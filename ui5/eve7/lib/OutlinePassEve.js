@@ -5,7 +5,7 @@
 
 
 
-class OutlinePass extends THREE.Pass { 
+class OutlinePassEve extends THREE.Pass { 
 
 	constructor( resolution, scene, camera ) {
 
@@ -15,12 +15,12 @@ class OutlinePass extends THREE.Pass {
 		this.renderScene = scene;
 		this.renderCamera = camera;
 
-		// [fElementId][elementId] -> { "sel_type": OutlinePass.selection_enum, "sec_sel": boolean, "geom": Primitive<> }
+		// [fElementId][elementId] -> { "sel_type": OutlinePassEve.selection_enum, "sec_sel": boolean, "geom": Primitive<> }
 		this.id2obj_map = {};
 		// R: Primitives
 		this._selectedObjects = [];
 		// [C1]: Selection Types - [C2]: Attributes(color, size, etc...) - [R2]: Primitives
-		this._groups = Array.from(Array(OutlinePass.selection_enum.total), () => []); // ES6 (could be replaced with vanilla Js)
+		this._groups = Array.from(Array(OutlinePassEve.selection_enum.total), () => []); // ES6 (could be replaced with vanilla Js)
 
 		this.edgeGlow = 0.0;
 		this.usePatternTexture = false;
@@ -41,16 +41,16 @@ class OutlinePass extends THREE.Pass {
 
 		this.renderTargetMaskBuffer = [];
 		// +1 extra for the "accumulated" result
-		for(let i = 0; i < OutlinePass.selection_enum.total; ++i){
+		for(let i = 0; i < OutlinePassEve.selection_enum.total; ++i){
 			let maskBuffer = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars )
-			maskBuffer.texture.name = "OutlinePass.submask"+i;
+			maskBuffer.texture.name = "OutlinePassEve.submask"+i;
 			maskBuffer.texture.generateMipmaps = false;
 
 			this.renderTargetMaskBuffer.push(maskBuffer);
 		}
 
 		this.renderTargetMaskBufferMain = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars );
-		this.renderTargetMaskBufferMain.texture.name = "OutlinePass.mask";
+		this.renderTargetMaskBufferMain.texture.name = "OutlinePassEve.mask";
 		this.renderTargetMaskBufferMain.texture.generateMipmaps = false;
 
 		this.depthMaterial = new THREE.MeshDepthMaterial();
@@ -63,26 +63,26 @@ class OutlinePass extends THREE.Pass {
 		this.prepareMaskMaterial.fragmentShader = replaceDepthToViewZ( this.prepareMaskMaterial.fragmentShader, this.renderCamera );
 
 		this.renderTargetDepthBuffer = new THREE.WebGLRenderTarget( this.resolution.x, this.resolution.y, pars );
-		this.renderTargetDepthBuffer.texture.name = "OutlinePass.depth";
+		this.renderTargetDepthBuffer.texture.name = "OutlinePassEve.depth";
 		this.renderTargetDepthBuffer.texture.generateMipmaps = false;
 
 		this.renderTargetMaskDownSampleBuffer = new THREE.WebGLRenderTarget( resx, resy, pars );
-		this.renderTargetMaskDownSampleBuffer.texture.name = "OutlinePass.depthDownSample";
+		this.renderTargetMaskDownSampleBuffer.texture.name = "OutlinePassEve.depthDownSample";
 		this.renderTargetMaskDownSampleBuffer.texture.generateMipmaps = false;
 
 		this.renderTargetBlurBuffer1 = new THREE.WebGLRenderTarget( resx, resy, pars );
-		this.renderTargetBlurBuffer1.texture.name = "OutlinePass.blur1";
+		this.renderTargetBlurBuffer1.texture.name = "OutlinePassEve.blur1";
 		this.renderTargetBlurBuffer1.texture.generateMipmaps = false;
 		this.renderTargetBlurBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ), pars );
-		this.renderTargetBlurBuffer2.texture.name = "OutlinePass.blur2";
+		this.renderTargetBlurBuffer2.texture.name = "OutlinePassEve.blur2";
 		this.renderTargetBlurBuffer2.texture.generateMipmaps = false;
 
 		this.edgeDetectionMaterial = this.getEdgeDetectionMaterial();
 		this.renderTargetEdgeBuffer1 = new THREE.WebGLRenderTarget( resx, resy, pars );
-		this.renderTargetEdgeBuffer1.texture.name = "OutlinePass.edge1";
+		this.renderTargetEdgeBuffer1.texture.name = "OutlinePassEve.edge1";
 		this.renderTargetEdgeBuffer1.texture.generateMipmaps = false;
 		this.renderTargetEdgeBuffer2 = new THREE.WebGLRenderTarget( Math.round( resx / this.glowDownSampleRatio ), Math.round( resy / this.glowDownSampleRatio ), pars );
-		this.renderTargetEdgeBuffer2.texture.name = "OutlinePass.edge2";
+		this.renderTargetEdgeBuffer2.texture.name = "OutlinePassEve.edge2";
 		this.renderTargetEdgeBuffer2.texture.generateMipmaps = false;
 
 		const MAX_EDGE_THICKNESS = 4;
@@ -100,7 +100,7 @@ class OutlinePass extends THREE.Pass {
 
 		// copy material
 		if ( THREE.CopyShader === undefined )
-			console.error( "THREE.OutlinePass relies on THREE.CopyShader" );
+			console.error( "THREE.OutlinePassEve relies on THREE.CopyShader" );
 
 		var copyShader = THREE.CopyShader;
 
@@ -176,7 +176,7 @@ class OutlinePass extends THREE.Pass {
 			}
 		}
 		catch (e) {
-			console.error("TREE.OutlinePass.parseAtts ", e);
+			console.error("TREE.OutlinePassEve.parseAtts ", e);
 		}
 		finally {
 		}
@@ -205,7 +205,7 @@ class OutlinePass extends THREE.Pass {
 		*/
 
 		// one array for each selection type
-		this._groups = Array.from(Array(OutlinePass.selection_enum.total), () => []);
+		this._groups = Array.from(Array(OutlinePassEve.selection_enum.total), () => []);
 
 		// fill in "this._groups"
 		for (const obj of this._selectedObjects){
@@ -492,7 +492,7 @@ class OutlinePass extends THREE.Pass {
 			//console.log(this._groups);
 
 			//console.log("$", this._groups[0]);
-			for(let i = 0; i < OutlinePass.selection_enum.total; ++i){
+			for(let i = 0; i < OutlinePassEve.selection_enum.total; ++i){
 				for(const group of this._groups[i])
 					if(group.length > 0)
 						this.draw(renderer, group, i);
@@ -533,7 +533,7 @@ class OutlinePass extends THREE.Pass {
 			renderer.clear();
 			renderer.setClearColor( 0xffffff, 1 );
 
-			for(let i = 0; i < OutlinePass.selection_enum.total; ++i){
+			for(let i = 0; i < OutlinePassEve.selection_enum.total; ++i){
 				let group = this._groups[i];
 				if(group.length > 0){
 					this.quad.material = this.materialCopy;
@@ -547,7 +547,7 @@ class OutlinePass extends THREE.Pass {
 					this.edgeDetectionMaterial.uniforms[ "maskTexture" ].value = this.renderTargetMaskDownSampleBuffer.texture;
 					this.edgeDetectionMaterial.uniforms[ "texSize" ].value = new THREE.Vector2( this.renderTargetMaskDownSampleBuffer.width, this.renderTargetMaskDownSampleBuffer.height );
 
-					const att = OutlinePass.selection_atts[i];
+					const att = OutlinePassEve.selection_atts[i];
 					this.edgeDetectionMaterial.uniforms[ "visibleEdgeColor" ].value = att.visibleEdgeColor;
 					this.edgeDetectionMaterial.uniforms[ "hiddenEdgeColor" ].value = att.hiddenEdgeColor;
 
@@ -559,13 +559,13 @@ class OutlinePass extends THREE.Pass {
 
 
 			//>-----------------
-			// for(let i = 0; i < OutlinePass.selection_enum.total; ++i){
+			// for(let i = 0; i < OutlinePassEve.selection_enum.total; ++i){
 			// 	const sel = this.sel[i];
 			// 	if(sel.length > 0){
 			// 		this.changeVisibilityOfSelectedObjects(true, sel);
 
 			// 		// 3. Apply Edge Detection Pass
-			// 		const att = OutlinePass.selection_atts[i];
+			// 		const att = OutlinePassEve.selection_atts[i];
 			// 		this.edgeDetectionMaterial.uniforms[ "visibleEdgeColor" ].value = att.visibleEdgeColor;
 			// 		this.edgeDetectionMaterial.uniforms[ "hiddenEdgeColor" ].value = att.hiddenEdgeColor;
 			// 		renderer.render( this.scene, this.camera );
@@ -578,13 +578,13 @@ class OutlinePass extends THREE.Pass {
 			// 4. Apply Blur on "glowDownSampleRatio" res
 			this.quad.material = this.separableBlurMaterial1;
 			this.separableBlurMaterial1.uniforms[ "colorTexture" ].value = this.renderTargetEdgeBuffer1.texture;
-			this.separableBlurMaterial1.uniforms[ "direction" ].value = OutlinePass.BlurDirectionX;
+			this.separableBlurMaterial1.uniforms[ "direction" ].value = OutlinePassEve.BlurDirectionX;
 			this.separableBlurMaterial1.uniforms[ "kernelRadius" ].value = this.edgeThickness;
 			renderer.setRenderTarget( this.renderTargetBlurBuffer1 );
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
 			this.separableBlurMaterial1.uniforms[ "colorTexture" ].value = this.renderTargetBlurBuffer1.texture;
-			this.separableBlurMaterial1.uniforms[ "direction" ].value = OutlinePass.BlurDirectionY;
+			this.separableBlurMaterial1.uniforms[ "direction" ].value = OutlinePassEve.BlurDirectionY;
 			renderer.setRenderTarget( this.renderTargetEdgeBuffer1 );
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
@@ -592,12 +592,12 @@ class OutlinePass extends THREE.Pass {
 			// Apply Blur on "downSampleRatio*glowDownSampleRatio" res
 			this.quad.material = this.separableBlurMaterial2;
 			this.separableBlurMaterial2.uniforms[ "colorTexture" ].value = this.renderTargetEdgeBuffer1.texture;
-			this.separableBlurMaterial2.uniforms[ "direction" ].value = OutlinePass.BlurDirectionX;
+			this.separableBlurMaterial2.uniforms[ "direction" ].value = OutlinePassEve.BlurDirectionX;
 			renderer.setRenderTarget( this.renderTargetBlurBuffer2 );
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
 			this.separableBlurMaterial2.uniforms[ "colorTexture" ].value = this.renderTargetBlurBuffer2.texture;
-			this.separableBlurMaterial2.uniforms[ "direction" ].value = OutlinePass.BlurDirectionY;
+			this.separableBlurMaterial2.uniforms[ "direction" ].value = OutlinePassEve.BlurDirectionY;
 			renderer.setRenderTarget( this.renderTargetEdgeBuffer2 );
 			renderer.clear();
 			renderer.render( this.scene, this.camera );
@@ -864,16 +864,16 @@ class OutlinePass extends THREE.Pass {
 
 }
 
-OutlinePass.BlurDirectionX = new THREE.Vector2( 1.0, 0.0 );
-OutlinePass.BlurDirectionY = new THREE.Vector2( 0.0, 1.0 );
+OutlinePassEve.BlurDirectionX = new THREE.Vector2( 1.0, 0.0 );
+OutlinePassEve.BlurDirectionY = new THREE.Vector2( 0.0, 1.0 );
 
-OutlinePass.selection_enum = {
+OutlinePassEve.selection_enum = {
 	"select": 0,
 	"highlight": 1,
 	"total": 2
 };
 
-OutlinePass.selection_atts = [
+OutlinePassEve.selection_atts = [
 	{
 		visibleEdgeColor: new THREE.Color( 1, 0, 0 ),
 		hiddenEdgeColor: new THREE.Color( 1, 0, 0.5 )
@@ -894,4 +894,4 @@ OutlinePass.selection_atts = [
 	}
 ];
 
-THREE.OutlinePass = OutlinePass;
+THREE.OutlinePassEve = OutlinePassEve;

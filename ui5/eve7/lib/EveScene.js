@@ -409,7 +409,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       }
 
       let stype  = selection_obj.fName.endsWith("Selection") ? "select" : "highlight";
-      let estype = THREE.OutlinePass.selection_enum[stype];
+      let estype = THREE.OutlinePassEve.selection_enum[stype];
       let oe = this.mgr.GetElement(element_id);
       // console.log("EveScene.SelectElement ", selection_obj.fName, oe.fName, selection_obj.fElementId, this.glctrl.viewer.outline_pass.id2obj_map);
 
@@ -420,7 +420,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       };
 
       // exit if you try to highlight an object that has already been selected
-      if (estype == THREE.OutlinePass.selection_enum["highlight"] &&
+      if (estype == THREE.OutlinePassEve.selection_enum["highlight"] &&
           opass.id2obj_map[element_id][this.mgr.global_selection_id] !== undefined)
       {
          if (!res.sec_sel)

@@ -1,7 +1,7 @@
 sap.ui.define([
    'rootui5/eve7/lib/GlViewer',
    'rootui5/eve7/lib/EveElements',
-   'rootui5/eve7/lib/OutlinePass',
+   'rootui5/eve7/lib/OutlinePassEve',
    'rootui5/eve7/lib/FXAAShader'
 ], function(GlViewer, EveElements) {
 
@@ -70,18 +70,17 @@ sap.ui.define([
          {
             // this here will be TGeoPainter!
 
-            this.outline_pass = new THREE.OutlinePass( new THREE.Vector2( w, h ), this._scene, this._camera );
+            this.outline_pass = new THREE.OutlinePassEve( new THREE.Vector2( w, h ), this._scene, this._camera );
             this.outline_pass.edgeStrength = 5.5;
             this.outline_pass.edgeGlow = 0.7;
             this.outline_pass.edgeThickness = 1.5;
             this.outline_pass.usePatternTexture = false;
             this.outline_pass.downSampleRatio = 1;
             this.outline_pass.glowDownSampleRatio = 3;
-            this.outline_pass.id2obj_map = {};
 
-            // const sh = THREE.OutlinePass.selection_enum["select"]; // doesnt stand for spherical harmonics :P
-            // THREE.OutlinePass.selection_atts[sh].visibleEdgeColor.set('#dd1111');
-            // THREE.OutlinePass.selection_atts[sh].hiddenEdgeColor.set('#1111dd');
+            // const sh = THREE.OutlinePassEve.selection_enum["select"]; // doesnt stand for spherical harmonics :P
+            // THREE.OutlinePassEve.selection_atts[sh].visibleEdgeColor.set('#dd1111');
+            // THREE.OutlinePassEve.selection_atts[sh].hiddenEdgeColor.set('#1111dd');
 
             this._effectComposer.addPass( this.outline_pass );
 
@@ -275,10 +274,9 @@ sap.ui.define([
 
       render: function()
       {
-         // fill selected objects for outline pass before rendering
          let outline_pass = this.geo_painter.outline_pass;
          if (outline_pass) outline_pass._selectedObjects = Object.values(outline_pass.id2obj_map).flat();
-         
+
          this.geo_painter.render3D();
       },
 
