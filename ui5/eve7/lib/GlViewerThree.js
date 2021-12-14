@@ -1,7 +1,7 @@
 sap.ui.define([
    'rootui5/eve7/lib/GlViewer',
    'rootui5/eve7/lib/EveElements',
-   'rootui5/eve7/lib/OutlinePass',
+   'rootui5/eve7/lib/OutlinePassEve',
    'rootui5/eve7/lib/FXAAShader'
 ], function(GlViewer, EveElements) {
 
@@ -16,7 +16,7 @@ sap.ui.define([
       constructor: GlViewerThree,
 
       g_highlight_update: function(mgr) {
-         let sa = THREE.OutlinePass.selection_atts;
+         let sa = THREE.OutlinePassEve.selection_atts;
          let gs = mgr.GetElement(mgr.global_selection_id);
          let gh = mgr.GetElement(mgr.global_highlight_id);
 
@@ -118,7 +118,7 @@ sap.ui.define([
          this.composer = new THREE.EffectComposer(this.renderer);
          this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
 
-         this.outline_pass = new THREE.OutlinePass(new THREE.Vector2(w, h), this.scene, this.camera);
+         this.outline_pass = new THREE.OutlinePassEve(new THREE.Vector2(w, h), this.scene, this.camera);
          this.outline_pass.edgeStrength = 5.5;
          this.outline_pass.edgeGlow = 0.7;
          this.outline_pass.edgeThickness = 1.5;
@@ -363,9 +363,6 @@ sap.ui.define([
          let v = this.get_manager().GetElement(this.controller.eveViewerId);
          if (!v.fRnrSelf)
             return;
-
-         // fill selected objects for outline pass before rendering
-         this.outline_pass._selectedObjects = Object.values(this.outline_pass.id2obj_map).flat();
 
          // Render through composer:
          this.composer.render(this.scene, this.camera);
