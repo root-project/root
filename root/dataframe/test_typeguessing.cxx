@@ -27,10 +27,6 @@ int main() {
    // TTreeReader should cause a runtime error (type mismatch) when the event-loop is run
    auto hb = d.Histo1D<double>("b");
 
-   // Histo1D("s") should compile and execute (jitting recognizes the std::string type)
-   // although the histogram will be filled with meaningless values
-   auto hs = d.Histo1D("s");
-
    bool exception_caught = false;
    try {
       *hb;
