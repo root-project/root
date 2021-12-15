@@ -6457,3 +6457,77 @@ public:
   return kTRUE ;
   }
 } ;
+
+/////////////////////////////////////////////////////////////////////////
+//
+// 'TESTSTATISTICS PLOTTING AND MINIMIZATION'
+//
+//  Plotting and likelihood minimization in parallel using teststatistics
+//  (currently has no associated tutorial macro)
+//
+// 12/2021 - Zef Wolffs
+//
+/////////////////////////////////////////////////////////////////////////
+
+#include "RooFit.h"
+#include "RooWorkspace.h"
+#include "RooPlot.h"
+#include "RooDataSet.h"
+#include "TestStatistics/buildLikelihood.h"
+#include "RooAbsPdf.h"
+#include "RooRealVar.h"
+#include "TestStatistics/RooRealL.h"
+#include "RooMinimizer.h"
+#include <memory>
+
+using namespace RooFit ;
+
+// Elementary operations on a gaussian PDF
+class TestRooRealLPlot : public RooUnitTest
+{
+public:
+  TestRooRealLPlot(TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode) : RooUnitTest("Plotting and minimization with RooFit::TestStatistics",refFile,writeRef,verbose,batchMode) {} ;
+  Bool_t testCode() {
+
+  // C r e a t e   m o d e l  a n d  d a t a
+  // ---------------------------------------
+
+  // Constructing a workspace with pdf and dataset
+  RooWorkspace w("w") ;
+  w.factory("expr::Nexp('mu*S+B',mu[1,-1,10],S[10],B[20])") ;
+  w.factory("Poisson::model(Nobs[0,100],Nexp)") ;
+  RooDataSet d("d","d",*w.var("Nobs")) ;
+  w.var("Nobs")->setVal(25) ;
+  d.add(*w.var("Nobs")) ;
+
+  // P e r f o r m   a  p a r a l l e l  l i k e l i h o o d  m i n i m i z a t i o n
+  // --------------------------------------------------------------------------------
+
+  // Creating a RooAbsL likelihood
+  std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood = RooFit::TestStatistics::buildLikelihood(w.pdf("model"),&d);
+
+  // Creating a minimizer and explicitly setting type of parallelization
+  RooMinimizer m(likelihood, RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode::serial,
+                  RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode::multiprocess);
+  m.setMinimizerType("Minuit2");
+
+  // Minimize
+  m.migrad();
+
+  // C o n v e r t  t o  R o o R e a l L  a n d  p l o t
+  // ---------------------------------------------------
+
+  // Create a RooRealL which has plotting functionality
+  std::shared_ptr<RooFit::TestStatistics::RooRealL> likelihood_real(new RooFit::TestStatistics::RooRealL("likelihood", "", likelihood));
+  RooPlot* xframe = w.var("mu")->frame(-1,10) ;
+  likelihood_real->plotOn(xframe);
+
+  // Clean up the minimizer
+  m.cleanup();
+
+  // --- Post processing for stressRooFit ---
+  regPlot(xframe ,"TestRooRealLPlot_plot");
+
+  return kTRUE;
+  }
+};

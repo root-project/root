@@ -165,6 +165,7 @@ Int_t stressRooFit(const char* refFile, Bool_t writeRef, Int_t doVerbose, Int_t 
   testList.push_back(new TestBasic802(fref,writeRef,doVerbose,batchMode)) ;
   testList.push_back(new TestBasic803(fref,writeRef,doVerbose,batchMode)) ;
   testList.push_back(new TestBasic804(fref,writeRef,doVerbose,batchMode)) ;
+  testList.push_back(new TestRooRealLPlot(fref,writeRef,doVerbose,batchMode)) ;
 
   cout << "*  Starting  S T R E S S  basic suite                            *" <<endl;
   cout << "******************************************************************" <<endl;
