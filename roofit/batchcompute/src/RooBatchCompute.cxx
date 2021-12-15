@@ -19,6 +19,7 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 **/
 
 #include "RooBatchCompute.h"
+#include "RooVDTHeaders.h"
 #include "Batches.h"
 
 #include "ROOT/RConfig.h"
