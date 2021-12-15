@@ -37,7 +37,7 @@ int main() {
    } catch (const std::runtime_error &) {
       exception_caught = true;
    }
-   assert(exception_caught);
+   R__ASSERT(exception_caught);
 
    return 0;
 }
