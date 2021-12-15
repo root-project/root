@@ -101,17 +101,20 @@ void TestLinear(int nbatches, bool useBN = false, int inputSize = 10, int nlayer
    }
 }
 
-void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannels = 2, int nd = 4, int nlayers = 4, int usePool = 0)
+void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups = 2, int nchannels = 2, int nd = 4, int nlayers = 4, int usePool = 0)
 {
-   std::string modelName = "Conv2dModel";
+   std::string modelName = "Conv" + type + "Model";
    if (useBN) modelName += "_BN";
    if (usePool == 1) modelName += "_MAXP";
    if (usePool == 2) modelName += "_AVGP";
    modelName += "_B" + std::to_string(nbatches);
 
    // input size is fixed to (nb, nc, nd, nd)
-   
-   const int inputSize = nchannels  * nd * nd;
+   int inputDim = nd;
+   if (type == "2d") inputDim *= nd;
+   if (type == "3d") inputDim *= nd*nd;
+
+   const int inputSize = nchannels * inputDim;
 
    //const char *argv[5] = {}
    std::string argv[5];
@@ -122,7 +125,7 @@ void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannel
    argv[2] = std::to_string(nd);
    argv[3] = std::to_string(ngroups);
    argv[4] = std::to_string(nlayers);
-   std::string command = "python3 Conv2dModelGenerator.py ";
+   std::string command = "python3 Conv" + type + "ModelGenerator.py ";
    for (int i = 0; i < 5; i++) {
       command += " ";
       command += argv[i];
@@ -144,7 +147,6 @@ void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannel
          return;
       }
    }
-   // TPython::ExecScript("Conv2dModelGenerator.py",5,argv);
 
   
    ExecuteSofieParser(modelName);
@@ -154,8 +156,8 @@ void TestConv2D( int nbatches, bool useBN = false, int ngroups = 2, int nchannel
    // input data 
    std::vector<float> xinput(nbatches*inputSize);
    for (int ib = 0; ib < nbatches; ib++) {
-      std::vector<float> x1(nd*nd, float(ib + 1));
-      std::vector<float> x2(nd*nd, -float(ib + 1));
+      std::vector<float> x1(inputDim, float(ib + 1));
+      std::vector<float> x2(inputDim, -float(ib + 1));
       // x1 and x2 are the two channels, if more channels will be with zero
       std::copy(x1.begin(), x1.end(), xinput.begin() + ib * inputSize);
       if (nchannels > 1)
@@ -263,11 +265,11 @@ TEST(SOFIE, Linear_B4)
    TestLinear(4);
 }
 TEST(SOFIE,Conv2d_B1) {
-   TestConv2D(1);
+   TestConv("2d", 1);
 }
 TEST(SOFIE, Conv2d_B4)
 {
-   TestConv2D(4);
+   TestConv("2d",4);
 }
 // test with batch normalization
 TEST(SOFIE, Linear_BNORM_B8)
@@ -276,17 +278,23 @@ TEST(SOFIE, Linear_BNORM_B8)
 }
 TEST(SOFIE, Conv2d_BNORM_B5)
 {
-   TestConv2D(5,true);
+   TestConv("2d",5,true);
 }
 // test with max pooling
 TEST(SOFIE, Conv2d_MAXPOOL_B2)
 {
-   TestConv2D(2,false,1,2,3,1,1);
+   TestConv("2d",2,false,1,2,3,1,1);
 }
 // test with avg pooling
 TEST(SOFIE, Conv2d_AVGPOOL_B2)
 {
-   TestConv2D(2, false, 1, 2, 4, 1, 2);
+   TestConv("2d", 2, false, 1, 2, 4, 1, 2);
+}
+
+// test conv1d
+TEST(SOFIE, Conv1d_B1)
+{
+   TestConv("1d", 1, false, 1, 2, 10, 1, 0);
 }
 
 // Tets recurrent network 
