@@ -40,7 +40,8 @@ private:
 
    std::string fType;
 
-   bool fUseSession = false;
+   size_t fDim;   // dimension of the convolution
+
 
 public:
 
@@ -94,9 +95,10 @@ public:
             std::runtime_error("TMVA SOFIE Conv Op Shape inference need 2 or 3 input tensors");
       }
       for(size_t i = 0; i < input.size(); i++) {
-         if (input[i].size() != 4) {
+         fDim = input[i].size() - 2;
+         if (fDim < 0 || fDim > 2) {
             throw
-               std::runtime_error("TMVA SOFIE Conv Op Shape inference only accept tensor with 4 dimensions");
+               std::runtime_error("TMVA SOFIE Conv Op Shape inference only accept tensor with 3, 4 or 5 dimensions");
          }
       }
 
@@ -104,8 +106,9 @@ public:
          fAttrGroup = input[0][1] / input[1][1];
       }
 
+      // kernel shape 
       size_t kHeight = ((fAttrKernelShape.empty())? input[1][2] : fAttrKernelShape[0]);
-      size_t kWidth = ((fAttrKernelShape.empty())? input[1][3] : fAttrKernelShape[1]);
+      size_t kWidth = (fDim > 1) ? ((fAttrKernelShape.empty()) ? input[1][3] : fAttrKernelShape[1]) : 1;
 
       if (fAttrDilations.empty()) {
          fAttrDilations = {1, 1};
@@ -134,15 +137,34 @@ public:
          fAttrStrides = {1, 1};
       }
 
-      size_t outputHeight =
-          (input[0][2] + fAttrPads[0] + fAttrPads[2] - fAttrKernelShape[0] + fAttrStrides[0]) /
-          fAttrStrides[0];
-      size_t outputWidth =
-          (input[0][3] + fAttrPads[1] + fAttrPads[3] - fAttrKernelShape[1] + fAttrStrides[1]) /
-          fAttrStrides[1];
+      size_t inputHeight = input[0][2];
+      size_t inputWidth = (fDim > 1) ? input[0][3] : 1;
+      size_t inputDepth = (fDim > 2) ? input[0][4] : 1;
 
-      // output is N x M x OH x OW 
-      std::vector<std::vector<size_t>> ret({{input[0][0], input[1][0], outputHeight, outputWidth}});
+      size_t padHeight = fAttrPads[0] + fAttrPads[1];
+      if (fDim == 2) padHeight = fAttrPads[0] + fAttrPads[2];
+      if (fDim == 3) padHeight = fAttrPads[0] + fAttrPads[3];
+      size_t outputHeight = (inputHeight + padHeight - fAttrKernelShape[0]) / fAttrStrides[0] + 1;
+
+      if (fDim == 1) {
+         fAttrDilations[1] = 1;
+         fAttrStrides[1] = 1;
+         std::vector<std::vector<size_t>> ret({{input[0][0], input[1][0], outputHeight}});
+         return ret;
+      }
+
+      size_t padWidth = (fDim == 2) ? fAttrPads[1] + fAttrPads[3] : fAttrPads[1] + fAttrPads[4];
+
+      size_t outputWidth = (inputWidth + padWidth - fAttrKernelShape[1]) / fAttrStrides[1] + 1;
+      if (fDim == 2) {
+         // output is N x M x OH x OW
+         std::vector<std::vector<size_t>> ret({{input[0][0], input[1][0], outputHeight, outputWidth}});
+         return ret;
+      }
+      size_t outputDepth = (inputDepth + fAttrPads[2] + fAttrPads[5] - fAttrKernelShape[2] ) / fAttrStrides[2] + 1;
+
+      // output is N x M x OH x OW x OD
+      std::vector<std::vector<size_t>> ret({{input[0][0], input[1][0], outputHeight, outputWidth, outputDepth}});
       return ret;
    }
 
@@ -153,19 +175,19 @@ public:
             std::runtime_error("TMVA SOFIE Conv op Input Tensor " + fNX + " is not found in model");
       }
       fShapeX = model.GetTensorShape(fNX);
-      if (fShapeX.size() != 4) {
+      if (fShapeX.size() < 3 || fShapeX.size()  > 5) {
          std::cout << fNX << " : " << ConvertShapeToString(fShapeX) << std::endl;
          throw
-            std::runtime_error("TMVA SOFIE Conv Op input data tensor" + fNX + " is not of 4 dimensions");
+            std::runtime_error("TMVA SOFIE Conv Op input data tensor" + fNX + " is not of 3,4 or 5 dimensions");
       }
       if (!model.CheckIfTensorAlreadyExist(fNW)) {
          throw
             std::runtime_error("TMVA SOFIE Conv op Input weight Tensor " + fNW + " is not found in model");
       }
       fShapeW = model.GetTensorShape(fNW);
-      if (fShapeW.size() != 4) {
+      if (fShapeW.size() < 3 || fShapeW.size()  > 5) {
          std::cout << fNW << " : " << ConvertShapeToString(fShapeW) << std::endl;
-         throw std::runtime_error("TMVA SOFIE Conv Op input weight tensor" + fNW + " is not of 4 dimensions");
+         throw std::runtime_error("TMVA SOFIE Conv Op input weight tensor" + fNW + " is not of 3,4 or 5 dimensions");
       }
       fShapeY = ShapeInference({fShapeX, fShapeW})[0];
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
@@ -209,24 +231,27 @@ public:
             }
          }
       }
-      
-   }
+      }
 
    std::string GenerateInitCode() {
+
+      size_t oHeight = fShapeY[2];                 // ouput height
+      size_t oWidth = (fDim > 1) ? fShapeY[3] : 1; // output width
+
       std::stringstream out;
       // generate initialization code for broadcasting of bias tensor  
       if (fShapeB.size() != fShapeY.size() && !fNB2.empty() ) {
          // include a separate scope to avoid defining unique operator temp variables 
          out << "   {\n"; 
          out << "      std::vector<size_t> oldShape = " << ConvertShapeToString(fShapeB) << ";\n";
-         out << "      std::vector<size_t> newShape = { " << fShapeY[1] << ", " << fShapeY[2] << ", " << fShapeY[3] << "};\n";
+         out << "      std::vector<size_t> newShape = { " << fShapeY[1] << ", " << oHeight << ", " << oWidth << "};\n";
          out << "      oldShape.resize(newShape.size(), 1.);\n";
          std::string original_bias_tensor = "tensor_" + fNB;
          std::string new_bias_tensor = "tensor_" + fNB2;
          out << "      float * newData_ptr = TMVA::Experimental::SOFIE::UTILITY::Unidirectional_broadcast<float>("
              << original_bias_tensor << ", oldShape, newShape);\n";
          // extend the new broadcasted bias tensor for the batch dimension
-         int length =  fShapeY[1]*fShapeY[2]*fShapeY[3]; // output nc*h*w
+         int length =  fShapeY[1]*oHeight*oWidth; // output nc*h*w
          out << "      for (int i = 0; i < " << fShapeY[0] << " ; i++)\n";
          out << "         std::copy(newData_ptr, newData_ptr + " << length << ", "
              <<  new_bias_tensor << " + i * " << length << ");\n";
@@ -238,6 +263,10 @@ public:
    
    // generate code for Session data members (e.g. internal vectors)
    virtual std::string GenerateSessionMembersCode(std::string opName) {
+
+      size_t oHeight = fShapeY[2];                 // ouput height
+      size_t oWidth = (fDim > 1) ? fShapeY[3] : 1; // output width
+
       opName = "op_" + opName;
       std::stringstream out;
       // matrix with convolution kernels
@@ -245,7 +274,7 @@ public:
           << fShapeW[0] * fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] << ");\n";
       // output matrix of im2col
       out << "std::vector<" << fType << "> fVec_" << opName << "_xcol = std::vector<" << fType << ">(" 
-          << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << ");\n";
+          << fShapeW[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * oHeight * oWidth << ");\n";
       out << "\n";
 
       return out.str(); 
@@ -261,6 +290,12 @@ public:
 
       std::stringstream out;
       size_t bsize = fShapeX[0];
+      size_t kHeight = fShapeW[2];  // kernel height
+      size_t kWidth = (fDim > 1) ? fShapeW[3] : 1; // kernel width
+      size_t iHeight = fShapeX[2];                 // input height
+      size_t iWidth = (fDim > 1) ? fShapeX[3] : 1; // input width
+      size_t oHeight = fShapeY[2];   // ouput height
+      size_t oWidth = (fDim > 1) ? fShapeY[3] : 1; // output width
 
       out << "\n//----  operator Conv " << OpName << "\n";
 
@@ -272,23 +307,23 @@ public:
 
       // vectorize the (dilated)convolution kernels into a matrix
       // no need to transpose the matrix
-      size_t hstride = fShapeW[3];
+      size_t hstride = kWidth;
       size_t hstrideDil = fAttrDilations[0] * fAttrKernelShape[1];  // stride dilated in the height
       size_t wstrideDil = fAttrDilations[1];
-      size_t dstride = fShapeW[2] * fShapeW[3];
+      size_t dstride = kHeight * kWidth;
       size_t dstrideDil = fAttrKernelShape[0] * fAttrKernelShape[1];
-      size_t kstride = fShapeW[1] * fShapeW[2] * fShapeW[3];
+      size_t kstride = fShapeW[1] * dstride;
       size_t kstrideDil = fShapeW[1] * dstrideDil;
 
       out << SP << "for (std::size_t k = 0; k < " << fShapeW[0] << "; k++) {\n";
       out << SP << SP << "for (std::size_t d = 0; d < " << fShapeW[1] << "; d++) {\n";
-      out << SP << SP << SP << "for (std::size_t h = 0; h < " << fShapeW[2] << "; h++) {\n";
-      out << SP << SP << SP << SP << "for (std::size_t w = 0; w < " << fShapeW[3] << "; w++) {\n";
+      out << SP << SP << SP << "for (std::size_t h = 0; h < " << kHeight << "; h++) {\n";
+      out << SP << SP << SP << SP << "for (std::size_t w = 0; w < " << kWidth << "; w++) {\n";
       // out << SP << SP << SP << SP << SP << OpName <<  "_f[k + " << "(d * "
       //     << fAttrKernelShape[0] * fAttrKernelShape[1] << " + h * " << fAttrDilations[0] * fAttrKernelShape[1]
       //     << " + w * " << fAttrDilations[1] << ") * " << fShapeW[0] << "] = tensor_" << fNW << "[k * "
-      //     << fShapeW[1] * fShapeW[2] * fShapeW[3] << " + d * " << fShapeW[2] * fShapeW[3] << " + h * "
-      //     << fShapeW[3] << " + w ];\n";
+      //     << fShapeW[1] * fShapeW[2] * kWidth << " + d * " << fShapeW[2] * kWidth << " + h * "
+      //     << kWidth << " + w ];\n";
       out << SP << SP << SP << SP << SP << OpName <<  "_f[k * "
           << kstrideDil << " + d * " << dstrideDil << " + h * " << hstrideDil << " + w * " << wstrideDil 
           << "  ] = tensor_" << fNW << "[k * " << kstride << " + d * " << dstride << " + h * "
@@ -302,7 +337,7 @@ public:
       //out << SP << "char " << OpName << "_transA = 'T';\n";
       out << SP << "char " << OpName << "_transA = 'N';\n";
       out << SP << "char " << OpName << "_transB = 'N';\n";
-      out << SP << "int " << OpName << "_m = " << fShapeY[2] * fShapeY[3] << ";\n"; // output h*w
+      out << SP << "int " << OpName << "_m = " << oHeight * oWidth << ";\n"; // output h*w
       assert(fShapeY[1] == fShapeW[0]);
       assert(fShapeW[1] == fShapeX[1] / fAttrGroup);
       out << SP << "int " << OpName << "_n = " << fShapeW[0] << ";\n"; // output channels
@@ -315,7 +350,7 @@ public:
       }
       else {
          out << SP << fType << " " << OpName << "_xcol["
-             << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * fShapeY[2] * fShapeY[3] << "] = {0};\n";
+             << fShapeX[1] * fAttrKernelShape[0] * fAttrKernelShape[1] * oHeight * oWidth << "] = {0};\n";
       }
 
       // Loop on batch size 
@@ -328,14 +363,25 @@ public:
       // trick for speed is using caffe im2col and output a matrix which contains filtered values as rows.
       // By doing this one has consecutive memory reads and writes
       // Resulting matrix op_xcol is (input channels * filter_h * filter_w , output_h * output_w)
-      if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
-         std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
-         fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
-         fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
+      if (fDim ==1) {
+         if (fAttrPads[0] != fAttrPads[1] ) {
+            std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding "
+                      << std::endl;
+            fAttrPads[0] = (fAttrPads[0] + fAttrPads[1]) / 2;
+         }
+         fAttrPads[1] = 0;
+         fAttrStrides[1] = 1;
       }
+      if (fDim == 2) {
+         if (fAttrPads[0] != fAttrPads[2] || fAttrPads[1] != fAttrPads[3]) {
+            std::cout << "TMVA SOFIE Operator Conv:  asymmetric padding not supported. Assume an average padding " << std::endl;
+            fAttrPads[0] = (fAttrPads[0] + fAttrPads[2]) / 2;
+            fAttrPads[1] = (fAttrPads[1] + fAttrPads[3]) / 2;
+         }
+      }  
       if (fAttrGroup == 1) {
-         out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * fShapeX[2] * fShapeX[3] << ";\n";
-         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * fShapeY[2] * fShapeY[3] << ";\n";
+         out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << ";\n";
+         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * oHeight * oWidth << ";\n";
          // when using im2col - resulting matrix is transposed, is (input_c * filter_h * filter_y,  output_h *
          // output_w)
          out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
@@ -343,7 +389,7 @@ public:
              //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
              //  dilation_w,
              //
-             << fShapeW[1] << "," << fShapeX[2] << "," << fShapeX[3] << "," << fAttrKernelShape[0] << ","
+             << fShapeW[1] << "," << iHeight << "," << iWidth << "," << fAttrKernelShape[0] << ","
              << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrStrides[0] << ","
              << fAttrStrides[1] << ",1,1," << OpName << "_xcol);\n\n ";
          // BLAS
@@ -356,19 +402,19 @@ public:
          // case of group convolution
          // Unroll (IM2COL) the input tensor- make loop on groups and repeat operations (IM2COL + GEMM for each
          // group)
-         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * fShapeY[2] * fShapeY[3] << ";\n";
+         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * oHeight * oWidth << ";\n";
          out << SP << SP << "for (size_t g = 0; g < " << fAttrGroup << "; g++) {\n";
-         out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * fShapeX[2] * fShapeX[3] << " + g * "
-             << fShapeW[1] * fShapeX[2] * fShapeX[3] << ";\n ";
-         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * fShapeY[2] * fShapeY[3] << " + g * "
-             << fShapeW[0] * fShapeY[2] * fShapeY[3] / fAttrGroup << ";\n ";
+         out << SP << SP << "size_t x_offset = n * " << fShapeX[1] * iHeight * iWidth << " + g * "
+             << fShapeW[1] * iHeight * iWidth << ";\n ";
+         out << SP << SP << "size_t out_offset = n * " << fShapeY[1] * oHeight * oWidth << " + g * "
+             << fShapeW[0] * oHeight * oWidth / fAttrGroup << ";\n ";
 
          out << SP << SP << "TMVA::Experimental::SOFIE::UTILITY::Im2col<float>(tensor_" << fNX
              << " + x_offset,"
              //  channels, height, width, kernel_h, kernel_w, pad_h, pad_w, stride_h, stride_w, dilation_h,
              //  dilation_w,
              //
-             << fShapeW[1] << "," << fShapeX[2] << "," << fShapeX[3] << "," << fAttrKernelShape[0] << ","
+             << fShapeW[1] << "," << iHeight << "," << iWidth << "," << fAttrKernelShape[0] << ","
              << fAttrKernelShape[1] << "," << fAttrPads[0] << "," << fAttrPads[1] << "," << fAttrStrides[0] << ","
              << fAttrStrides[1] << ",1,1," << OpName << "_xcol);\n\n ";
 
@@ -392,7 +438,7 @@ public:
 
     
       if (fNB2 != "") {
-         out << SP << "int " << OpName << "_size = " << fShapeY[0] * fShapeY[1] * fShapeY[2] * fShapeY[3] << ";\n";
+         out << SP << "int " << OpName << "_size = " << fShapeY[0] * fShapeY[1] * oHeight * oWidth << ";\n";
          out << SP << "float " << OpName << "_gamma = 1.0;\n";
          out << SP << "int " << OpName << "_incx = 1;\n";
          out << SP << "int " << OpName << "_incy = 1;\n";
