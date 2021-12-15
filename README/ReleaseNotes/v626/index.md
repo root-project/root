@@ -99,7 +99,7 @@ Try 'root --help' for more information.
 
 ## RNTuple
 
-- ROOT's experimental successor of TTree has been upgraded to the version 1 of the binary format specification. Compared to the v0 format, the header is ~40% smaller and the footer ~100% smaller (after zstd compression). As of version 1, RNTuple is supposed to stay backwards compatible. More details in PR [#8897](https://github.com/root-project/root/pull/8897).
+- ROOT's experimental successor of TTree has been upgraded to the version 1 of the binary format specification. Compared to the v0 format, the header is ~40% smaller and the footer ~100% smaller (after zstd compression). More details in PR [#8897](https://github.com/root-project/root/pull/8897).
 RNTuple is still experimental and is scheduled to become production grade in 2024. Thus, we appreciate feedback and suggestions for improvement.
 
 ## RDataFrame
