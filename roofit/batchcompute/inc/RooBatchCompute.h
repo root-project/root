@@ -15,7 +15,6 @@
 
 #include "RooSpan.h"
 #include "RunContext.h"
-#include "RooVDTHeaders.h"
 
 #include "DllImport.h" //for R__EXTERN, needed for windows
 #include "TError.h"
