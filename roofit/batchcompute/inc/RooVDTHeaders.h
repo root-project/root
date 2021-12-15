@@ -22,6 +22,8 @@
  * this layer can be used to switch between different implementations.
  */
 
+#include "RConfigure.h"
+
 #if defined(R__HAS_VDT) && !defined(__CUDACC__)
 #include "vdt/exp.h"
 #include "vdt/log.h"

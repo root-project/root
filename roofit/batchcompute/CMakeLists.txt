@@ -6,10 +6,11 @@ ROOT_LINKER_LIBRARY(RooBatchCompute
   DEPENDENCIES
     Core
     MathCore
+    Imt
 )
 
-if(vdt AND NOT builtin_vdt)
-  target_include_directories(RooBatchCompute PUBLIC ${VDT_INCLUDE_DIR})
+if(vdt OR builtin_vdt)
+  target_include_directories(RooBatchCompute PRIVATE ${VDT_INCLUDE_DIRS} INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIRS}>)
 endif()
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
