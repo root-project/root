@@ -24,6 +24,8 @@
 #include "RooAbsCache.h"
 #include "RooNameReg.h"
 #include "RooLinkedListIter.h"
+#include <RooBatchCompute/DataKey.h>
+
 #include <map>
 #include <set>
 #include <deque>
@@ -555,6 +557,8 @@ public:
 
   virtual bool canComputeBatchWithCuda() const { return false; }
   virtual bool isReducerNode() const { return false; }
+
+  operator RooBatchCompute::DataKey() const { return RooBatchCompute::DataKey::create(this); }
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
