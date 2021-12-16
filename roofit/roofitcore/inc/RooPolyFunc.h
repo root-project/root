@@ -31,6 +31,7 @@ public:
    RooPolyFunc(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooAbsCollection &coefList);
    RooPolyFunc(const char *name, const char *title, const RooAbsCollection &vars);
    RooPolyFunc(const RooPolyFunc &other, const char *name = 0);
+   RooPolyFunc &operator=(const RooPolyFunc &other);
    virtual TObject *clone(const char *newname) const { return new RooPolyFunc(*this, newname); }
 
    void addTerm(double coefficient);
