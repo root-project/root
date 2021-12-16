@@ -13,25 +13,12 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
-#include "RooSpan.h"
-#include "RunContext.h"
+#include "RooBatchComputeTypes.h"
 
 #include "DllImport.h" //for R__EXTERN, needed for windows
 #include "TError.h"
 
 #include <functional>
-#include <map>
-#include <vector>
-
-#ifndef __CUDACC__
-#define __device__
-#define __global__
-#define __host__
-struct cudaEvent_t;
-struct cudaStream_t;
-#endif // #ifndef __CUDACC__
-
-class RooAbsArg;
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
@@ -48,15 +35,6 @@ class RooAbsArg;
 namespace RooBatchCompute {
 
 enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
-
-struct RunContext;
-// We have to use map instead of unordered_map because the unordered_maps from
-// nvcc and gcc are not compatible sometimes.
-typedef std::map<const RooAbsArg *, RooSpan<const double>> DataMap;
-typedef std::vector<const RooAbsArg *> VarVector;
-typedef std::vector<double> ArgVector;
-typedef double *__restrict RestrictArr;
-typedef const double *__restrict InputArr;
 
 enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShape, Chebychev,
               ChiSquare, DstD0BG, Exponential, Gamma, Gaussian, Johnson, Landau, Lognormal,

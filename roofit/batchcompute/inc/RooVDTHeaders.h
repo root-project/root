@@ -47,27 +47,23 @@ inline double fast_isqrt(double x) {
 
 #else
 #include <cmath>
-#ifndef __CUDACC__
-  #define __device__
-#endif
 
 namespace RooBatchCompute{
 
-__device__ inline double fast_exp(double x) {
+__roodevice__ inline double fast_exp(double x) {
   return std::exp(x);
 }
 
-__device__ inline double fast_log(double x) {
+__roodevice__ inline double fast_log(double x) {
   return std::log(x);
 }
 
-__device__ inline double fast_isqrt(double x) {
+__roodevice__ inline double fast_isqrt(double x) {
   return 1/std::sqrt(x);
 }
 
 }
 
 #endif // defined(R__HAS_VDT) && !defined(__CUDACC__)
-
 
 #endif // ROOFIT_BATCHCOMPUTE_ROOVDTHEADERS_H_

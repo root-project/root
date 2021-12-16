@@ -18,7 +18,7 @@
 #include "RooAbsReal.h"
 #include "RooTemplateProxy.h"
 
-#include "RooBatchCompute.h"
+#include "RooBatchComputeTypes.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -59,8 +59,6 @@ protected:
    double getValV(const RooArgSet *normalisationSet = nullptr) const override;
 
    double evaluate() const override;
-
-   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext &evalData, const RooArgSet *normSet) const override;
 
    RooSpan<const double>
    getValues(RooBatchCompute::RunContext &evalData, const RooArgSet *normSet = nullptr) const override;

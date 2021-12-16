@@ -23,7 +23,7 @@
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
-#include "RooBatchCompute.h"
+#include "RooBatchComputeTypes.h"
 
 class RooArgList ;
 class RooDataSet ;

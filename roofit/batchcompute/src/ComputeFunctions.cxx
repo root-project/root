@@ -24,8 +24,8 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 **/
 
 #include "RooBatchCompute.h"
-#include "Batches.h"
 #include "RooVDTHeaders.h"
+#include "Batches.h"
 
 #include <complex>
 
@@ -43,7 +43,7 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 namespace RooBatchCompute {
 namespace RF_ARCH {
 
-__global__ void computeAddPdf(Batches batches)
+__rooglobal__ void computeAddPdf(Batches batches)
 {
    const int nPdfs = batches.getNExtraArgs();
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
@@ -53,7 +53,7 @@ __global__ void computeAddPdf(Batches batches)
          batches._output[i] += batches.extraArg(pdf) * batches[pdf][i];
 }
 
-__global__ void computeArgusBG(Batches batches)
+__rooglobal__ void computeArgusBG(Batches batches)
 {
    Batch m = batches[0], m0 = batches[1], c = batches[2], p = batches[3], normVal = batches[4];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -69,7 +69,7 @@ __global__ void computeArgusBG(Batches batches)
    }
 }
 
-__global__ void computeBernstein(Batches batches)
+__rooglobal__ void computeBernstein(Batches batches)
 {
    const int nCoef = batches.getNExtraArgs() - 2;
    const int degree = nCoef - 1;
@@ -130,7 +130,7 @@ __global__ void computeBernstein(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__global__ void computeBifurGauss(Batches batches)
+__rooglobal__ void computeBifurGauss(Batches batches)
 {
    Batch X = batches[0], M = batches[1], SL = batches[2], SR = batches[3], normVal = batches[4];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -143,7 +143,7 @@ __global__ void computeBifurGauss(Batches batches)
    }
 }
 
-__global__ void computeBreitWigner(Batches batches)
+__rooglobal__ void computeBreitWigner(Batches batches)
 {
    Batch X = batches[0], M = batches[1], W = batches[2], normVal = batches[3];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -152,7 +152,7 @@ __global__ void computeBreitWigner(Batches batches)
    }
 }
 
-__global__ void computeBukin(Batches batches)
+__rooglobal__ void computeBukin(Batches batches)
 {
    Batch X = batches[0], XP = batches[1], SP = batches[2], XI = batches[3], R1 = batches[4], R2 = batches[5],
          normVal = batches[6];
@@ -193,7 +193,7 @@ __global__ void computeBukin(Batches batches)
       batches._output[i] = fast_exp(batches._output[i]) / normVal[i];
 }
 
-__global__ void computeCBShape(Batches batches)
+__rooglobal__ void computeCBShape(Batches batches)
 {
    Batch M = batches[0], M0 = batches[1], S = batches[2], A = batches[3], N = batches[4], normVal = batches[5];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -211,7 +211,7 @@ __global__ void computeCBShape(Batches batches)
       batches._output[i] = fast_exp(batches._output[i]) / normVal[i];
 }
 
-__global__ void computeChebychev(Batches batches)
+__rooglobal__ void computeChebychev(Batches batches)
 {
    Batch xData = batches[0], normVal = batches[1];
    const int nCoef = batches.getNExtraArgs() - 2;
@@ -254,7 +254,7 @@ __global__ void computeChebychev(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__global__ void computeChiSquare(Batches batches)
+__rooglobal__ void computeChiSquare(Batches batches)
 {
    Batch X = batches[0], normVal = batches[1];
    const double ndof = batches.extraArg(0);
@@ -269,7 +269,7 @@ __global__ void computeChiSquare(Batches batches)
    }
 }
 
-__global__ void computeDstD0BG(Batches batches)
+__rooglobal__ void computeDstD0BG(Batches batches)
 {
    Batch DM = batches[0], DM0 = batches[1], C = batches[2], A = batches[3], B = batches[4], normVal = batches[5];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -286,14 +286,14 @@ __global__ void computeDstD0BG(Batches batches)
          batches._output[i] /= normVal[i];
 }
 
-__global__ void computeExponential(Batches batches)
+__rooglobal__ void computeExponential(Batches batches)
 {
    Batch x = batches[0], c = batches[1], normVal = batches[2];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = fast_exp(x[i] * c[i]) / normVal[i];
 }
 
-__global__ void computeGamma(Batches batches)
+__rooglobal__ void computeGamma(Batches batches)
 {
    Batch X = batches[0], G = batches[1], B = batches[2], M = batches[3], normVal = batches[4];
    double gamma = -std::lgamma(G[0]);
@@ -320,7 +320,7 @@ __global__ void computeGamma(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__global__ void computeGaussian(Batches batches)
+__rooglobal__ void computeGaussian(Batches batches)
 {
    auto x = batches[0], mean = batches[1], sigma = batches[2], normVal = batches[3];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -330,7 +330,7 @@ __global__ void computeGaussian(Batches batches)
    }
 }
 
-__global__ void computeNegativeLogarithms(Batches batches)
+__rooglobal__ void computeNegativeLogarithms(Batches batches)
 {
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = -fast_log(batches[0][i]);
@@ -340,7 +340,7 @@ __global__ void computeNegativeLogarithms(Batches batches)
          batches._output[i] *= batches[1][i];
 }
 
-__global__ void computeJohnson(Batches batches)
+__rooglobal__ void computeJohnson(Batches batches)
 {
    Batch mass = batches[0], mu = batches[1], lambda = batches[2], gamma = batches[3], delta = batches[4],
          normVal = batches[5];
@@ -367,7 +367,7 @@ __global__ void computeJohnson(Batches batches)
  * Code copied from function landau_pdf (math/mathcore/src/PdfFuncMathCore.cxx)
  * and rewritten to enable vectorization.
  */
-__global__ void computeLandau(Batches batches)
+__rooglobal__ void computeLandau(Batches batches)
 {
    auto case0 = [](double x) {
       const double a1[3] = {0.04166666667, -0.01996527778, 0.02709538966};
@@ -449,7 +449,7 @@ __global__ void computeLandau(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__global__ void computeLognormal(Batches batches)
+__rooglobal__ void computeLognormal(Batches batches)
 {
    Batch X = batches[0], M0 = batches[1], K = batches[2], normVal = batches[3];
    const double rootOf2pi = 2.506628274631000502415765284811;
@@ -472,7 +472,7 @@ __global__ void computeLognormal(Batches batches)
  * ln is the logarithm that was solely present in the initial
  * formula, that is before the asinh replacement
  */
-__global__ void computeNovosibirsk(Batches batches)
+__rooglobal__ void computeNovosibirsk(Batches batches)
 {
    Batch X = batches[0], P = batches[1], W = batches[2], T = batches[3], normVal = batches[4];
    constexpr double xi = 2.3548200450309494; // 2 Sqrt( Ln(4) )
@@ -493,7 +493,7 @@ __global__ void computeNovosibirsk(Batches batches)
       batches._output[i] = fast_exp(batches._output[i]) / normVal[i];
 }
 
-__global__ void computePoisson(Batches batches)
+__rooglobal__ void computePoisson(Batches batches)
 {
    Batch x = batches[0], mean = batches[1], normVal = batches[2];
    bool protectNegative = batches.extraArg(0);
@@ -523,7 +523,7 @@ __global__ void computePoisson(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__global__ void computePolynomial(Batches batches)
+__rooglobal__ void computePolynomial(Batches batches)
 {
    Batch X = batches[0], normVal = batches[1];
    const int nCoef = batches.getNExtraArgs() - 1;
@@ -568,7 +568,7 @@ finale:
       batches._output[i] /= normVal[i];
 }
 
-__global__ void computeProdPdf(Batches batches)
+__rooglobal__ void computeProdPdf(Batches batches)
 {
    const int nPdfs = batches.extraArg(0);
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
@@ -578,7 +578,7 @@ __global__ void computeProdPdf(Batches batches)
          batches._output[i] *= batches[pdf][i];
 }
 
-__global__ void computeVoigtian(Batches batches)
+__rooglobal__ void computeVoigtian(Batches batches)
 {
    Batch X = batches[0], M = batches[1], W = batches[2], S = batches[3], normVal = batches[4];
    const double invSqrt2 = 0.707106781186547524400844362105;
