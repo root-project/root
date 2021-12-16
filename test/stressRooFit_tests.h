@@ -6473,10 +6473,10 @@ public:
 #include "RooWorkspace.h"
 #include "RooPlot.h"
 #include "RooDataSet.h"
-#include "TestStatistics/buildLikelihood.h"
+#include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"
-#include "TestStatistics/RooRealL.h"
+#include "RooFit/TestStatistics/RooRealL.h"
 #include "RooMinimizer.h"
 #include <memory>
 
