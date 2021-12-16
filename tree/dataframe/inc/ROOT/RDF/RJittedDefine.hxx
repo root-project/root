@@ -47,6 +47,8 @@ public:
    void Update(unsigned int slot, Long64_t entry) final;
    void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id) final;
    void FinaliseSlot(unsigned int slot) final;
+   void MakeVariations(const std::vector<std::string> &variations) final;
+   RDefineBase &GetVariedDefine(const std::string &variationName) final;
 };
 
 } // ns RDF
