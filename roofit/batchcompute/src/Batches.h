@@ -23,7 +23,7 @@ so that they can contain data for every kind of compute function.
 #ifndef ROOFIT_BATCHCOMPUTE_BATCHES_H
 #define ROOFIT_BATCHCOMPUTE_BATCHES_H
 
-#include "RooBatchCompute.h"
+#include <RooBatchComputeTypes.h>
 
 #include <stdint.h>
 
@@ -45,7 +45,7 @@ public:
    Batch() = default;
    inline Batch(InputArr array, bool isVector) : _scalar{array[0]}, _array{array}, _isVector{isVector} {}
 
-   __device__ constexpr bool isItVector() const { return _isVector; }
+   __roodevice__ constexpr bool isItVector() const { return _isVector; }
    inline void set(double scalar, InputArr array, bool isVector)
    {
       _scalar = scalar;
@@ -54,7 +54,7 @@ public:
    }
    inline void advance(size_t _nEvents) { _array += _isVector * _nEvents; }
 #ifdef __CUDACC__
-   __device__ constexpr double operator[](size_t i) const noexcept { return _isVector ? _array[i] : _scalar; }
+   __roodevice__ constexpr double operator[](size_t i) const noexcept { return _isVector ? _array[i] : _scalar; }
 #else
    constexpr double operator[](size_t i) const noexcept { return _array[i]; }
 #endif // #ifdef __CUDACC__
@@ -75,10 +75,10 @@ public:
 
    Batches(RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
            const ArgVector &extraArgs = {}, double stackArr[maxParams][bufferSize] = nullptr);
-   __device__ size_t getNEvents() const { return _nEvents; }
-   __device__ uint8_t getNExtraArgs() const { return _nExtraArgs; }
-   __device__ double extraArg(uint8_t i) const { return _extraArgs[i]; }
-   __device__ Batch operator[](int batchIdx) const { return _arrays[batchIdx]; }
+   __roodevice__ size_t getNEvents() const { return _nEvents; }
+   __roodevice__ uint8_t getNExtraArgs() const { return _nExtraArgs; }
+   __roodevice__ double extraArg(uint8_t i) const { return _extraArgs[i]; }
+   __roodevice__ Batch operator[](int batchIdx) const { return _arrays[batchIdx]; }
    inline void setNEvents(size_t n = bufferSize) { _nEvents = n; }
    inline void advance(size_t nEvents)
    {

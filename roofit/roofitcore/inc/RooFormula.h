@@ -20,16 +20,13 @@
 #include "RooArgList.h"
 #include "RooArgSet.h"
 
-#include "RooBatchCompute.h"
+#include "RooBatchComputeTypes.h"
 #include "TFormula.h"
 
 #include <memory>
 #include <vector>
 #include <string>
 
-namespace RooBatchCompute {
-  struct RunContext;
-}
 class RooAbsReal;
 
 class RooFormula : public TNamed, public RooPrintable {
