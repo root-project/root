@@ -13,7 +13,7 @@
 #ifndef RooFit_Detail_Buffers_h
 #define RooFit_Detail_Buffers_h
 
-#include "RooBatchCompute.h"
+#include <RooBatchComputeTypes.h>
 
 #include <memory>
 
