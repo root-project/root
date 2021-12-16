@@ -123,7 +123,7 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
    //.c_str();
    argv[1] = std::to_string(nchannels);
    argv[2] = std::to_string(nd);
-   argv[3] = std::to_string(ngroups);
+   argv[3] = std::to_string(ngroups); // for 3d this is depth size
    argv[4] = std::to_string(nlayers);
    std::string command = "python3 Conv" + type + "ModelGenerator.py ";
    for (int i = 0; i < 5; i++) {
@@ -295,6 +295,12 @@ TEST(SOFIE, Conv2d_AVGPOOL_B2)
 TEST(SOFIE, Conv1d_B1)
 {
    TestConv("1d", 1, false, 1, 2, 10, 1, 0);
+}
+
+// test conv3d
+TEST(SOFIE, Conv3d_B1)
+{
+   TestConv("3d", 1, false, 3, 2, 3, 1, 0);
 }
 
 // Tets recurrent network 
