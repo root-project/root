@@ -46,11 +46,12 @@ protected:
    const ROOT::RDF::ColumnNames_t fColumnNames;
    /// The nth flag signals whether the nth input column is a custom column or not.
    ROOT::RVecB fIsDefine;
-   std::vector<std::string> fVariations; ///< List of systematic variations that affect the value of this define.
+   std::vector<std::string> fVariationDeps; ///< List of systematic variations that affect the value of this define.
+   std::string fVariation;                  ///< This indicates for what variation this define evaluates values.
 
 public:
    RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RColumnRegister &colRegister,
-               RLoopManager &lm, const ColumnNames_t &columnNames);
+               RLoopManager &lm, const ColumnNames_t &columnNames, const std::string &variationName = "nominal");
 
    RDefineBase &operator=(const RDefineBase &) = delete;
    RDefineBase &operator=(RDefineBase &&) = delete;
@@ -68,7 +69,13 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    virtual void FinalizeSlot(unsigned int slot) = 0;
 
-   const std::vector<std::string> &GetVariations() const { return fVariations; }
+   const std::vector<std::string> &GetVariations() const { return fVariationDeps; }
+
+   /// Create clones of this Define that work with values in varied "universes".
+   virtual void MakeVariations(const std::vector<std::string> &variations) = 0;
+
+   /// Return a clone of this Define that works with values in the variationName "universe".
+   virtual RDefineBase &GetVariedDefine(const std::string &variationName) = 0;
 };
 
 } // ns RDF
