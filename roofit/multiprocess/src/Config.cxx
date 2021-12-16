@@ -14,6 +14,7 @@
 #include "RooFit/MultiProcess/JobManager.h"
 
 #include <thread> // std::thread::hardware_concurrency()
+#include <stdio.h>
 
 namespace RooFit {
 namespace MultiProcess {
