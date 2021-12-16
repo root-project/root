@@ -66,6 +66,8 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    /// Column readers per slot and per input column
    std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
 
+   std::unordered_map<std::string, std::unique_ptr<RDefineBase>> fVariedDefines;
+
    template <typename... ColTypes, std::size_t... S>
    void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>, NoneTag)
    {
@@ -99,8 +101,9 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
 
 public:
    RDefine(std::string_view name, std::string_view type, F expression, const ROOT::RDF::ColumnNames_t &columns,
-           const RDFInternal::RColumnRegister &colRegister, RLoopManager &lm)
-      : RDefineBase(name, type, colRegister, lm, columns), fExpression(std::move(expression)),
+           const RDFInternal::RColumnRegister &colRegister, RLoopManager &lm,
+           const std::string &variationName = "nominal")
+      : RDefineBase(name, type, colRegister, lm, columns, variationName), fExpression(std::move(expression)),
         fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
    {
    }
@@ -112,8 +115,11 @@ public:
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
                                            fLoopManager->GetDataSource()};
-      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
+      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
+
+      for (auto &e : fVariedDefines)
+         e.second->InitSlot(r, slot);
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
@@ -141,7 +147,29 @@ public:
    {
       for (auto &v : fValues[slot])
          v.reset();
+
+      for (auto &e : fVariedDefines)
+         e.second->FinaliseSlot(slot);
    }
+
+   /// Create clones of this Define that work with values in varied "universes".
+   void MakeVariations(const std::vector<std::string> &variations) final
+   {
+      // the varied defines get a copy of the callable object.
+      // TODO document this
+      for (const auto &variation : variations) {
+         if (fVariedDefines.find(variation) != fVariedDefines.end())
+            continue; // we already have this variation stored
+
+         auto variedDefine = std::unique_ptr<RDefineBase>(
+            new RDefine(fName, fType, fExpression, fColumnNames, fColRegister, *fLoopManager, variation));
+         // TODO switch to fVariedDefines.insert({variationName, std::move(variedDefine)}) when we drop gcc 5
+         fVariedDefines[variation] = std::move(variedDefine);
+      }
+   }
+
+   /// Return a clone of this Define that works with values in the variationName "universe".
+   RDefineBase &GetVariedDefine(const std::string &variationName) final { return *fVariedDefines.at(variationName); }
 };
 
 } // ns RDF

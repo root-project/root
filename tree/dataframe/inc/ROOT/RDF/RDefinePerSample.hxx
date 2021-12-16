@@ -67,7 +67,16 @@ public:
    const std::type_info &GetTypeId() const { return typeid(RetType_t); }
 
    void InitSlot(TTreeReader *, unsigned int) final {}
+
    void FinaliseSlot(unsigned int) final {}
+
+   void MakeVariations(const std::vector<std::string> &) final { R__ASSERT(false && "Unimplemented"); }
+
+   RDefineBase &GetVariedDefine(const std::string &) final
+   {
+      R__ASSERT(false && "Unimplemented");
+      return *this;
+   }
 };
 
 } // namespace RDF

@@ -55,3 +55,15 @@ void RJittedDefine::FinaliseSlot(unsigned int slot)
    assert(fConcreteDefine != nullptr);
    fConcreteDefine->FinaliseSlot(slot);
 }
+
+void RJittedDefine::MakeVariations(const std::vector<std::string> &variations)
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->MakeVariations(variations);
+}
+
+RDefineBase &RJittedDefine::GetVariedDefine(const std::string &variationName)
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->GetVariedDefine(variationName);
+}

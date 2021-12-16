@@ -22,14 +22,18 @@ using ROOT::Detail::RDF::RDefineBase;
 namespace RDFInternal = ROOT::Internal::RDF; // redundant (already present in the header), but Windows needs it
 
 RDefineBase::RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RColumnRegister &colRegister,
-                         ROOT::Detail::RDF::RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columnNames)
+                         ROOT::Detail::RDF::RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columnNames,
+                         const std::string &variationName)
    : fName(name), fType(type), fLastCheckedEntry(lm.GetNSlots() * RDFInternal::CacheLineStep<Long64_t>(), -1),
      fColRegister(colRegister), fLoopManager(&lm), fColumnNames(columnNames), fIsDefine(columnNames.size()),
-     fVariations(fColRegister.GetVariationDeps(fColumnNames))
+     fVariationDeps(fColRegister.GetVariationDeps(fColumnNames)), fVariation(variationName)
 {
    const auto nColumns = fColumnNames.size();
-   for (auto i = 0u; i < nColumns; ++i)
+   for (auto i = 0u; i < nColumns; ++i) {
       fIsDefine[i] = fColRegister.HasName(fColumnNames[i]);
+      if (fVariation != "nominal" && fIsDefine[i])
+         fColRegister.GetColumns().at(fColumnNames[i])->MakeVariations({fVariation});
+   }
 }
 
 // pin vtable. Work around cling JIT issue.
