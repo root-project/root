@@ -174,6 +174,7 @@ called for each data event.
 #include "RooDerivative.h"
 #include "RooFit/BatchModeHelpers.h"
 #include "RooVDTHeaders.h"
+#include "RunContext.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "TClass.h"
