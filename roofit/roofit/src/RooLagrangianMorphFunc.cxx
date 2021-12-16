@@ -118,7 +118,7 @@ void writeMatrixToStreamT(const MatrixT &matrix, std::ostream &stream) {
   for (size_t i = 0; i < size(matrix); ++i) {
     for (size_t j = 0; j < size(matrix); ++j) {
 #ifdef USE_UBLAS
-      stream << std::setprecision(SuperFloatPrecision::digits10) << matrix(i, j)
+      stream << std::setprecision(RooFit::SuperFloatPrecision::digits10) << matrix(i, j)
              << "\t";
 #else
       stream << matrix(i, j) << "\t";
@@ -157,7 +157,7 @@ inline void writeMatrixToFileT(const MatrixT &matrix, const char *fname) {
 
 #pragma GCC diagnostic pop
 
-typedef boost::numeric::ublas::matrix<SuperFloat> Matrix;
+typedef boost::numeric::ublas::matrix<RooFit::SuperFloat> Matrix;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// write a matrix
@@ -165,7 +165,7 @@ typedef boost::numeric::ublas::matrix<SuperFloat> Matrix;
 inline void printMatrix(const Matrix &mat) {
   for (size_t i = 0; i < mat.size1(); ++i) {
     for (size_t j = 0; j < mat.size2(); ++j) {
-      // std::cout << std::setprecision(SuperFloatPrecision::digits10) <<
+      // std::cout << std::setprecision(RooFit::SuperFloatPrecision::digits10) <<
       // mat(i,j) << " ,\t";
     }
     std::cout << std::endl;
@@ -183,7 +183,7 @@ template <> inline size_t size<Matrix>(const Matrix &matrix) {
 /// create a new diagonal matrix of size n
 
 inline Matrix diagMatrix(size_t n) {
-  return boost::numeric::ublas::identity_matrix<SuperFloat>(n);
+  return boost::numeric::ublas::identity_matrix<RooFit::SuperFloat>(n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -222,9 +222,9 @@ inline Matrix operator*(const Matrix &m, const Matrix &otherM) {
 ////////////////////////////////////////////////////////////////////////////////
 /// calculate the inverse of a matrix, returning the condition
 
-inline SuperFloat invertMatrix(const Matrix &matrix, Matrix &inverse) {
+inline RooFit::SuperFloat invertMatrix(const Matrix &matrix, Matrix &inverse) {
   boost::numeric::ublas::permutation_matrix<size_t> pm(size(matrix));
-  SuperFloat mnorm = norm_inf(matrix);
+  RooFit::SuperFloat mnorm = norm_inf(matrix);
   Matrix lu(matrix);
   try {
     int res = lu_factorize(lu, pm);
@@ -239,8 +239,8 @@ inline SuperFloat invertMatrix(const Matrix &matrix, Matrix &inverse) {
     // coutE(Eval) << "boost::numberic::ublas error: matrix is not invertible!"
     // << std::endl;
   }
-  SuperFloat inorm = norm_inf(inverse);
-  SuperFloat condition = mnorm * inorm;
+  RooFit::SuperFloat inorm = norm_inf(inverse);
+  RooFit::SuperFloat condition = mnorm * inorm;
   return condition;
 }
 
@@ -359,15 +359,15 @@ template <class A, class B> inline void assignElement(A &a, const B &b) {
 
 template <class MatrixT>
 inline MatrixT readMatrixFromStreamT(std::istream &stream) {
-  std::vector<std::vector<SuperFloat>> matrix;
-  std::vector<SuperFloat> line;
+  std::vector<std::vector<RooFit::SuperFloat>> matrix;
+  std::vector<RooFit::SuperFloat> line;
   while (!stream.eof()) {
     if (stream.peek() == '\n') {
       stream.get();
       stream.peek();
       continue;
     }
-    SuperFloat val;
+    RooFit::SuperFloat val;
     stream >> val;
     line.push_back(val);
     while (stream.peek() == ' ' || stream.peek() == '\t') {
@@ -1358,7 +1358,7 @@ buildSampleWeights(T1 &weights, const char *fname,
     // build the formula with the correct normalization
     RooLinearCombination *sampleformula = new RooLinearCombination(name_full.Data());
     for (auto const &formulait : formulas) {
-      const SuperFloat val(inverse(formulaidx, sampleidx));
+      const RooFit::SuperFloat val(inverse(formulaidx, sampleidx));
       sampleformula->add(val, formulait.second.get());
       formulaidx++;
     }
@@ -1854,7 +1854,7 @@ inline void RooLagrangianMorphFunc::updateSampleWeights() {
     cxcoutP(ObjectHandling)
         << "updating formula for sample '" << sample << "'" << std::endl;
     for (size_t formulaidx = 0; formulaidx < n; ++formulaidx) {
-      const SuperFloat val(cache->_inverse(formulaidx, sampleidx));
+      const RooFit::SuperFloat val(cache->_inverse(formulaidx, sampleidx));
 #ifdef USE_UBLAS
       if (val != val) {
 #else

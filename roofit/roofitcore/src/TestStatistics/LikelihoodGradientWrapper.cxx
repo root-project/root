@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "TestStatistics/LikelihoodGradientWrapper.h"
+#include "RooFit/TestStatistics/LikelihoodGradientWrapper.h"
 #include "RooMinimizer.h"
 
 namespace RooFit {

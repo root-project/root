@@ -14,7 +14,7 @@
 #define ROOT_ROOFIT_TESTSTATISTICS_LikelihoodGradientJob
 
 #include "RooFit/MultiProcess/Job.h"
-#include "TestStatistics/LikelihoodGradientWrapper.h"
+#include "RooFit/TestStatistics/LikelihoodGradientWrapper.h"
 
 #include "Math/MinimizerOptions.h"
 #include "Minuit2/NumericalDerivator.h"

@@ -15,9 +15,9 @@
 
 #include "RooArgList.h"
 #include "RooRealVar.h"
-#include "TestStatistics/RooAbsL.h"
-#include "TestStatistics/LikelihoodWrapper.h"
-#include "TestStatistics/LikelihoodGradientWrapper.h"
+#include <RooFit/TestStatistics/RooAbsL.h>
+#include <RooFit/TestStatistics/LikelihoodWrapper.h>
+#include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
 #include "RooAbsMinimizerFcn.h"
 
 #include <Fit/ParameterSettings.h>
