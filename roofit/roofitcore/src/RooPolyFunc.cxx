@@ -155,9 +155,23 @@ RooPolyFunc::RooPolyFunc(const char *name, const char *title, const RooAbsCollec
 RooPolyFunc::RooPolyFunc(const RooPolyFunc &other, const char *name)
    : RooAbsReal(other, name), _vars("vars", this, other._vars)
 {
-   for (size_t i = 0; i < other._terms.size(); ++i) {
-      this->_terms.push_back(std::make_unique<RooListProxy>(other._terms[i]->GetName(), this, *(other._terms[i])));
+   for (auto const &term : other._terms) {
+      this->_terms.emplace_back(std::make_unique<RooListProxy>(term->GetName(), this, *term));
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+
+RooPolyFunc &RooPolyFunc::operator=(const RooPolyFunc &other)
+{
+   RooAbsReal::operator=(other);
+   _vars = other._vars;
+
+   for (auto const &term : other._terms) {
+      this->_terms.emplace_back(std::make_unique<RooListProxy>(term->GetName(), this, *term));
+   }
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
