@@ -164,6 +164,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooParamBinning.h
     RooPlotable.h
     RooPlot.h
+    RooPolyFunc.h
     RooPolyVar.h
     RooPrintable.h
     RooProdGenContext.h
@@ -400,6 +401,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooParamBinning.cxx
     src/RooPlotable.cxx
     src/RooPlot.cxx
+    src/RooPolyFunc.cxx
     src/RooPolyVar.cxx
     src/RooPrintable.cxx
     src/RooProdGenContext.cxx

@@ -49,6 +49,7 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "RooDataHist.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
+#include "RooPolyFunc.h"
 #include "RooSimultaneous.h"
 #include "RooFFTConvPdf.h"
 #include "RooNumConvPdf.h"
@@ -99,6 +100,7 @@ static Int_t init()
   RooFactoryWSTool::registerSpecial("prod",iface) ;
   RooFactoryWSTool::registerSpecial("expr",iface) ;
   RooFactoryWSTool::registerSpecial("nconv",iface) ;
+  RooFactoryWSTool::registerSpecial("taylorexpand", iface);
 
   // Test statistics
   RooFactoryWSTool::registerSpecial("nll",iface) ;
@@ -813,6 +815,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 /// <tr><td> `SIMUL::name(cat,a=pdf1,b=pdf2]`   <td> Create simultaneous p.d.f index category cat. Make pdf1 to state a, pdf2 to state b
 /// <tr><td> `EXPR::name(<expr>,var,...]`       <td> Create a generic p.d.f that interprets the given expression
 /// <tr><td> `expr::name(<expr>,var,...] `       <td> Create a generic function that interprets the given expression
+/// <tr><td> `taylorexpand::name(func,{var1,var2,...},val,order,eps1,eps2] ` Create a taylor expansion of func w.r.t. {var1,var2,..} around val upto order
 /// </table>
 ///
 /// The functionality of high-level object creation tools like RooSimWSTool, RooCustomizer and RooClassFactory
@@ -2048,7 +2051,41 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
       ft.createArg("RooFormulaVar",instName,genargs) ;
     }
 
-  } else if (cl=="nconv") {
+  } else if (cl == "taylorexpand") {
+
+    // taylorexpand::name[func,{var,var,..},val,order]
+    int order(1);
+    double eps1(1e-6), eps2(1e-3), observablesValue(0.0);
+
+    if (pargv.size() < 2)
+      throw string(Form("taylorexpand::%s, requires atleast 2 arguments (function, observables) atleast, has %d arguments", instName, (Int_t)pargv.size()));
+
+    RooAbsReal &func = ft.asFUNC(pargv[0].c_str());
+    RooArgList observables = ft.asLIST(pargv[1].c_str());
+
+    if (pargv.size() > 3)
+      order = atoi(pargv[3].c_str());
+    if (pargv.size() > 2) {
+      if (pargv[2].find(",") != string::npos)
+        throw string(Form("taylorexpand::%s, factory syntax supports expansion only around same value for all observables", instName));
+      else observablesValue = atof(pargv[2].c_str());
+    }
+
+    if (pargv.size() > 3)
+      order = atoi(pargv[3].c_str());
+    if (pargv.size() > 4)
+      eps1 = atof(pargv[4].c_str());
+    if (pargv.size() > 5)
+      eps2 = atof(pargv[5].c_str());
+
+    if (pargv.size() > 6)
+      throw string(
+        Form("taylorexpand::%s, requires max. 6 arguments, has %d arguments", instName, (Int_t)pargv.size()));
+
+    auto taylor = RooPolyFunc::taylorExpand(instName, instName, func, observables, observablesValue, order, eps1, eps2);
+    if (ft.ws().import(*taylor, Silence())) ft.logError();
+
+   } else if (cl=="nconv") {
 
     // nconv::name[var,pdf1,pdf2]
     ft.createArg("RooNumConvolution",instName,pargs) ;

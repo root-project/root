@@ -156,6 +156,7 @@
 #pragma link C++ class RooNumIntFactory+ ;
 #pragma link C++ class RooPlotable+ ;
 #pragma link C++ class RooPlot- ;
+#pragma link C++ class RooPolyFunc+ ;
 #pragma link C++ class RooPolyVar+ ;
 #pragma link C++ class RooPrintable+ ;
 #pragma link C++ class RooProdGenContext+ ;
