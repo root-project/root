@@ -68,12 +68,12 @@ THnBase::THnBase(const char *name, const char *title, Int_t dim, const Int_t *nb
      fTsumwx(dim), fTsumwx2(dim), fIntegral(0), fIntegralStatus(kNoInt)
 {
    if (Int_t(xbins.size()) != fNdimensions) {
-      Error("THnBase", "Mismatched number of dimensions %d with number of bin edge vectors %lu", fNdimensions,
+      Error("THnBase", "Mismatched number of dimensions %d with number of bin edge vectors %zu", fNdimensions,
             xbins.size());
    }
    for (Int_t i = 0; i < fNdimensions; ++i) {
       if (Int_t(xbins[i].size()) != (nbins[i] + 1)) {
-         Error("THnBase", "Mismatched number of bins %d with number of bin edges %lu", nbins[i], xbins[i].size());
+         Error("THnBase", "Mismatched number of bins %d with number of bin edges %zu", nbins[i], xbins[i].size());
       }
       TAxis *axis = new TAxis(nbins[i], xbins[i].data());
       axis->SetName(TString::Format("axis%d", i));
