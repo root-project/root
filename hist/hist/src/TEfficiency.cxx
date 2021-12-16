@@ -2217,19 +2217,20 @@ void TEfficiency::Draw(Option_t* opt)
    //check options
    TString option = opt;
    option.ToLower();
-   // use by default "AP"
-   if (option.IsNull() ) option = "ap";
 
    if(gPad && !option.Contains("same"))
       gPad->Clear();
-   else {
+
+   if (GetDimension() == 2) {
+      if (option.IsNull()) option = "colz";
+   } else {
+      // use by default "AP"
+      if (option.IsNull()) option = "ap";
       // add always "a" if not present
-      if (!option.Contains("a") ) option += "a";
+      if (!option.Contains("same") && !option.Contains("a") ) option += "a";
+      // add always p to the option
+      if (!option.Contains("p") ) option += "p";
    }
-
-   // add always p to the option
-   if (!option.Contains("p") ) option += "p";
-
 
    AppendPad(option.Data());
 }
