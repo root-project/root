@@ -32,6 +32,7 @@
    #define _VECOPS_USE_EXTERN_TEMPLATES true
 #endif
 
+#include <Rtypes.h> // R__CLING_PTRCHECK
 #include <TError.h> // R__ASSERT
 
 #include <algorithm>
@@ -116,7 +117,7 @@ inline uint64_t NextPowerOf2(uint64_t A)
 }
 
 /// This is all the stuff common to all SmallVectors.
-class SmallVectorBase {
+class R__CLING_PTRCHECK(off) SmallVectorBase {
 public:
    // This limits the maximum size of an RVec<char> to ~4GB but we don't expect this to ever be a problem,
    // and we prefer the smaller Size_T to reduce the size of each RVec object.
@@ -189,7 +190,7 @@ struct SmallVectorAlignmentAndSize {
 
 /// This is the part of SmallVectorTemplateBase which does not depend on whether the type T is a POD.
 template <typename T>
-class SmallVectorTemplateCommon : public SmallVectorBase {
+class R__CLING_PTRCHECK(off) SmallVectorTemplateCommon : public SmallVectorBase {
    using Base = SmallVectorBase;
 
    /// Find the address of the first element.  For this pointer math to be valid
@@ -311,7 +312,7 @@ public:
 template <typename T, bool = (std::is_trivially_copy_constructible<T>::value) &&
                              (std::is_trivially_move_constructible<T>::value) &&
                              std::is_trivially_destructible<T>::value>
-class SmallVectorTemplateBase : public SmallVectorTemplateCommon<T> {
+class R__CLING_PTRCHECK(off) SmallVectorTemplateBase : public SmallVectorTemplateCommon<T> {
 protected:
    SmallVectorTemplateBase(size_t Size) : SmallVectorTemplateCommon<T>(Size) {}
 
@@ -370,7 +371,7 @@ public:
 
 // Define this out-of-line to dissuade the C++ compiler from inlining it.
 template <typename T, bool TriviallyCopyable>
-void SmallVectorTemplateBase<T, TriviallyCopyable>::grow(size_t MinSize)
+void R__CLING_PTRCHECK(off) SmallVectorTemplateBase<T, TriviallyCopyable>::grow(size_t MinSize)
 {
    // Ensure we can fit the new capacity.
    // This is only going to be applicable when the capacity is 32 bit.
@@ -411,7 +412,7 @@ void SmallVectorTemplateBase<T, TriviallyCopyable>::grow(size_t MinSize)
 /// T's. This allows using memcpy in place of copy/move construction and
 /// skipping destruction.
 template <typename T>
-class SmallVectorTemplateBase<T, true> : public SmallVectorTemplateCommon<T> {
+class R__CLING_PTRCHECK(off) SmallVectorTemplateBase<T, true> : public SmallVectorTemplateCommon<T> {
    using SuperClass = SmallVectorTemplateCommon<T>;
 
 protected:
@@ -520,7 +521,7 @@ namespace VecOps {
 /// This class consists of common code factored out of the SmallVector class to
 /// reduce code duplication based on the SmallVector 'N' template parameter.
 template <typename T>
-class RVecImpl : public Internal::VecOps::SmallVectorTemplateBase<T> {
+class R__CLING_PTRCHECK(off) RVecImpl : public Internal::VecOps::SmallVectorTemplateBase<T> {
    using SuperClass = Internal::VecOps::SmallVectorTemplateBase<T>;
 
 public:
@@ -1088,7 +1089,7 @@ namespace VecOps {
 // Note that this does not attempt to be exception safe.
 
 template <typename T, unsigned int N>
-class RVecN : public Detail::VecOps::RVecImpl<T>, Internal::VecOps::SmallVectorStorage<T, N> {
+class R__CLING_PTRCHECK(off) RVecN : public Detail::VecOps::RVecImpl<T>, Internal::VecOps::SmallVectorStorage<T, N> {
 public:
    RVecN() : Detail::VecOps::RVecImpl<T>(N) {}
 
@@ -1418,7 +1419,7 @@ hpt->Draw();
 // clang-format on
 
 template <typename T>
-class RVec : public RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value> {
+class R__CLING_PTRCHECK(off) RVec : public RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value> {
    using SuperClass = RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value>;
 public:
    using reference = typename SuperClass::reference;
