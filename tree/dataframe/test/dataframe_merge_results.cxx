@@ -138,7 +138,7 @@ TEST(RDataFrameMergeResults, MergeHistoND)
    auto col3 = col2.Define("x2", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
    auto col4 = col3.Define("x3", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
 
-   int nbins[4] = {100, 100, 100, 100};
+   int nbins[4] = {10, 10, 10, 10};
    double xmin[4] = {0., 0., 0., 0.};
    double xmax[4] = {100., 100., 100., 100.};
    auto hist1 =
