@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RCutFlowReport.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include <numeric> // std::accumulate

@@ -56,7 +56,7 @@ MakeColumnReader(unsigned int slot, RDefineBase *define,
    // defines come second, so that Redefine'd columns have precedence over dataset columns
    if (define != nullptr) {
       if (variationName != "nominal" && IsStrInVec(variationName, define->GetVariations()))
-         throw std::runtime_error("Defines depending on variations are not implemented yet.");
+         define = &define->GetVariedDefine(variationName);
       return Ret_t{new RDefineReader(slot, *define, typeid(T))};
    }
 
