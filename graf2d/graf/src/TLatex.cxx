@@ -2539,7 +2539,8 @@ Double_t TLatex::GetHeight() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return size of the formula along X in pad coordinates
+/// Return size of the formula along X in pad coordinates when the text precision
+/// is smaller than 3.
 
 Double_t TLatex::GetXsize()
 {
@@ -2626,7 +2627,8 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return size of the formula along Y in pad coordinates
+/// Return size of the formula along Y in pad coordinates when the text precision
+/// is smaller than 3.
 
 Double_t TLatex::GetYsize()
 {
