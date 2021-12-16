@@ -2497,9 +2497,14 @@ TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const C
    TextSpec_t spec;
    spec.fAngle = angle;
    if (fTextFont%10 == 3) {
-      Double_t hw = TMath::Max((Double_t)gPad->XtoPixel(gPad->GetX2()),
-                               (Double_t)gPad->YtoPixel(gPad->GetY1()));
-      spec.fSize = size/hw;
+      UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
+                            gPad->XtoAbsPixel(gPad->GetX1()));
+      UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
+                            gPad->YtoAbsPixel(gPad->GetY1()));
+      if (w < h)
+         spec.fSize = size/w;
+      else
+         spec.fSize = size/h;
    } else {
       spec.fSize  = size;
    }
