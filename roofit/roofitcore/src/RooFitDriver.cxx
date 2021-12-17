@@ -243,7 +243,13 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
       }
    }
 
-   for (RooAbsArg const *arg : serverSet) {
+   for (RooAbsArg *arg : serverSet) {
+
+      // We don't need dirty flag propagation for nodes evaluated by the
+      // RooFitDriver, because the driver takes care of deciding which node
+      // needs to be re-evaluated.
+      setOperMode(arg, RooAbsArg::ADirty);
+
       if (absArgNeedsComputation(arg)) {
          if (_dataset.contains(arg)) {
             _dataMapCPU[arg] = _dataset.span(arg);
@@ -326,6 +332,11 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 
    if (nOut == 1) {
       // compute in scalar mode
+
+      // If a node is evaluated in scalar mode, we need the dirty flag propagation.
+      if (_getValInvocations == 1)
+         setOperMode(const_cast<RooAbsArg *>(node), RooAbsArg::Auto);
+
       _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal(&_normSet));
 
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
@@ -359,9 +370,11 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 /// Returns the value of the top node in the computation graph
 double RooFitDriver::getVal()
 {
+   ++_getValInvocations;
+
    // In a cuda fit, use first 3 fits to determine the execution times
    // and the hardware that computes each part of the graph
-   if (_batchMode == RooFit::BatchModeOption::Cuda && ++_getValInvocations <= 3)
+   if (_batchMode == RooFit::BatchModeOption::Cuda && _getValInvocations <= 3)
       markGPUNodes();
 
    for (auto &item : _nodeInfos) {
@@ -444,10 +457,14 @@ void RooFitDriver::handleIntegral(const RooAbsArg *node)
    // For now, we just assume they are scalar and assign them some temporary memory
    if (auto pAbsPdf = dynamic_cast<const RooAbsPdf *>(node)) {
       auto integral = pAbsPdf->getIntegral(_normSet);
-
       std::size_t inputSize = getInputSize(*integral);
 
       if (_integralInfos.count(integral) == 0) {
+         // We don't need dirty flag propagation for nodes evaluated by the
+         // RooFitDriver, because the driver takes care of deciding which node
+         // needs to be re-evaluated.
+         setOperMode(integral, RooAbsArg::ADirty);
+
          auto &info = _integralInfos[integral];
          if (inputSize > 1 && _batchMode == RooFit::BatchModeOption::Cuda) {
             info.copyAfterEvaluation = true;
