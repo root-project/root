@@ -2204,14 +2204,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Double_t saveSize = size;
    Int_t saveFont = fTextFont;
    if (fTextFont%10 > 2) {
-      UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
-                            gPad->XtoAbsPixel(gPad->GetX1()));
-      UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
-                            gPad->YtoAbsPixel(gPad->GetY1()));
-      if (w < h)
-         size = size/w;
-      else
-         size = size/h;
+      size = GetTextSizePercent(size);
       SetTextFont(10*(saveFont/10) + 2);
    }
 
@@ -2496,13 +2489,7 @@ TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const C
 
    TextSpec_t spec;
    spec.fAngle = angle;
-   if (fTextFont%10 == 3) {
-      Double_t hw = TMath::Max((Double_t)gPad->XtoPixel(gPad->GetX2()),
-                               (Double_t)gPad->YtoPixel(gPad->GetY1()));
-      spec.fSize = size/hw;
-   } else {
-      spec.fSize  = size;
-   }
+   spec.fSize  = GetTextSizePercent(size);
    spec.fColor = GetTextColor();
    spec.fFont  = GetTextFont();
    Short_t halign = fTextAlign/10;
@@ -2534,7 +2521,8 @@ Double_t TLatex::GetHeight() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return size of the formula along X in pad coordinates
+/// Return size of the formula along X in pad coordinates when the text precision
+/// is smaller than 3.
 
 Double_t TLatex::GetXsize()
 {
@@ -2621,7 +2609,8 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return size of the formula along Y in pad coordinates
+/// Return size of the formula along Y in pad coordinates when the text precision
+/// is smaller than 3.
 
 Double_t TLatex::GetYsize()
 {
