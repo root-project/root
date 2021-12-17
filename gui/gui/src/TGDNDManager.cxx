@@ -826,7 +826,7 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
       gVirtualX->ChangeProperties(event->fUser[0], event->fUser[3],
                                   event->fUser[2], 8,
                                   (unsigned char *) data, len);
-
+#ifndef R__WIN32
       xevent.fType    = kSelectionNotify;
       xevent.fTime    = event->fTime;
       xevent.fUser[0] = event->fUser[0]; // requestor
@@ -834,7 +834,7 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
       xevent.fUser[2] = event->fUser[2]; // target;
       xevent.fUser[3] = event->fUser[3]; // property;
       gVirtualX->SendEvent(event->fUser[0], &xevent);
-
+#endif
       return kTRUE;
    } else {
       return kFALSE;  // not for us...
