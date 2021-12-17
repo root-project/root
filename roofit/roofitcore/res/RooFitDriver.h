@@ -23,11 +23,27 @@
 #include <chrono>
 #include <memory>
 #include <queue>
+#include <stack>
 #include <unordered_map>
 
 class RooAbsArg;
 class RooAbsCategory;
 class RooAbsData;
+
+// Struct to temporarily change the operation mode of a RooAbsArg until it goes
+// out of scope.
+class ChangeOperModeRAII {
+public:
+   ChangeOperModeRAII(RooAbsArg *arg, RooAbsArg::OperMode opMode) : _arg{arg}, _oldOpMode(arg->operMode())
+   {
+      arg->setOperMode(opMode, /*recurse=*/false);
+   }
+   ~ChangeOperModeRAII() { _arg->setOperMode(_oldOpMode, /*recurse=*/false); }
+
+private:
+   RooAbsArg *_arg = nullptr;
+   RooAbsArg::OperMode _oldOpMode;
+};
 
 namespace ROOT {
 namespace Experimental {
@@ -86,7 +102,11 @@ public:
       {
       }
 
-      ~RooAbsRealWrapper() { if(_ownsDriver) delete _driver; }
+      ~RooAbsRealWrapper()
+      {
+         if (_ownsDriver)
+            delete _driver;
+      }
 
       TObject *clone(const char *newname) const override { return new RooAbsRealWrapper(*this, newname); }
 
@@ -109,7 +129,7 @@ public:
       bool _ownsDriver;
    };
 
-   std::unique_ptr<RooAbsReal> makeAbsRealWrapper(bool ownsDriver=false)
+   std::unique_ptr<RooAbsReal> makeAbsRealWrapper(bool ownsDriver = false)
    {
       return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this, ownsDriver}};
    }
@@ -168,6 +188,15 @@ private:
    void assignToGPU(const RooAbsArg *node);
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
 
+   /// Temporarily change the operation mode of a RooAbsArg until the
+   /// RooFitDriver gets deleted.
+   void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode)
+   {
+      if (opMode != arg->operMode()) {
+         _changeOperModeRAIIs.emplace(arg, opMode);
+      }
+   }
+
    std::string _name;
    std::string _title;
    RooArgSet _parameters;
@@ -189,6 +218,8 @@ private:
 
    // used for preserving resources
    std::vector<double> _nonDerivedValues;
+
+   std::stack<ChangeOperModeRAII> _changeOperModeRAIIs;
 }; // end class RooFitDriver
 
 } // end namespace Experimental
