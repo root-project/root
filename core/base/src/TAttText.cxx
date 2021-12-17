@@ -307,6 +307,29 @@ void TAttText::Copy(TAttText &atttext) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the text in percent of the pad size.
+///
+/// If the font precision is greater than 2, the text size returned is the size in pixel
+/// converted into percent of the pad size, otherwise the size returned is the same as the
+/// size given as input parameter.
+
+Float_t TAttText::GetTextSizePercent(Float_t size)
+{
+   Float_t rsize = size;
+   if (fTextFont%10 > 2 && gPad) {
+      UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
+                            gPad->XtoAbsPixel(gPad->GetX1()));
+      UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
+                            gPad->YtoAbsPixel(gPad->GetY1()));
+      if (w < h)
+         rsize = rsize/w;
+      else
+         rsize = rsize/h;
+   }
+   return rsize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Change current text attributes if necessary.
 
 void TAttText::Modify()
