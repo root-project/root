@@ -36,7 +36,6 @@ else()
   set(nmcxxflags "${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
-  set(nmcxxflags "${CMAKE_CXX_FLAGS_DEBUG}")
   set(nmcxxflags "${nmcxxflags} -D_WIN64")
 endif()
 
