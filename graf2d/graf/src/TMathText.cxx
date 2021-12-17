@@ -489,12 +489,12 @@ void TMathText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t /*angle*/)
    const TString newText = GetTitle();
    const Int_t length = newText.Length();
    const Char_t *text = newText.Data();
-   const Double_t size = GetTextSize();
 
    Double_t x0;
    Double_t y0;
    Double_t x1;
    Double_t y1;
+   Double_t size = GetTextSizePercent(GetTextSize());
 
    GetSize(x0, y0, x1, y1, size, 0, text, length);
    w = (UInt_t)(TMath::Abs(gPad->XtoAbsPixel(x1) - gPad->XtoAbsPixel(x0)));
