@@ -140,6 +140,8 @@ struct RXpmAttributes:XpmAttributes{};
 struct RXSetWindowAttributes:XSetWindowAttributes{};
 struct RVisual:Visual{};
 
+#ifndef __x86_64__
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline void SplitLong(Long_t ll, Long_t &i1, Long_t &i2)
@@ -161,6 +163,8 @@ inline void AsmLong(Long_t i1, Long_t i2, Long_t &ll)
    conv.i[1] = (Int_t) i2;
    ll = conv.l;
 }
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle X11 error.
@@ -1533,10 +1537,13 @@ void TGX11::MapEvent(Event_t &ev, void *xevi, Bool_t tox)
          xev.xclient.message_type = ev.fHandle;
          xev.xclient.format       = ev.fFormat;
          xev.xclient.data.l[0]    = ev.fUser[0];
+#ifndef __x86_64__
          if (sizeof(ev.fUser[0]) > 4) {
             SplitLong(ev.fUser[1], xev.xclient.data.l[1], xev.xclient.data.l[3]);
             SplitLong(ev.fUser[2], xev.xclient.data.l[2], xev.xclient.data.l[4]);
-         } else {
+         } else
+#endif
+         {
             xev.xclient.data.l[1]    = ev.fUser[1];
             xev.xclient.data.l[2]    = ev.fUser[2];
             xev.xclient.data.l[3]    = ev.fUser[3];
@@ -1636,10 +1643,13 @@ void TGX11::MapEvent(Event_t &ev, void *xevi, Bool_t tox)
          ev.fHandle  = xev.xclient.message_type;
          ev.fFormat  = xev.xclient.format;
          ev.fUser[0] = xev.xclient.data.l[0];
+#ifndef __x86_64__
          if (sizeof(ev.fUser[0]) > 4) {
             AsmLong(xev.xclient.data.l[1], xev.xclient.data.l[3], ev.fUser[1]);
             AsmLong(xev.xclient.data.l[2], xev.xclient.data.l[4], ev.fUser[2]);
-         } else {
+         } else
+#endif
+         {
             ev.fUser[1] = xev.xclient.data.l[1];
             ev.fUser[2] = xev.xclient.data.l[2];
             ev.fUser[3] = xev.xclient.data.l[3];
