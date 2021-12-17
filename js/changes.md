@@ -1,5 +1,10 @@
 # JSROOT changelog
 
+## Change in 6.3.x
+1. Fix TEfficiency drawing
+2. Provide TPadPainter.divide method 
+
+
 ## Changes in 6.3.2
 1. Fix bug in TH1 drawing when minimum or/and maximum was configured for histogram
 
