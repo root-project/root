@@ -494,18 +494,7 @@ void TMathText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t /*angle*/)
    Double_t y0;
    Double_t x1;
    Double_t y1;
-
-   Double_t size = GetTextSize();
-   if (fTextFont%10 == 3) {
-      UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
-                            gPad->XtoAbsPixel(gPad->GetX1()));
-      UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
-                            gPad->YtoAbsPixel(gPad->GetY1()));
-      if (w < h)
-         size = size/w;
-      else
-         size = size/h;
-   }
+   Double_t size = GetTextSizePercent(GetTextSize());
 
    GetSize(x0, y0, x1, y1, size, 0, text, length);
    w = (UInt_t)(TMath::Abs(gPad->XtoAbsPixel(x1) - gPad->XtoAbsPixel(x0)));
