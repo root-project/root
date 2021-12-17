@@ -4016,9 +4016,9 @@ int RootClingMain(int argc,
       for (const std::string& Opt : gOptBareClingSink)
          clingArgsC.push_back(Opt.c_str());
 
-      auto interp = llvm::make_unique<cling::Interpreter>(clingArgsC.size(),
-                                                          &clingArgsC[0],
-                                                          llvmResourceDir.c_str());
+      auto interp = std::make_unique<cling::Interpreter>(clingArgsC.size(),
+                                                         &clingArgsC[0],
+                                                         llvmResourceDir.c_str());
       // FIXME: Diagnose when we have misspelled a flag. Currently we show no
       // diagnostic and report exit as success.
       return interp->getDiagnostics().hasFatalErrorOccurred();

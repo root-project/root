@@ -1570,9 +1570,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    if (!EnvOpt.hasValue())
       extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>());
 
-   fInterpreter = llvm::make_unique<cling::Interpreter>(interpArgs.size(),
-                                                        &(interpArgs[0]),
-                                                        llvmResourceDir, extensions);
+   fInterpreter = std::make_unique<cling::Interpreter>(interpArgs.size(),
+                                                       &(interpArgs[0]),
+                                                       llvmResourceDir, extensions);
 
    // Don't check whether modules' files exist.
    fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
@@ -1585,7 +1585,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
    // using llvm::outs. Keeping file descriptor open we will be able to use
    // the results in pipes (Savannah #99234).
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
-   fMetaProcessor = llvm::make_unique<cling::MetaProcessor>(*fInterpreter, fMPOuts);
+   fMetaProcessor = std::make_unique<cling::MetaProcessor>(*fInterpreter, fMPOuts);
 
    RegisterCxxModules(*fInterpreter);
    RegisterPreIncludedHeaders(*fInterpreter);
