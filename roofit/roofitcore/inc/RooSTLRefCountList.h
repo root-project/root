@@ -261,7 +261,7 @@ class RooSTLRefCountList {
     }
 
     Container_t _storage;
-    std::vector<unsigned long> _refCount;
+    std::vector<UInt_t> _refCount;
     mutable std::vector<T*> _orderedStorage; //!
     mutable unsigned long _renameCounterForLastSorting = 0; //!
 
@@ -270,7 +270,7 @@ class RooSTLRefCountList {
     // the counter.
     static std::size_t const* _renameCounter;
 
-    ClassDef(RooSTLRefCountList<T>,2);
+    ClassDef(RooSTLRefCountList<T>,3);
 };
 
 template<class T>
