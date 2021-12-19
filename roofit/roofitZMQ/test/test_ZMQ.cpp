@@ -12,6 +12,8 @@
 
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 
+#include <RooFit/Common.h>
+
 #include "gtest/gtest.h"
 
 #include <unistd.h> // fork, usleep
@@ -139,7 +141,7 @@ TEST_P(AllSocketTypes, forkHandshake)
    }
 }
 
-std::string ipc{"ipc:///tmp/ZMQ_test_fork.ipc"};
+std::string ipc{"ipc://" + RooFit::tmpPath() + "ZMQ_test_fork.ipc"};
 std::string tcp_server{"tcp://127.0.0.1:6660"};
 std::string tcp_client{"tcp://*:6660"};
 auto socket_name_options = ::testing::Values(std::make_pair(tcp_server, tcp_client), std::make_pair(ipc, ipc));
