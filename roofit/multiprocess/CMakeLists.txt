@@ -12,6 +12,8 @@ ROOT_LINKER_LIBRARY(RooFitMultiProcess
         src/JobManager.cxx
         src/Job.cxx
         src/Config.cxx
+    LIBRARIES
+        RooFitCommon
     DEPENDENCIES
         RooFitZMQ
 )
