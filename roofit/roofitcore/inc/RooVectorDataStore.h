@@ -23,6 +23,7 @@
 #include "RooRealVar.h"
 
 #include "ROOT/RStringView.hxx"
+#include "Rtypes.h"
 
 #include <list>
 #include <vector>
@@ -685,14 +686,14 @@ public:
   const Double_t* _extWgtErrHiArray ;    //! External weight array - high error
   const Double_t* _extSumW2Array ;       //! External sum of weights array
 
-  mutable std::size_t _currentWeightIndex{0}; //
+  mutable ULong64_t _currentWeightIndex{0}; //
 
   RooVectorDataStore* _cache ; //! Optimization cache
   RooAbsArg* _cacheOwner ; //! Cache owner
 
   Bool_t _forcedUpdate ; //! Request for forced cache update 
 
-  ClassDefOverride(RooVectorDataStore, 6) // STL-vector-based Data Storage class
+  ClassDefOverride(RooVectorDataStore, 7) // STL-vector-based Data Storage class
 };
 
 
