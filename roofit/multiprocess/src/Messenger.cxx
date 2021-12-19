@@ -14,6 +14,8 @@
 #include "RooFit/MultiProcess/Messenger.h"
 #include "RooFit/MultiProcess/util.h"
 
+#include <RooFit/Common.h>
+
 #include <csignal> // sigprocmask etc
 
 namespace RooFit {
@@ -63,7 +65,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
    sigemptyset(&ppoll_sigmask);
 
    auto makeAddrPrefix = [](pid_t pid) -> std::string {
-      return "ipc:///tmp/" + std::to_string(pid) + "_roofitMP";
+      return "ipc://" + RooFit::tmpPath() + std::to_string(pid) + "_roofitMP";
    };
 
    // high water mark for master-queue sending, which can be quite a busy channel, especially at the start of a run
