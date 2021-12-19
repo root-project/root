@@ -12,8 +12,11 @@
 
 #include "RooFit_ZMQ/ZeroMQSvc.h"
 
+#include <RooFit/Common.h>
+
 #include "gtest/gtest.h"
 
+#include <string>
 #include <unistd.h> // fork, usleep
 
 class HighWaterMarkTest : public ::testing::Test {
@@ -24,18 +27,20 @@ protected:
          child_pid = fork();
       } while (child_pid == -1); // retry if fork fails
 
+      const std::string ipc = "ipc://" + RooFit::tmpPath() + "ZMQ_test_fork_polling_P2C.ipc";
+
       if (child_pid > 0) { // parent
          pusher.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
          if (set_hwm) {
             EXPECT_EQ(zmq_setsockopt(*pusher, ZMQ_SNDHWM, &hwm, sizeof hwm), 0);
          }
-         pusher->bind("ipc:///tmp/ZMQ_test_fork_polling_P2C.ipc");
+         pusher->bind(ipc);
       } else { // child
          puller.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
          if (set_hwm) {
             EXPECT_EQ(zmq_setsockopt(*puller, ZMQ_RCVHWM, &hwm, sizeof hwm), 0);
          }
-         puller->connect("ipc:///tmp/ZMQ_test_fork_polling_P2C.ipc");
+         puller->connect(ipc);
       }
    }
 

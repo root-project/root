@@ -6,6 +6,7 @@
 #include "RooStats/HistFactory/Sample.h"
 #include "RooStats/ModelConfig.h"
 
+#include "RooFit/Common.h"
 #include "RooWorkspace.h"
 #include "RooArgSet.h"
 #include "RooSimultaneous.h"
@@ -292,7 +293,7 @@ TEST_P(HFFixture, ModelProperties) {
 
   // Nice to inspect the model if needed:
   if (false)
-    channelPdf->graphVizTree("/tmp/graphVizTree.dot");
+    channelPdf->graphVizTree((RooFit::tmpPath() + "graphVizTree.dot").c_str());
 
   // Check bin widths
   ASSERT_NE(obs, nullptr);
@@ -596,9 +597,9 @@ TEST_P(HFFixture, Fit) {
     TCanvas canv;
     frame->Draw();
     canv.Draw();
-    canv.SaveAs(("/tmp/HFTest" + std::to_string(GetParam()) + ".png").c_str());
+    canv.SaveAs((RooFit::tmpPath() + "HFTest" + std::to_string(GetParam()) + ".png").c_str());
 
-    channelPdf->graphVizTree(("/tmp/HFTest" + std::to_string(GetParam()) + ".dot").c_str());
+    channelPdf->graphVizTree((RooFit::tmpPath() + "HFTest" + std::to_string(GetParam()) + ".dot").c_str());
   }
 }
 

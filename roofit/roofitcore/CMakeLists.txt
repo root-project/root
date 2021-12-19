@@ -486,6 +486,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     "-writeEmptyRootPCM"
   LIBRARIES
     RooBatchCompute
+    RooFitCommon
   DEPENDENCIES
     Core
     Hist
