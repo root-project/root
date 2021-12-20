@@ -820,7 +820,8 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
 
       if (!place || (place=="")) place = "item";
 
-      let sett = jsrp.getDrawSettings(hitem._kind), handle = sett.handle;
+      let selector = (hitem._kind == "ROOT.TKey" && hitem._more) ? "noinspect" : "",
+          sett = jsrp.getDrawSettings(hitem._kind, selector), handle = sett.handle;
 
       if (place == "icon") {
          let func = null;
