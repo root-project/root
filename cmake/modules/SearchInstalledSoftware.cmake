@@ -1907,6 +1907,10 @@ if (roofit_multiprocess)
     add_subdirectory(builtins/zeromq/libzmq)
   endif()
 
+  # zmq_ppoll is still in the draft API, so enable that transitively
+  target_compile_definitions(libzmq INTERFACE ZMQ_BUILD_DRAFT_API)
+  target_compile_definitions(libzmq INTERFACE ZMQ_NO_EXPORT)
+
   if(NOT builtin_cppzmq)
     message(STATUS "Looking for ZeroMQ C++ bindings (cppzmq)")
     # Clear cache before calling find_package(cppzmq),
@@ -1916,9 +1920,10 @@ if (roofit_multiprocess)
       unset(cppzmq_${suffix} CACHE)
     endforeach()
     if(fail-on-missing)
-      find_package(cppzmq REQUIRED)
+      # we only support MODULE mode fow now to handle version checking ourselves
+      find_package(cppzmq MODULE REQUIRED)
     else()
-      find_package(cppzmq QUIET)
+      find_package(cppzmq MODULE)
       if(NOT cppzmq_FOUND)
         message(STATUS "ZeroMQ C++ bindings not found. Switching on builtin_cppzmq option")
         set(builtin_cppzmq ON CACHE BOOL "Enabled because ZeroMQ C++ bindings not found (${builtin_cppzmq_description})" FORCE)
@@ -1932,8 +1937,6 @@ if (roofit_multiprocess)
   endif()
 
   # zmq_ppoll is still in the draft API, so enable that transitively
-  target_compile_definitions(libzmq INTERFACE ZMQ_BUILD_DRAFT_API)
-  target_compile_definitions(libzmq INTERFACE ZMQ_NO_EXPORT)
   target_compile_definitions(cppzmq INTERFACE ZMQ_BUILD_DRAFT_API)
   target_compile_definitions(cppzmq INTERFACE ZMQ_NO_EXPORT)
 endif (roofit_multiprocess)
