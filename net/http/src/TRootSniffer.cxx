@@ -761,8 +761,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
    } else if (obj->InheritsFrom(TDirectory::Class())) {
       TDirectory *dir = (TDirectory *)obj;
       ScanCollection(rec, dir->GetList(), nullptr, dir->GetListOfKeys());
-   }
-   if (rec.CanExpandItem()) {
+   } else if (rec.CanExpandItem()) {
       ScanObjectMembers(rec, obj->IsA(), (char *)obj);
    }
 }
