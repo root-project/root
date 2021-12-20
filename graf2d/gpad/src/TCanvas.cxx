@@ -1888,10 +1888,10 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    }
 
    TString mname(fname);
-//    out <<"#ifdef __CLING__"<<std::endl;
-//    out <<"#pragma cling optimize(0)"<<std::endl;
-//    out <<"#endif"<<std::endl;
-//    out <<""<<std::endl;
+   out <<"#ifdef __CLING__"<<std::endl;
+   out <<"#pragma cling optimize(0)"<<std::endl;
+   out <<"#endif"<<std::endl;
+   out <<""<<std::endl;
    Int_t p = mname.Last('.');
    Int_t s = mname.Last('/')+1;
 
