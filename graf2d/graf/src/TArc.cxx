@@ -76,13 +76,14 @@ void TArc::Copy(TObject &arc) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this arc with new coordinates.
 
-void TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax,Option_t *option)
+TArc *TArc::DrawArc(Double_t x1, Double_t y1,Double_t r1,Double_t phimin,Double_t phimax,Option_t *option)
 {
    TArc *newarc = new TArc(x1, y1, r1, phimin, phimax);
    TAttLine::Copy(*newarc);
    TAttFill::Copy(*newarc);
    newarc->SetBit(kCanDelete);
    newarc->AppendPad(option);
+   return newarc;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

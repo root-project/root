@@ -237,12 +237,13 @@ void TPave::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pave with new coordinates.
 
-void TPave::DrawPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
-                     Int_t bordersize ,Option_t *option)
+TPave *TPave::DrawPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
+                       Int_t bordersize ,Option_t *option)
 {
    TPave *newpave = new TPave(x1,y1,x2,y2,bordersize,option);
    newpave->SetBit(kCanDelete);
    newpave->AppendPad(option);
+   return newpave;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
