@@ -3808,7 +3808,6 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
       ::Info("TFile::OpenFromCache", "set cache directory using TFile::SetCacheFileDir()");
    } else {
       TUrl fileurl(name);
-      TUrl tagurl;
 
       if ((!strcmp(fileurl.GetProtocol(), "file"))) {
          // it makes no sense to read local files through a file cache
@@ -3954,11 +3953,9 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
                fileurl.SetProtocol("file");
                fileurl.SetFile(cachefilepath);
 
-               tagurl = fileurl;
                TString tagfile;
                tagfile = cachefilepath;
                tagfile += ".ROOT.cachefile";
-               tagurl.SetFile(tagfile);
                // we symlink this file as a ROOT cached file
                gSystem->Symlink(gSystem->BaseName(cachefilepath), tagfile);
                return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
