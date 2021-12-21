@@ -3938,28 +3938,33 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
             // try to fetch the file (disable now the forced caching)
             Bool_t forcedcache = fgCacheFileForce;
             fgCacheFileForce = kFALSE;
-            if (need2copy && !TFile::Cp(name, cachefilepath)) {
-               ::Warning("TFile::OpenFromCache", "you want to read through a cache, but I "
-                         "cannot make a cache copy of %s - CACHEREAD disabled",
-                         cachefilepathbasedir.Data());
-               fgCacheFileForce = forcedcache;
-               if (fgOpenTimeout != 0)
+            if (need2copy) {
+               const auto cachefilepathtmp = cachefilepath + std::to_string(gSystem->GetPid()) + ".tmp";
+               if (!TFile::Cp(name, cachefilepathtmp)) {
+                  ::Warning("TFile::OpenFromCache",
+                            "you want to read through a cache, but I "
+                            "cannot make a cache copy of %s - CACHEREAD disabled",
+                            cachefilepathbasedir.Data());
+                  fgCacheFileForce = forcedcache;
                   return nullptr;
-            } else {
-               fgCacheFileForce = forcedcache;
-               ::Info("TFile::OpenFromCache", "using local cache copy of %s [%s]",
-                       name, cachefilepath.Data());
-               // finally we have the file and can open it locally
-               fileurl.SetProtocol("file");
-               fileurl.SetFile(cachefilepath);
-
-               TString tagfile;
-               tagfile = cachefilepath;
-               tagfile += ".ROOT.cachefile";
-               // we symlink this file as a ROOT cached file
-               gSystem->Symlink(gSystem->BaseName(cachefilepath), tagfile);
-               return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
+               }
+               if (gSystem->AccessPathName(cachefilepath)) // then file _does not_ exist (weird convention)
+                  gSystem->Rename(cachefilepathtmp, cachefilepath);
+               else // another process or thread already wrote a file with the same name while we were copying it
+                  gSystem->Unlink(cachefilepathtmp);
             }
+            fgCacheFileForce = forcedcache;
+            ::Info("TFile::OpenFromCache", "using local cache copy of %s [%s]", name, cachefilepath.Data());
+            // finally we have the file and can open it locally
+            fileurl.SetProtocol("file");
+            fileurl.SetFile(cachefilepath);
+
+            TString tagfile;
+            tagfile = cachefilepath;
+            tagfile += ".ROOT.cachefile";
+            // we symlink this file as a ROOT cached file
+            gSystem->Symlink(gSystem->BaseName(cachefilepath), tagfile);
+            return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
          }
       }
    }
