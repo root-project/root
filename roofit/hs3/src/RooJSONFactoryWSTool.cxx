@@ -128,6 +128,35 @@ bool RooJSONFactoryWSTool::registerExporter(const TClass *key, const RooJSONFact
    return true;
 }
 
+int RooJSONFactoryWSTool::removeImporters(const std::string &needle)
+{
+   std::vector<std::string> toDelete;
+   for (auto &element : RooJSONFactoryWSTool::_importers) {
+      TString name(typeid(*element.second).name());
+      if (name.Contains(needle)) {
+         toDelete.push_back(element.first);
+      }
+   }
+   for (auto &e : toDelete) {
+      _importers.erase(_importers.find(e));
+   }
+   return toDelete.size();
+}
+int RooJSONFactoryWSTool::removeExporters(const std::string &needle)
+{
+   std::vector<const TClass *> toDelete;
+   for (auto &element : RooJSONFactoryWSTool::_exporters) {
+      TString name(typeid(*element.second).name());
+      if (name.Contains(needle)) {
+         toDelete.push_back(element.first);
+      }
+   }
+   for (auto &e : toDelete) {
+      _exporters.erase(_exporters.find(e));
+   }
+   return toDelete.size();
+}
+
 void RooJSONFactoryWSTool::printImporters()
 {
    for (const auto &x : RooJSONFactoryWSTool::_importers) {
@@ -564,8 +593,9 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
 
    auto it = _exporters.find(cl);
    if (it != _exporters.end()) { // check if we have a specific exporter available
-      if (it->second->autoExportDependants())
-         RooJSONFactoryWSTool::exportDependants(func, n);
+      if (it->second->autoExportDependants()) {
+         RooJSONFactoryWSTool::exportDependants(func, _rootnode);
+      }
       auto &elem = n[func->GetName()];
       elem.set_map();
       try {
@@ -600,6 +630,8 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
                    << std::endl;
          return;
       }
+
+      RooJSONFactoryWSTool::exportDependants(func, _rootnode);
 
       auto &elem = n[func->GetName()];
       elem.set_map();
@@ -1201,6 +1233,16 @@ void RooJSONFactoryWSTool::importVariables(const JSONNode &n)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // export all dependants (servers) of a RooAbsArg
+void RooJSONFactoryWSTool::exportDependants(const RooAbsArg *source, JSONNode *n)
+{
+   if (n) {
+      this->exportDependants(source, *n);
+   } else {
+      RooJSONFactoryWSTool::error(
+         "cannot export dependents without a valid root node, only call within the context of 'exportAll'");
+   }
+}
+
 void RooJSONFactoryWSTool::exportDependants(const RooAbsArg *source, JSONNode &n)
 {
    // export all the servers of a given RooAbsArg
@@ -1245,6 +1287,7 @@ void RooJSONFactoryWSTool::exportAll(JSONNode &n)
 {
    // export all ModelConfig objects and attached Pdfs
    RooArgSet main;
+   this->_rootnode = &n;
    for (auto obj : this->_workspace->allGenericObjects()) {
       if (obj->InheritsFrom(RooStats::ModelConfig::Class())) {
          RooStats::ModelConfig *mc = static_cast<RooStats::ModelConfig *>(obj);
@@ -1292,7 +1335,6 @@ void RooJSONFactoryWSTool::exportAll(JSONNode &n)
       if (!pdf)
          continue;
       if ((pdf->getAttribute("toplevel") || pdf->clients().size() == 0) && !main.find(*pdf)) {
-         this->exportDependants(pdf, n);
          main.add(*pdf);
       }
    }
@@ -1316,6 +1358,7 @@ void RooJSONFactoryWSTool::exportAll(JSONNode &n)
                    "empty client list. nothing exported!"
                 << std::endl;
    }
+   this->_rootnode = 0;
 }
 
 Bool_t RooJSONFactoryWSTool::importJSONfromString(const std::string &s)
@@ -1358,7 +1401,7 @@ Bool_t RooJSONFactoryWSTool::exportJSON(std::ostream &os)
    n.writeJSON(os);
    return true;
 }
-Bool_t RooJSONFactoryWSTool::exportJSON(std::string const& filename)
+Bool_t RooJSONFactoryWSTool::exportJSON(std::string const &filename)
 {
    // export the workspace in JSON
    std::ofstream out(filename.c_str());
@@ -1381,7 +1424,7 @@ Bool_t RooJSONFactoryWSTool::exportYML(std::ostream &os)
    n.writeYML(os);
    return true;
 }
-Bool_t RooJSONFactoryWSTool::exportYML(std::string const& filename)
+Bool_t RooJSONFactoryWSTool::exportYML(std::string const &filename)
 {
    // export the workspace in YML
    std::ofstream out(filename.c_str());
@@ -1419,7 +1462,7 @@ Bool_t RooJSONFactoryWSTool::importJSON(std::istream &is)
    }
    return true;
 }
-Bool_t RooJSONFactoryWSTool::importJSON(std::string const& filename)
+Bool_t RooJSONFactoryWSTool::importJSON(std::string const &filename)
 {
    // import a JSON file to the workspace
    std::ifstream infile(filename.c_str());
@@ -1446,7 +1489,7 @@ Bool_t RooJSONFactoryWSTool::importYML(std::istream &is)
    }
    return true;
 }
-Bool_t RooJSONFactoryWSTool::importYML(std::string const& filename)
+Bool_t RooJSONFactoryWSTool::importYML(std::string const &filename)
 {
    // import a YML file to the workspace
    std::ifstream infile(filename.c_str());
