@@ -691,15 +691,55 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove each argument in the input list from our list using remove(const RooAbsArg&).
+/// Remove each argument in the input list from our list.
+/// An exact pointer match is required, not just a match by name.
+/// If `matchByNameOnly` is set, items will be looked up by name. In this case, if
+/// the collection also owns the items, it will delete them.
 /// Return kFALSE in case of problems.
 
-Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly)
+Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t /*silent*/, Bool_t matchByNameOnly)
 {
 
   auto oldSize = _list.size();
-  for (auto item : list._list) {
-    remove(*item, silent, matchByNameOnly);
+  std::vector<const RooAbsArg*> markedItems;
+
+  if (matchByNameOnly) {
+
+    // Instead of doing two passes on the list as in remove(RooAbsArg&), we do
+    // everything in one pass, by using side effects of the predicate.
+    auto nameMatchAndMark = [&list, &markedItems](const RooAbsArg* elm) {
+      if( list.contains(*elm) ) {
+        markedItems.push_back(elm);
+        return true;
+      }
+      return false;
+    };
+
+    _list.erase(std::remove_if(_list.begin(), _list.end(), nameMatchAndMark), _list.end());
+
+    std::set<const RooAbsArg*> toBeDeleted(markedItems.begin(), markedItems.end());
+    if (_ownCont) {
+      for (auto arg : toBeDeleted) {
+        delete arg;
+      }
+    }
+  }
+  else {
+    auto argMatchAndMark = [&list, &markedItems](const RooAbsArg* elm) {
+      if( list.containsInstance(*elm) ) {
+        markedItems.push_back(elm);
+        return true;
+      }
+      return false;
+    };
+
+    _list.erase(std::remove_if(_list.begin(), _list.end(), argMatchAndMark), _list.end());
+  }
+
+  if (_hashAssistedFind && oldSize != _list.size()) {
+    for( auto& var : markedItems ) {
+      _hashAssistedFind->erase(var);
+    }
   }
 
   return oldSize != _list.size();
