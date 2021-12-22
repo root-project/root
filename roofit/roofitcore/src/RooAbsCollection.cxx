@@ -697,7 +697,7 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
 /// the collection also owns the items, it will delete them.
 /// Return kFALSE in case of problems.
 
-Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly)
+Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t /*silent*/, Bool_t matchByNameOnly)
 {
 
   auto oldSize = _list.size();
