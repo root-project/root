@@ -168,7 +168,7 @@ public:
          shapeElems.add(*binning);
          tmp.push_back(binning);
 
-         if (p["statError"].val_bool()) {
+         if (p.has_child("statError") && p["statError"].val_bool()) {
             RooAbsArg *phf = tool->getScopeObject("mcstat");
             if (phf) {
                shapeElems.add(*phf);
@@ -447,6 +447,93 @@ public:
    }
 };
 
+class PiecewiseInterpolationStreamer : public RooJSONFactoryWSTool::Exporter {
+public:
+   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      const PiecewiseInterpolation *pip =
+         static_cast<const PiecewiseInterpolation *>(func);
+      elem["type"] << "interpolation";
+      elem["interpolationCodes"] << pip->interpolationCodes();
+      auto &vars = elem["vars"];
+      vars.set_seq();
+      for (const auto &v : pip->paramList()) {
+         vars.append_child() << v->GetName();
+      }
+
+      auto &nom = elem["nom"];
+      nom << pip->nominalHist()->GetName();
+      
+      auto &high = elem["high"];
+      high.set_seq();
+      for (const auto &v : pip->highList()) {
+         high.append_child() << v->GetName();
+      }
+
+      auto &low = elem["low"];
+      low.set_seq();
+      for (const auto &v : pip->lowList()) {
+         low.append_child() << v->GetName();
+      }
+      return true;
+   }
+};  
+} // namespace
+
+
+namespace {
+class PiecewiseInterpolationFactory : public RooJSONFactoryWSTool::Importer {
+public:
+   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      if (!p.has_child("vars")) {
+         RooJSONFactoryWSTool::error("no vars of '" + name + "'");
+      }
+      if (!p.has_child("high")) {
+         RooJSONFactoryWSTool::error("no high variations of '" + name + "'");
+      }
+      if (!p.has_child("low")) {
+         RooJSONFactoryWSTool::error("no low variations of '" + name + "'");
+      }
+      if (!p.has_child("nom")) {
+         RooJSONFactoryWSTool::error("no nominal variation of '" + name + "'");
+      }
+
+      std::string nomname(p["nom"].val());
+      RooAbsReal* nominal = static_cast<RooAbsReal*>(tool->workspace()->obj(nomname.c_str()));
+      
+      RooArgList vars;
+      for(const auto& d:p["vars"].children()){
+        std::string objname(RooJSONFactoryWSTool::name(d));
+        RooRealVar* obj = tool->workspace()->var(objname.c_str());
+        vars.add(*obj);
+      }
+      RooArgList high;
+      for(const auto& d:p["high"].children()){
+        std::string objname(RooJSONFactoryWSTool::name(d));
+        RooAbsReal* obj = static_cast<RooAbsReal*>(tool->workspace()->obj(objname.c_str()));
+        high.add(*obj);
+      }
+      RooArgList low;
+      for(const auto& d:p["low"].children()){
+        std::string objname(RooJSONFactoryWSTool::name(d));
+        RooAbsReal* obj = static_cast<RooAbsReal*>(tool->workspace()->obj(objname.c_str()));
+        low.add(*obj);
+      }
+
+      PiecewiseInterpolation pip(name.c_str(), name.c_str(), *nominal, low, high, vars);
+
+      if(p.has_child("interpolationCodes")){
+        for(size_t i=0; i<vars.size(); ++i){
+          pip.setInterpCode(*static_cast<RooAbsReal*>(vars.at(i)),p["interpolationCodes"][i].val_int());
+        }
+      }
+      
+      tool->workspace()->import(pip);
+      return true;
+   }
+};
 } // namespace
 
 namespace {
@@ -633,8 +720,11 @@ STATIC_EXECUTE(
 
    RooJSONFactoryWSTool::registerImporter("histfactory", new RooRealSumPdfFactory());
    RooJSONFactoryWSTool::registerImporter("histogram", new RooHistogramFactory());
+   RooJSONFactoryWSTool::registerImporter("interpolation", new PiecewiseInterpolationFactory());   
    RooJSONFactoryWSTool::registerExporter(RooStats::HistFactory::FlexibleInterpVar::Class(),
                                           new FlexibleInterpVarStreamer());
+   RooJSONFactoryWSTool::registerExporter(PiecewiseInterpolation::Class(),
+                                          new PiecewiseInterpolationStreamer());
    RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new HistFactoryStreamer());
 
 )
