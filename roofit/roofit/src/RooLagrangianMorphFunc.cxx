@@ -2043,6 +2043,26 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name,
   TRACE_CREATE
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// constructor with proper arguments
+RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const char *filename,
+                                               const char *observableName, const RooArgSet &couplings,
+                                               const RooArgSet &folders)
+   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE),
+     _operators("operators", "set of operators", this, kTRUE, kFALSE),
+     _observables("observables", "morphing observables", this, kTRUE, kFALSE),
+     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE), _curNormSet(0)
+{
+   this->_config.fileName = filename;
+   this->_config.observableName = observableName;
+   this->_config.couplings.add(couplings);
+   this->addFolders(folders);
+   this->init();
+   this->setup(false);
+
+   TRACE_CREATE
+}
+
 /*////////////////////////////////////////////////////////////////////////////////
 /// protected constructor with proper arguments
 

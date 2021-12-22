@@ -101,6 +101,8 @@ public:
   };
 
   RooLagrangianMorphFunc();
+  RooLagrangianMorphFunc(const char *name, const char *title, const char *filename, const char *observableName,
+                          const RooArgSet &couplings, const RooArgSet &inputs);
   RooLagrangianMorphFunc(const char *name, const char *title,
                          const Config &config);
   RooLagrangianMorphFunc(const RooLagrangianMorphFunc &other,
