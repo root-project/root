@@ -44,9 +44,57 @@ TEST(RooFitHS3, RooArgusBG)
    RooAddPdf model("model", "g+a", RooArgList(signalModel, background), RooArgList(nsig, nbkg));
 
    std::string rootetcPath = gSystem->Getenv("ROOTSYS");
-   RooJSONFactoryWSTool::loadExportKeys(rootetcPath + "/etc/root/RooFitHS3_wsexportkeys.json");
+   RooJSONFactoryWSTool::loadExportKeys(rootetcPath + "/etc/RooFitHS3_wsexportkeys.json");
    RooWorkspace work;
    work.import(model);
    RooJSONFactoryWSTool tool(work);
    tool.exportJSON("argus.json");
 };
+
+#include "RooRealVar.h"
+#include "RooSimultaneous.h"
+#include "RooProdPdf.h"
+#include "RooCategory.h"
+
+TEST(RooFitHS3, SimultaneousGaussians)
+{
+   using namespace RooFit;
+
+   // Import keys and factory expressions files for the RooJSONFactoryWSTool.
+   std::string rootetcPath = gSystem->Getenv("ROOTSYS");
+   RooJSONFactoryWSTool::loadExportKeys(rootetcPath + "/etc/RooFitHS3_wsexportkeys.json");
+   RooJSONFactoryWSTool::loadFactoryExpressions(rootetcPath + "/etc/RooFitHS3_wsfactoryexpressions.json");
+
+   // Create a test model: RooSimultaneous with Gaussian in one component, and
+   // product of two Gaussians in the other.
+   RooRealVar x("x", "x", -8, 8);
+   RooRealVar mean("mean", "mean", 0, -8, 8);
+   RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
+   RooGaussian g1("g1", "g1", x, mean, sigma);
+   RooGaussian g2("g2", "g2", x, mean, RooConst(0.3));
+   RooProdPdf model("model", "model", RooArgList{g1, g2});
+   RooGaussian model_ctl("model_ctl", "model_ctl", x, mean, sigma);
+   RooCategory sample("sample", "sample", {{"physics", 0}, {"control", 1}});
+   RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
+   simPdf.addPdf(model, "physics");
+   simPdf.addPdf(model_ctl, "control");
+
+   // Export to JSON
+   {
+      RooWorkspace ws{"workspace"};
+      ws.import(simPdf);
+      RooJSONFactoryWSTool tool{ws};
+      tool.exportJSON("simPdf.json");
+      // Output can be pretty-printed with `python -m json.tool simPdf.json`
+   }
+
+   // Import JSON
+   {
+      RooWorkspace ws{"workspace"};
+      RooJSONFactoryWSTool tool{ws};
+      tool.importJSON("simPdf.json");
+
+      ASSERT_TRUE(ws.pdf("g1"));
+      ASSERT_TRUE(ws.pdf("g2"));
+   }
+}
