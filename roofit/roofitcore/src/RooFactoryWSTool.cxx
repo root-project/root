@@ -2070,7 +2070,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
           if (parts.size() == 2){
             ft.ws().arg(parts[0].c_str())->setAttribute("NP",atoi(parts[1].c_str()));
           }
-          else throw string(Form("%s::create() ERROR: unknown token %s encountered, check input provided for %s",instName,subarg));
+          else throw string(Form("%s::create() ERROR: unknown token %s encountered, check input provided for %s",instName,subarg.c_str(), pargv[i].c_str()));
         }
       }
       else {
@@ -2079,7 +2079,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
           string expr = ft.processExpression(subargs[0].c_str());
           strlcat(pargsmorph, subargs[0].c_str(),BUFFER_SIZE);
         }
-        else throw string(Form("Incorrect number of arguments in %s, have %d, expect 1",pargv[i],(Int_t)subargs.size())) ;
+        else throw string(Form("Incorrect number of arguments in %s, have %d, expect 1",pargv[i].c_str(),(Int_t)subargs.size())) ;
       }
     }
     ft.createArg("RooLagrangianMorphFunc",instName, pargsmorph);
