@@ -42,6 +42,9 @@ public:
   // Debugging
   void dumpFormula() { formula().dump() ; }
 
+  const TString& expression() const { return _formExpr; }
+  const RooListProxy& dependents() const { return _actualVars; }  
+
 protected:
 
   RooFormula& formula() const ;
