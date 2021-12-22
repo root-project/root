@@ -29,6 +29,12 @@
             "high"
         ]
     },
+    "sum": {
+        "class": "RooAddition",
+        "arguments": [
+            "summands"
+        ]
+    },    
     "sumpdf": {
         "class": "RooRealSumPdf",
         "arguments": [

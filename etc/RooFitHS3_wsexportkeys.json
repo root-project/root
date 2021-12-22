@@ -49,6 +49,12 @@
             "coefficients": "coefficients"
         }
     },
+    "RooAddition": {
+        "type": "sum",
+        "proxies": {
+            "set": "summands"
+        }
+    },    
     "RooArgusBG": {
         "type": "ARGUS",
         "proxies": {
