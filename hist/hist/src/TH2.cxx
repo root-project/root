@@ -890,13 +890,13 @@ void TH2::DoFitSlices(bool onX,
       // nentries can be the effective entries and it could be a very small number but not zero!
       Double_t nentries = hp->GetEntries();
       if ( nentries <= 0 || nentries < cut) {
-         if (!opt.Contains("Q"))
+         if (!opt.Contains("q"))
                Info("DoFitSlices","Slice %d skipped, the number of entries is zero or smaller than the given cut value, n=%f",bin,nentries);
          continue;
       }
       f1->SetParameters(parsave);
       Int_t binOn = hlist[0]->FindBin(outerAxis.GetBinCenter(bin+ngroup/2));
-      if (!opt.Contains("Q"))
+      if (!opt.Contains("q"))
          Info("DoFitSlices","Slice fit %d (%f,%f)",binOn,hlist[0]->GetXaxis()->GetBinLowEdge(binOn),hlist[0]->GetXaxis()->GetBinUpEdge(binOn));
       hp->Fit(f1,opt.Data());
       Int_t npfits = f1->GetNumberFitPoints();
@@ -908,7 +908,7 @@ void TH2::DoFitSlices(bool onX,
          hchi2->SetBinContent(binOn,f1->GetChisquare()/(npfits-npar));
       }
       else {
-         if (!opt.Contains("Q"))
+         if (!opt.Contains("q"))
             Info("DoFitSlices","Fitted slice %d skipped, the number of fitted points is too small, n=%d",bin,npfits);
       }
       // don't need to delete hp. If histogram has the same name it is re-used in TH2::Projection
