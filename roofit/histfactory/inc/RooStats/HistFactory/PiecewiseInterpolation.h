@@ -59,7 +59,7 @@ public:
 
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
 
-  void setInterpCode(RooAbsReal& param, int code);
+  void setInterpCode(RooAbsReal& param, int code, bool silent=false);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
