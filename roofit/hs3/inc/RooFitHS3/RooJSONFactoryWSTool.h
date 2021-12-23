@@ -23,7 +23,7 @@ class JSONNode;
 } // namespace RooFit
 
 class RooJSONFactoryWSTool {
-public:
+public:  
    class Importer {
    public:
       virtual bool importPdf(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
@@ -59,8 +59,11 @@ protected:
       std::map<std::string, RooAbsArg *> objects;
    };
    mutable Scope _scope;
+   mutable std::vector<std::string> _dependencyErrors;
    RooFit::Detail::JSONNode* _rootnode = 0;
 
+   void dependencyError(const std::string& parent, const std::string& child) const;
+  
    RooWorkspace *_workspace;
    static ImportMap _importers;
    static ExportMap _exporters;
@@ -71,6 +74,19 @@ protected:
    RooRealVar *createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
 public:
+
+   class DependencyMissingError : public std::exception {
+     std::string _parent, _child, _message;
+   public:
+     DependencyMissingError(const std::string& p, const std::string& c) : _parent(p), _child(c) {
+       _message = "object '"+_parent+"' is missing dependency '"+_child+"'";
+     };
+     const std::string& parent() const { return _parent; }
+     const std::string& child() const { return _child; }    
+     virtual const char* what() const noexcept override { return _message.c_str(); }
+   };
+   friend DependencyMissingError;
+  
    static std::string name(const RooFit::Detail::JSONNode &n);
 
    RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}

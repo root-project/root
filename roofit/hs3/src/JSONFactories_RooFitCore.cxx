@@ -27,7 +27,7 @@ public:
       if (!p.has_child("formula")) {
          RooJSONFactoryWSTool::error("no formula given for '" + name + "'");
       }
-      RooArgSet dependents;
+      RooArgList dependents;
       for(const auto& d:p["dependents"].children()){
         std::string objname(RooJSONFactoryWSTool::name(d));
         TObject* obj = tool->workspace()->obj(objname.c_str());
@@ -37,7 +37,7 @@ public:
       }
       TString formula(p["formula"].val());
       RooGenericPdf thepdf(name.c_str(), formula.Data(), dependents);
-      tool->workspace()->import(thepdf);
+      tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
 };
@@ -52,22 +52,22 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooArgSet factors;
-      if (!p.has_child("factors")) {
+      if (!p.has_child("pdfs")) {
          RooJSONFactoryWSTool::error("no pdfs of '" + name + "'");
       }
-      if (!p["factors"].is_seq()) {
+      if (!p["pdfs"].is_seq()) {
          RooJSONFactoryWSTool::error("pdfs '" + name + "' are not a list.");
       }
       for (const auto &comp : p["factors"].children()) {
          std::string pdfname(comp.val());
          RooAbsPdf *pdf = tool->workspace()->pdf(pdfname.c_str());
          if (!pdf) {
-            RooJSONFactoryWSTool::error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
+           throw RooJSONFactoryWSTool::DependencyMissingError(name,pdfname);                      
          }
          factors.add(*pdf);
       }
       RooProdPdf prod(name.c_str(), name.c_str(), factors);
-      tool->workspace()->import(prod);
+      tool->workspace()->import(prod, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
 };
@@ -99,7 +99,7 @@ public:
          std::string pdfname(comp.val());
          RooAbsPdf *pdf = tool->workspace()->pdf(pdfname.c_str());
          if (!pdf) {
-            RooJSONFactoryWSTool::error("unable to obtain component '" + pdfname + "' of '" + name + "'.");
+           throw RooJSONFactoryWSTool::DependencyMissingError(name,pdfname);                                 
          }
          pdfs.add(*pdf);
       }
@@ -107,12 +107,12 @@ public:
          std::string coefname(comp.val());
          RooAbsArg *coef = tool->workspace()->arg(coefname.c_str());
          if (!coef) {
-            RooJSONFactoryWSTool::error("unable to obtain component '" + coefname + "' of '" + name + "'.");
+           throw RooJSONFactoryWSTool::DependencyMissingError(name,coefname);                                            
          }
          coefs.add(*coef);
       }
       RooAddPdf add(name.c_str(), name.c_str(), pdfs, coefs);
-      tool->workspace()->import(add);
+      tool->workspace()->import(add, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
 };
@@ -138,13 +138,13 @@ public:
          std::string pdfname(comp.has_val() ? comp.val() : RooJSONFactoryWSTool::name(comp));
          RooAbsPdf *pdf = tool->workspace()->pdf(pdfname.c_str());
          if (!pdf) {
-            RooJSONFactoryWSTool::error("unable to obtain component '" + pdfname + "' of '" + name + "'");
+           throw RooJSONFactoryWSTool::DependencyMissingError(name,pdfname);                                                       
          }
          components[catname] = pdf;
          cat.defineType(catname.c_str());
       }
       RooSimultaneous simpdf(name.c_str(), name.c_str(), components, cat);
-      tool->workspace()->import(simpdf);
+      tool->workspace()->import(simpdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
 };
@@ -160,22 +160,31 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
 
+      if(!p.has_child("pdf")){
+        RooJSONFactoryWSTool::error("no pdf given in '" + name + "'");
+      }      
       std::string pdfname(p["pdf"].val());
       RooAbsPdf *pdf = tool->workspace()->pdf(pdfname.c_str());
       if (!pdf) {
-        RooJSONFactoryWSTool::error("unable to obtain component '" + pdfname + "' of '" + name + "'");
+        throw RooJSONFactoryWSTool::DependencyMissingError(name,pdfname);                                                               
       }
-      
+
+      if(!p.has_child("observable")){
+        RooJSONFactoryWSTool::error("no observable given in '" + name + "'");
+      }
       std::string obsname(p["observable"].val());
       RooRealVar *obs = tool->workspace()->var(obsname.c_str());
       if (!obs) {
-        RooJSONFactoryWSTool::error("unable to obtain observable '" + obsname + "' of '" + name + "'");
+        throw RooJSONFactoryWSTool::DependencyMissingError(name,obsname);                                                               
       }
-      
-      double epsilon(p["epsilon"].val_float());            
 
+      if(!p.has_child("epsilon")){
+        RooJSONFactoryWSTool::error("no epsilon given in '" + name + "'");
+      }            
+      double epsilon(p["epsilon"].val_float());            
+      
       RooBinSamplingPdf thepdf(name.c_str(), name.c_str(), *obs, *pdf, epsilon); 
-      tool->workspace()->import(thepdf);
+      tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       
       return true;
    }
@@ -240,6 +249,7 @@ public:
       const RooBinSamplingPdf *pdf = static_cast<const RooBinSamplingPdf *>(func);     
       elem["type"] << "binsampling";
       elem["pdf"] << pdf->pdf().GetName();
+      elem["observable"] << pdf->pdf().GetName();      
       elem["epsilon"] << pdf->epsilon(); 
       return true;
    }
