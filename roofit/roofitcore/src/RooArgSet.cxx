@@ -104,8 +104,10 @@ void RooArgSet::cleanup()
 
 void* RooArgSet::operator new (size_t bytes)
 {
-  //This will fail if a derived class uses this operator
-  assert(sizeof(RooArgSet) == bytes);
+  // To make sure that derived classes don't use this operator
+  if (bytes != sizeof(RooArgSet)) {
+    return ::operator new(bytes);
+  }
 
   return memPool()->allocate(bytes);
 }
@@ -130,8 +132,6 @@ void RooArgSet::operator delete (void* ptr)
   // Decrease use count in pool that ptr is on
   if (memPool()->deallocate(ptr))
     return;
-
-  std::cerr << __func__ << " " << ptr << " is not in any of the pools." << std::endl;
 
   // Not part of any pool; use global op delete:
   ::operator delete(ptr);
