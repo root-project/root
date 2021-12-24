@@ -60,7 +60,7 @@ protected:
    };
    mutable Scope _scope;
    mutable std::vector<std::string> _dependencyErrors;
-   RooFit::Detail::JSONNode* _rootnode = 0;
+   RooFit::Detail::JSONNode *_rootnode = 0;
 
    void dependencyError(const std::string& parent, const std::string& child) const;
   
@@ -95,7 +95,7 @@ public:
    static bool registerImporter(const std::string &key, const RooJSONFactoryWSTool::Importer *f);
    static int removeImporters(const std::string &needle);
    static bool registerExporter(const TClass *key, const RooJSONFactoryWSTool::Exporter *f);
-   static int removeExporters(const std::string &needle);    
+   static int removeExporters(const std::string &needle);
    static void printImporters();
    static void printExporters();
 
@@ -157,12 +157,12 @@ public:
    void setScopeObject(const std::string &key, RooAbsArg *obj);
    void clearScope();
 
-   bool importJSON(std::string const& filename);
-   bool importYML(std::string const& filename);
+   bool importJSON(std::string const &filename);
+   bool importYML(std::string const &filename);
    bool importJSON(std::istream &os);
    bool importYML(std::istream &os);
-   bool exportJSON(std::string const& fileName);
-   bool exportYML(std::string const& fileName);
+   bool exportJSON(std::string const &fileName);
+   bool exportYML(std::string const &fileName);
    bool exportJSON(std::ostream &os);
    bool exportYML(std::ostream &os);
 
@@ -194,6 +194,6 @@ public:
 
    void exportAll(RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode &n);
-   void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode* n);  
+   void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode *n);
 };
 #endif
