@@ -74,6 +74,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooClassFactory.h
     RooCmdArg.h
     RooCmdConfig.h
+    RooCollectionProxy.h
     RooCompositeDataStore.h
     RooConstraintSum.h
     RooConstVar.h
@@ -372,7 +373,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooLinkedListElem.cxx
     src/RooLinTransBinning.cxx
     src/RooList.cxx
-    src/RooListProxy.cxx
     src/RooMappedCategory.cxx
     src/RooMCIntegrator.cxx
     src/RooMCStudy.cxx
@@ -435,7 +435,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooSegmentedIntegrator1D.cxx
     src/RooSegmentedIntegrator2D.cxx
     src/RooSentinel.cxx
-    src/RooSetProxy.cxx
     src/RooSharedProperties.cxx
     src/RooSimGenContext.cxx
     src/RooSimPdfBuilder.cxx
