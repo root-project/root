@@ -32,6 +32,9 @@ ROOT_ADD_GTEST(testProxiesAndCategories testProxiesAndCategories.cxx
                    ${CMAKE_CURRENT_SOURCE_DIR}/categories_v621.root
                    ${CMAKE_CURRENT_SOURCE_DIR}/categories_v622.root
                    ${CMAKE_CURRENT_SOURCE_DIR}/categories_v624.root)
+ROOT_ADD_GTEST(testRooCollectionProxy testRooCollectionProxy.cxx
+  LIBRARIES RooFitCore
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooCollectionProxy_v626.root)
 ROOT_ADD_GTEST(testRooRealVar testRooRealVar.cxx LIBRARIES RooFitCore
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/testRooRealVar_data1.root)
 
