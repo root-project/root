@@ -50,8 +50,10 @@ class RooAbsData ;
 class RooAbsDataStore ;
 class RooAbsProxy ;
 class RooArgProxy ;
-class RooSetProxy ;
-class RooListProxy ;
+template<class RooCollection_t>
+class RooCollectionProxy;
+using RooSetProxy = RooCollectionProxy<RooArgSet>;
+using RooListProxy = RooCollectionProxy<RooArgList>;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
 
@@ -663,8 +665,8 @@ private:
   // Proxy management
   friend class RooAddModel ;
   friend class RooArgProxy ;
-  friend class RooSetProxy ;
-  friend class RooListProxy ;
+  template<class RooCollection_t>
+  friend class RooCollectionProxy;
   friend class RooObjectFactory ;
   friend class RooHistPdf ;
   friend class RooHistFunc ;
