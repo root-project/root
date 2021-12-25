@@ -3,7 +3,6 @@
 #include <RooDataHist.h>
 #include <RooWorkspace.h>
 
-
 #include "JSONInterface.h"
 #include "static_execute.h"
 
@@ -28,12 +27,12 @@ public:
          RooJSONFactoryWSTool::error("no formula given for '" + name + "'");
       }
       RooArgList dependents;
-      for(const auto& d:p["dependents"].children()){
-        std::string objname(RooJSONFactoryWSTool::name(d));
-        TObject* obj = tool->workspace()->obj(objname.c_str());
-        if(obj->InheritsFrom(RooAbsArg::Class())){
-          dependents.add(*static_cast<RooAbsArg*>(obj));
-        }
+      for (const auto &d : p["dependents"].children()) {
+         std::string objname(RooJSONFactoryWSTool::name(d));
+         TObject *obj = tool->workspace()->obj(objname.c_str());
+         if (obj->InheritsFrom(RooAbsArg::Class())) {
+            dependents.add(*static_cast<RooAbsArg *>(obj));
+         }
       }
       TString formula(p["formula"].val());
       RooGenericPdf thepdf(name.c_str(), formula.Data(), dependents);
@@ -58,12 +57,9 @@ public:
       if (!p["pdfs"].is_seq()) {
          RooJSONFactoryWSTool::error("pdfs '" + name + "' are not a list.");
       }
-      for (const auto &comp : p["factors"].children()) {
+      for (const auto &comp : p["pdfs"].children()) {
          std::string pdfname(comp.val());
-         RooAbsPdf *pdf = tool->workspace()->pdf(pdfname.c_str());
-         if (!pdf) {
-           throw RooJSONFactoryWSTool::DependencyMissingError(name,pdfname);                      
-         }
+         RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
          factors.add(*pdf);
       }
       RooProdPdf prod(name.c_str(), name.c_str(), factors);
@@ -97,18 +93,12 @@ public:
       }
       for (const auto &comp : p["summands"].children()) {
          std::string pdfname(comp.val());
-         RooAbsPdf *pdf = tool->workspace()->pdf(pdfname.c_str());
-         if (!pdf) {
-           throw RooJSONFactoryWSTool::DependencyMissingError(name,pdfname);                                 
-         }
+         RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
          pdfs.add(*pdf);
       }
       for (const auto &comp : p["coefficients"].children()) {
          std::string coefname(comp.val());
-         RooAbsArg *coef = tool->workspace()->arg(coefname.c_str());
-         if (!coef) {
-           throw RooJSONFactoryWSTool::DependencyMissingError(name,coefname);                                            
-         }
+         RooAbsReal *coef = tool->request<RooAbsReal>(coefname, name);
          coefs.add(*coef);
       }
       RooAddPdf add(name.c_str(), name.c_str(), pdfs, coefs);
@@ -119,7 +109,7 @@ public:
 } // namespace
 
 #include <RooSimultaneous.h>
-#include <RooCategory.h>  
+#include <RooCategory.h>
 
 namespace {
 class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer {
@@ -132,14 +122,12 @@ public:
       }
       tool->importPdfs(p["channels"]);
       std::map<std::string, RooAbsPdf *> components;
-      RooCategory cat("channelCat", "channelCat");
+      std::string indexname(p["index"].val());
+      RooCategory cat(indexname.c_str(), indexname.c_str());
       for (const auto &comp : p["channels"].children()) {
          std::string catname(RooJSONFactoryWSTool::name(comp));
          std::string pdfname(comp.has_val() ? comp.val() : RooJSONFactoryWSTool::name(comp));
-         RooAbsPdf *pdf = tool->workspace()->pdf(pdfname.c_str());
-         if (!pdf) {
-           throw RooJSONFactoryWSTool::DependencyMissingError(name,pdfname);                                                       
-         }
+         RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
          components[catname] = pdf;
          cat.defineType(catname.c_str());
       }
@@ -160,32 +148,32 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
 
-      if(!p.has_child("pdf")){
-        RooJSONFactoryWSTool::error("no pdf given in '" + name + "'");
-      }      
-      std::string pdfname(p["pdf"].val());
-      RooAbsPdf *pdf = tool->workspace()->pdf(pdfname.c_str());
-      if (!pdf) {
-        throw RooJSONFactoryWSTool::DependencyMissingError(name,pdfname);                                                               
+      if (!p.has_child("pdf")) {
+         RooJSONFactoryWSTool::error("no pdf given in '" + name + "'");
       }
+      std::string pdfname(p["pdf"].val());
+      RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
 
-      if(!p.has_child("observable")){
-        RooJSONFactoryWSTool::error("no observable given in '" + name + "'");
+      if (!p.has_child("observable")) {
+         RooJSONFactoryWSTool::error("no observable given in '" + name + "'");
       }
       std::string obsname(p["observable"].val());
-      RooRealVar *obs = tool->workspace()->var(obsname.c_str());
-      if (!obs) {
-        throw RooJSONFactoryWSTool::DependencyMissingError(name,obsname);                                                               
+      RooRealVar *obs = tool->request<RooRealVar>(obsname, name);
+
+      if (!pdf->dependsOn(*obs)) {
+         pdf->Print("t");
+         RooJSONFactoryWSTool::error("pdf '" + pdfname + "' does not depend on observable '" + obsname +
+                                     "' as indicated by parent RooBinSamplingPdf '" + name + "', please check!");
       }
 
-      if(!p.has_child("epsilon")){
-        RooJSONFactoryWSTool::error("no epsilon given in '" + name + "'");
-      }            
-      double epsilon(p["epsilon"].val_float());            
-      
-      RooBinSamplingPdf thepdf(name.c_str(), name.c_str(), *obs, *pdf, epsilon); 
+      if (!p.has_child("epsilon")) {
+         RooJSONFactoryWSTool::error("no epsilon given in '" + name + "'");
+      }
+      double epsilon(p["epsilon"].val_float());
+
+      RooBinSamplingPdf thepdf(name.c_str(), name.c_str(), *obs, *pdf, epsilon);
       tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-      
+
       return true;
    }
 };
@@ -203,6 +191,7 @@ public:
    {
       const RooSimultaneous *sim = static_cast<const RooSimultaneous *>(func);
       elem["type"] << "simultaneous";
+      elem["index"] << sim->indexCat().GetName();
       auto &channels = elem["channels"];
       channels.set_map();
       const auto &indexCat = sim->indexCat();
@@ -219,7 +208,7 @@ public:
 } // namespace
 
 #include <RooHistFunc.h>
-#include <TH1.h>  
+#include <TH1.h>
 
 namespace {
 class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
@@ -246,11 +235,11 @@ class RooBinSamplingPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      const RooBinSamplingPdf *pdf = static_cast<const RooBinSamplingPdf *>(func);     
+      const RooBinSamplingPdf *pdf = static_cast<const RooBinSamplingPdf *>(func);
       elem["type"] << "binsampling";
       elem["pdf"] << pdf->pdf().GetName();
-      elem["observable"] << pdf->pdf().GetName();      
-      elem["epsilon"] << pdf->epsilon(); 
+      elem["observable"] << pdf->observable().GetName();
+      elem["epsilon"] << pdf->epsilon();
       return true;
    }
 };
@@ -263,11 +252,11 @@ class RooProdPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      const RooProdPdf *pdf = static_cast<const RooProdPdf *>(func);     
+      const RooProdPdf *pdf = static_cast<const RooProdPdf *>(func);
       elem["type"] << "pdfprod";
-      auto& factors = elem["pdfs"];
-      for(const auto& f:pdf->pdfList()){
-        factors.append_child() << f->GetName();
+      auto &factors = elem["pdfs"];
+      for (const auto &f : pdf->pdfList()) {
+         factors.append_child() << f->GetName();
       }
       return true;
    }
@@ -281,12 +270,12 @@ class RooGenericPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      const RooGenericPdf *pdf = static_cast<const RooGenericPdf *>(func);     
+      const RooGenericPdf *pdf = static_cast<const RooGenericPdf *>(func);
       elem["type"] << "genericpdf";
       elem["formula"] << pdf->expression().Data();
-      auto& factors = elem["dependents"];
-      for(const auto& f:pdf->dependents()){
-        factors.append_child() << f->GetName();
+      auto &factors = elem["dependents"];
+      for (const auto &f : pdf->dependents()) {
+         factors.append_child() << f->GetName();
       }
       return true;
    }
@@ -301,16 +290,14 @@ namespace {
 STATIC_EXECUTE(
 
    RooJSONFactoryWSTool::registerImporter("pdfprod", new RooProdPdfFactory());
-   RooJSONFactoryWSTool::registerImporter("genericpdf", new RooGenericPdfFactory());   
-   RooJSONFactoryWSTool::registerImporter("binsampling", new RooBinSamplingPdfFactory());   
+   RooJSONFactoryWSTool::registerImporter("genericpdf", new RooGenericPdfFactory());
+   RooJSONFactoryWSTool::registerImporter("binsampling", new RooBinSamplingPdfFactory());
    RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory());
    RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory());
 
-   RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new RooProdPdfStreamer());   
+   RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new RooProdPdfStreamer());
    RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(), new RooSimultaneousStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooBinSamplingPdf::Class(), new RooBinSamplingPdfStreamer());   
+   RooJSONFactoryWSTool::registerExporter(RooBinSamplingPdf::Class(), new RooBinSamplingPdfStreamer());
    RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(), new RooHistFuncStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooGenericPdf::Class(), new RooGenericPdfStreamer());   
-)
+   RooJSONFactoryWSTool::registerExporter(RooGenericPdf::Class(), new RooGenericPdfStreamer());)
 } // namespace
-

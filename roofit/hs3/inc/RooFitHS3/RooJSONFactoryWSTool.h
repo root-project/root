@@ -8,6 +8,7 @@
 
 class RooAbsArg;
 class RooAbsReal;
+class RooAbsPdf;
 class RooDataHist;
 class RooDataSet;
 class RooRealVar;
@@ -59,15 +60,16 @@ protected:
       std::map<std::string, RooAbsArg *> objects;
    };
    mutable Scope _scope;
-   mutable std::vector<std::string> _dependencyErrors;
-   RooFit::Detail::JSONNode *_rootnode = 0;
+   const RooFit::Detail::JSONNode *_rootnode_input = 0;
+   RooFit::Detail::JSONNode *_rootnode_output = 0;  
 
-   void dependencyError(const std::string& parent, const std::string& child) const;
+   RooFit::Detail::JSONNode& orootnode();
+   const RooFit::Detail::JSONNode& irootnode() const;  
+
   
    RooWorkspace *_workspace;
    static ImportMap _importers;
    static ExportMap _exporters;
-   void prepare();
    std::map<std::string, RooAbsData *> loadData(const RooFit::Detail::JSONNode &n);
    RooDataSet *unbinned(RooDataHist *hist);
    RooRealVar *getWeightVar(const char *name);
@@ -75,20 +77,28 @@ protected:
 
 public:
 
-   class DependencyMissingError : public std::exception {
-     std::string _parent, _child, _message;
+   class MissingRootnodeError : public std::exception {
    public:
-     DependencyMissingError(const std::string& p, const std::string& c) : _parent(p), _child(c) {
-       _message = "object '"+_parent+"' is missing dependency '"+_child+"'";
+     virtual const char* what() const noexcept override { return "no rootnode set"; }
+   };
+  
+   class DependencyMissingError : public std::exception {
+     std::string _parent, _child, _class, _message;
+   public:
+     DependencyMissingError(const std::string& p, const std::string& c, const std::string& classname) : _parent(p), _child(c), _class(classname) {
+       _message = "object '"+_parent+"' is missing dependency '"+_child+"' of type '"+_class+"'";
      };
      const std::string& parent() const { return _parent; }
-     const std::string& child() const { return _child; }    
+     const std::string& child() const { return _child; }
+     const std::string& classname() const { return _class; }         
      virtual const char* what() const noexcept override { return _message.c_str(); }
    };
    friend DependencyMissingError;
   
    static std::string name(const RooFit::Detail::JSONNode &n);
 
+   template<class T> T* request(const std::string& objname, const std::string& requestAuthor);
+  
    RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}
    RooWorkspace *workspace() { return this->_workspace; }
 
@@ -178,10 +188,16 @@ public:
    static void clearExportKeys();
    static void printExportKeys();
 
+   void importAllNodes(const RooFit::Detail::JSONNode &n);
+  
    void importFunctions(const RooFit::Detail::JSONNode &n);
    void importPdfs(const RooFit::Detail::JSONNode &n);
    void importVariables(const RooFit::Detail::JSONNode &n);
+   void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
+   void importVariable(const RooFit::Detail::JSONNode &n);  
    void importDependants(const RooFit::Detail::JSONNode &n);
+
+   void configureToplevelPdf(RooAbsPdf* pdf);  
 
    bool find(const RooFit::Detail::JSONNode &n, const std::string &elem);
    void append(RooFit::Detail::JSONNode &n, const std::string &elem);
@@ -192,7 +208,7 @@ public:
    void exportObject(const RooAbsArg *func, RooFit::Detail::JSONNode &n);
    void exportFunctions(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
-   void exportAll(RooFit::Detail::JSONNode &n);
+   void exportAllObjects(RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode *n);
 };

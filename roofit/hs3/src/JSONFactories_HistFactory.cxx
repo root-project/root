@@ -159,10 +159,10 @@ public:
          RooArgSet shapeElems;
          RooArgSet normElems;
          auto varlist = tool->getObservables(p["data"], prefix);
-         RooDataHist *dh = dynamic_cast<RooDataHist*>(tool->workspace()->embeddedData(name.c_str()));
-         if(!dh){
-           dh = tool->readBinnedData(p["data"], name, varlist);
-           tool->workspace()->import(*dh, RooFit::Silence(true), RooFit::Embedded());
+         RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name.c_str()));
+         if (!dh) {
+            dh = tool->readBinnedData(p["data"], name, varlist);
+            tool->workspace()->import(*dh, RooFit::Silence(true), RooFit::Embedded());
          }
          RooHistFunc *hf =
             new RooHistFunc(("hist_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh->get()), *dh);
@@ -226,19 +226,21 @@ public:
                                                               : "alpha_" + sysname);
                RooAbsReal *par = ::getNP(tool, parname.c_str());
                nps.add(*par);
-               RooDataHist *dh_low = dynamic_cast<RooDataHist*>(tool->workspace()->embeddedData((sysname + "Low_" + name).c_str()));
-               if(!dh_low){
-                 dh_low = tool->readBinnedData(sys["dataLow"], sysname + "Low_" + name, varlist);
-                 tool->workspace()->import(*dh_low, RooFit::Silence(true), RooFit::Embedded());
+               RooDataHist *dh_low =
+                  dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData((sysname + "Low_" + name).c_str()));
+               if (!dh_low) {
+                  dh_low = tool->readBinnedData(sys["dataLow"], sysname + "Low_" + name, varlist);
+                  tool->workspace()->import(*dh_low, RooFit::Silence(true), RooFit::Embedded());
                }
                RooHistFunc *hf_low = new RooHistFunc((sysname + "Low_" + name).c_str(),
                                                      RooJSONFactoryWSTool::name(p).c_str(), *(dh_low->get()), *dh_low);
                low.add(*hf_low);
                tmp.push_back(hf_low);
-               RooDataHist *dh_high = dynamic_cast<RooDataHist*>(tool->workspace()->embeddedData((sysname + "High_" + name).c_str()));
-               if(!dh_high){
-                 dh_high = tool->readBinnedData(sys["dataHigh"], sysname + "High_" + name, varlist);
-                 tool->workspace()->import(*dh_high, RooFit::Silence(true), RooFit::Embedded());
+               RooDataHist *dh_high =
+                  dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData((sysname + "High_" + name).c_str()));
+               if (!dh_high) {
+                  dh_high = tool->readBinnedData(sys["dataHigh"], sysname + "High_" + name, varlist);
+                  tool->workspace()->import(*dh_high, RooFit::Silence(true), RooFit::Embedded());
                }
                RooHistFunc *hf_high =
                   new RooHistFunc((sysname + "High_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(),
@@ -394,20 +396,12 @@ public:
 
       tool->importFunctions(p["samples"]);
       for (const auto &fname : funcnames) {
-         RooAbsReal *func = tool->workspace()->function(fname.c_str());
-         if (!func) {
-           throw RooJSONFactoryWSTool::DependencyMissingError(name,fname);           
-         } else {
-           funcs.add(*func);
-         }
+         RooAbsReal *func = tool->request<RooAbsReal>(fname.c_str(), name);
+         funcs.add(*func);
       }
       for (const auto &coefname : coefnames) {
-         RooAbsReal *coef = tool->workspace()->function(coefname.c_str());
-         if (!coef) {
-           throw RooJSONFactoryWSTool::DependencyMissingError(name,coefname);                      
-         } else {
-           coefs.add(*coef);
-         }
+         RooAbsReal *coef = tool->request<RooAbsReal>(coefname.c_str(), name);
+         coefs.add(*coef);
       }
       for (auto &np : nps) {
          for (auto client : np->clients()) {
@@ -464,8 +458,7 @@ class PiecewiseInterpolationStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      const PiecewiseInterpolation *pip =
-         static_cast<const PiecewiseInterpolation *>(func);
+      const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);
       elem["type"] << "interpolation";
       elem["interpolationCodes"] << pip->interpolationCodes();
       auto &vars = elem["vars"];
@@ -476,7 +469,7 @@ public:
 
       auto &nom = elem["nom"];
       nom << pip->nominalHist()->GetName();
-      
+
       auto &high = elem["high"];
       high.set_seq();
       for (const auto &v : pip->highList()) {
@@ -490,9 +483,8 @@ public:
       }
       return true;
    }
-};  
+};
 } // namespace
-
 
 namespace {
 class PiecewiseInterpolationFactory : public RooJSONFactoryWSTool::Importer {
@@ -514,52 +506,37 @@ public:
       }
 
       std::string nomname(p["nom"].val());
-      RooAbsReal* nominal = static_cast<RooAbsReal*>(tool->workspace()->obj(nomname.c_str()));
-      if(!nominal){
-         throw RooJSONFactoryWSTool::DependencyMissingError(name,nomname);
-      }
+      RooAbsReal *nominal = tool->request<RooAbsReal>(nomname, name);
 
       RooArgList vars;
-      for(const auto& d:p["vars"].children()){
-        std::string objname(RooJSONFactoryWSTool::name(d));
-        RooRealVar* obj = tool->workspace()->var(objname.c_str());
-        if(!obj){
-          throw RooJSONFactoryWSTool::DependencyMissingError(name,objname);
-        } else {
-          vars.add(*obj);
-        }
+      for (const auto &d : p["vars"].children()) {
+         std::string objname(RooJSONFactoryWSTool::name(d));
+         RooRealVar *obj = tool->request<RooRealVar>(objname, name);
+         vars.add(*obj);
       }
 
       RooArgList high;
-      for(const auto& d:p["high"].children()){
-        std::string objname(RooJSONFactoryWSTool::name(d));
-        RooAbsReal* obj = static_cast<RooAbsReal*>(tool->workspace()->obj(objname.c_str()));
-        if(!obj){
-          throw RooJSONFactoryWSTool::DependencyMissingError(name,objname);
-        } else {
-          high.add(*obj);
-        }
+      for (const auto &d : p["high"].children()) {
+         std::string objname(RooJSONFactoryWSTool::name(d));
+         RooAbsReal *obj = tool->request<RooAbsReal>(objname, name);
+         high.add(*obj);
       }
 
       RooArgList low;
-      for(const auto& d:p["low"].children()){
-        std::string objname(RooJSONFactoryWSTool::name(d));
-        RooAbsReal* obj = static_cast<RooAbsReal*>(tool->workspace()->obj(objname.c_str()));
-        if(!obj){
-          throw RooJSONFactoryWSTool::DependencyMissingError(name,objname);
-        } else {        
-          low.add(*obj);
-        }
+      for (const auto &d : p["low"].children()) {
+         std::string objname(RooJSONFactoryWSTool::name(d));
+         RooAbsReal *obj = tool->request<RooAbsReal>(objname, name);
+         low.add(*obj);
       }
 
       PiecewiseInterpolation pip(name.c_str(), name.c_str(), *nominal, low, high, vars);
 
-      if(p.has_child("interpolationCodes")){
-        for(size_t i=0; i<vars.size(); ++i){
-          pip.setInterpCode(*static_cast<RooAbsReal*>(vars.at(i)),p["interpolationCodes"][i].val_int(),true);
-        }
+      if (p.has_child("interpolationCodes")) {
+         for (size_t i = 0; i < vars.size(); ++i) {
+            pip.setInterpCode(*static_cast<RooAbsReal *>(vars.at(i)), p["interpolationCodes"][i].val_int(), true);
+         }
       }
-      
+
       tool->workspace()->import(pip, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
@@ -750,11 +727,10 @@ STATIC_EXECUTE(
 
    RooJSONFactoryWSTool::registerImporter("histfactory", new RooRealSumPdfFactory());
    RooJSONFactoryWSTool::registerImporter("histogram", new RooHistogramFactory());
-   RooJSONFactoryWSTool::registerImporter("interpolation", new PiecewiseInterpolationFactory());   
+   RooJSONFactoryWSTool::registerImporter("interpolation", new PiecewiseInterpolationFactory());
    RooJSONFactoryWSTool::registerExporter(RooStats::HistFactory::FlexibleInterpVar::Class(),
                                           new FlexibleInterpVarStreamer());
-   RooJSONFactoryWSTool::registerExporter(PiecewiseInterpolation::Class(),
-                                          new PiecewiseInterpolationStreamer());
+   RooJSONFactoryWSTool::registerExporter(PiecewiseInterpolation::Class(), new PiecewiseInterpolationStreamer());
    RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new HistFactoryStreamer());
 
 )
