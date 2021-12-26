@@ -19,6 +19,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPage.hxx>
@@ -84,31 +85,36 @@ static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
 std::uint32_t
 ROOT::Experimental::Detail::RDaosNTupleAnchor::Serialize(void *buffer) const
 {
-   using namespace ROOT::Experimental::Internal::RNTupleSerialization;
+   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    if (buffer != nullptr) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes += SerializeUInt32(fVersion, bytes);
-      bytes += SerializeUInt32(fNBytesHeader, bytes);
-      bytes += SerializeUInt32(fLenHeader, bytes);
-      bytes += SerializeUInt32(fNBytesFooter, bytes);
-      bytes += SerializeUInt32(fLenFooter, bytes);
-      bytes += SerializeString(fObjClass, bytes);
+      bytes += RNTupleSerializer::SerializeUInt32(fVersion, bytes);
+      bytes += RNTupleSerializer::SerializeUInt32(fNBytesHeader, bytes);
+      bytes += RNTupleSerializer::SerializeUInt32(fLenHeader, bytes);
+      bytes += RNTupleSerializer::SerializeUInt32(fNBytesFooter, bytes);
+      bytes += RNTupleSerializer::SerializeUInt32(fLenFooter, bytes);
+      bytes += RNTupleSerializer::SerializeString(fObjClass, bytes);
    }
-   return SerializeString(fObjClass, nullptr) + 20;
+   return RNTupleSerializer::SerializeString(fObjClass, nullptr) + 20;
 }
 
-std::uint32_t
-ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer)
+ROOT::Experimental::RResult<std::uint32_t>
+ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer, std::uint32_t bufSize)
 {
-   using namespace ROOT::Experimental::Internal::RNTupleSerialization;
+   if (bufSize < 20)
+      return R__FAIL("DAOS anchor too short");
+
+   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   bytes += DeserializeUInt32(bytes, &fVersion);
-   bytes += DeserializeUInt32(bytes, &fNBytesHeader);
-   bytes += DeserializeUInt32(bytes, &fLenHeader);
-   bytes += DeserializeUInt32(bytes, &fNBytesFooter);
-   bytes += DeserializeUInt32(bytes, &fLenFooter);
-   bytes += DeserializeString(bytes, &fObjClass);
-   return SerializeString(fObjClass, nullptr) + 20;
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, fVersion);
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, fNBytesHeader);
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, fLenHeader);
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, fNBytesFooter);
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, fLenFooter);
+   auto result = RNTupleSerializer::DeserializeString(bytes, bufSize - 20, fObjClass);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   return result.Unwrap() + 20;
 }
 
 std::uint32_t
@@ -339,7 +345,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    auto buffer = std::make_unique<unsigned char[]>(ntplSize);
    fDaosContainer->ReadSingleAkey(buffer.get(), ntplSize, kOidAnchor, kDistributionKey,
                                   kAttributeKey, kCidMetadata);
-   ntpl.Deserialize(buffer.get());
+   ntpl.Deserialize(buffer.get(), ntplSize).Unwrap();
 
    auto oclass = RDaosObject::ObjClassId(ntpl.fObjClass);
    if (oclass.IsUnknown())

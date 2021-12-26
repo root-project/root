@@ -16,6 +16,7 @@
 #ifndef ROOT7_RPageStorageDaos
 #define ROOT7_RPageStorageDaos
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
@@ -74,7 +75,7 @@ struct RDaosNTupleAnchor {
    }
 
    std::uint32_t Serialize(void *buffer) const;
-   std::uint32_t Deserialize(const void *buffer);
+   RResult<std::uint32_t> Deserialize(const void *buffer, std::uint32_t bufSize);
 
    static std::uint32_t GetSize();
 };
