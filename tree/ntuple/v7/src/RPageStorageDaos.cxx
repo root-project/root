@@ -34,6 +34,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <limits>
 #include <utility>
 #include <regex>
 
@@ -67,6 +68,11 @@ static constexpr std::uint64_t kAttributeKey = 0x4243544b5344422d;
 static constexpr daos_obj_id_t kOidAnchor{std::uint64_t(-1), 0};
 static constexpr daos_obj_id_t kOidHeader{std::uint64_t(-2), 0};
 static constexpr daos_obj_id_t kOidFooter{std::uint64_t(-3), 0};
+// The page list offset needs to be a positive 64bit integer because we currently use
+// the object ID for the offset in the locator
+// TODO(jblomer): use object store locators
+// TODO(jblomer): add support for multiple page list envelopes from multiple cluster groups
+static constexpr daos_obj_id_t kOidPageList{std::numeric_limits<int64_t>::max(), 0};
 
 static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
 } // namespace
@@ -146,14 +152,15 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CreateImpl(const RNTupleModel & 
    fDaosContainer->SetDefaultObjectClass(oclass);
 
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szHeader = descriptor.GetHeaderSize();
-   auto buffer = std::make_unique<unsigned char[]>(szHeader);
-   descriptor.SerializeHeader(buffer.get());
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
+   auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(buffer.get(), descriptor);
 
-   auto zipBuffer = std::make_unique<unsigned char[]>(szHeader);
-   auto szZipHeader = fCompressor->Zip(buffer.get(), szHeader, GetWriteOptions().GetCompression(),
-      [&zipBuffer](const void *b, size_t n, size_t o){ memcpy(zipBuffer.get() + o, b, n); } );
-   WriteNTupleHeader(zipBuffer.get(), szZipHeader, szHeader);
+   auto zipBuffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
+   auto szZipHeader =
+      fCompressor->Zip(buffer.get(), fSerializationContext.GetHeaderSize(), GetWriteOptions().GetCompression(),
+                       [&zipBuffer](const void *b, size_t n, size_t o) { memcpy(zipBuffer.get() + o, b, n); });
+   WriteNTupleHeader(zipBuffer.get(), szZipHeader, fSerializationContext.GetHeaderSize());
 }
 
 
@@ -203,14 +210,40 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental:
 void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   auto szFooter = descriptor.GetFooterSize();
-   auto buffer = std::make_unique<unsigned char []>(szFooter);
-   descriptor.SerializeFooter(buffer.get());
 
-   auto zipBuffer = std::make_unique<unsigned char []>(szFooter);
-   auto szZipFooter = fCompressor->Zip(buffer.get(), szFooter, GetWriteOptions().GetCompression(),
-      [&zipBuffer](const void *b, size_t n, size_t o){ memcpy(zipBuffer.get() + o, b, n); } );
-   WriteNTupleFooter(zipBuffer.get(), szZipFooter, szFooter);
+   std::vector<DescriptorId_t> physClusterIDs;
+   for (const auto &c : descriptor.GetClusterIterable()) {
+      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(c.GetId()));
+   }
+
+   auto szPageList =
+      Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);
+   auto bufPageList = std::make_unique<unsigned char[]>(szPageList);
+   Internal::RNTupleSerializer::SerializePageListV1(bufPageList.get(), descriptor, physClusterIDs,
+                                                    fSerializationContext);
+
+   auto bufPageListZip = std::make_unique<unsigned char[]>(szPageList);
+   auto szPageListZip = fCompressor->Zip(
+      bufPageList.get(), szPageList, GetWriteOptions().GetCompression(),
+      [&bufPageListZip](const void *b, size_t n, size_t o) { memcpy(bufPageListZip.get() + o, b, n); });
+   fDaosContainer->WriteSingleAkey(bufPageListZip.get(), szPageListZip, kOidPageList, kDistributionKey, kAttributeKey,
+                                   kCidMetadata);
+
+   Internal::RNTupleSerializer::REnvelopeLink pageListEnvelope;
+   pageListEnvelope.fUnzippedSize = szPageList;
+   pageListEnvelope.fLocator.fPosition = kOidPageList.lo;
+   pageListEnvelope.fLocator.fBytesOnStorage = szPageListZip;
+   fSerializationContext.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);
+
+   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
+   auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
+   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
+
+   auto bufFooterZip = std::make_unique<unsigned char[]>(szFooter);
+   auto szFooterZip =
+      fCompressor->Zip(bufFooter.get(), szFooter, GetWriteOptions().GetCompression(),
+                       [&bufFooterZip](const void *b, size_t n, size_t o) { memcpy(bufFooterZip.get() + o, b, n); });
+   WriteNTupleFooter(bufFooterZip.get(), szFooterZip, szFooter);
    WriteNTupleAnchor();
 }
 
