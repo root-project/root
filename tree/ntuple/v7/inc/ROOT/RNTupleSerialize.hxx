@@ -84,9 +84,9 @@ public:
       REnvelopeLink fPageListEnvelopeLink;
    };
 
-   /// The streamer context is used for the piecewise serialization of a descriptor.  During header serialization,
+   /// The serialization context is used for the piecewise serialization of a descriptor.  During header serialization,
    /// the mapping of in-memory field and column IDs to physical IDs is built so that it can be used for the
-   /// footer serialzation in a second step.
+   /// footer serialization in a second step.
    class RContext {
    private:
       std::uint32_t fHeaderSize = 0;
