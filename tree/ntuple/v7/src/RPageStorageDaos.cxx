@@ -346,19 +346,37 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
       throw ROOT::Experimental::RException(R__FAIL("Unknown object class " + ntpl.fObjClass));
    fDaosContainer->SetDefaultObjectClass(oclass);
 
+   descBuilder.SetOnDiskHeaderSize(ntpl.fNBytesHeader);
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenHeader);
    auto zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesHeader);
    fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesHeader, kOidHeader, kDistributionKey,
                                   kAttributeKey, kCidMetadata);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
-   descBuilder.SetFromHeader(buffer.get());
+   Internal::RNTupleSerializer::DeserializeHeaderV1(buffer.get(), ntpl.fLenHeader, descBuilder);
 
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenFooter);
    zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesFooter);
    fDaosContainer->ReadSingleAkey(zipBuffer.get(), ntpl.fNBytesFooter, kOidFooter, kDistributionKey,
                                   kAttributeKey, kCidMetadata);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
-   descBuilder.AddClustersFromFooter(buffer.get());
+   Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), ntpl.fLenFooter, descBuilder);
+
+   auto cg = descBuilder.GetClusterGroup(0);
+   descBuilder.SetOnDiskFooterSize(ntpl.fNBytesFooter + cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+   buffer = std::make_unique<unsigned char[]>(cg.fPageListEnvelopeLink.fUnzippedSize);
+   zipBuffer = std::make_unique<unsigned char[]>(cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+   fDaosContainer->ReadSingleAkey(
+      zipBuffer.get(), cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
+      {static_cast<decltype(daos_obj_id_t::lo)>(cg.fPageListEnvelopeLink.fLocator.fPosition), 0}, kDistributionKey,
+      kAttributeKey, kCidMetadata);
+   fDecompressor->Unzip(zipBuffer.get(), cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
+                        cg.fPageListEnvelopeLink.fUnzippedSize, buffer.get());
+
+   std::vector<RClusterDescriptorBuilder> clusters;
+   Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cg.fPageListEnvelopeLink.fUnzippedSize, clusters);
+   for (std::size_t i = 0; i < clusters.size(); ++i) {
+      descBuilder.AddCluster(i, std::move(clusters[i]));
+   }
 
    return descBuilder.MoveDescriptor();
 }
