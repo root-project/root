@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorageDaos
 
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RStringView.hxx>
 
@@ -102,6 +103,8 @@ private:
    std::string fURI;
    /// Tracks the number of bytes committed to the current cluster
    std::uint64_t fNBytesCurrentCluster{0};
+   /// Used to keeo the column and field IDs issued during header serialization for the footer serialization
+   Internal::RNTupleSerializer::RContext fSerializationContext;
 
    RDaosNTupleAnchor fNTupleAnchor;
 
