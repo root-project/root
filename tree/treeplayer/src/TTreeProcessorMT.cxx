@@ -81,7 +81,7 @@ ConvertToElistClusters(std::vector<std::vector<EntryCluster>> &&clusters, TEntry
       };
    } else {
       // we need `chain` to be able to convert local entry numbers to global entry numbers in `Next`
-      chain.reset(new TChain());
+      chain.reset(new TChain(TChain::kWithoutGlobalRegistration));
       for (auto i = 0u; i < nFiles; ++i)
          chain->Add((fileNames[i] + "?#" + treeNames[i]).c_str(), entriesPerFile[i]);
       Next = [](Long64_t &elEntry, TEntryList &elist, TChain *ch) {
@@ -143,12 +143,14 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
       const auto &fileName = fileNames[i];
       const auto &treeName = treeNames[i];
 
-      std::unique_ptr<TFile> f(TFile::Open(fileName.c_str())); // need TFile::Open to load plugins if need be
+      std::unique_ptr<TFile> f(TFile::Open(
+         fileName.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")); // need TFile::Open to load plugins if need be
       if (!f || f->IsZombie()) {
          const auto msg = "TTreeProcessorMT::Process: an error occurred while opening file \"" + fileName + "\"";
          throw std::runtime_error(msg);
       }
       auto *t = f->Get<TTree>(treeName.c_str()); // t will be deleted by f
+      t->ResetBit(kMustCleanup);
 
       if (!t) {
          const auto msg = "TTreeProcessorMT::Process: an error occurred while getting tree \"" + treeName +
@@ -243,7 +245,8 @@ static std::vector<std::vector<Long64_t>> GetFriendEntries(const Internal::TreeU
       if (!thisFriendChainSubNames.empty()) {
          // Traverse together filenames and respective treenames
          for (auto fileidx = 0u; fileidx < thisFriendFiles.size(); ++fileidx) {
-            std::unique_ptr<TFile> curfile(TFile::Open(thisFriendFiles[fileidx].c_str()));
+            std::unique_ptr<TFile> curfile(
+               TFile::Open(thisFriendFiles[fileidx].c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
             if (!curfile || curfile->IsZombie())
                throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not open file \"" +
                                         thisFriendFiles[fileidx] + "\"");
@@ -261,7 +264,7 @@ static std::vector<std::vector<Long64_t>> GetFriendEntries(const Internal::TreeU
          // to retrieve from the file in `thisFriendFiles`
       } else {
          for (const auto &fname : thisFriendFiles) {
-            std::unique_ptr<TFile> f(TFile::Open(fname.c_str()));
+            std::unique_ptr<TFile> f(TFile::Open(fname.c_str(), "READ_WITHOUT_GLOBALREGISTRATION"));
             if (!f || f->IsZombie())
                throw std::runtime_error("TTreeProcessorMT::GetFriendEntries: Could not open file \"" + fname + "\"");
             TTree *t = f->Get<TTree>(thisFriendName.c_str());
@@ -302,7 +305,7 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
    const auto &friendFileNames = friendInfo.fFriendFileNames;
    const auto &friendChainSubNames = friendInfo.fFriendChainSubNames;
 
-   fChain.reset(new TChain());
+   fChain.reset(new TChain(TChain::kWithoutGlobalRegistration));
    const auto nFiles = fileNames.size();
    for (auto i = 0u; i < nFiles; ++i) {
       fChain->Add((fileNames[i] + "?#" + treeNames[i]).c_str(), nEntries[i]);
@@ -320,7 +323,7 @@ void TTreeView::MakeChain(const std::vector<std::string> &treeNames, const std::
       const auto &thisFriendEntries = friendEntries[i];
 
       // Build a friend chain
-      auto frChain = std::make_unique<TChain>(thisFriendName.c_str());
+      auto frChain = std::make_unique<TChain>(thisFriendName.c_str(), "", TChain::kWithoutGlobalRegistration);
       const auto nFileNames = friendFileNames[i].size();
       if (thisFriendChainSubNames.empty()) {
          // If there are no chain subnames, the friend was a TTree. It's safe
@@ -370,6 +373,15 @@ TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::st
    auto reader = std::make_unique<TTreeReader>(fChain.get(), fEntryList.get());
    reader->SetEntriesRange(start, end);
    return reader;
+}
+
+////////////////////////////////////////////////////////////////////////
+/// Clear the resources
+void TTreeView::Reset()
+{
+   fChain.reset();
+   fEntryList.reset();
+   fFriends.clear();
 }
 
 } // namespace Internal
@@ -549,6 +561,14 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    std::iota(fileIdxs.begin(), fileIdxs.end(), 0u);
 
    fPool.Foreach(processFile, fileIdxs);
+
+   // make sure TChains and TFiles are cleaned up since they are not globally tracked
+   for (unsigned int islot = 0; islot < fTreeView.GetNSlots(); ++islot) {
+      ROOT::Internal::TTreeView *view = fTreeView.GetAtSlotRaw(islot);
+      if (view != nullptr) {
+         view->Reset();
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////
