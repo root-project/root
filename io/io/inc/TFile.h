@@ -113,6 +113,8 @@ protected:
    TList           *fInfoCache{nullptr};      ///<!Cached list of the streamer infos in this file
    TList           *fOpenPhases{nullptr};     ///<!Time info about open phases
 
+   bool             fGlobalRegistration = true; ///<! if true, bypass use of global lists
+
 #ifdef R__USE_IMT
    std::mutex                                 fWriteMutex;  ///<!Lock for writing baskets / keys into the file.
    static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
