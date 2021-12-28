@@ -43,6 +43,7 @@ protected:
    TObjArray   *fFiles;            ///< -> List of file names containing the trees (TChainElement, owned)
    TList       *fStatus;           ///< -> List of active/inactive branches (TChainElement, owned)
    TChain      *fProofChain;       ///<! chain proxy when going to be processed by PROOF
+   bool         fGlobalRegistration;  ///<! if true, bypass use of global lists
 
 private:
    TChain(const TChain&);            // not implemented
@@ -66,8 +67,10 @@ public:
    static constexpr auto kBigNumber = TTree::kMaxEntries;
 
 public:
-   TChain();
-   TChain(const char* name, const char* title = "");
+   enum Mode { kWithoutGlobalRegistration, kWithGlobalRegistration };
+
+   TChain(Mode mode = kWithGlobalRegistration);
+   TChain(const char *name, const char *title = "", Mode mode = kWithGlobalRegistration);
    virtual ~TChain();
 
    virtual Int_t     Add(TChain* chain);
