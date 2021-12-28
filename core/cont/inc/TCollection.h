@@ -205,7 +205,7 @@ public:
    void               SetCurrentCollection();
    void               SetName(const char *name) { fName = name; }
    virtual void       SetOwner(Bool_t enable = kTRUE);
-   virtual bool       UseRWLock();
+   virtual bool       UseRWLock(Bool_t enable = true);
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 

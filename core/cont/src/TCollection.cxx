@@ -758,10 +758,14 @@ void TCollection::SetOwner(Bool_t enable)
 /// Note: To test whether the usage is enabled do:
 ///    collection->TestBit(TCollection::kUseRWLock);
 
-bool TCollection::UseRWLock()
+bool TCollection::UseRWLock(Bool_t enable)
 {
    bool prev = TestBit(TCollection::kUseRWLock);
-   SetBit(TCollection::kUseRWLock);
+   if (enable) {
+      SetBit(TCollection::kUseRWLock);
+   } else {
+      ResetBit(TCollection::kUseRWLock);
+   }
    return prev;
 }
 
