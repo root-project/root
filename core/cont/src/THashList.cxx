@@ -406,8 +406,8 @@ TObject *THashList::Remove(TObjLink *lnk)
 /// Note: To test whether the usage is enabled do:
 ///    collection->TestBit(TCollection::kUseRWLock);
 
-bool THashList::UseRWLock()
+bool THashList::UseRWLock(Bool_t enable)
 {
-   fTable->UseRWLock();
-   return TCollection::UseRWLock();
+   fTable->UseRWLock(enable);
+   return TCollection::UseRWLock(enable);
 }

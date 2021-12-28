@@ -67,7 +67,7 @@ public:
    void       Rehash(Int_t newCapacity);
    TObject   *Remove(TObject *obj);
    TObject   *Remove(TObjLink *lnk);
-   bool       UseRWLock();
+   bool       UseRWLock(Bool_t enable = true);
 
    ClassDef(THashList,0)  //Doubly linked list with hashtable for lookup
 };
