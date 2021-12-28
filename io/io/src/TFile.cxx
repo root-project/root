@@ -1324,7 +1324,9 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
 
 #ifdef R__USE_IMT
       if (lookupSICache) {
-         hash = fgTsSIHashes.Hash(buf, fNbytesInfo);
+         // key data must be excluded from the hash, otherwise the timestamp will
+         // always lead to unique hashes for each file
+         hash = fgTsSIHashes.Hash(buf + key->GetKeylen(), fNbytesInfo - key->GetKeylen());
          if (fgTsSIHashes.Find(hash)) {
             if (gDebug > 0) Info("GetStreamerInfo", "The streamer info record for file %s has already been treated, skipping it.", GetName());
             return {nullptr, 0, hash};
