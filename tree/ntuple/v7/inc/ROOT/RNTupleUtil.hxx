@@ -116,10 +116,6 @@ public:
    ClusterSize_t::ValueType GetIndex() const { return fIndex; }
 };
 
-/// Every NTuple is identified by a UUID.  TODO(jblomer): should this be a TUUID?
-using RNTupleUuid = std::string;
-
-
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
 /// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
 /// and therefore we need to store their actual size.
