@@ -55,7 +55,7 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(
       AddVirtualField(originIdx, f, virtualFieldId, f.GetFieldName());
 
    for (const auto &c: originDesc.GetColumnIterable(originField)) {
-      fBuilder.AddColumn(fNextId, virtualFieldId, c.GetVersion(), c.GetModel(), c.GetIndex());
+      fBuilder.AddColumn(fNextId, virtualFieldId, c.GetModel(), c.GetIndex());
       fIdBiMap.Insert({originIdx, c.GetId()}, fNextId);
       fNextId++;
    }
@@ -92,7 +92,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       AddVirtualField(i, desc.GetFieldZero(), 0, desc.GetName());
 
       for (const auto &c : desc.GetClusterIterable()) {
-         fBuilder.AddCluster(fNextId, c.GetVersion(), c.GetFirstEntryIndex(), c.GetNEntries());
+         fBuilder.AddCluster(fNextId, c.GetFirstEntryIndex(), c.GetNEntries());
          for (auto originColumnId : c.GetColumnIds()) {
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
 

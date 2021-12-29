@@ -62,9 +62,9 @@ class RFieldDescriptor {
 private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
    /// The version of the C++-type-to-column translation mechanics
-   RNTupleVersion fFieldVersion = RNTupleVersion();
+   std::uint32_t fFieldVersion = 0;
    /// The version of the C++ type itself
-   RNTupleVersion fTypeVersion = RNTupleVersion();
+   std::uint32_t fTypeVersion = 0;
    /// The leaf name, not including parent fields
    std::string fFieldName;
    /// Free text set by the user
@@ -96,8 +96,8 @@ public:
    std::unique_ptr<Detail::RFieldBase> CreateField(const RNTupleDescriptor &ntplDesc) const;
 
    DescriptorId_t GetId() const { return fFieldId; }
-   RNTupleVersion GetFieldVersion() const { return fFieldVersion; }
-   RNTupleVersion GetTypeVersion() const { return fTypeVersion; }
+   std::uint32_t GetFieldVersion() const { return fFieldVersion; }
+   std::uint32_t GetTypeVersion() const { return fTypeVersion; }
    std::string GetFieldName() const { return fFieldName; }
    std::string GetFieldDescription() const { return fFieldDescription; }
    std::string GetTypeName() const { return fTypeName; }
@@ -121,8 +121,6 @@ class RColumnDescriptor {
 
 private:
    DescriptorId_t fColumnId = kInvalidDescriptorId;
-   /// Versions can change, e.g., when new column types are added
-   RNTupleVersion fVersion;
    /// Contains the column type and whether it is sorted
    RColumnModel fModel;
    /// Every column belongs to one and only one field
@@ -142,7 +140,6 @@ public:
    RColumnDescriptor Clone() const;
 
    DescriptorId_t GetId() const { return fColumnId; }
-   RNTupleVersion GetVersion() const { return fVersion; }
    RColumnModel GetModel() const { return fModel; }
    std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
@@ -239,8 +236,6 @@ public:
 
 private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
-   /// Future versions of the cluster descriptor might add more meta-data, e.g. a semantic checksum
-   RNTupleVersion fVersion;
    /// Clusters can be swapped by adjusting the entry offsets
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
@@ -258,7 +253,6 @@ public:
    bool operator==(const RClusterDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fClusterId; }
-   RNTupleVersion GetVersion() const { return fVersion; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
    const RColumnRange &GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
@@ -630,11 +624,13 @@ public:
       fField.fFieldId = fieldId;
       return *this;
    }
-   RFieldDescriptorBuilder& FieldVersion(const RNTupleVersion& fieldVersion) {
+   RFieldDescriptorBuilder &FieldVersion(std::uint32_t fieldVersion)
+   {
       fField.fFieldVersion = fieldVersion;
       return *this;
    }
-   RFieldDescriptorBuilder& TypeVersion(const RNTupleVersion& typeVersion) {
+   RFieldDescriptorBuilder &TypeVersion(std::uint32_t typeVersion)
+   {
       fField.fTypeVersion = typeVersion;
       return *this;
    }
@@ -745,12 +741,10 @@ public:
    void AddField(const RFieldDescriptor& fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
-   void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,
-                  const RNTupleVersion &version, const RColumnModel &model, std::uint32_t index);
+   void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId, const RColumnModel &model, std::uint32_t index);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
-   void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
-                   NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
+   void AddCluster(DescriptorId_t clusterId, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
    void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
    void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
 

@@ -44,8 +44,8 @@ std::uint32_t SerializeFieldV1(
 
    pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
-   pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetFieldVersion().GetVersionUse(), *where);
-   pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeVersion().GetVersionUse(), *where);
+   pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetFieldVersion(), *where);
+   pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeVersion(), *where);
    pos += RNTupleSerializer::SerializeUInt32(physParentId, *where);
    pos += RNTupleSerializer::SerializeFieldStructure(fieldDesc.GetStructure(), *where);
    if (fieldDesc.GetNRepetitions() > 0) {
@@ -129,10 +129,7 @@ RResult<std::uint32_t> DeserializeFieldV1(
       return R__FORWARD_ERROR(res16);
    bytes += res16.Unwrap();
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, flags);
-   fieldDesc.FieldVersion(ROOT::Experimental::RNTupleVersion(fieldVersion, fieldVersion))
-            .TypeVersion(ROOT::Experimental::RNTupleVersion(typeVersion, typeVersion))
-            .ParentId(parentId)
-            .Structure(structure);
+   fieldDesc.FieldVersion(fieldVersion).TypeVersion(typeVersion).ParentId(parentId).Structure(structure);
 
    if (flags & RNTupleSerializer::kFlagRepetitiveField) {
       if (fnFrameSizeLeft() < sizeof(std::uint64_t))

@@ -253,9 +253,9 @@ public:
    void ConnectPageSource(RPageSource &pageSource);
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
-   virtual RNTupleVersion GetFieldVersion() const { return RNTupleVersion(); }
+   virtual std::uint32_t GetFieldVersion() const { return 0; }
    /// Indicates an evolution of the C++ type itself
-   virtual RNTupleVersion GetTypeVersion() const { return RNTupleVersion(); }
+   virtual std::uint32_t GetTypeVersion() const { return 0; }
 
    RSchemaIterator begin();
    RSchemaIterator end();
