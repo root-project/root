@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT sql/pgsql package
+# CMakeLists.txt file for building ROOT sql/sqlite package
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
