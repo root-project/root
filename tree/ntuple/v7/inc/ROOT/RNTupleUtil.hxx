@@ -120,37 +120,6 @@ public:
 using RNTupleUuid = std::string;
 
 
-/// 64 possible flags to apply to all versioned entities (so far unused).
-using NTupleFlags_t = std::uint64_t;
-/// For forward and backward compatibility, attach version information to
-/// the consitituents of the file format (column, field, cluster, ntuple).
-class RNTupleVersion {
-private:
-   /// The version used to write an entity
-   std::uint32_t fVersionUse = 0;
-   /// The minimum required version necessary to read an entity
-   std::uint32_t fVersionMin = 0;
-   NTupleFlags_t fFlags = 0;
-
-public:
-   RNTupleVersion() = default;
-   RNTupleVersion(std::uint32_t versionUse, std::uint32_t versionMin)
-     : fVersionUse(versionUse), fVersionMin(versionMin)
-   {}
-   RNTupleVersion(std::uint32_t versionUse, std::uint32_t versionMin, NTupleFlags_t flags)
-     : fVersionUse(versionUse), fVersionMin(versionMin), fFlags(flags)
-   {}
-
-   bool operator ==(const RNTupleVersion &other) const {
-      return fVersionUse == other.fVersionUse && fVersionMin == other.fVersionMin && fFlags == other.fFlags;
-   }
-
-   std::uint32_t GetVersionUse() const { return fVersionUse; }
-   std::uint32_t GetVersionMin() const { return fVersionMin; }
-   NTupleFlags_t GetFlags() const { return fFlags; }
-};
-
-
 /// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
 /// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
 /// and therefore we need to store their actual size.

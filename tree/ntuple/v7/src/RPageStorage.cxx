@@ -272,7 +272,7 @@ ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    auto columnId = fLastColumnId++;
-   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
+   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetModel(), column.GetIndex());
    return ColumnHandle_t{columnId, &column};
 }
 
@@ -348,8 +348,7 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
    auto nbytes = CommitClusterImpl(nEntries);
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
-   fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
-                                 ClusterSize_t(nEntries - fPrevClusterNEntries));
+   fDescriptorBuilder.AddCluster(fLastClusterId, fPrevClusterNEntries, ClusterSize_t(nEntries - fPrevClusterNEntries));
    for (auto &range : fOpenColumnRanges) {
       fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
       range.fFirstElementIndex += range.fNElements;

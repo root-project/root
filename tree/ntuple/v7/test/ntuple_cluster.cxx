@@ -23,7 +23,6 @@ using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 using RCluster = ROOT::Experimental::Detail::RCluster;
 using RClusterPool = ROOT::Experimental::Detail::RClusterPool;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using RNTupleVersion = ROOT::Experimental::RNTupleVersion;
 using ROnDiskPage = ROOT::Experimental::Detail::ROnDiskPage;
 using RPage = ROOT::Experimental::Detail::RPage;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
@@ -59,12 +58,12 @@ public:
 
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
       ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
-      descBuilder.AddCluster(0, RNTupleVersion(), 0, ClusterSize_t(1));
-      descBuilder.AddCluster(1, RNTupleVersion(), 1, ClusterSize_t(1));
-      descBuilder.AddCluster(2, RNTupleVersion(), 2, ClusterSize_t(1));
-      descBuilder.AddCluster(3, RNTupleVersion(), 3, ClusterSize_t(1));
-      descBuilder.AddCluster(4, RNTupleVersion(), 4, ClusterSize_t(1));
-      descBuilder.AddCluster(5, RNTupleVersion(), 5, ClusterSize_t(1));
+      descBuilder.AddCluster(0, 0, ClusterSize_t(1));
+      descBuilder.AddCluster(1, 1, ClusterSize_t(1));
+      descBuilder.AddCluster(2, 2, ClusterSize_t(1));
+      descBuilder.AddCluster(3, 3, ClusterSize_t(1));
+      descBuilder.AddCluster(4, 4, ClusterSize_t(1));
+      descBuilder.AddCluster(5, 5, ClusterSize_t(1));
       fDescriptor = descBuilder.MoveDescriptor();
    }
    std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
