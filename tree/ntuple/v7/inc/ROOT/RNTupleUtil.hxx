@@ -33,28 +33,6 @@ struct RNTuple;
 
 namespace Internal {
 
-namespace RNTupleSerialization {
-
-std::uint32_t SerializeInt64(std::int64_t val, void *buffer);
-std::uint32_t SerializeUInt64(std::uint64_t val, void *buffer);
-std::uint32_t DeserializeInt64(const void *buffer, std::int64_t *val);
-std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t *val);
-
-std::uint32_t SerializeInt32(std::int32_t val, void *buffer);
-std::uint32_t SerializeUInt32(std::uint32_t val, void *buffer);
-std::uint32_t DeserializeInt32(const void *buffer, std::int32_t *val);
-std::uint32_t DeserializeUInt32(const void *buffer, std::uint32_t *val);
-
-std::uint32_t SerializeInt16(std::int16_t val, void *buffer);
-std::uint32_t SerializeUInt16(std::uint16_t val, void *buffer);
-std::uint32_t DeserializeInt16(const void *buffer, std::int16_t *val);
-std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t *val);
-
-std::uint32_t SerializeString(const std::string &val, void *buffer);
-std::uint32_t DeserializeString(const void *buffer, std::string *val);
-
-} // namespace RNTupleSerialization
-
 void PrintRNTuple(const RNTuple& ntuple, std::ostream& output);
 
 } // namespace Internal

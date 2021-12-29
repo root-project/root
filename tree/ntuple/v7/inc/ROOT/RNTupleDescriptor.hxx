@@ -88,10 +88,6 @@ public:
    RFieldDescriptor(RFieldDescriptor &&other) = default;
    RFieldDescriptor &operator =(RFieldDescriptor &&other) = default;
 
-   /// In order to handle changes to the serialization routine in future ntuple versions
-   static constexpr std::uint16_t kFrameVersionCurrent = 0;
-   static constexpr std::uint16_t kFrameVersionMin = 0;
-
    bool operator==(const RFieldDescriptor &other) const;
    /// Get a copy of the descriptor
    RFieldDescriptor Clone() const;
@@ -135,10 +131,6 @@ private:
    std::uint32_t fIndex;
 
 public:
-   /// In order to handle changes to the serialization routine in future ntuple versions
-   static constexpr std::uint16_t kFrameVersionCurrent = 0;
-   static constexpr std::uint16_t kFrameVersionMin = 0;
-
    RColumnDescriptor() = default;
    RColumnDescriptor(const RColumnDescriptor &other) = delete;
    RColumnDescriptor &operator =(const RColumnDescriptor &other) = delete;
@@ -257,10 +249,6 @@ private:
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
 
 public:
-   /// In order to handle changes to the serialization routine in future ntuple versions
-   static constexpr std::uint16_t kFrameVersionCurrent = 0;
-   static constexpr std::uint16_t kFrameVersionMin = 0;
-
    RClusterDescriptor() = default;
    RClusterDescriptor(const RClusterDescriptor &other) = delete;
    RClusterDescriptor &operator =(const RClusterDescriptor &other) = delete;
@@ -489,14 +477,6 @@ public:
       RIterator end() { return RIterator(fNTuple, fNTuple.GetNClusters()); }
    };
 
-   /// In order to handle changes to the serialization routine in future ntuple versions
-   static constexpr std::uint16_t kFrameVersionCurrent = 0;
-   static constexpr std::uint16_t kFrameVersionMin = 0;
-   /// The preamble is sufficient to get the length of the header
-   static constexpr unsigned int kNBytesPreamble = 8;
-   /// The last few bytes after the footer store the length of footer and header
-   static constexpr unsigned int kNBytesPostscript = 16;
-
    RNTupleDescriptor() = default;
    RNTupleDescriptor(const RNTupleDescriptor &other) = delete;
    RNTupleDescriptor &operator=(const RNTupleDescriptor &other) = delete;
@@ -504,24 +484,6 @@ public:
    RNTupleDescriptor &operator=(RNTupleDescriptor &&other) = default;
 
    bool operator ==(const RNTupleDescriptor &other) const;
-
-   /// We deliberately do not use ROOT's built-in serialization in order to allow for use of RNTuple's without libCore
-   /// Serializes the global ntuple information as well as the column and field schemata
-   /// Returns the number of bytes and fills buffer if it is not nullptr.
-   /// TODO(jblomer): instead of runtime testing for nullptr, there should be a template for the case where
-   /// only the size of the buffer is required.
-   std::uint32_t SerializeHeader(void* buffer) const;
-   /// Serializes cluster meta data. Returns the number of bytes and fills buffer if it is not nullptr.
-   std::uint32_t SerializeFooter(void* buffer) const;
-   /// Given kNBytesPostscript bytes, extract the header and footer lengths in bytes
-   static void LocateMetadata(const void *postscript, std::uint32_t &szHeader, std::uint32_t &szFooter);
-
-   std::uint32_t GetHeaderSize() const {
-      return SerializeHeader(nullptr);
-   }
-   std::uint32_t GetFooterSize() const {
-      return SerializeFooter(nullptr);
-   }
 
    std::uint64_t GetOnDiskHeaderSize() const { return fOnDiskHeaderSize; }
    std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
@@ -810,14 +772,10 @@ public:
                   const RNTupleVersion &version, const RColumnModel &model, std::uint32_t index);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
-   void SetFromHeader(void* headerBuffer);
-
    void AddCluster(DescriptorId_t clusterId, RNTupleVersion version,
                    NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
    void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
    void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
-
-   void AddClustersFromFooter(void* footerBuffer);
 
    void AddClusterSummary(Internal::RNTupleSerializer::RClusterSummary &clusterSummary);
    void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
