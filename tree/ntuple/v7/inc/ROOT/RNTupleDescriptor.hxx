@@ -297,21 +297,6 @@ private:
    std::string fName;
    /// Free text from the user
    std::string fDescription;
-   /// The origin of the data
-   std::string fAuthor;
-   /// The current responsible for storing the data
-   std::string fCustodian;
-   /// The time stamp of the ntuple data (immutable)
-   std::chrono::system_clock::time_point fTimeStampData;
-   /// The time stamp of writing the data to storage, which gets updated when re-written
-   std::chrono::system_clock::time_point fTimeStampWritten;
-   /// The version evolves with the ntuple summary meta-data
-   RNTupleVersion fVersion;
-   /// Every NTuple gets a unique identifier
-   RNTupleUuid fOwnUuid;
-   /// Column sets that are created as derived sets from existing NTuples share the same group id.
-   /// NTuples in the same group have the same number of entries and are supposed to contain associated data.
-   RNTupleUuid fGroupUuid;
 
    std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
@@ -539,13 +524,6 @@ public:
 
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
-   std::string GetAuthor() const { return fAuthor; }
-   std::string GetCustodian() const { return fCustodian; }
-   std::chrono::system_clock::time_point GetTimeStampData() const { return fTimeStampData; }
-   std::chrono::system_clock::time_point GetTimeStampWritten() const { return fTimeStampWritten; }
-   RNTupleVersion GetVersion() const { return fVersion; }
-   RNTupleUuid GetOwnUuid() const { return fOwnUuid; }
-   RNTupleUuid GetGroupUuid() const { return fGroupUuid; }
 
    std::size_t GetNFields() const { return fFieldDescriptors.size(); }
    std::size_t GetNColumns() const { return fColumnDescriptors.size(); }
@@ -757,8 +735,7 @@ public:
    const RNTupleDescriptor& GetDescriptor() const { return fDescriptor; }
    RNTupleDescriptor MoveDescriptor();
 
-   void SetNTuple(const std::string_view name, const std::string_view description, const std::string_view author,
-                  const RNTupleVersion &version, const RNTupleUuid &uuid);
+   void SetNTuple(const std::string_view name, const std::string_view description);
    void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCRC32 = crc32; }
    std::uint32_t GetHeaderCRC32() const { return fHeaderCRC32; }
 
