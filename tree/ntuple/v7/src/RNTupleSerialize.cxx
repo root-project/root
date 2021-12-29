@@ -1120,7 +1120,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   descBuilder.SetNTuple(name, description, "", RNTupleVersion(), RNTupleUuid());
+   descBuilder.SetNTuple(name, description);
 
    std::uint32_t frameSize;
    auto frame = bytes;

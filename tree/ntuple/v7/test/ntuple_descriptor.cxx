@@ -72,13 +72,13 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
    RNTupleDescriptorBuilder descBuilder;
 
    // empty string is not a valid NTuple name
-   descBuilder.SetNTuple("", "", "", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
+   descBuilder.SetNTuple("", "");
    try {
       descBuilder.EnsureValidDescriptor();
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
    }
-   descBuilder.SetNTuple("something", "", "", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
+   descBuilder.SetNTuple("something", "");
    descBuilder.EnsureValidDescriptor();
 }
 

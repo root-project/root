@@ -64,7 +64,7 @@ void ROOT::Experimental::Detail::RPageSourceFriends::AddVirtualField(
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFriends::AttachImpl()
 {
-   fBuilder.SetNTuple(fNTupleName, "", "", RNTupleVersion(), RNTupleUuid());
+   fBuilder.SetNTuple(fNTupleName, "");
    fBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .Structure(ENTupleStructure::kRecord)

@@ -441,7 +441,7 @@ TEST(RNTuple, SerializeClusterGroup)
 TEST(RNTuple, SerializeEmptyHeader)
 {
    RNTupleDescriptorBuilder builder;
-   builder.SetNTuple("ntpl", "", "", RNTupleVersion(), ROOT::Experimental::RNTupleUuid());
+   builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .FieldName("")
@@ -461,7 +461,7 @@ TEST(RNTuple, SerializeEmptyHeader)
 TEST(RNTuple, SerializeHeader)
 {
    RNTupleDescriptorBuilder builder;
-   builder.SetNTuple("ntpl", "", "", RNTupleVersion(), ROOT::Experimental::RNTupleUuid());
+   builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .FieldName("")
@@ -506,7 +506,7 @@ TEST(RNTuple, SerializeHeader)
 TEST(RNTuple, SerializeFooter)
 {
    RNTupleDescriptorBuilder builder;
-   builder.SetNTuple("ntpl", "", "", RNTupleVersion(), ROOT::Experimental::RNTupleUuid());
+   builder.SetNTuple("ntpl", "");
    builder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .FieldName("")

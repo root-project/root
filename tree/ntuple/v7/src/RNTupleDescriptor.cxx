@@ -182,13 +182,6 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
 {
    return fName == other.fName &&
           fDescription == other.fDescription &&
-          fAuthor == other.fAuthor &&
-          fCustodian == other.fCustodian &&
-          fTimeStampData == other.fTimeStampData &&
-          fTimeStampWritten == other.fTimeStampWritten &&
-          fVersion == other.fVersion &&
-          fOwnUuid == other.fOwnUuid &&
-          fGroupUuid == other.fGroupUuid &&
           fFieldDescriptors == other.fFieldDescriptors &&
           fColumnDescriptors == other.fColumnDescriptors &&
           fClusterDescriptors == other.fClusterDescriptors;
@@ -405,17 +398,11 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::RNTupleDescriptorBuild
    return result;
 }
 
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
-   const std::string_view name, const std::string_view description, const std::string_view author,
-   const RNTupleVersion &version, const RNTupleUuid &uuid)
+void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(const std::string_view name,
+                                                             const std::string_view description)
 {
    fDescriptor.fName = std::string(name);
    fDescriptor.fDescription = std::string(description);
-   fDescriptor.fAuthor = std::string(author);
-   fDescriptor.fVersion = version;
-   fDescriptor.fOwnUuid = uuid;
-   fDescriptor.fGroupUuid = uuid;
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RColumnDescriptor>
@@ -592,7 +579,7 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
 void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
 {
    fDescriptor.fName = "";
-   fDescriptor.fVersion = RNTupleVersion();
+   fDescriptor.fDescription = "";
    fDescriptor.fFieldDescriptors.clear();
    fDescriptor.fColumnDescriptors.clear();
    fDescriptor.fClusterDescriptors.clear();
