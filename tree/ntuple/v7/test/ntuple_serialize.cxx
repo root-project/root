@@ -489,9 +489,9 @@ TEST(RNTuple, SerializeHeader)
    builder.AddFieldLink(0, 42);
    builder.AddFieldLink(0, 137);
    builder.AddFieldLink(137, 13);
-   builder.AddColumn(23, 42, RNTupleVersion(), RColumnModel(EColumnType::kReal32, false), 0);
-   builder.AddColumn(17, 137, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
-   builder.AddColumn(40, 137, RNTupleVersion(), RColumnModel(EColumnType::kByte, true), 1);
+   builder.AddColumn(23, 42, RColumnModel(EColumnType::kReal32, false), 0);
+   builder.AddColumn(17, 137, RColumnModel(EColumnType::kIndex, true), 0);
+   builder.AddColumn(40, 137, RColumnModel(EColumnType::kByte, true), 1);
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(nullptr, desc);
@@ -520,11 +520,11 @@ TEST(RNTuple, SerializeFooter)
       .MakeDescriptor()
       .Unwrap());
    builder.AddFieldLink(0, 42);
-   builder.AddColumn(17, 42, RNTupleVersion(), RColumnModel(EColumnType::kIndex, true), 0);
+   builder.AddColumn(17, 42, RColumnModel(EColumnType::kIndex, true), 0);
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   builder.AddCluster(84, RNTupleVersion(), 0, ROOT::Experimental::ClusterSize_t(100));
+   builder.AddCluster(84, 0, ROOT::Experimental::ClusterSize_t(100));
    columnRange.fColumnId = 17;
    columnRange.fFirstElementIndex = 0;
    columnRange.fNElements = 100;

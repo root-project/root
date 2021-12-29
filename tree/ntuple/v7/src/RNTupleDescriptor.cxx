@@ -93,7 +93,6 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
 {
    return fColumnId == other.fColumnId &&
-          fVersion == other.fVersion &&
           fModel == other.fModel &&
           fFieldId == other.fFieldId &&
           fIndex == other.fIndex;
@@ -105,7 +104,6 @@ ROOT::Experimental::RColumnDescriptor::Clone() const
 {
    RColumnDescriptor clone;
    clone.fColumnId = fColumnId;
-   clone.fVersion = fVersion;
    clone.fModel = fModel;
    clone.fFieldId = fFieldId;
    clone.fIndex = fIndex;
@@ -140,7 +138,6 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::Experimental::RCl
 bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const
 {
    return fClusterId == other.fClusterId &&
-          fVersion == other.fVersion &&
           fFirstEntryIndex == other.fFirstEntryIndex &&
           fNEntries == other.fNEntries &&
           fColumnRanges == other.fColumnRanges &&
@@ -485,14 +482,12 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldI
    return RResult<void>::Success();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(
-   DescriptorId_t columnId, DescriptorId_t fieldId, const RNTupleVersion &version, const RColumnModel &model,
-   std::uint32_t index)
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId,
+                                                             const RColumnModel &model, std::uint32_t index)
 {
    RColumnDescriptor c;
    c.fColumnId = columnId;
    c.fFieldId = fieldId;
-   c.fVersion = version;
    c.fModel = model;
    c.fIndex = index;
    fDescriptor.fColumnDescriptors.emplace(columnId, std::move(c));
@@ -521,13 +516,11 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
    return RResult<void>::Success();
 }
 
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
-   DescriptorId_t clusterId, RNTupleVersion version, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries)
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(DescriptorId_t clusterId, NTupleSize_t firstEntryIndex,
+                                                              ClusterSize_t nEntries)
 {
    RClusterDescriptor c;
    c.fClusterId = clusterId;
-   c.fVersion = version;
    c.fFirstEntryIndex = firstEntryIndex;
    c.fNEntries = nEntries;
    fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(c));

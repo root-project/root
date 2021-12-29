@@ -89,7 +89,6 @@ using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
-using RNTupleVersion = ROOT::Experimental::RNTupleVersion;
 using RPage = ROOT::Experimental::Detail::RPage;
 using RPageAllocatorHeap = ROOT::Experimental::Detail::RPageAllocatorHeap;
 using RPageDeleter = ROOT::Experimental::Detail::RPageDeleter;

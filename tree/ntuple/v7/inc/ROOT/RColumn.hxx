@@ -312,7 +312,6 @@ public:
    RPageSource *GetPageSource() const { return fPageSource; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
-   RNTupleVersion GetVersion() const { return RNTupleVersion(); }
 };
 
 } // namespace Detail
