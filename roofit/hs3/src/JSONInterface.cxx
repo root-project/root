@@ -1,4 +1,4 @@
-#include "JSONInterface.h"
+#include "RooFitHS3/JSONInterface.h"
 
 using RooFit::Detail::JSONNode;
 

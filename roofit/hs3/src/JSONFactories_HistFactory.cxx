@@ -1,4 +1,5 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
+#include <RooFitHS3/JSONInterface.h>
 
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
@@ -17,7 +18,6 @@
 
 #include <TH1.h>
 
-#include "JSONInterface.h"
 #include "static_execute.h"
 
 using RooFit::Detail::JSONNode;

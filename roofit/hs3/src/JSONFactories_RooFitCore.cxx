@@ -1,9 +1,9 @@
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
+#include <RooFitHS3/JSONInterface.h>
 
 #include <RooDataHist.h>
 #include <RooWorkspace.h>
 
-#include "JSONInterface.h"
 #include "static_execute.h"
 
 using RooFit::Detail::JSONNode;
@@ -41,6 +41,37 @@ public:
    }
 };
 } // namespace
+
+#include <RooFormulaVar.h>
+
+namespace {
+class RooFormulaVarFactory : public RooJSONFactoryWSTool::Importer {
+public:
+   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      if (!p.has_child("dependents")) {
+         RooJSONFactoryWSTool::error("no dependents of '" + name + "'");
+      }
+      if (!p.has_child("formula")) {
+         RooJSONFactoryWSTool::error("no formula given for '" + name + "'");
+      }
+      RooArgList dependents;
+      for (const auto &d : p["dependents"].children()) {
+         std::string objname(RooJSONFactoryWSTool::name(d));
+         TObject *obj = tool->workspace()->obj(objname.c_str());
+         if (obj->InheritsFrom(RooAbsArg::Class())) {
+            dependents.add(*static_cast<RooAbsArg *>(obj));
+         }
+      }
+      TString formula(p["formula"].val());
+      RooFormulaVar thevar(name.c_str(), formula.Data(), dependents);
+      tool->workspace()->import(thevar, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return true;
+   }
+};
+} // namespace
+
 
 #include <RooProdPdf.h>
 
@@ -282,6 +313,25 @@ public:
 };
 } // namespace
 
+#include <RooFormulaVar.h>
+
+namespace {
+class RooFormulaVarStreamer : public RooJSONFactoryWSTool::Exporter {
+public:
+   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      const RooFormulaVar *var = static_cast<const RooFormulaVar *>(func);
+      elem["type"] << "formulavar";
+      elem["formula"] << var->expression().Data();
+      auto &factors = elem["dependents"];
+      for (const auto &f : var->dependents()) {
+         factors.append_child() << f->GetName();
+      }
+      return true;
+   }
+};
+} // namespace
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -291,6 +341,7 @@ STATIC_EXECUTE(
 
    RooJSONFactoryWSTool::registerImporter("pdfprod", new RooProdPdfFactory());
    RooJSONFactoryWSTool::registerImporter("genericpdf", new RooGenericPdfFactory());
+   RooJSONFactoryWSTool::registerImporter("formulavar", new RooFormulaVarFactory());   
    RooJSONFactoryWSTool::registerImporter("binsampling", new RooBinSamplingPdfFactory());
    RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory());
    RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory());
@@ -299,5 +350,8 @@ STATIC_EXECUTE(
    RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(), new RooSimultaneousStreamer());
    RooJSONFactoryWSTool::registerExporter(RooBinSamplingPdf::Class(), new RooBinSamplingPdfStreamer());
    RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(), new RooHistFuncStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooGenericPdf::Class(), new RooGenericPdfStreamer());)
+   RooJSONFactoryWSTool::registerExporter(RooGenericPdf::Class(), new RooGenericPdfStreamer());
+   RooJSONFactoryWSTool::registerExporter(RooFormulaVar::Class(), new RooFormulaVarStreamer());
+
+               )
 } // namespace

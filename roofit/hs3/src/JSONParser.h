@@ -1,6 +1,7 @@
 #ifndef JSON_PARSER_H
 #define JSON_PARSER_H
-#include "JSONInterface.h"
+
+#include <RooFitHS3/JSONInterface.h>
 
 #include <istream>
 #include <memory>

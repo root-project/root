@@ -5,7 +5,6 @@
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Sample.h"
 
-#include "JSONInterface.h"
 
 #ifdef ROOFIT_HS3_WITH_RYML
 #include "RYMLParser.h"
