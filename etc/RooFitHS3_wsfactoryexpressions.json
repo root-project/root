@@ -7,6 +7,13 @@
             "sigma"
         ]
     },
+    "Exponential": {
+        "class": "RooExponential",
+        "arguments": [
+            "x",
+            "c"
+        ]
+    },    
     "Poisson": {
         "class": "RooPoisson",
         "arguments": [
