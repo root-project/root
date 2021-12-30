@@ -92,9 +92,6 @@ WinNT.*.Editor:          notepad
 # Default Fitter (current choices are Minuit and Fumili).
 Root.Fitter:             Minuit
 
-# Enable (default) or disable the RooFit banner printing.
-# RooFit.Banner:  yes
-
 # Specify list of file endings which TTabCom (TAB completion) should ignore.
 #TabCom.FileIgnore:       .cpp:.h:.cmz
 
