@@ -715,7 +715,7 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
          }
          RooJSONFactoryWSTool::exportAttributes(func, elem);
       } catch (const std::exception &ex) {
-         std::cerr << ex.what() << ". skipping." << std::endl;
+         std::cerr << "error exporting " << func->Class()->GetName() << " " << func->GetName() << ": " << ex.what() << ". skipping." << std::endl;
          return;
       }
    } else { // generic export using the factory expressions
@@ -911,7 +911,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
       throw;
    } catch (const std::exception &ex) {
       std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() " << ex.what() << ". skipping." << std::endl;
+      ss << "RooJSONFactoryWSTool(): error importing " << name << ": " << ex.what() << ". skipping." << std::endl;
       logInputArgumentsError(std::move(ss));
    }
 }
