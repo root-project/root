@@ -291,7 +291,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooArgList.cxx
     src/RooArgProxy.cxx
     src/RooArgSet.cxx
-    src/Initialisation.cxx
     src/RooBinIntegrator.cxx
     src/RooBinnedGenContext.cxx
     src/RooBinningCategory.cxx
