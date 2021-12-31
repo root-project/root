@@ -56,6 +56,16 @@ std::complex<double> evalCerfApprox(double _x, double u, double c)
 // Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
 inline std::complex<double> evalCerf(double swt, double u, double c)
 {
+  if(swt == 0.0) {
+    // For a purely complex argument z, the faddeeva function equals to
+    // exp(z*z) * erfc(z). Together with coefficient exp(-u*u), this means the
+    // function can be simplified to:
+    const double z = u + c;
+    return z > -4.0 ? (std::exp(c * (c + 2.*u)) * std::erfc(z)) : evalCerfApprox(0.,u,c);
+    // This version with std::erfc is about twice as fast as the faddeeva_fast
+    // code path, speeding up in particular the analytical convolution of an
+    // exponential decay with a Gaussian (like in RooDecay).
+  }
   std::complex<double> z(swt*c,u+c);
   return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
 }
