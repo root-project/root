@@ -692,7 +692,10 @@ bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet
 
    addParameters(tempList, observables, stripDisconnected);
 
-   outputSet.add(tempList);
+   // The adding from the list to the set has to be silent to not complain
+   // about duplicate parameters. After all, it's normal that parameters can
+   // appear in sifferent components of the model.
+   outputSet.add(tempList, /*silent=*/true);
    outputSet.sort();
 
    // Cache parameter set
