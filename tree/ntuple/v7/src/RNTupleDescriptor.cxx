@@ -320,6 +320,20 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool ROOT::Experimental::RColumnGroupDescriptor::operator==(const RColumnGroupDescriptor &other) const
+{
+   return fColumnGroupId == other.fColumnGroupId && fColumnIds == other.fColumnIds;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool ROOT::Experimental::RClusterGroupDescriptor::operator==(const RClusterGroupDescriptor &other) const
+{
+   return fClusterGroupId == other.fClusterGroupId && fClusterIds == other.fClusterIds &&
+          fFirstEntryIndex == other.fFirstEntryIndex && fNEntries == other.fNEntries;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(

@@ -145,6 +145,35 @@ public:
    DescriptorId_t GetFieldId() const { return fFieldId; }
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RColumnGroupDescriptor
+\ingroup NTuple
+\brief Meta-data for a sets of columns; non-trivial column groups are used for sharded clusters
+
+Clusters can span a subset of columns. Such subsets are described as a column group. An empty column group
+is used to denote the column group of all the columns. Every ntuple has at least one column group.
+*/
+// clang-format on
+class RColumnGroupDescriptor {
+private:
+   DescriptorId_t fColumnGroupId = kInvalidDescriptorId;
+   std::unordered_set<DescriptorId_t> fColumnIds;
+
+public:
+   RColumnGroupDescriptor() = default;
+   RColumnGroupDescriptor(const RColumnGroupDescriptor &other) = delete;
+   RColumnGroupDescriptor &operator=(const RColumnGroupDescriptor &other) = delete;
+   RColumnGroupDescriptor(RColumnGroupDescriptor &&other) = default;
+   RColumnGroupDescriptor &operator=(RColumnGroupDescriptor &&other) = default;
+
+   bool operator==(const RColumnGroupDescriptor &other) const;
+
+   DescriptorId_t GetId() const { return fColumnGroupId; }
+   const std::unordered_set<DescriptorId_t> &GetColumnIds() const { return fColumnIds; }
+   bool Contains(DescriptorId_t columnId) const { return fColumnIds.empty() || fColumnIds.count(columnId) > 0; }
+   bool HasAllColumns() const { return fColumnIds.empty(); }
+};
 
 // clang-format off
 /**
@@ -262,6 +291,41 @@ public:
    std::uint64_t GetBytesOnStorage() const;
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RClusterGroupDescriptor
+\ingroup NTuple
+\brief Clusters are stored in cluster groups. Cluster groups span all the columns of a certain event range.
+
+Very large ntuples or combined ntuples (chains, friends) contain multiple cluster groups. The cluster groups
+may contain shared clusters. However, a cluster group must contain the clusters spanning all the columns for the
+given event range. Cluster groups must partition the entry range of an ntuple. The cluster group spanning all
+clusters is denoted by an empty fClusterIds set. Every ntuple has at least one cluster group.
+*/
+// clang-format on
+class RClusterGroupDescriptor {
+private:
+   DescriptorId_t fClusterGroupId = kInvalidDescriptorId;
+   std::unordered_set<DescriptorId_t> fClusterIds;
+   NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
+   NTupleSize_t fNEntries = 0;
+
+public:
+   RClusterGroupDescriptor() = default;
+   RClusterGroupDescriptor(const RClusterGroupDescriptor &other) = delete;
+   RClusterGroupDescriptor &operator=(const RClusterGroupDescriptor &other) = delete;
+   RClusterGroupDescriptor(RClusterGroupDescriptor &&other) = default;
+   RClusterGroupDescriptor &operator=(RClusterGroupDescriptor &&other) = default;
+
+   bool operator==(const RClusterGroupDescriptor &other) const;
+
+   DescriptorId_t GetId() const { return fClusterGroupId; }
+   const std::unordered_set<DescriptorId_t> &GetClusterIds() const { return fClusterIds; }
+   NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
+   NTupleSize_t GetNEntries() const { return fNEntries; }
+   bool Contains(DescriptorId_t clusterId) const { return fClusterIds.empty() && fClusterIds.count(clusterId) > 0; }
+   bool HasAllClusters() const { return fClusterIds.empty(); }
+};
 
 // clang-format off
 /**
