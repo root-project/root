@@ -375,6 +375,29 @@ ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ROOT::Experimental::RResult<ROOT::Experimental::RClusterGroupDescriptor>
+ROOT::Experimental::RClusterGroupDescriptorBuilder::MoveDescriptor()
+{
+   if (fClusterGroup.fClusterGroupId == kInvalidDescriptorId)
+      return R__FAIL("unset cluster group ID");
+   RClusterGroupDescriptor result;
+   std::swap(result, fClusterGroup);
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+ROOT::Experimental::RResult<ROOT::Experimental::RColumnGroupDescriptor>
+ROOT::Experimental::RColumnGroupDescriptorBuilder::MoveDescriptor()
+{
+   if (fColumnGroup.fColumnGroupId == kInvalidDescriptorId)
+      return R__FAIL("unset column group ID");
+   RColumnGroupDescriptor result;
+   std::swap(result, fColumnGroup);
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::EnsureFieldExists(DescriptorId_t fieldId) const {
