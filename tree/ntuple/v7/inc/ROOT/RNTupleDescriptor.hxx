@@ -156,6 +156,8 @@ is used to denote the column group of all the columns. Every ntuple has at least
 */
 // clang-format on
 class RColumnGroupDescriptor {
+   friend class RColumnGroupDescriptorBuilder;
+
 private:
    DescriptorId_t fColumnGroupId = kInvalidDescriptorId;
    std::unordered_set<DescriptorId_t> fColumnIds;
@@ -304,6 +306,8 @@ clusters is denoted by an empty fClusterIds set. Every ntuple has at least one c
 */
 // clang-format on
 class RClusterGroupDescriptor {
+   friend class RClusterGroupDescriptorBuilder;
+
 private:
    DescriptorId_t fClusterGroupId = kInvalidDescriptorId;
    std::unordered_set<DescriptorId_t> fClusterIds;
@@ -769,6 +773,63 @@ public:
    RResult<RClusterDescriptor> MoveDescriptor();
 };
 
+// clang-format off
+/**
+\class ROOT::Experimental::RClusterGroupDescriptorBuilder
+\ingroup NTuple
+\brief A helper class for piece-wise construction of an RClusterGroupDescriptor
+*/
+// clang-format on
+class RClusterGroupDescriptorBuilder {
+private:
+   RClusterGroupDescriptor fClusterGroup;
+
+public:
+   RClusterGroupDescriptorBuilder() = default;
+
+   RClusterGroupDescriptorBuilder &ClusterGroupId(DescriptorId_t clusterGroupId)
+   {
+      fClusterGroup.fClusterGroupId = clusterGroupId;
+      return *this;
+   }
+   RClusterGroupDescriptorBuilder &FirstEntryIndex(NTupleSize_t firstEntryIndex)
+   {
+      fClusterGroup.fFirstEntryIndex = firstEntryIndex;
+      return *this;
+   }
+   RClusterGroupDescriptorBuilder &NEntries(NTupleSize_t nEntries)
+   {
+      fClusterGroup.fNEntries = nEntries;
+      return *this;
+   }
+   void AddCluster(DescriptorId_t clusterId) { fClusterGroup.fClusterIds.insert(clusterId); }
+
+   RResult<RClusterGroupDescriptor> MoveDescriptor();
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::RColumnGroupDescriptorBuilder
+\ingroup NTuple
+\brief A helper class for piece-wise construction of an RColumnGroupDescriptor
+*/
+// clang-format on
+class RColumnGroupDescriptorBuilder {
+private:
+   RColumnGroupDescriptor fColumnGroup;
+
+public:
+   RColumnGroupDescriptorBuilder() = default;
+
+   RColumnGroupDescriptorBuilder &ColumnGroupId(DescriptorId_t columnGroupId)
+   {
+      fColumnGroup.fColumnGroupId = columnGroupId;
+      return *this;
+   }
+   void AddColumn(DescriptorId_t columnId) { fColumnGroup.fColumnIds.insert(columnId); }
+
+   RResult<RColumnGroupDescriptor> MoveDescriptor();
+};
 
 // clang-format off
 /**
