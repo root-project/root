@@ -367,6 +367,7 @@ private:
 
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
+   std::unordered_map<DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
    /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
    /// from a chain of files
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
@@ -483,13 +484,63 @@ public:
 
    // clang-format off
    /**
+   \class ROOT::Experimental::RNTupleDescriptor::RClusterGroupDescriptorIterable
+   \ingroup NTuple
+   \brief Used to loop over all the cluster groups of an ntuple (in unspecified order)
+
+   Enumerate all cluster group IDs from the cluster group descriptor.  No specific order can be assumed, use
+   FindNextClusterGroupId and FindPrevClusterGroupId to travers clusters groups by entry number.
+   */
+   // clang-format on
+   class RClusterGroupDescriptorIterable {
+   private:
+      /// The associated NTuple for this range.
+      const RNTupleDescriptor &fNTuple;
+
+   public:
+      class RIterator {
+      private:
+         /// The enclosing range's NTuple.
+         const RNTupleDescriptor &fNTuple;
+         std::size_t fIndex = 0;
+
+      public:
+         using iterator_category = std::forward_iterator_tag;
+         using iterator = RIterator;
+         using value_type = RClusterGroupDescriptor;
+         using difference_type = std::ptrdiff_t;
+         using pointer = RClusterGroupDescriptor *;
+         using reference = const RClusterGroupDescriptor &;
+
+         RIterator(const RNTupleDescriptor &ntuple, std::size_t index) : fNTuple(ntuple), fIndex(index) {}
+         iterator operator++()
+         {
+            ++fIndex;
+            return *this;
+         }
+         reference operator*()
+         {
+            auto it = fNTuple.fClusterGroupDescriptors.begin();
+            std::advance(it, fIndex);
+            return it->second;
+         }
+         bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
+         bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      };
+
+      RClusterGroupDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
+      RIterator begin() { return RIterator(fNTuple, 0); }
+      RIterator end() { return RIterator(fNTuple, fNTuple.GetNClusterGroups()); }
+   };
+
+   // clang-format off
+   /**
    \class ROOT::Experimental::RNTupleDescriptor::RClusterDescriptorIterable
    \ingroup NTuple
    \brief Used to loop over all the clusters of an ntuple (in unspecified order)
 
    Enumerate all cluster IDs from the cluster descriptor.  No specific order can be assumed, use
    FindNextClusterId and FindPrevClusterId to travers clusters by entry number.
-   TODO(jblomer): review naming of *Range classes and possibly rename consistently to *Iterable
    */
    // clang-format on
    class RClusterDescriptorIterable {
@@ -543,6 +594,10 @@ public:
    const RColumnDescriptor& GetColumnDescriptor(DescriptorId_t columnId) const {
       return fColumnDescriptors.at(columnId);
    }
+   const RClusterGroupDescriptor &GetClusterGroupDescriptor(DescriptorId_t clusterGroupId) const
+   {
+      return fClusterGroupDescriptors.at(clusterGroupId);
+   }
    const RClusterDescriptor& GetClusterDescriptor(DescriptorId_t clusterId) const {
       return fClusterDescriptors.at(clusterId);
    }
@@ -581,6 +636,8 @@ public:
       return RColumnDescriptorIterable(*this, GetFieldDescriptor(fieldId));
    }
 
+   RClusterGroupDescriptorIterable GetClusterGroupIterable() const { return RClusterGroupDescriptorIterable(*this); }
+
    RClusterDescriptorIterable GetClusterIterable() const
    {
       return RClusterDescriptorIterable(*this);
@@ -591,6 +648,7 @@ public:
 
    std::size_t GetNFields() const { return fFieldDescriptors.size(); }
    std::size_t GetNColumns() const { return fColumnDescriptors.size(); }
+   std::size_t GetNClusterGroups() const { return fClusterGroupDescriptors.size(); }
    std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
 
    // The number of entries as seen with the currently loaded cluster meta-data; there might be more
@@ -604,7 +662,10 @@ public:
    /// Searches for a top-level field
    DescriptorId_t FindFieldId(std::string_view fieldName) const;
    DescriptorId_t FindColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
+   DescriptorId_t FindClusterGroupId(NTupleSize_t index) const;
    DescriptorId_t FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const;
+   DescriptorId_t FindNextClusterGroupId(DescriptorId_t clusterGroupId) const;
+   DescriptorId_t FindPrevClusterGroupId(DescriptorId_t clusterGroupId) const;
    DescriptorId_t FindNextClusterId(DescriptorId_t clusterId) const;
    DescriptorId_t FindPrevClusterId(DescriptorId_t clusterId) const;
 
