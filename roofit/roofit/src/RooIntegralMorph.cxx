@@ -405,17 +405,23 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
     //_hist->get(i) ;
     hist()->set(0) ;
   }
+
+  double x1 = _x->getMin("cache");
+  double x2 = _x->getMin("cache");
+
+  double xMax = _x->getMax("cache");
+
   // Transfer calculated values to histogram
   for (int i=_yatXmin ; i<_yatXmax ; i++) {
 
     double y = _yatX[i] ;
 
-    double x1,x2 ;
-
-    double xMin = _x->getMin("cache") ;
-    double xMax = _x->getMax("cache") ;
-    _rf1->findRoot(x1,xMin,xMax,y) ;
-    _rf2->findRoot(x2,xMin,xMax,y) ;
+    // Little optimization here exploiting the fact that th cumulative
+    // distribution functions increase monotonically, so we already know that
+    // the next x-value must be higher than the last one as y is increasing. So
+    // we can use the previous x values as lower bounds.
+    _rf1->findRoot(x1,x1,xMax,y) ;
+    _rf2->findRoot(x2,x2,xMax,y) ;
 
     _x->setVal(x1) ; double f1x1 = _pdf1->getVal(&nsetTmp) ;
     _x->setVal(x2) ; double f2x2 = _pdf2->getVal(&nsetTmp) ;
