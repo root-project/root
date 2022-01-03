@@ -139,6 +139,23 @@ public:
 };
 } // namespace
 
+#include <RooBinWidthFunction.h>
+
+namespace {
+class RooBinWidthFunctionFactory : public RooJSONFactoryWSTool::Importer {
+public:
+   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      bool divideByBinWidth = p["divideByBinWidth"].val_bool();
+      RooHistFunc* hf = dynamic_cast<RooHistFunc*>(tool->request<RooAbsReal>(p["histFunc"].val(),name));
+      RooBinWidthFunction func(name.c_str(), name.c_str(), *hf, divideByBinWidth);
+      tool->workspace()->import(func, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return true;
+   }
+};
+} // namespace
+
 #include <RooSimultaneous.h>
 #include <RooCategory.h>
 
@@ -313,6 +330,23 @@ public:
 };
 } // namespace
 
+#include <RooBinWidthFunction.h>
+
+namespace {
+class RooBinWidthFunctionStreamer : public RooJSONFactoryWSTool::Exporter {
+public:
+   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      const RooBinWidthFunction *pdf = static_cast<const RooBinWidthFunction *>(func);
+      elem["type"] << "binwidth";
+      elem["histogram"] << pdf->histFunc()->GetName();
+      elem["divideByBinWidth"] << pdf->divideByBinWidth();
+      return true;
+   }
+};
+} // namespace
+
+
 #include <RooFormulaVar.h>
 
 namespace {
@@ -345,7 +379,9 @@ STATIC_EXECUTE(
    RooJSONFactoryWSTool::registerImporter("binsampling", new RooBinSamplingPdfFactory());
    RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory());
    RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory());
-
+   RooJSONFactoryWSTool::registerImporter("binwidth", new RooBinWidthFunctionFactory());
+   
+   RooJSONFactoryWSTool::registerExporter(RooBinWidthFunction::Class(), new RooBinWidthFunctionStreamer());   
    RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new RooProdPdfStreamer());
    RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(), new RooSimultaneousStreamer());
    RooJSONFactoryWSTool::registerExporter(RooBinSamplingPdf::Class(), new RooBinSamplingPdfStreamer());
