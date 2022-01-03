@@ -41,8 +41,8 @@ public:
       virtual ~Exporter(){};
    };
 
-   typedef std::map<const std::string, const Importer *> ImportMap;
-   typedef std::map<const TClass *, const Exporter *> ExportMap;
+   typedef std::map<const std::string, std::vector<const Importer *> > ImportMap;
+   typedef std::map<const TClass *, std::vector<const Exporter *> > ExportMap;
 
    struct Var {
       int nbins;
@@ -102,9 +102,9 @@ public:
    RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}
    RooWorkspace *workspace() { return this->_workspace; }
 
-   static bool registerImporter(const std::string &key, const RooJSONFactoryWSTool::Importer *f);
+   static bool registerImporter(const std::string &key, const RooJSONFactoryWSTool::Importer *f, bool topPriority = true);
    static int removeImporters(const std::string &needle);
-   static bool registerExporter(const TClass *key, const RooJSONFactoryWSTool::Exporter *f);
+   static bool registerExporter(const TClass *key, const RooJSONFactoryWSTool::Exporter *f, bool topPriority = true);
    static int removeExporters(const std::string &needle);
    static void printImporters();
    static void printExporters();
