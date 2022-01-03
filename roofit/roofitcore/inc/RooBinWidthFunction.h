@@ -68,6 +68,8 @@ public:
     return _histFunc->plotSamplingHint(obs, xlo, xhi);
   }
 
+  bool divideByBinWidth() const { return _divideByBinWidth; }
+  const RooHistFunc* histFunc() const { return &(*_histFunc); }  
   double evaluate() const override;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
 
