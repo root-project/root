@@ -1664,7 +1664,9 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
   RooArgSet allObservables;
   for( const auto& catPair : splitCat) {
     const auto& catPdf = simpdf.getPdf(catPair.first.c_str());
-    allObservables.add(*(catPdf->getObservables(this)));
+    RooArgSet obsSet;
+    catPdf->getObservables(this->get(), obsSet);
+    allObservables.add(obsSet);
   }
   subsetVars.remove(allObservables, kTRUE, kTRUE);
 
@@ -1675,7 +1677,9 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
       // Add in the subset only the observables corresponding to this category
       RooArgSet subsetVarsCat(subsetVars);
       const auto& catPdf = simpdf.getPdf(nameIdx.first.c_str());
-      subsetVarsCat.add(*(catPdf->getObservables(this)));
+      RooArgSet obsSet;
+      catPdf->getObservables(this->get(), obsSet);
+      subsetVarsCat.add(obsSet);
 
       RooAbsData* subset = emptyClone(nameIdx.first.c_str(), nameIdx.first.c_str(), &subsetVarsCat,(addWV?"weight":0)) ;
       dsetList->Add((RooAbsArg*)subset) ;
