@@ -502,20 +502,20 @@ TEST(RNTuple, ModelId)
       m1->SetDescription("abc");
       FAIL() << "changing frozen model should throw";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to set description"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
    try {
       m1->MakeField<float>("pt");
       FAIL() << "changing frozen model should throw";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to add field"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
    try {
       float dummy;
       m1->AddField<float>("pt", &dummy);
       FAIL() << "changing frozen model should throw";
    } catch (const RException &err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to add field"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
    }
 
    EXPECT_NE(m1->GetModelId(), m2->GetModelId());
@@ -574,13 +574,13 @@ TEST(RNTuple, BareEntry)
          model->GetDefaultEntry();
          FAIL() << "accessing default entry of bare model should throw";
       } catch (const RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to get bare model's default entry"));
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
       try {
          model->Get<float>("pt");
          FAIL() << "accessing default entry of bare model should throw";
       } catch (const RException &err) {
-         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to get bare model's default entry"));
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
       }
 
       auto e1 = model->CreateEntry();
