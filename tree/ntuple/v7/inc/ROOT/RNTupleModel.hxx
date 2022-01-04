@@ -60,6 +60,12 @@ class RNTupleModel {
    /// of this NTuple model. Throws an RException for invalid names.
    void EnsureValidFieldName(std::string_view fieldName);
 
+   /// Throws an RException if fFrozen is true
+   void EnsureNotFrozen() const;
+
+   /// Throws an RException if fDefaultEntry is nullptr
+   void EnsureNotBare() const;
+
    RNTupleModel();
 
 public:
@@ -70,7 +76,7 @@ public:
    std::unique_ptr<RNTupleModel> Clone() const;
    static std::unique_ptr<RNTupleModel> Create();
    /// A bare model has no default entry
-   static std::unique_ptr<RNTupleModel> CreateBare();
+   static std::unique_ptr<RNTupleModel> CreateBare() { return std::unique_ptr<RNTupleModel>(new RNTupleModel()); }
 
    /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
    ///
@@ -127,8 +133,7 @@ public:
    std::shared_ptr<T> MakeField(std::pair<std::string_view, std::string_view> fieldNameDesc,
       ArgsT&&... args)
    {
-      if (IsFrozen())
-         throw RException(R__FAIL("invalid attempt to add field to frozen model"));
+      EnsureNotFrozen();
       EnsureValidFieldName(fieldNameDesc.first);
       auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
       field->SetDescription(fieldNameDesc.second);
@@ -153,10 +158,8 @@ public:
    /// Throws an exception if fromWhere is null.
    template <typename T>
    void AddField(std::pair<std::string_view, std::string_view> fieldNameDesc, T* fromWhere) {
-      if (IsFrozen())
-         throw RException(R__FAIL("invalid attempt to add field to frozen model"));
-      if (!fDefaultEntry)
-         throw RException(R__FAIL("invalid attempt capture value to a bare model's default entry"));
+      EnsureNotFrozen();
+      EnsureNotBare();
       if (!fromWhere)
          throw RException(R__FAIL("null field fromWhere"));
       EnsureValidFieldName(fieldNameDesc.first);
@@ -170,8 +173,7 @@ public:
    template <typename T>
    T *Get(std::string_view fieldName) const
    {
-      if (!fDefaultEntry)
-         throw RException(R__FAIL("invalid attempt to get bare model's default entry"));
+      EnsureNotBare();
       return fDefaultEntry->Get<T>(fieldName);
    }
 

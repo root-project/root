@@ -37,6 +37,18 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
    }
 }
 
+void ROOT::Experimental::RNTupleModel::EnsureNotFrozen() const
+{
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to modify frozen model"));
+}
+
+void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
+{
+   if (!fDefaultEntry)
+      throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
+}
+
 ROOT::Experimental::RNTupleModel::RNTupleModel()
   : fFieldZero(std::make_unique<RFieldZero>())
 {}
@@ -46,11 +58,6 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    auto model = CreateBare();
    model->fDefaultEntry = std::unique_ptr<REntry>(new REntry());
    return model;
-}
-
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::CreateBare()
-{
-   return std::unique_ptr<RNTupleModel>(new RNTupleModel());
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Clone() const
@@ -73,8 +80,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
 
 void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
-   if (IsFrozen())
-      throw RException(R__FAIL("invalid attempt to add field to frozen model"));
+   EnsureNotFrozen();
    if (!field)
       throw RException(R__FAIL("null field"));
    EnsureValidFieldName(field->GetName());
@@ -88,8 +94,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
 std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental::RNTupleModel::MakeCollection(
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
-   if (IsFrozen())
-      throw RException(R__FAIL("invalid attempt to add collection to frozen model"));
+   EnsureNotFrozen();
    EnsureValidFieldName(fieldName);
    if (!collectionModel) {
       throw RException(R__FAIL("null collectionModel"));
@@ -128,8 +133,7 @@ ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry() 
 {
    if (!IsFrozen())
       throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
-   if (!fDefaultEntry)
-      throw RException(R__FAIL("invalid attempt to get bare model's default entry"));
+   EnsureNotBare();
    return fDefaultEntry.get();
 }
 
@@ -170,7 +174,6 @@ void ROOT::Experimental::RNTupleModel::Freeze()
 
 void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)
 {
-   if (IsFrozen())
-      throw RException(R__FAIL("invalid attempt to set description of frozen model"));
+   EnsureNotFrozen();
    fDescription = std::string(description);
 }
