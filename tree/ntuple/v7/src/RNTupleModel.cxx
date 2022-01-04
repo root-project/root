@@ -69,7 +69,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
    if (fDefaultEntry) {
-      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry());
+      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(fModelId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
          cloneModel->fDefaultEntry->AddValue(f->GenerateValue());
       }
