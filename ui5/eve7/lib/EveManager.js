@@ -37,36 +37,6 @@ sap.ui.define([], function() {
 
       this.initialized = false;
       this.busyProcessingChanges = false;
-
-
-      // ---------------------------------
-      JSROOT.EVE.console = {};
-      JSROOT.EVE.console.txt = "";
-
-      JSROOT.EVE.console.stdlog = console.log.bind(console);
-      console.log = function () {
-         JSROOT.EVE.console.txt += "<p>";
-         JSROOT.EVE.console.txt += Array.from(arguments);
-         JSROOT.EVE.console.stdlog.apply(console, arguments);
-         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
-      }
-
-      JSROOT.EVE.console.stderror = console.error.bind(console);
-      console.error = function () {
-         JSROOT.EVE.console.txt += "<p style=\"color:red;\">";
-         JSROOT.EVE.console.txt += Array.from(arguments);
-         JSROOT.EVE.console.stderror.apply(console, arguments);
-         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
-      }
-
-      JSROOT.EVE.console.stdwarn = console.warn.bind(console);
-      console.warning = function () {
-         JSROOT.EVE.console.txt += "<p style=\"color:yellow;\">";
-         JSROOT.EVE.console.txt += Array.from(arguments);
-         JSROOT.EVE.console.stdwarn.apply(console, arguments);
-         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
-      }
-
    }
 
    //==============================================================================

@@ -1,0 +1,13 @@
+<mvc:View id="ClientLog"
+  	controllerName="rootui5.eve7.controller.ClientLog"
+    height="100%"
+	xmlns:mvc="sap.ui.core.mvc"
+	xmlns="sap.m">
+
+	<Button id="messagePopoverBtn"
+		icon="{ path: '/', formatter: '.buttonIconFormatter' }"
+		type="{ path: '/', formatter: '.buttonTypeFormatter' }"
+		text= "{path: '/', formatter: '.highestSeverityMessages' }"
+		press=".handleMessagePopoverPress"
+	/>
+</mvc:View>

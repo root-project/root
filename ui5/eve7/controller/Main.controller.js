@@ -6,15 +6,17 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/m/library',
                'sap/m/Button',
                'sap/m/MenuItem',
-               'rootui5/eve7/lib/EveManager'
-], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, EveManager) {
+               'rootui5/eve7/lib/EveManager',
+               "sap/ui/core/mvc/XMLView",
+               'sap/ui/model/json/JSONModel'
+], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, EveManager, XMLView, JSONModel) {
 
    "use strict";
 
    return Controller.extend("rootui5.eve7.controller.Main", {
       onInit: function () {
-
          this.mgr = new EveManager();
+         this.initClientLog();
 
          var conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
          this.mgr.UseConnection(conn_handle);
@@ -25,6 +27,7 @@ sap.ui.define(['sap/ui/core/Component',
          var elem = this.byId("Summary");
          var ctrl = elem.getController();
          ctrl.SetMgr(this.mgr);
+
       },
 
       onDisconnect : function() {
@@ -38,6 +41,57 @@ sap.ui.define(['sap/ui/core/Component',
          t.$().css('color', below ? 'yellow' : '')
       },
 
+      initClientLog: function() {
+         var consoleObj = {};
+         consoleObj.data = [];
+
+         consoleObj.model = new JSONModel();
+         consoleObj.model.setData(consoleObj.data);
+
+         consoleObj.cntInfo = 0;
+         consoleObj.cntWarn = 0;
+         consoleObj.cntErr = 0;
+
+         consoleObj.stdlog = console.log.bind(console);
+         console.log = function ()
+         {
+            consoleObj.data.push({ type: "Information", title: Array.from(arguments), counter: ++consoleObj.cntInfo });
+            consoleObj.stdlog.apply(console, arguments);
+            consoleObj.model.setData(consoleObj.data);
+            consoleObj.model.refresh(true);
+         };
+
+         consoleObj.stdwarn = console.warn.bind(console);
+         console.warning = function ()
+         {
+            consoleObj.data.push({ type: "Warning", title: Array.from(arguments), counter: ++consoleObj.cntWarn });
+            consoleObj.stdwarn.apply(console, arguments);
+            consoleObj.model.setData(consoleObj.data);
+            consoleObj.model.refresh(true);
+         };
+
+         consoleObj.stderror = console.error.bind(console);
+         console.error = function ()
+         {
+            consoleObj.data.push({ type: "Error", title: Array.from(arguments), counter: ++consoleObj.cntErr });
+            consoleObj.stderror.apply(console, arguments);
+            consoleObj.model.setData(consoleObj.data);
+            consoleObj.model.refresh(true);
+         };
+
+         // create GUI ClientLog
+         let pthis = this;
+         XMLView.create({
+            viewName: "rootui5.eve7.view.ClientLog",
+         }).then(function (oView)
+         {
+            oView.setModel(consoleObj.model);
+            oView.getController().oDialog.setModel(consoleObj.model);
+            let logCtrl = oView.getController();
+            var toolbar = pthis.byId("otb1");
+            toolbar.addContentRight(logCtrl.getButton());
+         });
+      },
 
       UpdateCommandsButtons: function(cmds) {
          if (!cmds || this.commands) return;
@@ -191,50 +245,6 @@ sap.ui.define(['sap/ui/core/Component',
 
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");
-      },
-
-      showLog: function (oEvent) {
-         let oPopover = sap.ui.getCore().byId("logView");
-         if (!oPopover)
-         {
-            let oFT = new sap.m.FormattedText("EveConsoleText", {
-               convertLinksToAnchorTags: sap.m.LinkConversion.All,
-               width: "100%",
-               height: "auto"
-            });
-
-            oPopover = new sap.m.Popover("logView", {
-               placement: sap.m.PlacementType.Auto,
-               title: "Console log",
-               content: [
-                  oFT
-               ]
-            });
-
-            // footer
-            let fa = new sap.m.OverflowToolbar();
-            let btnDebug = new sap.m.CheckBox({ text: "Debug", selected: JSROOT.EVE.gDebug ? false : JSROOT.EVE.gDebug });
-            btnDebug.attachSelect(
-               function (oEvent) {
-                  JSROOT.EVE.gDebug = this.getSelected();
-               }
-            );
-            fa.addContent(btnDebug);
-            let cBtn = new sap.m.Button({ text: "Close", icon: "sap-icon://sys-cancel", press: function () { oPopover.close(); }});
-            fa.addContent(cBtn);
-            oPopover.setFooter(fa);
-
-            // set callback function
-            JSROOT.EVE.console.refresh = this.loadLog;
-         }
-
-         this.loadLog();
-         oPopover.openBy(this.getView().byId("logButton"));
-      },
-
-      loadLog: function () {
-         let oFT = sap.ui.getCore().byId("EveConsoleText");
-         oFT.setHtmlText(JSROOT.EVE.console.txt.replace(/\n/g, "<p>"));
       },
 
       showUserURL : function(oEvent) {

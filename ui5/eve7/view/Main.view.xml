@@ -73,7 +73,6 @@
                 <FormattedText id="centerTitle" htmlText="ROOT Event Visalization Environment"/>
               </contentMiddle>
               <contentRight>
-              <Button id="logButton" icon="sap-icon://show" text="log" press="showLog"/>
             <MenuButton text="Help" type="Default"  enabled="true">
               <menu>
                 <Menu >
