@@ -45,7 +45,7 @@ public:
         const char* globalObservablesTag,
         bool takeGlobalObservablesFromData,
         bool cloneConstraints,
-        RooWorkspace * workspace = nullptr);
+        RooWorkspace * workspace);
 
   bool setData(RooAbsData const& data, bool cloneData=true);
   /// \copydoc setData(RooAbsData const&, bool)
