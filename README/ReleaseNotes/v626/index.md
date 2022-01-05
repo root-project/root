@@ -25,6 +25,7 @@ The following people have contributed to this new version:
  Enrico Guiraud, CERN/SFT,\
  Jonas Hahnfeld, CERN/SFT,\
  Ivan Kabadzhov, CERN/SFT,\
+ Shamrock Lee (@ShamrockLee),\
  Sergey Linev, GSI,\
  Javier Lopez-Gomez, CERN/SFT,\
  Pere Mato, CERN/SFT,\
@@ -97,25 +98,32 @@ Try 'root --help' for more information.
 - Add `TEntryList::AddSubList` to specifically add a sub-list to the main list of entries. Consequently, add also a new option `"sync"` in `TChain::SetEntryList` to connect the sub-trees of the chain to the sub-lists of the entry list in lockstep (PR [#8660](https://github.com/root-project/root/pull/8660)).
 - Add `TEntryList::EnterRange` to add all entries in a certain range `[start, end)` to the entry list (PR [#8740](https://github.com/root-project/root/pull/8740)).
 
-## RNTuple
-
-- ROOT's experimental successor of TTree has been upgraded to the version 1 of the binary format specification. Compared to the v0 format, the header is ~40% smaller and the footer ~100% smaller (after zstd compression). More details in PR [#8897](https://github.com/root-project/root/pull/8897).
-RNTuple is still experimental and is scheduled to become production grade in 2024. Thus, we appreciate feedback and suggestions for improvement.
-
 ## RDataFrame
 
 ### New features
 
-- Add `Redefine` to the `RDataFrame` interface, which allows to overwrite the value of an existing column.
-- Add `Describe` to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
-- Add `DescribeDataset` to the `RDataFrame` interface, which allows to get information about the dataset (subset of the output of Describe()).
-- Add [DefinePerSample](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a29d77593e95c0f84e359a802e6836a0e), a method which makes it possible to define columns based on the sample and entry range being processed. It is also a useful way to register callbacks that should only be called when the input dataset/TTree changes.
+- Add [`Redefine`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a4e882a949c8a1022a38ec6936c2ff29c) to the `RDataFrame` interface, which allows to overwrite the value of an existing column.
+- Add [`Describe`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a53f3e3d81e041a804481df228fe0081c) to the `RDataFrame` interface, which allows to get useful information, e.g. the columns and their types.
+- Add [`DescribeDataset`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a1bc5b86a2a834bb06711fb535451146d) to the `RDataFrame` interface, which allows to get information about the dataset (subset of the output of Describe()).
+- Add [`DefinePerSample`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a29d77593e95c0f84e359a802e6836a0e), a method which makes it possible to define columns based on the sample and entry range being processed. It is also a useful way to register callbacks that should only be called when the input dataset/TTree changes.
+- Add [`HistoND`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a0c9956a0f48c26f8e4294e17376c7fea) action that fills a N-dimensional histogram.
 - `Book` now supports just-in-time compilation, i.e. it can be called without passing the column types as template parameters (with some performance penalty, as usual).
 - As an aid to `RDataSource` implementations with which collection sizes can be retrieved more efficiently than the full collection, `#var` can now be used as a short-hand notation for column name `R_rdf_sizeof_var`.
-- Helpers have been added to export data from `RDataFrame` to RooFit datasets. See the "RooFit Libraries" section below for more details.
+- Helpers have been added to export data from `RDataFrame` to RooFit datasets. See the "RooFit Libraries" section below for more details, or see [the tutorial](https://root.cern/doc/master/rf408__RDataFrameToRooFit_8C.html).
+
+### Notable changes in behavior
+
+- The `Histo*D` methods now support the combination of scalar values and vector-like weight values. For each entry, the histogram is filled once for each weight, always with the same scalar value.
+- The `Histo*D` methods do not work on columns of type `std::string` anymore. They used to fill the histogram with the integer value corresponding to each of the characters in the string. Please use `Fill` with a custom class to recover the old behavior if that was what was desired.
+
+### Other improvements
+
+- The scaling to a large amount of threads of computation graphs with many simple `Filter`s or `Define`s has been greatly improved, see also [this talk](https://indico.cern.ch/event/1036730/#1-a-performance-study-of-the-r) for more details
 - The output format of `Display` has been significantly improved.
+- The `Fill` method now correctly supports user-defined classes with arbitrary `Fill` signatures (see [#9428](https://github.com/root-project/root/issues/9428))
 
 ### Experimental Distributed RDataFrame
+
 The distributed RDataFrame module has been improved. Now it supports sending RDataFrame tasks to a [Dask](https://dask.org/) scheduler. Through Dask, RDataFrame can be also scaled to a cluster of machines managed through a batch system like HTCondor or Slurm. Here is an example:
 
 ```python
@@ -147,10 +155,6 @@ Other notable additions and improvements include:
 - Add support for TChain data sources with no tree name and multiple different tree subnames.
 - Raise an error if an in-memory-only TTree is passed as data source to a distributed RDataFrame.
 
-### Other improvements
-
-- The scaling to a large amount of threads of computation graphs with many simple `Filter`s or `Define`s has been greatly improved, see also [this talk](https://indico.cern.ch/event/1036730/#1-a-performance-study-of-the-r) for more details
-
 ## Histogram Libraries
 
 - Implement the `SetStats` method for `TGraph` to turn ON or OFF the statistics box display
@@ -161,8 +165,9 @@ Other notable additions and improvements include:
 - `RVec` has been heavily re-engineered in order to add a small buffer optimization and to streamline its internals. The change should provide a small performance boost to
   applications that make heavy use of `RVec`s and should otherwise be user-transparent. Please report any issues you should encounter.
 - I/O support of `RVec` objects has been optimized. As a side-effect, `RVec`s can now be read back as `std::vector`s and vice-versa.
-- added `ROOT::VecOps::Drop`, an operation that removes `RVec` elements at the specified indices.
+- Add `ROOT::VecOps::Drop`, an operation that removes `RVec` elements at the specified indices.
 - handy aliases `ROOT::RVecI`, `ROOT::RVecD`, `ROOT::RVecF`, ..., have been introduced as short-hands for `RVec<int>`, `RVec<double>`, `RVec<float>`, ...
+- Add `VecOps::StableArgsort` and `VecOps::StableSort` operations
 
 
 ## RooFit Libraries
