@@ -33,6 +33,11 @@ The following people have contributed to this new version:
 
 ## Deprecation and Removal
 
+- The deprecated types `ROOT::Experimental::TBufferMerger` and `ROOT::Experimental::TBufferMergerFile` are removed.
+Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::TBufferMergerFile` instead.
+- `ROOT::RVec::shrink_to_fit()` has now been removed after deprecation; it is not needed.
+- `ROOT::RVec::emplace()` has now been removed after deprecation; please use `ROOT::RVec::insert()` instead.
+- The deprecated function `ROOT::Detail::RDF::RActionImpl<Helper>::GetDataBlockCallback()` is removed; please use `GetSampleCallback()` instead.
 
 ## Core Libraries
 

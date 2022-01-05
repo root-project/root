@@ -14,7 +14,6 @@
 
 #include "TFileMerger.h"
 #include "TMemFile.h"
-#include "RConfig.h" /// R__DEPRECATED
 
 #include <functional>
 #include <memory>
@@ -213,14 +212,6 @@ public:
 
    ClassDefOverride(TBufferMergerFile, 0);
 };
-
-namespace Experimental {
-using TBufferMerger R__DEPRECATED(
-   6, 28, "Please use ROOT::TBufferMerger instead of ROOT::Experimental::TBufferMerger.") = ::ROOT::TBufferMerger;
-using TBufferMergerFile
-   R__DEPRECATED(6, 28, "Please use ROOT::TBufferMergerFile instead of ROOT::Experimental::TBufferMergerFile.") =
-      ::ROOT::TBufferMergerFile;
-} // namespace Experimental
 
 } // namespace ROOT
 
