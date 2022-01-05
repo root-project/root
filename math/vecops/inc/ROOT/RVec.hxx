@@ -174,11 +174,6 @@ public:
       }
       fSize = N;
    }
-
-   // LLVM SmallVector does not have a shrink_to_fit method, but RVec used to.
-   // It's technically ok to do nothing, but assuming no one uses this method for RVec anyway, I'd rather deprecate it
-   R__DEPRECATED(6, 28, "This method will be removed.")
-   void shrink_to_fit() { }
 };
 
 /// Used to figure out the offset of the first element of an RVec
@@ -878,14 +873,6 @@ public:
    }
 
    void insert(iterator I, std::initializer_list<T> IL) { insert(I, IL.begin(), IL.end()); }
-
-   template <typename... ArgTypes>
-   R__DEPRECATED(6, 28, "Please use RVec::insert instead.")
-   reference emplace(iterator I, ArgTypes &&...Args)
-   {
-      // these are not the exact semantics of emplace, of course, hence the deprecation.
-      return insert(I, T(std::forward<Args>...));
-   }
 
    template <typename... ArgTypes>
    reference emplace_back(ArgTypes &&...Args)
