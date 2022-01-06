@@ -311,8 +311,10 @@ class RClusterGroupDescriptor {
 private:
    DescriptorId_t fClusterGroupId = kInvalidDescriptorId;
    std::unordered_set<DescriptorId_t> fClusterIds;
-   NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
-   NTupleSize_t fNEntries = 0;
+   /// The page list that corresponds to the cluster group
+   RNTupleLocator fPageListLocator;
+   /// Uncompressed size of the page list
+   std::uint32_t fPageListLength = 0;
 
 public:
    RClusterGroupDescriptor() = default;
@@ -325,8 +327,8 @@ public:
 
    DescriptorId_t GetId() const { return fClusterGroupId; }
    const std::unordered_set<DescriptorId_t> &GetClusterIds() const { return fClusterIds; }
-   NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
-   NTupleSize_t GetNEntries() const { return fNEntries; }
+   RNTupleLocator GetPageListLocator() const { return fPageListLocator; }
+   std::uint32_t GetPageListLength() const { return fPageListLength; }
    bool Contains(DescriptorId_t clusterId) const { return fClusterIds.empty() && fClusterIds.count(clusterId) > 0; }
    bool HasAllClusters() const { return fClusterIds.empty(); }
 };
@@ -792,14 +794,14 @@ public:
       fClusterGroup.fClusterGroupId = clusterGroupId;
       return *this;
    }
-   RClusterGroupDescriptorBuilder &FirstEntryIndex(NTupleSize_t firstEntryIndex)
+   RClusterGroupDescriptorBuilder &PageListLocator(const RNTupleLocator &pageListLocator)
    {
-      fClusterGroup.fFirstEntryIndex = firstEntryIndex;
+      fClusterGroup.fPageListLocator = pageListLocator;
       return *this;
    }
-   RClusterGroupDescriptorBuilder &NEntries(NTupleSize_t nEntries)
+   RClusterGroupDescriptorBuilder &PageListLength(std::uint32_t pageListLength)
    {
-      fClusterGroup.fNEntries = nEntries;
+      fClusterGroup.fPageListLength = pageListLength;
       return *this;
    }
    void AddCluster(DescriptorId_t clusterId) { fClusterGroup.fClusterIds.insert(clusterId); }
