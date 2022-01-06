@@ -54,7 +54,7 @@ sap.ui.define([], function() {
 
       console.log("EveManager got global error", msg, url, lineNo, columnNo, error);
 
-      alert("Global Exception handler: " + msg + "\n" + url +
+      JSROOT.EVE.alert("Global Exception handler: " + msg + "\n" + url +
          " line:" + lineNo + " col:" + columnNo);
       let suppress_alert = false;
       return suppress_alert;
@@ -706,9 +706,9 @@ sap.ui.define([], function() {
          try {
             item.endChanges();
          } catch (e) {
-            alert("EveManager: Exception caught during update processing: " + e + "\n" +
+            JSROOT.EVE.alert("EveManager: Exception caught during update processing: " + e + "\n" +
                "You might want to reload the page in browser and / or check error consoles.");
-            console.log("EveManager: Exception caught during update processing", e);
+            console.error("EveManager: Exception caught during update processing", e);
 
             // XXXX We might want to send e.name, e.message, e.stack back to the server.
          }

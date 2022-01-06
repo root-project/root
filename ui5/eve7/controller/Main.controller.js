@@ -6,10 +6,11 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/m/library',
                'sap/m/Button',
                'sap/m/MenuItem',
+               'sap/m/MessageBox',
                'rootui5/eve7/lib/EveManager',
                "sap/ui/core/mvc/XMLView",
                'sap/ui/model/json/JSONModel'
-], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, EveManager, XMLView, JSONModel) {
+], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, MessageBox, EveManager, XMLView, JSONModel) {
 
    "use strict";
 
@@ -91,6 +92,20 @@ sap.ui.define(['sap/ui/core/Component',
             var toolbar = pthis.byId("otb1");
             toolbar.addContentRight(logCtrl.getButton());
          });
+         consoleObj.alert = true;
+         JSROOT.EVE.alert = function (oText)
+         {
+            if (consoleObj.alert)
+            {
+               MessageBox.error(oText, {
+                  actions: ["Stop Alerts", MessageBox.Action.CLOSE],
+                  onClose: function (sAction)
+                  {
+                     if (sAction == "Stop Alerts") { consoleObj.alert = false; }
+                  }
+               });
+            }
+         };
       },
 
       UpdateCommandsButtons: function(cmds) {
