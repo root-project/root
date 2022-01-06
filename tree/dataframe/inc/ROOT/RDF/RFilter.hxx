@@ -153,7 +153,7 @@ public:
    }
 
    /// Clean-up operations to be performed at the end of a task.
-   virtual void FinaliseSlot(unsigned int slot) final
+   void FinaliseSlot(unsigned int slot) final
    {
       for (auto &v : fValues[slot])
          v.reset();
