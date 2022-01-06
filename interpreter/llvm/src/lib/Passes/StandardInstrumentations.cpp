@@ -370,8 +370,7 @@ bool isIgnored(StringRef PassID) {
 
 } // namespace
 
-template <typename IRUnitT>
-ChangeReporter<IRUnitT>::~ChangeReporter<IRUnitT>() {
+template <typename IRUnitT> ChangeReporter<IRUnitT>::~ChangeReporter() {
   assert(BeforeStack.empty() && "Problem with Change Printer stack.");
 }
 
