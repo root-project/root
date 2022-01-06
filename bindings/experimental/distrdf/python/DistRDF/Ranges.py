@@ -1,7 +1,8 @@
-import itertools
 import logging
 
-from functools import total_ordering
+from bisect import bisect_left
+from math import floor
+from typing import List, NamedTuple, Optional, Tuple, Union
 
 import ROOT
 
@@ -31,229 +32,6 @@ class EmptySourceRange(object):
         self.start = start
         self.end = end
 
-class TreeRange(object):
-    """
-    TTree range of entries. The entries are local with respect to the list of
-    files that are processed with this range. These files are a subset of the
-    global list of input files of the original dataset.
-
-    Attributes:
-
-    id (int): Sequential counter to identify this range. It is used to assign
-        a filename to a partial Snapshot in case it was requested. The id is
-        assigned in `get_clustered_ranges` to ensure that each distributed
-        RDataFrame run has a list of ranges with sequential ids starting from
-        zero.
-
-    globalstart (int): Starting entry relative to the TChain made with the list
-        of files of this range.
-
-    globalend (int): Ending entry relative to the TChain made with the list
-        of files of this range.
-
-    localstarts (list[int]): List of starting entries relative to each single
-        file in this range.
-
-    localends (list[int]): List of ending entries relative to each single
-        file in this range.
-
-    filelist (list[str]): List of files to be processed with this range.
-
-    treesnentries (list[int]): List of total number of entries relative to each
-        single file in this range.
-
-    friendinfo (ROOT.Internal.TreeUtils.RFriendInfo, None): Information about
-        friend trees of the chain built for this range. Not None if the user
-        provided a TTree or TChain in the distributed RDataFrame constructor.
-    """
-
-    def __init__(self, rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, treenames, friendinfo):
-        """set attributes"""
-        self.id = rangeid
-        self.globalstart = globalstart
-        self.globalend = globalend
-        self.localstarts = localstarts
-        self.localends = localends
-        self.filelist = filelist
-        self.treesnentries = treesnentries
-        self.treenames = treenames
-        self.friendinfo = friendinfo
-
-
-@total_ordering
-class FileAndIndex(object):
-    """
-    This is a pair (filename, index) that represents the index of the current
-    filename in the list of input files of the dataset
-
-    Attributes:
-
-    filename (str): The name of the file.
-
-    index (int): The index of the file in the list of input files.
-    """
-
-    def __init__(self, filename, fileindex):
-        """set attributes"""
-        self.filename = filename
-        self.fileindex = fileindex
-
-    def __lt__(self, other):
-        """Total ordering is defined to be able to sort a set[FileAndIndex]."""
-        return self.fileindex < other.fileindex
-
-    def __eq__(self, other):
-        """Defined in compliance with total_ordering decorator"""
-        return self.fileindex == other.fileindex
-
-    def __hash__(self):
-        """
-        This type needs to be hashable to be part of a set in
-        get_clustered_ranges
-        """
-        return hash(self.filename)
-
-
-@total_ordering
-class ChainCluster(object):
-    """
-    Descriptor of a cluster of entries in a TChain. Represents entries local to
-    the current file in the chain.
-
-    Attributes:
-
-    start (int): The starting file-local entry of this cluster in the chain.
-
-    end (int): The ending file-local entry of this cluster in the chain.
-
-    offset (int): The offset of this cluster in the chain. That is, the amount
-        of entries seen in the chain up to the beginning of the file this
-        cluster belongs to.
-
-    filetuple (FileAndIndex): A pair with the name of the file this cluster
-        belongs to and the index of that file in the chain.
-
-    treenentries (int): The total number of entries in the tree this file
-        belongs to.
-    """
-
-    def __init__(self, start, end, offset, filetuple, treenentries, treename):
-        """set attributes"""
-        self.start = start
-        self.end = end
-        self.offset = offset
-        self.filetuple = filetuple
-        self.treenentries = treenentries
-        self.treename = treename
-
-    def __lt__(self, other):
-        """
-        In `get_clustered_ranges` we need to retrieve the minimum and maximum
-        entries in a certain list of clusters.
-        """
-        return self.start < other.start and self.end < other.end
-
-    def __eq__(self, other):
-        """Defined in compliance with total_ordering decorator"""
-        return (self.start == other.start and
-               self.end == other.end and
-               self.offset == other.offset and
-               self.filetuple.filename == other.filetuple.filename and
-               self.filetuple.fileindex == other.filetuple.fileindex)
-
-
-def _n_even_chunks(iterable, n_chunks):
-    """
-    Yield `n_chunks` as even chunks as possible from `iterable`. Though generic,
-    this function is used in _get_clustered_ranges to split a list of clusters
-    into multiple sublists. Each sublist will hold the clusters that should fit
-    in a single partition of the distributed dataset::
-
-        [
-            # Partition 1 will process the following clusters
-            [
-                (start_0_0, end_0_0, offset_0, (filename_0, 0)),
-                (start_0_1, end_0_1, offset_0, (filename_0, 0)),
-                ...,
-                (start_1_0, end_1_0, offset_1, (filename_1, 1)),
-                (start_1_1, end_1_1, offset_1, (filename_1, 1)),
-                ...,
-                (start_n_0, end_n_0, offset_n, (filename_n, n)),
-                (start_n_1, end_n_1, offset_n, (filename_n, n)),
-                ...
-            ],
-            # Partition 2 will process these other clusters
-            [
-                (start_n+1_0, end_n+1_0, offset_n+1, (filename_n+1, n+1)),
-                (start_n+1_1, end_n+1_1, offset_n+1, (filename_n+1, n+1)),
-                ...,
-                (start_m_0, end_m_0, offset_m, (filename_m, m)),
-                (start_m_1, end_m_1, offset_m, (filename_m, m)),
-                ...
-            ],
-            ...
-        ]
-
-    """
-    last = 0
-    itlenght = len(iterable)
-    for i in range(1, n_chunks + 1):
-        cur = int(round(i * (itlenght / n_chunks)))
-        yield iterable[last:cur]
-        last = cur
-
-
-def get_clusters(treenames, filenames):
-    """
-    Extract a list of cluster boundaries for the given tree or chain.
-
-    Args:
-        tree (ROOT.TTree, ROOT.TChain): The dataset where the clusters are.
-            Depending on the type, the logic to retrieve the clusters is
-            different.
-
-    Returns:
-        list[ChainCluster]: Tuples with cluster boundaries and some metadata.
-        For example::
-
-            [
-                (0, 100, 0, ("filename_1.root", 0), 10000),
-                (100, 200, 0, ("filename_1.root", 0), 10000),
-                ...,
-                (10000, 10100, 10000, ("filename_2.root", 1), 10000),
-                (10100, 10200, 10000, ("filename_2.root", 1), 10000),
-                ...,
-                (n, n+100, n, ("filename_n.root", n), 10000),
-                (n+100, n+200, n, ("filename_n.root", n), 10000),
-                ...
-            ]
-
-    """
-
-    clusters = []
-
-    offset = 0
-    fileindex = 0
-
-    for treename, filename in zip(treenames, filenames):
-        f = ROOT.TFile.Open(filename)
-        t = f.Get(treename)
-
-        entries = t.GetEntriesFast()
-        it = t.GetClusterIterator(0)
-        start = it()
-        end = 0
-
-        while start < entries:
-            end = it()
-            clusters.append(ChainCluster(start, end, offset, FileAndIndex(filename, fileindex), entries, treename))
-            start = end
-
-        fileindex += 1
-        offset += entries
-
-    return clusters
-
 
 def get_balanced_ranges(nentries, npartitions):
     """
@@ -281,7 +59,7 @@ def get_balanced_ranges(nentries, npartitions):
 
     remainder = nentries % npartitions
 
-    rangeid = 0 # Keep track of the current range id
+    rangeid = 0  # Keep track of the current range id
     while i < nentries:
         # Start value of current range
         start = i
@@ -300,148 +78,261 @@ def get_balanced_ranges(nentries, npartitions):
     return ranges
 
 
-def get_clustered_ranges(clustersinfiles, npartitions, friendinfo):
+class TreeRange(NamedTuple):
     """
-    Builds ``TreeRange`` objects taking into account the clusters of the
-    dataset. Each range will represent the entries processed within a single
-    partition of the distributed dataset.
+    Range of entries in one of the trees in the chain of a single distributed task.
 
-    Args:
-        clustersinfiles (list): List of namedtuples representing clusters in
-            the input files of the current dataset.
+    The entries are local with respect to the list of files that are processed
+    in this range. These files are a subset of the global list of input files of
+    the original dataset.
 
-        npartitions (int): Number of ranges that will be produced.
+    Attributes:
 
-        friendinfo (ROOT.Internal.TreeUtils.RFriendInfo): Information about friend
-            trees.
+    id: Sequential counter to identify this range. It is used to assign a
+        filename to a partial Snapshot in case it was requested.
 
-    Returns:
-        list[DistRDF.Ranges.TreeRange]: Each element of the list represents one
-            range in which the dataset has been split for distributed execution.
-            Example output::
+    treenames: List of tree names.
 
-            [
-                TreeRange(id=0,
-                    globalstart=0,
-                    globalend=150,
-                    localstarts=[0, 0],
-                    localends=[50, 100],
-                    filelist=['file1.root', 'file2.root'],
-                    treesnentries=[50, 200],
-                    friendinfo=None),
-                TreeRange(id=1,
-                    globalstart=150,
-                    globalend=300,
-                    localstarts=[100, 0],
-                    localends=[200, 50],
-                    filelist=['file2.root', 'file3.root'],
-                    treesnentries=[200, 50],
-                    friendinfo=None),
-            ]
+    filenames: List of files to be processed with this range.
 
+    treesnentries: List of total number of entries relative to each tree in this
+        range.
+
+    localstarts: List of starting entries relative to each tree in this range.
+
+    localends: List of ending entries relative to each tree in this range.
+
+    globalstart: Starting entry relative to the TChain made with the trees in
+        this range.
+
+    globalend: Ending entry relative to the TChain made with the trees in this
+        range.
+
+    friendinfo: Information about friend trees of the chain built for this
+        range. Not None if the user provided a TTree or TChain in the
+        distributed RDataFrame constructor.
     """
 
-    clustersbypartition = _n_even_chunks(clustersinfiles, npartitions)
+    id: int
+    treenames: List[str]
+    filenames: List[str]
+    treesnentries: List[int]
+    localstarts: List[int]
+    localends: List[int]
+    globalstart: int
+    globalend: int
+    friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
 
 
-    clustered_ranges = []
-    rangeid = 0 # Keep track of the current range id
-    for partition in clustersbypartition:
+class TreeRangePerc(NamedTuple):
+    """
+    Range of percentages to be considered for a list of trees. Building block
+    for an actual range of entries of a distributed task.
+    """
+    id: int
+    treenames: List[str]
+    filenames: List[str]
+    first_tree_start_perc: int
+    last_tree_end_perc: int
+    friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
 
-        # One partition looks like:
-        #     [
-        #         (start_0_0, end_0_0, offset_0, (filename_0, 0), nentries_0),
-        #         (start_0_1, end_0_1, offset_0, (filename_0, 0), nentries_0),
-        #         ...,
-        #         (start_1_0, end_1_0, offset_1, (filename_1, 1), nentries_1),
-        #         (start_1_1, end_1_1, offset_1, (filename_1, 1), nentries_1),
-        #         ...,
-        #         (start_n_0, end_n_0, offset_n, (filename_n, n), nentries_n),
-        #         (start_n_1, end_n_1, offset_n, (filename_n, n), nentries_n),
-        #         ...
-        #     ],
-        # We need to retrieve:
-        # 1. The `globalstart` and `globalend` entries "global" to the chain
-        #    made with the files of this partition.
-        # 2. The `localstarts` and `localends` lists, the elements of which are
-        #    start and end entries of a set of clusters in a certain file of the
-        #    filelist of this partition.
-        # 3. The total number of entries for each file in the partition.
 
-        # Let's start with the start and end entries local to each file. We
-        # group the current partition by the fileindex, so that we can process
-        # all the clusters belonging to the same file together.
-        localstarts = []
-        localends = []
-        filelist = []
-        treesnentries = []
-        treenames = []
+def get_clusters_and_entries(treename: str, filename: str) -> Union[Tuple[List[int], int], Tuple[None, None]]:
+    """
+    Retrieve cluster boundaries and number of entries of a TTree. If the tree
+    is empty, returns None, None.
+    """
 
-        for _, clustersinsamefileiter in itertools.groupby(partition, lambda cluster: cluster.filetuple.fileindex):
-            # Grab a list of clusters belonging to the same file to give as
-            # argument to min and max
-            clustersinsamefilelist = list(clustersinsamefileiter)
+    tfile = ROOT.TFile.Open(filename)
+    if not tfile or tfile.IsZombie():
+        raise RuntimeError(f"Error opening file '{filename}'.")
+    ttree = tfile.Get(treename)
 
-            localstarts.append(min(clustersinsamefilelist).start)
-            localends.append(max(clustersinsamefilelist).end)
-            filelist.append(clustersinsamefilelist[0].filetuple.filename)
-            treesnentries.append(clustersinsamefilelist[0].treenentries)
-            treenames.append(clustersinsamefilelist[0].treename)
+    entries: int = ttree.GetEntriesFast()
 
-        # The global start and end entries are retrieved as follows:
-        # - Take as start start the `start` attribute of the first
-        #   `ChainCluster` object in the current partition
-        # - Take as end the `end` attribute of the last `ChainCluster` object
-        #   in the current partition
-        # - Both values need to be shifted by the respective `offset` attribute
-        #   in the same `ChainCluster` instance
-        # - Then to make them "global with respect to the chain of files in the
-        #   current partition", we need to subtract the offset of the first
-        #   cluster in the current partition. That is equal to the amount of
-        #   entries in the chain up to the beginning of the file that cluster
-        #   belongs to. This is needed to maintain a reference of the entries of
-        #   the range with respect to the list of files that hold them. For
-        #   example, given the following files:
-        #       tree10000entries10clusters.root --> 10000 entries, 10 clusters
-        #       tree20000entries10clusters.root --> 20000 entries, 10 clusters
-        #       tree30000entries10clusters.root --> 30000 entries, 10 clusters
-        #   Building 2 ranges will lead to the following tuples:
-        #       TreeRange(id=0,
-        #                 globalstart=0,
-        #                 globalend=20000,
-        #                 localstarts=[0, 0],
-        #                 localends=[10000, 10000],
-        #                 filelist=['tree10000entries10clusters.root',
-        #                           'tree20000entries10clusters.root'],
-        #                 treesnentries=[10000, 20000],
-        #                 friendinfo=None)
-        #       TreeRange(id=1,
-        #                 globalstart=10000,
-        #                 globalend=50000,
-        #                 localstarts=[10000, 0],
-        #                 localends=[20000, 30000],
-        #                 filelist=['tree20000entries10clusters.root',
-        #                           'tree30000entries10clusters.root'],
-        #                 treesnentries=[20000,30000],
-        #                 friendinfo=None)
-        #   The first `TreeRange` will read the first 10000 entries from the
-        #   first file, then switch to the second file and read the first 10000
-        #   entries. The second `TreeRange` will start from entry number 10000
-        #   of the second file up until the end of that file (entry number
-        #   20000), then switch to the third file and read the whole 30000
-        #   entries there.
-        firstclusterinpartition = partition[0]
-        partitionoffset = firstclusterinpartition.offset
+    it = ttree.GetClusterIterator(0)
+    cluster_startentry: int = it()
+    clusters: List[int] = [cluster_startentry]
 
-        lastclusterinpartition = partition[-1]
+    while cluster_startentry < entries:
+        cluster_startentry = it()
+        clusters.append(cluster_startentry)
 
-        # Cluster offsets are relative to the offset of the first cluster in the
-        # partition. For the first cluster, this would mean adding and
-        # subtracting the same quantity, no need to do that.
-        globalstart = firstclusterinpartition.start
-        globalend = lastclusterinpartition.end + lastclusterinpartition.offset - partitionoffset
+    tfile.Close()
 
-        clustered_ranges.append(TreeRange(rangeid, globalstart, globalend, localstarts, localends, filelist, treesnentries, treenames, friendinfo))
-        rangeid += 1
+    if not entries or not clusters:
+        return None, None
 
-    return clustered_ranges
+    return clusters, entries
+
+
+def get_percentage_ranges(treenames: List[str], filenames: List[str], npartitions: int,
+                          friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]) -> List[TreeRangePerc]:
+    """
+    Create a list of tasks that will process the given trees partitioning them
+    by percentages.
+    """
+    nfiles = len(filenames)
+    files_per_partition = nfiles / npartitions
+    # Given a number of files, partition them in npartitions, considering each
+    # file as splittable in percentages [0, 1]. Gather:
+    # 1. A list of percentages according to how many partitions are required.
+    # 2. The corresponding list of file boundaries, as integers.
+    # 3. The difference between the two above, to know to which percentage of
+    #    a specific file any element of the first list belongs.
+    # Example with nfiles = 10 and npartitions = 7
+    # percentages = [0., 1.428, 2.857, 4.285, 5.714, 7.142, 8.571, 10.]
+    # files_of_percentages = [0, 1, 2, 4, 5, 7, 8, 10]
+    # percentages_wrt_files = [0., 0.428, 0.857, 0.285, 0.714, 0.142, 0.571, 0.]
+    percentages = [files_per_partition * i for i in range(npartitions+1)]
+    files_of_percentages = [floor(percentage) for percentage in percentages]
+    percentages_wrt_files = [perc - file for perc, file in zip(percentages, files_of_percentages)]
+
+    # Compute which files are to be considered for the various tasks
+    # The indexes of starting files in each task are simply the list of files
+    # from above, except for the last value which corresponds to the end of the
+    # last file. Also, they are inclusive.
+    start_sample_idxs = files_of_percentages[:-1]
+    # The indexes of ending files in each task depend on what is the percentage
+    # considered for that file. Also, they are exclusive. When the percentage is
+    # zero, i.e. we are at a file boundary, we want to consider the whole
+    # (previous) file, we just take the file index (shifting the list by one).
+    # When the percentage is above zero, we increase the index (shifted by one)
+    # by one to be able to consider also the current file.
+    end_sample_idxs = [
+        file_index + 1 if perc > 0 else file_index
+        for file_index, perc in zip(files_of_percentages[1:], percentages_wrt_files[1:])
+    ]
+
+    # With the indexes created above, we can partition the lists of names of
+    # files and trees. Each task will get a number of trees dictated by the
+    # starting index (inclusive) and the ending index (exclusive)
+    tasktreenames = [treenames[s:e] for s, e in zip(start_sample_idxs, end_sample_idxs)]
+    taskfilenames = [filenames[s:e] for s, e in zip(start_sample_idxs, end_sample_idxs)]
+
+    # Compute the starting percentage of the first tree and the ending percentage
+    # of the last tree in each task.
+    first_tree_start_perc_tasks = percentages_wrt_files[:-1]
+    # When computing the ending percentages, if the percentage defined above is
+    # zero, i.e. we are at file boundary, we want to consider the whole tree,
+    # thus we set it to one.
+    last_tree_end_perc_tasks = [perc if perc > 0 else 1 for perc in percentages_wrt_files[1:]]
+
+    return [
+        TreeRangePerc(rangeid, tasktreenames[rangeid], taskfilenames[rangeid],
+                      first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo)
+        for rangeid in range(npartitions)
+    ]
+
+
+def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Optional[TreeRange]:
+    """
+    Builds a range of entries to be processed for each tree in the chain created
+    in a distributed task.
+    """
+
+    treenames: List[str] = []
+    filenames: List[str] = []
+    treesnentries: List[int] = []
+    localstarts: List[int] = []
+    localends: List[int] = []
+
+    # Accumulate entries seen so far in the chain of this task, for:
+    # - Deciding whether this task has anything to do (zero entries means empty task).
+    # - Computing the ending entry w.r.t. the chain of this task.
+    chain_entries_so_far: int = 0
+
+    nfiles = len(percrange.filenames)
+
+    # The starting entry w.r.t. to the chain created in this task. It is always
+    # zero, except if the first file in the list contributes to the task and it
+    # doesn't also start from zero.
+    globalstart = 0
+
+    # Lists of (start, end) percentages to be considered for each tree. The
+    # first starting percentage and the last ending percentage are stored in the
+    # input percrange object.
+    treepercstarts: List[int] = [0] * nfiles
+    treepercends: List[int] = [1] * nfiles
+    treepercstarts[0] = percrange.first_tree_start_perc
+    treepercends[-1] = percrange.last_tree_end_perc
+
+    # Entries in the last tree of this task that is actually processed (i.e.
+    # that is not empty).
+    last_available_entries: int = 0
+
+    for file_n, (treename, filename, thistreepercstart, thistreepercend) in enumerate(
+            zip(percrange.treenames, percrange.filenames, treepercstarts, treepercends)):
+
+        # clusters list contains cluster boundaries of the current file, e.g.:
+        # It is important that both the initial entry (0) as well as the last
+        # cluster boundary are included in the list. Example:
+        # [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+        clusters, entries = get_clusters_and_entries(treename, filename)
+        if entries is None:
+            # The tree is empty.
+            continue
+
+        # Estimate starting and ending entries that this task has to process
+        # in this tree.
+        startentry = int(thistreepercstart * entries)
+        endentry = int(thistreepercend * entries)
+
+        # Find the corresponding clusters for the above values.
+        # The startcluster index is inclusive. bisect_left returns the index
+        # corresponding to the correct starting cluster only if startentry is
+        # exactly at the cluster boundary. The endcluster index is exclusive.
+        # This logic relies on the specific representation of the list of
+        # clusters that includes the initial entry (0) as well as the last
+        # cluster boundary.
+        # Examples:
+        # cluster 1: [10, 20]
+        # cluster 2: [20, 30]
+        # startentry = 10, endentry = 13 --> startcluster = 1, endcluster = 2
+        # startentry = 13, endentry = 16 --> startcluster = 2, endcluster = 2
+        # startentry = 16, endentry = 19 --> startcluster = 2, endcluster = 2
+        # startentry = 19, endentry = 22 --> startcluster = 2, endcluster = 3
+        startcluster = bisect_left(clusters, startentry)
+        endcluster = bisect_left(clusters, endentry)
+        # Avoid creating tasks that will do nothing
+        if startcluster == endcluster:
+            continue
+
+        tree_startentry_at_cluster_boundary = clusters[startcluster]
+        tree_endentry_at_cluster_boundary = clusters[endcluster]
+
+        treenames.append(treename)
+        filenames.append(filename)
+        treesnentries.append(entries)
+
+        localstarts.append(tree_startentry_at_cluster_boundary)
+        localends.append(tree_endentry_at_cluster_boundary)
+
+        if file_n == 0:
+            # If we reach this point with the first file in the list, then
+            # compute the starting entry global w.r.t. the chain created in this
+            # task. It corresponds to the starting entry of the first cluster
+            # considered for the tree contained in this file.
+            globalstart = tree_startentry_at_cluster_boundary
+
+        chain_entries_so_far += entries
+        last_available_entries = entries
+
+    if chain_entries_so_far == 0:
+        # No chain should be constructed in this task. This can happen:
+        # - If all trees assigned to this task are empty.
+        # - If the computed starting cluster is equal to the ending cluster.
+        # These would effectively lead to creating a TChain with zero usable
+        # entries.
+        return None
+
+    # The ending entry w.r.t. the chain of this task is defined as:
+    # The total amount of entries in the chain minus the entries of the last tree
+    # in the chain plus the ending entry of the last cluster considered for the
+    # same tree. We need the first difference to put ourselves at the beginning
+    # of the last tree, then just adding up how many entries are actually
+    # processed in that tree.
+    globalend = chain_entries_so_far - last_available_entries + tree_endentry_at_cluster_boundary
+
+    return TreeRange(percrange.id, treenames, filenames, treesnentries, localstarts, localends,
+                     globalstart, globalend, percrange.friendinfo)
