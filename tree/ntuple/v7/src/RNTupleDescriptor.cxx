@@ -329,8 +329,7 @@ bool ROOT::Experimental::RColumnGroupDescriptor::operator==(const RColumnGroupDe
 
 bool ROOT::Experimental::RClusterGroupDescriptor::operator==(const RClusterGroupDescriptor &other) const
 {
-   return fClusterGroupId == other.fClusterGroupId && fClusterIds == other.fClusterIds &&
-          fFirstEntryIndex == other.fFirstEntryIndex && fNEntries == other.fNEntries;
+   return fClusterGroupId == other.fClusterGroupId && fClusterIds == other.fClusterIds;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
