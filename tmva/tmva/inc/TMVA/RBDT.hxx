@@ -48,6 +48,9 @@ public:
    {
       // Get number of output nodes of the forest
       auto file = TFile::Open(filename.c_str(), "READ");
+      if (!file) {
+         throw std::runtime_error("Failed to open input file " + filename);
+      }
       auto numOutputs = Internal::GetObjectSafe<std::vector<int>>(file, filename, key + "/num_outputs");
       fNumOutputs = numOutputs->at(0);
       delete numOutputs;
