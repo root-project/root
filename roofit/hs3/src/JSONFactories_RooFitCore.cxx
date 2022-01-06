@@ -144,11 +144,11 @@ public:
 namespace {
 class RooBinWidthFunctionFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       bool divideByBinWidth = p["divideByBinWidth"].val_bool();
-      RooHistFunc* hf = dynamic_cast<RooHistFunc*>(tool->request<RooAbsReal>(p["histFunc"].val(),name));
+      RooHistFunc* hf = dynamic_cast<RooHistFunc*>(tool->request<RooAbsReal>(p["histogram"].val(),name));
       RooBinWidthFunction func(name.c_str(), name.c_str(), *hf, divideByBinWidth);
       tool->workspace()->import(func, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
