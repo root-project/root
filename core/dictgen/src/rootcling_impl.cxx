@@ -6085,6 +6085,12 @@ int ROOT_rootcling_Driver(int argc, char **argv, const ROOT::Internal::RootCling
    gBuildingROOT = config.fBuildingROOTStage1; // gets refined later
 
    std::string exeName = ExtractFileName(GetExePath());
+#ifdef __APPLE__
+   // _dyld_get_image_name() on macOS11 and later sometimes returns "rootcling" for "genreflex".
+   // Fix that (while still initializing the binary path, needed for ROOTSYS) by updating the
+   // exeName to argv[0]:
+   exeName = ExtractFileName(argv[0]);
+#endif
 
    // Select according to the name of the executable the procedure to follow:
    // 1) RootCling
