@@ -93,6 +93,7 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
 
       for (int l=0; l<NUM_LS; ++l) {
         det_avg_ls[l].AddBin(3, x, y);
+        det_err_ls[l].AddBin(3, x, y);
       }
    }
 
@@ -136,6 +137,7 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
 
          tot_avg_ls[i].Fill(r1, r2, val);
          det_avg_ls[i].Fill(r1, r2, val);
+         det_err_ls[i].Fill(r1, r2, val);
       }
 
       std::string title;
@@ -158,10 +160,10 @@ void tprofile2polyRealistic(Int_t numEvents=100000)
 
       c1->cd((i+1)+(NUM_LS*2));
       title = "Detector View: Error in LS  " + to_string(i);
-      det_avg_ls[i].SetTitle(title.c_str());
-      det_avg_ls[i].SetStats(false);
-      det_avg_ls[i].SetContentToError();
-      det_avg_ls[i].Draw("COLZ");
+      det_err_ls[i].SetTitle(title.c_str());
+      det_err_ls[i].SetStats(false);
+      det_err_ls[i].SetContentToError();
+      det_err_ls[i].Draw("COLZ");
       c1->Update();
    }
 
