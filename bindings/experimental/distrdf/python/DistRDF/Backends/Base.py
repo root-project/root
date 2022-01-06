@@ -86,6 +86,7 @@ class BaseBackend(ABC):
 
         # Build the ranges for the current dataset
         headnode = generator.headnode
+
         ranges = headnode.build_ranges()
         build_rdf_from_range = headnode.generate_rdf_creator()
 
@@ -123,6 +124,10 @@ class BaseBackend(ABC):
             # Build an RDataFrame instance for the current mapper task, based
             # on the type of the head node.
             rdf = build_rdf_from_range(current_range)
+            if rdf is None:
+                # The RDF for this range could not be built because all trees
+                # assigned to it are empty.
+                return None
 
             if optimized:
                 # Create the RDF computation graph and execute it on this ranged
@@ -165,13 +170,25 @@ class BaseBackend(ABC):
                 list: The list of updated (mergeable)values.
             """
 
-            for mergeable_out, mergeable_in in zip(mergeables_out, mergeables_in):
-                Utils.merge_values(mergeable_out, mergeable_in)
+            if mergeables_out is not None and mergeables_in is not None:
+                for mergeable_out, mergeable_in in zip(mergeables_out, mergeables_in):
+                    Utils.merge_values(mergeable_out, mergeable_in)
+            elif mergeables_out is None and mergeables_in is not None:
+                return mergeables_in
 
+            # This should treat the 4 possible cases:
+            # 1. both arguments are non-empty: first if statement
+            # 2. First argument is None and second is not empty: elif statement
+            # 3. First argument is not empty and second is None: return first
+            #    list, no need to do anything
+            # 4. Both arguments are None: return first, it's None anyway.
             return mergeables_out
 
         # Values produced after Map-Reduce
         values = self.ProcessAndMerge(ranges, mapper, reducer)
+        if values is None:
+            raise RuntimeError("The distributed execution returned no values. "
+                               "This can happen if all files in your dataset contain empty trees.")
         # List of action nodes in the same order as values
         nodes = generator.get_action_nodes()
 
