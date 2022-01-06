@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <sstream> // std::stringstream
+#include <memory>
 
 namespace TMVA {
 namespace Experimental {
@@ -47,13 +48,16 @@ public:
    RBDT(const std::string &key, const std::string &filename)
    {
       // Get number of output nodes of the forest
-      auto file = TFile::Open(filename.c_str(), "READ");
-      auto numOutputs = Internal::GetObjectSafe<std::vector<int>>(file, filename, key + "/num_outputs");
+      std::unique_ptr<TFile> file{TFile::Open(filename.c_str(),"READ")};
+      if (!file || file->IsZombie()) {
+         throw std::runtime_error("Failed to open input file " + filename);
+      }
+      auto numOutputs = Internal::GetObjectSafe<std::vector<int>>(file.get(), filename, key + "/num_outputs");
       fNumOutputs = numOutputs->at(0);
       delete numOutputs;
 
       // Get objective and decide whether to normalize output nodes for example in the multiclass case
-      auto objective = Internal::GetObjectSafe<std::string>(file, filename, key + "/objective");
+      auto objective = Internal::GetObjectSafe<std::string>(file.get(), filename, key + "/objective");
       if (objective->compare("softmax") == 0)
          fNormalizeOutputs = true;
       else
