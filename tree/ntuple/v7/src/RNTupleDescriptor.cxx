@@ -137,16 +137,15 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::Experimental::RCl
 
 bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const
 {
-   return fClusterId == other.fClusterId &&
-          fFirstEntryIndex == other.fFirstEntryIndex &&
-          fNEntries == other.fNEntries &&
-          fColumnRanges == other.fColumnRanges &&
-          fPageRanges == other.fPageRanges;
+   return fClusterId == other.fClusterId && fFirstEntryIndex == other.fFirstEntryIndex &&
+          fNEntries == other.fNEntries && fHasPageLocations == other.fHasPageLocations &&
+          fColumnRanges == other.fColumnRanges && fPageRanges == other.fPageRanges;
 }
 
 
 std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClusterDescriptor::GetColumnIds() const
 {
+   EnsureHasPageLocations();
    std::unordered_set<DescriptorId_t> result;
    for (const auto &x : fColumnRanges)
       result.emplace(x.first);
@@ -156,12 +155,14 @@ std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClus
 
 bool ROOT::Experimental::RClusterDescriptor::ContainsColumn(DescriptorId_t columnId) const
 {
+   EnsureHasPageLocations();
    return fColumnRanges.find(columnId) != fColumnRanges.end();
 }
 
 
 std::uint64_t ROOT::Experimental::RClusterDescriptor::GetBytesOnStorage() const
 {
+   EnsureHasPageLocations();
    std::uint64_t nbytes = 0;
    for (const auto &pr : fPageRanges) {
       for (const auto &pi : pr.second.fPageInfos) {
@@ -171,6 +172,11 @@ std::uint64_t ROOT::Experimental::RClusterDescriptor::GetBytesOnStorage() const
    return nbytes;
 }
 
+void ROOT::Experimental::RClusterDescriptor::EnsureHasPageLocations() const
+{
+   if (!fHasPageLocations)
+      throw RException(R__FAIL("invalid attempt to access page locations of summary-only cluster descriptor"));
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -558,6 +564,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(DescriptorId_t clu
    c.fClusterId = clusterId;
    c.fFirstEntryIndex = firstEntryIndex;
    c.fNEntries = nEntries;
+   c.fHasPageLocations = true; // TODO(jblomer): remove me including this AddCluster() overload
    fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(c));
 }
 
@@ -579,10 +586,23 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(
    fClusterSummaries.push_back(clusterSummary);
 }
 
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry,
+                                                                     std::uint64_t nEntries)
+{
+   RClusterDescriptorBuilder builder;
+   builder.ClusterId(clusterId).FirstEntryIndex(firstEntry).NEntries(nEntries);
+   fDescriptor.fClusterDescriptors.emplace(clusterId, builder.MoveDescriptor().Unwrap());
+}
+
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(
    Internal::RNTupleSerializer::RClusterGroup &clusterGroup)
 {
    fClusterGroups.push_back(clusterGroup);
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup)
+{
+   fDescriptor.fClusterGroupDescriptors.emplace(clusterGroup.GetId(), clusterGroup.MoveDescriptor().Unwrap());
 }
 
 ROOT::Experimental::RResult<void>
@@ -595,8 +615,9 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
       return R__FAIL("cluster clash");
    const auto &summary = fClusterSummaries.at(clusterId);
    partialCluster.ClusterId(clusterId)
-                 .FirstEntryIndex(summary.fFirstEntry)
-                 .NEntries(summary.fNEntries);
+      .FirstEntryIndex(summary.fFirstEntry)
+      .NEntries(summary.fNEntries)
+      .HasPageLocations();
    auto cluster = partialCluster.MoveDescriptor();
    if (!cluster)
       return R__FORWARD_ERROR(cluster);
