@@ -50,6 +50,7 @@ The following people have contributed to this new version:
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been removed. `TTreeProcessorMT::SetTasksPerWorkerHint` is a superior alternative.
 - `TTree::GetEntry()` and `TTree::GetEvent()` no longer have 0 as the default value for the first parameter `entry`. We are not aware of correct uses of this function without providing an entry number. If you have one, please simply pass `0` from now on.
 - `TBufferMerger` is now out of the `Experimental` namespace (`ROOT::Experimental::TBufferMerger` is deprecated, please use `ROOT::TBufferMerger` instead)
+- `TTree.AsMatrix` has been removed, after being deprecated in 6.24. Instead, please use `RDataFrame.AsNumpy` from now on as a way to read and process data in ROOT files and store it in NumPy arrays (a tutorial can be found [here](https://root.cern/doc/master/df026__AsNumpyArrays_8py.html)).
 
 
 ## Core Libraries
@@ -373,5 +374,6 @@ canvas->Print(".tex", "Standalone");
 
 ## PyROOT
 
+- A decorator called `@pythonization` is now provided to inject extra behaviour in user C++ classes that are used from Python. The aim here is to make C++ classes more "pythonic" or easier to use from Python. The way it works is the following: the user defines a function - the pythonizor - that is decorated with `@pythonization`; the decorator arguments specify the target C++ class or classes, and the pythonizor is responsible for injecting the new behaviour if those classes are actually used from the application. For a more complete description of the `@pythonization` decorator, please refer to this [entry](https://root.cern.ch/manual/python/#pythonizing-c-user-classes) of the ROOT manual and this [tutorial](https://root.cern/doc/master/pyroot002__pythonizationDecorator_8py.html).
 - The `ROOT` Python module is now properly serializable so that it is automatically available in the Python environment if a function or ROOT object needs to be serialized. See issue [#6764](https://github.com/root-project/root/issues/6764) for a concrete usecase.
 - Improve overload resolution of functions that accept classes with long inheritance trees. Now prefer to call the function overload of the most derived class type (PR [#9092](https://github.com/root-project/root/pull/9092)).
