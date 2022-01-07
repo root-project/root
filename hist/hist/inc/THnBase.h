@@ -66,6 +66,14 @@ protected:
     THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins,
             const std::vector<std::vector<double>> &xbins);
 
+    THnBase(const THnBase &other);
+
+    THnBase &operator=(const THnBase &other);
+
+    THnBase(THnBase &&other);
+
+    THnBase &operator=(THnBase &&other);
+
     void UpdateXStat(const Double_t *x, Double_t w = 1.)
     {
        if (GetCalculateErrors()) {
