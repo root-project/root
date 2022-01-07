@@ -169,6 +169,12 @@ if(XROOTD_FOUND)
   endif ()
 endif()
 
+if(XROOTD_FOUND AND NOT TARGET Xrootd::Xrootd)
+  add_library(Xrootd::Xrootd INTERFACE IMPORTED)
+  set_property(TARGET Xrootd::Xrootd PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${XROOTD_INCLUDE_DIRS}")
+  set_property(TARGET Xrootd::Xrootd PROPERTY INTERFACE_LINK_LIBRARIES "${XROOTD_LIBRARIES}")
+endif()
+
 mark_as_advanced(XROOTD_INCLUDE_DIR
                  XROOTD_XrdMain_LIBRARY
                  XROOTD_XrdUtils_LIBRARY
