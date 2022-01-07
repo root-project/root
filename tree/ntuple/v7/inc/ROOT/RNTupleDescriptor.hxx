@@ -183,9 +183,11 @@ public:
 \ingroup NTuple
 \brief Meta-data for a set of ntuple clusters
 
-The cluster descriptor might carry information of only a subset of available clusters, for instance if multiple
-files are chained and not all of them have been processed yet. Clusters usually span across all available columns but
-in some cases they can describe only a subset of the columns, for instance when describing friend ntuples.
+The cluster descriptor is built in two phases.  In a first phase, the descriptor has only summary data,
+i.e. the ID and the event range.  In a second phase, page locations and column ranges are added.
+Both phases are populated by the RClusterDescriptorBuilder.
+Clusters usually span across all available columns but in some cases they can describe only a subset of the columns,
+for instance when describing friend ntuples.
 */
 // clang-format on
 class RClusterDescriptor {
@@ -270,9 +272,12 @@ private:
    /// Clusters can be swapped by adjusting the entry offsets
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
    ClusterSize_t fNEntries = kInvalidClusterIndex;
+   bool fHasPageLocations = false;
 
    std::unordered_map<DescriptorId_t, RColumnRange> fColumnRanges;
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
+
+   void EnsureHasPageLocations() const;
 
 public:
    RClusterDescriptor() = default;
@@ -286,11 +291,20 @@ public:
    DescriptorId_t GetId() const { return fClusterId; }
    NTupleSize_t GetFirstEntryIndex() const { return fFirstEntryIndex; }
    ClusterSize_t GetNEntries() const { return fNEntries; }
-   const RColumnRange &GetColumnRange(DescriptorId_t columnId) const { return fColumnRanges.at(columnId); }
-   const RPageRange &GetPageRange(DescriptorId_t columnId) const { return fPageRanges.at(columnId); }
+   const RColumnRange &GetColumnRange(DescriptorId_t columnId) const
+   {
+      EnsureHasPageLocations();
+      return fColumnRanges.at(columnId);
+   }
+   const RPageRange &GetPageRange(DescriptorId_t columnId) const
+   {
+      EnsureHasPageLocations();
+      return fPageRanges.at(columnId);
+   }
    bool ContainsColumn(DescriptorId_t columnId) const;
    std::unordered_set<DescriptorId_t> GetColumnIds() const;
    std::uint64_t GetBytesOnStorage() const;
+   bool HasPageLocations() const { return fHasPageLocations; }
 };
 
 // clang-format off
@@ -822,6 +836,11 @@ public:
       fCluster.fNEntries = nEntries;
       return *this;
    }
+   RClusterDescriptorBuilder &HasPageLocations()
+   {
+      fCluster.fHasPageLocations = true;
+      return *this;
+   }
 
    RResult<void> CommitColumnRange(DescriptorId_t columnId,
                                    std::uint64_t firstElementIndex,
@@ -863,6 +882,8 @@ public:
       return *this;
    }
    void AddCluster(DescriptorId_t clusterId) { fClusterGroup.fClusterIds.insert(clusterId); }
+
+   DescriptorId_t GetId() const { return fClusterGroup.GetId(); }
 
    RResult<RClusterGroupDescriptor> MoveDescriptor();
 };
@@ -937,6 +958,9 @@ public:
    void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
    Internal::RNTupleSerializer::RClusterGroup GetClusterGroup(std::uint32_t id) const { return fClusterGroups.at(id); }
    RResult<void> AddCluster(DescriptorId_t clusterId, RClusterDescriptorBuilder &&partialCluster);
+
+   void AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry, std::uint64_t nEntries);
+   void AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();
