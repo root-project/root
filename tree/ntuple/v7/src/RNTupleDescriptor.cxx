@@ -262,19 +262,6 @@ ROOT::Experimental::RNTupleDescriptor::FindColumnId(DescriptorId_t fieldId, std:
    return kInvalidDescriptorId;
 }
 
-ROOT::Experimental::DescriptorId_t ROOT::Experimental::RNTupleDescriptor::FindClusterGroupId(NTupleSize_t index) const
-{
-   // TODO(jblomer): binary search?
-   for (const auto &cgd : fClusterGroupDescriptors) {
-      if (cgd.second.GetFirstEntryIndex() > index)
-         continue;
-      if (cgd.second.GetFirstEntryIndex() + cgd.second.GetNEntries() <= index)
-         continue;
-      return cgd.second.GetId();
-   }
-   return kInvalidDescriptorId;
-}
-
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NTupleSize_t index) const
 {
@@ -289,30 +276,6 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
    return kInvalidDescriptorId;
 }
 
-ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindNextClusterGroupId(DescriptorId_t clusterGroupId) const
-{
-   const auto &clusterGroupDesc = GetClusterGroupDescriptor(clusterGroupId);
-   auto firstEntryInNextClusterGroup = clusterGroupDesc.GetFirstEntryIndex() + clusterGroupDesc.GetNEntries();
-   // TODO(jblomer): binary search?
-   for (const auto &cgd : fClusterGroupDescriptors) {
-      if (cgd.second.GetFirstEntryIndex() == firstEntryInNextClusterGroup)
-         return cgd.second.GetId();
-   }
-   return kInvalidDescriptorId;
-}
-
-ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindPrevClusterGroupId(DescriptorId_t clusterGroupId) const
-{
-   const auto &clusterGroupDesc = GetClusterGroupDescriptor(clusterGroupId);
-   // TODO(jblomer): binary search?
-   for (const auto &cgd : fClusterGroupDescriptors) {
-      if (cgd.second.GetFirstEntryIndex() + cgd.second.GetNEntries() == clusterGroupDesc.GetFirstEntryIndex())
-         return cgd.second.GetId();
-   }
-   return kInvalidDescriptorId;
-}
 
 // TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
