@@ -371,6 +371,7 @@ ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
          return R__FAIL("missing column range");
       }
    }
+   fCluster.fHasPageLocations = true;
    RClusterDescriptor result;
    std::swap(result, fCluster);
    return result;
@@ -615,9 +616,8 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
       return R__FAIL("cluster clash");
    const auto &summary = fClusterSummaries.at(clusterId);
    partialCluster.ClusterId(clusterId)
-      .FirstEntryIndex(summary.fFirstEntry)
-      .NEntries(summary.fNEntries)
-      .HasPageLocations();
+                 .FirstEntryIndex(summary.fFirstEntry)
+                 .NEntries(summary.fNEntries);
    auto cluster = partialCluster.MoveDescriptor();
    if (!cluster)
       return R__FORWARD_ERROR(cluster);

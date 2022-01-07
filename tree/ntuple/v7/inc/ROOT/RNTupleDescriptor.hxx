@@ -836,11 +836,6 @@ public:
       fCluster.fNEntries = nEntries;
       return *this;
    }
-   RClusterDescriptorBuilder &HasPageLocations()
-   {
-      fCluster.fHasPageLocations = true;
-      return *this;
-   }
 
    RResult<void> CommitColumnRange(DescriptorId_t columnId,
                                    std::uint64_t firstElementIndex,
