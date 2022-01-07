@@ -156,7 +156,7 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	Draw	 : 0
       void TObject::Draw(Option_t* option = "")
  OBJ: TMethod	DrawArrow	 : 0
-      void TArrow::DrawArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Float_t arrowsize = 0, Option_t* option = "")
+      TArrow* TArrow::DrawArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Float_t arrowsize = 0, Option_t* option = "")
  OBJ: TMethod	DrawClass	*MENU* : 0
       void TObject::DrawClass() const
  OBJ: TMethod	DrawClone	*MENU* : 0
