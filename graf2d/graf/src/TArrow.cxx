@@ -132,7 +132,7 @@ void TArrow::Draw(Option_t *option)
 ///  - if `arrowsize` is <= 0, `arrowsize` will be the current arrow size
 ///  - if `option=""`, `option` will be the current arrow option
 
-void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
+TArrow *TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Float_t arrowsize ,Option_t *option)
 {
 
@@ -148,6 +148,7 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    TAttFill::Copy(*newarrow);
    newarrow->SetBit(kCanDelete);
    newarrow->AppendPad(opt);
+   return newarrow;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +156,7 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
 void TArrow::Paint(Option_t *option)
 {
-   if (!gPad) return; 
+   if (!gPad) return;
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = (char*)GetOption();
@@ -174,7 +175,7 @@ void TArrow::Paint(Option_t *option)
 void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
-   if (!gPad) return; 
+   if (!gPad) return;
    // Compute the gPad coordinates in TRUE normalized space (NDC)
    Int_t iw = gPad->GetWw();
    Int_t ih = gPad->GetWh();
@@ -184,8 +185,8 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Int_t iy1 = (Int_t)(ih*y1p);
    Int_t ix2 = (Int_t)(iw*x2p);
    Int_t iy2 = (Int_t)(ih*y2p);
-   if (ix1==ix2||iy1==iy2) return; 
-   
+   if (ix1==ix2||iy1==iy2) return;
+
    // Option and attributes
    TString opt = option;
    opt.ToLower();

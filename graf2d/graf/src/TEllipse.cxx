@@ -173,7 +173,7 @@ void TEllipse::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this ellipse with new coordinates.
 
-void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta,Option_t *option)
+TEllipse *TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Double_t phimin,Double_t phimax,Double_t theta,Option_t *option)
 {
    TEllipse *newellipse = new TEllipse(x1, y1, r1, r2, phimin, phimax,theta);
    TAttLine::Copy(*newellipse);
@@ -181,6 +181,7 @@ void TEllipse::DrawEllipse(Double_t x1, Double_t y1,Double_t r1,Double_t r2,Doub
    newellipse->SetBit(kCanDelete);
    newellipse->AppendPad(option);
    if (TestBit(kNoEdges)) newellipse->SetBit(kNoEdges);
+   return newellipse;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -688,7 +689,7 @@ TPoint TEllipse::GetBBoxCenter()
 
 void TEllipse::SetBBoxCenter(const TPoint &p)
 {
-   if (!gPad) return; 
+   if (!gPad) return;
    fX1 = gPad->PixeltoX(p.GetX());
    fY1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0));
 }

@@ -70,7 +70,7 @@ public:
    virtual void        CenterLabels(Bool_t center=kTRUE);
    virtual void        CenterTitle(Bool_t center=kTRUE);
    void                ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c);
-   virtual void        DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
+   virtual TGaxis     *DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                 Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
                                 Double_t gridlength = 0);
    Float_t             GetGridLength() const   {return fGridLength;}
