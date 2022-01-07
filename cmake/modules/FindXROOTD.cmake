@@ -68,7 +68,7 @@ if(XROOTD_FOUND)
     endif()
   endif()
   set(XROOTD_CFLAGS "-DROOTXRDVERS=${xrdversnum}")
-
+  
   if ( ${xrdversnum} LESS 300010000 )
      set(XROOTD_OLDPACK TRUE)
      set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR})
@@ -82,7 +82,7 @@ if(XROOTD_FOUND)
      if (XROOTD_INC_PRIV_DIR)
         set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR} ${XROOTD_INCLUDE_DIR}/private)
      else()
-        set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/proof/xrdinc)
+        set(XROOTD_INCLUDE_DIRS ${XROOTD_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/proof/xrdinc)
      endif()
   endif()
 endif()
@@ -185,4 +185,3 @@ mark_as_advanced(XROOTD_INCLUDE_DIR
                  XROOTD_XrdSys_LIBRARY
                  XROOTD_XrdOuc_LIBRARY
                  XROOTD_Xrd_LIBRARY )
-
