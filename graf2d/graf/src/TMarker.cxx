@@ -204,12 +204,13 @@ void TMarker::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with new coordinates.
 
-void TMarker::DrawMarker(Double_t x, Double_t y)
+TMarker *TMarker::DrawMarker(Double_t x, Double_t y)
 {
    TMarker *newmarker = new TMarker(x, y, 1);
    TAttMarker::Copy(*newmarker);
    newmarker->SetBit(kCanDelete);
    newmarker->AppendPad();
+   return newmarker;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

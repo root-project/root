@@ -154,7 +154,7 @@ Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this crown with new coordinates.
 
-void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,Double_t phimin,Double_t phimax,Option_t *option)
+TCrown *TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,Double_t phimin,Double_t phimax,Option_t *option)
 {
 
    TCrown *newcrown = new TCrown(x1, y1, radin, radout, phimin, phimax);
@@ -162,6 +162,7 @@ void TCrown::DrawCrown(Double_t x1, Double_t y1,Double_t radin,Double_t radout,D
    TAttFill::Copy(*newcrown);
    newcrown->SetBit(kCanDelete);
    newcrown->AppendPad(option);
+   return newcrown;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
