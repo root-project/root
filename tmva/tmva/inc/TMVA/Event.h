@@ -116,6 +116,8 @@ namespace TMVA {
       void     SetSpectator          ( UInt_t ivar, Float_t value );
       void     SetVariableArrangement( std::vector<UInt_t>* const m ) const;
 
+      void SetSpectatorTypes(const std::vector<char> &types) { fSpectatorTypes = types; }
+
       void     SetDoNotBoost         () const  { fDoNotBoost = kTRUE; }
       static void ClearDynamicVariables() {}
 
@@ -139,6 +141,7 @@ namespace TMVA {
       std::vector<Float_t>           fTargets;         // target values for regression
       mutable std::vector<Float_t>   fSpectators;      // "visisting" variables not used in MVAs ; mutable, to be able to copy the dynamic values in there
       mutable std::vector<UInt_t>    fVariableArrangement;  // needed for MethodCategories, where we can train on other than the main variables
+      std::vector<char>              fSpectatorTypes;       // type of the spectator variable (typically F or I). Used ony for dynamic events
 
       UInt_t                         fClass;           // class number
       Double_t                       fWeight;          // event weight (product of global and individual weights)

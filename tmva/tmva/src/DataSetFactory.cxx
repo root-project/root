@@ -175,10 +175,15 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
 
    std::vector<VariableInfo>& spectatorinfos = dsi.GetSpectatorInfos();
    it = spectatorinfos.begin();
-   for (;it!=spectatorinfos.end();++it) evdyn->push_back( (Float_t*)(*it).GetExternalLink() );
+   std::vector<char> spectatorTypes;
+   for (; it != spectatorinfos.end(); ++it) {
+      evdyn->push_back( (Float_t*)(*it).GetExternalLink() );
+      spectatorTypes.push_back(it->GetVarType());
+   }
 
    TMVA::Event * ev = new Event((const std::vector<Float_t*>*&)evdyn, varinfos.size());
-   std::vector<Event*>* newEventVector = new std::vector<Event*>;
+   ev->SetSpectatorTypes(spectatorTypes);
+   std::vector<Event *> *newEventVector = new std::vector<Event *>;
    newEventVector->push_back(ev);
 
    ds->SetEventCollection(newEventVector, Types::kTraining);
