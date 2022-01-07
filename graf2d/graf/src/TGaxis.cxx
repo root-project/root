@@ -883,9 +883,9 @@ void TGaxis::CenterTitle(Bool_t center)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this axis with new attributes.
 
-void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
-                      Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
-                      Double_t gridlength)
+TGaxis *TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
+                         Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
+                         Double_t gridlength)
 {
 
    TGaxis *newaxis = new TGaxis(xmin,ymin,xmax,ymax,wmin,wmax,ndiv,chopt,gridlength);
@@ -908,6 +908,7 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    newaxis->SetTitle(GetTitle());
    newaxis->SetBit(TAxis::kCenterTitle,TestBit(TAxis::kCenterTitle));
    newaxis->AppendPad();
+   return newaxis;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
