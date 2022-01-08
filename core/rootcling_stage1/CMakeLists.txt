@@ -30,9 +30,9 @@ ROOT_EXECUTABLE(rootcling_stage1 src/rootcling_stage1.cxx
                               NOINSTALL)
 
 target_include_directories(rootcling_stage1 PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc    # for RConfig.hxx
-   ${CMAKE_SOURCE_DIR}/core/dictgen/res # for rootcling_impl.h
-   ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h
+   ${PROJECT_SOURCE_DIR}/core/foundation/inc    # for RConfig.hxx
+   ${PROJECT_SOURCE_DIR}/core/dictgen/res # for rootcling_impl.h
+   ${PROJECT_BINARY_DIR}/ginclude         # for RConfigure.h
 )
 
 set_target_properties(rootcling_stage1 PROPERTIES RUNTIME_OUTPUT_DIRECTORY src)

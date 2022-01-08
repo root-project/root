@@ -153,14 +153,14 @@ foreach(val RANGE ${how_many_pythons})
   target_link_libraries(PyROOT${python_major_version_string} INTERFACE cppyy_backend${python_under_version_string} cppyy${python_under_version_string} ROOTPythonizations${python_under_version_string})
 
   # Install library
-  install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
+  install(TARGETS ${libname} EXPORT ${PROJECT_NAME}Exports
                              RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                              LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
 
   # Install meta-target PyROOT2 and PyROOT3 (INTERFACE library)
   # Install library
-  install(TARGETS PyROOT${python_major_version_string} EXPORT ${CMAKE_PROJECT_NAME}Exports
+  install(TARGETS PyROOT${python_major_version_string} EXPORT ${PROJECT_NAME}Exports
                              RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                              LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)

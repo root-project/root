@@ -92,8 +92,8 @@ foreach(val RANGE ${how_many_pythons})
 
   target_include_directories(${libname}
      PRIVATE
-        ${CMAKE_SOURCE_DIR}/core/foundation/inc   # needed for string_view backport
-        ${CMAKE_BINARY_DIR}/ginclude
+        ${PROJECT_SOURCE_DIR}/core/foundation/inc   # needed for string_view backport
+        ${PROJECT_BINARY_DIR}/ginclude
      PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
@@ -102,7 +102,7 @@ foreach(val RANGE ${how_many_pythons})
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${libname})
 
   # Install library
-  install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
+  install(TARGETS ${libname} EXPORT ${PROJECT_NAME}Exports
                              RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
                              LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
                              ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
@@ -114,7 +114,7 @@ foreach(val RANGE ${how_many_pythons})
   endif()
 endforeach()
 
-file(COPY ${headers} DESTINATION ${CMAKE_BINARY_DIR}/include/CPyCppyy)
+file(COPY ${headers} DESTINATION ${PROJECT_BINARY_DIR}/include/CPyCppyy)
 install(FILES ${headers}
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/CPyCppyy
         COMPONENT headers)

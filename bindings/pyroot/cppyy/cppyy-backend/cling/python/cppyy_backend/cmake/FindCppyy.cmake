@@ -542,7 +542,7 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
     #
     # Copy pure python code
     #
-    file(COPY ${CMAKE_SOURCE_DIR}/py/ DESTINATION ${pkg_dir}
+    file(COPY ${PROJECT_SOURCE_DIR}/py/ DESTINATION ${pkg_dir}
          USE_SOURCE_PERMISSIONS
          FILES_MATCHING PATTERN "*.py")
 
@@ -561,13 +561,13 @@ function(cppyy_add_bindings pkg pkg_version author author_email)
     file(GLOB_RECURSE PY_PKG_FILES
          LIST_DIRECTORIES FALSE
          CONFIGURE_DEPENDS
-         "${CMAKE_SOURCE_DIR}/py/*.py")
+         "${PROJECT_SOURCE_DIR}/py/*.py")
     string(TOLOWER ${CMAKE_SYSTEM_NAME} SYSTEM_STR)
-    set(pkg_whl "${CMAKE_BINARY_DIR}/dist/${pkg}-${pkg_version}-py3-none-${SYSTEM_STR}_${CMAKE_SYSTEM_PROCESSOR}.whl")
+    set(pkg_whl "${PROJECT_BINARY_DIR}/dist/${pkg}-${pkg_version}-py3-none-${SYSTEM_STR}_${CMAKE_SYSTEM_PROCESSOR}.whl")
     add_custom_command(OUTPUT  ${pkg_whl}
                        COMMAND ${LibClang_PYTHON_EXECUTABLE} setup.py bdist_wheel
                        DEPENDS ${SETUP_PY_FILE} ${lib_name} ${setup_cfg}
-                       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                       WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     )
     add_custom_target(wheel ALL
                       DEPENDS ${pkg_whl}

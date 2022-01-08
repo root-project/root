@@ -34,8 +34,8 @@ endif()
 if(CPACK_GENERATOR MATCHES "NSIS")
   # There is a bug in NSI that does not handle full unix paths properly. Make
   # sure there is at least one set of four (4) backlasshes.
-  set(CPACK_NSIS_MUI_ICON "@CMAKE_SOURCE_DIR@\\icons\\RootIcon.ico")
-  set(CPACK_NSIS_MUI_UNIICON "@CMAKE_SOURCE_DIR@\\icons\\RootIcon.ico")
+  set(CPACK_NSIS_MUI_ICON "@PROJECT_SOURCE_DIR@\\icons\\RootIcon.ico")
+  set(CPACK_NSIS_MUI_UNIICON "@PROJECT_SOURCE_DIR@\\icons\\RootIcon.ico")
   set(CPACK_NSIS_DISPLAY_NAME "ROOT @ROOT_VERSION@")
   set(CPACK_NSIS_PACKAGE_NAME "ROOT @ROOT_VERSION@")
   set(CPACK_NSIS_HELP_LINK "https:\\\\root.cern")

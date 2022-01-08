@@ -71,7 +71,7 @@ include("${_thisdir}/RootMacros.cmake")
 
 #----------------------------------------------------------------------------
 # Include the file listing all the imported targets and options
-if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
+if(NOT PROJECT_NAME STREQUAL ROOT)
   include("${_thisdir}/ROOTConfig-targets.cmake")
 endif()
 

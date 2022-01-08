@@ -195,12 +195,12 @@ set(BASE_SOURCES
 )
 
 if(root7)
-  set(BASE_V7_INC ${CMAKE_SOURCE_DIR}/core/base/v7/inc)
+  set(BASE_V7_INC ${PROJECT_SOURCE_DIR}/core/base/v7/inc)
   set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_HEADERS
       ROOT/RDirectoryEntry.hxx
       ROOT/RIndexIter.hxx)
-  set(BASE_V7_INC ${CMAKE_SOURCE_DIR}/core/base/v7/inc)
+  set(BASE_V7_INC ${PROJECT_SOURCE_DIR}/core/base/v7/inc)
   set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_SOURCES
       RDirectory.cxx)
@@ -216,49 +216,49 @@ target_include_directories(Base PRIVATE
    ${BASE_V7_INC}
    ${PCRE_INCLUDE_DIR}
    res
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${PROJECT_SOURCE_DIR}/core/foundation/res
+   ${PROJECT_SOURCE_DIR}/core/clib/inc
+   ${PROJECT_SOURCE_DIR}/core/meta/inc
+   ${PROJECT_SOURCE_DIR}/core/cont/inc
+   ${PROJECT_SOURCE_DIR}/core/thread/inc
+   ${PROJECT_SOURCE_DIR}/core/gui/inc
+   ${PROJECT_SOURCE_DIR}/core/foundation/inc
+   ${PROJECT_BINARY_DIR}/ginclude
 )
 
 if(MSVC)
-   target_include_directories(Base PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+   target_include_directories(Base PRIVATE ${PROJECT_SOURCE_DIR}/core/winnt/inc)
 endif()
 
 
 #---CreateTApplicationCommandLineOptions------------------------------------------------------------------
 generateHeader(Base
   ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py
-  ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
+  ${PROJECT_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
 )
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/man)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/man)
 
 if(NOT MSVC)
 #---addRootC++CmdMan-------------------------------------------------------------------------
-generateManual(rootMan ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/man/root.1)
-generateManual(haddMan ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BINARY_DIR}/man/hadd.1)
-generateManual(hist2workspaceMan ${CMAKE_SOURCE_DIR}/roofit/histfactory/src/hist2workspace-argparse.py ${CMAKE_BINARY_DIR}/man/hist2workspace.1)
-generateManual(rootclingMan ${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/man/rootcling.1)
+generateManual(rootMan ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${PROJECT_BINARY_DIR}/man/root.1)
+generateManual(haddMan ${PROJECT_SOURCE_DIR}/main/src/hadd-argparse.py ${PROJECT_BINARY_DIR}/man/hadd.1)
+generateManual(hist2workspaceMan ${PROJECT_SOURCE_DIR}/roofit/histfactory/src/hist2workspace-argparse.py ${PROJECT_BINARY_DIR}/man/hist2workspace.1)
+generateManual(rootclingMan ${PROJECT_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${PROJECT_BINARY_DIR}/man/rootcling.1)
 
 #---addRootPyCmdMan---------------------------------------------------------------------------
-#generateManual(rootbrowseMan ${CMAKE_SOURCE_DIR}/main/python/rootbrowse.py ${CMAKE_BINARY_DIR}/man/rootbrowse.1)
-#generateManual(rootcpMan ${CMAKE_SOURCE_DIR}/main/python/rootcp.py ${CMAKE_BINARY_DIR}/man/rootcp.1)
-#generateManual(rootdrawtreeMan ${CMAKE_SOURCE_DIR}/main/python/rootdrawtree.py ${CMAKE_BINARY_DIR}/man/rootdrawtree.1)
-#generateManual(rooteventselectorMan ${CMAKE_SOURCE_DIR}/main/python/rooteventselector.py ${CMAKE_BINARY_DIR}/man/rooteventselector.1)
-#generateManual(rootlsMan ${CMAKE_SOURCE_DIR}/main/python/rootls.py ${CMAKE_BINARY_DIR}/man/rootls.1)
-#generateManual(rootmkdirMan ${CMAKE_SOURCE_DIR}/main/python/rootmkdir.py ${CMAKE_BINARY_DIR}/man/rootmkdir.1)
-#generateManual(rootmvMan ${CMAKE_SOURCE_DIR}/main/python/rootmv.py ${CMAKE_BINARY_DIR}/man/rootmv.1)
-#generateManual(rootprintMan ${CMAKE_SOURCE_DIR}/main/python/rootprint.py ${CMAKE_BINARY_DIR}/man/rootprint.1)
-#generateManual(rootrmMan ${CMAKE_SOURCE_DIR}/main/python/rootrm.py ${CMAKE_BINARY_DIR}/man/rootrm.1)
-#generateManual(rootslimtreeMan ${CMAKE_SOURCE_DIR}/main/python/rootslimtree.py ${CMAKE_BINARY_DIR}/man/rootslimtree.1)
+#generateManual(rootbrowseMan ${PROJECT_SOURCE_DIR}/main/python/rootbrowse.py ${PROJECT_BINARY_DIR}/man/rootbrowse.1)
+#generateManual(rootcpMan ${PROJECT_SOURCE_DIR}/main/python/rootcp.py ${PROJECT_BINARY_DIR}/man/rootcp.1)
+#generateManual(rootdrawtreeMan ${PROJECT_SOURCE_DIR}/main/python/rootdrawtree.py ${PROJECT_BINARY_DIR}/man/rootdrawtree.1)
+#generateManual(rooteventselectorMan ${PROJECT_SOURCE_DIR}/main/python/rooteventselector.py ${PROJECT_BINARY_DIR}/man/rooteventselector.1)
+#generateManual(rootlsMan ${PROJECT_SOURCE_DIR}/main/python/rootls.py ${PROJECT_BINARY_DIR}/man/rootls.1)
+#generateManual(rootmkdirMan ${PROJECT_SOURCE_DIR}/main/python/rootmkdir.py ${PROJECT_BINARY_DIR}/man/rootmkdir.1)
+#generateManual(rootmvMan ${PROJECT_SOURCE_DIR}/main/python/rootmv.py ${PROJECT_BINARY_DIR}/man/rootmv.1)
+#generateManual(rootprintMan ${PROJECT_SOURCE_DIR}/main/python/rootprint.py ${PROJECT_BINARY_DIR}/man/rootprint.1)
+#generateManual(rootrmMan ${PROJECT_SOURCE_DIR}/main/python/rootrm.py ${PROJECT_BINARY_DIR}/man/rootrm.1)
+#generateManual(rootslimtreeMan ${PROJECT_SOURCE_DIR}/main/python/rootslimtree.py ${PROJECT_BINARY_DIR}/man/rootslimtree.1)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
