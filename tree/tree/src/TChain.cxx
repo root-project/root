@@ -85,7 +85,6 @@ TChain::TChain()
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   if (gDirectory) gDirectory->Remove(this);
    gROOT->GetListOfSpecials()->Add(this);
    fFile = 0;
    fDirectory = 0;
