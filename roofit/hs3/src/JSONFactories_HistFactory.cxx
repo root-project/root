@@ -361,7 +361,7 @@ public:
          std::string fname(RooJSONFactoryWSTool::name(comp));
          auto &def = comp.is_container() ? comp : p["functions"][fname.c_str()];
          std::string fprefix = RooJSONFactoryWSTool::genPrefix(def, true);
-         if (def["type"].val() == "histogram") {
+         if (def["type"].val() == "hist-sample") {
             try {
                if (observables.size() == 0) {
                   observables.add(tool->getObservables(comp["data"], fprefix));
@@ -592,7 +592,7 @@ public:
             samplename = samplename.substr(0, end);
          auto &s = samples[samplename];
          s.set_map();
-         s["type"] << "histogram";
+         s["type"] << "hist-sample";
          RooArgSet elems;
          if (func->InheritsFrom(RooProduct::Class())) {
             collectElements(elems, (RooProduct *)func);
@@ -726,7 +726,7 @@ public:
 STATIC_EXECUTE(
 
    RooJSONFactoryWSTool::registerImporter("histfactory", new RooRealSumPdfFactory());
-   RooJSONFactoryWSTool::registerImporter("histogram", new RooHistogramFactory());
+   RooJSONFactoryWSTool::registerImporter("hist-sample", new RooHistogramFactory());
    RooJSONFactoryWSTool::registerImporter("interpolation", new PiecewiseInterpolationFactory());
    RooJSONFactoryWSTool::registerExporter(RooStats::HistFactory::FlexibleInterpVar::Class(),
                                           new FlexibleInterpVarStreamer());
