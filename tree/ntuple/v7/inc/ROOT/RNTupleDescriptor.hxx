@@ -691,6 +691,10 @@ public:
    /// In case of invalid field ID, an empty string is returned.
    std::string GetQualifiedFieldName(DescriptorId_t fieldId) const;
 
+   /// Methods to load and drop cluster details
+   RResult<void> AddClusterDetails(RClusterDescriptor &&clusterDesc);
+   RResult<void> DropClusterDetails(DescriptorId_t clusterId);
+
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;
    void PrintInfo(std::ostream &output) const;
@@ -875,6 +879,10 @@ public:
 
    DescriptorId_t GetId() const { return fClusterGroup.GetId(); }
 
+   /// Used to preapre the cluster descriptor builders when loading the page locations for a certain cluster group
+   static std::vector<RClusterDescriptorBuilder>
+   GetClusterSummaries(const RNTupleDescriptor &ntplDesc, DescriptorId_t clusterGroupId);
+
    RResult<RClusterGroupDescriptor> MoveDescriptor();
 };
 
@@ -940,13 +948,13 @@ public:
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    RResult<void> AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry, std::uint64_t nEntries);
+   void AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup);
+
    // TODO(jblomer): get cluster summaries as function of the cluster group
    std::vector<RClusterDescriptorBuilder> GetClusterSummaries();
    void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
    Internal::RNTupleSerializer::RClusterGroup GetClusterGroup(std::uint32_t id) const { return fClusterGroups.at(id); }
    RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);
-
-   void AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();

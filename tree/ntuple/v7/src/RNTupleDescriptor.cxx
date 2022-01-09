@@ -311,6 +311,28 @@ ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterI
    return kInvalidDescriptorId;
 }
 
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptor::AddClusterDetails(RClusterDescriptor &&clusterDesc)
+{
+   auto iter = fClusterDescriptors.find(clusterDesc.GetId());
+   if (iter == fClusterDescriptors.end())
+      return R__FAIL("invalid attempt to add cluster details without known cluster summary");
+   if (iter->second.HasPageLocations())
+      return R__FAIL("invalid attempt to re-populate page list");
+   iter->second = std::move(clusterDesc);
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleDescriptor::DropClusterDetails(DescriptorId_t clusterId)
+{
+   auto iter = fClusterDescriptors.find(clusterId);
+   if (iter == fClusterDescriptors.end())
+      return R__FAIL("invalid attempt to drop cluster details of unknown cluster");
+   if (!iter->second.HasPageLocations())
+      return R__FAIL("invalid attempt to drop details of cluster summary");
+   iter->second = RClusterDescriptor(clusterId, iter->second.GetFirstEntryIndex(), iter->second.GetNEntries());
+   return RResult<void>::Success();
+}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
@@ -377,6 +399,18 @@ ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
    return result;
 }
 
+std::vector<ROOT::Experimental::RClusterDescriptorBuilder>
+ROOT::Experimental::RClusterGroupDescriptorBuilder::GetClusterSummaries(const RNTupleDescriptor &ntplDesc,
+                                                                        DescriptorId_t clusterGroupId)
+{
+   const auto &clusterGroupDesc = ntplDesc.GetClusterGroupDescriptor(clusterGroupId);
+   std::vector<RClusterDescriptorBuilder> result;
+   for (auto clusterId : clusterGroupDesc.fClusterIds) {
+      const auto &cluster = ntplDesc.GetClusterDescriptor(clusterId);
+      result.emplace_back(RClusterDescriptorBuilder(clusterId, cluster.GetFirstEntryIndex(), cluster.GetNEntries()));
+   }
+   return result;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -568,6 +602,20 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(DescriptorId_t c
    return RResult<void>::Success();
 }
 
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup)
+{
+   fDescriptor.fClusterGroupDescriptors.emplace(clusterGroup.GetId(), clusterGroup.MoveDescriptor().Unwrap());
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
+{
+   fDescriptor.fName = "";
+   fDescriptor.fDescription = "";
+   fDescriptor.fFieldDescriptors.clear();
+   fDescriptor.fColumnDescriptors.clear();
+   fDescriptor.fClusterDescriptors.clear();
+}
+
 std::vector<ROOT::Experimental::RClusterDescriptorBuilder>
 ROOT::Experimental::RNTupleDescriptorBuilder::GetClusterSummaries()
 {
@@ -585,11 +633,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(
    fClusterGroups.push_back(clusterGroup);
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup)
-{
-   fDescriptor.fClusterGroupDescriptors.emplace(clusterGroup.GetId(), clusterGroup.MoveDescriptor().Unwrap());
-}
-
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
 {
@@ -600,13 +643,4 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&cl
       return R__FAIL("invalid attempt to re-populate page list");
    iter->second = std::move(clusterDesc);
    return RResult<void>::Success();
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
-{
-   fDescriptor.fName = "";
-   fDescriptor.fDescription = "";
-   fDescriptor.fFieldDescriptors.clear();
-   fDescriptor.fColumnDescriptors.clear();
-   fDescriptor.fClusterDescriptors.clear();
 }
