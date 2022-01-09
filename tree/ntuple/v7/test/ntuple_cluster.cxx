@@ -60,9 +60,12 @@ public:
       ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
       for (unsigned i = 0; i <= 5; ++i) {
          descBuilder.AddClusterSummary(i, i, 1);
-         descBuilder.AddCluster(ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
       }
       fDescriptor = descBuilder.MoveDescriptor();
+      for (unsigned i = 0; i <= 5; ++i) {
+         fDescriptor.AddClusterDetails(
+            ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
+      }
    }
    std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
    RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::NTupleSize_t) final { return RPage(); }

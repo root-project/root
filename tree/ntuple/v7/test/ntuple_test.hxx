@@ -60,6 +60,7 @@ using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
 using RClusterIndex = ROOT::Experimental::RClusterIndex;
 using RClusterDescriptorBuilder = ROOT::Experimental::RClusterDescriptorBuilder;
+using RClusterGroupDescriptorBuilder = ROOT::Experimental::RClusterGroupDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
 template <class T>

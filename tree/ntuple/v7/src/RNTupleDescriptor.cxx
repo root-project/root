@@ -587,7 +587,8 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
          return R__FAIL("out of bounds column index");
    }
 
-   fDescriptor.fColumnDescriptors.emplace(columnDesc.GetId(), std::move(columnDesc));
+   auto columnId = columnDesc.GetId();
+   fDescriptor.fColumnDescriptors.emplace(columnId, std::move(columnDesc));
 
    return RResult<void>::Success();
 }
@@ -602,9 +603,10 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(DescriptorId_t c
    return RResult<void>::Success();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup)
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroupDescriptorBuilder &&clusterGroup)
 {
-   fDescriptor.fClusterGroupDescriptors.emplace(clusterGroup.GetId(), clusterGroup.MoveDescriptor().Unwrap());
+   auto id = clusterGroup.GetId();
+   fDescriptor.fClusterGroupDescriptors.emplace(id, clusterGroup.MoveDescriptor().Unwrap());
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
@@ -614,23 +616,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
    fDescriptor.fFieldDescriptors.clear();
    fDescriptor.fColumnDescriptors.clear();
    fDescriptor.fClusterDescriptors.clear();
-}
-
-std::vector<ROOT::Experimental::RClusterDescriptorBuilder>
-ROOT::Experimental::RNTupleDescriptorBuilder::GetClusterSummaries()
-{
-   std::vector<RClusterDescriptorBuilder> result;
-   for (unsigned i = 0; i < fDescriptor.GetNClusters(); ++i) {
-      const auto &cluster = fDescriptor.GetClusterDescriptor(i);
-      result.emplace_back(RClusterDescriptorBuilder(i, cluster.GetFirstEntryIndex(), cluster.GetNEntries()));
-   }
-   return result;
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(
-   Internal::RNTupleSerializer::RClusterGroup &clusterGroup)
-{
-   fClusterGroups.push_back(clusterGroup);
+   fDescriptor.fClusterGroupDescriptors.clear();
 }
 
 ROOT::Experimental::RResult<void>
