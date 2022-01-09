@@ -1286,6 +1286,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
+      descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
       descBuilder.AddClusterGroup(clusterGroup);
    }
    bytes = frame + frameSize;
