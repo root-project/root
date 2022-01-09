@@ -191,7 +191,6 @@ for instance when describing friend ntuples.
 */
 // clang-format on
 class RClusterDescriptor {
-   friend class RNTupleDescriptorBuilder;
    friend class RClusterDescriptorBuilder;
 
 public:
@@ -271,6 +270,7 @@ private:
    DescriptorId_t fClusterId = kInvalidDescriptorId;
    /// Clusters can be swapped by adjusting the entry offsets
    NTupleSize_t fFirstEntryIndex = kInvalidNTupleIndex;
+   // TODO(jblomer): change to std::uint64_t
    ClusterSize_t fNEntries = kInvalidClusterIndex;
    bool fHasPageLocations = false;
 
@@ -281,6 +281,11 @@ private:
 
 public:
    RClusterDescriptor() = default;
+   // Constructor for a summary-only cluster descriptor without page locations
+   RClusterDescriptor(DescriptorId_t clusterId, std::uint64_t firstEntryIndex, std::uint64_t nEntries)
+      : fClusterId(clusterId), fFirstEntryIndex(firstEntryIndex), fNEntries(ClusterSize_t(nEntries))
+   {
+   }
    RClusterDescriptor(const RClusterDescriptor &other) = delete;
    RClusterDescriptor &operator =(const RClusterDescriptor &other) = delete;
    RClusterDescriptor(RClusterDescriptor &&other) = default;
@@ -813,37 +818,25 @@ public:
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RClusterDescriptor
 
-Dangling cluster descriptors can become actual descriptors when added to an
-RNTupleDescriptorBuilder instance.
+The cluster descriptor builder starts from a summary-only cluster descriptor and allows for the
+piecewise addition of page locations.
 */
 // clang-format on
 class RClusterDescriptorBuilder {
 private:
-   RClusterDescriptor fCluster = RClusterDescriptor();
+   RClusterDescriptor fCluster;
+
 public:
    /// Make an empty cluster descriptor builder.
-   RClusterDescriptorBuilder() = default;
-
-   RClusterDescriptorBuilder& ClusterId(DescriptorId_t clusterId) {
-      fCluster.fClusterId = clusterId;
-      return *this;
-   }
-   RClusterDescriptorBuilder& FirstEntryIndex(std::uint64_t firstEntryIndex) {
-      fCluster.fFirstEntryIndex = firstEntryIndex;
-      return *this;
-   }
-   RClusterDescriptorBuilder& NEntries(std::uint64_t nEntries) {
-      fCluster.fNEntries = nEntries;
-      return *this;
+   RClusterDescriptorBuilder(DescriptorId_t clusterId, std::uint64_t firstEntryIndex, std::uint64_t nEntries)
+      : fCluster(clusterId, firstEntryIndex, nEntries)
+   {
    }
 
-   RResult<void> CommitColumnRange(DescriptorId_t columnId,
-                                   std::uint64_t firstElementIndex,
-                                   std::uint32_t compressionSettings,
-                                   const RClusterDescriptor::RPageRange &pageRange);
+   RResult<void> CommitColumnRange(DescriptorId_t columnId, std::uint64_t firstElementIndex,
+                                   std::uint32_t compressionSettings, const RClusterDescriptor::RPageRange &pageRange);
 
-   /// Attempt to make a cluster descriptor. This may fail if the cluster
-   /// was not given enough information to make a proper descriptor.
+   /// Move out the full cluster descriptor including page locations
    RResult<RClusterDescriptor> MoveDescriptor();
 };
 
@@ -920,7 +913,6 @@ class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
    std::uint32_t fHeaderCRC32 = 0;
-   std::vector<Internal::RNTupleSerializer::RClusterSummary> fClusterSummaries;
    std::vector<Internal::RNTupleSerializer::RClusterGroup> fClusterGroups;
 
    RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
@@ -945,16 +937,13 @@ public:
    void AddColumn(DescriptorId_t columnId, DescriptorId_t fieldId, const RColumnModel &model, std::uint32_t index);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
-   void AddCluster(DescriptorId_t clusterId, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries);
-   void AddClusterColumnRange(DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange);
-   void AddClusterPageRange(DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange);
-
-   void AddClusterSummary(Internal::RNTupleSerializer::RClusterSummary &clusterSummary);
+   RResult<void> AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry, std::uint64_t nEntries);
+   // TODO(jblomer): get cluster summaries as function of the cluster group
+   std::vector<RClusterDescriptorBuilder> GetClusterSummaries();
    void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
    Internal::RNTupleSerializer::RClusterGroup GetClusterGroup(std::uint32_t id) const { return fClusterGroups.at(id); }
-   RResult<void> AddCluster(DescriptorId_t clusterId, RClusterDescriptorBuilder &&partialCluster);
+   RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);
 
-   void AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry, std::uint64_t nEntries);
    void AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
