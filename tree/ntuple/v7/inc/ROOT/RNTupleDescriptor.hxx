@@ -320,8 +320,9 @@ public:
 
 Very large ntuples or combined ntuples (chains, friends) contain multiple cluster groups. The cluster groups
 may contain shared clusters. However, a cluster group must contain the clusters spanning all the columns for the
-given event range. Cluster groups must partition the entry range of an ntuple. The cluster group spanning all
-clusters is denoted by an empty fClusterIds set. Every ntuple has at least one cluster group.
+given event range. Cluster groups must partition the entry range of an ntuple.
+Every ntuple has at least one cluster group.  The clusters in a cluster group are ordered corresponding to
+the order of page locations in the page list envelope that belongs to the cluster group (see format specification)
 */
 // clang-format on
 class RClusterGroupDescriptor {
@@ -329,7 +330,7 @@ class RClusterGroupDescriptor {
 
 private:
    DescriptorId_t fClusterGroupId = kInvalidDescriptorId;
-   std::unordered_set<DescriptorId_t> fClusterIds;
+   std::vector<DescriptorId_t> fClusterIds;
    /// The page list that corresponds to the cluster group
    RNTupleLocator fPageListLocator;
    /// Uncompressed size of the page list
@@ -345,11 +346,12 @@ public:
    bool operator==(const RClusterGroupDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fClusterGroupId; }
-   const std::unordered_set<DescriptorId_t> &GetClusterIds() const { return fClusterIds; }
    RNTupleLocator GetPageListLocator() const { return fPageListLocator; }
    std::uint32_t GetPageListLength() const { return fPageListLength; }
-   bool Contains(DescriptorId_t clusterId) const { return fClusterIds.empty() && fClusterIds.count(clusterId) > 0; }
-   bool HasAllClusters() const { return fClusterIds.empty(); }
+   bool Contains(DescriptorId_t clusterId) const
+   {
+      return std::find(fClusterIds.begin(), fClusterIds.end(), clusterId) != fClusterIds.end();
+   }
 };
 
 // clang-format off
@@ -869,7 +871,7 @@ public:
       fClusterGroup.fPageListLength = pageListLength;
       return *this;
    }
-   void AddCluster(DescriptorId_t clusterId) { fClusterGroup.fClusterIds.insert(clusterId); }
+   void AddCluster(DescriptorId_t clusterId) { fClusterGroup.fClusterIds.emplace_back(clusterId); }
 
    DescriptorId_t GetId() const { return fClusterGroup.GetId(); }
 
