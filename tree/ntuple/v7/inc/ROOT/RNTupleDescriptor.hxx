@@ -939,7 +939,8 @@ public:
    std::uint32_t GetHeaderCRC32() const { return fHeaderCRC32; }
 
    void SetOnDiskHeaderSize(std::uint64_t size) { fDescriptor.fOnDiskHeaderSize = size; }
-   void SetOnDiskFooterSize(std::uint64_t size) { fDescriptor.fOnDiskFooterSize = size; }
+   /// The real footer size also include the page list envelopes
+   void AddToOnDiskFooterSize(std::uint64_t size) { fDescriptor.fOnDiskFooterSize += size; }
 
    void AddField(const RFieldDescriptor& fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
