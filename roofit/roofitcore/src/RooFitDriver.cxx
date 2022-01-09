@@ -215,12 +215,8 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    // Get a serial list of the nodes in the computation graph.
    // treeNodeServelList() is recursive and adds the top node before the children,
    // so reversing the list gives us a topological ordering of the graph.
-   RooArgSet serverSet;
-   _topNode.treeNodeServerList(&serverSet, nullptr, true, true, true);
-
-   if (indexCat) {
-      _dataset.splitByCategory(*indexCat);
-   }
+   RooArgList serverList;
+   _topNode.treeNodeServerList(&serverList, nullptr, true, true, true);
 
    // The treeNodeServerList recursion stops at fundamental RooAbsArgs, such as
    // RooRealVar. But there can also be servers to fundamental types if they are
@@ -228,15 +224,33 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    // explicitely add the servers of the observables here.
    for (auto *obs : observables) {
       for (auto *server : obs->servers()) {
-         RooArgSet tmp;
+         RooArgList tmp;
          server->treeNodeServerList(&tmp, nullptr, true, true, true);
-         serverSet.add(tmp);
+         serverList.add(tmp);
       }
    }
 
-   for (std::size_t iNode = serverSet.size(); iNode > 0; --iNode) {
-      RooAbsArg *arg = serverSet[iNode - 1];
+   // To remove duplicates via the RooArgSet deduplication, we have to fill the
+   // set in reverse order because that's the dependency ordering of the graph.
+   RooArgSet serverSet;
+   std::unordered_map<TNamed const *, RooAbsArg *> instanceMap;
+   for (std::size_t iNode = serverList.size(); iNode > 0; --iNode) {
+      RooAbsArg *arg = &serverList[iNode - 1];
+      if (instanceMap.find(arg->namePtr()) != instanceMap.end()) {
+         if (arg != instanceMap.at(arg->namePtr())) {
+            serverSet.remove(*instanceMap.at(arg->namePtr()));
+         }
+      }
+      instanceMap[arg->namePtr()] = arg;
+      serverSet.add(*arg);
+   }
 
+   if (indexCat) {
+      _dataset.splitByCategory(*indexCat);
+   }
+
+   for (RooAbsArg *arg : serverSet) {
+      _orderedNodes.push_back(arg);
       auto &argInfo = _nodeInfos[arg];
       if (_dataset.contains(arg)) {
          _dataMapCPU[arg] = _dataset.span(arg);
@@ -253,6 +267,33 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
          ++clientInfo.nServers;
          ++argInfo.nClients;
       }
+   }
+
+   // Sort the nodes for good
+   std::unordered_set<TNamed const *> seenNodes;
+   for (std::size_t iNode = 0; iNode < _orderedNodes.size(); ++iNode) {
+      RooAbsArg *node = _orderedNodes[iNode];
+      bool movedNode = false;
+      for (RooAbsArg *server : node->servers()) {
+         if (server->isValueServer(*node) && seenNodes.find(server->namePtr()) == seenNodes.end()) {
+            auto found = std::find_if(_orderedNodes.begin(), _orderedNodes.end(),
+                                      [server](RooAbsArg *arg) { return arg->namePtr() == server->namePtr(); });
+            if (found == _orderedNodes.end()) {
+
+               throw std::runtime_error(std::string("Node ") + node->GetName() + " depends on " + server->GetName() +
+                                        ", but this node is missing in the computation queue!");
+            }
+            _orderedNodes.erase(found);
+            _orderedNodes.insert(_orderedNodes.begin() + iNode, server);
+            movedNode = true;
+            break;
+         }
+      }
+      if (movedNode) {
+         --iNode;
+         continue;
+      }
+      seenNodes.insert(node->namePtr());
    }
 
    determineOutputSizes(serverSet);
@@ -336,6 +377,7 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal(&_normSet));
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
    } else if (nOut == 1) {
+      handleIntegral(node);
       _nonDerivedValues.push_back(0.0);
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
       nodeAbsReal->computeBatch(nullptr, &_nonDerivedValues.back(), nOut, _dataMapCPU);
@@ -365,17 +407,34 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 /// Returns the value of the top node in the computation graph
 double RooFitDriver::getVal()
 {
-   // In a cuda fit, use first 3 fits to determine the execution times
-   // and the hardware that computes each part of the graph
-   if (_batchMode == RooFit::BatchModeOption::Cuda && ++_getValInvocations <= 3)
-      markGPUNodes();
+   _nonDerivedValues.clear();
+   _nonDerivedValues.reserve(_orderedNodes.size()); // to avoid reallocation
 
+   if (_batchMode == RooFit::BatchModeOption::Cuda)
+      return getValHeterogeneous();
+
+   for (std::size_t iNode = 0; iNode < _orderedNodes.size(); ++iNode) {
+      RooAbsArg *node = _orderedNodes[iNode];
+      if (!_dataset.contains(node)) {
+         computeCPUNode(node, _nodeInfos[node]);
+      }
+   }
+   // return the final value
+   return _dataMapCPU.at(&_topNode)[0];
+}
+
+/// Returns the value of the top node in the computation graph
+double RooFitDriver::getValHeterogeneous()
+{
    for (auto &item : _nodeInfos) {
       item.second.remClients = item.second.nClients;
       item.second.remServers = item.second.nServers;
    }
-   _nonDerivedValues.clear();
-   _nonDerivedValues.reserve(_nodeInfos.size()); // to avoid reallocation
+
+   // In a cuda fit, use first 3 fits to determine the execution times
+   // and the hardware that computes each part of the graph
+   if (_batchMode == RooFit::BatchModeOption::Cuda && ++_getValInvocations <= 3)
+      markGPUNodes();
 
    // find initial gpu nodes and assign them to gpu
    for (const auto &it : _nodeInfos)
@@ -732,30 +791,15 @@ void RooFitDriver::markGPUNodes()
 
 void RooFitDriver::determineOutputSizes(RooArgSet const &serverSet)
 {
-   std::size_t totalSize = 1;
-   std::size_t prevTotalSize = 0;
-
-   // Usually, the serverSet is sorted by dependency and one or two passes in
-   // reverse order are enough the propagate through all clinet-server
-   // relationships and converge to the correct output sizes. Indeed, this
-   // function takes a negligible fraction of the time of the NLL creation for
-   // large ATLAS Higgs combination models.
-   while (totalSize != prevTotalSize) {
-      prevTotalSize = totalSize;
-      totalSize = 0;
-
-      for (std::size_t iNode = serverSet.size(); iNode > 0; --iNode) {
-         RooAbsArg const *arg = serverSet[iNode - 1];
-         auto &argInfo = _nodeInfos[arg];
-         for (auto *client : arg->valueClients()) {
-            if (serverSet.containsInstance(*client)) {
-               auto &clientInfo = _nodeInfos[client];
-               if (!client->isReducerNode()) {
-                  clientInfo.outputSize = std::max(clientInfo.outputSize, argInfo.outputSize);
-               }
+   for (auto *arg : _orderedNodes) {
+      auto &argInfo = _nodeInfos[arg];
+      for (auto *client : arg->valueClients()) {
+         if (serverSet.containsInstance(*client)) {
+            auto &clientInfo = _nodeInfos[client];
+            if (!client->isReducerNode()) {
+               clientInfo.outputSize = std::max(clientInfo.outputSize, argInfo.outputSize);
             }
          }
-         totalSize += argInfo.outputSize;
       }
    }
 }
