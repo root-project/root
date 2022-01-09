@@ -524,17 +524,15 @@ TEST(RNTuple, SerializeFooter)
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   builder.AddCluster(84, 0, ROOT::Experimental::ClusterSize_t(100));
-   columnRange.fColumnId = 17;
-   columnRange.fFirstElementIndex = 0;
-   columnRange.fNElements = 100;
-   builder.AddClusterColumnRange(84, columnRange);
+   builder.AddClusterSummary(84, 0, ROOT::Experimental::ClusterSize_t(100));
+   RClusterDescriptorBuilder clusterBuilder(84, 0, 100);
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
    pageRange.fColumnId = 17;
    pageInfo.fNElements = 100;
    pageInfo.fLocator.fPosition = 7000;
    pageRange.fPageInfos.emplace_back(pageInfo);
-   builder.AddClusterPageRange(84, std::move(pageRange));
+   clusterBuilder.CommitColumnRange(17, 0, 100, pageRange);
+   builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(nullptr, desc);
@@ -573,11 +571,11 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(1337u, cg.fPageListEnvelopeLink.fLocator.fPosition);
    EXPECT_EQ(42u, cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
 
-   std::vector<RClusterDescriptorBuilder> clusters;
+   std::vector<RClusterDescriptorBuilder> clusters = builder.GetClusterSummaries();
    RNTupleSerializer::DeserializePageListV1(bufPageList.get(), sizePageList, clusters);
    EXPECT_EQ(physClusterIDs.size(), clusters.size());
    for (std::size_t i = 0; i < clusters.size(); ++i) {
-      builder.AddCluster(i, std::move(clusters[i]));
+      builder.AddCluster(clusters[i].MoveDescriptor().Unwrap());
    }
 
    desc = builder.MoveDescriptor();
