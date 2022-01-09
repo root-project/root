@@ -376,10 +376,10 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
    fDecompressor->Unzip(zipBuffer.get(), cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
                         cg.fPageListEnvelopeLink.fUnzippedSize, buffer.get());
 
-   std::vector<RClusterDescriptorBuilder> clusters;
+   std::vector<RClusterDescriptorBuilder> clusters = descBuilder.GetClusterSummaries();
    Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cg.fPageListEnvelopeLink.fUnzippedSize, clusters);
    for (std::size_t i = 0; i < clusters.size(); ++i) {
-      descBuilder.AddCluster(i, std::move(clusters[i]));
+      descBuilder.AddCluster(clusters[i].MoveDescriptor().Unwrap());
    }
 
    return descBuilder.MoveDescriptor();

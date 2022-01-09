@@ -558,41 +558,25 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
    return RResult<void>::Success();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(DescriptorId_t clusterId, NTupleSize_t firstEntryIndex,
-                                                              ClusterSize_t nEntries)
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry,
+                                                                std::uint64_t nEntries)
 {
-   RClusterDescriptor c;
-   c.fClusterId = clusterId;
-   c.fFirstEntryIndex = firstEntryIndex;
-   c.fNEntries = nEntries;
-   c.fHasPageLocations = true; // TODO(jblomer): remove me including this AddCluster() overload
-   fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(c));
+   if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
+      return R__FAIL("cluster id clash while adding cluster summary");
+   fDescriptor.fClusterDescriptors.emplace(clusterId, RClusterDescriptor(clusterId, firstEntry, nEntries));
+   return RResult<void>::Success();
 }
 
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterColumnRange(
-   DescriptorId_t clusterId, const RClusterDescriptor::RColumnRange &columnRange)
+std::vector<ROOT::Experimental::RClusterDescriptorBuilder>
+ROOT::Experimental::RNTupleDescriptorBuilder::GetClusterSummaries()
 {
-   fDescriptor.fClusterDescriptors[clusterId].fColumnRanges[columnRange.fColumnId] = columnRange;
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterPageRange(
-   DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange)
-{
-   fDescriptor.fClusterDescriptors[clusterId].fPageRanges.emplace(pageRange.fColumnId, std::move(pageRange));
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(
-   Internal::RNTupleSerializer::RClusterSummary &clusterSummary)
-{
-   fClusterSummaries.push_back(clusterSummary);
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry,
-                                                                     std::uint64_t nEntries)
-{
-   RClusterDescriptorBuilder builder;
-   builder.ClusterId(clusterId).FirstEntryIndex(firstEntry).NEntries(nEntries);
-   fDescriptor.fClusterDescriptors.emplace(clusterId, builder.MoveDescriptor().Unwrap());
+   std::vector<RClusterDescriptorBuilder> result;
+   for (unsigned i = 0; i < fDescriptor.GetNClusters(); ++i) {
+      const auto &cluster = fDescriptor.GetClusterDescriptor(i);
+      result.emplace_back(RClusterDescriptorBuilder(i, cluster.GetFirstEntryIndex(), cluster.GetNEntries()));
+   }
+   return result;
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(
@@ -607,21 +591,14 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(RClusterGroup
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
-   DescriptorId_t clusterId, RClusterDescriptorBuilder &&partialCluster)
+ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
 {
-   if (clusterId >= fClusterSummaries.size())
-      return R__FAIL("unknown cluster id");
-   if (fDescriptor.fClusterDescriptors.count(clusterId) != 0)
-      return R__FAIL("cluster clash");
-   const auto &summary = fClusterSummaries.at(clusterId);
-   partialCluster.ClusterId(clusterId)
-                 .FirstEntryIndex(summary.fFirstEntry)
-                 .NEntries(summary.fNEntries);
-   auto cluster = partialCluster.MoveDescriptor();
-   if (!cluster)
-      return R__FORWARD_ERROR(cluster);
-   fDescriptor.fClusterDescriptors.emplace(clusterId, cluster.Unwrap());
+   auto iter = fDescriptor.fClusterDescriptors.find(clusterDesc.GetId());
+   if (iter == fDescriptor.fClusterDescriptors.end())
+      return R__FAIL("invalid attempt to add cluster without known cluster summary");
+   if (iter->second.HasPageLocations())
+      return R__FAIL("invalid attempt to re-populate page list");
+   iter->second = std::move(clusterDesc);
    return RResult<void>::Success();
 }
 
