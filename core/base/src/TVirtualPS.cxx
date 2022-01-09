@@ -22,7 +22,7 @@ TVirtualPS is an abstract interface to Postscript, PDF, SVG. TeX etc... drivers
 
 TVirtualPS *gVirtualPS = nullptr;
 
-const Int_t  kMaxBuffer = 250;
+constexpr Int_t kMaxBuffer = 250;
 
 ClassImp(TVirtualPS);
 
@@ -35,7 +35,7 @@ TVirtualPS::TVirtualPS()
    fStream    = nullptr;
    fNByte     = 0;
    fSizBuffer = kMaxBuffer;
-   fBuffer    = new char[fSizBuffer+1];
+   fBuffer    = new char[fSizBuffer + 1];
    fLenBuffer = 0;
    fPrinted   = kFALSE;
    fImplicitCREsc = nullptr;
@@ -51,7 +51,7 @@ TVirtualPS::TVirtualPS(const char *name, Int_t)
    fStream    = nullptr;
    fNByte     = 0;
    fSizBuffer = kMaxBuffer;
-   fBuffer    = new char[fSizBuffer+1];
+   fBuffer    = new char[fSizBuffer + 1];
    fLenBuffer = 0;
    fPrinted   = kFALSE;
    fImplicitCREsc = nullptr;
@@ -104,8 +104,8 @@ void TVirtualPS::PrintStr(const char *str)
 void TVirtualPS::PrintFast(Int_t len, const char *str)
 {
    if (!len || !str) return;
-   while ((len + fLenBuffer) > kMaxBuffer) {
-      Int_t nWrite = kMaxBuffer;
+   while ((len + fLenBuffer) > fSizBuffer) {
+      Int_t nWrite = fSizBuffer;
       if (fImplicitCREsc) {
          if (fLenBuffer > 0) nWrite = fLenBuffer;
       } else {
@@ -117,7 +117,7 @@ void TVirtualPS::PrintFast(Int_t len, const char *str)
             }
             if (nWrite <= 0) {
                // Cannot find a convenient place to break a line, so we just break at this location.
-               nWrite = kMaxBuffer;
+               nWrite = fSizBuffer;
             }
          }
       }
@@ -201,12 +201,12 @@ void TVirtualPS::WriteReal(Float_t z, Bool_t space)
 void TVirtualPS::PrintRaw(Int_t len, const char *str)
 {
    fNByte += len;
-   if ((len + fLenBuffer) > kMaxBuffer - 1) {
+   if ((len + fLenBuffer) > fSizBuffer - 1) {
       fStream->write(fBuffer, fLenBuffer);
-      while(len > kMaxBuffer-1) {
-         fStream->write(str,kMaxBuffer);
-         len -= kMaxBuffer;
-         str += kMaxBuffer;
+      while (len > fSizBuffer - 1) {
+         fStream->write(str, fSizBuffer);
+         len -= fSizBuffer;
+         str += fSizBuffer;
       }
       memcpy(fBuffer, str, len);
       fLenBuffer = len;
