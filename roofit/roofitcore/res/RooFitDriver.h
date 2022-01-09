@@ -159,6 +159,8 @@ private:
          }
       }
 
+      RooAbsArg *absArg = nullptr;
+
       std::unique_ptr<Detail::AbsBuffer> buffer;
 
       cudaEvent_t *event = nullptr;
@@ -185,6 +187,7 @@ private:
             RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
       }
    };
+   double getValHeterogeneous();
    void updateMyClients(const RooAbsArg *node);
    void updateMyServers(const RooAbsArg *node);
    void handleIntegral(const RooAbsArg *node);
@@ -222,8 +225,11 @@ private:
    RooBatchCompute::DataMap _dataMapCUDA;
    const RooAbsReal &_topNode;
    RooArgSet _normSet;
-   std::unordered_map<const RooAbsArg *, NodeInfo> _nodeInfos;
-   std::unordered_map<const RooAbsArg *, NodeInfo> _integralInfos;
+   std::map<RooAbsArg const *, NodeInfo> _nodeInfos;
+   std::map<RooAbsArg const *, NodeInfo> _integralInfos;
+
+   // the ordered computation graph
+   std::vector<RooAbsArg *> _orderedNodes;
 
    // used for preserving resources
    std::vector<double> _nonDerivedValues;
