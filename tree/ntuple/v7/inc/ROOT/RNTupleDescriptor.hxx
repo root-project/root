@@ -346,6 +346,7 @@ public:
    bool operator==(const RClusterGroupDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fClusterGroupId; }
+   std::uint64_t GetNClusters() const { return fClusterIds.size(); }
    RNTupleLocator GetPageListLocator() const { return fPageListLocator; }
    std::uint32_t GetPageListLength() const { return fPageListLength; }
    bool Contains(DescriptorId_t clusterId) const
@@ -923,7 +924,6 @@ class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
    std::uint32_t fHeaderCRC32 = 0;
-   std::vector<Internal::RNTupleSerializer::RClusterGroup> fClusterGroups;
 
    RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
 public:
@@ -949,12 +949,8 @@ public:
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    RResult<void> AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry, std::uint64_t nEntries);
-   void AddClusterGroup(RClusterGroupDescriptorBuilder &clusterGroup);
+   void AddClusterGroup(RClusterGroupDescriptorBuilder &&clusterGroup);
 
-   // TODO(jblomer): get cluster summaries as function of the cluster group
-   std::vector<RClusterDescriptorBuilder> GetClusterSummaries();
-   void AddClusterGroup(Internal::RNTupleSerializer::RClusterGroup &clusterGroup);
-   Internal::RNTupleSerializer::RClusterGroup GetClusterGroup(std::uint32_t id) const { return fClusterGroups.at(id); }
    RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor

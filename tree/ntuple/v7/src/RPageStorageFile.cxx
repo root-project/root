@@ -278,24 +278,23 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
    Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), ntpl.fLenFooter, descBuilder);
 
-   auto cg = descBuilder.GetClusterGroup(0);
-   buffer = std::make_unique<unsigned char[]>(cg.fPageListEnvelopeLink.fUnzippedSize);
-   zipBuffer = std::make_unique<unsigned char[]>(cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
-   fReader.ReadBuffer(zipBuffer.get(),
-                      cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
-                      cg.fPageListEnvelopeLink.fLocator.fPosition);
-   fDecompressor->Unzip(zipBuffer.get(),
-                        cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
-                        cg.fPageListEnvelopeLink.fUnzippedSize,
-                        buffer.get());
+   auto ntplDesc = descBuilder.MoveDescriptor();
 
-   std::vector<RClusterDescriptorBuilder> clusters = descBuilder.GetClusterSummaries();
-   Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cg.fPageListEnvelopeLink.fUnzippedSize, clusters);
+   const auto &clusterGroupDesc = ntplDesc.GetClusterGroupDescriptor(0);
+   buffer = std::make_unique<unsigned char[]>(clusterGroupDesc.GetPageListLength());
+   zipBuffer = std::make_unique<unsigned char[]>(clusterGroupDesc.GetPageListLocator().fBytesOnStorage);
+   fReader.ReadBuffer(zipBuffer.get(), clusterGroupDesc.GetPageListLocator().fBytesOnStorage,
+                      clusterGroupDesc.GetPageListLocator().fPosition);
+   fDecompressor->Unzip(zipBuffer.get(), clusterGroupDesc.GetPageListLocator().fBytesOnStorage,
+                        clusterGroupDesc.GetPageListLength(), buffer.get());
+
+   auto clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(ntplDesc, 0);
+   Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), clusterGroupDesc.GetPageListLength(), clusters);
    for (std::size_t i = 0; i < clusters.size(); ++i) {
-      descBuilder.AddCluster(clusters[i].MoveDescriptor().Unwrap());
+      ntplDesc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
    }
 
-   return descBuilder.MoveDescriptor();
+   return ntplDesc;
 }
 
 

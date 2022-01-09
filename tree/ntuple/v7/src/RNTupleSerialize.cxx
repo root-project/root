@@ -1280,14 +1280,23 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
+   std::uint64_t clusterId = 0;
    for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
       RClusterGroup clusterGroup;
       result = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
+
       descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
-      descBuilder.AddClusterGroup(clusterGroup);
+      RClusterGroupDescriptorBuilder clusterGroupBuilder;
+      clusterGroupBuilder.ClusterGroupId(groupId)
+         .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
+         .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedSize);
+      for (std::uint64_t i = 0; i < clusterGroup.fNClusters; ++i)
+         clusterGroupBuilder.AddCluster(clusterId + i);
+      clusterId += clusterGroup.fNClusters;
+      descBuilder.AddClusterGroup(std::move(clusterGroupBuilder));
    }
    bytes = frame + frameSize;
 
