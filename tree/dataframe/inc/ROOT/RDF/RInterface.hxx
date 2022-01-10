@@ -1077,7 +1077,7 @@ public:
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
-   /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
+   /// \param[in] redIdentity The reduced object of each thread is initialized to this value.
    /// \return the reduced quantity wrapped in a RResultPtr.
    ///
    /// ### Example usage:
@@ -2498,7 +2498,7 @@ public:
    /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U&,T)`, where T is the type of the column, U is the type of the aggregator variable
    /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
    /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
-   /// \param[in] aggIdentity The aggregator variable of each thread is initialised to this value (or is default-constructed if the parameter is omitted)
+   /// \param[in] aggIdentity The aggregator variable of each thread is initialized to this value (or is default-constructed if the parameter is omitted)
    /// \return the result of the aggregation wrapped in a RResultPtr.
    ///
    /// An aggregator callable takes two values, an aggregator variable and a column value. The aggregator variable is

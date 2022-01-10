@@ -435,7 +435,7 @@ public:
    FillParHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
    {
       fObjects[0] = h.get();
-      // Initialise all other slots
+      // Initialize all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
          UnsetDirectoryIfPossible(fObjects[i]);
@@ -520,7 +520,7 @@ public:
    FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots) : fGraphs(nSlots, nullptr)
    {
       fGraphs[0] = g.get();
-      // Initialise all other slots
+      // Initialize all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fGraphs[i] = new TGraph(*fGraphs[0]);
       }
