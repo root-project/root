@@ -116,3 +116,9 @@ std::shared_ptr<RDFGraphDrawing::GraphNode> RJittedFilter::GetGraph()
    }
    throw std::runtime_error("The Jitting should have been invoked before this method.");
 }
+
+std::shared_ptr<RNodeBase> RJittedFilter::GetVariedFilter(const std::string &variationName)
+{
+   assert(fConcreteFilter != nullptr);
+   return fConcreteFilter->GetVariedFilter(variationName);
+}
