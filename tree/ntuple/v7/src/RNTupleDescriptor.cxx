@@ -620,13 +620,11 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(RClusterDescriptor &&clusterDesc)
+ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterWithDetails(RClusterDescriptor &&clusterDesc)
 {
-   auto iter = fDescriptor.fClusterDescriptors.find(clusterDesc.GetId());
-   if (iter == fDescriptor.fClusterDescriptors.end())
-      return R__FAIL("invalid attempt to add cluster without known cluster summary");
-   if (iter->second.HasPageLocations())
-      return R__FAIL("invalid attempt to re-populate page list");
-   iter->second = std::move(clusterDesc);
+   auto clusterId = clusterDesc.GetId();
+   if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
+      return R__FAIL("cluster id clash");
+   fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(clusterDesc));
    return RResult<void>::Success();
 }
