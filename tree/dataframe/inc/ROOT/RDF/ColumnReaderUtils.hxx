@@ -113,7 +113,7 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
    if (variationName == "nominal")
       doesVariationApply.fill(false);
    else {
-      for (auto i = 0u; i < colNames.size(); ++i)
+      for (auto i = 0u; i < sizeof...(ColTypes); ++i)
          doesVariationApply[i] = IsStrInVec(variationName, colRegister.GetVariationsFor(colNames[i]));
    }
 
@@ -129,6 +129,15 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
    (void)ds;
    (void)slot;
    (void)r;
+}
+
+// dummy overload for for the case of no columns, to silence compiler warnings
+std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, 0> inline MakeColumnReaders(unsigned int, TTreeReader *,
+                                                                                      TypeList<>,
+                                                                                      const RColumnReadersInfo &,
+                                                                                      const std::string & = "nominal")
+{
+   return {};
 }
 
 } // namespace RDF
