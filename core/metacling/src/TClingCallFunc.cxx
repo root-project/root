@@ -941,6 +941,7 @@ int TClingCallFunc::get_wrapper_code(std::string &wrapper_name, std::string &wra
    buf << "#pragma clang diagnostic push\n"
           "#pragma clang diagnostic ignored \"-Wformat-security\"\n"
           "__attribute__((used)) "
+          "__attribute__((annotate(\"__cling__ptrcheck(off)\")))\n"
           "extern \"C\" void ";
    buf << wrapper_name;
    buf << "(void* obj, int nargs, void** args, void* ret)\n"
