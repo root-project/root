@@ -14,8 +14,9 @@
 #include "RooFit/MultiProcess/Messenger.h"
 #include "RooFit/MultiProcess/util.h"
 
+#include <RooFit/Common.h>
+
 #include <csignal> // sigprocmask etc
-#include <cstdio>  // sprintf
 
 namespace RooFit {
 namespace MultiProcess {
@@ -63,9 +64,9 @@ Messenger::Messenger(const ProcessManager &process_manager)
 {
    sigemptyset(&ppoll_sigmask);
 
-   char addr_prefix_template[30] = "ipc:///tmp/%d_roofitMP";
-   char addr_prefix[50];
-   char addr[100];
+   auto makeAddrPrefix = [](pid_t pid) -> std::string {
+      return "ipc://" + RooFit::tmpPath() + std::to_string(pid) + "_roofitMP";
+   };
 
    // high water mark for master-queue sending, which can be quite a busy channel, especially at the start of a run
    int hwm = 0;
@@ -75,44 +76,34 @@ Messenger::Messenger(const ProcessManager &process_manager)
    // constructor.
    try {
       if (process_manager.is_master()) {
-         sprintf(addr_prefix, addr_prefix_template, getpid());
+         auto addrBase = makeAddrPrefix(getpid());
 
          mq_push_.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
          mq_push_->set(zmq::sockopt::sndhwm, hwm);
-         sprintf(addr, "%s_%s", addr_prefix, "from_master_to_queue");
-         mq_push_->bind(addr);
-         bound_ipc_addresses_.emplace_back(addr);
+         bindAddr(mq_push_, addrBase + "_from_master_to_queue");
 
          mq_push_poller_.register_socket(*mq_push_, zmq::event_flags::pollout);
 
          mq_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
          mq_pull_->set(zmq::sockopt::rcvhwm, hwm);
-         sprintf(addr, "%s_%s", addr_prefix, "from_queue_to_master");
-         mq_pull_->bind(addr);
-         bound_ipc_addresses_.emplace_back(addr);
+         bindAddr(mq_pull_, addrBase + "_from_queue_to_master");
 
          mq_pull_poller_.register_socket(*mq_pull_, zmq::event_flags::pollin);
 
          mw_pub_.reset(zmqSvc().socket_ptr(zmq::socket_type::pub));
          mw_pub_->set(zmq::sockopt::sndhwm, hwm);
-         sprintf(addr, "%s_%s", addr_prefix, "from_master_to_workers");
-         mw_pub_->bind(addr);
-         bound_ipc_addresses_.emplace_back(addr);
+         bindAddr(mw_pub_, addrBase + "_from_master_to_workers");
 
          wm_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
          wm_pull_->set(zmq::sockopt::rcvhwm, hwm);
-         sprintf(addr, "%s_%s", addr_prefix, "from_workers_to_master");
-         wm_pull_->bind(addr);
-         bound_ipc_addresses_.emplace_back(addr);
+         bindAddr(wm_pull_, addrBase + "_from_workers_to_master");
          wm_pull_poller_.register_socket(*wm_pull_, zmq::event_flags::pollin);
 
          close_MQ_on_destruct_ = true;
 
          // make sure all subscribers are connected
          ZmqLingeringSocketPtr<> subscriber_ping_socket{zmqSvc().socket_ptr(zmq::socket_type::pull)};
-         sprintf(addr, "%s_%s", addr_prefix, "subscriber_ping_socket");
-         subscriber_ping_socket->bind(addr);
-         bound_ipc_addresses_.emplace_back(addr);
+         bindAddr(subscriber_ping_socket, addrBase + "_subscriber_ping_socket");
          ZeroMQPoller subscriber_ping_poller;
          subscriber_ping_poller.register_socket(*subscriber_ping_socket, zmq::event_flags::pollin);
          std::size_t N_subscribers_confirmed = 0;
@@ -128,7 +119,7 @@ Messenger::Messenger(const ProcessManager &process_manager)
          zmqSvc().send(*mw_pub_, true);
 
       } else if (process_manager.is_queue()) {
-         sprintf(addr_prefix, addr_prefix_template, getppid());
+         auto addrBase = makeAddrPrefix(getppid());
 
          // first the queue-worker sockets
          // do resize instead of reserve so that the unique_ptrs are initialized
@@ -141,17 +132,13 @@ Messenger::Messenger(const ProcessManager &process_manager)
          for (std::size_t ix = 0; ix < process_manager.N_workers(); ++ix) {
             // push
             qw_push_[ix].reset(zmqSvc().socket_ptr(zmq::socket_type::push));
-            sprintf(addr, "%s_%s_%zu", addr_prefix, "from_queue_to_worker", ix);
-            qw_push_[ix]->bind(addr);
-            bound_ipc_addresses_.emplace_back(addr);
+            bindAddr(qw_push_[ix], addrBase + "_from_queue_to_worker_" + std::to_string(ix));
 
             qw_push_poller_[ix].register_socket(*qw_push_[ix], zmq::event_flags::pollout);
 
             // pull
             qw_pull_[ix].reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
-            sprintf(addr, "%s_%s_%zu_%s", addr_prefix, "from_worker", ix, "to_queue");
-            qw_pull_[ix]->bind(addr);
-            bound_ipc_addresses_.emplace_back(addr);
+            bindAddr(qw_pull_[ix], addrBase + "_from_worker_" + std::to_string(ix) + "_to_queue");
 
             qw_pull_poller_[ix].register_socket(*qw_pull_[ix], zmq::event_flags::pollin);
          }
@@ -159,22 +146,20 @@ Messenger::Messenger(const ProcessManager &process_manager)
          // then the master-queue sockets
          mq_push_.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
          mq_push_->set(zmq::sockopt::sndhwm, hwm);
-         sprintf(addr, "%s_%s", addr_prefix, "from_queue_to_master");
-         mq_push_->connect(addr);
+         mq_push_->connect(addrBase + "_from_queue_to_master");
 
          mq_push_poller_.register_socket(*mq_push_, zmq::event_flags::pollout);
 
          mq_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
          mq_pull_->set(zmq::sockopt::rcvhwm, hwm);
-         sprintf(addr, "%s_%s", addr_prefix, "from_master_to_queue");
-         mq_pull_->connect(addr);
+         mq_pull_->connect(addrBase + "_from_master_to_queue");
 
          mq_pull_poller_.register_socket(*mq_pull_, zmq::event_flags::pollin);
 
          close_MQ_on_destruct_ = true;
          close_QW_container_on_destruct_ = true;
       } else if (process_manager.is_worker()) {
-         sprintf(addr_prefix, addr_prefix_template, getppid());
+         auto addrBase = makeAddrPrefix(getppid());
 
          // we only need one queue-worker pipe on the worker
          qw_push_poller_.resize(1);
@@ -182,14 +167,14 @@ Messenger::Messenger(const ProcessManager &process_manager)
 
          // push
          this_worker_qw_push_.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
-         sprintf(addr, "%s_%s_%zu_%s", addr_prefix, "from_worker", process_manager.worker_id(), "to_queue");
+         auto addr = addrBase + "_from_worker_" + std::to_string(process_manager.worker_id()) + "_to_queue";
          this_worker_qw_push_->connect(addr);
 
          qw_push_poller_[0].register_socket(*this_worker_qw_push_, zmq::event_flags::pollout);
 
          // pull
          this_worker_qw_pull_.reset(zmqSvc().socket_ptr(zmq::socket_type::pull));
-         sprintf(addr, "%s_%s_%zu", addr_prefix, "from_queue_to_worker", process_manager.worker_id());
+         addr = addrBase + "_from_queue_to_worker_" + std::to_string(process_manager.worker_id());
          this_worker_qw_pull_->connect(addr);
 
          qw_pull_poller_[0].register_socket(*this_worker_qw_pull_, zmq::event_flags::pollin);
@@ -197,19 +182,16 @@ Messenger::Messenger(const ProcessManager &process_manager)
          mw_sub_.reset(zmqSvc().socket_ptr(zmq::socket_type::sub));
          mw_sub_->set(zmq::sockopt::rcvhwm, hwm);
          mw_sub_->set(zmq::sockopt::subscribe, "");
-         sprintf(addr, "%s_%s", addr_prefix, "from_master_to_workers");
-         mw_sub_->connect(addr);
+         mw_sub_->connect(addrBase + "_from_master_to_workers");
          mw_sub_poller_.register_socket(*mw_sub_, zmq::event_flags::pollin);
 
          wm_push_.reset(zmqSvc().socket_ptr(zmq::socket_type::push));
          wm_push_->set(zmq::sockopt::sndhwm, hwm);
-         sprintf(addr, "%s_%s", addr_prefix, "from_workers_to_master");
-         wm_push_->connect(addr);
+         wm_push_->connect(addrBase + "_from_workers_to_master");
 
          // check publisher connection and then wait until all subscribers are connected
          ZmqLingeringSocketPtr<> subscriber_ping_socket{zmqSvc().socket_ptr(zmq::socket_type::push)};
-         sprintf(addr, "%s_%s", addr_prefix, "subscriber_ping_socket");
-         subscriber_ping_socket->connect(addr);
+         subscriber_ping_socket->connect(addrBase + "_subscriber_ping_socket");
          auto all_connected = zmqSvc().receive<bool>(*mw_sub_);
          zmqSvc().send(*subscriber_ping_socket, "present");
 

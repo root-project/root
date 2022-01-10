@@ -74,7 +74,7 @@ TEST(RDataFrameInterface, CreateAliases)
 TEST(RDataFrameInterface, CheckAliasesPerChain)
 {
    RDataFrame tdf(1);
-   auto d = tdf.Define("c0", []() { return 0; });
+   auto d = tdf.Define("c0", []() { return 42; });
    // Now branch the graph
    auto ok = []() { return true; };
    auto f0 = d.Filter(ok);
@@ -82,8 +82,25 @@ TEST(RDataFrameInterface, CheckAliasesPerChain)
    auto f0a = f0.Alias("c1", "c0");
    // must work
    auto f0aa = f0a.Alias("c2", "c1");
+   EXPECT_EQ(f0aa.Max<int>("c2").GetValue(), 42);
    // must fail
    EXPECT_ANY_THROW(f1.Alias("c2", "c1")) << "No exception thrown when trying to alias a non-existing column.";
+}
+
+TEST(RDataFrameInterface, PerBranchAliases)
+{
+   // test that it's possible to register the same alias in different branches of the computation graph
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 42; }).Define("y", [] { return 0; });
+   auto dfzx = df.Alias("z", "x");
+   auto dfzy = df.Alias("z", "y");
+
+   EXPECT_ANY_THROW(df.Max<int>("z"))
+      << "No exception thrown when trying to access an alias that is not present at this point of the graph.";
+
+   auto max42 = dfzx.Max<int>("z");
+   auto max0 = dfzy.Max<int>("z");
+   EXPECT_EQ(*max42, 42);
+   EXPECT_EQ(*max0, 0);
 }
 
 TEST(RDataFrameInterface, GetColumnNamesFromScratch)
@@ -371,9 +388,12 @@ TEST(RDataFrameInterface, GetNSlots)
 TEST(RDataFrameInterface, DefineAliasedColumn)
 {
    ROOT::RDataFrame rdf(1);
-   auto r0 = rdf.Define("myVar", [](){return 1;});
+   auto r0 = rdf.Define("myVar", [] { return 1; });
    auto r1 = r0.Alias("newVar", "myVar");
-   EXPECT_ANY_THROW(r0.Define("newVar", [](int i){return i;}, {"myVar"})) << "No exception thrown when defining a column with a name which is already an alias.";
+   auto mdefine = r0.Define("newVar", [] { return 42; }).Max<int>("newVar");
+   auto malias = r1.Max<int>("newVar");
+   EXPECT_EQ(*mdefine, 42);
+   EXPECT_EQ(*malias, 1);
 }
 
 // ROOT-10619

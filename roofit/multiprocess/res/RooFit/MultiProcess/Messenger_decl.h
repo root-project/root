@@ -107,6 +107,12 @@ public:
 private:
    void debug_print(std::string s);
 
+   template<class T>
+   void bindAddr(T & socket, std::string && addr) {
+     bound_ipc_addresses_.emplace_back(addr);
+     socket->bind(bound_ipc_addresses_.back());
+   }
+
    // push
    std::vector<ZmqLingeringSocketPtr<>> qw_push_;
    ZmqLingeringSocketPtr<> this_worker_qw_push_;

@@ -26,23 +26,22 @@ An instance of this class is created every time RooAbsPdf::fitTo() is called
 and gets destroyed when the fitting ends.
 **/
 
-#include "RooFitDriver.h"
-#include "RooAbsCategory.h"
-#include "RooAbsData.h"
-#include "RooAbsReal.h"
-#include "RooAbsPdf.h"
-#include "RooArgList.h"
-#include "RooBatchCompute.h"
-#include "RooMsgService.h"
-#include "RooRealVar.h"
-#include "RunContext.h"
-#include "RooDataSet.h"
-#include "RooSimultaneous.h"
-#include "RooNLLVarNew.h"
+#include <RooFitDriver.h>
 
-#include "RooBatchCompute.h"
+#include <RooAbsCategory.h>
+#include <RooAbsData.h>
+#include <RooAbsReal.h>
+#include <RooAbsPdf.h>
+#include <RooArgList.h>
+#include <RooBatchCompute.h>
+#include <RooDataSet.h>
+#include <RooMsgService.h>
+#include <RooNLLVarNew.h>
+#include <RooRealVar.h>
+#include <RooSimultaneous.h>
+#include <RunContext.h>
 
-#include "ROOT/StringUtils.hxx"
+#include <ROOT/StringUtils.hxx>
 
 #include <iomanip>
 #include <numeric>
@@ -52,18 +51,6 @@ namespace ROOT {
 namespace Experimental {
 
 using namespace Detail;
-
-namespace {
-
-bool absArgNeedsComputation(RooAbsArg const *arg)
-{
-   auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(arg);
-   auto nodeAbsCategory = dynamic_cast<RooAbsCategory const *>(arg);
-   return nodeAbsReal || nodeAbsCategory;
-}
-
-} // namespace
-
 using namespace std::chrono;
 
 RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName)
@@ -243,28 +230,45 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
       }
    }
 
-   for (RooAbsArg const *arg : serverSet) {
-      if (absArgNeedsComputation(arg)) {
-         if (_dataset.contains(arg)) {
-            _dataMapCPU[arg] = _dataset.span(arg);
-         }
+   for (std::size_t iNode = serverSet.size(); iNode > 0; --iNode) {
+      RooAbsArg *arg = serverSet[iNode - 1];
 
-         // If the node doesn't depend on any observables, there is no need to
-         // loop over events and we don't need to use the batched evaluation.
-         RooArgSet observablesForNode;
-         arg->getObservables(data.get(), observablesForNode);
-         _nodeInfos[arg].computeInScalarMode = observablesForNode.empty() || !arg->isDerived();
+      auto &argInfo = _nodeInfos[arg];
+      if (_dataset.contains(arg)) {
+         _dataMapCPU[arg] = _dataset.span(arg);
+         argInfo.outputSize = _dataset.span(arg).size();
+      }
 
-         for (auto *client : arg->clients()) {
-            // we use containsInstance instead of find to match by pointer and not name
-            if (!serverSet.containsInstance(*client))
-               continue;
+      for (auto *client : arg->clients()) {
+         // we use containsInstance instead of find to match by pointer and not name
+         if (!serverSet.containsInstance(*client))
+            continue;
 
-            ++_nodeInfos[client].nServers;
-            ++_nodeInfos[arg].nClients;
-         }
+         auto &clientInfo = _nodeInfos[client];
+
+         ++clientInfo.nServers;
+         ++argInfo.nClients;
       }
    }
+
+   determineOutputSizes(serverSet);
+
+   for (auto *arg : serverSet) {
+      auto& info = _nodeInfos[arg];
+
+      // If the node evaluation doesn't involve a loop over entries, we can
+      // always use the scalar mode.
+      info.computeInScalarMode = info.outputSize == 1 && !arg->isReducerNode();
+
+      // We don't need dirty flag propagation for nodes evaluated in batch
+      // mode, because the driver takes care of deciding which node needs to be
+      // re-evaluated. However, dirty flag propagation must be kept for reducer
+      // nodes, because their clients are evaluated in scalar mode.
+      if(!info.computeInScalarMode && !arg->isReducerNode()) {
+         setOperMode(arg, RooAbsArg::ADirty);
+      }
+   }
+
 
    // Extra steps for initializing in cuda mode
    if (_batchMode != RooFit::BatchModeOption::Cuda)
@@ -322,17 +326,16 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    auto nodeAbsCategory = dynamic_cast<RooAbsCategory const *>(node);
    assert(nodeAbsReal || nodeAbsCategory);
 
-   const std::size_t nOut = getInputSize(*node);
+   const std::size_t nOut = info.outputSize;
 
-   if (nOut == 1) {
+   if (info.computeInScalarMode) {
       // compute in scalar mode
       _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal(&_normSet));
-
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
-   } else if (node->isReducerNode()) {
+   } else if (nOut == 1) {
       _nonDerivedValues.push_back(0.0);
-      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), 1);
-      nodeAbsReal->computeBatch(nullptr, &_nonDerivedValues.back(), 1, _dataMapCPU);
+      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
+      nodeAbsReal->computeBatch(nullptr, &_nonDerivedValues.back(), nOut, _dataMapCPU);
    } else {
       handleIntegral(node);
       info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeCpuBuffer(nOut);
@@ -421,21 +424,6 @@ double RooFitDriver::getVal()
    return _dataMapCPU.at(&_topNode)[0];
 }
 
-std::size_t RooFitDriver::getInputSize(RooAbsArg const &arg) const
-{
-   RooArgSet valueServers;
-   arg.treeNodeServerList(&valueServers, nullptr, true, true, true);
-   std::size_t inputSize = 1;
-   for (auto *server : valueServers) {
-      if (_dataMapCUDA.find(server) != _dataMapCUDA.end()) {
-         inputSize = std::max(inputSize, _dataMapCUDA.at(server).size());
-      } else if (_dataMapCPU.find(server) != _dataMapCPU.end()) {
-         inputSize = std::max(inputSize, _dataMapCPU.at(server).size());
-      }
-   }
-   return inputSize;
-}
-
 /// Handles the computation of the integral of a PDF for normalization purposes,
 /// before the pdf is computed.
 void RooFitDriver::handleIntegral(const RooAbsArg *node)
@@ -445,14 +433,25 @@ void RooFitDriver::handleIntegral(const RooAbsArg *node)
    if (auto pAbsPdf = dynamic_cast<const RooAbsPdf *>(node)) {
       auto integral = pAbsPdf->getIntegral(_normSet);
 
-      std::size_t inputSize = getInputSize(*integral);
-
       if (_integralInfos.count(integral) == 0) {
          auto &info = _integralInfos[integral];
-         if (inputSize > 1 && _batchMode == RooFit::BatchModeOption::Cuda) {
+         for (RooAbsArg *server : integral->servers()) {
+            if (server->isValueServer(*integral)) {
+               info.outputSize = std::max(info.outputSize, _nodeInfos.at(server).outputSize);
+            }
+         }
+
+         if (info.outputSize > 1 && _batchMode == RooFit::BatchModeOption::Cuda) {
             info.copyAfterEvaluation = true;
             info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
+         } else if (info.outputSize == 1) {
+            info.computeInScalarMode = true;
          }
+
+         // We don't need dirty flag propagation for nodes evaluated by the
+         // RooFitDriver, because the driver takes care of deciding which node
+         // needs to be re-evaluated.
+         if(!info.computeInScalarMode) setOperMode(integral, RooAbsArg::ADirty);
       }
 
       computeCPUNode(integral, _integralInfos.at(integral));
@@ -466,9 +465,9 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
    auto nodeAbsReal = dynamic_cast<RooAbsReal const *>(node);
    assert(nodeAbsReal || dynamic_cast<RooAbsCategory const *>(node));
 
-   const std::size_t nOut = getInputSize(*node);
-
    NodeInfo &info = _nodeInfos.at(node);
+   const std::size_t nOut = info.outputSize;
+
    info.remServers = -1;
    // wait for every server to finish
    for (auto *server : node->servers()) {
@@ -477,27 +476,6 @@ void RooFitDriver::assignToGPU(RooAbsArg const *node)
       const auto &infoServer = _nodeInfos.at(server);
       if (infoServer.event)
          RooBatchCompute::dispatchCUDA->cudaStreamWaitEvent(info.stream, infoServer.event);
-   }
-
-   if (node->isReducerNode()) {
-      _nonDerivedValues.push_back(0.0);
-      double *buffer = &_nonDerivedValues.back();
-      _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(buffer, 1);
-      nodeAbsReal->computeBatch(nullptr, buffer, 1, _dataMapCPU);
-
-      // measure launching overhead (add computation time later)
-      if (_getValInvocations == 2) {
-         using namespace std::chrono;
-         RooBatchCompute::dispatchCUDA->cudaEventRecord(info.eventStart, info.stream);
-         auto start = steady_clock::now();
-         nodeAbsReal->computeBatch(info.stream, buffer, 1, _dataMapCUDA);
-         info.cudaTime = duration_cast<microseconds>(steady_clock::now() - start);
-      } else
-         nodeAbsReal->computeBatch(info.stream, buffer, 1, _dataMapCUDA);
-      RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
-      updateMyClients(node);
-
-      return;
    }
 
    info.buffer = info.copyAfterEvaluation ? makePinnedBuffer(nOut, info.stream) : makeGpuBuffer(nOut);
@@ -745,6 +723,36 @@ void RooFitDriver::markGPUNodes()
             << std::setw(20) << item.first->GetName() << "\t" << item.first << "\t"
             << (item.second.computeInGPU ? "CUDA" : "CPU") << "\t" << item.second.cpuTime.count() << "us\t"
             << item.second.cudaTime.count() << "us\n";
+   }
+}
+
+void RooFitDriver::determineOutputSizes(RooArgSet const &serverSet)
+{
+   std::size_t totalSize = 1;
+   std::size_t prevTotalSize = 0;
+
+   // Usually, the serverSet is sorted by dependency and one or two passes in
+   // reverse order are enough the propagate through all clinet-server
+   // relationships and converge to the correct output sizes. Indeed, this
+   // function takes a negligible fraction of the time of the NLL creation for
+   // large ATLAS Higgs combination models.
+   while (totalSize != prevTotalSize) {
+      prevTotalSize = totalSize;
+      totalSize = 0;
+
+      for (std::size_t iNode = serverSet.size(); iNode > 0; --iNode) {
+         RooAbsArg const *arg = serverSet[iNode - 1];
+         auto &argInfo = _nodeInfos[arg];
+         for (auto *client : arg->valueClients()) {
+            if (serverSet.containsInstance(*client)) {
+               auto &clientInfo = _nodeInfos[client];
+               if (!client->isReducerNode()) {
+                  clientInfo.outputSize = std::max(clientInfo.outputSize, argInfo.outputSize);
+               }
+            }
+         }
+         totalSize += argInfo.outputSize;
+      }
    }
 }
 

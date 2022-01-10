@@ -137,7 +137,11 @@ TEST(RDataFrameUtils, FindUnknownColumns)
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), {"b"}, {});
+   RDFInt::RColumnRegister defs;
+   defs.AddAlias("b", "a");
+
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {});
+   EXPECT_EQ(ncols.size(), 2u);
    EXPECT_STREQ("c", ncols[0].c_str());
    EXPECT_STREQ("d", ncols[1].c_str());
 }
@@ -148,7 +152,10 @@ TEST(RDataFrameUtils, FindUnknownColumnsWithDataSource)
    TTree t("t", "t");
    t.Branch("a", &i);
 
-   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), {"b"}, {"c"});
+   RDFInt::RColumnRegister defs;
+   defs.AddAlias("b", "a");
+
+   auto ncols = RDFInt::FindUnknownColumns({"a", "b", "c", "d"}, RDFInt::GetBranchNames(t), defs, {"c"});
    EXPECT_EQ(ncols.size(), 1u);
    EXPECT_STREQ("d", ncols[0].c_str());
 }
