@@ -234,11 +234,12 @@ public:
 namespace {
 class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "simultaneous"; }    
    bool autoExportDependants() const override { return false; }
    virtual bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooSimultaneous *sim = static_cast<const RooSimultaneous *>(func);
-      elem["type"] << "simultaneous";
+      elem["type"] << key();
       elem["index"] << sim->indexCat().GetName();
       auto &channels = elem["channels"];
       channels.set_map();
@@ -261,11 +262,12 @@ public:
 namespace {
 class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "histogram"; }      
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
       const RooDataHist &dh = hf->dataHist();
-      elem["type"] << "histogram";
+      elem["type"] << key();
       RooArgList vars(*dh.get());
       TH1 *hist = hf->createHistogram(RooJSONFactoryWSTool::concat(&vars).c_str());
       auto &data = elem["data"];
@@ -304,10 +306,11 @@ public:
 namespace {
 class RooBinSamplingPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "binsampling"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooBinSamplingPdf *pdf = static_cast<const RooBinSamplingPdf *>(func);
-      elem["type"] << "binsampling";
+      elem["type"] << key();
       elem["pdf"] << pdf->pdf().GetName();
       elem["observable"] << pdf->observable().GetName();
       elem["epsilon"] << pdf->epsilon();
@@ -321,10 +324,11 @@ public:
 namespace {
 class RooProdPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "pdfprod"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooProdPdf *pdf = static_cast<const RooProdPdf *>(func);
-      elem["type"] << "pdfprod";
+      elem["type"] << key();
       auto &factors = elem["pdfs"];
       for (const auto &f : pdf->pdfList()) {
          factors.append_child() << f->GetName();
@@ -339,10 +343,11 @@ public:
 namespace {
 class RooGenericPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "genericpdf"; }    
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooGenericPdf *pdf = static_cast<const RooGenericPdf *>(func);
-      elem["type"] << "genericpdf";
+      elem["type"] << key();
       elem["formula"] << pdf->expression().Data();
       auto &factors = elem["dependents"];
       for (const auto &f : pdf->dependents()) {
@@ -358,10 +363,11 @@ public:
 namespace {
 class RooBinWidthFunctionStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "binwidth"; }  
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooBinWidthFunction *pdf = static_cast<const RooBinWidthFunction *>(func);
-      elem["type"] << "binwidth";
+      elem["type"] << key();
       elem["histogram"] << pdf->histFunc()->GetName();
       elem["divideByBinWidth"] << pdf->divideByBinWidth();
       return true;
@@ -375,10 +381,11 @@ public:
 namespace {
 class RooFormulaVarStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "formulavar"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooFormulaVar *var = static_cast<const RooFormulaVar *>(func);
-      elem["type"] << "formulavar";
+      elem["type"] << key();
       elem["formula"] << var->expression().Data();
       auto &factors = elem["dependents"];
       for (const auto &f : var->dependents()) {

@@ -33,6 +33,7 @@ public:
    };
    class Exporter {
    public:
+      virtual std::string key() const = 0;
       virtual bool autoExportDependants() const { return true; }
       virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *, RooFit::Detail::JSONNode &) const
       {
@@ -40,10 +41,22 @@ public:
       }
       virtual ~Exporter(){};
    };
+   struct ExportKeys {
+     std::string type;
+     std::map<std::string, std::string> proxies;
+   };
+   struct ImportExpression {
+     TClass *tclass;
+     std::vector<std::string> arguments;
+   };
 
+     
    typedef std::map<const std::string, std::vector<const Importer *> > ImportMap;
    typedef std::map<const TClass *, std::vector<const Exporter *> > ExportMap;
+   typedef std::map<TClass *, ExportKeys> ExportKeysMap;
+   typedef std::map<std::string, ImportExpression> ImportExpressionMap;
 
+  
    struct Var {
       int nbins;
       double min;
@@ -70,6 +83,10 @@ protected:
    RooWorkspace *_workspace;
    static ImportMap _importers;
    static ExportMap _exporters;
+   static ExportKeysMap _exportKeys;
+   static ImportExpressionMap _pdfFactoryExpressions;
+   static ImportExpressionMap _funcFactoryExpressions;
+  
    std::map<std::string, RooAbsData *> loadData(const RooFit::Detail::JSONNode &n);
    RooDataSet *unbinned(RooDataHist *hist);
    RooRealVar *getWeightVar(const char *name);
@@ -108,6 +125,12 @@ public:
    static int removeExporters(const std::string &needle);
    static void printImporters();
    static void printExporters();
+
+   static const ImportMap& importers() { return _importers; }
+   static const ExportMap& exporters() { return _exporters; }
+   static const ImportExpressionMap& pdfImportExpressions() { return _pdfFactoryExpressions; }
+   static const ImportExpressionMap& functionImportExpressions() { return _funcFactoryExpressions; }  
+   static const ExportKeysMap& exportKeys() { return _exportKeys; }  
 
    // error handling helpers
    static void error(const char *s) { throw std::runtime_error(s); }

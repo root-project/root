@@ -437,11 +437,12 @@ public:
 namespace {
 class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "interpolation0d"; }  
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooStats::HistFactory::FlexibleInterpVar *fip =
          static_cast<const RooStats::HistFactory::FlexibleInterpVar *>(func);
-      elem["type"] << "interpolation0d";
+      elem["type"] << key();
       auto &vars = elem["vars"];
       vars.set_seq();
       for (const auto &v : fip->variables()) {
@@ -456,10 +457,11 @@ public:
 
 class PiecewiseInterpolationStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
+   virtual std::string key() const { return "interpolation"; }  
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);
-      elem["type"] << "interpolation";
+      elem["type"] << key();
       elem["interpolationCodes"] << pip->interpolationCodes();
       auto &vars = elem["vars"];
       vars.set_seq();
@@ -707,13 +709,14 @@ public:
       return true;
    }
 
+   virtual std::string key() const { return "pdfprod"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *p, JSONNode &elem) const override
    {
       const RooProdPdf *prodpdf = static_cast<const RooProdPdf *>(p);
       if (tryExport(prodpdf, elem)) {
          return true;
       }
-      elem["type"] << "pdfprod";
+      elem["type"] << key();
       auto &factors = elem["factors"];
       factors.set_seq();
       for (const auto &v : prodpdf->pdfList()) {
