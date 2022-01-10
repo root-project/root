@@ -693,9 +693,9 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedFilters)
-      ptr->FinaliseSlot(slot);
+      ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedDefines)
-      ptr->FinaliseSlot(slot);
+      ptr->FinalizeSlot(slot);
 }
 
 /// Add RDF nodes that require just-in-time compilation to the computation graph.

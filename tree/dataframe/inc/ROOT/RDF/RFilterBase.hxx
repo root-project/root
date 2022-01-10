@@ -67,7 +67,7 @@ public:
       std::fill(fRejected.begin(), fRejected.end(), 0);
    }
    /// Clean-up operations to be performed at the end of a task.
-   virtual void FinaliseSlot(unsigned int slot) = 0;
+   virtual void FinalizeSlot(unsigned int slot) = 0;
    virtual void InitNode();
 };
 

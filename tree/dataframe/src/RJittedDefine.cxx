@@ -50,8 +50,8 @@ void RJittedDefine::Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)
    fConcreteDefine->Update(slot, id);
 }
 
-void RJittedDefine::FinaliseSlot(unsigned int slot)
+void RJittedDefine::FinalizeSlot(unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);
-   fConcreteDefine->FinaliseSlot(slot);
+   fConcreteDefine->FinalizeSlot(slot);
 }
