@@ -199,7 +199,7 @@ public:
 
    /// \cond
    // Unused deprecated struct, it's here to remind us to remove the deprecated spellings Initialise, Finalise and
-   // FinaliseSlot.
+   // FinaliseSlot. PR that removes the deprecated code: https://github.com/root-project/root/pull/9521 .
    struct R__DEPRECATED(6, 30,
                         "Use Initialize, Finalize and FinalizeSlot instead of the corresponding british spellings.")
       NeverUsedJustAReminder {
@@ -212,11 +212,12 @@ public:
       try {
          Initialise();
       } catch (int) {
+         // `Initialise()` was not overridden and threw, the data source uses the new spelling: good!
          Initialize();
          return;
       }
       Warning("RDataSource::Initialise",
-              "Initialise is deprecated. Please implement Initialize (with a z) instead of Initialise.");
+              "Initialise is deprecated. Please rename it to \"Initialize\" (with a z).");
    }
    /// \endcond
 
