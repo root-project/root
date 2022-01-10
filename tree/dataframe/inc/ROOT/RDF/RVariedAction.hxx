@@ -16,6 +16,7 @@
 #include "RActionBase.hxx"
 #include "RColumnReaderBase.hxx"
 #include "RLoopManager.hxx"
+#include "RJittedFilter.hxx"
 
 #include <Rtypes.h> // R__CLING_PTRCHECK
 #include <ROOT/TypeTraits.hxx>
@@ -33,12 +34,16 @@ namespace RDF {
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 /// Just like an RAction, but it has N action helpers (one per variation + nominal) and N previous nodes.
-template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t>
+template <typename Helper, typename PrevNode, typename ColumnTypes_t>
 class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
+   // If the PrevNode is a RJittedFilter, our collection of previous nodes will have to use the RNodeBase type:
+   // we'll have a RJittedFilter for the nominal case, but the others will be concrete filters.
+   using PrevNodeType = std::conditional_t<std::is_same<PrevNode, RJittedFilter>::value, RFilterBase, PrevNode>;
 
-   std::vector<Helper> fHelpers; /// Action helpers per variation.
-   std::shared_ptr<PrevDataFrame> fPrevNode;
+   std::vector<Helper> fHelpers; ///< Action helpers per variation.
+   /// Owning pointers to upstream nodes for each systematic variation (with the "nominal" at index 0).
+   std::vector<std::shared_ptr<PrevNodeType>> fPrevNodes;
 
    /// Column readers per slot (outer dimension), per variation and per input column (inner dimension, std::array).
    std::vector<std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>>> fInputValues;
@@ -46,11 +51,30 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
+   std::vector<std::shared_ptr<PrevNodeType>> MakePrevFilters(std::shared_ptr<PrevNode> nominal) const
+   {
+      const auto &variations = GetVariations();
+      std::vector<std::shared_ptr<PrevNodeType>> prevFilters;
+      prevFilters.reserve(variations.size() + 1);
+      prevFilters.emplace_back(nominal);
+      if (static_cast<RNodeBase *>(nominal.get()) == fLoopManager) {
+         // just fill this with the RLoopManager N times
+         prevFilters.resize(variations.size() + 1, nominal);
+      } else {
+         // create varied versions of the previous filter node
+         for (const auto &variation : variations) {
+            prevFilters.emplace_back(std::static_pointer_cast<PrevNodeType>(nominal->GetVariedFilter(variation)));
+         }
+      }
+
+      return prevFilters;
+   }
+
 public:
-   RVariedAction(std::vector<Helper> &&helpers, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
+   RVariedAction(std::vector<Helper> &&helpers, const ColumnNames_t &columns, std::shared_ptr<PrevNode> prevNode,
                  const RColumnRegister &colRegister)
-      : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister, pd->GetVariations()),
-        fHelpers(std::move(helpers)), fPrevNode(std::move(pd)), fInputValues(GetNSlots())
+      : RActionBase(prevNode->GetLoopManagerUnchecked(), columns, colRegister, prevNode->GetVariations()),
+        fHelpers(std::move(helpers)), fPrevNodes(MakePrevFilters(prevNode)), fInputValues(GetNSlots())
    {
       const auto &defines = colRegister.GetColumns();
       for (auto i = 0u; i < columns.size(); ++i) {
@@ -90,21 +114,25 @@ public:
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void CallExec(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
+   void
+   CallExec(unsigned int slot, unsigned int varIdx, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      for (auto varIdx = 0u; varIdx < GetVariations().size() + 1; ++varIdx)
-         fHelpers[varIdx].Exec(slot, fInputValues[slot][varIdx][S]->template Get<ColTypes>(entry)...);
+      fHelpers[varIdx].Exec(slot, fInputValues[slot][varIdx][S]->template Get<ColTypes>(entry)...);
       (void)entry;
    }
 
    void Run(unsigned int slot, Long64_t entry) final
    {
-      // check if entry passes all filters
-      if (fPrevNode->CheckFilters(slot, entry))
-         CallExec(slot, entry, ColumnTypes_t{}, TypeInd_t{});
+      for (auto varIdx = 0u; varIdx < GetVariations().size() + 1; ++varIdx) {
+         if (fPrevNodes[varIdx]->CheckFilters(slot, entry))
+            CallExec(slot, varIdx, entry, ColumnTypes_t{}, TypeInd_t{});
+      }
    }
 
-   void TriggerChildrenCount() final { fPrevNode->IncrChildrenCount(); }
+   void TriggerChildrenCount() final
+   {
+      std::for_each(fPrevNodes.begin(), fPrevNodes.end(), [](auto &f) { f->IncrChildrenCount(); });
+   }
 
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
@@ -130,7 +158,7 @@ public:
    std::shared_ptr<RDFGraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
-      auto prevNode = fPrevNode->GetGraph(visitedMap);
+      auto prevNode = fPrevNodes[0]->GetGraph(visitedMap);
       auto prevColumns = prevNode->GetDefinedColumns();
 
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
