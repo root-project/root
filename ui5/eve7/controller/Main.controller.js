@@ -211,10 +211,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       switchSingle: function (elem, oEvent) {
-         var sc = oEvent.getSource();
          let viewer = this.mgr.GetElement(elem.fElementId);
-
-         var item = oEvent.getSource();
          // console.log('item pressed', item.getText(), elem);
 
          var name = viewer.fName;
@@ -276,7 +273,6 @@ sap.ui.define(['sap/ui/core/Component',
 
 
       switchViewSides: function (elem, oEvent) {
-         var sc = oEvent.getSource();
          let viewer = this.mgr.GetElement(elem.fElementId);
          let primary = this.getView().byId("MainAreaSplitter");
          let secondary;
@@ -287,10 +283,6 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (elem.fElementId == pa.oViewData.eveViewerId) 
          { 
-            console.log("switch primary ", viewer);
-            console.log("switch primary CA ", viewer.ca);
-
-            let idx = secondary.indexOfContentArea(viewer.ca);
             let sa = secondary.getContentAreas()[0];
             primary.removeContentArea(pa);
             secondary.removeContentArea(sa);
@@ -298,9 +290,6 @@ sap.ui.define(['sap/ui/core/Component',
             secondary.insertContentArea(pa, 0);
          }
          else {
-
-            console.log("switch secondarty ", viewer);
-            console.log("switch secondarty CA ", viewer.ca);
             let idx = secondary.indexOfContentArea(viewer.ca);
             primary.removeContentArea(pa);
             secondary.removeContentArea(viewer.ca);
