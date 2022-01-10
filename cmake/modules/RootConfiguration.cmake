@@ -796,7 +796,7 @@ configure_file(${PROJECT_SOURCE_DIR}/cmake/scripts/RootUseFile.cmake.in
 install(FILES ${PROJECT_BINARY_DIR}/ROOTConfig-version.cmake
               ${PROJECT_BINARY_DIR}/installtree/ROOTUseFile.cmake
               ${PROJECT_BINARY_DIR}/installtree/ROOTConfig.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
-install(EXPORT ${PROJECT_NAME}Exports NAMESPACE ROOT:: FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
+install(EXPORT ${CMAKE_PROJECT_NAME}Exports NAMESPACE ROOT:: FILE ROOTConfig-targets.cmake DESTINATION ${CMAKE_INSTALL_CMAKEDIR})
 
 
 #---Especial definitions for root-config et al.--------------------------------------------------------------
