@@ -24,6 +24,7 @@
 #include <cassert>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility> // std::index_sequence
 #include <vector>
 
@@ -63,11 +64,14 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    const std::shared_ptr<PrevNode> fPrevNodePtr;
    PrevNode &fPrevNode;
 
+   std::unordered_map<std::string, std::shared_ptr<RFilterBase>> fVariedFilters;
+
 public:
    RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevNode> pd,
-           const RDFInternal::RColumnRegister &colRegister, std::string_view name = "")
+           const RDFInternal::RColumnRegister &colRegister, std::string_view name = "",
+           const std::string &variationName = "nominal")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), colRegister,
-                    columns, pd->GetVariations()),
+                    columns, pd->GetVariations(), variationName),
         fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevNodePtr(std::move(pd)),
         fPrevNode(*fPrevNodePtr)
    {
@@ -113,7 +117,7 @@ public:
    {
       RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
                                            fLoopManager->GetDataSource()};
-      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
+      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
@@ -184,6 +188,26 @@ public:
 
       upmostNode->SetPrevNode(prevNode);
       return thisNode;
+   }
+
+   /// Return a clone of this Filter that works with values in the variationName "universe".
+   std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName) final
+   {
+      auto it = fVariedFilters.find(variationName);
+      if (it != fVariedFilters.end())
+         return it->second;
+
+      auto prevNode = fPrevNodePtr;
+      if ((void *)fPrevNodePtr.get() != (void *)fLoopManager && variationName != "nominal")
+         prevNode = std::static_pointer_cast<PrevNode>(prevNode->GetVariedFilter(variationName));
+
+      // the varied filters get a copy of the callable object.
+      // TODO document this
+      auto variedFilter = std::unique_ptr<RFilterBase>(
+         new RFilter(fFilter, fColumnNames, std::move(prevNode), fColRegister, fName, variationName));
+      fLoopManager->Book(variedFilter.get());
+      auto e = fVariedFilters.insert({variationName, std::move(variedFilter)});
+      return e.first->second;
    }
 };
 

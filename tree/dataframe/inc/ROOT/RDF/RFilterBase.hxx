@@ -46,11 +46,12 @@ protected:
    RDFInternal::RColumnRegister fColRegister;
    /// The nth flag signals whether the nth input column is a custom column or not.
    ROOT::RVecB fIsDefine;
+   std::string fVariation; ///< This indicates for what variation this filter evaluates values.
 
 public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots,
                const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
-               const std::vector<std::string> &prevVariations);
+               const std::vector<std::string> &prevVariations, const std::string &variation = "nominal");
    RFilterBase &operator=(const RFilterBase &) = delete;
 
    virtual ~RFilterBase();

@@ -60,6 +60,7 @@ public:
    void FinalizeSlot(unsigned int slot) final;
    std::shared_ptr<RDFGraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap);
+   std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName) final;
 };
 
 } // ns RDF
