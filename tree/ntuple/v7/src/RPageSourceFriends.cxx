@@ -92,7 +92,6 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       AddVirtualField(i, desc.GetFieldZero(), 0, desc.GetName());
 
       for (const auto &c : desc.GetClusterIterable()) {
-         fBuilder.AddClusterSummary(fNextId, c.GetFirstEntryIndex(), c.GetNEntries());
          RClusterDescriptorBuilder clusterBuilder(fNextId, c.GetFirstEntryIndex(), c.GetNEntries());
          for (auto originColumnId : c.GetColumnIds()) {
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
@@ -105,7 +104,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
 
             clusterBuilder.CommitColumnRange(virtualColumnId, firstElementIndex, compressionSettings, pageRange);
          }
-         fBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+         fBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
          fIdBiMap.Insert({i, c.GetId()}, fNextId);
          fNextId++;
       }

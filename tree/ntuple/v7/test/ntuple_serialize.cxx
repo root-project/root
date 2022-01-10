@@ -524,7 +524,6 @@ TEST(RNTuple, SerializeFooter)
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   builder.AddClusterSummary(84, 0, ROOT::Experimental::ClusterSize_t(100));
    RClusterDescriptorBuilder clusterBuilder(84, 0, 100);
    ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
    pageRange.fColumnId = 17;
@@ -532,7 +531,7 @@ TEST(RNTuple, SerializeFooter)
    pageInfo.fLocator.fPosition = 7000;
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(17, 0, 100, pageRange);
-   builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+   builder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(nullptr, desc);
