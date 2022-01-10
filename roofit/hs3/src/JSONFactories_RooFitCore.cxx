@@ -276,6 +276,29 @@ public:
 };
 } // namespace
 
+namespace {
+class RooHistFuncFactory : public RooJSONFactoryWSTool::Importer {
+public:
+   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      if (!p.has_child("data")) {
+         RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
+      }
+      auto varlist = tool->getObservables(p["data"], name);
+      RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name.c_str()));
+      if (!dh) {
+        dh = tool->readBinnedData(p["data"], name, varlist);
+        tool->workspace()->import(*dh, RooFit::Silence(true), RooFit::Embedded());
+      }
+      RooHistFunc hf(name.c_str(),name.c_str(), *(dh->get()), *dh);
+      tool->workspace()->import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return true;
+   }
+};
+} // namespace
+
+
 #include <RooBinSamplingPdf.h>
 
 namespace {
@@ -378,6 +401,7 @@ STATIC_EXECUTE(
    RooJSONFactoryWSTool::registerImporter("formulavar", new RooFormulaVarFactory());   
    RooJSONFactoryWSTool::registerImporter("binsampling", new RooBinSamplingPdfFactory());
    RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory());
+   RooJSONFactoryWSTool::registerImporter("histogram", new RooHistFuncFactory());   
    RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory());
    RooJSONFactoryWSTool::registerImporter("binwidth", new RooBinWidthFunctionFactory());
    
