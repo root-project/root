@@ -1,4 +1,4 @@
-/// \file ROOTUnitTestSupport.h
+/// \file TestSupport.hxx
 ///
 /// \brief The file contains facilities allowing easier writing of in-tree unit tests
 ///
@@ -27,7 +27,8 @@
 
 #include "gtest/gtest.h"
 
-namespace ROOTUnitTestSupport {
+namespace ROOT {
+namespace TestSupport {
 
 /// \brief Allows a user function to catch and filter/analyse ROOT and cling diagnostics, e.g.
 /// ```c++
@@ -128,7 +129,7 @@ class CheckDiagsRAII {
          }
 
          if (abort) {
-            std::cerr << "ROOTUnitTestSupport::CheckDiagsRAII: Forced to abort because of diagnostic with severity "
+            std::cerr << "ROOT::TestSupport::CheckDiagsRAII: Forced to abort because of diagnostic with severity "
                << severity << " in '" << location << "' reading '" << msg << "'\n";
             ::abort();
          }
@@ -148,11 +149,11 @@ class CheckDiagsRAII {
       static CheckDiagsRAII * sActiveInstance;   /// Instance that will receive ROOT's callbacks.
 };
 
-}
+} } // namespace ROOT::TestSupport
 
 #define ROOT_EXPECT_ERROR(expression, where, expected_diag )       \
 {                                                                  \
-   using namespace ROOTUnitTestSupport;                            \
+   using namespace ROOT::TestSupport;                              \
    CheckDiagsRAII EE(kError, where,                                \
          expected_diag);                                           \
    expression;                                                     \
@@ -160,7 +161,7 @@ class CheckDiagsRAII {
 
 #define ROOT_EXPECT_WARNING(expression, where, expected_diag)      \
 {                                                                  \
-   using namespace ROOTUnitTestSupport;                            \
+   using namespace ROOT::TestSupport;                              \
    CheckDiagsRAII EE(kWarning, where,                              \
          expected_diag);                                           \
    expression;                                                     \
@@ -168,7 +169,7 @@ class CheckDiagsRAII {
 
 #define ROOT_EXPECT_INFO(expression, where, expected_diag)           \
 {                                                                    \
-   using namespace ROOTUnitTestSupport;                              \
+   using namespace ROOT::TestSupport;                                \
    CheckDiagsRAII EE(kInfo, where,                                   \
          expected_diag);                                             \
    expression;                                                       \
@@ -176,14 +177,14 @@ class CheckDiagsRAII {
 
 #define ROOT_EXPECT_NODIAG(expression)                               \
 {                                                                    \
-   using namespace ROOTUnitTestSupport;                              \
+   using namespace ROOT::TestSupport;                                \
    CheckDiagsRAII EE{};                                              \
    expression;                                                       \
 }
 
 #define ROOT_EXPECT_SYSERROR(expression, where, expected_diag)       \
 {                                                                    \
-   using namespace ROOTUnitTestSupport;                              \
+   using namespace ROOT::TestSupport;                                \
    CheckDiagsRAII EE(kSysError, where,                               \
          expected_diag);                                             \
    expression;                                                       \

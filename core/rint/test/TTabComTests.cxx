@@ -14,7 +14,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include <ROOT/RConfig.hxx>
 
 #include "TTabCom.h"

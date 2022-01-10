@@ -6,7 +6,7 @@
 #include "RStreamingDS.hxx"
 #include "RArraysDS.hxx"
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
 #include <memory>

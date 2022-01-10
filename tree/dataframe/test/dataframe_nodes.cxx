@@ -1,4 +1,4 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RSlotStack.hxx>

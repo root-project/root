@@ -3,7 +3,7 @@
 #include "ROOT/TThreadExecutor.hxx"
 #include "../src/ROpaqueTaskArena.hxx"
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include <fstream>
 #include <random>
@@ -21,7 +21,7 @@ std::uniform_int_distribution<> plausibleNCores(1, maxConcurrency); // define th
 
 /// Suppress the task arena diagnostics for tests where we try to create the task arena multiple times.
 #define SUPPRESS_DIAG \
-   ROOTUnitTestSupport::CheckDiagsRAII raii; \
+   ROOT::TestSupport::CheckDiagsRAII raii; \
    raii.optionalDiag(kWarning, "RTaskArenaWrapper", "There's already an active task arena", false);
 
 TEST(RTaskArena, Size0WhenNoInstance)

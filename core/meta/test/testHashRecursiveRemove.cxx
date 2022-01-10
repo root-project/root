@@ -1,4 +1,4 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TClass.h"
 #include "TClassTable.h"
@@ -165,7 +165,7 @@ void DeclareFailingClasses()
 TEST(HashRecursiveRemove, GetClassClassDefInline)
 {
    // On windows, the following might trigger a warning. Suppress it here:
-   ROOTUnitTestSupport::CheckDiagsRAII diagRAII;
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.optionalDiag(kWarning, "TClassTable::Add", "class WrongSetup already in TClassTable");
 
    DeclareFailingClasses();

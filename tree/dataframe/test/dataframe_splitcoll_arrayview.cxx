@@ -7,7 +7,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "gtest/gtest.h"
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TwoFloats.h"
 
@@ -30,7 +30,7 @@ void fill_tree(const char *filename, const char *treeName)
 void test_splitcoll_arrayview(const std::string &fileName, const std::string &treeName)
 {
    {
-      ROOTUnitTestSupport::CheckDiagsRAII diagRAII;
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
       diagRAII.optionalDiag(kWarning,
           "RTreeColumnReader::Get",
           "Branch v.a hangs from a non-split branch. A copy is being performed in order to properly read the content.");

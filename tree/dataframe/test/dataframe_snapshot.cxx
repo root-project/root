@@ -1,4 +1,4 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 #include "TFile.h"
@@ -612,7 +612,7 @@ TEST(RDFSnapshotMore, ReadWriteNestedLeaves)
    const auto outfname = "out_readwritenestedleaves.root";
    ROOT::RDF::RNode d2(d);
    {
-      ROOTUnitTestSupport::CheckDiagsRAII diagRAII;
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
       diagRAII.requiredDiag(kInfo, "Snapshot", "Column v.a will be saved as v_a");
       diagRAII.requiredDiag(kInfo, "Snapshot", "Column v.b will be saved as v_b");
       d2 = *d.Snapshot<int, int>(treename, outfname, {"v.a", "v.b"});
@@ -815,7 +815,7 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilename)
    // If some other test case called EnableThreadSafety, the error printed here is of the form
    // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
    // but the address printed changes every time
-   ROOTUnitTestSupport::CheckDiagsRAII diagRAII{kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory"};
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory"};
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
 }
 
@@ -1109,7 +1109,7 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilenameMT)
    // the error printed here is
    // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
    // but the address printed changes every time
-   ROOTUnitTestSupport::CheckDiagsRAII diagRAII;
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.requiredDiag(kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory");
    diagRAII.optionalDiag(kSysError, "TReentrantRWLock::WriteUnLock", "Write lock already released for", /*wholeStringNeedsToMatch=*/false);
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);

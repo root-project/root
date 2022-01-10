@@ -25,15 +25,15 @@ ROOT has support for both kinds of tests in the [roottest repository](https://gi
 and supports "inline" unit tests in each component's `test` folder. Unit testing
 uses the [GTest and GMock](https://github.com/google/googletest) infrastructure
 along with small ROOT-specific extensions located in
-[ROOTUnitTestSupport](../test/unit_testing_support). The documentation of GTest
+[TestSupport](../core/test_support/). The documentation of GTest
 and GMock is rather extensive and we will describe some of the features of
-ROOTUnitTestSupport. In order to write an inline unit test, add a new file in the
+ROOT::TestSupport. In order to write an inline unit test, add a new file in the
 nearest to the tested component's `test` folder and call `ROOT_ADD_GTEST` in the
 `CMakeLists.txt` file.
 
 In many cases using standard GTest facility is sufficient to write a good test.
-However, sometimes we want to test the error conditions of an interface and
-its diagnostics. For example,
+However, we disallow error messages in gtests, or sometimes we want to test the
+error conditions of an interface and its diagnostics. For example,
 
 ```cpp
 
@@ -53,7 +53,7 @@ following test:
 
 ```cpp
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "gtest/gtest.h"
 
