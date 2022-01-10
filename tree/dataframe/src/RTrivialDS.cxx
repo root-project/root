@@ -95,7 +95,7 @@ void RTrivialDS::SetNSlots(unsigned int nSlots)
    fCounterAddr.resize(fNSlots);
 }
 
-void RTrivialDS::Initialise()
+void RTrivialDS::Initialize()
 {
    if (fSize == std::numeric_limits<ULong64_t>::max()) {
       // infinite source, nothing to do here

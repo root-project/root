@@ -320,12 +320,12 @@ bool RNTupleDS::HasColumn(std::string_view colName) const
    return std::find(fColumnNames.begin(), fColumnNames.end(), colName) != fColumnNames.end();
 }
 
-void RNTupleDS::Initialise()
+void RNTupleDS::Initialize()
 {
    fHasSeenAllRanges = false;
 }
 
-void RNTupleDS::Finalise() {}
+void RNTupleDS::Finalize() {}
 
 void RNTupleDS::SetNSlots(unsigned int nSlots)
 {

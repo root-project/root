@@ -31,7 +31,7 @@ TEST(RLazyDS, Constructor)
    tds.SetNSlots(4);
    auto col0Readers = tds.GetColumnReaders<double>(col0Name);
    auto col1Readers = tds.GetColumnReaders<float>(col1Name);
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
 
    EXPECT_EQ(0UL, ranges[0].first); // 3 + 1 from the reminder is 4 entries
@@ -71,7 +71,7 @@ TEST(RLazyDS, RangesOneSlot)
 
    tds.SetNSlots(1);
    auto col0Readers = tds.GetColumnReaders<double>(col0Name);
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    EXPECT_EQ(1U, ranges.size());
    EXPECT_EQ(0UL, ranges[0].first);
@@ -89,7 +89,7 @@ TEST(RLazyDS, ColSizesCheck)
    auto col1 = d1.Define(colName, genf).Take<float>(colName);
    RLazyDS<double, float> tds({"zero", col0}, {"one", col1});
    tds.SetNSlots(4);
-   EXPECT_ANY_THROW(tds.Initialise());
+   EXPECT_ANY_THROW(tds.Initialize());
 }
 
 TEST(RLazyDS, RDFSimple)

@@ -48,7 +48,7 @@ public:
    bool SetEntry(unsigned int slot, ULong64_t entry) override;
    void InitSlot(unsigned int slot, ULong64_t firstEntry) override;
    void SetNSlots(unsigned int nSlots) override;
-   void Initialise() override;
+   void Initialize() override;
    std::string GetLabel() override;
 };
 

@@ -586,7 +586,7 @@ std::vector<void *> RArrowDS::GetColumnReadersImpl(std::string_view colName, con
    return fValueGetters[getterIdx]->SlotPtrs();
 }
 
-void RArrowDS::Initialise()
+void RArrowDS::Initialize()
 {
    auto nRecords = getNRecords(fTable, fColumnNames);
    splitInEqualRanges(fEntryRanges, nRecords, fNSlots);

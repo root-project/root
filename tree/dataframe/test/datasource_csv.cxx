@@ -66,7 +66,7 @@ TEST(RCsvDS, EntryRanges)
 {
    RCsvDS tds(fileName0);
    tds.SetNSlots(3U);
-   tds.Initialise();
+   tds.Initialize();
 
    // Still dividing in equal parts...
    auto ranges = tds.GetEntryRanges();
@@ -86,7 +86,7 @@ TEST(RCsvDS, ColumnReaders)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<Long64_t>("Age");
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    std::vector<Long64_t> ages = {60, 50, 40, 30, 1, -1};
@@ -134,7 +134,7 @@ TEST(RCsvDS, ColumnReadersString)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
@@ -156,7 +156,7 @@ TEST(RCsvDS, ProgressiveReadingEntryRanges)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
-   tds.Initialise();
+   tds.Initialize();
 
    std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
    auto ranges = tds.GetEntryRanges();

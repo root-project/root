@@ -504,7 +504,7 @@ void RLoopManager::RunTreeReader()
 void RLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   fDataSource->Initialise();
+   fDataSource->CallInitialize();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
       InitNodeSlots(nullptr, 0u);
@@ -525,10 +525,10 @@ void RLoopManager::RunDataSource()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->FinaliseSlot(0u);
+      fDataSource->CallFinalizeSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->Finalise();
+   fDataSource->CallFinalize();
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -559,16 +559,16 @@ void RLoopManager::RunDataSourceMT()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->FinaliseSlot(slot);
+      fDataSource->CallFinalizeSlot(slot);
    };
 
-   fDataSource->Initialise();
+   fDataSource->CallInitialize();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       pool.Foreach(runOnRange, ranges);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->Finalise();
+   fDataSource->CallFinalize();
 #endif // not implemented otherwise (never called)
 }
 
