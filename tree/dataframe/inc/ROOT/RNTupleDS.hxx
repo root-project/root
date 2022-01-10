@@ -82,8 +82,8 @@ public:
 
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
-   void Initialise() final;
-   void Finalise() final;
+   void Initialize() final;
+   void Finalize() final;
 
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
    GetColumnReaders(unsigned int /*slot*/, std::string_view /*name*/, const std::type_info &) final;

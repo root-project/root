@@ -526,7 +526,7 @@ bool RSqliteDS::HasColumn(std::string_view colName) const
 
 ////////////////////////////////////////////////////////////////////////////
 /// Resets the SQlite query engine at the beginning of the event loop.
-void RSqliteDS::Initialise()
+void RSqliteDS::Initialize()
 {
    fNRow = 0;
    int retval = sqlite3_reset(fDataSet->fQuery);

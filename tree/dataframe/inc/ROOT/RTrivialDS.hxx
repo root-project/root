@@ -46,7 +46,7 @@ public:
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
-   void Initialise();
+   void Initialize();
    std::string GetLabel();
 };
 
