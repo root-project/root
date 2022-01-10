@@ -145,17 +145,14 @@ if __name__ == "__main__":
 Other notable additions and improvements include:
 
 - Enable triggering multiple distributed computation graphs through `RunGraphs`. This also allows sending both Spark and Dask jobs at the same time through a single function call.
-- Greatly reduce distributed tasks processing overhead. This involved:
-    - Changing the distributed execution logic with the `TTree` data source to use `TEntryList` in order to select the range of entries that each task will read from the tree. This highly reduces the waiting time spent in retrieving the correct entries for processing, as it was previously done using the `Range` operation.
-    - Refactoring the internal mechanism to store information about data sources and create ranges for the distributed tasks accordingly. This will also allow in the future to easily extend the supported data sources in distributed RDataFrame.
+- Greatly reduce distributed tasks processing overhead in TTree-based analyses by refactoring the translation from task metadata to RDataFrame object on the workers.
 - Refactor triggering of the computation graph in the distributed tasks, so that it now runs with the Python GIL released. This allows interoperability with frameworks like Dask that run different Python threads along the main processing one.
 - Set minimum Python version to use this tool to 3.7. This allows using more modern Python functionality in distributed RDataFrame code and is in line with the Python support provided by Spark and Dask.
 - Add support for the `DefinePerSample` operation.
-- Fixed a bug that disregarded user provided `npartitions` parameter in distributed Spark execution.
-- Improve support for friend trees in distributed executions with TTree as data source. This fixes a long-standing issue with distributed RDataFrame [#7584](https://github.com/root-project/root/issues/7584).
-- Changed naming scheme of the files written by a distributed `Snapshot` operation. Now, each task will be assigned with a sequential id that will be appended to the name of the file created during the execution. For example, calling `Snapshot("mytree","myfile.root")` on a distributed RDataFrame with 3 partitions will create three files named like so: `myfile_0.root, myfile_1.root, myfile_2.root`.
+- Make sure a user-provided `npartitions` parameter to a distributed RDataFrame constructor always takes precedence over the value computed by default.
+- Improve support for friend trees in distributed executions, now any kind of friendship layout between the main tree and the friend tree(s) is expected to work.
 - Add support for TChain data sources with no tree name and multiple different tree subnames.
-- Raise an error if an in-memory-only TTree is passed as data source to a distributed RDataFrame.
+- Creating a distributed RDataFrame with an in-memory-only tree is prohibited, thus such usage now raises an error at runtime.
 
 ## Histogram Libraries
 
