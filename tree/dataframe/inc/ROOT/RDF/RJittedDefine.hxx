@@ -46,7 +46,7 @@ public:
    const std::type_info &GetTypeId() const final;
    void Update(unsigned int slot, Long64_t entry) final;
    void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id) final;
-   void FinaliseSlot(unsigned int slot) final;
+   void FinalizeSlot(unsigned int slot) final;
 };
 
 } // ns RDF

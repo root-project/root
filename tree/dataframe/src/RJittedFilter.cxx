@@ -87,10 +87,10 @@ void RJittedFilter::ResetReportCount()
    fConcreteFilter->ResetReportCount();
 }
 
-void RJittedFilter::FinaliseSlot(unsigned int slot)
+void RJittedFilter::FinalizeSlot(unsigned int slot)
 {
    assert(fConcreteFilter != nullptr);
-   fConcreteFilter->FinaliseSlot(slot);
+   fConcreteFilter->FinalizeSlot(slot);
 }
 
 void RJittedFilter::InitNode()
