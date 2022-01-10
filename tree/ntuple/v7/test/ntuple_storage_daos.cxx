@@ -1,10 +1,10 @@
 #include "ntuple_test.hxx"
 #include <ROOT/RPageStorageDaos.hxx>
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 TEST(RPageStorageDaos, Basics)
 {
-   ROOTUnitTestSupport::CheckDiagsRAII diags;
+   ROOT::TestSupport::CheckDiagsRAII diags;
    diags.requiredDiag(kWarning, "in int daos_init()", "This RNTuple build uses libdaos_mock. Use only for testing!");
    diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos", "The DAOS backend is experimental and still under development.", false);
 

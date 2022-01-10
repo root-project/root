@@ -15,7 +15,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include <Math/MinimizerOptions.h>
 #include <TFormula.h>

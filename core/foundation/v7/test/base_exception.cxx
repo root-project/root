@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include <ROOT/RError.hxx>
 
@@ -128,7 +128,7 @@ TEST(Exception, CheckReturnValue)
 TEST(Exception, DoubleThrow)
 {
    // We have to suppress a warning because of the double throw.
-   ROOTUnitTestSupport::FilterDiagsRAII filterDiags{ [](int /*severity*/, bool, const char* /*location*/, const char* msg) {
+   ROOT::TestSupport::FilterDiagsRAII filterDiags{ [](int /*severity*/, bool, const char* /*location*/, const char* msg) {
       EXPECT_STREQ(msg, "unhandled RResult exception during stack unwinding");
    }};
 
