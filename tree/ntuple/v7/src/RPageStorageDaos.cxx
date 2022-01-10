@@ -368,20 +368,21 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
 
    auto ntplDesc = descBuilder.MoveDescriptor();
 
-   const auto &clusterGroupDesc = ntplDesc.GetClusterGroupDescriptor(0);
-   buffer = std::make_unique<unsigned char[]>(clusterGroupDesc.GetPageListLength());
-   zipBuffer = std::make_unique<unsigned char[]>(clusterGroupDesc.GetPageListLocator().fBytesOnStorage);
-   fDaosContainer->ReadSingleAkey(
-      zipBuffer.get(), clusterGroupDesc.GetPageListLocator().fBytesOnStorage,
-      {static_cast<decltype(daos_obj_id_t::lo)>(clusterGroupDesc.GetPageListLocator().fPosition), 0}, kDistributionKey,
-      kAttributeKey, kCidMetadata);
-   fDecompressor->Unzip(zipBuffer.get(), clusterGroupDesc.GetPageListLocator().fBytesOnStorage,
-                        clusterGroupDesc.GetPageListLength(), buffer.get());
+   for (const auto &cgDesc : ntplDesc.GetClusterGroupIterable()) {
+      buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
+      zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
+      fDaosContainer->ReadSingleAkey(
+         zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
+         {static_cast<decltype(daos_obj_id_t::lo)>(cgDesc.GetPageListLocator().fPosition), 0}, kDistributionKey,
+         kAttributeKey, kCidMetadata);
+      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
+                           buffer.get());
 
-   auto clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(ntplDesc, 0);
-   Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), clusterGroupDesc.GetPageListLength(), clusters);
-   for (std::size_t i = 0; i < clusters.size(); ++i) {
-      ntplDesc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
+      auto clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(ntplDesc, 0);
+      Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetPageListLength(), clusters);
+      for (std::size_t i = 0; i < clusters.size(); ++i) {
+         ntplDesc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
+      }
    }
 
    return ntplDesc;
