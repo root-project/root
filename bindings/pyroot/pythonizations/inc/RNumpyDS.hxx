@@ -194,7 +194,7 @@ public:
          delete ptrHolder;
    }
 
-   void Initialise()
+   void Initialize()
    {
       ColLenghtChecker(std::index_sequence_for<ColumnTypes...>());
       const auto nEntries = GetEntriesNumber();

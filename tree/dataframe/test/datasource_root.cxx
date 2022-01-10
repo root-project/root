@@ -55,7 +55,7 @@ TEST(TRootTDS, EntryRanges)
 {
    ROOT::Internal::RDF::RRootDS tds(treeName, fileGlob);
    tds.SetNSlots(3U);
-   tds.Initialise();
+   tds.Initialize();
 
    // Still dividing in equal parts...
    auto ranges = tds.GetEntryRanges();
@@ -75,7 +75,7 @@ TEST(TRootTDS, ColumnReaders)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<int>("i");
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    for (auto &&range : ranges) {

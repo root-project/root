@@ -76,7 +76,7 @@ protected:
 
 public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
-   void Finalise();
+   void Finalize();
    void FreeRecords();
    ~RCsvDS();
    const std::vector<std::string> &GetColumnNames() const;

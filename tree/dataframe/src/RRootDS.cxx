@@ -117,7 +117,7 @@ void RRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    fChains[slot].reset(chain);
 }
 
-void RRootDS::FinaliseSlot(unsigned int slot)
+void RRootDS::FinalizeSlot(unsigned int slot)
 {
    fChains[slot].reset(nullptr);
 }
@@ -141,13 +141,13 @@ void RRootDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
 
    const auto nColumns = fListOfBranches.size();
-   // Initialise the entire set of addresses
+   // Initialize the entire set of addresses
    fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
 
    fChains.resize(fNSlots);
 }
 
-void RRootDS::Initialise()
+void RRootDS::Initialize()
 {
    const auto nentries = fModelChain.GetEntries();
    const auto chunkSize = nentries / fNSlots;

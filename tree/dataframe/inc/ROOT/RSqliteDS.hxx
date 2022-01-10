@@ -106,7 +106,7 @@ public:
    std::string GetTypeName(std::string_view colName) const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
-   void Initialise() final;
+   void Initialize() final;
    std::string GetLabel() final;
 
 protected:

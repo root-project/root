@@ -61,7 +61,7 @@ public:
 
    bool SetEntry(unsigned int, ULong64_t) final { return true; }
 
-   void Initialise() final { fRanges = {{0ull, 1ull}}; }
+   void Initialize() final { fRanges = {{0ull, 1ull}}; }
 
    std::string GetLabel() final { return "ArraysDS"; }
 

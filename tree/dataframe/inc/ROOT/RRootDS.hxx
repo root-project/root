@@ -49,11 +49,11 @@ public:
    const std::vector<std::string> &GetColumnNames() const;
    bool HasColumn(std::string_view colName) const;
    void InitSlot(unsigned int slot, ULong64_t firstEntry);
-   void FinaliseSlot(unsigned int slot);
+   void FinalizeSlot(unsigned int slot);
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
-   void Initialise();
+   void Initialize();
    std::string GetLabel();
 };
 

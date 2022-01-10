@@ -338,7 +338,7 @@ RCsvDS::~RCsvDS()
    FreeRecords();
 }
 
-void RCsvDS::Finalise()
+void RCsvDS::Finalize()
 {
    fCsvFile->Seek(fDataPos);
    fProcessedLines = 0ULL;
@@ -457,7 +457,7 @@ void RCsvDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
 
    const auto nColumns = fHeaders.size();
-   // Initialise the entire set of addresses
+   // Initialize the entire set of addresses
    fColAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
 
    // Initialize the per event data holders
