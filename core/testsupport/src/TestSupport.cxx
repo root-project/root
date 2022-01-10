@@ -10,14 +10,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include <algorithm>
 #include <cstring>
 #include <iostream>
 #include <iomanip>
 
-namespace ROOTUnitTestSupport {
+namespace ROOT {
+namespace TestSupport {
 
 /// Error handler for gtests that generates failures for every received diagnostic > kInfo when this file is linked to.
 static struct ForbidDiagnostics {
@@ -42,7 +43,7 @@ static struct ForbidDiagnostics {
       }
 
       if (abort) {
-         std::cerr << "ROOTUnitTestSupport::ForbidDiagnostics::handler(): Forced to abort because of diagnostic with severity "
+         std::cerr << "ROOT::TestSupport::ForbidDiagnostics::handler(): Forced to abort because of diagnostic with severity "
             << level << " in '" << location << "' reading '" << msg << "'\n";
          ::abort();
       }
@@ -75,7 +76,7 @@ static struct ForbidDiagnostics {
       FAIL() << "Received unexpected diagnostic of severity "
          << level
          << " at '" << location << "' reading '" << msg << "'.\n"
-         << "Suppress those using ROOTUnitTestSupport.h";
+         << "Suppress those using ROOT/TestSupport.hxx";
    }
 
    ErrorHandlerFunc_t const sOldErrorHandler;
@@ -89,10 +90,10 @@ CheckDiagsRAII::~CheckDiagsRAII() {
    ::SetErrorHandler(fOldErrorHandler);
    gInterpreter->ReportDiagnosticsToErrorHandler(/*enable=*/false);
 
-   if (!fUnexpectedDiags.empty()) ADD_FAILURE() << "ROOTUnitTestSupport::CheckDiagsRAII: Unexpected diagnostic messages received.";
+   if (!fUnexpectedDiags.empty()) ADD_FAILURE() << "ROOT::TestSupport::CheckDiagsRAII: Unexpected diagnostic messages received.";
 
    const bool missingDiag = std::any_of(fExpectedDiags.begin(), fExpectedDiags.end(), [](const Diag_t & diag){ return !diag.optional && diag.receivedCount < 1; });
-   if (missingDiag) ADD_FAILURE() << "ROOTUnitTestSupport::CheckDiagsRAII: Diagnostic message missing.";
+   if (missingDiag) ADD_FAILURE() << "ROOT::TestSupport::CheckDiagsRAII: Diagnostic message missing.";
 
    if (!fUnexpectedDiags.empty() || missingDiag) {
       std::cout << "-------------------------\nPre-registered messages:\n";
@@ -141,4 +142,4 @@ void CheckDiagsRAII::printDiags(std::vector<Diag_t> const & diags) const {
    }
 }
 
-}
+} } //ROOT::TestSupport

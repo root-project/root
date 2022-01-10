@@ -1764,7 +1764,13 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main ROOTUnitTestSupport)
+  target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
+  if(TARGET ROOT::TestSupport)
+    target_link_libraries(${test_suite} ROOT::TestSupport)
+  else()
+    message(WARNING "ROOT_ADD_GTEST(${test_suite} ...): The target ROOT::TestSupport is missing. It looks like the test is declared against a ROOT build that is configured with -Dtesting=OFF.
+            If this test sends warning or error messages, this will go unnoticed.")
+  endif()
   target_include_directories(${test_suite} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
   if (ARG_INCLUDE_DIRS)
     target_include_directories(${test_suite} PRIVATE ${ARG_INCLUDE_DIRS})

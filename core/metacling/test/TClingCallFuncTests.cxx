@@ -1,4 +1,4 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include "TInterpreter.h"
 
 #include "gtest/gtest.h"
@@ -282,7 +282,7 @@ TEST(TClingCallFunc, FunctionWrapperNodiscard)
    {
       using ::testing::Not;
       using ::testing::HasSubstr;
-      ROOTUnitTestSupport::FilterDiagsRAII RAII([] (int /*level*/, Bool_t /*abort*/,
+      ROOT::TestSupport::FilterDiagsRAII RAII([] (int /*level*/, Bool_t /*abort*/,
                                                     const char * /*location*/, const char *msg) {
          EXPECT_THAT(msg, Not(HasSubstr("-Wunused-result")));
       });

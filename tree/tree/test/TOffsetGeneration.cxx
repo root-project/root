@@ -6,7 +6,7 @@
 #include "TLeafElement.h"
 #include "TRandom.h"
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
 #include "ElementStruct.h"
@@ -19,7 +19,7 @@ protected:
    static void SetUpTestSuite() {
       // Suppress file-related warning on Windows throughout
       // this entire test suite
-      static ROOTUnitTestSupport::CheckDiagsRAII diags;
+      static ROOT::TestSupport::CheckDiagsRAII diags;
       diags.optionalDiag(kError,
          "TCling::LoadPCM",
          "ROOT PCM", false);

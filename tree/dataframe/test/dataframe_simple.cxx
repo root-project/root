@@ -1,6 +1,6 @@
 /****** Run RDataFrame tests both with and without IMT enabled *******/
 #include <gtest/gtest.h>
-#include <ROOTUnitTestSupport.h>
+#include <ROOT/TestSupport.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TChain.h>
@@ -847,7 +847,7 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
    const auto errmsg = "file %s/doesnotexist.root does not exist";
    TString expecteddiag;
    expecteddiag.Form(errmsg, gSystem->pwd());
-   ROOTUnitTestSupport::CheckDiagsRAII diagRAII{kError, "TFile::TFile", expecteddiag.Data()};
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kError, "TFile::TFile", expecteddiag.Data()};
    // in the single-thread case the error happens when TTreeReader is calling LoadTree the first time
    // otherwise we notice the file does not exist beforehand, e.g. in TTreeProcessorMT
    if (!ROOT::IsImplicitMTEnabled())
