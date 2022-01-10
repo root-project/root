@@ -70,7 +70,11 @@ def _string_to_root_attribute(value, lookup_map):
             return getattr(ROOT, lookup_map[value])
         else:
             try:
-                return getattr(ROOT, value)
+                # Here getattr(ROOT, value) would have less overhead, but it's
+                # also less convenient. With `eval`, the string that is passed
+                # by the user can also contain postfix operations on the enum
+                # value, which is often used for columns, e.g. `kGreen+1`.
+                return eval("ROOT." + value)
             except:
                 raise ValueError(
                     "Unsupported value passed. The value either has to be the name of an attribute of the ROOT module, or match with one of the following values that get translated to ROOT attributes: {}".format(
