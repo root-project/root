@@ -28,6 +28,8 @@
 #include "TLatex.h"
 #include "TStyle.h"
 
+#include "ROOT/RDFHelpers.hxx"
+
 using namespace ROOT::VecOps;
 
 void df102_NanoAODDimuonAnalysis()
@@ -37,6 +39,10 @@ void df102_NanoAODDimuonAnalysis()
 
    // Create dataframe from NanoAOD files
    ROOT::RDataFrame df("Events", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/AOD2NanoAODOutreachTool/Run2012BC_DoubleMuParked_Muons.root");
+   ROOT::RDF::ProgressHelper progress{1000};
+   df.DefinePerSample("_progressbar",
+           [&progress](unsigned int slot, const ROOT::RDF::RSampleInfo & id) -> std::size_t { progress.registerNewSample(slot, id); return progress.ComputeMaxEvents(); });
+   df.Count().OnPartialResultSlot(1000, [&](unsigned int slot, auto && arg){ progress(slot, arg); });
 
    // For simplicity, select only events with exactly two muons and require opposite charge
    auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
