@@ -24,7 +24,7 @@ class JSONNode;
 } // namespace RooFit
 
 class RooJSONFactoryWSTool {
-public:  
+public:
    class Importer {
    public:
       virtual bool importPdf(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
@@ -42,21 +42,19 @@ public:
       virtual ~Exporter(){};
    };
    struct ExportKeys {
-     std::string type;
-     std::map<std::string, std::string> proxies;
+      std::string type;
+      std::map<std::string, std::string> proxies;
    };
    struct ImportExpression {
-     TClass *tclass;
-     std::vector<std::string> arguments;
+      TClass *tclass;
+      std::vector<std::string> arguments;
    };
 
-     
-   typedef std::map<const std::string, std::vector<const Importer *> > ImportMap;
-   typedef std::map<const TClass *, std::vector<const Exporter *> > ExportMap;
+   typedef std::map<const std::string, std::vector<const Importer *>> ImportMap;
+   typedef std::map<const TClass *, std::vector<const Exporter *>> ExportMap;
    typedef std::map<TClass *, ExportKeys> ExportKeysMap;
    typedef std::map<std::string, ImportExpression> ImportExpressionMap;
 
-  
    struct Var {
       int nbins;
       double min;
@@ -74,63 +72,66 @@ protected:
    };
    mutable Scope _scope;
    const RooFit::Detail::JSONNode *_rootnode_input = 0;
-   RooFit::Detail::JSONNode *_rootnode_output = 0;  
+   RooFit::Detail::JSONNode *_rootnode_output = 0;
 
-   RooFit::Detail::JSONNode& orootnode();
-   const RooFit::Detail::JSONNode& irootnode() const;  
+   RooFit::Detail::JSONNode &orootnode();
+   const RooFit::Detail::JSONNode &irootnode() const;
 
-  
    RooWorkspace *_workspace;
    static ImportMap _importers;
    static ExportMap _exporters;
    static ExportKeysMap _exportKeys;
    static ImportExpressionMap _pdfFactoryExpressions;
    static ImportExpressionMap _funcFactoryExpressions;
-  
+
    std::map<std::string, RooAbsData *> loadData(const RooFit::Detail::JSONNode &n);
    RooDataSet *unbinned(RooDataHist *hist);
    RooRealVar *getWeightVar(const char *name);
    RooRealVar *createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
 public:
-
    class MissingRootnodeError : public std::exception {
    public:
-     virtual const char* what() const noexcept override { return "no rootnode set"; }
+      virtual const char *what() const noexcept override { return "no rootnode set"; }
    };
-  
+
    class DependencyMissingError : public std::exception {
-     std::string _parent, _child, _class, _message;
+      std::string _parent, _child, _class, _message;
+
    public:
-     DependencyMissingError(const std::string& p, const std::string& c, const std::string& classname) : _parent(p), _child(c), _class(classname) {
-       _message = "object '"+_parent+"' is missing dependency '"+_child+"' of type '"+_class+"'";
-     };
-     const std::string& parent() const { return _parent; }
-     const std::string& child() const { return _child; }
-     const std::string& classname() const { return _class; }         
-     virtual const char* what() const noexcept override { return _message.c_str(); }
+      DependencyMissingError(const std::string &p, const std::string &c, const std::string &classname)
+         : _parent(p), _child(c), _class(classname)
+      {
+         _message = "object '" + _parent + "' is missing dependency '" + _child + "' of type '" + _class + "'";
+      };
+      const std::string &parent() const { return _parent; }
+      const std::string &child() const { return _child; }
+      const std::string &classname() const { return _class; }
+      virtual const char *what() const noexcept override { return _message.c_str(); }
    };
    friend DependencyMissingError;
-  
+
    static std::string name(const RooFit::Detail::JSONNode &n);
 
-   template<class T> T* request(const std::string& objname, const std::string& requestAuthor);
-  
+   template <class T>
+   T *request(const std::string &objname, const std::string &requestAuthor);
+
    RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}
    RooWorkspace *workspace() { return this->_workspace; }
 
-   static bool registerImporter(const std::string &key, const RooJSONFactoryWSTool::Importer *f, bool topPriority = true);
+   static bool
+   registerImporter(const std::string &key, const RooJSONFactoryWSTool::Importer *f, bool topPriority = true);
    static int removeImporters(const std::string &needle);
    static bool registerExporter(const TClass *key, const RooJSONFactoryWSTool::Exporter *f, bool topPriority = true);
    static int removeExporters(const std::string &needle);
    static void printImporters();
    static void printExporters();
 
-   static const ImportMap& importers() { return _importers; }
-   static const ExportMap& exporters() { return _exporters; }
-   static const ImportExpressionMap& pdfImportExpressions() { return _pdfFactoryExpressions; }
-   static const ImportExpressionMap& functionImportExpressions() { return _funcFactoryExpressions; }  
-   static const ExportKeysMap& exportKeys() { return _exportKeys; }  
+   static const ImportMap &importers() { return _importers; }
+   static const ExportMap &exporters() { return _exporters; }
+   static const ImportExpressionMap &pdfImportExpressions() { return _pdfFactoryExpressions; }
+   static const ImportExpressionMap &functionImportExpressions() { return _funcFactoryExpressions; }
+   static const ExportKeysMap &exportKeys() { return _exportKeys; }
 
    // error handling helpers
    static void error(const char *s) { throw std::runtime_error(s); }
@@ -212,15 +213,15 @@ public:
    static void printExportKeys();
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
-  
+
    void importFunctions(const RooFit::Detail::JSONNode &n);
    void importPdfs(const RooFit::Detail::JSONNode &n);
    void importVariables(const RooFit::Detail::JSONNode &n);
    void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
-   void importVariable(const RooFit::Detail::JSONNode &n);  
+   void importVariable(const RooFit::Detail::JSONNode &n);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void configureToplevelPdf(RooAbsPdf* pdf);  
+   void configureToplevelPdf(RooAbsPdf *pdf);
 
    bool find(const RooFit::Detail::JSONNode &n, const std::string &elem);
    void append(RooFit::Detail::JSONNode &n, const std::string &elem);

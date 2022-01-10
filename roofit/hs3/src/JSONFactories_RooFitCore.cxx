@@ -72,7 +72,6 @@ public:
 };
 } // namespace
 
-
 #include <RooProdPdf.h>
 
 namespace {
@@ -148,7 +147,7 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       bool divideByBinWidth = p["divideByBinWidth"].val_bool();
-      RooHistFunc* hf = dynamic_cast<RooHistFunc*>(tool->request<RooAbsReal>(p["histogram"].val(),name));
+      RooHistFunc *hf = dynamic_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
       RooBinWidthFunction func(name.c_str(), name.c_str(), *hf, divideByBinWidth);
       tool->workspace()->import(func, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
@@ -234,7 +233,7 @@ public:
 namespace {
 class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "simultaneous"; }    
+   virtual std::string key() const { return "simultaneous"; }
    bool autoExportDependants() const override { return false; }
    virtual bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
@@ -262,7 +261,7 @@ public:
 namespace {
 class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "histogram"; }      
+   virtual std::string key() const { return "histogram"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
@@ -290,16 +289,15 @@ public:
       auto varlist = tool->getObservables(p["data"], name);
       RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name.c_str()));
       if (!dh) {
-        dh = tool->readBinnedData(p["data"], name, varlist);
-        tool->workspace()->import(*dh, RooFit::Silence(true), RooFit::Embedded());
+         dh = tool->readBinnedData(p["data"], name, varlist);
+         tool->workspace()->import(*dh, RooFit::Silence(true), RooFit::Embedded());
       }
-      RooHistFunc hf(name.c_str(),name.c_str(), *(dh->get()), *dh);
+      RooHistFunc hf(name.c_str(), name.c_str(), *(dh->get()), *dh);
       tool->workspace()->import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
 };
 } // namespace
-
 
 #include <RooBinSamplingPdf.h>
 
@@ -343,7 +341,7 @@ public:
 namespace {
 class RooGenericPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "genericpdf"; }    
+   virtual std::string key() const { return "genericpdf"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooGenericPdf *pdf = static_cast<const RooGenericPdf *>(func);
@@ -363,7 +361,7 @@ public:
 namespace {
 class RooBinWidthFunctionStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "binwidth"; }  
+   virtual std::string key() const { return "binwidth"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooBinWidthFunction *pdf = static_cast<const RooBinWidthFunction *>(func);
@@ -374,7 +372,6 @@ public:
    }
 };
 } // namespace
-
 
 #include <RooFormulaVar.h>
 
@@ -405,14 +402,14 @@ STATIC_EXECUTE(
 
    RooJSONFactoryWSTool::registerImporter("pdfprod", new RooProdPdfFactory());
    RooJSONFactoryWSTool::registerImporter("genericpdf", new RooGenericPdfFactory());
-   RooJSONFactoryWSTool::registerImporter("formulavar", new RooFormulaVarFactory());   
+   RooJSONFactoryWSTool::registerImporter("formulavar", new RooFormulaVarFactory());
    RooJSONFactoryWSTool::registerImporter("binsampling", new RooBinSamplingPdfFactory());
    RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory());
-   RooJSONFactoryWSTool::registerImporter("histogram", new RooHistFuncFactory());   
+   RooJSONFactoryWSTool::registerImporter("histogram", new RooHistFuncFactory());
    RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory());
    RooJSONFactoryWSTool::registerImporter("binwidth", new RooBinWidthFunctionFactory());
-   
-   RooJSONFactoryWSTool::registerExporter(RooBinWidthFunction::Class(), new RooBinWidthFunctionStreamer());   
+
+   RooJSONFactoryWSTool::registerExporter(RooBinWidthFunction::Class(), new RooBinWidthFunctionStreamer());
    RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new RooProdPdfStreamer());
    RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(), new RooSimultaneousStreamer());
    RooJSONFactoryWSTool::registerExporter(RooBinSamplingPdf::Class(), new RooBinSamplingPdfStreamer());
@@ -420,5 +417,5 @@ STATIC_EXECUTE(
    RooJSONFactoryWSTool::registerExporter(RooGenericPdf::Class(), new RooGenericPdfStreamer());
    RooJSONFactoryWSTool::registerExporter(RooFormulaVar::Class(), new RooFormulaVarStreamer());
 
-               )
+)
 } // namespace

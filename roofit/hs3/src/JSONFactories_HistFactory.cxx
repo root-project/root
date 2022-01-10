@@ -437,7 +437,7 @@ public:
 namespace {
 class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "interpolation0d"; }  
+   virtual std::string key() const { return "interpolation0d"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooStats::HistFactory::FlexibleInterpVar *fip =
@@ -457,7 +457,7 @@ public:
 
 class PiecewiseInterpolationStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "interpolation"; }  
+   virtual std::string key() const { return "interpolation"; }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);

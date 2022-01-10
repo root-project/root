@@ -80,7 +80,8 @@ public:
    virtual int val_int() const { return atoi(this->val().c_str()); }
    virtual float val_float() const { return atof(this->val().c_str()); }
    virtual bool val_bool() const { return atoi(this->val().c_str()); }
-   template<class T> T val_t() const;
+   template <class T>
+   T val_t() const;
    virtual bool has_key() const = 0;
    virtual bool has_val() const = 0;
    virtual bool has_child(std::string const &) const = 0;
@@ -112,10 +113,16 @@ class JSONTree {
 };
 
 std::ostream &operator<<(std::ostream &os, RooFit::Detail::JSONNode const &s);
-template<class T> std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode const &n){
-  if(!n.is_seq()){ throw std::runtime_error("node "+n.key() + " is not of sequence type!"); }
-  for(const auto& e:n.children()){ v.push_back(e.val_t<T>()); }
-  return v;
+template <class T>
+std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode const &n)
+{
+   if (!n.is_seq()) {
+      throw std::runtime_error("node " + n.key() + " is not of sequence type!");
+   }
+   for (const auto &e : n.children()) {
+      v.push_back(e.val_t<T>());
+   }
+   return v;
 }
 
 #endif

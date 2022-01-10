@@ -220,49 +220,55 @@ std::string containerName(RooAbsArg *elem)
 RooJSONFactoryWSTool::ImportMap RooJSONFactoryWSTool::_importers = RooJSONFactoryWSTool::ImportMap();
 RooJSONFactoryWSTool::ExportMap RooJSONFactoryWSTool::_exporters = RooJSONFactoryWSTool::ExportMap();
 RooJSONFactoryWSTool::ExportKeysMap RooJSONFactoryWSTool::_exportKeys = RooJSONFactoryWSTool::ExportKeysMap();
-RooJSONFactoryWSTool::ImportExpressionMap RooJSONFactoryWSTool::_pdfFactoryExpressions = RooJSONFactoryWSTool::ImportExpressionMap();
-RooJSONFactoryWSTool::ImportExpressionMap RooJSONFactoryWSTool::_funcFactoryExpressions = RooJSONFactoryWSTool::ImportExpressionMap();
+RooJSONFactoryWSTool::ImportExpressionMap RooJSONFactoryWSTool::_pdfFactoryExpressions =
+   RooJSONFactoryWSTool::ImportExpressionMap();
+RooJSONFactoryWSTool::ImportExpressionMap RooJSONFactoryWSTool::_funcFactoryExpressions =
+   RooJSONFactoryWSTool::ImportExpressionMap();
 
-bool RooJSONFactoryWSTool::registerImporter(const std::string &key, const RooJSONFactoryWSTool::Importer *f, bool topPriority)
+bool RooJSONFactoryWSTool::registerImporter(const std::string &key, const RooJSONFactoryWSTool::Importer *f,
+                                            bool topPriority)
 {
    auto it = RooJSONFactoryWSTool::_importers.find(key);
    if (it == RooJSONFactoryWSTool::_importers.end())
-     RooJSONFactoryWSTool::_importers.insert(std::make_pair(key, std::vector< const RooJSONFactoryWSTool::Importer *>()));
+      RooJSONFactoryWSTool::_importers.insert(
+         std::make_pair(key, std::vector<const RooJSONFactoryWSTool::Importer *>()));
    it = RooJSONFactoryWSTool::_importers.find(key);
-   if(topPriority){
-     it->second.insert(it->second.begin(),f);
+   if (topPriority) {
+      it->second.insert(it->second.begin(), f);
    } else {
-     it->second.push_back(f);
+      it->second.push_back(f);
    }
-   return true;  
+   return true;
 }
 
-bool RooJSONFactoryWSTool::registerExporter(const TClass *key, const RooJSONFactoryWSTool::Exporter *f, bool topPriority)
+bool RooJSONFactoryWSTool::registerExporter(const TClass *key, const RooJSONFactoryWSTool::Exporter *f,
+                                            bool topPriority)
 {
    auto it = RooJSONFactoryWSTool::_exporters.find(key);
    if (it == RooJSONFactoryWSTool::_exporters.end())
-     RooJSONFactoryWSTool::_exporters.insert(std::make_pair(key, std::vector< const RooJSONFactoryWSTool::Exporter *>()));
+      RooJSONFactoryWSTool::_exporters.insert(
+         std::make_pair(key, std::vector<const RooJSONFactoryWSTool::Exporter *>()));
    it = RooJSONFactoryWSTool::_exporters.find(key);
-   if(topPriority){
-     it->second.insert(it->second.begin(),f);
+   if (topPriority) {
+      it->second.insert(it->second.begin(), f);
    } else {
-     it->second.push_back(f);
+      it->second.push_back(f);
    }
    return true;
 }
 
 int RooJSONFactoryWSTool::removeImporters(const std::string &needle)
 {
-   int n=0;
+   int n = 0;
    std::vector<std::string> toDelete;
    for (auto &element : RooJSONFactoryWSTool::_importers) {
-      for(size_t i=element.second.size(); i>0; --i){
-        auto imp = element.second[i-1];
-        TString name(typeid(*imp).name());
-        if (name.Contains(needle)) {
-          element.second.erase(element.second.begin()+i-1);
-          ++n;
-        }
+      for (size_t i = element.second.size(); i > 0; --i) {
+         auto imp = element.second[i - 1];
+         TString name(typeid(*imp).name());
+         if (name.Contains(needle)) {
+            element.second.erase(element.second.begin() + i - 1);
+            ++n;
+         }
       }
    }
    return n;
@@ -270,16 +276,16 @@ int RooJSONFactoryWSTool::removeImporters(const std::string &needle)
 
 int RooJSONFactoryWSTool::removeExporters(const std::string &needle)
 {
-   int n=0;
+   int n = 0;
    std::vector<const TClass *> toDelete;
    for (auto &element : RooJSONFactoryWSTool::_exporters) {
-      for(size_t i=element.second.size(); i>0; --i){
-        auto imp = element.second[i-1];
-        TString name(typeid(*imp).name());
-        if (name.Contains(needle)) {
-          element.second.erase(element.second.begin()+i-1);
-          ++n;
-        }
+      for (size_t i = element.second.size(); i > 0; --i) {
+         auto imp = element.second[i - 1];
+         TString name(typeid(*imp).name());
+         if (name.Contains(needle)) {
+            element.second.erase(element.second.begin() + i - 1);
+            ++n;
+         }
       }
    }
    return n;
@@ -288,17 +294,17 @@ int RooJSONFactoryWSTool::removeExporters(const std::string &needle)
 void RooJSONFactoryWSTool::printImporters()
 {
    for (const auto &x : RooJSONFactoryWSTool::_importers) {
-     for (const auto &e : x.second){
-       std::cout << x.first << "\t" << typeid(*e).name() << std::endl;
-     }
+      for (const auto &e : x.second) {
+         std::cout << x.first << "\t" << typeid(*e).name() << std::endl;
+      }
    }
 }
 void RooJSONFactoryWSTool::printExporters()
 {
    for (const auto &x : RooJSONFactoryWSTool::_exporters) {
-     for (const auto &e : x.second){     
-       std::cout << x.first->GetName() << "\t" << typeid(*e).name() << std::endl;
-     }
+      for (const auto &e : x.second) {
+         std::cout << x.first->GetName() << "\t" << typeid(*e).name() << std::endl;
+      }
    }
 }
 
@@ -355,57 +361,57 @@ inline void writeAxis(JSONNode &bounds, const TAxis &ax)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  std::string generate(const RooJSONFactoryWSTool::ImportExpression& ex, const JSONNode &p, RooJSONFactoryWSTool *tool)
-   {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      std::stringstream expression;
-      std::string classname(ex.tclass->GetName());
-      size_t colon = classname.find_last_of(":");
-      if (colon < classname.size()) {
-         expression << classname.substr(colon + 1);
-      } else {
-         expression << classname;
+std::string generate(const RooJSONFactoryWSTool::ImportExpression &ex, const JSONNode &p, RooJSONFactoryWSTool *tool)
+{
+   std::string name(RooJSONFactoryWSTool::name(p));
+   std::stringstream expression;
+   std::string classname(ex.tclass->GetName());
+   size_t colon = classname.find_last_of(":");
+   if (colon < classname.size()) {
+      expression << classname.substr(colon + 1);
+   } else {
+      expression << classname;
+   }
+   expression << "::" << name << "(";
+   bool first = true;
+   for (auto k : ex.arguments) {
+      if (!first)
+         expression << ",";
+      first = false;
+      if (k == "true") {
+         expression << "1";
+         continue;
+      } else if (k == "false") {
+         expression << "0";
+         continue;
+      } else if (!p.has_child(k)) {
+         std::stringstream err;
+         err << "factory expression for class '" << ex.tclass->GetName() << "', which expects key '" << k
+             << "' missing from input for object '" << name << "', skipping.";
+         RooJSONFactoryWSTool::error(err.str().c_str());
       }
-      expression << "::" << name << "(";
-      bool first = true;
-      for (auto k : ex.arguments) {
-         if (!first)
-            expression << ",";
-         first = false;
-         if (k == "true") {
-            expression << "1";
-            continue;
-         } else if (k == "false") {
-            expression << "0";
-            continue;
-         } else if (!p.has_child(k)) {
-            std::stringstream err;
-            err << "factory expression for class '" << ex.tclass->GetName() << "', which expects key '" << k
-                << "' missing from input for object '" << name << "', skipping.";
-            RooJSONFactoryWSTool::error(err.str().c_str());
-         }
-         if (p[k].is_seq()) {
-            expression << "{";
-            bool f = true;
-            for (const auto &x : p[k].children()) {
-               if (!f)
-                  expression << ",";
-               f = false;
-               std::string obj(x.val());
-               tool->request<RooAbsReal>(obj, name);
-               expression << obj;
-            }
-            expression << "}";
-         } else {
-            std::string obj(p[k].val());
+      if (p[k].is_seq()) {
+         expression << "{";
+         bool f = true;
+         for (const auto &x : p[k].children()) {
+            if (!f)
+               expression << ",";
+            f = false;
+            std::string obj(x.val());
             tool->request<RooAbsReal>(obj, name);
             expression << obj;
          }
+         expression << "}";
+      } else {
+         std::string obj(p[k].val());
+         tool->request<RooAbsReal>(obj, name);
+         expression << obj;
       }
-      expression << ")";
-      return expression.str();
    }
-};
+   expression << ")";
+   return expression.str();
+}
+}; // namespace
 
 void RooJSONFactoryWSTool::loadFactoryExpressions(const std::string &fname)
 {
@@ -717,25 +723,26 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
    auto it = _exporters.find(cl);
    bool ok = false;
    if (it != _exporters.end()) { // check if we have a specific exporter available
-      for(auto& exp:it->second){
-        try {
-          auto &elem = n[func->GetName()];
-          elem.set_map();          
-          if (!exp->exportObject(this, func, elem)) {
-            continue;
-          }
-          if (exp->autoExportDependants()) {
-            RooJSONFactoryWSTool::exportDependants(func, &orootnode());
-          }
-          RooJSONFactoryWSTool::exportAttributes(func, elem);
-          ok = true;
-        } catch (const std::exception &ex) {
-          std::cerr << "error exporting " << func->Class()->GetName() << " " << func->GetName() << ": " << ex.what() << ". skipping." << std::endl;
-          return;
-        }
+      for (auto &exp : it->second) {
+         try {
+            auto &elem = n[func->GetName()];
+            elem.set_map();
+            if (!exp->exportObject(this, func, elem)) {
+               continue;
+            }
+            if (exp->autoExportDependants()) {
+               RooJSONFactoryWSTool::exportDependants(func, &orootnode());
+            }
+            RooJSONFactoryWSTool::exportAttributes(func, elem);
+            ok = true;
+         } catch (const std::exception &ex) {
+            std::cerr << "error exporting " << func->Class()->GetName() << " " << func->GetName() << ": " << ex.what()
+                      << ". skipping." << std::endl;
+            return;
+         }
       }
    }
-   if(!ok){ // generic export using the factory expressions
+   if (!ok) { // generic export using the factory expressions
       const auto &dict = _exportKeys.find(cl);
       if (dict == _exportKeys.end()) {
          std::cerr << "unable to export class '" << cl->GetName() << "' - no export keys available!" << std::endl;
@@ -868,12 +875,13 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
       auto it = _importers.find(functype);
       bool ok = false;
       if (it != _importers.end()) {
-         for(auto& imp:it->second){
-           ok = isPdf ? imp->importPdf(this, p) : imp->importFunction(this, p);
-           if(ok) break;
+         for (auto &imp : it->second) {
+            ok = isPdf ? imp->importPdf(this, p) : imp->importFunction(this, p);
+            if (ok)
+               break;
          }
       }
-      if(!ok){ // generic import using the factory expressions
+      if (!ok) { // generic import using the factory expressions
          auto expr = isPdf ? _pdfFactoryExpressions.find(functype) : _funcFactoryExpressions.find(functype);
          if (expr != (isPdf ? _pdfFactoryExpressions.end() : _funcFactoryExpressions.end())) {
             std::string expression = ::generate(expr->second, p, this);
