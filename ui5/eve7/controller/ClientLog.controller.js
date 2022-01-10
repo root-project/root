@@ -12,8 +12,6 @@ sap.ui.define([
 ], function(MessageView, Dialog, Button, Bar, Title, MessageItem, MessageToast, Link, Controller, JSONModel) {
 	"use strict";
 
-	var oMessagePopover;
-
 	return Controller.extend("rootui5.eve7.controller.ClientLog", {
 		onInit: function () {
 			// create any data and a model and set it to the view
@@ -58,13 +56,6 @@ sap.ui.define([
 					this.setVisible(false);
 				}
 			});
-
-			/*
-			this.getView().setModel(JSROOT.EVE.consoleModel);
-			this.oMessageView.setModel(JSROOT.EVE.consoleModel);
-			this.byId("messagePopoverBtn").addDependent(this.oMessageView); // ? AMT
-			this.byId("messagePopoverBtn").setModel(JSROOT.EVE.consoleModel);
-*/
 			
 			this.oDialog = new Dialog({
 				resizable: true,
@@ -135,7 +126,7 @@ sap.ui.define([
 					sHighestSeverityMessageType = "Success";
 					break;
 				default:
-					sHighestSeverityMessageType = !sHighestSeverityMessageType ? "Information" : sHighestSeverityMessageType;
+					sHighestSeverityMessageType = "Information";
 					break;
 			}
 
@@ -172,7 +163,6 @@ sap.ui.define([
 		handleMessagePopoverPress: function (oEvent) {
 			this.oMessageView.navigateBack();
 			this.oDialog.open();
-			
 		}
 
 	});
