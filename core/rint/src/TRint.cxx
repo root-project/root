@@ -48,6 +48,7 @@
 
 #ifdef R__UNIX
 #include <signal.h>
+#include <unistd.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,6 +136,17 @@ Bool_t TTermInputHandler::Notify()
 
 ClassImp(TRint);
 
+
+namespace {
+   static int SetExtraClingArgsBeforeTAppCtor() {
+#ifdef R__UNIX
+      if (isatty(0) || isatty(1))
+#endif
+         TROOT::AddExtraInterpreterArgs({"--ptrcheck"});
+      return 0;
+   }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an application environment. The TRint environment provides an
 /// interface to the WM manager functionality and eventloop via inheritance
@@ -143,7 +155,7 @@ ClassImp(TRint);
 
 TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
              Int_t numOptions, Bool_t noLogo):
-   TApplication(appClassName, argc, argv, options, numOptions),
+   TApplication(appClassName, argc, argv, options, numOptions + SetExtraClingArgsBeforeTAppCtor()),
    fCaughtSignal(-1)
 {
 
