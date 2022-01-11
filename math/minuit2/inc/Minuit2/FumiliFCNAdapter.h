@@ -94,7 +94,6 @@ void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
    grad.assign(npar, 0.0);
    hess.assign(hess.size(), 0.0);
 
-   double sum = 0;
    unsigned int ndata = fFunc.NPoints();
 
    std::vector<double> gf(npar);
@@ -107,9 +106,6 @@ void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
       for (unsigned int i = 0; i < ndata; ++i) {
          // calculate data element and gradient
          double fval = fFunc.DataElement(&v.front(), i, &gf[0]);
-
-         // t.b.d should protect for bad  values of fval
-         sum += fval * fval;
 
          for (unsigned int j = 0; j < npar; ++j) {
             grad[j] += 2. * fval * gf[j];
@@ -124,10 +120,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll(const std::vector<double> &v)
       for (unsigned int i = 0; i < ndata; ++i) {
 
          // calculate data element and gradient
-         // return value is log of pdf and derivative of the log(Pdf)
-         double fval = fFunc.DataElement(&v.front(), i, &gf[0]);
-
-         sum -= fval;
+         fFunc.DataElement(&v.front(), i, &gf[0]);
 
          for (unsigned int j = 0; j < npar; ++j) {
             double gfj = gf[j];

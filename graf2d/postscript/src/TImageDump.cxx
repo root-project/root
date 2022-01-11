@@ -665,7 +665,6 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    Int_t ndashes = 0;
    char *dash = 0;
    static char dashList[10];
-   Int_t dashLength = 0;
    Int_t dashSize = 0;
 
    if (line) {
@@ -684,10 +683,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          }
 
          dashSize = TMath::Min((int)sizeof(dashList), ndashes);
-         dashLength = 0;
          for (int i = 0; i < dashSize; i++ ) {
             dashList[i] = dash[i];
-            dashLength += dashList[i];
          }
          delete tokens;
          delete [] dash;

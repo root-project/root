@@ -548,7 +548,6 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
    fLogger << kVERBOSE << "Reading RuleFit summary file" << Endl;
    std::ifstream f;
    if (!OpenRFile("rulefit.sum",f)) return kFALSE;
-   Int_t    lines=0;
    Int_t    nrules=0;
    Int_t    nvars=0;
    Int_t    nvarsOpt=0;
@@ -586,21 +585,21 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
    // In order to catch this situation, some special checks are made below.
    //
    Bool_t norules;
-   lines += ReadInt(f,&nrules);
+   ReadInt(f,&nrules);
    norules = (nrules==1);
-   lines += ReadInt(f,&dumI);
+   ReadInt(f,&dumI);
    norules = norules && (dumI==1);
-   lines += ReadInt(f,&dumI);
+   ReadInt(f,&dumI);
    norules = norules && (dumI==1);
-   lines += ReadInt(f,&dumI);
+   ReadInt(f,&dumI);
    norules = norules && (dumI==0);
    if (nrules==0) norules=kTRUE; // this ugly construction is needed:(
    if (norules) nrules = 0;
    //
-   lines += ReadInt(f,&nvars);
-   lines += ReadInt(f,&nvarsOpt);
-   lines += ReadFloat(f,&dumF);
-   lines += ReadFloat(f,&offset);
+   ReadInt(f,&nvars);
+   ReadInt(f,&nvarsOpt);
+   ReadFloat(f,&dumF);
+   ReadFloat(f,&offset);
    fLogger << kDEBUG << "N(rules) = " << nrules   << Endl;
    fLogger << kDEBUG << "N(vars)  = " << nvars    << Endl;
    fLogger << kDEBUG << "N(varsO) = " << nvarsOpt << Endl;
@@ -617,7 +616,7 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
       // if no rules, read 8 blocks of data
       // this corresponds to one dummy rule
       for (Int_t t=0; t<8; t++) {
-         lines += ReadFloat(f,&dumF);
+         ReadFloat(f,&dumF);
       }
    }
    //
@@ -632,14 +631,14 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
    //   12      <float> 1       ??? not used by this interface
    //
    for (Int_t r=0; r<nrules; r++) {
-      lines += ReadFloat(f,&dumF);
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       rfSupp.push_back(dumF);
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       rfCoef.push_back(dumF);
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       rfNcut.push_back(static_cast<int>(dumF+0.5));
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       //
    }
    //--------------------------------------------
@@ -684,11 +683,11 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
       fLogger << kDEBUG << "  N(cut)   = " << rfNcut[r] << Endl;
 
       for (Int_t c=0; c<rfNcut[r]; c++) {
-         lines += ReadFloat(f,&dumF);
+         ReadFloat(f,&dumF);
          varind = static_cast<Int_t>(dumF+0.5)-1;
-         lines += ReadFloat(f,&dumF);
+         ReadFloat(f,&dumF);
          xmin   = static_cast<Double_t>(dumF);
-         lines += ReadFloat(f,&dumF);
+         ReadFloat(f,&dumF);
          xmax   = static_cast<Double_t>(dumF);
          // create Rule HERE!
          rfcut->SetSelector(c,varind);
@@ -724,19 +723,19 @@ Bool_t TMVA::RuleFitAPI::ReadModelSum()
    std::vector<Double_t> coeff;
    //
    for (Int_t c=0; c<nvars; c++) {
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       varind.push_back(static_cast<Int_t>(dumF+0.5)-1);
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       xmin.push_back(static_cast<Double_t>(dumF));
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       xmax.push_back(static_cast<Double_t>(dumF));
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       average.push_back(static_cast<Double_t>(dumF));
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       stdev.push_back(static_cast<Double_t>(dumF));
       Double_t nv = fRuleFit->GetRuleEnsemblePtr()->CalcLinNorm(stdev.back());
       norm.push_back(nv);
-      lines += ReadFloat(f,&dumF);
+      ReadFloat(f,&dumF);
       coeff.push_back(dumF/nv); // save coefficient for normalised var
       //
       fLogger << kDEBUG << "Linear #" << c << Endl;
