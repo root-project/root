@@ -19,6 +19,7 @@ echo "        ../../core/metacling/            \\" >> Doxyfile_INPUT
 echo "        ../../core/clingutils/           \\" >> Doxyfile_INPUT
 echo "        ../../core/multiproc/            \\" >> Doxyfile_INPUT
 echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
+echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
 echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
 echo "        ../../core/unix/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/winnt/                \\" >> Doxyfile_INPUT
