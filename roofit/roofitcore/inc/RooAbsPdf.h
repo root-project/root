@@ -318,8 +318,8 @@ protected:
 
   friend class RooAbsAnaConvPdf ;
   mutable Double_t _rawValue ;
-  mutable RooAbsReal* _norm   ;      //! Normalization integral (owned by _normMgr)
-  mutable RooArgSet* _normSet ;      //! Normalization set with for above integral
+  mutable RooAbsReal* _norm = nullptr; //! Normalization integral (owned by _normMgr)
+  mutable RooArgSet const* _normSet = nullptr; //! Normalization set with for above integral
 
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -339,8 +339,13 @@ protected:
 
     // Object is own by _normCacheManager that will delete object as soon as cache
     // is sterilized by server redirect
-    _norm = 0 ;
-    return kFALSE ; 
+    _norm = nullptr ;
+
+    // Similar to the situation with the normalization integral above: if a
+    // server is redirected, the cached normalization set might not point to
+    // the right observables anymore. We need to reset it.
+    _normSet = nullptr ;
+    return false ;
   } ;
 
   
