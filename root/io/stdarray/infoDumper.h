@@ -34,7 +34,7 @@ const char* EStateNames[] = {
       "kEmulated",
       "kInterpreted",
       "kHasTClassInit",
-      "kLoaded"
+      "kLoaded",
       "kNamespaceForMeta"
 };
 
