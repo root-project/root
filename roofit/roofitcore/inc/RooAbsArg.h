@@ -261,7 +261,25 @@ public:
   // Server redirection interface
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t isRecursionStep=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t recurseInNewSet=kTRUE) ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) { return kFALSE ; } ;
+
+  /// Function that is called at the end of redirectServers(). Can be overloaded
+  /// to inject some class-dependent behavior after server redirection, e.g.
+  /// resetting of caches. The return value is meant to be an error flag, so in
+  /// case something goes wrong the function should return `true`.
+  ///
+  /// \see redirectServers() For a detailed explanation of the function parameters.
+  ///
+  /// \param[in] newServerList One of the original parameters passed to redirectServers().
+  /// \param[in] mustReplaceAll One of the original parameters passed to redirectServers().
+  /// \param[in] nameChange  One of the original parameters passed to redirectServers().
+  /// \param[in] isRecursiveStep  One of the original parameters passed to redirectServers().
+  virtual bool redirectServersHook(const RooAbsCollection & /*newServerList*/, bool /*mustReplaceAll*/,
+                                   bool /*nameChange*/, bool /*isRecursiveStep*/)
+  {
+    return false;
+  }
+
+
   virtual void serverNameChangeHook(const RooAbsArg* /*oldServer*/, const RooAbsArg* /*newServer*/) { } ;
 
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE, std::size_t refCount = 1);

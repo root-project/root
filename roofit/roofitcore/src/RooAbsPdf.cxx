@@ -223,7 +223,7 @@ TString RooAbsPdf::_normRangeOverride;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _normMgr(this,10), _specGeneratorConfig(0)
+RooAbsPdf::RooAbsPdf() :_normMgr(this,10), _specGeneratorConfig(0)
 {
   _errorCount = 0 ;
   _negCount = 0 ;
@@ -238,7 +238,7 @@ RooAbsPdf::RooAbsPdf() : _norm(0), _normSet(0), _normMgr(this,10), _specGenerato
 /// Constructor with name and title only
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
-  RooAbsReal(name,title), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
+  RooAbsReal(name,title), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;
@@ -251,7 +251,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title) :
 
 RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 		     Double_t plotMin, Double_t plotMax) :
-  RooAbsReal(name,title,plotMin,plotMax), _norm(0), _normSet(0), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
+  RooAbsReal(name,title,plotMin,plotMax), _normMgr(this,10), _selectComp(kTRUE), _specGeneratorConfig(0)
 {
   resetErrorCounters() ;
   setTraceCounter(0) ;
@@ -263,7 +263,7 @@ RooAbsPdf::RooAbsPdf(const char *name, const char *title,
 /// Copy constructor
 
 RooAbsPdf::RooAbsPdf(const RooAbsPdf& other, const char* name) :
-  RooAbsReal(other,name), _norm(0), _normSet(0),
+  RooAbsReal(other,name),
   _normMgr(other._normMgr,this), _selectComp(other._selectComp), _normRange(other._normRange)
 {
   resetErrorCounters() ;
@@ -329,8 +329,8 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 
   // Special handling of case without normalization set (used in numeric integration of pdfs)
   if (!nset) {
-    RooArgSet* tmp = _normSet ;
-    _normSet = 0 ;
+    RooArgSet const* tmp = _normSet ;
+    _normSet = nullptr ;
     Double_t val = evaluate() ;
     _normSet = tmp ;
 
@@ -550,10 +550,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
 
 Bool_t RooAbsPdf::syncNormalization(const RooArgSet* nset, Bool_t adjustProxies) const
 {
-
-//   cout << IsA()->GetName() << "::syncNormalization(" << GetName() << ") nset = " << nset << " = " << (nset?*nset:RooArgSet()) << endl ;
-
-  _normSet = (RooArgSet*) nset ;
+  _normSet = nset;
 
   // Check if data sets are identical
   CacheElem* cache = (CacheElem*) _normMgr.getObj(nset) ;
