@@ -704,8 +704,6 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
    }
    maxMVA = maxMVA+(maxMVA-minMVA)/nBins;
 
-   Double_t sum = 0.;
-
    TH1D *mvaS  = new TH1D(Form("MVAS_%d",fCurrentMethodIdx) ,"",nBins,minMVA,maxMVA);
    TH1D *mvaB  = new TH1D(Form("MVAB_%d",fCurrentMethodIdx) ,"",nBins,minMVA,maxMVA);
    TH1D *mvaSC = new TH1D(Form("MVASC_%d",fCurrentMethodIdx),"",nBins,minMVA,maxMVA);
@@ -724,7 +722,6 @@ void TMVA::MethodBoost::FindMVACut(MethodBase *method)
 
       Double_t weight = GetEvent(ievt)->GetWeight();
       Double_t mvaVal=method->GetMvaValue();
-      sum +=weight;
       if (DataInfo().IsSignal(GetEvent(ievt))){
          mvaS->Fill(mvaVal,weight);
       }else {

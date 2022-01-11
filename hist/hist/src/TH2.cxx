@@ -1957,7 +1957,6 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
    // Fill the profile histogram
    // no entries/bin is available so can fill only using bin content as weight
-   Double_t totcont = 0;
 
    // implement filling of projected histogram
    // outbin is bin number of outAxis (the projected axis). Loop is done on all bin of TH2 histograms
@@ -1988,7 +1987,6 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
             if ( useWeights ) tmp = binSumw2.fArray[binOut];
             h1->Fill( xOut, inAxis.GetBinCenter(inbin), cxy );
             if ( useWeights ) binSumw2.fArray[binOut] = tmp + fSumw2.fArray[bin];
-            totcont += cxy;
          }
 
       }

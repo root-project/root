@@ -1496,10 +1496,7 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
 
    // print rescaling info
    // ---------------------------------
-   // compute sizes and sums of weights
-   Int_t trainingSize = 0;
-   Int_t testingSize  = 0;
-
+   // compute sums of weights
    ValuePerClass trainingSumWeightsPerClass( dsi.GetNClasses() );
    ValuePerClass testingSumWeightsPerClass( dsi.GetNClasses() );
 
@@ -1516,9 +1513,6 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    for( UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
       trainingSizePerClass.at(cls) = tmpEventVector[Types::kTraining].at(cls).size();
       testingSizePerClass.at(cls)  = tmpEventVector[Types::kTesting].at(cls).size();
-
-      trainingSize += trainingSizePerClass.back();
-      testingSize  += testingSizePerClass.back();
 
       // the functional solution
       // sum up the weights in Double_t although the individual weights are Float_t to prevent rounding issues in addition of floating points

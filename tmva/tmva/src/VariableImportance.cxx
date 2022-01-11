@@ -311,7 +311,6 @@ void TMVA::VariableImportance::EvaluateImportanceRandom(UInt_t seeds)
 
       // vector to save importances
       std::vector<Float_t> importances(nbits);
-      Float_t importances_norm = 0;
 
       for (UInt_t i = 0; i < nbits; i++)
          importances[i] = 0;
@@ -363,7 +362,6 @@ void TMVA::VariableImportance::EvaluateImportanceRandom(UInt_t seeds)
                 Double_t ny = log(x - y) / 0.693147;
                 if (y == 0) {
                     importances[ny] = SROC - 0.5;
-                    importances_norm += importances[ny];
                     continue;
                 }
 
