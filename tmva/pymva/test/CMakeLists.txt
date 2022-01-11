@@ -59,19 +59,26 @@ if(PY_TORCH_FOUND)
    set_target_properties(emitFromPyTorch PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
    add_custom_target(SofieCompileModels_PyTorch)
    add_dependencies(SofieCompileModels_PyTorch emitFromPyTorch)
-   add_custom_command(TARGET SofieCompileModels_PyTorch POST_BUILD
-		COMMAND ./emitFromPyTorch
-		USES_TERMINAL
-	)
-   ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
-    LIBRARIES
-    ROOTTMVASofie
-    blas
-    ${PYTHON_LIBRARIES}
-    INCLUDE_DIRS
-    ${CMAKE_CURRENT_BINARY_DIR}
-   )
-   add_dependencies(TestRModelParserPyTorch SofieCompileModels_PyTorch)
+   if(MSVC)
+      add_custom_command(TARGET SofieCompileModels_PyTorch POST_BUILD
+         COMMAND $<CONFIG>/emitFromPyTorch.exe
+         USES_TERMINAL
+      )
+   else())
+      add_custom_command(TARGET SofieCompileModels_PyTorch POST_BUILD
+         COMMAND ./emitFromPyTorch
+         USES_TERMINAL
+      )
+      ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
+         LIBRARIES
+         ROOTTMVASofie
+         blas
+         ${PYTHON_LIBRARIES}
+         INCLUDE_DIRS
+         ${CMAKE_CURRENT_BINARY_DIR}
+      )
+      add_dependencies(TestRModelParserPyTorch SofieCompileModels_PyTorch)
+   endif()
 endif(PY_TORCH_FOUND)
 
 if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
