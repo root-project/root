@@ -52,23 +52,10 @@ private:
    bool fIsNew = true; ///< A just created node. This means that in no other exploration the node was already created
    ///< (this is needed because branches may share some common node).
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns a static variable to allow each node to retrieve its counter
-   static unsigned int &GetStaticGlobalCounter()
-   {
-      static unsigned int sGlobalCounter = 1;
-      return sGlobalCounter;
-   }
-
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node with a name and a counter
-   GraphNode(const std::string_view &name) : fName(name) { fCounter = GetStaticGlobalCounter()++; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Resets the counter.
-   /// This is not strictly needed but guarantees that two consecutive request to the graph return the same result.
-   static void ClearCounter() { GraphNode::GetStaticGlobalCounter() = 1; }
+   GraphNode(const std::string_view &name) : fName(name) {}
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Appends a node on the head of the current node

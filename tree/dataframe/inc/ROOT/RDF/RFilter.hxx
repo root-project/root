@@ -35,11 +35,13 @@ using namespace ROOT::Detail::RDF;
 
 // fwd decl for RFilter
 namespace GraphDrawing {
-std::shared_ptr<GraphNode> CreateFilterNode(const RFilterBase *filterPtr);
+std::shared_ptr<GraphNode>
+CreateFilterNode(const RFilterBase *filterPtr, std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 
 std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
                                              const RDFInternal::RColumnRegister &colRegister,
-                                             const std::vector<std::string> &prevNodeDefines);
+                                             const std::vector<std::string> &prevNodeDefines,
+                                             std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // ns GraphDrawing
 
 } // ns RDF
@@ -159,13 +161,14 @@ public:
          v.reset();
    }
 
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
+   std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
    {
       // Recursively call for the previous node.
-      auto prevNode = fPrevData.GetGraph();
+      auto prevNode = fPrevData.GetGraph(visitedMap);
       auto prevColumns = prevNode->GetDefinedColumns();
 
-      auto thisNode = RDFGraphDrawing::CreateFilterNode(this);
+      auto thisNode = RDFGraphDrawing::CreateFilterNode(this, visitedMap);
 
       /* If the returned node is not new, there is no need to perform any other operation.
        * This is a likely scenario when building the entire graph in which branches share
@@ -174,7 +177,7 @@ public:
          return thisNode;
       }
 
-      auto upmostNode = AddDefinesToGraph(thisNode, fColRegister, prevColumns);
+      auto upmostNode = AddDefinesToGraph(thisNode, fColRegister, prevColumns, visitedMap);
 
       // Keep track of the columns defined up to this point.
       thisNode->AddDefinedColumns(fColRegister.GetNames());

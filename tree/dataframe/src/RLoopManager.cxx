@@ -878,7 +878,8 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions() const
    return actions;
 }
 
-std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph()
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph(
+   std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> & /*visitedMap*/)
 {
    std::string name;
    if (fDataSource) {
