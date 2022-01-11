@@ -32,6 +32,9 @@ public:
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
+  Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
+  double analyticalIntegral(Int_t code, const char *rangeName) const override;
+
 protected:
 
   RooRealProxy x ;

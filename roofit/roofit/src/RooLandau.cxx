@@ -27,6 +27,7 @@ Landau distribution p.d.f
 #include "RooBatchCompute.h"
 
 #include "TMath.h"
+#include "Math/ProbFunc.h"
 
 ClassImp(RooLandau);
 
@@ -72,7 +73,24 @@ void RooLandau::computeBatch(cudaStream_t* stream, double* output, size_t nEvent
 Int_t RooLandau::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,x)) return 1 ;
-  return 0 ;
+  return 0;
+}
+
+Int_t RooLandau::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
+{
+   if (matchArgs(allVars, analVars, x))
+      return 1;
+   return 0;
+}
+
+Double_t RooLandau::analyticalIntegral(Int_t code, const char *rangeName) const
+{
+   assert(code == 1);
+
+   double max = x.max(rangeName);
+   double min = x.min(rangeName);
+
+   return ROOT::Math::landau_cdf(max, sigma, mean) - ROOT::Math::landau_cdf(min, sigma, mean);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
