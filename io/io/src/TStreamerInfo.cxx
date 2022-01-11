@@ -4092,13 +4092,12 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    TMakeProject::GenerateForwardDeclaration(fp, GetName(), inclist, kFALSE, needGenericTemplate, extrainfos);
    fprintf(fp,"\n");
 
-   UInt_t ninc = 0;
-   ninc += GenerateIncludes(fp, inclist, extrainfos);
+   GenerateIncludes(fp, inclist, extrainfos);
    if (subClasses) {
       TIter subnext(subClasses);
       TStreamerInfo *subinfo;
       while ((subinfo = (TStreamerInfo*)subnext())) {
-         ninc = subinfo->GenerateIncludes(fp, inclist, extrainfos);
+         subinfo->GenerateIncludes(fp, inclist, extrainfos);
       }
    }
    fprintf(fp,"\n");

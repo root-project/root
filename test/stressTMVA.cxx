@@ -2194,25 +2194,25 @@ void MethodUnitTestWithROCLimits::run()
            else readerVal=reader[iTest]->EvaluateMVA( testvarDouble, readerName);
         }
         else if (iTest==3 ){
-           double dummy3 = reader2->EvaluateMVA( testvarDouble, readerName2);
+           reader2->EvaluateMVA( testvarDouble, readerName2);
            if (_methodType==Types::kCuts)
               readerVal = reader[iTest]->EvaluateMVA( testvarDouble, readerName, effS );
            else readerVal=reader[iTest]->EvaluateMVA( testvarDouble, readerName);
-           dummy3 += reader2->EvaluateMVA( testvarDouble, readerName2);
+           reader2->EvaluateMVA( testvarDouble, readerName2);
         }
         else if (iTest==4){
-           double dummy4 = reader2->EvaluateMVA( testvarDouble, readerName);
+           reader2->EvaluateMVA( testvarDouble, readerName);
            if (_methodType==Types::kCuts)
               readerVal = reader[iTest]->EvaluateMVA( testvarDouble, readerName, effS );
            else readerVal=reader[iTest]->EvaluateMVA( testvarDouble, readerName);
-           dummy4 += reader2->EvaluateMVA( testvarDouble, readerName);
+           reader2->EvaluateMVA( testvarDouble, readerName);
         }
         else if (iTest==5){
-           double dummy5 = reader2->EvaluateMVA( readerName2);
+           reader2->EvaluateMVA( readerName2);
            if (_methodType==Types::kCuts)
               readerVal = reader[iTest]->EvaluateMVA( readerName, effS );
            else readerVal=reader[iTest]->EvaluateMVA( readerName);
-           dummy5 += reader2->EvaluateMVA( readerName2);
+           reader2->EvaluateMVA( readerName2);
         }
         else {
            std::cout << "ERROR, undefined iTest value "<<iTest<<endl;

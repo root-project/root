@@ -393,20 +393,15 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, Double_t w
   // Transfer contents
   Int_t xmin(0),ymin(0),zmin(0) ;
   RooArgSet vset(*xvar) ;
-  Double_t volume = xvar->getMax()-xvar->getMin() ;
   xmin = offset[0] ;
   if (yvar) {
     vset.add(*yvar) ;
     ymin = offset[1] ;
-    volume *= (yvar->getMax()-yvar->getMin()) ;
   }
   if (zvar) {
     vset.add(*zvar) ;
     zmin = offset[2] ;
-    volume *= (zvar->getMax()-zvar->getMin()) ;
   }
-  //Double_t avgBV = volume / numEntries() ;
-//   cout << "average bin volume = " << avgBV << endl ;
 
   Int_t ix(0),iy(0),iz(0) ;
   for (ix=0 ; ix < xvar->getBins() ; ix++) {
