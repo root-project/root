@@ -147,17 +147,17 @@ public:
 
 inline Bool_t operator&(const TBits::TReference& lhs, const TBits::TReference& rhs)
 {
-   return (Bool_t)lhs & rhs;
+   return ((Bool_t)lhs) && rhs;
 }
 
 inline Bool_t operator|(const TBits::TReference& lhs, const TBits::TReference& rhs)
 {
-   return (Bool_t)lhs | rhs;
+   return ((Bool_t)lhs) || rhs;
 }
 
 inline Bool_t operator^(const TBits::TReference& lhs, const TBits::TReference& rhs)
 {
-   return (Bool_t)lhs ^ rhs;
+   return ((Bool_t)lhs) ^ rhs;
 }
 
 inline TBits operator&(const TBits& lhs, const TBits& rhs)
