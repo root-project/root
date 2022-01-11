@@ -2,25 +2,28 @@
 // Authors: Stephan Hageboeck, CERN 04/2020
 //          Jonas Rembser, CERN 04/2021
 
-#include "RooRealVar.h"
-#include "RooGenericPdf.h"
-#include "RooFormulaVar.h"
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooFitResult.h"
-#include "RooAddPdf.h"
-#include "RooProduct.h"
-#include "RooHelpers.h"
-#include "RooGaussian.h"
-#include "RooPoisson.h"
-#include "RooConstVar.h"
-#include "RooProdPdf.h"
-#include "RooPolynomial.h"
+#include <RooAddPdf.h>                                                                               
+#include <RooCategory.h>                                                                             
+#include <RooConstVar.h>                                                                             
+#include <RooDataHist.h>                                                                             
+#include <RooDataSet.h>
+#include <RooFitResult.h>                                                                            
+#include <RooFormulaVar.h>                                                                           
+#include <RooGaussian.h>                                                                             
+#include <RooGenericPdf.h>
+#include <RooHelpers.h>                                                                              
+#include <RooPoisson.h>                                                                              
+#include <RooPolynomial.h>                                                                           
+#include <RooProdPdf.h>                                                                              
+#include <RooProduct.h>                                                                              
+#include <RooRealVar.h>                                                                              
+#include <RooSimultaneous.h>
+#include <RooUniform.h>
 
-#include "TClass.h"
-#include "TRandom.h"
+#include <TClass.h>
+#include <TRandom.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <memory>
 
@@ -268,4 +271,50 @@ TEST(RooAbsPdf, MultiRangeFit2D)
       EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull)) << "Results of fitting " << model.GetName() << " to a "
                                                               << data->IsA()->GetName() << " should be very similar.";
    }
+}
+
+// This test will crash if the cached normalization sets are not reset
+// correctly after servers are redirected. This is a reduced version of a code
+// provided in the ROOT forum that originally unveiled this problem:
+// https://root-forum.cern.ch/t/problems-with-2d-simultaneous-fit/48249/4
+TEST(RooAbsPdf, ProblemsWith2DSimultaneousFit)
+{
+   using namespace RooFit;
+
+   RooRealVar x("x", "y", 1.0, 2.);
+   RooRealVar y("y", "y", 1.0, 2.);
+
+   RooRealVar mu1("mu1", "mu1", 2., 0, 5);
+
+   RooUniform uniform1("uniform1", "uniform1", {x, y});
+   RooUniform uniform2("uniform2", "uniform2", {x, y});
+
+   RooGaussian gauss1("gauss1", "gauss1", x, mu1, RooConst(0.1));
+   RooGaussian gauss2("gauss2", "gauss2", x, mu1, RooConst(0.1));
+   RooGaussian gauss3("gauss3", "gauss3", x, mu1, RooConst(0.1));
+
+   RooAddPdf gauss12("gauss12", "gauss12", gauss1, gauss2, RooConst(0.1));
+
+   RooAddPdf sig_x("sig_x", "sig_x", gauss3, gauss12, RooConst(0.1));
+
+   RooUniform sig_y("sig_y", "sig_y", y);
+   RooProdPdf sig("sig", "sig", sig_y, sig_x);
+
+   RooRealVar yield{"yield", "yield", 100};
+
+   // Complete model
+   RooAddPdf model("model", "model", {sig, sig_y, uniform2, uniform1}, {yield, yield, yield, yield});
+
+   // Define category to distinguish d0 and d0bar samples events
+   RooCategory sample("sample", "sample", {{"cat0", 0}, {"cat1", 1}});
+
+   // Construct a dummy dataset
+   RooDataSet data("data", "data", RooArgSet(sample, x, y));
+
+   // Construct a simultaneous pdf using category sample as index
+   RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
+   simPdf.addPdf(model, "cat0");
+   simPdf.addPdf(model, "cat1");
+
+   simPdf.fitTo(data, PrintLevel(-1));
 }
