@@ -6414,7 +6414,6 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
    Double_t xmax = axis->GetXmax();
    if (xmin >= xmax) return kFALSE;
    Double_t range = xmax-xmin;
-   Double_t binsize = range / axis->GetNbins();
 
    //recompute new axis limits by doubling the current range
    Int_t ntimes = 0;
@@ -6423,24 +6422,12 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
          return kFALSE;
       xmin = xmin - range;
       range *= 2;
-      binsize *= 2;
-      // // make sure that the merging will be correct
-      // if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
-      //    xmin += 0.5 * binsize;
-      //    xmax += 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
-      // }
    }
    while (point >= xmax) {
       if (ntimes++ > 64)
          return kFALSE;
       xmax = xmax + range;
       range *= 2;
-      binsize *= 2;
-      // // make sure that the merging will be correct
-      // if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
-      //    xmin -= 0.5 * binsize;
-      //    xmax -= 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
-      // }
    }
    newMin = xmin;
    newMax = xmax;

@@ -2486,7 +2486,6 @@ TH1F *TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds,
 
    // vector to save importances
    std::vector<Double_t> importances(nbits);
-   Double_t importances_norm = 0;
    for (int i = 0; i < nbits; i++)
       importances[i] = 0;
 
@@ -2543,7 +2542,6 @@ TH1F *TMVA::Factory::EvaluateImportanceRandom(DataLoader *loader, UInt_t nseeds,
             Double_t ny = log(x - y) / 0.693147;
             if (y == 0) {
                importances[ny] = SROC - 0.5;
-               importances_norm += importances[ny];
                //  std::cout << "SubSeed: " << y << " y:" << ybitset << "ROC " << 0.5 << std::endl;
                continue;
             }

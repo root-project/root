@@ -883,8 +883,6 @@ template <typename LAYERDATA>
                 ++dropOutChangeCount;
 
 
-                static double x = -1.0;
-                x += 1.0;
 //            settings.resetPlot ("errors");
                 settings.addPoint ("trainErrors", cycleCount, trainError);
                 settings.addPoint ("testErrors", cycleCount, testError);
@@ -1132,7 +1130,6 @@ template <typename LAYERDATA>
         //LM- This assert not needed anymore (outputsize is actually numNodes+1)
         //assert (_layers.back ().numNodes () == outputSize ());
         totalNumWeights = 0;
-        size_t totalNumNodes = 0;
         std::vector<std::vector<LayerData>> layerPatternData;
         layerPatternData.reserve (_layers.size ()+1);
         ItWeight itWeight = itWeightBegin;
@@ -1212,7 +1209,6 @@ template <typename LAYERDATA>
             itWeight += _numWeights;
             itGradient += _numWeights;
             numNodesPrev = layer.numNodes ();
-            totalNumNodes += numNodesPrev;
 
         }
 	assert (totalNumWeights > 0);
@@ -1226,7 +1222,6 @@ template <typename LAYERDATA>
                                   std::vector<LayerData>& layerData) const
     {
 	size_t idxLayer = 0, idxLayerEnd = _layers.size ();
-        size_t cumulativeNodeCount = 0;
 	for (; idxLayer < idxLayerEnd; ++idxLayer)
 	{
 	    LayerData& prevLayerData = layerData.at (idxLayer);
@@ -1252,7 +1247,6 @@ template <typename LAYERDATA>
         valuesStdDev.clear ();
         
         // ---------------------------------- loop over layers and pattern -------------------------------------------------------
-        size_t cumulativeNodeCount = 0;
 	for (size_t idxLayer = 0, idxLayerEnd = layerPatternData.size (); idxLayer < idxLayerEnd-1; ++idxLayer) 
 	{
 	    bool doTraining = idxLayer >= trainFromLayer;
@@ -1287,9 +1281,6 @@ template <typename LAYERDATA>
 		else
                     applyFunctions (currLayerData.valuesBegin (), currLayerData.valuesEnd (), currLayerData.activationFunction ());
             }
-
-            // accumulate node count
-            cumulativeNodeCount += numNodesLayer;
         }
 }
 

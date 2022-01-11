@@ -4500,7 +4500,6 @@ void TTree::DropBaskets()
 void TTree::DropBuffers(Int_t)
 {
    // Be careful not to remove current read/write buffers.
-   Int_t ndrop = 0;
    Int_t nleaves = fLeaves.GetEntriesFast();
    for (Int_t i = 0; i < nleaves; ++i)  {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
@@ -4512,7 +4511,7 @@ void TTree::DropBuffers(Int_t)
          }
          TBasket* basket = (TBasket*)branch->GetListOfBaskets()->UncheckedAt(j);
          if (basket) {
-            ndrop += basket->DropBuffers();
+            basket->DropBuffers();
             if (fTotalBuffers < fMaxVirtualSize) {
                return;
             }

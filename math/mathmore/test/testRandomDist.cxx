@@ -484,14 +484,11 @@ void testMultinomial( R & r,int ntot, TH1D & h1, TH1D & h2) {
    // generates the p distribution
    const int nbins = h1.GetNbinsX();
    std::vector<double> p(nbins);
-   double psum = 0;
    for (int i = 0; i < nbins; ++i) {
       double x1 = h1.GetBinLowEdge(i+1);
       double x2 = x1 + h1.GetBinWidth(i+1);
       p[i] = ROOT::Math::normal_cdf(x2) -  ROOT::Math::normal_cdf(x1);
-      psum += p[i];
    }
-   //std::cout << " psum  = " << psum << std::endl;
    // generate the multinomial
    TStopwatch w;
    int n = NEVT/10;

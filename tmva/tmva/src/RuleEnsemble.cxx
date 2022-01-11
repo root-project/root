@@ -369,11 +369,10 @@ void TMVA::RuleEnsemble::CleanupLinear()
 void TMVA::RuleEnsemble::CalcRuleSupport()
 {
    Log() << kVERBOSE << "Evaluating Rule support" << Endl;
-   Double_t s,t,stot,ttot,ssb;
+   Double_t s,t,stot,ssb;
    Double_t ssig, sbkg, ssum;
    Int_t indrule=0;
    stot = 0;
-   ttot = 0;
    // reset to default values
    SetAverageRuleSigma(0.4);
    const std::vector<const Event *> *events = GetTrainingEvents();
@@ -398,7 +397,6 @@ void TMVA::RuleEnsemble::CalcRuleSupport()
          t = s*(1.0-s);
          t = (t<0 ? 0:sqrt(t));
          stot += s;
-         ttot += t;
          ssum = ssig+sbkg;
          ssb = (ssum>0 ? Double_t(ssig)/Double_t(ssig+sbkg) : 0.0 );
          (*itrRule)->SetSupport(s);
@@ -748,7 +746,6 @@ Double_t TMVA::RuleEnsemble::PdfRule( Double_t & nsig, Double_t & ntot  ) const
 {
    Double_t sump  = 0;
    Double_t sumok = 0;
-   Double_t sumz  = 0;
    Double_t ssb;
    Double_t neve;
    //
@@ -760,7 +757,6 @@ Double_t TMVA::RuleEnsemble::PdfRule( Double_t & nsig, Double_t & ntot  ) const
          sump  += ssb*neve; // number of signal events
          sumok += neve; // total number of events passed
       }
-      else sumz += 1.0; // all events
    }
 
    nsig = sump;
