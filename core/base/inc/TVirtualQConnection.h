@@ -45,16 +45,6 @@ protected:
          SetArg((ULongptr_t)val);
    }
 
-   // We pass arrays as Lont_t*. In the template instance we can deduce their
-   // size, too.
-   template <class T, class = typename std::enable_if<std::is_array<T>::value>::type>
-   void SetArg(const T* val)
-   {
-      constexpr size_t size = sizeof(val)/sizeof(val[0]);
-      static_assert(size > 0, "The array must have at least one element!");
-      SetArg((Longptr_t*)val, size);
-   }
-
    void SetArgsImpl() {} // SetArgsImpl terminator
    template <typename T, typename... Ts> void SetArgsImpl(const T& arg, const Ts&... tail)
    {
