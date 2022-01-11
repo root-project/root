@@ -126,7 +126,8 @@ bool test6() {
    int iret = g.Fit("x++1","Q");
    ok &= (iret == 0);
    iret = g.Fit("1++x","Q");
-   return iret == 0;
+   ok &= (iret == 0);
+   return ok;
 }
 
 bool test7() {
