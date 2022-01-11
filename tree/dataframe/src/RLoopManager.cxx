@@ -878,8 +878,14 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions() const
    return actions;
 }
 
-std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph()
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph(
+   std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
 {
+   // If there is already a node for the RLoopManager return it. If there is not, return a new one.
+   auto duplicateRLoopManagerIt = visitedMap.find((void *)this);
+   if (duplicateRLoopManagerIt != visitedMap.end())
+      return duplicateRLoopManagerIt->second;
+
    std::string name;
    if (fDataSource) {
       name = fDataSource->GetLabel();
@@ -888,10 +894,10 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    } else {
       name = std::to_string(fNEmptyEntries);
    }
-
    auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(name);
    thisNode->SetRoot();
-   thisNode->SetCounter(0);
+   thisNode->SetCounter(visitedMap.size());
+   visitedMap[(void *)this] = thisNode;
    return thisNode;
 }
 
