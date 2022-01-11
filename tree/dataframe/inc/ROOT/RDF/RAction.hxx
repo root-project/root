@@ -34,7 +34,8 @@ namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 namespace GraphDrawing {
 std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
                                              const RDFInternal::RColumnRegister &colRegister,
-                                             const std::vector<std::string> &prevNodeDefines);
+                                             const std::vector<std::string> &prevNodeDefines,
+                                             std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // namespace GraphDrawing
 
 // clang-format off
@@ -135,19 +136,22 @@ public:
       SetHasRun();
    }
 
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() final
+   std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
-      auto prevNode = fPrevData.GetGraph();
+      auto prevNode = fPrevData.GetGraph(visitedMap);
       auto prevColumns = prevNode->GetDefinedColumns();
 
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
       auto thisNode = std::make_shared<RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
 
-      auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns);
+      auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
 
       thisNode->AddDefinedColumns(GetColRegister().GetNames());
       thisNode->SetAction(HasRun());
       upmostNode->SetPrevNode(prevNode);
+      thisNode->SetCounter(visitedMap.size());
+      visitedMap[(void *)this] = thisNode;
       return thisNode;
    }
 

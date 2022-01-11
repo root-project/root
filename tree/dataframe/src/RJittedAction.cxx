@@ -80,10 +80,11 @@ void RJittedAction::SetHasRun()
    return fConcreteAction->SetHasRun();
 }
 
-std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph()
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph(
+   std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
 {
    assert(fConcreteAction != nullptr);
-   return fConcreteAction->GetGraph();
+   return fConcreteAction->GetGraph(visitedMap);
 }
 
 /**
