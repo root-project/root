@@ -64,7 +64,7 @@ if(PY_TORCH_FOUND)
          COMMAND $<CONFIG>/emitFromPyTorch.exe
          USES_TERMINAL
       )
-   else())
+   else()
       add_custom_command(TARGET SofieCompileModels_PyTorch POST_BUILD
          COMMAND ./emitFromPyTorch
          USES_TERMINAL
