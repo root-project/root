@@ -108,11 +108,12 @@ void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
    fConcreteFilter->AddFilterName(filters);
 }
 
-std::shared_ptr<RDFGraphDrawing::GraphNode> RJittedFilter::GetGraph()
+std::shared_ptr<RDFGraphDrawing::GraphNode>
+RJittedFilter::GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
 {
    if (fConcreteFilter != nullptr) {
       // Here the filter exists, so it can be served
-      return fConcreteFilter->GetGraph();
+      return fConcreteFilter->GetGraph(visitedMap);
    }
    throw std::runtime_error("The Jitting should have been invoked before this method.");
 }

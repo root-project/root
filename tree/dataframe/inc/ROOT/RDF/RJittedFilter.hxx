@@ -58,7 +58,8 @@ public:
    void InitNode() final;
    void AddFilterName(std::vector<std::string> &filters) final;
    void FinalizeSlot(unsigned int slot) final;
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph();
+   std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap);
 };
 
 } // ns RDF

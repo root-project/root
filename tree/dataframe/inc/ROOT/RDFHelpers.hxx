@@ -118,7 +118,7 @@ template <typename NodeType>
 std::string SaveGraph(NodeType node)
 {
    ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
-   return helper(node);
+   return helper.RepresentGraph(node);
 }
 
 // clang-format off
@@ -137,7 +137,7 @@ template <typename NodeType>
 void SaveGraph(NodeType node, const std::string &outputFile)
 {
    ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
-   std::string dotGraph = helper(node);
+   std::string dotGraph = helper.RepresentGraph(node);
 
    std::ofstream out(outputFile);
    if (!out.is_open()) {

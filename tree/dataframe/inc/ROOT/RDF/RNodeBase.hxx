@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 namespace ROOT {
 namespace RDF {
@@ -54,7 +55,8 @@ public:
    virtual void StopProcessing() = 0;
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
    // Helper function for SaveGraph
-   virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
+   virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap) = 0;
 
    virtual void ResetChildrenCount()
    {

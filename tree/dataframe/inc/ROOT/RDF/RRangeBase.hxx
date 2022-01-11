@@ -50,7 +50,8 @@ public:
    virtual ~RRangeBase();
 
    void InitNode() { ResetCounters(); }
-   virtual std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() = 0;
+   virtual std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) = 0;
 };
 
 } // ns RDF

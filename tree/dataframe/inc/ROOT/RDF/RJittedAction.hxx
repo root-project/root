@@ -56,7 +56,8 @@ public:
    bool HasRun() const final;
    void SetHasRun() final;
 
-   std::shared_ptr<GraphDrawing::GraphNode> GetGraph();
+   std::shared_ptr<GraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<GraphDrawing::GraphNode>> &visitedMap);
 
    // Helper for RMergeableValue
    std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> GetMergeableValue() const final;
