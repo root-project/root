@@ -186,10 +186,6 @@ public:
 		}
 
 		std::stringstream out;
-		int length = 1;
-		for(auto& i: fShapeX){
-			length *= i;
-		}
 		//// Batch Norm op
       size_t batchSize = fShapeX[0];
       size_t channels = fShapeX[1];

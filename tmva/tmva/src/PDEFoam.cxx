@@ -589,9 +589,10 @@ void TMVA::PDEFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Dou
          Double_t xMin=0.0; Double_t xMax=0.0;
          // Double loop over all pairs jLo<jUp
          for(Int_t jLo=1; jLo<=fNBin; jLo++) {
-            Double_t aswIn=0;  Double_t asswIn=0;
+            // Double_t aswIn=0;
+            Double_t asswIn=0;
             for(Int_t jUp=jLo; jUp<=fNBin;jUp++) {
-               aswIn  +=     ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(jUp);
+               // aswIn  +=     ((TH1D *)(*fHistEdg)[kProj])->GetBinContent(jUp);
                asswIn += Sqr(((TH1D *)(*fHistEdg)[kProj])->GetBinError(  jUp));
                xLo=(jLo-1.0)/fNBin;
                xUp=(jUp*1.0)/fNBin;

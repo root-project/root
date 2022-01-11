@@ -936,7 +936,6 @@ Double_t TMVA::RuleFitParams::Optimism()
    Double_t sumyhat=0;
    Double_t sumyhaty=0;
    Double_t sumw2=0;
-   Double_t sumw=0;
    Double_t yhat;
    Double_t y;
    Double_t w;
@@ -950,7 +949,6 @@ Double_t TMVA::RuleFitParams::Optimism()
       sumyhat  += w*yhat;
       sumyhaty += w*yhat*y;
       sumw2    += w*w;
-      sumw     += w;
    }
    Double_t div = 1.0-sumw2;
    Double_t cov = sumyhaty - sumyhat*sumy;
