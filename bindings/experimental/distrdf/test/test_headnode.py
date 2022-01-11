@@ -1,6 +1,7 @@
 import os
 import unittest
 from array import array
+import platform
 
 import ROOT
 from DistRDF.HeadNode import get_headnode, EmptySourceHeadNode
@@ -39,9 +40,13 @@ class DataFrameConstructorTests(unittest.TestCase):
             x[0] = i
             tree.Fill()
 
-        with self.assertRaises(ROOT.std.runtime_error):
-            # Trees with no associated files are not supported
-            create_dummy_headnode(tree)
+        # See https://github.com/root-project/root/issues/7541 and
+        # https://bugs.llvm.org/show_bug.cgi?id=49692 :
+        # llvm JIT fails to catch exceptions on M1, so we disable their testing
+        if platform.processor() != "arm" or platform.mac_ver()[0] == '':
+            with self.assertRaises(ROOT.std.runtime_error):
+                # Trees with no associated files are not supported
+                create_dummy_headnode(tree)
 
     def assertArgs(self, args_list1, args_list2):
         """
