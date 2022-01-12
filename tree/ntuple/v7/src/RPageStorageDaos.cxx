@@ -229,9 +229,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
                                                     fSerializationContext);
 
    auto bufPageListZip = std::make_unique<unsigned char[]>(szPageList);
-   auto szPageListZip = fCompressor->Zip(
-      bufPageList.get(), szPageList, GetWriteOptions().GetCompression(),
-      [&bufPageListZip](const void *b, size_t n, size_t o) { memcpy(bufPageListZip.get() + o, b, n); });
+   auto szPageListZip = fCompressor->Zip(bufPageList.get(), szPageList, GetWriteOptions().GetCompression(),
+                                         RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
    fDaosContainer->WriteSingleAkey(bufPageListZip.get(), szPageListZip, kOidPageList, kDistributionKey, kAttributeKey,
                                    kCidMetadata);
 
@@ -246,9 +245,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
    Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
 
    auto bufFooterZip = std::make_unique<unsigned char[]>(szFooter);
-   auto szFooterZip =
-      fCompressor->Zip(bufFooter.get(), szFooter, GetWriteOptions().GetCompression(),
-                       [&bufFooterZip](const void *b, size_t n, size_t o) { memcpy(bufFooterZip.get() + o, b, n); });
+   auto szFooterZip = fCompressor->Zip(bufFooter.get(), szFooter, GetWriteOptions().GetCompression(),
+                                       RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
    WriteNTupleFooter(bufFooterZip.get(), szFooterZip, szFooter);
    WriteNTupleAnchor();
 }
