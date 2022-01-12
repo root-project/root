@@ -24,6 +24,7 @@
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRange.hxx"
 #include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RDF/RDFDescription.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/RStringView.hxx"
@@ -117,6 +118,85 @@ class RInterface {
 
    /// Contains the columns defined up to this node.
    RDFInternal::RColumnRegister fColRegister;
+
+   std::string DescribeDataset() const
+   {
+      // TTree/TChain as input
+      const auto tree = fLoopManager->GetTree();
+      if (tree) {
+         const auto treeName = tree->GetName();
+         const auto isTChain = dynamic_cast<TChain *>(tree) ? true : false;
+         const auto treeType = isTChain ? "TChain" : "TTree";
+         const auto isInMemory = !isTChain && !tree->GetCurrentFile() ? true : false;
+         const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
+         const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
+         std::stringstream ss;
+         ss << "Dataframe from " << treeType << " " << treeName;
+         if (isInMemory) {
+            ss << " (in-memory)";
+         } else {
+            const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
+            const auto numFiles = files.size();
+            if (numFiles == 1) {
+               ss << " in file " << files[0];
+            } else {
+               ss << " in files\n";
+               for (auto i = 0u; i < numFiles; i++) {
+                  ss << "  " << files[i];
+                  if (i < numFiles - 1)
+                     ss << '\n';
+               }
+            }
+         }
+         if (hasFriends) {
+            const auto numFriends = friendInfo.fFriendNames.size();
+            if (numFriends == 1) {
+               ss << "\nwith friend\n";
+            } else {
+               ss << "\nwith friends\n";
+            }
+            for (auto i = 0u; i < numFriends; i++) {
+               const auto nameAlias = friendInfo.fFriendNames[i];
+               const auto files = friendInfo.fFriendFileNames[i];
+               const auto numFiles = files.size();
+               const auto subnames = friendInfo.fFriendChainSubNames[i];
+               ss << "  " << nameAlias.first;
+               if (nameAlias.first != nameAlias.second)
+                  ss << " (" << nameAlias.second << ")";
+               // case: TTree as friend
+               if (numFiles == 1) {
+                  ss << " " << files[0];
+               }
+               // case: TChain as friend
+               else {
+                  ss << '\n';
+                  for (auto j = 0u; j < numFiles; j++) {
+                     ss << "    " << subnames[j] << " " << files[j];
+                     if (j < numFiles - 1)
+                        ss << '\n';
+                  }
+               }
+               if (i < numFriends - 1)
+                  ss << '\n';
+            }
+         }
+         return ss.str();
+      }
+      // Datasource as input
+      else if (fDataSource) {
+         const auto datasourceLabel = fDataSource->GetLabel();
+         return "Dataframe from datasource " + datasourceLabel;
+      }
+      // Trivial/empty datasource
+      else {
+         const auto n = fLoopManager->GetNEmptyEntries();
+         if (n == 1) {
+            return "Empty dataframe filling 1 row";
+         } else {
+            return "Empty dataframe filling " + std::to_string(n) + " rows";
+         }
+      }
+   }
 
 public:
    ////////////////////////////////////////////////////////////////////////////
@@ -2205,10 +2285,9 @@ public:
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Return information about the dataframe.
-   /// \return information about the dataframe as string
+   /// \return information about the dataframe as RDFDescription object
    ///
    /// This convenience function describes the dataframe and combines the following information:
-   /// - Information about the dataset, see DescribeDataset()
    /// - Number of event loops run, see GetNRuns()
    /// - Number of total and defined columns, see GetColumnNames() and GetDefinedColumnNames()
    /// - Column names, see GetColumnNames()
@@ -2220,22 +2299,21 @@ public:
    /// defined columns returned by GetDefinedColumnNames().
    ///
    /// Please note that this is a convenience feature and the layout of the output can be subject
-   /// to change and should not be automatically parsed.
+   /// to change and should be parsed via RDFDescription methods.
    ///
    /// ### Example usage:
    /// ~~~{.cpp}
    /// RDataFrame df(10);
    /// auto df2 = df.Define("x", "1.f").Define("s", "\"myStr\"");
    /// // Describe the dataframe
-   /// std::cout << df2.Describe() << std::endl;
+   /// df2.Describe().Print()
+   /// df2.Describe().Print(/*shortFormat=*/true)
+   /// std::cout << df2.Describe().AsString() << std::endl;
+   /// std::cout << df2.Describe().AsString(/*shortFormat=*/true) << std::endl;
    /// ~~~
    ///
-   std::string Describe()
+   RDFDescription Describe()
    {
-      // Put the information from DescribeDataset on the top
-      std::stringstream ss;
-      ss << DescribeDataset() << "\n\n";
-
       // Build set of defined column names to find later in all column names
       // the defined columns more efficiently
       const auto columnNames = GetColumnNames();
@@ -2256,6 +2334,7 @@ public:
       // to the maximum of the string "Value" and all values to be put in this column.
       const auto columnWidthValues =
          std::max(std::max_element(metadataValues.begin(), metadataValues.end())->size(), static_cast<std::size_t>(5u));
+      std::stringstream ss;
       ss << std::left << std::setw(columnWidthProperties) << "Property" << std::setw(columnWidthValues) << "Value\n"
          << std::setw(columnWidthProperties) << "--------" << std::setw(columnWidthValues) << "-----\n";
 
@@ -2287,8 +2366,9 @@ public:
          if (i < nCols - 1)
             ss << '\n';
       }
-
-      return ss.str();
+      // Use the string returned from DescribeDataset() as the 'brief' description
+      // Use the converted to string stringstream ss as the 'full' description
+      return RDFDescription(DescribeDataset(), ss.str());
    }
 
    /// \brief Returns the names of the filters created.
@@ -2397,97 +2477,6 @@ public:
    /// std::cout << df.GetNRuns() << std::endl; // prints "2"
    /// ~~~
    unsigned int GetNRuns() const { return fLoopManager->GetNRuns(); }
-
-   /// \brief Get descriptive information about the dataset.
-   /// \return Info describing the dataset as a multi-line string
-   ///
-   /// The information returned by this convenience function is meant for interactive
-   /// use. The exact string format should not be parsed automatically and can be subject to change.
-   ///
-   /// Example usage:
-   /// ~~~{.cpp}
-   /// ROOT::RDataFrame df("Events", "sample.root");
-   /// std::cout << df.DescribeDataset() << std::endl;
-   /// // prints "Dataframe from TTree Events in file sample.root"
-   /// ~~~
-   std::string DescribeDataset() const
-   {
-      // TTree/TChain as input
-      const auto tree = fLoopManager->GetTree();
-      if (tree) {
-         const auto treeName = tree->GetName();
-         const auto isTChain = dynamic_cast<TChain *>(tree) ? true : false;
-         const auto treeType = isTChain ? "TChain" : "TTree";
-         const auto isInMemory = !isTChain && !tree->GetCurrentFile() ? true : false;
-         const auto friendInfo = ROOT::Internal::TreeUtils::GetFriendInfo(*tree);
-         const auto hasFriends = friendInfo.fFriendNames.empty() ? false : true;
-         std::stringstream ss;
-         ss << "Dataframe from " << treeType << " " << treeName;
-         if (isInMemory) {
-            ss << " (in-memory)";
-         } else {
-            const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
-            const auto numFiles = files.size();
-            if (numFiles == 1) {
-               ss << " in file " << files[0];
-            } else {
-               ss << " in files\n";
-               for (auto i = 0u; i < numFiles; i++) {
-                  ss << "  " << files[i];
-                  if (i < numFiles - 1)
-                     ss << '\n';
-               }
-            }
-         }
-         if (hasFriends) {
-            const auto numFriends = friendInfo.fFriendNames.size();
-            if (numFriends == 1) {
-               ss << "\nwith friend\n";
-            } else {
-               ss << "\nwith friends\n";
-            }
-            for (auto i = 0u; i < numFriends; i++) {
-               const auto nameAlias = friendInfo.fFriendNames[i];
-               const auto files = friendInfo.fFriendFileNames[i];
-               const auto numFiles = files.size();
-               const auto subnames = friendInfo.fFriendChainSubNames[i];
-               ss << "  " << nameAlias.first;
-               if (nameAlias.first != nameAlias.second)
-                  ss << " (" << nameAlias.second << ")";
-               // case: TTree as friend
-               if (numFiles == 1) {
-                   ss << " " << files[0];
-               }
-               // case: TChain as friend
-               else {
-                  ss << '\n';
-                  for (auto j = 0u; j < numFiles; j++) {
-                     ss << "    " << subnames[j] << " " << files[j];
-                     if (j < numFiles - 1)
-                        ss << '\n';
-                  }
-               }
-               if (i < numFriends - 1)
-                  ss << '\n';
-            }
-         }
-         return ss.str();
-      }
-      // Datasource as input
-      else if (fDataSource) {
-         const auto datasourceLabel = fDataSource->GetLabel();
-         return "Dataframe from datasource " + datasourceLabel;
-      }
-      // Trivial/empty datasource
-      else {
-         const auto n = fLoopManager->GetNEmptyEntries();
-         if (n == 1) {
-            return "Empty dataframe filling 1 row";
-         } else {
-            return "Empty dataframe filling " + std::to_string(n) + " rows";
-         }
-      }
-   }
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////

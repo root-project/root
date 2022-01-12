@@ -77,6 +77,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RTreeColumnReader.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
+    ROOT/RDF/RDFDescription.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
@@ -101,6 +102,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RRootDS.cxx
     src/RSlotStack.cxx
     src/RTrivialDS.cxx
+    src/RDFDescription.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
     ${RDATAFRAME_EXTRA_INCLUDES}
