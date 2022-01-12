@@ -947,18 +947,11 @@ void REveManager::PublishChanges()
 
       std::stringstream strm;
       for (auto entry : gEveLogEntries) {
-
-         auto channel = entry.fChannel;
-         if (channel && !channel->GetName().empty())
-            strm << '[' << channel->GetName() << "] ";
-
          int cappedLevel = std::min(static_cast<int>(entry.fLevel), numLevels - 1);
          strm << sTag[cappedLevel];
-
-         if (!entry.fLocation.fFile.empty())
-            strm << " " << entry.fLocation.fFile << ':' << entry.fLocation.fLine;
          if (!entry.fLocation.fFuncName.empty())
-            strm << " in " << entry.fLocation.fFuncName;
+            strm << " " << entry.fLocation.fFuncName;
+         strm << " " << entry.fMessage; 
       }
       jobj["log"] = strm.str();
       gEveLogEntries.clear();

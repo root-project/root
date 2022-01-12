@@ -11,6 +11,8 @@
 
 #include <ROOT/REveDataTable.hxx>
 #include <ROOT/REveDataCollection.hxx>
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/RLogger.hxx>
 #include "TClass.h"
 #include "TROOT.h"
 
@@ -63,7 +65,14 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       nlohmann::json row;
       for (auto &chld : fChildren) {
          auto clmn = dynamic_cast<REveDataColumn *>(chld);
-         row[chld->GetCName()] = clmn->EvalExpr(data);
+
+         try {
+            row[chld->GetCName()] = clmn->EvalExpr(data);
+         }
+         catch (const std::exception& e) {
+            R__LOG_ERROR(REveLog()) << "can't eval expr " << clmn->fExpression.Data();
+            row[chld->GetCName()] = "err";
+         }
       }
       jarr.push_back(row);
    }
