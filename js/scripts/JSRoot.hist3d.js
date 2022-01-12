@@ -667,6 +667,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'latex', 'hist'], (d3, jsrp, THREE, lt
                return tgtmesh;
             }
 
+            if (!this.geometry) return false;
+
             if (!tgtmesh) {
                gg = this.geometry.clone();
                let pos = gg.getAttribute('position').array;

@@ -104,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "19/11/2021"*/
-   JSROOT.version_date = "20/12/2021";
+   JSROOT.version_date = "3/01/2022";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
