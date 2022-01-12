@@ -355,12 +355,16 @@ public:
       return "ROOT file "s + fFileName;
    }
 
+   /** Provide iterator over TDirectory */
    std::unique_ptr<RLevelIter> GetChildsIter() override
    {
       auto dir = GetDir();
 
       return dir ? std::make_unique<TDirectoryLevelIter>(dir) : nullptr;
    }
+
+   /** Get default action - browsing for the TFile/TDirectory*/
+   EActionKind GetDefaultAction() const override { return kActBrowse; }
 };
 
 
