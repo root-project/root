@@ -619,7 +619,18 @@ TEST(RDataFrameInterface, Describe)
                      "\n"
                      "Column  Type    Origin\n"
                      "------  ----    ------\n";
-   EXPECT_EQ(df1.Describe(), ref1);
+   EXPECT_EQ(df1.Describe().AsString(), ref1);
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   std::cout << df1.Describe();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+   EXPECT_EQ(strCout.str(), ref1);
 
    // create in-memory tree
    TTree tree("tree", "tree");
@@ -649,7 +660,7 @@ TEST(RDataFrameInterface, Describe)
                      "myLongColumnName        unsigned int                    Define\n"
                      "myInt                   Int_t                           Dataset\n"
                      "myFloat                 Float_t                         Dataset";
-   EXPECT_EQ(df3.Describe(), ref2);
+   EXPECT_EQ(df3.Describe().AsString(), ref2);
 }
 
 TEST(RDFSimpleTests, LeafWithDifferentNameThanBranch)
@@ -663,20 +674,31 @@ TEST(RDFSimpleTests, LeafWithDifferentNameThanBranch)
    EXPECT_EQ(*m, 42);
 }
 
-TEST(RDataFrameInterface, DescribeDataset)
+TEST(RDataFrameInterface, DescribeShortFormat)
 {
    // trivial/empty datasource
    ROOT::RDataFrame df1a(1);
-   EXPECT_EQ(df1a.DescribeDataset(), "Empty dataframe filling 1 row");
+   EXPECT_EQ(df1a.Describe().AsString(/*shortFormat =*/true), "Empty dataframe filling 1 row");
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   df1a.Describe().Print(/*shortFormat =*/true);
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+   EXPECT_EQ(strCout.str(), "Empty dataframe filling 1 row");
 
    ROOT::RDataFrame df1b(2);
-   EXPECT_EQ(df1b.DescribeDataset(), "Empty dataframe filling 2 rows");
+   EXPECT_EQ(df1b.Describe().AsString(/*shortFormat =*/true), "Empty dataframe filling 2 rows");
 
    // ttree/tchain
    // case: in-memory tree
    TTree tree("someName", "someTitle");
    ROOT::RDataFrame df2a(tree);
-   EXPECT_EQ(df2a.DescribeDataset(), "Dataframe from TTree someName (in-memory)");
+   EXPECT_EQ(df2a.Describe().AsString(/*shortFormat =*/true), "Dataframe from TTree someName (in-memory)");
 
    // case: ctor from a single file
    // NOTE: using the RDataFrame("tree", "file.root") ctor, it's always a TChain
@@ -687,7 +709,7 @@ TEST(RDataFrameInterface, DescribeDataset)
    ROOT::RDataFrame df2b("myTree", "testDescribeDataset1.root");
    std::stringstream ss1;
    ss1 << "Dataframe from TChain myTree in file testDescribeDataset1.root";
-   EXPECT_EQ(df2b.DescribeDataset(), ss1.str());
+   EXPECT_EQ(df2b.Describe().AsString(/*shortFormat =*/true), ss1.str());
 
    // case: ctor with multiple files
    TFile f2("testDescribeDataset2.root", "recreate");
@@ -699,7 +721,7 @@ TEST(RDataFrameInterface, DescribeDataset)
    ss2 << "Dataframe from TChain myTree in files\n"
        << "  testDescribeDataset1.root\n"
        << "  testDescribeDataset2.root";
-   EXPECT_EQ(df2d.DescribeDataset(), ss2.str());
+   EXPECT_EQ(df2d.Describe().AsString(/*shortFormat =*/true), ss2.str());
 
    // case: ttree/tchain with friends
    TFile f3("testDescribeDataset3.root", "recreate");
@@ -727,13 +749,13 @@ TEST(RDataFrameInterface, DescribeDataset)
        << "  myTree (myAlias2)\n"
        << "    myTree testDescribeDataset2.root\n"
        << "    myTree testDescribeDataset3.root";
-   EXPECT_EQ(df2e.DescribeDataset(), ss3.str());
+   EXPECT_EQ(df2e.Describe().AsString(/*shortFormat =*/true), ss3.str());
    f3.Close();
    f4.Close();
 
    // others with an actual fDataSource, like csv
    auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
-   EXPECT_EQ(df3.DescribeDataset(), "Dataframe from datasource RCsv");
+   EXPECT_EQ(df3.Describe().AsString(/*shortFormat =*/true), "Dataframe from datasource RCsv");
 }
 
 // #var is a convenience alias for R_rdf_sizeof_var.
