@@ -701,7 +701,7 @@ void RooHist::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TStrin
     os << indent << "  Errors calculated at" << _nSigma << "-sigma CL" << endl;
     os << indent << "  Bin Contents:" << endl;
     for(Int_t i= 0; i < n; i++) {
-      os << indent << setw(3) << i << ") x= " <<  fX[i];
+      os << indent << setw(3) << i << ") x= " <<  fX->at(i);
       if(fEXhigh[i] > 0 || fEXlow[i] > 0) {
    os << " +" << fEXhigh[i] << " -" << fEXlow[i];
       }

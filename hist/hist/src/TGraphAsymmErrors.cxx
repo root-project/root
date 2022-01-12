@@ -195,7 +195,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVectorF  &vx, const TVectorF  &vy, c
    Int_t iveyllow = veyl.GetLwb();
    Int_t iveyhlow = veyh.GetLwb();
       for (Int_t i=0;i<fNpoints;i++) {
-      fX[i]      = vx(i+ivxlow);
+      fX->at(i)      = vx(i+ivxlow);
       fY[i]      = vy(i+ivylow);
       fEXlow[i]  = vexl(i+ivexllow);
       fEYlow[i]  = veyl(i+iveyllow);
@@ -225,7 +225,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, con
    Int_t iveyllow = veyl.GetLwb();
    Int_t iveyhlow = veyh.GetLwb();
       for (Int_t i=0;i<fNpoints;i++) {
-      fX[i]      = vx(i+ivxlow);
+      fX->at(i)      = vx(i+ivxlow);
       fY[i]      = vy(i+ivylow);
       fEXlow[i]  = vexl(i+ivexllow);
       fEYlow[i]  = veyl(i+iveyllow);
@@ -972,15 +972,15 @@ void TGraphAsymmErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
    TGraph::ComputeRange(xmin,ymin,xmax,ymax);
 
    for (Int_t i=0;i<fNpoints;i++) {
-      if (fX[i] -fEXlow[i] < xmin) {
+      if (fX->at(i) -fEXlow[i] < xmin) {
          if (gPad && gPad->GetLogx()) {
-            if (fEXlow[i] < fX[i]) xmin = fX[i]-fEXlow[i];
-            else                   xmin = TMath::Min(xmin,fX[i]/3);
+            if (fEXlow[i] < fX->at(i)) xmin = fX->at(i)-fEXlow[i];
+            else                   xmin = TMath::Min(xmin,fX->at(i)/3);
          } else {
-            xmin = fX[i]-fEXlow[i];
+            xmin = fX->at(i)-fEXlow[i];
          }
       }
-      if (fX[i] +fEXhigh[i] > xmax) xmax = fX[i]+fEXhigh[i];
+      if (fX->at(i) +fEXhigh[i] > xmax) xmax = fX->at(i)+fEXhigh[i];
       if (fY[i] -fEYlow[i] < ymin) {
          if (gPad && gPad->GetLogy()) {
             if (fEYlow[i] < fY[i]) ymin = fY[i]-fEYlow[i];
@@ -1010,8 +1010,8 @@ void TGraphAsymmErrors::CopyAndRelease(Double_t **newarrays,
       fEYlow = newarrays[2];
       delete[] fEYhigh;
       fEYhigh = newarrays[3];
-      delete[] fX;
-      fX = newarrays[4];
+      //delete[] fX;
+      //fX = newarrays[4];
       delete[] fY;
       fY = newarrays[5];
       delete[] newarrays;
@@ -1223,7 +1223,7 @@ void TGraphAsymmErrors::Print(Option_t *) const
 {
    for (Int_t i=0;i<fNpoints;i++) {
       printf("x[%d]=%g, y[%d]=%g, exl[%d]=%g, exh[%d]=%g, eyl[%d]=%g, eyh[%d]=%g\n"
-         ,i,fX[i],i,fY[i],i,fEXlow[i],i,fEXhigh[i],i,fEYlow[i],i,fEYhigh[i]);
+         ,i,fX->at(i),i,fY[i],i,fEXlow[i],i,fEXhigh[i],i,fEYlow[i],i,fEYhigh[i]);
    }
 }
 
@@ -1246,8 +1246,8 @@ void TGraphAsymmErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""
    TString fEhXName = TString(GetName()) + Form("_fehx%d",frameNumber);
    TString fEhYName = TString(GetName()) + Form("_fehy%d",frameNumber);
    out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
-   out << "   " << fX[fNpoints-1] << "};" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fX->at(i) << "," << std::endl;
+   out << "   " << fX->at(fNpoints-1) << "};" << std::endl;
    out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
    out << "   " << fY[fNpoints-1] << "};" << std::endl;
@@ -1328,7 +1328,7 @@ void TGraphAsymmErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, 
    Int_t i;
    // start with a small window (in case the mouse is very close to one point)
    for (i=0;i<fNpoints;i++) {
-      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX->at(i)));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
       if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
    }

@@ -543,7 +543,7 @@ void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*
   os << indent << "  Contains " << n << " points" << endl;
   os << indent << "  Graph points:" << endl;
   for(Int_t i= 0; i < n; i++) {
-    os << indent << setw(3) << i << ") x = " << fX[i] << " , y = " << fY[i] << endl;
+    os << indent << setw(3) << i << ") x = " << fX->at(i) << " , y = " << fY[i] << endl;
   }
 }
 
@@ -889,8 +889,8 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const
   Int_t n= min(GetN(),other.GetN());
   Double_t xmin(1e30), xmax(-1e30), ymin(1e30), ymax(-1e30) ;
   for(Int_t i= 0; i < n; i++) {
-    if (fX[i]<xmin) xmin=fX[i] ;
-    if (fX[i]>xmax) xmax=fX[i] ;
+    if (fX->at(i)<xmin) xmin=fX->at(i) ;
+    if (fX->at(i)>xmax) xmax=fX->at(i) ;
     if (fY[i]<ymin) ymin=fY[i] ;
     if (fY[i]>ymax) ymax=fY[i] ;
   }
@@ -898,15 +898,15 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const
 
   Bool_t ret(kTRUE) ;
   for(Int_t i= 2; i < n-2; i++) {
-    Double_t yTest = interpolate(other.fX[i],1e-10) ;
+    Double_t yTest = interpolate(other.fX->at(i),1e-10) ;
     Double_t rdy = fabs(yTest-other.fY[i])/Yrange ;
     if (rdy>tol) {
       ret = false;
       cout << "RooCurve::isIdentical[" << std::setw(3) << i << "] Y tolerance exceeded (" << std::setprecision(5) << std::setw(10) << rdy << ">" << tol << "),";
-      cout << "  x,y=(" << std::right << std::setw(10) << fX[i] << "," << std::setw(10) << fY[i] << ")\tref: y="
-          << std::setw(10) << other.interpolate(fX[i], 1.E-15) << ". [Nearest point from ref: ";
-      auto j = other.findPoint(fX[i], 1.E10);
-      std::cout << "j=" << j << "\tx,y=(" << std::setw(10) << other.fX[j] << "," << std::setw(10) << other.fY[j] << ") ]" << "\trange=" << Yrange << std::endl;
+      cout << "  x,y=(" << std::right << std::setw(10) << fX->at(i) << "," << std::setw(10) << fY[i] << ")\tref: y="
+          << std::setw(10) << other.interpolate(fX->at(i), 1.E-15) << ". [Nearest point from ref: ";
+      auto j = other.findPoint(fX->at(i), 1.E10);
+      std::cout << "j=" << j << "\tx,y=(" << std::setw(10) << other.fX->at(j) << "," << std::setw(10) << other.fY[j] << ") ]" << "\trange=" << Yrange << std::endl;
     }
   }
       

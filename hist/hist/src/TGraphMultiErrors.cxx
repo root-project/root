@@ -440,7 +440,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, c
    Int_t itvEyHL = tvEyH.GetLwb();
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      fX[i] = tvX(itvXL + i);
+      fX->at(i) = tvX(itvXL + i);
       fY[i] = tvY(itvYL + i);
       fExL[i] = tvExL(itvExLL + i);
       fExH[i] = tvExH(itvExHL + i);
@@ -479,7 +479,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, c
    Int_t itvEyHL = tvEyH.GetLwb();
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      fX[i] = tvX(i + itvXL);
+      fX->at(i) = tvX(i + itvXL);
       fY[i] = tvY(i + itvYL);
       fExL[i] = tvExL(i + itvExLL);
       fExH[i] = tvExH(i + itvExHL);
@@ -515,7 +515,7 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorF &tvX, const TVecto
    Int_t itvExHL = tvExH.GetLwb();
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      fX[i] = tvX(i + itvXL);
+      fX->at(i) = tvX(i + itvXL);
       fY[i] = tvY(i + itvYL);
       fExL[i] = tvExL(i + itvExLL);
       fExH[i] = tvExH(i + itvExHL);
@@ -554,7 +554,7 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorD &tvX, const TVecto
    Int_t itvExHL = tvExH.GetLwb();
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      fX[i] = tvX(i + itvXL);
+      fX->at(i) = tvX(i + itvXL);
       fY[i] = tvY(i + itvYL);
       fExL[i] = tvExL(i + itvExLL);
       fExH[i] = tvExH(i + itvExHL);
@@ -749,8 +749,8 @@ void TGraphMultiErrors::CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t
 {
    CopyPoints(newarrays, ibegin, iend, obegin);
    if (newarrays) {
-      delete[] fX;
-      fX = newarrays[0];
+      //delete[] fX;
+      //fX = newarrays[0];
       delete[] fY;
       fY = newarrays[1];
 
@@ -1347,18 +1347,18 @@ void TGraphMultiErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
    TGraph::ComputeRange(xmin, ymin, xmax, ymax);
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      if (fX[i] - fExL[i] < xmin) {
+      if (fX->at(i) - fExL[i] < xmin) {
          if (gPad && gPad->GetLogx()) {
-            if (fExL[i] < fX[i])
-               xmin = fX[i] - fExL[i];
+            if (fExL[i] < fX->at(i))
+               xmin = fX->at(i) - fExL[i];
             else
-               xmin = TMath::Min(xmin, fX[i] / 3.);
+               xmin = TMath::Min(xmin, fX->at(i) / 3.);
          } else
-            xmin = fX[i] - fExL[i];
+            xmin = fX->at(i) - fExL[i];
       }
 
-      if (fX[i] + fExH[i] > xmax)
-         xmax = fX[i] + fExH[i];
+      if (fX->at(i) + fExH[i] > xmax)
+         xmax = fX->at(i) + fExH[i];
 
       Double_t eyLMax = 0., eyHMax = 0.;
       for (Int_t j = 0; j < fNYErrors; j++) {
@@ -1674,7 +1674,7 @@ Width_t TGraphMultiErrors::GetLineWidth(Int_t e) const
 void TGraphMultiErrors::Print(Option_t *) const
 {
    for (Int_t i = 0; i < fNpoints; i++) {
-      printf("x[%d]=%g, y[%d]=%g", i, fX[i], i, fY[i]);
+      printf("x[%d]=%g, y[%d]=%g", i, fX->at(i), i, fY[i]);
       if (fExL)
          printf(", exl[%d]=%g", i, fExL[i]);
       if (fExH)
@@ -1716,7 +1716,7 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
    }
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      out << "   tgme->SetPoint(" << i << ", " << fX[i] << ", " << fY[i] << ");" << std::endl;
+      out << "   tgme->SetPoint(" << i << ", " << fX->at(i) << ", " << fY[i] << ");" << std::endl;
       out << "   tgme->SetPointEX(" << i << ", " << fExL[i] << ", " << fExH[i] << ");" << std::endl;
 
       for (Int_t j = 0; j < fNYErrors; j++)
@@ -1770,7 +1770,7 @@ void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1,
    Int_t i;
    // start with a small window (in case the mouse is very close to one point)
    for (i = 0; i < fNpoints; i++) {
-      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX[i]));
+      Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX->at(i)));
       Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
 
       if (dpx * dpx + dpy * dpy < 25) {

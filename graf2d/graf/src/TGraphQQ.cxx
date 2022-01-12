@@ -167,7 +167,7 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
       TMath::Sort(ny, y, index, kFALSE);
       if (nx==ny){
          for (Int_t i=0; i<fNpoints; i++)
-            fX[i] = y[index[i]];
+            fX->at(i) = y[index[i]];
          fY0 = 0;
          Quartiles();
       } else {
@@ -215,7 +215,7 @@ void TGraphQQ::MakeFunctionQuantiles()
       //use plotting positions optimal for normal distribution
       for (Int_t k=1; k<=fNpoints; k++){
          pk = (k-0.375)/(fNpoints+0.25);
-         fX[k-1]=TMath::NormQuantile(pk);
+         fX->at(k-1)=TMath::NormQuantile(pk);
       }
    } else {
       Double_t *prob = new Double_t[fNpoints];
@@ -227,7 +227,7 @@ void TGraphQQ::MakeFunctionQuantiles()
             prob[k-1] = (k-0.375)/(fNpoints+0.25);
       }
       //fF->GetQuantiles(fNpoints, prob, fX);
-      fF->GetQuantiles(fNpoints, fX, prob);
+      fF->GetQuantiles(fNpoints, &fX->at(0), prob);
       delete [] prob;
    }
 
@@ -250,9 +250,9 @@ void TGraphQQ::MakeQuantiles()
       pi = (fNy0-1)*Double_t(i)/Double_t(fNpoints-1);
       pint = TMath::FloorNint(pi);
       pfrac = pi - pint;
-      fX[i] = (1-pfrac)*fY0[pint]+pfrac*fY0[pint+1];
+      fX->at(i) = (1-pfrac)*fY0[pint]+pfrac*fY0[pint+1];
    }
-   fX[fNpoints-1]=fY0[fNy0-1];
+   fX->at(fNpoints-1)=fY0[fNy0-1];
 
    Quartiles();
 }
@@ -278,7 +278,7 @@ void TGraphQQ::Quartiles()
          fF->GetQuantiles(2, x, prob);
    }
    else
-      TMath::Quantiles(fNpoints, 2, fX, x, prob, kTRUE);
+      TMath::Quantiles(fNpoints, 2, &fX->at(0), x, prob, kTRUE);
 
    fXq1=x[0]; fXq2=x[1]; fYq1=y[0]; fYq2=y[1];
 }

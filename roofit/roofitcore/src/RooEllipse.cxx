@@ -154,6 +154,6 @@ void RooEllipse::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TSt
 {
   RooPlotable::printMultiline(os,contents,verbose,indent);
   for(Int_t index=0; index < fNpoints; index++) {
-    os << indent << "Point [" << index << "] is at (" << fX[index] << "," << fY[index] << ")" << endl;
+    os << indent << "Point [" << index << "] is at (" << fX->at(index) << "," << fY[index] << ")" << endl;
   }
 }
