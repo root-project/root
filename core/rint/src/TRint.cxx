@@ -138,13 +138,26 @@ ClassImp(TRint);
 
 
 namespace {
-   static int SetExtraClingArgsBeforeTAppCtor() {
+static int SetExtraClingArgsBeforeTAppCtor(Int_t *argc, char **argv)
+{
+   bool forcePtrCheck = false;
+   for (int iarg = 1; iarg < *argc; ++iarg) {
+      if (!strcmp(argv[iarg], "--ptrcheck")) {
+         // Hide this, by moving all other args one down...
+         for (int jarg = iarg + 1; jarg < *argc; ++jarg)
+            argv[jarg - 1] = argv[jarg];
+         // ... and updating argc accordingly.
+         --*argc;
+         forcePtrCheck = true;
+         break;
+      }
+   }
 #ifdef R__UNIX
-      if (isatty(0) || isatty(1))
+   if (forcePtrCheck || isatty(0) || isatty(1))
 #endif
          TROOT::AddExtraInterpreterArgs({"--ptrcheck"});
       return 0;
-   }
+}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,10 +166,9 @@ namespace {
 /// of TApplication and in addition provides interactive access to
 /// the Cling C++ interpreter via the command line.
 
-TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
-             Int_t numOptions, Bool_t noLogo):
-   TApplication(appClassName, argc, argv, options, numOptions + SetExtraClingArgsBeforeTAppCtor()),
-   fCaughtSignal(-1)
+TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options, Int_t numOptions, Bool_t noLogo)
+   : TApplication(appClassName, argc, argv, options, numOptions + SetExtraClingArgsBeforeTAppCtor(argc, argv)),
+     fCaughtSignal(-1)
 {
 
    if (*argc > 1) {
