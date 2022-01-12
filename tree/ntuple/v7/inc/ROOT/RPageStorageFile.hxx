@@ -65,7 +65,7 @@ private:
    std::uint64_t fClusterMaxOffset = 0;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
-   /// Used to keeo the column and field IDs issued during header serialization for the footer serialization
+   /// Used to keep the column and field IDs issued during header serialization for the footer serialization
    Internal::RNTupleSerializer::RContext fSerializationContext;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
