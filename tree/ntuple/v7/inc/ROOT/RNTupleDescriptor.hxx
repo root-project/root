@@ -387,6 +387,8 @@ private:
    std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
    std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
 
+   std::uint64_t fNEntries = 0; ///< Updated by the descriptor builder when the cluster summaries are added
+
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
    std::unordered_map<DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
@@ -673,8 +675,8 @@ public:
    std::size_t GetNClusterGroups() const { return fClusterGroupDescriptors.size(); }
    std::size_t GetNClusters() const { return fClusterDescriptors.size(); }
 
-   // The number of entries as seen with the currently loaded cluster meta-data; there might be more
-   NTupleSize_t GetNEntries() const;
+   /// We know the number of entries from adding the cluster summaries
+   NTupleSize_t GetNEntries() const { return fNEntries; }
    NTupleSize_t GetNElements(DescriptorId_t columnId) const;
 
    /// Returns the logical parent of all top-level NTuple data fields.
