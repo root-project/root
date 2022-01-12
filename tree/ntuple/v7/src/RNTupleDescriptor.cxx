@@ -191,15 +191,6 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
 }
 
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNEntries() const
-{
-   NTupleSize_t result = 0;
-   for (const auto &cd : fClusterDescriptors) {
-      result = std::max(result, cd.second.GetFirstEntryIndex() + cd.second.GetNEntries());
-   }
-   return result;
-}
-
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElements(DescriptorId_t columnId) const
 {
    NTupleSize_t result = 0;
@@ -601,6 +592,7 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(DescriptorId_t c
 {
    if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
       return R__FAIL("cluster id clash while adding cluster summary");
+   fDescriptor.fNEntries = std::max(fDescriptor.fNEntries, firstEntry + nEntries);
    fDescriptor.fClusterDescriptors.emplace(clusterId, RClusterDescriptor(clusterId, firstEntry, nEntries));
    return RResult<void>::Success();
 }
@@ -627,6 +619,8 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterWithDetails(RClusterDesc
    auto clusterId = clusterDesc.GetId();
    if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
       return R__FAIL("cluster id clash");
+   fDescriptor.fNEntries =
+      std::max(fDescriptor.fNEntries, clusterDesc.GetFirstEntryIndex() + clusterDesc.GetNEntries());
    fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(clusterDesc));
    return RResult<void>::Success();
 }
