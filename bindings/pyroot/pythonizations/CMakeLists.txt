@@ -12,6 +12,7 @@ if(dataframe)
     list(APPEND PYROOT_EXTRA_PYSOURCE
         ROOT/_pythonization/_rdf_utils.py
         ROOT/_pythonization/_rdataframe.py
+        ROOT/_pythonization/_rdfdescription.py
         ROOT/_pythonization/_rtensor.py)
     list(APPEND PYROOT_EXTRA_SOURCE
         src/RDataFramePyz.cxx

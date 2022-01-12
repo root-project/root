@@ -17,7 +17,8 @@ df = ROOT.RDataFrame('Events', path)
 
 # Describe the state of the dataframe.
 # Note that this operation is not running the event loop.
-print(df.Describe())
+# Describe returns a DFDescription object, which has e.g. a Print method. See its docs for more information.
+df.Describe().Print()
 
 # Build a small analysis studying the invariant mass of dimuon systems.
 # See tutorial df102_NanoAODDimuonAnalysis for more information.
@@ -31,5 +32,5 @@ df = df.Filter('nMuon == 2')\
 print('\nApproximate mass of the Z boson: {:.2f} GeV\n'.format(
     df.Mean('Dimuon_mass').GetValue()))
 
-# Describe again the state of the dataframe.
-print(df.Describe())
+# This time we ask for the `shortFormat`, which only prints a brief description of the dataset:
+df.Describe().Print(shortFormat=True)
