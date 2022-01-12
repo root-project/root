@@ -108,6 +108,11 @@ if (dataframe)
     endif()
 endif()
 
+# RDFDescription pythonization
+if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_rdfdescription rdfdescription.py)
+endif()
+
 # RTensor pythonizations
 if (dataframe AND tmva)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
