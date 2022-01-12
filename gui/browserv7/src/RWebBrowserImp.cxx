@@ -15,6 +15,8 @@
 #include "TROOT.h"
 #include "TSeqCollection.h" // needed in gROOT->GetListOfFiles()->FindObject
 
+#include <iostream>
+
 using namespace ROOT::Experimental;
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -22,6 +24,8 @@ using namespace ROOT::Experimental;
 
 RWebBrowserImp::RWebBrowserImp(TBrowser *b) : TBrowserImp(b)
 {
+   ShowWarning();
+
    fWebBrowser = std::make_shared<RBrowser>();
    fWebBrowser->AddTCanvas();
 }
@@ -31,6 +35,8 @@ RWebBrowserImp::RWebBrowserImp(TBrowser *b) : TBrowserImp(b)
 
 RWebBrowserImp::RWebBrowserImp(TBrowser *b, const char *title, UInt_t width, UInt_t height, Option_t *opt) : TBrowserImp(b,title, width, height, opt)
 {
+   ShowWarning();
+
    fWidth = width;
    fHeight = height;
    fWebBrowser = std::make_shared<RBrowser>();
@@ -42,6 +48,8 @@ RWebBrowserImp::RWebBrowserImp(TBrowser *b, const char *title, UInt_t width, UIn
 
 RWebBrowserImp::RWebBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt) : TBrowserImp(b,title, x, y, width, height, opt)
 {
+   ShowWarning();
+
    fX = x;
    fY = y;
    fWidth = width;
@@ -55,6 +63,22 @@ RWebBrowserImp::RWebBrowserImp(TBrowser *b, const char *title, Int_t x, Int_t y,
 
 RWebBrowserImp::~RWebBrowserImp()
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+/// Show warning that RBrowser will be shown
+
+void RWebBrowserImp::ShowWarning()
+{
+   static bool show_warn = true;
+   if (!show_warn) return;
+   show_warn = false;
+
+   std::cout << "\n"
+                "ROOT comes with a web-based browser, which is now being started. \n"
+                "Revert to TBrowser by setting \"Browser.Name: TRootBrowser\" in rootrc file or\n"
+                "by starting \"root --web=off\"\n"
+                "Find more info on https://root.cern/for_developers/root7/#rbrowser\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
