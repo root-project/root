@@ -948,7 +948,7 @@ public:
 class MeanHelper : public RActionImpl<MeanHelper> {
    const std::shared_ptr<double> fResultMean;
    std::vector<ULong64_t> fCounts;
-   std::vector<double> fSums;
+   double kahanSum(vector< double > &fsums);
    std::vector<double> fPartialMeans;
 
 public:
