@@ -5,8 +5,8 @@ find_package(LibXml2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 set(DAVIX_VERSION "0.6.7")
-set(DAVIX_URL "http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix")
-set(DAVIX_URLHASH "SHA256=1694152a20a5c5e692c4bc545b2efbacec5274fb799e60725412ebae40cced3d")
+set(DAVIX_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources")
+set(DAVIX_URLHASH "SHA256=bc067aef67d16fd530b45d7718294802dbd5f63c1a6002f50c404055f7755431")
 set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
 set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
 
@@ -16,7 +16,7 @@ foreach(lib davix neon)
 endforeach()
 
 ExternalProject_Add(DAVIX
-  URL ${DAVIX_URL}/${DAVIX_VERSION}/davix-embedded-${DAVIX_VERSION}.tar.gz
+  URL ${DAVIX_URL}/davix-${DAVIX_VERSION}.tar.gz
   URL_HASH ${DAVIX_URLHASH}
   CMAKE_CACHE_ARGS
     -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
