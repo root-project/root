@@ -46,6 +46,10 @@ public:
    /// Data might be overwritten, if a zipped block in the middle of a large input data stream
    /// turns out to be uncompressible
    using Writer_t = std::function<void(const void *buffer, size_t nbytes, size_t offset)>;
+   static Writer_t MakeMemCopyWriter(unsigned char *dest)
+   {
+      return [=](const void *b, size_t n, size_t o) { memcpy(dest + o, b, n); };
+   }
    static constexpr size_t kMaxSingleBlock = kMAXZIPBUF;
 
    RNTupleCompressor() : fZipBuffer(std::unique_ptr<Buffer_t>(new Buffer_t())) {}
