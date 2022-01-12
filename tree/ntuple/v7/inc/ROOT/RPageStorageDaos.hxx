@@ -104,7 +104,7 @@ private:
    std::string fURI;
    /// Tracks the number of bytes committed to the current cluster
    std::uint64_t fNBytesCurrentCluster{0};
-   /// Used to keeo the column and field IDs issued during header serialization for the footer serialization
+   /// Used to keep the column and field IDs issued during header serialization for the footer serialization
    Internal::RNTupleSerializer::RContext fSerializationContext;
 
    RDaosNTupleAnchor fNTupleAnchor;
