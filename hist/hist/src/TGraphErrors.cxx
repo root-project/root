@@ -481,15 +481,15 @@ void TGraphErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, 
          }
       }
       if (fX->at(i) + fEX[i] > xmax) xmax = fX->at(i) + fEX[i];
-      if (fY[i] - fEY[i] < ymin) {
+      if (fY->at(i) - fEY[i] < ymin) {
          if (gPad && gPad->GetLogy()) {
-            if (fEY[i] < fY[i]) ymin = fY[i] - fEY[i];
-            else                ymin = TMath::Min(ymin, fY[i] / 3);
+            if (fEY[i] < fY->at(i)) ymin = fY->at(i) - fEY[i];
+            else                ymin = TMath::Min(ymin, fY->at(i) / 3);
          } else {
-            ymin = fY[i] - fEY[i];
+            ymin = fY->at(i) - fEY[i];
          }
       }
-      if (fY[i] + fEY[i] > ymax) ymax = fY[i] + fEY[i];
+      if (fY->at(i) + fEY[i] > ymax) ymax = fY->at(i) + fEY[i];
    }
 }
 
@@ -504,8 +504,8 @@ void TGraphErrors::CopyAndRelease(Double_t **newarrays,
    if (newarrays) {
       //delete[] fX;
       //fX = newarrays[2];
-      delete[] fY;
-      fY = newarrays[3];
+      //delete[] fY;
+      //fY = newarrays[3];
       delete[] fEX;
       fEX = newarrays[0];
       delete[] fEY;
@@ -702,7 +702,7 @@ Int_t TGraphErrors::Merge(TCollection* li)
 void TGraphErrors::Print(Option_t *) const
 {
    for (Int_t i = 0; i < fNpoints; i++) {
-      printf("x[%d]=%g, y[%d]=%g, ex[%d]=%g, ey[%d]=%g\n", i, fX->at(i), i, fY[i], i, fEX[i], i, fEY[i]);
+      printf("x[%d]=%g, y[%d]=%g, ex[%d]=%g, ey[%d]=%g\n", i, fX->at(i), i, fY->at(i), i, fEX[i], i, fEY[i]);
    }
 }
 
@@ -726,8 +726,8 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    for (i = 0; i < fNpoints-1; i++) out << "   " << fX->at(i) << "," << std::endl;
    out << "   " << fX->at(fNpoints-1) << "};" << std::endl;
    out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-   out << "   " << fY[fNpoints-1] << "};" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fY->at(i) << "," << std::endl;
+   out << "   " << fY->at(fNpoints-1) << "};" << std::endl;
    out << "   Double_t " << fEXName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fEX[i] << "," << std::endl;
    out << "   " << fEX[fNpoints-1] << "};" << std::endl;
@@ -800,7 +800,7 @@ void TGraphErrors::SetPointError(Double_t ex, Double_t ey)
    // start with a small window (in case the mouse is very close to one point)
    for (i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX->at(i)));
-      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY->at(i)));
       if (dpx * dpx + dpy * dpy < 25) {
          ipoint = i;
          break;

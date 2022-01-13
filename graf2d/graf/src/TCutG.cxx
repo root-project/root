@@ -274,7 +274,7 @@ Double_t TCutG::Area() const
    Double_t a = 0;
    Int_t n = GetN();
    for (Int_t i=0;i<n-1;i++) {
-      a += (fX->at(i)-fX->at(i+1))*(fY[i]+fY[i+1]);
+      a += (fX->at(i)-fX->at(i+1))*(fY->at(i)+fY->at(i+1));
    }
    a *= 0.5;
    return a;
@@ -293,10 +293,10 @@ void TCutG::Center(Double_t &cx, Double_t &cy) const
    cx = cy = 0;
    Double_t t;
    for (Int_t i=0;i<n-1;i++) {
-      t   = 2*fX->at(i)*fY[i] + fY[i]*fX->at(i+1) + fX->at(i)*fY[i+1] + 2*fX->at(i+1)*fY[i+1];
+      t   = 2*fX->at(i)*fY->at(i) + fY->at(i)*fX->at(i+1) + fX->at(i)*fY->at(i+1) + 2*fX->at(i+1)*fY->at(i+1);
       cx += (fX->at(i)-fX->at(i+1))*t;
-      cy += (-fY[i]+fY[i+1])*t;
-      a  += (fX->at(i)-fX->at(i+1))*(fY[i]+fY[i+1]);
+      cy += (-fY->at(i)+fY->at(i+1))*t;
+      a  += (fX->at(i)-fX->at(i+1))*(fY->at(i)+fY->at(i+1));
    }
    a  *= 0.5;
    cx *= 1./(6*a);
@@ -319,8 +319,8 @@ Double_t TCutG::IntegralHist(TH2 *h, Option_t *option) const
    for (Int_t i=0;i<n;i++) {
       if (fX->at(i) < xmin) xmin = fX->at(i);
       if (fX->at(i) > xmax) xmax = fX->at(i);
-      if (fY[i] < ymin) ymin = fY[i];
-      if (fY[i] > ymax) ymax = fY[i];
+      if (fY->at(i) < ymin) ymin = fY->at(i);
+      if (fY->at(i) > ymax) ymax = fY->at(i);
    }
    TAxis *xaxis = h->GetXaxis();
    TAxis *yaxis = h->GetYaxis();
@@ -372,7 +372,7 @@ void TCutG::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    SaveMarkerAttributes(out,"cutg",1,1,1);
 
    for (Int_t i=0;i<fNpoints;i++) {
-      out<<"   cutg->SetPoint("<<i<<","<<fX->at(i)<<","<<fY[i]<<");"<<std::endl;
+      out<<"   cutg->SetPoint("<<i<<","<<fX->at(i)<<","<<fY->at(i)<<");"<<std::endl;
    }
    out<<"   cutg->Draw("
       <<quote<<option<<quote<<");"<<std::endl;

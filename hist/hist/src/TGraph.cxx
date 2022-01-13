@@ -116,7 +116,7 @@ TGraph::TGraph(Int_t n, const Int_t *x, const Int_t *y)
    if (!CtorAllocate()) return;
    for (Int_t i = 0; i < n; i++) {
       fX->at(i) = (Double_t)x[i];
-      fY[i] = (Double_t)y[i];
+      fY->at(i) = (Double_t)y[i];
    }
 }
 
@@ -134,7 +134,7 @@ TGraph::TGraph(Int_t n, const Float_t *x, const Float_t *y)
    if (!CtorAllocate()) return;
    for (Int_t i = 0; i < n; i++) {
       fX->at(i) = x[i];
-      fY[i] = y[i];
+      fY->at(i) = y[i];
    }
 }
 
@@ -152,7 +152,7 @@ TGraph::TGraph(Int_t n, const Double_t *x, const Double_t *y)
    if (!CtorAllocate()) return;
    n = fNpoints * sizeof(Double_t);
    //memcpy(fX, x, n);
-   memcpy(fY, y, n);
+   //memcpy(fY, y, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -178,12 +178,12 @@ TGraph::TGraph(const TGraph &gr)
       return;
    } else {
       //fX = new Double_t[fMaxSize];
-      fY = new Double_t[fMaxSize];
+      //fY = new Double_t[fMaxSize];
    }
 
    Int_t n = gr.GetN() * sizeof(Double_t);
    //memcpy(fX, gr.fX, n);
-   memcpy(fY, gr.fY, n);
+   //memcpy(fY, gr.fY, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,19 +230,19 @@ TGraph& TGraph::operator=(const TGraph &gr)
       fMinimum = gr.fMinimum;
       fMaximum = gr.fMaximum;
       //if (fX) delete [] fX;
-      if (fY) delete [] fY;
+      //if (fY) delete [] fY;
       if (!fMaxSize) {
          //fX = fY = nullptr;
          return *this;
       } else {
          //fX = new Double_t[fMaxSize];
-         fY = new Double_t[fMaxSize];
+         //fY = new Double_t[fMaxSize];
       }
 
       Int_t n = gr.GetN() * sizeof(Double_t);
       if (n > 0) {
          //memcpy(fX, gr.fX, n);
-         memcpy(fY, gr.fY, n);
+         //memcpy(fY, gr.fY, n);
       }
    }
    return *this;
@@ -263,7 +263,7 @@ TGraph::TGraph(const TVectorF &vx, const TVectorF &vy)
    Int_t ivylow  = vy.GetLwb();
    for (Int_t i = 0; i < fNpoints; i++) {
       fX->at(i)  = vx(i + ivxlow);
-      fY[i]  = vy(i + ivylow);
+      fY->at(i)  = vy(i + ivylow);
    }
 }
 
@@ -282,7 +282,7 @@ TGraph::TGraph(const TVectorD &vx, const TVectorD &vy)
    Int_t ivylow  = vy.GetLwb();
    for (Int_t i = 0; i < fNpoints; i++) {
       fX->at(i)  = vx(i + ivxlow);
-      fY[i]  = vy(i + ivylow);
+      fY->at(i)  = vy(i + ivylow);
    }
 }
 
@@ -309,7 +309,7 @@ TGraph::TGraph(const TH1 *h)
    TAxis *xaxis = ((TH1*)h)->GetXaxis();
    for (Int_t i = 0; i < fNpoints; i++) {
       fX->at(i) = xaxis->GetBinCenter(i + 1);
-      fY[i] = h->GetBinContent(i + 1);
+      fY->at(i) = h->GetBinContent(i + 1);
    }
    h->TAttLine::Copy(*this);
    h->TAttFill::Copy(*this);
@@ -353,19 +353,19 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
    for (i = 0; i < fNpoints; i++) {
       if (coption == 'i' || coption == 'I') {
          fX->at(i) = xmin + i * dx;
-         if (i == 0) fY[i] = 0;
-         else        fY[i] = integ + ((TF1*)f)->Integral(fX->at(i) - dx, fX->at(i));
-         integ = fY[i];
+         if (i == 0) fY->at(i) = 0;
+         else        fY->at(i) = integ + ((TF1*)f)->Integral(fX->at(i) - dx, fX->at(i));
+         integ = fY->at(i);
       } else if (coption == 'd' || coption == 'D') {
          fX->at(i) = xmin + (i + 0.5) * dx;
-         fY[i] = ((TF1*)f)->Derivative(fX->at(i));
+         fY->at(i) = ((TF1*)f)->Derivative(fX->at(i));
       } else {
          fX->at(i) = xmin + (i + 0.5) * dx;
-         fY[i] = ((TF1*)f)->Eval(fX->at(i));
+         fY->at(i) = ((TF1*)f)->Eval(fX->at(i));
       }
    }
    if (integ != 0 && coption == 'I') {
-      for (i = 1; i < fNpoints; i++) fY[i] /= integ;
+      for (i = 1; i < fNpoints; i++) fY->at(i) /= integ;
    }
 
    f->TAttLine::Copy(*this);
@@ -521,7 +521,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
 TGraph::~TGraph()
 {
    //delete [] fX;
-   delete [] fY;
+   //delete [] fY;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
       //special logic to support the case where the same object is
@@ -578,7 +578,7 @@ void TGraph::Apply(TF1 *f)
    if (fHistogram) SetBit(kResetHisto);
 
    for (Int_t i = 0; i < fNpoints; i++) {
-      fY[i] = f->Eval(fX->at(i), fY[i]);
+      fY->at(i) = f->Eval(fX->at(i), fY->at(i));
    }
    if (gPad) gPad->Modified();
 }
@@ -646,11 +646,11 @@ Bool_t TGraph::CompareX(const TGraph* gr, Int_t left, Int_t right)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if fY[left] > fY[right]. Can be used by Sort.
+/// Return kTRUE if fY->at(left) > fY->at(right). Can be used by Sort.
 
 Bool_t TGraph::CompareY(const TGraph* gr, Int_t left, Int_t right)
 {
-   return gr->fY[left] > gr->fY[right];
+   return gr->fY->at(left) > gr->fY->at(right);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -659,8 +659,8 @@ Bool_t TGraph::CompareY(const TGraph* gr, Int_t left, Int_t right)
 
 Bool_t TGraph::CompareRadius(const TGraph* gr, Int_t left, Int_t right)
 {
-   return gr->fX->at(left) * gr->fX->at(left) + gr->fY[left] * gr->fY[left]
-          > gr->fX->at(right) * gr->fX->at(right) + gr->fY[right] * gr->fY[right];
+   return gr->fX->at(left) * gr->fX->at(left) + gr->fY->at(left) * gr->fY->at(left)
+          > gr->fX->at(right) * gr->fX->at(right) + gr->fY->at(right) * gr->fY->at(right);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -673,7 +673,7 @@ void TGraph::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double
       return;
    }
    xmin = xmax = fX->at(0);
-   ymin = ymax = fY[0];
+   ymin = ymax = fY->at(0);
 
    Double_t xminl = 0; // Positive minimum. Used in case of log scale along X axis.
    Double_t yminl = 0; // Positive minimum. Used in case of log scale along Y axis.
@@ -681,8 +681,8 @@ void TGraph::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double
    for (Int_t i = 1; i < fNpoints; i++) {
       if (fX->at(i) < xmin) xmin = fX->at(i);
       if (fX->at(i) > xmax) xmax = fX->at(i);
-      if (fY[i] < ymin) ymin = fY[i];
-      if (fY[i] > ymax) ymax = fY[i];
+      if (fY->at(i) < ymin) ymin = fY->at(i);
+      if (fY->at(i) > ymax) ymax = fY->at(i);
       if (ymin>0 && (yminl==0 || ymin<yminl)) yminl = ymin;
       if (xmin>0 && (xminl==0 || xmin<xminl)) xminl = xmin;
    }
@@ -704,8 +704,8 @@ void TGraph::CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend,
    if (newarrays) {
       //delete[] fX;
       //fX = newarrays[0];
-      delete[] fY;
-      fY = newarrays[1];
+      //delete[] fY;
+      //fY = newarrays[1];
       delete[] newarrays;
    }
 }
@@ -726,10 +726,10 @@ Bool_t TGraph::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
    Int_t n = (iend - ibegin) * sizeof(Double_t);
    if (arrays) {
       memmove(&arrays[0][obegin], &fX->at(ibegin), n);
-      memmove(&arrays[1][obegin], &fY[ibegin], n);
+      memmove(&arrays[1][obegin], &fY->at(ibegin), n);
    } else {
       memmove(&fX->at(obegin), &fX->at(ibegin), n);
-      memmove(&fY[obegin], &fY[ibegin], n);
+      memmove(&fY->at(obegin), &fY->at(ibegin), n);
    }
    return kTRUE;
 }
@@ -756,7 +756,7 @@ Bool_t TGraph::CtorAllocate()
    } else {
       fMaxSize   = fNpoints;
       //fX = new Double_t[fMaxSize];
-      fY = new Double_t[fMaxSize];
+      //fY = new Double_t[fMaxSize];
    }
    return kTRUE;
 }
@@ -851,7 +851,7 @@ void TGraph::DrawGraph(Int_t n, const Double_t *x, const Double_t *y, Option_t *
    const Double_t *xx = x;
    const Double_t *yy = y;
    if (!xx) xx = &fX->at(0);
-   if (!yy) yy = fY;
+   if (!yy) yy = &fY->at(0);
    TGraph *newgraph = new TGraph(n, xx, yy);
    TAttLine::Copy(*newgraph);
    TAttFill::Copy(*newgraph);
@@ -893,7 +893,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
    }
 
    if (fNpoints == 0) return 0;
-   if (fNpoints == 1) return fY[0];
+   if (fNpoints == 1) return fY->at(0);
 
    if (option && *option) {
       TString opt = option;
@@ -908,7 +908,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
          TMath::Sort(fNpoints, &fX->at(0), &indxsort[0], false);
          for (Int_t i = 0; i < fNpoints; ++i) {
             xsort[i] = fX->at( indxsort[i] );
-            ysort[i] = fY[ indxsort[i] ];
+            ysort[i] = fY->at( indxsort[i] );
          }
 
          // spline interpolation creating a new spline
@@ -930,7 +930,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
          // use first two points for doing an extrapolation
          low = 0;
       }
-      if (fX->at(low) == x) return fY[low];
+      if (fX->at(low) == x) return fY->at(low);
       if (low == fNpoints-1) low--; // for extrapolating
       up = low+1;
    }
@@ -955,7 +955,7 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
                up = i;
             } else if (up2 == -1) up2 = i;
          } else // case x == fX->at(i)
-            return fY[i]; // no interpolation needed
+            return fY->at(i); // no interpolation needed
       }
 
       // treat cases when x is outside graph min max abscissa
@@ -971,8 +971,8 @@ Double_t TGraph::Eval(Double_t x, TSpline *spline, Option_t *option) const
    // do now the linear interpolation
    assert(low != -1 && up != -1);
 
-   if (fX->at(low) == fX->at(up)) return fY[low];
-   Double_t yn = fY[up] + (x - fX->at(up)) * (fY[low] - fY[up]) / (fX->at(low) - fX->at(up));
+   if (fX->at(low) == fX->at(up)) return fY->at(low);
+   Double_t yn = fY->at(up) + (x - fX->at(up)) * (fY->at(low) - fY->at(up)) / (fX->at(low) - fX->at(up));
    return yn;
 }
 
@@ -1037,7 +1037,7 @@ Double_t **TGraph::ExpandAndCopy(Int_t size, Int_t iend)
 void TGraph::FillZero(Int_t begin, Int_t end, Bool_t)
 {
    //memset(&fX->at(0) + begin, 0, (end - begin)*sizeof(Double_t));
-   memset(fY + begin, 0, (end - begin)*sizeof(Double_t));
+   //memset(&fY->at(0) + begin, 0, (end - begin)*sizeof(Double_t));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1369,8 +1369,8 @@ Double_t TGraph::GetCovariance() const
 
    for (Int_t i = 0; i < fNpoints; i++) {
       sumx  += fX->at(i);
-      sumy  += fY[i];
-      sumxy += fX->at(i) * fY[i];
+      sumy  += fY->at(i);
+      sumxy += fX->at(i) * fY->at(i);
    }
    return sumxy / sum - sumx / sum * sumy / sum;
 }
@@ -1385,7 +1385,7 @@ Double_t TGraph::GetMean(Int_t axis) const
    Double_t sumx = 0;
    for (Int_t i = 0; i < fNpoints; i++) {
       if (axis == 1) sumx += fX->at(i);
-      else           sumx += fY[i];
+      else           sumx += fY->at(i);
    }
    return sumx / fNpoints;
 }
@@ -1403,8 +1403,8 @@ Double_t TGraph::GetRMS(Int_t axis) const
          sumx += fX->at(i);
          sumx2 += fX->at(i) * fX->at(i);
       } else           {
-         sumx += fY[i];
-         sumx2 += fY[i] * fY[i];
+         sumx += fY->at(i);
+         sumx2 += fY->at(i) * fY->at(i);
       }
    }
    Double_t x = sumx / fNpoints;
@@ -1608,7 +1608,7 @@ Int_t TGraph::GetPoint(Int_t i, Double_t &x, Double_t &y) const
 {
    if (i < 0 || i >= fNpoints || !fX || !fY) return -1;
    x = fX->at(i);
-   y = fY[i];
+   y = fY->at(i);
    return i;
 }
 
@@ -1631,7 +1631,7 @@ Double_t TGraph::GetPointY(Int_t i) const
    if (i < 0 || i >= fNpoints || !fY)
       return -1.;
 
-   return fY[i];
+   return fY->at(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1666,7 +1666,7 @@ char *TGraph::GetObjectInfo(Int_t px, Int_t py) const
    // start with a small window (in case the mouse is very close to one point)
    for (i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX->at(i)));
-      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY->at(i)));
 
       if (dpx * dpx + dpy * dpy < 25) {
          ipoint = i;
@@ -1681,7 +1681,7 @@ char *TGraph::GetObjectInfo(Int_t px, Int_t py) const
       return Form("x=%g, y=%g", x, y);
 
    Double_t xval = fX->at(ipoint);
-   Double_t yval = fY[ipoint];
+   Double_t yval = fY->at(ipoint);
 
    return Form("x=%g, y=%g, point=%d, xval=%g, yval=%g", x, y, ipoint, xval, yval);
 }
@@ -1706,7 +1706,7 @@ void TGraph::InitGaus(Double_t xmin, Double_t xmax)
       x       = fX->at(bin);
       if (x < xmin || x > xmax) continue;
       np++;
-      val     = fY[bin];
+      val     = fY->at(bin);
       sumx   += val * x;
       sumx2  += val * x * x;
       allcha += val;
@@ -1778,7 +1778,7 @@ Int_t TGraph::InsertPoint()
    Int_t i, d = 0;
    // start with a small window (in case the mouse is very close to one point)
    for (i = 0; i < fNpoints - 1; i++) {
-      d = DistancetoLine(px, py, gPad->XtoPad(fX->at(i)), gPad->YtoPad(fY[i]), gPad->XtoPad(fX->at(i+1)), gPad->YtoPad(fY[i+1]));
+      d = DistancetoLine(px, py, gPad->XtoPad(fX->at(i)), gPad->YtoPad(fY->at(i)), gPad->XtoPad(fX->at(i+1)), gPad->YtoPad(fY->at(i+1)));
       if (d < 5) {
          ipoint = i + 1;
          break;
@@ -1787,7 +1787,7 @@ Int_t TGraph::InsertPoint()
    if (ipoint == -2) {
       //may be we are far from one point, try again with a larger window
       for (i = 0; i < fNpoints - 1; i++) {
-         d = DistancetoLine(px, py, gPad->XtoPad(fX->at(i)), gPad->YtoPad(fY[i]), gPad->XtoPad(fX->at(i+1)), gPad->YtoPad(fY[i+1]));
+         d = DistancetoLine(px, py, gPad->XtoPad(fX->at(i)), gPad->YtoPad(fY->at(i)), gPad->XtoPad(fX->at(i+1)), gPad->YtoPad(fY->at(i+1)));
          if (d < 10) {
             ipoint = i + 1;
             break;
@@ -1797,7 +1797,7 @@ Int_t TGraph::InsertPoint()
    if (ipoint == -2) {
       //distinguish between first and last point
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX->at(0)));
-      Int_t dpy = py - gPad->YtoAbsPixel(gPad->XtoPad(fY[0]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->XtoPad(fY->at(0)));
       if (dpx * dpx + dpy * dpy < 25) ipoint = 0;
       else                      ipoint = fNpoints;
    }
@@ -1837,7 +1837,7 @@ void TGraph::InsertPointBefore(Int_t ipoint, Double_t x, Double_t y)
    FillZero(ipoint, ipoint + 1);
 
    fX->at(ipoint) = x;
-   fY[ipoint] = y;
+   fY->at(ipoint) = y;
 }
 
 
@@ -1882,12 +1882,12 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
    Double_t sum = 0.0;
    //for(Int_t i=first;i<=last;i++) {
    //   Int_t j = first + (i-first+1)%np;
-   //   sum += TMath::Abs(fX->at(i)*fY[j]);
-   //   sum -= TMath::Abs(fY[i]*fX->at(j));
+   //   sum += TMath::Abs(fX->at(i)*fY->at(j));
+   //   sum -= TMath::Abs(fY->at(i)*fX->at(j));
    //}
    for (Int_t i = first; i <= last; i++) {
       Int_t j = first + (i - first + 1) % np;
-      sum += (fY[i] + fY[j]) * (fX->at(j) - fX->at(i));
+      sum += (fY->at(i) + fY->at(j)) * (fX->at(j) - fX->at(i));
    }
    return 0.5 * TMath::Abs(sum);
 }
@@ -1907,7 +1907,7 @@ Double_t TGraph::Integral(Int_t first, Int_t last) const
 
 Int_t TGraph::IsInside(Double_t x, Double_t y) const
 {
-   return (Int_t)TMath::IsInside(x, y, fNpoints, &fX->at(0), fY);
+   return (Int_t)TMath::IsInside(x, y, fNpoints, &fX->at(0), &fY->at(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1952,7 +1952,7 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
       xk     = fX->at(k);
       if (xk < xmin || xk > xmax) continue;
       np++;
-      yk     = fY[k];
+      yk     = fY->at(k);
       power  = one;
       da[0] += yk;
       for (l = 2; l <= m; ++l) {
@@ -1974,7 +1974,7 @@ void TGraph::LeastSquareFit(Int_t m, Double_t *a, Double_t xmin, Double_t xmax)
    H1LeastSquareSeqnd(m, b, idim, ifail, 1, da);
 
    if (ifail < 0) {
-      a[0] = fY[0];
+      a[0] = fY->at(0);
       for (i = 1; i < m; ++i) a[i] = 0;
       return;
    }
@@ -2014,7 +2014,7 @@ void TGraph::LeastSquareLinearFit(Int_t ndata, Double_t &a0, Double_t &a1, Int_t
       xk = fX->at(i);
       if (xk < xmin || xk > xmax) continue;
       np++;
-      yk = fY[i];
+      yk = fY->at(i);
       if (ndata < 0) {
          if (yk <= 0) yk = 1e-9;
          yk = TMath::Log(yk);
@@ -2080,7 +2080,7 @@ void TGraph::PaintStats(TF1 *fit)
 void TGraph::Print(Option_t *) const
 {
    for (Int_t i = 0; i < fNpoints; i++) {
-      printf("x[%d]=%g, y[%d]=%g\n", i, fX->at(i), i, fY[i]);
+      printf("x[%d]=%g, y[%d]=%g\n", i, fX->at(i), i, fY->at(i));
    }
 }
 
@@ -2110,7 +2110,7 @@ Int_t TGraph::RemovePoint()
    // start with a small window (in case the mouse is very close to one point)
    for (i = 0; i < fNpoints; i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX->at(i)));
-      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY->at(i)));
       if (dpx * dpx + dpy * dpy < 100) {
          ipoint = i;
          break;
@@ -2151,8 +2151,8 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       for (i = 0; i < fNpoints-1; i++) out << "   " << fX->at(i) << "," << std::endl;
       out << "   " << fX->at(fNpoints-1) << "};" << std::endl;
       out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-      for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-      out << "   " << fY[fNpoints-1] << "};" << std::endl;
+      for (i = 0; i < fNpoints-1; i++) out << "   " << fY->at(i) << "," << std::endl;
+      out << "   " << fY->at(fNpoints-1) << "};" << std::endl;
       if (gROOT->ClassSaved(TGraph::Class())) out << "   ";
       else out << "   TGraph *";
       out << "graph = new TGraph(" << fNpoints << "," << fXName << "," << fYName << ");" << std::endl;
@@ -2298,7 +2298,7 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
       fNpoints = i + 1;
    }
    fX->at(i) = x;
-   fY[i] = y;
+   fY->at(i) = y;
    if (gPad) gPad->Modified();
 }
 
@@ -2463,7 +2463,7 @@ void TGraph::Streamer(TBuffer &b)
       b >> fNpoints;
       fMaxSize = fNpoints;
       //fX = new Double_t[fNpoints];
-      fY = new Double_t[fNpoints];
+      //fY = new Double_t[fNpoints];
       if (R__v < 2) {
          Float_t *x = new Float_t[fNpoints];
          Float_t *y = new Float_t[fNpoints];
@@ -2471,13 +2471,13 @@ void TGraph::Streamer(TBuffer &b)
          b.ReadFastArray(y, fNpoints);
          for (Int_t i = 0; i < fNpoints; i++) {
             fX->at(i) = x[i];
-            fY[i] = y[i];
+            fY->at(i) = y[i];
          }
          delete [] y;
          delete [] x;
       } else {
          b.ReadFastArray(&fX->at(0), fNpoints);
-         b.ReadFastArray(fY, fNpoints);
+         b.ReadFastArray(&fY->at(0), fNpoints);
       }
       b >> fFunctions;
       b >> fHistogram;
@@ -2506,7 +2506,7 @@ void TGraph::Streamer(TBuffer &b)
 void TGraph::SwapPoints(Int_t pos1, Int_t pos2)
 {
    SwapValues(&fX->at(0), pos1, pos2);
-   SwapValues(fY, pos1, pos2);
+   SwapValues(&fY->at(0), pos1, pos2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

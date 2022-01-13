@@ -251,15 +251,15 @@ void TGraphBentErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xm
          }
       }
       if (fX->at(i) +fEXhigh[i] > xmax) xmax = fX->at(i)+fEXhigh[i];
-      if (fY[i] -fEYlow[i] < ymin) {
+      if (fY->at(i) -fEYlow[i] < ymin) {
          if (gPad && gPad->GetLogy()) {
-            if (fEYlow[i] < fY[i]) ymin = fY[i]-fEYlow[i];
-            else                   ymin = TMath::Min(ymin,fY[i]/3);
+            if (fEYlow[i] < fY->at(i)) ymin = fY->at(i)-fEYlow[i];
+            else                   ymin = TMath::Min(ymin,fY->at(i)/3);
          } else {
-            ymin = fY[i]-fEYlow[i];
+            ymin = fY->at(i)-fEYlow[i];
          }
       }
-      if (fY[i] +fEYhigh[i] > ymax) ymax = fY[i]+fEYhigh[i];
+      if (fY->at(i) +fEYhigh[i] > ymax) ymax = fY->at(i)+fEYhigh[i];
    }
 }
 
@@ -290,8 +290,8 @@ void TGraphBentErrors::CopyAndRelease(Double_t **newarrays,
       fEYhighd = newarrays[7];
       //delete[] fX;
       //fX = newarrays[8];
-      delete[] fY;
-      fY = newarrays[9];
+      //delete[] fY;
+      //fY = newarrays[9];
       delete[] newarrays;
    }
 }
@@ -490,7 +490,7 @@ void TGraphBentErrors::Print(Option_t *) const
 {
    for (Int_t i=0;i<fNpoints;i++) {
       printf("x[%d]=%g, y[%d]=%g, exl[%d]=%g, exh[%d]=%g, eyl[%d]=%g, eyh[%d]=%g\n"
-         ,i,fX->at(i),i,fY[i],i,fEXlow[i],i,fEXhigh[i],i,fEYlow[i],i,fEYhigh[i]);
+         ,i,fX->at(i),i,fY->at(i),i,fEXlow[i],i,fEXhigh[i],i,fEYlow[i],i,fEYhigh[i]);
    }
 }
 
@@ -520,8 +520,8 @@ void TGraphBentErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*
    for (i = 0; i < fNpoints-1; i++) out << "   " << fX->at(i) << "," << std::endl;
    out << "   " << fX->at(fNpoints-1) << "};" << std::endl;
    out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-   out << "   " << fY[fNpoints-1] << "};" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << fY->at(i) << "," << std::endl;
+   out << "   " << fY->at(fNpoints-1) << "};" << std::endl;
    out << "   Double_t " << fElXName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fEXlow[i] << "," << std::endl;
    out << "   " << fEXlow[fNpoints-1] << "};" << std::endl;
@@ -616,7 +616,7 @@ void TGraphBentErrors::SetPointError(Double_t exl, Double_t exh, Double_t eyl, D
    // start with a small window (in case the mouse is very close to one point)
    for (i=0;i<fNpoints;i++) {
       Int_t dpx = px - gPad->XtoAbsPixel(gPad->XtoPad(fX->at(i)));
-      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY[i]));
+      Int_t dpy = py - gPad->YtoAbsPixel(gPad->YtoPad(fY->at(i)));
       if (dpx*dpx+dpy*dpy < 25) {ipoint = i; break;}
    }
    if (ipoint == -2) return;

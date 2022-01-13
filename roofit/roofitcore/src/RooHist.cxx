@@ -705,7 +705,7 @@ void RooHist::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TStrin
       if(fEXhigh[i] > 0 || fEXlow[i] > 0) {
    os << " +" << fEXhigh[i] << " -" << fEXlow[i];
       }
-      os << " , y = " << fY[i] << " +" << fEYhigh[i] << " -" << fEYlow[i] << endl;
+      os << " , y = " << fY->at(i) << " +" << fEYhigh[i] << " -" << fEYlow[i] << endl;
     }
   }
 }

@@ -117,7 +117,7 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x)
    Int_t *index = new Int_t[n];
    TMath::Sort(n, x, index, kFALSE);
    for (Int_t i=0; i<fNpoints; i++)
-      fY[i] = x[index[i]];
+      fY->at(i) = x[index[i]];
    fF=0;
    fY0=0;
    delete [] index;
@@ -134,7 +134,7 @@ TGraphQQ::TGraphQQ(Int_t n, Double_t *x, TF1 *f)
    Int_t *index = new Int_t[n];
    TMath::Sort(n, x, index, kFALSE);
    for (Int_t i=0; i<fNpoints; i++)
-      fY[i] = x[index[i]];
+      fY->at(i) = x[index[i]];
    delete [] index;
    fF = f;
    fY0=0;
@@ -163,7 +163,7 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
    TMath::Sort(nx, x, index, kFALSE);
    if (nx <=ny){
       for (Int_t i=0; i<fNpoints; i++)
-         fY[i] = x[index[i]];
+         fY->at(i) = x[index[i]];
       TMath::Sort(ny, y, index, kFALSE);
       if (nx==ny){
          for (Int_t i=0; i<fNpoints; i++)
@@ -184,7 +184,7 @@ TGraphQQ::TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y)
          fY0[i] = x[index[i]];
       TMath::Sort(ny, y, index, kFALSE);
       for (Int_t i=0; i<ny; i++)
-         fY[i] = y[index[i]];
+         fY->at(i) = y[index[i]];
       MakeQuantiles();
    }
 
@@ -266,7 +266,7 @@ void TGraphQQ::Quartiles()
    Double_t prob[]={0.25, 0.75};
    Double_t x[2];
    Double_t y[2];
-   TMath::Quantiles(fNpoints, 2, fY, y, prob, kTRUE);
+   TMath::Quantiles(fNpoints, 2, &fY->at(0), y, prob, kTRUE);
    if (fY0)
       TMath::Quantiles(fNy0, 2, fY0, x, prob, kTRUE);
    else if (fF) {

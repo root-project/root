@@ -47,7 +47,7 @@ protected:
    Int_t              fMaxSize;   ///<!Current dimension of arrays fX and fY
    Int_t              fNpoints;   ///< Number of points <= fMaxSize
    std::shared_ptr<std::vector<Double_t>>          fX;         ///<[fNpoints] array of X points
-   Double_t          *fY;         ///<[fNpoints] array of Y points
+   std::shared_ptr<std::vector<Double_t>>          fY;         ///<[fNpoints] array of Y points
    TList             *fFunctions; ///< Pointer to list of functions (fits and user)
    TH1F              *fHistogram; ///< Pointer to histogram used for drawing axis
    Double_t           fMinimum;   ///< Minimum value for plotting along y
@@ -131,7 +131,7 @@ public:
    virtual Double_t      GetErrorYhigh(Int_t bin) const;
    virtual Double_t      GetErrorYlow(Int_t bin)  const;
    Double_t             *GetX()  const {return fX->data();}
-   Double_t             *GetY()  const {return fY;}
+   Double_t             *GetY()  const {return fY->data();}
    virtual Double_t     *GetEX() const {return nullptr;}
    virtual Double_t     *GetEY() const {return nullptr;}
    virtual Double_t     *GetEXhigh() const {return nullptr;}
