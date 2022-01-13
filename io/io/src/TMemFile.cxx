@@ -180,7 +180,7 @@ TMemFile::TMemFile(const char *path, char *buffer, Long64_t size, Option_t *opti
       Int_t mode = O_RDWR | O_CREAT;
       if (optmode == EMode::kRecreate) mode |= O_TRUNC;
 
-      fD = TMemFile::SysOpen(path, O_RDWR | O_CREAT, 0644);
+      fD = TMemFile::SysOpen(path, mode, 0644);
       if (fD == -1) {
          SysError("TMemFile", "file %s can not be opened", path);
          goto zombie;
