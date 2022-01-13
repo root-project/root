@@ -12,16 +12,12 @@
 #define ROOT_GRAPHUTILS
 
 #include <string>
-#include <sstream>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <memory>
-#include <type_traits>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/RDF/GraphNode.hxx>
-
-#include <iostream>
 
 namespace ROOT {
 namespace Detail {
