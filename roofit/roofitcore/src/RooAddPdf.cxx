@@ -826,7 +826,9 @@ bool RooAddPdf::checkObservables(const RooArgSet* nset) const
 {
   bool ret(false) ;
 
-  for (std::size_t i = 0; i < _pdfList.size(); ++i) {
+  // There may be fewer coefficients than PDFs.
+  std::size_t end = std::min(_pdfList.size(), _coefList.size());
+  for (std::size_t i = 0; i < end; ++i) {
     auto pdf  = static_cast<const RooAbsPdf *>(_pdfList.at(i));
     auto coef = static_cast<const RooAbsReal*>(_coefList.at(i));
     if (pdf->observableOverlaps(nset,*coef)) {
