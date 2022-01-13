@@ -10,7 +10,11 @@
 #include "TInterpreter.h"
 
 #include <iomanip>
+#include <iostream>
 #include <limits>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace ROOT {
 namespace Internal {
