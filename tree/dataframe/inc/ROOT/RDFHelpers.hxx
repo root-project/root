@@ -21,7 +21,6 @@
 #include <algorithm> // std::transform
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <type_traits>
 #include <utility> // std::index_sequence
