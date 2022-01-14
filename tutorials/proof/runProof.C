@@ -2,7 +2,7 @@
 /// \ingroup proof
 ///
 /// Macro to run examples of analysis on PROOF, corresponding to the TSelector
-/// implementations found under <ROOTSYS>/tutorials/proof .
+/// implementations found under `<ROOTSYS>/tutorials/proof`.
 /// This macro uses an existing PROOF session or starts one at the indicated URL.
 /// In the case non existing PROOF session is found and no URL is given, the
 /// macro tries to start a local PROOF session.
