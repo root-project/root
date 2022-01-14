@@ -1205,7 +1205,7 @@ TGeoMaterial *TGeoMixture::DecayMaterial(Double_t time, Double_t precision)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fills a user array with all the elements deriving from the possible
 /// decay of the top elements composing the mixture. Each element contained
-/// by <population> may be a radionuclide having a Bateman solution attached.
+/// by `<population>` may be a radionuclide having a Bateman solution attached.
 /// The precision represent the minimum cumulative branching ratio for
 /// which decay products are still taken into account.
 /// To visualize the time evolution of each decay product one can use:
