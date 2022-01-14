@@ -2460,7 +2460,7 @@ Bool_t TWinNTSystem::IsAbsoluteFileName(const char *dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert a pathname to a unix pathname. E.g. transform `\user\root` to `/user/root`.
+/// Convert a pathname to a unix pathname. E.g. from `\user\root` to `/user/root`.
 /// General rules for applications creating names for directories and files or
 /// processing names supplied by the user include the following:
 ///
