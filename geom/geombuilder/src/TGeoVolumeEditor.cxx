@@ -32,7 +32,7 @@ split vertically by a shutter:
     the selected visibility level, without displaying the containers, while "Only"
     will just draw the edited volume.
   - Division: The category becomes active only if there are no daughters of the
-    edited volume added by normal positioning (e.g. from <Daughters> category). The
+    edited volume added by normal positioning (e.g. from `<Daughters>` category). The
     minimum allowed starting value for the selected division axis is automatically
     selected, while the slicing step is set to 0 - meaning that only the number
     of slices matter.
