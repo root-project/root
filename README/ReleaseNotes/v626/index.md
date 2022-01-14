@@ -214,6 +214,8 @@ New member functions of RooFit classes were introduced exclusively to PyROOT for
 - `RooDataSet.to_numpy`: Export a RooDataSet to a dictionary of numpy arrays
 - `RooDataSet.from_pandas`: Import a RooDataSet from a Pandas dataframe (static method)
 - `RooDataSet.to_pandas`: Export a RooDataSet to a Pandas dataframe
+- `RooDataHist.from_numpy`: Import a RooDataHist from numpy arrays with histogram counts and bin edges (static method)
+- `RooDataHist.to_numpy`: Export a RooDataHist to numpy arrays with histogram counts and bin edges
 - `RooRealVar.bins`: Get bin boundaries for a `RooRealVar` as a NumPy array
 
 For more details, consult the tutorial [rf409_NumPyPandasToRooFit.py](https://root.cern/doc/v626/rf409__NumPyPandasToRooFit_8C.html).
