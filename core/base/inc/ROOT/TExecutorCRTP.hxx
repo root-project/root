@@ -315,7 +315,7 @@ T* TExecutorCRTP<SubC>::MapReduce(F func, std::vector<T*> &args)
 /// \brief Execute a function over the TObject-inheriting elements of an immutable vector (Map) and merge the objects into a single one (Reduce).
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
-/// \param args Immutable ctor of elements passed as an argument to `func`.
+/// \param args Immutable vector of elements passed as an argument to `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class SubC> template<class F, class T, class Cond>
 T* TExecutorCRTP<SubC>::MapReduce(F func, const std::vector<T*> &args)
