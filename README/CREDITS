@@ -488,6 +488,10 @@ N: Burt Holzman
 E: burt@fnal.gov
 D: Contribution to TWebFile,rpdutils and sockets.
 
+N: Fernando Hueso-González
+E: fernando.hueso@uv.es
+D: Improve ROOT stability, add GUI functionalities, improve documentation
+
 N: Raphael Isemann
 E: teemperor@gmail.com
 D: c++ modules and runtime c++ modules co-author, integration in the CMS experiment
