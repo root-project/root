@@ -251,7 +251,10 @@ public:
          coefficients.add(*c);
       }
 
-      bool extended = p["extended"].val_bool();
+      bool extended = false;
+      if(p.has_child("extended") && p["extended"].val_bool()){
+        extended = true;
+      }
       RooRealSumPdf thepdf(name.c_str(), name.c_str(), samples, coefficients, extended);
       tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
@@ -272,6 +275,7 @@ public:
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooRealSumPdf *pdf = static_cast<const RooRealSumPdf *>(func);
+      elem["type"] << key();
       auto &samples = elem["samples"];
       samples.set_seq();
       auto &coefs = elem["coefficients"];
