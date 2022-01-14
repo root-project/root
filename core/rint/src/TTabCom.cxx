@@ -919,7 +919,7 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
 ///[static utility function]/////////////////////////////
 ///
 ///  returns a colon-separated string of directories
-///  that CINT will search when you call #include<...>
+///  that CINT will search when you call `#include<...>`
 ///
 ///  returns empty string on failure.
 ///

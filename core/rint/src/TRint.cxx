@@ -759,7 +759,7 @@ Longptr_t TRint::ProcessRemote(const char *line, Int_t *)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calls ProcessLine() possibly prepending a #line directive for
+/// Calls TRint::ProcessLine() possibly prepending a `#line` directive for
 /// better diagnostics. Must be called after fNcmd has been increased for
 /// the next line.
 

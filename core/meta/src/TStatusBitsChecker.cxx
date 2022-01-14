@@ -47,13 +47,13 @@
   Without the EStatusBitsDupExceptions enum you would see
 
   ~~~ {.cpp}
-TStatusBitsChecker::Check("TStreamerElement");
+  TStatusBitsChecker::Check("TStreamerElement");
 
-Error in <TStatusBitsChecker>: In TStreamerElement class hierarchy, there are duplicates bits:
-Error in <TStatusBitsChecker>:    Bit   6 used in TStreamerElement as kHasRange
-Error in <TStatusBitsChecker>:    Bit   6 used in TObject as kCannotPick
-Error in <TStatusBitsChecker>:    Bit  13 used in TStreamerElement as kDoNotDelete
-Error in <TStatusBitsChecker>:    Bit  13 used in TObject as kInvalidObject
+  Error in `<TStatusBitsChecker>`: In TStreamerElement class hierarchy, there are duplicates bits:
+  Error in `<TStatusBitsChecker>`:    Bit   6 used in TStreamerElement as kHasRange
+  Error in `<TStatusBitsChecker>`:    Bit   6 used in TObject as kCannotPick
+  Error in `<TStatusBitsChecker>`:    Bit  13 used in TStreamerElement as kDoNotDelete
+  Error in `<TStatusBitsChecker>`:    Bit  13 used in TObject as kInvalidObject
   ~~~ {.cpp}
 
 */

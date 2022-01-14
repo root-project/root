@@ -5200,14 +5200,14 @@ const clang::RecordDecl* ROOT::TMetaUtils::AST2SourceTools::EncloseInScopes(cons
 /// using the fully qualified name
 /// There are different cases:
 /// Case 1: a simple template parameter
-///   E.g. template<typename T> class A;
+///   E.g. `template<typename T> class A;`
 /// Case 2: a non-type: either an integer or an enum
-///   E.g. template<int I, Foo > class A; where Foo is enum Foo {red, blue};
+///   E.g. `template<int I, Foo > class A;` where `Foo` is `enum Foo {red, blue};`
 /// 2 sub cases here:
 ///   SubCase 2.a: the parameter is an enum: bail out, cannot be treated.
 ///   SubCase 2.b: use the fully qualified name
 /// Case 3: a TemplateTemplate argument
-///   E.g. template <template <typename> class T> class container { };
+///   E.g. `template <template <typename> class T> class container { };`
 
 int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templateArgs,
                           const clang::TemplateParameterList& tmplParamList,

@@ -192,8 +192,8 @@ std::ostream& operator<<(std::ostream& os, const TString& s)
 // ------------------- C I/O ------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read one line from the stream, including the \n, or until EOF.
-/// Remove the trailing [\r]\n if chop is true. Returns kTRUE if data was read.
+/// Read one line from the stream, including the `\n`, or until EOF.
+/// Remove the trailing `[\r]\n` if chop is true. Returns kTRUE if data was read.
 
 Bool_t TString::Gets(FILE *fp, Bool_t chop)
 {

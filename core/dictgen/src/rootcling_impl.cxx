@@ -532,7 +532,7 @@ void SetRootSys()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check whether the #pragma line contains expectedTokens (0-terminated array).
+/// Check whether the `#pragma` line contains expectedTokens (0-terminated array).
 
 bool ParsePragmaLine(const std::string &line,
                      const char *expectedTokens[],
@@ -1926,7 +1926,7 @@ bool Which(cling::Interpreter &interp, const char *fname, string &pname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If the argument starts with MODULE/inc, strip it
-/// to make it the name we can use in #includes.
+/// to make it the name we can use in `#includes`.
 
 const char *CopyArg(const char *original)
 {
@@ -2229,7 +2229,7 @@ int ExtractAutoloadKeys(std::list<std::string> &names,
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a rootmap file in the new format, like
 /// { decls }
-/// namespace A { namespace B { template <typename T> class myTemplate; } }
+/// `namespace A { namespace B { template <typename T> class myTemplate; } }`
 /// [libGpad.so libGraf.so libHist.so libMathCore.so]
 /// class TAttCanvas
 /// class TButton
@@ -3003,7 +3003,7 @@ std::ostream *CreateStreamPtrForSplitDict(const std::string &dictpathname,
 ////////////////////////////////////////////////////////////////////////////////
 /// Transform -W statements in diagnostic pragmas for cling reacting on "-Wno-"
 /// For example
-/// -Wno-deprecated-declarations --> #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+/// -Wno-deprecated-declarations --> `#pragma clang diagnostic ignored "-Wdeprecated-declarations"`
 
 static void CheckForMinusW(std::string arg,
                            std::list<std::string> &diagnosticPragmas)

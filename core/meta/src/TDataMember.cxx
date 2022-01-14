@@ -125,7 +125,7 @@ Each option item may have one of the following forms:
 
         "TextValue" = Text Label"
 
-~~~
+~~~ {.cpp}
 
 One can specify values as Integers or Enums - when data field is an
 Integer, Float or Enum type; as texts - for char (more precisely:

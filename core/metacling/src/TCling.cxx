@@ -664,7 +664,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 /// Find a template decl within N nested namespaces, 0<=N<inf
 /// Assumes 1 and only 1 template present and 1 and only 1 entity contained
-/// by the namespace. Example: ns1::ns2::..::nsN::myTemplate
+/// by the namespace. Example: `ns1::ns2::..::nsN::myTemplate`
 /// Returns nullptr in case of error
 
 static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)
@@ -1364,6 +1364,8 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
+/// \param name name for TInterpreter
+/// \param title title for TInterpreter
 /// \param argv - array of arguments passed to the cling::Interpreter constructor
 ///               e.g. `-DFOO=bar`. The last element of the array must be `nullptr`.
 
@@ -2013,7 +2015,7 @@ void TCling::ProcessClassesToUpdate()
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Inject the module named "modulename" into cling; load all headers.
-/// headers is a 0-terminated array of header files to #include after
+/// headers is a 0-terminated array of header files to `#include` after
 /// loading the module. The module is searched for in all $LD_LIBRARY_PATH
 /// entries (or %PATH% on Windows).
 /// This function gets called by the static initialization of dictionary
@@ -2442,7 +2444,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    }
    catch (cling::InterpreterException& ex)
    {
-      Error("HandleInterpreterException", "%s\n%s", ex.what(), "Execution of your code was aborted.");
+      Error("HandleInterpreterException", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
       compRes = cling::Interpreter::kFailure;
    }
@@ -3059,7 +3061,7 @@ void TCling::ClearStack()
 /// that could trigger a re-interpretation of the code. I.e. make cling
 /// behave like a compiler: no dynamic lookup, no input wrapping for
 /// subsequent execution, no automatic provision of declarations but just a
-/// plain #include.
+/// plain `#include`.
 /// Returns true on success, false on failure.
 
 bool TCling::Declare(const char* code)
@@ -4082,7 +4084,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 /// (expected) error messages.  Currently the only way to avoid this is to
 /// specifically check that each level of nesting is already loaded.
 /// In case of templates the idea is that everything between the outer
-/// '<' and '>' has to be skipped, e.g.: aap<pippo<noot>::klaas>::a_class
+/// '<' and '>' has to be skipped, e.g.: `aap<pippo<noot>::klaas>::a_class`
 
 TInterpreter::ECheckClassInfo
 TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/)
@@ -4614,7 +4616,7 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
 /// Generate the dictionary for the C++ classes listed in the first
 /// argument (in a semi-colon separated list).
 /// 'includes' contains a semi-colon separated list of file to
-/// #include in the dictionary.
+/// `#include` in the dictionary.
 /// For example:
 /// ~~~ {.cpp}
 ///    gInterpreter->GenerateDictionary("vector<vector<float> >;list<vector<float> >","list;vector");
@@ -5543,11 +5545,11 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a resource table and read the (possibly) three resource files,
-/// i.e.\ $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name>
-/// and $PWD/<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You
+/// i.e. `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`), `$HOME/<name>`
+/// and `$PWD/<name>`. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You
 /// can read additional user defined resource files by creating additional TEnv
 /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
-/// the $HOME/<name> resource file will be skipped. This might be useful in
+/// the `$HOME/<name>` resource file will be skipped. This might be useful in
 /// case the home directory resides on an automounted remote file system
 /// and one wants to avoid the file system from being mounted.
 
@@ -6911,7 +6913,7 @@ void TCling::InvalidateCachedDecl(const std::tuple<TListOfDataMembers*,
       // Try to invalidate enumerators (for unscoped enumerations).
       for (TIter I = E->GetConstants(); auto EC = (TEnumConstant *)I(); )
          RemoveAndInvalidateObject(LODM,
-      	       	         	   (TEnumConstant *)LODM.FindObject(EC->GetName()));
+                               (TEnumConstant *)LODM.FindObject(EC->GetName()));
 
       RemoveAndInvalidateObject(LOE, E);
    } else if (isa<RecordDecl>(D) || isa<NamespaceDecl>(D)) {
@@ -7612,7 +7614,7 @@ void TCling::ReportDiagnosticsToErrorHandler(bool enable)
    } else {
       fInterpreter->replaceDiagnosticConsumer(nullptr);
    }
-}  
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
