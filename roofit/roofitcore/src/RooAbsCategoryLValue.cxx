@@ -26,7 +26,7 @@ hand side of an assignment ("*lvalue*").
 Each implementation must provide the functions setIndex()/setLabel() to allow direct modification
 of the value. RooAbsCategoryLValue may be derived, but its functional relation
 to other RooAbsArgs must be invertible.
-**/
+*/
 
 #include "RooAbsCategoryLValue.h"
 

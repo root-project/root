@@ -21,7 +21,7 @@
 **************************************************************************/
 
 
-/** \classTGToolTip
+/** \class TGToolTip
     \ingroup guiwidgets
 
 A tooltip can be a one or multiple lines help text that is displayed
