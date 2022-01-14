@@ -4750,7 +4750,10 @@ void* TStreamerInfo::New(void *obj)
                // missing information, avoid infinite loop
                // by doing nothing ....
             } else {
-               cle->New(eaddr);
+               if (cle->GetCollectionProxy())
+                  cle->GetCollectionProxy()->New(eaddr);
+               else
+                  cle->New(eaddr);
             }
          }
          break;
