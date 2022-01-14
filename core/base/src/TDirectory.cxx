@@ -1320,7 +1320,7 @@ void TDirectory::RegisterGDirectory(std::atomic<TDirectory*> *globalptr)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \copydoc TDirectory::WriteTObject().
+/// \copydoc TDirectoryFile::WriteTObject().
 
 Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * /*option*/, Int_t /*bufsize*/)
 {
