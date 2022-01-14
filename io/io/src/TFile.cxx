@@ -547,11 +547,9 @@ TFile::~TFile()
    SafeDelete(fInfoCache);
    SafeDelete(fOpenPhases);
 
-   {
+   if (fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
-      if (fGlobalRegistration) {
-         gROOT->GetListOfClosedObjects()->Remove(this);
-      }
+      gROOT->GetListOfClosedObjects()->Remove(this);
       gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
    }
 
@@ -834,11 +832,9 @@ void TFile::Init(Bool_t create)
       }
    }
 
-   {
+   if (fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
-      if (fGlobalRegistration) {
-         gROOT->GetListOfFiles()->Add(this);
-      }
+      gROOT->GetListOfFiles()->Add(this);
       gROOT->GetUUIDs()->AddUUID(fUUID, this);
    }
 
