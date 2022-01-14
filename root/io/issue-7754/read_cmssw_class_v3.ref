@@ -1,0 +1,9 @@
+
+Processing roottest/root/io/issue-7754/read_cmssw_class_v3.cxx+...
+Holder has 1 value.
+Content.fBefore (transient): 0
+Content.fSubObj.fValue: 200
+Content.fSubObj.fNewValue: 6000
+Content.fAfter: 110
+Content.fNewData 220
+(int) 0
