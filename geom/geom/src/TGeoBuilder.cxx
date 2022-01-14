@@ -585,9 +585,9 @@ TGeoMedium *TGeoBuilder::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a node called <name_nr> pointing to the volume called <name>
-/// as daughter of the volume called <mother> (gspos). The relative matrix is
-/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// Create a node called `<name_nr>` pointing to the volume called `<name>`
+/// as daughter of the volume called `<mother>` (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named `<matIROT>`.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
 ///  - NAME   Volume name
@@ -725,9 +725,9 @@ void TGeoBuilder::Node(const char *name, Int_t nr, const char *mother,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a node called <name_nr> pointing to the volume called <name>
-/// as daughter of the volume called <mother> (gspos). The relative matrix is
-/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// Create a node called `<name_nr>` pointing to the volume called `<name>`
+/// as daughter of the volume called `<mother>` (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named `<matIROT>`.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
 ///  - NAME   Volume name

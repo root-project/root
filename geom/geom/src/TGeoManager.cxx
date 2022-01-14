@@ -1216,9 +1216,9 @@ TGeoMedium *TGeoManager::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a node called <name_nr> pointing to the volume called <name>
-/// as daughter of the volume called <mother> (gspos). The relative matrix is
-/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// Create a node called `<name_nr>` pointing to the volume called `<name>`
+/// as daughter of the volume called `<mother>` (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named `<matIROT>`.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
 ///  - NAME   Volume name
@@ -1238,9 +1238,9 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a node called <name_nr> pointing to the volume called <name>
-/// as daughter of the volume called <mother> (gspos). The relative matrix is
-/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// Create a node called `<name_nr>` pointing to the volume called `<name>`
+/// as daughter of the volume called `<mother>` (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named `<matIROT>`.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
 ///  - NAME   Volume name
@@ -4026,8 +4026,8 @@ void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
    }
    else if ( gGeometryLocked )    {
       ::Fatal("TGeoManager","The system of units may only be changed once, \n"
-	      "BEFORE any elements and materials are created! \n"
-	      "Alternatively unlock the default units at own risk.");
+          "BEFORE any elements and materials are created! \n"
+          "Alternatively unlock the default units at own risk.");
    }
    else if ( new_value == kG4Units )   {
       ::Info("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
