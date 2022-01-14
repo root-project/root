@@ -291,6 +291,7 @@ auto TExecutorCRTP<SubC>::MapReduce(F func, std::vector<T> &args, R redfunc) -> 
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
 /// \param args Immutable vector of elements passed as an argument to `func`.
+/// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class SubC> template<class F, class T, class R, class Cond>
 auto TExecutorCRTP<SubC>::MapReduce(F func, const std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
@@ -314,8 +315,7 @@ T* TExecutorCRTP<SubC>::MapReduce(F func, std::vector<T*> &args)
 /// \brief Execute a function over the TObject-inheriting elements of an immutable vector (Map) and merge the objects into a single one (Reduce).
 ///
 /// \param func Function to be executed on the elements of the vector passed as second parameter.
-/// \param args Immutableector of elements passed as an argument to `func`.
-/// \param redfunc Reduction function to combine the results of the calls to `func`. Must return the same type as `func`.
+/// \param args Immutable vector of elements passed as an argument to `func`.
 /// \return A value result of "reducing" the vector returned by the Map operation into a single object.
 template<class SubC> template<class F, class T, class Cond>
 T* TExecutorCRTP<SubC>::MapReduce(F func, const std::vector<T*> &args)

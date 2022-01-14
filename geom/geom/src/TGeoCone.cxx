@@ -52,7 +52,7 @@ End_Macro
 /** \class TGeoConeSeg
 \ingroup Cones
 
-A cone segment is a cone having a range in `phi.` The cone segment class
+A cone segment is a cone having a range in `phi`. The cone segment class
 derives from **`TGeoCone`**, having two extra parameters: `phi1` and
 `phi2`.
 
