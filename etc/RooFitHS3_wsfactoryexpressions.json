@@ -42,13 +42,6 @@
             "summands"
         ]
     },    
-    "sumpdf": {
-        "class": "RooRealSumPdf",
-        "arguments": [
-            "samples",
-            "coefficients"
-        ]
-    },
     "paramhist": {
         "class": "ParamHistFunc",
         "arguments": [

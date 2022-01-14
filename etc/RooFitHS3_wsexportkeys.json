@@ -41,13 +41,6 @@
             "paramSet": "parameters"
         }
     },
-    "RooRealSumPdf": {
-        "type": "sumpdf",
-        "proxies": {
-            "funcList": "samples",
-            "coefList": "coefficients"
-        }
-    },
     "RooAddPdf": {
         "type": "pdfsum",
         "proxies": {

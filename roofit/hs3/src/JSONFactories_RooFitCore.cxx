@@ -226,9 +226,67 @@ public:
 };
 } // namespace
 
+#include <RooRealSumPdf.h>
+
+namespace {
+class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
+public:
+   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      if (!p.has_child("samples")) {
+         RooJSONFactoryWSTool::error("no samples given in '" + name + "'");
+      }
+      if (!p.has_child("coefficients")) {
+         RooJSONFactoryWSTool::error("no coefficients given in '" + name + "'");
+      }
+      RooArgList samples;
+      for(const auto& sample:p["samples"].children()){
+        RooAbsReal *s = tool->request<RooAbsReal>(sample.val(), name);
+        samples.add(*s);
+      }
+      RooArgList coefficients;
+      for(const auto& coef:p["coefficients"].children()){
+        RooAbsReal *c = tool->request<RooAbsReal>(coef.val(), name);
+        coefficients.add(*c);
+      }      
+      
+      bool extended = p["extended"].val_bool();
+      RooRealSumPdf thepdf(name.c_str(), name.c_str(), samples, coefficients, extended);      
+      tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return true;
+   }
+};
+} // namespace
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // specialized exporter implementations
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
+#include <RooRealSumPdf.h>
+
+namespace {
+  class RooRealSumPdfStreamer : public RooJSONFactoryWSTool::Exporter {
+public:
+   virtual std::string key() const { return "sumpdf"; }
+   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      const RooRealSumPdf *pdf = static_cast<const RooRealSumPdf *>(func);
+      auto &samples = elem["samples"];
+      samples.set_seq();      
+      auto &coefs = elem["coefficients"];
+      coefs.set_seq();
+      for(const auto& s:pdf->funcList()){
+        samples.append_child() << s->GetName();
+      }
+      for(const auto& c:pdf->coefList()){
+        coefs.append_child() << c->GetName();
+      }
+      elem["extended"] << (pdf->extendMode() == RooAbsPdf::CanBeExtended);
+      return true;
+   }
+};
+}
 
 namespace {
 class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
@@ -400,22 +458,24 @@ public:
 namespace {
 STATIC_EXECUTE(
 
-   RooJSONFactoryWSTool::registerImporter("pdfprod", new RooProdPdfFactory());
-   RooJSONFactoryWSTool::registerImporter("genericpdf", new RooGenericPdfFactory());
-   RooJSONFactoryWSTool::registerImporter("formulavar", new RooFormulaVarFactory());
-   RooJSONFactoryWSTool::registerImporter("binsampling", new RooBinSamplingPdfFactory());
-   RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory());
-   RooJSONFactoryWSTool::registerImporter("histogram", new RooHistFuncFactory());
-   RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory());
-   RooJSONFactoryWSTool::registerImporter("binwidth", new RooBinWidthFunctionFactory());
+               RooJSONFactoryWSTool::registerImporter("pdfprod", new RooProdPdfFactory(),false);
+               RooJSONFactoryWSTool::registerImporter("genericpdf", new RooGenericPdfFactory(),false);
+               RooJSONFactoryWSTool::registerImporter("formulavar", new RooFormulaVarFactory(),false);
+               RooJSONFactoryWSTool::registerImporter("binsampling", new RooBinSamplingPdfFactory(),false);
+               RooJSONFactoryWSTool::registerImporter("pdfsum", new RooAddPdfFactory(),false);
+               RooJSONFactoryWSTool::registerImporter("histogram", new RooHistFuncFactory(),false);
+               RooJSONFactoryWSTool::registerImporter("simultaneous", new RooSimultaneousFactory(),false);
+               RooJSONFactoryWSTool::registerImporter("binwidth", new RooBinWidthFunctionFactory(),false);
+               RooJSONFactoryWSTool::registerImporter("sumpdf", new RooRealSumPdfFactory(),false);               
 
-   RooJSONFactoryWSTool::registerExporter(RooBinWidthFunction::Class(), new RooBinWidthFunctionStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new RooProdPdfStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(), new RooSimultaneousStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooBinSamplingPdf::Class(), new RooBinSamplingPdfStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(), new RooHistFuncStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooGenericPdf::Class(), new RooGenericPdfStreamer());
-   RooJSONFactoryWSTool::registerExporter(RooFormulaVar::Class(), new RooFormulaVarStreamer());
-
+               RooJSONFactoryWSTool::registerExporter(RooBinWidthFunction::Class(), new RooBinWidthFunctionStreamer(),false);
+               RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new RooProdPdfStreamer(),false);
+               RooJSONFactoryWSTool::registerExporter(RooSimultaneous::Class(), new RooSimultaneousStreamer(),false);
+               RooJSONFactoryWSTool::registerExporter(RooBinSamplingPdf::Class(), new RooBinSamplingPdfStreamer(),false);
+               RooJSONFactoryWSTool::registerExporter(RooHistFunc::Class(), new RooHistFuncStreamer(),false);
+               RooJSONFactoryWSTool::registerExporter(RooGenericPdf::Class(), new RooGenericPdfStreamer(),false);
+               RooJSONFactoryWSTool::registerExporter(RooFormulaVar::Class(), new RooFormulaVarStreamer(),false);
+               RooJSONFactoryWSTool::registerExporter(RooRealSumPdf::Class(), new RooRealSumPdfStreamer(),false);               
+               
 )
 } // namespace
