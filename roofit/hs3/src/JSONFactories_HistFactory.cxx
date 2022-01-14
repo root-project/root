@@ -728,14 +728,14 @@ public:
 
 STATIC_EXECUTE(
 
-               RooJSONFactoryWSTool::registerImporter("histfactory", new RooRealSumPdfFactory(),true);
-               RooJSONFactoryWSTool::registerImporter("hist-sample", new RooHistogramFactory(),true);
-               RooJSONFactoryWSTool::registerImporter("interpolation", new PiecewiseInterpolationFactory(),true);
-               RooJSONFactoryWSTool::registerExporter(RooStats::HistFactory::FlexibleInterpVar::Class(),
-                                                      new FlexibleInterpVarStreamer(),true);
-               RooJSONFactoryWSTool::registerExporter(PiecewiseInterpolation::Class(), new PiecewiseInterpolationStreamer(),true);
-               RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new HistFactoryStreamer(),true);
-               
+   RooJSONFactoryWSTool::registerImporter("histfactory", new RooRealSumPdfFactory(), true);
+   RooJSONFactoryWSTool::registerImporter("hist-sample", new RooHistogramFactory(), true);
+   RooJSONFactoryWSTool::registerImporter("interpolation", new PiecewiseInterpolationFactory(), true);
+   RooJSONFactoryWSTool::registerExporter(RooStats::HistFactory::FlexibleInterpVar::Class(),
+                                          new FlexibleInterpVarStreamer(), true);
+   RooJSONFactoryWSTool::registerExporter(PiecewiseInterpolation::Class(), new PiecewiseInterpolationStreamer(), true);
+   RooJSONFactoryWSTool::registerExporter(RooProdPdf::Class(), new HistFactoryStreamer(), true);
+
 )
 
 } // namespace
