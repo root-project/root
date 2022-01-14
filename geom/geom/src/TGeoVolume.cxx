@@ -918,7 +918,7 @@ Int_t TGeoVolume::Export(const char *filename, const char *name, Option_t *optio
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Actualize matrix of node indexed <inode>
+/// Actualize matrix of node indexed `<inode>`
 
 void TGeoVolume::cd(Int_t inode) const
 {

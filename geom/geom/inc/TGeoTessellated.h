@@ -154,7 +154,7 @@ public:
    virtual void Print(Option_t *option = "") const;
    virtual void SavePrimitive(std::ostream &, Option_t *) {}
    virtual void SetPoints(double *points) const;
-   virtual void SetPoints(float *points) const;
+   virtual void SetPoints(Float_t *points) const;
    virtual void SetSegsAndPols(TBuffer3D &buff) const;
    virtual void Sizeof3D() const {}
 
