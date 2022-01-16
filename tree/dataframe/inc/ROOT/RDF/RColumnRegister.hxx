@@ -102,7 +102,7 @@ public:
    /// \brief Return the actual column name that the alias resolves to.
    /// Drills through multiple levels of aliasing if needed.
    /// Returns the input in case it's not an alias.
-   /// Expands `#var` to `R_rdf_sizeof_var` (the #var columns are implicitly-defined aliases).
+   /// Expands `#%var` to `R_rdf_sizeof_var` (the #%var columns are implicitly-defined aliases).
    std::string ResolveAlias(std::string_view alias) const;
 
    ////////////////////////////////////////////////////////////////////////////
