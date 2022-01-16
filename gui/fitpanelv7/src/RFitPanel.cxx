@@ -785,7 +785,7 @@ bool ROOT::Experimental::RFitPanel::DoFit()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extract color from string
-/// Should be coded as #ff00ff string
+/// Should be coded as #%ff00ff string
 
 Color_t ROOT::Experimental::RFitPanel::GetColor(const std::string &colorid)
 {
