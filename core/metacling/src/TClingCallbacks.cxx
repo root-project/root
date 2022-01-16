@@ -359,9 +359,6 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    if (fIsAutoParsingSuspended || fIsAutoLoadingRecursively)
       return false;
 
-   if (findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ false))
-      return true;
-
    if (Name.getNameKind() != DeclarationName::Identifier)
       return false;
 
@@ -369,11 +366,13 @@ bool TClingCallbacks::LookupObject(const DeclContext* DC, DeclarationName Name) 
    // We need to cast away the constness because we will lookup items of this
    // namespace/DeclContext
    NamespaceDecl* NSD = dyn_cast<NamespaceDecl>(const_cast<DeclContext*>(DC));
-   if (!NSD)
-      return false;
 
-   if ( !TCling__IsAutoLoadNamespaceCandidate(NSD) )
-      return false;
+   // When GMI is mixed with rootmaps, we might have a name for two different
+   // entities provided by the two systems. In that case check if the rootmaps
+   // registered the enclosing namespace as a rootmap name resolution namespace
+   // and only if that was not the case use the information in the GMI.
+   if (!NSD || !TCling__IsAutoLoadNamespaceCandidate(NSD))
+      return findInGlobalModuleIndex(Name, /*loadFirstMatchOnly*/ false);
 
    const DeclContext* primaryDC = NSD->getPrimaryContext();
    if (primaryDC != DC)
