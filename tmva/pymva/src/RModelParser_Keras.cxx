@@ -75,9 +75,8 @@ const KerasMethodMapWithActivation mapKerasLayerWithActivation = {
 /// \brief Adds equivalent ROperator with respect to Keras model layer
 ///        into the referenced RModel object
 ///
-/// \param[in] rmodel RModel object
+/// \param[in] rmodel RModel object, by reference, returned ith the added ROperator
 /// \param[in] fLayer Python Keras layer as a Dictionary object
-/// \param[out] RModel object with the added ROperator
 ///
 /// Function adds equivalent ROperator into the referenced RModel object.
 /// Keras models can have layers like Dense and Conv which have activation

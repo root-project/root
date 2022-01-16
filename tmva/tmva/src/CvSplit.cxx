@@ -313,6 +313,7 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
 /// \brief Split sets for into k-folds
 /// \param[in] oldSet Original, unsplit, events
 /// \param[in] numFolds Number of folds to split data into
+/// \param[in] numClasses number of classes to stratify into
 ///
 
 std::vector<std::vector<TMVA::Event *>>

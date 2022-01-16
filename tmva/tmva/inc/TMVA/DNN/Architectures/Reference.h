@@ -69,7 +69,7 @@ public:
     * through the network.
     */
    ///@{
-   /** Matrix-multiply \p input with the transpose of \pweights and
+   /** Matrix-multiply \p input with the transpose of \p weights and
     *  write the results into \p output. */
 
    static void MultiplyTranspose(TMatrixT<Scalar_t> &output,
@@ -118,8 +118,8 @@ public:
 
    /** Backward pass for LSTM Network */
    static Matrix_t & LSTMLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward,
-			                              TMatrixT<Scalar_t> & cell_gradients_backward,
-			                              TMatrixT<Scalar_t> & input_weight_gradients,
+                                          TMatrixT<Scalar_t> & cell_gradients_backward,
+                                          TMatrixT<Scalar_t> & input_weight_gradients,
                                        TMatrixT<Scalar_t> & forget_weight_gradients,
                                        TMatrixT<Scalar_t> & candidate_weight_gradients,
                                        TMatrixT<Scalar_t> & output_weight_gradients,
@@ -319,7 +319,7 @@ public:
     * For each regularization type two functions are required, one named
     * <tt><Type>Regularization</tt> that evaluates the corresponding
     * regularization functional for a given weight matrix and the
-    * <tt>Add<Type>RegularizationGradients</tt>, that adds the regularization
+    * <tt>Add`<Type>`RegularizationGradients</tt>, that adds the regularization
     * component in the gradients to the provided matrix.
     */
    ///@{
