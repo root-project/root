@@ -40,7 +40,7 @@ The following are modifications of Knuth's properties on page 478:
   9.  For InnerNode n with key n[i].key, then sub-tree n[i-1].tree contains
       all keys < n[i].key, and sub-tree n[i].tree contains all keys
       >= n[i].key.
- 10.  Order is at least 3.
+  10. Order is at least 3.
 
 The values of InnerLowWaterMark and LeafLowWaterMark may actually be set
 by the user when the tree is initialized, but currently they are set
