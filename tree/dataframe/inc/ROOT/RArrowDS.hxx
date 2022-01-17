@@ -53,9 +53,7 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-/// \brief Factory method to create a Apache Arrow RDataFrame.
-/// \param[in] table an apache::arrow table to use as a source.
-RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columns);
+RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames);
 
 } // namespace RDF
 

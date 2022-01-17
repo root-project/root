@@ -539,7 +539,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \param[in] filename file location of PyTorch .pt model
+/// \param[in] filepath file location of PyTorch .pt model
 /// \param[in] inputShapes vector of input shape vectors
 /// \return    Parsed RModel object
 ///

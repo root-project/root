@@ -37,8 +37,9 @@ using namespace ROOT::Experimental;
 
 ///////////////////////////////////////////////////////////////
 /// Parse boolean gEnv variable which should be "yes" or "no"
-/// Returns 1 for true or 0 for false
+/// \return 1 for true or 0 for false
 /// Returns \param dflt if result is not defined
+/// \param name name of the env variable
 
 int RWebWindowWSHandler::GetBoolEnv(const std::string &name, int dflt)
 {
@@ -64,7 +65,7 @@ Central instance to create and show web-based windows like Canvas or FitPanel.
 Manager responsible to creating THttpServer instance, which is used for RWebWindow's
 communication with clients.
 
-Method RWebWindowsManager::Show() used to show window in specified location.
+Method RWebWindows::Show() used to show window in specified location.
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -471,6 +472,7 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show web window in specified location.
 ///
+/// \param win web window by reference
 /// \param user_args specifies where and how display web window
 ///
 /// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.

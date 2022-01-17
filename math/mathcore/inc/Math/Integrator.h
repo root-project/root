@@ -244,10 +244,10 @@ public:
    }
 
 
-    /**
-      evaluate the Integral of a function f over the infinite interval (-inf,+inf)
-       @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
-    */
+//    /**
+//      evaluate the Integral of a function f over the infinite interval (-inf,+inf)
+//       @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
+//    */
 //    template<class Function>
 //    double Integral(const Function & f);
 
@@ -261,11 +261,11 @@ public:
    }
 
 
-    /**
-      evaluate the Integral of a function f over the semi-infinite interval (a,+inf)
-      @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
-      @param a lower value of the integration interval
-    */
+//    /**
+//      evaluate the Integral of a function f over the semi-infinite interval (a,+inf)
+//      @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
+//      @param a lower value of the integration interval
+//    */
 //    template<class Function>
 //    double IntegralUp(Function & f, double a);
 
@@ -280,11 +280,11 @@ public:
       return IntegralUp(a);
    }
 
-    /**
-      evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b)
-      @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
-      @param b upper value of the integration interval
-    */
+//    /**
+//      evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b)
+//      @param f integration function. The function type must be a C++ callable object implementing operator()(double x)
+//      @param b upper value of the integration interval
+//    */
 //    template<class Function>
 //    double IntegralLow(Function & f, double b);
 

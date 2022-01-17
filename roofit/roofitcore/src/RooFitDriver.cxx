@@ -176,8 +176,12 @@ there's also some cuda-related initialization.
 
 \param data The dataset for the fitting model
 \param topNode The RooNLLVaNew object that sits on top of the graph and whose value the minimiser needs.
+\param observables The observabes of the pdf
+\param normSet
 \param batchMode The computation mode of the RooBatchCompute library, accepted values are `RooBatchCompute::Cpu` and
 `RooBatchCompute::Cuda`.
+\param rangeName the range name
+\param indexCat
 **/
 RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &observables,
                            RooArgSet const &normSet, RooFit::BatchModeOption batchMode, std::string_view rangeName,

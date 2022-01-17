@@ -147,8 +147,10 @@ public:
       /**
          evaluate the Integral of a function f over the defined hypercube (a,b)
        @param f integration function. The function type must implement the mathlib::IGenFunction interface
+       @param dim the dimension
        @param a lower value of the integration interval
        @param b upper value of the integration interval
+       @param p pointer to parameter array
        */
 
       double Integral(const GSLMonteFuncPointer & f, unsigned int dim, double* a, double* b, void * p = 0);

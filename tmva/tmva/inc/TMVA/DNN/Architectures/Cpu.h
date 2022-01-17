@@ -187,7 +187,7 @@ public:
     * through the network.
     */
    ///@{
-   /** Matrix-multiply \p input with the transpose of \pweights and
+   /** Matrix-multiply \p input with the transpose of \p weights and
     *  write the results into \p output. */
    static void MultiplyTranspose(Matrix_t &output, const Matrix_t &input, const Matrix_t &weights);
 
@@ -388,7 +388,7 @@ public:
 
    /** @name Regularization
     * For each regularization type two functions are required, one named
-    * <tt><Type>Regularization</tt> that evaluates the corresponding
+    * <tt>`<Type>`Regularization</tt> that evaluates the corresponding
     * regularization functional for a given weight matrix and the
     * <tt>Add<Type>RegularizationGradients</tt>, that adds the regularization
     * component in the gradients to the provided matrix.
@@ -472,8 +472,8 @@ public:
 
    /** The input from each batch are normalized during training to have zero mean and unit variance
      * and they are then scaled by two parameter, different for each input variable:
-     *  - a scale factor \gamma gamma
-     *  - an offset \beta beta */
+     *  - a scale factor `\gamma` gamma
+     *  - an offset `\beta` beta */
    static void BatchNormLayerForwardTraining(int axis, const Tensor_t &x, Tensor_t &y, Matrix_t &gamma, Matrix_t &beta,
                                              Matrix_t &mean, Matrix_t &, Matrix_t &iVariance, Matrix_t &runningMeans,
                                              Matrix_t &runningVars, Scalar_t nTrainedBatches, Scalar_t momentum,
@@ -644,8 +644,8 @@ public:
 
    /** Backward pass for LSTM Network */
    static Matrix_t & LSTMLayerBackward(TCpuMatrix<Scalar_t> & state_gradients_backward,
-			                              TCpuMatrix<Scalar_t> & cell_gradients_backward,
-			                              TCpuMatrix<Scalar_t> & input_weight_gradients,
+                                          TCpuMatrix<Scalar_t> & cell_gradients_backward,
+                                          TCpuMatrix<Scalar_t> & input_weight_gradients,
                                        TCpuMatrix<Scalar_t> & forget_weight_gradients,
                                        TCpuMatrix<Scalar_t> & candidate_weight_gradients,
                                        TCpuMatrix<Scalar_t> & output_weight_gradients,

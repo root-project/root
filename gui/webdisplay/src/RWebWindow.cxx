@@ -1147,7 +1147,8 @@ int RWebWindow::GetSendQueueLength(unsigned connid) const
 ///////////////////////////////////////////////////////////////////////////////////
 /// Internal method to send data
 /// \param connid  connection id, when 0 - data will be send to all connections
-/// \param txt  is text message should be send
+/// \param txt  is text message that should be sent
+/// \param data  data to be std-moved to SubmitData function
 /// \param chid  channel id, 1 - normal communication, 0 - internal with highest priority
 
 void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int chid)
@@ -1204,6 +1205,7 @@ void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int c
 ///////////////////////////////////////////////////////////////////////////////////
 /// Sends data to specified connection
 /// \param connid  connection id, when 0 - data will be send to all connections
+/// \param data  data to be copied to SubmitData function
 
 void RWebWindow::Send(unsigned connid, const std::string &data)
 {
@@ -1213,6 +1215,7 @@ void RWebWindow::Send(unsigned connid, const std::string &data)
 ///////////////////////////////////////////////////////////////////////////////////
 /// Send binary data to specified connection
 /// \param connid  connection id, when 0 - data will be send to all connections
+/// \param data  data to be std-moved to SubmitData function
 
 void RWebWindow::SendBinary(unsigned connid, std::string &&data)
 {
@@ -1222,6 +1225,8 @@ void RWebWindow::SendBinary(unsigned connid, std::string &&data)
 ///////////////////////////////////////////////////////////////////////////////////
 /// Send binary data to specified connection
 /// \param connid  connection id, when 0 - data will be send to all connections
+/// \param data  pointer to binary data
+/// \param len number of bytes in data
 
 void RWebWindow::SendBinary(unsigned connid, const void *data, std::size_t len)
 {
