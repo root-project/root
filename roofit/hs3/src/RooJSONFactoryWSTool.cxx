@@ -1163,7 +1163,8 @@ RooAbsArg *RooJSONFactoryWSTool::getScopeObject(const std::string &name)
 }
 void RooJSONFactoryWSTool::clearScope()
 {
-   this->_scope = Scope();
+   this->_scope.objects.clear();
+   this->_scope.observables.clear();
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////

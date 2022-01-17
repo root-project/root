@@ -277,7 +277,7 @@ public:
 
 class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   ParamHistFunc *createPHF(const std::string &name, const std::vector<double> sumW, const std::vector<double> &sumW2,
+   ParamHistFunc *createPHF(const std::string &name, const std::vector<double> &sumW, const std::vector<double> &sumW2,
                             RooArgList &nps, RooArgList &constraints, const RooArgSet &observables,
                             double statErrorThreshold) const
    {
