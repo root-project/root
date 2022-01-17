@@ -3811,9 +3811,9 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
 ///             }
 /// ~~~
 ///     2. ex.
-///           -  fOptimal = ::EvalPrimitive0 - if it return only variable, constant or parameter
-///           -           = ::EvalParameter1 - if only one unary operation
-///           -           = ::EvalPrimitive2 - if only one binary operation
+///           -  fOptimal = TFormula::EvalPrimitive0 - if it return only variable, constant or parameter
+///           -           = TFormula::EvalPrimitive1 - if only one unary operation
+///           -           = TFormula::EvalPrimitive2 - if only one binary operation
 
 void TFormula::Optimize()
 {

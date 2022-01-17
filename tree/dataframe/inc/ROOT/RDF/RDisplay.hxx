@@ -239,6 +239,7 @@ public:
    /// \param[in] columnNames Columns to print
    /// \param[in] types The type of each column
    /// \param[in] entries How many events per column (row) must be processed.
+   /// \param[in] nMaxCollectionElements Number of maximum elements in collection.
    RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries, size_t nMaxCollectionElements);
 
    ////////////////////////////////////////////////////////////////////////////

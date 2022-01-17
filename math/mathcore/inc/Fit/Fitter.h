@@ -418,7 +418,7 @@ public:
 
    /**
       query if fit is binned. In cse of false teh fit can be unbinned
-      or is not defined (like in case of fitting through a ::FitFCN)
+      or is not defined (like in case of fitting through a ROOT::Fit::Fitter::FitFCN)
     */
    bool IsBinFit() const { return fBinFit; }
 

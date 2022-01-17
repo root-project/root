@@ -654,7 +654,7 @@ public:
    /// present, by default all friend top-level branches that have names that do not collide with
    /// names of branches in the main TTree/TChain will be written out. Since v6.24, Snapshot will also write out
    /// friend branches with the same names of branches in the main TTree/TChain with names of the form
-   /// '<friendname>_<branchname>' in order to differentiate them from the branches in the main tree/chain.
+   /// `<friendname>_<branchname>` in order to differentiate them from the branches in the main tree/chain.
    ///
    /// ### Writing to a sub-directory
    ///
@@ -2671,7 +2671,7 @@ public:
    RResultPtr<RDisplay>
    Display(const ColumnNames_t &columnList, int nRows = 5, size_t nMaxCollectionElements = 10)
    {
-      CheckIMTDisabled("Display");  
+      CheckIMTDisabled("Display");
       auto newCols = columnList;
       newCols.insert(newCols.begin(), "rdfentry_"); // Artificially insert first column
       auto displayer = std::make_shared<RDFInternal::RDisplay>(newCols, GetColumnTypeNamesList(newCols), nRows, nMaxCollectionElements);
@@ -2723,6 +2723,7 @@ public:
    /// \brief Provides a representation of the columns in the dataset.
    /// \param[in] columnList Names of the columns to be displayed.
    /// \param[in] nRows Number of events for each column to be displayed.
+   /// \param[in] nMaxCollectionElements Number of maximum elements in collection.
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
    /// See the previous overloads for further details.

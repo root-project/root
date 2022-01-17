@@ -62,14 +62,14 @@ TMVA::SimulatedAnnealingFitter::SimulatedAnnealingFitter( IFitterTarget& target,
 ////////////////////////////////////////////////////////////////////////////////
 /// declare SA options.
 ///
-///  - MaxCalls                 <int>      maximum number of calls for simulated annealing
-///  - TemperatureGradient      <float>    temperature gradient for simulated annealing
-///  - UseAdaptiveTemperature   <bool>     use of adaptive temperature for simulated annealing
-///  - InitialTemperature       <float>    initial temperature for simulated annealing
-///  - MinTemperature           <float>    minimum temperature for simulated annealing
-///  - Eps                      <int>      number of epochs for simulated annealing
-///  - NFunLoops                <int>      number of loops for simulated annealing
-///  - NEps                     <int>      number of epochs for simulated annealing
+///  - MaxCalls                 `<int>`      maximum number of calls for simulated annealing
+///  - TemperatureGradient      `<float>`    temperature gradient for simulated annealing
+///  - UseAdaptiveTemperature   `<bool>`     use of adaptive temperature for simulated annealing
+///  - InitialTemperature       `<float>`    initial temperature for simulated annealing
+///  - MinTemperature           `<float>`    minimum temperature for simulated annealing
+///  - Eps                      `<int>`      number of epochs for simulated annealing
+///  - NFunLoops                `<int>`      number of loops for simulated annealing
+///  - NEps                     `<int>`      number of epochs for simulated annealing
 
 void TMVA::SimulatedAnnealingFitter::DeclareOptions()
 {

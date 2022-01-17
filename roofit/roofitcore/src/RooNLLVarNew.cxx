@@ -73,12 +73,14 @@ double kahanSum(Input const &input)
 
 } // namespace
 
-/** Contstruct a RooNLLVarNew
-
+/** Construct a RooNLLVarNew
+\param name the name
+\param title the title
 \param pdf The pdf for which the nll is computed for
 \param observables The observabes of the pdf
 \param weight A pointer to the weight variable (if exists)
 \param isExtended Set to true if this is an extended fit
+\param rangeName the range name
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
                            RooAbsReal *weight, bool isExtended, std::string const &rangeName)
@@ -105,9 +107,8 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 
 /** Compute multiple negative logs of propabilities
 
-\param dispatch A pointer to the RooBatchCompute library interface used for this computation
 \param output An array of doubles where the computation results will be stored
-\param nEvents The number of events to be processed
+\note nEvents is the number of events to be processed (the dataMap size)
 \param dataMap A map containing spans with the input data for the computation
 **/
 void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_t /*nOut*/,

@@ -664,7 +664,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 /// Find a template decl within N nested namespaces, 0<=N<inf
 /// Assumes 1 and only 1 template present and 1 and only 1 entity contained
-/// by the namespace. Example: `ns1::ns2::..::nsN::myTemplate`
+/// by the namespace. Example: `ns1::ns2::..::%nsN::%myTemplate`
 /// Returns nullptr in case of error
 
 static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)

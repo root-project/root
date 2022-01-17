@@ -258,6 +258,7 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
+/// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize) // TODO: Let users specify types?
    : fReadHeaders(readHeaders),
      fCsvFile(ROOT::Internal::RRawFile::Create(fileName)),

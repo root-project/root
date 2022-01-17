@@ -805,17 +805,17 @@ void TMVA::PDF::FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& hi
 ///
 /// know options:
 ///
-/// PDFInterpol[ivar] <string>   Spline0, Spline1, Spline2 <default>, Spline3, Spline5, KDE  used to interpolate reference histograms
+/// PDFInterpol[ivar] `<string>`   Spline0, Spline1, Spline2 `<default>`, Spline3, Spline5, KDE  used to interpolate reference histograms
 ///             if no variable index is given, it is valid for ALL the variables
 ///
-///  - NSmooth           <int>    how often the input histos are smoothed
-///  - MinNSmooth        <int>    min number of smoothing iterations, for bins with most data
-///  - MaxNSmooth        <int>    max number of smoothing iterations, for bins with least data
-///  - NAvEvtPerBin      <int>    minimum average number of events per PDF bin
-///  - TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
-///  - fKDEtype          <KernelType>   type of the Kernel to use (1 is Gaussian)
-///  - fKDEiter          <KerneIter>    number of iterations (1 --> "static KDE", 2 --> "adaptive KDE")
-///  - fBorderMethod     <KernelBorder> the method to take care about "border" effects (1=no treatment , 2=kernel renormalization, 3=sample mirroring)
+///  - NSmooth           `<int>`    how often the input histos are smoothed
+///  - MinNSmooth        `<int>`    min number of smoothing iterations, for bins with most data
+///  - MaxNSmooth        `<int>`    max number of smoothing iterations, for bins with least data
+///  - NAvEvtPerBin      `<int>`    minimum average number of events per PDF bin
+///  - TransformOutput   `<bool>`   transform (often strongly peaked) likelihood output through sigmoid inversion
+///  - fKDEtype          `<KernelType>`   type of the Kernel to use (1 is Gaussian)
+///  - fKDEiter          `<KerneIter>`    number of iterations (1 --> "static KDE", 2 --> "adaptive KDE")
+///  - fBorderMethod     `<KernelBorder>` the method to take care about "border" effects (1=no treatment , 2=kernel renormalization, 3=sample mirroring)
 
 void TMVA::PDF::DeclareOptions()
 {

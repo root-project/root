@@ -20,7 +20,7 @@
 
 #include <iostream>
 
-#ifndef DNN_USE_CBLAS 
+#ifndef DNN_USE_CBLAS
 // External Library Routines
 //____________________________________________________________________________
 extern "C" void saxpy_(const int * n, const float * alpha, const float * x,
@@ -67,7 +67,7 @@ namespace Blas
 
 // Type-Generic Wrappers
 //____________________________________________________________________________
-/** Add the vector \p x scaled by \p alpha to \p y scaled by \beta */
+/** Add the vector \p x scaled by \p alpha to \p y scaled by `\beta` */
 template <typename AReal>
 inline void Axpy(const int * n, const AReal * alpha,
                  const AReal * x, const int * incx,
@@ -98,7 +98,7 @@ inline void Ger(const int * m, const int * n, const AReal * alpha,
 // Specializations
 //____________________________________________________________________________
 #ifndef DNN_USE_CBLAS
-   
+
 template<>
 inline void Axpy<double>(const int * n, const double * alpha,
                          const double * x, const int * incx,
@@ -254,7 +254,7 @@ inline void Ger<float>(const int * m, const int * n, const float * alpha,
 }
 
 #endif
-   
+
 } // namespace Blas
 } // namespace DNN
 } // namespace TMVA

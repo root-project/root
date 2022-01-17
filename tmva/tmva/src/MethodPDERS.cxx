@@ -217,7 +217,7 @@ TMVA::MethodPDERS::~MethodPDERS( void )
 /// define the options (their key words) that can be set in the option string.
 ///
 /// know options:
-///  - VolumeRangeMode   <string>  Method to determine volume range
+///  - VolumeRangeMode   `<string>`  Method to determine volume range
 ///    available values are:
 ///    - MinMax
 ///    - Unscaled
@@ -225,9 +225,9 @@ TMVA::MethodPDERS::~MethodPDERS( void )
 ///    - kNN
 ///    - Adaptive <default>
 ///
-///  - KernelEstimator   <string>  Kernel estimation function
+///  - KernelEstimator   `<string>`  Kernel estimation function
 ///    available values are:
-///    - Box <default>
+///    - Box `<default>`
 ///    - Sphere
 ///    - Teepee
 ///    - Gauss
@@ -242,12 +242,12 @@ TMVA::MethodPDERS::~MethodPDERS( void )
 ///    - Lanczos8
 ///    - Trim
 ///
-///  - DeltaFrac         <float>   Ratio of #EventsMin/#EventsMax for MinMax and RMS volume range
-///  - NEventsMin        <int>     Minimum number of events for adaptive volume range
-///  - NEventsMax        <int>     Maximum number of events for adaptive volume range
-///  - MaxVIterations    <int>     Maximum number of iterations for adaptive volume range
-///  - InitialScale      <float>   Initial scale for adaptive volume range
-///  - GaussSigma        <float>   Width with respect to the volume size of Gaussian kernel estimator
+///  - DeltaFrac         `<float>`   Ratio of #%EventsMin/#%EventsMax for MinMax and RMS volume range
+///  - NEventsMin        `<int>`     Minimum number of events for adaptive volume range
+///  - NEventsMax        `<int>`     Maximum number of events for adaptive volume range
+///  - MaxVIterations    `<int>`     Maximum number of iterations for adaptive volume range
+///  - InitialScale      `<float>`   Initial scale for adaptive volume range
+///  - GaussSigma        `<float>`   Width with respect to the volume size of Gaussian kernel estimator
 
 void TMVA::MethodPDERS::DeclareOptions()
 {

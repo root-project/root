@@ -238,7 +238,7 @@ void TMVA::MethodLikelihood::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// define the options (their key words) that can be set in the option string
 ///
-/// TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
+/// TransformOutput   `<bool>`   transform (often strongly peaked) likelihood output through sigmoid inversion
 
 void TMVA::MethodLikelihood::DeclareOptions()
 {

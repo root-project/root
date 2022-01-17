@@ -142,7 +142,7 @@ namespace MathMore {
 
   Re-implementation in MathMore of the Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution
   function of the lower tail of the \f$\chi^2\f$ distribution
-  with \f$r\f$ degrees of freedom (#chisquared_cdf). For detailed description see
+  with \f$r\f$ degrees of freedom (ROOT::Math::chisquared_cdf). For detailed description see
   <A HREF="http://mathworld.wolfram.com/Chi-SquaredDistribution.html">
   Mathworld</A>. The implementation used is that of
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC303">GSL</A>.
@@ -160,7 +160,7 @@ namespace MathMore {
 
   Re-implementation in MathMore of the Inverse (\f$D^{-1}(z)\f$) of the cumulative distribution
   function of the lower tail of the gamma distribution
-  (#gamma_cdf). For detailed description see
+  (#ROOT::Math::gamma_cdf). For detailed description see
   <A HREF="http://mathworld.wolfram.com/GammaDistribution.html">
   Mathworld</A>. The implementation used is that of
   <A HREF="http://www.gnu.org/software/gsl/manual/gsl-ref_19.html#SEC300">GSL</A>.

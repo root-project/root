@@ -329,7 +329,7 @@ Double_t TMVA::RuleFitParams::Risk(UInt_t ind1,UInt_t ind2, Double_t neff) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// risk assessment for tau model <itau>
+/// risk assessment for tau model `<itau>`
 
 Double_t TMVA::RuleFitParams::Risk(UInt_t ind1,UInt_t ind2, Double_t neff, UInt_t itau) const
 {
@@ -1199,7 +1199,7 @@ void TMVA::RuleFitParams::ErrorRateRocTst()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Estimates the error rate with the current set of parameters.
-/// using the <Perf> subsample.
+/// using the `<Perf>` subsample.
 /// Return the tau index giving the lowest error
 
 UInt_t TMVA::RuleFitParams::RiskPerfTst()

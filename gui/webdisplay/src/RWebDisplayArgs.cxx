@@ -145,7 +145,7 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 ///      qt5 - Qt5 QWebEngine, local display, local communication
 ///      qt6 - Qt6 QWebEngineCore, local display, local communication
 ///    local - either cef or qt5 or qt6
-///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
+/// `<prog>` - any program name which will be started instead of default browser, like /usr/bin/opera
 
 RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {

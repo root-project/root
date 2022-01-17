@@ -158,7 +158,7 @@ std::string RElement::GetPathAsString(const RElementPath_t &path)
 
 /////////////////////////////////////////////////////////////////////
 /// Extract index from name
-/// Index coded by client with ###<indx>$$$ suffix
+/// Index coded by client with `###<indx>$$$` suffix
 /// Such coding used by browser to identify element by index
 
 int RElement::ExtractItemIndex(std::string &name)
