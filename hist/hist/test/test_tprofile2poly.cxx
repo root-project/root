@@ -58,15 +58,14 @@ void binEntriesCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
       for(Double_t x=0.5; x<10; x+=2.0) {
          cont1 = tp2d->GetBinEffectiveEntries(tp2d->FindBin(x,y));
          cont2 = tpp->GetBinEffectiveEntries(tpp->FindBin(x,y));
-         ASSERT_NEAR(cont1, cont2, delta);
+         ASSERT_NEAR(cont1, cont2, 2 * delta);
       }
 
    }
    // test overflow
    cont1 = tp2d->GetBinEffectiveEntries(tp2d->FindBin(11,11));
    cont2 = tpp->GetBinEffectiveEntries(tpp->FindBin(11,11));
-   ASSERT_NEAR(cont1, cont2, delta);
-
+   ASSERT_NEAR(cont1, cont2, 2 * delta);
 }
 
 void binErrorCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
