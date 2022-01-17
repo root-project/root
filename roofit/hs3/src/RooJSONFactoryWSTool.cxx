@@ -740,6 +740,7 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
                       << ". skipping." << std::endl;
             return;
          }
+         if(ok) break;
       }
    }
    if (!ok) { // generic export using the factory expressions
