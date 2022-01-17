@@ -104,7 +104,7 @@ ClassImp(TRootEmbeddedCanvas);
 ///        destroyed by it ]
 
 TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
-            UInt_t w, UInt_t h, UInt_t options, ULong_t back)
+            UInt_t w, UInt_t h, UInt_t options, Pixel_t back)
    : TGCanvas(p, w, h, options, back)
 {
    fCanvas  = 0;

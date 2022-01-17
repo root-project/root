@@ -77,7 +77,7 @@ public:
                     const TGLMatrix & transform, Bool_t invertedWind,
                     const Float_t rgba[4]);
    TGLPhysicalShape(UInt_t ID, const TGLLogicalShape & logicalShape,
-                    const double * transform, Bool_t invertedWind,
+                    const Double_t * transform, Bool_t invertedWind,
                     const Float_t rgba[4]);
    virtual ~TGLPhysicalShape();
 

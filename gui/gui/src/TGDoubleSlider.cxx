@@ -90,7 +90,7 @@ ClassImp(TGDoubleHSlider);
 /// Slider constructor.
 
 TGDoubleSlider::TGDoubleSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
-                               UInt_t options, ULong_t back,
+                               UInt_t options, Pixel_t back,
                                Bool_t reversed, Bool_t mark_ends)
    : TGFrame(p, w, h, options, back)
 {

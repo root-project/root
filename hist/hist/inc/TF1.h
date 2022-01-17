@@ -343,13 +343,18 @@ public:
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor using a pointer to function.
    ///
-   /// \param npar is the number of free parameters used by the function
+   /// \param[in] name object name
+   /// \param[in] fcn pointer to function
+   /// \param[in] xmin,xmax x axis limits
+   /// \param[in] npar is the number of free parameters used by the function
+   /// \param[in] ndim number of dimensions
+   /// \param[in] addToGlobList boolean marking if it should be added to global list
    ///
    /// This constructor creates a function of type C when invoked
    /// with the normal C++ compiler.
    ///
    ///
-   /// WARNING! A function created with this constructor cannot be Cloned
+   /// \warning A function created with this constructor cannot be Cloned
 
 
    template <class T>

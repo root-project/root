@@ -58,7 +58,7 @@ ClassImp(TGViewFrame);
 /// Create a editor frame.
 
 TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
-                         ULong_t back) :
+                         Pixel_t back) :
    TGCompositeFrame(v, w, h, options | kOwnBackground, back)
 {
    fView = v;
@@ -91,7 +91,7 @@ ClassImp(TGView);
 
 TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
                UInt_t xMargin, UInt_t yMargin, UInt_t options,
-               UInt_t sboptions, ULong_t back)
+               UInt_t sboptions, Pixel_t back)
        : TGCompositeFrame(p, w, h, options, GetDefaultFrameBackground())
 {
    fWidgetId    = id;

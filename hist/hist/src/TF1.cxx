@@ -717,7 +717,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 ///
 ///  This constructor is called for functions of type C by the C++ interpreter.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kInterpreted, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
@@ -743,7 +743,12 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor using a pointer to a real function.
 ///
-/// \param npar is the number of free parameters used by the function
+/// \param[in] name object name
+/// \param[in] fcn pointer to function
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor creates a function of type C when invoked
 /// with the normal C++ compiler.
@@ -751,16 +756,21 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
 /// see test program test/stress.cxx (function stress1) for an example.
 /// note the interface with an intermediate pointer.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor using a pointer to real function.
+/// Constructor using a pointer to (const) real function.
 ///
-/// \param npar is the number of free parameters used by the function
+/// \param[in] name object name
+/// \param[in] fcn pointer to function
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor creates a function of type C when invoked
 /// with the normal C++ compiler.
@@ -768,7 +778,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
 /// see test program test/stress.cxx (function stress1) for an example.
 /// note the interface with an intermediate pointer.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
@@ -777,9 +787,13 @@ TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor using the Functor class.
 ///
+/// \param[in] name object name
+/// \param f parameterized functor
 /// \param xmin and
 /// \param xmax define the plotting range of the function
-/// \param npar is the number of free parameters used by the function
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor can be used only in compiled code
 ///

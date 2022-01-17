@@ -1446,7 +1446,7 @@ LayoutChunk_t *TGFont::NewChunk(TGTextLayout *layout, Int_t *maxPtr,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a string of characters on the screen. DrawCharsExp() expands
-/// control characters that occur in the string to \X or \xXX sequences.
+/// control characters that occur in the string to \\X or \\xXX sequences.
 /// DrawChars() just draws the strings.
 ///
 /// dst      -- Window or pixmap in which to draw.

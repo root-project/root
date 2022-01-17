@@ -152,7 +152,7 @@ void TSpectrum::SetDeconIterations(Int_t n)
 ///   as the input histogram h, but only bins from `binmin` to `binmax` will be filled
 ///   with the estimated background.
 
-TH1 *TSpectrum::Background(const TH1 * h, int numberIterations,
+TH1 *TSpectrum::Background(const TH1 * h, Int_t numberIterations,
                            Option_t * option)
 {
    if (h == 0) return 0;
@@ -512,10 +512,10 @@ void TSpectrum::SetResolution(Double_t resolution)
 /// ../../../tutorials/spectrum/Background_compton.C
 /// End_Macro
 
-const char *TSpectrum::Background(Double_t *spectrum, int ssize,
-                                          int numberIterations,
-                                          int direction, int filterOrder,
-                                          bool smoothing,int smoothWindow,
+const char *TSpectrum::Background(Double_t *spectrum, Int_t ssize,
+                                          Int_t numberIterations,
+                                          Int_t direction, Int_t filterOrder,
+                                          bool smoothing, Int_t smoothWindow,
                                           bool compton)
 {
    int i, j, w, bw, b1, b2, priz;

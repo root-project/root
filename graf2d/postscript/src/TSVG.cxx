@@ -1502,8 +1502,8 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the SVG file. The main task of the function is to output the
-/// SVG header file which consist in <title>, <desc> and <defs>. The
-/// HeaderPS provided by the user program is written in the <defs> part.
+/// SVG header file which consist in `<title>`, `<desc>` and `<defs>`. The
+/// HeaderPS provided by the user program is written in the `<defs>` part.
 
 void TSVG::Initialize()
 {
@@ -1558,7 +1558,7 @@ void TSVG::MovePS(Double_t ix, Double_t iy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the SVG page. This function initialize the pad conversion
-/// coefficients and output the <svg> directive which is close later in the
+/// coefficients and output the `<svg>` directive which is close later in the
 /// the function Close.
 
 void TSVG::NewPage()

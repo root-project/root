@@ -1083,7 +1083,7 @@ TMatrixD* TFITSHDU::ReadAsMatrix(Int_t layer, Option_t *opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read image HDU as a histogram. Return 0 if conversion cannot be done.
 /// The returned object can be TH1D, TH2D or TH3D depending on data dimensionality.
-/// Please, check condition (returnedValue->IsA() == TH*D::Class()) to
+/// Please, check condition (returnedValue->IsA() == TH*D::%Class()) to
 /// determine the object class.
 ///
 /// NOTE: do not confuse with image histogram! This function interprets
