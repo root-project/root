@@ -1266,9 +1266,9 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf *pd
       RooArgSet nps;
       RooArgSet pois;
       RooArgSet globs;
-      for (auto var : this->_workspace->allVars()) {
+      for (auto& var : this->_workspace->allVars()) {
          if (!pdf->dependsOn(*var))
-            return;
+            continue;
          if (var->getAttribute("observable")) {
             observables.add(*var, true);
          }

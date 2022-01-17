@@ -249,7 +249,7 @@ public:
                tmp.push_back(hf_high);
             }
             PiecewiseInterpolation *v = new PiecewiseInterpolation(
-               ("histoSys_" + name).c_str(), ("histoSys_" + name).c_str(), *hf, nps, low, high, false);
+               ("histoSys_" + name).c_str(), ("histoSys_" + name).c_str(), *hf, low, high, nps, false);
             shapeElems.add(*v);
             tmp.push_back(v);
          } else {
