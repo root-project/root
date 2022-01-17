@@ -130,7 +130,7 @@ RooRealVar *getNP(RooJSONFactoryWSTool *tool, const char *parname)
 }
 RooAbsPdf *getConstraint(RooJSONFactoryWSTool *tool, const std::string &sysname)
 {
-   RooAbsPdf *pdf = tool->workspace()->pdf(sysname.c_str());
+   RooAbsPdf *pdf = tool->workspace()->pdf((sysname+"_constraint").c_str());
    if (!pdf) {
       pdf = (RooAbsPdf *)(tool->workspace()->factory(
          TString::Format("RooGaussian::%s_constraint(alpha_%s,nom_alpha_%s,sigma_alpha_%s)", sysname.c_str(),
