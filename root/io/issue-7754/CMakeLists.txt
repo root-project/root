@@ -7,7 +7,7 @@ ROOTTEST_ADD_TEST(read_cmssw_class_v3
                   OUTREF read_cmssw_class_v3.ref
                   DEPENDS write_cmssw_class_v2 )
 
-set(RootExternalIncludes -e ".include ${CMAKE_CURRENT_SOURCE_DIR}/mwe/include")
+set(RootExternalIncludes -e "gSystem->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}/mwe/include\");")
 
 ROOTTEST_ADD_TEST(read_mwe_0
                   MACRO mwe/combined.cxx+
