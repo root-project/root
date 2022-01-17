@@ -16,7 +16,7 @@
 /// \author Rene Brun
 
 void latex5() {
-   TCanvas *c1 = new TCanvas("mathsymb","Mathematical Symbols",600,600);
+   auto c1 = new TCanvas("mathsymb","Mathematical Symbols",600,600);
 
    TLatex l;
    l.SetTextSize(0.03);
@@ -119,7 +119,7 @@ void latex5() {
 
    // Save the picture in various formats
    c1->Print("mathsymb.ps");
-   c1->Print("mathsymb.gif");
+   c1->Print("mathsymb.png");
    c1->Print("mathsymb.pdf");
    c1->Print("mathsymb.svg");
 }
