@@ -9,7 +9,7 @@
 /// \author Yue Shi Lai
 
 {
-   auto c1 = new TCanvas("c1");
+   TCanvas *c1 = new TCanvas("c1");
 
    TMathText l;
    l.SetTextAlign(23);
@@ -25,4 +25,6 @@
 
    c1->Print("c1.png");
    c1->Print("c1.ps");
+
+   return c1;
 }
