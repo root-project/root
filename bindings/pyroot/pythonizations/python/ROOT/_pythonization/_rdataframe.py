@@ -131,6 +131,20 @@ df = ROOT.RDF.MakeNumpyDataFrame({"x": x, "y": y})
 df.Define("z", "x + y").Snapshot("tree", "file.root")
 ~~~
 
+### Construct histogram and profile models from a tuple
+
+The Histo1D(), Histo2D(), Histo3D(), Profile1D() and Profile2D() methods return
+histograms and profiles, respectively, which can be constructed using a model
+argument.
+
+In Python, we can specify the arguments for the constructor of such histogram or
+profile model with a Python tuple, as shown in the example below:
+
+~~~{.py}
+# First argument is a tuple with the arguments to construct a TH1D model
+h = df.Histo1D(("histName", "histTitle", 64, 0., 128.), "myColumn")
+~~~
+
 \htmlonly
 </div>
 \endhtmlonly
