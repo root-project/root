@@ -39,6 +39,8 @@ namespace ROOT {
        based on another precision type
 
        @ingroup GenVector
+
+       @sa Overview of the @ref GenVector "physics vector library"
        */
 
 

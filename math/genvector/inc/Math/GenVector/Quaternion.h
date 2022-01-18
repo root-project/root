@@ -42,6 +42,8 @@ namespace Math {
       See also ROOT::Math::AxisAngle, ROOT::Math::EulerAngles, and ROOT::Math::Rotation3D.
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 
 class Quaternion {

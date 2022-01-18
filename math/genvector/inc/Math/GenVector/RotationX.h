@@ -38,6 +38,8 @@ namespace Math {
       For efficiency reason, in addition to the the angle, the sine and cosine of the angle are held
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 
 class RotationX {
