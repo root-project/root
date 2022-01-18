@@ -213,6 +213,7 @@ public:
             }
             RooStats::HistFactory::FlexibleInterpVar *v = new RooStats::HistFactory::FlexibleInterpVar(
                ("overallSys_" + name).c_str(), ("overallSys_" + name).c_str(), nps, 1., low, high);
+            v->setAllInterpCodes(4); // default HistFactory interpCode
             normElems.add(*v);
             tmp.push_back(v);
          }
@@ -250,6 +251,7 @@ public:
             }
             PiecewiseInterpolation *v = new PiecewiseInterpolation(
                ("histoSys_" + name).c_str(), ("histoSys_" + name).c_str(), *hf, low, high, nps, false);
+            v->setAllInterpCodes(4); // default interpCode for HistFactory
             shapeElems.add(*v);
             tmp.push_back(v);
          } else {
