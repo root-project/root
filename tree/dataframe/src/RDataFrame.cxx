@@ -36,7 +36,7 @@ myHisto->Draw(); // Event loop is run here, upon first access to a result
 
 Calculations are expressed in terms of a type-safe *functional chain of actions and transformations*, RDataFrame takes
 care of their execution. The implementation automatically puts in place several low level optimisations such as
-multi-thread parallelisation and caching.
+multi-thread parallelization and caching.
 
 \htmlonly
 <a href="https://doi.org/10.5281/zenodo.260230"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.260230.svg"
@@ -142,20 +142,24 @@ These operations do not modify the dataframe or book computations but simply ret
 
 \anchor introduction
 ## Introduction
-Users define their analysis as a sequence of operations to be performed on the data-frame object; the framework
-takes care of the management of the loop over entries as well as low-level details such as I/O and parallelisation.
+Users define their analysis as a sequence of operations to be performed on the dataframe object; the framework
+takes care of the management of the loop over entries as well as low-level details such as I/O and parallelization.
 RDataFrame provides methods to perform most common operations required by ROOT analyses;
 at the same time, users can just as easily specify custom code that will be executed in the event loop.
 
 RDataFrame is built with a *modular* and *flexible* workflow in mind, summarised as follows:
 
-1. **build a data-frame** object by specifying your data-set
-2. **apply a series of transformations** to your data
-   1.  **filter** (e.g. apply some cuts) or
-   2.  **define** a new column (e.g. the result of an expensive computation on columns)
-3. **apply actions** to the transformed data to produce results (e.g. fill a histogram)
+1. Construct a dataframe object by specifying a dataset. RDataFrame supports TTree as well as TChain, [CSV files](https://root.cern/doc/master/df014__CSVDataSource_8C.html), [SQLite files](https://root.cern/doc/master/df027__SQliteDependencyOverVersion_8C.html), [RNTuples](https://root.cern/doc/master/structROOT_1_1Experimental_1_1RNTuple.html), and it can be extended to custom data formats. From Python, [NumPy arrays can be imported into RDataFrame](https://root.cern/doc/master/df032__MakeNumpyDataFrame_8py.html) as well.
 
-Make sure to book all transformations and actions before you access the contents of any of the results: this lets RDataFrame accumulate work and then produce all results at the same time, upon first access to any of them.
+2. Transform the dataframe by:
+
+   - [Applying filters](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#transformations). This selects only specific rows of the dataset.
+
+   - [Creating custom columns](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#transformations). Custom columns can, for example, contain the results of a computation that must be performed for every row of the dataset.
+
+3. [Produce results](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#actions). *Actions* are used to aggregate data into results. Most actions are *lazy*, i.e. they are not executed on the spot, but registered with RDataFrame and executed only when a result is accessed for the first time.
+
+Make sure to book all transformations and actions before you access the contents of any of the results. This lets RDataFrame accumulate work and then produce all results at the same time, upon first access to any of them.
 
 The following table shows how analyses based on TTreeReader and TTree::Draw() translate to RDataFrame. Follow the
 [crash course](#crash-course) to discover more idiomatic and flexible ways to express analyses with RDataFrame.
@@ -249,11 +253,11 @@ using namespace ROOT; // RDataFrame's namespace
 ~~~
 which is omitted for brevity. The terms "column" and "branch" are used interchangeably.
 
-### Creating a RDataFrame
+### Creating an RDataFrame
 RDataFrame's constructor is where the user specifies the dataset and, optionally, a default set of columns that
-operations should work with. Here are the most common methods to construct a RDataFrame object:
+operations should work with. Here are the most common methods to construct an RDataFrame object:
 ~~~{.cpp}
-// single file -- all ctors are equivalent
+// single file -- all constructors are equivalent
 TFile *f = TFile::Open("file.root");
 TTree *t = f.Get<TTree>("treeName");
 
@@ -261,7 +265,7 @@ RDataFrame d1("treeName", "file.root");
 RDataFrame d2("treeName", f); // same as TTreeReader
 RDataFrame d3(*t);
 
-// multiple files -- all ctors are equivalent
+// multiple files -- all constructors are equivalent
 TChain chain("myTree");
 chain.Add("file1.root");
 chain.Add("file2.root");
@@ -272,13 +276,13 @@ RDataFrame d5("myTree", files);
 RDataFrame d6("myTree", "file*.root"); // the glob is passed as-is to TChain's constructor
 RDataFrame d7(chain);
 ~~~
-Additionally, users can construct a RDataFrame with no data source by passing an integer number. This is the number of rows that
+Additionally, users can construct an RDataFrame with no data source by passing an integer number. This is the number of rows that
 will be generated by this RDataFrame.
 ~~~{.cpp}
 RDataFrame d(10); // a RDF with 10 entries (and no columns/branches, for now)
 d.Foreach([] { static int i = 0; std::cout << i++ << std::endl; }); // silly example usage: count to ten
 ~~~
-This is useful to generate simple data-sets on the fly: the contents of each event can be specified with Define() (explained below). For example, we have used this method to generate Pythia events and write them to disk in parallel (with the Snapshot action).
+This is useful to generate simple datasets on the fly: the contents of each event can be specified with Define() (explained below). For example, we have used this method to generate Pythia events and write them to disk in parallel (with the Snapshot action).
 
 For data sources other than TTrees and TChains, RDataFrame objects are constructed using ad-hoc factory functions (see e.g. MakeCsvDataFrame(), MakeSqliteDataFrame(), MakeArrowDataFrame()):
 
@@ -295,14 +299,14 @@ RDataFrame d("myTree", "file.root");
 auto h = d.Histo1D("MET");
 h->Draw();
 ~~~
-The first line creates a RDataFrame associated to the TTree "myTree". This tree has a branch named "MET".
+The first line creates an RDataFrame associated to the TTree "myTree". This tree has a branch named "MET".
 
 Histo1D() is an *action*; it returns a smart pointer (a ROOT::RDF::RResultPtr, to be precise) to a TH1D histogram filled
 with the `MET` of all events. If the quantity stored in the branch is a collection (e.g. a vector or an array), the
 histogram is filled with all vector elements for each event.
 
 You can use the objects returned by actions as if they were pointers to the desired results. There are many other
-possible [actions](#cheatsheet), and all their results are wrapped in smart pointers; we'll see why in a minute.
+possible [actions](\ref cheatsheet), and all their results are wrapped in smart pointers; we'll see why in a minute.
 
 ### Applying a filter
 Let's say we want to cut over the value of branch "MET" and count how many events pass this cut. This is one way to do it:
@@ -341,15 +345,15 @@ auto df = d.Define("p", "std::array<double, 4> p{px, py, pz}; return p;")
 
 The code snippet above defines a column `p` that is a fixed-size array using the component column names and then
 filters on its magnitude by looping over its elements. It must be noted that the usage of strings to define columns
-like the one above is a major advantage when using PyROOT. However, only constants and data coming from other columns
+like the one above is currently the only possibility when using PyROOT. When writing expressions as such, only constants and data coming from other columns
 in the dataset can be involved in the code passed as a string. Local variables and functions cannot be used, since
-the interpreter will not know how to find them. When capturing local state is necessary, a C++ callable can be used.
+the interpreter will not know how to find them. When capturing local state is necessary, it is suggested to write a C++ application and make use of C++ callables.
 
 More information on filters and how to use them to automatically generate cutflow reports can be found [below](#Filters).
 
 ### Defining custom columns
 Let's now consider the case in which "myTree" contains two quantities "x" and "y", but our analysis relies on a derived
-quantity `z = sqrt(x*x + y*y)`. Using the Define() transformation, we can create a new column in the data-set containing
+quantity `z = sqrt(x*x + y*y)`. Using the Define() transformation, we can create a new column in the dataset containing
 the variable "z":
 ~~~{.cpp}
 RDataFrame d("myTree", "file.root");
@@ -369,27 +373,28 @@ auto zMean = d.Define("z", "sqrt(x*x + y*y)").Mean("z");
 std::cout << *zMean << std::endl;
 ~~~
 Again the names of the branches used in the expression and their types are inferred automatically. The string must be
-valid C++ and is just-in-time compiled by the ROOT interpreter, cling -- the process has a small runtime overhead.
+valid C++ and it is just-in-time compiled. The process has a small runtime overhead and like with filters it is currently the only possible approach when using PyROOT.
 
-Previously, when showing the different ways a RDataFrame can be created, we showed a constructor that only takes a
-number of entries a parameter. In the following example we show how to combine such an "empty" RDataFrame with Define()
-transformations to create a data-set on the fly. We then save the generated data on disk using the Snapshot() action.
+Previously, when showing the different ways an RDataFrame can be created, we showed a constructor that takes a
+number of entries as a parameter. In the following example we show how to combine such an "empty" RDataFrame with Define()
+transformations to create a dataset on the fly. We then save the generated data on disk using the Snapshot() action.
 ~~~{.cpp}
-RDataFrame d(100); // a RDF that will generate 100 entries (currently empty)
+RDataFrame d(100); // an RDF that will generate 100 entries (currently empty)
 int x = -1;
 auto d_with_columns = d.Define("x", [&x] { return ++x; })
                        .Define("xx", [&x] { return x*x; });
 d_with_columns.Snapshot("myNewTree", "newfile.root");
 ~~~
-This example is slightly more advanced than what we have seen so far: for starters, it makes use of lambda captures (a
+This example is slightly more advanced than what we have seen so far. First, it makes use of lambda captures (a
 simple way to make external variables available inside the body of C++ lambdas) to act on the same variable `x` from
-both Define() transformations. Secondly we have *stored* the transformed data-frame in a variable. This is always
-possible: at each point of the transformation chain, users can store the status of the data-frame for further use (more
+both Define() transformations. Second, we have *stored* the transformed dataframe in a variable. This is always
+possible, since at each point of the transformation chain users can store the status of the dataframe for further use (more
 on this [below](#callgraphs)).
 
 You can read more about defining new columns [here](#custom-columns).
 
 \image html RDF_Graph.png "A graph composed of two branches, one starting with a filter and one with a define. The end point of a branch is always an action."
+
 
 ### Running on a range of entries
 It is sometimes necessary to limit the processing of the dataset to a range of entries. For this reason, the RDataFrame
@@ -399,7 +404,7 @@ exclusively on the entries passing the filter -- it will not even count the othe
 hanging from another Range(). Here are some commented examples:
 ~~~{.cpp}
 RDataFrame d("myTree", "file.root");
-// Here we store a data-frame that loops over only the first 30 entries in a variable
+// Here we store a dataframe that loops over only the first 30 entries in a variable
 auto d30 = d.Range(30);
 // This is how you pick all entries from 15 onwards
 auto d15on = d.Range(15, 0);
@@ -410,9 +415,9 @@ Note that ranges are not available when multi-threading is enabled. More informa
 [here](#ranges).
 
 ### Executing multiple actions in the same event loop
-As a final example let us apply two different cuts on branch "MET" and fill two different histograms with the "pt\_v" of
+As a final example let us apply two different cuts on branch "MET" and fill two different histograms with the "pt_v" of
 the filtered events.
-By now, you should be able to easily understand what's happening:
+By now, you should be able to easily understand what is happening:
 ~~~{.cpp}
 RDataFrame d("treeName", "file.root");
 auto h1 = d.Filter("MET > 10").Histo1D("pt_v");
@@ -431,7 +436,7 @@ RDataFrame to run the loop once and produce all results in one go.
 ### Going parallel
 Let's say we would like to run the previous examples in parallel on several cores, dividing events fairly between cores.
 The only modification required to the snippets would be the addition of this line *before* constructing the main
-data-frame object:
+dataframe object:
 ~~~{.cpp}
 ROOT::EnableImplicitMT();
 ~~~
@@ -440,19 +445,22 @@ Simple as that. More details are given [below](#parallel-execution).
 \anchor collections
 ## Working with collections and object selections
 
-RDataFrame reads collections as the special type ROOT::VecOps::RVec (e.g. a branch containing an array of floating point numbers can
-be read as a `ROOT::VecOps::RVec<float>`). C-style arrays (with variable or static size), `std::vector`s and most other collection
-types can be read this way. When reading ROOT data, column values of type `ROOT::VecOps::RVec<T>` perform no copy of the underlying array.
+RDataFrame reads collections as the special type [ROOT::RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html): for example, a branch containing an array of floating point numbers can be read as a ROOT::RVecF. C-style arrays (with variable or static size), STL vectors and most other collection types can be read this way.
 
-ROOT::VecOps::RVec is a container similar to `std::vector` (and can be used just like a `std::vector`) but it also offers a rich interface to operate on the array elements in a
-vectorised fashion, similarly to Python's NumPy arrays.
+RVec is a container similar to std::vector (and can be used just like a std::vector) but it also offers a rich interface to operate on the array elements in a vectorised fashion, similarly to Python's NumPy arrays.
 
-For example, to fill a histogram with the `pt` of selected particles for each event, Define() can be used to create
-a column that contains the desired array elements as follows:
+For example, to fill a histogram with the "pt" of selected particles for each event, Define() can be used to create a column that contains the desired array elements as follows:
 
 ~~~{.cpp}
 // h is filled with all the elements of `good_pts`, for each event
-auto h = df.Define("good_pts", "pt[pt > 0]").Histo1D("good_pts")
+auto h = df.Define("good_pts", [](const ROOT::RVecF &pt) { return pt[pt > 0]; })
+           .Histo1D("good_pts");
+~~~
+
+And in Python:
+
+~~~{.py}
+h = df.Define("good_pts", "pt[pt > 0]").Histo1D("good_pts")
 ~~~
 
 Learn more at ROOT::VecOps::RVec.
@@ -655,7 +663,7 @@ print(cols["x"], cols["y"])
 ### Processing data stored in NumPy arrays
 
 In case you have data in NumPy arrays in Python and you want to process the data with ROOT, you can easily
-create a RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function returns a new RDataFrame with
+create an RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function returns a new RDataFrame with
 the column names defined by the keys of the given dictionary with NumPy arrays. Only arrays of fundamental types (integers and floating point values) are supported and the arrays must have the same length. Data is read directly from the arrays: no copies are performed.
 
 ~~~{.py}
@@ -916,7 +924,7 @@ auto ApplySomeFilters(RDF df)
 A possibly simpler, C++11-compatible alternative is to take advantage of the fact that any dataframe node can be
 converted (implicitly or via an explicit cast) to the common type ROOT::RDF::RNode:
 ~~~{.cpp}
-// a function that conditionally adds a Range to a RDataFrame node.
+// a function that conditionally adds a Range to an RDataFrame node.
 RNode MaybeAddRange(RNode df, bool mustAddRange)
 {
    return mustAddRange ? df.Range(1) : df;
@@ -966,7 +974,7 @@ Read more on ROOT::RDF::RResultPtr::OnPartialResult().
 
 \anchor default-branches
 ### Default branch lists
-When constructing a RDataFrame object, it is possible to specify a **default column list** for your analysis, in the
+When constructing an RDataFrame object, it is possible to specify a **default column list** for your analysis, in the
 usual form of a list of strings representing branch/column names. The default column list will be used as a fallback
 whenever a list specific to the transformation/action is not present. RDataFrame will take as many of these columns as
 needed, ignoring trailing extra names if present.
@@ -1079,7 +1087,7 @@ Friend TTrees are supported by RDataFrame.
 Friend TTrees with a TTreeIndex are supported starting from ROOT v6.24.
 
 To use friend trees in RDataFrame, it's necessary to add the friends directly to
-the tree and instantiate a RDataFrame with the main tree:
+the tree and instantiate an RDataFrame with the main tree:
 
 ~~~{.cpp}
 TTree t([...]);
@@ -1120,12 +1128,12 @@ several paths of filtering/creation of columns are executed simultaneously; we o
 state of the chain".
 
 This feature can be used, for example, to create a temporary column once and use it in several subsequent filters or
-actions, or to apply a strict filter to the data-set *before* executing several other transformations and actions,
+actions, or to apply a strict filter to the dataset *before* executing several other transformations and actions,
 effectively reducing the amount of events processed.
 
 Let's try to make this clearer with a commented example:
 ~~~{.cpp}
-// build the data-frame and specify a default column list
+// build the dataframe and specify a default column list
 RDataFrame d(treeName, filePtr, {"var1", "var2", "var3"});
 
 // apply a cut and save the state of the chain
@@ -1287,11 +1295,11 @@ RDataFrame::RDataFrame(ULong64_t numEntries)
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// \brief Build dataframe associated to datasource.
-/// \param[in] ds The data-source object.
+/// \brief Build dataframe associated to data source.
+/// \param[in] ds The data source object.
 /// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
 ///
-/// A dataframe associated to a datasource will query it to access column values.
+/// A dataframe associated to a data source will query it to access column values.
 /// See ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnNames_t &defaultBranches)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultBranches))
@@ -1302,7 +1310,7 @@ RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnN
 
 namespace cling {
 //////////////////////////////////////////////////////////////////////////
-/// Print a RDataFrame at the prompt
+/// Print an RDataFrame at the prompt
 std::string printValue(ROOT::RDataFrame *tdf)
 {
    auto &df = *tdf->GetLoopManager();
