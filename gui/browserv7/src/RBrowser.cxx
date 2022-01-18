@@ -361,6 +361,7 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
 /// Show or update RBrowser in web window
 /// If web window already started - just refresh it like "reload" button does
 /// If no web window exists or \param always_start_new_browser configured, starts new window
+/// \param args display arguments
 
 void RBrowser::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {

@@ -83,6 +83,7 @@ void ROOT::Experimental::REveGeomViewer::SelectVolume(const std::string &volname
 /// Show or update geometry in web window
 /// If web browser already started - just refresh drawing like "reload" button does
 /// If no web window exists or \param always_start_new_browser configured, starts new window
+/// \param args arguments to display
 
 void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browser)
 {

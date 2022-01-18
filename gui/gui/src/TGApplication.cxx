@@ -42,7 +42,7 @@ ClassImp(TGApplication);
 /// use either TApplication or TRint.
 
 TGApplication::TGApplication(const char *appClassName,
-                             int *argc, char **argv, void*, int)
+                             Int_t *argc, char **argv, void*, Int_t)
    : TApplication()
 {
    if (gApplication) {

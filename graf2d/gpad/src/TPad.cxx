@@ -677,9 +677,8 @@ void TPad::Clear(Option_t *option)
 ///  - If Clip ==1 the segment has one point outside the boundary.
 ///  - If Clip ==0 the segment is inside the boundary.
 ///
-/// \param[in]  x[],y[]                       Segment coordinates (2 points)
-/// \param[in]  xclipl,yclipb,xclipr,yclipt   Clipping boundary
-/// \param[out] x[],y[]                       New segment coordinates( 2 points)
+/// \param[inout]  x[],y[]                       Segment coordinates (2 points)
+/// \param[in]     xclipl,yclipb,xclipr,yclipt   Clipping boundary
 
 Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t xclipr, Float_t yclipt)
 {
@@ -741,16 +740,7 @@ Int_t TPad::Clip(Float_t *x, Float_t *y, Float_t xclipl, Float_t yclipb, Float_t
    return clip;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Clipping routine: Cohen Sutherland algorithm.
-///
-///  - If Clip ==2 the segment is outside the boundary.
-///  - If Clip ==1 the segment has one point outside the boundary.
-///  - If Clip ==0 the segment is inside the boundary.
-///
-/// \param[in]  x[],y[]                       Segment coordinates (2 points)
-/// \param[in]  xclipl,yclipb,xclipr,yclipt   Clipping boundary
-/// \param[out] x[],y[]                       New segment coordinates(2 points)
+/// @copydoc TPad::Clip(Float_t*,Float_t*,Float_t,Float_t,Float_t,Float_t)
 
 Int_t TPad::Clip(Double_t *x, Double_t *y, Double_t xclipl, Double_t yclipb, Double_t xclipr, Double_t yclipt)
 {
@@ -838,7 +828,7 @@ Int_t TPad::ClippingCode(Double_t x, Double_t y, Double_t xcl1, Double_t ycl1, D
 ///
 /// \param[in]  n                            Number of points in the polygon to
 ///                                          be clipped
-/// \param[in]  x[n],y[n]                    Polygon do be clipped vertices
+/// \param[in]  x,y                          Polygon x[n], y[n] do be clipped vertices
 /// \param[in]  xclipl,yclipb,xclipr,yclipt  Clipping boundary
 /// \param[out] nn                           Number of points in xc and yc
 /// \param[out] xc,yc                        Clipped polygon vertices. The Int_t

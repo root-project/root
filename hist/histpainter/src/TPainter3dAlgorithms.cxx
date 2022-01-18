@@ -2250,6 +2250,7 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
 /// \param[in] ang   angle between X ang Y (not used in this method)
 /// \param[in] nx   number of cells along X
 /// \param[in] ny   number of cells along Y
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -2407,6 +2408,7 @@ void TPainter3dAlgorithms::LegoCartesian(Double_t, Int_t nx, Int_t ny, const cha
 /// \param[in] iordr   order of variables (0 - R,PHI; 1 - PHI,R)
 /// \param[in] na   number of steps along 1st variable
 /// \param[in] nb   number of steps along 2nd variable
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -2622,6 +2624,7 @@ L300:
 /// \param[in] iordr   order of variables (0 - Z,PHI; 1 - PHI,Z)
 /// \param[in] na   number of steps along 1st variable
 /// \param[in] nb   number of steps along 2nd variable
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -2843,6 +2846,7 @@ L400:
 /// \param[in] iordr   order of variables (0 - THETA,PHI; 1 - PHI,THETA)
 /// \param[in] na   number of steps along 1st variable
 /// \param[in] nb   number of steps along 2nd variable
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -3346,7 +3350,7 @@ void TPainter3dAlgorithms::SetEdgeAtt(Color_t color, Style_t style, Width_t widt
 ///
 /// \param[in] val   encoded value
 ///
-/// \param[out] iv1-iv6   visibility of the sides
+/// \param[out] iv1,iv2,iv3,iv4,iv5,iv6   visibility of the sides
 /// \param[out] ir   increment along R
 
 void TPainter3dAlgorithms::SideVisibilityDecode(Double_t val, Int_t &iv1, Int_t &iv2, Int_t &iv3, Int_t &iv4, Int_t &iv5, Int_t &iv6, Int_t &ir)
@@ -3471,6 +3475,7 @@ void TPainter3dAlgorithms::Spectrum(Int_t nl, Double_t fmin, Double_t fmax, Int_
 /// \param[in] ang   angle between X ang Y (not used in this method)
 /// \param[in] nx   number of steps along X
 /// \param[in] ny   number of steps along Y
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -3660,6 +3665,7 @@ void TPainter3dAlgorithms::SurfaceFunction(Int_t ia, Int_t ib, Double_t *f, Doub
 /// \param[in] iordr   order of variables (0 - R,PHI, 1 - PHI,R)
 /// \param[in] na   number of steps along 1st variable
 /// \param[in] nb   number of steps along 2nd variable
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -3787,6 +3793,7 @@ L300:
 /// \param[in] iordr   order of variables (0 - Z,PHI; 1 - PHI,Z)
 /// \param[in] na   number of steps along 1st variable
 /// \param[in] nb   number of steps along 2nd variable
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -3910,6 +3917,7 @@ L400:
 /// \param[in] iordr   order of variables (0 - THETA,PHI; 1 - PHI,THETA)
 /// \param[in] na   number of steps along 1st variable
 /// \param[in] nb   number of steps along 2nd variable
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -4098,11 +4106,13 @@ void TPainter3dAlgorithms::SurfaceProperty(Double_t qqa, Double_t qqd, Double_t 
 /// Draw implicit function FUN(X,Y,Z) = 0 in cartesian coordinates using
 /// hidden surface removal algorithm "Painter".
 ///
+/// \param[in] f3 pointer to 3D function
 /// \param[in] rmin   min scope coordinates
 /// \param[in] rmax   max scope coordinates
 /// \param[in] nx   number of steps along X
 /// \param[in] ny   number of steps along Y
 /// \param[in] nz   number of steps along Z
+/// \param[in] chopt specific options
 ///
 /// - `chopt` = 'BF' from BACK to FRONT
 /// - `chopt` = 'FB' from FRONT to BACK
@@ -4592,7 +4602,12 @@ L560:
 ////////////////////////////////////////////////////////////////////////////////
 /// Consideration of trivial cases: 1,2,5,8,9,11,14
 ///
-/// \param[in] k1-k6   edges intersected with iso-surface
+/// \param[in] k1,k2,k3,k4,k5,k6   edges intersected with iso-surface
+/// \param[out] nnod number of nodes
+/// \param[out] ntria number of triangles
+/// \param[out] xyz 3D points
+/// \param[out] grad 3D gradients
+/// \param[out] itria 3D triangle indices
 
 void TPainter3dAlgorithms::MarchingCubeCase00(Int_t k1, Int_t k2, Int_t k3,
                                               Int_t k4, Int_t k5, Int_t k6,
@@ -5159,8 +5174,8 @@ void TPainter3dAlgorithms::MarchingCubeMiddlePoint(Int_t nnod, Double_t xyz[52][
 ////////////////////////////////////////////////////////////////////////////////
 /// Check for surface penetration ("bottle neck")
 ///
-/// \param[in] axx   vertex values for 1st face
-/// \param[in] bxx   vertex values for opposite face
+/// \param[in] a00,a10,a11,a01   vertex values for 1st face
+/// \param[in] b00,b10,b11,b01   vertex values for opposite face
 ///
 /// \param[out] irep   1,2: there is surface penetration, 0: there is not surface penetration
 
@@ -5535,6 +5550,7 @@ L998:
 /// \param[in] x   slices along X
 /// \param[in] y   slices along Y
 /// \param[in] z   slices along Z
+/// \param[in] chopt specific options
 ///
 /// - chopt` = 'BF' from BACK to FRONT
 /// - chopt` = 'FB' from FRONT to BACK

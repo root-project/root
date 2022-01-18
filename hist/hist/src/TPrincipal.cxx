@@ -819,7 +819,7 @@ void TPrincipal::MakeNormalised()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate the file <classname>PCA.cxx which contains the
+/// Generate the file `<classname>PCA.cxx` which contains the
 /// implementation of two methods:
 /// ~~~ {.cpp}
 ///    void <classname>::X2P(Double_t *x, Double *p)
@@ -837,7 +837,7 @@ void TPrincipal::MakeNormalised()
 ///    Double_t <classname>::fgSigmaValues[]
 /// ~~~
 /// are initialized, and assumed to exist. The class declaration is
-/// assumed to be in <classname>.h and assumed to be provided by the
+/// assumed to be in `<classname>.h` and assumed to be provided by the
 /// user.
 ///
 /// See TPrincipal::MakeRealCode for a list of options
@@ -856,7 +856,7 @@ void TPrincipal::MakeNormalised()
 ///     void P2X(Double_t *p, Double_t *x, Int_t nTest);
 ///   };
 /// ~~~
-/// Whether the methods <classname>::X2P and <classname>::P2X should
+/// Whether the methods `<classname>::%X2P` and `<classname>::%P2X` should
 /// be static or not, is up to the user.
 
 void TPrincipal::MakeMethods(const char *classname, Option_t *opt)

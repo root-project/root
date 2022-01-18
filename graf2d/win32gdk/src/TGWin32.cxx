@@ -7284,7 +7284,7 @@ void TGWin32::DeleteImage(Drawable_t img)
 /// x, y, width, height - position of bitmap
 /// returns a pointer on bitmap bits array
 /// in format:
-/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ..
+/// b1, g1, r1, 0,  b2, g2, r2, 0 ... bn, gn, rn, 0 ...
 ///
 /// Pixels are numbered from left to right and from top to bottom.
 /// By default all pixels from the whole drawable are returned.

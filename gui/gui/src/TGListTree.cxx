@@ -342,7 +342,7 @@ void TGListTreeItemStd::SetPictures(const TGPicture *opened, const TGPicture *cl
 /// Create a list tree widget.
 
 TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
-                       ULong_t back) :
+                       Pixel_t back) :
    TGContainer(p, w, h, options, back)
 {
    fMsgWindow   = p;
@@ -406,7 +406,7 @@ TGListTree::TGListTree(TGWindow *p, UInt_t w, UInt_t h, UInt_t options,
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a list tree widget.
 
-TGListTree::TGListTree(TGCanvas *p,UInt_t options,ULong_t back) :
+TGListTree::TGListTree(TGCanvas *p,UInt_t options,Pixel_t back) :
    TGContainer(p, options, back)
 {
    fMsgWindow   = p;

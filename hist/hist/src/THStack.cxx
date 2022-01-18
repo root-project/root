@@ -169,7 +169,7 @@ THStack::THStack(const char *name, const char *title)
 /// - axis:  for TH2: "x" for ProjectionX, "y" for ProjectionY.
 ///          for TH3: see TH3::Project3D.
 /// - name:  fName is set to name if given, otherwise to histo's name with
-///          "_stack_<axis>" appended, where <axis> is the value of the
+///          "_stack_<axis>" appended, where `<axis>` is the value of the
 ///          parameter axis.
 /// - title: fTitle is set to title if given, otherwise to histo's title
 ///          with ", stack of <axis> projections" appended.

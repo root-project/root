@@ -205,7 +205,7 @@
 
  ## Test 1
  Denoting by \f$ H_{L-1}\f$ the subspace spanned by \f$\textbf{w}_1,\ldots,\textbf{w}_{L-1}\f$
- the function \d$\textbf{w}_L\d$ is by construction (see 4) the projection of the function
+ the function \f$\textbf{w}_L\f$ is by construction (see 4) the projection of the function
  \f$ F_L\f$ onto the direction perpendicular to \f$ H_{L-1}\f$. Now, if the
  length of \f$\textbf{w}_L\f$ (given by \f$\textbf{w}_L\bullet\textbf{w}_L\f$)
  is very small compared to the length of \f$\textbf{f}_L\f$ this new
@@ -215,7 +215,7 @@
  (see also figure 1) and requiring that it's
  *greater* then a threshold value which the user must set (TMultiDimFit::SetMinAngle).
 
- \image html multidimfit_img86.gif "Figure 1: (a) angle \f$\theta\f$ between \f$\textbf{w}_l\f$ and \f$\textbf{f}_L\f$, (b) angle \f$ \phi \f$ between \f$\textbf{w}_L\f$ and \f$\textbf{D}\f$"
+ \image html multidimfit_img86.gif "Figure 1: (a) angle \\f$\\theta\\f$ between \\f$\\textbf{w}_l\\f$ and \\f$\\textbf{f}_L\\f$, (b) angle \\f$ \\phi \\f$ between \\f$\\textbf{w}_L\\f$ and \\f$\\textbf{D}\\f$"
 
  ## Test 2
  Let \f$\textbf{D}\f$ be the data vector to be fitted. As illustrated in
@@ -1263,11 +1263,11 @@ Double_t TMultiDimFit::MakeChi2(const Double_t* coeff)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate the file <filename> with .C appended if argument doesn't
+/// Generate the file `<filename>` with .C appended if argument doesn't
 /// end in .cxx or .C. The contains the implementation of the
 /// function:
 ///
-///   Double_t <funcname>(Double_t *x)
+///   `Double_t <funcname>(Double_t *x)`
 ///
 /// which does the same as TMultiDimFit::Eval. Please refer to this
 /// method.
@@ -1695,16 +1695,16 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate the file <classname>MDF.cxx which contains the
+/// Generate the file `<classname>MDF.cxx` which contains the
 /// implementation of the method:
 ///
-///   Double_t <classname>::MDF(Double_t *x)
+///   `Double_t <classname>::%MDF(Double_t *x)`
 ///
 /// which does the same as  TMultiDimFit::Eval. Please refer to this
 /// method.
 ///
 /// Further, the public static members:
-///
+///   \code{.cpp}
 ///   Int_t    <classname>::fgNVariables
 ///   Int_t    <classname>::fgNCoefficients
 ///   Double_t <classname>::fgDMean
@@ -1713,15 +1713,16 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 ///   Double_t <classname>::fgXMax[]        //[fgNVariables]
 ///   Double_t <classname>::fgCoefficient[] //[fgNCoeffficents]
 ///   Int_t    <classname>::fgPower[]       //[fgNCoeffficents*fgNVariables]
+///   \endcode
 ///
 /// are initialized, and assumed to exist. The class declaration is
-/// assumed to be in <classname>.h and assumed to be provided by the
+/// assumed to be in `<classname>.h` and assumed to be provided by the
 /// user.
 ///
-/// See TMultiDimFit::MakeRealCode for a list of options
+/// \see TMultiDimFit::MakeRealCode for a list of options
 ///
 /// The minimal class definition is:
-///
+///   \code{.cpp}
 ///   class <classname> {
 ///   public:
 ///     Int_t    <classname>::fgNVariables;     // Number of variables
@@ -1735,8 +1736,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 ///
 ///     Double_t Eval(Double_t *x);
 ///   };
+///   \endcode
 ///
-/// Whether the method <classname>::Eval should be static or not, is
+/// Whether the method `<classname>::%Eval` should be static or not, is
 /// up to the user.
 
 void TMultiDimFit::MakeMethod(const Char_t* classname, Option_t* option)

@@ -472,7 +472,7 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show web window in specified location.
 ///
-/// \param win web window by reference
+/// \param[inout] win web window by reference
 /// \param user_args specifies where and how display web window
 ///
 /// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.

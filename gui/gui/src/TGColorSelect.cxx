@@ -85,7 +85,7 @@ ClassImp(TGColorSelect);
 /// TGColorFrame constructor.
 /// The TGColorFrame is a small frame with border showing a specific color.
 
-TGColorFrame::TGColorFrame(const TGWindow *p, ULong_t color, Int_t /*n*/) :
+TGColorFrame::TGColorFrame(const TGWindow *p, Pixel_t color, Int_t /*n*/) :
    TGFrame(p, 20, 20, kOwnBackground, color)
 {
    SetBackgroundColor(color);
@@ -218,7 +218,7 @@ Bool_t TG16ColorSelector::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr
 /// The TGColorPopup is a popup containing a TG16ColorSelector and a "More..."
 /// button which popups up a TGColorDialog allowing custom color selection.
 
-TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, ULong_t color) :
+TGColorPopup::TGColorPopup(const TGWindow *p, const TGWindow *m, Pixel_t color) :
    TGCompositeFrame(p, 10, 10, kDoubleBorder | kRaisedFrame | kOwnBackground,
                     GetDefaultFrameBackground())
 {
@@ -403,7 +403,7 @@ void TGColorPopup::PreviewAlphaColor(ULongptr_t color)
 /// mark there is color area with a little down arrow.
 /// When clicked on the arrow the TGColorPopup pops up.
 
-TGColorSelect::TGColorSelect(const TGWindow *p, ULong_t color, Int_t id) :
+TGColorSelect::TGColorSelect(const TGWindow *p, Pixel_t color, Int_t id) :
    TGCheckButton(p, "", id)
 {
    if (!p && fClient->IsEditable() && !color) {

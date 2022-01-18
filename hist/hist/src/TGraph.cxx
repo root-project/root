@@ -387,11 +387,11 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// can be added,  e.g. `"%lg %*lg %lg"` would read x-values from the first and
 /// y-values from the third column.
 ///
-/// For files separated by a specific delimiter different from ' ' and '\t' (e.g.
+/// For files separated by a specific delimiter different from ' ' and '\\t' (e.g.
 /// ';' in csv files) you can avoid using `%*s` to bypass this delimiter by explicitly
 /// specify the `option` argument,
-/// e.g. option=`" \t,;"` for columns of figures separated by any of these characters
-/// (' ', '\t', ',', ';')
+/// e.g. option=`" \\t,;"` for columns of figures separated by any of these characters
+/// (' ', '\\t', ',', ';')
 /// used once (e.g. `"1;1"`) or in a combined way (`" 1;,;;  1"`).
 /// Note in that case, the instantiation is about two times slower.
 
