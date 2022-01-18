@@ -434,9 +434,11 @@ public:
       }
       if (constraints.getSize() == 0) {
          RooRealSumPdf sum(name.c_str(), name.c_str(), funcs, coefs, true);
+         sum.setAttribute("BinnedLikelihood");
          tool->workspace()->import(sum, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       } else {
          RooRealSumPdf sum((name + "_model").c_str(), name.c_str(), funcs, coefs, true);
+         sum.setAttribute("BinnedLikelihood");
          tool->workspace()->import(sum, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
          RooArgList lhelems;
          lhelems.add(sum);
