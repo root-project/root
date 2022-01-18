@@ -25,4 +25,6 @@
 
    c1->Print("c1.png");
    c1->Print("c1.ps");
+
+   return c1;
 }
