@@ -1444,11 +1444,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       data.set_map();
       this->exportData(d, data);
    }
-   for (auto d : this->_workspace->allData()) {
-      auto &data = n["data"];
-      data.set_map();
-      this->exportData(d, data);
-   }
    for (const auto *snsh_obj : this->_workspace->getSnapshots()) {
       const RooArgSet *snsh = static_cast<const RooArgSet *>(snsh_obj);
       auto &snapshots = n["snapshots"];
