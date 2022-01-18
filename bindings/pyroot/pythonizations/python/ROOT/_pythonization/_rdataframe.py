@@ -18,7 +18,7 @@ r'''
 \anchor python
 ## Efficient analysis in Python
 
-You can use RDataFrame in Python due to the dynamic C++/Python translation of PyROOT. In general, the interface
+You can use RDataFrame in Python thanks to the dynamic Python/C++ translation of PyROOT. In general, the interface
 is the same as for C++, a simple example follows.
 
 ~~~{.py}
@@ -27,15 +27,20 @@ sum = df.Filter("x > 10").Sum("y")
 print(sum.GetValue())
 ~~~
 
-### Simple usage of efficient C++ code in Python
+### User code in the RDataFrame workflow
 
-To perform more complex operations in the RDataFrame graph, e.g., in Filter() and Define() nodes, which don't
-fit into a simple expression string, you can just-in-time compile such functions directly in the Python script
-via the C++ interpreter cling. This approach has the advantage that you get the efficiency of compiled C++ code
-combined with the convenient workflow of a Python script. See the following snippet for an example of how to
-use a just-in-time-compiled C++ function from Python.
+#### C++ code
+
+In the simple example that was shown above, a C++ expression is passed to the Filter() operation as a string
+(`"x > 0"`), even if we call the method from Python. Indeed, under the hood, the analysis computations run in
+C++, while Python is just the interface language.
+
+To perform more complex operations that don't fit into a simple expression string, you can just-in-time compile
+C++ functions - via the C++ interpreter cling - and use those functions in an expression. See the following
+snippet for an example:
 
 ~~~{.py}
+# JIT a C++ function from Python
 ROOT.gInterpreter.Declare("""
 bool myFilter(float x) {
     return x > 10;
@@ -43,6 +48,7 @@ bool myFilter(float x) {
 """)
 
 df = ROOT.RDataFrame("myTree", "myFile.root")
+# Use the function in an RDF operation
 sum = df.Filter("myFilter(x)").Sum("y")
 print(sum.GetValue())
 ~~~
@@ -58,25 +64,15 @@ sum = df.Filter("myFilter(x)").Sum("y")
 print(sum.GetValue())
 ~~~
 
-Alternatively, you can also pass the full RDataFrame object to C++ using the ROOT::RDF::AsRNode helper in Python, which casts any RDataFrame node to ROOT::RDF::RNode:
+A more thorough explanation of how to use C++ code from Python can be found in the [PyROOT manual](https://root.cern/manual/python/#loading-user-libraries-and-just-in-time-compilation-jitting).
 
-~~~{.py}
-ROOT.gInterpreter.Declare("""
-ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode df) {
-    auto myFunc = [](float x){ return -x;};
-    return df.Define("y", myFunc, {"x"});
-}
-""")
+#### Python code
 
-df = ROOT.RDataFrame("myTree", "myFile.root")
-df = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
-~~~
+ROOT also offers the option to compile Python functions with fundamental types and arrays thereof using numba.
+Such compiled functions can then be used in a C++ expression provided to RDataFrame.
 
-### Just-in-time compilation of Python callables with numba
-
-ROOT also offers the option to compile Python callables with fundamental types and arrays thereof using numba and then
-using the function in RDataFrame from C++. The workflow requires the Python packages `numba` and `cffi`
-to be installed. See the following snippet for a simple example or the full tutorial [here](pyroot004__NumbaDeclare_8py.html).
+The function to be compiled is decorated with `ROOT.Numba.Declare`, which allows to specify the parameter and
+return types. See the following snippet for a simple example or the full tutorial [here](pyroot004__NumbaDeclare_8py.html).
 
 ~~~{.py}
 @ROOT.Numba.Declare(["float"], "bool")
@@ -99,28 +95,35 @@ df.Define('array', 'ROOT::RVec<float>{1.,2.,3.})\
   .Define('arraySquared', 'Numba::pypowarray(array, 2)')
 ~~~
 
-### Conversion to numpy arrays
+Note that this functionality requires the Python packages `numba` and `cffi` to be installed.
+
+### Interoperability with NumPy
+
+#### Conversion to NumPy arrays
 
 Eventually, you probably would like to inspect the content of the RDataFrame or process the data further
-with functionality from Python libraries. For this purpose, we provide the AsNumpy() function, which is able
-to provide you the columns of your RDataFrame as numpy arrays in Python. See a brief introduction below or
-a full tutorial [here](df026__AsNumpyArrays_8py.html).
+with Python libraries. For this purpose, we provide the `AsNumpy()` function, which returns the columns
+of your RDataFrame as a dictionary of NumPy arrays. See a simple example below or a full tutorial [here](df026__AsNumpyArrays_8py.html).
 
 ~~~{.py}
 df = ROOT.RDataFrame("myTree", "myFile.root")
-cols = df.Filter("x > 10").AsNumpy(["x", "y"])
-print(cols["x"], cols["y"])
+cols = df.Filter("x > 10").AsNumpy(["x", "y"]) # retrieve columns "x" and "y" as NumPy arrays
+print(cols["x"], cols["y"]) # the values of the cols dictionary are NumPy arrays
 ~~~
 
-### Processing data stored in NumPy arrays
+#### Processing data stored in NumPy arrays
 
 In case you have data in NumPy arrays in Python and you want to process the data with ROOT, you can easily
-create an RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function returns a new RDataFrame with
-the column names defined by the keys of the given dictionary with NumPy arrays. Only arrays of fundamental types (integers and floating point values) are supported and the arrays must have the same length. Data is read directly from the arrays: no copies are performed.
+create an RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function accepts a dictionary where
+the keys are the column names and the values are NumPy arrays, and returns a new RDataFrame with the provided
+columns.
+
+Only arrays of fundamental types (integers and floating point values) are supported and the arrays must have the same length.
+Data is read directly from the arrays: no copies are performed.
 
 ~~~{.py}
-# Read data from numpy arrays
-# The column names in the RDataFrame are taken from the dictionary keys.
+# Read data from NumPy arrays
+# The column names in the RDataFrame are taken from the dictionary keys
 x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
 df = ROOT.RDF.MakeNumpyDataFrame({"x": x, "y": y})
 
