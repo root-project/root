@@ -923,7 +923,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
          ::importAttributes(func, p);
 
          if (isPdf && toplevel) {
-            configureToplevelPdf(static_cast<RooAbsPdf *>(func));
+            configureToplevelPdf(p,static_cast<RooAbsPdf *>(func));
          }
       }
    } catch (const RooJSONFactoryWSTool::DependencyMissingError &ex) {
@@ -1246,11 +1246,15 @@ void RooJSONFactoryWSTool::importPdfs(const JSONNode &n)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // configure a pdf as "toplevel" by creating a modelconfig for it
-void RooJSONFactoryWSTool::configureToplevelPdf(RooAbsPdf *pdf)
+void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf *pdf)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
-   std::string mcname(pdf->GetName());
-   mcname += "_modelConfig";
+   std::string mcname = "ModelConfig";
+   if(p.has_child("dict")){
+     if(p["dict"].has_child("ModelConfig")){
+       mcname = p["dict"]["ModelConfig"].val();
+     }
+   } 
    RooStats::ModelConfig *mc = new RooStats::ModelConfig(mcname.c_str(), pdf->GetName());
    this->_workspace->import(*mc);
    RooStats::ModelConfig *inwsmc = dynamic_cast<RooStats::ModelConfig *>(this->_workspace->obj(mcname.c_str()));
@@ -1390,12 +1394,11 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
 void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    // export all ModelConfig objects and attached Pdfs
-   RooArgSet main;
+   std::vector<RooStats::ModelConfig*> main;
    this->_rootnode_output = &n;
    for (auto obj : this->_workspace->allGenericObjects()) {
       if (obj->InheritsFrom(RooStats::ModelConfig::Class())) {
          RooStats::ModelConfig *mc = static_cast<RooStats::ModelConfig *>(obj);
-         RooAbsPdf *pdf = mc->GetPdf();
          auto &vars = n["variables"];
          vars.set_map();
          if (mc->GetObservables()) {
@@ -1431,15 +1434,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
                }
             }
          }
-         main.add(*pdf, true);
-      }
-   }
-   for (auto obj : this->_workspace->allPdfs()) {
-      RooAbsPdf *pdf = dynamic_cast<RooAbsPdf *>(obj);
-      if (!pdf)
-         return;
-      if ((pdf->getAttribute("toplevel") || pdf->clients().size() == 0) && !main.find(*pdf)) {
-         main.add(*pdf, true);
+         main.push_back(mc);
       }
    }
    for (auto d : this->_workspace->allData()) {
@@ -1460,20 +1455,19 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       coll.set_map();
       this->exportVariables(*snsh, coll);
    }
-   if (main.size() > 0) {
+   for (const auto &mc : main) {
       auto &pdfs = n["pdfs"];
       pdfs.set_map();
-      RooJSONFactoryWSTool::RooJSONFactoryWSTool::exportFunctions(main, pdfs);
-      for (auto &pdf : main) {
-         auto &node = pdfs[pdf->GetName()];
-         node.set_map();
-         auto &tags = node["tags"];
-         RooJSONFactoryWSTool::append(tags, "toplevel");
-      }
-   } else {
-      std::cerr << "no ModelConfig found in workspace and no pdf identified as toplevel by 'toplevel' attribute or an "
-                   "empty client list. nothing exported!"
-                << std::endl;
+      RooAbsPdf* pdf = mc->GetPdf();
+      RooJSONFactoryWSTool::exportObject(pdf,pdfs);
+      auto &node = pdfs[pdf->GetName()];
+      node.set_map();
+      auto &tags = node["tags"];
+      tags.set_seq();
+      RooJSONFactoryWSTool::append(tags, "toplevel");
+      auto &dict = node["dict"];
+      dict.set_map();
+      dict["ModelConfig"] << mc->GetName();
    }
    this->_rootnode_output = 0;
 }
