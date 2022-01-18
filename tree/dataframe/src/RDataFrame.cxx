@@ -1052,47 +1052,101 @@ df.Define("x", "0").Filter("x = 0");
 \anchor generic-actions
 ### User-defined custom actions
 RDataFrame strives to offer a comprehensive set of standard actions that can be performed on each event. At the same
-time, it **allows users to execute arbitrary code (i.e. a generic action) inside the event loop** through the Foreach()
-and ForeachSlot() actions.
+time, it allows users to inject their own action code to perform arbitrarily complex data reductions.
 
-`Foreach(f, columnList)` takes a function `f` (lambda expression, free function, functor...) and a list of columns, and
-executes `f` on those columns for each event. The function passed must return nothing (i.e. `void`). It can be used to
-perform actions that are not already available in the interface. For example, the following snippet evaluates the root
-mean square of column "b":
+#### Implementing custom actions with Book()
+
+Through the Book() method, users can implement a custom action and have access to the same features
+that built-in RDataFrame actions have, e.g. hooks to events related to the start, end and execution of the
+event loop, or the possibility to return a lazy RResultPtr to an arbitrary type of result:
+
 ~~~{.cpp}
-// Single-thread evaluation of RMS of column "b" using Foreach
+#include <ROOT/RDataFrame.hxx>
+#include <memory>
+
+class MyCounter : public ROOT::Detail::RDF::RActionImpl<MyCounter> {
+   std::shared_ptr<int> fFinalResult = std::make_shared<int>(0);
+   std::vector<int> fPerThreadResults;
+
+public:
+   // We use a public type alias to advertise the type of the result of this action
+   using Result_t = int;
+
+   MyCounter(unsigned int nSlots) : fPerThreadResults(nSlots) {}
+
+   // Called before the event loop to retrieve the address of the result that will be filled/generated.
+   std::shared_ptr<int> GetResultPtr() const { return fFinalResult; }
+
+   // Called at the beginning of the event loop.
+   void Initialize() {}
+
+   // Called at the beginning of each processing task.
+   void InitTask(TTreeReader *, int) {}
+
+   /// Called at every entry.
+   void Exec(unsigned int slot)
+   {
+      fPerThreadResults[slot]++;
+   }
+
+   // Called at the end of the event loop.
+   void Finalize()
+   {
+      *fFinalResult = std::accumulate(fPerThreadResults.begin(), fPerThreadResults.end(), 0);
+   }
+
+   // Called by RDataFrame to retrieve the name of this action.
+   std::string GetActionName() const { return "MyCounter"; }
+};
+
+int main() {
+   ROOT::RDataFrame df(10);
+   ROOT::RDF::RResultPtr<int> resultPtr = df.Book<>(MyCounter{df.GetNSlots()}, {});
+   // The GetValue call triggers the event loop
+   std::cout << "Number of processed entries: " <<  resultPtr.GetValue() << std::endl;
+}
+~~~
+
+See the Book() method for more information and [this tutorial](https://root.cern/doc/master/df018__customActions_8C.html)
+for a more complete example.
+
+#### Injecting arbitrary code in the event loop with Foreach() and ForeachSlot()
+
+Foreach() takes a callable (lambda expression, free function, functor...) and a list of columns and
+executes the callable on the values of those columns for each event that passes all upstream selections.
+It can be used to perform actions that are not already available in the interface. For example, the following snippet
+evaluates the root mean square of column "x":
+~~~{.cpp}
+// Single-thread evaluation of RMS of column "x" using Foreach
 double sumSq = 0.;
 unsigned int n = 0;
-RDataFrame d("bTree", bFilePtr);
-d.Foreach([&sumSq, &n](double b) { ++n; sumSq += b*b; }, {"b"});
-std::cout << "rms of b: " << std::sqrt(sumSq / n) << std::endl;
+df.Foreach([&sumSq, &n](double x) { ++n; sumSq += x*x; }, {"x"});
+std::cout << "rms of x: " << std::sqrt(sumSq / n) << std::endl;
 ~~~
-When executing on multiple threads, users are responsible for the thread-safety of the expression passed to Foreach():
-each thread will execute the expression multiple times (once per entry) in an unspecified order.
+In multi-thread runs, users are responsible for the thread-safety of the expression passed to Foreach():
+thread will execute the expression concurrently.
 The code above would need to employ some resource protection mechanism to ensure non-concurrent writing of `rms`; but
 this is probably too much head-scratch for such a simple operation.
 
 ForeachSlot() can help in this situation. It is an alternative version of Foreach() for which the function takes an
-additional parameter besides the columns it should be applied to: an `unsigned int slot` parameter, where `slot` is a
-number indicating which thread (0, 1, 2 , ..., poolSize - 1) the function is being run in. More specifically, RDataFrame
+additional "processing slot" parameter besides the columns it should be applied to. RDataFrame
 guarantees that ForeachSlot() will invoke the user expression with different `slot` parameters for different concurrent
-executions (there is no guarantee that a certain slot number will always correspond to a given thread id, though).
-We can take advantage of ForeachSlot() to evaluate a thread-safe root mean square of column "b":
+executions (see [Special helper columns: rdfentry_ and rdfslot_](\ref helper-cols) for more information on the slot parameter).
+We can take advantage of ForeachSlot() to evaluate a thread-safe root mean square of column "x":
 ~~~{.cpp}
-// Thread-safe evaluation of RMS of column "b" using ForeachSlot
+// Thread-safe evaluation of RMS of column "x" using ForeachSlot
 ROOT::EnableImplicitMT();
-const unsigned int nSlots = ROOT::GetThreadPoolSize();
+const unsigned int nSlots = df.GetNSlots();
 std::vector<double> sumSqs(nSlots, 0.);
 std::vector<unsigned int> ns(nSlots, 0);
 
-RDataFrame d("bTree", bFilePtr);
-d.ForeachSlot([&sumSqs, &ns](unsigned int slot, double b) { sumSqs[slot] += b*b; ns[slot] += 1; }, {"b"});
+df.ForeachSlot([&sumSqs, &ns](unsigned int slot, double x) { sumSqs[slot] += x*x; ns[slot] += 1; }, {"x"});
 double sumSq = std::accumulate(sumSqs.begin(), sumSqs.end(), 0.); // sum all squares
 unsigned int n = std::accumulate(ns.begin(), ns.end(), 0); // sum all counts
-std::cout << "rms of b: " << std::sqrt(sumSq / n) << std::endl;
+std::cout << "rms of x: " << std::sqrt(sumSq / n) << std::endl;
 ~~~
-You see how we created one `double` variable for each thread in the pool, and later merged their results via
-`std::accumulate`.
+Notice how we created one `double` variable for each processing slot and later merged their results via `std::accumulate`.
+
 
 \anchor friends
 ### Friend trees
