@@ -19,20 +19,20 @@
 
 void fitMultiGraph()
 {
-   Int_t n = 30;
-   Double_t *xvalues1 = new Double_t[n];
-   Double_t *xvalues2 = new Double_t[n];
-   Double_t *xvalues3 = new Double_t[n];
-   Double_t *yvalues1 = new Double_t[n];
-   Double_t *yvalues2 = new Double_t[n];
-   Double_t *yvalues3 = new Double_t[n];
-   Double_t *evalues1 = new Double_t[n];
-   Double_t *evalues2 = new Double_t[n];
-   Double_t *evalues3 = new Double_t[n];
+   int n = 30;
+   double *xvalues1 = new double[n];
+   double *xvalues2 = new double[n];
+   double *xvalues3 = new double[n];
+   double *yvalues1 = new double[n];
+   double *yvalues2 = new double[n];
+   double *yvalues3 = new double[n];
+   double *evalues1 = new double[n];
+   double *evalues2 = new double[n];
+   double *evalues3 = new double[n];
 
    //generate the data for the graphs
    TRandom r;
-   Int_t i;
+   int i;
    for (i=0; i<n; i++) {
       xvalues1[i] = r.Uniform(0.1, 5);
       xvalues2[i] = r.Uniform(3, 8);
@@ -81,22 +81,22 @@ void fitMultiGraph()
 
 void fitminuit()
 {
-   Int_t n = 30;
-   Double_t *xvalues1 = new Double_t[n];
-   Double_t *xvalues2 = new Double_t[n];
-   Double_t *xvalues3 = new Double_t[n];
-   Double_t *yvalues1 = new Double_t[n];
-   Double_t *yvalues2 = new Double_t[n];
-   Double_t *yvalues3 = new Double_t[n];
-   Double_t *evalues1 = new Double_t[n];
-   Double_t *evalues2 = new Double_t[n];
-   Double_t *evalues3 = new Double_t[n];
-   Double_t *xtotal = new Double_t[n*3];
-   Double_t *ytotal = new Double_t[n*3];
-   Double_t *etotal = new Double_t[n*3];
+   int n = 30;
+   double *xvalues1 = new double[n];
+   double *xvalues2 = new double[n];
+   double *xvalues3 = new double[n];
+   double *yvalues1 = new double[n];
+   double *yvalues2 = new double[n];
+   double *yvalues3 = new double[n];
+   double *evalues1 = new double[n];
+   double *evalues2 = new double[n];
+   double *evalues3 = new double[n];
+   double *xtotal = new double[n*3];
+   double *ytotal = new double[n*3];
+   double *etotal = new double[n*3];
 
    TRandom r;
-   Int_t i;
+   int i;
    for (i=0; i<n; i++) {
       xvalues1[i] = r.Uniform(-3, -1);
       xvalues2[i] = r.Uniform(-1, 1);
