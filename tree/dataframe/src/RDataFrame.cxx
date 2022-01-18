@@ -60,14 +60,15 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [RDataFrame objects as function arguments and return values](\ref rnode)
    - [Storing RDataFrame objects in collections](\ref RDFCollections)
    - [Executing callbacks every N events](\ref callbacks)
-   - [Default branch lists](\ref default-branches)
+   - [Default column lists](\ref default-branches)
    - [Special helper columns: `rdfentry_` and `rdfslot_`](\ref helper-cols)
-   - [Just-in-time compilation: branch type inference and explicit declaration of branch types](\ref jitting)
-   - [Generic actions](\ref generic-actions)
+   - [Just-in-time compilation: column type inference and explicit declaration of column types](\ref jitting)
+   - [User-defined custom actions](\ref generic-actions)
    - [Friend trees](\ref friends)
    - [Reading data formats other than ROOT trees](\ref other-file-formats)
-   - [Call graphs (storing and reusing sets of transformations](\ref callgraphs)
+   - [Computation graphs (storing and reusing sets of transformations](\ref callgraphs)
    - [Visualizing the computation graph](\ref representgraph)
+   - [Activating RDataFrame execution logs](\ref rdf-logging)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
 \anchor cheatsheet
@@ -302,7 +303,7 @@ h->Draw();
 The first line creates an RDataFrame associated to the TTree "myTree". This tree has a branch named "MET".
 
 Histo1D() is an *action*; it returns a smart pointer (a ROOT::RDF::RResultPtr, to be precise) to a TH1D histogram filled
-with the `MET` of all events. If the quantity stored in the branch is a collection (e.g. a vector or an array), the
+with the `MET` of all events. If the quantity stored in the column is a collection (e.g. a vector or an array), the
 histogram is filled with all vector elements for each event.
 
 You can use the objects returned by actions as if they were pointers to the desired results. There are many other
@@ -315,7 +316,7 @@ RDataFrame d("myTree", "file.root");
 auto c = d.Filter("MET > 4.").Count(); // computations booked, not run
 std::cout << *c << std::endl; // computations run here, upon first access to the result
 ~~~
-The filter string (which must contain a valid C++ expression) is applied to the specified branches for each event;
+The filter string (which must contain a valid C++ expression) is applied to the specified columns for each event;
 the name and types of the columns are inferred automatically. The string expression is required to return a `bool`
 which signals whether the event passes the filter (`true`) or not (`false`).
 
@@ -326,7 +327,7 @@ Using string filters is nice for simple things, but they are limited to specifyi
 statement or the body of a lambda, so it's cumbersome to use strings with more complex filters. They also add a small
 runtime overhead, as ROOT needs to just-in-time compile the string into C++ code. When more freedom is required or
 runtime performance is very important, a C++ callable can be specified instead (a lambda in the following snippet,
-but it can be any kind of function or even a functor class), together with a list of branch names.
+but it can be any kind of function or even a functor class), together with a list of column names.
 This snippet is analogous to the one above:
 ~~~{.cpp}
 RDataFrame d("myTree", "file.root");
@@ -372,7 +373,8 @@ RDataFrame d("myTree", "file.root");
 auto zMean = d.Define("z", "sqrt(x*x + y*y)").Mean("z");
 std::cout << *zMean << std::endl;
 ~~~
-Again the names of the branches used in the expression and their types are inferred automatically. The string must be
+
+Again the names of the columns used in the expression and their types are inferred automatically. The string must be
 valid C++ and it is just-in-time compiled. The process has a small runtime overhead and like with filters it is currently the only possible approach when using PyROOT.
 
 Previously, when showing the different ways an RDataFrame can be created, we showed a constructor that takes a
@@ -445,7 +447,7 @@ Simple as that. More details are given [below](#parallel-execution).
 \anchor collections
 ## Working with collections and object selections
 
-RDataFrame reads collections as the special type [ROOT::RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html): for example, a branch containing an array of floating point numbers can be read as a ROOT::RVecF. C-style arrays (with variable or static size), STL vectors and most other collection types can be read this way.
+RDataFrame reads collections as the special type [ROOT::RVec](https://root.cern/doc/master/classROOT_1_1VecOps_1_1RVec.html): for example, a column containing an array of floating point numbers can be read as a ROOT::RVecF. C-style arrays (with variable or static size), STL vectors and most other collection types can be read this way.
 
 RVec is a container similar to std::vector (and can be used just like a std::vector) but it also offers a rich interface to operate on the array elements in a vectorised fashion, similarly to Python's NumPy arrays.
 
@@ -819,7 +821,6 @@ Every distributed backend supports this feature and graphs belonging to differen
 a single call to % RunGraphs (e.g. it is possible to send a Spark job and a Dask job at the same time).
 
 
-
 \anchor parallel-execution
 ## Performance tips and parallel execution
 As pointed out before in this document, RDataFrame can transparently perform multi-threaded event loops to speed up
@@ -828,7 +829,7 @@ object to indicate that it should take advantage of a pool of worker threads. **
 subset of entries**, and their partial results are merged before returning the final values to the user.
 There are no guarantees on the order in which threads will process the batches of entries.
 In particular, note that this means that, for multi-thread event loops, there is no
-guarantee on the order in which Snapshot() will _write_ entries: they could be scrambled with respect to the input dataset.
+guarantee on the order in which Snapshot() will _write_ entries: they could be scrambled with respect to the input dataset. The values of the special `rdfentry_` column will also not correspond to the entry numbers in the input dataset (e.g. TChain) in multi-thread runs.
 
 \warning By default, RDataFrame will use as many threads as the hardware supports, using up **all** the resources on
 a machine. This might be undesirable on shared computing resources such as a batch cluster. Therefore, when running on shared computing resources, use
@@ -842,23 +843,23 @@ RDataFrame operations such as Histo1D() or Snapshot() are guaranteed to work cor
 User-defined expressions, such as strings or lambdas passed to Filter(), Define(), Foreach(), Reduce() or Aggregate()
 will have to be thread-safe, i.e. it should be possible to call them concurrently from different threads.
 
-Note that simple Filter() and Define() transformations will inherently satisfy this requirement: Filter()/Define()
+Note that simple Filter() and Define() transformations will inherently satisfy this requirement: Filter() / Define()
 expressions will often be *pure* in the functional programming sense (no side-effects, no dependency on external state),
 which eliminates all risks of race conditions.
 
-In order to facilitate writing of thread-safe operations, some RDataFrame features such as Foreach(), Define() or OnPartialResult()
-offer thread-aware counterparts (ForeachSlot(), DefineSlot(), OnPartialResultSlot()): their only difference is that they
+In order to facilitate writing of thread-safe operations, some RDataFrame features such as Foreach(), Define() or \link ROOT::RDF::RResultPtr::OnPartialResult OnPartialResult()\endlink
+offer thread-aware counterparts (ForeachSlot(), DefineSlot(), \link ROOT::RDF::RResultPtr::OnPartialResultSlot OnPartialResultSlot()\endlink): their only difference is that they
 will pass an extra `slot` argument (an unsigned integer) to the user-defined expression. When calling user-defined code
 concurrently, RDataFrame guarantees that different threads will employ different values of the `slot` parameter,
-where `slot` will be a number between 0 and `ROOT::GetThreadPoolSize() - 1`.
+where `slot` will be a number between 0 and `GetNSlots() - 1`.
 In other words, within a slot, computation runs sequentially and events are processed sequentially.
 Note that the same slot might be associated to different threads over the course of a single event loop, but two threads
 will never receive the same slot at the same time.
 This extra parameter might facilitate writing safe parallel code by having each thread write/modify a different
-*processing slot*, e.g. a different element of a list. See [here](#generic-actions) for an example usage of ForeachSlot().
+processing slot, e.g. a different element of a list. See [here](#generic-actions) for an example usage of ForeachSlot().
 
 ### Parallel execution of multiple RDataFrame event loops
-A complex analysis may require multiple separate RDatFrame computation graphs to produce all desired results. This poses the challenge that the
+A complex analysis may require multiple separate RDataFrame computation graphs to produce all desired results. This poses the challenge that the
 event loops of each computation graph can be parallelized, but the different loops run sequentially, one after the other.
 On many-core architectures it might be desirable to run different event loops concurrently to improve resource usage.
 ROOT::RDF::RunGraphs() allows running multiple RDataFrame event loops concurrently:
@@ -873,14 +874,15 @@ auto histo2 = df2.Histo1D("y");
 histo1->Draw(); // runs first multi-thread event loop
 histo2->Draw(); // runs second multi-thread event loop
 
-// with ROOT::RDF::RunGraphs, event loops for separate computation graphs can run concurrently
+// alternatively, with ROOT::RDF::RunGraphs, event loops for separate computation graphs can run concurrently
 ROOT::RDF::RunGraphs({histo1, histo2});
+histo1->Draw(); // results can then be used as usual
 ~~~
 
-### Performance profiling of RDataFrame applications
+### Performance considerations
 
 To obtain the maximum performance out of RDataFrame, make sure to avoid just-in-time compiled versions of transformations and actions if at all possible.
-For instance, `Filter("x > 0")` requires just-in-time compilation of the corresponding C++ logic, while the equivalent `Filter([] { return x > 0; }, {"x"})` does not.
+For instance, `Filter("x > 0")` requires just-in-time compilation of the corresponding C++ logic, while the equivalent `Filter([](float x) { return x > 0.; }, {"x"})` does not.
 Similarly, `Histo1D("x")` requires just-in-time compilation after the type of `x` is retrieved from the dataset, while `Histo1D<float>("x")` does not; the latter spelling
 should be preferred for performance-critical applications.
 
@@ -890,17 +892,27 @@ See [Efficient analysis in Python](#python) for possible ways to speed up hot pa
 Just-in-time compilation happens once, right before starting an event loop. To reduce the runtime cost of this step, make sure to book all operations *for all RDataFrame computation graphs*
 before the first event loop is triggered: just-in-time compilation will happen once for all code required to be generated up to that point, also across different computation graphs.
 
-Also make sure not to count the just-in-time compilation time (which happens once before the event loop and does not depend on the size of the dataset) as part of the event loop runtime (which scales with the size of the dataset). RDataFrame has an experimental logging feature that simplifies measuring the time spent in just-in-time compilation and in the event loop (as well as providing some more interesting information). It is activated like follows:
-~~~{.cpp}
-#include <ROOT/RLogger.hxx>
-// ...
-auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
-~~~
+Also make sure not to count the just-in-time compilation time (which happens once before the event loop and does not depend on the size of the dataset) as part of the event loop runtime (which scales with the size of the dataset). RDataFrame has an experimental logging feature that simplifies measuring the time spent in just-in-time compilation and in the event loop (as well as providing some more interesting information). See [Activating RDataFrame execution logs](\ref rdf-logging).
 
 ### Memory usage
 
-There are two reasons why RDataFrame may consume more memory than expected. Firstly, each result is duplicated for each worker thread, which e.g. in case of many (possibly multi-dimensional) histograms with fine binning can result in visible memory consumption during the event loop. The thread-local copies of the results are destroyed when the final result is produced.
-Secondly, just-in-time compilation of string expressions or non-templated actions (see the previous paragraph) causes Cling, ROOT's C++ interpreter, to allocate some memory for the generated code that is only released at the end of the application. This commonly results in memory usage creep in long-running applications that create many RDataFrames one after the other. Possible mitigations include creating and running each RDataFrame event loop in a sub-process, or booking all operations for all different RDataFrame computation graphs before the first event loop is triggered, so that the interpreter is invoked only once for all computation graphs.
+There are two reasons why RDataFrame may consume more memory than expected. Firstly, each result is duplicated for each worker thread, which e.g. in case of many (possibly multi-dimensional) histograms with fine binning can result in visible memory consumption during the event loop. The thread-local copies of the results are destroyed when the final result is produced. Reducing the number of threads or using coarser binning will reduce the memory usage.
+
+Secondly, just-in-time compilation of string expressions or non-templated actions (see the previous paragraph) causes Cling, ROOT's C++ interpreter, to allocate some memory for the generated code that is only released at the end of the application. This commonly results in memory usage creep in long-running applications that create many RDataFrames one after the other. Possible mitigations include creating and running each RDataFrame event loop in a sub-process, or booking all operations for all different RDataFrame computation graphs before the first event loop is triggered, so that the interpreter is invoked only once for all computation graphs:
+
+~~~{.cpp}
+// assuming df1 and df2 are separate computation graphs, do:
+auto h1 = df1.Histo1D("x");
+auto h2 = df2.Histo1D("y");
+h1->Draw(); // we just-in-time compile everything needed by df1 and df2 here
+h2->Draw("SAME");
+
+// do not:
+auto h1 = df1.Histo1D("x");
+h1->Draw(); // we just-in-time compile here
+auto h2 = df2.Histo1D("y");
+h2->Draw("SAME"); // we just-in-time compile again here, as the second Histo1D call is new
+~~~
 
 \anchor more-features
 ## More features
@@ -935,9 +947,9 @@ auto maybeRangedDF = MaybeAddRange(df, true);
 ~~~
 
 The conversion to ROOT::RDF::RNode is cheap, but it will introduce an extra virtual call during the RDataFrame event
-loop (in most cases, the resulting performance impact should be negligible).
+loop (in most cases, the resulting performance impact should be negligible). Python users can perform the conversion with the helper function `ROOT.RDF.AsRNode`.
 
-As a final note, remember that RDataFrame actions do not return another dataframe, but a ROOT::RDF::RResultPtr<T>, where T is the
+As a final note, remember that RDataFrame actions do not return another dataframe, but a \link ROOT::RDF::RResultPtr ROOT::RDF::RResultPtr<T>\endlink, where T is the
 type of the result of the action.
 
 \anchor RDFCollections
@@ -955,38 +967,39 @@ dfs.emplace_back(dfs[0].Define("x", "42.f"));
 ### Executing callbacks every N events
 It's possible to schedule execution of arbitrary functions (callbacks) during the event loop.
 Callbacks can be used e.g. to inspect partial results of the analysis while the event loop is running,
-drawing a partially-filled histogram every time a certain number of new entries is processed, or event
+drawing a partially-filled histogram every time a certain number of new entries is processed, or
 displaying a progress bar while the event loop runs.
 
 For example one can draw an up-to-date version of a result histogram every 100 entries like this:
 ~~~{.cpp}
-auto h = tdf.Histo1D("x");
+auto h = df.Histo1D("x");
 TCanvas c("c","x hist");
 h.OnPartialResult(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
-h->Draw(); // event loop runs here, this `Draw` is executed after the event loop is finished
+// event loop runs here, this final `Draw` is executed after the event loop is finished
+h->Draw();
 ~~~
 
 Callbacks are registered to a ROOT::RDF::RResultPtr and must be callables that takes a reference to the result type as argument
 and return nothing. RDataFrame will invoke registered callbacks passing partial action results as arguments to them
 (e.g. a histogram filled with a part of the selected events).
 
-Read more on ROOT::RDF::RResultPtr::OnPartialResult().
+Read more on ROOT::RDF::RResultPtr::OnPartialResult() and ROOT::RDF::RResultPtr::OnPartialResultSlot().
 
 \anchor default-branches
-### Default branch lists
+### Default column lists
 When constructing an RDataFrame object, it is possible to specify a **default column list** for your analysis, in the
 usual form of a list of strings representing branch/column names. The default column list will be used as a fallback
 whenever a list specific to the transformation/action is not present. RDataFrame will take as many of these columns as
 needed, ignoring trailing extra names if present.
 ~~~{.cpp}
-// use "b1" and "b2" as default branches
+// use "b1" and "b2" as default columns
 RDataFrame d1("myTree", "file.root", {"b1","b2"});
 auto h = d1.Filter([](int b1, int b2) { return b1 > b2; }) // will act on "b1" and "b2"
            .Histo1D(); // will act on "b1"
 
-// just one default branch this time
+// just one default column this time
 RDataFrame d2("myTree", "file.root", {"b1"});
-auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}) // we can still specify non-default branch lists
+auto min = d2.Filter([](double b2) { return b2 > 0; }, {"b2"}) // we can still specify non-default column lists
              .Min(); // returns the minimum value of "b1" for the filtered entries
 ~~~
 
@@ -996,48 +1009,48 @@ Every instance of RDataFrame is created with two special columns called `rdfentr
 column is of type `ULong64_t` and it holds the current entry number while `rdfslot_` is an `unsigned int`
 holding the index of the current data processing slot.
 For backwards compatibility reasons, the names `tdfentry_` and `tdfslot_` are also accepted.
-These columns are not considered by operations such as [Cache](classROOT_1_1RDF_1_1RInterface.html#aaaa0a7bb8eb21315d8daa08c3e25f6c9)
-or [Snapshot](classROOT_1_1RDF_1_1RInterface.html#a233b7723e498967f4340705d2c4db7f8). The _cached_ or _snapshot_ data frame
-provides "its own" values for these columns which do not necessarily correspond to the ones of the mother data frame. This is
-most notably the case where filters are used before deriving a cached/persistified dataframe.
+These columns are ignored by operations such as [Cache](classROOT_1_1RDF_1_1RInterface.html#aaaa0a7bb8eb21315d8daa08c3e25f6c9)
+or [Snapshot](classROOT_1_1RDF_1_1RInterface.html#a233b7723e498967f4340705d2c4db7f8).
 
-Note that in multi-thread event loops the values of `rdfentry_` _do not_ correspond to what would be the entry numbers
+\warning Note that in multi-thread event loops the values of `rdfentry_` _do not_ correspond to what would be the entry numbers
 of a TChain constructed over the same set of ROOT files, as the entries are processed in an unspecified order.
 
 \anchor jitting
-### Just-in-time compilation: branch type inference and explicit declaration of branch types
+### Just-in-time compilation: column type inference and explicit declaration of column types
 C++ is a statically typed language: all types must be known at compile-time. This includes the types of the TTree
-branches we want to work on. For filters, temporary columns and some of the actions, **branch types are deduced from the
+branches we want to work on. For filters, defined columns and some of the actions, **column types are deduced from the
 signature** of the relevant filter function/temporary column expression/action function:
 ~~~{.cpp}
 // here b1 is deduced to be `int` and b2 to be `double`
-dataFrame.Filter([](int x, double y) { return x > 0 && y < 0.; }, {"b1", "b2"});
+df.Filter([](int x, double y) { return x > 0 && y < 0.; }, {"b1", "b2"});
 ~~~
-If we specify an incorrect type for one of the branches, an exception with an informative message will be thrown at
-runtime, when the branch value is actually read from the TTree: RDataFrame detects type mismatches. The same would
-happen if we swapped the order of "b1" and "b2" in the branch list passed to Filter().
+If we specify an incorrect type for one of the columns, an exception with an informative message will be thrown at
+runtime, when the column value is actually read from the dataset: RDataFrame detects type mismatches. The same would
+happen if we swapped the order of "b1" and "b2" in the column list passed to Filter().
 
 Certain actions, on the other hand, do not take a function as argument (e.g. Histo1D()), so we cannot deduce the type of
-the branch at compile-time. In this case **RDataFrame infers the type of the branch** from the TTree itself. This
-is why we never needed to specify the branch types for all actions in the above snippets.
+the column at compile-time. In this case **RDataFrame infers the type of the column** from the TTree itself. This
+is why we never needed to specify the column types for all actions in the above snippets.
 
-When the branch type is not a common one such as `int`, `double`, `char` or `float` it is nonetheless good practice to
+When the column type is not a common one such as `int`, `double`, `char` or `float` it is nonetheless good practice to
 specify it as a template parameter to the action itself, like this:
 ~~~{.cpp}
-dataFrame.Histo1D("b1"); // OK, the type of "b1" is deduced at runtime
-dataFrame.Min<MyNumber_t>("myObject"); // OK, "myObject" is deduced to be of type `MyNumber_t`
+df.Histo1D("b1"); // OK, the type of "b1" is deduced at runtime
+df.Min<MyNumber_t>("myObject"); // OK, "myObject" is deduced to be of type `MyNumber_t`
 ~~~
 
 Deducing types at runtime requires the just-in-time compilation of the relevant actions, which has a small runtime
 overhead, so specifying the type of the columns as template parameters to the action is good practice when performance is a goal.
 
-When deducing types at runtime, fundamental types are read as constant values, i.e. it is not possible to write to column values
-from Filters or Defines. This is typically perfectly fine and avoids certain common mistakes such as typing `x = 0` rather than `x == 0`.
-Classes and other complex types are read by non-constant references to avoid copies and to permit calls to non-const member functions.
-Note that calling non-const member functions will often not be thread-safe.
+When strings are passed as expressions to Filter() or Define(), fundamental types are passed as constants. This avoids certaincommon mistakes such as typing `x = 0` rather than `x == 0`:
+
+~~~{.cpp}
+// this throws an error (note the typo)
+df.Define("x", "0").Filter("x = 0");
+~~~
 
 \anchor generic-actions
-### Generic actions
+### User-defined custom actions
 RDataFrame strives to offer a comprehensive set of standard actions that can be performed on each event. At the same
 time, it **allows users to execute arbitrary code (i.e. a generic action) inside the event loop** through the Foreach()
 and ForeachSlot() actions.
@@ -1064,9 +1077,9 @@ additional parameter besides the columns it should be applied to: an `unsigned i
 number indicating which thread (0, 1, 2 , ..., poolSize - 1) the function is being run in. More specifically, RDataFrame
 guarantees that ForeachSlot() will invoke the user expression with different `slot` parameters for different concurrent
 executions (there is no guarantee that a certain slot number will always correspond to a given thread id, though).
-We can take advantage of ForeachSlot() to evaluate a thread-safe root mean square of branch "b":
+We can take advantage of ForeachSlot() to evaluate a thread-safe root mean square of column "b":
 ~~~{.cpp}
-// Thread-safe evaluation of RMS of branch "b" using ForeachSlot
+// Thread-safe evaluation of RMS of column "b" using ForeachSlot
 ROOT::EnableImplicitMT();
 const unsigned int nSlots = ROOT::GetThreadPoolSize();
 std::vector<double> sumSqs(nSlots, 0.);
@@ -1086,7 +1099,7 @@ You see how we created one `double` variable for each thread in the pool, and la
 Friend TTrees are supported by RDataFrame.
 Friend TTrees with a TTreeIndex are supported starting from ROOT v6.24.
 
-To use friend trees in RDataFrame, it's necessary to add the friends directly to
+To use friend trees in RDataFrame, it is necessary to add the friends directly to
 the tree and instantiate an RDataFrame with the main tree:
 
 ~~~{.cpp}
@@ -1099,17 +1112,15 @@ auto f = d.Filter("myFriend.MyCol == 42");
 ~~~
 
 Columns coming from the friend trees can be referred to by their full name, like in the example above,
-or the friend tree name can be omitted in case the branch name is not ambiguous (e.g. "MyCol" could be used instead of
+or the friend tree name can be omitted in case the column name is not ambiguous (e.g. "MyCol" could be used instead of
       "myFriend.MyCol" in the example above).
 
 
 \anchor other-file-formats
 ### Reading data formats other than ROOT trees
-RDataFrame can be interfaced with RDataSources. The ROOT::RDF::RDataSource interface defines an API that RDataFrame can use to read arbitrary data formats.
+RDataFrame can be interfaced with RDataSources. The ROOT::RDF::RDataSource interface defines an API that RDataFrame can use to read arbitrary columnar data formats.
 
-A concrete ROOT::RDF::RDataSource implementation (i.e. a class that inherits from RDataSource and implements all of its pure
-methods) provides an adaptor that RDataFrame can leverage to read any kind of tabular data formats.
-RDataFrame calls into RDataSource to retrieve information about the data, retrieve (thread-local) readers or "cursors" for selected columns
+RDataFrame calls into concrete RDataSource implementations to retrieve information about the data, retrieve (thread-local) readers or "cursors" for selected columns
 and to advance the readers to the desired data entry.
 Some predefined RDataSources are natively provided by ROOT such as the ROOT::RDF::RCsvDS which allows to read comma separated files:
 ~~~{.cpp}
@@ -1121,51 +1132,23 @@ auto h = filteredEvents.Histo1D("m");
 h->Draw();
 ~~~
 
+See also MakeNumpyDataFrame (Python-only), MakeNTupleDataFrame(), MakeArrowDataFrame(), MakeSqliteDataFrame().
+
 \anchor callgraphs
-### Call graphs (storing and reusing sets of transformations)
-**Sets of transformations can be stored as variables** and reused multiple times to create **call graphs** in which
-several paths of filtering/creation of columns are executed simultaneously; we often refer to this as "storing the
-state of the chain".
+### Computation graphs (storing and reusing sets of transformations)
 
-This feature can be used, for example, to create a temporary column once and use it in several subsequent filters or
-actions, or to apply a strict filter to the dataset *before* executing several other transformations and actions,
-effectively reducing the amount of events processed.
+As we saw, transformed dataframes can be stored as variables and reused multiple times to create modified versions of the dataset. This implicitly defines a **computation graph** in which
+several paths of filtering/creation of columns are executed simultaneously, and finally aggregated results are produced.
 
-Let's try to make this clearer with a commented example:
-~~~{.cpp}
-// build the dataframe and specify a default column list
-RDataFrame d(treeName, filePtr, {"var1", "var2", "var3"});
-
-// apply a cut and save the state of the chain
-auto filtered = d.Filter(myBigCut);
-
-// plot branch "var1" at this point of the chain
-auto h1 = filtered.Histo1D("var1");
-
-// create a new branch "vec" with a vector extracted from a complex object (only for filtered entries)
-// and save the state of the chain
-auto newBranchFiltered = filtered.Define("vec", [](const Obj& o) { return o.getVector(); }, {"obj"});
-
-// apply a cut and fill a histogram with "vec"
-auto h2 = newBranchFiltered.Filter(cut1).Histo1D("vec");
-
-// apply a different cut and fill a new histogram
-auto h3 = newBranchFiltered.Filter(cut2).Histo1D("vec");
-
-// Inspect results
-h2->Draw(); // first access to an action result: run event-loop!
-h3->Draw("SAME"); // event loop does not need to be run again here..
-std::cout << "Entries in h1: " << h1->GetEntries() << std::endl; // ..or here
-~~~
-RDataFrame detects when several actions use the same filter or the same temporary column, and **only evaluates each
-filter or temporary column once per event**, regardless of how many times that result is used down the call graph.
+RDataFrame detects when several actions use the same filter or the same defined column, and **only evaluates each
+filter or defined column once per event**, regardless of how many times that result is used down the computation graph.
 Objects read from each column are **built once and never copied**, for maximum efficiency.
 When "upstream" filters are not passed, subsequent filters, temporary column expressions and actions are not evaluated,
-so it might be advisable to put the strictest filters first in the chain.
+so it might be advisable to put the strictest filters first in the graph.
 
 \anchor representgraph
 ### Visualizing the computation graph
-It is possible to print the computation graph from any node to obtain a dot representation either on the standard output
+It is possible to print the computation graph from any node to obtain a [DOT (graphviz)](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) representation either on the standard output
 or in a file.
 
 Invoking the function ROOT::RDF::SaveGraph() on any node that is not the head node, the computation graph of the branch
@@ -1188,6 +1171,26 @@ ROOT::RDF::SaveGraph(rd1, "./mydot.dot");
 // Prints the graph to standard output
 ROOT::RDF::SaveGraph(rd1);
 ~~~
+
+\anchor rdf-logging
+### Activating RDataFrame execution logs
+
+RDataFrame has experimental support for verbose logging of the event loop runtimes and other interesting related information. It is activated as follows:
+~~~{.cpp}
+#include <ROOT/RLogger.hxx>
+
+// this increases RDF's verbosity level as long as the `verbosity` variable is in scope
+auto verbosity = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(), ROOT::Experimental::ELogLevel::kInfo);
+~~~
+
+or in Python:
+~~~{.python}
+import ROOT
+
+verbosity = ROOT.Experimental.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.Experimental.ELogLevel.kInfo)
+~~~
+
+### RDataFrame API reference
 
 \anchor reference
 */
