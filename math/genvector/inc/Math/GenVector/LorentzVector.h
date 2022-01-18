@@ -32,7 +32,7 @@ namespace ROOT {
   namespace Math {
 
 //__________________________________________________________________________________________
-/** \ingroup GenVector
+/** @ingroup GenVector
 
 Class describing a generic LorentzVector in the 4D space-time,
 using the specified coordinate system for the spatial vector part.
@@ -52,7 +52,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
 - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
 - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector but float)
 
-More details about the GenVector package can be found \ref GenVector "here".
+@sa Overview of the @ref GenVector "physics vector library"
 */
 
     template< class CoordSystem >

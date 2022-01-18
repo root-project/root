@@ -60,6 +60,8 @@ namespace Math {
      Note that the operator is NOT commutative, the order how the rotations are applied is relevant.
 
      @ingroup GenVector
+
+     @sa Overview of the @ref GenVector "physics vector library"
   */
 
 class Rotation3D {
