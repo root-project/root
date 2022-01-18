@@ -25,6 +25,14 @@ def _load_helper(bkname):
     except OSError:
          pass
 
+ # failed ... try absolute path
+ # needed on MacOS12 with soversion
+    try:
+        libpath = os.path.dirname(os.path.dirname(__file__))
+        return ctypes.CDLL(os.path.join(libpath, bkname), ctypes.RTLD_GLOBAL)
+    except OSError:
+        pass
+
  # failed ... load dependencies explicitly
     try:
         pkgpath = os.path.dirname(bkname)
