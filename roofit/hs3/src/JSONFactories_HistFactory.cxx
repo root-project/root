@@ -83,11 +83,12 @@ TH1 *histFunc2TH1(const RooHistFunc *hf)
    return hist;
 }
 
-template<class T> T* findClient(RooAbsArg *gamma)
+template <class T>
+T *findClient(RooAbsArg *gamma)
 {
    for (const auto &client : gamma->clients()) {
       if (client->InheritsFrom(T::Class())) {
-         return static_cast<T*>(client);
+         return static_cast<T *>(client);
       } else {
          T *c = findClient<T>(client);
          if (c)
@@ -131,7 +132,7 @@ RooRealVar *getNP(RooJSONFactoryWSTool *tool, const char *parname)
 }
 RooAbsPdf *getConstraint(RooJSONFactoryWSTool *tool, const std::string &sysname)
 {
-   RooAbsPdf *pdf = tool->workspace()->pdf((sysname+"_constraint").c_str());
+   RooAbsPdf *pdf = tool->workspace()->pdf((sysname + "_constraint").c_str());
    if (!pdf) {
       pdf = (RooAbsPdf *)(tool->workspace()->factory(
          TString::Format("RooGaussian::%s_constraint(alpha_%s,nom_alpha_%s,sigma_alpha_%s)", sysname.c_str(),
@@ -282,7 +283,7 @@ class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
    ParamHistFunc *createPHF(const std::string &name, const std::vector<double> &sumW, const std::vector<double> &sumW2,
                             RooArgList &nps, RooArgList &constraints, const RooArgSet &observables,
-                            double statErrorThreshold, const std::string& statErrorType) const
+                            double statErrorThreshold, const std::string &statErrorType) const
    {
       RooArgList gammas;
       for (size_t i = 0; i < sumW.size(); ++i) {
@@ -313,18 +314,18 @@ public:
             RooProduct *prod = new RooProduct(prodname.Data(), prodname.Data(), elems);
             gammas.add(*g, true);
             nps.add(*g);
-            if(statErrorType == "gauss"){
-              TString sname = TString::Format("sigma_stat_%s_bin_%d", name.c_str(), (int)i);              
-              RooRealVar *sigma = new RooRealVar(sname.Data(), sname.Data(), err);
-              sigma->setConstant(true);
-              RooGaussian *gaus = new RooGaussian(poisname.Data(), poisname.Data(), *tau, *prod, *sigma);
-              constraints.add(*gaus, true);              
-            } else if(statErrorType == "poisson"){
-              RooPoisson *pois = new RooPoisson(poisname.Data(), poisname.Data(), *tau, *prod);
-              pois->setNoRounding(true);
-              constraints.add(*pois, true);
+            if (statErrorType == "gauss") {
+               TString sname = TString::Format("sigma_stat_%s_bin_%d", name.c_str(), (int)i);
+               RooRealVar *sigma = new RooRealVar(sname.Data(), sname.Data(), err);
+               sigma->setConstant(true);
+               RooGaussian *gaus = new RooGaussian(poisname.Data(), poisname.Data(), *tau, *prod, *sigma);
+               constraints.add(*gaus, true);
+            } else if (statErrorType == "poisson") {
+               RooPoisson *pois = new RooPoisson(poisname.Data(), poisname.Data(), *tau, *prod);
+               pois->setNoRounding(true);
+               constraints.add(*pois, true);
             } else {
-              RooJSONFactoryWSTool::error("unknown constraint type "+statErrorType);
+               RooJSONFactoryWSTool::error("unknown constraint type " + statErrorType);
             }
          } else {
             RooRealVar *g = new RooRealVar(gname.Data(), gname.Data(), 1.);
@@ -360,7 +361,7 @@ public:
          if (staterr.has_child("relThreshold"))
             statErrorThreshold = staterr["relThreshold"].val_float();
          if (staterr.has_child("constraint"))
-            statErrorType = staterr["constraint"].val();         
+            statErrorType = staterr["constraint"].val();
       }
       std::vector<double> sumW;
       std::vector<double> sumW2;
@@ -403,7 +404,8 @@ public:
          coefnames.push_back(fprefix + fname + "_norm");
       }
 
-      ParamHistFunc *phf = createPHF(name, sumW, sumW2, nps, constraints, observables, statErrorThreshold, statErrorType);
+      ParamHistFunc *phf =
+         createPHF(name, sumW, sumW2, nps, constraints, observables, statErrorThreshold, statErrorType);
       if (phf) {
          tool->workspace()->import(*phf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
          tool->setScopeObject("mcstat", tool->workspace()->function(phf->GetName()));
@@ -600,8 +602,8 @@ public:
       samples.set_map();
 
       bool has_poisson_constraints = false;
-      bool has_gauss_constraints = false;      
-      
+      bool has_gauss_constraints = false;
+
       for (size_t sampleidx = 0; sampleidx < sumpdf->funcList().size(); ++sampleidx) {
          const auto func = sumpdf->funcList().at(sampleidx);
          const auto coef = sumpdf->coefList().at(sampleidx);
@@ -708,15 +710,15 @@ public:
             for (const auto &g : phf->paramList()) {
                ++idx;
                RooPoisson *constraint_p = findClient<RooPoisson>(g);
-               RooGaussian *constraint_g = findClient<RooGaussian>(g);               
+               RooGaussian *constraint_g = findClient<RooGaussian>(g);
                if (constraint_p) {
                   double erel = 1. / sqrt(constraint_p->getX().getVal());
                   hist->SetBinError(idx, erel * hist->GetBinContent(idx));
                   has_poisson_constraints = true;
-               } else if(constraint_g){
+               } else if (constraint_g) {
                   double erel = constraint_g->getSigma().getVal() / constraint_g->getMean().getVal();
                   hist->SetBinError(idx, erel * hist->GetBinContent(idx));
-                  has_gauss_constraints = true;                  
+                  has_gauss_constraints = true;
                } else {
                   hist->SetBinError(idx, 0);
                }
@@ -724,7 +726,7 @@ public:
          } else {
             s["statError"] << 0;
          }
-         auto& ns = s["namespaces"];
+         auto &ns = s["namespaces"];
          ns.set_seq();
          ns.append_child() << chname;
          if (hist) {
@@ -734,12 +736,12 @@ public:
             delete hist;
          }
       }
-      auto& statError = elem["statError"];
+      auto &statError = elem["statError"];
       statError.set_map();
-      if(has_poisson_constraints){
-        statError["constraint"] << "poisson";
-      } else if(has_gauss_constraints){
-        statError["constraint"] << "gauss";
+      if (has_poisson_constraints) {
+         statError["constraint"] << "poisson";
+      } else if (has_gauss_constraints) {
+         statError["constraint"] << "gauss";
       }
       return true;
    }

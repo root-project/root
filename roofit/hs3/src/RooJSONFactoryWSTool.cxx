@@ -740,7 +740,8 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
                       << ". skipping." << std::endl;
             return;
          }
-         if(ok) break;
+         if (ok)
+            break;
       }
    }
    if (!ok) { // generic export using the factory expressions
@@ -923,7 +924,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
          ::importAttributes(func, p);
 
          if (isPdf && toplevel) {
-            configureToplevelPdf(p,static_cast<RooAbsPdf *>(func));
+            configureToplevelPdf(p, static_cast<RooAbsPdf *>(func));
          }
       }
    } catch (const RooJSONFactoryWSTool::DependencyMissingError &ex) {
@@ -1251,11 +1252,11 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf *pd
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string mcname = "ModelConfig";
-   if(p.has_child("dict")){
-     if(p["dict"].has_child("ModelConfig")){
-       mcname = p["dict"]["ModelConfig"].val();
-     }
-   } 
+   if (p.has_child("dict")) {
+      if (p["dict"].has_child("ModelConfig")) {
+         mcname = p["dict"]["ModelConfig"].val();
+      }
+   }
    RooStats::ModelConfig *mc = new RooStats::ModelConfig(mcname.c_str(), pdf->GetName());
    this->_workspace->import(*mc);
    RooStats::ModelConfig *inwsmc = dynamic_cast<RooStats::ModelConfig *>(this->_workspace->obj(mcname.c_str()));
@@ -1266,7 +1267,7 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf *pd
       RooArgSet nps;
       RooArgSet pois;
       RooArgSet globs;
-      for (auto& var : this->_workspace->allVars()) {
+      for (auto &var : this->_workspace->allVars()) {
          if (!pdf->dependsOn(*var))
             continue;
          if (var->getAttribute("observable")) {
@@ -1395,7 +1396,7 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
 void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    // export all ModelConfig objects and attached Pdfs
-   std::vector<RooStats::ModelConfig*> main;
+   std::vector<RooStats::ModelConfig *> main;
    this->_rootnode_output = &n;
    for (auto obj : this->_workspace->allGenericObjects()) {
       if (obj->InheritsFrom(RooStats::ModelConfig::Class())) {
@@ -1459,8 +1460,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    for (const auto &mc : main) {
       auto &pdfs = n["pdfs"];
       pdfs.set_map();
-      RooAbsPdf* pdf = mc->GetPdf();
-      RooJSONFactoryWSTool::exportObject(pdf,pdfs);
+      RooAbsPdf *pdf = mc->GetPdf();
+      RooJSONFactoryWSTool::exportObject(pdf, pdfs);
       auto &node = pdfs[pdf->GetName()];
       node.set_map();
       auto &tags = node["tags"];

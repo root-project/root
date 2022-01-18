@@ -252,8 +252,8 @@ public:
       }
 
       bool extended = false;
-      if(p.has_child("extended") && p["extended"].val_bool()){
-        extended = true;
+      if (p.has_child("extended") && p["extended"].val_bool()) {
+         extended = true;
       }
       RooRealSumPdf thepdf(name.c_str(), name.c_str(), samples, coefficients, extended);
       tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
