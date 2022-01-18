@@ -1,20 +1,22 @@
 \defgroup GenVector Physics Vectors
 \ingroup Math
-\brief Generic 2D, 3D and 4D vector classes and their transformations (rotations).
+\brief Vector classes (2D, 3D and 4D / Lorentz vector) and their transformations.
 
 These classes represent vectors and their operations and transformations, such as rotations and Lorentz transformations, in two, three and four dimensions.
 The 4D space-time is used for physics vectors representing relativistic particles in [Minkowski-space](https://en.wikipedia.org/wiki/Minkowski_space).
 These vectors are different from Linear Algebra vectors or `std::vector` which describe generic N-dimensional vectors.
 
+Hint: the most commonly used Lorentz vector class is ROOT::Math::PtEtaPhiMVector, a typedef to ROOT::Math::LorentzVector < ROOT::Math::PtEtaPhiM4D <double> >.
+
 ## Points and Vector concept
 
-Mathematically vectors and points are two distinct concepts. They have different
-transformations, like vectors only rotate while points rotate and translate. You can
-add two vectors but not two points and the difference between two points is a vector.
+Mathematically, vectors and points are two distinct concepts. They have different
+transformations: vectors can only be rotated, while points can be rotated or translated.
+You can add two vectors but not two points, and the difference between two points is a vector.
 We then distinguish for the 2 and 3 dimensional case, between points and vectors,
 modeling them with different classes:
 *   ROOT::Math::DisplacementVector2D and ROOT::Math::DisplacementVector3D describe
-    2 and 3 component direction and magnitude vectors, not rooted at any particular point;
+    2- and 3-component direction and magnitude vectors, not rooted at any particular point;
 *   ROOT::Math::PositionVector2D and ROOT::Math::PositionVector3D model points in
     2 and 3 dimensions.
 
@@ -36,7 +38,7 @@ coordinates systems:
     *   ROOT::Math::Cartesian3D, based on <em>(x,y,z)</em>;
     *   ROOT::Math::Polar3D, based on <em>(r, theta, phi)</em>;
     *   ROOT::Math::Cylindrical3D, based on <em>(rho, z, phi)</em>
-    *   ROOT::Math::CylindricalEta3D, based on <em>(rho, eta, phi)</em>, where eta is the pseudo-rapidity;
+    *   ROOT::Math::CylindricalEta3D, based on <em>(rho, eta, phi)</em>;
 *   **4D coordinate system** classes:
     *   ROOT::Math::PxPyPzE4D, based on based on <em>(px,py,pz,E)</em>;
     *   ROOT::Math::PxPyPzM4D, based on based on <em>(px,py,pz,M)</em>;
@@ -45,16 +47,17 @@ coordinates systems:
 
 The angle _theta_ is defined between [0,\f$\pi\f$] and _phi_ between [-\f$\pi\f$,\f$\pi\f$].
 The angles are expressed in radians.
+The _eta_ component is known as [pseudo-rapidity](https://en.wikipedia.org/wiki/Pseudorapidity).
 
 Users can define the Vectors according to the coordinate type which
 is most efficient for their use. Transformations between the various coordinate
 systems are available through copy constructors or the assignment `operator =`.
-For maximum flexibility and minimize in some use case memory allocation, the
-coordinate system classes are templated on the scalar type.
+The coordinate system classes are templated on the scalar type for maximum flexibility,
+and to minimize memory usage for some use cases.
 
 ### Coordinate System Tag
 
-The 2D and 3D points and vector classes can be associated to a tag defining the
+The 2D and 3D point and vector classes can be associated to a tag defining the
 coordinate system. This can be used to distinguish between vectors of different
 coordinate systems like global or local vectors. The coordinate system tag is a
 template parameter of the ROOT::Math::DisplacementVector3D
@@ -68,63 +71,52 @@ functionality.
 ## Concrete Vector typedefs
 
 To avoid exposing templated parameters to the users, typedefs are defined for all types of vectors based an `double`s and `float`s.
+The table below lists the `double` versions; the `float` counterpart ends on an extra `F`, such as ROOT::Math::XYPointF instead of ROOT::Math::XYPoint.
 
 ### Point2D
 
 Type definitions for points in two dimensions, based on ROOT::Math::PositionVector2D, are defined by `Math/Point2D.h`:
 
-*   ROOT::Math::XYPoint vector based on x,y coordinates (cartesian) in double precision
-*   ROOT::Math::XYPointF vector based on x,y coordinates (cartesian) in float precision
-*   ROOT::Math::Polar2DPoint vector based on r,phi coordinates (polar) in double precision
-*   ROOT::Math::Polar2DPointF vector based on r,phi coordinates (polar) in float precision
+*   ROOT::Math::XYPoint vector based on x,y coordinates (cartesian)
+*   ROOT::Math::Polar2DPoint vector based on r,phi coordinates (polar)
 
 ### Vector2D
 
 Type definitions for vectors in two dimensions, based on ROOT::Math::DisplacementVector2D, are defined by `Math/Vector2D.h`:
 
-*   ROOT::Math::XYVector vector based on x,y coordinates (cartesian) in double precision
-*   ROOT::Math::XYVectorF vector based on x,y coordinates (cartesian) in float precision
-*   ROOT::Math::Polar2DVector vector based on r,phi coordinates (polar) in double precision
-*   ROOT::Math::Polar2DVectorF vector based on r,phi coordinates (polar) in float precision
+*   ROOT::Math::XYVector vector based on x,y coordinates (cartesian)
+*   ROOT::Math::Polar2DVector vector based on r,phi coordinates (polar)
 
 ### Point3D
 
 Type definitions for points in three dimensions, based on ROOT::Math::PositionVector3D, are defined by `Math/Point3D.h`:
 
-*   ROOT::Math::XYZPoint point based on x,y,z coordinates (cartesian) in double precision
-*   ROOT::Math::XYZPointF point based on x,y,z coordinates (cartesian) in float precision
-*   ROOT::Math::Polar3DPoint point based on r,theta,phi coordinates (polar) in double precision
-*   ROOT::Math::Polar3DPointF point based on r,theta,phi coordinates (polar) in float precision
-*   ROOT::Math::RhoZPhiPoint point based on rho,z,phi coordinates (cylindrical using z) in double precision
-*   ROOT::Math::RhoZPhiPointF point based on rho,z,phi coordinates (cylindrical using z) in float precision
-*   ROOT::Math::RhoEtaPhiPoint point based on rho,eta,phi coordinates (cylindrical using eta instead of z) in double precision
-*   ROOT::Math::RhoEtaPhiPointF point based on rho,eta,phi coordinates (cylindrical using eta instead of z) in float precision
+*   ROOT::Math::XYZPoint point based on x,y,z coordinates (cartesian)
+*   ROOT::Math::Polar3DPoint point based on r,theta,phi coordinates (polar)
+*   ROOT::Math::RhoZPhiPoint point based on rho,z,phi coordinates (cylindrical using z)
+*   ROOT::Math::RhoEtaPhiPoint point based on rho,eta,phi coordinates (cylindrical using eta instead of z)
 
 ### Vector3D
 
 Type definitions for vectors in three dimensions, based on ROOT::Math::DisplacementVector3D, are defined by `Math/Vector3D.h`:
 
-*   ROOT::Math::XYZVector vector based on x,y,z coordinates (cartesian) in double precision
-*   ROOT::Math::XYZVectorF vector based on x,y,z coordinates (cartesian) in float precision
-*   ROOT::Math::Polar3DVector vector based on r,theta,phi coordinates (polar) in double precision
-*   ROOT::Math::Polar3DVectorF vector based on r,theta,phi coordinates (polar) in float precision
-*   ROOT::Math::RhoZPhiVector vector based on rho, z,phi coordinates (cylindrical) in double precision
-*   ROOT::Math::RhoZPhiVectorF vector based on rho, z,phi coordinates (cylindrical) in float precision
-*   ROOT::Math::RhoEtaPhiVector vector based on rho,eta,phi coordinates (cylindrical using eta instead of z) in double precision
-*   ROOT::Math::RhoEtaPhiVectorF vector based on rho,eta,phi coordinates (cylindrical using eta instead of z) in float precision
+*   ROOT::Math::XYZVector vector based on x,y,z coordinates (cartesian)
+*   ROOT::Math::Polar3DVector vector based on r,theta,phi coordinates (polar)
+*   ROOT::Math::RhoZPhiVector vector based on rho, z,phi coordinates (cylindrical)
+*   ROOT::Math::RhoEtaPhiVector vector based on rho,eta,phi coordinates (cylindrical using eta instead of z)
+precision
 
 ### LorentzVector
 
 Type definitions for Lorentz vectors in four dimensions, based on ROOT::Math::LorentzVector, are defined by `Math/Vector4D.h`:
 
-*   ROOT::Math::XYZTVector vector based on x,y,z,t coordinates (cartesian) in double precision
-*   ROOT::Math::XYZTVectorF vector based on x,y,z,t coordinates (cartesian) in float precision
-*   ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates in double precision
-*   ROOT::Math::PtEtaPhiMVector vector based on pt (rho),eta,phi and M (t) coordinates in double precision
-*   ROOT::Math::PxPyPzMVector vector based on px,py,pz and M (mass) coordinates in double precision
-*   ROOT::Math::PxPyPzEVector vector based on px,py,pz and E (energy) coordinates in double precision
+*   ROOT::Math::XYZTVector vector based on x,y,z,t coordinates (cartesian)
+*   ROOT::Math::PtEtaPhiEVector vector based on pt (rho),eta,phi and E (t) coordinates
+*   ROOT::Math::PtEtaPhiMVector vector based on pt (rho),eta,phi and M (t) coordinates
+*   ROOT::Math::PxPyPzMVector vector based on px,py,pz and M (mass) coordinates
+*   ROOT::Math::PxPyPzEVector vector based on px,py,pz and E (energy) coordinates
 
-The metric used for all the LorentzVector's is (-,-,-,+)
+The metric used for any such LorentzVector is (-,-,-,+).
 
 
 \anchor GenVectorOperations
@@ -132,25 +124,30 @@ The metric used for all the LorentzVector's is (-,-,-,+)
 
 ### Constructors and Assignment
 
-Vectors can be constructed by passing its coordinate representation.
-In addition the vector classes can be constructed by any vector which implements the
-accessors x(), y() and z(). This can be another vector based on a different coordinate
-system type or even any vector of a different package, like the CLHEP `Hep3Vector` that
-implements the required signatures.
+A vector can be constructed from its coordinate representation:
 
-```
+~~~{.cpp}
+ROOT::Math::PtEtaPhiMVector v1(10. /*pt*/, 0.1 /*eta*/, 0.24 /*phi*/, 5 /*M*/);
+~~~
+
+In addition, the vector classes can be constructed from any object that implements the
+accessors x(), y() and z(). This can be a vector using a different coordinate
+system, or even an object from a different package as long as it implements the required signatures.
+One such package is CLHEP's `Hep3Vector`:
+
+~~~{.cpp}
 XYZVector v1(1,2,3);
 RhoEtaPhiVector r2(v1);
 CLHEP::Hep3Vector q(1,2,3);
 XYZVector v3(q)
-```
+~~~
 
 ### Arithmetic Operations
 
 The following operations are possible between vector classes, even of different
 coordinate system types:
 
-```
+~~~{.cpp}
 v1 += v2;
 v1 -= v2;
 v1 = - v2;
@@ -161,7 +158,7 @@ v2 = v1 / a;
 v2 = v1 * a;
 v3 = v1 + v2;
 v3 = v1 - v2;
-```
+~~~
 
 Note that the multiplication between two vectors using the `operator *` is not supported
 because it is ambiguous.
@@ -171,7 +168,7 @@ because it is ambiguous.
 The vector classes support methods for:
 
 - computation of the dot product via Dot(),
-- comptuation of the cross product via Cross(),
+- computation of the cross product via Cross(),
 - construction of a unit vector via Unit().
 
 
