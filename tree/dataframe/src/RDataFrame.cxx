@@ -346,9 +346,10 @@ auto df = d.Define("p", "std::array<double, 4> p{px, py, pz}; return p;")
 
 The code snippet above defines a column `p` that is a fixed-size array using the component column names and then
 filters on its magnitude by looping over its elements. It must be noted that the usage of strings to define columns
-like the one above is currently the only possibility when using PyROOT. When writing expressions as such, only constants and data coming from other columns
-in the dataset can be involved in the code passed as a string. Local variables and functions cannot be used, since
-the interpreter will not know how to find them. When capturing local state is necessary, it is suggested to write a C++ application and make use of C++ callables.
+like the one above is currently the only possibility when using PyROOT. When writing expressions as such, only constants
+and data coming from other columns in the dataset can be involved in the code passed as a string. Local variables and
+functions cannot be used, since the interpreter will not know how to find them. When capturing local state is necessary,
+it must first be declared to the ROOT C++ interpreter.
 
 More information on filters and how to use them to automatically generate cutflow reports can be found [below](#Filters).
 
