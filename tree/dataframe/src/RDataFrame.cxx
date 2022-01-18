@@ -1221,10 +1221,17 @@ auto df2 = df.Define("x", []() { return 1; })
 auto count =  df2.Count();
 
 // Prints the graph to the rd1.dot file in the current directory
-ROOT::RDF::SaveGraph(rd1, "./mydot.dot");
+ROOT::RDF::SaveGraph(df, "./mydot.dot");
 // Prints the graph to standard output
-ROOT::RDF::SaveGraph(rd1);
+ROOT::RDF::SaveGraph(df);
 ~~~
+
+The generated graph can be rendered using one of the graphviz filters, e.g. `dot`. For instance, the image below can be generated with the following command:
+~~~{.sh}
+$ dot -Tpng computation_graph.dot -ocomputation_graph.png
+~~~
+
+\image html RDF_Graph2.png
 
 \anchor rdf-logging
 ### Activating RDataFrame execution logs
