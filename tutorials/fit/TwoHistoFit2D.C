@@ -40,7 +40,7 @@ std::vector<std::pair<double, double> > coords;
 std::vector<double > values;
 std::vector<double > errors;
 
-void myFcn(Int_t & /*nPar*/, Double_t * /*grad*/ , Double_t &fval, Double_t *p, Int_t /*iflag */  )
+void myFcn(int & /*nPar*/, double * /*grad*/ , double &fval, double *p, int /*iflag */  )
 {
   int n = coords.size();
   double chi2 = 0;

@@ -22,10 +22,10 @@
 
 double RosenBrock(const double *xx )
 {
-  const Double_t x = xx[0];
-  const Double_t y = xx[1];
-  const Double_t tmp1 = y-x*x;
-  const Double_t tmp2 = 1-x;
+  const double x = xx[0];
+  const double y = xx[1];
+  const double tmp1 = y-x*x;
+  const double tmp2 = 1-x;
   return 100*tmp1*tmp1+tmp2*tmp2;
 }
 

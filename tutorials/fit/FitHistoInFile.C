@@ -35,18 +35,18 @@ const std::map<ParIndex_t,std::string> parNames{
 
 
 // Quadratic background function
-Double_t background(Double_t *x, Double_t *par) {
+double background(double *x, double *par) {
    return par[Bkg0] + par[Bkg1]*x[0] + par[Bkg2]*x[0]*x[0];
 }
 
 // Gauss Peak function
-Double_t signal(Double_t *x, Double_t *par) {
+double signal(double *x, double *par) {
    return par[SigScale]*TMath::Gaus(x[0], par[SigMean], par[SigSigma], true);
 }
 
 // Sum of background and peak function. We pass x and the fit parameters
 // down to the signal and background functions.
-Double_t fitFunction(Double_t *x, Double_t *par) {
+double fitFunction(double *x, double *par) {
    return background(x, par) + signal(x, par);
 }
 
@@ -78,7 +78,7 @@ void FitRoutine(TCanvas* c1, TH1* histo, float fitxmin, float fitxmax, TString f
    signalFcn.SetNpx(500);
 
    // Retrieve fit parameters, and copy them to the signal and background functions
-   Double_t par[N_PAR];
+   double par[N_PAR];
    fitFcn.GetParameters(par);
 
    backFcn.SetParameters(par);
@@ -109,7 +109,7 @@ void FitRoutine(TCanvas* c1, TH1* histo, float fitxmin, float fitxmax, TString f
 void CreateRootFile(){
    // The data in array form
    const int nBins = 60;
-   Double_t data[nBins] = { 6, 1,10,12, 6,13,23,22,15,21,
+   double data[nBins] = { 6, 1,10,12, 6,13,23,22,15,21,
                            23,26,36,25,27,35,40,44,66,81,
                            75,57,43,37,36,31,35,36,43,32,
                            40,37,38,33,36,44,42,37,32,32,

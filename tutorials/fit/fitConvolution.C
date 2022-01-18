@@ -33,7 +33,7 @@ void fitConvolution()
    TH1F *h_ExpGauss = new TH1F("h_ExpGauss","Exponential convoluted by gaussian",100,0.,5.);
    for (int i=0;i<1e6;i++)
    {
-      Double_t x = gRandom->Exp(1./0.3);//gives a alpha of -0.3 in the exp
+      double x = gRandom->Exp(1./0.3);//gives a alpha of -0.3 in the exp
       x += gRandom->Gaus(0.,3.);
       h_ExpGauss->Fill(x);//probability density function of the addition of two variables is the convolution of 2 dens. functions
    }

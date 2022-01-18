@@ -5,7 +5,7 @@
 // To try this macro, in a ROOT prompt, do:
 // .L fitEllipseTGraphDLSF.cxx // or ".L fitEllipseTGraphDLSF.cxx++"
 // fitEllipseTGraphDLSF(TestGraphDLSF());
-// for (Int_t i=0; i<10; i++) { fitEllipseTGraphDLSF(); gSystem->Sleep(333); }
+// for (int i=0; i<10; i++) { fitEllipseTGraphDLSF(); gSystem->Sleep(333); }
 //
 // Last update: Thu Jul 31 18:00:00 UTC 2014
 //
@@ -60,11 +60,11 @@ TVectorD fit_ellipse(TGraph *g)
   if (!g) return ellipse; // just a precaution
   if (g->GetN() < 6) return ellipse; // just a precaution
 
-  Int_t i;
-  Double_t tmp;
+  int i;
+  double tmp;
 
-  Int_t N = g->GetN();
-  Double_t xmin, xmax, ymin, ymax, X0, Y0;
+  int N = g->GetN();
+  double xmin, xmax, ymin, ymax, X0, Y0;
   g->ComputeRange(xmin, ymin, xmax, ymax);
 #if 1 /* 0 or 1 */
   X0 = (xmax + xmin) / 2.0;
@@ -77,8 +77,8 @@ TVectorD fit_ellipse(TGraph *g)
   TMatrixD D2(N, 3); // linear part of the design matrix
 
   for (i = 0; i < N; i++) {
-    Double_t x = (g->GetX())[i] - X0;
-    Double_t y = (g->GetY())[i] - Y0;
+    double x = (g->GetX())[i] - X0;
+    double y = (g->GetY())[i] - Y0;
     D1[i][0] = x * x;
     D1[i][1] = x * y;
     D1[i][2] = y * y;
@@ -190,21 +190,21 @@ TVectorD ConicToParametric(const TVectorD &conic)
     return ellipse;
   }
 
-  Double_t a, b, theta;
-  Double_t x0 = conic[0]; // = X0
-  Double_t y0 = conic[1]; // = Y0
+  double a, b, theta;
+  double x0 = conic[0]; // = X0
+  double y0 = conic[1]; // = Y0
 
   // http://mathworld.wolfram.com/Ellipse.html
-  Double_t A = conic[2];
-  Double_t B = conic[3] / 2.0;
-  Double_t C = conic[4];
-  Double_t D = conic[5] / 2.0;
-  Double_t F = conic[6] / 2.0;
-  Double_t G = conic[7];
+  double A = conic[2];
+  double B = conic[3] / 2.0;
+  double C = conic[4];
+  double D = conic[5] / 2.0;
+  double F = conic[6] / 2.0;
+  double G = conic[7];
 
-  Double_t J = B * B - A * C;
-  Double_t Delta = A * F * F + C * D * D + J * G - 2.0 * B * D * F;
-  Double_t I = - (A + C);
+  double J = B * B - A * C;
+  double Delta = A * F * F + C * D * D + J * G - 2.0 * B * D * F;
+  double I = - (A + C);
 
   // http://mathworld.wolfram.com/QuadraticCurve.html
   if (!( (Delta != 0.0) && (J < 0.0) && (I != 0.0) && (Delta / I < 0.0) )) {
@@ -215,7 +215,7 @@ TVectorD ConicToParametric(const TVectorD &conic)
   x0 += (C * D - B * F) / J;
   y0 += (A * F - B * D) / J;
 
-  Double_t tmp = std::sqrt((A - C) * (A - C) + 4.0 * B * B);
+  double tmp = std::sqrt((A - C) * (A - C) + 4.0 * B * B);
   a = std::sqrt(2.0 * Delta / J / (I + tmp));
   b = std::sqrt(2.0 * Delta / J / (I - tmp));
 
@@ -247,15 +247,15 @@ TVectorD ConicToParametric(const TVectorD &conic)
 //
 // creates a test TGraph with an ellipse
 //
-TGraph *TestGraphDLSF(Bool_t randomize = kFALSE) {
-  Int_t i;
+TGraph *TestGraphDLSF(bool randomize = false) {
+  int i;
 
   // define the test ellipse
-  Double_t x0 = 4; // ellipse's "x" center
-  Double_t y0 = 3; // ellipse's "y" center
-  Double_t a = 2; // ellipse's "semimajor" axis along "x" (> 0)
-  Double_t b = 1; // ellipse's "semiminor" axis along "y" (> 0)
-  Double_t theta = 100; // ellipse's axes rotation angle (-45 ... 135 degrees)
+  double x0 = 4; // ellipse's "x" center
+  double y0 = 3; // ellipse's "y" center
+  double a = 2; // ellipse's "semimajor" axis along "x" (> 0)
+  double b = 1; // ellipse's "semiminor" axis along "y" (> 0)
+  double theta = 100; // ellipse's axes rotation angle (-45 ... 135 degrees)
 
   // gRandom->SetSeed(0);
   if (randomize) {
@@ -266,14 +266,14 @@ TGraph *TestGraphDLSF(Bool_t randomize = kFALSE) {
     theta = 180.0 - 360.0 * gRandom->Rndm();
   }
 
-  const Int_t n = 100; // number of points
-  Double_t x[n], y[n];
-  Double_t dt = TMath::TwoPi() / Double_t(n);
-  Double_t tmp;
+  const int n = 100; // number of points
+  double x[n], y[n];
+  double dt = TMath::TwoPi() / double(n);
+  double tmp;
   theta *= TMath::PiOver2() / 90.0; // degrees -> radians
   for (i = 0; i < n; i++) {
-    x[i] = a * (std::cos(dt * Double_t(i)) + 0.1 * gRandom->Rndm() - 0.05);
-    y[i] = b * (std::sin(dt * Double_t(i)) + 0.1 * gRandom->Rndm() - 0.05);
+    x[i] = a * (std::cos(dt * double(i)) + 0.1 * gRandom->Rndm() - 0.05);
+    y[i] = b * (std::sin(dt * double(i)) + 0.1 * gRandom->Rndm() - 0.05);
     // rotate the axes
     tmp = x[i];
     x[i] = x[i] * std::cos(theta) - y[i] * std::sin(theta);
@@ -297,7 +297,7 @@ TGraph *TestGraphDLSF(Bool_t randomize = kFALSE) {
 //
 void fitEllipseTGraphDLSF(TGraph *g = ((TGraph *)0))
 {
-  if (!g) g = TestGraphDLSF(kTRUE); // create a "random" ellipse
+  if (!g) g = TestGraphDLSF(true); // create a "random" ellipse
 
   // fit the TGraph
   TVectorD conic = fit_ellipse(g);
