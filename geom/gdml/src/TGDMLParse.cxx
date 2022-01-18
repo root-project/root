@@ -1126,15 +1126,12 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
       // We cannot use elements with Z = 0, so we expect a user definition
       if (ele && ele->Z() == 0)
          ele = nullptr;
-      if (!ele) {
+      if (!ele)
          ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
-         for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
-            if (fisomap.find(f->first) != fisomap.end()) {
-               ele->AddIsotope((TGeoIsotope *)fisomap[f->first], f->second);
-            }
+      for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
+         if (fisomap.find(f->first) != fisomap.end()) {
+            ele->AddIsotope((TGeoIsotope *)fisomap[f->first], f->second);
          }
-      } else if (gDebug >= 2) {
-         Info("TGDMLParse", "Re-use existing element: %s", ele->GetName());
       }
       felemap[name.Data()] = ele;
       return child;
@@ -1189,15 +1186,12 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine *gdml, XMLNodePointer_t node,
       // We cannot use elements with Z = 0, so we expect a user definition
       if (ele && ele->Z() == 0)
          ele = nullptr;
-      if (!ele) {
+      if (!ele)
          ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
-         for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
-            if (fisomap.find(f->first) != fisomap.end()) {
-               ele->AddIsotope((TGeoIsotope *)fisomap[f->first], f->second);
-            }
+      for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
+         if (fisomap.find(f->first) != fisomap.end()) {
+            ele->AddIsotope((TGeoIsotope *)fisomap[f->first], f->second);
          }
-      } else if (gDebug >= 2) {
-         Info("TGDMLParse", "Re-use existing element: %s", ele->GetName());
       }
       felemap[name.Data()] = ele;
       return child;
