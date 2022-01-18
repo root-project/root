@@ -288,39 +288,45 @@ public:
       RooArgList gammas;
       for (size_t i = 0; i < sumW.size(); ++i) {
          TString gname = TString::Format("gamma_stat_%s_bin_%d", name.c_str(), (int)i);
-         TString tname = TString::Format("tau_stat_%s_bin_%d", name.c_str(), (int)i);
-         TString prodname = TString::Format("nExp_stat_%s_bin_%d", name.c_str(), (int)i);
-         TString poisname = TString::Format("Constraint_stat_%s_bin_%d", name.c_str(), (int)i);
          double err = sqrt(sumW2[i]) / sumW[i];
          if (err > 0) {
-            double tauCV = 1. / (err * err);
             RooRealVar *g = new RooRealVar(gname.Data(), gname.Data(), 1.);
             g->setAttribute("np");
             if (err < statErrorThreshold) {
-               g->setConstant(true);
+              g->setConstant(true);
             } else {
-               g->setConstant(false);
+              g->setConstant(false);
             }
-            RooRealVar *tau = new RooRealVar(tname.Data(), tname.Data(), tauCV);
-            //           tau->setAttribute("glob");
-            tau->setConstant(true);
-            tau->setRange(tau->getVal(), tau->getVal());
-            RooArgSet elems;
-            elems.add(*g);
-            elems.add(*tau);
             g->setError(err);
             g->setMin(1. - 10 * err);
             g->setMax(1. + 10 * err);
-            RooProduct *prod = new RooProduct(prodname.Data(), prodname.Data(), elems);
             gammas.add(*g, true);
             nps.add(*g);
+
             if (statErrorType == "gauss") {
-               TString sname = TString::Format("sigma_stat_%s_bin_%d", name.c_str(), (int)i);
-               RooRealVar *sigma = new RooRealVar(sname.Data(), sname.Data(), err);
-               sigma->setConstant(true);
-               RooGaussian *gaus = new RooGaussian(poisname.Data(), poisname.Data(), *tau, *prod, *sigma);
+               TString tname = TString::Format("nom_gamma_stat_%s_bin_%d", name.c_str(), (int)i);
+               TString poisname = TString::Format("gamma_stat_%s_bin_%d_constraint", name.c_str(), (int)i);
+               TString sname = TString::Format("gamma_stat_%s_bin_%d_sigma", name.c_str(), (int)i);
+               RooRealVar *tau = new RooRealVar(tname.Data(), tname.Data(), 1);
+               tau->setAttribute("glob");
+               tau->setConstant(true);
+               tau->setRange(tau->getVal(), tau->getVal());
+               RooConstVar *sigma = new RooConstVar(sname.Data(), sname.Data(), err);
+               RooGaussian *gaus = new RooGaussian(poisname.Data(), poisname.Data(), *tau, *g, *sigma);
                constraints.add(*gaus, true);
             } else if (statErrorType == "poisson") {
+               TString tname = TString::Format("tau_stat_%s_bin_%d", name.c_str(), (int)i);
+               TString prodname = TString::Format("nExp_stat_%s_bin_%d", name.c_str(), (int)i);
+               TString poisname = TString::Format("Constraint_stat_%s_bin_%d", name.c_str(), (int)i);
+               double tauCV = 1. / (err * err);
+               RooRealVar *tau = new RooRealVar(tname.Data(), tname.Data(), tauCV);
+               tau->setAttribute("glob");
+               tau->setConstant(true);
+               tau->setRange(tau->getVal(), tau->getVal());
+               RooArgSet elems;
+               elems.add(*g);
+               elems.add(*tau);
+               RooProduct *prod = new RooProduct(prodname.Data(), prodname.Data(), elems);
                RooPoisson *pois = new RooPoisson(poisname.Data(), poisname.Data(), *tau, *prod);
                pois->setNoRounding(true);
                constraints.add(*pois, true);
