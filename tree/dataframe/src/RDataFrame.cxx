@@ -1205,13 +1205,13 @@ using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 /// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
 /// \param[in] dirPtr TDirectory where the tree is stored, e.g. a TFile.
-/// \param[in] defaultBranches Collection of default branches.
+/// \param[in] defaultColumns Collection of default columns.
 ///
-/// The default branches are looked at in case no branch is specified in the
+/// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
 /// See ROOT::RDF::RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultBranches)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultColumns)
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
    if (!dirPtr) {
       auto msg = "Invalid TDirectory!";
@@ -1230,16 +1230,16 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
 /// \param[in] filenameglob TDirectory where the tree is stored, e.g. a TFile.
-/// \param[in] defaultBranches Collection of default branches.
+/// \param[in] defaultColumns Collection of default columns.
 ///
 /// The filename glob supports the same type of expressions as TChain::Add(), and it is passed as-is to TChain's
 /// constructor.
 ///
-/// The default branches are looked at in case no branch is specified in the
+/// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
 /// See ROOT::RDF::RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultColumns)
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
    const std::string treeNameInt(treeName);
    const std::string filenameglobInt(filenameglob);
@@ -1252,16 +1252,16 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 /// \brief Build the dataframe.
 /// \param[in] treeName Name of the tree contained in the directory
 /// \param[in] fileglobs Collection of file names of filename globs
-/// \param[in] defaultBranches Collection of default branches.
+/// \param[in] defaultColumns Collection of default columns.
 ///
 /// The filename globs support the same type of expressions as TChain::Add(), and each glob is passed as-is
 /// to TChain's constructor.
 ///
-/// The default branches are looked at in case no branch is specified in the booking of actions or transformations.
+/// The default columns are looked at in case no column is specified in the booking of actions or transformations.
 /// See ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
-                       const ColumnNames_t &defaultBranches)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultBranches))
+                       const ColumnNames_t &defaultColumns)
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
    std::string treeNameInt(treeName);
    auto chain = std::make_shared<TChain>(treeNameInt.c_str());
@@ -1273,13 +1273,13 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
 /// \param[in] tree The tree or chain to be studied.
-/// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
+/// \param[in] defaultColumns Collection of default column names to fall back to when none is specified.
 ///
-/// The default branches are looked at in case no branch is specified in the
+/// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
 /// See ROOT::RDF::RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(&tree, defaultBranches))
+RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns)
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(&tree, defaultColumns))
 {
 }
 
@@ -1289,7 +1289,7 @@ RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches)
 ///
 /// An empty-source dataframe constructed with a number of entries will
 /// generate those entries on the fly when some action is triggered,
-/// and it will do so for all the previously-defined temporary branches.
+/// and it will do so for all the previously-defined columns.
 /// See ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(ULong64_t numEntries)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(numEntries))
@@ -1300,12 +1300,12 @@ RDataFrame::RDataFrame(ULong64_t numEntries)
 //////////////////////////////////////////////////////////////////////////
 /// \brief Build dataframe associated to data source.
 /// \param[in] ds The data source object.
-/// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
+/// \param[in] defaultColumns Collection of default column names to fall back to when none is specified.
 ///
 /// A dataframe associated to a data source will query it to access column values.
 /// See ROOT::RDF::RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnNames_t &defaultBranches)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultBranches))
+RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnNames_t &defaultColumns)
+   : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultColumns))
 {
 }
 
@@ -1318,18 +1318,18 @@ std::string printValue(ROOT::RDataFrame *tdf)
 {
    auto &df = *tdf->GetLoopManager();
    auto *tree = df.GetTree();
-   auto defBranches = df.GetDefaultColumnNames();
+   auto defCols = df.GetDefaultColumnNames();
 
    std::ostringstream ret;
    if (tree) {
       ret << "A data frame built on top of the " << tree->GetName() << " dataset.";
-      if (!defBranches.empty()) {
-         if (defBranches.size() == 1)
-            ret << "\nDefault branch: " << defBranches[0];
+      if (!defCols.empty()) {
+         if (defCols.size() == 1)
+            ret << "\nDefault column: " << defCols[0];
          else {
-            ret << "\nDefault branches:\n";
-            for (auto &&branch : defBranches) {
-               ret << " - " << branch << "\n";
+            ret << "\nDefault columns:\n";
+            for (auto &&col : defCols) {
+               ret << " - " << col << "\n";
             }
          }
       }
