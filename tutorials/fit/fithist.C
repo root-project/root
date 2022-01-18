@@ -21,7 +21,7 @@ void histgen() {
    TFile f("background.root","recreate");
    //save the background histogram
    h.Write();
-   //superimpose a gaussian signal to the background histogram
+   //superimpose a Gaussian signal to the background histogram
    TF1 f2("f2","gaus",0,10);
    f2.SetParameters(1,6,0.5);
    h.FillRandom("f2",2000);

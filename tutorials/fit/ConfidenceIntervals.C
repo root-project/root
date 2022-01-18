@@ -62,7 +62,7 @@ void ConfidenceIntervals()
    //Create, fill and fit a histogram
    int nh=5000;
    TH1D *h = new TH1D("h",
-      "Fitted gaussian with .95 conf.band", 100, -3, 3);
+      "Fitted Gaussian with .95 conf.band", 100, -3, 3);
    h->FillRandom("gaus", nh);
    TF1 *f = new TF1("fgaus", "gaus", -3, 3);
    f->SetLineWidth(2);
@@ -71,7 +71,7 @@ void ConfidenceIntervals()
 
    /*Create a histogram to hold the confidence intervals*/
    TH1D *hint = new TH1D("hint",
-      "Fitted gaussian with .95 conf.band", 100, -3, 3);
+      "Fitted Gaussian with .95 conf.band", 100, -3, 3);
    (TVirtualFitter::GetFitter())->GetConfidenceIntervals(hint);
    //Now the "hint" histogram has the fitted function values as the
    //bin contents and the confidence intervals as bin errors
