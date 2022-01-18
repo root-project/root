@@ -104,7 +104,6 @@ Type definitions for vectors in three dimensions, based on ROOT::Math::Displacem
 *   ROOT::Math::Polar3DVector vector based on r,theta,phi coordinates (polar)
 *   ROOT::Math::RhoZPhiVector vector based on rho, z,phi coordinates (cylindrical)
 *   ROOT::Math::RhoEtaPhiVector vector based on rho,eta,phi coordinates (cylindrical using eta instead of z)
-precision
 
 ### LorentzVector
 
@@ -133,7 +132,7 @@ ROOT::Math::PtEtaPhiMVector v1(10. /*pt*/, 0.1 /*eta*/, 0.24 /*phi*/, 5 /*M*/);
 In addition, the vector classes can be constructed from any object that implements the
 accessors x(), y() and z(). This can be a vector using a different coordinate
 system, or even an object from a different package as long as it implements the required signatures.
-One such package is CLHEP's `Hep3Vector`:
+One such vector type is CLHEP's `Hep3Vector`:
 
 ~~~{.cpp}
 XYZVector v1(1,2,3);
