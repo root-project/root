@@ -121,7 +121,7 @@ void FillHisto(TH2D * h, int n, double * p) {
 
    double x, y;
    for (int i = 0; i < n; ++i) {
-      // generate randoms with larger gaussians
+      // generate randoms with larger Gaussians
       rndm.Rannor(x,y);
 
       double r = rndm.Rndm(1);

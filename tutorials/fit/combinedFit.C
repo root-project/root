@@ -35,9 +35,9 @@ int iparB[2] = { 0,      // exp amplitude in B histo
 // signal + background function
 int iparSB[5] = { 1, // exp amplitude in S+B histo
                   2, // exp common parameter
-                  3, // gaussian amplitude
-                  4, // gaussian mean
-                  5  // gaussian sigma
+                  3, // Gaussian amplitude
+                  4, // Gaussian mean
+                  5  // Gaussian sigma
 };
 
 // Create the GlobalCHi2 structure
