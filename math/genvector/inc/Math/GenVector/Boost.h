@@ -41,6 +41,7 @@ namespace ROOT {
 
      @ingroup GenVector
 
+     @sa Overview of the @ref GenVector "physics vector library"
   */
 
 class Boost {
