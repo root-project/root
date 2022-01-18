@@ -310,7 +310,7 @@ public:
                RooRealVar *tau = new RooRealVar(tname.Data(), tname.Data(), 1);
                tau->setAttribute("glob");
                tau->setConstant(true);
-               tau->setRange(tau->getVal(), tau->getVal());
+               tau->setRange(0, 10);
                RooConstVar *sigma = new RooConstVar(sname.Data(), sname.Data(), err);
                RooGaussian *gaus = new RooGaussian(poisname.Data(), poisname.Data(), *tau, *g, *sigma);
                constraints.add(*gaus, true);
@@ -322,7 +322,7 @@ public:
                RooRealVar *tau = new RooRealVar(tname.Data(), tname.Data(), tauCV);
                tau->setAttribute("glob");
                tau->setConstant(true);
-               tau->setRange(tau->getVal(), tau->getVal());
+               tau->setRange(tauCV - 10./err, tauCV + 10./err);
                RooArgSet elems;
                elems.add(*g);
                elems.add(*tau);
