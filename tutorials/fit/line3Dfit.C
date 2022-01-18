@@ -110,7 +110,7 @@ int line3Dfit()
       double t = gRandom->Uniform(0,10);
       line(t,p0,x,y,z);
       double err = 1;
-      // do a gaussian smearing around the points in all coordinates
+      // do a Gaussian smearing around the points in all coordinates
       x += gRandom->Gaus(0,err);
       y += gRandom->Gaus(0,err);
       z += gRandom->Gaus(0,err);

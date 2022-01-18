@@ -680,14 +680,17 @@ if(ROOT_pyroot_FOUND)
   # List requirements for python tutorials.
   # To add a new requirement, add a glob expression that's named requires_<packageName>,
   # and add it to the list "fixtureLists" below.
-  file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/df026_AsNumpyArrays.py)
+  file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      dataframe/df026_AsNumpyArrays.py
+      fit/multifit.py
+      roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} pyroot/pyroot004_NumbaDeclare.py)
-  file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/df026_AsNumpyArrays.py)
+  file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+      dataframe/df026_AsNumpyArrays.py
+      roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_keras   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
   file(GLOB requires_torch   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/tmva10*.py)
-  list(APPEND requires_numpy roofit/rf409_NumPyPandasToRooFit.py)
-  list(APPEND requires_pandas roofit/rf409_NumPyPandasToRooFit.py)
   set(fixtureLists requires_numpy requires_numba requires_pandas requires_keras requires_xgboost requires_torch)
 
   # Now set up all the tests
