@@ -19,11 +19,11 @@
 #include "TRecorder.h"
 #include "Riostream.h"
 
-Int_t file_size(char *filename)
+int file_size(char *filename)
 {
    FileStat_t fs;
    gSystem->GetPathInfo(filename, fs);
-   return (Int_t)fs.fSize;
+   return (int)fs.fSize;
 }
 
 void fitpanel_playback()
@@ -37,18 +37,18 @@ void fitpanel_playback()
       gSystem->Sleep(1);
    }
 
-   Int_t Step_Err    = 100;
-   Int_t Step1_Ref   = 15691;
-   Int_t Step2_Ref   = 15691;
-   Int_t Step3_Ref   = 17632;
-   Int_t Step4_Ref   = 12305;
-   Int_t Step5_Ref   = 11668;
+   int Step_Err    = 100;
+   int Step1_Ref   = 15691;
+   int Step2_Ref   = 15691;
+   int Step3_Ref   = 17632;
+   int Step4_Ref   = 12305;
+   int Step5_Ref   = 11668;
 
-   Int_t Step1_Size   =  file_size("Step1.png");
-   Int_t Step2_Size   =  file_size("Step2.png");
-   Int_t Step3_Size   =  file_size("Step3.png");
-   Int_t Step4_Size   =  file_size("Step4.png");
-   Int_t Step5_Size   =  file_size("Step5.png");
+   int Step1_Size   =  file_size("Step1.png");
+   int Step2_Size   =  file_size("Step2.png");
+   int Step3_Size   =  file_size("Step3.png");
+   int Step4_Size   =  file_size("Step4.png");
+   int Step5_Size   =  file_size("Step5.png");
 
 
    cout << "**********************************************************************" <<endl;

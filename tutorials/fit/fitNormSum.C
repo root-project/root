@@ -34,8 +34,8 @@ void fitNormSum()
 {
    const int nsig = 5.E4;
    const int nbkg = 1.e6;
-   Int_t NEvents = nsig+nbkg;
-   Int_t NBins   = 1e3;
+   int NEvents = nsig+nbkg;
+   int NBins   = 1e3;
 
    double signal_mean = 3;
    TF1 *f_cb    = new TF1("MyCrystalBall","crystalball",-5.,5.);

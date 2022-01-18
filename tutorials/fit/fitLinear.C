@@ -19,14 +19,14 @@
 #include "TMath.h"
 
 
-void makePoints(Int_t n, Double_t *x, Double_t *y, Double_t *e, Int_t p);
+void makePoints(int n, double *x, double *y, double *e, int p);
 
 void fitLinear()
 {
-   Int_t n = 40;
-   Double_t *x = new Double_t[n];
-   Double_t *y = new Double_t[n];
-   Double_t *e = new Double_t[n];
+   int n = 40;
+   double *x = new double[n];
+   double *y = new double[n];
+   double *e = new double[n];
    TCanvas *myc = new TCanvas("myc",
       "Fitting 3 TGraphErrors with linear functions");
    myc->SetGrid();
@@ -83,9 +83,9 @@ void fitLinear()
 
 }
 
-void makePoints(Int_t n, Double_t *x, Double_t *y, Double_t *e, Int_t p)
+void makePoints(int n, double *x, double *y, double *e, int p)
 {
-  Int_t i;
+  int i;
   TRandom r;
 
   if (p==2) {

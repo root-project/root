@@ -85,14 +85,14 @@ struct SumDistance2 {
 
 };
 
-Int_t line3Dfit()
+int line3Dfit()
 {
    gStyle->SetOptStat(0);
    gStyle->SetOptFit();
 
 
    //double e = 0.1;
-   Int_t nd = 10000;
+   int nd = 10000;
 
 
    // double xmin = 0; double ymin = 0;
@@ -104,7 +104,7 @@ Int_t line3Dfit()
    double p0[4] = {10,20,1,2};
 
    // generate graph with the 3d points
-   for (Int_t N=0; N<nd; N++) {
+   for (int N=0; N<nd; N++) {
       double x,y,z = 0;
       // Generate a random number
       double t = gRandom->Uniform(0,10);

@@ -15,12 +15,12 @@
 ///
 /// \author Rene Brun
 
-Double_t fitf(Double_t *x, Double_t *par)
+double fitf(double *x, double *par)
 {
-   Double_t arg = 0;
+   double arg = 0;
    if (par[2] != 0) arg = (x[0] - par[1])/par[2];
 
-   Double_t fitval = par[0]*TMath::Exp(-0.5*arg*arg);
+   double fitval = par[0]*TMath::Exp(-0.5*arg*arg);
    return fitval;
 }
 void myfit()

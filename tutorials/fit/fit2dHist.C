@@ -62,9 +62,9 @@ double my2Dfunc(double *x, double *par) {
 // data need to be globals to be visible by fcn
 TRandom3 rndm;
 TH2D *h1, *h2;
-Int_t npfits;
+int npfits;
 
-void myFcn(Int_t & /*nPar*/, Double_t * /*grad*/ , Double_t &fval, Double_t *p, Int_t /*iflag */  )
+void myFcn(int & /*nPar*/, double * /*grad*/ , double &fval, double *p, int /*iflag */  )
 {
    TAxis *xaxis1  = h1->GetXaxis();
    TAxis *yaxis1  = h1->GetYaxis();
