@@ -69,7 +69,7 @@ ClassImp(TGListView);
 TGLVEntry::TGLVEntry(const TGWindow *p, const TGPicture *bigpic,
                      const TGPicture *smallpic, TGString *name,
                      TGString **subnames, EListViewMode viewMode,
-                     UInt_t options, ULong_t back) :
+                     UInt_t options, Pixel_t back) :
    TGFrame(p, 10, 10, options, back)
 {
    fSelPic = 0;
@@ -519,7 +519,7 @@ const TGGC &TGLVEntry::GetDefaultGC()
 /// created by the TGCanvas derived TGListView).
 
 TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
-                             UInt_t options, ULong_t back) :
+                             UInt_t options, Pixel_t back) :
    TGContainer(p, w, h, options, back)
 {
    fListView = 0;
@@ -538,7 +538,7 @@ TGLVContainer::TGLVContainer(const TGWindow *p, UInt_t w, UInt_t h,
 /// all the list items. It will be shown through a TGViewPort (which is
 /// created by the TGCanvas derived TGListView).
 
-TGLVContainer::TGLVContainer(TGCanvas *p,UInt_t options, ULong_t back) :
+TGLVContainer::TGLVContainer(TGCanvas *p,UInt_t options, Pixel_t back) :
    TGContainer(p,options, back)
 {
    fListView = 0;
@@ -1172,7 +1172,7 @@ void TGLVContainer::SelectEntry(TGLVEntry *item)
 /// Create a list view widget.
 
 TGListView::TGListView(const TGWindow *p, UInt_t w, UInt_t h,
-                       UInt_t options, ULong_t back) :
+                       UInt_t options, Pixel_t back) :
    TGCanvas(p, w, h, options, back)
 {
    fViewMode    = kLVLargeIcons;

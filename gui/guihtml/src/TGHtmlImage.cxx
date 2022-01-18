@@ -156,8 +156,8 @@ void TGHtml::ImageChanged(TGHtmlImage *pImage, int newWidth, int newHeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Given an <IMG> markup, find or create an appropriate TGHtmlImage
-/// object and return a pointer to that object. NULL might be returned.
+/// Given an `<IMG>` markup, find or create an appropriate TGHtmlImage
+/// object and return a pointer to that object. `NULL` might be returned.
 
 TGHtmlImage *TGHtml::GetImage(TGHtmlImageMarkup *p)
 {

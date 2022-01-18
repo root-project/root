@@ -224,9 +224,9 @@ TGraphErrors::TGraphErrors(const TH1 *h)
 ///   - format = `%lg %lg %lg`     read only 3 first columns into X,Y and EY
 ///   - format = `%lg %lg %lg %lg` read only 4 first columns into X,Y,EX,EY.
 ///
-/// For files separated by a specific delimiter different from ' ' and `\t` (e.g. `;` in csv files)
+/// For files separated by a specific delimiter different from ' ' and `\\t` (e.g. `;` in csv files)
 /// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `option` argument,
-/// e.g. `option=" \t,;"` for columns of figures separated by any of these characters (`' ', '\t', ',', ';'`)
+/// e.g. `option=" \\t,;"` for columns of figures separated by any of these characters (`' ', '\\t', ',', ';'`)
 /// used once (e.g. `"1;1"`) or in a combined way (`" 1;,;;  1"`).
 ///
 /// Note in that case, the instantiation is about 2 times slower.

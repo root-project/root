@@ -1339,6 +1339,7 @@ void TASImage::Image2Drawable(ASImage *im, Drawable_t wid, Int_t x, Int_t y,
 /// \param[in] x,y        : Window coordinates where image is drawn.
 /// \param[in] xsrc, ysrc : X and Y coordinates of an image area to be drawn.
 /// \param[in] wsrc, hsrc : Width and height image area to be drawn.
+/// \param[in] opt        : specific options
 
 void TASImage::PaintImage(Drawable_t wid, Int_t x, Int_t y, Int_t xsrc, Int_t ysrc,
                           UInt_t wsrc, UInt_t hsrc, Option_t *opt)
@@ -3007,7 +3008,10 @@ void TASImage::HSV(UInt_t hue, UInt_t radius, Int_t H, Int_t S, Int_t V,
 ///          the minimum of the two will be used, and the other will be
 ///          truncated to match.  If offsets are not given, a smooth
 ///          stepping from 0.0 to 1.0 will be used.
-
+/// \param[in] x x position coordinate
+/// \param[in] y y position coordinate
+/// \param[in] width image width, if 0, it will be read from fImage
+/// \param[in] height image height, if 0, it will be read from fImage
 void TASImage::Gradient(UInt_t angle, const char *colors, const char *offsets,
                         Int_t x, Int_t y, UInt_t width, UInt_t height)
 {

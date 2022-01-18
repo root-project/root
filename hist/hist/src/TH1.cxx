@@ -3921,6 +3921,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit histogram with function f1.
 ///
+/// \param[in] f1 Pointer to 1D function
 /// \param[in] option fit options is given in parameter option.
 ///        - "W"  Ignore the bin uncertainties when fitting using the default least square (chi2) method but skip empty bins
 ///        - "WW" Ignore the bin uncertainties when fitting using the default least square (chi2) method and include also the empty bins
@@ -7939,6 +7940,7 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
 /// Binned data are considered as un-binned data
 /// with identical observation happening in the bin center.
 ///
+/// \param[in] h2 Pointer to 1D histogram
 /// \param[in] option is a character string to specify options
 ///    - "D" Put out a line of "Debug" printout
 ///    - "T" Return the normalized A-D test statistic

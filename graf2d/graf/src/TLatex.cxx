@@ -516,10 +516,10 @@ TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t len
 ///  itself recursively to analyse the arguments of the operator.
 ///  when the argument is an atom (normal text), it calculates
 ///  the size of it and return it as the result.
-///  for example : if the operator #frac{arg1}{arg2} is found :
+///  for example : if the operator #%frac{arg1}{arg2} is found :
 ///  Analyse(arg1) return the size of arg1 (width, up, down)
 ///  Analyse(arg2) return the size of arg2
-///  now, we know the size of #frac{arg1}{arg2}:
+///  now, we know the size of #%frac{arg1}{arg2}:
 ///
 /// ~~~ {.cpp}
 ///  width = max(width_arg1, width_arg2)

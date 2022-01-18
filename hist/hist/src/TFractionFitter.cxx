@@ -275,7 +275,7 @@ void TFractionFitter::SetData(TH1* data) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change the histogram for template number <parm>. Notes:
+/// Change the histogram for template number `<parm>`. Notes:
 /// - Parameter constraints and settings are retained from a possible previous fit.
 /// - Modifying the dimension or number of bins results in an error (in this case
 ///   rather instantiate a new TFractionFitter object)
@@ -289,7 +289,7 @@ void TFractionFitter::SetMC(Int_t parm, TH1* MC) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set bin by bin weights for template number <parm> (the parameter numbering
+/// Set bin by bin weights for template number `<parm>` (the parameter numbering
 /// follows that of the input template vector).
 /// Weights can be "unset" by passing a null pointer.
 /// Consistency of the weights histogram with the data histogram is checked at
@@ -456,7 +456,7 @@ bool TFractionFitter::IsExcluded(Int_t bin) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constrain the values of parameter number <parm> (the parameter numbering
+/// Constrain the values of parameter number `<parm>` (the parameter numbering
 /// follows that of the input template vector).
 /// Use UnConstrain() to remove this constraint.
 
@@ -467,7 +467,7 @@ void TFractionFitter::Constrain(Int_t parm, Double_t low, Double_t high) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove the constraints on the possible values of parameter <parm>.
+/// Remove the constraints on the possible values of parameter `<parm>`.
 
 void TFractionFitter::UnConstrain(Int_t parm) {
    CheckParNo(parm);
@@ -596,7 +596,7 @@ void TFractionFitter::ErrorAnalysis(Double_t UP) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Obtain the fit result for parameter <parm> (the parameter numbering
+/// Obtain the fit result for parameter `<parm>` (the parameter numbering
 /// follows that of the input template vector).
 
 void TFractionFitter::GetResult(Int_t parm, Double_t& value, Double_t& error) const {
@@ -867,9 +867,9 @@ void TFractionFitFCN(Int_t& npar, Double_t* gin, Double_t& f, Double_t* par, Int
 /// The value is computed when the fit is executed successfully.
 /// Chi2 calculation is based on the "likelihood ratio" lambda,
 /// lambda = L(y;n) / L(m;n),
-/// where L(y;n) is the likelihood of the fit result <y> describing the data <n>
+/// where L(y;n) is the likelihood of the fit result `<y>` describing the data `<n>`
 /// and L(m;n) is the likelihood of an unknown "true" underlying distribution
-/// <m> describing the data <n>. Since <m> is unknown, the data distribution is
+/// `<m>` describing the data `<n>`. Since `<m>` is unknown, the data distribution is
 /// used instead,
 /// lambda = L(y;n) / L(n;n).
 /// Note that this ratio is 1 if the fit is perfect. The chi2 value is then

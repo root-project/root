@@ -1830,9 +1830,11 @@ const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
 /// builtin to the source code.
 ///
 /// For example,
+/// \code{.cpp}
 ///    #include "/home/root/icons/bld_rgb.xpm"
 ///    //bld_rgb.xpm contains char *bld_rgb[] array
 ///    main_frame->SetIconPixmap(bld_rgb);
+/// \endcode
 
 void TGMainFrame::SetIconPixmap(char **xpm_array)
 {

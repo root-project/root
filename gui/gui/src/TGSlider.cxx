@@ -78,7 +78,7 @@ ClassImp(TGHSlider);
 /// Slider constructor.
 
 TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
-                   UInt_t options, ULong_t back)
+                   UInt_t options, Pixel_t back)
    : TGFrame(p, w, h, options, back)
 {
    fDisabledPic = 0;

@@ -239,7 +239,7 @@ ClassImp(TGTextEdit);
 /// Create a text edit widget.
 
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
-                       UInt_t sboptions, ULong_t back) :
+                       UInt_t sboptions, Pixel_t back) :
      TGTextView(parent, w, h, id, sboptions, back)
 {
    Init();
@@ -249,7 +249,7 @@ TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
 /// Create a text edit widget. Initialize it with the specified text buffer.
 
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-                       Int_t id, UInt_t sboptions, ULong_t back) :
+                       Int_t id, UInt_t sboptions, Pixel_t back) :
      TGTextView(parent, w, h, text, id, sboptions, back)
 {
    Init();
@@ -260,7 +260,7 @@ TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
 
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h,
                        const char *string, Int_t id, UInt_t sboptions,
-                       ULong_t back) :
+                       Pixel_t back) :
      TGTextView(parent, w, h, string, id, sboptions, back)
 {
    Init();

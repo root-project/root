@@ -190,8 +190,8 @@ TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLe
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extract this part of the name
-/// 1. Templates ns::ns2::,,,::THISPART<...
-/// 2. Namespaces,classes ns::ns2::,,,::THISPART
+/// 1. Templates `ns::%ns2::,,,::%THISPART<...`
+/// 2. Namespaces,classes `ns::%ns2::,,,::%THISPART`
 
 void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
 {

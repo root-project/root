@@ -246,7 +246,7 @@ ClassImp(TGTextEntry);
 
 TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
                          GContext_t norm, FontStruct_t font, UInt_t options,
-                         ULong_t back) :
+                         Pixel_t back) :
    TGFrame(p, 1, 1, options | kOwnBackground, back)
 {
    TGGC *normgc   = fClient->GetResourcePool()->GetGCPool()->FindGC(norm);
@@ -407,7 +407,7 @@ void TGTextEntry::ShiftTabPressed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This signal is emitted when the <TAB> key is pressed.
+/// This signal is emitted when the `<TAB>` key is pressed.
 
 void TGTextEntry::TabPressed()
 {

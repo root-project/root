@@ -370,7 +370,7 @@ Int_t TH2::Fill(Double_t )
 ///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
-/// -  If the storage of the sum of squares of weights has been triggered,
+///  - If the storage of the sum of squares of weights has been triggered,
 ///    via the function Sumw2, then the sum of the squares of weights is incremented
 ///    by 1 in the cell corresponding to x,y.
 ///
