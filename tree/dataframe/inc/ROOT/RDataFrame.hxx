@@ -9,7 +9,7 @@
  *************************************************************************/
 
 /**
-  \defgroup dataframe DataFrame
+  \defgroup dataframe Dataframe
 ROOT's RDataFrame allows to analyse data stored in TTrees with a high level interface.
 */
 

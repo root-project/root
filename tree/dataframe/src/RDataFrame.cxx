@@ -20,7 +20,7 @@
 /**
 * \class ROOT::RDataFrame
 * \ingroup dataframe
-* \brief ROOT's RDataFrame offers a high level interface for analyses of data stored in TTree, CSV's and other data formats.
+* \brief ROOT's RDataFrame offers a modern, high-level interface for analysis of data stored in TTree , CSV and other data formats, in C++ or Python.
 
 In addition, multi-threading and other low-level optimisations allow users to exploit all the resources available
 on their machines completely transparently.<br>
@@ -51,11 +51,11 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Introduction](\ref introduction)
 - [Crash course](\ref crash-course)
 - [Working with collections](\ref collections)
+- [Transformations: manipulating data](\ref transformations)
+- [Actions: getting results](\ref actions) 
 - [Efficient analysis in Python](\ref python)
 - [Distributed execution in Python](\ref distrdf)
-- [Transformations](\ref transformations) -- manipulating data
-- [Actions](\ref actions) -- getting results
-- [Performance tips and parallel execution](\ref parallel-execution) -- how to use it and common pitfalls
+- [Performance tips and parallel execution](\ref parallel-execution)
 - [More features](\ref more-features)
    - [RDataFrame objects as function arguments and return values](\ref rnode)
    - [Storing RDataFrame objects in collections](\ref RDFCollections)
@@ -68,7 +68,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [Reading data formats other than ROOT trees](\ref other-file-formats)
    - [Call graphs (storing and reusing sets of transformations](\ref callgraphs)
    - [Visualizing the computation graph](\ref representgraph)
-- [Class reference](\ref reference) -- most methods are implemented in the ROOT::RDF::RInterface base class
+- <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
 \anchor cheatsheet
 ## Cheat sheet
@@ -80,10 +80,10 @@ Transformations are a way to manipulate the data.
 | **Transformation** | **Description** |
 |------------------|--------------------|
 | Alias() | Introduce an alias for a particular column name. |
-| Define() | Creates a new column in the dataset. Example usages include adding a column that contains the invariant mass of a particle, or a selection of elements of an array (e.g. only the `pt`s of "good" muons). |
+| Define() | Create a new column in the dataset. Example usages include adding a column that contains the invariant mass of a particle, or a selection of elements of an array (e.g. only the `pt`s of "good" muons). |
 | DefinePerSample() | Define a new column that is updated when the input sample changes, e.g. when switching tree being processed in a chain. |
 | DefineSlot() | Same as Define(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe Define() transformation when using RDataFrame after ROOT::EnableImplicitMT(). DefineSlot() works just as well with single-thread execution: in that case `slot` will always be `0`.  |
-| DefineSlotEntry() | Same as DefineSlot(), but the entry number is passed in addition to the slot number. This is meant as a helper in case some dependency on the entry number needs to be honoured. |
+| DefineSlotEntry() | Same as DefineSlot(), but the entry number is passed in addition to the slot number. This is meant as a helper in case the expression depends on the entry number. For details about entry numbers in multi-threaded runs, see [here](\ref helper-cols). |
 | Filter() | Filter rows based on user-defined conditions. |
 | Range() | Filter rows based on entry number (single-thread only). |
 
@@ -100,18 +100,18 @@ produce many different results in one event loop. Instant actions trigger the ev
 |------------------|-----------------|
 | Aggregate() | Execute a user-defined accumulation operation on the processed column values. |
 | Book() | Book execution of a custom action using a user-defined helper object. |
-| Cache() | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
+| Cache() | Cache column values in memory. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
 | Count() | Return the number of events processed. Useful e.g. to get a quick count of the number of events passing a Filter. |
-| Display() | Provides a printable representation of the dataset contents. The method returns a RDisplay() instance which can be queried to get a compressed tabular representation on the standard output or a complete representation as a string. |
-| Fill() | Fill a user-defined object with the values of the specified columns, as if by calling `Obj.Fill(col1, col2, ...). |
-| Graph() | Fills a TGraph with the two columns provided. If Multithread is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
+| Display() | Provides a printable representation of the dataset contents. The method returns a ROOT::RDF::RDisplay() instance which can print a tabular representation of the data or return it as a string. |
+| Fill() | Fill a user-defined object with the values of the specified columns, as if by calling `Obj.Fill(col1, col2, ...)`. |
+| Graph() | Fills a TGraph with the two columns provided. If multi-threading is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
 | Histo1D(), Histo2D(), Histo3D() | Fill a one-, two-, three-dimensional histogram with the processed column values. |
 | Max() | Return the maximum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
 | Mean() | Return the mean of processed column values.|
 | Min() | Return the minimum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
 | Profile1D(), Profile2D() | Fill a one- or two-dimensional profile with the column values that passed all filters. |
 | Reduce() | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the column. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
-| Report() | Obtains statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a RCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
+| Report() | Obtain statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a ROOT::RDF::RCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
 | Stats() | Return a TStatistic object filled with the input columns. |
 | StdDev() | Return the unbiased standard deviation of the processed column values. |
 | Sum() | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
@@ -119,28 +119,26 @@ produce many different results in one event loop. Instant actions trigger the ev
 
 | **Instant action** | **Description** |
 |---------------------|-----------------|
-| Foreach() | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
+| Foreach() | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this callable when executing with implicit multi-threading enabled. |
 | ForeachSlot() | Same as Foreach(), but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe Foreach() actions when using RDataFrame after ROOT::EnableImplicitMT(). ForeachSlot() works just as well with single-thread execution: in that case `slot` will always be `0`. |
-| Snapshot() | Writes processed data-set to disk, in a new TTree and TFile. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. Snapshot() can be made *lazy* setting the appropriate flage in the snapshot options.|
+| Snapshot() | Write the processed dataset to disk, in a new TTree and TFile. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. Snapshot() can be made *lazy* setting the appropriate flag in the snapshot options.|
 
 
 ### Queries
 
-These operations do not modify the dataframe or book computations but simply return informations on the RDataFrame object.
+These operations do not modify the dataframe or book computations but simply return information on the RDataFrame object.
 
 | **Operation** | **Description** |
 |---------------------|-----------------|
+| Describe() | Get useful information describing the dataframe, e.g. columns and their types. |
 | GetColumnNames() | Get the names of all the available columns of the dataset. |
-| GetDefinedColumnNames() | Get the names of all the defined columns |
 | GetColumnType() | Return the type of a given column as a string. |
 | GetColumnTypeNamesList() | Return the list of type names of columns in the dataset. |
-| GetFilterNames() | Return the names of all filters in the computation graph. If called on a root node, all filters will be returned. For any other node, only the filters upstream of that node. |
-| SaveGraph() | Store the computation graph of an RDataFrame in graphviz format for easy inspection. |
+| GetDefinedColumnNames() | Get the names of all the defined columns. |
+| GetFilterNames() | Return the names of all filters in the computation graph. |
 | GetNRuns() | Return the number of event loops run by this RDataFrame instance so far. |
 | GetNSlots() | Return the number of processing slots that RDataFrame will use during the event loop (i.e. the concurrency level). |
-| Describe() | Get useful information describing the dataframe, e.g. columns and their types. |
-| DescribeDataset() | Get useful information describing the dataset (subset of the output of Describe()). |
-
+| SaveGraph() | Store the computation graph of an RDataFrame in [DOT format (graphviz)](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) for easy inspection. See the [relevant section](\ref representgraph) for details. |
 
 \anchor introduction
 ## Introduction
@@ -459,6 +457,104 @@ auto h = df.Define("good_pts", "pt[pt > 0]").Histo1D("good_pts")
 
 Learn more at ROOT::VecOps::RVec.
 
+\anchor transformations
+## Transformations: manipulating data
+\anchor Filters
+### Filters
+A filter is created through a call to `Filter(f, columnList)` or `Filter(filterString)`. In the first overload, `f` can
+be a function, a lambda expression, a functor class, or any other callable object. It must return a `bool` signalling
+whether the event has passed the selection (`true`) or not (`false`). It should perform "read-only" operations on the
+columns, and should not have side-effects (e.g. modification of an external or static variable) to ensure correctness
+when implicit multi-threading is active. The second overload takes a string with a valid C++ expression in which column
+names are used as variable names (e.g. `Filter("x[0] + x[1] > 0")`). This is a convenience feature that comes with a
+certain runtime overhead: C++ code has to be generated on the fly from this expression before using it in the event
+loop. See the paragraph about "Just-in-time compilation" below for more information.
+
+RDataFrame only evaluates filters when necessary: if multiple filters are chained one after another, they are executed
+in order and the first one returning `false` causes the event to be discarded and triggers the processing of the next
+entry. If multiple actions or transformations depend on the same filter, that filter is not executed multiple times for
+each entry: after the first access it simply serves a cached result.
+
+\anchor named-filters-and-cutflow-reports
+#### Named filters and cutflow reports
+An optional string parameter `name` can be passed to the Filter() method to create a **named filter**. Named filters
+work as usual, but also keep track of how many entries they accept and reject.
+
+Statistics are retrieved through a call to the Report() method:
+
+- when Report() is called on the main RDataFrame object, it returns a ROOT::RDF::RResultPtr<RCutFlowReport> relative to all
+named filters declared up to that point
+- when called on a specific node (e.g. the result of a Define() or Filter()), it returns a ROOT::RDF::RResultPtr<RCutFlowReport>
+relative all named filters in the section of the chain between the main RDataFrame and that node (included).
+
+Stats are stored in the same order as named filters have been added to the graph, and *refer to the latest event-loop*
+that has been run using the relevant RDataFrame.
+
+\anchor ranges
+### Ranges
+When RDataFrame is not being used in a multi-thread environment (i.e. no call to EnableImplicitMT() was made),
+Range() transformations are available. These act very much like filters but instead of basing their decision on
+a filter expression, they rely on `begin`,`end` and `stride` parameters.
+
+- `begin`: initial entry number considered for this range.
+- `end`: final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+- `stride`: process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
+
+The actual number of entries processed downstream of a Range() node will be `(end - begin)/stride` (or less if less
+entries than that are available).
+
+Note that ranges act "locally", not based on the global entry count: `Range(10,50)` means "skip the first 10 entries
+*that reach this node*, let the next 40 entries pass, then stop processing". If a range node hangs from a filter node,
+and the range has a `begin` parameter of 10, that means the range will skip the first 10 entries *that pass the
+preceding filter*.
+
+Ranges allow "early quitting": if all branches of execution of a functional graph reached their `end` value of
+processed entries, the event-loop is immediately interrupted. This is useful for debugging and quick data explorations.
+
+\anchor custom-columns
+### Custom columns
+Custom columns are created by invoking `Define(name, f, columnList)`. As usual, `f` can be any callable object
+(function, lambda expression, functor class...); it takes the values of the columns listed in `columnList` (a list of
+strings) as parameters, in the same order as they are listed in `columnList`. `f` must return the value that will be
+assigned to the temporary column.
+
+A new variable is created called `name`, accessible as if it was contained in the dataset from subsequent
+transformations/actions.
+
+Use cases include:
+- caching the results of complex calculations for easy and efficient multiple access
+- extraction of quantities of interest from complex objects
+- branch aliasing, i.e. changing the name of a branch
+
+An exception is thrown if the `name` of the new column/branch is already in use for another branch in the TTree.
+
+It is also possible to specify the quantity to be stored in the new temporary column as a C++ expression with the method
+`Define(name, expression)`. For example this invocation
+
+~~~{.cpp}
+df.Define("pt", "sqrt(px*px + py*py)");
+~~~
+
+will create a new column called "pt" the value of which is calculated starting from the columns px and py. The system
+builds a just-in-time compiled function starting from the expression after having deduced the list of necessary branches
+from the names of the variables specified by the user.
+
+#### Custom columns as function of slot and entry number
+
+It is possible to create custom columns also as a function of the processing slot and entry numbers. The methods that can
+be invoked are:
+- `DefineSlot(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, T1, T2, ...)`: the
+first parameter is the slot number which ranges from 0 to ROOT::GetThreadPoolSize() - 1.
+- `DefineSlotEntry(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, ULong64_t,
+T1, T2, ...)`: the first parameter is the slot number while the second one the number of the entry being processed.
+
+\anchor actions
+## Actions: getting results
+### Instant and lazy actions
+Actions can be **instant** or **lazy**. Instant actions are executed as soon as they are called, while lazy actions are
+executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
+are lazy, the others are instant.
+
 \anchor python
 ## Efficient analysis in Python
 
@@ -714,103 +810,7 @@ histos = [histoproxy.GetValue() for histoproxy in histoproxies]
 Every distributed backend supports this feature and graphs belonging to different backends can be still triggered with
 a single call to % RunGraphs (e.g. it is possible to send a Spark job and a Dask job at the same time).
 
-\anchor transformations
-## Transformations
-\anchor Filters
-### Filters
-A filter is created through a call to `Filter(f, columnList)` or `Filter(filterString)`. In the first overload, `f` can
-be a function, a lambda expression, a functor class, or any other callable object. It must return a `bool` signalling
-whether the event has passed the selection (`true`) or not (`false`). It should perform "read-only" operations on the
-columns, and should not have side-effects (e.g. modification of an external or static variable) to ensure correctness
-when implicit multi-threading is active. The second overload takes a string with a valid C++ expression in which column
-names are used as variable names (e.g. `Filter("x[0] + x[1] > 0")`). This is a convenience feature that comes with a
-certain runtime overhead: C++ code has to be generated on the fly from this expression before using it in the event
-loop. See the paragraph about "Just-in-time compilation" below for more information.
 
-RDataFrame only evaluates filters when necessary: if multiple filters are chained one after another, they are executed
-in order and the first one returning `false` causes the event to be discarded and triggers the processing of the next
-entry. If multiple actions or transformations depend on the same filter, that filter is not executed multiple times for
-each entry: after the first access it simply serves a cached result.
-
-\anchor named-filters-and-cutflow-reports
-#### Named filters and cutflow reports
-An optional string parameter `name` can be passed to the Filter() method to create a **named filter**. Named filters
-work as usual, but also keep track of how many entries they accept and reject.
-
-Statistics are retrieved through a call to the Report() method:
-
-- when Report() is called on the main RDataFrame object, it returns a ROOT::RDF::RResultPtr<RCutFlowReport> relative to all
-named filters declared up to that point
-- when called on a specific node (e.g. the result of a Define() or Filter()), it returns a ROOT::RDF::RResultPtr<RCutFlowReport>
-relative all named filters in the section of the chain between the main RDataFrame and that node (included).
-
-Stats are stored in the same order as named filters have been added to the graph, and *refer to the latest event-loop*
-that has been run using the relevant RDataFrame.
-
-\anchor ranges
-### Ranges
-When RDataFrame is not being used in a multi-thread environment (i.e. no call to EnableImplicitMT() was made),
-Range() transformations are available. These act very much like filters but instead of basing their decision on
-a filter expression, they rely on `begin`,`end` and `stride` parameters.
-
-- `begin`: initial entry number considered for this range.
-- `end`: final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
-- `stride`: process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
-
-The actual number of entries processed downstream of a Range() node will be `(end - begin)/stride` (or less if less
-entries than that are available).
-
-Note that ranges act "locally", not based on the global entry count: `Range(10,50)` means "skip the first 10 entries
-*that reach this node*, let the next 40 entries pass, then stop processing". If a range node hangs from a filter node,
-and the range has a `begin` parameter of 10, that means the range will skip the first 10 entries *that pass the
-preceding filter*.
-
-Ranges allow "early quitting": if all branches of execution of a functional graph reached their `end` value of
-processed entries, the event-loop is immediately interrupted. This is useful for debugging and quick data explorations.
-
-\anchor custom-columns
-### Custom columns
-Custom columns are created by invoking `Define(name, f, columnList)`. As usual, `f` can be any callable object
-(function, lambda expression, functor class...); it takes the values of the columns listed in `columnList` (a list of
-strings) as parameters, in the same order as they are listed in `columnList`. `f` must return the value that will be
-assigned to the temporary column.
-
-A new variable is created called `name`, accessible as if it was contained in the dataset from subsequent
-transformations/actions.
-
-Use cases include:
-- caching the results of complex calculations for easy and efficient multiple access
-- extraction of quantities of interest from complex objects
-- branch aliasing, i.e. changing the name of a branch
-
-An exception is thrown if the `name` of the new column/branch is already in use for another branch in the TTree.
-
-It is also possible to specify the quantity to be stored in the new temporary column as a C++ expression with the method
-`Define(name, expression)`. For example this invocation
-
-~~~{.cpp}
-df.Define("pt", "sqrt(px*px + py*py)");
-~~~
-
-will create a new column called "pt" the value of which is calculated starting from the columns px and py. The system
-builds a just-in-time compiled function starting from the expression after having deduced the list of necessary branches
-from the names of the variables specified by the user.
-
-#### Custom columns as function of slot and entry number
-
-It is possible to create custom columns also as a function of the processing slot and entry numbers. The methods that can
-be invoked are:
-- `DefineSlot(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, T1, T2, ...)`: the
-first parameter is the slot number which ranges from 0 to ROOT::GetThreadPoolSize() - 1.
-- `DefineSlotEntry(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, ULong64_t,
-T1, T2, ...)`: the first parameter is the slot number while the second one the number of the entry being processed.
-
-\anchor actions
-## Actions
-### Instant and lazy actions
-Actions can be **instant** or **lazy**. Instant actions are executed as soon as they are called, while lazy actions are
-executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
-are lazy, the others are instant.
 
 \anchor parallel-execution
 ## Performance tips and parallel execution
