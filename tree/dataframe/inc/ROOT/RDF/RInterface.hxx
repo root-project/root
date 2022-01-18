@@ -2605,10 +2605,13 @@ public:
    ///   before Initialize(), because the RResultPtr is constructed before the event loop is started.
    ///
    /// In case this is called without specifying column types, jitting is used,
-   /// and the Helper class needs to be known to the interpreter.
-   ///
-   /// See ActionHelpers.hxx for the helpers used by standard RDF actions.
+   /// and the Helper class needs to be known to the interpreter.<br>
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Examples
+   /// See [this tutorial](https://root.cern/doc/master/df018__customActions_8C.html) for an example implementation of an action helper.<br>
+   /// It is also possible to inspect the code used by built-in RDataFrame actions at ActionHelpers.hxx.
+   ///
    // clang-format on
 
    template <typename FirstColumn = RDFDetail::RInferredType, typename... OtherColumns, typename Helper>
