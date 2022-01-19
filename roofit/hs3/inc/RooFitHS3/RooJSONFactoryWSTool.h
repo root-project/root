@@ -71,8 +71,8 @@ protected:
       std::map<std::string, RooAbsArg *> objects;
    };
    mutable Scope _scope;
-   const RooFit::Detail::JSONNode *_rootnode_input = 0;
-   RooFit::Detail::JSONNode *_rootnode_output = 0;
+   const RooFit::Detail::JSONNode *_rootnode_input = nullptr;
+   RooFit::Detail::JSONNode *_rootnode_output = nullptr;
 
    RooFit::Detail::JSONNode &orootnode();
    const RooFit::Detail::JSONNode &irootnode() const;
@@ -219,6 +219,7 @@ public:
    void importVariables(const RooFit::Detail::JSONNode &n);
    void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
    void importVariable(const RooFit::Detail::JSONNode &n);
+   void configureVariable(const RooFit::Detail::JSONNode &p, RooRealVar& v);  
    void importDependants(const RooFit::Detail::JSONNode &n);
 
    void configureToplevelPdf(const RooFit::Detail::JSONNode &n, RooAbsPdf *pdf);

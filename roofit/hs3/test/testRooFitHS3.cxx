@@ -1,21 +1,26 @@
 #include "RooRealVar.h"
 #include "RooConstVar.h"
-#include "RooArgusBG.h"
-#include "RooGaussian.h"
-#include "RooAddPdf.h"
-#include "RooDataSet.h"
-#include "RooPlot.h"
 #include "RooWorkspace.h"
 
-#include "TSystem.h"
+#include "TROOT.h"
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include "gtest/gtest.h"
 
-#ifndef __CINT__
 #include "RooGlobalFunc.h"
-#endif
+
+// includes for RooArgusBG
+#include "RooArgusBG.h"
+#include "RooGaussian.h"
+#include "RooAddPdf.h"
+
+// includes for SimultaneousGaussians
+#include "RooRealVar.h"
+#include "RooSimultaneous.h"
+#include "RooProdPdf.h"
+#include "RooCategory.h"
+
 
 using namespace RooFit;
 
@@ -43,27 +48,24 @@ TEST(RooFitHS3, RooArgusBG)
    RooRealVar nbkg("nbkg", "#background events", 800, 0., 10000);
    RooAddPdf model("model", "g+a", RooArgList(signalModel, background), RooArgList(nsig, nbkg));
 
-   std::string rootetcPath = gSystem->Getenv("ROOTSYS");
-   RooJSONFactoryWSTool::loadExportKeys(rootetcPath + "/etc/RooFitHS3_wsexportkeys.json");
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+   
    RooWorkspace work;
    work.import(model);
    RooJSONFactoryWSTool tool(work);
    tool.exportJSON("argus.json");
 };
 
-#include "RooRealVar.h"
-#include "RooSimultaneous.h"
-#include "RooProdPdf.h"
-#include "RooCategory.h"
-
 TEST(RooFitHS3, SimultaneousGaussians)
 {
    using namespace RooFit;
 
    // Import keys and factory expressions files for the RooJSONFactoryWSTool.
-   std::string rootetcPath = gSystem->Getenv("ROOTSYS");
-   RooJSONFactoryWSTool::loadExportKeys(rootetcPath + "/etc/RooFitHS3_wsexportkeys.json");
-   RooJSONFactoryWSTool::loadFactoryExpressions(rootetcPath + "/etc/RooFitHS3_wsfactoryexpressions.json");
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");   
 
    // Create a test model: RooSimultaneous with Gaussian in one component, and
    // product of two Gaussians in the other.
@@ -78,6 +80,9 @@ TEST(RooFitHS3, SimultaneousGaussians)
    RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
    simPdf.addPdf(model, "physics");
    simPdf.addPdf(model_ctl, "control");
+   
+   // this is a handy way of triggering the creation of a ModelConfig upon re-import
+   simPdf.setAttribute("toplevel");
 
    // Export to JSON
    {
@@ -93,6 +98,7 @@ TEST(RooFitHS3, SimultaneousGaussians)
       RooWorkspace ws{"workspace"};
       RooJSONFactoryWSTool tool{ws};
       tool.importJSON("simPdf.json");
+     ws.Print();
 
       ASSERT_TRUE(ws.pdf("g1"));
       ASSERT_TRUE(ws.pdf("g2"));

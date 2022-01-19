@@ -25,7 +25,7 @@ void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Sample
    obsnames.push_back("obs_z_" + sample.GetChannelName());
 
    s.set_map();
-   s["type"] << "histogram";
+   s["type"] << "hist-sample";
 
    if (sample.GetOverallSysList().size() > 0) {
       auto &overallSys = s["overallSystematics"];
@@ -145,6 +145,7 @@ void RooStats::HistFactory::JSONTool::Export(JSONNode &n) const
    auto &sim = pdflist[this->_measurement->GetName()];
    sim.set_map();
    sim["type"] << "simultaneous";
+   sim["index"] << "channelCat";   
    auto &simdict = sim["dict"];
    simdict.set_map();
    simdict["InterpolationScheme"] << this->_measurement->GetInterpolationScheme();

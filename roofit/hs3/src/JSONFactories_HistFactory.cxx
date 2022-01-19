@@ -154,7 +154,7 @@ public:
       if (prefix.size() > 0)
          name = prefix + name;
       if (!p.has_child("data")) {
-         RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
+        RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       try {
          std::vector<RooAbsArg *> tmp;
@@ -314,7 +314,7 @@ public:
                RooConstVar *sigma = new RooConstVar(sname.Data(), sname.Data(), err);
                RooGaussian *gaus = new RooGaussian(poisname.Data(), poisname.Data(), *tau, *g, *sigma);
                constraints.add(*gaus, true);
-            } else if (statErrorType == "poisson") {
+            } else if (statErrorType == "Poisson") {
                TString tname = TString::Format("tau_stat_%s_bin_%d", name.c_str(), (int)i);
                TString prodname = TString::Format("nExp_stat_%s_bin_%d", name.c_str(), (int)i);
                TString poisname = TString::Format("Constraint_stat_%s_bin_%d", name.c_str(), (int)i);
@@ -361,7 +361,7 @@ public:
       RooArgList nps;
       std::vector<std::string> usesStatError;
       double statErrorThreshold = 0;
-      std::string statErrorType = "poisson";
+      std::string statErrorType = "Poisson";
       if (p.has_child("statError")) {
          auto &staterr = p["statError"];
          if (staterr.has_child("relThreshold"))
@@ -740,7 +740,9 @@ public:
                   has_gauss_constraints = true;
                }
             }
+            bb_histograms[samplename] = hist;
          } else {
+            nonbb_histograms[samplename] = hist;           
             s["statError"] << 0;
          }
          auto &ns = s["namespaces"];
@@ -772,9 +774,9 @@ public:
       auto &statError = elem["statError"];
       statError.set_map();
       if (has_poisson_constraints) {
-         statError["constraint"] << "poisson";
+         statError["constraint"] << "Poisson";
       } else if (has_gauss_constraints) {
-         statError["constraint"] << "gauss";
+         statError["constraint"] << "Gauss";
       }
       return true;
    }
