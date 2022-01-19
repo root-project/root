@@ -19,13 +19,13 @@ globally applies to all the pieces. It has to be defined in two steps:
 
 1. First call the TGeoPcon constructor to define a polycone:
 
-~~~{.cpp}
-TGeoPcon(Double_t phi1,Double_t dphi,Int_t nz
-~~~
+   ~~~{.cpp}
+   TGeoPcon(Double_t phi1,Double_t dphi,Int_t nz
+   ~~~
 
-  - `phi1:` starting phi angle in degrees
-  - `dphi:` total phi range
-  - `nz:` number of Z planes defining polycone sections (minimum 2)
+     - `phi1:` starting phi angle in degrees
+     - `dphi:` total phi range
+     - `nz:` number of Z planes defining polycone sections (minimum 2)
 
 2. Define one by one all sections [0, nz-1]
 

@@ -605,7 +605,7 @@ void TGX11::DrawFillArea(int n, TPoint *xy)
 ///  \param [in] x1,y1        : begin of line
 ///  \param [in] x2,y2        : end of line
 
-void TGX11::DrawLine(int x1, int y1, int x2, int y2)
+void TGX11::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    if (gLineStyle == LineSolid)
       XDrawLine((Display*)fDisplay, gCws->fDrawing, *gGCline, x1, y1, x2, y2);
@@ -748,7 +748,7 @@ void TGX11::DrawPolyMarker(int n, TPoint *xy)
 ///  \param [in] mgn        : magnification factor
 ///  \param [in] text       : text string
 
-void TGX11::DrawText(int x, int y, float angle, float mgn,
+void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                      const char *text, ETextMode mode)
 {
    XRotSetMagnification(mgn);
@@ -1045,7 +1045,7 @@ void TGX11::GetRGB(int index, float &r, float &g, float &b)
 ///  \param [in] h          : text height
 ///  \param [in] mess        : message
 
-void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
+void TGX11::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 {
    w=0; h=0;
    if (strlen(mess)==0) return;
@@ -1077,7 +1077,7 @@ Window_t TGX11::GetWindowID(int wid)
 ///  \param [in] x    : x new window position
 ///  \param [in] y    : y new window position
 
-void TGX11::MoveWindow(int wid, int x, int y)
+void TGX11::MoveWindow(Int_t wid, Int_t x, Int_t y)
 {
    gTws = &fWindows[wid];
    if (!gTws->fOpen) return;
@@ -1451,7 +1451,7 @@ void TGX11::RemoveWindow(ULong_t qwid)
 ///  \param [in] iy       : Y coordinate of pointer
 /// (both coordinates are relative to the origin of the root window)
 
-void TGX11::QueryPointer(int &ix, int &iy)
+void TGX11::QueryPointer(Int_t &ix, Int_t &iy)
 {
    Window    root_return, child_return;
    int       win_x_return, win_y_return;
@@ -1916,7 +1916,7 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize the current window if necessary.
 
-void TGX11::ResizeWindow(int wid)
+void TGX11::ResizeWindow(Int_t wid)
 {
    int i;
    int xval=0, yval=0;
@@ -2073,7 +2073,7 @@ void  TGX11::SetColor(void *gci, int ci)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the cursor.
 
-void  TGX11::SetCursor(int wid, ECursor cursor)
+void  TGX11::SetCursor(Int_t wid, ECursor cursor)
 {
    gTws = &fWindows[wid];
    XDefineCursor((Display*)fDisplay, gTws->fWindow, fCursors[cursor]);
@@ -3447,8 +3447,8 @@ Int_t TGX11::WriteGIF(char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw image.
 
-void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
-                     int ymin,int xmax,int ymax, unsigned char *image,Drawable_t wid)
+void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t ny,Int_t xmin,
+                     Int_t ymin,Int_t xmax,Int_t ymax, UChar_t *image,Drawable_t wid)
 {
    const int maxSegment = 20;
    int           i, n, x, y, xcur, x1, x2, y1, y2;
