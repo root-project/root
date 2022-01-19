@@ -33,7 +33,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink
 
 void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model)
 {
-   fBufferedColumns.resize(fLastColumnId);
+   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNColumns());
    fInnerModel = model.Clone();
    fInnerSink->Create(*fInnerModel);
 }
