@@ -112,6 +112,7 @@ protected:
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RSealedPage &sealedPage) final;
    std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
+   RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    void CommitDatasetImpl() final;
 
 public:
