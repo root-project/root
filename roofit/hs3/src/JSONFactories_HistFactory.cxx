@@ -303,7 +303,7 @@ public:
             gammas.add(*g, true);
             nps.add(*g);
 
-            if (statErrorType == "gauss") {
+            if (statErrorType == "Gauss") {
                TString tname = TString::Format("nom_gamma_stat_%s_bin_%d", name.c_str(), (int)i);
                TString poisname = TString::Format("gamma_stat_%s_bin_%d_constraint", name.c_str(), (int)i);
                TString sname = TString::Format("gamma_stat_%s_bin_%d_sigma", name.c_str(), (int)i);
