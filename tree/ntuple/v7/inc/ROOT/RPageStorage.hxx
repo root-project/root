@@ -177,7 +177,7 @@ protected:
    /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
    DescriptorId_t fLastFieldId = 0;
    DescriptorId_t fLastColumnId = 0;
-   DescriptorId_t fLastClusterId = 0;
+   /// Used to calculate the number of entries in the current cluster
    NTupleSize_t fPrevClusterNEntries = 0;
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
