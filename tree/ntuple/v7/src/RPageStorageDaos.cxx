@@ -228,29 +228,6 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
-   std::vector<DescriptorId_t> physClusterIDs;
-   for (const auto &c : descriptor.GetClusterIterable()) {
-      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(c.GetId()));
-   }
-
-   auto szPageList =
-      Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);
-   auto bufPageList = std::make_unique<unsigned char[]>(szPageList);
-   Internal::RNTupleSerializer::SerializePageListV1(bufPageList.get(), descriptor, physClusterIDs,
-                                                    fSerializationContext);
-
-   auto bufPageListZip = std::make_unique<unsigned char[]>(szPageList);
-   auto szPageListZip = fCompressor->Zip(bufPageList.get(), szPageList, GetWriteOptions().GetCompression(),
-                                         RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
-   fDaosContainer->WriteSingleAkey(bufPageListZip.get(), szPageListZip, kOidPageList, kDistributionKey, kAttributeKey,
-                                   kCidMetadata);
-
-   Internal::RNTupleSerializer::REnvelopeLink pageListEnvelope;
-   pageListEnvelope.fUnzippedSize = szPageList;
-   pageListEnvelope.fLocator.fPosition = kOidPageList.lo;
-   pageListEnvelope.fLocator.fBytesOnStorage = szPageListZip;
-   fSerializationContext.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);
-
    auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
    auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
    Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
