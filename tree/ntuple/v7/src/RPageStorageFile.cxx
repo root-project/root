@@ -85,19 +85,13 @@ ROOT::Experimental::Detail::RPageSinkFile::~RPageSinkFile()
 {
 }
 
-
-void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & /* model */)
+void ROOT::Experimental::Detail::RPageSinkFile::CreateImpl(const RNTupleModel & /* model */,
+                                                           unsigned char *serializedHeader, std::uint32_t length)
 {
-   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
-   auto buffer = std::make_unique<unsigned char []>(fSerializationContext.GetHeaderSize());
-   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(buffer.get(), descriptor);
-
-   auto zipBuffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
-   auto szZipHeader =
-      fCompressor->Zip(buffer.get(), fSerializationContext.GetHeaderSize(), GetWriteOptions().GetCompression(),
-         [&zipBuffer](const void *b, size_t n, size_t o){ memcpy(zipBuffer.get() + o, b, n); } );
-   fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, fSerializationContext.GetHeaderSize());
+   auto zipBuffer = std::make_unique<unsigned char[]>(length);
+   auto szZipHeader = fCompressor->Zip(serializedHeader, length, GetWriteOptions().GetCompression(),
+                                       RNTupleCompressor::MakeMemCopyWriter(zipBuffer.get()));
+   fWriter->WriteNTupleHeader(zipBuffer.get(), szZipHeader, length);
 }
 
 
