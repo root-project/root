@@ -365,6 +365,11 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
    return nbytes;
 }
 
+void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
+{
+   // TODO
+}
+
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
 ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
    const RColumnElementBase &element, int compressionSetting, void *buf)

@@ -103,6 +103,15 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
    return fInnerSink->CommitCluster(nEntries);
 }
 
+ROOT::Experimental::RNTupleLocator
+ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroupImpl(unsigned char * /* serializedPageList */,
+                                                                 std::uint32_t /* length */)
+{
+   fInnerSink->CommitClusterGroup();
+   // We're not using that locator any further, so it is safe to return a dummy one
+   return RNTupleLocator{};
+}
+
 void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl()
 {
    fInnerSink->CommitDataset();

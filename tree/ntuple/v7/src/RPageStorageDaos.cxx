@@ -212,6 +212,13 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental:
    return std::exchange(fNBytesCurrentCluster, 0);
 }
 
+ROOT::Experimental::RNTupleLocator
+ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char * /* serializedPageList */,
+                                                                  std::uint32_t /* length */)
+{
+   // TODO
+   return RNTupleLocator{};
+}
 
 void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
 {
