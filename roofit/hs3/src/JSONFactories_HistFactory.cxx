@@ -169,8 +169,8 @@ public:
          RooHistFunc *hf =
             new RooHistFunc(("hist_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh->get()), *dh);
          RooBinWidthFunction *binning =
-            new RooBinWidthFunction(TString::Format("%s_binWidth", name.c_str()).Data(),
-                                    TString::Format("%s_binWidth", name.c_str()).Data(), *hf, true);
+            new RooBinWidthFunction(TString::Format("%s_binWidth", (prefix.size() > 0 ? prefix : name).c_str()).Data(),
+                                    TString::Format("%s_binWidth", (prefix.size() > 0 ? prefix : name).c_str()).Data(), *hf, true);
          shapeElems.add(*binning);
          tmp.push_back(binning);
 
