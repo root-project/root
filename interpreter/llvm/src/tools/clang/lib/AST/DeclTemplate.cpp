@@ -207,6 +207,7 @@ Decl *RedeclarableTemplateDecl::loadLazySpecializationImpl(
   uint32_t ID = LazySpecInfo.DeclID;
   assert(ID && "Loading already loaded specialization!");
   // Note that we loaded the specialization.
+  // FIXME: consider removing entry from Specs.
   LazySpecInfo.DeclID = LazySpecInfo.ODRHash = LazySpecInfo.IsPartial = 0;
   return getASTContext().getExternalSource()->GetExternalDecl(ID);
 }
@@ -247,15 +248,16 @@ void RedeclarableTemplateDecl::addSpecializationImpl(
   using SETraits = SpecEntryTraits<EntryType>;
 
   if (InsertPos) {
-#ifndef NDEBUG
-    auto Args = SETraits::getTemplateArgs(Entry);
-    assert(!loadLazySpecializationsImpl(Args) &&
-           "Specialization is already registered as lazy");
-    void *CorrectInsertPos;
-    assert(!findSpecializationImpl(Specializations, Args, CorrectInsertPos) &&
-           InsertPos == CorrectInsertPos &&
-           "given incorrect InsertPos for specialization");
-#endif
+// This won't work as ODRHash isn't unique.
+//#ifndef NDEBUG
+//    auto Args = SETraits::getTemplateArgs(Entry);
+//    assert(!loadLazySpecializationsImpl(Args) &&
+//           "Specialization is already registered as lazy");
+//    void *CorrectInsertPos;
+//    assert(!findSpecializationImpl(Specializations, Args, CorrectInsertPos) &&
+//           InsertPos == CorrectInsertPos &&
+//           "given incorrect InsertPos for specialization");
+//#endif
     Specializations.InsertNode(Entry, InsertPos);
   } else {
     EntryType *Existing = Specializations.GetOrInsertNode(Entry);
