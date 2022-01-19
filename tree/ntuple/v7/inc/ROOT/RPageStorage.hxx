@@ -184,7 +184,7 @@ protected:
    /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
    Internal::RNTupleSerializer::RContext fSerializationContext;
 
-   virtual void CreateImpl(const RNTupleModel &model) = 0;
+   virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId,
                                                const RPageStorage::RSealedPage &sealedPage) = 0;
