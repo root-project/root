@@ -13,6 +13,7 @@ TEST(RNTuple, ReconstructModel)
    {
       RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
       sink.Create(*model.get());
+      sink.CommitClusterGroup();
       sink.CommitDataset();
       model = nullptr;
    }
