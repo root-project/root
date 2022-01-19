@@ -181,6 +181,9 @@ protected:
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
+   /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
+   Internal::RNTupleSerializer::RContext fSerializationContext;
+
    virtual void CreateImpl(const RNTupleModel &model) = 0;
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId,
