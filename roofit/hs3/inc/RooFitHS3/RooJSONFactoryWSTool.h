@@ -78,6 +78,9 @@ protected:
    const RooFit::Detail::JSONNode &irootnode() const;
 
    RooWorkspace *_workspace;
+
+   static bool _stripObservables;
+
    static ImportMap _importers;
    static ExportMap _exporters;
    static ExportKeysMap _exportKeys;
@@ -90,6 +93,9 @@ protected:
    RooRealVar *createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
 public:
+   static bool getStripObservables();
+   static void setStripObservables(bool);
+
    class MissingRootnodeError : public std::exception {
    public:
       virtual const char *what() const noexcept override { return "no rootnode set"; }
@@ -181,8 +187,7 @@ public:
    void exportData(RooAbsData *data, RooFit::Detail::JSONNode &n);
    static void writeObservables(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &varnames);
    static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
-   RooDataHist *
-   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, const RooArgList &observables);
+   RooDataHist *readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList observables);
    static std::map<std::string, RooJSONFactoryWSTool::Var>
    readObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp);
    RooArgSet getObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp);
@@ -219,7 +224,7 @@ public:
    void importVariables(const RooFit::Detail::JSONNode &n);
    void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
    void importVariable(const RooFit::Detail::JSONNode &n);
-   void configureVariable(const RooFit::Detail::JSONNode &p, RooRealVar& v);  
+   void configureVariable(const RooFit::Detail::JSONNode &p, RooRealVar &v);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
    void configureToplevelPdf(const RooFit::Detail::JSONNode &n, RooAbsPdf *pdf);
