@@ -532,6 +532,13 @@ TEST(RNTuple, SerializeFooter)
    pageRange.fPageInfos.emplace_back(pageInfo);
    clusterBuilder.CommitColumnRange(17, 0, 100, pageRange);
    builder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
+   RClusterGroupDescriptorBuilder cgBuilder;
+   RNTupleLocator cgLocator;
+   cgLocator.fPosition = 1337;
+   cgLocator.fBytesOnStorage = 42;
+   cgBuilder.ClusterGroupId(256).PageListLength(137).PageListLocator(cgLocator);
+   cgBuilder.AddCluster(84);
+   builder.AddClusterGroup(std::move(cgBuilder));
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeaderV1(nullptr, desc);
@@ -549,12 +556,7 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_GT(sizePageList, 0);
    auto bufPageList = std::make_unique<unsigned char []>(sizePageList);
    EXPECT_EQ(sizePageList, RNTupleSerializer::SerializePageListV1(bufPageList.get(), desc, physClusterIDs, context));
-
-   RNTupleSerializer::REnvelopeLink pageListEnvelope;
-   pageListEnvelope.fUnzippedSize = 137;
-   pageListEnvelope.fLocator.fPosition = 1337;
-   pageListEnvelope.fLocator.fBytesOnStorage = 42;
-   context.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);
+   context.MapClusterGroupId(256);
 
    auto sizeFooter = RNTupleSerializer::SerializeFooterV1(nullptr, desc, context);
    EXPECT_GT(sizeFooter, 0);
