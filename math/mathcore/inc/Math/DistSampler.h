@@ -36,7 +36,7 @@ namespace ROOT {
       class DistSamplerOptions;
 
 /**
-   @defgroup Random Random Classes
+   @defgroup Random Interface classes for Random number generation
 
    Pseudo-random numbers generator classes and for generation of random number distributions.
    These classes implement several pseudo-random number generators and method for generation of random numbers

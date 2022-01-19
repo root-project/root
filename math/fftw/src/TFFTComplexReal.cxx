@@ -187,7 +187,7 @@ void TFFTComplexReal::GetPoints(Double_t *data, Bool_t fromInput) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the point #ipoint
+///Returns the point `#ipoint`
 /// Works only for output (input array is destroyed in a C2R transform)
 
 Double_t TFFTComplexReal::GetPointReal(Int_t ipoint, Bool_t fromInput) const
@@ -319,7 +319,7 @@ void TFFTComplexReal::SetPoint(Int_t ipoint, Double_t re, Double_t im)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Set the point #ipoint. Since the input is Hermitian, only the first (roughly)half of
+///Set the point `#ipoint`. Since the input is Hermitian, only the first (roughly) half of
 ///the points have to be set.
 
 void TFFTComplexReal::SetPoint(const Int_t *ipoint, Double_t re, Double_t im)
