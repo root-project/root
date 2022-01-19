@@ -353,6 +353,7 @@ public:
    {
       return std::find(fClusterIds.begin(), fClusterIds.end(), clusterId) != fClusterIds.end();
    }
+   const std::vector<DescriptorId_t> &GetClusterIds() const { return fClusterIds; }
 };
 
 // clang-format off

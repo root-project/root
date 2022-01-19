@@ -1039,18 +1039,24 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // Cluster summaries
-   const auto nClusters = desc.GetNClusters();
+   const auto nClusterGroups = desc.GetNClusterGroups();
+   unsigned int nClusters = 0;
+   for (const auto &cgDesc : desc.GetClusterGroupIterable())
+      nClusters += cgDesc.GetNClusters();
    frame = pos;
    pos += SerializeListFramePreamble(nClusters, *where);
-   for (unsigned int i = 0; i < nClusters; ++i) {
-      const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(i));
-      RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
-      pos += SerializeClusterSummary(summary, *where);
+   for (unsigned int i = 0; i < nClusterGroups; ++i) {
+      const auto &cgDesc = desc.GetClusterGroupDescriptor(context.GetMemClusterGroupId(i));
+      const auto nClustersInGroup = cgDesc.GetNClusters();
+      for (unsigned int j = 0; j < nClustersInGroup; ++j) {
+         const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(j));
+         RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
+         pos += SerializeClusterSummary(summary, *where);
+      }
    }
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // Cluster groups
-   const auto nClusterGroups = desc.GetNClusterGroups();
    frame = pos;
    pos += SerializeListFramePreamble(nClusterGroups, *where);
    for (unsigned int i = 0; i < nClusterGroups; ++i) {
