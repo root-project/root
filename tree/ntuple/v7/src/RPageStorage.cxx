@@ -349,7 +349,8 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
    auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
-   RClusterDescriptorBuilder clusterBuilder(fLastClusterId, fPrevClusterNEntries, nEntriesInCluster);
+   RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
+                                            nEntriesInCluster);
    for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
       RClusterDescriptor::RPageRange fullRange;
       fullRange.fColumnId = i;
@@ -361,7 +362,6 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
    }
    fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
    fPrevClusterNEntries = nEntries;
-   ++fLastClusterId;
    return nbytes;
 }
 
