@@ -164,21 +164,14 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitClusterGroupImpl(unsigned char 
    return result;
 }
 
-void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
+void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length)
 {
-   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-
-   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
-   auto bufFooter = std::make_unique<unsigned char []>(szFooter);
-   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
-
-   auto bufFooterZip = std::make_unique<unsigned char []>(szFooter);
-   auto szFooterZip = fCompressor->Zip(bufFooter.get(), szFooter, GetWriteOptions().GetCompression(),
-      [&bufFooterZip](const void *b, size_t n, size_t o){ memcpy(bufFooterZip.get() + o, b, n); } );
-   fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, szFooter);
+   auto bufFooterZip = std::make_unique<unsigned char[]>(length);
+   auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
+                                       RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
+   fWriter->WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
    fWriter->Commit();
 }
-
 
 ROOT::Experimental::Detail::RPage
 ROOT::Experimental::Detail::RPageSinkFile::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
