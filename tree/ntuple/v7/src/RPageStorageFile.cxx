@@ -110,8 +110,6 @@ ROOT::Experimental::Detail::RPageSinkFile::WriteSealedPage(
       RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
       offsetData = fWriter->WriteBlob(sealedPage.fBuffer, sealedPage.fSize, bytesPacked);
    }
-   fClusterMinOffset = std::min(offsetData, fClusterMinOffset);
-   fClusterMaxOffset = std::max(offsetData + sealedPage.fSize, fClusterMaxOffset);
 
    RNTupleLocator result;
    result.fPosition = offsetData;
