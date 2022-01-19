@@ -27,7 +27,6 @@
 
 using namespace RooFit ;
 
-// Elementary operations on a gaussian PDF
 class TestRooRealLPlot : public RooUnitTest
 {
 public:
@@ -72,7 +71,7 @@ public:
   // Clean up the minimizer
   m.cleanup();
 
-  // --- Post processing for stressRooFit ---
+  // --- Post processing for RooUnitTest ---
   regPlot(xframe ,"TestRooRealLPlot_plot");
 
   return kTRUE;
@@ -81,6 +80,7 @@ public:
 
 TEST (TestStatisticsPlot, RooRealL) {
     // Run the RooUnitTest and assert that it succeeds with gtest
+
     RooUnitTest::setMemDir(gDirectory) ;
 
     TFile* fref = TFile::Open("TestStatistics_ref.root");
