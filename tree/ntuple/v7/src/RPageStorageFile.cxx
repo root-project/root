@@ -157,11 +157,17 @@ ROOT::Experimental::Detail::RPageSinkFile::CommitClusterImpl(ROOT::Experimental:
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkFile::CommitClusterGroupImpl(unsigned char * /* serializedPageList */,
-                                                                  std::uint32_t /* length */)
+ROOT::Experimental::Detail::RPageSinkFile::CommitClusterGroupImpl(unsigned char *serializedPageList,
+                                                                  std::uint32_t length)
 {
-   // TODO
-   return RNTupleLocator{};
+   auto bufPageListZip = std::make_unique<unsigned char[]>(length);
+   auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
+                                         RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
+
+   RNTupleLocator result;
+   result.fBytesOnStorage = szPageListZip;
+   result.fPosition = fWriter->WriteBlob(bufPageListZip.get(), szPageListZip, length);
+   return result;
 }
 
 void ROOT::Experimental::Detail::RPageSinkFile::CommitDatasetImpl()
