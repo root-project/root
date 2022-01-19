@@ -305,6 +305,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
    CommitCluster();
+   fSink->CommitClusterGroup();
    fSink->CommitDataset();
 }
 

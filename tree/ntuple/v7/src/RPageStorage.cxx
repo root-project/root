@@ -362,7 +362,23 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
 
 void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
 {
-   // TODO
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   std::vector<DescriptorId_t> physClusterIDs;
+   for (const auto &c : descriptor.GetClusterIterable()) {
+      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(c.GetId()));
+   }
+
+   auto szPageList =
+      Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);
+   auto bufPageList = std::make_unique<unsigned char[]>(szPageList);
+   Internal::RNTupleSerializer::SerializePageListV1(bufPageList.get(), descriptor, physClusterIDs,
+                                                    fSerializationContext);
+
+   Internal::RNTupleSerializer::REnvelopeLink pageListEnvelope;
+   pageListEnvelope.fUnzippedSize = szPageList;
+   pageListEnvelope.fLocator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
+   fSerializationContext.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);
 }
 
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
