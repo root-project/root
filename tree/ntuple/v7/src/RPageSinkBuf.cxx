@@ -114,7 +114,8 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterGroupImpl(unsigned char *
    return RNTupleLocator{};
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl()
+void ROOT::Experimental::Detail::RPageSinkBuf::CommitDatasetImpl(unsigned char * /* serializedFooter */,
+                                                                 std::uint32_t /* length */)
 {
    fInnerSink->CommitDataset();
 }
