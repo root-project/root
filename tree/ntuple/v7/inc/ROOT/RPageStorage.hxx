@@ -152,6 +152,10 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+private:
+   /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
+   Internal::RNTupleSerializer::RContext fSerializationContext;
+
 protected:
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -180,9 +184,6 @@ protected:
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
    RNTupleDescriptorBuilder fDescriptorBuilder;
-
-   /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
-   Internal::RNTupleSerializer::RContext fSerializationContext;
 
    virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
