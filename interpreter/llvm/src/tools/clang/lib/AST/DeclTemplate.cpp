@@ -305,6 +305,7 @@ Decl *RedeclarableTemplateDecl::loadLazySpecializationImpl(
   uint32_t ID = LazySpecInfo.DeclID;
   assert(ID && "Loading already loaded specialization!");
   // Note that we loaded the specialization.
+  // FIXME: consider removing entry from Specs.
   LazySpecInfo.DeclID = LazySpecInfo.ODRHash = LazySpecInfo.IsPartial = 0;
   return getASTContext().getExternalSource()->GetExternalDecl(ID);
 }
@@ -347,6 +348,7 @@ void RedeclarableTemplateDecl::addSpecializationImpl(
   using SETraits = SpecEntryTraits<EntryType>;
 
   if (InsertPos) {
+#if 0
 #ifndef NDEBUG
     auto Args = SETraits::getTemplateArgs(Entry);
     assert(!loadLazySpecializationsImpl(Args) &&
@@ -355,6 +357,7 @@ void RedeclarableTemplateDecl::addSpecializationImpl(
     assert(!findSpecializationImpl(Specializations, CorrectInsertPos, Args) &&
            InsertPos == CorrectInsertPos &&
            "given incorrect InsertPos for specialization");
+#endif
 #endif
     Specializations.InsertNode(Entry, InsertPos);
   } else {
