@@ -282,23 +282,13 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
 
    auto &fieldZero = *model.GetFieldZero();
-   fDescriptorBuilder.AddField(
-      RFieldDescriptorBuilder::FromField(fieldZero)
-         .FieldId(fLastFieldId)
-         .MakeDescriptor()
-         .Unwrap()
-   );
-   fieldZero.SetOnDiskId(fLastFieldId);
+   fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
+   fieldZero.SetOnDiskId(0);
    for (auto& f : *model.GetFieldZero()) {
-      fLastFieldId++;
-      fDescriptorBuilder.AddField(
-         RFieldDescriptorBuilder::FromField(f)
-            .FieldId(fLastFieldId)
-            .MakeDescriptor()
-            .Unwrap()
-      );
-      fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fLastFieldId);
-      f.SetOnDiskId(fLastFieldId);
+      auto fieldId = fDescriptorBuilder.GetDescriptor().GetNFields();
+      fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
+      fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
+      f.SetOnDiskId(fieldId);
       f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
    }
 
