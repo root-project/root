@@ -603,6 +603,12 @@ public:
 
       bool has_poisson_constraints = false;
       bool has_gauss_constraints = false;
+      std::map<int, double> tot_yield;
+      std::map<int, double> tot_yield2;
+      std::map<int, double> rel_errors;
+      std::map<std::string, TH1 *> bb_histograms;
+      std::map<std::string, TH1 *> nonbb_histograms;
+      std::vector<std::string> varnames;
 
       for (size_t sampleidx = 0; sampleidx < sumpdf->funcList().size(); ++sampleidx) {
          const auto func = sumpdf->funcList().at(sampleidx);
@@ -631,7 +637,6 @@ public:
          ParamHistFunc *phf = NULL;
          PiecewiseInterpolation *pip = NULL;
          RooStats::HistFactory::FlexibleInterpVar *fip = NULL;
-         std::vector<std::string> varnames;
          for (const auto &e : elems) {
             if (e->InheritsFrom(RooConstVar::Class())) {
                if (((RooConstVar *)e)->getVal() == 1.)
@@ -711,16 +716,20 @@ public:
                ++idx;
                RooPoisson *constraint_p = findClient<RooPoisson>(g);
                RooGaussian *constraint_g = findClient<RooGaussian>(g);
+               if (tot_yield.find(idx) == tot_yield.end()) {
+                  tot_yield[idx] = 0;
+                  tot_yield2[idx] = 0;
+               }
+               tot_yield[idx] += hist->GetBinContent(idx);
+               tot_yield2[idx] += (hist->GetBinContent(idx) * hist->GetBinContent(idx));
                if (constraint_p) {
                   double erel = 1. / sqrt(constraint_p->getX().getVal());
-                  hist->SetBinError(idx, erel * hist->GetBinContent(idx));
+                  rel_errors[idx] = erel;
                   has_poisson_constraints = true;
                } else if (constraint_g) {
                   double erel = constraint_g->getSigma().getVal() / constraint_g->getMean().getVal();
-                  hist->SetBinError(idx, erel * hist->GetBinContent(idx));
+                  rel_errors[idx] = erel;
                   has_gauss_constraints = true;
-               } else {
-                  hist->SetBinError(idx, 0);
                }
             }
          } else {
@@ -729,12 +738,28 @@ public:
          auto &ns = s["namespaces"];
          ns.set_seq();
          ns.append_child() << chname;
-         if (hist) {
-            auto &data = s["data"];
-            RooJSONFactoryWSTool::writeObservables(*hist, elem, varnames);
-            RooJSONFactoryWSTool::exportHistogram(*hist, data, varnames, 0, false, phf);
-            delete hist;
+      }
+      for (const auto &hist : nonbb_histograms) {
+         auto &s = samples[hist.first];
+         auto &data = s["data"];
+         RooJSONFactoryWSTool::writeObservables(*hist.second, elem, varnames);
+         RooJSONFactoryWSTool::exportHistogram(*hist.second, data, varnames, 0, false, false);
+         delete hist.second;
+      }
+      for (const auto &hist : bb_histograms) {
+         auto &s = samples[hist.first];
+         for (auto bin : rel_errors) {
+            // reverse engineering the correct partial error
+            // the (arbitrary) convention used here is that all samples should have the same relative error
+            const int i = bin.first;
+            const double relerr_tot = bin.second;
+            const double count = hist.second->GetBinContent(i);
+            hist.second->SetBinError(i, relerr_tot * tot_yield[i] / sqrt(tot_yield2[i]) * count);
          }
+         auto &data = s["data"];
+         RooJSONFactoryWSTool::writeObservables(*hist.second, elem, varnames);
+         RooJSONFactoryWSTool::exportHistogram(*hist.second, data, varnames, 0, false, true);
+         delete hist.second;
       }
       auto &statError = elem["statError"];
       statError.set_map();
