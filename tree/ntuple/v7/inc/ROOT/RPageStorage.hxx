@@ -193,7 +193,7 @@ protected:
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
    /// Typically, the implementation takes care of compressing and writing the provided buffer.
    virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
-   virtual void CommitDatasetImpl() = 0;
+   virtual void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
@@ -252,7 +252,7 @@ public:
    /// CommitClusterGroup (or the beginning of writing).
    void CommitClusterGroup();
    /// Finalize the current cluster and the entrire data set.
-   void CommitDataset() { CommitDatasetImpl(); }
+   void CommitDataset();
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.

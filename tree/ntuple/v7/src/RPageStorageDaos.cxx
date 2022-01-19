@@ -224,21 +224,14 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char 
    return result;
 }
 
-void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
+void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length)
 {
-   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-
-   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
-   auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
-   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
-
-   auto bufFooterZip = std::make_unique<unsigned char[]>(szFooter);
-   auto szFooterZip = fCompressor->Zip(bufFooter.get(), szFooter, GetWriteOptions().GetCompression(),
+   auto bufFooterZip = std::make_unique<unsigned char[]>(length);
+   auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
                                        RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
-   WriteNTupleFooter(bufFooterZip.get(), szFooterZip, szFooter);
+   WriteNTupleFooter(bufFooterZip.get(), szFooterZip, length);
    WriteNTupleAnchor();
 }
-
 
 void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleHeader(
 		const void *data, size_t nbytes, size_t lenHeader)

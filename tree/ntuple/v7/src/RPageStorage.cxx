@@ -381,6 +381,17 @@ void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
    fSerializationContext.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);
 }
 
+void ROOT::Experimental::Detail::RPageSink::CommitDataset()
+{
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
+   auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
+   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
+
+   CommitDatasetImpl(bufFooter.get(), szFooter);
+}
+
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
 ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
    const RColumnElementBase &element, int compressionSetting, void *buf)
