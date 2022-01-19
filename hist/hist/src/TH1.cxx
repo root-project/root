@@ -3125,7 +3125,7 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
-   TString newName = (name_postfix) ? TString::Format("%s%s",GetName(),name_postfix) : TString();
+   TString newName = (name_postfix) ? TString::Format("%s%s", GetName(), name_postfix) : TString();
    TH1 *newth1 = (TH1 *)Clone(newName);
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
