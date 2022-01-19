@@ -364,10 +364,12 @@ void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
+   const auto nClusters = descriptor.GetNClusters();
    std::vector<DescriptorId_t> physClusterIDs;
-   for (const auto &c : descriptor.GetClusterIterable()) {
-      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(c.GetId()));
+   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
    }
+   fNextClusterInGroup = nClusters;
 
    auto szPageList =
       Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);

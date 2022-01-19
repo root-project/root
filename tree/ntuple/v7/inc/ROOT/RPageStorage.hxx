@@ -177,6 +177,8 @@ protected:
    /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
    std::unique_ptr<RNTupleCompressor> fCompressor;
 
+   /// Remembers the starting cluster id for the next cluster group
+   std::uint64_t fNextClusterInGroup = 0;
    /// Used to calculate the number of entries in the current cluster
    NTupleSize_t fPrevClusterNEntries = 0;
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
