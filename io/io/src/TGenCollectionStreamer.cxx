@@ -44,7 +44,7 @@ TGenCollectionStreamer::TGenCollectionStreamer(Info_t info, size_t iter_size)
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 }
 
-TGenCollectionStreamer::TGenCollectionStreamer(const ::ROOT::TCollectionProxyInfo &info, TClass *cl)
+TGenCollectionStreamer::TGenCollectionStreamer(const ROOT::TCollectionProxyInfo &info, TClass *cl)
       : TGenCollectionProxy(info, cl), fReadBufferFunc(&TGenCollectionStreamer::ReadBufferDefault)
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.

@@ -1149,11 +1149,11 @@ TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
 /// Indentation is used to identify the directory tree
 /// Subdirectories are listed first, then objects in memory, then objects on the file
 ///
-/// The option can has the following format: <b>[-d |-m][<regexp>]</b>
+/// The option can has the following format: <b>`[-d |-m][<regexp>]`</b>
 /// Options:
 ///   - -d: only list objects in the file
 ///   - -m: only list objects in memory
-///  The <regexp> will be used to match the name of the objects.
+///  The `<regexp>` will be used to match the name of the objects.
 ///  By default memory and disk objects are listed.
 
 void TDirectoryFile::ls(Option_t *option) const
