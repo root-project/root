@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
+#include <algorithm>
 
 #include <RooConstVar.h>
 #include <RooRealVar.h>
@@ -1118,13 +1119,20 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
       RooArgSet reduced_obs;
       if (_stripObservables) {
          if (!singlePoint) {
+           std::map<RooRealVar*, std::vector<double>> obs_values;
             for (Int_t i = 0; i < ds->numEntries(); ++i) {
                ds->get(i);
                for (const auto &obs : observables) {
                   RooRealVar *rv = (RooRealVar *)(obs);
-                  if (rv->getVal() != 0)
-                     reduced_obs.add(*rv, true);
+                  obs_values[rv].push_back(rv->getVal());
                }
+            }
+            for (auto& obs_it : obs_values) {
+               auto& vals = obs_it.second;
+               double v0 = vals[0];
+               bool is_const_val = std::all_of(vals.begin(), vals.end(), [v0](double v){return v==v0;});
+               if (!is_const_val)
+                  reduced_obs.add(*(obs_it.first), true);
             }
          }
       } else {
