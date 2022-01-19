@@ -1050,12 +1050,16 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // Cluster groups
-   const auto &clusterGroups = context.GetClusterGroups();
-   const auto nClusterGroups = clusterGroups.size();
+   const auto nClusterGroups = desc.GetNClusterGroups();
    frame = pos;
    pos += SerializeListFramePreamble(nClusterGroups, *where);
    for (unsigned int i = 0; i < nClusterGroups; ++i) {
-      pos += SerializeClusterGroup(clusterGroups[i], *where);
+      const auto &cgDesc = desc.GetClusterGroupDescriptor(context.GetMemClusterGroupId(i));
+      RClusterGroup clusterGroup;
+      clusterGroup.fNClusters = cgDesc.GetNClusters();
+      clusterGroup.fPageListEnvelopeLink.fUnzippedSize = cgDesc.GetPageListLength();
+      clusterGroup.fPageListEnvelopeLink.fLocator = cgDesc.GetPageListLocator();
+      pos += SerializeClusterGroup(clusterGroup, *where);
    }
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 

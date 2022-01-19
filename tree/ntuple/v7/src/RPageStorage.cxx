@@ -369,7 +369,6 @@ void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
    for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
       physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
    }
-   fNextClusterInGroup = nClusters;
 
    auto szPageList =
       Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);
@@ -377,10 +376,17 @@ void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
    Internal::RNTupleSerializer::SerializePageListV1(bufPageList.get(), descriptor, physClusterIDs,
                                                     fSerializationContext);
 
-   Internal::RNTupleSerializer::REnvelopeLink pageListEnvelope;
-   pageListEnvelope.fUnzippedSize = szPageList;
-   pageListEnvelope.fLocator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
-   fSerializationContext.AddClusterGroup(physClusterIDs.size(), pageListEnvelope);
+   const auto clusterGroupId = descriptor.GetNClusterGroups();
+   const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
+   RClusterGroupDescriptorBuilder cgBuilder;
+   cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
+   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+      cgBuilder.AddCluster(i);
+   }
+   fDescriptorBuilder.AddClusterGroup(std::move(cgBuilder));
+   fSerializationContext.MapClusterGroupId(clusterGroupId);
+
+   fNextClusterInGroup = nClusters;
 }
 
 void ROOT::Experimental::Detail::RPageSink::CommitDataset()
