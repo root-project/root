@@ -271,7 +271,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detai
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
-   auto columnId = fLastColumnId++;
+   auto columnId = fDescriptorBuilder.GetDescriptor().GetNColumns();
    fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetModel(), column.GetIndex());
    return ColumnHandle_t{columnId, &column};
 }
@@ -302,7 +302,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
    }
 
-   auto nColumns = fLastColumnId;
+   auto nColumns = fDescriptorBuilder.GetDescriptor().GetNColumns();
    for (DescriptorId_t i = 0; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fColumnId = i;
