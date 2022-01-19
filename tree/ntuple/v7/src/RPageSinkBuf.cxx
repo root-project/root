@@ -31,7 +31,9 @@ ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink
    fMetrics.ObserveMetrics(fInnerSink->GetMetrics());
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model)
+void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model,
+                                                          unsigned char * /* serializedHeader */,
+                                                          std::uint32_t /* length */)
 {
    fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNColumns());
    fInnerModel = model.Clone();

@@ -108,7 +108,7 @@ private:
    RDaosNTupleAnchor fNTupleAnchor;
 
 protected:
-   void CreateImpl(const RNTupleModel &model) final;
+   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;

@@ -280,19 +280,20 @@ ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const R
 void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto &fieldZero = *model.GetFieldZero();
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
    for (auto& f : *model.GetFieldZero()) {
-      auto fieldId = fDescriptorBuilder.GetDescriptor().GetNFields();
+      auto fieldId = descriptor.GetNFields();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
       f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
    }
 
-   auto nColumns = fDescriptorBuilder.GetDescriptor().GetNColumns();
+   auto nColumns = descriptor.GetNColumns();
    for (DescriptorId_t i = 0; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fColumnId = i;
@@ -305,7 +306,11 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
-   CreateImpl(model);
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
+   auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(buffer.get(), descriptor);
+
+   CreateImpl(model, buffer.get(), fSerializationContext.GetHeaderSize());
 }
 
 
