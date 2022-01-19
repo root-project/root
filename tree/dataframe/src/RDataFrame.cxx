@@ -86,6 +86,10 @@ Transformations are a way to manipulate the data.
 | DefineSlotEntry() | Same as DefineSlot(), but the entry number is passed in addition to the slot number. This is meant as a helper in case some dependency on the entry number needs to be honoured. |
 | Filter() | Filter rows based on user-defined conditions. |
 | Range() | Filter rows based on entry number (single-thread only). |
+| Redefine() | Overwrite the value and/or type of an existing column. See Define() for more information. |
+| RedefineSlot() | Overwrite the value and/or type of an existing column. See DefineSlot() for more information. |
+| RedefineSlotEntry() | Overwrite the value and/or type of an existing column. See DefineSlotEntry() for more information. |
+
 
 ### Actions
 Actions aggregate data into a result. Each one is described in more detail in the reference guide.
