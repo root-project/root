@@ -213,11 +213,21 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental:
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char * /* serializedPageList */,
-                                                                  std::uint32_t /* length */)
+ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char *serializedPageList,
+                                                                  std::uint32_t length)
 {
-   // TODO
-   return RNTupleLocator{};
+   auto bufPageListZip = std::make_unique<unsigned char[]>(length);
+   auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
+                                         RNTupleCompressor::MakeMemCopyWriter(bufPageListZip.get()));
+
+   auto offsetData = fOid.fetch_add(1);
+   fDaosContainer->WriteSingleAkey(bufPageListZip.get(), szPageListZip, {offsetData, 0}, kDistributionKey,
+                                   kAttributeKey, kCidMetadata);
+   RNTupleLocator result;
+   result.fPosition = offsetData;
+   result.fBytesOnStorage = szPageListZip;
+   fCounters->fSzWritePayload.Add(szPageListZip);
+   return result;
 }
 
 void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl()
