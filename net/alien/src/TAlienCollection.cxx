@@ -140,7 +140,7 @@ TGridCollection *TAlienCollection::Open(const char *collectionurl,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open the file specified by <filename> from the currently active file group in the collection via its TURL.
+/// Open the file specified by `<filename>` from the currently active file group in the collection via its TURL.
 
 TFile *TAlienCollection::OpenFile(const char *filename)
 {
@@ -283,7 +283,7 @@ void TAlienCollection::Reset()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse event file collection XML file.
-/// <maxentries> stops the parsing after <maxentries>.
+/// `<maxentries>` stops the parsing after `<maxentries>`.
 
 void TAlienCollection::ParseXML(UInt_t maxentries)
 {
@@ -562,7 +562,7 @@ void TAlienCollection::SetTag(const char *tag, const char *value,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Selects all files with name <filename> in the collection
+/// Selects all files with name `<filename>` in the collection
 /// All files can be selected using "*" as filename
 
 Bool_t TAlienCollection::SelectFile(const char *filename, Int_t nstart, Int_t nstop)
@@ -595,8 +595,8 @@ Bool_t TAlienCollection::SelectFile(const char *filename, Int_t nstart, Int_t ns
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Deselects the file <filename> from the loaded collection
-/// All files can be deselected using "*" as <filename>
+/// Deselects the file `<filename>` from the loaded collection
+/// All files can be deselected using "*" as `<filename>`
 
 Bool_t TAlienCollection::DeselectFile(const char *filename, Int_t nstart, Int_t nstop)
 {
@@ -866,9 +866,9 @@ TDSet *TAlienCollection::GetDataset(const char *type, const char *objname,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a TGridResult.
 /// If files have been selected in this collection, only the selected files
-/// are returned. If <onlyonline> is set to kTRUE, only files which are
+/// are returned. If `<onlyonline>` is set to kTRUE, only files which are
 /// 'online' (staged) are included. If no online check was done, TGridResult
-/// will be empty. <publicaccess> adds the publicaccess option to the TGridResult entries
+/// will be empty. `<publicaccess>` adds the publicaccess option to the TGridResult entries
 
 TGridResult *TAlienCollection::GetGridResult(const char *filename,
                                              Bool_t onlyonline,
@@ -896,7 +896,7 @@ TGridResult *TAlienCollection::GetGridResult(const char *filename,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return kTRUE if comparator overlaps with this
-/// all objects in this collection, which are not defined in the <comparator> collection are removed.
+/// all objects in this collection, which are not defined in the `<comparator>` collection are removed.
 
 Bool_t TAlienCollection::OverlapCollection(TGridCollection * comparator)
 {
@@ -930,7 +930,7 @@ loopagain:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// adds <addcollection> to this collection - equal elements are skipped
+/// adds `<addcollection>` to this collection - equal elements are skipped
 
 void TAlienCollection::Add(TGridCollection * addcollection)
 {
@@ -964,7 +964,7 @@ leaveloop:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// adds <addcollection> to this collection - NO check for identical elements
+/// adds `<addcollection>` to this collection - NO check for identical elements
 
 void TAlienCollection::AddFast(TGridCollection * addcollection)
 {
@@ -1036,7 +1036,7 @@ Bool_t TAlienCollection::LookupSUrls(Bool_t verbose)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the 'stage' method for all files in this collection (trigger staging).
-/// The <bulk> stage method is currently not working.
+/// The `<bulk>` stage method is currently not working.
 
 Bool_t TAlienCollection::Stage(Bool_t bulk,Option_t* option)
 {
@@ -1110,7 +1110,7 @@ Bool_t TAlienCollection::Stage(Bool_t bulk,Option_t* option)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Run an online check if files are currently accessible (staged) or offline (to be staged).
-/// The <bulk> check is currently not working.
+/// The `<bulk>` check is currently not working.
 
 Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
 {
@@ -1274,9 +1274,9 @@ Bool_t TAlienCollection::CheckIfOnline(Bool_t bulk)
 /// Exports the contens of the TAlienCollection into an XML formatted file.
 /// By default exports only selected files. By default exports only accessible (online) files.
 /// You can change this behaviour by specifying online=kFALSE or selected=kFALSE.
-/// <name> specifies a name you want to assign to this collection.
-/// <comment> can be a user comment to this collection.
-/// If <exporturl>="" the collection is exported to the URL which was stored inside the collection or
+/// `<name>` specifies a name you want to assign to this collection.
+/// `<comment>` can be a user comment to this collection.
+/// If `<exporturl>`="" the collection is exported to the URL which was stored inside the collection or
 /// was specified by the ExportUrl(const char* url) method.
 
 Bool_t TAlienCollection::ExportXML(const char *exporturl, Bool_t selected, Bool_t online,
