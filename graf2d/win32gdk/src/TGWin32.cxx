@@ -2687,7 +2687,7 @@ void TGWin32::RescaleWindow(int wid, unsigned int w, unsigned int h)
                                        w, h, gdk_visual_get_best_depth());
       }
       for (i = 0; i < kMAXGC; i++) {
-         gdk_gc_set_clip_mask(gGClist[i], None);
+         gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
       }
       SetColor(gGCpxmp, 0);
       gdk_win32_draw_rectangle(gTws->buffer, gGCpxmp, 1, 0, 0, w, h);
@@ -3052,7 +3052,7 @@ void TGWin32::SetDoubleBufferON()
       SetColor(gGCpxmp, 1);
    }
    for (int i = 0; i < kMAXGC; i++) {
-      gdk_gc_set_clip_mask(gGClist[i], None);
+      gdk_gc_set_clip_mask(gGClist[i], (GdkBitmap *)None);
    }
    gTws->double_buffer = 1;
    gTws->drawing = gTws->buffer;

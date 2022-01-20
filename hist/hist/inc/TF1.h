@@ -465,7 +465,7 @@ public:
    }
    virtual TString  GetExpFormula(Option_t *option = "") const
    {
-      return (fFormula) ? fFormula->GetExpFormula(option) : "";
+      return (fFormula) ? fFormula->GetExpFormula(option) : TString();
    }
    virtual const TObject *GetLinearPart(Int_t i) const
    {
