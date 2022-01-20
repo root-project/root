@@ -3990,13 +3990,13 @@ JSROOT.define(['d3'], (d3) => {
          prereq += ";v7gpad";
       else if (handle.direct)
          prereq += ";gpad";
-      let script = handle.script || "";
-      if (script) script = script.split(";");
+      if (handle.script)
+         prereq += ";" + handle.script;
 
-      if (!prereq && !script)
+      if (!prereq)
          return Promise.reject(Error(`Prerequicities to load ${funcname} are not specified`));
 
-      return JSROOT.require(prereq).then(() => JSROOT.loadScript(script)).then(() => {
+      return JSROOT.require(prereq).then(() => {
          let func = JSROOT.findFunction(funcname);
          if (!func)
             return Promise.reject(Error(`Fail to find function ${funcname} after loading ${prereq}`));
