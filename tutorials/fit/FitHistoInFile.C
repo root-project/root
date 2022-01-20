@@ -90,7 +90,7 @@ void FitRoutine(TCanvas* c1, TH1* histo, float fitxmin, float fitxmax, TString f
 
    const double binwidth = histo->GetXaxis()->GetBinWidth(1);
    const double integral = signalFcn.Integral(0.,3.);
-   cout << "number of signal events = " << integral/binwidth << " " << binwidth<< endl;
+   std::cout << "number of signal events = " << integral/binwidth << " " << binwidth<< std::endl;
 
    // draw the legend
    TLegend legend(0.15,0.7,0.28,0.85);
@@ -138,7 +138,7 @@ void FitHistoInFile() {
    TH1D* histo= nullptr;
    f->GetObject("histo",histo);
    if (!histo){
-      cout << "histo not found"<<endl;
+      std::cout << "histo not found" << std::endl;
       return;
    }
    histo->SetMarkerStyle(21);

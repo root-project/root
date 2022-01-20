@@ -19,7 +19,7 @@
 #include "TRecorder.h"
 #include "Riostream.h"
 
-int file_size(char *filename)
+int file_size(const char *filename)
 {
    FileStat_t fs;
    gSystem->GetPathInfo(filename, fs);
@@ -28,7 +28,7 @@ int file_size(char *filename)
 
 void fitpanel_playback()
 {
-   r = new TRecorder();
+   auto * r = new TRecorder();
    r->Replay("http://root.cern.ch/files/fitpanel_playback.root");
 
    // wait for the recorder to finish the replay
@@ -51,39 +51,39 @@ void fitpanel_playback()
    int Step5_Size   =  file_size("Step5.png");
 
 
-   cout << "**********************************************************************" <<endl;
-   cout << "*  Report of fitpanel_playback.C                                     *" <<endl;
-   cout << "**********************************************************************" <<endl;
+   std::cout << "**********************************************************************" << std::endl;
+   std::cout << "*  Report of fitpanel_playback.C                                     *" << std::endl;
+   std::cout << "**********************************************************************" << std::endl;
 
    if (TMath::Abs(Step1_Ref-Step1_Size) <= Step_Err) {
-      cout << "Step1: ............................................................ OK" <<endl;
+      std::cout << "Step1: ............................................................ OK" << std::endl;
    } else {
-      cout << "Step1: ........................................................ FAILED" <<endl;
+      std::cout << "Step1: ........................................................ FAILED" << std::endl;
    }
 
    if (TMath::Abs(Step2_Ref-Step2_Size) <= Step_Err) {
-      cout << "Step2: ............................................................ OK" <<endl;
+      std::cout << "Step2: ............................................................ OK" << std::endl;
    } else {
-      cout << "Step2: ........................................................ FAILED" <<endl;
+      std::cout << "Step2: ........................................................ FAILED" << std::endl;
    }
 
    if (TMath::Abs(Step3_Ref-Step3_Size) <= Step_Err) {
-      cout << "Step3: ............................................................ OK" <<endl;
+      std::cout << "Step3: ............................................................ OK" << std::endl;
    } else {
-      cout << "Step3: ........................................................ FAILED" <<endl;
+      std::cout << "Step3: ........................................................ FAILED" << std::endl;
    }
 
    if (TMath::Abs(Step4_Ref-Step4_Size) <= Step_Err) {
-      cout << "Step4: ............................................................ OK" <<endl;
+      std::cout << "Step4: ............................................................ OK" << std::endl;
    } else {
-      cout << "Step4: ........................................................ FAILED" <<endl;
+      std::cout << "Step4: ........................................................ FAILED" << std::endl;
    }
 
    if (TMath::Abs(Step5_Ref-Step5_Size) <= Step_Err) {
-      cout << "Step5: ............................................................ OK" <<endl;
+      std::cout << "Step5: ............................................................ OK" << std::endl;
    } else {
-      cout << "Step5: ........................................................ FAILED" <<endl;
+      std::cout << "Step5: ........................................................ FAILED" << std::endl;
    }
-   cout << "**********************************************************************" <<endl;
+   std::cout << "**********************************************************************" << std::endl;
 
 }

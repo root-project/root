@@ -174,7 +174,3 @@ int line3Dfit()
    l0->Draw("same");
    return 0;
 }
-
-int main() {
-   return line3Dfit();
-}
