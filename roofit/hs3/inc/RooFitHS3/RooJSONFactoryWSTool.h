@@ -50,7 +50,7 @@ public:
       std::map<std::string, std::string> proxies;
    };
    struct ImportExpression {
-      TClass *tclass;
+      TClass *tclass = nullptr;
       std::vector<std::string> arguments;
    };
 
