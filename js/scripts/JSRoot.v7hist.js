@@ -64,8 +64,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
     * @private
     */
 
-   function RHistPainter(divid, histo) {
-      JSROOT.ObjectPainter.call(this, divid, histo);
+   function RHistPainter(dom, histo) {
+      JSROOT.ObjectPainter.call(this, dom, histo);
       this.csstype = "hist";
       this.draw_content = true;
       this.nbinsx = 0;
@@ -1203,13 +1203,13 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          this.draw_g.append("svg:path")
                .attr("d", barsl)
                .call(this.fillatt.func)
-               .style("fill", d3.rgb(this.fillatt.color).brighter(0.5).toString());
+               .style("fill", d3.rgb(this.fillatt.color).brighter(0.5).formatHex());
 
       if (barsr.length > 0)
          this.draw_g.append("svg:path")
                .attr("d", barsr)
                .call(this.fillatt.func)
-               .style("fill", d3.rgb(this.fillatt.color).darker(0.5).toString());
+               .style("fill", d3.rgb(this.fillatt.color).darker(0.5).formatHex());
    }
 
    /** @summary Draw histogram as filled errors
@@ -1246,7 +1246,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
       this.draw_g.append("svg:path")
                  .attr("d", path1.path + path2.path + "Z")
-                 .style("stroke", "none")
                  .call(this.fillatt.func);
    }
 
@@ -1492,8 +1491,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             let gry0 = Math.round(funcs.gry(0));
             if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
          }
-         close_path = "L"+currx+","+h0 + "L"+startx+","+h0 + "Z";
-         if (res.length>0) res += close_path;
+         close_path = `L${currx},${h0}H{startx}Z`;
+         if (res.length > 0) res += close_path;
       }
 
       if (draw_markers || show_line) {
@@ -1510,20 +1509,18 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          if ((hints_err !== null) && (hints_err.length > 0))
                this.draw_g.append("svg:path")
                    .attr("d", hints_err)
-                   .attr("stroke", "none")
-                   .attr("fill", "none")
-                   .attr("pointer-events", "visibleFill");
+                   .style("fill", "none")
+                   .style("pointer-events", JSROOT.batch_mode ? null : "visibleFill");
 
          if ((path_line !== null) && (path_line.length > 0)) {
             if (!this.fillatt.empty())
                this.draw_g.append("svg:path")
                      .attr("d", options.Fill ? (path_line + close_path) : res)
-                     .attr("stroke", "none")
                      .call(this.fillatt.func);
 
             this.draw_g.append("svg:path")
                    .attr("d", path_line)
-                   .attr("fill", "none")
+                   .style("fill", "none")
                    .call(this.lineatt.func);
          }
 
@@ -1911,9 +1908,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.callDrawFunc(reason);
    }
 
-   let drawHist1 = (divid, histo, opt) => {
+   /** @summary draw RH1 object
+     * @memberof JSROOT.v7
+     * @private */
+   function drawHist1(dom, histo, opt) {
       // create painter and add it to canvas
-      let painter = new RH1Painter(divid, histo);
+      let painter = new RH1Painter(dom, histo);
 
       return jsrp.ensureRCanvas(painter).then(() => {
 
@@ -2215,6 +2215,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       }
    }
 
+   /** @summary Count statistic */
    RH2Painter.prototype.countStat = function(cond) {
       let histo = this.getHisto(),
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
@@ -2272,6 +2273,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return res;
    }
 
+   /** @summary Fill statistic into statbox */
    RH2Painter.prototype.fillStatistic = function(stat, dostat /*, dofit*/) {
 
       let data = this.countStat(),
@@ -2359,7 +2361,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                continue;
             }
 
-            cmd1 = "M"+handle.grx[i]+","+handle.gry[j];
+            cmd1 = `M${handle.grx[i]},${handle.gry[j]}`;
 
             dy = (handle.gry[j+dj] - handle.gry[j]) || -1;
 
@@ -2371,7 +2373,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                entry.y2 = handle.gry[j] + dy;
                continue;
             } else {
-               cmd2 = "m" + (handle.grx[i]-entry.x) + "," + (handle.gry[j]-entry.y);
+               cmd2 = `m${handle.grx[i]-entry.x},${handle.gry[j]-entry.y}`;
                entry.path += (cmd2.length < cmd1.length) ? cmd2 : cmd1;
             }
             if (last_entry) flush_last_entry();
@@ -2381,7 +2383,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                entry.y2 = handle.gry[j] + dy;
                last_entry = entry;
             } else {
-               entry.path += "h"+dx + "v"+dy + "h"+(-dx) + "z";
+               entry.path += `h${dx}v${dy}h${-dx}z`;
             }
          }
          if (last_entry) flush_last_entry();
@@ -2391,7 +2393,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
         if (entry)
            this.draw_g
                .append("svg:path")
-               .attr("fill", handle.palette.getColor(colindx))
+               .style("fill", handle.palette.getColor(colindx))
                .attr("d", entry.path);
       });
 
@@ -2671,7 +2673,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          this.draw_g
              .append("svg:path")
              .attr("d", dd)
-             .style('stroke','none')
              .style("fill", palette.getColor(0));
       }
 
@@ -2699,8 +2700,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
             if (lineatt)
                elem.call(lineatt.func);
-            else
-               elem.style('stroke','none');
          }
       );
 
@@ -2709,6 +2708,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       return handle;
    }
 
+   /** @summary Create polybin */
    RH2Painter.prototype.createPolyBin = function(pmain, bin, text_pos) {
       let cmd = "", ngr, ngraphs = 1, gr = null,
           funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y);
@@ -2818,7 +2818,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          if (colPaths[colindx]) {
             item = this.draw_g
                      .append("svg:path")
-                     .attr("fill", colindx ? palette.getColor(colindx) : "none")
+                     .style("fill", colindx ? palette.getColor(colindx) : "none")
                      .attr("d", colPaths[colindx]);
             if (this.options.Line)
                item.call(this.lineatt.func);
@@ -2847,7 +2847,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             this.drawText({ x: bin._midx, y: bin._midy, text: lbl, latex: 0, draw_g: text_g });
          }
 
-         this.finishTextDrawing(text_g);
+         this.finishTextDrawing(text_g, true);
       }
 
       return { poly: true };
@@ -2901,7 +2901,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             this.drawText({ align: 22, x: posx, y: posy, width: sizex, height: sizey, text: lbl, latex: 0, draw_g: text_g });
          }
 
-      this.finishTextDrawing(text_g);
+      this.finishTextDrawing(text_g, true);
 
       handle.hide_only_zeros = true; // text drawing suppress only zeros
 
@@ -3063,25 +3063,21 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          let elem = this.draw_g.append("svg:path")
                                .attr("d", res)
                                .call(this.fillatt.func);
-         if ((this.options.BoxStyle === 11) || !this.fillatt.empty())
-            elem.style('stroke','none');
-         else
+         if ((this.options.BoxStyle !== 11) && this.fillatt.empty())
             elem.call(this.lineatt.func);
       }
 
       if ((btn1.length > 0) && this.fillatt.hasColor())
          this.draw_g.append("svg:path")
                     .attr("d", btn1)
-                    .style("stroke","none")
                     .call(this.fillatt.func)
-                    .style("fill", d3.rgb(this.fillatt.color).brighter(0.5).toString());
+                    .style("fill", d3.rgb(this.fillatt.color).brighter(0.5).formatHex());
 
       if (btn2.length > 0)
          this.draw_g.append("svg:path")
                     .attr("d", btn2)
-                    .style("stroke","none")
                     .call(this.fillatt.func)
-                    .style("fill", !this.fillatt.hasColor() ? 'red' : d3.rgb(this.fillatt.color).darker(0.5).toString());
+                    .style("fill", !this.fillatt.hasColor() ? 'red' : d3.rgb(this.fillatt.color).darker(0.5).formatHex());
 
       if (cross.length > 0) {
          let elem = this.draw_g.append("svg:path")
@@ -3089,8 +3085,6 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                                .style("fill", "none");
          if (!this.lineatt.empty())
             elem.call(this.lineatt.func);
-         else
-            elem.style('stroke','black');
       }
 
       return handle;
@@ -3216,7 +3210,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
           scale = this.options.ScatCoef * ((this.gmaxbin) > 2000 ? 2000. / this.gmaxbin : 1.),
           di = handle.stepi, dj = handle.stepj;
 
-      JSROOT.seed(handle.sumz);
+      let rnd = new JSROOT.TRandom(handle.sumz);
 
       if (scale*handle.sumz < 1e5) {
          // one can use direct drawing of scatter plot without any patterns
@@ -3237,8 +3231,8 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
                for (k = 0; k < npix; ++k)
                   path += this.markeratt.create(
-                            Math.round(handle.grx[i] + cw * JSROOT.random()),
-                            Math.round(handle.gry[j+1] + ch * JSROOT.random()));
+                            Math.round(handle.grx[i] + cw * rnd.random()),
+                            Math.round(handle.gry[j+1] + ch * rnd.random()));
             }
          }
 
@@ -3309,16 +3303,16 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
               pattern.selectAll("*").remove();
 
            let npix = Math.round(factor*cntr[colindx]*cell_w[colindx]*cell_h[colindx]);
-           if (npix<1) npix = 1;
+           if (npix < 1) npix = 1;
 
            let arrx = new Float32Array(npix), arry = new Float32Array(npix);
 
-           if (npix===1) {
+           if (npix === 1) {
               arrx[0] = arry[0] = 0.5;
            } else {
-              for (let n=0;n<npix;++n) {
-                 arrx[n] = JSROOT.random();
-                 arry[n] = JSROOT.random();
+              for (let n = 0; n < npix; ++n) {
+                 arrx[n] = rnd.random();
+                 arry[n] = rnd.random();
               }
            }
 
@@ -3328,7 +3322,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
            let path = "";
 
-           for (let n=0;n<npix;++n)
+           for (let n = 0; n < npix; ++n)
               path += this.markeratt.create(arrx[n] * cell_w[colindx], arry[n] * cell_h[colindx]);
 
            pattern.attr("width", cell_w[colindx])
@@ -3340,7 +3334,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
            this.draw_g
                .append("svg:path")
                .attr("scatter-index", colindx)
-               .attr("fill", 'url(#' + pattern.attr("id") + ')')
+               .style("fill", 'url(#' + pattern.attr("id") + ')')
                .attr("d", colPaths[colindx]);
         }
 
@@ -3760,9 +3754,12 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.callDrawFunc(reason);
    }
 
-   let drawHist2 = (divid, obj, opt) => {
+   /** @summary draw RH2 object
+     * @memberof JSROOT.v7
+     * @private */
+   function drawHist2(dom, obj, opt) {
       // create painter and add it to canvas
-      let painter = new RH2Painter(divid, obj);
+      let painter = new RH2Painter(dom, obj);
 
       return jsrp.ensureRCanvas(painter).then(() => {
 
@@ -3811,26 +3808,29 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    // =================================================================================
 
-   let drawHistDisplayItem = (divid, obj, opt) => {
+   /** @summary draw RHistDisplayItem  object
+     * @memberof JSROOT.v7
+     * @private */
+   function drawHistDisplayItem(dom, obj, opt) {
       if (!obj)
          return null;
 
       if (obj.fAxes.length == 1)
-         return drawHist1(divid, obj, opt);
+         return drawHist1(dom, obj, opt);
 
       if (obj.fAxes.length == 2)
-         return drawHist2(divid, obj, opt);
+         return drawHist2(dom, obj, opt);
 
       if (obj.fAxes.length == 3)
-         return JSROOT.require("v7hist3d").then(() => JSROOT.v7.drawHist3(divid, obj, opt));
+         return JSROOT.require("v7hist3d").then(() => JSROOT.v7.drawHist3(dom, obj, opt));
 
       return null;
    }
 
    // =============================================================
 
-   function RHistStatsPainter(divid, palette, opt) {
-      JSROOT.v7.RPavePainter.call(this, divid, palette, opt, "stats");
+   function RHistStatsPainter(dom, palette, opt) {
+      JSROOT.v7.RPavePainter.call(this, dom, palette, opt, "stats");
    }
 
    RHistStatsPainter.prototype = Object.create(JSROOT.v7.RPavePainter.prototype);
@@ -4038,8 +4038,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
       this.drawPave();
    }
 
-   function drawHistStats(divid, stats, opt) {
-      let painter = new RHistStatsPainter(divid, stats, opt);
+   /** @summary draw RHistStats object
+     * @memberof JSROOT.v7
+     * @private */
+   function drawHistStats(dom, stats, opt) {
+      let painter = new RHistStatsPainter(dom, stats, opt);
 
       return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
    }

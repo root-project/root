@@ -192,7 +192,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    // required only for symbols.html to generate list of scale for symbols
    ltx.symbols_map = symbols_map;
 
-
    // array with relative width of base symbols from range 32..126
    const base_symbols_width = [453,535,661,973,955,1448,1242,324,593,596,778,1011,431,570,468,492,947,885,947,947,947,947,947,947,947,947,511,495,980,1010,987,893,1624,1185,1147,1193,1216,1080,1028,1270,1274,531,910,1177,1004,1521,1252,1276,1111,1276,1164,1056,1073,1215,1159,1596,1150,1124,1065,540,591,540,837,874,572,929,972,879,973,901,569,967,973,453,458,903,453,1477,973,970,972,976,638,846,548,973,870,1285,884,864,835,656,430,656,1069];
 
@@ -258,7 +257,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       { name: "#||{", braces: "||" }
    ];
 
+   // taken from: https://sites.math.washington.edu/~marshall/cxseminar/symbol.htm, starts from 33
+   const symbolsMap = [0,8704,0,8707,0,0,8717,0,0,8727,0,0,8722,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,8773,913,914,935,916,917,934,915,919,921,977,922,923,924,925,927,928,920,929,931,932,933,962,937,926,936,918,0,8756,0,8869,0,0,945,946,967,948,949,966,947,951,953,981,954,955,956,957,959,960,952,961,963,964,965,982,969,958,968,950,0,402,0,8764,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,978,8242,8804,8260,8734,0,9827,9830,9829,9824,8596,8592,8593,8594,8595,0,0,8243,8805,0,8733,8706,8729,0,8800,8801,8776,8230,0,0,8629,8501,8465,8476,8472,8855,8853,8709,8745,8746,8835,8839,8836,8834,8838,8712,8713,8736,8711,0,0,8482,8719,8730,8901,0,8743,8744,8660,8656,8657,8658,8659,9674,9001,0,0,8482,8721,0,0,0,0,0,0,0,0,0,0,8364,9002,8747,8992,0,8993];
 
+   // taken from http://www.alanwood.net/demos/wingdings.html, starts from 33
+   const wingdingsMap = [128393,9986,9985,128083,128365,128366,128367,128383,9990,128386,128387,128234,128235,128236,128237,128193,128194,128196,128463,128464,128452,8987,128430,128432,128434,128435,128436,128427,128428,9991,9997,128398,9996,128076,128077,128078,9756,9758,9757,9759,128400,9786,128528,9785,128163,9760,127987,127985,9992,9788,128167,10052,128326,10014,128328,10016,10017,9770,9775,2384,9784,9800,9801,9802,9803,9804,9805,9806,9807,9808,9809,9810,9811,128624,128629,9679,128318,9632,9633,128912,10065,10066,11047,10731,9670,10070,11045,8999,11193,8984,127989,127990,128630,128631,0,9450,9312,9313,9314,9315,9316,9317,9318,9319,9320,9321,9471,10102,10103,10104,10105,10106,10107,10108,10109,10110,10111,128610,128608,128609,128611,128606,128604,128605,128607,183,8226,9642,9898,128902,128904,9673,9678,128319,9642,9723,128962,10022,9733,10038,10036,10041,10037,11216,8982,10209,8977,11217,10026,10032,128336,128337,128338,128339,128340,128341,128342,128343,128344,128345,128346,128347,11184,11185,11186,11187,11188,11189,11190,11191,128618,128619,128597,128596,128599,128598,128592,128593,128594,128595,9003,8998,11160,11162,11161,11163,11144,11146,11145,11147,129128,129130,129129,129131,129132,129133,129135,129134,129144,129146,129145,129147,129148,129149,129151,129150,8678,8680,8679,8681,11012,8691,11008,11009,11011,11010,129196,129197,128502,10004,128503,128505];
+
+   ltx.replaceSymbols = function(s, kind) {
+      let res = "", m = kind == "Wingdings" ? wingdingsMap : symbolsMap;
+      for (let k = 0; k < s.length; ++k) {
+         let code = s.charCodeAt(k),
+             new_code = (code > 32) ? m[code-33] : 0;
+         res += String.fromCodePoint(new_code || code);
+      }
+      return res;
+   }
 
    ltx.translateLaTeX = translateLaTeX;
 
@@ -268,561 +281,16 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       arg.plain = true;
       if (arg.simple_latex)
          arg.text = translateLaTeX(arg.text); // replace latex symbols
-      txt_node.text(arg.text);
+      if (arg.font && arg.font.isSymbol)
+         txt_node.text(ltx.replaceSymbols(arg.text, arg.font.isSymbol));
+      else
+         txt_node.text(arg.text);
    }
 
    /** @summary Check if plain text
      * @private */
    ltx.isPlainText = function(txt) {
       return !txt || ((txt.indexOf("#") < 0) && (txt.indexOf("{") < 0));
-   }
-
-   /** @ummary draw TLatex inside element
-     * @desc attempt to implement subset of TLatex with plain SVG text and tspan elements
-     * @deprecated
-     * @private */
-   ltx.produceOldLatex = function(painter, node, arg, label, curr) {
-
-      if (!curr) {
-         // initial dy = -0.1 is to move complete from very bottom line like with normal text drawing
-         curr = { lvl: 0, x: 0, y: 0, dx: 0, dy: -0.1, fsize: arg.font_size, parent: null };
-         label = arg.text;
-         arg.mainnode = node;
-      }
-
-      const extend_pos = (pos, value) => {
-
-         let dx1, dx2, dy1, dy2;
-
-         if (typeof value == 'string') {
-            if (!pos.rect) pos.rect = { x: pos.x, y: pos.y, height: 0, width: 0 };
-            dx1 = -pos.x;
-            pos.x += approximateLabelWidth(value, arg.font, pos.fsize); // value.length * arg.font.aver_width * pos.fsize;
-            dx2 = pos.x;
-            dy1 = -(pos.y - pos.fsize * 1.1);
-            dy2 = pos.y + pos.fsize * 0.1;
-         } else {
-            if (!pos.rect) pos.rect = JSROOT.extend({}, value);
-            dx1 = -value.x;
-            dx2 = value.x + value.width;
-            dy1 = -value.y;
-            dy2 = value.y + value.height;
-         }
-
-         let rect = pos.rect;
-
-         dx1 += rect.x;
-         dx2 -= (rect.x + rect.width);
-         dy1 += rect.y;
-         dy2 -= (rect.y + rect.height);
-
-         if (dx1 > 0) { rect.x -= dx1; rect.width += dx1; }
-         if (dx2 > 0) rect.width += dx2;
-         if (dy1 > 0) { rect.y -= dy1; rect.height += dy1; }
-         if (dy2 > 0) rect.height += dy2;
-
-         if (pos.parent) return extend_pos(pos.parent, rect);
-
-         // calculate dimensions for the
-         arg.text_rect = rect;
-
-         let h = rect.height, mid = rect.y + rect.height / 2;
-
-         if (h > 0) {
-            arg.mid_shift = -mid / h || 0.001;        // relative shift to get latex middle at given point
-            arg.top_shift = -rect.y / h || 0.001; // relative shift to get latex top at given point
-         }
-      };
-
-      const makeem = value => {
-         if (Math.abs(value) < 1e-2) return null; // very small values not needed, attribute will be removed
-         if (value == Math.round(value)) return Math.round(value) + "em";
-         let res = value.toFixed(2);
-         if (res.indexOf("0.") == 0) res = res.substr(1); else
-            if (res.indexOf("-0.") == 0) res = "-." + res.substr(3);
-         if (res[res.length - 1] == '0') res = res.substr(0, res.length - 1);
-         return res + "em";
-      };
-
-      const get_boundary = (element, approx_rect) => {
-         // actually, it is workaround for getBBox() or getElementBounday,
-         // which is not implemented for tspan element in Firefox
-
-         if (JSROOT.nodejs || !element || element.empty())
-            return approx_rect || { height: 0, width: 0 };
-
-         let important = [], prnt = element.node();
-
-         while (prnt && (prnt != arg.mainnode.node())) {
-            important.push(prnt);
-            prnt = prnt.parentNode;
-         }
-
-         element.selectAll('tspan').each(function() { important.push(this) });
-
-         let tspans = arg.mainnode.selectAll('tspan');
-
-         // this is just workaround to know that many elements are created and in Chrome we need to redo them once again
-         if (tspans.size() > 3) arg.large_latex = true;
-
-         tspans.each(function() { if (important.indexOf(this) < 0) d3.select(this).attr('display', 'none'); });
-
-         let box = jsrp.getElementRect(arg.mainnode, 'bbox');
-
-         tspans.each(function() { if (important.indexOf(this) < 0) d3.select(this).attr('display', null); });
-
-         return box;
-      };
-
-      let isany = false, best, found, foundarg, pos, n, subnode, subnode1, subpos = null, prevsubpos = null;
-
-      while (label) {
-
-         best = label.length; found = null; foundarg = null;
-
-         for (n = 0; n < latex_features.length; ++n) {
-            pos = label.indexOf(latex_features[n].name);
-            if ((pos >= 0) && (pos < best)) { best = pos; found = latex_features[n]; }
-         }
-
-         if (!found && !isany) {
-            let s = translateLaTeX(label);
-            if (!curr.lvl && (s == label)) {
-               // nothing need to be done - can do plain svg text
-               ltx.producePlainText(painter, node, arg);
-               return true;
-            }
-            extend_pos(curr, s);
-
-            if (curr.accent && (s.length == 1)) {
-               let elem = node.append('svg:tspan').text(s),
-                  rect = get_boundary(elem, { width: 10000 }),
-                  w = Math.min(rect.width / curr.fsize, 0.5); // at maximum, 0.5 should be used
-
-               node.append('svg:tspan').attr('dx', makeem(curr.dx - w)).attr('dy', makeem(curr.dy - 0.2)).text(curr.accent);
-               curr.dy = 0.2; // compensate hat
-               curr.dx = Math.max(0.2, w - 0.2); // extra horizontal gap
-               curr.accent = false;
-            } else {
-               node.text(s);
-            }
-            return true;
-         }
-
-         if (best > 0) {
-            let s = translateLaTeX(label.substr(0, best));
-            if (s.length > 0) {
-               extend_pos(curr, s);
-               node.append('svg:tspan')
-                  .attr('dx', makeem(curr.dx))
-                  .attr('dy', makeem(curr.dy))
-                  .text(s);
-               curr.dx = curr.dy = 0;
-            }
-            subpos = null; // indicate that last element is plain
-            delete curr.special; // and any special handling is also over
-            delete curr.next_super_dy; // remove potential shift
-         }
-
-         if (!found) return true;
-
-         // remove preceeding block and tag itself
-         label = label.substr(best + found.name.length);
-
-         subnode1 = subnode = node.append('svg:tspan');
-
-         prevsubpos = subpos;
-
-         subpos = { lvl: curr.lvl + 1, x: curr.x, y: curr.y, fsize: curr.fsize, dx: 0, dy: 0, parent: curr };
-
-         isany = true;
-
-         if (found.arg) {
-            pos = label.indexOf("]{");
-            if (pos < 0) { console.log('missing argument for ', found.name); return false; }
-            foundarg = label.substr(0, pos);
-            if (found.arg == 'int') {
-               foundarg = parseInt(foundarg);
-               if (!Number.isInteger(foundarg)) { console.log('wrong int argument', label.substr(0, pos)); return false; }
-            } else if (found.arg == 'float') {
-               foundarg = parseFloat(foundarg);
-               if (!Number.isFinite(foundarg)) { console.log('wrong float argument', label.substr(0, pos)); return false; }
-            }
-            label = label.substr(pos + 2);
-         }
-
-         let nextdy = curr.dy, nextdx = curr.dx, trav = null,
-            scale = 1, left_brace = "{", right_brace = "}"; // this will be applied to the next element
-
-         curr.dy = curr.dx = 0; // relative shift for elements
-
-         if (found.special) {
-            subnode.attr('dx', makeem(nextdx)).attr('dy', makeem(nextdy)).text(found.special);
-            nextdx = nextdy = 0;
-            curr.special = found;
-
-            let rect = get_boundary(subnode);
-            if (rect.width && rect.height) {
-               found.w = rect.width / curr.fsize;
-               found.h = rect.height / curr.fsize - 0.1;
-            }
-            continue; // just create special node
-         }
-
-         if (found.braces) {
-            // special handling of large braces
-            subpos.left_cont = subnode.append('svg:tspan'); // container for left brace
-            subpos.left = subpos.left_cont.append('svg:tspan').text(found.braces[0]);
-            subnode1 = subnode.append('svg:tspan');
-            subpos.left_rect = { y: curr.y - curr.fsize * 1.1, height: curr.fsize * 1.2, x: curr.x, width: curr.fsize * 0.6 };
-            extend_pos(curr, subpos.left_rect);
-            subpos.braces = found; // indicate braces handling
-            if (found.right) {
-               left_brace = found.name;
-               right_brace = found.right;
-            }
-         } else if (found.deco) {
-            subpos.deco = found.deco;
-         } else if (found.accent) {
-            subpos.accent = found.accent;
-         } else
-            switch (found.name) {
-               case "#color[":
-                  if (painter.getColor(foundarg))
-                     subnode.attr('fill', painter.getColor(foundarg));
-                  break;
-               case "#kern[": // horizontal shift
-                  nextdx += foundarg;
-                  break;
-               case "#lower[": // after vertical shift one need to compensate it back
-                  curr.dy -= foundarg;
-                  nextdy += foundarg;
-                  break;
-               case "scale[":
-                  scale = foundarg;
-                  break;
-               case "#font[":
-                  let subfont = new JSROOT.FontHandler(foundarg);
-                  subfont.setFont(subnode, 'without-size');
-                  break;
-               case "#it{":
-                  curr.italic = true;
-                  trav = curr;
-                  while (trav = trav.parent)
-                     if (trav.italic !== undefined) {
-                        curr.italic = !trav.italic;
-                        break;
-                     }
-                  subnode.attr('font-style', curr.italic ? 'italic' : 'normal');
-                  break;
-               case "#bf{":
-                  curr.bold = true;
-                  trav = curr;
-                  while (trav = trav.parent)
-                     if (trav.bold !== undefined) {
-                        curr.bold = !trav.bold;
-                        break;
-                     }
-                  subnode.attr('font-weight', curr.bold ? 'bold' : 'normal');
-                  break;
-               case "#underline{":
-                  subnode.attr('text-decoration', 'underline');
-                  break;
-               case "#overline{":
-                  subnode.attr('text-decoration', 'overline');
-                  break;
-               case "_{":
-                  scale = 0.6;
-                  subpos.script = 'sub';
-
-                  if (curr.special) {
-                     curr.dx = curr.special.w;
-                     curr.dy = -0.7;
-                     nextdx -= curr.dx;
-                     nextdy -= curr.dy;
-                  } else {
-                     nextdx += 0.1 * scale;
-                     nextdy += 0.4 * scale;
-                     subpos.y += 0.4 * subpos.fsize;
-                     curr.dy = -0.4 * scale; // compensate vertical shift back
-
-                     if (prevsubpos && (prevsubpos.script === 'super')) {
-                        let rect = get_boundary(prevsubpos.node, prevsubpos.rect);
-                        subpos.width_limit = rect.width;
-                        nextdx -= (rect.width / subpos.fsize + 0.1) * scale;
-                     }
-                  }
-                  break;
-               case "^{":
-                  scale = 0.6;
-                  subpos.script = 'super';
-
-                  if (curr.special) {
-                     curr.dx = curr.special.w;
-                     curr.dy = curr.special.h;
-                     nextdx -= curr.dx;
-                     nextdy -= curr.dy;
-                  } else {
-
-                     curr.dy = 0.6 * scale; // compensate vertical shift afterwards
-                     if (curr.next_super_dy) curr.dy -= curr.next_super_dy;
-
-                     nextdx += 0.1 * scale;
-                     nextdy -= curr.dy;
-
-                     subpos.y -= 0.4 * subpos.fsize;
-
-                     if (prevsubpos && (prevsubpos.script === 'sub')) {
-                        let rect = get_boundary(prevsubpos.node, prevsubpos.rect);
-                        subpos.width_limit = rect.width;
-                        nextdx -= (rect.width / subpos.fsize + 0.1) * scale;
-                     }
-                  }
-                  break;
-               case "#frac{":
-               case "#splitline{":
-                  subpos.first = subnode;
-                  subpos.two_lines = true;
-                  subpos.need_middle = (found.name == "#frac{");
-                  subpos.x0 = subpos.x;
-                  nextdy -= 0.6;
-                  curr.dy = -0.6;
-                  break;
-               case "#sqrt{":
-                  foundarg = 2;
-               case "#sqrt[":
-                  subpos.square_root = subnode.append('svg:tspan');
-                  subpos.square_root.append('svg:tspan').text((foundarg == 3) ? '\u221B' : ((foundarg == 4) ? '\u221C' : '\u221A')); // unicode square, cubic and fourth root
-                  subnode1 = subnode.append('svg:tspan');
-                  subpos.sqrt_rect = { y: curr.y - curr.fsize * 1.1, height: curr.fsize * 1.2, x: 0, width: curr.fsize * 0.7 };
-                  extend_pos(curr, subpos.sqrt_rect); // just dummy symbol instead of square root
-                  break;
-            }
-
-         if (scale !== 1) {
-            // handle centrally change of scale factor
-            subnode.attr('font-size', Math.round(scale * 100) + '%');
-            subpos.fsize *= scale;
-            nextdx = nextdx / scale;
-            nextdy = nextdy / scale;
-         }
-
-         if (curr.special && !subpos.script) delete curr.special;
-         delete curr.next_super_dy;
-
-         subpos.node = subnode; // remember node where sublement is build
-
-         while (true) {
-            // loop need to create two lines for #frac or #splitline
-            // normally only one sub-element is created
-
-            // moving cursor with the tspan
-            subpos.x += nextdx * subpos.fsize;
-            subpos.y += nextdy * subpos.fsize;
-
-            subnode.attr('dx', makeem(nextdx)).attr('dy', makeem(nextdy));
-            nextdx = nextdy = 0;
-
-            pos = -1; n = 1;
-
-            while ((n != 0) && (++pos < label.length)) {
-               if (label.indexOf(left_brace, pos) === pos) n++; else
-                  if (label.indexOf(right_brace, pos) === pos) n--;
-            }
-
-            if (n != 0) {
-               console.log('mismatch with open ' + left_brace + ' and close ' + right_brace + ' braces in Latex', label);
-               return false;
-            }
-
-            let sublabel = label.substr(0, pos);
-
-            // if (subpos.square_root) sublabel = "#frac{a}{bc}";
-
-            if (!ltx.produceOldLatex(painter, subnode1, arg, sublabel, subpos)) return false;
-
-            // takeover current possition and deltas
-            curr.x = subpos.x;
-            curr.y = subpos.y;
-
-            curr.dx += subpos.dx * subpos.fsize / curr.fsize;
-            curr.dy += subpos.dy * subpos.fsize / curr.fsize;
-
-            label = label.substr(pos + right_brace.length);
-
-            if (subpos.width_limit) {
-               // special handling for the case when created element does not reach its minimal width
-               // use when super-script and subscript should be combined together
-
-               let rect = get_boundary(subnode1, subpos.rect);
-               if (rect.width < subpos.width_limit)
-                  curr.dx += (subpos.width_limit - rect.width) / curr.fsize;
-               delete subpos.width_limit;
-            }
-
-            if (curr.special) {
-               // case over #sum or #integral one need to compensate width
-               let rect = get_boundary(subnode1, subpos.rect);
-               curr.dx -= rect.width / curr.fsize; // compensate width as much as we can
-            }
-
-            if (subpos.square_root) {
-               // creating cap for square root
-               // while overline symbol does not match with square root, use empty text with overline
-               let sqrt_dy = 0, yscale = 1,
-                   bs = get_boundary(subpos.square_root, subpos.sqrt_rect),
-                   be = get_boundary(subnode1, subpos.rect);
-
-               // we can compare y coordinates while both nodes (root and element) on the same level
-               if ((be.height > bs.height) && (bs.height > 0)) {
-                  yscale = be.height / bs.height * 1.3;
-                  sqrt_dy = ((be.y + be.height) - (bs.y + bs.height)) / curr.fsize / yscale;
-                  subpos.square_root.style('font-size', Math.round(100 * yscale) + '%').attr('dy', makeem(sqrt_dy));
-               }
-
-               // we taking into account only element width
-               let len = be.width / subpos.fsize / yscale,
-                   a = "", nn = Math.round(Math.max(len * 3, 2));
-               while (nn--) a += '\u203E'; // unicode overline
-
-               subpos.square_root.append('svg:tspan').attr("dy", makeem(0)).text(a);
-
-               subpos.square_root.append('svg:tspan').attr("dy", makeem(-sqrt_dy)).attr("dx", makeem(-a.length / 3 - 0.2)).text('\u2009'); // unicode tiny space
-
-               break;
-            }
-
-            if (subpos.deco) {
-
-               // use text-decoration attribute when there are no extra elements inside
-               if (subnode1.selectAll('tspan').size() == 0) {
-                  subnode1.attr('text-decoration', subpos.deco);
-                  break;
-               }
-
-               let be = get_boundary(subnode1, subpos.rect),
-                  len = be.width / subpos.fsize, fact, dy, symb;
-               switch (subpos.deco) {
-                  case "underline": dy = 0.35; fact = 1.2; symb = '\uFF3F'; break; // '\u2014'; // underline
-                  case "overline": dy = -0.35; fact = 3; symb = '\u203E'; break; // overline
-                  default: dy = 0; fact = 1.8; symb = '\u23AF'; break;
-               }
-               let nn = Math.round(Math.max(len * fact, 1)), a = "";
-               while (nn--) a += symb;
-
-               subnode1.append('svg:tspan').attr("dx", makeem(-len - 0.2)).attr("dy", makeem(dy)).text(a);
-               curr.dy -= dy;
-               break;
-            }
-
-            if (subpos.braces) {
-               // handling braces
-
-               let bs = get_boundary(subpos.left_cont, subpos.left_rect),
-                   be = get_boundary(subnode1, subpos.rect),
-                   yscale = 1, brace_dy = 0;
-
-               // console.log('braces height', bs.height, ' entry height', be.height);
-
-               if (1.2 * bs.height < be.height) {
-                  // make scaling
-                  yscale = be.height / bs.height;
-                  // brace_dy = ((be.y+be.height) - (bs.y+bs.height))/curr.fsize/yscale - 0.15;
-                  brace_dy = 0;
-                  subpos.left.style('font-size', Math.round(100 * yscale) + '%').attr('dy', makeem(brace_dy));
-                  // unicode tiny space, used to return cursor on vertical position
-                  subpos.left_cont.append('svg:tspan').attr("dx", makeem(-0.2))
-                     .attr("dy", makeem(-brace_dy * yscale)).text('\u2009');
-                  curr.next_super_dy = -0.3 * yscale; // special shift for next comming superscript
-               }
-
-               subpos.left_rect.y = curr.y;
-               subpos.left_rect.height *= yscale;
-
-               extend_pos(curr, subpos.left_rect); // just dummy symbol instead of right brace for accounting
-
-               let right_cont = subnode.append('svg:tspan')
-                  .attr("dx", makeem(curr.dx))
-                  .attr("dy", makeem(curr.dy));
-
-               curr.dx = curr.dy = 0;
-
-               if (yscale != 1) right_cont.append('svg:tspan').attr("dx", makeem(-0.2)).text('\u2009'); // unicode tiny space if larger brace is used
-
-               let right = right_cont.append('svg:tspan').text(subpos.braces.braces[1]);
-
-               if (yscale != 1) {
-                  right.style('font-size', Math.round(100 * yscale) + '%').attr('dy', makeem(brace_dy));
-                  curr.dy = -brace_dy * yscale; // compensation of right brace
-               }
-
-               break;
-            }
-
-            if (subpos.first && subpos.second) {
-               // when two lines created, adjust horizontal position and place divider if required
-
-               let rect1 = get_boundary(subpos.first, subpos.rect1),
-                   rect2 = get_boundary(subpos.second, subpos.rect),
-                   l1 = rect1.width / subpos.fsize,
-                   l2 = rect2.width / subpos.fsize,
-                   l3 = Math.max(l2, l1);
-
-               if (subpos.need_middle) {
-                  // starting from content len 1.2 two -- will be inserted
-                  l3 = Math.round(Math.max(l3, 1) + 0.3);
-                  let a = "";
-                  while (a.length < l3) a += '\u2014';
-                  node.append('svg:tspan')
-                     .attr("dx", makeem(-0.5 * (l3 + l2)))
-                     .attr("dy", makeem(curr.dy - 0.2))
-                     .text(a);
-                  curr.dy = 0.2; // return to the normal level
-                  curr.dx = 0.2; // extra spacing
-               } else {
-                  curr.dx = 0.2;
-                  if (l2 < l1) curr.dx += 0.5 * (l1 - l2);
-               }
-
-               if (subpos.need_middle || arg.align[0] == 'middle') {
-                  subpos.first.attr("dx", makeem(0.5 * (l3 - l1)));
-                  subpos.second.attr("dx", makeem(-0.5 * (l2 + l1)));
-               } else if (arg.align[0] == 'end') {
-                  if (l1 < l2) subpos.first.attr("dx", makeem(l2 - l1));
-                  subpos.second.attr("dx", makeem(-l2));
-               } else {
-                  subpos.second.attr("dx", makeem(-l1));
-               }
-
-               delete subpos.first;
-               delete subpos.second;
-            }
-
-            if (!subpos.two_lines) break;
-
-            if (label[0] != '{') {
-               console.log('missing { for second line', label);
-               return false;
-            }
-
-            label = label.substr(1);
-
-            subnode = subnode1 = node.append('svg:tspan');
-
-            subpos.two_lines = false;
-            subpos.rect1 = subpos.rect; // remember first rect
-            delete subpos.rect;     // reset rectangle calculations
-            subpos.x = subpos.x0;   // it is used only for SVG, make it more realistic
-            subpos.second = subnode;
-
-            nextdy = curr.dy + 1.6;
-            curr.dy = -0.4;
-            subpos.dx = subpos.dy = 0; // reset variable
-         }
-
-      }
-
-      return true;
    }
 
    /** @ummary translate TLatex and draw inside provided g element
@@ -969,7 +437,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                if (curr.fisze !== curr.font.size)
                   elem.attr("font-size", Math.round(curr.fsize));
 
-               elem.text(s);
+               if (curr.font && curr.font.isSymbol)
+                  elem.text(ltx.replaceSymbols(s, curr.font.isSymbol));
+               else
+                  elem.text(s);
 
                let rect = !JSROOT.nodejs && !JSROOT.settings.ApproxTextSize && !arg.fast ? jsrp.getElementRect(elem, 'nopadding') :
                              { height: curr.fsize * 1.2, width: approximateLabelWidth(s, curr.font, curr.fsize) }
@@ -1376,7 +847,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return parseLatex(node, arg, arg.text, pos);
    }
 
-
    /** @summary Load MathJax functionality,
      * @desc one need not only to load script but wait for initialization
      * @private */
@@ -1414,10 +884,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                enableMenu: false
             },
             loader: {
-               load: ['[tex]/color']
+               load: ['[tex]/color', '[tex]/upgreek', '[tex]/mathtools', '[tex]/physics']
             },
             tex: {
-               packages: {'[+]': ['color']}
+               packages: {'[+]': ['color', 'upgreek', 'mathtools', 'physics']}
             },
             svg: svg_config,
             startup: {
@@ -1437,10 +907,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          // return Promise with mathjax loading
          mj.init({
             loader: {
-               load: ['input/tex', 'output/svg', '[tex]/color']
+               load: ['input/tex', 'output/svg', '[tex]/color', '[tex]/upgreek', '[tex]/mathtools', '[tex]/physics']
              },
              tex: {
-                packages: {'[+]': ['color']}
+                packages: {'[+]': ['color', 'upgreek', 'mathtools', 'physics']}
              },
              svg: svg_config,
              config: {
@@ -1535,6 +1005,33 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          ' ': "\\;"
     };
 
+    const mathjax_remap = {
+      'upDelta': "Updelta",
+      'upGamma': "Upgamma",
+      'upLambda': "Uplambda",
+      'upOmega': "Upomega",
+      'upPhi': "Upphi",
+      'upPi': "Uppi",
+      'upPsi': "Uppsi",
+      'upSigma': "Upsigma",
+      'upTheta': "Uptheta",
+      'upUpsilon': "Upupsilon",
+      'upXi': "Upxi",
+      'notcong': "ncong",
+      'notgeq': "ngeq",
+      'notgr': "ngtr",
+      'notless': "nless",
+      'notleq': "nleq",
+      'notsucc': "nsucc",
+      'notprec': "nprec",
+      'notsubseteq': "nsubseteq",
+      'notsupseteq': "nsupseteq",
+      'openclubsuit': "clubsuit",
+      'openspadesuit': "spadesuit",
+      'dasharrow': "dashrightarrow",
+      'downuparrows': "updownarrow"
+    };
+
    /** @summary Function translates ROOT TLatex into MathJax format
      * @private */
    const translateMath = (str, kind, color, painter) => {
@@ -1581,6 +1078,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          str = clean;
       } else {
          str = str.replace(/\\\^/g, "\\hat");
+         for (let x in mathjax_remap)
+            str = str.replace(new RegExp('\\\\' + x, 'g'), '\\' + mathjax_remap[x]);
       }
 
       if (typeof color != 'string') return str;
@@ -1668,8 +1167,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (arg.align[1] == 'bottom') arg[ny] += sign.y * (arg.height - mh); else
             if (arg.align[1] == 'bottom-base') arg[ny] += sign.y * (arg.height - mh - arg.valign);
 
-      let trans = "translate(" + arg.x + "," + arg.y + ")";
-      if (arg.rotate) trans += " rotate(" + arg.rotate + ")";
+      let trans = `translate(${arg.x},${arg.y})`;
+      if (arg.rotate) trans += ` rotate(${arg.rotate})`;
 
       mj_node.attr('transform', trans).attr('visibility', null);
    }
