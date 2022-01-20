@@ -58,7 +58,7 @@ if(MSVC)
     add_custom_command(TARGET Event POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/Event.pcm
                                      ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/Event.pcm)
-  endif()                                                           
+  endif()
 endif()
 ROOT_EXECUTABLE(eventexe MainEvent.cxx LIBRARIES Event RIO Tree TreePlayer Hist Net)
 ROOT_ADD_TEST(test-event COMMAND eventexe)
@@ -240,7 +240,7 @@ if(ROOT_roofit_FOUND)
     ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit RooFitMore)
   else()
     ROOT_EXECUTABLE(stressRooFit stressRooFit.cxx LIBRARIES RooFit )
-  endif()  
+  endif()
   configure_file(stressRooFit_ref.root stressRooFit_ref.root COPYONLY)
   ROOT_ADD_TEST(test-stressroofit COMMAND stressRooFit FAILREGEX "FAILED|Error in" LABELS longtest)
   ROOT_ADD_TEST(test-stressroofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressRooFit.cxx

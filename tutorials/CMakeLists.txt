@@ -275,7 +275,7 @@ else()
   if (NOT tmva-sofie)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
   endif()
-  
+
 endif()
 
 if (NOT ROOT_pythia6_FOUND)

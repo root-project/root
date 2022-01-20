@@ -17,7 +17,7 @@ set(CEF_sources src/simple_app.cxx src/gui_handler.cxx src/RCefWebDisplayHandle.
 set(CEF_root $ENV{CEF_ROOT})
 
 # ensure bin directory is exists where CEF files should be copied
-file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
 if(ROOT_ARCHITECTURE MATCHES macosx)
    set(CEF_platform src/gui_handler_mac.mm)
@@ -25,8 +25,8 @@ if(ROOT_ARCHITECTURE MATCHES macosx)
    set(CEF_LIBRARY ${CEF_RELEASE_DIR}/Chromium\ Embedded\ Framework)
    set(CEF_LIB_DEPENDENCY "-framework Foundation")
    set(CEF_DLL_WRAPPER ${CEF_root}/build/libcef_dll_wrapper/libcef_dll_wrapper.a)
-   file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/Frameworks/Chromium\ Embedded\ Framework.framework)
-   file(COPY ${CEF_RELEASE_DIR} DESTINATION ${CMAKE_BINARY_DIR}/Frameworks/)
+   file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/Frameworks/Chromium\ Embedded\ Framework.framework)
+   file(COPY ${CEF_RELEASE_DIR} DESTINATION ${PROJECT_BINARY_DIR}/Frameworks/)
 elseif(MSVC)
    set(CEF_platform src/gui_handler_win.cc)
    set(CEF_RESOURCES ${CEF_root}/Resources)

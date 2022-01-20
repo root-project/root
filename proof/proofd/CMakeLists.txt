@@ -76,13 +76,13 @@ else()
 
   ROOT_EXECUTABLE(proofexecv
     proofexecv.cxx
-    ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
-    ${CMAKE_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
+    ${PROJECT_SOURCE_DIR}/net/rpdutils/src/rpdconn.cxx
+    ${PROJECT_SOURCE_DIR}/net/rpdutils/src/rpdpriv.cxx
   )
 
   target_include_directories(proofexecv PRIVATE
-    ${CMAKE_SOURCE_DIR}/core/base/inc    # for RConfig.hxx
-    ${CMAKE_BINARY_DIR}/ginclude         # for RConfigure.h
+    ${PROJECT_SOURCE_DIR}/core/base/inc    # for RConfig.hxx
+    ${PROJECT_BINARY_DIR}/ginclude         # for RConfigure.h
   )
 
 endif()

@@ -11,8 +11,8 @@ ROOT_OBJECT_LIBRARY(Lz4 src/ZipLZ4.cxx)
 target_include_directories(Lz4 PRIVATE
    ${LZ4_INCLUDE_DIR}
    ${xxHash_INCLUDE_DIR}
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${PROJECT_SOURCE_DIR}/core/foundation/inc
+   ${PROJECT_BINARY_DIR}/ginclude
 )
 
 ROOT_INSTALL_HEADERS()

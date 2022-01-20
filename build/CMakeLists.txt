@@ -13,7 +13,7 @@ if(WIN32)
   ROOT_EXECUTABLE(bindexplib
     win/bindexplib/bindexplib.cxx
   )
-  file(COPY win/w32pragma.h DESTINATION ${CMAKE_BINARY_DIR}/include/)
+  file(COPY win/w32pragma.h DESTINATION ${PROJECT_BINARY_DIR}/include/)
 endif()
 
 ROOT_EXECUTABLE(rmkdepend
@@ -35,7 +35,7 @@ if(NOT MSVC AND _BUILD_TYPE_UPPER MATCHES "DEBUG|RELWITHDEBINFO")
       string(REPLACE ".so-gdb.py" ".so.${ROOT_VERSION}-gdb.py"
         PRETTY_PRINTER_DEST ${PRETTY_PRINTER_DEST})
     endif(soversion)
-    set(PRETTY_PRINTER_DEST ${CMAKE_BINARY_DIR}/lib/${PRETTY_PRINTER_DEST})
+    set(PRETTY_PRINTER_DEST ${PROJECT_BINARY_DIR}/lib/${PRETTY_PRINTER_DEST})
     add_custom_command(OUTPUT ${PRETTY_PRINTER_DEST}
       COMMAND ${CMAKE_COMMAND} -E copy ${PRETTY_PRINTER} ${PRETTY_PRINTER_DEST}
       DEPENDS ${PRETTY_PRINTER})

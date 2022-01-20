@@ -12,15 +12,15 @@ set(nlohmann_json_VERSION "${JSON_VERSION_MAJOR}.${JSON_VERSION_MINOR}.${JSON_VE
 unset(JSON_H)
 
 add_custom_command(
-     OUTPUT ${CMAKE_BINARY_DIR}/include/nlohmann/json.hpp
-     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/builtins/nlohmann/json.hpp ${CMAKE_BINARY_DIR}/include/nlohmann/json.hpp
-     COMMENT "Copying nlohmann/json.hpp header to ${CMAKE_BINARY_DIR}/include"
-     DEPENDS ${CMAKE_SOURCE_DIR}/builtins/nlohmann/json.hpp)
+     OUTPUT ${PROJECT_BINARY_DIR}/include/nlohmann/json.hpp
+     COMMAND ${CMAKE_COMMAND} -E copy ${PROJECT_SOURCE_DIR}/builtins/nlohmann/json.hpp ${PROJECT_BINARY_DIR}/include/nlohmann/json.hpp
+     COMMENT "Copying nlohmann/json.hpp header to ${PROJECT_BINARY_DIR}/include"
+     DEPENDS ${PROJECT_SOURCE_DIR}/builtins/nlohmann/json.hpp)
 
-add_custom_target(builtin_nlohmann_json_incl DEPENDS ${CMAKE_BINARY_DIR}/include/nlohmann/json.hpp)
+add_custom_target(builtin_nlohmann_json_incl DEPENDS ${PROJECT_BINARY_DIR}/include/nlohmann/json.hpp)
 
 set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS builtin_nlohmann_json_incl)
 
-install(FILES ${CMAKE_SOURCE_DIR}/builtins/nlohmann/json.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nlohmann/)
+install(FILES ${PROJECT_SOURCE_DIR}/builtins/nlohmann/json.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nlohmann/)
 
 

@@ -33,15 +33,15 @@ ROOT_OBJECT_LIBRARY(TextInput
 )
 
 target_include_directories(TextInput PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/textinput/src
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_BINARY_DIR}/ginclude
+   ${PROJECT_SOURCE_DIR}/core/textinput/src
+   ${PROJECT_SOURCE_DIR}/core/base/inc
+   ${PROJECT_SOURCE_DIR}/core/clib/inc
+   ${PROJECT_SOURCE_DIR}/core/meta/inc
+   ${PROJECT_SOURCE_DIR}/core/cont/inc
+   ${PROJECT_SOURCE_DIR}/core/gui/inc
+   ${PROJECT_SOURCE_DIR}/core/thread/inc
+   ${PROJECT_SOURCE_DIR}/core/foundation/inc
+   ${PROJECT_BINARY_DIR}/ginclude
 )
 
 ROOT_INSTALL_HEADERS()
