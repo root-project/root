@@ -361,8 +361,8 @@ public:                                                                         
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
 
 
-#define ClassImpUnique(name,key) \
-   namespace ROOT { \
+#define ClassImpUnique(name,key)                                                                        \
+   namespace ROOT {                                                                                     \
       /** \cond HIDDEN_SYMBOLS */ TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
       namespace {                                                                                       \
          /** \cond HIDDEN_SYMBOLS */                                                                    \
