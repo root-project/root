@@ -79,8 +79,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (!hints[n]) continue;
 
             nhints++;
-            
-            if (hint.exact) nexact++; 
+
+            if (hint.exact) nexact++;
 
             for (let l = 0; l < hint.lines.length; ++l)
                maxlen = Math.max(maxlen, hint.lines[l].length);
@@ -98,13 +98,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              title = "", name = "", info = "",
              hint = null, best_dist2 = 1e10, best_hint = null, show_only_best = nhints > 15,
              coordinates = pnt ? Math.round(pnt.x) + "," + Math.round(pnt.y) : "";
-            
+
          // try to select hint with exact match of the position when several hints available
          for (let k = 0; k < (hints ? hints.length : 0); ++k) {
             if (!hints[k]) continue;
             if (!hint) hint = hints[k];
-            
-            // select exact hint if this is the only one  
+
+            // select exact hint if this is the only one
             if (hints[k].exact && (nexact < 2) && (!hint || !hint.exact)) { hint = hints[k]; break; }
 
             if (!pnt || (hints[k].x === undefined) || (hints[k].y === undefined)) continue;
@@ -123,7 +123,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          this.showObjectStatus(name, title, info, coordinates);
-         
+
 
          // end of closing tooltips
          if (!pnt || disable_tootlips || (hints.length === 0) || (maxlen === 0) || (show_only_best && !best_hint)) {
@@ -161,9 +161,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             let bleft = 0.5, bright = 0.5;
 
-            if (viewmode == "left") 
-               bright = 0.7; 
-            else if (viewmode == "right") 
+            if (viewmode == "left")
+               bright = 0.7;
+            else if (viewmode == "right")
                bleft = 0.3;
 
             if (posx <= bleft * frame_rect.width) {
@@ -175,7 +175,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             } else {
                posx = hintsg.property('startx');
             }
-         } 
+         }
 
          if (viewmode !== hintsg.property('viewmode')) {
             hintsg.property('viewmode', viewmode);
@@ -203,14 +203,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          for (let n = 0; n < hints.length; ++n) {
             let hint = hints[n],
                group = hintsg.select(".painter_hint_" + n);
-               
+
             if (show_only_best && (hint !== best_hint)) hint = null;
-               
+
             if (hint === null) {
                group.remove();
                continue;
             }
-            
+
             let was_empty = group.empty();
 
             if (was_empty)
@@ -248,13 +248,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                .attr("y", 0)
                .attr("width", 60)
                .attr("height", hint.height)
-               .attr("fill", "lightgrey")
+               .style("fill", "lightgrey")
                .style("pointer-events", "none");
 
             if (nhints > 1) {
                let col = usecolor1 ? hint.color1 : hint.color2;
                if (col && (col !== 'none'))
-                  r.attr("stroke", col);
+                  r.style("stroke", col);
             }
             r.attr("stroke-width", hint.exact ? 3 : 1);
 
@@ -265,7 +265,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                      .attr("x", wmargin)
                      .attr("y", hmargin + l * textheight * hstep)
                      .attr("dy", ".8em")
-                     .attr("fill", "black")
+                     .style("fill", "black")
                      .style("pointer-events", "none")
                      .call(font.func)
                      .text(hint.lines[l]);
@@ -334,7 +334,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    } // TooltipHandler
 
-   let setPainterTooltipEnabled = (painter,on) => {
+   function setPainterTooltipEnabled(painter,on) {
       if (!painter) return;
 
       let fp = painter.getFramePainter();
@@ -343,107 +343,97 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          fp.processFrameTooltipEvent(null);
       }
       // this is 3D control object
-      if (this.control && (typeof this.control.setTooltipEnabled == 'function'))
-         this.control.setTooltipEnabled(on);
+      if (painter.control && (typeof painter.control.setTooltipEnabled == 'function'))
+         painter.control.setTooltipEnabled(on);
    }
 
+   function detectRightButton(event) {
+      if ('buttons' in event) return event.buttons === 2;
+      if ('which' in event) return event.which === 3;
+      if ('button' in event) return event.button === 2;
+      return false;
+   }
 
    /** @summary Add drag for interactive rectangular elements for painter */
-   function addDragHandler(painter, callback) {
+   function addDragHandler(_painter, arg) {
       if (!JSROOT.settings.MoveResize || JSROOT.batch_mode) return;
 
-      let pthis = painter, drag_rect = null, pp = pthis.getPadPainter();
+      let painter = _painter, drag_rect = null, pp = painter.getPadPainter();
       if (pp && pp._fast_drawing) return;
 
-      function detectRightButton(event) {
-         if ('buttons' in event) return event.buttons === 2;
-         else if ('which' in event) return event.which === 3;
-         else if ('button' in event) return event.button === 2;
-         return false;
-      }
-
-      function rect_width() { return Number(pthis.draw_g.attr("width")); }
-      function rect_height() { return Number(pthis.draw_g.attr("height")); }
-
-      function MakeResizeElements(group, width, height, handler) {
-         function make(cursor, d) {
+      const makeResizeElements = (group, handler) => {
+         const addElement = (cursor, d) => {
             let clname = "js_" + cursor.replace(/[-]/g, '_'),
-               elem = group.select('.' + clname);
+                elem = group.select('.' + clname);
             if (elem.empty()) elem = group.append('path').classed(clname, true);
             elem.style('opacity', 0).style('cursor', cursor).attr('d', d);
             if (handler) elem.call(handler);
-         }
+         };
 
-         make("nw-resize", "M2,2h15v-5h-20v20h5Z");
-         make("ne-resize", "M" + (width - 2) + ",2h-15v-5h20v20h-5 Z");
-         make("sw-resize", "M2," + (height - 2) + "h15v5h-20v-20h5Z");
-         make("se-resize", "M" + (width - 2) + "," + (height - 2) + "h-15v5h20v-20h-5Z");
+         addElement("nw-resize", "M2,2h15v-5h-20v20h5Z");
+         addElement("ne-resize", `M${arg.width-2},2h-15v-5h20v20h-5 Z`);
+         addElement("sw-resize", `M2,${arg.height-2}h15v5h-20v-20h5Z`);
+         addElement("se-resize", `M${arg.width-2},${arg.height-2}h-15v5h20v-20h-5Z`);
 
-         if (!callback.no_change_x) {
-            make("w-resize", "M-3,18h5v" + Math.max(0, height - 2 * 18) + "h-5Z");
-            make("e-resize", "M" + (width + 3) + ",18h-5v" + Math.max(0, height - 2 * 18) + "h5Z");
+         if (!arg.no_change_x) {
+            addElement("w-resize", `M-3,18h5v${Math.max(0,arg.height-2*18)}h-5Z`);
+            addElement("e-resize", `M${arg.width+3},18h-5v${Math.max(0,arg.height-2*18)}h5Z`);
          }
-         if (!callback.no_change_y) {
-            make("n-resize", "M18,-3v5h" + Math.max(0, width - 2 * 18) + "v-5Z");
-            make("s-resize", "M18," + (height + 3) + "v-5h" + Math.max(0, width - 2 * 18) + "v5Z");
+         if (!arg.no_change_y) {
+            addElement("n-resize", `M18,-3v5h${Math.max(0,arg.width-2*18)}v-5Z`);
+            addElement("s-resize", `M18,${arg.height+3}v-5h${Math.max(0,arg.width-2*18)}v5Z`);
          }
-      }
+      };
 
-      function complete_drag() {
+      const complete_drag = (newx, newy, newwidth, newheight) => {
          drag_rect.style("cursor", "auto");
 
-         if (!pthis.draw_g) {
+         if (!painter.draw_g) {
             drag_rect.remove();
             drag_rect = null;
             return false;
          }
 
-         let oldx = Number(pthis.draw_g.attr("x")),
-            oldy = Number(pthis.draw_g.attr("y")),
-            newx = Number(drag_rect.attr("x")),
-            newy = Number(drag_rect.attr("y")),
-            newwidth = Number(drag_rect.attr("width")),
-            newheight = Number(drag_rect.attr("height"));
+         let oldx = arg.x, oldy = arg.y;
 
-         if (callback.minwidth && newwidth < callback.minwidth) newwidth = callback.minwidth;
-         if (callback.minheight && newheight < callback.minheight) newheight = callback.minheight;
+         if (arg.minwidth && newwidth < arg.minwidth) newwidth = arg.minwidth;
+         if (arg.minheight && newheight < arg.minheight) newheight = arg.minheight;
 
-         let change_size = (newwidth !== rect_width()) || (newheight !== rect_height()),
-            change_pos = (newx !== oldx) || (newy !== oldy);
+         let change_size = (newwidth !== arg.width) || (newheight !== arg.height),
+             change_pos = (newx !== oldx) || (newy !== oldy);
 
-         pthis.draw_g.attr('x', newx).attr('y', newy)
-            .attr("transform", "translate(" + newx + "," + newy + ")")
-            .attr('width', newwidth).attr('height', newheight);
+         arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
+
+         painter.draw_g.attr("transform", `translate(${newx},${newy})`);
 
          drag_rect.remove();
          drag_rect = null;
 
-         setPainterTooltipEnabled(pthis, true);
+         setPainterTooltipEnabled(painter, true);
 
-         MakeResizeElements(pthis.draw_g, newwidth, newheight);
+         makeResizeElements(painter.draw_g);
 
          if (change_size || change_pos) {
-            if (change_size && ('resize' in callback)) callback.resize(newwidth, newheight);
-            if (change_pos && ('move' in callback)) callback.move(newx, newy, newx - oldxx, newy - oldy);
+            if (change_size && ('resize' in arg)) arg.resize(newwidth, newheight);
+            if (change_pos && ('move' in arg)) arg.move(newx, newy, newx - oldxx, newy - oldy);
 
             if (change_size || change_pos) {
-               if ('obj' in callback) {
+               if ('obj' in arg) {
                   let rect = pp.getPadRect();
-                  callback.obj.fX1NDC = newx / rect.width;
-                  callback.obj.fX2NDC = (newx + newwidth) / rect.width;
-                  callback.obj.fY1NDC = 1 - (newy + newheight) / rect.height;
-                  callback.obj.fY2NDC = 1 - newy / rect.height;
-                  callback.obj.modified_NDC = true; // indicate that NDC was interactively changed, block in updated
+                  arg.obj.fX1NDC = newx / rect.width;
+                  arg.obj.fX2NDC = (newx + newwidth) / rect.width;
+                  arg.obj.fY1NDC = 1 - (newy + newheight) / rect.height;
+                  arg.obj.fY2NDC = 1 - newy / rect.height;
+                  arg.obj.modified_NDC = true; // indicate that NDC was interactively changed, block in updated
                }
-               if ('redraw' in callback) callback.redraw();
+               if ('redraw' in arg) arg.redraw(arg);
             }
          }
 
          return change_size || change_pos;
       }
 
-      let drag_move = d3.drag().subject(Object),
-          drag_resize = d3.drag().subject(Object);
+      let drag_move = d3.drag().subject(Object);
 
       drag_move
          .on("start", function(evnt) {
@@ -451,7 +441,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             if (jsrp.closeMenu) jsrp.closeMenu(); // close menu
 
-            setPainterTooltipEnabled(pthis, false); // disable tooltip
+            setPainterTooltipEnabled(painter, false); // disable tooltip
 
             evnt.sourceEvent.preventDefault();
             evnt.sourceEvent.stopPropagation();
@@ -459,21 +449,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             let pad_rect = pp.getPadRect();
 
             let handle = {
-               acc_x1: Number(pthis.draw_g.attr("x")),
-               acc_y1: Number(pthis.draw_g.attr("y")),
-               pad_w: pad_rect.width - rect_width(),
-               pad_h: pad_rect.height - rect_height(),
+               x: arg.x, y: arg.y, width: arg.width, height: arg.height,
+               acc_x1: arg.x, acc_y1: arg.y,
+               pad_w: pad_rect.width - arg.width,
+               pad_h: pad_rect.height - arg.height,
                drag_tm: new Date(),
-               path: "v" + rect_height() + "h" + rect_width() + "v" + (-rect_height()) + "z"
+               path: `v${arg.height}h${arg.width}v${-arg.height}z`
             };
 
-            drag_rect = d3.select(pthis.draw_g.node().parentNode).append("path")
+            drag_rect = d3.select(painter.draw_g.node().parentNode).append("path")
                .classed("zoom", true)
-               .attr("x", handle.acc_x1)
-               .attr("y", handle.acc_y1)
-               .attr("width", rect_width())
-               .attr("height", rect_height())
-               .attr("d", "M" + handle.acc_x1 + "," + handle.acc_y1 + handle.path)
+               .attr("d", `M${handle.acc_x1},${handle.acc_y1}${handle.path}`)
                .style("cursor", "move")
                .style("pointer-events", "none") // let forward double click to underlying elements
                .property('drag_handle', handle);
@@ -487,17 +473,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             let handle = drag_rect.property('drag_handle');
 
-            if (!callback.no_change_x)
+            if (!arg.no_change_x)
                handle.acc_x1 += evnt.dx;
-            if (!callback.no_change_y)
+            if (!arg.no_change_y)
                handle.acc_y1 += evnt.dy;
 
-            let x = Math.min(Math.max(handle.acc_x1, 0), handle.pad_w),
-                y = Math.min(Math.max(handle.acc_y1, 0), handle.pad_h);
+            handle.x = Math.min(Math.max(handle.acc_x1, 0), handle.pad_w);
+            handle.y = Math.min(Math.max(handle.acc_y1, 0), handle.pad_h);
 
-            drag_rect.attr("x", x)
-                     .attr("y", y)
-                     .attr("d", "M" + x + "," + y + handle.path);
+            drag_rect.attr("d", `M${handle.x},${handle.y}${handle.path}`);
 
          }).on("end", function(evnt) {
             if (!drag_rect) return;
@@ -506,17 +490,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             let handle = drag_rect.property('drag_handle');
 
-            if (complete_drag() === false) {
+            if (complete_drag(handle.x, handle.y, arg.width, arg.height) === false) {
                let spent = (new Date()).getTime() - handle.drag_tm.getTime();
-               if (callback.ctxmenu && (spent > 600) && pthis.showContextMenu) {
+               if (arg.ctxmenu && (spent > 600) && painter.showContextMenu) {
                   let rrr = resize_se.node().getBoundingClientRect();
-                  pthis.showContextMenu('main', { clientX: rrr.left, clientY: rrr.top });
-               } else if (callback.canselect && (spent <= 600)) {
-                  let pp = pthis.getPadPainter();
-                  if (pp) pp.selectObjectPainter(pthis);
+                  painter.showContextMenu('main', { clientX: rrr.left, clientY: rrr.top });
+               } else if (arg.canselect && (spent <= 600)) {
+                  let pp = painter.getPadPainter();
+                  if (pp) pp.selectObjectPainter(painter);
                }
             }
          });
+
+      let drag_resize = d3.drag().subject(Object);
 
       drag_resize
          .on("start", function(evnt) {
@@ -525,21 +511,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             evnt.sourceEvent.stopPropagation();
             evnt.sourceEvent.preventDefault();
 
-            setPainterTooltipEnabled(pthis, false); // disable tooltip
+            setPainterTooltipEnabled(painter, false); // disable tooltip
 
             let pad_rect = pp.getPadRect();
 
             let handle = {
-               acc_x1: Number(pthis.draw_g.attr("x")),
-               acc_y1: Number(pthis.draw_g.attr("y")),
+               x: arg.x, y: arg.y, width: arg.width, height: arg.height,
+               acc_x1: arg.x, acc_y1: arg.y,
                pad_w: pad_rect.width,
                pad_h: pad_rect.height
             };
 
-            handle.acc_x2 = handle.acc_x1 + rect_width();
-            handle.acc_y2 = handle.acc_y1 + rect_height();
+            handle.acc_x2 = handle.acc_x1 + arg.width;
+            handle.acc_y2 = handle.acc_y1 + arg.height;
 
-            drag_rect = d3.select(pthis.draw_g.node().parentNode)
+            drag_rect = d3.select(painter.draw_g.node().parentNode)
                .append("rect")
                .classed("zoom", true)
                .style("cursor", d3.select(this).style("cursor"))
@@ -558,8 +544,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             let handle = drag_rect.property('drag_handle'),
                dx = evnt.dx, dy = evnt.dy, elem = d3.select(this);
 
-            if (callback.no_change_x) dx = 0;
-            if (callback.no_change_y) dy = 0;
+            if (arg.no_change_x) dx = 0;
+            if (arg.no_change_y) dy = 0;
 
             if (elem.classed('js_nw_resize')) { handle.acc_x1 += dx; handle.acc_y1 += dy; }
             else if (elem.classed('js_ne_resize')) { handle.acc_x2 += dx; handle.acc_y1 += dy; }
@@ -571,23 +557,29 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             else if (elem.classed('js_s_resize')) { handle.acc_y2 += dy; }
 
             let x1 = Math.max(0, handle.acc_x1), x2 = Math.min(handle.acc_x2, handle.pad_w),
-               y1 = Math.max(0, handle.acc_y1), y2 = Math.min(handle.acc_y2, handle.pad_h);
+                y1 = Math.max(0, handle.acc_y1), y2 = Math.min(handle.acc_y2, handle.pad_h);
 
-            drag_rect.attr("x", x1).attr("y", y1).attr("width", Math.max(0, x2 - x1)).attr("height", Math.max(0, y2 - y1));
+            handle.x = Math.min(x1, x2);
+            handle.y = Math.min(y1, y2);
+            handle.width = Math.abs(x2 - x1);
+            handle.height = Math.abs(y2 - y1);
+
+            drag_rect.attr("x", handle.x).attr("y", handle.y).attr("width", handle.width).attr("height", handle.height);
 
          }).on("end", function(evnt) {
             if (!drag_rect) return;
-
             evnt.sourceEvent.preventDefault();
 
-            complete_drag();
+            let handle = drag_rect.property('drag_handle');
+
+            complete_drag(handle.x, handle.y, handle.width, handle.height);
          });
 
-      if (!callback.only_resize)
-         pthis.draw_g.style("cursor", "move").call(drag_move);
+      if (!arg.only_resize)
+         painter.draw_g.style("cursor", "move").call(drag_move);
 
-      if (!callback.only_move)
-         MakeResizeElements(pthis.draw_g, rect_width(), rect_height(), drag_resize);
+      if (!arg.only_move)
+         makeResizeElements(painter.draw_g, drag_resize);
    }
 
    /** @summary Add move handlers for drawn element
@@ -611,13 +603,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       if (painter.draw_g.property("assigned_move")) return;
-
-      function detectRightButton(event) {
-         if ('buttons' in event) return event.buttons === 2;
-         else if ('which' in event) return event.which === 3;
-         else if ('button' in event) return event.button === 2;
-         return false;
-      }
 
       let drag_move = d3.drag().subject(Object),
          not_changed = true, move_disabled = false;
@@ -664,14 +649,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          TooltipHandler.assign(this);
 
-         this.draw_g.attr("x", this._frame_x)
-                    .attr("y", this._frame_y)
-                    .attr("width", this.getFrameWidth())
-                    .attr("height", this.getFrameHeight());
-
          if (!this._frame_rotate && !this._frame_fixpos)
-            addDragHandler(this, { obj: this, only_resize: true,
-                                    minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
+            addDragHandler(this, { obj: this, x: this._frame_x, y: this._frame_y, width: this.getFrameWidth(), height: this.getFrameHeight(),
+                                   only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
 
          let main_svg = this.draw_g.select(".main_layer");
 
@@ -985,7 +965,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.zoom_rect = this.getFrameSvg()
                                  .append("rect")
                                  .attr("class", "zoom")
-                                 .attr("pointer-events","none");
+                                 .style("pointer-events","none");
          }
 
          this.zoom_rect.attr("x", x).attr("y", y).attr("width", w).attr("height", h);
@@ -1547,7 +1527,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                JSROOT.extend(rec, btn.recs[n]);
                svg.append('rect').attr("x", rec.x).attr("y", rec.y)
                   .attr("width", rec.w).attr("height", rec.h)
-                  .attr("fill", rec.f);
+                  .style("fill", rec.f);
             }
          } else {
             svg.append('svg:path').attr('d', btn.path);

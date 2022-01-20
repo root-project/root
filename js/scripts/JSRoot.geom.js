@@ -12,64 +12,64 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    // ============================================================================================
 
    /**
-     * @summary toolbar for geometry painter
+     * @summary Toolbar for geometry painter
      *
      * @class
      * @memberof JSROOT.GEO
      * @private
      */
 
-   function Toolbar(container, bright) {
-      this.bright = bright;
-      this.element = container.append("div").attr('class','geo_toolbar_group');
-   }
+   class Toolbar {
+      constructor(container, bright) {
+         this.bright = bright;
+         this.element = container.append("div").attr('class','geo_toolbar_group');
+      }
 
-   /** @summary add buttons */
-   Toolbar.prototype.addButtons = function(buttons) {
-      this.buttonsNames = [];
+      /** @summary add buttons */
+      addButtons(buttons) {
+         this.buttonsNames = [];
 
-      JSROOT.require(["interactive"]).then(inter => {
-         buttons.forEach(buttonConfig => {
-            let buttonName = buttonConfig.name;
-            if (!buttonName) {
-               throw new Error('must provide button \'name\' in button config');
-            }
-            if (this.buttonsNames.indexOf(buttonName) !== -1) {
-               throw new Error('button name \'' + buttonName + '\' is taken');
-            }
+         JSROOT.require(["interactive"]).then(inter => {
+            buttons.forEach(buttonConfig => {
+               let buttonName = buttonConfig.name;
+               if (!buttonName)
+                  throw new Error(`must provide button ${name} in button config`);
+               if (this.buttonsNames.indexOf(buttonName) !== -1)
+                  throw new Error(`button name ${buttonName} is taken`);
 
-            this.buttonsNames.push(buttonName);
+               this.buttonsNames.push(buttonName);
 
-            let title = buttonConfig.title || buttonConfig.name;
+               let title = buttonConfig.title || buttonConfig.name;
 
-            if (typeof buttonConfig.click !== 'function')
-               throw new Error('must provide button \'click\' function in button config');
+               if (typeof buttonConfig.click !== 'function')
+                  throw new Error('must provide button "click" function in button config');
 
-            let button = this.element.append('a')
-                              .attr('class', this.bright ? 'geo_toolbar_btn_bright' : 'geo_toolbar_btn')
-                              .attr('rel', 'tooltip')
-                              .attr('data-title', title)
-                              .on('click', buttonConfig.click);
+               let button = this.element.append('a')
+                                 .attr('class', this.bright ? 'geo_toolbar_btn_bright' : 'geo_toolbar_btn')
+                                 .attr('rel', 'tooltip')
+                                 .attr('data-title', title)
+                                 .on('click', buttonConfig.click);
 
-            inter.ToolbarIcons.createSVG(button, inter.ToolbarIcons[buttonConfig.icon], 16, title);
+               inter.ToolbarIcons.createSVG(button, inter.ToolbarIcons[buttonConfig.icon], 16, title);
+            });
+
          });
+      }
 
-      });
-   }
+      /** @summary change brightness */
+      changeBrightness(bright) {
+         this.bright = bright;
+         if (this.element)
+            this.element.selectAll(bright ? '.geo_toolbar_btn' : ".geo_toolbar_btn_bright")
+                        .attr("class", !bright ? 'geo_toolbar_btn' : "geo_toolbar_btn_bright");
+      }
 
-   /** @summary change brightness */
-   Toolbar.prototype.changeBrightness = function(bright) {
-      this.bright = bright;
-      if (this.element)
-         this.element.selectAll(bright ? '.geo_toolbar_btn' : ".geo_toolbar_btn_bright")
-                     .attr("class", !bright ? 'geo_toolbar_btn' : "geo_toolbar_btn_bright");
-   }
-
-   /** @summary cleanup toolbar */
-   Toolbar.prototype.cleanup = function() {
-      if (this.element) {
-         this.element.remove();
-         delete this.element;
+      /** @summary cleanup toolbar */
+      cleanup() {
+         if (this.element) {
+            this.element.remove();
+            delete this.element;
+         }
       }
    }
 
@@ -291,8 +291,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
      * @private */
    TGeoPainter.prototype.initVRControllersGeometry = function() {
       let geometry = new THREE.SphereGeometry(0.025, 18, 36);
-      let material = new THREE.MeshBasicMaterial({color: 'grey'});
-      let rayMaterial = new THREE.MeshBasicMaterial({color: 'fuchsia'});
+      let material = new THREE.MeshBasicMaterial({ color: 'grey', vertexColors: false });
+      let rayMaterial = new THREE.MeshBasicMaterial({ color: 'fuchsia', vertexColors: false });
       let rayGeometry = new THREE.BoxBufferGeometry(0.001, 0.001, 2);
       let ray1Mesh = new THREE.Mesh(rayGeometry, rayMaterial);
       let ray2Mesh = new THREE.Mesh(rayGeometry, rayMaterial);
@@ -345,7 +345,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
       // Remove duplicates.
       intersects = intersects.filter(function (item, pos) {return intersects.indexOf(item) === pos});
-      this._controls.ProcessMouseMove(intersects);
+      this._controls.processMouseMove(intersects);
    }
 
    /** @summary Update VR controllers
@@ -1441,7 +1441,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       this._controls.contextMenu = this.orbitContext.bind(this);
 
-      this._controls.ProcessMouseMove = function(intersects) {
+      this._controls.processMouseMove = function(intersects) {
 
          // painter already cleaned up, ignore any incoming events
          if (!painter.ctrl || !painter._controls) return;
@@ -1488,8 +1488,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines: lines };
       }
 
-      this._controls.ProcessMouseLeave = function() {
-         this.ProcessMouseMove([]); // to disable highlight and reset browser
+      this._controls.processMouseLeave = function() {
+         this.processMouseMove([]); // to disable highlight and reset browser
       }
 
       this._controls.processDblClick = function() {
@@ -2114,7 +2114,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       // three.js 3D drawing
       this._scene = new THREE.Scene();
       this._scene.fog = new THREE.Fog(0xffffff, 1, 10000);
-      this._scene.overrideMaterial = new THREE.MeshLambertMaterial( { color: 0x7000ff, transparent: true, opacity: 0.2, depthTest: false } );
+      this._scene.overrideMaterial = new THREE.MeshLambertMaterial({ color: 0x7000ff, vertexColors: false, transparent: true, opacity: 0.2, depthTest: false });
 
       this._scene_width = w;
       this._scene_height = h;
@@ -2291,8 +2291,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       let roty = euler.y / Math.PI * 180,
           rotz = euler.z / Math.PI * 180;
 
-      if (roty<0) roty += 360;
-      if (rotz<0) rotz += 360;
+      if (roty < 0) roty += 360;
+      if (rotz < 0) rotz += 360;
 
       return "roty" + roty.toFixed(prec || 0) + ",rotz" + rotz.toFixed(prec || 0) + ",zoom" + zoom.toFixed(prec || 0);
    }
@@ -2883,7 +2883,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       if (!track || !track.fNpoints) return false;
 
       let track_width = track.fLineWidth || 1,
-          track_color = jsrp.getColor(track.fLineColor) || "rgb(255,0,255)";
+          track_color = jsrp.getColor(track.fLineColor) || "#ff00ff";
 
       if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
 
@@ -2925,7 +2925,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       if (!track || (track.fN <= 0)) return false;
 
       let track_width = track.fLineWidth || 1,
-          track_color = jsrp.getColor(track.fLineColor) || "rgb(255,0,255)";
+          track_color = jsrp.getColor(track.fLineColor) || "#ff00ff";
 
       if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
 
@@ -2983,7 +2983,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                        projy ? projv : hit.fP[i*3+1],
                        projz ? projv : hit.fP[i*3+2]);
 
-      return pnts.createPoints({ color: jsrp.getColor(hit.fMarkerColor) || "rgb(0,0,255)", style: hit_style, promise:true }).then(mesh => {
+      return pnts.createPoints({ color: jsrp.getColor(hit.fMarkerColor) || "#0000ff", style: hit_style, promise:true }).then(mesh => {
          mesh.renderOrder = 1000000; // to bring points to the front
          mesh.highlightScale = 2;
          mesh.geo_name = itemname;
@@ -3245,15 +3245,15 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       this.createToolbar();
 
-      if (this._clones)
-         return new Promise(resolveFunc => {
-            this._resolveFunc = resolveFunc;
-            this.showDrawInfo("Drawing geometry");
-            this.startDrawGeometry(true);
-         });
+      // just draw extras and complete drawing if there are no main model
+      if (!this._clones)
+         return this.completeDraw();
 
-      this.completeDraw();
-      return Promise.resolve(this);
+      return new Promise(resolveFunc => {
+         this._resolveFunc = resolveFunc;
+         this.showDrawInfo("Drawing geometry");
+         this.startDrawGeometry(true);
+      });
    }
 
    /** @summary methods show info when first geometry drawing is performed */
@@ -3627,7 +3627,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          container.add(mesh);
 
-         let textMaterial = new THREE.MeshBasicMaterial({ color: axiscol });
+         let textMaterial = new THREE.MeshBasicMaterial({ color: axiscol, vertexColors: false });
 
          if ((center[naxis]===0) && (center[naxis]>=box.min[name]) && (center[naxis]<=box.max[name]))
            if ((this.ctrl._axis != 2) || (naxis===0)) {
@@ -3640,7 +3640,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
                container.add(mesh);
            }
 
-         let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size: text_size, height: 0, curveSegments: 5 });
+         let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
          mesh = new THREE.Mesh(text3d, textMaterial);
          let textbox = new THREE.Box3().setFromObject(mesh);
 
@@ -3681,7 +3681,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          container.add(mesh);
 
-         text3d = new THREE.TextGeometry(Convert(box.min[name]), { font: JSROOT.threejs_font_helvetiker_regular, size: text_size, height: 0, curveSegments: 5 });
+         text3d = new THREE.TextGeometry(Convert(box.min[name]), { font: JSROOT.HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
 
          mesh = new THREE.Mesh(text3d, textMaterial);
          textbox = new THREE.Box3().setFromObject(mesh);
@@ -4263,11 +4263,11 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
    /** @summary Create geo painter
      * @private */
-   jsrp.createGeoPainter = function(divid, obj, opt) {
+   jsrp.createGeoPainter = function(dom, obj, opt) {
       geo.GradPerSegm = JSROOT.settings.GeoGradPerSegm;
       geo.CompressComp = JSROOT.settings.GeoCompressComp;
 
-      let painter = new TGeoPainter(divid, obj);
+      let painter = new TGeoPainter(dom, obj);
 
       // one could use TGeoManager setting, but for some example JSROOT does not build composites
       // if (obj && obj._typename=='TGeoManager' && (obj.fNsegments > 3))
@@ -4291,7 +4291,10 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       return painter;
    }
 
-   let drawGeoObject = (divid, obj, opt) => {
+   /** @summary draw TGeo object
+     * @memberof JSROOT.Painter
+     * @private */
+   function drawGeoObject(dom, obj, opt) {
       if (!obj) return null;
 
       let shape = null, extras = null, extras_path = "", is_eve = false;
@@ -4327,7 +4330,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       if (!obj) return null;
 
-      let painter = jsrp.createGeoPainter(divid, obj, opt);
+      let painter = jsrp.createGeoPainter(dom, obj, opt);
 
       if (painter.ctrl.is_main && !obj.$geo_painter)
          obj.$geo_painter = painter;
@@ -4740,27 +4743,27 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
      * @private */
    geo.getShapeIcon = function(shape) {
       switch (shape._typename) {
-         case "TGeoArb8" : return "img_geoarb8";
-         case "TGeoCone" : return "img_geocone";
-         case "TGeoConeSeg" : return "img_geoconeseg";
-         case "TGeoCompositeShape" : return "img_geocomposite";
-         case "TGeoTube" : return "img_geotube";
-         case "TGeoTubeSeg" : return "img_geotubeseg";
-         case "TGeoPara" : return "img_geopara";
-         case "TGeoParaboloid" : return "img_geoparab";
-         case "TGeoPcon" : return "img_geopcon";
-         case "TGeoPgon" : return "img_geopgon";
-         case "TGeoShapeAssembly" : return "img_geoassembly";
-         case "TGeoSphere" : return "img_geosphere";
-         case "TGeoTorus" : return "img_geotorus";
-         case "TGeoTrd1" : return "img_geotrd1";
-         case "TGeoTrd2" : return "img_geotrd2";
-         case "TGeoXtru" : return "img_geoxtru";
-         case "TGeoTrap" : return "img_geotrap";
-         case "TGeoGtra" : return "img_geogtra";
-         case "TGeoEltu" : return "img_geoeltu";
-         case "TGeoHype" : return "img_geohype";
-         case "TGeoCtub" : return "img_geoctub";
+         case "TGeoArb8": return "img_geoarb8";
+         case "TGeoCone": return "img_geocone";
+         case "TGeoConeSeg": return "img_geoconeseg";
+         case "TGeoCompositeShape": return "img_geocomposite";
+         case "TGeoTube": return "img_geotube";
+         case "TGeoTubeSeg": return "img_geotubeseg";
+         case "TGeoPara": return "img_geopara";
+         case "TGeoParaboloid": return "img_geoparab";
+         case "TGeoPcon": return "img_geopcon";
+         case "TGeoPgon": return "img_geopgon";
+         case "TGeoShapeAssembly": return "img_geoassembly";
+         case "TGeoSphere": return "img_geosphere";
+         case "TGeoTorus": return "img_geotorus";
+         case "TGeoTrd1": return "img_geotrd1";
+         case "TGeoTrd2": return "img_geotrd2";
+         case "TGeoXtru": return "img_geoxtru";
+         case "TGeoTrap": return "img_geotrap";
+         case "TGeoGtra": return "img_geogtra";
+         case "TGeoEltu": return "img_geoeltu";
+         case "TGeoHype": return "img_geohype";
+         case "TGeoCtub": return "img_geoctub";
       }
       return "img_geotube";
    }
@@ -4772,7 +4775,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       if (hitem._kind == 'ROOT.TEveTrack') icon = 'img_evetrack'; else
       if (hitem._kind == 'ROOT.TEvePointSet') icon = 'img_evepoints'; else
       if (hitem._kind == 'ROOT.TPolyMarker3D') icon = 'img_evepoints';
-      if (icon.length>0) {
+      if (icon.length > 0) {
          let drawitem = geo.findItemWithPainter(hitem);
          if (drawitem)
             if (drawitem._painter.extraObjectVisible(hpainter, hitem))

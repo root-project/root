@@ -276,11 +276,11 @@
 }
 
 .geo_info {
-	position: absolute;
-	text-align: center;
-	vertical-align: middle;
-	top: 45%;
-	left: 40%;
-	color: red;
-	font-size: 150%;
+   position: absolute;
+   text-align: center;
+   vertical-align: middle;
+   top: 45%;
+   left: 40%;
+   color: red;
+   font-size: 150%;
 }

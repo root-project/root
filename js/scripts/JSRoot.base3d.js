@@ -1,9 +1,11 @@
 /// @file JSRoot.base3d.js
 /// JavaScript ROOT 3D graphics
 
-JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
+JSROOT.define(['d3', 'three', 'painter'], (d3, THREE, jsrp) => {
 
    "use strict";
+
+   JSROOT.HelveticerRegularFont = new THREE.Font ( THREE.HelveticerRegularJson );
 
    /** @ummary Define rendering kind which will be used for rendering of 3D elements
     * @memberOf JSROOT.Painter
@@ -214,7 +216,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
                .attr('y', size.y)
                .attr('width', size.width)
                .attr('height', size.height)
-               .attr('viewBox', "0 0 " + size.width + " " + size.height)
+               .attr('viewBox', `0 0 ${size.width} ${size.height}`)
                .attr('preserveAspectRatio', 'xMidYMid');
          }
 
@@ -918,7 +920,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          if (this.control_active && evnt.buttons && (evnt.buttons & 2))
             this.block_ctxt = true; // if right button in control was active, block next context menu
 
-         if (this.control_active || this.block_mousemove || !this.ProcessMouseMove) return;
+         if (this.control_active || this.block_mousemove || !this.processMouseMove) return;
 
          if (this.mouse_zoom_mesh) {
             // when working with zoom mesh, need special handling
@@ -965,7 +967,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
          let mouse = this.tmout_mouse,
              intersects = this.getMouseIntersects(mouse),
-             tip = this.ProcessMouseMove(intersects);
+             tip = this.processMouseMove(intersects);
 
          if (tip) {
             let name = "", title = "", coord = "", info = "";
@@ -1005,8 +1007,8 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
             delete this.tmout_handle;
          }
          this.tooltip.hide();
-         if (typeof this.ProcessMouseLeave === 'function')
-            this.ProcessMouseLeave();
+         if (typeof this.processMouseLeave === 'function')
+            this.processMouseLeave();
          if (this.cursor_changed) {
             document.body.style.cursor = 'auto';
             this.cursor_changed = false;
@@ -1037,9 +1039,9 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          }
 
          // method assigned in the Eve7 and used for object selection
-         if ((kind == 2) && (typeof this.ProcessSingleClick == 'function')) {
+         if ((kind == 2) && (typeof this.processSingleClick == 'function')) {
             let intersects = this.getMouseIntersects(mouse_pos);
-            this.ProcessSingleClick(intersects);
+            this.processSingleClick(intersects);
          }
       };
 
@@ -1055,7 +1057,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
          let kind = 0, fp = this.painter ? this.painter.getFramePainter() : null;
          if (fp && typeof fp._click_handler == 'function')
             kind = 1; // user click handler
-         else if (this.ProcessSingleClick && this.painter && this.painter.options && this.painter.options.mouse_click)
+         else if (this.processSingleClick && this.painter && this.painter.options && this.painter.options.mouse_click)
             kind = 2;  // eve7 click handler
 
          // if normal event, set longer timeout waiting if double click not detected
@@ -1333,7 +1335,7 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       if (args.style === 6) k = 0.5; else
       if (args.style === 7) k = 0.7;
 
-      let makePoints = (material, skip_promise) => {
+      const makePoints = (material, skip_promise) => {
          let pnts = new THREE.Points(this.geom, material);
          pnts.nvertex = 1;
          return !args.promise || skip_promise ? pnts : Promise.resolve(pnts);
@@ -1345,10 +1347,10 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
 
       let handler = new JSROOT.TAttMarkerHandler({ style: args.style, color: args.color, size: 7 }),
           w = handler.fill ? 1 : 7,
-          dataUrl = 'data:image/svg+xml;utf8,' +
-                    '<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">' +
-                    `<path d="${handler.create(32,32)}" stroke="${handler.getStrokeColor()}" stroke-width="${w}" fill="${handler.getFillColor()}"/>` +
-                    '</svg>',
+          imgdata = `<svg width="64" height="64" xmlns="http://www.w3.org/2000/svg">` +
+                    `<path d="${handler.create(32,32)}" style="stroke: ${handler.getStrokeColor()}; stroke-width: ${w}; fill: ${handler.getFillColor()}"></path>`+
+                    `</svg>`,
+          dataUrl = 'data:image/svg+xml;charset=utf8,' + (JSROOT.nodejs ? imgdata : encodeURIComponent(imgdata)),
           loader = new THREE.TextureLoader();
 
       if (args.promise) {
@@ -1364,8 +1366,8 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
              });
 
          } else {
-            texture_promise = new Promise(resolveFunc => {
-               loader.load(dataUrl, texture => resolveFunc(texture));
+            texture_promise = new Promise((resolveFunc, rejectFunc) => {
+               loader.load(dataUrl, texture => resolveFunc(texture), undefined, () => rejectFunc());
             });
          }
 
