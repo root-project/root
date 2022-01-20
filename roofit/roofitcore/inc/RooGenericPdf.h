@@ -42,7 +42,7 @@ public:
   // Debugging
   void dumpFormula() { formula().dump() ; }
 
-  const TString& expression() const { return _formExpr; }
+  const char* expression() const { return _formExpr.Data(); }
   const RooListProxy& dependents() const { return _actualVars; }  
 
 protected:
