@@ -42,6 +42,7 @@ to the drawing option.
 THStack::Add() allows to add a new histogram to the list.
 The THStack does not own the objects in the list.
 
+\anchor HS00
 ### Stack painting
 
 By default, histograms are shown stacked.
