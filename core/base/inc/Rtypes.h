@@ -263,11 +263,11 @@ class ClassDefGenerateInitInstanceLocalInjector:
 }} // namespace ROOT::Internal
 
 
-// Common part of ClassDef definition.
+// Common part of ClassDef definition, used both by ClassDef and ClassDefInline.
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
-private:          \
+private:                                                                                                        \
    static_assert(std::is_integral<decltype(id)>::value, "ClassDef(Inline) macro: the specified class version number is not an integer.");                                                        \
    /** \cond HIDDEN_SYMBOLS */ virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                \
    {                                                                                                            \
@@ -288,30 +288,31 @@ private:          \
                                                                                                                 \
 public:                                                                                                         \
    /** \return Version of this class */ static Version_t Class_Version() { return id; }                         \
-   /** \cond HIDDEN_SYMBOLS */ virtual_keyword TClass *IsA() const overrd { return name::Class(); } /** \endcond */ \
+   /** \see ::Class() */ virtual_keyword TClass *IsA() const overrd { return name::Class(); }                   \
    /** \cond HIDDEN_SYMBOLS */ virtual_keyword void ShowMembers(TMemberInspector &insp) const overrd            \
    {                                                                                                            \
       ::ROOT::Class_ShowMembers(name::Class(), this, insp);                                                     \
    } /** \endcond */                                                                                            \
    /** \cond HIDDEN_SYMBOLS */ void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b)                      \
    { name::Streamer(ClassDef_StreamerNVirtual_b); } /** \endcond */                                             \
-   /** \cond HIDDEN_SYMBOLS */ static const char *DeclFileName() { return __FILE__; } /** \endcond */
+   /** \return Name of the current file */ static const char *DeclFileName() { return __FILE__; }
 
 #define _ClassDefOutline_(name,id, virtual_keyword, overrd)                                                     \
    _ClassDefBase_(name,id, virtual_keyword, overrd)                                                             \
 private:                                                                                                        \
    static atomic_TClass_ptr fgIsA;                                                                              \
 public:                                                                                                         \
-   /** \cond HIDDEN_SYMBOLS */ static int ImplFileLine();  /** \endcond */                                      \
-   /** \cond HIDDEN_SYMBOLS */ static const char *ImplFileName();  /** \endcond */                              \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static int ImplFileLine(); /** \endcond */                           \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName(); /** \endcond */                   \
    /** \return Name of this class */ static const char *Class_Name();                                           \
    /** \cond HIDDEN_SYMBOLS */ static TClass *Dictionary(); /** \endcond */                                     \
-   /** \cond HIDDEN_SYMBOLS */ static TClass *Class(); /** \endcond */                                          \
+   /** \return Pointer to injected TClass */ static TClass *Class();                                            \
    virtual_keyword void Streamer(TBuffer&) overrd;
 
 #define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                     \
-   _ClassDefBase_(name, id, virtual_keyword, overrd) public : static int ImplFileLine() { return -1; }          \
-   static const char *ImplFileName() { return 0; }                                                              \
+   _ClassDefBase_(name, id, virtual_keyword, overrd) public :                                                   \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static int ImplFileLine() { return -1; } /** \endcond */             \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName() { return 0; } /** \endcond */      \
    /** \return Name of this class */ static const char *Class_Name()                                            \
    {                                                                                                            \
       return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();                         \
@@ -320,8 +321,14 @@ public:                                                                         
    {                                                                                                            \
       return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                   \
    } /** \endcond */                                                                                            \
-   /** \cond HIDDEN_SYMBOLS */ static TClass *Class() { return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); } /** \endcond */ \
-   virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
+   /** \return Pointer to injected TClass */ static TClass *Class()                                             \
+   {                                                                                                            \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); }                      \
+   }                                                                                                            \
+   virtual_keyword void Streamer(TBuffer &R__b) overrd                                                          \
+   {                                                                                                            \
+      ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this);                                             \
+   }
 
 #define ClassDef(name,id)                            \
    _ClassDefOutline_(name,id,virtual,)               \
