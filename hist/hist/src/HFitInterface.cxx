@@ -231,7 +231,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 
             if (ndim == hdim -1) {
                // case of fitting a function with  dimension -1
-               // point error is bin width y / sqrt(N) where N is nuber of entries in the bin
+               // point error is bin width y / sqrt(N) where N is the number of entries in the bin
                // normalization of error will be wrong - but they will be rescaled in the fit
                if (hdim == 2)  dv.Add(  x,  x[1],  yaxis->GetBinWidth(biny) / error  );
                if (hdim == 3)  dv.Add(  x,  x[2],  zaxis->GetBinWidth(binz) / error  );
