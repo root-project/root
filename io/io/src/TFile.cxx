@@ -1215,6 +1215,8 @@ TFileCacheWrite *TFile::GetCacheWrite() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read the logical record header starting at a certain postion.
 ///
+/// \param[in] buf pointer to buffer
+/// \param[in] first read offset
 /// \param[in] maxbytes Bytes which are read into buf.
 /// \param[out] nbytes Number of bytes in record if negative, this is a deleted
 /// record if 0, cannot read record, wrong value of argument first
@@ -2595,7 +2597,7 @@ void TFile::WriteHeader()
 /// object does not exist.
 ///
 /// The code generated includes:
-///   - <em>dirnameProjectHeaders.h</em>, which contains one #include statement per generated header file
+///   - <em>dirnameProjectHeaders.h</em>, which contains one `#include` statement per generated header file
 ///   - <em>dirnameProjectSource.cxx</em>,which contains all the constructors and destructors implementation.
 /// and one header per class that is not nested inside another class.
 /// The header file name is the fully qualified name of the class after all the special characters
@@ -3998,7 +4000,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 ///
 /// For TFile implementations supporting asynchronous file open, see
 /// TFile::AsyncOpen(...), it is possible to request a timeout with the
-/// option <b>TIMEOUT=<secs></b>: the timeout must be specified in seconds and
+/// option <b>`TIMEOUT=<secs>`</b>: the timeout must be specified in seconds and
 /// it will be internally checked with granularity of one millisec.
 /// For remote files there is the option: <b>CACHEREAD</b> opens an existing
 /// file for reading through the file cache. The file will be downloaded to

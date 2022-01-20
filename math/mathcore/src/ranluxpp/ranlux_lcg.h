@@ -52,7 +52,7 @@ static void to_lcg(const uint64_t *ranlux, unsigned c, uint64_t *lcg)
 ///
 /// \param[in] lcg the 576 bits of the LCG state, must be smaller than m
 /// \param[out] ranlux the RANLUX numbers as 576 bits
-/// \param[out] c the carry bit of the RANLUX state
+/// \param[out] c_out the carry bit of the RANLUX state
 ///
 /// \f$ m = 2^{576} - 2^{240} + 1 \f$
 static void to_ranlux(const uint64_t *lcg, uint64_t *ranlux, unsigned &c_out)

@@ -1731,7 +1731,7 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
 /// x1,y1        : begin of line
 /// x2,y2        : end of line
 
-void TGWin32::DrawLine(int x1, int y1, int x2, int y2)
+void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    if (!fWindows) return;
 
@@ -2027,7 +2027,7 @@ void TGWin32::GetRGB(int index, float &r, float &g, float &b)
 /// ih          : text height
 /// mess        : message
 
-void TGWin32::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
+void TGWin32::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 {
    TTF::SetTextFont(gTextFont);
    TTF::SetTextSize(fTextSize);
@@ -2050,7 +2050,7 @@ Window_t TGWin32::GetWindowID(int wid)
 /// x    : x new window position
 /// y    : y new window position
 
-void TGWin32::MoveWindow(int wid, int x, int y)
+void TGWin32::MoveWindow(Int_t wid, Int_t x, Int_t y)
 {
    if (!fWindows) return;
 
@@ -2227,7 +2227,7 @@ Int_t TGWin32::InitWindow(ULongptr_t win)
 /// iy       : Y coordinate of pointer
 /// (both coordinates are relative to the origin of the root window)
 
-void TGWin32::QueryPointer(int &ix, int &iy)
+void TGWin32::QueryPointer(Int_t &ix, Int_t &iy)
 {
    //GdkModifierType mask;
    //GdkWindow *retw = gdk_window_get_pointer((GdkWindow *) gCws->window,
@@ -2752,7 +2752,7 @@ int TGWin32::ResizePixmap(int wid, unsigned int w, unsigned int h)
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize the current window if necessary.
 
-void TGWin32::ResizeWindow(int wid)
+void TGWin32::ResizeWindow(Int_t wid)
 {
    int i;
    int xval = 0, yval = 0;
@@ -2960,7 +2960,7 @@ void TGWin32::SetColor(GdkGC *gc, int ci)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the cursor.
 
-void TGWin32::SetCursor(int wid, ECursor cursor)
+void TGWin32::SetCursor(Int_t wid, ECursor cursor)
 {
    if (!fWindows) return;
 
@@ -4416,9 +4416,9 @@ Int_t TGWin32::WriteGIF(char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw image.
 
-void TGWin32::PutImage(int offset, int itran, int x0, int y0, int nx,
-                       int ny, int xmin, int ymin, int xmax, int ymax,
-                       unsigned char *image, Drawable_t wid)
+void TGWin32::PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
+                       Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
+                       UChar_t *image, Drawable_t wid)
 {
    const int MAX_SEGMENT = 20;
    int i, n, x, y, xcur, x1, x2, y1, y2;

@@ -894,14 +894,14 @@ Bool_t TAuthenticate::CheckNetrc(TString &user, TString &passwd)
 /// The format of these files are:
 ///
 /// # this is a comment line
-/// machine <machine fqdn> login <user> password <passwd>
-/// machine <machine fqdn> login <user> password-hash <passwd>
+/// machine `<machine fqdn>` login `<user>` password `<passwd>`
+/// machine `<machine fqdn>` login `<user>` password-hash `<passwd>`
 ///
 /// and in addition ~/.rootnetrc also supports:
 ///
-/// secure <machine fqdn> login <user> password <passwd>
+/// secure `<machine fqdn>` login `<user>` password `<passwd>`
 ///
-/// <machine fqdn> may be a domain name or contain the wild card '*'.
+/// `<machine fqdn>` may be a domain name or contain the wild card '*'.
 ///
 /// for the secure protocols. All lines must start in the first column.
 
@@ -3205,7 +3205,7 @@ Int_t TAuthenticate::SendRSAPublicKey(TSocket *socket, Int_t key)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read authentication directives from $ROOTAUTHRC, $HOME/.rootauthrc or
-/// <Root_etc_dir>/system.rootauthrc and create related THostAuth objects.
+/// `<Root_etc_dir>/system.rootauthrc` and create related THostAuth objects.
 /// Files are read only if they changed since last reading
 /// If 'proofconf' is defined, check also file proofconf for directives
 

@@ -181,7 +181,7 @@ Bool_t TAlienPackage::UnInstall ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that <str> is listed in GRID directory <dir1>.
+/// Check that `<str>` is listed in GRID directory `<dir1>`.
 
 Bool_t TAlienPackage::IsDirectory (const char *dir1, const char *str)
 {

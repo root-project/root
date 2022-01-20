@@ -637,7 +637,7 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
 ////////////////////////////////////////////////////////////////////////////////
 /// Build a proxy for a collection whose type is described by 'collectionClass'.
 
-TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info, TClass *cl)
+TGenCollectionProxy::TGenCollectionProxy(const ROOT::Detail::TCollectionProxyInfo &info, TClass *cl)
    : TVirtualCollectionProxy(cl),
      fTypeinfo(info.fInfo), fOnFileClass(0)
 {

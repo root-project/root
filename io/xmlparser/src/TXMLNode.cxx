@@ -32,7 +32,7 @@ ClassImp(TXMLNode);
 ////////////////////////////////////////////////////////////////////////////////
 /// TXMLNode constructor.
 
-TXMLNode::TXMLNode(xmlNode *node, TXMLNode *parent, TXMLNode *previous) :
+TXMLNode::TXMLNode(_xmlNode *node, TXMLNode *parent, TXMLNode *previous) :
    fXMLNode(node), fParent(parent), fChildren(0), fNextNode(0),
    fPreviousNode(previous), fAttrList(0)
 {

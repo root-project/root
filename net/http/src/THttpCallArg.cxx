@@ -255,7 +255,8 @@ std::shared_ptr<THttpWSEngine> THttpCallArg::TakeWSEngine()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace all occurrences of \param from by \param to in content
-/// Used only internally
+/// \param once set to true to stop after first occurrence is replaced
+/// \note Used only internally
 
 void THttpCallArg::ReplaceAllinContent(const std::string &from, const std::string &to, bool once)
 {
