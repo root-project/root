@@ -193,20 +193,15 @@ std::string RooJSONFactoryWSTool::genPrefix(const JSONNode &p, bool trailing_und
 
 namespace {
 // helpers for serializing / deserializing binned datasets
-inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, const RooArgList &vars, size_t curridx)
+inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::vector<int>& curr_comb, const std::vector<int> &vars_numbins, size_t curridx)
 {
-   if (curridx == vars.size()) {
-      std::vector<int> indices(curridx);
-      for (size_t i = 0; i < curridx; ++i) {
-         RooRealVar *v = (RooRealVar *)(vars.at(i));
-         indices[i] = v->getBinning().binNumber(v->getVal());
-      }
-      combinations.push_back(indices);
+   if (curridx == vars_numbins.size()) {
+     // we have filled a combination. Copy it.
+      combinations.push_back(std::vector<int>(curr_comb));
    } else {
-      RooRealVar *v = (RooRealVar *)(vars.at(curridx));
-      for (int i = 0; i < v->numBins(); ++i) {
-         v->setVal(v->getBinning().binCenter(i));
-         ::genIndicesHelper(combinations, vars, curridx + 1);
+      for (int i = 0; i < vars_numbins[curridx]; ++i) {
+         curr_comb[curridx] = i;
+         ::genIndicesHelper(combinations, curr_comb, vars_numbins, curridx + 1);
       }
    }
 }
@@ -496,7 +491,13 @@ void RooJSONFactoryWSTool::printFactoryExpressions()
 std::vector<std::vector<int>> RooJSONFactoryWSTool::generateBinIndices(const RooArgList &vars)
 {
    std::vector<std::vector<int>> combinations;
-   ::genIndicesHelper(combinations, vars, 0);
+   std::vector<int> vars_numbins;
+   vars_numbins.reserve(vars.size());
+   for (auto& absv : vars) {
+      vars_numbins.push_back(((RooRealVar*)absv)->numBins());
+   }
+   std::vector<int> curr_comb(vars.size());
+   ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
    return combinations;
 }
 
@@ -1227,12 +1228,24 @@ RooDataHist *RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::
       RooJSONFactoryWSTool::error(TString::Format("inconsistent bin numbers: counts=%d, bins=%d",
                                                   (int)counts.num_children(), (int)(bins.size())));
    RooDataHist *dh = new RooDataHist(("dataHist_" + namecomp).c_str(), namecomp.c_str(), varlist);
+   // temporarily disable dirty flag propagation when filling the RDH
+   std::vector<double> initVals;
+   for (auto& v : varlist) {
+      v->setDirtyInhibit(true);
+      initVals.push_back(((RooRealVar*)v)->getVal());
+   }
    for (size_t ibin = 0; ibin < bins.size(); ++ibin) {
       for (size_t i = 0; i < bins[ibin].size(); ++i) {
          RooRealVar *v = (RooRealVar *)(varlist.at(i));
-         v->setVal(v->getBinning().binCenter(bins[ibin][i]));
+         v->setBin(bins[ibin][i]);
       }
       dh->add(varlist, counts[ibin].val_float());
+   }
+   // re-enable dirty flag propagation
+   for (size_t i = 0; i < varlist.size(); ++i) {
+      RooRealVar *v = (RooRealVar *)(varlist.at(i));
+      v->setVal(initVals[i]);
+      v->setDirtyInhibit(false);
    }
    return dh;
 }
@@ -1295,8 +1308,9 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf &pd
       RooArgSet nps;
       RooArgSet pois;
       RooArgSet globs;
+      RooArgSet* pdfVars = pdf->getVariables();
       for (auto &var : this->_workspace->allVars()) {
-         if (!pdf.dependsOn(*var))
+         if (!pdfVars->find(*var))
             continue;
          if (var->getAttribute("observable")) {
             observables.add(*var, true);
