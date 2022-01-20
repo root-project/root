@@ -25,6 +25,10 @@ class JSONNode;
 
 class RooJSONFactoryWSTool {
 public:
+   struct Config {
+     static bool stripObservables;
+   };
+  
    class Importer {
    public:
       virtual bool importPdf(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
@@ -79,8 +83,6 @@ protected:
 
    RooWorkspace *_workspace;
 
-   static bool _stripObservables;
-
    static ImportMap _importers;
    static ExportMap _exporters;
    static ExportKeysMap _exportKeys;
@@ -93,9 +95,6 @@ protected:
    RooRealVar *createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
 public:
-   static bool getStripObservables();
-   static void setStripObservables(bool);
-
    class MissingRootnodeError : public std::exception {
    public:
       virtual const char *what() const noexcept override { return "no rootnode set"; }

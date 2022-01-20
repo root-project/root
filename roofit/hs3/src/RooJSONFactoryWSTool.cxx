@@ -220,16 +220,7 @@ std::string containerName(RooAbsArg *elem)
 }
 } // namespace
 
-bool RooJSONFactoryWSTool::_stripObservables = true;
-
-bool RooJSONFactoryWSTool::getStripObservables()
-{
-   return RooJSONFactoryWSTool::_stripObservables;
-}
-void RooJSONFactoryWSTool::setStripObservables(bool strip)
-{
-   RooJSONFactoryWSTool::_stripObservables = strip;
-}
+bool RooJSONFactoryWSTool::Config::stripObservables = true;
 
 // maps to hold the importers and exporters for runtime lookup
 RooJSONFactoryWSTool::ImportMap RooJSONFactoryWSTool::_importers = RooJSONFactoryWSTool::ImportMap();
@@ -1117,7 +1108,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
 
       bool singlePoint = (ds->numEntries() <= 1);
       RooArgSet reduced_obs;
-      if (_stripObservables) {
+      if (Config::stripObservables) {
          if (!singlePoint) {
            std::map<RooRealVar*, std::vector<double>> obs_values;
             for (Int_t i = 0; i < ds->numEntries(); ++i) {
@@ -1143,11 +1134,11 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
          obsset.set_map();
          exportVariables(reduced_obs, obsset);
       }
-      auto &weights = singlePoint && _stripObservables ? output["counts"] : output["weights"];
+      auto &weights = singlePoint && Config::stripObservables ? output["counts"] : output["weights"];
       weights.set_seq();
       for (Int_t i = 0; i < ds->numEntries(); ++i) {
          ds->get(i);
-         if (!(_stripObservables && singlePoint)) {
+         if (!(Config::stripObservables && singlePoint)) {
             auto &coordinates = output["coordinates"];
             coordinates.set_seq();
             auto &point = coordinates.append_child();
