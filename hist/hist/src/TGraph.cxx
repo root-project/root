@@ -1139,7 +1139,7 @@ TObject *TGraph::FindObject(const TObject *obj) const
 ///   Least Trimmed Square (LTS) regression algorithm, by using the fit option `ROB`.
 ///   See the tutorial `fitLinearRobust.C`.
 ///
-/// ### NOTES on TGraph/TGraphErrors Fitting:
+/// ### Notes on TGraph/TGraphErrors Fitting:
 ///
 /// 1. By using the "effective variance" method a simple linear regression
 ///    becomes a non-linear case, which takes several iterations
@@ -1176,15 +1176,16 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fit this graph with function with name fname.
+/// Fit this graph with function with name `fname`.
 ///
-/// interface to TGraph::Fit(TF1 *f1...
+/// This is a different interface to TGraph fitting using TGraph::Fit(TF1 *f1,Option_t *, Option_t *, Axis_t, Axis_t)
+/// See there for the details about fitting a TGraph. 
 ///
-/// fname is the name of an already predefined function created by TF1 or TF2
+/// The parameter `fname` is the name of an already predefined function created by TF1 or TF2
 /// Predefined functions such as gaus, expo and poln are automatically
 /// created by ROOT.
 ///
-/// fname can also be a formula, accepted by the linear fitter (linear parts divided
+/// The parameter `fname` can also be a formula, accepted by the linear fitter (linear parts divided
 /// by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 
 TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
