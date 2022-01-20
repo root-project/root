@@ -1,8 +1,26 @@
 # JSROOT changelog
 
-## Change in 6.3.x
-1. Fix TEfficiency drawing
-2. Provide TPadPainter.divide method 
+## Changes in dev
+1. Fully remove jQuery and jQueryUI from JSROOT, replace by plane HTML/JavaScript
+2. Provide bootstrap-based menu - optionally
+3. Make "col" default draw option for TH2 in default JSROOT GUI
+4. Upgrade d3.js to 7.3.0, take only used components: "d3-selection", "d3-drag", "d3-scale", "d3-time-format", "d3-color", "d3-transition"
+5. Upgrade three.js to r136, reduce number of components used in jsroot
+6. Implement proper drawing of TEllipse
+7. Support new TGraphMultiErrors class
+8. Implement all variants of CANDLE and VIOLIN draw options (#194)
+9. Implement "cjust" draw option when drawing color palette
+10. Implement "colhz" draw option to plot horizontal color palette
+11. Implement "pads" draw option for THStack
+12. Improve drawing of TEfficiency, support 2D case
+13. Let disable TGraph dragging via JSROOT.settings.DragGraphs flag (#224)
+14. Use BigInt in I/O when 64bit integer can not be stored as plain Number
+15. In TF1/TF2 always try to use formula, only when fail - apply saved buffer when exist
+16. Add proper support of "Symbols" and "Wingdings" fonts
+17. Add many standard functions to math like "crystalball_pdf", "gaussian_pdf", "tdistribution_pdf"
+18. Correctly display extra data from TGraphQQ
+19. Remove "collapsible" and "tabs" layouts which were implemented with jQuery - use "flex" instead
+20. Improve flexible layout, provide context menu with cascading, tiling, selecting frames
 
 
 ## Changes in 6.3.2

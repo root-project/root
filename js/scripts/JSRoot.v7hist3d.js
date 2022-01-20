@@ -181,7 +181,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
 
       let axis_painter = this, obj_painter = this.getMainPainter();
 
-      this.control.ProcessMouseMove = function(intersects) {
+      this.control.processMouseMove = function(intersects) {
          let tip = null, mesh = null, zoom_mesh = null;
 
          for (let i = 0; i < intersects.length; ++i) {
@@ -225,7 +225,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          return (tip && tip.lines) ? tip : "";
       };
 
-      this.control.ProcessMouseLeave = function() {
+      this.control.processMouseLeave = function() {
          axis_painter.highlightBin3D(null);
       };
 
@@ -385,7 +385,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
             let geom = new THREE.BufferGeometry();
             geom.setAttribute( 'position', new THREE.BufferAttribute( pos, 3 ) );
             geom.setAttribute( 'normal', new THREE.BufferAttribute( norm, 3 ) );
-            let mater = new THREE.MeshBasicMaterial({ color: color, opacity: opacity });
+            let mater = new THREE.MeshBasicMaterial({ color: color, opacity: opacity, vertexColors: false });
             tooltip_mesh = new THREE.Mesh(geom, mater);
          } else {
             pos = tooltip_mesh.geometry.attributes.position.array;
@@ -497,8 +497,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
       this.z_handle.configureAxis("zaxis", this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz]);
       this.z_handle.assignFrameMembers(this,"z");
 
-      let textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }),
-          lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }),
+      let textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000, vertexColors: false }),
+          lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000, vertexColors: false }),
           ticklen = textsize*0.5, lbls = [], text_scale = 1,
           xticks = this.x_handle.createTicks(false, true),
           yticks = this.y_handle.createTicks(false, true),
@@ -523,7 +523,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          }
 
          if (is_major && lbl && (lbl.length>0)) {
-            let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+            let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.HelveticerRegularFont, size: textsize, height: 0, curveSegments: 5 });
             text3d.computeBoundingBox();
             let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                 draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -548,7 +548,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
       }
 
       if (xaxis && xaxis.fTitle) {
-         let text3d = new THREE.TextGeometry(ltx.translateLaTeX(xaxis.fTitle), { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+         let text3d = new THREE.TextGeometry(ltx.translateLaTeX(xaxis.fTitle), { font: JSROOT.HelveticerRegularFont, size: textsize, height: 0, curveSegments: 5 });
          text3d.computeBoundingBox();
          text3d.center = false; // xaxis.TestBit(JSROOT.EAxisBits.kCenterTitle);
          text3d.gry = 2; // factor 2 shift
@@ -586,7 +586,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          geom.computeVertexNormals();
 
          let material = new THREE.MeshBasicMaterial({ transparent: true,
-                                   vertexColors: THREE.NoColors, //   THREE.FaceColors,
+                                   vertexColors: false,
                                    side: THREE.DoubleSide,
                                    opacity: 0 });
 
@@ -633,6 +633,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
                return tgtmesh;
             }
 
+            if (!this.geometry) return false;
+
             if (!tgtmesh) {
                gg = this.geometry.clone();
                let pos = gg.getAttribute('position').array;
@@ -642,7 +644,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
                //            else gg.vertices[2].y = gg.vertices[3].y = -ticklen;
                if (kind==="z") pos[6] = pos[3] = pos[15] = ticklen;
                           else pos[4] = pos[16] = pos[13] = -ticklen;
-               tgtmesh = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({ color: 0xFF00, side: THREE.DoubleSide }));
+               tgtmesh = new THREE.Mesh(gg, new THREE.MeshBasicMaterial({ color: 0xFF00, side: THREE.DoubleSide, vertexColors: false }));
                this.add(tgtmesh);
             } else {
                gg = tgtmesh.geometry;
@@ -663,11 +665,6 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
             }
 
             gg.getAttribute('position').needsUpdate = true;
-
-            gg.computeFaceNormals();
-
-            // gg.verticesNeedUpdate = true;
-            // gg.normalsNeedUpdate = true;
 
             return true;
          };
@@ -740,7 +737,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          }
 
          if (is_major) {
-            let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+            let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.HelveticerRegularFont, size: textsize, height: 0, curveSegments: 5 });
             text3d.computeBoundingBox();
             let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                 draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -763,7 +760,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
       }
 
       if (yaxis && yaxis.fTitle) {
-         let text3d = new THREE.TextGeometry(ltx.translateLaTeX(yaxis.fTitle), { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+         let text3d = new THREE.TextGeometry(ltx.translateLaTeX(yaxis.fTitle), { font: JSROOT.HelveticerRegularFont, size: textsize, height: 0, curveSegments: 5 });
          text3d.computeBoundingBox();
          text3d.center = false; // yaxis.TestBit(JSROOT.EAxisBits.kCenterTitle);
          text3d.grx = 2; // factor 2 shift
@@ -842,7 +839,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          if (lbl === null) { is_major = false; lbl = ""; }
 
          if (is_major && lbl) {
-            let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+            let text3d = new THREE.TextGeometry(lbl, { font: JSROOT.HelveticerRegularFont, size: textsize, height: 0, curveSegments: 5 });
             text3d.computeBoundingBox();
             let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                 draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -918,7 +915,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          });
 
          if (zaxis && zaxis.fTitle) {
-            let text3d = new THREE.TextGeometry(ltx.translateLaTeX(zaxis.fTitle), { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+            let text3d = new THREE.TextGeometry(ltx.translateLaTeX(zaxis.fTitle), { font: JSROOT.HelveticerRegularFont, size: textsize, height: 0, curveSegments: 5 });
             text3d.computeBoundingBox();
             let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                 // draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y,
@@ -1189,8 +1186,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
             fcolor = 'white';
          }
 
-         //var material = new THREE.MeshLambertMaterial( { color: fcolor } );
-         let material = new THREE.MeshBasicMaterial( { color: fcolor } );
+         let material = new THREE.MeshBasicMaterial({ color: fcolor, vertexColors: false });
 
          let mesh = new THREE.Mesh(geometry, material);
 
@@ -1204,7 +1200,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
 
          mesh.tooltip = function(intersect) {
             if (!Number.isInteger(intersect.faceIndex)) {
-               console.error(`intersect.faceIndex not provided, three.js version ${THREE.REVISION}, expected 127`);
+               console.error(`intersect.faceIndex not provided, three.js version ${THREE.REVISION}, expected 136`);
                return null;
             }
 
@@ -1251,7 +1247,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
             let color2 = (rootcolor<2) ? new THREE.Color(0xFF0000) :
                             new THREE.Color(d3.rgb(fcolor).darker(0.5).toString());
 
-            let material2 = new THREE.MeshBasicMaterial( { color: color2 } );
+            let material2 = new THREE.MeshBasicMaterial({ color: color2, vertexColors: false });
 
             let mesh2 = new THREE.Mesh(geom2, material2);
             mesh2.face_to_bins_index = face_to_bins_indx2;
@@ -1838,9 +1834,9 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
             }
 
             if (this.options.Surf === 14)
-               material = new THREE.MeshLambertMaterial( { color: fcolor, side: THREE.DoubleSide  } );
+               material = new THREE.MeshLambertMaterial({ color: fcolor, side: THREE.DoubleSide, vertexColors: false });
             else
-               material = new THREE.MeshBasicMaterial( { color: fcolor, side: THREE.DoubleSide  } );
+               material = new THREE.MeshBasicMaterial({ color: fcolor, side: THREE.DoubleSide, vertexColors: false });
 
             let mesh = new THREE.Mesh(geometry, material);
 
@@ -1938,7 +1934,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
                 geometry.setAttribute( 'normal', new THREE.BufferAttribute( norm, 3 ) );
 
                 let fcolor = palette.getColor(colindx);
-                let material = new THREE.MeshBasicMaterial( { color: fcolor, side: THREE.DoubleSide, opacity: 0.5 } );
+                let material = new THREE.MeshBasicMaterial({ color: fcolor, side: THREE.DoubleSide, opacity: 0.5, vertexColors: false });
                 let mesh = new THREE.Mesh(geometry, material);
                 mesh.painter = this;
                 main.toplevel.add(mesh);
@@ -2028,7 +2024,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
 
        line.tooltip = function(intersect) {
           if (!Number.isInteger(intersect.index)) {
-             console.error(`intersect.index not provided, three.js version ${THREE.REVISION}, expected 127`);
+             console.error(`intersect.index not provided, three.js version ${THREE.REVISION}, expected 136`);
              return null;
           }
 
@@ -2172,7 +2168,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
                }
             }
 
-            if (z1>z0) {
+            if (z1 > z0) {
                for (let n=0;n<pnts.length;++n) {
                   let pnt1 = pnts[n],
                       pnt2 = pnts[(n>0) ? n-1 : pnts.length-1];
@@ -2215,7 +2211,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
          geometry.computeVertexNormals();
 
          let fcolor = this.fPalette.getColor(colindx);
-         let material = new THREE.MeshBasicMaterial( { color: fcolor } );
+         let material = new THREE.MeshBasicMaterial({ color: fcolor, vertexColors: false });
          let mesh = new THREE.Mesh(geometry, material);
 
          pmain.toplevel.add(mesh);
@@ -2481,11 +2477,10 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
       // too many pixels - use box drawing
       if (numpixels > (main.webgl ? 100000 : 30000)) return false;
 
-      JSROOT.seed(sumz);
-
       let pnts = new jsrp.PointsCreator(numpixels, main.webgl, main.size_x3d/200),
           bins = new Int32Array(numpixels), nbin = 0,
-          xaxis = this.getAxis("x"), yaxis = this.getAxis("y"), zaxis = this.getAxis("z");
+          xaxis = this.getAxis("x"), yaxis = this.getAxis("y"), zaxis = this.getAxis("z"),
+          rnd = new JSROOT.TRandom(sumz);
 
       for (i = i1; i < i2; i += di) {
          for (j = j1; j < j2; j += dj) {
@@ -2495,9 +2490,9 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
                let num = Math.round(bin_content*coef);
 
                for (let n=0;n<num;++n) {
-                  let binx = xaxis.GetBinCoord(i+JSROOT.random()),
-                      biny = yaxis.GetBinCoord(j+JSROOT.random()),
-                      binz = zaxis.GetBinCoord(k+JSROOT.random());
+                  let binx = xaxis.GetBinCoord(i + rnd.random()),
+                      biny = yaxis.GetBinCoord(j + rnd.random()),
+                      binz = zaxis.GetBinCoord(k + rnd.random());
 
                   // remember bin index for tooltip
                   bins[nbin++] = histo.getBin(i+1, j+1, k+1);
@@ -2517,7 +2512,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
 
          mesh.tooltip = function(intersect) {
             if (!Number.isInteger(intersect.index)) {
-               console.error(`intersect.index not provided, three.js version ${THREE.REVISION}, expected 127`);
+               console.error(`intersect.index not provided, three.js version ${THREE.REVISION}, expected 136`);
                return null;
             }
 
@@ -2796,8 +2791,8 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
 
          if (use_colors) fillcolor = palette.getColor(ncol);
 
-         let material = use_lambert ? new THREE.MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: (use_opacity<1) })
-                                    : new THREE.MeshBasicMaterial({ color: fillcolor, opacity: use_opacity });
+         let material = use_lambert ? new THREE.MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: (use_opacity < 1), vertexColors: false })
+                                    : new THREE.MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, vertexColors: false });
 
          let combined_bins = new THREE.Mesh(all_bins_buffgeom, material);
 
@@ -2813,7 +2808,7 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
 
          combined_bins.tooltip = function(intersect) {
             if (!Number.isInteger(intersect.faceIndex)) {
-               console.error(`intersect.faceIndex not provided, three.js version ${THREE.REVISION}, expected 127`);
+               console.error(`intersect.faceIndex not provided, three.js version ${THREE.REVISION}, expected 136`);
                return null;
             }
             let indx = Math.floor(intersect.faceIndex / this.bins_faces);
@@ -2980,9 +2975,11 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
       });
    }
 
-   let drawHist3 = (divid, histo /*, opt*/) => {
-      // create painter and add it to canvas
-      let painter = new RH3Painter(divid, histo);
+   /** @summary draw RH3 object
+     * @memberof JSROOT.v7
+     * @private */
+   function drawHist3(dom, histo /*, opt*/) {
+      let painter = new RH3Painter(dom, histo);
 
       return jsrp.ensureRCanvas(painter, "3d").then(() => {
 

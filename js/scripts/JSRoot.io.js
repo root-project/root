@@ -424,7 +424,7 @@ JSROOT.define(['rawinflate'], () => {
    TBuffer.prototype.ntou8 = function() {
       const high = this.arr.getUint32(this.o); this.o += 4;
       const low = this.arr.getUint32(this.o); this.o += 4;
-      return high * 0x100000000 + low;
+      return (high < 0x200000) ? (high * 0x100000000 + low) : (BigInt(high) * BigInt(0x100000000) + BigInt(low));
    }
 
    /** @summary read int8_t */
@@ -448,8 +448,9 @@ JSROOT.define(['rawinflate'], () => {
    TBuffer.prototype.ntoi8 = function() {
       const high = this.arr.getUint32(this.o); this.o += 4;
       const low = this.arr.getUint32(this.o); this.o += 4;
-      if (high < 0x80000000) return high * 0x100000000 + low;
-      return -1 - ((~high) * 0x100000000 + ~low);
+      if (high < 0x80000000)
+         return (high < 0x200000) ? (high * 0x100000000 + low) : (BigInt(high) * BigInt(0x100000000) + BigInt(low));
+      return (~high < 0x200000) ? (-1 - ((~high) * 0x100000000 + ~low)) : (BigInt(-1) - (BigInt(~high) * BigInt(0x100000000) + BigInt(~low)));
    }
 
    /** @summary read float */
@@ -481,13 +482,13 @@ JSROOT.define(['rawinflate'], () => {
             break;
          case jsrio.kLong:
          case jsrio.kLong64:
-            array = new Float64Array(n);
+            array = new Array(n);
             for (; i < n; ++i)
                array[i] = this.ntoi8();
             return array; // exit here to avoid conflicts
          case jsrio.kULong:
          case jsrio.kULong64:
-            array = new Float64Array(n);
+            array = new Array(n);
             for (; i < n; ++i)
                array[i] = this.ntou8();
             return array; // exit here to avoid conflicts
@@ -1162,7 +1163,7 @@ JSROOT.define(['rawinflate'], () => {
    }
 
    /** @summary Retrieve a key by its name and cycle in the list of keys
-    * @desc callback used when keys must be read first from the directory
+    * @desc If only_direct not specified, returns Promise while key keys must be read first from the directory
     * @private */
    TFile.prototype.getKey = function(keyname, cycle, only_direct) {
 

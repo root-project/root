@@ -29,6 +29,54 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       kOppositeTitle: JSROOT.BIT(32) // atrificial bit, not possible to set in ROOT
    };
 
+   /** @summary Return time offset value for given TAxis object
+     * @private */
+   function getTimeOffset(axis) {
+      let dflt_time_offset = 788918400000;
+      if (!axis) return dflt_time_offset;
+      let idF = axis.fTimeFormat.indexOf('%F');
+      if (idF < 0) return JSROOT.gStyle.fTimeOffset * 1000;
+      let sof = axis.fTimeFormat.substr(idF + 2);
+      // default string in axis offset
+      if (sof.indexOf('1995-01-01 00:00:00s0') == 0) return dflt_time_offset;
+      // special case, used from DABC painters
+      if ((sof == "0") || (sof == "")) return 0;
+
+      // decode time from ROOT string
+      const next = (separ, min, max) => {
+         let pos = sof.indexOf(separ);
+         if (pos < 0) return min;
+         let val = parseInt(sof.substr(0, pos));
+         sof = sof.substr(pos + 1);
+         if (!Number.isInteger(val) || (val < min) || (val > max)) return min;
+         return val;
+      }, year = next("-", 1970, 2300),
+         month = next("-", 1, 12) - 1,
+         day = next(" ", 1, 31),
+         hour = next(":", 0, 23),
+         min = next(":", 0, 59),
+         sec = next("s", 0, 59),
+         msec = next(" ", 0, 999),
+         dt = new Date(Date.UTC(year, month, day, hour, min, sec, msec));
+
+      let offset = dt.getTime();
+
+      // now also handle suffix like GMT or GMT -0600
+      sof = sof.toUpperCase();
+
+      if (sof.indexOf('GMT') == 0) {
+         offset += dt.getTimezoneOffset() * 60000;
+         sof = sof.substr(4).trim();
+         if (sof.length > 3) {
+            let p = 0, sign = 1000;
+            if (sof[0] == '-') { p = 1; sign = -1000; }
+            offset -= sign * (parseInt(sof.substr(p, 2)) * 3600 + parseInt(sof.substr(p + 2, 2)) * 60);
+         }
+      }
+
+      return offset;
+   }
+
 
    /**
     * @summary Painter for TAxis/TGaxis objects.
@@ -69,12 +117,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.symlog = opts.symlog || false;
       this.reverse = opts.reverse || false;
       this.swap_side = opts.swap_side || false;
+      this.fixed_ticks = opts.fixed_ticks || null;
+      this.max_tick_size = opts.max_tick_size || 0;
 
       let axis = this.getObject();
 
       if (opts.time_scale || axis.fTimeDisplay) {
          this.kind = 'time';
-         this.timeoffset = jsrp.getTimeOffset(axis);
+         this.timeoffset = getTimeOffset(axis);
       } else {
          this.kind = !axis.fLabels ? 'normal' : 'labels';
       }
@@ -148,7 +198,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this.nticks > 8) this.nticks = 8;
 
          let scale_range = this.scale_max - this.scale_min,
-             tf1 = jsrp.getTimeFormat(axis),
+             idF = axis.fTimeFormat.indexOf('%F'),
+             tf1 = (idF >= 0) ? axis.fTimeFormat.substr(0, idF) : axis.fTimeFormat,
              tf2 = jsrp.chooseTimeFormat(scale_range / gr_range, false);
 
          if ((tf1.length == 0) || (scale_range < 0.1 * (this.full_max - this.full_min)))
@@ -225,9 +276,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (optionNoopt && this.nticks && (this.kind == "normal")) this.noticksopt = true;
 
-      let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func };
+      let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func }, ticks;
 
-      handle.minor = handle.middle = handle.major = this.produceTicks(this.nticks);
+      if (this.fixed_ticks) {
+         ticks = [];
+         this.fixed_ticks.forEach(v => {
+            if ((v >= this.scale_min) && (v <= this.scale_max)) ticks.push(v);
+         });
+      } else {
+         ticks = this.produceTicks(this.nticks);
+      }
+
+      handle.minor = handle.middle = handle.major = ticks;
 
       if (only_major_as_array) {
          let res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
@@ -245,7 +305,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
-      if ((this.nticks2 > 1) && (!this.log || (this.logbase === 10))) {
+      if ((this.nticks2 > 1) && (!this.log || (this.logbase === 10)) && !this.fixed_ticks) {
          handle.minor = handle.middle = this.produceTicks(handle.major.length, this.nticks2);
 
          let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
@@ -482,8 +542,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       title_g.style("cursor", "move").call(drag_move);
    }
 
-   /** @summary Draw axis ticks */
-   TAxisPainter.prototype.drawTicks = function(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, real_draw) {
+   /** @summary Produce svg path for axis ticks */
+   TAxisPainter.prototype.produceTicksPath = function(handle, side, tickSize, ticksPlusMinus, secondShift, real_draw) {
       let res = "", res2 = "", lastpos = 0, lasth = 0;
       this.ticks = [];
 
@@ -501,29 +561,30 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.ticks.push(handle.grpos); // keep graphical positions of major ticks
          }
 
-         if (ticksPlusMinus > 0) h2 = -h1; else
-         if (side < 0) { h2 = -h1; h1 = 0; } else { h2 = 0; }
-
-         if (res.length == 0) {
-            res = this.vertical ? ("M"+h1+","+handle.grpos) : ("M"+handle.grpos+","+(-h1));
-            res2 = this.vertical ? ("M"+(secondShift-h1)+","+handle.grpos) : ("M"+handle.grpos+","+(secondShift+h1));
-         } else {
-            res += this.vertical ? ("m"+(h1-lasth)+","+(handle.grpos-lastpos)) : ("m"+(handle.grpos-lastpos)+","+(lasth-h1));
-            res2 += this.vertical ? ("m"+(lasth-h1)+","+(handle.grpos-lastpos)) : ("m"+(handle.grpos-lastpos)+","+(h1-lasth));
+         if (ticksPlusMinus > 0) {
+            h2 = -h1;
+         } else if (side < 0) {
+            h2 = -h1; h1 = 0;
          }
 
-         res += this.vertical ? ("h"+ (h2-h1)) : ("v"+ (h1-h2));
-         res2 += this.vertical ? ("h"+ (h1-h2)) : ("v"+ (h2-h1));
+         if (res.length == 0) {
+            res = this.vertical ? `M${h1},${handle.grpos}` : `M${handle.grpos},${-h1}`;
+            res2 = this.vertical ? `M${secondShift-h1},${handle.grpos}` : `M${handle.grpos},${secondShift+h1}`;
+         } else {
+            res += this.vertical ? `m${h1-lasth},${handle.grpos-lastpos}` : `m${handle.grpos-lastpos},${lasth-h1}`;
+            res2 += this.vertical ? `m${lasth-h1},${handle.grpos-lastpos}` : `m${handle.grpos-lastpos},${h1-lasth}`;
+         }
+
+         res += this.vertical ? `h${h2-h1}` : `v${h1-h2}`;
+         res2 += this.vertical ? `h${h1-h2}` : `v${h2-h1}`;
 
          lastpos = handle.grpos;
          lasth = h2;
       }
 
-      if ((res.length > 0) && real_draw)
-         axis_g.append("svg:path").attr("d", res).call(this.lineatt.func);
+      if (secondShift !== 0) res += res2;
 
-      if ((secondShift !== 0) && (res2.length > 0) && real_draw)
-         axis_g.append("svg:path").attr("d", res2).call(this.lineatt.func);
+      return real_draw ? res  : "";
    }
 
    /** @summary Returns modifier for axis label */
@@ -548,9 +609,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           lbl_pos = handle.lbl_pos || handle.major, lbl_tilt = false, max_textwidth = 0;
 
       if (this.lbls_both_sides)
-         label_g.push(axis_g.append("svg:g").attr("class","axis_labels").attr("transform", this.vertical ? "translate(" + w + ",0)" : "translate(0," + (-h) + ")"));
+         label_g.push(axis_g.append("svg:g").attr("class","axis_labels").attr("transform", this.vertical ? `translate(${w})` : `translate(0,${-h})`));
 
       // function called when text is drawn to analyze width, required to correctly scale all labels
+      // must be function to correctly handle 'this' argument
       function process_drawtext_ready(painter) {
          let textwidth = this.result_width;
          max_textwidth = Math.max(max_textwidth, textwidth);
@@ -651,12 +713,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
 
       // first complete major labels drawing
-      return this.finishTextDrawing(label_g[0]).then(() => {
+      return this.finishTextDrawing(label_g[0], true).then(() => {
          if (label_g.length > 1) {
             // now complete drawing of second half with scaling if necessary
             if (applied_scale)
                this.scaleTextDrawing(applied_scale, label_g[1]);
-            return this.finishTextDrawing(label_g[1]);
+            return this.finishTextDrawing(label_g[1], true);
           }
           return true;
       }).then(() => {
@@ -714,9 +776,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             axis_g.selectAll("*").remove();
       }
 
-      if (!disable_axis_drawing && draw_lines)
-         axis_g.append("svg:path").attr("d", "M0,0" + (vertical ? "v"+h : "h"+w))
-               .call(this.lineatt.func);
+      let axis_lines = "";
+      if (draw_lines) {
+         axis_lines = "M0,0" + (vertical ? `v${h}` : `h${w}`);
+         if (secondShift !== 0)
+            axis_lines += vertical ? `M${secondShift},0v${h}` : `M0,${secondShift}h${w}`;
+      }
 
       axis_g.attr("transform", transform || null);
 
@@ -749,7 +814,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       const handle = this.createTicks(false, optionNoexp, optionNoopt, optionInt);
 
-      this.drawTicks(axis_g, handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing && !this.disable_ticks);
+      axis_lines += this.produceTicksPath(handle, side, tickSize, ticksPlusMinus, secondShift, draw_lines && !disable_axis_drawing && !this.disable_ticks);
+
+      if (!disable_axis_drawing && axis_lines && !this.lineatt.empty())
+         axis_g.append("svg:path").attr("d", axis_lines)
+               .call(this.lineatt.func);
 
       let labelSize0 = Math.round( (axis.fLabelSize < 1) ? axis.fLabelSize * text_scaling_size : axis.fLabelSize),
           labeloffset = Math.round(Math.abs(axis.fLabelOffset)*text_scaling_size);
@@ -937,11 +1006,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.createG();
 
-      return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), "translate(" + x1 + "," + y2 +")");
+      return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), `translate(${x1},${y2})`);
    }
 
-   let drawGaxis = (divid, obj, opt) => {
-      let painter = new TAxisPainter(divid, obj, false);
+   /** @summary draw TGaxis object
+     * @memberof JSROOT.Painter
+     * @private */
+   function drawGaxis(dom, obj, opt) {
+      let painter = new TAxisPainter(dom, obj, false);
       painter.disable_zooming = true;
 
       return jsrp.ensureTCanvas(painter, false)
@@ -949,37 +1021,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    // ===============================================
-
-   let ProjectAitoff2xy = (l, b) => {
-      const DegToRad = Math.PI/180,
-            alpha2 = (l/2)*DegToRad,
-            delta  = b*DegToRad,
-            r2     = Math.sqrt(2),
-            f      = 2*r2/Math.PI,
-            cdec   = Math.cos(delta),
-            denom  = Math.sqrt(1. + cdec*Math.cos(alpha2));
-      return {
-         x: cdec*Math.sin(alpha2)*2.*r2/denom/f/DegToRad,
-         y: Math.sin(delta)*r2/denom/f/DegToRad
-      };
-   }
-
-   let ProjectMercator2xy = (l, b) => {
-      const aid = Math.tan((Math.PI/2 + b/180*Math.PI)/2);
-      return { x: l, y: Math.log(aid) };
-   }
-
-   let ProjectSinusoidal2xy = (l, b) => {
-      return { x: l*Math.cos(b/180*Math.PI), y: b };
-   }
-
-   let ProjectParabolic2xy = (l, b) => {
-      return {
-         x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1),
-         y: 180*Math.sin(b/180*Math.PI/3)
-      };
-   }
-
 
    /**
     * @summary Painter class for TFrame, main handler for interactivity
@@ -1049,10 +1090,26 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Returns coordinates transformation func */
    TFramePainter.prototype.getProjectionFunc = function() {
       switch (this.projection) {
-         case 1: return ProjectAitoff2xy;
-         case 2: return ProjectMercator2xy;
-         case 3: return ProjectSinusoidal2xy;
-         case 4: return ProjectParabolic2xy;
+         // Aitoff2xy
+         case 1: return (l, b) => {
+            const DegToRad = Math.PI/180,
+                  alpha2 = (l/2)*DegToRad,
+                  delta  = b*DegToRad,
+                  r2     = Math.sqrt(2),
+                  f      = 2*r2/Math.PI,
+                  cdec   = Math.cos(delta),
+                  denom  = Math.sqrt(1. + cdec*Math.cos(alpha2));
+            return {
+               x: cdec*Math.sin(alpha2)*2.*r2/denom/f/DegToRad,
+               y: Math.sin(delta)*r2/denom/f/DegToRad
+            };
+         };
+         // mercator
+         case 2: return (l, b) => { return { x: l, y: Math.log(Math.tan((Math.PI/2 + b/180*Math.PI)/2)) }; };
+         // sinusoidal
+         case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
+         // parabolic
+         case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
       }
    }
 
@@ -1461,11 +1518,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // add a grid on x axis, if the option is set
       if (pad && pad.fGridx && this.x_handle) {
          let gridx = "";
-         for (let n=0;n<this.x_handle.ticks.length;++n)
+         for (let n = 0; n < this.x_handle.ticks.length; ++n)
             if (this.swap_xy)
-               gridx += "M0,"+this.x_handle.ticks[n]+"h"+w;
+               gridx += `M0,${this.x_handle.ticks[n]}h${w}`;
             else
-               gridx += "M"+this.x_handle.ticks[n]+",0v"+h;
+               gridx += `M${this.x_handle.ticks[n]},0v${h}`;
 
          let colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.getAxis("x") ? this.getAxis("x").fAxisColor : 1),
              grid_color = this.getColor(colid) || "black";
@@ -1474,7 +1531,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
            layer.append("svg:path")
                 .attr("class", "xgrid")
                 .attr("d", gridx)
-                .style('stroke', grid_color)
+                .style("stroke", grid_color)
                 .style("stroke-width", JSROOT.gStyle.fGridWidth)
                 .style("stroke-dasharray", jsrp.root_line_styles[grid_style]);
       }
@@ -1482,11 +1539,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       // add a grid on y axis, if the option is set
       if (pad && pad.fGridy && this.y_handle) {
          let gridy = "";
-         for (let n=0;n<this.y_handle.ticks.length;++n)
+         for (let n = 0; n < this.y_handle.ticks.length; ++n)
             if (this.swap_xy)
-               gridy += "M"+this.y_handle.ticks[n]+",0v"+h;
+               gridy += `M${this.y_handle.ticks[n]},0v${h}`;
             else
-               gridy += "M0,"+this.y_handle.ticks[n]+"h"+w;
+               gridy += `M0,${this.y_handle.ticks[n]}h${w}`;
 
          let colid = (JSROOT.gStyle.fGridColor > 0) ? JSROOT.gStyle.fGridColor : (this.getAxis("y") ? this.getAxis("y").fAxisColor : 1),
              grid_color = this.getColor(colid) || "black";
@@ -1495,7 +1552,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
            layer.append("svg:path")
                 .attr("class", "ygrid")
                 .attr("d", gridy)
-                .style('stroke',grid_color)
+                .style("stroke", grid_color)
                 .style("stroke-width",JSROOT.gStyle.fGridWidth)
                 .style("stroke-dasharray", jsrp.root_line_styles[grid_style]);
       }
@@ -1520,7 +1577,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary draw axes, return Promise which ready when drawing is completed  */
    TFramePainter.prototype.drawAxes = function(shrink_forbidden,
                                                disable_x_draw, disable_y_draw,
-                                               AxisPos, has_x_obstacle) {
+                                               AxisPos, has_x_obstacle, has_y_obstacle) {
 
       this.cleanAxesDrawings();
 
@@ -1541,6 +1598,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       this.y_handle.invert_side = ((AxisPos % 10) === 1);
       this.y_handle.lbls_both_sides = !this.y_handle.invert_side && pad && (pad.fTicky > 1); // labels on both sides
+      this.y_handle.has_obstacle = has_y_obstacle;
 
       let draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle,
@@ -1558,12 +1616,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let can_adjust_frame = !shrink_forbidden && JSROOT.settings.CanAdjustFrame;
 
          let promise1 = draw_horiz.drawAxis(layer, w, h,
-                                            draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
+                                            draw_horiz.invert_side ? undefined : `translate(0,${h})`,
                                             pad && pad.fTickx ? -h : 0, disable_x_draw,
                                             undefined, false);
 
          let promise2 = draw_vertical.drawAxis(layer, w, h,
-                                               draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
+                                               draw_vertical.invert_side ? `translate(${w})` : undefined,
                                                pad && pad.fTicky ? w : 0, disable_y_draw,
                                                draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
 
@@ -1630,13 +1688,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (draw_horiz)
          promise1 = draw_horiz.drawAxis(layer, w, h,
-                                        draw_horiz.invert_side ? undefined : "translate(0," + h + ")",
+                                        draw_horiz.invert_side ? undefined : `translate(0,${h})`,
                                         pad && pad.fTickx ? -h : 0, false,
                                         undefined, false);
 
       if (draw_vertical)
          promise2 = draw_vertical.drawAxis(layer, w, h,
-                                            draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
+                                            draw_vertical.invert_side ? `translate(${w})` : undefined,
                                             pad && pad.fTicky ? w : 0, false,
                                             draw_vertical.invert_side ? 0 : this._frame_x, false);
 
@@ -1864,12 +1922,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       let top_rect, main_svg;
 
       if (this.draw_g.empty()) {
-
          let layer = this.getLayerSvg("primitives_layer");
 
          this.draw_g = layer.append("svg:g").attr("class", "root_frame");
 
-         this.draw_g.append("svg:title").text("");
+         // empty title on the frame required to suppress title of the canvas
+         if (!JSROOT.batch_mode)
+            this.draw_g.append("svg:title").text("");
 
          top_rect = this.draw_g.append("svg:path");
 
@@ -1899,11 +1958,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       main_svg.attr("width", w)
               .attr("height", h)
-              .attr("viewBox", "0 0 " + w + " " + h);
+              .attr("viewBox", `0 0 ${w} ${h}`);
 
       if (JSROOT.batch_mode) return;
 
-      top_rect.attr("pointer-events", "visibleFill"); // let process mouse events inside frame
+      top_rect.style("pointer-events", "visibleFill"); // let process mouse events inside frame
 
       JSROOT.require(['interactive']).then(inter => {
          inter.FrameInteractive.assign(this);
@@ -2312,7 +2371,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    }
 
    /** @summary Add interactive functionality to the frame
-    * @private */
+     * @private */
    TFramePainter.prototype.addInteractivity = function(for_second_axes) {
       if (JSROOT.batch_mode || (!JSROOT.settings.Zooming && !JSROOT.settings.ContextMenu))
          return Promise.resolve(false);
@@ -2323,8 +2382,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   let drawFrame = (divid, obj, opt) => {
-      let fp = new TFramePainter(divid, obj);
+   /** @summary draw TFrame object
+     * @memberof JSROOT.Painter
+     * @private */
+   function drawFrame(dom, obj, opt) {
+      let fp = new TFramePainter(dom, obj);
       return jsrp.ensureTCanvas(fp, false).then(() => {
          if (opt == "3d") fp.mode3d = true;
          fp.redraw();
@@ -2346,8 +2408,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private
      */
 
-   function TPadPainter(divid, pad, iscan) {
-      JSROOT.ObjectPainter.call(this, divid, pad);
+   function TPadPainter(dom, pad, iscan) {
+      JSROOT.ObjectPainter.call(this, dom, pad);
       this.pad = pad;
       this.iscan = iscan; // indicate if working with canvas
       this.this_pad_name = "";
@@ -2473,12 +2535,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    TPadPainter.prototype.forEachPainterInPad = function(userfunc, kind) {
       if (!kind) kind = "all";
-      if (kind!="objects") userfunc(this);
+      if (kind != "objects") userfunc(this);
       for (let k = 0; k < this.painters.length; ++k) {
          let sub = this.painters[k];
          if (typeof sub.forEachPainterInPad === 'function') {
-            if (kind!="objects") sub.forEachPainterInPad(userfunc, kind);
-         } else if (kind != "pads") userfunc(sub);
+            if (kind != "objects") sub.forEachPainterInPad(userfunc, kind);
+         } else if (kind != "pads") {
+            userfunc(sub);
+         }
       }
    }
 
@@ -2543,7 +2607,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /** @summary Create SVG element for canvas */
    TPadPainter.prototype.createCanvasSvg = function(check_resize, new_size) {
 
-      let factor = null, svg = null, lmt = 5, rect = null, btns;
+      let factor = null, svg = null, lmt = 5, rect = null, btns, frect;
 
       if (check_resize > 0) {
 
@@ -2561,6 +2625,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          if (!JSROOT.batch_mode)
             btns = this.getLayerSvg("btns_layer", this.this_pad_name);
+
+         frect = svg.select(".canvas_fillrect");
 
       } else {
 
@@ -2580,15 +2646,19 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (JSROOT.batch_mode) {
             svg.attr("xmlns", "http://www.w3.org/2000/svg");
             svg.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
+         } else {
+            svg.append("svg:title").text("ROOT canvas");
          }
 
-         svg.append("svg:title").text("ROOT canvas");
-         let frect = svg.append("svg:path").attr("class","canvas_fillrect");
+         if (!JSROOT.batch_mode || (this.pad.fFillStyle > 0))
+            frect = svg.append("svg:path").attr("class","canvas_fillrect");
+
          if (!JSROOT.batch_mode)
             frect.style("pointer-events", "visibleFill")
                  .on("dblclick", evnt => this.enlargePad(evnt))
                  .on("click", () => this.selectObjectPainter())
-                 .on("mouseenter", () => this.showObjectStatus());
+                 .on("mouseenter", () => this.showObjectStatus())
+                 .on("contextmenu", JSROOT.settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
          svg.append("svg:g").attr("class","primitives_layer");
          svg.append("svg:g").attr("class","info_layer");
@@ -2597,9 +2667,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                       .attr("class","btns_layer")
                       .property('leftside', JSROOT.settings.ToolBarSide == 'left')
                       .property('vertical', JSROOT.settings.ToolBarVert);
-
-         if (JSROOT.settings.ContextMenu && !JSROOT.batch_mode)
-            svg.select(".canvas_fillrect").on("contextmenu", evnt => this.padContextMenu(evnt));
 
          factor = 0.66;
          if (this.pad && this.pad.fCw && this.pad.fCh && (this.pad.fCw > 0)) {
@@ -2621,7 +2688,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if ((rect.width <= lmt) || (rect.height <= lmt)) {
          svg.style("display", "none");
-         console.warn("Hide canvas while geometry too small w=" + rect.width + " h=" + rect.height);
+         console.warn(`Hide canvas while geometry too small w=${rect.width} h=${rect.height}`);
          rect.width = 200; rect.height = 100; // just to complete drawing
       } else {
          svg.style("display", null);
@@ -2645,7 +2712,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
            .style("bottom", 0);
       }
 
-      svg.attr("viewBox", "0 0 " + rect.width + " " + rect.height)
+      svg.attr("viewBox", `0 0 ${rect.width} ${rect.height}`)
          .attr("preserveAspectRatio", "none")  // we do not preserve relative ratio
          .property('height_factor', factor)
          .property('draw_x', 0)
@@ -2658,13 +2725,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this._pad_width = rect.width;
       this._pad_height = rect.height;
 
-      let fill_rect = svg.select(".canvas_fillrect")
-         .attr("d", `M0,0H${rect.width}V${rect.height}H0Z`)
-         .call(this.fillatt.func);
+      if (frect) {
+         frect.attr("d", `M0,0H${rect.width}V${rect.height}H0Z`)
+              .call(this.fillatt.func);
+         this.drawActiveBorder(frect);
+      }
 
       this._fast_drawing = JSROOT.settings.SmallPad && ((rect.width < JSROOT.settings.SmallPad.width) || (rect.height < JSROOT.settings.SmallPad.height));
-
-      this.drawActiveBorder(fill_rect);
 
       if (this.alignButtons && btns)
          this.alignButtons(btns, rect.width, rect.height);
@@ -2738,7 +2805,20 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              .classed("__root_pad_" + this.this_pad_name, true)
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
-         svg_rect = svg_pad.append("svg:path").attr("class", "root_pad_border");
+
+         if (!JSROOT.batch_mode)
+            svg_pad.append("svg:title").text("subpad " + this.this_pad_name);
+
+         // need to check attributes directly while attributes objects will be created later
+         if (!JSROOT.batch_mode || (this.pad.fFillStyle > 0) || ((this.pad.fLineStyle > 0) && (this.pad.fLineColor > 0)))
+            svg_rect = svg_pad.append("svg:path").attr("class", "root_pad_border");
+
+         if (!JSROOT.batch_mode)
+            svg_rect.style("pointer-events", "visibleFill") // get events also for not visible rect
+                    .on("dblclick", evnt => this.enlargePad(evnt))
+                    .on("click", () => this.selectObjectPainter())
+                    .on("mouseenter", () => this.showObjectStatus())
+                    .on("contextmenu", JSROOT.settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
          svg_pad.append("svg:g").attr("class","primitives_layer");
          if (!JSROOT.batch_mode)
@@ -2746,22 +2826,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                           .attr("class","btns_layer")
                           .property('leftside', JSROOT.settings.ToolBarSide != 'left')
                           .property('vertical', JSROOT.settings.ToolBarVert);
-
-         if (JSROOT.settings.ContextMenu)
-            svg_rect.on("contextmenu", evnt => this.padContextMenu(evnt));
-
-         if (!JSROOT.batch_mode)
-            svg_rect.attr("pointer-events", "visibleFill") // get events also for not visible rect
-                    .on("dblclick", evnt => this.enlargePad(evnt))
-                    .on("click", () => this.selectObjectPainter())
-                    .on("mouseenter", () => this.showObjectStatus());
       }
 
       this.createAttFill({ attr: this.pad });
       this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
-      svg_pad.attr("display", pad_visible ? null : "none")
-             .attr("viewBox", "0 0 " + w + " " + h) // due to svg
+      svg_pad.style("display", pad_visible ? null : "none")
+             .attr("viewBox", `0 0 ${w} ${h}`) // due to svg
              .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
              .attr("x", x)        // due to svg
              .attr("y", y)        // due to svg
@@ -2777,11 +2848,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this._pad_width = w;
       this._pad_height = h;
 
-      svg_rect.attr("d", `M0,0H${w}V${h}H0Z`)
-              .call(this.fillatt.func)
-              .call(this.lineatt.func);
+      if (svg_rect) {
+         svg_rect.attr("d", `M0,0H${w}V${h}H0Z`)
+                 .call(this.fillatt.func)
+                 .call(this.lineatt.func);
 
-      this.drawActiveBorder(svg_rect);
+         this.drawActiveBorder(svg_rect);
+      }
 
       this._fast_drawing = JSROOT.settings.SmallPad && ((w < JSROOT.settings.SmallPad.width) || (h < JSROOT.settings.SmallPad.height));
 
@@ -2974,21 +3047,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return this.drawPrimitives(indx+1);
       });
    }
-   
+
    /** @summary Divide pad on subpads
      * @returns {Promise} when finished
      * @private */
    TPadPainter.prototype.divide = function(nx, ny) {
       if (!ny) {
          let ndiv = nx;
-         if (ndiv < 2) return Promise.resolve(this); 
+         if (ndiv < 2) return Promise.resolve(this);
          nx = ny = Math.round(Math.sqrt(ndiv));
          if (nx*ny < ndiv) nx += 1;
       }
-      
+
       if (nx*ny < 2) return Promise.resolve(this);
-      
-      let xmargin = 0.01, ymargin = 0.01, 
+
+      let xmargin = 0.01, ymargin = 0.01,
           dy = 1/ny, dx = 1/nx, n = 0, subpads = [];
       for (let iy = 0; iy < ny; iy++) {
          let y2 = 1 - iy*dy - ymargin,
@@ -3014,15 +3087,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                pad.fAbsXlowNDC = x1;
                pad.fAbsYlowNDC = y1;
             }
-            
+
             subpads.push(pad);
          }
       }
-      
+
       const drawNext = () => {
-         if (subpads.length == 0) 
+         if (subpads.length == 0)
             return Promise.resolve(this);
-         return JSROOT.draw(this.getDom(), subpads.shift()).then(drawNext); 
+         return JSROOT.draw(this.getDom(), subpads.shift()).then(drawNext);
       };
 
       return drawNext();
@@ -3037,6 +3110,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       }
       return null;
    }
+
 
    /** @summary Process tooltip event in the pad
      * @private */
@@ -3379,10 +3453,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          for (let n = 0; n < arr.length; ++n) {
             let name = arr[n], p = name.indexOf(":");
             if (p > 0) {
-               ListOfColors[parseInt(name.substr(0,p))] = "rgb(" + name.substr(p+1) + ")";
+               ListOfColors[parseInt(name.substr(0,p))] = d3.color("rgb(" + name.substr(p+1) + ")").formatHex();
             } else {
                p = name.indexOf("=");
-               ListOfColors[parseInt(name.substr(0,p))] = "rgba(" + name.substr(p+1) + ")";
+               ListOfColors[parseInt(name.substr(0,p))] = d3.color("rgba(" + name.substr(p+1) + ")").formatHex();
             }
          }
 
@@ -3574,7 +3648,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
 
          if (sub) {
-            console.log(`Remove painter ${k} from ${this.painters.length} class ${sub.getClassName()}`);
+            // console.log(`Remove painter ${k} from ${this.painters.length} class ${sub.getClassName()}`);
             // remove painter which does not found in the list of snaps
             this.painters.splice(k--,1);
             sub.cleanup(); // cleanup such painter
@@ -3995,6 +4069,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                this.painters.forEach((pp,indx) => {
                   let obj = pp ? pp.getObject() : null;
                   if (!obj || (shown.indexOf(obj) >= 0)) return;
+                  if (pp.$secondary) return;
                   let name = ('_typename' in obj) ? (obj._typename + "::") : "";
                   if ('fName' in obj) name += obj.fName;
                   if (!name.length) name = "item" + indx;
@@ -4122,8 +4197,11 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.storeDrawOpt(opt);
    }
 
-   let drawPad = (divid, pad, opt) => {
-      let painter = new TPadPainter(divid, pad, false);
+   /** @summary draw TPad object
+     * @memberof JSROOT.Painter
+     * @private */
+   function drawPad(dom, pad, opt) {
+      let painter = new TPadPainter(dom, pad, false);
       painter.decodeOptions(opt);
 
       if (painter.getCanvSvg().empty()) {
@@ -4178,8 +4256,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private
      */
 
-   function TCanvasPainter(divid, canvas) {
-      TPadPainter.call(this, divid, canvas, true);
+   function TCanvasPainter(dom, canvas) {
+      TPadPainter.call(this, dom, canvas, true);
       this._websocket = null;
       this.tooltip_allowed = JSROOT.settings.Tooltip;
    }
@@ -4241,7 +4319,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return Promise.resolve(true);
       }
 
-      return JSROOT.require("jq2d").then(() => {
+      return JSROOT.require("hierarchy").then(() => {
 
          let grid = new JSROOT.GridDisplay(origin.node(), layout_kind);
 
@@ -4796,11 +4874,14 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             return JSROOT.draw(this.getDom(), lst.arr[0], lst.opt[0]); // return promise
    }
 
-   let drawCanvas = (divid, can, opt) => {
+   /** @summary draw TCanvas
+     * @memberof JSROOT.Painter
+     * @private */
+   function drawCanvas(dom, can, opt) {
       let nocanvas = !can;
       if (nocanvas) can = JSROOT.create("TCanvas");
 
-      let painter = new TCanvasPainter(divid, can);
+      let painter = new TCanvasPainter(dom, can);
       painter.checkSpecialsInPrimitives(can);
 
       if (!nocanvas && can.fCw && can.fCh && !JSROOT.batch_mode) {
@@ -4820,7 +4901,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       painter.addPadButtons();
 
-      let promise = (nocanvas && opt.indexOf("noframe") < 0) ? drawFrame(divid, null) : Promise.resolve(true);
+      let promise = (nocanvas && opt.indexOf("noframe") < 0) ? drawFrame(dom, null) : Promise.resolve(true);
       return promise.then(() => {
          // select global reference - required for keys handling
          jsrp.selectActivePad({ pp: painter, active: true });
@@ -4835,16 +4916,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
   /** @summary Ensure TCanvas and TFrame for the painter object
     * @param {Object} painter  - painter object to process
     * @param {string|boolean} frame_kind  - false for no frame or "3d" for special 3D mode
-    * @desc Assign divid, creates TCanvas if necessary, add to list of pad painters
+    * @desc Assign dom, creates TCanvas if necessary, add to list of pad painters
     * @memberof JSROOT.Painter */
    let ensureTCanvas = function(painter, frame_kind) {
       if (!painter) return Promise.reject('Painter not provided in ensureTCanvas');
 
       // simple check - if canvas there, can use painter
-      let svg_c = painter.getCanvSvg();
-      let noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "";
-
-      let promise = !svg_c.empty() ? Promise.resolve(true) : drawCanvas(painter.getDom(), null, noframe);
+      let svg_c = painter.getCanvSvg(),
+          noframe = (frame_kind === false) || (frame_kind == "3d") ? "noframe" : "",
+          promise = !svg_c.empty() ? Promise.resolve(true) : drawCanvas(painter.getDom(), null, noframe);
 
       return promise.then(() => {
          if (frame_kind === false) return;
@@ -4857,12 +4937,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
-   let drawPadSnapshot = (divid, snap /*, opt*/) => {
-      // just for debugging without running web canvas
-
-      let can = JSROOT.create("TCanvas");
-
-      let painter = new TCanvasPainter(divid, can);
+   /** @summary draw TPad snapshot from TWebCanvas
+     * @memberof JSROOT.Painter
+     * @private */
+   function drawPadSnapshot(dom, snap /*, opt*/) {
+      let can = JSROOT.create("TCanvas"),
+          painter = new TCanvasPainter(dom, can);
       painter.normal_canvas = false;
       painter.addPadButtons();
 

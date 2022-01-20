@@ -1776,8 +1776,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    }
 
    /** @summary Returns geometry bounding box
-    * @memberof JSROOT.GEO
-    * @private */
+     * @memberof JSROOT.GEO
+     * @private */
    function geomBoundingBox(geom) {
       if (!geom) return null;
 
@@ -1804,9 +1804,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    }
 
    /** @summary Creates half-space geometry for given shape
-    * @desc Just big-enough triangle to make BSP calculations
-    * @memberof JSROOT.GEO
-    * @private */
+     * @desc Just big-enough triangle to make BSP calculations
+     * @memberof JSROOT.GEO
+     * @private */
    function createHalfSpace(shape, geom) {
       if (!shape || !shape.fN || !shape.fP) return null;
 
@@ -2205,7 +2205,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    }
 
    /** @summary Compares two stacks.
-     * @returns {number} length where stacks are the same
+     * @returns {Number} length where stacks are the same
      * @private */
    geo.compareStacks = function(stack1, stack2) {
       if (!stack1 || !stack2) return 0;
@@ -2326,105 +2326,105 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    /** @summary Create complete description for provided Geo object
      * @private */
    ClonedNodes.prototype.createClones = function(obj, sublevel, kind) {
-       if (!sublevel) {
+      if (!sublevel) {
 
-          if (obj && obj._typename == "$$Shape$$")
-             return this.createClonesForShape(obj);
+         if (obj && obj._typename == "$$Shape$$")
+            return this.createClonesForShape(obj);
 
-          this.origin = [];
-          sublevel = 1;
-          kind = geo.getNodeKind(obj);
-       }
+         this.origin = [];
+         sublevel = 1;
+         kind = geo.getNodeKind(obj);
+      }
 
-       if ((kind < 0) || !obj || ('_refid' in obj)) return;
+      if ((kind < 0) || !obj || ('_refid' in obj)) return;
 
-       obj._refid = this.origin.length;
-       this.origin.push(obj);
-       if (sublevel>this.maxdepth) this.maxdepth = sublevel;
+      obj._refid = this.origin.length;
+      this.origin.push(obj);
+      if (sublevel > this.maxdepth) this.maxdepth = sublevel;
 
-       let chlds = null;
-       if (kind === kindGeo)
-          chlds = (obj.fVolume && obj.fVolume.fNodes) ? obj.fVolume.fNodes.arr : null;
-       else
-          chlds = obj.fElements ? obj.fElements.arr : null;
+      let chlds = null;
+      if (kind === kindGeo)
+         chlds = (obj.fVolume && obj.fVolume.fNodes) ? obj.fVolume.fNodes.arr : null;
+      else
+         chlds = obj.fElements ? obj.fElements.arr : null;
 
-       if (chlds !== null) {
-          geo.checkDuplicates(obj, chlds);
-          for (let i = 0; i < chlds.length; ++i)
-             this.createClones(chlds[i], sublevel+1, kind);
-       }
+      if (chlds !== null) {
+         geo.checkDuplicates(obj, chlds);
+         for (let i = 0; i < chlds.length; ++i)
+            this.createClones(chlds[i], sublevel + 1, kind);
+      }
 
-       if (sublevel > 1) return;
+      if (sublevel > 1) return;
 
-       this.nodes = [];
+      this.nodes = [];
 
-       let sortarr = [];
+      let sortarr = [];
 
-       // first create nodes objects
+      // first create nodes objects
       for (let n = 0; n < this.origin.length; ++n) {
-          // let obj = this.origin[n];
-          let node = { id: n, kind: kind, vol: 0, nfaces: 0 };
-          this.nodes.push(node);
-          sortarr.push(node); // array use to produce sortmap
-       }
+         // let obj = this.origin[n];
+         let node = { id: n, kind: kind, vol: 0, nfaces: 0 };
+         this.nodes.push(node);
+         sortarr.push(node); // array use to produce sortmap
+      }
 
-       // than fill children lists
-       for (let n=0;n<this.origin.length;++n) {
-          let obj = this.origin[n], clone = this.nodes[n];
+      // than fill children lists
+      for (let n = 0; n < this.origin.length; ++n) {
+         let obj = this.origin[n], clone = this.nodes[n];
 
-          let chlds = null, shape = null;
+         let chlds = null, shape = null;
 
-          if (kind === kindEve) {
-             shape = obj.fShape;
-             if (obj.fElements) chlds = obj.fElements.arr;
-          } else if (obj.fVolume) {
-             shape = obj.fVolume.fShape;
-             if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
-          }
+         if (kind === kindEve) {
+            shape = obj.fShape;
+            if (obj.fElements) chlds = obj.fElements.arr;
+         } else if (obj.fVolume) {
+            shape = obj.fVolume.fShape;
+            if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
+         }
 
-          let matrix = geo.getNodeMatrix(kind, obj);
-          if (matrix) {
-             clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
-             if (clone.matrix[0] === 1) {
-                let issimple = true;
-                for (let k = 1; (k < clone.matrix.length) && issimple; ++k)
-                   issimple = (clone.matrix[k] === ((k===5) || (k===10) || (k===15) ? 1 : 0));
-                if (issimple) delete clone.matrix;
-             }
-             if (clone.matrix && (kind == kindEve)) clone.abs_matrix = true;
-          }
-          if (shape) {
-             clone.fDX = shape.fDX;
-             clone.fDY = shape.fDY;
-             clone.fDZ = shape.fDZ;
-             clone.vol = shape.fDX*shape.fDY*shape.fDZ;
-             if (shape.$nfaces === undefined)
-                shape.$nfaces = createGeometry(shape, -1);
-             clone.nfaces = shape.$nfaces;
-             if (clone.nfaces <= 0) clone.vol = 0;
-          }
+         let matrix = geo.getNodeMatrix(kind, obj);
+         if (matrix) {
+            clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
+            if (clone.matrix[0] === 1) {
+               let issimple = true;
+               for (let k = 1; (k < clone.matrix.length) && issimple; ++k)
+                  issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
+               if (issimple) delete clone.matrix;
+            }
+            if (clone.matrix && (kind == kindEve)) clone.abs_matrix = true;
+         }
+         if (shape) {
+            clone.fDX = shape.fDX;
+            clone.fDY = shape.fDY;
+            clone.fDZ = shape.fDZ;
+            clone.vol = shape.fDX * shape.fDY * shape.fDZ;
+            if (shape.$nfaces === undefined)
+               shape.$nfaces = createGeometry(shape, -1);
+            clone.nfaces = shape.$nfaces;
+            if (clone.nfaces <= 0) clone.vol = 0;
+         }
 
-          if (!chlds) continue;
+         if (!chlds) continue;
 
-          // in cloned object children is only list of ids
-          clone.chlds = new Array(chlds.length);
-          for (let k=0;k<chlds.length;++k)
-             clone.chlds[k] = chlds[k]._refid;
-       }
+         // in cloned object children is only list of ids
+         clone.chlds = new Array(chlds.length);
+         for (let k = 0; k < chlds.length; ++k)
+            clone.chlds[k] = chlds[k]._refid;
+      }
 
-       // remove _refid identifiers from original objects
-       for (let n=0;n<this.origin.length;++n)
-          delete this.origin[n]._refid;
+      // remove _refid identifiers from original objects
+      for (let n = 0; n < this.origin.length; ++n)
+         delete this.origin[n]._refid;
 
-       // do sorting once
-       sortarr.sort(function(a,b) { return b.vol - a.vol; });
+      // do sorting once
+      sortarr.sort(function(a, b) { return b.vol - a.vol; });
 
-       // remember sort map and also sortid
-       this.sortmap = new Array(this.nodes.length);
-       for (let n=0;n<this.nodes.length;++n) {
-          this.sortmap[n] = sortarr[n].id;
-          sortarr[n].sortid = n;
-       }
+      // remember sort map and also sortid
+      this.sortmap = new Array(this.nodes.length);
+      for (let n = 0; n < this.nodes.length; ++n) {
+         this.sortmap[n] = sortarr[n].id;
+         sortarr[n].sortid = n;
+      }
    }
 
    /** @summary Create elementary item with single already existing shape
@@ -2451,7 +2451,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    ClonedNodes.prototype.countVisibles = function() {
       let cnt = 0;
       if (this.nodes)
-         for (let k=0;k<this.nodes.length;++k)
+         for (let k = 0; k < this.nodes.length; ++k)
             if (this.nodes[k].vis)
                cnt++;
       return cnt;
@@ -2522,7 +2522,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
    /** @summary After visibility flags is set, produce idshift for all nodes as it would be maximum level */
    ClonedNodes.prototype.produceIdShifts = function() {
-      for (let k=0;k<this.nodes.length;++k)
+      for (let k = 0; k < this.nodes.length; ++k)
          this.nodes[k].idshift = -1;
 
       function scan_func(nodes, node) {
@@ -2817,7 +2817,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          prop.fillcolor = new THREE.Color( entry.color ? "rgb(" + entry.color + ")" : "blue" );
          prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                           opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                          side: THREE.FrontSide /* THREE.DoubleSide*/, vertexColors: THREE.NoColors /*THREE.VertexColors */,
+                          side: THREE.FrontSide, vertexColors: false,
                           depthWrite: _opacity == 1 } );
          prop.material.inherentOpacity = _opacity;
 
@@ -2843,7 +2843,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
             prop.fillcolor = new THREE.Color( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
             prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                              opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                             side: THREE.FrontSide /* THREE.DoubleSide*/, vertexColors: THREE.NoColors /*THREE.VertexColors */,
+                             side: THREE.FrontSide, vertexColors: false,
                              depthWrite: _opacity == 1 } );
             prop.material.inherentOpacity = _opacity;
          }
@@ -2894,7 +2894,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
          prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
                               opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                              side: THREE.FrontSide /* THREE.DoubleSide */, vertexColors: THREE.NoColors /*THREE.VertexColors*/,
+                              side: THREE.FrontSide, vertexColors: false,
                               depthWrite: _opacity == 1 } );
          prop.material.inherentOpacity = _opacity;
 
@@ -3310,14 +3310,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       let names = [], cnts = [];
-      for (let k=0;k<chlds.length;++k) {
+      for (let k = 0; k < chlds.length; ++k) {
          let chld = chlds[k];
          if (!chld || !chld.fName) continue;
          if (!chld.$geo_suffix) {
             let indx = names.indexOf(chld.fName);
             if (indx>=0) {
                let cnt = cnts[indx] || 1;
-               while(names.indexOf(chld.fName+"#"+cnt)>=0) ++cnt;
+               while(names.indexOf(chld.fName+"#"+cnt) >= 0) ++cnt;
                chld.$geo_suffix = "#" + cnt;
                cnts[indx] = cnt+1;
             }
@@ -3331,7 +3331,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
     * one should inverse geometry object, otherwise THREE.js cannot correctly draw it
     * @param {Object} shape - TGeoShape object
     * @param {Object} material - material
-    * @memberof SJROOT.GEO
+    * @memberof JSROOT.GEO
     * @private */
 
    function createFlippedMesh(shape, material) {
@@ -3402,9 +3402,6 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
                face = geom.faces[n++];
                d = face.b; face.b = face.c; face.c = d;
             }
-
-            // normals are calculated with normal geometry and correctly scaled
-            // geom.computeFaceNormals();
          }
       }
 
@@ -3586,7 +3583,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
                let unique = [];
 
-               for (let k1=0;k1<intersects.length;++k1) {
+               for (let k1 = 0; k1 < intersects.length; ++k1) {
                   if (unique.indexOf(intersects[k1].object)<0) unique.push(intersects[k1].object);
                   // if (intersects[k1].object === mesh) break; // trace until object itself
                }
@@ -3606,7 +3603,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
             }
 
             // now push first object in intersects to the front
-            for (let k1=0;k1<intersects.length-1;++k1) {
+            for (let k1 = 0; k1 < intersects.length - 1; ++k1) {
                let mesh1 = intersects[k1], mesh2 = intersects[k1+1],
                    i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
                if (i1<i2) continue;
@@ -3620,7 +3617,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
          }
 
-         for (let i=0;i<resort.length;++i) {
+         for (let i = 0; i < resort.length; ++i) {
             resort[i].renderOrder = maxorder - (i+1) / (resort.length+1) * (maxorder-minorder);
             delete resort[i].$jsroot_index;
             delete resort[i].$jsroot_distance;
@@ -3637,14 +3634,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          if (!arr.length) return;
 
          if (minorder === maxorder) {
-            for (let k=0;k<arr.length;++k)
+            for (let k = 0; k < arr.length; ++k)
                arr[k].renderOrder = minorder;
          } else {
            did_sort = sort(arr, minorder, maxorder);
            if (!did_sort) minorder = maxorder = (minorder + maxorder) / 2;
          }
 
-         for (let k=0;k<arr.length;++k) {
+         for (let k = 0; k < arr.length; ++k) {
             let next = arr[k].parent, min = minorder, max = maxorder;
 
             if (did_sort) {

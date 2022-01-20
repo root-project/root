@@ -100,11 +100,11 @@
    /** @summary JSROOT version id
      * @desc For the JSROOT release the string in format "major.minor.patch" like "6.3.0"
      * For the ROOT release string is "ROOT major.minor.patch" like "ROOT 6.26.00" */
-   JSROOT.version_id = "6.3.x";
+   JSROOT.version_id = "dev";
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "19/11/2021"*/
-   JSROOT.version_date = "20/12/2021";
+   JSROOT.version_date = "20/01/2022";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -160,20 +160,19 @@
    }
 
    _.sources = {
-         'd3'                   : { src: 'd3', libs: true, extract: "d3", node: "d3" },
-         'jquery'               : { src: 'jquery', libs: true,  extract: "$" },
-         'jquery-ui'            : { src: 'jquery-ui', libs: true, extract: "$", dep: 'jquery' },
-         'jqueryui-mousewheel'  : { src: 'jquery.mousewheel', onlymin: true, extract: "$", dep: 'jquery-ui' },
-         'jqueryui-touch-punch' : { src: 'touch-punch', onlymin: true, extract: "$", dep: 'jquery-ui' },
+         'd3'                   : { src: 'd3', libs: true, extract: "d3" },
+         'jquery'               : { src: 'https://root.cern/js/6.3.2/scripts/jquery.min', onlymin: true, extract: "$" },
+         'jquery-ui'            : { src: 'https://root.cern/js/6.3.2/scripts/jquery-ui.min', onlymin: true, extract: "$", dep: 'jquery' },
+         'jqueryui-mousewheel'  : { src: 'https://root.cern/js/6.3.2/scripts/jquery.mousewheel.min', onlymin: true, extract: "$", dep: 'jquery-ui' },
+         'jqueryui-touch-punch' : { src: 'https://root.cern/js/6.3.2/scripts/touch-punch.min', onlymin: true, extract: "$", dep: 'jquery-ui' },
          'rawinflate'           : { src: 'rawinflate', libs: true },
          'zstd-codec'           : { src: '../../zstd/zstd-codec', onlymin: true, alt: "https://root.cern/js/zstd/zstd-codec.min.js", extract: "ZstdCodec", node: "zstd-codec" },
          'mathjax'              : { src: '../../mathjax/3.2.0/es5/tex-svg', nomin: true,  alt: 'https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg.js', extract: "MathJax", node: "mathjax" },
          'dat.gui'              : { src: 'dat.gui', libs: true, extract: "dat" },
-         'three'                : { src: 'three', libs: true, extract: "THREE", node: "three" },
-         'threejs_jsroot'       : { src: 'three.extra', libs: true }
+         'three'                : { src: 'three', libs: true, extract: "THREE" }
     };
 
-    ['core','base3d','csg','geobase','geom','geoworker','gpad','hierarchy','hist','hist3d','interactive','io','menu','jq2d','latex',
+    ['core','base3d','csg','geobase','geom','geoworker','gpad','hierarchy','hist','hist3d','interactive','io','menu','latex',
       'math','more','openui5','painter','tree','v7gpad','v7hist','v7hist3d','v7more','webwindow']
          .forEach(item => _.sources[item] = { src: "JSRoot." + item });
 
@@ -264,15 +263,14 @@
          MathJax: 3,
          /** @summary always use MathJax for text rendering */
          AlwaysMathJax: 4,
-         /** @summary old latex processing with tspan, deprecated, will be removed after release 6.4 */
-         Old: 5,
          fromString: function(s) {
             if (!s || (typeof s !== 'string'))
                return this.Normal;
             switch(s){
                case "off": return this.Off;
                case "symbols": return this.Symbols;
-               case "old": return this.Old;
+               case "normal":
+               case "latex":
                case "exp":
                case "experimental": return this.Normal;
                case "MathJax":
@@ -283,7 +281,7 @@
                case "alwaysmathjax": return this.AlwaysMathJax;
             }
             let code = parseInt(s);
-            return (Number.isInteger(code) && (code >= this.Off) && (code <= this.Old)) ? code : this.Normal;
+            return (Number.isInteger(code) && (code >= this.Off) && (code <= this.AlwaysMathJax)) ? code : this.Normal;
          }
       }
    };
@@ -370,7 +368,9 @@
        * @default false */
       NoCache: false,
       /** @summary Skip streamer infos from the GUI */
-      SkipStreamerInfos: false
+      SkipStreamerInfos: false,
+      /** @summary Interactive dragging of TGraph points */
+      DragGraphs: true
    };
 
    /** @namespace
@@ -468,20 +468,18 @@
       return udefined;
    }
 
-   function jsroot_require(need, factoryFunc) {
+   async function jsroot_require(need, factoryFunc) {
 
       if (!need && !factoryFunc)
          return Promise.resolve(null);
 
       if (typeof need == "string") need = need.split(";");
 
-      need = need.filter(elem => !!elem);
-
       need.forEach((name,indx) => {
          if ((name.indexOf("load:")==0) || (name.indexOf("user:")==0))
             need[indx] = name.substr(5);
-         else if (name == "jq")
-            need[indx] = "jq2d";
+         else if ((name == "jq") || (name == "jq2d")) // only for backward compatibility
+            need[indx] = "hierarchy";
          else if (name == "2d")
             need[indx] = "painter";
          else if (name == "v6")
@@ -489,6 +487,9 @@
          else if (name == "v7")
             need[indx] = "v7gpad";
       });
+
+      // remove duplicates
+      need = need.filter((name, pos) => name && (need.indexOf(name) == pos));
 
       // loading with require.js
 
@@ -783,7 +784,6 @@
      *    - 'v7more' ROOT v7 special classes
      *    - 'math'   some methods from TMath class
      *    - 'hierarchy' hierarchy browser
-     *    - 'jq2d'   jQuery-dependent part of hierarchy
      *    - 'openui5' OpenUI5 and related functionality
      * @param {Array|string} req - list of required components (as array or string separated by semicolon)
      * @returns {Promise} with array of requirements (or single element) */
@@ -808,26 +808,17 @@
 
    /** @summary Seed simple random generator
      * @param {number} i seed value
+     * @deprecated Please use JSROOT.TRandom class
      * @private */
-   JSROOT.seed = function(i) {
-      i = Math.abs(i);
-      if (i > 1e8) i = Math.abs(1e8 * Math.sin(i)); else
-      if (i < 1) i*=1e8;
-      this.m_w = Math.round(i);
-      this.m_z = 987654321;
-   }
+   JSROOT.seed = function() {}
 
    /** @summary Simple random generator
      * @desc Works like Math.random(), but with configurable seed - see {@link JSROOT.seed}
      * @returns {number} random value between 0 (inclusive) and 1.0 (exclusive)
+     * @deprecated Please use JSROOT.TRandom class
      * @private */
    JSROOT.random = function() {
-      if (this.m_z===undefined) return Math.random();
-      this.m_z = (36969 * (this.m_z & 65535) + (this.m_z >> 16)) & 0xffffffff;
-      this.m_w = (18000 * (this.m_w & 65535) + (this.m_w >> 16)) & 0xffffffff;
-      let result = ((this.m_z << 16) + this.m_w) & 0xffffffff;
-      result /= 4294967296;
-      return result + 0.5;
+      return Math.random();
    }
 
    /** @summary Just copy (not clone) all fields from source to the target object
@@ -1393,13 +1384,13 @@
    }
 
    // Draw object, defined in JSRoot.painter.js
-   JSROOT.draw = (divid, obj, opt) => {
-      return jsroot_require("painter").then(() => JSROOT.draw(divid, obj, opt));
+   JSROOT.draw = (dom, obj, opt) => {
+      return jsroot_require("painter").then(() => JSROOT.draw(dom, obj, opt));
    }
 
    // Redaraw object, defined in JSRoot.painter.js
-   JSROOT.redraw = (divid, obj, opt) => {
-      return jsroot_require("painter").then(() => JSROOT.redraw(divid, obj, opt));
+   JSROOT.redraw = (dom, obj, opt) => {
+      return jsroot_require("painter").then(() => JSROOT.redraw(dom, obj, opt));
    }
 
    // Dummy, when painter is not yet loaded, should happens nothing
@@ -1437,8 +1428,6 @@
       } else if (gui_kind != "online") {
          gui_kind = "gui";
       }
-
-      if (!nobrowser) requirements.push("jq2d");
 
       let user_scripts = d.get("autoload") || d.get("load");
 
@@ -1890,7 +1879,6 @@
 
          m.evalPar = function(x, y) {
             if (! ('_func' in this) || (this._title !== this.fTitle)) {
-
               let _func = this.fTitle, isformula = false, pprefix = "[";
               if (_func === "gaus") _func = "gaus(0)";
               if (this.fFormula && typeof this.fFormula.fFormula == "string") {
@@ -1901,48 +1889,47 @@
                     _func = this.fFormula.fFormula;
                     pprefix = "[p";
                  }
-                 if (this.fFormula.fClingParameters && this.fFormula.fParams) {
-                    for (let i=0;i<this.fFormula.fParams.length;++i) {
-                       let regex = new RegExp('(\\[' + this.fFormula.fParams[i].first + '\\])', 'g'),
-                           parvalue = this.fFormula.fClingParameters[this.fFormula.fParams[i].second];
-                       _func = _func.replace(regex, (parvalue < 0) ? "(" + parvalue + ")" : parvalue);
-                    }
-                 }
+                 if (this.fFormula.fClingParameters && this.fFormula.fParams)
+                    this.fFormula.fParams.forEach(pair => {
+                       let regex = new RegExp(`(\\[${pair.first}\\])`, 'g'),
+                           parvalue = this.fFormula.fClingParameters[pair.second];
+                       _func = _func.replace(regex, (parvalue < 0) ? `(${parvalue})` : parvalue);
+                    });
+
               }
 
               if ('formulas' in this)
-                 for (let i=0;i<this.formulas.length;++i)
-                    while (_func.indexOf(this.formulas[i].fName) >= 0)
-                       _func = _func.replace(this.formulas[i].fName, this.formulas[i].fTitle);
+                 this.formulas.forEach(entry => {
+                   _func = _func.replaceAll(entry.fName, entry.fTitle);
+                 });
+
               _func = _func.replace(/\b(abs)\b/g, 'TMath::Abs')
-                           .replace(/TMath::Exp\(/g, 'Math.exp(')
-                           .replace(/TMath::Abs\(/g, 'Math.abs(');
+                           .replace(/\b(TMath::Exp)/g, 'Math.exp')
+                           .replace(/\b(TMath::Abs)/g, 'Math.abs');
+
               if (typeof JSROOT.Math == 'object') {
                  this._math = JSROOT.Math;
-                 _func = _func.replace(/TMath::Prob\(/g, 'this._math.Prob(')
-                              .replace(/TMath::Gaus\(/g, 'this._math.Gaus(')
-                              .replace(/TMath::BreitWigner\(/g, 'this._math.BreitWigner(')
-                              .replace(/xygaus\(/g, 'this._math.gausxy(this, x, y, ')
+                 _func = _func.replace(/xygaus\(/g, 'this._math.gausxy(this, x, y, ')
                               .replace(/gaus\(/g, 'this._math.gaus(this, x, ')
                               .replace(/gausn\(/g, 'this._math.gausn(this, x, ')
                               .replace(/expo\(/g, 'this._math.expo(this, x, ')
                               .replace(/landau\(/g, 'this._math.landau(this, x, ')
                               .replace(/landaun\(/g, 'this._math.landaun(this, x, ')
+                              .replace(/TMath::/g, 'this._math.')
                               .replace(/ROOT::Math::/g, 'this._math.');
               }
-              for (let i=0;i<this.fNpar;++i) {
-                 let parname = pprefix + i + "]";
-                 while(_func.indexOf(parname) != -1)
-                    _func = _func.replace(parname, '('+this.GetParValue(i)+')');
-              }
+
+              for (let i = 0; i < this.fNpar; ++i)
+                _func = _func.replaceAll(pprefix + i + "]", `(${this.GetParValue(i)})`);
+
               _func = _func.replace(/\b(sin)\b/gi, 'Math.sin')
                            .replace(/\b(cos)\b/gi, 'Math.cos')
                            .replace(/\b(tan)\b/gi, 'Math.tan')
                            .replace(/\b(exp)\b/gi, 'Math.exp')
                            .replace(/\b(pow)\b/gi, 'Math.pow')
                            .replace(/pi/g, 'Math.PI');
-              for (let n=2;n<10;++n)
-                 _func = _func.replace('x^'+n, 'Math.pow(x,'+n+')');
+              for (let n = 2; n < 10; ++n)
+                 _func = _func.replaceAll(`x^${n}`, `Math.pow(x,${n})`);
 
               if (isformula) {
                  _func = _func.replace(/x\[0\]/g,"x");
@@ -1952,8 +1939,7 @@
                  } else {
                     this._func = new Function("x", _func).bind(this);
                  }
-              } else
-              if (this._typename==="TF2")
+              } else if (this._typename === "TF2")
                  this._func = new Function("x", "y", "return " + _func).bind(this);
               else
                  this._func = new Function("x", "return " + _func).bind(this);
