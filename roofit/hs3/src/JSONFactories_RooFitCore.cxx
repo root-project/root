@@ -446,7 +446,7 @@ public:
    {
       const RooFormulaVar *var = static_cast<const RooFormulaVar *>(func);
       elem["type"] << key();
-      elem["formula"] << var->expression().Data();
+      elem["formula"] << var->expression();
       auto &factors = elem["dependents"];
       for (const auto &f : var->dependents()) {
          factors.append_child() << f->GetName();
