@@ -268,7 +268,8 @@ class ClassDefGenerateInitInstanceLocalInjector:
 // the class comment string.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
 private:                                                                                                        \
-   static_assert(std::is_integral<decltype(id)>::value, "ClassDef(Inline) macro: the specified class version number is not an integer.");                                                        \
+   static_assert(std::is_integral<decltype(id)>::value,                                                         \
+   "ClassDef(Inline) macro: the specified class version number is not an integer.");                            \
    /** \cond HIDDEN_SYMBOLS */ virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                \
    {                                                                                                            \
       static std::atomic<UChar_t> recurseBlocker(0);                                                            \
@@ -288,7 +289,8 @@ private:                                                                        
                                                                                                                 \
 public:                                                                                                         \
    /** \return Version of this class */ static Version_t Class_Version() { return id; }                         \
-   /** \Return TClass describing current object */ virtual_keyword TClass *IsA() const overrd { return name::Class(); }                   \
+   /** \return TClass describing current object */ virtual_keyword TClass *IsA() const overrd                   \
+   { return name::Class(); }                                                                                    \
    /** \cond HIDDEN_SYMBOLS */ virtual_keyword void ShowMembers(TMemberInspector &insp) const overrd            \
    {                                                                                                            \
       ::ROOT::Class_ShowMembers(name::Class(), this, insp);                                                     \
@@ -305,7 +307,7 @@ public:                                                                         
    /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName(); /** \endcond */                   \
    /** \return Name of this class */ static const char *Class_Name();                                           \
    /** \cond HIDDEN_SYMBOLS */ static TClass *Dictionary(); /** \endcond */                                     \
-   /** \return Pointer to injected TClass */ static TClass *Class();                                            \
+   /** \return Pointer to statically injected TClass */ static TClass *Class();                                 \
    virtual_keyword void Streamer(TBuffer&) overrd;
 
 #define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                     \
@@ -320,7 +322,7 @@ public:                                                                         
    {                                                                                                            \
       return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                   \
    } /** \endcond */                                                                                            \
-   /** \return Pointer to injected TClass */ static TClass *Class()                                             \
+   /** \return Pointer to statically injected TClass */ static TClass *Class()                                  \
    {                                                                                                            \
       return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); }                      \
    }                                                                                                            \
