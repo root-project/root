@@ -43,7 +43,7 @@ public:
 
    // static methods for setting and retrieving the default options
 
-   /// Set the the default Minimizer type and corresponding algorithms 
+   /// Set the the default Minimizer type and corresponding algorithms.
    /// Here is the list of the available minimizers and their corresponding algorithms. 
    /// For some minimizers (e.g. Fumili) there are no specific algorithms available, then there is no need to specify it.
    /// 
@@ -74,7 +74,7 @@ public:
    ///
    static void SetDefaultMinimizer(const char * type, const char * algo = 0);
 
-   /// Set the default level for computing the parameter errors 
+   /// Set the default level for computing the parameter errors. 
    /// For example for 1-sigma parameter errors
    ///  - up = 1 for a chi-squared function
    ///  - up = 0.5 for a negative log-likelihood function
@@ -86,33 +86,33 @@ public:
    /// The Default value for Minuit and Minuit2 is 0.01
    static void SetDefaultTolerance(double tol);
  
-   /// Set the default Minimizer precision 
+   /// Set the default Minimizer precision. 
    /// (used only by MInuit and Minuit2)
    /// It is used to specify the numerical precision used for computing the 
    /// objective function. It should be left to the default value found by the Minimizer 
    /// (typically double precision)
    static void SetDefaultPrecision(double prec);
 
-   /// Set the maximum number of function calls
+   /// Set the maximum number of function calls.
    static void SetDefaultMaxFunctionCalls(int maxcall);
 
-   /// Set the maximum number of iterations
-   /// Used by the GSL minimizers and Genetic. Not used by Minuit,Minuit2
+   /// Set the maximum number of iterations.
+   /// Used by the GSL minimizers and Genetic. Not used by Minuit,Minuit2.
    static void SetDefaultMaxIterations(int maxiter);
 
    /// Set the default strategy. 
-   /// The strategy is a parameter used only by Minuit and Minuit2
+   /// The strategy is a parameter used only by Minuit and Minuit2.
    /// Possible values are: 
    /// - `strat = 0` : rough approximation of Hessian using the gradient. Avoid computing the full Hessian matrix
    /// - `strat = 1` (default and reccomended one) - Use Hessian approximation but compute full Hessian at the end of minimization if needed.
    /// - `strat = 2`  Perform several full Hessian computations during the minimization. Slower and not always working better than `strat=1`. 
    static void SetDefaultStrategy(int strat);
 
-   /// Set the default Print Level 
+   /// Set the default Print Level. 
    /// Possible levels are from 0 (minimal printing) to 3 (maximum printing)
    static void SetDefaultPrintLevel(int level);
 
-   /// Set additional minimizer options as pair of (string,value)
+   /// Set additional minimizer options as pair of (string,value).
    /// Extra option defaults can be configured for a specific algorithm and 
    /// then if a matching with the correct option name exists it will be used 
    /// whenever creating a new minimizer instance.  
@@ -140,13 +140,13 @@ public:
    static int DefaultPrintLevel();
    static IOptions * DefaultExtraOptions();
 
-   /// retrieve extra options for a given minimizer name - 
+   /// Retrieve extra options for a given minimizer name.
    /// If the extra options already exist in a global map of (Minimizer name, options)
    /// it will return a reference to that options, otherwise it will create a new one 
    /// and return the corresponding reference
    static ROOT::Math::IOptions & Default(const char * name);
 
-   /// Find an extra options and  return a nullptr if it is not existing.
+   /// Find an extra options and return a nullptr if it is not existing.
    /// Same as above but it will not create a new one 
    static ROOT::Math::IOptions * FindDefault(const char * name);
 

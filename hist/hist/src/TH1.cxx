@@ -3880,8 +3880,9 @@ TObject *TH1::FindObject(const TObject *obj) const
 ///
 /// fname is the name of a function available in the global ROOT list of functions
 /// `gROOT->GetListOfFunctions`
-/// The list include any TF1 object created by the user plus some pre-defined functions 
-/// which are automatically created by ROOT. 
+/// The list include any TF1 object created by the user plus some pre-defined functions
+/// which are automatically created by ROOT the first time a pre-defined function is requested from `gROOT`
+/// (i.e. when calling `gROOT->GetFunction(const char *name)`).
 /// These pre-defined functions are:
 ///  - `gaus, gausn` where gausn is the normalized Gaussian
 ///  - `landau, landaun`
@@ -3890,13 +3891,14 @@ TObject *TH1::FindObject(const TObject *obj) const
 ///
 /// For printing the list of all available functions do:
 ///
-///       gROOT-GetListOfFunctions()->ls()
+///       TF1::InitStandardFunctions();   // not needed if `gROOT->GetFunction` is called before
+///       gROOT->GetListOfFunctions()->ls()
 ///
-/// `fname` can also be a formula, that is accepted by the linear fitter containing the special operator `++`,
+/// `fname` can also be a formula that is accepted by the linear fitter containing the special operator `++`,
 /// representing linear components separated by `++` sign, for example `x++sin(x)` for fitting `[0]*x+[1]*sin(x)`
 ///
-///  This function finds a pointer to the TF1 object with name `fname` and calls TH1::Fit(TF1 *, Option_t *, Option_t *, Double_t, Double_t).
-///  See there for the fitting options and the details about fitting histograms
+///  This function finds a pointer to the TF1 object with name `fname` and calls TH1::Fit(TF1 *, Option_t *, Option_t *,
+///  Double_t, Double_t). See there for the fitting options and the details about fitting histograms
 
 TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Double_t xxmin, Double_t xxmax)
 {
@@ -4152,7 +4154,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///      f1->SetParLimits(p_number, parmin, parmax);
 /// ~~~
 ///
-/// if parmin>=parmax, the parameter is fixed
+/// if `parmin >= parmax`, the parameter is fixed
 /// Note that you are not forced to fix the limits for all parameters.
 /// For example, if you fit a function with 6 parameters, you can do:
 ///
