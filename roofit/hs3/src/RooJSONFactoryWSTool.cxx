@@ -29,6 +29,8 @@ typedef TRYMLTree tree_t;
 typedef TJSONTree tree_t;
 #endif
 
+ClassImp(RooJSONFactoryWSTool)
+
 using RooFit::Detail::JSONNode;
 
 namespace {

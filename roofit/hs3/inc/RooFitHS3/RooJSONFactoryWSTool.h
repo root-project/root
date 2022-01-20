@@ -23,7 +23,7 @@ class JSONNode;
 }
 } // namespace RooFit
 
-class RooJSONFactoryWSTool {
+class RooJSONFactoryWSTool : public TObject {
 public:
    struct Config {
      static bool stripObservables;
@@ -240,5 +240,7 @@ public:
    void exportAllObjects(RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode *n);
+
+  ClassDef(RooJSONFactoryWSTool,0)
 };
 #endif

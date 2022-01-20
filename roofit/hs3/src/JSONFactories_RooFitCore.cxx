@@ -167,12 +167,13 @@ public:
       if (!p.has_child("channels")) {
          RooJSONFactoryWSTool::error("no channel components of '" + name + "'");
       }
-      tool->importPdfs(p["channels"]);
       std::map<std::string, RooAbsPdf *> components;
       std::string indexname(p["index"].val());
       RooCategory cat(indexname.c_str(), indexname.c_str());
       for (const auto &comp : p["channels"].children()) {
          std::string catname(RooJSONFactoryWSTool::name(comp));
+         RooMsgService::instance().log(tool,RooFit::INFO,RooFit::IO) << "importing category " << catname << std::endl;
+         tool->importFunction(comp,true);
          std::string pdfname(comp.has_val() ? comp.val() : RooJSONFactoryWSTool::name(comp));
          RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
          components[catname] = pdf;
