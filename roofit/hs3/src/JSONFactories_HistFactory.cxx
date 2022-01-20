@@ -727,7 +727,7 @@ public:
                tot_yield[idx] += hist->GetBinContent(idx);
                tot_yield2[idx] += (hist->GetBinContent(idx) * hist->GetBinContent(idx));
                if (constraint_p) {
-                  double erel = 1. / sqrt(constraint_p->getX().getVal());
+                  double erel = 1. / std::sqrt(constraint_p->getX().getVal());
                   rel_errors[idx] = erel;
                   has_poisson_constraints = true;
                } else if (constraint_g) {
