@@ -13,7 +13,7 @@ typedef TRYMLTree tree_t;
 typedef TJSONTree tree_t;
 #endif
 
-using RooFit::Detail::JSONNode;
+using RooFit::Experimental::JSONNode;
 
 RooStats::HistFactory::JSONTool::JSONTool(RooStats::HistFactory::Measurement *m) : _measurement(m){};
 

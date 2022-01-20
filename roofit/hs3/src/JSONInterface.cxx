@@ -1,6 +1,6 @@
 #include "RooFitHS3/JSONInterface.h"
 
-using RooFit::Detail::JSONNode;
+using RooFit::Experimental::JSONNode;
 
 std::ostream &operator<<(std::ostream &os, JSONNode const &s)
 {

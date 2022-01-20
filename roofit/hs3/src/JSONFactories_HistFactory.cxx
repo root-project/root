@@ -21,7 +21,7 @@
 
 #include "static_execute.h"
 
-using RooFit::Detail::JSONNode;
+using RooFit::Experimental::JSONNode;
 
 namespace {
 inline void collectNames(const JSONNode &n, std::vector<std::string> &names)
@@ -292,7 +292,7 @@ public:
          if (err > 0) {
             RooRealVar *g = new RooRealVar(gname.Data(), gname.Data(), 1.);
             g->setAttribute("np");
-            g->setConstang(err < statErrorThreshold);
+            g->setConstant(err < statErrorThreshold);
             g->setError(err);
             g->setMin(1. - 10 * err);
             g->setMax(1. + 10 * err);
@@ -459,7 +459,10 @@ public:
 namespace {
 class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "interpolation0d"; }
+   virtual std::string const& key() const {
+      static const std::string keystring = "interpolation0d";
+      return keystring;
+   }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooStats::HistFactory::FlexibleInterpVar *fip =
@@ -479,7 +482,10 @@ public:
 
 class PiecewiseInterpolationStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "interpolation"; }
+   virtual std::string const& key() const {
+      static const std::string keystring = "interpolation";
+      return keystring;
+   }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);
@@ -777,7 +783,10 @@ public:
       return true;
    }
 
-   virtual std::string key() const { return "histfactory"; }
+   virtual std::string const& key() const {
+      static const std::string keystring = "histfactory";
+      return keystring;
+   }
    virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *p, JSONNode &elem) const override
    {
       const RooProdPdf *prodpdf = static_cast<const RooProdPdf *>(p);

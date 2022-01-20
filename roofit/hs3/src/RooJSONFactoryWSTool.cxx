@@ -31,7 +31,7 @@ typedef TJSONTree tree_t;
 
 ClassImp(RooJSONFactoryWSTool)
 
-   using RooFit::Detail::JSONNode;
+using RooFit::Experimental::JSONNode;
 
 namespace {
 bool isNumber(const std::string &str)
@@ -46,13 +46,13 @@ bool isNumber(const std::string &str)
 }
 } // namespace
 
-RooFit::Detail::JSONNode &RooJSONFactoryWSTool::orootnode()
+RooFit::Experimental::JSONNode &RooJSONFactoryWSTool::orootnode()
 {
    if (_rootnode_output)
       return *_rootnode_output;
    throw MissingRootnodeError();
 }
-const RooFit::Detail::JSONNode &RooJSONFactoryWSTool::irootnode() const
+const RooFit::Experimental::JSONNode &RooJSONFactoryWSTool::irootnode() const
 {
    if (_rootnode_input)
       return *_rootnode_input;
@@ -930,7 +930,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
          ::importAttributes(func, p);
 
          if (isPdf && toplevel) {
-            configureToplevelPdf(p, static_cast<RooAbsPdf *>(func));
+            configureToplevelPdf(p, *static_cast<RooAbsPdf *>(func));
          }
       }
    } catch (const RooJSONFactoryWSTool::DependencyMissingError &ex) {
@@ -1276,7 +1276,7 @@ void RooJSONFactoryWSTool::importPdfs(const JSONNode &n)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // configure a pdf as "toplevel" by creating a modelconfig for it
-void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf *pdf)
+void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf &pdf)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string mcname = "ModelConfig";
@@ -1285,18 +1285,18 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf *pd
          mcname = p["dict"]["ModelConfig"].val();
       }
    }
-   RooStats::ModelConfig *mc = new RooStats::ModelConfig(mcname.c_str(), pdf->GetName());
+   RooStats::ModelConfig *mc = new RooStats::ModelConfig(mcname.c_str(), pdf.GetName());
    this->_workspace->import(*mc);
    RooStats::ModelConfig *inwsmc = dynamic_cast<RooStats::ModelConfig *>(this->_workspace->obj(mcname.c_str()));
    if (inwsmc) {
       inwsmc->SetWS(*(this->_workspace));
-      inwsmc->SetPdf(*pdf);
+      inwsmc->SetPdf(pdf);
       RooArgSet observables;
       RooArgSet nps;
       RooArgSet pois;
       RooArgSet globs;
       for (auto &var : this->_workspace->allVars()) {
-         if (!pdf->dependsOn(*var))
+         if (!pdf.dependsOn(*var))
             continue;
          if (var->getAttribute("observable")) {
             observables.add(*var, true);
@@ -1612,7 +1612,7 @@ Bool_t RooJSONFactoryWSTool::exportYML(std::string const &filename)
    return this->exportYML(out);
 }
 
-void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
+void RooJSONFactoryWSTool::importAllNodes(const RooFit::Experimental::JSONNode &n)
 {
    // import a JSON file to the workspace
    try {

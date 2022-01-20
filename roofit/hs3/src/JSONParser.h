@@ -9,7 +9,7 @@
 
 class TJSONTree : public JSONTree {
 public:
-   class Node : public RooFit::Detail::JSONNode {
+   class Node : public RooFit::Experimental::JSONNode {
    protected:
       TJSONTree *tree;
       class Impl;
