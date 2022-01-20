@@ -53,7 +53,7 @@ if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(testRooPolyFunc testRooPolyFunc.cxx LIBRARIES Gpad RooFit)
 endif()
 if (roofit_multiprocess)
-  ROOT_ADD_GTEST(TestStatisticsPlot TestStatistics/testPlot.cpp LIBRARIES RooFitMultiProcess RooFitCore RooFit 
+  ROOT_ADD_GTEST(testTestStatisticsPlot TestStatistics/testPlot.cpp LIBRARIES RooFitMultiProcess RooFitCore RooFit 
                  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/TestStatistics/TestStatistics_ref.root)
   ROOT_ADD_GTEST(testLikelihoodGradientJob TestStatistics/testLikelihoodGradientJob.cpp LIBRARIES RooFitMultiProcess RooFitCore RooFit RooStats m)
   target_include_directories(testLikelihoodGradientJob PRIVATE ${RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR})

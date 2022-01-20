@@ -44,7 +44,7 @@ RooRealL::RooRealL(const RooRealL &other, const char *name)
 Double_t RooRealL::evaluate() const
 {
    // Transfer values from proxy variables to internal variables of likelihood
-   if (vars_proxy_.getSize()>0) {
+   if (!vars_proxy_.empty()) {
       for (auto i = 0u; i < vars_obs_.size(); ++i) {
          auto harg = vars_obs_[i];
          const auto parg = vars_proxy_[i];
