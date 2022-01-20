@@ -1308,7 +1308,7 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf &pd
       RooArgSet nps;
       RooArgSet pois;
       RooArgSet globs;
-      RooArgSet* pdfVars = pdf->getVariables();
+      RooArgSet* pdfVars = pdf.getVariables();
       for (auto &var : this->_workspace->allVars()) {
          if (!pdfVars->find(*var))
             continue;
