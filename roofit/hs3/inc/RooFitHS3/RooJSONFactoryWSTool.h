@@ -226,7 +226,7 @@ public:
    void configureVariable(const RooFit::Detail::JSONNode &p, RooRealVar &v);
    void importDependants(const RooFit::Detail::JSONNode &n);
 
-   void configureToplevelPdf(const RooFit::Detail::JSONNode &n, RooAbsPdf *pdf);
+   void configureToplevelPdf(const RooFit::Detail::JSONNode &n, RooAbsPdf &pdf);
 
    bool find(const RooFit::Detail::JSONNode &n, const std::string &elem);
    void append(RooFit::Detail::JSONNode &n, const std::string &elem);
