@@ -387,7 +387,7 @@ TGFileDialog::TGFileDialog(const TGWindow *p, const TGWindow *main,
 TGFileDialog::~TGFileDialog()
 {
    if (IsZombie()) return;
-   TString str = fCheckB ? fCheckB->GetString() : "";
+   TString str = fCheckB ? fCheckB->GetString() : TString();
    if (str.Contains("Multiple") && fCheckB)
       fCheckB->Disconnect("Toggled(Bool_t)");
    fClient->FreePicture(fPcdup);
