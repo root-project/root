@@ -154,7 +154,7 @@ public:
       if (prefix.size() > 0)
          name = prefix + name;
       if (!p.has_child("data")) {
-        RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
+         RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       try {
          std::vector<RooAbsArg *> tmp;
@@ -168,9 +168,9 @@ public:
          }
          RooHistFunc *hf =
             new RooHistFunc(("hist_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh->get()), *dh);
-         RooBinWidthFunction *binning =
-            new RooBinWidthFunction(TString::Format("%s_binWidth", (prefix.size() > 0 ? prefix : name).c_str()).Data(),
-                                    TString::Format("%s_binWidth", (prefix.size() > 0 ? prefix : name).c_str()).Data(), *hf, true);
+         RooBinWidthFunction *binning = new RooBinWidthFunction(
+            TString::Format("%s_binWidth", (prefix.size() > 0 ? prefix : name).c_str()).Data(),
+            TString::Format("%s_binWidth", (prefix.size() > 0 ? prefix : name).c_str()).Data(), *hf, true);
          shapeElems.add(*binning);
          tmp.push_back(binning);
 
@@ -293,9 +293,9 @@ public:
             RooRealVar *g = new RooRealVar(gname.Data(), gname.Data(), 1.);
             g->setAttribute("np");
             if (err < statErrorThreshold) {
-              g->setConstant(true);
+               g->setConstant(true);
             } else {
-              g->setConstant(false);
+               g->setConstant(false);
             }
             g->setError(err);
             g->setMin(1. - 10 * err);
@@ -322,7 +322,7 @@ public:
                RooRealVar *tau = new RooRealVar(tname.Data(), tname.Data(), tauCV);
                tau->setAttribute("glob");
                tau->setConstant(true);
-               tau->setRange(tauCV - 10./err, tauCV + 10./err);
+               tau->setRange(tauCV - 10. / err, tauCV + 10. / err);
                RooArgSet elems;
                elems.add(*g);
                elems.add(*tau);
@@ -742,7 +742,7 @@ public:
             }
             bb_histograms[samplename] = hist;
          } else {
-            nonbb_histograms[samplename] = hist;           
+            nonbb_histograms[samplename] = hist;
             s["statError"] << 0;
          }
          auto &ns = s["namespaces"];

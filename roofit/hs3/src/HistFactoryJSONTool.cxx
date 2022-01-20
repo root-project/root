@@ -145,7 +145,7 @@ void RooStats::HistFactory::JSONTool::Export(JSONNode &n) const
    auto &sim = pdflist[this->_measurement->GetName()];
    sim.set_map();
    sim["type"] << "simultaneous";
-   sim["index"] << "channelCat";   
+   sim["index"] << "channelCat";
    auto &simdict = sim["dict"];
    simdict.set_map();
    simdict["InterpolationScheme"] << this->_measurement->GetInterpolationScheme();

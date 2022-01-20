@@ -26,9 +26,9 @@ class JSONNode;
 class RooJSONFactoryWSTool : public TObject {
 public:
    struct Config {
-     static bool stripObservables;
+      static bool stripObservables;
    };
-  
+
    class Importer {
    public:
       virtual bool importPdf(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
@@ -241,6 +241,6 @@ public:
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Detail::JSONNode *n);
 
-  ClassDef(RooJSONFactoryWSTool,0)
+   ClassDef(RooJSONFactoryWSTool, 0)
 };
 #endif
