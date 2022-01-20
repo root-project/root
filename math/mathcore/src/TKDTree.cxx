@@ -829,7 +829,7 @@ Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
 ///Indices are returned as the first and last value of the part of indices array, that belong to this node
 ///Sometimes points are in 2 intervals, then the first and last value for the second one are returned in
 ///third and fourth parameter, otherwise first2 is set to 0 and last2 is set to -1
-///To iterate over all the points of the node #inode, one can do, for example:
+///To iterate over all the points of the node `#inode`, one can do, for example:
 ///Index *indices = kdtree->GetPointsIndexes();
 ///Int_t first1, last1, first2, last2;
 ///kdtree->GetPointsIndexes(inode, first1, last1, first2, last2);
@@ -939,7 +939,7 @@ void TKDTree<Index, Value>::SetData(Index npoints, Index ndim, UInt_t bsize, Val
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Set the coordinate #ndim of all points (the column #ndim of the data matrix)
+///Set the coordinate `#ndim` of all points (the column `#ndim` of the data matrix)
 ///After setting all the data columns, proceed by calling Build() function
 ///Note, that calling this function after Build() is not possible
 ///Note also, that no checks on the array sizes is performed anywhere

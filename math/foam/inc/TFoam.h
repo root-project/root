@@ -67,7 +67,7 @@ protected:
    Double_t fSumOve;          ///< Total Sum of overweighted events
    Double_t fNevGen;          ///< Total number of the generated MC events
    Double_t fWtMax, fWtMin;   ///< Maximum/Minimum MC weight
-   Double_t fPrime;           ///< Primary integral R' (R=R'<wt>)
+   Double_t fPrime;           ///< Primary integral R' (R=R'`<wt>`)
    Double_t fMCresult;        ///< True Integral R from MC series
    Double_t fMCerror;         ///< and its error
 

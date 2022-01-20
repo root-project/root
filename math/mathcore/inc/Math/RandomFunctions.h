@@ -50,8 +50,8 @@ namespace Math {
 
 
 
-      /**
-      Definition of the generic impelmentation class for the RandomFunctions.
+   /**
+      Definition of the generic implementation class for the RandomFunctions.
       Needs to have specialized implementations on the different type of engines      
     */
    template <class EngineBaseType> 
@@ -224,7 +224,7 @@ namespace Math {
       }
 
 
-      /// generate Gaussian number using defqault method
+      /// generate Gaussian number using default method
       inline double Gaus( double mean, double sigma) {
          return fImpl.GausACR(mean,sigma);
       }

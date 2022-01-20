@@ -1187,7 +1187,7 @@ Int_t TWebFile::GetHead()
 ////////////////////////////////////////////////////////////////////////////////
 /// Read a line from the socket. Reads at most one less than the number of
 /// characters specified by maxsize. Reading stops when a newline character
-/// is found, The newline (\n) and cr (\r), if any, are removed.
+/// is found, The newline (\\n) and cr (\\r), if any, are removed.
 /// Returns -1 in case of error, or the number of characters read (>= 0)
 /// otherwise.
 

@@ -439,7 +439,7 @@ void TSAXParserCallback::CdataBlock(void *fParser, const xmlChar *value,
 /// with the user-define SAX Handler, whose functions has to be exactly the
 /// same as in TSAXParser.
 ///
-/// \param[in] handler Name User-defined SAX Handler class name
+/// \param[in] handlerName User-defined SAX Handler class name
 /// \param[in] handler Pointer to the user-defined SAX Handler
 ///
 /// See SAXHandler.C tutorial.

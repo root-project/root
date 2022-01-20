@@ -54,7 +54,7 @@ public:
    EventTranslator();
 
    void GenerateConfigureNotifyEvent(NSView<X11Window> *view, const NSRect &newFrame);
-   void GenerateDestroyNotify(unsigned winID);
+   void GenerateDestroyNotify(unsigned /*winID*/);
    void GenerateExposeEvent(NSView<X11Window> *view, const NSRect &exposedRect);
 
    void GenerateCrossingEvent(NSEvent *theEvent);

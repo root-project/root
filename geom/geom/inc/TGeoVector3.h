@@ -87,10 +87,10 @@ struct Vertex_t {
 
    void Set(const double a) { Set(a, a, a); }
 
-   /// \Return the length squared perpendicular to z direction
+   /// \return the length squared perpendicular to z direction
    double Perp2() const { return fVec[0] * fVec[0] + fVec[1] * fVec[1]; }
 
-   /// \Return the length perpendicular to z direction
+   /// \return the length perpendicular to z direction
    double Perp() const { return TMath::Sqrt(Perp2()); }
 
    /// The dot product of two vector objects

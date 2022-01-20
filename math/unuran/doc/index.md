@@ -31,7 +31,7 @@ It can then be used in two distinct ways:
 - For 1D distribution the class **TUnuranContDist** must be used.
     - A **TUnuranContDist** object can be created from a function
     providing the pdf (probability density function) and optionally one providing the derivative of the pdf.
-   - If the derivative is not provided and the generation method requires it, then it is estimated numerically.
+    - If the derivative is not provided and the generation method requires it, then it is estimated numerically.
     - The user can optionally provide the
      - cdf (cumulative distribution function) via the **TUnuranContDist::SetCdf** function,
      - the mode via **TUnuranContDist::SetMode**,

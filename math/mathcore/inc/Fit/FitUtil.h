@@ -267,7 +267,7 @@ namespace FitUtil {
       evaluate the Chi2 given a model function and the data at the point x.
       return also nPoints as the effective number of used points in the Chi2 evaluation
   */
-  double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints,
+  double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
                       ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks = 0);
 
   /**
@@ -278,10 +278,10 @@ namespace FitUtil {
   double EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints);
 
   /**
-      evaluate the Chi2 gradient given a model function and the data at the point x.
+      evaluate the Chi2 gradient given a model function and the data at the point p.
       return also nPoints as the effective number of used points in the Chi2 evaluation
   */
-  void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
+  void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *p, double *grad,
                             unsigned int &nPoints,
                             ::ROOT::EExecutionPolicy executionPolicy = ::ROOT::EExecutionPolicy::kSequential,
                             unsigned nChunks = 0);
@@ -294,10 +294,10 @@ namespace FitUtil {
                       unsigned int &nPoints, ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks = 0);
 
   /**
-      evaluate the LogL gradient given a model function and the data at the point x.
+      evaluate the LogL gradient given a model function and the data at the point p.
       return also nPoints as the effective number of used points in the LogL evaluation
   */
-  void EvaluateLogLGradient(const IModelFunction &func, const UnBinData &data, const double *x, double *grad,
+  void EvaluateLogLGradient(const IModelFunction &func, const UnBinData &data, const double *p, double *grad,
                             unsigned int &nPoints,
                             ::ROOT::EExecutionPolicy executionPolicy = ::ROOT::EExecutionPolicy::kSequential,
                             unsigned nChunks = 0);
@@ -309,19 +309,19 @@ namespace FitUtil {
   // #endif
 
   /**
-      evaluate the Poisson LogL given a model function and the data at the point x.
+      evaluate the Poisson LogL given a model function and the data at the point p.
       return also nPoints as the effective number of used points in the LogL evaluation
       By default is extended, pass extedend to false if want to be not extended (MultiNomial)
   */
-  double EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *x, int iWeight,
+  double EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight,
                              bool extended, unsigned int &nPoints, ::ROOT::EExecutionPolicy executionPolicy,
                              unsigned nChunks = 0);
 
   /**
-      evaluate the Poisson LogL given a model function and the data at the point x.
+      evaluate the Poisson LogL given a model function and the data at the point p.
       return also nPoints as the effective number of used points in the LogL evaluation
   */
-  void EvaluatePoissonLogLGradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
+  void EvaluatePoissonLogLGradient(const IModelFunction &func, const BinData &data, const double *p, double *grad,
                                    unsigned int &nPoints,
                                    ::ROOT::EExecutionPolicy executionPolicy = ::ROOT::EExecutionPolicy::kSequential,
                                    unsigned nChunks = 0);
@@ -334,7 +334,7 @@ namespace FitUtil {
       If the function provides parameter derivatives they are used otherwise a simple derivative calculation
       is used
   */
-  double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *x, unsigned int ipoint,
+  double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *p, unsigned int ipoint,
                               double *g = 0);
 
   /**
@@ -344,7 +344,7 @@ namespace FitUtil {
       is used
   */
   double
-  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *x, unsigned int ipoint, double *g = 0);
+  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *p, unsigned int ipoint, double *g = 0);
 
 #ifdef R__HAS_VECCORE
    template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>

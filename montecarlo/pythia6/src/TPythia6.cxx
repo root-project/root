@@ -647,7 +647,7 @@ int TPythia6::Pychge(int kf) {
 /// Add one entry to the event record, i.e. either a parton or a
 /// particle.
 ///
-/// - IP:   normally line number for the parton/particle. There are two
+///  - IP:  normally line number for the parton/particle. There are two
 ///         exceptions:
 ///         - If IP = 0: line number 1 is used and PYEXEC is called.
 ///         - If IP < 0: line -IP is used, with status code K(-IP,2)=2

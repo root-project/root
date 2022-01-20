@@ -3268,9 +3268,12 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
 /// This function assumes that the class version and the byte count
 /// information have been read.
 ///
+/// \param[in] cl pointer to the local TClass
+/// \param[out] pointer void pointer to object
 /// \param[in] version The version number of the class
 /// \param[in] start   The starting position in the buffer b
 /// \param[in] count   The number of bytes for this object in the buffer
+/// \param[in] onFileClass pointer to TClass object on file
 ///
 
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onFileClass)

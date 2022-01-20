@@ -198,7 +198,7 @@ public:
    void      SetCharacterUp(Float_t chupx, Float_t chupy);
    void      SetClipOFF(Int_t wid);
    void      SetClipRegion(Int_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   void      SetCursor(Int_t win, ECursor cursor);
+   void      SetCursor(Int_t wid, ECursor cursor);
    void      SetDoubleBuffer(Int_t wid, Int_t mode);
    void      SetDoubleBufferOFF();
    void      SetDoubleBufferON();

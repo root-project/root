@@ -2,7 +2,7 @@
 
 ### Release 3.02.06
   A ROOT file is mostly a suite of consecutive data records with the following format
- <Name>;<Cycle> uniquely identifies the record in a directory
+ `<Name>`;`<Cycle>` uniquely identifies the record in a directory
 
 <div style="background-color: lightgrey; font-size: 0.9vw;"><pre>
  ----------TKey-(never compressed)--------------
