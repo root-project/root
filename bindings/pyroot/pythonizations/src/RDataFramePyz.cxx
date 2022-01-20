@@ -26,7 +26,7 @@
 ///
 /// This function takes a dictionary of numpy arrays and creates an RDataFrame
 /// using the keys as column names and the numpy arrays as data.
-PyObject *PyROOT::MakeNumpyDataFrame(PyObject * /*self*/, PyObject * pydata)
+PyObject *PyROOT::MakeNumpyDataFrameImpl(PyObject * /*self*/, PyObject * pydata)
 {
    if (!pydata) {
       PyErr_SetString(PyExc_RuntimeError, "Object not convertible: Invalid Python object.");
