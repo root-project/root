@@ -32,12 +32,15 @@ public:
    class Importer {
    public:
       virtual bool importPdf(RooJSONFactoryWSTool *, const RooFit::Experimental::JSONNode &) const { return false; }
-      virtual bool importFunction(RooJSONFactoryWSTool *, const RooFit::Experimental::JSONNode &) const { return false; }
+      virtual bool importFunction(RooJSONFactoryWSTool *, const RooFit::Experimental::JSONNode &) const
+      {
+         return false;
+      }
       virtual ~Importer(){};
    };
    class Exporter {
    public:
-      virtual std::string const& key() const = 0;
+      virtual std::string const &key() const = 0;
       virtual bool autoExportDependants() const { return true; }
       virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *, RooFit::Experimental::JSONNode &) const
       {
@@ -181,12 +184,15 @@ public:
    }
 
    static std::string genPrefix(const RooFit::Experimental::JSONNode &p, bool trailing_underscore);
-   static void exportHistogram(const TH1 &h, RooFit::Experimental::JSONNode &n, const std::vector<std::string> &obsnames,
-                               const TH1 *errH = 0, bool writeObservables = true, bool writeErrors = true);
+   static void exportHistogram(const TH1 &h, RooFit::Experimental::JSONNode &n,
+                               const std::vector<std::string> &obsnames, const TH1 *errH = 0,
+                               bool writeObservables = true, bool writeErrors = true);
    void exportData(RooAbsData *data, RooFit::Experimental::JSONNode &n);
-   static void writeObservables(const TH1 &h, RooFit::Experimental::JSONNode &n, const std::vector<std::string> &varnames);
+   static void
+   writeObservables(const TH1 &h, RooFit::Experimental::JSONNode &n, const std::vector<std::string> &varnames);
    static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
-   RooDataHist *readBinnedData(const RooFit::Experimental::JSONNode &n, const std::string &namecomp, RooArgList observables);
+   RooDataHist *
+   readBinnedData(const RooFit::Experimental::JSONNode &n, const std::string &namecomp, RooArgList observables);
    static std::map<std::string, RooJSONFactoryWSTool::Var>
    readObservables(const RooFit::Experimental::JSONNode &n, const std::string &obsnamecomp);
    RooArgSet getObservables(const RooFit::Experimental::JSONNode &n, const std::string &obsnamecomp);

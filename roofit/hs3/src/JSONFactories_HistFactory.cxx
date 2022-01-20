@@ -459,7 +459,8 @@ public:
 namespace {
 class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "interpolation0d";
       return keystring;
    }
@@ -482,7 +483,8 @@ public:
 
 class PiecewiseInterpolationStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "interpolation";
       return keystring;
    }
@@ -783,7 +785,8 @@ public:
       return true;
    }
 
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "histfactory";
       return keystring;
    }

@@ -31,7 +31,7 @@ typedef TJSONTree tree_t;
 
 ClassImp(RooJSONFactoryWSTool)
 
-using RooFit::Experimental::JSONNode;
+   using RooFit::Experimental::JSONNode;
 
 namespace {
 bool isNumber(const std::string &str)

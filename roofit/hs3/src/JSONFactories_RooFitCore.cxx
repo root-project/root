@@ -272,7 +272,8 @@ public:
 namespace {
 class RooRealSumPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       const static std::string keystring = "sumpdf";
       return keystring;
    }
@@ -299,10 +300,11 @@ public:
 namespace {
 class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
-      const static std::string keystring = "simultaneous";   
-      return keystring;      
-}
+   virtual std::string const &key() const
+   {
+      const static std::string keystring = "simultaneous";
+      return keystring;
+   }
    bool autoExportDependants() const override { return false; }
    virtual bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
@@ -330,7 +332,8 @@ public:
 namespace {
 class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "histogram";
       return keystring;
    }
@@ -376,7 +379,8 @@ public:
 namespace {
 class RooBinSamplingPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "binsampling";
       return keystring;
    }
@@ -397,7 +401,8 @@ public:
 namespace {
 class RooProdPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "pdfprod";
       return keystring;
    }
@@ -419,7 +424,8 @@ public:
 namespace {
 class RooGenericPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "genericpdf";
       return keystring;
    }
@@ -442,7 +448,8 @@ public:
 namespace {
 class RooBinWidthFunctionStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "binwidth";
       return keystring;
    }
@@ -462,7 +469,8 @@ public:
 namespace {
 class RooFormulaVarStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const& key() const {
+   virtual std::string const &key() const
+   {
       static const std::string keystring = "formulavar";
       return keystring;
    }
