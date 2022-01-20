@@ -429,7 +429,7 @@ public:
    {
       const RooBinWidthFunction *pdf = static_cast<const RooBinWidthFunction *>(func);
       elem["type"] << key();
-      elem["histogram"] << pdf->histFunc()->GetName();
+      elem["histogram"] << pdf->histFunc().GetName();
       elem["divideByBinWidth"] << pdf->divideByBinWidth();
       return true;
    }
