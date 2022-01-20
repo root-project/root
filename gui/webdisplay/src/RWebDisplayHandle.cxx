@@ -285,7 +285,7 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
       // use UnixPathName to simplify handling of backslashes
       exec = "wmic process call create '"s + gSystem->UnixPathName(fProg.c_str()) + exec + "' | find \"ProcessId\" "s;
-      std::string process_id = gSystem->GetFromPipe(exec.c_str());
+      std::string process_id = gSystem->GetFromPipe(exec.c_str()).Data();
       std::stringstream ss(process_id);
       std::string tmp;
       char c;
