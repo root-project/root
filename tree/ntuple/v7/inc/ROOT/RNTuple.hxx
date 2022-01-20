@@ -359,6 +359,7 @@ private:
    std::unique_ptr<RNTupleModel> fModel;
    Detail::RNTupleMetrics fMetrics;
    NTupleSize_t fLastCommitted = 0;
+   NTupleSize_t fLastCommittedClusterGroup = 0;
    NTupleSize_t fNEntries = 0;
    /// Keeps track of the number of bytes written into the current cluster
    std::size_t fUnzippedClusterSize = 0;
@@ -405,7 +406,7 @@ public:
          CommitCluster();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
-   void CommitCluster();
+   void CommitCluster(bool commitClusterGroup = false);
 
    std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
 
