@@ -296,7 +296,10 @@ public:
 namespace {
 class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string key() const { return "simultaneous"; }
+   virtual std::string const& key() const {
+      const static std::string keystring = "simultaneous";   
+      return keystring;      
+}
    bool autoExportDependants() const override { return false; }
    virtual bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
