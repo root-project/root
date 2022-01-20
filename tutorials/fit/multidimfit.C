@@ -156,12 +156,12 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
 int multidimfit(bool doFit = true)
 {
 
-   cout << "*************************************************" << endl;
-   cout << "*             Multidimensional Fit              *" << endl;
-   cout << "*                                               *" << endl;
-   cout << "* By Christian Holm <cholm@nbi.dk> 14/10/00     *" << endl;
-   cout << "*************************************************" << endl;
-   cout << endl;
+   std::cout << "*************************************************" << std::endl;
+   std::cout << "*             Multidimensional Fit              *" << std::endl;
+   std::cout << "*                                               *" << std::endl;
+   std::cout << "* By Christian Holm <cholm@nbi.dk> 14/10/00     *" << std::endl;
+   std::cout << "*************************************************" << std::endl;
+   std::cout << std::endl;
 
    // Initialize global TRannom object.
    gRandom = new TRandom();

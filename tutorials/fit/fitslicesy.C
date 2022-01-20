@@ -14,6 +14,12 @@
 ///
 /// \author Rene Brun
 
+#include <TCanvas.h>
+#include <TFile.h>
+#include <TH2F.h>
+#include <TROOT.h>
+#include <TStyle.h>
+
 void fitslicesy() {
 // Change some default parameters in the current style
    gStyle->SetLabelSize(0.06,"x");

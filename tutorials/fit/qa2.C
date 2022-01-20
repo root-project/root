@@ -9,6 +9,13 @@
 ///
 /// \author Rene Brun
 
+#include <TBenchmark.h>
+#include <TCanvas.h>
+#include <TF1.h>
+#include <TFormula.h>
+#include <TH1F.h>
+#include <TPaveLabel.h>
+
 void qa2() {
    //Fill a 1-D histogram from a parametric function
    TCanvas *c1 = new TCanvas("c1","The FillRandom example",0,0,700,500);

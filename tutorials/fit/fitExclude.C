@@ -9,9 +9,9 @@
 ///
 /// \author Rene Brun
 
-#include "TH1.h"
-#include "TF1.h"
-#include "TList.h"
+#include <TH1.h>
+#include <TF1.h>
+#include <TROOT.h>
 
 bool reject;
 double fline(double *x, double *par)
