@@ -98,7 +98,6 @@ TEST(RooFitHS3, SimultaneousGaussians)
       RooWorkspace ws{"workspace"};
       RooJSONFactoryWSTool tool{ws};
       tool.importJSON("simPdf.json");
-     ws.Print();
 
       ASSERT_TRUE(ws.pdf("g1"));
       ASSERT_TRUE(ws.pdf("g2"));

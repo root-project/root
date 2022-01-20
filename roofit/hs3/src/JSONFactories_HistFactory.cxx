@@ -292,11 +292,7 @@ public:
          if (err > 0) {
             RooRealVar *g = new RooRealVar(gname.Data(), gname.Data(), 1.);
             g->setAttribute("np");
-            if (err < statErrorThreshold) {
-               g->setConstant(true);
-            } else {
-               g->setConstant(false);
-            }
+            g->setConstang(err < statErrorThreshold);
             g->setError(err);
             g->setMin(1. - 10 * err);
             g->setMax(1. + 10 * err);
