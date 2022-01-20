@@ -571,7 +571,7 @@ executed whenever the object they return is accessed for the first time. As a ru
 are lazy, the others are instant.
 
 \anchor distrdf
-## Distributed execution in Python
+## Distributed execution
 
 RDataFrame applications can be executed in parallel through distributed computing frameworks on a set of remote machines
 thanks to the Python package `ROOT.RDF.Experimental.Distributed`. This experimental, **Python-only** package allows to scale the
