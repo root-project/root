@@ -381,7 +381,7 @@ public:                                                                         
          /** \cond HIDDEN_SYMBOLS */                                        \
          ::ROOT::TGenericClassInfo *GenerateInitInstance(); /** \endcond */ \
          namespace {                                                        \
-            /** \cond HIDDEN_SYMBOLS */
+            /** \cond HIDDEN_SYMBOLS */                                     \
             static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) =              \
                GenerateInitInstance()->SetImplFile(__FILE__, __LINE__);     \
             /** \endcond */                                                 \
