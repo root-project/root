@@ -551,12 +551,12 @@ TEST(RNTuple, SerializeFooter)
       physClusterIDs.emplace_back(context.MapClusterId(c.GetId()));
    }
    EXPECT_EQ(desc.GetNClusters(), physClusterIDs.size());
+   context.MapClusterGroupId(256);
 
    auto sizePageList = RNTupleSerializer::SerializePageListV1(nullptr, desc, physClusterIDs, context);
    EXPECT_GT(sizePageList, 0);
    auto bufPageList = std::make_unique<unsigned char []>(sizePageList);
    EXPECT_EQ(sizePageList, RNTupleSerializer::SerializePageListV1(bufPageList.get(), desc, physClusterIDs, context));
-   context.MapClusterGroupId(256);
 
    auto sizeFooter = RNTupleSerializer::SerializeFooterV1(nullptr, desc, context);
    EXPECT_GT(sizeFooter, 0);

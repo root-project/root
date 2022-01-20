@@ -364,3 +364,55 @@ TEST(RPageSinkBuf, ParallelZip) {
       EXPECT_EQ("hi" + std::to_string(i), viewKlassVec(i).at(0).s);
    }
 }
+
+TEST(RPageSink, Empty)
+{
+   FileRaii fileGuard("test_ntuple_empty.ntuple");
+
+   auto model = RNTupleModel::Create();
+   auto wrPt = model->MakeField<float>("pt", 42.0);
+
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(0U, ntuple->GetNEntries());
+   EXPECT_EQ(0U, ntuple->GetDescriptor().GetNClusterGroups());
+   EXPECT_EQ(0U, ntuple->GetDescriptor().GetNClusters());
+}
+
+TEST(RPageSink, MultipleClusterGroups)
+{
+   FileRaii fileGuard("test_ntuple_multi_cluster_groups.ntuple");
+
+   auto model = RNTupleModel::Create();
+   auto wrPt = model->MakeField<float>("pt", 42.0);
+
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      ntuple->Fill();
+      ntuple->CommitCluster();
+      // This pattern should work: CommitCluster(false) followed by CommitCluster(true) and
+      // be identical to a single call to CommitCluster(true)
+      ntuple->CommitCluster(true);
+      *wrPt = 24.0;
+      ntuple->Fill();
+      ntuple->CommitCluster();
+      *wrPt = 12.0;
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(2U, ntuple->GetDescriptor().GetNClusterGroups());
+   EXPECT_EQ(3U, ntuple->GetDescriptor().GetNClusters());
+   EXPECT_EQ(3U, ntuple->GetNEntries());
+   auto rdPt = ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt");
+
+   ntuple->LoadEntry(0);
+   EXPECT_EQ(42.0, *rdPt);
+   ntuple->LoadEntry(1);
+   EXPECT_EQ(24.0, *rdPt);
+   ntuple->LoadEntry(2);
+   EXPECT_EQ(12.0, *rdPt);
+}
