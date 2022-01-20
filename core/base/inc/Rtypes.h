@@ -362,28 +362,34 @@ public:                                                                         
 
 #define ClassImpUnique(name,key) \
    namespace ROOT { \
-      TGenericClassInfo *GenerateInitInstance(const name*); \
-      namespace { \
-         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__((unused)) = \
-            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
-         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
-      } \
+      /** \cond HIDDEN_SYMBOLS */ TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
+      namespace {                                                                                       \
+         /** \cond HIDDEN_SYMBOLS */                                                                    \
+         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__((unused)) =                     \
+            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__);  /** \endcond */         \
+         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));                                            \
+      }                                                                                                 \
    }
+   
 #define ClassImp(name) ClassImpUnique(name,default)
 
 // Macro for Namespace
 
-#define NamespaceImpUnique(name,key) \
-   namespace name { \
-      namespace ROOTDict { \
-         ::ROOT::TGenericClassInfo *GenerateInitInstance(); \
-         namespace { \
-            static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
-               GenerateInitInstance()->SetImplFile(__FILE__, __LINE__); \
-            R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
-         } \
-      } \
+#define NamespaceImpUnique(name,key)                                        \
+   namespace name {                                                         \
+      namespace ROOTDict {                                                  \
+         /** \cond HIDDEN_SYMBOLS */                                        \
+         ::ROOT::TGenericClassInfo *GenerateInitInstance(); /** \endcond */ \
+         namespace {                                                        \
+            /** \cond HIDDEN_SYMBOLS */
+            static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) =              \
+               GenerateInitInstance()->SetImplFile(__FILE__, __LINE__);     \
+            /** \endcond */                                                 \
+            R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));             \
+         }                                                                  \
+      }                                                                     \
    }
+   
 #define NamespaceImp(name) NamespaceImpUnique(name,default)
 
 //---- ClassDefT macros for templates with one template argument ---------------
@@ -409,8 +415,9 @@ public:                                                                         
 
 #define templateClassImpUnique(name, key)                                                                           \
    namespace ROOT {                                                                                                 \
-   static TNamed *                                                                                                  \
+   /** \cond HIDDEN_SYMBOLS */ static TNamed *                                                                      \
       _R__UNIQUE_(_NAME2_(R__dummyholder, key)) = ::ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
+   /** \endcond */                                                                                                  \
    R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder, key)));                                                          \
    }
 #define templateClassImp(name) templateClassImpUnique(name,default)
@@ -437,20 +444,25 @@ public:                                                                         
 
 //---- Macro to set the class version of non instrumented classes --------------
 
-#define RootClassVersion(name,VersionNumber) \
-namespace ROOT { \
-   TGenericClassInfo *GenerateInitInstance(const name*); \
-   static Short_t _R__UNIQUE_(R__dummyVersionNumber) = \
-           GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
-   R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber)); \
+#define RootClassVersion(name,VersionNumber)                             \
+namespace ROOT { /** \cond HIDDEN_SYMBOLS */                             \
+   TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
+   /** \cond HIDDEN_SYMBOLS */                                           \
+   static Short_t _R__UNIQUE_(R__dummyVersionNumber) =                   \
+           GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber);  \
+   /** \endcond */                                                       \
+   R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber));                      \
 }
 
-#define RootStreamer(name,STREAMER)                                  \
-namespace ROOT {                                                     \
-   TGenericClassInfo *GenerateInitInstance(const name*);             \
-   static Short_t _R__UNIQUE_(R__dummyStreamer) =                    \
-           GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);  \
-   R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
+#define RootStreamer(name,STREAMER)                                      \
+namespace ROOT {                                                         \
+   /** \cond HIDDEN_SYMBOLS */                                           \
+   TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
+   /** \cond HIDDEN_SYMBOLS */                                           \
+   static Short_t _R__UNIQUE_(R__dummyStreamer) =                        \
+           GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);      \
+   /** \endcond */                                                       \
+   R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                           \
 }
 
 //---- Macro to load a library into the interpreter --------------
