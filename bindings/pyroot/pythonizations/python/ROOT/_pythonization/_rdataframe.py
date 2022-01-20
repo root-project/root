@@ -145,6 +145,21 @@ profile model with a Python tuple, as shown in the example below:
 h = df.Histo1D(("histName", "histTitle", 64, 0., 128.), "myColumn")
 ~~~
 
+### AsRNode helper function
+
+The ROOT::RDF::AsRNode function casts an RDataFrame node to the generic ROOT::RDF::RNode type. From Python, it can be used to pass any RDataFrame node as an argument of a C++ function, as shown below:
+
+~~~{.py}
+ROOT.gInterpreter.Declare("""
+ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode &df) {
+    auto myFunc = [](float x){ return -x;};
+    return df.Define("y", myFunc, {"x"});
+}
+""")
+
+df = ROOT.RDataFrame("myTree", "myFile.root")
+df = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
+~~~
 \htmlonly
 </div>
 \endhtmlonly
