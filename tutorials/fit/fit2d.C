@@ -9,6 +9,12 @@
 ///
 /// \author Rene Brun
 
+#include <TCanvas.h>
+#include <TCutG.h>
+#include <TH2F.h>
+#include <TProfile.h>
+#include <TRandom.h>
+
 void fit2d()
 {
    // generate a 2-d histogram using a TCutG

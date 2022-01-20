@@ -35,17 +35,22 @@
 ///
 /// \author Rene Brun
 
-#include "TBinomialEfficiencyFitter.h"
-#include "TVirtualFitter.h"
-#include "TH1.h"
-#include "TRandom3.h"
-#include "TF1.h"
-#include "TFitResult.h"
-#include "TStyle.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include "TPaveStats.h"
-#include "Math/IntegratorOptions.h"
+#include <TBinomialEfficiencyFitter.h>
+#include <TVirtualFitter.h>
+#include <TH1.h>
+#include <TRandom3.h>
+#include <TF1.h>
+#include <TFitResult.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+#include <TLegend.h>
+#include <TPaveStats.h>
+#include <TGraphErrors.h>
+#include <TObjArray.h>
+#include <HFitInterface.h>
+#include <Fit/BinData.h>
+#include <Math/IntegratorOptions.h>
+
 #include <cassert>
 #include <iostream>
 

@@ -54,19 +54,19 @@ void testGausFit( std::string type = "Minuit2", int n = 1000) {
    c1->Divide(2,2);
 
    c1->cd(1);
-   cout << "\nDo Fit 1\n";
+   std::cout << "\nDo Fit 1\n";
    h1->Fit("gaus","Q");
    h1->Draw();
    c1->cd(2);
-   cout << "\nDo Fit 2\n";
+   std::cout << "\nDo Fit 2\n";
    h2->Fit("gaus","VE");
    h2->Draw();
    c1->cd(3);
-   cout << "\nDo Fit 3\n";
+   std::cout << "\nDo Fit 3\n";
    h3->Fit("gaus","IE");
    h3->Draw();
    c1->cd(4);
-   cout << "\nDo Fit 4\n";
+   std::cout << "\nDo Fit 4\n";
    h4->Fit("gaus","VLE");
    h4->Draw();
 

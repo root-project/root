@@ -9,6 +9,10 @@
 ///
 /// \author Rene Brun
 
+#include <TF1.h>
+#include <TFile.h>
+#include <TH1F.h>
+
 TH1F *background;
 void histgen() {
    //generate the histogram background and save it to a file
