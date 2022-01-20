@@ -15,13 +15,13 @@ sap.ui.define([
 	return Controller.extend("rootui5.eve7.controller.ClientLog", {
 		onInit: function () {
 			// create any data and a model and set it to the view
-			var oLink = new Link({
+			let oLink = new Link({
 				text: "Show more information",
 				href: "http://sap.com",
 				target: "_blank"
 			});
 
-			var oMessageTemplate = new MessageItem({
+			let oMessageTemplate = new MessageItem({
 				type: '{type}',
 				title: '{title}',
 				activeTitle: "{active}",
@@ -32,7 +32,6 @@ sap.ui.define([
 			});
 
 			this.oMessageView = new MessageView({
-				class:"sapUiSizeCompact",
 				showDetailsPageHeader: false,
 				itemSelect: function () {
 					oBackButton.setVisible(true);
@@ -46,8 +45,9 @@ sap.ui.define([
 				}
 			});
 
+			this.oMessageView.addStyleClass("sapUiSizeCompact");
 
-			var oBackButton = new Button({
+			let oBackButton = new Button({
 				icon: "sap-icon://nav-back",
 				visible: false,
 				press: function ()
@@ -56,7 +56,7 @@ sap.ui.define([
 					this.setVisible(false);
 				}
 			});
-			
+
 			this.oDialog = new Dialog({
 				resizable: true,
 				content: this.oMessageView,
@@ -77,7 +77,7 @@ sap.ui.define([
 				contentWidth: "50%",
 				verticalScrolling: false
 			});
-			this.oDialog.addStyleClass("sapUiSizeCompact"); 
+			this.oDialog.addStyleClass("sapUiSizeCompact");
 		},
 
 		getButton: function() {
@@ -87,8 +87,8 @@ sap.ui.define([
 		// Display the button type according to the message with the highest severity
 		// The priority of the message types are as follows: Error > Warning > Success > Info
 		buttonTypeFormatter: function () {
-			var sHighestSeverityIcon;
-			var aMessages = this.getView().getModel().oData;
+			let sHighestSeverityIcon;
+			let aMessages = this.getView().getModel().oData;
 
 			aMessages.forEach(function (sMessage) {
 				switch (sMessage.type) {
@@ -112,8 +112,8 @@ sap.ui.define([
 
 		// Display the number of messages with the highest severity
 		highestSeverityMessages: function () {
-			var sHighestSeverityIconType = this.buttonTypeFormatter();
-			var sHighestSeverityMessageType;
+			let sHighestSeverityIconType = this.buttonTypeFormatter();
+			let sHighestSeverityMessageType;
 
 			switch (sHighestSeverityIconType) {
 				case "Negative":
@@ -137,8 +137,7 @@ sap.ui.define([
 
 		// Set the button icon according to the message with the highest severity
 		buttonIconFormatter: function () {
-			var sIcon;
-			var aMessages = this.getView().getModel().oData;
+			let sIcon, aMessages = this.getView().getModel().oData;
 
 			aMessages.forEach(function (sMessage) {
 				switch (sMessage.type) {
@@ -159,7 +158,7 @@ sap.ui.define([
 
 			return sIcon;
 		},
-		
+
 		handleMessagePopoverPress: function (oEvent) {
 			this.oMessageView.navigateBack();
 			this.oDialog.open();
