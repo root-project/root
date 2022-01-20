@@ -324,7 +324,7 @@ public:                                                                         
    } /** \endcond */                                                                                            \
    /** \return Pointer to statically injected TClass */ static TClass *Class()                                  \
    {                                                                                                            \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); }                      \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class();                        \
    }                                                                                                            \
    virtual_keyword void Streamer(TBuffer &R__b) overrd                                                          \
    {                                                                                                            \
