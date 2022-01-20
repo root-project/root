@@ -293,8 +293,7 @@ public:                                                                         
    {                                                                                                            \
       ::ROOT::Class_ShowMembers(name::Class(), this, insp);                                                     \
    } /** \endcond */                                                                                            \
-   /** \cond HIDDEN_SYMBOLS */ void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b)                      \
-   { name::Streamer(ClassDef_StreamerNVirtual_b); } /** \endcond */                                             \
+   void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
    /** \return Name of the current file */ static const char *DeclFileName() { return __FILE__; }
 
 #define _ClassDefOutline_(name,id, virtual_keyword, overrd)                                                     \
