@@ -263,9 +263,9 @@ class ClassDefGenerateInitInstanceLocalInjector:
 }} // namespace ROOT::Internal
 
 
-// Common part being called both by _ClassDefOutline_ and _ClassDefInline_.
-// DeclFileLine() is not part of it, since Cling uses that as trigger for
-// associating as class title the comment string found right after the macro.
+/// Common part being called both by _ClassDefOutline_ and _ClassDefInline_.
+/// \note DeclFileLine() is not part of it, since Cling uses that as trigger for
+/// associating as class title the comment string found right after the macro.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
 private:                                                                                                        \
    static_assert(std::is_integral<decltype(id)>::value,                                                         \
@@ -360,7 +360,6 @@ public:                                                                         
 #define R__UseDummy(name) \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
 
-
 #define ClassImpUnique(name,key)                                                                        \
    namespace ROOT {                                                                                     \
       /** \cond HIDDEN_SYMBOLS */ TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
@@ -371,11 +370,11 @@ public:                                                                         
          R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));                                            \
       }                                                                                                 \
    }
-   
+
+/// \deprecated
 #define ClassImp(name) ClassImpUnique(name,default)
 
-// Macro for Namespace
-
+/// Macro for Namespace
 #define NamespaceImpUnique(name,key)                                        \
    namespace name {                                                         \
       namespace ROOTDict {                                                  \
@@ -400,9 +399,8 @@ public:                                                                         
 // ClassImpT  corresponds to ClassImp
 
 
-// This ClassDefT is stricly redundant and is kept only for
-// backward compatibility.
-
+/// This ClassDefT is stricly redundant and is kept only for
+/// backward compatibility. \deprecated
 #define ClassDefT(name,id)                          \
    _ClassDefOutline_(name,id,virtual,)              \
    /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
