@@ -78,6 +78,7 @@ class Operation(object):
             "Mean": Operation.ACTION,
             "Sum": Operation.ACTION,
             "Fill": Operation.ACTION,
+            "Redefine": Operation.TRANSFORMATION,
             "Reduce": Operation.ACTION,
             "Report": Operation.ACTION,
             "Take": Operation.ACTION,
