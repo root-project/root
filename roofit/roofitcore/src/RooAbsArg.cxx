@@ -568,7 +568,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 /// function is responsible for deleting the returned argset.
 /// The complement of this function is getObservables()
 
-RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, Bool_t stripDisconnected) const
+RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, bool stripDisconnected) const
 {
   return getParameters(set?set->get():0,stripDisconnected) ;
 }

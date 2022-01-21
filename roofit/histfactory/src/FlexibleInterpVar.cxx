@@ -52,7 +52,7 @@ FlexibleInterpVar::FlexibleInterpVar()
 
 FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
              const RooArgList& paramList,
-             Double_t argNominal, vector<double> lowVec, vector<double> highVec) :
+             double argNominal, std::vector<double> lowVec, std::vector<double> highVec) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
   _nominal(argNominal), _low(lowVec), _high(highVec), _interpBoundary(1.)
