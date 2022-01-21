@@ -511,7 +511,7 @@ public:
    \brief Used to loop over all the cluster groups of an ntuple (in unspecified order)
 
    Enumerate all cluster group IDs from the cluster group descriptor.  No specific order can be assumed, use
-   FindNextClusterGroupId and FindPrevClusterGroupId to travers clusters groups by entry number.
+   FindNextClusterGroupId and FindPrevClusterGroupId to traverse clusters groups by entry number.
    */
    // clang-format on
    class RClusterGroupDescriptorIterable {
