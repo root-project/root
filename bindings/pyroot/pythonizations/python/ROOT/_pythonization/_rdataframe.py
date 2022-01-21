@@ -18,7 +18,7 @@ r'''
 \anchor python
 ## Efficient analysis in Python
 
-You can use RDataFrame in Python thanks to the dynamic Python/C++ translation of PyROOT. In general, the interface
+You can use RDataFrame in Python thanks to the dynamic Python/C++ translation of [PyROOT](https://root.cern/manual/python). In general, the interface
 is the same as for C++, a simple example follows.
 
 ~~~{.py}
