@@ -263,9 +263,9 @@ class ClassDefGenerateInitInstanceLocalInjector:
 }} // namespace ROOT::Internal
 
 
-// Common part of ClassDef definition, used both by ClassDef and ClassDefInline.
-// DeclFileLine() is not part of it since CINT uses that as trigger for
-// the class comment string.
+// Common part being called both by _ClassDefOutline_ and _ClassDefInline_.
+// DeclFileLine() is not part of it, since Cling uses that as trigger for
+// associating as class title the comment string found right after the macro.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
 private:                                                                                                        \
    static_assert(std::is_integral<decltype(id)>::value,                                                         \
@@ -296,7 +296,7 @@ public:                                                                         
       ::ROOT::Class_ShowMembers(name::Class(), this, insp);                                                     \
    } /** \endcond */                                                                                            \
    void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
-   /** \return Name the file containing the class declaration */ static const char *DeclFileName() { return __FILE__; }
+   /** \return Name of the file containing the class declaration */ static const char *DeclFileName() { return __FILE__; }
 
 #define _ClassDefOutline_(name,id, virtual_keyword, overrd)                                                     \
    _ClassDefBase_(name,id, virtual_keyword, overrd)                                                             \
