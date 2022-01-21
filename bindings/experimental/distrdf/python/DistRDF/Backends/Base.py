@@ -56,6 +56,7 @@ class BaseBackend(ABC):
         "Profile1D",
         "Profile2D",
         "Profile3D",
+        "Redefine",
         "Snapshot",
         "Sum"
     ]
