@@ -55,6 +55,7 @@ doxygen: filter pyzdoc
 	./listlibs.sh
 	sed -i -e '/^ */s///' -e '/ *$$/s///'  $(DOXYGEN_OUTPUT_DIRECTORY)/html/index.qhp
 	qhelpgenerator $(DOXYGEN_OUTPUT_DIRECTORY)/html/index.qhp
+	mv $(DOXYGEN_OUTPUT_DIRECTORY)/html/index.qhp $(DOXYGEN_OUTPUT_DIRECTORY)/html/ROOT.qhp
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
 	rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
 	rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
