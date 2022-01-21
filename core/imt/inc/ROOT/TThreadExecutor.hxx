@@ -127,7 +127,7 @@ namespace ROOT {
       auto Map(F func, const std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<InvokeResult_t<F, T>>;
 
       // Functions that interface with the parallel library used as a backend
-      void   ParallelFor(unsigned start, unsigned end, unsigned step, const std::function<void(unsigned int i)> &f);
+      void   ParallelFor(unsigned int start, unsigned int end, unsigned step, const std::function<void(unsigned int i)> &f);
       double ParallelReduce(const std::vector<double> &objs, const std::function<double(double a, double b)> &redfunc);
       float  ParallelReduce(const std::vector<float> &objs, const std::function<float(float a, float b)> &redfunc);
       template<class T, class R>
