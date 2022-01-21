@@ -37,7 +37,7 @@ ROOT was built with. It should be sufficient to
 ## Use sanitised ROOT libraries from a non-sanitised executable (e.g. `python`)
 When ROOT libraries are built with sanitizers, the address sanitizer runtime needs to be loaded at startup. However, when calling into ROOT
 functions from python, that won't happen, since python is not sanitised. Therefore, the address sanitizer runtime has to be preloaded with
-    LD_PRELOAD=<pathToRuntime>:libROOTSanitizerConfig.<so|dylib> pythonX ROOTScript.py
+    `LD_PRELOAD=<pathToRuntime>:libROOTSanitizerConfig.<so|dylib> pythonX ROOTScript.py`
 
 Preloading the shared sanitizer config as above is optional, but recommended, because it adds leak sanitizer suppressions.
 

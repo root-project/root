@@ -95,8 +95,8 @@ public:
    {}
    explicit TClingClassInfo(cling::Interpreter *, Bool_t all = kTRUE);
    explicit TClingClassInfo(cling::Interpreter *, const char *classname, bool intantiateTemplate = kTRUE);
-   explicit TClingClassInfo(cling::Interpreter *, const clang::Type &);
-   explicit TClingClassInfo(cling::Interpreter *, const clang::Decl *);
+   explicit TClingClassInfo(cling::Interpreter *interp, const clang::Type &tag);
+   explicit TClingClassInfo(cling::Interpreter *interp, const clang::Decl *D);
    TClingClassInfo &operator=(const TClingClassInfo &rhs)
    {
       // Copy all but the mutex
@@ -163,9 +163,9 @@ public:
    ROOT::TMetaUtils::EIOCtorCategory HasDefaultConstructor(bool checkio = false, std::string *type_name = nullptr) const;
    bool                 HasMethod(const char *name) const;
    void                 Init(const char *name);
-   void                 Init(const clang::Decl*);
+   void                 Init(const clang::Decl* decl);
    void                 Init(int tagnum);
-   void                 Init(const clang::Type &);
+   void                 Init(const clang::Type &tag);
    bool                 IsBase(const char *name) const;
    static bool          IsEnum(cling::Interpreter *interp, const char *name);
    bool                 IsScopedEnum() const;
