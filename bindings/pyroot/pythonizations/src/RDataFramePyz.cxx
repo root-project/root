@@ -22,6 +22,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Make an RDataFrame from a dictionary of numpy arrays
+/// \param[in] self null
 /// \param[in] pydata Dictionary with numpy arrays
 ///
 /// This function takes a dictionary of numpy arrays and creates an RDataFrame
