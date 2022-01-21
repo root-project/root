@@ -302,6 +302,21 @@ class ReducerMergeTest(unittest.TestCase):
         for filename in tmp_files:
             os.remove(filename)
 
+    def test_redefine_one_column(self):
+        """Test that values of one column can be properly redefined."""
+        # A simple dataframe with ten sequential numbers from 0 to 9
+        df = Spark.RDataFrame(10, sparkcontext=self.sc)
+        df_before = df.Define("x", "1")
+        df_after = df_before.Redefine("x", "2")
+
+        # Initial sum should be equal to 10
+        sum_before = df_before.Sum("x")
+        # Sum after the redefinition should be equal to 20
+        sum_after = df_after.Sum("x")
+
+        self.assertAlmostEqual(sum_before.GetValue(), 10.0)
+        self.assertAlmostEqual(sum_after.GetValue(), 20.0)
+
 
 if __name__ == "__main__":
     unittest.main(argv=[__file__])
