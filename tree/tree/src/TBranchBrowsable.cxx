@@ -28,7 +28,7 @@
 #include "TError.h"
 #include <algorithm>
 
-ClassImp(TVirtualBranchBrowsable);
+ClassImp(TVirtualBranchBrowsable)
 
 /** \class TVirtualBranchBrowsable
 \ingroup tree
@@ -375,7 +375,7 @@ void TVirtualBranchBrowsable::UnregisterGenerator(MethodCreateListOfBrowsables_t
    fgGenerators.remove(generator);
 }
 
-ClassImp(TMethodBrowsable);
+ClassImp(TMethodBrowsable)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TMethodBrowsable
@@ -596,7 +596,7 @@ void TMethodBrowsable::Unregister()
    TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables);
 }
 
-ClassImp(TNonSplitBrowsable);
+ClassImp(TNonSplitBrowsable)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TNonSplitBrowsable
@@ -735,7 +735,7 @@ void TNonSplitBrowsable::Unregister()
    TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables);
 }
 
-ClassImp(TCollectionPropertyBrowsable);
+ClassImp(TCollectionPropertyBrowsable)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TCollectionPropertyBrowsable
@@ -883,7 +883,7 @@ void TCollectionPropertyBrowsable::Unregister()
    TVirtualBranchBrowsable::UnregisterGenerator(GetBrowsables);
 }
 
-ClassImp(TCollectionMethodBrowsable);
+ClassImp(TCollectionMethodBrowsable)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TCollectionMethodBrowsable

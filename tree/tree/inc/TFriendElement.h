@@ -68,7 +68,8 @@ public:
            void        ResetUpdated() { ResetBit(kUpdated); }
            void        MarkUpdated() { SetBit(kUpdated); }
 
-   ClassDef(TFriendElement,2)  //A friend element of another TTree
+   //A friend element of another TTree
+   ClassDef(TFriendElement,2)
 };
 
 #endif

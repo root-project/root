@@ -52,7 +52,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Crash course](\ref crash-course)
 - [Working with collections](\ref collections)
 - [Transformations: manipulating data](\ref transformations)
-- [Actions: getting results](\ref actions) 
+- [Actions: getting results](\ref actions)
 - [Efficient analysis in Python](\ref python)
 - [Distributed execution in Python](\ref distrdf)
 - [Performance tips and parallel execution](\ref parallel-execution)
@@ -1275,7 +1275,7 @@ using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// See ROOT::RDF::RInterface for the documentation of the methods available.
+/// \see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
@@ -1303,7 +1303,7 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// See ROOT::RDF::RInterface for the documentation of the methods available.
+/// \see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
@@ -1324,7 +1324,7 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 /// to TChain's constructor.
 ///
 /// The default columns are looked at in case no column is specified in the booking of actions or transformations.
-/// See ROOT::RDF::RInterface for the documentation of the methods available.
+/// \see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
                        const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
@@ -1343,7 +1343,7 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
 ///
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
-/// See ROOT::RDF::RInterface for the documentation of the methods available.
+/// \see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(&tree, defaultColumns))
 {
@@ -1356,7 +1356,7 @@ RDataFrame::RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns)
 /// An empty-source dataframe constructed with a number of entries will
 /// generate those entries on the fly when some action is triggered,
 /// and it will do so for all the previously-defined columns.
-/// See ROOT::RDF::RInterface for the documentation of the methods available.
+/// \see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(ULong64_t numEntries)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(numEntries))
 
@@ -1369,7 +1369,7 @@ RDataFrame::RDataFrame(ULong64_t numEntries)
 /// \param[in] defaultColumns Collection of default column names to fall back to when none is specified.
 ///
 /// A dataframe associated to a data source will query it to access column values.
-/// See ROOT::RDF::RInterface for the documentation of the methods available.
+/// \see ROOT::RDF::RInterface for the documentation of the methods available.
 RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnNames_t &defaultColumns)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(ds), defaultColumns))
 {

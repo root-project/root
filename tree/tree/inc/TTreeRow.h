@@ -54,7 +54,8 @@ public:
    const char *GetField(Int_t field);
    void        SetRow(const Int_t *fields, const char *row);
 
-   ClassDef(TTreeRow,1)  // One row of an TTree query result
+   // One row of a TTree query result
+   ClassDef(TTreeRow,1)
 };
 
 #endif

@@ -407,7 +407,6 @@ Bool_t TTreeReader::SetProxies() {
 ///
 /// \param beginEntry The first entry to be loaded by `Next()`.
 /// \param endEntry   The entry where `Next()` will return kFALSE, not loading it.
-
 TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long64_t endEntry)
 {
    if (beginEntry < 0)
@@ -460,7 +459,7 @@ void TTreeReader::Restart() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
 /// of the TTree / TChain, independent of a range set by SetEntriesRange()
-/// by calling TTree/TChain::GetEntriesFast.
+/// by calling TTree/TChain::%GetEntriesFast.
 
 
 Long64_t TTreeReader::GetEntries() const {
