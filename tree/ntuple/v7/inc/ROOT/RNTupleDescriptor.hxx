@@ -880,7 +880,7 @@ public:
 
    DescriptorId_t GetId() const { return fClusterGroup.GetId(); }
 
-   /// Used to preapre the cluster descriptor builders when loading the page locations for a certain cluster group
+   /// Used to prepare the cluster descriptor builders when loading the page locations for a certain cluster group
    static std::vector<RClusterDescriptorBuilder>
    GetClusterSummaries(const RNTupleDescriptor &ntplDesc, DescriptorId_t clusterGroupId);
 
