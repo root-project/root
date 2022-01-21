@@ -69,8 +69,7 @@ public:
    virtual void    SetAddress(void *add=0);
    virtual void    SetVirtual(Bool_t virt=kTRUE) {fVirtual=virt;}
 
-   //A TLeaf for a general object derived from TObject.
-   ClassDef(TLeafObject,4)
+   ClassDef(TLeafObject,4) //A TLeaf for a general object derived from TObject.
 };
 
 #endif
