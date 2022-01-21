@@ -307,7 +307,7 @@ public:                                                                         
    /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName(); /** \endcond */                   \
    /** \return Name of this class */ static const char *Class_Name();                                           \
    /** \cond HIDDEN_SYMBOLS */ static TClass *Dictionary(); /** \endcond */                                     \
-   /** \return Pointer to statically injected TClass */ static TClass *Class();                                 \
+   /** \return TClass describing this class  */ static TClass *Class();                                 \
    virtual_keyword void Streamer(TBuffer&) overrd;
 
 #define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                     \
