@@ -157,8 +157,13 @@ ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode df) {
 }
 """)
 
+# Cast the RDataFrame head node
 df = ROOT.RDataFrame("myTree", "myFile.root")
-df = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
+df_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
+
+# ... or any other node
+df2 = df.Filter("x > 42")
+df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 ~~~
 \htmlonly
 </div>
