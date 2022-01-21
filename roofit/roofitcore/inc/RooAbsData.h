@@ -111,7 +111,7 @@ public:
   enum ErrorType { Poisson, SumW2, None, Auto, Expected } ;
   /// Return the symmetric error on the current weight.
   /// See also weightError(double&,double&,ErrorType) const for asymmetric errors.
-  /// \param[in] etype Type of error to compute. May throw if not supported.
+  // \param[in] etype Type of error to compute. May throw if not supported.
   virtual double weightError(ErrorType /*etype*/=Poisson) const {
     // Dummy implementation returning zero, because not all deriving classes
     // need to implement a non-zero weight error.
@@ -121,7 +121,7 @@ public:
   /// See also weightError(ErrorType) const for symmetric error.
   /// \param[out] lo Low error.
   /// \param[out] hi High error.
-  /// \param[in] etype Type of error to compute. May throw if not supported.
+  // \param[in] etype Type of error to compute. May throw if not supported.
   virtual void weightError(double& lo, double& hi, ErrorType /*etype*/=Poisson) const {
     // Dummy implementation returning zero, because not all deriving classes
     // need to implement a non-zero weight error.
@@ -141,12 +141,12 @@ public:
   /// This indicates that the weight is constant. Use weight() to retrieve it.
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const = 0;
 
-  /// Return number of entries in dataset, *i.e.*, count unweighted entries.
+  /// Return number of entries in dataset, i.e., count unweighted entries.
   virtual Int_t numEntries() const ;
-  /// Return effective number of entries in dataset, *i.e.*, sum all weights.
+  /// Return effective number of entries in dataset, i.e., sum all weights.
   virtual Double_t sumEntries() const = 0 ;
-  /// Return effective number of entries in dataset inside range or after cuts, *i.e.*, sum certain weights.
-  /// \param[in] cutSpec Apply given cut when counting (*e.g.* `0 < x && x < 5`). Passing `"1"` selects all events.
+  /// Return effective number of entries in dataset inside range or after cuts, i.e., sum certain weights.
+  /// \param[in] cutSpec Apply given cut when counting (e.g. `0 < x && x < 5`). Passing `"1"` selects all events.
   /// \param[in] cutRange If the observables have a range with this name, only count events inside this range.
   virtual Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const = 0 ; // DERIVED
   double sumEntriesW2() const;

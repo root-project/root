@@ -215,7 +215,7 @@ void RooMinimizer::setStrategy(Int_t istrat)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change maximum number of MINUIT iterations
-/// (RooMinimizer default 500 * #parameters)
+/// (RooMinimizer default 500 * #%parameters)
 
 void RooMinimizer::setMaxIterations(Int_t n)
 {
@@ -227,7 +227,7 @@ void RooMinimizer::setMaxIterations(Int_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Change maximum number of likelihood function calss from MINUIT
-/// (RooMinimizer default 500 * #parameters)
+/// (RooMinimizer default 500 * #%parameters)
 
 void RooMinimizer::setMaxFunctionCalls(Int_t n)
 {

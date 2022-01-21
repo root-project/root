@@ -938,7 +938,7 @@ std::string RooFactoryWSTool::processExpression(const char* token)
 /// Process a single composite expression
 ///
 /// e.g. 'A=RooGaussian::g[x,m,s]' --> 'A=g'
-/// e.g. 'f[0,1]*RooGaussian::g[x,m,s]' --> 'f*g'
+/// e.g. 'f[0,1]*RooGaussian::%g[x,m,s]' --> 'f*g'
 /// e.g. 'RooGaussian::g(x,y,s)|x' --> g|x'
 /// e.g. '$MetaArg(RooGaussian::g[x,m,s],blah)' --> '$MetaArg(g,blah)'
 
@@ -1569,7 +1569,7 @@ void RooFactoryWSTool::checkIndex(UInt_t idx)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooAbsArg reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooAbsArg reference found in workspace
 
 RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
   {
@@ -1589,7 +1589,7 @@ RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooAbsReal reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooAbsReal reference found in workspace
 
 RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 {
@@ -1612,7 +1612,7 @@ RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooAbsRealLValue reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooAbsRealLValue reference found in workspace
 
 RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 {
@@ -1635,7 +1635,7 @@ RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooRealVar reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooRealVar reference found in workspace
 
 RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 {
@@ -1650,7 +1650,7 @@ RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooAbsPdf reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooAbsPdf reference found in workspace
 
 RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 {
@@ -1665,7 +1665,7 @@ RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooResolutionModel reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooResolutionModel reference found in workspace
 
 RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 {
@@ -1684,7 +1684,7 @@ RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooAbsCategory reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooAbsCategory reference found in workspace
 
 RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 {
@@ -1702,7 +1702,7 @@ RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooAbsCategoryLValue reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooAbsCategoryLValue reference found in workspace
 
 RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 {
@@ -1721,7 +1721,7 @@ RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooCategory reference found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooCategory reference found in workspace
 
 RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 {
@@ -1737,7 +1737,7 @@ RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooArgSet of objects found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooArgSet of objects found in workspace
 
 RooArgSet RooFactoryWSTool::asSET(const char* arg)
 {
@@ -1786,7 +1786,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooArgList of objects found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooArgList of objects found in workspace
 
 RooArgList RooFactoryWSTool::asLIST(const char* arg)
 {
@@ -1822,7 +1822,7 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooAbsData object found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooAbsData object found in workspace
 
 RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 {
@@ -1836,7 +1836,7 @@ RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooDataHist object found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooDataHist object found in workspace
 
 RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 {
@@ -1853,7 +1853,7 @@ RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as RooDataSet object found in workspace
+/// CINT constructor interface, return constructor string argument `#idx` as RooDataSet object found in workspace
 
 RooDataSet& RooFactoryWSTool::asDSET(const char* arg)
 {
@@ -1884,7 +1884,7 @@ TObject& RooFactoryWSTool::asOBJ(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as const char*
+/// CINT constructor interface, return constructor string argument `#idx` as const char*
 
 const char* RooFactoryWSTool::asSTRING(const char* arg)
 {
@@ -1914,7 +1914,7 @@ const char* RooFactoryWSTool::asSTRING(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as Int_t
+/// CINT constructor interface, return constructor string argument `#idx` as Int_t
 
 Int_t RooFactoryWSTool::asINT(const char* arg)
 {
@@ -1923,7 +1923,7 @@ Int_t RooFactoryWSTool::asINT(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as Double_t
+/// CINT constructor interface, return constructor string argument `#idx` as Double_t
 
 Double_t RooFactoryWSTool::asDOUBLE(const char* arg)
 {

@@ -41,8 +41,12 @@ namespace TestStatistics {
  * likelihood object, or to use a higher level entry point like RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
  */
 
+/// \param[in] _likelihood L
 /// \param[in] context RooMinimizer that creates and owns this class.
 /// \param[in] parameters The vector of ParameterSettings objects that describe the parameters used in the Minuit
+/// \param[in] likelihoodMode Lmode
+/// \param[in] likelihoodGradientMode Lgrad
+/// \param[in] verbose true for verbose output
 /// Fitter. Note that these must match the set used in the Fitter used by \p context! It can be passed in from
 /// RooMinimizer with fitter()->Config().ParamsSettings().
 MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,

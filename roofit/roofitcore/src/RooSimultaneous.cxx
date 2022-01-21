@@ -1130,7 +1130,7 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
 /// Wraps the components of this RooSimultaneous in RooBinSamplingPdfs.
 /// \param[in] data The dataset to be used in the eventual fit, used to figure
 ///            out the observables and whether the dataset is binned.
-/// \param[in] precisions Precision argument for all created RooBinSamplingPdfs.
+/// \param[in] precision Precision argument for all created RooBinSamplingPdfs.
 void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data, double precision) {
 
   if (precision < 0.) return;

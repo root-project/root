@@ -100,21 +100,24 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 /// \param[in] real Function to evaluate.
 /// \param[in] indata Dataset for which to compute test statistic.
 /// \param[in] projDeps A set of projected observables.
-/// \param[in] rangeName If not null, only events in the dataset inside the range will be used in the test
-/// statistic calculation.
-/// \param[in] addCoefRangeName If not null, all RooAddPdf components of `real` will be
-/// instructed to fix their fraction definitions to the given named range.
-/// \param[in] nCPU If > 1, the test statistic calculation will be parallelised over multiple processes. By default, the data
-/// is split with 'bulk' partitioning (each process calculates a contiguous block of fraction 1/nCPU
-/// of the data). For binned data, this approach may be suboptimal as the number of bins with >0 entries
-/// in each processing block may vary greatly; thereby distributing the workload rather unevenly.
-/// \param[in] interleave Strategy how to distribute events among workers. If an interleave partitioning strategy is used where each partition
-/// i takes all bins for which (ibin % ncpu == i), an even distribution of work is more likely.
-/// \param[in] splitCutRange If true, a different rangeName constructed as `rangeName_{catName}` will be used
-/// as range definition for each index state of a RooSimultaneous.
-/// \param[in] cloneInputData Not used. Data is always cloned.
-/// \param[in] integrateOverBinsPrecision If > 0, PDF in binned fits are integrated over the bins. This sets the precision. If = 0,
-/// only unbinned PDFs fit to RooDataHist are integrated. If < 0, PDFs are never integrated.
+/// \param[in] cfg the statistic configuration
+///
+/// cfg contains:
+/// - rangeName If not null, only events in the dataset inside the range will be used in the test
+///   statistic calculation.
+/// - addCoefRangeName If not null, all RooAddPdf components of `real` will be
+///   instructed to fix their fraction definitions to the given named range.
+/// - nCPU If > 1, the test statistic calculation will be parallelised over multiple processes. By default, the data
+///   is split with 'bulk' partitioning (each process calculates a contiguous block of fraction 1/nCPU
+///   of the data). For binned data, this approach may be suboptimal as the number of bins with >0 entries
+///   in each processing block may vary greatly; thereby distributing the workload rather unevenly.
+/// - interleave Strategy how to distribute events among workers. If an interleave partitioning strategy is used where each partition
+///   i takes all bins for which (ibin % ncpu == i), an even distribution of work is more likely.
+/// - splitCutRange If true, a different rangeName constructed as `rangeName_{catName}` will be used
+///   as range definition for each index state of a RooSimultaneous.
+/// - cloneInputData Not used. Data is always cloned.
+/// - integrateOverBinsPrecision If > 0, PDF in binned fits are integrated over the bins. This sets the precision. If = 0,
+///   only unbinned PDFs fit to RooDataHist are integrated. If < 0, PDFs are never integrated.
 RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real,
                                                RooAbsData& indata, const RooArgSet& projDeps,
                                                RooAbsTestStatistic::Configuration const& cfg) :
