@@ -41,7 +41,7 @@ ClassImp(RooAbsCachedPdf);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsCachedPdf::RooAbsCachedPdf(const char *name, const char *title, int ipOrder) :
+RooAbsCachedPdf::RooAbsCachedPdf(const char *name, const char *title, Int_t ipOrder) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
   _ipOrder(ipOrder)

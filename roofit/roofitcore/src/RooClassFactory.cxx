@@ -123,8 +123,8 @@ Bool_t RooClassFactory::makeAndCompilePdf(const char* name, const char* expressi
 /// for analytical integrals to be advertised by your class in the
 /// syntax
 /// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where <intObsName> a name of the observable integrated over and
-/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// where "<intObsName>" a name of the observable integrated over and
+/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
 Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
@@ -173,8 +173,8 @@ Bool_t RooClassFactory::makeAndCompileFunction(const char* name, const char* exp
 /// You can add optional expressions for analytical integrals to be
 /// advertised by your class in the syntax
 /// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where <intObsName> a name of the observable integrated over and
-/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// where "<intObsName>" a name of the observable integrated over and
+/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
 RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
@@ -203,8 +203,8 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* name, const char* 
 /// You can add optional expressions for analytical integrals to be
 /// advertised by your class in the syntax
 /// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where <intObsName> a name of the observable integrated over and
-/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// where "<intObsName>" a name of the observable integrated over and
+/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
 RooAbsReal* RooClassFactory::makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression)
@@ -267,8 +267,8 @@ RooAbsReal* RooClassFactory::makeFunctionInstance(const char* className, const c
 /// You can add optional expressions for analytical integrals to be
 /// advertised by your class in the syntax
 /// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where <intObsName> a name of the observable integrated over and
-/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// where "<intObsName>" a name of the observable integrated over and
+/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
 RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expression,
@@ -298,8 +298,8 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* name, const char* expres
 /// You can add optional expressions for analytical integrals to be
 /// advertised by your class in the syntax
 /// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where <intObsName> a name of the observable integrated over and
-/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// where "<intObsName>" a name of the observable integrated over and
+/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
 RooAbsPdf* RooClassFactory::makePdfInstance(const char* className, const char* name, const char* expression,
@@ -358,8 +358,8 @@ RooAbsPdf* RooClassFactory::makePdfInstance(const char* className, const char* n
 /// optional expressions for analytical integrals to be advertised by
 /// your class in the syntax
 /// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where <intObsName> a name of the observable integrated over and
-/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// where "<intObsName>" a name of the observable integrated over and
+/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral. Skeleton code for internal event generation is added
 /// if hasIntGen is true
 ///
@@ -383,8 +383,8 @@ Bool_t RooClassFactory::makePdf(const char* name, const char* argNames, const ch
 /// optional expressions for analytical integrals to be advertised by
 /// your class in the syntax
 /// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where <intObsName> a name of the observable integrated over and
-/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// where "<intObsName>" a name of the observable integrated over and
+/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral.
 
 Bool_t RooClassFactory::makeFunction(const char* name, const char* argNames, const char* catArgNames, const char* expression, Bool_t hasAnaInt, const char* intExpression)
@@ -405,8 +405,8 @@ Bool_t RooClassFactory::makeFunction(const char* name, const char* argNames, con
 /// optional expressions for analytical integrals to be advertised by
 /// your class in the syntax
 /// "<intObsName>:<CPPAnaIntExpression>;<intObsName,intObsName>:<CPPAnaIntExpression>"
-/// where <intObsName> a name of the observable integrated over and
-/// <CPPAnaIntExpression> is the C++ expression that calculates that
+/// where "<intObsName>" a name of the observable integrated over and
+/// "<CPPAnaIntExpression>" is the C++ expression that calculates that
 /// integral. Skeleton code for internal event generation is added
 /// if hasIntGen is true
 ///

@@ -233,7 +233,7 @@ RooProdPdf::RooProdPdf(const char* name, const char* title, const RooArgList& in
 /// \param[in] name Name used by RooFit
 /// \param[in] title Title used for plotting
 /// \param[in] fullPdfSet Set of "regular" PDFs that are normalised over all their observables
-/// \param[in] argX Optional arguments according to table below.
+/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 Optional arguments according to table below.
 ///
 /// <table>
 /// <tr><th> Argument                 <th> Description

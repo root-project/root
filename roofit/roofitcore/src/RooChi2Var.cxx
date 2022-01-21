@@ -101,7 +101,7 @@ RooArgSet RooChi2Var::_emptySet ;
 ///  \param[in] title Title for plotting etc.
 ///  \param[in] func  Function
 ///  \param[in] hdata Data histogram
-///  \param[in] argX Optional arguments according to table below.
+///  \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9 Optional arguments according to table below.
 ///  <table>
 ///  <tr><th> Argument  <th> Effect
 ///  <tr><td>
@@ -152,7 +152,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 ///  \param[in] title Title for plotting etc.
 ///  \param[in] pdf  PDF to fit
 ///  \param[in] hdata Data histogram
-///  \param[in] argX Optional arguments according to table below.
+///  \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9 Optional arguments according to table below.
 ///  <table>
 ///  <tr><th> Argument  <th> Effect
 ///  <tr><td>

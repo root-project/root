@@ -48,7 +48,7 @@ public:
   { }
 
 
-  /// Conversion constructor from <T> to <const T>
+  /// Conversion constructor from `<T>` to `<const_T>`
   /// If the input span owns some memory, the const-version of the
   /// span will copy the shared_ptr.
   template<typename NON_CONST_T,

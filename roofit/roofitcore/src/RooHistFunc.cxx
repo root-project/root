@@ -204,8 +204,7 @@ Double_t RooHistFunc::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute value of the HistFunc for every entry in `evalData`.
-/// \param[in/out] evalData Struct with input data. The computation results will be stored here.
-/// \param[in] normSet Set of observables to normalise over (ignored).
+/// \param[in,out] evalData Struct with input data. The computation results will be stored here.
 RooSpan<double> RooHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const {
   std::vector<RooSpan<const double>> inputValues;
   std::size_t batchSize = 0;

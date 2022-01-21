@@ -269,10 +269,10 @@ public:
   ///
   /// \see redirectServers() For a detailed explanation of the function parameters.
   ///
-  /// \param[in] newServerList One of the original parameters passed to redirectServers().
-  /// \param[in] mustReplaceAll One of the original parameters passed to redirectServers().
-  /// \param[in] nameChange  One of the original parameters passed to redirectServers().
-  /// \param[in] isRecursiveStep  One of the original parameters passed to redirectServers().
+  // \param[in] newServerList One of the original parameters passed to redirectServers().
+  // \param[in] mustReplaceAll One of the original parameters passed to redirectServers().
+  // \param[in] nameChange  One of the original parameters passed to redirectServers().
+  // \param[in] isRecursiveStep  One of the original parameters passed to redirectServers().
   virtual bool redirectServersHook(const RooAbsCollection & /*newServerList*/, bool /*mustReplaceAll*/,
                                    bool /*nameChange*/, bool /*isRecursiveStep*/)
   {
@@ -523,8 +523,8 @@ public:
   virtual void setExpensiveObjectCache(RooExpensiveObjectCache &cache) { _eocache = &cache; }
 
   /// Overwrite the current value stored in this object, making it look like this object computed that value.
-  /// \param[in] value Value to store.
-  /// \param[in] notifyClients Notify users of this object that they need to
+  // \param[in] value Value to store.
+  // \param[in] notifyClients Notify users of this object that they need to
   /// recompute their values.
   virtual void setCachedValue(double /*value*/, bool /*notifyClients*/ = true) {};
 

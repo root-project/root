@@ -1474,7 +1474,7 @@ void RooDataHist::set(std::size_t binNumber, double wgt, double wgtErr) {
 /// \deprecated Prefer set(std::size_t, double, double).
 /// \param[in] wgt New bin content.
 /// \param[in] wgtErr Optional error of the bin content.
-void RooDataHist::set(double wgt, double wgtErr) {
+void RooDataHist::set(Double_t wgt, Double_t wgtErr) {
   if (_curIndex == std::numeric_limits<std::size_t>::max()) {
     _curIndex = calcTreeIndex(_vars, true) ;
   }

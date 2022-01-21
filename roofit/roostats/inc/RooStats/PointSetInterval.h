@@ -63,13 +63,13 @@ namespace RooStats {
 
   protected:
 
-    ClassDef(PointSetInterval,1)  /// Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
+    ClassDef(PointSetInterval,1) // Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
 
   private:
 
     //    RooArgSet* fParameters; // parameter of interest
-    Double_t fConfidenceLevel; /// confidence level
-    RooAbsData* fParameterPointsInInterval; /// either a histogram (RooDataHist) or a tree (RooDataSet)
+    Double_t fConfidenceLevel; ///< confidence level
+    RooAbsData* fParameterPointsInInterval; ///< either a histogram (RooDataHist) or a tree (RooDataSet)
 
 
   };

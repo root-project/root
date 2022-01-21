@@ -698,6 +698,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 ///
 /// \param[in] name Name of the ROOT histogram
 /// \param[in] xvar Observable to be mapped on x axis of ROOT histogram
+/// \param[in] argListIn list of input arguments
 /// \return Histogram now owned by user.
 ///
 /// <table>
@@ -2586,7 +2587,7 @@ double RooAbsData::sumEntriesW2() const {
 /// variables remain intact.
 /// \param[out] evalData Store references to all data batches in this struct's `spans`.
 /// The key to retrieve an item is the pointer of the variable that owns the data.
-/// \param first Index of first event that ends up in the batch.
+/// \param begin Index of first event that ends up in the batch.
 /// \param len   Number of events in each batch.
 void RooAbsData::getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const {
   for (auto&& batch : store()->getBatches(begin, len).spans) {

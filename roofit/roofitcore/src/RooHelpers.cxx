@@ -178,8 +178,9 @@ std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const 
 
 
 /// Check if there is any overlap when a list of ranges is applied to a set of observables.
-/// \param[in] arg RooAbsCollection with the observables to check for overlap.
-/// \param[in] rangeName The names of the ranges.
+/// \param[in] pdf the PDF
+/// \param[in] data RooAbsCollection with the observables to check for overlap.
+/// \param[in] rangeNames The names of the ranges.
 bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vector<std::string> const& rangeNames) {
 
   auto observables = *pdf.getObservables(data);
@@ -244,7 +245,7 @@ bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vec
 
 
 /// Create a string with all sorted names of RooArgSet elements separated by colons.
-/// \param[in] arg argSet The input RooArgSet.
+/// \param[in] argSet The input RooArgSet.
 std::string getColonSeparatedNameString(RooArgSet const& argSet) {
 
   RooArgList tmp(argSet);
@@ -264,8 +265,8 @@ std::string getColonSeparatedNameString(RooArgSet const& argSet) {
 
 /// Construct a RooArgSet of objects in a RooArgSet whose names match to those
 /// in the names string.
-/// \param[in] arg argSet The input RooArgSet.
-/// \param[in] arg names The names of the objects to select in a colon-separated string.
+/// \param[in] argSet The input RooArgSet.
+/// \param[in] names The names of the objects to select in a colon-separated string.
 RooArgSet selectFromArgSet(RooArgSet const& argSet, std::string const& names) {
   RooArgSet output;
   for(auto const& name : ROOT::Split(names, ":")) {

@@ -1408,7 +1408,7 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
 /// is binned, a binned maximum likelihood is performed. By default the fit is executed through the MINUIT
 /// commands MIGRAD, HESSE in succession.
 /// \param[in] data  Data to fit the PDF to
-/// \param[in] arg1  One or more arguments to control the behaviour of the fit
+/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8  One or more arguments to control the behaviour of the fit
 /// \return RooFitResult with fit status and parameters if option Save() is used, `nullptr` otherwise. The user takes ownership of the fit result.
 ///
 /// The following named arguments are supported
@@ -2020,7 +2020,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// Generate the specified number of events or expectedEvents() if not specified.
 /// \param[in] whatVars Choose variables in which to generate events. Variables not listed here will remain
 /// constant and not be used for event generation.
-/// \param[in] argxx Optional RooCmdArg() to change behaviour of generate().
+/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6 Optional RooCmdArg() to change behaviour of generate().
 /// \return RooDataSet *, owned by caller.
 ///
 /// Any variables of this PDF that are not in whatVars will use their
@@ -2443,7 +2443,7 @@ Bool_t RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 /// Generate a new dataset containing the specified variables with events sampled from our distribution.
 /// \param[in] whatVars Choose variables in which to generate events. Variables not listed here will remain
 /// constant and not be used for event generation
-/// \param[in] arg1 Optional RooCmdArg to change behaviour of generateBinned()
+/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6 Optional RooCmdArg to change behaviour of generateBinned()
 /// \return RooDataHist *, to be managed by caller.
 ///
 /// Generate the specified number of events or expectedEvents() if not specified.
@@ -3648,6 +3648,7 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
 /** Base function for computing multiple values of a RooAbsPdf.
 First, the RooAbsReal base function is called to compute the raw values of the
 pdf. After that, divide by the normalization values found in the dataMap.
+\param stream pointer to cuda stream
 \param output The array where the results are stored
 \param nEvents The number of events to be processed
 \param dataMap A std::map containing the input data for the computations
