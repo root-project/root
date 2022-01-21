@@ -58,7 +58,7 @@ and load the function into the RDataFrame computation as follows.
 
 ~~~{.py}
 ROOT.gSystem.Load("path/to/myLibrary.so") # Library with the myFilter function
-ROOT.gInterpreter.Declare('#include "myLibrary.h"') # Header with the definition of the myFilter function
+ROOT.gInterpreter.Declare('#include "myLibrary.h"') # Header with the declaration of the myFilter function
 df = ROOT.RDataFrame("myTree", "myFile.root")
 sum = df.Filter("myFilter(x)").Sum("y")
 print(sum.GetValue())
@@ -68,10 +68,10 @@ A more thorough explanation of how to use C++ code from Python can be found in t
 
 #### Python code
 
-ROOT also offers the option to compile Python functions with fundamental types and arrays thereof using numba.
+ROOT also offers the option to compile Python functions with fundamental types and arrays thereof using [Numba](https://numba.pydata.org/).
 Such compiled functions can then be used in a C++ expression provided to RDataFrame.
 
-The function to be compiled is decorated with `ROOT.Numba.Declare`, which allows to specify the parameter and
+The function to be compiled should be decorated with `ROOT.Numba.Declare`, which allows to specify the parameter and
 return types. See the following snippet for a simple example or the full tutorial [here](pyroot004__NumbaDeclare_8py.html).
 
 ~~~{.py}
@@ -88,10 +88,10 @@ It also works with collections: `RVec` objects of fundamental types can be trans
 
 ~~~{.py}
 @ROOT.Numba.Declare(['RVec<float>', 'int'], 'RVec<float>')
-def pypowarray(x, y):
-    return x**y
+def pypowarray(numpyvec, pow):
+    return numpyvec**pow
 
-df.Define('array', 'ROOT::RVec<float>{1.,2.,3.})\
+df.Define('array', 'ROOT::RVecF{1.,2.,3.}')\
   .Define('arraySquared', 'Numba::pypowarray(array, 2)')
 ~~~
 
@@ -151,7 +151,7 @@ The ROOT::RDF::AsRNode function casts an RDataFrame node to the generic ROOT::RD
 
 ~~~{.py}
 ROOT.gInterpreter.Declare("""
-ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode &df) {
+ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode df) {
     auto myFunc = [](float x){ return -x;};
     return df.Define("y", myFunc, {"x"});
 }
