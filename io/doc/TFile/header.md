@@ -44,7 +44,7 @@
 
 | Byte Range       | Record Name    | Description                             | |
 |------------------|----------------|-----------------------------------------|-|
-| 0...3            | "root"      | Identifies this file as a ROOT file        | |
+| 0...3            | "root"         | Identifies this file as a ROOT file     | |
 | 4...7            | Version     | File format version                        | TFile::fVersion (10000*major+100*minor+cycle (e.g. 62206 for 6.22.06)) |
 | 8...11           | BEGIN       | Byte offset of first data record (100)     | TFile::fBEGIN |
 |12...15 [12...19] | END         | Pointer to first free word at the EOF      | TFile::fEND (will be == to file size in bytes) |
