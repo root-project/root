@@ -319,6 +319,8 @@ ROOT::Experimental::RNTupleDescriptor::AddClusterDetails(RClusterDescriptor &&cl
       return R__FAIL("invalid attempt to add cluster details without known cluster summary");
    if (iter->second.HasPageLocations())
       return R__FAIL("invalid attempt to re-populate page list");
+   if (!clusterDesc.HasPageLocations())
+      return R__FAIL("provided cluster descriptor does not contain page locations");
    iter->second = std::move(clusterDesc);
    return RResult<void>::Success();
 }
