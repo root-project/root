@@ -322,7 +322,7 @@ public:                                                                         
    {                                                                                                            \
       return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                   \
    } /** \endcond */                                                                                            \
-   /** \return Pointer to statically injected TClass */ static TClass *Class()                                  \
+   /** \return TClass describing this class */ static TClass *Class()                                  \
    {                                                                                                            \
       return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class();                        \
    }                                                                                                            \
