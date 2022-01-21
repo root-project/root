@@ -198,7 +198,7 @@ bool XrdProofWorker::Matches(XrdProofWorker *wrk)
 ////////////////////////////////////////////////////////////////////////////////
 /// Export current content in a form understood by parsing algorithms
 /// inside the PROOF session, i.e.
-/// <type>|<user@host>|<port>|<ord>|-|<perfidx>|<img>|<workdir>|<msd>
+/// `<type>`|`<user@host>`|`<port>`|`<ord>`|-|`<perfidx>`|`<img>`|`<workdir>`|`<msd>`
 
 const char *XrdProofWorker::Export(const char *ord)
 {

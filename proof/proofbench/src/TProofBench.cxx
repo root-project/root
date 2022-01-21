@@ -1331,10 +1331,10 @@ Int_t TProofBench::RemoveDataSet(const char *dset)
 /// The string 'fnroot' defines the location of the files, interpreted as an URL.
 /// Examples:
 ///          fnroot             files
-///          'event'            <datadir>/event_<ord>_<#>.root
-///          '/mss/event'       /mss/event_<ord>_<#>.root
+///          'event'            `<datadir>`/event_`<ord>`_`<#>`.root
+///          '/mss/event'       /mss/event_`<ord>`_`<#>`.root
 ///          'root://srv//mss/event?remote=1'
-///                             root://srv//mss/event_<ord>_<#>?remote=1.root
+///                             root://srv//mss/event_`<ord>`_`<#>`?remote=1.root
 /// Default selector is TSelEventGen. Use SetDataGenSel and SetDataGenPar to change it
 /// and to pass the list of PARs defining the alternative selector.
 /// The argument 'nevt' controls the number of events per file (-1 for the default,

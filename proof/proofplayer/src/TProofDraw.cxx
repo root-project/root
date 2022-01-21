@@ -303,7 +303,7 @@ void TProofDraw::ClearFormula()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Move to a canvas named <name>_canvas; create the canvas if not existing.
+/// Move to a canvas named `<name>_canvas`; create the canvas if not existing.
 /// Used to avoid screwing up existing plots when non default names are used
 /// for the final objects
 

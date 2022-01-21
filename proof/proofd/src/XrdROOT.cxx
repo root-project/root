@@ -270,7 +270,7 @@ int XrdROOT::ParseROOTVersionInfo()
 ////////////////////////////////////////////////////////////////////////////////
 /// Translate 'release' into a version code integer following the rules
 /// in $ROOTSYS/include/RVersion.h.
-/// 'release' must be in the format 'M.N/PP<something else>', e.g. 5.20/04-cms
+/// 'release' must be in the format 'M.N/PP`<something_else>`', e.g. 5.20/04-cms
 
 int XrdROOT::GetVersionCode(const char *release)
 {
@@ -290,8 +290,8 @@ int XrdROOT::GetVersionCode(int maj, int min, int patch)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extract from 'release' its major, minor and patch numerical components;
-/// 'release' must be in the format 'M.N/PP<something else>', e.g. 5.20/04-cms;
-/// the part <something else> is ignored.
+/// 'release' must be in the format 'M.N/PP`<something_else>`', e.g. 5.20/04-cms;
+/// the part `<something_else>` is ignored.
 
 int XrdROOT::ParseReleaseString(const char *release,
                                 int &maj, int &min, int &patch)
