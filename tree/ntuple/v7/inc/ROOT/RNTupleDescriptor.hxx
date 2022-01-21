@@ -319,7 +319,7 @@ public:
 \brief Clusters are stored in cluster groups. Cluster groups span all the columns of a certain event range.
 
 Very large ntuples or combined ntuples (chains, friends) contain multiple cluster groups. The cluster groups
-may contain shared clusters. However, a cluster group must contain the clusters spanning all the columns for the
+may contain sharded clusters. However, a cluster group must contain the clusters spanning all the columns for the
 given event range. Cluster groups must partition the entry range of an ntuple.
 Every ntuple has at least one cluster group.  The clusters in a cluster group are ordered corresponding to
 the order of page locations in the page list envelope that belongs to the cluster group (see format specification)
