@@ -104,7 +104,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "19/11/2021"*/
-   JSROOT.version_date = "20/01/2022";
+   JSROOT.version_date = "21/01/2022";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -154,8 +154,9 @@
       browser.isFirefox = typeof InstallTrigger !== 'undefined';
       browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
       browser.isChrome = !!window.chrome && !browser.isOpera;
-      browser.isWin = navigator.platform.indexOf('Win') >= 0;
       browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
+      browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
+      browser.isWin = navigator.platform.indexOf('Win') >= 0;
       browser.touches = ('ontouchend' in document); // identify if touch events are supported
    }
 

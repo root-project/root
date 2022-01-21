@@ -4483,8 +4483,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              return;
          }
 
-         let pos = group.position;
-
+         let pos;
          if (action == "restore") {
              pos = group.position0;
          } else if (handle.vertical) {
@@ -4791,7 +4790,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             return;
          }
 
-         let state = main.property("state"), newstate = state;
+         let state = main.property("state"), newstate;
          if (kind.t == "maximize")
             newstate = (state == "max") ? "normal" : "max";
          else

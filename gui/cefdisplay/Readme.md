@@ -2,9 +2,9 @@
 
 ## Compilation with CEF support
 
-See details about [Chromimum Embedded Framework](https://bitbucket.org/chromiumembedded/cef)
+See details about [Chromium Embedded Framework](https://bitbucket.org/chromiumembedded/cef)
 
-1. Current code tested with CEF3 branch 4638, Chromium 95 (October 2021)
+1. Current code tested with CEF3 branch 4692, Chromium 97 (January 2022)
    Older CEF versions are no longer supported.
 
 2. Download binary code from [https://cef-builds.spotifycdn.com/index.html](https://cef-builds.spotifycdn.com/index.html) and unpack it in directory without spaces and special symbols:
@@ -12,8 +12,8 @@ See details about [Chromimum Embedded Framework](https://bitbucket.org/chromiume
 ~~~
      $ mkdir /d/cef
      $ cd /d/cef/
-     $ wget https://cef-builds.spotifycdn.com/cef_binary_95.7.12%2Bg99c4ac0%2Bchromium-95.0.4638.54_linux64.tar.bz2
-     $ tar xjf cef_binary_95.7.12+g99c4ac0+chromium-95.0.4638.54_linux64.tar.bz2
+     $ wget https://cef-builds.spotifycdn.com/cef_binary_97.1.6%2Bg8961cdb%2Bchromium-97.0.4692.99_linux64_minimal.tar.bz2
+     $ tar xjf cef_binary_97.1.6+g8961cdb+chromium-97.0.4692.99_linux64_minimal.tar.bz2
 ~~~
 
 
@@ -23,7 +23,7 @@ See details about [Chromimum Embedded Framework](https://bitbucket.org/chromiume
 4. Compile CEF to produce `libcef_dll_wrapper`:
 
 ~~~
-     $ cd /d/cef/cef_binary_95.7.12+g99c4ac0+chromium-95.0.4638.54_linux64
+     $ cd /d/cef/cef_binary_97.1.6+g8961cdb+chromium-97.0.4692.99_linux64_minimal
      $ mkdir build
      $ cd build
      $ cmake ..
@@ -33,7 +33,7 @@ See details about [Chromimum Embedded Framework](https://bitbucket.org/chromiume
 5. Set CEF_ROOT variable to unpacked directory:
 
 ~~~
-     $ export CEF_ROOT=/d/cef/cef_binary_95.7.12+g99c4ac0+chromium-95.0.4638.54_linux64
+     $ export CEF_ROOT=/d/cef/cef_binary_97.1.6+g8961cdb+chromium-97.0.4692.99_linux64_minimal
 ~~~
 
 6. When configure ROOT compilation with `cmake -Dwebgui=ON -Dcefweb=ON ...`, CEF_ROOT shell variable should be set appropriately.
@@ -103,5 +103,4 @@ CEF with ozone support can be compiled with following commands:
 With little luck one get prepared tarballs in `/home/user/cef/chromium/src/cef/binary_distrib`.
 Just install it in the same way as described before in this document.
 ROOT will automatically detect that CEF build with `ozone` support and will use it for both interactive and headless modes.
-
 

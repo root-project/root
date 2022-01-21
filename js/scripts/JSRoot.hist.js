@@ -6352,7 +6352,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (fWhiskerDown <= 0)
            if ((swapXY && funcs.logx) || (!swapXY && funcs.logy)) return;
 
-         let w = (grx_right - grx_left), candleWidth = w, histoWidth = w,
+         let w = (grx_right - grx_left), candleWidth, histoWidth,
              center = (grx_left + grx_right) / 2 + histo.fBarOffset/1000*w;
          if ((histo.fBarWidth > 0) && (histo.fBarWidth !== 1000)) {
             candleWidth = histoWidth = w * histo.fBarWidth / 1000;
