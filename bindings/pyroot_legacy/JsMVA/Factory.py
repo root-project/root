@@ -238,7 +238,7 @@ class TreeReader:
 
     ## Standard Constructor
     # @param self object pointer
-    # @oaran fileName path to XML file
+    # @param fileName path to XML file
     def __init__(self, fileName):
         self.__xmltree = ElementTree()
         self.__xmltree.parse(fileName)
