@@ -422,7 +422,7 @@ Bool_t PyROOT::TULongConverter::ToMemory( PyObject* value, void* address )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// construct python object from C++ unsigned int read at <address>
+/// construct python object from C++ unsigned int read at `<address>`
 
 PyObject* PyROOT::TUIntConverter::FromMemory( void* address )
 {
@@ -782,7 +782,7 @@ Bool_t PyROOT::TVoidArrayConverter::SetArg(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// nothing sensible can be done, just return <address> as pylong
+/// nothing sensible can be done, just return `<address>` as pylong
 
 PyObject* PyROOT::TVoidArrayConverter::FromMemory( void* address )
 {
@@ -1004,7 +1004,7 @@ Bool_t PyROOT::TCppObjectConverter::SetArg(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// construct python object from C++ instance read at <address>
+/// construct python object from C++ instance read at `<address>`
 
 PyObject* PyROOT::TCppObjectConverter::FromMemory( void* address )
 {
@@ -1012,7 +1012,7 @@ PyObject* PyROOT::TCppObjectConverter::FromMemory( void* address )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// convert <value> to C++ instance, write it at <address>
+/// convert <value> to C++ instance, write it at `<address>`
 
 Bool_t PyROOT::TCppObjectConverter::ToMemory( PyObject* value, void* address )
 {
@@ -1197,7 +1197,7 @@ Bool_t PyROOT::TCppObjectPtrConverter<ISREFERENCE>::SetArg(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// construct python object from C++ instance* read at <address>
+/// construct python object from C++ instance* read at `<address>`
 
 template <bool ISREFERENCE>
 PyObject* PyROOT::TCppObjectPtrConverter<ISREFERENCE>::FromMemory( void* address )
@@ -1206,7 +1206,7 @@ PyObject* PyROOT::TCppObjectPtrConverter<ISREFERENCE>::FromMemory( void* address
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// convert <value> to C++ instance*, write it at <address>
+/// convert <value> to C++ instance*, write it at `<address>`
 
 template <bool ISREFERENCE>
 Bool_t PyROOT::TCppObjectPtrConverter<ISREFERENCE>::ToMemory( PyObject* value, void* address )
@@ -1265,7 +1265,7 @@ Bool_t PyROOT::TCppObjectArrayConverter::SetArg(
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// construct python tuple of instances from C++ array read at <address>
+/// construct python tuple of instances from C++ array read at `<address>`
 
 PyObject* PyROOT::TCppObjectArrayConverter::FromMemory( void* address )
 {
@@ -1276,7 +1276,7 @@ PyObject* PyROOT::TCppObjectArrayConverter::FromMemory( void* address )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// convert <value> to C++ array of instances, write it at <address>
+/// convert <value> to C++ array of instances, write it at `<address>`
 
 Bool_t PyROOT::TCppObjectArrayConverter::ToMemory( PyObject* /* value */, void* /* address */ )
 {
