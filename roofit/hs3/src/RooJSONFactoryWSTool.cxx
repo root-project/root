@@ -1329,6 +1329,7 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf &pd
       inwsmc->SetParametersOfInterest(pois);
       inwsmc->SetNuisanceParameters(nps);
       inwsmc->SetGlobalObservables(globs);
+      delete pdfVars;
    } else {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() object '" << mcname << "' in workspace is not of type RooStats::ModelConfig!"
