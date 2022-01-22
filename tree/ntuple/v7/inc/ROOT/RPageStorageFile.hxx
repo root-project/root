@@ -154,8 +154,8 @@ public:
 
    RPageSourceFile(const RPageSourceFile&) = delete;
    RPageSourceFile& operator=(const RPageSourceFile&) = delete;
-   RPageSourceFile(RPageSourceFile&&) = default;
-   RPageSourceFile& operator=(RPageSourceFile&&) = default;
+   RPageSourceFile(RPageSourceFile &&) = delete;
+   RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    virtual ~RPageSourceFile();
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
