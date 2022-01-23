@@ -144,20 +144,13 @@ def get_defined_attributes(klass, consider_base_classes=False):
     return sorted([attr for attr in dir(klass) if is_defined(attr)])
 
 
-def is_staticmethod(klass, func_name):
-    """Check if the function with name `func_name` of a class is a static method."""
+def is_staticmethod_py2(klass, func_name):
+    """Check if the function with name `func_name` of a class is a static method in Python 2."""
 
-    import sys
-
-    if sys.version_info >= (3, 0):
-        func = getattr(klass(), func_name)
-    else:
-        func = getattr(klass, func_name)
-
-    return type(func).__name__ == "function"
+    return type(getattr(klass, func_name)).__name__ == "function"
 
 
-def rebind_instancemethod(to_class, from_class, func_name):
+def rebind_attribute(to_class, from_class, func_name):
     """
     Bind the instance method `from_class.func_name` also to class `to_class`.
     """
@@ -168,7 +161,9 @@ def rebind_instancemethod(to_class, from_class, func_name):
 
     if sys.version_info >= (3, 0):
         to_method = from_method
-    elif is_staticmethod(from_class, func_name):
+    elif isinstance(from_method, property):
+        to_method = from_method
+    elif is_staticmethod_py2(from_class, func_name):
         to_method = staticmethod(from_method)
     else:
         import new
@@ -231,7 +226,7 @@ def pythonize_roofit_class(klass, name):
 
             setattr(klass, func_name_orig, func_orig)
 
-        rebind_instancemethod(klass, python_klass, func_name)
+        rebind_attribute(klass, python_klass, func_name)
 
     return
 
