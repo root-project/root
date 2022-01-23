@@ -80,7 +80,7 @@ class THnChain : public TObject
 
    static bool CheckConsistency(const THnBase& h, const std::vector<TAxis*>& axes);
 
-   ClassDef(THnChain, 0)
+   ClassDef(THnChain, 0);
 
 };
 
