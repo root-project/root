@@ -147,40 +147,40 @@ protected:
 
    //typedef std::function<double(double)>                  Transformer;
 
-   Int_t       fNdt;         //!Number of Delaunay triangles found
-   Int_t       fNpoints;     //!Number of data points
+   Int_t       fNdt;           ///<! Number of Delaunay triangles found
+   Int_t       fNpoints;       ///<! Number of data points
 
-   const double   *fX;           //!Pointer to X array (managed externally)
-   const double   *fY;           //!Pointer to Y array
-   const double   *fZ;           //!Pointer to Z array
+   const double   *fX;         ///<! Pointer to X array (managed externally)
+   const double   *fY;         ///<! Pointer to Y array
+   const double   *fZ;         ///<! Pointer to Z array
 
-   double    fXNmin;       //!Minimum value of fXN
-   double    fXNmax;       //!Maximum value of fXN
-   double    fYNmin;       //!Minimum value of fYN
-   double    fYNmax;       //!Maximum value of fYN
+   double    fXNmin;           ///<! Minimum value of fXN
+   double    fXNmax;           ///<! Maximum value of fXN
+   double    fYNmin;           ///<! Minimum value of fYN
+   double    fYNmax;           ///<! Maximum value of fYN
 
-   //Transformer xTransformer; //!transform x values to mapped space
-   //Transformer yTransformer; //!transform y values to mapped space
+   //Transformer xTransformer; ///<! transform x values to mapped space
+   //Transformer yTransformer; ///<! transform y values to mapped space
 
-   double    fOffsetX;      //!Normalization offset X
-   double    fOffsetY;      //!Normalization offset Y
+   double    fOffsetX;         ///<! Normalization offset X
+   double    fOffsetY;         ///<! Normalization offset Y
 
-   double    fScaleFactorX; //!Normalization factor X
-   double    fScaleFactorY; //!Normalization factor Y
+   double    fScaleFactorX;    ///<! Normalization factor X
+   double    fScaleFactorY;    ///<! Normalization factor Y
 
-   double    fZout;        //!Height for points lying outside the convex hull
+   double    fZout;            ///<! Height for points lying outside the convex hull
 
 #ifdef THREAD_SAFE
 
    enum class Initialization : char {UNINITIALIZED, INITIALIZING, INITIALIZED};
-   std::atomic<Initialization> fInit; //!Indicate initialization state
+   std::atomic<Initialization> fInit; ///<! Indicate initialization state
 
 #else
-   Bool_t      fInit;        //!True if FindAllTriangels() has been performed
+   Bool_t      fInit;          ///<! True if FindAllTriangels() has been performed
 #endif
 
 
-   Triangles   fTriangles;   //!Triangles of Triangulation
+   Triangles   fTriangles;     ///<! Triangles of Triangulation
 
 #ifdef HAS_CGAL
 
@@ -213,7 +213,7 @@ protected:
    	typedef K::FT                                                Coord_type;
    	typedef K::Point_2                                           Point;
    	typedef std::map<Point, Vb::Info, K::Less_xy_2>              PointWithInfoMap;
-   	typedef Data_access< PointWithInfoMap, double >            Value_access;
+   	typedef Data_access< PointWithInfoMap, double >              Value_access;
 
    Delaunay fCGALdelaunay; //! CGAL delaunay triangulation object
    PointWithInfoMap fNormalizedPoints; //! Normalized function values
