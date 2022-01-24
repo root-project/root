@@ -610,10 +610,10 @@ Bool_t TOracleStatement::StoreResult()
    try {
       if (fStmt->status() == oracle::occi::Statement::RESULT_SET_AVAILABLE) {
          fResult      = fStmt->getResultSet();
-         fFieldInfo   = (fResult==0) ? 0 : new std::vector<oracle::occi::MetaData>(fResult->getColumnListMetaData());
-         Int_t count  = (fFieldInfo==0) ? 0 : fFieldInfo->size();
+         fFieldInfo   = !fResult ? nullptr : new std::vector<oracle::occi::MetaData>(fResult->getColumnListMetaData());
+         Int_t count  = !fFieldInfo ? 0 : fFieldInfo->size();
          SetBufferSize(count);
-         if ((fResult!=0) && (count>0)) fWorkingMode = 2;
+         if (fResult && (count > 0)) fWorkingMode = 2;
 
          return IsResultSet();
       }
@@ -676,12 +676,10 @@ Bool_t TOracleStatement::NextResultRow()
 {
    ClearError();
 
-   if (fResult==0) {
+   if (!fResult) {
       SetError(-1,"There is no result set for statement", "NextResultRow");
       return kFALSE;
    }
-
-   if (fResult==0) return kFALSE;
 
    try {
       for (int n=0;n<fBufferSize;n++) {
