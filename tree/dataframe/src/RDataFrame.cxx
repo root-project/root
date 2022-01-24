@@ -686,7 +686,7 @@ computations.
 
 ### Distributed RunGraphs
 
-Submitting multiple distributed RDataFrame executions is supported through the % RunGraphs function. Similarly to its
+Submitting multiple distributed RDataFrame executions is supported through the RunGraphs function. Similarly to its
 local counterpart, the function expects an iterable of objects representing an RDataFrame action. Each action will be
 triggered concurrently to send multiple computation graphs to a distributed cluster at the same time:
 
@@ -710,7 +710,7 @@ histos = [histoproxy.GetValue() for histoproxy in histoproxies]
 ~~~
 
 Every distributed backend supports this feature and graphs belonging to different backends can be still triggered with
-a single call to % RunGraphs (e.g. it is possible to send a Spark job and a Dask job at the same time).
+a single call to RunGraphs (e.g. it is possible to send a Spark job and a Dask job at the same time).
 
 
 \anchor parallel-execution
