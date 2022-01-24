@@ -21,7 +21,12 @@
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
-RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RColumnRegister{}, {}) {}
+RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns,
+                             const RDFInternal::RColumnRegister &colRegister,
+                             const std::vector<std::string> &prevVariations)
+   : RActionBase(&lm, columns, colRegister, prevVariations)
+{
+}
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
