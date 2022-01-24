@@ -113,14 +113,14 @@ public:
 
       TString signal = CompressName(signal_name);
 
-      TVirtualQConnection *connection = 0;
+      TVirtualQConnection *connection = nullptr;
 
       // execute class signals
       TList *sigList;
       TIter  nextSigList(&classSigLists);
-      while ((sigList = (TList*) nextSigList())) {
+      while ((sigList = (TList*) nextSigList()) != nullptr) {
          TIter nextcl((TList*) sigList->FindObject(signal));
-         while ((connection = static_cast<TVirtualQConnection*>(nextcl()))) {
+         while ((connection = static_cast<TVirtualQConnection*>(nextcl())) != nullptr) {
             gTQSender = GetSender();
             connection->SetArgs(params...);
             connection->SendSignal();
@@ -131,7 +131,7 @@ public:
 
       // execute object signals
       TIter next((TList*) fListOfSignals->FindObject(signal));
-      while (fListOfSignals && (connection = static_cast<TVirtualQConnection*>(next()))) {
+      while (fListOfSignals && (connection = static_cast<TVirtualQConnection*>(next())) != nullptr) {
          gTQSender = GetSender();
          connection->SetArgs(params...);
          connection->SendSignal();
