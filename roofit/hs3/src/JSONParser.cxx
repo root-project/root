@@ -225,8 +225,8 @@ std::string TJSONTree::Node::val() const
    case nlohmann::json::value_t::number_unsigned: return ::itoa(node->get().get<unsigned int>());
    case nlohmann::json::value_t::number_float: return ::ftoa(node->get().get<float>());
    default:
-      throw std::runtime_error(std::string("implicit string conversion for type ") + node->get().type_name() +
-                               std::string(" not supported!"));
+      throw std::runtime_error(std::string("node " + node->key() + ": implicit string conversion for type " +
+                                           node->get().type_name() + " not supported!"));
    }
 }
 

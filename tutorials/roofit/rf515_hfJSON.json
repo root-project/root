@@ -1,6 +1,10 @@
 {
     "pdfs": {
         "main": {
+            "dict": {
+                "InterpolationScheme": ""
+            },
+            "index": "channelCat",
             "type": "simultaneous",
             "tags": [
                 "toplevel"
@@ -17,7 +21,7 @@
                     },
                     "samples": {
                         "signal": {
-                            "type": "histogram",
+                            "type": "hist-sample",
                             "overallSystematics": {
                                 "syst1": {
                                     "low": 0.95,
@@ -36,7 +40,7 @@
                             }
                         },
                         "background1": {
-                            "type": "histogram",
+                            "type": "hist-sample",
                             "overallSystematics": {
                                 "syst2": {
                                     "low": 0.95,
@@ -56,7 +60,7 @@
                             }
                         },
                         "background2": {
-                            "type": "histogram",
+                            "type": "hist-sample",
                             "overallSystematics": {
                                 "syst3": {
                                     "low": 0.95,

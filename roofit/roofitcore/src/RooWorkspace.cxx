@@ -473,7 +473,9 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
         return kTRUE ;
       }
     } else {
-      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Recycling existing object " << inArg.GetName() << " created with identical factory specification" << endl ;
+      if(!silence) {
+        coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Recycling existing object " << inArg.GetName() << " created with identical factory specification" << endl ;
+      }
     }
   }
 
