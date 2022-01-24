@@ -14,6 +14,13 @@
             "mean": "mean"
         }
     },
+    "RooExponential": {
+        "type": "Exponential",
+        "proxies": {
+            "x": "x",
+            "c": "c"
+        }
+    },    
     "RooProduct": {
         "type": "prod",
         "proxies": {
@@ -34,13 +41,6 @@
             "paramSet": "parameters"
         }
     },
-    "RooRealSumPdf": {
-        "type": "sumpdf",
-        "proxies": {
-            "funcList": "samples",
-            "coefList": "coefficients"
-        }
-    },
     "RooAddPdf": {
         "type": "pdfsum",
         "proxies": {
@@ -49,6 +49,12 @@
             "coefficients": "coefficients"
         }
     },
+    "RooAddition": {
+        "type": "sum",
+        "proxies": {
+            "set": "summands"
+        }
+    },    
     "RooArgusBG": {
         "type": "ARGUS",
         "proxies": {

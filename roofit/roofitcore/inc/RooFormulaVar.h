@@ -37,7 +37,9 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooFormulaVar(*this,newname); }
 
   inline Bool_t ok() const { return getFormula().ok() ; }
-
+  const char* expression() const { return _formExpr.Data(); }
+  const RooArgList& dependents() const { return _actualVars; }  
+  
   /// Return pointer to parameter with given name.
   inline RooAbsArg* getParameter(const char* name) const { 
     return _actualVars.find(name) ; 
