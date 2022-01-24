@@ -1537,7 +1537,7 @@ This implies by default that the point is also contained by `A_1`, since
 `B_1` have to be fully contained by this. After searching the point
 location, the modeller will consider that the point is located inside
 `B_1`, which will be considered as the representative object (node) for
-the current state. This is stored as: `TGeoNode *TGeoNavigator::fCurrentNode`
+the current state. This is stored as: `TGeoNode *TGeoNavigator::%fCurrentNode`
 and can be asked from the manager class
 only after the `'Where am I?'` was completed:
 

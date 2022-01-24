@@ -338,7 +338,7 @@ const char *TPgSQLServer::ServerInfo()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// PG_VERSION_NUM conveniently only started being #defined at 8.2.3
+/// PG_VERSION_NUM conveniently only started being #%defined at 8.2.3
 /// which is the first version of libpq which explicitly supports prepared
 /// statements
 

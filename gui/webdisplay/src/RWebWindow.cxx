@@ -159,8 +159,8 @@ THttpServer *RWebWindow::GetServer()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
-/// See \ref ROOT::Experimental::RWebWindowsManager::Show for more info
-/// returns (future) connection id (or 0 when fails)
+/// \see ROOT::Experimental::RWebWindowsManager::Show for more info
+/// \return (future) connection id (or 0 when fails)
 
 unsigned RWebWindow::Show(const RWebDisplayArgs &args)
 {

@@ -118,7 +118,7 @@ public:
    @param x vector containing the mean, the standard deviation and the constant
    describing the Gaussian.
 
-   @param par vector containing the x coordinate (which is the Parameter in
+   @param param vector containing the x coordinate (which is the Parameter in
    the case of a minimization).
 
    @return the Value of the Gaussian for the given input.
