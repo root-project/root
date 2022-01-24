@@ -460,7 +460,7 @@ void TTreeReader::Restart() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
 /// of the TTree / TChain, independent of a range set by SetEntriesRange()
-/// by calling TTree/TChain::GetEntriesFast.
+/// by calling TTree/TChain::%GetEntriesFast.
 
 
 Long64_t TTreeReader::GetEntries() const {

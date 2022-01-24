@@ -6175,10 +6175,10 @@ TLeaf* TTree::GetLeaf(const char* branchname, const char *leafname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to first leaf named \param[name] in any branch of this
+/// Return pointer to first leaf named "name" in any branch of this
 /// tree or its friend trees.
 ///
-/// \param[name] may be in the form 'branch/leaf'
+/// \param[in] name may be in the form 'branch/leaf'
 ///
 
 TLeaf* TTree::GetLeaf(const char *name)
