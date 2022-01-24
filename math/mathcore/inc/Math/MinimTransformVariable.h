@@ -25,11 +25,11 @@ namespace ROOT {
          The enumeration are used in the minimizer classes to categorize the variables
       */
       enum EMinimVariableType {
-         kDefault,    // free variable (unlimited)
-         kFix,        // fixed variable
-         kBounds,     //  variable has two bounds
-         kLowBound,   // variable has a lower bound
-         kUpBound     // variable has an upper bounds
+         kDefault,    ///< free variable (unlimited)
+         kFix,        ///< fixed variable
+         kBounds,     ///<  variable has two bounds
+         kLowBound,   ///< variable has a lower bound
+         kUpBound     ///< variable has an upper bounds
       };
 
 
@@ -130,20 +130,20 @@ public:
       return (fTransform.get() ) ? fTransform->DInt2Ext( x, fLower, fUpper) : 1.0;
    }
 
-   // etxernal to internal transformation
+   // external to internal transformation
    double ExternalToInternal(double x) const {
       return (fTransform.get() ) ? fTransform->Ext2int(x, fLower, fUpper) : x;
    }
 
 private:
 
-   bool fFix;         // fix variable
-   bool fLowBound;    // has lower bound
-   bool fUpBound;     // has uppper bound param
-   bool fBounds;      // has double bound
-   std::unique_ptr< MinimizerVariableTransformation> fTransform; // pointer to the minimizer transformation
-   double fLower;   // lower parameter limit
-   double fUpper;   // upper parameter limit
+   bool fFix;         ///< fix variable
+   bool fLowBound;    ///< has lower bound
+   bool fUpBound;     ///< has upper bound param
+   bool fBounds;      ///< has double bound
+   std::unique_ptr< MinimizerVariableTransformation> fTransform; ///< pointer to the minimizer transformation
+   double fLower;     ///< lower parameter limit
+   double fUpper;     ///< upper parameter limit
 
 };
 

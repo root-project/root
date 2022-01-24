@@ -29,7 +29,7 @@ namespace ROOT {
 typedef double( * FreeParamMultiFunctionPtr ) (const double *, const double * );
 
 /**
-   WrappedParamFunction class to wrap any multi-dimensional function pbject
+   WrappedParamFunction class to wrap any multi-dimensional function object
    implementing the operator()(const double * x, const double * p)
    in an interface-like IParamFunction with a vector storing and caching internally the
    parameter values
@@ -142,7 +142,7 @@ class WrappedParamFunctionGen : public IParamMultiFunction {
 public:
 
    /**
-      Constructor a wrapped function from a pointer to a generic callable object implemention operator()(const double *), the new function dimension, the number of parameters (number of fixed variables) and an array specifying the index of the fixed variables which becames
+      Constructor a wrapped function from a pointer to a generic callable object implementation operator()(const double *), the new function dimension, the number of parameters (number of fixed variables) and an array specifying the index of the fixed variables which became
       parameters in the new API
    */
 
@@ -274,7 +274,7 @@ private:
    }
 
    // set the parameter values in the cached fX vector
-   // makme const because it might be called from const methods
+   // make const because it might be called from const methods
    void SetParValues(unsigned int npar, const double * p) const {
       for (unsigned int i = 0; i < npar; ++i) {
          unsigned int j = fParIndices[i];

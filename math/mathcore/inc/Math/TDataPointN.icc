@@ -7,7 +7,7 @@
  *                                                                    *
  **********************************************************************/
 //
-// impelmentation of template functions for TDataPointN class
+// implementation of template functions for TDataPointN class
 //
 
 #ifndef TDataPointN_ICC

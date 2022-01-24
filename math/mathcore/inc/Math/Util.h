@@ -272,7 +272,7 @@ namespace ROOT {
 
        /// Subtract other KahanSum. Does not vectorise.
        ///
-       /// This is only meaningfull when both the sum and carry of each operand are of similar order of magnitude.
+       /// This is only meaningful when both the sum and carry of each operand are of similar order of magnitude.
        KahanSum<T, N>& operator-=(KahanSum<T, N> const& other) {
          fSum[0]   -= other.Sum();
          fCarry[0] -= other.Carry();

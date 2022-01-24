@@ -25,7 +25,7 @@ namespace ROOT {
 
       /**
          MultiDimParamFunctionAdapter class to wrap a one-dimensional parametric function in
-         a multi dimensional parameteric function interface
+         a multi dimensional parametric function interface
          This is used typically in fitting where internally the function is stored as multidimension
 
          To wrap a non-parametric one-dim function in a multi-dim interface one can use simply a
@@ -154,14 +154,14 @@ namespace ROOT {
 
       /**
          MultiDimParamGradFunctionAdapter class to wrap a one-dimensional parametric gradient function in
-         a multi dimensional parameteric gradient function interface
+         a multi dimensional parametric gradient function interface
          This is used typically in fitting where internally the function is stored as multidimension
 
          To wrap a non-parametric one-dim gradient function in a multi-dim interface one can use simply a
            a ROOT::Math::GradFunctor
 
          The parameters are not stored in the adapter class and by default the pointer to the 1D function is owned.
-         This means that deleteing the class deletes also the 1D function and copying the class copies also the
+         This means that deleting the class deletes also the 1D function and copying the class copies also the
          1D function
          This class differs from WrappedParamFunction in the fact that the parameters are not stored in
          the adapter class and optionally it keeps a cloned and managed copy of the adapter class.

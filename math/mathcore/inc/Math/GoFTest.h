@@ -22,20 +22,20 @@
 
 namespace ROOT {
 
-   namespace Fit { 
-      class BinData; 
+   namespace Fit {
+      class BinData;
    }
 namespace Math {
 
-/////  @defgroup GoFClasses Goodness of Fit Statistical Tests Tools 
-   
+/////  @defgroup GoFClasses Goodness of Fit Statistical Tests Tools
+
 /*
   Class for Goodness of Fit tests implementing the Anderson-Darling and Kolmogorov-Smirnov 1- and 2-Samples Goodness of Fit Tests.
   @ingroup MathCore
 
  */
 
-   
+
 class GoFTest {
 public:
 
@@ -52,7 +52,7 @@ public:
       kPDF                  // Default value
    };
 
-   enum ETestType { // Goodness of Fit test types for using with the class's unary funtions as a shorthand for the in-built methods
+   enum ETestType { // Goodness of Fit test types for using with the class's unary functions as a shorthand for the in-built methods
       kAD,   // Anderson-Darling Test. Default value
       kAD2s, // Anderson-Darling 2-Samples Test
       kKS,   // Kolmogorov-Smirnov Test
@@ -155,7 +155,7 @@ public:
   The Kolmogorov-Smirnov 1-Sample Test algorithm for a specific distribution is described at
   http://www.itl.nist.gov/div898/software/dataplot/refman1/auxillar/kstest.htm
   and described and taken from (4)
-  Press W. H., Teukolsky S.A., Vetterling W.T., Flannery B.P. (2007), Numerical Recipes - The Art of Scientific Computing (Third Edition), Cambridge Univerdity Press
+  Press W. H., Teukolsky S.A., Vetterling W.T., Flannery B.P. (2007), Numerical Recipes - The Art of Scientific Computing (Third Edition), Cambridge University Press
 */ void KolmogorovSmirnovTest(Double_t& pvalue, Double_t& testStat) const;
    Double_t KolmogorovSmirnovTest(const Char_t* option = "p") const; // Returns default p-value; option "t" returns the test statistic value "Dn"
 
@@ -164,20 +164,20 @@ public:
 
    // Returns default Anderson Darling 1-Sample Test and default p-value; option "t" returns the test statistic value
    // specific to the test type
-   Double_t operator()(ETestType test = kAD, const Char_t* option = "p") const; 
- 
-   // Computation of the K-Sample Anderson-Darling Test's p-value as described in (1) 
-   // given a normalized test statistic. The first variant described in the paper is used 
-   static Double_t PValueADKSamples(UInt_t nsamples, Double_t A2 ); 
+   Double_t operator()(ETestType test = kAD, const Char_t* option = "p") const;
+
+   // Computation of the K-Sample Anderson-Darling Test's p-value as described in (1)
+   // given a normalized test statistic. The first variant described in the paper is used
+   static Double_t PValueADKSamples(UInt_t nsamples, Double_t A2 );
 
    // Compute The 2-Sample Anderson Darling test for binned data
    static void  AndersonDarling2SamplesTest(const ROOT::Fit::BinData & data1, const ROOT::Fit::BinData & data2, Double_t& pvalue, Double_t& testStat);
 
 private:
 
-   GoFTest();                       // Disallowed default constructor
-   GoFTest(GoFTest& gof);           // Disallowed copy constructor
-   GoFTest operator=(GoFTest& gof); // Disallowed assign operator
+   GoFTest();                       ///< Disallowed default constructor
+   GoFTest(GoFTest& gof);           ///< Disallowed copy constructor
+   GoFTest operator=(GoFTest& gof); ///< Disallowed assign operator
 
    std::unique_ptr<IGenFunction> fCDF;
 

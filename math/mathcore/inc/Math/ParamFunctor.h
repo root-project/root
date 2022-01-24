@@ -260,7 +260,7 @@ private :
 /**
    Param Functor class for Multidimensional functions.
    It is used to wrap in a very simple and convenient way
-   any other C++ callable object (implemention double operator( const double *, const double * ) )
+   any other C++ callable object (implementation double operator( const double *, const double * ) )
    or a member function with the correct signature,
    like Foo::EvalPar(const double *, const double *)
 

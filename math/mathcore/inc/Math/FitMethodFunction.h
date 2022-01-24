@@ -28,7 +28,7 @@ namespace ROOT {
    FitMethodFunction class
    Interface for objective functions (like chi2 and likelihood used in the fit)
    In addition to normal function interface provide interface for calculating each
-   data contrinution to the function which is required by some algorithm (like Fumili)
+   data contribution to the function which is required by some algorithm (like Fumili)
 
    @ingroup  FitMethodFunc
 */
@@ -40,7 +40,7 @@ public:
 
    typedef  typename FunctionType::BaseFunc BaseFunction;
 
-   /// enumeration specyfing the possible fit method types
+   /// enumeration specifying the possible fit method types
    enum Type_t { kUndefined , kLeastSquare, kLogLikelihood };
 
 
@@ -80,7 +80,7 @@ public:
    virtual Type_t Type() const { return kUndefined; }
 
    /**
-      return the total number of function calls (overrided if needed)
+      return the total number of function calls (override if needed)
     */
    virtual unsigned int NCalls() const { return fNCalls; }
 

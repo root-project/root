@@ -65,7 +65,7 @@ class WrappedFunction : public IGenFunction {
       fFunc( f )
    { /* no op */ }
 
-   // use default  copy contructor and assignment operator
+   // use default copy constructor and assignment operator
 
    /// clone (required by the interface)
    WrappedFunction * Clone() const {
@@ -116,7 +116,7 @@ class WrappedMemFunction : public IGenFunction {
       fMemFunc( memFn )
    { /* no op */ }
 
-   // use default  copy contructor and assignment operator
+   // use default  copy constructor and assignment operator
 
    /// clone (required by the interface)
    WrappedMemFunction * Clone() const {
@@ -204,7 +204,7 @@ class WrappedMemMultiFunction : public IMultiGenFunction {
       fDim(dim)
    { /* no op */ }
 
-   // use default  copy contructor and assignment operator
+   // use default  copy constructor and assignment operator
 
    /// clone (required by the interface)
    WrappedMemMultiFunction * Clone() const {
