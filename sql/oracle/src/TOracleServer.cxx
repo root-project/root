@@ -63,8 +63,6 @@
 
 ClassImp(TOracleServer);
 
-using namespace oracle::occi;
-
 const char *TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
 
 
@@ -78,7 +76,7 @@ const char *TOracleServer::fgDatimeFormat = "MM/DD/YYYY, HH24:MI:SS";
 
 // catch Oracle exception after try block
 #define CatchError(method)                           \
-   catch (SQLException &oraex) {                     \
+   catch (oracle::occi::SQLException &oraex) {                     \
       SetError(oraex.getErrorCode(), oraex.getMessage().c_str(), method); \
    }
 
@@ -125,9 +123,9 @@ TOracleServer::TOracleServer(const char *db, const char *uid, const char *pw)
       Int_t pos = options.Index("ObjectMode");
       // create environment accordingly
       if (pos != kNPOS) {
-        fEnv = Environment::createEnvironment(Environment::OBJECT);
+        fEnv = oracle::occi::Environment::createEnvironment(oracle::occi::Environment::OBJECT);
       } else {
-        fEnv = Environment::createEnvironment();
+        fEnv = oracle::occi::Environment::createEnvironment();
       }
       fConn = fEnv->createConnection(uid, pw, conn_str ? conn_str : "");
 
@@ -152,7 +150,6 @@ TOracleServer::~TOracleServer()
       Close();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Close connection to Oracle DB server.
 
@@ -164,7 +161,7 @@ void TOracleServer::Close(Option_t *)
       if (fConn)
          fEnv->terminateConnection(fConn);
       if (fEnv)
-         Environment::terminateEnvironment(fEnv);
+         oracle::occi::Environment::terminateEnvironment(fEnv);
    } CatchError("Close")
 
    fPort = -1;
@@ -184,7 +181,7 @@ TSQLStatement *TOracleServer::Statement(const char *sql, Int_t niter)
    try {
       oracle::occi::Statement *stmt = fConn->createStatement(sql);
 
-      Blob parblob(fConn);
+      oracle::occi::Blob parblob(fConn);
 
       return new TOracleStatement(fEnv, fConn, stmt, niter, fErrorOut);
 
@@ -604,12 +601,12 @@ Bool_t TOracleServer::Rollback()
 
 void TOracleServer::SetDatimeFormat(const char* fmt)
 {
-   if (fmt==0) fmt = "MM/DD/YYYY, HH24:MI:SS";
+   if (!fmt) fmt = "MM/DD/YYYY, HH24:MI:SS";
    fgDatimeFormat = fmt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return value of actul convertion format from timestamps or date to string
+/// return value of actual conversion format from timestamps or date to string
 
 const char* TOracleServer::GetDatimeFormat()
 {
