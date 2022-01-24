@@ -1142,8 +1142,6 @@ import ROOT
 
 verbosity = ROOT.Experimental.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.Experimental.ELogLevel.kInfo)
 ~~~
-
-\anchor reference
 */
 // clang-format on
 
