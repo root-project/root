@@ -298,7 +298,7 @@ Int_t TChain::Add(TChain* chain)
 /// - Tagging the name of the tree with a slash (e.g. \p /tree_name ) is only
 ///   supported for backward compatibility; it requires the file name to contain
 ///   the string '.root' and its use is deprecated. Instead, use the form
-///   \p ?#tree_name (that is an "?" followed by an empty query), for example:
+///   \p ?#%tree_name (that is an "?" followed by an empty query), for example:
 ///   ~~~{.cpp}
 ///   TChain c;
 ///   // DO NOT DO THIS
@@ -2134,7 +2134,7 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///     [xxx://host]/a/path/file#treename
 /// ~~~
 /// i.e. anchor but no options (query), the filename will be the full path, as
-/// the anchor may be the internal file name of an archive. Use '?#treename' to
+/// the anchor may be the internal file name of an archive. Use '?#%treename' to
 /// pass the treename if the query field is empty.
 ///
 /// \param[in] name        is the original name
