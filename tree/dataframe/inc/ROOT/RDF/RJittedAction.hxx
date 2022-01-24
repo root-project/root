@@ -41,7 +41,8 @@ private:
    std::unique_ptr<RActionBase> fConcreteAction;
 
 public:
-   RJittedAction(RLoopManager &lm);
+   RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns, const RColumnRegister &colRegister,
+                 const std::vector<std::string> &prevVariations);
    ~RJittedAction() { fLoopManager->Deregister(this); }
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
