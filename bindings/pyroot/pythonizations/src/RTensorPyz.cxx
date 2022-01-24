@@ -20,7 +20,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Adopt memory of a Python object with array interface using an RTensor
-/// \param[in] self self object
+/// \param[in] self Always null, since this is a module function.
 /// \param[in] obj PyObject with array interface
 ///
 /// This function returns an RTensor which adopts the memory of the given
