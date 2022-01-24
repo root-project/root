@@ -58,9 +58,9 @@ namespace ROOT {
 
 /**
 
-   Class to generate a Delaunay triangulation of a 2D set of points. 
-   Algorithm based on **Triangle**, a two-dimensional quality mesh generator and 
-   Delaunay triangulator from Jonathan Richard Shewchuk. 
+   Class to generate a Delaunay triangulation of a 2D set of points.
+   Algorithm based on **Triangle**, a two-dimensional quality mesh generator and
+   Delaunay triangulator from Jonathan Richard Shewchuk.
 
    See [http://www.cs.cmu.edu/~quake/triangle.html]
 
@@ -86,7 +86,7 @@ public:
 
 public:
 
-   
+
    Delaunay2D(int n, const double *x, const double * y, const double * z, double xmin=0, double xmax=0, double ymin=0, double ymax=0);
 
    /// set the input points for building the graph
@@ -95,10 +95,10 @@ public:
    /// Return the Interpolated z value corresponding to the (x,y) point
    double  Interpolate(double x, double y);
 
-   /// Find all triangles 
+   /// Find all triangles
    void      FindAllTriangles();
 
-   /// return the number of triangles 
+   /// return the number of triangles
    Int_t     NumberOfTriangles() const {return fNdt;}
 
    double  XMin() const {return fXNmin;}
@@ -106,13 +106,13 @@ public:
    double  YMin() const {return fYNmin;}
    double  YMax() const {return fYNmax;}
 
-   /// set z value to be returned for points  outside the region 
+   /// set z value to be returned for points  outside the region
    void      SetZOuterValue(double z=0.) { fZout = z; }
 
    /// return the user defined Z-outer value
-   double ZOuterValue() const { return fZout; } 
+   double ZOuterValue() const { return fZout; }
 
-   // iterators on the found triangles 
+   // iterators on the found triangles
    Triangles::const_iterator begin() const { return fTriangles.begin(); }
    Triangles::const_iterator end()  const { return fTriangles.end(); }
 
@@ -121,7 +121,7 @@ private:
 
    // internal methods
 
-   
+
    inline double Linear_transform(double x, double offset, double factor){
 	   return (x+offset)*factor;
    }
@@ -130,14 +130,14 @@ private:
    void DoNormalizePoints();
 
    /// internal function to find the triangle
-   /// use Triangle or CGAL if flag is set 
+   /// use Triangle or CGAL if flag is set
    void DoFindTriangles();
 
    /// internal method to compute the interpolation
    double  DoInterpolateNormalized(double x, double y);
 
 
-   
+
 private:
    // class is not copyable
    Delaunay2D(const Delaunay2D&); // Not implemented
@@ -148,11 +148,11 @@ protected:
    //typedef std::function<double(double)>                  Transformer;
 
    Int_t       fNdt;         //!Number of Delaunay triangles found
-   Int_t       fNpoints;     //!Number of data points 
+   Int_t       fNpoints;     //!Number of data points
 
    const double   *fX;           //!Pointer to X array (managed externally)
-   const double   *fY;           //!Pointer to Y array 
-   const double   *fZ;           //!Pointer to Z array 
+   const double   *fY;           //!Pointer to Y array
+   const double   *fZ;           //!Pointer to Z array
 
    double    fXNmin;       //!Minimum value of fXN
    double    fXNmax;       //!Maximum value of fXN
@@ -258,18 +258,18 @@ protected:
     *
     */
 
-   std::vector<double> fXN; //! normalized X
-   std::vector<double> fYN; //! normalized Y
+   std::vector<double> fXN; ///<! normalized X
+   std::vector<double> fYN; ///<! normalized Y
 
    /* To speed up localisation of points a grid is layed over normalized space
     *
     * A reference to triangle ABC is added to _all_ grid cells that include ABC's bounding box
     */
 
-   static const int fNCells = 25; //! number of cells to divide the normalized space
-   double fXCellStep; //! inverse denominator to calculate X cell = fNCells / (fXNmax - fXNmin)
-   double fYCellStep; //! inverse denominator to calculate X cell = fNCells / (fYNmax - fYNmin)
-   std::set<UInt_t> fCells[(fNCells+1)*(fNCells+1)]; //! grid cells with containing triangles
+   static const int fNCells = 25; ///<! number of cells to divide the normalized space
+   double fXCellStep; ///<! inverse denominator to calculate X cell = fNCells / (fXNmax - fXNmin)
+   double fYCellStep; ///<! inverse denominator to calculate X cell = fNCells / (fYNmax - fYNmin)
+   std::set<UInt_t> fCells[(fNCells+1)*(fNCells+1)]; ///<! grid cells with containing triangles
 
    inline unsigned int Cell(UInt_t x, UInt_t y) const {
 	   return x*(fNCells+1) + y;
@@ -292,5 +292,5 @@ protected:
 } // namespace Math
 } // namespace ROOT
 
-      
+
 #endif

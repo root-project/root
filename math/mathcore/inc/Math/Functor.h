@@ -32,7 +32,7 @@ namespace Math {
    Internal classes for implementing Functor and Functor1D classes
    @ingroup GenFunc
  */
-   
+
 /**
    FunctorImpl is a base class for the functor
    handler implementation class.
@@ -387,7 +387,7 @@ private :
    It is used to wrap in a very simple and convenient way multi-dimensional function objects.
    It can wrap all the following types:
    <ul>
-   <li> any C++ callable object implemention double operator()( const double *  )
+   <li> any C++ callable object implementation double operator()( const double *  )
    <li> a free C function of type double ()(const double * )
    <li> an std::function of type std::function<double (double const *)>
    <li> a member function with the correct signature like Foo::Eval(const double * ).
@@ -434,14 +434,14 @@ public:
    /**
         specialized constructor from a std::function of multi-dimension
         with the right signature (double operator()(double const *x)
-        This specialized constructor is introduced in order to use the Functor class in 
-        Python passing Python user defined functions 
+        This specialized constructor is introduced in order to use the Functor class in
+        Python passing Python user defined functions
       */
    //template <typename Func>
    Functor(const std::function<double(double const *)> &f, unsigned int dim)
       : fImpl(new FunctorHandler<Functor, std::function<double(double const *)> >(dim, f) )
    {}
-  
+
    /**
       Destructor (no operations)
    */
@@ -492,7 +492,7 @@ private :
    Functor1D class for one-dimensional functions.
    It is used to wrap in a very simple and convenient way:
    <ul>
-   <li> any C++ callable object implemention double operator()( double  )
+   <li> any C++ callable object implementation double operator()( double  )
    <li> a free C function of type double ()(double )
    <li> a member function with the correct signature like Foo::Eval(double ).
        In this case one pass the object pointer and a pointer to the member function (&Foo::Eval)
@@ -553,7 +553,7 @@ public:
       Copy constructor for Functor based on ROOT::Math::IGenFunction
    */
    Functor1D(const Functor1D & rhs) :
-      // strange that this is required eventhough ImplBase is an abstract class
+      // strange that this is required even though ImplBase is an abstract class
       ImplBase()
    {
       if (rhs.fImpl)
@@ -635,7 +635,7 @@ public:
 
    /**
       construct for Gradient Functions of multi-dimension
-      Func gives the function evaluatiion, GradFunc the partial derivatives
+      Func gives the function evaluation, GradFunc the partial derivatives
       The function dimension is  required
     */
    template <typename Func, typename GradFunc>
@@ -644,15 +644,15 @@ public:
    { }
 
    /**
-      specialized constructor from 2 std::functions 
-      with the right signature (the first one implementing double operator()(double const *x) 
+      specialized constructor from 2 std::functions
+      with the right signature (the first one implementing double operator()(double const *x)
       for the function evaluation and the second one implementing double operator()(double const *x, unsigned int icoord)
       for the function partial derivatives.
       This specialized constructor is introduced in order to use the Functor class in
       Python passing Python user defined functions
     */
    // template <typename Func>
-   GradFunctor(const std::function<double(double const *)> &f, 
+   GradFunctor(const std::function<double(double const *)> &f,
            const std::function<double(double const *, unsigned int)> &g, unsigned int dim)
       : fImpl(new FunctorGradHandler<GradFunctor, std::function<double(double const *)>,
                                      std::function<double(double const *, unsigned int)> >(dim, f, g))
@@ -774,7 +774,7 @@ public:
 
    /**
      specialized constructor from 2 std::function objects
-     implementing double operator()(double x). The first one for the function evaluation 
+     implementing double operator()(double x). The first one for the function evaluation
      and the second one implementing the function derivative.
      This specialized constructor is introduced in order to use the class in
      Python passing Python user defined functions
@@ -793,7 +793,7 @@ public:
       Copy constructor for Functor based on ROOT::Math::IGradFunction
    */
    GradFunctor1D(const GradFunctor1D & rhs) :
-      // strange that this is required eventhough Impl is an abstract class
+      // strange that this is required even though Impl is an abstract class
       ImplBase()
    {
       if (rhs.fImpl)

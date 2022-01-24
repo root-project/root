@@ -39,7 +39,7 @@ public:
    // copy the options
    virtual IOptions * Clone() const = 0;
 
-   /** generic  methods for  retrivieng options */
+   /** generic  methods for  retrieving options */
 
    /// set option value
    void SetValue(const char * name, double val) { SetRealValue(name,val);}

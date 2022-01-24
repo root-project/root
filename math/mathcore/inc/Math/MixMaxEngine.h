@@ -147,7 +147,7 @@ http://dx.doi.org/10.1016/j.chaos.2016.05.003
          static const char *Name();
 
       protected:
-         // protected functions used for tesing the generator
+         // protected functions used for testing the generator
 
          /// get the state of the generator
          void GetState(std::vector<StateInt_t> & state) const;
@@ -165,9 +165,9 @@ http://dx.doi.org/10.1016/j.chaos.2016.05.003
          /// implementation function to generate the random number
          double Rndm_impl();
 
-         //rng_state_t * fRngState;  // mix-max generator state
-         //mixmax::mixmax_engine<N> * fRng;  // mixmax internal engine class
-         MixMaxEngineImpl<N> * fRng;  // mixmax internal engine class
+         //rng_state_t * fRngState;          ///< mix-max generator state
+         //mixmax::mixmax_engine<N> * fRng;  ///< mixmax internal engine class
+         MixMaxEngineImpl<N> * fRng;         ///< mixmax internal engine class
 
       };
 
