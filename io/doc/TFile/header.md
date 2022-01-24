@@ -1,22 +1,9 @@
 \page header File header format
 
-<style>
-.byteTable th {
-  border: 1px solid #2D4068;
-  background: #2D4068;
-  color:white
-}
-.byteTable td {
-  border: 1px solid #2D4068;
-}
-</style>
-
  Here is the file header format as of release 6.22.06.  It is never compressed.
 
  If END, SeekFree, or SeekInfo are located past the 32 bit file limit (> 2000000000)
  then these fields will be 8 instead of 4 bytes and 1000000 is added to the file format version.
-
-<div class="byteTable">
 
 | Byte Range       | Record Name    | Description                             | |
 |------------------|----------------|-----------------------------------------|-|
@@ -36,11 +23,7 @@
 |47...62 [59...74] | UUID           | Universally Unique Identifier           | TUUID::fTimeLow through fNode[6] |
 |63...99 [75...99] |                | Extra space to allow END, SeekFree, or SeekInfo to become 64 bit without moving this header| |
 
-</div>
-
  Here is the file header format as of release 3.02.06.  It is never compressed.
-
-<div class="byteTable">
 
 | Byte Range       | Record Name    | Description                                | |
 |------------------|----------------|--------------------------------------------|-|
@@ -57,5 +40,3 @@
 |37...40           | SeekInfo       | Byte offset of StreamerInfo record         | TFile::fSeekInfo |
 |41...44           | NbytesInfo     | Number of bytes in StreamerInfo record     | TFile::fNbytesInfo |
 |45...63           |                | Unused??                                   | |
-
-</div>

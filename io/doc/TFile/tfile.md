@@ -1,16 +1,5 @@
 \page tfile Format of the root (first) directory record
 
-<style>
-.byteTable th {
-  border: 1px solid #2D4068;
-  background: #2D4068;
-  color:white
-}
-.byteTable td {
-  border: 1px solid #2D4068;
-}
-</style>
-
 Format of the root (first) directory record in release 6.22.06.  It is never compressed.
 
 This directory record differs from subdirectories (see \ref tdirectory) in the additional
@@ -22,7 +11,6 @@ then these fields will be 8 instead of 4 bytes and 1000 is added to the TKey Ver
 If the SeekDir, SeekParent, or SeekKeys in the TDirectory header are past the 32 bit file limit,
 then these fields will be 8 instead of 4 bytes and 1000 is added to the TDirectory Version.
 
-<div class="byteTable">
  ----------TKey---------------
 
 | Byte Range       | Member Name    | Description                             | |
@@ -58,5 +46,3 @@ then these fields will be 8 instead of 4 bytes and 1000 is added to the TDirecto
 |18...21 [18...25] | SeekDir        | Byte offset of directory record in file (64)             | TDirectory::fSeekDir |
 |22...25 [26...33] | SeekParent     | Byte offset of parent directory record in file (0)       | TDirectory::fSeekParent |
 |26...29 [34...41] | SeekKeys       | Byte offset of associated KeysList record in file        | TDirectory::fSeekKeys |
-
-</div>
