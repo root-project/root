@@ -1143,8 +1143,6 @@ import ROOT
 verbosity = ROOT.Experimental.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.Experimental.ELogLevel.kInfo)
 ~~~
 
-### RDataFrame API reference
-
 \anchor reference
 */
 // clang-format on
