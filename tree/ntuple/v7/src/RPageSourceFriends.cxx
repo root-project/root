@@ -92,18 +92,19 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFri
       AddVirtualField(i, desc.GetFieldZero(), 0, desc.GetName());
 
       for (const auto &c : desc.GetClusterIterable()) {
-         fBuilder.AddCluster(fNextId, c.GetFirstEntryIndex(), c.GetNEntries());
+         RClusterDescriptorBuilder clusterBuilder(fNextId, c.GetFirstEntryIndex(), c.GetNEntries());
          for (auto originColumnId : c.GetColumnIds()) {
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
 
-            auto columnRange = c.GetColumnRange(originColumnId);
-            columnRange.fColumnId = virtualColumnId;
-            fBuilder.AddClusterColumnRange(fNextId, columnRange);
-
             auto pageRange = c.GetPageRange(originColumnId).Clone();
             pageRange.fColumnId = virtualColumnId;
-            fBuilder.AddClusterPageRange(fNextId, std::move(pageRange));
+
+            auto firstElementIndex = c.GetColumnRange(originColumnId).fFirstElementIndex;
+            auto compressionSettings = c.GetColumnRange(originColumnId).fCompressionSettings;
+
+            clusterBuilder.CommitColumnRange(virtualColumnId, firstElementIndex, compressionSettings, pageRange);
          }
+         fBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
          fIdBiMap.Insert({i, c.GetId()}, fNextId);
          fNextId++;
       }

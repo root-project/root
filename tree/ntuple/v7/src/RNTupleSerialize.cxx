@@ -1270,7 +1270,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       bytes += result.Unwrap();
       if (clusterSummary.fColumnGroupID >= 0)
          return R__FAIL("sharded clusters are still unsupported");
-      descBuilder.AddClusterSummary(clusterSummary);
+      descBuilder.AddClusterSummary(clusterId, clusterSummary.fFirstEntry, clusterSummary.fNEntries);
    }
    bytes = frame + frameSize;
 
@@ -1280,13 +1280,23 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
+   std::uint64_t clusterId = 0;
    for (std::uint32_t groupId = 0; groupId < nClusterGroups; ++groupId) {
       RClusterGroup clusterGroup;
       result = DeserializeClusterGroup(bytes, fnFrameSizeLeft(), clusterGroup);
       if (!result)
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
-      descBuilder.AddClusterGroup(clusterGroup);
+
+      descBuilder.AddToOnDiskFooterSize(clusterGroup.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
+      RClusterGroupDescriptorBuilder clusterGroupBuilder;
+      clusterGroupBuilder.ClusterGroupId(groupId)
+         .PageListLocator(clusterGroup.fPageListEnvelopeLink.fLocator)
+         .PageListLength(clusterGroup.fPageListEnvelopeLink.fUnzippedSize);
+      for (std::uint64_t i = 0; i < clusterGroup.fNClusters; ++i)
+         clusterGroupBuilder.AddCluster(clusterId + i);
+      clusterId += clusterGroup.fNClusters;
+      descBuilder.AddClusterGroup(std::move(clusterGroupBuilder));
    }
    bytes = frame + frameSize;
 
@@ -1326,12 +1336,13 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
 
+   if (nClusters != clusters.size())
+      return R__FAIL("mismatch of page list and cluster summaries");
+
    for (std::uint32_t i = 0; i < nClusters; ++i) {
       std::uint32_t outerFrameSize;
       auto outerFrame = bytes;
       auto fnOuterFrameSizeLeft = [&]() { return outerFrameSize - (bytes - outerFrame); };
-
-      RClusterDescriptorBuilder clusterBuilder;
 
       std::uint32_t nColumns;
       result = DeserializeFrameHeader(bytes, fnTopMostFrameSizeLeft(), outerFrameSize, nColumns);
@@ -1372,11 +1383,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
          std::uint32_t compressionSettings;
          bytes += DeserializeUInt32(bytes, compressionSettings);
 
-         clusterBuilder.CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
+         clusters[i].CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
          bytes = innerFrame + innerFrameSize;
       }
 
-      clusters.emplace_back(std::move(clusterBuilder));
       bytes = outerFrame + outerFrameSize;
    }
 

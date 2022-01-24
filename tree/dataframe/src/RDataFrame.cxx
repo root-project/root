@@ -53,7 +53,6 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Working with collections](\ref collections)
 - [Transformations: manipulating data](\ref transformations)
 - [Actions: getting results](\ref actions)
-- [Efficient analysis in Python](\ref python)
 - [Distributed execution in Python](\ref distrdf)
 - [Performance tips and parallel execution](\ref parallel-execution)
 - [More features](\ref more-features)
@@ -69,6 +68,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [Computation graphs (storing and reusing sets of transformations](\ref callgraphs)
    - [Visualizing the computation graph](\ref representgraph)
    - [Activating RDataFrame execution logs](\ref rdf-logging)
+- [Efficient analysis in Python](\ref python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
 \anchor cheatsheet
@@ -570,121 +570,8 @@ Actions can be **instant** or **lazy**. Instant actions are executed as soon as 
 executed whenever the object they return is accessed for the first time. As a rule of thumb, actions with a return value
 are lazy, the others are instant.
 
-\anchor python
-## Efficient analysis in Python
-
-You can use RDataFrame in Python due to the dynamic C++/Python translation of PyROOT. In general, the interface
-is the same as for C++, a simple example follows.
-
-~~~{.py}
-df = ROOT.RDataFrame("myTree", "myFile.root")
-sum = df.Filter("x > 10").Sum("y")
-print(sum.GetValue())
-~~~
-
-### Simple usage of efficient C++ code in Python
-
-To perform more complex operations in the RDataFrame graph, e.g., in Filter() and Define() nodes, which don't
-fit into a simple expression string, you can just-in-time compile such functions directly in the Python script
-via the C++ interpreter cling. This approach has the advantage that you get the efficiency of compiled C++ code
-combined with the convenient workflow of a Python script. See the following snippet for an example of how to
-use a just-in-time-compiled C++ function from Python.
-
-~~~{.py}
-ROOT.gInterpreter.Declare("""
-bool myFilter(float x) {
-    return x > 10;
-}
-""")
-
-df = ROOT.RDataFrame("myTree", "myFile.root")
-sum = df.Filter("myFilter(x)").Sum("y")
-print(sum.GetValue())
-~~~
-
-To increase the performance even further, you can also pre-compile a C++ library with full code optimizations
-and load the function into the RDataFrame computation as follows.
-
-~~~{.py}
-ROOT.gSystem.Load("path/to/myLibrary.so") # Library with the myFilter function
-ROOT.gInterpreter.Declare('#include "myLibrary.h"') # Header with the definition of the myFilter function
-df = ROOT.RDataFrame("myTree", "myFile.root")
-sum = df.Filter("myFilter(x)").Sum("y")
-print(sum.GetValue())
-~~~
-
-Alternatively, you can also pass the full RDataFrame object to C++ using the ROOT::RDF::AsRNode helper in Python, which casts any RDataFrame node to ROOT::RDF::RNode:
-
-~~~{.py}
-ROOT.gInterpreter.Declare("""
-ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode df) {
-    auto myFunc = [](float x){ return -x;};
-    return df.Define("y", myFunc, {"x"});
-}
-""")
-
-df = ROOT.RDataFrame("myTree", "myFile.root")
-df = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
-~~~
-
-### Just-in-time compilation of Python callables with numba
-
-ROOT also offers the option to compile Python callables with fundamental types and arrays thereof using numba and then
-using the function in RDataFrame from C++. The workflow requires the Python packages `numba` and `cffi`
-to be installed. See the following snippet for a simple example or the full tutorial [here](pyroot004__NumbaDeclare_8py.html).
-
-~~~{.py}
-@ROOT.Numba.Declare(["float"], "bool")
-def myFilter(x):
-    return x > 10
-
-df = ROOT.RDataFrame("myTree", "myFile.root")
-sum = df.Filter("Numba::myFilter(x)").Sum("y")
-print(sum.GetValue())
-~~~
-
-It also works with collections: `RVec` objects of fundamental types can be transparently converted to/from numpy arrays:
-
-~~~{.py}
-@ROOT.Numba.Declare(['RVec<float>', 'int'], 'RVec<float>')
-def pypowarray(x, y):
-    return x**y
-
-df.Define('array', 'ROOT::RVec<float>{1.,2.,3.})\
-  .Define('arraySquared', 'Numba::pypowarray(array, 2)')
-~~~
-
-### Conversion to numpy arrays
-
-Eventually, you probably would like to inspect the content of the RDataFrame or process the data further
-with functionality from Python libraries. For this purpose, we provide the AsNumpy() function, which is able
-to provide you the columns of your RDataFrame as numpy arrays in Python. See a brief introduction below or
-a full tutorial [here](df026__AsNumpyArrays_8py.html).
-
-~~~{.py}
-df = ROOT.RDataFrame("myTree", "myFile.root")
-cols = df.Filter("x > 10").AsNumpy(["x", "y"])
-print(cols["x"], cols["y"])
-~~~
-
-### Processing data stored in NumPy arrays
-
-In case you have data in NumPy arrays in Python and you want to process the data with ROOT, you can easily
-create an RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function returns a new RDataFrame with
-the column names defined by the keys of the given dictionary with NumPy arrays. Only arrays of fundamental types (integers and floating point values) are supported and the arrays must have the same length. Data is read directly from the arrays: no copies are performed.
-
-~~~{.py}
-# Read data from numpy arrays
-# The column names in the RDataFrame are taken from the dictionary keys.
-x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
-df = ROOT.RDF.MakeNumpyDataFrame({"x": x, "y": y})
-
-# Use RDataFrame as usual, e.g. write out a ROOT file
-df.Define("z", "x + y").Snapshot("tree", "file.root")
-~~~
-
 \anchor distrdf
-## Distributed execution in Python
+## Distributed execution
 
 RDataFrame applications can be executed in parallel through distributed computing frameworks on a set of remote machines
 thanks to the Python package `ROOT.RDF.Experimental.Distributed`. This experimental, **Python-only** package allows to scale the
@@ -799,7 +686,7 @@ computations.
 
 ### Distributed RunGraphs
 
-Submitting multiple distributed RDataFrame executions is supported through the % RunGraphs function. Similarly to its
+Submitting multiple distributed RDataFrame executions is supported through the RunGraphs function. Similarly to its
 local counterpart, the function expects an iterable of objects representing an RDataFrame action. Each action will be
 triggered concurrently to send multiple computation graphs to a distributed cluster at the same time:
 
@@ -823,7 +710,7 @@ histos = [histoproxy.GetValue() for histoproxy in histoproxies]
 ~~~
 
 Every distributed backend supports this feature and graphs belonging to different backends can be still triggered with
-a single call to % RunGraphs (e.g. it is possible to send a Spark job and a Dask job at the same time).
+a single call to RunGraphs (e.g. it is possible to send a Spark job and a Dask job at the same time).
 
 
 \anchor parallel-execution
@@ -1255,10 +1142,6 @@ import ROOT
 
 verbosity = ROOT.Experimental.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(), ROOT.Experimental.ELogLevel.kInfo)
 ~~~
-
-### RDataFrame API reference
-
-\anchor reference
 */
 // clang-format on
 

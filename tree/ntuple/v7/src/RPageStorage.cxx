@@ -348,18 +348,18 @@ std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experim
    auto nbytes = CommitClusterImpl(nEntries);
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
-   fDescriptorBuilder.AddCluster(fLastClusterId, fPrevClusterNEntries, ClusterSize_t(nEntries - fPrevClusterNEntries));
-   for (auto &range : fOpenColumnRanges) {
-      fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
-      range.fFirstElementIndex += range.fNElements;
-      range.fNElements = 0;
-   }
-   for (auto &range : fOpenPageRanges) {
+   auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
+   RClusterDescriptorBuilder clusterBuilder(fLastClusterId, fPrevClusterNEntries, nEntriesInCluster);
+   for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
       RClusterDescriptor::RPageRange fullRange;
-      std::swap(fullRange, range);
-      range.fColumnId = fullRange.fColumnId;
-      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, std::move(fullRange));
+      fullRange.fColumnId = i;
+      std::swap(fullRange, fOpenPageRanges[i]);
+      clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
+                                       fOpenColumnRanges[i].fCompressionSettings, fullRange);
+      fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
+      fOpenColumnRanges[i].fNElements = 0;
    }
+   fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
    fPrevClusterNEntries = nEntries;
    ++fLastClusterId;
    return nbytes;

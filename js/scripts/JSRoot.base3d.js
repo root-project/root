@@ -53,6 +53,9 @@ JSROOT.define(['d3', 'three', 'painter'], (d3, THREE, jsrp) => {
             can3d = JSROOT.settings.Embed3D;
          else if (JSROOT.browser.isFirefox)
             can3d = JSROOT.constants.Embed3D.Embed;
+         else if (JSROOT.browser.chromeVersion > 95)
+         // version 96 works partially, 97 works fine
+            can3d = JSROOT.constants.Embed3D.Embed;
          else
             can3d = JSROOT.constants.Embed3D.Overlay;
       }

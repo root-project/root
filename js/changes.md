@@ -21,6 +21,7 @@
 18. Correctly display extra data from TGraphQQ
 19. Remove "collapsible" and "tabs" layouts which were implemented with jQuery - use "flex" instead
 20. Improve flexible layout, provide context menu with cascading, tiling, selecting frames
+21. Starting from Chrome 96, allow embedding WebGL into SVG - solving problem with lego plots in canvas
 
 
 ## Changes in 6.3.2

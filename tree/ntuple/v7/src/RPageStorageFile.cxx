@@ -271,31 +271,31 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesHeader, ntpl.fLenHeader, buffer.get());
    Internal::RNTupleSerializer::DeserializeHeaderV1(buffer.get(), ntpl.fLenHeader, descBuilder);
 
+   descBuilder.AddToOnDiskFooterSize(ntpl.fNBytesFooter);
    buffer = std::make_unique<unsigned char[]>(ntpl.fLenFooter);
    zipBuffer = std::make_unique<unsigned char[]>(ntpl.fNBytesFooter);
    fReader.ReadBuffer(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fSeekFooter);
    fDecompressor->Unzip(zipBuffer.get(), ntpl.fNBytesFooter, ntpl.fLenFooter, buffer.get());
    Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), ntpl.fLenFooter, descBuilder);
 
-   auto cg = descBuilder.GetClusterGroup(0);
-   descBuilder.SetOnDiskFooterSize(ntpl.fNBytesFooter + cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
-   buffer = std::make_unique<unsigned char[]>(cg.fPageListEnvelopeLink.fUnzippedSize);
-   zipBuffer = std::make_unique<unsigned char[]>(cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage);
-   fReader.ReadBuffer(zipBuffer.get(),
-                      cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
-                      cg.fPageListEnvelopeLink.fLocator.fPosition);
-   fDecompressor->Unzip(zipBuffer.get(),
-                        cg.fPageListEnvelopeLink.fLocator.fBytesOnStorage,
-                        cg.fPageListEnvelopeLink.fUnzippedSize,
-                        buffer.get());
+   auto ntplDesc = descBuilder.MoveDescriptor();
 
-   std::vector<RClusterDescriptorBuilder> clusters;
-   Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cg.fPageListEnvelopeLink.fUnzippedSize, clusters);
-   for (std::size_t i = 0; i < clusters.size(); ++i) {
-      descBuilder.AddCluster(i, std::move(clusters[i]));
+   for (const auto &cgDesc : ntplDesc.GetClusterGroupIterable()) {
+      buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
+      zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
+      fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
+                         cgDesc.GetPageListLocator().fPosition);
+      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
+                           buffer.get());
+
+      auto clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(ntplDesc, 0);
+      Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetPageListLength(), clusters);
+      for (std::size_t i = 0; i < clusters.size(); ++i) {
+         ntplDesc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
+      }
    }
 
-   return descBuilder.MoveDescriptor();
+   return ntplDesc;
 }
 
 

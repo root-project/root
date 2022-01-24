@@ -58,13 +58,14 @@ public:
 
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
       ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
-      descBuilder.AddCluster(0, 0, ClusterSize_t(1));
-      descBuilder.AddCluster(1, 1, ClusterSize_t(1));
-      descBuilder.AddCluster(2, 2, ClusterSize_t(1));
-      descBuilder.AddCluster(3, 3, ClusterSize_t(1));
-      descBuilder.AddCluster(4, 4, ClusterSize_t(1));
-      descBuilder.AddCluster(5, 5, ClusterSize_t(1));
+      for (unsigned i = 0; i <= 5; ++i) {
+         descBuilder.AddClusterSummary(i, i, 1);
+      }
       fDescriptor = descBuilder.MoveDescriptor();
+      for (unsigned i = 0; i <= 5; ++i) {
+         fDescriptor.AddClusterDetails(
+            ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
+      }
    }
    std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
    RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::NTupleSize_t) final { return RPage(); }

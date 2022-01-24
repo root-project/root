@@ -215,6 +215,7 @@ public:
    static RResult<void> DeserializeFooterV1(const void *buffer,
                                             std::uint32_t bufSize,
                                             RNTupleDescriptorBuilder &descBuilder);
+   // The clusters vector must be initialized with the cluster summaries corresponding to the page list
    static RResult<void> DeserializePageListV1(const void *buffer,
                                               std::uint32_t bufSize,
                                               std::vector<RClusterDescriptorBuilder> &clusters);

@@ -8,6 +8,171 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
+r'''
+/**
+\class ROOT::RDataFrame
+\brief \parblock \endparblock
+\htmlonly
+<div class="pyrootbox">
+\endhtmlonly
+\anchor python
+## Efficient analysis in Python
+
+You can use RDataFrame in Python thanks to the dynamic Python/C++ translation of [PyROOT](https://root.cern/manual/python). In general, the interface
+is the same as for C++, a simple example follows.
+
+~~~{.py}
+df = ROOT.RDataFrame("myTree", "myFile.root")
+sum = df.Filter("x > 10").Sum("y")
+print(sum.GetValue())
+~~~
+
+### User code in the RDataFrame workflow
+
+#### C++ code
+
+In the simple example that was shown above, a C++ expression is passed to the Filter() operation as a string
+(`"x > 0"`), even if we call the method from Python. Indeed, under the hood, the analysis computations run in
+C++, while Python is just the interface language.
+
+To perform more complex operations that don't fit into a simple expression string, you can just-in-time compile
+C++ functions - via the C++ interpreter cling - and use those functions in an expression. See the following
+snippet for an example:
+
+~~~{.py}
+# JIT a C++ function from Python
+ROOT.gInterpreter.Declare("""
+bool myFilter(float x) {
+    return x > 10;
+}
+""")
+
+df = ROOT.RDataFrame("myTree", "myFile.root")
+# Use the function in an RDF operation
+sum = df.Filter("myFilter(x)").Sum("y")
+print(sum.GetValue())
+~~~
+
+To increase the performance even further, you can also pre-compile a C++ library with full code optimizations
+and load the function into the RDataFrame computation as follows.
+
+~~~{.py}
+ROOT.gSystem.Load("path/to/myLibrary.so") # Library with the myFilter function
+ROOT.gInterpreter.Declare('#include "myLibrary.h"') # Header with the declaration of the myFilter function
+df = ROOT.RDataFrame("myTree", "myFile.root")
+sum = df.Filter("myFilter(x)").Sum("y")
+print(sum.GetValue())
+~~~
+
+A more thorough explanation of how to use C++ code from Python can be found in the [PyROOT manual](https://root.cern/manual/python/#loading-user-libraries-and-just-in-time-compilation-jitting).
+
+#### Python code
+
+ROOT also offers the option to compile Python functions with fundamental types and arrays thereof using [Numba](https://numba.pydata.org/).
+Such compiled functions can then be used in a C++ expression provided to RDataFrame.
+
+The function to be compiled should be decorated with `ROOT.Numba.Declare`, which allows to specify the parameter and
+return types. See the following snippet for a simple example or the full tutorial [here](pyroot004__NumbaDeclare_8py.html).
+
+~~~{.py}
+@ROOT.Numba.Declare(["float"], "bool")
+def myFilter(x):
+    return x > 10
+
+df = ROOT.RDataFrame("myTree", "myFile.root")
+sum = df.Filter("Numba::myFilter(x)").Sum("y")
+print(sum.GetValue())
+~~~
+
+It also works with collections: `RVec` objects of fundamental types can be transparently converted to/from numpy arrays:
+
+~~~{.py}
+@ROOT.Numba.Declare(['RVec<float>', 'int'], 'RVec<float>')
+def pypowarray(numpyvec, pow):
+    return numpyvec**pow
+
+df.Define('array', 'ROOT::RVecF{1.,2.,3.}')\
+  .Define('arraySquared', 'Numba::pypowarray(array, 2)')
+~~~
+
+Note that this functionality requires the Python packages `numba` and `cffi` to be installed.
+
+### Interoperability with NumPy
+
+#### Conversion to NumPy arrays
+
+Eventually, you probably would like to inspect the content of the RDataFrame or process the data further
+with Python libraries. For this purpose, we provide the `AsNumpy()` function, which returns the columns
+of your RDataFrame as a dictionary of NumPy arrays. See a simple example below or a full tutorial [here](df026__AsNumpyArrays_8py.html).
+
+~~~{.py}
+df = ROOT.RDataFrame("myTree", "myFile.root")
+cols = df.Filter("x > 10").AsNumpy(["x", "y"]) # retrieve columns "x" and "y" as NumPy arrays
+print(cols["x"], cols["y"]) # the values of the cols dictionary are NumPy arrays
+~~~
+
+#### Processing data stored in NumPy arrays
+
+In case you have data in NumPy arrays in Python and you want to process the data with ROOT, you can easily
+create an RDataFrame using `ROOT.RDF.MakeNumpyDataFrame`. The factory function accepts a dictionary where
+the keys are the column names and the values are NumPy arrays, and returns a new RDataFrame with the provided
+columns.
+
+Only arrays of fundamental types (integers and floating point values) are supported and the arrays must have the same length.
+Data is read directly from the arrays: no copies are performed.
+
+~~~{.py}
+# Read data from NumPy arrays
+# The column names in the RDataFrame are taken from the dictionary keys
+x, y = numpy.array([1, 2, 3]), numpy.array([4, 5, 6])
+df = ROOT.RDF.MakeNumpyDataFrame({"x": x, "y": y})
+
+# Use RDataFrame as usual, e.g. write out a ROOT file
+df.Define("z", "x + y").Snapshot("tree", "file.root")
+~~~
+
+### Construct histogram and profile models from a tuple
+
+The Histo1D(), Histo2D(), Histo3D(), Profile1D() and Profile2D() methods return
+histograms and profiles, respectively, which can be constructed using a model
+argument.
+
+In Python, we can specify the arguments for the constructor of such histogram or
+profile model with a Python tuple, as shown in the example below:
+
+~~~{.py}
+# First argument is a tuple with the arguments to construct a TH1D model
+h = df.Histo1D(("histName", "histTitle", 64, 0., 128.), "myColumn")
+~~~
+
+### AsRNode helper function
+
+The ROOT::RDF::AsRNode function casts an RDataFrame node to the generic ROOT::RDF::RNode type. From Python, it can be used to pass any RDataFrame node as an argument of a C++ function, as shown below:
+
+~~~{.py}
+ROOT.gInterpreter.Declare("""
+ROOT::RDF::RNode MyTransformation(ROOT::RDF::RNode df) {
+    auto myFunc = [](float x){ return -x;};
+    return df.Define("y", myFunc, {"x"});
+}
+""")
+
+# Cast the RDataFrame head node
+df = ROOT.RDataFrame("myTree", "myFile.root")
+df_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df))
+
+# ... or any other node
+df2 = df.Filter("x > 42")
+df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
+~~~
+\htmlonly
+</div>
+\endhtmlonly
+
+\anchor reference
+*/
+'''
+
 from . import pythonization
 
 # functools.partial does not add the self argument
