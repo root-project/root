@@ -311,7 +311,7 @@ TRandom1::TRandom1()
 ////////////////////////////////////////////////////////////////////////////////
 ///constructor
 
-TRandom1::TRandom1(int rowIndex, int colIndex, int lux)
+TRandom1::TRandom1(Int_t rowIndex, Int_t colIndex, Int_t lux)
         : fIntModulus(0x1000000),
           fMantissaBit24( TMath::Power(0.5,24.) ),
           fMantissaBit12( TMath::Power(0.5,12.) )

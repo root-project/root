@@ -24,7 +24,7 @@ using namespace oracle::occi;
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of query result.
 
-TOracleRow::TOracleRow(ResultSet *rs, std::vector<MetaData> *fieldMetaData)
+TOracleRow::TOracleRow(oracle::occi::ResultSet *rs, std::vector<oracle::occi::MetaData> *fieldMetaData)
 {
    fResult      = rs;
    fFieldInfo   = fieldMetaData;

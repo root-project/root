@@ -54,7 +54,7 @@ void TOracleResult::initResultSet(Statement *stmt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
+TOracleResult::TOracleResult(oracle::occi::Connection *conn, oracle::occi::Statement *stmt)
 {
    fConn        = conn;
    fResult      = nullptr;
@@ -73,7 +73,7 @@ TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
 ////////////////////////////////////////////////////////////////////////////////
 /// This construction func is only used to get table metainfo.
 
-TOracleResult::TOracleResult(Connection *conn, const char *tableName)
+TOracleResult::TOracleResult(oracle::occi::Connection *conn, const char *tableName)
 {
    fResult      = nullptr;
    fStmt        = nullptr;

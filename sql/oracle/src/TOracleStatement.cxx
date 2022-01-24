@@ -36,7 +36,7 @@ using namespace oracle::occi;
 /// On creation time specifies buffer length, which should be
 /// used in data fetching or data inserting
 
-TOracleStatement::TOracleStatement(Environment* env, Connection* conn, Statement* stmt, Int_t niter, Bool_t errout) :
+TOracleStatement::TOracleStatement(oracle::occi::Environment* env, oracle::occi::Connection* conn, oracle::occi::Statement* stmt, Int_t niter, Bool_t errout) :
    TSQLStatement(errout),
    fEnv(env),
    fConn(conn),

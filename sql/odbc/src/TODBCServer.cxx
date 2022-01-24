@@ -297,7 +297,7 @@ TList* TODBCServer::GetDrivers()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print list of ODBC drivers in form:
-///   <name> : <options list>
+///   `<name`> : `<options-list>`
 
 void TODBCServer::PrintDrivers()
 {
@@ -323,7 +323,7 @@ TList* TODBCServer::GetDataSources()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print list of ODBC data sources in form:
-///   <name> : <options list>
+///   `<name>` : `<options list>`
 
 void TODBCServer::PrintDataSources()
 {

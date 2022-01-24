@@ -283,7 +283,7 @@ void TFFTRealComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, 
    }
 }
 ////////////////////////////////////////////////////////////////////////////////
-///For multidimensional transforms. Returns the point #ipoint.
+///For multidimensional transforms. Returns the point `#ipoint`.
 ///In case of transforms of more than 2 dimensions,
 ///only points from the first (roughly)half are returned, the rest being Hermitian symmetric
 

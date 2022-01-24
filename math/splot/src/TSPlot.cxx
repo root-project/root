@@ -751,11 +751,11 @@ TObjArray *TSPlot::GetSWeightsHists()
 ///
 ///Parameters:
 ///
-///  - type = 1 - histogram of x variable `#nvar`
-///  - type = 2 - histogram of y variable `#nvar`
-///  - type = 3 - histogram of y_pdf for y `#nvar` and species #nspecies`
-///  - type = 4 - histogram of x variable `#nvar`, species `#nspecies`, WITH sWeights
-///  - type = 5 - histogram of y variable `#nvar`, species `#nspecies`, WITH sWeights
+///  - type = 1 - histogram of x variable `#%nvar`
+///  - type = 2 - histogram of y variable `#%nvar`
+///  - type = 3 - histogram of y_pdf for y `#%nvar` and species #%nspecies`
+///  - type = 4 - histogram of x variable `#%nvar`, species `#%nspecies`, WITH sWeights
+///  - type = 5 - histogram of y variable `#%nvar`, species `#%nspecies`, WITH sWeights
 
 void TSPlot::RefillHist(Int_t type, Int_t nvar, Int_t nbins, Double_t min, Double_t max, Int_t nspecies)
 {

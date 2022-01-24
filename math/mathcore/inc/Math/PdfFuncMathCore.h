@@ -419,7 +419,7 @@ namespace Math {
   @param x x variable
   @param y y variable
   @param sigmax the stdev in x
-  @param sigma the stdev in y
+  @param sigmay the stdev in y
   @param rho correlation, must be between -1,1
   @param x0 the offset in x
   @param y0 the offset in y

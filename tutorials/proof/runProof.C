@@ -78,7 +78,7 @@
 ///      - 'readall'  to read the whole event, by default only the branches
 ///                   needed by the analysis are read (read 25% more bytes)
 ///      - 'datasrc=<dir-with-files>' to read the files from another server,
-///                   the files must be named 'event_<num>.root' where <num>=1,2,...
+///                   the files must be named 'event_<num>.root' where '<num>'=1,2,...
 ///        or
 ///      - 'datasrc=<file-with-files>' to take the file content from a text file,
 ///                   specified one file per line; usefull when testing differences
@@ -254,7 +254,7 @@
 ///      Use parallel unzipping in reading files where relevant
 ///      e.g. root[] runProof("eventproc(punzip)")
 ///
-///   7. cache=<bytes> (or <kbytes>K or <mbytes>M)
+///   7. cache=`<bytes>` (or `<kbytes`>K or `<mbytes>`M)
 ///
 ///      Change the size of the tree cache; 0 or <0 disables the cache,
 ///      value cane be in bytes (no suffix), kilobytes (suffix 'K') or

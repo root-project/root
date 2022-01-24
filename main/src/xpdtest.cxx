@@ -70,12 +70,12 @@ typedef struct {
 ////////////////////////////////////////////////////////////////////////////////
 ///  PROOF daemon test program.
 ///  Syntax
-///          xpdtest  <url> <sandbox_dir> <time_span>
+///          xpdtest  `<url>` `<sandbox_dir>` `<time_span>`
 ///
-///          <url>            URL to test; default 'localhost:1093'
-///          <sandbox_dir>    directory with users sandboxes; used to find out
+///          `<url>`            URL to test; default 'localhost:1093'
+///          `<sandbox_dir>`    directory with users sandboxes; used to find out
 ///                           users to check connection; default '/tmp/proofbox'
-///          <time_span>      check only users whose latest activity was within
+///          `<time_span>`      check only users whose latest activity was within
 ///                           'time_span' minutes; use -1 to check all users;
 ///                           default -1.
 ///
