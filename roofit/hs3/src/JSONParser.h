@@ -1,6 +1,7 @@
 #ifndef JSON_PARSER_H
 #define JSON_PARSER_H
-#include "JSONInterface.h"
+
+#include <RooFitHS3/JSONInterface.h>
 
 #include <istream>
 #include <memory>
@@ -8,7 +9,7 @@
 
 class TJSONTree : public JSONTree {
 public:
-   class Node : public RooFit::Detail::JSONNode {
+   class Node : public RooFit::Experimental::JSONNode {
    protected:
       TJSONTree *tree;
       class Impl;

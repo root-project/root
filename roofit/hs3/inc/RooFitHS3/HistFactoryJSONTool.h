@@ -5,7 +5,7 @@
 #include <string>
 
 namespace RooFit {
-namespace Detail {
+namespace Experimental {
 class JSONNode;
 }
 } // namespace RooFit
@@ -21,8 +21,8 @@ class JSONTool {
 protected:
    RooStats::HistFactory::Measurement *_measurement;
 
-   void Export(const RooStats::HistFactory::Channel &c, RooFit::Detail::JSONNode &t) const;
-   void Export(const RooStats::HistFactory::Sample &s, RooFit::Detail::JSONNode &t) const;
+   void Export(const RooStats::HistFactory::Channel &c, RooFit::Experimental::JSONNode &t) const;
+   void Export(const RooStats::HistFactory::Sample &s, RooFit::Experimental::JSONNode &t) const;
 
 public:
    JSONTool(RooStats::HistFactory::Measurement *);
@@ -31,7 +31,7 @@ public:
    void PrintJSON(std::string const &filename);
    void PrintYAML(std::ostream &os = std::cout);
    void PrintYAML(std::string const &filename);
-   void Export(RooFit::Detail::JSONNode &t) const;
+   void Export(RooFit::Experimental::JSONNode &t) const;
 };
 
 } // namespace HistFactory

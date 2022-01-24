@@ -4,8 +4,9 @@ import ROOT
 msg = ROOT.RooMsgService.instance()
 msg.setGlobalKillBelow(ROOT.RooFit.WARNING)
 
+
 class TestHS3HistFactoryJSON(unittest.TestCase):
-    def measurement(self, inputFileName="histfactory-input.root"):
+    def measurement(self, inputFileName="test_hs3_histfactory_json_input.root"):
         ROOT.gROOT.SetBatch(True)
         meas = ROOT.RooStats.HistFactory.Measurement("meas", "meas")
         meas.SetOutputFilePrefix("./results/example_")
@@ -64,7 +65,7 @@ class TestHS3HistFactoryJSON(unittest.TestCase):
         mc = ws["ModelConfig"]
         assert mc
 
-        mc_from_js = ws_from_js["meas_modelConfig"]
+        mc_from_js = ws_from_js["ModelConfig"]
         assert mc_from_js
 
         pdf = mc.GetPdf()
@@ -79,18 +80,13 @@ class TestHS3HistFactoryJSON(unittest.TestCase):
         data_from_js = ws_from_js["obsData"]
         assert data_from_js
 
-        pdf.fitTo(
-            data,
-            Strategy=1,
-            Minos=mc.GetParametersOfInterest(),
-            GlobalObservables = mc.GetGlobalObservables()
-        )
+        pdf.fitTo(data, Strategy=1, Minos=mc.GetParametersOfInterest(), GlobalObservables=mc.GetGlobalObservables())
 
         pdf_from_js.fitTo(
             data_from_js,
             Strategy=1,
             Minos=mc_from_js.GetParametersOfInterest(),
-            GlobalObservables=mc_from_js.GetGlobalObservables()
+            GlobalObservables=mc_from_js.GetGlobalObservables(),
         )
 
         from math import isclose
@@ -112,23 +108,23 @@ class TestHS3HistFactoryJSON(unittest.TestCase):
         meas = self.measurement()
         ws = self.toWS(meas)
 
-        tool = ROOT.RooJSONFactoryWSTool(ws)        
+        tool = ROOT.RooJSONFactoryWSTool(ws)
         js = tool.exportJSONtoString()
-        
-        newws = ROOT.RooWorkspace("new");
+
+        newws = ROOT.RooWorkspace("new")
         newtool = ROOT.RooJSONFactoryWSTool(newws)
         newtool.importJSONfromString(js)
-        
-        mc = ws.obj("ModelConfig")
+
+        mc = ws["ModelConfig"]
         assert mc
 
-        newmc = newws["simPdf_modelConfig"]
+        newmc = newws["ModelConfig"]
         assert newmc
 
         pdf = mc.GetPdf()
         assert pdf
 
-        newpdf = newws["simPdf"]
+        newpdf = newmc.GetPdf()
         assert newpdf
 
         data = ws["obsData"]
@@ -136,13 +132,13 @@ class TestHS3HistFactoryJSON(unittest.TestCase):
 
         newdata = newws["obsData"]
         assert newdata
-        
-         pdf.fitTo(
+
+        pdf.fitTo(
             data,
             Strategy=1,
             Minos=mc.GetParametersOfInterest(),
             GlobalObservables=mc.GetGlobalObservables(),
-            PrintLevel=-1,            
+            PrintLevel=-1,
         )
 
         newpdf.fitTo(
@@ -150,7 +146,7 @@ class TestHS3HistFactoryJSON(unittest.TestCase):
             Strategy=1,
             Minos=newmc.GetParametersOfInterest(),
             GlobalObservables=newmc.GetGlobalObservables(),
-            PrintLevel=-1
+            PrintLevel=-1,
         )
 
         from math import isclose
@@ -166,7 +162,7 @@ class TestHS3HistFactoryJSON(unittest.TestCase):
             newws.var("mu").getError(),
             rel_tol=1e-4,
             abs_tol=1e-4,
-        )        
+        )
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@
 #include <vector>
 
 namespace RooFit {
-namespace Detail {
+namespace Experimental {
 
 class JSONNode {
 protected:
@@ -80,6 +80,8 @@ public:
    virtual int val_int() const { return atoi(this->val().c_str()); }
    virtual float val_float() const { return atof(this->val().c_str()); }
    virtual bool val_bool() const { return atoi(this->val().c_str()); }
+   template <class T>
+   T val_t() const;
    virtual bool has_key() const = 0;
    virtual bool has_val() const = 0;
    virtual bool has_child(std::string const &) const = 0;
@@ -103,13 +105,24 @@ public:
    virtual const JSONNode &child(size_t pos) const = 0;
 };
 
-} // namespace Detail
+} // namespace Experimental
 } // namespace RooFit
 
 class JSONTree {
-   virtual RooFit::Detail::JSONNode &rootnode() = 0;
+   virtual RooFit::Experimental::JSONNode &rootnode() = 0;
 };
 
-std::ostream &operator<<(std::ostream &os, RooFit::Detail::JSONNode const &s);
+std::ostream &operator<<(std::ostream &os, RooFit::Experimental::JSONNode const &s);
+template <class T>
+std::vector<T> &operator<<(std::vector<T> &v, RooFit::Experimental::JSONNode const &n)
+{
+   if (!n.is_seq()) {
+      throw std::runtime_error("node " + n.key() + " is not of sequence type!");
+   }
+   for (const auto &e : n.children()) {
+      v.push_back(e.val_t<T>());
+   }
+   return v;
+}
 
 #endif

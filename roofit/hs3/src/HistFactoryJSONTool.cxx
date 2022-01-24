@@ -5,8 +5,6 @@
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Sample.h"
 
-#include "JSONInterface.h"
-
 #ifdef ROOFIT_HS3_WITH_RYML
 #include "RYMLParser.h"
 typedef TRYMLTree tree_t;
@@ -15,7 +13,7 @@ typedef TRYMLTree tree_t;
 typedef TJSONTree tree_t;
 #endif
 
-using RooFit::Detail::JSONNode;
+using RooFit::Experimental::JSONNode;
 
 RooStats::HistFactory::JSONTool::JSONTool(RooStats::HistFactory::Measurement *m) : _measurement(m){};
 
@@ -27,7 +25,7 @@ void RooStats::HistFactory::JSONTool::Export(const RooStats::HistFactory::Sample
    obsnames.push_back("obs_z_" + sample.GetChannelName());
 
    s.set_map();
-   s["type"] << "histogram";
+   s["type"] << "hist-sample";
 
    if (sample.GetOverallSysList().size() > 0) {
       auto &overallSys = s["overallSystematics"];
@@ -147,6 +145,7 @@ void RooStats::HistFactory::JSONTool::Export(JSONNode &n) const
    auto &sim = pdflist[this->_measurement->GetName()];
    sim.set_map();
    sim["type"] << "simultaneous";
+   sim["index"] << "channelCat";
    auto &simdict = sim["dict"];
    simdict.set_map();
    simdict["InterpolationScheme"] << this->_measurement->GetInterpolationScheme();

@@ -95,6 +95,10 @@ public:
 
   static std::unique_ptr<RooAbsPdf> create(RooAbsPdf& pdf, RooAbsData const &data, double precision);
 
+  double epsilon() const { return _relEpsilon; }
+  const RooAbsPdf& pdf() const { return _pdf.arg(); }
+  const RooAbsReal& observable() const { return _observable.arg(); }  
+  
 protected:
   double evaluate() const override;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;

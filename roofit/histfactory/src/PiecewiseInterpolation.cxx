@@ -742,14 +742,16 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void PiecewiseInterpolation::setInterpCode(RooAbsReal& param, int code){
+void PiecewiseInterpolation::setInterpCode(RooAbsReal& param, int code, bool silent){
   int index = _paramSet.index(&param);
   if(index<0){
       coutE(InputArguments) << "PiecewiseInterpolation::setInterpCode ERROR:  " << param.GetName() 
 			    << " is not in list" << endl ;
   } else {
-      coutW(InputArguments) << "PiecewiseInterpolation::setInterpCode :  " << param.GetName() 
-			    << " is now " << code << endl ;
+     if(!silent){
+       coutW(InputArguments) << "PiecewiseInterpolation::setInterpCode :  " << param.GetName() 
+                             << " is now " << code << endl ;
+     }
     _interpCode.at(index) = code;
   }
 }
