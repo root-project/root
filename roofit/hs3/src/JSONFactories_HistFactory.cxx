@@ -147,7 +147,7 @@ RooAbsPdf *getConstraint(RooJSONFactoryWSTool *tool, const std::string &sysname)
 
 class RooHistogramFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       std::string prefix = RooJSONFactoryWSTool::genPrefix(p, true);
@@ -345,7 +345,7 @@ public:
       }
    }
 
-   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooArgList funcs;
@@ -459,12 +459,12 @@ public:
 namespace {
 class FlexibleInterpVarStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "interpolation0d";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooStats::HistFactory::FlexibleInterpVar *fip =
          static_cast<const RooStats::HistFactory::FlexibleInterpVar *>(func);
@@ -483,12 +483,12 @@ public:
 
 class PiecewiseInterpolationStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "interpolation";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const PiecewiseInterpolation *pip = static_cast<const PiecewiseInterpolation *>(func);
       elem["type"] << key();
@@ -521,7 +521,7 @@ public:
 namespace {
 class PiecewiseInterpolationFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("vars")) {
@@ -785,12 +785,12 @@ public:
       return true;
    }
 
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "histfactory";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *p, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *p, JSONNode &elem) const override
    {
       const RooProdPdf *prodpdf = static_cast<const RooProdPdf *>(p);
       if (tryExport(prodpdf, elem)) {

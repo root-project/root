@@ -17,7 +17,7 @@ using RooFit::Experimental::JSONNode;
 namespace {
 class RooGenericPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("dependents")) {
@@ -47,7 +47,7 @@ public:
 namespace {
 class RooFormulaVarFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("dependents")) {
@@ -77,7 +77,7 @@ public:
 namespace {
 class RooProdPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooArgSet factors;
@@ -104,7 +104,7 @@ public:
 namespace {
 class RooAddPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooArgList pdfs;
@@ -143,7 +143,7 @@ public:
 namespace {
 class RooBinWidthFunctionFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       bool divideByBinWidth = p["divideByBinWidth"].val_bool();
@@ -161,7 +161,7 @@ public:
 namespace {
 class RooSimultaneousFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("channels")) {
@@ -172,7 +172,7 @@ public:
       RooCategory cat(indexname.c_str(), indexname.c_str());
       for (const auto &comp : p["channels"].children()) {
          std::string catname(RooJSONFactoryWSTool::name(comp));
-         RooMsgService::instance().log(tool, RooFit::INFO, RooFit::IO) << "importing category " << catname << std::endl;
+         tool->log(RooFit::INFO) << "importing category " << catname << std::endl;
          tool->importFunction(comp, true);
          std::string pdfname(comp.has_val() ? comp.val() : RooJSONFactoryWSTool::name(comp));
          RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
@@ -192,7 +192,7 @@ public:
 namespace {
 class RooBinSamplingPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
 
@@ -232,7 +232,7 @@ public:
 namespace {
 class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("samples")) {
@@ -272,12 +272,12 @@ public:
 namespace {
 class RooRealSumPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       const static std::string keystring = "sumpdf";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooRealSumPdf *pdf = static_cast<const RooRealSumPdf *>(func);
       elem["type"] << key();
@@ -300,13 +300,13 @@ public:
 namespace {
 class RooSimultaneousStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       const static std::string keystring = "simultaneous";
       return keystring;
    }
    bool autoExportDependants() const override { return false; }
-   virtual bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooSimultaneous *sim = static_cast<const RooSimultaneous *>(func);
       elem["type"] << key();
@@ -332,12 +332,12 @@ public:
 namespace {
 class RooHistFuncStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "histogram";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
       const RooDataHist &dh = hf->dataHist();
@@ -355,7 +355,7 @@ public:
 namespace {
 class RooHistFuncFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   virtual bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("data")) {
@@ -379,12 +379,12 @@ public:
 namespace {
 class RooBinSamplingPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "binsampling";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooBinSamplingPdf *pdf = static_cast<const RooBinSamplingPdf *>(func);
       elem["type"] << key();
@@ -401,12 +401,12 @@ public:
 namespace {
 class RooProdPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "pdfprod";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooProdPdf *pdf = static_cast<const RooProdPdf *>(func);
       elem["type"] << key();
@@ -424,12 +424,12 @@ public:
 namespace {
 class RooGenericPdfStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "genericpdf";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooGenericPdf *pdf = static_cast<const RooGenericPdf *>(func);
       elem["type"] << key();
@@ -448,12 +448,12 @@ public:
 namespace {
 class RooBinWidthFunctionStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "binwidth";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooBinWidthFunction *pdf = static_cast<const RooBinWidthFunction *>(func);
       elem["type"] << key();
@@ -469,12 +469,12 @@ public:
 namespace {
 class RooFormulaVarStreamer : public RooJSONFactoryWSTool::Exporter {
 public:
-   virtual std::string const &key() const
+   std::string const &key() const override
    {
       static const std::string keystring = "formulavar";
       return keystring;
    }
-   virtual bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooFormulaVar *var = static_cast<const RooFormulaVar *>(func);
       elem["type"] << key();

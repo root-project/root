@@ -29,9 +29,7 @@ typedef TRYMLTree tree_t;
 typedef TJSONTree tree_t;
 #endif
 
-ClassImp(RooJSONFactoryWSTool)
-
-   using RooFit::Experimental::JSONNode;
+using RooFit::Experimental::JSONNode;
 
 namespace {
 bool isNumber(const std::string &str)
@@ -193,10 +191,11 @@ std::string RooJSONFactoryWSTool::genPrefix(const JSONNode &p, bool trailing_und
 
 namespace {
 // helpers for serializing / deserializing binned datasets
-inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::vector<int>& curr_comb, const std::vector<int> &vars_numbins, size_t curridx)
+inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::vector<int> &curr_comb,
+                             const std::vector<int> &vars_numbins, size_t curridx)
 {
    if (curridx == vars_numbins.size()) {
-     // we have filled a combination. Copy it.
+      // we have filled a combination. Copy it.
       combinations.push_back(std::vector<int>(curr_comb));
    } else {
       for (int i = 0; i < vars_numbins[curridx]; ++i) {
@@ -493,8 +492,8 @@ std::vector<std::vector<int>> RooJSONFactoryWSTool::generateBinIndices(const Roo
    std::vector<std::vector<int>> combinations;
    std::vector<int> vars_numbins;
    vars_numbins.reserve(vars.size());
-   for (auto& absv : vars) {
-      vars_numbins.push_back(((RooRealVar*)absv)->numBins());
+   for (auto &absv : vars) {
+      vars_numbins.push_back(((RooRealVar *)absv)->numBins());
    }
    std::vector<int> curr_comb(vars.size());
    ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
@@ -954,7 +953,7 @@ RooDataSet *RooJSONFactoryWSTool::unbinned(RooDataHist *hist)
    RooRealVar *weight = this->getWeightVar("weight");
    obs.add(*weight, true);
    RooDataSet *data = new RooDataSet(hist->GetName(), hist->GetTitle(), obs, RooFit::WeightVar(*weight));
-   for (Int_t i = 0; i < hist->numEntries(); ++i) {
+   for (int i = 0; i < hist->numEntries(); ++i) {
       data->add(*hist->get(i), hist->weight(i));
    }
    return data;
@@ -1101,7 +1100,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
       exportVariables(observables, obs);
       auto &weights = output["counts"];
       weights.set_seq();
-      for (Int_t i = 0; i < dh->numEntries(); ++i) {
+      for (int i = 0; i < dh->numEntries(); ++i) {
          dh->get(i);
          weights.append_child() << dh->weight();
       }
@@ -1114,7 +1113,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
       if (Config::stripObservables) {
          if (!singlePoint) {
             std::map<RooRealVar *, std::vector<double>> obs_values;
-            for (Int_t i = 0; i < ds->numEntries(); ++i) {
+            for (int i = 0; i < ds->numEntries(); ++i) {
                ds->get(i);
                for (const auto &obs : observables) {
                   RooRealVar *rv = (RooRealVar *)(obs);
@@ -1139,7 +1138,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
       }
       auto &weights = singlePoint && Config::stripObservables ? output["counts"] : output["weights"];
       weights.set_seq();
-      for (Int_t i = 0; i < ds->numEntries(); ++i) {
+      for (int i = 0; i < ds->numEntries(); ++i) {
          ds->get(i);
          if (!(Config::stripObservables && singlePoint)) {
             auto &coordinates = output["coordinates"];
@@ -1230,9 +1229,9 @@ RooDataHist *RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::
    RooDataHist *dh = new RooDataHist(("dataHist_" + namecomp).c_str(), namecomp.c_str(), varlist);
    // temporarily disable dirty flag propagation when filling the RDH
    std::vector<double> initVals;
-   for (auto& v : varlist) {
+   for (auto &v : varlist) {
       v->setDirtyInhibit(true);
-      initVals.push_back(((RooRealVar*)v)->getVal());
+      initVals.push_back(((RooRealVar *)v)->getVal());
    }
    for (size_t ibin = 0; ibin < bins.size(); ++ibin) {
       for (size_t i = 0; i < bins[ibin].size(); ++i) {
@@ -1308,7 +1307,7 @@ void RooJSONFactoryWSTool::configureToplevelPdf(const JSONNode &p, RooAbsPdf &pd
       RooArgSet nps;
       RooArgSet pois;
       RooArgSet globs;
-      RooArgSet* pdfVars = pdf.getVariables();
+      RooArgSet *pdfVars = pdf.getVariables();
       for (auto &var : this->_workspace->allVars()) {
          if (!pdfVars->find(*var))
             continue;
@@ -1551,14 +1550,14 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    this->_rootnode_output = nullptr;
 }
 
-Bool_t RooJSONFactoryWSTool::importJSONfromString(const std::string &s)
+bool RooJSONFactoryWSTool::importJSONfromString(const std::string &s)
 {
    // import the workspace from JSON
    std::stringstream ss(s);
    return importJSON(ss);
 }
 
-Bool_t RooJSONFactoryWSTool::importYMLfromString(const std::string &s)
+bool RooJSONFactoryWSTool::importYMLfromString(const std::string &s)
 {
    // import the workspace from YML
    std::stringstream ss(s);
@@ -1581,7 +1580,7 @@ std::string RooJSONFactoryWSTool::exportYMLtoString()
    return ss.str();
 }
 
-Bool_t RooJSONFactoryWSTool::exportJSON(std::ostream &os)
+bool RooJSONFactoryWSTool::exportJSON(std::ostream &os)
 {
    // export the workspace in JSON
    tree_t p;
@@ -1591,7 +1590,7 @@ Bool_t RooJSONFactoryWSTool::exportJSON(std::ostream &os)
    n.writeJSON(os);
    return true;
 }
-Bool_t RooJSONFactoryWSTool::exportJSON(std::string const &filename)
+bool RooJSONFactoryWSTool::exportJSON(std::string const &filename)
 {
    // export the workspace in JSON
    std::ofstream out(filename.c_str());
@@ -1604,7 +1603,7 @@ Bool_t RooJSONFactoryWSTool::exportJSON(std::string const &filename)
    return this->exportJSON(out);
 }
 
-Bool_t RooJSONFactoryWSTool::exportYML(std::ostream &os)
+bool RooJSONFactoryWSTool::exportYML(std::ostream &os)
 {
    // export the workspace in YML
    tree_t p;
@@ -1614,7 +1613,7 @@ Bool_t RooJSONFactoryWSTool::exportYML(std::ostream &os)
    n.writeYML(os);
    return true;
 }
-Bool_t RooJSONFactoryWSTool::exportYML(std::string const &filename)
+bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
 {
    // export the workspace in YML
    std::ofstream out(filename.c_str());
@@ -1666,7 +1665,7 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Experimental::JSONNode &
    this->_rootnode_input = nullptr;
 }
 
-Bool_t RooJSONFactoryWSTool::importJSON(std::istream &is)
+bool RooJSONFactoryWSTool::importJSON(std::istream &is)
 {
    // import a JSON file to the workspace
    try {
@@ -1679,7 +1678,7 @@ Bool_t RooJSONFactoryWSTool::importJSON(std::istream &is)
    return true;
 }
 
-Bool_t RooJSONFactoryWSTool::importJSON(std::string const &filename)
+bool RooJSONFactoryWSTool::importJSON(std::string const &filename)
 {
    // import a JSON file to the workspace
    std::ifstream infile(filename.c_str());
@@ -1692,7 +1691,7 @@ Bool_t RooJSONFactoryWSTool::importJSON(std::string const &filename)
    return this->importJSON(infile);
 }
 
-Bool_t RooJSONFactoryWSTool::importYML(std::istream &is)
+bool RooJSONFactoryWSTool::importYML(std::istream &is)
 {
    // import a YML file to the workspace
    try {
@@ -1704,7 +1703,7 @@ Bool_t RooJSONFactoryWSTool::importYML(std::istream &is)
    }
    return true;
 }
-Bool_t RooJSONFactoryWSTool::importYML(std::string const &filename)
+bool RooJSONFactoryWSTool::importYML(std::string const &filename)
 {
    // import a YML file to the workspace
    std::ifstream infile(filename.c_str());
@@ -1715,4 +1714,9 @@ Bool_t RooJSONFactoryWSTool::importYML(std::string const &filename)
       return false;
    }
    return this->importYML(infile);
+}
+
+std::ostream &RooJSONFactoryWSTool::log(RooFit::MsgLevel level) const
+{
+   return RooMsgService::instance().log(static_cast<TObject *>(nullptr), level, RooFit::IO);
 }

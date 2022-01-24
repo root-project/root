@@ -2,6 +2,7 @@
 #define RooFitHS3_RooJSONFactoryWSTool_h
 
 #include <RooArgSet.h>
+#include <RooGlobalFunc.h>
 
 #include <map>
 #include <string>
@@ -23,7 +24,7 @@ class JSONNode;
 }
 } // namespace RooFit
 
-class RooJSONFactoryWSTool : public TObject {
+class RooJSONFactoryWSTool {
 public:
    struct Config {
       static bool stripObservables;
@@ -71,6 +72,8 @@ public:
       Var(int n) : nbins(n), min(0), max(n) {}
       Var(const RooFit::Experimental::JSONNode &val);
    };
+
+   std::ostream &log(RooFit::MsgLevel level) const;
 
 protected:
    struct Scope {
@@ -246,7 +249,5 @@ public:
    void exportAllObjects(RooFit::Experimental::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Experimental::JSONNode &n);
    void exportDependants(const RooAbsArg *source, RooFit::Experimental::JSONNode *n);
-
-   ClassDef(RooJSONFactoryWSTool, 0)
 };
 #endif

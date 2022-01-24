@@ -1,6 +1,10 @@
 {
     "pdfs": {
         "main": {
+            "dict": {
+                "InterpolationScheme": ""
+            },
+            "index": "channelCat",
             "type": "simultaneous",
             "tags": [
                 "toplevel"
