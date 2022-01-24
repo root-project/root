@@ -263,7 +263,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
 }} // namespace ROOT::Internal
 
 
-/// Common part being called both by _ClassDefOutline_ and _ClassDefInline_.
+/// Common part being called both by \_ClassDefOutline\_ and \_ClassDefInline\_.
 /// \note DeclFileLine() is not part of it, since Cling uses that as trigger for
 /// associating as class title the comment string found right after the macro.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
