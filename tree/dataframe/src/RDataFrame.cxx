@@ -53,7 +53,6 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Working with collections](\ref collections)
 - [Transformations: manipulating data](\ref transformations)
 - [Actions: getting results](\ref actions) 
-- [Efficient analysis in Python](\ref python)
 - [Distributed execution in Python](\ref distrdf)
 - [Performance tips and parallel execution](\ref parallel-execution)
 - [More features](\ref more-features)
@@ -69,6 +68,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [Computation graphs (storing and reusing sets of transformations](\ref callgraphs)
    - [Visualizing the computation graph](\ref representgraph)
    - [Activating RDataFrame execution logs](\ref rdf-logging)
+- [Efficient analysis in Python](\ref python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
 \anchor cheatsheet
