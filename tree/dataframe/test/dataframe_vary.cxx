@@ -403,6 +403,32 @@ TEST_P(RDFVary, JittedDefine)
    EXPECT_EQ(sums["x:up"], 40);
    EXPECT_EQ(sums["x:down"], -20);
 }
+
+TEST_P(RDFVary, JittedFilter)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto sum = df.Vary("x", SimpleVariation, {}, 2).Filter("x > 0").Sum<int>("x");
+   EXPECT_EQ(*sum, 10);
+
+   auto sums = VariationsFor(sum);
+
+   EXPECT_EQ(sums["nominal"], 10);
+   EXPECT_EQ(sums["x:0"], 0);
+   EXPECT_EQ(sums["x:1"], 20);
+
+   // Now let's have the variation be propagated only through the Filter:
+   // Sum("y") per se does not require any variation
+   auto df2 = df.Define("y", [] { return 42; });
+   auto sum2 = df2.Vary("x", SimpleVariation, {}, 2).Filter("x > 0").Sum<int>("y");
+   EXPECT_EQ(*sum2, 420);
+
+   auto sums2 = VariationsFor(sum2);
+
+   EXPECT_EQ(sums2["nominal"], 420);
+   EXPECT_EQ(sums2["x:0"], 0);
+   EXPECT_EQ(sums2["x:1"], 420);
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
@@ -412,7 +438,6 @@ INSTANTIATE_TEST_SUITE_P(MT, RDFVary, ::testing::Values(true));
 #endif
 
 // TODO
-// - jitted Filter depending on variation
 // - try calling VariationsFor twice on the same result (with different filters in between)
 // - check that after running a second event loop, the results from the first are still correct
 // - jitted Vary expression
