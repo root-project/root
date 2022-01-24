@@ -80,7 +80,7 @@
 - [Setting line, fill, marker, and text attributes](\ref HP03)
 - [Setting Tick marks on the histogram axis](\ref HP04)
 - [Giving titles to the X, Y and Z axis](\ref HP05)
-- [The option \"SAME\"](\ref HP060)
+- [The option "SAME"](\ref HP060)
    - [Limitations](\ref HP060a)
 - [Colors automatically picked in palette](\ref HP061)
 - [Superimposing two histograms with different scales in the same pad](\ref HP06)
@@ -88,7 +88,7 @@
 - [Fit Statistics](\ref HP08)
 - [The error bars options](\ref HP09)
 - [The bar chart option](\ref HP100)
-- [The \"BAR\" and \"HBAR\" options](\ref HP10)
+- [The "BAR" and "HBAR" options](\ref HP10)
 - [The SCATter plot option (default for 2D histograms)](\ref HP11)
 - [The ARRow option](\ref HP12)
 - [The BOX option](\ref HP13)
@@ -101,12 +101,12 @@
    - [The LIST option](\ref HP16a)
    - [The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options](\ref HP16b)
 - [The LEGO options](\ref HP17)
-- [The \"SURFace\" options](\ref HP18)
+- [The "SURFace" options](\ref HP18)
 - [Cylindrical, Polar, Spherical and PseudoRapidity/Phi options](\ref HP19)
 - [Base line for bar-charts and lego plots](\ref HP20)
 - [TH2Poly Drawing](\ref HP20a)
 - [The SPEC option](\ref HP21)
-- [Option \"Z\" : Adding the color palette on the right side of the pad](\ref HP22)
+- [Option "Z" : Adding the color palette on the right side of the pad](\ref HP22)
 - [Setting the color palette](\ref HP23)
 - [Drawing a sub-range of a 2-D histogram; the [cutg] option](\ref HP24)
 - [Drawing options for 3D histograms](\ref HP25)
@@ -126,7 +126,7 @@
    - [Panning](\ref HP29i)
    - [Box cut](\ref HP29j)
    - [Plot specific interactions (dynamic slicing etc.)](\ref HP29k)
-   - [Surface with option \"GLSURF\"](\ref HP29l)
+   - [Surface with option "GLSURF"](\ref HP29l)
    - [TF3](\ref HP29m)
    - [Box](\ref HP29n)
    - [Iso](\ref HP29o)
@@ -817,7 +817,7 @@ An horizontal bar-chart is drawn with the options `hbar`, `hbar0`, `hbar1`,
    - 30% for option "(h)bar3"
    - 40% for option "(h)bar4"
 
-When an histogram has errors the option [\"HIST\"](\ref OPTHIST) together with the `(h)bar` option.
+When an histogram has errors the option ["HIST"](\ref OPTHIST) together with the `(h)bar` option.
 
 Begin_Macro(source)
 ../../../tutorials/hist/hbars.C
