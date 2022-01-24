@@ -30,7 +30,7 @@ output list.
 
 #include <cstddef>
 
-namespace AN {//anonymous namespace
+namespace {
 
    static TClass* IsSettableDataMember(TDataMember* dm) {
       if (!dm || !dm->IsaPointer() || dm->IsBasic()) return 0;
@@ -56,7 +56,7 @@ namespace AN {//anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 
-AN::TSetSelDataMembers::TSetSelDataMembers(const TOutputListSelectorDataMap& owner,
+TSetSelDataMembers::TSetSelDataMembers(const TOutputListSelectorDataMap& owner,
                                        TCollection* dmInfo, TList* output):
    fDMInfo(dmInfo), fOutputList(output), fNumSet(0), fOwner(owner)
 {}
@@ -70,7 +70,7 @@ AN::TSetSelDataMembers::TSetSelDataMembers(const TOutputListSelectorDataMap& own
 ///    name   is the data member name
 ///    addr   is the data member address
 
-void AN::TSetSelDataMembers::Inspect(TClass *cl, const char* parent, const char *name, const void *addr, Bool_t /* isTransient */)
+void TSetSelDataMembers::Inspect(TClass *cl, const char* parent, const char *name, const void *addr, Bool_t /* isTransient */)
 {
    while (name[0] == '*') ++name;
 
@@ -112,7 +112,7 @@ void AN::TSetSelDataMembers::Inspect(TClass *cl, const char* parent, const char 
 }
 
 
-namespace AN {//anonymous namespace
+namespace {
    class TCollectDataMembers: public TMemberInspector {
    public:
       TCollectDataMembers(const TOutputListSelectorDataMap& owner): fOwner(owner) { }
@@ -135,7 +135,7 @@ namespace AN {//anonymous namespace
 ///    name   is the data member name
 ///    addr   is the data member address
 
-void AN::TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const char *name, const void *addr, Bool_t /* isTransient */)
+void TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const char *name, const void *addr, Bool_t /* isTransient */)
 {
    TDataMember *dm = cl->GetDataMember(name);
    if (!IsSettableDataMember(dm)) return;
@@ -167,7 +167,7 @@ void AN::TCollectDataMembers::Inspect(TClass *cl, const char* /*parent*/, const 
    }
 }
 
-AN::TCollectDataMembers::~TCollectDataMembers() {
+TCollectDataMembers::~TCollectDataMembers() {
    // Destructor
 
    // Clean up collection of TDataMembers in fMap
@@ -226,7 +226,7 @@ Bool_t TOutputListSelectorDataMap::Init(TSelector* sel)
    fMap = new THashTable;
    fMap->SetOwner();
 
-   AN::TCollectDataMembers cdm(*this);
+   TCollectDataMembers cdm(*this);
    if (!sel->IsA()->CallShowMembers(sel, cdm)) {
       // failed to map
       PDB(kOutput,1) Warning("Init","Failed to determine mapping!");
@@ -273,7 +273,7 @@ Bool_t TOutputListSelectorDataMap::SetDataMembers(TSelector* sel) const
    if (!output || output->IsEmpty()) return kTRUE;
 
    // Set fSelector's data members
-   AN::TSetSelDataMembers ssdm(*this, fMap, output);
+   TSetSelDataMembers ssdm(*this, fMap, output);
    Bool_t res = sel->IsA()->CallShowMembers(sel, ssdm);
    PDB(kOutput,1) Info("SetDataMembers()","%s, set %d data members.",
                        (res ? "success" : "failure"), ssdm.GetNumSet());
