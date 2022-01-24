@@ -39,7 +39,7 @@ public:
 
    // use default copy constructor and assignment operator
 
-   /** generic  methods for  retrivieng options */
+   /** generic  methods for  retrieving options */
 
 
    // methods implementing the  IOptions interface
@@ -89,7 +89,7 @@ public:
       std::vector<std::string> names;
       names.reserve(fNamOpts.size());
       // start by named options
-      for (auto const & e : fNamOpts) 
+      for (auto const & e : fNamOpts)
          names.push_back(e.first);
       return names;
    }
@@ -97,7 +97,7 @@ public:
       std::vector<std::string> names;
       names.reserve(fRealOpts.size());
       // start by named options
-      for (auto const & e : fRealOpts) 
+      for (auto const & e : fRealOpts)
          names.push_back(e.first);
       return names;
    }
@@ -105,7 +105,7 @@ public:
       std::vector<std::string> names;
       names.reserve(fIntOpts.size());
       // start by named options
-      for (auto const & e : fIntOpts) 
+      for (auto const & e : fIntOpts)
          names.push_back(e.first);
       return names;
    }
@@ -167,9 +167,9 @@ private:
          os << std::setw(25) << pos->first << " : " << std::setw(15) << pos->second << std::endl;
    }
 
-   std::map<std::string, int>         fIntOpts;    // map of the integer options
-   std::map<std::string, double>      fRealOpts;   // map of the real options
-   std::map<std::string, std::string> fNamOpts;    // map of the named options
+   std::map<std::string, int>         fIntOpts;    ///< map of the integer options
+   std::map<std::string, double>      fRealOpts;   ///< map of the real options
+   std::map<std::string, std::string> fNamOpts;    ///< map of the named options
 
 };
 

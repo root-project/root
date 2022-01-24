@@ -23,7 +23,7 @@
 #include <string>
 
 /**
-   @defgroup ParamFunc Parameteric Function Evaluation Interfaces.
+   @defgroup ParamFunc Parametric Function Evaluation Interfaces.
    Interfaces classes for evaluation of parametric functions
    @ingroup CppFunctions
 */
@@ -38,7 +38,7 @@ namespace ROOT {
       /**
           Documentation for the abstract class IBaseParam.
           It defines the interface for dealing with the function parameters
-          This is used only for internal convinience, to avoid redefining the Parameter API
+          This is used only for internal convenience, to avoid redefining the Parameter API
           for the one and the multi-dim functions.
           Concrete class should derive from ROOT::Math::IParamFunction and not from this class.
 
@@ -91,7 +91,7 @@ namespace ROOT {
 
 //___________________________________________________________________
       /**
-         IParamFunction interface (abstract class) describing multi-dimensional parameteric functions
+         IParamFunction interface (abstract class) describing multi-dimensional parametric functions
          It is a derived class from ROOT::Math::IBaseFunctionMultiDim and
          ROOT::Math::IBaseParam
 

@@ -215,10 +215,10 @@ namespace ROOT
            virtual BinNode*                        Clone();
 
            // intrinsic bin properties
-           std::vector<tBoundary>                  fBoundaries;    //bin boundaries
-           Double_t                                fSumw;          //sum of weights
-           Double_t                                fSumw2;         //sum of weights^2
-           UInt_t                                  fEntries;       //number of entries
+           std::vector<tBoundary>                  fBoundaries;    ///< bin boundaries
+           Double_t                                fSumw;          ///< sum of weights
+           Double_t                                fSumw2;         ///< sum of weights^2
+           UInt_t                                  fEntries;       ///< number of entries
 
         private:
            BinNode& operator=(const BinNode& rhs);
@@ -239,7 +239,7 @@ namespace ROOT
            typedef std::pair<value_type,value_type> tBoundary;
 
         public:
-           //constructor and desctructor
+           //constructor and destructor
            TerminalNode(Double_t iBucketSize,BaseNode* pParent = 0);
            virtual ~TerminalNode();
 
@@ -278,11 +278,11 @@ namespace ROOT
            data_it                                 SplitBinContent();
            void                                    UpdateBoundaries();
 
-           Bool_t                                  fOwnData;       // terminal node owns the data objects (default = false)
-           eSplitOption                            fSplitOption;   // according to which figure of merit the node is splitted
-           Double_t                                fBucketSize;    // target number of entries per bucket
-           UInt_t                                  fSplitAxis;     // axis at which the next split will occur
-           std::vector<const _DataPoint*>          fDataPoints;    // data points in this bucket
+           Bool_t                                  fOwnData;       ///< terminal node owns the data objects (default = false)
+           eSplitOption                            fSplitOption;   ///< according to which figure of merit the node is split
+           Double_t                                fBucketSize;    ///< target number of entries per bucket
+           UInt_t                                  fSplitAxis;     ///< axis at which the next split will occur
+           std::vector<const _DataPoint*>          fDataPoints;    ///< data points in this bucket
         };
 
      public:
