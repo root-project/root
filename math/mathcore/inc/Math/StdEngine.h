@@ -60,7 +60,7 @@ namespace ROOT {
           @ingroup Random
           Class to wrap engines fron the C++ standard random library in
           the ROOT Random interface.
-          This cases are then by used by the generic TRandomGen class
+          These cases are then used by the generic TRandomGen class
           to provide TRandom interrace generators for the C++ random generators.
 
           See for examples the TRandomMT64 and TRandomRanlux48 generators
