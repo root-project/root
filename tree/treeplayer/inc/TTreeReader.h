@@ -202,11 +202,6 @@ public:
    /// \return the `entry`'s read status, i.e. whether the entry is available.
    EEntryStatus SetLocalEntry(Long64_t entry) { return SetEntryBase(entry, kTRUE); }
 
-   ///  Set the begin and end entry numbers
-   ///
-   /// \param beginEntry The first entry that `Next()` will load.
-   /// \param endEntry The entry that `Next()` will return `kFALSE` on (i.e. not
-   ///   load anymore).
    EEntryStatus SetEntriesRange(Long64_t beginEntry, Long64_t endEntry);
 
    ///  Get the begin and end entry numbers
@@ -283,7 +278,7 @@ private:
    enum EStatusBits {
       kBitIsChain = BIT(14), ///< our tree is a chain
       kBitHaveWarnedAboutEntryListAttachedToTTree = BIT(15), ///< the tree had a TEntryList and we have warned about that
-      kBitSetEntryBaseCallingLoadTree = BIT(16) ///< SetEntryBase is in the process of calling TChain/TTree::LoadTree.
+      kBitSetEntryBaseCallingLoadTree = BIT(16) ///< SetEntryBase is in the process of calling TChain/TTree::%LoadTree.
    };
 
    TTree* fTree = nullptr; ///< tree that's read

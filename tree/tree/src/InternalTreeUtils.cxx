@@ -81,12 +81,13 @@ std::vector<std::string> GetFileNamesFromTree(const TTree &tree)
 /// position `i` represent the `i`-th friend of the input tree. If this friend
 /// is a TTree, the `i`-th element of each of the three vectors will contain
 /// respectively:
+///
 /// - A pair with the name and alias of the tree (the alias might not be
 ///   present, in which case it will be just an empty string).
 /// - A vector with a single string representing the path to current file where
 ///   the tree is stored.
 /// - An empty vector.
-/// .
+///
 /// If the `i`-th friend is a TChain instead, the `i`-th element of each of the
 /// three vectors will contain respectively:
 /// - A pair with the name and alias of the chain (if present, both might be
