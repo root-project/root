@@ -695,7 +695,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 
    auto definesCopy = new RColumnRegister(customCols);
    auto definesAddr = PrettyPrintAddr(definesCopy);
-   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm);
+   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm, customCols, parsedExpr.fUsedCols);
 
    std::stringstream defineInvocation;
    defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefineTag>("
@@ -732,7 +732,7 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 
    auto definesCopy = new RColumnRegister(customCols);
    auto definesAddr = PrettyPrintAddr(definesCopy);
-   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm);
+   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm, customCols, ColumnNames_t{});
 
    std::stringstream defineInvocation;
    defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefinePerSampleTag>("
