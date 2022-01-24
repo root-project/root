@@ -3054,7 +3054,8 @@ private:
       using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister, fDataSource);
 
-      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager);
+      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(
+         *fLoopManager, validColumnNames, fColRegister, fProxiedPtr->GetVariations());
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
       auto toJit =

@@ -380,6 +380,18 @@ TEST_P(RDFVary, FilterChainDependingOnVariations)
    EXPECT_EQ(sums["y:1"], 30);
 }
 
+TEST_P(RDFVary, JittedAction)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto h = df.Vary("x", SimpleVariation, {}, 2).Histo1D("x");
+   auto hs = VariationsFor(h);
+
+   EXPECT_DOUBLE_EQ(h->GetMean(), 1);
+   EXPECT_DOUBLE_EQ(hs["nominal"].GetMean(), 1);
+   EXPECT_DOUBLE_EQ(hs["x:0"].GetMean(), -1);
+   EXPECT_DOUBLE_EQ(hs["x:1"].GetMean(), 2);
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
