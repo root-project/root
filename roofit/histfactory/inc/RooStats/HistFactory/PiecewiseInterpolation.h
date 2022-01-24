@@ -49,7 +49,8 @@ public:
   const RooArgList& lowList() const { return _lowSet ; }
   const RooArgList& highList() const { return _highSet ; }
   const RooArgList& paramList() const { return _paramSet ; }
-
+  const std::vector<int>&  interpolationCodes() const { return _interpCode; }
+  
   //virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
   Bool_t setBinIntegrator(RooArgSet& allVars) ;
 
@@ -58,7 +59,7 @@ public:
 
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
 
-  void setInterpCode(RooAbsReal& param, int code);
+  void setInterpCode(RooAbsReal& param, int code, bool silent=false);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 

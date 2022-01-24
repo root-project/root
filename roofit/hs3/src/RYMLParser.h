@@ -14,7 +14,7 @@ protected:
    std::unique_ptr<Impl> tree;
 
 public:
-   class Node : public RooFit::Detail::JSONNode {
+   class Node : public RooFit::Experimental::JSONNode {
    protected:
       TRYMLTree *tree;
       class Impl;

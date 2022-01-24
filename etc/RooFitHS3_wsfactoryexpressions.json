@@ -7,6 +7,13 @@
             "sigma"
         ]
     },
+    "Exponential": {
+        "class": "RooExponential",
+        "arguments": [
+            "x",
+            "c"
+        ]
+    },    
     "Poisson": {
         "class": "RooPoisson",
         "arguments": [
@@ -29,13 +36,12 @@
             "high"
         ]
     },
-    "sumpdf": {
-        "class": "RooRealSumPdf",
+    "sum": {
+        "class": "RooAddition",
         "arguments": [
-            "samples",
-            "coefficients"
+            "summands"
         ]
-    },
+    },    
     "paramhist": {
         "class": "ParamHistFunc",
         "arguments": [
