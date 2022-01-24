@@ -392,6 +392,17 @@ TEST_P(RDFVary, JittedAction)
    EXPECT_DOUBLE_EQ(hs["x:1"].GetMean(), 2);
 }
 
+TEST_P(RDFVary, JittedDefine)
+{
+   // have a jitted Define that depends on a varied column
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto sum = df.Vary("x", SimpleVariation, {}, {"down", "up"}).Define("y", "x * 2").Sum<int>("y");
+   auto sums = VariationsFor(sum);
+
+   EXPECT_EQ(sums["nominal"], 20);
+   EXPECT_EQ(sums["x:up"], 40);
+   EXPECT_EQ(sums["x:down"], -20);
+}
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
@@ -401,7 +412,6 @@ INSTANTIATE_TEST_SUITE_P(MT, RDFVary, ::testing::Values(true));
 #endif
 
 // TODO
-// - jitted Define depending on variation
 // - jitted Filter depending on variation
 // - try calling VariationsFor twice on the same result (with different filters in between)
 // - check that after running a second event loop, the results from the first are still correct
