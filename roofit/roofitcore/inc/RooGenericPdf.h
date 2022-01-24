@@ -43,7 +43,7 @@ public:
   void dumpFormula() { formula().dump() ; }
 
   const char* expression() const { return _formExpr.Data(); }
-  const RooListProxy& dependents() const { return _actualVars; }  
+  const RooArgList& dependents() const { return _actualVars; }  
 
 protected:
 
