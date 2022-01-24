@@ -301,7 +301,8 @@ public:                                                                         
 #define _ClassDefOutline_(name,id, virtual_keyword, overrd)                                                     \
    _ClassDefBase_(name,id, virtual_keyword, overrd)                                                             \
 private:                                                                                                        \
-   static atomic_TClass_ptr fgIsA;                                                                              \
+   /** \cond HIDDEN_SYMBOLS \brief Pointer holding the address of the TClass describing this class */           \
+   static atomic_TClass_ptr fgIsA; /** \endcond */                                                              \
 public:                                                                                                         \
    /** \cond HIDDEN_SYMBOLS \deprecated */ static int ImplFileLine(); /** \endcond */                           \
    /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName(); /** \endcond */                   \
@@ -364,9 +365,8 @@ public:                                                                         
    namespace ROOT {                                                                                     \
       /** \cond HIDDEN_SYMBOLS */ TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
       namespace {                                                                                       \
-         /** \cond HIDDEN_SYMBOLS */                                                                    \
          static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__((unused)) =                     \
-            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__);  /** \endcond */         \
+            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__);                          \
          R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));                                            \
       }                                                                                                 \
    }
@@ -381,10 +381,8 @@ public:                                                                         
          /** \cond HIDDEN_SYMBOLS */                                        \
          ::ROOT::TGenericClassInfo *GenerateInitInstance(); /** \endcond */ \
          namespace {                                                        \
-            /** \cond HIDDEN_SYMBOLS */                                     \
             static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) =              \
                GenerateInitInstance()->SetImplFile(__FILE__, __LINE__);     \
-            /** \endcond */                                                 \
             R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));             \
          }                                                                  \
       }                                                                     \
