@@ -1,33 +1,39 @@
 #include <RooFitHS3/JSONInterface.h>
 
-std::ostream &operator<<(std::ostream &os, RooFit::Experimental::JSONNode const &s)
+namespace RooFit {
+namespace Experimental {
+
+std::ostream &operator<<(std::ostream &os, JSONNode const &s)
 {
    s.writeJSON(os);
    return os;
 }
 
 template <>
-int RooFit::Experimental::JSONNode::val_t<int>() const
+int JSONNode::val_t<int>() const
 {
    return val_int();
 }
 template <>
-float RooFit::Experimental::JSONNode::val_t<float>() const
+float JSONNode::val_t<float>() const
 {
    return val_float();
 }
 template <>
-double RooFit::Experimental::JSONNode::val_t<double>() const
+double JSONNode::val_t<double>() const
 {
    return val_float();
 }
 template <>
-bool RooFit::Experimental::JSONNode::val_t<bool>() const
+bool JSONNode::val_t<bool>() const
 {
    return val_bool();
 }
 template <>
-std::string RooFit::Experimental::JSONNode::val_t<std::string>() const
+std::string JSONNode::val_t<std::string>() const
 {
    return val();
+}
+
+}
 }
