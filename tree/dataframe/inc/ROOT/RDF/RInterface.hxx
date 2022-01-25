@@ -52,6 +52,7 @@
 #include <string>
 #include <type_traits> // is_same, enable_if
 #include <typeinfo>
+#include <unordered_set>
 #include <utility> // std::index_sequence
 #include <vector>
 
@@ -2232,11 +2233,12 @@ public:
    ///
    ColumnNames_t GetColumnNames()
    {
-      ColumnNames_t allColumns;
+      // there could be duplicates between Redefined columns and columns in the data source
+      std::unordered_set<std::string> allColumns;
 
       auto addIfNotInternal = [&allColumns](std::string_view colName) {
          if (!RDFInternal::IsInternalColumn(colName))
-            allColumns.emplace_back(colName);
+            allColumns.emplace(colName);
       };
 
       auto definedColumns = fColRegister.GetNames();
@@ -2246,17 +2248,20 @@ public:
       auto tree = fLoopManager->GetTree();
       if (tree) {
          auto branchNames = RDFInternal::GetBranchNames(*tree, /*allowDuplicates=*/false);
-         allColumns.insert(allColumns.end(), branchNames.begin(), branchNames.end());
+         for (const auto &bName : branchNames)
+            allColumns.emplace(bName);
       }
 
       if (fDataSource) {
          const auto &dsColNames = fDataSource->GetColumnNames();
-         // ignore columns starting with R_rdf_sizeof_
-         std::copy_if(dsColNames.begin(), dsColNames.end(), std::back_inserter(allColumns),
-                      [](const std::string &s) { return s.rfind("R_rdf_sizeof", 0) != 0; });
+         for (const auto &s : dsColNames) {
+            if (s.rfind("R_rdf_sizeof", 0) != 0)
+               allColumns.emplace(s);
+         }
       }
 
-      return allColumns;
+      ColumnNames_t ret(allColumns.begin(), allColumns.end());
+      return ret;
    }
 
    /////////////////////////////////////////////////////////////////////////////
