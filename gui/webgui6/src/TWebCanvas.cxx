@@ -564,6 +564,8 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
          if (!conn.fSendVersion)
             holder.SetScripts(fCustomScripts);
 
+         holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
+
          CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf,this](TPadWebSnapshot *snap) {
             buf.append(TBufferJSON::ToJSON(snap, fJsonComp).Data());
          });
