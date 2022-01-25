@@ -1,5 +1,12 @@
-## \file## \ingroup tutorial_roofit## \notebook##Taylor expansion of RooFit functions using the taylorExpand function
-#### \macro_code#### \date November 2021## \authors Rahul Balasubramanian
+## \file
+## \ingroup tutorial_roofit
+## \notebook
+## Taylor expansion of RooFit functions using the taylorExpand function
+##
+## \macro_code
+##
+## \date November 2021
+## \authors Rahul Balasubramanian
 
 import ROOT
 
@@ -48,4 +55,4 @@ legend.AddEntry("f", "Polynomial of fourth order", "L")
 legend.Draw()
 
 c.Draw()
-c.SaveAs("rf710_roopoly.pdf")
+c.SaveAs("rf710_roopoly.png")
