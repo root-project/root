@@ -11,6 +11,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <fstream>
 #include "ROOT/StringUtils.hxx"
 
 namespace ROOT {
@@ -36,5 +37,26 @@ std::vector<std::string> Split(std::string_view str, std::string_view delims, bo
 
    return out;
 }
+
+/// Read and split into white-space separated components a (txt) file
+/// A component string starting with '#' will be ignored
+/// \param[in] str File to read
+/// \param[out] std::vector<std::string> A vector of strings
+std::vector<std::string> ReadFilelist (std::string filelist) {
+    std::vector<std::string> input_file_list;
+    std::fstream infile;
+    infile.open(filelist, std::ios::in);
+    
+    if (infile.is_open()) {
+        infile.seekg(0);
+        std::string line;
+        while( std::getline(infile, line) ) {
+            for (const auto& p: ROOT::Split(line.c_str(), " ", true)) { if (p[0] != '#') { input_file_list.push_back(p);} }
+        }
+    }
+    return input_file_list;
+}
+
+
 
 } // namespace ROOT
