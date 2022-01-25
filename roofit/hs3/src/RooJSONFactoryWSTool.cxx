@@ -295,7 +295,7 @@ void RooJSONFactoryWSTool::printImporters()
    for (const auto &x : RooJSONFactoryWSTool::_importers) {
       for (const auto &ePtr : x.second) {
          // Passing *e directory to typeid results in clang warnings.
-         auto const& e = *ePtr;
+         auto const &e = *ePtr;
          std::cout << x.first << "\t" << typeid(e).name() << std::endl;
       }
    }
@@ -305,7 +305,7 @@ void RooJSONFactoryWSTool::printExporters()
    for (const auto &x : RooJSONFactoryWSTool::_exporters) {
       for (const auto &ePtr : x.second) {
          // Passing *e directory to typeid results in clang warnings.
-         auto const& e = *ePtr;
+         auto const &e = *ePtr;
          std::cout << x.first->GetName() << "\t" << typeid(e).name() << std::endl;
       }
    }
