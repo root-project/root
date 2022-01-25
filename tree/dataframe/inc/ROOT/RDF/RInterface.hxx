@@ -2239,9 +2239,9 @@ public:
             allColumns.emplace_back(colName);
       };
 
-      auto columnNames = fColRegister.GetNames();
+      auto definedColumns = fColRegister.GetNames();
 
-      std::for_each(columnNames.begin(), columnNames.end(), addIfNotInternal);
+      std::for_each(definedColumns.begin(), definedColumns.end(), addIfNotInternal);
 
       auto tree = fLoopManager->GetTree();
       if (tree) {
