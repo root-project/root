@@ -10,8 +10,10 @@ if(NOT TARGET gtest)
     ${_gtest_byproduct_binary_dir}/lib/libgmock.a
     ${_gtest_byproduct_binary_dir}/lib/libgmock_main.a
     )
-
+  set(GTEST_C_FLAGS "${CMAKE_C_FLAGS}")
   if(MSVC)
+    string(REPLACE "-fIw32pragma.h" "" GTEST_C_FLAGS "${GTEST_C_FLAGS}")
+    string(REPLACE "-fIsehmap.h" "" GTEST_C_FLAGS "${GTEST_C_FLAGS}")
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=${_gtest_byproduct_binary_dir}/lib/
@@ -40,7 +42,7 @@ if(NOT TARGET gtest)
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
                   -DCMAKE_BUILD_TYPE=Release
                   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                  -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                  -DCMAKE_C_FLAGS=${GTEST_C_FLAGS}
                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                   -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
                   -DCMAKE_AR=${CMAKE_AR}
