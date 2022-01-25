@@ -545,6 +545,13 @@ public:
   virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
 
   Bool_t addOwnedComponents(const RooArgSet& comps) ;
+
+  // Transfer the ownership of one or more other RooAbsArgs to this RooAbsArg
+  // via a `std::unique_ptr`.
+  template<typename... Args_t>
+  bool addOwnedComponents(std::unique_ptr<Args_t>... comps) {
+    return addOwnedComponents({*comps.release() ...});
+  }
   const RooArgSet* ownedComponents() const { return _ownedComponents ; }
 
   void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
