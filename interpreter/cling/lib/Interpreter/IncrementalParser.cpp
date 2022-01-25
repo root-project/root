@@ -121,7 +121,7 @@ namespace {
   /// On destruction, the original (i.e. overridden consumer) is restored.
   ///
   class FilteringDiagConsumer : public cling::utils::DiagnosticsOverride {
-    std::stack<bool> m_IgnorePromptDiags;
+    std::stack<unsigned> m_IgnoreDiagsMask;
     llvm::PointerIntPair<DiagnosticConsumer*, 1, bool /*Own*/> m_Target{};
 
     void SyncDiagCountWithTarget() {
@@ -163,22 +163,28 @@ namespace {
 
     void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
                           const Diagnostic &Info) override {
-      if (Ignoring()) {
-        if (Info.getID() == diag::warn_unused_expr
-            || Info.getID() == diag::warn_unused_call
-            || Info.getID() == diag::warn_unused_comparison)
-          return; // ignore!
-        if (Info.getID() == diag::warn_falloff_nonvoid_function) {
-          DiagLevel = DiagnosticsEngine::Error;
+      if (auto mask = Ignoring()) {
+        if (mask & cling::IgnoreDiags::kPromptBasic) {
+          if (Info.getID() == diag::warn_unused_expr
+              || Info.getID() == diag::warn_unused_call
+              || Info.getID() == diag::warn_unused_comparison)
+            return; // ignore!
+          if (Info.getID() == diag::warn_falloff_nonvoid_function) {
+            DiagLevel = DiagnosticsEngine::Error;
+          }
+          if (Info.getID() == diag::ext_return_has_expr) {
+            // An error that we need to suppress.
+            auto Diags = const_cast<DiagnosticsEngine*>(Info.getDiags());
+            assert(Diags->hasErrorOccurred() && "Expected ErrorOccurred");
+            if (m_PrevClient.getNumErrors() == 0) { // first error
+              Diags->Reset(true /*soft - only counts, not mappings*/);
+            } // else we had other errors, too.
+            return; // ignore!
+          }
         }
-        if (Info.getID() == diag::ext_return_has_expr) {
-          // An error that we need to suppress.
-          auto Diags = const_cast<DiagnosticsEngine*>(Info.getDiags());
-          assert(Diags->hasErrorOccurred() && "Expected ErrorOccurred");
-          if (m_PrevClient.getNumErrors() == 0) { // first error
-            Diags->Reset(true /*soft - only counts, not mappings*/);
-          } // else we had other errors, too.
-          return; // ignore!
+        if (mask & cling::IgnoreDiags::kPromptExtended) {
+          if (Info.getID() == diag::warn_redundant_parens_around_declarator)
+            return;
         }
       }
 
@@ -197,8 +203,10 @@ namespace {
       SyncDiagCountWithTarget();
     }
 
-    bool Ignoring() const {
-      return !m_IgnorePromptDiags.empty() && m_IgnorePromptDiags.top();
+    /// \brief Return the current mask of ignored diagnostics (see `IgnoreDiags`
+    /// in CompilationOptions.h).
+    unsigned Ignoring() const {
+      return !m_IgnoreDiagsMask.empty() ? m_IgnoreDiagsMask.top() : 0;
     }
 
   public:
@@ -225,11 +233,11 @@ namespace {
 
     struct RAAI {
       FilteringDiagConsumer& m_Client;
-      RAAI(DiagnosticConsumer& F, bool Ignore) :
+      RAAI(DiagnosticConsumer& F, unsigned Ignore) :
        m_Client(static_cast<FilteringDiagConsumer&>(F)) {
-        m_Client.m_IgnorePromptDiags.push(Ignore);
+        m_Client.m_IgnoreDiagsMask.push(Ignore);
       }
-      ~RAAI() { m_Client.m_IgnorePromptDiags.pop(); }
+      ~RAAI() { m_Client.m_IgnoreDiagsMask.pop(); }
     };
   };
 } // unnamed namespace
@@ -914,7 +922,7 @@ namespace cling {
 
     DiagnosticsEngine& Diags = getCI()->getDiagnostics();
 
-    FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
+    FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnoreDiagsMask);
 
     DiagnosticErrorTrap Trap(Diags);
     Sema::SavePendingInstantiationsRAII SavedPendingInstantiations(S);
