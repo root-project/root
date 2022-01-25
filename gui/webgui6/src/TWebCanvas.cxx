@@ -918,6 +918,20 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          AssignStatusBits(std::stoul(arg.substr(11)));
          if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
       }
+   } else if (arg.compare(0, 10, "HIGHLIGHT:") == 0) {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(10));
+      if (!arr || (arr->size() != 4)) {
+         Error("ProcessData", "Wrong arguments count %d in highlight message", (int) (arr ? arr->size() : -1));
+      } else {
+         auto pad = dynamic_cast<TVirtualPad*> (FindPrimitive(arr->at(0)));
+         auto obj = FindPrimitive(arr->at(1));
+         int argx = std::stoi(arr->at(2));
+         int argy = std::stoi(arr->at(3));
+         if (pad && obj) {
+            Canvas()->Highlighted(pad, obj, argx, argy);
+            CheckPadModified(Canvas());
+         }
+      }
 
    } else if (IsReadOnly()) {
 
@@ -1122,7 +1136,7 @@ Bool_t TWebCanvas::PerformUpdate()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Increment canvas version and force sending data to client - do not wit for reply
+/// Increment canvas version and force sending data to client - do not wait for reply
 
 void TWebCanvas::ForceUpdate()
 {
