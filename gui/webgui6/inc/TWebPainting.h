@@ -25,9 +25,9 @@ class TColor;
 class TWebPainting : public TObject {
 
    protected:
-      std::string fOper;      /// list of operations, separated by semicolons
+      std::string fOper;      ///< list of operations, separated by semicolons
       Int_t fSize{0};         ///<! filled buffer size
-      TArrayF fBuf;           /// array of points for all operations
+      TArrayF fBuf;           ///< array of points for all operations
       TAttLine fLastLine;     ///<! last line attributes
       TAttFill fLastFill;     ///<! last fill attributes
       TAttMarker fLastMarker; ///<! last marker attributes
