@@ -212,38 +212,6 @@ void RooAbsCollection::safeDeleteList()
 {
   _hashAssistedFind = nullptr;
 
-  // Handle trivial case here
-  if (_list.size() > 1) {
-    std::vector<RooAbsArg*> tmp;
-    tmp.reserve(_list.size());
-    do {
-      tmp.clear();
-      for (auto arg : _list) {
-        // Check if arg depends on remainder of list
-        if (!arg->dependsOn(*this, arg)) tmp.push_back(arg);
-      }
-
-      // sort and uniquify, in case some elements occur more than once
-      std::sort(tmp.begin(), tmp.end());
-
-      tmp.erase(std::unique(tmp.begin(), tmp.end()), tmp.end());
-      // okay, can remove and delete what's in tmp
-      auto newEnd = _list.end();
-      for (auto item : tmp) {
-        newEnd = std::remove(_list.begin(), newEnd, item);
-        delete item;
-      }
-      _list.erase(newEnd, _list.end());
-    } while (!tmp.empty() && _list.size() > 1);
-
-    // Check if there are any remaining elements
-    if (_list.size() > 1) {
-      coutW(ObjectHandling) << "RooAbsCollection::safeDeleteList(" << GetName()
-	    << ") WARNING: unable to delete following elements in client-server order " ;
-      Print("1") ;
-    }
-  }
-
   // Built-in delete remaining elements
   for (auto item : _list) {
     delete item;
