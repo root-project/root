@@ -198,17 +198,18 @@ RooAbsCollection::~RooAbsCollection()
 {
   // Delete all variables in our list if we own them
   if(_ownCont){
-    safeDeleteList() ;
+    deleteList() ;
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Examine client server dependencies in list and
-/// delete contents in safe order: any client
-/// is deleted before a server is deleted
+/// Delete contents of the list.
+/// The RooAbsArg destructor ensures clients and servers can be deleted in any
+/// order.
+/// Also cleans the hash-map for fast lookups if present.
 
-void RooAbsCollection::safeDeleteList()
+void RooAbsCollection::deleteList()
 {
   _hashAssistedFind = nullptr;
 
@@ -725,7 +726,7 @@ void RooAbsCollection::removeAll()
   _hashAssistedFind = nullptr;
 
   if(_ownCont) {
-    safeDeleteList() ;
+    deleteList() ;
     _ownCont= kFALSE;
   }
   else {
