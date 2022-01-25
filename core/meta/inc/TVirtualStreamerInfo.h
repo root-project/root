@@ -25,7 +25,7 @@
 
 #include "ESTLType.h"
 
-#ifdef WIN32
+#ifdef _MSC_VER
 // On Windows, Disable the warning:
 // 'kIgnoreTObjectStreamer': illegal qualified name in member declaration
 #pragma warning( push )
@@ -206,7 +206,7 @@ public:
    ClassDef(TVirtualStreamerInfo,6)  //Abstract Interface describing Streamer information for one class
 };
 
-#ifdef WIN32
+#ifdef _MSC_VER
 #pragma warning( pop )
 #endif
 
