@@ -10,6 +10,7 @@
 #ifndef CLING_INTERPRETER_H
 #define CLING_INTERPRETER_H
 
+#include "cling/Interpreter/CompilationOptions.h"
 #include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Interpreter/RuntimeOptions.h"
 
@@ -66,7 +67,6 @@ namespace cling {
     }
   }
   class ClangInternalState;
-  class CompilationOptions;
   class DynamicLibraryManager;
   class IncrementalCUDADeviceCompiler;
   class IncrementalExecutor;
@@ -710,7 +710,7 @@ namespace cling {
     }
 
     ///\brief Create suitable default compilation options.
-    CompilationOptions makeDefaultCompilationOpts() const;
+    CompilationOptions makeDefaultCompilationOpts(unsigned ignoreDiags = IgnoreDiags::kPromptExtended) const;
 
     //FIXME: This must be in InterpreterCallbacks.
     void installLazyFunctionCreator(void* (*fp)(const std::string&));

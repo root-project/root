@@ -761,7 +761,7 @@ namespace cling {
     return m_IncrParser->getDiagnosticConsumer() != nullptr;
   }
 
-  CompilationOptions Interpreter::makeDefaultCompilationOpts() const {
+  CompilationOptions Interpreter::makeDefaultCompilationOpts(unsigned ignoreDiags) const {
     CompilationOptions CO;
     CO.DeclarationExtraction = 0;
     CO.EnableShadowing = 0;
@@ -769,7 +769,8 @@ namespace cling {
     CO.CodeGeneration = m_IncrParser->hasCodeGenerator();
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
-    CO.IgnoreDiagsMask = (!isRawInputEnabled() ? IgnoreDiags::kPromptBasic : 0);
+    CO.IgnoreDiagsMask = ignoreDiags | (!isRawInputEnabled()
+                                        ? IgnoreDiags::kPromptBasic : 0);
     CO.CheckPointerValidity = !isRawInputEnabled();
     CO.OptLevel = getDefaultOptLevel();
     return CO;
@@ -821,7 +822,7 @@ namespace cling {
     if (!isRawInputEnabled())
       wrapPoint = utils::getWrapPoint(wrapReadySource, getCI()->getLangOpts());
 
-    CompilationOptions CO = makeDefaultCompilationOpts();
+    CompilationOptions CO = makeDefaultCompilationOpts(IgnoreDiags::kNone);
     CO.EnableShadowing = m_RuntimeOptions.AllowRedefinition && !isRawInputEnabled();
 
     if (isRawInputEnabled() || wrapPoint == std::string::npos) {
