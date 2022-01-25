@@ -32,6 +32,7 @@ Use RooAbsCollection derived objects for public use
 #include "RooFit.h"
 #include "RooLinkedListIter.h"
 #include "RooAbsArg.h"
+#include "RooAbsData.h"
 #include "RooMsgService.h"
 
 #include "Riostream.h"
@@ -404,7 +405,7 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   if (!arg) return ;
 
   // Only use RooAbsArg::namePtr() in lookup-by-name if all elements have it
-  if (!dynamic_cast<RooAbsArg*>(arg)) _useNptr = kFALSE;
+  if (!dynamic_cast<RooAbsArg*>(arg) && !dynamic_cast<RooAbsData*>(arg)) _useNptr = kFALSE;
   
   // Add to hash table 
   if (_htableName) {
@@ -604,7 +605,7 @@ TObject* RooLinkedList::find(const char* name) const
 {
   
   if (_htableName) {
-    RooAbsArg* a = (RooAbsArg*) (*_htableName)[name] ;
+    TObject *a = const_cast<TObject*>((*_htableName)[name]) ;
     // RooHashTable::find could return false negative if element was renamed to 'name'.
     // The list search means it won't return false positive, so can return here.
     if (a) return a;
@@ -616,6 +617,9 @@ TObject* RooLinkedList::find(const char* name) const
         RooLinkedListElem* ptr = _first ;
         while(ptr) {
           if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
+            return ptr->_arg ;
+          }
+          if ((((RooAbsData*)ptr->_arg)->namePtr() == nptr)) {
             return ptr->_arg ;
           }
           ptr = ptr->_next ;
@@ -636,6 +640,9 @@ TObject* RooLinkedList::find(const char* name) const
     
     while(ptr) {
       if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
+	return ptr->_arg ;
+      }
+      if ((((RooAbsData*)ptr->_arg)->namePtr() == nptr)) {
 	return ptr->_arg ;
       }
       ptr = ptr->_next ;
