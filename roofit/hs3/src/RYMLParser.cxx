@@ -110,12 +110,12 @@ void TRYMLTree::Node::set_seq()
 }
 
 TRYMLTree::TRYMLTree(std::istream &is)
-   : tree(new Impl(is)){
+   : tree(std::make_unique<Impl>(is)){
         // constructor taking an istream (for reading)
      };
 
 TRYMLTree::TRYMLTree()
-   : tree(new Impl()){
+   : tree(std::make_unique<Impl>()){
         // default constructor (for writing)
      };
 
@@ -127,7 +127,7 @@ TRYMLTree::~TRYMLTree()
 
 // JSONNode interface implementation
 
-TRYMLTree::Node::Node(TRYMLTree *t, const TRYMLTree::Node::Impl &imp) : tree(t), node(new Impl(imp))
+TRYMLTree::Node::Node(TRYMLTree *t, const TRYMLTree::Node::Impl &imp) : tree(t), node(std::make_unique<Impl>(imp))
 {
    // construct a new node from scratch
 }

@@ -26,12 +26,13 @@
 #include "RooLinkedListIter.h"
 #include <RooBatchCompute/DataKey.h>
 
-#include <map>
-#include <set>
 #include <deque>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <set>
 #include <stack>
 #include <string>
-#include <iostream>
 
 #ifndef R__LESS_INCLUDES
 #include "TClass.h"
