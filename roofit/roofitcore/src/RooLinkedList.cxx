@@ -616,16 +616,14 @@ TObject* RooLinkedList::find(const char* name) const
       if (nptr && nptr->TestBit(RooNameReg::kRenamedArg)) {
         RooLinkedListElem* ptr = _first ;
         while(ptr) {
-          if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
-            return ptr->_arg ;
-          }
-          if ((((RooAbsData*)ptr->_arg)->namePtr() == nptr)) {
+          if (static_cast<RooAbsArg*>(ptr->_arg)->namePtr() == nptr ||
+              static_cast<RooAbsData*>(ptr->_arg)->namePtr() == nptr) {
             return ptr->_arg ;
           }
           ptr = ptr->_next ;
         }
       }
-      return 0 ;
+      return nullptr ;
     }
     //cout << "RooLinkedList::find: possibly renamed '" << name << "'" << endl;
   }
@@ -636,18 +634,16 @@ TObject* RooLinkedList::find(const char* name) const
   // when the size list is longer than ~7, but let's be a bit conservative.
   if (_useNptr && _size>9) {
     const TNamed* nptr= RooNameReg::known(name);
-    if (!nptr) return 0;
+    if (!nptr) return nullptr;
     
     while(ptr) {
-      if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
-	return ptr->_arg ;
-      }
-      if ((((RooAbsData*)ptr->_arg)->namePtr() == nptr)) {
-	return ptr->_arg ;
+      if (static_cast<RooAbsArg*>(ptr->_arg)->namePtr() == nptr ||
+          static_cast<RooAbsData*>(ptr->_arg)->namePtr() == nptr) {
+        return ptr->_arg ;
       }
       ptr = ptr->_next ;
     }
-    return 0 ;
+    return nullptr ;
   }
   
   while(ptr) {
@@ -656,7 +652,7 @@ TObject* RooLinkedList::find(const char* name) const
     }
     ptr = ptr->_next ;
   }
-  return 0 ;
+  return nullptr ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

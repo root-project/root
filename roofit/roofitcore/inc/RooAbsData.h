@@ -375,7 +375,7 @@ protected:
 
   std::unique_ptr<RooArgSet> _globalObservables; // Snapshot of global observables
 
-  mutable TNamed* _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
+  mutable const TNamed * _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
 
 private:
   void copyGlobalObservables(const RooAbsData& other);

@@ -217,7 +217,7 @@ RooAbsData::RooAbsData(std::string_view name, std::string_view title, const RooA
       var->attachArgs(_vars);
    }
 
-   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+   _namePtr = RooNameReg::instance().constPtr(GetName()) ;
 
    RooTrace::create(this);
 }
@@ -268,7 +268,7 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   // Use name in argument, if supplied
   if (newname) {
     TNamed::SetName(newname) ;
-    _namePtr = (TNamed*) RooNameReg::instance().constPtr(newname) ;
+    _namePtr = RooNameReg::instance().constPtr(newname) ;
   } else {
     // Same name, don't recalculate name pointer (expensive)
     TNamed::SetName(other.GetName()) ;
@@ -2469,7 +2469,7 @@ void RooAbsData::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(RooAbsData::Class(),this);
-      _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+      _namePtr = RooNameReg::instance().constPtr(GetName()) ;
 
       // Convert on the fly to vector storage if that the current working default
       if (defaultStorageType==RooAbsData::Vector) {
@@ -2584,11 +2584,11 @@ void RooAbsData::setGlobalObservables(RooArgSet const& globalObservables) {
 void RooAbsData::SetName(const char* name)
 {
   TNamed::SetName(name) ;
-  TNamed* newPtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+  auto newPtr = RooNameReg::instance().constPtr(GetName()) ;
   if (newPtr != _namePtr) {
     //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
     _namePtr = newPtr;
-    _namePtr->SetBit(RooNameReg::kRenamedArg);
+    const_cast<TNamed*>(_namePtr)->SetBit(RooNameReg::kRenamedArg);
     RooNameReg::incrementRenameCounter();
   }
 }
@@ -2600,14 +2600,8 @@ void RooAbsData::SetName(const char* name)
 
 void RooAbsData::SetNameTitle(const char *name, const char *title)
 {
-  TNamed::SetNameTitle(name,title) ;
-  TNamed* newPtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
-  if (newPtr != _namePtr) {
-    //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
-    _namePtr = newPtr;
-    _namePtr->SetBit(RooNameReg::kRenamedArg);
-    RooNameReg::incrementRenameCounter();
-  }
+  TNamed::SetTitle(title) ;
+  SetName(name);
 }
 
 

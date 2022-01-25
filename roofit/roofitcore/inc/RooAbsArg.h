@@ -718,7 +718,7 @@ private:
 
   mutable RooExpensiveObjectCache* _eocache{nullptr}; // Pointer to global cache manager for any expensive components created by this object
 
-  mutable TNamed* _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
+  mutable const TNamed * _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
   Bool_t _isConstant ; //! Cached isConstant status
 
   mutable Bool_t _localNoInhibitDirty ; //! Prevent 'AlwaysDirty' mode for this node
