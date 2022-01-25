@@ -285,16 +285,12 @@ size_t TJSONTree::Node::num_children() const
 
 TJSONTree::Node &TJSONTree::Node::child(size_t pos)
 {
-   auto it = node->get().begin();
-   for (size_t i = 0; i < pos; ++i)
-      ++it;
+   auto it = node->get().begin()+pos;
    return Impl::mkNode(tree, this->is_map() ? it.key() : "", *it);
 }
 
 const TJSONTree::Node &TJSONTree::Node::child(size_t pos) const
 {
-   auto it = node->get().begin();
-   for (size_t i = 0; i < pos; ++i)
-      ++it;
+   auto it = node->get().begin()+pos;
    return Impl::mkNode(tree, this->is_map() ? it.key() : "", *it);
 }
