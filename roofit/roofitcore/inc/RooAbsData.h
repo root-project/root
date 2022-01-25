@@ -380,7 +380,7 @@ protected:
 private:
   void copyGlobalObservables(const RooAbsData& other);
 
-   ClassDef(RooAbsData, 7) // Abstract data collection
+   ClassDef(RooAbsData, 6) // Abstract data collection
 };
 
 #endif
