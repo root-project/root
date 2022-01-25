@@ -642,7 +642,7 @@ void REveSelection::NewElementPickedStr(ElementId_t id, bool multi, bool seconda
    try {
       while (itr != end) sis.insert(std::stoi(*itr++));
    }
-   catch (const std::invalid_argument& ia) {
+   catch (const std::invalid_argument&) {
       throw eh + "invalid secondary index argument '" + *itr + "' - must be int.";
    }
 
