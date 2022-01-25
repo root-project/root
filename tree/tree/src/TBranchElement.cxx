@@ -2226,7 +2226,7 @@ void TBranchElement::InitInfo()
             Bool_t seenExisting = kFALSE;
 
             fOnfileObject = new TVirtualArray( info->GetElement(0)->GetClassPointer(), arrlen );
-            // Propagate this to all the other branch belonging to the same object.
+            // Propagate this to all the other branches belonging to the same object.
             TObjArray *branches = toplevel ? GetListOfBranches() : GetMother()->GetSubBranch(this)->GetListOfBranches();
             Int_t nbranches = branches->GetEntriesFast();
             TBranchElement *lastbranch = this;
