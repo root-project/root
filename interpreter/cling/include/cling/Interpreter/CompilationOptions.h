@@ -12,6 +12,22 @@
 
 namespace cling {
 
+  ///\brief Bits that can be set in `CompilationOptions::IgnoreDiagsMask` to
+  /// filter a group of diagnostics. These flags can be bitwise-OR'd together.
+  enum IgnoreDiags {
+    kNone = 0x00,
+
+    ///\brief Prompt input can look weird for the compiler, e.g.
+    /// void __cling_prompt() { sin(0.1); } // warning: unused function call
+    /// This flag suppresses these warnings; it should be set whenever input
+    /// is wrapped.
+    kPromptBasic = 0x01,
+
+    ///\brief Ignore additional (yet useful for prompt input) warnings, e.g.
+    /// `int (a); // warning: redundant parentheses surrounding declarator`.
+    kPromptExtended = 0x02
+  };
+
   ///\brief Options controlling the incremental compilation. Describe the set of
   /// custom AST consumers to be enabled/disabled.
   ///
@@ -57,11 +73,8 @@ namespace cling {
     /// describing code coming from an existing library.
     unsigned CodeGenerationForModule : 1;
 
-    ///\brief Prompt input can look weird for the compiler, e.g.
-    /// void __cling_prompt() { sin(0.1); } // warning: unused function call
-    /// This flag suppresses these warnings; it should be set whenever input
-    /// is wrapped.
-    unsigned IgnorePromptDiags : 1;
+    ///\brief Mask of ignored diagnostics (see `IgnoreDiags` enum above).
+    unsigned IgnoreDiagsMask : 2;
 
     ///\brief Pointer validity check can be enabled/disabled.
     ///
@@ -85,7 +98,7 @@ namespace cling {
       Debug = 0;
       CodeGeneration = 1;
       CodeGenerationForModule = 0;
-      IgnorePromptDiags = 0;
+      IgnoreDiagsMask = 0;
       OptLevel = 1;
       CheckPointerValidity = 1;
     }
@@ -100,7 +113,7 @@ namespace cling {
         Debug                 == Other.Debug &&
         CodeGeneration        == Other.CodeGeneration &&
         CodeGenerationForModule == Other.CodeGenerationForModule &&
-        IgnorePromptDiags     == Other.IgnorePromptDiags &&
+        IgnoreDiagsMask       == Other.IgnoreDiagsMask &&
         CheckPointerValidity  == Other.CheckPointerValidity &&
         OptLevel              == Other.OptLevel &&
         CodeCompletionOffset  == Other.CodeCompletionOffset;
@@ -116,7 +129,7 @@ namespace cling {
         Debug                 != Other.Debug ||
         CodeGeneration        != Other.CodeGeneration ||
         CodeGenerationForModule != Other.CodeGenerationForModule ||
-        IgnorePromptDiags     != Other.IgnorePromptDiags ||
+        IgnoreDiagsMask       != Other.IgnoreDiagsMask ||
         CheckPointerValidity  != Other.CheckPointerValidity ||
         OptLevel              != Other.OptLevel ||
         CodeCompletionOffset  != Other.CodeCompletionOffset;

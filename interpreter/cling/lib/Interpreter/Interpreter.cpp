@@ -769,7 +769,7 @@ namespace cling {
     CO.CodeGeneration = m_IncrParser->hasCodeGenerator();
     CO.DynamicScoping = isDynamicLookupEnabled();
     CO.Debug = isPrintingDebug();
-    CO.IgnorePromptDiags = !isRawInputEnabled();
+    CO.IgnoreDiagsMask = (!isRawInputEnabled() ? IgnoreDiags::kPromptBasic : 0);
     CO.CheckPointerValidity = !isRawInputEnabled();
     CO.OptLevel = getDefaultOptLevel();
     return CO;
@@ -835,7 +835,7 @@ namespace cling {
     CO.ValuePrinting = disableValuePrinting ? CompilationOptions::VPDisabled
       : CompilationOptions::VPAuto;
     CO.ResultEvaluation = (bool)V;
-    // CO.IgnorePromptDiags = 1; done by EvaluateInternal().
+    // CO.IgnoreDiagsMask |= IgnoreDiags::kPromptBasic; done by EvaluateInternal().
     CO.CheckPointerValidity = 1;
     if (EvaluateInternal(wrapReadySource, CO, V, T, wrapPoint)
                                                      == Interpreter::kFailure) {
@@ -1373,7 +1373,7 @@ namespace cling {
 
     // We have wrapped and need to disable warnings that are caused by
     // non-default C++ at the prompt:
-    CO.IgnorePromptDiags = 1;
+    CO.IgnoreDiagsMask |= IgnoreDiags::kPromptBasic;
 
     IncrementalParser::ParseResultTransaction PRT
       = m_IncrParser->Compile(Wrapper, CO);
