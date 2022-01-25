@@ -74,11 +74,14 @@ TJSONTree::Node &TJSONTree::Node::Impl::mkNode(TJSONTree *t, const std::string &
    return t->incache(Node(t, ref));
 }
 
-TJSONTree::Node::Node(TJSONTree *t, std::istream &is) : tree(t), node(new Impl::BaseNode(is)) {}
+TJSONTree::Node::Node(TJSONTree *t, std::istream &is) : tree(t), node(std::make_unique<Impl::BaseNode>(is)) {}
 
-TJSONTree::Node::Node(TJSONTree *t) : tree(t), node(new Impl::BaseNode()) {}
+TJSONTree::Node::Node(TJSONTree *t) : tree(t), node(std::make_unique<Impl::BaseNode>()) {}
 
-TJSONTree::Node::Node(TJSONTree *t, Impl &other) : tree(t), node(new Impl::NodeRef(other.key(), other.get())) {}
+TJSONTree::Node::Node(TJSONTree *t, Impl &other)
+   : tree(t), node(std::make_unique<Impl::NodeRef>(other.key(), other.get()))
+{
+}
 
 TJSONTree::Node::Node(const Node &other) : Node(other.tree, *other.node) {}
 
