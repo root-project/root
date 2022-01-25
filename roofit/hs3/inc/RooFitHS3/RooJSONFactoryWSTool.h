@@ -5,6 +5,7 @@
 #include <RooGlobalFunc.h>
 
 #include <map>
+#include <memory>
 #include <string>
 
 class RooAbsArg;
@@ -58,8 +59,8 @@ public:
       std::vector<std::string> arguments;
    };
 
-   typedef std::map<const std::string, std::vector<const Importer *>> ImportMap;
-   typedef std::map<const TClass *, std::vector<const Exporter *>> ExportMap;
+   typedef std::map<const std::string, std::vector<std::unique_ptr<const Importer>>> ImportMap;
+   typedef std::map<const TClass *, std::vector<std::unique_ptr<const Exporter>>> ExportMap;
    typedef std::map<TClass *, ExportKeys> ExportKeysMap;
    typedef std::map<std::string, ImportExpression> ImportExpressionMap;
 
@@ -95,8 +96,8 @@ protected:
    static ImportExpressionMap _pdfFactoryExpressions;
    static ImportExpressionMap _funcFactoryExpressions;
 
-   std::map<std::string, RooAbsData *> loadData(const RooFit::Experimental::JSONNode &n);
-   RooDataSet *unbinned(RooDataHist *hist);
+   std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Experimental::JSONNode &n);
+   std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
    RooRealVar *getWeightVar(const char *name);
    RooRealVar *createObservable(const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
@@ -130,10 +131,22 @@ public:
    RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}
    RooWorkspace *workspace() { return this->_workspace; }
 
-   static bool
-   registerImporter(const std::string &key, const RooJSONFactoryWSTool::Importer *f, bool topPriority = true);
+   template <class T>
+   static bool registerImporter(const std::string &key, bool topPriority = true)
+   {
+      return registerImporter(key, std::make_unique<T>(), topPriority);
+   }
+   template <class T>
+   static bool registerExporter(const TClass *key, bool topPriority = true)
+   {
+      return registerExporter(key, std::make_unique<T>(), topPriority);
+   }
+
+   static bool registerImporter(const std::string &key, std::unique_ptr<const RooJSONFactoryWSTool::Importer> f,
+                                bool topPriority = true);
+   static bool registerExporter(const TClass *key, std::unique_ptr<const RooJSONFactoryWSTool::Exporter> f,
+                                bool topPriority = true);
    static int removeImporters(const std::string &needle);
-   static bool registerExporter(const TClass *key, const RooJSONFactoryWSTool::Exporter *f, bool topPriority = true);
    static int removeExporters(const std::string &needle);
    static void printImporters();
    static void printExporters();
@@ -194,7 +207,7 @@ public:
    static void
    writeObservables(const TH1 &h, RooFit::Experimental::JSONNode &n, const std::vector<std::string> &varnames);
    static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
-   RooDataHist *
+   std::unique_ptr<RooDataHist>
    readBinnedData(const RooFit::Experimental::JSONNode &n, const std::string &namecomp, RooArgList observables);
    static std::map<std::string, RooJSONFactoryWSTool::Var>
    readObservables(const RooFit::Experimental::JSONNode &n, const std::string &obsnamecomp);
