@@ -73,6 +73,7 @@ public:
    virtual Int_t     Add(TChain* chain);
    virtual Int_t     Add(const char* name, Long64_t nentries = TTree::kMaxEntries);
    virtual Int_t     AddFile(const char* name, Long64_t nentries = TTree::kMaxEntries, const char* tname = "");
+   virtual Int_t     AddFilelist(const char* filelist, Long64_t nentries = TTree::kMaxEntries, const char* tname = "");
    virtual Int_t     AddFileInfoList(TCollection* list, Long64_t nfiles = TTree::kMaxEntries);
    virtual TFriendElement *AddFriend(const char* chainname, const char* dummy = "");
    virtual TFriendElement *AddFriend(const char* chainname, TFile* dummy);

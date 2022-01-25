@@ -27,6 +27,7 @@ the trees in the chain.
 #include "TChain.h"
 
 #include <iostream>
+#include <fstream>
 #include <cfloat>
 #include <string>
 
@@ -62,6 +63,7 @@ the trees in the chain.
 #include "TVirtualPerfStats.h"
 #include "strlcpy.h"
 #include "snprintf.h"
+#include "ROOT/StringUtils.hxx"
 
 ClassImp(TChain);
 
@@ -573,6 +575,31 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
       ResetBit(kProofUptodate);
 
    return 1;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new list of files to this chain.
+///
+/// Filename formats are similar to TChain::Add. Wildcards are not
+/// applied. urls may also contain query and fragment identifiers
+/// where the tree name can be specified in the url fragment.
+
+Int_t TChain::AddFilelist(const char* filelist, Long64_t nentries /* = TTree::kMaxEntries */, const char* tname /* = "" */)
+{
+   if (filelist == 0 || filelist[0] == '\0') {
+      Error("AddFilelist", "No file name; no files connected");
+      return 0;
+   }
+
+   Int_t sum_results = 0;
+   std::vector<std::string> input_file_list = ROOT::ReadFilelist(filelist);
+   for (auto f: input_file_list) {
+     Int_t result = AddFile(f.c_str(), nentries, tname);
+     sum_results += result;
+     }
+
+return sum_results;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
