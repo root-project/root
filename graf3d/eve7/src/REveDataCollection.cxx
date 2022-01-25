@@ -158,7 +158,7 @@ void REveDataItemList::ProcessSelectionStr(ElementId_t id, bool multi, bool seco
    try {
       while (itr != end) sis.insert(std::stoi(*itr++));
    }
-   catch (const std::invalid_argument& ia) {
+   catch (const std::invalid_argument&) {
       throw eh + "invalid secondary index argument '" + *itr + "' - must be int.";
    }
 
@@ -312,7 +312,7 @@ void REveDataCollection::SetFilterExpr(const char* filter)
          R__LOG_ERROR(REveLog()) << "EveDataCollection::SetFilterExpr" << exc.what();
       }
    }
-   else 
+   else
    {
       // Remove filter
       fFilterFoo = nullptr;
@@ -336,7 +336,7 @@ void REveDataCollection::ApplyFilter()
 {
    if (!fFilterFoo)
       return;
-   
+
    Ids_t ids;
    int idx = 0;
    for (auto &ii : fItemList->fItems)

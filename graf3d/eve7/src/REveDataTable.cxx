@@ -69,7 +69,7 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
          try {
             row[chld->GetCName()] = clmn->EvalExpr(data);
          }
-         catch (const std::exception& e) {
+         catch (const std::exception&) {
             R__LOG_ERROR(REveLog()) << "can't eval expr " << clmn->fExpression.Data();
             row[chld->GetCName()] = "err";
          }
@@ -142,7 +142,7 @@ std::string REveDataColumn::GetFunctionExpressionString() const
    }
 
    std::stringstream s;
-   s  << " *((std::function<" << rtyp << "(" << fClassType->GetName() << "*)>*)" 
+   s  << " *((std::function<" << rtyp << "(" << fClassType->GetName() << "*)>*)"
      << std::hex << std::showbase << (size_t)fooptr
      << ") = [](" << fClassType->GetName() << "* p){" << fClassType->GetName() << " &i=*p; return (" << fExpression.Data()
      << "); };";
