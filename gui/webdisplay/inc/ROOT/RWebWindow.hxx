@@ -110,13 +110,13 @@ private:
    using ConnectionsList_t = std::vector<std::shared_ptr<WebConn>>;
 
    std::shared_ptr<RWebWindowsManager> fMgr;        ///<! display manager
-   std::shared_ptr<RWebWindow> fMaster;             ///<! master window where this window is embeded
+   std::shared_ptr<RWebWindow> fMaster;             ///<! master window where this window is embedded
    unsigned fMasterConnId{0};                       ///<! master connection id
    int fMasterChannel{-1};                          ///<! channel id in the master window
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
-   bool fUseServerThreads{false};                       ///<! indicates that server thread is using, no special window thread
+   bool fUseServerThreads{false};                   ///<! indicates that server thread is using, no special window thread
    bool fProcessMT{false};                          ///<! if window event processing performed in dedicated thread
    bool fSendMT{false};                             ///<! true is special threads should be used for sending data
    std::shared_ptr<RWebWindowWSHandler> fWSHandler; ///<! specialize websocket handler for all incoming connections
