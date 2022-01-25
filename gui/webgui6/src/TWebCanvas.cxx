@@ -741,7 +741,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
 
       if ((pad->GetTickx() != r.tickx) || (pad->GetTicky() != r.ticky))
          pad->SetTicks(r.tickx, r.ticky);
-      if ((pad->GetGridx() != r.gridx) || (pad->GetGridy() != r.gridy))
+      if ((pad->GetGridx() != (r.gridx > 0)) || (pad->GetGridy() != (r.gridy > 0)))
          pad->SetGrid(r.gridx, r.gridy);
       if (r.logx != pad->GetLogx())
          pad->SetLogx(r.logx);
