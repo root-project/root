@@ -1547,7 +1547,7 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch() with added check that addobj matches className.
 ///
-/// See TTree::Branch() for other details.
+/// \see TTree::Branch() for other details.
 ///
 
 TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
@@ -1596,7 +1596,7 @@ TBranch* TTree::BranchImp(const char* branchname, const char* classname, TClass*
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// See TTree::Branch for other details.
+/// \see TTree::Branch for other details.
 
 TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -1629,7 +1629,7 @@ TBranch* TTree::BranchImp(const char* branchname, TClass* ptrClass, void* addobj
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// See TTree::Branch for other details.
+/// \see TTree::Branch for other details.
 
 TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TClass* ptrClass, void *addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -1689,7 +1689,7 @@ TBranch* TTree::BranchImpRef(const char* branchname, const char *classname, TCla
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Same as TTree::Branch but automatic detection of the class name.
-/// See TTree::Branch for other details.
+/// \see TTree::Branch for other details.
 
 TBranch* TTree::BranchImpRef(const char* branchname, TClass* ptrClass, EDataType datatype, void* addobj, Int_t bufsize, Int_t splitlevel)
 {
@@ -2630,7 +2630,7 @@ void TTree::Browse(TBrowser* b)
 /// If an index is already existing, this is replaced by the new one without being
 /// deleted. This behaviour prevents the deletion of a previously external index
 /// assigned to the TTree via the TTree::SetTreeIndex() method.
-/// See also comments in TTree::SetTreeIndex().
+/// \see also comments in TTree::SetTreeIndex().
 
 Int_t TTree::BuildIndex(const char* majorname, const char* minorname /* = "0" */)
 {
@@ -7507,9 +7507,9 @@ TSQLResult* TTree::Query(const char* varexp, const char* selection, Option_t* op
 /// - If the type of the first variable is not specified, it is assumed to be "/F"
 /// - If the type of any other variable is not specified, the type of the previous
 ///   variable is assumed. eg
-///     - `x:y:z`      (all variables are assumed of type "F"
-///     - `x/D:y:z`    (all variables are of type "D"
-///     - `x:y/D:z`    (x is type "F", y and z of type "D"
+///     - `x:y:z`      (all variables are assumed of type "F")
+///     - `x/D:y:z`    (all variables are of type "D")
+///     - `x:y/D:z`    (x is type "F", y and z of type "D")
 ///
 /// delimiter allows for the use of another delimiter besides whitespace.
 /// This provides support for direct import of common data file formats
@@ -7585,7 +7585,7 @@ char TTree::GetNewlineValue(std::istream &inputStream)
 ////////////////////////////////////////////////////////////////////////////////
 /// Create or simply read branches from an input stream.
 ///
-/// See reference information for TTree::ReadFile
+/// \see reference information for TTree::ReadFile
 
 Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescriptor, char delimiter)
 {
@@ -8064,7 +8064,7 @@ void TTree::ResetBranchAddresses()
 /// - If varexp = "*" print all columns.
 ///
 /// Otherwise a columns selection can be made using "var1:var2:var3".
-/// See TTreePlayer::Scan for more information
+/// \see TTreePlayer::Scan for more information
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)
 {
@@ -9603,7 +9603,7 @@ void TTree::Streamer(TBuffer& b)
 ///
 /// funcname is a TF1 function.
 ///
-/// See TTree::Draw for explanations of the other parameters.
+/// \see TTree::Draw for explanations of the other parameters.
 ///
 /// Fit the variable varexp using the function funcname using the
 /// selection cuts given by selection.
