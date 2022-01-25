@@ -495,8 +495,8 @@ std::vector<std::vector<int>> RooJSONFactoryWSTool::generateBinIndices(const Roo
    std::vector<std::vector<int>> combinations;
    std::vector<int> vars_numbins;
    vars_numbins.reserve(vars.size());
-   for (auto &absv : vars) {
-      vars_numbins.push_back(((RooRealVar *)absv)->numBins());
+   for (const auto &absv : static_range_cast<RooRealVar *>(vars)) {
+      vars_numbins.push_back(absv->numBins());
    }
    std::vector<int> curr_comb(vars.size());
    ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
