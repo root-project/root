@@ -153,20 +153,13 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 /// object. Transient properties and client-server links are not copied
 
 RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
-   : TNamed(other.GetName(), other.GetTitle()), RooPrintable(other), _boolAttrib(other._boolAttrib),
+   : TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other),
+     _boolAttrib(other._boolAttrib),
      _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(kFALSE),
-     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _namePtr(other._namePtr),
+     _ownedComponents(0), _prohibitServerRedirect(kFALSE),
+     _namePtr(name ? RooNameReg::instance().constPtr(name) : other._namePtr),
      _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(0)
 {
-  // Use name in argument, if supplied
-  if (name) {
-    TNamed::SetName(name) ;
-    _namePtr = RooNameReg::instance().constPtr(name) ;
-  } else {
-    // Same name, don't recalculate name pointer (expensive)
-    TNamed::SetName(other.GetName()) ;
-    _namePtr = other._namePtr ;
-  }
 
   // Copy server list by hand
   Bool_t valueProp, shapeProp ;

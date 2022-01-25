@@ -262,7 +262,7 @@ RooLinkedList::Pool* RooLinkedList::_pool = 0;
 ////////////////////////////////////////////////////////////////////////////////
 
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(nullptr), _htableLink(nullptr), _useNptr(kTRUE)
+  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(nullptr), _htableLink(nullptr), _useNptr(true)
 {
   if (!_pool) _pool = new Pool;
   _pool->acquire();
@@ -405,7 +405,7 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   if (!arg) return ;
 
   // Only use RooAbsArg::namePtr() in lookup-by-name if all elements have it
-  if (!dynamic_cast<RooAbsArg*>(arg) && !dynamic_cast<RooAbsData*>(arg)) _useNptr = kFALSE;
+  if (!dynamic_cast<RooAbsArg*>(arg) && !dynamic_cast<RooAbsData*>(arg)) _useNptr = false;
   
   // Add to hash table 
   if (_htableName) {
@@ -448,7 +448,7 @@ Bool_t RooLinkedList::Remove(TObject* arg)
 {
   // Find link element
   RooLinkedListElem* elem = findLink(arg) ;
-  if (!elem) return kFALSE ;
+  if (!elem) return false ;
   
   // Remove from hash table
   if (_htableName) {
@@ -469,7 +469,7 @@ Bool_t RooLinkedList::Remove(TObject* arg)
   // Delete and shrink
   _size-- ;
   deleteElement(elem) ;	
-  return kTRUE ;
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -503,13 +503,13 @@ TObject* RooLinkedList::At(Int_t index) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace object 'oldArg' in collection with new object 'newArg'.
-/// If 'oldArg' is not found in collection kFALSE is returned
+/// If 'oldArg' is not found in collection false is returned
 
 Bool_t RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg) 
 {
   // Find existing element and replace arg
   RooLinkedListElem* elem = findLink(oldArg) ;
-  if (!elem) return kFALSE ;
+  if (!elem) return false ;
   
   if (_htableName) {
     _htableName->erase(oldArg->GetName());
@@ -522,7 +522,7 @@ Bool_t RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg)
   }
 
   elem->_arg = (TObject*)newArg ;
-  return kTRUE ;
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

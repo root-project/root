@@ -226,10 +226,10 @@ RooAbsData::RooAbsData(std::string_view name, std::string_view title, const RooA
 /// Copy constructor
 
 RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
-  TNamed(newname?newname:other.GetName(),other.GetTitle()),
+  TNamed(newname ? newname : other.GetName(),other.GetTitle()),
   RooPrintable(other), _vars(),
   _cachedVars("Cached Variables"),
-  _namePtr(other._namePtr)
+  _namePtr(newname ? RooNameReg::instance().constPtr(newname) : other._namePtr)
 {
   //cout << "created dataset " << this << endl ;
   claimVars(this) ;
@@ -264,16 +264,6 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   }
 
   copyGlobalObservables(other);
-
-  // Use name in argument, if supplied
-  if (newname) {
-    TNamed::SetName(newname) ;
-    _namePtr = RooNameReg::instance().constPtr(newname) ;
-  } else {
-    // Same name, don't recalculate name pointer (expensive)
-    TNamed::SetName(other.GetName()) ;
-    _namePtr = other._namePtr ;
-  }
 
   RooTrace::create(this) ;
 }
