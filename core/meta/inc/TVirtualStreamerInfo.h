@@ -25,6 +25,13 @@
 
 #include "ESTLType.h"
 
+#ifdef _MSC_VER
+// On Windows, Disable the warning:
+// 'kIgnoreTObjectStreamer': illegal qualified name in member declaration
+#pragma warning( push )
+#pragma warning( disable : 4596 )
+#endif
+
 class TFile;
 class TClass;
 class TObjArray;
@@ -77,7 +84,7 @@ public:
       // we can not change its value without breaking forward compatibility.
       // Furthermore, TObject::kInvalidObject and its semantic is not (and should not be)
       // used in TVirtualStreamerInfo
-      kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer,
+      kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer
    };
 
    enum EReadWrite {
@@ -198,5 +205,9 @@ public:
    //WARNING this class version must be the same as TStreamerInfo
    ClassDef(TVirtualStreamerInfo,6)  //Abstract Interface describing Streamer information for one class
 };
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 #endif
