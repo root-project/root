@@ -74,6 +74,7 @@ protected:
    std::vector<std::string> fCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
    Bool_t fCanCreateObjects{kTRUE}; ///<! indicates if canvas allowed to create extra objects for interactive painting
    Bool_t fLongerPolling{kFALSE};  ///<! when true, make longer polling in blocking operations
+   Bool_t fProcessingData{kFALSE}; ///<! flag used to prevent blocking methods when process data is invoked
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal; ///<! signal emitted when active pad changed in the canvas
