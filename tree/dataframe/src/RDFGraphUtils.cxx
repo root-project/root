@@ -27,7 +27,7 @@ std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> le
 
    // Explore the graph bottom-up and store its dot representation.
    while (leaf) {
-      dotStringLabels << "\t" << leaf->fCounter << " [label=\"" << leaf->fName << "\", style=\"filled\", fillcolor=\""
+      dotStringLabels << "\t" << leaf->fCounter << " [label=<" << leaf->fName << ">, style=\"filled\", fillcolor=\""
                       << leaf->fColor << "\", shape=\"" << leaf->fShape << "\"];\n";
       if (leaf->fPrevNode) {
          dotStringGraph << "\t" << leaf->fPrevNode->fCounter << " -> " << leaf->fCounter << ";\n";
@@ -47,9 +47,8 @@ std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_pt
 
    for (auto leaf : leaves) {
       while (leaf && !leaf->fIsExplored) {
-         dotStringLabels << "\t" << leaf->fCounter << " [label=\"" << leaf->fName
-                         << "\", style=\"filled\", fillcolor=\"" << leaf->fColor << "\", shape=\"" << leaf->fShape
-                         << "\"];\n";
+         dotStringLabels << "\t" << leaf->fCounter << " [label=<" << leaf->fName << ">, style=\"filled\", fillcolor=\""
+                         << leaf->fColor << "\", shape=\"" << leaf->fShape << "\"];\n";
          if (leaf->fPrevNode) {
             dotStringGraph << "\t" << leaf->fPrevNode->fCounter << " -> " << leaf->fCounter << ";\n";
          }
@@ -96,7 +95,7 @@ std::shared_ptr<GraphNode> CreateDefineNode(const std::string &columnName,
    if (duplicateDefineIt != visitedMap.end())
       return duplicateDefineIt->second;
 
-   auto node = std::make_shared<GraphNode>("Define\n" + columnName);
+   auto node = std::make_shared<GraphNode>("Define<BR/>" + columnName);
    node->SetDefine();
    node->SetCounter(visitedMap.size());
    visitedMap[(void *)columnPtr] = node;
