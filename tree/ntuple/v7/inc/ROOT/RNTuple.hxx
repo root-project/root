@@ -247,7 +247,7 @@ public:
    void LoadEntry(NTupleSize_t index) {
       // TODO(jblomer): can be templated depending on the factory method / constructor
       if (R__unlikely(!fModel)) {
-         fModel = fSource->GetDescriptor().GenerateModel();
+         fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
          ConnectModel(*fModel);
       }
       LoadEntry(index, *fModel->GetDefaultEntry());
@@ -298,11 +298,10 @@ public:
    /// ~~~
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) {
-      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
+      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
       if (fieldId == kInvalidDescriptorId) {
-         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
-            + fSource->GetDescriptor().GetName() + "'"
-         ));
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
+                                  fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
       return RNTupleView<T>(fieldId, fSource.get());
    }
@@ -311,11 +310,10 @@ public:
    /// * there is no field with the given name or,
    /// * the field is not a collection
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
-      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName);
+      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName);
       if (fieldId == kInvalidDescriptorId) {
-         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
-            + fSource->GetDescriptor().GetName() + "'"
-         ));
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
+                                  fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
       return RNTupleViewCollection(fieldId, fSource.get());
    }
