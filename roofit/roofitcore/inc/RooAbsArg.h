@@ -545,7 +545,19 @@ public:
   void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
   virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
 
-  Bool_t addOwnedComponents(const RooArgSet& comps) ;
+  // We want to support three cases here:
+  //   * passing a RooArgSet
+  //   * passing a RooArgList
+  //   * passing an initializer list
+  // Before, there was only an overload taking a RooArg set, which caused an
+  // implicit creation of a RooArgSet when a RooArgList was passed. This needs
+  // to be avoided, because if the passed RooArgList is owning the argumnets,
+  // this information will be lost with the copy. The solution is to have one
+  // overload that takes a general RooAbsCollection, and one overload for
+  // RooArgList that is invoked in the case of passing an initializer list.
+  bool addOwnedComponents(const RooAbsCollection& comps) ;
+  bool addOwnedComponents(RooAbsCollection&& comps) ;
+  bool addOwnedComponents(RooArgList&& comps) ;
 
   // Transfer the ownership of one or more other RooAbsArgs to this RooAbsArg
   // via a `std::unique_ptr`.
