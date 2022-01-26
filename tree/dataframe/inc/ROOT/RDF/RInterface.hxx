@@ -2261,6 +2261,7 @@ public:
       }
 
       ColumnNames_t ret(allColumns.begin(), allColumns.end());
+      std::sort(ret.begin(), ret.end());
       return ret;
    }
 
