@@ -810,7 +810,6 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg)
    return kTRUE;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Handle data from web browser
 /// Returns kFALSE if message was not processed
@@ -828,6 +827,14 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    }
    if (indx >= fWebConn.size())
       return kTRUE;
+
+   struct FlagGuard {
+      Bool_t &flag;
+      FlagGuard(Bool_t &_flag) : flag(_flag) { flag = true; }
+      ~FlagGuard() { flag = false; }
+   };
+
+   FlagGuard guard(fProcessingData);
 
    const char *cdata = arg.c_str();
 
@@ -1098,7 +1105,8 @@ Bool_t TWebCanvas::PerformUpdate()
    CheckDataToSend();
 
    // block in canvas update, can it be optional?
-   WaitWhenCanvasPainted(fCanvVersion);
+   if (!fProcessingData)
+      WaitWhenCanvasPainted(fCanvVersion);
 
    return kTRUE;
 }
