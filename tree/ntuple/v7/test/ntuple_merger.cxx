@@ -41,11 +41,11 @@ TEST(RPageStorage, ReadSealedPages)
 
    RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
    source.Attach();
-   auto descriptorGuard = source.GetSharedDescriptorGuard();
-   auto columnId = descriptorGuard->FindColumnId(descriptorGuard->FindFieldId("pt"), 0);
+   auto columnId =
+      source.GetSharedDescriptorGuard()->FindColumnId(source.GetSharedDescriptorGuard()->FindFieldId("pt"), 0);
 
    // Check first cluster consisting of a single entry
-   RClusterIndex index(descriptorGuard->FindClusterId(columnId, 0), 0);
+   RClusterIndex index(source.GetSharedDescriptorGuard()->FindClusterId(columnId, 0), 0);
    RPageStorage::RSealedPage sealedPage;
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.fNElements);
@@ -58,9 +58,9 @@ TEST(RPageStorage, ReadSealedPages)
    EXPECT_EQ(42, ReadRawInt(sealedPage.fBuffer));
 
    // Check second, big cluster
-   auto clusterId = descriptorGuard->FindClusterId(columnId, 1);
+   auto clusterId = source.GetSharedDescriptorGuard()->FindClusterId(columnId, 1);
    ASSERT_NE(clusterId, index.GetClusterId());
-   const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
+   const auto clusterDesc = source.GetSharedDescriptorGuard()->GetClusterDescriptor(clusterId).Clone();
    const auto &pageRange = clusterDesc.GetPageRange(columnId);
    EXPECT_GT(pageRange.fPageInfos.size(), 1U);
    std::uint32_t firstElementInPage = 0;
