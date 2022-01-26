@@ -291,6 +291,8 @@ public:
    RClusterDescriptor(RClusterDescriptor &&other) = default;
    RClusterDescriptor &operator =(RClusterDescriptor &&other) = default;
 
+   RClusterDescriptor Clone() const;
+
    bool operator==(const RClusterDescriptor &other) const;
 
    DescriptorId_t GetId() const { return fClusterId; }
@@ -342,6 +344,8 @@ public:
    RClusterGroupDescriptor &operator=(const RClusterGroupDescriptor &other) = delete;
    RClusterGroupDescriptor(RClusterGroupDescriptor &&other) = default;
    RClusterGroupDescriptor &operator=(RClusterGroupDescriptor &&other) = default;
+
+   RClusterGroupDescriptor Clone() const;
 
    bool operator==(const RClusterGroupDescriptor &other) const;
 
@@ -617,13 +621,12 @@ public:
    RNTupleDescriptor(RNTupleDescriptor &&other) = default;
    RNTupleDescriptor &operator=(RNTupleDescriptor &&other) = default;
 
+   std::unique_ptr<RNTupleDescriptor> Clone() const;
+
    bool operator ==(const RNTupleDescriptor &other) const;
 
    std::uint64_t GetOnDiskHeaderSize() const { return fOnDiskHeaderSize; }
    std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
-
-   std::uint64_t GetGeneration() const { return fGeneration; }
-   void IncGeneration() { fGeneration++; }
 
    const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const {
       return fFieldDescriptors.at(fieldId);
@@ -710,6 +713,9 @@ public:
    /// Methods to load and drop cluster details
    RResult<void> AddClusterDetails(RClusterDescriptor &&clusterDesc);
    RResult<void> DropClusterDetails(DescriptorId_t clusterId);
+
+   std::uint64_t GetGeneration() const { return fGeneration; }
+   void IncGeneration() { fGeneration++; }
 
    /// Re-create the C++ model from the stored meta-data
    std::unique_ptr<RNTupleModel> GenerateModel() const;
