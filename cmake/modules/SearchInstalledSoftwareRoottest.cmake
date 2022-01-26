@@ -12,8 +12,8 @@ if(NOT TARGET gtest)
     )
   set(GTEST_C_FLAGS "${CMAKE_C_FLAGS}")
   if(MSVC)
-    string(REPLACE "-fIw32pragma.h" "" GTEST_C_FLAGS "${GTEST_C_FLAGS}")
-    string(REPLACE "-fIsehmap.h" "" GTEST_C_FLAGS "${GTEST_C_FLAGS}")
+    string(REPLACE "-FIw32pragma.h" "" GTEST_C_FLAGS "${GTEST_C_FLAGS}")
+    string(REPLACE "-FIsehmap.h" "" GTEST_C_FLAGS "${GTEST_C_FLAGS}")
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=${_gtest_byproduct_binary_dir}/lib/
