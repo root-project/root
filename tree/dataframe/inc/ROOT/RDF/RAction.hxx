@@ -43,18 +43,18 @@ std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
  * \ingroup dataframe
  * \brief A RDataFrame node that produces a result
  * \tparam Helper The action helper type, which implements the concrete action logic (e.g. FillHelper, SnapshotHelper)
- * \tparam PrevDataFrame The type of the parent node in the computation graph
+ * \tparam PrevNode The type of the parent node in the computation graph
  * \tparam ColumnTypes_t A TypeList with the types of the input columns
  *
  */
 // clang-format on
-template <typename Helper, typename PrevDataFrame, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
+template <typename Helper, typename PrevNode, typename ColumnTypes_t = typename Helper::ColumnTypes_t>
 class R__CLING_PTRCHECK(off) RAction : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
 
    Helper fHelper;
-   const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
-   PrevDataFrame &fPrevData;
+   const std::shared_ptr<PrevNode> fPrevNodePtr;
+   PrevNode &fPrevNode;
    /// Column readers per slot and per input column
    std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
 
@@ -62,10 +62,9 @@ class R__CLING_PTRCHECK(off) RAction : public RActionBase {
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
 public:
-   RAction(Helper &&h, const ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
-           const RColumnRegister &colRegister)
+   RAction(Helper &&h, const ColumnNames_t &columns, std::shared_ptr<PrevNode> pd, const RColumnRegister &colRegister)
       : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister), fHelper(std::forward<Helper>(h)),
-        fPrevDataPtr(std::move(pd)), fPrevData(*fPrevDataPtr), fValues(GetNSlots()), fIsDefine()
+        fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr), fValues(GetNSlots()), fIsDefine()
    {
       const auto nColumns = columns.size();
       const auto &customCols = GetColRegister();
@@ -77,8 +76,8 @@ public:
    RAction &operator=(const RAction &) = delete;
    ~RAction()
    {
-      // must Deregister objects from the RLoopManager here, before the fPrevDataFrame data member is destroyed:
-      // otherwise if fPrevDataFrame is the RLoopManager, it will be destroyed before the calls to Deregister happen.
+      // must Deregister objects from the RLoopManager here, before the fPrevNode data member is destroyed:
+      // otherwise if fPrevNode is the RLoopManager, it will be destroyed before the calls to Deregister happen.
       RActionBase::GetColRegister().Clear(); // triggers RDefine deregistration
       fLoopManager->Deregister(this);
    }
@@ -113,11 +112,11 @@ public:
    void Run(unsigned int slot, Long64_t entry) final
    {
       // check if entry passes all filters
-      if (fPrevData.CheckFilters(slot, entry))
+      if (fPrevNode.CheckFilters(slot, entry))
          CallExec(slot, entry, ColumnTypes_t{}, TypeInd_t{});
    }
 
-   void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
+   void TriggerChildrenCount() final { fPrevNode.IncrChildrenCount(); }
 
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
@@ -137,7 +136,7 @@ public:
 
    std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() final
    {
-      auto prevNode = fPrevData.GetGraph();
+      auto prevNode = fPrevNode.GetGraph();
       auto prevColumns = prevNode->GetDefinedColumns();
 
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
