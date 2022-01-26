@@ -198,51 +198,20 @@ RooAbsCollection::~RooAbsCollection()
 {
   // Delete all variables in our list if we own them
   if(_ownCont){
-    safeDeleteList() ;
+    deleteList() ;
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Examine client server dependencies in list and
-/// delete contents in safe order: any client
-/// is deleted before a server is deleted
+/// Delete contents of the list.
+/// The RooAbsArg destructor ensures clients and servers can be deleted in any
+/// order.
+/// Also cleans the hash-map for fast lookups if present.
 
-void RooAbsCollection::safeDeleteList()
+void RooAbsCollection::deleteList()
 {
   _hashAssistedFind = nullptr;
-
-  // Handle trivial case here
-  if (_list.size() > 1) {
-    std::vector<RooAbsArg*> tmp;
-    tmp.reserve(_list.size());
-    do {
-      tmp.clear();
-      for (auto arg : _list) {
-        // Check if arg depends on remainder of list
-        if (!arg->dependsOn(*this, arg)) tmp.push_back(arg);
-      }
-
-      // sort and uniquify, in case some elements occur more than once
-      std::sort(tmp.begin(), tmp.end());
-
-      tmp.erase(std::unique(tmp.begin(), tmp.end()), tmp.end());
-      // okay, can remove and delete what's in tmp
-      auto newEnd = _list.end();
-      for (auto item : tmp) {
-        newEnd = std::remove(_list.begin(), newEnd, item);
-        delete item;
-      }
-      _list.erase(newEnd, _list.end());
-    } while (!tmp.empty() && _list.size() > 1);
-
-    // Check if there are any remaining elements
-    if (_list.size() > 1) {
-      coutW(ObjectHandling) << "RooAbsCollection::safeDeleteList(" << GetName()
-	    << ") WARNING: unable to delete following elements in client-server order " ;
-      Print("1") ;
-    }
-  }
 
   // Built-in delete remaining elements
   for (auto item : _list) {
@@ -757,7 +726,7 @@ void RooAbsCollection::removeAll()
   _hashAssistedFind = nullptr;
 
   if(_ownCont) {
-    safeDeleteList() ;
+    deleteList() ;
     _ownCont= kFALSE;
   }
   else {
