@@ -44,6 +44,7 @@ protected:
   RooNameReg(const RooNameReg& other) = delete;
 
   friend class RooAbsArg;
+  friend class RooAbsData;
   static void incrementRenameCounter() ;
 
   std::unordered_map<std::string,std::unique_ptr<TNamed>> _map;

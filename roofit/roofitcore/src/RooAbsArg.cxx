@@ -127,7 +127,7 @@ RooAbsArg::RooAbsArg()
      _prohibitServerRedirect(kFALSE), _namePtr(0), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
      _myws(0)
 {
-  _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+  _namePtr = RooNameReg::instance().constPtr(GetName()) ;
 
 }
 
@@ -145,7 +145,7 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
     throw std::logic_error("Each RooFit object needs a name. "
         "Objects representing the same entity (e.g. an observable 'x') are identified using their name.");
   }
-  _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+  _namePtr = RooNameReg::instance().constPtr(GetName()) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,20 +153,13 @@ RooAbsArg::RooAbsArg(const char *name, const char *title)
 /// object. Transient properties and client-server links are not copied
 
 RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
-   : TNamed(other.GetName(), other.GetTitle()), RooPrintable(other), _boolAttrib(other._boolAttrib),
+   : TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other),
+     _boolAttrib(other._boolAttrib),
      _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(kFALSE),
-     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _namePtr(other._namePtr),
+     _ownedComponents(0), _prohibitServerRedirect(kFALSE),
+     _namePtr(name ? RooNameReg::instance().constPtr(name) : other._namePtr),
      _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(0)
 {
-  // Use name in argument, if supplied
-  if (name) {
-    TNamed::SetName(name) ;
-    _namePtr = (TNamed*) RooNameReg::instance().constPtr(name) ;
-  } else {
-    // Same name, don't recalculate name pointer (expensive)
-    TNamed::SetName(other.GetName()) ;
-    _namePtr = other._namePtr ;
-  }
 
   // Copy server list by hand
   Bool_t valueProp, shapeProp ;
@@ -2310,7 +2303,7 @@ RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
   // Adjust name of head node if requested
   if (newname) {
     head->TNamed::SetName(newname) ;
-    head->_namePtr = (TNamed*) RooNameReg::instance().constPtr(newname) ;
+    head->_namePtr = RooNameReg::instance().constPtr(newname) ;
   }
 
   // Return the head
@@ -2382,11 +2375,11 @@ void RooAbsArg::wireAllCaches()
 void RooAbsArg::SetName(const char* name)
 {
   TNamed::SetName(name) ;
-  TNamed* newPtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+  auto newPtr = RooNameReg::instance().constPtr(GetName()) ;
   if (newPtr != _namePtr) {
     //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
     _namePtr = newPtr;
-    _namePtr->SetBit(RooNameReg::kRenamedArg);
+    const_cast<TNamed*>(_namePtr)->SetBit(RooNameReg::kRenamedArg);
     RooNameReg::incrementRenameCounter();
   }
 }
@@ -2398,14 +2391,8 @@ void RooAbsArg::SetName(const char* name)
 
 void RooAbsArg::SetNameTitle(const char *name, const char *title)
 {
-  TNamed::SetNameTitle(name,title) ;
-  TNamed* newPtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
-  if (newPtr != _namePtr) {
-    //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
-    _namePtr = newPtr;
-    _namePtr->SetBit(RooNameReg::kRenamedArg);
-    RooNameReg::incrementRenameCounter();
-  }
+  TNamed::SetTitle(title) ;
+  SetName(name);
 }
 
 
@@ -2418,7 +2405,7 @@ void RooAbsArg::Streamer(TBuffer &R__b)
      _ioReadStack.push(this) ;
      R__b.ReadClassBuffer(RooAbsArg::Class(),this);
      _ioReadStack.pop() ;
-     _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
+     _namePtr = RooNameReg::instance().constPtr(GetName()) ;
      _isConstant = getAttribute("Constant") ;
    } else {
      R__b.WriteClassBuffer(RooAbsArg::Class(),this);
