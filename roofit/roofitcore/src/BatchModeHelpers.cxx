@@ -63,10 +63,9 @@ std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous 
          arg->SetName(newName.c_str());
       }
       nll.recursiveRedirectServers(obsClones, false, true);
-      nll.addOwnedComponents(obsClones);
-      obsClones.releaseOwnership();
       newObservables.add(obsClones);
       static_cast<ROOT::Experimental::RooNLLVarNew &>(nll).setObservables(obsClones);
+      nll.addOwnedComponents(std::move(obsClones));
       ++iNLL;
    }
 

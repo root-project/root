@@ -433,28 +433,53 @@ void RooAbsCollection::assignFast(const RooAbsCollection& other, bool setValDirt
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Add the specified argument to list. Returns kTRUE if successful, or
-/// else kFALSE if a variable of the same name is already in the list.
-/// This method can only be called on a list that is flagged as owning
-/// all of its contents, or else on an empty list (which will force the
-/// list into that mode).
+/// Add an argument and transfer the ownership to the collection. Returns `true`
+/// if successful, or `false` if the argument could not be added to the
+/// collection (e.g. in the RooArgSet case when an argument with the same name
+/// is already in the list). This method can only be called on a list that is
+/// flagged as owning all of its contents, or else on an empty list (which will
+/// force the list into that mode).
+///
+/// If the argument you want to add is owned by a `std::unique_ptr`, you should
+/// prefer RooAbsCollection::addOwned(std::unique_ptr<RooAbsArg>, bool).
 
-Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
+bool RooAbsCollection::addOwned(RooAbsArg& var, bool silent)
 {
   if(!canBeAdded(var, silent)) return false;
 
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addOwned: can only add to an owned list" << endl;
-    return kFALSE;
+    return false;
   }
-  _ownCont= kTRUE;
+  _ownCont= true;
 
   insert(&var);
 
-  return kTRUE;
+  return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add an argument and transfer the ownership to the collection from a
+/// `std::unique_ptr`. Always returns `true`. If the argument can not be added
+/// to the collection (e.g. in the RooArgSet case when an argument with the
+/// same name is already in the list), a `std::runtime_exception` will be
+/// thrown, as nobody is owning the argument anymore. This method can only be
+/// called on a list that is flagged as owning all of its contents, or else on
+/// an empty list (which will force the list into that mode).
+///
+/// If you want to pass an argument that is not owned by a `std::unique_ptr`,
+/// you can use RooAbsCollection::addOwned(RooAbsArg&, bool).
+
+bool RooAbsCollection::addOwned(std::unique_ptr<RooAbsArg> var, bool silent) {
+  bool result = addOwned(*var.release(), silent);
+  if(!result) {
+    throw std::runtime_error(std::string("RooAbsCollection::addOwned could not add the argument to the")
+                             + " collection! The ownership would not be well defined if we ignore this.");
+  }
+  return result;
 }
 
 
@@ -511,12 +536,29 @@ Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a collection of arguments to this collection by calling addOwned()
-/// for each element in the source collection
+// Add a collection of arguments to this collection by calling addOwned()
+/// for each element in the source collection. The input list can't be an
+/// owning collection itself, otherwise the arguments would be owned by two
+/// collections.
+///
+/// If you want to transfer arguments from one owning collection to another,
+/// you have two options:
+///  1. `std::move` the input collection and use
+///     RooAbsCollection::addOwned(RooAbsCollection&&, bool) (preferred)
+///  2. release the ownership of the input collection first, using
+///     RooAbsCollection::releaseOwnership()
 
-Bool_t RooAbsCollection::addOwned(const RooAbsCollection& list, Bool_t silent)
+bool RooAbsCollection::addOwned(const RooAbsCollection& list, bool silent)
 {
-  Bool_t result(false) ;
+  if(list.isOwning()) {
+    throw std::invalid_argument("Passing an owning RooAbsCollection by const& to"
+            " RooAbsCollection::addOwned is forbidden because the ownership"
+            " would be ambiguous! Please std::move() the RooAbsCollection in this case."
+            " Note that the passed RooAbsCollection is invalid afterwards.");
+
+  }
+
+  bool result(false) ;
   _list.reserve(_list.size() + list._list.size());
 
   for (auto item : list._list) {
@@ -526,6 +568,36 @@ Bool_t RooAbsCollection::addOwned(const RooAbsCollection& list, Bool_t silent)
   return result;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a collection of arguments to this collection by calling addOwned()
+/// for each element in the source collection. Unlike
+/// RooAbsCollection::addOwned(const RooAbsCollection&, bool), this function
+/// also accepts owning source collections because their content will be
+/// moved out.
+
+bool RooAbsCollection::addOwned(RooAbsCollection&& list, bool silent)
+{
+  if(list.isOwning()) {
+    list.releaseOwnership();
+  }
+  if(list.empty()) return false;
+
+  bool result = addOwned(list, silent);
+
+  if(!result) {
+    throw std::runtime_error(std::string("RooAbsCollection::addOwned could not add the argument to the")
+                             + " collection! The ownership would not be well defined if we ignore this.");
+  }
+
+  // So far, comps has only released the ownership, but it is still valid.
+  // However, we don't want users to keep using objects after moving them, so
+  // we make sure to keep our promise that the RooArgSet is really moved.
+  // Just like a `std::unique_ptr` is also reset when moved.
+  list.clear();
+
+  return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
