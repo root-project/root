@@ -310,8 +310,13 @@ public:
       RExclDescriptorGuard &operator=(const RExclDescriptorGuard &) = delete;
       RExclDescriptorGuard(RExclDescriptorGuard &&) = delete;
       RExclDescriptorGuard &operator=(RExclDescriptorGuard &&) = delete;
-      ~RExclDescriptorGuard() { fLock.unlock(); }
+      ~RExclDescriptorGuard()
+      {
+         fDescriptor.IncGeneration();
+         fLock.unlock();
+      }
       RNTupleDescriptor *operator->() const { return &fDescriptor; }
+      RNTupleDescriptor *operator*() const { return &fDescriptor; }
    };
 
 protected:
