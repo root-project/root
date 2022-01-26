@@ -272,10 +272,10 @@ void RNTupleDS::AddField(const RNTupleDescriptor &desc, std::string_view colName
 RNTupleDS::RNTupleDS(std::unique_ptr<Detail::RPageSource> pageSource)
 {
    pageSource->Attach();
-   const auto &descriptor = pageSource->GetDescriptor();
+   auto descriptorGuard = pageSource->GetSharedDescriptorGuard();
    fSources.emplace_back(std::move(pageSource));
 
-   AddField(descriptor, "", descriptor.GetFieldZeroId(), std::vector<DescriptorId_t>());
+   AddField(descriptorGuard.GetRef(), "", descriptorGuard->GetFieldZeroId(), std::vector<DescriptorId_t>());
 }
 
 RDF::RDataSource::Record_t RNTupleDS::GetColumnReadersImpl(std::string_view /* name */, const std::type_info & /* ti */)

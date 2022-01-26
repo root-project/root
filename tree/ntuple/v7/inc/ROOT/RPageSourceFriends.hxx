@@ -80,10 +80,8 @@ private:
    RNTupleDescriptorBuilder fBuilder;
    DescriptorId_t fNextId = 1;  ///< 0 is reserved for the friend zero field
 
-   void AddVirtualField(std::size_t originIdx,
-                        const RFieldDescriptor &originField,
-                        DescriptorId_t virtualParent,
-                        const std::string &virtualName);
+   void AddVirtualField(const RNTupleDescriptor &originDesc, std::size_t originIdx, const RFieldDescriptor &originField,
+                        DescriptorId_t virtualParent, const std::string &virtualName);
 
 protected:
    RNTupleDescriptor AttachImpl() final;
