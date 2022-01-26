@@ -390,6 +390,15 @@ private:
 
    std::uint64_t fNEntries = 0; ///< Updated by the descriptor builder when the cluster summaries are added
 
+   /**
+    * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
+    * active the page locations.  During the lifetime of the descriptor, page location information for clusters
+    * can be added or removed.  When this happens, the generation should be increased, so that users of the
+    * descriptor know that the information changed.  The generation is increased, e.g., by the page source's
+    * exclusive lock guard around the descriptor.  It is used, e.g., by the descriptor cache in RNTupleReader.
+    */
+   std::uint64_t fGeneration = 0;
+
    std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
    std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
    std::unordered_map<DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
@@ -612,6 +621,9 @@ public:
 
    std::uint64_t GetOnDiskHeaderSize() const { return fOnDiskHeaderSize; }
    std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
+
+   std::uint64_t GetGeneration() const { return fGeneration; }
+   void IncGeneration() { fGeneration++; }
 
    const RFieldDescriptor& GetFieldDescriptor(DescriptorId_t fieldId) const {
       return fFieldDescriptors.at(fieldId);
