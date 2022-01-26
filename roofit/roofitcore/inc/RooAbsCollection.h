@@ -356,7 +356,7 @@ protected:
   TString _name;    // Our name.
   Bool_t _allRRV ; // All contents are RRV
 
-  void safeDeleteList() ;
+  void deleteList() ;
 
   // Support for snapshot method 
   Bool_t addServerClonesToList(const RooAbsArg& var) ;
