@@ -274,33 +274,24 @@ public:
 
 class RooRealSumPdfFactory : public RooJSONFactoryWSTool::Importer {
 public:
-   struct CreatePHFAndConstraintsOutput {
-      std::unique_ptr<ParamHistFunc> phf;
-      RooArgList constraints;
-      std::stack<std::unique_ptr<RooAbsArg>> keepAlive;
-   };
-
-   CreatePHFAndConstraintsOutput createPHFAndConstraints(const std::string &name, const std::vector<double> &sumW,
-                                                         const std::vector<double> &sumW2, const RooArgSet &observables,
-                                                         double statErrorThreshold,
-                                                         const std::string &statErrorType) const
+   std::unique_ptr<ParamHistFunc> createPHF(const std::string &name, const std::vector<double> &sumW,
+                                            const std::vector<double> &sumW2, RooArgList &constraints,
+                                            const RooArgSet &observables, double statErrorThreshold,
+                                            const std::string &statErrorType) const
    {
       RooArgList gammas;
       RooArgList nps;
-      RooArgList constraints;
-      std::stack<std::unique_ptr<RooAbsArg>> keepAlive;
+      RooArgList ownedComponents;
       for (size_t i = 0; i < sumW.size(); ++i) {
          TString gname = TString::Format("gamma_stat_%s_bin_%d", name.c_str(), (int)i);
          double err = sqrt(sumW2[i]) / sumW[i];
+         auto g = std::make_unique<RooRealVar>(gname.Data(), gname.Data(), 1.);
          if (err > 0) {
-            keepAlive.push(std::make_unique<RooRealVar>(gname.Data(), gname.Data(), 1.));
-            RooRealVar *g = static_cast<RooRealVar *>(keepAlive.top().get());
             g->setAttribute("np");
             g->setConstant(err < statErrorThreshold);
             g->setError(err);
             g->setMin(1. - 10 * err);
             g->setMax(1. + 10 * err);
-            gammas.add(*g, true);
             nps.add(*g);
 
             if (statErrorType == "Gauss") {
@@ -315,7 +306,7 @@ public:
                auto gaus = std::make_unique<RooGaussian>(poisname.Data(), poisname.Data(), *tau, *g, *sigma);
                gaus->addOwnedComponents(std::move(tau), std::move(sigma));
                constraints.add(*gaus, true);
-               keepAlive.push(std::move(gaus));
+               ownedComponents.addOwned(std::move(gaus), true);
             } else if (statErrorType == "Poisson") {
                TString tname = TString::Format("tau_stat_%s_bin_%d", name.c_str(), (int)i);
                TString prodname = TString::Format("nExp_stat_%s_bin_%d", name.c_str(), (int)i);
@@ -325,24 +316,21 @@ public:
                tau->setAttribute("glob");
                tau->setConstant(true);
                tau->setRange(tauCV - 10. / err, tauCV + 10. / err);
-               RooArgSet elems;
-               elems.add(*g);
-               elems.add(*tau);
+               RooArgSet elems{*g, *tau};
                auto prod = std::make_unique<RooProduct>(prodname.Data(), prodname.Data(), elems);
                auto pois = std::make_unique<RooPoisson>(poisname.Data(), poisname.Data(), *tau, *prod);
                pois->addOwnedComponents(std::move(tau), std::move(prod));
                pois->setNoRounding(true);
                constraints.add(*pois, true);
-               keepAlive.push(std::move(pois));
+               ownedComponents.addOwned(std::move(pois), true);
             } else {
                RooJSONFactoryWSTool::error("unknown constraint type " + statErrorType);
             }
          } else {
-            auto g = std::make_unique<RooRealVar>(gname.Data(), gname.Data(), 1.);
             g->setConstant(true);
-            gammas.add(*g, true);
-            keepAlive.push(std::move(g));
          }
+         gammas.add(*g, true);
+         ownedComponents.addOwned(std::move(g), true);
       }
       for (auto &np : nps) {
          for (auto client : np->clients()) {
@@ -351,13 +339,18 @@ public:
             }
          }
       }
-      std::unique_ptr<ParamHistFunc> phf;
       if (!gammas.empty()) {
-         phf = std::make_unique<ParamHistFunc>(TString::Format("%s_mcstat", name.c_str()), "staterror", observables,
-                                               gammas);
+         auto phf = std::make_unique<ParamHistFunc>(TString::Format("%s_mcstat", name.c_str()), "staterror",
+                                                    observables, gammas);
+
          phf->recursiveRedirectServers(observables);
+
+         // Transfer ownership of gammas and owned constraints to the ParamHistFunc
+         phf->addOwnedComponents(std::move(ownedComponents));
+
+         return phf;
       }
-      return {std::move(phf), std::move(constraints), std::move(keepAlive)};
+      return nullptr;
    }
 
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -419,9 +412,11 @@ public:
          coefnames.push_back(fprefix + fname + "_norm");
       }
 
-      auto out = createPHFAndConstraints(name, sumW, sumW2, observables, statErrorThreshold, statErrorType);
-      RooArgList constraints = std::move(out.constraints);
-      if (ParamHistFunc *phf = out.phf.get()) {
+      RooArgList constraints;
+      auto phf = createPHF(name, sumW, sumW2, constraints, observables, statErrorThreshold, statErrorType);
+      phf->Print();
+      constraints.Print();
+      if (phf) {
          tool->workspace()->import(*phf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
          tool->setScopeObject("mcstat", tool->workspace()->function(phf->GetName()));
       }
