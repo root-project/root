@@ -455,7 +455,8 @@ void readValues(std::map<const std::string, T> &myMap, TH1 *h_pc)
 /// @param folder TFolder to clean up 
 /// @param deleteIt if set, enable deletion of the folder after 
 ///                 setting ownership  
-void cleanUpFolder(TFolder* folder, bool deleteIt=true){
+void cleanUpFolder(TFolder* folder, bool deleteIt=true)
+{
   // start by assigning ownership to the folder itself
   folder->SetOwner();
   // And we need to do the same for all nested sub-folders.
@@ -474,20 +475,23 @@ void cleanUpFolder(TFolder* folder, bool deleteIt=true){
 ///////////////////////////////////////////////////////////////////////////////
 /// Helper to load a single object from a file-resident TFolder, while 
 /// avoiding memory leaks. 
-/// @tparam objType Type of object to load. 
+/// @tparam AObjType Type of object to load. 
 /// @param inFile input file to load from. Expected to be a valid pointer 
 /// @param folderName Name of the TFolder to load from the file 
 /// @param objName Name of the object to load 
 /// @param notFoundError If set, print a detailed error if we didn't find something
 /// @return Returns a pointer to a clone of the loaded object. Ownership assigned to the caller. 
-template <class objType> objType* loadFromFileResidentFolder(TDirectory* inFile, const std::string & folderName, const std::string & objName,
-                          bool notFoundError = true){
+template <class AObjType> AObjType* loadFromFileResidentFolder(TDirectory* inFile, 
+                                                            const std::string & folderName, 
+                                                            const std::string & objName,
+                                                            bool notFoundError = true)
+{
    auto folder = inFile->Get<TFolder>(folderName.c_str());
    if (!folder) {
       std::cerr << "Error: unable to access data from folder '" << folderName << "'!" << std::endl;
       return nullptr;
    }
-   objType *loadedObject = dynamic_cast<objType *>(folder->FindObject(objName.c_str()));
+   AObjType *loadedObject = dynamic_cast<AObjType *>(folder->FindObject(objName.c_str()));
    if (!loadedObject) {
       if (notFoundError){
          std::stringstream errstr;
@@ -504,7 +508,7 @@ template <class objType> objType* loadFromFileResidentFolder(TDirectory* inFile,
       return nullptr; 
    }
    // replace the loaded object by a clone to be able to clean the loaded folder 
-   objType* output = static_cast<objType *>(loadedObject->Clone()); // can use a static_cast - confirmed validity by initial cast above. 
+   AObjType* output = static_cast<AObjType *>(loadedObject->Clone()); // can use a static_cast - confirmed validity by initial cast above. 
    cleanUpFolder(folder); 
    return output;      
 }  
