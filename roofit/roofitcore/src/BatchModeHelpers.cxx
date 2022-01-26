@@ -78,11 +78,11 @@ std::unique_ptr<RooAbsArg> prepareSimultaneousModelForBatchMode(RooSimultaneous 
 
 } // namespace
 
-RooAbsReal *RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data,
-                                                std::unique_ptr<RooAbsReal> &&constraints, std::string const &rangeName,
-                                                std::string const &addCoefRangeName, RooArgSet const &projDeps,
-                                                bool isExtended, double integrateOverBinsPrecision,
-                                                RooFit::BatchModeOption batchMode)
+std::unique_ptr<RooAbsReal>
+RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::unique_ptr<RooAbsReal> &&constraints,
+                                    std::string const &rangeName, std::string const &addCoefRangeName,
+                                    RooArgSet const &projDeps, bool isExtended, double integrateOverBinsPrecision,
+                                    RooFit::BatchModeOption batchMode)
 {
    std::unique_ptr<RooRealVar> weightVar;
 
@@ -122,7 +122,7 @@ RooAbsReal *RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data
    wrappedPdf = RooBinSamplingPdf::create(pdf, data, integrateOverBinsPrecision);
    RooAbsPdf &finalPdf = wrappedPdf ? *wrappedPdf : pdf;
    if (wrappedPdf) {
-      binSamplingPdfs.add(*wrappedPdf.release());
+      binSamplingPdfs.addOwned(std::move(wrappedPdf));
    }
    // Done dealing with the IntegrateBins option
 
@@ -132,20 +132,20 @@ RooAbsReal *RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data
       auto *simPdfClone = static_cast<RooSimultaneous *>(simPdf->cloneTree());
       simPdfClone->wrapPdfsInBinSamplingPdfs(data, integrateOverBinsPrecision);
       // Warning! This mutates "observables"
-      nllTerms.add(
-         *prepareSimultaneousModelForBatchMode(*simPdfClone, observables, weightVar.get(), isExtended, rangeName)
-             .release());
+      nllTerms.addOwned(
+         prepareSimultaneousModelForBatchMode(*simPdfClone, observables, weightVar.get(), isExtended, rangeName));
    } else {
-      nllTerms.add(*new ROOT::Experimental::RooNLLVarNew("RooNLLVarNew", "RooNLLVarNew", finalPdf, observables,
-                                                         weightVar.get(), isExtended, rangeName));
+      nllTerms.addOwned(std::make_unique<ROOT::Experimental::RooNLLVarNew>(
+         "RooNLLVarNew", "RooNLLVarNew", finalPdf, observables, weightVar.get(), isExtended, rangeName));
    }
    if (constraints) {
-      nllTerms.add(*constraints.release());
+      nllTerms.addOwned(std::move(constraints));
    }
 
    std::string nllName = std::string("nll_") + pdf.GetName() + "_" + data.GetName();
-   auto nll = new RooAddition(nllName.c_str(), nllName.c_str(), nllTerms, true);
-   nll->addOwnedComponents(binSamplingPdfs);
+   auto nll = std::make_unique<RooAddition>(nllName.c_str(), nllName.c_str(), nllTerms);
+   nll->addOwnedComponents(std::move(binSamplingPdfs));
+   nll->addOwnedComponents(std::move(nllTerms));
 
    if (auto simPdf = dynamic_cast<RooSimultaneous *>(&finalPdf)) {
       RooArgSet parameters;
@@ -180,11 +180,10 @@ RooAbsReal *RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data
       pdf.setStringAttribute("fitrange", fitrangeValue.c_str());
    }
 
-   auto driverWrapper = driver->makeAbsRealWrapper(true);
-   driver.release();
-   driverWrapper->addOwnedComponents(*nll);
+   auto driverWrapper = ROOT::Experimental::RooFitDriver::makeAbsRealWrapper(std::move(driver));
+   driverWrapper->addOwnedComponents(std::move(nll));
    if (weightVar)
-      driverWrapper->addOwnedComponents(*weightVar.release());
+      driverWrapper->addOwnedComponents(std::move(weightVar));
 
-   return driverWrapper.release();
+   return driverWrapper;
 }

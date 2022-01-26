@@ -92,7 +92,7 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
    if (!rangeName.empty()) {
       auto term = createRangeNormTerm(pdf, observables, pdf.GetName(), rangeName);
       _rangeNormTerm = std::make_unique<RooTemplateProxy<RooAbsReal>>("_rangeNormTerm", "_rangeNormTerm", this, *term);
-      this->addOwnedComponents(*term.release());
+      this->addOwnedComponents(std::move(term));
    }
 }
 
