@@ -61,6 +61,8 @@
 namespace ROOT {
 namespace Detail {
 namespace RDF {
+
+/// Base class for action helpers, see RInterface::Book() for more information.
 template <typename Helper>
 class RActionImpl {
 public:
