@@ -52,7 +52,7 @@ namespace RDF {
 using namespace ROOT::TypeTraits;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
-template <typename FilterF, typename PrevDataFrame>
+template <typename FilterF, typename PrevNode>
 class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    using ColumnTypes_t = typename CallableTraits<FilterF>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
@@ -60,24 +60,24 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    FilterF fFilter;
    /// Column readers per slot and per input column
    std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
-   const std::shared_ptr<PrevDataFrame> fPrevDataPtr;
-   PrevDataFrame &fPrevData;
+   const std::shared_ptr<PrevNode> fPrevNodePtr;
+   PrevNode &fPrevNode;
 
 public:
-   RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevDataFrame> pd,
+   RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevNode> pd,
            const RDFInternal::RColumnRegister &colRegister, std::string_view name = "")
       : RFilterBase(pd->GetLoopManagerUnchecked(), name, pd->GetLoopManagerUnchecked()->GetNSlots(), colRegister,
                     columns),
-        fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevDataPtr(std::move(pd)),
-        fPrevData(*fPrevDataPtr)
+        fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevNodePtr(std::move(pd)),
+        fPrevNode(*fPrevNodePtr)
    {
    }
 
    RFilter(const RFilter &) = delete;
    RFilter &operator=(const RFilter &) = delete;
    ~RFilter() {
-      // must Deregister objects from the RLoopManager here, before the fPrevDataFrame data member is destroyed:
-      // otherwise if fPrevDataFrame is the RLoopManager, it will be destroyed before the calls to Deregister happen.
+      // must Deregister objects from the RLoopManager here, before the fPrevNode data member is destroyed:
+      // otherwise if fPrevNode is the RLoopManager, it will be destroyed before the calls to Deregister happen.
       fColRegister.Clear(); // triggers RDefine deregistration
       fLoopManager->Deregister(this);
    }
@@ -85,7 +85,7 @@ public:
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
       if (entry != fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()]) {
-         if (!fPrevData.CheckFilters(slot, entry)) {
+         if (!fPrevNode.CheckFilters(slot, entry)) {
             // a filter upstream returned false, cache the result
             fLastResult[slot * RDFInternal::CacheLineStep<int>()] = false;
          } else {
@@ -122,7 +122,7 @@ public:
 
    void PartialReport(ROOT::RDF::RCutFlowReport &rep) const final
    {
-      fPrevData.PartialReport(rep);
+      fPrevNode.PartialReport(rep);
       FillReport(rep);
    }
 
@@ -130,7 +130,7 @@ public:
    {
       ++fNStopsReceived;
       if (fNStopsReceived == fNChildren)
-         fPrevData.StopProcessing();
+         fPrevNode.StopProcessing();
    }
 
    void IncrChildrenCount() final
@@ -138,18 +138,18 @@ public:
       ++fNChildren;
       // propagate "children activation" upstream. named filters do the propagation via `TriggerChildrenCount`.
       if (fNChildren == 1 && fName.empty())
-         fPrevData.IncrChildrenCount();
+         fPrevNode.IncrChildrenCount();
    }
 
    void TriggerChildrenCount() final
    {
       assert(!fName.empty()); // this method is to only be called on named filters
-      fPrevData.IncrChildrenCount();
+      fPrevNode.IncrChildrenCount();
    }
 
    void AddFilterName(std::vector<std::string> &filters)
    {
-      fPrevData.AddFilterName(filters);
+      fPrevNode.AddFilterName(filters);
       auto name = (HasName() ? fName : "Unnamed Filter");
       filters.push_back(name);
    }
@@ -165,7 +165,7 @@ public:
    GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
    {
       // Recursively call for the previous node.
-      auto prevNode = fPrevData.GetGraph(visitedMap);
+      auto prevNode = fPrevNode.GetGraph(visitedMap);
       auto prevColumns = prevNode->GetDefinedColumns();
 
       auto thisNode = RDFGraphDrawing::CreateFilterNode(this, visitedMap);
