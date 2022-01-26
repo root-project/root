@@ -2247,14 +2247,12 @@ public:
 
       auto tree = fLoopManager->GetTree();
       if (tree) {
-         auto branchNames = RDFInternal::GetBranchNames(*tree, /*allowDuplicates=*/false);
-         for (const auto &bName : branchNames)
+         for (const auto &bName : RDFInternal::GetBranchNames(*tree, /*allowDuplicates=*/false))
             allColumns.emplace(bName);
       }
 
       if (fDataSource) {
-         const auto &dsColNames = fDataSource->GetColumnNames();
-         for (const auto &s : dsColNames) {
+         for (const auto &s : fDataSource->GetColumnNames()) {
             if (s.rfind("R_rdf_sizeof", 0) != 0)
                allColumns.emplace(s);
          }
