@@ -144,18 +144,18 @@ TEST(RNTuple, PageFilling) {
    for (std::int16_t i = 0; i < 8; ++i)
       EXPECT_EQ(i, viewX(i));
 
-   const auto &desc = ntuple->GetDescriptor();
-   EXPECT_EQ(3u, desc.GetNClusters());
-   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
+   const auto desc = ntuple->GetDescriptor();
+   EXPECT_EQ(3u, desc->GetNClusters());
+   const auto &cd1 = desc->GetClusterDescriptor(desc->FindClusterId(0, 0));
    const auto &pr1 = cd1.GetPageRange(0);
    ASSERT_EQ(2u, pr1.fPageInfos.size());
    EXPECT_EQ(2u, pr1.fPageInfos[0].fNElements);
    EXPECT_EQ(1u, pr1.fPageInfos[1].fNElements);
-   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
+   const auto &cd2 = desc->GetClusterDescriptor(desc->FindNextClusterId(cd1.GetId()));
    const auto &pr2 = cd2.GetPageRange(0);
    ASSERT_EQ(1u, pr2.fPageInfos.size());
    EXPECT_EQ(2u, pr2.fPageInfos[0].fNElements);
-   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
+   const auto &cd3 = desc->GetClusterDescriptor(desc->FindNextClusterId(cd2.GetId()));
    const auto &pr3 = cd3.GetPageRange(0);
    ASSERT_EQ(2u, pr3.fPageInfos.size());
    EXPECT_EQ(2u, pr3.fPageInfos[0].fNElements);
@@ -199,20 +199,20 @@ TEST(RNTuple, PageFillingString) {
    EXPECT_EQ("",                         viewX(2));
    EXPECT_EQ("012345678901234567890123", viewX(3));
 
-   const auto &desc = ntuple->GetDescriptor();
-   EXPECT_EQ(4u, desc.GetNClusters());
-   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(1, 0));
+   const auto desc = ntuple->GetDescriptor();
+   EXPECT_EQ(4u, desc->GetNClusters());
+   const auto &cd1 = desc->GetClusterDescriptor(desc->FindClusterId(1, 0));
    const auto &pr1 = cd1.GetPageRange(1);
    ASSERT_EQ(1u, pr1.fPageInfos.size());
    EXPECT_EQ(17u, pr1.fPageInfos[0].fNElements);
-   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
+   const auto &cd2 = desc->GetClusterDescriptor(desc->FindNextClusterId(cd1.GetId()));
    const auto &pr2 = cd2.GetPageRange(1);
    ASSERT_EQ(1u, pr2.fPageInfos.size());
    EXPECT_EQ(16u, pr2.fPageInfos[0].fNElements);
-   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
+   const auto &cd3 = desc->GetClusterDescriptor(desc->FindNextClusterId(cd2.GetId()));
    const auto &pr3 = cd3.GetPageRange(1);
    ASSERT_EQ(0u, pr3.fPageInfos.size());
-   const auto &cd4 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd3.GetId()));
+   const auto &cd4 = desc->GetClusterDescriptor(desc->FindNextClusterId(cd3.GetId()));
    const auto &pr4 = cd4.GetPageRange(1);
    ASSERT_EQ(2u, pr4.fPageInfos.size());
    EXPECT_EQ(16u, pr4.fPageInfos[0].fNElements);
@@ -291,7 +291,7 @@ TEST(RPageSinkBuf, Basics)
 
    std::vector<std::pair<DescriptorId_t, std::int64_t>> pagePositions;
    std::size_t num_columns = 10;
-   const auto &cluster0 = ntupleBuf->GetDescriptor().GetClusterDescriptor(0);
+   const auto &cluster0 = ntupleBuf->GetDescriptor()->GetClusterDescriptor(0);
    for (std::size_t i = 0; i < num_columns; i++) {
       const auto &columnPages = cluster0.GetPageRange(i);
       for (const auto &page: columnPages.fPageInfos) {
@@ -378,8 +378,8 @@ TEST(RPageSink, Empty)
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
    EXPECT_EQ(0U, ntuple->GetNEntries());
-   EXPECT_EQ(0U, ntuple->GetDescriptor().GetNClusterGroups());
-   EXPECT_EQ(0U, ntuple->GetDescriptor().GetNClusters());
+   EXPECT_EQ(0U, ntuple->GetDescriptor()->GetNClusterGroups());
+   EXPECT_EQ(0U, ntuple->GetDescriptor()->GetNClusters());
 }
 
 TEST(RPageSink, MultipleClusterGroups)
@@ -404,8 +404,8 @@ TEST(RPageSink, MultipleClusterGroups)
    }
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
-   EXPECT_EQ(2U, ntuple->GetDescriptor().GetNClusterGroups());
-   EXPECT_EQ(3U, ntuple->GetDescriptor().GetNClusters());
+   EXPECT_EQ(2U, ntuple->GetDescriptor()->GetNClusterGroups());
+   EXPECT_EQ(3U, ntuple->GetDescriptor()->GetNClusters());
    EXPECT_EQ(3U, ntuple->GetNEntries());
    auto rdPt = ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt");
 
