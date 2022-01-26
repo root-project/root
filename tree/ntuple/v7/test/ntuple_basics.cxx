@@ -236,7 +236,7 @@ TEST(RNTuple, ClusterEntries)
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    // 100 entries / 5 entries per cluster
-   EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
+   EXPECT_EQ(20, ntuple->GetDescriptor()->GetNClusters());
 }
 
 TEST(RNTuple, PageSize)
@@ -257,7 +257,7 @@ TEST(RNTuple, PageSize)
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto &col0_pages = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0);
+   const auto &col0_pages = ntuple->GetDescriptor()->GetClusterDescriptor(0).GetPageRange(0);
    // 1000 column elements / 50 elements per page
    EXPECT_EQ(20, col0_pages.fPageInfos.size());
 }
@@ -338,7 +338,7 @@ TEST(RNTupleModel, FieldDescriptions)
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    std::vector<std::string> fieldDescriptions;
-   for (auto& f: ntuple->GetDescriptor().GetTopLevelFields()) {
+   for (auto &f : ntuple->GetDescriptor()->GetTopLevelFields()) {
       fieldDescriptions.push_back(f.GetFieldDescription());
    }
    ASSERT_EQ(3, fieldDescriptions.size());
@@ -360,7 +360,7 @@ TEST(RNTupleModel, CollectionFieldDescriptions)
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-   const auto& muon_desc = *ntuple->GetDescriptor().GetTopLevelFields().begin();
+   const auto &muon_desc = *ntuple->GetDescriptor()->GetTopLevelFields().begin();
    EXPECT_EQ(std::string("muons after basic selection"), muon_desc.GetFieldDescription());
 }
 

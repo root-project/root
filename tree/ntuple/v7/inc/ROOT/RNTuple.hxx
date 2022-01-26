@@ -201,7 +201,10 @@ public:
 
    RNTupleModel *GetModel();
    NTupleSize_t GetNEntries() const { return fSource->GetNEntries(); }
-   const RNTupleDescriptor &GetDescriptor() const { return fSource->GetDescriptor(); }
+
+   /// Returns a cached copy of the page source descriptor. The returned pointer remains valid until the next call
+   /// to LoadEntry or to any of the views returned from the reader.
+   const RNTupleDescriptor *GetDescriptor();
 
    /// Prints a detailed summary of the ntuple, including a list of fields.
    ///

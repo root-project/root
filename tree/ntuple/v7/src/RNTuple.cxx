@@ -268,6 +268,13 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleSh
    }
 }
 
+const ROOT::Experimental::RNTupleDescriptor *ROOT::Experimental::RNTupleReader::GetDescriptor()
+{
+   auto descriptorGuard = fSource->GetSharedDescriptorGuard();
+   if (!fCachedDescriptor || fCachedDescriptor->GetGeneration() != descriptorGuard->GetGeneration())
+      fCachedDescriptor = descriptorGuard->Clone();
+   return fCachedDescriptor.get();
+}
 
 //------------------------------------------------------------------------------
 

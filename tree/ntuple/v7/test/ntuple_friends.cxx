@@ -29,9 +29,9 @@ TEST(RPageStorageFriends, Empty)
    EXPECT_EQ(0u, reader->GetModel()->GetFieldZero()->GetOnDiskId());
    EXPECT_EQ(0u, std::distance(reader->GetModel()->GetDefaultEntry()->begin(),
                                reader->GetModel()->GetDefaultEntry()->end()));
-   EXPECT_EQ(0u, reader->GetDescriptor().GetNColumns());
-   EXPECT_EQ(1u, reader->GetDescriptor().GetNFields()); // The zero field
-   EXPECT_EQ(0u, reader->GetDescriptor().GetNClusters());
+   EXPECT_EQ(0u, reader->GetDescriptor()->GetNColumns());
+   EXPECT_EQ(1u, reader->GetDescriptor()->GetNFields()); // The zero field
+   EXPECT_EQ(0u, reader->GetDescriptor()->GetNClusters());
 }
 
 

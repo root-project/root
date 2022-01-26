@@ -93,7 +93,7 @@ TEST(RNTuple, RandomAccess)
    RNTupleReadOptions options;
    options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath(), options);
-   EXPECT_EQ(10, ntuple->GetDescriptor().GetNClusters());
+   EXPECT_EQ(10, ntuple->GetDescriptor()->GetNClusters());
 
    auto viewValue = ntuple->GetView<std::int32_t>("value");
 
