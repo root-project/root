@@ -57,12 +57,10 @@ namespace GenAlgoOptUtil {
       std::string algoname(algo);
       OptionsMap & gOpts = GenAlgoOptUtil::gAlgoOptions;
       IOptions * opt = GenAlgoOptUtil::DoFindDefault(algoname, gOpts);
-      if (opt == 0) {
-         // create new extra options for the given type
-         std::pair<OptionsMap::iterator,bool> ret = gOpts.insert( OptionsMap::value_type(algoname, ROOT::Math::GenAlgoOptions()) );
-         assert(ret.second);
-         opt = &((ret.first)->second);
-      }
+      if (opt) return *opt;
+      // if not existing create new extra options for the given type
+      std::pair<OptionsMap::iterator,bool> ret = gOpts.insert( OptionsMap::value_type(algoname, ROOT::Math::GenAlgoOptions()) );
+      if (ret.second) return gOpts[algoname];
       return *opt;
    }
 

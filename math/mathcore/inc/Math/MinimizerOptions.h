@@ -151,8 +151,8 @@ public:
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// Print all the default options including the extra one specific for a given minimizer name.
-   /// If no minimizer name is given, all the extra default options which have been set and configured will be printed
-   static void PrintDefault(const char * name, std::ostream & os = std::cout);
+   /// If no minimizer name is given, all the extra default options, which have been set and configured will be printed 
+   static void PrintDefault(const char * name = nullptr, std::ostream & os = std::cout);
 
 public:
 
