@@ -256,3 +256,29 @@ def MarkerStyle(style):
     from cppyy.gbl import RooFit
 
     return RooFit._MarkerStyle(_string_to_root_attribute(style, {}))
+
+
+@cpp_signature("DataError(Int_t) ;")
+def DataError(etype):
+    # Redefinition of `DataError` to also accept `str` or `NoneType` to get the
+    # corresponding enum values from RooAbsData.DataError.
+    from cppyy.gbl import RooFit
+
+    # One of the possible enum values is "None", and we want the user to be
+    # able to pass None also as a NoneType for convenience.
+    if etype is None:
+        etype = "None"
+
+    if isinstance(etype, str):
+        try:
+            import ROOT
+            etype = getattr(ROOT.RooAbsData.ErrorType, etype)
+        except AttributeError as error:
+            raise ValueError(
+                'Unsupported error type type passed to DataError().'
+                + ' Supported decay types are : "Poisson", "SumW2", "Auto", "Expected", and None.'
+            )
+        except Exception as exception:
+            raise exception
+
+    return RooFit._DataError(etype)

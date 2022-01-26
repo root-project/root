@@ -30,6 +30,7 @@ from ._roodataset import RooDataSet
 from ._roodecays import RooDecay, RooBDecay, RooBCPGenDecay, RooBCPEffDecay, RooBMixDecay
 from ._roogenfitstudy import RooGenFitStudy
 from ._rooglobalfunc import (
+    DataError,
     FitOptions,
     Format,
     Frame,
@@ -91,6 +92,7 @@ python_classes = [
 
 # list of python functions that are used to pythonize RooGlobalFunc function in RooFit
 python_roofit_functions = [
+    DataError,
     FitOptions,
     Format,
     Frame,
