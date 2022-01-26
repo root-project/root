@@ -1,4 +1,9 @@
 ROOTTEST_GENERATE_DICTIONARY(stl_makeproject_test stl_makeproject_test.h LINKDEF stl_makeproject_test_linkdef.h)
+# If we build roottest in-tree, add a dependecy on Hist because the header
+# includes TH1D.
+if(TARGET Hist)
+  add_dependencies(stl_makeproject_test Hist)
+endif()
 
 if(ROOT_runtime_cxxmodules_FOUND)
   # FIXME: For C++ modules builds, module.modulemap is generated during configuration time 
