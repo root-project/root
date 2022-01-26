@@ -178,15 +178,28 @@ void ROOT::Experimental::RClusterDescriptor::EnsureHasPageLocations() const
       throw RException(R__FAIL("invalid attempt to access page locations of summary-only cluster descriptor"));
 }
 
+ROOT::Experimental::RClusterDescriptor ROOT::Experimental::RClusterDescriptor::Clone() const
+{
+   RClusterDescriptor clone;
+   clone.fClusterId = fClusterId;
+   clone.fFirstEntryIndex = fFirstEntryIndex;
+   clone.fNEntries = fNEntries;
+   clone.fHasPageLocations = fHasPageLocations;
+   clone.fColumnRanges = fColumnRanges;
+   for (const auto &d : fPageRanges)
+      clone.fPageRanges.emplace(d.first, d.second.Clone());
+   return clone;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 
 bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
 {
-   return fName == other.fName &&
-          fDescription == other.fDescription &&
-          fFieldDescriptors == other.fFieldDescriptors &&
+   return fName == other.fName && fDescription == other.fDescription && fNEntries == other.fNEntries &&
+          fGeneration == other.fGeneration && fFieldDescriptors == other.fFieldDescriptors &&
           fColumnDescriptors == other.fColumnDescriptors &&
+          fClusterGroupDescriptors == other.fClusterGroupDescriptors &&
           fClusterDescriptors == other.fClusterDescriptors;
 }
 
@@ -337,6 +350,25 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDes
    return model;
 }
 
+std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTupleDescriptor::Clone() const
+{
+   auto clone = std::make_unique<RNTupleDescriptor>();
+   clone->fName = fName;
+   clone->fDescription = fDescription;
+   clone->fOnDiskHeaderSize = fOnDiskHeaderSize;
+   clone->fOnDiskFooterSize = fOnDiskFooterSize;
+   clone->fNEntries = fNEntries;
+   clone->fGeneration = fGeneration;
+   for (const auto &d : fFieldDescriptors)
+      clone->fFieldDescriptors.emplace(d.first, d.second.Clone());
+   for (const auto &d : fColumnDescriptors)
+      clone->fColumnDescriptors.emplace(d.first, d.second.Clone());
+   for (const auto &d : fClusterGroupDescriptors)
+      clone->fClusterGroupDescriptors.emplace(d.first, d.second.Clone());
+   for (const auto &d : fClusterDescriptors)
+      clone->fClusterDescriptors.emplace(d.first, d.second.Clone());
+   return clone;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -350,6 +382,16 @@ bool ROOT::Experimental::RColumnGroupDescriptor::operator==(const RColumnGroupDe
 bool ROOT::Experimental::RClusterGroupDescriptor::operator==(const RClusterGroupDescriptor &other) const
 {
    return fClusterGroupId == other.fClusterGroupId && fClusterIds == other.fClusterIds;
+}
+
+ROOT::Experimental::RClusterGroupDescriptor ROOT::Experimental::RClusterGroupDescriptor::Clone() const
+{
+   RClusterGroupDescriptor clone;
+   clone.fClusterGroupId = fClusterGroupId;
+   clone.fClusterIds = fClusterIds;
+   clone.fPageListLocator = fPageListLocator;
+   clone.fPageListLength = fPageListLength;
+   return clone;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

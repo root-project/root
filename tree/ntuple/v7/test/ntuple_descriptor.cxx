@@ -290,3 +290,24 @@ TEST(RClusterDescriptor, GetBytesOnStorage)
    ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
    EXPECT_EQ(4 + 8 + 4 + 3, desc.GetClusterDescriptor(clusterID).GetBytesOnStorage());
 }
+
+TEST(RNTupleDescriptor, Clone)
+{
+   auto model = RNTupleModel::Create();
+   auto floats = model->MakeField<std::vector<float>>("jets");
+   auto bools = model->MakeField<std::string>("tag");
+
+   FileRaii fileGuard("test_ntuple_descriptor_clone.root");
+   {
+      RNTupleWriter ntuple(std::move(model),
+                           std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), RNTupleWriteOptions()));
+      ntuple.Fill();
+      ntuple.CommitCluster(true /* commitClusterGroup */);
+      ntuple.Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto &desc = ntuple->GetDescriptor();
+   auto clone = desc.Clone();
+   EXPECT_EQ(desc, *clone);
+}
