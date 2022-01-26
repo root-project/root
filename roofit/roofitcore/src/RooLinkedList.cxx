@@ -616,8 +616,8 @@ TObject* RooLinkedList::find(const char* name) const
       if (nptr && nptr->TestBit(RooNameReg::kRenamedArg)) {
         RooLinkedListElem* ptr = _first ;
         while(ptr) {
-          if (static_cast<RooAbsArg*>(ptr->_arg)->namePtr() == nptr ||
-              static_cast<RooAbsData*>(ptr->_arg)->namePtr() == nptr) {
+          if ( (dynamic_cast<RooAbsArg*>(ptr->_arg) && static_cast<RooAbsArg*>(ptr->_arg)->namePtr() == nptr) ||
+               (dynamic_cast<RooAbsData*>(ptr->_arg) && static_cast<RooAbsData*>(ptr->_arg)->namePtr() == nptr)) {
             return ptr->_arg ;
           }
           ptr = ptr->_next ;
@@ -637,8 +637,8 @@ TObject* RooLinkedList::find(const char* name) const
     if (!nptr) return nullptr;
     
     while(ptr) {
-      if (static_cast<RooAbsArg*>(ptr->_arg)->namePtr() == nptr ||
-          static_cast<RooAbsData*>(ptr->_arg)->namePtr() == nptr) {
+      if ( (dynamic_cast<RooAbsArg*>(ptr->_arg) && static_cast<RooAbsArg*>(ptr->_arg)->namePtr() == nptr) ||
+           (dynamic_cast<RooAbsData*>(ptr->_arg) && static_cast<RooAbsData*>(ptr->_arg)->namePtr() == nptr)) {
         return ptr->_arg ;
       }
       ptr = ptr->_next ;
