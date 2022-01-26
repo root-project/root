@@ -1120,8 +1120,7 @@ Bool_t TWebCanvas::PerformUpdate()
 
    CheckDataToSend();
 
-   // block in canvas update, can it be optional?
-   if (!fProcessingData)
+   if (!fProcessingData && !IsAsyncMode())
       WaitWhenCanvasPainted(fCanvVersion);
 
    return kTRUE;
