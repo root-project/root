@@ -186,9 +186,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              gapy = 10,  // y coordinate, taking into account all gaps
              gapminx = -1111, gapmaxx = -1111,
              minhinty = -frame_shift.y,
-             maxhinty = this.getCanvPainter().getPadHeight() - frame_rect.y - frame_shift.y;
+             cp = this.getCanvPainter(),
+             maxhinty = cp.getPadHeight() - frame_rect.y - frame_shift.y;
 
-         function FindPosInGap(y) {
+         const FindPosInGap = y => {
             for (let n = 0; (n < hints.length) && (y < maxhinty); ++n) {
                let hint = hints[n];
                if (!hint) continue;
@@ -198,7 +199,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                }
             }
             return y;
-         }
+         };
 
          for (let n = 0; n < hints.length; ++n) {
             let hint = hints[n],
@@ -321,6 +322,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                .select('rect').attr("width", actualw);
 
          hintsg.property('startx', posx);
+
+         if (cp._highlight_connect && (typeof cp.processHighlightConnect == 'function'))
+            cp.processHighlightConnect(hints);
       },
 
       /** @summary Assigns tooltip methods */
@@ -334,7 +338,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    } // TooltipHandler
 
-   function setPainterTooltipEnabled(painter,on) {
+   function setPainterTooltipEnabled(painter, on) {
       if (!painter) return;
 
       let fp = painter.getFramePainter();
