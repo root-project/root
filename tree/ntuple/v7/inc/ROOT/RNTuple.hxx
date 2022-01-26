@@ -113,6 +113,12 @@ private:
    /// from the full model even if the analysis code uses only a subset of fields. The display reader
    /// is a clone of the original reader.
    std::unique_ptr<RNTupleReader> fDisplayReader;
+   /// The ntuple descriptor in the page source is protected by a read-write lock. We don't expose that to the
+   /// users of RNTupleReader::GetDescriptor().  Instead, if descriptor information is needed, we clone the
+   /// descriptor.  Using the descriptor's generation number, we know if the cached descriptor is stale.
+   /// Retrieving descriptor data from an RNTupleReader is supposed to be for testing and information purposes,
+   /// not on a hot code path.
+   std::unique_ptr<RNTupleDescriptor> fCachedDescriptor;
    Detail::RNTupleMetrics fMetrics;
 
    void ConnectModel(const RNTupleModel &model);
