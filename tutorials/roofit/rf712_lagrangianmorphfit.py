@@ -32,7 +32,7 @@ cHDD.setAttribute("NewPhysics", True)
 
 # Inputs to setup config
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-infilename = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/input_histos_rf_lagrangianmorph.root";
+infilename = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/input_histos_rf_lagrangianmorph.root"
 par = "cHq3"
 samplelist = [
     "SM_NPsq0",
@@ -105,8 +105,8 @@ postfit_dh.plotOn(
     frame0,
     Name="postfit_dist",
     DrawOption="C",
-    LineColor=ROOT.kBlue,
-    DataError=getattr(ROOT.RooAbsData, "None"),
+    LineColor="b",
+    DataError=None,
     XErrorSize=0,
 )
 pseudo_dh.plotOn(frame0, Name="input")

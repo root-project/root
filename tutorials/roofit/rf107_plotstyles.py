@@ -41,7 +41,7 @@ frame4 = x.frame(Name="xframe", Title="Partial Range / Filled Bar chart", Bins=2
 # ---------------------------------------
 
 # Use sqrt(sum(weights^2)) error instead of Poisson errors
-data.plotOn(frame1, DataError=ROOT.RooAbsData.SumW2)
+data.plotOn(frame1, DataError="SumW2")
 
 # Remove horizontal error bars
 data.plotOn(frame2, XErrorSize=0)
@@ -50,7 +50,7 @@ data.plotOn(frame2, XErrorSize=0)
 data.plotOn(frame3, MarkerColor="b", LineColor="b")
 
 # Filled bar chart
-data.plotOn(frame4, DrawOption="B", DataError=ROOT.RooAbsData.ErrorType(2), XErrorSize=0, FillColor="kGray")
+data.plotOn(frame4, DrawOption="B", DataError=None, XErrorSize=0, FillColor="kGray")
 
 # Function plotting styles
 # -----------------------------------------------
