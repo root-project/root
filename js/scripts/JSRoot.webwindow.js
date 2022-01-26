@@ -493,7 +493,7 @@ JSROOT.define([], () => {
       this.close();
       if (!href && this.href) href = this.href;
 
-      let pthis = this, ntry = 0, args = (this.key ? ("key=" + this.key) : "");
+      let ntry = 0, args = (this.key ? ("key=" + this.key) : "");
       if (this.token) {
          if (args) args += "&";
          args += "token=" + this.token;
@@ -541,37 +541,37 @@ JSROOT.define([], () => {
 
          if (!this._websocket) return;
 
-         this._websocket.onopen = function() {
+         this._websocket.onopen = () => {
             if ((ntry > 2) && JSROOT.Painter) JSROOT.Painter.showProgress();
-            pthis.state = 1;
+            this.state = 1;
 
-            let key = pthis.key || "";
+            let key = this.key || "";
 
-            pthis.send("READY=" + key, 0); // need to confirm connection
-            pthis.invokeReceiver(false, "onWebsocketOpened");
-         }
+            this.send("READY=" + key, 0); // need to confirm connection
+            this.invokeReceiver(false, "onWebsocketOpened");
+         };
 
-         this._websocket.onmessage = function(e) {
+         this._websocket.onmessage = e => {
             let msg = e.data;
 
-            if (pthis.next_binary) {
+            if (this.next_binary) {
 
-               let binchid = pthis.next_binary;
-               delete pthis.next_binary;
+               let binchid = this.next_binary;
+               delete this.next_binary;
 
                if (msg instanceof Blob) {
                   // this is case of websocket
                   // console.log('Get Blob object - convert to buffer array');
-                  let reader = new FileReader, qitem = pthis.reserveQueueItem();
+                  let reader = new FileReader, qitem = this.reserveQueueItem();
                   reader.onload = function(event) {
                      // The file's text will be printed here
-                     pthis.markQueueItemDone(qitem, event.target.result, 0);
+                     this.markQueueItemDone(qitem, event.target.result, 0);
                   };
                   reader.readAsArrayBuffer(msg, e.offset || 0);
                } else {
                   // console.log('got array ' + (typeof msg) + ' len = ' + msg.byteLength);
                   // this is from CEF or LongPoll handler
-                  pthis.provideData(binchid, msg, e.offset || 0);
+                  this.provideData(binchid, msg, e.offset || 0);
                }
 
                return;
@@ -586,45 +586,45 @@ JSROOT.define([], () => {
                i3 = msg.indexOf(":", i2 + 1),
                chid = parseInt(msg.substr(i2 + 1, i3 - i2));
 
-            pthis.ackn++;            // count number of received packets,
-            pthis.cansend += credit; // how many packets client can send
+            this.ackn++;            // count number of received packets,
+            this.cansend += credit; // how many packets client can send
 
             msg = msg.substr(i3 + 1);
 
             if (chid == 0) {
                console.log('GET chid=0 message', msg);
                if (msg == "CLOSE") {
-                  pthis.close(true); // force closing of socket
-                  pthis.invokeReceiver(true, "onWebsocketClosed");
+                  this.close(true); // force closing of socket
+                  this.invokeReceiver(true, "onWebsocketClosed");
                }
             } else if (msg == "$$binary$$") {
-               pthis.next_binary = chid;
+               this.next_binary = chid;
             } else if (msg == "$$nullbinary$$") {
-               pthis.provideData(chid, new ArrayBuffer(0), 0);
+               this.provideData(chid, new ArrayBuffer(0), 0);
             } else {
-               pthis.provideData(chid, msg);
+               this.provideData(chid, msg);
             }
 
-            if (pthis.ackn > 7)
-               pthis.send('READY', 0); // send dummy message to server
-         }
+            if (this.ackn > 7)
+               this.send('READY', 0); // send dummy message to server
+         };
 
-         this._websocket.onclose = function(arg) {
-            delete pthis._websocket;
-            if ((pthis.state > 0) || (arg === "force_close")) {
+         this._websocket.onclose = arg => {
+            delete this._websocket;
+            if ((this.state > 0) || (arg === "force_close")) {
                console.log('websocket closed');
-               pthis.state = 0;
-               pthis.invokeReceiver(true, "onWebsocketClosed");
+               this.state = 0;
+               this.invokeReceiver(true, "onWebsocketClosed");
             }
-         }
+         };
 
-         this._websocket.onerror = function(err) {
-            console.log(`websocket error ${err} state ${pthis.state}`);
-            if (pthis.state > 0) {
-               pthis.invokeReceiver(true, "onWebsocketError", err);
-               pthis.state = 0;
+         this._websocket.onerror = err => {
+            console.log(`websocket error ${err} state ${this.state}`);
+            if (this.state > 0) {
+               this.invokeReceiver(true, "onWebsocketError", err);
+               this.state = 0;
             }
-         }
+         };
 
          // only in interactive mode try to reconnect
          if (!JSROOT.batch_mode)

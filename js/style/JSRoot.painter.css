@@ -717,6 +717,7 @@
    background-position: left 2px top 2px;
    background-repeat: no-repeat;
    background-size: 24px 24px;
+   border-color: inherit;
 }
 
 .jsroot_browser_btns:hover {

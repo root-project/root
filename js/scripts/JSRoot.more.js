@@ -1703,13 +1703,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
       if (findbin === null) return null;
 
-      let d = d3.select(findbin).datum();
-
-      let res = { name: this.getObject().fName, title: this.getObject().fTitle,
+      let d = d3.select(findbin).datum(),
+          gr = this.getObject(),
+          res = { name: gr.fName, title: gr.fTitle,
                   x: d.grx1, y: d.gry1,
                   color1: this.lineatt.color,
                   lines: this.getTooltips(d),
                   rect: best, d3bin: findbin  };
+
+       res.user_info = { obj: gr,  name: gr.fName, bin: d.indx, cont: d.y, grx: d.grx1, gry: d.gry1 };
 
       if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.getFillColor();
 
@@ -1882,6 +1884,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                   lines: this.getTooltips(best.bin),
                   usepath: true };
 
+      res.user_info = { obj: gr,  name: gr.fName, bin: 0, cont: 0, grx: res.x, gry: res.y };
+
       res.ismark = ismark;
       res.islines = islines;
 
@@ -1899,6 +1903,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          res.binindx = best.indx;
          res.bin = best.bin;
          res.radius = best.radius;
+         res.user_info.bin = best.indx;
+         res.user_info.cont = best.bin.y;
 
          res.exact = (Math.abs(pnt.x - res.x) <= best.radius) &&
             ((Math.abs(pnt.y - res.gry1) <= best.radius) || (Math.abs(pnt.y - res.gry2) <= best.radius));

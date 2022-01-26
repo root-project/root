@@ -2998,6 +2998,12 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       });
    }
 
+   /** @summary indicates if painter performing objects draw
+     * @private */
+   TPadPainter.prototype.doingDraw = function() {
+      return this._doing_draw !== undefined;
+   }
+
    /** @summary confirms that drawing is completed, may trigger next drawing immediately
      * @private */
    TPadPainter.prototype.confirmDraw = function() {
@@ -3584,7 +3590,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (!this.batch_mode)
             this.addPadButtons(true);
 
-         if (snap.fScripts && (typeof snap.fScripts == "string")) {
+         if (typeof snap.fHighlightConnect !== 'undefined')
+            this._highlight_connect = snap.fHighlightConnect;
+
+         if ((typeof snap.fScripts == "string") && snap.fScripts) {
             let arg = "";
 
             if (snap.fScripts.indexOf("load:") == 0)
@@ -4745,7 +4754,35 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       this.showSection("StatusBar", this.pad.TestBit(TCanvasStatusBits.kShowEventStatus));
       this.showSection("ToolBar", this.pad.TestBit(TCanvasStatusBits.kShowToolBar));
       this.showSection("Editor", this.pad.TestBit(TCanvasStatusBits.kShowEditor));
-      this.showSection("ToolTips", this.pad.TestBit(TCanvasStatusBits.kShowToolTips));
+      this.showSection("ToolTips", this.pad.TestBit(TCanvasStatusBits.kShowToolTips) || this._highlight_connect);
+   }
+
+   /** @summary Handle highlight in canvas - delver information to server
+     * @private */
+   TCanvasPainter.prototype.processHighlightConnect = function(hints) {
+      if (!hints || hints.length == 0 || !this._highlight_connect ||
+           !this._websocket || this.doingDraw() || !this._websocket.canSend(2)) return;
+
+      let hint = hints[0] || hints[1];
+      if (!hint || !hint.painter || !hint.painter.snapid || !hint.user_info) return;
+      let pp = hint.painter.getPadPainter() || this;
+      if (!pp.snapid) return;
+
+      let arr = [pp.snapid, hint.painter.snapid, "0", "0"];
+
+      if ((hint.user_info.binx !== undefined) && (hint.user_info.biny !== undefined)) {
+         arr[2] = hint.user_info.binx.toString();
+         arr[3] = hint.user_info.biny.toString();
+      }  else if (hint.user_info.bin !== undefined) {
+         arr[2] = hint.user_info.bin.toString();
+      }
+
+      let msg = JSON.stringify(arr);
+
+      if (this._last_highlight_msg != msg) {
+         this._last_highlight_msg = msg;
+         this.sendWebsocket("HIGHLIGHT:" + msg);
+      }
    }
 
    /** @summary Method informs that something was changed in the canvas
