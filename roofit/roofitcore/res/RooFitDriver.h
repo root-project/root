@@ -129,9 +129,16 @@ public:
       bool _ownsDriver;
    };
 
-   std::unique_ptr<RooAbsReal> makeAbsRealWrapper(bool ownsDriver = false)
+   std::unique_ptr<RooAbsReal> makeAbsRealWrapper()
    {
-      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this, ownsDriver}};
+      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*this, false}};
+   }
+
+   // Static method to create a RooAbsRealWrapper that owns a given
+   // RooFitDriver passed by smart pointer.
+   static std::unique_ptr<RooAbsReal> makeAbsRealWrapper(std::unique_ptr<RooFitDriver> driver)
+   {
+      return std::unique_ptr<RooAbsReal>{new RooAbsRealWrapper{*driver.release(), true}};
    }
 
 private:

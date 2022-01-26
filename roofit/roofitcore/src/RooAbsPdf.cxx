@@ -1182,12 +1182,12 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
                                                projDeps,
                                                ext,
                                                pc.getDouble("IntegrateBins"),
-                                               batchMode);
+                                               batchMode).release();
   }
 
   // Construct NLL
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
-  RooAbsReal* nll ;
+  std::unique_ptr<RooAbsReal> nll ;
   RooAbsTestStatistic::Configuration cfg;
   cfg.addCoefRangeName = addCoefRangeName ? addCoefRangeName : "";
   cfg.nCPU = numcpu;
@@ -1203,9 +1203,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     //cout<<"FK: Data test 1: "<<data.sumEntries()<<endl;
 
     cfg.rangeName = rangeName ? rangeName : "";
-    auto theNLL = new RooNLLVar(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
-    theNLL->batchMode(batchMode == RooFit::BatchModeOption::Old);
-    nll = theNLL;
+    nll = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
+    static_cast<RooNLLVar&>(*nll).batchMode(batchMode == RooFit::BatchModeOption::Old);
   } else {
     // Composite case: multiple ranges
     RooArgList nllList ;
@@ -1216,10 +1215,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     }
     for (const auto& token : tokens) {
       cfg.rangeName = token;
-      auto nllComp = new RooNLLVar((baseName + "_" + token).c_str(),"-log(likelihood)",
-                                   *this,data,projDeps,ext,cfg);
+      auto nllComp = std::make_unique<RooNLLVar>((baseName + "_" + token).c_str(),"-log(likelihood)",
+                                                 *this,data,projDeps,ext,cfg);
       nllComp->batchMode(pc.getInt("BatchMode"));
-      nllList.add(*nllComp) ;
+      nllList.addOwned(std::move(nllComp)) ;
     }
 
     if (!ext) {
@@ -1230,18 +1229,19 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       // term to the individual NLLs as done here is mathematicall equivalent
       // to adding the normalization correction terms plus a global extension
       // term.
-      nllList.add(*createMultiRangeNLLCorrectionTerm(*this, data, baseName, rangeName).release());
+      nllList.addOwned(createMultiRangeNLLCorrectionTerm(*this, data, baseName, rangeName));
     }
 
-    nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,true) ;
+    nll = std::make_unique<RooAddition>(baseName.c_str(),"-log(likelihood)",nllList) ;
+    nll->addOwnedComponents(std::move(nllList));
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
   // Include constraints, if any, in likelihood
   if (constraintTerm) {
-    RooAbsReal* orignll = nll ;
-    nll = new RooAddition(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*nll,*constraintTerm)) ;
-    nll->addOwnedComponents(RooArgSet(*orignll,*constraintTerm.release())) ;
+    auto orignll = std::move(nll) ;
+    nll = std::make_unique<RooAddition>(Form("%s_with_constr",baseName.c_str()),"nllWithCons",RooArgSet(*orignll,*constraintTerm)) ;
+    nll->addOwnedComponents(std::move(orignll),std::move(constraintTerm)) ;
   }
 
   if (optConst) {
@@ -1249,10 +1249,10 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
   }
 
   if (doOffset) {
-    nll->enableOffsetting(kTRUE) ;
+    nll->enableOffsetting(true) ;
   }
 
-  return nll ;
+  return nll.release() ;
 }
 
 
