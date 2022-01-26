@@ -135,9 +135,8 @@ TEST(RDataFrameInterface, GetColumnNamesFromOrdering)
    RDataFrame tdf(t);
    auto names = tdf.GetColumnNames();
    EXPECT_EQ(2U, names.size());
-   EXPECT_STREQ("zzz", names[0].c_str());
-   EXPECT_STREQ("aaa", names[1].c_str());
-
+   EXPECT_STREQ("aaa", names[0].c_str());
+   EXPECT_STREQ("zzz", names[1].c_str());
 }
 
 TEST(RDataFrameInterface, GetColumnNamesFromSource)
@@ -472,7 +471,7 @@ TEST(RDataFrameInterface, ColumnWithSimpleStruct)
    EXPECT_NE(t.GetLeaf("c.b"),nullptr);
 
    ROOT::RDataFrame df(t);
-   const std::vector<std::string> expected({ "c.a", "a", "c.b", "b", "c" });
+   const std::vector<std::string> expected({ "a",  "b", "c", "c.a", "c.b" });
    EXPECT_EQ(df.GetColumnNames(), expected);
    for (std::string_view col : {"c.a", "a"}) {
       EXPECT_DOUBLE_EQ(df.Mean<int>(col).GetValue(), 42.); // compiled
@@ -656,10 +655,10 @@ TEST(RDataFrameInterface, Describe)
                      "\n"
                      "Column                  Type                            Origin\n"
                      "------                  ----                            ------\n"
-                     "myVec                   ROOT::VecOps::RVec<float>       Define\n"
-                     "myLongColumnName        unsigned int                    Define\n"
+                     "myFloat                 Float_t                         Dataset\n"
                      "myInt                   Int_t                           Dataset\n"
-                     "myFloat                 Float_t                         Dataset";
+                     "myLongColumnName        unsigned int                    Define\n"
+                     "myVec                   ROOT::VecOps::RVec<float>       Define";
    EXPECT_EQ(df3.Describe().AsString(), ref2);
 }
 
