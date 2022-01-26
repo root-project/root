@@ -32,6 +32,7 @@ Use RooAbsCollection derived objects for public use
 #include "RooFit.h"
 #include "RooLinkedListIter.h"
 #include "RooAbsArg.h"
+#include "RooAbsData.h"
 #include "RooMsgService.h"
 
 #include "Riostream.h"
@@ -261,7 +262,7 @@ RooLinkedList::Pool* RooLinkedList::_pool = 0;
 ////////////////////////////////////////////////////////////////////////////////
 
 RooLinkedList::RooLinkedList(Int_t htsize) : 
-  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(nullptr), _htableLink(nullptr), _useNptr(kTRUE)
+  _hashThresh(htsize), _size(0), _first(0), _last(0), _htableName(nullptr), _htableLink(nullptr), _useNptr(true)
 {
   if (!_pool) _pool = new Pool;
   _pool->acquire();
@@ -404,7 +405,7 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
   if (!arg) return ;
 
   // Only use RooAbsArg::namePtr() in lookup-by-name if all elements have it
-  if (!dynamic_cast<RooAbsArg*>(arg)) _useNptr = kFALSE;
+  if (!dynamic_cast<RooAbsArg*>(arg) && !dynamic_cast<RooAbsData*>(arg)) _useNptr = false;
   
   // Add to hash table 
   if (_htableName) {
@@ -447,7 +448,7 @@ Bool_t RooLinkedList::Remove(TObject* arg)
 {
   // Find link element
   RooLinkedListElem* elem = findLink(arg) ;
-  if (!elem) return kFALSE ;
+  if (!elem) return false ;
   
   // Remove from hash table
   if (_htableName) {
@@ -468,7 +469,7 @@ Bool_t RooLinkedList::Remove(TObject* arg)
   // Delete and shrink
   _size-- ;
   deleteElement(elem) ;	
-  return kTRUE ;
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -502,13 +503,13 @@ TObject* RooLinkedList::At(Int_t index) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Replace object 'oldArg' in collection with new object 'newArg'.
-/// If 'oldArg' is not found in collection kFALSE is returned
+/// If 'oldArg' is not found in collection false is returned
 
 Bool_t RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg) 
 {
   // Find existing element and replace arg
   RooLinkedListElem* elem = findLink(oldArg) ;
-  if (!elem) return kFALSE ;
+  if (!elem) return false ;
   
   if (_htableName) {
     _htableName->erase(oldArg->GetName());
@@ -521,7 +522,7 @@ Bool_t RooLinkedList::Replace(const TObject* oldArg, const TObject* newArg)
   }
 
   elem->_arg = (TObject*)newArg ;
-  return kTRUE ;
+  return true ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -604,7 +605,7 @@ TObject* RooLinkedList::find(const char* name) const
 {
   
   if (_htableName) {
-    RooAbsArg* a = (RooAbsArg*) (*_htableName)[name] ;
+    TObject *a = const_cast<TObject*>((*_htableName)[name]) ;
     // RooHashTable::find could return false negative if element was renamed to 'name'.
     // The list search means it won't return false positive, so can return here.
     if (a) return a;
@@ -615,13 +616,14 @@ TObject* RooLinkedList::find(const char* name) const
       if (nptr && nptr->TestBit(RooNameReg::kRenamedArg)) {
         RooLinkedListElem* ptr = _first ;
         while(ptr) {
-          if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
+          if ( (dynamic_cast<RooAbsArg*>(ptr->_arg) && static_cast<RooAbsArg*>(ptr->_arg)->namePtr() == nptr) ||
+               (dynamic_cast<RooAbsData*>(ptr->_arg) && static_cast<RooAbsData*>(ptr->_arg)->namePtr() == nptr)) {
             return ptr->_arg ;
           }
           ptr = ptr->_next ;
         }
       }
-      return 0 ;
+      return nullptr ;
     }
     //cout << "RooLinkedList::find: possibly renamed '" << name << "'" << endl;
   }
@@ -632,15 +634,16 @@ TObject* RooLinkedList::find(const char* name) const
   // when the size list is longer than ~7, but let's be a bit conservative.
   if (_useNptr && _size>9) {
     const TNamed* nptr= RooNameReg::known(name);
-    if (!nptr) return 0;
+    if (!nptr) return nullptr;
     
     while(ptr) {
-      if ((((RooAbsArg*)ptr->_arg)->namePtr() == nptr)) {
-	return ptr->_arg ;
+      if ( (dynamic_cast<RooAbsArg*>(ptr->_arg) && static_cast<RooAbsArg*>(ptr->_arg)->namePtr() == nptr) ||
+           (dynamic_cast<RooAbsData*>(ptr->_arg) && static_cast<RooAbsData*>(ptr->_arg)->namePtr() == nptr)) {
+        return ptr->_arg ;
       }
       ptr = ptr->_next ;
     }
-    return 0 ;
+    return nullptr ;
   }
   
   while(ptr) {
@@ -649,7 +652,7 @@ TObject* RooLinkedList::find(const char* name) const
     }
     ptr = ptr->_next ;
   }
-  return 0 ;
+  return nullptr ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

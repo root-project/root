@@ -187,7 +187,8 @@ RooAbsData::RooAbsData(std::string_view name, std::string_view title, const RooA
   TNamed(TString{name},TString{title}),
   _vars("Dataset Variables"),
   _cachedVars("Cached Variables"),
-  _dstore(dstore)
+  _dstore(dstore),
+  _namePtr(nullptr)
 {
    if (dynamic_cast<RooTreeDataStore *>(dstore)) {
       storageType = RooAbsData::Tree;
@@ -216,6 +217,8 @@ RooAbsData::RooAbsData(std::string_view name, std::string_view title, const RooA
       var->attachArgs(_vars);
    }
 
+   _namePtr = RooNameReg::instance().constPtr(GetName()) ;
+
    RooTrace::create(this);
 }
 
@@ -223,9 +226,10 @@ RooAbsData::RooAbsData(std::string_view name, std::string_view title, const RooA
 /// Copy constructor
 
 RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
-  TNamed(newname?newname:other.GetName(),other.GetTitle()),
+  TNamed(newname ? newname : other.GetName(),other.GetTitle()),
   RooPrintable(other), _vars(),
-  _cachedVars("Cached Variables")
+  _cachedVars("Cached Variables"),
+  _namePtr(newname ? RooNameReg::instance().constPtr(newname) : other._namePtr)
 {
   //cout << "created dataset " << this << endl ;
   claimVars(this) ;
@@ -271,6 +275,7 @@ RooAbsData& RooAbsData::operator=(const RooAbsData& other) {
   claimVars(this);
   _vars.Clear();
   _vars.addClone(other._vars);
+  _namePtr = other._namePtr;
 
   // reconnect any parameterized ranges to internal dataset observables
   for (const auto var : _vars) {
@@ -2454,6 +2459,7 @@ void RooAbsData::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(RooAbsData::Class(),this);
+      _namePtr = RooNameReg::instance().constPtr(GetName()) ;
 
       // Convert on the fly to vector storage if that the current working default
       if (defaultStorageType==RooAbsData::Vector) {
@@ -2561,6 +2567,33 @@ void RooAbsData::setGlobalObservables(RooArgSet const& globalObservables) {
     if(auto lval = dynamic_cast<RooAbsCategoryLValue*>(arg)) lval->setConstant(true);
   }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RooAbsData::SetName(const char* name)
+{
+  TNamed::SetName(name) ;
+  auto newPtr = RooNameReg::instance().constPtr(GetName()) ;
+  if (newPtr != _namePtr) {
+    //cout << "Rename '" << _namePtr->GetName() << "' to '" << name << "' (set flag in new name)" << endl;
+    _namePtr = newPtr;
+    const_cast<TNamed*>(_namePtr)->SetBit(RooNameReg::kRenamedArg);
+    RooNameReg::incrementRenameCounter();
+  }
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RooAbsData::SetNameTitle(const char *name, const char *title)
+{
+  TNamed::SetTitle(title) ;
+  SetName(name);
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////////////

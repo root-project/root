@@ -21,6 +21,7 @@
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooSpan.h"
+#include "RooNameReg.h"
 
 #include "ROOT/RStringView.hxx"
 #include "TNamed.h"
@@ -311,6 +312,20 @@ public:
   RooArgSet const* getGlobalObservables() const { return _globalObservables.get(); }
   void setGlobalObservables(RooArgSet const& globalObservables);
 
+  /// De-duplicated pointer to this object's name.
+  /// This can be used for fast name comparisons.
+  /// like `if (namePtr() == other.namePtr())`.
+  /// \note TNamed::GetName() will return a pointer that's
+  /// different for each object, but namePtr() always points
+  /// to a unique instance.
+  inline const TNamed* namePtr() const {
+    return _namePtr ;
+  }
+
+  void SetName(const char* name) ;
+  void SetNameTitle(const char *name, const char *title) ;
+
+
 protected:
 
   static StorageType defaultStorageType ;
@@ -359,6 +374,8 @@ protected:
   std::map<std::string,RooAbsData*> _ownedComponents ; // Owned external components
 
   std::unique_ptr<RooArgSet> _globalObservables; // Snapshot of global observables
+
+  mutable const TNamed * _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
 
 private:
   void copyGlobalObservables(const RooAbsData& other);
