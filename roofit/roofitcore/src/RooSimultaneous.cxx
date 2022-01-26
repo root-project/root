@@ -1148,12 +1148,12 @@ void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data, double p
       // RooBinSamplingPdf in the RooSimultaneous.
       newSamplingPdf->setAttribute(
           (std::string("ORIGNAME:") + pdf.GetName()).c_str());
-      newSamplingPdfs.add(*newSamplingPdf.release());
+      newSamplingPdfs.addOwned(std::move(newSamplingPdf));
     }
   }
 
   this->redirectServers(newSamplingPdfs, false, true);
-  this->addOwnedComponents(newSamplingPdfs);
+  this->addOwnedComponents(std::move(newSamplingPdfs));
 }
 
 
@@ -1195,10 +1195,10 @@ void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data,
       // RooBinSamplingPdf in the RooSimultaneous.
       newSamplingPdf->setAttribute(
           (std::string("ORIGNAME:") + pdf.GetName()).c_str());
-      newSamplingPdfs.add(*newSamplingPdf.release());
+      newSamplingPdfs.addOwned(std::move(newSamplingPdf));
     }
   }
 
   this->redirectServers(newSamplingPdfs, false, true);
-  this->addOwnedComponents(newSamplingPdfs);
+  this->addOwnedComponents(std::move(newSamplingPdfs));
 }
