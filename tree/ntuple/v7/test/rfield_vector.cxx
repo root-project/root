@@ -54,11 +54,11 @@ TEST(RNTuple, InsideCollection)
    source->Attach();
    EXPECT_EQ(1U, source->GetNEntries());
 
-   auto idKlassVec = source->GetDescriptor().FindFieldId("klassVec");
+   auto idKlassVec = source->GetSharedDescriptorGuard()->FindFieldId("klassVec");
    ASSERT_NE(idKlassVec, ROOT::Experimental::kInvalidDescriptorId);
-   auto idKlass = source->GetDescriptor().FindFieldId("_0", idKlassVec);
+   auto idKlass = source->GetSharedDescriptorGuard()->FindFieldId("_0", idKlassVec);
    ASSERT_NE(idKlass, ROOT::Experimental::kInvalidDescriptorId);
-   auto idA = source->GetDescriptor().FindFieldId("a", idKlass);
+   auto idA = source->GetSharedDescriptorGuard()->FindFieldId("a", idKlass);
    ASSERT_NE(idA, ROOT::Experimental::kInvalidDescriptorId);
    auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec.a", "float").Unwrap());
    fieldInner->SetOnDiskId(idA);
