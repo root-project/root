@@ -216,27 +216,16 @@ public:
 
     // compare pdfs
     assert(pMC_API->GetPdf() && pMC_XML->GetPdf());
-    RooArgSet* pObservables = (RooArgSet*)(pMC_API->GetObservables()->snapshot());
-    RooArgSet* pGlobalObservables = (RooArgSet*)(pMC_API->GetGlobalObservables()->snapshot());
-    if(pGlobalObservables)
-    {
-      pObservables->addOwned(*pGlobalObservables);
-    }
+    RooArgSet pObservables;
+    pMC_API->GetObservables()->snapshot(pObservables);
+    RooArgSet pGlobalObservables;
+    pMC_API->GetGlobalObservables()->snapshot(pGlobalObservables);
+    pObservables.addOwned(std::move(pGlobalObservables));
 
     if(_verb > 0)
       Info("testCode","comparing PDFs");
-    if(!ComparePDF(*pMC_API->GetPdf(),*pMC_XML->GetPdf(),*pObservables,*pWS_API->data("obsData")))
-    {
-      delete pObservables;
-      // delete pGlobalObservables;
-      return kFALSE;
-    }
 
-    // clean up
-    delete pObservables;
-    // delete pGlobalObservables;
-
-    return kTRUE;
+    return ComparePDF(*pMC_API->GetPdf(),*pMC_XML->GetPdf(),pObservables,*pWS_API->data("obsData"));
   }
 
 private:
