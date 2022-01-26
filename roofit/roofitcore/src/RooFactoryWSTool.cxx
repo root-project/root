@@ -41,6 +41,7 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "TInterpreter.h"
 #include "TEnum.h"
 #include "RooAbsPdf.h"
+#include <array>
 #include <fstream>
 #include "strtok.h"
 #include "strlcpy.h"
@@ -2038,6 +2039,9 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     
   } else if (cl == "lagrangianmorph") {
     // Perform syntax check. Warn about any meta parameters other than the ones needed
+    const std::array<std::string,4> funcArgs{{"fileName","observableName","couplings","folders"}};
+    map<string,string> mapped_inputs; 
+
     for (unsigned int i=1 ; i<pargv.size() ; i++) {
       if (pargv[i].find("$fileName(")!=0 &&
         pargv[i].find("$observableName(")!=0 &&
@@ -2052,10 +2056,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     pargsmorph[0] = 0;
  
     for (unsigned int i=0 ; i<pargv.size() ; i++) {
-      if (strlen(pargsmorph) > 0 && pargv[i].find("$NewPhysics(")!=0)
-        strlcat(pargsmorph, ",", BUFFER_SIZE);
- 
-      else if (pargv[i].find("$NewPhysics(")==0) {
+      if (pargv[i].find("$NewPhysics(")==0) {
         vector<string> subargs = ft.splitFunctionArgs(pargv[i].c_str()) ;
         for(const auto& subarg: subargs) {
           char buf[BUFFER_SIZE];
@@ -2068,7 +2069,7 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
             tok = R__STRTOK_R(0, "=", &save);
           }
           if (parts.size() == 2){
-            ft.ws().arg(parts[0].c_str())->setAttribute("NP",atoi(parts[1].c_str()));
+            ft.ws().arg(parts[0].c_str())->setAttribute("NewPhysics",atoi(parts[1].c_str()));
           }
           else throw string(Form("%s::create() ERROR: unknown token %s encountered, check input provided for %s",instName,subarg.c_str(), pargv[i].c_str()));
         }
@@ -2077,10 +2078,16 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
         vector<string> subargs = ft.splitFunctionArgs(pargv[i].c_str()) ;
         if (subargs.size()==1){
           string expr = ft.processExpression(subargs[0].c_str());
-          strlcat(pargsmorph, subargs[0].c_str(),BUFFER_SIZE);
+          for(auto const& param : funcArgs){
+            if(pargv[i].find(param)!=string::npos) mapped_inputs[param]=subargs[0];
+          }
         }
         else throw string(Form("Incorrect number of arguments in %s, have %d, expect 1",pargv[i].c_str(),(Int_t)subargs.size())) ;
       }
+    }
+    for(auto const& param : funcArgs){
+      if(strlen(pargsmorph) > 0) strlcat(pargsmorph, ",", BUFFER_SIZE);
+      strlcat(pargsmorph, mapped_inputs[param].c_str(),BUFFER_SIZE);
     }
     ft.createArg("RooLagrangianMorphFunc",instName, pargsmorph);
  
