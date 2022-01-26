@@ -253,46 +253,40 @@ TEST(Cache, Regex)
    ROOT::RDataFrame df(1);
    ROOT::RDF::RNode n(df);
    std::string base("col_");
-   std::vector<std::string> defColNames; defColNames.reserve(128);
-   auto addCol = [base, &defColNames](ROOT::RDF::RNode &node, int i) {
-      auto colName = base+std::to_string(i);
-      defColNames.emplace_back(colName);
-      return ROOT::RDF::RNode(node.Define(colName, [](){return 0;}));
-   };
    for (auto i : ROOT::TSeqI(128)) {
-      n = addCol(n, i);
+      auto colName = base + std::to_string(i);
+      n = n.Define(colName, [](){return 0;});
    }
-   int cursor = 0;
    const auto df_even_cols = n.Cache(".*[02468]$").GetColumnNames();
+
+   std::vector<std::string> evenColNames;
+   for (auto i : ROOT::TSeqI(0, 128, 2))
+      evenColNames.emplace_back(base + std::to_string(i));
+   std::sort(evenColNames.begin(), evenColNames.end());
+
+   std::size_t cursor = 0u;
    for (auto &&col : df_even_cols) {
-      EXPECT_TRUE(col == defColNames[cursor]) << "Checking even columns. An error was encountered: expecting "
-                                              << defColNames[cursor] << " but found " << col;
-      cursor+=2;
+      EXPECT_TRUE(col == evenColNames[cursor]) << "Checking even columns. An error was encountered: expecting "
+                                              << evenColNames[cursor] << " but found " << col;
+      ++cursor;
    }
 
-   cursor = 1;
-   const auto df_odd_cols = n.Cache(".*[13579]$").GetColumnNames();
-   for (auto &&col : df_odd_cols) {
-      EXPECT_TRUE(col == defColNames[cursor]) << "Checking odd columns. An error was encountered: expecting "
-                                              << defColNames[cursor] << " but found " << col;
-      cursor+=2;
+   std::vector<std::string> colNamesWith2And5;
+   for (auto i : ROOT::TSeqI(128)) {
+      const auto s = std::to_string(i);
+      if (s.back() == '2' || s.back() == '5') {
+         colNamesWith2And5.emplace_back(base + s);
+      }
    }
-
-   cursor = 1;
+   std::sort(colNamesWith2And5.begin(), colNamesWith2And5.end());
+   cursor = 0u;
    const auto df_or_cols = n.Cache("(col_.*[2]$|col_.*[5]$)").GetColumnNames();
    for (auto &&col : df_or_cols) {
-      cursor++;
-      auto cursorAsString = std::to_string(cursor);
-      auto last = cursorAsString.back();
-      while (last != '2' && last != '5') {
-        cursor++;
-        cursorAsString = std::to_string(cursor);
-        last = cursorAsString.back();
-      }
-      EXPECT_TRUE(col == defColNames[cursor]) << "Checking columns chosen with an or. An error was encountered!: expecting "
-                                              << defColNames[cursor] << " but found " << col;
+      EXPECT_TRUE(col == colNamesWith2And5[cursor])
+         << "Checking columns chosen with an or. An error was encountered!: expecting " << colNamesWith2And5[cursor]
+         << " but found " << col;
+      ++cursor;
    }
-
 }
 
 TEST(Cache, Carrays)
