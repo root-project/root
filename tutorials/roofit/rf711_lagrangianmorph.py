@@ -34,7 +34,7 @@ cHq3.setAttribute("NewPhysics", True)
 
 # Inputs to setup config
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
-infilename = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/input_histos_rf_lagrangianmorph.root";
+infilename = ROOT.gROOT.GetTutorialDir().Data() + "/roofit/input_histos_rf_lagrangianmorph.root"
 par = "cHq3"
 samplelist = ["SM_NPsq0", "cHq3_NPsq1", "cHq3_NPsq2"]
 
@@ -71,45 +71,28 @@ morph_datahist_0p5 = ROOT.RooDataHist("morph_dh_cHq3=0.5", "", [obsvar], morph_h
 
 input_hists = {sample: ROOT.TFile.Open(infilename).Get(sample).FindObject(observablename) for sample in samplelist}
 input_datahists = {
-    sample: ROOT.RooDataHist("dh_" + sample, "dh_" + sample, [obsvar], input_hists[sample])
-    for sample in samplelist
+    sample: ROOT.RooDataHist("dh_" + sample, "dh_" + sample, [obsvar], input_hists[sample]) for sample in samplelist
 }
 
 # Plot input templates
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
 frame0 = obsvar.frame(Title="Input templates for p_{T}^{V}")
-for sample, color in zip(samplelist, [ROOT.kBlack, ROOT.kRed, ROOT.kBlue]):
+for sample, color in zip(samplelist, "krb"):
     input_datahists[sample].plotOn(frame0, Name=sample, LineColor=color, MarkerColor=color, MarkerSize=1)
 
 # Plot morphed templates for cHq3=0.01,0.25,0.5
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
 frame1 = obsvar.frame(Title="Morphed templates for selected values")
-morph_datahist_0p01.plotOn(
-    frame1,
-    Name="morph_dh_cHq3=0.01",
+plot_args = dict(
     DrawOption="C",
-    LineColor=ROOT.kGreen,
-    DataError=getattr(ROOT.RooAbsData, "None"),
+    DataError=None,
     XErrorSize=0,
 )
-morph_datahist_0p25.plotOn(
-    frame1,
-    Name="morph_dh_cHq3=0.25",
-    DrawOption="C",
-    LineColor=ROOT.kGreen + 1,
-    DataError=getattr(ROOT.RooAbsData, "None"),
-    XErrorSize=0,
-)
-morph_datahist_0p5.plotOn(
-    frame1,
-    Name="morph_dh_cHq3=0.5",
-    DrawOption="C",
-    LineColor=ROOT.kGreen + 2,
-    DataError=getattr(ROOT.RooAbsData, "None"),
-    XErrorSize=0,
-)
+morph_datahist_0p01.plotOn(frame1, Name="morph_dh_cHq3=0.01", LineColor="kGreen", **plot_args)
+morph_datahist_0p25.plotOn(frame1, Name="morph_dh_cHq3=0.25", LineColor="kGreen+1", **plot_args)
+morph_datahist_0p5.plotOn(frame1, Name="morph_dh_cHq3=0.5", LineColor="kGreen+2", **plot_args)
 
 # Create wrapped pdf to generate 2D dataset of cHq3 as a function of pTV
 # -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -

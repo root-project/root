@@ -76,7 +76,7 @@ gauss.plotOn(frame)
 # but e.g. is a sum of weighted events) you can data with symmetric 'sum-of-weights' error instead
 # (same error bars as shown by ROOT)
 frame2 = x.frame(Title="Imported ROOT.TH1 with internal errors")
-dh.plotOn(frame2, DataError=ROOT.RooAbsData.SumW2)
+dh.plotOn(frame2, DataError="SumW2")
 gauss.plotOn(frame2)
 
 # Please note that error bars shown (Poisson or SumW2) are for visualization only, the are NOT used
