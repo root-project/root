@@ -1,9 +1,10 @@
 # JSROOT changelog
 
-## Change in 6.3.x
+## Changes in 6.3.3
 1. Fix TEfficiency drawing
 2. Provide TPadPainter.divide method
 3. Fix browsing remote file via THttpServer
+4. Fix lego draw update while zooming
 
 
 ## Changes in 6.3.2
