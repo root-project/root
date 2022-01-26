@@ -88,31 +88,31 @@ public:
    /// \brief Gives a different shape based on the node type
    void SetRoot()
    {
-      fColor = "#e8f8fc";
-      fShape = "oval";
+      fColor = "#f4b400";
+      fShape = "ellipse";
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gives a different shape based on the node type
    void SetFilter()
    {
-      fColor = "#c4cfd4";
-      fShape = "diamond";
+      fColor = "#0f9d58";
+      fShape = "hexagon";
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gives a different shape based on the node type
    void SetDefine()
    {
-      fColor = "#60aef3";
-      fShape = "oval";
+      fColor = "#4285f4";
+      fShape = "ellipse";
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gives a different shape based on the node type
    void SetRange()
    {
-      fColor = "#6F4D8F";
+      fColor = "#9574b4";
       fShape = "diamond";
    }
 
@@ -121,9 +121,10 @@ public:
    void SetAction(bool hasRun)
    {
       if (hasRun) {
-         fColor = "#baf1e5";
+         fName += "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>";
+         fColor = "#e6e5e6";
       } else {
-         fColor = "#9cbbe5";
+         fColor = "#e47c7e";
       }
       fShape = "box";
    }

@@ -317,7 +317,10 @@ public:
       return std::make_unique<RMergeableFill<Hist_t>>(*fResultHist);
    }
 
-   std::string GetActionName() { return "FillWithUnknownAxes"; }
+   std::string GetActionName()
+   {
+      return std::string(fResultHist->IsA()->GetName()) + "<BR/>" + std::string(fResultHist->GetName());
+   }
 };
 
 extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
@@ -501,7 +504,19 @@ public:
       return std::make_unique<RMergeableFill<HIST>>(*fObjects[0]);
    }
 
-   std::string GetActionName() { return "Fill"; }
+   // if the fObjects vector type is derived from TObject, return the name of the object
+   template <typename T = HIST, typename std::enable_if<std::is_base_of<TObject, T>::value>::type * = nullptr>
+   std::string GetActionName()
+   {
+      return std::string(fObjects[0]->IsA()->GetName()) + "<BR/>" + std::string(fObjects[0]->GetName());
+   }
+
+   // if fObjects is not derived from TObject, indicate it is some other object
+   template <typename T = HIST, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type * = nullptr>
+   std::string GetActionName()
+   {
+      return "Fill custom object";
+   }
 };
 
 class FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
