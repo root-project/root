@@ -2264,9 +2264,9 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Take ownership of the contents of 'comps'
+/// Take ownership of the contents of 'comps'.
 
-Bool_t RooAbsArg::addOwnedComponents(const RooArgSet& comps)
+bool RooAbsArg::addOwnedComponents(const RooAbsCollection& comps)
 {
   if (!_ownedComponents) {
     _ownedComponents = new RooArgSet("owned components") ;
@@ -2274,6 +2274,27 @@ Bool_t RooAbsArg::addOwnedComponents(const RooArgSet& comps)
   return _ownedComponents->addOwned(comps) ;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Take ownership of the contents of 'comps'. Different from the overload that
+/// taked the RooArgSet by `const&`, this version can also take an owning
+/// RooArgSet without error, because the ownership will not be ambiguous afterwards.
+
+bool RooAbsArg::addOwnedComponents(RooAbsCollection&& comps)
+{
+  if (!_ownedComponents) {
+    _ownedComponents = new RooArgSet("owned components") ;
+  }
+  return _ownedComponents->addOwned(std::move(comps)) ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// \copydoc RooAbsArg::addOwnedComponents(RooAbsCollection&& comps)
+
+bool RooAbsArg::addOwnedComponents(RooArgList&& comps) {
+  return addOwnedComponents(static_cast<RooAbsCollection&&>(std::move(comps)));
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2283,22 +2304,19 @@ Bool_t RooAbsArg::addOwnedComponents(const RooArgSet& comps)
 RooAbsArg* RooAbsArg::cloneTree(const char* newname) const
 {
   // Clone tree using snapshot
-  RooArgSet* clonedNodes = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+  RooArgSet clonedNodes;
+  RooArgSet(*this).snapshot(clonedNodes, true);
 
   // Find the head node in the cloneSet
-  RooAbsArg* head = clonedNodes->find(*this) ;
+  RooAbsArg* head = clonedNodes.find(*this) ;
   assert(head);
 
   // Remove the head node from the cloneSet
   // To release it from the set ownership
-  clonedNodes->remove(*head) ;
+  clonedNodes.remove(*head) ;
 
   // Add the set as owned component of the head
-  head->addOwnedComponents(*clonedNodes) ;
-
-  // Delete intermediate container
-  clonedNodes->releaseOwnership() ;
-  delete clonedNodes ;
+  head->addOwnedComponents(std::move(clonedNodes)) ;
 
   // Adjust name of head node if requested
   if (newname) {

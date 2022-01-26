@@ -241,20 +241,21 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   // don't participate in any caching, which are used to compute integrals.
   RooArgSet prodSetClone;
   prodSet.snapshot(prodSetClone, false);
-  saveSet.addOwned(prodSetClone);
-  prodSetClone.releaseOwnership();
 
-  RooProduct* prod = new RooProduct(prodName, "product", prodSetClone);
+  auto prod = std::make_unique<RooProduct>(prodName, "product", prodSetClone);
   prod->setExpensiveObjectCache(expensiveObjectCache()) ;
   prod->setOperMode(_operMode) ;
 
-  // Declare ownership of product
-  saveSet.addOwned(*prod);
-
   // Create integral performing remaining numeric integration over (partial) analytic product
-  RooAbsReal* ret = prod->createIntegral(numIntSet,isetRangeName) ;
-  ret->setOperMode(_operMode) ;
-  saveSet.addOwned(*ret) ;
+  std::unique_ptr<RooAbsReal> integral{prod->createIntegral(numIntSet,isetRangeName)};
+  integral->setOperMode(_operMode) ;
+  auto ret = integral.get();
+
+  // Declare ownership of prodSet, product, and integral
+  saveSet.addOwned(std::move(prodSetClone));
+  saveSet.addOwned(std::move(prod));
+  saveSet.addOwned(std::move(integral)) ;
+
 
   // Caller owners returned master integral object
   return ret ;

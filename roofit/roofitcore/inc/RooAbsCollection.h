@@ -34,6 +34,7 @@
 #include <unordered_map>
 #include <vector>
 #include <type_traits>
+#include <memory>
 
 
 // To make ROOT::RangeStaticCast available under the name static_range_cast.
@@ -110,6 +111,7 @@ public:
   // List content management
   virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
+  bool addOwned(std::unique_ptr<RooAbsArg> var, bool silent=false);
   virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
   virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
@@ -132,7 +134,8 @@ public:
   bool add(const RooAbsCollection& list, bool silent=kFALSE) {
     return add(list._list.begin(), list._list.end(), silent);
   }
-  virtual Bool_t addOwned(const RooAbsCollection& list, Bool_t silent=kFALSE);
+  virtual bool addOwned(const RooAbsCollection& list, bool silent=false);
+  bool addOwned(RooAbsCollection&& list, bool silent=false);
   virtual void   addClone(const RooAbsCollection& list, Bool_t silent=kFALSE);
   Bool_t replace(const RooAbsCollection &other);
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
