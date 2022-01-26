@@ -3929,12 +3929,12 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit histogram with the function pointer f1.
 ///
-/// \param[in] f1 pointer to the function object 
-/// \param[in] option string defining the fit options (see table below). 
+/// \param[in] f1 pointer to the function object
+/// \param[in] option string defining the fit options (see table below).
 /// \param[in] goption specify a list of graphics options. See TH1::Draw for a complete list of these options.
 /// \param[in] xxmin lower fitting range
 /// \param[in] xxmax upper fitting range
-/// \return A smart pointer to the TFitResult class 
+/// \return A smart pointer to the TFitResult class
 ///
 /// \anchor HFitOpt
 /// ### Histogram Fitting Options
@@ -3947,7 +3947,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///   "L"  | Uses a log likelihood method (default is chi-square method). To be used when the histogram represents counts.
 ///   "WL" | Weighted log likelihood method. To be used when the histogram has been filled with weights different than 1. This is needed for getting correct parameter uncertainties for weighted fits.
 ///   "P"  | Uses Pearson chi-square method. Uses expected errors instead of the observed one (default case). The expected error is instead estimated from the square-root of the bin function value.
-///   "MULTI" | Uses Loglikelihood method based on multi-nomial distribution. In this case the function must be normalized and one fits only the function shape. 
+///   "MULTI" | Uses Loglikelihood method based on multi-nomial distribution. In this case the function must be normalized and one fits only the function shape.
 ///   "W"  | Fit using the chi-square method and ignoring the bin uncertainties and skip empty bins.
 ///   "WW" | Fit using the chi-square method and ignoring the bin uncertainties and include the empty bins.
 ///   "I"  | Uses the integral of function in the bin instead of the default bin center value.
@@ -3970,23 +3970,23 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///   "MULTITHREAD" | Forces usage of multi-thread execution whenever possible
 ///
 /// The default fitting of an histogram (when no option is given) is perfomed as following:
-///   - a chi-square fit (see below Chi-square Fits) computed using the bin histogram errors and excluding bins with zero errors (empty bins); 
+///   - a chi-square fit (see below Chi-square Fits) computed using the bin histogram errors and excluding bins with zero errors (empty bins);
 ///   - the full range of the histogram is used;
 ///   - the default Minimizer with its default configuration is used (see below Minimizer Configuration) except for linear function;
 ///   - for linear functions (`polN`, `chenbyshev` or formula expressions combined using operator `++`) a linear minimization is used.
-///   - only the status of the fit is returned; 
+///   - only the status of the fit is returned;
 ///   - the fit is performed in Multithread whenever is enabled in ROOT;
 ///   - only the last fitted function is saved in the histogram;
 ///   - the histogram is drawn after fitting overalyed with the resulting fitting function
 ///
 /// \anchor HFitMinimizer
 /// ### Minimizer Configuration
-///  
-/// The Fit is perfomed using  the default Minimizer, defined in the `ROOT::Math::MinimizerOptions` class. 
+///
+/// The Fit is perfomed using  the default Minimizer, defined in the `ROOT::Math::MinimizerOptions` class.
 /// It is possible to change the default minimizer and its configuration parameters by calling these static functions before fitting (before calling `TH1::Fit`):
 ///  - `ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerName, minimizerAgorithm)` for changing the minmizer and/or the corresponding algorithm.
 ///     For example `ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS");` will set the usage of the BFGS algorithm of the GSL multi-dimensional minimization
-///     The current defaults are ("Minuit","Migrad"). 
+///     The current defaults are ("Minuit","Migrad").
 ///     See the documentation of the `ROOT::Math::MinimizerOptions` for the available minimizers in ROOT  and their corresponding algorithms.
 ///  - `ROOT::Math::MinimizerOptions::SetDefaultTolerance` for setting a different tolerance value for the minimization.
 ///  - `ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls` for setting the maximum number of function calls.
@@ -4013,10 +4013,10 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// an un-weighted histogram). Bins with zero errors are excluded from the fit. See also later the note on the treatment
 /// of empty bins. When using option "I" the residual is computed not using the function value at the bin center, `f(x(i)|p)`,
 /// but the integral of the function in the bin,   Integral{ f(x|p)dx }, divided by the bin volume.
-/// When using option `P` (Pearson chi2), the expected error computed as `e(i) = sqrt(f(x(i)|p))` is used. 
-/// In this case empty bins are considered in the fit. 
-/// Both chi-square methods should not be used when the bin content represent counts, especially in case of low bin statistics, 
-/// because they could return a biased result.  
+/// When using option `P` (Pearson chi2), the expected error computed as `e(i) = sqrt(f(x(i)|p))` is used.
+/// In this case empty bins are considered in the fit.
+/// Both chi-square methods should not be used when the bin content represent counts, especially in case of low bin statistics,
+/// because they could return a biased result.
 ///
 /// \anchor HFitNLL
 /// ### Likelihood Fits
@@ -4036,19 +4036,19 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// \f[
 ///       NLL = \sum_{i}{( f(x(i) | p ) + y(i)\log(y(i)/ f(x(i) | p )) - y(i)) }
 /// \f]
-/// By using this formulation, `2*NLL` can be interpreted as the chi-square resulting from the fit. 
+/// By using this formulation, `2*NLL` can be interpreted as the chi-square resulting from the fit.
 ///
 /// This method should be always used when the bin content represents counts (i.e. errors are sqrt(N) ).
 /// The likelihood method has the advantage of treating correctly bins with low statistics. In case of high
 /// statistics/bin the distribution of the bin content becomes a normal distribution and the likelihood and the chi2 fit
 /// give the same result.
 ///
-/// The likelihood method, although a bit slower, it is therefore the recommended method, 
-/// when the histogram represent counts (Poisson statistics), where the chi-square methods may 
+/// The likelihood method, although a bit slower, it is therefore the recommended method,
+/// when the histogram represent counts (Poisson statistics), where the chi-square methods may
 /// give incorrect results, especially in case of low statistics.
 /// In case of a weighted histogram, it is possible to perform also a likelihood fit by using the
 /// option "WL". Note a weighted histogram is a histogram which has been filled with weights and it
-/// has the information on the sum of the weight square for each bin ( TH1::Sumw2() has been called). 
+/// has the information on the sum of the weight square for each bin ( TH1::Sumw2() has been called).
 /// The bin error for a weighted histogram is the square root of the sum of the weight square.
 ///
 /// \anchor HFitRes
@@ -4063,7 +4063,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// ~~~
 ///
 /// If the option "S" is instead used, TFitResultPtr behaves as a smart
-/// pointer to the TFitResult object. This is useful for retrieving the full result information from the fit, such as the covariance matrix, 
+/// pointer to the TFitResult object. This is useful for retrieving the full result information from the fit, such as the covariance matrix,
 /// as shown in this example code:
 ///
 /// ~~~ {.cpp}
@@ -4077,7 +4077,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// ~~~
 ///
 /// The fit parameters, error and chi-square (but not covariance matrix) can be retrieved also
-/// directly from the fitted function that is passed to this call. 
+/// directly from the fitted function that is passed to this call.
 /// Given a pointer to an associated fitted function `myfunc`, one can retrieve the function/fit
 /// parameters with calls such as:
 ///
@@ -4110,10 +4110,10 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///     TFitResultPtr r = h->Fit(myFunc,opt);
 ///     Int_t fitStatus = r;
 /// ~~~
-/// 
+///
 /// - `status = 0` : the fit has been performed successfully (i.e no error occurred).
 /// - `status < 0` : there is an error not connected with the minimization procedure, for example  when a wrong function is used.
-/// - `status > 0` : return status from Minimizer, depends on used Minimizer. For example for TMinuit and Minuit2 we have: 
+/// - `status > 0` : return status from Minimizer, depends on used Minimizer. For example for TMinuit and Minuit2 we have:
 ///     - `status =  migradStatus + 10*minosStatus + 100*hesseStatus + 1000*improveStatus`.
 ///     TMinuit returns 0 (for migrad, minos, hesse or improve) in case of success and 4 in case of error (see the documentation of TMinuit::mnexcm). For example, for an error
 ///     only in Minos but not in Migrad a fitStatus of 40 will be returned.
@@ -4123,13 +4123,13 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///     minos return status and Minuit2Minimizer::Hesse for the hesse return status.
 ///     If other minimizers are used see their specific documentation for the status code returned.
 ///     For example in the case of Fumili, see TFumili::Minimize.
-/// 
+///
 /// \anchor HFitRange
 /// ### Fitting in a range
 ///
 /// In order to fit in a sub-range of the histogram you have two options:
 /// -  pass to this function the lower (`xxmin`) and upper (`xxmax`) values for the fitting range;
-/// -  define a specific range in the fitted function and use the fitting option "R".  
+/// -  define a specific range in the fitted function and use the fitting option "R".
 ///    For example, if your histogram has a defined range between -4 and 4 and you want to fit a gaussian
 ///    only in the interval 1 to 3, you can do:
 ///
@@ -4175,7 +4175,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// \anchor HFitStatBox
 /// ### Fit Statistics Box
 ///
-///   The statistics box can display the result of the fit. 
+///   The statistics box can display the result of the fit.
 ///   You can change the statistics box to display the fit parameters with
 ///   the TStyle::SetOptFit(mode) method. This mode has four digits.
 ///   mode = pcev  (default = 0111)
@@ -4196,11 +4196,11 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///
 /// \anchor HFitExtra
 /// ### Additional Notes on Fitting
-/// 
+///
 /// #### Fitting a histogram of dimension N with a function of dimension N-1
 ///
 /// It is possible to fit a TH2 with a TF1 or a TH3 with a TF2.
-/// In this case the chi-square is computed from the squared error distance between the function values and the bin centers weighted by the bin content. 
+/// In this case the chi-square is computed from the squared error distance between the function values and the bin centers weighted by the bin content.
 /// For correct error scaling, the obtained parameter error are corrected as in the case when the
 /// option "W" is used.
 ///
@@ -4236,9 +4236,9 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// If the bin errors are not known, one should use the fit option "W", which gives a weight=1 for each bin (it is an unweighted least-square
 /// fit). When using option "WW" the empty bins will be also considered in the chi-square fit with an error of 1.
 /// Note that in this fitting case (option "W" or "WW ) the resulting fitted parameter errors
-/// are corrected by the obtained chi2 value using this scaling expression:   
+/// are corrected by the obtained chi2 value using this scaling expression:
 ///`errorp *= sqrt(chisquare/(ndf-1))` as it is done when fitting a TGraph with
-/// no point errors. 
+/// no point errors.
 ///
 /// #### Excluding points
 ///
@@ -4255,7 +4255,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// ~~~ {.cpp}
 ///     h.Fit("myFunction", "0"); // fit, store function but do not draw
 ///     h.Draw(); function is not drawn
-///     h.GetFunction("myFunction")->ResetBit(TF1::kNotDraw); 
+///     h.GetFunction("myFunction")->ResetBit(TF1::kNotDraw);
 ///     h.Draw();  // function is visible again
 /// ~~~
 ///
@@ -4459,18 +4459,17 @@ Double_t TH1::GetEffectiveEntries() const
 
 void TH1::SetHighlight(Bool_t set)
 {
-   if (IsHighlight() == set) return;
+   if (IsHighlight() == set)
+      return;
    if (fDimension > 2) {
       Info("SetHighlight", "Supported only 1-D or 2-D histograms");
       return;
    }
 
-   if (!fPainter) {
-      Info("SetHighlight", "Need to draw histogram first");
-      return;
-   }
    SetBit(kIsHighlight, set);
-   fPainter->SetHighlight();
+
+   if (fPainter)
+      fPainter->SetHighlight();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
