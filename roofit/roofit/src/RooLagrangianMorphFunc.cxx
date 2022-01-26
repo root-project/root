@@ -448,10 +448,10 @@ void readValues(std::map<const std::string, T> &myMap, TH1 *h_pc)
    }
 }
 
-
-/// Reading file-resident TFolders results in memory leakage, addressing this 
-/// by assigning ownership to the loaded folder over its content 
-/// and then deleting 
+///////////////////////////////////////////////////////////////////////////////
+/// Set up a TFolder loaded from a file to own its content. 
+/// Also recursively updates nested subfolders accordingly
+/// Optionally, delete the TFolder at the end
 /// @param folder TFolder to clean up 
 /// @param deleteIt if set, enable deletion of the folder after 
 ///                 setting ownership  
@@ -463,8 +463,7 @@ void cleanUpFolder(TFolder* folder, bool deleteIt=true){
   for (auto* subdir : *subdirs){
     auto thisfolder = dynamic_cast<TFolder*>(subdir);  
     if (thisfolder){
-      // recursively clean up the subfolders - no explicit deletion here, 
-      // will be handled by owning parent
+      // no explicit deletion here, will be handled by parent
       cleanUpFolder(thisfolder, false); 
     }
   }
@@ -472,7 +471,8 @@ void cleanUpFolder(TFolder* folder, bool deleteIt=true){
   if (deleteIt) delete folder; 
 }
 
-/// Helper to load an object from a file-resident TFolder, while 
+///////////////////////////////////////////////////////////////////////////////
+/// Helper to load a single object from a file-resident TFolder, while 
 /// avoiding memory leaks. 
 /// @tparam objType Type of object to load. 
 /// @param inFile input file to load from. Expected to be a valid pointer 
