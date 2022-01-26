@@ -405,20 +405,23 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
       std::size_t fBufPos = 0;
    };
 
-   const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterKey.fClusterId);
-
-   // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
-   for (auto columnId : clusterKey.fColumnSet) {
-      const auto &pageRange = clusterDesc.GetPageRange(columnId);
-      NTupleSize_t pageNo = 0;
-      for (const auto &pageInfo : pageRange.fPageInfos) {
-         const auto &pageLocator = pageInfo.fLocator;
-         activeSize += pageLocator.fBytesOnStorage;
-         onDiskPages.push_back(
-            {columnId, pageNo, std::uint64_t(pageLocator.fPosition), pageLocator.fBytesOnStorage, 0});
-         ++pageNo;
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
+
+      // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
+      for (auto columnId : clusterKey.fColumnSet) {
+         const auto &pageRange = clusterDesc.GetPageRange(columnId);
+         NTupleSize_t pageNo = 0;
+         for (const auto &pageInfo : pageRange.fPageInfos) {
+            const auto &pageLocator = pageInfo.fLocator;
+            activeSize += pageLocator.fBytesOnStorage;
+            onDiskPages.push_back(
+               {columnId, pageNo, std::uint64_t(pageLocator.fPosition), pageLocator.fBytesOnStorage, 0});
+            ++pageNo;
+         }
       }
    }
 

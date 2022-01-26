@@ -54,13 +54,14 @@ public:
    /** Name of RField */
    std::string GetName() const override
    {
-      return fNtplSource->GetDescriptor().GetFieldDescriptor(fFieldId).GetFieldName();
+      return fNtplSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fFieldId).GetFieldName();
    }
 
    /** Title of RField */
    std::string GetTitle() const override
    {
-      auto &fld = fNtplSource->GetDescriptor().GetFieldDescriptor(fFieldId);
+      auto descriptorGuard = fNtplSource->GetSharedDescriptorGuard();
+      auto &fld = descriptorGuard->GetFieldDescriptor(fFieldId);
       return "RField name "s + fld.GetFieldName() + " type "s + fld.GetTypeName();
    }
 
@@ -76,7 +77,8 @@ public:
 
    EActionKind GetDefaultAction() const override
    {
-      auto range = fNtplSource->GetDescriptor().GetFieldIterable(fFieldId);
+      auto descriptorGuard = fNtplSource->GetSharedDescriptorGuard();
+      auto range = descriptorGuard->GetFieldIterable(fFieldId);
       if (range.begin() != range.end()) return kActNone;
       return kActDraw7;
    }
@@ -119,7 +121,7 @@ public:
    bool IsNull() const { return !fNtplSource; }
 
    /** Name of NTuple */
-   std::string GetName() const override { return fNtplSource->GetDescriptor().GetName(); }
+   std::string GetName() const override { return fNtplSource->GetSharedDescriptorGuard()->GetName(); }
 
    /** Title of NTuple */
    std::string GetTitle() const override { return "RNTuple title"s; }
@@ -170,12 +172,13 @@ public:
 
    std::string GetItemName() const override
    {
-      return fNtplSource->GetDescriptor().GetFieldDescriptor(fFieldIds[fCounter]).GetFieldName();
+      return fNtplSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fFieldIds[fCounter]).GetFieldName();
    }
 
    bool CanItemHaveChilds() const override
    {
-      auto subrange = fNtplSource->GetDescriptor().GetFieldIterable(fFieldIds[fCounter]);
+      auto descriptorGuard = fNtplSource->GetSharedDescriptorGuard();
+      auto subrange = descriptorGuard->GetFieldIterable(fFieldIds[fCounter]);
       return subrange.begin() != subrange.end();
    }
 
@@ -184,13 +187,24 @@ public:
    {
 
       int nchilds = 0;
-      for (auto &sub: fNtplSource->GetDescriptor().GetFieldIterable(fFieldIds[fCounter])) { (void) sub; nchilds++; }
+      std::string fieldName;
+      std::string typeName;
 
-      auto &field = fNtplSource->GetDescriptor().GetFieldDescriptor(fFieldIds[fCounter]);
+      {
+         auto descriptorGuard = fNtplSource->GetSharedDescriptorGuard();
+         for (auto &sub : descriptorGuard->GetFieldIterable(fFieldIds[fCounter])) {
+            (void)sub;
+            nchilds++;
+         }
 
-      auto item = std::make_unique<RItem>(field.GetFieldName(), nchilds, nchilds > 0 ? "sap-icon://split" : "sap-icon://e-care");
+         auto &field = descriptorGuard->GetFieldDescriptor(fFieldIds[fCounter]);
+         fieldName = field.GetFieldName();
+         typeName = field.GetTypeName();
+      }
 
-      item->SetTitle("RField name "s + field.GetFieldName() + " type "s + field.GetTypeName());
+      auto item = std::make_unique<RItem>(fieldName, nchilds, nchilds > 0 ? "sap-icon://split" : "sap-icon://e-care");
+
+      item->SetTitle("RField name "s + fieldName + " type "s + typeName);
 
       return item;
    }
@@ -205,15 +219,21 @@ public:
 std::unique_ptr<RLevelIter> RFieldElement::GetChildsIter()
 {
    std::vector<ROOT::Experimental::DescriptorId_t> ids;
+   std::string prefix;
 
-   for (auto &f : fNtplSource->GetDescriptor().GetFieldIterable(fFieldId))
-      ids.emplace_back(f.GetId());
+   {
+      auto descriptorGuard = fNtplSource->GetSharedDescriptorGuard();
 
-   if (ids.size() == 0) return nullptr;
+      for (auto &f : descriptorGuard->GetFieldIterable(fFieldId))
+         ids.emplace_back(f.GetId());
 
-   std::string prefix = fParentName;
-   auto &fld = fNtplSource->GetDescriptor().GetFieldDescriptor(fFieldId);
-   prefix.append(fld.GetFieldName());
+      if (ids.size() == 0)
+         return nullptr;
+
+      prefix = fParentName;
+      auto &fld = descriptorGuard->GetFieldDescriptor(fFieldId);
+      prefix.append(fld.GetFieldName());
+   }
    prefix.append(".");
 
    return std::make_unique<RFieldsIterator>(fNtplSource, std::move(ids), prefix);
@@ -223,8 +243,11 @@ std::unique_ptr<RLevelIter> RNTupleElement::GetChildsIter()
 {
    std::vector<ROOT::Experimental::DescriptorId_t> ids;
 
-   for (auto &f : fNtplSource->GetDescriptor().GetTopLevelFields())
-      ids.emplace_back(f.GetId());
+   {
+      auto descriptorGuard = fNtplSource->GetSharedDescriptorGuard();
+      for (auto &f : descriptorGuard->GetTopLevelFields())
+         ids.emplace_back(f.GetId());
+   }
 
    if (ids.size() == 0) return nullptr;
    return std::make_unique<RFieldsIterator>(fNtplSource, std::move(ids));

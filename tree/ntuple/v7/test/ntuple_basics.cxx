@@ -21,7 +21,7 @@ TEST(RNTuple, ReconstructModel)
    RPageSourceFile source("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
    source.Attach();
 
-   auto modelReconstructed = source.GetDescriptor().GenerateModel();
+   auto modelReconstructed = source.GetSharedDescriptorGuard()->GenerateModel();
    try {
       modelReconstructed->GetDefaultEntry()->Get<float>("xyz");
       FAIL() << "invalid field name should throw";

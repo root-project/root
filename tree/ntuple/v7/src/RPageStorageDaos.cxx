@@ -499,8 +499,6 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
       auto clusterId = clusterKey.fClusterId;
       fCounters->fNClusterLoaded.Inc();
 
-      const auto &clusterDesc = GetDescriptor().GetClusterDescriptor(clusterId);
-
       struct RDaosSealedPageLocator {
          RDaosSealedPageLocator() = default;
          RDaosSealedPageLocator(DescriptorId_t c, NTupleSize_t p, std::uint64_t o, std::uint64_t s, std::size_t b)
@@ -512,18 +510,23 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
          std::size_t fBufPos = 0;
       };
 
-      // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
       std::vector<RDaosSealedPageLocator> onDiskPages;
       std::size_t szPayload = 0;
-      for (auto columnId : clusterKey.fColumnSet) {
-         const auto &pageRange = clusterDesc.GetPageRange(columnId);
-         NTupleSize_t pageNo = 0;
-         for (const auto &pageInfo : pageRange.fPageInfos) {
-            const auto &pageLocator = pageInfo.fLocator;
-            onDiskPages.emplace_back(RDaosSealedPageLocator(
-               columnId, pageNo, pageLocator.fPosition, pageLocator.fBytesOnStorage, szPayload));
-            szPayload += pageLocator.fBytesOnStorage;
-            ++pageNo;
+      {
+         auto descriptorGuard = GetSharedDescriptorGuard();
+         const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterId);
+
+         // Collect the page necessary page meta-data and sum up the total size of the compressed and packed pages
+         for (auto columnId : clusterKey.fColumnSet) {
+            const auto &pageRange = clusterDesc.GetPageRange(columnId);
+            NTupleSize_t pageNo = 0;
+            for (const auto &pageInfo : pageRange.fPageInfos) {
+               const auto &pageLocator = pageInfo.fLocator;
+               onDiskPages.emplace_back(RDaosSealedPageLocator(columnId, pageNo, pageLocator.fPosition,
+                                                               pageLocator.fBytesOnStorage, szPayload));
+               szPayload += pageLocator.fBytesOnStorage;
+               ++pageNo;
+            }
          }
       }
 

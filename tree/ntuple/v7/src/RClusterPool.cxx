@@ -235,39 +235,41 @@ ROOT::Experimental::Detail::RCluster *
 ROOT::Experimental::Detail::RClusterPool::GetCluster(
    DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns)
 {
-   const auto &desc = fPageSource.GetDescriptor();
-
-   // Determine previous cluster ids that we keep if they happen to be in the pool
    std::set<DescriptorId_t> keep;
-   auto prev = clusterId;
-   for (unsigned int i = 0; i < fWindowPre; ++i) {
-      prev = desc.FindPrevClusterId(prev);
-      if (prev == kInvalidDescriptorId)
-         break;
-      keep.insert(prev);
-   }
-
-   // Determine following cluster ids and the column ids that we want to make available
    RProvides provide;
-   RProvides::RInfo provideInfo;
-   provideInfo.fColumnSet = columns;
-   provideInfo.fBunchId = fBunchId;
-   provideInfo.fFlags = RProvides::kFlagRequired;
-   for (DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
-      if (i == fClusterBunchSize)
-         provideInfo.fBunchId = ++fBunchId;
+   {
+      auto descriptorGuard = fPageSource.GetSharedDescriptorGuard();
 
-      auto cid = next;
-      next = desc.FindNextClusterId(cid);
-      if (next == kInvalidDescriptorId)
-         provideInfo.fFlags |= RProvides::kFlagLast;
+      // Determine previous cluster ids that we keep if they happen to be in the pool
+      auto prev = clusterId;
+      for (unsigned int i = 0; i < fWindowPre; ++i) {
+         prev = descriptorGuard->FindPrevClusterId(prev);
+         if (prev == kInvalidDescriptorId)
+            break;
+         keep.insert(prev);
+      }
 
-      provide.Insert(cid, provideInfo);
+      // Determine following cluster ids and the column ids that we want to make available
+      RProvides::RInfo provideInfo;
+      provideInfo.fColumnSet = columns;
+      provideInfo.fBunchId = fBunchId;
+      provideInfo.fFlags = RProvides::kFlagRequired;
+      for (DescriptorId_t i = 0, next = clusterId; i < 2 * fClusterBunchSize; ++i) {
+         if (i == fClusterBunchSize)
+            provideInfo.fBunchId = ++fBunchId;
 
-      if (next == kInvalidDescriptorId)
-         break;
-      provideInfo.fFlags = 0;
-   }
+         auto cid = next;
+         next = descriptorGuard->FindNextClusterId(cid);
+         if (next == kInvalidDescriptorId)
+            provideInfo.fFlags |= RProvides::kFlagLast;
+
+         provide.Insert(cid, provideInfo);
+
+         if (next == kInvalidDescriptorId)
+            break;
+         provideInfo.fFlags = 0;
+      }
+   } // descriptorGuard
 
    // Clear the cache from clusters not the in the look-ahead or the look-back window
    for (auto &cptr : fPool) {

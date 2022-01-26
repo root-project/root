@@ -294,6 +294,7 @@ public:
       RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&) = delete;
       ~RSharedDescriptorGuard() { fLock.unlock_shared(); }
       const RNTupleDescriptor *operator->() const { return &fDescriptor; }
+      const RNTupleDescriptor &GetRef() const { return fDescriptor; }
    };
 
    /// An RAII wrapper used for the writable access to RPageSource::fDescriptor
@@ -390,12 +391,13 @@ public:
    virtual std::unique_ptr<RPageSource> Clone() const = 0;
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
+   const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
+
    const RSharedDescriptorGuard GetSharedDescriptorGuard() const
    {
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
    }
-   const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
-   const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
+
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) override;
    void DropColumn(ColumnHandle_t columnHandle) override;
 

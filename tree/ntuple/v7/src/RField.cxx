@@ -353,7 +353,10 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &pageSource)
 {
    R__ASSERT(fColumns.empty());
-   GenerateColumnsImpl(pageSource.GetDescriptor());
+   {
+      const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
+      GenerateColumnsImpl(descriptorGuard.GetRef());
+   }
    if (!fColumns.empty())
       fPrincipalColumn = fColumns[0].get();
    for (auto& column : fColumns)

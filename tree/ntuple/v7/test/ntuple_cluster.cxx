@@ -300,9 +300,11 @@ TEST(PageStorageFile, LoadClusters)
       "myNTuple", fileGuard.GetPath(), ROOT::Experimental::RNTupleReadOptions());
    source.Attach();
 
-   auto ptId = source.GetDescriptor().FindFieldId("pt");
+   auto descriptorGuard = source.GetSharedDescriptorGuard();
+
+   auto ptId = descriptorGuard->FindFieldId("pt");
    EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, ptId);
-   auto colId = source.GetDescriptor().FindColumnId(ptId, 0);
+   auto colId = descriptorGuard->FindColumnId(ptId, 0);
    EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
 
    std::vector<ROOT::Experimental::Detail::RCluster::RKey> clusterKeys;

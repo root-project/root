@@ -68,13 +68,14 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) {
-   const auto &desc = fSource->GetDescriptor();
-   model.GetFieldZero()->SetOnDiskId(desc.GetFieldZeroId());
+   // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
+   model.GetFieldZero()->SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
    for (auto &field : *model.GetFieldZero()) {
       // If the model has been created from the descritor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
       if (field.GetOnDiskId() == kInvalidDescriptorId) {
-         field.SetOnDiskId(desc.FindFieldId(field.GetName(), field.GetParent()->GetOnDiskId()));
+         field.SetOnDiskId(
+            fSource->GetSharedDescriptorGuard()->FindFieldId(field.GetName(), field.GetParent()->GetOnDiskId()));
       }
       field.ConnectPageSource(*fSource);
    }
@@ -153,7 +154,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
 ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
 {
    if (!fModel) {
-      fModel = fSource->GetDescriptor().GenerateModel();
+      fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
       ConnectModel(*fModel);
    }
    return fModel.get();
@@ -170,9 +171,16 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       return;
    }
    */
-   std::string name = fSource->GetDescriptor().GetName();
    switch (what) {
    case ENTupleInfo::kSummary: {
+      std::string name;
+      std::unique_ptr<RNTupleModel> fullModel;
+      {
+         auto descriptorGuard = fSource->GetSharedDescriptorGuard();
+         name = descriptorGuard->GetName();
+         fullModel = descriptorGuard->GenerateModel();
+      }
+
       for (int i = 0; i < (width/2 + width%2 - 4); ++i)
             output << frameSymbol;
       output << " NTUPLE ";
@@ -189,7 +197,6 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       RPrintSchemaVisitor printVisitor(output);
 
       // Note that we do not need to connect the model, we are only looking at its tree of fields
-      auto fullModel = fSource->GetDescriptor().GenerateModel();
       fullModel->GetFieldZero()->AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
@@ -206,9 +213,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       output << std::endl;
       break;
    }
-   case ENTupleInfo::kStorageDetails:
-      fSource->GetDescriptor().PrintInfo(output);
-      break;
+   case ENTupleInfo::kStorageDetails: fSource->GetSharedDescriptorGuard()->PrintInfo(output); break;
    case ENTupleInfo::kMetrics:
       fMetrics.Print(output);
       break;
