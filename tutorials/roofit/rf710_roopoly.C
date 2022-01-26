@@ -63,5 +63,5 @@ void rf710_roopoly()
    legend->AddEntry("f", "Polynomial of fourth order", "L");
    legend->Draw();
    c->Draw();
-   c->SaveAs("rf710_roopoly.pdf");
+   c->SaveAs("rf710_roopoly.png");
 }

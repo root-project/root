@@ -619,7 +619,7 @@ inline void addCoupling(T &set, const TString &name, const TString &formula, con
 {
    if (!set.find(name)) {
       RooFormulaVar *c = new RooFormulaVar(name, formula, components);
-      c->setAttribute("NP", isNP);
+      c->setAttribute("NewPhysics", isNP);
       set.add(*c);
    }
 }
@@ -1205,7 +1205,7 @@ buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputP
             RooAbsReal *coupling = dynamic_cast<RooAbsReal *>(couplings.at(j));
             for (int k = 0; k < exponent; ++k) {
                ss.add(*coupling);
-               if (coupling->getAttribute("NP")) {
+               if (coupling->getAttribute("NewPhysics")) {
                   nNP++;
                }
             }
@@ -1228,7 +1228,7 @@ buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputP
          auto obj = dynamic_cast<RooAbsReal *>(itr);
          if (!obj)
             continue;
-         TString sval(obj->getStringAttribute("NP"));
+         TString sval(obj->getStringAttribute("NewPhysics"));
          int val = atoi(sval);
          if (val == nNP) {
             if (flagsZero.find(obj->GetName()) != flagsZero.end() && flagsZero.at(obj->GetName())) {
@@ -1984,23 +1984,23 @@ void RooLagrangianMorphFunc::init()
    closeFile(file);
    this->addServerList(this->_physics);
    RooRealVar *nNP0 = new RooRealVar("nNP0", "nNP0", 1., 0, 1.);
-   nNP0->setStringAttribute("NP", "0");
+   nNP0->setStringAttribute("NewPhysics", "0");
    nNP0->setConstant(true);
    this->_flags.add(*nNP0);
    RooRealVar *nNP1 = new RooRealVar("nNP1", "nNP1", 1., 0, 1.);
-   nNP1->setStringAttribute("NP", "1");
+   nNP1->setStringAttribute("NewPhysics", "1");
    nNP1->setConstant(true);
    this->_flags.add(*nNP1);
    RooRealVar *nNP2 = new RooRealVar("nNP2", "nNP2", 1., 0, 1.);
-   nNP2->setStringAttribute("NP", "2");
+   nNP2->setStringAttribute("NewPhysics", "2");
    nNP2->setConstant(true);
    this->_flags.add(*nNP2);
    RooRealVar *nNP3 = new RooRealVar("nNP3", "nNP3", 1., 0, 1.);
-   nNP3->setStringAttribute("NP", "3");
+   nNP3->setStringAttribute("NewPhysics", "3");
    nNP3->setConstant(true);
    this->_flags.add(*nNP3);
    RooRealVar *nNP4 = new RooRealVar("nNP4", "nNP4", 1., 0, 1.);
-   nNP4->setStringAttribute("NP", "4");
+   nNP4->setStringAttribute("NewPhysics", "4");
    nNP4->setConstant(true);
    this->_flags.add(*nNP4);
 }
