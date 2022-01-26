@@ -13,42 +13,20 @@
 /// \date March 2018
 /// \author Jan Musinsky
 
-void Highlight2(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb);
-
-TText *info;
-
-
-void hlHisto2()
-{
-   auto Canvas = new TCanvas("Canvas", "Canvas", 0, 0, 500, 500);
-   auto h2 = new TH2F("h2", "", 50, -5.0, 5.0, 50, -5.0, 5.0);
-   for (Int_t i = 0; i < 10000; i++) h2->Fill(gRandom->Gaus(), gRandom->Gaus());
-   h2->Draw("col");
-
-   info = new TText(0.0, -4.0, "please move the mouse over the frame");
-   info->SetTextAlign(22);
-   info->SetTextSize(0.04);
-   info->SetTextColor(kRed+1);
-   info->SetBit(kCannotPick);
-   info->Draw();
-   Canvas->Update();
-
-   h2->SetHighlight();
-   Canvas->HighlightConnect("Highlight2(TVirtualPad*,TObject*,Int_t,Int_t)");
-}
-
+TText *info = nullptr;
 
 void Highlight2(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
 {
-   auto h2 = (TH2F *)obj;
+   auto h2 = dynamic_cast<TH2F *>(obj);
    if(!h2) return;
    auto CanvasProj = (TCanvas *) gROOT->GetListOfCanvases()->FindObject("CanvasProj");
    if (!h2->IsHighlight()) { // after highlight disabled
       if (CanvasProj) delete CanvasProj;
+      h2->SetTitle("Disable highlight");
       return;
    }
 
-   info->SetTitle("");
+   if (info) info->SetTitle("");
 
    auto px = h2->ProjectionX("_px", yhb, yhb);
    auto py = h2->ProjectionY("_py", xhb, xhb);
@@ -64,7 +42,32 @@ void Highlight2(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
       py->Draw();
    }
 
+   h2->SetTitle(TString::Format("Highlight bin [%02d, %02d]", xhb, yhb).Data());
+   pad->Modified();
+   pad->Update();
+
    CanvasProj->GetPad(1)->Modified();
    CanvasProj->GetPad(2)->Modified();
    CanvasProj->Update();
 }
+
+void hlHisto2()
+{
+   auto c1 = new TCanvas("Canvas", "Canvas", 0, 0, 500, 500);
+   c1->HighlightConnect("Highlight2(TVirtualPad*,TObject*,Int_t,Int_t)");
+
+   auto h2 = new TH2F("h2", "", 50, -5.0, 5.0, 50, -5.0, 5.0);
+   for (Int_t i = 0; i < 10000; i++) h2->Fill(gRandom->Gaus(), gRandom->Gaus());
+   h2->Draw("col");
+
+   info = new TText(0.0, -4.0, "please move the mouse over the frame");
+   info->SetTextAlign(22);
+   info->SetTextSize(0.04);
+   info->SetTextColor(kRed+1);
+   info->SetBit(kCannotPick);
+   info->Draw();
+   c1->Update();
+
+   h2->SetHighlight();
+}
+
