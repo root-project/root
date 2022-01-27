@@ -1370,7 +1370,7 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 ///               e.g. `-DFOO=bar`. The last element of the array must be `nullptr`.
 
 TCling::TCling(const char *name, const char *title, const char* const argv[])
-: TInterpreter(name, title), fMore(0), fGlobalsListSerial(-1), fMapfile(nullptr),
+: TInterpreter(name, title), fGlobalsListSerial(-1), fMapfile(nullptr),
   fRootmapFiles(nullptr), fLockProcessLine(true), fNormalizedCtxt(0),
   fPrevLoadedDynLibInfo(0), fClingCallbacks(0), fAutoLoadCallBack(0),
   fTransactionCount(0), fHeaderParsingOnDemand(true), fIsAutoParsingSuspended(kFALSE)
@@ -4448,6 +4448,14 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
    m->fMethodArgs = arglist;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return whether we are waiting for more input either because the collected
+/// input contains unbalanced braces or last seen token was a `\` (backslash-newline)
+
+Int_t TCling::GetMore() const
+{
+   return fMetaProcessor->awaitingMoreInput();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a TClass for the given class.
