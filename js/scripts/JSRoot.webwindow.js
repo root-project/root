@@ -563,7 +563,7 @@ JSROOT.define([], () => {
                   // this is case of websocket
                   // console.log('Get Blob object - convert to buffer array');
                   let reader = new FileReader, qitem = this.reserveQueueItem();
-                  reader.onload = function(event) {
+                  reader.onload = event => {
                      // The file's text will be printed here
                      this.markQueueItemDone(qitem, event.target.result, 0);
                   };
