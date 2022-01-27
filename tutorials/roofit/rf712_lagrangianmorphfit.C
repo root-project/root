@@ -117,21 +117,21 @@ void rf712_lagrangianmorphfit()
    frame0->Draw();
 
    c1->cd(2);
-   gPad->SetLeftMargin(0.08);
+   gPad->SetLeftMargin(0.15);
    gPad->SetRightMargin(0.15);
    gStyle->SetPaintTextFormat("4.1f");
    gStyle->SetOptStat(0);
    hcorr->SetMarkerSize(3.);
    hcorr->SetTitle("correlation matrix");
    hcorr->GetYaxis()->SetTitleOffset(1.4);
-   hcorr->GetYaxis()->SetLabelSize(0.05);
-   hcorr->GetXaxis()->SetLabelSize(0.05);
+   hcorr->GetYaxis()->SetLabelSize(0.1);
+   hcorr->GetXaxis()->SetLabelSize(0.1);
    hcorr->GetYaxis()->SetBinLabel(1, "c_{HDD}");
    hcorr->GetYaxis()->SetBinLabel(2, "c_{Hl^{(3)}}");
    hcorr->GetYaxis()->SetBinLabel(3, "c_{Hq^{(3)}}");
-   hcorr->GetXaxis()->SetBinLabel(1, "c_{HDD}");
+   hcorr->GetXaxis()->SetBinLabel(3, "c_{HDD}");
    hcorr->GetXaxis()->SetBinLabel(2, "c_{Hl^{(3)}}");
-   hcorr->GetXaxis()->SetBinLabel(3, "c_{Hq^{(3)}}");
+   hcorr->GetXaxis()->SetBinLabel(1, "c_{Hq^{(3)}}");
    hcorr->Draw("colz text");
    c1->SaveAs("rf712_lagrangianmorphfit.png");
 }
