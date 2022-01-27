@@ -31,8 +31,8 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooBarlowBeestonLL(*this,newname); }
   virtual ~RooBarlowBeestonLL() ;
 
-  // A simple class to store the 
-  // necessary objects for a 
+  // A simple class to store the
+  // necessary objects for a
   // single gamma in a single channel
   class BarlowCache {
   public:
@@ -60,12 +60,12 @@ public:
 
 protected:
 
-  RooRealProxy _nll ;    // Input -log(L) function
+  RooRealProxy _nll ;    ///< Input -log(L) function
   RooAbsPdf* _pdf;
   RooAbsData* _data;
   mutable std::map< std::string, std::vector< BarlowCache > > _barlowCache;
   mutable std::set< std::string > _statUncertParams;
-  mutable std::map<std::string,bool> _paramFixed ; // Parameter constant status at last time of use
+  mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
   Double_t evaluate() const ;
 
 private:
@@ -76,5 +76,5 @@ private:
 
   }
 }
- 
+
 #endif
