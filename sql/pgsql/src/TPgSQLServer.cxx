@@ -45,8 +45,8 @@ ClassImp(TPgSQLServer);
 
 TPgSQLServer::TPgSQLServer(const char *db, const char *uid, const char *pw)
 {
-   fPgSQL = 0;
-   fSrvInfo="";
+   fPgSQL = nullptr;
+   fSrvInfo = "";
 
    TUrl url(db);
 
