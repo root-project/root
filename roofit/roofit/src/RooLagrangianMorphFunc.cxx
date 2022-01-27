@@ -449,27 +449,38 @@ void readValues(std::map<const std::string, T> &myMap, TH1 *h_pc)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Set up a TFolder loaded from a file to own its content. 
+/// Set up folder ownership over its children, and treat likewise any subfolders. 
+/// @param theFolder: folder to update. Assumed to be a valid pointer 
+void setOwnerRecursive(TFolder* theFolder){
+   theFolder->SetOwner();
+   // And also need to set up ownership for nested folders
+   auto subdirs = theFolder->GetListOfFolders(); 
+   for (auto* subdir : *subdirs){
+      auto thisfolder = dynamic_cast<TFolder*>(subdir);  
+      if (thisfolder){
+         // no explicit deletion here, will be handled by parent
+         setOwnerRecursive(thisfolder); 
+      } 
+   }
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/// Load a TFolder from a file while ensuring it owns its content. 
+/// This avoids memory leaks. Note that when fetching objects
+/// from this folder, you need to clone them to prevent deletion. 
 /// Also recursively updates nested subfolders accordingly
-/// Optionally, delete the TFolder at the end
-/// @param folder TFolder to clean up 
-/// @param deleteIt if set, enable deletion of the folder after 
-///                 setting ownership  
-void cleanUpFolder(TFolder* folder, bool deleteIt=true)
-{
-  // start by assigning ownership to the folder itself
-  folder->SetOwner();
-  // And we need to do the same for all nested sub-folders.
-  auto subdirs = folder->GetListOfFolders(); 
-  for (auto* subdir : *subdirs){
-    auto thisfolder = dynamic_cast<TFolder*>(subdir);  
-    if (thisfolder){
-      // no explicit deletion here, will be handled by parent
-      cleanUpFolder(thisfolder, false); 
-    }
-  }
-  // now ownership is set up - can delete if requested. 
-  if (deleteIt) delete folder; 
+/// @param inFile: Input file to read - assumed to be a valid pointer 
+/// @param folderName: Name of the folder to read from the file 
+/// @return a unique_ptr to the folder. Nullptr if not found. 
+std::unique_ptr<TFolder> readOwningFolderFromFile(TDirectory* inFile, const std::string & folderName){
+   std::unique_ptr<TFolder> theFolder(inFile->Get<TFolder>(folderName.c_str()));
+   if (!theFolder) {
+      std::cerr << "Error: unable to access data from folder '" << folderName << "' from file '"<<inFile->GetName()<<"'!" << std::endl;
+      return nullptr; 
+   }
+   setOwnerRecursive(theFolder.get()); 
+   return theFolder; 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -486,9 +497,8 @@ template <class AObjType> AObjType* loadFromFileResidentFolder(TDirectory* inFil
                                                             const std::string & objName,
                                                             bool notFoundError = true)
 {
-   auto folder = inFile->Get<TFolder>(folderName.c_str());
+   auto folder = readOwningFolderFromFile(inFile, folderName);
    if (!folder) {
-      std::cerr << "Error: unable to access data from folder '" << folderName << "'!" << std::endl;
       return nullptr;
    }
    AObjType *loadedObject = dynamic_cast<AObjType *>(folder->FindObject(objName.c_str()));
@@ -504,13 +514,10 @@ template <class AObjType> AObjType* loadFromFileResidentFolder(TDirectory* inFil
          }
          std::cerr << errstr.str() << std::endl;
       } 
-      cleanUpFolder(folder); 
       return nullptr; 
    }
-   // replace the loaded object by a clone to be able to clean the loaded folder 
-   AObjType* output = static_cast<AObjType *>(loadedObject->Clone()); // can use a static_cast - confirmed validity by initial cast above. 
-   cleanUpFolder(folder); 
-   return output;      
+   // replace the loaded object by a clone, as the loaded folder will delete the original 
+   return static_cast<AObjType *>(loadedObject->Clone()); // can use a static_cast - confirmed validity by initial cast above. 
 }  
 
 
@@ -1801,11 +1808,10 @@ void RooLagrangianMorphFunc::addFolders(const RooArgList &folders)
    TIter next(file->GetList());
    TObject *obj = nullptr;
    while ((obj = (TObject *)next())) {
-      auto f = file->Get<TFolder>(obj->GetName());
+      auto f = readOwningFolderFromFile(file,obj->GetName()); 
       if (!f)
          continue;
-      std::string name(f->GetName());
-      cleanUpFolder(f); 
+      std::string name(f->GetName()); 
       if (name.empty())
          continue;
       this->_config.folderNames.push_back(name);
