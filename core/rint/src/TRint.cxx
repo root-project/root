@@ -786,7 +786,7 @@ Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *e
          input += TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
       input += line;
       int res = ProcessLine(input, kFALSE, error);
-      if (*error == TInterpreter::kProcessing) {
+      if (gCling->GetMore()) {
          if (!fNonContinuePrompt.Length())
             fNonContinuePrompt = fDefaultPrompt;
          SetPrompt("root (cont'ed, cancel with .@) [%d]");
