@@ -26,7 +26,7 @@ private:
    Bool_t  IsValid(Int_t field);
 
 public:
-   TPgSQLResult(void *result);
+   TPgSQLResult(PGresult *result);
    ~TPgSQLResult();
 
    void        Close(Option_t *opt="") final;
