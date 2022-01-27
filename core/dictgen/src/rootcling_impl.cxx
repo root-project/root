@@ -2941,12 +2941,14 @@ public:
          std::ifstream ifile(tmpName);
          if (!ifile)
             ROOT::TMetaUtils::Error(nullptr, "Cannot find %s!\n", tmpName);
+         // make sure the file is closed, mostly for Windows FS, also when
+         // accesing it from a Linux VM via a shared folder
+         if (ifile.is_open())
+            ifile.close();
 #ifdef WIN32
          // Sometimes files cannot be renamed on Windows if they don't have
          // been released by the system. So just copy them and try to delete
          // the old one afterwards.
-         if (ifile.is_open())
-            ifile.close();
          if (0 != std::rename(tmpName , name)) {
             if (llvm::sys::fs::copy_file(tmpName , name)) {
                llvm::sys::fs::remove(tmpName);
