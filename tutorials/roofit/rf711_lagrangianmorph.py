@@ -5,6 +5,8 @@
 ## A morphing function as a function of one coefficient is setup and can be used
 ## to obtain the distribution for any value of the coefficient.
 ##
+## \macro_image
+## \macro_output
 ## \macro_code
 ##
 ## \date January 2022

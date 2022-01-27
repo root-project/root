@@ -3,6 +3,8 @@
 ## \notebook
 ## Taylor expansion of RooFit functions using the taylorExpand function
 ##
+## \macro_image
+## \macro_output
 ## \macro_code
 ##
 ## \date November 2021
