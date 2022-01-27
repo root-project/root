@@ -28,13 +28,13 @@ TTreeReader::Next:
 Error in <TTree::SetBranchStatus>: unknown branch -> x.x
 Error in <TTree::SetBranchStatus>: unknown branch -> x.x
 RDataFrame columns:
-i.x
-x
 i
-m.x
+i.x
 m.
+m.x
 p.f
 p.x
 q..f
 q..x
+x
 (int) 0
