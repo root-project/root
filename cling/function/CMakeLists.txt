@@ -29,5 +29,11 @@ ROOTTEST_ADD_TEST(runstaticfunc
                   ${WILLFAIL_ON_WIN32}
                   LABELS roottest regression cling)
 
+ROOTTEST_ADD_TEST(trybody
+                  MACRO trybody.C
+                  OUTREF trybody.ref
+                  ${WILLFAIL_ON_WIN32}
+                  LABELS roottest regression cling)
+
 ROOTTEST_COMPILE_MACRO(refFunction.C)
 ROOTTEST_COMPILE_MACRO(refClasses.cxx)
