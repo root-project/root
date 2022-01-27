@@ -14,7 +14,12 @@
 
 #include "TSQLStatement.h"
 
-#include <libpq-fe.h>
+struct pg_conn;
+typedef struct pg_conn PGconn;
+
+struct pg_result;
+typedef struct pg_result PGresult;
+
 
 struct PgSQL_Stmt_t {
    PGconn   *fConn;
@@ -24,7 +29,6 @@ struct PgSQL_Stmt_t {
 class TPgSQLStatement : public TSQLStatement {
 
 private:
-
 
    PgSQL_Stmt_t         *fStmt{nullptr};          //! executed statement
    Int_t                 fNumBuffers{0};          //! number of statement parameters

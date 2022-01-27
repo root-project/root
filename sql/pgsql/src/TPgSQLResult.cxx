@@ -12,6 +12,7 @@
 #include "TPgSQLResult.h"
 #include "TPgSQLRow.h"
 
+#include <libpq-fe.h>
 
 ClassImp(TPgSQLResult);
 
