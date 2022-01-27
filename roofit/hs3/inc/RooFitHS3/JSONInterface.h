@@ -2,6 +2,7 @@
 #define JSON_INTERFACE_H
 
 #include <string>
+#include <memory>
 #include <stdexcept>
 #include <iostream>
 #include <vector>
@@ -10,32 +11,39 @@ namespace RooFit {
 namespace Experimental {
 
 class JSONNode {
-protected:
+public:
    template <class Nd>
    class child_iterator_t {
-      Nd &node;
-      size_t pos;
+   public:
+      class Impl {
+      public:
+         virtual std::unique_ptr<Impl> mkptr() const = 0;
+         virtual void forward() = 0;
+         virtual void backward() = 0;        
+         virtual Nd &current() = 0;
+         virtual bool equal(const Impl &other) const = 0;
+      };
+
+   private:
+      std::unique_ptr<Impl> it;
 
    public:
-      child_iterator_t(Nd &n, size_t p) : node(n), pos(p){};
+      child_iterator_t(std::unique_ptr<Impl> impl);
+      child_iterator_t(const child_iterator_t &other);
+      ~child_iterator_t();
 
-      child_iterator_t &operator++()
-      {
-         ++pos;
-         return *this;
-      }
-      child_iterator_t &operator--()
-      {
-         --pos;
-         return *this;
-      }
+      child_iterator_t &operator++();
+      child_iterator_t &operator--();
+      Nd &operator*() const;
+      Nd &operator->() const;
 
-      Nd &operator*() const { return node.child(pos); }
-      Nd &operator->() const { return node.child(pos); }
-
-      bool operator!=(const child_iterator_t &that) const { return this->pos != that.pos; };
-      bool operator==(const child_iterator_t &that) const { return this->pos == that.pos; };
+      bool operator!=(const child_iterator_t &that) const;
+      bool operator==(const child_iterator_t &that) const;
    };
+
+   using child_iterator = child_iterator_t<JSONNode>;
+   using const_child_iterator = child_iterator_t<const JSONNode>;
+
    template <class Nd>
    class children_view_t {
       child_iterator_t<Nd> b, e;
@@ -46,6 +54,11 @@ protected:
       inline child_iterator_t<Nd> begin() const { return b; }
       inline child_iterator_t<Nd> end() const { return e; }
    };
+
+   virtual child_iterator childIteratorBegin();
+   virtual child_iterator childIteratorEnd();
+   virtual const_child_iterator childConstIteratorBegin() const;
+   virtual const_child_iterator childConstIteratorEnd() const;
 
 public:
    virtual void writeJSON(std::ostream &os) const = 0;
@@ -91,16 +104,8 @@ public:
    using children_view = children_view_t<JSONNode>;
    using const_children_view = children_view_t<const JSONNode>;
 
-   children_view children()
-   {
-      return children_view(child_iterator_t<JSONNode>(*this, 0),
-                           child_iterator_t<JSONNode>(*this, this->num_children()));
-   }
-   const_children_view children() const
-   {
-      return const_children_view(child_iterator_t<const JSONNode>(*this, 0),
-                                 child_iterator_t<const JSONNode>(*this, this->num_children()));
-   }
+   children_view children();
+   const_children_view children() const;
    virtual JSONNode &child(size_t pos) = 0;
    virtual const JSONNode &child(size_t pos) const = 0;
 };
