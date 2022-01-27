@@ -50,7 +50,7 @@ public:
   const RooArgList& highList() const { return _highSet ; }
   const RooArgList& paramList() const { return _paramSet ; }
   const std::vector<int>&  interpolationCodes() const { return _interpCode; }
-  
+
   //virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
   Bool_t setBinIntegrator(RooArgSet& allVars) ;
 
@@ -64,7 +64,7 @@ public:
   void printAllInterpCodes();
 
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ;
   virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const ;
 
 protected:
@@ -72,12 +72,12 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    virtual ~CacheElem() {} ; 
-    virtual RooArgList containedArgs(Action) { 
-      RooArgList ret(_funcIntList) ; 
-      ret.add(_lowIntList); 
+    virtual ~CacheElem() {} ;
+    virtual RooArgList containedArgs(Action) {
+      RooArgList ret(_funcIntList) ;
+      ret.add(_lowIntList);
       ret.add(_highIntList);
-      return ret ; 
+      return ret ;
     }
     RooArgList _funcIntList ;
     RooArgList _lowIntList ;
@@ -86,13 +86,13 @@ protected:
   } ;
   mutable RooObjCacheManager _normIntMgr ; ///<! The integration cache manager
 
-  RooRealProxy _nominal;           // The nominal value
-  RooArgList   _ownedList ;       // List of owned components
-  RooListProxy _lowSet ;            // Low-side variation
-  RooListProxy _highSet ;            // High-side varaition
-  RooListProxy _paramSet ;            // interpolation parameters
-  RooListProxy _normSet ;            // interpolation parameters
-  Bool_t _positiveDefinite; // protect against negative and 0 bins.
+  RooRealProxy _nominal;           ///< The nominal value
+  RooArgList   _ownedList ;        ///< List of owned components
+  RooListProxy _lowSet ;           ///< Low-side variation
+  RooListProxy _highSet ;          ///< High-side variation
+  RooListProxy _paramSet ;         ///< interpolation parameters
+  RooListProxy _normSet ;          ///< interpolation parameters
+  Bool_t _positiveDefinite;        ///< protect against negative and 0 bins.
 
   std::vector<int> _interpCode;
 

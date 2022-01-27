@@ -41,13 +41,13 @@ public:
 
   virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList);
 
-  virtual RooAbsReal* createNLL(RooAbsData& data, 
-				const RooCmdArg& arg1 = RooCmdArg::none(), const RooCmdArg& arg2 = RooCmdArg::none(), 
-				const RooCmdArg& arg3 = RooCmdArg::none(), const RooCmdArg& arg4 = RooCmdArg::none(), 
-				const RooCmdArg& arg5 = RooCmdArg::none(), const RooCmdArg& arg6 = RooCmdArg::none(), 
-				const RooCmdArg& arg7 = RooCmdArg::none(), const RooCmdArg& arg8 = RooCmdArg::none());
-    
-  
+  virtual RooAbsReal* createNLL(RooAbsData& data,
+            const RooCmdArg& arg1 = RooCmdArg::none(), const RooCmdArg& arg2 = RooCmdArg::none(),
+            const RooCmdArg& arg3 = RooCmdArg::none(), const RooCmdArg& arg4 = RooCmdArg::none(),
+            const RooCmdArg& arg5 = RooCmdArg::none(), const RooCmdArg& arg6 = RooCmdArg::none(),
+            const RooCmdArg& arg7 = RooCmdArg::none(), const RooCmdArg& arg8 = RooCmdArg::none());
+
+
 protected:
 
   ClassDef(RooStats::HistFactory::HistFactorySimultaneous,2)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A

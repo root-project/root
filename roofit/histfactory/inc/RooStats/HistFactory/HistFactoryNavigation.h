@@ -23,12 +23,12 @@ namespace RooStats {
 
       /// Initialze based on an already-created HistFactory Model
       HistFactoryNavigation(ModelConfig* mc);
-      HistFactoryNavigation(const std::string& File, 
-			    const std::string& WorkspaceName="combined",
-			    const std::string& ModelConfigName="ModelConfig");
+      HistFactoryNavigation(const std::string& File,
+             const std::string& WorkspaceName="combined",
+             const std::string& ModelConfigName="ModelConfig");
       HistFactoryNavigation(RooAbsPdf* model, RooArgSet* observables);
 
-      virtual ~HistFactoryNavigation() {} 
+      virtual ~HistFactoryNavigation() {}
 
       /// Should pretty print all channels and the current values 
       void PrintState();
@@ -39,12 +39,12 @@ namespace RooStats {
       void PrintParameters(bool IncludeConstantParams=false);
 
       /// Print parameters that effect a particular channel
-      void PrintChannelParameters(const std::string& channel, 
-				  bool IncludeConstantParams=false);
+      void PrintChannelParameters(const std::string& channel,
+              bool IncludeConstantParams=false);
 
       /// Print parameters that effect a particular sample
-      void PrintSampleParameters(const std::string& channel, const std::string& sample, 
-				 bool IncludeConstantParams=false);
+      void PrintSampleParameters(const std::string& channel, const std::string& sample,
+             bool IncludeConstantParams=false);
 
       /// Print the different components that make up a sample
       /// (NormFactors, Statistical Uncertainties, Interpolation, etc)
@@ -57,14 +57,14 @@ namespace RooStats {
       void PrintModelAndData(RooDataSet* data);
 
       /// The value of the ith bin for the total in that channel
-      double GetBinValue(int bin, const std::string& channel);  
+      double GetBinValue(int bin, const std::string& channel);
       /// The value of the ith bin for that sample and channel 
-      double GetBinValue(int bin, const std::string& channel, const std::string& sample);  
+      double GetBinValue(int bin, const std::string& channel, const std::string& sample);
 
-      /// The (current) histogram for that sample 
+      /// The (current) histogram for that sample
       /// This includes all parameters and interpolation
-      TH1* GetSampleHist(const std::string& channel, 
-			 const std::string& sample, const std::string& name="");  
+      TH1* GetSampleHist(const std::string& channel,
+          const std::string& sample, const std::string& name="");
 
       /// Get the total channel histogram for this channel
       TH1* GetChannelHist(const std::string& channel, const std::string& name="");
@@ -117,7 +117,7 @@ namespace RooStats {
       // Return the RooRealVar by the same name used in the model
       // If not found, return NULL
       RooRealVar* var(const std::string& varName) const;
-      
+
       /*
       // Add a channel to the pdf
       // Combine the data if it is provided
@@ -130,7 +130,7 @@ namespace RooStats {
       void AddConstraintTerm(RooAbsArg* constraintTerm);
 
       // Add a constraint term to the pdf of a particular channel
-      // This method requires that the pdf be simultaneous 
+      // This method requires that the pdf be simultaneous
       // OR that the channel string match the channel that the pdf represents
       void AddConstraintTerm(RooAbsArg* constraintTerm, const std::string& channel);
       */
@@ -157,7 +157,7 @@ namespace RooStats {
       std::map< std::string, RooAbsReal*> GetSampleFunctionMap(const std::string& channel);
 
     private:
-      
+
       /// The HistFactory Pdf Pointer
       RooAbsPdf* fModel;
 
@@ -174,11 +174,11 @@ namespace RooStats {
       std::vector<std::string> fChannelNameVec;
 
       /// Map of channel names to their full pdf's
-      std::map< std::string, RooAbsPdf* > fChannelPdfMap;  
+      std::map< std::string, RooAbsPdf* > fChannelPdfMap;
 
       /// Map of channel names to pdf without constraint
-      std::map< std::string, RooAbsPdf* > fChannelSumNodeMap;  
-      
+      std::map< std::string, RooAbsPdf* > fChannelSumNodeMap;
+
       /// Map of channel names to their set of ovservables
       std::map< std::string, RooArgSet*> fChannelObservMap;
 
@@ -192,7 +192,7 @@ namespace RooStats {
 
       /// Recursively get all products of products
       RooArgSet _GetAllProducts(RooProduct* node);
-      
+
 
     protected:
       ClassDef(RooStats::HistFactory::HistFactoryNavigation,2)

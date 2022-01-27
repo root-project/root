@@ -44,8 +44,8 @@ public:
   RooRealVar& getParameter() const ;
   RooRealVar& getParameter( Int_t masterIdx ) const ;
 
-  const RooArgSet* get(Int_t masterIdx) const { return _dataSet.get( masterIdx ) ; } 
-  const RooArgSet* get(const RooArgSet& coord) const { return _dataSet.get( coord ) ; } 
+  const RooArgSet* get(Int_t masterIdx) const { return _dataSet.get( masterIdx ) ; }
+  const RooArgSet* get(const RooArgSet& coord) const { return _dataSet.get( coord ) ; }
 
   double binVolume() const { return _dataSet.binVolume(); }
 
@@ -68,22 +68,22 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    virtual ~CacheElem() {} ; 
-    virtual RooArgList containedArgs(Action) { 
-      RooArgList ret(_funcIntList) ; 
-      ret.add(_lowIntList); 
+    virtual ~CacheElem() {} ;
+    virtual RooArgList containedArgs(Action) {
+      RooArgList ret(_funcIntList) ;
+      ret.add(_lowIntList);
       ret.add(_highIntList);
-      return ret ; 
+      return ret ;
     }
     RooArgList _funcIntList ;
     RooArgList _lowIntList ;
     RooArgList _highIntList ;
     // will want std::vector<RooRealVar*> for low and high also
   } ;
-  mutable RooObjCacheManager _normIntMgr ; //! The integration cache manager
+  mutable RooObjCacheManager _normIntMgr ; ///<! The integration cache manager
 
-  RooListProxy _dataVars;       // The RooRealVars
-  RooListProxy _paramSet ;            // interpolation parameters
+  RooListProxy _dataVars;             ///< The RooRealVars
+  RooListProxy _paramSet ;            ///< interpolation parameters
 
   Int_t _numBins;
   struct NumBins {
