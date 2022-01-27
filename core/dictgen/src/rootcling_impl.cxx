@@ -2920,7 +2920,9 @@ public:
          std::ifstream ifile(tmpName);
          if (!ifile)
             ROOT::TMetaUtils::Error(nullptr, "Cannot find %s!\n", tmpName);
-
+         // make sure the file is closed
+         if (ifile.is_open())
+            ifile.close();
          if (0 != std::remove(tmpName)) {
             ROOT::TMetaUtils::Error(nullptr, "Removing %s!\n", tmpName);
             retval++;
