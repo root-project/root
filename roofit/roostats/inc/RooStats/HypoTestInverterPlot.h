@@ -27,7 +27,7 @@ namespace RooStats {
 
    public:
 
-      // constructor
+      /// constructor
       HypoTestInverterPlot(HypoTestInverterResult* results ) ;
 
       HypoTestInverterPlot( const char* name,

@@ -83,7 +83,7 @@ namespace RooStats {
       void DrawKeysPdfInterval(const Option_t* options = NULL);
       void DrawTailFractionInterval(const Option_t* options = NULL);
 
-      ClassDef(MCMCIntervalPlot,1)  /// Class containing the results of the MCMCCalculator
+      ClassDef(MCMCIntervalPlot,1)  // Class containing the results of the MCMCCalculator
    };
 }
 

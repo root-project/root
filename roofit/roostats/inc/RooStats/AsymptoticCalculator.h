@@ -33,9 +33,6 @@ namespace RooStats {
          const ModelConfig &nullModel,
          bool nominalAsimov = false
          );
-      //    HypoTestCalculatorGeneric(data, altModel, nullModel, 0)
-      // {
-      // }
 
       ~AsymptoticCalculator() {
       }
@@ -129,19 +126,19 @@ namespace RooStats {
 
    private:
 
-      bool fOneSided;                     // for one sided PL test statistic (upper limits)
-      mutable bool fOneSidedDiscovery;    // for one sided PL test statistic (for discovery)
-      bool fNominalAsimov;                // make Asimov at nominal parameter values
-      mutable bool fIsInitialized;        //! flag to check if calculator is initialized
-      mutable int fUseQTilde;             // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
-      static int fgPrintLevel;            // control print level  (0 minimal, 1 normal, 2 debug)
+      bool fOneSided;                     ///< for one sided PL test statistic (upper limits)
+      mutable bool fOneSidedDiscovery;    ///< for one sided PL test statistic (for discovery)
+      bool fNominalAsimov;                ///< make Asimov at nominal parameter values
+      mutable bool fIsInitialized;        ///<! flag to check if calculator is initialized
+      mutable int fUseQTilde;             ///< flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
+      static int fgPrintLevel;            ///< control print level  (0 minimal, 1 normal, 2 debug)
       mutable double fNLLObs;
       mutable double fNLLAsimov;
 
-      mutable RooAbsData * fAsimovData;   // asimov data set
-      mutable RooArgSet  fAsimovGlobObs;  // snapshot of Asimov global observables
-      mutable RooArgSet  fBestFitPoi;     // snapshot of best fitted POI values
-      mutable RooArgSet  fBestFitParams;  // snapshot of all best fitted Parameter values
+      mutable RooAbsData * fAsimovData;   ///< asimov data set
+      mutable RooArgSet  fAsimovGlobObs;  ///< snapshot of Asimov global observables
+      mutable RooArgSet  fBestFitPoi;     ///< snapshot of best fitted POI values
+      mutable RooArgSet  fBestFitParams;  ///< snapshot of all best fitted Parameter values
 
 
    };

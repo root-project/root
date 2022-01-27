@@ -25,10 +25,10 @@ namespace RooStats {
 
    public:
 
-      // Translate the given fit result to a RooArgSet in a generic way.
-      // Prefix is prepended to all variable names.
-      // Note that the returned set is managed by the user and the user must
-      // explicitly delete all the set content (the returned set does not own the content)
+      /// Translate the given fit result to a RooArgSet in a generic way.
+      /// Prefix is prepended to all variable names.
+      /// Note that the returned set is managed by the user and the user must
+      /// explicitly delete all the set content (the returned set does not own the content)
       static RooArgSet *GetAsArgSet(RooFitResult *result, TString prefix="", bool withErrorsAndPulls=false);
 
       DetailedOutputAggregator() {
@@ -36,9 +36,9 @@ namespace RooStats {
          fBuiltSet = NULL;
       }
 
-      // For each variable in aset, prepend prefix to its name and add
-      // to the internal store. Note this will not appear in the produced
-      // dataset unless CommitSet is called.
+      /// For each variable in aset, prepend prefix to its name and add
+      /// to the internal store. Note this will not appear in the produced
+      /// dataset unless CommitSet is called.
       void AppendArgSet(const RooAbsCollection *aset, TString prefix="");
 
       const RooArgList* GetAsArgList() const {
@@ -48,7 +48,7 @@ namespace RooStats {
          return fBuiltSet;
       }
 
-      // Commit to the result RooDataSet.
+      /// Commit to the result RooDataSet.
       void CommitSet(double weight=1.0);
 
       RooDataSet *GetAsDataSet(TString name, TString title);

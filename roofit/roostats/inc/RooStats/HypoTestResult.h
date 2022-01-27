@@ -114,12 +114,12 @@ namespace RooStats {
 
    protected:
 
-      mutable Double_t fNullPValue; // p-value for the null hypothesis (small number means disfavoured)
-      mutable Double_t fAlternatePValue; // p-value for the alternate hypothesis (small number means disfavoured)
-      mutable Double_t fNullPValueError; // error of p-value for the null hypothesis (small number means disfavoured)
-      mutable Double_t fAlternatePValueError; // error of p-value for the alternate hypothesis (small number means disfavoured)
-      Double_t fTestStatisticData; // result of the test statistic evaluated on data
-      const RooArgList* fAllTestStatisticsData; // for the case of multiple test statistics, holds all the results
+      mutable Double_t fNullPValue;             ///< p-value for the null hypothesis (small number means disfavoured)
+      mutable Double_t fAlternatePValue;        ///< p-value for the alternate hypothesis (small number means disfavoured)
+      mutable Double_t fNullPValueError;        ///< error of p-value for the null hypothesis (small number means disfavoured)
+      mutable Double_t fAlternatePValueError;   ///< error of p-value for the alternate hypothesis (small number means disfavoured)
+      Double_t fTestStatisticData;              ///< result of the test statistic evaluated on data
+      const RooArgList* fAllTestStatisticsData; ///< for the case of multiple test statistics, holds all the results
       SamplingDistribution *fNullDistr;
       SamplingDistribution *fAltDistr;
       RooDataSet* fNullDetailedOutput;

@@ -62,13 +62,13 @@ namespace RooStats {
       }
 
 
-      // returns -logL(poi, conditional MLE of nuisance params)
-      // it does not subtract off the global MLE
-      // because  nuisance parameters of null and alternate may not
-      // be the same.
+      /// returns -logL(poi, conditional MLE of nuisance params)
+      /// it does not subtract off the global MLE
+      /// because  nuisance parameters of null and alternate may not
+      /// be the same.
       Double_t ProfiledLikelihood(RooAbsData& data, RooArgSet& poi, RooAbsPdf& pdf);
 
-      // evaluate the ratio of profile likelihood
+      /// evaluate the ratio of profile likelihood
       virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullParamsOfInterest);
 
       virtual void EnableDetailedOutput( bool e=true ) {
@@ -101,25 +101,25 @@ namespace RooStats {
          fAltProfile.SetPrintLevel(printLevel);
       }
 
-      // set the conditional observables which will be used when creating the NLL
-      // so the pdf's will not be normalized on the conditional observables when computing the NLL
+      /// set the conditional observables which will be used when creating the NLL
+      /// so the pdf's will not be normalized on the conditional observables when computing the NLL
       virtual void SetConditionalObservables(const RooArgSet& set) {
          fNullProfile.SetConditionalObservables(set);
          fAltProfile.SetConditionalObservables(set);
       }
 
-      // set the global observables which will be used when creating the NLL
-      // so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
+      /// set the global observables which will be used when creating the NLL
+      /// so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
       virtual void SetGlobalObservables(const RooArgSet& set) {
          fNullProfile.SetGlobalObservables(set);
          fAltProfile.SetGlobalObservables(set);
       }
 
+      /// Returns detailed output. The value returned by this function is updated after each call to Evaluate().
+      /// The returned RooArgSet contains the following for the alternative and null hypotheses:
+      ///  - the minimum nll, fitstatus and convergence quality for each fit
+      ///  - for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored
       virtual const RooArgSet* GetDetailedOutput(void) const {
-         // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
-         // The returned RooArgSet contains the following for the alternative and null hypotheses:
-         //  - the minimum nll, fitstatus and convergence quality for each fit
-         //  - for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored
          return fDetailedOutput;
       }
 

@@ -50,7 +50,7 @@ namespace RooStats {
       /// inherited methods from HypoTestCalculator interface
       virtual HypoTestResult* GetHypoTest() const;
 
-      // set the model for the null hypothesis (only B)
+      /// set the model for the null hypothesis (only B)
       virtual void SetNullModel(const ModelConfig &nullModel) { fNullModel = &nullModel; }
       const RooAbsData * GetData(void) const { return fData; }
       const ModelConfig* GetNullModel(void) const { return fNullModel; }
