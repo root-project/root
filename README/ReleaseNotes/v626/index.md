@@ -146,7 +146,7 @@ Other notable additions and improvements include:
 - Greatly reduce distributed tasks processing overhead in TTree-based analyses by refactoring the translation from task metadata to RDataFrame object on the workers.
 - Refactor triggering of the computation graph in the distributed tasks, so that it now runs with the Python GIL released. This allows interoperability with frameworks like Dask that run different Python threads along the main processing one.
 - Set minimum Python version to use this tool to 3.7. This allows using more modern Python functionality in distributed RDataFrame code and is in line with the Python support provided by Spark and Dask.
-- Add support for the `DefinePerSample` operation.
+- Add support for the `DefinePerSample` and `Redefine` operations.
 - Make sure a user-provided `npartitions` parameter to a distributed RDataFrame constructor always takes precedence over the value computed by default.
 - Improve support for friend trees in distributed executions, now any kind of friendship layout between the main tree and the friend tree(s) is expected to work.
 - Add support for TChain data sources with no tree name and multiple different tree subnames.
