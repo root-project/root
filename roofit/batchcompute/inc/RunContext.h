@@ -56,8 +56,8 @@ struct RunContext {
   std::map<const RooAbsArg*, std::vector<double>> ownedMemory;
   std::map<const RooAbsArg*, double*> ownedMemoryCuda;
 
-  const char* rangeName{nullptr}; /// If evaluation should only occur in a range, the range name can be passed here.
-  std::vector<double> logProbabilities; /// Possibility to register log probabilities.
+  const char* rangeName{nullptr};       ///< If evaluation should only occur in a range, the range name can be passed here.
+  std::vector<double> logProbabilities; ///< Possibility to register log probabilities.
 };
 
 }
