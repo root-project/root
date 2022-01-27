@@ -17,6 +17,7 @@ The following people have contributed to this new version:
  Jakob Blomer, CERN/SFT,\
  Patrick Bos, Netherlands eScience Center,\
  Rene Brun, CERN/SFT,\
+ Carsten D. Burgard, DESY/ATLAS,\ 
  Will Buttinger, STFC/ATLAS,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
@@ -230,6 +231,22 @@ Two new classes to help to provide this functionality:
 For example usage of the RooLagrangianMorphFunc class, please consult the tutorials for a single parameter case ([rf711_lagrangianmorph.C](https://root.cern.ch/doc/v626/rf711__lagrangianmorph_8C.html) / [.py](https://root.cern.ch/doc/v626/rf711__lagrangianmorph_8py.html)) and for a multi-parameter case ([rf712_lagrangianmorphfit.C](https://root.cern.ch/doc/v626/rf712__lagrangianmorphfit_8C.html) / [.py](https://root.cern.ch/doc/v626/rf712__lagrangianmorphfit_8py.html)).
 
 A `RooLagrangianMorphFunc` can also be created with the `RooWorkspace::factory` interface, showcased in [rf512_wsfactory_oper.C](https://root.cern.ch/doc/v626/rf512__wsfactory__oper_8C.html) / [.py](https://root.cern.ch/doc/master/rf512__wsfactory__oper_8py.html).
+
+### Exporting and importing `RooWorkspace` to and from JSON and YML
+
+The new component `RooFitHS3` implements serialization and
+deserialization of `RooWorkspace` objects to and from JSON and YML.
+The main class providing this functionality is
+[RooJSONFactoryWSTool](https://root.cern/doc/v626/classRooJSONFactoryWSTool.html).
+For now, this functionality is not feature complete with respect to
+all available functions and pdfs available in `RooFit`, but provides
+an interface that is easily extensible by users, which is documented
+in the corresponding
+[README](https://github.com/root-project/root/blob/master/roofit/hs3/README.md). It
+is hoped that, though user contributions, a sufficiently comprehensive
+library of serializers and deserializers will emerge over time.
+
+For more details, consult the tutorial [rf515_hfJSON](https://root.cern/doc/v626/rf515__hfJSON_8py.html).
 
 ### Creating RooFit datasets from RDataFrame
 RooFit now contains two RDataFrame action helpers, `RooDataSetHelper` and `RooDataHistHelper`, which allow for creating RooFit datasets by booking an action:
