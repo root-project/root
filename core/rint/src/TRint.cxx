@@ -449,7 +449,6 @@ void TRint::Run(Bool_t retrn)
             }
             Getlinem(kCleanUp, 0);
             Gl_histadd(cmd);
-            fNcmd++;
 
             // The ProcessLine might throw an 'exception'.  In this case,
             // GetLinem(kInit,"Root >") is called and we are jump back
@@ -457,6 +456,7 @@ void TRint::Run(Bool_t retrn)
             needGetlinemInit = kFALSE;
             retval = ProcessLineNr("ROOT_cli_", cmd, &error);
             gCling->EndOfLineAction();
+            fNcmd++;
 
             // The ProcessLine has successfully completed and we need
             // to call Getlinem(kInit, GetPrompt());
@@ -626,8 +626,6 @@ Bool_t TRint::HandleTermInput()
 
       fInterrupt = kFALSE;
 
-      if (!gCling->GetMore() && !sline.IsNull()) fNcmd++;
-
       // prevent recursive calling of this input handler
       fInputHandler->DeActivate();
 
@@ -671,6 +669,14 @@ Bool_t TRint::HandleTermInput()
          if (!added) fInputHandler->Activate();
          Error("HandleTermInput()", "Exception caught!");
       }
+
+      // `ProcessLineNr()` only prepends a `#line` directive if the previous
+      // input line was not terminated by a '\' (backslash-newline).
+      // Thus, to match source locations included in cling diagnostics, we only
+      // increment `fNcmd` if the next call to `ProcessLineNr()` will issue
+      // a new `#line`.
+      if (!fBackslashContinue && !sline.IsNull())
+         fNcmd++;
 
       if (gROOT->Timer()) timer.Print("u");
 
@@ -772,8 +778,9 @@ Longptr_t TRint::ProcessRemote(const char *line, Int_t *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calls TRint::ProcessLine() possibly prepending a `#line` directive for
-/// better diagnostics. Must be called after fNcmd has been increased for
-/// the next line.
+/// better diagnostics.
+/// The user is responsible for incrementing `fNcmd`, where appropriate, after
+/// a call to this function.
 
 Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
 {
@@ -783,7 +790,7 @@ Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *e
    if (line && line[0] != '.') {
       TString input;
       if (!fBackslashContinue)
-         input += TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
+         input += TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd);
       input += line;
       int res = ProcessLine(input, kFALSE, error);
       if (gCling->GetMore()) {
