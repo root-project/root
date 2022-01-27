@@ -30,6 +30,50 @@ typedef TJSONTree tree_t;
 #include <stack>
 #include <stdexcept>
 
+
+/** \class RooJSONFactoryWSTool
+\ingroup roofit
+
+When using `RooFit`, statistical models can be conveniently handled and
+stored as a `RooWorkspace`. However, for the sake of interoperability
+with other statistical frameworks, and also ease of manipulation, it
+may be useful to store statistical models in text form.
+
+The RooJSONFactoryWSTool is a helper class to achieve exactly this,
+exporting to and importing from JSON and YML.
+
+In order to import a workspace from a JSON file, you can do
+
+~~~ {.py}
+ws = ROOT.RooWorkspace("ws")
+tool = ROOT.RooJSONFactoryWSTool(ws)
+tool.importJSON("myjson.json")
+~~~
+
+Similarly, in order to export a workspace to a JSON file, you can do
+
+~~~ {.py}
+tool = ROOT.RooJSONFactoryWSTool(ws)
+tool.exportJSON("myjson.json")
+~~~
+
+For more details, consult the tutorial <a
+href="https://root.cern/doc/v626/rf515__hfJSON_8py.html">rf515_hfJSON</a>.
+
+In order to import and export YML files, `ROOT` needs to be compiled
+with the external dependency <a
+href="https://github.com/biojppm/rapidyaml">RapidYAML</a>, which needs
+to be installed on your system and enabled via the CMake option
+`roofit_hs3_ryml`.
+
+The RooJSONFactoryWSTool only knows about a limited set of classes for
+import and export. If import or export of a class you're interested in
+fails, you might need to add your own importer or exporter. Please
+consult the <a
+href="https://github.com/root-project/root/blob/master/roofit/hs3/README.md">README</a>
+to learn how to do that.  ~~~
+*/
+
 using RooFit::Experimental::JSONNode;
 
 namespace {
@@ -771,7 +815,7 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
          std::cerr << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to "
                       "see what is available"
                    << std::endl;
-         std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to "
+         std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
                       "see how to do this!"
                    << std::endl;
          return;
@@ -905,7 +949,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
             }
          } else {
             std::stringstream ss;
-            ss << "RooJSONFactoryWSTool() no handling for functype '" << functype << "' implemented, skipping."
+            ss << "RooJSONFactoryWSTool() no handling for type '" << functype << "' implemented, skipping."
                << "\n"
                << "there are several possible reasons for this:\n"
                << " 1. " << functype << " is a custom type that is not available in RooFit.\n"
@@ -915,9 +959,9 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
                   "RooJSONFactoryWSTool::clearFactoryExpressions() and/or never successfully read a file defining "
                   "these expressions with RooJSONFactoryWSTool::loadFactoryExpressions(filename)\n"
                << "either way, please make sure that:\n"
-               << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printFactoryExpressions() "
+               << " 3: you are reading a file with factory expressions - call RooJSONFactoryWSTool::printFactoryExpressions() "
                   "to see what is available\n"
-               << " 2 & 1: you might need to write a serialization definition yourself. check INSERTLINKHERE to see "
+               << " 2 & 1: you might need to write a deserialization definition yourself. check https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
                   "how to do this!"
                << std::endl;
             logInputArgumentsError(std::move(ss));
