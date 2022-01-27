@@ -28,6 +28,26 @@ TJSONTree::Node &TJSONTree::incache(const TJSONTree::Node &n)
    return _nodecache.back();
 }
 
+TJSONTree *TJSONTree::Node::get_tree()
+{
+   return tree;
+}
+
+const TJSONTree::Node::Impl &TJSONTree::Node::get_node() const
+{
+   return *node;
+}
+
+const TJSONTree *TJSONTree::Node::get_tree() const
+{
+   return tree;
+}
+
+TJSONTree::Node::Impl &TJSONTree::Node::get_node()
+{
+   return *node;
+}
+
 void TJSONTree::clearcache()
 {
    TJSONTree::_nodecache.clear();
@@ -46,6 +66,7 @@ public:
    Impl(const std::string &k) : _key(k) {}
    virtual ~Impl() = default;
    static TJSONTree::Node &mkNode(TJSONTree *t, const std::string &k, nlohmann::json &n);
+   static const TJSONTree::Node &mkNode(const TJSONTree *t, const std::string &k, const nlohmann::json &n);
 };
 
 class TJSONTree::Node::Impl::BaseNode : public TJSONTree::Node::Impl {
@@ -72,6 +93,13 @@ TJSONTree::Node &TJSONTree::Node::Impl::mkNode(TJSONTree *t, const std::string &
 {
    Node::Impl::NodeRef ref(k, n);
    return t->incache(Node(t, ref));
+}
+
+const TJSONTree::Node &TJSONTree::Node::Impl::mkNode(const TJSONTree *t, const std::string &k, const nlohmann::json &n)
+{
+   // not so nice to use const_cast here, but the non-const version will only live in the cache
+   Node::Impl::NodeRef ref(k, const_cast<nlohmann::json &>(n));
+   return const_cast<TJSONTree *>(t)->incache(Node(const_cast<TJSONTree *>(t), ref));
 }
 
 TJSONTree::Node::Node(TJSONTree *t, std::istream &is) : tree(t), node(std::make_unique<Impl::BaseNode>(is)) {}
@@ -285,12 +313,65 @@ size_t TJSONTree::Node::num_children() const
 
 TJSONTree::Node &TJSONTree::Node::child(size_t pos)
 {
-   auto it = node->get().begin()+pos;
-   return Impl::mkNode(tree, this->is_map() ? it.key() : "", *it);
+   return Impl::mkNode(tree, "", node->get().at(pos));
 }
 
 const TJSONTree::Node &TJSONTree::Node::child(size_t pos) const
 {
-   auto it = node->get().begin()+pos;
-   return Impl::mkNode(tree, this->is_map() ? it.key() : "", *it);
+   return Impl::mkNode(tree, "", node->get().at(pos));
+}
+
+using json_iterator = nlohmann::basic_json<>::iterator;
+using const_json_iterator = nlohmann::basic_json<>::const_iterator;
+
+#define childIt TJSONTree::Node::childItImpl<RooFit::Experimental::JSONNode, TJSONTree::Node, json_iterator>
+#define childConstIt \
+   TJSONTree::Node::childItImpl<const RooFit::Experimental::JSONNode, const TJSONTree::Node, const_json_iterator>
+
+template <class Nd, class NdType, class json_it>
+class TJSONTree::Node::childItImpl : public RooFit::Experimental::JSONNode::child_iterator_t<Nd>::Impl {
+public:
+   enum POS { BEGIN, END };
+   NdType &node;
+   json_it iter;
+   childItImpl(NdType &n, POS p) : node(n), iter(p == BEGIN ? n.get_node().get().begin() : n.get_node().get().end()){};
+   childItImpl(NdType &n, json_it it) : node(n), iter(it) {}
+   childItImpl(const childItImpl &other) : node(other.node), iter(other.iter) {}
+   using child_iterator = RooFit::Experimental::JSONNode::child_iterator_t<Nd>;
+   virtual std::unique_ptr<typename child_iterator::Impl> mkptr() const override
+   {
+      return std::make_unique<childItImpl>(node, iter);
+   }
+   virtual void forward() override { ++iter; }
+   virtual void backward() override { --iter; }
+   virtual Nd &current() override
+   {
+      if (node.is_seq()) {
+         return TJSONTree::Node::Impl::mkNode(node.get_tree(), "", iter.value());
+      } else {
+         return TJSONTree::Node::Impl::mkNode(node.get_tree(), iter.key(), iter.value());
+      }
+   }
+   virtual bool equal(const typename child_iterator::Impl &other) const override
+   {
+      auto it = dynamic_cast<const childItImpl<Nd, NdType, json_it> *>(&other);
+      return it && it->iter == this->iter;
+   }
+};
+
+RooFit::Experimental::JSONNode::child_iterator TJSONTree::Node::childIteratorBegin()
+{
+   return child_iterator(std::make_unique<childIt>(*this, childIt::BEGIN));
+}
+RooFit::Experimental::JSONNode::child_iterator TJSONTree::Node::childIteratorEnd()
+{
+   return child_iterator(std::make_unique<childIt>(*this, childIt::END));
+}
+RooFit::Experimental::JSONNode::const_child_iterator TJSONTree::Node::childConstIteratorBegin() const
+{
+   return const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::BEGIN));
+}
+RooFit::Experimental::JSONNode::const_child_iterator TJSONTree::Node::childConstIteratorEnd() const
+{
+   return const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::END));
 }
