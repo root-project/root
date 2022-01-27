@@ -14,7 +14,8 @@
 
 #include "TSQLRow.h"
 
-#include <libpq-fe.h>
+struct pg_result;
+typedef struct pg_result PGresult;
 
 class TPgSQLRow : public TSQLRow {
 

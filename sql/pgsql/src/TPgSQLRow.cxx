@@ -11,6 +11,8 @@
 
 #include "TPgSQLRow.h"
 
+#include <libpq-fe.h>
+
 
 ClassImp(TPgSQLRow);
 

@@ -25,6 +25,7 @@
                         || ((x) == PGRES_COMMAND_OK) \
                         || ((x) == PGRES_TUPLES_OK))
 
+#include <libpq-fe.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PluginManager generator function
