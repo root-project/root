@@ -59,6 +59,12 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 
 ## RooFit Libraries
 
+### Code modernization by using `std::string` in RooFit interfaces
+
+The following lesser-used RooFit functions now return a `std::string` instead of a `const char*`, potentially requiring the update of your code:
+
+- [std::string RooCmdConfig::missingArgs() const](https://root.cern/doc/v628/classRooCmdConfig.html#aec50335293c45a507d347c604bf9651f)
+
 
 ## 2D Graphics Libraries
 
