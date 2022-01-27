@@ -64,6 +64,8 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
 endif()
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
   ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-maybe-uninitialized)
+  ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-alloc-size-larger-than)
+
 endif()
 
 set(unrsources ${UNR_UNTARDIR}/src/utils/*.c
