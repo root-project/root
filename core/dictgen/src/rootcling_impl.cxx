@@ -2920,7 +2920,8 @@ public:
          std::ifstream ifile(tmpName);
          if (!ifile)
             ROOT::TMetaUtils::Error(nullptr, "Cannot find %s!\n", tmpName);
-         // make sure the file is closed
+         // Make sure the file is closed, mostly for Windows FS, also when
+         // accessing it from a Linux VM via a shared folder
          if (ifile.is_open())
             ifile.close();
          if (0 != std::remove(tmpName)) {
