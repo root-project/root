@@ -324,6 +324,82 @@ TEST(RDFHelpers, SaveGraphSharedDefines)
    EXPECT_EQ(graph, expected);
 }
 
+TEST(RDFHelpers, GraphAsymmErrorsContainers)
+{
+   const std::vector<double> xx = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61, 0.7, 0.85, 0.89, 0.95};
+   const std::vector<double> yy = {1., 2.9, 5.6, 7.4, 9, 9.6, 8.7, 6.3, 4.5, 1};
+   const std::vector<double> exl = {.05, .1, .07, .07, .04, .05, .06, .07, .08, .05};
+   const std::vector<double> exh = {.02, .08, .05, .05, .03, .03, .04, .05, .06, .03};
+   const std::vector<double> eyl = {.8, .7, .6, .5, .4, .4, .5, .6, .7, .8};
+   const std::vector<double> eyh = {.6, .5, .4, .3, .2, .2, .3, .4, .5, .6};
+
+   auto df = RDataFrame(1)
+                .Define("xx", [&] { return xx; })
+                .Define("yy", [&] { return yy; })
+                .Define("exl", [&] { return exl; })
+                .Define("exh", [&] { return exh; })
+                .Define("eyl", [&] { return eyl; })
+                .Define("eyh", [&] { return eyh; });
+
+   auto gr1 = df.GraphAsymmErrors("xx", "yy", "exl", "exh", "eyl", "eyh");
+
+   for (size_t i = 0; i < xx.size(); ++i) {
+      EXPECT_DOUBLE_EQ(gr1->GetX()[i], xx[i]);
+      EXPECT_DOUBLE_EQ(gr1->GetY()[i], yy[i]);
+      EXPECT_DOUBLE_EQ(gr1->GetEXlow()[i], exl[i]);
+      EXPECT_DOUBLE_EQ(gr1->GetEXhigh()[i], exh[i]);
+      EXPECT_DOUBLE_EQ(gr1->GetEYlow()[i], eyl[i]);
+      EXPECT_DOUBLE_EQ(gr1->GetEYhigh()[i], eyh[i]);
+   }
+}
+
+TEST(RDFHelpers, GraphAsymmErrorsScalars)
+{
+   auto df = RDataFrame(3)
+                .DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return e + 1.2; })
+                .DefineSlotEntry("y", [](unsigned int, ULong64_t e) { return e + 3.4; })
+                .DefineSlotEntry("exl", [](unsigned int, ULong64_t e) { return e + .5; })
+                .DefineSlotEntry("exh", [](unsigned int, ULong64_t e) { return e + .2; })
+                .DefineSlotEntry("eyl", [](unsigned int, ULong64_t e) { return e + .8; })
+                .DefineSlotEntry("eyh", [](unsigned int, ULong64_t e) { return e + .3; });
+
+   auto gr1 = df.GraphAsymmErrors("x", "y", "exl", "exh", "eyl", "eyh");
+
+   for (size_t i = 0; i < 3; ++i) {
+      EXPECT_DOUBLE_EQ(gr1->GetX()[i], i + 1.2);
+      EXPECT_DOUBLE_EQ(gr1->GetY()[i], i + 3.4);
+      EXPECT_DOUBLE_EQ(gr1->GetEXlow()[i], i + .5);
+      EXPECT_DOUBLE_EQ(gr1->GetEXhigh()[i], i + .2);
+      EXPECT_DOUBLE_EQ(gr1->GetEYlow()[i], i + .8);
+      EXPECT_DOUBLE_EQ(gr1->GetEYhigh()[i], i + .3);
+   }
+}
+
+TEST(RDFHelpers, GraphAsymmErrorsRunTimeErrors)
+{
+   const std::vector<double> xx = {-0.22}; // smaller size
+   const std::vector<double> yy = {1., 2.9};
+   const std::vector<double> exl = {.05, .1};
+   const std::vector<double> exh = {.02, .08};
+   const std::vector<double> eyl = {.8, .7};
+   const std::vector<double> eyh = {.6, .5};
+
+   auto df = RDataFrame(1)
+                .Define("xx", [&] { return xx; })
+                .Define("yy", [&] { return yy; })
+                .Define("exl", [&] { return exl; })
+                .Define("exh", [&] { return exh; })
+                .Define("eyl", [&] { return eyl; })
+                .Define("eyh", [&] { return eyh; })
+                .Define("x", [] { return 3.14; }); // scalar
+
+   auto gr1 = df.GraphAsymmErrors("xx", "yy", "exl", "exh", "eyl", "eyh"); // still no error since lazy action
+   auto gr2 = df.GraphAsymmErrors("x", "yy", "exl", "exh", "eyl", "eyh");  // still no error since lazy action
+
+   EXPECT_THROW(gr1.GetValue(), std::runtime_error);
+   EXPECT_THROW(gr2.GetValue(), std::runtime_error);
+}
+
 TEST(RunGraphs, RunGraphs)
 {
 #ifdef R__USE_IMT
