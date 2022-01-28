@@ -45,13 +45,13 @@ public:
   RooAbsArg* findArg(const RooAbsArg* arg) const ;
   TObject* find(const TObject* arg) const ;
   RooLinkedListElem* findLinkTo(const TObject* arg) const ;
-  RooSetPair* findSetPair(const RooArgSet* set1, const RooArgSet* set2) const ;  
+  RooSetPair* findSetPair(const RooArgSet* set1, const RooArgSet* set2) const ;
   Bool_t replace(const TObject* oldArg, const TObject* newArg, const TObject* oldHashArg=0) ;
   Int_t size() const { return _size ; }
   Int_t entries() const { return _entries ; }
   Double_t avgCollisions() const ;
 
-protected:  
+protected:
   inline ULong_t hash(const TObject* arg) const {
     // Return hash value calculated by method chosen in constructor
     switch(_hashMethod) {
@@ -62,11 +62,11 @@ protected:
     return 0 ;
   }
 
-  HashMethod _hashMethod ; // Hashing method
-  Int_t _usedSlots ;       // Number of used slots
-  Int_t _entries ;         // Number of entries stored
-  Int_t _size ;            // Total number of slots
-  RooLinkedList** _arr ;   //! Array of linked lists storing elements in each slot
+  HashMethod _hashMethod ; ///< Hashing method
+  Int_t _usedSlots ;       ///< Number of used slots
+  Int_t _entries ;         ///< Number of entries stored
+  Int_t _size ;            ///< Total number of slots
+  RooLinkedList** _arr ;   ///<! Array of linked lists storing elements in each slot
 
   ClassDef(RooHashTable,1) // Hash table
 } R__SUGGEST_ALTERNATIVE("Please use std::unordered_map, which is also a hash table.");

@@ -47,8 +47,8 @@ protected:
 private:
    std::shared_ptr<RooAbsL> likelihood_;
    mutable double eval_carry = 0;
-   RooSetProxy vars_proxy_; // sets up client-server connections
-   RooArgSet vars_obs_; // list of observables
+   RooSetProxy vars_proxy_; ///< sets up client-server connections
+   RooArgSet vars_obs_;     ///< list of observables
 
    ClassDefOverride(RooRealL, 0);
 };

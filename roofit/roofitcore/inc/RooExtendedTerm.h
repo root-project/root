@@ -36,7 +36,7 @@ public:
 
 protected:
 
-  RooRealProxy _n ;          // Number of expected events
+  RooRealProxy _n ;          ///< Number of expected events
 
   ClassDef(RooExtendedTerm,1) // Meta-p.d.f flat in all observables introducing only extended ML term
 };

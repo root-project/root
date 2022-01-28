@@ -30,15 +30,15 @@ public:
   virtual TObject* clone(const char* newname) const { return new RooBinningCategory(*this, newname); }
   virtual ~RooBinningCategory();
 
-  // Printing interface (human readable)
+  /// Printing interface (human readable)
   virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 
 protected:
-  
+
   void initialize(const char* catTypeName=0) ;
 
-  RooTemplateProxy<RooAbsRealLValue> _inputVar; // Input variable that is mapped
-  TString _bname ;         // Name of the binning specification to be used to perform the mapping
+  RooTemplateProxy<RooAbsRealLValue> _inputVar; ///< Input variable that is mapped
+  TString _bname ;         ///< Name of the binning specification to be used to perform the mapping
 
   virtual value_type evaluate() const;
   /// The shape of this category does not need to be recomputed, as it creates states on the fly.

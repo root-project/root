@@ -22,7 +22,7 @@
 #include "RooArgList.h"
 #include "RooMPSentinel.h"
 #include "TStopwatch.h"
-#include <vector> 
+#include <vector>
 
 class RooArgSet ;
 namespace RooFit { class BidirMMapPipe; }
@@ -46,7 +46,7 @@ public:
   void enableOffsetting(Bool_t flag) ;
 
   void followAsSlave(RooRealMPFE& master) { _updateMaster = &master ; }
-  
+
   protected:
 
   // Function evaluation
@@ -58,18 +58,18 @@ public:
   enum State { Initialize,Client,Server,Inline } ;
   State _state ;
 
-  enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate, 
-		 ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset } ;
-  
-  void initialize() ; 
+  enum Message { SendReal=0, SendCat, Calculate, Retrieve, ReturnValue, Terminate,
+       ConstOpt, Verbose, LogEvalError, ApplyNLLW2, EnableOffset, CalculateNoOffset } ;
+
+  void initialize() ;
   void initVars() ;
   void serverLoop() ;
 
   void doApplyNLLW2(Bool_t flag) ;
 
-  RooRealProxy _arg ; // Function to calculate in parallel process
-  RooListProxy _vars ;   // Variables
-  RooArgList _saveVars ;  // Copy of variables
+  RooRealProxy _arg ; ///< Function to calculate in parallel process
+  RooListProxy _vars ;   ///< Variables
+  RooArgList _saveVars ;  ///< Copy of variables
   mutable Bool_t _calcInProgress ;
   Bool_t _verboseClient ;
   Bool_t _verboseServer ;
@@ -77,17 +77,17 @@ public:
   mutable Bool_t _forceCalc ;
   mutable RooAbsReal::ErrorLoggingMode _remoteEvalErrorLoggingState ;
 
-  RooFit::BidirMMapPipe *_pipe; //! connection to child
+  RooFit::BidirMMapPipe *_pipe; ///<! connection to child
 
-  mutable std::vector<Bool_t> _valueChanged ; //! Flags if variable needs update on server-side
-  mutable std::vector<Bool_t> _constChanged ; //! Flags if variable needs update on server-side
-  RooRealMPFE* _updateMaster ; //! Update master
-  mutable Bool_t _retrieveDispatched ; //!
-  mutable Double_t _evalCarry; //!
+  mutable std::vector<Bool_t> _valueChanged ; ///<! Flags if variable needs update on server-side
+  mutable std::vector<Bool_t> _constChanged ; ///<! Flags if variable needs update on server-side
+  RooRealMPFE* _updateMaster ; ///<! Update master
+  mutable Bool_t _retrieveDispatched ; ///<!
+  mutable Double_t _evalCarry; ///<!
 
   static RooMPSentinel _sentinel ;
 
-  ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function 
+  ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };
 
 #endif

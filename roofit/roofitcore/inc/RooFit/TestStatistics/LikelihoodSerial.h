@@ -37,8 +37,8 @@ public:
 private:
    ROOT::Math::KahanSum<double> result;
 
-   RooArgList _vars;      // Variables
-   RooArgList _saveVars;  // Copy of variables
+   RooArgList _vars;      ///< Variables
+   RooArgList _saveVars;  ///< Copy of variables
 
    LikelihoodType likelihood_type;
 };

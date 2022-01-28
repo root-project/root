@@ -51,7 +51,7 @@ public:
   void resize(UInt_t bins);
   void resetValues();
   void generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[],
-		     Double_t &vol, Bool_t useQuasiRandom= kTRUE) const;
+           Double_t &vol, Bool_t useQuasiRandom= kTRUE) const;
   void accumulate(const UInt_t bin[], Double_t amount);
   void refine(Double_t alpha= 1.5);
 
@@ -71,17 +71,17 @@ protected:
 
 protected:
 
-  Bool_t _valid;              // Is configuration valid
-  UInt_t _dim,_bins,_boxes;   // Number of dimensions, bins and boxes
-  Double_t _vol;              // Volume
+  Bool_t _valid;              ///< Is configuration valid
+  UInt_t _dim,_bins,_boxes;   ///< Number of dimensions, bins and boxes
+  Double_t _vol;              ///< Volume
 
-  Double_t *_xl;     //! Internal workspace
-  Double_t *_xu;     //! Internal workspace
-  Double_t *_delx;   //! Internal workspace
-  Double_t *_d;      //! Internal workspace
-  Double_t *_xi;     //! Internal workspace
-  Double_t *_xin;    //! Internal workspace
-  Double_t *_weight; //! Internal workspace
+  Double_t *_xl;     ///<! Internal workspace
+  Double_t *_xu;     ///<! Internal workspace
+  Double_t *_delx;   ///<! Internal workspace
+  Double_t *_d;      ///<! Internal workspace
+  Double_t *_xi;     ///<! Internal workspace
+  Double_t *_xin;    ///<! Internal workspace
+  Double_t *_weight; ///<! Internal workspace
 
   ClassDef(RooGrid,1) // Utility class for RooMCIntegrator holding a multi-dimensional grid
 };

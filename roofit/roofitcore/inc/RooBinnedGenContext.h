@@ -32,7 +32,7 @@ public:
   RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooBinnedGenContext();
-  
+
   RooDataSet* generate(Double_t nEvents=0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) ;
 
   virtual void setProtoDataOrder(Int_t*)  {}
@@ -50,11 +50,11 @@ protected:
 
   RooBinnedGenContext(const RooBinnedGenContext& other) ;
 
-  const RooArgSet* _vars ;       
-  RooArgSet* _pdfSet ;           //  Set owned all nodes of internal clone of p.d.f
-  RooAbsPdf *_pdf ;              //  Pointer to cloned p.d.f
-  RooDataHist* _hist ;          // Histogram 
-  Bool_t _expectedData ;        // Asimov?
+  const RooArgSet* _vars ;
+  RooArgSet* _pdfSet ;          ///<  Set owned all nodes of internal clone of p.d.f
+  RooAbsPdf *_pdf ;             ///<  Pointer to cloned p.d.f
+  RooDataHist* _hist ;          ///< Histogram
+  Bool_t _expectedData ;        ///< Asimov?
 
   ClassDef(RooBinnedGenContext,0) // Specialized context for generating a dataset from a binned pdf
 };

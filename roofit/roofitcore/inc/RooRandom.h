@@ -35,13 +35,13 @@ public:
 
   static RooQuasiRandomGenerator *quasiGenerator();
   static Bool_t quasi(UInt_t dimension, Double_t vector[],
-		      RooQuasiRandomGenerator *generator= quasiGenerator());
+            RooQuasiRandomGenerator *generator= quasiGenerator());
 
 private:
   RooRandom();
 
-  static TRandom* _theGenerator; // random number generator
-  static RooQuasiRandomGenerator* _theQuasiGenerator; // quasi random number sequence generator
+  static TRandom* _theGenerator; ///< random number generator
+  static RooQuasiRandomGenerator* _theQuasiGenerator; ///< quasi random number sequence generator
 
   // free resources when library is unloaded
   struct Guard { ~Guard(); };

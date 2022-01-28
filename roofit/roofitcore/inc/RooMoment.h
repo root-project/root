@@ -42,9 +42,9 @@ public:
 
 protected:
 
-  RooRealProxy _xf ;                     // X*F 
-  RooRealProxy _ixf ;                    // Int(X*F(X))dx ;
-  RooRealProxy _if ;                     // Int(F(x))dx ;
+  RooRealProxy _xf ;                     ///< X*F
+  RooRealProxy _ixf ;                    ///< Int(X*F(X))dx ;
+  RooRealProxy _if ;                     ///< Int(F(x))dx ;
   Double_t evaluate() const;
 
   ClassDef(RooMoment,1) // Representation of moment in a RooAbsReal in a given RooRealVar

@@ -43,14 +43,14 @@ public:
   void dumpFormula() { formula().dump() ; }
 
   const char* expression() const { return _formExpr.Data(); }
-  const RooArgList& dependents() const { return _actualVars; }  
+  const RooArgList& dependents() const { return _actualVars; }
 
 protected:
 
   RooFormula& formula() const ;
 
   // Function evaluation
-  RooListProxy _actualVars ; 
+  RooListProxy _actualVars ;
   virtual Double_t evaluate() const ;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
@@ -62,8 +62,8 @@ protected:
 
   virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
 
-  std::unique_ptr<RooFormula> _formula{nullptr}; //! Formula engine
-  TString _formExpr ;            // Formula expression string
+  std::unique_ptr<RooFormula> _formula{nullptr}; ///<! Formula engine
+  TString _formExpr ;            ///< Formula expression string
 
   ClassDef(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables
 };

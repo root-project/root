@@ -48,7 +48,7 @@ public:
 
 protected:
 
-  mutable Double_t* _array ; //! do not persist
+  mutable Double_t* _array ; ///<! do not persist
   Double_t _xlo ;
   Double_t _xhi ;
   Int_t    _nbins ;

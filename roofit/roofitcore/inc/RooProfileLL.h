@@ -36,7 +36,7 @@ public:
   const RooArgSet& bestFitObs() const ;
 
   virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
-  
+
   virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
 
   void clearAbsMin() { _absMinValid = kFALSE ; }
@@ -49,22 +49,22 @@ protected:
   void validateAbsMin() const ;
   void initializeMinimizer() const ;
 
-  RooRealProxy _nll ;    // Input -log(L) function
-  RooSetProxy _obs ;     // Parameters of profile likelihood
-  RooSetProxy _par ;     // Marginialized parameters of likelihood
-  Bool_t _startFromMin ; // Always start minimization for global minimum?
+  RooRealProxy _nll ;    ///< Input -log(L) function
+  RooSetProxy _obs ;     ///< Parameters of profile likelihood
+  RooSetProxy _par ;     ///< Marginalised parameters of likelihood
+  Bool_t _startFromMin ; ///< Always start minimization for global minimum?
 
-  TIterator* _piter ; //! Iterator over profile likelihood parameters to be minimized 
-  TIterator* _oiter ; //! Iterator of profile likelihood output parameter(s)
+  TIterator* _piter ; ///<! Iterator over profile likelihood parameters to be minimized
+  TIterator* _oiter ; ///<! Iterator of profile likelihood output parameter(s)
 
-  mutable std::unique_ptr<RooMinimizer> _minimizer = nullptr ; //! Internal minimizer instance
+  mutable std::unique_ptr<RooMinimizer> _minimizer = nullptr ; ///<! Internal minimizer instance
 
-  mutable Bool_t _absMinValid ; // flag if absmin is up-to-date
-  mutable Double_t _absMin ; // absolute minimum of -log(L)
-  mutable RooArgSet _paramAbsMin ; // Parameter values at absolute minimum
-  mutable RooArgSet _obsAbsMin ; // Observable values at absolute minimum
-  mutable std::map<std::string,bool> _paramFixed ; // Parameter constant status at last time of use
-  mutable Int_t _neval ; // Number evaluations used in last minimization
+  mutable Bool_t _absMinValid ; ///< flag if absmin is up-to-date
+  mutable Double_t _absMin ; ///< absolute minimum of -log(L)
+  mutable RooArgSet _paramAbsMin ; ///< Parameter values at absolute minimum
+  mutable RooArgSet _obsAbsMin ; ///< Observable values at absolute minimum
+  mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
+  mutable Int_t _neval ; ///< Number evaluations used in last minimization
   Double_t evaluate() const ;
 
 
@@ -72,5 +72,5 @@ private:
 
   ClassDef(RooProfileLL,0) // Real-valued function representing profile likelihood of external (likelihood) function
 };
- 
+
 #endif

@@ -33,18 +33,18 @@ public:
   /// ambiguity problems in RooFit code. It is not a problem that the first
   /// parameter always has to be given, because creating a RooCmdArg with only
   /// a name and no payload doesn't make sense anyway.
-  RooCmdArg(const char* name, 
-	    Int_t i1, Int_t i2=0,
-	    Double_t d1=0, Double_t d2=0, 
-	    const char* s1=0, const char* s2=0, 
-	    const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0, const char* s3=0,
-	    const RooArgSet* c1=0, const RooArgSet* c2=0) ;
+  RooCmdArg(const char* name,
+            Int_t i1, Int_t i2=0,
+            Double_t d1=0, Double_t d2=0,
+            const char* s1=0, const char* s2=0,
+            const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0, const char* s3=0,
+            const RooArgSet* c1=0, const RooArgSet* c2=0) ;
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
-  void setProcessRecArgs(Bool_t flag, Bool_t prefix=kTRUE) { 
+  void setProcessRecArgs(Bool_t flag, Bool_t prefix=kTRUE) {
     // If true flag this object as containing recursive arguments
-    _procSubArgs = flag ; 
+    _procSubArgs = flag ;
     _prefixSubArgs = prefix ;
   }
 
@@ -64,9 +64,9 @@ public:
 
   static const RooCmdArg& none() ;
 
-  const char* opcode() const { 
+  const char* opcode() const {
     // Return operator code
-    return strlen(GetName()) ? GetName() : 0 ; 
+    return strlen(GetName()) ? GetName() : 0 ;
   }
 
   void setInt(Int_t idx,Int_t value) {
@@ -83,21 +83,21 @@ public:
   }
   void setSet(Int_t idx,const RooArgSet& set) ;
 
-  Int_t getInt(Int_t idx) const { 
+  Int_t getInt(Int_t idx) const {
     // Return integer stored in slot idx
-    return _i[idx] ; 
+    return _i[idx] ;
   }
-  Double_t getDouble(Int_t idx) const { 
-    // Return double stored in slot idx
-    return _d[idx] ; 
+  /// Return double stored in slot idx
+  Double_t getDouble(Int_t idx) const {
+    return _d[idx] ;
   }
-  const char* getString(Int_t idx) const { 
-    // Return string stored in slot idx
-      return (_s[idx].size()>0) ? _s[idx].c_str() : 0 ; 
+  /// Return string stored in slot idx
+  const char* getString(Int_t idx) const {
+      return (_s[idx].size()>0) ? _s[idx].c_str() : 0 ;
   }
-  const TObject* getObject(Int_t idx) const { 
-  // Return TObject stored in slot idx
-    return _o[idx] ; 
+  /// Return TObject stored in slot idx
+  const TObject* getObject(Int_t idx) const {
+    return _o[idx] ;
   }
 
   const RooArgSet* getSet(Int_t idx) const ;
@@ -115,25 +115,25 @@ public:
 
 private:
 
-  static const RooCmdArg _none  ; // Static instance of null object
+  static const RooCmdArg _none  ; ///< Static instance of null object
 
   // Payload
-  Double_t _d[2] ;       // Payload doubles
-  Int_t _i[2] ;          // Payload integers
-  std::string _s[3] ;    // Payload strings
-  TObject* _o[2] ;       // Payload objects
-  Bool_t _procSubArgs ;  // If true argument requires recursive processing
-  RooArgSet* _c ;        // Payload RooArgSets 
-  RooLinkedList _argList ; // Payload sub-arguments
-  Bool_t _prefixSubArgs ; // Prefix subarguments with container name?
+  Double_t _d[2] ;         ///< Payload doubles
+  Int_t _i[2] ;            ///< Payload integers
+  std::string _s[3] ;      ///< Payload strings
+  TObject* _o[2] ;         ///< Payload objects
+  Bool_t _procSubArgs ;    ///< If true argument requires recursive processing
+  RooArgSet* _c ;          ///< Payload RooArgSets
+  RooLinkedList _argList ; ///< Payload sub-arguments
+  Bool_t _prefixSubArgs ;  ///< Prefix sub-arguments with container name?
 
   using DataCollection = std::vector<std::unique_ptr<TObject>>;
-  std::shared_ptr<DataCollection> _sharedData; //!
+  std::shared_ptr<DataCollection> _sharedData; ///<!
 
   // the next RooCmdArg created will take ownership of this data
   static DataCollection _nextSharedData;
   static DataCollection &getNextSharedData();
-  
+
   ClassDef(RooCmdArg,2) // Generic named argument container
 };
 

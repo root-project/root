@@ -44,7 +44,7 @@ public:
   RooAbsCategory(const char *name, const char *title);
   RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
   virtual ~RooAbsCategory();
-  
+
   // Value accessors
   virtual value_type getCurrentIndex() const ;
   virtual const char* getCurrentLabel() const ;
@@ -59,7 +59,7 @@ public:
   virtual Bool_t operator==(const RooAbsArg& other) const ;
   Bool_t         operator!=(const RooAbsArg& other) { return !operator==(other);}
   virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const;
-  
+
   /// Check if a state with name `label` exists.
   bool hasLabel(const std::string& label) const {
     return stateNames().find(label) != stateNames().end();
@@ -84,9 +84,9 @@ public:
   virtual void printValue(std::ostream& os) const ;
   virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const { 
+  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const {
     // Is this l-value object safe for use as integration observable
-    return kTRUE ; 
+    return kTRUE ;
   }
 
   RooAbsArg *createFundamental(const char* newname=0) const;
@@ -212,12 +212,12 @@ protected:
   value_type nextAvailableStateIndex() const;
 
 
-  mutable value_type _currentIndex{std::numeric_limits<int>::min()}; /// Current category state
-  std::map<std::string, value_type> _stateNames; /// Map state names to index numbers. Make sure state names are updated in recomputeShape().
-  std::vector<std::string> _insertionOrder; /// Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
-  mutable UChar_t _byteValue{0}; //! Transient cache for byte values from tree branches
-  mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; //! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
-  bool _treeVar{false}; /// Is this category attached to a tree?
+  mutable value_type _currentIndex{std::numeric_limits<int>::min()}; ///< Current category state
+  std::map<std::string, value_type> _stateNames;                     ///< Map state names to index numbers. Make sure state names are updated in recomputeShape().
+  std::vector<std::string> _insertionOrder;                          ///< Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
+  mutable UChar_t _byteValue{0};                                     ///<! Transient cache for byte values from tree branches
+  mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; ///<! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
+  bool _treeVar{false}; ///< Is this category attached to a tree?
 
   static const decltype(_stateNames)::value_type& invalidCategory();
 

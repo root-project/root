@@ -52,15 +52,15 @@ public:
   Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
 
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;     
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
   Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
 
   virtual void enableOffsetting(Bool_t) ;
 
 protected:
 
-  RooArgList   _ownedList ;      // List of owned components
-  RooListProxy _set ;            // set of terms to be summed
+  RooArgList   _ownedList ;      ///< List of owned components
+  RooListProxy _set ;            ///< set of terms to be summed
 
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -69,7 +69,7 @@ protected:
       RooArgList _I ;
       virtual RooArgList containedArgs(Action) ;
   };
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
   Double_t evaluate() const;
 
