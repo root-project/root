@@ -1493,6 +1493,16 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
                }
             }
          }
+         if (mc->GetGlobalObservables()) {
+            for (auto *np : *mc->GetGlobalObservables()) {
+               if (auto *v = dynamic_cast<RooRealVar *>(np)) {
+                  exportVariable(v, vars);
+                  auto &tags = vars[v->GetName()]["tags"];
+                  tags.set_seq();
+                  RooJSONFactoryWSTool::append(tags, "glob");
+               }
+            }
+         }
          mcs.push_back(mc);
       }
    }
