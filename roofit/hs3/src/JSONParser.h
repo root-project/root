@@ -57,10 +57,8 @@ public:
       virtual Node &child(size_t pos) override;
       virtual const Node &child(size_t pos) const override;
 
-      virtual child_iterator childIteratorBegin() override;
-      virtual child_iterator childIteratorEnd() override;
-      virtual const_child_iterator childConstIteratorBegin() const override;
-      virtual const_child_iterator childConstIteratorEnd() const override;
+      children_view children() override;
+      const_children_view children() const override;
    };
 
 protected:

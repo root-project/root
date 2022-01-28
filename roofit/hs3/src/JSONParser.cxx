@@ -58,7 +58,7 @@ void TJSONTree::clearcache()
 class TJSONTree::Node::Impl {
 public:
    std::string _key;
-   std::string key() const { return _key; }
+   std::string const &key() const { return _key; }
    virtual nlohmann::json &get() = 0;
    virtual const nlohmann::json &get() const = 0;
    class BaseNode;
@@ -359,19 +359,13 @@ public:
    }
 };
 
-RooFit::Experimental::JSONNode::child_iterator TJSONTree::Node::childIteratorBegin()
+RooFit::Experimental::JSONNode::children_view TJSONTree::Node::children()
 {
-   return child_iterator(std::make_unique<childIt>(*this, childIt::BEGIN));
+   return {child_iterator(std::make_unique<childIt>(*this, childIt::BEGIN)),
+           child_iterator(std::make_unique<childIt>(*this, childIt::END))};
 }
-RooFit::Experimental::JSONNode::child_iterator TJSONTree::Node::childIteratorEnd()
+RooFit::Experimental::JSONNode::const_children_view TJSONTree::Node::children() const
 {
-   return child_iterator(std::make_unique<childIt>(*this, childIt::END));
-}
-RooFit::Experimental::JSONNode::const_child_iterator TJSONTree::Node::childConstIteratorBegin() const
-{
-   return const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::BEGIN));
-}
-RooFit::Experimental::JSONNode::const_child_iterator TJSONTree::Node::childConstIteratorEnd() const
-{
-   return const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::END));
+   return {const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::BEGIN)),
+           const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::END))};
 }

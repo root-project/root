@@ -19,7 +19,7 @@ public:
       public:
          virtual std::unique_ptr<Impl> mkptr() const = 0;
          virtual void forward() = 0;
-         virtual void backward() = 0;        
+         virtual void backward() = 0;
          virtual Nd &current() = 0;
          virtual bool equal(const Impl &other) const = 0;
       };
@@ -54,11 +54,6 @@ public:
       inline child_iterator_t<Nd> begin() const { return b; }
       inline child_iterator_t<Nd> end() const { return e; }
    };
-
-   virtual child_iterator childIteratorBegin();
-   virtual child_iterator childIteratorEnd();
-   virtual const_child_iterator childConstIteratorBegin() const;
-   virtual const_child_iterator childConstIteratorEnd() const;
 
 public:
    virtual void writeJSON(std::ostream &os) const = 0;
@@ -104,8 +99,8 @@ public:
    using children_view = children_view_t<JSONNode>;
    using const_children_view = children_view_t<const JSONNode>;
 
-   children_view children();
-   const_children_view children() const;
+   virtual children_view children();
+   virtual const_children_view children() const;
    virtual JSONNode &child(size_t pos) = 0;
    virtual const JSONNode &child(size_t pos) const = 0;
 };

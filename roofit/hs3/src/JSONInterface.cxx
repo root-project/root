@@ -85,35 +85,20 @@ public:
 namespace RooFit {
 namespace Experimental {
 
-JSONNode::child_iterator JSONNode::childIteratorBegin()
-{
-   return child_iterator(std::make_unique<::childItImpl<JSONNode>>(*this, ::childItImpl<JSONNode>::BEGIN));
-}
-JSONNode::child_iterator JSONNode::childIteratorEnd()
-{
-   return child_iterator(std::make_unique<::childItImpl<JSONNode>>(*this, ::childItImpl<JSONNode>::END));
-}
-JSONNode::const_child_iterator JSONNode::childConstIteratorBegin() const
-{
-   return const_child_iterator(
-      std::make_unique<::childItImpl<const JSONNode>>(*this, ::childItImpl<const JSONNode>::BEGIN));
-}
-JSONNode::const_child_iterator JSONNode::childConstIteratorEnd() const
-{
-   return const_child_iterator(
-      std::make_unique<::childItImpl<const JSONNode>>(*this, ::childItImpl<const JSONNode>::END));
-}
-
 template class JSONNode::child_iterator_t<JSONNode>;
 template class JSONNode::child_iterator_t<const JSONNode>;
 
 JSONNode::children_view JSONNode::children()
 {
-   return children_view(this->childIteratorBegin(), this->childIteratorEnd());
+   return {child_iterator(std::make_unique<::childItImpl<JSONNode>>(*this, ::childItImpl<JSONNode>::BEGIN)),
+           child_iterator(std::make_unique<::childItImpl<JSONNode>>(*this, ::childItImpl<JSONNode>::END))};
 }
 JSONNode::const_children_view JSONNode::children() const
 {
-   return const_children_view(this->childConstIteratorBegin(), this->childConstIteratorEnd());
+   return {
+      const_child_iterator(
+         std::make_unique<::childItImpl<const JSONNode>>(*this, ::childItImpl<const JSONNode>::BEGIN)),
+      const_child_iterator(std::make_unique<::childItImpl<const JSONNode>>(*this, ::childItImpl<const JSONNode>::END))};
 }
 
 std::ostream &operator<<(std::ostream &os, JSONNode const &s)
