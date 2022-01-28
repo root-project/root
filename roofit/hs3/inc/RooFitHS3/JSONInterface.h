@@ -1,41 +1,56 @@
 #ifndef JSON_INTERFACE_H
 #define JSON_INTERFACE_H
 
-#include <string>
-#include <stdexcept>
 #include <iostream>
+#include <memory>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace RooFit {
 namespace Experimental {
 
 class JSONNode {
-protected:
+public:
    template <class Nd>
    class child_iterator_t {
-      Nd &node;
-      size_t pos;
+   public:
+      class Impl {
+      public:
+         virtual std::unique_ptr<Impl> clone() const = 0;
+         virtual void forward() = 0;
+         virtual void backward() = 0;
+         virtual Nd &current() = 0;
+         virtual bool equal(const Impl &other) const = 0;
+      };
+
+   private:
+      std::unique_ptr<Impl> it;
 
    public:
-      child_iterator_t(Nd &n, size_t p) : node(n), pos(p){};
+      child_iterator_t(std::unique_ptr<Impl> impl) : it(std::move(impl)) {}
+      child_iterator_t(const child_iterator_t &other) : it(std::move(other.it->clone())) {}
 
       child_iterator_t &operator++()
       {
-         ++pos;
+         it->forward();
          return *this;
       }
       child_iterator_t &operator--()
       {
-         --pos;
+         it->backward();
          return *this;
       }
+      Nd &operator*() const { return it->current(); }
+      Nd &operator->() const { return it->current(); }
 
-      Nd &operator*() const { return node.child(pos); }
-      Nd &operator->() const { return node.child(pos); }
-
-      bool operator!=(const child_iterator_t &that) const { return this->pos != that.pos; };
-      bool operator==(const child_iterator_t &that) const { return this->pos == that.pos; };
+      bool operator!=(const child_iterator_t &that) const { return !this->it->equal(*that.it); }
+      bool operator==(const child_iterator_t &that) const { return this->it->equal(*that.it); }
    };
+
+   using child_iterator = child_iterator_t<JSONNode>;
+   using const_child_iterator = child_iterator_t<const JSONNode>;
+
    template <class Nd>
    class children_view_t {
       child_iterator_t<Nd> b, e;
@@ -91,16 +106,8 @@ public:
    using children_view = children_view_t<JSONNode>;
    using const_children_view = children_view_t<const JSONNode>;
 
-   children_view children()
-   {
-      return children_view(child_iterator_t<JSONNode>(*this, 0),
-                           child_iterator_t<JSONNode>(*this, this->num_children()));
-   }
-   const_children_view children() const
-   {
-      return const_children_view(child_iterator_t<const JSONNode>(*this, 0),
-                                 child_iterator_t<const JSONNode>(*this, this->num_children()));
-   }
+   virtual children_view children();
+   virtual const_children_view children() const;
    virtual JSONNode &child(size_t pos) = 0;
    virtual const JSONNode &child(size_t pos) const = 0;
 };

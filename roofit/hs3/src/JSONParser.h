@@ -13,8 +13,15 @@ public:
    protected:
       TJSONTree *tree;
       class Impl;
+      template <class Nd, class NdType, class json_it>
+      class childItImpl;
       friend TJSONTree;
       std::unique_ptr<Impl> node;
+
+      const TJSONTree *get_tree() const;
+      TJSONTree *get_tree();
+      const Impl &get_node() const;
+      Impl &get_node();
 
    public:
       virtual void writeJSON(std::ostream &os) const override;
@@ -49,6 +56,9 @@ public:
       virtual size_t num_children() const override;
       virtual Node &child(size_t pos) override;
       virtual const Node &child(size_t pos) const override;
+
+      children_view children() override;
+      const_children_view children() const override;
    };
 
 protected:
