@@ -128,7 +128,7 @@ protected:
    // ownership, we would have used that instead.
    std::shared_ptr<RooAbsPdf> pdf_;
    std::shared_ptr<RooAbsData> data_;
-   std::unique_ptr<RooArgSet> normSet_; // Pointer to set with observables used for normalization
+   std::unique_ptr<RooArgSet> normSet_; ///< Pointer to set with observables used for normalization
 
    std::size_t N_events_ = 1;
    std::size_t N_components_ = 1;

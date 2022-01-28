@@ -48,9 +48,9 @@ public:
   RooDataHist* getCacheHist(const RooArgSet* nset=0) const ;
 
   void setInterpolationOrder(int order) ;
-  Int_t getInterpolationOrder() const { 
+  Int_t getInterpolationOrder() const {
     // Set interpolation order in RooHistPdf that represent cached histogram
-    return _ipOrder ; 
+    return _ipOrder ;
   }
 
   virtual bool forceAnalyticalInt(const RooAbsArg& dep) const ;
@@ -84,20 +84,20 @@ public:
   protected:
 
   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
-   
+
   PdfCacheElem* getCache(const RooArgSet* nset, bool recalculate=true) const ;
   void clearCacheObject(PdfCacheElem& cache) const ;
 
   virtual const char* payloadUniqueSuffix() const { return 0 ; }
-  
+
   friend class PdfCacheElem ;
-  virtual const char* binningName() const { 
+  virtual const char* binningName() const {
     // Return name of binning to be used for creation of cache histogram
-    return "cache" ; 
+    return "cache" ;
   }
-  virtual PdfCacheElem* createCache(const RooArgSet* nset) const { 
+  virtual PdfCacheElem* createCache(const RooArgSet* nset) const {
     // Create cache storage element
-    return new PdfCacheElem(*this,nset) ; 
+    return new PdfCacheElem(*this,nset) ;
   }
   virtual const char* inputBaseName() const = 0 ;
   virtual RooArgSet* actualObservables(const RooArgSet& nset) const = 0 ;
@@ -105,17 +105,17 @@ public:
   virtual RooAbsArg& pdfObservable(RooAbsArg& histObservable) const { return histObservable ; }
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager  
-  Int_t _ipOrder ; // Interpolation order for cache histograms 
- 
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  Int_t _ipOrder ; // Interpolation order for cache histograms
+
   std::string cacheNameSuffix(const RooArgSet& nset) const ;
   virtual TString histNameSuffix() const { return TString("") ; }
   void disableCache(bool flag) {
     // Flag to disable caching mechanism
-    _disableCache = flag ; 
+    _disableCache = flag ;
   }
 
-  mutable RooAICRegistry _anaReg ; //! Registry for analytical integration codes
+  mutable RooAICRegistry _anaReg ; ///<! Registry for analytical integration codes
   class AnaIntConfig {
   public:
     RooArgSet _allVars ;
@@ -123,15 +123,15 @@ public:
     const RooArgSet* _nset ;
     bool    _unitNorm ;
   } ;
-  mutable std::map<Int_t,AnaIntConfig> _anaIntMap ; //! Map for analytical integration codes
+  mutable std::map<Int_t,AnaIntConfig> _anaIntMap ; ///<! Map for analytical integration codes
 
 
 
 private:
 
-  bool _disableCache = false; // Flag to run object in passthrough (= non-caching mode)
+  bool _disableCache = false; ///< Flag to run object in passthrough (= non-caching mode)
 
   ClassDef(RooAbsCachedPdf,2) // Abstract base class for cached p.d.f.s
 };
- 
+
 #endif

@@ -77,13 +77,13 @@ protected:
 
    Bool_t _haveLastCoef;
 
-   RooListProxy _funcList; //  List of component FUNCs
-   RooListProxy _coefList; //  List of coefficients
-   TIterator *_funcIter;   //! Iterator over FUNC list
-   TIterator *_coefIter;   //! Iterator over coefficient list
+   RooListProxy _funcList; ///<  List of component FUNCs
+   RooListProxy _coefList; ///<  List of coefficients
+   TIterator *_funcIter;   ///<! Iterator over FUNC list
+   TIterator *_coefIter;   ///<! Iterator over coefficient list
 
-   Bool_t _doFloor;              // Introduce floor at zero in pdf
-   static Bool_t _doFloorGlobal; // Global flag for introducing floor at zero in pdf
+   Bool_t _doFloor;              ///< Introduce floor at zero in pdf
+   static Bool_t _doFloorGlobal; ///< Global flag for introducing floor at zero in pdf
 
 private:
    ClassDef(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions

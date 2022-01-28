@@ -28,13 +28,13 @@ public:
   RooRealSumPdf(const char *name, const char *title);
   RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList, Bool_t extended=kFALSE) ;
   RooRealSumPdf(const char *name, const char *title,
-		   RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
+         RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
   RooRealSumPdf(const RooRealSumPdf& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooRealSumPdf(*this,newname) ; }
   virtual ~RooRealSumPdf() ;
 
   Double_t evaluate() const ;
-  virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
+  virtual Bool_t checkObservables(const RooArgSet* nset) const ;
 
   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
 
@@ -45,7 +45,7 @@ public:
   const RooArgList& funcList() const { return _funcList ; }
   const RooArgList& coefList() const { return _coefList ; }
 
-  virtual ExtendMode extendMode() const ; 
+  virtual ExtendMode extendMode() const ;
 
   /// Return expected number of events for extended likelihood calculation, which
   /// is the sum of all coefficients.
@@ -70,26 +70,26 @@ public:
 
 protected:
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
-  
+
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    virtual ~CacheElem() {} ; 
+    virtual ~CacheElem() {} ;
     virtual RooArgList containedArgs(Action) { RooArgList ret(_funcIntList) ; ret.add(_funcNormList) ; return ret ; }
     RooArgList _funcIntList ;
     RooArgList _funcNormList ;
   } ;
-  mutable RooObjCacheManager _normIntMgr ; //! The integration cache manager
+  mutable RooObjCacheManager _normIntMgr ; ///<! The integration cache manager
 
 
-  RooListProxy _funcList ;  //  List of component FUNCs
-  RooListProxy _coefList ;  //  List of coefficients
-  Bool_t _extended ;        // Allow use as extended p.d.f.
+  RooListProxy _funcList ;  ///<  List of component FUNCs
+  RooListProxy _coefList ;  ///<  List of coefficients
+  Bool_t _extended ;        ///< Allow use as extended p.d.f.
 
-  Bool_t _doFloor = false; // Introduce floor at zero in pdf
-  mutable bool _haveWarned{false}; //!
-  static Bool_t _doFloorGlobal ; // Global flag for introducing floor at zero in pdf
-  
+  Bool_t _doFloor = false; ///< Introduce floor at zero in pdf
+  mutable bool _haveWarned{false}; ///<!
+  static Bool_t _doFloorGlobal ; ///< Global flag for introducing floor at zero in pdf
+
 private:
 
   bool haveLastCoef() const {

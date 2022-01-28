@@ -73,7 +73,7 @@ protected:
       virtual RooArgList containedArgs(Action) ;
   };
   mutable RooObjCacheManager _cacheMgr ; //! The cache manager
-                                                                                                                                                             
+
 
   Double_t calculate(const RooArgList& partIntList) const;
   Double_t evaluate() const;
@@ -82,9 +82,6 @@ protected:
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;
   Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=0) const;
-    
-
-
 
   ClassDef(RooProduct,3) // Product of RooAbsReal and/or RooAbsCategory terms
 };

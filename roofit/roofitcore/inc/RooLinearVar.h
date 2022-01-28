@@ -35,7 +35,7 @@ public:
   RooLinearVar(const RooLinearVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooLinearVar(*this,newname); }
   virtual ~RooLinearVar() ;
-  
+
   // Parameter value and error accessors
   virtual void setVal(Double_t value) ;
 
@@ -62,12 +62,12 @@ protected:
   virtual Double_t evaluate() const ;
 
   mutable RooLinTransBinning _binning ;
-  RooLinkedList _altBinning ; //!
-  RooRealProxy _var ;         // Input observable
-  RooRealProxy _slope ;       // Slope of transformation
-  RooRealProxy _offset ;      // Offset of transformation
+  RooLinkedList _altBinning ; ///<!
+  RooRealProxy _var ;         ///< Input observable
+  RooRealProxy _slope ;       ///< Slope of transformation
+  RooRealProxy _offset ;      ///< Offset of transformation
 
-  ClassDef(RooLinearVar,1) // Lvalue linear transformation function 
+  ClassDef(RooLinearVar,1) // Lvalue linear transformation function
 };
 
 #endif

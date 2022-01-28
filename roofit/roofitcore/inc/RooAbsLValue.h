@@ -39,7 +39,7 @@ public:
 
   virtual const RooAbsBinning* getBinningPtr(const char* rangeName) const = 0 ;
   virtual std::list<std::string> getBinningNames() const = 0;
-  virtual Int_t getBin(const RooAbsBinning*) const = 0 ;		       
+  virtual Int_t getBin(const RooAbsBinning*) const = 0 ;
 
 protected:
 

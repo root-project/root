@@ -28,8 +28,8 @@ public:
   virtual Bool_t findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value= 0) const = 0;
 
 protected:
-  const RooAbsFunc *_function; // Pointer to input function
-  Bool_t _valid;               // True if current state is valid
+  const RooAbsFunc *_function; ///< Pointer to input function
+  Bool_t _valid;               ///< True if current state is valid
 
   ClassDef(RooAbsRootFinder,0) // Abstract interface for 1-dim real-valued function root finders
 };

@@ -34,8 +34,8 @@ public:
 
 protected:
 
-  RooListProxy _set1 ;            // Set of input fractions
-  mutable TIterator* _setIter1 ;  //! Iterator over set of input fractions
+  RooListProxy _set1 ;            ///< Set of input fractions
+  mutable TIterator* _setIter1 ;  ///<! Iterator over set of input fractions
 
   Double_t evaluate() const;
 

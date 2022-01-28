@@ -37,39 +37,39 @@ public:
 
   RooArgSet* createProtoBuildConfig() ;
 
-  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents, 
-				  const RooArgSet* auxSplitCats=0, bool verbose=false) ;
+  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
+              const RooArgSet* auxSplitCats=0, bool verbose=false) ;
 
-  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
-				  const RooArgSet& auxSplitCats, bool verbose=false) {
+  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet,
+              const RooArgSet& auxSplitCats, bool verbose=false) {
     return buildPdf(buildConfig,*dataSet->get(),&auxSplitCats,verbose) ;
   }
 
   RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooArgSet& dependents,
-				  const RooArgSet& auxSplitCats, bool verbose=false) {
+              const RooArgSet& auxSplitCats, bool verbose=false) {
     return buildPdf(buildConfig,dependents,&auxSplitCats,verbose) ;
   }
 
-  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet, 
-				  const RooArgSet* auxSplitCats=0, bool verbose=false) {
+  RooSimultaneous* buildPdf(const RooArgSet& buildConfig, const RooAbsData* dataSet,
+              const RooArgSet* auxSplitCats=0, bool verbose=false) {
     return buildPdf(buildConfig,*dataSet->get(),auxSplitCats,verbose) ;
   }
-  
+
   const RooArgSet& splitLeafList() { return _splitNodeList; }
 
   void addSpecializations(const RooArgSet& specSet) ;
- 
+
 protected:
 
-  RooArgSet _protoPdfSet ;       // Set of prototype PDFS
+  RooArgSet _protoPdfSet ;           ///< Set of prototype PDFS
 
-  RooArgSet _compSplitCatSet ;   // List of owned composite splitting categories
-  RooArgSet _splitNodeListOwned ;  // List of all split nodes
-  RooArgSet _splitNodeList ;       // List of owned split nodes
-  TList     _retiredCustomizerList ; // Retired customizer from previous builds (own their PDF branch nodes)
- 
-  std::list<RooSimultaneous*> _simPdfList ;     // The simpdfs that we built
-  std::list<RooSuperCategory*> _fitCatList ;     // The supercategories that we built
+  RooArgSet _compSplitCatSet ;       ///< List of owned composite splitting categories
+  RooArgSet _splitNodeListOwned ;    ///< List of all split nodes
+  RooArgSet _splitNodeList ;         ///< List of owned split nodes
+  TList     _retiredCustomizerList ; ///< Retired customizer from previous builds (own their PDF branch nodes)
+
+  std::list<RooSimultaneous*> _simPdfList ;     ///< The simpdfs that we built
+  std::list<RooSuperCategory*> _fitCatList ;    ///< The super-categories that we built
 
 
 private:

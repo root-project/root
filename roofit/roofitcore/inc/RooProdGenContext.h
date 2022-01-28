@@ -31,7 +31,7 @@ class RooSuperCategory ;
 class RooProdGenContext : public RooAbsGenContext {
 public:
   RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
-		    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
+          const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   virtual ~RooProdGenContext();
 
   virtual void setProtoDataOrder(Int_t* lut) ;
@@ -48,20 +48,20 @@ protected:
 
 
   RooProdGenContext(const RooProdGenContext& other) ;
-  
-  RooArgSet _commonCats ;        // Common category dependents
+
+  RooArgSet _commonCats ;        ///< Common category dependents
   RooArgSet* _ccdCloneSet ;
-  RooSuperCategory* _ccdSuper ;  // SuperCategory of Common category dependents
+  RooSuperCategory* _ccdSuper ;  ///< SuperCategory of Common category dependents
   RooArgSet* _pdfCloneSet ;
   RooAbsPdf* _pdfClone ;
   RooRealIntegral* _pdfCcdInt ;
-  RooArgSet _uniObs ;            // Observable to be generated with flat distribution
-  TIterator* _uniIter ;          // Iterator over uniform observables
+  RooArgSet _uniObs ;            ///< Observable to be generated with flat distribution
+  TIterator* _uniIter ;          ///< Iterator over uniform observables
   Bool_t _ccdRefresh ;
   Double_t * _ccdTable ;
-  const RooProdPdf *_pdf ;       //  Original PDF
-  std::list<RooAbsGenContext*>  _gcList ; //  List of component generator contexts
-  RooArgSet _ownedMultiProds ;   //  Owned auxilary multi-term product PDFs
+  const RooProdPdf *_pdf ;       ///<  Original PDF
+  std::list<RooAbsGenContext*>  _gcList ; ///<  List of component generator contexts
+  RooArgSet _ownedMultiProds ;   ///<  Owned auxiliary multi-term product PDFs
 
   ClassDef(RooProdGenContext,0) // Context for efficient generation of a a dataset from a RooProdPdf
 };

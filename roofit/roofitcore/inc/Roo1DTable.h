@@ -56,11 +56,11 @@ public:
 
 protected:
 
-  
-  TObjArray _types ;             // Array of defined category states
-  std::vector<Double_t> _count ; // Array of counters for each state
-  Double_t  _total ;             // Total number of entries
-  Double_t  _nOverflow ;         // Number of overflow entries
+
+  TObjArray _types ;             ///< Array of defined category states
+  std::vector<Double_t> _count ; ///< Array of counters for each state
+  Double_t  _total ;             ///< Total number of entries
+  Double_t  _nOverflow ;         ///< Number of overflow entries
 
   ClassDef(Roo1DTable,1) // 1-dimensional table
 };

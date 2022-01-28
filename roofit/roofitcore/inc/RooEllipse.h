@@ -31,8 +31,8 @@ public:
   virtual void printClassName(std::ostream& os) const ;
   virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
 
+  /// Printing interface
   inline virtual void Print(Option_t *options= 0) const {
-    // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 

@@ -41,7 +41,7 @@ public:
   virtual void saveXVec() const ;
   virtual void restoreXVec() const ;
 
-  virtual const char* getName() const ; 
+  virtual const char* getName() const ;
 
   virtual std::list<Double_t>* binBoundaries(Int_t) const ;
   /// Return a pointer to the observable that defines the `i`-th dimension of the function.
@@ -52,18 +52,18 @@ protected:
 
   void loadValues(const Double_t xvector[]) const;
   const RooAbsReal *_func;
-  std::vector<RooAbsRealLValue*> _vars; // Non-owned pointers to variables
+  std::vector<RooAbsRealLValue*> _vars; ///< Non-owned pointers to variables
   const RooArgSet *_nset;
   mutable Bool_t _xvecValid;
   Bool_t _clipInvalid ;
   mutable Double_t* _xsave ;
-  const TNamed* _rangeName ; //!
-  
-  mutable std::vector<RooAbsReal*> _compList ; //!
-  mutable std::vector<Double_t>    _compSave ; //!
-  mutable Double_t _funcSave ; //!
-  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; /// Memory for batch evaluations
-  
+  const TNamed* _rangeName ; ///<!
+
+  mutable std::vector<RooAbsReal*> _compList ; ///<!
+  mutable std::vector<Double_t>    _compSave ; ///<!
+  mutable Double_t _funcSave ; ///<!
+  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; ///< Memory for batch evaluations
+
   ClassDef(RooRealBinding,0) // Function binding to RooAbsReal object
 };
 

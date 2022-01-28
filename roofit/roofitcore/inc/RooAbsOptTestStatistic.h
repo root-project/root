@@ -60,8 +60,8 @@ private:
 protected:
 
   Bool_t setDataSlave(RooAbsData& data, Bool_t cloneData=kTRUE, Bool_t ownNewDataAnyway=kFALSE) ;
-  void initSlave(RooAbsReal& real, RooAbsData& indata, const RooArgSet& projDeps, const char* rangeName, 
-		 const char* addCoefRangeName)  ;
+  void initSlave(RooAbsReal& real, RooAbsData& indata, const RooArgSet& projDeps, const char* rangeName,
+       const char* addCoefRangeName)  ;
 
   friend class RooAbsReal ;
   friend class RooAbsTestStatistic ;
@@ -75,20 +75,20 @@ protected:
   void optimizeCaching() ;
   void optimizeConstantTerms(Bool_t,Bool_t=kTRUE) ;
 
-  RooArgSet*  _normSet ; // Pointer to set with observables used for normalization
-  RooArgSet*  _funcCloneSet ; // Set owning all components of internal clone of input function
-  RooAbsData* _dataClone{nullptr}; // Pointer to internal clone if input data
-  RooAbsReal* _funcClone ; // Pointer to internal clone of input function
-  RooArgSet*  _projDeps ; // Set of projected observable
-  Bool_t      _ownData  ; // Do we own the dataset
-  Bool_t      _sealed ; // Is test statistic sealed -- i.e. no access to data 
-  TString     _sealNotice ; // User-defined notice shown when reading a sealed likelihood 
-  RooArgSet*  _funcObsSet ; // List of observables in the pdf expression
-  RooArgSet   _cachedNodes ; //! List of nodes that are cached as constant expressions
-  
-  RooAbsReal* _origFunc ; // Original function 
-  RooAbsData* _origData ; // Original data 
-  Bool_t      _optimized ; //!
+  RooArgSet*  _normSet ;           ///< Pointer to set with observables used for normalization
+  RooArgSet*  _funcCloneSet ;      ///< Set owning all components of internal clone of input function
+  RooAbsData* _dataClone{nullptr}; ///< Pointer to internal clone if input data
+  RooAbsReal* _funcClone ;   ///< Pointer to internal clone of input function
+  RooArgSet*  _projDeps ;    ///< Set of projected observable
+  Bool_t      _ownData  ;    ///< Do we own the dataset
+  Bool_t      _sealed ;      ///< Is test statistic sealed -- i.e. no access to data
+  TString     _sealNotice ;  ///< User-defined notice shown when reading a sealed likelihood
+  RooArgSet*  _funcObsSet ;  ///< List of observables in the pdf expression
+  RooArgSet   _cachedNodes ; ///<! List of nodes that are cached as constant expressions
+
+  RooAbsReal* _origFunc ;  ///< Original function
+  RooAbsData* _origData ;  ///< Original data
+  Bool_t      _optimized ; ///<!
   double      _integrateBinsPrecision{-1.}; // Precision for finer sampling of bins.
 
   ClassDef(RooAbsOptTestStatistic,5) // Abstract base class for optimized test statistics

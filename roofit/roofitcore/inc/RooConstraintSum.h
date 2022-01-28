@@ -55,9 +55,9 @@ public:
 
 protected:
 
-  RooListProxy _set1 ;    // Set of constraint terms
-  RooSetProxy _paramSet ; // Set of parameters to which constraints apply
-  const bool _takeGlobalObservablesFromData = false; // If the global observable values are taken from data
+  RooListProxy _set1 ;    ///< Set of constraint terms
+  RooSetProxy _paramSet ; ///< Set of parameters to which constraints apply
+  const bool _takeGlobalObservablesFromData = false; ///< If the global observable values are taken from data
 
   Double_t evaluate() const override;
 

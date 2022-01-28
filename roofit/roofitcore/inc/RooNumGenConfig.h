@@ -51,28 +51,28 @@ public:
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
   virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
-  
+
 
 protected:
-  
-  RooCategory _method1D        ; // Selects integration method for 1D p.d.f.s
-  RooCategory _method1DCat     ; // Selects integration method for 1D  p.d.f.s with categories
-  RooCategory _method1DCond    ; // Selects integration method for 1D conditional p.d.f.s
-  RooCategory _method1DCondCat ; // Selects integration method for 1D conditional p.d.f.s with categories
 
-  RooCategory _method2D        ; // Selects integration method for 2D p.d.f.s
-  RooCategory _method2DCat     ; // Selects integration method for 2D  p.d.f.s with categories
-  RooCategory _method2DCond    ; // Selects integration method for 2D conditional p.d.f.s
-  RooCategory _method2DCondCat ; // Selects integration method for 2D conditional p.d.f.s with categories
+  RooCategory _method1D        ; ///< Selects integration method for 1D p.d.f.s
+  RooCategory _method1DCat     ; ///< Selects integration method for 1D  p.d.f.s with categories
+  RooCategory _method1DCond    ; ///< Selects integration method for 1D conditional p.d.f.s
+  RooCategory _method1DCondCat ; ///< Selects integration method for 1D conditional p.d.f.s with categories
 
-  RooCategory _methodND        ; // Selects integration method for ND p.d.f.s
-  RooCategory _methodNDCat     ; // Selects integration method for ND  p.d.f.s with categories
-  RooCategory _methodNDCond    ; // Selects integration method for ND conditional p.d.f.s
-  RooCategory _methodNDCondCat ; // Selects integration method for ND conditional p.d.f.s with categories
+  RooCategory _method2D        ; ///< Selects integration method for 2D p.d.f.s
+  RooCategory _method2DCat     ; ///< Selects integration method for 2D  p.d.f.s with categories
+  RooCategory _method2DCond    ; ///< Selects integration method for 2D conditional p.d.f.s
+  RooCategory _method2DCondCat ; ///< Selects integration method for 2D conditional p.d.f.s with categories
 
-  RooLinkedList _configSets ; // List of configuration sets for individual integration methods
+  RooCategory _methodND        ; ///< Selects integration method for ND p.d.f.s
+  RooCategory _methodNDCat     ; ///< Selects integration method for ND  p.d.f.s with categories
+  RooCategory _methodNDCond    ; ///< Selects integration method for ND conditional p.d.f.s
+  RooCategory _methodNDCondCat ; ///< Selects integration method for ND conditional p.d.f.s with categories
 
-  ClassDef(RooNumGenConfig,1) // Numeric (MC) Event generator configuration 
+  RooLinkedList _configSets ; ///< List of configuration sets for individual integration methods
+
+  ClassDef(RooNumGenConfig,1) // Numeric (MC) Event generator configuration
 };
 
 #endif

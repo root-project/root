@@ -35,8 +35,8 @@ public:
   RooAbsBinning* clone(const char* name = 0) const { return new RooBinning(*this,name?name:GetName()); }
   ~RooBinning();
 
+  /// Return the number boundaries
   virtual Int_t numBoundaries() const {
-    // Return the number boundaries
     return _nbins+1;
   }
   virtual Int_t binNumber(Double_t x) const;
@@ -45,16 +45,18 @@ public:
 
   virtual void setRange(Double_t xlo, Double_t xhi);
 
+  /// Return the lower bound value
   virtual Double_t lowBound() const {
-    // Return the lower bound value
     return _xlo;
   }
+
+  /// Return the upper bound value
   virtual Double_t highBound() const {
-    // Return the upper bound value
     return _xhi;
   }
+
+  /// Return the average bin width
   virtual Double_t averageBinWidth() const {
-    // Return the average bin width
     return (highBound() - lowBound()) / numBins();
   }
   virtual Double_t* array() const;
@@ -76,15 +78,15 @@ protected:
   Bool_t binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const;
   void updateBinCount();
 
-  Double_t _xlo;          // Lower bound
-  Double_t _xhi;          // Upper bound
-  Bool_t _ownBoundLo;     // Does the lower bound coincide with a bin boundary
-  Bool_t _ownBoundHi;     // Does the upper bound coincide with a bin boundary
-  Int_t _nbins;           // Numer of bins
+  Double_t _xlo;          ///< Lower bound
+  Double_t _xhi;          ///< Upper bound
+  Bool_t _ownBoundLo;     ///< Does the lower bound coincide with a bin boundary
+  Bool_t _ownBoundHi;     ///< Does the upper bound coincide with a bin boundary
+  Int_t _nbins;           ///< Numer of bins
 
-  std::vector<Double_t> _boundaries;   // Boundaries
-  mutable Double_t* _array;         //! Array of boundaries
-  mutable Int_t _blo; //! bin number for _xlo
+  std::vector<Double_t> _boundaries; ///< Boundaries
+  mutable Double_t* _array;          ///<! Array of boundaries
+  mutable Int_t _blo;                ///<! bin number for _xlo
 
   ClassDef(RooBinning,3) // Generic binning specification
 };

@@ -31,8 +31,8 @@ public:
    evaluatePartition(Section bins, std::size_t components_begin, std::size_t components_end) override;
 
 private:
-   mutable bool _first = true;        //!
-   mutable std::vector<double> _binw; //!
+   mutable bool _first = true;        ///<!
+   mutable std::vector<double> _binw; ///<!
 };
 
 } // namespace TestStatistics

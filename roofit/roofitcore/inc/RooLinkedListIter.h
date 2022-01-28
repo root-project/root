@@ -71,7 +71,7 @@ class RooFIterForLinkedList final : public GenericRooFIter
   }
 
  private:
-    const RooLinkedListElem * fPtr{nullptr};  //! Next link element
+    const RooLinkedListElem * fPtr{nullptr};  ///<! Next link element
 };
 
 
@@ -181,9 +181,9 @@ private:
   }
 
 
-  const STLContainer & fSTLContainer; //!
-  std::size_t fIndex; //!
-  const RooAbsArg * fCurrentElem; //!
+  const STLContainer & fSTLContainer; ///<!
+  std::size_t fIndex; ///<!
+  const RooAbsArg * fCurrentElem; ///<!
 };
 
 
@@ -312,9 +312,9 @@ public:
   }
 
 protected:
-  const RooLinkedList* _list ;     //! Collection iterated over
-  const RooLinkedListElem* _ptr ;  //! Next link element
-  bool _forward ;                  //!  Iterator direction
+  const RooLinkedList* _list ;     ///<! Collection iterated over
+  const RooLinkedListElem* _ptr ;  ///<! Next link element
+  bool _forward ;                  ///<!  Iterator direction
 };
 
 

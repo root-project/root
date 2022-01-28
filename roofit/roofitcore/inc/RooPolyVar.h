@@ -31,7 +31,7 @@ public:
   RooPolyVar() ;
   RooPolyVar(const char* name, const char* title, RooAbsReal& x) ;
   RooPolyVar(const char *name, const char *title,
-		RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=0) ;
+      RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=0) ;
 
   RooPolyVar(const RooPolyVar& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new RooPolyVar(*this, newname); }
@@ -46,7 +46,7 @@ protected:
   RooListProxy _coefList ;
   Int_t _lowestOrder ;
 
-  mutable std::vector<Double_t> _wksp; //! do not persist
+  mutable std::vector<Double_t> _wksp; ///<! do not persist
 
   Double_t evaluate() const;
 

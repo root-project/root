@@ -55,14 +55,14 @@ public:
   virtual void printCompactTreeHook(std::ostream&, const char *) {}
 
   virtual void wireCache() {}
-   
+
 protected:
 
-  RooAbsArg* _owner ; // Pointer to owning RooAbsArg
+  RooAbsArg* _owner ; ///< Pointer to owning RooAbsArg
 
-  ClassDef(RooAbsCache,1) // Base class for cache managers 
+  ClassDef(RooAbsCache,1) // Base class for cache managers
 
 } ;
 
 
-#endif 
+#endif

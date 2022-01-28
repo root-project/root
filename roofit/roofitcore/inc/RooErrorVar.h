@@ -28,29 +28,29 @@ class RooVectorDataStore;
 class RooErrorVar : public RooAbsRealLValue {
 public:
   // Constructors, assignment etc.
+  /// Default constructor
   inline RooErrorVar() {
-    // Default constructor
   }
   RooErrorVar(const char *name, const char *title, const RooRealVar& input) ;
   RooErrorVar(const RooErrorVar& other, const char* name=0);
   virtual TObject* clone(const char* newname) const { return new RooErrorVar(*this,newname); }
   virtual ~RooErrorVar() ;
 
-  virtual Double_t getValV(const RooArgSet* set=0) const ; 
+  virtual Double_t getValV(const RooArgSet* set=0) const ;
 
-  virtual Double_t evaluate() const { 
+  virtual Double_t evaluate() const {
     // return error of input RooRealVar
-    return ((RooRealVar&)_realVar.arg()).getError() ; 
-  } 
+    return ((RooRealVar&)_realVar.arg()).getError() ;
+  }
 
   virtual void setVal(Double_t value) {
     // Set error of input RooRealVar to value
-    ((RooRealVar&)_realVar.arg()).setVal(value) ; 
+    ((RooRealVar&)_realVar.arg()).setVal(value) ;
   }
 
-  inline virtual Bool_t isFundamental() const { 
-    // Return kTRUE as we implement a fundamental type of AbsArg that can be stored in a dataset    
-    return kTRUE ; 
+  inline virtual Bool_t isFundamental() const {
+    // Return kTRUE as we implement a fundamental type of AbsArg that can be stored in a dataset
+    return kTRUE ;
   }
 
   // I/O streaming interface (machine readable)
@@ -58,17 +58,17 @@ public:
   virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
 
   // Set/get finite fit range limits
-  inline void setMin(Double_t value) { 
-    // Set lower bound of default range to value
-    setMin(0,value) ; 
+  /// Set lower bound of default range to value
+  inline void setMin(Double_t value) {
+    setMin(0,value) ;
   }
-  inline void setMax(Double_t value) { 
-    // Set upper bound of default range to value
-    setMax(0,value) ; 
+  /// Set upper bound of default range to value
+  inline void setMax(Double_t value) {
+    setMax(0,value) ;
   }
-  inline void setRange(Double_t min, Double_t max) { 
-    // Set default ranges to [min,max]
-    setRange(0,min,max) ; 
+  /// Set default ranges to [min,max]
+  inline void setRange(Double_t min, Double_t max) {
+    setRange(0,min,max) ;
   }
   void setMin(const char* name, Double_t value) ;
   void setMax(const char* name, Double_t value) ;
@@ -91,12 +91,12 @@ public:
 
 protected:
 
-  RooLinkedList _altBinning ;  //! Optional alternative ranges and binnings
+  RooLinkedList _altBinning ;  ///<! Optional alternative ranges and binnings
 
   void syncCache(const RooArgSet* set=0) ;
 
-  RooRealProxy _realVar ; // RealVar with the original error
-  RooAbsBinning* _binning ; //! Pointer to default binning definition
+  RooRealProxy _realVar ;   ///< RealVar with the original error
+  RooAbsBinning* _binning ; ///<! Pointer to default binning definition
 
   ClassDef(RooErrorVar,1) // RooAbsRealLValue representation of an error of a RooRealVar
 };

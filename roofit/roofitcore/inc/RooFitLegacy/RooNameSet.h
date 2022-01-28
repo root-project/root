@@ -35,7 +35,7 @@ public:
 
   void refill(const RooArgSet& argSet) ;
   RooArgSet* select(const RooArgSet& list) const ;
-  Bool_t operator==(const RooNameSet& other) const;  
+  Bool_t operator==(const RooNameSet& other) const;
   RooNameSet& operator=(const RooNameSet&) ;
   Bool_t operator<(const RooNameSet& other) const ;
 
@@ -53,7 +53,7 @@ public:
 
 private:
   Int_t _len ;
-  char* _nameList ; //[_len]
+  char* _nameList ; ///<[_len]
 
 protected:
 

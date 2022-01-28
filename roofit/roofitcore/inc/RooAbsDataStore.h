@@ -53,14 +53,14 @@ public:
 
   // Write current row
   virtual Int_t fill() = 0 ;
-  
+
   // Retrieve a row
   virtual const RooArgSet* get(Int_t index) const = 0 ;
-  virtual const RooArgSet* get() const { return &_vars ; } 
+  virtual const RooArgSet* get() const { return &_vars ; }
   virtual Double_t weight() const = 0 ;
 
   virtual Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ;
-  virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ; 
+  virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const = 0 ;
 
   double weight(Int_t index) const {
     get(index) ;
@@ -79,7 +79,7 @@ public:
 
   // Change observable name
   virtual Bool_t changeObservableName(const char* from, const char* to) =0 ;
-  
+
   // Add one or more columns
   virtual RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) = 0 ;
   virtual RooArgSet* addColumns(const RooArgList& varList) = 0 ;
@@ -87,7 +87,7 @@ public:
   // Merge column-wise
   virtual RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) = 0 ;
 
-  // Add rows 
+  // Add rows
   virtual void append(RooAbsDataStore& other)= 0 ;
 
   // General & bookkeeping methods
@@ -96,7 +96,7 @@ public:
   virtual void reset() = 0 ;
 
   // Buffer redirection routines used in inside RooAbsOptTestStatistics
-  virtual void attachBuffers(const RooArgSet& extObs) = 0 ; 
+  virtual void attachBuffers(const RooArgSet& extObs) = 0 ;
   virtual void resetBuffers() = 0 ;
 
   virtual void setExternalWeightArray(const Double_t* /*arrayWgt*/, const Double_t* /*arrayWgtErrLo*/, const Double_t* /*arrayWgtErrHi*/, const Double_t* /*arraySumW2*/) {} ;
@@ -119,7 +119,7 @@ public:
 
   /// Define default print options, for a given print style
   virtual int defaultPrintContents(Option_t* /*opt*/) const override { return kName|kClassName|kArgs|kValue ; }
-   
+
 
   // Constant term  optimizer interface
   virtual void cacheArgs(const RooAbsArg* cacheOwner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) = 0 ;
@@ -134,23 +134,23 @@ public:
   Bool_t dirtyProp() const { return _doDirtyProp ; }
 
   virtual void checkInit() const {} ;
-  
+
   virtual Bool_t hasFilledCache() const { return kFALSE ; }
-  
+
   virtual const TTree* tree() const { return 0 ; }
-  virtual void dump() {} 
+  virtual void dump() {}
 
   virtual void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0,
       std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) = 0 ;
 
   virtual void forceCacheUpdate() {} ;
-  
+
  protected:
 
   RooArgSet _vars;
   RooArgSet _cachedVars;
 
-  Bool_t _doDirtyProp = true; // Switch do (de)activate dirty state propagation when loading a data point
+  Bool_t _doDirtyProp = true; ///< Switch do (de)activate dirty state propagation when loading a data point
 
   ClassDefOverride(RooAbsDataStore,1) // Abstract Data Storage class
 };

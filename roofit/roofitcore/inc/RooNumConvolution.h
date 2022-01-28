@@ -31,8 +31,8 @@ public:
 
   RooNumConvolution() ;
 
-  RooNumConvolution(const char *name, const char *title, 
-	         RooRealVar& convVar, RooAbsReal& pdf, RooAbsReal& resmodel, const RooNumConvolution* proto=0) ;
+  RooNumConvolution(const char *name, const char *title,
+            RooRealVar& convVar, RooAbsReal& pdf, RooAbsReal& resmodel, const RooNumConvolution* proto=0) ;
 
   RooNumConvolution(const RooNumConvolution& other, const char* name=0) ;
 
@@ -66,33 +66,33 @@ protected:
 
   virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
 
-  RooNumIntConfig _convIntConfig ; // Configuration of numeric convolution integral ;
-  mutable RooConvIntegrandBinding* _integrand ; //! Binding of Convolution Integrand function
-  mutable RooAbsIntegrator* _integrator ;  //! Numeric integrator of convolution integrand
+  RooNumIntConfig _convIntConfig ; ///< Configuration of numeric convolution integral ;
+  mutable RooConvIntegrandBinding* _integrand ; ///<! Binding of Convolution Integrand function
+  mutable RooAbsIntegrator* _integrator ;  ///<! Numeric integrator of convolution integrand
 
-  RooRealProxy _origVar ;         // Original convolution variable
-  RooRealProxy _origPdf ;         // Original input PDF
-  RooRealProxy _origModel ;       // Original resolution model
+  RooRealProxy _origVar ;         ///< Original convolution variable
+  RooRealProxy _origPdf ;         ///< Original input PDF
+  RooRealProxy _origModel ;       ///< Original resolution model
 
-  mutable RooArgSet    _ownedClonedPdfSet ;   // Owning set of cloned PDF components
-  mutable RooArgSet    _ownedClonedModelSet ; // Owning set of cloned model components
+  mutable RooArgSet    _ownedClonedPdfSet ;   ///< Owning set of cloned PDF components
+  mutable RooArgSet    _ownedClonedModelSet ; ///< Owning set of cloned model components
 
-  mutable RooAbsReal*  _cloneVar ;        // Pointer to cloned convolution variable
-  mutable RooAbsReal*  _clonePdf ;        // Pointer to cloned PDF 
-  mutable RooAbsReal*  _cloneModel ;      // Pointer to cloned model
+  mutable RooAbsReal*  _cloneVar ;        ///< Pointer to cloned convolution variable
+  mutable RooAbsReal*  _clonePdf ;        ///< Pointer to cloned PDF
+  mutable RooAbsReal*  _cloneModel ;      ///< Pointer to cloned model
 
   friend class RooConvGenContext ;
   RooRealVar&  cloneVar()   const { if (!_init) initialize() ; return (RooRealVar&) *_cloneVar ; }
   RooAbsReal&   clonePdf()   const { if (!_init) initialize() ; return (RooAbsReal&)  *_clonePdf ; }
   RooAbsReal&   cloneModel() const { if (!_init) initialize() ; return (RooAbsReal&)  *_cloneModel ; }
 
-  Bool_t       _useWindow   ;     // Switch to activate window convolution
-  Double_t     _windowScale ;     // Scale factor for window parameter
-  RooListProxy _windowParam ;     // Holder for optional convolution integration window scaling parameter
+  Bool_t       _useWindow   ;     ///< Switch to activate window convolution
+  Double_t     _windowScale ;     ///< Scale factor for window parameter
+  RooListProxy _windowParam ;     ///< Holder for optional convolution integration window scaling parameter
 
-  Int_t        _verboseThresh ;   // Call count threshold for verbose printing
-  Bool_t       _doProf   ;        // Switch to activate profiling option
-  TH2*         _callHist ;        //! Histogram recording number of calls per convolution integral calculation
+  Int_t        _verboseThresh ;   ///< Call count threshold for verbose printing
+  Bool_t       _doProf   ;        ///< Switch to activate profiling option
+  TH2*         _callHist ;        ///<! Histogram recording number of calls per convolution integral calculation
 
   ClassDef(RooNumConvolution,1)   // Operator PDF implementing numeric convolution of 2 input functions
 };

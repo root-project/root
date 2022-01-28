@@ -31,15 +31,14 @@ public:
   RooCmdConfig(const char* methodName);
   RooCmdConfig(const RooCmdConfig& other) ;
 
-  void setVerbose(Bool_t flag) { 
-    // If flag is true verbose messaging is activated
-    _verbose = flag ; 
+  /// If flag is true verbose messaging is activated
+  void setVerbose(Bool_t flag) {
+    _verbose = flag ;
   }
-
-  void allowUndefined(Bool_t flag=kTRUE) { 
-    // If flag is true the processing of unrecognized RooCmdArgs
-    // is not considered an error
-    _allowUndefined = flag ; 
+  /// If flag is true the processing of unrecognized RooCmdArgs
+  /// is not considered an error
+  void allowUndefined(Bool_t flag=kTRUE) {
+    _allowUndefined = flag ;
   }
   void defineDependency(const char* refArgName, const char* neededArgName) ;
 
@@ -99,22 +98,22 @@ public:
 protected:
 
   TString _name ;
-  
+
   Bool_t _verbose = false;
   Bool_t _error = false;
   Bool_t _allowUndefined = false;
 
-  TList _iList ; // Integer list
-  TList _dList ; // Double list
-  TList _sList ; // String list
-  TList _oList ; // Object list
-  TList _cList ; // RooArgSet list
+  TList _iList ; ///< Integer list
+  TList _dList ; ///< Double list
+  TList _sList ; ///< String list
+  TList _oList ; ///< Object list
+  TList _cList ; ///< RooArgSet list
 
-  TList _rList ; // Required cmd list
-  TList _fList ; // Forbidden cmd list
-  TList _mList ; // Mutex cmd list 
-  TList _yList ; // Dependency cmd list
-  TList _pList ; // Processed cmd list 
+  TList _rList ; ///< Required cmd list
+  TList _fList ; ///< Forbidden cmd list
+  TList _mList ; ///< Mutex cmd list
+  TList _yList ; ///< Dependency cmd list
+  TList _pList ; ///< Processed cmd list
 
   ClassDef(RooCmdConfig,0) // Configurable parse of RooCmdArg objects
 };
@@ -166,7 +165,7 @@ bool RooCmdConfig::process(It_t begin, It_t end) {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static decoder function allows to retrieve integer property from set of RooCmdArgs 
+/// Static decoder function allows to retrieve integer property from set of RooCmdArgs
 /// For use in base member initializers in constructors
 
 template<class ...Args_t>
@@ -182,13 +181,13 @@ Int_t RooCmdConfig::decodeIntOnTheFly(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static decoder function allows to retrieve string property from set of RooCmdArgs 
+/// Static decoder function allows to retrieve string property from set of RooCmdArgs
 /// For use in base member initializers in constructors
 
 template<class ...Args_t>
 std::string RooCmdConfig::decodeStringOnTheFly(
         const char* callerID, const char* cmdArgName, Int_t strIdx, const char* defVal, Args_t && ...args)
-{  
+{
   RooCmdConfig pc(callerID) ;
   pc.allowUndefined() ;
   pc.defineString("theString",cmdArgName,strIdx,defVal) ;
@@ -200,7 +199,7 @@ std::string RooCmdConfig::decodeStringOnTheFly(
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static decoder function allows to retrieve object property from set of RooCmdArgs 
+/// Static decoder function allows to retrieve object property from set of RooCmdArgs
 /// For use in base member initializers in constructors
 
 template<class ...Args_t>

@@ -38,15 +38,15 @@ public:
 
   inline Bool_t ok() const { return getFormula().ok() ; }
   const char* expression() const { return _formExpr.Data(); }
-  const RooArgList& dependents() const { return _actualVars; }  
-  
+  const RooArgList& dependents() const { return _actualVars; }
+
   /// Return pointer to parameter with given name.
-  inline RooAbsArg* getParameter(const char* name) const { 
-    return _actualVars.find(name) ; 
+  inline RooAbsArg* getParameter(const char* name) const {
+    return _actualVars.find(name) ;
   }
   /// Return pointer to parameter at given index.
-  inline RooAbsArg* getParameter(Int_t index) const { 
-    return _actualVars.at(index) ; 
+  inline RooAbsArg* getParameter(Int_t index) const {
+    return _actualVars.at(index) ;
   }
 
   // I/O streaming interface (machine readable)
@@ -88,10 +88,10 @@ public:
   private:
   RooFormula& getFormula() const;
 
-  RooListProxy _actualVars ;     // Actual parameters used by formula engine
-  std::unique_ptr<RooFormula> _formula{nullptr}; //! Formula engine
-  mutable RooArgSet* _nset{nullptr}; //! Normalization set to be passed along to contents
-  TString _formExpr ;            // Formula expression string
+  RooListProxy _actualVars ;     ///< Actual parameters used by formula engine
+  std::unique_ptr<RooFormula> _formula{nullptr}; ///<! Formula engine
+  mutable RooArgSet* _nset{nullptr}; ///<! Normalization set to be passed along to contents
+  TString _formExpr ;            ///< Formula expression string
 
   ClassDef(RooFormulaVar,1) // Real-valued function of other RooAbsArgs calculated by a TFormula expression
 };

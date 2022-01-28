@@ -42,7 +42,7 @@ public:
 
   void setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
   void setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
- 
+
   virtual Bool_t attach(RooWorkspace& w) ;
   virtual Bool_t initialize() ;
   virtual Bool_t execute() ;
@@ -57,20 +57,20 @@ public:
   std::string _genObsName ;
   std::string _fitPdfName ;
   std::string _fitObsName ;
-  RooLinkedList _genOpts ; 
+  RooLinkedList _genOpts ;
   RooLinkedList _fitOpts ;
 
-  RooAbsPdf* _genPdf ; //!
-  RooArgSet _genObs ;  //!
-  RooAbsPdf* _fitPdf ; //!
-  RooArgSet _fitObs ; //!
+  RooAbsPdf* _genPdf ; ///<!
+  RooArgSet _genObs ; ///<!
+  RooAbsPdf* _fitPdf ; ///<!
+  RooArgSet _fitObs ; ///<!
 
-  RooAbsPdf::GenSpec* _genSpec ; //!
-  RooRealVar* _nllVar ; //!
-  RooRealVar* _ngenVar ; //!
-  RooArgSet* _params ; //!
-  RooArgSet* _initParams; //!
-  
+  RooAbsPdf::GenSpec* _genSpec ; ///<!
+  RooRealVar* _nllVar ; ///<!
+  RooRealVar* _ngenVar ; ///<!
+  RooArgSet* _params ; ///<!
+  RooArgSet* _initParams; ///<!
+
   ClassDef(RooGenFitStudy,1) // Generate-and-Fit study module
 } ;
 

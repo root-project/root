@@ -47,8 +47,8 @@ public:
 
 private:
    std::string parent_pdf_name_;
-   RooArgList subsidiary_pdfs_{"subsidiary_pdfs"}; // Set of subsidiary PDF or "constraint" terms
-   RooArgSet parameter_set_{"parameter_set"};      // Set of parameters to which constraints apply
+   RooArgList subsidiary_pdfs_{"subsidiary_pdfs"}; ///< Set of subsidiary PDF or "constraint" terms
+   RooArgSet parameter_set_{"parameter_set"};      ///< Set of parameters to which constraints apply
 };
 
 } // namespace TestStatistics

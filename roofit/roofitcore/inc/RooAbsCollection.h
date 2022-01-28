@@ -72,8 +72,8 @@ public:
   RooAbsCollection(const char *name);
   virtual TObject* clone(const char* newname) const = 0 ;
   virtual TObject* create(const char* newname) const = 0 ;
-  virtual TObject* Clone(const char* newname=0) const { 
-    return clone(newname?newname:GetName()) ; 
+  virtual TObject* Clone(const char* newname=0) const {
+    return clone(newname?newname:GetName()) ;
   }
   virtual ~RooAbsCollection();
 
@@ -101,7 +101,7 @@ public:
   }
   /// Query the size at which the collection will automatically start using an extra
   /// lookup table instead of performing a linear search.
-  Int_t getHashTableSize() const { 
+  Int_t getHashTableSize() const {
     return _sizeThresholdForMapSearch;
   }
 
@@ -175,18 +175,18 @@ public:
 
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
-  Bool_t contains(const RooAbsArg& var) const { 
+  Bool_t contains(const RooAbsArg& var) const {
     return find(var) != nullptr;
   }
   /// Check if this exact instance is in this collection.
-  virtual Bool_t containsInstance(const RooAbsArg& var) const { 
+  virtual Bool_t containsInstance(const RooAbsArg& var) const {
     return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
   bool selectCommon(const RooAbsCollection& refColl, RooAbsCollection& outColl) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
   RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
-  Bool_t equals(const RooAbsCollection& otherColl) const ; 
+  Bool_t equals(const RooAbsCollection& otherColl) const ;
   bool hasSameLayout(const RooAbsCollection& other) const;
 
   template<typename Iterator_t,
@@ -233,7 +233,7 @@ public:
   const_iterator begin() const {
     return _list.begin();
   }
-  
+
   const_iterator end() const {
     return _list.end();
   }
@@ -263,12 +263,12 @@ public:
     removeAll();
   }
 
-  inline Int_t getSize() const { 
-    // Return the number of elements in the collection
+  /// Return the number of elements in the collection
+  inline Int_t getSize() const {
     return _list.size();
   }
-  
-  inline RooAbsArg *first() const { 
+
+  inline RooAbsArg *first() const {
     // Return the first element in this collection
     return _list.front();
   }
@@ -307,24 +307,24 @@ public:
   virtual Int_t defaultPrintContents(Option_t* opt) const ;
 
   // Latex printing methods
-  void printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),	
-		  const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),	
-		  const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),	
-		  const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
-  void printLatex(std::ostream& ofs, Int_t ncol, const char* option="NEYU", Int_t sigDigit=1, 
+  void printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
+        const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
+        const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
+        const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) const ;
+  void printLatex(std::ostream& ofs, Int_t ncol, const char* option="NEYU", Int_t sigDigit=1,
                   const RooLinkedList& siblingLists=RooLinkedList(), const RooCmdArg* formatCmd=0) const ;
 
   void setName(const char *name) {
     // Set name of collection
-    _name= name; 
+    _name= name;
   }
-  const char* GetName() const { 
+  const char* GetName() const {
     // Return namer of collection
-    return _name.Data() ; 
+    return _name.Data() ;
   }
-  Bool_t isOwning() const { 
+  Bool_t isOwning() const {
     // Does collection own contents?
-    return _ownCont ; 
+    return _ownCont ;
   }
 
   Bool_t allInRange(const char* rangeSpec) const ;
@@ -352,24 +352,24 @@ public:
   };
 
 protected:
-  Storage_t _list; // Actual object storage
+  Storage_t _list;  ///< Actual object storage
   using LegacyIterator_t = TIteratorToSTLInterface<Storage_t>;
 
-  Bool_t _ownCont;  // Flag to identify a list that owns its contents.
-  TString _name;    // Our name.
-  Bool_t _allRRV ; // All contents are RRV
+  Bool_t _ownCont;  ///< Flag to identify a list that owns its contents.
+  TString _name;    ///< Our name.
+  Bool_t _allRRV ;  ///< All contents are RRV
 
   void deleteList() ;
 
-  // Support for snapshot method 
+  // Support for snapshot method
   Bool_t addServerClonesToList(const RooAbsArg& var) ;
 
   inline TNamed* structureTag() { if (_structureTag==0) makeStructureTag() ; return _structureTag ; }
   inline TNamed* typedStructureTag() { if (_typedStructureTag==0) makeTypedStructureTag() ; return _typedStructureTag ; }
 
-  mutable TNamed* _structureTag{nullptr}; //! Structure tag
-  mutable TNamed* _typedStructureTag{nullptr}; //! Typed structure tag
-  
+  mutable TNamed* _structureTag{nullptr};      ///<! Structure tag
+  mutable TNamed* _typedStructureTag{nullptr}; ///<! Typed structure tag
+
   inline void clearStructureTags() { _structureTag=0 ; _typedStructureTag = 0 ; }
 
   void makeStructureTag() ;
@@ -391,8 +391,8 @@ private:
   std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
 
   using HashAssistedFind = RooFit::Detail::HashAssistedFind;
-  mutable std::unique_ptr<HashAssistedFind> _hashAssistedFind; //!
-  std::size_t _sizeThresholdForMapSearch; //!
+  mutable std::unique_ptr<HashAssistedFind> _hashAssistedFind; ///<!
+  std::size_t _sizeThresholdForMapSearch; ///<!
 
   void insert(RooAbsArg*);
 
