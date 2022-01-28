@@ -94,6 +94,7 @@ struct Histo2D{};
 struct Histo3D{};
 struct HistoND{};
 struct Graph{};
+struct GraphAsymmErrors{};
 struct Profile1D{};
 struct Profile2D{};
 struct Min{};
@@ -160,6 +161,16 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TGraph> &g, const uns
             std::shared_ptr<PrevNodeType> prevNode, ActionTags::Graph, const RColumnRegister &colRegister)
 {
    using Helper_t = FillTGraphHelper;
+   using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
+   return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, std::move(prevNode), colRegister);
+}
+
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &bl, const std::shared_ptr<TGraphAsymmErrors> &g, const unsigned int nSlots,
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::GraphAsymmErrors, const RColumnRegister &colRegister)
+{
+   using Helper_t = FillTGraphAsymmErrorsHelper;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
    return std::make_unique<Action_t>(Helper_t(g, nSlots), bl, std::move(prevNode), colRegister);
 }
