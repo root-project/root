@@ -4,12 +4,10 @@ namespace {
 template <class Nd>
 class childItImpl : public RooFit::Experimental::JSONNode::child_iterator_t<Nd>::Impl {
 public:
-   Nd &node;
-   size_t pos;
    using child_iterator = RooFit::Experimental::JSONNode::child_iterator_t<Nd>;
    childItImpl(Nd &n, size_t p) : node(n), pos(p) {}
    childItImpl(const childItImpl &other) : node(other.node), pos(other.pos) {}
-   virtual std::unique_ptr<typename child_iterator::Impl> mkptr() const override
+   virtual std::unique_ptr<typename child_iterator::Impl> clone() const override
    {
       return std::make_unique<childItImpl>(node, pos);
    }
@@ -21,6 +19,10 @@ public:
       auto it = dynamic_cast<const childItImpl<Nd> *>(&other);
       return it && &(it->node) == &(this->node) && (it->pos) == this->pos;
    }
+
+private:
+   Nd &node;
+   size_t pos;
 };
 } // namespace
 

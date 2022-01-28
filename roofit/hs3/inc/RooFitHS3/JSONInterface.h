@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <memory>
-#include <span>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -18,7 +17,7 @@ public:
    public:
       class Impl {
       public:
-         virtual std::unique_ptr<Impl> mkptr() const = 0;
+         virtual std::unique_ptr<Impl> clone() const = 0;
          virtual void forward() = 0;
          virtual void backward() = 0;
          virtual Nd &current() = 0;
@@ -30,7 +29,7 @@ public:
 
    public:
       child_iterator_t(std::unique_ptr<Impl> impl) : it(std::move(impl)) {}
-      child_iterator_t(const child_iterator_t &other) : it(std::move(other.it->mkptr())) {}
+      child_iterator_t(const child_iterator_t &other) : it(std::move(other.it->clone())) {}
 
       child_iterator_t &operator++()
       {
