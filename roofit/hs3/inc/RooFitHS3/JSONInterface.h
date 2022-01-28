@@ -1,10 +1,11 @@
 #ifndef JSON_INTERFACE_H
 #define JSON_INTERFACE_H
 
-#include <string>
-#include <memory>
-#include <stdexcept>
 #include <iostream>
+#include <memory>
+#include <span>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace RooFit {
@@ -28,17 +29,24 @@ public:
       std::unique_ptr<Impl> it;
 
    public:
-      child_iterator_t(std::unique_ptr<Impl> impl);
-      child_iterator_t(const child_iterator_t &other);
-      ~child_iterator_t();
+      child_iterator_t(std::unique_ptr<Impl> impl) : it(std::move(impl)) {}
+      child_iterator_t(const child_iterator_t &other) : it(std::move(other.it->mkptr())) {}
 
-      child_iterator_t &operator++();
-      child_iterator_t &operator--();
-      Nd &operator*() const;
-      Nd &operator->() const;
+      child_iterator_t &operator++()
+      {
+         it->forward();
+         return *this;
+      }
+      child_iterator_t &operator--()
+      {
+         it->backward();
+         return *this;
+      }
+      Nd &operator*() const { return it->current(); }
+      Nd &operator->() const { return it->current(); }
 
-      bool operator!=(const child_iterator_t &that) const;
-      bool operator==(const child_iterator_t &that) const;
+      bool operator!=(const child_iterator_t &that) const { return !this->it->equal(*that.it); }
+      bool operator==(const child_iterator_t &that) const { return this->it->equal(*that.it); }
    };
 
    using child_iterator = child_iterator_t<JSONNode>;

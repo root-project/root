@@ -1,70 +1,12 @@
 #include <RooFitHS3/JSONInterface.h>
 
-namespace RooFit {
-namespace Experimental {
-
-// RooFit::Experimental::JSONNode::child_iterator_t implementation
-
-template <class Nd>
-JSONNode::child_iterator_t<Nd>::child_iterator_t(std::unique_ptr<Impl> impl) : it(std::move(impl))
-{
-}
-
-template <class Nd>
-JSONNode::child_iterator_t<Nd>::child_iterator_t(const child_iterator_t &other) : it(std::move(other.it->mkptr()))
-{
-}
-
-template <class Nd>
-JSONNode::child_iterator_t<Nd>::~child_iterator_t()
-{
-}
-
-template <class Nd>
-JSONNode::child_iterator_t<Nd> &JSONNode::child_iterator_t<Nd>::operator++()
-{
-   it->forward();
-   return *this;
-}
-template <class Nd>
-JSONNode::child_iterator_t<Nd> &JSONNode::child_iterator_t<Nd>::operator--()
-{
-   it->backward();
-   return *this;
-}
-
-template <class Nd>
-Nd &JSONNode::child_iterator_t<Nd>::operator*() const
-{
-   return it->current();
-}
-template <class Nd>
-Nd &JSONNode::child_iterator_t<Nd>::operator->() const
-{
-   return it->current();
-}
-template <class Nd>
-bool JSONNode::child_iterator_t<Nd>::operator!=(const child_iterator_t &that) const
-{
-   return !this->it->equal(*that.it);
-}
-template <class Nd>
-bool JSONNode::child_iterator_t<Nd>::operator==(const child_iterator_t &that) const
-{
-   return this->it->equal(*that.it);
-}
-} // namespace Experimental
-} // namespace RooFit
-
 namespace {
 template <class Nd>
 class childItImpl : public RooFit::Experimental::JSONNode::child_iterator_t<Nd>::Impl {
 public:
-   enum POS { BEGIN, END };
    Nd &node;
    size_t pos;
    using child_iterator = RooFit::Experimental::JSONNode::child_iterator_t<Nd>;
-   childItImpl(Nd &n, POS p) : node(n), pos(p == BEGIN ? 0 : n.num_children()) {}
    childItImpl(Nd &n, size_t p) : node(n), pos(p) {}
    childItImpl(const childItImpl &other) : node(other.node), pos(other.pos) {}
    virtual std::unique_ptr<typename child_iterator::Impl> mkptr() const override
@@ -90,15 +32,13 @@ template class JSONNode::child_iterator_t<const JSONNode>;
 
 JSONNode::children_view JSONNode::children()
 {
-   return {child_iterator(std::make_unique<::childItImpl<JSONNode>>(*this, ::childItImpl<JSONNode>::BEGIN)),
-           child_iterator(std::make_unique<::childItImpl<JSONNode>>(*this, ::childItImpl<JSONNode>::END))};
+   return {child_iterator(std::make_unique<::childItImpl<JSONNode>>(*this, 0)),
+           child_iterator(std::make_unique<::childItImpl<JSONNode>>(*this, this->num_children()))};
 }
 JSONNode::const_children_view JSONNode::children() const
 {
-   return {
-      const_child_iterator(
-         std::make_unique<::childItImpl<const JSONNode>>(*this, ::childItImpl<const JSONNode>::BEGIN)),
-      const_child_iterator(std::make_unique<::childItImpl<const JSONNode>>(*this, ::childItImpl<const JSONNode>::END))};
+   return {const_child_iterator(std::make_unique<::childItImpl<const JSONNode>>(*this, 0)),
+           const_child_iterator(std::make_unique<::childItImpl<const JSONNode>>(*this, this->num_children()))};
 }
 
 std::ostream &operator<<(std::ostream &os, JSONNode const &s)
