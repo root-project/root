@@ -14,7 +14,7 @@ public:
       TJSONTree *tree;
       class Impl;
       template <class Nd, class NdType, class json_it>
-      class childItImpl;
+      class ChildItImpl;
       friend TJSONTree;
       std::unique_ptr<Impl> node;
 

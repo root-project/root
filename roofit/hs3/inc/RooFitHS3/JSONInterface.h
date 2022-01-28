@@ -17,6 +17,7 @@ public:
    public:
       class Impl {
       public:
+         virtual ~Impl() = default;
          virtual std::unique_ptr<Impl> clone() const = 0;
          virtual void forward() = 0;
          virtual void backward() = 0;

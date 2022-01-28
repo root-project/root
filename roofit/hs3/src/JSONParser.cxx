@@ -325,17 +325,17 @@ using json_iterator = nlohmann::basic_json<>::iterator;
 using const_json_iterator = nlohmann::basic_json<>::const_iterator;
 
 template <class Nd, class NdType, class json_it>
-class TJSONTree::Node::childItImpl : public RooFit::Experimental::JSONNode::child_iterator_t<Nd>::Impl {
+class TJSONTree::Node::ChildItImpl final : public RooFit::Experimental::JSONNode::child_iterator_t<Nd>::Impl {
 public:
    enum class POS { BEGIN, END };
-   childItImpl(NdType &n, POS p)
+   ChildItImpl(NdType &n, POS p)
       : node(n), iter(p == POS::BEGIN ? n.get_node().get().begin() : n.get_node().get().end()){};
-   childItImpl(NdType &n, json_it it) : node(n), iter(it) {}
-   childItImpl(const childItImpl &other) : node(other.node), iter(other.iter) {}
+   ChildItImpl(NdType &n, json_it it) : node(n), iter(it) {}
+   ChildItImpl(const ChildItImpl &other) : node(other.node), iter(other.iter) {}
    using child_iterator = RooFit::Experimental::JSONNode::child_iterator_t<Nd>;
    virtual std::unique_ptr<typename child_iterator::Impl> clone() const override
    {
-      return std::make_unique<childItImpl>(node, iter);
+      return std::make_unique<ChildItImpl>(node, iter);
    }
    virtual void forward() override { ++iter; }
    virtual void backward() override { --iter; }
@@ -349,7 +349,7 @@ public:
    }
    virtual bool equal(const typename child_iterator::Impl &other) const override
    {
-      auto it = dynamic_cast<const childItImpl<Nd, NdType, json_it> *>(&other);
+      auto it = dynamic_cast<const ChildItImpl<Nd, NdType, json_it> *>(&other);
       return it && it->iter == this->iter;
    }
 
@@ -360,14 +360,14 @@ private:
 
 RooFit::Experimental::JSONNode::children_view TJSONTree::Node::children()
 {
-   using childIt = TJSONTree::Node::childItImpl<RooFit::Experimental::JSONNode, TJSONTree::Node, json_iterator>;
+   using childIt = TJSONTree::Node::ChildItImpl<RooFit::Experimental::JSONNode, TJSONTree::Node, json_iterator>;
    return {child_iterator(std::make_unique<childIt>(*this, childIt::POS::BEGIN)),
            child_iterator(std::make_unique<childIt>(*this, childIt::POS::END))};
 }
 RooFit::Experimental::JSONNode::const_children_view TJSONTree::Node::children() const
 {
    using childConstIt =
-      TJSONTree::Node::childItImpl<const RooFit::Experimental::JSONNode, const TJSONTree::Node, const_json_iterator>;
+      TJSONTree::Node::ChildItImpl<const RooFit::Experimental::JSONNode, const TJSONTree::Node, const_json_iterator>;
    return {const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::POS::BEGIN)),
            const_child_iterator(std::make_unique<childConstIt>(*this, childConstIt::POS::END))};
 }
