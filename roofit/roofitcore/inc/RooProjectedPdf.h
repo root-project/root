@@ -16,7 +16,7 @@
 #include "RooRealProxy.h"
 #include "RooAbsReal.h"
 #include "RooObjCacheManager.h"
-#include "RooSetProxy.h" 
+#include "RooSetProxy.h"
 
 class RooProjectedPdf : public RooAbsPdf {
 public:
@@ -39,16 +39,16 @@ public:
   virtual Bool_t selfNormalized() const { return kTRUE ; }
 
   // Handle projection of projection explicitly
-  virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;  
+  virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;
 
   void printMetaArgs(std::ostream& os) const ;
 
 
 protected:
 
-  RooRealProxy intpdf ; // p.d.f that is integrated
-  RooSetProxy intobs ;  // observables that p.d.f is integrated over
-  RooSetProxy deps ;    // dependents of this p.d.f
+  RooRealProxy intpdf ; ///< p.d.f that is integrated
+  RooSetProxy intobs ;  ///< observables that p.d.f is integrated over
+  RooSetProxy deps ;    ///< dependents of this p.d.f
 
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -56,10 +56,10 @@ protected:
     // Payload
     RooAbsReal* _projection ;
     // Cache management functions
-    virtual RooArgList containedArgs(Action) ; 
+    virtual RooArgList containedArgs(Action) ;
     virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
   Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
 
@@ -70,5 +70,5 @@ private:
 
   ClassDef(RooProjectedPdf,1) // Operator p.d.f calculating projection of another p.d.f
 };
- 
+
 #endif

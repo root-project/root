@@ -34,13 +34,13 @@ public:
   void sampleSumUniform(const RooArgSet& paramSet, Double_t lo, Double_t hi) ;
   void sampleSumGauss(const RooArgSet& paramSet, Double_t lo, Double_t hi) ;
 
-  Bool_t initializeInstance() ; 
+  Bool_t initializeInstance() ;
 
-  Bool_t initializeRun(Int_t /*numSamples*/) ; 
+  Bool_t initializeRun(Int_t /*numSamples*/) ;
   RooDataSet* finalizeRun() ;
 
-  Bool_t processBeforeGen(Int_t /*sampleNum*/) ; 
-	
+  Bool_t processBeforeGen(Int_t /*sampleNum*/) ;
+
 private:
 
   struct UniParam {
@@ -83,10 +83,10 @@ private:
      Double_t _sigma ;
   } ;
 
-  std::list<UniParam>     _unifParams ; //!
-  std::list<UniParamSet>  _unifParamSets ; //!
-  std::list<GausParam>    _gausParams ; //!
-  std::list<GausParamSet> _gausParamSets ; //!
+  std::list<UniParam>     _unifParams ; ///<!
+  std::list<UniParamSet>  _unifParamSets ; ///<!
+  std::list<GausParam>    _gausParams ; ///<!
+  std::list<GausParamSet> _gausParamSets ; ///<!
 
   RooArgSet _genParSet ;
   RooDataSet* _data ;

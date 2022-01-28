@@ -36,7 +36,7 @@ public:
   RooFormula(const char* name, const char* formula, const RooArgList& varList, bool checkVariables = true);
   RooFormula(const RooFormula& other, const char* name=0);
   virtual TObject* Clone(const char* newName = nullptr) const {return new RooFormula(*this, newName);}
-	
+
   ////////////////////////////////////////////////////////////////////////////////
   /// Return list of arguments which are used in the formula.
   RooArgSet actualDependents() const {return usedVariables();}
@@ -88,9 +88,9 @@ private:
   std::string reconstructFormula(std::string internalRepr) const;
   void installFormulaOrThrow(const std::string& formulaa);
 
-  RooArgList _origList; //! Original list of dependents
-  std::vector<bool> _isCategory; //! Whether an element of the _origList is a category.
-  std::unique_ptr<TFormula> _tFormula; //! The formula used to compute values
+  RooArgList _origList; ///<! Original list of dependents
+  std::vector<bool> _isCategory; ///<! Whether an element of the _origList is a category.
+  std::unique_ptr<TFormula> _tFormula; ///<! The formula used to compute values
 
   ClassDef(RooFormula,0)
 };

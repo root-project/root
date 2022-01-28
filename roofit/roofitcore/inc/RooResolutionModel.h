@@ -68,17 +68,15 @@ protected:
 
   friend class RooConvGenContext ;
   friend class RooAddModel ;
-  RooTemplateProxy<RooAbsRealLValue> x;                   // Dependent/convolution variable
+  RooTemplateProxy<RooAbsRealLValue> x;                   ///< Dependent/convolution variable
 
   virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-//  Bool_t traceEvalHook(Double_t value) const ;
-
 
   friend class RooAbsAnaConvPdf ;
 
-  Int_t _basisCode ;         // Identifier code for selected basis function
-  RooFormulaVar* _basis ;    // Basis function convolved with this resolution model
-  Bool_t _ownBasis ;         // Flag indicating ownership of _basis 
+  Int_t _basisCode ;         ///< Identifier code for selected basis function
+  RooFormulaVar* _basis ;    ///< Basis function convolved with this resolution model
+  Bool_t _ownBasis ;         ///< Flag indicating ownership of _basis
 
   ClassDef(RooResolutionModel, 2) // Abstract Resolution Model
 };

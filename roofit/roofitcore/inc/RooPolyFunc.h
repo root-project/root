@@ -53,7 +53,6 @@ protected:
 
    /// Evaluation
    double evaluate() const;
-   // RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
    ClassDef(RooPolyFunc, 1) // Polynomial Function
 };

@@ -50,8 +50,8 @@ protected:
   value_type evaluate() const override;
   void recomputeShape() override;
 
-  RooSetProxy _catSet ; // Set of input category
-  
+  RooSetProxy _catSet ; ///< Set of input category
+
   friend class RooSuperCategory;
   ClassDefOverride(RooMultiCategory,1) // Product operator for categories
 };

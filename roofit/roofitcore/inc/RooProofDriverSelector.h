@@ -16,13 +16,13 @@ class TIterator ;
 
 class RooProofDriverSelector : public TSelector {
 public :
-   TTree          *fChain;   //!pointer to the analyzed TTree or TChain
+   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain
 
    // Declaration of leaf types
    Int_t           i;
 
    // List of branches
-   TBranch        *b_i;   //!
+   TBranch        *b_i;   ///<!
 
    RooProofDriverSelector(TTree * /*tree*/ =0) { b_i = 0 ; _pkg = 0 ; fChain = 0 ; }
    virtual ~RooProofDriverSelector() { }

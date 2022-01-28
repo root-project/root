@@ -26,23 +26,23 @@ class RooDataSet;
 class RooAbsGenContext : public TNamed, public RooPrintable {
 public:
   RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0, const RooArgSet* auxProto=0,
-		   Bool_t _verbose= kFALSE) ;
+         Bool_t _verbose= kFALSE) ;
   virtual ~RooAbsGenContext();
-  
+
   virtual RooDataSet *generate(Double_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE);
 
-  Bool_t isValid() const { 
+  Bool_t isValid() const {
     // If true generator context is in a valid state
-    return _isValid; 
+    return _isValid;
   }
 
-  inline void setVerbose(Bool_t verbose= kTRUE) { 
+  inline void setVerbose(Bool_t verbose= kTRUE) {
     // Set/clear verbose messaging
-    _verbose= verbose; 
+    _verbose= verbose;
   }
-  inline Bool_t isVerbose() const { 
+  inline Bool_t isVerbose() const {
     // If true verbose messaging is active
-    return _verbose; 
+    return _verbose;
   }
 
   virtual void setProtoDataOrder(Int_t* lut) ;
@@ -74,18 +74,18 @@ protected:
 
   void resampleData(Double_t& ratio) ;
 
-  const RooDataSet *_prototype; // Pointer to prototype dataset
-  RooArgSet _theEvent;          // Pointer to observable event being generated
-  Bool_t _isValid;              // Is context in valid state?
-  Bool_t _verbose;              // Verbose messaging?
-  UInt_t _expectedEvents;       // Number of expected events from extended p.d.f
-  RooArgSet _protoVars;         // Prototype observables
-  Int_t _nextProtoIndex;        // Next prototype event to load according to LUT
-  RooAbsPdf::ExtendMode _extendMode ;  // Extended mode capabilities of p.d.f.
-  Int_t* _protoOrder ;          // LUT with traversal order of prototype data
-  TString _normRange ;          // Normalization range of pdf
+  const RooDataSet *_prototype; ///< Pointer to prototype dataset
+  RooArgSet _theEvent;          ///< Pointer to observable event being generated
+  Bool_t _isValid;              ///< Is context in valid state?
+  Bool_t _verbose;              ///< Verbose messaging?
+  UInt_t _expectedEvents;       ///< Number of expected events from extended p.d.f
+  RooArgSet _protoVars;         ///< Prototype observables
+  Int_t _nextProtoIndex;        ///< Next prototype event to load according to LUT
+  RooAbsPdf::ExtendMode _extendMode ;  ///< Extended mode capabilities of p.d.f.
+  Int_t* _protoOrder ;          ///< LUT with traversal order of prototype data
+  TString _normRange ;          ///< Normalization range of pdf
 
-  RooDataSet* _genData ;        //! Data being generated
+  RooDataSet* _genData ;        ///<! Data being generated
 
   ClassDef(RooAbsGenContext,0) // Abstract context for generating a dataset from a PDF
 };

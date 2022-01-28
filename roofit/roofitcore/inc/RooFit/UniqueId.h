@@ -61,13 +61,13 @@ public:
    bool operator==(UniqueId const &other) const { return _val == other._val; }
    bool operator<(UniqueId const &other) const { return _val < other._val; }
 
-   static const UniqueId nullid;           /// An ID that is less than the ID of any object (similar to nullptr).
-   static constexpr Value_t nullval = 0UL; /// The value of the nullid.
+   static const UniqueId nullid;           ///< An ID that is less than the ID of any object (similar to nullptr).
+   static constexpr Value_t nullval = 0UL; ///< The value of the nullid.
 
 private:
-   Value_t _val; /// Numerical value of the ID.
+   Value_t _val; ///< Numerical value of the ID.
 
-   static std::atomic<Value_t> counter; /// The static object counter to get the next ID value.
+   static std::atomic<Value_t> counter; ///< The static object counter to get the next ID value.
 };
 
 template <class Class>

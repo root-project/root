@@ -23,11 +23,11 @@
 class RooErrorHandler
 {
 public:
-  // Soft assert function that interrupts macro execution but doesn't kill ROOT
+  /// Soft assert function that interrupts macro execution but doesn't kill ROOT
   static void softAssert(Bool_t condition) { if (!condition) abort() ; }
 
-  // Soft abort function that interrupts macro execution but doesn't kill ROOT
+  /// Soft abort function that interrupts macro execution but doesn't kill ROOT
   static void softAbort() { raise(11) ; }
 } ;
- 
+
 #endif

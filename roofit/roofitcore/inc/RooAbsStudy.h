@@ -39,13 +39,13 @@ public:
   virtual RooAbsStudy* clone(const char* newname="") const = 0 ;
   TObject* Clone(const char* newname="") const { return clone(newname) ; }
   virtual ~RooAbsStudy() ;
- 
+
   virtual Bool_t attach(RooWorkspace& /*w*/) { return kFALSE ; } ;
   virtual Bool_t initialize() { return kFALSE ; } ;
   virtual Bool_t execute() { return kFALSE ; } ;
   virtual Bool_t finalize() { return 0 ; } ;
   void storeDetailedOutput(Bool_t flag) { _storeDetails = flag ; }
-  
+
   RooDataSet* summaryData() { return _summaryData ; }
   RooLinkedList* detailedData() { return _detailData ; }
 
@@ -61,12 +61,12 @@ public:
   void storeSummaryOutput(const RooArgSet& vars) ;
   void storeDetailedOutput(TNamed& object) ;
   void aggregateSummaryOutput(TList* chunkList) ;
-  
+
  private:
 
   Bool_t _storeDetails ;
-  RooDataSet* _summaryData ; //!
-  RooLinkedList*  _detailData ;  //!
+  RooDataSet* _summaryData ;     ///<!
+  RooLinkedList*  _detailData ;  ///<!
   Bool_t      _ownDetailData ;
 
   ClassDef(RooAbsStudy,1) // Abstract base class for RooStudyManager modules

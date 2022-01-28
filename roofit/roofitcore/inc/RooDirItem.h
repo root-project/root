@@ -30,8 +30,8 @@ protected:
   void appendToDir(TObject* obj, Bool_t forceMemoryResident=kFALSE) ;
   void removeFromDir(TObject* obj) ;
 
-  TDirectory* _dir{nullptr};     //! Associated directory
-  ClassDef(RooDirItem,1) // Base class for RooFit objects that are listed TDirectories
+  TDirectory* _dir{nullptr}; ///<! Associated directory
+  ClassDef(RooDirItem,1)     ///< Base class for RooFit objects that are listed TDirectories
 };
 
 #endif

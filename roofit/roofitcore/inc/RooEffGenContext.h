@@ -33,11 +33,11 @@ protected:
   void generateEvent(RooArgSet &theEvent, Int_t remaining);
 
 private:
-   RooArgSet* _cloneSet;           // Internal clone of p.d.f.
-   RooAbsReal* _eff;               // Pointer to efficiency function
-   RooAbsGenContext* _generator;   // Generator context for p.d.f
-   RooArgSet* _vars;               // Vars to generate
-   double _maxEff;                 // Maximum of efficiency in vars
+   RooArgSet* _cloneSet;           ///< Internal clone of p.d.f.
+   RooAbsReal* _eff;               ///< Pointer to efficiency function
+   RooAbsGenContext* _generator;   ///< Generator context for p.d.f
+   RooArgSet* _vars;               ///< Vars to generate
+   double _maxEff;                 ///< Maximum of efficiency in vars
 
    ClassDef(RooEffGenContext, 1) // Context for generating a dataset from a PDF
 };

@@ -44,7 +44,7 @@ public:
   using RooAbsCategoryLValue::setIndex;
   virtual Bool_t setLabel(const char* label, bool printError = true) override;
   using RooAbsCategoryLValue::setLabel;
-  
+
   // I/O streaming interface (machine readable)
   virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override;
   virtual void writeToStream(std::ostream& os, Bool_t compact) const override ;
@@ -128,13 +128,13 @@ private:
   /// Map range names to allowed category states. Note that this must be shared between copies,
   /// so categories in datasets have the same ranges as their counterparts outside of the dataset.
   std::shared_ptr<RangeMap_t> _ranges{new RangeMap_t()}; //!
-  RangeMap_t* _rangesPointerForIO{nullptr}; // Pointer to the same object as _ranges, but not shared for I/O.
+  RangeMap_t* _rangesPointerForIO{nullptr}; ///< Pointer to the same object as _ranges, but not shared for I/O.
 
   void installLegacySharedProp(const RooCategorySharedProperties* sp);
   void installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap);
-  // Helper for restoring shared ranges from old versions of this class read from files. Maps TUUID names to shared ranges.
+  /// Helper for restoring shared ranges from old versions of this class read from files. Maps TUUID names to shared ranges.
   static std::map<std::string, std::weak_ptr<RangeMap_t>> _uuidToSharedRangeIOHelper;
-  // Helper for restoring shared ranges from current versions of this class read from files. Maps category names to shared ranges.
+  /// Helper for restoring shared ranges from current versions of this class read from files. Maps category names to shared ranges.
   static std::map<std::string, std::weak_ptr<RangeMap_t>> _sharedRangeIOHelper;
 
   ClassDefOverride(RooCategory, 3) // Discrete valued variable type

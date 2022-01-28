@@ -47,7 +47,7 @@ protected:
 
   friend class RooCategory ;
 
-  RooLinkedList _altRanges ;  // Optional alternative ranges 
+  RooLinkedList _altRanges ;  ///< Optional alternative ranges
 
   ClassDef(RooCategorySharedProperties,1) // Shared properties of a RooCategory clone set
 };
