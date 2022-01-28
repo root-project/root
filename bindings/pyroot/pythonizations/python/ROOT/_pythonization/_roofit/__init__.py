@@ -46,6 +46,7 @@ from ._rooglobalfunc import (
     FillStyle,
     MarkerStyle,
 )
+from ._roojsonfactorywstool import RooJSONFactoryWSTool
 from ._roomcstudy import RooMCStudy
 from ._roomsgservice import RooMsgService
 from ._roonllvar import RooNLLVar
@@ -76,6 +77,7 @@ python_classes = [
     RooDataSet,
     RooDecay,
     RooGenFitStudy,
+    RooJSONFactoryWSTool,
     RooMCStudy,
     RooMsgService,
     RooNLLVar,
