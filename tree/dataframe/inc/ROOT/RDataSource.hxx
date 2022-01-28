@@ -107,6 +107,13 @@ RDataSource implementations must support running multiple event-loops consecutiv
 */
 class RDataSource {
    // clang-format on
+private:
+   /// \cond
+   // Temporary boolean value used by the backwards compatibility code for the deprecated spellings Initialise,
+   // Finalise and FinaliseSlot.
+   bool fDeprecatedBaseCalled = false;
+   /// \endcond
+
 protected:
    using Record_t = std::vector<void *>;
    friend std::string cling::printValue(::ROOT::RDF::RDataSource *);
@@ -205,19 +212,19 @@ public:
       NeverUsedJustAReminder {
    };
 
-   virtual void Initialise() { throw 0; }
+   virtual void Initialise() { fDeprecatedBaseCalled = true; }
 
    void CallInitialize()
    {
-      try {
-         Initialise();
-      } catch (int) {
-         // `Initialise()` was not overridden and threw, the data source uses the new spelling: good!
-         Initialize();
+      fDeprecatedBaseCalled = false;
+      Initialise();
+      if (!fDeprecatedBaseCalled) {
+         Warning("RDataSource::Initialise", "Initialise is deprecated. Please rename it to \"Initialize\" (with a z).");
          return;
       }
-      Warning("RDataSource::Initialise",
-              "Initialise is deprecated. Please rename it to \"Initialize\" (with a z).");
+
+      // `Initialise()` was not overridden, the data source uses the new spelling: good!
+      Initialize();
    }
    /// \endcond
 
@@ -237,18 +244,19 @@ public:
    virtual void FinalizeSlot(unsigned int /*slot*/) {}
 
    /// \cond
-   virtual void FinaliseSlot(unsigned int) { throw 0; }
+   virtual void FinaliseSlot(unsigned int) { fDeprecatedBaseCalled = true; }
 
    void CallFinalizeSlot(unsigned int slot)
    {
-      try {
-         FinaliseSlot(slot);
-      } catch (int) {
-         FinalizeSlot(slot);
+      fDeprecatedBaseCalled = false;
+      FinaliseSlot(slot);
+      if (!fDeprecatedBaseCalled) {
+         Warning("RDataSource::FinaliseSlot",
+                 "FinaliseSlot is deprecated. Please implement FinalizeSlot (with a z) instead of FinaliseSlot.");
          return;
       }
-      Warning("RDataSource::FinaliseSlot",
-              "FinaliseSlot is deprecated. Please implement FinalizeSlot (with a z) instead of FinaliseSlot.");
+
+      FinalizeSlot(slot);
    }
    /// \endcond
 
@@ -259,18 +267,19 @@ public:
    virtual void Finalize() {}
 
    /// \cond
-   virtual void Finalise() { throw 0; }
+   virtual void Finalise() { fDeprecatedBaseCalled = true; }
 
    void CallFinalize()
    {
-      try {
-         Finalise();
-      } catch (int) {
-         Finalize();
+      fDeprecatedBaseCalled = false;
+      Finalise();
+      if (!fDeprecatedBaseCalled) {
+         Warning("RDataSource::FinaliseSlot",
+                 "Finalise is deprecated. Please implement Finalize (with a z) instead of Finalise.");
          return;
       }
-      Warning("RDataSource::Finalise",
-              "Finalise is deprecated. Please implement Finalize (with a z) instead of Finalise.");
+
+      Finalize();
    }
    /// \endcond
 
