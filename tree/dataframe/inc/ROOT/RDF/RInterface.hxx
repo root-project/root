@@ -1704,6 +1704,61 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Fill and return a TGraphAsymmErrors object (*lazy action*).
+   /// \param[in] x The name of the column that will fill the x axis.
+   /// \param[in] y The name of the column that will fill the y axis.
+   /// \param[in] exl The name of the column of X low errors
+   /// \param[in] exh The name of the column of X high errors
+   /// \param[in] eyl The name of the column of Y low errors
+   /// \param[in] eyh The name of the column of Y high errors
+   /// \return the TGraphAsymmErrors wrapped in a RResultPtr.
+   ///
+   /// Columns can be of a container type (e.g. std::vector<double>), in which case the graph
+   /// is filled with each one of the elements of the container.
+   /// If Multithreading is enabled, the order in which points are inserted is undefined.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. Also see RResultPtr.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// // Deduce column types (this invocation needs jitting internally)
+   /// auto myGAE1 = myDf.GraphAsymmErrors("xValues", "yValues", "exl", "exh", "eyl", "eyh");
+   /// // Explicit column types
+   /// using f = float
+   /// auto myGAE2 = myDf.GraphAsymmErrors<f, f, f, f, f, f>("xValues", "yValues", "exl", "exh", "eyl", "eyh");
+   /// ~~~
+   ///
+   /// \note Differently from other ROOT interfaces, the returned TGraphAsymmErrors is not associated to gDirectory
+   /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
+   /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
+   template <typename X = RDFDetail::RInferredType, typename Y = RDFDetail::RInferredType,
+             typename EXL = RDFDetail::RInferredType, typename EXH = RDFDetail::RInferredType,
+             typename EYL = RDFDetail::RInferredType, typename EYH = RDFDetail::RInferredType>
+   RResultPtr<::TGraphAsymmErrors>
+   GraphAsymmErrors(std::string_view x = "", std::string_view y = "", std::string_view exl = "",
+                    std::string_view exh = "", std::string_view eyl = "", std::string_view eyh = "")
+   {
+      auto graph = std::make_shared<::TGraphAsymmErrors>();
+      const std::vector<std::string_view> columnViews = {x, y, exl, exh, eyl, eyh};
+      const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
+                                  ? ColumnNames_t()
+                                  : ColumnNames_t(columnViews.begin(), columnViews.end());
+
+      const auto validatedColumns = GetValidatedColumnNames(6, userColumns);
+
+      // We build a default name and title based on the input columns
+      const auto g_name = validatedColumns[0] + "_vs_" + validatedColumns[1];
+      const auto g_title = validatedColumns[0] + " vs " + validatedColumns[1];
+      graph->SetNameTitle(g_name.c_str(), g_title.c_str());
+      graph->GetXaxis()->SetTitle(validatedColumns[0].c_str());
+      graph->GetYaxis()->SetTitle(validatedColumns[1].c_str());
+
+      return CreateAction<RDFInternal::ActionTags::GraphAsymmErrors, X, Y, EXL, EXH, EYL, EYH>(validatedColumns, graph,
+                                                                                               graph);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Fill and return a one-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column the values of which are used to fill the profile. Inferred if not present.
    /// \tparam V2 The type of the column the values of which are used to fill the profile. Inferred if not present.
