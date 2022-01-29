@@ -1691,7 +1691,9 @@ namespace TStreamerInfoActions
 
    ESelectLooper SelectLooper(TVirtualCollectionProxy &proxy)
    {
-      if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
+      if ( (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
+         return kVectorLooper;
+      } else if ( (proxy.GetCollectionType() == ROOT::kSTLvector)) {
          if (proxy.GetProperties() & TVirtualCollectionProxy::kCustomAlloc)
             return kGenericLooper;
          else
@@ -2645,6 +2647,8 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         //TODO:  Check whether we can implement this without loading the data in
+         // a temporary variable and whether this is noticeably faster.
          return ReadNumericalCollection<ConvertBasicType<T,T,Numeric > >(buf,addr,conf);
       }
 
