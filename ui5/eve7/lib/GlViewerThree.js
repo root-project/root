@@ -153,7 +153,6 @@ sap.ui.define([
             window.removeEventListener('keydown', this.keydown_func);
          }
 
-         this.removeMouseupListener();
          this.removeMouseMoveTimeout();
          delete this.renderer;
          delete this.scene;
@@ -168,8 +167,6 @@ sap.ui.define([
          if (event.movementX == 0 && event.movementY == 0)
             return;
 
-         this.removeMouseupListener();
-
          if (event.buttons === 0) {
             this.removeMouseMoveTimeout();
             this.mousemove_timeout = setTimeout(this.onMouseMoveTimeout.bind(this, event.offsetX, event.offsetY), this.controller.htimeout);
@@ -181,27 +178,41 @@ sap.ui.define([
       mouseLeaveHandler: function(/* event */) {
          this.removeMouseMoveTimeout();
          this.clearHighlight();
-         this.removeMouseupListener();
-      },
-
-      mouseUpHandler: function(e0_buttons, event) {
-         this.removeMouseupListener();
-
-         if (e0_buttons == 1) {// Selection on mouseup without move
-            this.handleMouseSelect(event);
-         } else if (e0_buttons == 2) { // Context menu on delay without move
-            JSROOT.Painter.createMenu(event, this).then(menu => { this.showContextMenu(event, menu) });
-         }
       },
 
       mouseDownHandler: function(event) {
          this.removeMouseMoveTimeout();
-         if (event.buttons != 1 && event.buttons != 2) this.clearHighlight();
-         this.removeMouseupListener();
+         if (event.buttons != 1 && event.buttons != 2)
+            this.clearHighlight();
+         else if (this.renderer) {
+            // keep track which buttons and where are clicked
+            this.click_event = event;
+            this.click_buttons = event.buttons;
+            this.click_intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+         }
+      },
 
-         if ((event.buttons == 1 || event.buttons == 2) && this.renderer) {
-            this.mouseup_listener = this.mouseUpHandler.bind(this, event.buttons);
-            this.renderer.domElement.addEventListener('pointerup', this.mouseup_listener);
+      clearClickedButtons: function() {
+         delete this.click_buttons;
+         delete this.click_intersect;
+      },
+
+      processControlEnd: function() {
+         if (this.click_buttons == 1) {
+            // handle left mouse button click
+            if (this.click_intersect) {
+               let c = this.click_intersect.object.get_ctrl();
+               c.event = this.click_event;
+               c.elementSelected(c.extractIndex(this.click_intersect));
+               this.highlighted_scene = this.click_intersect.object.scene;
+            } else {
+               // XXXX HACK - handlersMIR senders should really be in the mgr
+
+               this.controller.created_scenes[0].processElementSelected(null, [], this.click_event);
+            }
+         } else if (this.click_buttons == 2) {
+            let intersect = this.click_intersect;
+            JSROOT.Painter.createMenu(this.click_event, this).then(menu => this.showContextMenu(intersect, menu));
          }
       },
 
@@ -282,7 +293,14 @@ sap.ui.define([
 
          // Setup controls
          this.controls = new THREE.OrbitControls(this.camera, this.get_view().getDomRef());
-         this.controls.addEventListener('change', this.render.bind(this));
+         this.controls.addEventListener('change', () => {
+            this.clearClickedButtons();
+            this.render();
+         })
+         this.controls.addEventListener('end', () => {
+            this.processControlEnd();
+            this.clearClickedButtons();
+         });
 
          // This will also call render().
          this.resetThreejsRenderer();
@@ -525,21 +543,11 @@ sap.ui.define([
       // Mouse button handlers, selection, context menu
       //------------------------------------------------------------------------------
 
-      removeMouseupListener: function() {
-         if (this.mouseup_listener) {
-            if (this.render)
-               this.renderer.domElement.removeEventListener('pointerup', this.mouseup_listener);
-            delete this.mouseup_listener;
-         }
-      },
-
-      showContextMenu: function(event, menu) {
+      showContextMenu: function(intersect, menu) {
          // console.log("GLC::showContextMenu", this, menu)
 
          // See js/scripts/JSRootPainter.jquery.js JSROOT.Painter.createMenu(), menu.add()
 
-
-         let intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
          menu.add("header:Context Menu");
 
@@ -559,7 +567,7 @@ sap.ui.define([
          menu.add("Baz", 'baz', fff);
          menu.add("endsub:");
 
-         menu.show(event);
+         menu.show();
       },
 
       defaultContextMenuAction: function(arg) {
