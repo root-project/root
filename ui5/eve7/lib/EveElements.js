@@ -440,7 +440,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       //
       // set colors
       let material = 0;
-      if (boxset.fSingleColor == false)
+      if (!boxset.fSingleColor)
       {
          let ci = rnr_data.idxBuff;
          let off = 0
@@ -462,7 +462,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
          material = new THREE.MeshPhongMaterial( {
             color: 0xffffff,
             flatShading: true,
-            vertexColors: THREE.VertexColors,
+            vertexColors: true,
             shininess: 0
          } );
       }
@@ -616,7 +616,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
        let material = new THREE.MeshPhongMaterial({
           color: 0xffffff,
           flatShading: true,
-          vertexColors: THREE.VertexColors,
+          vertexColors: true,
           shininess: 0
        });
        let mesh = new THREE.Mesh(body, material);
@@ -838,7 +838,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
        let material = new THREE.MeshPhongMaterial({
           color: 0xffffff,
           flatShading: true,
-          vertexColors: THREE.VertexColors,
+          vertexColors: true,
           shininess: 0
        });
 
