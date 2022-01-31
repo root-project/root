@@ -102,7 +102,7 @@ protected:
    Long64_t         fArchiveOffset{0};        ///<!Offset at which file starts in archive
    Bool_t           fIsArchive{kFALSE};       ///<!True if this is a pure archive file
    Bool_t           fNoAnchorInName{kFALSE};  ///<!True if we don't want to force the anchor to be appended to the file name
-   Bool_t           fIsRootFile{kTRUE};       ///<!True is this is a ROOT file, raw file otherwise
+   Bool_t           fIsRootFile{kTRUE};       ///<!True if this is a ROOT file, raw file otherwise
    Bool_t           fInitDone{kFALSE};        ///<!True if the file has been initialized
    Bool_t           fMustFlush{kTRUE};        ///<!True if the file buffers must be flushed
    Bool_t           fIsPcmFile{kFALSE};       ///<!True if the file is a ROOT pcm file.
