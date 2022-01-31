@@ -75,19 +75,18 @@ sap.ui.define([
       //==============================================================================
 
       createThreejsRenderer: function() {
-         var w = this.get_width(), h = this.get_height();
+         let w = this.get_width(), h = this.get_height();
 
          // console.log("createThreejsRenderer", this.controller.kind, "w=", w, "h=", h);
 
          this.scene = new THREE.Scene();
          // this.scene.fog = new THREE.FogExp2( 0xaaaaaa, 0.05 );
 
-         if (this.controller.isEveCameraPerspective()) {
+         if (this.controller.isEveCameraPerspective())
             this.camera = new THREE.PerspectiveCamera(75, w / h, 1, 5000);
-         }
-         else {
+         else
             this.camera = new THREE.OrthographicCamera(-w / 2, w / 2, -h / 2, h / 2, 0, 2000);
-         }
+
          this.scene.add(this.camera);
 
          this.rot_center = new THREE.Vector3(0, 0, 0);
@@ -112,7 +111,7 @@ sap.ui.define([
          this.point_lights.add(new THREE.PointLight(0xffffff, 0.7)); // B
          this.scene.add(this.point_lights);
 
-         // var plane = new THREE.GridHelper(20, 20, 0x80d080, 0x8080d0);
+         // let plane = new THREE.GridHelper(20, 20, 0x80d080, 0x8080d0);
          // this.scene.add(plane);
 
          this.composer = new THREE.EffectComposer(this.renderer);
@@ -131,7 +130,7 @@ sap.ui.define([
          // This does not work ... seems it is not standard pass?
          // this.outline_pass.renderToScreen = true;
          // Tried hacking with this, but would apparently need to load it somehow, sigh.
-         // var copyPass = new ShaderPass( CopyShader );
+         // let copyPass = new ShaderPass( CopyShader );
          // this.composer.addPass( new THREE.ShaderPass(CopyShader) );
 
          this.composer.addPass(this.outline_pass);
@@ -602,27 +601,27 @@ sap.ui.define([
 
          if (!this.attributes.position || !this.index) return;
 
-         var index = this.index;
-         var attributes = this.attributes;
-         var positions = attributes.position.array;
+         let index = this.index;
+         let attributes = this.attributes;
+         let positions = attributes.position.array;
          if (attributes.normal === undefined) {
             this.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(positions.length), 3));
          } else {
             // reset existing normals to zero
-            var array = attributes.normal.array;
-            for (var i = 0, il = array.length; i < il; i++) {
+            let array = attributes.normal.array;
+            for (let i = 0, il = array.length; i < il; i++) {
                array[i] = 0;
             }
          }
-         var normals = attributes.normal.array;
+         let normals = attributes.normal.array;
 
-         var vA, vB, vC;
-         var pA = new THREE.Vector3(), pB = new THREE.Vector3(), pC = new THREE.Vector3();
-         var cb = new THREE.Vector3(), ab = new THREE.Vector3();
+         let vA, vB, vC;
+         let pA = new THREE.Vector3(), pB = new THREE.Vector3(), pC = new THREE.Vector3();
+         let cb = new THREE.Vector3(), ab = new THREE.Vector3();
 
-         var indices = index.array;
+         let indices = index.array;
 
-         for (var i = start, i_end = start + count; i < i_end; i += 3) {
+         for (let i = start, i_end = start + count; i < i_end; i += 3) {
 
             vA = indices[i + 0] * 3;
             vB = indices[i + 1] * 3;
