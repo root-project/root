@@ -2035,20 +2035,20 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if (!isStdNotString && !ROOT::TMetaUtils::hasOpaqueTypedef(cl, interp, normCtxt)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
-      finalString << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol << "*)" << "\n" << "   {\n      return GenerateInitInstanceLocal((" << csymbol << "*)nullptr);\n   }" << "\n";
+      finalString << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol << "*)" << "\n" << "   {\n      return GenerateInitInstanceLocal(static_cast<" << csymbol << "*>(nullptr));\n   }" << "\n";
    }
 
    finalString << "   // Static variable to force the class initialization" << "\n";
    // must be one long line otherwise UseDummy does not work
 
 
-   finalString << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const " << csymbol << "*)nullptr); R__UseDummy(_R__UNIQUE_DICT_(Init));" << "\n";
+   finalString << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal(static_cast<const " << csymbol << "*>(nullptr)); R__UseDummy(_R__UNIQUE_DICT_(Init));" << "\n";
 
    if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl)) {
       finalString <<  "\n" << "   // Dictionary for non-ClassDef classes" << "\n"
                   << "   static TClass *" << mappedname << "_Dictionary() {\n"
                   << "      TClass* theClass ="
-                  << "::ROOT::GenerateInitInstanceLocal((const " << csymbol << "*)nullptr)->GetClass();\n"
+                  << "::ROOT::GenerateInitInstanceLocal(static_cast<const " << csymbol << "*>(nullptr))->GetClass();\n"
                   << "      " << mappedname << "_TClassManip(theClass);\n";
       finalString << "   return theClass;\n";
       finalString << "   }\n\n";
@@ -2436,7 +2436,7 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
    }
 
    if (NeedDestructor(decl, interp)) {
-      finalString << "   // Wrapper around operator delete" << "\n" << "   static void delete_" << mappedname.c_str() << "(void *p) {" << "\n" << "      delete ((" << classname.c_str() << "*)p);" << "\n" << "   }" << "\n" << "   static void deleteArray_" << mappedname.c_str() << "(void *p) {" << "\n" << "      delete [] ((" << classname.c_str() << "*)p);" << "\n" << "   }" << "\n" << "   static void destruct_" << mappedname.c_str() << "(void *p) {" << "\n" << "      typedef " << classname.c_str() << " current_t;" << "\n" << "      ((current_t*)p)->~current_t();" << "\n" << "   }" << "\n";
+      finalString << "   // Wrapper around operator delete" << "\n" << "   static void delete_" << mappedname.c_str() << "(void *p) {" << "\n" << "      delete (static_cast<" << classname.c_str() << "*>(p));" << "\n" << "   }" << "\n" << "   static void deleteArray_" << mappedname.c_str() << "(void *p) {" << "\n" << "      delete [] (static_cast<" << classname.c_str() << "*>(p));" << "\n" << "   }" << "\n" << "   static void destruct_" << mappedname.c_str() << "(void *p) {" << "\n" << "      typedef " << classname.c_str() << " current_t;" << "\n" << "      (static_cast<current_t*>(p))->~current_t();" << "\n" << "   }" << "\n";
    }
 
    if (HasDirectoryAutoAdd(decl, interp)) {
