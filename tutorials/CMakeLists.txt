@@ -500,7 +500,12 @@ file(GLOB multithreaded RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${multithreaded})
 #---Loop over all tutorials and define the corresponding test---------
 
 #---Define the primordial tutorials-----------------------------------
+if(Vc_INCLUDE_DIR)
+  set(HSIMPLE_ROOT_INCPATH "ROOT_INCLUDE_PATH=${Vc_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}")
+endif()
+
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
+    ENVIRONMENT ${HSIMPLE_ROOT_INCPATH}
                 PASSRC 255 FAILREGEX "Error in" "error:" LABELS tutorial)
 ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
                 FAILREGEX "Error in" "error:" LABELS tutorial)
