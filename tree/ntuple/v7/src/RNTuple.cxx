@@ -331,13 +331,19 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWr
    return std::make_unique<RNTupleWriter>(std::move(model), std::move(sink));
 }
 
+void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
+{
+   if (fNEntries == fLastCommittedClusterGroup)
+      return;
+   fSink->CommitClusterGroup();
+   fLastCommittedClusterGroup = fNEntries;
+}
+
 void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
 {
    if (fNEntries == fLastCommitted) {
-      if (commitClusterGroup && fNEntries > fLastCommittedClusterGroup) {
-         fSink->CommitClusterGroup();
-         fLastCommittedClusterGroup = fNEntries;
-      }
+      if (commitClusterGroup)
+         CommitClusterGroup();
       return;
    }
    for (auto& field : *fModel->GetFieldZero()) {
@@ -356,10 +362,8 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
    fLastCommitted = fNEntries;
    fUnzippedClusterSize = 0;
 
-   if (commitClusterGroup) {
-      fSink->CommitClusterGroup();
-      fLastCommittedClusterGroup = fNEntries;
-   }
+   if (commitClusterGroup)
+      CommitClusterGroup();
 }
 
 
