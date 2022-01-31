@@ -225,14 +225,10 @@ sap.ui.define([
          this.ttip.appendChild(this.ttip_text);
          dome.appendChild(this.ttip);
 
-         this.controls = new RC.ReveCameraControls(this.camera, this.get_view().getDomRef());
-
-         this.controls.addEventListener('change', this.render.bind(this));
-
          // Setup some event pre-handlers
          var glc = this;
 
-         dome.addEventListener('mousemove', function(event) {
+         dome.addEventListener('pointermove', function(event) {
 
             if (event.movementX == 0 && event.movementY == 0)
                return;
@@ -247,14 +243,14 @@ sap.ui.define([
             }
          });
 
-         dome.addEventListener('mouseleave', function(event) {
+         dome.addEventListener('pointerleave', function(event) {
 
             glc.removeMouseMoveTimeout();
             glc.clearHighlight();
             glc.removeMouseupListener();
          });
 
-         dome.addEventListener('mousedown', function(event) {
+         dome.addEventListener('pointerdown', function(event) {
 
             glc.removeMouseMoveTimeout();
             if (event.buttons != 1 && event.buttons != 2)  glc.clearHighlight();
@@ -264,7 +260,7 @@ sap.ui.define([
 
             glc.mouseup_listener = function(event2)
             {
-               this.removeEventListener('mouseup', glc.mouseup_listener);
+               this.removeEventListener('pointerup', glc.mouseup_listener);
 
                if (event2.buttons == 1) // Selection on mouseup without move
                {
@@ -276,7 +272,7 @@ sap.ui.define([
                }
             }
 
-            this.addEventListener('mouseup', glc.mouseup_listener);
+            this.addEventListener('pointerup', glc.mouseup_listener);
          });
 
          dome.addEventListener('dblclick', function(event) {
@@ -340,6 +336,10 @@ sap.ui.define([
                glc.render();
             }
          });
+
+         // Was RC.ReveCameraControls
+         this.controls = new THREE.OrbitControls(this.camera, this.get_view().getDomRef());
+         this.controls.addEventListener('change', this.render.bind(this));
 
          // This will also call render().
          this.resetRenderer();
@@ -607,7 +607,7 @@ sap.ui.define([
       {
          if (this.mouseup_listener)
          {
-            this.get_view().getDomRef().removeEventListener('mouseup', this.mouseup_listener);
+            this.get_view().getDomRef().removeEventListener('pointerup', this.mouseup_listener);
             this.mouseup_listener = 0;
          }
       },
