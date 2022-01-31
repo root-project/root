@@ -373,6 +373,9 @@ private:
    /// Estimator of uncompressed cluster size, taking into account the estimated compression ratio
    NTupleSize_t fUnzippedClusterSizeEst;
 
+   // Helper function that is called from CommitCluster() when necessary
+   void CommitClusterGroup();
+
 public:
    /// Throws an exception if the model is null.
    static std::unique_ptr<RNTupleWriter> Recreate(std::unique_ptr<RNTupleModel> model,
