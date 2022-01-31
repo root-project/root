@@ -33,6 +33,9 @@ namespace Detail {
 \class ROOT::Experimental::Detail::RPageSinkBuf
 \ingroup NTuple
 \brief Wrapper sink that coalesces cluster column page writes
+*
+* TODO(jblomer): The interplay of derived class and RPageSink is not yet optimally designed for page storage wrapper
+* classes like this one. Header and footer serialization, e.g., are done twice.  To be revised.
 */
 // clang-format on
 class RPageSinkBuf : public RPageSink {
