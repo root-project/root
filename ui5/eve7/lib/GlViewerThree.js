@@ -146,9 +146,9 @@ sap.ui.define([
       destroyThreejsRenderer: function() {
          if (this.renderer) {
             this.get_view().getDomRef().removeChild(this.renderer.domElement);
-            this.renderer.domElement.removeEventListener('mousemove', this.mousemove_func);
-            this.renderer.domElement.removeEventListener('mouseleave', this.mouseleave_func);
-            this.renderer.domElement.removeEventListener('mousedown', this.mousedown_func);
+            this.renderer.domElement.removeEventListener('pointermove', this.mousemove_func);
+            this.renderer.domElement.removeEventListener('pointerleave', this.mouseleave_func);
+            this.renderer.domElement.removeEventListener('pointerdown', this.mousedown_func);
             this.renderer.domElement.removeEventListener('dblclick', this.dblclick_func);
             window.removeEventListener('keydown', this.keydown_func);
          }
@@ -201,7 +201,7 @@ sap.ui.define([
 
          if ((event.buttons == 1 || event.buttons == 2) && this.renderer) {
             this.mouseup_listener = this.mouseUpHandler.bind(this, event.buttons);
-            this.renderer.domElement.addEventListener('mouseup', this.mouseup_listener);
+            this.renderer.domElement.addEventListener('pointerup', this.mouseup_listener);
          }
       },
 
@@ -265,11 +265,6 @@ sap.ui.define([
          this.ttip.appendChild(this.ttip_text);
          this.get_view().getDomRef().appendChild(this.ttip);
 
-         // Setup controls
-         this.controls = new THREE.OrbitControls(this.camera, this.get_view().getDomRef());
-
-         this.controls.addEventListener('change', this.render.bind(this));
-
          // Setup some event pre-handlers
          this.mousemove_func = this.mouseMoveHandler.bind(this);
          this.mouseleave_func = this.mouseLeaveHandler.bind(this);
@@ -277,13 +272,17 @@ sap.ui.define([
          this.dblclick_func = this.dblClickHandler.bind(this);
          this.keydown_func = this.keyDownHandler.bind(this);
 
-         this.renderer.domElement.addEventListener('mousemove', this.mousemove_func);
-         this.renderer.domElement.addEventListener('mouseleave', this.mouseleave_func);
-         this.renderer.domElement.addEventListener('mousedown', this.mousedown_func);
+         this.renderer.domElement.addEventListener('pointermove', this.mousemove_func);
+         this.renderer.domElement.addEventListener('pointerleave', this.mouseleave_func);
+         this.renderer.domElement.addEventListener('pointerdown', this.mousedown_func);
          this.renderer.domElement.addEventListener('dblclick', this.dblclick_func);
 
          // Key-handlers go on window ...
          window.addEventListener('keydown', this.keydown_func);
+
+         // Setup controls
+         this.controls = new THREE.OrbitControls(this.camera, this.get_view().getDomRef());
+         this.controls.addEventListener('change', this.render.bind(this));
 
          // This will also call render().
          this.resetThreejsRenderer();
@@ -529,7 +528,7 @@ sap.ui.define([
       removeMouseupListener: function() {
          if (this.mouseup_listener) {
             if (this.render)
-               this.renderer.domElement.removeEventListener('mouseup', this.mouseup_listener);
+               this.renderer.domElement.removeEventListener('pointerup', this.mouseup_listener);
             delete this.mouseup_listener;
          }
       },
