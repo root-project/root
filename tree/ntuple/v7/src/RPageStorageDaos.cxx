@@ -69,11 +69,6 @@ static constexpr std::uint64_t kAttributeKey = 0x4243544b5344422d;
 static constexpr daos_obj_id_t kOidAnchor{std::uint64_t(-1), 0};
 static constexpr daos_obj_id_t kOidHeader{std::uint64_t(-2), 0};
 static constexpr daos_obj_id_t kOidFooter{std::uint64_t(-3), 0};
-// The page list offset needs to be a positive 64bit integer because we currently use
-// the object ID for the offset in the locator
-// TODO(jblomer): use object store locators
-// TODO(jblomer): add support for multiple page list envelopes from multiple cluster groups
-static constexpr daos_obj_id_t kOidPageList{std::numeric_limits<int64_t>::max(), 0};
 
 static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
 } // namespace
