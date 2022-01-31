@@ -285,7 +285,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
    auto &fieldZero = *model.GetFieldZero();
    fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
    fieldZero.SetOnDiskId(0);
-   for (auto& f : *model.GetFieldZero()) {
+   for (auto &f : fieldZero) {
       auto fieldId = descriptor.GetNFields();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
