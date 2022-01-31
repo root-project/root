@@ -1048,8 +1048,9 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1
    for (unsigned int i = 0; i < nClusterGroups; ++i) {
       const auto &cgDesc = desc.GetClusterGroupDescriptor(context.GetMemClusterGroupId(i));
       const auto nClustersInGroup = cgDesc.GetNClusters();
+      const auto &clusterIds = cgDesc.GetClusterIds();
       for (unsigned int j = 0; j < nClustersInGroup; ++j) {
-         const auto &clusterDesc = desc.GetClusterDescriptor(cgDesc.GetClusterIds()[j]);
+         const auto &clusterDesc = desc.GetClusterDescriptor(clusterIds[j]);
          RClusterSummary summary{clusterDesc.GetFirstEntryIndex(), clusterDesc.GetNEntries(), -1};
          pos += SerializeClusterSummary(summary, *where);
       }
