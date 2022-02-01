@@ -41,13 +41,11 @@ TEST(RDFVary, RequireVariationsHaveConsistentType)
    EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
 }
 
-// FIXME requires jitting
-//TEST(RDFVary, RequireReturnTypeIsRVec)
-//{
-//   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
-//   df.Vary(
-//      "x", "0", {}, 1);
-//}
+TEST(RDFVary, RequireReturnTypeIsRVec)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   EXPECT_THROW(df.Vary("x", "0", /*nVariations=*/2), std::runtime_error);
+}
 
 TEST(RDFVary, RequireNVariationsIsConsistent)
 {
@@ -455,6 +453,32 @@ TEST_P(RDFVary, JittedFilter)
    EXPECT_EQ(sums2["nominal"], 420);
    EXPECT_EQ(sums2["x:0"], 0);
    EXPECT_EQ(sums2["x:1"], 420);
+}
+
+TEST_P(RDFVary, JittedVary)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto sum = df.Vary("x", "ROOT::RVecI{-1*x, 2*x}", 2).Sum<int>("x");
+   EXPECT_EQ(*sum, 10);
+
+   auto sums = VariationsFor(sum);
+
+   EXPECT_EQ(sums["nominal"], 10);
+   EXPECT_EQ(sums["x:0"], -10);
+   EXPECT_EQ(sums["x:1"], 20);
+}
+
+TEST_P(RDFVary, JittedVaryDefineFilterAndAction)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", "1");
+   auto sum = df.Vary("x", "ROOT::RVecI{-1*x, 2*x}", {"down", "up"}, "myvariation").Filter("x > 0").Sum("x");
+   EXPECT_EQ(*sum, 10);
+
+   auto sums = VariationsFor(sum);
+
+   EXPECT_EQ(sums["nominal"], 10);
+   EXPECT_EQ(sums["myvariation:down"], 0);
+   EXPECT_EQ(sums["myvariation:up"], 20);
 }
 
 // instantiate single-thread tests
