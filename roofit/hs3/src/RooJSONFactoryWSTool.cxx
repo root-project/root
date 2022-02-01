@@ -30,7 +30,6 @@ typedef TJSONTree tree_t;
 #include <stack>
 #include <stdexcept>
 
-
 /** \class RooJSONFactoryWSTool
 \ingroup roofit
 
@@ -71,7 +70,23 @@ import and export. If import or export of a class you're interested in
 fails, you might need to add your own importer or exporter. Please
 consult the <a
 href="https://github.com/root-project/root/blob/master/roofit/hs3/README.md">README</a>
-to learn how to do that.  ~~~
+to learn how to do that.
+
+You can always get a list of all the avialable importers and exporters by calling the following functions:
+~~~ {.py}
+tool = ROOT.RooJSONFactoryWSTool(ws)
+tool.printImporters()
+tool.printExporters()
+tool.printFactoryExpressions()
+tool.printExportKeys()
+~~~
+
+Alternatively, you can generate a LaTeX version of the available importers and exporters by calling
+~~~ {.py}
+tool = ROOT.RooJSONFactoryWSTool(ws)
+tool.writedoc("hs3.tex")
+~~~
+
 */
 
 using RooFit::Experimental::JSONNode;
@@ -815,7 +830,8 @@ void RooJSONFactoryWSTool::exportObject(const RooAbsArg *func, JSONNode &n)
          std::cerr << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to "
                       "see what is available"
                    << std::endl;
-         std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
+         std::cerr << " 2 & 1: you might need to write a serialization definition yourself. check "
+                      "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
                       "see how to do this!"
                    << std::endl;
          return;
@@ -959,9 +975,11 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
                   "RooJSONFactoryWSTool::clearFactoryExpressions() and/or never successfully read a file defining "
                   "these expressions with RooJSONFactoryWSTool::loadFactoryExpressions(filename)\n"
                << "either way, please make sure that:\n"
-               << " 3: you are reading a file with factory expressions - call RooJSONFactoryWSTool::printFactoryExpressions() "
+               << " 3: you are reading a file with factory expressions - call "
+                  "RooJSONFactoryWSTool::printFactoryExpressions() "
                   "to see what is available\n"
-               << " 2 & 1: you might need to write a deserialization definition yourself. check https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
+               << " 2 & 1: you might need to write a deserialization definition yourself. check "
+                  "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
                   "how to do this!"
                << std::endl;
             logInputArgumentsError(std::move(ss));
