@@ -385,14 +385,14 @@ static Int_t _lookup_string(Event_t * event, char *buf, Int_t buflen)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void SplitLong(Longptr_t ll, Longptr_t & i1, Longptr_t & i2)
+inline void SplitLong(Longptr_t ll, Longptr_t &i1, Longptr_t &i2)
 {
    union {
       Longptr_t l;
       Int_t i[2];
    } conv;
 
-   conv.l    = 0L;
+   conv.l = 0L;
    conv.i[0] = 0;
    conv.i[1] = 0;
 
@@ -403,15 +403,15 @@ inline void SplitLong(Longptr_t ll, Longptr_t & i1, Longptr_t & i2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void AsmLong(Longptr_t i1, Longptr_t i2, Longptr_t & ll)
+inline void AsmLong(Longptr_t i1, Longptr_t i2, Longptr_t &ll)
 {
    union {
       Longptr_t l;
       Int_t i[2];
    } conv;
 
-   conv.i[0] = (Int_t) i1;
-   conv.i[1] = (Int_t) i2;
+   conv.i[0] = (Int_t)i1;
+   conv.i[1] = (Int_t)i2;
    ll = conv.l;
 }
 
@@ -6033,10 +6033,8 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
             xev.client.data_format = ev.fFormat;
             xev.client.data.l[0] = ev.fUser[0];
             if (sizeof(ev.fUser[0]) > 4) {
-               SplitLong(ev.fUser[1], xev.client.data.l[1],
-                         xev.client.data.l[3]);
-               SplitLong(ev.fUser[2], xev.client.data.l[2],
-                         xev.client.data.l[4]);
+               SplitLong(ev.fUser[1], xev.client.data.l[1], xev.client.data.l[3]);
+               SplitLong(ev.fUser[2], xev.client.data.l[2], xev.client.data.l[4]);
             } else {
                xev.client.data.l[1] = ev.fUser[1];
                xev.client.data.l[2] = ev.fUser[2];
@@ -6145,15 +6143,13 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fHandle = gWM_DELETE_WINDOW;
          ev.fUser[0] = (Longptr_t) gWM_DELETE_WINDOW;
          if (sizeof(ev.fUser[0]) > 4) {
-            AsmLong(xev.client.data.l[1], xev.client.data.l[3],
-                    ev.fUser[1]);
-            AsmLong(xev.client.data.l[2], xev.client.data.l[4],
-                    ev.fUser[2]);
+            AsmLong(xev.client.data.l[1], xev.client.data.l[3], ev.fUser[1]);
+            AsmLong(xev.client.data.l[2], xev.client.data.l[4], ev.fUser[2]);
          } else {
-            ev.fUser[1] = 0; //xev.client.data.l[1];
-            ev.fUser[2] = 0; //xev.client.data.l[2];
-            ev.fUser[3] = 0; //xev.client.data.l[3];
-            ev.fUser[4] = 0; //xev.client.data.l[4];
+            ev.fUser[1] = 0; // xev.client.data.l[1];
+            ev.fUser[2] = 0; // xev.client.data.l[2];
+            ev.fUser[3] = 0; // xev.client.data.l[3];
+            ev.fUser[4] = 0; // xev.client.data.l[4];
          }
       }
       if (xev.type == GDK_DESTROY) {
@@ -6253,10 +6249,8 @@ void TGWin32::MapEvent(Event_t & ev, GdkEvent & xev, Bool_t tox)
          ev.fFormat = xev.client.data_format;
          ev.fUser[0] = xev.client.data.l[0];
          if (sizeof(ev.fUser[0]) > 4) {
-            AsmLong(xev.client.data.l[1], xev.client.data.l[3],
-                    ev.fUser[1]);
-            AsmLong(xev.client.data.l[2], xev.client.data.l[4],
-                    ev.fUser[2]);
+            AsmLong(xev.client.data.l[1], xev.client.data.l[3], ev.fUser[1]);
+            AsmLong(xev.client.data.l[2], xev.client.data.l[4], ev.fUser[2]);
          } else {
             ev.fUser[1] = xev.client.data.l[1];
             ev.fUser[2] = xev.client.data.l[2];
