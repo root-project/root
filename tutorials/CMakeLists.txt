@@ -620,10 +620,13 @@ if(ROOT_pyroot_FOUND)
     list(APPEND pyveto dataframe/df026_AsNumpyArrays.py)
   endif()
 
-  # Rules specific to distributed RDataFrame with Pyspark
+  # Rules specific to distributed RDataFrame
   # Disable distributed RDF tutorials if we didn't check dependencies in the environment first
   if(NOT test_distrdf_pyspark)
-    list(APPEND pyveto dataframe/distrdf*)
+    list(APPEND pyveto dataframe/distrdf001_spark_connection.py)
+  endif()
+  if(NOT test_distrdf_dask)
+    list(APPEND pyveto dataframe/distrdf002_dask_connection.py)
   endif()
   # Use main Python executable to run in PySpark driver and executors
   if(test_distrdf_pyspark)
