@@ -1,5 +1,9 @@
 # JSROOT changelog
 
+## Changes in 6.3.x
+1. Fix bug in handling superimposing items via URL syntax
+
+
 ## Changes in 6.3.3
 1. Fix TEfficiency drawing
 2. Provide TPadPainter.divide method

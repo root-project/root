@@ -1002,7 +1002,7 @@ JSROOT.define(['d3', 'jquery', 'painter', 'hierarchy', 'jquery-ui', 'jqueryui-mo
             if (items.length == 1) {
                addr += separ() + "item=" + items[0] + separ() + "opt=" + opts[0];
             } else if (items.length > 1) {
-               addr += separ() + "items=" + JSON.stringify(items) + separ() + "opt=" + JSON.stringify(opts);
+               addr += separ() + "items=" + JSON.stringify(items) + separ() + "opts=" + JSON.stringify(opts);
             }
 
             menu.add("Direct link", () => window.open(addr));
