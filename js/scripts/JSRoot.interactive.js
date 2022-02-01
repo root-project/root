@@ -9,24 +9,24 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       /** @desc only canvas info_layer can be used while other pads can overlay
         * @returns layer where frame tooltips are shown */
-      hints_layer: function() {
+      hints_layer() {
          let pp = this.getCanvPainter();
          return pp ? pp.getLayerSvg("info_layer") : d3.select(null);
       },
 
       /** @returns true if tooltip is shown, use to prevent some other action */
-      isTooltipShown: function() {
+      isTooltipShown() {
          if (!this.tooltip_enabled || !this.isTooltipAllowed()) return false;
          let hintsg = this.hints_layer().select(".objects_hints");
          return hintsg.empty() ? false : hintsg.property("hints_pad") == this.getPadName();
       },
 
-      setTooltipEnabled: function(enabled) {
+      setTooltipEnabled(enabled) {
          if (enabled !== undefined) this.tooltip_enabled = enabled;
       },
 
       /** @summary central function which let show selected hints for the object */
-      processFrameTooltipEvent: function(pnt, evnt) {
+      processFrameTooltipEvent(pnt, evnt) {
          if (pnt && pnt.handler) {
             // special use of interactive handler in the frame painter
             let rect = this.draw_g ? this.draw_g.select(".main_layer") : null;
@@ -328,7 +328,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Assigns tooltip methods */
-      assign: function(painter) {
+      assign(painter) {
          painter.tooltip_enabled = true;
          painter.hints_layer = this.hints_layer;
          painter.isTooltipShown = this.isTooltipShown;
@@ -649,7 +649,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    let FrameInteractive = {
 
-      addBasicInteractivity: function() {
+      addBasicInteractivity() {
 
          TooltipHandler.assign(this);
 
@@ -696,7 +696,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Add interactive handlers */
-      addInteractivity: function(for_second_axes) {
+      addInteractivity(for_second_axes) {
 
          let pp = this.getPadPainter(),
              svg = this.getFrameSvg();
@@ -769,7 +769,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Add keys handler */
-      addKeysHandler: function() {
+      addKeysHandler() {
          if (this.keys_handler || (typeof window == 'undefined')) return;
 
          this.keys_handler = evnt => this.processKeyPress(evnt);
@@ -778,7 +778,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Handle key press */
-      processKeyPress: function(evnt) {
+      processKeyPress(evnt) {
          let main = this.selectDom();
          if (!JSROOT.settings.HandleKeys || main.empty() || (this.enabledKeys === false)) return;
 
@@ -838,7 +838,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       /** @summary Function called when frame is clicked and object selection can be performed
         * @desc such event can be used to select */
-      processFrameClick: function(pnt, dblckick) {
+      processFrameClick(pnt, dblckick) {
 
          let pp = this.getPadPainter();
          if (!pp) return;
@@ -865,7 +865,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Start mouse rect zooming */
-      startRectSel: function(evnt) {
+      startRectSel(evnt) {
          // ignore when touch selection is activated
 
          if (this.zoom_kind > 100) return;
@@ -922,7 +922,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Starts labels move */
-      startLabelsMove: function() {
+      startLabelsMove() {
          if (this.zoom_rect) return;
 
          let handle = this.zoom_kind == 2 ? this.x_handle : this.y_handle;
@@ -935,7 +935,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Process mouse rect zooming */
-      moveRectSel: function(evnt) {
+      moveRectSel(evnt) {
 
          if ((this.zoom_kind == 0) || (this.zoom_kind > 100)) return;
 
@@ -976,7 +976,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Finish mouse rect zooming */
-      endRectSel: function(evnt) {
+      endRectSel(evnt) {
          if ((this.zoom_kind == 0) || (this.zoom_kind > 100)) return;
 
          evnt.preventDefault();
@@ -1057,7 +1057,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Handle mouse double click on frame */
-      mouseDoubleClick: function(evnt) {
+      mouseDoubleClick(evnt) {
          evnt.preventDefault();
          let m = d3.pointer(evnt, this.getFrameSvg().node()),
              fw = this.getFrameWidth(), fh = this.getFrameHeight();
@@ -1087,7 +1087,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Start touch zoom */
-      startTouchZoom: function(evnt) {
+      startTouchZoom(evnt) {
          // in case when zooming was started, block any other kind of events
          if (this.zoom_kind != 0) {
             evnt.preventDefault();
@@ -1175,7 +1175,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Move touch zooming */
-      moveTouchZoom: function(evnt) {
+      moveTouchZoom(evnt) {
          if (this.zoom_kind < 100) return;
 
          evnt.preventDefault();
@@ -1209,7 +1209,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary End touch zooming handler */
-      endTouchZoom: function(evnt) {
+      endTouchZoom(evnt) {
 
          this.getFrameSvg().on("touchcancel", null)
                          .on("touchend", null);
@@ -1278,7 +1278,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Analyze zooming with mouse wheel */
-      analyzeMouseWheelEvent: function(event, item, dmin, test_ignore, second_side) {
+      analyzeMouseWheelEvent(event, item, dmin, test_ignore, second_side) {
          // if there is second handle, use it
          let handle2 = second_side ? this[item.name + "2_handle"] : null;
          if (handle2) {
@@ -1293,7 +1293,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
        /** @summary return true if default Y zooming should be enabled
          * @desc it is typically for 2-Dim histograms or
          * when histogram not draw, defined by other painters */
-      isAllowedDefaultYZooming: function() {
+      isAllowedDefaultYZooming() {
 
          if (this.self_drawaxes) return true;
 
@@ -1309,7 +1309,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Handles mouse wheel event */
-      mouseWheel: function(evnt) {
+      mouseWheel(evnt) {
          evnt.stopPropagation();
          evnt.preventDefault();
          this.clearInteractiveElements();
@@ -1341,7 +1341,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Show frame context menu */
-      showContextMenu: function(kind, evnt, obj) {
+      showContextMenu(kind, evnt, obj) {
 
          // ignore context menu when touches zooming is ongoing
          if (('zoom_kind' in this) && (this.zoom_kind > 100)) return;
@@ -1421,7 +1421,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
      /** @summary Activate context menu handler via touch events
        * @private */
-      startTouchMenu: function(kind, evnt) {
+      startTouchMenu(kind, evnt) {
          // method to let activate context menu via touch handler
 
          let arr = d3.pointers(evnt, this.getFrameSvg().node());
@@ -1443,7 +1443,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       /** @summary Process end-touch event, which can cause content menu to appear
        * @private */
-      endTouchMenu: function(kind, evnt) {
+      endTouchMenu(kind, evnt) {
          let fld = "touch_" + kind;
 
          if (! (fld in this)) return;
@@ -1466,7 +1466,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Clear frame interactive elements */
-      clearInteractiveElements: function() {
+      clearInteractiveElements() {
          if (jsrp.closeMenu) jsrp.closeMenu();
          this.zoom_kind = 0;
          if (this.zoom_rect) { this.zoom_rect.remove(); delete this.zoom_rect; }
@@ -1480,7 +1480,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       },
 
       /** @summary Assign frame interactive methods */
-      assign: function(painter) {
+      assign(painter) {
          JSROOT.extend(painter, this);
       }
 
@@ -1517,7 +1517,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                "M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z"
       },
 
-      createSVG: function(group, btn, size, title) {
+      createSVG(group, btn, size, title) {
          let svg = group.append("svg:svg")
                         .attr("class", "svg_toolbar_btn")
                         .attr("width", size + "px")
@@ -1588,7 +1588,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
    let PadButtonsHandler = {
 
-      alignButtons:  function(btns, width, height) {
+      alignButtons(btns, width, height) {
          let sz0 = getButtonSize(this, 1.25), nextx = (btns.property('nextx') || 0) + sz0, btns_x, btns_y;
 
          if (btns.property('vertical')) {
@@ -1602,7 +1602,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          btns.attr("transform","translate("+btns_x+","+btns_y+")");
       },
 
-      findPadButton: function(keyname) {
+      findPadButton(keyname) {
          let group = this.getLayerSvg("btns_layer", this.this_pad_name), found_func = "";
          if (!group.empty())
             group.selectAll("svg").each(function() {
@@ -1613,7 +1613,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return found_func;
       },
 
-      removePadButtons: function() {
+      removePadButtons() {
          let group = this.getLayerSvg("btns_layer", this.this_pad_name);
          if (!group.empty()) {
             group.selectAll("*").remove();
@@ -1621,7 +1621,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       },
 
-      showPadButtons: function() {
+      showPadButtons() {
          let group = this.getLayerSvg("btns_layer", this.this_pad_name);
          if (group.empty()) return;
 
@@ -1683,7 +1683,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             ctrl.attr("x", x);
       },
 
-      assign: function(painter) {
+      assign(painter) {
          painter.alignButtons = this.alignButtons;
          painter.findPadButton = this.findPadButton;
          painter.removePadButtons = this.removePadButtons;

@@ -26,16 +26,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (id >= 50) {
          // for higher color numbers ensure that such color exists
          let c = d3.color(col);
-         id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
+         id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
       }
 
-      return "exec:" + method + "(" + id + ")";
+      return `exec:${method}(${id})`;
    }
 
    /**
     * @summary Abstract class for creating context menu
     *
-    * @class
     * @memberof JSROOT.Painter
     * @desc Use {@link JSROOT.Painter.createMenu} to create instance of the menu
     * @private
@@ -149,7 +148,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (value === undefined) return;
          let useid = (typeof value !== 'string');
          this.add("sub:" + name, () => {
-            this.input("Enter color " + (useid ? "(only id number)" : "(name or id)"), value, useid ? "int" : "text").then(col => {
+            this.input("Enter color " + (useid ? "(only id number)" : "(name or id)"), value, useid ? "int" : "text", useid ? 0 : undefined, useid ? 9999 : undefined).then(col => {
                let id = parseInt(col);
                if (Number.isInteger(id) && jsrp.getColor(id)) {
                   col = jsrp.getColor(id);
@@ -191,11 +190,39 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          this.add("endsub:");
       }
 
+      /** @summary Add palette menu entries
+        * @protected */
+      addPaletteMenu(curr, set_func) {
+         const add = (id, name, more) => this.addchk((id === curr) || more, '<nobr>' + name + '</nobr>', id, set_func);
+
+         this.add("sub:Palette", () => this.input("Enter palette code [1..113]", curr, "int", 1, 113).then(set_func));
+
+         add(50, "ROOT 5", (curr>=10) && (curr<51));
+         add(51, "Deep Sea");
+         add(52, "Grayscale", (curr>0) && (curr<10));
+         add(53, "Dark body radiator");
+         add(54, "Two-color hue");
+         add(55, "Rainbow");
+         add(56, "Inverted dark body radiator");
+         add(57, "Bird", (curr>113));
+         add(58, "Cubehelix");
+         add(59, "Green Red Violet");
+         add(60, "Blue Red Yellow");
+         add(61, "Ocean");
+         add(62, "Color Printable On Grey");
+         add(63, "Alpine");
+         add(64, "Aquamarine");
+         add(65, "Army");
+         add(66, "Atlantic");
+
+         this.add("endsub:");
+      }
+
       /** @summary Add rebin menu entries
         * @protected */
       addRebinMenu(rebin_func) {
         this.add("sub:Rebin", () => {
-            this.input("Enter rebin value", 2, "int").then(rebin_func);
+            this.input("Enter rebin value", 2, "int", 2).then(rebin_func);
          });
          for (let sz = 2; sz <= 7; sz++) {
             this.add(sz.toString(), sz, res => rebin_func(parseInt(res)));
@@ -310,7 +337,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.addColorMenu("color", painter.lineatt.color,
                arg => { painter.lineatt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, "SetLineColor")); });
             this.add("sub:style", () => {
-               this.input("Enter line style id (1-solid)", painter.lineatt.style, "int").then(id => {
+               this.input("Enter line style id (1-solid)", painter.lineatt.style, "int", 1, 11).then(id => {
                   if (!jsrp.root_line_styles[id]) return;
                   painter.lineatt.change(undefined, undefined, id);
                   painter.interactiveRedraw(true, `exec:SetLineStyle(${id})`);
@@ -347,7 +374,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.addColorMenu("color", painter.fillatt.colorindx,
                arg => { painter.fillatt.change(arg, undefined, painter.getCanvSvg()); painter.interactiveRedraw(true, getColorExec(arg, "SetFillColor")); }, painter.fillatt.kind);
             this.add("sub:style", () => {
-               this.input("Enter fill style id (1001-solid, 3000..3010)", painter.fillatt.pattern, "int").then(id => {
+               this.input("Enter fill style id (1001-solid, 3000..3010)", painter.fillatt.pattern, "int", 0, 4000).then(id => {
                   if ((id < 0) || (id > 4000)) return;
                   painter.fillatt.change(undefined, id, painter.getCanvSvg());
                   painter.interactiveRedraw(true, "exec:SetFillStyle(" + id + ")");
@@ -394,7 +421,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       /** @summary Fill context menu for axis
         * @private */
       addTAxisMenu(painter, faxis, kind) {
-         this.add("Divisions", () => this.input("Set Ndivisions", faxis.fNdivisions, "int").then(val => {
+         this.add("Divisions", () => this.input("Set Ndivisions", faxis.fNdivisions, "int", 0).then(val => {
             faxis.fNdivisions = val;
             painter.interactiveRedraw("pad", `exec:SetNdivisions(${val})`, kind);
          }));
@@ -458,7 +485,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
         * @param {String} message - message
         * @protected */
       info(title, message) {
-         return this.runModal(title,`<p tabindex="0">${message}</p>`, { height: 120, width: 400, resizable: true });
+         return this.runModal(title,`<p>${message}</p>`, { height: 120, width: 400, resizable: true });
       }
 
       /** @summary Show confirm dialog
@@ -476,18 +503,20 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
         * @param value - initial value
         * @param {string} [kind] - use "text" (default), "number", "float" or "int"
         * @protected */
-      input(title, value, kind) {
+      input(title, value, kind, min, max) {
 
          if (!kind) kind = "text";
-         let inp_type = (kind == "int") ? "number" : "text";
+         let inp_type = (kind == "int") ? "number" : "text", ranges = "";
          if ((value === undefined) || (value === null)) value = "";
+         if (kind == "int") {
+             if (min !== undefined) ranges += ` min="${min}"`;
+             if (max !== undefined) ranges += ` max="${max}"`;
+          }
 
          let main_content =
-            `<form>
-                <fieldset style="padding:0; border:0">
-                   <input type="${inp_type}" tabindex="0" value="${value}" style="width:100%;display:block" class="jsroot_dlginp"/>
-               </fieldset>
-             </form>`;
+            '<form><fieldset style="padding:0; border:0">'+
+               `<input type="${inp_type}" value="${value}" ${ranges} style="width:98%;display:block" class="jsroot_dlginp"/>`+
+            '</fieldset></form>';
 
          return new Promise(resolveFunc => {
 
@@ -521,7 +550,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             arg.fValue = arg.fDefault;
             if (arg.fValue == '\"\"') arg.fValue = "";
             main_content += `<label for="${dlg_id}_inp${n}">${arg.fName}</label>
-                             <input type="text" tabindex="0" id="${dlg_id}_inp${n}" value="${arg.fValue}" style="width:100%;display:block"/>`;
+                             <input type="text" tabindex="${n+1}" id="${dlg_id}_inp${n}" value="${arg.fValue}" style="width:100%;display:block"/>`;
          }
 
          main_content += '</fieldset></form>';
@@ -561,7 +590,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          for (let n = 0; n < args.length; ++n)
             main_content += `<label for="${dlg_id}_inp${n}">arg${n+1}</label>
-                             <input type="text" tabindex="0" id="${dlg_id}_inp${n}" value="${args[n]}" style="width:100%;display:block"/>`;
+                             <input type="text" id="${dlg_id}_inp${n}" value="${args[n]}" style="width:100%;display:block"/>`;
 
          main_content += '</fieldset></form>';
 
@@ -584,7 +613,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /**
     * @summary Context menu class using plain HTML/JavaScript
     *
-    * @class
     * @memberof JSROOT.Painter
     * @desc Use {@link JSROOT.Painter.createMenu} to create instance of the menu
     * based on {@link https://github.com/L1quidH2O/ContextMenu.js}
@@ -834,21 +862,18 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       /** @summary Run modal elements with standalone code */
       runModal(title, main_content, args) {
          if (!args) args = {};
-         let dlg_id = this.menuname + "_dialog",
-             old_dlg = document.getElementById(dlg_id),
-             old_blk = document.getElementById(dlg_id+"_block");
-         if (old_dlg) old_dlg.remove();
-         if (old_blk) old_blk.remove();
+         let dlg_id = this.menuname + "_dialog";
+         d3.select("#" + dlg_id).remove();
+         d3.select("#" + dlg_id+"_block").remove();
 
-         let block = document.createElement('div');
-         block.setAttribute('id', dlg_id+"_block");
-         block.className = "jsroot_dialog_block";
-         document.body.appendChild(block);
+         let block = d3.select('body').append('div').attr('id', dlg_id+"_block").attr("class", "jsroot_dialog_block");
 
-         let element = document.createElement('div');
-         element.setAttribute('id', dlg_id);
-         element.className = "jsroot_dialog";
-         element.innerHTML =
+         let element = d3.select('body')
+                         .append('div')
+                         .attr('id',dlg_id)
+                         .attr("class","jsroot_dialog").style("width",(args.width || 450) + "px")
+                         .attr("tabindex", "0")
+                         .html(
             `<div class="jsroot_dialog_body">
                <div class="jsroot_dialog_header">${title}</div>
                <div class="jsroot_dialog_content">${main_content}</div>
@@ -856,17 +881,33 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   <button class="jsroot_dialog_button">Ok</button>
                   ${args.btns ? '<button class="jsroot_dialog_button">Cancel</button>' : ''}
               </div>
-             </div>`;
-         element.style.width = (args.width || 450) + "px";
-         document.body.appendChild(element);
+             </div>`);
 
          return new Promise(resolveFunc => {
-
-            d3.select(element).selectAll('.jsroot_dialog_button').on("click", evnt => {
-               resolveFunc(args.btns && (d3.select(evnt.target).text() == "Ok") ? element : null);
+            element.on("keyup", evnt => {
+               if ((evnt.keyCode == 13) || (evnt.keyCode == 27)) {
+                  evnt.preventDefault();
+                  evnt.stopPropagation();
+                  resolveFunc(evnt.keyCode == 13 ? element.node() : null);
+                  element.remove();
+                  block.remove();
+               }
+            });
+            element.on("keydown", evnt => {
+               if ((evnt.keyCode == 13) || (evnt.keyCode == 27)) {
+                  evnt.preventDefault();
+                  evnt.stopPropagation();
+               }
+            });
+            element.selectAll('.jsroot_dialog_button').on("click", evnt => {
+               resolveFunc(args.btns && (d3.select(evnt.target).text() == "Ok") ? element.node() : null);
                element.remove();
                block.remove();
             });
+
+            let f = element.select('.jsroot_dialog_content').select('input');
+            if (f.empty()) f = element.select('.jsroot_dialog_footer').select('button');
+            if (!f.empty()) f.node().focus();
          });
       }
 
@@ -875,7 +916,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    /**
     * @summary Context menu class using Bootstrap
     *
-    * @class
     * @memberof JSROOT.Painter
     * @desc Use {@link JSROOT.Painter.createMenu} to create instance of the menu
     * @private
