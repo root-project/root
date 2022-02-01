@@ -12,6 +12,8 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Sitong An, CERN/SFT,\
+ Simone Azeglio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
  Josh Bendavid, CERN/CMS,\
  Jakob Blomer, CERN/SFT,\
@@ -24,6 +26,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
  Jonas Hahnfeld, CERN/SFT,\
+ Ahmat Hamdan, GSOC, \
  Ivan Kabadzhov, CERN/SFT,\
  Shamrock Lee (@ShamrockLee),\
  Sergey Linev, GSI,\
@@ -38,7 +41,10 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/SFT,\
  Jonas Rembser, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
+ Aaradhya Saxena, GSOC,\
  Oksana Shadura, UNL/CMS,\
+ Sanjiban Sengupta, GSOC,\
+ Federico Sossai, CERN/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
@@ -292,7 +298,65 @@ Before 6.26, it was possible to still use the `RooMinuit` by passing the `Minimi
 
 ### Increase of the `RooAbsArg` class version
 
-The class version of `RooAbsArg` was incremented from 7 to 8 in this release. In some circumstances, this can cause warnings in `TStreamerInfo` for classes inheriting from `RooAbsArg` when reading older RooFit models from a file. These warnings are harmless and can be avoided by incrementing also the class version of the inheriting class.
+The class version of `RooAbsArg` was incremented from 7 to 8 in this release. In some circumstances, this can cause warnings in `TStreamerInfo` for classes inheriting from `RooAbsArg` when reading
+older RooFit models from a file. These warnings are harmless and can be avoided by incrementing also the class version of the inheriting class.
+
+## TMVA
+
+### SOFIE : Code generation for fast inference of Deep Learning models
+
+ROOT/TMVA SOFIE (“System for Optimized Fast Inference code Emit”) is a new package introduced in this release that generates C++ functions easily invokable for the fast inference of trained neural network models. It takes ONNX model files as inputs and produces C++ header files that can be included and utilized in a “plug-and-go” style.
+This is a new development and it is currently still in experimental stage.
+
+From ROOT command line, or in a ROOT macro you can use this code for parsing a model in ONNX file format 
+and generate C++ code taht can be used to evaluate the model: 
+
+```
+using namespace TMVA::Experimental;
+SOFIE::RModelParser_ONNX parser;
+SOFIE::RModel model = parser.Parse(“./example_model.onnx”);
+model.Generate();
+model.OutputGenerated(“./example_output.hxx”);
+```
+And an C++ header file will be generated. In addition also a text file, `example_output.dat` will be also generated. This file will contain the model weight values that will be used to initialize the model.
+A full example for parsing an ONNX input file is given by the tutorial [`TMVA_SOFIE_ONNX.C`](https://root.cern.ch/doc/master/TMVA__SOFIE__ONNX_8C.html). 
+
+To use the generated inference code, you need to create a `Session` class and call the function `Session::inder(float *)`:
+
+```
+#include "example_output.hxx"
+float input[INPUT_SIZE] = {.....};   // input data 
+TMVA_SOFIE_example_model::Session s("example_output.dat");
+std::vector<float> out = s.infer(input);
+```
+
+For using the ONNX parser you need to build ROOT with the configure option `tmva-sofie=ON`, which will be enabled when a Google Protocol Buffer library (`protobuf`, see https://developers.google.com/protocol-buffers) is found in your system.   
+
+If you don't have `protobuf` and you don't want to install you can still use SOFIE, although with some more limited operator support parsing directly Keras `.h5` input files or PyTorch `.pt` files. 
+In tis case you can convert directly the model to a `RModel` representation which can be used as above to generate the header and the weight file. 
+
+For parsing a Keras input file you need to do:
+```
+SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModel.h5");
+```
+See the tutorial [`TMVA_SOFIE_Keras.C`](https://root.cern.ch/doc/master/TMVA__SOFIE__Keras_8C.html).
+For parsing a PyTorch input file : 
+```
+SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModel.pt",inputShapes);
+```
+where `inputShapes` is a `std::vector<std::vector<size_t>>` defining the inputs shape tensors. This information is required by PyTorch since it is not stored in the model. 
+A full example for parsing a PyTorch file is in the [`TMVA_SOFIE_PyTorch.C`](https://root.cern.ch/doc/master/TMVA__SOFIE__PyTorch_8C.html) tutorial. 
+
+For using the Keras and/or the PyTorch parser you need to have installed Keras and/or PyTorch in your Python system and in addition build root with the support for `pymva`, obtained when configuring with `-Dtmva-pymva=On`. 
+ 
+Note that the created `SOFIE::RModel` class after parsing can be stored also in a ROOT file, using standard ROOT I/O functionality:
+```
+SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModel.h5");
+TFile file("model.root","NEW");
+model.Write();
+file.Close(); 
+```
+
 
 ## 2D Graphics Libraries
 
