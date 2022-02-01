@@ -2005,7 +2005,6 @@ JSROOT.define([], () =>  {
 
    // =========================================================================
 
-
    /** @summary Appends more methods
      * @desc different methods which are typically used in TTree::Draw
      * @private */
