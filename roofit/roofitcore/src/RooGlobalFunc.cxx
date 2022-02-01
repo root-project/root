@@ -124,12 +124,11 @@ namespace RooFit {
   RooCmdArg Cut(const RooFormulaVar& cutVar)      { return RooCmdArg("CutVar",0,0,0,0,0,0,&cutVar,0) ; }
   RooCmdArg Binning(const RooAbsBinning& binning) { return RooCmdArg("Binning",0,0,0,0,0,0,&binning,0) ;}
   RooCmdArg Binning(const char* binningName) { return RooCmdArg("BinningName",0,0,0,0,binningName,0,0,0) ;}
-  RooCmdArg Binning(Int_t nBins, Double_t xlo, Double_t xhi) { return RooCmdArg("BinningSpec",nBins,0,xlo,xhi,0,0,0,0) ;}
+  RooCmdArg Binning(int nBins, double xlo, double xhi) { return RooCmdArg("BinningSpec",nBins,0,xlo,xhi,0,0,0,0) ;}
   RooCmdArg MarkerStyle(Style_t style)            { return RooCmdArg("MarkerStyle",style,0,0,0,0,0,0,0) ; }
   RooCmdArg MarkerSize(Size_t size)               { return RooCmdArg("MarkerSize",0,0,size,0,0,0,0,0) ; }
   RooCmdArg MarkerColor(Color_t color)            { return RooCmdArg("MarkerColor",color,0,0,0,0,0,0,0) ; }
   RooCmdArg CutRange(const char* rangeName)       { return RooCmdArg("CutRange",0,0,0,0,rangeName,0,0,0) ; }
-  RooCmdArg AddTo(const char* name)               { return RooCmdArg("AddTo",0,0,0,0,name,0,0,0) ; }
   RooCmdArg XErrorSize(Double_t width)            { return RooCmdArg("XErrorSize",0,0,width,0,0,0,0,0) ; }
   RooCmdArg RefreshNorm()                         { return RooCmdArg("RefreshNorm",1,0,0,0,0,0,0,0) ; }
   RooCmdArg Efficiency(const RooCategory& cat)    { return RooCmdArg("Efficiency",0,0,0,0,0,0,&cat,0) ; }
