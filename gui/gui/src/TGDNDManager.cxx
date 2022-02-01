@@ -424,10 +424,11 @@ Bool_t TGDNDManager::HandleClientMessage(Event_t *event)
       HandleDNDLeave((Window_t) event->fUser[0]);
 
    } else if (event->fHandle == fgDNDPosition) {
+      Atom_t action = (Atom_t) event->fUser[4] ? event->fUser[4] : 1;
       HandleDNDPosition((Window_t) event->fUser[0],
                        (Int_t) (event->fUser[2] >> 16) & 0xFFFF,  // x_root
                        (Int_t) (event->fUser[2] & 0xFFFF),        // y_root
-                       (Atom_t) event->fUser[4],                  // action
+                       (Atom_t) action,                           // action
                        (Time_t) event->fUser[3]);                 // timestamp
 
    } else if (event->fHandle == fgDNDStatus) {
