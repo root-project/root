@@ -6,6 +6,7 @@
 
 ROOT_ADD_GTEST(RRawFile RRawFile.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TFile TFileTests.cxx LIBRARIES RIO)
+ROOT_ADD_GTEST(TBufferFile TBufferFileTests.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TBufferMerger TBufferMerger.cxx LIBRARIES RIO Imt Tree)
 ROOT_ADD_GTEST(TBufferJSON TBufferJSONTests.cxx LIBRARIES RIO)
 ROOT_ADD_GTEST(TFileMerger TFileMergerTests.cxx LIBRARIES RIO Tree)
