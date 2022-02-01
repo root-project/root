@@ -752,6 +752,69 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
    return jittedDefine;
 }
 
+/// Book the jitting of a Vary call
+std::shared_ptr<RJittedVariation>
+BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
+                 const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
+                 RDataSource *ds, const RColumnRegister &colRegister, const ColumnNames_t &branches,
+                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
+{
+   auto *const tree = lm.GetTree();
+   const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
+
+   const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
+   const auto exprVarTypes =
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Vary", /*vector2rvec=*/true);
+   const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
+   const auto type = RetTypeOfLambda(lambdaName);
+
+   if (type.rfind("ROOT::VecOps::RVec", 0) != 0)
+      throw std::runtime_error(
+         "Jitted Vary expressions must return an RVec object. The following expression returns a " + type +
+         " instead:\n" + parsedExpr.fExpr);
+
+   auto colRegisterCopy = new RColumnRegister(colRegister);
+   const auto colRegisterAddr = PrettyPrintAddr(colRegisterCopy);
+   auto jittedVariation = std::make_shared<RJittedVariation>(colNames, variationName, variationTags, type, colRegister,
+                                                             lm, parsedExpr.fUsedCols);
+
+   // build invocation to JitVariationHelper
+   // arrays of strings are passed as const char** plus size.
+   // lifetime of pointees:
+   // - lm is the loop manager, and if that goes out of scope jitting does not happen at all (i.e. will always be valid)
+   // - jittedVariation: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
+   // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
+   std::stringstream varyInvocation;
+   varyInvocation << "ROOT::Internal::RDF::JitVariationHelper(" << lambdaName << ", new const char*["
+                  << parsedExpr.fUsedCols.size() << "]{";
+   for (const auto &col : parsedExpr.fUsedCols) {
+      varyInvocation << "\"" << col << "\", ";
+   }
+   if (!parsedExpr.fUsedCols.empty())
+      varyInvocation.seekp(-2, varyInvocation.cur); // remove the last ", "
+   varyInvocation << "}, " << parsedExpr.fUsedCols.size();
+   varyInvocation << ", new const char*[" << colNames.size() << "]{";
+   for (const auto &col : colNames) {
+      varyInvocation << "\"" << col << "\", ";
+   }
+   varyInvocation.seekp(-2, varyInvocation.cur); // remove the last ", "
+   varyInvocation << "}, " << colNames.size() << ", new const char*[" << variationTags.size() << "]{";
+   for (const auto &tag : variationTags) {
+      varyInvocation << "\"" << tag << "\", ";
+   }
+   varyInvocation.seekp(-2, varyInvocation.cur); // remove the last ", "
+   varyInvocation << "}, " << variationTags.size() << ", \"" << variationName
+                  << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>(" << PrettyPrintAddr(&lm)
+                  << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedVariation>*>("
+                  << PrettyPrintAddr(MakeWeakOnHeap(jittedVariation))
+                  << "), reinterpret_cast<ROOT::Internal::RDF::RColumnRegister*>(" << colRegisterAddr
+                  << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
+                  << PrettyPrintAddr(upcastNodeOnHeap) << "));\n";
+
+   lm.ToJitExec(varyInvocation.str());
+   return jittedVariation;
+}
+
 // Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"
 // (see comments in the body for actual jitted code)
 std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,

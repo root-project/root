@@ -67,6 +67,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RJittedAction.hxx
     ROOT/RDF/RJittedDefine.hxx
     ROOT/RDF/RJittedFilter.hxx
+    ROOT/RDF/RJittedVariation.hxx
     ROOT/RDF/RLazyDSImpl.hxx
     ROOT/RDF/RLoopManager.hxx
     ROOT/RDF/RMergeableValue.hxx
@@ -102,6 +103,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RJittedAction.cxx
     src/RJittedDefine.cxx
     src/RJittedFilter.cxx
+    src/RJittedVariation.cxx
     src/RLoopManager.cxx
     src/RRangeBase.cxx
     src/RVariationBase.cxx

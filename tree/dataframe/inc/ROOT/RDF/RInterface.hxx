@@ -853,6 +853,64 @@ public:
       return Vary(colNames, std::forward<F>(expression), inputColumns, std::move(variationTags), variationName);
    }
 
+   // FIXME docs
+   RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression,
+                                  const std::vector<std::string> &variationTags, std::string_view variationName = "")
+   {
+      std::vector<std::string> colNames{{std::string(colName)}};
+      const std::string theVariationName{variationName.empty() ? colName : variationName};
+
+      return Vary(std::move(colNames), expression, variationTags, theVariationName);
+   }
+
+   RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression, std::size_t nVariations,
+                                  std::string_view variationName = "")
+   {
+      std::vector<std::string> colNames{{std::string(colName)}};
+      const std::string theVariationName{variationName.empty() ? colName : variationName};
+
+      return Vary(std::move(colNames), expression, nVariations, theVariationName);
+   }
+
+   RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
+                                  std::size_t nVariations, std::string_view variationName)
+   {
+      std::vector<std::string> variationTags;
+      variationTags.reserve(nVariations);
+      for (std::size_t i = 0u; i < nVariations; ++i)
+         variationTags.emplace_back(std::to_string(i));
+
+      return Vary(colNames, expression, std::move(variationTags), variationName);
+   }
+
+   RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
+                                  const std::vector<std::string> &variationTags, std::string_view variationName)
+   {
+      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
+      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationName.empty() && "Must provide a variation name.");
+
+      for (auto &colName : colNames) {
+         RDFInternal::CheckValidCppVarName(colName, "Vary");
+         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      }
+      RDFInternal::CheckValidCppVarName(variationName, "Vary");
+
+      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
+      auto jittedVariation =
+         RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager, fDataSource,
+                                       fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+      fLoopManager->Book(jittedVariation.get());
+
+      RDFInternal::RColumnRegister newColRegister(fColRegister);
+      newColRegister.AddVariation(std::move(jittedVariation));
+
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister), fDataSource);
+
+      return newInterface;
+   }
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Allow to refer to a column with a different name.
    /// \param[in] alias name of the column alias
