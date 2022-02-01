@@ -504,11 +504,16 @@ install(
    PATTERN "pkgconfig" EXCLUDE
 )
 
+if(Vc_INCLUDE_DIR)
+  set(MODULES_ROOT_INCPATH "ROOT_INCLUDE_PATH=${Vc_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}")
+endif()
+
 # modules.idx
 if(runtime_cxxmodules)
+
   add_custom_command(OUTPUT ${CMAKE_INSTALL_LIBDIR}/modules.idx
                      COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                     COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
                              ROOTIGNOREPREFIX=1 ROOT_HIST=0
                              $<TARGET_FILE:root.exe> -l -q -b
                      WORKING_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
@@ -530,7 +535,7 @@ if(WIN32)
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 else()
   add_custom_command(OUTPUT tutorials/hsimple.root
-                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                     COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
                              ROOTIGNOREPREFIX=1 ROOT_HIST=0
                              $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                      WORKING_DIRECTORY tutorials
