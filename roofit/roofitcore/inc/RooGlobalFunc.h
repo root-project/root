@@ -126,7 +126,7 @@ RooCmdArg Cut(const char* cutSpec) ;
 RooCmdArg Cut(const RooFormulaVar& cutVar) ;
 RooCmdArg Binning(const RooAbsBinning& binning) ;
 RooCmdArg Binning(const char* binningName) ;
-RooCmdArg Binning(Int_t nBins, Double_t xlo=0., Double_t xhi=0.) ;
+RooCmdArg Binning(int nBins, double xlo=0., double xhi=0.) ;
 RooCmdArg MarkerStyle(Style_t style) ;
 RooCmdArg MarkerSize(Size_t size) ;
 RooCmdArg MarkerColor(Color_t color) ;
