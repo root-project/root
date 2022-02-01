@@ -2862,7 +2862,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
          tree = obj.$tree;
       } else {
 
-         if ((args==='player') || !args) {
+         if ((args==='player') || !args || (typeof args == 'string' && args.indexOf('player:') == 0)) {
             return JSROOT.require("jq2d").then(() => {
                JSROOT.createTreePlayer(painter);
                painter.configureTree(tree);

@@ -1531,7 +1531,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             items[indx] = null; // mark item as ready
 
             for (let cnt = 0; cnt < items.length; ++cnt) {
-               if (dropitems[cnt]) isany = true;
                if (items[cnt]===null) continue; // ignore completed item
                if (items_wait[cnt] && items.indexOf(items[cnt])===cnt) {
                   items_wait[cnt] = false;
