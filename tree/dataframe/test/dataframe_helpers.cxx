@@ -458,7 +458,7 @@ TEST(RDFHelpers, GraphScalars)
    }
 }
 
-TEST(RDFHelpers, GraphErrors)
+TEST(RDFHelpers, GraphRunTimeErrors)
 {
    const std::vector<double> xx = {-0.22}; // smaller size
    const std::vector<double> yy = {1., 2.9};
