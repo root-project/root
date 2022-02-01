@@ -1724,60 +1724,86 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
 /// - A binned dataset will retain its intrinsic binning.
 ///
 /// The following optional named arguments can be used to modify the behaviour:
+/// \note Please follow the function links in the left column to learn about PyROOT specifics for a given option.
 ///
 /// <table>
+/// 
 /// <tr><th> <th> Data representation options
-/// <tr><td> `Asymmetry(const RooCategory& c)`   <td> Show the asymmetry of the data in given two-state category [F(+)-F(-)] / [F(+)+F(-)].
+/// <tr><td> RooFit::Asymmetry(const RooCategory& c)
+///     <td> Show the asymmetry of the data in given two-state category [F(+)-F(-)] / [F(+)+F(-)].
 ///     Category must have two states with indices -1 and +1 or three states with indices -1,0 and +1.
-/// <tr><td> `Efficiency(const RooCategory& c)`   <td> Show the efficiency F(acc)/[F(acc)+F(rej)]. Category must have two states with indices 0 and 1
-/// <tr><td> `DataError(RooAbsData::EType)`   <td> Select the type of error drawn:
+/// <tr><td> RooFit::Efficiency(const RooCategory& c)
+///     <td> Show the efficiency F(acc)/[F(acc)+F(rej)]. Category must have two states with indices 0 and 1
+/// <tr><td> RooFit::DataError(Int_t)
+///     <td> Select the type of error drawn:
 ///    - `Auto(default)` results in Poisson for unweighted data and SumW2 for weighted data
 ///    - `Poisson` draws asymmetric Poisson confidence intervals.
 ///    - `SumW2` draws symmetric sum-of-weights error ( \f$ \left( \sum w \right)^2 / \sum\left(w^2\right) \f$ )
 ///    - `None` draws no error bars
-/// <tr><td> `Binning(int nbins, double xlo, double xhi)`   <td> Use specified binning to draw dataset
-/// <tr><td> `Binning(const RooAbsBinning&)`   <td>  Use specified binning to draw dataset
-/// <tr><td> `Binning(const char* name)`   <td>  Use binning with specified name to draw dataset
-/// <tr><td> `RefreshNorm(Bool_t flag)`   <td> Force refreshing for PDF normalization information in frame.
+/// <tr><td> RooFit::Binning(int nbins, double xlo, double xhi)
+///     <td> Use specified binning to draw dataset
+/// <tr><td> RooFit::Binning(const RooAbsBinning&)
+///     <td>  Use specified binning to draw dataset
+/// <tr><td> RooFit::Binning(const char* name)
+///     <td>  Use binning with specified name to draw dataset
+/// <tr><td> RooFit::RefreshNorm()
+///     <td> Force refreshing for PDF normalization information in frame.
 ///     If set, any subsequent PDF will normalize to this dataset, even if it is
 ///     not the first one added to the frame. By default only the 1st dataset
 ///     added to a frame will update the normalization information
-/// <tr><td> `Rescale(Double_t f)`   <td> Rescale drawn histogram by given factor.
-/// <tr><td> `Cut(const char*)`      <td> Only plot entries that pass the given cut.
-///                                       Apart from cutting in continuous variables `Cut("x>5")`, this can also be used to plot a specific
-///                                       category state. Use something like `Cut("myCategory == myCategory::stateA")`, where
-///                                       `myCategory` resolves to the state number for a given entry and
-///                                       `myCategory::stateA` resolves to the state number of the state named "stateA".
+/// <tr><td> RooFit::Rescale(Double_t f)
+///     <td> Rescale drawn histogram by given factor.
+/// <tr><td> RooFit::Cut(const char*)
+///     <td> Only plot entries that pass the given cut.
+///          Apart from cutting in continuous variables `Cut("x>5")`, this can also be used to plot a specific
+///          category state. Use something like `Cut("myCategory == myCategory::stateA")`, where
+///          `myCategory` resolves to the state number for a given entry and
+///          `myCategory::stateA` resolves to the state number of the state named "stateA".
 ///
-/// <tr><td> `CutRange(const char*)` <td> Only plot data from given range. Separate multiple ranges with ",".
-/// \note This often requires passing the normalisation when plotting the PDF because RooFit does not save
-/// how many events were being plotted (it will only work for cutting slices out of uniformly distributed variables).
+/// <tr><td> RooFit::CutRange(const char*)
+///     <td> Only plot data from given range. Separate multiple ranges with ",".
+///          \note This often requires passing the normalisation when plotting the PDF because RooFit does not save
+///          how many events were being plotted (it will only work for cutting slices out of uniformly distributed
+///          variables).
 /// ```
-///  data->plotOn(frame01, CutRange("SB1"));
-///  const double nData = data->sumEntries("", "SB1");
-///  // Make clear that the target normalisation is nData. The enumerator NumEvent
-///  // is needed to switch between relative and absolute scaling.
-///  model.plotOn(frame01, Normalization(nData, RooAbsReal::NumEvent),
-///    ProjectionRange("SB1"));
+/// data->plotOn(frame01, CutRange("SB1"));
+/// const double nData = data->sumEntries("", "SB1");
+/// // Make clear that the target normalisation is nData. The enumerator NumEvent
+/// // is needed to switch between relative and absolute scaling.
+/// model.plotOn(frame01, Normalization(nData, RooAbsReal::NumEvent),
+///   ProjectionRange("SB1"));
 /// ```
 ///
 /// <tr><th> <th> Histogram drawing options
-/// <tr><td> `DrawOption(const char* opt)`   <td> Select ROOT draw option for resulting TGraph object
-/// <tr><td> `LineStyle(Int_t style)`   <td> Select line style by ROOT line style code, default is solid
-/// <tr><td> `LineColor(Int_t color)`   <td> Select line color by ROOT color code, default is black
-/// <tr><td> `LineWidth(Int_t width)`   <td> Select line with in pixels, default is 3
-/// <tr><td> `MarkerStyle(Int_t style)`   <td> Select the ROOT marker style, default is 21
-/// <tr><td> `MarkerColor(Int_t color)`   <td> Select the ROOT marker color, default is black
-/// <tr><td> `MarkerSize(Double_t size)`   <td> Select the ROOT marker size
-/// <tr><td> `FillStyle(Int_t style)`   <td> Select fill style, default is filled.
-/// <tr><td> `FillColor(Int_t color)`   <td> Select fill color by ROOT color code
-/// <tr><td> `XErrorSize(Double_t frac)`   <td> Select size of X error bar as fraction of the bin width, default is 1
-///
+/// <tr><td> RooFit::DrawOption(const char* opt)
+///     <td> Select ROOT draw option for resulting TGraph object
+/// <tr><td> RooFit::LineStyle(Style_t style)
+///     <td> Select line style by ROOT line style code, default is solid
+/// <tr><td> RooFit::LineColor(Color_t color)
+///     <td> Select line color by ROOT color code, default is black
+/// <tr><td> RooFit::LineWidth(Width_t width)
+///     <td> Select line with in pixels, default is 3
+/// <tr><td> RooFit::MarkerStyle(Style_t style)
+///     <td> Select the ROOT marker style, default is 21
+/// <tr><td> RooFit::MarkerColor(Color_t color)
+///     <td> Select the ROOT marker color, default is black
+/// <tr><td> RooFit::MarkerSize(Size_t size)
+///     <td> Select the ROOT marker size
+/// <tr><td> RooFit::FillStyle(Style_t style)
+///     <td> Select fill style, default is filled.
+/// <tr><td> RooFit::FillColor(Color_t color)
+///     <td> Select fill color by ROOT color code
+/// <tr><td> RooFit::XErrorSize(Double_t frac)
+///     <td> Select size of X error bar as fraction of the bin width, default is 1
 ///
 /// <tr><th> <th> Misc. other options
-/// <tr><td> `Name(const chat* name)`   <td> Give curve specified name in frame. Useful if curve is to be referenced later
-/// <tr><td> `Invisible()`   <td> Add curve to frame, but do not display. Useful in combination AddTo()
-/// <tr><td> `AddTo(const char* name, double_t wgtSelf, double_t wgtOther)`   <td> Add constructed histogram to already existing histogram with given name and relative weight factors
+/// <tr><td> RooFit::Name(const char* name)
+///     <td> Give curve specified name in frame. Useful if curve is to be referenced later
+/// <tr><td> RooFit::Invisible()
+///     <td> Add curve to frame, but do not display. Useful in combination AddTo()
+/// <tr><td> RooFit::AddTo(const char* name, double wgtSel, double wgtOther)
+///     <td> Add constructed histogram to already existing histogram with given name and relative weight factors
+///
 /// </table>
 
 RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
