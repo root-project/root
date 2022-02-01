@@ -529,6 +529,7 @@ public:
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
+   // case: both types are container types
    template <typename X0, typename X1,
              std::enable_if_t<IsDataContainer<X0>::value && IsDataContainer<X1>::value, int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
@@ -536,7 +537,7 @@ public:
       if (x0s.size() != x1s.size()) {
          throw std::runtime_error("Cannot fill Graph with values in containers of different sizes.");
       }
-      auto thisSlotG = fGraphs[slot];
+      auto *thisSlotG = fGraphs[slot];
       auto x0sIt = std::begin(x0s);
       const auto x0sEnd = std::end(x0s);
       auto x1sIt = std::begin(x1s);
@@ -545,11 +546,21 @@ public:
       }
    }
 
-   template <typename X0, typename X1>
+   // case: both types are non-container types, e.g. scalars
+   template <typename X0, typename X1,
+             std::enable_if_t<!IsDataContainer<X0>::value && !IsDataContainer<X1>::value, int> = 0>
    void Exec(unsigned int slot, X0 x0, X1 x1)
    {
       auto thisSlotG = fGraphs[slot];
       thisSlotG->SetPoint(thisSlotG->GetN(), x0, x1);
+   }
+
+   // case: types are combination of containers and non-containers
+   // this is not supported, error out
+   template <typename X0, typename X1, typename... ExtraArgsToLowerPriority>
+   void Exec(unsigned int, X0, X1, ExtraArgsToLowerPriority...)
+   {
+      throw std::runtime_error("Graph was applied to a mix of scalar values and collections. This is not supported.");
    }
 
    void Finalize()

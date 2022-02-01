@@ -324,6 +324,49 @@ TEST(RDFHelpers, SaveGraphSharedDefines)
    EXPECT_EQ(graph, expected);
 }
 
+TEST(RDFHelpers, GraphContainers)
+{
+   const std::vector<double> xx = {-0.22, 0.05, 0.25, 0.35, 0.5, 0.61, 0.7, 0.85, 0.89, 0.95};
+   const std::vector<double> yy = {1., 2.9, 5.6, 7.4, 9, 9.6, 8.7, 6.3, 4.5, 1};
+
+   auto df = RDataFrame(1).Define("xx", [&] { return xx; }).Define("yy", [&] { return yy; });
+
+   auto gr1 = df.Graph<std::vector<double>, std::vector<double>>("xx", "yy");
+
+   for (size_t i = 0; i < xx.size(); ++i) {
+      EXPECT_DOUBLE_EQ(gr1->GetX()[i], xx[i]);
+      EXPECT_DOUBLE_EQ(gr1->GetY()[i], yy[i]);
+   }
+}
+
+TEST(RDFHelpers, GraphScalars)
+{
+   auto df =
+      RDataFrame(2).DefineSlotEntry("x", [](unsigned int, ULong64_t x) { return x; }).Define("y", [] { return .5; });
+
+   auto gr1 = df.Graph<ULong64_t, double>("x", "y");
+
+   for (size_t i = 0; i < 2; ++i) {
+      EXPECT_EQ(gr1->GetX()[i], i);
+      EXPECT_DOUBLE_EQ(gr1->GetY()[i], .5);
+   }
+}
+
+TEST(RDFHelpers, GraphErrors)
+{
+   const std::vector<double> xx = {-0.22}; // smaller size
+   const std::vector<double> yy = {1., 2.9};
+
+   auto df =
+      RDataFrame(1).Define("xx", [&] { return xx; }).Define("yy", [&] { return yy; }).Define("x", [] { return .5; });
+
+   auto gr1 = df.Graph<std::vector<double>, std::vector<double>>("xx", "yy"); // still no error since lazy action
+   auto gr2 = df.Graph<double, std::vector<double>>("x", "yy");               // still no error since lazy action
+
+   EXPECT_THROW(gr1.GetValue(), std::runtime_error);
+   EXPECT_THROW(gr2.GetValue(), std::runtime_error);
+}
+
 TEST(RunGraphs, RunGraphs)
 {
 #ifdef R__USE_IMT
