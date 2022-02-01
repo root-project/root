@@ -2170,7 +2170,7 @@ JSROOT.define(['rawinflate'], () => {
                member.func = function(buf, obj) {
                   const ver = buf.readVersion();
                   buf.checkByteCount(ver);
-                  obj[this.name] = ull;
+                  obj[this.name] = null;
                };
             }
 
