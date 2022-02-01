@@ -222,6 +222,34 @@ TEST_P(RDFVary, MultipleVariations)
    EXPECT_DOUBLE_EQ(histos["y:up"].GetMean(), 1.);
 }
 
+TEST_P(RDFVary, MultipleVariationsOnSameColumn)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto h = df.Vary("x", SimpleVariation, {}, {"down", "up"})
+               .Vary("x",
+                     [] {
+                        return ROOT::RVecI{-2, 4};
+                     },
+                     {}, {"down2", "up2"})
+               .Histo1D<int>("x");
+   auto histos = VariationsFor(h);
+
+   const auto expectedKeys = std::vector<std::string>{"nominal", "x:down", "x:down2", "x:up", "x:up2"};
+   auto keys = histos.GetKeys();
+   std::sort(keys.begin(), keys.end()); // key ordering is not guaranteed
+   EXPECT_EQ(keys, expectedKeys);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMaximum(), 10.);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMean(), 1.);
+   EXPECT_DOUBLE_EQ(histos["x:down"].GetMaximum(), 10.);
+   EXPECT_DOUBLE_EQ(histos["x:down"].GetMean(), -1.);
+   EXPECT_DOUBLE_EQ(histos["x:up"].GetMaximum(), 10.);
+   EXPECT_DOUBLE_EQ(histos["x:up"].GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(histos["x:down2"].GetMaximum(), 10.);
+   EXPECT_DOUBLE_EQ(histos["x:down2"].GetMean(), -2.);
+   EXPECT_DOUBLE_EQ(histos["x:up2"].GetMaximum(), 10.);
+   EXPECT_DOUBLE_EQ(histos["x:up2"].GetMean(), 4.);
+}
+
 TEST_P(RDFVary, SimultaneousVariations)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; }).Define("y", [] { return 42; });
