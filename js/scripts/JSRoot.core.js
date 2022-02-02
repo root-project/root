@@ -29,14 +29,7 @@
                delete paths[p];
 
          // configure all dependencies
-         requirejs.config({
-            paths: paths,
-            shim: {
-               'jquery-ui': { deps: ['jquery'] },
-               'jqueryui-mousewheel': { deps: ['jquery-ui'] },
-               'jqueryui-touch-punch': { deps: ['jquery-ui'] }
-            }
-         });
+         requirejs.config({ paths: paths });
       }
 
       define( jsroot );
@@ -87,8 +80,6 @@
             }
          });
 
-         if (globalThis.jQuery)
-            jsroot._.modules['jquery'] = { module: globalThis.jQuery };
       }
 
       jsroot._.init();
@@ -104,7 +95,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "19/11/2021"*/
-   JSROOT.version_date = "26/01/2022";
+   JSROOT.version_date = "1/02/2022";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -162,11 +153,6 @@
 
    _.sources = {
          'd3'                   : { src: 'd3', libs: true, extract: "d3" },
-         'jquery'               : { src: 'https://root.cern/js/6.3.2/scripts/jquery.min', onlymin: true, extract: "$" },
-         'jquery-ui'            : { src: 'https://root.cern/js/6.3.2/scripts/jquery-ui.min', onlymin: true, extract: "$", dep: 'jquery' },
-         'jqueryui-mousewheel'  : { src: 'https://root.cern/js/6.3.2/scripts/jquery.mousewheel.min', onlymin: true, extract: "$", dep: 'jquery-ui' },
-         'jqueryui-touch-punch' : { src: 'https://root.cern/js/6.3.2/scripts/touch-punch.min', onlymin: true, extract: "$", dep: 'jquery-ui' },
-         'rawinflate'           : { src: 'rawinflate', libs: true },
          'zstd-codec'           : { src: '../../zstd/zstd-codec', onlymin: true, alt: "https://root.cern/js/zstd/zstd-codec.min.js", extract: "ZstdCodec", node: "zstd-codec" },
          'mathjax'              : { src: '../../mathjax/3.2.0/es5/tex-svg', nomin: true,  alt: 'https://cdn.jsdelivr.net/npm/mathjax@3.2.0/es5/tex-svg.js', extract: "MathJax", node: "mathjax" },
          'dat.gui'              : { src: 'dat.gui', libs: true, extract: "dat" },
@@ -479,8 +465,6 @@
       need.forEach((name,indx) => {
          if ((name.indexOf("load:")==0) || (name.indexOf("user:")==0))
             need[indx] = name.substr(5);
-         else if ((name == "jq") || (name == "jq2d")) // only for backward compatibility
-            need[indx] = "hierarchy";
          else if (name == "2d")
             need[indx] = "painter";
          else if (name == "v6")
@@ -561,8 +545,8 @@
 
          function decode_sap_results(args) {
             for (let i = 0; i < reqindx.length; ++i) {
-               let k = reqindx[i]; // index in original request
-               let src = _.sources[need[k]];
+               let k = reqindx[i], // index in original request
+                   src = _.sources[need[k]];
                if (src && src.extract) {
                   let m = _.modules[need[k]];
                   if (!m) m = _.modules[need[k]] = { module: globalThis[src.extract] };
@@ -807,21 +791,6 @@
      * @private */
    JSROOT.BIT = function(n) { return 1 << n; }
 
-   /** @summary Seed simple random generator
-     * @param {number} i seed value
-     * @deprecated Please use JSROOT.TRandom class
-     * @private */
-   JSROOT.seed = function() {}
-
-   /** @summary Simple random generator
-     * @desc Works like Math.random(), but with configurable seed - see {@link JSROOT.seed}
-     * @returns {number} random value between 0 (inclusive) and 1.0 (exclusive)
-     * @deprecated Please use JSROOT.TRandom class
-     * @private */
-   JSROOT.random = function() {
-      return Math.random();
-   }
-
    /** @summary Just copy (not clone) all fields from source to the target object
      * @desc Simple replacement of jQuery.extend method
      * @memberof JSROOT
@@ -842,7 +811,7 @@
      * @param {string} [typename] - optional typename, if not specified, obj._typename will be used
      * @memberof JSROOT
      * @private */
-   let addMethods = (obj, typename) => {
+   const addMethods = (obj, typename) => {
       extend(obj, JSROOT.getMethods(typename || obj._typename, obj));
    }
 
@@ -892,7 +861,7 @@
 
          if ((newfmt!==false) && (len>1) && (ks[0]==='$arr') && (ks[1]==='len')) {
             // this is ROOT-coded array
-            let arr = null, dflt = (value.$arr==="Bool") ? false : 0;
+            let arr;
             switch (value.$arr) {
                case "Int8": arr = new Int8Array(value.len); break;
                case "Uint8": arr = new Uint8Array(value.len); break;
@@ -904,9 +873,10 @@
                case "Int64":
                case "Uint64":
                case "Float64": arr = new Float64Array(value.len); break;
-               default: arr = new Array(value.len); break;
+               default: arr = new Array(value.len);
             }
-            for (let k = 0; k < value.len; ++k) arr[k] = dflt;
+
+            arr.fill((value.$arr==="Bool") ? false : 0);
 
             if (value.b !== undefined) {
                // base64 coding
@@ -1744,9 +1714,9 @@
             case "F": histo.fArray = new Float32Array(histo.fNcells); break;
             case "L":
             case "D": histo.fArray = new Float64Array(histo.fNcells); break;
-            default: histo.fArray = new Array(histo.fNcells); break;
+            default: histo.fArray = new Array(histo.fNcells);
          }
-         for (let i=0;i<histo.fNcells;++i) histo.fArray[i] = 0;
+         histo.fArray.fill(0);
       }
       return histo;
    }

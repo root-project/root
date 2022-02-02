@@ -68,6 +68,7 @@ public:
                                               const std::vector<std::string> &fileNames, const TreeUtils::RFriendInfo &friendInfo,
                                               const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
                                               const std::vector<std::vector<Long64_t>> &friendEntries);
+   void Reset();
 };
 } // End of namespace Internal
 

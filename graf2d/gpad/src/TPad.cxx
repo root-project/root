@@ -2602,6 +2602,8 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
          if (zoombox) {
             zoombox->Delete();
             zoombox = 0;
+            gPad->Modified();
+            gPad->Update();
          }
       }
       break;

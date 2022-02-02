@@ -22,6 +22,14 @@
 19. Remove "collapsible" and "tabs" layouts which were implemented with jQuery - use "flex" instead
 20. Improve flexible layout, provide context menu with cascading, tiling, selecting frames
 21. Starting from Chrome 96, allow embedding WebGL into SVG - solving problem with lego plots in canvas
+22. All internal JSROOT code rewritten as classes. One have to use class syntax to derive from it.
+
+
+## Changes in 6.3.3
+1. Fix TEfficiency drawing
+2. Provide TPadPainter.divide method
+3. Fix browsing remote file via THttpServer
+4. Fix lego draw update while zooming
 
 
 ## Changes in 6.3.2

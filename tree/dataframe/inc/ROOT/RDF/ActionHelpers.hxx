@@ -38,6 +38,7 @@
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
 #include "TGraph.h"
+#include "TGraphAsymmErrors.h"
 #include "TLeaf.h"
 #include "TObject.h"
 #include "TTree.h"
@@ -317,7 +318,10 @@ public:
       return std::make_unique<RMergeableFill<Hist_t>>(*fResultHist);
    }
 
-   std::string GetActionName() { return "FillWithUnknownAxes"; }
+   std::string GetActionName()
+   {
+      return std::string(fResultHist->IsA()->GetName()) + "<BR/>" + std::string(fResultHist->GetName());
+   }
 };
 
 extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
@@ -501,7 +505,19 @@ public:
       return std::make_unique<RMergeableFill<HIST>>(*fObjects[0]);
    }
 
-   std::string GetActionName() { return "Fill"; }
+   // if the fObjects vector type is derived from TObject, return the name of the object
+   template <typename T = HIST, typename std::enable_if<std::is_base_of<TObject, T>::value>::type * = nullptr>
+   std::string GetActionName()
+   {
+      return std::string(fObjects[0]->IsA()->GetName()) + "<BR/>" + std::string(fObjects[0]->GetName());
+   }
+
+   // if fObjects is not derived from TObject, indicate it is some other object
+   template <typename T = HIST, typename std::enable_if<!std::is_base_of<TObject, T>::value>::type * = nullptr>
+   std::string GetActionName()
+   {
+      return "Fill custom object";
+   }
 };
 
 class FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
@@ -584,6 +600,104 @@ public:
    std::string GetActionName() { return "Graph"; }
 
    Result_t &PartialUpdate(unsigned int slot) { return *fGraphs[slot]; }
+};
+
+class FillTGraphAsymmErrorsHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphAsymmErrorsHelper> {
+public:
+   using Result_t = ::TGraphAsymmErrors;
+
+private:
+   std::vector<::TGraphAsymmErrors *> fGraphAsymmErrors;
+
+public:
+   FillTGraphAsymmErrorsHelper(FillTGraphAsymmErrorsHelper &&) = default;
+   FillTGraphAsymmErrorsHelper(const FillTGraphAsymmErrorsHelper &) = delete;
+
+   FillTGraphAsymmErrorsHelper(const std::shared_ptr<::TGraphAsymmErrors> &g, const unsigned int nSlots)
+      : fGraphAsymmErrors(nSlots, nullptr)
+   {
+      fGraphAsymmErrors[0] = g.get();
+      // Initialize all other slots
+      for (unsigned int i = 1; i < nSlots; ++i) {
+         fGraphAsymmErrors[i] = new TGraphAsymmErrors(*fGraphAsymmErrors[0]);
+      }
+   }
+
+   void Initialize() {}
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   // case: all types are container types
+   template <
+      typename X, typename Y, typename EXL, typename EXH, typename EYL, typename EYH,
+      std::enable_if_t<IsDataContainer<X>::value && IsDataContainer<Y>::value && IsDataContainer<EXL>::value &&
+                          IsDataContainer<EXH>::value && IsDataContainer<EYL>::value && IsDataContainer<EYH>::value,
+                       int> = 0>
+   void
+   Exec(unsigned int slot, const X &xs, const Y &ys, const EXL &exls, const EXH &exhs, const EYL &eyls, const EYH &eyhs)
+   {
+      if ((xs.size() != ys.size()) || (xs.size() != exls.size()) || (xs.size() != exhs.size()) ||
+          (xs.size() != eyls.size()) || (xs.size() != eyhs.size())) {
+         throw std::runtime_error("Cannot fill GraphAsymmErrors with values in containers of different sizes.");
+      }
+      auto *thisSlotG = fGraphAsymmErrors[slot];
+      auto xsIt = std::begin(xs);
+      auto ysIt = std::begin(ys);
+      auto exlsIt = std::begin(exls);
+      auto exhsIt = std::begin(exhs);
+      auto eylsIt = std::begin(eyls);
+      auto eyhsIt = std::begin(eyhs);
+      while (xsIt != std::end(xs)) {
+         const auto n = thisSlotG->GetN(); // must use the same `n` for SetPoint and SetPointError
+         thisSlotG->SetPoint(n, *xsIt++, *ysIt++);
+         thisSlotG->SetPointError(n, *exlsIt++, *exhsIt++, *eylsIt++, *eyhsIt++);
+      }
+   }
+
+   // case: all types are non-container types, e.g. scalars
+   template <
+      typename X, typename Y, typename EXL, typename EXH, typename EYL, typename EYH,
+      std::enable_if_t<!IsDataContainer<X>::value && !IsDataContainer<Y>::value && !IsDataContainer<EXL>::value &&
+                          !IsDataContainer<EXH>::value && !IsDataContainer<EYL>::value && !IsDataContainer<EYH>::value,
+                       int> = 0>
+   void Exec(unsigned int slot, X x, Y y, EXL exl, EXH exh, EYL eyl, EYH eyh)
+   {
+      auto thisSlotG = fGraphAsymmErrors[slot];
+      const auto n = thisSlotG->GetN();
+      thisSlotG->SetPoint(n, x, y);
+      thisSlotG->SetPointError(n, exl, exh, eyl, eyh);
+   }
+
+   // case: types are combination of containers and non-containers
+   // this is not supported, error out
+   template <typename X, typename Y, typename EXL, typename EXH, typename EYL, typename EYH,
+             typename... ExtraArgsToLowerPriority>
+   void Exec(unsigned int, X, Y, EXL, EXH, EYL, EYH, ExtraArgsToLowerPriority...)
+   {
+      throw std::runtime_error(
+         "GraphAsymmErrors was applied to a mix of scalar values and collections. This is not supported.");
+   }
+
+   void Finalize()
+   {
+      const auto nSlots = fGraphAsymmErrors.size();
+      auto resGraphAsymmErrors = fGraphAsymmErrors[0];
+      TList l;
+      l.SetOwner(); // The list will free the memory associated to its elements upon destruction
+      for (unsigned int slot = 1; slot < nSlots; ++slot) {
+         l.Add(fGraphAsymmErrors[slot]);
+      }
+      resGraphAsymmErrors->Merge(&l);
+   }
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableFill<Result_t>>(*fGraphAsymmErrors[0]);
+   }
+
+   std::string GetActionName() { return "GraphAsymmErrors"; }
+
+   Result_t &PartialUpdate(unsigned int slot) { return *fGraphAsymmErrors[slot]; }
 };
 
 // In case of the take helper we have 4 cases:

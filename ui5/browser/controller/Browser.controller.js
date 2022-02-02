@@ -1075,7 +1075,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
 
          let painter = await ((kind == "rcanvas")
-                ? JSROOT.require("v7").then(() => new JSROOT.v7.RCanvasPainter(null, null))
+                ? JSROOT.require("v7").then(() => new JSROOT.RCanvasPainter(null, null))
                 : JSROOT.require("v6").then(() => new JSROOT.TCanvasPainter(null, null)));
 
          painter.online_canvas = true; // indicates that canvas gets data from running server

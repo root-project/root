@@ -48,7 +48,7 @@ JSROOT.define([], () =>  {
    /** @summary lgam function, logarithm from gamma
      * @private */
    function lgam(x) {
-      let p, q, u, w, z, sgngam = 1;
+      let p, q, u, w, z;
       const kMAXLGM = 2.556348e305,
             LS2PI = 0.91893853320467274178,
       A = [
@@ -121,7 +121,7 @@ JSROOT.define([], () =>  {
          return Math.log(z) + p;
       }
       if ( x > kMAXLGM )
-         return sgngam > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+         return Number.POSITIVE_INFINITY;
 
       q = ( x - 0.5 ) * Math.log(x) - x + LS2PI;
       if ( x > 1.0e8 )
@@ -315,9 +315,7 @@ JSROOT.define([], () =>  {
    /** @summary gamma calculation
      * @private */
    function gamma(x) {
-      let p, q, z, i;
-
-      let sgngam = 1;
+      let p, q, z, i, sgngam = 1;
 
       if (x >= Number.MAX_VALUE)
          return x;
@@ -330,9 +328,7 @@ JSROOT.define([], () =>  {
          {
             p = Math.floor(q);
             if( p == q )
-            {
-               return sgngam > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
-            }
+               return Number.POSITIVE_INFINITY;
             i = Math.round(p);
             if( (i & 1) == 0 )
                sgngam = -1;
@@ -2004,7 +2000,6 @@ JSROOT.define([], () =>  {
    }
 
    // =========================================================================
-
 
    /** @summary Appends more methods
      * @desc different methods which are typically used in TTree::Draw
