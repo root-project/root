@@ -51,20 +51,20 @@ protected:
 
    Engine  fEngine;   // random number generator engine
 public:
-   
+
    TRandomGen(ULong_t seed=1) {
       fEngine.SetSeed(seed);
       SetName(TString::Format("Random_%s", std::string(fEngine.Name()).c_str()));
       SetTitle(TString::Format("Random number generator: %s", std::string(fEngine.Name()).c_str()));
    }
    virtual ~TRandomGen() {}
-   using TRandom::Rndm; 
+   using TRandom::Rndm;
    virtual  Double_t Rndm( ) { return fEngine(); }
    virtual  void     RndmArray(Int_t n, Float_t *array) {
-      for (int i = 0; i < n; ++i) array[i] = fEngine(); 
+      for (int i = 0; i < n; ++i) array[i] = fEngine();
    }
    virtual  void     RndmArray(Int_t n, Double_t *array) {
-            for (int i = 0; i < n; ++i) array[i] = fEngine(); 
+            for (int i = 0; i < n; ++i) array[i] = fEngine();
    }
    virtual  void     SetSeed(ULong_t seed=0) {
       fEngine.SetSeed(seed);
@@ -96,7 +96,7 @@ extern template class  TRandomGen<ROOT::Math::StdEngine<std::ranlux48> >;
 #endif
 /**
   @ingroup Random
-  MIXMAX generator based on a state of N=240.  
+  MIXMAX generator based on a state of N=240.
   This generator is described in this paper:
 
    K. Savvidy and G. Savvidy, *Spectrum and Entropy of C-systems. MIXMAX random number generator*,
@@ -107,7 +107,7 @@ typedef TRandomGen<ROOT::Math::MixMaxEngine<240,0>> TRandomMixMax;
 /**
   @ingroup Random
   MIXMAX generator based on a state of N=17. This generator has a fast seeding time
-  compared to N=240. 
+  compared to N=240.
    This generator is described in this paper:
 
    K. Savvidy and G. Savvidy, *Spectrum and Entropy of C-systems. MIXMAX random number generator*,
@@ -117,15 +117,15 @@ typedef TRandomGen<ROOT::Math::MixMaxEngine<17,0>> TRandomMixMax17;
 
 /**
   @ingroup Random
-  MIXMAX generator based on a state of N=256, based on the generator descrived in this 
+  MIXMAX generator based on a state of N=256, based on the generator described in this
   paper:
 
    K. Savvidy, *The MIXMAX random number generator*, Comp. Phys. Commun. 196 (2015), pp 161–165
   http://dx.doi.org/10.1016/j.cpc.2015.06.003
 
-   This generator has been implemented with a skipping value of 2 iterations (so retaining one 
-   matrix iteration every 3). 
-  
+   This generator has been implemented with a skipping value of 2 iterations (so retaining one
+   matrix iteration every 3).
+
  */
 typedef TRandomGen<ROOT::Math::MixMaxEngine<256,2>> TRandomMixMax256;
 
@@ -133,16 +133,16 @@ typedef TRandomGen<ROOT::Math::RanluxppEngine2048> TRandomRanluxpp;
 
 /**
   @ingroup Random
-  Generator based on a the Mersenne-Twister generator with 64 bits, 
-  using the implementation provided by the standard library, 
+  Generator based on a the Mersenne-Twister generator with 64 bits,
+  using the implementation provided by the standard library,
   std::mt19937_64 (see  http://www.cplusplus.com/reference/random/mt19937_64/ )
 
  */
 typedef TRandomGen<ROOT::Math::StdEngine<std::mt19937_64> > TRandomMT64;
 /**
   @ingroup Random
-  Generator based on a the RanLux generator with 48 bits, 
-  using the implementation provided by the standard library, 
+  Generator based on a the RanLux generator with 48 bits,
+  using the implementation provided by the standard library,
   std::ranlux48 (see  http://www.cplusplus.com/reference/random/ranlux48/ )
 
  */
