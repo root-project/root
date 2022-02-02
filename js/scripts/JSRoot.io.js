@@ -5,7 +5,9 @@ JSROOT.define([], () => {
 
    "use strict";
 
-   const clTObject = 'TObject', clTNamed = 'TNamed',
+   const clTObject = 'TObject', clTNamed = 'TNamed', clTObjString = 'TObjString',
+         clTList = 'TList', clTStreamerElement = "TStreamerElement", clTStreamerObject = 'TStreamerObject',
+
          kChar = 1, kShort = 2, kInt = 3, kLong = 4, kFloat = 5, kCounter = 6,
          kCharStar = 7, kDouble = 8, kDouble32 = 9, kLegacyChar = 10,
          kUChar = 11, kUShort = 12, kUInt = 13, kULong = 14, kBits = 15,
@@ -38,51 +40,7 @@ JSROOT.define([], () => {
          // TObject bits
          kIsReferenced = JSROOT.BIT(4), kHasUUID = JSROOT.BIT(5);
 
-
-   /** @summary Holder of IO functionality
-     * @alias JSROOT.IO
-     * @namespace
-     * @private */
-
-   let jsrio = {
-
-      // here constants which are used outside
-      kChar: kChar, kShort: kShort, kInt: kInt, kLong: kLong, kFloat: kFloat, kCounter: kCounter,
-      kCharStar: kCharStar, kDouble: kDouble, kDouble32: kDouble32, kLegacyChar: kLegacyChar,
-      kUChar: kUChar, kUShort: kUShort, kUInt: kUInt, kULong: kULong, kBits: kBits,
-      kLong64: kLong64, kULong64: kULong64, kBool: kBool, kFloat16: kFloat16,
-
-      kBase: kBase, kOffsetL: kOffsetL, kOffsetP: kOffsetP,
-      kObject: kObject, kAny: kAny, kObjectp: kObjectp, kObjectP: kObjectP, kTString: kTString,
-   //   kTObject: kTObject, kTNamed: kTNamed, kAnyp: kAnyp,
-      kAnyP: kAnyP, kStreamer: kStreamer, kStreamLoop: kStreamLoop,
-
-      /* kAnyPnoVT: 70, */
-      kSTLp: 71,
-      /* kSkip: 100, kSkipL: 120, kSkipP: 140, kConv: 200, kConvL: 220, kConvP: 240, */
-
-      kSTL: 300, /* kSTLstring: 365, */
-
-      Mode: "array", // could be string or array, enable usage of ArrayBuffer in http requests
-
-      // kSplitCollectionOfPointers: 100,
-
-      // map of user-streamer function like func(buf,obj)
-      // or alias (classname) which can be used to read that function
-      // or list of read functions
-      CustomStreamers: {},
-
-      // these are streamers which do not handle version regularly
-      // used for special classes like TRef or TBasket
-      DirectStreamers: {},
-
-      /** @summary Add custom streamer
-        * @public */
-      addUserStreamer(type, user_streamer) {
-         this.CustomStreamers[type] = user_streamer;
-      }
-
-   } // namespace jsrio
+   let jsrio;
 
    /** @summary Returns type id by its name
      * @private */
@@ -899,111 +857,6 @@ JSROOT.define([], () => {
       return j;
    }
 
-
-   /** @summary Reads header envelope, determines zipped size and unzip content
-     * @returns {Promise} with unzipped content
-     * @private */
-   jsrio.R__unzip = function(arr, tgtsize, noalert, src_shift) {
-
-      const HDRSIZE = 9, totallen = arr.byteLength,
-           getChar = o => String.fromCharCode(arr.getUint8(o)),
-           getCode = o => arr.getUint8(o);
-
-      let curr = src_shift || 0, fullres = 0, tgtbuf = null;
-
-      const nextPortion = () => {
-
-         while (fullres < tgtsize) {
-
-            let fmt = "unknown", off = 0, CHKSUM = 0;
-
-            if (curr + HDRSIZE >= totallen) {
-               if (!noalert) console.error("Error R__unzip: header size exceeds buffer size");
-               return Promise.resolve(null);
-            }
-
-            if (getChar(curr) == 'Z' && getChar(curr + 1) == 'L' && getCode(curr + 2) == 8) { fmt = "new"; off = 2; } else
-            if (getChar(curr) == 'C' && getChar(curr + 1) == 'S' && getCode(curr + 2) == 8) { fmt = "old"; off = 0; } else
-            if (getChar(curr) == 'X' && getChar(curr + 1) == 'Z' && getCode(curr + 2) == 0) fmt = "LZMA"; else
-            if (getChar(curr) == 'Z' && getChar(curr + 1) == 'S' && getCode(curr + 2) == 1) fmt = "ZSTD"; else
-            if (getChar(curr) == 'L' && getChar(curr + 1) == '4') { fmt = "LZ4"; off = 0; CHKSUM = 8; }
-
-            /*   C H E C K   H E A D E R   */
-            if ((fmt !== "new") && (fmt !== "old") && (fmt !== "LZ4") && (fmt !== "ZSTD")) {
-               if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
-               return Promise.resolve(null);
-            }
-
-            const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16));
-
-            const uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
-
-            if (fmt === "ZSTD")  {
-               const handleZsdt = ZstdCodec => {
-
-                  return new Promise((resolveFunc, rejectFunc) => {
-
-                     ZstdCodec.run(zstd => {
-                        // const simple = new zstd.Simple();
-                        const streaming = new zstd.Streaming();
-
-                        // const data2 = simple.decompress(uint8arr);
-                        const data2 = streaming.decompress(uint8arr);
-
-                        // console.log(`tgtsize ${tgtsize} zstd size ${data2.length} offset ${data2.byteOffset} rawlen ${data2.buffer.byteLength}`);
-
-                        const reslen = data2.length;
-
-                        if (data2.byteOffset !== 0)
-                           return rejectFunc(Error("ZSTD result with byteOffset != 0"));
-
-                        // shortcut when exactly required data unpacked
-                        //if ((tgtsize == reslen) && data2.buffer)
-                        //   resolveFunc(new DataView(data2.buffer));
-
-                        // need to copy data while zstd does not provide simple way of doing it
-                        if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
-                        let tgt8arr = new Uint8Array(tgtbuf, fullres);
-
-                        for(let i = 0; i < reslen; ++i)
-                           tgt8arr[i] = data2[i];
-
-                        fullres += reslen;
-                        curr += srcsize;
-                        resolveFunc(true);
-                     });
-                  });
-               };
-
-               let promise = JSROOT.nodejs ? handleZsdt(require('zstd-codec').ZstdCodec)
-                                           : JSROOT.require('zstd-codec').then(codec => handleZsdt(codec));
-               return promise.then(() => nextPortion());
-            }
-
-            //  place for unpacking
-            if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
-
-            let tgt8arr = new Uint8Array(tgtbuf, fullres);
-
-            const reslen = (fmt === "LZ4") ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
-            if (reslen <= 0) break;
-
-            fullres += reslen;
-            curr += srcsize;
-         }
-
-         if (fullres !== tgtsize) {
-            if (!noalert) console.error(`R__unzip: fail to unzip data expects ${tgtsize}, got ${fullres}`);
-            return Promise.resolve(null);
-         }
-
-         return Promise.resolve(new DataView(tgtbuf));
-      };
-
-      return nextPortion();
-   }
-
-   // =================================================================================
 
    /**
      * @summary Buffer object to read data from TFile
@@ -1975,7 +1828,7 @@ JSROOT.define([], () => {
          // in such situation calls are asynchrone
          return this.getKey(obj_name, cycle).then(key => {
 
-            if ((obj_name == "StreamerInfo") && (key.fClassName == "TList"))
+            if ((obj_name == "StreamerInfo") && (key.fClassName == clTList))
                return file.fStreamerInfos;
 
             if ((key.fClassName == 'TDirectory' || key.fClassName == 'TDirectoryFile')) {
@@ -2039,7 +1892,7 @@ JSROOT.define([], () => {
 
          let lst = {};
          buf.mapObject(1, lst);
-         buf.classStreamer(lst, 'TList');
+         buf.classStreamer(lst, clTList);
 
          lst._typename = "TStreamerInfoList";
 
@@ -2469,7 +2322,7 @@ JSROOT.define([], () => {
                p1 = p - 1;
                return res.trim();
             }
-            si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: JSROOT.create("TList") };
+            si = { _typename: 'TStreamerInfo', fVersion: 1, fName: typname, fElements: JSROOT.create(clTList) };
             si.fElements.Add(jsrio.createStreamerElement("first", GetNextName(), file));
             si.fElements.Add(jsrio.createStreamerElement("second", GetNextName(), file));
          }
@@ -2541,507 +2394,6 @@ JSROOT.define([], () => {
       return res;
    }
 
-   /** @summary create member entry for streamer element
-     * @desc used for reading of data
-     * @private */
-   jsrio.createMember = function(element, file) {
-      let member = {
-         name: element.fName, type: element.fType,
-         fArrayLength: element.fArrayLength,
-         fArrayDim: element.fArrayDim,
-         fMaxIndex: element.fMaxIndex
-      };
-
-      if (element.fTypeName === 'BASE') {
-         if (getArrayKind(member.name) > 0) {
-            // this is workaround for arrays as base class
-            // we create 'fArray' member, which read as any other data member
-            member.name = 'fArray';
-            member.type = kAny;
-         } else {
-            // create streamer for base class
-            member.type = kBase;
-            // this.getStreamer(element.fName);
-         }
-      }
-
-      switch (member.type) {
-         case kBase:
-            member.base = element.fBaseVersion; // indicate base class
-            member.basename = element.fName; // keep class name
-            member.func = function(buf, obj) { buf.classStreamer(obj, this.basename); };
-            break;
-         case kShort:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntoi2(); }; break;
-         case kInt:
-         case kCounter:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntoi4(); }; break;
-         case kLong:
-         case kLong64:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntoi8(); }; break;
-         case kDouble:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntod(); }; break;
-         case kFloat:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntof(); }; break;
-         case kLegacyChar:
-         case kUChar:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntou1(); }; break;
-         case kUShort:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntou2(); }; break;
-         case kBits:
-         case kUInt:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntou4(); }; break;
-         case kULong64:
-         case kULong:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntou8(); }; break;
-         case kBool:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntou1() != 0; }; break;
-         case kOffsetL + kBool:
-         case kOffsetL + kInt:
-         case kOffsetL + kCounter:
-         case kOffsetL + kDouble:
-         case kOffsetL + kUChar:
-         case kOffsetL + kShort:
-         case kOffsetL + kUShort:
-         case kOffsetL + kBits:
-         case kOffsetL + kUInt:
-         case kOffsetL + kULong:
-         case kOffsetL + kULong64:
-         case kOffsetL + kLong:
-         case kOffsetL + kLong64:
-         case kOffsetL + kFloat:
-            if (element.fArrayDim < 2) {
-               member.arrlength = element.fArrayLength;
-               member.func = function(buf, obj) {
-                  obj[this.name] = buf.readFastArray(this.arrlength, this.type - kOffsetL);
-               };
-            } else {
-               member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-               member.minus1 = true;
-               member.func = function(buf, obj) {
-                  obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
-                     buf.readFastArray(handle.arrlength, handle.type - kOffsetL));
-               };
-            }
-            break;
-         case kOffsetL + kChar:
-            if (element.fArrayDim < 2) {
-               member.arrlength = element.fArrayLength;
-               member.func = function(buf, obj) {
-                  obj[this.name] = buf.readFastString(this.arrlength);
-               };
-            } else {
-               member.minus1 = true; // one dimension used for char*
-               member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-               member.func = function(buf, obj) {
-                  obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
-                     buf.readFastString(handle.arrlength));
-               };
-            }
-            break;
-         case kOffsetP + kBool:
-         case kOffsetP + kInt:
-         case kOffsetP + kDouble:
-         case kOffsetP + kUChar:
-         case kOffsetP + kShort:
-         case kOffsetP + kUShort:
-         case kOffsetP + kBits:
-         case kOffsetP + kUInt:
-         case kOffsetP + kULong:
-         case kOffsetP + kULong64:
-         case kOffsetP + kLong:
-         case kOffsetP + kLong64:
-         case kOffsetP + kFloat:
-            member.cntname = element.fCountName;
-            member.func = function(buf, obj) {
-               obj[this.name] = (buf.ntou1() === 1) ? buf.readFastArray(obj[this.cntname], this.type - kOffsetP) : [];
-            };
-            break;
-         case kOffsetP + kChar:
-            member.cntname = element.fCountName;
-            member.func = function(buf, obj) {
-               obj[this.name] = (buf.ntou1() === 1) ? buf.readFastString(obj[this.cntname]) : null;
-            };
-            break;
-         case kDouble32:
-         case kOffsetL + kDouble32:
-         case kOffsetP + kDouble32:
-            member.double32 = true;
-         case kFloat16:
-         case kOffsetL + kFloat16:
-         case kOffsetP + kFloat16:
-            if (element.fFactor !== 0) {
-               member.factor = 1. / element.fFactor;
-               member.min = element.fXmin;
-               member.read = function(buf) { return buf.ntou4() * this.factor + this.min; };
-            } else
-               if ((element.fXmin === 0) && member.double32) {
-                  member.read = function(buf) { return buf.ntof(); };
-               } else {
-                  member.nbits = Math.round(element.fXmin);
-                  if (member.nbits === 0) member.nbits = 12;
-                  member.dv = new DataView(new ArrayBuffer(8), 0); // used to cast from uint32 to float32
-                  member.read = function(buf) {
-                     let theExp = buf.ntou1(), theMan = buf.ntou2();
-                     this.dv.setUint32(0, (theExp << 23) | ((theMan & ((1 << (this.nbits + 1)) - 1)) << (23 - this.nbits)));
-                     return ((1 << (this.nbits + 1) & theMan) ? -1 : 1) * this.dv.getFloat32(0);
-                  };
-               }
-
-            member.readarr = function(buf, len) {
-               let arr = this.double32 ? new Float64Array(len) : new Float32Array(len);
-               for (let n = 0; n < len; ++n) arr[n] = this.read(buf);
-               return arr;
-            }
-
-            if (member.type < kOffsetL) {
-               member.func = function(buf, obj) { obj[this.name] = this.read(buf); }
-            } else
-               if (member.type > kOffsetP) {
-                  member.cntname = element.fCountName;
-                  member.func = function(buf, obj) {
-                     obj[this.name] = (buf.ntou1() === 1) ? this.readarr(buf, obj[this.cntname]) : null;
-                  };
-               } else
-                  if (element.fArrayDim < 2) {
-                     member.arrlength = element.fArrayLength;
-                     member.func = function(buf, obj) { obj[this.name] = this.readarr(buf, this.arrlength); };
-                  } else {
-                     member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
-                     member.minus1 = true;
-                     member.func = function(buf, obj) {
-                        obj[this.name] = buf.readNdimArray(this, (buf, handle) => handle.readarr(buf, handle.arrlength));
-                     };
-                  }
-            break;
-
-         case kAnyP:
-         case kObjectP:
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, buf => buf.readObjectAny());
-            };
-            break;
-
-         case kAny:
-         case kAnyp:
-         case kObjectp:
-         case kObject: {
-            let classname = (element.fTypeName === 'BASE') ? element.fName : element.fTypeName;
-            if (classname[classname.length - 1] == "*")
-               classname = classname.substr(0, classname.length - 1);
-
-            const arrkind = getArrayKind(classname);
-
-            if (arrkind > 0) {
-               member.arrkind = arrkind;
-               member.func = function(buf, obj) { obj[this.name] = buf.readFastArray(buf.ntou4(), this.arrkind); };
-            } else if (arrkind === 0) {
-               member.func = function(buf, obj) { obj[this.name] = buf.readTString(); };
-            } else {
-               member.classname = classname;
-
-               if (element.fArrayLength > 1) {
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.readNdimArray(this, (buf, handle) => buf.classStreamer({}, handle.classname));
-                  };
-               } else {
-                  member.func = function(buf, obj) {
-                     obj[this.name] = buf.classStreamer({}, this.classname);
-                  };
-               }
-            }
-            break;
-         }
-         case kOffsetL + kObject:
-         case kOffsetL + kAny:
-         case kOffsetL + kAnyp:
-         case kOffsetL + kObjectp: {
-            let classname = element.fTypeName;
-            if (classname[classname.length - 1] == "*")
-               classname = classname.substr(0, classname.length - 1);
-
-            member.arrkind = getArrayKind(classname);
-            if (member.arrkind < 0) member.classname = classname;
-            member.func = function(buf, obj) {
-               obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
-                  if (handle.arrkind > 0) return buf.readFastArray(buf.ntou4(), handle.arrkind);
-                  if (handle.arrkind === 0) return buf.readTString();
-                  return buf.classStreamer({}, handle.classname);
-               });
-            }
-            break;
-         }
-         case kChar:
-            member.func = function(buf, obj) { obj[this.name] = buf.ntoi1(); }; break;
-         case kCharStar:
-            member.func = function(buf, obj) {
-               const len = buf.ntoi4();
-               obj[this.name] = buf.substring(buf.o, buf.o + len);
-               buf.o += len;
-            };
-            break;
-         case kTString:
-            member.func = function(buf, obj) { obj[this.name] = buf.readTString(); };
-            break;
-         case kTObject:
-         case kTNamed:
-            member.typename = element.fTypeName;
-            member.func = function(buf, obj) { obj[this.name] = buf.classStreamer({}, this.typename); };
-            break;
-         case kOffsetL + kTString:
-         case kOffsetL + kTObject:
-         case kOffsetL + kTNamed:
-            member.typename = element.fTypeName;
-            member.func = function(buf, obj) {
-               const ver = buf.readVersion();
-               obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
-                  if (handle.typename === 'TString') return buf.readTString();
-                  return buf.classStreamer({}, handle.typename);
-               });
-               buf.checkByteCount(ver, this.typename + "[]");
-            };
-            break;
-         case kStreamLoop:
-         case kOffsetL + kStreamLoop:
-            member.typename = element.fTypeName;
-            member.cntname = element.fCountName;
-
-            if (member.typename.lastIndexOf("**") > 0) {
-               member.typename = member.typename.substr(0, member.typename.lastIndexOf("**"));
-               member.isptrptr = true;
-            } else {
-               member.typename = member.typename.substr(0, member.typename.lastIndexOf("*"));
-               member.isptrptr = false;
-            }
-
-            if (member.isptrptr) {
-               member.readitem = function(buf) { return buf.readObjectAny(); }
-            } else {
-               member.arrkind = getArrayKind(member.typename);
-               if (member.arrkind > 0)
-                  member.readitem = function(buf) { return buf.readFastArray(buf.ntou4(), this.arrkind); }
-               else if (member.arrkind === 0)
-                  member.readitem = function(buf) { return buf.readTString(); }
-               else
-                  member.readitem = function(buf) { return buf.classStreamer({}, this.typename); }
-            }
-
-            if (member.readitem !== undefined) {
-               member.read_loop = function(buf, cnt) {
-                  return buf.readNdimArray(this, (buf2, member2) => {
-                     let itemarr = new Array(cnt);
-                     for (let i = 0; i < cnt; ++i)
-                        itemarr[i] = member2.readitem(buf2);
-                     return itemarr;
-                  });
-               }
-
-               member.func = function(buf, obj) {
-                  const ver = buf.readVersion();
-                  let res = this.read_loop(buf, obj[this.cntname]);
-                  if (!buf.checkByteCount(ver, this.typename)) res = null;
-                  obj[this.name] = res;
-               }
-               member.branch_func = function(buf, obj) {
-                  // this is special functions, used by branch in the STL container
-
-                  const ver = buf.readVersion(), sz0 = obj[this.stl_size];
-                  let res = new Array(sz0);
-
-                  for (let loop0 = 0; loop0 < sz0; ++loop0) {
-                     let cnt = obj[this.cntname][loop0];
-                     res[loop0] = this.read_loop(buf, cnt);
-                  }
-                  if (!buf.checkByteCount(ver, this.typename)) res = null;
-                  obj[this.name] = res;
-               }
-
-               member.objs_branch_func = function(buf, obj) {
-                  // special function when branch read as part of complete object
-                  // objects already preallocated and only appropriate member must be set
-                  // see code in JSRoot.tree.js for reference
-
-                  const ver = buf.readVersion();
-                  let arr = obj[this.name0]; // objects array where reading is done
-
-                  for (let loop0 = 0; loop0 < arr.length; ++loop0) {
-                     let obj1 = this.get(arr, loop0), cnt = obj1[this.cntname];
-                     obj1[this.name] = this.read_loop(buf, cnt);
-                  }
-
-                  buf.checkByteCount(ver, this.typename);
-               }
-
-            } else {
-               console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
-               member.func = function(buf, obj) {
-                  const ver = buf.readVersion();
-                  buf.checkByteCount(ver);
-                  obj[this.name] = null;
-               };
-            }
-
-            break;
-
-         case kStreamer: {
-            member.typename = element.fTypeName;
-
-            let stl = (element.fSTLtype || 0) % 40;
-
-            if ((element._typename === 'TStreamerSTLstring') ||
-               (member.typename == "string") || (member.typename == "string*")) {
-               member.readelem = buf => buf.readTString();
-            } else if ((stl === kSTLvector) || (stl === kSTLlist) ||
-                       (stl === kSTLdeque) || (stl === kSTLset) || (stl === kSTLmultiset)) {
-               let p1 = member.typename.indexOf("<"),
-                  p2 = member.typename.lastIndexOf(">");
-
-               member.conttype = member.typename.substr(p1 + 1, p2 - p1 - 1).trim();
-
-               member.typeid = getTypeId(member.conttype);
-               if ((member.typeid < 0) && file.fBasicTypes[member.conttype]) {
-                  member.typeid = file.fBasicTypes[member.conttype];
-                  console.log('!!! Reuse basic type', member.conttype, 'from file streamer infos');
-               }
-
-               // check
-               if (element.fCtype && (element.fCtype < 20) && (element.fCtype !== member.typeid)) {
-                  console.warn('Contained type', member.conttype, 'not recognized as basic type', element.fCtype, 'FORCE');
-                  member.typeid = element.fCtype;
-               }
-
-               if (member.typeid > 0) {
-                  member.readelem = function(buf) {
-                     return buf.readFastArray(buf.ntoi4(), this.typeid);
-                  };
-               } else {
-                  member.isptr = false;
-
-                  if (member.conttype.lastIndexOf("*") === member.conttype.length - 1) {
-                     member.isptr = true;
-                     member.conttype = member.conttype.substr(0, member.conttype.length - 1);
-                  }
-
-                  if (element.fCtype === kObjectp) member.isptr = true;
-
-                  member.arrkind = getArrayKind(member.conttype);
-
-                  member.readelem = readVectorElement;
-
-                  if (!member.isptr && (member.arrkind < 0)) {
-
-                     let subelem = jsrio.createStreamerElement("temp", member.conttype);
-
-                     if (subelem.fType === kStreamer) {
-                        subelem.$fictional = true;
-                        member.submember = jsrio.createMember(subelem, file);
-                     }
-                  }
-               }
-            } else if ((stl === kSTLmap) || (stl === kSTLmultimap)) {
-               const p1 = member.typename.indexOf("<"),
-                     p2 = member.typename.lastIndexOf(">");
-
-               member.pairtype = "pair<" + member.typename.substr(p1 + 1, p2 - p1 - 1) + ">";
-
-               // remember found streamer info from the file -
-               // most probably it is the only one which should be used
-               member.si = file.findStreamerInfo(member.pairtype);
-
-               member.streamer = getPairStreamer(member.si, member.pairtype, file);
-
-               if (!member.streamer || (member.streamer.length !== 2)) {
-                  console.error(`Fail to build streamer for pair ${member.pairtype}`);
-                  delete member.streamer;
-               }
-
-               if (member.streamer) member.readelem = readMapElement;
-            } else if (stl === kSTLbitset) {
-               member.readelem = (buf/*, obj*/) => buf.readFastArray(buf.ntou4(), kBool);
-            }
-
-            if (!member.readelem) {
-               console.error(`'failed to create streamer for element ${member.typename} ${member.name} element ${element._typename} STL type ${element.fSTLtype}`);
-               member.func = function(buf, obj) {
-                  const ver = buf.readVersion();
-                  buf.checkByteCount(ver);
-                  obj[this.name] = null;
-               }
-            } else
-               if (!element.$fictional) {
-
-                  member.read_version = function(buf, cnt) {
-                     if (cnt === 0) return null;
-                     const ver = buf.readVersion();
-                     this.member_wise = ((ver.val & kStreamedMemberWise) !== 0);
-
-                     this.stl_version = undefined;
-                     if (this.member_wise) {
-                        ver.val = ver.val & ~kStreamedMemberWise;
-                        this.stl_version = { val: buf.ntoi2() };
-                        if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
-                     }
-                     return ver;
-                  }
-
-                  member.func = function(buf, obj) {
-                     const ver = this.read_version(buf);
-
-                     let res = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
-
-                     if (!buf.checkByteCount(ver, this.typename)) res = null;
-                     obj[this.name] = res;
-                  }
-
-                  member.branch_func = function(buf, obj) {
-                     // special function to read data from STL branch
-                     const cnt = obj[this.stl_size],
-                           ver = this.read_version(buf, cnt);
-                     let arr = new Array(cnt);
-
-                     for (let n = 0; n < cnt; ++n)
-                        arr[n] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
-
-                     if (ver) buf.checkByteCount(ver, "branch " + this.typename);
-
-                     obj[this.name] = arr;
-                  }
-                  member.split_func = function(buf, arr, n) {
-                     // function to read array from member-wise streaming
-                     const ver = this.read_version(buf);
-                     for (let i = 0; i < n; ++i)
-                        arr[i][this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
-                     buf.checkByteCount(ver, this.typename);
-                  }
-                  member.objs_branch_func = function(buf, obj) {
-                     // special function when branch read as part of complete object
-                     // objects already preallocated and only appropriate member must be set
-                     // see code in JSRoot.tree.js for reference
-
-                     let arr = obj[this.name0]; // objects array where reading is done
-
-                     const ver = this.read_version(buf, arr.length);
-
-                     for (let n = 0; n < arr.length; ++n) {
-                        let obj1 = this.get(arr, n);
-                        obj1[this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
-                     }
-
-                     if (ver) buf.checkByteCount(ver, "branch " + this.typename);
-                  }
-               }
-            break;
-         }
-
-         default:
-            console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
-
-            member.func = function(/*buf, obj*/) { };  // do nothing, fix in the future
-      }
-
-      return member;
-   }
-
    // =============================================================
 
    /**
@@ -3093,9 +2445,7 @@ JSROOT.define([], () => {
          });
       }
 
-   } // TLocalFile
-
-   // =============================================================
+   } // class TLocalFile
 
    /**
      * @summary Interface to read file in node.js
@@ -3166,602 +2516,7 @@ JSROOT.define([], () => {
          });
       }
 
-   } // TNodejsFile
-
-   /** @summary Add custom streamers for basic ROOT classes
-     * @private */
-   function produceCustomStreamers() {
-      let cs = jsrio.CustomStreamers;
-
-      cs[clTObject] = cs['TMethodCall'] = function(buf, obj) {
-         obj.fUniqueID = buf.ntou4();
-         obj.fBits = buf.ntou4();
-         if (obj.fBits & kIsReferenced) buf.ntou2(); // skip pid
-      };
-
-      cs[clTNamed] = [
-         {
-            basename: clTObject, base: 1, func: function(buf, obj) {
-               if (!obj._typename) obj._typename = clTNamed;
-               buf.classStreamer(obj, clTObject);
-            }
-         },
-         { name: 'fName', func: function(buf, obj) { obj.fName = buf.readTString(); } },
-         { name: 'fTitle', func: function(buf, obj) { obj.fTitle = buf.readTString(); } }
-      ];
-      addClassMethods(clTNamed, cs[clTNamed]);
-
-      cs.TObjString = [
-         {
-            basename: clTObject, base: 1, func: (buf, obj) => {
-               if (!obj._typename) obj._typename = 'TObjString';
-               buf.classStreamer(obj, clTObject);
-            }
-         },
-         { name: 'fString', func: (buf, obj) => { obj.fString = buf.readTString(); } }
-      ];
-
-      addClassMethods('TObjString', cs['TObjString']);
-
-      cs.TList = cs.THashList = function(buf, obj) {
-         // stream all objects in the list from the I/O buffer
-         if (!obj._typename) obj._typename = this.typename;
-         obj.$kind = "TList"; // all derived classes will be marked as well
-         if (buf.last_read_version > 3) {
-            buf.classStreamer(obj, clTObject);
-            obj.name = buf.readTString();
-            const nobjects = buf.ntou4();
-            obj.arr = new Array(nobjects);
-            obj.opt = new Array(nobjects);
-            for (let i = 0; i < nobjects; ++i) {
-               obj.arr[i] = buf.readObjectAny();
-               obj.opt[i] = buf.readTString();
-            }
-         } else {
-            obj.name = "";
-            obj.arr = [];
-            obj.opt = [];
-         }
-      }
-
-      cs.TClonesArray = (buf, list) => {
-         if (!list._typename) list._typename = "TClonesArray";
-         list.$kind = "TClonesArray";
-         list.name = "";
-         const ver = buf.last_read_version;
-         if (ver > 2) buf.classStreamer(list, clTObject);
-         if (ver > 1) list.name = buf.readTString();
-         let classv = buf.readTString(), clv = 0,
-             pos = classv.lastIndexOf(";");
-
-         if (pos > 0) {
-            clv = parseInt(classv.substr(pos + 1));
-            classv = classv.substr(0, pos);
-         }
-
-         let nobjects = buf.ntou4();
-         if (nobjects < 0) nobjects = -nobjects;  // for backward compatibility
-
-         list.arr = new Array(nobjects);
-         list.fLast = nobjects - 1;
-         list.fLowerBound = buf.ntou4();
-
-         let streamer = buf.fFile.getStreamer(classv, { val: clv });
-         streamer = buf.fFile.getSplittedStreamer(streamer);
-
-         if (!streamer) {
-            console.log('Cannot get member-wise streamer for', classv, clv);
-         } else {
-            // create objects
-            for (let n = 0; n < nobjects; ++n)
-               list.arr[n] = { _typename: classv };
-
-            // call streamer for all objects member-wise
-            for (let k = 0; k < streamer.length; ++k)
-               for (let n = 0; n < nobjects; ++n)
-                  streamer[k].func(buf, list.arr[n]);
-         }
-      }
-
-      cs.TMap = (buf, map) => {
-         if (!map._typename) map._typename = "TMap";
-         map.name = "";
-         map.arr = [];
-         const ver = buf.last_read_version;
-         if (ver > 2) buf.classStreamer(map, clTObject);
-         if (ver > 1) map.name = buf.readTString();
-
-         const nobjects = buf.ntou4();
-         // create objects
-         for (let n = 0; n < nobjects; ++n) {
-            let obj = { _typename: "TPair" };
-            obj.first = buf.readObjectAny();
-            obj.second = buf.readObjectAny();
-            if (obj.first) map.arr.push(obj);
-         }
-      }
-
-      cs.TTreeIndex = (buf, obj) => {
-         const ver = buf.last_read_version;
-         obj._typename = "TTreeIndex";
-         buf.classStreamer(obj, "TVirtualIndex");
-         obj.fMajorName = buf.readTString();
-         obj.fMinorName = buf.readTString();
-         obj.fN = buf.ntoi8();
-         obj.fIndexValues = buf.readFastArray(obj.fN, kLong64);
-         if (ver > 1) obj.fIndexValuesMinor = buf.readFastArray(obj.fN, kLong64);
-         obj.fIndex = buf.readFastArray(obj.fN, kLong64);
-      }
-
-      cs.TRefArray = (buf, obj) => {
-         obj._typename = "TRefArray";
-         buf.classStreamer(obj, clTObject);
-         obj.name = buf.readTString();
-         const nobj = buf.ntoi4();
-         obj.fLast = nobj - 1;
-         obj.fLowerBound = buf.ntoi4();
-         /*const pidf = */ buf.ntou2();
-         obj.fUIDs = buf.readFastArray(nobj, kUInt);
-      }
-
-      cs.TCanvas = (buf, obj) => {
-         obj._typename = "TCanvas";
-         buf.classStreamer(obj, "TPad");
-         obj.fDISPLAY = buf.readTString();
-         obj.fDoubleBuffer = buf.ntoi4();
-         obj.fRetained = (buf.ntou1() !== 0);
-         obj.fXsizeUser = buf.ntoi4();
-         obj.fYsizeUser = buf.ntoi4();
-         obj.fXsizeReal = buf.ntoi4();
-         obj.fYsizeReal = buf.ntoi4();
-         obj.fWindowTopX = buf.ntoi4();
-         obj.fWindowTopY = buf.ntoi4();
-         obj.fWindowWidth = buf.ntoi4();
-         obj.fWindowHeight = buf.ntoi4();
-         obj.fCw = buf.ntou4();
-         obj.fCh = buf.ntou4();
-         obj.fCatt = buf.classStreamer({}, "TAttCanvas");
-         buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
-         buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
-         obj.fHighLightColor = buf.ntoi2();
-         obj.fBatch = (buf.ntou1() !== 0);
-         buf.ntou1();   // ignore b << TestBit(kShowEventStatus);
-         buf.ntou1();   // ignore b << TestBit(kAutoExec);
-         buf.ntou1();   // ignore b << TestBit(kMenuBar);
-      }
-
-      cs.TObjArray = (buf, list) => {
-         if (!list._typename) list._typename = "TObjArray";
-         list.$kind = "TObjArray";
-         list.name = "";
-         const ver = buf.last_read_version;
-         if (ver > 2)
-            buf.classStreamer(list, clTObject);
-         if (ver > 1)
-            list.name = buf.readTString();
-         const nobjects = buf.ntou4();
-         let i = 0;
-         list.arr = new Array(nobjects);
-         list.fLast = nobjects - 1;
-         list.fLowerBound = buf.ntou4();
-         while (i < nobjects)
-            list.arr[i++] = buf.readObjectAny();
-      }
-
-      cs.TPolyMarker3D = (buf, marker) => {
-         const ver = buf.last_read_version;
-         buf.classStreamer(marker, clTObject);
-         buf.classStreamer(marker, "TAttMarker");
-         marker.fN = buf.ntoi4();
-         marker.fP = buf.readFastArray(marker.fN * 3, kFloat);
-         marker.fOption = buf.readTString();
-         marker.fName = (ver > 1) ? buf.readTString() : "TPolyMarker3D";
-      }
-
-      cs.TPolyLine3D = (buf, obj) => {
-         buf.classStreamer(obj, clTObject);
-         buf.classStreamer(obj, "TAttLine");
-         obj.fN = buf.ntoi4();
-         obj.fP = buf.readFastArray(obj.fN * 3, kFloat);
-         obj.fOption = buf.readTString();
-      }
-
-      cs.TStreamerInfo = (buf, obj) => {
-         buf.classStreamer(obj, clTNamed);
-         obj.fCheckSum = buf.ntou4();
-         obj.fClassVersion = buf.ntou4();
-         obj.fElements = buf.readObjectAny();
-      }
-
-      cs.TStreamerElement = (buf, element) => {
-         const ver = buf.last_read_version;
-         buf.classStreamer(element, clTNamed);
-         element.fType = buf.ntou4();
-         element.fSize = buf.ntou4();
-         element.fArrayLength = buf.ntou4();
-         element.fArrayDim = buf.ntou4();
-         element.fMaxIndex = buf.readFastArray((ver == 1) ? buf.ntou4() : 5, kUInt);
-         element.fTypeName = buf.readTString();
-
-         if ((element.fType === kUChar) && ((element.fTypeName == "Bool_t") || (element.fTypeName == "bool")))
-            element.fType = kBool;
-
-         element.fXmin = element.fXmax = element.fFactor = 0;
-         if (ver === 3) {
-            element.fXmin = buf.ntod();
-            element.fXmax = buf.ntod();
-            element.fFactor = buf.ntod();
-         } else if ((ver > 3) && (element.fBits & JSROOT.BIT(6))) { // kHasRange
-
-            let p1 = element.fTitle.indexOf("[");
-            if ((p1 >= 0) && (element.fType > kOffsetP)) p1 = element.fTitle.indexOf("[", p1 + 1);
-            let p2 = element.fTitle.indexOf("]", p1 + 1);
-
-            if ((p1 >= 0) && (p2 >= p1 + 2)) {
-
-               let arr = element.fTitle.substr(p1+1, p2 - p1 - 1).split(","), nbits = 32;
-               if (!arr || arr.length < 2)
-                  throw new Error(`Problem to decode range setting from streamer element title ${element.fTitle}`);
-
-               if (arr.length === 3) nbits = parseInt(arr[2]);
-               if (!Number.isInteger(nbits) || (nbits < 2) || (nbits > 32)) nbits = 32;
-
-               let parse_range = val => {
-                  if (!val) return 0;
-                  if (val.indexOf("pi") < 0) return parseFloat(val);
-                  val = val.trim();
-                  let sign = 1.;
-                  if (val[0] == "-") { sign = -1; val = val.substr(1); }
-                  switch (val) {
-                     case "2pi":
-                     case "2*pi":
-                     case "twopi": return sign * 2 * Math.PI;
-                     case "pi/2": return sign * Math.PI / 2;
-                     case "pi/4": return sign * Math.PI / 4;
-                  }
-                  return sign * Math.PI;
-               };
-
-               element.fXmin = parse_range(arr[0]);
-               element.fXmax = parse_range(arr[1]);
-
-               // avoid usage of 1 << nbits, while only works up to 32 bits
-               let bigint = ((nbits >= 0) && (nbits < 32)) ? Math.pow(2, nbits) : 0xffffffff;
-               if (element.fXmin < element.fXmax)
-                  element.fFactor = bigint / (element.fXmax - element.fXmin);
-               else if (nbits < 15)
-                  element.fXmin = nbits;
-            }
-         }
-      }
-
-      cs.TStreamerBase = (buf, elem) => {
-         const ver = buf.last_read_version;
-         buf.classStreamer(elem, "TStreamerElement");
-         if (ver > 2) elem.fBaseVersion = buf.ntou4();
-      }
-
-      cs.TStreamerBasicPointer = cs.TStreamerLoop = (buf, elem) => {
-         if (buf.last_read_version > 1) {
-            buf.classStreamer(elem, "TStreamerElement");
-            elem.fCountVersion = buf.ntou4();
-            elem.fCountName = buf.readTString();
-            elem.fCountClass = buf.readTString();
-         }
-      }
-
-      cs.TStreamerSTL = (buf, elem) => {
-         buf.classStreamer(elem, "TStreamerElement");
-         elem.fSTLtype = buf.ntou4();
-         elem.fCtype = buf.ntou4();
-
-         if ((elem.fSTLtype === kSTLmultimap) &&
-            ((elem.fTypeName.indexOf("std::set") === 0) ||
-               (elem.fTypeName.indexOf("set") === 0))) elem.fSTLtype = kSTLset;
-
-         if ((elem.fSTLtype === kSTLset) &&
-            ((elem.fTypeName.indexOf("std::multimap") === 0) ||
-               (elem.fTypeName.indexOf("multimap") === 0))) elem.fSTLtype = kSTLmultimap;
-      }
-
-      cs.TStreamerSTLstring = (buf, elem) => {
-         if (buf.last_read_version > 0)
-            buf.classStreamer(elem, "TStreamerSTL");
-      }
-
-      cs.TStreamerObject = cs.TStreamerBasicType = cs.TStreamerObjectAny =
-         cs.TStreamerString = cs.TStreamerObjectPointer = (buf, elem) => {
-            if (buf.last_read_version > 1)
-               buf.classStreamer(elem, "TStreamerElement");
-         }
-
-      cs.TStreamerObjectAnyPointer = (buf, elem) => {
-         if (buf.last_read_version > 0)
-            buf.classStreamer(elem, "TStreamerElement");
-      }
-
-      cs.TTree = {
-         name: '$file',
-         func: (buf, obj) => { obj.$kind = "TTree"; obj.$file = buf.fFile; buf.fFile._addReadTree(obj); }
-      }
-
-      cs.TVirtualPerfStats = clTObject; // use directly TObject streamer
-
-      cs.RooRealVar = (buf, obj) => {
-         const v = buf.last_read_version;
-         buf.classStreamer(obj, "RooAbsRealLValue");
-         if (v == 1) { buf.ntod(); buf.ntod(); buf.ntoi4(); } // skip fitMin, fitMax, fitBins
-         obj._error = buf.ntod();
-         obj._asymErrLo = buf.ntod();
-         obj._asymErrHi = buf.ntod();
-         if (v >= 2) obj._binning = buf.readObjectAny();
-         if (v == 3) obj._sharedProp = buf.readObjectAny();
-         if (v >= 4) obj._sharedProp = buf.classStreamer({}, "RooRealVarSharedProperties");
-      }
-
-      cs.RooAbsBinning = (buf, obj) => {
-         buf.classStreamer(obj, (buf.last_read_version == 1) ? clTObject : clTNamed);
-         buf.classStreamer(obj, "RooPrintable");
-      }
-
-      cs.RooCategory = (buf, obj) => {
-         const v = buf.last_read_version;
-         buf.classStreamer(obj, "RooAbsCategoryLValue");
-         obj._sharedProp = (v === 1) ? buf.readObjectAny() : buf.classStreamer({}, "RooCategorySharedProperties");
-      }
-
-      cs['RooWorkspace::CodeRepo'] = (buf /*, obj*/) => {
-         const sz = (buf.last_read_version == 2) ? 3 : 2;
-         for (let i = 0; i < sz; ++i) {
-            let cnt = buf.ntoi4() * ((i == 0) ? 4 : 3);
-            while (cnt--) buf.readTString();
-         }
-      }
-
-      cs.RooLinkedList = (buf, obj) => {
-         const v = buf.last_read_version;
-         buf.classStreamer(obj, clTObject);
-         let size = buf.ntoi4();
-         obj.arr = JSROOT.create("TList");
-         while (size--)
-            obj.arr.Add(buf.readObjectAny());
-         if (v > 1) obj._name = buf.readTString();
-      }
-
-      cs.TImagePalette = [
-         {
-            basename: clTObject, base: 1, func: (buf, obj) => {
-               if (!obj._typename) obj._typename = 'TImagePalette';
-               buf.classStreamer(obj, clTObject);
-            }
-         },
-         { name: 'fNumPoints', func: (buf, obj) => { obj.fNumPoints = buf.ntou4(); } },
-         { name: 'fPoints', func: (buf, obj) => { obj.fPoints = buf.readFastArray(obj.fNumPoints, kDouble); } },
-         { name: 'fColorRed', func: (buf, obj) => { obj.fColorRed = buf.readFastArray(obj.fNumPoints, kUShort); } },
-         { name: 'fColorGreen', func: (buf, obj) => { obj.fColorGreen = buf.readFastArray(obj.fNumPoints, kUShort); } },
-         { name: 'fColorBlue', func: (buf, obj) => { obj.fColorBlue = buf.readFastArray(obj.fNumPoints, kUShort); } },
-         { name: 'fColorAlpha', func: (buf, obj) => { obj.fColorAlpha = buf.readFastArray(obj.fNumPoints, kUShort); } }
-      ];
-
-      cs.TAttImage = [
-         { name: 'fImageQuality', func: (buf, obj) => { obj.fImageQuality = buf.ntoi4(); } },
-         { name: 'fImageCompression', func: (buf, obj) => { obj.fImageCompression = buf.ntou4(); } },
-         { name: 'fConstRatio', func: (buf, obj) => { obj.fConstRatio = (buf.ntou1() != 0); } },
-         { name: 'fPalette', func: (buf, obj) => { obj.fPalette = buf.classStreamer({}, "TImagePalette"); } }
-      ]
-
-      cs.TASImage = (buf, obj) => {
-         if ((buf.last_read_version == 1) && (buf.fFile.fVersion > 0) && (buf.fFile.fVersion < 50000))
-            return console.warn("old TASImage version - not yet supported");
-
-         buf.classStreamer(obj, clTNamed);
-
-         if (buf.ntou1() != 0) {
-            const size = buf.ntoi4();
-            obj.fPngBuf = buf.readFastArray(size, kUChar);
-         } else {
-            buf.classStreamer(obj, "TAttImage");
-            obj.fWidth = buf.ntoi4();
-            obj.fHeight = buf.ntoi4();
-            obj.fImgBuf = buf.readFastArray(obj.fWidth * obj.fHeight, kDouble);
-         }
-      }
-
-      cs.TMaterial = (buf, obj) => {
-         const v = buf.last_read_version;
-         buf.classStreamer(obj, clTNamed);
-         obj.fNumber = buf.ntoi4();
-         obj.fA = buf.ntof();
-         obj.fZ = buf.ntof();
-         obj.fDensity = buf.ntof();
-         if (v > 2) {
-            buf.classStreamer(obj, "TAttFill");
-            obj.fRadLength = buf.ntof();
-            obj.fInterLength = buf.ntof();
-         } else {
-            obj.fRadLength = obj.fInterLength = 0;
-         }
-      }
-
-      cs.TMixture = (buf, obj) => {
-         buf.classStreamer(obj, "TMaterial");
-         obj.fNmixt = buf.ntoi4();
-         obj.fAmixt = buf.readFastArray(buf.ntoi4(), kFloat);
-         obj.fZmixt = buf.readFastArray(buf.ntoi4(), kFloat);
-         obj.fWmixt = buf.readFastArray(buf.ntoi4(), kFloat);
-      }
-
-      // these are direct streamers - not follow version/checksum logic
-
-      let ds = jsrio.DirectStreamers;
-
-      // do nothing
-      ds.TQObject = ds.TGraphStruct = ds.TGraphNode = ds.TGraphEdge = () => {};
-
-      ds.TDatime = (buf, obj) => {
-         obj.fDatime = buf.ntou4();
-         //  obj.GetDate = function() {
-         //  let res = new Date();
-         //  res.setFullYear((this.fDatime >>> 26) + 1995);
-         //  res.setMonth((this.fDatime << 6) >>> 28);
-         //  res.setDate((this.fDatime << 10) >>> 27);
-         //  res.setHours((this.fDatime << 15) >>> 27);
-         //  res.setMinutes((this.fDatime << 20) >>> 26);
-         //  res.setSeconds((this.fDatime << 26) >>> 26);
-         //  res.setMilliseconds(0);
-         //  return res;
-         //  }
-      };
-
-      ds.TKey = (buf, key) => {
-         key.fNbytes = buf.ntoi4();
-         key.fVersion = buf.ntoi2();
-         key.fObjlen = buf.ntou4();
-         key.fDatime = buf.classStreamer({}, 'TDatime');
-         key.fKeylen = buf.ntou2();
-         key.fCycle = buf.ntou2();
-         if (key.fVersion > 1000) {
-            key.fSeekKey = buf.ntou8();
-            buf.shift(8); // skip seekPdir
-         } else {
-            key.fSeekKey = buf.ntou4();
-            buf.shift(4); // skip seekPdir
-         }
-         key.fClassName = buf.readTString();
-         key.fName = buf.readTString();
-         key.fTitle = buf.readTString();
-      };
-
-      ds.TDirectory = (buf, dir) => {
-         const version = buf.ntou2();
-         dir.fDatimeC = buf.classStreamer({}, 'TDatime');
-         dir.fDatimeM = buf.classStreamer({}, 'TDatime');
-         dir.fNbytesKeys = buf.ntou4();
-         dir.fNbytesName = buf.ntou4();
-         dir.fSeekDir = (version > 1000) ? buf.ntou8() : buf.ntou4();
-         dir.fSeekParent = (version > 1000) ? buf.ntou8() : buf.ntou4();
-         dir.fSeekKeys = (version > 1000) ? buf.ntou8() : buf.ntou4();
-         // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
-      }
-
-      ds.TBasket = (buf, obj) => {
-         buf.classStreamer(obj, 'TKey');
-         const ver = buf.readVersion();
-         obj.fBufferSize = buf.ntoi4();
-         obj.fNevBufSize = buf.ntoi4();
-         obj.fNevBuf = buf.ntoi4();
-         obj.fLast = buf.ntoi4();
-         if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
-         const flag = buf.ntoi1();
-
-         if (flag === 0) return;
-
-         if ((flag % 10) != 2) {
-            if (obj.fNevBuf) {
-               obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
-               if ((20 < flag) && (flag < 40))
-                  for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
-                     obj.fEntryOffset[i] &= ~kDisplacementMask;
-            }
-
-            if (flag > 40)
-               obj.fDisplacement = buf.readFastArray(buf.ntoi4(), kInt);
-         }
-
-         if ((flag === 1) || (flag > 10)) {
-            // here is reading of raw data
-            const sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
-
-            if (sz > obj.fKeylen) {
-               // buffer includes again complete TKey data - exclude it
-               let blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
-
-               obj.fBufferRef = new TBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
-               obj.fBufferRef.fTagOffset = obj.fKeylen;
-            }
-
-            buf.shift(sz);
-         }
-      }
-
-      ds.TRef = (buf, obj) => {
-         buf.classStreamer(obj, clTObject);
-         if (obj.fBits & kHasUUID)
-            obj.fUUID = buf.readTString();
-         else
-            obj.fPID = buf.ntou2();
-      }
-
-      ds['TMatrixTSym<float>'] = (buf, obj) => {
-         buf.classStreamer(obj, "TMatrixTBase<float>");
-         obj.fElements = new Float32Array(obj.fNelems);
-         let arr = buf.readFastArray((obj.fNrows * (obj.fNcols + 1)) / 2, kFloat), cnt = 0;
-         for (let i = 0; i < obj.fNrows; ++i)
-            for (let j = i; j < obj.fNcols; ++j)
-               obj.fElements[j * obj.fNcols + i] = obj.fElements[i * obj.fNcols + j] = arr[cnt++];
-      }
-
-      ds['TMatrixTSym<double>'] = (buf, obj) => {
-         buf.classStreamer(obj, "TMatrixTBase<double>");
-         obj.fElements = new Float64Array(obj.fNelems);
-         let arr = buf.readFastArray((obj.fNrows * (obj.fNcols + 1)) / 2, kDouble), cnt = 0;
-         for (let i = 0; i < obj.fNrows; ++i)
-            for (let j = i; j < obj.fNcols; ++j)
-               obj.fElements[j * obj.fNcols + i] = obj.fElements[i * obj.fNcols + j] = arr[cnt++];
-      }
-
-   }
-
-   /** @summary create element of the streamer
-     * @private  */
-   jsrio.createStreamerElement = function(name, typename, file) {
-      const elem = {
-         _typename: 'TStreamerElement', fName: name, fTypeName: typename,
-         fType: 0, fSize: 0, fArrayLength: 0, fArrayDim: 0, fMaxIndex: [0, 0, 0, 0, 0],
-         fXmin: 0, fXmax: 0, fFactor: 0
-      };
-
-      if (typeof typename === "string") {
-         elem.fType = getTypeId(typename);
-         if ((elem.fType < 0) && file && file.fBasicTypes[typename])
-            elem.fType = file.fBasicTypes[typename];
-      } else {
-         elem.fType = typename;
-         typename = elem.fTypeName = BasicTypeNames[elem.fType] || "int";
-      }
-
-      if (elem.fType > 0) return elem; // basic type
-
-      // check if there are STL containers
-      let stltype = kNotSTL, pos = typename.indexOf("<");
-      if ((pos > 0) && (typename.indexOf(">") > pos + 2))
-         for (let stl = 1; stl < StlNames.length; ++stl)
-            if (typename.substr(0, pos) === StlNames[stl]) {
-               stltype = stl; break;
-            }
-
-      if (stltype !== kNotSTL) {
-         elem._typename = 'TStreamerSTL';
-         elem.fType = kStreamer;
-         elem.fSTLtype = stltype;
-         elem.fCtype = 0;
-         return elem;
-      }
-
-      const isptr = (typename.lastIndexOf("*") === typename.length - 1);
-
-      if (isptr)
-         elem.fTypeName = typename = typename.substr(0, typename.length - 1);
-
-      if (getArrayKind(typename) == 0) {
-         elem.fType = kTString;
-         return elem;
-      }
-
-      elem.fType = isptr ? kAnyP : kAny;
-
-      return elem;
-   }
+   } // class TNodejsFile
 
    /** @summary Open ROOT file for reading
      * @desc Generic method to open ROOT file for reading
@@ -3799,7 +2554,1254 @@ JSROOT.define([], () => {
       return file._open();
    }
 
-   produceCustomStreamers();
+   /** @summary Holder of IO functionality
+     * @alias JSROOT.IO
+     * @namespace
+     * @private */
+
+   jsrio = {
+
+      // here constants which are used outside
+      kChar: kChar, kShort: kShort, kInt: kInt, kLong: kLong, kFloat: kFloat, kCounter: kCounter,
+      kCharStar: kCharStar, kDouble: kDouble, kDouble32: kDouble32, kLegacyChar: kLegacyChar,
+      kUChar: kUChar, kUShort: kUShort, kUInt: kUInt, kULong: kULong, kBits: kBits,
+      kLong64: kLong64, kULong64: kULong64, kBool: kBool, kFloat16: kFloat16,
+
+      kBase: kBase, kOffsetL: kOffsetL, kOffsetP: kOffsetP,
+      kObject: kObject, kAny: kAny, kObjectp: kObjectp, kObjectP: kObjectP, kTString: kTString,
+   //   kTObject: kTObject, kTNamed: kTNamed, kAnyp: kAnyp,
+      kAnyP: kAnyP, kStreamer: kStreamer, kStreamLoop: kStreamLoop,
+
+      /* kAnyPnoVT: 70, */
+      kSTLp: 71,
+      /* kSkip: 100, kSkipL: 120, kSkipP: 140, kConv: 200, kConvL: 220, kConvP: 240, */
+
+      kSTL: 300, /* kSTLstring: 365, */
+
+      /** @summary I/O mode for http requests
+        * @desc could be "string" or "array", enable usage of ArrayBuffer in http requests */
+      Mode: "array",
+
+      // kSplitCollectionOfPointers: 100,
+
+      /** @summary these are streamers which do not handle version regularly
+        * @desc used for special classes like TRef or TBasket */
+      DirectStreamers: {
+         // do nothing for these classes
+         TQObject() {},
+         TGraphStruct() {},
+         TGraphNode() {},
+         TGraphEdge() {},
+
+         TDatime(buf, obj) {
+            obj.fDatime = buf.ntou4();
+            //  obj.GetDate = function() {
+            //  let res = new Date();
+            //  res.setFullYear((this.fDatime >>> 26) + 1995);
+            //  res.setMonth((this.fDatime << 6) >>> 28);
+            //  res.setDate((this.fDatime << 10) >>> 27);
+            //  res.setHours((this.fDatime << 15) >>> 27);
+            //  res.setMinutes((this.fDatime << 20) >>> 26);
+            //  res.setSeconds((this.fDatime << 26) >>> 26);
+            //  res.setMilliseconds(0);
+            //  return res;
+            //  }
+         },
+
+         TKey(buf, key) {
+            key.fNbytes = buf.ntoi4();
+            key.fVersion = buf.ntoi2();
+            key.fObjlen = buf.ntou4();
+            key.fDatime = buf.classStreamer({}, 'TDatime');
+            key.fKeylen = buf.ntou2();
+            key.fCycle = buf.ntou2();
+            if (key.fVersion > 1000) {
+               key.fSeekKey = buf.ntou8();
+               buf.shift(8); // skip seekPdir
+            } else {
+               key.fSeekKey = buf.ntou4();
+               buf.shift(4); // skip seekPdir
+            }
+            key.fClassName = buf.readTString();
+            key.fName = buf.readTString();
+            key.fTitle = buf.readTString();
+         },
+
+         TDirectory(buf, dir) {
+            const version = buf.ntou2();
+            dir.fDatimeC = buf.classStreamer({}, 'TDatime');
+            dir.fDatimeM = buf.classStreamer({}, 'TDatime');
+            dir.fNbytesKeys = buf.ntou4();
+            dir.fNbytesName = buf.ntou4();
+            dir.fSeekDir = (version > 1000) ? buf.ntou8() : buf.ntou4();
+            dir.fSeekParent = (version > 1000) ? buf.ntou8() : buf.ntou4();
+            dir.fSeekKeys = (version > 1000) ? buf.ntou8() : buf.ntou4();
+            // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
+         },
+
+         TBasket(buf, obj) {
+            buf.classStreamer(obj, 'TKey');
+            const ver = buf.readVersion();
+            obj.fBufferSize = buf.ntoi4();
+            obj.fNevBufSize = buf.ntoi4();
+            obj.fNevBuf = buf.ntoi4();
+            obj.fLast = buf.ntoi4();
+            if (obj.fLast > obj.fBufferSize) obj.fBufferSize = obj.fLast;
+            const flag = buf.ntoi1();
+
+            if (flag === 0) return;
+
+            if ((flag % 10) != 2) {
+               if (obj.fNevBuf) {
+                  obj.fEntryOffset = buf.readFastArray(buf.ntoi4(), kInt);
+                  if ((20 < flag) && (flag < 40))
+                     for (let i = 0, kDisplacementMask = 0xFF000000; i < obj.fNevBuf; ++i)
+                        obj.fEntryOffset[i] &= ~kDisplacementMask;
+               }
+
+               if (flag > 40)
+                  obj.fDisplacement = buf.readFastArray(buf.ntoi4(), kInt);
+            }
+
+            if ((flag === 1) || (flag > 10)) {
+               // here is reading of raw data
+               const sz = (ver.val <= 1) ? buf.ntoi4() : obj.fLast;
+
+               if (sz > obj.fKeylen) {
+                  // buffer includes again complete TKey data - exclude it
+                  let blob = buf.extract([buf.o + obj.fKeylen, sz - obj.fKeylen]);
+
+                  obj.fBufferRef = new TBuffer(blob, 0, buf.fFile, sz - obj.fKeylen);
+                  obj.fBufferRef.fTagOffset = obj.fKeylen;
+               }
+
+               buf.shift(sz);
+            }
+         },
+
+         TRef(buf, obj) {
+            buf.classStreamer(obj, clTObject);
+            if (obj.fBits & kHasUUID)
+               obj.fUUID = buf.readTString();
+            else
+               obj.fPID = buf.ntou2();
+         },
+
+         'TMatrixTSym<float>': (buf, obj) => {
+            buf.classStreamer(obj, "TMatrixTBase<float>");
+            obj.fElements = new Float32Array(obj.fNelems);
+            let arr = buf.readFastArray((obj.fNrows * (obj.fNcols + 1)) / 2, kFloat), cnt = 0;
+            for (let i = 0; i < obj.fNrows; ++i)
+               for (let j = i; j < obj.fNcols; ++j)
+                  obj.fElements[j * obj.fNcols + i] = obj.fElements[i * obj.fNcols + j] = arr[cnt++];
+         },
+
+         'TMatrixTSym<double>': (buf, obj) => {
+            buf.classStreamer(obj, "TMatrixTBase<double>");
+            obj.fElements = new Float64Array(obj.fNelems);
+            let arr = buf.readFastArray((obj.fNrows * (obj.fNcols + 1)) / 2, kDouble), cnt = 0;
+            for (let i = 0; i < obj.fNrows; ++i)
+               for (let j = i; j < obj.fNcols; ++j)
+                  obj.fElements[j * obj.fNcols + i] = obj.fElements[i * obj.fNcols + j] = arr[cnt++];
+         }
+
+      },
+
+      /** @summary Custom streamers for root classes
+        * @desc map of user-streamer function like func(buf,obj)
+        * or alias (classname) which can be used to read that function
+        * or list of read functions */
+      CustomStreamers: {
+         TObject(buf, obj) {
+            obj.fUniqueID = buf.ntou4();
+            obj.fBits = buf.ntou4();
+            if (obj.fBits & kIsReferenced) buf.ntou2(); // skip pid
+         },
+
+         TNamed: [ {
+            basename: clTObject, base: 1, func: (buf, obj) => {
+               if (!obj._typename) obj._typename = clTNamed;
+               buf.classStreamer(obj, clTObject);
+            }
+           },
+           { name: 'fName', func: (buf, obj) => { obj.fName = buf.readTString(); } },
+           { name: 'fTitle', func: (buf, obj) => { obj.fTitle = buf.readTString(); } }
+         ],
+
+         TObjString: [ {
+            basename: clTObject, base: 1, func: (buf, obj) => {
+               if (!obj._typename) obj._typename = clTObjString;
+               buf.classStreamer(obj, clTObject);
+            }
+           },
+           { name: 'fString', func: (buf, obj) => { obj.fString = buf.readTString(); } }
+         ],
+
+         TClonesArray(buf, list) {
+            if (!list._typename) list._typename = "TClonesArray";
+            list.$kind = "TClonesArray";
+            list.name = "";
+            const ver = buf.last_read_version;
+            if (ver > 2) buf.classStreamer(list, clTObject);
+            if (ver > 1) list.name = buf.readTString();
+            let classv = buf.readTString(), clv = 0,
+                pos = classv.lastIndexOf(";");
+
+            if (pos > 0) {
+               clv = parseInt(classv.substr(pos + 1));
+               classv = classv.substr(0, pos);
+            }
+
+            let nobjects = buf.ntou4();
+            if (nobjects < 0) nobjects = -nobjects;  // for backward compatibility
+
+            list.arr = new Array(nobjects);
+            list.fLast = nobjects - 1;
+            list.fLowerBound = buf.ntou4();
+
+            let streamer = buf.fFile.getStreamer(classv, { val: clv });
+            streamer = buf.fFile.getSplittedStreamer(streamer);
+
+            if (!streamer) {
+               console.log('Cannot get member-wise streamer for', classv, clv);
+            } else {
+               // create objects
+               for (let n = 0; n < nobjects; ++n)
+                  list.arr[n] = { _typename: classv };
+
+               // call streamer for all objects member-wise
+               for (let k = 0; k < streamer.length; ++k)
+                  for (let n = 0; n < nobjects; ++n)
+                     streamer[k].func(buf, list.arr[n]);
+            }
+         },
+
+         TMap(buf, map) {
+            if (!map._typename) map._typename = "TMap";
+            map.name = "";
+            map.arr = [];
+            const ver = buf.last_read_version;
+            if (ver > 2) buf.classStreamer(map, clTObject);
+            if (ver > 1) map.name = buf.readTString();
+
+            const nobjects = buf.ntou4();
+            // create objects
+            for (let n = 0; n < nobjects; ++n) {
+               let obj = { _typename: "TPair" };
+               obj.first = buf.readObjectAny();
+               obj.second = buf.readObjectAny();
+               if (obj.first) map.arr.push(obj);
+            }
+         },
+
+         TTreeIndex(buf, obj) {
+            const ver = buf.last_read_version;
+            obj._typename = "TTreeIndex";
+            buf.classStreamer(obj, "TVirtualIndex");
+            obj.fMajorName = buf.readTString();
+            obj.fMinorName = buf.readTString();
+            obj.fN = buf.ntoi8();
+            obj.fIndexValues = buf.readFastArray(obj.fN, kLong64);
+            if (ver > 1) obj.fIndexValuesMinor = buf.readFastArray(obj.fN, kLong64);
+            obj.fIndex = buf.readFastArray(obj.fN, kLong64);
+         },
+
+         TRefArray(buf, obj) {
+            obj._typename = "TRefArray";
+            buf.classStreamer(obj, clTObject);
+            obj.name = buf.readTString();
+            const nobj = buf.ntoi4();
+            obj.fLast = nobj - 1;
+            obj.fLowerBound = buf.ntoi4();
+            /*const pidf = */ buf.ntou2();
+            obj.fUIDs = buf.readFastArray(nobj, kUInt);
+         },
+
+         TCanvas(buf, obj) {
+            obj._typename = "TCanvas";
+            buf.classStreamer(obj, "TPad");
+            obj.fDISPLAY = buf.readTString();
+            obj.fDoubleBuffer = buf.ntoi4();
+            obj.fRetained = (buf.ntou1() !== 0);
+            obj.fXsizeUser = buf.ntoi4();
+            obj.fYsizeUser = buf.ntoi4();
+            obj.fXsizeReal = buf.ntoi4();
+            obj.fYsizeReal = buf.ntoi4();
+            obj.fWindowTopX = buf.ntoi4();
+            obj.fWindowTopY = buf.ntoi4();
+            obj.fWindowWidth = buf.ntoi4();
+            obj.fWindowHeight = buf.ntoi4();
+            obj.fCw = buf.ntou4();
+            obj.fCh = buf.ntou4();
+            obj.fCatt = buf.classStreamer({}, "TAttCanvas");
+            buf.ntou1(); // ignore b << TestBit(kMoveOpaque);
+            buf.ntou1(); // ignore b << TestBit(kResizeOpaque);
+            obj.fHighLightColor = buf.ntoi2();
+            obj.fBatch = (buf.ntou1() !== 0);
+            buf.ntou1();   // ignore b << TestBit(kShowEventStatus);
+            buf.ntou1();   // ignore b << TestBit(kAutoExec);
+            buf.ntou1();   // ignore b << TestBit(kMenuBar);
+         },
+
+         TObjArray(buf, list) {
+            if (!list._typename) list._typename = "TObjArray";
+            list.$kind = "TObjArray";
+            list.name = "";
+            const ver = buf.last_read_version;
+            if (ver > 2)
+               buf.classStreamer(list, clTObject);
+            if (ver > 1)
+               list.name = buf.readTString();
+            const nobjects = buf.ntou4();
+            let i = 0;
+            list.arr = new Array(nobjects);
+            list.fLast = nobjects - 1;
+            list.fLowerBound = buf.ntou4();
+            while (i < nobjects)
+               list.arr[i++] = buf.readObjectAny();
+         },
+
+         TPolyMarker3D(buf, marker) {
+            const ver = buf.last_read_version;
+            buf.classStreamer(marker, clTObject);
+            buf.classStreamer(marker, "TAttMarker");
+            marker.fN = buf.ntoi4();
+            marker.fP = buf.readFastArray(marker.fN * 3, kFloat);
+            marker.fOption = buf.readTString();
+            marker.fName = (ver > 1) ? buf.readTString() : "TPolyMarker3D";
+         },
+
+         TPolyLine3D(buf, obj) {
+            buf.classStreamer(obj, clTObject);
+            buf.classStreamer(obj, "TAttLine");
+            obj.fN = buf.ntoi4();
+            obj.fP = buf.readFastArray(obj.fN * 3, kFloat);
+            obj.fOption = buf.readTString();
+         },
+
+         TStreamerInfo(buf, obj) {
+            buf.classStreamer(obj, clTNamed);
+            obj.fCheckSum = buf.ntou4();
+            obj.fClassVersion = buf.ntou4();
+            obj.fElements = buf.readObjectAny();
+         },
+
+         TStreamerElement(buf, element) {
+            const ver = buf.last_read_version;
+            buf.classStreamer(element, clTNamed);
+            element.fType = buf.ntou4();
+            element.fSize = buf.ntou4();
+            element.fArrayLength = buf.ntou4();
+            element.fArrayDim = buf.ntou4();
+            element.fMaxIndex = buf.readFastArray((ver == 1) ? buf.ntou4() : 5, kUInt);
+            element.fTypeName = buf.readTString();
+
+            if ((element.fType === kUChar) && ((element.fTypeName == "Bool_t") || (element.fTypeName == "bool")))
+               element.fType = kBool;
+
+            element.fXmin = element.fXmax = element.fFactor = 0;
+            if (ver === 3) {
+               element.fXmin = buf.ntod();
+               element.fXmax = buf.ntod();
+               element.fFactor = buf.ntod();
+            } else if ((ver > 3) && (element.fBits & JSROOT.BIT(6))) { // kHasRange
+
+               let p1 = element.fTitle.indexOf("[");
+               if ((p1 >= 0) && (element.fType > kOffsetP)) p1 = element.fTitle.indexOf("[", p1 + 1);
+               let p2 = element.fTitle.indexOf("]", p1 + 1);
+
+               if ((p1 >= 0) && (p2 >= p1 + 2)) {
+
+                  let arr = element.fTitle.substr(p1+1, p2 - p1 - 1).split(","), nbits = 32;
+                  if (!arr || arr.length < 2)
+                     throw new Error(`Problem to decode range setting from streamer element title ${element.fTitle}`);
+
+                  if (arr.length === 3) nbits = parseInt(arr[2]);
+                  if (!Number.isInteger(nbits) || (nbits < 2) || (nbits > 32)) nbits = 32;
+
+                  let parse_range = val => {
+                     if (!val) return 0;
+                     if (val.indexOf("pi") < 0) return parseFloat(val);
+                     val = val.trim();
+                     let sign = 1.;
+                     if (val[0] == "-") { sign = -1; val = val.substr(1); }
+                     switch (val) {
+                        case "2pi":
+                        case "2*pi":
+                        case "twopi": return sign * 2 * Math.PI;
+                        case "pi/2": return sign * Math.PI / 2;
+                        case "pi/4": return sign * Math.PI / 4;
+                     }
+                     return sign * Math.PI;
+                  };
+
+                  element.fXmin = parse_range(arr[0]);
+                  element.fXmax = parse_range(arr[1]);
+
+                  // avoid usage of 1 << nbits, while only works up to 32 bits
+                  let bigint = ((nbits >= 0) && (nbits < 32)) ? Math.pow(2, nbits) : 0xffffffff;
+                  if (element.fXmin < element.fXmax)
+                     element.fFactor = bigint / (element.fXmax - element.fXmin);
+                  else if (nbits < 15)
+                     element.fXmin = nbits;
+               }
+            }
+         },
+
+         TStreamerBase(buf, elem) {
+            const ver = buf.last_read_version;
+            buf.classStreamer(elem, clTStreamerElement);
+            if (ver > 2) elem.fBaseVersion = buf.ntou4();
+         },
+
+         TStreamerSTL(buf, elem) {
+            buf.classStreamer(elem, clTStreamerElement);
+            elem.fSTLtype = buf.ntou4();
+            elem.fCtype = buf.ntou4();
+
+            if ((elem.fSTLtype === kSTLmultimap) &&
+               ((elem.fTypeName.indexOf("std::set") === 0) ||
+                  (elem.fTypeName.indexOf("set") === 0))) elem.fSTLtype = kSTLset;
+
+            if ((elem.fSTLtype === kSTLset) &&
+               ((elem.fTypeName.indexOf("std::multimap") === 0) ||
+                  (elem.fTypeName.indexOf("multimap") === 0))) elem.fSTLtype = kSTLmultimap;
+         },
+
+         TStreamerSTLstring(buf, elem) {
+            if (buf.last_read_version > 0)
+               buf.classStreamer(elem, "TStreamerSTL");
+         },
+
+         TList: function(buf, obj) {
+            // stream all objects in the list from the I/O buffer
+            if (!obj._typename) obj._typename = this.typename;
+            obj.$kind = clTList; // all derived classes will be marked as well
+            if (buf.last_read_version > 3) {
+               buf.classStreamer(obj, clTObject);
+               obj.name = buf.readTString();
+               const nobjects = buf.ntou4();
+               obj.arr = new Array(nobjects);
+               obj.opt = new Array(nobjects);
+               for (let i = 0; i < nobjects; ++i) {
+                  obj.arr[i] = buf.readObjectAny();
+                  obj.opt[i] = buf.readTString();
+               }
+            } else {
+               obj.name = "";
+               obj.arr = [];
+               obj.opt = [];
+            }
+         },
+
+         THashList: clTList,
+
+         TStreamerLoop(buf, elem)  {
+            if (buf.last_read_version > 1) {
+               buf.classStreamer(elem, clTStreamerElement);
+               elem.fCountVersion = buf.ntou4();
+               elem.fCountName = buf.readTString();
+               elem.fCountClass = buf.readTString();
+            }
+         },
+
+         TStreamerBasicPointer: 'TStreamerLoop',
+
+         TStreamerObject(buf, elem) {
+            if (buf.last_read_version > 1)
+               buf.classStreamer(elem, clTStreamerElement);
+         },
+
+         TStreamerBasicType: clTStreamerObject,
+         TStreamerObjectAny: clTStreamerObject,
+         TStreamerString: clTStreamerObject,
+         TStreamerObjectPointer: clTStreamerObject,
+
+         TStreamerObjectAnyPointer(buf, elem) {
+            if (buf.last_read_version > 0)
+               buf.classStreamer(elem, clTStreamerElement);
+         },
+
+         TTree: {
+            name: '$file',
+            func: (buf, obj) => { obj.$kind = "TTree"; obj.$file = buf.fFile; buf.fFile._addReadTree(obj); }
+         },
+
+         RooRealVar(buf, obj) {
+            const v = buf.last_read_version;
+            buf.classStreamer(obj, "RooAbsRealLValue");
+            if (v == 1) { buf.ntod(); buf.ntod(); buf.ntoi4(); } // skip fitMin, fitMax, fitBins
+            obj._error = buf.ntod();
+            obj._asymErrLo = buf.ntod();
+            obj._asymErrHi = buf.ntod();
+            if (v >= 2) obj._binning = buf.readObjectAny();
+            if (v == 3) obj._sharedProp = buf.readObjectAny();
+            if (v >= 4) obj._sharedProp = buf.classStreamer({}, "RooRealVarSharedProperties");
+         },
+
+         RooAbsBinning(buf, obj) {
+            buf.classStreamer(obj, (buf.last_read_version == 1) ? clTObject : clTNamed);
+            buf.classStreamer(obj, "RooPrintable");
+         },
+
+         RooCategory(buf, obj) {
+            const v = buf.last_read_version;
+            buf.classStreamer(obj, "RooAbsCategoryLValue");
+            obj._sharedProp = (v === 1) ? buf.readObjectAny() : buf.classStreamer({}, "RooCategorySharedProperties");
+         },
+
+         'RooWorkspace::CodeRepo': (buf /*, obj*/) => {
+            const sz = (buf.last_read_version == 2) ? 3 : 2;
+            for (let i = 0; i < sz; ++i) {
+               let cnt = buf.ntoi4() * ((i == 0) ? 4 : 3);
+               while (cnt--) buf.readTString();
+            }
+         },
+
+         RooLinkedList(buf, obj) {
+            const v = buf.last_read_version;
+            buf.classStreamer(obj, clTObject);
+            let size = buf.ntoi4();
+            obj.arr = JSROOT.create(clTList);
+            while (size--)
+               obj.arr.Add(buf.readObjectAny());
+            if (v > 1) obj._name = buf.readTString();
+         },
+
+         TImagePalette: [
+            {
+               basename: clTObject, base: 1, func: (buf, obj) => {
+                  if (!obj._typename) obj._typename = 'TImagePalette';
+                  buf.classStreamer(obj, clTObject);
+               }
+            },
+            { name: 'fNumPoints', func: (buf, obj) => { obj.fNumPoints = buf.ntou4(); } },
+            { name: 'fPoints', func: (buf, obj) => { obj.fPoints = buf.readFastArray(obj.fNumPoints, kDouble); } },
+            { name: 'fColorRed', func: (buf, obj) => { obj.fColorRed = buf.readFastArray(obj.fNumPoints, kUShort); } },
+            { name: 'fColorGreen', func: (buf, obj) => { obj.fColorGreen = buf.readFastArray(obj.fNumPoints, kUShort); } },
+            { name: 'fColorBlue', func: (buf, obj) => { obj.fColorBlue = buf.readFastArray(obj.fNumPoints, kUShort); } },
+            { name: 'fColorAlpha', func: (buf, obj) => { obj.fColorAlpha = buf.readFastArray(obj.fNumPoints, kUShort); } }
+         ],
+
+         TAttImage: [
+            { name: 'fImageQuality', func: (buf, obj) => { obj.fImageQuality = buf.ntoi4(); } },
+            { name: 'fImageCompression', func: (buf, obj) => { obj.fImageCompression = buf.ntou4(); } },
+            { name: 'fConstRatio', func: (buf, obj) => { obj.fConstRatio = (buf.ntou1() != 0); } },
+            { name: 'fPalette', func: (buf, obj) => { obj.fPalette = buf.classStreamer({}, "TImagePalette"); } }
+         ],
+
+         TASImage(buf, obj) {
+            if ((buf.last_read_version == 1) && (buf.fFile.fVersion > 0) && (buf.fFile.fVersion < 50000))
+               return console.warn("old TASImage version - not yet supported");
+
+            buf.classStreamer(obj, clTNamed);
+
+            if (buf.ntou1() != 0) {
+               const size = buf.ntoi4();
+               obj.fPngBuf = buf.readFastArray(size, kUChar);
+            } else {
+               buf.classStreamer(obj, "TAttImage");
+               obj.fWidth = buf.ntoi4();
+               obj.fHeight = buf.ntoi4();
+               obj.fImgBuf = buf.readFastArray(obj.fWidth * obj.fHeight, kDouble);
+            }
+         },
+
+         TMaterial(buf, obj) {
+            const v = buf.last_read_version;
+            buf.classStreamer(obj, clTNamed);
+            obj.fNumber = buf.ntoi4();
+            obj.fA = buf.ntof();
+            obj.fZ = buf.ntof();
+            obj.fDensity = buf.ntof();
+            if (v > 2) {
+               buf.classStreamer(obj, "TAttFill");
+               obj.fRadLength = buf.ntof();
+               obj.fInterLength = buf.ntof();
+            } else {
+               obj.fRadLength = obj.fInterLength = 0;
+            }
+         },
+
+         TMixture(buf, obj) {
+            buf.classStreamer(obj, "TMaterial");
+            obj.fNmixt = buf.ntoi4();
+            obj.fAmixt = buf.readFastArray(buf.ntoi4(), kFloat);
+            obj.fZmixt = buf.readFastArray(buf.ntoi4(), kFloat);
+            obj.fWmixt = buf.readFastArray(buf.ntoi4(), kFloat);
+         },
+
+         TVirtualPerfStats: clTObject, // use directly TObject streamer
+         TMethodCall: clTObject
+
+      },
+
+      /** @summary Add custom streamer
+        * @public */
+      addUserStreamer(type, user_streamer) {
+         this.CustomStreamers[type] = user_streamer;
+      },
+
+      /** @summary Reads header envelope, determines zipped size and unzip content
+        * @returns {Promise} with unzipped content
+        * @private */
+      R__unzip(arr, tgtsize, noalert, src_shift) {
+
+         const HDRSIZE = 9, totallen = arr.byteLength,
+              getChar = o => String.fromCharCode(arr.getUint8(o)),
+              getCode = o => arr.getUint8(o);
+
+         let curr = src_shift || 0, fullres = 0, tgtbuf = null;
+
+         const nextPortion = () => {
+
+            while (fullres < tgtsize) {
+
+               let fmt = "unknown", off = 0, CHKSUM = 0;
+
+               if (curr + HDRSIZE >= totallen) {
+                  if (!noalert) console.error("Error R__unzip: header size exceeds buffer size");
+                  return Promise.resolve(null);
+               }
+
+               if (getChar(curr) == 'Z' && getChar(curr + 1) == 'L' && getCode(curr + 2) == 8) { fmt = "new"; off = 2; } else
+               if (getChar(curr) == 'C' && getChar(curr + 1) == 'S' && getCode(curr + 2) == 8) { fmt = "old"; off = 0; } else
+               if (getChar(curr) == 'X' && getChar(curr + 1) == 'Z' && getCode(curr + 2) == 0) fmt = "LZMA"; else
+               if (getChar(curr) == 'Z' && getChar(curr + 1) == 'S' && getCode(curr + 2) == 1) fmt = "ZSTD"; else
+               if (getChar(curr) == 'L' && getChar(curr + 1) == '4') { fmt = "LZ4"; off = 0; CHKSUM = 8; }
+
+               /*   C H E C K   H E A D E R   */
+               if ((fmt !== "new") && (fmt !== "old") && (fmt !== "LZ4") && (fmt !== "ZSTD")) {
+                  if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
+                  return Promise.resolve(null);
+               }
+
+               const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16));
+
+               const uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
+
+               if (fmt === "ZSTD")  {
+                  const handleZsdt = ZstdCodec => {
+
+                     return new Promise((resolveFunc, rejectFunc) => {
+
+                        ZstdCodec.run(zstd => {
+                           // const simple = new zstd.Simple();
+                           const streaming = new zstd.Streaming();
+
+                           // const data2 = simple.decompress(uint8arr);
+                           const data2 = streaming.decompress(uint8arr);
+
+                           // console.log(`tgtsize ${tgtsize} zstd size ${data2.length} offset ${data2.byteOffset} rawlen ${data2.buffer.byteLength}`);
+
+                           const reslen = data2.length;
+
+                           if (data2.byteOffset !== 0)
+                              return rejectFunc(Error("ZSTD result with byteOffset != 0"));
+
+                           // shortcut when exactly required data unpacked
+                           //if ((tgtsize == reslen) && data2.buffer)
+                           //   resolveFunc(new DataView(data2.buffer));
+
+                           // need to copy data while zstd does not provide simple way of doing it
+                           if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+                           let tgt8arr = new Uint8Array(tgtbuf, fullres);
+
+                           for(let i = 0; i < reslen; ++i)
+                              tgt8arr[i] = data2[i];
+
+                           fullres += reslen;
+                           curr += srcsize;
+                           resolveFunc(true);
+                        });
+                     });
+                  };
+
+                  let promise = JSROOT.nodejs ? handleZsdt(require('zstd-codec').ZstdCodec)
+                                              : JSROOT.require('zstd-codec').then(codec => handleZsdt(codec));
+                  return promise.then(() => nextPortion());
+               }
+
+               //  place for unpacking
+               if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+
+               let tgt8arr = new Uint8Array(tgtbuf, fullres);
+
+               const reslen = (fmt === "LZ4") ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
+               if (reslen <= 0) break;
+
+               fullres += reslen;
+               curr += srcsize;
+            }
+
+            if (fullres !== tgtsize) {
+               if (!noalert) console.error(`R__unzip: fail to unzip data expects ${tgtsize}, got ${fullres}`);
+               return Promise.resolve(null);
+            }
+
+            return Promise.resolve(new DataView(tgtbuf));
+         };
+
+         return nextPortion();
+      },
+
+      /** @summary create member entry for streamer element
+        * @desc used for reading of data
+        * @private */
+      createMember(element, file) {
+         let member = {
+            name: element.fName, type: element.fType,
+            fArrayLength: element.fArrayLength,
+            fArrayDim: element.fArrayDim,
+            fMaxIndex: element.fMaxIndex
+         };
+
+         if (element.fTypeName === 'BASE') {
+            if (getArrayKind(member.name) > 0) {
+               // this is workaround for arrays as base class
+               // we create 'fArray' member, which read as any other data member
+               member.name = 'fArray';
+               member.type = kAny;
+            } else {
+               // create streamer for base class
+               member.type = kBase;
+               // this.getStreamer(element.fName);
+            }
+         }
+
+         switch (member.type) {
+            case kBase:
+               member.base = element.fBaseVersion; // indicate base class
+               member.basename = element.fName; // keep class name
+               member.func = function(buf, obj) { buf.classStreamer(obj, this.basename); };
+               break;
+            case kShort:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntoi2(); }; break;
+            case kInt:
+            case kCounter:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntoi4(); }; break;
+            case kLong:
+            case kLong64:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntoi8(); }; break;
+            case kDouble:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntod(); }; break;
+            case kFloat:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntof(); }; break;
+            case kLegacyChar:
+            case kUChar:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntou1(); }; break;
+            case kUShort:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntou2(); }; break;
+            case kBits:
+            case kUInt:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntou4(); }; break;
+            case kULong64:
+            case kULong:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntou8(); }; break;
+            case kBool:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntou1() != 0; }; break;
+            case kOffsetL + kBool:
+            case kOffsetL + kInt:
+            case kOffsetL + kCounter:
+            case kOffsetL + kDouble:
+            case kOffsetL + kUChar:
+            case kOffsetL + kShort:
+            case kOffsetL + kUShort:
+            case kOffsetL + kBits:
+            case kOffsetL + kUInt:
+            case kOffsetL + kULong:
+            case kOffsetL + kULong64:
+            case kOffsetL + kLong:
+            case kOffsetL + kLong64:
+            case kOffsetL + kFloat:
+               if (element.fArrayDim < 2) {
+                  member.arrlength = element.fArrayLength;
+                  member.func = function(buf, obj) {
+                     obj[this.name] = buf.readFastArray(this.arrlength, this.type - kOffsetL);
+                  };
+               } else {
+                  member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
+                  member.minus1 = true;
+                  member.func = function(buf, obj) {
+                     obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
+                        buf.readFastArray(handle.arrlength, handle.type - kOffsetL));
+                  };
+               }
+               break;
+            case kOffsetL + kChar:
+               if (element.fArrayDim < 2) {
+                  member.arrlength = element.fArrayLength;
+                  member.func = function(buf, obj) {
+                     obj[this.name] = buf.readFastString(this.arrlength);
+                  };
+               } else {
+                  member.minus1 = true; // one dimension used for char*
+                  member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
+                  member.func = function(buf, obj) {
+                     obj[this.name] = buf.readNdimArray(this, (buf, handle) =>
+                        buf.readFastString(handle.arrlength));
+                  };
+               }
+               break;
+            case kOffsetP + kBool:
+            case kOffsetP + kInt:
+            case kOffsetP + kDouble:
+            case kOffsetP + kUChar:
+            case kOffsetP + kShort:
+            case kOffsetP + kUShort:
+            case kOffsetP + kBits:
+            case kOffsetP + kUInt:
+            case kOffsetP + kULong:
+            case kOffsetP + kULong64:
+            case kOffsetP + kLong:
+            case kOffsetP + kLong64:
+            case kOffsetP + kFloat:
+               member.cntname = element.fCountName;
+               member.func = function(buf, obj) {
+                  obj[this.name] = (buf.ntou1() === 1) ? buf.readFastArray(obj[this.cntname], this.type - kOffsetP) : [];
+               };
+               break;
+            case kOffsetP + kChar:
+               member.cntname = element.fCountName;
+               member.func = function(buf, obj) {
+                  obj[this.name] = (buf.ntou1() === 1) ? buf.readFastString(obj[this.cntname]) : null;
+               };
+               break;
+            case kDouble32:
+            case kOffsetL + kDouble32:
+            case kOffsetP + kDouble32:
+               member.double32 = true;
+            case kFloat16:
+            case kOffsetL + kFloat16:
+            case kOffsetP + kFloat16:
+               if (element.fFactor !== 0) {
+                  member.factor = 1. / element.fFactor;
+                  member.min = element.fXmin;
+                  member.read = function(buf) { return buf.ntou4() * this.factor + this.min; };
+               } else
+                  if ((element.fXmin === 0) && member.double32) {
+                     member.read = function(buf) { return buf.ntof(); };
+                  } else {
+                     member.nbits = Math.round(element.fXmin);
+                     if (member.nbits === 0) member.nbits = 12;
+                     member.dv = new DataView(new ArrayBuffer(8), 0); // used to cast from uint32 to float32
+                     member.read = function(buf) {
+                        let theExp = buf.ntou1(), theMan = buf.ntou2();
+                        this.dv.setUint32(0, (theExp << 23) | ((theMan & ((1 << (this.nbits + 1)) - 1)) << (23 - this.nbits)));
+                        return ((1 << (this.nbits + 1) & theMan) ? -1 : 1) * this.dv.getFloat32(0);
+                     };
+                  }
+
+               member.readarr = function(buf, len) {
+                  let arr = this.double32 ? new Float64Array(len) : new Float32Array(len);
+                  for (let n = 0; n < len; ++n) arr[n] = this.read(buf);
+                  return arr;
+               }
+
+               if (member.type < kOffsetL) {
+                  member.func = function(buf, obj) { obj[this.name] = this.read(buf); }
+               } else
+                  if (member.type > kOffsetP) {
+                     member.cntname = element.fCountName;
+                     member.func = function(buf, obj) {
+                        obj[this.name] = (buf.ntou1() === 1) ? this.readarr(buf, obj[this.cntname]) : null;
+                     };
+                  } else
+                     if (element.fArrayDim < 2) {
+                        member.arrlength = element.fArrayLength;
+                        member.func = function(buf, obj) { obj[this.name] = this.readarr(buf, this.arrlength); };
+                     } else {
+                        member.arrlength = element.fMaxIndex[element.fArrayDim - 1];
+                        member.minus1 = true;
+                        member.func = function(buf, obj) {
+                           obj[this.name] = buf.readNdimArray(this, (buf, handle) => handle.readarr(buf, handle.arrlength));
+                        };
+                     }
+               break;
+
+            case kAnyP:
+            case kObjectP:
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readNdimArray(this, buf => buf.readObjectAny());
+               };
+               break;
+
+            case kAny:
+            case kAnyp:
+            case kObjectp:
+            case kObject: {
+               let classname = (element.fTypeName === 'BASE') ? element.fName : element.fTypeName;
+               if (classname[classname.length - 1] == "*")
+                  classname = classname.substr(0, classname.length - 1);
+
+               const arrkind = getArrayKind(classname);
+
+               if (arrkind > 0) {
+                  member.arrkind = arrkind;
+                  member.func = function(buf, obj) { obj[this.name] = buf.readFastArray(buf.ntou4(), this.arrkind); };
+               } else if (arrkind === 0) {
+                  member.func = function(buf, obj) { obj[this.name] = buf.readTString(); };
+               } else {
+                  member.classname = classname;
+
+                  if (element.fArrayLength > 1) {
+                     member.func = function(buf, obj) {
+                        obj[this.name] = buf.readNdimArray(this, (buf, handle) => buf.classStreamer({}, handle.classname));
+                     };
+                  } else {
+                     member.func = function(buf, obj) {
+                        obj[this.name] = buf.classStreamer({}, this.classname);
+                     };
+                  }
+               }
+               break;
+            }
+            case kOffsetL + kObject:
+            case kOffsetL + kAny:
+            case kOffsetL + kAnyp:
+            case kOffsetL + kObjectp: {
+               let classname = element.fTypeName;
+               if (classname[classname.length - 1] == "*")
+                  classname = classname.substr(0, classname.length - 1);
+
+               member.arrkind = getArrayKind(classname);
+               if (member.arrkind < 0) member.classname = classname;
+               member.func = function(buf, obj) {
+                  obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
+                     if (handle.arrkind > 0) return buf.readFastArray(buf.ntou4(), handle.arrkind);
+                     if (handle.arrkind === 0) return buf.readTString();
+                     return buf.classStreamer({}, handle.classname);
+                  });
+               }
+               break;
+            }
+            case kChar:
+               member.func = function(buf, obj) { obj[this.name] = buf.ntoi1(); }; break;
+            case kCharStar:
+               member.func = function(buf, obj) {
+                  const len = buf.ntoi4();
+                  obj[this.name] = buf.substring(buf.o, buf.o + len);
+                  buf.o += len;
+               };
+               break;
+            case kTString:
+               member.func = function(buf, obj) { obj[this.name] = buf.readTString(); };
+               break;
+            case kTObject:
+            case kTNamed:
+               member.typename = element.fTypeName;
+               member.func = function(buf, obj) { obj[this.name] = buf.classStreamer({}, this.typename); };
+               break;
+            case kOffsetL + kTString:
+            case kOffsetL + kTObject:
+            case kOffsetL + kTNamed:
+               member.typename = element.fTypeName;
+               member.func = function(buf, obj) {
+                  const ver = buf.readVersion();
+                  obj[this.name] = buf.readNdimArray(this, (buf, handle) => {
+                     if (handle.typename === 'TString') return buf.readTString();
+                     return buf.classStreamer({}, handle.typename);
+                  });
+                  buf.checkByteCount(ver, this.typename + "[]");
+               };
+               break;
+            case kStreamLoop:
+            case kOffsetL + kStreamLoop:
+               member.typename = element.fTypeName;
+               member.cntname = element.fCountName;
+
+               if (member.typename.lastIndexOf("**") > 0) {
+                  member.typename = member.typename.substr(0, member.typename.lastIndexOf("**"));
+                  member.isptrptr = true;
+               } else {
+                  member.typename = member.typename.substr(0, member.typename.lastIndexOf("*"));
+                  member.isptrptr = false;
+               }
+
+               if (member.isptrptr) {
+                  member.readitem = function(buf) { return buf.readObjectAny(); }
+               } else {
+                  member.arrkind = getArrayKind(member.typename);
+                  if (member.arrkind > 0)
+                     member.readitem = function(buf) { return buf.readFastArray(buf.ntou4(), this.arrkind); }
+                  else if (member.arrkind === 0)
+                     member.readitem = function(buf) { return buf.readTString(); }
+                  else
+                     member.readitem = function(buf) { return buf.classStreamer({}, this.typename); }
+               }
+
+               if (member.readitem !== undefined) {
+                  member.read_loop = function(buf, cnt) {
+                     return buf.readNdimArray(this, (buf2, member2) => {
+                        let itemarr = new Array(cnt);
+                        for (let i = 0; i < cnt; ++i)
+                           itemarr[i] = member2.readitem(buf2);
+                        return itemarr;
+                     });
+                  }
+
+                  member.func = function(buf, obj) {
+                     const ver = buf.readVersion();
+                     let res = this.read_loop(buf, obj[this.cntname]);
+                     if (!buf.checkByteCount(ver, this.typename)) res = null;
+                     obj[this.name] = res;
+                  }
+                  member.branch_func = function(buf, obj) {
+                     // this is special functions, used by branch in the STL container
+
+                     const ver = buf.readVersion(), sz0 = obj[this.stl_size];
+                     let res = new Array(sz0);
+
+                     for (let loop0 = 0; loop0 < sz0; ++loop0) {
+                        let cnt = obj[this.cntname][loop0];
+                        res[loop0] = this.read_loop(buf, cnt);
+                     }
+                     if (!buf.checkByteCount(ver, this.typename)) res = null;
+                     obj[this.name] = res;
+                  }
+
+                  member.objs_branch_func = function(buf, obj) {
+                     // special function when branch read as part of complete object
+                     // objects already preallocated and only appropriate member must be set
+                     // see code in JSRoot.tree.js for reference
+
+                     const ver = buf.readVersion();
+                     let arr = obj[this.name0]; // objects array where reading is done
+
+                     for (let loop0 = 0; loop0 < arr.length; ++loop0) {
+                        let obj1 = this.get(arr, loop0), cnt = obj1[this.cntname];
+                        obj1[this.name] = this.read_loop(buf, cnt);
+                     }
+
+                     buf.checkByteCount(ver, this.typename);
+                  }
+
+               } else {
+                  console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
+                  member.func = function(buf, obj) {
+                     const ver = buf.readVersion();
+                     buf.checkByteCount(ver);
+                     obj[this.name] = null;
+                  };
+               }
+
+               break;
+
+            case kStreamer: {
+               member.typename = element.fTypeName;
+
+               let stl = (element.fSTLtype || 0) % 40;
+
+               if ((element._typename === 'TStreamerSTLstring') ||
+                  (member.typename == "string") || (member.typename == "string*")) {
+                  member.readelem = buf => buf.readTString();
+               } else if ((stl === kSTLvector) || (stl === kSTLlist) ||
+                          (stl === kSTLdeque) || (stl === kSTLset) || (stl === kSTLmultiset)) {
+                  let p1 = member.typename.indexOf("<"),
+                     p2 = member.typename.lastIndexOf(">");
+
+                  member.conttype = member.typename.substr(p1 + 1, p2 - p1 - 1).trim();
+
+                  member.typeid = getTypeId(member.conttype);
+                  if ((member.typeid < 0) && file.fBasicTypes[member.conttype]) {
+                     member.typeid = file.fBasicTypes[member.conttype];
+                     console.log('!!! Reuse basic type', member.conttype, 'from file streamer infos');
+                  }
+
+                  // check
+                  if (element.fCtype && (element.fCtype < 20) && (element.fCtype !== member.typeid)) {
+                     console.warn('Contained type', member.conttype, 'not recognized as basic type', element.fCtype, 'FORCE');
+                     member.typeid = element.fCtype;
+                  }
+
+                  if (member.typeid > 0) {
+                     member.readelem = function(buf) {
+                        return buf.readFastArray(buf.ntoi4(), this.typeid);
+                     };
+                  } else {
+                     member.isptr = false;
+
+                     if (member.conttype.lastIndexOf("*") === member.conttype.length - 1) {
+                        member.isptr = true;
+                        member.conttype = member.conttype.substr(0, member.conttype.length - 1);
+                     }
+
+                     if (element.fCtype === kObjectp) member.isptr = true;
+
+                     member.arrkind = getArrayKind(member.conttype);
+
+                     member.readelem = readVectorElement;
+
+                     if (!member.isptr && (member.arrkind < 0)) {
+
+                        let subelem = jsrio.createStreamerElement("temp", member.conttype);
+
+                        if (subelem.fType === kStreamer) {
+                           subelem.$fictional = true;
+                           member.submember = jsrio.createMember(subelem, file);
+                        }
+                     }
+                  }
+               } else if ((stl === kSTLmap) || (stl === kSTLmultimap)) {
+                  const p1 = member.typename.indexOf("<"),
+                        p2 = member.typename.lastIndexOf(">");
+
+                  member.pairtype = "pair<" + member.typename.substr(p1 + 1, p2 - p1 - 1) + ">";
+
+                  // remember found streamer info from the file -
+                  // most probably it is the only one which should be used
+                  member.si = file.findStreamerInfo(member.pairtype);
+
+                  member.streamer = getPairStreamer(member.si, member.pairtype, file);
+
+                  if (!member.streamer || (member.streamer.length !== 2)) {
+                     console.error(`Fail to build streamer for pair ${member.pairtype}`);
+                     delete member.streamer;
+                  }
+
+                  if (member.streamer) member.readelem = readMapElement;
+               } else if (stl === kSTLbitset) {
+                  member.readelem = (buf/*, obj*/) => buf.readFastArray(buf.ntou4(), kBool);
+               }
+
+               if (!member.readelem) {
+                  console.error(`'failed to create streamer for element ${member.typename} ${member.name} element ${element._typename} STL type ${element.fSTLtype}`);
+                  member.func = function(buf, obj) {
+                     const ver = buf.readVersion();
+                     buf.checkByteCount(ver);
+                     obj[this.name] = null;
+                  }
+               } else
+                  if (!element.$fictional) {
+
+                     member.read_version = function(buf, cnt) {
+                        if (cnt === 0) return null;
+                        const ver = buf.readVersion();
+                        this.member_wise = ((ver.val & kStreamedMemberWise) !== 0);
+
+                        this.stl_version = undefined;
+                        if (this.member_wise) {
+                           ver.val = ver.val & ~kStreamedMemberWise;
+                           this.stl_version = { val: buf.ntoi2() };
+                           if (this.stl_version.val <= 0) this.stl_version.checksum = buf.ntou4();
+                        }
+                        return ver;
+                     }
+
+                     member.func = function(buf, obj) {
+                        const ver = this.read_version(buf);
+
+                        let res = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
+
+                        if (!buf.checkByteCount(ver, this.typename)) res = null;
+                        obj[this.name] = res;
+                     }
+
+                     member.branch_func = function(buf, obj) {
+                        // special function to read data from STL branch
+                        const cnt = obj[this.stl_size],
+                              ver = this.read_version(buf, cnt);
+                        let arr = new Array(cnt);
+
+                        for (let n = 0; n < cnt; ++n)
+                           arr[n] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
+
+                        if (ver) buf.checkByteCount(ver, "branch " + this.typename);
+
+                        obj[this.name] = arr;
+                     }
+                     member.split_func = function(buf, arr, n) {
+                        // function to read array from member-wise streaming
+                        const ver = this.read_version(buf);
+                        for (let i = 0; i < n; ++i)
+                           arr[i][this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
+                        buf.checkByteCount(ver, this.typename);
+                     }
+                     member.objs_branch_func = function(buf, obj) {
+                        // special function when branch read as part of complete object
+                        // objects already preallocated and only appropriate member must be set
+                        // see code in JSRoot.tree.js for reference
+
+                        let arr = obj[this.name0]; // objects array where reading is done
+
+                        const ver = this.read_version(buf, arr.length);
+
+                        for (let n = 0; n < arr.length; ++n) {
+                           let obj1 = this.get(arr, n);
+                           obj1[this.name] = buf.readNdimArray(this, (buf2, member2) => member2.readelem(buf2));
+                        }
+
+                        if (ver) buf.checkByteCount(ver, "branch " + this.typename);
+                     }
+                  }
+               break;
+            }
+
+            default:
+               console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
+
+               member.func = function(/*buf, obj*/) { };  // do nothing, fix in the future
+         }
+
+         return member;
+      },
+
+      /** @summary create element of the streamer
+        * @private  */
+      createStreamerElement(name, typename, file) {
+         const elem = {
+            _typename: 'TStreamerElement', fName: name, fTypeName: typename,
+            fType: 0, fSize: 0, fArrayLength: 0, fArrayDim: 0, fMaxIndex: [0, 0, 0, 0, 0],
+            fXmin: 0, fXmax: 0, fFactor: 0
+         };
+
+         if (typeof typename === "string") {
+            elem.fType = getTypeId(typename);
+            if ((elem.fType < 0) && file && file.fBasicTypes[typename])
+               elem.fType = file.fBasicTypes[typename];
+         } else {
+            elem.fType = typename;
+            typename = elem.fTypeName = BasicTypeNames[elem.fType] || "int";
+         }
+
+         if (elem.fType > 0) return elem; // basic type
+
+         // check if there are STL containers
+         let stltype = kNotSTL, pos = typename.indexOf("<");
+         if ((pos > 0) && (typename.indexOf(">") > pos + 2))
+            for (let stl = 1; stl < StlNames.length; ++stl)
+               if (typename.substr(0, pos) === StlNames[stl]) {
+                  stltype = stl; break;
+               }
+
+         if (stltype !== kNotSTL) {
+            elem._typename = 'TStreamerSTL';
+            elem.fType = kStreamer;
+            elem.fSTLtype = stltype;
+            elem.fCtype = 0;
+            return elem;
+         }
+
+         const isptr = (typename.lastIndexOf("*") === typename.length - 1);
+
+         if (isptr)
+            elem.fTypeName = typename = typename.substr(0, typename.length - 1);
+
+         if (getArrayKind(typename) == 0) {
+            elem.fType = kTString;
+            return elem;
+         }
+
+         elem.fType = isptr ? kAnyP : kAny;
+
+         return elem;
+      }
+
+   } // namespace jsrio
+
+   // special way to assign methods when streaming objects
+   addClassMethods(clTNamed, jsrio.CustomStreamers[clTNamed]);
+   addClassMethods(clTObjString, jsrio.CustomStreamers[clTObjString]);
 
    JSROOT.TBuffer = TBuffer;
    JSROOT.TDirectory = TDirectory;

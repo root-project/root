@@ -3579,42 +3579,46 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             // case of ROOT7 with always dummy TPad as first entry
             if (!first.fCw || !first.fCh) this._fixed_size = false;
 
-            if (JSROOT.BrowserLayout && !this.batch_mode && !this.use_openui && !this.brlayout) {
-               let mainid = this.selectDom().attr("id");
-               if (mainid && (typeof mainid == "string")) {
+            let layout_promise = Promise.resolve(true),
+                mainid = this.selectDom().attr("id");
+
+            if (!this.batch_mode && !this.use_openui && !this.brlayout && mainid && (typeof mainid == "string"))
+               layout_promise = JSROOT.require('hierarchy').then(() => {
                   this.brlayout = new JSROOT.BrowserLayout(mainid, null, this);
                   this.brlayout.create(mainid, true);
                   // this.brlayout.toggleBrowserKind("float");
                   this.setDom(this.brlayout.drawing_divid()); // need to create canvas
                   jsrp.registerForResize(this.brlayout);
+              });
+
+            return layout_promise.then(() => {
+
+               this.createCanvasSvg(0);
+
+               if (!this.batch_mode)
+                  this.addPadButtons(true);
+
+               if (typeof snap.fHighlightConnect !== 'undefined')
+                  this._highlight_connect = snap.fHighlightConnect;
+
+               if ((typeof snap.fScripts == "string") && snap.fScripts) {
+                  let arg = "";
+
+                  if (snap.fScripts.indexOf("load:") == 0)
+                     arg = snap.fScripts;
+                  else if (snap.fScripts.indexOf("assert:") == 0)
+                     arg = snap.fScripts.substr(7);
+
+                  if (arg)
+                     return JSROOT.require(arg).then(() => this.drawNextSnap(snap.fPrimitives));
+
+                  console.log('Calling eval ' + snap.fScripts.length);
+                  eval(snap.fScripts);
+                  console.log('Calling eval done');
                }
-            }
 
-            this.createCanvasSvg(0);
-
-            if (!this.batch_mode)
-               this.addPadButtons(true);
-
-            if (typeof snap.fHighlightConnect !== 'undefined')
-               this._highlight_connect = snap.fHighlightConnect;
-
-            if ((typeof snap.fScripts == "string") && snap.fScripts) {
-               let arg = "";
-
-               if (snap.fScripts.indexOf("load:") == 0)
-                  arg = snap.fScripts;
-               else if (snap.fScripts.indexOf("assert:") == 0)
-                  arg = snap.fScripts.substr(7);
-
-               if (arg)
-                  return JSROOT.require(arg).then(() => this.drawNextSnap(snap.fPrimitives));
-
-               console.log('Calling eval ' + snap.fScripts.length);
-               eval(snap.fScripts);
-               console.log('Calling eval done');
-            }
-
-            return this.drawNextSnap(snap.fPrimitives);
+               return this.drawNextSnap(snap.fPrimitives);
+            });
          }
 
          this.updateObject(first); // update only object attributes
