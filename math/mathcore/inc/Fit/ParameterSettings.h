@@ -193,15 +193,15 @@ protected:
 
 private:
 
-   double fValue;        // parameter value
-   double fStepSize;     // parameter step size (used by minimizer)
-   bool fFix;            // flag to control if parameter is fixed
-   double fLowerLimit;   // lower parameter limit
-   double fUpperLimit;   // upper parameter limit
-   bool fHasLowerLimit;  // flag to control lower parameter limit
-   bool fHasUpperLimit;  // flag to control upper parameter limit
+   double fValue;        ///< parameter value
+   double fStepSize;     ///< parameter step size (used by minimizer)
+   bool fFix;            ///< flag to control if parameter is fixed
+   double fLowerLimit;   ///< lower parameter limit
+   double fUpperLimit;   ///< upper parameter limit
+   bool fHasLowerLimit;  ///< flag to control lower parameter limit
+   bool fHasUpperLimit;  ///< flag to control upper parameter limit
 
-   std::string fName;    // parameter name
+   std::string fName;    ///< parameter name
 
 };
 
