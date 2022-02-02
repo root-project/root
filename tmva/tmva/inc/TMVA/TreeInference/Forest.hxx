@@ -43,7 +43,7 @@ namespace Internal {
 template <typename T>
 T *GetObjectSafe(TFile *f, const std::string &n, const std::string &m)
 {
-   auto v = reinterpret_cast<T *>(f->Get(m.c_str()));
+   auto *v = f->Get<T>(m.c_str());
    if (v == nullptr)
       throw std::runtime_error("Failed to read " + m + " from file " + n + ".");
    return v;
