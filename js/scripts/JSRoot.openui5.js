@@ -81,7 +81,7 @@ JSROOT.define([], () => {
    }
 
    let openui5_sources = [],
-       openui5_dflt = "https://openui5.hana.ondemand.com/1.82.2/",
+       openui5_dflt = "https://openui5.hana.ondemand.com/1.98.0/",
        openui5_root = "";
 
    if (rootui5sys) openui5_root = rootui5sys + "distribution/";
