@@ -33,7 +33,7 @@ namespace ROOT {
    - only coordinates and values  (for binned likelihood fits)  : kNoError
    - coordinate, values and error on  values (for normal least square fits)  : kValueError
    - coordinate, values, error on values and coordinates (for effective least square fits) : kCoordError
-   - corrdinate, values, error on coordinates and asymmettric error on valyes : kAsymError
+   - coordinate, values, error on coordinates and asymmetric error on values : kAsymError
 
    In addition there is the option to construct Bindata copying the data in (using the DataVector class)
    or using pointer to external data (DataWrapper) class.
@@ -72,12 +72,12 @@ public :
 
    /**
       constructor from options and range
-      efault is 1D and value errors
+      default is 1D and value errors
    */
    BinData (const DataOptions & opt, const DataRange & range,
             unsigned int maxpoints = 0, unsigned int dim = 1, ErrorType err = kValueError );
 
-   /** constructurs using external data */
+   /** constructors using external data */
 
    /**
       constructor from external data for 1D with errors on  coordinate and value
@@ -566,7 +566,7 @@ public :
 
    /**
       return true if the data set is weighted
-      We cannot compute ourselfs because sometimes errors are filled with 1
+      We cannot compute ourselves because sometimes errors are filled with 1
       instead of zero (as in ROOT::Fit::FillData )
     */
    bool IsWeighted() const {
@@ -588,10 +588,10 @@ protected:
 private:
 
    ErrorType fErrorType;
-   bool fIsWeighted = false; // flag to indicate weighted data
-   double fRefVolume;  // reference bin volume - used to normalize the bins in case of variable bins data
-   double fSumContent = 0;  // total sum of the bin data content
-   double fSumError2 = 0;  // total sum square of the errors
+   bool fIsWeighted = false; ///< flag to indicate weighted data
+   double fRefVolume;        ///< reference bin volume - used to normalize the bins in case of variable bins data
+   double fSumContent = 0;   ///< total sum of the bin data content
+   double fSumError2 = 0;    ///< total sum square of the errors
 
    /**
     * Stores the data values the same way as the coordinates.
@@ -614,12 +614,12 @@ private:
    // This vector contains the data error.
    // Either only fDataError or fDataErrorHigh and fDataErrorLow are used.
 
-   double* fpTmpCoordErrorVector; // not threadsafe stuff!
+   double* fpTmpCoordErrorVector; ///< not threadsafe stuff!
 
    std::vector< std::vector< double > > fBinEdge;
    // vector containing the bin upper edge (coordinate will contain low edge)
 
-   double* fpTmpBinEdgeVector; // not threadsafe stuff!
+   double* fpTmpBinEdgeVector; ///< not threadsafe stuff!
 };
 
 

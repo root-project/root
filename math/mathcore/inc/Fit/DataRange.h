@@ -25,7 +25,7 @@ namespace ROOT {
 /**
    class describing the range in the coordinates
    it supports  multiple range in a coordinate.
-   The rnage dimension is the dimension of the coordinate, its size is
+   The range dimension is the dimension of the coordinate, its size is
    the number of interval for each coordinate.
    Default range is -inf, inf
    Range can be modified with the add range method
@@ -206,15 +206,15 @@ public:
    bool IsInside(double x, unsigned int icoord = 0) const;
 
    /**
-      check if a multi-dimpoint is inside the range 
+      check if a multi-dimpoint is inside the range
     */
    bool IsInside(const double *x) const {
       bool ret = true;
-      for (unsigned int idim = 0; idim < fRanges.size(); ++idim) { 
+      for (unsigned int idim = 0; idim < fRanges.size(); ++idim) {
          ret &= IsInside(x[idim],idim);
          if (!ret) return ret;
       }
-      return ret; 
+      return ret;
    }
 
 protected:
@@ -229,7 +229,7 @@ protected:
 
 private:
 
-   RangeIntervals fRanges;  // list of all ranges
+   RangeIntervals fRanges;  ///< list of all ranges
 
 
 };

@@ -117,7 +117,7 @@ public :
     Uses as argument an iterator of a list (or vector) containing the const double * of the data
     An example could be the std::vector<const double *>::begin
     In case of weighted data, the external data must have a dim+1 lists of data
-    The apssed dim refers just to the coordinate size
+    The passed dim refers just to the coordinate size
   */
   template<class Iterator>
   UnBinData(unsigned int n, unsigned int dim, Iterator dataItr,

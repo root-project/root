@@ -174,14 +174,14 @@ private:
 
       //data member
 
-   bool fIsExtended; // flag to indicate if is extended (when false is a Multinomial lieklihood), default is true
-   int fWeight;  // flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
+   bool fIsExtended; ///< flag to indicate if is extended (when false is a Multinomial likelihood), default is true
+   int fWeight;  ///< flag to indicate if needs to evaluate using weight or weight squared (default weight = 0)
 
-   mutable unsigned int fNEffPoints;  // number of effective points used in the fit
+   mutable unsigned int fNEffPoints;  ///< number of effective points used in the fit
 
-   mutable std::vector<double> fGrad; // for derivatives
+   mutable std::vector<double> fGrad; ///< for derivatives
 
-   ::ROOT::EExecutionPolicy fExecutionPolicy; // Execution policy
+   ::ROOT::EExecutionPolicy fExecutionPolicy; ///< Execution policy
 };
 
       // define useful typedef's
