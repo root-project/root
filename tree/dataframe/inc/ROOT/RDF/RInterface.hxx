@@ -1654,18 +1654,18 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Fill and return a graph (*lazy action*).
-   /// \tparam V1 The type of the column used to fill the x axis of the graph.
-   /// \tparam V2 The type of the column used to fill the y axis of the graph.
-   /// \param[in] v1Name The name of the column that will fill the x axis.
-   /// \param[in] v2Name The name of the column that will fill the y axis.
-   /// \return the graph wrapped in a RResultPtr.
+   /// \brief Fill and return a TGraph object (*lazy action*).
+   /// \tparam X The type of the column used to fill the x axis.
+   /// \tparam Y The type of the column used to fill the y axis.
+   /// \param[in] x The name of the column that will fill the x axis.
+   /// \param[in] y The name of the column that will fill the y axis.
+   /// \return the TGraph wrapped in a RResultPtr.
    ///
-   /// Columns can be of a container type (e.g. std::vector<double>), in which case the graph
+   /// Columns can be of a container type (e.g. std::vector<double>), in which case the TGraph
    /// is filled with each one of the elements of the container.
    /// If Multithreading is enabled, the order in which points are inserted is undefined.
    /// If the Graph has to be drawn, it is suggested to the user to sort it on the x before printing.
-   /// A name and a title to the graph is given based on the input column names.
+   /// A name and a title to the TGraph is given based on the input column names.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. Also see RResultPtr.
@@ -1678,14 +1678,14 @@ public:
    /// auto myGraph2 = myDf.Graph<int, float>("xValues", "yValues");
    /// ~~~
    ///
-   /// \note Differently from other ROOT interfaces, the returned graph is not associated to gDirectory
+   /// \note Differently from other ROOT interfaces, the returned TGraph is not associated to gDirectory
    /// and the caller is responsible for its lifetime (in particular, a typical source of confusion is that
    /// if result histograms go out of scope before the end of the program, ROOT might display a blank canvas).
-   template <typename V1 = RDFDetail::RInferredType, typename V2 = RDFDetail::RInferredType>
-   RResultPtr<::TGraph> Graph(std::string_view v1Name = "", std::string_view v2Name = "")
+   template <typename X = RDFDetail::RInferredType, typename Y = RDFDetail::RInferredType>
+   RResultPtr<::TGraph> Graph(std::string_view x = "", std::string_view y = "")
    {
       auto graph = std::make_shared<::TGraph>();
-      const std::vector<std::string_view> columnViews = {v1Name, v2Name};
+      const std::vector<std::string_view> columnViews = {x, y};
       const auto userColumns = RDFInternal::AtLeastOneEmptyString(columnViews)
                                   ? ColumnNames_t()
                                   : ColumnNames_t(columnViews.begin(), columnViews.end());
@@ -1693,15 +1693,13 @@ public:
       const auto validatedColumns = GetValidatedColumnNames(2, userColumns);
 
       // We build a default name and title based on the input columns
-      if (!(validatedColumns[0].empty() && validatedColumns[1].empty())) {
-         const auto g_name = std::string(v1Name) + "_vs_" + std::string(v2Name);
-         const auto g_title = std::string(v1Name) + " vs " + std::string(v2Name);
-         graph->SetNameTitle(g_name.c_str(), g_title.c_str());
-         graph->GetXaxis()->SetTitle(std::string(v1Name).c_str());
-         graph->GetYaxis()->SetTitle(std::string(v2Name).c_str());
-      }
+      const auto g_name = validatedColumns[0] + "_vs_" + validatedColumns[1];
+      const auto g_title = validatedColumns[0] + " vs " + validatedColumns[1];
+      graph->SetNameTitle(g_name.c_str(), g_title.c_str());
+      graph->GetXaxis()->SetTitle(validatedColumns[0].c_str());
+      graph->GetYaxis()->SetTitle(validatedColumns[1].c_str());
 
-      return CreateAction<RDFInternal::ActionTags::Graph, V1, V2>(validatedColumns, graph, graph);
+      return CreateAction<RDFInternal::ActionTags::Graph, X, Y>(validatedColumns, graph, graph);
    }
 
    ////////////////////////////////////////////////////////////////////////////
