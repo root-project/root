@@ -1431,15 +1431,18 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             }
          }
 
-         let close_path = "";
-         let fill_for_interactive = !JSROOT.batch_mode && this.fillatt.empty() && options.Hist && JSROOT.settings.Tooltip && !draw_markers && !show_line;
+         let close_path = "",
+             fill_for_interactive = !JSROOT.batch_mode && this.fillatt.empty() && options.Hist && JSROOT.settings.Tooltip && !draw_markers && !show_line;
          if (!this.fillatt.empty() || fill_for_interactive) {
             let h0 = height + 3;
             if (fill_for_interactive) {
                let gry0 = Math.round(funcs.gry(0));
-               if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
+               if (gry0 <= 0)
+                  h0 = -3;
+               else if (gry0 < height)
+                  h0 = gry0;
             }
-            close_path = `L${currx},${h0}H{startx}Z`;
+            close_path = `L${currx},${h0}H${startx}Z`;
             if (res.length > 0) res += close_path;
          }
 
@@ -2860,7 +2863,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
             if (dx)
                return dy ? `l${dx},${dy}` : `h${dx}`;
             return dy ? `v${dy}` : "";
-         }
+         };
 
          for (let loop = 0; loop < 2; ++loop)
             for (i = handle.i1; i < handle.i2; i += di)
@@ -2943,8 +2946,11 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
          if (main.logz && (absmax>0)) {
             uselogz = true;
             let logmax = Math.log(absmax);
-            if (absmin>0) logmin = Math.log(absmin); else
-            if ((main.minposbin>=1) && (main.minposbin<100)) logmin = Math.log(0.7); else
+            if (absmin > 0)
+               logmin = Math.log(absmin);
+            else if ((main.minposbin >= 1) && (main.minposbin < 100))
+               logmin = Math.log(0.7);
+             else
                logmin = (main.minposbin > 0) ? Math.log(0.7*main.minposbin) : logmax - 10;
             if (logmin >= logmax) logmin = logmax - 10;
             xyfactor = 1. / (logmax - logmin);
@@ -2959,7 +2965,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                absz = Math.abs(binz);
                if ((absz === 0) || (absz < absmin)) continue;
 
-               zdiff = uselogz ? ((absz>0) ? Math.log(absz) - logmin : 0) : (absz - absmin);
+               zdiff = uselogz ? ((absz > 0) ? Math.log(absz) - logmin : 0) : (absz - absmin);
                // area of the box should be proportional to absolute bin content
                zdiff = 0.5 * ((zdiff < 0) ? 1 : (1 - Math.sqrt(zdiff * xyfactor)));
                // avoid oversized bins
@@ -2977,28 +2983,27 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
                ww = Math.max(Math.round(ww - 2*dgrx), 1);
                hh = Math.max(Math.round(hh - 2*dgry), 1);
 
-               res += "M"+xx+","+yy + "v"+hh + "h"+ww + "v-"+hh + "z";
+               res += `M${xx},${yy}v${hh}h${ww}v${-hh}z`;
 
-               if ((binz<0) && (this.options.BoxStyle === 10))
-                  cross += "M"+xx+","+yy + "l"+ww+","+hh + "M"+(xx+ww)+","+yy + "l-"+ww+","+hh;
+               if ((binz < 0) && (this.options.BoxStyle === 10))
+                  cross += `M${xx},${yy}l${ww},${hh}M${xx+ww},${yy}l${-ww},${hh}`;
 
                if ((this.options.BoxStyle === 11) && (ww>5) && (hh>5)) {
                   let pww = Math.round(ww*0.1),
                       phh = Math.round(hh*0.1),
-                      side1 = "M"+xx+","+yy + "h"+ww + "l"+(-pww)+","+phh + "h"+(2*pww-ww) +
-                              "v"+(hh-2*phh)+ "l"+(-pww)+","+phh + "z",
-                      side2 = "M"+(xx+ww)+","+(yy+hh) + "v"+(-hh) + "l"+(-pww)+","+phh + "v"+(hh-2*phh)+
-                              "h"+(2*pww-ww) + "l"+(-pww)+","+phh + "z";
-                  if (binz<0) { btn2+=side1; btn1+=side2; }
-                         else { btn1+=side1; btn2+=side2; }
+                      side1 = `M${xx},${yy}h${ww}l${-pww},${phh}h${2*pww-ww}v${hh-2*phh}l${-pww},${phh}z`,
+                      side2 = `M${xx+ww},${yy+hh}v${-hh}l${-pww},${phh}v${hh-2*phh}h${2*pww-ww}l${-pww},${phh}z`;
+                  if (binz < 0) { btn2 += side1; btn1 += side2; }
+                           else { btn1 += side1; btn2 += side2; }
                }
             }
          }
 
          if (res.length > 0) {
-            let elem = this.draw_g.append("svg:path")
-                                  .attr("d", res)
-                                  .call(this.fillatt.func);
+            let elem = this.draw_g
+                           .append("svg:path")
+                           .attr("d", res)
+                           .call(this.fillatt.func);
             if ((this.options.BoxStyle !== 11) && this.fillatt.empty())
                elem.call(this.lineatt.func);
          }

@@ -3299,12 +3299,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                BetaMode = (a,b) => {
             if (a <= 0 || b <= 0 ) return 0;
             if ( a <= 1 || b <= 1) {
-               if ( a < b) return 0;
-               if ( a > b) return 1;
+               if (a < b) return 0;
+               if (a > b) return 1;
                if (a == b) return 0.5; // cannot do otherwise
             }
             return (a - 1.0) / (a + b -2.0);
-         }
+         };
 
          let total = obj.fTotalHistogram.fArray[bin], // should work for both 1-d and 2-d
              passed = obj.fPassedHistogram.fArray[bin]; // should work for both 1-d and 2-d

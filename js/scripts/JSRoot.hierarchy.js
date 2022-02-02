@@ -4461,7 +4461,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
              let sel = findGroup(grid);
              if (!sel.classed('jsroot_newgrid')) sel = sel.select(".jsroot_newgrid");
              sel.each(function() { JSROOT.resize(this); });
-          }
+          };
 
          if (action == "start") {
             group.startpos = group.position;
@@ -4763,7 +4763,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
             main.style("left", rect.x + "px").style("top", rect.y + "px");
          } else if (!no_redraw) {
-            JSROOT.resize(frame)
+            JSROOT.resize(frame);
          }
 
          return true;

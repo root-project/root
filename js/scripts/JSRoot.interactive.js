@@ -435,7 +435,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
 
          return change_size || change_pos;
-      }
+      };
 
       let drag_move = d3.drag().subject(Object);
 

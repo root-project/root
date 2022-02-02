@@ -1547,7 +1547,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                if (jsrp.getColor(col).toUpperCase() === this.part)
                   { this.color = col; return true; }
             return false;
-         }
+         };
 
          if (d.check('FILL_', true) && d.getColor())
             this.histoFillColor = d.color;
@@ -1950,7 +1950,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       kIsZoomed      : JSROOT.BIT(16), // bit set when zooming on Y axis
       kNoTitle       : JSROOT.BIT(17), // don't draw the histogram title
       kIsAverage     : JSROOT.BIT(18)  // Bin contents are average (used by Add)
-   }
+   };
 
    /**
     * @summary Basic painter for histogram classes
@@ -3904,7 +3904,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                do_marker = true;
                this.markeratt.resetPos();
                if ((hints_err === null) && want_tooltip && (!this.markeratt.fill || (this.markeratt.getFullSize() < 7))) {
-                  hints_marker = ""; hsz = Math.max(5, Math.round(this.markeratt.getFullSize()*0.7))
+                  hints_marker = "";
+                  hsz = Math.max(5, Math.round(this.markeratt.getFullSize()*0.7));
                 }
             } else {
                show_markers = false;
@@ -4734,11 +4735,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
 
          if (first < last) {
-            let axis = this.proj_hist.fXaxis
+            let axis = this.proj_hist.fXaxis;
             axis.fFirst = first;
             axis.fLast = last;
 
-            if (((axis.fFirst==1) && (axis.fLast==axis.fNbins)) == axis.TestBit(JSROOT.EAxisBits.kAxisRange))
+            if (((axis.fFirst == 1) && (axis.fLast == axis.fNbins)) == axis.TestBit(JSROOT.EAxisBits.kAxisRange))
                axis.InvertBit(JSROOT.EAxisBits.kAxisRange);
          }
 
@@ -5244,21 +5245,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                if (zc < levels[kk])
                   return kk-1;
             return nlevels-1;
-         }
-
-   //      // not used while slower for <100 levels
-   //      const RealBinarySearch = zc => {
-   //         let l = 0, r = nlevels-1;
-   //         if (zc < levels[0]) return -1;
-   //         if (zc >= levels[r]) return r;
-   //         while (r - l > 1) {
-   //            let m = Math.round((r+l)/2);
-   //            if (zc < levels[m]) r = m; else l = m;
-   //         }
-   //         return r-1;
-   //      }
-
-         function PaintContourLine(elev1, icont1, x1, y1,  elev2, icont2, x2, y2) {
+         }, PaintContourLine = (elev1, icont1, x1, y1,  elev2, icont2, x2, y2) => {
             /* Double_t *xarr, Double_t *yarr, Int_t *itarr, Double_t *levels */
             let vert = (x1 === x2),
                 tlen = vert ? (y2 - y1) : (x2 - x1),
@@ -5284,11 +5271,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                }
                itarr[ii] = n;
                icount++;
-               ii +=2;
+               ii += 2;
                n++;
             }
             return icount;
-         }
+         };
 
          let arrx = handle.original ? handle.origx : handle.grx,
              arry = handle.original ? handle.origy : handle.gry;
@@ -5388,18 +5375,18 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          let polysort = new Int32Array(levels.length), first = 0;
          //find first positive contour
-         for (ipoly=0;ipoly<levels.length;ipoly++) {
+         for (ipoly = 0; ipoly < levels.length; ipoly++) {
             if (levels[ipoly] >= 0) { first = ipoly; break; }
          }
          //store negative contours from 0 to minimum, then all positive contours
          k = 0;
-         for (ipoly=first-1;ipoly>=0;ipoly--) {polysort[k] = ipoly; k++;}
-         for (ipoly=first;ipoly<levels.length;ipoly++) { polysort[k] = ipoly; k++;}
+         for (ipoly = first-1; ipoly >= 0; ipoly--) { polysort[k] = ipoly; k++; }
+         for (ipoly = first; ipoly < levels.length; ipoly++) { polysort[k] = ipoly; k++; }
 
          let xp = new Float32Array(2*npmax),
              yp = new Float32Array(2*npmax);
 
-         for (k=0;k<levels.length;++k) {
+         for (k = 0; k < levels.length; ++k) {
 
             ipoly = polysort[k];
             poly = polys[ipoly];
@@ -5868,7 +5855,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             if (dx)
                return dy ? `l${dx},${dy}` : `h${dx}`;
             return dy ? `v${dy}` : "";
-         }
+         };
 
          for (let loop = 0;loop < 2; ++loop)
             for (i = handle.i1; i < handle.i2; ++i)
@@ -6153,7 +6140,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             }
 
             return res;
-         }
+         };
 
          if (this.options.Candle)
             parseOption(this.options.Candle, true);
@@ -6285,7 +6272,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                 y02 = Math.round(funcs[fname](pnt.fMedian - fMedianErr));
 
             if (isOption(kHistoZeroIndicator))
-               hlines += make_path(center, Math.round(funcs[fname](xx[xindx1])),'V',Math.round(funcs[fname](xx[xindx2])))
+               hlines += make_path(center, Math.round(funcs[fname](xx[xindx1])),'V',Math.round(funcs[fname](xx[xindx2])));
 
             if (isOption(kMedianLine))
                lines += make_path(pnt.x1,pnt.y0,'H',pnt.x2);
@@ -6442,7 +6429,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if ((hlines.length > 0) && (histo.fFillColor > 0))
             this.draw_g.append("svg:path")
                 .attr("d", hlines)
-                .style("stroke", this.getColor(histo.fFillColor))
+                .style("stroke", this.getColor(histo.fFillColor));
 
          let hline_color = (isOption(kHistoZeroIndicator) && (histo.fFillStyle != 0)) ? this.fillatt.color : this.lineatt.color;
          if ((hists.length > 0) && (!this.fillatt.empty() || (hline_color != 'none')))
