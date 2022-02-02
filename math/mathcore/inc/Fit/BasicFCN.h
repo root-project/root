@@ -33,7 +33,7 @@ namespace ROOT {
 //___________________________________________________________________________________
 /**
    BasicFCN class: base class  for the objective functions used in the fits
-   It has a reference to the data and th emodel function used in the fit.
+   It has a reference to the data and the model function used in the fit.
    It cannot be instantiated but constructed from the derived classes
 */
 template<class DerivFunType, class ModelFunType, class DataType>
