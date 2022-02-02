@@ -56,6 +56,22 @@ TEST(RDFVary, RequireNVariationsIsConsistent)
    ASSERT_DEATH(all_s["nominal"], "Variation expression has wrong size");
 }
 
+TEST(RDFVary, VariationsForDoesNotTriggerRun)
+{
+   ROOT::RDataFrame df(10);
+   auto h = df.Define("x", [] { return 1; }).Histo1D<int>("x");
+   auto hs = VariationsFor(h);
+   EXPECT_EQ(df.GetNRuns(), 0);
+}
+
+TEST(RDFVary, VariationsForWithNoVariations)
+{
+   ROOT::RDataFrame df(10);
+   auto h = df.Define("x", [] { return 1; }).Histo1D<int>("x");
+   auto hs = VariationsFor(h);
+   EXPECT_EQ(hs.GetKeys(), std::vector<std::string>{"nominal"});
+}
+
 TEST_P(RDFVary, SimpleSum)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
@@ -481,6 +497,34 @@ TEST_P(RDFVary, JittedVaryDefineFilterAndAction)
    EXPECT_EQ(sums["myvariation:up"], 20);
 }
 
+TEST_P(RDFVary, VariationsForOnSameResult)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto h = df.Vary("x", SimpleVariation, {}, 2).Histo1D<int>("x");
+   EXPECT_EQ(df.GetNRuns(), 0);
+   EXPECT_EQ(int(h->GetEntries()), 10);
+   EXPECT_DOUBLE_EQ(h->GetMean(), 1.);
+   EXPECT_EQ(df.GetNRuns(), 1);
+
+   auto checkHistos = [&h](ROOT::RDF::Experimental::RResultMap<TH1D> &histos) {
+      EXPECT_EQ(int(h->GetEntries()), 10);
+      EXPECT_EQ(int(histos["nominal"].GetEntries()), 10);
+      EXPECT_DOUBLE_EQ(histos["nominal"].GetMean(), 1.);
+      EXPECT_EQ(int(histos["x:0"].GetEntries()), 10);
+      EXPECT_DOUBLE_EQ(histos["x:0"].GetMean(), -1.);
+      EXPECT_EQ(int(histos["x:1"].GetEntries()), 10);
+      EXPECT_DOUBLE_EQ(histos["x:1"].GetMean(), 2.);
+   };
+
+   auto histos = VariationsFor(h);
+   checkHistos(histos);
+   EXPECT_EQ(df.GetNRuns(), 2);
+   auto histos2 = VariationsFor(h);
+   checkHistos(histos2);
+   checkHistos(histos); // check that these results are still correct
+   EXPECT_EQ(df.GetNRuns(), 3);
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
@@ -490,11 +534,6 @@ INSTANTIATE_TEST_SUITE_P(MT, RDFVary, ::testing::Values(true));
 #endif
 
 // TODO
-// - try calling VariationsFor twice on the same result (with different filters in between)
-// - check that after running a second event loop, the results from the first are still correct
-// - jitted Vary expression
-// - test with TH1 (in particular running the varied event loop _after_ the nominal to check that results are reset)
-// - test calling VariationsFor on something that's not varied
 // - interaction with Redefine
 // - interaction with SaveGraph
 // - throw a Range into the mix (for now, we should throw if Range + Vary I guess?)
