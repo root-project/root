@@ -813,7 +813,7 @@ JSROOT.define(['three'], function(THREE) {
          return new Geometry(node);
       }
 
-   }
+   };
 
    if (JSROOT.nodejs) module.exports = ThreeBSP;
    return ThreeBSP;

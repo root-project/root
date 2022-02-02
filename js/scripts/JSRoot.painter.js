@@ -3390,7 +3390,7 @@ JSROOT.define(['d3'], (d3) => {
                if (ticks.length <= total) return true;
                if (ticks.length > total + 1) return false;
                return (ticks[0] === dom[0]) || (ticks[total] === dom[1]); // special case of N+1 ticks, but match any range
-            }
+            };
 
             let res1 = this.func.ticks(total);
             if (ndiv2 || check(res1)) return res1;
