@@ -130,10 +130,8 @@ std::vector<float> predictWithFloat(std::string method)
       tree->GetEntry(ievt);
 
       // Convert TTree UInt_t to Float_t of TMVA
-      fid = uid;
-      
+      fid = uid; 
       output[ievt] = reader.EvaluateMVA("BDT1");
-
    }
    return output;
 }
@@ -168,17 +166,14 @@ std::vector<float> predictWithInt(std::string method)
 
    for (Long64_t ievt = 0; ievt < NUM_EVENTS; ievt++) {
       tree->GetEntry(ievt);
-
-
       output[ievt] = reader.EvaluateMVA("BDT1");
-      
    }
    return output;
 }
 
 TEST(CrossValidationIntVar, EqualOutputTo)
 {
-   // trainining (use a single process)
+   // training
    auto p = runCrossValidation(1);
 
    // Print duration
@@ -188,12 +183,10 @@ TEST(CrossValidationIntVar, EqualOutputTo)
    // Verify that the two models generate the same output given the same input.
    std::string weightPath = std::get<0>(p);
 
-
    // AccessPathName() == kFALSE means file exits
    ASSERT_FALSE(gSystem->AccessPathName(weightPath.c_str())) << "Method was"
-      << " not serialised correctly. Path: '" << weightPath << "' does not"
+      << " not serialized correctly. Path: '" << weightPath << "' does not"
       << " exist.";
-   
 
    auto output1 = predictWithFloat(weightPath);
    auto output2 = predictWithInt(weightPath);
