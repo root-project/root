@@ -95,7 +95,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "19/11/2021"*/
-   JSROOT.version_date = "1/02/2022";
+   JSROOT.version_date = "2/02/2022";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -467,6 +467,8 @@
             need[indx] = name.substr(5);
          else if (name == "2d")
             need[indx] = "painter";
+         else if (name == "jq2d")
+            need[indx] = "hierarchy";
          else if (name == "v6")
             need[indx] = "gpad";
          else if (name == "v7")
@@ -687,8 +689,7 @@
 
          if (req.factoryFunc && req.thisModule) {
             if (!(_.modules[req.thisModule])) {
-               console.log('Introducing module', req.thisModule, 'need', need)
-
+               console.log('Introducing module', req.thisModule, 'need', need);
                _.modules[req.thisModule] = { jsroot: true, src: thisSrc, loading: true };
             }
          }

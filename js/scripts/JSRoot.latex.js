@@ -443,7 +443,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                   elem.text(s);
 
                let rect = !JSROOT.nodejs && !JSROOT.settings.ApproxTextSize && !arg.fast ? jsrp.getElementRect(elem, 'nopadding') :
-                             { height: curr.fsize * 1.2, width: approximateLabelWidth(s, curr.font, curr.fsize) }
+                             { height: curr.fsize * 1.2, width: approximateLabelWidth(s, curr.font, curr.fsize) };
 
                if (curr.x) elem.attr("x", curr.x);
                if (curr.y) elem.attr("y", curr.y);
