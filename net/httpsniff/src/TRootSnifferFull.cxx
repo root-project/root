@@ -101,7 +101,7 @@ void TRootSnifferFull::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *o
       rec.SetField("_more", "false", kFALSE);
       rec.SetField("_can_draw", "false", kFALSE);
       rec.SetField("_player", "JSROOT.drawLeafPlayer");
-      rec.SetField("_prereq", "jq2d");
+      rec.SetField("_prereq", "hierarchy");
       return;
    }
 
@@ -127,7 +127,7 @@ void TRootSnifferFull::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TO
          } else {
             rec.SetField("_ttree", "true", kFALSE); // indicate ROOT TTree
             rec.SetField("_player", "JSROOT.drawTreePlayerKey");
-            rec.SetField("_prereq", "jq2d");
+            rec.SetField("_prereq", "hierarchy");
             // rec.SetField("_more", "true", kFALSE); // one could allow to extend
          }
       }
@@ -144,7 +144,7 @@ void TRootSnifferFull::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
       if (!rec.IsReadOnly(fReadOnly)) {
          rec.SetField("_ttree", "true", kFALSE); // indicate ROOT TTree
          rec.SetField("_player", "JSROOT.drawTreePlayer");
-         rec.SetField("_prereq", "jq2d");
+         rec.SetField("_prereq", "hierarchy");
       }
       ScanCollection(rec, ((TTree *)obj)->GetListOfLeaves());
    } else if (obj->InheritsFrom(TBranch::Class())) {
