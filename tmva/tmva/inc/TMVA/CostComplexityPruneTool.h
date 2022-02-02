@@ -68,13 +68,13 @@ namespace TMVA {
       virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = NULL, Bool_t isAutomatic = kFALSE );
 
    private:
-      SeparationBase* fQualityIndexTool; //! the quality index used to calculate R(t), R(T) = sum[t in ~T]{ R(t) }
+      SeparationBase* fQualityIndexTool;             ///<! the quality index used to calculate R(t), R(T) = sum[t in ~T]{ R(t) }
 
-      std::vector<DecisionTreeNode*> fPruneSequence; //! map of weakest links (i.e., branches to prune) -> pruning index
-      std::vector<Double_t> fPruneStrengthList; //! map of alpha -> pruning index
-      std::vector<Double_t> fQualityIndexList; //! map of R(T) -> pruning index
+      std::vector<DecisionTreeNode*> fPruneSequence; ///<! map of weakest links (i.e., branches to prune) -> pruning index
+      std::vector<Double_t> fPruneStrengthList;      ///<! map of alpha -> pruning index
+      std::vector<Double_t> fQualityIndexList;       ///<! map of R(T) -> pruning index
 
-      Int_t fOptimalK; //! the optimal index of the prune sequence
+      Int_t fOptimalK;                               ///<! the optimal index of the prune sequence
 
    private:
       // set the meta data used for cost complexity pruning

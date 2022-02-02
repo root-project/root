@@ -124,13 +124,13 @@ namespace TMVA {
       Bool_t   GetHessian( TMatrixD &Hessian, TMatrixD &Gamma, TMatrixD &Delta );
       void     SetDir( TMatrixD &Hessian, TMatrixD &Dir );
       Double_t DerivDir( TMatrixD &Dir );
-      Bool_t   LineSearch( TMatrixD &Dir, std::vector<Double_t> &Buffer, Double_t* dError=0 ); //zjh
+      Bool_t   LineSearch( TMatrixD &Dir, std::vector<Double_t> &Buffer, Double_t* dError=0 ); ///< zjh
       void     ComputeDEDw();
       void     SimulateEvent( const Event* ev );
       void     SetDirWeights( std::vector<Double_t> &Origin, TMatrixD &Dir, Double_t alpha );
       Double_t GetError();
-      Double_t GetMSEErr( const Event* ev, UInt_t index = 0 );   //zjh
-      Double_t GetCEErr( const Event* ev, UInt_t index = 0 );   //zjh
+      Double_t GetMSEErr( const Event* ev, UInt_t index = 0 );   ///< zjh
+      Double_t GetCEErr( const Event* ev, UInt_t index = 0 );   ///< zjh
 
       // backpropagation functions
       void     BackPropagationMinimize( Int_t nEpochs );
@@ -161,60 +161,60 @@ namespace TMVA {
 #endif
 
       // general
-      bool               fUseRegulator;         // zjh
-      bool               fCalculateErrors;      // compute inverse hessian matrix at the end of the training
-      Double_t           fPrior;                // zjh
-      std::vector<Double_t> fPriorDev;          // zjh
-      void               GetApproxInvHessian ( TMatrixD& InvHessian, bool regulate=true );   //rank-1 approximation, neglect 2nd derivatives. //zjh
-      void               UpdateRegulators();    // zjh
-      void               UpdatePriors();        // zjh
-      Int_t              fUpdateLimit;          // zjh
+      bool               fUseRegulator;         ///< zjh
+      bool               fCalculateErrors;      ///< compute inverse hessian matrix at the end of the training
+      Double_t           fPrior;                ///< zjh
+      std::vector<Double_t> fPriorDev;          ///< zjh
+      void               GetApproxInvHessian ( TMatrixD& InvHessian, bool regulate=true );   ///< rank-1 approximation, neglect 2nd derivatives. //zjh
+      void               UpdateRegulators();    ///< zjh
+      void               UpdatePriors();        ///< zjh
+      Int_t              fUpdateLimit;          ///< zjh
 
-      ETrainingMethod fTrainingMethod; // method of training, BP or GA
-      TString         fTrainMethodS;   // training method option param
+      ETrainingMethod fTrainingMethod; ///< method of training, BP or GA
+      TString         fTrainMethodS;   ///< training method option param
 
-      Float_t         fSamplingFraction;  // fraction of events which is sampled for training
-      Float_t         fSamplingEpoch;     // fraction of epochs where sampling is used
-      Float_t         fSamplingWeight;    // changing factor for event weights when sampling is turned on
-      Bool_t          fSamplingTraining;  // The training sample is sampled
-      Bool_t          fSamplingTesting;   // The testing sample is sampled
+      Float_t         fSamplingFraction;  ///< fraction of events which is sampled for training
+      Float_t         fSamplingEpoch;     ///< fraction of epochs where sampling is used
+      Float_t         fSamplingWeight;    ///< changing factor for event weights when sampling is turned on
+      Bool_t          fSamplingTraining;  ///< The training sample is sampled
+      Bool_t          fSamplingTesting;   ///< The testing sample is sampled
 
       // BFGS variables
-      Double_t        fLastAlpha;      // line search variable
-      Double_t        fTau;            // line search variable
-      Int_t           fResetStep;      // reset time (how often we clear hessian matrix)
+      Double_t        fLastAlpha;      ///< line search variable
+      Double_t        fTau;            ///< line search variable
+      Int_t           fResetStep;      ///< reset time (how often we clear hessian matrix)
 
       // back propagation variable
-      Double_t        fLearnRate;      // learning rate for synapse weight adjustments
-      Double_t        fDecayRate;      // decay rate for above learning rate
-      EBPTrainingMode fBPMode;         // backprop learning mode (sequential or batch)
-      TString         fBpModeS;        // backprop learning mode option string (sequential or batch)
-      Int_t           fBatchSize;      // batch size, only matters if in batch learning mode
-      Int_t           fTestRate;       // test for overtraining performed at each #th epochs
-      Bool_t          fEpochMon;       // create and fill epoch-wise monitoring histograms (makes outputfile big!)
+      Double_t        fLearnRate;      ///< learning rate for synapse weight adjustments
+      Double_t        fDecayRate;      ///< decay rate for above learning rate
+      EBPTrainingMode fBPMode;         ///< backprop learning mode (sequential or batch)
+      TString         fBpModeS;        ///< backprop learning mode option string (sequential or batch)
+      Int_t           fBatchSize;      ///< batch size, only matters if in batch learning mode
+      Int_t           fTestRate;       ///< test for overtraining performed at each #th epochs
+      Bool_t          fEpochMon;       ///< create and fill epoch-wise monitoring histograms (makes outputfile big!)
 
       // genetic algorithm variables
-      Int_t           fGA_nsteps;      // GA settings: number of steps
-      Int_t           fGA_preCalc;     // GA settings: number of pre-calc steps
-      Int_t           fGA_SC_steps;    // GA settings: SC_steps
-      Int_t           fGA_SC_rate; // GA settings: SC_rate
-      Double_t        fGA_SC_factor;   // GA settings: SC_factor
+      Int_t           fGA_nsteps;      ///< GA settings: number of steps
+      Int_t           fGA_preCalc;     ///< GA settings: number of pre-calc steps
+      Int_t           fGA_SC_steps;    ///< GA settings: SC_steps
+      Int_t           fGA_SC_rate;     ///< GA settings: SC_rate
+      Double_t        fGA_SC_factor;   ///< GA settings: SC_factor
 
       // regression, storage of deviations
-      std::vector<std::pair<Float_t,Float_t> >* fDeviationsFromTargets; // deviation from the targets, event weight
+      std::vector<std::pair<Float_t,Float_t> >* fDeviationsFromTargets; ///< deviation from the targets, event weight
 
-      Float_t         fWeightRange;    // suppress outliers for the estimator calculation
+      Float_t         fWeightRange;    ///< suppress outliers for the estimator calculation
 
 #ifdef MethodMLP_UseMinuit__
       // minuit variables -- commented out because they rely on a static pointer
-      Int_t          fNumberOfWeights; // Minuit: number of weights
-      static MethodMLP* fgThis;        // Minuit: this pointer
+      Int_t          fNumberOfWeights; ///< Minuit: number of weights
+      static MethodMLP* fgThis;        ///< Minuit: this pointer
 #endif
 
       // debugging flags
-      static const Int_t  fgPRINT_ESTIMATOR_INC = 10;     // debug flags
-      static const Bool_t fgPRINT_SEQ           = kFALSE; // debug flags
-      static const Bool_t fgPRINT_BATCH         = kFALSE; // debug flags
+      static const Int_t  fgPRINT_ESTIMATOR_INC = 10;     ///< debug flags
+      static const Bool_t fgPRINT_SEQ           = kFALSE; ///< debug flags
+      static const Bool_t fgPRINT_BATCH         = kFALSE; ///< debug flags
 
       ClassDef(MethodMLP,0); // Multi-layer perceptron implemented specifically for TMVA
    };

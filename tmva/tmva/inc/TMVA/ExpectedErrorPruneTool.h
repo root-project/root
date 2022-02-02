@@ -70,11 +70,11 @@ namespace TMVA {
       Double_t GetSubTreeError( DecisionTreeNode* node ) const;
       Int_t CountNodes( DecisionTreeNode* node, Int_t icount = 0 );
 
-      Double_t fDeltaPruneStrength; //! the stepsize for optimizing the pruning strength parameter
-      Double_t fNodePurityLimit; //! the purity limit for labelling a terminal node as signal
-      std::vector<DecisionTreeNode*> fPruneSequence; //! the (optimal) prune sequence
-      //      std::multimap<const Double_t, Double_t> fQualityMap; //! map of tree quality <=> prune strength
-      mutable MsgLogger* fLogger;   // message logger
+      Double_t fDeltaPruneStrength; ///<! the stepsize for optimizing the pruning strength parameter
+      Double_t fNodePurityLimit; ///<! the purity limit for labelling a terminal node as signal
+      std::vector<DecisionTreeNode*> fPruneSequence; ///<! the (optimal) prune sequence
+      //      std::multimap<const Double_t, Double_t> fQualityMap; ///<! map of tree quality <=> prune strength
+      mutable MsgLogger* fLogger;   ///< message logger
       MsgLogger& Log() const { return *fLogger; }
    };
 

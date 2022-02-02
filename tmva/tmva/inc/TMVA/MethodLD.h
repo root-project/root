@@ -1,4 +1,4 @@
-// Author: Krzysztof Danielowski, Kamil Kraszewski, Maciej Kruk, Jan Therhaag 
+// Author: Krzysztof Danielowski, Kamil Kraszewski, Maciej Kruk, Jan Therhaag
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -17,8 +17,8 @@
  *      Jan Therhaag          <therhaag@physik.uni-bonn.de> - Uni Bonn, Germany   *
  *                                                                                *
  * Copyright (c) 2008-2011:                                                       *
- *      CERN, Switzerland                                                         * 
- *      PAN, Poland                                                               * 
+ *      CERN, Switzerland                                                         *
+ *      PAN, Poland                                                               *
  *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -50,22 +50,22 @@ namespace TMVA {
    class MethodLD : public MethodBase {
 
    public:
-   
+
       // constructor
-      MethodLD( const TString& jobName, 
-                const TString& methodTitle, 
+      MethodLD( const TString& jobName,
+                const TString& methodTitle,
                 DataSetInfo& dsi,
                 const TString& theOption = "LD");
-      
+
       // constructor
-      MethodLD( DataSetInfo& dsi, 
+      MethodLD( DataSetInfo& dsi,
                 const TString& theWeightFile);
 
       // destructor
       virtual ~MethodLD( void );
 
       Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
-    
+
       // training method
       void Train( void );
 
@@ -75,7 +75,7 @@ namespace TMVA {
       // calculate the Regression value
       virtual const std::vector<Float_t>& GetRegressionValues();
 
-      using MethodBase::ReadWeightsFromStream;   
+      using MethodBase::ReadWeightsFromStream;
 
       void AddWeightsXMLTo      ( void* parent ) const;
 
@@ -93,12 +93,12 @@ namespace TMVA {
 
    private:
 
-      Int_t fNRegOut; // size of the output
- 
-      TMatrixD *fSumMatx;              // Sum of coordinates product matrix 
-      TMatrixD *fSumValMatx;           // Sum of values multiplied by coordinates
-      TMatrixD *fCoeffMatx;            // Matrix of coefficients
-      std::vector< std::vector<Double_t>* > *fLDCoeff; // LD coefficients
+      Int_t fNRegOut; ///< size of the output
+
+      TMatrixD *fSumMatx;              ///< Sum of coordinates product matrix
+      TMatrixD *fSumValMatx;           ///< Sum of values multiplied by coordinates
+      TMatrixD *fCoeffMatx;            ///< Matrix of coefficients
+      std::vector< std::vector<Double_t>* > *fLDCoeff; ///< LD coefficients
 
       // default initialisation called by all constructors
       void Init( void );
@@ -114,7 +114,7 @@ namespace TMVA {
 
       // get LD coefficients
       void GetLDCoeff( void );
-      
+
       // nice output
       void PrintCoefficients( void );
 

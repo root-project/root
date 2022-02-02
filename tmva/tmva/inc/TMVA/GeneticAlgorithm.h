@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,8 +14,8 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -42,7 +42,7 @@
 #include "TMVA/Types.h"
 
 namespace TMVA {
-     
+
    class IFitterTarget;
    class Interval;
    class MsgLogger;
@@ -50,8 +50,8 @@ namespace TMVA {
    class GeneticAlgorithm {
 
    public:
-    
-      GeneticAlgorithm( IFitterTarget& target, Int_t populationSize, 
+
+      GeneticAlgorithm( IFitterTarget& target, Int_t populationSize,
                         const std::vector<TMVA::Interval*>& ranges, UInt_t seed = 0 );
       virtual ~GeneticAlgorithm();
 
@@ -63,8 +63,8 @@ namespace TMVA {
       virtual Double_t NewFitness(Double_t oldValue, Double_t newValue);
       virtual Double_t CalculateFitness();
       virtual void Evolution();
-      
-      GeneticPopulation& GetGeneticPopulation() { return fPopulation; } 
+
+      GeneticPopulation& GetGeneticPopulation() { return fPopulation; }
 
       Double_t GetSpread() const { return fSpread; }
       void     SetSpread(Double_t s) { fSpread = s; }
@@ -75,15 +75,15 @@ namespace TMVA {
       Int_t    fConvCounter;              // converging? ... keeps track of the number of improvements
 
    protected:
-   
+
       IFitterTarget&    fFitterTarget;    // the fitter target
-      
+
       Double_t fConvValue;                // keeps track of the quantity of improvement
 
       // spread-control (stepsize)
       // successList keeps track of the improvements to be able
-      
-      std::deque<Int_t> fSuccessList;     // to adjust the stepSize      
+
+      std::deque<Int_t> fSuccessList;     // to adjust the stepSize
       Double_t          fLastResult;      // remembers the last obtained result (for internal use)
 
       Double_t          fSpread;          // regulates the spread of the value change at mutation (sigma)
@@ -99,11 +99,11 @@ namespace TMVA {
       Double_t fBestFitness;
 
       mutable MsgLogger* fLogger;         // message logger
-      MsgLogger& Log() const { return *fLogger; }          
+      MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(GeneticAlgorithm, 0);  // Genetic algorithm controller
    };
-   
+
 } // namespace TMVA
 
 #endif

@@ -151,7 +151,7 @@ public:
     * accumulator. */
    inline static void ResetDeviceReturn(AFloat value = 0.0);
    /** Transfer the value in the device return buffer to the host. This
-    *  tranfer is synchronous */
+    *  transfer is synchronous */
    inline static AFloat GetDeviceReturn();
    /** Return device pointer to the device return buffer */
    inline static AFloat *        GetDeviceReturnPointer() {return fDeviceReturn;}

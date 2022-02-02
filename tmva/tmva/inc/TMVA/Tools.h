@@ -268,7 +268,7 @@ namespace TMVA {
 
    private:
 
-      int fXMLBufferSize = 10000000; 
+      int fXMLBufferSize = 10000000;
       // utilities for correlation ratio
       Double_t GetYMean_binX( const TH2& , Int_t bin_x );
 

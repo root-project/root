@@ -66,7 +66,7 @@ public:
 
    const std::vector<std::tuple<Float_t, Float_t, Bool_t>> GetMvas() const { return fMva; }
 private:
-   mutable MsgLogger *fLogger; //! message logger
+   mutable MsgLogger *fLogger; ///<! message logger
    MsgLogger &Log() const;
 
    TGraph *fGraph;

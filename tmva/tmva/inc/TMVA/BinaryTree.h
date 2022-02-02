@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$    
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Eckhard von Toerne
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -49,23 +49,23 @@
 
 // the actual tree class
 // Handles allocation, deallocation, and sorting of nodes.
-// the Tree consists of a "root-node" wich might have  0 to 2 daughther nodes
+// the Tree consists of a "root-node" wich might have  0 to 2 daughter nodes
 
 namespace TMVA {
-   
+
    class BinaryTree;
    class MsgLogger;
 
    std::ostream& operator<< ( std::ostream& os, const BinaryTree& tree );
    std::istream& operator>> ( std::istream& istr,     BinaryTree& tree );
-   
+
    class BinaryTree {
-      
+
       friend std::ostream& operator<< ( std::ostream& os, const BinaryTree& tree );
       friend std::istream& operator>> ( std::istream& istr,     BinaryTree& tree );
-      
+
    public:
-      
+
       // or a tree with Root node "n", any daughters of this node are automatically in the tree
       BinaryTree( void );
 
@@ -78,10 +78,10 @@ namespace TMVA {
 
       // set the root node of the tree
       void SetRoot( Node* r ) { fRoot = r; }
-    
+
       // Retrieves the address of the root node
       virtual Node* GetRoot() const { return fRoot; }
-    
+
       // get number of Nodes in the Tree as counted while booking the nodes;
       UInt_t GetNNodes() const { return fNNodes; }
 
@@ -95,7 +95,7 @@ namespace TMVA {
       void SetTotalTreeDepth( Int_t depth ) { fDepth = depth; }
       void SetTotalTreeDepth( Node* n = NULL );
 
-      Node* GetLeftDaughter ( Node* n);    
+      Node* GetLeftDaughter ( Node* n);
       Node* GetRightDaughter( Node* n);
 
       virtual void Print( std::ostream& os ) const;
@@ -104,23 +104,23 @@ namespace TMVA {
       virtual void  ReadXML(void* node, UInt_t tmva_Version_Code = TMVA_VERSION_CODE );
 
    private:
-  
-  
+
+
    protected:
-      Node*      fRoot;                //the root node of the tree
-      // the tree only has it's root node, the "daughters" are taken car 
-      // of by the "node" properties of the "root"
+      Node*      fRoot; ///< the root node of the tree
+                        ///< the tree only has it's root node, the "daughters" are taken care
+                        ///< of by the "node" properties of the "root"
 
       // delete a node (and the corresponding event if owned by the tree)
       void       DeleteNode( Node* );
 
-      UInt_t     fNNodes;           // total number of nodes in the tree (counted)
-      UInt_t     fDepth;            // maximal depth in tree reached
+      UInt_t     fNNodes;           ///< total number of nodes in the tree (counted)
+      UInt_t     fDepth;            ///< maximal depth in tree reached
 
       MsgLogger& Log() const;
 
       ClassDef(BinaryTree,0); // Base class for BinarySearch and Decision Trees
-   };  
+   };
 
 } // namespace TMVA
 

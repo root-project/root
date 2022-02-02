@@ -69,8 +69,7 @@ private:
    Scalar_t fTrainingError;///< Holds the most recently computed training loss.
    Scalar_t fTestError;    ///< Holds the most recently computed test loss.
    Scalar_t fLearningRate; ///< Learning rate \f$\alpha\f$
-   Scalar_t fMinimumError; ///< The minimum loss achieved on the training set
-   ///< during the current traning session.
+   Scalar_t fMinimumError; ///< The minimum loss achieved on the training set during the current training session.
 
 public:
    TGradientDescent();
@@ -100,7 +99,7 @@ public:
                           Net_t & net, Scalar_t momentum, size_t nThreads = 1);
 
    /** Perform a single optimization step on a given batch. Propagates the input
-       matrix foward through the net, evaluates the loss and propagates the gradients
+       matrix forward through the net, evaluates the loss and propagates the gradients
        backward through the net. The computed gradients are scaled by the learning
        rate \f$\alpha\f$ and subtracted from the weights and bias values of each
        layer. */

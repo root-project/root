@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Peter Speckmayer, Joerg Stelzer, Jan Therhaag, Eckhard von Toerne, Helge Voss
 
 /**********************************************************************************
@@ -12,13 +12,13 @@
  *      by python script development/tmvaTag.py                                   *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Andreas Hoecker    <Andreas.Hocker@cern.ch>      - CERN, Switzerland      *                      
- *      Peter Speckmayer   <Peter.Speckmayer@cern.ch>    - CERN, Switzerland      *                      
- *      Joerg Stelzer      <Joerg.Stelzer@cern.ch>       - CERN, Switzerland      *                      
- *      Jan Therhaag       <therhaag@physik.uni-bonn.de> - U of Bonn, Germany     *                      
- *      Eckhard v. Toerne  <evt@uni-bonn.de>             - U of Bonn, Germany     *                      
- *      Helge Voss         <Helge.Voss@cern.ch>          - MPI-K Heidelberg, GER  *                      
- *                                                                                *                      
+ *      Andreas Hoecker    <Andreas.Hocker@cern.ch>      - CERN, Switzerland      *
+ *      Peter Speckmayer   <Peter.Speckmayer@cern.ch>    - CERN, Switzerland      *
+ *      Joerg Stelzer      <Joerg.Stelzer@cern.ch>       - CERN, Switzerland      *
+ *      Jan Therhaag       <therhaag@physik.uni-bonn.de> - U of Bonn, Germany     *
+ *      Eckhard v. Toerne  <evt@uni-bonn.de>             - U of Bonn, Germany     *
+ *      Helge Voss         <Helge.Voss@cern.ch>          - MPI-K Heidelberg, GER  *
+ *                                                                                *
  * Copyright (c) 2005-2010,                                                       *
  * Regents of CERN (Switzerland),                                                 *
  * University of Bonn (Germany),                                                  *
@@ -42,7 +42,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #define TMVA_RELEASE      "4.2.1"
-#define TMVA_RELEASE_DATE "Feb 5, 2015" 
+#define TMVA_RELEASE_DATE "Feb 5, 2015"
 #define TMVA_RELEASE_TIME "14:25:28"
 #define TMVA_VERSION_CODE 262657
 #define TMVA_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))

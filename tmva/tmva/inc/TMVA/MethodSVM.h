@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Marcin Wolter, Andrzej Zemla
 
 /**********************************************************************************
@@ -13,7 +13,7 @@
  * Authors (alphabetical):                                                        *
  *      Marcin Wolter  <Marcin.Wolter@cern.ch> - IFJ PAN, Krakow, Poland          *
  *      Andrzej Zemla  <azemla@cern.ch>         - IFJ PAN, Krakow, Poland         *
- *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *   
+ *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
  *                                                                                *
  * Introduction of regression by:                                                 *
  *      Krzysztof Danielowski <danielow@cern.ch> - IFJ PAN & AGH, Krakow, Poland  *
@@ -21,8 +21,8 @@
  *      Maciej Kruk           <mkruk@cern.ch>    - IFJ PAN & AGH, Krakow, Poland  *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      PAN, Krakow, Poland                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -101,9 +101,9 @@ namespace TMVA
       void Init( void );
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; } 
+      const Ranking* CreateRanking() { return 0; }
 
-      // for SVM optimisation                                                         
+      // for SVM optimisation
       void SetGamma(Double_t g){fGamma = g;}
       void SetCost(Double_t c){fCost = c;}
       void SetMGamma(std::string & mg);
@@ -129,39 +129,39 @@ namespace TMVA
       void DeclareCompatibilityOptions();
       void ProcessOptions();
       Double_t getLoss( TString lossFunction );
-      
-      Float_t                       fCost;                // cost value
-      Float_t                       fTolerance;           // tolerance parameter
-      UInt_t                        fMaxIter;             // max number of iteration
-      UShort_t                      fNSubSets;            // nr of subsets, default 1
-      Float_t                       fBparm;               // free plane coefficient 
-      Float_t                       fGamma;               // RBF Kernel parameter
-      SVWorkingSet*                 fWgSet;               // svm working set 
-      std::vector<TMVA::SVEvent*>*  fInputData;           // vector of training data in SVM format
-      std::vector<TMVA::SVEvent*>*  fSupportVectors;      // contains support vectors
-      SVKernelFunction*             fSVKernelFunction;    // kernel function
 
-      TVectorD*                     fMinVars;             // for normalization //is it still needed?? 
-      TVectorD*                     fMaxVars;             // for normalization //is it still needed?? 
+      Float_t                       fCost;                ///< cost value
+      Float_t                       fTolerance;           ///< tolerance parameter
+      UInt_t                        fMaxIter;             ///< max number of iteration
+      UShort_t                      fNSubSets;            ///< nr of subsets, default 1
+      Float_t                       fBparm;               ///< free plane coefficient
+      Float_t                       fGamma;               ///< RBF Kernel parameter
+      SVWorkingSet*                 fWgSet;               ///< svm working set
+      std::vector<TMVA::SVEvent*>*  fInputData;           ///< vector of training data in SVM format
+      std::vector<TMVA::SVEvent*>*  fSupportVectors;      ///< contains support vectors
+      SVKernelFunction*             fSVKernelFunction;    ///< kernel function
+
+      TVectorD*                     fMinVars;             ///< for normalization //is it still needed??
+      TVectorD*                     fMaxVars;             ///< for normalization //is it still needed??
 
       // for kernel functions
-      TString                       fTheKernel;           // kernel name
-      Float_t                       fDoubleSigmaSquared;  // for RBF Kernel
-      Int_t                         fOrder;               // for Polynomial Kernel ( polynomial order )
-      Float_t                       fTheta;               // for Sigmoidal Kernel
-      Float_t                       fKappa;               // for Sigmoidal Kernel
+      TString                       fTheKernel;           ///< kernel name
+      Float_t                       fDoubleSigmaSquared;  ///< for RBF Kernel
+      Int_t                         fOrder;               ///< for Polynomial Kernel ( polynomial order )
+      Float_t                       fTheta;               ///< for Sigmoidal Kernel
+      Float_t                       fKappa;               ///< for Sigmoidal Kernel
       Float_t                       fMult;
-      std::vector<Float_t>          fmGamma;              // vector of gammas for multi-gaussian kernel                                                                    
-      Float_t                       fNumVars;             // number of input variables for multi-gaussian                                                                  
+      std::vector<Float_t>          fmGamma;              ///< vector of gammas for multi-gaussian kernel
+      Float_t                       fNumVars;             ///< number of input variables for multi-gaussian
       std::vector<TString>          fVarNames;
       std::string                   fGammas;
       std::string                   fGammaList;
-      std::string                   fTune;                // Specify parameters to be tuned
+      std::string                   fTune;                ///< Specify parameters to be tuned
       std::string                   fMultiKernels;
 
       Int_t                 fDataSize;
       TString fLoss;
-      
+
       ClassDef(MethodSVM,0);  // Support Vector Machine
    };
 

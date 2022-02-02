@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$ 
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,8 +14,8 @@
  *      Peter Speckmayer <peter.speckmayer@cern.ch> - CERN, Switzerland           *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -59,13 +59,13 @@ namespace TMVA {
       Int_t GetErrors   (Int_t ipar, Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc);
       Int_t SetParameter(Int_t ipar,const char *parname, Double_t value, Double_t verr, Double_t vlow, Double_t vhigh);
       TObject *Clone(char const*) const;
-      
+
    private:
-      
-      IFitterTarget&        fFitterTarget; // fitter Target
-      std::vector<Double_t> fParameters;   // vector holding the current parameters 
-      Int_t                 fNumPar;       // number of parameters
-      
+
+      IFitterTarget&        fFitterTarget; ///< fitter Target
+      std::vector<Double_t> fParameters;   ///< vector holding the current parameters
+      Int_t                 fNumPar;       ///< number of parameters
+
       ClassDef(MinuitWrapper,0); // Wrapper around TMinuit
    };
 

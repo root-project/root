@@ -185,72 +185,72 @@ namespace TMVA {
       void CalcTstAverageResponse();
 
 
-      RuleFit             * fRuleFit;      // rule fit
-      RuleEnsemble        * fRuleEnsemble; // rule ensemble
+      RuleFit             * fRuleFit;      ///< rule fit
+      RuleEnsemble        * fRuleEnsemble; ///< rule ensemble
       //
-      UInt_t                fNRules;       // number of rules
-      UInt_t                fNLinear;      // number of linear terms
+      UInt_t                fNRules;       ///< number of rules
+      UInt_t                fNLinear;      ///< number of linear terms
       //
       // Event indices for path/validation - TODO: should let the user decide
       // Now it is just a simple one-fold cross validation.
       //
-      UInt_t                fPathIdx1;       // first event index for path search
-      UInt_t                fPathIdx2;       // last event index for path search
-      UInt_t                fPerfIdx1;       // first event index for performance evaluation
-      UInt_t                fPerfIdx2;       // last event index for performance evaluation
-      Double_t              fNEveEffPath;    // sum of weights for Path events
-      Double_t              fNEveEffPerf;    // idem for Perf events
+      UInt_t                fPathIdx1;       ///< first event index for path search
+      UInt_t                fPathIdx2;       ///< last event index for path search
+      UInt_t                fPerfIdx1;       ///< first event index for performance evaluation
+      UInt_t                fPerfIdx2;       ///< last event index for performance evaluation
+      Double_t              fNEveEffPath;    ///< sum of weights for Path events
+      Double_t              fNEveEffPerf;    ///< idem for Perf events
 
-      std::vector<Double_t> fAverageSelectorPath; // average of each variable over the range fPathIdx1,2
-      std::vector<Double_t> fAverageRulePath;     // average of each rule, same range
-      std::vector<Double_t> fAverageSelectorPerf; // average of each variable over the range fPerfIdx1,2
-      std::vector<Double_t> fAverageRulePerf;     // average of each rule, same range
+      std::vector<Double_t> fAverageSelectorPath; ///< average of each variable over the range fPathIdx1,2
+      std::vector<Double_t> fAverageRulePath;     ///< average of each rule, same range
+      std::vector<Double_t> fAverageSelectorPerf; ///< average of each variable over the range fPerfIdx1,2
+      std::vector<Double_t> fAverageRulePerf;     ///< average of each rule, same range
 
-      std::vector<Double_t> fGradVec;        // gradient vector - dimension = number of rules in ensemble
-      std::vector<Double_t> fGradVecLin;     // gradient vector - dimension = number of variables
+      std::vector<Double_t> fGradVec;        ///< gradient vector - dimension = number of rules in ensemble
+      std::vector<Double_t> fGradVecLin;     ///< gradient vector - dimension = number of variables
 
-      std::vector< std::vector<Double_t> > fGradVecTst;    // gradient vector - one per tau
-      std::vector< std::vector<Double_t> > fGradVecLinTst; // gradient vector, linear terms - one per tau
+      std::vector< std::vector<Double_t> > fGradVecTst;    ///< gradient vector - one per tau
+      std::vector< std::vector<Double_t> > fGradVecLinTst; ///< gradient vector, linear terms - one per tau
       //
-      std::vector<Double_t> fGDErrTst;     // error rates per tau
-      std::vector<Char_t>   fGDErrTstOK;   // error rate is sufficiently low <--- stores boolean
-      std::vector< std::vector<Double_t> > fGDCoefTst;    // rule coeffs - one per tau
-      std::vector< std::vector<Double_t> > fGDCoefLinTst; // linear coeffs - one per tau
-      std::vector<Double_t> fGDOfsTst;       // offset per tau
-      std::vector< Double_t > fGDTauVec;     // the tau's
-      UInt_t                fGDNTauTstOK;    // number of tau in the test-phase that are ok
-      UInt_t                fGDNTau;         // number of tau-paths - calculated in SetGDTauPrec
-      Double_t              fGDTauPrec;      // precision in tau
-      UInt_t                fGDTauScan;      // number scan for tau-paths
-      Double_t              fGDTauMin;       // min threshold parameter (tau in eq 26, ref 1)
-      Double_t              fGDTauMax;       // max threshold parameter (tau in eq 26, ref 1)
-      Double_t              fGDTau;          // selected threshold parameter (tau in eq 26, ref 1)
-      Double_t              fGDPathStep;     // step size along path (delta nu in eq 22, ref 1)
-      Int_t                 fGDNPathSteps;   // number of path steps
-      Double_t              fGDErrScale;     // stop scan at error = scale*errmin
+      std::vector<Double_t> fGDErrTst;     ///< error rates per tau
+      std::vector<Char_t>   fGDErrTstOK;   ///< error rate is sufficiently low <--- stores boolean
+      std::vector< std::vector<Double_t> > fGDCoefTst;    ///< rule coeffs - one per tau
+      std::vector< std::vector<Double_t> > fGDCoefLinTst; ///< linear coeffs - one per tau
+      std::vector<Double_t> fGDOfsTst;       ///< offset per tau
+      std::vector< Double_t > fGDTauVec;     ///< the tau's
+      UInt_t                fGDNTauTstOK;    ///< number of tau in the test-phase that are ok
+      UInt_t                fGDNTau;         ///< number of tau-paths - calculated in SetGDTauPrec
+      Double_t              fGDTauPrec;      ///< precision in tau
+      UInt_t                fGDTauScan;      ///< number scan for tau-paths
+      Double_t              fGDTauMin;       ///< min threshold parameter (tau in eq 26, ref 1)
+      Double_t              fGDTauMax;       ///< max threshold parameter (tau in eq 26, ref 1)
+      Double_t              fGDTau;          ///< selected threshold parameter (tau in eq 26, ref 1)
+      Double_t              fGDPathStep;     ///< step size along path (delta nu in eq 22, ref 1)
+      Int_t                 fGDNPathSteps;   ///< number of path steps
+      Double_t              fGDErrScale;     ///< stop scan at error = scale*errmin
       //
-      Double_t              fAverageTruth;   // average truth, ie sum(y)/N, y=+-1
+      Double_t              fAverageTruth;   ///< average truth, ie sum(y)/N, y=+-1
       //
-      std::vector<Double_t> fFstar;          // vector of F*() - filled in CalcFStar()
-      Double_t              fFstarMedian;    // median value of F*() using
+      std::vector<Double_t> fFstar;          ///< vector of F*() - filled in CalcFStar()
+      Double_t              fFstarMedian;    ///< median value of F*() using
       //
-      TTree                *fGDNtuple;       // Gradient path ntuple, contains params for each step along the path
-      Double_t              fNTRisk;         // GD path: risk
-      Double_t              fNTErrorRate;    // GD path: error rate (or performance)
-      Double_t              fNTNuval;        // GD path: value of nu
-      Double_t              fNTCoefRad;      // GD path: 'radius' of all rulecoeffs
-      Double_t              fNTOffset;       // GD path: model offset
-      Double_t             *fNTCoeff;        // GD path: rule coefficients
-      Double_t             *fNTLinCoeff;     // GD path: linear coefficients
+      TTree                *fGDNtuple;       ///< Gradient path ntuple, contains params for each step along the path
+      Double_t              fNTRisk;         ///< GD path: risk
+      Double_t              fNTErrorRate;    ///< GD path: error rate (or performance)
+      Double_t              fNTNuval;        ///< GD path: value of nu
+      Double_t              fNTCoefRad;      ///< GD path: 'radius' of all rulecoeffs
+      Double_t              fNTOffset;       ///< GD path: model offset
+      Double_t             *fNTCoeff;        ///< GD path: rule coefficients
+      Double_t             *fNTLinCoeff;     ///< GD path: linear coefficients
 
-      Double_t              fsigave;         // Sigma of current signal score function F(sig)
-      Double_t              fsigrms;         // Rms of F(sig)
-      Double_t              fbkgave;         // Average of F(bkg)
-      Double_t              fbkgrms;         // Rms of F(bkg)
+      Double_t              fsigave;         ///< Sigma of current signal score function F(sig)
+      Double_t              fsigrms;         ///< Rms of F(sig)
+      Double_t              fbkgave;         ///< Average of F(bkg)
+      Double_t              fbkgrms;         ///< Rms of F(bkg)
 
    private:
 
-      mutable MsgLogger*    fLogger;         //! message logger
+      mutable MsgLogger*    fLogger;         ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    };
