@@ -2064,7 +2064,7 @@ if(webgui)
       ExternalProject_Add(
         OPENUI5
         URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
-        URL_HASH SHA256=a308ac5abf5d532f179bec1f5a208913e6d2627b859349f5e159ec2bd86b9cbc
+        URL_HASH SHA256=cc6791ac9c064c3e3f8281870063c549fa5e3f1252095ccc5d542c33db9cf8b2
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -2074,8 +2074,8 @@ if(webgui)
     else()
       ExternalProject_Add(
         OPENUI5
-        URL https://github.com/SAP/openui5/releases/download/1.82.2/openui5-runtime-1.82.2.zip
-        URL_HASH SHA256=b405fa6a3a3621879e8efe80eb193c1071f2bdf37a8ecc8c057194a09635eaff
+        URL https://github.com/SAP/openui5/releases/download/1.98.0/openui5-runtime-1.98.0.zip
+        URL_HASH SHA256=3d3db9ba001141019aae2cdf6eb6d34d655a3652308e03a335794f1231d21d2f
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
