@@ -99,8 +99,6 @@ sap.ui.define([
         },
 
         bindTree: function(sPath, oContext, aFilters, mParameters, aSorters) {
-           console.log('BINDING TREE!!!!!!!!!!!!! ' + sPath);
-
            this.oBinding = new BrowserListBinding(this, sPath, oContext, aFilters, mParameters, aSorters);
            return this.oBinding;
         },
@@ -146,7 +144,6 @@ sap.ui.define([
                  if (curr.childs[indx] && (curr.childs[indx].name == name)) {
                     curr = curr.childs[indx];
                     find = true;
-                    console.log(`Match index ${indx} with name ${name}`);
                  }
               }
 
@@ -502,14 +499,14 @@ sap.ui.define([
         },
 
         // toggle expand state of specified node
-        toggleNode: function(index) {
+        toggleNode: function(index, do_expand) {
 
            let node = this.getNodeByIndex(index),
                elem = node ? node._elem : null;
 
            if (!node || !elem) return;
 
-           if (elem.expanded) {
+           if (elem.expanded && (do_expand === false)) {
               delete elem.expanded;
               if (!this.fullModel)
                  delete elem.childs; // TODO: for the future keep childs but make request if expand once again
@@ -520,7 +517,7 @@ sap.ui.define([
 
               return true;
 
-           } else if (elem.nchilds || !elem.index) {
+           } else if ((elem.nchilds || !elem.index) && (do_expand === true)) {
 
               elem.expanded = true;
               // structure is changing but not immediately
