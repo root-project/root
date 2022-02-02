@@ -38,14 +38,14 @@
       if (is_ui5)
          _prereq += ";openui5";
       else if (!is_batch)
-         _prereq += ";jq2d";
+         _prereq += ";hierarchy"; // need for BrowserLayout
 
       JSROOT.connectWebWindow({
          prereq: _prereq,
          prereq_logdiv: "CanvasDiv"
          // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
       }).then(handle => {
-         let painter = new JSROOT.v7.RCanvasPainter(null, null);
+         let painter = new JSROOT.RCanvasPainter(null, null);
          painter.online_canvas = true;
          painter.use_openui = is_ui5;
          painter.batch_mode = is_batch;
