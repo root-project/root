@@ -199,19 +199,19 @@ protected:
 
 private:
 
-   std::vector<double> fPVec;        //Vector of the probabilities
-   mutable std::vector<double> fPVecSum;     //Vector of the sum of the probabilities
-   const ROOT::Math::IGenFunction *fPmf;   //pointer to a function calculating the probability
-   const ROOT::Math::IGenFunction *fCdf;    //pointer to the cumulative distribution function
-   int   fXmin;                  //lower value of the domain
-   int   fXmax;                  //upper value of the domain
-   int   fMode;                  //mode of the distribution
-   double fSum;                  //total sum of the probabilities in the given domain
+   std::vector<double> fPVec;            ///< Vector of the probabilities
+   mutable std::vector<double> fPVecSum; ///< Vector of the sum of the probabilities
+   const ROOT::Math::IGenFunction *fPmf; ///< pointer to a function calculating the probability
+   const ROOT::Math::IGenFunction *fCdf; ///< pointer to the cumulative distribution function
+   int   fXmin;                  ///< lower value of the domain
+   int   fXmax;                  ///< upper value of the domain
+   int   fMode;                  ///< mode of the distribution
+   double fSum;                  ///< total sum of the probabilities in the given domain
    // flags
-   bool  fHasDomain;             //flag to control if distribution has a defined domain (otherwise is [0,INT_MAX])
-   bool  fHasMode;               //flag to control if distribution has a pre-computed mode
-   bool  fHasSum;                //flag to control if distribution has a pre-computed sum of the probabilities
-   bool  fOwnFunc;               // flag to control if distribution owns the funcitno pointers
+   bool  fHasDomain;             ///< flag to control if distribution has a defined domain (otherwise is [0,INT_MAX])
+   bool  fHasMode;               ///< flag to control if distribution has a pre-computed mode
+   bool  fHasSum;                ///< flag to control if distribution has a pre-computed sum of the probabilities
+   bool  fOwnFunc;               ///< flag to control if distribution owns the function pointers
 
    ClassDef(TUnuranDiscrDist,1)  //Wrapper class for one dimensional discrete distribution
 

@@ -74,7 +74,7 @@ public:
    /// set the cumulative distribution function of the PDF used for random sampling (one dim case)
    void SetCdf(const ROOT::Math::IGenFunction &cdf);
 
-   /// set the Derivative of the PDF used for random sampling (one dim continous case)
+   /// set the Derivative of the PDF used for random sampling (one dim continuous case)
    void SetDPdf(const ROOT::Math::IGenFunction &dpdf);
 
    /**
@@ -131,7 +131,7 @@ public:
       fHasArea = true;
    }
 
-   /// Set using of logarithm of PDF (only for 1D continous case)
+   /// Set using of logarithm of PDF (only for 1D continuous case)
    void SetUseLogPdf(bool on = true) { fUseLogPdf = on; }
 
    /**
@@ -181,21 +181,21 @@ protected:
 private:
 
    // private member
-   bool                              fOneDim = false;      /// flag to indicate if the function is 1 dimension
-   bool                              fDiscrete = false;    /// flag to indicate if the function is discrete
-   bool                              fHasMode = false;     /// flag to indicate if a mode is set
-   bool                              fHasArea = false;     /// flag to indicate if a area is set
-   bool                              fUseLogPdf = false;   /// flag to indicate if we use the log of the PDF 
-   int fLevel;                                     /// debug level
-   double                            fMode;        /// mode of dist (1D)
-   double                            fArea;        /// area of dist
-   std::vector<double>               fNDMode;      /// mode of the multi-dim distribution
-   const ROOT::Math::IGenFunction *  fFunc1D = nullptr;      /// 1D function pointer (pdf)
-   const ROOT::Math::IGenFunction *  fCDF    = nullptr;      /// CDF function pointer
-   const ROOT::Math::IGenFunction *  fDPDF   = nullptr;        /// 1D Derivative function pointer
-   TUnuran *                         fUnuran = nullptr;      /// unuran engine class
+   bool                              fOneDim = false;      ///< flag to indicate if the function is 1 dimension
+   bool                              fDiscrete = false;    ///< flag to indicate if the function is discrete
+   bool                              fHasMode = false;     ///< flag to indicate if a mode is set
+   bool                              fHasArea = false;     ///< flag to indicate if a area is set
+   bool                              fUseLogPdf = false;   ///< flag to indicate if we use the log of the PDF
+   int fLevel;                                     ///< debug level
+   double                            fMode;        ///< mode of dist (1D)
+   double                            fArea;        ///< area of dist
+   std::vector<double>               fNDMode;      ///< mode of the multi-dim distribution
+   const ROOT::Math::IGenFunction *  fFunc1D = nullptr;      ///< 1D function pointer (pdf)
+   const ROOT::Math::IGenFunction *  fCDF    = nullptr;      ///< CDF function pointer
+   const ROOT::Math::IGenFunction *  fDPDF   = nullptr;      ///< 1D Derivative function pointer
+   TUnuran *                         fUnuran = nullptr;      ///< unuran engine class
 
-   ClassDef(TUnuranSampler, 2);                    /// Distribution sampler class based on UNU.RAN
+   ClassDef(TUnuranSampler, 2);                    // Distribution sampler class based on UNU.RAN
 };
 
 
