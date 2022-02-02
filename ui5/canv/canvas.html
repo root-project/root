@@ -37,8 +37,6 @@
 
       if (is_ui5)
          _prereq += ";openui5";
-      else if (!is_batch)
-         _prereq += ";hierarchy"; // need for BrowserLayout
 
       JSROOT.connectWebWindow({
          prereq: _prereq,
