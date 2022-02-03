@@ -24,6 +24,7 @@ protected:
    Bool_t fTerminating{kFALSE}; ///<! server doing shutdown and not react on requests
    Bool_t fOnlySecured{kFALSE}; ///<! if server should run only https protocol
    Int_t fMaxAge{3600};         ///<! max-age parameter
+   Bool_t fWinSymLinks{kTRUE};  ///<! resolve symbolic links on Windows
 
    void Terminate() override { fTerminating = kTRUE; }
 
@@ -40,6 +41,8 @@ public:
    Bool_t IsDebugMode() const { return fDebug; }
 
    Bool_t IsTerminating() const { return fTerminating; }
+
+   Bool_t IsWinSymLinks() const { return fWinSymLinks; }
 
    Int_t ProcessLog(const char *message);
 
