@@ -1,8 +1,7 @@
-// $Id$
 // Author: Sergey Linev   21/12/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -10,8 +9,6 @@
  *************************************************************************/
 
 #include "TCivetweb.h"
-
-#include "../civetweb/civetweb.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -24,8 +21,6 @@
 #include "THttpServer.h"
 #include "THttpWSEngine.h"
 #include "TUrl.h"
-
-
 
 //////////////////////////////////////////////////////////////////////////
 /// TCivetwebWSEngine
@@ -463,9 +458,7 @@ TCivetweb::TCivetweb(Bool_t only_secured)
 TCivetweb::~TCivetweb()
 {
    if (fCtx && !fTerminating)
-      mg_stop((struct mg_context *)fCtx);
-   if (fCallbacks)
-      free(fCallbacks);
+      mg_stop(fCtx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -511,10 +504,9 @@ Int_t TCivetweb::ProcessLog(const char *message)
 
 Bool_t TCivetweb::Create(const char *args)
 {
-   fCallbacks = malloc(sizeof(struct mg_callbacks));
-   memset(fCallbacks, 0, sizeof(struct mg_callbacks));
-   //((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
-   ((struct mg_callbacks *)fCallbacks)->log_message = log_message_handler;
+   memset(&fCallbacks, 0, sizeof(struct mg_callbacks));
+   // fCallbacks.begin_request = begin_request_handler;
+   fCallbacks.log_message = log_message_handler;
    TString sport = IsSecured() ? "8480s" : "8080",
            num_threads = "10",
            websocket_timeout = "300000",
@@ -662,15 +654,15 @@ Bool_t TCivetweb::Create(const char *args)
    options[op++] = nullptr;
 
    // Start the web server.
-   fCtx = mg_start((struct mg_callbacks *)fCallbacks, this, options);
+   fCtx = mg_start(&fCallbacks, this, options);
 
    if (!fCtx)
       return kFALSE;
 
-   mg_set_request_handler((struct mg_context *)fCtx, "/", begin_request_handler, nullptr);
+   mg_set_request_handler(fCtx, "/", begin_request_handler, nullptr);
 
    if (use_ws)
-      mg_set_websocket_handler((struct mg_context *)fCtx, "**root.websocket$", websocket_connect_handler,
+      mg_set_websocket_handler(fCtx, "**root.websocket$", websocket_connect_handler,
                                websocket_ready_handler, websocket_data_handler, websocket_close_handler, nullptr);
 
    return kTRUE;
