@@ -80,7 +80,7 @@ sap.ui.define([
 
                let itemList = pthis.collection.childs[0];
                let secIdcs = [ui];
-               let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + `, false, true`;
+               let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + ", " + pthis.multiSelect + ", true";
                fcall += ", \" " + secIdcs.join(", ") + " \"";
                fcall += ")";
                pthis.mgr.SendMIR(fcall, itemList.fElementId, itemList._typename);
@@ -89,7 +89,20 @@ sap.ui.define([
                // console.log("attachRowSelectionChange no path ", oData);
             }
          });
+
+
+         if (table._enableLegacyMultiSelection) {
+            table._enableLegacyMultiSelection();
+         }
+         else {
+            console.error("Ctrl modifier not supported !")
+         }
          this.table = table;
+
+         // listen to Ctrl key events
+         this.multiSelect = false;
+         window.addEventListener('keydown', function(event) { if (event.ctrlKey) pthis.multiSelect = true; });
+         window.addEventListener('keyup',   function(event) { if (event.key == 'Control') pthis.multiSelect = false; });
       },
 
       sortTable: function (e) {
