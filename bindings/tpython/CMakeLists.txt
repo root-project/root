@@ -30,6 +30,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
     ${PYTHON_LIBRARIES_Development_Main}
 )
 
+if(APPLE)
+    target_link_options(ROOTTPython PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+endif()
+
 # Disables warnings originating from deprecated register keyword in Python
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
     target_compile_options(ROOTTPython PRIVATE -Wno-register)
