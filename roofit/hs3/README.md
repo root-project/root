@@ -75,6 +75,7 @@ For the importer, an entry in the
 [factory expressions](https://github.com/root-project/root/blob/master/etc/RooFitHS3_wsfactoryexpressions.json)
 needs to be added as follows:
 
+```json
     "<json-key>": {
         "class": "<C++ class name>",
         "arguments": [
@@ -83,11 +84,13 @@ needs to be added as follows:
              ...
         ]
     }
+```
 
 Similarly, for the exporter, an entry in the
 [export keys](https://github.com/root-project/root/blob/master/etc/RooFitHS3_wsexportkeys.json)
 needs to be added as follows:
 
+```json
     "<C++ class name>": {
         "type": "<json-key>",
         "proxies": {
@@ -96,6 +99,7 @@ needs to be added as follows:
             ...
         }
     }
+```
 
 
 If you don't want to edit the central `json` files containing the
@@ -121,6 +125,7 @@ in `ROOT`.
 
 Any importer should take the following form:
 
+```C++
     class MyClassFactory : public RooJSONFactoryWSTool::Importer {
     public:
        bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -143,6 +148,7 @@ Any importer should take the following form:
           return true;
        }
     };
+```
 
 If the class you are trying to import inherits from `RooAbsPdf` rather
 than from `RooAbsReal`, you should define `importPdf` instead of
@@ -150,7 +156,9 @@ than from `RooAbsReal`, you should define `importPdf` instead of
 
 Once your importer implementation exists, you need to register it with the tool using a line like the following:
 
+```C++
     RooJSONFactoryWSTool::registerImporter("<json key>", new MyClassFactory(), true);
+```
 
 As there can be several importers for the same `json` key, the last
 (boolean) argument determines whether your new importer should be
@@ -159,6 +167,7 @@ added at the top of the priority list (`true`) or at the bottom
 
 The implementation of an exporter works in a very similar fashion:
 
+```C++
     class MyClassStreamer : public RooJSONFactoryWSTool::Exporter {
     public:
        std::string const &key() const override
@@ -180,10 +189,13 @@ The implementation of an exporter works in a very similar fashion:
           return true;
        }
     };
+```
 
 Also this needs to be registered with the tool
 
+```C++
     RooJSONFactoryWSTool::registerExporter(MyClass::Class(), new MyClassStreamer(), true);
+```
 
 For more complicated cases where members are lists of elements, the
 methods `is_seq()`, `set_seq()`, `is_map()`, `set_map()` and
