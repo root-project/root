@@ -217,6 +217,72 @@ In upcoming releases, further developments are planned:
 For more details, consult the usage notes in the [TestStatistics README.md](https://github.com/root-project/root/tree/master/roofit/roofitcore/src/TestStatistics/README.md).
 For benchmarking results on the prototype version of the parallelized gradient calculator, see the corresponding [CHEP19 proceedings paper](https://doi.org/10.1051/epjconf/202024506027).
 
+### New pythonizations
+
+Various new pythonizations are introduced to streamline your RooFit code in Python.
+
+For a complete list of all pythonized classes and functions, please see the [RooFit pythonizations page in the reference guide](https://root.cern.ch/doc/v626/group__RoofitPythonizations.html).
+All RooFit Python tutorials have been updated to profit from all available pythonizations.
+
+Some notable highlights are listed in the following.
+
+#### Keyword argument pythonizations
+
+All functions that take RooFit command arguments as parameters now accept equivalent Python keyword arguments, for example simplifying calls to [RooAbsPdf::fitTo()](https://root.cern.ch/doc/v626/classRooAbsPdf.html#a5f79f16f4a26a19c9e66fb5c080f59c5) such as:
+```Python
+model.fitTo(data, ROOT.RooFit.Range("left,right"), ROOT.RooFit.Save())
+```
+which becomes:
+```Python
+model.fitTo(data, Range="left,right", Save=True)
+```
+
+#### String to enum pythonizations
+
+Many functions that take an enum as a parameter now accept also a string with the enum label.
+
+Take for example this expression:
+```Python
+data.plotOn(frame, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2)
+```
+Combining the enum pythonization with the keyword argument pythonization explained before, this becomes:
+```Python
+data.plotOn(frame, DataError="SumW2")
+```
+
+This pythonization is also useful for your calls to [RooFit::LineColor()](https://root.cern.ch/doc/v626/group__Plotting.html#gad309cf5f63ec87ae5a7025d530f0398f) or [RooFit::LineStyle](https://root.cern.ch/doc/v626/group__Plotting.html#gaf1f7922ba5965c1a5a9791a00ef354cb), to give some more common examples.
+
+#### Implicit conversion from Python collections to RooFit collections
+
+You can now benefit from implicit conversion from Python lists to RooArgLists, and from Python sets to RooArgSets.
+
+For example, you can call [RooAbsPdf::generate()](https://root.cern.ch/doc/v626/classRooAbsPdf.html#a87926e1044acf4403d8d5f1d366f6591) with a Python set to specify the observables:
+```Python
+pdf.generate({x, y, cut}, 10000)
+```
+
+Or, you can create a [RooPolynomial](https://root.cern.ch/doc/v626/classRooPolynomial.html) from a Python list of coefficients:
+```Python
+ROOT.RooPolynomial("p", "p", x, [0.01, -0.01, 0.0004])
+```
+
+Note that here we benefit from another new feature: the implicit call to [RooFit::RooConst()](https://root.cern.ch/doc/v626/group__CmdArgs.html#gaabf71812817894196e743cf2ef1d1e7b) when passing raw numbers to the RooFit collection constructors.
+
+#### Allow for use of Python collections instead of C++ STL containers
+
+Some RooFit functions take STL map-like types such as `std::map` as parameters, for example the [RooCategory constructor](https://root.cern.ch/doc/v626/classRooCategory.html#ae63ae78231765d184b7a839c74746a49). In the past, you had to create the correct C++ class in Python, but now you can usually pass a Python dictionary instead. For example, a RooCategory can be created like this:
+```Python
+sample = ROOT.RooCategory("sample", "sample", {"Sample1": 1, "Sample2": 2, "Sample3": 3})
+```
+
+#### RooWorkspace accessors
+
+In Python, you can now get objects stored in a [RooWorkspace](https://root.cern.ch/doc/v626/classRooWorkspace.html) with the item retrieval operator, and the return value is also always downcasted to the correcy type. That means in Python you don't have to use [RooWorkspace::var()](https://root.cern.ch/doc/v626/classRooWorkspace.html#acf5f9126ee264c234721a4ed1f9bf837) to access variables or [RooWorkspace::pdf()](https://root.cern.ch/doc/v626/classRooWorkspace.html#afa7384cece424a1a94a644bb05549eee) to access pdfs, but you can always get any object using square brackets. For example:
+```Python
+# w is a RooWorkspace instance that contains the variables `x`, `y`, and `z` for which we want to generate toy data:
+model.generate({w["x"], w["y"], w["z"]}, 1000)
+```
+
 ### New PyROOT functions for interoperability with NumPy and Pandas
 
 New member functions of RooFit classes were introduced exclusively to PyROOT for better interoperability between RooFit and Numpy and Pandas:
@@ -313,6 +379,9 @@ RooDataSet data{"dataset", "dataset", x, RooFit::GlobalObservables(g1, g2)};
 
 To access the set of global observables stored in a `RooAbsData`, call `RooAbsData::getGlobalObservables()`.
 It returns a `nullptr` if no global observable snapshots are stored in the dataset.
+
+For more information of global observables and how to attach them to the toy datasets, please take a look at the new
+[rf613_global_observables.C](https://root.cern.ch/doc/v626/rf613__global_observables_8C.html) / [.py](https://root.cern.ch/doc/v626/rf613__global_observables_8py.html) tutorial.
 
 ### Changes in `RooAbsPdf::fitTo` behaviour for multi-range fits
 
