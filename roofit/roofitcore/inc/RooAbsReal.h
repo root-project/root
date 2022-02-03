@@ -135,7 +135,7 @@ public:
     throw std::logic_error("Deprecated getValBatch() has been removed in favour of the faster getValues(). If your code is affected by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition. https://root.cern/doc/v624/release-notes.html");
   }
 #endif
-  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
+  /// \copydoc getValBatch(std::size_t, std::size_t, const RooArgSet*)
   virtual RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
   std::vector<double> getValues(RooAbsData& data, RooFit::BatchModeOption batchMode=RooFit::BatchModeOption::Cpu) const;
 
