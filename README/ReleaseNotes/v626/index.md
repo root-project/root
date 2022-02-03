@@ -14,26 +14,32 @@ The following people have contributed to this new version:
 
  Sitong An, CERN/SFT,\
  Simone Azeglio, CERN/SFT,\
+ Rahul Balasubramanian, NIKHEF/ATLAS,\
  Bertrand Bellenot, CERN/SFT,\
  Josh Bendavid, CERN/CMS,\
  Jakob Blomer, CERN/SFT,\
  Patrick Bos, Netherlands eScience Center,\
  Rene Brun, CERN/SFT,\
- Carsten D. Burgard, DESY/ATLAS,\ 
+ Carsten D. Burgard, DESY/ATLAS,\
  Will Buttinger, STFC/ATLAS,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
+ Mattias Ellert, Uppsala University, \
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
+ Stephan Hageboeck, CERN/IT,\
  Jonas Hahnfeld, CERN/SFT,\
  Ahmat Hamdan, GSOC, \
+ Fernando Hueso-González, University of Valencia,\
  Ivan Kabadzhov, CERN/SFT,\
  Shamrock Lee (@ShamrockLee),\
  Sergey Linev, GSI,\
  Javier Lopez-Gomez, CERN/SFT,\
  Pere Mato, CERN/SFT,\
+ Emmanouil Michalainas, CERN/SFT, \
  Lorenzo Moneta, CERN/SFT,\
+ Nicolas Morange, CNRS/IJCLab, \
  Axel Naumann, CERN/SFT,\
  Vincenzo Eduardo Padulano, CERN/SFT and UPV,\
  Max Orok, U Ottawa,\
@@ -46,9 +52,11 @@ The following people have contributed to this new version:
  Oksana Shadura, UNL/CMS,\
  Sanjiban Sengupta, GSOC,\
  Federico Sossai, CERN/SFT,\
+ Harshal Shende, GSOC,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,\
+ Wouter Verkerke, NIKHEF/ATLAS,\
+ Zef Wolffs, NIKHEF/ATLAS,\
  Stefan Wunsch, CERN/SFT
 
 ## Deprecation, Removal, Backward Incompatibilities
