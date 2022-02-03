@@ -1,3 +1,15 @@
+/*
+ * Project: RooFit
+ * Authors:
+ *   Carsten D. Burgard, DESY/ATLAS, Dec 2021
+ *
+ * Copyright (c) 2022, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
 #ifndef RooFitHS3_RooJSONFactoryWSTool_h
 #define RooFitHS3_RooJSONFactoryWSTool_h
 
