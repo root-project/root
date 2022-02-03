@@ -1,5 +1,8 @@
 // @(#)root/eve7:$Id$
-// Authors: Matevz Tadel & Alja Mrak-Tadel: 2006, 2007, 2018
+// Authors: Matevz Tadel and Alja Mrak Tadel: 2006, 2007, 2018
+//
+// Based of initial implementation of generic collection access interface
+// for CMS framework and Fireworks event display by Christopher D. Jones.
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
