@@ -1,7 +1,8 @@
 /// \file
 /// \ingroup tutorial_eve7
-///  This example display collection of ??? in web browser
 ///
+/// This is an example of visualization of containers
+/// with REveDataCollection and REveDataProxyBuilders.
 /// \macro_code
 ///
 
