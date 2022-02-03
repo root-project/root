@@ -3403,6 +3403,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/libRosetta")
        || strstr(filename, "/usr/lib/libCoreEntitlements")
        || strstr(filename, "/usr/lib/libssl.")
+       || strstr(filename, "/usr/lib/libcrypto.")
        // These are candidates for suppression, too:
        //   -lfakelink -lapple_nghttp2 -lnetwork -lsqlite3 -lenergytrace -lCoreEntitlements
        //   -lMobileGestalt -lcoretls -lcoretls_cfhelpers -lxar.1 -lcompression -larchive.2
