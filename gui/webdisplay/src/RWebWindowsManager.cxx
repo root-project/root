@@ -222,6 +222,10 @@ void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
 ///
 ///      WebGui.HttpMaxAge: 3600
 ///
+/// Also one can provide extra URL options for, see TCivetweb::Create for list of supported options
+///
+///      WebGui.HttpExtraArgs: winsymlinks=no
+///
 /// One also can configure usage of FastCGI server for web windows:
 ///
 ///      WebGui.FastCgiPort: 4000
@@ -292,6 +296,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int http_thrds = gEnv->GetValue("WebGui.HttpThreads", 10);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
    int http_maxage = gEnv->GetValue("WebGui.HttpMaxAge", -1);
+   const char *extra_args = gEnv->GetValue("WebGui.HttpExtraArgs", "");
    int fcgi_port = gEnv->GetValue("WebGui.FastCgiPort", 0);
    int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
@@ -363,6 +368,11 @@ bool RWebWindowsManager::CreateServer(bool with_http)
          if (use_secure) {
             engine.Append("&ssl_cert=");
             engine.Append(ssl_cert);
+         }
+
+         if (extra_args && strlen(extra_args) > 0) {
+            engine.Append("&");
+            engine.Append(extra_args);
          }
 
          if (fServer->CreateEngine(engine)) {
