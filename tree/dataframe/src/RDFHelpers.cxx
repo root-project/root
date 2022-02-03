@@ -217,7 +217,7 @@ void ProgressHelper::PrintProgressbar(std::ostream& stream, std::size_t currentE
   if (fUseShellColours) stream << "\e[0m";
 }
 
-std::size_t ROOT::RDF::RetrieveNEvents(const char* treename, const char* fileUrl) {
+std::size_t RetrieveNEvents(const char* treename, const char* fileUrl) {
   std::unique_ptr<TFile> file( TFile::Open(fileUrl, "READ") );
   if (!file)
     return 0u;
