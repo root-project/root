@@ -353,8 +353,6 @@ static int begin_request_handler(struct mg_connection *conn, void *)
       filename = (const char *)arg->GetContent();
 #ifdef _MSC_VER
       // resolve Windows links which are not supported by civetweb
-      const int BUFSIZE = 2048;
-      TCHAR Path[BUFSIZE];
 
       auto hFile = CreateFile(filename.Data(),       // file to open
                               GENERIC_READ,          // open for reading
@@ -365,10 +363,16 @@ static int begin_request_handler(struct mg_connection *conn, void *)
                               NULL);                 // no attr. template
 
       if( hFile != INVALID_HANDLE_VALUE) {
-         auto dwRet = GetFinalPathNameByHandle( hFile, Path, BUFSIZE, VOLUME_NAME_DOS );
-         // produced file name may include \\? symbols, which are indicating long file name
-         if(dwRet < BUFSIZE)
-            filename = Path;
+         const int BUFSIZE = 2048;
+         TCHAR Path[BUFSIZE];
+         auto dwRet = GetFinalPathNameByHandle( hFile, Path, BUFSIZE, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS );
+         // produced file name may include \\?\ symbols, which are indicating long file name
+         if(dwRet < BUFSIZE) {
+            if (dwRet > 4 && Path[0] == '\\' && Path[1] == '\\' && Path[2] == '?' && Path[3] == '\\')
+               filename = Path + 4;
+            else
+               filename = Path;
+         }
          CloseHandle(hFile);
       }
 #endif
