@@ -208,8 +208,8 @@ namespace TMVA {
       Double_t  fMinLinCorrForFisher; ///< the minimum linear correlation between two variables demanded for use in fisher criterium in node splitting
       Bool_t    fUseExclusiveVars;    ///< individual variables already used in fisher criterium are not anymore analysed individually for node splitting
 
-      SeparationBase *fSepType;       ///< the separation crition
-      RegressionVariance *fRegType;   ///< the separation crition used in Regression
+      SeparationBase *fSepType;       ///< the separation criteria
+      RegressionVariance *fRegType;   ///< the separation criteria used in Regression
 
       Double_t  fMinSize;             ///< min number of events in node
       Double_t  fMinNodeSize;         ///< min fraction of training events in node
