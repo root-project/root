@@ -352,28 +352,29 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    } else if (arg->IsFile()) {
       filename = (const char *)arg->GetContent();
 #ifdef _MSC_VER
-      // resolve Windows links which are not supported by civetweb
+      if (engine->IsWinSymLinks()) {
+         // resolve Windows links which are not supported by civetweb
+         auto hFile = CreateFile(filename.Data(),       // file to open
+                                 GENERIC_READ,          // open for reading
+                                 FILE_SHARE_READ,       // share for reading
+                                 NULL,                  // default security
+                                 OPEN_EXISTING,         // existing file only
+                                 FILE_ATTRIBUTE_NORMAL, // normal file
+                                 NULL);                 // no attr. template
 
-      auto hFile = CreateFile(filename.Data(),       // file to open
-                              GENERIC_READ,          // open for reading
-                              FILE_SHARE_READ,       // share for reading
-                              NULL,                  // default security
-                              OPEN_EXISTING,         // existing file only
-                              FILE_ATTRIBUTE_NORMAL, // normal file
-                              NULL);                 // no attr. template
-
-      if( hFile != INVALID_HANDLE_VALUE) {
-         const int BUFSIZE = 2048;
-         TCHAR Path[BUFSIZE];
-         auto dwRet = GetFinalPathNameByHandle( hFile, Path, BUFSIZE, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS );
-         // produced file name may include \\?\ symbols, which are indicating long file name
-         if(dwRet < BUFSIZE) {
-            if (dwRet > 4 && Path[0] == '\\' && Path[1] == '\\' && Path[2] == '?' && Path[3] == '\\')
-               filename = Path + 4;
-            else
-               filename = Path;
+         if( hFile != INVALID_HANDLE_VALUE) {
+            const int BUFSIZE = 2048;
+            TCHAR Path[BUFSIZE];
+            auto dwRet = GetFinalPathNameByHandle( hFile, Path, BUFSIZE, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS );
+            // produced file name may include \\?\ symbols, which are indicating long file name
+            if(dwRet < BUFSIZE) {
+               if (dwRet > 4 && Path[0] == '\\' && Path[1] == '\\' && Path[2] == '?' && Path[3] == '\\')
+                  filename = Path + 4;
+               else
+                  filename = Path;
+            }
+            CloseHandle(hFile);
          }
-         CloseHandle(hFile);
       }
 #endif
       const char *mime_type = THttpServer::GetMimeType(filename.Data());
@@ -453,8 +454,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 /// constructor
 
 TCivetweb::TCivetweb(Bool_t only_secured)
-   : THttpEngine("civetweb", "compact embedded http server"), fCtx(nullptr), fCallbacks(nullptr), fTopName(),
-     fDebug(kFALSE), fTerminating(kFALSE), fOnlySecured(only_secured)
+   : THttpEngine("civetweb", "compact embedded http server"),
+     fOnlySecured(only_secured)
 {
 }
 
@@ -498,6 +499,7 @@ Int_t TCivetweb::ProcessLog(const char *message)
 ///    log=filename  - configure civetweb log file
 ///    max_age=value - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
 ///    nocache - try to fully disable cache control for file requests
+///    winsymlinks=no - do not resolve symbolic links on file system (Windows only), default true
 ///  Examples:
 ///     http:8080?websocket_disable
 ///     http:7546?thrds=30&websocket_timeout=20
@@ -566,6 +568,10 @@ Bool_t TCivetweb::Create(const char *args)
 
             if (url.HasOption("debug"))
                fDebug = kTRUE;
+
+            const char *winsymlinks = url.GetValueFromOptions("winsymlinks");
+            if (winsymlinks)
+               fWinSymLinks = strcmp(winsymlinks,"no") != 0;
 
             if (url.HasOption("loopback") && (sport.Index(":") == kNPOS))
                sport = TString("127.0.0.1:") + sport;
