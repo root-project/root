@@ -50,6 +50,10 @@ if(PY_TORCH_FOUND)
                   ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
                  )
    target_link_libraries(emitFromPyTorch ${PYTHON_LIBRARIES} ${Libraries})
+if(APPLE)
+   target_link_options(emitFromPyTorch PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+endif()
+
    target_include_directories(emitFromPyTorch PRIVATE
                               ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                               ${CMAKE_SOURCE_DIR}/tmva/inc
@@ -101,6 +105,10 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
                  ${CMAKE_SOURCE_DIR}/tmva/sofie/src/SOFIE_common.cxx
                  )
    target_link_libraries(emitFromKeras ${PYTHON_LIBRARIES} ${Libraries})
+if(APPLE)
+   target_link_options(emitFromKeras PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+endif()
+
    target_include_directories(emitFromKeras PRIVATE
                  ${CMAKE_SOURCE_DIR}/tmva/sofie/inc
                  ${CMAKE_SOURCE_DIR}/tmva/inc
