@@ -7,6 +7,12 @@
 ##
 ## ### Introduction
 ##
+## Note: in this tutorial, we are multiplying the likelihood with an additional
+## likelihood to constrain the parameters with auxiliary measurements. This is
+## different from the `rf604_constraints` tutorial, where the likelihood is
+## multiplied with a Bayesian prior to constrain the parameters.
+##
+##
 ## With RooFit, you usually optimize some model parameters `p` to maximize the
 ## likelihood `L` given the per-event or per-bin ## observations `x`:
 ##
@@ -40,7 +46,7 @@
 ##
 ## \f[ L'(data | mu, count) = L(data | mu, count) * Poisson(count_obs | count) \f]
 ##
-## Note: unlike a Guassian, a Poissonian is not symmetric under exchange of the
+## Unlike a Guassian, a Poissonian is not symmetric under exchange of the
 ## observable and the parameter, so here you need to be more careful to follow
 ## the global observable prescription correctly.
 ##
