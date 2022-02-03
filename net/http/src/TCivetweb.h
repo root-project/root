@@ -1,8 +1,7 @@
-// $Id$
 // Author: Sergey Linev   21/12/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -15,10 +14,12 @@
 #include "THttpEngine.h"
 #include "TString.h"
 
+#include "../civetweb/civetweb.h"
+
 class TCivetweb : public THttpEngine {
 protected:
-   void *fCtx{nullptr};         ///<! civetweb context
-   void *fCallbacks{nullptr};   ///<! call-back table for civetweb webserver
+   struct mg_context *fCtx{nullptr}; ///<! civetweb context
+   struct mg_callbacks fCallbacks;  ///<! call-back table for civetweb webserver
    TString fTopName;            ///<! name of top item
    Bool_t fDebug{kFALSE};       ///<! debug mode
    Bool_t fTerminating{kFALSE}; ///<! server doing shutdown and not react on requests
