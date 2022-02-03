@@ -3387,6 +3387,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/liboah")
        || strstr(filename, "/usr/lib/libRosetta")
        || strstr(filename, "/usr/lib/libssl.")
+       || strstr(filename, "/usr/lib/libcrypto.")
        // "cannot link directly with dylib/framework, your binary is not an allowed client of
        // /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/
        // SDKs/MacOSX.sdk/usr/lib/libAudioToolboxUtility.tbd for architecture x86_64
