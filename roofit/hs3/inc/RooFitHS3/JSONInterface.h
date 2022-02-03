@@ -1,5 +1,17 @@
-#ifndef JSON_INTERFACE_H
-#define JSON_INTERFACE_H
+/*
+ * Project: RooFit
+ * Authors:
+ *   Carsten D. Burgard, DESY/ATLAS, Dec 2021
+ *
+ * Copyright (c) 2022, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
+#ifndef RooFitHS3_JSONInterface_h
+#define RooFitHS3_JSONInterface_h
 
 #include <iostream>
 #include <memory>
