@@ -37,4 +37,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     TMVA
 )
 
+if(APPLE)
+    target_link_options(PyMVA PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
+endif()
+
 ROOT_ADD_TEST_SUBDIRECTORY(test)
