@@ -154,6 +154,12 @@ def is_staticmethod_py2(klass, func_name):
     return type(getattr(klass, func_name)).__name__ == "function"
 
 
+def is_classmethod(klass, func):
+    if hasattr(func, "__self__"):
+        return func.__self__ == klass
+    return False
+
+
 def rebind_attribute(to_class, from_class, func_name):
     """
     Bind the instance method `from_class.func_name` also to class `to_class`.
@@ -163,13 +169,20 @@ def rebind_attribute(to_class, from_class, func_name):
 
     from_method = getattr(from_class, func_name)
 
-    if sys.version_info >= (3, 0):
+    if is_classmethod(from_class, from_method):
+        # the @classmethod case
+        to_method = classmethod(from_method.__func__)
+    elif sys.version_info >= (3, 0):
+        # any other case in Python 3 is trivial
         to_method = from_method
     elif isinstance(from_method, property):
+        # the @property case in Python 2
         to_method = from_method
     elif is_staticmethod_py2(from_class, func_name):
+        # the @staticmethod case in Python 2
         to_method = staticmethod(from_method)
     else:
+        # the instance method case in Python 2
         import new
 
         to_method = new.instancemethod(from_method.__func__, None, to_class)
