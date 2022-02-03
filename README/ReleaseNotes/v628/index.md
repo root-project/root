@@ -80,6 +80,12 @@ The following lesser-used RooFit functions now return a `std::string` instead of
 
 ## Networking Libraries
 
+### THttpServer
+
+- upgrade civetweb code to version 1.15, supports SSL version 3.0
+- resolve problem with symbolic links usage on Windows
+- let disable/enable directory files listing via THttpServer (default is off)
+
 
 ## GUI Libraries
 
