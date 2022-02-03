@@ -137,12 +137,18 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
 
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
 
-  # NumPy compatibility
+  if (NOT APPLE AND (NOT MSVC OR win_broken_tests))
+    # Test pythonizations for the RooFitHS3 package, which is not built on Windows.
+    # The test is also disabled on Mac, where it crashes on the CI for unknown
+    # reasons, even though it works locally.
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
+  endif()
+
   if(NOT MSVC OR win_broken_tests)
+    # NumPy compatibility
     ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
     ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
   endif()
