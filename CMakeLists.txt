@@ -292,17 +292,16 @@ endif()
 
 #---Copy files to the build area, with dependency---------------------------------
 file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/* ${jsroot_files} ${openui5_files})
+
+# Filter out hsimple.root
+list(REMOVE_ITEM artifact_files "tutorials/hsimple.root")
+
 set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
-  # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
-  # target below will interfere.
-  if (NOT (artifact_file STREQUAL "tutorials/hsimple.root"))
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
-      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
-      DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
-    list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
-  endif()
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMAND ${CMAKE_COMMAND} -DSRC="${CMAKE_SOURCE_DIR}/${artifact_file}" -DTGT="${CMAKE_BINARY_DIR}/${artifact_file}" -P ${CMAKE_SOURCE_DIR}/cmake/scripts/CopyFile.cmake
+    DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+  list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
 endforeach()
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
 
