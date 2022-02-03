@@ -28,12 +28,9 @@
 
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCivetwebWSEngine                                                    //
-//                                                                      //
-// Implementation of THttpWSEngine for Civetweb                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/// TCivetwebWSEngine
+///
+/// Implementation of THttpWSEngine for Civetweb
 
 class TCivetwebWSEngine : public THttpWSEngine {
 protected:
@@ -420,35 +417,36 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 }
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCivetweb                                                            //
-//                                                                      //
-// http server implementation, based on civetweb embedded server        //
-// It is default kind of engine, created for THttpServer                //
-// Currently v1.8 from https://github.com/civetweb/civetweb is used     //
-//                                                                      //
-// Following additional options can be specified:                       //
-//    top=foldername - name of top folder, seen in the browser          //
-//    thrds=N - use N threads to run civetweb server (default 5)        //
-//    auth_file - global authentication file                            //
-//    auth_domain - domain name, used for authentication                //
-//                                                                      //
-// Example:                                                             //
-//    new THttpServer("http:8080?top=MyApp&thrds=3");                   //
-//                                                                      //
-// Authentication:                                                      //
-//    When auth_file and auth_domain parameters are specified, access   //
-//    to running http server will be possible only after user           //
-//    authentication, using so-call digest method. To generate          //
-//    authentication file, htdigest routine should be used:             //
-//                                                                      //
-//        [shell] htdigest -c .htdigest domain_name user                //
-//                                                                      //
-//    When creating server, parameters should be:                       //
-//                                                                      //
-//       new THttpServer("http:8080?auth_file=.htdigets&auth_domain=domain_name");  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+///
+/// TCivetweb
+///
+/// http server implementation, based on civetweb embedded server
+/// It is default kind of engine, created for THttpServer
+/// Currently v1.15 from https://github.com/civetweb/civetweb is used
+///
+/// Additional options can be specified:
+///
+///     top=foldername - name of top folder, seen in the browser
+///     thrds=N - use N threads to run civetweb server (default 5)
+///     auth_file - global authentication file
+///     auth_domain - domain name, used for authentication
+///
+/// Example:
+///
+///     new THttpServer("http:8080?top=MyApp&thrds=3");
+///
+/// For the full list of supported options see TCivetweb::Create() documentation
+///
+/// When `auth_file` and `auth_domain` parameters are specified, access
+/// to running http server will be possible only after user
+/// authentication, using so-call digest method. To generate
+/// authentication file, htdigest routine should be used:
+///
+///     [shell] htdigest -c .htdigest domain_name user
+///
+/// When creating server, parameters should be:
+///
+///     new THttpServer("http:8080?auth_file=.htdigets&auth_domain=domain_name");
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -483,24 +481,31 @@ Int_t TCivetweb::ProcessLog(const char *message)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates embedded civetweb server
+///
+/// \param args string with civetweb server configuration
+///
 /// As main argument, http port should be specified like "8090".
 /// Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
 /// Extra parameters like in URL string could be specified after '?' mark:
-///    thrds=N   - there N is number of threads used by the civetweb (default is 10)
-///    top=name  - configure top name, visible in the web browser
-///    ssl_certificate=filename - SSL certificate, see docs/OpenSSL.md from civetweb
-///    auth_file=filename  - authentication file name, created with htdigets utility
-///    auth_domain=domain   - authentication domain
-///    websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
-///    websocket_disable - disable web sockets handling (default enabled)
-///    bind - ip address to bind server socket
-///    loopback  - bind specified port to loopback 127.0.0.1 address
-///    debug   - enable debug mode, server always returns html page with request info
-///    log=filename  - configure civetweb log file
-///    max_age=value - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
-///    nocache - try to fully disable cache control for file requests
-///    winsymlinks=no - do not resolve symbolic links on file system (Windows only), default true
-///  Examples:
+///
+///     thrds=N   - there N is number of threads used by the civetweb (default is 10)
+///     top=name  - configure top name, visible in the web browser
+///     ssl_certificate=filename - SSL certificate, see docs/OpenSSL.md from civetweb
+///     auth_file=filename  - authentication file name, created with htdigets utility
+///     auth_domain=domain   - authentication domain
+///     websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
+///     websocket_disable - disable web sockets handling (default enabled)
+///     bind - ip address to bind server socket
+///     loopback  - bind specified port to loopback 127.0.0.1 address
+///     debug   - enable debug mode, server always returns html page with request info
+///     log=filename  - configure civetweb log file
+///     max_age=value - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
+///     nocache - try to fully disable cache control for file requests
+///     winsymlinks=no - do not resolve symbolic links on file system (Windows only), default true
+///     dirlisting=no - enable/disable directory listing for browsing filesystem (default no)
+///
+/// Examples of valid args values:
+///
 ///     http:8080?websocket_disable
 ///     http:7546?thrds=30&websocket_timeout=20
 
@@ -510,8 +515,15 @@ Bool_t TCivetweb::Create(const char *args)
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
    //((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
    ((struct mg_callbacks *)fCallbacks)->log_message = log_message_handler;
-   TString sport = IsSecured() ? "8480s" : "8080", num_threads = "10", websocket_timeout = "300000";
-   TString auth_file, auth_domain, log_file, ssl_cert, max_age;
+   TString sport = IsSecured() ? "8480s" : "8080",
+           num_threads = "10",
+           websocket_timeout = "300000",
+           dir_listening = "no",
+           auth_file,
+           auth_domain,
+           log_file,
+           ssl_cert,
+           max_age;
    Bool_t use_ws = kTRUE;
 
    // extract arguments
@@ -573,6 +585,10 @@ Bool_t TCivetweb::Create(const char *args)
             if (winsymlinks)
                fWinSymLinks = strcmp(winsymlinks,"no") != 0;
 
+            const char *dls = url.GetValueFromOptions("dirlisting");
+            if (dls && (!strcmp(dls,"no") || !strcmp(dls,"yes")))
+               dir_listening = dls;
+
             if (url.HasOption("loopback") && (sport.Index(":") == kNPOS))
                sport = TString("127.0.0.1:") + sport;
 
@@ -598,7 +614,7 @@ Bool_t TCivetweb::Create(const char *args)
       }
    }
 
-   const char *options[20];
+   const char *options[25];
    int op(0);
 
    Info("Create", "Starting HTTP server on port %s", sport.Data());
@@ -639,6 +655,9 @@ Bool_t TCivetweb::Create(const char *args)
       options[op++] = "static_file_max_age";
       options[op++] = max_age.Data();
    }
+
+   options[op++] = "enable_directory_listing";
+   options[op++] = dir_listening.Data();
 
    options[op++] = nullptr;
 
