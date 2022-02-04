@@ -76,6 +76,16 @@ public:
    typedef std::map<TClass *, ExportKeys> ExportKeysMap;
    typedef std::map<std::string, ImportExpression> ImportExpressionMap;
 
+   // The following maps to hold the importers and exporters for runtime lookup
+   // could also be static variables directly, but to avoid the static
+   // initialization order fiasco these are functions that return static
+   // variables.
+   static ImportMap &staticImporters();
+   static ExportMap &staticExporters();
+   static ImportExpressionMap &staticPdfImportExpressions();
+   static ImportExpressionMap &staticFunctionImportExpressions();
+   static ExportKeysMap &staticExportKeys();
+
    struct Var {
       int nbins;
       double min;
@@ -101,12 +111,6 @@ protected:
    const RooFit::Experimental::JSONNode &irootnode() const;
 
    RooWorkspace *_workspace;
-
-   static ImportMap _importers;
-   static ExportMap _exporters;
-   static ExportKeysMap _exportKeys;
-   static ImportExpressionMap _pdfFactoryExpressions;
-   static ImportExpressionMap _funcFactoryExpressions;
 
    std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Experimental::JSONNode &n);
    std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
@@ -163,11 +167,11 @@ public:
    static void printImporters();
    static void printExporters();
 
-   static const ImportMap &importers() { return _importers; }
-   static const ExportMap &exporters() { return _exporters; }
-   static const ImportExpressionMap &pdfImportExpressions() { return _pdfFactoryExpressions; }
-   static const ImportExpressionMap &functionImportExpressions() { return _funcFactoryExpressions; }
-   static const ExportKeysMap &exportKeys() { return _exportKeys; }
+   static ImportMap const &importers() { return staticImporters(); }
+   static ExportMap const &exporters() { return staticExporters(); }
+   static ImportExpressionMap const &pdfImportExpressions() { return staticPdfImportExpressions(); }
+   static ImportExpressionMap const &functionImportExpressions() { return staticFunctionImportExpressions(); }
+   static ExportKeysMap const &exportKeys() { return staticExportKeys(); }
 
    // error handling helpers
    static void error(const char *s) { throw std::runtime_error(s); }
