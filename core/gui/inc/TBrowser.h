@@ -105,7 +105,7 @@ public:
    void          SetDrawOption(Option_t *option="") { if (fImp) fImp->SetDrawOption(option); }
    Option_t     *GetDrawOption() const { return  (fImp) ? fImp->GetDrawOption() : 0; }
 
-   Long_t        ExecPlugin(const char *name = 0, const char *fname = 0,
+   Longptr_t     ExecPlugin(const char *name = 0, const char *fname = 0,
                             const char *cmd = 0, Int_t pos = 1, Int_t subpos = -1) {
                     return (fImp) ? fImp->ExecPlugin(name, fname, cmd, pos, subpos) : -1;
                  }
