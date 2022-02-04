@@ -56,14 +56,14 @@ class RunGraphsTests(unittest.TestCase):
         nentries = 10000
         opts = ROOT.RDF.RSnapshotOptions()
         opts.fAutoFlush = 5000
-        ROOT.RDataFrame(nentries).Define("b1", "gRandom->Gaus(10, 1)")\
-                                 .Define("b2", "gRandom->Gaus(10, 1)")\
-                                 .Define("b3", "gRandom->Gaus(10, 1)")\
+        ROOT.RDataFrame(nentries).Define("b1", "42")\
+                                 .Define("b2", "42")\
+                                 .Define("b3", "42")\
                                  .Snapshot(treename, filename, ["b1", "b2", "b3"], opts)
 
         histoproxies = [
             Spark.RDataFrame(treename, filename, sparkcontext=self.sc, npartitions=2)
-                 .Histo1D((col, col, 100, 0, 20), col)
+                 .Histo1D((col, col, 1, 40, 45), col)
             for col in ["b1", "b2", "b3"]
         ]
 
@@ -79,7 +79,7 @@ class RunGraphsTests(unittest.TestCase):
             histo = proxy.proxied_node.value
             self.assertIsInstance(histo, ROOT.TH1D)
             self.assertEqual(histo.GetEntries(), nentries)
-            self.assertAlmostEqual(histo.GetMean(), 10)
+            self.assertAlmostEqual(histo.GetMean(), 42)
 
         os.remove(filename)
 
