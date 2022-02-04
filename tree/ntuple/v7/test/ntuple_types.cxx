@@ -65,7 +65,7 @@ TEST(RNTuple, UnsupportedStdTypes)
       auto field = RFieldBase::Create("pair_field", "std::pair<int, float>").Unwrap();
       FAIL() << "should not be able to make a std::pair field";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("std::pair<int,float> is not supported"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("pair<int,float> is not supported"));
    }
    try {
       auto field = RField<std::pair<int, float>>("pair_field");
