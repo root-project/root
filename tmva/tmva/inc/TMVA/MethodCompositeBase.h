@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$   
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss,Or Cohen 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss,Or Cohen
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -18,9 +18,9 @@
  *      Or Cohen        <orcohenor@gmail.com>    - Weizmann Inst., Israel         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      LAPP, Annecy, France                                                      *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -67,7 +67,7 @@ namespace TMVA {
       void AddWeightsXMLTo( void* parent ) const;
       void ReadWeightsFromXML( void* wghtnode );
 
-      // calculate the MVA value combining all classifiers according to thier fMethodWeight
+      // calculate the MVA value combining all classifiers according to their fMethodWeight
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       using MethodBase::GetMvaValue;
@@ -88,9 +88,9 @@ namespace TMVA {
       void DeclareOptions() = 0;
       void ProcessOptions() = 0;
 
-      IMethod* GetMethod( const TString& title ) const;  // accessor by name
+      IMethod* GetMethod( const TString& title ) const;  ///< accessor by name
 
-      IMethod* GetMethod( const Int_t index ) const;  // accessor by index in vector
+      IMethod* GetMethod( const Int_t index ) const;  ///< accessor by index in vector
 
       //the index of the classifier currently boosted
       UInt_t             fCurrentMethodIdx;
@@ -106,7 +106,7 @@ namespace TMVA {
 
 
 
-      std::vector<IMethod*>      fMethods;          // vector of all classifiers
+      std::vector<IMethod*>      fMethods;          ///< vector of all classifiers
 
       //the weight of every classifier used in the GetMVA method
       std::vector<Double_t>      fMethodWeight;

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,8 +14,8 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -55,7 +55,7 @@ namespace TMVA {
       void SetRandomSeed( UInt_t seed = 0);
 
       void MakeChildren();
-      void Mutate( Double_t probability = 20, Int_t startIndex = 0, Bool_t near = kFALSE, 
+      void Mutate( Double_t probability = 20, Int_t startIndex = 0, Bool_t near = kFALSE,
                    Double_t spread = 0.1, Bool_t mirror = kFALSE  );
 
       GeneticGenes* GetGenes( Int_t index );
@@ -77,7 +77,7 @@ namespace TMVA {
       // To keep compatibility: These methods might be reimplemented
       // or just eliminated later on. They are used by the
       // GeneticFitter class.
-     
+
       void MakeCopies( int number );
       void NextGeneration() {}
       void AddPopulation( GeneticPopulation *strangers );
@@ -88,16 +88,16 @@ namespace TMVA {
 
    private:
       GeneticGenes MakeSex( GeneticGenes male, GeneticGenes female );
-  
+
    private:
 
-      std::vector<TMVA::GeneticGenes>  fGenePool;    // the "genePool" where the individuals of the current generation are stored
-      std::vector<TMVA::GeneticRange*> fRanges;      // contains the ranges inbetween the values of the coefficients have to be
+      std::vector<TMVA::GeneticGenes>  fGenePool;    ///< the "genePool" where the individuals of the current generation are stored
+      std::vector<TMVA::GeneticRange*> fRanges;      ///< contains the ranges in between the values of the coefficients have to be
 
-      TRandom3*fRandomGenerator;    // random Generator for this population
+      TRandom3*fRandomGenerator;    ///< random Generator for this population
 
-      mutable MsgLogger* fLogger;   // message logger
-      MsgLogger& Log() const { return *fLogger; }    
+      mutable MsgLogger* fLogger;   ///< message logger
+      MsgLogger& Log() const { return *fLogger; }
 
       Int_t fPopulationSizeLimit;
 

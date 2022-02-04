@@ -156,7 +156,7 @@ public:
    /*! Read the information and the weights about the layer from XML node. */
    virtual void ReadWeightsFromXML(void *parent) = 0;
 
-   /*! Set Dropout probability. Reimplemented for layesrs supporting droput */
+   /*! Set Dropout probability. Reimplemented for layers supporting droput */
    virtual void SetDropoutProbability(Scalar_t ) {}
 
    /*! Getters */
@@ -478,7 +478,7 @@ template <typename Arch>
 void VGeneralLayer<Architecture_t>::CopyParameters(const VGeneralLayer<Arch> &layer)
 {
    //assert(!std::is_same<Arch, Architecture_t>::value);
-   // copy weights from a different arhcitecture- default generic implementation
+   // copy weights from a different architecture- default generic implementation
    Architecture_t::CopyDiffArch(this->GetWeights(), layer.GetWeights());
    Architecture_t::CopyDiffArch(this->GetBiases(), layer.GetBiases());
 

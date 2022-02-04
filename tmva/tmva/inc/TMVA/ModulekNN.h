@@ -52,10 +52,10 @@ namespace TMVA {
    class MsgLogger;
 
    namespace kNN {
-      
+
       typedef Float_t VarType;
       typedef std::vector<VarType> VarVec;
-      
+
       class Event {
       public:
 
@@ -87,11 +87,11 @@ namespace TMVA {
 
       private:
 
-         VarVec fVar; // coordinates (variables) for knn search
-         VarVec fTgt; // targets for regression analysis
+         VarVec fVar; ///< coordinates (variables) for knn search
+         VarVec fTgt; ///< targets for regression analysis
 
          Double_t fWeight; // event weight
-         Short_t fType; // event type ==0 or == 1, expand it to arbitrary class types? 
+         Short_t fType; // event type ==0 or == 1, expand it to arbitrary class types?
       };
 
       typedef std::vector<TMVA::kNN::Event> EventVec;
@@ -119,7 +119,7 @@ namespace TMVA {
 
          Bool_t Find(Event event, UInt_t nfind = 100, const std::string &option = "count") const;
          Bool_t Find(UInt_t nfind, const std::string &option) const;
-      
+
          const EventVec& GetEventVec() const;
 
          const List& GetkNNList() const;
@@ -128,7 +128,7 @@ namespace TMVA {
          const VarMap& GetVarMap() const;
 
          const std::map<Int_t, Double_t>& GetMetric() const;
-      
+
          void Print() const;
          void Print(std::ostream &os) const;
 
@@ -154,7 +154,7 @@ namespace TMVA {
 
          mutable List  fkNNList;     // latest result from kNN search
          mutable Event fkNNEvent;    // latest event used for kNN search
-         
+
          std::map<Short_t, UInt_t> fCount; // count number of events of each type
 
          EventVec fEvent; // vector of all events used to build tree and analysis

@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,8 +14,8 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -31,7 +31,7 @@
 //                                                                          //
 // Interval definition, continuous and discrete                             //
 //                                                                          //
-// Interval(min,max)  : a continous interval [min,max]                      //
+// Interval(min,max)  : a continuous interval [min,max]                     //
 // Interval(min,max,n): a "discrete interval" [min,max], i.e the n numbers: //
 //          min, min+step, min+2*step,...., min+(n-1)*step, min+n*step=max  //
 //   e.g.: Interval(1,5,5)=1,2,3,4,5                                        //
@@ -57,7 +57,7 @@ class TRandom3;
 namespace TMVA {
 
    class MsgLogger;
-   
+
    class Interval {
 
    public:
@@ -74,7 +74,7 @@ namespace TMVA {
       virtual Int_t    GetNbins() const { return fNbins; }
       virtual Double_t GetMean()  const;
       virtual Double_t GetRndm( TRandom3& )  const;
-      virtual Double_t GetElement( Int_t position ) const;      
+      virtual Double_t GetElement( Int_t position ) const;
       virtual Double_t GetStepSize(Int_t iBin=0) const;
 
       void SetMax( Double_t m ) { fMax = m; }
@@ -84,13 +84,13 @@ namespace TMVA {
 
    protected:
 
-      Double_t fMin, fMax;    // the constraints of the Interval
-      Int_t    fNbins;        // when >0 : number of bins (discrete interval); when ==0 continuous interval
+      Double_t fMin, fMax;    ///< the constraints of the Interval
+      Int_t    fNbins;        ///< when >0 : number of bins (discrete interval); when ==0 continuous interval
 
    private:
-      MsgLogger& Log() const;          
+      MsgLogger& Log() const;
 
-      ClassDef(Interval,0);    // Interval definition, continous and discrete
+      ClassDef(Interval,0);    // Interval definition, continuous and discrete
    };
 
 } // namespace TMVA

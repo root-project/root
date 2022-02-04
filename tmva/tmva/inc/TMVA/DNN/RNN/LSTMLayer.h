@@ -80,7 +80,7 @@ private:
    bool fReturnSequence = false;                ///< Return in output full sequence or just last element
 
    DNN::EActivationFunction fF1;                ///< Activation function: sigmoid
-   DNN::EActivationFunction fF2;                ///< Activaton function: tanh
+   DNN::EActivationFunction fF2;                ///< Activation function: tanh
 
    Matrix_t fInputValue;                        ///< Computed input gate values
    Matrix_t fCandidateValue;                    ///< Computed candidate values
@@ -702,7 +702,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
 
          // Tensor_t tmp1 = y.At(y.GetShape()[0] - 1).Reshape({y.GetShape()[1], 1, y.GetShape()[2]});
          // dy is a tensor of shape (rowmajor for Cudnn): T x B x S
-         // and this->ActivatuonGradients is  B x (T=1) x S
+         // and this->ActivationGradients is  B x (T=1) x S
          Tensor_t tmp2 = dy.At(dy.GetShape()[0] - 1).Reshape({dy.GetShape()[1], 1, dy.GetShape()[2]});
 
          // Architecture_t::Copy(tmp1, this->GetOutput());
@@ -786,7 +786,7 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
       Architecture_t::Rearrange(arr_output, this->GetOutput());
       Architecture_t::Rearrange(arr_actgradients, this->GetActivationGradients());
    } else {
-      // here for CPU need to transpose the input activatuon gradients into the right format
+      // here for CPU need to transpose the input activation gradients into the right format
       arr_output = fY;
       Architecture_t::InitializeZero(arr_actgradients);
       // need to reshape to pad a time dimension = 1 (note here is columnmajor tensors)

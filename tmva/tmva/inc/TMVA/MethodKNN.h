@@ -115,30 +115,30 @@ namespace TMVA
    private:
 
       // number of events (sumOfWeights)
-      Double_t fSumOfWeightsS;        // sum-of-weights for signal training events
-      Double_t fSumOfWeightsB;        // sum-of-weights for background training events
+      Double_t fSumOfWeightsS;        ///< sum-of-weights for signal training events
+      Double_t fSumOfWeightsB;        ///< sum-of-weights for background training events
 
-      kNN::ModulekNN *fModule;        //! module where all work is done
+      kNN::ModulekNN *fModule;        ///<! module where all work is done
 
-      Int_t fnkNN;            // number of k-nearest neighbors
-      Int_t fBalanceDepth;    // number of binary tree levels used for balancing tree
+      Int_t fnkNN;            ///< number of k-nearest neighbors
+      Int_t fBalanceDepth;    ///< number of binary tree levels used for balancing tree
 
-      Float_t fScaleFrac;     // fraction of events used to compute variable width
-      Float_t fSigmaFact;     // scale factor for Gaussian sigma in Gaus. kernel
+      Float_t fScaleFrac;     ///< fraction of events used to compute variable width
+      Float_t fSigmaFact;     ///< scale factor for Gaussian sigma in Gaus. kernel
 
-      TString fKernel;        // ="Gaus","Poln" - kernel type for smoothing
+      TString fKernel;        ///< ="Gaus","Poln" - kernel type for smoothing
 
-      Bool_t fTrim;           // set equal number of signal and background events
-      Bool_t fUseKernel;      // use polynomial kernel weight function
-      Bool_t fUseWeight;      // use weights to count kNN
-      Bool_t fUseLDA;         // use local linear discriminant analysis to compute MVA
+      Bool_t fTrim;           ///< set equal number of signal and background events
+      Bool_t fUseKernel;      ///< use polynomial kernel weight function
+      Bool_t fUseWeight;      ///< use weights to count kNN
+      Bool_t fUseLDA;         ///< use local linear discriminant analysis to compute MVA
 
-      kNN::EventVec fEvent;   //! (untouched) events used for learning
+      kNN::EventVec fEvent;   ///<! (untouched) events used for learning
 
-      LDA fLDA;               //! Experimental feature for local knn analysis
+      LDA fLDA;               ///<! Experimental feature for local knn analysis
 
       // for backward compatibility
-      Int_t fTreeOptDepth;    // number of binary tree levels used for optimization
+      Int_t fTreeOptDepth;    ///< number of binary tree levels used for optimization
 
       ClassDef(MethodKNN,0); // k Nearest Neighbour classifier
    };

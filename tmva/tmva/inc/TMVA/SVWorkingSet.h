@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Andrzej Zemla
 
 /**********************************************************************************
@@ -13,11 +13,11 @@
  * Authors (alphabetical):                                                        *
  *      Marcin Wolter  <Marcin.Wolter@cern.ch> - IFJ PAN, Krakow, Poland          *
  *      Andrzej Zemla  <azemla@cern.ch>        - IFJ PAN, Krakow, Poland          *
- *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *   
+ *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      PAN, Krakow, Poland                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -38,7 +38,7 @@ namespace TMVA {
    class SVKernelMatrix;
    class SVKernelFunction;
    class MsgLogger;
-        
+
    class SVWorkingSet {
 
    public:
@@ -46,7 +46,7 @@ namespace TMVA {
       SVWorkingSet();
       SVWorkingSet( std::vector<TMVA::SVEvent*>*, SVKernelFunction*, Float_t , Bool_t);
       ~SVWorkingSet();
-                
+
       Bool_t  ExamineExample( SVEvent*);
       Bool_t  TakeStep      ( SVEvent*, SVEvent*);
       Bool_t  Terminated();
@@ -54,7 +54,7 @@ namespace TMVA {
       void    PrintStat();
       std::vector<TMVA::SVEvent*>* GetSupportVectors();
       Float_t GetBpar() {return 0.5*(fB_low + fB_up);}
-      
+
       //for regression
       Bool_t ExamineExampleReg(SVEvent*);
       Bool_t TakeStepReg(SVEvent*, SVEvent*);
@@ -66,25 +66,25 @@ namespace TMVA {
         fExitFromTraining = ExitFromTraining;
         fIPyCurrentIter = fIPyCurrentIter_;
       }
-         
-                
+
+
    private:
 
-      Bool_t fdoRegression;                      //TODO temporary, find nicer solution 
-      std::vector<TMVA::SVEvent*> *fInputData;  // input events
-      std::vector<TMVA::SVEvent*> *fSupVec;     // output events - support vectors
-      SVKernelFunction            *fKFunction;  // kernel function
-      SVKernelMatrix              *fKMatrix;    // kernel matrix
+      Bool_t fdoRegression;                     ///< TODO temporary, find nicer solution
+      std::vector<TMVA::SVEvent*> *fInputData;  ///< input events
+      std::vector<TMVA::SVEvent*> *fSupVec;     ///< output events - support vectors
+      SVKernelFunction            *fKFunction;  ///< kernel function
+      SVKernelMatrix              *fKMatrix;    ///< kernel matrix
 
-      SVEvent                     *fTEventUp;   // last optimized event
-      SVEvent                     *fTEventLow;  // last optimized event
+      SVEvent                     *fTEventUp;   ///< last optimized event
+      SVEvent                     *fTEventLow;  ///< last optimized event
 
-      Float_t                     fB_low;       // documentation
-      Float_t                     fB_up;        // documentation
-      Float_t                     fTolerance;   // documentation
-      
-      mutable MsgLogger*          fLogger;      //! message logger
-      
+      Float_t                     fB_low;       ///< documentation
+      Float_t                     fB_up;        ///< documentation
+      Float_t                     fTolerance;   ///< documentation
+
+      mutable MsgLogger*          fLogger;      ///<! message logger
+
       // variables for JsMVA
       UInt_t *fIPyCurrentIter = nullptr;
       bool * fExitFromTraining = nullptr;

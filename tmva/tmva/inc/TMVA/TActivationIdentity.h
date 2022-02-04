@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Matt Jachowski 
+// Author: Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -20,7 +20,7 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
- 
+
 #ifndef ROOT_TMVA_TActivationIdentity
 #define ROOT_TMVA_TActivationIdentity
 
@@ -37,21 +37,21 @@
 #include "TMVA/TActivation.h"
 
 namespace TMVA {
-  
+
    class TActivationIdentity : public TActivation {
-      
+
    public:
 
       TActivationIdentity() {}
       ~TActivationIdentity() {}
-     
+
       // evaluate the activation function
       virtual Double_t Eval(Double_t arg) { return arg; } // f(x) = x
 
       // evaluate the derivative of the activation function
-      virtual Double_t EvalDerivative(Double_t) { 
+      virtual Double_t EvalDerivative(Double_t) {
          return 1; // f'(x) = 1
-      } 
+      }
 
       // minimum of the range of the activation function
       virtual Double_t GetMin() { return 0; } // these should never be called

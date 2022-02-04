@@ -149,22 +149,22 @@ namespace TMVA {
       // calculate MVA values of current trained method on training
       // sample
       void CalcMVAValues();
-      
-      UInt_t                 fBoostNum;           // Number of times the classifier is boosted
-      TString                fBoostType;          // string specifying the boost type      
 
-      TString                fTransformString;    // min and max values for the classifier response      
-      Bool_t                 fDetailedMonitoring; // produce detailed monitoring histograms (boost-wise)
-      
-      Double_t               fAdaBoostBeta;       // ADA boost parameter, default is 1      
-      UInt_t                 fRandomSeed;         // seed for random number generator used for bagging
-      Double_t               fBaggedSampleFraction;// rel.Size of bagged sample
-      
-      TString                fBoostedMethodName;    // details of the boosted classifier
-      TString                fBoostedMethodTitle;   // title 
-      TString                fBoostedMethodOptions; // options
-      
-      Bool_t                 fMonitorBoostedMethod; // monitor the MVA response of every classifier
+      UInt_t                 fBoostNum;             ///< Number of times the classifier is boosted
+      TString                fBoostType;            ///< string specifying the boost type
+
+      TString                fTransformString;      ///< min and max values for the classifier response
+      Bool_t                 fDetailedMonitoring;   ///< produce detailed monitoring histograms (boost-wise)
+
+      Double_t               fAdaBoostBeta;         ///< ADA boost parameter, default is 1
+      UInt_t                 fRandomSeed;           ///< seed for random number generator used for bagging
+      Double_t               fBaggedSampleFraction; ///< rel.Size of bagged sample
+
+      TString                fBoostedMethodName;    ///< details of the boosted classifier
+      TString                fBoostedMethodTitle;   ///< title
+      TString                fBoostedMethodOptions; ///< options
+
+      Bool_t                 fMonitorBoostedMethod; ///< monitor the MVA response of every classifier
 
       // MVA output from each classifier over the training hist, using orignal events weights
       std::vector< TH1* >   fTrainSigMVAHist;
@@ -176,23 +176,23 @@ namespace TMVA {
       std::vector< TH1* >   fTestSigMVAHist;
       std::vector
          < TH1* >   fTestBgdMVAHist;
-      
+
       //monitoring tree/ntuple and it's variables
-      TTree*                fMonitorTree;     // tree  to monitor values during the boosting      
-      Double_t              fBoostWeight;        // the weight used to boost the next classifier      
-      Double_t              fMethodError;     // estimation of the level error of the classifier 
-      // analysing the train dataset      
-      Double_t           fROC_training;       // roc integral of last trained method (on training sample)
+      TTree*                fMonitorTree;     ///< tree  to monitor values during the boosting
+      Double_t              fBoostWeight;     ///< the weight used to boost the next classifier
+      Double_t              fMethodError;     ///< estimation of the level error of the classifier
+      // analysing the train dataset
+      Double_t           fROC_training;       ///< roc integral of last trained method (on training sample)
 
       // overlap integral of mva distributions for signal and
       // background (training sample)
       Double_t           fOverlap_integral;
-      
-      std::vector<Float_t> *fMVAvalues;       // mva values for the last trained method
 
-      DataSetManager*    fDataSetManager;     // DSMTEST
-      TString fHistoricOption;    //historic variable, only needed for "CompatibilityOptions" 
-      Bool_t fHistoricBoolOption; //historic variable, only needed for "CompatibilityOptions" 
+      std::vector<Float_t> *fMVAvalues;       ///< mva values for the last trained method
+
+      DataSetManager*    fDataSetManager;     ///< DSMTEST
+      TString fHistoricOption;                ///< historic variable, only needed for "CompatibilityOptions"
+      Bool_t fHistoricBoolOption;             ///< historic variable, only needed for "CompatibilityOptions"
 
    protected:
 

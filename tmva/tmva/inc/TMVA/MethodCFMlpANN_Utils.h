@@ -60,17 +60,17 @@ namespace TMVA {
 
    protected:
 
-      void Train_nn( Double_t *tin2, Double_t *tout2, Int_t *ntrain, 
-                     Int_t *ntest, Int_t *nvar2, Int_t *nlayer, 
+      void Train_nn( Double_t *tin2, Double_t *tout2, Int_t *ntrain,
+                     Int_t *ntest, Int_t *nvar2, Int_t *nlayer,
                      Int_t *nodes, Int_t *ncycle );
-      
-      void Entree_new( Int_t *, char *, Int_t *ntrain, Int_t *ntest, 
-                       Int_t *numlayer, Int_t *nodes, Int_t *numcycle, 
+
+      void Entree_new( Int_t *, char *, Int_t *ntrain, Int_t *ntest,
+                       Int_t *numlayer, Int_t *nodes, Int_t *numcycle,
                        Int_t );
 
       virtual Int_t DataInterface( Double_t*, Double_t*, Int_t*, Int_t*, Int_t*, Int_t*,
                                    Double_t*, Int_t*, Int_t* ) = 0;
-  
+
       Double_t Fdecroi(Int_t *i__);
       Double_t Sen3a(void);
 
@@ -106,7 +106,7 @@ namespace TMVA {
       Double_t& W_ref(Double_t wNN[], Int_t a_1, Int_t a_2, Int_t a_3) {
          return wNN [((a_3)*max_nNodes_ + (a_2))*max_nLayers_ + a_1 - 187];
       }
-      
+
       Double_t Ww_ref(const Double_t wwNN[], Int_t a_1,Int_t a_2) const {
          return wwNN[(a_2)*max_nLayers_ + a_1 - 7];
       }
@@ -130,7 +130,7 @@ namespace TMVA {
       // dynamic data table
       class VARn2 {
       public:
-      VARn2() : fNevt(0), fNvar(0) { 
+      VARn2() : fNevt(0), fNvar(0) {
             fxx = 0;
          }
          ~VARn2() {
@@ -142,7 +142,7 @@ namespace TMVA {
             for (Int_t i=0; i<fNevt; i++) fxx[i] = new Double_t[fNvar];
          }
          Double_t operator=( Double_t val ) { return val; }
-         Double_t &operator()( Int_t ievt, Int_t ivar ) const { 
+         Double_t &operator()( Int_t ievt, Int_t ivar ) const {
             if (0 != fxx && ievt < fNevt && ivar < fNvar) return fxx[ievt][ivar];
             else {
                printf( "*** ERROR in varn3_(): fxx is zero pointer ==> abort ***\n") ;

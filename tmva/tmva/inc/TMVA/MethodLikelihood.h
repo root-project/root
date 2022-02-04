@@ -1,5 +1,5 @@
-// @(#)root/tmva $Id$ 
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Peter Speckmayer, Eckhard von Toerne, Jan Therhaag 
+// @(#)root/tmva $Id$
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss, Peter Speckmayer, Eckhard von Toerne, Jan Therhaag
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -25,9 +25,9 @@
  *      Eckhard v. Toerne  <evt@uni-bonn.de>          - U of Bonn, Germany        *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -71,8 +71,8 @@ namespace TMVA {
                         const TString& theWeightFile);
 
       virtual ~MethodLikelihood();
-    
-      virtual Bool_t HasAnalysisType( Types::EAnalysisType type, 
+
+      virtual Bool_t HasAnalysisType( Types::EAnalysisType type,
                                       UInt_t numberClasses, UInt_t numberTargets );
 
       // training method
@@ -120,38 +120,38 @@ namespace TMVA {
       void Init();
       void DeclareOptions();
       void ProcessOptions();
-      
-      // options
-      Double_t             fEpsilon;                   // minimum number of likelihood (to avoid zero)
-      Bool_t               fTransformLikelihoodOutput; // likelihood output is sigmoid-transformed
 
-      Int_t                fDropVariable;              //  for ranking test
-      
-      std::vector<TH1*>*   fHistSig;                   // signal PDFs (histograms)
-      std::vector<TH1*>*   fHistBgd;                   // background PDFs (histograms)
-      std::vector<TH1*>*   fHistSig_smooth;            // signal PDFs (smoothed histograms)
-      std::vector<TH1*>*   fHistBgd_smooth;            // background PDFs (smoothed histograms)
-  
-      PDF*                 fDefaultPDFLik;             // pdf that contains default definitions
-      std::vector<PDF*>*   fPDFSig;                    // list of PDFs (signal)    
-      std::vector<PDF*>*   fPDFBgd;                    // list of PDFs (background)
+      // options
+      Double_t             fEpsilon;                   ///< minimum number of likelihood (to avoid zero)
+      Bool_t               fTransformLikelihoodOutput; ///< likelihood output is sigmoid-transformed
+
+      Int_t                fDropVariable;              ///<  for ranking test
+
+      std::vector<TH1*>*   fHistSig;                   ///< signal PDFs (histograms)
+      std::vector<TH1*>*   fHistBgd;                   ///< background PDFs (histograms)
+      std::vector<TH1*>*   fHistSig_smooth;            ///< signal PDFs (smoothed histograms)
+      std::vector<TH1*>*   fHistBgd_smooth;            ///< background PDFs (smoothed histograms)
+
+      PDF*                 fDefaultPDFLik;             ///< pdf that contains default definitions
+      std::vector<PDF*>*   fPDFSig;                    ///< list of PDFs (signal)
+      std::vector<PDF*>*   fPDFBgd;                    ///< list of PDFs (background)
 
       // default initialisation called by all constructors
 
-      // obsolete variables kept for backward combatibility
-      Int_t                fNsmooth;                   // number of smooth passes
-      Int_t*               fNsmoothVarS;               // number of smooth passes
-      Int_t*               fNsmoothVarB;               // number of smooth passes
-      Int_t                fAverageEvtPerBin;          // average events per bin; used to calculate fNbins
-      Int_t*               fAverageEvtPerBinVarS;      // average events per bin; used to calculate fNbins
-      Int_t*               fAverageEvtPerBinVarB;      // average events per bin; used to calculate fNbins
-      TString              fBorderMethodString;        // the method to take care about "border" effects (string)
-      Float_t              fKDEfineFactor;             // fine tuning factor for Adaptive KDE
-      TString              fKDEiterString;             // Number of iterations (string)
-      TString              fKDEtypeString;             // Kernel type to use for KDE (string)
-      TString*             fInterpolateString;         // which interpolation method used for reference histograms (individual for each variable)
+      // obsolete variables kept for backward compatibility
+      Int_t                fNsmooth;                   ///< number of smooth passes
+      Int_t*               fNsmoothVarS;               ///< number of smooth passes
+      Int_t*               fNsmoothVarB;               ///< number of smooth passes
+      Int_t                fAverageEvtPerBin;          ///< average events per bin; used to calculate fNbins
+      Int_t*               fAverageEvtPerBinVarS;      ///< average events per bin; used to calculate fNbins
+      Int_t*               fAverageEvtPerBinVarB;      ///< average events per bin; used to calculate fNbins
+      TString              fBorderMethodString;        ///< the method to take care about "border" effects (string)
+      Float_t              fKDEfineFactor;             ///< fine tuning factor for Adaptive KDE
+      TString              fKDEiterString;             ///< Number of iterations (string)
+      TString              fKDEtypeString;             ///< Kernel type to use for KDE (string)
+      TString*             fInterpolateString;         ///< which interpolation method used for reference histograms (individual for each variable)
 
-      ClassDef(MethodLikelihood,0); // Likelihood analysis ("non-parametric approach") 
+      ClassDef(MethodLikelihood,0); // Likelihood analysis ("non-parametric approach")
    };
 
 } // namespace TMVA

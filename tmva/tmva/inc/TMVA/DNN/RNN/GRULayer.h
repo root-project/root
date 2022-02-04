@@ -80,7 +80,7 @@ private:
    bool fResetGateAfter = false;                ///< GRU variant to Apply the reset gate multiplication afterwards (used by cuDNN)
 
    DNN::EActivationFunction fF1;                ///< Activation function: sigmoid
-   DNN::EActivationFunction fF2;                ///< Activaton function: tanh
+   DNN::EActivationFunction fF2;                ///< Activation function: tanh
 
    Matrix_t fResetValue;                        ///< Computed reset gate values
    Matrix_t fUpdateValue;                       ///< Computed forget gate values
@@ -119,7 +119,7 @@ private:
    Matrix_t &fWeightsCandidateStateGradients;   ///< Gradients w.r.t the candidate gate - hidden state weights
    Matrix_t &fCandidateBiasGradients;           ///< Gradients w.r.t the candidate gate - bias weights
 
-   Matrix_t fCell;                              ///< EMpty matrix for GRU
+   Matrix_t fCell;                              ///< Empty matrix for GRU
 
    // Tensor representing all weights (used by cuDNN)
    Tensor_t fWeightsTensor;         ///< Tensor for all weights
@@ -574,7 +574,7 @@ auto inline TBasicGRULayer<Architecture_t>::Forward(Tensor_t &input, bool isTrai
    else {
       // get T[end[]]
       Tensor_t tmp = arrOutput.At(fTimeSteps - 1); // take last time step
-      // shape of tmp is  for CPU (columnwise) B x D ,   need to reshape to  make a B x D x 1
+      // shape of tmp is  for CPU (column wise) B x D ,   need to reshape to  make a B x D x 1
       //  and transpose it to 1 x D x B  (this is how output is expected in columnmajor format)
       tmp = tmp.Reshape({tmp.GetShape()[0], tmp.GetShape()[1], 1});
       assert(tmp.GetSize() == this->GetOutput().GetSize());

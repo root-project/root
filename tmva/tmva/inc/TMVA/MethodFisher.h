@@ -132,26 +132,26 @@ namespace TMVA {
       TMatrixD *fMeanMatx;
 
       // method to be used
-      TString       fTheMethod;       // Fisher or Mahalanobis
-      EFisherMethod fFisherMethod;    // Fisher or Mahalanobis 
+      TString       fTheMethod;       ///< Fisher or Mahalanobis
+      EFisherMethod fFisherMethod;    ///< Fisher or Mahalanobis
 
       // covariance matrices
-      TMatrixD *fBetw;                // between-class matrix
-      TMatrixD *fWith;                // within-class matrix
-      TMatrixD *fCov;                 // full covariance matrix
+      TMatrixD *fBetw;                ///< between-class matrix
+      TMatrixD *fWith;                ///< within-class matrix
+      TMatrixD *fCov;                 ///< full covariance matrix
 
       // number of events (sumOfWeights)
-      Double_t fSumOfWeightsS;        // sum-of-weights for signal training events
-      Double_t fSumOfWeightsB;        // sum-of-weights for background training events
-      
-      std::vector<Double_t>* fDiscrimPow;  // discriminating power
-      std::vector<Double_t>* fFisherCoeff; // Fisher coefficients
-      Double_t fF0;                   // offset
+      Double_t fSumOfWeightsS;        ///< sum-of-weights for signal training events
+      Double_t fSumOfWeightsB;        ///< sum-of-weights for background training events
+
+      std::vector<Double_t>* fDiscrimPow;  ///< discriminating power
+      std::vector<Double_t>* fFisherCoeff; ///< Fisher coefficients
+      Double_t fF0;                   ///< offset
 
       // default initialisation called by all constructors
       void Init( void );
 
-      ClassDef(MethodFisher,0); // Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
+      ClassDef(MethodFisher,0); // Analysis of Fisher discriminant (Fisher or Mahalanobis approach)
    };
 
 } // namespace TMVA

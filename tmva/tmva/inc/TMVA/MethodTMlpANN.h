@@ -105,17 +105,17 @@ namespace TMVA {
       void CreateMLPOptions( TString );
 
       // option string
-      TString fLayerSpec;          // Layer specification option
+      TString fLayerSpec;          ///< Layer specification option
 
-      TMultiLayerPerceptron* fMLP; // the TMLP
-      TTree*                 fLocalTrainingTree; // local copy of training tree
+      TMultiLayerPerceptron* fMLP; ///< the TMLP
+      TTree*                 fLocalTrainingTree; ///< local copy of training tree
 
-      TString  fHiddenLayer;        // string containing the hidden layer structure
-      Int_t    fNcycles;            // number of training cycles
-      Double_t fValidationFraction; // fraction of events in training tree used for cross validation
-      TString  fMLPBuildOptions;    // option string to build the mlp
+      TString  fHiddenLayer;        ///< string containing the hidden layer structure
+      Int_t    fNcycles;            ///< number of training cycles
+      Double_t fValidationFraction; ///< fraction of events in training tree used for cross validation
+      TString  fMLPBuildOptions;    ///< option string to build the mlp
 
-      TString  fLearningMethod;     // the learning method (given via option string)
+      TString  fLearningMethod;     ///< the learning method (given via option string)
 
       // default initialisation called by all constructors
       void Init( void );

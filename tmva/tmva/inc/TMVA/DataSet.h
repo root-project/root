@@ -69,11 +69,11 @@ namespace TMVA {
       Long64_t  GetNTestEvents()                  const { return GetNEvents(Types::kTesting); }
 
       // const getters
-      const Event*    GetEvent()                        const; // returns event without transformations
+      const Event*    GetEvent()                        const; ///< returns event without transformations
       const Event*    GetEvent        ( Long64_t ievt ) const { fCurrentEventIdx = ievt; return GetEvent(); } // returns event without transformations
       const Event*    GetTrainingEvent( Long64_t ievt ) const { return GetEvent(ievt, Types::kTraining); }
       const Event*    GetTestEvent    ( Long64_t ievt ) const { return GetEvent(ievt, Types::kTesting); }
-      const Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const 
+      const Event*    GetEvent        ( Long64_t ievt, Types::ETreeType type ) const
       {
          fCurrentTreeIdx = TreeIndex(type); fCurrentEventIdx = ievt; return GetEvent();
       }
@@ -115,7 +115,7 @@ namespace TMVA {
       // some of which are given to the Validation sample. As default they belong all to Training set.
       void      DivideTrainingSet( UInt_t blockNum );
 
-      // sets a certrain block from the origin training set to belong to either Training or Validation set
+      // sets a certain block from the origin training set to belong to either Training or Validation set
       void      MoveTrainingBlock( Int_t blockInd,Types::ETreeType dest, Bool_t applyChanges = kTRUE );
 
       void      IncrementNClassEvents( Int_t type, UInt_t classNumber );
@@ -136,42 +136,42 @@ namespace TMVA {
       // data members
       void DestroyCollection( Types::ETreeType type, Bool_t deleteEvents );
 
-      const DataSetInfo         *fdsi;                       //-> datasetinfo that created this dataset
+      const DataSetInfo         *fdsi;                        ///<-> datasetinfo that created this dataset
 
-      std::vector< std::vector<Event*>  > fEventCollection;  // list of events for training/testing/...
+      std::vector< std::vector<Event*>  > fEventCollection;   ///< list of events for training/testing/...
 
-      std::vector< std::map< TString, Results* > > fResults; //!  [train/test/...][method-identifier]
+      std::vector< std::map< TString, Results* > > fResults;  ///<!  [train/test/...][method-identifier]
 
       mutable UInt_t             fCurrentTreeIdx;
       mutable Long64_t           fCurrentEventIdx;
 
       // event sampling
-      std::vector<Char_t>        fSampling;                   // random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
-      std::vector<Int_t>         fSamplingNEvents;            // number of events which should be sampled
-      std::vector<Float_t>       fSamplingWeight;             // weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)] 
-      mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingEventList;  // weights and indices for sampling
-      mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingSelected;   // selected events
-      TRandom3                   *fSamplingRandom;             //-> random generator for sampling
+      std::vector<Char_t>        fSampling;                   ///< random or importance sampling (not all events are taken) !! Bool_t are stored ( no std::vector<bool> taken for speed (performance) issues )
+      std::vector<Int_t>         fSamplingNEvents;            ///< number of events which should be sampled
+      std::vector<Float_t>       fSamplingWeight;             ///< weight change factor [weight is indicating if sampling is random (1.0) or importance (<1.0)]
+      mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingEventList;  ///< weights and indices for sampling
+      mutable std::vector< std::vector< std::pair< Float_t, Long64_t > > > fSamplingSelected;   ///< selected events
+      TRandom3                   *fSamplingRandom;            ///<-> random generator for sampling
 
 
       // further things
-      std::vector< std::vector<Long64_t> > fClassEvents;       // number of events of class 0,1,2,... in training[0] 
-                                                               // and testing[1] (+validation, trainingoriginal)
+      std::vector< std::vector<Long64_t> > fClassEvents;      ///< number of events of class 0,1,2,... in training[0]
+                                                              ///< and testing[1] (+validation, trainingoriginal)
 
-      Bool_t                     fHasNegativeEventWeights;     // true if at least one signal or bkg event has negative weight
+      Bool_t                     fHasNegativeEventWeights;    ///< true if at least one signal or bkg event has negative weight
 
-      mutable MsgLogger*         fLogger;                      //! message logger
+      mutable MsgLogger*         fLogger;                     ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
-      std::vector<Char_t>        fBlockBelongToTraining;       // when dividing the dataset to blocks, sets whether 
-                                                               // the certain block is in the Training set or else 
-                                                               // in the validation set 
-                                                               // boolean are stored, taken std::vector<Char_t> for performance reasons (instead of std::vector<Bool_t>)
-      Long64_t                   fTrainingBlockSize;           // block size into which the training dataset is divided
+      std::vector<Char_t>        fBlockBelongToTraining;      ///< when dividing the dataset to blocks, sets whether
+                                                              ///< the certain block is in the Training set or else
+                                                              ///< in the validation set
+                                                              ///< boolean are stored, taken std::vector<Char_t> for performance reasons (instead of std::vector<Bool_t>)
+      Long64_t                   fTrainingBlockSize;          ///< block size into which the training dataset is divided
 
       void  ApplyTrainingBlockDivision();
       void  ApplyTrainingSetDivision();
    public:
-       
+
        ClassDef(DataSet,1);
    };
 }
@@ -203,7 +203,7 @@ inline TMVA::Types::ETreeType TMVA::DataSet::GetCurrentType() const
 }
 
 //_______________________________________________________________________
-inline Long64_t TMVA::DataSet::GetNEvents(Types::ETreeType type) const 
+inline Long64_t TMVA::DataSet::GetNEvents(Types::ETreeType type) const
 {
    Int_t treeIdx = TreeIndex(type);
    if (fSampling.size() > UInt_t(treeIdx) && fSampling.at(treeIdx)) {

@@ -65,7 +65,7 @@ namespace DNN {
 
 /** \class TDeepNet
     Generic Deep Neural Network class.
-    This classs encapsulates the information for all types of Deep Neural Networks.
+    This class encapsulates the information for all types of Deep Neural Networks.
     \tparam Architecture The Architecture type that holds the
     architecture-specific data types.
  */
@@ -318,7 +318,7 @@ public:
    /*! Print the Deep Net Info */
    void Print() const;
 
-   /*! Get the layer in the vector of layers at poistion i */
+   /*! Get the layer in the vector of layers at position i */
    inline Layer_t *GetLayerAt(size_t i) { return fLayers[i]; }
    inline const Layer_t *GetLayerAt(size_t i) const { return fLayers[i]; }
 

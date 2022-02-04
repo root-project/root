@@ -123,12 +123,12 @@ public:
    inline Scalar_t Loss(Matrix_t &X, const Matrix_t &Y, const Matrix_t &weights, bool applyDropout = false,
                         bool includeRegularization = true);
 
-   /*! Compute the neural network predictionion obtained from forwarding the
+   /*! Compute the neural network prediction obtained from forwarding the
     *  batch X through the neural network and applying the output function
     *  f to the activation of the last layer in the network. */
    inline void Prediction(Matrix_t &Y_hat, Matrix_t &X, EOutputFunction f);
 
-   /*! Compute the neural network rediction obtained from applying the output
+   /*! Compute the neural network prediction obtained from applying the output
     * function f to the activation of the last layer in the network. */
    inline void Prediction(Matrix_t &Y_hat, EOutputFunction f) const;
 

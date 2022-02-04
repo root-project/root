@@ -47,22 +47,22 @@ namespace TMVA {
 
    private:
       //--- linked tree organization ---
-      Int_t    fSerial;                // Serial number
-      Int_t    fStatus;                // Status (active, inactive)
-      TRef     fParent;                // Pointer to parent cell
-      TRef     fDaught0;               // Pointer to daughter 1
-      TRef     fDaught1;               // Pointer to daughter 2
+      Int_t    fSerial;                ///< Serial number
+      Int_t    fStatus;                ///< Status (active, inactive)
+      TRef     fParent;                ///< Pointer to parent cell
+      TRef     fDaught0;               ///< Pointer to daughter 1
+      TRef     fDaught1;               ///< Pointer to daughter 2
       //--- M.C. sampling and choice of the best edge ---
 
    private:
-      Double_t fXdiv;                  // Factor for division
-      Int_t    fBest;                  // Best Edge for division
+      Double_t fXdiv;                  ///< Factor for division
+      Int_t    fBest;                  ///< Best Edge for division
       //--- Integrals of all kinds ---
-      Double_t fVolume;                // Cartesian Volume of cell
-      Double_t fIntegral;              // Integral over cell (estimate from exploration)
-      Double_t fDrive;                 // Driver  integral, only for cell build-up
+      Double_t fVolume;                ///< Cartesian Volume of cell
+      Double_t fIntegral;              ///< Integral over cell (estimate from exploration)
+      Double_t fDrive;                 ///< Driver  integral, only for cell build-up
       //----------  working space for the user --------------
-      TObject *fElement;               // may set by the user to save some data in this cell
+      TObject *fElement;               ///< may set by the user to save some data in this cell
 
       //////////////////////////////////////////////////////////////////////////////////////
       //                           METHODS                                                //

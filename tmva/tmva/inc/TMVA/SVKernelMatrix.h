@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Andrzej Zemla
 
 /**********************************************************************************
@@ -13,11 +13,11 @@
  * Authors (alphabetical):                                                        *
  *      Marcin Wolter  <Marcin.Wolter@cern.ch> - IFJ PAN, Krakow, Poland          *
  *      Andrzej Zemla  <azemla@cern.ch>        - IFJ PAN, Krakow, Poland          *
- *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *   
+ *      (IFJ PAN: Henryk Niewodniczanski Inst. Nucl. Physics, Krakow, Poland)     *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *      PAN, Krakow, Poland                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -45,10 +45,10 @@ namespace TMVA {
       //constructors
       SVKernelMatrix();
       SVKernelMatrix( std::vector<TMVA::SVEvent*>*, SVKernelFunction* );
-      
+
       //destructor
       ~SVKernelMatrix();
-      
+
       //functions
       Float_t* GetLine   ( UInt_t );
       Float_t* GetColumn ( UInt_t col ) { return this->GetLine(col);}
@@ -56,11 +56,11 @@ namespace TMVA {
 
    private:
 
-      UInt_t               fSize;              // matrix size
-      SVKernelFunction*    fKernelFunction;    // kernel function
-      Float_t**            fSVKernelMatrix;    // kernel matrix
+      UInt_t               fSize;              ///< matrix size
+      SVKernelFunction*    fKernelFunction;    ///< kernel function
+      Float_t**            fSVKernelMatrix;    ///< kernel matrix
 
-      mutable MsgLogger* fLogger;                     //! message logger
+      mutable MsgLogger* fLogger;              ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    };

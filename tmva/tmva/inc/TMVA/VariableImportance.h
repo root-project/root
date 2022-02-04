@@ -41,7 +41,6 @@ namespace TMVA {
        TCanvas* Draw(const TString name="VariableImportance") const;
    };
 
-
    class VariableImportance : public Envelope {
    private:
        UInt_t                    fNumFolds = 0;

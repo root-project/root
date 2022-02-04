@@ -51,7 +51,7 @@
 namespace TMVA {
 
    class MsgLogger;
-   
+
    class ResultsMulticlass : public Results, public IFitterTarget {
 
    public:
@@ -87,8 +87,8 @@ namespace TMVA {
 
    private:
 
-      mutable std::vector<std::vector< Float_t> >  fMultiClassValues;        // mva values (Results)
-      mutable MsgLogger* fLogger;                                            //! message logger
+      mutable std::vector<std::vector< Float_t> >  fMultiClassValues;        ///< mva values (Results)
+      mutable MsgLogger* fLogger;                                            ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
       UInt_t fClassToOptimize;
       std::vector<Float_t> fAchievableEff;
@@ -101,10 +101,10 @@ namespace TMVA {
       std::vector<UInt_t>  fEventClasses;
 
    protected:
-       
+
        ClassDef(ResultsMulticlass,2);
 
-   }; 
+   };
 
 }
 

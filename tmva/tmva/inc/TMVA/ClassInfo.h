@@ -43,13 +43,13 @@
 #include "TMatrixDfwd.h"
 
 namespace TMVA {
-   
+
    class MsgLogger;
 
    class ClassInfo :public TNamed{
 
    public:
-      
+
       ClassInfo( const TString& name = "default" );
       ~ClassInfo();
 
@@ -67,18 +67,18 @@ namespace TMVA {
 
    private:
 
-      TString            fWeight;           // the input formula string that is the weight for the class
-      TCut               fCut;              // pretraining cut for the class
-      UInt_t             fNumber;           // index in of this class in vectors
+      TString            fWeight;           ///< the input formula string that is the weight for the class
+      TCut               fCut;              ///< pre-training cut for the class
+      UInt_t             fNumber;           ///< index in of this class in vectors
 
-      TMatrixD*          fCorrMatrix;       // Correlation matrix for this class
+      TMatrixD*          fCorrMatrix;       ///< Correlation matrix for this class
 
-      mutable MsgLogger* fLogger;           //! message logger
+      mutable MsgLogger* fLogger;           ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
-       
+
        ClassDef(ClassInfo,1);
-      
+
    };
 }
 

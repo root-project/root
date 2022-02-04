@@ -72,20 +72,20 @@ namespace TMVA {
 
    private:
 
-      Float_t       fSigma;             // Width of the Kernel function
-      EKernelIter   fIter;              // iteration number
-      Float_t       fLowerEdge;         // the lower edge of the PDF
-      Float_t       fUpperEdge;         // the upper edge of the PDF
-      Float_t       fFineFactor;        // fine tuning factor for Adaptive KDE: factor to multiply the "width" of the Kernel function
-      TF1          *fKernel_integ;      // the integral of the Kernel function
-      EKernelBorder fKDEborder;         // The method to take care about "border" effects
-      TH1F         *fHist;              // copy of input histogram
-      TH1F         *fFirstIterHist;      // histogram to be filled in the hidden iteration
-      TH1F         *fSigmaHist;         // contains the Sigmas Widths for adaptive KDE
-      Bool_t        fHiddenIteration;   // Defines if whats currently running is the
+      Float_t       fSigma;             ///< Width of the Kernel function
+      EKernelIter   fIter;              ///< iteration number
+      Float_t       fLowerEdge;         ///< the lower edge of the PDF
+      Float_t       fUpperEdge;         ///< the upper edge of the PDF
+      Float_t       fFineFactor;        ///< fine tuning factor for Adaptive KDE: factor to multiply the "width" of the Kernel function
+      TF1          *fKernel_integ;      ///< the integral of the Kernel function
+      EKernelBorder fKDEborder;         ///< The method to take care about "border" effects
+      TH1F         *fHist;              ///< copy of input histogram
+      TH1F         *fFirstIterHist;     ///< histogram to be filled in the hidden iteration
+      TH1F         *fSigmaHist;         ///< contains the Sigmas Widths for adaptive KDE
+      Bool_t        fHiddenIteration;   ///< Defines if whats currently running is the
       // (first) hidden iteration when doing adaptive KDE
 
-      mutable MsgLogger* fLogger;   // message logger
+      mutable MsgLogger* fLogger;       ///< message logger
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(KDEKernel,0); // Kernel density estimator for PDF smoothing

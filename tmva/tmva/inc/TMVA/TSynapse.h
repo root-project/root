@@ -88,13 +88,13 @@ namespace TMVA {
 
    private:
 
-      Double_t fWeight;            // weight of the synapse
-      Double_t fLearnRate;         // learning rate parameter
-      Double_t fDelta;             // local error field
-      Double_t fDEDw;              // sum of deltas
-      Int_t    fCount;             // number of updates contributing to error field
-      TNeuron* fPreNeuron;         // pointer to pre-neuron
-      TNeuron* fPostNeuron;        // pointer to post-neuron
+      Double_t fWeight;            ///< weight of the synapse
+      Double_t fLearnRate;         ///< learning rate parameter
+      Double_t fDelta;             ///< local error field
+      Double_t fDEDw;              ///< sum of deltas
+      Int_t    fCount;             ///< number of updates contributing to error field
+      TNeuron* fPreNeuron;         ///< pointer to pre-neuron
+      TNeuron* fPostNeuron;        ///< pointer to post-neuron
 
       MsgLogger& Log() const;
 

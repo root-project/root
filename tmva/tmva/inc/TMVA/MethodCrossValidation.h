@@ -44,7 +44,7 @@ public:
    MethodCrossValidation(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
                          const TString &theOption = "");
 
-   // constructor for calculating BDT-MVA using previously generatad decision trees
+   // constructor for calculating BDT-MVA using previously generated decision trees
    MethodCrossValidation(DataSetInfo &theData, const TString &theWeightFile);
 
    virtual ~MethodCrossValidation(void);

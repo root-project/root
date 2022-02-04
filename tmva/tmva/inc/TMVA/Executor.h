@@ -32,7 +32,7 @@
 namespace TMVA {
 
 
-/// Base Excutor class
+/// Base Executor class
 class Executor {
 
 public:
@@ -46,7 +46,7 @@ public:
    //////////////////////////////////////
    /// Default constructor of TMVA Executor class
    /// if ROOT::EnableImplicitMT has not been called then by default a serial executor will be created
-   /// A user can create a thread pool and enable multi-thread excution by calling TMVA::Config::Instance()::EnableMT(nthreads)
+   /// A user can create a thread pool and enable multi-thread execution by calling TMVA::Config::Instance()::EnableMT(nthreads)
    /// For releasing the thread pool used by TMVA one can do it by calling  TMVA::Config::Instance()::DisableMT() or
    /// calling TMVA::Config::Instance()::EnableMT() with only one thread
    ////////////////////////////////////////////
@@ -91,7 +91,7 @@ public:
       if (fMTExecImpl) return fMTExecImpl.get();
       else {
          fMTExecImpl =  std::unique_ptr< ROOT::TThreadExecutor>(new ROOT::TThreadExecutor());
-         Info("GetThreadExecutor","Creating a TThread executor with a pool with a defult size of %d",fMTExecImpl->GetPoolSize());
+         Info("GetThreadExecutor","Creating a TThread executor with a pool with a default size of %d",fMTExecImpl->GetPoolSize());
          return fMTExecImpl.get();
       }
    }

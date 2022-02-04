@@ -46,13 +46,13 @@ namespace TMVA
    class PDEFoamDensityBase : public ::TObject
       {
       private:
-         std::vector<Double_t> fBox; // range-searching box
-         Double_t fBoxVolume;        // volume of range searching box
-         Bool_t fBoxHasChanged;      // range searching box has changed
+         std::vector<Double_t> fBox; ///< range-searching box
+         Double_t fBoxVolume;        ///< volume of range searching box
+         Bool_t fBoxHasChanged;      ///< range searching box has changed
 
       protected:
-         BinarySearchTree *fBst;     // Binary tree to find events within a volume
-         mutable MsgLogger *fLogger; //! message logger
+         BinarySearchTree *fBst;     ///< Binary tree to find events within a volume
+         mutable MsgLogger *fLogger; ///<! message logger
 
          MsgLogger& Log() const { return *fLogger; }
 

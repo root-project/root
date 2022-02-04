@@ -70,7 +70,7 @@ namespace TMVA {
                  DataSetInfo& theData,
                  const TString& theOption = "");
 
-      // constructor for calculating BDT-MVA using previously generatad decision trees
+      // constructor for calculating BDT-MVA using previously generated decision trees
       MethodBDT( DataSetInfo& theData,
                  const TString& theWeightFile);
 
@@ -137,7 +137,7 @@ namespace TMVA {
 
       void SetNTrees(Int_t d){fNTrees = d;}
       void SetAdaBoostBeta(Double_t b){fAdaBoostBeta = b;}
-      void SetNodePurityLimit(Double_t l){fNodePurityLimit = l;} 
+      void SetNodePurityLimit(Double_t l){fNodePurityLimit = l;}
       void SetShrinkage(Double_t s){fShrinkage = s;}
       void SetUseNvars(Int_t n){fUseNvars = n;}
       void SetBaggedSampleFraction(Double_t f){fBaggedSampleFraction = f;}
@@ -203,103 +203,103 @@ namespace TMVA {
       Double_t GetGradBoostMVA(const TMVA::Event *e, UInt_t nTrees);
       void     GetBaggedSubSample(std::vector<const TMVA::Event*>&);
 
-      std::vector<const TMVA::Event*>       fEventSample;     // the training events
-      std::vector<const TMVA::Event*>       fValidationSample;// the Validation events
-      std::vector<const TMVA::Event*>       fSubSample;       // subsample for bagged grad boost
-      std::vector<const TMVA::Event*>      *fTrainSample;     // pointer to sample actually used in training (fEventSample or fSubSample) for example
+      std::vector<const TMVA::Event*>       fEventSample;      ///< the training events
+      std::vector<const TMVA::Event*>       fValidationSample; ///< the Validation events
+      std::vector<const TMVA::Event*>       fSubSample;        ///< subsample for bagged grad boost
+      std::vector<const TMVA::Event*>      *fTrainSample;      ///< pointer to sample actually used in training (fEventSample or fSubSample) for example
 
-      Int_t                           fNTrees;          // number of decision trees requested
-      std::vector<DecisionTree*>      fForest;          // the collection of decision trees
-      std::vector<double>             fBoostWeights;    // the weights applied in the individual boosts
-      Double_t                        fSigToBkgFraction;// Signal to Background fraction assumed during training
-      TString                         fBoostType;       // string specifying the boost type
-      Double_t                        fAdaBoostBeta;    // beta parameter for AdaBoost algorithm
-      TString                         fAdaBoostR2Loss;  // loss type used in AdaBoostR2 (Linear,Quadratic or Exponential)
-      //Double_t                        fTransitionPoint; // break-down point for gradient regression
-      Double_t                        fShrinkage;       // learning rate for gradient boost;
-      Bool_t                          fBaggedBoost;     // turn bagging in combination with boost on/off
-      Bool_t                          fBaggedGradBoost; // turn bagging in combination with grad boost on/off
-      //Double_t                        fSumOfWeights;    // sum of all event weights
-      //std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;  // weighted regression residuals
-      std::map< const TMVA::Event*, LossFunctionEventInfo>                fLossFunctionEventInfo;  // map event to true value, predicted value, and weight
-                                                                                                   // used by different loss functions for BDT regression
-      std::map< const TMVA::Event*,std::vector<double> > fResiduals; // individual event residuals for gradient boost
+      Int_t                           fNTrees;            ///< number of decision trees requested
+      std::vector<DecisionTree*>      fForest;            ///< the collection of decision trees
+      std::vector<double>             fBoostWeights;      ///< the weights applied in the individual boosts
+      Double_t                        fSigToBkgFraction;  ///< Signal to Background fraction assumed during training
+      TString                         fBoostType;         ///< string specifying the boost type
+      Double_t                        fAdaBoostBeta;      ///< beta parameter for AdaBoost algorithm
+      TString                         fAdaBoostR2Loss;    ///< loss type used in AdaBoostR2 (Linear,Quadratic or Exponential)
+      //Double_t                        fTransitionPoint; ///< break-down point for gradient regression
+      Double_t                        fShrinkage;         ///< learning rate for gradient boost;
+      Bool_t                          fBaggedBoost;       ///< turn bagging in combination with boost on/off
+      Bool_t                          fBaggedGradBoost;   ///< turn bagging in combination with grad boost on/off
+      //Double_t                        fSumOfWeights;    ///< sum of all event weights
+      //std::map< const TMVA::Event*, std::pair<Double_t, Double_t> >       fWeightedResiduals;   ///< weighted regression residuals
+      std::map< const TMVA::Event*, LossFunctionEventInfo>                fLossFunctionEventInfo; ///< map event to true value, predicted value, and weight
+                                                                                                  /// used by different loss functions for BDT regression
+      std::map< const TMVA::Event*,std::vector<double> > fResiduals; ///< individual event residuals for gradient boost
 
       //options for the decision Tree
-      SeparationBase                 *fSepType;         // the separation used in node splitting
-      TString                         fSepTypeS;        // the separation (option string) used in node splitting
-      Int_t                           fMinNodeEvents;   // min number of events in node
-      Float_t                         fMinNodeSize;     // min percentage of training events in node
-      TString                         fMinNodeSizeS;    // string containing min percentage of training events in node
+      SeparationBase                 *fSepType;         ///< the separation used in node splitting
+      TString                         fSepTypeS;        ///< the separation (option string) used in node splitting
+      Int_t                           fMinNodeEvents;   ///< min number of events in node
+      Float_t                         fMinNodeSize;     ///< min percentage of training events in node
+      TString                         fMinNodeSizeS;    ///< string containing min percentage of training events in node
 
-      Int_t                           fNCuts;           // grid used in cut applied in node splitting
-      Bool_t                          fUseFisherCuts;   // use multivariate splits using the Fisher criterium
-      Double_t                        fMinLinCorrForFisher; // the minimum linear correlation between two variables demanded for use in fisher criterium in node splitting
-      Bool_t                          fUseExclusiveVars; // individual variables already used in fisher criterium are not anymore analysed individually for node splitting
-      Bool_t                          fUseYesNoLeaf;    // use sig or bkg classification in leave nodes or sig/bkg
-      Double_t                        fNodePurityLimit; // purity limit for sig/bkg nodes
-      UInt_t                          fNNodesMax;       // max # of nodes
-      UInt_t                          fMaxDepth;        // max depth
+      Int_t                           fNCuts;               ///< grid used in cut applied in node splitting
+      Bool_t                          fUseFisherCuts;       ///< use multivariate splits using the Fisher criterium
+      Double_t                        fMinLinCorrForFisher; ///< the minimum linear correlation between two variables demanded for use in fisher criterium in node splitting
+      Bool_t                          fUseExclusiveVars;    ///< individual variables already used in fisher criterium are not anymore analysed individually for node splitting
+      Bool_t                          fUseYesNoLeaf;        ///< use sig or bkg classification in leave nodes or sig/bkg
+      Double_t                        fNodePurityLimit;     ///< purity limit for sig/bkg nodes
+      UInt_t                          fNNodesMax;           ///< max # of nodes
+      UInt_t                          fMaxDepth;            ///< max depth
 
-      DecisionTree::EPruneMethod       fPruneMethod;     // method used for prunig
-      TString                          fPruneMethodS;    // prune method option String
-      Double_t                         fPruneStrength;   // a parameter to set the "amount" of pruning..needs to be adjusted
-      Double_t                         fFValidationEvents;    // fraction of events to use for pruning
-      Bool_t                           fAutomatic;       // use user given prune strength or automatically determined one using a validation sample
-      Bool_t                           fRandomisedTrees; // choose a random subset of possible cut variables at each node during training
-      UInt_t                           fUseNvars;        // the number of variables used in the randomised tree splitting
-      Bool_t                           fUsePoissonNvars; // use "fUseNvars" not as fixed number but as mean of a possion distr. in each split
-      UInt_t                           fUseNTrainEvents; // number of randomly picked training events used in randomised (and bagged) trees
+      DecisionTree::EPruneMethod       fPruneMethod;       ///< method used for pruning
+      TString                          fPruneMethodS;      ///< prune method option String
+      Double_t                         fPruneStrength;     ///< a parameter to set the "amount" of pruning..needs to be adjusted
+      Double_t                         fFValidationEvents; ///< fraction of events to use for pruning
+      Bool_t                           fAutomatic;         ///< use user given prune strength or automatically determined one using a validation sample
+      Bool_t                           fRandomisedTrees;   ///< choose a random subset of possible cut variables at each node during training
+      UInt_t                           fUseNvars;          ///< the number of variables used in the randomised tree splitting
+      Bool_t                           fUsePoissonNvars;   ///< use "fUseNvars" not as fixed number but as mean of a poisson distr. in each split
+      UInt_t                           fUseNTrainEvents;   ///< number of randomly picked training events used in randomised (and bagged) trees
 
-      Double_t                         fBaggedSampleFraction;     // relative size of bagged event sample to original sample size
-      TString                          fNegWeightTreatment;     // variable that holds the option of how to treat negative event weights in training
-      Bool_t                           fNoNegWeightsInTraining; // ignore negative event weights in the training
-      Bool_t                           fInverseBoostNegWeights; // boost ev. with neg. weights with 1/boostweight rathre than boostweight
-      Bool_t                           fPairNegWeightsGlobal;   // pair ev. with neg. and pos. weights in traning sample and "annihilate" them 
-      Bool_t                           fTrainWithNegWeights; // yes there are negative event weights and we don't ignore them
-      Bool_t                           fDoBoostMonitor; //create control plot with ROC integral vs tree number
+      Double_t                         fBaggedSampleFraction;   ///< relative size of bagged event sample to original sample size
+      TString                          fNegWeightTreatment;     ///< variable that holds the option of how to treat negative event weights in training
+      Bool_t                           fNoNegWeightsInTraining; ///< ignore negative event weights in the training
+      Bool_t                           fInverseBoostNegWeights; ///< boost ev. with neg. weights with 1/boostweight rather than boostweight
+      Bool_t                           fPairNegWeightsGlobal;   ///< pair ev. with neg. and pos. weights in training sample and "annihilate" them
+      Bool_t                           fTrainWithNegWeights;    ///< yes there are negative event weights and we don't ignore them
+      Bool_t                           fDoBoostMonitor;         ///< create control plot with ROC integral vs tree number
 
 
       //some histograms for monitoring
-      TTree*                           fMonitorNtuple;   // monitoring ntuple
-      Int_t                            fITree;           // ntuple var: ith tree
-      Double_t                         fBoostWeight;     // ntuple var: boost weight
-      Double_t                         fErrorFraction;   // ntuple var: misclassification error fraction
+      TTree*                           fMonitorNtuple;   ///< monitoring ntuple
+      Int_t                            fITree;           ///< ntuple var: ith tree
+      Double_t                         fBoostWeight;     ///< ntuple var: boost weight
+      Double_t                         fErrorFraction;   ///< ntuple var: misclassification error fraction
 
-      Double_t                         fCss;             // Cost factor
-      Double_t                         fCts_sb;          // Cost factor
-      Double_t                         fCtb_ss;          // Cost factor
-      Double_t                         fCbb;             // Cost factor
-      
-      Bool_t                           fDoPreselection;  // do or do not perform automatic pre-selection of 100% eff. cuts
+      Double_t                         fCss;             ///< Cost factor
+      Double_t                         fCts_sb;          ///< Cost factor
+      Double_t                         fCtb_ss;          ///< Cost factor
+      Double_t                         fCbb;             ///< Cost factor
 
-      Bool_t                           fSkipNormalization; // true for skipping normalization at initialization of trees
+      Bool_t                           fDoPreselection;  ///< do or do not perform automatic pre-selection of 100% eff. cuts
 
-      std::vector<Double_t>            fVariableImportance; // the relative importance of the different variables
+      Bool_t                           fSkipNormalization; ///< true for skipping normalization at initialization of trees
+
+      std::vector<Double_t>            fVariableImportance; ///< the relative importance of the different variables
 
 
       void                             DeterminePreselectionCuts(const std::vector<const TMVA::Event*>& eventSample);
       Double_t                         ApplyPreselectionCuts(const Event* ev);
-      
+
       std::vector<Double_t> fLowSigCut;
       std::vector<Double_t> fLowBkgCut;
       std::vector<Double_t> fHighSigCut;
       std::vector<Double_t> fHighBkgCut;
-      
-      std::vector<Bool_t>  fIsLowSigCut;  
-      std::vector<Bool_t>  fIsLowBkgCut;  
-      std::vector<Bool_t>  fIsHighSigCut; 
-      std::vector<Bool_t>  fIsHighBkgCut; 
-      
-      Bool_t fHistoricBool; //historic variable, only needed for "CompatibilityOptions" 
 
-      TString                         fRegressionLossFunctionBDTGS;       // the option string determining the loss function for BDT regression
-      Double_t                        fHuberQuantile;                     // the option string determining the quantile for the Huber Loss Function
-                                                                          // in BDT regression.
+      std::vector<Bool_t>  fIsLowSigCut;
+      std::vector<Bool_t>  fIsLowBkgCut;
+      std::vector<Bool_t>  fIsHighSigCut;
+      std::vector<Bool_t>  fIsHighBkgCut;
+
+      Bool_t fHistoricBool; //historic variable, only needed for "CompatibilityOptions"
+
+      TString                         fRegressionLossFunctionBDTGS;       ///< the option string determining the loss function for BDT regression
+      Double_t                        fHuberQuantile;                     ///< the option string determining the quantile for the Huber Loss Function
+                                                                          ///< in BDT regression.
       LossFunctionBDT* fRegressionLossFunctionBDTG;
 
       // debugging flags
-      static const Int_t               fgDebugLevel;     // debug level determining some printout/control plots etc.
+      static const Int_t               fgDebugLevel;     ///< debug level determining some printout/control plots etc.
 
       // for backward compatibility
       ClassDef(MethodBDT,0);  // Analysis of Boosted Decision Trees

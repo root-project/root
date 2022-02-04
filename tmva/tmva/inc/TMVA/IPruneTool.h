@@ -96,9 +96,9 @@ Any tool which implements the interface should provide two modes for tree prunin
 
    protected:
 
-      //       mutable MsgLogger* fLogger; //! output stream to save logging information
+      //       mutable MsgLogger* fLogger; ///<! output stream to save logging information
       //       MsgLogger& Log() const { return *fLogger; }
-      Double_t fPruneStrength; //! regularization parameter in pruning
+      Double_t fPruneStrength; ///<! regularization parameter in pruning
 
 
       Double_t S, B;
