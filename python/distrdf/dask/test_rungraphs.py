@@ -64,3 +64,7 @@ class RunGraphsTests(unittest.TestCase):
             self.assertAlmostEqual(histo.GetMean(), 10)
 
         os.remove(filename)
+
+
+if __name__ == "__main__":
+    unittest.main(argv=[__file__])
