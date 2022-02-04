@@ -85,7 +85,7 @@ namespace RooStats {
   }
 
   private:
-    LookupTable fLookupTable; // map ( Index, ( CL, leftside tail prob) )
+    LookupTable fLookupTable; ///< map ( Index, ( CL, leftside tail prob) )
 
   protected:
     ClassDef(SamplingSummaryLookup,1)  // A simple class used by ConfidenceBelt
@@ -170,10 +170,10 @@ namespace RooStats {
     ConfidenceBelt(const char* name, const char* title, RooAbsData&);
     virtual ~ConfidenceBelt();
 
-    // add after creating a region
+    /// add after creating a region
     void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, Double_t cl=-1., Double_t leftside=-1.);
 
-    // add without creating a region, more useful for clients
+    /// add without creating a region, more useful for clients
     void AddAcceptanceRegion(RooArgSet& point, Int_t dataSetIndex, Double_t lower, Double_t upper, Double_t cl=-1., Double_t leftside=-1.);
 
     AcceptanceRegion* GetAcceptanceRegion(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
@@ -181,14 +181,10 @@ namespace RooStats {
     Double_t GetAcceptanceRegionMax(RooArgSet&, Double_t cl=-1., Double_t leftside=-1.);
     std::vector<Double_t> ConfidenceLevels() const ;
 
-    // Method to return lower limit on a given parameter
-    //  Double_t LowerLimit(RooRealVar& param) ; // could provide, but misleading?
-    //      Double_t UpperLimit(RooRealVar& param) ; // could provide, but misleading?
-
-    // do we want it to return list of parameters
+    /// do we want it to return list of parameters
     virtual RooArgSet* GetParameters() const;
 
-    // check if parameters are correct. (dummy implementation to start)
+    /// check if parameters are correct. (dummy implementation to start)
     Bool_t CheckParameters(RooArgSet&) const ;
 
   protected:

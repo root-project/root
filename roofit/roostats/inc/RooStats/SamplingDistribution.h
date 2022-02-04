@@ -80,14 +80,13 @@ namespace RooStats {
 
   private:
 
-    mutable std::vector<Double_t> fSamplingDist; /// vector of points for the sampling distribution
-    mutable std::vector<Double_t> fSampleWeights; /// vector of weights for the samples
-    // store a RooRealVar that this distribution corresponds to?
+    mutable std::vector<Double_t> fSamplingDist;  ///< vector of points for the sampling distribution
+    mutable std::vector<Double_t> fSampleWeights; ///< vector of weights for the samples
 
     TString fVarName;
 
-    mutable std::vector<Double_t> fSumW;   //! Cached vector with sum of the weight used to compute integral
-    mutable std::vector<Double_t> fSumW2;  //! Cached vector with sum of the weight used to compute integral error
+    mutable std::vector<Double_t> fSumW;   ///<! Cached vector with sum of the weight used to compute integral
+    mutable std::vector<Double_t> fSumW2;  ///<! Cached vector with sum of the weight used to compute integral error
 
   protected:
 

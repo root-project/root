@@ -96,17 +96,17 @@ namespace RooStats {
 
    private:
 
-      RooArgSet   fParameters; /// parameters of interest for this interval
-      RooArgSet * fBestFitParams; /// snapshot of the model parameters with best fit value (managed internally)
-      RooAbsReal* fLikelihoodRatio; /// likelihood ratio function used to make contours (managed internally)
-      Double_t fConfidenceLevel; /// Requested confidence level (eg. 0.95 for 95% CL)
-      std::map<std::string, double> fLowerLimits; /// map with cached lower bound values
-      std::map<std::string, double> fUpperLimits; /// map with cached upper bound values
-      std::shared_ptr<ROOT::Math::Minimizer > fMinimizer; //! transient pointer to minimizer class used to find limits and contour
-      std::shared_ptr<RooFunctor>           fFunctor;   //! transient pointer to functor class used by the minimizer
-      std::shared_ptr<ROOT::Math::IMultiGenFunction> fMinFunc; //! transient pointer to the minimization function
+      RooArgSet   fParameters;      ///< parameters of interest for this interval
+      RooArgSet * fBestFitParams;   ///< snapshot of the model parameters with best fit value (managed internally)
+      RooAbsReal* fLikelihoodRatio; ///< likelihood ratio function used to make contours (managed internally)
+      Double_t fConfidenceLevel;    ///< Requested confidence level (eg. 0.95 for 95% CL)
+      std::map<std::string, double> fLowerLimits; ///< map with cached lower bound values
+      std::map<std::string, double> fUpperLimits; ///< map with cached upper bound values
+      std::shared_ptr<ROOT::Math::Minimizer > fMinimizer;      ///<! transient pointer to minimizer class used to find limits and contour
+      std::shared_ptr<RooFunctor>           fFunctor;          ///<! transient pointer to functor class used by the minimizer
+      std::shared_ptr<ROOT::Math::IMultiGenFunction> fMinFunc; ///<! transient pointer to the minimization function
 
-      ClassDef(LikelihoodInterval,1)  /// Concrete implementation of a ConfInterval based on a likelihood ratio
+      ClassDef(LikelihoodInterval,1)  // Concrete implementation of a ConfInterval based on a likelihood ratio
 
    };
 }

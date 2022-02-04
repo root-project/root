@@ -92,11 +92,8 @@ in a common way for several concrete calculators.
          SetTestSize(size);
       }
 
-
       /// destructor.
       virtual ~CombinedCalculator() { }
-
-
 
       /// Main interface to get a ConfInterval, pure virtual
       virtual ConfInterval* GetInterval() const = 0;
@@ -161,16 +158,16 @@ in a common way for several concrete calculators.
       RooAbsPdf * GetPdf() const { return fPdf; }
       RooAbsData * GetData() const { return fData; }
 
-      Double_t fSize; // size of the test (eg. specified rate of Type I error)
+      Double_t fSize; ///< size of the test (eg. specified rate of Type I error)
 
       RooAbsPdf  * fPdf;
       RooAbsData * fData;
-      RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
-      RooArgSet fNullParams; // RooArgSet specifying null parameters for hypothesis test
-      RooArgSet fAlternateParams; // RooArgSet specifying alternate parameters for hypothesis test       // Is it used ????
-      RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
-      RooArgSet fConditionalObs; // RooArgSet specifying the conditional observables
-      RooArgSet fGlobalObs; // RooArgSet specifying the global observables 
+      RooArgSet fPOI;             ///< RooArgSet specifying parameters of interest for interval
+      RooArgSet fNullParams;      ///< RooArgSet specifying null parameters for hypothesis test
+      RooArgSet fAlternateParams; ///< RooArgSet specifying alternate parameters for hypothesis test
+      RooArgSet fNuisParams;      ///< RooArgSet specifying nuisance parameters for interval
+      RooArgSet fConditionalObs;  ///< RooArgSet specifying the conditional observables
+      RooArgSet fGlobalObs;       ///< RooArgSet specifying the global observables
 
 
       ClassDef(CombinedCalculator,2) // A base class that is for tools that can be both HypoTestCalculators and IntervalCalculators

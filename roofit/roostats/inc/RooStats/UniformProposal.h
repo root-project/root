@@ -42,7 +42,7 @@ namespace RooStats {
 
       virtual ~UniformProposal() {}
 
-      ClassDef(UniformProposal,1) /// A concrete implementation of ProposalFunction, that uniformly samples the parameter space.
+      ClassDef(UniformProposal,1) // A concrete implementation of ProposalFunction, that uniformly samples the parameter space.
    };
 }
 

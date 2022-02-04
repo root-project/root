@@ -45,8 +45,8 @@ namespace RooStats {
 
       ~FrequentistCalculator() {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
-    if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
-    if( fFitInfo ) delete fFitInfo;
+         if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
+         if( fFitInfo ) delete fFitInfo;
       }
 
 

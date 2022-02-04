@@ -164,32 +164,32 @@ namespace RooStats {
 
    protected:
 
-      Double_t fSize;   // size of the test (eg. specified rate of Type I error)
-      RooArgSet   fPOI;        // parameters of interest for interval
-      RooArgSet   fNuisParams; // nuisance parameters for interval (not really used)
-      RooArgSet   fChainParams; // parameters to store in the chain (if not specified they are all of them )
-      RooArgSet   fConditionalObs; // conditional observables
-      RooArgSet   fGlobalObs;     // global observables
-      mutable ProposalFunction* fPropFunc; // Proposal function for MCMC integration
-      RooAbsPdf * fPdf;        // pointer to common PDF (owned by the workspace)
-      RooAbsPdf * fPriorPdf;   // pointer to prior  PDF (owned by the workspace)
-      RooAbsData * fData;     // pointer to the data (owned by the workspace)
-      Int_t fNumIters; // number of iterations to run metropolis algorithm
-      Int_t fNumBurnInSteps; // number of iterations to discard as burn-in, starting from the first
-      Int_t fNumBins; // set the number of bins to create for each
-                      // axis when constructing the interval
-      RooArgList * fAxes; // which variables to put on each axis
-      Bool_t fUseKeys; // whether to use kernel estimation to determine interval
-      Bool_t fUseSparseHist; // whether to use sparse histogram (if using hist at all)
-      Double_t fLeftSideTF; // left side tail-fraction for interval
-      Double_t fEpsilon; // acceptable error for Keys interval determination
+      Double_t fSize;              ///< size of the test (eg. specified rate of Type I error)
+      RooArgSet   fPOI;            ///< parameters of interest for interval
+      RooArgSet   fNuisParams;     ///< nuisance parameters for interval (not really used)
+      RooArgSet   fChainParams;    ///< parameters to store in the chain (if not specified they are all of them )
+      RooArgSet   fConditionalObs; ///< conditional observables
+      RooArgSet   fGlobalObs;      ///< global observables
+      mutable ProposalFunction* fPropFunc; ///< Proposal function for MCMC integration
+      RooAbsPdf * fPdf;      ///< pointer to common PDF (owned by the workspace)
+      RooAbsPdf * fPriorPdf; ///< pointer to prior  PDF (owned by the workspace)
+      RooAbsData * fData;    ///< pointer to the data (owned by the workspace)
+      Int_t fNumIters;       ///< number of iterations to run metropolis algorithm
+      Int_t fNumBurnInSteps; ///< number of iterations to discard as burn-in, starting from the first
+      Int_t fNumBins;        ///< set the number of bins to create for each
+                             ///< axis when constructing the interval
+      RooArgList * fAxes;    ///< which variables to put on each axis
+      Bool_t fUseKeys;       ///< whether to use kernel estimation to determine interval
+      Bool_t fUseSparseHist; ///< whether to use sparse histogram (if using hist at all)
+      Double_t fLeftSideTF;  ///< left side tail-fraction for interval
+      Double_t fEpsilon;     ///< acceptable error for Keys interval determination
 
-      Double_t fDelta; // acceptable error for Keys cutoffs being equal
-                       // topCutoff (a) considered == bottomCutoff (b) iff
-                       // (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
-                       // Theoretically, the Abs is not needed here, but
-                       // floating-point arithmetic does not always work
-                       // perfectly, and the Abs doesn't hurt
+      Double_t fDelta; ///< acceptable error for Keys cutoffs being equal
+                       ///< topCutoff (a) considered == bottomCutoff (b) iff
+                       ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
+                       ///< Theoretically, the Abs is not needed here, but
+                       ///< floating-point arithmetic does not always work
+                       ///< perfectly, and the Abs doesn't hurt
       enum MCMCInterval::IntervalType fIntervalType; // type of interval to find
 
       void SetupBasicUsage();

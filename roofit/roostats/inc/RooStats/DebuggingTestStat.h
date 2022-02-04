@@ -47,7 +47,7 @@ namespace RooStats {
        //       delete fTestStatistic;
      }
 
-     // Main interface to evaluate the test statistic on a dataset
+     /// Main interface to evaluate the test statistic on a dataset
      virtual Double_t Evaluate(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/)  {
        //data = data; // avoid warning
        //paramsOfInterest = paramsOfInterest; //avoid warning

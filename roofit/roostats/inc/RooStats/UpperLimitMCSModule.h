@@ -42,12 +42,12 @@ public:
 
 private:
 
-   std::string _parName ;  // Name of Nsignal parameter
+   std::string _parName ;  ///< Name of Nsignal parameter
    RooStats::ProfileLikelihoodCalculator* _plc;
    RooRealVar* _ul ;
 
-   const RooArgSet* _poi;  // parameters of interest
-   RooDataSet* _data ;     // Summary dataset to store results
+   const RooArgSet* _poi;  ///< parameters of interest
+   RooDataSet* _data ;     ///< Summary dataset to store results
    Double_t _cl;
    RooAbsPdf* _model;
 

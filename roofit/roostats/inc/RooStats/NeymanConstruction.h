@@ -108,8 +108,8 @@ namespace RooStats {
 
       /// save the confidence belt to a file
       void SaveBeltToFile(bool flag=true){
-   fSaveBeltToFile = flag;
-   if(flag) fCreateBelt = true;
+         fSaveBeltToFile = flag;
+         if(flag) fCreateBelt = true;
       }
       /// should create confidence belt
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
@@ -121,26 +121,21 @@ namespace RooStats {
 
    private:
 
-      Double_t fSize; /// size of the test (eg. specified rate of Type I error)
-      RooAbsData& fData; /// data set
+      Double_t fSize;    ///< size of the test (eg. specified rate of Type I error)
+      RooAbsData& fData; ///< data set
       ModelConfig &fModel;
-      /*
-      RooAbsPdf * fPdf; // common PDF
-      mutable RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
-      RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
-      */
 
       TestStatSampler* fTestStatSampler;
       RooAbsData* fPointsToTest;
       Double_t fLeftSideFraction;
       ConfidenceBelt* fConfBelt;
-      bool fAdaptiveSampling; // controls use of adaptive sampling algorithm
-      Double_t fAdditionalNToysFactor; // give user ability to ask for more toys
-      bool fSaveBeltToFile; // controls use if ConfidenceBelt should be saved to a TFile
-      bool fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
+      bool fAdaptiveSampling;          ///< controls use of adaptive sampling algorithm
+      Double_t fAdditionalNToysFactor; ///< give user ability to ask for more toys
+      bool fSaveBeltToFile;            ///< controls use if ConfidenceBelt should be saved to a TFile
+      bool fCreateBelt;                ///< controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
-      ClassDef(NeymanConstruction,1)   // Interface for tools setting limits (producing confidence intervals)
+      ClassDef(NeymanConstruction,1)   ///< Interface for tools setting limits (producing confidence intervals)
    };
 }
 

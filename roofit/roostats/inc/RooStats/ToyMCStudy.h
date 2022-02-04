@@ -30,7 +30,7 @@ namespace RooStats {
 class ToyMCStudy: public RooAbsStudy {
 
    public:
-      // need to have constructor without arguments for proof
+      /// need to have constructor without arguments for proof
       ToyMCStudy(const char *name = "ToyMCStudy", const char *title = "ToyMCStudy") :
          RooAbsStudy(name, title),
          fRandomSeed(0),

@@ -44,9 +44,9 @@ Note, one could use the same class for a Bayesian "credible interval".
 
       /// operator=
       ConfInterval& operator=(const ConfInterval& other) {
-   if (&other==this) { return *this; }
-   TNamed::operator=(other);
-   return *this;
+         if (&other==this) { return *this; }
+         TNamed::operator=(other);
+         return *this;
       }
 
       /// check if given point is in the interval
