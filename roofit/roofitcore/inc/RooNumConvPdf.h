@@ -33,10 +33,10 @@ public:
 
   RooNumConvPdf(const RooNumConvPdf& other, const char* name=0) ;
 
-  virtual TObject* clone(const char* newname) const { return new RooNumConvPdf(*this,newname) ; }
-  virtual ~RooNumConvPdf() ;
+  TObject* clone(const char* newname) const override { return new RooNumConvPdf(*this,newname) ; }
+  ~RooNumConvPdf() override ;
 
-  virtual Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   // Calls forwarded to RooNumConvolution
   inline RooNumIntConfig& convIntConfig() { return conv().convIntConfig() ; }
@@ -53,7 +53,7 @@ public:
   RooAbsReal&  pdf() const { return const_cast<RooAbsReal&>(_origPdf.arg()) ; }
   RooAbsReal&  model() const { return const_cast<RooAbsReal&>(_origModel.arg()) ; }
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override ;
 
 protected:
 
@@ -70,12 +70,12 @@ protected:
   RooRealProxy _origPdf ;         ///< Original input PDF
   RooRealProxy _origModel ;       ///< Original resolution model
 
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
+                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const override ;
 
   friend class RooConvGenContext ;
 
-  ClassDef(RooNumConvPdf,1)     // Operator PDF implementing numeric convolution of 2 input PDFs
+  ClassDefOverride(RooNumConvPdf,1)     // Operator PDF implementing numeric convolution of 2 input PDFs
 };
 
 #endif

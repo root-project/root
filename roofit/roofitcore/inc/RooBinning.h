@@ -32,39 +32,39 @@ public:
   RooBinning(Int_t nBins, Double_t xlo, Double_t xhi, const char* name = 0);
   RooBinning(Int_t nBins, const Double_t* boundaries, const char* name = 0);
   RooBinning(const RooBinning& other, const char* name = 0);
-  RooAbsBinning* clone(const char* name = 0) const { return new RooBinning(*this,name?name:GetName()); }
-  ~RooBinning();
+  RooAbsBinning* clone(const char* name = 0) const override { return new RooBinning(*this,name?name:GetName()); }
+  ~RooBinning() override;
 
   /// Return the number boundaries
-  virtual Int_t numBoundaries() const {
+  Int_t numBoundaries() const override {
     return _nbins+1;
   }
-  virtual Int_t binNumber(Double_t x) const;
-  virtual Int_t rawBinNumber(Double_t x) const;
+  Int_t binNumber(Double_t x) const override;
+  Int_t rawBinNumber(Double_t x) const override;
   virtual Double_t nearestBoundary(Double_t x) const;
 
-  virtual void setRange(Double_t xlo, Double_t xhi);
+  void setRange(Double_t xlo, Double_t xhi) override;
 
   /// Return the lower bound value
-  virtual Double_t lowBound() const {
+  Double_t lowBound() const override {
     return _xlo;
   }
 
   /// Return the upper bound value
-  virtual Double_t highBound() const {
+  Double_t highBound() const override {
     return _xhi;
   }
 
   /// Return the average bin width
-  virtual Double_t averageBinWidth() const {
+  Double_t averageBinWidth() const override {
     return (highBound() - lowBound()) / numBins();
   }
-  virtual Double_t* array() const;
+  Double_t* array() const override;
 
-  virtual Double_t binCenter(Int_t bin) const;
-  virtual Double_t binWidth(Int_t bin) const;
-  virtual Double_t binLow(Int_t bin) const;
-  virtual Double_t binHigh(Int_t bin) const;
+  Double_t binCenter(Int_t bin) const override;
+  Double_t binWidth(Int_t bin) const override;
+  Double_t binLow(Int_t bin) const override;
+  Double_t binHigh(Int_t bin) const override;
 
   Bool_t addBoundary(Double_t boundary);
   void addBoundaryPair(Double_t boundary, Double_t mirrorPoint = 0);
@@ -88,7 +88,7 @@ protected:
   mutable Double_t* _array;          ///<! Array of boundaries
   mutable Int_t _blo;                ///<! bin number for _xlo
 
-  ClassDef(RooBinning,3) // Generic binning specification
+  ClassDefOverride(RooBinning,3) // Generic binning specification
 };
 
 #endif

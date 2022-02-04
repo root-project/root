@@ -28,20 +28,20 @@ public:
   RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config) ;
 
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooSegmentedIntegrator1D();
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooSegmentedIntegrator1D() override;
 
-  virtual Bool_t checkLimits() const;
-  virtual Double_t integral(const Double_t *yvec=0) ;
+  Bool_t checkLimits() const override;
+  Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t *xmin, Double_t *xmax);
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) { _useIntegrandLimits = flag ; return kTRUE ; }
+  Bool_t setLimits(Double_t *xmin, Double_t *xmax) override;
+  Bool_t setUseIntegrandLimits(Bool_t flag) override { _useIntegrandLimits = flag ; return kTRUE ; }
 
-  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
-  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
-  virtual Bool_t canIntegrateND() const { return kFALSE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  Bool_t canIntegrate1D() const override { return kTRUE ; }
+  Bool_t canIntegrate2D() const override { return kFALSE ; }
+  Bool_t canIntegrateND() const override { return kFALSE ; }
+  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
 
 protected:
 
@@ -60,7 +60,7 @@ protected:
 
   Bool_t initialize();
 
-  ClassDef(RooSegmentedIntegrator1D,0) // 1-dimensional piece-wise numerical integration engine
+  ClassDefOverride(RooSegmentedIntegrator1D,0) // 1-dimensional piece-wise numerical integration engine
 };
 
 #endif

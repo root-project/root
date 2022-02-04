@@ -42,7 +42,7 @@ class RooMinuit : public TObject {
 public:
 
   RooMinuit(RooAbsReal& function) ;
-  virtual ~RooMinuit() ;
+  ~RooMinuit() override ;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
@@ -145,7 +145,7 @@ private:
 
   RooMinuit(const RooMinuit&) ;
 
-  ClassDef(RooMinuit,0) // RooFit minimizer based on MINUIT
+  ClassDefOverride(RooMinuit,0) // RooFit minimizer based on MINUIT
 } R__SUGGEST_ALTERNATIVE("Please use RooMinimizer instead of RooMinuit");
 
 

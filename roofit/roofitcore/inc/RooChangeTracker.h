@@ -28,10 +28,10 @@ public:
 
   RooChangeTracker() ;
   RooChangeTracker(const char *name, const char *title, const RooArgSet& trackSet, Bool_t checkValues=kFALSE) ;
-  virtual ~RooChangeTracker() ;
+  ~RooChangeTracker() override ;
 
   RooChangeTracker(const RooChangeTracker& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooChangeTracker(*this, newname); }
+  TObject* clone(const char* newname) const override { return new RooChangeTracker(*this, newname); }
 
   Bool_t hasChanged(Bool_t clearState) ;
 
@@ -48,9 +48,9 @@ protected:
 
   Bool_t        _init ; //!
 
-  Double_t evaluate() const { return 1 ; }
+  Double_t evaluate() const override { return 1 ; }
 
-  ClassDef(RooChangeTracker,1) // Meta object that tracks changes in set of other arguments
+  ClassDefOverride(RooChangeTracker,1) // Meta object that tracks changes in set of other arguments
 };
 
 #endif

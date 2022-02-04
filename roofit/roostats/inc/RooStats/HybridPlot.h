@@ -47,10 +47,10 @@ namespace RooStats {
                  bool verbosity=true);
 
       /// Destructor
-      ~HybridPlot();
+      ~HybridPlot() override;
 
       /// Draw on current pad
-      void Draw (const char* options="");
+      void Draw (const char* options="") override;
 
       /// All the objects are written to rootfile
       void DumpToFile (const char* RootFileName, const char* options);
@@ -118,7 +118,7 @@ namespace RooStats {
       TVirtualPad * fPad;         ///< The pad where it has been drawn
       bool fVerbose;              ///< verbosity flag
 
-      ClassDef(HybridPlot,1)   // Provides the plots for an HybridResult
+      ClassDefOverride(HybridPlot,1)   // Provides the plots for an HybridResult
    };
 }
 

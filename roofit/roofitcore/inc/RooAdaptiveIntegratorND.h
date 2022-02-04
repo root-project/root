@@ -30,21 +30,21 @@ public:
   RooAdaptiveIntegratorND() ;
   RooAdaptiveIntegratorND(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooAdaptiveIntegratorND();
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooAdaptiveIntegratorND() override;
 
-  virtual Bool_t checkLimits() const;
-  virtual Double_t integral(const Double_t *yvec=0) ;
+  Bool_t checkLimits() const override;
+  Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax);
+  Bool_t setLimits(Double_t* xmin, Double_t* xmax) override;
 
-  virtual Bool_t canIntegrate1D() const { return kFALSE ; }
-  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
-  virtual Bool_t canIntegrateND() const { return kTRUE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  Bool_t canIntegrate1D() const override { return kFALSE ; }
+  Bool_t canIntegrate2D() const override { return kTRUE ; }
+  Bool_t canIntegrateND() const override { return kTRUE ; }
+  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
 
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
+  Bool_t setUseIntegrandLimits(Bool_t flag) override {_useIntegrandLimits = flag ; return kTRUE ; }
 
 protected:
 
@@ -66,7 +66,7 @@ protected:
   friend class RooNumIntFactory ;
   static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  ClassDef(RooAdaptiveIntegratorND,0) // N-dimensional adaptive integration (interface to MathCore integrator)
+  ClassDefOverride(RooAdaptiveIntegratorND,0) // N-dimensional adaptive integration (interface to MathCore integrator)
 };
 
 #endif

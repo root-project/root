@@ -115,7 +115,7 @@ protected:
   TList _yList ; ///< Dependency cmd list
   TList _pList ; ///< Processed cmd list
 
-  ClassDef(RooCmdConfig,0) // Configurable parse of RooCmdArg objects
+  ClassDefOverride(RooCmdConfig,0) // Configurable parse of RooCmdArg objects
 };
 
 

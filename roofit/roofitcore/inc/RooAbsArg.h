@@ -62,9 +62,9 @@ class RooRefArray : public TObjArray {
   RooRefArray(const RooRefArray& other) : TObjArray(other) {
   }
   RooRefArray& operator=(const RooRefArray& other) = default;
-  virtual ~RooRefArray() {} ;
+  ~RooRefArray() override {} ;
  protected:
-  ClassDef(RooRefArray,1) // Helper class for proxy lists
+  ClassDefOverride(RooRefArray,1) // Helper class for proxy lists
 } ;
 
 class RooAbsArg;
@@ -80,12 +80,12 @@ public:
 
   // Constructors, cloning and assignment
   RooAbsArg() ;
-  virtual ~RooAbsArg();
+  ~RooAbsArg() override;
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
   RooAbsArg& operator=(const RooAbsArg& other);
   virtual TObject* clone(const char* newname=0) const = 0 ;
-  virtual TObject* Clone(const char* newname = 0) const {
+  TObject* Clone(const char* newname = 0) const override {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);
   }
   virtual RooAbsArg* cloneTree(const char* newname=0) const ;
@@ -341,21 +341,21 @@ public:
 
   /// Print the object to the defaultPrintStream().
   /// \param[in] options **V** print verbose. **T** print a tree structure with all children.
-  virtual void Print(Option_t *options= 0) const {
+  void Print(Option_t *options= 0) const override {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printAddress(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printAddress(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
   virtual void printMetaArgs(std::ostream& /*os*/) const {} ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
-  virtual void printTree(std::ostream& os, TString indent="") const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printTree(std::ostream& os, TString indent="") const override ;
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
 
   // Accessors to attributes
   void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
@@ -387,8 +387,8 @@ public:
   RooLinkedList getCloningAncestors() const ;
 
   // Sorting
-  Int_t Compare(const TObject* other) const ;
-  virtual Bool_t IsSortable() const {
+  Int_t Compare(const TObject* other) const override ;
+  Bool_t IsSortable() const override {
     // Object is sortable in ROOT container class
     return kTRUE ;
   }
@@ -585,8 +585,8 @@ public:
     return _namePtr ;
   }
 
-  void SetName(const char* name) ;
-  void SetNameTitle(const char *name, const char *title) ;
+  void SetName(const char* name) override ;
+  void SetNameTitle(const char *name, const char *title) override ;
 
   virtual Bool_t importWorkspaceHook(RooWorkspace &ws)
   {
@@ -759,7 +759,7 @@ private:
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
   /// \endcond
 
-  ClassDef(RooAbsArg,8) // Abstract variable
+  ClassDefOverride(RooAbsArg,8) // Abstract variable
 };
 
 std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);

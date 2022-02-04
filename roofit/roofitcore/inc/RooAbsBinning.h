@@ -30,9 +30,9 @@ public:
   RooAbsBinning(const RooAbsBinning& other, const char* name=0) : TNamed(name,name), RooPrintable(other) {
     // Copy constructor
   }
-  virtual TObject* Clone(const char* newname=0) const { return clone(newname) ; }
+  TObject* Clone(const char* newname=0) const override { return clone(newname) ; }
   virtual RooAbsBinning* clone(const char* name=0) const = 0 ;
-  virtual ~RooAbsBinning() ;
+  ~RooAbsBinning() override ;
 
   /// Return number of bins.
   Int_t numBins() const { 
@@ -64,16 +64,16 @@ public:
 
   virtual Double_t* array() const = 0 ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
   
   /// Interface function. If true, min/max of binning is parameterized by external RooAbsReals.
   /// Default to `false`, unless overridden by a sub class.
@@ -100,7 +100,7 @@ public:
 
 protected:  
 
-  ClassDef(RooAbsBinning,2) // Abstract base class for binning specification
+  ClassDefOverride(RooAbsBinning,2) // Abstract base class for binning specification
 };
 
 #endif

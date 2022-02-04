@@ -32,7 +32,7 @@ public:
    RooPolyFunc(const char *name, const char *title, const RooAbsCollection &vars);
    RooPolyFunc(const RooPolyFunc &other, const char *name = 0);
    RooPolyFunc &operator=(const RooPolyFunc &other);
-   virtual TObject *clone(const char *newname) const { return new RooPolyFunc(*this, newname); }
+   TObject *clone(const char *newname) const override { return new RooPolyFunc(*this, newname); }
 
    void addTerm(double coefficient);
    void addTerm(double coefficient, const RooAbsCollection &exponents);
@@ -52,9 +52,9 @@ protected:
    std::vector<std::unique_ptr<RooListProxy>> _terms;
 
    /// Evaluation
-   double evaluate() const;
+   double evaluate() const override;
 
-   ClassDef(RooPolyFunc, 1) // Polynomial Function
+   ClassDefOverride(RooPolyFunc, 1) // Polynomial Function
 };
 
 #endif

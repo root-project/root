@@ -19,10 +19,10 @@ public:
   RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
   RooTFnBinding(const char *name, const char *title, TF1* func, const RooArgList& list, const RooArgList& plist);
   RooTFnBinding(const RooTFnBinding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooTFnBinding(*this,newname); }
-  inline virtual ~RooTFnBinding() { }
+  TObject* clone(const char* newname) const override { return new RooTFnBinding(*this,newname); }
+  inline ~RooTFnBinding() override { }
 
-  void printArgs(std::ostream& os) const ;
+  void printArgs(std::ostream& os) const override ;
 
 protected:
 
@@ -30,11 +30,11 @@ protected:
   RooListProxy _plist ;
   TF1* _func ;
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
 
-  ClassDef(RooTFnBinding,1) // RooAbsReal binding to ROOT TF[123] functions
+  ClassDefOverride(RooTFnBinding,1) // RooAbsReal binding to ROOT TF[123] functions
 };
 
 

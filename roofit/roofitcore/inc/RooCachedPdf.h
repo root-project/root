@@ -23,33 +23,33 @@ public:
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf, const RooArgSet& cacheObs);
   RooCachedPdf(const char *name, const char *title, RooAbsPdf& _pdf);
   RooCachedPdf(const RooCachedPdf& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooCachedPdf(*this,newname); }
-  virtual ~RooCachedPdf() ;
+  TObject* clone(const char* newname) const override { return new RooCachedPdf(*this,newname); }
+  ~RooCachedPdf() override ;
 
-  virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
+  void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const override ;
 
 protected:
 
   /// Return the base name for cache objects, in this case the name of the cached p.d.f
-  virtual const char* inputBaseName() const {
+  const char* inputBaseName() const override {
     return pdf.arg().GetName() ;
   } ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(PdfCacheElem& cachePdf) const ;
-  virtual Double_t evaluate() const {
+  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooArgSet* actualParameters(const RooArgSet& nset) const override ;
+  void fillCacheObject(PdfCacheElem& cachePdf) const override ;
+  Double_t evaluate() const override {
     // Dummy evaluate, it is never called
     return 0 ;
   }
 
-  virtual const char* payloadUniqueSuffix() const { return pdf.arg().aggregateCacheUniqueSuffix() ; }
+  const char* payloadUniqueSuffix() const override { return pdf.arg().aggregateCacheUniqueSuffix() ; }
 
   RooRealProxy pdf ;       ///< Proxy to p.d.f being cached
   RooSetProxy  _cacheObs ; ///< Observable to be cached
 
 private:
 
-  ClassDef(RooCachedPdf,1) // P.d.f class that wraps another p.d.f and caches its output
+  ClassDefOverride(RooCachedPdf,1) // P.d.f class that wraps another p.d.f and caches its output
 
 };
 

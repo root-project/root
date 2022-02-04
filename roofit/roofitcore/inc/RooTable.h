@@ -25,7 +25,7 @@ public:
 
   // Constructors, cloning and assignment
   RooTable() {} ;
-  virtual ~RooTable() ;
+  ~RooTable() override ;
   RooTable(const char *name, const char *title);
   RooTable(const RooTable& other) ;
 
@@ -35,7 +35,7 @@ public:
 
 protected:
 
-  ClassDef(RooTable,1) // Abstract interface for tables
+  ClassDefOverride(RooTable,1) // Abstract interface for tables
 };
 
 #endif

@@ -70,7 +70,7 @@ public:
            double size = 0.05) ;
 
 
-   virtual HypoTestInverterResult* GetInterval() const;
+   HypoTestInverterResult* GetInterval() const override;
 
    void Clear();
 
@@ -103,21 +103,21 @@ public:
 
    void UseCLs( bool on = true) { fUseCLs = on; if (fResults) fResults->UseCLs(on);   }
 
-   virtual void  SetData(RooAbsData &);
+   void  SetData(RooAbsData &) override;
 
-   virtual void SetModel(const ModelConfig &) { } // not needed
+   void SetModel(const ModelConfig &) override { } // not needed
 
    /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-   virtual void SetTestSize(Double_t size) {fSize = size; if (fResults) fResults->SetTestSize(size); }
+   void SetTestSize(Double_t size) override {fSize = size; if (fResults) fResults->SetTestSize(size); }
    /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-   virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
+   void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
    /// Get the size of the test (eg. rate of Type I error)
-   virtual Double_t Size() const {return fSize;}
+   Double_t Size() const override {return fSize;}
    /// Get the Confidence level for the test
-   virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+   Double_t ConfidenceLevel()  const override {return 1.-fSize;}
 
    /// destructor
-   virtual ~HypoTestInverter() ;
+   ~HypoTestInverter() override ;
 
    /// retrieved a reference to the internally used HypoTestCalculator
    /// it might be invalid when the class is deleted
@@ -202,7 +202,7 @@ private:
 
 protected:
 
-   ClassDef(HypoTestInverter,4)  // HypoTestInverter class
+   ClassDefOverride(HypoTestInverter,4)  // HypoTestInverter class
 
 };
 

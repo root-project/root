@@ -35,7 +35,7 @@ namespace RooStats {
     LikelihoodIntervalPlot(LikelihoodInterval* theInterval);
 
     /// Destructor of SamplingDistribution
-    virtual ~LikelihoodIntervalPlot();
+    ~LikelihoodIntervalPlot() override;
 
 
     /// returned plotted object (RooPlot or histograms)
@@ -70,7 +70,7 @@ namespace RooStats {
     /// if option "TF1" is used the objects are drawn using a TF1 scanning the LL function in a
     /// grid of the set points (by default
     /// the TF1 can be costumized by setting maximum and the number of points to scan
-    void Draw(const Option_t *options=0);
+    void Draw(const Option_t *options=0) override;
 
   private:
 
@@ -96,7 +96,7 @@ namespace RooStats {
 
   protected:
 
-    ClassDef(LikelihoodIntervalPlot,2)  // Class containing the results of the IntervalCalculator
+    ClassDefOverride(LikelihoodIntervalPlot,2)  // Class containing the results of the IntervalCalculator
   };
 }
 

@@ -32,7 +32,7 @@ class TestRooRealLPlot : public RooUnitTest {
 public:
    TestRooRealLPlot(TFile &refFile, bool writeRef, int verbose, std::string const &batchMode)
       : RooUnitTest("Plotting and minimization with RooFit::TestStatistics", &refFile, writeRef, verbose, batchMode){};
-   Bool_t testCode()
+   Bool_t testCode() override
    {
 
       // C r e a t e   m o d e l  a n d  d a t a

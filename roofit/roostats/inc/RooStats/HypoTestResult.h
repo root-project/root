@@ -33,7 +33,7 @@ namespace RooStats {
       HypoTestResult(const char* name, Double_t nullp, Double_t altp);
 
       /// destructor
-      virtual ~HypoTestResult();
+      ~HypoTestResult() override;
 
       /// assignment operator
       HypoTestResult & operator=(const HypoTestResult& other);
@@ -106,7 +106,7 @@ namespace RooStats {
       Double_t SignificanceError() const;
 
 
-      void Print(const Option_t* = "") const;
+      void Print(const Option_t* = "") const override;
 
    private:
       void UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror,  Bool_t pIsRightTail);
@@ -128,7 +128,7 @@ namespace RooStats {
       Bool_t fPValueIsRightTail;
       Bool_t fBackgroundIsAlt;
 
-      ClassDef(HypoTestResult,4)  // Base class to represent results of a hypothesis test
+      ClassDefOverride(HypoTestResult,4)  // Base class to represent results of a hypothesis test
 
    };
 }

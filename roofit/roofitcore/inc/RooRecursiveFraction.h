@@ -27,18 +27,18 @@ public:
 
   RooRecursiveFraction() ;
   RooRecursiveFraction(const char *name, const char *title, const RooArgList& fracSet) ;
-  virtual ~RooRecursiveFraction() ;
+  ~RooRecursiveFraction() override ;
 
   RooRecursiveFraction(const RooRecursiveFraction& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooRecursiveFraction(*this, newname); }
+  TObject* clone(const char* newname) const override { return new RooRecursiveFraction(*this, newname); }
 
 protected:
 
   RooListProxy _list ;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
-  ClassDef(RooRecursiveFraction,1) // Recursive fraction formula f1*(1-f2)*(1-f3) etc...
+  ClassDefOverride(RooRecursiveFraction,1) // Recursive fraction formula f1*(1-f2)*(1-f3) etc...
 } ;
 
 #endif

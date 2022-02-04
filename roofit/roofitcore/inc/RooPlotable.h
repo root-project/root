@@ -26,7 +26,7 @@ class RooArgSet;
 class RooPlotable : public RooPrintable {
 public:
   inline RooPlotable() : _ymin(0), _ymax(0), _normValue(0) { }
-  inline virtual ~RooPlotable() { }
+  inline ~RooPlotable() override { }
 
   inline const char* getYAxisLabel() const { return _yAxisLabel.Data(); }
   inline void setYAxisLabel(const char *label) { _yAxisLabel= label; }
@@ -47,13 +47,13 @@ public:
   virtual Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const = 0;
   virtual Double_t getFitRangeBinW() const = 0;
 
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const override;
 
   TObject *crossCast();
 protected:
   TString _yAxisLabel;
   Double_t _ymin, _ymax, _normValue;
-  ClassDef(RooPlotable,1) // Abstract interface for plotable objects in a RooPlot
+  ClassDefOverride(RooPlotable,1) // Abstract interface for plotable objects in a RooPlot
 };
 
 #endif

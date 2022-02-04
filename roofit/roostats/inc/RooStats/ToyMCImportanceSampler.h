@@ -43,15 +43,15 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          fToysStrategy = EQUALTOYSPERDENSITY;
       }
 
-      virtual ~ToyMCImportanceSampler();
+      ~ToyMCImportanceSampler() override;
 
       /// overwrite GetSamplingDistributionsSingleWorker(paramPoint) with a version that loops
       /// over nulls and importance densities, but calls the parent
       /// ToyMCSampler::GetSamplingDistributionsSingleWorker(paramPoint).
-      virtual RooDataSet* GetSamplingDistributionsSingleWorker(RooArgSet& paramPoint);
+      RooDataSet* GetSamplingDistributionsSingleWorker(RooArgSet& paramPoint) override;
 
       using ToyMCSampler::GenerateToyData;
-      virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight) const;
+      RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight) const override;
       virtual RooAbsData* GenerateToyData(RooArgSet& paramPoint, double& weight, std::vector<double>& impNLLs, double& nullNLL) const;
       virtual RooAbsData* GenerateToyData(std::vector<double>& weights) const;
       virtual RooAbsData* GenerateToyData(std::vector<double>& weights, std::vector<double>& nullNLLs, std::vector<double>& impNLLs) const;
@@ -115,7 +115,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          ClearCache();
       }
       /// overwrite from ToyMCSampler
-      virtual void SetPdf(RooAbsPdf& pdf) {
+      void SetPdf(RooAbsPdf& pdf) override {
          ToyMCSampler::SetPdf(pdf);
 
          if( fNullDensities.size() == 1 ) { fNullDensities[0] = &pdf; }
@@ -125,7 +125,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
          }
       }
       /// overwrite from ToyMCSampler
-      void SetParametersForTestStat(const RooArgSet& nullpoi) {
+      void SetParametersForTestStat(const RooArgSet& nullpoi) override {
          ToyMCSampler::SetParametersForTestStat(nullpoi);
          if( fNullSnapshots.size() == 0 ) AddNullDensity( NULL, &nullpoi );
          else if( fNullSnapshots.size() == 1 ) {
@@ -170,7 +170,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
    protected:
 
       /// helper method for clearing  the cache
-      virtual void ClearCache();
+      void ClearCache() override;
 
       unsigned int fIndexGenDensity;
       bool fGenerateFromNull;
@@ -194,7 +194,7 @@ class ToyMCImportanceSampler: public ToyMCSampler {
       mutable std::vector<RooAbsReal*> fImpNLLs;     ///<!
 
    protected:
-   ClassDef(ToyMCImportanceSampler,2) // An implementation of importance sampling
+   ClassDefOverride(ToyMCImportanceSampler,2) // An implementation of importance sampling
 };
 }
 

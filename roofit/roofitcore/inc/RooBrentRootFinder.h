@@ -21,9 +21,9 @@
 class RooBrentRootFinder : public RooAbsRootFinder {
 public:
   RooBrentRootFinder(const RooAbsFunc& function);
-  inline virtual ~RooBrentRootFinder() { }
+  inline ~RooBrentRootFinder() override { }
 
-  virtual Bool_t findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value= 0) const;
+  Bool_t findRoot(Double_t &result, Double_t xlo, Double_t xhi, Double_t value= 0) const override;
 
   /// Set convergence tolerance parameter
   void setTol(Double_t tol) {
@@ -35,7 +35,7 @@ protected:
 
   Double_t _tol ;
 
-  ClassDef(RooBrentRootFinder,0) // Abstract interface for 1-dim real-valued function root finders
+  ClassDefOverride(RooBrentRootFinder,0) // Abstract interface for 1-dim real-valued function root finders
 };
 
 #endif

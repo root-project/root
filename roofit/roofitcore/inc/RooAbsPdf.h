@@ -48,7 +48,7 @@ public:
   RooAbsPdf(const char *name, const char *title=0) ;
   RooAbsPdf(const char *name, const char *title, Double_t minVal, Double_t maxVal) ;
   // RooAbsPdf(const RooAbsPdf& other, const char* name=0);
-  virtual ~RooAbsPdf();
+  ~RooAbsPdf() override;
 
   // Toy MC generation
 
@@ -118,16 +118,16 @@ public:
   virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
 
   ///Helper calling plotOn(RooPlot*, RooLinkedList&) const
-  virtual RooPlot* plotOn(RooPlot* frame,
+  RooPlot* plotOn(RooPlot* frame,
            const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
            const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
            const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
            const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),
            const RooCmdArg& arg9=RooCmdArg::none(), const RooCmdArg& arg10=RooCmdArg::none()
-              ) const {
+              ) const override {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
+  RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const override ;
 
   /// Add a box with parameter values (and errors) to the specified frame
   virtual RooPlot* paramOn(RooPlot* frame,
@@ -194,13 +194,13 @@ public:
   // Chi^2 fits to histograms
   using RooAbsReal::chi2FitTo ;
   using RooAbsReal::createChi2 ;
-  virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
-  virtual RooAbsReal* createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
+  RooFitResult* chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
+  RooAbsReal* createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
              const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-             const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+             const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) override ;
 
   // Chi^2 fits to X-Y datasets
-  virtual RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
+  RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
 
 
   // Constraint management
@@ -222,17 +222,17 @@ public:
   RooAbsReal* createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
   // Function evaluation support
-  virtual Double_t getValV(const RooArgSet* set=0) const ;
+  Double_t getValV(const RooArgSet* set=0) const override ;
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
-  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
   using RooAbsReal::getValues;
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;
   RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
   void getLogProbabilities(RooSpan<const double> pdfValues, double * output) const;
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
 
   /// \copydoc getNorm(const RooArgSet*) const
   Double_t getNorm(const RooArgSet& nset) const {
@@ -253,7 +253,7 @@ public:
   virtual void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value, Bool_t allNodes=kFALSE) ;
 
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   /// Shows if a PDF is self-normalized, which means that no attempt is made to add a normalization term.
   /// Always returns false, unless a PDF overrides this function.
@@ -287,8 +287,8 @@ public:
   }
 
   // Printing interface (human readable)
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printValue(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
 
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
@@ -332,7 +332,7 @@ private:
 protected:
   double normalizeWithNaNPacking(double rawVal, double normVal) const;
 
-  virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;
+  RooPlot *plotOn(RooPlot *frame, PlotOpt o) const override;
 
   friend class RooEffGenContext ;
   friend class RooAddGenContext ;
@@ -365,15 +365,15 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem(RooAbsReal& norm) : _norm(&norm) {} ;
-    virtual ~CacheElem() ;
-    virtual RooArgList containedArgs(Action) { return RooArgList(*_norm) ; }
+    ~CacheElem() override ;
+    RooArgList containedArgs(Action) override { return RooArgList(*_norm) ; }
     RooAbsReal* _norm ;
   } ;
   mutable RooObjCacheManager _normMgr ; //! The cache manager
 
   friend class CacheElem ; // Cache needs to be able to clear _norm pointer
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection&, Bool_t, Bool_t, Bool_t) {
+  Bool_t redirectServersHook(const RooAbsCollection&, Bool_t, Bool_t, Bool_t) override {
     // Hook function intercepting redirectServer calls. Discard current normalization
     // object if any server is redirected
 
@@ -404,7 +404,7 @@ private:
   int calcAsymptoticCorrectedCovariance(RooMinimizer& minimizer, RooAbsData const& data);
   int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal const& nll) const;
 
-  ClassDef(RooAbsPdf,5) // Abstract PDF with normalization support
+  ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
 };
 
 

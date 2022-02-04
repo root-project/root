@@ -31,17 +31,17 @@ public:
        const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName=0, Bool_t doFactorize=kTRUE) ;
 
   RooGenProdProj(const RooGenProdProj& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooGenProdProj(*this, newname); }
-  virtual ~RooGenProdProj() ;
+  TObject* clone(const char* newname) const override { return new RooGenProdProj(*this, newname); }
+  ~RooGenProdProj() override ;
 
 protected:
 
   RooAbsReal* makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet,
             RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize) ;
 
-  virtual void operModeHook() ;
+  void operModeHook() override ;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
   RooArgSet* _compSetOwnedN ; ///< Owner of numerator components
   RooArgSet* _compSetOwnedD ; ///< Owner of denominator components
   RooSetProxy _compSetN ; ///< Set proxy for numerator components
@@ -49,7 +49,7 @@ protected:
   RooListProxy _intList ; ///< Master integrals representing numerator and denominator
   Bool_t _haveD ;         ///< Do we have a denominator term?
 
-  ClassDef(RooGenProdProj,1) // General form of projected integral of product of PDFs, utility class for RooProdPdf
+  ClassDefOverride(RooGenProdProj,1) // General form of projected integral of product of PDFs, utility class for RooProdPdf
 };
 
 #endif

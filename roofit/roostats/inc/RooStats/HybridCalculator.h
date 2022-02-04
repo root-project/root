@@ -40,7 +40,7 @@ namespace RooStats {
       {
       }
 
-      ~HybridCalculator() {
+      ~HybridCalculator() override {
          if(!fPriorNuisanceNullExternal) delete fPriorNuisanceNull;
          if(!fPriorNuisanceAltExternal) delete fPriorNuisanceAlt;
       }
@@ -58,14 +58,14 @@ namespace RooStats {
          fPriorNuisanceAltExternal = true;
       }
 
-      virtual void SetNullModel(const ModelConfig &nullModel) {
+      void SetNullModel(const ModelConfig &nullModel) override {
          fNullModel = &nullModel;
          if(!fPriorNuisanceNullExternal) delete fPriorNuisanceNull;
          fPriorNuisanceNull = MakeNuisancePdf(nullModel, "PriorNuisanceNull");
          fPriorNuisanceAltExternal = false;
       }
 
-      virtual void SetAlternateModel(const ModelConfig &altModel) {
+      void SetAlternateModel(const ModelConfig &altModel) override {
          fAltModel = &altModel;
          if(!fPriorNuisanceAltExternal) delete fPriorNuisanceAlt;
          fPriorNuisanceAlt = MakeNuisancePdf(altModel, "PriorNuisanceAlt");
@@ -80,13 +80,13 @@ namespace RooStats {
 
    protected:
       /// check whether all input is consistent
-      int CheckHook(void) const;
+      int CheckHook(void) const override;
 
       /// configure TestStatSampler for the Null run
-      int PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const;
+      int PreNullHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const override;
 
       /// configure TestStatSampler for the Alt run
-      int PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const;
+      int PreAltHook(RooArgSet* /*parameterPoint*/, double obsTestStat) const override;
 
    protected:
       RooAbsPdf *fPriorNuisanceNull;
@@ -106,7 +106,7 @@ namespace RooStats {
       int fNToysAltTail;
 
    protected:
-      ClassDef(HybridCalculator,2)
+      ClassDefOverride(HybridCalculator,2)
    };
 }
 

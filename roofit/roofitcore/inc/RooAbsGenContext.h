@@ -27,7 +27,7 @@ class RooAbsGenContext : public TNamed, public RooPrintable {
 public:
   RooAbsGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0, const RooArgSet* auxProto=0,
          Bool_t _verbose= kFALSE) ;
-  virtual ~RooAbsGenContext();
+  ~RooAbsGenContext() override;
 
   virtual RooDataSet *generate(Double_t nEvents= 0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE);
 
@@ -47,21 +47,21 @@ public:
 
   virtual void setProtoDataOrder(Int_t* lut) ;
 
-   inline virtual void Print(Option_t *options= 0) const {
+   inline void Print(Option_t *options= 0) const override {
      // Print context information on stdout
      printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
   virtual void attach(const RooArgSet& params) ;
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
-  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
+  StyleOption defaultPrintStyle(Option_t* opt) const override ;
 
   virtual void setExpectedData(Bool_t) {} ;
 
@@ -87,7 +87,7 @@ protected:
 
   RooDataSet* _genData ;        ///<! Data being generated
 
-  ClassDef(RooAbsGenContext,0) // Abstract context for generating a dataset from a PDF
+  ClassDefOverride(RooAbsGenContext,0) // Abstract context for generating a dataset from a PDF
 };
 
 #endif

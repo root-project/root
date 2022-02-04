@@ -31,16 +31,16 @@ class RooGenContext : public RooAbsGenContext {
 public:
   RooGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
 		const RooArgSet* auxProto=0, Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
-  virtual ~RooGenContext();
+  ~RooGenContext() override;
 
-  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual void attach(const RooArgSet& params) ;
+  void attach(const RooArgSet& params) override ;
 
 protected:
 
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void initGenerator(const RooArgSet &theEvent) override;
+  void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
   RooArgSet _cloneSet;    ///< Clone of all nodes of input p.d.f
   RooAbsPdf *_pdfClone;   ///< Clone of input p.d.f
@@ -53,7 +53,7 @@ protected:
   TIterator *_uniIter ;               ///< Iterator over uniform observables
   Int_t _updateFMaxPerEvent ;         ///< If true, maximum p.d.f value needs to be recalculated for each event
 
-  ClassDef(RooGenContext,0) // Universal context for generating toy MC data from any p.d.f
+  ClassDefOverride(RooGenContext,0) // Universal context for generating toy MC data from any p.d.f
 };
 
 #endif

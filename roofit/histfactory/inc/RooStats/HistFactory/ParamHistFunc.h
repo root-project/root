@@ -27,10 +27,10 @@ public:
   ParamHistFunc() ;
   ParamHistFunc(const char *name, const char *title, const RooArgList& vars, const RooArgList& paramSet );
   ParamHistFunc(const char *name, const char *title, const RooArgList& vars, const RooArgList& paramSet, const TH1* hist );
-  virtual ~ParamHistFunc() ;
+  ~ParamHistFunc() override ;
 
   ParamHistFunc(const ParamHistFunc& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const override { return new ParamHistFunc(*this, newname); }
+  TObject* clone(const char* newname) const override { return new ParamHistFunc(*this, newname); }
 
   const RooArgList& paramList() const { return _paramSet ; }
 
@@ -49,7 +49,7 @@ public:
 
   double binVolume() const { return _dataSet.binVolume(); }
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const override { return kTRUE ; }
+  Bool_t forceAnalyticalInt(const RooAbsArg&) const override { return kTRUE ; }
 
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const override;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override;
@@ -58,9 +58,9 @@ public:
   static RooArgList createParamSet(RooWorkspace& w, const std::string&, const RooArgList& Vars, Double_t, Double_t);
   static RooArgList createParamSet(const std::string&, Int_t, Double_t, Double_t);
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
-  virtual Bool_t isBinnedDistribution(const RooArgSet& /*obs*/) const override { return true; }
+  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
+  Bool_t isBinnedDistribution(const RooArgSet& /*obs*/) const override { return true; }
 
 
 protected:
@@ -68,8 +68,8 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    virtual ~CacheElem() {} ;
-    virtual RooArgList containedArgs(Action) {
+    ~CacheElem() override {} ;
+    RooArgList containedArgs(Action) override {
       RooArgList ret(_funcIntList) ;
       ret.add(_lowIntList);
       ret.add(_highIntList);

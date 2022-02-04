@@ -30,7 +30,7 @@ public:
   RooAbsMoment() ;
   RooAbsMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, Bool_t takeRoot=kFALSE) ;
   RooAbsMoment(const RooAbsMoment& other, const char* name = 0);
-  virtual ~RooAbsMoment() ;
+  ~RooAbsMoment() override ;
 
   Int_t order() const { return _order ; }
   Bool_t central() const { return _mean.absArg() ? kTRUE : kFALSE ; }
@@ -46,7 +46,7 @@ protected:
   RooRealProxy _x     ;                  ///< Observable
   RooRealProxy _mean ;                   ///< Mean (if calculated for central moment)
 
-  ClassDef(RooAbsMoment,1) // Abstract representation of moment in a RooAbsReal in a given RooRealVar
+  ClassDefOverride(RooAbsMoment,1) // Abstract representation of moment in a RooAbsReal in a given RooRealVar
 };
 
 #endif

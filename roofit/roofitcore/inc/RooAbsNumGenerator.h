@@ -38,7 +38,7 @@ public:
     // If true, generator is in a valid state
     return _isValid;
   }
-  virtual ~RooAbsNumGenerator();
+  ~RooAbsNumGenerator() override;
 
   inline void setVerbose(Bool_t verbose= kTRUE) {
     // If flag is true, verbose messaging will be active during generation
@@ -52,15 +52,15 @@ public:
   virtual const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio) = 0;
   virtual Double_t getFuncMax() { return 0 ; }
 
-   inline virtual void Print(Option_t *options= 0) const {
+   inline void Print(Option_t *options= 0) const override {
      // ascii printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
 
   void attachParameters(const RooArgSet& vars) ;
 
@@ -79,7 +79,7 @@ protected:
 
   RooDataSet *_cache;                  ///< Dataset holding generared values of observables
 
-  ClassDef(RooAbsNumGenerator,0) // Abstract base class for numeric event generator algorithms
+  ClassDefOverride(RooAbsNumGenerator,0) // Abstract base class for numeric event generator algorithms
 };
 
 #endif

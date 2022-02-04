@@ -30,8 +30,8 @@ public:
   RooAbsCachedPdf(const char *name, const char *title, Int_t ipOrder=0);
   RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name=nullptr) ;
 
-  virtual double getValV(const RooArgSet* set=nullptr) const ;
-  virtual bool selfNormalized() const {
+  double getValV(const RooArgSet* set=nullptr) const override ;
+  bool selfNormalized() const override {
     // Declare p.d.f self normalized
     return true ;
   }
@@ -53,9 +53,9 @@ public:
     return _ipOrder ;
   }
 
-  virtual bool forceAnalyticalInt(const RooAbsArg& dep) const ;
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=nullptr) const ;
-  virtual double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const ;
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
 
   class PdfCacheElem : public RooAbsCacheElement {
@@ -63,8 +63,8 @@ public:
     PdfCacheElem(const RooAbsCachedPdf& self, const RooArgSet* nset) ;
 
     // Cache management functions
-    virtual RooArgList containedArgs(Action) ;
-    virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
+    RooArgList containedArgs(Action) override ;
+    void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
 
     RooHistPdf* pdf() { return _pdf.get() ; }
     RooDataHist* hist() { return _hist.get() ; }
@@ -83,7 +83,7 @@ public:
 
   protected:
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
 
   PdfCacheElem* getCache(const RooArgSet* nset, bool recalculate=true) const ;
   void clearCacheObject(PdfCacheElem& cache) const ;
@@ -131,7 +131,7 @@ private:
 
   bool _disableCache = false; ///< Flag to run object in passthrough (= non-caching mode)
 
-  ClassDef(RooAbsCachedPdf,2) // Abstract base class for cached p.d.f.s
+  ClassDefOverride(RooAbsCachedPdf,2) // Abstract base class for cached p.d.f.s
 };
 
 #endif

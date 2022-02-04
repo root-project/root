@@ -41,7 +41,7 @@ public:
         const RooArgSet& dependents, const char* genOptions="",
         const char* fitOptions="", const RooDataSet* genProtoData=0,
         const RooArgSet& projDeps=RooArgSet()) ;
-  virtual ~RooMCStudy() ;
+  ~RooMCStudy() override ;
 
   // Method to add study modules
   void addModule(RooAbsMCStudyModule& module) ;
@@ -148,13 +148,13 @@ protected:
   // Utilities for modules ;
   RooFitResult* refit(RooAbsData* genSample=0) ;
   void resetFitParams() ;
-  virtual void RecursiveRemove(TObject *obj);
+  void RecursiveRemove(TObject *obj) override;
 
 private:
 
   RooMCStudy(const RooMCStudy&) ;
 
-  ClassDef(RooMCStudy,0) // A general purpose toy Monte Carlo study manager
+  ClassDefOverride(RooMCStudy,0) // A general purpose toy Monte Carlo study manager
 } ;
 
 

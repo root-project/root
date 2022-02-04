@@ -32,19 +32,19 @@ public:
   inline RooMappedCategory() : _defCat(0), _mapcache(0) { }
   RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defCatName="NotMapped", Int_t defCatIdx=NoCatIdx);
   RooMappedCategory(const RooMappedCategory& other, const char *name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooMappedCategory(*this,newname); }
-  virtual ~RooMappedCategory();
+  TObject* clone(const char* newname) const override { return new RooMappedCategory(*this,newname); }
+  ~RooMappedCategory() override;
 
   // Mapping function
   Bool_t map(const char* inKeyRegExp, const char* outKeyName, Int_t outKeyNum=NoCatIdx) ;
 
   // Printing interface (human readable)
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
-  void printMetaArgs(std::ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMetaArgs(std::ostream& os) const override ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
+  void writeToStream(std::ostream& os, Bool_t compact) const override ;
 
 
   class Entry {
@@ -77,15 +77,15 @@ protected:
   std::map<std::string,RooMappedCategory::Entry> _mapArray ;  ///< List of mapping rules
   mutable RooMappedCategoryCache* _mapcache; ///<! transient member: cache the mapping
 
-  virtual value_type evaluate() const ;
+  value_type evaluate() const override ;
   const RooMappedCategoryCache* getOrCreateCache() const;
 
   /// When the input category changes states, the cached state mappings are invalidated
-  void recomputeShape();
+  void recomputeShape() override;
 
   friend class RooMappedCategoryCache;
 
-  ClassDef(RooMappedCategory, 2) // Index variable, derived from another index using pattern-matching based mapping
+  ClassDefOverride(RooMappedCategory, 2) // Index variable, derived from another index using pattern-matching based mapping
 };
 
 #endif

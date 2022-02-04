@@ -33,17 +33,17 @@ public:
 
   RooObjCacheManager(RooAbsArg* owner=0, Int_t maxSize=2, Bool_t clearCacheOnServerRedirect=kTRUE, Bool_t allowOptimize=kFALSE) ;
   RooObjCacheManager(const RooObjCacheManager& other, RooAbsArg* owner=0) ;
-  virtual ~RooObjCacheManager() ;
+  ~RooObjCacheManager() override ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
-  virtual void operModeHook() ;
-  virtual void optimizeCacheMode(const RooArgSet& /*obs*/, RooArgSet& /*optSet*/, RooLinkedList& /*processedNodes*/) ;
-  virtual void printCompactTreeHook(std::ostream&, const char *) ;
-  virtual void findConstantNodes(const RooArgSet& /*obs*/, RooArgSet& /*cacheList*/, RooLinkedList& /*processedNodes*/) ;
+  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override ;
+  void operModeHook() override ;
+  void optimizeCacheMode(const RooArgSet& /*obs*/, RooArgSet& /*optSet*/, RooLinkedList& /*processedNodes*/) override ;
+  void printCompactTreeHook(std::ostream&, const char *) override ;
+  void findConstantNodes(const RooArgSet& /*obs*/, RooArgSet& /*cacheList*/, RooLinkedList& /*processedNodes*/) override ;
 
-  virtual void insertObjectHook(RooAbsCacheElement&) ;
+  void insertObjectHook(RooAbsCacheElement&) override ;
 
-  void sterilize() ;
+  void sterilize() override ;
 
   static void doClearObsList(Bool_t flag) { _clearObsList = flag ; }
   static Bool_t clearObsList() { return _clearObsList ; }
@@ -60,7 +60,7 @@ protected:
 
   static Bool_t _clearObsList ; ///< Clear obslist on sterilize?
 
-  ClassDef(RooObjCacheManager,3) ///< Cache manager for generic caches that contain RooAbsArg objects
+  ClassDefOverride(RooObjCacheManager,3) ///< Cache manager for generic caches that contain RooAbsArg objects
 } ;
 
 

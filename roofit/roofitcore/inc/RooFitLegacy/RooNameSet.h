@@ -30,8 +30,8 @@ public:
   RooNameSet();
   RooNameSet(const RooArgSet& argSet);
   RooNameSet(const RooNameSet& other) ;
-  virtual TObject* Clone(const char*) const { return new RooNameSet(*this) ; }
-  virtual ~RooNameSet() ;
+  TObject* Clone(const char*) const override { return new RooNameSet(*this) ; }
+  ~RooNameSet() override ;
 
   void refill(const RooArgSet& argSet) ;
   RooArgSet* select(const RooArgSet& list) const ;
@@ -39,12 +39,12 @@ public:
   RooNameSet& operator=(const RooNameSet&) ;
   Bool_t operator<(const RooNameSet& other) const ;
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -60,7 +60,7 @@ protected:
   void extendBuffer(Int_t inc) ;
   static void strdup(Int_t& dstlen, char* &dstbuf, const char* str);
 
-  ClassDef(RooNameSet,1) // A sterile version of RooArgSet, containing only the names of the contained RooAbsArgs
+  ClassDefOverride(RooNameSet,1) // A sterile version of RooArgSet, containing only the names of the contained RooAbsArgs
 } R__SUGGEST_ALTERNATIVE("Please use RooHelpers::getColonSeparatedNameString() and RooHelpers::selectFromArgSet().");
 
 #endif

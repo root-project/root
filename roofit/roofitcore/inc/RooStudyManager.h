@@ -61,7 +61,7 @@ protected:
 
   RooStudyManager(const RooStudyManager&) ;
 
-  ClassDef(RooStudyManager,1) // A general purpose workspace oriented parallelizing study manager
+  ClassDefOverride(RooStudyManager,1) // A general purpose workspace oriented parallelizing study manager
 } ;
 
 

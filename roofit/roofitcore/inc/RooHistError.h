@@ -56,7 +56,7 @@ private:
   class PoissonSum : public RooAbsFunc {
   public:
     inline PoissonSum(Int_t n) : RooAbsFunc(1), _n(n) { }
-    inline Double_t operator()(const Double_t xvec[]) const {
+    inline Double_t operator()(const Double_t xvec[]) const override {
       Double_t mu(xvec[0]),result(1),factorial(1);
       for(Int_t k= 1; k <= _n; k++) {
    factorial*= k;
@@ -64,8 +64,8 @@ private:
       }
       return exp(-mu)*result;
     };
-    inline Double_t getMinLimit(UInt_t /*index*/) const { return 0; }
-    inline Double_t getMaxLimit(UInt_t /*index*/) const { return RooNumber::infinity() ; }
+    inline Double_t getMinLimit(UInt_t /*index*/) const override { return 0; }
+    inline Double_t getMaxLimit(UInt_t /*index*/) const override { return RooNumber::infinity() ; }
   private:
     Int_t _n;
   };
@@ -82,7 +82,7 @@ private:
   public:
     BinomialSumAsym(Int_t n, Int_t m) : RooAbsFunc(1), _n1(n), _N1(n+m) {
     }
-    inline Double_t operator()(const Double_t xvec[]) const
+    inline Double_t operator()(const Double_t xvec[]) const override
       {
    Double_t p1(0.5*(1+xvec[0])),p2(1-p1),result(0),fact1(1),fact2(1);
    for(Int_t k= 0; k <= _n1; k++) {
@@ -92,8 +92,8 @@ private:
    return result;
       };
 
-    inline Double_t getMinLimit(UInt_t /*index*/) const { return -1; }
-    inline Double_t getMaxLimit(UInt_t /*index*/) const { return +1; }
+    inline Double_t getMinLimit(UInt_t /*index*/) const override { return -1; }
+    inline Double_t getMaxLimit(UInt_t /*index*/) const override { return +1; }
 
   private:
     Int_t _n1 ; ///< WVE Solaris CC5 doesn't want _n or _N here (likely compiler bug)
@@ -113,7 +113,7 @@ private:
   public:
     BinomialSumEff(Int_t n, Int_t m) : RooAbsFunc(1), _n1(n), _N1(n+m) {
     }
-    inline Double_t operator()(const Double_t xvec[]) const
+    inline Double_t operator()(const Double_t xvec[]) const override
       {
    Double_t p1(xvec[0]),p2(1-p1),result(0),fact1(1),fact2(1);
    for(Int_t k= 0; k <= _n1; k++) {
@@ -123,8 +123,8 @@ private:
    return result;
       };
 
-    inline Double_t getMinLimit(UInt_t /*index*/) const { return  0; }
-    inline Double_t getMaxLimit(UInt_t /*index*/) const { return +1; }
+    inline Double_t getMinLimit(UInt_t /*index*/) const override { return  0; }
+    inline Double_t getMaxLimit(UInt_t /*index*/) const override { return +1; }
 
   private:
     Int_t _n1 ; ///< WVE Solaris CC5 doesn't want _n or _N here (likely compiler bug)

@@ -28,7 +28,7 @@ public:
   RooNumGenConfig();
   RooNumGenConfig(const RooNumGenConfig& other) ;
   RooNumGenConfig& operator=(const RooNumGenConfig& other) ;
-  virtual ~RooNumGenConfig();
+  ~RooNumGenConfig() override;
 
   // Return selected integration techniques for 1,2,N dimensional integrals
   RooCategory& method1D(Bool_t cond, Bool_t cat) ;
@@ -45,12 +45,12 @@ public:
   const RooArgSet& getConfigSection(const char* name) const ;
   RooArgSet& getConfigSection(const char* name) ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const override;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
-  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
+  StyleOption defaultPrintStyle(Option_t* opt) const override ;
 
 
 protected:
@@ -72,7 +72,7 @@ protected:
 
   RooLinkedList _configSets ; ///< List of configuration sets for individual integration methods
 
-  ClassDef(RooNumGenConfig,1) // Numeric (MC) Event generator configuration
+  ClassDefOverride(RooNumGenConfig,1) // Numeric (MC) Event generator configuration
 };
 
 #endif

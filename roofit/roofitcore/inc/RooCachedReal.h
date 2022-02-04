@@ -25,8 +25,8 @@ public:
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func, const RooArgSet& cacheObs);
   RooCachedReal(const char *name, const char *title, RooAbsReal& _func);
   RooCachedReal(const RooCachedReal& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooCachedReal(*this,newname); }
-  virtual ~RooCachedReal() ;
+  TObject* clone(const char* newname) const override { return new RooCachedReal(*this,newname); }
+  ~RooCachedReal() override ;
 
   /// If flag is true the RooHistFunc that represent the cache histogram
   /// will use special boundary conditions for use with cumulative distribution
@@ -46,22 +46,22 @@ public:
 protected:
 
   /// Return base name for caches, i.e. the name of the cached function
-  virtual const char* inputBaseName() const {
+  const char* inputBaseName() const override {
     return func.arg().GetName() ;
   } ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(FuncCacheElem& cacheFunc) const ;
+  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooArgSet* actualParameters(const RooArgSet& nset) const override ;
+  void fillCacheObject(FuncCacheElem& cacheFunc) const override ;
   /// Dummy evaluate, it is never called
-  virtual Double_t evaluate() const {
+  Double_t evaluate() const override {
     return func ;
   }
 
-  void operModeHook() ;
+  void operModeHook() override ;
 
-  virtual FuncCacheElem* createCache(const RooArgSet* nset) const ;
+  FuncCacheElem* createCache(const RooArgSet* nset) const override ;
 
-  virtual const char* payloadUniqueSuffix() const { return func.arg().aggregateCacheUniqueSuffix() ; }
+  const char* payloadUniqueSuffix() const override { return func.arg().aggregateCacheUniqueSuffix() ; }
 
   RooRealProxy func ;           ///< Proxy to function being cached
   RooSetProxy  _cacheObs ;      ///< Variables to be cached
@@ -70,7 +70,7 @@ protected:
 
 private:
 
-  ClassDef(RooCachedReal,2) // P.d.f class that wraps another p.d.f and caches its output
+  ClassDefOverride(RooCachedReal,2) // P.d.f class that wraps another p.d.f and caches its output
 
 };
 

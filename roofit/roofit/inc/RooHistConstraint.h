@@ -21,10 +21,10 @@ public:
   RooHistConstraint() {} ;
   RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, Int_t threshold=1000000);
   RooHistConstraint(const RooHistConstraint& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooHistConstraint(*this,newname); }
-  inline virtual ~RooHistConstraint() { }
+  TObject* clone(const char* newname) const override { return new RooHistConstraint(*this,newname); }
+  inline ~RooHistConstraint() override { }
 
-  Double_t getLogVal(const RooArgSet* set=0) const ;
+  Double_t getLogVal(const RooArgSet* set=0) const override ;
 
 protected:
 
@@ -32,11 +32,11 @@ protected:
   RooListProxy _nominal ;
   Bool_t _relParam ;
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
 
-  ClassDef(RooHistConstraint, 2)
+  ClassDefOverride(RooHistConstraint, 2)
 };
 
 #endif

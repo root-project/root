@@ -48,7 +48,7 @@ namespace RooStats{
 
       HistoToWorkspaceFactoryFast();
       HistoToWorkspaceFactoryFast(  RooStats::HistFactory::Measurement& Meas );
-      virtual ~HistoToWorkspaceFactoryFast();
+      ~HistoToWorkspaceFactoryFast() override;
 
       static void ConfigureWorkspaceForMeasurement( const std::string& ModelName,
                       RooWorkspace* ws_single,
@@ -139,7 +139,7 @@ namespace RooStats{
 
       RooArgList createObservables(const TH1 *hist, RooWorkspace *proto) const;
 
-      ClassDef(RooStats::HistFactory::HistoToWorkspaceFactoryFast,3)
+      ClassDefOverride(RooStats::HistFactory::HistoToWorkspaceFactoryFast,3)
     };
 
   }

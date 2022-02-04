@@ -37,7 +37,7 @@ public:
   RooHashTable(const RooHashTable& other) ;
 
   // Destructor
-  virtual ~RooHashTable() ;
+  ~RooHashTable() override ;
 
   void add(TObject* arg, TObject* hashArg=0) ;
   Bool_t remove(TObject* arg, TObject* hashArg=0) ;
@@ -68,7 +68,7 @@ protected:
   Int_t _size ;            ///< Total number of slots
   RooLinkedList** _arr ;   ///<! Array of linked lists storing elements in each slot
 
-  ClassDef(RooHashTable,1) // Hash table
+  ClassDefOverride(RooHashTable,1) // Hash table
 } R__SUGGEST_ALTERNATIVE("Please use std::unordered_map, which is also a hash table.");
 
 #endif

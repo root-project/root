@@ -45,13 +45,13 @@ namespace RooStats {
      NumEventsTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
      }
-     virtual ~NumEventsTestStat() {
+     ~NumEventsTestStat() override {
        //       delete fRand;
        //       delete fTestStatistic;
      }
     
      // Main interface to evaluate the test statistic on a dataset
-     virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/)  {       
+     Double_t Evaluate(RooAbsData& data, RooArgSet& /*paramsOfInterest*/) override  {       
       
          if(data.isWeighted()) {
             return data.sumEntries();
@@ -82,14 +82,14 @@ namespace RooStats {
       // Get the TestStatistic
       virtual const RooAbsArg* GetTestStatistic()  const {return fPdf;}  
 
-      virtual const TString GetVarName() const {return "Number of events";}
+      const TString GetVarName() const override {return "Number of events";}
     
       
    private:
       RooAbsPdf* fPdf;
 
    protected:
-      ClassDef(NumEventsTestStat,1)   
+      ClassDefOverride(NumEventsTestStat,1)   
    };
 
 }

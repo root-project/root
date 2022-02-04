@@ -25,11 +25,11 @@ class Roo1DTable ;
 class RooDataProjBinding : public RooRealBinding {
 public:
   RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, const RooArgSet &vars, const RooArgSet* normSet=0) ;
-  virtual ~RooDataProjBinding() ;
+  ~RooDataProjBinding() override ;
 
-  virtual Double_t operator()(const Double_t xvector[]) const;
+  Double_t operator()(const Double_t xvector[]) const override;
 
-  RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const;
+  RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const override;
 
 protected:
 
@@ -42,7 +42,7 @@ protected:
   Roo1DTable* _catTable ;        ///< Supercategory table generated from _data
   mutable std::unique_ptr<std::vector<double>> _batchBuffer; ///<! Storage for handing out spans.
 
-  ClassDef(RooDataProjBinding,0) // RealFunc/Dataset binding for data projection of a real function
+  ClassDefOverride(RooDataProjBinding,0) // RealFunc/Dataset binding for data projection of a real function
 };
 
 #endif

@@ -17,7 +17,7 @@ protected:
     a.setConstant(true);
   }
 
-  ~TestProdPdf() {
+  ~TestProdPdf() override {
 
   }
 

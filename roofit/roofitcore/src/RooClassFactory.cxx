@@ -543,7 +543,7 @@ Bool_t RooClassFactory::makeClass(const char* baseName, const char* className, c
      << "" << endl
      << "private:" << endl
      << "" << endl
-     << "  ClassDef(" << className << ",1) // Your description goes here..." << endl
+     << "  ClassDefOverride(" << className << ",1) // Your description goes here..." << endl
      << "};" << endl
      << " " << endl
      << "#endif" << endl ;

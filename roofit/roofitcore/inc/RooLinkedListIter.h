@@ -248,7 +248,7 @@ public:
   RooLinkedListIterImpl(const RooLinkedList* list, bool forward) :
     RooLinkedListIterImpl(list, forward ? list->_first : list->_last, forward) {}
 
-  TIterator& operator=(const TIterator& other) {
+  TIterator& operator=(const TIterator& other) override {
 
     // Iterator assignment operator
 
@@ -262,12 +262,12 @@ public:
     return *this ;
   }
 
-  virtual const TCollection *GetCollection() const {
+  const TCollection *GetCollection() const override {
     // Dummy
     return 0 ;
   }
 
-  virtual TObject *Next() {
+  TObject *Next() override {
     // Return next element in collection
     return NextNV();
   }
@@ -280,12 +280,12 @@ public:
     return arg ;
   }
 
-  virtual void Reset() {
+  void Reset() override {
     // Return iterator to first element in collection
     _ptr = _forward ? _list->_first : _list->_last ;
   }
 
-  bool operator!=(const TIterator &aIter) const {
+  bool operator!=(const TIterator &aIter) const override {
     const RooLinkedListIterImpl *iter(dynamic_cast<const RooLinkedListIterImpl*>(&aIter));
     if (iter) return (_ptr != iter->_ptr);
     return false; // for base class we don't implement a comparison
@@ -295,7 +295,7 @@ public:
     return _ptr != aIter._ptr;
   }
 
-  virtual TObject *operator*() const {
+  TObject *operator*() const override {
     // Return element iterator points to
     return _ptr ? _ptr->_arg : nullptr;
   }

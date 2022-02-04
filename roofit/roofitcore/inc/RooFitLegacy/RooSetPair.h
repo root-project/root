@@ -32,12 +32,12 @@ public:
   }
 
   // Destructor
-  virtual ~RooSetPair();
+  ~RooSetPair() override;
 
   RooArgSet* _set1 ;
   RooArgSet* _set2 ;
 
-  virtual ULong_t Hash() const {
+  ULong_t Hash() const override {
     return TString::Hash((void*)&_set1,2*sizeof(void*)) ;  
   }
 
@@ -47,7 +47,7 @@ protected:
   // Forbidden
   RooSetPair(const RooSetPair&) ;
 
-  ClassDef(RooSetPair,0) // Utility class holding a pair of RooArgSet pointers
+  ClassDefOverride(RooSetPair,0) // Utility class holding a pair of RooArgSet pointers
 } R__SUGGEST_ALTERNATIVE("Please use std::pair<RooArgSet*,RooArgSet*>");
 
 

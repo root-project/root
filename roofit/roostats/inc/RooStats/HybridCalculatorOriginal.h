@@ -66,18 +66,18 @@ namespace RooStats {
    public:
 
       /// Destructor of HybridCalculator
-      virtual ~HybridCalculatorOriginal();
+      ~HybridCalculatorOriginal() override;
 
       /// inherited methods from HypoTestCalculator interface
-      virtual HybridResult* GetHypoTest() const;
+      HybridResult* GetHypoTest() const override;
 
       // inherited setter methods from HypoTestCalculator
 
 
       /// set the model for the null hypothesis (only B)
-      virtual void SetNullModel(const ModelConfig & );
+      void SetNullModel(const ModelConfig & ) override;
       /// set the model for the alternate hypothesis  (S+B)
-      virtual void SetAlternateModel(const ModelConfig & );
+      void SetAlternateModel(const ModelConfig & ) override;
 
 
       /// Set a common PDF for both the null and alternate
@@ -88,7 +88,7 @@ namespace RooStats {
       virtual void SetAlternatePdf(RooAbsPdf& pdf) { fSbModel = &pdf;  }
 
       /// Set the DataSet
-      virtual void SetData(RooAbsData& data) { fData = &data; }
+      void SetData(RooAbsData& data) override { fData = &data; }
 
       /// set parameter values for the null if using a common PDF
       virtual void SetNullParameters(const RooArgSet& ) { } // not needed
@@ -151,7 +151,7 @@ namespace RooStats {
       bool fTmpDoExtended;
 
    protected:
-      ClassDef(HybridCalculatorOriginal,1)  // Hypothesis test calculator using a Bayesian-frequentist hybrid method
+      ClassDefOverride(HybridCalculatorOriginal,1)  // Hypothesis test calculator using a Bayesian-frequentist hybrid method
    };
 
 }
