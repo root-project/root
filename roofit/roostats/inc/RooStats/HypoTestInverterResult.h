@@ -187,31 +187,31 @@ private:
 protected:
 
    bool fUseCLs;
-   bool fIsTwoSided;                  /// two sided scan (look for lower/upper limit)
+   bool fIsTwoSided;                  ///< two sided scan (look for lower/upper limit)
    bool fInterpolateLowerLimit;
    bool fInterpolateUpperLimit;
    bool fFittedLowerLimit;
    bool fFittedUpperLimit;
-   InterpolOption_t fInterpolOption;  /// interpolation option (linear or spline)
+   InterpolOption_t fInterpolOption;  ///< interpolation option (linear or spline)
 
    double fLowerLimitError;
    double fUpperLimitError;
 
    double fCLsCleanupThreshold;
 
-   static double fgAsymptoticMaxSigma;  /// max sigma value used to scan asymptotic expected p values
-   static int fgAsymptoticNumPoints;    /// number of points used to build expected p-values
+   static double fgAsymptoticMaxSigma;  ///< max sigma value used to scan asymptotic expected p values
+   static int fgAsymptoticNumPoints;    ///< number of points used to build expected p-values
 
    std::vector<double> fXValues;
 
-   TList fYObjects;       /// list of HypoTestResult for each point
-   TList fExpPValues;     /// list of expected sampling distribution for each point
+   TList fYObjects;       ///< list of HypoTestResult for each point
+   TList fExpPValues;     ///< list of expected sampling distribution for each point
 
    friend class HypoTestInverter;
    friend class HypoTestInverterPlot;
    friend class HypoTestInverterOriginal;
 
-   ClassDef(HypoTestInverterResult,5)  /// HypoTestInverterResult class
+   ClassDef(HypoTestInverterResult,5)  // HypoTestInverterResult class
 };
 }
 

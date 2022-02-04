@@ -35,7 +35,6 @@ namespace RooStats {
     /// Constructors for SamplingDistribution
     SamplingDistPlot(Int_t nbins = 100);
     SamplingDistPlot(Int_t nbins, Double_t min, Double_t max);
-//    SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax);
 
     /// Destructor of SamplingDistribution
     virtual ~SamplingDistPlot();
@@ -117,9 +116,9 @@ namespace RooStats {
     TH1F* fHist;
     TLegend *fLegend;
 
-    RooList fItems; /// holds TH1Fs only
-    RooList fOtherItems; /// other objects to be drawn like TLine etc.
-    TIterator* fIterator; /// TODO remove class variable and instantiate locally as necessary
+    RooList fItems;       ///< holds TH1Fs only
+    RooList fOtherItems;  ///< other objects to be drawn like TLine etc.
+    TIterator* fIterator;
     RooPlot* fRooPlot;
     Bool_t fLogXaxis;
     Bool_t fLogYaxis;

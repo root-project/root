@@ -34,8 +34,6 @@ namespace RooStats {
 
    public:
 
-     //     FeldmanCousins();
-
      /// Common constructor
      FeldmanCousins(RooAbsData& data, ModelConfig& model);
 
@@ -50,31 +48,31 @@ namespace RooStats {
       virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
       /// Set the DataSet
       virtual void SetData(RooAbsData& /*data*/) {
-   std::cout << "DEPRECATED, set data in constructor" << std::endl;
+         std::cout << "DEPRECATED, set data in constructor" << std::endl;
       }
       /// Set the Pdf
       virtual void SetPdf(RooAbsPdf& /*pdf*/) {
-   std::cout << "DEPRECATED, use ModelConfig" << std::endl;
+         std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
       /// specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& /*set*/) {
-   std::cout << "DEPRECATED, use ModelConfig" << std::endl;
+         std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
       /// specify the nuisance parameters (eg. the rest of the parameters)
       virtual void SetNuisanceParameters(const RooArgSet& /*set*/) {
-   std::cout << "DEPRECATED, use ModelConfig" << std::endl;
+         std::cout << "DEPRECATED, use ModelConfig" << std::endl;
       }
 
       /// User-defined set of points to test
       void SetParameterPointsToTest(RooAbsData& pointsToTest) {
-   fPointsToTest = &pointsToTest;
+         fPointsToTest = &pointsToTest;
       }
 
       /// User-defined set of points to test
       void SetPOIPointsToTest(RooAbsData& poiToTest) {
-   fPOIToTest = &poiToTest;
+         fPOIToTest = &poiToTest;
       }
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
@@ -119,28 +117,21 @@ namespace RooStats {
       /// initializes fTestStatSampler data member (mutable)
       void CreateTestStatSampler() const;
 
-      Double_t fSize; // size of the test (eg. specified rate of Type I error)
+      Double_t fSize;     ///< size of the test (eg. specified rate of Type I error)
       ModelConfig &fModel;
-      RooAbsData & fData; // data set
+      RooAbsData & fData; ///< data set
 
-      /*
-      RooAbsPdf * fPdf; // common PDF
-      RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
-      RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
-      RooArgSet fObservables;// RooArgSet specifying  nuisance parameters for interval
-      */
-
-      mutable ToyMCSampler* fTestStatSampler; // the test statistic sampler
-      mutable RooAbsData* fPointsToTest; // points to perform the construction
-      mutable RooAbsData* fPOIToTest; // value of POI points to perform the construction
+      mutable ToyMCSampler* fTestStatSampler; ///< the test statistic sampler
+      mutable RooAbsData* fPointsToTest;      ///< points to perform the construction
+      mutable RooAbsData* fPOIToTest;         ///< value of POI points to perform the construction
       mutable ConfidenceBelt* fConfBelt;
-      Bool_t fAdaptiveSampling; // controls use of adaptive sampling algorithm
-      Double_t fAdditionalNToysFactor; // give user ability to ask for more toys
-      Int_t fNbins; // number of samples per variable
-      Bool_t fFluctuateData;  // tell ToyMCSampler to fluctuate number of entries in dataset
-      Bool_t fDoProfileConstruction; // instead of full construction over nuisance parameters, do profile
-      Bool_t fSaveBeltToFile; // controls use if ConfidenceBelt should be saved to a TFile
-      Bool_t fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
+      Bool_t fAdaptiveSampling;               ///< controls use of adaptive sampling algorithm
+      Double_t fAdditionalNToysFactor;        ///< give user ability to ask for more toys
+      Int_t fNbins;                           ///< number of samples per variable
+      Bool_t fFluctuateData;                  ///< tell ToyMCSampler to fluctuate number of entries in dataset
+      Bool_t fDoProfileConstruction;          ///< instead of full construction over nuisance parameters, do profile
+      Bool_t fSaveBeltToFile;                 ///< controls use if ConfidenceBelt should be saved to a TFile
+      Bool_t fCreateBelt;                     ///< controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
       ClassDef(FeldmanCousins,2)   // Interface for tools setting limits (producing confidence intervals)
