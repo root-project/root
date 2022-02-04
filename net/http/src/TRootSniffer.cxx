@@ -1230,13 +1230,12 @@ Bool_t TRootSniffer::ExecuteCmd(const std::string &path, const std::string &opti
    }
 
    if (item_obj) {
-      method =
-         TString::Format("((%s*)%zu)->%s", item_obj->ClassName(), (size_t)item_obj, method.Data() + separ + 3);
+      method.Form("((%s*)%zu)->%s", item_obj->ClassName(), (size_t)item_obj, method.Data() + separ + 3);
       if (gDebug > 2)
          Info("ExecuteCmd", "Executing %s", method.Data());
    }
 
-   Long_t v = gROOT->ProcessLineSync(method.Data());
+   auto v = gROOT->ProcessLineSync(method.Data());
 
    res = std::to_string(v);
 
