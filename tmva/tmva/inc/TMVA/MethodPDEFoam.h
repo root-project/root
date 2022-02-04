@@ -175,36 +175,36 @@ namespace TMVA {
       template<typename T> T Sqr(T x) const { return x*x; }
 
       // options to be used
-      Bool_t        fSigBgSeparated;  // Separate Sig and Bg, or not
-      Float_t       fFrac;            // Fraction used for calc of Xmin, Xmax
-      Float_t       fDiscrErrCut;     // cut on discriminant error
-      Float_t       fVolFrac;         // volume fraction (used for density calculation during buildup)
-      Int_t         fnCells;          // Number of Cells  (1000)
-      Int_t         fnActiveCells;    // Number of active cells
-      Int_t         fnSampl;          // Number of MC events per cell in build-up (1000)
-      Int_t         fnBin;            // Number of bins in build-up (100)
-      Int_t         fEvPerBin;        // Maximum events (equiv.) per bin in build-up (1000)
+      Bool_t        fSigBgSeparated;  ///< Separate Sig and Bg, or not
+      Float_t       fFrac;            ///< Fraction used for calc of Xmin, Xmax
+      Float_t       fDiscrErrCut;     ///< cut on discriminant error
+      Float_t       fVolFrac;         ///< volume fraction (used for density calculation during buildup)
+      Int_t         fnCells;          ///< Number of Cells  (1000)
+      Int_t         fnActiveCells;    ///< Number of active cells
+      Int_t         fnSampl;          ///< Number of MC events per cell in build-up (1000)
+      Int_t         fnBin;            ///< Number of bins in build-up (100)
+      Int_t         fEvPerBin;        ///< Maximum events (equiv.) per bin in build-up (1000)
 
-      Bool_t        fCompress;        // compress foam output file
-      Bool_t        fMultiTargetRegression; // do regression on multiple targets
-      UInt_t        fNmin;            // minimal number of events in cell necessary to split cell"
-      Bool_t        fCutNmin;         // Keep for bw compatibility: Grabbing cell with maximal RMS to split next (TFoam default)
-      UInt_t        fMaxDepth;        // maximum depth of cell tree
+      Bool_t        fCompress;        ///< compress foam output file
+      Bool_t        fMultiTargetRegression; ///< do regression on multiple targets
+      UInt_t        fNmin;            ///< minimal number of events in cell necessary to split cell"
+      Bool_t        fCutNmin;         ///< Keep for bw compatibility: Grabbing cell with maximal RMS to split next (TFoam default)
+      UInt_t        fMaxDepth;        ///< maximum depth of cell tree
 
-      TString       fKernelStr;       // Kernel for GetMvaValue() (option string)
-      EKernel       fKernel;          // Kernel for GetMvaValue()
-      PDEFoamKernelBase *fKernelEstimator;// Kernel estimator
-      TString       fTargetSelectionStr; // method of selecting the target (only mulit target regr.)
-      ETargetSelection fTargetSelection; // method of selecting the target (only mulit target regr.)
-      Bool_t        fFillFoamWithOrigWeights; // fill the foam with boost weights
-      Bool_t        fUseYesNoCell;    // return -1 or 1 for bg or signal like event
-      TString       fDTLogic;         // use DT algorithm to split cells
-      EDTSeparation fDTSeparation;    // enum which specifies the separation to use for the DT logic
-      Bool_t        fPeekMax;         // BACKWARDS COMPATIBILITY: peek up cell with max. driver integral for split
+      TString       fKernelStr;       ///< Kernel for GetMvaValue() (option string)
+      EKernel       fKernel;          ///< Kernel for GetMvaValue()
+      PDEFoamKernelBase *fKernelEstimator; ///< Kernel estimator
+      TString       fTargetSelectionStr;   ///< method of selecting the target (only mulit target regr.)
+      ETargetSelection fTargetSelection;   ///< method of selecting the target (only mulit target regr.)
+      Bool_t        fFillFoamWithOrigWeights; ///< fill the foam with boost weights
+      Bool_t        fUseYesNoCell;    ///< return -1 or 1 for bg or signal like event
+      TString       fDTLogic;         ///< use DT algorithm to split cells
+      EDTSeparation fDTSeparation;    ///< enum which specifies the separation to use for the DT logic
+      Bool_t        fPeekMax;         ///< BACKWARDS COMPATIBILITY: peek up cell with max. driver integral for split
 
-      std::vector<Float_t> fXmin, fXmax; // range for histograms and foams
+      std::vector<Float_t> fXmin, fXmax; ///< range for histograms and foams
 
-      std::vector<PDEFoam*> fFoam;    // grown PDEFoams
+      std::vector<PDEFoam*> fFoam;    ///< grown PDEFoams
 
       // default initialisation called by all constructors
       void Init( void );

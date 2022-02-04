@@ -804,9 +804,9 @@ namespace TMVA
          virtual void startTestCycle () {} ///< callback for monitoring and loggging
          virtual void endTestCycle () {} ///< callback for monitoring and loggging
          virtual void testIteration () {} ///< callback for monitoring and loggging
-         virtual void drawSample (const std::vector<double>& /*input*/, const std::vector<double>& /* output */, const std::vector<double>& /* target */, double /* patternWeight */) {} ///< callback for monitoring and loggging
+         virtual void drawSample (const std::vector<double>& /*input*/, const std::vector<double>& /* output */, const std::vector<double>& /* target */, double /* patternWeight */) {} ///< callback for monitoring and logging
 
-         virtual void computeResult (const Net& /* net */, std::vector<double>& /* weights */) {} ///< callback for monitoring and loggging
+         virtual void computeResult (const Net& /* net */, std::vector<double>& /* weights */) {} ///< callback for monitoring and logging
 
          virtual bool hasConverged (double testError); ///< has this training converged already?
 
@@ -1138,7 +1138,7 @@ namespace TMVA
           * \param minimizer the minimizer to be used
           * \param weights the weight vector to be used
           * \param itPatternBegin the pattern to be trained with
-          * \param itPatternEnd the pattern to be trainied with
+          * \param itPatternEnd the pattern to be trained with
           * \param settings the settings for the training
           * \param dropContainer the configuration for DNN drop-out
           */
@@ -1268,7 +1268,7 @@ namespace TMVA
 
          ModeErrorFunction m_eErrorFunction; ///< denotes the error function
          size_t m_sizeInput; ///< input size of this DNN
-         size_t m_sizeOutput; ///< outut size of this DNN
+         size_t m_sizeOutput; ///< output size of this DNN
          std::vector<Layer> m_layers; ///< layer-structure-data
 
       protected:

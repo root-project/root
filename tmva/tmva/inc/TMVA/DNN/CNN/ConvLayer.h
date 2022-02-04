@@ -161,7 +161,7 @@ public:
    void Forward(Tensor_t &input, bool applyDropout = false);
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
-    *  first partial derviatives of the activation function computed during
+    *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  at the corresponding call to Forward(...). */
    void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);

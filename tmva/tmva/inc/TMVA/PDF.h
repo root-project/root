@@ -19,10 +19,10 @@
  *      Jan Therhaag       <Jan.Therhaag@cern.ch>     - U of Bonn, Germany        *
  *                                                                                *
  * Copyright (c) 2005-2011:                                                       *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
- *      Freiburg U., Germany                                                      * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
+ *      Freiburg U., Germany                                                      *
  *      U. of Bonn, Germany                                                       *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
@@ -64,20 +64,20 @@ namespace TMVA {
 
       friend std::ostream& operator<< ( std::ostream& os, const PDF& tree );
       friend std::istream& operator>> ( std::istream& istr, PDF& tree);
-      
+
    public:
 
       enum EInterpolateMethod { kSpline0, kSpline1, kSpline2, kSpline3, kSpline5, kKDE };
 
       explicit PDF( const TString& name, Bool_t norm=kTRUE );
-      explicit PDF( const TString& name, const TH1* theHist, EInterpolateMethod method = kSpline2, 
+      explicit PDF( const TString& name, const TH1* theHist, EInterpolateMethod method = kSpline2,
                     Int_t minnsmooth = 0, Int_t maxnsmooth = 0, Bool_t checkHist = kFALSE, Bool_t norm=kTRUE );
-      explicit PDF( const TString& name, const TH1* theHist, 
-                    KDEKernel::EKernelType ktype, KDEKernel::EKernelIter kiter, KDEKernel::EKernelBorder 
+      explicit PDF( const TString& name, const TH1* theHist,
+                    KDEKernel::EKernelType ktype, KDEKernel::EKernelIter kiter, KDEKernel::EKernelBorder
                     kborder, Float_t FineFactor, Bool_t norm=kTRUE );
       explicit PDF( const TString& name, const TString& options, const TString& suffix = "", PDF* defaultPDF = 0, Bool_t norm=kTRUE);
       virtual ~PDF();
-      
+
       //creates the pdf after the definitions have been stored in
       void BuildPDF (const TH1* theHist);
 
@@ -116,7 +116,7 @@ namespace TMVA {
       const char* GetName() const { return fPDFName; }
 
       // TMVA version control (for weight files)
-      void   SetReadingVersion( UInt_t rv ) { fReadingVersion = rv; }      
+      void   SetReadingVersion( UInt_t rv ) { fReadingVersion = rv; }
       UInt_t GetReadingVersion() const { return fReadingVersion; }
 
       //void WriteOptionsToStream ( std::ostream& o, const TString& prefix ) const;
@@ -127,7 +127,7 @@ namespace TMVA {
 
    private:
 
-      // sanity check of PDF quality (after smoothing): comparison with 
+      // sanity check of PDF quality (after smoothing): comparison with
       // original histogram
       void     CheckHist() const;
       void     FillSplineToHist();
@@ -135,7 +135,7 @@ namespace TMVA {
       void     SmoothHistogram();
       void     FillHistToGraph();
       Double_t GetIntegral() const;
-      Double_t GetPdfHistBinWidth() const { 
+      Double_t GetPdfHistBinWidth() const {
          TH1* h = GetPDFHist();
          return (fPDFHist) ? (h->GetXaxis()->GetXmax() - h->GetXaxis()->GetXmin())/h->GetNbinsX() : 1;
       }
@@ -143,7 +143,7 @@ namespace TMVA {
       // do we use the original histogram as reference ?
       Bool_t   UseHistogram() const { return fUseHistogram; }
 
-      void FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue, 
+      void FindBinInverse( const TH1* histogram, Int_t& lowerBin, Int_t& higherBin, Double_t& lowerBinValue, Double_t& higherBinValue,
                            Double_t y, Bool_t isMonotonouslyIncreasingFunction=kFALSE ) const;
 
 
@@ -151,61 +151,61 @@ namespace TMVA {
 
       // flag that indicates that no splines are produced and no smoothing
       // is applied, i.e., the original histogram is used as reference
-      // this is useful for discrete variables      
+      // this is useful for discrete variables
       Bool_t                   fUseHistogram;  // spline0 uses histogram as reference
-  
+
       // static configuration variables ----------------------------
-      // to increase computation speed, the final PDF is filled in 
+      // to increase computation speed, the final PDF is filled in
       // a high-binned histogram; "GetValue" then returns the histogram
       // entry, linearized between adjacent bins
-      static const Int_t       fgNbin_PdfHist;        // number of bins in high-binned reference histogram
-      static const Bool_t      fgManualIntegration;   // manual integration (sum over bins) or DGAUSS
-      static const Double_t    fgEpsilon;             // minimum PDF return
+      static const Int_t       fgNbin_PdfHist;        ///< number of bins in high-binned reference histogram
+      static const Bool_t      fgManualIntegration;   ///< manual integration (sum over bins) or DGAUSS
+      static const Double_t    fgEpsilon;             ///< minimum PDF return
       // -----------------------------------------------------------
 
-      TString                  fPDFName;              // for output
-      Int_t                    fNsmooth;              // Min number of smoothing iterations
-      Int_t                    fMinNsmooth;           // Min number of smoothing iterations
-      Int_t                    fMaxNsmooth;           // Max number of smoothing iterations
-      TH1*                     fNSmoothHist;          // number of smooth for each bin
+      TString                  fPDFName;              ///< for output
+      Int_t                    fNsmooth;              ///< Min number of smoothing iterations
+      Int_t                    fMinNsmooth;           ///< Min number of smoothing iterations
+      Int_t                    fMaxNsmooth;           ///< Max number of smoothing iterations
+      TH1*                     fNSmoothHist;          ///< number of smooth for each bin
 
-      TMVA::PDF::EInterpolateMethod fInterpolMethod;  // interpolation method
-      TSpline*                 fSpline;               //! the used spline type
-      TH1*                     fPDFHist;              //  the high-binned histogram corresponding to the PDF
-      TH1*                     fHist;                 //  copy of input histogram
-      TH1*                     fHistOriginal;         //  the input histogram
-      TGraph*                  fGraph;                //! needed to create PDF from histogram
-      TF1*                     fIGetVal;              // integration interface
+      TMVA::PDF::EInterpolateMethod fInterpolMethod;  ///< interpolation method
+      TSpline*                 fSpline;               ///<! the used spline type
+      TH1*                     fPDFHist;              ///<  the high-binned histogram corresponding to the PDF
+      TH1*                     fHist;                 ///<  copy of input histogram
+      TH1*                     fHistOriginal;         ///<  the input histogram
+      TGraph*                  fGraph;                ///<! needed to create PDF from histogram
+      TF1*                     fIGetVal;              ///< integration interface
 
-      Int_t                    fHistAvgEvtPerBin;     // avg event per source hist bin
-      Int_t                    fHistDefinedNBins;     // source hist bin num set by user
+      Int_t                    fHistAvgEvtPerBin;     ///< avg event per source hist bin
+      Int_t                    fHistDefinedNBins;     ///< source hist bin num set by user
 
-      TString                  fKDEtypeString;        // strings used to read definitions
+      TString                  fKDEtypeString;        ///< strings used to read definitions
       TString                  fKDEiterString;
       TString                  fBorderMethodString;
       TString                  fInterpolateString;
 
-      KDEKernel::EKernelType   fKDEtype;              // Kernel type to use for KDE
-      KDEKernel::EKernelIter   fKDEiter;              // Number of iterations (adaptive or not)
-      KDEKernel::EKernelBorder fKDEborder;            // The method to take care about "border" effects (string)
-      Float_t                  fFineFactor;           // fine tuning factor for Adaptive KDE
+      KDEKernel::EKernelType   fKDEtype;              ///< Kernel type to use for KDE
+      KDEKernel::EKernelIter   fKDEiter;              ///< Number of iterations (adaptive or not)
+      KDEKernel::EKernelBorder fKDEborder;            ///< The method to take care about "border" effects (string)
+      Float_t                  fFineFactor;           ///< fine tuning factor for Adaptive KDE
 
-      UInt_t                   fReadingVersion;       // the TMVA version of the weight file
+      UInt_t                   fReadingVersion;       ///< the TMVA version of the weight file
 
-      Bool_t                   fCheckHist;            // check of source histogram
-      Bool_t                   fNormalize;            // normalize histogram (false for cumulative distribution used in GaussTranform)
+      Bool_t                   fCheckHist;            ///< check of source histogram
+      Bool_t                   fNormalize;            ///< normalize histogram (false for cumulative distribution used in GaussTranform)
 
-      TString                  fSuffix;               //! the suffix for options
-      mutable MsgLogger*       fLogger;               //! message logger
-      MsgLogger&               Log() const { return *fLogger; }    
+      TString                  fSuffix;               ///<! the suffix for options
+      mutable MsgLogger*       fLogger;               ///<! message logger
+      MsgLogger&               Log() const { return *fLogger; }
 
       // static pointer to this object
       // This is a workaround for OSx where static thread_local data members are
       // not supported. The C++ solution would indeed be the following:
       static PDF*& GetThisPdfThreadLocal() { TTHREAD_TLS(PDF*) fgThisPDF(nullptr); return fgThisPDF; };
-      static PDF*              ThisPDF( void ); 
+      static PDF*              ThisPDF( void );
 
-      // external auxiliary functions 
+      // external auxiliary functions
       static Double_t          IGetVal( Double_t*, Double_t* );
 
       ClassDef(PDF,1)  // PDF wrapper for histograms
@@ -213,4 +213,4 @@ namespace TMVA {
 
 } // namespace TMVA
 
-#endif 
+#endif

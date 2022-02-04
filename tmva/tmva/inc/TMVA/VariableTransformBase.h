@@ -136,42 +136,42 @@ namespace TMVA {
       Int_t GetNClasses() const { return fDsi.GetNClasses(); }
 
 
-      mutable Event*           fTransformedEvent;     // holds the current transformed event
-      mutable Event*           fBackTransformedEvent; // holds the current back-transformed event
+      mutable Event*           fTransformedEvent;     ///< holds the current transformed event
+      mutable Event*           fBackTransformedEvent; ///< holds the current back-transformed event
 
       // variable selection
-      VectorOfCharAndInt               fGet;           // get variables/targets/spectators
-      VectorOfCharAndInt               fPut;           // put variables/targets/spectators
+      VectorOfCharAndInt               fGet;          ///< get variables/targets/spectators
+      VectorOfCharAndInt               fPut;          ///< put variables/targets/spectators
 
    private:
 
-      Types::EVariableTransform fVariableTransform;  // Decorrelation, PCA, etc.
+      Types::EVariableTransform fVariableTransform;   ///< Decorrelation, PCA, etc.
 
       void UpdateNorm( Int_t ivar, Double_t x );
 
-      Bool_t                           fUseSignalTransform; // true if transformation bases on signal data
-      Bool_t                           fEnabled;            // has been enabled
-      Bool_t                           fCreated;            // has been created
-      Bool_t                           fNormalise;          // normalise input variables
-      UInt_t                           fNVars;              // number of variables
-      TString                          fTransformName;      // name of transformation
-      std::vector<TMVA::VariableInfo>  fVariables;          // event variables [saved to weight file]
-      std::vector<TMVA::VariableInfo>  fTargets;            // event targets [saved to weight file --> TODO ]
-      std::vector<TMVA::VariableInfo>  fSpectators;         // event spectators [saved to weight file --> TODO ]
+      Bool_t                           fUseSignalTransform; ///< true if transformation bases on signal data
+      Bool_t                           fEnabled;            ///< has been enabled
+      Bool_t                           fCreated;            ///< has been created
+      Bool_t                           fNormalise;          ///< normalise input variables
+      UInt_t                           fNVars;              ///< number of variables
+      TString                          fTransformName;      ///< name of transformation
+      std::vector<TMVA::VariableInfo>  fVariables;          ///< event variables [saved to weight file]
+      std::vector<TMVA::VariableInfo>  fTargets;            ///< event targets [saved to weight file --> TODO ]
+      std::vector<TMVA::VariableInfo>  fSpectators;         ///< event spectators [saved to weight file --> TODO ]
 
-      mutable Bool_t                   fVariableTypesAreCounted; // true if variable types have been counted already
-      mutable UInt_t                   fNVariables;         // number of variables to be transformed
-      mutable UInt_t                   fNTargets;           // number of targets to be transformed
-      mutable UInt_t                   fNSpectators;        // number of spectators to be transformed
+      mutable Bool_t                   fVariableTypesAreCounted; ///< true if variable types have been counted already
+      mutable UInt_t                   fNVariables;         ///< number of variables to be transformed
+      mutable UInt_t                   fNTargets;           ///< number of targets to be transformed
+      mutable UInt_t                   fNSpectators;        ///< number of spectators to be transformed
 
-      Bool_t                           fSortGet;            // if true, sort the variables into the order as defined by the user at the var definition
-                                                            // if false, sort the variables according to the order given for the var transformation
+      Bool_t                           fSortGet;            ///< if true, sort the variables into the order as defined by the user at the var definition
+                                                            ///< if false, sort the variables according to the order given for the var transformation
 
    protected:
 
       TMVAVersion_t                    fTMVAVersion;
 
-      mutable MsgLogger* fLogger;                     //! message logger
+      mutable MsgLogger* fLogger;                     ///<! message logger
 
       ClassDef(VariableTransformBase,0);   //  Base class for variable transformations
    };

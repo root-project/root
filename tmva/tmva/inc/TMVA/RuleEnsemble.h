@@ -334,51 +334,51 @@ namespace TMVA {
       Rule *MakeTheRule( const Node *node );
 
 
-      ELearningModel                fLearningModel;     // can be full (rules+linear), rules, linear
-      Double_t                      fImportanceCut;     // minimum importance accepted
-      Double_t                      fLinQuantile;       // quantile cut to remove outliers
-      Double_t                      fOffset;            // offset in discriminator function
-      std::vector< TMVA::Rule* >    fRules;             // vector of rules
-      std::vector< Char_t >         fLinTermOK;         // flags linear terms with sufficient strong importance <-- stores boolean
-      std::vector< Double_t >       fLinDP;             // delta+ in eq 24, ref 2
-      std::vector< Double_t >       fLinDM;             // delta-
-      std::vector< Double_t >       fLinCoefficients;   // linear coefficients, one per variable
-      std::vector< Double_t >       fLinNorm;           // norm of ditto, see after eq 26 in ref 2
-      std::vector< TH1F* >          fLinPDFB;           // pdfs for each variable, background
-      std::vector< TH1F* >          fLinPDFS;           // pdfs for each variable, signal
-      std::vector< Double_t >       fLinImportance;     // linear term importance
-      std::vector< Double_t >       fVarImportance;     // one importance per input variable
-      Double_t                      fImportanceRef;     // reference importance (max)
-      Double_t                      fAverageSupport;    // average support (over all rules)
-      Double_t                      fAverageRuleSigma;  // average rule sigma
+      ELearningModel                fLearningModel;     ///< can be full (rules+linear), rules, linear
+      Double_t                      fImportanceCut;     ///< minimum importance accepted
+      Double_t                      fLinQuantile;       ///< quantile cut to remove outliers
+      Double_t                      fOffset;            ///< offset in discriminator function
+      std::vector< TMVA::Rule* >    fRules;             ///< vector of rules
+      std::vector< Char_t >         fLinTermOK;         ///< flags linear terms with sufficient strong importance <-- stores boolean
+      std::vector< Double_t >       fLinDP;             ///< delta+ in eq 24, ref 2
+      std::vector< Double_t >       fLinDM;             ///< delta-
+      std::vector< Double_t >       fLinCoefficients;   ///< linear coefficients, one per variable
+      std::vector< Double_t >       fLinNorm;           ///< norm of ditto, see after eq 26 in ref 2
+      std::vector< TH1F* >          fLinPDFB;           ///< pdfs for each variable, background
+      std::vector< TH1F* >          fLinPDFS;           ///< pdfs for each variable, signal
+      std::vector< Double_t >       fLinImportance;     ///< linear term importance
+      std::vector< Double_t >       fVarImportance;     ///< one importance per input variable
+      Double_t                      fImportanceRef;     ///< reference importance (max)
+      Double_t                      fAverageSupport;    ///< average support (over all rules)
+      Double_t                      fAverageRuleSigma;  ///< average rule sigma
       //
-      std::vector< Double_t >       fRuleVarFrac;       // fraction of rules using a given variable - size of vector = n(variables)
-      std::vector< Double_t >       fRulePSS;           // p(tag as S|S) - tagged as S if rule is SIG and the event is accepted
-      std::vector< Double_t >       fRulePSB;           // p(tag as S|B)
-      std::vector< Double_t >       fRulePBS;           // p(tag as B|S)
-      std::vector< Double_t >       fRulePBB;           // p(tag as B|B)
-      std::vector< Double_t >       fRulePTag;          // p(tag)
-      Double_t                      fRuleFSig;          // N(sig)/N(sig)+N(bkg)
-      Double_t                      fRuleNCave;         // N(cuts) average
-      Double_t                      fRuleNCsig;         // idem sigma
+      std::vector< Double_t >       fRuleVarFrac;       ///< fraction of rules using a given variable - size of vector = n(variables)
+      std::vector< Double_t >       fRulePSS;           ///< p(tag as S|S) - tagged as S if rule is SIG and the event is accepted
+      std::vector< Double_t >       fRulePSB;           ///< p(tag as S|B)
+      std::vector< Double_t >       fRulePBS;           ///< p(tag as B|S)
+      std::vector< Double_t >       fRulePBB;           ///< p(tag as B|B)
+      std::vector< Double_t >       fRulePTag;          ///< p(tag)
+      Double_t                      fRuleFSig;          ///< N(sig)/N(sig)+N(bkg)
+      Double_t                      fRuleNCave;         ///< N(cuts) average
+      Double_t                      fRuleNCsig;         ///< idem sigma
       //
-      Double_t                      fRuleMinDist;       // minimum rule distance
-      UInt_t                        fNRulesGenerated;   // number of rules generated, before cleanup
+      Double_t                      fRuleMinDist;       ///< minimum rule distance
+      UInt_t                        fNRulesGenerated;   ///< number of rules generated, before cleanup
       //
-      const Event*                  fEvent;             // current event.
-      Bool_t                        fEventCacheOK;      // true if rule/linear respons are updated
-      std::vector<Char_t>           fEventRuleVal;      // the rule respons of current event <----- stores boolean
-      std::vector<Double_t>         fEventLinearVal;    // linear respons
+      const Event*                  fEvent;             ///< current event.
+      Bool_t                        fEventCacheOK;      ///< true if rule/linear respons are updated
+      std::vector<Char_t>           fEventRuleVal;      ///< the rule respons of current event <----- stores boolean
+      std::vector<Double_t>         fEventLinearVal;    ///< linear respons
       //
-      Bool_t                        fRuleMapOK;         // true if MakeRuleMap() has been called
-      std::vector< std::vector<UInt_t> > fRuleMap;           // map of rule responses
-      UInt_t                        fRuleMapInd0;       // start index
-      UInt_t                        fRuleMapInd1;       // last index
-      const std::vector<const TMVA::Event *> *fRuleMapEvents; // pointer to vector of events used
+      Bool_t                        fRuleMapOK;         ///< true if MakeRuleMap() has been called
+      std::vector< std::vector<UInt_t> > fRuleMap;      ///< map of rule responses
+      UInt_t                        fRuleMapInd0;       ///< start index
+      UInt_t                        fRuleMapInd1;       ///< last index
+      const std::vector<const TMVA::Event *> *fRuleMapEvents; ///< pointer to vector of events used
       //
-      const RuleFit*                fRuleFit;           // pointer to rule fit object
+      const RuleFit*                fRuleFit;           ///< pointer to rule fit object
 
-      mutable MsgLogger*            fLogger;            //! message logger
+      mutable MsgLogger*            fLogger;            ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    };
 }

@@ -80,42 +80,42 @@ namespace TMVA {
    protected:
       // COMPONENTS //
       //-------------- Input parameters
-      TString fName;             // Name of a given instance of the FOAM class
-      Int_t   fDim;              // Dimension of the integration/simulation space
-      Int_t   fNCells;           // Maximum number of cells
+      TString fName;             ///< Name of a given instance of the FOAM class
+      Int_t   fDim;              ///< Dimension of the integration/simulation space
+      Int_t   fNCells;           ///< Maximum number of cells
       //-------------------
-      Int_t   fNBin;             // No. of bins in the edge histogram for cell MC exploration
-      Int_t   fNSampl;           // No. of MC events, when dividing (exploring) cell
-      Int_t   fEvPerBin;         // Maximum number of effective (wt=1) events per bin
+      Int_t   fNBin;             ///< No. of bins in the edge histogram for cell MC exploration
+      Int_t   fNSampl;           ///< No. of MC events, when dividing (exploring) cell
+      Int_t   fEvPerBin;         ///< Maximum number of effective (wt=1) events per bin
       //-------------------  MULTI-BRANCHING ---------------------
-      Int_t  *fMaskDiv;          //! [fDim] Dynamic Mask for cell division
-      Int_t  *fInhiDiv;          //! [fDim] Flags for inhibiting cell division
+      Int_t  *fMaskDiv;          ///<! [fDim] Dynamic Mask for cell division
+      Int_t  *fInhiDiv;          ///<! [fDim] Flags for inhibiting cell division
       //-------------------  GEOMETRY ----------------------------
-      Int_t   fNoAct;            // Number of active cells
-      Int_t   fLastCe;           // Index of the last cell
-      PDEFoamCell **fCells;      // [fNCells] Array of ALL cells
+      Int_t   fNoAct;            ///< Number of active cells
+      Int_t   fLastCe;           ///< Index of the last cell
+      PDEFoamCell **fCells;      ///< [fNCells] Array of ALL cells
       //------------------ M.C. generation----------------------------
-      TObjArray *fHistEdg;       // Histograms of wt, one for each cell edge
-      Double_t *fRvec;           // [fDim] random number vector from r.n. generator fDim+1 maximum elements
+      TObjArray *fHistEdg;       ///< Histograms of wt, one for each cell edge
+      Double_t *fRvec;           ///< [fDim] random number vector from r.n. generator fDim+1 maximum elements
       //----------- Procedures
-      TRandom3        *fPseRan;  // Pointer to user-defined generator of pseudorandom numbers
+      TRandom3        *fPseRan;  ///< Pointer to user-defined generator of pseudorandom numbers
       //----------  working space for CELL exploration -------------
-      Double_t *fAlpha;          // [fDim] Internal parameters of the hyperrectangle
+      Double_t *fAlpha;          ///< [fDim] Internal parameters of the hyperrectangle
       // ---------  PDE-Foam specific variables
-      EFoamType fFoamType;     // BACKWARDS COMPATIBILITY: type of foam
-      Double_t *fXmin;         // [fDim] minimum for variable transform
-      Double_t *fXmax;         // [fDim] maximum for variable transform
-      UInt_t fNElements;       // BACKWARDS COMPATIBILITY: number of variables in every cell
-      UInt_t fNmin;            // minimal number of events in cell to split cell
-      UInt_t fMaxDepth;        // maximum depth of cell tree
-      Float_t fVolFrac;        // BACKWARDS COMPATIBILITY: volume fraction (with respect to total phase space
-      Bool_t fFillFoamWithOrigWeights; // BACKWARDS COMPATIBILITY: fill the foam with boost or orig. weights
-      EDTSeparation fDTSeparation; // BACKWARDS COMPATIBILITY: split cells according to decision tree logic
-      Bool_t fPeekMax;         // BACKWARDS COMPATIBILITY: peek up cell with max. driver integral for split
-      PDEFoamDensityBase *fDistr;  //! distribution of training events
-      Timer *fTimer;           //! timer for graphical output
-      TObjArray *fVariableNames;// collection of all variable names
-      mutable MsgLogger* fLogger;                     //! message logger
+      EFoamType fFoamType;     ///< BACKWARDS COMPATIBILITY: type of foam
+      Double_t *fXmin;         ///< [fDim] minimum for variable transform
+      Double_t *fXmax;         ///< [fDim] maximum for variable transform
+      UInt_t fNElements;       ///< BACKWARDS COMPATIBILITY: number of variables in every cell
+      UInt_t fNmin;            ///< minimal number of events in cell to split cell
+      UInt_t fMaxDepth;        ///< maximum depth of cell tree
+      Float_t fVolFrac;        ///< BACKWARDS COMPATIBILITY: volume fraction (with respect to total phase space
+      Bool_t fFillFoamWithOrigWeights; ///< BACKWARDS COMPATIBILITY: fill the foam with boost or orig. weights
+      EDTSeparation fDTSeparation; ///< BACKWARDS COMPATIBILITY: split cells according to decision tree logic
+      Bool_t fPeekMax;         ///< BACKWARDS COMPATIBILITY: peek up cell with max. driver integral for split
+      PDEFoamDensityBase *fDistr;  ///<! distribution of training events
+      Timer *fTimer;           ///<! timer for graphical output
+      TObjArray *fVariableNames;///< collection of all variable names
+      mutable MsgLogger* fLogger;                     ///<! message logger
 
       /////////////////////////////////////////////////////////////////
       //                            METHODS                          //

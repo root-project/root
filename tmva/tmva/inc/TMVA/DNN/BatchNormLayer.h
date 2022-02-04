@@ -53,8 +53,8 @@ namespace DNN {
    In addition a running batch mean and variance is computed and stored in the class
    During inference the inputs are not normalized using the batch mean but the previously computed
   at  running mean and variance
-   If momentum is in [0,1) the running mean and variances are the exponetial averages using the momentum value
-     runnig_mean = momentum * running_mean + (1-momentum) * batch_mean
+   If momentum is in [0,1) the running mean and variances are the exponential averages using the momentum value
+     running_mean = momentum * running_mean + (1-momentum) * batch_mean
    If instead momentum<1 the cumulative average is computed
    running_mean = (nb/(nb+1) * running_mean + 1/(nb+1) * batch_mean
 
@@ -91,7 +91,7 @@ private:
    // cached tensor used for Cudnn to get correct shape
    Tensor_t fReshapedData;  // cached reshaped data tensor
 
-   // counter of trained batches for computing tesing and variance means
+   // counter of trained batches for computing testing and variance means
    int fTrainedBatches = 0;
 
    TDescriptors * fDescriptors = nullptr;
@@ -118,7 +118,7 @@ public:
    void Forward(Tensor_t &input, bool inTraining = true);
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
-    *  first partial derviatives of the activation function computed during
+    *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  a the corresponding call to Forward(...). */
    void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
@@ -243,15 +243,15 @@ TBatchNormLayer<Architecture_t>::TBatchNormLayer(TBatchNormLayer<Architecture_t>
    : VGeneralLayer<Architecture_t>(layer)
 {
    // to be implemented
-   printf("Error - copy ctor not implmented\n");
+   printf("Error - copy ctor not implemented\n");
 }
 
 //______________________________________________________________________________
 template <typename Architecture_t>
 TBatchNormLayer<Architecture_t>::TBatchNormLayer(const TBatchNormLayer &layer) : VGeneralLayer<Architecture_t>(layer)
 {
-   // to be implmeented
-   printf("Error - copy ctor not implmented\n");
+   // to be implemented
+   printf("Error - copy ctor not implemented\n");
 }
 
 //______________________________________________________________________________
@@ -387,7 +387,7 @@ template <typename Architecture_t>
 void TBatchNormLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
 
-   // write layer width activation function + weigbht and bias matrices
+   // write layer width activation function + weight and bias matrices
 
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "BatchNormLayer");
 

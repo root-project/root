@@ -65,8 +65,8 @@ public:
 
 private:
 
-   Tensor_t fInputActivation; /// output of GEMM and input to activation function
-   Tensor_t fDerivatives; /// activation functgion gradient 
+   Tensor_t fInputActivation; ///< output of GEMM and input to activation function
+   Tensor_t fDerivatives;     ///< activation function gradient
 
    Scalar_t fDropoutProbability; ///< Probability that an input is active.
 
@@ -74,7 +74,7 @@ private:
    ERegularization fReg;   ///< The regularization method.
    Scalar_t fWeightDecay;  ///< The weight decay.
 
-   typename Architecture_t::ActivationDescriptor_t fActivationDesc; // the descriptor for the activation function  
+   typename Architecture_t::ActivationDescriptor_t fActivationDesc; // the descriptor for the activation function
 
 public:
    /*! Constructor */
@@ -98,7 +98,7 @@ public:
    void Forward(Tensor_t &input, bool applyDropout = false);
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
-    *  first partial derviatives of the activation function computed during
+    *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  a the corresponding call to Forward(...). */
    void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward );
@@ -119,10 +119,10 @@ public:
    /*! Getters */
    Scalar_t GetDropoutProbability() const { return fDropoutProbability; }
 
-   /* return output of Gemm before computing the activation function */ 
+   /* return output of Gemm before computing the activation function */
    const Tensor_t &GetInputActivation() const { return fInputActivation; }
    Tensor_t &GetInputActivation() { return fInputActivation; }
-   
+
    EActivationFunction GetActivationFunction() const { return fF; }
    ERegularization GetRegularization() const { return fReg; }
    Scalar_t GetWeightDecay() const { return fWeightDecay; }
@@ -150,8 +150,8 @@ TDenseLayer<Architecture_t>::TDenseLayer(size_t batchSize, size_t inputWidth, si
 //______________________________________________________________________________
 template <typename Architecture_t>
 TDenseLayer<Architecture_t>::TDenseLayer(TDenseLayer<Architecture_t> *layer) :
-   VGeneralLayer<Architecture_t>(layer), 
-   fInputActivation( layer->GetInputActivation().GetShape() ), 
+   VGeneralLayer<Architecture_t>(layer),
+   fInputActivation( layer->GetInputActivation().GetShape() ),
    fDropoutProbability(layer->GetDropoutProbability()),
    fF(layer->GetActivationFunction()), fReg(layer->GetRegularization()), fWeightDecay(layer->GetWeightDecay())
 {
@@ -162,9 +162,9 @@ TDenseLayer<Architecture_t>::TDenseLayer(TDenseLayer<Architecture_t> *layer) :
 //______________________________________________________________________________
 template <typename Architecture_t>
 TDenseLayer<Architecture_t>::TDenseLayer(const TDenseLayer &layer) :
-   VGeneralLayer<Architecture_t>(layer), 
-   fInputActivation( layer->GetInputActivation()), 
-   fDropoutProbability(layer.fDropoutProbability), 
+   VGeneralLayer<Architecture_t>(layer),
+   fInputActivation( layer->GetInputActivation()),
+   fDropoutProbability(layer.fDropoutProbability),
    fF(layer.fF), fReg(layer.fReg), fWeightDecay(layer.fWeightDecay)
 {
    fDerivatives = Tensor_t ( this->GetOutput().GetShape() );
@@ -187,17 +187,17 @@ template <typename Architecture_t>
 auto TDenseLayer<Architecture_t>::Forward( Tensor_t &input, bool applyDropout) -> void
 {
    if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
-      // 
-      Architecture_t::DropoutForward(input, static_cast<TDescriptors *> (nullptr), 
-                                     static_cast<TWorkspace *> (nullptr), 
+      //
+      Architecture_t::DropoutForward(input, static_cast<TDescriptors *> (nullptr),
+                                     static_cast<TWorkspace *> (nullptr),
                                      this->GetDropoutProbability());
    }
    Architecture_t::MultiplyTranspose(this->GetOutput() , input, this->GetWeightsAt(0));
    Architecture_t::AddRowWise(this->GetOutput(), this->GetBiasesAt(0));
-  
+
    //evaluate<Architecture_t>(this->GetOutput(), this->GetActivationFunction());
    Architecture_t::Copy(this->GetInputActivation(),this->GetOutput());
-   
+
    Architecture_t::ActivationFunctionForward(this->GetOutput(), this->GetActivationFunction(), fActivationDesc);
 }
 
@@ -209,12 +209,12 @@ auto TDenseLayer<Architecture_t>::Backward(Tensor_t &gradients_backward, const T
 {
 
    if (this->GetDropoutProbability() != 1.0) {
-      Architecture_t::DropoutBackward(this->GetActivationGradients(), 
-      static_cast<TDescriptors *> (nullptr), 
+      Architecture_t::DropoutBackward(this->GetActivationGradients(),
+      static_cast<TDescriptors *> (nullptr),
       static_cast<TWorkspace *> (nullptr));
    }
 
-   Architecture_t::ActivationFunctionBackward(fDerivatives, this->GetOutput(), 
+   Architecture_t::ActivationFunctionBackward(fDerivatives, this->GetOutput(),
                                               this->GetActivationGradients(), this->GetInputActivation(),
                                               this->GetActivationFunction(), fActivationDesc);
 
@@ -231,11 +231,11 @@ template <typename Architecture_t>
 void TDenseLayer<Architecture_t>::Print() const
 {
    std::cout << " DENSE Layer: \t";
-   std::cout << " ( Input =" << std::setw(6) << this->GetWeightsAt(0).GetNcols();  // input size 
+   std::cout << " ( Input =" << std::setw(6) << this->GetWeightsAt(0).GetNcols();  // input size
    std::cout << " , Width =" << std::setw(6) << this->GetWeightsAt(0).GetNrows() << " ) ";  // layer width
-  
+
    std::cout << "\tOutput = ( " << std::setw(2) << this->GetOutput().GetFirstSize() << " ," << std::setw(6) << this->GetOutput().GetShape()[0] << " ," << std::setw(6) << this->GetOutput().GetShape()[1] << " ) ";
-   
+
    std::vector<std::string> activationNames = { "Identity","Relu","Sigmoid","Tanh","SymmRelu","SoftSign","Gauss" };
    std::cout << "\t Activation Function = ";
    std::cout << activationNames[ static_cast<int>(fF) ];
@@ -248,7 +248,7 @@ void TDenseLayer<Architecture_t>::Print() const
 template <typename Architecture_t>
 void TDenseLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
-  // write layer width activation function + weigbht and bias matrices
+  // write layer width activation function + weight and bias matrices
 
    auto layerxml = gTools().xmlengine().NewChild(parent, 0, "DenseLayer");
 
@@ -257,7 +257,7 @@ void TDenseLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
    int activationFunction = static_cast<int>(this -> GetActivationFunction());
    gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
                                 TString::Itoa(activationFunction, 10));
-   // write weights and bias matrix 
+   // write weights and bias matrix
    this->WriteMatrixToXML(layerxml, "Weights", this -> GetWeightsAt(0));
    this->WriteMatrixToXML(layerxml, "Biases",  this -> GetBiasesAt(0));
 }
@@ -269,7 +269,7 @@ void TDenseLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
    // Read layer weights and biases from XML
    this->ReadMatrixXML(parent,"Weights", this -> GetWeightsAt(0));
    this->ReadMatrixXML(parent,"Biases", this -> GetBiasesAt(0));
-   
+
 }
 
 

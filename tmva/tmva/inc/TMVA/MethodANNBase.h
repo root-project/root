@@ -183,16 +183,16 @@ namespace TMVA {
 
 
       // general
-      TMatrixD           fInvHessian;           // zjh
-      bool               fUseRegulator;         // zjh
+      TMatrixD           fInvHessian;           ///< zjh
+      bool               fUseRegulator;         ///< zjh
 
    protected:
-      Int_t                   fRandomSeed;      // random seed for initial synapse weights
+      Int_t                   fRandomSeed;      ///< random seed for initial synapse weights
 
-      Int_t                   fNcycles;         // number of epochs to train
+      Int_t                   fNcycles;         ///< number of epochs to train
 
-      TString                 fNeuronType;      // name of neuron activation function class
-      TString                 fNeuronInputType; // name of neuron input calculator class
+      TString                 fNeuronType;      ///< name of neuron activation function class
+      TString                 fNeuronInputType; ///< name of neuron input calculator class
 
 
    private:
@@ -216,12 +216,12 @@ namespace TMVA {
       void PrintNeuron(TNeuron* neuron) const;
 
       // private variables
-      TObjArray*              fInputLayer;      // cache this for fast access
-      std::vector<TNeuron*>   fOutputNeurons;   // cache this for fast access
-      TString                 fLayerSpec;       // layout specification option
+      TObjArray*              fInputLayer;      ///< cache this for fast access
+      std::vector<TNeuron*>   fOutputNeurons;   ///< cache this for fast access
+      TString                 fLayerSpec;       ///< layout specification option
 
       // some static flags
-      static const Bool_t fgDEBUG      = kTRUE;  // debug flag
+      static const Bool_t fgDEBUG      = kTRUE;  ///< debug flag
 
       ClassDef(MethodANNBase,0); // Base class for TMVA ANNs
    };

@@ -70,7 +70,7 @@ private:
    Matrix_t fBiases;              ///< The bias values of this layer.
    Matrix_t fOutput;              ///< Activations of this layer.
    Matrix_t fDerivatives;         ///< First fDerivatives of the activations of this layer.
-   Matrix_t fWeightGradients;     ///< Gradients w.r.t. the weigths of this layer.
+   Matrix_t fWeightGradients;     ///< Gradients w.r.t. the weights of this layer.
    Matrix_t fBiasGradients;       ///< Gradients w.r.t. the bias values of this layer.
    Matrix_t fActivationGradients; ///< Gradients w.r.t. the activations of this layer.
 
@@ -95,7 +95,7 @@ public:
     * activations. */
    void inline Forward(Matrix_t & input, bool applyDropout = false);
    /*! Compute weight, bias and activation gradients. Uses the precomputed
-    *  first partial derviatives of the activation function computed during
+    *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  a the corresponding call to Forward(...). */
    void inline Backward(Matrix_t & gradients_backward,
@@ -166,7 +166,7 @@ private:
    Matrix_t & fBiases;            ///< Reference to the bias vectors of this layer.
    Matrix_t fOutput;              ///< Activations of this layer.
    Matrix_t fDerivatives;         ///< First fDerivatives of the activations of this layer.
-   Matrix_t fWeightGradients;     ///< Gradients w.r.t. the weigths of this layer.
+   Matrix_t fWeightGradients;     ///< Gradients w.r.t. the weights of this layer.
    Matrix_t fBiasGradients;       ///< Gradients w.r.t. the bias values of this layer.
    Matrix_t fActivationGradients; ///< Gradients w.r.t. the activations of this layer.
 
@@ -185,7 +185,7 @@ public:
     * activations. */
    void inline Forward(Matrix_t & input, bool applyDropout = false);
    /*! Compute weight, bias and activation gradients. Uses the precomputed
-    *  first partial derviatives of the activation function computed during
+    *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  a the corresponding call to Forward(...). */
    void inline Backward(Matrix_t & gradients_backward,
@@ -275,10 +275,10 @@ auto inline TLayer<Architecture_t>::Forward(Matrix_t & input,
    }
    Architecture_t::MultiplyTranspose(fOutput, input, fWeights);
    Architecture_t::AddRowWise(fOutput, fBiases);
-   Tensor_t tOutput(fOutput); 
-   Tensor_t tDerivatives(fDerivatives); 
+   Tensor_t tOutput(fOutput);
+   Tensor_t tDerivatives(fDerivatives);
    evaluateDerivative<Architecture_t>(tDerivatives, fF, tOutput);
-  
+
    evaluate<Architecture_t>(tOutput, fF);
 }
 
@@ -296,7 +296,7 @@ auto TLayer<Architecture_t>::Backward(Matrix_t & gradients_backward,
    Tensor_t tActGrad(fActivationGradients);
    Tensor_t tDeriv(fDerivatives);
 
-   Architecture_t::Hadamard( tDeriv, tActGrad); 
+   Architecture_t::Hadamard( tDeriv, tActGrad);
    Architecture_t::Backward( tGradBw,
                             fWeightGradients,
                             fBiasGradients,
@@ -362,8 +362,8 @@ auto inline TSharedLayer<Architecture_t>::Forward(Matrix_t & input,
    }
    Architecture_t::MultiplyTranspose(fOutput, input, fWeights);
    Architecture_t::AddRowWise(fOutput, fBiases);
-   Tensor_t tOutput(fOutput); 
-   Tensor_t tDerivatives(fDerivatives); 
+   Tensor_t tOutput(fOutput);
+   Tensor_t tDerivatives(fDerivatives);
    evaluateDerivative<Architecture_t>(tDerivatives, fF, tOutput);
    evaluate<Architecture_t>(tOutput, fF);
 }

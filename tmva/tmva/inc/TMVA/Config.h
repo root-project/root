@@ -137,12 +137,12 @@ namespace TMVA {
       static std::atomic<Config*> fgConfigPtr;
    private:
 
-      std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
-      std::atomic<UInt_t> fNWorkers;              // Default number of workers for multi-process jobs
-      std::atomic<Bool_t> fUseColoredConsole;     // coloured standard output
-      std::atomic<Bool_t> fSilent;                // no output at all
-      std::atomic<Bool_t> fWriteOptionsReference; // if set true: Configurable objects write file with option reference
-      mutable MsgLogger* fLogger;   // message logger
+      std::atomic<Bool_t> fDrawProgressBar;       ///< draw progress bar to indicate training evolution
+      std::atomic<UInt_t> fNWorkers;              ///< Default number of workers for multi-process jobs
+      std::atomic<Bool_t> fUseColoredConsole;     ///< coloured standard output
+      std::atomic<Bool_t> fSilent;                ///< no output at all
+      std::atomic<Bool_t> fWriteOptionsReference; ///< if set true: Configurable objects write file with option reference
+      mutable MsgLogger* fLogger;                 ///< message logger
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(Config,0); // Singleton class for global configuration settings

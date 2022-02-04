@@ -84,17 +84,17 @@ namespace TMVA
    private:
 
       std::vector<Float_t> fDataVector;
-      const Float_t        fCweight;     // svm cost weight
-      Float_t              fAlpha;       // Lagrange multiplier
-      Float_t              fAlpha_p;     // Lagrange multiplier
-      Float_t              fErrorCache;  // optimization parameter
-      UInt_t               fNVar;        // number of variables
-      const Int_t          fTypeFlag;    // is sig or bkg - svm requieres 1 for sig and -1 for bkg
-      Int_t                fIdx;         // index flag
-      UInt_t               fNs;          // documentation
-      Int_t                fIsShrinked;  // shrinking flag, see documentation
-      Float_t*             fLine;        // pointer to column of kernel matrix
-      const Float_t        fTarget;      // regression target
+      const Float_t        fCweight;     ///< svm cost weight
+      Float_t              fAlpha;       ///< Lagrange multiplier
+      Float_t              fAlpha_p;     ///< Lagrange multiplier
+      Float_t              fErrorCache;  ///< optimization parameter
+      UInt_t               fNVar;        ///< number of variables
+      const Int_t          fTypeFlag;    ///< is sig or bkg - svm requieres 1 for sig and -1 for bkg
+      Int_t                fIdx;         ///< index flag
+      UInt_t               fNs;          ///< documentation
+      Int_t                fIsShrinked;  ///< shrinking flag, see documentation
+      Float_t*             fLine;        ///< pointer to column of kernel matrix
+      const Float_t        fTarget;      ///< regression target
 
       ClassDef(SVEvent,0); // Event for SVM
    };

@@ -48,7 +48,7 @@ namespace TMVA {
    class VariablePCATransform : public VariableTransformBase {
 
    public:
-  
+
       VariablePCATransform( DataSetInfo& dsi );
       virtual ~VariablePCATransform( void );
 
@@ -74,13 +74,13 @@ namespace TMVA {
       void P2X( std::vector<Float_t>&, const std::vector<Float_t>&, Int_t cls ) const;
 
       // store relevant parts of PCA locally
-      std::vector<TVectorD*> fMeanValues;   // mean values
-      std::vector<TMatrixD*> fEigenVectors; // eigenvectors
+      std::vector<TVectorD*> fMeanValues;   ///< mean values
+      std::vector<TMatrixD*> fEigenVectors; ///< eigenvectors
 
       ClassDef(VariablePCATransform,0); // Variable transformation: Principal Value Composition
    };
 
 } // namespace TMVA
 
-#endif 
+#endif
 

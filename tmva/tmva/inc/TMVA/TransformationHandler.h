@@ -129,12 +129,12 @@ namespace TMVA {
       std::vector< Int_t >  fTransformationsReferenceClasses; //! reference classes for the transformations
       std::vector<std::vector<TMVA::TransformationHandler::VariableStat> >  fVariableStats; // first the variables, then the targets
 
-      Int_t                 fNumC;               // number of categories (#classes +1)
+      Int_t                 fNumC;               ///< number of categories (#classes +1)
 
-      std::vector<Ranking*> fRanking;            //! ranking object
-      TDirectory*           fRootBaseDir;        //! if set put input var hists
-      TString               fCallerName;         //! name of the caller for output
-      mutable MsgLogger*    fLogger;             //! message logger
+      std::vector<Ranking*> fRanking;            ///<! ranking object
+      TDirectory*           fRootBaseDir;        ///<! if set put input var hists
+      TString               fCallerName;         ///<! name of the caller for output
+      mutable MsgLogger*    fLogger;             ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    };
 }

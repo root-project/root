@@ -68,9 +68,9 @@ public:
    using HelperDescriptor_t = typename Architecture_t::DropoutDescriptor_t;
 
    // do we need thse ???
-   using AlgorithmForward_t = typename Architecture_t::AlgorithmForward_t;   // Forward layer operation
-   using AlgorithmBackward_t = typename Architecture_t::AlgorithmBackward_t; // Backward layer operation
-   using AlgorithmHelper_t = typename Architecture_t::AlgorithmHelper_t;     // Used for weight grad backward pass
+   using AlgorithmForward_t = typename Architecture_t::AlgorithmForward_t;   ///< Forward layer operation
+   using AlgorithmBackward_t = typename Architecture_t::AlgorithmBackward_t; ///< Backward layer operation
+   using AlgorithmHelper_t = typename Architecture_t::AlgorithmHelper_t;     ///< Used for weight grad backward pass
 
    // FIXME: Add other cudnn types (algorithm preference etc.)
    using AlgorithmDataType_t = typename Architecture_t::AlgorithmDataType_t;

@@ -81,12 +81,12 @@ namespace TMVA {
 
       //      mutable Event*           fTransformedEvent;
 
-      VectorOfFloatVectors                   fMin;       //! Min of source range
-      VectorOfFloatVectors                   fMax;       //! Max of source range
+      VectorOfFloatVectors                   fMin;       ///<! Min of source range
+      VectorOfFloatVectors                   fMax;       ///<! Max of source range
 
       ClassDef(VariableNormalizeTransform,0); // Variable transformation: normalization
    };
 
 } // namespace TMVA
 
-#endif 
+#endif

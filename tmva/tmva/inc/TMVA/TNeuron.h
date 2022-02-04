@@ -141,16 +141,16 @@ namespace TMVA {
       }
 
       // private member variables
-      TObjArray*    fLinksIn;                 // array of input synapses
-      TObjArray*    fLinksOut;                // array of output synapses
-      Double_t      fValue;                   // input value
-      Double_t      fActivationValue;         // activation/output value
-      Double_t      fDelta;                   // error field of neuron
-      Double_t      fDEDw;                    // sum of all deltas
-      Double_t      fError;                   // error, only set for output neurons
-      Bool_t        fForcedValue;             // flag for forced input value
-      TActivation*  fActivation;              // activation equation
-      TNeuronInput* fInputCalculator;         // input calculator
+      TObjArray*    fLinksIn;                 ///< array of input synapses
+      TObjArray*    fLinksOut;                ///< array of output synapses
+      Double_t      fValue;                   ///< input value
+      Double_t      fActivationValue;         ///< activation/output value
+      Double_t      fDelta;                   ///< error field of neuron
+      Double_t      fDEDw;                    ///< sum of all deltas
+      Double_t      fError;                   ///< error, only set for output neurons
+      Bool_t        fForcedValue;             ///< flag for forced input value
+      TActivation*  fActivation;              ///< activation equation
+      TNeuronInput* fInputCalculator;         ///< input calculator
 
       MsgLogger& Log() const;
 

@@ -632,54 +632,54 @@ namespace TMVA {
       //Model Persistence
       Bool_t fModelPersistence;
 
-      TString          fParentDir;           // method parent name, like booster name
+      TString          fParentDir;           ///< method parent name, like booster name
 
-      TString          fFileDir;             // unix sub-directory for weight files (default: DataLoader's Name + "weights")
-      TString          fWeightFile;          // weight file name
+      TString          fFileDir;             ///< unix sub-directory for weight files (default: DataLoader's Name + "weights")
+      TString          fWeightFile;          ///< weight file name
 
    private:
 
-      TH1*             fEffS;                // efficiency histogram for rootfinder
+      TH1*             fEffS;                ///< efficiency histogram for rootfinder
 
-      PDF*             fDefaultPDF;          // default PDF definitions
-      PDF*             fMVAPdfS;             // signal MVA PDF
-      PDF*             fMVAPdfB;             // background MVA PDF
+      PDF*             fDefaultPDF;          ///< default PDF definitions
+      PDF*             fMVAPdfS;             ///< signal MVA PDF
+      PDF*             fMVAPdfB;             ///< background MVA PDF
 
-      //      TH1D*            fmvaS;                // PDFs of MVA distribution (signal)
-      //      TH1D*            fmvaB;                // PDFs of MVA distribution (background)
-      PDF*             fSplS;                // PDFs of MVA distribution (signal)
-      PDF*             fSplB;                // PDFs of MVA distribution (background)
-      TSpline*         fSpleffBvsS;          // splines for signal eff. versus background eff.
+      //      TH1D*            fmvaS;        ///< PDFs of MVA distribution (signal)
+      //      TH1D*            fmvaB;        ///< PDFs of MVA distribution (background)
+      PDF*             fSplS;                ///< PDFs of MVA distribution (signal)
+      PDF*             fSplB;                ///< PDFs of MVA distribution (background)
+      TSpline*         fSpleffBvsS;          ///< splines for signal eff. versus background eff.
 
-      PDF*             fSplTrainS;           // PDFs of training MVA distribution (signal)
-      PDF*             fSplTrainB;           // PDFs of training MVA distribution (background)
-      TSpline*         fSplTrainEffBvsS;     // splines for training signal eff. versus background eff.
+      PDF*             fSplTrainS;           ///< PDFs of training MVA distribution (signal)
+      PDF*             fSplTrainB;           ///< PDFs of training MVA distribution (background)
+      TSpline*         fSplTrainEffBvsS;     ///< splines for training signal eff. versus background eff.
 
    private:
 
       // basic statistics quantities of MVA
-      Double_t         fMeanS;               // mean (signal)
-      Double_t         fMeanB;               // mean (background)
-      Double_t         fRmsS;                // RMS (signal)
-      Double_t         fRmsB;                // RMS (background)
-      Double_t         fXmin;                // minimum (signal and background)
-      Double_t         fXmax;                // maximum (signal and background)
+      Double_t         fMeanS;               ///< mean (signal)
+      Double_t         fMeanB;               ///< mean (background)
+      Double_t         fRmsS;                ///< RMS (signal)
+      Double_t         fRmsB;                ///< RMS (background)
+      Double_t         fXmin;                ///< minimum (signal and background)
+      Double_t         fXmax;                ///< maximum (signal and background)
 
       // variable preprocessing
-      TString          fVarTransformString;          // labels variable transform method
+      TString          fVarTransformString;           ///< labels variable transform method
 
-      TransformationHandler* fTransformationPointer;  // pointer to the rest of transformations
-      TransformationHandler  fTransformation;         // the list of transformations
+      TransformationHandler* fTransformationPointer;  ///< pointer to the rest of transformations
+      TransformationHandler  fTransformation;         ///< the list of transformations
 
 
       // help and verbosity
-      Bool_t           fVerbose;               // verbose flag
-      TString          fVerbosityLevelString;  // verbosity level (user input string)
-      EMsgType         fVerbosityLevel;        // verbosity level
-      Bool_t           fHelp;                  // help flag
-      Bool_t           fHasMVAPdfs;            // MVA Pdfs are created for this classifier
+      Bool_t           fVerbose;               ///< verbose flag
+      TString          fVerbosityLevelString;  ///< verbosity level (user input string)
+      EMsgType         fVerbosityLevel;        ///< verbosity level
+      Bool_t           fHelp;                  ///< help flag
+      Bool_t           fHasMVAPdfs;            ///< MVA Pdfs are created for this classifier
 
-      Bool_t           fIgnoreNegWeightsInTraining;// If true, events with negative weights are not used in training
+      Bool_t           fIgnoreNegWeightsInTraining; ///< If true, events with negative weights are not used in training
 
    protected:
 
