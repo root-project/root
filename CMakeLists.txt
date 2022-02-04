@@ -300,7 +300,8 @@ set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
   add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
     COMMAND ${CMAKE_COMMAND} -DSRC="${CMAKE_SOURCE_DIR}/${artifact_file}" -DTGT="${CMAKE_BINARY_DIR}/${artifact_file}" -P ${CMAKE_SOURCE_DIR}/cmake/scripts/CopyFile.cmake
-    DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+    DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file}
+    COMMENT "")
   list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
 endforeach()
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
