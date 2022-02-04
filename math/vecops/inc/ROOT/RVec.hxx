@@ -2059,7 +2059,7 @@ template <typename T>
 auto Any(const RVec<T> &v) -> decltype(v[0] == true)
 {
    for (auto &&e : v)
-      if (e == true)
+      if ((bool) e == true)
          return true;
    return false;
 }
@@ -2078,7 +2078,7 @@ template <typename T>
 auto All(const RVec<T> &v) -> decltype(v[0] == false)
 {
    for (auto &&e : v)
-      if (e == false)
+      if ((bool) e == false)
          return false;
    return true;
 }
