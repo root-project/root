@@ -555,7 +555,7 @@ void TRootBrowser::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 Longptr_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
                                    const char *cmd, Int_t pos, Int_t subpos)
 {
-   Long_t retval = 0;
+   Longptr_t retval = 0;
    TBrowserPlugin *p;
    TString command, pname;
    if (cmd && strlen(cmd)) {
