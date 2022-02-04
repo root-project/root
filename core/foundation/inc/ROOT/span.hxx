@@ -196,8 +196,8 @@ public:
     static_assert(N > 0, "Zero-length array is not permitted in ISO C++.");
   }
 
-  /*implicit*/ span(std::vector<typename std::remove_cv<T>::type> const& v) noexcept
-     : length_(v.size()), data_(v.empty() ? nullptr : v.data())
+  /*implicit*/ span(std::vector<typename std::remove_cv<T>::type> const &v) noexcept
+     : length_(v.size()), data_(v.empty() ? nullptr : const_cast<T *>(v.data()))
   {}
 
   /*implicit*/ span(std::vector<typename std::remove_cv<T>::type> & v) noexcept

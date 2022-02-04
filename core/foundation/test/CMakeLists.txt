@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -6,6 +6,7 @@
 
 ROOT_ADD_GTEST(testMake_unique testMake_unique.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(testTypeTraits testTypeTraits.cxx LIBRARIES Core)
+ROOT_ADD_GTEST(testSpan testspan.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(testNotFn testNotFn.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(testClassEdit testClassEdit.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(testLogger testLogger.cxx LIBRARIES Core)
