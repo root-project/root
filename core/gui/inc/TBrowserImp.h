@@ -56,7 +56,7 @@ public:
    virtual void      SetDrawOption(Option_t * = "") { }
    virtual Option_t *GetDrawOption() const { return nullptr; }
 
-   virtual Long_t    ExecPlugin(const char *, const char *, const char *, Int_t, Int_t) { return 0; }
+   virtual Longptr_t ExecPlugin(const char *, const char *, const char *, Int_t, Int_t) { return 0; }
    virtual void      SetStatusText(const char *, Int_t) { }
    virtual void      StartEmbedding(Int_t, Int_t) { }
    virtual void      StopEmbedding(const char *) { }

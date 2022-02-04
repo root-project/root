@@ -165,7 +165,7 @@ public:
    Option_t         *GetDrawOption() const override;
    TGMainFrame      *GetMainFrame() const override { return (TGMainFrame *)this; }
 
-   Long_t            ExecPlugin(const char *name = nullptr, const char *fname = nullptr,
+   Longptr_t         ExecPlugin(const char *name = nullptr, const char *fname = nullptr,
                                 const char *cmd = nullptr, Int_t pos = kRight,
                                 Int_t subpos = -1) override;
    void              SetStatusText(const char *txt, Int_t col) override;
