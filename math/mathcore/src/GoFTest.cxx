@@ -934,7 +934,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       for (UInt_t i = 0; i < n; ++i) {
          Double_t Fn = (i + 1.0) / n;
          Double_t F = (*fCDF)(fSamples[0][i]);
-         Double_t result = std::max(TMath::Abs(Fn - F), TMath::Abs(Fo - Fn));
+         Double_t result = std::max(TMath::Abs(Fn - F), TMath::Abs(Fo - F));
          if (result > Dn) Dn = result;
          Fo = Fn;
       }
