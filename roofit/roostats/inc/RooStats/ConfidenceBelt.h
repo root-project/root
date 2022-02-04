@@ -34,7 +34,7 @@ namespace RooStats {
 
   public:
     SamplingSummaryLookup() {}
-    virtual ~SamplingSummaryLookup() {}
+    ~SamplingSummaryLookup() override {}
 
     void Add(Double_t cl, Double_t leftside){
       // add cl,leftside pair to lookup table
@@ -88,7 +88,7 @@ namespace RooStats {
     LookupTable fLookupTable; ///< map ( Index, ( CL, leftside tail prob) )
 
   protected:
-    ClassDef(SamplingSummaryLookup,1)  // A simple class used by ConfidenceBelt
+    ClassDefOverride(SamplingSummaryLookup,1)  // A simple class used by ConfidenceBelt
   };
 
 
@@ -96,7 +96,7 @@ namespace RooStats {
   class AcceptanceRegion : public TObject{
   public:
      AcceptanceRegion() : fLookupIndex(0), fLowerLimit(0), fUpperLimit(0) {}
-    virtual ~AcceptanceRegion() {}
+    ~AcceptanceRegion() override {}
 
     AcceptanceRegion(Int_t lu, Double_t ll, Double_t ul){
       fLookupIndex = lu;
@@ -113,7 +113,7 @@ namespace RooStats {
     Double_t fUpperLimit;  // upper limit on test statistic
 
   protected:
-    ClassDef(AcceptanceRegion,1)  // A simple class for acceptance regions used for ConfidenceBelt
+    ClassDefOverride(AcceptanceRegion,1)  // A simple class for acceptance regions used for ConfidenceBelt
 
   };
 
@@ -122,7 +122,7 @@ namespace RooStats {
   class SamplingSummary : public TObject {
   public:
      SamplingSummary() : fParameterPointIndex(0) {}
-    virtual ~SamplingSummary() {}
+    ~SamplingSummary() override {}
      SamplingSummary(AcceptanceRegion& ar) : fParameterPointIndex(0) {
       AddAcceptanceRegion(ar);
     }
@@ -147,7 +147,7 @@ namespace RooStats {
      std::map<Int_t, AcceptanceRegion> fAcceptanceRegions;
 
   protected:
-    ClassDef(SamplingSummary,1)  // A summary of acceptance regions for confidence belt
+    ClassDefOverride(SamplingSummary,1)  // A summary of acceptance regions for confidence belt
 
   };
 
@@ -168,7 +168,7 @@ namespace RooStats {
     ConfidenceBelt(const char* name, const char* title);
     ConfidenceBelt(const char* name, RooAbsData&);
     ConfidenceBelt(const char* name, const char* title, RooAbsData&);
-    virtual ~ConfidenceBelt();
+    ~ConfidenceBelt() override;
 
     /// add after creating a region
     void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, Double_t cl=-1., Double_t leftside=-1.);
@@ -188,7 +188,7 @@ namespace RooStats {
     Bool_t CheckParameters(RooArgSet&) const ;
 
   protected:
-    ClassDef(ConfidenceBelt,1)  // A confidence belt for the Neyman Construction
+    ClassDefOverride(ConfidenceBelt,1)  // A confidence belt for the Neyman Construction
 
   };
 }

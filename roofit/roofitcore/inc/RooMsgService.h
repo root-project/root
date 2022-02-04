@@ -106,7 +106,7 @@ class RooWorkspace ;
 class RooMsgService : public TObject {
 public:
 
-  virtual ~RooMsgService() ;
+  ~RooMsgService() override ;
 
   struct StreamConfig {
     public:
@@ -160,7 +160,7 @@ public:
   void setGlobalKillBelow(RooFit::MsgLevel level) { _globMinLevel = level ; }
   RooFit::MsgLevel globalKillBelow() const { return _globMinLevel ; }
 
-  void Print(Option_t *options= 0) const ;
+  void Print(Option_t *options= 0) const override ;
   void showPid(Bool_t flag) { _showPid = flag ; }
 
   // Back end -- Send message or check if particular logging configuration is active
@@ -213,7 +213,7 @@ protected:
 
   Int_t _debugCode ;
   
-  ClassDef(RooMsgService,0) // RooFit Message Service Singleton class
+  ClassDefOverride(RooMsgService,0) // RooFit Message Service Singleton class
 };
 
 #endif

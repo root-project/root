@@ -104,7 +104,7 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    virtual ~CacheElem() {} ;
+    ~CacheElem() override {} ;
 
     RooArgList _suppNormList ; ///< Supplemental normalization list
     bool    _needSupNorm ;     ///< Does the above list contain any non-unit entries?
@@ -114,7 +114,7 @@ protected:
     RooArgList _refRangeProjList ; ///< Range integrals to be multiplied with coefficients (reference range)
     RooArgList _rangeProjList ;    ///< Range integrals to be multiplied with coefficients (target range)
 
-    virtual RooArgList containedArgs(Action) ;
+    RooArgList containedArgs(Action) override ;
 
   } ;
   mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations

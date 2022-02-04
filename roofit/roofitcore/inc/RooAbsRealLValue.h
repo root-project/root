@@ -35,7 +35,7 @@ public:
   RooAbsRealLValue(const char *name, const char *title, const char *unit= "") ;
   RooAbsRealLValue(const RooAbsRealLValue& other, const char* name=0);
   RooAbsRealLValue& operator=(const RooAbsRealLValue&) = default;
-  virtual ~RooAbsRealLValue();
+  ~RooAbsRealLValue() override;
 
   // Parameter value and error accessors
   /// Set the current value of the object. Needs to be overridden by implementations.
@@ -49,15 +49,15 @@ public:
   virtual RooAbsArg& operator=(Double_t newValue);
 
   // Implementation of RooAbsLValue
-  virtual void setBin(Int_t ibin, const char* rangeName=0) ;
-  virtual Int_t getBin(const char* rangeName=0) const { return getBinning(rangeName).binNumber(getVal()) ; }
-  virtual Int_t numBins(const char* rangeName=0) const { return getBins(rangeName) ; }
-  virtual Double_t getBinWidth(Int_t i, const char* rangeName=0) const { return getBinning(rangeName).binWidth(i) ; }
-  virtual Double_t volume(const char* rangeName) const { return getMax(rangeName)-getMin(rangeName) ; }
-  virtual void randomize(const char* rangeName=0);
+  void setBin(Int_t ibin, const char* rangeName=0) override ;
+  Int_t getBin(const char* rangeName=0) const override { return getBinning(rangeName).binNumber(getVal()) ; }
+  Int_t numBins(const char* rangeName=0) const override { return getBins(rangeName) ; }
+  Double_t getBinWidth(Int_t i, const char* rangeName=0) const override { return getBinning(rangeName).binWidth(i) ; }
+  Double_t volume(const char* rangeName) const override { return getMax(rangeName)-getMin(rangeName) ; }
+  void randomize(const char* rangeName=0) override;
 
-  virtual const RooAbsBinning* getBinningPtr(const char* rangeName) const { return &getBinning(rangeName) ; }
-  virtual Int_t getBin(const RooAbsBinning* ptr) const { return ptr->binNumber(getVal()) ; }
+  const RooAbsBinning* getBinningPtr(const char* rangeName) const override { return &getBinning(rangeName) ; }
+  Int_t getBin(const RooAbsBinning* ptr) const override { return ptr->binNumber(getVal()) ; }
 
   virtual void setBin(Int_t ibin, const RooAbsBinning& binning) ;
   virtual Int_t getBin(const RooAbsBinning& binning) const { return binning.binNumber(getVal()) ; }
@@ -77,7 +77,7 @@ public:
   virtual RooAbsBinning& getBinning(const char* name=0, Bool_t verbose=kTRUE, Bool_t createOnTheFly=kFALSE) = 0 ;
   /// Check if binning with given name has been defined.
   virtual Bool_t hasBinning(const char* name) const = 0 ;
-  virtual Bool_t inRange(const char* name) const ;
+  Bool_t inRange(const char* name) const override ;
   /// Get number of bins of currently defined range.
   /// \param name Optionally, request number of bins for range with given name.
   virtual Int_t getBins(const char* name=0) const { return getBinning(name).numBins(); }
@@ -99,28 +99,28 @@ public:
   /// Check if variable has an upper bound.
   inline Bool_t hasMax(const char* name=0) const { return !RooNumber::isInfinite(getMax(name)); }
   /// Check if variable has a binning with given name.
-  virtual Bool_t hasRange(const char* name) const { return hasBinning(name) ; }
+  Bool_t hasRange(const char* name) const override { return hasBinning(name) ; }
 
   // Jacobian term management
   virtual Bool_t isJacobianOK(const RooArgSet& depList) const ;
   virtual Double_t jacobian() const { return 1 ; }
 
-  inline virtual Bool_t isLValue() const { return kTRUE; }
+  inline Bool_t isLValue() const override { return kTRUE; }
 
   // Test a value against our fit range
   Bool_t inRange(Double_t value, const char* rangeName, Double_t* clippedValue=0) const;
   void inRange(std::span<const double> values, std::string const& rangeName, std::vector<bool>& out) const;
-  virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
+  Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const override ;
 
   // Constant and Projected flags
   inline void setConstant(Bool_t value= kTRUE) { setAttribute("Constant",value); setValueDirty() ; setShapeDirty() ; }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
+  void writeToStream(std::ostream& os, Bool_t compact) const override ;
 
   // Printing interface (human readable)
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
 
 
   // Build 1-dimensional plots
@@ -162,9 +162,9 @@ protected:
   virtual void setValFast(Double_t value) { setVal(value) ; }
 
   Bool_t fitRangeOKForPlotting() const ;
-  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) ;
+  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) override ;
 
-  ClassDef(RooAbsRealLValue,1) // Abstract modifiable real-valued object
+  ClassDefOverride(RooAbsRealLValue,1) // Abstract modifiable real-valued object
 };
 
 #endif

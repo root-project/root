@@ -37,7 +37,7 @@ namespace RooStats {
     SamplingDistPlot(Int_t nbins, Double_t min, Double_t max);
 
     /// Destructor of SamplingDistribution
-    virtual ~SamplingDistPlot();
+    ~SamplingDistPlot() override;
 
     /// adds the sampling distribution and returns the scale factor
     Double_t AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions="NORMALIZE HIST");
@@ -54,7 +54,7 @@ namespace RooStats {
     /// set legend
     void SetLegend(TLegend* l){ fLegend = l; }
 
-    void Draw(Option_t *options=0);
+    void Draw(Option_t *options=0) override;
 
     /// Applies a predefined style if fApplyStyle is kTRUE (default).
     void ApplyDefaultStyle(void);
@@ -134,7 +134,7 @@ namespace RooStats {
     void addOtherObject(TObject *obj, Option_t *drawOptions=0);
     void GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, Double_t &theYMax) const;
 
-    ClassDef(SamplingDistPlot,1)  /// Class containing the results of the HybridCalculator
+    ClassDefOverride(SamplingDistPlot,1)  /// Class containing the results of the HybridCalculator
   };
 }
 

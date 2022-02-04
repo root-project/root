@@ -21,8 +21,8 @@ public:
   RooPoisson() { _noRounding = kFALSE ;   } ;
   RooPoisson(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, Bool_t noRounding=kFALSE);
   RooPoisson(const RooPoisson& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const override { return new RooPoisson(*this,newname); }
-  inline virtual ~RooPoisson() {  }
+  TObject* clone(const char* newname) const override { return new RooPoisson(*this,newname); }
+  inline ~RooPoisson() override {  }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;

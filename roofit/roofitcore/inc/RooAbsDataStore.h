@@ -118,7 +118,7 @@ public:
   void printMultiline(std::ostream& os, Int_t content, Bool_t verbose, TString indent) const override;
 
   /// Define default print options, for a given print style
-  virtual int defaultPrintContents(Option_t* /*opt*/) const override { return kName|kClassName|kArgs|kValue ; }
+  int defaultPrintContents(Option_t* /*opt*/) const override { return kName|kClassName|kArgs|kValue ; }
 
 
   // Constant term  optimizer interface

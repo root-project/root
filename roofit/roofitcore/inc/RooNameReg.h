@@ -26,7 +26,7 @@ class RooNameReg : public TNamed {
 public:
 
   static RooNameReg& instance() ;
-  virtual ~RooNameReg();
+  ~RooNameReg() override;
   const TNamed* constPtr(const char* stringPtr) ;
   const char* constStr(const TNamed* namePtr) ;
   static const TNamed* ptr(const char* stringPtr) ;
@@ -50,7 +50,7 @@ protected:
   std::unordered_map<std::string,std::unique_ptr<TNamed>> _map;
   std::size_t _renameCounter = 0;
 
-//  ClassDef(RooNameReg,1) // String name registry
+//  ClassDefOverride(RooNameReg,1) // String name registry
 };
 
 #endif

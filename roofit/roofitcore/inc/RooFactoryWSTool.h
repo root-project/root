@@ -50,7 +50,7 @@ public:
 
   // Constructors, assignment etc
   RooFactoryWSTool(RooWorkspace& ws) ;
-  virtual ~RooFactoryWSTool() ;
+  ~RooFactoryWSTool() override ;
 
   // --- low level factory interface ---
 
@@ -144,8 +144,8 @@ public:
 
   class SpecialsIFace : public IFace {
   public:
-    virtual ~SpecialsIFace() {} ;
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) ;
+    ~SpecialsIFace() override {} ;
+    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
   } ;
 
   static void registerSpecial(const char* typeName, RooFactoryWSTool::IFace* iface) ;
@@ -198,7 +198,7 @@ protected:
 
   RooFactoryWSTool(const RooFactoryWSTool&) ;
 
-  ClassDef(RooFactoryWSTool,0) // RooFit class code and instance factory
+  ClassDefOverride(RooFactoryWSTool,0) // RooFit class code and instance factory
 
 } ;
 

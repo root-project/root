@@ -38,20 +38,20 @@ public:
          const RooResolutionModel& model,
          DecayType type);
   RooBDecay(const RooBDecay& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const
+  TObject* clone(const char* newname) const override
   {
     return new RooBDecay(*this,newname);
   }
-  virtual ~RooBDecay();
+  ~RooBDecay() override;
 
-  virtual Double_t coefficient(Int_t basisIndex) const;
-  RooArgSet* coefVars(Int_t coefIdx) const ;
+  Double_t coefficient(Int_t basisIndex) const override;
+  RooArgSet* coefVars(Int_t coefIdx) const override ;
 
-  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
+  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
 
 protected:
 
@@ -70,7 +70,7 @@ protected:
   Int_t _basisB;
   DecayType _type;
 
-  ClassDef(RooBDecay, 1) // P.d.f of general description of B decay time distribution
+  ClassDefOverride(RooBDecay, 1) // P.d.f of general description of B decay time distribution
     };
 
 #endif

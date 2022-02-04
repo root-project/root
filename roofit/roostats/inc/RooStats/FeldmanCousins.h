@@ -37,17 +37,17 @@ namespace RooStats {
      /// Common constructor
      FeldmanCousins(RooAbsData& data, ModelConfig& model);
 
-     virtual ~FeldmanCousins();
+     ~FeldmanCousins() override;
 
       /// Main interface to get a ConfInterval (will be a PointSetInterval)
-      virtual PointSetInterval* GetInterval() const;
+      PointSetInterval* GetInterval() const override;
 
       /// Get the size of the test (eg. rate of Type I error)
-      virtual Double_t Size() const {return fSize;}
+      Double_t Size() const override {return fSize;}
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+      Double_t ConfidenceLevel()  const override {return 1.-fSize;}
       /// Set the DataSet
-      virtual void SetData(RooAbsData& /*data*/) {
+      void SetData(RooAbsData& /*data*/) override {
          std::cout << "DEPRECATED, set data in constructor" << std::endl;
       }
       /// Set the Pdf
@@ -76,11 +76,11 @@ namespace RooStats {
       }
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) {fSize = size;}
+      void SetTestSize(Double_t size) override {fSize = size;}
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
+      void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;}
 
-      virtual void SetModel(const ModelConfig &);
+      void SetModel(const ModelConfig &) override;
 
       RooAbsData* GetPointsToScan() {
    if(!fPointsToTest) CreateParameterPoints();
@@ -134,7 +134,7 @@ namespace RooStats {
       Bool_t fCreateBelt;                     ///< controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
-      ClassDef(FeldmanCousins,2)   // Interface for tools setting limits (producing confidence intervals)
+      ClassDefOverride(FeldmanCousins,2)   // Interface for tools setting limits (producing confidence intervals)
    };
 }
 

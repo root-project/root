@@ -39,7 +39,7 @@ namespace HistFactory{
 
      HistoToWorkspaceFactory(  std::string, std::string , std::vector<std::string> , double =200, double =20, int =0, int =6, TFile * =0);
       HistoToWorkspaceFactory();
-      virtual ~HistoToWorkspaceFactory();
+      ~HistoToWorkspaceFactory() override;
 
       void AddEfficiencyTerms(RooWorkspace* proto, std::string prefix, std::string interpName,
             std::map<std::string,std::pair<double,double> > systMap,
@@ -95,7 +95,7 @@ namespace HistFactory{
       TFile * fOut_f;
       FILE * pFile;
 
-      ClassDef(RooStats::HistFactory::HistoToWorkspaceFactory,1)
+      ClassDefOverride(RooStats::HistFactory::HistoToWorkspaceFactory,1)
   };
 
 }

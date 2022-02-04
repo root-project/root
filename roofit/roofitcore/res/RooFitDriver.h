@@ -102,7 +102,7 @@ public:
       {
       }
 
-      ~RooAbsRealWrapper()
+      ~RooAbsRealWrapper() override
       {
          if (_ownsDriver)
             delete _driver;

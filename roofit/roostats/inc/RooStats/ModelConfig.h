@@ -51,7 +51,7 @@ public:
 
 
    /// clone
-   virtual ModelConfig * Clone(const char * name = "") const override {
+   ModelConfig * Clone(const char * name = "") const override {
       ModelConfig * mc =  new ModelConfig(*this);
       if(strcmp(name,"")==0)
    mc->SetName(this->GetName());
@@ -61,12 +61,12 @@ public:
    }
 
    /// Set a workspace that owns all the necessary components for the analysis.
-   virtual void SetWS(RooWorkspace & ws) override;
+   void SetWS(RooWorkspace & ws) override;
    //// alias for SetWS(...)
    virtual void SetWorkspace(RooWorkspace & ws) { SetWS(ws); }
 
    /// Remove the existing reference to a workspace and replace it with this new one.
-   virtual void ReplaceWS(RooWorkspace *ws) override {
+   void ReplaceWS(RooWorkspace *ws) override {
      fRefWS = nullptr;
      SetWS(*ws);
    }
@@ -269,7 +269,7 @@ public:
    void GuessObsAndNuisance(const RooAbsData& data, bool printModelConfig = true);
 
    /// overload the print method
-   virtual void Print(Option_t* option = "") const override;
+   void Print(Option_t* option = "") const override;
 
 protected:
 

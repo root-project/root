@@ -47,7 +47,7 @@ public:
   RooWorkspace(const char* name, Bool_t doCINTExport) ;
   RooWorkspace(const char* name, const char* title=0) ;
   RooWorkspace(const RooWorkspace& other) ;
-  ~RooWorkspace() ;
+  ~RooWorkspace() override ;
 
   void exportToCint(const char* namespaceName=0) ;
 
@@ -143,7 +143,7 @@ public:
     _allOwnedNodes.useHashMapForFind(flag);
   }
 
-  virtual void RecursiveRemove(TObject *obj);
+  void RecursiveRemove(TObject *obj) override;
 
   // Tools management
   RooFactoryWSTool& factory() ;
@@ -155,7 +155,7 @@ public:
   void clearStudies() ;
 
   // Print function
-  void Print(Option_t* opts=0) const ;
+  void Print(Option_t* opts=0) const override ;
 
   static void autoImportClassCode(Bool_t flag) ;
 
@@ -178,7 +178,7 @@ public:
           _ehmap(other._ehmap),
           _compiledOK(other._compiledOK) {} ;
 
-    virtual ~CodeRepo() {} ;
+    ~CodeRepo() override {} ;
 
     Bool_t autoImportClass(TClass* tc, Bool_t doReplace=kFALSE) ;
     Bool_t compileClasses() ;
@@ -218,7 +218,7 @@ public:
     std::map<TString,ExtraHeader> _ehmap ; // List of extra header files
     Bool_t _compiledOK ; //! Flag indicating that classes compiled OK
 
-    ClassDef(CodeRepo,2) ; // Code repository for RooWorkspace
+    ClassDefOverride(CodeRepo,2) ; // Code repository for RooWorkspace
   } ;
 
 
@@ -230,18 +230,18 @@ public:
       {
       }
 
-    virtual ~WSDir() { Clear("nodelete") ; } ;
+    ~WSDir() override { Clear("nodelete") ; } ;
 
 
-    virtual void Add(TObject*,Bool_t) ;
-    virtual void Append(TObject*,Bool_t) ;
+    void Add(TObject*,Bool_t) override ;
+    void Append(TObject*,Bool_t) override ;
 
   protected:
     friend class RooWorkspace ;
     void InternalAppend(TObject* obj) ;
     RooWorkspace* _wspace ; //! do not persist
 
-    ClassDef(WSDir,1) ; // TDirectory representation of RooWorkspace
+    ClassDefOverride(WSDir,1) ; // TDirectory representation of RooWorkspace
   } ;
 
 
@@ -287,7 +287,7 @@ public:
     Bool_t _openTrans;       ///<! Is there a transaction open?
     RooArgSet _sandboxNodes; ///<! Sandbox for incoming objects in a transaction
 
-    ClassDef(RooWorkspace, 8) // Persistable project container for (composite) pdfs, functions, variables and datasets
+    ClassDefOverride(RooWorkspace, 8) // Persistable project container for (composite) pdfs, functions, variables and datasets
 } ;
 
 #endif

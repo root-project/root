@@ -45,10 +45,10 @@ namespace RooStats {
       enum {DEFAULT_NUM_BINS = 50};
       enum IntervalType {kShortest, kTailFraction};
 
-      virtual ~MCMCInterval();
+      ~MCMCInterval() override;
 
       /// determine whether this point is in the confidence interval
-      virtual Bool_t IsInInterval(const RooArgSet& point) const;
+      Bool_t IsInInterval(const RooArgSet& point) const override;
 
       /// set the desired confidence level (see GetActualConfidenceLevel())
       /// Note: calling this function triggers the algorithm that determines
@@ -56,14 +56,14 @@ namespace RooStats {
       /// of this IntervalCalculator
       /// Also, calling this function again with a different confidence level
       /// re-triggers the calculation of the interval
-      virtual void SetConfidenceLevel(Double_t cl);
+      void SetConfidenceLevel(Double_t cl) override;
 
       /// get the desired confidence level (see GetActualConfidenceLevel())
-      virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
+      Double_t ConfidenceLevel() const override {return fConfidenceLevel;}
 
       /// return a set containing the parameters of this interval
       /// the caller owns the returned RooArgSet*
-      virtual RooArgSet* GetParameters() const;
+      RooArgSet* GetParameters() const override;
 
       /// get the cutoff bin height for being considered in the
       /// confidence interval
@@ -83,7 +83,7 @@ namespace RooStats {
       { fIsHistStrict = isHistStrict; }
 
       /// check if parameters are correct. (dummy implementation to start)
-      Bool_t CheckParameters(const RooArgSet& point) const;
+      Bool_t CheckParameters(const RooArgSet& point) const override;
 
       /// Set the parameters of interest for this interval
       /// and change other internal data members accordingly
@@ -341,7 +341,7 @@ namespace RooStats {
       virtual void CreateVector(RooRealVar* param);
       inline virtual Double_t CalcConfLevel(Double_t cutoff, Double_t full);
 
-      ClassDef(MCMCInterval,1)  // Concrete implementation of a ConfInterval based on MCMC calculation
+      ClassDefOverride(MCMCInterval,1)  // Concrete implementation of a ConfInterval based on MCMC calculation
 
    };
 }

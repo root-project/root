@@ -76,7 +76,7 @@ namespace RooStats {
        fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
 
-     virtual ~ProfileLikelihoodTestStat() {
+     ~ProfileLikelihoodTestStat() override {
        if(fNll) delete fNll;
        if(fCachedBestFitParams) delete fCachedBestFitParams;
        if(fDetailedOutput) delete fDetailedOutput;
@@ -100,7 +100,7 @@ namespace RooStats {
      void SetPrintLevel(Int_t printlevel){fPrintLevel=printlevel;}
 
      /// Main interface to evaluate the test statistic on a dataset
-     virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
+     Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) override {
         return EvaluateProfileLikelihood(0, data, paramsOfInterest);
      }
 
@@ -119,20 +119,20 @@ namespace RooStats {
      ///  - the minimum nll, fitstatus and convergence quality for each fit </li>
      ///  - for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored </li>
      ///
-     virtual const RooArgSet* GetDetailedOutput(void) const {
+     const RooArgSet* GetDetailedOutput(void) const override {
       return fDetailedOutput;
      }
 
      /// set the conditional observables which will be used when creating the NLL
      /// so the pdf's will not be normalized on the conditional observables when computing the NLL
-     virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+     void SetConditionalObservables(const RooArgSet& set) override {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
      /// set the global observables which will be used when creating the NLL
      /// so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
-     virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
+     void SetGlobalObservables(const RooArgSet& set) override {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
      virtual void SetVarName(const char* name) { fVarName = name; }
-     virtual const TString GetVarName() const {return fVarName;}
+     const TString GetVarName() const override {return fVarName;}
 
      virtual RooAbsPdf * GetPdf() const { return fPdf; }
 
@@ -170,7 +170,7 @@ namespace RooStats {
 
    protected:
 
-      ClassDef(ProfileLikelihoodTestStat,10)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDefOverride(ProfileLikelihoodTestStat,10)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 

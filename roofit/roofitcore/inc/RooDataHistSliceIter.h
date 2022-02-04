@@ -27,14 +27,14 @@ class RooDataHistSliceIter : public TIterator {
 public:
   // Constructors, assignment etc.
   RooDataHistSliceIter(const RooDataHistSliceIter& other) ;
-  virtual ~RooDataHistSliceIter() ;
+  ~RooDataHistSliceIter() override ;
 
   // Iterator implementation
-  virtual const TCollection* GetCollection() const ;
-  virtual TObject* Next() ;
-  virtual void Reset() ;
-  virtual bool operator!=(const TIterator &aIter) const ;
-  virtual TObject *operator*() const ;
+  const TCollection* GetCollection() const override ;
+  TObject* Next() override ;
+  void Reset() override ;
+  bool operator!=(const TIterator &aIter) const override ;
+  TObject *operator*() const override ;
 protected:
 
   friend class RooDataHist ;
@@ -48,11 +48,11 @@ protected:
   Int_t      _curStep ;
 
   /// Prohibit iterator assignment
-  TIterator& operator=(const TIterator&) {
+  TIterator& operator=(const TIterator&) override {
     return *this ;
   }
 
-  ClassDef(RooDataHistSliceIter,0) // Iterator over a one-dimensional slice of a RooDataHist
+  ClassDefOverride(RooDataHistSliceIter,0) // Iterator over a one-dimensional slice of a RooDataHist
 };
 
 #endif

@@ -67,17 +67,17 @@ public:
              const RooFormulaVar& cutVar, const char* wgtVarName=0) ;
 
   RooDataSet(RooDataSet const & other, const char* newname=0) ;
-  virtual TObject* Clone(const char* newname = "") const override {
+  TObject* Clone(const char* newname = "") const override {
     return new RooDataSet(*this, newname && newname[0] != '\0' ? newname : GetName());
   }
-  virtual ~RooDataSet() ;
+  ~RooDataSet() override ;
 
-  virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const override;
+  RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const override;
 
   RooDataHist* binnedClone(const char* newName=0, const char* newTitle=0) const ;
 
-  virtual Double_t sumEntries() const override;
-  virtual Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const override;
+  Double_t sumEntries() const override;
+  Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const override;
 
   virtual RooPlot* plotOnXY(RooPlot* frame,
              const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
@@ -95,23 +95,23 @@ public:
   Bool_t write(std::ostream & ofs) const;
 
 
-  virtual Bool_t isWeighted() const override;
-  virtual Bool_t isNonPoissonWeighted() const override;
+  Bool_t isWeighted() const override;
+  Bool_t isNonPoissonWeighted() const override;
 
-  virtual Double_t weight() const override;
+  Double_t weight() const override;
   /// Returns a pointer to the weight variable (if set).
   RooRealVar* weightVar() const { return _wgtVar; }
-  virtual Double_t weightSquared() const override;
-  virtual void weightError(double& lo, double& hi,ErrorType etype=SumW2) const override;
+  Double_t weightSquared() const override;
+  void weightError(double& lo, double& hi,ErrorType etype=SumW2) const override;
   double weightError(ErrorType etype=SumW2) const override;
 
-  virtual const RooArgSet* get(Int_t index) const override;
-  virtual const RooArgSet* get() const override;
+  const RooArgSet* get(Int_t index) const override;
+  const RooArgSet* get() const override;
 
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
+  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
 
   /// Add one ore more rows of data
-  virtual void add(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0) override;
+  void add(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0) override;
   virtual void add(const RooArgSet& row, Double_t weight, Double_t weightErrorLo, Double_t weightErrorHi);
 
   virtual void addFast(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0);
@@ -132,8 +132,8 @@ public:
                         const char* cuts="", const char *name="hist") const;
 
   void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
-  virtual void printArgs(std::ostream& os) const override;
-  virtual void printValue(std::ostream& os) const override;
+  void printArgs(std::ostream& os) const override;
+  void printValue(std::ostream& os) const override;
 
   void SetName(const char *name) override;
   void SetNameTitle(const char *name, const char* title) override;
@@ -144,7 +144,7 @@ public:
 
 protected:
 
-  virtual RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) override;
+  RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) override;
 
   friend class RooProdGenContext ;
 

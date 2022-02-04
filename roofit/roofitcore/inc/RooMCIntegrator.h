@@ -31,11 +31,11 @@ public:
   RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode= Importance,
         GeneratorType genType= QuasiRandom, Bool_t verbose= kFALSE);
   RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config);
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooMCIntegrator();
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooMCIntegrator() override;
 
-  virtual Bool_t checkLimits() const;
-  virtual Double_t integral(const Double_t* yvec=0);
+  Bool_t checkLimits() const override;
+  Double_t integral(const Double_t* yvec=0) override;
 
   enum Stage { AllStages, ReuseGrid, RefineGrid };
   Double_t vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError= 0);
@@ -48,10 +48,10 @@ public:
 
   const RooGrid &grid() const { return _grid; }
 
-  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
-  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
-  virtual Bool_t canIntegrateND() const { return kTRUE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  Bool_t canIntegrate1D() const override { return kTRUE ; }
+  Bool_t canIntegrate2D() const override { return kTRUE ; }
+  Bool_t canIntegrateND() const override { return kTRUE ; }
+  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
 
 protected:
 
@@ -74,7 +74,7 @@ protected:
   Double_t _jac,_wtd_int_sum,_sum_wgts,_chi_sum,_chisq,_result,_sigma; ///< Scratch variables preserved between calls to vegas1/2/2
   UInt_t _it_start,_it_num,_samples,_calls_per_box;                    ///< Scratch variables preserved between calls to vegas1/2/2
 
-  ClassDef(RooMCIntegrator,0) // VEGAS based multi-dimensional numerical integration engine
+  ClassDefOverride(RooMCIntegrator,0) // VEGAS based multi-dimensional numerical integration engine
 };
 
 #endif

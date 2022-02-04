@@ -32,27 +32,27 @@ public:
   // Constructors, assignment etc
   RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Bool_t calcInline=kFALSE) ;
   RooRealMPFE(const RooRealMPFE& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooRealMPFE(*this,newname); }
-  virtual ~RooRealMPFE();
+  TObject* clone(const char* newname) const override { return new RooRealMPFE(*this,newname); }
+  ~RooRealMPFE() override;
 
   void calculate() const ;
-  virtual Double_t getValV(const RooArgSet* nset=0) const ;
+  Double_t getValV(const RooArgSet* nset=0) const override ;
   void standby() ;
 
   void setVerbose(Bool_t clientFlag=kTRUE, Bool_t serverFlag=kTRUE) ;
 
   void applyNLLWeightSquared(Bool_t flag) ;
 
-  void enableOffsetting(Bool_t flag) ;
+  void enableOffsetting(Bool_t flag) override ;
 
   void followAsSlave(RooRealMPFE& master) { _updateMaster = &master ; }
 
   protected:
 
   // Function evaluation
-  virtual Double_t evaluate() const ;
+  Double_t evaluate() const override ;
   friend class RooAbsTestStatistic ;
-  virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking=kTRUE) ;
+  void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTracking=kTRUE) override ;
   virtual Double_t getCarry() const;
 
   enum State { Initialize,Client,Server,Inline } ;
@@ -87,7 +87,7 @@ public:
 
   static RooMPSentinel _sentinel ;
 
-  ClassDef(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
+  ClassDefOverride(RooRealMPFE,2) // Multi-process front-end for parallel calculation of a real valued function
 };
 
 #endif

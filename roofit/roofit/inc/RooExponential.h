@@ -28,8 +28,8 @@ public:
   RooExponential(const char *name, const char *title,
        RooAbsReal& _x, RooAbsReal& _c);
   RooExponential(const RooExponential& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const override { return new RooExponential(*this,newname); }
-  inline virtual ~RooExponential() { }
+  TObject* clone(const char* newname) const override { return new RooExponential(*this,newname); }
+  inline ~RooExponential() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;

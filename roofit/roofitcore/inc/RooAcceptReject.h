@@ -33,18 +33,18 @@ public:
   } ;
   RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0);
   RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/,
-             const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const {
+             const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const override {
     return new RooAcceptReject(func,genVars,config,verbose,maxFuncVal) ;
   }
-  virtual ~RooAcceptReject();
+  ~RooAcceptReject() override;
 
-  const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio);
-  Double_t getFuncMax() ;
+  const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio) override;
+  Double_t getFuncMax() override ;
 
 
   // Advertisement of capabilities
-  virtual Bool_t canSampleConditional() const { return kTRUE ; }
-  virtual Bool_t canSampleCategories() const { return kTRUE ; }
+  Bool_t canSampleConditional() const override { return kTRUE ; }
+  Bool_t canSampleCategories() const override { return kTRUE ; }
 
 
 protected:
@@ -65,7 +65,7 @@ protected:
 
   UInt_t _minTrialsArray[4];            ///< Minimum number of trials samples for 1,2,3 dimensional problems
 
-  ClassDef(RooAcceptReject,0) // Context for generating a dataset from a PDF
+  ClassDefOverride(RooAcceptReject,0) // Context for generating a dataset from a PDF
 };
 
 #endif

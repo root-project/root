@@ -43,31 +43,31 @@ public:
   RooSimultaneous(const char *name, const char *title, std::map<std::string,RooAbsPdf*> pdfMap, RooAbsCategoryLValue& inIndexCat) ;
   RooSimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
   RooSimultaneous(const RooSimultaneous& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooSimultaneous(*this,newname) ; }
-  virtual ~RooSimultaneous() ;
+  TObject* clone(const char* newname) const override { return new RooSimultaneous(*this,newname) ; }
+  ~RooSimultaneous() override ;
 
-  virtual Double_t evaluate() const ;
-  virtual Bool_t selfNormalized() const { return kTRUE ; }
+  Double_t evaluate() const override ;
+  Bool_t selfNormalized() const override { return kTRUE ; }
   Bool_t addPdf(const RooAbsPdf& pdf, const char* catLabel) ;
 
-  virtual ExtendMode extendMode() const ;
+  ExtendMode extendMode() const override ;
 
-  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
+  Double_t expectedEvents(const RooArgSet* nset) const override ;
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  Bool_t forceAnalyticalInt(const RooAbsArg&) const override { return kTRUE ; }
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   using RooAbsPdf::plotOn ;
-  virtual RooPlot* plotOn(RooPlot* frame,
+  RooPlot* plotOn(RooPlot* frame,
            const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),
            const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
            const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
            const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg(),
-           const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()) const {
+           const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()) const override {
     return RooAbsReal::plotOn(frame,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10) ;
   }
-  virtual RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const ;
+  RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const override ;
 
   // Backward compatibility function
   virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions, Double_t scaleFactor=1.0,
@@ -79,7 +79,7 @@ public:
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
 
 
-  virtual RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) ;
+  RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) override ;
 
   virtual RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, Double_t scaleFactor,
                 Bool_t correctForBinVolume=kFALSE, Bool_t showProgress=kFALSE) const ;
@@ -93,15 +93,15 @@ protected:
 
   void initialize(RooAbsCategoryLValue& inIndexCat, std::map<std::string,RooAbsPdf*> pdfMap) ;
 
-  virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
+  void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) override ;
+  void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) override ;
   mutable RooSetProxy _plotCoefNormSet ;
   const TNamed* _plotCoefNormRange ;
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    virtual ~CacheElem() {} ;
-    RooArgList containedArgs(Action) { return RooArgList(_partIntList) ; }
+    ~CacheElem() override {} ;
+    RooArgList containedArgs(Action) override { return RooArgList(_partIntList) ; }
     RooArgList _partIntList ;
   } ;
   mutable RooObjCacheManager _partIntMgr ; ///<! Component normalization manager
@@ -109,16 +109,16 @@ protected:
 
   friend class RooSimGenContext ;
   friend class RooSimSplitGenContext ;
-  virtual RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=0, const RooArgSet* auxProto=0,
-                  Bool_t verbose=kFALSE, Bool_t autoBinned=kTRUE, const char* binnedTag="") const ;
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                  const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
+  RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=0, const RooArgSet* auxProto=0,
+                  Bool_t verbose=kFALSE, Bool_t autoBinned=kTRUE, const char* binnedTag="") const override ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
+                                  const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const override ;
 
   RooCategoryProxy _indexCat ; ///< Index category
   TList    _pdfProxyList ;     ///< List of PDF proxies (named after applicable category state)
   Int_t    _numPdf ;           ///< Number of registered PDFs
 
-  ClassDef(RooSimultaneous,3)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
+  ClassDefOverride(RooSimultaneous,3)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
 };
 
 #endif

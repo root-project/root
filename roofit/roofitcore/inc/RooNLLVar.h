@@ -46,16 +46,16 @@ public:
             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
 
   RooNLLVar(const RooNLLVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooNLLVar(*this,newname); }
 
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
-                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg);
+  RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
+                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) override;
 
-  virtual ~RooNLLVar();
+  ~RooNLLVar() override;
 
   void applyWeightSquared(Bool_t flag) ;
 
-  virtual Double_t defaultErrorLevel() const { return 0.5 ; }
+  Double_t defaultErrorLevel() const override { return 0.5 ; }
 
   void batchMode(bool on = true) {
     _batchEvaluations = on;
@@ -73,8 +73,8 @@ public:
 
 protected:
 
-  virtual Bool_t processEmptyDataSets() const { return _extended ; }
-  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const;
+  Bool_t processEmptyDataSets() const override { return _extended ; }
+  Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
 
   static RooArgSet _emptySet ; // Supports named argument constructor
 
@@ -92,7 +92,7 @@ private:
   mutable RooRealSumPdf* _binnedPdf{nullptr}; ///<!
   mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; ///<! Struct to store function evaluation workspaces.
 
-  ClassDef(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
+  ClassDefOverride(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
 };
 
 #endif

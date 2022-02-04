@@ -27,12 +27,12 @@ public:
                RooAbsReal& x,  RooAbsReal& ndof) ;
 
   RooChiSquarePdf(const RooChiSquarePdf& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooChiSquarePdf(*this, newname); }
-  inline virtual ~RooChiSquarePdf() { }
+  TObject* clone(const char* newname) const override { return new RooChiSquarePdf(*this, newname); }
+  inline ~RooChiSquarePdf() override { }
 
   
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
   
 
 private:
@@ -40,11 +40,11 @@ private:
   RooRealProxy _x;
   RooRealProxy _ndof;
 
-  Double_t evaluate() const;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
-  inline bool canComputeBatchWithCuda() const { return true; }
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
-  ClassDef(RooChiSquarePdf,1) // Chi Square distribution (eg. the PDF )
+  ClassDefOverride(RooChiSquarePdf,1) // Chi Square distribution (eg. the PDF )
 };
 
 #endif

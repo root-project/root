@@ -34,20 +34,20 @@ public:
   RooBinIntegrator(const RooAbsFunc& function) ;
   RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooBinIntegrator();
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooBinIntegrator() override;
 
-  virtual Bool_t checkLimits() const;
-  virtual Double_t integral(const Double_t *yvec=0) ;
+  Bool_t checkLimits() const override;
+  Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax);
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
+  Bool_t setLimits(Double_t* xmin, Double_t* xmax) override;
+  Bool_t setUseIntegrandLimits(Bool_t flag) override {_useIntegrandLimits = flag ; return kTRUE ; }
 
-  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
-  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
-  virtual Bool_t canIntegrateND() const { return kTRUE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  Bool_t canIntegrate1D() const override { return kTRUE ; }
+  Bool_t canIntegrate2D() const override { return kTRUE ; }
+  Bool_t canIntegrateND() const override { return kTRUE ; }
+  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
 
 protected:
 
@@ -72,7 +72,7 @@ protected:
 
   Double_t *_x ; ///<! do not persist
 
-  ClassDef(RooBinIntegrator,0) // 1-dimensional numerical integration engine
+  ClassDefOverride(RooBinIntegrator,0) // 1-dimensional numerical integration engine
 };
 
 #endif

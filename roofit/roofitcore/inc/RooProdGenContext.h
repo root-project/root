@@ -32,17 +32,17 @@ class RooProdGenContext : public RooAbsGenContext {
 public:
   RooProdGenContext(const RooProdPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
           const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
-  virtual ~RooProdGenContext();
+  ~RooProdGenContext() override;
 
-  virtual void setProtoDataOrder(Int_t* lut) ;
-  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void setProtoDataOrder(Int_t* lut) override ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual void attach(const RooArgSet& params) ;
+  void attach(const RooArgSet& params) override ;
 
 protected:
 
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void initGenerator(const RooArgSet &theEvent) override;
+  void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
   void updateCCDTable() ;
 
@@ -63,7 +63,7 @@ protected:
   std::list<RooAbsGenContext*>  _gcList ; ///<  List of component generator contexts
   RooArgSet _ownedMultiProds ;   ///<  Owned auxiliary multi-term product PDFs
 
-  ClassDef(RooProdGenContext,0) // Context for efficient generation of a a dataset from a RooProdPdf
+  ClassDefOverride(RooProdGenContext,0) // Context for efficient generation of a a dataset from a RooProdPdf
 };
 
 #endif

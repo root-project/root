@@ -65,7 +65,7 @@ public:
   RooAbsData(const RooAbsData& other, const char* newname = 0) ;
 
   RooAbsData& operator=(const RooAbsData& other);
-  virtual ~RooAbsData() ;
+  ~RooAbsData() override ;
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const = 0 ;
 
   // Reduction methods
@@ -88,7 +88,7 @@ public:
   void resetBuffers() ;
 
 
-  virtual void Draw(Option_t* option = "") ;
+  void Draw(Option_t* option = "") override ;
 
   void checkInit() const ;
 
@@ -220,17 +220,17 @@ public:
   virtual TH1 *fillHistogram(TH1 *hist, const RooArgList &plotVars, const char *cuts= "", const char* cutRange=0) const;
 
   // Printing interface (human readable)
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     // Print contents on stdout
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
 
   void setDirtyProp(Bool_t flag) ;
 
@@ -267,7 +267,7 @@ public:
                           const char* cutSpec=0, const char* cutRange=0,
                           const RooCmdArg* formatCmd=0);
 
-  virtual void RecursiveRemove(TObject *obj);
+  void RecursiveRemove(TObject *obj) override;
 
   Bool_t hasFilledCache() const ;
 
@@ -298,8 +298,8 @@ public:
     return _namePtr ;
   }
 
-  void SetName(const char* name) ;
-  void SetNameTitle(const char *name, const char *title) ;
+  void SetName(const char* name) override ;
+  void SetNameTitle(const char *name, const char *title) override ;
 
 
 protected:
@@ -356,7 +356,7 @@ protected:
 private:
   void copyGlobalObservables(const RooAbsData& other);
 
-   ClassDef(RooAbsData, 6) // Abstract data collection
+   ClassDefOverride(RooAbsData, 6) // Abstract data collection
 };
 
 #endif

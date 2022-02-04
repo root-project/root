@@ -25,7 +25,7 @@ public:
 
   RooSharedProperties() ;
   RooSharedProperties(const char* uuidstr) ;
-  virtual ~RooSharedProperties() ;
+  ~RooSharedProperties() override ;
   Bool_t operator==(const RooSharedProperties& other) const ;
 
   // Copying and moving is disabled for RooSharedProperties and derived classes
@@ -36,7 +36,7 @@ public:
   RooSharedProperties(RooSharedProperties &&) = delete;
   RooSharedProperties& operator=(RooSharedProperties &&) = delete;
 
-  virtual void Print(Option_t* opts=0) const ;
+  void Print(Option_t* opts=0) const override ;
 
   void increaseRefCount() { _refCount++ ; }
   void decreaseRefCount() { if (_refCount>0) _refCount-- ; }
@@ -53,7 +53,7 @@ protected:
   Int_t _refCount ; ///<! Use count
   Int_t _inSharedList ; ///<! Is in shared list
 
-  ClassDef(RooSharedProperties,1) // Abstract interface for shared property implementations
+  ClassDefOverride(RooSharedProperties,1) // Abstract interface for shared property implementations
 };
 
 

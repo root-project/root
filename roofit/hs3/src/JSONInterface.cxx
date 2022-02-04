@@ -19,14 +19,14 @@ public:
    using child_iterator = RooFit::Experimental::JSONNode::child_iterator_t<Nd>;
    ChildItImpl(Nd &n, size_t p) : node(n), pos(p) {}
    ChildItImpl(const ChildItImpl &other) : node(other.node), pos(other.pos) {}
-   virtual std::unique_ptr<typename child_iterator::Impl> clone() const override
+   std::unique_ptr<typename child_iterator::Impl> clone() const override
    {
       return std::make_unique<ChildItImpl>(node, pos);
    }
-   virtual void forward() override { ++pos; }
-   virtual void backward() override { --pos; }
-   virtual Nd &current() override { return node.child(pos); }
-   virtual bool equal(const typename child_iterator::Impl &other) const override
+   void forward() override { ++pos; }
+   void backward() override { --pos; }
+   Nd &current() override { return node.child(pos); }
+   bool equal(const typename child_iterator::Impl &other) const override
    {
       auto it = dynamic_cast<const ChildItImpl<Nd> *>(&other);
       return it && &(it->node) == &(this->node) && (it->pos) == this->pos;

@@ -45,7 +45,7 @@ the proposal density to maintain detailed balance.
       ///Default constructor
       ProposalFunction() {}
 
-      virtual ~ProposalFunction() {}
+      ~ProposalFunction() override {}
 
       /// Populate xPrime with the new proposed point,
       /// possibly based on the current point x
@@ -83,7 +83,7 @@ the proposal density to maintain detailed balance.
       }
 
    protected:
-      ClassDef(ProposalFunction,1) /// Interface for the proposal function used with Markov Chain Monte Carlo
+      ClassDefOverride(ProposalFunction,1) /// Interface for the proposal function used with Markov Chain Monte Carlo
    };
 }
 

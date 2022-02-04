@@ -31,7 +31,7 @@ class RooNumIntFactory : public TObject {
 public:
 
   static RooNumIntFactory& instance() ;
-  virtual ~RooNumIntFactory() = default;
+  ~RooNumIntFactory() override = default;
 
   Bool_t storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName="") ;
   const RooAbsIntegrator* getProtoIntegrator(const char* name) const;
@@ -52,7 +52,7 @@ private:
   void init();
 
 
-  ClassDef(RooNumIntFactory, 0) // Numeric Integrator factory
+  ClassDefOverride(RooNumIntFactory, 0) // Numeric Integrator factory
 };
 
 #endif

@@ -88,7 +88,7 @@ namespace RooStats {
          fOwnsVars = kTRUE;
       }
 
-      virtual ~ProposalHelper()
+      ~ProposalHelper() override
       {
          if (fOwnsPdfProp)      delete fPdfProp;
          if (fOwnsPdf)          delete fPdf;
@@ -123,7 +123,7 @@ namespace RooStats {
       void CreateUniformPdf();
       void CreateCovMatrix(RooArgList& xVec);
 
-      ClassDef(ProposalHelper,1)
+      ClassDefOverride(ProposalHelper,1)
    };
 }
 #endif

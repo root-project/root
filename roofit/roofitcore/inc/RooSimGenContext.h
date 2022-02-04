@@ -28,20 +28,20 @@ class RooSimGenContext : public RooAbsGenContext {
 public:
   RooSimGenContext(const RooSimultaneous &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
-  virtual ~RooSimGenContext();
-  virtual void setProtoDataOrder(Int_t* lut) ;
+  ~RooSimGenContext() override;
+  void setProtoDataOrder(Int_t* lut) override ;
 
-  virtual void attach(const RooArgSet& params) ;
+  void attach(const RooArgSet& params) override ;
 
-  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
 
 protected:
 
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void initGenerator(const RooArgSet &theEvent) override;
+  void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
-  RooDataSet* createDataSet(const char* name, const char* title, const RooArgSet& obs) ;
+  RooDataSet* createDataSet(const char* name, const char* title, const RooArgSet& obs) override ;
   void updateFractions() ;
 
   RooSimGenContext(const RooSimGenContext& other) ;
@@ -61,7 +61,7 @@ protected:
   RooArgSet _allVarsPdf{};        ///< All pdf variables
   TIterator* _proxyIter{nullptr}; ///< Iterator over pdf proxies
 
-  ClassDef(RooSimGenContext,0) // Context for efficiently generating a dataset from a RooSimultaneous PDF
+  ClassDefOverride(RooSimGenContext,0) // Context for efficiently generating a dataset from a RooSimultaneous PDF
 };
 
 #endif

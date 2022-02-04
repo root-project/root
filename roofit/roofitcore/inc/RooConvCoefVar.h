@@ -33,16 +33,16 @@ public:
   }
   RooConvCoefVar(const char *name, const char *title, const RooAbsAnaConvPdf& input, Int_t coefIdx, const RooArgSet* varList=0) ;
   RooConvCoefVar(const RooConvCoefVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooConvCoefVar(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooConvCoefVar(*this,newname); }
   /// Destructor
-  virtual ~RooConvCoefVar() {
+  ~RooConvCoefVar() override {
   } ;
 
-  virtual Double_t getValV(const RooArgSet* nset=0) const ;
+  Double_t getValV(const RooArgSet* nset=0) const override ;
 
-  virtual Double_t evaluate() const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Double_t evaluate() const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
 
@@ -50,7 +50,7 @@ protected:
   RooRealProxy _convPdf ; ///< RooAbsAnaConv object implementing our coefficient
   Int_t    _coefIdx  ;    ///< Index code of the coefficient
 
-  ClassDef(RooConvCoefVar,1) // Auxiliary class representing the coefficient of a RooAbsAnaConvPdf as a RooAbsReal
+  ClassDefOverride(RooConvCoefVar,1) // Auxiliary class representing the coefficient of a RooAbsAnaConvPdf as a RooAbsReal
 };
 
 #endif

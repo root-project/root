@@ -29,8 +29,8 @@ public:
 	      RooAbsReal& x, RooAbsReal& lambda, RooAbsReal& zeta, RooAbsReal& beta,
 	      RooAbsReal& sigma, RooAbsReal& mu, RooAbsReal& a, RooAbsReal& n, RooAbsReal& a2, RooAbsReal& n2);
   RooHypatia2(const RooHypatia2& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const override { return new RooHypatia2(*this,newname); }
-  inline virtual ~RooHypatia2() { }
+  TObject* clone(const char* newname) const override { return new RooHypatia2(*this,newname); }
+  inline ~RooHypatia2() override { }
 
   /* Analytical integrals need testing.
 

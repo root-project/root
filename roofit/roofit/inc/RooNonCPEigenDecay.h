@@ -77,21 +77,21 @@ public:
             DecayType       type = DoubleSided );
 
   RooNonCPEigenDecay(const RooNonCPEigenDecay& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const {
+  TObject* clone(const char* newname) const override {
     return new RooNonCPEigenDecay(*this,newname);
   }
-  virtual ~RooNonCPEigenDecay( void );
+  ~RooNonCPEigenDecay( void ) override;
 
-  virtual Double_t coefficient( Int_t basisIndex ) const;
+  Double_t coefficient( Int_t basisIndex ) const override;
 
-  virtual Int_t getCoefAnalyticalIntegral( Int_t coef, RooArgSet& allVars,
-                    RooArgSet& analVars, const char* rangeName=0 ) const;
-  virtual Double_t coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=0 ) const;
+  Int_t getCoefAnalyticalIntegral( Int_t coef, RooArgSet& allVars,
+                    RooArgSet& analVars, const char* rangeName=0 ) const override;
+  Double_t coefAnalyticalIntegral( Int_t coef, Int_t code, const char* rangeName=0 ) const override;
 
   Int_t getGenerator( const RooArgSet& directVars,
-            RooArgSet&       generateVars, Bool_t staticInitOK=kTRUE ) const;
-  void initGenerator( Int_t code );
-  void generateEvent( Int_t code );
+            RooArgSet&       generateVars, Bool_t staticInitOK=kTRUE ) const override;
+  void initGenerator( Int_t code ) override;
+  void generateEvent( Int_t code ) override;
 
 protected:
 
@@ -117,7 +117,7 @@ protected:
   Int_t            _basisSin;
   Int_t            _basisCos;
 
-  ClassDef(RooNonCPEigenDecay,1) // PDF to model CP-violating decays to final states which are not CP eigenstates
+  ClassDefOverride(RooNonCPEigenDecay,1) // PDF to model CP-violating decays to final states which are not CP eigenstates
 };
 
 #endif

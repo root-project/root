@@ -106,26 +106,26 @@ public:
    RooLagrangianMorphFunc(const char *name, const char *title, const Config &config);
    RooLagrangianMorphFunc(const RooLagrangianMorphFunc &other, const char *newName);
 
-   virtual ~RooLagrangianMorphFunc();
+   ~RooLagrangianMorphFunc() override;
 
-   virtual std::list<Double_t> *
+   std::list<Double_t> *
    binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-   virtual std::list<Double_t> *
+   std::list<Double_t> *
    plotSamplingHint(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
-   virtual Bool_t isBinnedDistribution(const RooArgSet &obs) const override;
-   virtual Double_t evaluate() const override;
-   virtual TObject *clone(const char *newname) const override;
-   virtual Double_t getValV(const RooArgSet *set = 0) const override;
+   Bool_t isBinnedDistribution(const RooArgSet &obs) const override;
+   Double_t evaluate() const override;
+   TObject *clone(const char *newname) const override;
+   Double_t getValV(const RooArgSet *set = 0) const override;
 
-   virtual Bool_t checkObservables(const RooArgSet *nset) const override;
-   virtual Bool_t forceAnalyticalInt(const RooAbsArg &arg) const override;
-   virtual Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
+   Bool_t checkObservables(const RooArgSet *nset) const override;
+   Bool_t forceAnalyticalInt(const RooAbsArg &arg) const override;
+   Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
                                          const char *rangeName = 0) const override;
-   virtual Double_t
+   Double_t
    analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
-   virtual void printMetaArgs(std::ostream &os) const override;
-   virtual RooAbsArg::CacheMode canNodeBeCached() const override;
-   virtual void setCacheAndTrackHints(RooArgSet &) override;
+   void printMetaArgs(std::ostream &os) const override;
+   RooAbsArg::CacheMode canNodeBeCached() const override;
+   void setCacheAndTrackHints(RooArgSet &) override;
 
    void insert(RooWorkspace *ws);
 

@@ -47,10 +47,10 @@ public:
     _histFunc("HistFuncForBinWidth", this, other._histFunc),
     _divideByBinWidth(other._divideByBinWidth) { }
 
-  virtual ~RooBinWidthFunction() { }
+  ~RooBinWidthFunction() override { }
 
   /// Copy the object and return as TObject*.
-  virtual TObject* clone(const char* newname = nullptr) const override {
+  TObject* clone(const char* newname = nullptr) const override {
     return new RooBinWidthFunction(*this, newname);
   }
 

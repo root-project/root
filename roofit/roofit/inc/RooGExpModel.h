@@ -64,22 +64,22 @@ public:
 
 
   RooGExpModel(const RooGExpModel& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooGExpModel(*this,newname) ; }
-  virtual ~RooGExpModel();
+  TObject* clone(const char* newname) const override { return new RooGExpModel(*this,newname) ; }
+  ~RooGExpModel() override;
 
-  virtual Int_t basisCode(const char* name) const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t basisCode(const char* name) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
 
   void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
 
   void advertiseAsymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
 
 protected:
-  virtual Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
   //Double_t calcDecayConv(Double_t sign, Double_t tau, Double_t sig, Double_t rtau) const ;
@@ -113,7 +113,7 @@ private:
   Bool_t _flatSFInt ;
   Bool_t _asympInt ;  // added FMV,07/24/03
 
-  ClassDef(RooGExpModel,2) // Gauss (x) Exponential resolution model
+  ClassDefOverride(RooGExpModel,2) // Gauss (x) Exponential resolution model
 };
 
 #endif

@@ -39,7 +39,7 @@ public:
   /// Constructor with unique-id string.
   RooCategorySharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr) {}
   /// Destructor.
-  virtual ~RooCategorySharedProperties() {
+  ~RooCategorySharedProperties() override {
     _altRanges.Delete() ;
   }
 
@@ -49,7 +49,7 @@ protected:
 
   RooLinkedList _altRanges ;  ///< Optional alternative ranges
 
-  ClassDef(RooCategorySharedProperties,1) // Shared properties of a RooCategory clone set
+  ClassDefOverride(RooCategorySharedProperties,1) // Shared properties of a RooCategory clone set
 };
 
 

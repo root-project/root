@@ -54,13 +54,13 @@ public:
   /// Return list of sub-arguments in this RooCmdArg
   RooLinkedList& subArgs() { return _argList ; }
 
-  virtual TObject* Clone(const char* newName=0) const {
+  TObject* Clone(const char* newName=0) const override {
     RooCmdArg* newarg = new RooCmdArg(*this) ;
     if (newName) { newarg->SetName(newName) ; }
     return newarg ;
   }
 
-  virtual ~RooCmdArg();
+  ~RooCmdArg() override;
 
   static const RooCmdArg& none() ;
 
@@ -102,7 +102,7 @@ public:
 
   const RooArgSet* getSet(Int_t idx) const ;
 
-  void Print(const char* = "") const;
+  void Print(const char* = "") const override;
 
   template<class T>
   static T const& take(T && obj) {
@@ -134,7 +134,7 @@ private:
   static DataCollection _nextSharedData;
   static DataCollection &getNextSharedData();
 
-  ClassDef(RooCmdArg,2) // Generic named argument container
+  ClassDefOverride(RooCmdArg,2) // Generic named argument container
 };
 
 #endif

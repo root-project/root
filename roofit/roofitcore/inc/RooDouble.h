@@ -28,7 +28,7 @@ public:
   RooDouble(Double_t value) ;
   RooDouble(const RooDouble& other) : TNamed(other), _value(other._value) {}
   /// Destructor
-  virtual ~RooDouble() {
+  ~RooDouble() override {
   } ;
 
   // Double_t cast operator
@@ -42,16 +42,16 @@ public:
   }
 
   // Sorting interface ;
-  Int_t Compare(const TObject* other) const ;
+  Int_t Compare(const TObject* other) const override ;
   /// We are a sortable object
-  virtual Bool_t IsSortable() const {
+  Bool_t IsSortable() const override {
     return kTRUE ;
   }
 
 protected:
 
   Double_t _value ; ///< Value payload
-  ClassDef(RooDouble,1) // Container class for Double_t
+  ClassDefOverride(RooDouble,1) // Container class for Double_t
 };
 
 #endif

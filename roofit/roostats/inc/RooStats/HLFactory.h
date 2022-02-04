@@ -46,7 +46,7 @@ namespace RooStats {
     HLFactory();
 
     /// Default Destructor
-    ~HLFactory();
+    ~HLFactory() override;
 
     /// Add channel for the combination
     int AddChannel(const char* label,
@@ -130,7 +130,7 @@ namespace RooStats {
     int fParseLine(TString& line);
 
 
-  ClassDef(HLFactory,1)  // The high Level Model Factory to create models from datacards
+  ClassDefOverride(HLFactory,1)  // The high Level Model Factory to create models from datacards
 
   };
 }

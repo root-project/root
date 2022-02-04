@@ -39,15 +39,15 @@ public:
   void setAnaIntZ(Double_t z) { _z = z ; }
 
   RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooMultiVarGaussian(*this,newname); }
-  inline virtual ~RooMultiVarGaussian() { }
+  TObject* clone(const char* newname) const override { return new RooMultiVarGaussian(*this,newname); }
+  inline ~RooMultiVarGaussian() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void initGenerator(Int_t code) ;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void initGenerator(Int_t code) override ;
+  void generateEvent(Int_t code) override;
 
   const TMatrixDSym& covarianceMatrix() const { return _cov ; }
 
@@ -106,11 +106,11 @@ protected:
   void syncMuVec() const ;
   mutable TVectorD _muVec ; //! Do not persist
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
 
-  ClassDef(RooMultiVarGaussian,1) // Multivariate Gaussian PDF with correlations
+  ClassDefOverride(RooMultiVarGaussian,1) // Multivariate Gaussian PDF with correlations
 };
 
 #endif

@@ -31,14 +31,14 @@ public:
   RooAbsHiddenReal(const char *name, const char *title, const char *unit= "") ;
   RooAbsHiddenReal(const char *name, const char *title, RooAbsCategory& blindState, const char *unit= "") ;
   RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name=0) ;
-  virtual ~RooAbsHiddenReal();
+  ~RooAbsHiddenReal() override;
   
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
+  void writeToStream(std::ostream& os, Bool_t compact) const override ;
 
   // Printing interface (human readable)
-  virtual void printValue(std::ostream& stream) const ;
+  void printValue(std::ostream& stream) const override ;
   
   inline Bool_t isHidden() const { 
     // If true, hiding mode is active
@@ -55,7 +55,7 @@ protected:
   // This is dubious from a C++ point of view, but it blocks the interactive user
   // from accidentally calling getVal() without explicit cast, which is the whole
   // point of this class
-  virtual Double_t getValV(const RooArgSet* nset=0) const { 
+  Double_t getValV(const RooArgSet* nset=0) const override { 
     // Forward call to RooAbsReal
     return RooAbsReal::getValV(nset) ; 
   }
@@ -65,7 +65,7 @@ protected:
 
   RooCategoryProxy _state ; // Proxy to hiding state category
 
-  ClassDef(RooAbsHiddenReal,1) // Abstract hidden real-valued variable
+  ClassDefOverride(RooAbsHiddenReal,1) // Abstract hidden real-valued variable
 };
 
 #endif

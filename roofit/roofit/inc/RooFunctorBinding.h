@@ -35,13 +35,13 @@ public:
   } ;
   RooFunctorBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionMultiDim& ftor, const RooArgList& vars);
   RooFunctorBinding(const RooFunctorBinding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooFunctorBinding(*this,newname); }
-  inline virtual ~RooFunctorBinding() { delete[] x ; }
-  void printArgs(std::ostream& os) const ;
+  TObject* clone(const char* newname) const override { return new RooFunctorBinding(*this,newname); }
+  inline ~RooFunctorBinding() override { delete[] x ; }
+  void printArgs(std::ostream& os) const override ;
 
 protected:
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   const ROOT::Math::IBaseFunctionMultiDim* func ;    // Functor
   RooListProxy                       vars ;    // Argument reference
@@ -50,7 +50,7 @@ protected:
 
 private:
 
-  ClassDef(RooFunctorBinding,1) // RooAbsReal binding to a ROOT::Math::IBaseFunctionMultiDim
+  ClassDefOverride(RooFunctorBinding,1) // RooAbsReal binding to a ROOT::Math::IBaseFunctionMultiDim
 };
 
 
@@ -62,13 +62,13 @@ public:
   } ;
   RooFunctorPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionMultiDim& ftor, const RooArgList& vars);
   RooFunctorPdfBinding(const RooFunctorPdfBinding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooFunctorPdfBinding(*this,newname); }
-  inline virtual ~RooFunctorPdfBinding() { delete[] x ; }
-  void printArgs(std::ostream& os) const ;
+  TObject* clone(const char* newname) const override { return new RooFunctorPdfBinding(*this,newname); }
+  inline ~RooFunctorPdfBinding() override { delete[] x ; }
+  void printArgs(std::ostream& os) const override ;
 
 protected:
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   const ROOT::Math::IBaseFunctionMultiDim* func ;    // Functor
   RooListProxy                       vars ;    // Argument reference
@@ -77,7 +77,7 @@ protected:
 
 private:
 
-  ClassDef(RooFunctorPdfBinding,1) // RooAbsPdf binding to a ROOT::Math::IBaseFunctionMultiDim
+  ClassDefOverride(RooFunctorPdfBinding,1) // RooAbsPdf binding to a ROOT::Math::IBaseFunctionMultiDim
 };
 
 

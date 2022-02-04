@@ -27,9 +27,9 @@ public:
   RooAbsCachedReal() : _cacheMgr(this,10) {}
   RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder=0);
   RooAbsCachedReal(const RooAbsCachedReal& other, const char* name=0) ;
-  virtual ~RooAbsCachedReal() ;
+  ~RooAbsCachedReal() override ;
 
-  virtual Double_t getValV(const RooArgSet* set=0) const ;
+  Double_t getValV(const RooArgSet* set=0) const override ;
   virtual Bool_t selfNormalized() const {
     // Declares function self normalized
     return kTRUE ;
@@ -41,13 +41,13 @@ public:
     return _ipOrder ;
   }
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const {
+  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
     // Force all observables to be offered for internal integration
     return kTRUE ;
   }
 
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   void disableCache(Bool_t flag) {
     // Switch to disable caching mechanism
@@ -59,11 +59,11 @@ protected:
   class FuncCacheElem : public RooAbsCacheElement {
   public:
     FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset) ;
-    virtual ~FuncCacheElem() ;
+    ~FuncCacheElem() override ;
 
     // Cache management functions
-    virtual RooArgList containedArgs(Action) ;
-    virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
+    RooArgList containedArgs(Action) override ;
+    void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
 
     RooHistFunc* func() { return _func ; }
     RooDataHist* hist() { return _hist ; }
@@ -114,7 +114,7 @@ private:
 
   Bool_t _disableCache ; // Flag to run object in passthrough (= non-caching mode)
 
-  ClassDef(RooAbsCachedReal,1) // Abstract base class for cached p.d.f.s
+  ClassDefOverride(RooAbsCachedReal,1) // Abstract base class for cached p.d.f.s
 };
 
 #endif

@@ -37,13 +37,13 @@ public:
   } ; 
   RooFunctor1DBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& var);
   RooFunctor1DBinding(const RooFunctor1DBinding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooFunctor1DBinding(*this,newname); }
-  inline virtual ~RooFunctor1DBinding() {}
-  void printArgs(std::ostream& os) const ;
+  TObject* clone(const char* newname) const override { return new RooFunctor1DBinding(*this,newname); }
+  inline ~RooFunctor1DBinding() override {}
+  void printArgs(std::ostream& os) const override ;
 
 protected:
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   const ROOT::Math::IBaseFunctionOneDim* func ;    // Functor
   RooRealProxy                       var ;    // Argument reference
@@ -51,7 +51,7 @@ protected:
 
 private:
 
-  ClassDef(RooFunctor1DBinding,1) // RooAbsReal binding to a ROOT::Math::IBaseFunctionOneDim
+  ClassDefOverride(RooFunctor1DBinding,1) // RooAbsReal binding to a ROOT::Math::IBaseFunctionOneDim
 };
 
 
@@ -63,13 +63,13 @@ public:
   } ; 
   RooFunctor1DPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& vars);
   RooFunctor1DPdfBinding(const RooFunctor1DPdfBinding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooFunctor1DPdfBinding(*this,newname); }
-  inline virtual ~RooFunctor1DPdfBinding() {}
-  void printArgs(std::ostream& os) const ;
+  TObject* clone(const char* newname) const override { return new RooFunctor1DPdfBinding(*this,newname); }
+  inline ~RooFunctor1DPdfBinding() override {}
+  void printArgs(std::ostream& os) const override ;
 
 protected:
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   const ROOT::Math::IBaseFunctionOneDim* func ;    // Functor
   RooRealProxy                           var ;    // Argument reference
@@ -77,7 +77,7 @@ protected:
 
 private:
 
-  ClassDef(RooFunctor1DPdfBinding,1) // RooAbsPdf binding to a ROOT::Math::IBaseFunctionOneDim
+  ClassDefOverride(RooFunctor1DPdfBinding,1) // RooAbsPdf binding to a ROOT::Math::IBaseFunctionOneDim
 };
 
 

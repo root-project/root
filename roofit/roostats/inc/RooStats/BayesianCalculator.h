@@ -51,7 +51,7 @@ namespace RooStats {
                           ModelConfig& model );
 
       /// destructor
-      virtual ~BayesianCalculator();
+      ~BayesianCalculator() override;
 
       /// get the plot with option to get it normalized
       RooPlot* GetPosteriorPlot(bool norm = false, double precision = 0.01) const;
@@ -67,16 +67,16 @@ namespace RooStats {
       /// compute the interval. By Default a central interval is computed
       /// By using SetLeftTileFraction can control if central/ upper/lower interval
       /// For shortest interval use SetShortestInterval(true)
-      virtual SimpleInterval* GetInterval() const ;
+      SimpleInterval* GetInterval() const override ;
 
-      virtual void SetData( RooAbsData & data ) {
+      void SetData( RooAbsData & data ) override {
          fData = &data;
          ClearAll();
       }
 
 
       /// set the model via the ModelConfig
-      virtual void SetModel( const ModelConfig& model );
+      void SetModel( const ModelConfig& model ) override;
 
       /// specify the parameters of interest in the interval
       virtual void SetParameters(const RooArgSet& set) { fPOI.removeAll(); fPOI.add(set); }
@@ -96,16 +96,16 @@ namespace RooStats {
       virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize( Double_t size ) {
+      void SetTestSize( Double_t size ) override {
          fSize = size;
          fValidInterval = false;
       }
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel( Double_t cl ) { SetTestSize(1.-cl); }
+      void SetConfidenceLevel( Double_t cl ) override { SetTestSize(1.-cl); }
       /// Get the size of the test (eg. rate of Type I error)
-      virtual Double_t Size() const { return fSize; }
+      Double_t Size() const override { return fSize; }
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel() const { return 1.-fSize; }
+      Double_t ConfidenceLevel() const override { return 1.-fSize; }
 
       /// set the fraction of probability content on the left tail
       /// Central limits use 0.5 (default case)
@@ -191,7 +191,7 @@ namespace RooStats {
 
    protected:
 
-      ClassDef(BayesianCalculator,2)  // BayesianCalculator class
+      ClassDefOverride(BayesianCalculator,2)  // BayesianCalculator class
 
    };
 }

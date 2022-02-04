@@ -35,7 +35,7 @@ namespace RooStats {
       MetropolisHastings(RooAbsReal& function, const RooArgSet& paramsOfInterest,
             ProposalFunction& proposalFunction, Int_t numIters);
 
-      virtual ~MetropolisHastings() {}
+      ~MetropolisHastings() override {}
 
       /// main purpose of MetropolisHastings - run Metropolis-Hastings
       /// algorithm to generate Markov Chain of points in the parameter space
@@ -80,7 +80,7 @@ namespace RooStats {
       virtual Bool_t ShouldTakeStep(Double_t d);
       virtual Double_t CalcNLL(Double_t xL);
 
-      ClassDef(MetropolisHastings,2) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
+      ClassDefOverride(MetropolisHastings,2) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
    };
 }
 

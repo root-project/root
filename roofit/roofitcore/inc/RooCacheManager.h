@@ -38,7 +38,7 @@ public:
   RooCacheManager(Int_t maxSize=2) ;
   RooCacheManager(RooAbsArg* owner, Int_t maxSize=2) ;
   RooCacheManager(const RooCacheManager& other, RooAbsArg* owner=0) ;
-  virtual ~RooCacheManager() ;
+  ~RooCacheManager() override ;
 
   /// Getter function without integration set
   T* getObj(const RooArgSet* nset, Int_t* sterileIndex=0, const TNamed* isetRangeName=0) {
@@ -71,15 +71,15 @@ public:
   }
 
   /// Interface function to intercept server redirects
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
-                 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) {
+  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
+                 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override {
     return kFALSE ;
   }
   /// Interface function to intercept cache operation mode changes
-  virtual void operModeHook() {
+  void operModeHook() override {
   }
   /// Interface function to cache add contents to output in tree printing mode
-  virtual void printCompactTreeHook(std::ostream&, const char *) {
+  void printCompactTreeHook(std::ostream&, const char *) override {
   }
 
   T* getObjByIndex(Int_t index) const ;
@@ -90,7 +90,7 @@ public:
   virtual void insertObjectHook(T&) {
   }
 
-  void wireCache() {
+  void wireCache() override {
     if (_size==0) {
       oocoutI(_owner,Optimization) << "RooCacheManager::wireCache(" << _owner->GetName() << ") no cached elements!" << std::endl ;
     } else if (_size==1) {
@@ -111,7 +111,7 @@ protected:
   std::vector<T*> _object ;                 ///<! Payload
   Bool_t _wired ;               ///<! In wired mode, there is a single payload which is returned always
 
-  ClassDef(RooCacheManager,2) // Cache Manager class generic objects
+  ClassDefOverride(RooCacheManager,2) // Cache Manager class generic objects
 } ;
 
 

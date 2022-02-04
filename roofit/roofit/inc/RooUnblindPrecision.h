@@ -33,18 +33,18 @@ public:
             const char *blindString, Double_t centralValue, Double_t scale,
             RooAbsReal& blindValue, RooAbsCategory& blindState, Bool_t sin2betaMode=kFALSE);
   RooUnblindPrecision(const RooUnblindPrecision& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooUnblindPrecision(*this,newname); }
-  virtual ~RooUnblindPrecision();
+  TObject* clone(const char* newname) const override { return new RooUnblindPrecision(*this,newname); }
+  ~RooUnblindPrecision() override;
 
 protected:
 
   // Function evaluation
-  virtual Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   RooRealProxy _value ;          // Holder of the blind value
   RooBlindTools _blindEngine ;   // Blinding engine
 
-  ClassDef(RooUnblindPrecision,1) // Precision unblinding transformation
+  ClassDefOverride(RooUnblindPrecision,1) // Precision unblinding transformation
 };
 
 #endif

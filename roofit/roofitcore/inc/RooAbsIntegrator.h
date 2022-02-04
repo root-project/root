@@ -24,7 +24,7 @@ public:
   RooAbsIntegrator() ;
   RooAbsIntegrator(const RooAbsFunc& function, Bool_t printEvalCounter=kFALSE);
   /// Destructor
-  inline virtual ~RooAbsIntegrator() {
+  inline ~RooAbsIntegrator() override {
   }
   virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const = 0 ;
 
@@ -69,7 +69,7 @@ protected:
   Bool_t _valid;               ///< Is integrator in valid state?
   Bool_t _printEvalCounter ;   ///< If true print number of function evaluation required for integration
 
-  ClassDef(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
+  ClassDefOverride(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };
 
 #endif

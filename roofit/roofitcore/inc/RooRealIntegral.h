@@ -39,15 +39,15 @@ public:
   RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, const RooArgSet& depList,
         const RooArgSet* funcNormSet=0, const RooNumIntConfig* config=0, const char* rangeName=0) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooRealIntegral(*this,newname); }
-  virtual ~RooRealIntegral();
+  TObject* clone(const char* newname) const override { return new RooRealIntegral(*this,newname); }
+  ~RooRealIntegral() override;
 
-  virtual Double_t getValV(const RooArgSet* set=0) const ;
+  Double_t getValV(const RooArgSet* set=0) const override ;
 
-  Bool_t isValid() const { return _valid; }
+  Bool_t isValid() const override { return _valid; }
 
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
-  void printMetaArgs(std::ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMetaArgs(std::ostream& os) const override ;
 
   const RooArgSet& numIntCatVars() const { return _sumList ; }
   const RooArgSet& numIntRealVars() const { return _intList ; }
@@ -71,12 +71,12 @@ public:
 
   static Int_t getCacheAllNumeric() ;
 
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const {
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
     // Forward plot sampling hint of integrand
     return _function.arg().plotSamplingHint(obs,xlo,xhi) ;
   }
 
-  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const override ;
 
   void setAllowComponentSelection(Bool_t allow);
   Bool_t getAllowComponentSelection() const;
@@ -99,13 +99,13 @@ protected:
   virtual Double_t jacobianProduct() const ;
 
   // Evaluation and validation implementation
-  Double_t evaluate() const ;
-  virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
+  Double_t evaluate() const override ;
+  Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const override ;
   Bool_t servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches, const RooArgSet& allBranches) const ;
 
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList,
-                 Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
+  Bool_t redirectServersHook(const RooAbsCollection& newServerList,
+                 Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
 
   // Function pointer and integrands list
   mutable RooSetProxy _sumList ; ///< Set of discrete observable over which is summed numerically
@@ -139,7 +139,7 @@ protected:
   Bool_t _cacheNum ;           ///< Cache integral if numeric
   static Int_t _cacheAllNDim ; ///<! Cache all integrals with given numeric dimension
 
-  ClassDef(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
+  ClassDefOverride(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
 };
 
 #endif

@@ -116,7 +116,7 @@ protected:
 public:
    class MissingRootnodeError : public std::exception {
    public:
-      virtual const char *what() const noexcept override { return "no rootnode set"; }
+      const char *what() const noexcept override { return "no rootnode set"; }
    };
 
    class DependencyMissingError : public std::exception {
@@ -131,7 +131,7 @@ public:
       const std::string &parent() const { return _parent; }
       const std::string &child() const { return _child; }
       const std::string &classname() const { return _class; }
-      virtual const char *what() const noexcept override { return _message.c_str(); }
+      const char *what() const noexcept override { return _message.c_str(); }
    };
    friend DependencyMissingError;
 

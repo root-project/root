@@ -24,23 +24,23 @@ public:
   RooSpHarmonic(const char *name, const char *title, RooAbsReal& ctheta, RooAbsReal& phi, int l1, int m1, int l2, int m2);
 
   RooSpHarmonic(const RooSpHarmonic& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooSpHarmonic(*this, newname); }
-  inline virtual ~RooSpHarmonic() { }
+  TObject* clone(const char* newname) const override { return new RooSpHarmonic(*this, newname); }
+  inline ~RooSpHarmonic() override { }
 
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  virtual Int_t getMaxVal( const RooArgSet& vars) const;
-  virtual Double_t maxVal( Int_t code) const;
+  Int_t getMaxVal( const RooArgSet& vars) const override;
+  Double_t maxVal( Int_t code) const override;
 
 private:
   RooRealProxy _phi;
   double _n;
   int _sgn1,_sgn2;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
-  ClassDef(RooSpHarmonic,1) // SpHarmonic polynomial
+  ClassDefOverride(RooSpHarmonic,1) // SpHarmonic polynomial
 };
 
 #endif

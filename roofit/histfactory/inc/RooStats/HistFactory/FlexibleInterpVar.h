@@ -50,10 +50,10 @@ namespace HistFactory{
 
     void printAllInterpCodes();
 
-    virtual TObject* clone(const char* newname) const { return new FlexibleInterpVar(*this, newname); }
-    virtual ~FlexibleInterpVar() ;
+    TObject* clone(const char* newname) const override { return new FlexibleInterpVar(*this, newname); }
+    ~FlexibleInterpVar() override ;
 
-    virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose = kFALSE, TString indent = "") const;
+    void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose = kFALSE, TString indent = "") const override;
     virtual void printFlexibleInterpVars(std::ostream& os) const;
 
     const RooListProxy& variables() const;
@@ -77,9 +77,9 @@ namespace HistFactory{
     mutable Bool_t         _logInit ;            ///<! flag used for caching polynomial coefficients
     mutable std::vector< double>  _polCoeff;     ///<! cached polynomial coefficients
 
-    Double_t evaluate() const;
+    Double_t evaluate() const override;
 
-    ClassDef(RooStats::HistFactory::FlexibleInterpVar,2) // flexible interpolation
+    ClassDefOverride(RooStats::HistFactory::FlexibleInterpVar,2) // flexible interpolation
   };
 }
 }

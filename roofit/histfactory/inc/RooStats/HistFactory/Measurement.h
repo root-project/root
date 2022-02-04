@@ -160,7 +160,7 @@ private:
 
   std::string GetDirPath( TDirectory* dir );
 
-  ClassDef(RooStats::HistFactory::Measurement, 3);
+  ClassDefOverride(RooStats::HistFactory::Measurement, 3);
 
 };
 

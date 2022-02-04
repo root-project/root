@@ -37,8 +37,8 @@ public:
   RooAbsStudy(const char* name, const char* title) ;
   RooAbsStudy(const RooAbsStudy& other) ;
   virtual RooAbsStudy* clone(const char* newname="") const = 0 ;
-  TObject* Clone(const char* newname="") const { return clone(newname) ; }
-  virtual ~RooAbsStudy() ;
+  TObject* Clone(const char* newname="") const override { return clone(newname) ; }
+  ~RooAbsStudy() override ;
 
   virtual Bool_t attach(RooWorkspace& /*w*/) { return kFALSE ; } ;
   virtual Bool_t initialize() { return kFALSE ; } ;
@@ -69,7 +69,7 @@ public:
   RooLinkedList*  _detailData ;  ///<!
   Bool_t      _ownDetailData ;
 
-  ClassDef(RooAbsStudy,1) // Abstract base class for RooStudyManager modules
+  ClassDefOverride(RooAbsStudy,1) // Abstract base class for RooStudyManager modules
 } ;
 
 

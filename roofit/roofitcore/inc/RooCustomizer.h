@@ -39,7 +39,7 @@ public:
   // Constructors, assignment etc
   RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=0) ;
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
-  virtual ~RooCustomizer() ;
+  ~RooCustomizer() override ;
 
   /// If flag is true, make customizer own all created components
   void setOwning(Bool_t flag) {
@@ -62,14 +62,14 @@ public:
   }
 
   // Printing interface
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent= "") const;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent= "") const override;
 
   /// Printing interface
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -79,8 +79,8 @@ public:
   /// Factory interface
   class CustIFace : public RooFactoryWSTool::IFace {
   public:
-    virtual ~CustIFace() {} ;
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) ;
+    ~CustIFace() override {} ;
+    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
   } ;
 
 protected:
@@ -114,7 +114,7 @@ protected:
   RooArgSet* _cloneNodeListAll ;        ///< List of all cloned nodes
   RooArgSet* _cloneNodeListOwned ;      ///< List of owned cloned nodes
 
-  ClassDef(RooCustomizer,0) // Editing tool for RooAbsArg composite object expressions
+  ClassDefOverride(RooCustomizer,0) // Editing tool for RooAbsArg composite object expressions
 } ;
 
 #endif

@@ -33,14 +33,14 @@ public:
   RooMomentMorph(const char *name, const char *title, RooAbsReal& _m, const RooArgList& varList,
           const RooArgList& pdfList, const TVectorD& mrefpoints, Setting setting = NonLinearPosFractions );
   RooMomentMorph(const RooMomentMorph& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooMomentMorph(*this,newname); }
-  virtual ~RooMomentMorph();
+  TObject* clone(const char* newname) const override { return new RooMomentMorph(*this,newname); }
+  ~RooMomentMorph() override;
 
   void     setMode(const Setting& setting) { _setting = setting; }
 
   void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
-  virtual Bool_t selfNormalized() const {
+  Bool_t selfNormalized() const override {
     // P.d.f is self normalized
     return kTRUE ;
   }
@@ -54,8 +54,8 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem(RooAbsPdf& sumPdf, RooChangeTracker& tracker, const RooArgList& flist) : _sumPdf(&sumPdf), _tracker(&tracker) { _frac.add(flist) ; } ;
-    virtual ~CacheElem() ;
-    virtual RooArgList containedArgs(Action) ;
+    ~CacheElem() override ;
+    RooArgList containedArgs(Action) override ;
     RooAbsPdf* _sumPdf ;
     RooChangeTracker* _tracker ;
     RooArgList _frac ;
@@ -69,7 +69,7 @@ protected:
 
   friend class CacheElem ; // Cache needs to be able to clear _norm pointer
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   void     initialize();
   CacheElem* getCache(const RooArgSet* nset) const ;
@@ -91,7 +91,7 @@ protected:
 
   bool _useHorizMorph;
 
-  ClassDef(RooMomentMorph,3) // Your description goes here...
+  ClassDefOverride(RooMomentMorph,3) // Your description goes here...
 };
 
 #endif

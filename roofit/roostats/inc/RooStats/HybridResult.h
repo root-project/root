@@ -39,7 +39,7 @@ namespace RooStats {
 
 
       /// Destructor of HybridResult
-      virtual ~HybridResult();
+      ~HybridResult() override;
 
       void SetDataTestStatistics(double testStat_data_val);
 
@@ -59,10 +59,10 @@ namespace RooStats {
       double GetTestStat_data(){ return fTestStat_data;}
 
       // Return p-value for null hypothesis
-      Double_t NullPValue() const;
+      Double_t NullPValue() const override;
 
       // Return p-value for alternate hypothesis
-      Double_t AlternatePValue() const;
+      Double_t AlternatePValue() const override;
 
       /// The error on the "confidence level" of the null hypothesis
       Double_t CLbError() const;
@@ -85,7 +85,7 @@ namespace RooStats {
 
    protected:
 
-      ClassDef(HybridResult,1)  // Class containing the results of the HybridCalculator
+      ClassDefOverride(HybridResult,1)  // Class containing the results of the HybridCalculator
    };
 }
 

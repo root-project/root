@@ -25,15 +25,15 @@ class RooGrid : public TObject, public RooPrintable {
 public:
   RooGrid() ;
   RooGrid(const RooAbsFunc &function);
-  virtual ~RooGrid();
+  ~RooGrid() override;
 
   // Printing interface
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -83,7 +83,7 @@ protected:
   Double_t *_xin;    ///<! Internal workspace
   Double_t *_weight; ///<! Internal workspace
 
-  ClassDef(RooGrid,1) // Utility class for RooMCIntegrator holding a multi-dimensional grid
+  ClassDefOverride(RooGrid,1) // Utility class for RooMCIntegrator holding a multi-dimensional grid
 };
 
 #endif

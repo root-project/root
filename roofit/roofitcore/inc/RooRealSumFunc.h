@@ -29,42 +29,42 @@ public:
    RooRealSumFunc(const char *name, const char *title, const RooArgList &funcList, const RooArgList &coefList);
    RooRealSumFunc(const char *name, const char *title, RooAbsReal &func1, RooAbsReal &func2, RooAbsReal &coef1);
    RooRealSumFunc(const RooRealSumFunc &other, const char *name = 0);
-   virtual TObject *clone(const char *newname) const { return new RooRealSumFunc(*this, newname); }
-   virtual ~RooRealSumFunc();
+   TObject *clone(const char *newname) const override { return new RooRealSumFunc(*this, newname); }
+   ~RooRealSumFunc() override;
 
-   Double_t evaluate() const;
-   virtual Bool_t checkObservables(const RooArgSet *nset) const;
+   Double_t evaluate() const override;
+   Bool_t checkObservables(const RooArgSet *nset) const override;
 
-   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
+   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
 
-   virtual Bool_t forceAnalyticalInt(const RooAbsArg &arg) const { return arg.isFundamental(); }
+   Bool_t forceAnalyticalInt(const RooAbsArg &arg) const override { return arg.isFundamental(); }
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
-                                 const char *rangeName = 0) const;
-   Double_t analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const;
+                                 const char *rangeName = 0) const override;
+   Double_t analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const override;
 
    const RooArgList &funcList() const { return _funcList; }
    const RooArgList &coefList() const { return _coefList; }
 
-   void printMetaArgs(std::ostream &os) const;
+   void printMetaArgs(std::ostream &os) const override;
 
-   virtual std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const;
-   virtual std::list<Double_t> *plotSamplingHint(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const;
-   Bool_t isBinnedDistribution(const RooArgSet &obs) const;
+   std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
+   std::list<Double_t> *plotSamplingHint(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
+   Bool_t isBinnedDistribution(const RooArgSet &obs) const override;
 
    void setFloor(Bool_t flag) { _doFloor = flag; }
    Bool_t getFloor() const { return _doFloor; }
    static void setFloorGlobal(Bool_t flag) { _doFloorGlobal = flag; }
    static Bool_t getFloorGlobal() { return _doFloorGlobal; }
 
-   virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised; };
-   virtual void setCacheAndTrackHints(RooArgSet &);
+   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised; };
+   void setCacheAndTrackHints(RooArgSet &) override;
 
 protected:
    class CacheElem : public RooAbsCacheElement {
    public:
       CacheElem(){};
-      virtual ~CacheElem(){};
-      virtual RooArgList containedArgs(Action)
+      ~CacheElem() override{};
+      RooArgList containedArgs(Action) override
       {
          RooArgList ret(_funcIntList);
          ret.add(_funcNormList);
@@ -86,7 +86,7 @@ protected:
    static Bool_t _doFloorGlobal; ///< Global flag for introducing floor at zero in pdf
 
 private:
-   ClassDef(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions
+   ClassDefOverride(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

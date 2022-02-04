@@ -34,7 +34,7 @@ public:
   RooArgProxy(const char* name, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
          Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg=kFALSE) ;
   RooArgProxy(const char* name, RooAbsArg* owner, const RooArgProxy& other) ;
-  virtual ~RooArgProxy() ;
+  ~RooArgProxy() override ;
 
   /// Return pointer to contained argument
   inline RooAbsArg* absArg() const {
@@ -42,10 +42,10 @@ public:
   }
 
   /// Return name of proxy
-  virtual const char* name() const {
+  const char* name() const override {
     return GetName() ;
   }
-  virtual void print(std::ostream& os, Bool_t addContents=kFALSE) const ;
+  void print(std::ostream& os, Bool_t addContents=kFALSE) const override ;
 
 protected:
 
@@ -68,11 +68,11 @@ protected:
   inline Bool_t isShapeServer() const {
     return _shapeServer ;
   }
-  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) ;
+  Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) override ;
 
   virtual void changeDataSet(const RooArgSet* newNormSet) ;
 
-  ClassDef(RooArgProxy,1) // Abstract proxy for RooAbsArg objects
+  ClassDefOverride(RooArgProxy,1) // Abstract proxy for RooAbsArg objects
 };
 
 #endif

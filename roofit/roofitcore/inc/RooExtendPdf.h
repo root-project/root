@@ -26,24 +26,24 @@ public:
   RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
           RooAbsReal& norm, const char* rangeName=0) ;
   RooExtendPdf(const RooExtendPdf& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooExtendPdf(*this,newname) ; }
-  virtual ~RooExtendPdf() ;
+  TObject* clone(const char* newname) const override { return new RooExtendPdf(*this,newname) ; }
+  ~RooExtendPdf() override ;
 
-  Double_t evaluate() const { return _pdf ; }
+  Double_t evaluate() const override { return _pdf ; }
 
-  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { return kTRUE ; }
+  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const override { return kTRUE ; }
   /// Forward determination of analytical integration capabilities to input p.d.f
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const {
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override {
     return _pdf->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName) ;
   }
   /// Forward calculation of analytical integrals to input p.d.f
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const {
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override {
     return _pdf->analyticalIntegralWN(code, normSet, rangeName) ;
   }
 
-  virtual Bool_t selfNormalized() const { return kTRUE ; }
-  virtual ExtendMode extendMode() const { return CanBeExtended ; }
-  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
+  Bool_t selfNormalized() const override { return kTRUE ; }
+  ExtendMode extendMode() const override { return CanBeExtended ; }
+  Double_t expectedEvents(const RooArgSet* nset) const override ;
 
 protected:
 
@@ -52,7 +52,7 @@ protected:
   const TNamed* _rangeName ;         ///< Name of subset range
 
 
-  ClassDef(RooExtendPdf,2) // Wrapper p.d.f adding an extended likelihood term to an existing p.d.f
+  ClassDefOverride(RooExtendPdf,2) // Wrapper p.d.f adding an extended likelihood term to an existing p.d.f
 };
 
 #endif

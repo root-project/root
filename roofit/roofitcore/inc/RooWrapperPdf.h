@@ -33,13 +33,13 @@ public:
   RooWrapperPdf(const char *name, const char *title, RooAbsReal& inputFunction) :
     RooAbsPdf(name, title),
     _func("inputFunction", "Function to be converted into a PDF", this, inputFunction) { }
-  virtual ~RooWrapperPdf() {};
+  ~RooWrapperPdf() override {};
 
   RooWrapperPdf(const RooWrapperPdf& other, const char* name = 0) :
     RooAbsPdf(other, name),
     _func("inputFunction", this, other._func) { }
 
-  virtual TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname) const override {
     return new RooWrapperPdf(*this, newname);
   }
 

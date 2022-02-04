@@ -26,7 +26,7 @@ public:
 
   RooRandomizeParamMCSModule() ;
   RooRandomizeParamMCSModule(const RooRandomizeParamMCSModule& other) ;
-  virtual ~RooRandomizeParamMCSModule() ;
+  ~RooRandomizeParamMCSModule() override ;
 
   void sampleUniform(RooRealVar& param, Double_t lo, Double_t hi) ;
   void sampleGaussian(RooRealVar& param, Double_t mean, Double_t sigma) ;
@@ -34,12 +34,12 @@ public:
   void sampleSumUniform(const RooArgSet& paramSet, Double_t lo, Double_t hi) ;
   void sampleSumGauss(const RooArgSet& paramSet, Double_t lo, Double_t hi) ;
 
-  Bool_t initializeInstance() ;
+  Bool_t initializeInstance() override ;
 
-  Bool_t initializeRun(Int_t /*numSamples*/) ;
-  RooDataSet* finalizeRun() ;
+  Bool_t initializeRun(Int_t /*numSamples*/) override ;
+  RooDataSet* finalizeRun() override ;
 
-  Bool_t processBeforeGen(Int_t /*sampleNum*/) ;
+  Bool_t processBeforeGen(Int_t /*sampleNum*/) override ;
 
 private:
 
@@ -91,7 +91,7 @@ private:
   RooArgSet _genParSet ;
   RooDataSet* _data ;
 
-  ClassDef(RooRandomizeParamMCSModule,0) // MCStudy module to vary one or more input parameters during fit/generation cycle
+  ClassDefOverride(RooRandomizeParamMCSModule,0) // MCStudy module to vary one or more input parameters during fit/generation cycle
 } ;
 
 

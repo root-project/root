@@ -23,19 +23,19 @@ public:
                   RooAbsReal &alpha, RooAbsReal &n, bool doubleSided = false);
 
    RooCrystalBall(const RooCrystalBall &other, const char *name = 0);
-   virtual TObject *clone(const char *newname) const { return new RooCrystalBall(*this, newname); }
+   TObject *clone(const char *newname) const override { return new RooCrystalBall(*this, newname); }
 
-   inline virtual ~RooCrystalBall() {}
+   inline ~RooCrystalBall() override {}
 
-   virtual Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = 0) const;
-   virtual Double_t analyticalIntegral(Int_t code, const char *rangeName = 0) const;
+   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = 0) const override;
+   Double_t analyticalIntegral(Int_t code, const char *rangeName = 0) const override;
 
    // Optimized accept/reject generator support
-   virtual Int_t getMaxVal(const RooArgSet &vars) const;
-   virtual Double_t maxVal(Int_t code) const;
+   Int_t getMaxVal(const RooArgSet &vars) const override;
+   Double_t maxVal(Int_t code) const override;
 
 protected:
-   Double_t evaluate() const;
+   Double_t evaluate() const override;
 
 private:
    RooRealProxy x_;
@@ -49,7 +49,7 @@ private:
    std::unique_ptr<RooRealProxy> alphaR_ = nullptr;
    std::unique_ptr<RooRealProxy> nR_ = nullptr;
 
-   ClassDef(RooCrystalBall, 1)
+   ClassDefOverride(RooCrystalBall, 1)
 };
 
 #endif

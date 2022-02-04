@@ -71,7 +71,7 @@ and increment the class version of the owner.
 // In .h: Declare member
 RooRealProxy pdfProxy;
 
-ClassDef(MyPdf, 1)
+ClassDefOverride(MyPdf, 1)
 };
 
 // In .cxx: Initialise proxy in constructor
@@ -94,7 +94,7 @@ pdf->fitTo(...);
 // In .h: Declare member
 RooTemplateProxy<RooAbsPdf> pdfProxy;
 
-ClassDef(MyPdf, 2)
+ClassDefOverride(MyPdf, 2)
 };
 
 // In .cxx: Initialise proxy in constructor
@@ -201,7 +201,7 @@ public:
     }
   }
 
-  virtual TObject* Clone(const char* newName=0) const { return new RooTemplateProxy<T>(newName,_owner,*this); }
+  TObject* Clone(const char* newName=0) const override { return new RooTemplateProxy<T>(newName,_owner,*this); }
 
 
   /// Return reference to the proxied object.
@@ -369,7 +369,7 @@ private:
     return real.getVal(_nset);
   }
 
-  ClassDef(RooTemplateProxy,1) // Proxy for a RooAbsReal object
+  ClassDefOverride(RooTemplateProxy,1) // Proxy for a RooAbsReal object
 };
 
 #endif

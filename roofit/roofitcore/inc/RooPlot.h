@@ -51,7 +51,7 @@ public:
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 	  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
-  virtual ~RooPlot();
+  ~RooPlot() override;
 
   static RooPlot* frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
   static RooPlot* frameWithLabels(const RooAbsRealLValue &var);
@@ -62,7 +62,7 @@ public:
   virtual Stat_t GetBinContent(Int_t) const;
   virtual Stat_t GetBinContent(Int_t, Int_t) const;
   virtual Stat_t GetBinContent(Int_t, Int_t, Int_t) const;
-  virtual void Draw(Option_t *options= 0);
+  void Draw(Option_t *options= 0) override;
 
   // forwarding of relevant TH1 interface
   TAxis* GetXaxis() const ;
@@ -78,7 +78,7 @@ public:
   void SetBarWidth(Float_t width = 0.5) ;
   void SetContour(Int_t nlevels, const Double_t* levels = 0) ;
   void SetContourLevel(Int_t level, Double_t value) ;
-  void SetDrawOption(Option_t* option = "") ;
+  void SetDrawOption(Option_t* option = "") override ;
   void SetFillAttributes() ;
   void SetFillColor(Color_t fcolor) ;
   void SetFillStyle(Style_t fstyle) ;
@@ -94,9 +94,9 @@ public:
   void SetMarkerColor(Color_t tcolor = 1) ;
   void SetMarkerSize(Size_t msize = 1) ;
   void SetMarkerStyle(Style_t mstyle = 1) ;
-  void SetName(const char *name) ;
-  void SetTitle(const char *name) ;
-  void SetNameTitle(const char *name, const char* title) ;
+  void SetName(const char *name) override ;
+  void SetTitle(const char *name) override ;
+  void SetNameTitle(const char *name, const char* title) override ;
   void SetNdivisions(Int_t n = 510, Option_t* axis = "X") ;
   void SetOption(Option_t* option = " ") ;
   void SetStats(Bool_t stats = kTRUE) ;
@@ -122,16 +122,16 @@ public:
   void remove(const char* name=0, Bool_t deleteToo=kTRUE) ;
 
   // ascii printing
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -181,7 +181,7 @@ public:
   RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=true) const
     { return residHist(histname,pdfname,true,useAverage); }
 
-  void Browse(TBrowser *b) ;
+  void Browse(TBrowser *b) override ;
 
   /// \copydoc AddDirectoryStatus()
   static Bool_t addDirectoryStatus() ;
@@ -246,7 +246,7 @@ protected:
 
   static Bool_t _addDirStatus ; ///< static flag controlling AutoDirectoryAdd feature
 
-  ClassDef(RooPlot,2)        // Plot frame and container for graphics objects
+  ClassDefOverride(RooPlot,2)        // Plot frame and container for graphics objects
 };
 
 #endif

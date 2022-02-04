@@ -36,10 +36,10 @@ public:
 
   RooNumConvolution(const RooNumConvolution& other, const char* name=0) ;
 
-  virtual TObject* clone(const char* newname) const { return new RooNumConvolution(*this,newname) ; }
-  virtual ~RooNumConvolution() ;
+  TObject* clone(const char* newname) const override { return new RooNumConvolution(*this,newname) ; }
+  ~RooNumConvolution() override ;
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   RooNumIntConfig& convIntConfig() { _init = kFALSE ; return _convIntConfig ; }
   const RooNumIntConfig& convIntConfig() const { _init = kFALSE ; return _convIntConfig ; }
@@ -62,9 +62,9 @@ protected:
 
   mutable Bool_t _init ;
   void initialize() const ;
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
+  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
 
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
+  void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
 
   RooNumIntConfig _convIntConfig ; ///< Configuration of numeric convolution integral ;
   mutable RooConvIntegrandBinding* _integrand ; ///<! Binding of Convolution Integrand function
@@ -94,7 +94,7 @@ protected:
   Bool_t       _doProf   ;        ///< Switch to activate profiling option
   TH2*         _callHist ;        ///<! Histogram recording number of calls per convolution integral calculation
 
-  ClassDef(RooNumConvolution,1)   // Operator PDF implementing numeric convolution of 2 input functions
+  ClassDefOverride(RooNumConvolution,1)   // Operator PDF implementing numeric convolution of 2 input functions
 };
 
 #endif

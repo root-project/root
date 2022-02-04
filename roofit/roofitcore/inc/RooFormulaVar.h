@@ -34,7 +34,7 @@ public:
   RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents, bool checkVariables = true);
   RooFormulaVar(const char *name, const char *title, const RooArgList& dependents, bool checkVariables = true);
   RooFormulaVar(const RooFormulaVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooFormulaVar(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooFormulaVar(*this,newname); }
 
   inline Bool_t ok() const { return getFormula().ok() ; }
   const char* expression() const { return _formExpr.Data(); }
@@ -50,12 +50,12 @@ public:
   }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
+  void writeToStream(std::ostream& os, Bool_t compact) const override ;
 
   // Printing interface (human readable)
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const ;
-  void printMetaArgs(std::ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const override ;
+  void printMetaArgs(std::ostream& os) const override ;
 
   // Debugging
   /// Dump the formula to stdout.
@@ -65,15 +65,15 @@ public:
     return getFormula();
   }
 
-  virtual Double_t defaultErrorLevel() const ;
+  Double_t defaultErrorLevel() const override ;
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
+  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
 
   // Function evaluation
-  virtual Double_t evaluate() const ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
-  inline void computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+  Double_t evaluate() const override ;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  inline void computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const override
   {
     formula().computeBatch(stream, output, nEvents, dataMap);
   }
@@ -81,9 +81,9 @@ public:
 
   protected:
   // Post-processing of server redirection
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
+  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
 
-  virtual Bool_t isValidReal(Double_t /*value*/, Bool_t /*printError*/) const {return true;}
+  Bool_t isValidReal(Double_t /*value*/, Bool_t /*printError*/) const override {return true;}
 
   private:
   RooFormula& getFormula() const;
@@ -93,7 +93,7 @@ public:
   mutable RooArgSet* _nset{nullptr}; ///<! Normalization set to be passed along to contents
   TString _formExpr ;            ///< Formula expression string
 
-  ClassDef(RooFormulaVar,1) // Real-valued function of other RooAbsArgs calculated by a TFormula expression
+  ClassDefOverride(RooFormulaVar,1) // Real-valued function of other RooAbsArgs calculated by a TFormula expression
 };
 
 #endif

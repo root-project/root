@@ -25,15 +25,15 @@ public:
   RooGenFunction(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters) ;
   RooGenFunction(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters, const RooArgSet& nset) ;
   RooGenFunction(const RooGenFunction& other) ;
-  virtual ~RooGenFunction() ;
+  ~RooGenFunction() override ;
 
-  virtual ROOT::Math::IBaseFunctionOneDim* Clone() const {
+  ROOT::Math::IBaseFunctionOneDim* Clone() const override {
     return new RooGenFunction(*this) ;
   }
 
 protected:
 
-  double DoEval(double) const ;
+  double DoEval(double) const override ;
 
   RooFunctor _ftor ;
 

@@ -34,9 +34,9 @@ public:
                          const RooArgSet& projDeps,
                          RooAbsTestStatistic::Configuration const& cfg);
   RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
-  virtual ~RooAbsOptTestStatistic();
+  ~RooAbsOptTestStatistic() override;
 
-  virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const ;
+  Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const override ;
 
   RooAbsReal& function() { return *_funcClone ; }
   const RooAbsReal& function() const { return *_funcClone ; }
@@ -45,10 +45,10 @@ public:
   const RooAbsData& data() const ;
 
 
-  virtual const char* cacheUniqueSuffix() const { return Form("_%zx", (size_t)_dataClone) ; }
+  const char* cacheUniqueSuffix() const override { return Form("_%zx", (size_t)_dataClone) ; }
 
   // Override this to be always true to force calculation of likelihood without parameters
-  virtual Bool_t isDerived() const { return kTRUE ; }
+  Bool_t isDerived() const override { return kTRUE ; }
 
   void seal(const char* notice="") { _sealed = kTRUE ; _sealNotice = notice ; }
   Bool_t isSealed() const { return _sealed ; }
@@ -59,7 +59,7 @@ private:
 
 protected:
 
-  Bool_t setDataSlave(RooAbsData& data, Bool_t cloneData=kTRUE, Bool_t ownNewDataAnyway=kFALSE) ;
+  Bool_t setDataSlave(RooAbsData& data, Bool_t cloneData=kTRUE, Bool_t ownNewDataAnyway=kFALSE) override ;
   void initSlave(RooAbsReal& real, RooAbsData& indata, const RooArgSet& projDeps, const char* rangeName,
        const char* addCoefRangeName)  ;
 
@@ -67,10 +67,10 @@ protected:
   friend class RooAbsTestStatistic ;
 
   virtual Bool_t allowFunctionCache() { return kTRUE ;  }
-  void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
+  void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) override ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
+  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
+  void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
   virtual RooArgSet requiredExtraObservables() const { return RooArgSet() ; }
   void optimizeCaching() ;
   void optimizeConstantTerms(Bool_t,Bool_t=kTRUE) ;
@@ -91,7 +91,7 @@ protected:
   Bool_t      _optimized ; ///<!
   double      _integrateBinsPrecision{-1.}; // Precision for finer sampling of bins.
 
-  ClassDef(RooAbsOptTestStatistic,5) // Abstract base class for optimized test statistics
+  ClassDefOverride(RooAbsOptTestStatistic,5) // Abstract base class for optimized test statistics
 };
 
 #endif

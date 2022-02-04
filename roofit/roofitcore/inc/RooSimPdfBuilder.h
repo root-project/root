@@ -33,7 +33,7 @@ class RooSimPdfBuilder : public TObject {
 public:
 
   RooSimPdfBuilder(const RooArgSet& pdfProtoList) ;
-  ~RooSimPdfBuilder() ;
+  ~RooSimPdfBuilder() override ;
 
   RooArgSet* createProtoBuildConfig() ;
 
@@ -76,7 +76,7 @@ private:
   RooSimPdfBuilder(const RooSimPdfBuilder&) ; // No copying allowed
 
 protected:
-  ClassDef(RooSimPdfBuilder,0) // RooSimultaneous PDF Builder (obsolete)
+  ClassDefOverride(RooSimPdfBuilder,0) // RooSimultaneous PDF Builder (obsolete)
 };
 
 #endif

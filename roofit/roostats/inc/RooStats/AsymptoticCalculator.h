@@ -34,14 +34,14 @@ namespace RooStats {
          bool nominalAsimov = false
          );
 
-      ~AsymptoticCalculator() {
+      ~AsymptoticCalculator() override {
       }
 
       /// initialize the calculator by performing a global fit and make the Asimov data set
       bool Initialize() const;
 
       /// re-implement HypoTest computation using the asymptotic
-      virtual HypoTestResult *GetHypoTest() const;
+      HypoTestResult *GetHypoTest() const override;
 
       /// Make Asimov data.
       static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = 0);
@@ -68,15 +68,15 @@ namespace RooStats {
       void SetOneSidedDiscovery(bool on) { fOneSidedDiscovery = on; }
 
       /// re-implementation of  setters since they are needed to re-initialize the calculator
-      virtual void SetNullModel(const ModelConfig &nullModel) {
+      void SetNullModel(const ModelConfig &nullModel) override {
          HypoTestCalculatorGeneric::SetNullModel(nullModel);
          fIsInitialized = false;
       }
-      virtual void SetAlternateModel(const ModelConfig &altModel) {
+      void SetAlternateModel(const ModelConfig &altModel) override {
          HypoTestCalculatorGeneric::SetAlternateModel(altModel);
          fIsInitialized = false;
       }
-      virtual void SetData(RooAbsData &data) {
+      void SetData(RooAbsData &data) override {
          HypoTestCalculatorGeneric::SetData(data);
          fIsInitialized = false;
       }
@@ -122,7 +122,7 @@ namespace RooStats {
       static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs);
 
    protected:
-      ClassDef(AsymptoticCalculator,2)
+      ClassDefOverride(AsymptoticCalculator,2)
 
    private:
 

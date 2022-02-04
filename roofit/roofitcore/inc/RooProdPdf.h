@@ -53,43 +53,43 @@ public:
              const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg()) ;
 
   RooProdPdf(const RooProdPdf& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooProdPdf(*this,newname) ; }
-  virtual ~RooProdPdf() ;
+  TObject* clone(const char* newname) const override { return new RooProdPdf(*this,newname) ; }
+  ~RooProdPdf() override ;
 
-  virtual Bool_t checkObservables(const RooArgSet* nset) const ;
+  Bool_t checkObservables(const RooArgSet* nset) const override ;
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Bool_t selfNormalized() const { return _selfNorm ; }
+  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Bool_t selfNormalized() const override { return _selfNorm ; }
 
-  virtual ExtendMode extendMode() const ;
-  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
+  ExtendMode extendMode() const override ;
+  Double_t expectedEvents(const RooArgSet* nset) const override ;
 
   const RooArgList& pdfList() const { return _pdfList ; }
 
-  virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  virtual void initGenerator(Int_t code) ;
-  virtual void generateEvent(Int_t code);
-  virtual Bool_t isDirectGenSafe(const RooAbsArg& arg) const ;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void initGenerator(Int_t code) override ;
+  void generateEvent(Int_t code) override;
+  Bool_t isDirectGenSafe(const RooAbsArg& arg) const override ;
 
   // Constraint management
-  virtual RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, Bool_t stripDisconnected) const ;
+  RooArgSet* getConstraints(const RooArgSet& observables, RooArgSet& constrainedParams, Bool_t stripDisconnected) const override ;
 
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ;
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
+  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  Bool_t isBinnedDistribution(const RooArgSet& obs) const override  ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override ;
 
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
+  void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) override ;
   void fixRefRange(const char* rangeName) ;
 
   void setSelfNormalized(Bool_t flag) { _selfNorm = flag ; }
   void setDefNormSet(const RooArgSet& nset) { _defNormSet.removeAll() ; _defNormSet.addClone(nset) ; }
 
 
-  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
+  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override ;
 
   RooArgSet* getConnectedParameters(const RooArgSet& observables) const ;
 
@@ -99,13 +99,13 @@ public:
 
 private:
 
-  Double_t evaluate() const ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
-  inline bool canComputeBatchWithCuda() const { return true; }
+  Double_t evaluate() const override ;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
   RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
-  virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, Bool_t stripDisconnected) const ;
+  void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, Bool_t stripDisconnected) const override ;
 
   void initializeFromCmdArgList(const RooArgSet& fullPdfSet, const RooLinkedList& l) ;
 
@@ -127,8 +127,8 @@ private:
                      Bool_t& isOwned, Bool_t forceWrap=kFALSE) const ;
 
 
-  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
-  virtual void setCacheAndTrackHints(RooArgSet&) ;
+  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
+  void setCacheAndTrackHints(RooArgSet&) override ;
 
   // The cache object
   class CacheElem final : public RooAbsCacheElement {
@@ -159,8 +159,8 @@ private:
 
 
   friend class RooProdGenContext ;
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
-                                  const RooArgSet *auxProto=0, Bool_t verbose= kFALSE) const ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0,
+                                  const RooArgSet *auxProto=0, Bool_t verbose= kFALSE) const override ;
 
 
   mutable RooAICRegistry _genCode ; ///<! Registry of composite direct generator codes
@@ -180,7 +180,7 @@ private:
 
 private:
 
-  ClassDef(RooProdPdf,6) // PDF representing a product of PDFs
+  ClassDefOverride(RooProdPdf,6) // PDF representing a product of PDFs
 };
 
 

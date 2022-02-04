@@ -31,11 +31,11 @@ public:
   RooBinSamplingPdf() { };
   RooBinSamplingPdf(const char *name, const char *title, RooAbsRealLValue& observable, RooAbsPdf& inputPdf,
       double epsilon = 1.E-4);
-  virtual ~RooBinSamplingPdf() {};
+  ~RooBinSamplingPdf() override {};
 
   RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = 0);
 
-  virtual TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname) const override {
     return new RooBinSamplingPdf(*this, newname);
   }
 
@@ -66,7 +66,7 @@ public:
   bool selfNormalized() const override { return true; }
 
   ExtendMode extendMode() const override { return _pdf->extendMode(); }
-  virtual Double_t expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
+  Double_t expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
 
   /// Forwards to the PDF's implementation.
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet& generateVars, bool staticInitOK = true) const override {

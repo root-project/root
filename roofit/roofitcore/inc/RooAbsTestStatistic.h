@@ -59,11 +59,11 @@ public:
   RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                       const RooArgSet& projDeps, Configuration const& cfg);
   RooAbsTestStatistic(const RooAbsTestStatistic& other, const char* name=0);
-  virtual ~RooAbsTestStatistic();
+  ~RooAbsTestStatistic() override;
   virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                                       const RooArgSet& projDeps, Configuration const& cfg) = 0;
 
-  virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
+  void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) override ;
 
   virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const = 0 ;
   virtual Double_t globalNormalization() const {
@@ -71,19 +71,19 @@ public:
     return 1.0 ;
   }
 
-  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
+  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) override ;
 
-  void enableOffsetting(Bool_t flag) ;
-  Bool_t isOffsetting() const { return _doOffset ; }
-  virtual Double_t offset() const { return _offset.Sum() ; }
+  void enableOffsetting(Bool_t flag) override ;
+  Bool_t isOffsetting() const override { return _doOffset ; }
+  Double_t offset() const override { return _offset.Sum() ; }
   virtual Double_t offsetCarry() const { return _offset.Carry(); }
 
 protected:
 
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
+  void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  virtual Double_t evaluate() const ;
+  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
+  Double_t evaluate() const override ;
 
   virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const = 0 ;
   virtual Double_t getCarry() const;
@@ -160,7 +160,7 @@ protected:
   mutable ROOT::Math::KahanSum<double> _offset = 0.0; ///<! Offset as KahanSum to avoid loss of precision
   mutable Double_t _evalCarry = 0.0;                  ///<! carry of Kahan sum in evaluatePartition
 
-  ClassDef(RooAbsTestStatistic,3) // Abstract base class for real-valued test statistics
+  ClassDefOverride(RooAbsTestStatistic,3) // Abstract base class for real-valued test statistics
 
 };
 

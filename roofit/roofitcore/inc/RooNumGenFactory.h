@@ -31,7 +31,7 @@ class RooNumGenFactory : public TObject {
 public:
 
   static RooNumGenFactory& instance() ;
-  virtual ~RooNumGenFactory();
+  ~RooNumGenFactory() override;
 
   Bool_t storeProtoSampler(RooAbsNumGenerator* proto, const RooArgSet& defConfig) ;
   const RooAbsNumGenerator* getProtoSampler(const char* name) ;
@@ -50,7 +50,7 @@ protected:
   RooNumGenFactory(const RooNumGenFactory& other) ;
 
 
-  ClassDef(RooNumGenFactory,1) // Numeric Generator factory
+  ClassDefOverride(RooNumGenFactory,1) // Numeric Generator factory
 };
 
 #endif

@@ -32,7 +32,7 @@ public:
 
   RooJohnson(const RooJohnson& other, const char* newName = nullptr);
 
-  virtual ~RooJohnson() = default;
+  ~RooJohnson() override = default;
 
   TObject* clone(const char* newname) const override {
     return new RooJohnson(*this,newname);

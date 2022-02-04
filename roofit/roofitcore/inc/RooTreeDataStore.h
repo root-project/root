@@ -40,8 +40,8 @@ public:
 
   // Empty ctor
   RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName=0) ;
-  virtual RooAbsDataStore* clone(const char* newname=0) const { return new RooTreeDataStore(*this,newname) ; }
-  virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const { return new RooTreeDataStore(*this,vars,newname) ; }
+  RooAbsDataStore* clone(const char* newname=0) const override { return new RooTreeDataStore(*this,newname) ; }
+  RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const override { return new RooTreeDataStore(*this,vars,newname) ; }
 
   // Ctors from TTree
   RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName=0) ;
@@ -57,56 +57,56 @@ public:
 
   RooTreeDataStore(const RooTreeDataStore& other, const char* newname=0) ;
   RooTreeDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname=0) ;
-  virtual ~RooTreeDataStore() ;
+  ~RooTreeDataStore() override ;
 
 
   // Write current row
-  virtual Int_t fill() ;
+  Int_t fill() override ;
 
   // Retrieve a row
   using RooAbsDataStore::get ;
-  virtual const RooArgSet* get(Int_t index) const ;
+  const RooArgSet* get(Int_t index) const override ;
   using RooAbsDataStore::weight ;
-  virtual Double_t weight() const ;
-  virtual Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const ;
-  virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const ;
-  virtual Bool_t isWeighted() const { return (_wgtVar!=0||_extWgtArray!=0) ; }
+  Double_t weight() const override ;
+  Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
+  void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override ;
+  Bool_t isWeighted() const override { return (_wgtVar!=0||_extWgtArray!=0) ; }
 
-  virtual RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const {
+  RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override {
     //TODO
     std::cerr << "This functionality is not yet implemented for tree data stores." << std::endl;
     throw std::logic_error("getBatches() not implemented in RooTreeDataStore.");
     (void)first; (void)len;
     return {};
   }
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const;
+  RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
-  virtual Bool_t changeObservableName(const char* from, const char* to) ;
+  Bool_t changeObservableName(const char* from, const char* to) override ;
 
   // Add one or more columns
-  virtual RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) ;
-  virtual RooArgSet* addColumns(const RooArgList& varList) ;
+  RooAbsArg* addColumn(RooAbsArg& var, Bool_t adjustRange=kTRUE) override ;
+  RooArgSet* addColumns(const RooArgList& varList) override ;
 
   // Merge column-wise
-  RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) ;
+  RooAbsDataStore* merge(const RooArgSet& allvars, std::list<RooAbsDataStore*> dstoreList) override ;
 
   // Add rows
-  virtual void append(RooAbsDataStore& other) ;
+  void append(RooAbsDataStore& other) override ;
 
   // General & bookkeeping methods
-  virtual Double_t sumEntries() const ;
-  virtual Int_t numEntries() const ;
-  virtual void reset() ;
+  Double_t sumEntries() const override ;
+  Int_t numEntries() const override ;
+  void reset() override ;
 
   // Buffer redirection routines used in inside RooAbsOptTestStatistics
-  virtual void attachBuffers(const RooArgSet& extObs) ;
-  virtual void resetBuffers() ;
+  void attachBuffers(const RooArgSet& extObs) override ;
+  void resetBuffers() override ;
   void restoreAlternateBuffers() ;
 
   // Tree access
   TTree& tree() { return *_tree ; }
-  virtual const TTree* tree() const { return _tree ; }
+  const TTree* tree() const override { return _tree ; }
 
   // Forwarded from TTree
   Stat_t GetEntries() const;
@@ -114,22 +114,22 @@ public:
   Int_t Fill();
   Int_t GetEntry(Int_t entry = 0, Int_t getall = 0);
 
-  void   Draw(Option_t* option = "") ;
+  void   Draw(Option_t* option = "") override ;
 
   // Constant term  optimizer interface
-  virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
-  virtual const RooAbsArg* cacheOwner() { return _cacheOwner ; }
-  virtual void setArgStatus(const RooArgSet& set, Bool_t active) ;
-  virtual void resetCache() ;
+  void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) override ;
+  const RooAbsArg* cacheOwner() override { return _cacheOwner ; }
+  void setArgStatus(const RooArgSet& set, Bool_t active) override ;
+  void resetCache() override ;
 
   void loadValues(const TTree *t, const RooFormulaVar* select=0, const char* rangeName=0, Int_t nStart=0, Int_t nStop=2000000000)  ;
   void loadValues(const RooAbsDataStore *tds, const RooFormulaVar* select=0, const char* rangeName=0,
-      std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max());
+      std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
 
-  virtual void checkInit() const;
+  void checkInit() const override;
 
   void setExternalWeightArray(const Double_t* arrayWgt, const Double_t* arrayWgtErrLo,
-      const Double_t* arrayWgtErrHi, const Double_t* arraySumW2) {
+      const Double_t* arrayWgtErrHi, const Double_t* arraySumW2) override {
     _extWgtArray = arrayWgt ;
     _extWgtErrLoArray = arrayWgtErrLo ;
     _extWgtErrHiArray = arrayWgtErrHi ;
@@ -146,7 +146,7 @@ public:
   RooRealVar* weightVar(const RooArgSet& allVars, const char* wgtName=0) ;
 
   void initialize();
-  void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
+  void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) override ;
 
   // TTree Branch buffer size control
   void setBranchBufferSize(Int_t size) { _defTreeBufSize = size ; }
@@ -178,7 +178,7 @@ public:
 
   RooArgSet _attachedBuffers ; ///<! Currently attached buffers (if different from _varsww)
 
-  ClassDef(RooTreeDataStore, 2) // TTree-based Data Storage class
+  ClassDefOverride(RooTreeDataStore, 2) // TTree-based Data Storage class
 };
 
 

@@ -29,13 +29,13 @@ public:
   RooDecay(const char *name, const char *title, RooRealVar& t,
       RooAbsReal& tau, const RooResolutionModel& model, DecayType type) ;
   RooDecay(const RooDecay& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooDecay(*this,newname) ; }
-  virtual ~RooDecay();
+  TObject* clone(const char* newname) const override { return new RooDecay(*this,newname) ; }
+  ~RooDecay() override;
 
-  virtual Double_t coefficient(Int_t basisIndex) const ;
+  Double_t coefficient(Int_t basisIndex) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
 
 protected:
 
@@ -44,7 +44,7 @@ protected:
   DecayType    _type ;
   Int_t        _basisExp ;
 
-  ClassDef(RooDecay,1) // General decay function p.d.f
+  ClassDefOverride(RooDecay,1) // General decay function p.d.f
 };
 
 #endif
