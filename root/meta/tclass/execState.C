@@ -6,7 +6,7 @@ void writeState() {
 int execState() {
    int result = 0;
 
-   gROOT->ProcessLine("class Event;");
+   gInterpreter->Declare("class Event;");
    TClass *c = TClass::GetClass("Event"); 
    if (TClass::kForwardDeclared != c->GetState()) {
       Error("execState","State is %d instead of %d (TClass::kForwardDeclared)",
