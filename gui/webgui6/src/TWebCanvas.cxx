@@ -1066,8 +1066,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          if (gDebug > 1)
             Info("ProcessData", "Obj %s Exec %s", obj->GetName(), exec.str().c_str());
 
-         Long_t res = gROOT->ProcessLine(exec.str().c_str());
-         TObject *resobj = (TObject *)res;
+         auto res = gROOT->ProcessLine(exec.str().c_str());
+         TObject *resobj = (TObject *)(res);
          if (resobj) {
             std::string send = reply;
             send.append(":");
