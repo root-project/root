@@ -35,7 +35,7 @@ private:
   RooArgSet _truth;        ///< Truth variables
   TString _blindString ;   ///< Blinding string (optionally read from ASCII files)
 
-  ClassDef(RooTreeData,1) // Dummy class for legacy RooDataSet support
+  ClassDefOverride(RooTreeData,1) // Dummy class for legacy RooDataSet support
 };
 
 

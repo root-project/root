@@ -171,7 +171,7 @@ struct DummyClass : public RooAbsPdf {
       }
     }
 
-    double evaluate() const {
+    double evaluate() const override {
       return 1.;
     }
 
@@ -179,7 +179,7 @@ struct DummyClass : public RooAbsPdf {
       clearValueAndShapeDirty();
     }
 
-    TObject* clone(const char*) const {
+    TObject* clone(const char*) const override {
       return new TObject();
     }
 

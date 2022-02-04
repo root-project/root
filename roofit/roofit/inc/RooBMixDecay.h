@@ -34,17 +34,17 @@ public:
           DecayType type=DoubleSided) ;
 
   RooBMixDecay(const RooBMixDecay& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooBMixDecay(*this,newname) ; }
-  virtual ~RooBMixDecay();
+  TObject* clone(const char* newname) const override { return new RooBMixDecay(*this,newname) ; }
+  ~RooBMixDecay() override;
 
-  virtual Double_t coefficient(Int_t basisIndex) const ;
+  Double_t coefficient(Int_t basisIndex) const override ;
 
-  virtual Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
+  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void initGenerator(Int_t code) ;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void initGenerator(Int_t code) override ;
+  void generateEvent(Int_t code) override;
 
 protected:
 
@@ -64,7 +64,7 @@ protected:
   Double_t _genFlavFracMix ;   //!
   Double_t _genFlavFracUnmix ; //!
 
-  ClassDef(RooBMixDecay,1) // B Mixing decay PDF
+  ClassDefOverride(RooBMixDecay,1) // B Mixing decay PDF
 };
 
 #endif

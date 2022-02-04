@@ -42,16 +42,16 @@ namespace RooStats {
       ProfileLikelihoodCalculator(RooAbsData& data, ModelConfig & model, Double_t size = 0.05);
 
 
-      virtual ~ProfileLikelihoodCalculator();
+      ~ProfileLikelihoodCalculator() override;
 
       /// Return a likelihood interval. A global fit to the likelihood is performed and
       /// the interval is constructed using the profile likelihood ratio function of the POI.
-      virtual LikelihoodInterval* GetInterval() const ;
+      LikelihoodInterval* GetInterval() const override ;
 
       /// Return the hypothesis test result obtained from the likelihood ratio of the
       /// maximum likelihood value with the null parameters fixed to their values, with respect to keeping all parameters
       /// floating (global maximum likelihood value).
-      virtual HypoTestResult* GetHypoTest() const;
+      HypoTestResult* GetHypoTest() const override;
 
 
 
@@ -71,7 +71,7 @@ namespace RooStats {
     mutable bool fGlobalFitDone;        ///< flag to control if a global fit has been done
 
 
-    ClassDef(ProfileLikelihoodCalculator,2) // A concrete implementation of CombinedCalculator that uses the ProfileLikelihood ratio.
+    ClassDefOverride(ProfileLikelihoodCalculator,2) // A concrete implementation of CombinedCalculator that uses the ProfileLikelihood ratio.
 
    };
 }

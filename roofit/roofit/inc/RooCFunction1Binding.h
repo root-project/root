@@ -93,7 +93,7 @@ class RooCFunction1Ref : public TObject {
   RooCFunction1Ref(VO (*ptr)(VI)=0) : _ptr(ptr) {
     // Constructor of persistable function reference
   } ;
-  ~RooCFunction1Ref() {} ;
+  ~RooCFunction1Ref() override {} ;
 
   VO operator()(VI x) const {
     // Evaluate embedded function
@@ -137,7 +137,7 @@ class RooCFunction1Ref : public TObject {
 
   static RooCFunction1Map<VO,VI>* _fmap ; // Pointer to mapping service object
 
-  ClassDef(RooCFunction1Ref,1) // Persistable reference to C function pointer
+  ClassDefOverride(RooCFunction1Ref,1) // Persistable reference to C function pointer
 } ;
 
 // Define static member
@@ -224,10 +224,10 @@ public:
   } ;
   RooCFunction1Binding(const char *name, const char *title, VO (*_func)(VI), RooAbsReal& _x);
   RooCFunction1Binding(const RooCFunction1Binding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooCFunction1Binding(*this,newname); }
-  inline virtual ~RooCFunction1Binding() { }
+  TObject* clone(const char* newname) const override { return new RooCFunction1Binding(*this,newname); }
+  inline ~RooCFunction1Binding() override { }
 
-  void printArgs(std::ostream& os) const {
+  void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
     os << "[ function=" << func.name() << " " ;
     for (Int_t i=0 ; i<numProxies() ; i++) {
@@ -245,14 +245,14 @@ protected:
   RooCFunction1Ref<VO,VI> func ; // Function pointer reference
   RooRealProxy x ;              // Argument reference
 
-  Double_t evaluate() const {
+  Double_t evaluate() const override {
     // Return value of embedded function using value of referenced variable x
     return func(x) ;
   }
 
 private:
 
-  ClassDef(RooCFunction1Binding,1) // RooAbsReal binding to external C functions
+  ClassDefOverride(RooCFunction1Binding,1) // RooAbsReal binding to external C functions
 };
 
 
@@ -288,10 +288,10 @@ public:
   } ;
   RooCFunction1PdfBinding(const char *name, const char *title, VO (*_func)(VI), RooAbsReal& _x);
   RooCFunction1PdfBinding(const RooCFunction1PdfBinding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooCFunction1PdfBinding(*this,newname); }
-  inline virtual ~RooCFunction1PdfBinding() { }
+  TObject* clone(const char* newname) const override { return new RooCFunction1PdfBinding(*this,newname); }
+  inline ~RooCFunction1PdfBinding() override { }
 
-  void printArgs(std::ostream& os) const {
+  void printArgs(std::ostream& os) const override {
     // Print object arguments and name/address of function pointer
     os << "[ function=" << func.name() << " " ;
     for (Int_t i=0 ; i<numProxies() ; i++) {
@@ -309,14 +309,14 @@ protected:
   RooCFunction1Ref<VO,VI> func ; // Function pointer reference
   RooRealProxy x ;              // Argument reference
 
-  Double_t evaluate() const {
+  Double_t evaluate() const override {
     // Return value of embedded function using value of referenced variable x
     return func(x) ;
   }
 
 private:
 
-  ClassDef(RooCFunction1PdfBinding,1) // RooAbsReal binding to external C functions
+  ClassDefOverride(RooCFunction1PdfBinding,1) // RooAbsReal binding to external C functions
 };
 
 

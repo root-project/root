@@ -34,7 +34,7 @@ public:
 
   // Constructors, assignment etc
   RooClassFactory() ;
-  virtual ~RooClassFactory() ;
+  ~RooClassFactory() override ;
 
   static RooAbsReal* makeFunctionInstance(const char* className, const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
   static RooAbsReal* makeFunctionInstance(const char* name, const char* expression, const RooArgList& vars, const char* intExpression=0) ;
@@ -54,7 +54,7 @@ public:
 
   class ClassFacIFace : public RooFactoryWSTool::IFace {
   public:
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) ;
+    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
   } ;
 
 protected:
@@ -63,7 +63,7 @@ protected:
 
   RooClassFactory(const RooClassFactory&) ;
 
-  ClassDef(RooClassFactory,0) // RooFit class code and instance factory
+  ClassDefOverride(RooClassFactory,0) // RooFit class code and instance factory
 } ;
 
 #endif

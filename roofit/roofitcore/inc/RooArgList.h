@@ -94,15 +94,15 @@ public:
     }
   }
 
-  virtual ~RooArgList();
+  ~RooArgList() override;
   // Create a copy of an existing list. New variables cannot be added
   // to a copied list. The variables in the copied list are independent
   // of the original variables.
   RooArgList(const RooArgList& other, const char *name="");
   /// Move constructor.
   RooArgList(RooArgList && other) : RooAbsCollection(std::move(other)) {}
-  virtual TObject* clone(const char* newname) const { return new RooArgList(*this,newname); }
-  virtual TObject* create(const char* newname) const { return new RooArgList(newname); }
+  TObject* clone(const char* newname) const override { return new RooArgList(*this,newname); }
+  TObject* create(const char* newname) const override { return new RooArgList(newname); }
   RooArgList& operator=(const RooArgList& other) { RooAbsCollection::operator=(other) ; return *this ; }
 
 
@@ -126,7 +126,7 @@ public:
   }
 
 protected:
-  virtual bool canBeAdded(RooAbsArg const&, bool) const  { return true; }
+  bool canBeAdded(RooAbsArg const&, bool) const override  { return true; }
 
 private:
   template<typename... Args_t>
@@ -146,7 +146,7 @@ private:
   void processArg(const char* name) { _name = name; }
   void processArg(double value);
 
-  ClassDef(RooArgList,1) // Ordered list of RooAbsArg objects
+  ClassDefOverride(RooArgList,1) // Ordered list of RooAbsArg objects
 };
 
 

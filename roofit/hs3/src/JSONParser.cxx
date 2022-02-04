@@ -85,8 +85,8 @@ class TJSONTree::Node::Impl::BaseNode : public TJSONTree::Node::Impl {
    nlohmann::json node;
 
 public:
-   virtual nlohmann::json &get() override { return node; }
-   virtual const nlohmann::json &get() const override { return node; }
+   nlohmann::json &get() override { return node; }
+   const nlohmann::json &get() const override { return node; }
    BaseNode(std::istream &is) : Impl(""), node(nlohmann::json::parse(is)) {}
    BaseNode() : Impl("") {}
 };
@@ -95,8 +95,8 @@ class TJSONTree::Node::Impl::NodeRef : public TJSONTree::Node::Impl {
    nlohmann::json &node;
 
 public:
-   virtual nlohmann::json &get() override { return node; }
-   virtual const nlohmann::json &get() const override { return node; }
+   nlohmann::json &get() override { return node; }
+   const nlohmann::json &get() const override { return node; }
    NodeRef(const std::string &k, nlohmann::json &n) : Impl(k), node(n) {}
    NodeRef(const NodeRef &other) : Impl(other.key()), node(other.node) {}
 };
@@ -345,13 +345,13 @@ public:
    ChildItImpl(NdType &n, json_it it) : node(n), iter(it) {}
    ChildItImpl(const ChildItImpl &other) : node(other.node), iter(other.iter) {}
    using child_iterator = RooFit::Experimental::JSONNode::child_iterator_t<Nd>;
-   virtual std::unique_ptr<typename child_iterator::Impl> clone() const override
+   std::unique_ptr<typename child_iterator::Impl> clone() const override
    {
       return std::make_unique<ChildItImpl>(node, iter);
    }
-   virtual void forward() override { ++iter; }
-   virtual void backward() override { --iter; }
-   virtual Nd &current() override
+   void forward() override { ++iter; }
+   void backward() override { --iter; }
+   Nd &current() override
    {
       if (node.is_seq()) {
          return TJSONTree::Node::Impl::mkNode(node.get_tree(), "", iter.value());
@@ -359,7 +359,7 @@ public:
          return TJSONTree::Node::Impl::mkNode(node.get_tree(), iter.key(), iter.value());
       }
    }
-   virtual bool equal(const typename child_iterator::Impl &other) const override
+   bool equal(const typename child_iterator::Impl &other) const override
    {
       auto it = dynamic_cast<const ChildItImpl<Nd, NdType, json_it> *>(&other);
       return it && it->iter == this->iter;

@@ -89,7 +89,7 @@ namespace RooStats {
          fNllAlt=NULL ;
       }
 
-      virtual ~SimpleLikelihoodRatioTestStat() {
+      ~SimpleLikelihoodRatioTestStat() override {
          if (fNullParameters) delete fNullParameters;
          if (fAltParameters) delete fAltParameters;
          if (fNllNull) delete fNllNull ;
@@ -134,18 +134,18 @@ namespace RooStats {
 
       /// set the conditional observables which will be used when creating the NLL
       /// so the pdf's will not be normalized on the conditional observables when computing the NLL
-      virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+      void SetConditionalObservables(const RooArgSet& set) override {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
       /// set the global observables which will be used when creating the NLL
       /// so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
-      virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
+      void SetGlobalObservables(const RooArgSet& set) override {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
-      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullPOI);
+      Double_t Evaluate(RooAbsData& data, RooArgSet& nullPOI) override;
 
       virtual void EnableDetailedOutput( bool e=true ) { fDetailedOutputEnabled = e; fDetailedOutput = NULL; }
-      virtual const RooArgSet* GetDetailedOutput(void) const { return fDetailedOutput; }
+      const RooArgSet* GetDetailedOutput(void) const override { return fDetailedOutput; }
 
-      virtual const TString GetVarName() const {
+      const TString GetVarName() const override {
          return "log(L(#mu_{1}) / L(#mu_{0}))";
       }
 
@@ -169,7 +169,7 @@ namespace RooStats {
 
 
    protected:
-   ClassDef(SimpleLikelihoodRatioTestStat,4)
+   ClassDefOverride(SimpleLikelihoodRatioTestStat,4)
 };
 
 }

@@ -31,22 +31,22 @@ class RooBinnedGenContext : public RooAbsGenContext {
 public:
   RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
-  virtual ~RooBinnedGenContext();
+  ~RooBinnedGenContext() override;
 
-  RooDataSet* generate(Double_t nEvents=0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) ;
+  RooDataSet* generate(Double_t nEvents=0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) override ;
 
-  virtual void setProtoDataOrder(Int_t*)  {}
+  void setProtoDataOrder(Int_t*) override  {}
 
-  virtual void attach(const RooArgSet& params) ;
+  void attach(const RooArgSet& params) override ;
 
-  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual void setExpectedData(Bool_t) ;
+  void setExpectedData(Bool_t) override ;
 
 protected:
 
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void initGenerator(const RooArgSet &theEvent) override;
+  void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
   RooBinnedGenContext(const RooBinnedGenContext& other) ;
 
@@ -56,7 +56,7 @@ protected:
   RooDataHist* _hist ;          ///< Histogram
   Bool_t _expectedData ;        ///< Asimov?
 
-  ClassDef(RooBinnedGenContext,0) // Specialized context for generating a dataset from a binned pdf
+  ClassDefOverride(RooBinnedGenContext,0) // Specialized context for generating a dataset from a binned pdf
 };
 
 #endif

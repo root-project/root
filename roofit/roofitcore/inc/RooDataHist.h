@@ -134,9 +134,9 @@ public:
 
   void reset() override;
 
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
-  virtual void printArgs(std::ostream& os) const override;
-  virtual void printValue(std::ostream& os) const override;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printArgs(std::ostream& os) const override;
+  void printValue(std::ostream& os) const override;
   void printDataHistogram(std::ostream& os, RooRealVar* obs) const;
 
   void SetName(const char *name) override;

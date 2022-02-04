@@ -37,12 +37,12 @@ public:
     strlcpy(_label,other._label,256) ;
   } ;
 
-  virtual ~RooCatType() {
+  ~RooCatType() override {
     // Destructor
   } ;
-  virtual TObject* Clone(const char*) const { return new RooCatType(*this); }
+  TObject* Clone(const char*) const override { return new RooCatType(*this); }
 
-  virtual const Text_t* GetName() const {
+  const Text_t* GetName() const override {
     // Return state name
     return _label[0] ? _label : 0 ;
   }
@@ -86,12 +86,12 @@ public:
   _value = newValue ;
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -103,7 +103,7 @@ protected:
   Int_t _value ;     ///< Index value
   char _label[256] ; ///< State name
 
-  ClassDef(RooCatType,1) // Category state, (name,index) pair
+  ClassDefOverride(RooCatType,1) // Category state, (name,index) pair
 } R__SUGGEST_ALTERNATIVE("Instead of RooCatType, directly use the category number returned by RooAbsCategory::getIndex().\n"
     "Convert it into a name using RooAbsCategory::lookupName(index).");
 

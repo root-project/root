@@ -29,24 +29,24 @@ public:
   RooListProxy(const char* name, const char* desc, RooAbsArg* owner,
 	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
   RooListProxy(const char* name, RooAbsArg* owner, const RooListProxy& other) ;
-  virtual ~RooListProxy() ;
+  ~RooListProxy() override ;
 
-  virtual const char* name() const override { return GetName() ; }
+  const char* name() const override { return GetName() ; }
 
   // List content management (modified for server hooks)
   using RooAbsCollection::add;
-  virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) override;
+  Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) override;
   virtual Bool_t add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent) ;
 
   using RooAbsCollection::addOwned;
-  virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE) override;
-  virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) override;
-  virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) override;
-  virtual void removeAll() override;
+  Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE) override;
+  Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) override;
+  Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) override;
+  void removeAll() override;
 
   RooListProxy& operator=(const RooArgList& other) ;
 
-  virtual void print(std::ostream& os, Bool_t addContents=kFALSE) const override;
+  void print(std::ostream& os, Bool_t addContents=kFALSE) const override;
 
 protected:
 
@@ -54,7 +54,7 @@ protected:
   Bool_t _defValueServer ;  ///< Propagate value dirty flags?
   Bool_t _defShapeServer ;  ///< Propagate shape dirty flags?
 
-  virtual Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) override;
+  Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) override;
 
   ClassDefOverride(RooListProxy,1) // Proxy class for a RooArgList
 };

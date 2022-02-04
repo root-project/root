@@ -29,32 +29,32 @@ public:
   RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, 
                                       const RooNumIntConfig& config) ;
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooAdaptiveGaussKronrodIntegrator1D();
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooAdaptiveGaussKronrodIntegrator1D() override;
 
-  virtual Bool_t checkLimits() const;
-  virtual Double_t integral(const Double_t *yvec=0) ;
+  Bool_t checkLimits() const override;
+  Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax);
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {
+  Bool_t setLimits(Double_t* xmin, Double_t* xmax) override;
+  Bool_t setUseIntegrandLimits(Bool_t flag) override {
     // If flag is true, intergration limits are taken from definition in input function binding
     _useIntegrandLimits = flag ; return kTRUE ; 
   }
 
-  virtual Bool_t canIntegrate1D() const { 
+  Bool_t canIntegrate1D() const override { 
     // We can integrate 1-dimensional functions
     return kTRUE ; 
   }
-  virtual Bool_t canIntegrate2D() const { 
+  Bool_t canIntegrate2D() const override { 
     // We can not integrate 2-dimensional functions
     return kFALSE ; 
   }
-  virtual Bool_t canIntegrateND() const { 
+  Bool_t canIntegrateND() const override { 
     // We can not integrate >2-dimensional functions
     return kFALSE ; 
   }
-  virtual Bool_t canIntegrateOpenEnded() const { 
+  Bool_t canIntegrateOpenEnded() const override { 
     // We can integrate over open-ended domains
     return kTRUE ; 
   }
@@ -88,7 +88,7 @@ protected:
   mutable Double_t _xmin;              //! Lower integration bound
   mutable Double_t _xmax;              //! Upper integration bound
 
-  ClassDef(RooAdaptiveGaussKronrodIntegrator1D,0) // 1-dimensional adaptive Gauss-Kronrod numerical integration engine
+  ClassDefOverride(RooAdaptiveGaussKronrodIntegrator1D,0) // 1-dimensional adaptive Gauss-Kronrod numerical integration engine
 };
 
 #endif

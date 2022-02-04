@@ -1360,12 +1360,12 @@ public:
    double _condition;
 
    CacheElem(){};
-   virtual void operModeHook(RooAbsArg::OperMode) override{};
+   void operModeHook(RooAbsArg::OperMode) override{};
 
    //////////////////////////////////////////////////////////////////////////////
    /// retrieve the list of contained args
 
-   virtual RooArgList containedArgs(Action) override
+   RooArgList containedArgs(Action) override
    {
       RooArgList args(*_sumFunc);
       args.add(_weights);
@@ -1379,7 +1379,7 @@ public:
    //////////////////////////////////////////////////////////////////////////////
    // default destructor
 
-   virtual ~CacheElem() {}
+   ~CacheElem() override {}
 
    //////////////////////////////////////////////////////////////////////////////
    /// create the basic objects required for the morphing

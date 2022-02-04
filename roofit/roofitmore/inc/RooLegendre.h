@@ -27,24 +27,24 @@ public:
   RooLegendre(const char *name, const char *title, RooAbsReal& ctheta, int l1, int m1, int l2, int m2);
 
   RooLegendre(const RooLegendre& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooLegendre(*this, newname); }
-  inline virtual ~RooLegendre() { }
+  TObject* clone(const char* newname) const override { return new RooLegendre(*this, newname); }
+  inline ~RooLegendre() override { }
 
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  virtual Int_t getMaxVal( const RooArgSet& vars) const;
-  virtual Double_t maxVal( Int_t code) const;
+  Int_t getMaxVal( const RooArgSet& vars) const override;
+  Double_t maxVal( Int_t code) const override;
 
 protected: // allow RooSpHarmonic access...
   RooRealProxy _ctheta;
   int _l1,_m1;
   int _l2,_m2;
 
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
 
-  ClassDef(RooLegendre,1) // Legendre polynomial
+  ClassDefOverride(RooLegendre,1) // Legendre polynomial
 };
 
 #endif

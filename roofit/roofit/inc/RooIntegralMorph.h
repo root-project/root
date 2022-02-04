@@ -34,10 +34,10 @@ public:
            RooAbsReal& _x,
          RooAbsReal& _alpha, Bool_t cacheAlpha=kFALSE);
   RooIntegralMorph(const RooIntegralMorph& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooIntegralMorph(*this,newname); }
-  inline virtual ~RooIntegralMorph() { }
+  TObject* clone(const char* newname) const override { return new RooIntegralMorph(*this,newname); }
+  inline ~RooIntegralMorph() override { }
 
-  Bool_t selfNormalized() const {
+  Bool_t selfNormalized() const override {
     // P.d.f is self normalized
     return kTRUE ;
   }
@@ -50,14 +50,14 @@ public:
     return _cacheAlpha ;
   }
 
-  virtual void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const ;
+  void preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& orderedObs) const override ;
 
   class MorphCacheElem : public RooAbsCachedPdf::PdfCacheElem {
   public:
     MorphCacheElem(RooIntegralMorph& self, const RooArgSet* nset) ;
-    ~MorphCacheElem() ;
+    ~MorphCacheElem() override ;
     void calculate(TIterator* iter) ;
-    virtual RooArgList containedArgs(Action) ;
+    RooArgList containedArgs(Action) override ;
 
   protected:
 
@@ -92,11 +92,11 @@ public:
 protected:
 
   friend class MorphCacheElem ;
-  virtual PdfCacheElem* createCache(const RooArgSet* nset) const ;
-  virtual const char* inputBaseName() const ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(PdfCacheElem& cache) const ;
+  PdfCacheElem* createCache(const RooArgSet* nset) const override ;
+  const char* inputBaseName() const override ;
+  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooArgSet* actualParameters(const RooArgSet& nset) const override ;
+  void fillCacheObject(PdfCacheElem& cache) const override ;
 
   RooRealProxy pdf1 ; // First input shape
   RooRealProxy pdf2 ; // Second input shape
@@ -106,11 +106,11 @@ protected:
   mutable MorphCacheElem* _cache ; // Current morph cache element in use
 
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
 
-  ClassDef(RooIntegralMorph,1) // Linear shape interpolation operator p.d.f
+  ClassDefOverride(RooIntegralMorph,1) // Linear shape interpolation operator p.d.f
 };
 
 #endif

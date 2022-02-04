@@ -38,26 +38,26 @@ public:
   inline RooTruthModel() { }
   RooTruthModel(const char *name, const char *title, RooAbsRealLValue& x) ;
   RooTruthModel(const RooTruthModel& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooTruthModel(*this,newname) ; }
-  virtual ~RooTruthModel();
+  TObject* clone(const char* newname) const override { return new RooTruthModel(*this,newname) ; }
+  ~RooTruthModel() override;
 
-  virtual Int_t basisCode(const char* name) const ;
+  Int_t basisCode(const char* name) const override ;
 
-  virtual RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars,
+  RooAbsGenContext* modelGenContext(const RooAbsAnaConvPdf& convPdf, const RooArgSet &vars,
                                             const RooDataSet *prototype=0, const RooArgSet* auxProto=0,
-                                            Bool_t verbose= kFALSE) const;
+                                            Bool_t verbose= kFALSE) const override;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
-  virtual Double_t evaluate() const ;
-  virtual void changeBasis(RooFormulaVar* basis) ;
+  Double_t evaluate() const override ;
+  void changeBasis(RooFormulaVar* basis) override ;
 
-  ClassDef(RooTruthModel,1) // Truth resolution model (delta function)
+  ClassDefOverride(RooTruthModel,1) // Truth resolution model (delta function)
 };
 
 #endif

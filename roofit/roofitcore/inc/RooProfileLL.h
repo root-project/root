@@ -25,7 +25,7 @@ public:
   RooProfileLL() ;
   RooProfileLL(const char *name, const char *title, RooAbsReal& nll, const RooArgSet& observables);
   RooProfileLL(const RooProfileLL& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooProfileLL(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooProfileLL(*this,newname); }
 
   void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
   Bool_t alwaysStartFromMin() const { return _startFromMin ; }
@@ -35,9 +35,9 @@ public:
   const RooArgSet& bestFitParams() const ;
   const RooArgSet& bestFitObs() const ;
 
-  virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
+  RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) override ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
+  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override ;
 
   void clearAbsMin() { _absMinValid = kFALSE ; }
 
@@ -65,12 +65,12 @@ protected:
   mutable RooArgSet _obsAbsMin ; ///< Observable values at absolute minimum
   mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
   mutable Int_t _neval ; ///< Number evaluations used in last minimization
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 
 private:
 
-  ClassDef(RooProfileLL,0) // Real-valued function representing profile likelihood of external (likelihood) function
+  ClassDefOverride(RooProfileLL,0) // Real-valued function representing profile likelihood of external (likelihood) function
 };
 
 #endif

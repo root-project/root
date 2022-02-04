@@ -27,10 +27,10 @@ public:
   RooGaussian(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
   RooGaussian(const RooGaussian& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname) const override {
     return new RooGaussian(*this,newname);
   }
-  inline virtual ~RooGaussian() { }
+  inline ~RooGaussian() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;

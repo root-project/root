@@ -32,8 +32,8 @@ public:
   RooHistPdf(const char *name, const char *title, const RooArgSet& vars, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder=0);
   RooHistPdf(const RooHistPdf& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooHistPdf(*this,newname); }
-  virtual ~RooHistPdf() ;
+  TObject* clone(const char* newname) const override { return new RooHistPdf(*this,newname); }
+  ~RooHistPdf() override ;
 
   RooDataHist& dataHist()  {
     // Return RooDataHist that is represented
@@ -67,8 +67,8 @@ public:
                                      RooDataHist& dataHist,
                                      bool histFuncMode) ;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   void setCdfBoundaries(Bool_t flag) {
     // Set use of special boundary conditions for c.d.f.s
@@ -88,23 +88,23 @@ public:
     return _unitNorm ;
   }
 
-  virtual Bool_t selfNormalized() const { return _unitNorm ; }
+  Bool_t selfNormalized() const override { return _unitNorm ; }
 
-  virtual Int_t getMaxVal(const RooArgSet& vars) const ;
-  virtual Double_t maxVal(Int_t code) const ;
+  Int_t getMaxVal(const RooArgSet& vars) const override ;
+  Double_t maxVal(Int_t code) const override ;
 
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ;
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual Bool_t isBinnedDistribution(const RooArgSet&) const { return _intOrder==0 ; }
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
+  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  Bool_t isBinnedDistribution(const RooArgSet&) const override { return _intOrder==0 ; }
 
 
 protected:
 
   Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
-  Bool_t importWorkspaceHook(RooWorkspace& ws) ;
+  Bool_t importWorkspaceHook(RooWorkspace& ws) override ;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
   Double_t totalVolume() const ;
   friend class RooAbsCachedPdf ;
   Double_t totVolume() const ;
@@ -118,7 +118,7 @@ protected:
   mutable Double_t  _totVolume ;     ///<! Total volume of space (product of ranges of observables)
   Bool_t            _unitNorm  ;     ///< Assume contents is unit normalized (for use as pdf cache)
 
-  ClassDef(RooHistPdf,4) // Histogram based PDF
+  ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };
 
 #endif

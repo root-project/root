@@ -72,10 +72,10 @@ public:
   RooAbsCollection(const char *name);
   virtual TObject* clone(const char* newname) const = 0 ;
   virtual TObject* create(const char* newname) const = 0 ;
-  virtual TObject* Clone(const char* newname=0) const {
+  TObject* Clone(const char* newname=0) const override {
     return clone(newname?newname:GetName()) ;
   }
-  virtual ~RooAbsCollection();
+  ~RooAbsCollection() override;
 
   // Create a copy of an existing list. New variables cannot be added
   // to a copied list. The variables in the copied list are independent
@@ -168,10 +168,10 @@ public:
   RooAbsArg *find(const RooAbsArg&) const ;
 
   /// Find object by name in the collection
-  TObject* FindObject(const char* name) const { return find(name); }
+  TObject* FindObject(const char* name) const override { return find(name); }
 
   /// Find object in the collection, Note: matching by object name, like the find() method
-  TObject* FindObject(const TObject* obj) const { auto arg = dynamic_cast<const RooAbsArg*>(obj); return (arg) ? find(*arg) : nullptr; }
+  TObject* FindObject(const TObject* obj) const override { auto arg = dynamic_cast<const RooAbsArg*>(obj); return (arg) ? find(*arg) : nullptr; }
 
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
@@ -291,20 +291,20 @@ public:
 
   Int_t index(const char* name) const;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
   std::string contentsString() const ;
 
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
 
   // Latex printing methods
   void printLatex(const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
@@ -318,7 +318,7 @@ public:
     // Set name of collection
     _name= name;
   }
-  const char* GetName() const {
+  const char* GetName() const override {
     // Return namer of collection
     return _name.Data() ;
   }
@@ -336,7 +336,7 @@ public:
 
   void sort(Bool_t reverse = false);
 
-  virtual void RecursiveRemove(TObject *obj);
+  void RecursiveRemove(TObject *obj) override;
 
   void useHashMapForFind(bool flag) const;
 
@@ -396,7 +396,7 @@ private:
 
   void insert(RooAbsArg*);
 
-  ClassDef(RooAbsCollection,3) // Collection of RooAbsArg objects
+  ClassDefOverride(RooAbsCollection,3) // Collection of RooAbsArg objects
 };
 
 #endif

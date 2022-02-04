@@ -43,33 +43,33 @@ public:
   // Constructors, assignment etc.
   RooFitResult(const char* name=0, const char* title=0) ;
   RooFitResult(const RooFitResult& other) ;
-  virtual TObject* Clone(const char* newname = 0) const {
+  TObject* Clone(const char* newname = 0) const override {
     RooFitResult* r =  new RooFitResult(*this) ;
     if (newname && *newname) r->SetName(newname) ;
     return r ;
   }
   virtual TObject* clone() const { return new RooFitResult(*this); }
-  virtual ~RooFitResult() ;
+  ~RooFitResult() override ;
 
   static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
 
   static RooFitResult *prefitResult(const RooArgList &paramList);
 
   // Printing interface (human readable)
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printValue(std::ostream& os) const override ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
-  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
+  StyleOption defaultPrintStyle(Option_t* opt) const override ;
 
   RooAbsPdf* createHessePdf(const RooArgSet& params) const ;
 
@@ -154,8 +154,8 @@ public:
   bool isIdenticalNoCov(const RooFitResult& other, double tol=1e-6, bool verbose=true) const ;
   bool isIdentical(const RooFitResult& other, double tol=1e-6, double tolCorr=1e-4, bool verbose=true) const ;
 
-  void SetName(const char *name) ;
-  void SetNameTitle(const char *name, const char* title) ;
+  void SetName(const char *name) override ;
+  void SetNameTitle(const char *name, const char* title) override ;
 
 protected:
 
@@ -201,7 +201,7 @@ protected:
 
   std::vector<std::pair<std::string,int> > _statusHistory ; ///< History of status codes
 
-  ClassDef(RooFitResult,5) // Container class for fit result
+  ClassDefOverride(RooFitResult,5) // Container class for fit result
 };
 
 #endif

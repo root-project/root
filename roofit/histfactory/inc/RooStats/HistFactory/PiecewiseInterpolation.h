@@ -32,10 +32,10 @@ public:
 
   PiecewiseInterpolation() ;
   PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet, Bool_t takeOwnerShip=kFALSE) ;
-  virtual ~PiecewiseInterpolation() ;
+  ~PiecewiseInterpolation() override ;
 
   PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new PiecewiseInterpolation(*this, newname); }
+  TObject* clone(const char* newname) const override { return new PiecewiseInterpolation(*this, newname); }
 
   /// Return pointer to the nominal hist function.
   const RooAbsReal* nominalHist() const {
@@ -54,8 +54,8 @@ public:
   //virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
   Bool_t setBinIntegrator(RooArgSet& allVars) ;
 
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const override ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
 
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
 
@@ -63,17 +63,17 @@ public:
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ;
-  virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const ;
+  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
+  Bool_t isBinnedDistribution(const RooArgSet& obs) const override ;
 
 protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    virtual ~CacheElem() {} ;
-    virtual RooArgList containedArgs(Action) {
+    ~CacheElem() override {} ;
+    RooArgList containedArgs(Action) override {
       RooArgList ret(_funcIntList) ;
       ret.add(_lowIntList);
       ret.add(_highIntList);
@@ -96,10 +96,10 @@ protected:
 
   std::vector<int> _interpCode;
 
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
 
-  ClassDef(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
+  ClassDefOverride(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };
 
 #endif

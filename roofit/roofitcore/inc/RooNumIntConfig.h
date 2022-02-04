@@ -28,7 +28,7 @@ public:
   RooNumIntConfig();
   RooNumIntConfig(const RooNumIntConfig& other) ;
   RooNumIntConfig& operator=(const RooNumIntConfig& other) ;
-  virtual ~RooNumIntConfig();
+  ~RooNumIntConfig() override;
 
   // Return selected integration techniques for 1,2,N dimensional integrals
   RooCategory& method1D() { return _method1D ; }
@@ -63,10 +63,10 @@ public:
   const RooArgSet& getConfigSection(const char* name) const ;
   RooArgSet& getConfigSection(const char* name) ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const override;
 
-  virtual StyleOption defaultPrintStyle(Option_t* opt) const ;
-  inline virtual void Print(Option_t *options= 0) const {
+  StyleOption defaultPrintStyle(Option_t* opt) const override ;
+  inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -83,7 +83,7 @@ protected:
   RooCategory _methodNDOpen ; ///< Selects integration method for open ended ND integrals
   RooLinkedList _configSets ; ///< List of configuration sets for individual integration methods
 
-  ClassDef(RooNumIntConfig,1) // Numeric Integrator configuration
+  ClassDefOverride(RooNumIntConfig,1) // Numeric Integrator configuration
 };
 
 #endif

@@ -36,16 +36,16 @@ public:
           const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
           const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
-  virtual ~RooConvGenContext();
+  ~RooConvGenContext() override;
 
-  virtual void setProtoDataOrder(Int_t* lut) ;
+  void setProtoDataOrder(Int_t* lut) override ;
 
-  virtual void attach(const RooArgSet& params) ;
+  void attach(const RooArgSet& params) override ;
 
-  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void initGenerator(const RooArgSet &theEvent) override;
+  void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
 protected:
 
@@ -64,7 +64,7 @@ protected:
   RooRealVar* _cvPdf{nullptr};   ///< Convolution variable in PDFxTruth event
   RooRealVar* _cvOut{nullptr};   ///< Convolution variable in output event
 
-  ClassDef(RooConvGenContext,0) // Context for generating a dataset from a PDF
+  ClassDefOverride(RooConvGenContext,0) // Context for generating a dataset from a PDF
 };
 
 #endif

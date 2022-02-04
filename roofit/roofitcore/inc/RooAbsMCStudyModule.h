@@ -32,7 +32,7 @@ public:
 
   RooAbsMCStudyModule(const char* name, const char* title) ;
   RooAbsMCStudyModule(const RooAbsMCStudyModule& other) ;
-  virtual ~RooAbsMCStudyModule() {} ;
+  ~RooAbsMCStudyModule() override {} ;
 
   /// Initializer method called upon attachement to given RooMCStudy object
   Bool_t doInitializeInstance(RooMCStudy& /*study*/) ;
@@ -189,7 +189,7 @@ private:
 
   RooMCStudy* _mcs ; ///< Pointer to RooMCStudy object module is attached to
 
-  ClassDef(RooAbsMCStudyModule,0) // Monte Carlo study manager add-on module
+  ClassDefOverride(RooAbsMCStudyModule,0) // Monte Carlo study manager add-on module
 } ;
 
 

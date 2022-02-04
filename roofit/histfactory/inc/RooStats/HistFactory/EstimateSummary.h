@@ -50,8 +50,8 @@ struct  EstimateSummary : public TObject {
 
    // simple structure to hold necessary information about each channel
    EstimateSummary();
-   virtual ~EstimateSummary();
-   void Print(const char *opt = 0) const ;
+   ~EstimateSummary() override;
+   void Print(const char *opt = 0) const override ;
    void AddSyst( const std::string & sname, TH1* low, TH1* high);
    bool operator==(const EstimateSummary &other) const ;
    bool CompareHisto( const TH1 * one, const TH1 * two) const ;
@@ -80,7 +80,7 @@ struct  EstimateSummary : public TObject {
   std::string shapeFactorName; //
   std::vector<ShapeSys> shapeSysts; //
 
-   ClassDef(RooStats::HistFactory::EstimateSummary,1)
+   ClassDefOverride(RooStats::HistFactory::EstimateSummary,1)
 };
 
 }

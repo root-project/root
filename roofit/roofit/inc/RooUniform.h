@@ -26,26 +26,26 @@ public:
   RooUniform() {} ;
   RooUniform(const char *name, const char *title, const RooArgSet& _x);
   RooUniform(const RooUniform& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooUniform(*this,newname); }
-  inline virtual ~RooUniform() { }
+  TObject* clone(const char* newname) const override { return new RooUniform(*this,newname); }
+  inline ~RooUniform() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
 
 protected:
 
   RooListProxy x ;
 
-  Double_t evaluate() const ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/ = nullptr) const;
+  Double_t evaluate() const override ;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/ = nullptr) const override;
 
 
 private:
 
-  ClassDef(RooUniform,1) // Flat PDF in N dimensions
+  ClassDefOverride(RooUniform,1) // Flat PDF in N dimensions
 };
 
 #endif

@@ -98,7 +98,7 @@ protected:
     outfile.WriteObject(&w, "ws");
   }
 
-  ~TestRooWorkspaceWithGaussian() {
+  ~TestRooWorkspaceWithGaussian() override {
     gSystem->Unlink(_filename);
   }
 

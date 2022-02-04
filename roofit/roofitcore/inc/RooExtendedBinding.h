@@ -18,18 +18,18 @@ public:
   RooExtendedBinding() {} ; 
   RooExtendedBinding(const char *name, const char *title, RooAbsPdf& _pdf);
   RooExtendedBinding(const RooExtendedBinding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooExtendedBinding(*this,newname); }
-  inline virtual ~RooExtendedBinding() { }
+  TObject* clone(const char* newname) const override { return new RooExtendedBinding(*this,newname); }
+  inline ~RooExtendedBinding() override { }
 
 protected:
 
   RooRealProxy pdf ;
   
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
 
-  ClassDef(RooExtendedBinding,1) // Your description goes here...
+  ClassDefOverride(RooExtendedBinding,1) // Your description goes here...
 };
  
 #endif

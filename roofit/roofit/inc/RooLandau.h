@@ -26,11 +26,11 @@ public:
   RooLandau() {} ;
   RooLandau(const char *name, const char *title, RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
   RooLandau(const RooLandau& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooLandau(*this,newname); }
-  inline virtual ~RooLandau() { }
+  TObject* clone(const char* newname) const override { return new RooLandau(*this,newname); }
+  inline ~RooLandau() override { }
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
   
 protected:
   
@@ -38,13 +38,13 @@ protected:
   RooRealProxy mean ;
   RooRealProxy sigma ;
   
-  Double_t evaluate() const ;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
-  inline bool canComputeBatchWithCuda() const { return true; }
+  Double_t evaluate() const override ;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
   
 private:
   
-  ClassDef(RooLandau,1) // Landau Distribution PDF
+  ClassDefOverride(RooLandau,1) // Landau Distribution PDF
 };
 
 #endif

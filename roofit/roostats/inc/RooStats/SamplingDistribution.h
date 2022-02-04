@@ -43,7 +43,7 @@ namespace RooStats {
     SamplingDistribution();
 
     /// Destructor of SamplingDistribution
-    virtual ~SamplingDistribution();
+    ~SamplingDistribution() override;
 
     /// get the inverse of the Cumulative distribution function
     Double_t InverseCDF(Double_t pvalue);
@@ -93,7 +93,7 @@ namespace RooStats {
     /// internal function to sort values
     void SortValues() const;
 
-    ClassDef(SamplingDistribution,2)  /// Class containing the results of the HybridCalculator
+    ClassDefOverride(SamplingDistribution,2)  /// Class containing the results of the HybridCalculator
   };
 }
 

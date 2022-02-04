@@ -48,17 +48,17 @@ public:
              RooDataHist::ErrorType=RooDataHist::SumW2) ;
 
   RooChi2Var(const RooChi2Var& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooChi2Var(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooChi2Var(*this,newname); }
 
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,
-                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) {
+  RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& dhist,
+                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) override {
     // Virtual constructor
     return new RooChi2Var(name,title,(RooAbsPdf&)pdf,(RooDataHist&)dhist,projDeps,_funcMode,cfg,_etype) ;
   }
 
-  virtual ~RooChi2Var();
+  ~RooChi2Var() override;
 
-  virtual Double_t defaultErrorLevel() const {
+  Double_t defaultErrorLevel() const override {
     // The default error level for MINUIT error analysis for a chi^2 is 1.0
     return 1.0 ;
   }
@@ -70,9 +70,9 @@ protected:
   RooDataHist::ErrorType _etype ;     ///< Error type store in associated RooDataHist
   FuncMode _funcMode ;                ///< Function, P.d.f. or extended p.d.f?
 
-  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
+  Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
-  ClassDef(RooChi2Var,1) // Chi^2 function of p.d.f w.r.t a binned dataset
+  ClassDefOverride(RooChi2Var,1) // Chi^2 function of p.d.f w.r.t a binned dataset
 };
 
 

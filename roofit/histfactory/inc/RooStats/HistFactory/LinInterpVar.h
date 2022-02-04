@@ -32,8 +32,8 @@ namespace HistFactory{
     LinInterpVar(const char *name, const char *title);
     LinInterpVar(const LinInterpVar&, const char*);
 
-    virtual TObject* clone(const char* newname) const { return new LinInterpVar(*this, newname); }
-    virtual ~LinInterpVar() ;
+    TObject* clone(const char* newname) const override { return new LinInterpVar(*this, newname); }
+    ~LinInterpVar() override ;
 
 
   protected:
@@ -45,9 +45,9 @@ namespace HistFactory{
 
     TIterator* _paramIter ;  ///<! do not persist
 
-    Double_t evaluate() const;
+    Double_t evaluate() const override;
 
-    ClassDef(RooStats::HistFactory::LinInterpVar,1) // Piecewise linear interpolation
+    ClassDefOverride(RooStats::HistFactory::LinInterpVar,1) // Piecewise linear interpolation
   };
 }
 }

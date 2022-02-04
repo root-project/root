@@ -40,23 +40,23 @@ public:
   RooCurve(const char *name, const char *title, const RooAbsFunc &func, Double_t xlo,
       Double_t xhi, UInt_t minPoints, Double_t prec= 1e-3, Double_t resolution= 1e-3,
       Bool_t shiftToZero=kFALSE, WingMode wmode=Extended, Int_t nEvalError=-1, Int_t doEEVal=kFALSE, Double_t eeVal=0);
-  virtual ~RooCurve();
+  ~RooCurve() override;
 
   RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1=1., Double_t scale2=1.) ;
 
   void addPoint(Double_t x, Double_t y);
 
-  Double_t getFitRangeBinW() const;
-  Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const ;
-  Double_t getFitRangeNEvt() const;
+  Double_t getFitRangeBinW() const override;
+  Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const override ;
+  Double_t getFitRangeNEvt() const override;
 
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
@@ -90,7 +90,7 @@ protected:
 
   Bool_t _showProgress ; ///<! Show progress indication when adding points
 
-  ClassDef(RooCurve,1) // 1-dimensional smooth curve for use in RooPlots
+  ClassDefOverride(RooCurve,1) // 1-dimensional smooth curve for use in RooPlots
 };
 
 #endif

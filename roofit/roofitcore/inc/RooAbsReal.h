@@ -71,7 +71,7 @@ public:
         const char *unit= "") ;
   RooAbsReal(const RooAbsReal& other, const char* name=0);
   RooAbsReal& operator=(const RooAbsReal& other);
-  virtual ~RooAbsReal();
+  ~RooAbsReal() override;
 
 
 
@@ -142,8 +142,8 @@ public:
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
   Bool_t operator==(Double_t value) const ;
-  virtual Bool_t operator==(const RooAbsArg& other) const;
-  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const;
+  Bool_t operator==(const RooAbsArg& other) const override;
+  Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const override;
 
 
   inline const Text_t *getUnit() const {
@@ -160,7 +160,7 @@ public:
   RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE) const;
 
   // Create a fundamental-type object that can hold our value.
-  RooAbsArg *createFundamental(const char* newname=0) const;
+  RooAbsArg *createFundamental(const char* newname=0) const override;
 
   // Analytical integration support
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ;
@@ -305,12 +305,12 @@ public:
              Bool_t correctForBinVolume=kFALSE, Bool_t showProgress=kFALSE) const ;
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
+  void writeToStream(std::ostream& os, Bool_t compact) const override ;
 
   // Printing interface (human readable)
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printValue(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
 
   inline void setCachedValue(double value, bool notifyClients = true) final;
 
@@ -426,7 +426,7 @@ protected:
 
   // Internal consistency checking (needed by RooDataSet)
   /// Check if current value is valid.
-  virtual bool isValid() const { return isValidReal(_value); }
+  bool isValid() const override { return isValidReal(_value); }
   /// Interface function to check if given value is a valid value for this object. Returns true unless overridden.
   virtual bool isValidReal(double /*value*/, bool printError = false) const { (void)printError; return true; }
 
@@ -469,12 +469,12 @@ protected:
   // Hooks for RooDataSet interface
   friend class RooRealIntegral ;
   friend class RooVectorDataStore ;
-  virtual void syncCache(const RooArgSet* set=0) { getVal(set) ; }
-  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) ;
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
-  virtual void attachToVStore(RooVectorDataStore& vstore) ;
-  virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
-  virtual void fillTreeBranch(TTree& t) ;
+  void syncCache(const RooArgSet* set=0) override { getVal(set) ; }
+  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) override ;
+  void attachToTree(TTree& t, Int_t bufSize=32000) override ;
+  void attachToVStore(RooVectorDataStore& vstore) override ;
+  void setTreeBranchStatus(TTree& t, Bool_t active) override ;
+  void fillTreeBranch(TTree& t) override ;
 
   friend class RooRealBinding ;
   Double_t _plotMin ;       ///< Minimum of plot range
@@ -584,7 +584,7 @@ protected:
   mutable RooArgSet* _lastNSet ; ///<!
   static Bool_t _hideOffset ;    ///< Offset hiding flag
 
-  ClassDef(RooAbsReal,2) // Abstract real-valued variable
+  ClassDefOverride(RooAbsReal,2) // Abstract real-valued variable
 };
 
 

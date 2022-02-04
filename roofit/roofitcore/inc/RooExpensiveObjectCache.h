@@ -26,7 +26,7 @@ public:
 
   RooExpensiveObjectCache() ;
   RooExpensiveObjectCache(const RooExpensiveObjectCache&) ;
-  virtual ~RooExpensiveObjectCache() ;
+  ~RooExpensiveObjectCache() override ;
 
   Bool_t registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, TIterator* paramIter) ;
   Bool_t registerObject(const char* ownerName, const char* objectName, TObject& cacheObject, const RooArgSet& params) ;
@@ -80,7 +80,7 @@ protected:
   std::map<TString,ExpensiveObject*> _map ;
 
 
-  ClassDef(RooExpensiveObjectCache,2) // Singleton class that serves as session repository for expensive objects
+  ClassDefOverride(RooExpensiveObjectCache,2) // Singleton class that serves as session repository for expensive objects
 };
 
 #endif

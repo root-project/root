@@ -172,7 +172,7 @@ public:
 
 protected:
   Bool_t checkForDup(const RooAbsArg& arg, Bool_t silent) const ;
-  virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const override {
+  bool canBeAdded(const RooAbsArg& arg, bool silent) const override {
     return !checkForDup(arg, silent);
   }
 

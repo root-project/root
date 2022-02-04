@@ -43,7 +43,7 @@ public:
   // Copy constructor
   RooLinkedList(const RooLinkedList& other) ;
 
-  virtual TObject* Clone(const char* =0) const {
+  TObject* Clone(const char* =0) const override {
     return new RooLinkedList(*this) ;
   }
 
@@ -58,7 +58,7 @@ public:
   void setHashTableSize(Int_t size) ;
 
   // Destructor
-  virtual ~RooLinkedList() ;
+  ~RooLinkedList() override ;
 
   Int_t GetSize() const { return _size ; }
   std::size_t size() const { return _size ; }
@@ -76,32 +76,32 @@ public:
   RooLinkedListIterImpl rbegin() const;
   RooLinkedListIterImpl rend() const;
 
-  void Clear(Option_t *o=0) ;
-  void Delete(Option_t *o=0) ;
+  void Clear(Option_t *o=0) override ;
+  void Delete(Option_t *o=0) override ;
   TObject* find(const char* name) const ;
   RooAbsArg* findArg(const RooAbsArg*) const ;
-  TObject* FindObject(const char* name) const ;
-  TObject* FindObject(const TObject* obj) const ;
+  TObject* FindObject(const char* name) const override ;
+  TObject* FindObject(const TObject* obj) const override ;
   Int_t IndexOf(const char* name) const ;
   Int_t IndexOf(const TObject* arg) const ;
   TObject* First() const {
     return _first?_first->_arg:0 ;
   }
 
-  virtual void RecursiveRemove(TObject *obj);
+  void RecursiveRemove(TObject *obj) override;
 
-  void Print(const char* opt) const ;
+  void Print(const char* opt) const override ;
   void Sort(Bool_t ascend=kTRUE) ;
 
   // const char* GetName() const { return "" ; /*_name.Data() ; */ }
   // void SetName(const char* /*name*/) { /*_name = name ; */ }
-  const char* GetName() const { return _name.Data() ;  }
+  const char* GetName() const override { return _name.Data() ;  }
   void SetName(const char* name) { _name = name ;  }
 
    void useNptr(Bool_t flag) { _useNptr = flag ; }
    // needed for using it in THashList/THashTable
 
-   ULong_t  Hash() const { return _name.Hash(); }
+   ULong_t  Hash() const override { return _name.Hash(); }
 
 protected:
 
@@ -140,7 +140,7 @@ private:
 
   std::vector<RooLinkedListElem *> _at; ///<! index list for quick index through ::At
 
-  ClassDef(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
+  ClassDefOverride(RooLinkedList,3) // Doubly linked list for storage of RooAbsArg objects
 };
 
 #endif

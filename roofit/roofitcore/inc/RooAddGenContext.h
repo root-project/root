@@ -35,18 +35,18 @@ public:
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   RooAddGenContext(const RooAddModel &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
-  virtual ~RooAddGenContext();
+  ~RooAddGenContext() override;
 
-  virtual void setProtoDataOrder(Int_t* lut) ;
+  void setProtoDataOrder(Int_t* lut) override ;
 
-  virtual void attach(const RooArgSet& params) ;
+  void attach(const RooArgSet& params) override ;
 
-  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
 protected:
 
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void initGenerator(const RooArgSet &theEvent) override;
+  void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
   void updateThresholds() ;
 
   RooAddGenContext(const RooAddGenContext& other) ;
@@ -61,7 +61,7 @@ protected:
   RooAddModel::CacheElem* _mcache ; ///<! RooAddModel cache element
   RooAddPdf::CacheElem* _pcache ;   ///<! RooAddPdf cache element
 
-  ClassDef(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
+  ClassDefOverride(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
 };
 
 #endif
