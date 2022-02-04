@@ -67,14 +67,14 @@ public:
       std::map<std::string, std::string> proxies;
    };
    struct ImportExpression {
-      TClass *tclass = nullptr;
+      TClass const* tclass = nullptr;
       std::vector<std::string> arguments;
    };
 
    typedef std::map<const std::string, std::vector<std::unique_ptr<const Importer>>> ImportMap;
-   typedef std::map<const TClass *, std::vector<std::unique_ptr<const Exporter>>> ExportMap;
-   typedef std::map<TClass *, ExportKeys> ExportKeysMap;
-   typedef std::map<std::string, ImportExpression> ImportExpressionMap;
+   typedef std::map<TClass const*, std::vector<std::unique_ptr<const Exporter>>> ExportMap;
+   typedef std::map<TClass const*, ExportKeys> ExportKeysMap;
+   typedef std::map<const std::string, ImportExpression> ImportExpressionMap;
 
    // The following maps to hold the importers and exporters for runtime lookup
    // could also be static variables directly, but to avoid the static
