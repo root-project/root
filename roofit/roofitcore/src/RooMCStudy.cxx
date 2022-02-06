@@ -97,7 +97,6 @@ fitting the PDF to data and accumulating the fit statistics.
 <tr><td> FitModel(const RooAbsPdf&)        <td> The PDF for fitting if it is different from the PDF for generating.
 <tr><td> ConditionalObservables(const RooArgSet& set)  <td> The set of observables that the PDF should _not_ be normalized over
 <tr><td> Binned(Bool_t flag)               <td> Bin the dataset before fitting it. Speeds up fitting of large data samples
-<tr><td> FitOptions(const char*)           <td> Classic fit options, provided for backward compatibility
 <tr><td> FitOptions(....)                  <td> Options to be used for fitting. All named arguments inside FitOptions() are passed to RooAbsPdf::fitTo().
                                                 `Save()` is especially interesting to be able to retrieve fit results of each run using fitResult().
 <tr><td> Verbose(Bool_t flag)              <td> Activate informational messages in event generation phase
@@ -136,11 +135,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   pc.defineInt("verboseGen","Verbose",0,0) ;
   pc.defineInt("extendedGen","Extended",0,0) ;
   pc.defineInt("binGenData","Binned",0,0) ;
-  pc.defineString("fitOpts","FitOptions",0,"") ;
   pc.defineInt("dummy","FitOptArgs",0,0) ;
-  pc.defineMutex("FitOptions","FitOptArgs") ; // can have either classic or new-style fit options
-  pc.defineMutex("Constrain","FitOptions") ; // constraints only work with new-style fit options
-  pc.defineMutex("ExternalConstraints","FitOptions") ; // constraints only work with new-style fit options
 
   // Process and check varargs
   pc.process(cmdList) ;
@@ -236,7 +231,6 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   _dependents.add(observables) ;
 
   _allDependents.add(_dependents) ;
-  _fitOptions = pc.getString("fitOpts") ;
   _canAddFitResults = kTRUE ;
 
   if (_extendedGen && _genProtoData && !_randProto) {
@@ -309,112 +303,6 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   }
 
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated PLEASE USE CONSTRUCTOR WITH NAMED ARGUMENTS. RETAINED FOR BACKWARD COMPATIBILY.
-///
-/// Constructor with a generator and fit model. Both models may point
-/// to the same object. The 'dependents' set of variables is generated
-/// in the generator phase. The optional prototype dataset is passed to
-/// the generator
-///
-/// Available generator options
-///  v  - Verbose
-///  e  - Extended: use Poisson distribution for Nevts generated
-///
-/// Available fit options
-///  See RooAbsPdf::fitTo()
-///
-
-RooMCStudy::RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
-                const RooArgSet& dependents, const char* genOptions,
-                const char* fitOptions, const RooDataSet* genProtoData,
-                const RooArgSet& projDeps) :
-  TNamed("mcstudy","mcstudy"),
-  _genModel((RooAbsPdf*)&genModel),
-  _genProtoData(genProtoData),
-  _projDeps(projDeps),
-  _constrPdf(0),
-  _constrGenContext(0),
-  _dependents(dependents),
-  _allDependents(dependents),
-  _fitModel((RooAbsPdf*)&fitModel),
-  _nllVar(0),
-  _ngenVar(0),
-  _genParData(0),
-  _fitOptions(fitOptions),
-  _canAddFitResults(kTRUE),
-  _perExptGenParams(0),
-  _silence(kFALSE)
-{
-  // Decode generator options
-  TString genOpt(genOptions) ;
-  genOpt.ToLower() ;
-  _verboseGen = genOpt.Contains("v") ;
-  _extendedGen = genOpt.Contains("e") ;
-  _binGenData = genOpt.Contains("b") ;
-  _randProto = genOpt.Contains("r") ;
-
-  if (_extendedGen && genProtoData && !_randProto) {
-    oocoutE(_fitModel,Generation) << "RooMCStudy::RooMCStudy: WARNING Using generator option 'e' (Poisson distribution of #events) together " << endl
-              << "                        with a prototype dataset implies incomplete sampling or oversampling of proto data." << endl
-              << "                        Use option \"r\" to randomize prototype dataset order and thus to randomize" << endl
-              << "                        the set of over/undersampled prototype events for each generation cycle." << endl ;
-  }
-
-  if (!_binGenData) {
-    _genContext = genModel.genContext(dependents,genProtoData,0,_verboseGen) ;
-  } else {
-    _genContext = 0 ;
-  }
-  _genParams = _genModel->getParameters(&_dependents) ;
-  _genSample = 0 ;
-  RooArgSet* tmp = genModel.getParameters(&dependents) ;
-  _genInitParams = (RooArgSet*) tmp->snapshot(kFALSE) ;
-  delete tmp ;
-
-  // Store list of parameters and save initial values separately
-  _fitParams = fitModel.getParameters(&dependents) ;
-  _fitInitParams = (RooArgSet*) _fitParams->snapshot(kTRUE) ;
-
-  _nExpGen = _extendedGen ? genModel.expectedEvents(&dependents) : 0 ;
-
-  // Place holder for NLL
-  _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
-
-  // Place holder for number of generated events
-  _ngenVar = new RooRealVar("ngen","number of generated events",0) ;
-
-  // Create data set containing parameter values, errors and pulls
-  RooArgSet tmp2(*_fitParams) ;
-  tmp2.add(*_nllVar) ;
-  tmp2.add(*_ngenVar) ;
-
-  // Mark all variable to store their errors in the dataset
-  tmp2.setAttribAll("StoreError",kTRUE) ;
-  tmp2.setAttribAll("StoreAsymError",kTRUE) ;
-  _fitParData = new RooDataSet("fitParData","Fit Parameters DataSet",tmp2) ;
-  tmp2.setAttribAll("StoreError",kFALSE) ;
-  tmp2.setAttribAll("StoreAsymError",kFALSE) ;
-
-  // Append proto variables to allDependents
-  if (genProtoData) {
-    _allDependents.add(*genProtoData->get(),kTRUE) ;
-  }
-
-  // Call module initializers
-  list<RooAbsMCStudyModule*>::iterator iter ;
-  for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
-    Bool_t ok = (*iter)->doInitializeInstance(*this) ;
-    if (!ok) {
-      oocoutE(_fitModel,Generation) << "RooMCStudy::ctor: removing study module " << (*iter)->GetName() << " from analysis chain because initialization failed" << endl ;
-      iter = _modList.erase(iter) ;
-    }
-  }
-
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -747,12 +635,6 @@ void RooMCStudy::resetFitParams()
 
 RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
 {
-  // Fit model to data set
-  TString fitOpt2(_fitOptions) ; fitOpt2.Append("r") ;
-  if (_silence) {
-    fitOpt2.Append("b") ;
-  }
-
   // Optionally bin dataset before fitting
   RooAbsData* data ;
   if (_binGenData) {
@@ -763,27 +645,17 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
     data = genSample ;
   }
 
-  RooFitResult* fr ;
-  if (_fitOptList.GetSize()==0) {
-    if (_projDeps.getSize()>0) {
-      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFit::ConditionalObservables(_projDeps),RooFitLegacy::FitOptions(fitOpt2)) ;
-    } else {
-      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFitLegacy::FitOptions(fitOpt2)) ;
-    }
-  } else {
-    RooCmdArg save  = RooFit::Save() ;
-    RooCmdArg condo = RooFit::ConditionalObservables(_projDeps) ;
-    RooCmdArg plevel = RooFit::PrintLevel(-1) ;
-    RooLinkedList fitOptList(_fitOptList) ;
-    fitOptList.Add(&save) ;
-    if (_projDeps.getSize()>0) {
-      fitOptList.Add(&condo) ;
-    }
-    if (_silence) {
-      fitOptList.Add(&plevel) ;
-    }
-    fr = (RooFitResult*) _fitModel->fitTo(*data,fitOptList) ;
+  RooCmdArg save  = RooFit::Save() ;
+  RooCmdArg condo = RooFit::ConditionalObservables(_projDeps) ;
+  RooCmdArg plevel = RooFit::PrintLevel(_silence ? -1 : 1) ;
+
+  RooLinkedList fitOptList(_fitOptList) ;
+  fitOptList.Add(&save) ;
+  if (!_projDeps.empty()) {
+    fitOptList.Add(&condo) ;
   }
+  fitOptList.Add(&plevel) ;
+  RooFitResult* fr = _fitModel->fitTo(*data,fitOptList) ;
 
   if (_binGenData) delete data ;
 
@@ -852,8 +724,6 @@ Bool_t RooMCStudy::fitSample(RooAbsData* genSample)
   Bool_t userSaveRequest = kFALSE ;
   if (_fitOptList.GetSize()>0) {
     if (_fitOptList.FindObject("Save")) userSaveRequest = kTRUE ;
-  } else {
-    if (_fitOptions.Contains("r")) userSaveRequest = kTRUE ;
   }
 
   if (userSaveRequest) {
@@ -898,7 +768,7 @@ Bool_t RooMCStudy::addFitResult(const RooFitResult& fr)
   }
 
   // Store fit result if requested by user
-  if (_fitOptions.Contains("r")) {
+  if (_fitOptList.FindObject("Save")) {
     _fitResList.Add((TObject*)&fr) ;
   }
 

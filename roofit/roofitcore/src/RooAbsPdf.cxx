@@ -1495,8 +1495,6 @@ int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal 
 ///                                                  this happens, try switching it off.
 /// <tr><td> `RecoverFromUndefinedRegions(double strength)` <td> When PDF is invalid (e.g. parameter in undefined region), try to direct minimiser away from that region.
 ///                                                              `strength` controls the magnitude of the penalty term. Leaving out this argument defaults to 10. Switch off with `strength = 0.`.
-/// <tr><td> `FitOptions(const char* optStr)`  <td>  \deprecated Steer fit with classic options string (for backward compatibility).
-///                                                \attention Use of this option excludes use of any of the new style steering options.
 ///
 /// <tr><td> `SumW2Error(Bool_t flag)`         <td>  Apply correction to errors and covariance matrix.
 ///       This uses two covariance matrices, one with the weights, the other with squared weights,
@@ -1607,35 +1605,6 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
   m.setPrintEvalErrors(cfg.numee);
   if (cfg.printLevel!=1) m.setPrintLevel(cfg.printLevel);
   if (cfg.optConst) m.optimizeConst(cfg.optConst); // Activate constant term optimization
-
-  if (!cfg.fitOpt.empty()) {
-
-    // Play fit options as historically defined
-    // (code copied from RooMinimizer::fit() instead of calling said function to avoid deprecation warning)
-    TString opts(cfg.fitOpt) ;
-    opts.ToLower() ;
-
-    // Initial configuration
-    if (opts.Contains("v")) m.setVerbose(1) ;
-    if (opts.Contains("t")) m.setProfile(1) ;
-    if (opts.Contains("l")) m.setLogFile(Form("%s.log",nll.GetName())) ;
-    if (opts.Contains("c")) m.optimizeConst(1) ;
-
-    // Fitting steps
-    if (opts.Contains("0")) m.setStrategy(0) ;
-    m.migrad() ;
-    if (opts.Contains("0")) m.setStrategy(1) ;
-    if (opts.Contains("h")||!opts.Contains("m")) m.hesse() ;
-    if (!opts.Contains("m")) m.minos() ;
-
-    auto ret = (opts.Contains("r")) ? m.save() : 0 ;
-
-    if (cfg.optConst) m.optimizeConst(0) ;
-
-    return std::unique_ptr<RooFitResult>(ret);
-
-  }
-
   if (cfg.verbose) m.setVerbose(1); // Activate verbose options
   if (cfg.doTimer) m.setProfile(1); // Activate timer options
   if (cfg.strat!=1) m.setStrategy(cfg.strat); // Modify fit strategy
@@ -1693,7 +1662,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   pc.defineDouble("prefit", "Prefit",0,0);
   pc.defineDouble("RecoverFromUndefinedRegions", "RecoverFromUndefinedRegions",0,minimizerDefaults.recoverFromNaN);
-  pc.defineString("fitOpt","FitOptions",0,minimizerDefaults.fitOpt.c_str()) ;
   pc.defineInt("optConst","Optimize",0,minimizerDefaults.optConst) ;
   pc.defineInt("verbose","Verbose",0,minimizerDefaults.verbose) ;
   pc.defineInt("doSave","Save",0,minimizerDefaults.doSave) ;
@@ -1712,13 +1680,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineString("mintype","Minimizer",0,minimizerDefaults.minType.c_str()) ;
   pc.defineString("minalg","Minimizer",1,minimizerDefaults.minAlg.c_str()) ;
   pc.defineObject("minosSet","Minos",0,minimizerDefaults.minosSet) ;
-  pc.defineMutex("FitOptions","Verbose") ;
-  pc.defineMutex("FitOptions","Save") ;
-  pc.defineMutex("FitOptions","Timer") ;
-  pc.defineMutex("FitOptions","Strategy") ;
-  pc.defineMutex("FitOptions","InitialHesse") ;
-  pc.defineMutex("FitOptions","Hesse") ;
-  pc.defineMutex("FitOptions","Minos") ;
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("InitialHesse","Minimizer") ;
 
@@ -1784,7 +1745,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 
   MinimizerConfig cfg;
   cfg.recoverFromNaN = pc.getDouble("RecoverFromUndefinedRegions");
-  cfg.fitOpt = pc.getString("fitOpt",0,true) ? pc.getString("fitOpt",0,true) : "";
   cfg.optConst = optConst;
   cfg.verbose = pc.getInt("verbose");
   cfg.doSave = pc.getInt("doSave");

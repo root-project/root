@@ -165,7 +165,6 @@ public:
   //RooAbsPdf::fitTo.
   struct MinimizerConfig {
       double recoverFromNaN = 10.;
-      std::string fitOpt = "";
       int optConst = 2;
       int verbose = 0;
       int doSave = 0;

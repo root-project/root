@@ -37,12 +37,6 @@ public:
              const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
              const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
-  RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
-        const RooArgSet& dependents, const char* genOptions="",
-        const char* fitOptions="", const RooDataSet* genProtoData=0,
-        const RooArgSet& projDeps=RooArgSet()) R__DEPRECATED(6,28,
-  "please migrate to the other RooMCStudy constructor that doesn't use the deprecated string-based fit options.");
-
   ~RooMCStudy() override ;
 
   // Method to add study modules
@@ -133,7 +127,6 @@ protected:
   TList       _fitResList ;     // List of RooFitResult fit output objects
   RooDataSet* _genParData ;     // List of of generated parameters of each sample
   RooDataSet* _fitParData ;     // Data set of fit parameters of each sample
-  TString     _fitOptions ;     // Fit options string
   RooLinkedList _fitOptList ;   // Fit option command list
   Bool_t      _extendedGen ;    // Add poisson term to number of events to generate?
   Bool_t      _binGenData ;     // Bin data between generating and fitting

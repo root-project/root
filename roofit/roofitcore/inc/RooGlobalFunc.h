@@ -47,12 +47,6 @@ class RooAbsCollection ;
 class TH1 ;
 class TTree ;
 
-namespace RooFitLegacy {
-
-RooCmdArg FitOptions(const char* opts);
-
-}
-
 /*! \namespace RooFit
 The namespace RooFit contains mostly switches that change the behaviour of functions of PDFs
 (or other types of arguments).
@@ -228,10 +222,6 @@ RooCmdArg IntegrateBins(double precision);
 
 // RooAbsPdf::fitTo arguments
 RooCmdArg PrefitDataFraction(Double_t data_ratio = 0.0) ;
-RooCmdArg FitOptions(const char* opts)
-  R__DEPRECATED(6,28,"Please migrate to the RooCmdArg-based fit configuration"
-                     " (or use RooFitLegacy::FitOptions(const char*) to silence this warning,"
-                     " but be warned that the RooFitLegacy function also gets removed in ROOT v6.28).") ;
 RooCmdArg Optimize(Int_t flag=2) ;
 
 ////////////////////////////////////////////////////////////////////////////////
