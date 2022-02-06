@@ -81,39 +81,39 @@ public:
 
    TF3(const TF3 &f3);
    TF3& operator=(const TF3 &rhs);
-   virtual   ~TF3();
-   virtual void     Copy(TObject &f3) const;
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option="");
-   virtual TObject *DrawDerivative(Option_t * ="al") {return 0;}
-   virtual TObject *DrawIntegral(Option_t * ="al")   {return 0;}
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+     ~TF3() override;
+   void     Copy(TObject &f3) const override;
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   void     Draw(Option_t *option="") override;
+   TObject *DrawDerivative(Option_t * ="al") override {return 0;}
+   TObject *DrawIntegral(Option_t * ="al") override   {return 0;}
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Double_t GetMinimumXYZ(Double_t &x, Double_t &y, Double_t &z);
    virtual Double_t GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z);
           Int_t     GetNpz() const {return fNpz;}
    virtual void     GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom, TRandom * rng = nullptr);
    using TF1::GetRange;
-   virtual void     GetRange(Double_t &xmin, Double_t &xmax) const;
-   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const ;
-   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
-   virtual Double_t GetSave(const Double_t *x);
+   void     GetRange(Double_t &xmin, Double_t &xmax) const override;
+   void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const override ;
+   void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const override;
+   Double_t GetSave(const Double_t *x) override;
    virtual Double_t GetZmin() const {return fZmin;}
    virtual Double_t GetZmax() const {return fZmax;}
    using TF2::Integral;
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t az, Double_t bz, Double_t epsrel=1.e-6);
-   virtual Bool_t   IsInside(const Double_t *x) const;
-   virtual TH1     *CreateHistogram();
-   virtual void     Paint(Option_t *option="");
-   virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   Bool_t   IsInside(const Double_t *x) const override;
+   TH1     *CreateHistogram() override;
+   void     Paint(Option_t *option="") override;
+   void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax) override;
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetClippingBoxOff(); // *MENU*
    virtual Bool_t   GetClippingBoxOn() const { return fClipBoxOn; }
    virtual void     SetClippingBoxOn(Double_t xclip=0, Double_t yclip=0, Double_t zclip=0); // *MENU*
    virtual const Double_t *GetClippingBox() const { return fClipBoxOn ? fClipBox : nullptr; }
    virtual void     SetNpz(Int_t npz=30);
-   virtual void     SetRange(Double_t xmin, Double_t xmax);
-   virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax);
-   virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax); // *MENU*
+   void     SetRange(Double_t xmin, Double_t xmax) override;
+   void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override;
+   void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax) override; // *MENU*
 
    //Moments
    virtual Double_t Moment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t nz, Double_t az, Double_t bz, Double_t epsilon=0.000001);
@@ -133,9 +133,9 @@ public:
 
 protected:
 
-   virtual Double_t FindMinMax(Double_t* x, bool findmax) const;
+   Double_t FindMinMax(Double_t* x, bool findmax) const override;
 
-   ClassDef(TF3,3)  //The Parametric 3-D function
+   ClassDefOverride(TF3,3)  //The Parametric 3-D function
 };
 
 inline void TF3::GetRange(Double_t &xmin, Double_t &xmax) const

@@ -58,7 +58,7 @@ private:
 public:
    TBinomialEfficiencyFitter();
    TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator);
-   virtual ~TBinomialEfficiencyFitter();
+   ~TBinomialEfficiencyFitter() override;
 
    void   Set(const TH1 *numerator, const TH1 *denominator);
    void   SetPrecision(Double_t epsilon);
@@ -70,7 +70,7 @@ public:
       return f;
    }
 
-   ClassDef(TBinomialEfficiencyFitter, 1) //Binomial Fitter for the division of two histograms
+   ClassDefOverride(TBinomialEfficiencyFitter, 1) //Binomial Fitter for the division of two histograms
 
 
 };

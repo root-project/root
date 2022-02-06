@@ -59,7 +59,7 @@ public:
    TSVDUnfold( const TSVDUnfold& other );
 
    // Destructor
-   virtual ~TSVDUnfold();
+   ~TSVDUnfold() override;
 
    // Set option to normalize unfolded spectrum to unit area
    // "normalize" - switch
@@ -153,7 +153,7 @@ private:
    ///@}
 
 
-   ClassDef( TSVDUnfold, 0 ) // Data unfolding using Singular Value Decomposition (hep-ph/9509307)
+   ClassDefOverride( TSVDUnfold, 0 ) // Data unfolding using Singular Value Decomposition (hep-ph/9509307)
 };
 
 #endif

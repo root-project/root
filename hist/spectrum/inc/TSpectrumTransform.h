@@ -47,7 +47,7 @@ public:
    };
    TSpectrumTransform();
    TSpectrumTransform(Int_t size);
-   virtual ~TSpectrumTransform();
+   ~TSpectrumTransform() override;
 
 protected:
    void                BitReverse(Double_t *working_space,Int_t num);
@@ -68,7 +68,7 @@ public:
    void                SetTransformType(Int_t transType, Int_t degree);
    void                Transform(const Double_t *source, Double_t *destVector);
 
-   ClassDef(TSpectrumTransform,1)  //Spectrum Transformer, it calculates classic orthogonal 1D transforms
+   ClassDefOverride(TSpectrumTransform,1)  //Spectrum Transformer, it calculates classic orthogonal 1D transforms
 };
 
 

@@ -53,7 +53,7 @@ namespace ROOT {
          /**
             Destructor (no operations). TF1 Function pointer is not owned
          */
-         virtual ~WrappedTF1() {}
+         ~WrappedTF1() override {}
 
          /**
             Copy constructor
@@ -70,7 +70,7 @@ namespace ROOT {
          /**
              Clone the wrapper but not the original function
          */
-         ROOT::Math::IGenFunction *Clone() const
+         ROOT::Math::IGenFunction *Clone() const override
          {
             return  new WrappedTF1(*this);
          }
@@ -79,7 +79,7 @@ namespace ROOT {
          /** @name interface inherited from IParamFunction */
 
          /// get the parameter values (return values cachen inside, those inside TF1 might be different)
-         const double *Parameters() const
+         const double *Parameters() const override
          {
             //return  (fParams.size() > 0) ? &fParams.front() : 0;
             return fFunc->GetParameters();
@@ -87,21 +87,21 @@ namespace ROOT {
 
          /// set parameter values
          /// need to call also SetParameters in TF1 in ace some other operations (re-normalizations) are needed
-         void SetParameters(const double *p)
+         void SetParameters(const double *p) override
          {
             //std::copy(p,p+fParams.size(),fParams.begin());
             fFunc->SetParameters(p);
          }
 
          /// return number of parameters
-         unsigned int NPar() const
+         unsigned int NPar() const override
          {
             //return fParams.size();
             return fFunc->GetNpar();
          }
 
          /// return parameter name (this is stored in TF1)
-         std::string ParameterName(unsigned int i) const
+         std::string ParameterName(unsigned int i) const override
          {
             return std::string(fFunc->GetParName(i));
          }
@@ -110,10 +110,10 @@ namespace ROOT {
          using BaseGradFunc::operator();
 
          /// evaluate the derivative of the function with respect to the parameters
-         void  ParameterGradient(double x, const double *par, double *grad) const;
+         void  ParameterGradient(double x, const double *par, double *grad) const override;
 
          /// calculate function and derivative at same time (required by IGradient interface)
-         void FdF(double x, double &f, double &deriv) const
+         void FdF(double x, double &f, double &deriv) const override
          {
             f = DoEval(x);
             deriv = DoDerivative(x);
@@ -130,7 +130,7 @@ namespace ROOT {
 
 
          /// evaluate function passing coordinates x and vector of parameters
-         double DoEvalPar(double x, const double *p) const
+         double DoEvalPar(double x, const double *p) const override
          {
             fX[0] = x;
             if (fFunc->GetMethodCall()) fFunc->InitArgs(fX, p);  // needed for interpreted functions
@@ -139,7 +139,7 @@ namespace ROOT {
 
          /// evaluate function using the cached parameter values (of TF1)
          /// re-implement for better efficiency
-         double DoEval(double x) const
+         double DoEval(double x) const override
          {
             // no need to call InitArg for interpreted functions (done in ctor)
             // use EvalPar since it is much more efficient than Eval
@@ -149,10 +149,10 @@ namespace ROOT {
          }
 
          /// return the function derivatives w.r.t. x
-         double DoDerivative(double  x) const;
+         double DoDerivative(double  x) const override;
 
          /// evaluate the derivative of the function with respect to the parameters
-         double  DoParameterDerivative(double x, const double *p, unsigned int ipar) const;
+         double  DoParameterDerivative(double x, const double *p, unsigned int ipar) const override;
 
          bool fLinear;                 // flag for linear functions
          bool fPolynomial;             // flag for polynomial functions

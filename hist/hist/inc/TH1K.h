@@ -35,27 +35,27 @@ protected:
 public:
    TH1K();
    TH1K(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup,Int_t k=0);
-   virtual ~TH1K();
+   ~TH1K() override;
 
-   virtual void      Copy(TObject &obj) const;
-   virtual Int_t     Fill(Double_t x);
-   virtual Int_t     Fill(Double_t x,Double_t w){return TH1::Fill(x,w);}
-   virtual Int_t     Fill(const char *name,Double_t w){return TH1::Fill(name,w);}
-   virtual Double_t  GetBinContent(Int_t bin) const;
-   virtual Double_t  GetBinContent(Int_t bin,Int_t) const {return GetBinContent(bin);}
-   virtual Double_t  GetBinContent(Int_t bin,Int_t,Int_t) const {return GetBinContent(bin);}
+   void      Copy(TObject &obj) const override;
+   Int_t     Fill(Double_t x) override;
+   Int_t     Fill(Double_t x,Double_t w) override{return TH1::Fill(x,w);}
+   Int_t     Fill(const char *name,Double_t w) override{return TH1::Fill(name,w);}
+   Double_t  GetBinContent(Int_t bin) const override;
+   Double_t  GetBinContent(Int_t bin,Int_t) const override {return GetBinContent(bin);}
+   Double_t  GetBinContent(Int_t bin,Int_t,Int_t) const override {return GetBinContent(bin);}
 
-   virtual Double_t  GetBinError(Int_t bin) const;
-   virtual Double_t  GetBinError(Int_t bin,Int_t) const {return GetBinError(bin);}
-   virtual Double_t  GetBinError(Int_t bin,Int_t,Int_t) const {return GetBinError(bin);}
+   Double_t  GetBinError(Int_t bin) const override;
+   Double_t  GetBinError(Int_t bin,Int_t) const override {return GetBinError(bin);}
+   Double_t  GetBinError(Int_t bin,Int_t,Int_t) const override {return GetBinError(bin);}
 
 
-   virtual void      Reset(Option_t *option="");
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void      Reset(Option_t *option="") override;
+   void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    void    SetKOrd(Int_t k){fKOrd=k;}
 
-   ClassDef(TH1K,2)  //1-Dim Nearest Kth neighbour method
+   ClassDefOverride(TH1K,2)  //1-Dim Nearest Kth neighbour method
 };
 
 #endif

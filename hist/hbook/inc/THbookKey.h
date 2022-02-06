@@ -32,11 +32,11 @@ protected:
 public:
    THbookKey() : fDirectory(0),fID(0) {;}
    THbookKey(Int_t id, THbookFile *file);
-   virtual ~THbookKey();
-   virtual void      Browse(TBrowser *b);
-   Bool_t            IsFolder() const;
+   ~THbookKey() override;
+   void      Browse(TBrowser *b) override;
+   Bool_t            IsFolder() const override;
 
-   ClassDef(THbookKey,1)  //Hbook id descriptor
+   ClassDefOverride(THbookKey,1)  //Hbook id descriptor
 };
 
 #endif

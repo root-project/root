@@ -54,10 +54,10 @@ struct TF1Data : public ROOT::v5::TFormula, public TAttLine, public TAttFill, pu
 
 
    TF1Data();
-   virtual   ~TF1Data();
+     ~TF1Data() override;
    void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0);
    
-   ClassDef(TF1Data,7)  //The Parametric 1-D function data structure  of v5::TF1
+   ClassDefOverride(TF1Data,7)  //The Parametric 1-D function data structure  of v5::TF1
 };
 
    }  // end namespace v5

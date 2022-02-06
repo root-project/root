@@ -72,7 +72,7 @@ class TUnfoldDensity : public TUnfoldSys {
    };
  protected:
 
-   virtual TString GetOutputBinName(Int_t iBinX) const; // name a bin
+   TString GetOutputBinName(Int_t iBinX) const override; // name a bin
 
    Double_t GetDensityFactor(EDensityMode densityMode,Int_t iBin) const; // density correction factor for this bin
    void RegularizeDistributionRecursive
@@ -95,7 +95,7 @@ class TUnfoldDensity : public TUnfoldSys {
 		     const char *regularisationDistribution=0,
 		     const char *regularisationAxisSteering="*[UOB]"); // constructor for using the histogram classes. Default regularisation is on the curvature of the bin-width normalized density, excluding underflow and overflow bins
 
-   virtual ~ TUnfoldDensity(void); // delete data members
+   ~ TUnfoldDensity(void) override; // delete data members
 
    void RegularizeDistribution(ERegMode regmode,EDensityMode densityMode,
 			       const char *distribution,
@@ -195,7 +195,7 @@ class TUnfoldDensity : public TUnfoldSys {
    const TUnfoldBinning *GetOutputBinning(const char *distributionName=0) const; // find binning scheme for output bins
    /// return binning scheme for regularisation conditions (matrix L)
 TUnfoldBinning *GetLBinning(void) const { return fRegularisationConditions; }
-   ClassDef(TUnfoldDensity, TUnfold_CLASS_VERSION) //Unfolding with density regularisation
+   ClassDefOverride(TUnfoldDensity, TUnfold_CLASS_VERSION) //Unfolding with density regularisation
 };
 
 #endif

@@ -184,7 +184,7 @@ public:
    using CladStorage = std::vector<Double_t>;
 
                   TFormula();
-   virtual        ~TFormula();
+          ~TFormula() override;
    TFormula&      operator=(const TFormula &rhs);
    TFormula(const char *name, const char * formula = "", bool addToGlobList = true, bool vectorize = false);
    TFormula(const char *name, const char * formula, int ndim, int npar, bool addToGlobList = true);
@@ -195,8 +195,8 @@ public:
    void           AddVariable(const TString &name, Double_t value = 0);
    void           AddVariables(const TString *vars, const Int_t size);
    Int_t          Compile(const char *expression="");
-   virtual void   Copy(TObject &f1) const;
-   virtual void   Clear(Option_t * option="");
+   void   Copy(TObject &f1) const override;
+   void   Clear(Option_t * option="") override;
    Double_t       Eval(Double_t x) const;
    Double_t       Eval(Double_t x, Double_t y) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
@@ -268,8 +268,8 @@ public:
    Bool_t         IsValid() const { return fReadyToExecute && fClingInitialized; }
    Bool_t IsVectorized() const { return fVectorized; }
    Bool_t         IsLinear() const { return TestBit(kLinear); }
-   void           Print(Option_t *option = "") const;
-   void           SetName(const char* name);
+   void           Print(Option_t *option = "") const override;
+   void           SetName(const char* name) override;
    void           SetParameter(const char* name, Double_t value);
    void           SetParameter(Int_t param, Double_t value);
    void           SetParameters(const Double_t *params);
@@ -286,6 +286,6 @@ public:
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
    void SetVectorized(Bool_t vectorized);
 
-   ClassDef(TFormula,13)
+   ClassDefOverride(TFormula,13)
 };
 #endif

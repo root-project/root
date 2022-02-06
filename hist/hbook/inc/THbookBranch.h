@@ -32,15 +32,15 @@ public:
    THbookBranch() {;}
    THbookBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    THbookBranch(TBranch *branch, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
-   virtual ~THbookBranch();
-   virtual void     Browse(TBrowser *b);
-   virtual Int_t    GetEntry(Long64_t entry=0, Int_t getall=0);
+   ~THbookBranch() override;
+   void     Browse(TBrowser *b) override;
+   Int_t    GetEntry(Long64_t entry=0, Int_t getall=0) override;
    const char      *GetBlockName() const {return fBlockName.Data();}
-   virtual void     SetAddress(void *addobj);
+   void     SetAddress(void *addobj) override;
            void     SetBlockName(const char *name) {fBlockName=name;}
-   virtual void     SetEntries(Long64_t n) {fEntries=n;}
+   void     SetEntries(Long64_t n) override {fEntries=n;}
 
-   ClassDef(THbookBranch,1)  //A branch for a THbookTree
+   ClassDefOverride(THbookBranch,1)  //A branch for a THbookTree
 };
 
 #endif

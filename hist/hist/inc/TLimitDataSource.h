@@ -24,7 +24,7 @@ class TH1;
 class TLimitDataSource : public TObject{
 public:
    TLimitDataSource();
-   virtual ~TLimitDataSource() {}
+   ~TLimitDataSource() override {}
    TLimitDataSource(TH1* s,TH1* b,TH1* d);
    TLimitDataSource(TH1* s,TH1* b,TH1* d, TVectorD* es,TVectorD* eb,TObjArray* names);
    virtual void AddChannel(TH1*,TH1*,TH1*);
@@ -53,7 +53,7 @@ private:
    TObjArray fDummyIds;          ///< Array of dummy object (used for bookeeping)
    ///@}
 
-   ClassDef(TLimitDataSource, 2 ) // Input for TLimit routines
+   ClassDefOverride(TLimitDataSource, 2 ) // Input for TLimit routines
 };
 
 #endif

@@ -22,7 +22,7 @@ public:
 
    TProfile2PolyBin();
    TProfile2PolyBin(TObject *poly, Int_t bin_number);
-   virtual ~TProfile2PolyBin() {}
+   ~TProfile2PolyBin() override {}
 
    void Merge(const TProfile2PolyBin *toMerge);
 
@@ -52,7 +52,7 @@ protected:
    void UpdateError();
    void SetErrorOption(EErrorType type) { fErrorMode = type; }
 
-   ClassDef(TProfile2PolyBin, 1)
+   ClassDefOverride(TProfile2PolyBin, 1)
 };
 
 class TProfile2Poly : public TH2Poly {
@@ -65,15 +65,15 @@ public:
    TProfile2Poly(const char *name, const char *title, Double_t xlow, Double_t xup, Double_t ylow, Double_t yup);
    TProfile2Poly(const char *name, const char *title, Int_t nX, Double_t xlow, Double_t xup, Int_t nY, Double_t ylow,
                  Double_t yup);
-   virtual ~TProfile2Poly() {}
+   ~TProfile2Poly() override {}
 
    using TH2Poly::Fill;
-   virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
+   Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value) override;
    virtual Int_t Fill(Double_t xcoord, Double_t ycoord, Double_t value, Double_t weight);
 
    Long64_t Merge(const std::vector<TProfile2Poly *> &list);
    Long64_t Merge(TCollection *in) override;
-   virtual void Reset(Option_t *option = "") override;
+   void Reset(Option_t *option = "") override;
 
    // option to display different measures on bins
    void SetContentToAverage(); // this one is used by default
@@ -88,12 +88,12 @@ public:
    Double_t GetBinEntriesWV2(Int_t bin) const;
 
    using TH2Poly::GetBinContent;
-   virtual Double_t GetBinContent(Int_t bin) const override;
+   Double_t GetBinContent(Int_t bin) const override;
 
    using TH2Poly::GetBinError;
-   virtual Double_t GetBinError(Int_t bin) const override;
+   Double_t GetBinError(Int_t bin) const override;
 
-   virtual void GetStats(Double_t *stats) const override;
+   void GetStats(Double_t *stats) const override;
 
 
    Double_t GetOverflowContent(Int_t idx) { return fOverflowBins[idx].fSumw; }
@@ -106,7 +106,7 @@ private:
    Double_t fTsumwz2;
 
 protected:
-   virtual TProfile2PolyBin *CreateBin(TObject *poly) override;
+   TProfile2PolyBin *CreateBin(TObject *poly) override;
 
    Int_t GetOverflowRegionFromCoordinates(Double_t x, Double_t y);
    Int_t OverflowIdxToArrayIdx(Int_t val) { return -val - 1; }

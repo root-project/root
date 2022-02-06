@@ -94,7 +94,7 @@ class TUnfoldBinning : public TNamed {
    Bool_t AddAxis(const char *name,Int_t nBins,Double_t xMin,Double_t xMax,
                 Bool_t hasUnderflow,Bool_t hasOverflow); // add an axis (equidistant bins) to the distribution associated with this node
    Bool_t AddAxis(const TAxis &axis,Bool_t includeUnderflow,Bool_t includeOverflow); // add an axis (from TAxis instance) to the distribution associated with this node
-   virtual ~TUnfoldBinning(void);
+   ~TUnfoldBinning(void) override;
    void PrintStream(std::ostream &out,Int_t indent=0,int debug=0) const;
    void SetBinFactorFunction(Double_t normalisation,TF1 *userFunc=0); // define function to calculate bin factor. Note: the function is not owned by this class
 
@@ -196,7 +196,7 @@ class TUnfoldBinning : public TNamed {
    Int_t FillBinMapSingleNode(const TH1 *hist,Int_t startBin,Int_t nDim,const Int_t *axisList,const char *axisSteering,Int_t *binMap) const; // fill bin map for a single node
    void SetBinFactor(Double_t normalisation,TObject *factors); // define function to calculate bin factor. Note: the object is owned by this class, unless it is a function
 
-   ClassDef(TUnfoldBinning, TUnfold_CLASS_VERSION) //Complex binning schemes for TUnfoldDensity
+   ClassDefOverride(TUnfoldBinning, TUnfold_CLASS_VERSION) //Complex binning schemes for TUnfoldDensity
 };
 
 #endif

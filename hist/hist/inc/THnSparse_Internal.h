@@ -39,7 +39,7 @@ class THnSparseArrayChunk: public TObject {
       fContent(0), fSumw2(0) {}
 
    THnSparseArrayChunk(Int_t coordsize, bool errors, TArray* cont);
-   virtual ~THnSparseArrayChunk();
+   ~THnSparseArrayChunk() override;
 
    Int_t    fCoordinateAllocationSize; ///<! Size of the allocated coordinate buffer; -1 means none or fCoordinatesSize
    Int_t    fSingleCoordinateSize;     ///<  Size of a single bin coordinate
@@ -64,7 +64,7 @@ class THnSparseArrayChunk: public TObject {
       return fSingleCoordinateSize <= 8 ||
          !memcmp(fCoordinates + idx * fSingleCoordinateSize, idxbuf, fSingleCoordinateSize); }
 
-   ClassDef(THnSparseArrayChunk, 1); // chunks of linearized bins
+   ClassDefOverride(THnSparseArrayChunk, 1); // chunks of linearized bins
 };
 #endif // ROOT_THnSparse_Internal
 
