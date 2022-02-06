@@ -4377,8 +4377,6 @@ RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, cons
 /// <tr><td> `Minos(const RooArgSet& set)`    <td> Only run MINOS on given subset of arguments
 /// <tr><td> `Save(Bool_t flag)`              <td> Flac controls if RooFitResult object is produced and returned, off by default
 /// <tr><td> `Strategy(Int_t flag)`           <td> Set Minuit strategy (0 through 2, default is 1)
-/// <tr><td> `FitOptions(const char* optStr)` <td> Steer fit with classic options string (for backward compatibility). Use of this option
-///                                              excludes use of any of the new style steering options.
 ///
 /// <tr><th> <th> Options to control informational output
 /// <tr><td> `Verbose(Bool_t flag)`           <td> Flag controls if verbose output is printed (NLL, parameter changes during fit
@@ -4503,8 +4501,6 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 /// <tr><td> `Minos(const RooArgSet& set)`    <td>  Only run MINOS on given subset of arguments
 /// <tr><td> `Save(Bool_t flag)`              <td>  Flac controls if RooFitResult object is produced and returned, off by default
 /// <tr><td> `Strategy(Int_t flag)`           <td>  Set Minuit strategy (0 through 2, default is 1)
-/// <tr><td> `FitOptions(const char* optStr)` <td>  Steer fit with classic options string (for backward compatibility). Use of this option
-///                                   excludes use of any of the new style steering options.
 ///
 /// <tr><th><th> Options to control informational output
 /// <tr><td> `Verbose(Bool_t flag)`           <td>  Flag controls if verbose output is printed (NLL, parameter changes during fit
@@ -4626,8 +4622,6 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::chi2FitDriver(%s)",GetName())) ;
 
-  pc.defineString("fitOpt","FitOptions",0,"") ;
-
   pc.defineInt("optConst","Optimize",0,1) ;
   pc.defineInt("verbose","Verbose",0,0) ;
   pc.defineInt("doSave","Save",0,0) ;
@@ -4644,14 +4638,6 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   pc.defineString("minalg","Minimizer",1,"minuit") ;
   pc.defineObject("minosSet","Minos",0,0) ;
 
-  pc.defineMutex("FitOptions","Verbose") ;
-  pc.defineMutex("FitOptions","Save") ;
-  pc.defineMutex("FitOptions","Timer") ;
-  pc.defineMutex("FitOptions","Strategy") ;
-  pc.defineMutex("FitOptions","InitialHesse") ;
-  pc.defineMutex("FitOptions","Hesse") ;
-  pc.defineMutex("FitOptions","Minos") ;
-
   // Process and check varargs
   pc.process(cmdList) ;
   if (!pc.ok(kTRUE)) {
@@ -4659,7 +4645,6 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   }
 
   // Decode command line arguments
-  const char* fitOpt = pc.getString("fitOpt",0,kTRUE) ;
   const char* minType = pc.getString("mintype","Minuit") ;
   const char* minAlg = pc.getString("minalg","minuit") ;
   Int_t optConst = pc.getInt("optConst") ;
@@ -4695,72 +4680,47 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
     m.optimizeConst(optConst);
   }
 
-  if (fitOpt) {
+  if (verbose) {
+    // Activate verbose options
+    m.setVerbose(1) ;
+  }
+  if (doTimer) {
+    // Activate timer options
+    m.setProfile(1) ;
+  }
 
-    // Play fit options as historically defined
-    // (code copied from RooMinimizer::fit() instead of calling said function to avoid deprecation warning)
-    TString opts(fitOpt) ;
-    opts.ToLower() ;
+  if (strat!=1) {
+    // Modify fit strategy
+    m.setStrategy(strat) ;
+  }
 
-    // Initial configuration
-    if (opts.Contains("v")) m.setVerbose(1) ;
-    if (opts.Contains("t")) m.setProfile(1) ;
-    if (opts.Contains("l")) m.setLogFile(Form("%s.log",fcn.GetName())) ;
-    if (opts.Contains("c")) m.optimizeConst(1) ;
+  if (initHesse) {
+    // Initialize errors with hesse
+    m.hesse() ;
+  }
 
-    // Fitting steps
-    if (opts.Contains("0")) m.setStrategy(0) ;
-    m.migrad() ;
-    if (opts.Contains("0")) m.setStrategy(1) ;
-    if (opts.Contains("h")||!opts.Contains("m")) m.hesse() ;
-    if (!opts.Contains("m")) m.minos() ;
+  // Minimize using migrad
+  m.minimize(minType, minAlg) ;
 
-    ret = (opts.Contains("r")) ? m.save() : 0 ;
+  if (hesse) {
+    // Evaluate errors with Hesse
+    m.hesse() ;
+  }
 
-  } else {
-
-    if (verbose) {
-      // Activate verbose options
-      m.setVerbose(1) ;
+  if (minos) {
+    // Evaluate errs with Minos
+    if (minosSet) {
+      m.minos(*minosSet) ;
+    } else {
+      m.minos() ;
     }
-    if (doTimer) {
-      // Activate timer options
-      m.setProfile(1) ;
-    }
+  }
 
-    if (strat!=1) {
-      // Modify fit strategy
-      m.setStrategy(strat) ;
-    }
-
-    if (initHesse) {
-      // Initialize errors with hesse
-      m.hesse() ;
-    }
-
-    // Minimize using migrad
-    m.minimize(minType, minAlg) ;
-
-    if (hesse) {
-      // Evaluate errors with Hesse
-      m.hesse() ;
-    }
-
-    if (minos) {
-      // Evaluate errs with Minos
-      if (minosSet) {
-        m.minos(*minosSet) ;
-      } else {
-        m.minos() ;
-      }
-    }
-
-    // Optionally return fit result
-    if (doSave) {
-      string name = Form("fitresult_%s",fcn.GetName()) ;
-      string title = Form("Result of fit of %s ",GetName()) ;
-      ret = m.save(name.c_str(),title.c_str()) ;
-    }
+  // Optionally return fit result
+  if (doSave) {
+    string name = Form("fitresult_%s",fcn.GetName()) ;
+    string title = Form("Result of fit of %s ",GetName()) ;
+    ret = m.save(name.c_str(),title.c_str()) ;
   }
 
   // Cleanup
