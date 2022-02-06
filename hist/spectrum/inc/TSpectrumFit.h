@@ -85,7 +85,7 @@ public:
    };
    TSpectrumFit(void); //default constructor
    TSpectrumFit(Int_t numberPeaks);
-   virtual ~TSpectrumFit();
+   ~TSpectrumFit() override;
 
    //auxiliary functions for 1. parameter fit functions
 protected:
@@ -128,7 +128,7 @@ public:
    void                SetPeakParameters(Double_t sigma, Bool_t fixSigma, const Double_t *positionInit, const Bool_t *fixPosition, const Double_t *ampInit, const Bool_t *fixAmp);
    void                SetTailParameters(Double_t tInit, Bool_t fixT, Double_t bInit, Bool_t fixB, Double_t sInit, Bool_t fixS);
 
-   ClassDef(TSpectrumFit,1)  //Spectrum Fitter using algorithm without matrix inversion and conjugate gradient method for symmetrical matrices (Stiefel-Hestens method)
+   ClassDefOverride(TSpectrumFit,1)  //Spectrum Fitter using algorithm without matrix inversion and conjugate gradient method for symmetrical matrices (Stiefel-Hestens method)
 };
 
 #endif

@@ -53,12 +53,12 @@ public:
    TF1Convolution(const TF1Convolution &conv);
 
    TF1Convolution &operator=(const TF1Convolution &rhs);
-   virtual ~TF1Convolution() {}
+   ~TF1Convolution() override {}
 
-   void SetParameters(const Double_t *params);
+   void SetParameters(const Double_t *params) override;
    void SetParameters(Double_t p0, Double_t p1, Double_t p2 = 0., Double_t p3 = 0., Double_t p4 = 0., Double_t p5 = 0.,
                       Double_t p6 = 0., Double_t p7 = 0.);
-   void SetRange(Double_t a, Double_t b);
+   void SetRange(Double_t a, Double_t b) override;
    void SetExtraRange(Double_t percentage);
    void SetNofPointsFFT(Int_t n);
    void SetNumConv(Bool_t flag = true) { fFlagFFT = !flag; }
@@ -71,13 +71,13 @@ public:
    const char *GetParName(Int_t ipar) const { return fParNames.at(ipar).Data(); }
    void GetRange(Double_t &a, Double_t &b) const;
 
-   void Update();
+   void Update() override;
 
-   Double_t operator()(const Double_t *x, const Double_t *p);
+   Double_t operator()(const Double_t *x, const Double_t *p) override;
 
-   void Copy(TObject &obj) const;
+   void Copy(TObject &obj) const override;
 
-   ClassDef(TF1Convolution, 1);
+   ClassDefOverride(TF1Convolution, 1);
 };
 
 

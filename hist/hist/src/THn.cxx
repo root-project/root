@@ -34,10 +34,10 @@ namespace {
    public:
       THnBinIter(Int_t dim, const TObjArray* axes, const TNDArray* arr,
                  Bool_t respectAxisRange);
-      ~THnBinIter() { delete [] fCounter; }
+      ~THnBinIter() override { delete [] fCounter; }
 
-      Long64_t Next(Int_t* coord = 0);
-      Int_t GetCoord(Int_t dim) const { return fCounter[dim].i; }
+      Long64_t Next(Int_t* coord = 0) override;
+      Int_t GetCoord(Int_t dim) const override { return fCounter[dim].i; }
    private:
       THnBinIter(const THnBinIter&); // intentionally unimplemented
       THnBinIter& operator=(const THnBinIter&); // intentionally unimplemented

@@ -63,7 +63,7 @@ private:
 public:
    TPainter3dAlgorithms();
    TPainter3dAlgorithms(Double_t *rmin, Double_t *rmax, Int_t system=1);
-   virtual ~TPainter3dAlgorithms();
+   ~TPainter3dAlgorithms() override;
    void    BackBox(Double_t ang);
    void    FrontBox(Double_t ang);
    void    DrawFaceGouraudShaded(Int_t *icodes, Double_t xyz[][3], Int_t np, Int_t *iface, Double_t *t);
