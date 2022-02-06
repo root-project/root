@@ -31,7 +31,7 @@ class THn: public THnBase {
 
 protected:
    void AllocCoordBuf() const;
-   void InitStorage(Int_t* nbins, Int_t chunkSize);
+   void InitStorage(Int_t* nbins, Int_t chunkSize) override;
 
    THn() = default;
    THn(const char* name, const char* title, Int_t dim, const Int_t* nbins,
@@ -41,7 +41,7 @@ protected:
        const std::vector<std::vector<double>> &xbins);
 
 public:
-   virtual ~THn();
+   ~THn() override;
 
    static THn* CreateHn(const char* name, const char* title, const TH1* h1) {
       return (THn*) CreateHnAny(name, title, h1, kFALSE /*THn*/, -1);
@@ -50,13 +50,13 @@ public:
       return (THn*) CreateHnAny(name, title, hn, kFALSE /*THn*/, -1);
    }
 
-   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
-   Long64_t GetNbins() const { return GetArray().GetNbins(); }
+   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const override;
+   Long64_t GetNbins() const override { return GetArray().GetNbins(); }
 
-   Long64_t GetBin(const Int_t* idx) const {
+   Long64_t GetBin(const Int_t* idx) const override {
       return GetArray().GetBin(idx);
    }
-   Long64_t GetBin(const Double_t* x) const {
+   Long64_t GetBin(const Double_t* x) const override {
       if (fCoordBuf.empty())
          AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
@@ -64,7 +64,7 @@ public:
       }
       return GetArray().GetBin(fCoordBuf.data());
    }
-   Long64_t GetBin(const char* name[]) const {
+   Long64_t GetBin(const char* name[]) const override {
       if (fCoordBuf.empty())
          AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
@@ -73,18 +73,18 @@ public:
       return GetArray().GetBin(fCoordBuf.data());
    }
 
-   Long64_t GetBin(const Int_t* idx, Bool_t /*allocate*/ = kTRUE) {
+   Long64_t GetBin(const Int_t* idx, Bool_t /*allocate*/ = kTRUE) override {
       return const_cast<const THn*>(this)->GetBin(idx);
    }
-   Long64_t GetBin(const Double_t* x, Bool_t /*allocate*/ = kTRUE) {
+   Long64_t GetBin(const Double_t* x, Bool_t /*allocate*/ = kTRUE) override {
       return const_cast<const THn*>(this)->GetBin(x);
    }
-   Long64_t GetBin(const char* name[], Bool_t /*allocate*/ = kTRUE) {
+   Long64_t GetBin(const char* name[], Bool_t /*allocate*/ = kTRUE) override {
       return const_cast<const THn*>(this)->GetBin(name);
    }
 
    /// Increment the bin content of "bin" by "w", return the bin index.
-   void FillBin(Long64_t bin, Double_t w) {
+   void FillBin(Long64_t bin, Double_t w) override {
       GetArray().AddAt(bin, w);
       if (GetCalculateErrors()) {
          fSumw2.AddAt(bin, w * w);
@@ -97,10 +97,10 @@ public:
    void SetBinContent(const Int_t* idx, Double_t v) {
       THnBase::SetBinContent(idx, v);
    }
-   void SetBinContent(Long64_t bin, Double_t v) {
+   void SetBinContent(Long64_t bin, Double_t v) override {
       GetArray().SetAsDouble(bin, v);
    }
-   void SetBinError2(Long64_t bin, Double_t e2) {
+   void SetBinError2(Long64_t bin, Double_t e2) override {
       if (!GetCalculateErrors()) Sumw2();
       fSumw2.At(bin) = e2;
    }
@@ -109,10 +109,10 @@ public:
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
       THnBase::AddBinContent(idx, v);
    }
-   void AddBinContent(Long64_t bin, Double_t v = 1.) {
+   void AddBinContent(Long64_t bin, Double_t v = 1.) override {
       GetArray().AddAt(bin, v);
    }
-   void AddBinError2(Long64_t bin, Double_t e2) {
+   void AddBinError2(Long64_t bin, Double_t e2) override {
       fSumw2.At(bin) += e2;
    }
    /// Forwards to THnBase::GetBinContent() overload.
@@ -121,7 +121,7 @@ public:
       return THnBase::GetBinContent(idx);
    }
    /// Get the content of bin, and set its index if idx is != 0.
-   Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const {
+   Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const override {
       if (idx) {
          const TNDArray& arr = GetArray();
          Long64_t prevCellSize = arr.GetNbins();
@@ -133,14 +133,14 @@ public:
       }
       return GetArray().AtAsDouble(bin);
    }
-   Double_t GetBinError2(Long64_t linidx) const {
+   Double_t GetBinError2(Long64_t linidx) const override {
       return GetCalculateErrors() ? fSumw2.At(linidx) : GetBinContent(linidx);
    }
 
    virtual const TNDArray& GetArray() const = 0;
    virtual TNDArray& GetArray() = 0;
 
-   void Sumw2();
+   void Sumw2() override;
 
    /// Forwards to THnBase::Projection().
    /// Non-virtual, as a CINT-compatible replacement of a using declaration.
@@ -174,13 +174,13 @@ public:
       return (THn*) RebinBase(group);
    }
 
-   void Reset(Option_t* option = "");
+   void Reset(Option_t* option = "") override;
 
 protected:
    TNDArrayT<Double_t> fSumw2; // bin error, lazy allocation happens in TNDArrayT
    mutable std::vector<Int_t> fCoordBuf; //! Temporary buffer
 
-   ClassDef(THn, 1); //Base class for multi-dimensional histogram
+   ClassDefOverride(THn, 1); //Base class for multi-dimensional histogram
 };
 
 
@@ -232,12 +232,12 @@ public:
    {
    }
 
-   const TNDArray& GetArray() const { return fArray; }
-   TNDArray& GetArray() { return fArray; }
+   const TNDArray& GetArray() const override { return fArray; }
+   TNDArray& GetArray() override { return fArray; }
 
 protected:
    TNDArrayT<T> fArray; ///< Bin content
-   ClassDef(THnT, 1);   ///< Multi-dimensional histogram with templated storage
+   ClassDefOverride(THnT, 1);   ///< Multi-dimensional histogram with templated storage
 };
 
 typedef THnT<Float_t>  THnF;

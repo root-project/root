@@ -200,7 +200,7 @@ public:
       if (par) fFunc->SetParameters(par);
    }
 
-   ROOT::Math::IGenFunction *Clone()  const
+   ROOT::Math::IGenFunction *Clone()  const override
    {
       // use default copy constructor
       TF1_EvalWrapper *f =  new TF1_EvalWrapper(*this);
@@ -208,7 +208,7 @@ public:
       return f;
    }
    // evaluate |f(x)|
-   Double_t DoEval(Double_t x) const
+   Double_t DoEval(Double_t x) const override
    {
       // use evaluation with stored parameters (i.e. pass zero)
       fX[0] = x;

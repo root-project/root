@@ -44,23 +44,23 @@ public:
    TPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
    TPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    TPolyMarker(const TPolyMarker &polymarker);
-   virtual ~TPolyMarker();
-   virtual void     Copy(TObject &polymarker) const;
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option="");
+   ~TPolyMarker() override;
+   void     Copy(TObject &polymarker) const override;
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   void     Draw(Option_t *option="") override;
    virtual void     DrawPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Int_t    GetLastPoint() const { return fLastPoint;}
    virtual Int_t    GetN() const {return fN;}
-   Option_t        *GetOption() const {return fOption.Data();}
+   Option_t        *GetOption() const override {return fOption.Data();}
    Double_t        *GetX() const {return fX;}
    Double_t        *GetY() const {return fY;}
-   virtual void     ls(Option_t *option="") const;
+   void     ls(Option_t *option="") const override;
    virtual Int_t    Merge(TCollection *list);
-   virtual void     Paint(Option_t *option="");
+   void     Paint(Option_t *option="") override;
    virtual void     PaintPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
-   virtual void     Print(Option_t *option="") const;
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void     Print(Option_t *option="") const override;
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual Int_t    SetNextPoint(Double_t x, Double_t y); // *MENU*
    virtual void     SetPoint(Int_t point, Double_t x, Double_t y); // *MENU*
    virtual void     SetPolyMarker(Int_t n);
@@ -68,7 +68,7 @@ public:
    virtual void     SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    virtual Int_t    Size() const {return fLastPoint+1;}
 
-   ClassDef(TPolyMarker,4)  //An array of points with the same marker
+   ClassDefOverride(TPolyMarker,4)  //An array of points with the same marker
 };
 
 #endif

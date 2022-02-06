@@ -45,7 +45,7 @@ public:
    //TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::FitData * );
    TBackCompFitter( const std::shared_ptr<ROOT::Fit::Fitter> & fitter, const std::shared_ptr<ROOT::Fit::FitData> & data  );
 
-   virtual ~TBackCompFitter();
+   ~TBackCompFitter() override;
 
 public:
 
@@ -54,35 +54,35 @@ public:
    };
 
    // inherited interface
-   virtual Double_t  Chisquare(Int_t npar, Double_t *params) const;
-   virtual void      Clear(Option_t *option="");
-   virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
-   virtual void      FixParameter(Int_t ipar);
+   Double_t  Chisquare(Int_t npar, Double_t *params) const override;
+   void      Clear(Option_t *option="") override;
+   Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) override;
+   void      FixParameter(Int_t ipar) override;
 
-   virtual void      GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
-   virtual void      GetConfidenceIntervals(TObject *obj, Double_t cl=0.95);
+   void      GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95) override;
+   void      GetConfidenceIntervals(TObject *obj, Double_t cl=0.95) override;
 
-   virtual Double_t *GetCovarianceMatrix() const;
-   virtual Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const;
-   virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;
-   virtual Int_t     GetNumberTotalParameters() const;
-   virtual Int_t     GetNumberFreeParameters() const;
+   Double_t *GetCovarianceMatrix() const override;
+   Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const override;
+   Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const override;
+   Int_t     GetNumberTotalParameters() const override;
+   Int_t     GetNumberFreeParameters() const override;
 
-   virtual Double_t  GetParError(Int_t ipar) const;
-   virtual Double_t  GetParameter(Int_t ipar) const;
-   virtual Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const;
-   virtual const char *GetParName(Int_t ipar) const;
-   virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
-   virtual Double_t  GetSumLog(Int_t i);
+   Double_t  GetParError(Int_t ipar) const override;
+   Double_t  GetParameter(Int_t ipar) const override;
+   Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const override;
+   const char *GetParName(Int_t ipar) const override;
+   Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const override;
+   Double_t  GetSumLog(Int_t i) override;
 
-   virtual Bool_t    IsFixed(Int_t ipar) const ;
+   Bool_t    IsFixed(Int_t ipar) const override ;
 
-   virtual void      PrintResults(Int_t level, Double_t amin) const;
-   virtual void      ReleaseParameter(Int_t ipar);
-   virtual void      SetFitMethod(const char *name);
-   virtual Int_t     SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh);
+   void      PrintResults(Int_t level, Double_t amin) const override;
+   void      ReleaseParameter(Int_t ipar) override;
+   void      SetFitMethod(const char *name) override;
+   Int_t     SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) override;
 
-   virtual void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t) );
+   void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t) ) override;
 
    /// For using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
@@ -140,7 +140,7 @@ private:
 
 
 
-   ClassDef(TBackCompFitter,1)  // Class providing backward compatibility for fitting by implementing the TVirtualFitter interface
+   ClassDefOverride(TBackCompFitter,1)  // Class providing backward compatibility for fitting by implementing the TVirtualFitter interface
 
 };
 

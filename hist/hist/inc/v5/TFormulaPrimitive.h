@@ -90,7 +90,7 @@ public:
    Double_t Eval(TObject *o,  Double_t *x);      //eval member function
    Double_t Eval(Double_t *x, Double_t *param);  //eval primitive parametric function
 
-   ClassDef(ROOT::v5::TFormulaPrimitive,0)  //The primitive formula
+   ClassDefOverride(ROOT::v5::TFormulaPrimitive,0)  //The primitive formula
 };
 
    } // end namespace v5

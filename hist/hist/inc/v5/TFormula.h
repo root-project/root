@@ -218,15 +218,15 @@ public:
                TFormula(const char *name,const char *formula);
                TFormula(const TFormula &formula);
    TFormula&   operator=(const TFormula &rhs);
-   virtual    ~TFormula();
+      ~TFormula() override;
 
  public:
    void                Optimize();
    virtual void        Analyze(const char *schain, Int_t &err, Int_t offset=0);
    virtual Bool_t      AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset=0);
    virtual Int_t       Compile(const char *expression="");
-   virtual void        Copy(TObject &formula) const;
-   virtual void        Clear(Option_t *option="");
+   void        Copy(TObject &formula) const override;
+   void        Clear(Option_t *option="") override;
    virtual char       *DefinedString(Int_t code);
    virtual Double_t    DefinedValue(Int_t code);
    virtual Int_t       DefinedVariable(TString &variable,Int_t &action);
@@ -246,7 +246,7 @@ public:
    virtual Int_t       GetParNumber(const char *name) const;
    virtual Bool_t      IsLinear() const {return TestBit(kLinear);}
    virtual Bool_t      IsNormalized() const {return TestBit(kNormalized);}
-   virtual void        Print(Option_t *option="") const; // *MENU*
+   void        Print(Option_t *option="") const override; // *MENU*
    virtual void        ProcessLinear(TString &replaceformula);
    virtual void        SetNumber(Int_t number) {fNumber = number;}
    virtual void        SetParameter(const char *name, Double_t parvalue);
@@ -268,7 +268,7 @@ public:
    void Streamer(TBuffer &b, const TClass *onfile_class);
    void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0);
 
-   ClassDef(ROOT::v5::TFormula,8)  //The formula base class  f(x,y,z,par)
+   ClassDefOverride(ROOT::v5::TFormula,8)  //The formula base class  f(x,y,z,par)
 };
 
    } // end namespace v5

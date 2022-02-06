@@ -274,7 +274,7 @@ public:
            EConstraint constraint=kEConstraintArea);
    // for root streamer and derived classes
    TUnfold(void);
-   virtual ~TUnfold(void);
+   ~TUnfold(void) override;
    // define input distribution
    virtual Int_t SetInput(const TH1 *hist_y, Double_t scaleBias=0.0,Double_t oneOverZeroError=0.0,const TH2 *hist_vyy=0,const TH2 *hist_vyy_inv=0);
    // Unfold with given choice of tau and input 
@@ -338,7 +338,7 @@ public:
    /// matrices with rank problems
    void SetEpsMatrix(Double_t eps); // set accuracy for eigenvalue analysis
 
-   ClassDef(TUnfold, TUnfold_CLASS_VERSION) //Unfolding with support for L-curve analysis
+   ClassDefOverride(TUnfold, TUnfold_CLASS_VERSION) //Unfolding with support for L-curve analysis
 };
 
 #endif

@@ -58,7 +58,7 @@ public:
            Int_t firstbin2 = 1, Int_t lastbin2 = -1,
            Option_t *proj_option = "", Option_t *draw_option = "");
    THStack(const THStack &hstack);
-   virtual ~THStack();
+   ~THStack() override;
    virtual void     Add(TH1 *h, Option_t *option="");
    void             Browse(TBrowser *b)  override;
    Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;

@@ -84,7 +84,7 @@ public:
 
 protected:
    std::vector<Long64_t> fSizes; ///< bin count
-   ClassDef(TNDArray, 2);        ///< Base for n-dimensional array
+   ClassDefOverride(TNDArray, 2);        ///< Base for n-dimensional array
 };
 
 template <typename T>
@@ -117,12 +117,12 @@ public:
 
    TNDArrayT(Int_t ndim, const Int_t *nbins, bool addOverflow = false) : TNDArray(ndim, nbins, addOverflow), fData() {}
 
-   void Init(Int_t ndim, const Int_t* nbins, bool addOverflow = false) {
+   void Init(Int_t ndim, const Int_t* nbins, bool addOverflow = false) override {
       fData.clear();
       TNDArray::Init(ndim, nbins, addOverflow);
    }
 
-   void Reset(Option_t* /*option*/ = "") {
+   void Reset(Option_t* /*option*/ = "") override {
       // Reset the content
       fData.assign(fSizes[0], T());
    }
@@ -152,17 +152,17 @@ public:
       return fData[linidx];
    }
 
-   Double_t AtAsDouble(ULong64_t linidx) const {
+   Double_t AtAsDouble(ULong64_t linidx) const override {
       if (fData.empty())
          return 0.;
       return fData[linidx];
    }
-   void SetAsDouble(ULong64_t linidx, Double_t value) {
+   void SetAsDouble(ULong64_t linidx, Double_t value) override {
       if (fData.empty())
          fData.resize(fSizes[0], T());
       fData[linidx] = (T) value;
    }
-   void AddAt(ULong64_t linidx, Double_t value) {
+   void AddAt(ULong64_t linidx, Double_t value) override {
       if (fData.empty())
          fData.resize(fSizes[0], T());
       fData[linidx] += (T) value;
@@ -170,7 +170,7 @@ public:
 
 protected:
    std::vector<T> fData;   // data
-   ClassDef(TNDArrayT, 2); // N-dimensional array
+   ClassDefOverride(TNDArrayT, 2); // N-dimensional array
 };
 
 // FIXME: Remove once we implement https://sft.its.cern.ch/jira/browse/ROOT-6284

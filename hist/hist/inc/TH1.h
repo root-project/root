@@ -183,7 +183,7 @@ public:
    };
 
 
-   virtual ~TH1();
+   ~TH1() override;
 
    virtual Bool_t   Add(TF1 *h1, Double_t c1=1, Option_t *option="");
    virtual Bool_t   Add(const TH1 *h1, Double_t c1=1);
@@ -457,7 +457,7 @@ public:
    TH1C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
    TH1C(const TH1C &h1c);
    TH1C& operator=(const TH1C &h1);
-   virtual ~TH1C();
+   ~TH1C() override;
 
    void     AddBinContent(Int_t bin) override;
    void     AddBinContent(Int_t bin, Double_t w) override;
@@ -498,7 +498,7 @@ public:
    TH1S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
    TH1S(const TH1S &h1s);
    TH1S& operator=(const TH1S &h1);
-   virtual ~TH1S();
+   ~TH1S() override;
 
    void     AddBinContent(Int_t bin) override;
    void     AddBinContent(Int_t bin, Double_t w) override;
@@ -539,7 +539,7 @@ public:
    TH1I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
    TH1I(const TH1I &h1i);
    TH1I& operator=(const TH1I &h1);
-   virtual ~TH1I();
+   ~TH1I() override;
 
    void     AddBinContent(Int_t bin) override;
    void     AddBinContent(Int_t bin, Double_t w) override;
@@ -581,7 +581,7 @@ public:
    explicit TH1F(const TVectorF &v);
    TH1F(const TH1F &h1f);
    TH1F& operator=(const TH1F &h1);
-   virtual ~TH1F();
+   ~TH1F() override;
 
    void     AddBinContent(Int_t bin) override {++fArray[bin];}
    void     AddBinContent(Int_t bin, Double_t w) override
@@ -624,7 +624,7 @@ public:
    explicit TH1D(const TVectorD &v);
    TH1D(const TH1D &h1d);
    TH1D& operator=(const TH1D &h1);
-   virtual ~TH1D();
+   ~TH1D() override;
 
    void     AddBinContent(Int_t bin) override {++fArray[bin];}
    void     AddBinContent(Int_t bin, Double_t w) override

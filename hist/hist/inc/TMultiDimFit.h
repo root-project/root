@@ -125,13 +125,13 @@ public:
    TMultiDimFit(Int_t dimension,
                 EMDFPolyType type=kMonomials,
                 Option_t *option="");
-   virtual ~TMultiDimFit();
+   ~TMultiDimFit() override;
 
    virtual void     AddRow(const Double_t *x, Double_t D, Double_t E=0);
    virtual void     AddTestRow(const Double_t *x, Double_t D, Double_t E=0);
-   virtual void     Browse(TBrowser* b);
-   virtual void     Clear(Option_t *option=""); // *MENU*
-   virtual void     Draw(Option_t * ="d") { }
+   void     Browse(TBrowser* b) override;
+   void     Clear(Option_t *option="") override; // *MENU*
+   void     Draw(Option_t * ="d") override { }
    virtual Double_t Eval(const Double_t *x, const Double_t *coeff=0) const;
    virtual Double_t EvalError(const Double_t *x, const Double_t *coeff=0) const;
    virtual void     FindParameterization(Option_t* option=""); // *MENU*
@@ -185,12 +185,12 @@ public:
    const TVectorD*  GetVariables()         const { return &fVariables; }
 
    static TMultiDimFit* Instance();
-   virtual Bool_t   IsFolder()             const { return kTRUE; }
+   Bool_t   IsFolder()             const override { return kTRUE; }
    virtual Double_t MakeChi2(const Double_t* coeff=0);
    virtual void     MakeCode(const char *functionName="MDF", Option_t *option=""); // *MENU*
    virtual void     MakeHistograms(Option_t* option="A"); // *MENU*
    virtual void     MakeMethod(const Char_t* className="MDF", Option_t* option=""); // *MENU*
-   virtual void     Print(Option_t *option="ps") const; // *MENU*
+   void     Print(Option_t *option="ps") const override; // *MENU*
 
    void             SetBinVarX(Int_t nbbinvarx) {fBinVarX = nbbinvarx;}
    void             SetBinVarY(Int_t nbbinvary) {fBinVarY = nbbinvary;}
@@ -204,7 +204,7 @@ public:
    void             SetPowerLimit(Double_t limit=1e-3);
    virtual void     SetPowers(const Int_t *powers, Int_t terms);
 
-   ClassDef(TMultiDimFit,2) // Multi dimensional fit class
+   ClassDefOverride(TMultiDimFit,2) // Multi dimensional fit class
 }
 ;
 #endif

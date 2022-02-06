@@ -21,7 +21,7 @@ class TConfidenceLevel : public TObject {
  public:
    TConfidenceLevel();
    TConfidenceLevel(Int_t mc, bool onesided = kTRUE);
-   virtual ~TConfidenceLevel();
+   ~TConfidenceLevel() override;
    inline void SetTSD(Double_t in) { fTSD = in; }
    void SetTSB(Double_t * in);
    void SetTSS(Double_t * in);
@@ -31,7 +31,7 @@ class TConfidenceLevel : public TObject {
    inline void SetStot(Double_t in) { fStot = in; }
    inline void SetDtot(Int_t in) { fDtot = in; }
    inline Double_t GetStatistic() const { return -2 * (fTSD - fStot); }
-   void Draw(const Option_t *option="");
+   void Draw(const Option_t *option="") override;
    Double_t GetExpectedStatistic_b(Int_t sigma = 0) const;
    Double_t GetExpectedStatistic_sb(Int_t sigma = 0) const;
    Double_t CLb(bool use_sMC = kFALSE) const;
@@ -74,7 +74,7 @@ class TConfidenceLevel : public TObject {
    static const Double_t fgMCL5S1S;
    static const Double_t fgMCL3S2S;
    static const Double_t fgMCL5S2S;
-   ClassDef(TConfidenceLevel, 1) // output for TLimit functions
+   ClassDefOverride(TConfidenceLevel, 1) // output for TLimit functions
 };
 
 #endif

@@ -65,7 +65,7 @@ static TUnfoldBinningXML *ImportXML(const TXMLDocument *document,const char *nam
    void AddAxisXML(TXMLNode *node); // import axis information
 protected:
 
-   ClassDef(TUnfoldBinningXML, TUnfold_CLASS_VERSION) //Complex binning schemes for TUnfoldDensity
+   ClassDefOverride(TUnfoldBinningXML, TUnfold_CLASS_VERSION) //Complex binning schemes for TUnfoldDensity
 };
 
 #endif

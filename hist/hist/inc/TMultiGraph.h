@@ -46,7 +46,7 @@ protected:
 public:
    TMultiGraph();
    TMultiGraph(const char *name, const char *title);
-   virtual ~TMultiGraph();
+   ~TMultiGraph() override;
 
    virtual void      Add(TGraph *graph, Option_t *chopt = "");
    virtual void      Add(TMultiGraph *multigraph, Option_t *chopt = "");

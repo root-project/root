@@ -123,7 +123,7 @@ protected:
                                Int_t chunkSize = 1024 * 16);
 
  public:
-   virtual ~THnBase();
+   ~THnBase() override;
 
    TObjArray* GetListOfAxes() { return &fAxes; }
    const TObjArray* GetListOfAxes() const { return &fAxes; }
@@ -190,7 +190,7 @@ protected:
    void SetBinError(Long64_t bin, Double_t e) { SetBinError2(bin, e*e); }
    void AddBinContent(const Int_t* x, Double_t v = 1.) { AddBinContent(GetBin(x), v); }
    void SetEntries(Double_t entries) { fEntries = entries; }
-   void SetTitle(const char *title);
+   void SetTitle(const char *title) override;
 
    Double_t GetBinContent(const Int_t *idx) const { return GetBinContent(GetBin(idx)); } // intentionally non-virtual
    virtual Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const = 0;
@@ -274,19 +274,19 @@ protected:
    Double_t ComputeIntegral();
    void GetRandom(Double_t *rand, Bool_t subBinRandom = kTRUE);
 
-   void Print(Option_t* option = "") const;
+   void Print(Option_t* option = "") const override;
    void PrintEntries(Long64_t from = 0, Long64_t howmany = -1, Option_t* options = 0) const;
    void PrintBin(Int_t* coord, Option_t* options) const {
       PrintBin(-1, coord, options);
    }
    void PrintBin(Long64_t idx, Option_t* options) const;
 
-   void Browse(TBrowser *b);
-   Bool_t IsFolder() const { return kTRUE; }
+   void Browse(TBrowser *b) override;
+   Bool_t IsFolder() const override { return kTRUE; }
 
    //void Draw(Option_t* option = "");
 
-   ClassDef(THnBase, 1); // Common base for n-dimensional histogram
+   ClassDefOverride(THnBase, 1); // Common base for n-dimensional histogram
 
    friend class THnIter;
 };
@@ -297,15 +297,15 @@ namespace Internal {
    class THnBaseBrowsable: public TNamed {
    public:
       THnBaseBrowsable(THnBase* hist, Int_t axis);
-      ~THnBaseBrowsable();
-      void Browse(TBrowser *b);
-      Bool_t IsFolder() const { return kFALSE; }
+      ~THnBaseBrowsable() override;
+      void Browse(TBrowser *b) override;
+      Bool_t IsFolder() const override { return kFALSE; }
 
    private:
       THnBase* fHist; // Original histogram
       Int_t    fAxis; // Axis to visualize
       TH1*     fProj; // Projection result
-      ClassDef(THnBaseBrowsable, 0); // Browser-helper for THnBase
+      ClassDefOverride(THnBaseBrowsable, 0); // Browser-helper for THnBase
    };
 
    // Base class for iterating over THnBase bins
@@ -331,7 +331,7 @@ class THnIter: public TObject {
 public:
    THnIter(const THnBase* hist, Bool_t respectAxisRange = kFALSE):
       fIter(hist->CreateIter(respectAxisRange)) {}
-   virtual ~THnIter();
+   ~THnIter() override;
 
    /// Return the next bin's index.
    /// If provided, set coord to that bin's coordinates (bin indexes).
@@ -347,7 +347,7 @@ public:
 
 private:
    ROOT::Internal::THnBaseBinIter* fIter;
-   ClassDef(THnIter, 0); //Iterator over bins of a THnBase.
+   ClassDefOverride(THnIter, 0); //Iterator over bins of a THnBase.
 };
 
 #endif //  ROOT_THnBase

@@ -76,7 +76,7 @@ public:
    TAxis(Int_t nbins, Double_t xmin, Double_t xmax);
    TAxis(Int_t nbins, const Double_t *xbins);
    TAxis(const TAxis &axis);
-   virtual ~TAxis();
+   ~TAxis() override;
    TAxis& operator=(const TAxis&);
 
    Bool_t     CanExtend() const { return (fBits2 & kCanExtend);  }
@@ -94,11 +94,11 @@ public:
    void               CenterLabels(Bool_t center=kTRUE);
    void               CenterTitle(Bool_t center=kTRUE);
    const char        *ChooseTimeFormat(Double_t axislength=0);
-   virtual void       Copy(TObject &axis) const;
-   virtual void       Delete(Option_t * /*option*/ ="") { }
-   virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py);
-   virtual TObject   *DrawClone(Option_t * /*option*/ ="") const {return 0;}
-   virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void       Copy(TObject &axis) const override;
+   void       Delete(Option_t * /*option*/ ="") override { }
+   Int_t      DistancetoPrimitive(Int_t px, Int_t py) override;
+   TObject   *DrawClone(Option_t * /*option*/ ="") const override {return 0;}
+   void       ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual Int_t      FindBin(Double_t x);
    virtual Int_t      FindBin(Double_t x) const { return FindFixBin(x); }
    virtual Int_t      FindBin(const char *label);
@@ -126,7 +126,7 @@ public:
    virtual Bool_t     GetTimeDisplay() const {return fTimeDisplay;}
    virtual const char *GetTimeFormat() const {return fTimeFormat.Data();}
    virtual const char *GetTimeFormatOnly() const;
-   const char        *GetTitle() const {return fTitle.Data();}
+   const char        *GetTitle() const override {return fTitle.Data();}
    const TArrayD     *GetXbins() const {return &fXbins;}
            Int_t      GetFirst() const;
            Int_t      GetLast() const;
@@ -139,14 +139,14 @@ public:
                       }
    virtual void       LabelsOption(Option_t *option="h");  // *MENU*
            void       RotateTitle(Bool_t rotate=kTRUE); // *TOGGLE* *GETTER=GetRotateTitle
-   virtual void       SaveAttributes(std::ostream &out, const char *name, const char *subname);
+   void       SaveAttributes(std::ostream &out, const char *name, const char *subname) override;
    virtual void       Set(Int_t nbins, Double_t xmin, Double_t xmax);
    virtual void       Set(Int_t nbins, const Float_t *xbins);
    virtual void       Set(Int_t nbins, const Double_t *xbins);
    virtual void       SetBinLabel(Int_t bin, const char *label);
            void       SetDecimals(Bool_t dot = kTRUE); // *TOGGLE* *GETTER=GetDecimals
    virtual void       SetDefaults();
-   virtual void       SetDrawOption(Option_t * /*option*/ ="") { }
+   void       SetDrawOption(Option_t * /*option*/ ="") override { }
    void               ChangeLabel(Int_t labNum=0, Double_t labAngle = -1.,
                                   Double_t labSize = -1., Int_t labAlign = -1,
                                   Int_t labColor = -1 , Int_t labFont = -1,
@@ -164,7 +164,7 @@ public:
    virtual void       UnZoom();  // *MENU*
    virtual void       ZoomOut(Double_t factor=0, Double_t offset=0);  // *MENU*
 
-   ClassDef(TAxis,10)  //Axis class
+   ClassDefOverride(TAxis,10)  //Axis class
 };
 
 ////////////////////////////////////////////////////////////////////////////////
