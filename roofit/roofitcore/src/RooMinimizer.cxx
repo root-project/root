@@ -303,40 +303,6 @@ const ROOT::Fit::Fitter* RooMinimizer::fitter() const
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Parse traditional RooAbsPdf::fitTo driver options
-///
-///  m - Run Migrad only
-///  h - Run Hesse to estimate errors
-///  v - Verbose mode
-///  l - Log parameters after each Minuit steps to file
-///  t - Activate profile timer
-///  r - Save fit result
-///  0 - Run Migrad with strategy 0
-
-RooFitResult* RooMinimizer::fit(const char* options)
-{
-  TString opts(options) ;
-  opts.ToLower() ;
-
-  // Initial configuration
-  if (opts.Contains("v")) setVerbose(1) ;
-  if (opts.Contains("t")) setProfile(1) ;
-  if (opts.Contains("l")) setLogFile(Form("%s.log",_fcn->getFunctionName().c_str())) ;
-  if (opts.Contains("c")) optimizeConst(1) ;
-
-  // Fitting steps
-  if (opts.Contains("0")) setStrategy(0) ;
-  migrad() ;
-  if (opts.Contains("0")) setStrategy(1) ;
-  if (opts.Contains("h")||!opts.Contains("m")) hesse() ;
-  if (!opts.Contains("m")) minos() ;
-
-  return (opts.Contains("r")) ? save() : 0 ;
-}
-
-
 bool RooMinimizer::fitFcn() const {
    bool ret;
 

@@ -150,11 +150,6 @@ protected:
 
    // Accessors for fit options, generator and MCstudy configuration flags
 
-   /// Return fit option string provided user
-   const char* fitOptions() {
-     return _mcs ? _mcs->_fitOptions.Data() : 0 ;
-   }
-
    /// Return list of fit options provided by user
    RooLinkedList* fitOptList() {
      return _mcs ? &_mcs->_fitOptList : 0 ;
