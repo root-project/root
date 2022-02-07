@@ -30,16 +30,12 @@ class SparkBackendInitTest(unittest.TestCase):
           library overrides the default warning filters thus exposing this
           warning
         """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
-        os.environ["PYSPARK_PYTHON"] = ""
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
@@ -106,8 +102,6 @@ class OperationSupportTest(unittest.TestCase):
           warning
         - Initialize a SparkContext for the tests in this class
         """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
@@ -117,8 +111,6 @@ class OperationSupportTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
-        os.environ["PYSPARK_PYTHON"] = ""
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
@@ -170,8 +162,6 @@ class InitializationTest(unittest.TestCase):
           warning
         - Initialize a SparkContext for the tests in this class
         """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
@@ -181,8 +171,6 @@ class InitializationTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
-        os.environ["PYSPARK_PYTHON"] = ""
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
@@ -255,8 +243,6 @@ class EmptyTreeErrorTest(unittest.TestCase):
           warning
         - Initialize a SparkContext for the tests in this class
         """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
@@ -266,8 +252,6 @@ class EmptyTreeErrorTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
-        os.environ["PYSPARK_PYTHON"] = ""
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
@@ -305,8 +289,6 @@ class ChangeAttributeTest(unittest.TestCase):
           warning
         - Initialize a SparkContext for the tests in this class
         """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
@@ -316,8 +298,6 @@ class ChangeAttributeTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
-        os.environ["PYSPARK_PYTHON"] = ""
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 

@@ -34,8 +34,6 @@ class SparkHistoWriteTest(unittest.TestCase):
         cls.gaus_stdev = 1  # Standard deviation of the gaussian distribution
         cls.delta_equal = 0.01  # Delta to check for float equality
 
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
@@ -45,8 +43,6 @@ class SparkHistoWriteTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
-        os.environ["PYSPARK_PYTHON"] = ""
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
