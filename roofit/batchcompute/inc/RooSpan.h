@@ -125,7 +125,7 @@ public:
   constexpr bool empty() const noexcept {
     return _span.empty();
   }
-  
+
   constexpr bool isBatch() const noexcept {
     return true;
   }

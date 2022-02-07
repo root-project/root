@@ -401,7 +401,7 @@ Bool_t RooStreamParser::expectToken(const TString& expected, Bool_t zapOnError)
   Bool_t error=token.CompareTo(expected) ;
   if (error && !_prefix.IsNull()) {
     oocoutW((TObject*)0,InputArguments) << _prefix << ": parse error, expected '"
-					<< expected << "'" << ", got '" << token << "'" << endl ;
+               << expected << "'" << ", got '" << token << "'" << endl ;
     if (zapOnError) zapToEnd(kTRUE) ;
   }
   return error ;
@@ -442,7 +442,7 @@ Bool_t RooStreamParser::convertToDouble(const TString& token, Double_t& value)
 
   if (error && !_prefix.IsNull()) {
     oocoutE((TObject*)0,InputArguments) << _prefix << ": parse error, cannot convert '"
-					<< token << "'" << " to double precision" <<  endl ;
+               << token << "'" << " to double precision" <<  endl ;
   }
   return error ;
 }
@@ -475,7 +475,7 @@ Bool_t RooStreamParser::convertToInteger(const TString& token, Int_t& value)
 
   if (error && !_prefix.IsNull()) {
     oocoutE((TObject*)0,InputArguments)<< _prefix << ": parse error, cannot convert '"
-				       << token << "'" << " to integer" <<  endl ;
+                   << token << "'" << " to integer" <<  endl ;
   }
   return error ;
 }

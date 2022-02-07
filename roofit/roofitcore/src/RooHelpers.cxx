@@ -185,7 +185,7 @@ bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vec
   auto observables = *pdf.getObservables(data);
 
   auto getLimits = [&](RooAbsRealLValue const& rlv, const char* rangeName) {
-    
+
     // RooDataHistCase
     if(dynamic_cast<RooDataHist const*>(&data)) {
       if (auto binning = rlv.getBinningPtr(rangeName)) {

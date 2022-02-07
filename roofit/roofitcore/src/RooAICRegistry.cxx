@@ -21,7 +21,7 @@
 
 RooAICRegistry is a utility class for operator p.d.f
 classes that keeps track of analytical integration codes and
-associated normalization and integration sets.  
+associated normalization and integration sets.
 **/
 
 #include "RooFit.h"
@@ -40,7 +40,7 @@ ClassImp(RooAICRegistry);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAICRegistry::RooAICRegistry(UInt_t size) 
+RooAICRegistry::RooAICRegistry(UInt_t size)
   : _clArr(0), _asArr1(0), _asArr2(0), _asArr3(0), _asArr4(0)
 {
   _clArr.reserve(size);
@@ -65,7 +65,7 @@ RooAICRegistry::RooAICRegistry(const RooAICRegistry& other)
     _asArr3.resize(size, 0);
     _asArr4.resize(size, 0);
     for(UInt_t i = 0; i < size; ++i) {
-      _asArr1[i] = other._asArr1[i] ? ((RooArgSet*)other._asArr1[i]->snapshot(kFALSE)) : 0; 
+      _asArr1[i] = other._asArr1[i] ? ((RooArgSet*)other._asArr1[i]->snapshot(kFALSE)) : 0;
       _asArr2[i] = other._asArr2[i] ? ((RooArgSet*)other._asArr2[i]->snapshot(kFALSE)) : 0;
       _asArr3[i] = other._asArr3[i] ? ((RooArgSet*)other._asArr3[i]->snapshot(kFALSE)) : 0;
       _asArr4[i] = other._asArr4[i] ? ((RooArgSet*)other._asArr4[i]->snapshot(kFALSE)) : 0;
@@ -76,7 +76,7 @@ RooAICRegistry::RooAICRegistry(const RooAICRegistry& other)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAICRegistry::~RooAICRegistry() 
+RooAICRegistry::~RooAICRegistry()
 {
   // Delete code list array, if allocated
   for (unsigned int i = 0; i < _clArr.size(); ++i) {
@@ -100,11 +100,11 @@ RooAICRegistry::~RooAICRegistry()
 Int_t RooAICRegistry::store(const std::vector<Int_t>& codeList, RooArgSet* set1,
                             RooArgSet* set2, RooArgSet* set3, RooArgSet* set4)
 {
-  // Loop over code-list array  
+  // Loop over code-list array
   for (UInt_t i = 0; i < _clArr.size(); ++i) {
     // Existing slot, compare with current list, if matched return index
     Bool_t match(kTRUE) ;
-    
+
     // Check that array contents is identical
     match &= _clArr[i] == codeList;
 
@@ -117,13 +117,13 @@ Int_t RooAICRegistry::store(const std::vector<Int_t>& codeList, RooArgSet* set1,
     if (!_asArr3[i] && set3) match=kFALSE ;
     if (_asArr4[i] && !set4) match=kFALSE ;
     if (!_asArr4[i] && set4) match=kFALSE ;
-    
+
     // Check that contents of arrays is identical
     if (_asArr1[i] && set1 && !set1->equals(*_asArr1[i])) match=kFALSE ;
-    if (_asArr2[i] && set2 && !set2->equals(*_asArr2[i])) match=kFALSE ;	
-    if (_asArr3[i] && set3 && !set3->equals(*_asArr3[i])) match=kFALSE ;	
-    if (_asArr4[i] && set4 && !set4->equals(*_asArr4[i])) match=kFALSE ;	
-    
+    if (_asArr2[i] && set2 && !set2->equals(*_asArr2[i])) match=kFALSE ;
+    if (_asArr3[i] && set3 && !set3->equals(*_asArr3[i])) match=kFALSE ;
+    if (_asArr4[i] && set4 && !set4->equals(*_asArr4[i])) match=kFALSE ;
+
     if (match) {
       if (set1) delete set1 ;
       if (set2) delete set2 ;
@@ -150,7 +150,7 @@ Int_t RooAICRegistry::store(const std::vector<Int_t>& codeList, RooArgSet* set1,
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve the array of integer codes associated with the given master code
 
-const std::vector<Int_t>& RooAICRegistry::retrieve(Int_t masterCode) const 
+const std::vector<Int_t>& RooAICRegistry::retrieve(Int_t masterCode) const
 {
   return _clArr[masterCode] ;
 }
@@ -159,7 +159,7 @@ const std::vector<Int_t>& RooAICRegistry::retrieve(Int_t masterCode) const
 /// Retrieve the array of integer codes associated with the given master code
 /// and set the passed set1 pointer to the first RooArgSet associated with this master code
 
-const std::vector<Int_t>& RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet& set1) const 
+const std::vector<Int_t>& RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet& set1) const
 {
   set1 = _asArr1[masterCode] ;
   return _clArr[masterCode] ;
@@ -167,11 +167,11 @@ const std::vector<Int_t>& RooAICRegistry::retrieve(Int_t masterCode, pRooArgSet&
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve the array of integer codes associated with the given master code
-/// and set the passed set1,set2 pointers to the first and second  RooArgSets associated with this 
+/// and set the passed set1,set2 pointers to the first and second  RooArgSets associated with this
 /// master code respectively
 
 const std::vector<Int_t>& RooAICRegistry::retrieve
-(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const 
+(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2) const
 {
   set1 = _asArr1[masterCode] ;
   set2 = _asArr2[masterCode] ;
@@ -180,11 +180,11 @@ const std::vector<Int_t>& RooAICRegistry::retrieve
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve the array of integer codes associated with the given master code
-/// and set the passed set1-4 pointers to the four  RooArgSets associated with this 
+/// and set the passed set1-4 pointers to the four  RooArgSets associated with this
 /// master code respectively
 
 const std::vector<Int_t>& RooAICRegistry::retrieve
-(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const 
+(Int_t masterCode, pRooArgSet& set1, pRooArgSet& set2, pRooArgSet& set3, pRooArgSet& set4) const
 {
   set1 = _asArr1[masterCode] ;
   set2 = _asArr2[masterCode] ;

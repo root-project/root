@@ -38,7 +38,7 @@ ClassImp(RooChebychev);
 namespace { // anonymous namespace to hide implementation details
 /// use fast FMA if available, fall back to normal arithmetic if not
 static inline double fast_fma(
-	const double x, const double y, const double z) noexcept
+   const double x, const double y, const double z) noexcept
 {
 #if defined(FP_FAST_FMA) // check if std::fma has fast hardware implementation
    return std::fma(x, y, z);
@@ -183,7 +183,7 @@ Double_t RooChebychev::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Chebychev.  
+/// Compute multiple values of Chebychev.
 void RooChebychev::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   RooBatchCompute::ArgVector extraArgs;

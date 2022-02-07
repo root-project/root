@@ -38,7 +38,7 @@ ClassImp(RooEffProd);
 /// Constructor of a a production of p.d.f inPdf with efficiency
 /// function inEff.
 
-RooEffProd::RooEffProd(const char *name, const char *title, 
+RooEffProd::RooEffProd(const char *name, const char *title,
                              RooAbsPdf& inPdf, RooAbsReal& inEff) :
   RooAbsPdf(name,title),
   _cacheMgr(this,10),
@@ -46,7 +46,7 @@ RooEffProd::RooEffProd(const char *name, const char *title,
   _eff("eff","efficiency function",this,inEff),
   _nset(0),
   _fixedNset(0)
-{  
+{
 }
 
 
@@ -55,13 +55,13 @@ RooEffProd::RooEffProd(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooEffProd::RooEffProd(const RooEffProd& other, const char* name) : 
+RooEffProd::RooEffProd(const RooEffProd& other, const char* name) :
   RooAbsPdf(other, name),
   _cacheMgr(other._cacheMgr,this),
   _pdf("pdf",this,other._pdf),
   _eff("acc",this,other._eff),
   _nset(0),
-  _fixedNset(0) 
+  _fixedNset(0)
 {
 }
 
@@ -71,7 +71,7 @@ RooEffProd::RooEffProd(const RooEffProd& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooEffProd::~RooEffProd() 
+RooEffProd::~RooEffProd()
 {
 }
 
@@ -114,12 +114,12 @@ RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet
 /// through a custom integration routine that properly accounts for the use of normalized p.d.f.
 /// in the evaluate() expression, which breaks the default RooAbsPdf normalization handling
 
-Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, 
-					  const RooArgSet* normSet, const char* rangeName) const 
+Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
+                 const RooArgSet* normSet, const char* rangeName) const
 {
-  
+
   // No special handling required if a normalization set is given
-  if (normSet && normSet->getSize()>0) {    
+  if (normSet && normSet->getSize()>0) {
     return 0 ;
   }
   // No special handling required if running with a fixed normalization set
@@ -155,7 +155,7 @@ Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
   cache->_int = cache->_clone->createIntegral(cache->_intObs,rangeName) ;
 
   // Store cache and return index as code
-  Int_t code = _cacheMgr.setObj(&allVars,&allVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ; 
+  Int_t code = _cacheMgr.setObj(&allVars,&allVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName)) ;
 
   return code+1 ;
 }
@@ -168,7 +168,7 @@ Int_t RooEffProd::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVar
 /// Return value of integral identified by code, which should be a return value of getAnalyticalIntegralWN,
 /// Code zero is always handled and signifies no integration (return value is normalized p.d.f. value)
 
-Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const 
+Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* /*rangeName*/) const
 {
   // Return analytical integral defined by given scenario code
 
@@ -190,7 +190,7 @@ Double_t RooEffProd::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, 
 /// Report all RooAbsArg derived objects contained in Cache Element (used in function optimization and
 /// and server redirect management of the cache)
 
-RooArgList RooEffProd::CacheElem::containedArgs(Action) 
+RooArgList RooEffProd::CacheElem::containedArgs(Action)
 {
   RooArgList ret(_intObs) ;
   ret.add(*_int) ;

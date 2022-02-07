@@ -19,8 +19,8 @@
 \class RooHistFunc
 \ingroup Roofitcore
 
-RooHistFunc implements a real-valued function sampled from a 
-multidimensional histogram. The histogram can have an arbitrary number of real or 
+RooHistFunc implements a real-valued function sampled from a
+multidimensional histogram. The histogram can have an arbitrary number of real or
 discrete dimensions and may have negative values.
 **/
 
@@ -56,7 +56,7 @@ RooHistFunc::RooHistFunc() :
   _totVolume(0),
   _unitNorm(kFALSE)
 {
-  TRACE_CREATE 
+  TRACE_CREATE
 }
 
 
@@ -67,11 +67,11 @@ RooHistFunc::RooHistFunc() :
 /// RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
 /// for the entire life span of this function.
 
-RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& vars, 
-		       const RooDataHist& dhist, Int_t intOrder) :
-  RooAbsReal(name,title), 
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& vars,
+             const RooDataHist& dhist, Int_t intOrder) :
+  RooAbsReal(name,title),
   _depList("depList","List of dependents",this),
-  _dataHist((RooDataHist*)&dhist), 
+  _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
   _cdfBoundaries(kFALSE),
@@ -84,20 +84,20 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
   if (vars.getSize()!=dvars->getSize()) {
-    coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
-			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+    coutE(InputArguments) << "RooHistFunc::ctor(" << GetName()
+           << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
     throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
   }
 
   for (const auto arg : vars) {
     if (!dvars->find(arg->GetName())) {
-      coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
-			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+      coutE(InputArguments) << "RooHistFunc::ctor(" << GetName()
+             << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
       throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
     }
   }
 
-  TRACE_CREATE 
+  TRACE_CREATE
 }
 
 
@@ -109,11 +109,11 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgSet& v
 /// RooHistFunc neither owns or clone 'dhist' and the user must ensure the input histogram exists
 /// for the entire life span of this function.
 
-RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& funcObs, const RooArgList& histObs, 
-  		       const RooDataHist& dhist, Int_t intOrder) :
-  RooAbsReal(name,title), 
+RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& funcObs, const RooArgList& histObs,
+             const RooDataHist& dhist, Int_t intOrder) :
+  RooAbsReal(name,title),
   _depList("depList","List of dependents",this),
-  _dataHist((RooDataHist*)&dhist), 
+  _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
   _cdfBoundaries(kFALSE),
@@ -126,20 +126,20 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
   if (histObs.getSize()!=dvars->getSize()) {
-    coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
-			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+    coutE(InputArguments) << "RooHistFunc::ctor(" << GetName()
+           << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
     throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
   }
 
   for (const auto arg : histObs) {
     if (!dvars->find(arg->GetName())) {
-      coutE(InputArguments) << "RooHistFunc::ctor(" << GetName() 
-			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+      coutE(InputArguments) << "RooHistFunc::ctor(" << GetName()
+             << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
       throw std::invalid_argument("RooHistFunc: ERROR variable list and RooDataHist must contain the same variables.");
     }
   }
 
-  TRACE_CREATE 
+  TRACE_CREATE
 }
 
 
@@ -148,7 +148,7 @@ RooHistFunc::RooHistFunc(const char *name, const char *title, const RooArgList& 
 /// Copy constructor
 
 RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
-  RooAbsReal(other,name), 
+  RooAbsReal(other,name),
   _depList("depList",this,other._depList),
   _dataHist(other._dataHist),
   _codeReg(other._codeReg),
@@ -157,7 +157,7 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
   _totVolume(other._totVolume),
   _unitNorm(other._unitNorm)
 {
-  TRACE_CREATE 
+  TRACE_CREATE
 
   _histObsList.addClone(other._histObsList) ;
 }
@@ -166,8 +166,8 @@ RooHistFunc::RooHistFunc(const RooHistFunc& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooHistFunc::~RooHistFunc() 
-{ 
+RooHistFunc::~RooHistFunc()
+{
   TRACE_DESTROY
 }
 
@@ -181,7 +181,7 @@ RooHistFunc::~RooHistFunc()
 
 Double_t RooHistFunc::evaluate() const
 {
-  // Transfer values from   
+  // Transfer values from
   if (_depList.getSize()>0) {
     for (auto i = 0u; i < _histObsList.size(); ++i) {
       const auto harg = _histObsList[i];
@@ -197,7 +197,7 @@ Double_t RooHistFunc::evaluate() const
     }
   }
 
-  Double_t ret =  _dataHist->weightFast(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;  
+  Double_t ret =  _dataHist->weightFast(_histObsList,_intOrder,kFALSE,_cdfBoundaries) ;
   return ret ;
 }
 
@@ -247,7 +247,7 @@ RooSpan<double> RooHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalData,
 ////////////////////////////////////////////////////////////////////////////////
 /// Only handle case of maximum in all variables
 
-Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const 
+Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const
 {
   RooAbsCollection* common = _depList.selectCommon(vars) ;
   if (common->getSize()==_depList.getSize()) {
@@ -260,7 +260,7 @@ Int_t RooHistFunc::getMaxVal(const RooArgSet& vars) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooHistFunc::maxVal(Int_t code) const 
+Double_t RooHistFunc::maxVal(Int_t code) const
 {
   R__ASSERT(code==1) ;
 
@@ -291,7 +291,7 @@ Double_t RooHistFunc::totVolume() const
     } else {
       RooCategory* cat = dynamic_cast<RooCategory*>(arg) ;
       if (cat) {
-	_totVolume *= cat->numTypes() ;
+   _totVolume *= cat->numTypes() ;
       }
     }
   }
@@ -307,7 +307,7 @@ Double_t RooHistFunc::totVolume() const
 /// histogram. If interpolation is used, only the integral
 /// over all RooHistPdf observables is implemented.
 
-Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
     return RooHistPdf::getAnalyticalIntegral(allVars, analVars, rangeName, _histObsList, _depList, _intOrder);
 }
@@ -318,7 +318,7 @@ Int_t RooHistFunc::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 /// is deferred to RooDataHist::sum() which implements partial
 /// or complete summation over the histograms contents
 
-Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const
 {
     return RooHistPdf::analyticalIntegral(code, rangeName, _histObsList, _depList, *_dataHist, true);
 }
@@ -343,7 +343,7 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
     const auto harg = _histObsList[i];
     const auto parg = _depList[i];
     if (string(parg->GetName())==obs.GetName()) {
-      hobs=harg ; 
+      hobs=harg ;
     }
   }
   if (!hobs) {
@@ -367,7 +367,7 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
   xhi = xhi + 0.01*(xhi-xlo) ;
 
   Double_t delta = (xhi-xlo)*1e-8 ;
- 
+
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
   for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
@@ -386,7 +386,7 @@ list<Double_t>* RooHistFunc::plotSamplingHint(RooAbsRealLValue& obs, Double_t xl
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   // No hints are required when interpolation is used
   if (_intOrder>1) {
@@ -399,7 +399,7 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
     const auto harg = _histObsList[i];
     const auto parg = _depList[i];
     if (string(parg->GetName())==obs.GetName()) {
-      hobs=harg ; 
+      hobs=harg ;
     }
   }
 
@@ -460,14 +460,14 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
   // right of the bin boundaries
   for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
     if (boundaries[i]>xlo-delta && boundaries[i]<xhi+delta) {
-      
+
       Double_t boundary = boundaries[i] ;
       if (transform) {
-	transform->setVal(boundary) ;
-	//cout << "transform bound " << boundary << " using " << transform->GetName() << " result " << obs.getVal() << endl ;
-	hint->push_back(obs.getVal()) ;
-      } else {	
-	hint->push_back(boundary) ;
+   transform->setVal(boundary) ;
+   //cout << "transform bound " << boundary << " using " << transform->GetName() << " result " << obs.getVal() << endl ;
+   hint->push_back(obs.getVal()) ;
+      } else {
+   hint->push_back(boundary) ;
       }
     }
   }
@@ -480,8 +480,8 @@ std::list<Double_t>* RooHistFunc::binBoundaries(RooAbsRealLValue& obs, Double_t 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if our datahist is already in the workspace.
 /// In case of error, return true.
-Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws) 
-{  
+Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
+{
   // Check if dataset with given name already exists
   RooAbsData* wsdata = ws.embeddedData(_dataHist->GetName()) ;
 
@@ -490,7 +490,7 @@ Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
     if (static_cast<RooDataHist*>(wsdata) == _dataHist)
       return false;
 
-    // Yes it exists - now check if it is identical to our internal histogram 
+    // Yes it exists - now check if it is identical to our internal histogram
     if (wsdata->InheritsFrom(RooDataHist::Class())) {
 
       // Check if histograms are identical
@@ -536,7 +536,7 @@ Bool_t RooHistFunc::importWorkspaceHook(RooWorkspace& ws)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) 
+Bool_t RooHistFunc::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 {
   if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return kFALSE ;
   if (dh1.numEntries() != dh2.numEntries()) return kFALSE ;
@@ -573,7 +573,7 @@ void RooHistFunc::Streamer(TBuffer &R__b)
 /// then fill it here. Can't be done in regular schema evolution in LinkDef
 /// as _depList content is not guaranteed to be initialized there
 
-void RooHistFunc::ioStreamerPass2() 
+void RooHistFunc::ioStreamerPass2()
 {
   if (_histObsList.getSize()==0) {
     _histObsList.addClone(_depList) ;

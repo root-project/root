@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'DATA AND CATEGORIES' RooFit tutorial macro #404
-// 
+//
 // Working with RooCategory objects to describe discrete variables
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -26,11 +26,11 @@ using namespace RooFit ;
 
 class TestBasic404 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic404(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Categories basic functionality",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C o n s t r u c t    a   c a t e g o r y   w i t h   l a b e l s 
+  // C o n s t r u c t    a   c a t e g o r y   w i t h   l a b e l s
   // ----------------------------------------------------------------
 
   // Define a category with labels only
@@ -52,10 +52,10 @@ public:
 
 
 
-  // G e n e r a t e   d u m m y   d a t a  f o r   t a b u l a t i o n   d e m o 
+  // G e n e r a t e   d u m m y   d a t a  f o r   t a b u l a t i o n   d e m o
   // ----------------------------------------------------------------------------
-  
-  // Generate a dummy dataset 
+
+  // Generate a dummy dataset
   RooRealVar x("x","x",0,10) ;
   RooDataSet *data = RooPolynomial("p","p",x).generate(RooArgSet(x,b0flav,tagCat),10000) ;
 
@@ -80,7 +80,7 @@ public:
 
   // Retrieve fraction of events with "Lepton" tag
   Double_t fracLep = ttable->getFrac("Lepton") ;
-  regValue(fracLep,"rf404_fracLep") ;  
+  regValue(fracLep,"rf404_fracLep") ;
 
 
   // D e f i n i n g   r a n g e s   f o r   p l o t t i n g ,   f i t t i n g   o n   c a t e g o r i e s
@@ -92,11 +92,11 @@ public:
   // Or add state names one by one
   tagCat.addToRange("soso","NetTagger-1") ;
   tagCat.addToRange("soso","NetTagger-2") ;
-  
+
   // Use category range in dataset reduction specification
   RooDataSet* goodData = (RooDataSet*) data->reduce(CutRange("good")) ;
   Roo1DTable* gtable = goodData->table(tagCat) ;
-  
+
 
   regTable(btable,"rf404_btable") ;
   regTable(ttable,"rf404_ttable") ;

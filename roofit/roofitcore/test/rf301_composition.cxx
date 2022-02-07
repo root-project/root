@@ -1,14 +1,14 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #301
-// 
-// Multi-dimensional p.d.f.s through composition, e.g. substituting a 
-// p.d.f parameter with a function that depends on other observables
-// 
-// pdf = gauss(x,f(y),s) with f(y) = a0 + a1*y
-// 
 //
-// 07/2008 - Wouter Verkerke 
+// Multi-dimensional p.d.f.s through composition, e.g. substituting a
+// p.d.f parameter with a function that depends on other observables
+//
+// pdf = gauss(x,f(y),s) with f(y) = a0 + a1*y
+//
+//
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +28,7 @@ using namespace RooFit ;
 
 class TestBasic301 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic301(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Composition extension of basic p.d.f",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -46,10 +46,10 @@ public:
 
   // Creat gauss(x,f(y),s)
   RooRealVar sigma("sigma","width of gaussian",0.5) ;
-  RooGaussian model("model","Gaussian with shifting mean",x,fy,sigma) ;  
+  RooGaussian model("model","Gaussian with shifting mean",x,fy,sigma) ;
 
 
-  // S a m p l e   d a t a ,   p l o t   d a t a   a n d   p d f   o n   x   a n d   y 
+  // S a m p l e   d a t a ,   p l o t   d a t a   a n d   p d f   o n   x   a n d   y
   // ---------------------------------------------------------------------------------
 
   // Generate 10000 events in x and y from model
@@ -58,12 +58,12 @@ public:
   // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
   RooPlot* xframe = x.frame() ;
   data->plotOn(xframe) ;
-  model.plotOn(xframe) ; 
+  model.plotOn(xframe) ;
 
   // Plot x distribution of data and projection of model on y = Int(dx) model(x,y)
   RooPlot* yframe = y.frame() ;
   data->plotOn(yframe) ;
-  model.plotOn(yframe) ; 
+  model.plotOn(yframe) ;
 
   // Make two-dimensional plot in x vs y
   TH1* hh_model = model.createHistogram("hh_model",x,Binning(50),YVar(y,Binning(50))) ;

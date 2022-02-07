@@ -65,7 +65,7 @@ Double_t RooBreitWigner::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of BreitWigner distribution.  
+/// Compute multiple values of BreitWigner distribution.
 void RooBreitWigner::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;

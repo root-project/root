@@ -39,7 +39,7 @@ public:
   void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) override ;
 
 private:
-  
+
   RooTemplateProxy<RooAbsRealLValue> _x ;
   RooListProxy _coefList ;
   std::string _refRangeName ;

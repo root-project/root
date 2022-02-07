@@ -1,4 +1,4 @@
-#ifdef __CINT__ 
+#ifdef __CINT__
 
 //Old LinkDef1.h
 #pragma link off all globals;
@@ -8,7 +8,7 @@
 #pragma link C++ class stack<RooAbsArg*,deque<RooAbsArg*> > ;
 #pragma link C++ class RooRefArray- ;
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-4]" source="TList _proxyList" target="_proxyList" \
-    code="{ TIterator* iter = onfile._proxyList.MakeIterator() ; TObject* tmpObj ; while ((tmpObj = iter->Next())) { _proxyList.Add(tmpObj) ; } delete iter ; }" 
+    code="{ TIterator* iter = onfile._proxyList.MakeIterator() ; TObject* tmpObj ; while ((tmpObj = iter->Next())) { _proxyList.Add(tmpObj) ; } delete iter ; }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[5]" source="TRefArray _proxyList" target="_proxyList" \
   code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = std::make_unique<TRefArray>(onfile._proxyList); } }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
@@ -97,7 +97,7 @@
 #pragma link C++ class RooDLLSignificanceMCSModule+ ;
 #pragma link C++ class RooAbsAnaConvPdf+ ;
 #pragma link C++ class RooAddPdf+ ;
-#pragma link C++ class RooEfficiency+ ; 
+#pragma link C++ class RooEfficiency+ ;
 #pragma link C++ class RooEffProd+ ;
 #pragma link C++ class RooExtendPdf+ ;
 #pragma link off class RooErrorHandler+ ;
@@ -168,7 +168,7 @@
 #pragma link C++ class RooRatio+ ;
 #pragma link C++ class RooRandom+ ;
 #pragma link off class RooErrorHandler+ ;
- 
+
 
 // Old LinkDef3.h
 #pragma link C++ class RooCacheManager<std::vector<double> >+ ;
@@ -361,6 +361,6 @@
 // The nomap options excludes the class from the roomap file
 #pragma link C++ options=nomap class std::map<string,TH1*>+ ;
 #pragma link off class RooErrorHandler+ ;
-#endif 
+#endif
 #pragma link C++ class RooBinSamplingPdf+;
 #pragma link C++ class RooBinWidthFunction+;

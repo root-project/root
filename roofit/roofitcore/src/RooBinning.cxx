@@ -175,7 +175,7 @@ void RooBinning::addUniform(Int_t nbins, Double_t xlo, Double_t xhi)
   _boundaries.reserve(_boundaries.size() + nbins + 1);
   for (Int_t i = 0; i <= nbins; ++i)
     addBoundary((double(nbins - i) / double(nbins)) * xlo +
-	(double(i) / double(nbins)) * xhi);
+   (double(i) / double(nbins)) * xhi);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +199,7 @@ Int_t RooBinning::rawBinNumber(Double_t x) const
       _boundaries.begin(), _boundaries.end(), x);
   // always return valid bin number
   while (_boundaries.begin() != it &&
-	  (_boundaries.end() == it || _boundaries.end() == it + 1 || x < *it)) --it;
+     (_boundaries.end() == it || _boundaries.end() == it + 1 || x < *it)) --it;
   return it - _boundaries.begin();
 }
 
@@ -329,41 +329,41 @@ void RooBinning::Streamer(TBuffer &R__b)
      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
      switch (R__v) {
        case 3:
-	 // current version - fallthrough intended
+    // current version - fallthrough intended
        case 2:
-	 // older version with std::set<Double_t> instead of
-	 // std::vector<Double_t>, apparently ROOT is clever enough to not care
-	 // about set vs vector
-	 R__b.ReadClassBuffer(RooBinning::Class(), this, R__v, R__s, R__c);
-	 break;
+    // older version with std::set<Double_t> instead of
+    // std::vector<Double_t>, apparently ROOT is clever enough to not care
+    // about set vs vector
+    R__b.ReadClassBuffer(RooBinning::Class(), this, R__v, R__s, R__c);
+    break;
        case 1:
-	 {
-	   RooAbsBinning::Streamer(R__b);
-	   R__b >> _xlo;
-	   R__b >> _xhi;
-	   R__b >> _ownBoundLo;
-	   R__b >> _ownBoundHi;
-	   R__b >> _nbins;
+    {
+      RooAbsBinning::Streamer(R__b);
+      R__b >> _xlo;
+      R__b >> _xhi;
+      R__b >> _ownBoundLo;
+      R__b >> _ownBoundHi;
+      R__b >> _nbins;
 
-	   _boundaries.clear();
-	   // Convert TList to std::vector<Double_t>
-	   TList tmp;
-	   tmp.Streamer(R__b);
-	   _boundaries.reserve(tmp.GetSize());
-	   TIterator* it = tmp.MakeIterator();
-	   for (RooDouble* el = (RooDouble*) it->Next(); el;
-	       el = (RooDouble*) it->Next()) _boundaries.push_back(*el);
-	   delete it;
-	 }
-	 R__b.CheckByteCount(R__s, R__c, RooBinning::IsA());
-	 break;
+      _boundaries.clear();
+      // Convert TList to std::vector<Double_t>
+      TList tmp;
+      tmp.Streamer(R__b);
+      _boundaries.reserve(tmp.GetSize());
+      TIterator* it = tmp.MakeIterator();
+      for (RooDouble* el = (RooDouble*) it->Next(); el;
+          el = (RooDouble*) it->Next()) _boundaries.push_back(*el);
+      delete it;
+    }
+    R__b.CheckByteCount(R__s, R__c, RooBinning::IsA());
+    break;
        default:
-	 throw std::string("Unknown class version!");
+    throw std::string("Unknown class version!");
      }
      if (_boundaries.size() > 2) {
        std::sort(_boundaries.begin(), _boundaries.end());
        _boundaries.erase(std::unique(_boundaries.begin(), _boundaries.end()),
-	   _boundaries.end());
+      _boundaries.end());
      }
    } else {
      R__b.WriteClassBuffer(RooBinning::Class(),this);

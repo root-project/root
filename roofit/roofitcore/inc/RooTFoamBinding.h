@@ -27,7 +27,7 @@ public:
   ~RooTFoamBinding() override;
 
   Double_t Density(Int_t ndim, Double_t *) override ;
-  
+
   RooRealBinding& binding() { return *_binding ; }
 
 protected:

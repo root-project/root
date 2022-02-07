@@ -129,7 +129,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   if (cache) {
     if (cache->paramTracker()->hasChanged(true) && (recalculate || !cache->pdf()->haveUnitNorm()) ) {
       cxcoutD(Eval) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache << " pdf "
-		    << cache->pdf()->GetName() << " requires recalculation as parameters changed" << std::endl ;
+          << cache->pdf()->GetName() << " requires recalculation as parameters changed" << std::endl ;
       fillCacheObject(*cache) ;
       cache->pdf()->setValueDirty() ;
     }
@@ -162,7 +162,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   int code = _cacheMgr.setObj(nset,0,(static_cast<RooAbsCacheElement*>(cache)),0) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
-		 << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
+       << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
   if (htmp) {
     ccoutI(Caching) << " from preexisting content." ;
   }

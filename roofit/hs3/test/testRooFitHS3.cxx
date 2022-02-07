@@ -51,7 +51,7 @@ TEST(RooFitHS3, RooArgusBG)
    auto etcDir = std::string(TROOT::GetEtcDir());
    RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
    RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
-   
+
    RooWorkspace work;
    work.import(model);
    RooJSONFactoryWSTool tool(work);
@@ -65,7 +65,7 @@ TEST(RooFitHS3, SimultaneousGaussians)
    // Import keys and factory expressions files for the RooJSONFactoryWSTool.
    auto etcDir = std::string(TROOT::GetEtcDir());
    RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");   
+   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
 
    // Create a test model: RooSimultaneous with Gaussian in one component, and
    // product of two Gaussians in the other.
@@ -80,7 +80,7 @@ TEST(RooFitHS3, SimultaneousGaussians)
    RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
    simPdf.addPdf(model, "physics");
    simPdf.addPdf(model_ctl, "control");
-   
+
    // this is a handy way of triggering the creation of a ModelConfig upon re-import
    simPdf.setAttribute("toplevel");
 

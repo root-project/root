@@ -45,7 +45,7 @@ ClassImp(RooSharedProperties);
 RooSharedProperties::RooSharedProperties() : _refCount(0), _inSharedList(kFALSE)
 {
   RooTrace::create(this) ;
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,17 +54,17 @@ RooSharedProperties::RooSharedProperties() : _refCount(0), _inSharedList(kFALSE)
 RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr), _refCount(0), _inSharedList(kFALSE)
 {
   RooTrace::create(this) ;
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooSharedProperties::~RooSharedProperties() 
+RooSharedProperties::~RooSharedProperties()
 {
   RooTrace::destroy(this) ;
-} 
+}
 
 
 
@@ -80,7 +80,7 @@ Bool_t RooSharedProperties::operator==(const RooSharedProperties& other) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Printing interface
 
-void RooSharedProperties::Print(Option_t* /*opts*/) const 
+void RooSharedProperties::Print(Option_t* /*opts*/) const
 {
   cout << "RooSharedProperties(" << this << ") UUID = " << _uuid.AsString() << endl ;
 }

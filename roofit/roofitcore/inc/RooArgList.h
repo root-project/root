@@ -107,7 +107,7 @@ public:
 
 
   /// Return object at given index, or nullptr if index is out of range
-  inline RooAbsArg* at(Int_t idx) const { 
+  inline RooAbsArg* at(Int_t idx) const {
 
     if (idx >= static_cast<Int_t>(_list.size()))
       return nullptr;
@@ -117,7 +117,7 @@ public:
 
   // I/O streaming interface (machine readable)
   virtual bool readFromStream(std::istream& is, bool compact, bool verbose=false);
-  virtual void writeToStream(std::ostream& os, bool compact); 
+  virtual void writeToStream(std::ostream& os, bool compact);
 
   /// Access element by index.
   RooAbsArg& operator[](Int_t idx) const {

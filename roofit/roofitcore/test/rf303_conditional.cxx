@@ -1,13 +1,13 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #303
-// 
-// Use of tailored p.d.f as conditional p.d.fs.s
-// 
-// pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y
-// 
 //
-// 07/2008 - Wouter Verkerke 
+// Use of tailored p.d.f as conditional p.d.fs.s
+//
+// pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y
+//
+//
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -28,9 +28,9 @@ using namespace RooFit ;
 
 class TestBasic303 : public RooFitTestUnit
 {
-public: 
+public:
 
-RooDataSet* makeFakeDataXY() 
+RooDataSet* makeFakeDataXY()
 {
   RooRealVar x("x","x",-10,10) ;
   RooRealVar y("y","y",-10,10) ;
@@ -46,7 +46,7 @@ RooDataSet* makeFakeDataXY()
       y = tmpy ;
       d->add(coord) ;
     }
-      
+
   }
 
   return d ;
@@ -71,7 +71,7 @@ RooDataSet* makeFakeDataXY()
 
   // Creat gauss(x,f(y),s)
   RooRealVar sigma("sigma","width of gaussian",0.5,0.1,2.0) ;
-  RooGaussian model("model","Gaussian with shifting mean",x,fy,sigma) ;  
+  RooGaussian model("model","Gaussian with shifting mean",x,fy,sigma) ;
 
 
   // Obtain fake external experimental dataset with values for x and y
@@ -79,7 +79,7 @@ RooDataSet* makeFakeDataXY()
 
 
 
-  // G e n e r a t e   d a t a   f r o m   c o n d i t i o n a l   p . d . f   m o d e l ( x | y )  
+  // G e n e r a t e   d a t a   f r o m   c o n d i t i o n a l   p . d . f   m o d e l ( x | y )
   // ---------------------------------------------------------------------------------------------
 
   // Make subset of experimental data with only y values
@@ -94,7 +94,7 @@ RooDataSet* makeFakeDataXY()
   // ---------------------------------------------------------------------------------------------
 
   model.fitTo(*expDataXY,ConditionalObservables(y)) ;
-  
+
 
 
   // P r o j e c t   c o n d i t i o n a l   p . d . f   o n   x   a n d   y   d i m e n s i o n s
@@ -103,7 +103,7 @@ RooDataSet* makeFakeDataXY()
   // Plot x distribution of data and projection of model on x = 1/Ndata sum(data(y_i)) model(x;y_i)
   RooPlot* xframe = x.frame() ;
   expDataXY->plotOn(xframe) ;
-  model.plotOn(xframe,ProjWData(*expDataY)) ; 
+  model.plotOn(xframe,ProjWData(*expDataY)) ;
 
 
   // Speed up (and approximate) projection by using binned clone of data for projection

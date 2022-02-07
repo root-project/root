@@ -1,13 +1,13 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #308
-// 
+//
 // Examples on normalization of p.d.f.s,
 // integration of p.d.fs, construction
 // of cumulative distribution functions from p.d.f.s
 // in two dimensions
 //
-// 07/2008 - Wouter Verkerke 
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -26,18 +26,18 @@ using namespace RooFit ;
 
 class TestBasic308 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic308(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Normalization of p.d.f.s in 2D",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // S e t u p   m o d e l 
+  // S e t u p   m o d e l
   // ---------------------
 
   // Create observables x,y
   RooRealVar x("x","x",-10,10) ;
   RooRealVar y("y","y",-10,10) ;
 
-  // Create p.d.f. gaussx(x,-2,3), gaussy(y,2,2) 
+  // Create p.d.f. gaussx(x,-2,3), gaussy(y,2,2)
   RooGaussian gx("gx","gx",x,RooConst(-2),RooConst(3)) ;
   RooGaussian gy("gy","gy",y,RooConst(+2),RooConst(2)) ;
 
@@ -51,7 +51,7 @@ public:
 
   // Return 'raw' unnormalized value of gx
   regValue(gxy.getVal(),"rf308_gxy") ;
-  
+
   // Return value of gxy normalized over x _and_ y in range [-10,10]
   RooArgSet nset_xy(x,y) ;
   regValue(gxy.getVal(&nset_xy),"rf308_gx_Norm[x,y]") ;
@@ -79,7 +79,7 @@ public:
   // Define a range named "signal" in x from -5,5
   x.setRange("signal",-5,5) ;
   y.setRange("signal",-3,3) ;
-  
+
   // Create an integral of gxy_Norm[x,y] over x and y in range "signal"
   // This is the fraction of of p.d.f. gxy_Norm[x,y] which is in the
   // range named "signal"
@@ -94,10 +94,10 @@ public:
   // Create the cumulative distribution function of gx
   // i.e. calculate Int[-10,x] gx(x') dx'
   RooAbsReal* gxy_cdf = gxy.createCdf(RooArgSet(x,y)) ;
-  
+
   // Plot cdf of gx versus x
   TH1* hh_cdf = gxy_cdf->createHistogram("hh_cdf",x,Binning(40),YVar(y,Binning(40))) ;
-  
+
   regTH(hh_cdf,"rf308_cdf") ;
 
   delete igxy_sig ;

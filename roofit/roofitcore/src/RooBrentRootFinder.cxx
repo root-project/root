@@ -64,7 +64,7 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
   Double_t fb= (*_function)(&b) - value;
   if(fb*fa > 0) {
     oocxcoutD((TObject*)0,Eval) << "RooBrentRootFinder::findRoot(" << _function->getName() << "): initial interval does not bracket a root: ("
-				<< a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
+            << a << "," << b << "), value = " << value << " f[xlo] = " << fa << " f[xhi] = " << fb << endl;
     return kFALSE;
   }
 
@@ -81,7 +81,7 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
       d = b - a;
       e = b - a;
     }
-  
+
     if (fabs (fc) < fabs (fb)) {
       ac_equal = kTRUE;
       a = b;
@@ -99,10 +99,10 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
     if (fb == 0 || fabs(m) <= tol) {
       //cout << "RooBrentRootFinder: iter = " << iter << " m = " << m << " tol = " << tol << endl ;
       result= b;
-      _function->restoreXVec() ;      
+      _function->restoreXVec() ;
       return kTRUE;
     }
-  
+
     if (fabs (e) < tol || fabs (fa) <= fabs (fb)) {
       // Bounds decreasing too slowly: use bisection
       d = m;
@@ -112,36 +112,36 @@ Bool_t RooBrentRootFinder::findRoot(Double_t &result, Double_t xlo, Double_t xhi
       // Attempt inverse cubic interpolation
       Double_t p, q, r;
       Double_t s = fb / fa;
-      
+
       if (ac_equal) {
-	p = 2 * m * s;
-	q = 1 - s;
+   p = 2 * m * s;
+   q = 1 - s;
       }
       else {
-	q = fa / fc;
-	r = fb / fc;
-	p = s * (2 * m * q * (q - r) - (b - a) * (r - 1));
-	q = (q - 1) * (r - 1) * (s - 1);
+   q = fa / fc;
+   r = fb / fc;
+   p = s * (2 * m * q * (q - r) - (b - a) * (r - 1));
+   q = (q - 1) * (r - 1) * (s - 1);
       }
       // Check whether we are in bounds
       if (p > 0) {
-	q = -q;
+   q = -q;
       }
       else {
-	p = -p;
+   p = -p;
       }
-      
+
       Double_t min1= 3 * m * q - fabs (tol * q);
       Double_t min2= fabs (e * q);
       if (2 * p < (min1 < min2 ? min1 : min2)) {
-	// Accept the interpolation
-	e = d;
-	d = p / q;
+   // Accept the interpolation
+   e = d;
+   d = p / q;
       }
       else {
-	// Interpolation failed: use bisection.
-	d = m;
-	e = m;
+   // Interpolation failed: use bisection.
+   d = m;
+   e = m;
       }
     }
     // Move last best guess to a

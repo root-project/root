@@ -55,7 +55,7 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
 {
   for (const auto comp : constraintSet) {
     if (!dynamic_cast<RooAbsPdf*>(comp)) {
-      coutE(InputArguments) << "RooConstraintSum::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
+      coutE(InputArguments) << "RooConstraintSum::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
                             << " is not of type RooAbsPdf" << std::endl ;
       RooErrorHandler::softAbort() ;
     }
@@ -70,7 +70,7 @@ RooConstraintSum::RooConstraintSum(const char* name, const char* title, const Ro
 /// Copy constructor.
 
 RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _set1("set1",this,other._set1),
   _paramSet("paramSet",this,other._paramSet),
   _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData}
@@ -81,14 +81,14 @@ RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* na
 ////////////////////////////////////////////////////////////////////////////////
 /// Return sum of -log of constraint p.d.f.s.
 
-Double_t RooConstraintSum::evaluate() const 
+Double_t RooConstraintSum::evaluate() const
 {
   Double_t sum(0);
 
   for (const auto comp : _set1) {
     sum -= static_cast<RooAbsPdf*>(comp)->getLogVal(&_paramSet);
   }
-  
+
   return sum;
 }
 
@@ -180,7 +180,7 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 /// \param[in] constraints Set of parameters to constrain. If `nullptr`, all
 ///            parameters will be considered.
 /// \param[in] externalConstraints Set of constraint terms that are not
-///            embedded in the pdf (external constraints). 
+///            embedded in the pdf (external constraints).
 /// \param[in] globalObservables The normalization set for the constraint terms.
 ///            If it is `nullptr`, the set of all constrained parameters will
 ///            be used as the normalization set.

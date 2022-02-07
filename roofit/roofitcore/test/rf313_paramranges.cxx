@@ -1,14 +1,14 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #313
-// 
+//
 // Working with parameterized ranges to define non-rectangular regions
 // for fitting and integration
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -26,11 +26,11 @@ using namespace RooFit ;
 
 class TestBasic313 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic313(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Integration over non-rectangular regions",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   3 D   p d f 
+  // C r e a t e   3 D   p d f
   // -------------------------
 
   // Define observable (x,y,z)
@@ -47,7 +47,7 @@ public:
 
 
 
-  // D e f i n e d   n o n - r e c t a n g u l a r   r e g i o n   R   i n   ( x , y , z ) 
+  // D e f i n e d   n o n - r e c t a n g u l a r   r e g i o n   R   i n   ( x , y , z )
   // -------------------------------------------------------------------------------------
 
   //
@@ -66,7 +66,7 @@ public:
 
 
 
-  // C a l c u l a t e   i n t e g r a l   o f   n o r m a l i z e d   p d f   i n   R 
+  // C a l c u l a t e   i n t e g r a l   o f   n o r m a l i z e d   p d f   i n   R
   // ----------------------------------------------------------------------------------
 
   // Create integral over normalized pdf model over x,y,z in "R" region

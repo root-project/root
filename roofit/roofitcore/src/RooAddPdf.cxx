@@ -130,7 +130,7 @@ void RooAddPdf::finalizeConstruction() {
 /// Constructor with two PDFs and one coefficient
 
 RooAddPdf::RooAddPdf(const char *name, const char *title,
-		     RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) :
+           RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) :
   RooAddPdf(name, title)
 {
   _pdfList.add(pdf1) ;
@@ -160,7 +160,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   if (inPdfList.size()>inCoefList.size()+1 || inPdfList.size()<inCoefList.size()) {
     std::stringstream errorMsg;
     errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-			  << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1." << endl ;
+           << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1." << endl ;
     coutE(InputArguments) << errorMsg.str();
     throw std::invalid_argument(errorMsg.str().c_str());
   }
@@ -168,7 +168,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
   if (recursiveFractions && inPdfList.size()!=inCoefList.size()+1) {
     std::stringstream errorMsg;
     errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-			  << "): Recursive fractions option can only be used if Npdf=Ncoef+1." << endl;
+           << "): Recursive fractions option can only be used if Npdf=Ncoef+1." << endl;
     coutE(InputArguments) << errorMsg.str();
     throw std::invalid_argument(errorMsg.str());
   }
@@ -184,7 +184,7 @@ RooAddPdf::RooAddPdf(const char *name, const char *title, const RooArgList& inPd
     if (inPdfList.at(i) == nullptr) {
       std::stringstream errorMsg;
       errorMsg << "RooAddPdf::RooAddPdf(" << GetName()
-			        << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
+                 << ") number of pdfs and coefficients inconsistent, must have Npdf=Ncoef or Npdf=Ncoef+1" << endl ;
       coutE(InputArguments) << errorMsg.str();
       throw std::invalid_argument(errorMsg.str());
     }
@@ -456,8 +456,8 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
   if (!nset2->equals(_refCoefNorm) || _refCoefRangeName !=0 || rangeName !=0 || _normRange.Length()>0) {
 
     cxcoutD(Caching) << "ALEX:     RooAddPdf::syncCoefProjList(" << GetName() << ") projecting coefficients from "
-		   << *nset2 << (rangeName?":":"") << (rangeName?rangeName:"")
-		   << " to "  << ((!_refCoefNorm.empty())?_refCoefNorm:*nset2) << (_refCoefRangeName?":":"") << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"") << endl ;
+         << *nset2 << (rangeName?":":"") << (rangeName?rangeName:"")
+         << " to "  << ((!_refCoefNorm.empty())?_refCoefNorm:*nset2) << (_refCoefRangeName?":":"") << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"") << endl ;
 
     // Recalculate projection integrals of PDFs
     for (auto arg : _pdfList) {
@@ -466,9 +466,9 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
       // Calculate projection integral
       RooAbsReal* pdfProj ;
       if (!nset2->equals(_refCoefNorm)) {
-	pdfProj = thePdf->createIntegral(*nset2,_refCoefNorm,_normRange.Length()>0?_normRange.Data():0) ;
-	pdfProj->setOperMode(operMode()) ;
-	cxcoutD(Caching) << "RooAddPdf(" << GetName() << ")::getPC nset2(" << *nset2 << ")!=_refCoefNorm(" << _refCoefNorm << ") --> pdfProj = " << pdfProj->GetName() << endl ;
+   pdfProj = thePdf->createIntegral(*nset2,_refCoefNorm,_normRange.Length()>0?_normRange.Data():0) ;
+   pdfProj->setOperMode(operMode()) ;
+   cxcoutD(Caching) << "RooAddPdf(" << GetName() << ")::getPC nset2(" << *nset2 << ")!=_refCoefNorm(" << _refCoefNorm << ") --> pdfProj = " << pdfProj->GetName() << endl ;
       } else {
         auto name = std::string(GetName()) + "_" + thePdf->GetName() + "_ProjectNorm";
         pdfProj = new RooRealVar(name.c_str(),"Unit Projection normalization integral",1.0) ;
@@ -499,9 +499,9 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
       RooAbsReal* rangeProj1 ;
 
    //    cout << "ALEX >>>> RooAddPdf(" << GetName() << ")::getPC _refCoefRangeName WVE = "
-// 	   <<(_refCoefRangeName?":":"") << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"")
-// 	   <<" _refCoefRangeName AK = "  << (_refCoefRangeName?_refCoefRangeName->GetName():"")
-// 	   << " && _refCoefNorm" << _refCoefNorm << " with size = _refCoefNorm.size() " << _refCoefNorm.size() << endl ;
+//       <<(_refCoefRangeName?":":"") << (_refCoefRangeName?RooNameReg::str(_refCoefRangeName):"")
+//       <<" _refCoefRangeName AK = "  << (_refCoefRangeName?_refCoefRangeName->GetName():"")
+//       << " && _refCoefNorm" << _refCoefNorm << " with size = _refCoefNorm.size() " << _refCoefNorm.size() << endl ;
 
       // Check if _refCoefRangeName is identical to default range for all observables,
       // If so, substitute by unit integral
@@ -510,28 +510,28 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
       auto tmpObs = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
       bool allIdent = true ;
       for (auto const& obsArg : *tmpObs) {
-	RooRealVar* rvarg = dynamic_cast<RooRealVar*>(obsArg) ;
-	if (rvarg) {
-	  if (rvarg->getMin(RooNameReg::str(_refCoefRangeName))!=rvarg->getMin() ||
-	      rvarg->getMax(RooNameReg::str(_refCoefRangeName))!=rvarg->getMax()) {
-	    allIdent=false ;
-	  }
-	}
+   RooRealVar* rvarg = dynamic_cast<RooRealVar*>(obsArg) ;
+   if (rvarg) {
+     if (rvarg->getMin(RooNameReg::str(_refCoefRangeName))!=rvarg->getMin() ||
+         rvarg->getMax(RooNameReg::str(_refCoefRangeName))!=rvarg->getMax()) {
+       allIdent=false ;
+     }
+   }
       }
       // -------------
 
       if (_refCoefRangeName && !_refCoefNorm.empty() && !allIdent) {
 
 
-	auto tmp = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
-	rangeProj1 = thePdf->createIntegral(*tmp,*tmp,RooNameReg::str(_refCoefRangeName)) ;
+   auto tmp = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
+   rangeProj1 = thePdf->createIntegral(*tmp,*tmp,RooNameReg::str(_refCoefRangeName)) ;
 
-	//rangeProj1->setOperMode(operMode()) ;
+   //rangeProj1->setOperMode(operMode()) ;
 
       } else {
 
-	auto theName = std::string(GetName()) + "_" + thePdf->GetName() + "_RangeNorm1";
-	rangeProj1 = new RooRealVar(theName.c_str(),"Unit range normalization integral",1.0) ;
+   auto theName = std::string(GetName()) + "_" + thePdf->GetName() + "_RangeNorm1";
+   rangeProj1 = new RooRealVar(theName.c_str(),"Unit range normalization integral",1.0) ;
 
       }
       cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") R1 = " << rangeProj1->GetName() << endl ;
@@ -541,21 +541,21 @@ RooAddPdf::CacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooAr
       // Calculate range adjusted projection integral
       RooAbsReal* rangeProj2 ;
       cxcoutD(Caching) << "RooAddPdf::syncCoefProjList(" << GetName() << ") rangename = " << (rangeName?rangeName:"<null>")
-		       << " nset = " << (nset?*nset:RooArgSet()) << endl ;
+             << " nset = " << (nset?*nset:RooArgSet()) << endl ;
       if (rangeName && !_refCoefNorm.empty()) {
 
-	rangeProj2 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,rangeName) ;
-	//rangeProj2->setOperMode(operMode()) ;
+   rangeProj2 = thePdf->createIntegral(_refCoefNorm,_refCoefNorm,rangeName) ;
+   //rangeProj2->setOperMode(operMode()) ;
 
       } else if (_normRange.Length()>0) {
 
-	auto tmp = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
-	rangeProj2 = thePdf->createIntegral(*tmp,*tmp,_normRange.Data()) ;
+   auto tmp = std::unique_ptr<RooArgSet>{thePdf->getObservables(_refCoefNorm)} ;
+   rangeProj2 = thePdf->createIntegral(*tmp,*tmp,_normRange.Data()) ;
 
       } else {
 
-	auto theName = std::string(GetName()) + "_" + thePdf->GetName() + "_RangeNorm2";
-	rangeProj2 = new RooRealVar(theName.c_str(),"Unit range normalization integral",1.0) ;
+   auto theName = std::string(GetName()) + "_" + thePdf->GetName() + "_RangeNorm2";
+   rangeProj2 = new RooRealVar(theName.c_str(),"Unit range normalization integral",1.0) ;
 
       }
       cxcoutD(Caching) << " RooAddPdf::syncCoefProjList(" << GetName() << ") R2 = " << rangeProj2->GetName() << endl ;
@@ -644,7 +644,7 @@ void RooAddPdf::updateCoefficients(CacheElem& cache, const RooArgSet* nset) cons
         if (_coefErrCount-->0) {
           msg << "RooAddPdf::updateCoefCache(" << GetName()
               << " WARNING: sum of PDF coefficients not in range [0-1], value="
-		      << 1-lastCoef ;
+            << 1-lastCoef ;
           if (_coefErrCount==0) {
             msg << " (no more will be printed)"  ;
           }
@@ -833,7 +833,7 @@ bool RooAddPdf::checkObservables(const RooArgSet* nset) const
     auto coef = static_cast<const RooAbsReal*>(_coefList.at(i));
     if (pdf->observableOverlaps(nset,*coef)) {
       coutE(InputArguments) << "RooAddPdf::checkObservables(" << GetName() << "): ERROR: coefficient " << coef->GetName()
-			    << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
+             << " and PDF " << pdf->GetName() << " have one or more dependents in common" << endl ;
       ret = true ;
     }
   }
@@ -853,7 +853,7 @@ bool RooAddPdf::checkObservables(const RooArgSet* nset) const
 /// codes into a single integration code valid for RooAddPdf.
 
 Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
-					 const RooArgSet* normSet, const char* rangeName) const
+                const RooArgSet* normSet, const char* rangeName) const
 {
 
   RooArgSet allAnalVars(*std::unique_ptr<RooArgSet>{getObservables(allVars)}) ;
@@ -892,8 +892,8 @@ Int_t RooAddPdf::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars
     subCode[n] = pdf->getAnalyticalIntegralWN(*allAnalVars2,subAnalVars,normSet,rangeName) ;
     if (subCode[n]==0 && !allAnalVars2->empty()) {
       coutE(InputArguments) << "RooAddPdf::getAnalyticalIntegral(" << GetName() << ") WARNING: component PDF " << pdf->GetName()
-			    << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually."
-			    << "   Distributed analytical integration disabled. Please fix PDF" << endl ;
+             << "   advertises inconsistent set of integrals (e.g. (X,Y) but not X or Y individually."
+             << "   Distributed analytical integration disabled. Please fix PDF" << endl ;
       allOK = false ;
     }
     n++ ;
@@ -1052,7 +1052,7 @@ void RooAddPdf::selectNormalizationRange(const char* rangeName, bool force)
 /// return RooAbsPdf::genContext(vars,prototype,auxProto,verbose) ; // WVE DEBUG
 
 RooAbsGenContext* RooAddPdf::genContext(const RooArgSet &vars, const RooDataSet *prototype,
-					const RooArgSet* auxProto, bool verbose) const
+               const RooArgSet* auxProto, bool verbose) const
 {
   return new RooAddGenContext(*this,vars,prototype,auxProto,verbose) ;
 }
@@ -1093,19 +1093,19 @@ std::list<Double_t>* RooAddPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t
     if (pdfHint) {
       if (!sumHint) {
 
-	// If this is the first hint, then just save it
-	sumHint = std::move(pdfHint) ;
+   // If this is the first hint, then just save it
+   sumHint = std::move(pdfHint) ;
 
       } else {
 
-	auto newSumHint = std::make_unique<std::list<Double_t>>(sumHint->size()+pdfHint->size());
+   auto newSumHint = std::make_unique<std::list<Double_t>>(sumHint->size()+pdfHint->size());
 
-	// Merge hints into temporary array
-	merge(pdfHint->begin(),pdfHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
+   // Merge hints into temporary array
+   merge(pdfHint->begin(),pdfHint->end(),sumHint->begin(),sumHint->end(),newSumHint->begin()) ;
 
-	// Copy merged array without duplicates to new sumHintArrau
-	sumHint = std::move(newSumHint) ;
-	needClean = true ;
+   // Copy merged array without duplicates to new sumHintArrau
+   sumHint = std::move(newSumHint) ;
+   needClean = true ;
 
       }
     }
@@ -1135,19 +1135,19 @@ std::list<Double_t>* RooAddPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xl
     if (pdfBinB) {
       if (!sumBinB) {
 
-	// If this is the first hint, then just save it
-	sumBinB = std::move(pdfBinB) ;
+   // If this is the first hint, then just save it
+   sumBinB = std::move(pdfBinB) ;
 
       } else {
 
-	auto newSumBinB = std::make_unique<list<Double_t>>(sumBinB->size()+pdfBinB->size()) ;
+   auto newSumBinB = std::make_unique<list<Double_t>>(sumBinB->size()+pdfBinB->size()) ;
 
-	// Merge hints into temporary array
-	merge(pdfBinB->begin(),pdfBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
+   // Merge hints into temporary array
+   merge(pdfBinB->begin(),pdfBinB->end(),sumBinB->begin(),sumBinB->end(),newSumBinB->begin()) ;
 
-	// Copy merged array without duplicates to new sumBinBArrau
-	sumBinB = std::move(newSumBinB) ;
-	needClean = true ;
+   // Copy merged array without duplicates to new sumBinBArrau
+   sumBinB = std::move(newSumBinB) ;
+   needClean = true ;
       }
     }
   }

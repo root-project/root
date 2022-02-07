@@ -34,13 +34,13 @@ class MemPoolForRooSets;
 
 class RooArgSet : public RooAbsCollection {
 public:
-  
+
 #ifdef USEMEMPOOLFORARGSET
   void* operator new (size_t bytes);
   void* operator new (size_t bytes, void* ptr) noexcept;
   void operator delete (void *ptr);
 #endif
- 
+
   // Constructors, assignment etc.
   RooArgSet();
 
@@ -146,7 +146,7 @@ public:
 
 
   /// Check if this exact instance is in this collection.
-  Bool_t containsInstance(const RooAbsArg& var) const override { 
+  Bool_t containsInstance(const RooAbsArg& var) const override {
     return find(var) == &var;
   }
 
@@ -208,7 +208,7 @@ private:
   static MemPool* memPool();
 #endif
   const RooFit::UniqueId<RooArgSet> _uniqueId; //!
-  
+
   ClassDefOverride(RooArgSet,1) // Set of RooAbsArg objects
 };
 

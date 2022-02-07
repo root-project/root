@@ -54,7 +54,7 @@ ClassImp(RooMoment);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooMoment::RooMoment() 
+RooMoment::RooMoment()
 {
 }
 
@@ -69,7 +69,7 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   _if("!if","if",this)
 {
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
-  
+
   string pname=Form("%s_product",name) ;
 
   RooFormulaVar* XF ;
@@ -104,8 +104,8 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, 
-		     Int_t orderIn, Bool_t centr, Bool_t takeRoot, Bool_t intNSet) :
+RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset,
+           Int_t orderIn, Bool_t centr, Bool_t takeRoot, Bool_t intNSet) :
   RooAbsMoment(name, title,func,x,orderIn,takeRoot),
   _xf("!xf","xf",this,kFALSE,kFALSE),
   _ixf("!ixf","ixf",this),
@@ -154,7 +154,7 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMoment::RooMoment(const RooMoment& other, const char* name) :
-  RooAbsMoment(other, name), 
+  RooAbsMoment(other, name),
   _xf("xf",this,other._xf),
   _ixf("ixf",this,other._ixf),
   _if("if",this,other._if)
@@ -166,16 +166,16 @@ RooMoment::RooMoment(const RooMoment& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooMoment::~RooMoment() 
+RooMoment::~RooMoment()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate value  
+/// Calculate value
 
-Double_t RooMoment::evaluate() const 
+Double_t RooMoment::evaluate() const
 {
   Double_t ratio = _ixf / _if ;
   Double_t ret =  _takeRoot ? pow(ratio,1.0/_order) : ratio ;

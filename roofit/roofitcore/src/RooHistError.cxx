@@ -46,7 +46,7 @@ ClassImp(RooHistError);
 /// first time this method is called. Only one object will be
 /// constructed per ROOT session.
 
-const RooHistError &RooHistError::instance() 
+const RooHistError &RooHistError::instance()
 {
   static RooHistError _theInstance;
   return _theInstance;
@@ -56,7 +56,7 @@ const RooHistError &RooHistError::instance()
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct our singleton object.
 
-RooHistError::RooHistError() 
+RooHistError::RooHistError()
 {
   // Initialize lookup table ;
   Int_t i ;
@@ -85,7 +85,7 @@ Bool_t RooHistError::getPoissonInterval(Int_t n, Double_t &mu1, Double_t &mu2, D
     return kTRUE ;
   }
 
-  // Forward to calculation method 
+  // Forward to calculation method
   Bool_t ret =  getPoissonIntervalCalc(n,mu1,mu2,nSigma) ;
   return ret ;
 }
@@ -131,7 +131,7 @@ Bool_t RooHistError::getPoissonIntervalCalc(Int_t n, Double_t &mu1, Double_t &mu
 /// If the return values is kFALSE and error occurred.
 
 Bool_t RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
-					     Double_t &asym1, Double_t &asym2, Double_t nSigma) const
+                    Double_t &asym1, Double_t &asym2, Double_t nSigma) const
 {
   // sanity checks
   if(n < 0 || m < 0) {
@@ -194,7 +194,7 @@ Bool_t RooHistError::getBinomialIntervalAsym(Int_t n, Int_t m,
 /// If the return values is kFALSE and error occurred.
 
 Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
-					     Double_t &asym1, Double_t &asym2, Double_t nSigma) const
+                    Double_t &asym1, Double_t &asym2, Double_t nSigma) const
 {
   // sanity checks
   if(n < 0 || m < 0) {
@@ -261,7 +261,7 @@ Bool_t RooHistError::getBinomialIntervalEff(Int_t n, Int_t m,
 /// pinned at the point estimate is returned instead.
 
 Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Double_t pointEstimate,
-				 Double_t stepSize, Double_t &lo, Double_t &hi, Double_t nSigma) const
+             Double_t stepSize, Double_t &lo, Double_t &hi, Double_t nSigma) const
 {
   // sanity checks
   assert(0 != Qu || 0 != Ql);
@@ -310,7 +310,7 @@ Bool_t RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, Dou
 /// Scan f(x)-value until it changes sign. Start at the specified point and take constant
 /// steps of the specified size. Give up after 1000 steps.
 
-Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step, Double_t value) const 
+Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step, Double_t value) const
 {
   Int_t steps(1000);
   Double_t min(f.getMinLimit(1)),max(f.getMaxLimit(1));
@@ -331,17 +331,17 @@ Double_t RooHistError::seek(const RooAbsFunc &f, Double_t startAt, Double_t step
 ////////////////////////////////////////////////////////////////////////////////
 /// Create and return a PoissonSum function binding
 
-RooAbsFunc *RooHistError::createPoissonSum(Int_t n) 
-{ 
-  return new PoissonSum(n); 
+RooAbsFunc *RooHistError::createPoissonSum(Int_t n)
+{
+  return new PoissonSum(n);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create and return a BinomialSum function binding
 
-RooAbsFunc *RooHistError::createBinomialSum(Int_t n, Int_t m, Bool_t eff) 
-{ 
+RooAbsFunc *RooHistError::createBinomialSum(Int_t n, Int_t m, Bool_t eff)
+{
   if (eff) {
     return new BinomialSumEff(n,m) ;
   } else {

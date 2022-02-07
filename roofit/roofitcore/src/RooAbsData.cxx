@@ -1606,7 +1606,7 @@ TList* RooAbsData::split(const RooAbsCategory& splitCat, Bool_t createEmptyDataS
 /// Split dataset into subsets based on the categorisation of the RooSimultaneous
 /// A TList of RooDataSets is returned in which each RooDataSet is named
 /// after the state name of splitCat of which it contains the dataset subset.
-/// The observables splitCat itself is no longer present in the sub datasets, as well as the 
+/// The observables splitCat itself is no longer present in the sub datasets, as well as the
 /// observables of the other categories.
 /// If createEmptyDataSets is kFALSE (default) this method only creates datasets for states
 /// which have at least one entry The caller takes ownership of the returned list and its contents
@@ -1727,7 +1727,7 @@ TList* RooAbsData::split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSe
 /// \note Please follow the function links in the left column to learn about PyROOT specifics for a given option.
 ///
 /// <table>
-/// 
+///
 /// <tr><th> <th> Data representation options
 /// <tr><td> RooFit::Asymmetry(const RooCategory& c)
 ///     <td> Show the asymmetry of the data in given two-state category [F(+)-F(-)] / [F(+)+F(-)].

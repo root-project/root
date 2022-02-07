@@ -155,7 +155,7 @@ RooAbsReal::RooAbsReal(const char *name, const char *title, const char *unit) :
 /// Constructor with plot range and unit label
 
 RooAbsReal::RooAbsReal(const char *name, const char *title, Double_t inMinVal,
-		       Double_t inMaxVal, const char *unit) :
+             Double_t inMaxVal, const char *unit) :
   RooAbsArg(name,title), _plotMin(inMinVal), _plotMax(inMaxVal), _plotBins(100),
   _value(0), _unit(unit), _forceNumInt(kFALSE), _specIntegratorConfig(0), _selectComp(kTRUE), _lastNSet(0)
 {
@@ -371,7 +371,7 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
   //Standard tracing code goes here
   if (!isValidReal(value)) {
     coutW(Tracing) << "RooAbsReal::traceEval(" << GetName()
-		   << "): validation failed: " << value << endl ;
+         << "): validation failed: " << value << endl ;
   }
 
   //Call optional subclass tracing code
@@ -391,7 +391,7 @@ Double_t RooAbsReal::traceEval(const RooArgSet* /*nset*/) const
 /// requested integral.
 
 Int_t RooAbsReal::getAnalyticalIntegralWN(RooArgSet& allDeps, RooArgSet& analDeps,
-					  const RooArgSet* /*normSet*/, const char* rangeName) const
+                 const RooArgSet* /*normSet*/, const char* rangeName) const
 {
   return _forceNumInt ? 0 : getAnalyticalIntegral(allDeps,analDeps,rangeName) ;
 }
@@ -553,8 +553,8 @@ RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 /// | `Range(const char* name)`              | Integrate only over given range. Multiple ranges may be specified by passing multiple Range() arguments
 
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
-				       const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
-				       const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
+                   const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
+                   const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
 
 
@@ -594,7 +594,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& a
 /// decided automatically by RooRealIntegral.
 
 RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset,
-				       const RooNumIntConfig* cfg, const char* rangeName) const
+                   const RooNumIntConfig* cfg, const char* rangeName) const
 {
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: integral over full range or single limited range
@@ -624,7 +624,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal utility function for createIntegral() that creates the actual integral object.
 RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
-				     const RooNumIntConfig* cfg, const char* rangeName) const
+                 const RooNumIntConfig* cfg, const char* rangeName) const
 {
   // Make internal use copies of iset and nset
   RooArgSet iset(iset2) ;
@@ -712,14 +712,14 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
 
     if (cacheParams.getSize()>0) {
       cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.getSize()
-		     << "-dim value cache for integral over " << iset2 << " as a function of " << cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  endl ;
+           << "-dim value cache for integral over " << iset2 << " as a function of " << cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  endl ;
       string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams.contentsString().c_str()) ;
       RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,cacheParams) ;
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(*integral) ;
       cachedIntegral->setCacheSource(kTRUE) ;
       if (integral->operMode()==ADirty) {
-	cachedIntegral->setOperMode(ADirty) ;
+   cachedIntegral->setOperMode(ADirty) ;
       }
       //cachedIntegral->disableCache(kTRUE) ;
       integral = cachedIntegral ;
@@ -810,9 +810,9 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
     Bool_t first(kTRUE) ;
     while((arg=(RooAbsArg*)iter->Next())) {
       if (first) {
-	first=kFALSE ;
+   first=kFALSE ;
       } else {
-	name.Append(",") ;
+   name.Append(",") ;
       }
       name.Append(arg->GetName()) ;
     }
@@ -837,9 +837,9 @@ TString RooAbsReal::integralNameSuffix(const RooArgSet& iset, const RooArgSet* n
     RooAbsArg* arg ;
     while((arg=(RooAbsArg*)iter->Next())) {
       if (first) {
-	first=kFALSE ;
+   first=kFALSE ;
       } else {
-	name.Append(",") ;
+   name.Append(",") ;
       }
       name.Append(arg->GetName()) ;
     }
@@ -892,7 +892,7 @@ const RooAbsReal* RooAbsReal::createPlotProjection(const RooArgSet& depVars, con
 /// \return A pointer to the newly created object, or zero in case of an
 /// error. The caller is responsible for deleting the `cloneSet` (which includes the returned projection object).
 const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
-						   RooArgSet *&cloneSet, const char* rangeName, const RooArgSet* condObs) const
+                     RooArgSet *&cloneSet, const char* rangeName, const RooArgSet* condObs) const
 {
   // Get the set of our leaf nodes
   RooArgSet leafNodes;
@@ -907,14 +907,14 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   for (const auto arg : dependentVars) {
     if(!arg->isFundamental() && !dynamic_cast<const RooAbsLValue*>(arg)) {
       coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: variable \"" << arg->GetName()
-	       << "\" of wrong type: " << arg->ClassName() << endl;
+          << "\" of wrong type: " << arg->ClassName() << endl;
       return 0;
     }
 
     RooAbsArg *found= treeNodes.find(arg->GetName());
     if(!found) {
       coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
-		          << "\" is not a dependent and will be ignored." << endl;
+                << "\" is not a dependent and will be ignored." << endl;
       continue;
     }
     if(found != arg) {
@@ -939,7 +939,7 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
     // check if this arg is also in the projection set
     if(0 != projectedVars && projectedVars->find(arg->GetName())) {
       coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: \"" << arg->GetName()
-		          << "\" cannot be both a dependent and a projected variable." << endl;
+                << "\" cannot be both a dependent and a projected variable." << endl;
       return 0;
     }
   }
@@ -1028,8 +1028,8 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
 /// with bin volume)
 
 TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
-			       Double_t scaleFactor, const RooArgSet *projectedVars, Bool_t scaleForDensity,
-			       const RooArgSet* condObs, Bool_t setError) const
+                Double_t scaleFactor, const RooArgSet *projectedVars, Bool_t scaleForDensity,
+                const RooArgSet* condObs, Bool_t setError) const
 {
   // Do we have a valid histogram to use?
   if(0 == hist) {
@@ -1053,12 +1053,12 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     const RooRealVar *realVar= dynamic_cast<const RooRealVar*>(var);
     if(0 == realVar) {
       coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot plot variable \"" << var->GetName()
-	   << "\" of type " << var->ClassName() << endl;
+      << "\" of type " << var->ClassName() << endl;
       return 0;
     }
     if(!this->dependsOn(*realVar)) {
       coutE(InputArguments) << ClassName() << "::" << GetName()
-	   << ":fillHistogram: WARNING: variable is not an explicit dependent: " << realVar->GetName() << endl;
+      << ":fillHistogram: WARNING: variable is not an explicit dependent: " << realVar->GetName() << endl;
     }
     plotClones.addClone(*realVar,kTRUE); // do not complain about duplicates
   }
@@ -1126,7 +1126,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     break;
   default:
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot fill histogram with "
-			  << hdim << " dimensions" << endl;
+           << hdim << " dimensions" << endl;
     break;
   }
 
@@ -1139,14 +1139,14 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
     switch(hdim) {
     case 3:
       if(bin % (xbins*ybins) == 0) {
-	zbin++;
-	zvar->setVal(zaxis->GetBinCenter(zbin));
+   zbin++;
+   zvar->setVal(zaxis->GetBinCenter(zbin));
       }
       // fall through to next case...
     case 2:
       if(bin % xbins == 0) {
-	ybin= (ybin%ybins) + 1;
-	yvar->setVal(yaxis->GetBinCenter(ybin));
+   ybin= (ybin%ybins) + 1;
+   yvar->setVal(yaxis->GetBinCenter(ybin));
       }
       // fall through to next case...
     case 1:
@@ -1205,7 +1205,7 @@ TH1 *RooAbsReal::fillHistogram(TH1 *hist, const RooArgList &plotVars,
 /// such as likelihoods
 
 RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSet, Double_t scaleFactor,
-				      Bool_t correctForBinSize, Bool_t showProgress) const
+                  Bool_t correctForBinSize, Bool_t showProgress) const
 {
   // Do we have a valid histogram to use?
   if(0 == hist) {
@@ -1349,8 +1349,8 @@ TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
 ///
 
 TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
-				 const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
-				 const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
+             const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3, const RooCmdArg& arg4,
+             const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
 
   RooLinkedList l ;
@@ -1434,13 +1434,13 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     if (!bl) {
       // Only emit warning when intrinsic binning is explicitly requested
       if (doIntBinning==1) {
-	coutW(InputArguments) << "RooAbsReal::createHistogram(" << GetName()
-			      << ") WARNING, intrinsic model binning requested for histogram, but model does not define bin boundaries, reverting to default binning"<< endl ;
+   coutW(InputArguments) << "RooAbsReal::createHistogram(" << GetName()
+               << ") WARNING, intrinsic model binning requested for histogram, but model does not define bin boundaries, reverting to default binning"<< endl ;
       }
     } else {
       if (doIntBinning==2) {
-	coutI(InputArguments) << "RooAbsReal::createHistogram(" << GetName()
-			      << ") INFO: Model has intrinsic binning definition, selecting that binning for the histogram"<< endl ;
+   coutI(InputArguments) << "RooAbsReal::createHistogram(" << GetName()
+               << ") INFO: Model has intrinsic binning definition, selecting that binning for the histogram"<< endl ;
       }
       Double_t* ba = new Double_t[bl->size()] ; int i=0 ;
       for (list<double>::iterator it=bl->begin() ; it!=bl->end() ; ++it) { ba[i++] = *it ; }
@@ -1474,7 +1474,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
     RooAbsArg* arg ;
     while((arg=(RooAbsArg*)iter->Next())) {
       if (!dynamic_cast<RooAbsReal*>(arg)) {
-	branchNodeSet.remove(*arg) ;
+   branchNodeSet.remove(*arg) ;
       }
     }
     delete iter ;
@@ -1492,9 +1492,9 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
       plotOnCompSelect(dirSelNodes) ;
     } else {
       if (compSet) {
-	coutE(Plotting) << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR: component selection set " << *compSet << " does not match any components of p.d.f." << endl ;
+   coutE(Plotting) << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR: component selection set " << *compSet << " does not match any components of p.d.f." << endl ;
       } else {
-	coutE(Plotting) << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR: component selection expression '" << compSpec << "' does not select any components of p.d.f." << endl ;
+   coutE(Plotting) << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR: component selection expression '" << compSpec << "' does not select any components of p.d.f." << endl ;
       }
       return 0 ;
     }
@@ -1654,7 +1654,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// <tr><td> `Components(const RooArgSet& compSet)` <td> As above, but pass a RooArgSet of the components themselves.
 ///
 /// <tr><th><th> Plotting control
-/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object. Currently supported options are "F" (fill), "L" (line), and "P" (points). 
+/// <tr><td> `DrawOption(const char* opt)`     <td> Select ROOT draw option for resulting TGraph object. Currently supported options are "F" (fill), "L" (line), and "P" (points).
 ///           \note Option "P" will cause RooFit to plot (and treat) this pdf as if it were data! This is intended for plotting "corrected data"-type pdfs such as "data-minus-background" or unfolded datasets.
 ///
 /// <tr><td> `LineStyle(Int_t style)`          <td> Select line style by ROOT line style code, default is solid
@@ -1697,10 +1697,10 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// \copydetails plotOnWithErrorBand()
 
 RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
-			    const RooCmdArg& arg3, const RooCmdArg& arg4,
-			    const RooCmdArg& arg5, const RooCmdArg& arg6,
-			    const RooCmdArg& arg7, const RooCmdArg& arg8,
-			    const RooCmdArg& arg9, const RooCmdArg& arg10) const
+             const RooCmdArg& arg3, const RooCmdArg& arg4,
+             const RooCmdArg& arg5, const RooCmdArg& arg6,
+             const RooCmdArg& arg7, const RooCmdArg& arg8,
+             const RooCmdArg& arg9, const RooCmdArg& arg10) const
 {
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
@@ -1751,7 +1751,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot* frame, RooLinkedList& argList) const
   pc.defineString("curveNameSuffix","CurveNameSuffix",0,"") ;
   pc.defineString("sliceCatState","SliceCat",0,"",kTRUE) ;
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
-  pc.defineInt("scaleType","Normalization",0,Relative) ; 
+  pc.defineInt("scaleType","Normalization",0,Relative) ;
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
   // This dummy is needed for plotOn to recognize the "SliceCatMany" command.
@@ -2033,14 +2033,14 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       sliceSetTmp.remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
 
       if (o.projData) {
-	RooArgSet* tmp = (RooArgSet*) projDataVars.selectCommon(*o.projSet) ;
-	sliceSetTmp.remove(*tmp,kTRUE,kTRUE) ;
-	delete tmp ;
+   RooArgSet* tmp = (RooArgSet*) projDataVars.selectCommon(*o.projSet) ;
+   sliceSetTmp.remove(*tmp,kTRUE,kTRUE) ;
+   delete tmp ;
       }
 
       if (!sliceSetTmp.empty()) {
-	coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on "
-			<< frame->getPlotVar()->GetName() << " represents a slice in " << sliceSetTmp << endl ;
+   coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on "
+         << frame->getPlotVar()->GetName() << " represents a slice in " << sliceSetTmp << endl ;
       }
       sliceSet.add(sliceSetTmp) ;
     }
@@ -2070,12 +2070,12 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
   // Inform user about projections
   if (projectedVars.getSize()) {
     coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
-		    << " integrates over variables " << projectedVars
-		    << (o.projectionRangeName?Form(" in range %s",o.projectionRangeName):"") << endl;
+          << " integrates over variables " << projectedVars
+          << (o.projectionRangeName?Form(" in range %s",o.projectionRangeName):"") << endl;
   }
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
     coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
-		    << " averages using data variables " << *projDataNeededVars << endl ;
+          << " averages using data variables " << *projDataNeededVars << endl ;
   }
 
   // Create projection integral
@@ -2140,36 +2140,36 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       RooArgSet* sliceDataSet = (RooArgSet*) sliceSet.selectCommon(*o.projData->get()) ;
       TString cutString ;
       if (sliceDataSet->getSize()>0) {
-	TIterator* iter2 = sliceDataSet->createIterator() ;
-	RooAbsArg* sliceVar ;
-	Bool_t first(kTRUE) ;
-	while((sliceVar=(RooAbsArg*)iter2->Next())) {
-	  if (!first) {
-	    cutString.Append("&&") ;
-	  } else {
-	    first=kFALSE ;
-	  }
+   TIterator* iter2 = sliceDataSet->createIterator() ;
+   RooAbsArg* sliceVar ;
+   Bool_t first(kTRUE) ;
+   while((sliceVar=(RooAbsArg*)iter2->Next())) {
+     if (!first) {
+       cutString.Append("&&") ;
+     } else {
+       first=kFALSE ;
+     }
 
-	  RooAbsRealLValue* real ;
-	  RooAbsCategoryLValue* cat ;
-	  if ((real = dynamic_cast<RooAbsRealLValue*>(sliceVar))) {
-	    cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
-	  } else if ((cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar))) {
-	    cutString.Append(Form("%s==%d",cat->GetName(),cat->getCurrentIndex())) ;
-	  }
-	}
-	delete iter2 ;
+     RooAbsRealLValue* real ;
+     RooAbsCategoryLValue* cat ;
+     if ((real = dynamic_cast<RooAbsRealLValue*>(sliceVar))) {
+       cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
+     } else if ((cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar))) {
+       cutString.Append(Form("%s==%d",cat->GetName(),cat->getCurrentIndex())) ;
+     }
+   }
+   delete iter2 ;
       }
       delete sliceDataSet ;
 
       if (!cutString.IsNull()) {
-	projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars,cutString) ;
-	coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << endl ;
+   projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars,cutString) ;
+   coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") reducing given projection dataset to entries with " << cutString << endl ;
       } else {
-	projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars) ;
+   projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars) ;
       }
       coutI(Plotting) << "RooAbsReal::plotOn(" << GetName()
-		      << ") only the following components of the projection data will be used: " << *projDataNeededVars << endl ;
+            << ") only the following components of the projection data will be used: " << *projDataNeededVars << endl ;
     }
 
     // Request binning of unbinned projection dataset that consists exclusively of category observables
@@ -2180,13 +2180,13 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       Bool_t allCat(kTRUE) ;
       RooAbsArg* arg2 ;
       while((arg2=(RooAbsArg*)iter2->Next())) {
-	if (!dynamic_cast<RooCategory*>(arg2)) allCat = kFALSE ;
+   if (!dynamic_cast<RooCategory*>(arg2)) allCat = kFALSE ;
       }
       delete iter2 ;
       if (allCat) {
-	o.binProjData = kTRUE ;
-	coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") unbinned projection dataset consist only of discrete variables,"
-			<< " performing projection with binned copy for optimization." << endl ;
+   o.binProjData = kTRUE ;
+   coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") unbinned projection dataset consist only of discrete variables,"
+         << " performing projection with binned copy for optimization." << endl ;
 
       }
     }
@@ -2239,7 +2239,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Curve constructor for data weighted average
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
     RooCurve *curve = new RooCurve(projection->GetName(),projection->GetTitle(),scaleBind,
-				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval) ;
+               o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,o.shiftToZero,o.wmode,o.numee,o.doeeval,o.eeval) ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
     curve->SetName(curveName.Data()) ;
@@ -2277,8 +2277,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // result fit on subrange of data)
     if (o.postRangeFracScale) {
       if (!o.normRangeName) {
-	o.normRangeName = "plotRange" ;
-	plotVar->setRange("plotRange",o.rangeLo,o.rangeHi) ;
+   o.normRangeName = "plotRange" ;
+   plotVar->setRange("plotRange",o.rangeLo,o.rangeHi) ;
       }
 
       // Evaluate fractional correction integral always on full p.d.f, not component.
@@ -2306,7 +2306,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
       // Append any suffixes imported from RooAbsPdf::plotOn
       curveName.Append(o.curveNameSuffix) ;
     }
-    
+
     TString opt(o.drawOptions);
     if(opt.Contains("P")){
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
@@ -2359,7 +2359,7 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
 /// \deprecated OBSOLETE -- RETAINED FOR BACKWARD COMPATIBILITY. Use plotOn() with Slice() instead
 
 RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Option_t* drawOptions,
-				 Double_t scaleFactor, ScaleType stype, const RooAbsData* projData) const
+             Double_t scaleFactor, ScaleType stype, const RooAbsData* projData) const
 {
   RooArgSet projectedVars ;
   makeProjectionSet(frame->getPlotVar(),frame->getNormVars(),projectedVars,kTRUE) ;
@@ -2373,7 +2373,7 @@ RooPlot* RooAbsReal::plotSliceOn(RooPlot *frame, const RooArgSet& sliceSet, Opti
       projectedVars.remove(*arg) ;
     } else {
       coutI(Plotting) << "RooAbsReal::plotSliceOn(" << GetName() << ") slice variable "
-		      << sliceArg->GetName() << " was not projected anyway" << endl ;
+            << sliceArg->GetName() << " was not projected anyway" << endl ;
     }
   }
   delete iter ;
@@ -2426,14 +2426,14 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   // Must depend on asymCat
   if (!dependsOn(asymCat)) {
     coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
-		    << ") function doesn't depend on asymmetry category " << asymCat.GetName() << endl ;
+          << ") function doesn't depend on asymmetry category " << asymCat.GetName() << endl ;
     return frame ;
   }
 
   // asymCat must be a signCat
   if (!asymCat.isSignType()) {
     coutE(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
-		    << ") asymmetry category must have 2 or 3 states with index values -1,0,1" << endl ;
+          << ") asymmetry category must have 2 or 3 states with index values -1,0,1" << endl ;
     return frame ;
   }
 
@@ -2451,14 +2451,14 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
       sliceSetTmp.remove(*frame->getPlotVar(),kTRUE,kTRUE) ;
 
       if (o.projData) {
-	RooArgSet* tmp = (RooArgSet*) projDataVars.selectCommon(*o.projSet) ;
-	sliceSetTmp.remove(*tmp,kTRUE,kTRUE) ;
-	delete tmp ;
+   RooArgSet* tmp = (RooArgSet*) projDataVars.selectCommon(*o.projSet) ;
+   sliceSetTmp.remove(*tmp,kTRUE,kTRUE) ;
+   delete tmp ;
       }
 
       if (!sliceSetTmp.empty()) {
-	coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on "
-			<< frame->getPlotVar()->GetName() << " represents a slice in " << sliceSetTmp << endl ;
+   coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on "
+         << frame->getPlotVar()->GetName() << " represents a slice in " << sliceSetTmp << endl ;
       }
       sliceSet.add(sliceSetTmp) ;
     }
@@ -2486,11 +2486,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
   // Inform user about projections
   if (projectedVars.getSize()) {
     coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName() << ") plot on " << plotVar->GetName()
-		    << " projects variables " << projectedVars << endl ;
+          << " projects variables " << projectedVars << endl ;
   }
   if (projDataNeededVars && projDataNeededVars->getSize()>0) {
     coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") plot on " << plotVar->GetName()
-		    << " averages using data variables "<<  *projDataNeededVars << endl ;
+          << " averages using data variables "<<  *projDataNeededVars << endl ;
   }
 
 
@@ -2545,37 +2545,37 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
       RooArgSet* sliceDataSet = (RooArgSet*) sliceSet.selectCommon(*o.projData->get()) ;
       TString cutString ;
       if (sliceDataSet->getSize()>0) {
-	TIterator* iter = sliceDataSet->createIterator() ;
-	RooAbsArg* sliceVar ;
-	Bool_t first(kTRUE) ;
- 	while((sliceVar=(RooAbsArg*)iter->Next())) {
-	  if (!first) {
-	    cutString.Append("&&") ;
- 	  } else {
-	    first=kFALSE ;
- 	  }
+   TIterator* iter = sliceDataSet->createIterator() ;
+   RooAbsArg* sliceVar ;
+   Bool_t first(kTRUE) ;
+   while((sliceVar=(RooAbsArg*)iter->Next())) {
+     if (!first) {
+       cutString.Append("&&") ;
+     } else {
+       first=kFALSE ;
+     }
 
- 	  RooAbsRealLValue* real ;
-	  RooAbsCategoryLValue* cat ;
- 	  if ((real = dynamic_cast<RooAbsRealLValue*>(sliceVar))) {
-	    cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
-	  } else if ((cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar))) {
-	    cutString.Append(Form("%s==%d",cat->GetName(),cat->getCurrentIndex())) ;
-	  }
- 	}
-	delete iter ;
+     RooAbsRealLValue* real ;
+     RooAbsCategoryLValue* cat ;
+     if ((real = dynamic_cast<RooAbsRealLValue*>(sliceVar))) {
+       cutString.Append(Form("%s==%f",real->GetName(),real->getVal())) ;
+     } else if ((cat = dynamic_cast<RooAbsCategoryLValue*>(sliceVar))) {
+       cutString.Append(Form("%s==%d",cat->GetName(),cat->getCurrentIndex())) ;
+     }
+   }
+   delete iter ;
       }
       delete sliceDataSet ;
 
       if (!cutString.IsNull()) {
-	projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars,cutString) ;
- 	coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
-			<< ") reducing given projection dataset to entries with " << cutString << endl ;
+   projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars,cutString) ;
+   coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
+         << ") reducing given projection dataset to entries with " << cutString << endl ;
       } else {
-	projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars) ;
+   projDataSel = ((RooAbsData*)o.projData)->reduce(*projDataNeededVars) ;
       }
       coutI(Plotting) << "RooAbsReal::plotAsymOn(" << GetName()
-		      << ") only the following components of the projection data will be used: " << *projDataNeededVars << endl ;
+            << ") only the following components of the projection data will be used: " << *projDataNeededVars << endl ;
     }
 
 
@@ -2615,7 +2615,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
     RooCurve *curve = new RooCurve(funcAsym->GetName(),funcAsym->GetTitle(),scaleBind,
-				   o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,kFALSE,o.wmode,o.numee,o.doeeval,o.eeval) ;
+               o.rangeLo,o.rangeHi,frame->GetNbinsX(),o.precision,o.precision,kFALSE,o.wmode,o.numee,o.doeeval,o.eeval) ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
@@ -2636,7 +2636,7 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
     RooCurve* curve= new RooCurve(*funcAsym,*plotVar,o.rangeLo,o.rangeHi,frame->GetNbinsX(),
-				  o.scaleFactor,0,o.precision,o.precision,kFALSE,o.wmode,o.numee,o.doeeval,o.eeval);
+              o.scaleFactor,0,o.precision,o.precision,kFALSE,o.wmode,o.numee,o.doeeval,o.eeval);
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
     dynamic_cast<TAttLine*>(curve)->SetLineColor(2) ;
@@ -2730,8 +2730,8 @@ Double_t RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet 
 
   // Create vector of plus,minus variations for each parameter
   TMatrixDSym V(paramList.getSize()==fr.floatParsFinal().getSize()?
-		fr.covarianceMatrix():
-		fr.reducedCovarianceMatrix(paramList)) ;
+      fr.covarianceMatrix():
+      fr.reducedCovarianceMatrix(paramList)) ;
 
   for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
 
@@ -2827,7 +2827,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     if (std::string("Normalization")==cmd->GetName()) {
       if (((RooCmdArg*)cmd)->getInt(1)!=0) {
       } else {
-	plotArgList.Add(cmd) ;
+   plotArgList.Add(cmd) ;
       }
     } else {
       plotArgList.Add(cmd) ;
@@ -2867,7 +2867,7 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     if (n<100) n=100 ;
 
     coutI(Plotting) << "RooAbsReal::plotOn(" << GetName() << ") INFO: visualizing " << Z << "-sigma uncertainties in parameters "
-		  << errorParams << " from fit result " << fr.GetName() << " using " << n << " samplings." << endl ;
+        << errorParams << " from fit result " << fr.GetName() << " using " << n << " samplings." << endl ;
 
     // Generate variation curves with above set of parameter values
     Double_t ymin = frame->GetMinimum() ;
@@ -2935,8 +2935,8 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     for (Int_t i=0 ; i<fpf.getSize() ; i++) {
       RooAbsArg* par = errorParams.find(fpf[i].GetName()) ;
       if (par) {
-	paramList.add(*par) ;
-	fpf_idx.push_back(i) ;
+   paramList.add(*par) ;
+   fpf_idx.push_back(i) ;
       }
     }
 
@@ -2945,8 +2945,8 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     // Create vector of plus,minus variations for each parameter
 
     TMatrixDSym V(paramList.getSize()==fr.floatParsFinal().getSize()?
-		  fr.covarianceMatrix():
-		  fr.reducedCovarianceMatrix(paramList)) ;
+        fr.covarianceMatrix():
+        fr.reducedCovarianceMatrix(paramList)) ;
 
 
     for (Int_t ivar=0 ; ivar<paramList.getSize() ; ivar++) {
@@ -2981,8 +2981,8 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     for (int i=0 ; i<paramList.getSize() ; i++) {
       errVec[i] = sqrt(V(i,i)) ;
       for (int j=i ; j<paramList.getSize() ; j++) {
-	C(i,j) = V(i,j)/sqrt(V(i,i)*V(j,j)) ;
-	C(j,i) = C(i,j) ;
+   C(i,j) = V(i,j)/sqrt(V(i,i)*V(j,j)) ;
+   C(j,i) = C(i,j) ;
       }
     }
 
@@ -3082,21 +3082,21 @@ Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
   RooAbsReal* var = frame->getPlotVar() ;
   if(!var) {
     coutE(Plotting) << ClassName() << "::" << GetName()
-	 << ":plotOn: frame does not specify a plot variable" << endl;
+    << ":plotOn: frame does not specify a plot variable" << endl;
     return kTRUE;
   }
 
   // check that the plot variable is not derived
   if(!dynamic_cast<RooAbsRealLValue*>(var)) {
     coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOn: cannot plot variable \""
-		    << var->GetName() << "\" of type " << var->ClassName() << endl;
+          << var->GetName() << "\" of type " << var->ClassName() << endl;
     return kTRUE;
   }
 
   // check if we actually depend on the plot variable
   if(!this->dependsOn(*var)) {
     coutE(Plotting) << ClassName() << "::" << GetName() << ":plotOn: WARNING: variable is not an explicit dependent: "
-		    << var->GetName() << endl;
+          << var->GetName() << endl;
   }
 
   return kFALSE ;
@@ -3114,10 +3114,10 @@ Bool_t RooAbsReal::plotSanityChecks(RooPlot* frame) const
 /// will be printed.
 
 void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* allVars,
-				   RooArgSet& projectedVars, Bool_t silent) const
+               RooArgSet& projectedVars, Bool_t silent) const
 {
   cxcoutD(Plotting) << "RooAbsReal::makeProjectionSet(" << GetName() << ") plotVar = " << plotVar->GetName()
-		    << " allVars = " << (allVars?(*allVars):RooArgSet()) << endl ;
+          << " allVars = " << (allVars?(*allVars):RooArgSet()) << endl ;
 
   projectedVars.removeAll() ;
   if (!allVars) return ;
@@ -3137,9 +3137,9 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
     while((ps=(RooAbsArg*)psIter->Next())) {
       RooAbsArg* tmp = projectedVars.find(ps->GetName()) ;
       if (tmp) {
-	cxcoutD(Plotting) << "RooAbsReal::makeProjectionSet(" << GetName() << ") removing " << tmp->GetName()
-			  << " from projection set because it a server of " << plotVar->GetName() << endl ;
-	projectedVars.remove(*tmp) ;
+   cxcoutD(Plotting) << "RooAbsReal::makeProjectionSet(" << GetName() << ") removing " << tmp->GetName()
+           << " from projection set because it a server of " << plotVar->GetName() << endl ;
+   projectedVars.remove(*tmp) ;
       }
     }
     delete psIter ;
@@ -3147,8 +3147,8 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
 
     if (!silent) {
       coutW(Plotting) << "RooAbsReal::plotOn(" << GetName()
-		      << ") WARNING: cannot project out frame variable ("
-		      << found->GetName() << "), ignoring" << endl ;
+            << ") WARNING: cannot project out frame variable ("
+            << found->GetName() << "), ignoring" << endl ;
     }
   }
 
@@ -3160,8 +3160,8 @@ void RooAbsReal::makeProjectionSet(const RooAbsArg* plotVar, const RooArgSet* al
       projectedVars.remove(*arg,kTRUE) ;
 
       cxcoutD(Plotting) << "RooAbsReal::plotOn(" << GetName()
-			<< ") function doesn't depend on projection variable "
-			<< arg->GetName() << ", ignoring" << endl ;
+         << ") function doesn't depend on projection variable "
+         << arg->GetName() << ", ignoring" << endl ;
     }
   }
   delete iter ;
@@ -3292,7 +3292,7 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
     TLeaf* counterLeaf = leaf->GetLeafCounter(dummy) ;
     if (counterLeaf) {
       coutE(Eval) << "RooAbsReal::attachToTree(" << GetName() << ") ERROR: TTree branch " << GetName()
-		  << " is an array and cannot be attached to a RooAbsReal" << endl ;
+        << " is an array and cannot be attached to a RooAbsReal" << endl ;
       return ;
     }
 
@@ -3393,7 +3393,7 @@ RooAbsArg *RooAbsReal::createFundamental(const char* newname) const
 /// held in 'a' is copied from allDeps to analDeps
 
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-			      const RooArgProxy& a) const
+               const RooArgProxy& a) const
 {
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
@@ -3410,7 +3410,7 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 /// held in a,b are copied from allDeps to analDeps
 
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-			      const RooArgProxy& a, const RooArgProxy& b) const
+               const RooArgProxy& a, const RooArgProxy& b) const
 {
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
@@ -3428,8 +3428,8 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 /// held in a,b,c are copied from allDeps to analDeps
 
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-			      const RooArgProxy& a, const RooArgProxy& b,
-			      const RooArgProxy& c) const
+               const RooArgProxy& a, const RooArgProxy& b,
+               const RooArgProxy& c) const
 {
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
@@ -3448,8 +3448,8 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 /// held in a,b,c,d are copied from allDeps to analDeps
 
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-			      const RooArgProxy& a, const RooArgProxy& b,
-			      const RooArgProxy& c, const RooArgProxy& d) const
+               const RooArgProxy& a, const RooArgProxy& b,
+               const RooArgProxy& c, const RooArgProxy& d) const
 {
   TList nameList ;
   nameList.Add(new TObjString(a.absArg()->GetName())) ;
@@ -3468,7 +3468,7 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 /// held in 'refset' are copied from allDeps to analDeps.
 
 Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
-			     const RooArgSet& refset) const
+              const RooArgSet& refset) const
 {
   TList nameList ;
   TIterator* iter = refset.createIterator() ;
@@ -3491,7 +3491,7 @@ Bool_t RooAbsReal::matchArgs(const RooArgSet& allDeps, RooArgSet& analDeps,
 /// return kFALSE and do not change matchedArgs.
 
 Bool_t RooAbsReal::matchArgsByName(const RooArgSet &allArgs, RooArgSet &matchedArgs,
-				  const TList &nameList) const
+              const TList &nameList) const
 {
   RooArgSet matched("matched");
   TIterator *iterator= nameList.MakeIterator();
@@ -3692,9 +3692,9 @@ void RooAbsReal::logEvalError(const RooAbsReal* originator, const char* origName
 
   if (_evalErrorMode==PrintErrors) {
    oocoutE((TObject*)0,Eval) << "RooAbsReal::logEvalError(" << "<STATIC>" << ") evaluation error, " << endl
-		   << " origin       : " << origName << endl
-		   << " message      : " << ee._msg << endl
-		   << " server values: " << ee._srvval << endl ;
+         << " origin       : " << origName << endl
+         << " message      : " << ee._msg << endl
+         << " server values: " << ee._srvval << endl ;
   } else if (_evalErrorMode==CollectErrors) {
     _evalErrorList[originator].first = origName ;
     _evalErrorList[originator].second.push_back(ee) ;
@@ -3752,9 +3752,9 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
       if (!p) continue ;
       //if (p->name()[0]=='!') continue ;
       if (first) {
-	first=kFALSE ;
+   first=kFALSE ;
       } else {
-	oss << ", " ;
+   oss << ", " ;
       }
       p->print(oss,kTRUE) ;
     }
@@ -3766,9 +3766,9 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
 
   if (_evalErrorMode==PrintErrors) {
    coutE(Eval) << "RooAbsReal::logEvalError(" << GetName() << ") evaluation error, " << endl
-	       << " origin       : " << oss2.str() << endl
-	       << " message      : " << ee._msg << endl
-	       << " server values: " << ee._srvval << endl ;
+          << " origin       : " << oss2.str() << endl
+          << " message      : " << ee._msg << endl
+          << " server values: " << ee._srvval << endl ;
   } else if (_evalErrorMode==CollectErrors) {
     if (_evalErrorList[this].second.size() >= 2048) {
        // avoid overflowing the error list, so if there are very many, print
@@ -3777,7 +3777,7 @@ void RooAbsReal::logEvalError(const char* message, const char* serverValueString
        // print to debug stream, since these would normally be suppressed, and
        // we do not want to increase the error count in the message service...
        ccoutD(Eval) << "RooAbsReal::logEvalError(" << GetName()
-	           << ") delayed evaluation error, " << endl
+              << ") delayed evaluation error, " << endl
                    << " origin       : " << oss2.str() << endl
                    << " message      : " << oee._msg << endl
                    << " server values: " << oee._srvval << endl ;
@@ -3864,11 +3864,11 @@ void RooAbsReal::printEvalErrors(ostream& os, Int_t maxPerNode)
       Int_t i(0) ;
       std::list<EvalError>::iterator iter2 = iter->second.second.begin() ;
       for(;iter2!=iter->second.second.end() ; ++iter2, i++) {
-	os << "     " << iter2->_msg << " @ " << iter2->_srvval << endl ;
-	if (i>maxPerNode) {
-	  os << "    ... (remaining " << iter->second.second.size() - maxPerNode << " messages suppressed)" << endl ;
-	  break ;
-	}
+   os << "     " << iter2->_msg << " @ " << iter2->_srvval << endl ;
+   if (i>maxPerNode) {
+     os << "    ... (remaining " << iter->second.second.size() - maxPerNode << " messages suppressed)" << endl ;
+     break ;
+   }
       }
     }
   }
@@ -3914,9 +3914,9 @@ void RooAbsReal::fixAddCoefNormalization(const RooArgSet& addNormSet, Bool_t for
     RooAbsPdf* pdf = dynamic_cast<RooAbsPdf*>(arg) ;
     if (pdf) {
       if (addNormSet.getSize()>0) {
-	pdf->selectNormalization(&addNormSet,force) ;
+   pdf->selectNormalization(&addNormSet,force) ;
       } else {
-	pdf->selectNormalization(0,force) ;
+   pdf->selectNormalization(0,force) ;
       }
     }
   }
@@ -4016,8 +4016,8 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooAr
 /// | `ScanNone()`                           | Never apply scanning technique
 
 RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
-				 const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
-				 const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
+             const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
+             const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
   // Define configuration for this method
   RooCmdConfig pc(Form("RooAbsReal::createRunningIntegral(%s)",GetName())) ;
@@ -4061,9 +4061,9 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCm
 
     if (isNum) {
       coutI(NumIntegration) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << endl
-			    << "      constructing cdf though numeric integration of sampled pdf in " << numScanBins << " bins and applying order "
-			    << intOrder << " interpolation on integrated histogram." << endl
-			    << "      To override this choice of technique use argument ScanNone(), to change scan parameters use ScanParameters(nbins,order) argument" << endl ;
+             << "      constructing cdf though numeric integration of sampled pdf in " << numScanBins << " bins and applying order "
+             << intOrder << " interpolation on integrated histogram." << endl
+             << "      To override this choice of technique use argument ScanNone(), to change scan parameters use ScanParameters(nbins,order) argument" << endl ;
     }
 
     return isNum ? createScanRI(iset,nset,numScanBins,intOrder) : createIntRI(iset,nset) ;
@@ -4243,7 +4243,7 @@ TF1* RooAbsReal::asTF(const RooArgList& obs, const RooArgList& pars, const RooAr
   }
   default:
     coutE(InputArguments) << "RooAbsReal::asTF(" << GetName() << ") ERROR: " << obs.getSize()
-			  << " observables specified, but a ROOT TFx can only have  1,2 or 3 observables" << endl ;
+           << " observables specified, but a ROOT TFx can only have  1,2 or 3 observables" << endl ;
     return 0 ;
   }
 
@@ -4393,8 +4393,8 @@ RooMultiGenFunction* RooAbsReal::iGenFunction(const RooArgSet& observables, cons
 ///
 
 RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-				    const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-				    const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+                const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
+                const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
@@ -4446,8 +4446,8 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 /// \return \f$ \chi^2 \f$ variable
 
 RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-				   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-				   const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+               const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
+               const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
   string name = Form("chi2_%s_%s",GetName(),data.GetName()) ;
 
@@ -4518,8 +4518,8 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 /// </table>
 
 RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-				      const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-				      const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+                  const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
+                  const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
@@ -4570,8 +4570,8 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmd
 ///
 
 RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-				     const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-				     const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+                 const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
+                 const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
   RooLinkedList l ;
   l.Add((TObject*)&arg1) ;  l.Add((TObject*)&arg2) ;
@@ -4785,7 +4785,7 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
   while((arg=iter.next())) {
     if (!dependsOnValue(*arg)) {
       coutW(InputArguments) << "RooAbsReal::setParameterizeIntegral(" << GetName()
-			    << ") function does not depend on listed parameter " << arg->GetName() << ", ignoring" << endl ;
+             << ") function does not depend on listed parameter " << arg->GetName() << ", ignoring" << endl ;
       continue ;
     }
     if (plist.size()>0) plist += ":" ;
@@ -4888,7 +4888,7 @@ RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, 
 \param output The array where the results are stored
 \param nEvents The number of events to be processed
 \param dataMap A std::map containing the input data for the computations
-**/ 
+**/
 void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
 
   // Find all servers that are serving real numbers to us, retrieve their batch data,

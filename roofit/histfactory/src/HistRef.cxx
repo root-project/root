@@ -10,9 +10,9 @@
 
 /** \class RooStats::HistFactory::HistRef
  * \ingroup HistFactory
- * Internal class wrapping an histogram and managing its content. 
- * convenient for dealing with histogram pointers in the 
- * HistFactory class 
+ * Internal class wrapping an histogram and managing its content.
+ * convenient for dealing with histogram pointers in the
+ * HistFactory class
  */
 
 #include "TH1.h"
@@ -24,10 +24,10 @@ namespace HistFactory {
    TH1 * HistRef::CopyObject(const TH1 * h) {
       // implementation of method copying the contained pointer
       // (just use Clone)
-      if (!h) return 0; 
+      if (!h) return 0;
       return static_cast<TH1*>(h->Clone());
    }
 }
 }
 
-   
+

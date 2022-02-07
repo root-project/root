@@ -64,7 +64,7 @@ class BracketAdapterWithMask {
     _mask(batch.size() > 1 ? ~static_cast<size_t>(0): 0)
     {
     }
-    
+
     /// Construct adapter from a batch of values.
     /// - If `batch.size() == 1`, always return the value at `batch[0]`.
     /// - Else, return `batch[i]`.
@@ -84,13 +84,13 @@ class BracketAdapterWithMask {
     _mask(other._mask)
     {
     }
-    
+
     BracketAdapterWithMask& operator= (const BracketAdapterWithMask& other) = delete;
 
     inline double operator[](std::size_t i) const noexcept {
       return _pointer[ i & _mask];
     }
-    
+
     inline bool isBatch() const noexcept {
       return _isBatch;
     }

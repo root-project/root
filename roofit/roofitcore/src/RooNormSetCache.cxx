@@ -29,7 +29,7 @@ with the same contents and reports to the owner if the present nset/iset
 is truely different from the current reference. Class RooNormSet only
 evaluates each RooArgSet pointer once, it therefore assumes that
 RooArgSets with normalization and/or integration sets are not changes
-during their lifetime. 
+during their lifetime.
 **/
 #include "RooFit.h"
 
@@ -54,12 +54,12 @@ RooNormSetCache::RooNormSetCache(ULong_t max) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooNormSetCache::~RooNormSetCache() 
+RooNormSetCache::~RooNormSetCache()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear contents 
+/// Clear contents
 
 void RooNormSetCache::clear()
 {
@@ -112,11 +112,11 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 /// update cache reference to current input sets.
 
 Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
-	const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill) 
+   const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill)
 {
 
   // Automated cache management function - Returns kTRUE if cache is invalidated
-  
+
   // A - Check if set1/2 are in cache and range name is identical
   if (set2RangeName == _set2RangeName && contains(set1,set2)) {
     return kFALSE ;
@@ -152,7 +152,7 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
     delete set2d;
     return kFALSE;
   }
-  
+
   // C - Reset cache and refill with current state
   if (doRefill) {
     clear();
@@ -163,7 +163,7 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
 //     cout << "RooNormSetCache::autoCache() _name2 refilled from " << *set2d << " to " ; _name2.printValue(cout) ; cout << endl;
     _set2RangeName = (TNamed*) set2RangeName;
   }
-  
+
   delete set1d;
   delete set2d;
   return kTRUE;

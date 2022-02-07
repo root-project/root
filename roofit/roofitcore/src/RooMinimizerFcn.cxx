@@ -53,7 +53,7 @@ RooArgSet getParameters(RooAbsReal const& funct) {
 
 
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer* context,
-			   bool verbose) :
+            bool verbose) :
   RooAbsMinimizerFcn(getParameters(*funct), context, verbose), _funct(funct)
 {}
 

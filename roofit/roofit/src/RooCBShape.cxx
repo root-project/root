@@ -97,7 +97,7 @@ void RooCBShape::computeBatch(cudaStream_t* stream, double* output, size_t nEven
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
   dispatch->compute(stream, RooBatchCompute::CBShape, output, nEvents, dataMap, {&*m,&*m0,&*sigma,&*alpha,&*n,&*_norm});
 }
-  
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const

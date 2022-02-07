@@ -186,28 +186,28 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
     // Write remainder of deriver script
     ofstream bdr2 (Form("study_driver_%s.sh",studyName),ios::app) ;
     bdr2 << "EOR" << endl
-	 << "fi" << endl
-	 << "root -l -b <<EOR" << endl
-	 << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-	 << ".q" << endl
-	 << "EOR" << endl ;
+    << "fi" << endl
+    << "root -l -b <<EOR" << endl
+    << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
+    << ".q" << endl
+    << "EOR" << endl ;
     // Remove binary input file
     gSystem->Unlink(Form("study_data_%s.root",studyName)) ;
 
     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-			<< "     input data files is embedded in driver script" << endl ;
+         << "     input data files is embedded in driver script" << endl ;
 
   } else {
 
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
     bdr << "#!/bin/sh" << endl
-	<< "root -l -b <<EOR" << endl
-	<< Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-	<< ".q" << endl
-	<< "EOR" << endl ;
+   << "root -l -b <<EOR" << endl
+   << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
+   << ".q" << endl
+   << "EOR" << endl ;
 
     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-			<< "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
+         << "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
 
   }
 }

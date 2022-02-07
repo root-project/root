@@ -22,7 +22,7 @@
 RooListProxy is the concrete proxy for RooArgList objects.
 A RooListProxy is the only safe mechanism to store a RooArgList
 with RooAbsArg contents in another RooAbsArg.
-The list proxy has the semantic of a RooArgList but also 
+The list proxy has the semantic of a RooArgList but also
 takes care of all bookkeeping required when composite objects
 are clone and client-server links need to be redirected.
 **/
@@ -48,10 +48,10 @@ ClassImp(RooListProxy);
 /// propagation of the list contents to the list owner is controlled
 /// by the defValueServer and defShapeServer flags.
 
-RooListProxy::RooListProxy(const char* inName, const char* /*desc*/, RooAbsArg* owner, 
-			 Bool_t defValueServer, Bool_t defShapeServer) :
-  RooArgList(inName), _owner(owner), 
-  _defValueServer(defValueServer), 
+RooListProxy::RooListProxy(const char* inName, const char* /*desc*/, RooAbsArg* owner,
+          Bool_t defValueServer, Bool_t defShapeServer) :
+  RooArgList(inName), _owner(owner),
+  _defValueServer(defValueServer),
   _defShapeServer(defShapeServer)
 {
   _owner->registerProxy(*this) ;
@@ -63,9 +63,9 @@ RooListProxy::RooListProxy(const char* inName, const char* /*desc*/, RooAbsArg* 
 /// Copy constructor with name of proxy, pointer to owner of this proxy and
 /// reference to list proxy to be copied
 
-RooListProxy::RooListProxy(const char* inName, RooAbsArg* owner, const RooListProxy& other) : 
-  RooArgList(other,inName), _owner(owner),  
-  _defValueServer(other._defValueServer), 
+RooListProxy::RooListProxy(const char* inName, RooAbsArg* owner, const RooListProxy& other) :
+  RooArgList(other,inName), _owner(owner),
+  _defValueServer(other._defValueServer),
   _defShapeServer(other._defShapeServer)
 {
   _owner->registerProxy(*this) ;
@@ -93,7 +93,7 @@ Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeS
   if (ret && _owner) {
     _owner->addServer((RooAbsArg&)var,valueServer,shapeServer) ;
   }
-  return ret ;  
+  return ret ;
 }
 
 
@@ -101,7 +101,7 @@ Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeS
 ////////////////////////////////////////////////////////////////////////////////
 /// Reimplementation of standard RooArgList::add()
 
-Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t silent) 
+Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t silent)
 {
   return add(var,_defValueServer,_defShapeServer,silent) ;
 }
@@ -117,20 +117,20 @@ Bool_t RooListProxy::addOwned(RooAbsArg& var, Bool_t silent)
   if (ret) {
     _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
   }
-  return ret ;  
+  return ret ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reimplementation of standard RooArgList::replace()
 
-Bool_t RooListProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2) 
+Bool_t RooListProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 {
   Bool_t ret=RooArgList::replace(var1,var2) ;
   if (ret) {
     _owner->removeServer((RooAbsArg&)var1) ;
     _owner->addServer((RooAbsArg&)var2,_owner->isValueServer(var1),
-		                       _owner->isShapeServer(var2)) ;
+                             _owner->isShapeServer(var2)) ;
   }
   return ret ;
 }
@@ -140,7 +140,7 @@ Bool_t RooListProxy::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reimplementation of standard RooArgList::remove()
 
-Bool_t RooListProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNameOnly) 
+Bool_t RooListProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByNameOnly)
 {
   Bool_t ret=RooArgList::remove(var,silent,matchByNameOnly) ;
   if (ret) {
@@ -154,7 +154,7 @@ Bool_t RooListProxy::remove(const RooAbsArg& var, Bool_t silent, Bool_t matchByN
 ////////////////////////////////////////////////////////////////////////////////
 /// Reimplementation of standard RooArgList::removeAll()
 
-void RooListProxy::removeAll() 
+void RooListProxy::removeAll()
 {
   RooFIter iter = fwdIterator();
   RooAbsArg* arg ;
@@ -171,7 +171,7 @@ void RooListProxy::removeAll()
 ////////////////////////////////////////////////////////////////////////////////
 /// Reimplementation of standard RooArgList assignment operator
 
-RooListProxy& RooListProxy::operator=(const RooArgList& other) 
+RooListProxy& RooListProxy::operator=(const RooArgList& other)
 {
   RooArgList::operator=(other) ;
   return *this ;
@@ -185,26 +185,26 @@ RooListProxy& RooListProxy::operator=(const RooArgList& other)
 /// owner. If the list contains any element with names identical to those in newServerList
 /// replace them with the instance in newServerList
 
-Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode) 
+Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode)
 {
   if (getSize()==0) {
     if (factoryInitMode) {
       RooFIter iter = newServerList.fwdIterator() ;
       RooAbsArg* arg ;
       while((arg=(RooAbsArg*)iter.next())) {
-	if (arg!=_owner) {
-	  add(*arg,kTRUE) ;
-	}
+   if (arg!=_owner) {
+     add(*arg,kTRUE) ;
+   }
       }
     } else {
-      return kTRUE ;	
+      return kTRUE ;
     }
   }
   RooFIter iter = fwdIterator();
   RooAbsArg* arg ;
   Bool_t error(kFALSE) ;
   while ((arg=(RooAbsArg*)iter.next())) {
-    
+
     RooAbsArg* newArg= arg->findNewServer(newServerList, nameChange);
     if (newArg && newArg!=_owner) error |= !RooArgList::replace(*arg,*newArg) ;
   }
@@ -217,10 +217,10 @@ Bool_t RooListProxy::changePointer(const RooAbsCollection& newServerList, Bool_t
 /// Print the name of the proxy, and if requested a summary of
 /// the contained elements as well
 
-void RooListProxy::print(ostream& os, Bool_t addContents) const 
-{ 
+void RooListProxy::print(ostream& os, Bool_t addContents) const
+{
   if (!addContents) {
-    os << name() << "=" ; printStream(os,kValue,kInline) ; 
+    os << name() << "=" ; printStream(os,kValue,kInline) ;
   } else {
     os << name() << "=(" ;
     RooFIter iter = fwdIterator() ;
@@ -228,9 +228,9 @@ void RooListProxy::print(ostream& os, Bool_t addContents) const
     Bool_t first2(kTRUE) ;
     while ((arg=(RooAbsArg*)iter.next())) {
       if (first2) {
-	first2 = kFALSE ;
+   first2 = kFALSE ;
       } else {
-	os << "," ;
+   os << "," ;
       }
       arg->printStream(os,kValue|kName,kInline) ;
     }

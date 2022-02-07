@@ -27,7 +27,7 @@ public:
   // Constructors, assignment etc
   RooAdaptiveGaussKronrodIntegrator1D() ;
   RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
-  RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, 
+  RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
                                       const RooNumIntConfig& config) ;
   RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
   ~RooAdaptiveGaussKronrodIntegrator1D() override;
@@ -39,30 +39,30 @@ public:
   Bool_t setLimits(Double_t* xmin, Double_t* xmax) override;
   Bool_t setUseIntegrandLimits(Bool_t flag) override {
     // If flag is true, intergration limits are taken from definition in input function binding
-    _useIntegrandLimits = flag ; return kTRUE ; 
+    _useIntegrandLimits = flag ; return kTRUE ;
   }
 
-  Bool_t canIntegrate1D() const override { 
+  Bool_t canIntegrate1D() const override {
     // We can integrate 1-dimensional functions
-    return kTRUE ; 
+    return kTRUE ;
   }
-  Bool_t canIntegrate2D() const override { 
+  Bool_t canIntegrate2D() const override {
     // We can not integrate 2-dimensional functions
-    return kFALSE ; 
+    return kFALSE ;
   }
-  Bool_t canIntegrateND() const override { 
+  Bool_t canIntegrateND() const override {
     // We can not integrate >2-dimensional functions
-    return kFALSE ; 
+    return kFALSE ;
   }
-  Bool_t canIntegrateOpenEnded() const override { 
+  Bool_t canIntegrateOpenEnded() const override {
     // We can integrate over open-ended domains
-    return kTRUE ; 
+    return kTRUE ;
   }
 
 protected:
 
   friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;	
+  static void registerIntegrator(RooNumIntFactory& fact) ;
 
   enum DomainType { Closed, OpenLo, OpenHi, Open } ;
   mutable DomainType _domainType ;
@@ -71,11 +71,11 @@ protected:
 
   Bool_t initialize();
 
-  Bool_t _useIntegrandLimits;  
+  Bool_t _useIntegrandLimits;
 
   Double_t* xvec(Double_t& xx) {
     // Return contents of xx in internal array pointer
-    _x[0] = xx ; return _x ; 
+    _x[0] = xx ; return _x ;
   }
   Double_t *_x ;                        //! Current coordinate
 
@@ -83,7 +83,7 @@ protected:
   Double_t _epsRel ;                   // Relative precision
   Int_t    _methodKey ;                // GSL method key
   Int_t    _maxSeg ;                   // Maximum number of segments
-  void*    _workspace ;                // GSL workspace 
+  void*    _workspace ;                // GSL workspace
 
   mutable Double_t _xmin;              //! Lower integration bound
   mutable Double_t _xmax;              //! Upper integration bound

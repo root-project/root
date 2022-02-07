@@ -64,7 +64,7 @@ void IntegrationChecker(double a0, double a1, double a2, double a3)
       accAnaVsNum/100.*numInt_range1->getVal())
   << "Analytical vs numerical integral"
   << " within " << accAnaVsNum << "%. ";
-  
+
   EXPECT_NEAR(int_range1->getVal(), numInt_range1->getVal(),
       accAnaVsNum/100.*numInt_range2->getVal())
   << "Analytical vs numerical integral"

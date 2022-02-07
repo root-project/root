@@ -31,7 +31,7 @@ way that RooLinearVar does
 
 using namespace std;
 
-ClassImp(RooLinTransBinning); 
+ClassImp(RooLinTransBinning);
 ;
 
 
@@ -56,15 +56,15 @@ RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other, const ch
 {
   _input = other._input ;
   _slope = other._slope ;
-  _offset = other._offset ;    
+  _offset = other._offset ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor 
+/// Destructor
 
-RooLinTransBinning::~RooLinTransBinning() 
+RooLinTransBinning::~RooLinTransBinning()
 {
   if (_array) delete[] _array ;
 }
@@ -73,7 +73,7 @@ RooLinTransBinning::~RooLinTransBinning()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooLinTransBinning::setRange(Double_t /*xlo*/, Double_t /*xhi*/) 
+void RooLinTransBinning::setRange(Double_t /*xlo*/, Double_t /*xhi*/)
 {
   // Change limits -- not implemented
 }
@@ -82,7 +82,7 @@ void RooLinTransBinning::setRange(Double_t /*xlo*/, Double_t /*xhi*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return array of bin boundaries
 
-Double_t* RooLinTransBinning::array() const 
+Double_t* RooLinTransBinning::array() const
 {
   const int n = numBoundaries();
   // Return array with boundary values

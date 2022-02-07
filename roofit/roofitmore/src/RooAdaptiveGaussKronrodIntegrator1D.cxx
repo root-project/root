@@ -133,8 +133,8 @@ gsl_integration_qagiu (gsl_function * f,
 
 //-------------------------------------------------------------------
 
-// register integrator class 
-// create a derived class in order to call the protected method of the 
+// register integrator class
+// create a derived class in order to call the protected method of the
 // RoodaptiveGaussKronrodIntegrator1D
 namespace RooFit_internal {
 struct Roo_internal_AGKInteg1D : public RooAdaptiveGaussKronrodIntegrator1D {
@@ -185,50 +185,50 @@ RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D() : _x(
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor taking a function binding and a configuration object
 
-RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, 
-									 const RooNumIntConfig& config) :
+RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function,
+                            const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _epsAbs(config.epsRel()),
   _epsRel(config.epsAbs()),
   _workspace(0)
-{  
+{
   // Use this form of the constructor to integrate over the function's default range.
-  const RooArgSet& confSet = config.getConfigSection(IsA()->GetName()) ;  
+  const RooArgSet& confSet = config.getConfigSection(IsA()->GetName()) ;
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
   _methodKey = confSet.getCatIndex("method",2) ;
 
   _useIntegrandLimits= kTRUE;
   _valid= initialize();
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor taking a function binding, an integration range and a configuration object
 
-RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function, 
-									 Double_t xmin, Double_t xmax,
-									 const RooNumIntConfig& config) :
+RooAdaptiveGaussKronrodIntegrator1D::RooAdaptiveGaussKronrodIntegrator1D(const RooAbsFunc& function,
+                            Double_t xmin, Double_t xmax,
+                            const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _epsAbs(config.epsRel()),
   _epsRel(config.epsAbs()),
   _workspace(0),
   _xmin(xmin),
   _xmax(xmax)
-{  
+{
   // Use this form of the constructor to integrate over the function's default range.
-  const RooArgSet& confSet = config.getConfigSection(IsA()->GetName()) ;  
+  const RooArgSet& confSet = config.getConfigSection(IsA()->GetName()) ;
   _maxSeg = (Int_t) confSet.getRealValue("maxSeg",100) ;
   _methodKey = confSet.getCatIndex("method",2) ;
-  
+
   _useIntegrandLimits= kFALSE;
   _valid= initialize();
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual constructor 
+/// Virtual constructor
 
 RooAbsIntegrator* RooAdaptiveGaussKronrodIntegrator1D::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
@@ -245,7 +245,7 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::initialize()
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
   _workspace = gsl_integration_workspace_alloc (_maxSeg)  ;
-  
+
   return checkLimits();
 }
 
@@ -271,7 +271,7 @@ RooAdaptiveGaussKronrodIntegrator1D::~RooAdaptiveGaussKronrodIntegrator1D()
 /// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax) 
+Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 {
   if(_useIntegrandLimits) {
     coutE(Integration) << "RooAdaptiveGaussKronrodIntegrator1D::setLimits: cannot override integrand's limits" << endl;
@@ -289,7 +289,7 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::setLimits(Double_t* xmin, Double_t* 
 /// Check that our integration range is finite and otherwise return kFALSE.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const 
+Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -320,7 +320,7 @@ Bool_t RooAdaptiveGaussKronrodIntegrator1D::checkLimits() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Glue function interacing to GSL code
 
-double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) 
+double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data)
 {
   RooAdaptiveGaussKronrodIntegrator1D* instance = (RooAdaptiveGaussKronrodIntegrator1D*) data ;
   return instance->integrand(instance->xvec(x)) ;
@@ -331,7 +331,7 @@ double RooAdaptiveGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return integral at at given parameter values
 
-Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec) 
+Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 {
   assert(isValid());
 
@@ -350,23 +350,23 @@ Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec)
   // Return values
   double result, error;
 
-  // Call GSL implementation of integeator  
+  // Call GSL implementation of integeator
   switch(_domainType) {
   case Closed:
     if (_methodKey==0) {
-      gsl_integration_qags (&F, _xmin, _xmax, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error); 
+      gsl_integration_qags (&F, _xmin, _xmax, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error);
     } else {
-      gsl_integration_qag (&F, _xmin, _xmax, _epsAbs, _epsRel, _maxSeg, _methodKey, (gsl_integration_workspace*)_workspace,&result, &error); 
+      gsl_integration_qag (&F, _xmin, _xmax, _epsAbs, _epsRel, _maxSeg, _methodKey, (gsl_integration_workspace*)_workspace,&result, &error);
     }
     break ;
   case OpenLo:
-    gsl_integration_qagil (&F, _xmax, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error); 
+    gsl_integration_qagil (&F, _xmax, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error);
     break ;
   case OpenHi:
-    gsl_integration_qagiu (&F, _xmin, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error); 
+    gsl_integration_qagiu (&F, _xmin, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error);
     break ;
   case Open:
-    gsl_integration_qagi (&F, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error); 
+    gsl_integration_qagi (&F, _epsAbs, _epsRel, _maxSeg, (gsl_integration_workspace*)_workspace,&result, &error);
     break ;
   }
 
@@ -379,19 +379,19 @@ Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 // ----------------------------------------------------------------------------
 
 /*
- * 
+ *
  * Copyright (C) 1996, 1997, 1998, 1999, 2000 Brian Gough
- * 
+ *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation; either version 2 of the License, or (at
  * your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -407,12 +407,12 @@ Double_t RooAdaptiveGaussKronrodIntegrator1D::integral(const Double_t *yvec)
 #define GSL_DBL_MAX        1.7976931348623157e+308
 #define GSL_DBL_EPSILON    2.2204460492503131e-16
 
-#define GSL_EINVAL 2 
-#define GSL_EMAXITER 3 
-#define GSL_ESING 4 
-#define GSL_EFAILED 5 
-#define GSL_EDIVERGE 6 
-#define GSL_EROUND 7 
+#define GSL_EINVAL 2
+#define GSL_EMAXITER 3
+#define GSL_ESING 4
+#define GSL_EFAILED 5
+#define GSL_EDIVERGE 6
+#define GSL_EROUND 7
 
 #define GSL_ERROR_VAL(reason, gsl_errno, value) return value ;
 
@@ -472,7 +472,7 @@ void gsl_integration_qk61 (const gsl_function * f, double a, double b,
                            double *result, double *abserr,
                            double *resabs, double *resasc);
 
-void gsl_integration_qcheb (gsl_function * f, double a, double b, 
+void gsl_integration_qcheb (gsl_function * f, double a, double b,
                             double *cheb12, double *cheb24);
 
 /* The low-level integration rules in QUADPACK are identified by small
@@ -528,11 +528,11 @@ void initialise (gsl_integration_workspace * workspace, double a, double b)
 
 // INCLUDED BELOW #include "set_initial.c"
 static inline
-void set_initial_result (gsl_integration_workspace * workspace, 
+void set_initial_result (gsl_integration_workspace * workspace,
                          double result, double error);
 
 static inline
-void set_initial_result (gsl_integration_workspace * workspace, 
+void set_initial_result (gsl_integration_workspace * workspace,
                          double result, double error)
 {
   workspace->size = 1;
@@ -541,7 +541,7 @@ void set_initial_result (gsl_integration_workspace * workspace,
 }
 
 // INCLUDED BELOW #include "qpsrt.c"
-static inline void 
+static inline void
 qpsrt (gsl_integration_workspace * workspace);
 
 static inline
@@ -559,10 +559,10 @@ void qpsrt (gsl_integration_workspace * workspace)
 
   size_t i_nrmax = workspace->nrmax;
   size_t i_maxerr = order[i_nrmax] ;
-  
+
   /* Check whether the list contains more than two error estimates */
 
-  if (last < 2) 
+  if (last < 2)
     {
       order[0] = 0 ;
       order[1] = 1 ;
@@ -577,17 +577,17 @@ void qpsrt (gsl_integration_workspace * workspace)
      case the insert procedure should start after the nrmax-th largest
      error estimate. */
 
-  while (i_nrmax > 0 && errmax > elist[order[i_nrmax - 1]]) 
+  while (i_nrmax > 0 && errmax > elist[order[i_nrmax - 1]])
     {
       order[i_nrmax] = order[i_nrmax - 1] ;
       i_nrmax-- ;
-    } 
+    }
 
   /* Compute the number of elements in the list to be maintained in
      descending order. This number depends on the number of
      subdivisions still allowed. */
-  
-  if(last < (limit/2 + 2)) 
+
+  if(last < (limit/2 + 2))
     {
       top = last ;
     }
@@ -595,12 +595,12 @@ void qpsrt (gsl_integration_workspace * workspace)
     {
       top = limit - last + 1;
     }
-  
+
   /* Insert errmax by traversing the list top-down, starting
      comparison from the element elist(order(i_nrmax+1)). */
-  
+
   i = i_nrmax + 1 ;
-  
+
   /* The order of the tests in the following line is important to
      prevent a segmentation fault */
 
@@ -609,27 +609,27 @@ void qpsrt (gsl_integration_workspace * workspace)
       order[i-1] = order[i] ;
       i++ ;
     }
-  
+
   order[i-1] = i_maxerr ;
-  
+
   /* Insert errmin by traversing the list bottom-up */
-  
+
   errmin = elist[last] ;
-  
+
   k = top - 1 ;
-  
+
   while (k > i - 2 && errmin >= elist[order[k]])
     {
       order[k+1] = order[k] ;
       k-- ;
     }
-  
+
   order[k+1] = last ;
 
   /* Set i_max and e_max */
 
   i_maxerr = order[i_nrmax] ;
-  
+
   workspace->i = i_maxerr ;
   workspace->nrmax = i_nrmax ;
 }
@@ -643,7 +643,7 @@ void update (gsl_integration_workspace * workspace,
                  double a2, double b2, double area2, double error2);
 
 static inline void
-retrieve (const gsl_integration_workspace * workspace, 
+retrieve (const gsl_integration_workspace * workspace,
           double * a, double * b, double * r, double * e);
 
 
@@ -665,14 +665,14 @@ void update (gsl_integration_workspace * workspace,
   const size_t new_level = workspace->level[i_max] + 1;
 
   /* append the newly-created intervals to the list */
-  
+
   if (error2 > error1)
     {
       alist[i_max] = a2;        /* blist[maxerr] is already == b2 */
       rlist[i_max] = area2;
       elist[i_max] = error2;
       level[i_max] = new_level;
-      
+
       alist[i_new] = a1;
       blist[i_new] = b1;
       rlist[i_new] = area1;
@@ -685,14 +685,14 @@ void update (gsl_integration_workspace * workspace,
       rlist[i_max] = area1;
       elist[i_max] = error1;
       level[i_max] = new_level;
-      
+
       alist[i_new] = a2;
       blist[i_new] = b2;
       rlist[i_new] = area2;
       elist[i_new] = error2;
       level[i_new] = new_level;
     }
-  
+
   workspace->size++;
 
   if (new_level > workspace->maximum_level)
@@ -704,7 +704,7 @@ void update (gsl_integration_workspace * workspace,
 }
 
 static inline void
-retrieve (const gsl_integration_workspace * workspace, 
+retrieve (const gsl_integration_workspace * workspace,
           double * a, double * b, double * r, double * e)
 {
   const size_t i = workspace->i;
@@ -735,7 +735,7 @@ sum_results (const gsl_integration_workspace * workspace)
     {
       result_sum += rlist[k];
     }
-  
+
   return result_sum;
 }
 
@@ -779,13 +779,13 @@ gsl_integration_qag (const gsl_function *f,
   if (key < GSL_INTEG_GAUSS15)
     {
       key = GSL_INTEG_GAUSS15 ;
-    } 
-  else if (key > GSL_INTEG_GAUSS61) 
+    }
+  else if (key > GSL_INTEG_GAUSS61)
     {
       key = GSL_INTEG_GAUSS61 ;
     }
 
-  switch (key) 
+  switch (key)
     {
     case GSL_INTEG_GAUSS15:
       integration_rule = gsl_integration_qk15 ;
@@ -794,24 +794,24 @@ gsl_integration_qag (const gsl_function *f,
       integration_rule = gsl_integration_qk21 ;
       break ;
     case GSL_INTEG_GAUSS31:
-      integration_rule = gsl_integration_qk31 ; 
+      integration_rule = gsl_integration_qk31 ;
       break ;
     case GSL_INTEG_GAUSS41:
       integration_rule = gsl_integration_qk41 ;
-      break ;      
+      break ;
     case GSL_INTEG_GAUSS51:
       integration_rule = gsl_integration_qk51 ;
-      break ;      
+      break ;
     case GSL_INTEG_GAUSS61:
       integration_rule = gsl_integration_qk61 ;
-      break ;      
+      break ;
     }
 
   status = qag (f, a, b, epsabs, epsrel, limit,
-                workspace, 
-                result, abserr, 
+                workspace,
+                result, abserr,
                 integration_rule) ;
-  
+
   return status ;
 }
 
@@ -830,7 +830,7 @@ qag (const gsl_function * f,
   size_t iteration = 0;
   int roundoff_type1 = 0, roundoff_type2 = 0, error_type = 0;
 
-  double round_off;     
+  double round_off;
 
   /* Initialize results */
 
@@ -905,7 +905,7 @@ qag (const gsl_function * f,
 
       retrieve (workspace, &a_i, &b_i, &r_i, &e_i);
 
-      a1 = a_i; 
+      a1 = a_i;
       b1 = 0.5 * (a_i + b_i);
       a2 = b1;
       b2 = b_i;
@@ -997,12 +997,12 @@ rescale_error (double err, const double result_abs, const double result_asc)
   if (result_asc != 0 && err != 0)
       {
         double scale = TMath::Power((200 * err / result_asc), 1.5) ;
-        
+
         if (scale < 1)
           {
             err = result_asc * scale ;
           }
-        else 
+        else
           {
             err = result_asc ;
           }
@@ -1011,18 +1011,18 @@ rescale_error (double err, const double result_abs, const double result_asc)
     {
       double min_err = 50 * GSL_DBL_EPSILON * result_abs ;
 
-      if (min_err > err) 
+      if (min_err > err)
         {
           err = min_err ;
         }
     }
-  
+
   return err ;
 }
 
 
 void
-gsl_integration_qk (const int n, 
+gsl_integration_qk (const int n,
                     const double xgk[], const double wg[], const double wgk[],
                     double fv1[], double fv2[],
                     const gsl_function * f, double a, double b,
@@ -1115,7 +1115,7 @@ static const double xgkA[8] =    /* abscissae of the 15-point kronrod rule */
   0.000000000000000000000000000000000
 };
 
-/* xgk[1], xgk[3], ... abscissae of the 7-point gauss rule. 
+/* xgk[1], xgk[3], ... abscissae of the 7-point gauss rule.
    xgk[0], xgk[2], ... abscissae to optimally extend the 7-point gauss rule */
 
 static const double wgA[4] =     /* weights of the 7-point gauss rule */
@@ -1167,7 +1167,7 @@ static const double xgkB[11] =   /* abscissae of the 21-point kronrod rule */
   0.000000000000000000000000000000000
 };
 
-/* xgk[1], xgk[3], ... abscissae of the 10-point gauss rule. 
+/* xgk[1], xgk[3], ... abscissae of the 10-point gauss rule.
    xgk[0], xgk[2], ... abscissae to optimally extend the 10-point gauss rule */
 
 static const double wgB[5] =     /* weights of the 10-point gauss rule */
@@ -1229,7 +1229,7 @@ static const double xgkC[16] =   /* abscissae of the 31-point kronrod rule */
   0.000000000000000000000000000000000
 };
 
-/* xgk[1], xgk[3], ... abscissae of the 15-point gauss rule. 
+/* xgk[1], xgk[3], ... abscissae of the 15-point gauss rule.
    xgk[0], xgk[2], ... abscissae to optimally extend the 15-point gauss rule */
 
 static const double wgC[8] =     /* weights of the 15-point gauss rule */
@@ -1303,7 +1303,7 @@ static const double xgkD[21] =   /* abscissae of the 41-point kronrod rule */
   0.000000000000000000000000000000000
 };
 
-/* xgk[1], xgk[3], ... abscissae of the 20-point gauss rule. 
+/* xgk[1], xgk[3], ... abscissae of the 20-point gauss rule.
    xgk[0], xgk[2], ... abscissae to optimally extend the 20-point gauss rule */
 
 static const double wgD[11] =    /* weights of the 20-point gauss rule */
@@ -1389,7 +1389,7 @@ static const double xgkE[26] =   /* abscissae of the 51-point kronrod rule */
   0.000000000000000000000000000000000
 };
 
-/* xgk[1], xgk[3], ... abscissae of the 25-point gauss rule. 
+/* xgk[1], xgk[3], ... abscissae of the 25-point gauss rule.
    xgk[0], xgk[2], ... abscissae to optimally extend the 25-point gauss rule */
 
 static const double wgE[13] =    /* weights of the 25-point gauss rule */
@@ -1490,7 +1490,7 @@ static const double xgkF[31] =   /* abscissae of the 61-point kronrod rule */
   0.000000000000000000000000000000000
 };
 
-/* xgk[1], xgk[3], ... abscissae of the 30-point gauss rule. 
+/* xgk[1], xgk[3], ... abscissae of the 30-point gauss rule.
    xgk[0], xgk[2], ... abscissae to optimally extend the 30-point gauss rule */
 
 static const double wgF[15] =    /* weights of the 30-point gauss rule */
@@ -1558,17 +1558,17 @@ gsl_integration_qk61 (const gsl_function * f, double a, double b,
 }
 
 gsl_integration_workspace*
-gsl_integration_workspace_alloc (const size_t n) 
+gsl_integration_workspace_alloc (const size_t n)
 {
   gsl_integration_workspace* w ;
-  
+
   if (n == 0)
     {
       GSL_ERROR_VAL ("workspace length n must be positive integer",
                         GSL_EDOM, 0);
     }
 
-  w = (gsl_integration_workspace *) 
+  w = (gsl_integration_workspace *)
     malloc (sizeof (gsl_integration_workspace));
 
   if (w == 0)
@@ -1656,7 +1656,7 @@ gsl_integration_workspace_alloc (const size_t n)
   w->size = 0 ;
   w->limit = n ;
   w->maximum_level = 0 ;
-  
+
   return w ;
 }
 
@@ -1715,11 +1715,11 @@ increase_nrmax (gsl_integration_workspace * workspace)
     {
       jupbnd = last;
     }
-  
+
   for (k = id; k <= jupbnd; k++)
     {
       size_t i_max = order[workspace->nrmax];
-      
+
       workspace->i = i_max ;
 
       if (level[i_max] < workspace->maximum_level)
@@ -1738,7 +1738,7 @@ large_interval (gsl_integration_workspace * workspace)
 {
   size_t i = workspace->i ;
   const size_t * level = workspace->level;
-  
+
   if (level[i] < workspace->maximum_level)
     {
       return 1 ;
@@ -1790,8 +1790,8 @@ append_table (struct extrapolation_table *table, double y)
 }
 
 /* static inline void
-   qelg (size_t * n, double epstab[], 
-   double * result, double * abserr, 
+   qelg (size_t * n, double epstab[],
+   double * result, double * abserr,
    double res3la[], size_t * nres); */
 
 static inline void
@@ -1959,7 +1959,7 @@ qelg (struct extrapolation_table *table, double *result, double *abserr)
      have moved the update to this point so that its value more
      useful. */
 
-  table->nres = nres_orig + 1;  
+  table->nres = nres_orig + 1;
 
   *abserr = GSL_MAX_DBL (*abserr, 5 * GSL_DBL_EPSILON * fabs (*result));
 
@@ -1995,8 +1995,8 @@ gsl_integration_qags (const gsl_function *f,
                       double * result, double * abserr)
 {
   int status = qags (f, a, b, epsabs, epsrel, limit,
-                     workspace, 
-                     result, abserr, 
+                     workspace,
+                     result, abserr,
                      &gsl_integration_qk21) ;
   return status ;
 }
@@ -2023,7 +2023,7 @@ gsl_integration_qagi (gsl_function * f,
   f_transform.function = &i_transform;
   f_transform.params = f;
 
-  status = qags (&f_transform, 0.0, 1.0, 
+  status = qags (&f_transform, 0.0, 1.0,
                  epsabs, epsrel, limit,
                  workspace,
                  result, abserr,
@@ -2032,7 +2032,7 @@ gsl_integration_qagi (gsl_function * f,
   return status;
 }
 
-static double 
+static double
 i_transform (double t, void *params)
 {
   gsl_function *f = (gsl_function *) params;
@@ -2044,7 +2044,7 @@ i_transform (double t, void *params)
 
 /* QAGIL: Evaluate an integral over an infinite range using the
    transformation,
-   
+
    integrate(f(x),-Inf,b) = integrate(f(b-(1-t)/t)/t^2,0,1)
 
    */
@@ -2071,7 +2071,7 @@ gsl_integration_qagil (gsl_function * f,
   f_transform.function = &il_transform;
   f_transform.params = &transform_params;
 
-  status = qags (&f_transform, 0.0, 1.0, 
+  status = qags (&f_transform, 0.0, 1.0,
                  epsabs, epsrel, limit,
                  workspace,
                  result, abserr,
@@ -2080,7 +2080,7 @@ gsl_integration_qagil (gsl_function * f,
   return status;
 }
 
-static double 
+static double
 il_transform (double t, void *params)
 {
   struct il_params *p = (struct il_params *) params;
@@ -2120,7 +2120,7 @@ gsl_integration_qagiu (gsl_function * f,
   f_transform.function = &iu_transform;
   f_transform.params = &transform_params;
 
-  status = qags (&f_transform, 0.0, 1.0, 
+  status = qags (&f_transform, 0.0, 1.0,
                  epsabs, epsrel, limit,
                  workspace,
                  result, abserr,
@@ -2129,7 +2129,7 @@ gsl_integration_qagiu (gsl_function * f,
   return status;
 }
 
-static double 
+static double
 iu_transform (double t, void *params)
 {
   struct iu_params *p = (struct iu_params *) params;
@@ -2485,7 +2485,7 @@ return_error:
 
 
 
-  if (error_type == 0) 
+  if (error_type == 0)
     {
       return GSL_SUCCESS;
     }

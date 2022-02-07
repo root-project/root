@@ -27,7 +27,7 @@ public:
   // Constructors, assignment etc.
   RooListProxy() : _defValueServer(kTRUE), _defShapeServer(kFALSE) { _owner=0 ; } ;
   RooListProxy(const char* name, const char* desc, RooAbsArg* owner,
-	      Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
+         Bool_t defValueServer=kTRUE, Bool_t defShapeServer=kFALSE) ;
   RooListProxy(const char* name, RooAbsArg* owner, const RooListProxy& other) ;
   ~RooListProxy() override ;
 
