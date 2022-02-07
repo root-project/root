@@ -42,6 +42,37 @@ namespace RDF {
 
 using namespace ROOT::TypeTraits;
 
+template <typename T>
+bool ResultsSizeEq(const RVec<RVec<T>> &results, std::size_t expected, std::size_t nColumns)
+{
+   if (nColumns == 1)
+      return results.size() == expected;
+
+   return std::all_of(results.begin(), results.end(), [&expected](const RVec<T> &v) { return v.size() == expected; });
+}
+
+template <typename T>
+bool ResultsSizeEq(const RVec<T> &results, std::size_t expected, std::size_t nColumns)
+{
+   assert(nColumns == 1);
+   (void)nColumns;
+
+   return results.size() == expected;
+}
+
+template <typename T>
+std::size_t GetNVariations(const RVec<RVec<T>> &results)
+{
+   assert(!results.empty());
+   return results[0].size();
+}
+
+template <typename T>
+std::size_t GetNVariations(const RVec<T> &results)
+{
+   return results.size();
+}
+
 template <typename F>
 class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    using ColumnTypes_t = typename CallableTraits<F>::arg_types;
@@ -62,8 +93,12 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    {
       // fExpression must return an RVec<T>
       const auto &results = fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
-      R__ASSERT(results.size() == fLastResults[slot * CacheLineStep<ret_type>()].size() &&
-                "Variation expression has wrong size.");
+      if (!ResultsSizeEq(results, fVariationNames.size(), fColNames.size())) {
+         std::string variationName = fVariationNames[0].substr(0, fVariationNames[0].find_first_of(':'));
+         throw std::runtime_error("The evaluation of the expression for variation \"" + variationName +
+                                  "\" resulted in " + std::to_string(GetNVariations(results)) + " values, but " +
+                                  std::to_string(fVariationNames.size()) + " were expected.");
+      }
       // Assign into fLastResults without changing the addresses of its elements (we gave those addresses away in
       // GetValuePtr)
       fLastResults[slot * CacheLineStep<ret_type>()].assign(results.begin(), results.end());
