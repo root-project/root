@@ -853,7 +853,25 @@ public:
       return Vary(colNames, std::forward<F>(expression), inputColumns, std::move(variationTags), variationName);
    }
 
-   // FIXME docs
+   /// \brief Register systematic variations for an existing column.
+   /// \param[in] colName name of the column for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
+   ///            values for the specified column.
+   /// \param[in] variationTags names for each of the varied values, e.g. "up" and "down".
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///            colName is used if none is provided.
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", "ROOT::RVecD{pt*0.9, pt*1.1}", {"down", "up"})
+   ///       .Filter("pt > k")
+   ///       .Define("x", someFunc, {"pt"})
+   ///       .Histo1D("x");
+   ///
+   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["pt:down"].Draw("SAME");
+   /// ~~~
    RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression,
                                   const std::vector<std::string> &variationTags, std::string_view variationName = "")
    {
@@ -863,6 +881,15 @@ public:
       return Vary(std::move(colNames), expression, variationTags, theVariationName);
    }
 
+   /// \brief Register systematic variations for an existing column.
+   /// \param[in] colName name of the column for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
+   ///            values for the specified column.
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be "0", "1", etc.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///            colName is used if none is provided.
+   ///
+   /// See the documentation for the previous overload for more information.
    RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression, std::size_t nVariations,
                                   std::string_view variationName = "")
    {
@@ -872,6 +899,23 @@ public:
       return Vary(std::move(colNames), expression, nVariations, theVariationName);
    }
 
+   /// \brief Register systematic variations for one or more existing columns.
+   /// \param[in] colNames names of the columns for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec or RVecs containing the varied
+   ///            values for the specified columns.
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be "0", "1", etc.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.9, x*1.1}, {y*0.9, y*1.1}}", 2, "xy")
+   ///       .Histo1D("x", "y");
+   ///
+   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["xy:0"].Draw("SAME");
+   /// hx["xy:1"].Draw("SAME");
+   /// ~~~
    RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
                                   std::size_t nVariations, std::string_view variationName)
    {
@@ -883,6 +927,23 @@ public:
       return Vary(colNames, expression, std::move(variationTags), variationName);
    }
 
+   /// \brief Register systematic variations for one or more existing columns.
+   /// \param[in] colNames names of the columns for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec or RVecs containing the varied
+   ///            values for the specified columns.
+   /// \param[in] variationTags names for each of the varied values, e.g. "up" and "down".
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.9, x*1.1}, {y*0.9, y*1.1}}", {"down", "up"}, "xy")
+   ///       .Histo1D("x", "y");
+   ///
+   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["xy:down"].Draw("SAME");
+   /// hx["xy:up"].Draw("SAME");
+   /// ~~~
    RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
                                   const std::vector<std::string> &variationTags, std::string_view variationName)
    {
