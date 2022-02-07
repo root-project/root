@@ -1157,8 +1157,9 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
          TUrl url;
          url.SetOptions(arg->fQuery);
          url.ParseOptions();
-         Int_t connid = url.GetIntValueFromOptions("connection");
-         arg->SetWSId((UInt_t)connid);
+         const char *connid = url.GetValueFromOptions("connection");
+         if (connid)
+            arg->SetWSId(std::stoul(connid));
          if (url.HasOption("close")) {
             arg->SetMethod("WS_CLOSE");
             arg->SetTextContent("OK");
