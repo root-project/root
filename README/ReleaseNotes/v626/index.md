@@ -232,14 +232,14 @@ For benchmarking results on the prototype version of the parallelized gradient c
 
 Various new pythonizations are introduced to streamline your RooFit code in Python.
 
-For a complete list of all pythonized classes and functions, please see the [RooFit pythonizations page in the reference guide](https://root.cern.ch/doc/v626/group__RoofitPythonizations.html).
+For a complete list of all pythonized classes and functions, please see the [RooFit pythonizations page in the reference guide](https://root.cern/doc/v626/group__RoofitPythonizations.html).
 All RooFit Python tutorials have been updated to profit from all available pythonizations.
 
 Some notable highlights are listed in the following.
 
 #### Keyword argument pythonizations
 
-All functions that take RooFit command arguments as parameters now accept equivalent Python keyword arguments, for example simplifying calls to [RooAbsPdf::fitTo()](https://root.cern.ch/doc/v626/classRooAbsPdf.html#a5f79f16f4a26a19c9e66fb5c080f59c5) such as:
+All functions that take RooFit command arguments as parameters now accept equivalent Python keyword arguments, for example simplifying calls to [RooAbsPdf::fitTo()](https://root.cern/doc/v626/classRooAbsPdf.html#a5f79f16f4a26a19c9e66fb5c080f59c5) such as:
 ```Python
 model.fitTo(data, ROOT.RooFit.Range("left,right"), ROOT.RooFit.Save())
 ```
@@ -261,34 +261,34 @@ Combining the enum pythonization with the keyword argument pythonization explain
 data.plotOn(frame, DataError="SumW2")
 ```
 
-This pythonization is also useful for your calls to [RooFit::LineColor()](https://root.cern.ch/doc/v626/group__Plotting.html#gad309cf5f63ec87ae5a7025d530f0398f) or [RooFit::LineStyle](https://root.cern.ch/doc/v626/group__Plotting.html#gaf1f7922ba5965c1a5a9791a00ef354cb), to give some more common examples.
+This pythonization is also useful for your calls to [RooFit::LineColor()](https://root.cern/doc/v626/group__Plotting.html#gad309cf5f63ec87ae5a7025d530f0398f) or [RooFit::LineStyle](https://root.cern/doc/v626/group__Plotting.html#gaf1f7922ba5965c1a5a9791a00ef354cb), to give some more common examples.
 
 #### Implicit conversion from Python collections to RooFit collections
 
 You can now benefit from implicit conversion from Python lists to RooArgLists, and from Python sets to RooArgSets.
 
-For example, you can call [RooAbsPdf::generate()](https://root.cern.ch/doc/v626/classRooAbsPdf.html#a87926e1044acf4403d8d5f1d366f6591) with a Python set to specify the observables:
+For example, you can call [RooAbsPdf::generate()](https://root.cern/doc/v626/classRooAbsPdf.html#a87926e1044acf4403d8d5f1d366f6591) with a Python set to specify the observables:
 ```Python
 pdf.generate({x, y, cut}, 10000)
 ```
 
-Or, you can create a [RooPolynomial](https://root.cern.ch/doc/v626/classRooPolynomial.html) from a Python list of coefficients:
+Or, you can create a [RooPolynomial](https://root.cern/doc/v626/classRooPolynomial.html) from a Python list of coefficients:
 ```Python
 ROOT.RooPolynomial("p", "p", x, [0.01, -0.01, 0.0004])
 ```
 
-Note that here we benefit from another new feature: the implicit call to [RooFit::RooConst()](https://root.cern.ch/doc/v626/group__CmdArgs.html#gaabf71812817894196e743cf2ef1d1e7b) when passing raw numbers to the RooFit collection constructors.
+Note that here we benefit from another new feature: the implicit call to [RooFit::RooConst()](https://root.cern/doc/v626/group__CmdArgs.html#gaabf71812817894196e743cf2ef1d1e7b) when passing raw numbers to the RooFit collection constructors.
 
 #### Allow for use of Python collections instead of C++ STL containers
 
-Some RooFit functions take STL map-like types such as `std::map` as parameters, for example the [RooCategory constructor](https://root.cern.ch/doc/v626/classRooCategory.html#ae63ae78231765d184b7a839c74746a49). In the past, you had to create the correct C++ class in Python, but now you can usually pass a Python dictionary instead. For example, a RooCategory can be created like this:
+Some RooFit functions take STL map-like types such as `std::map` as parameters, for example the [RooCategory constructor](https://root.cern/doc/v626/classRooCategory.html#ae63ae78231765d184b7a839c74746a49). In the past, you had to create the correct C++ class in Python, but now you can usually pass a Python dictionary instead. For example, a RooCategory can be created like this:
 ```Python
 sample = ROOT.RooCategory("sample", "sample", {"Sample1": 1, "Sample2": 2, "Sample3": 3})
 ```
 
 #### RooWorkspace accessors
 
-In Python, you can now get objects stored in a [RooWorkspace](https://root.cern.ch/doc/v626/classRooWorkspace.html) with the item retrieval operator, and the return value is also always downcasted to the correcy type. That means in Python you don't have to use [RooWorkspace::var()](https://root.cern.ch/doc/v626/classRooWorkspace.html#acf5f9126ee264c234721a4ed1f9bf837) to access variables or [RooWorkspace::pdf()](https://root.cern.ch/doc/v626/classRooWorkspace.html#afa7384cece424a1a94a644bb05549eee) to access pdfs, but you can always get any object using square brackets. For example:
+In Python, you can now get objects stored in a [RooWorkspace](https://root.cern/doc/v626/classRooWorkspace.html) with the item retrieval operator, and the return value is also always downcasted to the correcy type. That means in Python you don't have to use [RooWorkspace::var()](https://root.cern/doc/v626/classRooWorkspace.html#acf5f9126ee264c234721a4ed1f9bf837) to access variables or [RooWorkspace::pdf()](https://root.cern/doc/v626/classRooWorkspace.html#afa7384cece424a1a94a644bb05549eee) to access pdfs, but you can always get any object using square brackets. For example:
 ```Python
 # w is a RooWorkspace instance that contains the variables `x`, `y`, and `z` for which we want to generate toy data:
 model.generate({w["x"], w["y"], w["z"]}, 1000)
@@ -310,14 +310,14 @@ For more details, consult the tutorial [rf409_NumPyPandasToRooFit.py](https://ro
 
 ### Modeling Effective Field Theory distributions with RooLadgrangianMorphFunc
 
-The [**RooLagrangianMorphFunc**](https://root.cern.ch/doc/v626/classRooLagrangianMorphFunc.html) class is a new RooFit class for modeling a continuous distribution of an observable as a function of the parameters of an effective field theory given the distribution sampled at some points in the parameter space.
+The [**RooLagrangianMorphFunc**](https://root.cern/doc/v626/classRooLagrangianMorphFunc.html) class is a new RooFit class for modeling a continuous distribution of an observable as a function of the parameters of an effective field theory given the distribution sampled at some points in the parameter space.
 Two new classes to help to provide this functionality:
   * [RooRatio](https://root.cern/doc/v626/classRooRatio.html): computes the ratio of RooFit objects 
   * [RooPolyFunc](https://root.cern/doc/v626/classRooPolyFunc.html): multi-dimensional polynomial function, were [RooPolyFunc::taylorExpand()](https://root.cern/doc/v626/classRooPolyFunc.html#a21c6671e1b2391d08dbc62c5a5e7be38) can be used to obtain the (multi-dimensional) Taylor expansion up to the second order
 
-For example usage of the RooLagrangianMorphFunc class, please consult the tutorials for a single parameter case ([rf711_lagrangianmorph.C](https://root.cern.ch/doc/v626/rf711__lagrangianmorph_8C.html) / [.py](https://root.cern.ch/doc/v626/rf711__lagrangianmorph_8py.html)) and for a multi-parameter case ([rf712_lagrangianmorphfit.C](https://root.cern.ch/doc/v626/rf712__lagrangianmorphfit_8C.html) / [.py](https://root.cern.ch/doc/v626/rf712__lagrangianmorphfit_8py.html)).
+For example usage of the RooLagrangianMorphFunc class, please consult the tutorials for a single parameter case ([rf711_lagrangianmorph.C](https://root.cern/doc/v626/rf711__lagrangianmorph_8C.html) / [.py](https://root.cern/doc/v626/rf711__lagrangianmorph_8py.html)) and for a multi-parameter case ([rf712_lagrangianmorphfit.C](https://root.cern/doc/v626/rf712__lagrangianmorphfit_8C.html) / [.py](https://root.cern/doc/v626/rf712__lagrangianmorphfit_8py.html)).
 
-A `RooLagrangianMorphFunc` can also be created with the `RooWorkspace::factory` interface, showcased in [rf512_wsfactory_oper.C](https://root.cern.ch/doc/v626/rf512__wsfactory__oper_8C.html) / [.py](https://root.cern.ch/doc/master/rf512__wsfactory__oper_8py.html).
+A `RooLagrangianMorphFunc` can also be created with the `RooWorkspace::factory` interface, showcased in [rf512_wsfactory_oper.C](https://root.cern/doc/v626/rf512__wsfactory__oper_8C.html) / [.py](https://root.cern/doc/master/rf512__wsfactory__oper_8py.html).
 
 ### Exporting and importing `RooWorkspace` to and from JSON and YML
 
@@ -392,7 +392,7 @@ To access the set of global observables stored in a `RooAbsData`, call `RooAbsDa
 It returns a `nullptr` if no global observable snapshots are stored in the dataset.
 
 For more information of global observables and how to attach them to the toy datasets, please take a look at the new
-[rf613_global_observables.C](https://root.cern.ch/doc/v626/rf613__global_observables_8C.html) / [.py](https://root.cern.ch/doc/v626/rf613__global_observables_8py.html) tutorial.
+[rf613_global_observables.C](https://root.cern/doc/v626/rf613__global_observables_8C.html) / [.py](https://root.cern/doc/v626/rf613__global_observables_8py.html) tutorial.
 
 ### Changes in `RooAbsPdf::fitTo` behaviour for multi-range fits
 
@@ -413,6 +413,21 @@ Before 6.26, it was possible to still use the `RooMinuit` by passing the `Minimi
 The class version of `RooAbsArg` was incremented from 7 to 8 in this release. In some circumstances, this can cause warnings in `TStreamerInfo` for classes inheriting from `RooAbsArg` when reading
 older RooFit models from a file. These warnings are harmless and can be avoided by incrementing also the class version of the inheriting class.
 
+### Compile-time protection against creating empty `RooCmdArg`s from strings
+
+The implicit [RooCmdArg](https://root.cern/doc/v626/classRooCmdArg.html) constructor from `const char*` was removed to avoid the accidental construction of meaningless RooCmdArgs that only have a name but no payload.
+This causes new compiler errors in your code if you pass a string instead of a RooCmdArg to various RooFit functions, such as [RooAbsPdf::fitTo()](https://root.cern/doc/v626/classRooAbsPdf.html#a5f79f16f4a26a19c9e66fb5c080f59c5).
+If this happens, please consult the documentation of [fitTo()](https://root.cern/doc/v626/classRooAbsPdf.html#a5f79f16f4a26a19c9e66fb5c080f59c5) to check which of the [free functions in the `RooFit` namespace](https://root.cern/doc/v626/group__CmdArgs.html) you need to use to achieve the desired configuration.
+
+**Example** of an error that is now caught at compile time: confusing the [RooAbsPdf::fitTo()]() function signature with the one of [TH1::Fit()](https://root.cern/doc/v626/classTH1.html#a63eb028df86bc86c8e20c989eb23fb2a) and passing the fit range name as a string literal:
+
+```C++
+pdf.fitTo(*data, "r"); // ERROR!
+// Will not compile anymore, as `"r"` is not a recognized command and will be ignored!
+// Instead, to restrict to a range called "r", use:
+pdf.fitTo(*data, RooFit::Range("r"));
+```
+
 ## TMVA
 
 ### SOFIE : Code generation for fast inference of Deep Learning models
@@ -431,7 +446,7 @@ model.Generate();
 model.OutputGenerated(“./example_output.hxx”);
 ```
 And an C++ header file will be generated. In addition also a text file, `example_output.dat` will be also generated. This file will contain the model weight values that will be used to initialize the model.
-A full example for parsing an ONNX input file is given by the tutorial [`TMVA_SOFIE_ONNX.C`](https://root.cern.ch/doc/master/TMVA__SOFIE__ONNX_8C.html). 
+A full example for parsing an ONNX input file is given by the tutorial [`TMVA_SOFIE_ONNX.C`](https://root.cern/doc/master/TMVA__SOFIE__ONNX_8C.html). 
 
 To use the generated inference code, you need to create a `Session` class and call the function `Session::inder(float *)`:
 
@@ -451,13 +466,13 @@ For parsing a Keras input file you need to do:
 ```
 SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModel.h5");
 ```
-See the tutorial [`TMVA_SOFIE_Keras.C`](https://root.cern.ch/doc/master/TMVA__SOFIE__Keras_8C.html).
+See the tutorial [`TMVA_SOFIE_Keras.C`](https://root.cern/doc/master/TMVA__SOFIE__Keras_8C.html).
 For parsing a PyTorch input file : 
 ```
 SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModel.pt",inputShapes);
 ```
 where `inputShapes` is a `std::vector<std::vector<size_t>>` defining the inputs shape tensors. This information is required by PyTorch since it is not stored in the model. 
-A full example for parsing a PyTorch file is in the [`TMVA_SOFIE_PyTorch.C`](https://root.cern.ch/doc/master/TMVA__SOFIE__PyTorch_8C.html) tutorial. 
+A full example for parsing a PyTorch file is in the [`TMVA_SOFIE_PyTorch.C`](https://root.cern/doc/master/TMVA__SOFIE__PyTorch_8C.html) tutorial. 
 
 For using the Keras and/or the PyTorch parser you need to have installed Keras and/or PyTorch in your Python system and in addition build root with the support for `pymva`, obtained when configuring with `-Dtmva-pymva=On`. 
  
