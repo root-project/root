@@ -33,8 +33,6 @@ class RunGraphsTests(unittest.TestCase):
         - Initialize a Dask client for the tests in this class. This uses a
           `LocalCluster` object that spawns 2 single-threaded Python processes.
         """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
@@ -46,8 +44,6 @@ class RunGraphsTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
-        os.environ["PYSPARK_PYTHON"] = ""
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 

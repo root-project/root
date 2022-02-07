@@ -28,8 +28,6 @@ class IncludesSparkTest(unittest.TestCase):
           warning
         - Initialize a SparkContext for the tests in this class
         """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("ignore", ResourceWarning)
 
@@ -39,8 +37,6 @@ class IncludesSparkTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Reset test environment."""
-        os.environ["PYSPARK_PYTHON"] = ""
-
         if sys.version_info.major >= 3:
             warnings.simplefilter("default", ResourceWarning)
 
