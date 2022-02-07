@@ -52,8 +52,8 @@ TEST(RDFVary, RequireNVariationsIsConsistent)
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
    auto s = df.Vary("x", SimpleVariation, {}, /*wrong=*/3).Sum<int>("x");
    auto all_s = VariationsFor(s);
-   // now, when evaluating `SimpleVariation`, we should notice that it returns 2 values, not 3, and complain.
-   ASSERT_DEATH(all_s["nominal"], "Variation expression has wrong size");
+   // now, when evaluating `SimpleVariation`, we should notice that it returns 2 values, not 3, and throw
+   EXPECT_THROW(all_s["nominal"], std::runtime_error);
 }
 
 TEST(RDFVary, VariationsForDoesNotTriggerRun)
@@ -270,13 +270,13 @@ TEST_P(RDFVary, SimultaneousVariations)
    auto h = df.Vary(
                  {"x", "y"},
                  [] {
-                    return ROOT::RVec<ROOT::RVecI>{{-1, 2}, {41, 43}};
+                    return ROOT::RVec<ROOT::RVecI>{{-1, 2, 3}, {41, 43, 44}};
                  },
-                 {}, {"down", "up"}, "xy")
+                 {}, {"down", "up", "other"}, "xy")
                .Histo1D<int, int>("x", "y");
    auto histos = VariationsFor(h);
 
-   const auto expectedKeys = std::vector<std::string>{"nominal", "xy:down", "xy:up"};
+   const auto expectedKeys = std::vector<std::string>{"nominal", "xy:down", "xy:other", "xy:up"};
    auto keys = histos.GetKeys();
    std::sort(keys.begin(), keys.end()); // key ordering is not guaranteed
    EXPECT_EQ(keys, expectedKeys);
@@ -286,6 +286,8 @@ TEST_P(RDFVary, SimultaneousVariations)
    EXPECT_DOUBLE_EQ(histos["xy:down"].GetMean(), -1.);
    EXPECT_DOUBLE_EQ(histos["xy:up"].GetMaximum(), 43. * 10.);
    EXPECT_DOUBLE_EQ(histos["xy:up"].GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(histos["xy:other"].GetMaximum(), 44 * 10.);
+   EXPECT_DOUBLE_EQ(histos["xy:other"].GetMean(), 3.);
 }
 
 TEST_P(RDFVary, VaryTTreeBranch)
@@ -523,6 +525,31 @@ TEST_P(RDFVary, VariationsForOnSameResult)
    checkHistos(histos2);
    checkHistos(histos); // check that these results are still correct
    EXPECT_EQ(df.GetNRuns(), 3);
+}
+
+TEST_P(RDFVary, VariedColumnIsRVec)
+{
+   // this is a tricky case for our internal logic as we have to distinguish varying a column of RVec type
+   // from varying multiple columns: in both cases the Vary expression returns an RVec<RVec<..>>
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return ROOT::RVecI{1, 2, 3}; });
+   auto h = df.Vary(
+                 "x",
+                 [] {
+                    return ROOT::RVec<ROOT::RVecI>{{}, {4, 5}};
+                 },
+                 {}, 2)
+               .Histo1D<ROOT::RVecI>("x");
+   auto histos = VariationsFor(h);
+
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetEntries(), 3 * 10.);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(histos["nominal"].GetMaximum(), 10.);
+
+   EXPECT_DOUBLE_EQ(histos["x:0"].GetEntries(), 0.);
+
+   EXPECT_DOUBLE_EQ(histos["x:1"].GetEntries(), 2 * 10.);
+   EXPECT_DOUBLE_EQ(histos["x:1"].GetMean(), 4.5);
+   EXPECT_DOUBLE_EQ(histos["x:1"].GetMaximum(), 10.);
 }
 
 // instantiate single-thread tests
