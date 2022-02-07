@@ -309,7 +309,7 @@ bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFir
    if (fIsCodeGening)
       return false;
 
-   GlobalModuleIndex *Index = CI->getModuleManager()->getGlobalIndex();
+   GlobalModuleIndex *Index = CI->getASTReader()->getGlobalIndex();
    if (!Index)
       return false;
 
