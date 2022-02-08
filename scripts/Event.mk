@@ -48,9 +48,6 @@ else
 ifeq ($(ARCH),aix5)
 		$(CMDECHO) /usr/vacpp/bin/makeC++SharedLib $(OutPutOpt) $@ $(LIBS) -p 0 $^
 else
-ifeq ($(PLATFORM),macosx)
-		$(CMDECHO) $(LD) $(SOFLAGS) $(EVENTO) $(OutPutOpt) $(EVENTLIB) $(EXPLLINKLIBS)
-else
 ifeq ($(PLATFORM),win32)
 		$(CMDECHO) bindexplib $* $(EVENTO) > $*.def
 		$(CMDECHO) lib -nologo -MACHINE:IX86 $(EVENTO) -def:$*.def \
@@ -59,7 +56,6 @@ ifeq ($(PLATFORM),win32)
 		   $(OutPutOpt)$@
 else
 		$(CMDECHO) $(LD) $(SOFLAGS) $(LDFLAGS) $^ $(OutPutOpt) $@ $(EXPLLINKLIBS)
-endif
 endif
 endif
 endif
