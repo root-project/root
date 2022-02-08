@@ -23,7 +23,7 @@ PyROOT extension module.
 
 #include "PyROOTPythonize.h"
 
-#include "RConfig.h"
+#include "ROOT/RConfig.hxx"
 #include "TInterpreter.h"
 
 #include <sstream>
