@@ -1575,7 +1575,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
                                                        llvmResourceDir, extensions);
 
    // Don't check whether modules' files exist.
-   fInterpreter->getCI()->getPreprocessorOpts().DisablePCHValidation = true;
+   fInterpreter->getCI()->getPreprocessorOpts().DisablePCHOrModuleValidation =
+      DisableValidationForModuleKind::All;
 
    // Until we can disable AutoLoading during Sema::CorrectTypo() we have
    // to disable spell checking.
