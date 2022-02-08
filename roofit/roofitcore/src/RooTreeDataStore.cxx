@@ -228,8 +228,8 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 ////////////////////////////////////////////////////////////////////////////////
 
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
-			 const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-			 Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName) :
+          const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
+          Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(kFALSE),
   _varsww(vars),
   _wgtVar(weightVar(vars,wgtVarName)),
@@ -549,7 +549,7 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
 ///
 
 void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVar* select,
-				  const char* rangeName, std::size_t nStart, std::size_t nStop)
+              const char* rangeName, std::size_t nStart, std::size_t nStop)
 {
   // Redirect formula servers to source data row
   std::unique_ptr<RooFormulaVar> selectClone;
@@ -869,7 +869,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
   // Sanity check that the holder really is fundamental
   if(!valHolder->isFundamental()) {
     coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
-	 << valHolder->GetName() << "\"" << endl;
+    << valHolder->GetName() << "\"" << endl;
     return 0;
   }
 
@@ -943,7 +943,7 @@ RooArgSet* RooTreeDataStore::addColumns(const RooArgList& varList)
     // Sanity check that the holder really is fundamental
     if(!valHolder->isFundamental()) {
       coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
-	   << valHolder->GetName() << "\"" << endl;
+      << valHolder->GetName() << "\"" << endl;
       return 0;
     }
 
@@ -951,7 +951,7 @@ RooArgSet* RooTreeDataStore::addColumns(const RooArgList& varList)
     RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(*var).snapshot() ;
     if (!newVarCloneList) {
       coutE(InputArguments) << "RooTreeDataStore::RooTreeData(" << GetName()
-			    << ") Couldn't deep-clone variable " << var->GetName() << ", abort." << endl ;
+             << ") Couldn't deep-clone variable " << var->GetName() << ", abort." << endl ;
       return 0 ;
     }
     RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;
@@ -1145,7 +1145,7 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
       arg->setValueDirty() ;
       arg->syncCache(nset) ;
       if (!doTreeFill) {
-	arg->fillTreeBranch(*_cacheTree) ;
+   arg->fillTreeBranch(*_cacheTree) ;
       }
     }
 
@@ -1176,7 +1176,7 @@ void RooTreeDataStore::setArgStatus(const RooArgSet& set, Bool_t active)
     RooAbsArg* depArg = _vars.find(arg->GetName()) ;
     if (!depArg) {
       coutE(InputArguments) << "RooTreeDataStore::setArgStatus(" << GetName()
-			    << ") dataset doesn't contain variable " << arg->GetName() << endl ;
+             << ") dataset doesn't contain variable " << arg->GetName() << endl ;
       continue ;
     }
     depArg->setTreeBranchStatus(*_tree,active) ;
@@ -1215,10 +1215,10 @@ void RooTreeDataStore::attachBuffers(const RooArgSet& extObs)
     RooAbsArg* extArg = extObs.find(arg->GetName()) ;
     if (extArg) {
       if (arg->getAttribute("StoreError")) {
-	extArg->setAttribute("StoreError") ;
+   extArg->setAttribute("StoreError") ;
       }
       if (arg->getAttribute("StoreAsymError")) {
-	extArg->setAttribute("StoreAsymError") ;
+   extArg->setAttribute("StoreAsymError") ;
       }
       extArg->attachToTree(*_tree) ;
       _attachedBuffers.add(*extArg) ;

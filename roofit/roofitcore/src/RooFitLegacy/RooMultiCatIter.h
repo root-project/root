@@ -41,14 +41,14 @@ public:
   TObject *operator*() const override ;
 
 protected:
-  
+
   TIterator& operator=(const TIterator&) override { return *this ; } // forbidden for now
 
   void initialize(const RooArgSet& catList) ;
   TObjString* compositeLabel() ;
 
   RooArgSet        _catList  ;   // Set of categories iterated over
-  pTIterator*      _iterList ;   // Array of category type iterators 
+  pTIterator*      _iterList ;   // Array of category type iterators
   pRooCategory*  _catPtrList ;   // Array of pointers to original categories
   RooCatType*   _curTypeList ;   // List of current types
   Int_t _nIter ;                 // Number of categories/iterators in use

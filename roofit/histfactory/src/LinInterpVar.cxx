@@ -46,9 +46,9 @@ LinInterpVar::LinInterpVar()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-LinInterpVar::LinInterpVar(const char* name, const char* title, 
-		       const RooArgList& paramList, 
-		       double nominal, vector<double> low, vector<double> high) :
+LinInterpVar::LinInterpVar(const char* name, const char* title,
+             const RooArgList& paramList,
+             double nominal, vector<double> low, vector<double> high) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
   _nominal(nominal), _low(low), _high(high)
@@ -60,8 +60,8 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
   RooAbsArg* param ;
   while((param = (RooAbsArg*)paramIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
-      coutE(InputArguments) << "LinInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
-			    << " is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "LinInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
+             << " is not of type RooAbsReal" << endl ;
       assert(0) ;
     }
     _paramList.add(*param) ;
@@ -75,7 +75,7 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
 
 LinInterpVar::LinInterpVar(const char* name, const char* title) :
   RooAbsReal(name, title),
-  _paramList("paramList","List of coefficients",this), 
+  _paramList("paramList","List of coefficients",this),
   _nominal(0)
 {
   _paramIter = _paramList.createIterator() ;
@@ -84,21 +84,21 @@ LinInterpVar::LinInterpVar(const char* name, const char* title) :
 ////////////////////////////////////////////////////////////////////////////////
 
 LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _paramList("paramList",this,other._paramList),
   _nominal(other._nominal), _low(other._low), _high(other._high)
-  
+
 {
   // Copy constructor
   _paramIter = _paramList.createIterator() ;
-  
+
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-LinInterpVar::~LinInterpVar() 
+LinInterpVar::~LinInterpVar()
 {
   delete _paramIter ;
 }
@@ -109,7 +109,7 @@ LinInterpVar::~LinInterpVar()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
-Double_t LinInterpVar::evaluate() const 
+Double_t LinInterpVar::evaluate() const
 {
   Double_t sum(_nominal) ;
   _paramIter->Reset() ;
@@ -131,7 +131,7 @@ Double_t LinInterpVar::evaluate() const
 
   if(sum<=0) {
     sum=1E-9;
-  }    
+  }
 
   return sum;
 }

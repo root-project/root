@@ -118,7 +118,7 @@ Double_t RooArgusBG::analyticalIntegral(Int_t code, const char* rangeName) const
   Double_t f1 = (1.-TMath::Power(min/m0,2));
   Double_t f2 = (1.-TMath::Power(max/m0,2));
   Double_t aLow, aHigh ;
-  if ( c < 0. ) { 
+  if ( c < 0. ) {
     aLow  = -0.5*m0*m0*(exp(c*f1)*sqrt(f1)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f1)));
     aHigh = -0.5*m0*m0*(exp(c*f2)*sqrt(f2)/c + 0.5/TMath::Power(-c,1.5)*sqrt(pi)*RooMath::erf(sqrt(-c*f2)));
   } else if ( c == 0. ) {

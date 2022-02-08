@@ -72,7 +72,7 @@
 
 using namespace std;
 
-ClassImp(RooResolutionModel); 
+ClassImp(RooResolutionModel);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -81,9 +81,9 @@ ClassImp(RooResolutionModel);
 /// to give information about its range. This is supported by e.g. RooRealVar or RooLinearVar, which
 /// accepts offsetting and scaling an observable.
 RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooAbsRealLValue& _x) :
-  RooAbsPdf(name,title), 
+  RooAbsPdf(name,title),
   x("x","Dependent or convolution variable",this,_x),
-  _basisCode(0), _basis(0), 
+  _basisCode(0), _basis(0),
   _ownBasis(kFALSE)
 {
 
@@ -94,8 +94,8 @@ RooResolutionModel::RooResolutionModel(const char *name, const char *title, RooA
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) : 
-  RooAbsPdf(other,name), 
+RooResolutionModel::RooResolutionModel(const RooResolutionModel& other, const char* name) :
+  RooAbsPdf(other,name),
   x("x",this,other.x),
   _basisCode(other._basisCode), _basis(0),
   _ownBasis(kFALSE)
@@ -133,8 +133,8 @@ RooResolutionModel::~RooResolutionModel()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return identity formula pointer
 
-RooFormulaVar* RooResolutionModel::identity() 
-{ 
+RooFormulaVar* RooResolutionModel::identity()
+{
   static RooFormulaVar identity("identity","1",RooArgSet(""));
   return &identity;
 }
@@ -145,7 +145,7 @@ RooFormulaVar* RooResolutionModel::identity()
 /// Instantiate a clone of this resolution model representing a convolution with given
 /// basis function. The owners object name is incorporated in the clones name
 /// to avoid multiple convolution objects with the same name in complex PDF structures.
-/// 
+///
 /// Note: The 'inBasis' formula expression must be a RooFormulaVar that encodes the formula
 /// in the title of the object and this expression must be an exact match against the
 /// implemented basis function strings (see derived class implementation of method basisCode()
@@ -153,18 +153,18 @@ RooFormulaVar* RooResolutionModel::identity()
 
 RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooAbsArg* owner) const
 {
-  // Check that primary variable of basis functions is our convolution variable  
+  // Check that primary variable of basis functions is our convolution variable
   if (inBasis->getParameter(0) != x.absArg()) {
-    coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this  
-			  << ") convolution parameter of basis function and PDF don't match" << endl 
-			  << "basis->findServer(0) = " << inBasis->findServer(0) << endl 
-			  << "x.absArg()           = " << x.absArg() << endl ;
+    coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this
+           << ") convolution parameter of basis function and PDF don't match" << endl
+           << "basis->findServer(0) = " << inBasis->findServer(0) << endl
+           << "x.absArg()           = " << x.absArg() << endl ;
     return 0 ;
   }
-  
+
   if (basisCode(inBasis->GetTitle())==0) {
-    coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this  
-			  << ") basis function '" << inBasis->GetTitle() << "' is not supported." << endl ;
+    coutE(InputArguments) << "RooResolutionModel::convolution(" << GetName() << "," << this
+           << ") basis function '" << inBasis->GetTitle() << "' is not supported." << endl ;
     return 0 ;
   }
 
@@ -176,7 +176,7 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
   newName.Append("]") ;
 
   RooResolutionModel* conv = (RooResolutionModel*) clone(newName) ;
-  
+
   TString newTitle(conv->GetTitle()) ;
   newTitle.Append(" convoluted with basis function ") ;
   newTitle.Append(inBasis->GetName()) ;
@@ -193,7 +193,7 @@ RooResolutionModel* RooResolutionModel::convolution(RooFormulaVar* inBasis, RooA
 /// Change the basis function we convolute with.
 /// For one-time use by convolution() only.
 
-void RooResolutionModel::changeBasis(RooFormulaVar* inBasis) 
+void RooResolutionModel::changeBasis(RooFormulaVar* inBasis)
 {
   // Remove client-server link to old basis
   if (_basis) {
@@ -230,7 +230,7 @@ void RooResolutionModel::changeBasis(RooFormulaVar* inBasis)
 /// Return the convolution variable of the selection basis function.
 /// This is, by definition, the first parameter of the basis function
 
-const RooRealVar& RooResolutionModel::basisConvVar() const 
+const RooRealVar& RooResolutionModel::basisConvVar() const
 {
   // Convolution variable is by definition first server of basis function
   TIterator* sIter = basis().serverIterator() ;
@@ -242,7 +242,7 @@ const RooRealVar& RooResolutionModel::basisConvVar() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Modified version of RooAbsPdf::getValF(). If used as regular PDF, 
+/// Modified version of RooAbsPdf::getValF(). If used as regular PDF,
 /// call RooAbsPdf::getValF(), otherwise return unnormalized value
 /// regardless of specified normalization set
 
@@ -252,13 +252,13 @@ Double_t RooResolutionModel::getValV(const RooArgSet* nset) const
 
   // Return value of object. Calculated if dirty, otherwise cached value is returned.
   if (isValueDirty()) {
-    _value = evaluate() ; 
+    _value = evaluate() ;
 
     // WVE insert traceEval traceEval
     if (_verboseDirty) cxcoutD(Tracing) << "RooResolutionModel(" << GetName() << ") value = " << _value << endl ;
 
-    clearValueDirty() ; 
-    clearShapeDirty() ; 
+    clearValueDirty() ;
+    clearShapeDirty() ;
   }
 
   return _value ;
@@ -270,12 +270,12 @@ Double_t RooResolutionModel::getValV(const RooArgSet* nset) const
 /// Forward redirectServers call to our basis function, which is not connected to either resolution
 /// model or the physics model.
 
-Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/) 
+Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
   if (!_basis) {
     _norm = 0 ;
-    return kFALSE ; 
-  } 
+    return kFALSE ;
+  }
 
   RooFormulaVar* newBasis = (RooFormulaVar*) newServerList.find(_basis->GetName()) ;
   if (newBasis) {
@@ -289,7 +289,7 @@ Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServer
   }
 
   _basis->redirectServers(newServerList,mustReplaceAll,nameChange) ;
-    
+
   return (mustReplaceAll && !newBasis) ;
 }
 
@@ -309,7 +309,7 @@ Bool_t RooResolutionModel::redirectServersHook(const RooAbsCollection& newServer
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the list of servers used by our normalization integral
 
-void RooResolutionModel::normLeafServerList(RooArgSet& list) const 
+void RooResolutionModel::normLeafServerList(RooArgSet& list) const
 {
   _norm->leafNodeServerList(&list) ;
 }
@@ -317,7 +317,7 @@ void RooResolutionModel::normLeafServerList(RooArgSet& list) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the integral of this PDF over all elements of 'nset'. 
+/// Return the integral of this PDF over all elements of 'nset'.
 
 Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
 {
@@ -326,8 +326,8 @@ Double_t RooResolutionModel::getNorm(const RooArgSet* nset) const
   }
 
   syncNormalization(nset,kFALSE) ;
-  if (_verboseEval>1) cxcoutD(Tracing) << IsA()->GetName() << "::getNorm(" << GetName() 
-				       << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
+  if (_verboseEval>1) cxcoutD(Tracing) << IsA()->GetName() << "::getNorm(" << GetName()
+                   << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
 
   Double_t ret = _norm->getVal() ;
   return ret ;
@@ -348,7 +348,7 @@ void RooResolutionModel::printMultiline(ostream& os, Int_t content, Bool_t verbo
 
   if(verbose) {
     os << indent << "--- RooResolutionModel ---" << endl;
-    os << indent << "basis function = " ; 
+    os << indent << "basis function = " ;
     if (_basis) {
       _basis->printStream(os,kName|kAddress|kTitle,kSingleLine,indent) ;
     } else {

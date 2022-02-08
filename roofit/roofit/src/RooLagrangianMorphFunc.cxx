@@ -449,51 +449,51 @@ void readValues(std::map<const std::string, T> &myMap, TH1 *h_pc)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Set up folder ownership over its children, and treat likewise any subfolders. 
-/// @param theFolder: folder to update. Assumed to be a valid pointer 
+/// Set up folder ownership over its children, and treat likewise any subfolders.
+/// @param theFolder: folder to update. Assumed to be a valid pointer
 void setOwnerRecursive(TFolder* theFolder){
    theFolder->SetOwner();
    // And also need to set up ownership for nested folders
-   auto subdirs = theFolder->GetListOfFolders(); 
+   auto subdirs = theFolder->GetListOfFolders();
    for (auto* subdir : *subdirs){
-      auto thisfolder = dynamic_cast<TFolder*>(subdir);  
+      auto thisfolder = dynamic_cast<TFolder*>(subdir);
       if (thisfolder){
          // no explicit deletion here, will be handled by parent
-         setOwnerRecursive(thisfolder); 
-      } 
+         setOwnerRecursive(thisfolder);
+      }
    }
 }
 
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Load a TFolder from a file while ensuring it owns its content. 
+/// Load a TFolder from a file while ensuring it owns its content.
 /// This avoids memory leaks. Note that when fetching objects
-/// from this folder, you need to clone them to prevent deletion. 
+/// from this folder, you need to clone them to prevent deletion.
 /// Also recursively updates nested subfolders accordingly
-/// @param inFile: Input file to read - assumed to be a valid pointer 
-/// @param folderName: Name of the folder to read from the file 
-/// @return a unique_ptr to the folder. Nullptr if not found. 
+/// @param inFile: Input file to read - assumed to be a valid pointer
+/// @param folderName: Name of the folder to read from the file
+/// @return a unique_ptr to the folder. Nullptr if not found.
 std::unique_ptr<TFolder> readOwningFolderFromFile(TDirectory* inFile, const std::string & folderName){
    std::unique_ptr<TFolder> theFolder(inFile->Get<TFolder>(folderName.c_str()));
    if (!theFolder) {
       std::cerr << "Error: unable to access data from folder '" << folderName << "' from file '"<<inFile->GetName()<<"'!" << std::endl;
-      return nullptr; 
+      return nullptr;
    }
-   setOwnerRecursive(theFolder.get()); 
-   return theFolder; 
+   setOwnerRecursive(theFolder.get());
+   return theFolder;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Helper to load a single object from a file-resident TFolder, while 
-/// avoiding memory leaks. 
-/// @tparam AObjType Type of object to load. 
-/// @param inFile input file to load from. Expected to be a valid pointer 
-/// @param folderName Name of the TFolder to load from the file 
-/// @param objName Name of the object to load 
+/// Helper to load a single object from a file-resident TFolder, while
+/// avoiding memory leaks.
+/// @tparam AObjType Type of object to load.
+/// @param inFile input file to load from. Expected to be a valid pointer
+/// @param folderName Name of the TFolder to load from the file
+/// @param objName Name of the object to load
 /// @param notFoundError If set, print a detailed error if we didn't find something
-/// @return Returns a pointer to a clone of the loaded object. Ownership assigned to the caller. 
-template <class AObjType> AObjType* loadFromFileResidentFolder(TDirectory* inFile, 
-                                                            const std::string & folderName, 
+/// @return Returns a pointer to a clone of the loaded object. Ownership assigned to the caller.
+template <class AObjType> AObjType* loadFromFileResidentFolder(TDirectory* inFile,
+                                                            const std::string & folderName,
                                                             const std::string & objName,
                                                             bool notFoundError = true)
 {
@@ -513,12 +513,12 @@ template <class AObjType> AObjType* loadFromFileResidentFolder(TDirectory* inFil
             errstr << " " << f->GetName();
          }
          std::cerr << errstr.str() << std::endl;
-      } 
-      return nullptr; 
+      }
+      return nullptr;
    }
-   // replace the loaded object by a clone, as the loaded folder will delete the original 
-   return static_cast<AObjType *>(loadedObject->Clone()); // can use a static_cast - confirmed validity by initial cast above. 
-}  
+   // replace the loaded object by a clone, as the loaded folder will delete the original
+   return static_cast<AObjType *>(loadedObject->Clone()); // can use a static_cast - confirmed validity by initial cast above.
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -803,8 +803,8 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
    bool binningOK = false;
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      TH1* hist = loadFromFileResidentFolder<TH1>(file, sample, varname, true); 
-      if (!hist) return; 
+      TH1* hist = loadFromFileResidentFolder<TH1>(file, sample, varname, true);
+      if (!hist) return;
 
       auto it = list_hf.find(sample);
       if (it != list_hf.end()) {
@@ -855,8 +855,8 @@ void collectRooAbsReal(const char * /*name*/, TDirectory *file, std::map<std::st
 {
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
-      RooAbsReal* obj = loadFromFileResidentFolder<RooAbsReal>(file,sample,varname,true); 
-      if (!obj) return; 
+      RooAbsReal* obj = loadFromFileResidentFolder<RooAbsReal>(file,sample,varname,true);
+      if (!obj) return;
       auto it = list_hf.find(sample);
       if (it == list_hf.end()) {
          int idx = physics.getSize();
@@ -922,8 +922,8 @@ void collectCrosssectionsTPair(const char *name, TDirectory *file, std::map<std:
                                RooArgList &physics, const std::string &varname, const std::string &basefolder,
                                const RooLagrangianMorphFunc::ParamMap &inputParameters)
 {
-   TPair* pair = loadFromFileResidentFolder<TPair>(file,basefolder,varname,false); 
-   if (!pair) return; 
+   TPair* pair = loadFromFileResidentFolder<TPair>(file,basefolder,varname,false);
+   if (!pair) return;
    TParameter<double> *xsec_double = dynamic_cast<TParameter<double> *>(pair->Key());
    if (xsec_double) {
       collectCrosssections<double>(name, file, list_xs, physics, varname, inputParameters);
@@ -1808,10 +1808,10 @@ void RooLagrangianMorphFunc::addFolders(const RooArgList &folders)
    TIter next(file->GetList());
    TObject *obj = nullptr;
    while ((obj = (TObject *)next())) {
-      auto f = readOwningFolderFromFile(file,obj->GetName()); 
+      auto f = readOwningFolderFromFile(file,obj->GetName());
       if (!f)
          continue;
-      std::string name(f->GetName()); 
+      std::string name(f->GetName());
       if (name.empty())
          continue;
       this->_config.folderNames.push_back(name);

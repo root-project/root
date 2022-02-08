@@ -143,12 +143,12 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 
   if(!var1.hasMin() || !var1.hasMax()) {
     coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
-	 << var1.GetName() << endl;
+    << var1.GetName() << endl;
     return;
   }
   if(!var2.hasMin() || !var2.hasMax()) {
     coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
-	 << var1.GetName() << endl;
+    << var1.GetName() << endl;
     return;
   }
   SetMinimum(var2.getMin());
@@ -165,7 +165,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 /// of [xmin,xmax] x [ymin,ymax]
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
-		 Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
+       Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
   _hist(0), _items(), _plotVarClone(0),
   _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
 {
@@ -240,7 +240,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new frame for a given variable in x. This is just a
 /// wrapper for the RooPlot constructor with the same interface.
-/// 
+///
 /// More details.
 /// \param[in] var The variable on the x-axis
 /// \param[in] xmin Left edge of the x-axis
@@ -447,7 +447,7 @@ void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, Bool_t invisible)
   // check that this histogram is really 1D
   if(1 != hist->GetDimension()) {
     coutE(InputArguments) << fName << "::addTH1: cannot plot histogram with "
-	 << hist->GetDimension() << " dimensions" << endl;
+    << hist->GetDimension() << " dimensions" << endl;
     return;
   }
 
@@ -486,7 +486,7 @@ namespace {
         x.push_back(hist->GetXaxis()->GetBinUpEdge(i+1));
         y.push_back(graph->Eval(xvar->getBinning().binHigh(i)));
         x.push_back(hist->GetXaxis()->GetBinCenter(i+1));
-        y.push_back(graph->Eval(xvar->getBinning().binCenter(i)));                
+        y.push_back(graph->Eval(xvar->getBinning().binCenter(i)));
       }
       int n = x.size();
       graph->Set(n);
@@ -539,7 +539,7 @@ namespace {
   // this version uses TGraphErrors, which is a parent of RooHist
   void translateGraph(TH1* hist, RooAbsRealLValue* xvar, TGraphAsymmErrors* graph){
     // if the graph already has a labelled axis, don't do anything
-    if(graph->GetXaxis()->IsAlphanumeric()) return; 
+    if(graph->GetXaxis()->IsAlphanumeric()) return;
     int n = graph->GetN();
     double xmin = hist->GetXaxis()->GetXmin();
     double xmax = hist->GetXaxis()->GetXmax();
@@ -554,7 +554,7 @@ namespace {
       graph->SetPointEXlow(i,0.5*hist->GetXaxis()->GetBinWidth(bin+1));
     }
     graph->GetXaxis()->Set(hist->GetNbinsX(),xmin,xmax);
-    // make sure that the graph also has the labels set, such that subsequent calls to translate this graph will not do anything    
+    // make sure that the graph also has the labels set, such that subsequent calls to translate this graph will not do anything
     for(int i=0; i<hist->GetNbinsX(); ++i){
       graph->GetXaxis()->SetBinLabel(i+1,hist->GetXaxis()->GetBinLabel(i+1));
     }
@@ -589,7 +589,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t i
         ::translateGraph(this->_hist,_plotVarClone,static_cast<RooHist*>(obj));
       }
     }
-    
+
     DrawOpt opt(drawOptions) ;
     opt.invisible = invisible ;
     _items.Add(obj,opt.rawOpt());
@@ -626,7 +626,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, Bool_t refreshNorm)
 
     if (fabs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
       coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac
-		      << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
+            << " will supercede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
     }
 
     // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
@@ -812,14 +812,14 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
       os << deeper << "[" << i++ << "] (Options=\"" << _iterator->GetOption() << "\") ";
       // Is this a printable object?
       if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
-	RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
-	if (po) {
-	  po->printStream(os,kName|kClassName|kArgs|kExtras,kSingleLine) ;
-	}
+   RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
+   if (po) {
+     po->printStream(os,kName|kClassName|kArgs|kExtras,kSingleLine) ;
+   }
       }
       // is it a TNamed subclass?
       else {
-	os << obj->ClassName() << "::" << obj->GetName() << endl;
+   os << obj->ClassName() << "::" << obj->GetName() << endl;
       }
     }
   }
@@ -1103,7 +1103,7 @@ void RooPlot::SetMinimum(Double_t minimum)
 /// \param[in] nFitParam  If non-zero, reduce the number of degrees of freedom by this
 /// number. This means that the curve was fitted to the data with nFitParam floating
 /// parameters, which needs to be reflected in the calculation of \f$\chi^2 / \mathrm{ndf}\f$.
-/// 
+///
 /// \return \f$ \chi^2 / \mathrm{ndf} \f$ between the plotted curve and the data.
 ///
 /// \note The \f$ \chi^2 \f$ is calculated between a *plot of the original distribution* and the data.
@@ -1217,7 +1217,7 @@ Double_t RooPlot::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
     scaleFactor = _normObj->getFitRangeNEvt(xlo,xhi)/_normObj->getFitRangeNEvt() ;
   } else {
     coutW(Plotting) << "RooPlot::getFitRangeNEvt(" << GetName() << ") WARNING: Unable to obtain event count in range "
-		    << xlo << " to " << xhi << ", substituting full event count" << endl ;
+          << xlo << " to " << xhi << ", substituting full event count" << endl ;
   }
   return getFitRangeNEvt()*scaleFactor ;
 }

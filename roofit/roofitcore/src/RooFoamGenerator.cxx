@@ -90,7 +90,7 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
   RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
 {
   _binding = new RooTFoamBinding(*_funcClone,_realVars) ;
- 
+
   _tfoam = new TFoam("TFOAM") ;
   _tfoam->SetkDim(_realVars.getSize()) ;
   _tfoam->SetRho(_binding) ;
@@ -109,7 +109,7 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
   _vec = new Double_t[_realVars.getSize()] ;
   _xmin  = new Double_t[_realVars.getSize()] ;
   _range = new Double_t[_realVars.getSize()] ;
-  
+
   Int_t i(0) ;
   for (const auto arg : _realVars) {
     auto var = static_cast<const RooRealVar*>(arg);
@@ -123,7 +123,7 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooFoamGenerator::~RooFoamGenerator() 
+RooFoamGenerator::~RooFoamGenerator()
 {
   delete[] _vec ;
   delete[] _xmin ;
@@ -137,14 +137,14 @@ RooFoamGenerator::~RooFoamGenerator()
 ////////////////////////////////////////////////////////////////////////////////
 /// are we actually generating anything? (the cache always contains at least our function value)
 
-const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, Double_t& /*resampleRatio*/) 
+const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, Double_t& /*resampleRatio*/)
 {
   const RooArgSet *event= _cache->get();
   if(event->getSize() == 1) return event;
 
   _tfoam->MakeEvent() ;
   _tfoam->GetMCvect(_vec) ;
-  
+
   // Transfer contents to dataset
   Int_t i(0) ;
   for (auto arg : _realVars) {

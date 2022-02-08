@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'SPECIAL PDFS' RooFit tutorial macro #706
-// 
+//
 // Histogram based p.d.f.s and functions
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -26,11 +26,11 @@ using namespace RooFit ;
 // Elementary operations on a gaussian PDF
 class TestBasic706 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic706(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Histogram based p.d.f.s",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   p d f   f o r   s a m p l i n g 
+  // C r e a t e   p d f   f o r   s a m p l i n g
   // ---------------------------------------------
 
   RooRealVar x("x","x",0,20) ;
@@ -44,7 +44,7 @@ public:
   // Sample 500 events from p
   x.setBins(20) ;
   RooDataSet* data1 = p.generate(x,500) ;
-  
+
   // Create a binned dataset with 20 bins and 500 events
   RooDataHist* hist1 = data1->binnedClone() ;
 
@@ -54,8 +54,8 @@ public:
   // Plot unbinned data and histogram pdf overlaid
   RooPlot* frame1 = x.frame(Title("Low statistics histogram pdf"),Bins(100)) ;
   data1->plotOn(frame1) ;
-  histpdf1.plotOn(frame1) ;  
-  
+  histpdf1.plotOn(frame1) ;
+
 
   // C r e a t e   h i g h   s t a t s   h i s t o g r a m
   // -----------------------------------------------------
@@ -67,13 +67,13 @@ public:
   // Create a binned dataset with 10 bins and 100K events
   RooDataHist* hist2 = data2->binnedClone() ;
 
-  // Represent data in dh as pdf in x, apply 2nd order interpolation  
+  // Represent data in dh as pdf in x, apply 2nd order interpolation
   RooHistPdf histpdf2("histpdf2","histpdf2",x,*hist2,2) ;
 
   // Plot unbinned data and histogram pdf overlaid
   RooPlot* frame2 = x.frame(Title("High stats histogram pdf with interpolation"),Bins(100)) ;
   data2->plotOn(frame2) ;
-  histpdf2.plotOn(frame2) ;  
+  histpdf2.plotOn(frame2) ;
 
 
   regPlot(frame1,"rf607_plot1") ;

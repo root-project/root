@@ -32,7 +32,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
 
    {
       TFile outfile(filename, "RECREATE");
-      
+
       // now create the model config for this problem
       RooWorkspace* w = new RooWorkspace("ws");
       ModelConfig modelConfig("ModelConfig", w);
@@ -44,7 +44,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
       outfile.WriteObject(w, "ws");
       delete w;
    }
-   
+
    RooWorkspace *w2;
    {
       TFile infile(filename, "READ");
@@ -55,7 +55,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
       w2 = new RooWorkspace(*w);
       delete w;
    }
-   
+
    w2->Print();
 
    ModelConfig *mc = dynamic_cast<ModelConfig*>(w2->genobj("ModelConfig"));

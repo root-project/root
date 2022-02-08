@@ -53,7 +53,7 @@ The default numeric precision is 1e-7, i.e. the global default for
 numeric integration but you should experiment with this value to
 see if it is sufficient for example by studying the number of function
 calls that MINUIT needs to fit your function as function of the
-convolution precision. 
+convolution precision.
 **/
 
 #include "RooFit.h"
@@ -99,7 +99,7 @@ RooNumConvolution::RooNumConvolution() :
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of convolution operator PDF
-/// 
+///
 /// convVar  :  convolution variable (on which both pdf and resmodel should depend)
 /// pdf      :  input 'physics' pdf
 /// resmodel :  input 'resultion' pdf
@@ -107,8 +107,8 @@ RooNumConvolution::RooNumConvolution() :
 /// output is pdf(x) (X) resmodel(x) = Int [ pdf(x') resmodel (x-x') ] dx'
 ///
 
-RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRealVar& convVar, RooAbsReal& inPdf, RooAbsReal& resmodel, const RooNumConvolution* proto) : 
-  RooAbsReal(name,title), 
+RooNumConvolution::RooNumConvolution(const char *name, const char *title, RooRealVar& convVar, RooAbsReal& inPdf, RooAbsReal& resmodel, const RooNumConvolution* proto) :
+  RooAbsReal(name,title),
   _init(kFALSE),
   _convIntConfig(RooNumIntConfig::defaultConfig()),
   _integrand(0),
@@ -178,7 +178,7 @@ void RooNumConvolution::initialize() const
   // Initialization function -- create clone of convVar (x') and deep-copy clones of pdf and
   // model that are connected to x' rather than x (convVar)
 
-  // Start out clean 
+  // Start out clean
   _ownedClonedPdfSet.removeAll() ;
   _ownedClonedModelSet.removeAll() ;
 
@@ -200,24 +200,24 @@ void RooNumConvolution::initialize() const
 
   // Change name back to original name
   _cloneVar->SetName(var().GetName()) ;
-  
+
   // Create Convolution integrand
   _integrand = new RooConvIntegrandBinding(*_clonePdf,*_cloneModel,*_cloneVar,var(),0) ;
- 
+
   // Instantiate integrator for convolution integrand
   _integrator = RooNumIntFactory::instance().createIntegrator(*_integrand,_convIntConfig,1) ;
   _integrator->setUseIntegrandLimits(kFALSE) ;
 
   _init = kTRUE ;
 }
- 
+
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooNumConvolution::~RooNumConvolution() 
+RooNumConvolution::~RooNumConvolution()
 {
 }
 
@@ -226,7 +226,7 @@ RooNumConvolution::~RooNumConvolution()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate convolution integral
 
-Double_t RooNumConvolution::evaluate() const 
+Double_t RooNumConvolution::evaluate() const
 {
   // Check if deferred initialization has occurred
   if (!_init) initialize() ;
@@ -245,15 +245,15 @@ Double_t RooNumConvolution::evaluate() const
   } else {
     _integrator->setLimits(-RooNumber::infinity(),RooNumber::infinity()) ;
   }
-  
+
   // Calculate convolution for present x
   if (_doProf) _integrand->resetNumCall() ;
   Double_t ret = _integrator->integral(&x) ;
   if (_doProf) {
     _callHist->Fill(x,_integrand->numCall()) ;
     if (_integrand->numCall()>_verboseThresh) {
-      coutW(Integration) << "RooNumConvolution::eveluate(" << GetName() << ") WARNING convolution integral at x=" << x 
-			 << " required " << _integrand->numCall() << " function evaluations" << endl ;
+      coutW(Integration) << "RooNumConvolution::eveluate(" << GetName() << ") WARNING convolution integral at x=" << x
+          << " required " << _integrand->numCall() << " function evaluations" << endl ;
     }
   }
 
@@ -263,10 +263,10 @@ Double_t RooNumConvolution::evaluate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.   
+/// Intercept server redirects. Throw away cache, as figuring out redirections on the cache is an unsolvable problem.
 
-Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
-					      Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
+Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
+                     Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
 {
   _init = kFALSE ;
   return kFALSE ;
@@ -277,7 +277,7 @@ Bool_t RooNumConvolution::redirectServersHook(const RooAbsCollection& /*newServe
 ////////////////////////////////////////////////////////////////////////////////
 /// Removes previously defined convolution window, reverting to convolution from -inf to +inf
 
-void RooNumConvolution::clearConvolutionWindow() 
+void RooNumConvolution::clearConvolutionWindow()
 {
   _useWindow = kFALSE ;
   _windowParam.removeAll() ;
@@ -286,11 +286,11 @@ void RooNumConvolution::clearConvolutionWindow()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Restrict convolution integral to finite range [ x - C - S*W, x - C + S*W ] 
+/// Restrict convolution integral to finite range [ x - C - S*W, x - C + S*W ]
 /// where x is current value of convolution variablem, C = centerParam, W=widthParam and S = widthScaleFactor
 /// Inputs centerParam and withParam can be function expressions (RooAbsReal, RooFormulaVar) etc.
 
-void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor) 
+void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal& widthParam, Double_t widthScaleFactor)
 {
   _useWindow = kTRUE ;
   _windowParam.removeAll() ;
@@ -302,10 +302,10 @@ void RooNumConvolution::setConvolutionWindow(RooAbsReal& centerParam, RooAbsReal
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Activate warning messages if number of function calls needed for evaluation of convolution integral 
+/// Activate warning messages if number of function calls needed for evaluation of convolution integral
 /// exceeds given threshold
 
-void RooNumConvolution::setCallWarning(Int_t threshold) 
+void RooNumConvolution::setCallWarning(Int_t threshold)
 {
   if (threshold<0) {
     coutE(InputArguments) << "RooNumConvolution::setCallWarning(" << GetName() << ") ERROR: threshold must be positive, value unchanged" << endl ;
@@ -322,20 +322,20 @@ void RooNumConvolution::setCallWarning(Int_t threshold)
 /// All clones of RooNumConvolution objects will keep logging to the histogram of the original class
 /// so that performance of temporary object clones, such as used in e.g. fitting, plotting and generating
 /// are all logged in a single place.
-/// 
+///
 /// Function caller should take ownership of profiling histogram as it is not deleted at the RooNumConvolution dtor
 ///
 /// Calling this function with flag set to false will deactivate call profiling and delete the profiling histogram
 
-void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCall, Int_t nCallHigh) 
+void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCall, Int_t nCallHigh)
 {
   if (flag) {
     if (_doProf) {
       delete _callHist ;
     }
     _callHist = new TH2F(Form("callHist_%s",GetName()),Form("Call Profiling of RooNumConvolution %s",GetTitle()),
-			 nbinX,_origVar.min(),_origVar.max(),
-			 nbinCall,0,nCallHigh) ;
+          nbinX,_origVar.min(),_origVar.max(),
+          nbinCall,0,nCallHigh) ;
     _doProf=kTRUE ;
 
   } else if (_doProf) {
@@ -353,7 +353,7 @@ void RooNumConvolution::setCallProfiling(Bool_t flag, Int_t nbinX, Int_t nbinCal
 /// Hook function to intercept printCompactTree() calls so that it can print out
 /// the content of its private cache in the print sequence
 
-void RooNumConvolution::printCompactTreeHook(ostream& os, const char* indent) 
+void RooNumConvolution::printCompactTreeHook(ostream& os, const char* indent)
 {
   os << indent << "RooNumConvolution begin cache" << endl ;
 

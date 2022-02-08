@@ -1,11 +1,11 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #604
-// 
+//
 // Fitting with constraints
 //
 //
-// 07/2008 - Wouter Verkerke 
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -27,11 +27,11 @@ using namespace RooFit ;
 
 class TestBasic604 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic604(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Auxiliary observable constraints",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   m o d e l  a n d   d a t a s e t 
+  // C r e a t e   m o d e l  a n d   d a t a s e t
   // ----------------------------------------------
 
   // Construct a Gaussian p.d.f
@@ -53,7 +53,7 @@ public:
 
 
 
-  // C r e a t e   c o n s t r a i n t   p d f 
+  // C r e a t e   c o n s t r a i n t   p d f
   // -----------------------------------------
 
   // Construct Gaussian constraint p.d.f on parameter f at 0.8 with resolution of 0.1
@@ -61,7 +61,7 @@ public:
 
 
 
-  // M E T H O D   1   -   A d d   i n t e r n a l   c o n s t r a i n t   t o   m o d e l 
+  // M E T H O D   1   -   A d d   i n t e r n a l   c o n s t r a i n t   t o   m o d e l
   // -------------------------------------------------------------------------------------
 
   // Multiply constraint term with regular p.d.f using RooProdPdf
@@ -69,7 +69,7 @@ public:
 
   // Multiply constraint with p.d.f
   RooProdPdf modelc("modelc","model with constraint",RooArgSet(model,fconstraint)) ;
-  
+
   // Fit modelc without use of constraint term
   RooFitResult* r1 = modelc.fitTo(*d,Save()) ;
 
@@ -93,7 +93,7 @@ public:
   regResult(r3,"rf604_r3") ;
 
   delete d ;
-  
+
   return kTRUE ;
   }
 } ;

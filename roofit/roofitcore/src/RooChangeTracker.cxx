@@ -74,13 +74,13 @@ RooChangeTracker::RooChangeTracker(const char* name, const char* title, const Ro
 {
 for (const auto arg : trackSet) {
     if (dynamic_cast<const RooAbsReal*>(arg)) {
-      _realSet.add(*arg) ;      
+      _realSet.add(*arg) ;
     }
     if (dynamic_cast<const RooAbsCategory*>(arg)) {
-      _catSet.add(*arg) ;      
+      _catSet.add(*arg) ;
     }
   }
-  
+
   if (_checkVal) {
     for (unsigned int i=0; i < _realSet.size(); ++i) {
       auto real = static_cast<const RooAbsReal*>(_realSet.at(i));
@@ -101,7 +101,7 @@ for (const auto arg : trackSet) {
 /// Copy constructor
 
 RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _realSet("realSet",this,other._realSet),
   _catSet("catSet",this,other._catSet),
   _realRef(other._realRef),
@@ -117,7 +117,7 @@ RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* na
 /// Returns true if state has changed since last call with clearState=kTRUE.
 /// If clearState is true, changeState flag will be cleared.
 
-Bool_t RooChangeTracker::hasChanged(Bool_t clearState) 
+Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
 {
 
   // If dirty flag did not change, object has not changed in any case
@@ -138,7 +138,7 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
 
     return kTRUE ;
   }
-  
+
   // Compare values against reference
   if (clearState) {
 
@@ -170,13 +170,13 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
       valuesChanged=kTRUE ;
       _init = kTRUE ;
     }
-    
+
     // cout << "RooChangeTracker(" << GetName() << ") returning " << (valuesChanged?"T":"F") << endl ;
 
     return valuesChanged ;
 
   } else {
-    
+
     // Return true as soon as any input has changed
 
     // Check if any of the real values changed
@@ -193,9 +193,9 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
         return kTRUE ;
       }
     }
-   
+
   }
-  
+
   return kFALSE ;
 }
 
@@ -204,7 +204,7 @@ Bool_t RooChangeTracker::hasChanged(Bool_t clearState)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooChangeTracker::~RooChangeTracker() 
+RooChangeTracker::~RooChangeTracker()
 {
 
 }
@@ -213,7 +213,7 @@ RooChangeTracker::~RooChangeTracker()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooArgSet RooChangeTracker::parameters() const 
+RooArgSet RooChangeTracker::parameters() const
 {
   RooArgSet ret ;
   ret.add(_realSet) ;

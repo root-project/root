@@ -30,7 +30,7 @@ public:
   RooMoment() ;
   RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, Int_t order=1, Bool_t central=kFALSE, Bool_t takeRoot=kFALSE) ;
   RooMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t order=1, Bool_t central=kFALSE, Bool_t takeRoot=kFALSE,
-	    Bool_t intNSet=kFALSE) ;
+       Bool_t intNSet=kFALSE) ;
   ~RooMoment() override ;
 
   RooMoment(const RooMoment& other, const char* name = 0);

@@ -1,10 +1,10 @@
- /***************************************************************************** 
-  * Project: RooFit                                                           * 
-  *                                                                           * 
+ /*****************************************************************************
+  * Project: RooFit                                                           *
+  *                                                                           *
   * Simple Poisson PDF
   * author: Kyle Cranmer <cranmer@cern.ch>
-  *                                                                           * 
-  *****************************************************************************/ 
+  *                                                                           *
+  *****************************************************************************/
 
 #ifndef ROOPOISSON
 #define ROOPOISSON
@@ -15,7 +15,7 @@
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooTrace.h"
- 
+
 class RooPoisson : public RooAbsPdf {
 public:
   RooPoisson() { _noRounding = kFALSE ;   } ;
@@ -29,7 +29,7 @@ public:
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
   void generateEvent(Int_t code) override;
-  
+
   /// Switch off/on rounding of `x` to the nearest integer.
   void setNoRounding(bool flag = kTRUE) {_noRounding = flag;}
   /// Switch on or off protection against negative means.
@@ -47,12 +47,12 @@ protected:
   RooRealProxy mean ;
   Bool_t  _noRounding ;
   Bool_t  _protectNegative{true};
-  
+
   Double_t evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooPoisson,3) // A Poisson PDF
 };
- 
+
 #endif

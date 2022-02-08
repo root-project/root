@@ -46,7 +46,7 @@ public:
 protected:
 
   friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;	
+  static void registerIntegrator(RooNumIntFactory& fact) ;
 
   friend double RooGaussKronrodIntegrator1D_GSL_GlueFunction(double x, void *data) ;
 

@@ -658,7 +658,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 
   if (var1It == _list.end()) {
     coutE(ObjectHandling) << "RooAbsCollection: variable \"" << name << "\" is not in the list"
-	 << " and cannot be replaced" << endl;
+    << " and cannot be replaced" << endl;
     return kFALSE;
   }
 
@@ -668,7 +668,7 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
     RooAbsArg *other = find(var2);
     if(other != 0 && other != &var1) {
       coutE(ObjectHandling) << "RooAbsCollection: cannot replace \"" << name
-	   << "\" with already existing \"" << var2.GetName() << "\"" << endl;
+      << "\" with already existing \"" << var2.GetName() << "\"" << endl;
       return kFALSE;
     }
   }
@@ -905,10 +905,10 @@ RooAbsCollection* RooAbsCollection::selectByName(const char* nameList, Bool_t ve
     RooAbsArg* arg ;
     while((arg=iter.next())) {
       if (TString(arg->GetName()).Index(rexp)>=0) {
-	if (verbose) {
-	  cxcoutD(ObjectHandling) << "RooAbsCollection::selectByName(" << GetName() << ") selected element " << arg->GetName() << endl ;
-	}
-	sel->add(*arg) ;
+   if (verbose) {
+     cxcoutD(ObjectHandling) << "RooAbsCollection::selectByName(" << GetName() << ") selected element " << arg->GetName() << endl ;
+   }
+   sel->add(*arg) ;
       }
     }
     wcExpr = strtok(0,",") ;
@@ -963,7 +963,7 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
 {
   if (!name)
     return nullptr;
-  
+
   // If an object with such a name exists, its name has been registered.
   const TNamed* nptr = RooNameReg::known(name);
   if (!nptr) return nullptr;
@@ -1358,9 +1358,9 @@ void RooAbsCollection::dump() const
 /// ```
 
 void RooAbsCollection::printLatex(const RooCmdArg& arg1, const RooCmdArg& arg2,
-				  const RooCmdArg& arg3, const RooCmdArg& arg4,
-				  const RooCmdArg& arg5, const RooCmdArg& arg6,
-				  const RooCmdArg& arg7, const RooCmdArg& arg8) const
+              const RooCmdArg& arg3, const RooCmdArg& arg4,
+              const RooCmdArg& arg5, const RooCmdArg& arg6,
+              const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
 
 
@@ -1457,13 +1457,13 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
 
       RooRealVar* rrv = dynamic_cast<RooRealVar*>(arg) ;
       if (rrv) {
-	list->add(*rrv) ;
+   list->add(*rrv) ;
       } else {
-	coutW(InputArguments) << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
-	     << arg->GetName() << endl ;
+   coutW(InputArguments) << "RooAbsCollection::printLatex: can only print RooRealVar in LateX, skipping non-RooRealVar object named "
+        << arg->GetName() << endl ;
       }
       if (prevList && TString(rrv->GetName()).CompareTo(prevList->at(list->getSize()-1)->GetName())) {
-	coutW(InputArguments) << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << endl ;
+   coutW(InputArguments) << "RooAbsCollection::printLatex: WARNING: naming and/or ordering of sibling list is different" << endl ;
       }
     }
     listListRRV.Add(list) ;
@@ -1494,21 +1494,21 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
   for (i=0 ; i<nrow ; i++) {
     for (j=0 ; j<ncol ; j++) {
       for (k=0 ; k<nlist ; k++) {
-	RooRealVar* par = (RooRealVar*) ((RooArgList*)listListRRV.At(k))->at(i+j*nrow) ;
-	if (par) {
-	  if (option) {
-	    TString* tmp = par->format(sigDigit,(k==0)?option:sibOption.Data()) ;
-	    ofs << *tmp ;
-	    delete tmp ;
-	  } else {
-	    TString* tmp = par->format((k==0)?*formatCmd:sibFormatCmd) ;
-	    ofs << *tmp ;
-	    delete tmp ;
-	  }
-	}
-	if (!(j==ncol-1 && k==nlist-1)) {
-	  ofs << " & " ;
-	}
+   RooRealVar* par = (RooRealVar*) ((RooArgList*)listListRRV.At(k))->at(i+j*nrow) ;
+   if (par) {
+     if (option) {
+       TString* tmp = par->format(sigDigit,(k==0)?option:sibOption.Data()) ;
+       ofs << *tmp ;
+       delete tmp ;
+     } else {
+       TString* tmp = par->format((k==0)?*formatCmd:sibFormatCmd) ;
+       ofs << *tmp ;
+       delete tmp ;
+     }
+   }
+   if (!(j==ncol-1 && k==nlist-1)) {
+     ofs << " & " ;
+   }
       }
     }
     ofs << "\\\\" << endl ;
@@ -1540,8 +1540,8 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
       strlcpy(buf,rangeSpec,bufSize) ;
       const char* oneRange = strtok(buf,",") ;
       while(oneRange) {
-	cutVec.push_back(oneRange) ;
-	oneRange = strtok(0,",") ;
+   cutVec.push_back(oneRange) ;
+   oneRange = strtok(0,",") ;
       }
       delete[] buf ;
     }
@@ -1554,8 +1554,8 @@ Bool_t RooAbsCollection::allInRange(const char* rangeSpec) const
     UInt_t icut ;
     for (icut=0 ; icut<cutVec.size() ; icut++) {
       if (arg->inRange(cutVec[icut].c_str())) {
-	selectThisArg = kTRUE ;
-	break ;
+   selectThisArg = kTRUE ;
+   break ;
       }
     }
     if (!selectThisArg) {

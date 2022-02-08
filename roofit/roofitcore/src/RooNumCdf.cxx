@@ -1,13 +1,13 @@
- /***************************************************************************** 
-  * Project: RooFit                                                           * 
-  *                                                                           * 
-  * Copyright (c) 2000-2005, Regents of the University of California          * 
-  *                          and Stanford University. All rights reserved.    * 
-  *                                                                           * 
-  * Redistribution and use in source and binary forms,                        * 
-  * with or without modification, are permitted according to the terms        * 
-  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
-  *****************************************************************************/ 
+ /*****************************************************************************
+  * Project: RooFit                                                           *
+  *                                                                           *
+  * Copyright (c) 2000-2005, Regents of the University of California          *
+  *                          and Stanford University. All rights reserved.    *
+  *                                                                           *
+  * Redistribution and use in source and binary forms,                        *
+  * with or without modification, are permitted according to the terms        *
+  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+  *****************************************************************************/
 
 /**
 \file RooNumCdf.cxx
@@ -24,11 +24,11 @@ upper bound is guaranteed to converge to exactly one, at all interpolation
 orders.
 **/
 
-#include "Riostream.h" 
+#include "Riostream.h"
 
 #include "RooAbsPdf.h"
-#include "RooNumCdf.h" 
-#include "RooAbsReal.h" 
+#include "RooNumCdf.h"
+#include "RooAbsReal.h"
 #include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
@@ -36,7 +36,7 @@ orders.
 
 using namespace std;
 
-ClassImp(RooNumCdf); 
+ClassImp(RooNumCdf);
   ;
 
 
@@ -48,25 +48,25 @@ ClassImp(RooNumCdf);
 
 RooNumCdf::RooNumCdf(const char *name, const char *title, RooAbsPdf& _pdf, RooRealVar& _x, const char* bname) :
    RooNumRunningInt(name,title,_pdf,_x,bname)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooNumCdf::RooNumCdf(const RooNumCdf& other, const char* name) :  
+RooNumCdf::RooNumCdf(const RooNumCdf& other, const char* name) :
    RooNumRunningInt(other,name)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooNumCdf::~RooNumCdf() 
+RooNumCdf::~RooNumCdf()
 {
 }
 
@@ -76,9 +76,9 @@ RooNumCdf::~RooNumCdf()
 /// Fill cache using running integral cache elements calculate()
 /// method with specification of cdf-specific boundary conditions
 
-void RooNumCdf::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const 
+void RooNumCdf::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const
 {
-  RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;  
+  RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;
   riCache.calculate(kTRUE) ;
 }
 

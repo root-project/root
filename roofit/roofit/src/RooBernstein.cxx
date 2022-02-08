@@ -141,7 +141,7 @@ Double_t RooBernstein::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Bernstein distribution.  
+/// Compute multiple values of Bernstein distribution.
 void RooBernstein::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   const int nCoef = _coefList.size();

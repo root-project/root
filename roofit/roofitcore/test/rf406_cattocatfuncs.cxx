@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'DATA AND CATEGORIES' RooFit tutorial macro #406
-// 
+//
 // Demonstration of discrete-->discrete (invertable) functions
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -28,7 +28,7 @@ using namespace RooFit ;
 
 class TestBasic406 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic406(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Category-to-category functions",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -54,7 +54,7 @@ public:
 
 
 
-  // C r e a t e   a   c a t - > c a t   m  a p p i n g   c a t e g o r y 
+  // C r e a t e   a   c a t - > c a t   m  a p p i n g   c a t e g o r y
   // ---------------------------------------------------------------------
 
   // A RooMappedCategory is category->category mapping function based on string expression
@@ -74,7 +74,7 @@ public:
 
 
 
-  // C r e a t e   a   c a t   X   c a t   p r o d u c t   c a t e g o r y 
+  // C r e a t e   a   c a t   X   c a t   p r o d u c t   c a t e g o r y
   // ----------------------------------------------------------------------
 
   // A SUPER-category is 'product' of _lvalue_ categories. The state names of a super
@@ -92,7 +92,7 @@ public:
   // A MULTI-category is a 'product' of any category (function). The state names of a super
   // category is a composite of the state labels of the input categories
   RooMultiCategory b0Xttype("b0Xttype","b0flav X tagType",RooArgSet(b0flav,tcatType)) ;
-  
+
   // Make a table of the product category state multiplicity in data
   Roo1DTable* xtable = data->table(b0Xttype) ;
 

@@ -15,11 +15,11 @@
  *****************************************************************************/
 
 /** \class RooExtendPdf
-RooExtendPdf is a wrapper around an existing PDF that adds a 
-parameteric extended likelihood term to the PDF, optionally divided by a 
+RooExtendPdf is a wrapper around an existing PDF that adds a
+parameteric extended likelihood term to the PDF, optionally divided by a
 fractional term from a partial normalization of the PDF:
 \f[
-      n_\mathrm{Expected} = N \quad \text{or} \quad n_\mathrm{Expected} = N / \mathrm{frac} 
+      n_\mathrm{Expected} = N \quad \text{or} \quad n_\mathrm{Expected} = N / \mathrm{frac}
 \f]
 where \f$ N \f$ is supplied as a RooAbsReal to RooExtendPdf.
 The fractional term is defined as
@@ -59,7 +59,7 @@ RooExtendPdf::RooExtendPdf() : _rangeName(0)
 }
 
 /// Constructor. The ExtendPdf behaves identical to the supplied input pdf,
-/// but adds an extended likelihood term. expectedEvents() will return 
+/// but adds an extended likelihood term. expectedEvents() will return
 /// `norm` if `rangeName` remains empty. If `rangeName` is not empty,
 /// `norm` will refer to this range, and expectedEvents will return the
 /// total number of events over the full range of the observables.
@@ -70,7 +70,7 @@ RooExtendPdf::RooExtendPdf() : _rangeName(0)
 /// \param[in] rangeName  If given, the number of events denoted by `norm` is interpreted as
 /// the number of events in this range only
 RooExtendPdf::RooExtendPdf(const char *name, const char *title, RooAbsPdf& pdf,
-			   RooAbsReal& norm, const char* rangeName) :
+            RooAbsReal& norm, const char* rangeName) :
   RooAbsPdf(name,title),
   _pdf("pdf", "PDF", this, pdf),
   _n("n","Normalization",this,norm),
@@ -94,7 +94,7 @@ RooExtendPdf::RooExtendPdf(const RooExtendPdf& other, const char* name) :
 }
 
 
-RooExtendPdf::~RooExtendPdf() 
+RooExtendPdf::~RooExtendPdf()
 {
   // Destructor
 
@@ -113,13 +113,13 @@ RooExtendPdf::~RooExtendPdf()
 /// \f$ x \f$ over the full range. `norm` is the number of events given as parameter to the constructor.
 ///
 /// If the nested PDF can be extended, \f$ N \f$ is further scaled by its expected number of events.
-Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const 
+Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 {
   const RooAbsPdf& pdf = *_pdf;
 
   if (_rangeName && (!nset || nset->getSize()==0)) {
-    coutW(InputArguments) << "RooExtendPdf::expectedEvents(" << GetName() << ") WARNING: RooExtendPdf needs non-null normalization set to calculate fraction in range " 
-			  << _rangeName << ".  Results may be nonsensical" << endl ;  
+    coutW(InputArguments) << "RooExtendPdf::expectedEvents(" << GetName() << ") WARNING: RooExtendPdf needs non-null normalization set to calculate fraction in range "
+           << _rangeName << ".  Results may be nonsensical" << endl ;
   }
 
   Double_t nExp = _n ;
@@ -135,11 +135,11 @@ Double_t RooExtendPdf::expectedEvents(const RooArgSet* nset) const
 
 
     if ( fracInt == 0. || _n == 0.) {
-      coutW(Eval) << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / " 
-		  << fracInt << " for nset = " << (nset?*nset:RooArgSet()) << endl ;
+      coutW(Eval) << "RooExtendPdf(" << GetName() << ") WARNING: nExpected = " << _n << " / "
+        << fracInt << " for nset = " << (nset?*nset:RooArgSet()) << endl ;
     }
 
-    nExp /= fracInt ;    
+    nExp /= fracInt ;
 
 
     // cout << "RooExtendPdf::expectedEvents(" << GetName() << ") fracInt = " << fracInt << " _n = " << _n << " nExpect = " << nExp << endl ;

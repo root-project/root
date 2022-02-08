@@ -31,19 +31,19 @@ public:
 
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
   void generateEvent(Int_t code) override;
-  
+
 protected:
-  
+
   RooRealProxy x ;
   RooRealProxy mean ;
   RooRealProxy sigma ;
-  
+
   Double_t evaluate() const override ;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
-  
+
 private:
-  
+
   ClassDefOverride(RooLandau,1) // Landau Distribution PDF
 };
 

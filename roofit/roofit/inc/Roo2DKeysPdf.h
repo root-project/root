@@ -86,7 +86,7 @@ private:
   // these are used in calculating bandwidths for x and y
   Double_t evaluateFull(Double_t thisX, Double_t thisY) const;
   Double_t g(Double_t var1, Double_t * _var1, Double_t sigma1, Double_t var2,
-	     Double_t * _var2, Double_t sigma2) const;
+        Double_t * _var2, Double_t sigma2) const;
 
   //mirror corrections for the boundaries
   Double_t highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar) const;

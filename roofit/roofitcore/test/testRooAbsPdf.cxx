@@ -2,21 +2,21 @@
 // Authors: Stephan Hageboeck, CERN 04/2020
 //          Jonas Rembser, CERN 04/2021
 
-#include <RooAddPdf.h>                                                                               
-#include <RooCategory.h>                                                                             
-#include <RooConstVar.h>                                                                             
-#include <RooDataHist.h>                                                                             
+#include <RooAddPdf.h>
+#include <RooCategory.h>
+#include <RooConstVar.h>
+#include <RooDataHist.h>
 #include <RooDataSet.h>
-#include <RooFitResult.h>                                                                            
-#include <RooFormulaVar.h>                                                                           
-#include <RooGaussian.h>                                                                             
+#include <RooFitResult.h>
+#include <RooFormulaVar.h>
+#include <RooGaussian.h>
 #include <RooGenericPdf.h>
-#include <RooHelpers.h>                                                                              
-#include <RooPoisson.h>                                                                              
-#include <RooPolynomial.h>                                                                           
-#include <RooProdPdf.h>                                                                              
-#include <RooProduct.h>                                                                              
-#include <RooRealVar.h>                                                                              
+#include <RooHelpers.h>
+#include <RooPoisson.h>
+#include <RooPolynomial.h>
+#include <RooProdPdf.h>
+#include <RooProduct.h>
+#include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooUniform.h>
 
@@ -166,7 +166,7 @@ TEST(RooAbsPdf, MultiRangeFit)
   std::size_t nEvents = 100;
 
   // model for extended fit
-  RooRealVar nsig("nsig","nsig",nEvents,0.,2000) ;    
+  RooRealVar nsig("nsig","nsig",nEvents,0.,2000) ;
   RooAddPdf  modelExtended("model_extended","model_simple+a",RooArgList(modelSimple),RooArgList(nsig)) ;
 
   auto resetValues = [&](){

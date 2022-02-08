@@ -63,7 +63,7 @@ Double_t RooChiSquarePdf::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of ChiSquare distribution.  
+/// Compute multiple values of ChiSquare distribution.
 void RooChiSquarePdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;

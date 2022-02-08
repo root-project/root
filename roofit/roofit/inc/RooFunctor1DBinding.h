@@ -34,7 +34,7 @@ class RooFunctor1DBinding : public RooAbsReal {
 public:
   RooFunctor1DBinding() : func(0) {
     // Default constructor
-  } ; 
+  } ;
   RooFunctor1DBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& var);
   RooFunctor1DBinding(const RooFunctor1DBinding& other, const char* name=0) ;
   TObject* clone(const char* newname) const override { return new RooFunctor1DBinding(*this,newname); }
@@ -47,7 +47,7 @@ protected:
 
   const ROOT::Math::IBaseFunctionOneDim* func ;    // Functor
   RooRealProxy                       var ;    // Argument reference
-  
+
 
 private:
 
@@ -60,7 +60,7 @@ class RooFunctor1DPdfBinding : public RooAbsPdf {
 public:
   RooFunctor1DPdfBinding() : func(0) {
     // Default constructor
-  } ; 
+  } ;
   RooFunctor1DPdfBinding(const char *name, const char *title, const ROOT::Math::IBaseFunctionOneDim& ftor, RooAbsReal& vars);
   RooFunctor1DPdfBinding(const RooFunctor1DPdfBinding& other, const char* name=0) ;
   TObject* clone(const char* newname) const override { return new RooFunctor1DPdfBinding(*this,newname); }
@@ -73,7 +73,7 @@ protected:
 
   const ROOT::Math::IBaseFunctionOneDim* func ;    // Functor
   RooRealProxy                           var ;    // Argument reference
-  
+
 
 private:
 

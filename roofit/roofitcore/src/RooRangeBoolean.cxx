@@ -61,7 +61,7 @@ RooRangeBoolean::RooRangeBoolean(const char* name, const char* title, RooAbsReal
 /// Copy constructor
 
 RooRangeBoolean::RooRangeBoolean(const RooRangeBoolean& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _x("x", this, other._x),
   _rangeName(other._rangeName)
 {
@@ -73,7 +73,7 @@ RooRangeBoolean::RooRangeBoolean(const RooRangeBoolean& other, const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooRangeBoolean::~RooRangeBoolean() 
+RooRangeBoolean::~RooRangeBoolean()
 {
 }
 
@@ -83,11 +83,11 @@ RooRangeBoolean::~RooRangeBoolean()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 1 if x is in range, zero otherwis
 
-Double_t RooRangeBoolean::evaluate() const 
+Double_t RooRangeBoolean::evaluate() const
 {
   Double_t xmin = ((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data()) ;
   Double_t xmax = ((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data()) ;
-  
+
   Double_t ret = (_x >= xmin && _x < xmax) ? 1.0 : 0.0 ;
   return ret ;
 }
@@ -96,7 +96,7 @@ Double_t RooRangeBoolean::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::list<Double_t>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, Double_t /*xlo*/, Double_t /*xhi*/) const 
+std::list<Double_t>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, Double_t /*xlo*/, Double_t /*xhi*/) const
 {
   if (string(obs.GetName())!=_x.arg().GetName()) {
     return 0 ;
@@ -105,8 +105,8 @@ std::list<Double_t>* RooRangeBoolean::plotSamplingHint(RooAbsRealLValue& obs, Do
   list<Double_t>* hint = new list<Double_t> ;
   hint->push_back(((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data())-1e-6) ;
   hint->push_back(((RooAbsRealLValue&)_x.arg()).getMin(_rangeName.Data())+1e-6) ;
-  hint->push_back(((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data())-1e-6) ;  
-  hint->push_back(((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data())+1e-6) ;  
+  hint->push_back(((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data())-1e-6) ;
+  hint->push_back(((RooAbsRealLValue&)_x.arg()).getMax(_rangeName.Data())+1e-6) ;
   return hint ;
 }
 

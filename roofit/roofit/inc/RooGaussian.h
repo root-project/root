@@ -45,8 +45,8 @@ public:
   RooAbsReal const& getMean() const { return mean.arg(); }
 
   /// Get the sigma parameter.
-  RooAbsReal const& getSigma() const { return sigma.arg(); }  
-  
+  RooAbsReal const& getSigma() const { return sigma.arg(); }
+
 protected:
 
   RooRealProxy x ;

@@ -52,7 +52,7 @@ RooEfficiency::RooEfficiency(const char *name, const char *title, const RooAbsRe
   _cat("cat","Signal/Background category",this,(RooAbsCategory&)cat),
   _effFunc("effFunc","Efficiency modeling function",this,(RooAbsReal&)effFunc),
   _sigCatName(sigCatName)
-{  
+{
 }
 
 
@@ -60,7 +60,7 @@ RooEfficiency::RooEfficiency(const char *name, const char *title, const RooAbsRe
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) : 
+RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
   RooAbsPdf(other, name),
   _cat("cat",this,other._cat),
   _effFunc("effFunc",this,other._effFunc),
@@ -73,7 +73,7 @@ RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooEfficiency::~RooEfficiency() 
+RooEfficiency::~RooEfficiency()
 {
 }
 
@@ -107,7 +107,7 @@ Double_t RooEfficiency::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   if (matchArgs(allVars,analVars,_cat)) return 1 ;
   return 0 ;
@@ -117,7 +117,7 @@ Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+Double_t RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
   R__ASSERT(code==1) ;
   return 1.0 ;
