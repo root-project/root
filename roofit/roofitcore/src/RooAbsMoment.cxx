@@ -76,8 +76,8 @@ RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAbsMoment::RooAbsMoment(const RooAbsMoment& other, const char* name) :
-  RooAbsReal(other, name), 
-  _order(other._order),  
+  RooAbsReal(other, name),
+  _order(other._order),
   _takeRoot(other._takeRoot),
   _nset("nset",this,other._nset),
   _func("function",this,other._func),
@@ -91,7 +91,7 @@ RooAbsMoment::RooAbsMoment(const RooAbsMoment& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsMoment::~RooAbsMoment() 
+RooAbsMoment::~RooAbsMoment()
 {
 }
 

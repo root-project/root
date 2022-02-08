@@ -1,14 +1,14 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'ORGANIZATION AND SIMULTANEOUS FITS' RooFit tutorial macro #501
-// 
+//
 // Using simultaneous p.d.f.s to describe simultaneous fits to multiple
 // datasets
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -28,7 +28,7 @@ using namespace RooFit ;
 
 class TestBasic501 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic501(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Simultaneous p.d.f. operator",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -57,7 +57,7 @@ public:
   // C r e a t e   m o d e l   f o r   c o n t r o l   s a m p l e
   // --------------------------------------------------------------
 
-  // Construct signal pdf. 
+  // Construct signal pdf.
   // NOTE that sigma is shared with the signal sample model
   RooRealVar mean_ctl("mean_ctl","mean_ctl",-3,-8,8) ;
   RooGaussian gx_ctl("gx_ctl","gx_ctl",x,mean_ctl,sigma) ;
@@ -73,7 +73,7 @@ public:
 
 
 
-  // G e n e r a t e   e v e n t s   f o r   b o t h   s a m p l e s 
+  // G e n e r a t e   e v e n t s   f o r   b o t h   s a m p l e s
   // ---------------------------------------------------------------
 
   // Generate 1000 events in x and y from model
@@ -82,7 +82,7 @@ public:
 
 
 
-  // C r e a t e   i n d e x   c a t e g o r y   a n d   j o i n   s a m p l e s 
+  // C r e a t e   i n d e x   c a t e g o r y   a n d   j o i n   s a m p l e s
   // ---------------------------------------------------------------------------
 
   // Define category to distinguish physics and control samples events
@@ -115,7 +115,7 @@ public:
 
 
 
-  // P l o t   m o d e l   s l i c e s   o n   d a t a    s l i c e s 
+  // P l o t   m o d e l   s l i c e s   o n   d a t a    s l i c e s
   // ----------------------------------------------------------------
 
   // Make a frame for the physics sample
@@ -124,9 +124,9 @@ public:
   // Plot all data tagged as physics sample
   combData.plotOn(frame1,Cut("sample==sample::physics")) ;
 
-  // Plot "physics" slice of simultaneous pdf. 
-  // NBL You _must_ project the sample index category with data using ProjWData 
-  // as a RooSimultaneous makes no prediction on the shape in the index category 
+  // Plot "physics" slice of simultaneous pdf.
+  // NBL You _must_ project the sample index category with data using ProjWData
+  // as a RooSimultaneous makes no prediction on the shape in the index category
   // and can thus not be integrated
   simPdf.plotOn(frame1,Slice(sample,"physics"),ProjWData(sample,combData)) ;
   simPdf.plotOn(frame1,Slice(sample,"physics"),Components("px"),ProjWData(sample,combData),LineStyle(kDashed)) ;

@@ -53,9 +53,9 @@ ClassImp(RooDLLSignificanceMCSModule);
 /// Constructor of module with parameter to be interpreted as nSignal and the value of the
 /// null hypothesis for nSignal (usually zero)
 
-RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, Double_t nullHypoValue) : 
+RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param, Double_t nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",param.GetName()),Form("RooDLLSignificanceMCSModule_%s",param.GetName())),
-  _parName(param.GetName()), 
+  _parName(param.GetName()),
   _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
 {
 }
@@ -68,7 +68,7 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooRealVar& param
 
 RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, Double_t nullHypoValue) :
   RooAbsMCStudyModule(Form("RooDLLSignificanceMCSModule_%s",parName),Form("RooDLLSignificanceMCSModule_%s",parName)),
-  _parName(parName), 
+  _parName(parName),
   _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(nullHypoValue)
 {
 }
@@ -78,8 +78,8 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const char* parName, Do
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) : 
-  RooAbsMCStudyModule(other), 
+RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanceMCSModule& other) :
+  RooAbsMCStudyModule(other),
   _parName(other._parName),
   _data(0), _nll0h(0), _dll0h(0), _sig0h(0), _nullValue(other._nullValue)
 {
@@ -90,14 +90,14 @@ RooDLLSignificanceMCSModule::RooDLLSignificanceMCSModule(const RooDLLSignificanc
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooDLLSignificanceMCSModule:: ~RooDLLSignificanceMCSModule() 
+RooDLLSignificanceMCSModule:: ~RooDLLSignificanceMCSModule()
 {
   if (_nll0h) {
     delete _nll0h ;
-  }    
+  }
   if (_dll0h) {
     delete _dll0h ;
-  }    
+  }
   if (_sig0h) {
     delete _sig0h ;
   }
@@ -145,7 +145,7 @@ Bool_t RooDLLSignificanceMCSModule::initializeInstance()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize module at beginning of RooCMStudy run
 
-Bool_t RooDLLSignificanceMCSModule::initializeRun(Int_t /*numSamples*/) 
+Bool_t RooDLLSignificanceMCSModule::initializeRun(Int_t /*numSamples*/)
 {
   _data->reset() ;
   return kTRUE ;
@@ -158,7 +158,7 @@ Bool_t RooDLLSignificanceMCSModule::initializeRun(Int_t /*numSamples*/)
 /// calculations of this module so that it is merged with
 /// RooMCStudy::fitParDataSet() by RooMCStudy
 
-RooDataSet* RooDLLSignificanceMCSModule::finalizeRun() 
+RooDataSet* RooDLLSignificanceMCSModule::finalizeRun()
 {
   return _data ;
 }
@@ -170,14 +170,14 @@ RooDataSet* RooDLLSignificanceMCSModule::finalizeRun()
 /// null hypothesis value and rerun fit Save difference in likelihood
 /// and associated Gaussian significance in auxilary dataset
 
-Bool_t RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)  
+Bool_t RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
 {
   RooRealVar* par = static_cast<RooRealVar*>(fitParams()->find(_parName.c_str())) ;
   par->setVal(_nullValue) ;
   par->setConstant(kTRUE) ;
   RooFitResult* frnull = refit() ;
   par->setConstant(kFALSE) ;
-  
+
   _nll0h->setVal(frnull->minNll()) ;
 
   Double_t deltaLL = (frnull->minNll() - nllVar()->getVal()) ;

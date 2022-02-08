@@ -36,7 +36,7 @@ ClassImp(RooDouble);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDouble::RooDouble(Double_t value) : TNamed(), _value(value) 
+RooDouble::RooDouble(Double_t value) : TNamed(), _value(value)
 {
   SetName(Form("%f",value)) ;
 }
@@ -46,7 +46,7 @@ RooDouble::RooDouble(Double_t value) : TNamed(), _value(value)
 /// Implement comparison to other TObjects that are also RooDouble
 /// to faciliate sorting of RooDoubles in a ROOT container
 
-Int_t RooDouble::Compare(const TObject* other) const 
+Int_t RooDouble::Compare(const TObject* other) const
 {
   const RooDouble* otherD = dynamic_cast<const RooDouble*>(other) ;
   if (!otherD) return 0 ;

@@ -50,7 +50,7 @@ RooAbsBinning::RooAbsBinning(const char* name) : TNamed(name,name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsBinning::~RooAbsBinning() 
+RooAbsBinning::~RooAbsBinning()
 {
 }
 
@@ -59,7 +59,7 @@ RooAbsBinning::~RooAbsBinning()
 ////////////////////////////////////////////////////////////////////////////////
 /// Print binning name
 
-void RooAbsBinning::printName(ostream& os) const 
+void RooAbsBinning::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -69,7 +69,7 @@ void RooAbsBinning::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print binning title
 
-void RooAbsBinning::printTitle(ostream& os) const 
+void RooAbsBinning::printTitle(ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -79,7 +79,7 @@ void RooAbsBinning::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print binning class name
 
-void RooAbsBinning::printClassName(ostream& os) const 
+void RooAbsBinning::printClassName(ostream& os) const
 {
   os << IsA()->GetName() ;
 }
@@ -90,9 +90,9 @@ void RooAbsBinning::printClassName(ostream& os) const
 /// Print binning arguments (the RooAbsReal objects represening
 /// the variable bin boundaries for parameterized binning implementations
 
-void RooAbsBinning::printArgs(ostream& os) const 
+void RooAbsBinning::printArgs(ostream& os) const
 {
-  os << "[ " ;    
+  os << "[ " ;
   if (lowBoundFunc()) {
     os << "lowerBound=" << lowBoundFunc()->GetName() ;
   }
@@ -102,7 +102,7 @@ void RooAbsBinning::printArgs(ostream& os) const
     }
     os << "upperBound=" << highBoundFunc()->GetName() ;
   }
-  os << " ]" ;  
+  os << " ]" ;
 }
 
 
@@ -114,7 +114,7 @@ void RooAbsBinning::printValue(ostream &os) const
 {
   Int_t n = numBins() ;
   os << "B(" ;
-  
+
   Int_t i ;
   for (i=0 ; i<n ; i++) {
     if (i>0) {
@@ -138,9 +138,9 @@ void RooAbsBinning::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
       if (R__v==1) {
-	TObject::Streamer(R__b);
+   TObject::Streamer(R__b);
       } else {
-	TNamed::Streamer(R__b);
+   TNamed::Streamer(R__b);
       }
       RooPrintable::Streamer(R__b);
       R__b.CheckByteCount(R__s, R__c, RooAbsBinning::IsA());

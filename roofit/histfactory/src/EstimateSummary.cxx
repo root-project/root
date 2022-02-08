@@ -11,7 +11,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class RooStats::HistFactory::EstimateSummary
- *  \ingroup HistFactory 
+ *  \ingroup HistFactory
  */
 
 #include <algorithm>
@@ -19,19 +19,19 @@
 
 ClassImp(RooStats::HistFactory::EstimateSummary);
 
-using namespace std; 
+using namespace std;
 
 namespace RooStats {
   namespace HistFactory {
 
     EstimateSummary::EstimateSummary(){
-      nominal=0; 
+      nominal=0;
 
       normName="Lumi";
       IncludeStatError = false;
       StatConstraintType=Gaussian;
       RelErrorThreshold=0.0;
-      relStatError=NULL; 
+      relStatError=NULL;
       shapeFactorName="";
     }
     EstimateSummary::~EstimateSummary(){}
@@ -43,8 +43,8 @@ namespace RooStats {
       cout << "  NormName = " << normName << endl;
       cout << "  Nominal ptr = " << nominal << endl;
       if (nominal) cout << "  Nominal hist name = " << nominal->GetName() << endl;
-      cout << "  Number of hist variations = " << systSourceForHist.size() 
-     << " " << lowHists.size() << " " 
+      cout << "  Number of hist variations = " << systSourceForHist.size()
+     << " " << lowHists.size() << " "
      << " " << highHists.size() << endl;
       cout << "  Number of overall systematics = " << overallSyst.size() << endl;
     }
@@ -114,7 +114,7 @@ namespace RooStats {
           }
           else if (!( CompareHisto( highHists[counter], other.highHists[ ind ]) ) ){
             cout << "contents of sys histo high " << *itr << " did not match" << endl;
-          } 
+          }
         } else {
           cout << "mismatch in systSourceForHist : " << systSourceForHist.size() << " vs " << other.systSourceForHist.size() << endl;
           for( vector<string>::const_iterator itr_this=systSourceForHist.begin(); itr_this!=systSourceForHist.end(); ++itr_this){
@@ -148,10 +148,10 @@ namespace RooStats {
 
     bool EstimateSummary::CompareHisto( const TH1 * one, const TH1 * two) const {
 
-       if (!one && !two) return true; 
-       if (!one) return false; 
-       if (!two) return false; 
-      
+       if (!one && !two) return true;
+       if (!one) return false;
+       if (!two) return false;
+
       for(int i=1; i<=one->GetNbinsX(); ++i){
         if(!(one->GetBinContent(i)-two->GetBinContent(i)==0)) return false;
       }

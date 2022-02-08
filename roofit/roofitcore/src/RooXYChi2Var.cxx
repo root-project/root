@@ -313,11 +313,11 @@ Double_t RooXYChi2Var::xErrorContribution(Double_t ydata) const
 
       // Asymmetric X error, decide which one to use
       if ((ydata>cxval && fxmax>fxmin) || (ydata<=cxval && fxmax<=fxmin)) {
-	// Use right X error
-	ret += pow(xerrHi*slope,2) ;
+   // Use right X error
+   ret += pow(xerrHi*slope,2) ;
       } else {
-	// Use left X error
-	ret += pow(xerrLo*slope,2) ;
+   // Use left X error
+   ret += pow(xerrLo*slope,2) ;
       }
 
     } else if (var->hasError()) {
@@ -447,7 +447,7 @@ Double_t RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t las
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (eInt==0.) {
       coutE(Eval) << "RooXYChi2Var::RooXYChi2Var(" << GetName() << ") INFINITY ERROR: data point " << i
-		  << " has zero error, but function is not zero (f=" << yfunc << ")" << endl ;
+        << " has zero error, but function is not zero (f=" << yfunc << ")" << endl ;
       return 0 ;
     }
 

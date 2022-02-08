@@ -47,9 +47,9 @@ namespace RooStats {
 
       // We will make the measurements 1-by-1
       for(unsigned int i = 0; i < measurement_list.size(); ++i) {
-	HistFactory::Measurement measurement = measurement_list.at(i);
-	measurement.CollectHistograms();
-	MakeModelAndMeasurementFast( measurement );
+   HistFactory::Measurement measurement = measurement_list.at(i);
+   measurement.CollectHistograms();
+   MakeModelAndMeasurementFast( measurement );
       }
 
       return;

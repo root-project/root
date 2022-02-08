@@ -49,7 +49,7 @@ namespace {
          }
        }
      }
-   }   
+   }
 
 namespace RooStats {
 
@@ -69,15 +69,15 @@ namespace RooStats {
       if (r > 1.E-12) {
          double bpsb2 = b + sb2;
          double b2 = b*b;
-         double spb = s+b; 
+         double spb = s+b;
          double za2 = 2.*( (spb)* std::log( ( spb)*(bpsb2)/(b2+ spb*sb2) ) -
                            (b2/sb2) * std::log(1. + ( sb2 * s)/(b * bpsb2) ) );
-         return sqrt(za2); 
+         return sqrt(za2);
 
       }
       // case when the background (b) is known
       double za2 = 2.*( (s+b) * std::log(1. + s/b) -s );
-      return std::sqrt(za2); 
+      return std::sqrt(za2);
    }
 
    /// Use an offset in NLL calculations.
@@ -141,7 +141,7 @@ namespace RooStats {
       if(constraints.getSize() == 0) {
          oocoutW((TObject *)0, Eval) << "RooStatsUtils::MakeNuisancePdf - no constraints found on nuisance parameters in the input model" << endl;
          return 0;
-      } 
+      }
       return new RooProdPdf(name,"", constraints);
    }
 
@@ -364,9 +364,9 @@ namespace RooStats {
       }
       if (!oldMC)
         throw std::runtime_error("unable to retrieve ModelConfig");
-  
+
       RooAbsPdf *origPdf = oldMC->GetPdf();
-  
+
       // start off with the old modelconfig
       std::vector<TString> poilist;
       std::vector<TString> nplist;
@@ -387,12 +387,12 @@ namespace RooStats {
       if (!pdf) {
         return NULL;
       }
-  
+
       // create them anew
       RooWorkspace *newWS = new RooWorkspace(newName ? newName : oldWS->GetName());
       newWS->autoImportClassCode(true);
       RooStats::ModelConfig *newMC = new RooStats::ModelConfig(newmcname, newWS);
-  
+
       // Copy snapshots
       if (copySnapshots) {
         RooFIter itr(oldWS->getSnapshots().fwdIterator());
@@ -403,15 +403,15 @@ namespace RooStats {
           newWS->getSnapshots().Add(snapClone);
         }
       }
-  
+
       newWS->import(*pdf, RooFit::RecycleConflictNodes());
       RooAbsPdf *newPdf = newWS->pdf(pdf->GetName());
       newMC->SetPdf(*newPdf);
-  
+
       for (auto d : data) {
         newWS->import(*d);
       }
-  
+
       RooArgSet poiset;
       ::getArgs(newWS, poilist, poiset);
       RooArgSet npset;
@@ -420,13 +420,13 @@ namespace RooStats {
       ::getArgs(newWS, obslist, obsset);
       RooArgSet globobsset;
       ::getArgs(newWS, globobslist, globobsset);
-  
+
       newMC->SetParametersOfInterest(poiset);
       newMC->SetNuisanceParameters(npset);
       newMC->SetObservables(obsset);
       newMC->SetGlobalObservables(globobsset);
       newWS->import(*newMC);
-  
+
       return newWS;
   }
 

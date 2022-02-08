@@ -60,7 +60,7 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
     const RooAbsArg* arg = (*_floatParamList).at(i);
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       oocoutW(_context,Minimization) << "RooAbsMinimizerFcn::RooAbsMinimizerFcn: removing parameter "
-				     << arg->GetName() << " from list because it is not of type RooRealVar" << endl;
+                 << arg->GetName() << " from list because it is not of type RooRealVar" << endl;
       _floatParamList->remove(*arg);
     } else {
       ++i;
@@ -406,7 +406,7 @@ Bool_t RooAbsMinimizerFcn::SetPdfParamVal(int index, double value) const
 
   if (par->getVal()!=value) {
     if (_verbose) cout << par->GetName() << "=" << value << ", " ;
-    
+
     par->setVal(value);
     return kTRUE;
   }

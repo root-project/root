@@ -111,7 +111,7 @@ double RooJohnson::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of the Johnson distribution. 
+/// Compute multiple values of the Johnson distribution.
 void RooJohnson::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;

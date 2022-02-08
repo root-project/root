@@ -145,7 +145,7 @@ RooMinuit::RooMinuit(RooAbsReal& function)
   while((arg=(RooAbsArg*)pIter->Next())) {
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
       coutW(Minimization) << "RooMinuit::RooMinuit: removing parameter " << arg->GetName()
-			  << " from list because it is not of type RooRealVar" << endl ;
+           << " from list because it is not of type RooRealVar" << endl ;
       _floatParamList->remove(*arg) ;
     }
   }
@@ -249,9 +249,9 @@ void RooMinuit::setEps(Double_t eps)
 ////////////////////////////////////////////////////////////////////////////////
 /// Enable internal likelihood offsetting for enhanced numeric precision
 
-void RooMinuit::setOffsetting(Bool_t flag) 
-{ 
-  _func->enableOffsetting(flag) ; 
+void RooMinuit::setOffsetting(Bool_t flag)
+{
+  _func->enableOffsetting(flag) ;
 }
 
 
@@ -388,11 +388,11 @@ Int_t RooMinuit::minos()
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1);
   // check also the status of Minos looking at fCstatu
   if (_status == 0 && gMinuit->fCstatu != "SUCCESSFUL") {
-    if (gMinuit->fCstatu == "FAILURE" || 
-	gMinuit->fCstatu == "PROBLEMS") _status = 5; 
-    _status = 6; 
-  } 
-  
+    if (gMinuit->fCstatu == "FAILURE" ||
+   gMinuit->fCstatu == "PROBLEMS") _status = 5;
+    _status = 6;
+  }
+
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
@@ -427,8 +427,8 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
     while((arg=(RooAbsArg*)aIter->Next())) {
       RooAbsArg* par = _floatParamList->find(arg->GetName());
       if (par && !par->isConstant()) {
-	Int_t index = _floatParamList->index(par);
-	nMinosPar++;
+   Int_t index = _floatParamList->index(par);
+   nMinosPar++;
         arglist[nMinosPar]=index+1;
       }
     }
@@ -443,16 +443,16 @@ Int_t RooMinuit::minos(const RooArgSet& minosParamList)
   _status= _theFitter->ExecuteCommand("MINOS",arglist,1+nMinosPar);
   // check also the status of Minos looking at fCstatu
   if (_status == 0 && gMinuit->fCstatu != "SUCCESSFUL") {
-    if (gMinuit->fCstatu == "FAILURE" || 
-	gMinuit->fCstatu == "PROBLEMS") _status = 5; 
-    _status = 6; 
-  } 
+    if (gMinuit->fCstatu == "FAILURE" ||
+   gMinuit->fCstatu == "PROBLEMS") _status = 5;
+    _status = 6;
+  }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
   profileStop() ;
   backProp() ;
 
   delete[] arglist ;
-  
+
   saveStatus("MINOS",_status) ;
 
   return _status ;
@@ -487,7 +487,7 @@ Int_t RooMinuit::seek()
   backProp() ;
 
   saveStatus("SEEK",_status) ;
-  
+
   return _status ;
 }
 
@@ -521,7 +521,7 @@ Int_t RooMinuit::simplex()
   backProp() ;
 
   saveStatus("SIMPLEX",_status) ;
-  
+
   return _status ;
 }
 
@@ -554,7 +554,7 @@ Int_t RooMinuit::improve()
   backProp() ;
 
   saveStatus("IMPROVE",_status) ;
-  
+
   return _status ;
 }
 
@@ -646,7 +646,7 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
       _nPar++ ;
 
       if (verbose) {
-	coutI(Minimization) << "RooMinuit::synchronize: parameter " << par->GetName() << " is now floating." << endl ;
+   coutI(Minimization) << "RooMinuit::synchronize: parameter " << par->GetName() << " is now floating." << endl ;
       }
     }
 
@@ -654,8 +654,8 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
     if (par->getVal()!= oldpar->getVal()) {
       constValChange=kTRUE ;
       if (verbose) {
-	coutI(Minimization) << "RooMinuit::synchronize: value of constant parameter " << par->GetName()
-			    << " changed from " << oldpar->getVal() << " to " << par->getVal() << endl ;
+   coutI(Minimization) << "RooMinuit::synchronize: value of constant parameter " << par->GetName()
+             << " changed from " << oldpar->getVal() << " to " << par->getVal() << endl ;
       }
     }
 
@@ -673,48 +673,48 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
     Double_t pstep(0) ;
     Double_t pmin(0) ;
     Double_t pmax(0) ;
-    
+
     if(!par->isConstant()) {
 
       // Verify that floating parameter is indeed of type RooRealVar
       if (!par->IsA()->InheritsFrom(RooRealVar::Class())) {
-	coutW(Minimization) << "RooMinuit::fit: Error, non-constant parameter " << par->GetName()
-			    << " is not of type RooRealVar, skipping" << endl ;
-	continue ;
+   coutW(Minimization) << "RooMinuit::fit: Error, non-constant parameter " << par->GetName()
+             << " is not of type RooRealVar, skipping" << endl ;
+   continue ;
       }
 
       // Set the limits, if not infinite
       if (par->hasMin() && par->hasMax()) {
-	pmin = par->getMin();
-	pmax = par->getMax();
+   pmin = par->getMin();
+   pmax = par->getMax();
       }
 
       // Calculate step size
       pstep= par->getError();
       if(pstep <= 0) {
-	// Floating parameter without error estitimate
-	if (par->hasMin() && par->hasMax()) {
-	  pstep= 0.1*(pmax-pmin);
+   // Floating parameter without error estitimate
+   if (par->hasMin() && par->hasMax()) {
+     pstep= 0.1*(pmax-pmin);
 
-	  // Trim default choice of error if within 2 sigma of limit
-	  if (pmax - par->getVal() < 2*pstep) {
-	    pstep = (pmax - par->getVal())/2 ;
-	  } else if (par->getVal() - pmin < 2*pstep) {
-	    pstep = (par->getVal() - pmin )/2 ;
-	  }
+     // Trim default choice of error if within 2 sigma of limit
+     if (pmax - par->getVal() < 2*pstep) {
+       pstep = (pmax - par->getVal())/2 ;
+     } else if (par->getVal() - pmin < 2*pstep) {
+       pstep = (par->getVal() - pmin )/2 ;
+     }
 
-	  // If trimming results in zero error, restore default
-	  if (pstep==0) {
-	    pstep= 0.1*(pmax-pmin);
-	  }
+     // If trimming results in zero error, restore default
+     if (pstep==0) {
+       pstep= 0.1*(pmax-pmin);
+     }
 
-	} else {
-	  pstep=1 ;
-	}
-	if(_verbose) {
-	  coutW(Minimization) << "RooMinuit::synchronize: WARNING: no initial error estimate available for "
-			      << par->GetName() << ": using " << pstep << endl;
-	}
+   } else {
+     pstep=1 ;
+   }
+   if(_verbose) {
+     coutW(Minimization) << "RooMinuit::synchronize: WARNING: no initial error estimate available for "
+               << par->GetName() << ": using " << pstep << endl;
+   }
       }
     } else {
       pmin = par->getVal() ;
@@ -740,68 +740,68 @@ Bool_t RooMinuit::synchronize(Bool_t verbose)
 
       // Parameter changes floating -> constant : update only value if necessary
       if (oldVar!=par->getVal()) {
-	Double_t arglist[2] ;
-	arglist[0] = index+1 ;
-	arglist[1] = par->getVal() ;
-	_theFitter->ExecuteCommand("SET PAR",arglist,2) ;
-	if (verbose) {
-	  coutI(Minimization) << "RooMinuit::synchronize: value of parameter " << par->GetName() << " changed from " << oldVar << " to " << par->getVal() << endl ;
-	}
+   Double_t arglist[2] ;
+   arglist[0] = index+1 ;
+   arglist[1] = par->getVal() ;
+   _theFitter->ExecuteCommand("SET PAR",arglist,2) ;
+   if (verbose) {
+     coutI(Minimization) << "RooMinuit::synchronize: value of parameter " << par->GetName() << " changed from " << oldVar << " to " << par->getVal() << endl ;
+   }
       }
 
       _theFitter->FixParameter(index) ;
       constStatChange=kTRUE ;
       if (verbose) {
-	coutI(Minimization) << "RooMinuit::synchronize: parameter " << par->GetName() << " is now fixed." << endl ;
+   coutI(Minimization) << "RooMinuit::synchronize: parameter " << par->GetName() << " is now fixed." << endl ;
       }
 
     } else if (par->isConstant() && oldFixed) {
 
       // Parameter changes constant -> constant : update only value if necessary
       if (oldVar!=par->getVal()) {
-	Double_t arglist[2] ;
-	arglist[0] = index+1 ;
-	arglist[1] = par->getVal() ;
-	_theFitter->ExecuteCommand("SET PAR",arglist,2) ;
-	constValChange=kTRUE ;
+   Double_t arglist[2] ;
+   arglist[0] = index+1 ;
+   arglist[1] = par->getVal() ;
+   _theFitter->ExecuteCommand("SET PAR",arglist,2) ;
+   constValChange=kTRUE ;
 
-	if (verbose) {
-	  coutI(Minimization) << "RooMinuit::synchronize: value of fixed parameter " << par->GetName() << " changed from " << oldVar << " to " << par->getVal() << endl ;
-	}
+   if (verbose) {
+     coutI(Minimization) << "RooMinuit::synchronize: value of fixed parameter " << par->GetName() << " changed from " << oldVar << " to " << par->getVal() << endl ;
+   }
       }
 
     } else {
 
       if (!par->isConstant() && oldFixed) {
-	_theFitter->ReleaseParameter(index) ;
-	constStatChange=kTRUE ;
+   _theFitter->ReleaseParameter(index) ;
+   constStatChange=kTRUE ;
 
-	if (verbose) {
-	  coutI(Minimization) << "RooMinuit::synchronize: parameter " << par->GetName() << " is now floating." << endl ;
-	}
+   if (verbose) {
+     coutI(Minimization) << "RooMinuit::synchronize: parameter " << par->GetName() << " is now floating." << endl ;
+   }
       }
 
       // Parameter changes constant -> floating : update all if necessary
       if (oldVar!=par->getVal() || oldVlo!=pmin || oldVhi != pmax || oldVerr!=pstep) {
-	_theFitter->SetParameter(index, par->GetName(), par->getVal(), pstep, pmin, pmax);
+   _theFitter->SetParameter(index, par->GetName(), par->getVal(), pstep, pmin, pmax);
       }
 
       // Inform user about changes in verbose mode
       if (verbose && ierr>=0) {
-	// if ierr<0, par was moved from the const list and a message was already printed
+   // if ierr<0, par was moved from the const list and a message was already printed
 
-	if (oldVar!=par->getVal()) {
-	  coutI(Minimization) << "RooMinuit::synchronize: value of parameter " << par->GetName() << " changed from " << oldVar << " to " << par->getVal() << endl ;
-	}
-	if (oldVlo!=pmin || oldVhi!=pmax) {
-	  coutI(Minimization) << "RooMinuit::synchronize: limits of parameter " << par->GetName() << " changed from [" << oldVlo << "," << oldVhi
-	       << "] to [" << pmin << "," << pmax << "]" << endl ;
-	}
+   if (oldVar!=par->getVal()) {
+     coutI(Minimization) << "RooMinuit::synchronize: value of parameter " << par->GetName() << " changed from " << oldVar << " to " << par->getVal() << endl ;
+   }
+   if (oldVlo!=pmin || oldVhi!=pmax) {
+     coutI(Minimization) << "RooMinuit::synchronize: limits of parameter " << par->GetName() << " changed from [" << oldVlo << "," << oldVhi
+          << "] to [" << pmin << "," << pmax << "]" << endl ;
+   }
 
-	// If oldVerr=0, then parameter was previously fixed
-	if (oldVerr!=pstep && oldVerr!=0) {
-	coutI(Minimization) << "RooMinuit::synchronize: error/step size of parameter " << par->GetName() << " changed from " << oldVerr << " to " << pstep << endl ;
-	}
+   // If oldVerr=0, then parameter was previously fixed
+   if (oldVerr!=pstep && oldVerr!=0) {
+   coutI(Minimization) << "RooMinuit::synchronize: error/step size of parameter " << par->GetName() << " changed from " << oldVerr << " to " << pstep << endl ;
+   }
       }
     }
   }
@@ -948,14 +948,14 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
   Int_t index1= _floatParamList->index(&var1);
   if(index1 < 0) {
     coutE(Minimization) << "RooMinuit::contour(" << GetName()
-			<< ") ERROR: " << var1.GetName() << " is not a floating parameter of " << _func->GetName() << endl ;
+         << ") ERROR: " << var1.GetName() << " is not a floating parameter of " << _func->GetName() << endl ;
     return 0;
   }
 
   Int_t index2= _floatParamList->index(&var2);
   if(index2 < 0) {
     coutE(Minimization) << "RooMinuit::contour(" << GetName()
-			<< ") ERROR: " << var2.GetName() << " is not a floating parameter of PDF " << _func->GetName() << endl ;
+         << ") ERROR: " << var2.GetName() << " is not a floating parameter of PDF " << _func->GetName() << endl ;
     return 0;
   }
 
@@ -980,13 +980,13 @@ RooPlot* RooMinuit::contour(RooRealVar& var1, RooRealVar& var2, Double_t n1, Dou
       // calculate and draw the contour
       TGraph* graph= (TGraph*)gMinuit->Contour(50, index1, index2);
       if (!graph) {
-	coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n[ic] << endl ;
+   coutE(Minimization) << "RooMinuit::contour(" << GetName() << ") ERROR: MINUIT did not return a contour graph for n=" << n[ic] << endl ;
       } else {
-	graph->SetName(Form("contour_%s_n%f",_func->GetName(),n[ic])) ;
-	graph->SetLineStyle(ic+1) ;
-	graph->SetLineWidth(2) ;
-	graph->SetLineColor(kBlue) ;
-	frame->addObject(graph,"L") ;
+   graph->SetName(Form("contour_%s_n%f",_func->GetName(),n[ic])) ;
+   graph->SetLineStyle(ic+1) ;
+   graph->SetLineWidth(2) ;
+   graph->SetLineColor(kBlue) ;
+   frame->addObject(graph,"L") ;
       }
     }
   }
@@ -1157,7 +1157,7 @@ void RooMinuit::backProp()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooMinuit::updateFloatVec() 
+void RooMinuit::updateFloatVec()
 {
   _floatParamVec.clear() ;
   RooFIter iter = _floatParamList->fwdIterator() ;
@@ -1197,7 +1197,7 @@ void RooMinuit::applyCovarianceMatrix(TMatrixDSym& V)
 
 
 void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
-		   Double_t &f, Double_t *par, Int_t /*flag*/)
+         Double_t &f, Double_t *par, Int_t /*flag*/)
 {
   // Static function that interfaces minuit with RooMinuit
 
@@ -1224,11 +1224,11 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
     if (context->_printEvalErrors>=0) {
 
       if (context->_doEvalErrorWall) {
-	oocoutW(context,Minimization) << "RooMinuitGlue: Minimized function has error status." << endl
-				      << "Returning maximum FCN so far (" << maxFCN
-				      << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
+   oocoutW(context,Minimization) << "RooMinuitGlue: Minimized function has error status." << endl
+                  << "Returning maximum FCN so far (" << maxFCN
+                  << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
       } else {
-	oocoutW(context,Minimization) << "RooMinuitGlue: Minimized function has error status but is ignored" << endl ;
+   oocoutW(context,Minimization) << "RooMinuitGlue: Minimized function has error status but is ignored" << endl ;
       }
 
       TIterator* iter = context->_floatParamList->createIterator() ;
@@ -1236,8 +1236,8 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
       Bool_t first(kTRUE) ;
       ooccoutW(context,Minimization) << "Parameter values: " ;
       while((var=(RooRealVar*)iter->Next())) {
-	if (first) { first = kFALSE ; } else ooccoutW(context,Minimization) << ", " ;
-	ooccoutW(context,Minimization) << var->GetName() << "=" << var->getVal() ;
+   if (first) { first = kFALSE ; } else ooccoutW(context,Minimization) << ", " ;
+   ooccoutW(context,Minimization) << var->GetName() << "=" << var->getVal() ;
       }
       delete iter ;
       ooccoutW(context,Minimization) << endl ;
@@ -1255,7 +1255,7 @@ void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,
   } else if (f>maxFCN) {
     maxFCN = f ;
   }
-  
+
   // Optional logging
   if (logf) (*logf) << setprecision(15) << f << setprecision(4) << endl;
   if (verbose) {

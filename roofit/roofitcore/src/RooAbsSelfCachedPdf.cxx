@@ -1,13 +1,13 @@
- /***************************************************************************** 
-  * Project: RooFit                                                           * 
-  *                                                                           * 
-  * Copyright (c) 2000-2005, Regents of the University of California          * 
-  *                          and Stanford University. All rights reserved.    * 
-  *                                                                           * 
-  * Redistribution and use in source and binary forms,                        * 
-  * with or without modification, are permitted according to the terms        * 
-  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
-  *****************************************************************************/ 
+ /*****************************************************************************
+  * Project: RooFit                                                           *
+  *                                                                           *
+  * Copyright (c) 2000-2005, Regents of the University of California          *
+  *                          and Stanford University. All rights reserved.    *
+  *                                                                           *
+  * Redistribution and use in source and binary forms,                        *
+  * with or without modification, are permitted according to the terms        *
+  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+  *****************************************************************************/
 
 /**
 \file RooAbsSelfCachedPdf.cxx
@@ -27,18 +27,18 @@ RooCachedPdf wrapper p.d.f. that takes any RooAbsPdf object as
 input.
 **/
 
-#include "Riostream.h" 
+#include "Riostream.h"
 
 #include "RooFit.h"
-#include "RooAbsSelfCachedPdf.h" 
-#include "RooAbsReal.h" 
+#include "RooAbsSelfCachedPdf.h"
+#include "RooAbsReal.h"
 #include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 
 using namespace std ;
 
-ClassImp(RooAbsSelfCachedPdf); 
+ClassImp(RooAbsSelfCachedPdf);
 
 
 
@@ -47,25 +47,25 @@ ClassImp(RooAbsSelfCachedPdf);
 
 RooAbsSelfCachedPdf::RooAbsSelfCachedPdf(const char *name, const char *title, Int_t ipOrder) :
   RooAbsCachedPdf(name,title,ipOrder)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsSelfCachedPdf::RooAbsSelfCachedPdf(const RooAbsSelfCachedPdf& other, const char* name) :  
+RooAbsSelfCachedPdf::RooAbsSelfCachedPdf(const RooAbsSelfCachedPdf& other, const char* name) :
    RooAbsCachedPdf(other,name)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsSelfCachedPdf::~RooAbsSelfCachedPdf() 
+RooAbsSelfCachedPdf::~RooAbsSelfCachedPdf()
 {
 }
 
@@ -74,7 +74,7 @@ RooAbsSelfCachedPdf::~RooAbsSelfCachedPdf()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill cache with sampling of p.d.f as defined by the evaluate() implementation
 
-void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const 
+void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 {
   RooDataHist& cacheHist = *cache.hist() ;
 
@@ -102,7 +102,7 @@ void RooAbsSelfCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) 
 /// Defines observables to be cached, given a set of user defined observables
 /// Returns the subset of nset that are observables this p.d.f
 
-RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) const 
+RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) const
 {
   // Make list of servers
   RooArgSet *serverSet = new RooArgSet;
@@ -110,7 +110,7 @@ RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) con
   for (auto server : _serverList) {
     serverSet->add(*server) ;
   }
-  
+
   // Return servers that are in common with given normalization set
   return serverSet;
 }
@@ -122,14 +122,14 @@ RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) con
 /// subset of variables of self that is not contained in the
 /// supplied nset
 
-RooArgSet* RooAbsSelfCachedPdf::actualParameters(const RooArgSet& nset) const 
-{  
+RooArgSet* RooAbsSelfCachedPdf::actualParameters(const RooArgSet& nset) const
+{
   RooArgSet *serverSet = new RooArgSet;
 
   for (auto server : _serverList) {
     serverSet->add(*server) ;
   }
-  
+
   // Remove all given observables from server list
   serverSet->remove(nset,kTRUE,kTRUE);
 

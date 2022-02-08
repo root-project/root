@@ -1,11 +1,11 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'VALIDATION AND MC STUDIES' RooFit tutorial macro #803
-// 
+//
 // RooMCStudy: Using the randomizer and profile likelihood add-on models
 //
-// 
-// 07/2008 - Wouter Verkerke 
+//
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -30,11 +30,11 @@ using namespace RooFit ;
 
 class TestBasic803 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic803(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Study with param rand. and Z calc",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   m o d e l 
+  // C r e a t e   m o d e l
   // -----------------------
 
   // Simulation of signal and background of top quark decaying into
@@ -67,24 +67,24 @@ public:
   // Configure manager to perform binned extended likelihood fits (Binned(),Extended()) on data generated
   // with a Poisson fluctuation on Nobs (Extended())
   RooMCStudy* mcs = new RooMCStudy(model,mjjj,Binned(),Silence(),Extended(kTRUE),
-				   FitOptions(Extended(kTRUE),PrintEvalErrors(-1))) ;
+               FitOptions(Extended(kTRUE),PrintEvalErrors(-1))) ;
 
 
 
   // C u s t o m i z e   m a n a g e r
   // ---------------------------------
 
-  // Add module that randomizes the summed value of nsig+nbkg 
+  // Add module that randomizes the summed value of nsig+nbkg
   // sampling from a uniform distribution between 0 and 1000
   //
-  // In general one can randomize a single parameter, or a 
+  // In general one can randomize a single parameter, or a
   // sum of N parameters, using either a uniform or a Gaussian
   // distribution. Multiple randomization can be executed
   // by a single randomizer module
-  
+
   RooRandomizeParamMCSModule randModule ;
   randModule.sampleSumUniform(RooArgSet(nsig,nbkg),50,500) ;
-  mcs->addModule(randModule) ;  
+  mcs->addModule(randModule) ;
 
 
   // Add profile likelihood calculation of significance. Redo each
@@ -103,7 +103,7 @@ public:
 
   mcs->generateAndFit(50) ;
 
-  // Make some plots  
+  // Make some plots
   RooRealVar* ngen    = (RooRealVar*) mcs->fitParDataSet().get()->find("ngen") ;
   RooRealVar* dll     = (RooRealVar*) mcs->fitParDataSet().get()->find("dll_nullhypo_nsig") ;
   RooRealVar* z       = (RooRealVar*) mcs->fitParDataSet().get()->find("significance_nullhypo_nsig") ;

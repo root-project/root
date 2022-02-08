@@ -85,7 +85,7 @@ void RooRealVar::cleanup()
 RooRealVarSharedProperties& RooRealVar::_nullProp()
 {
   static const std::unique_ptr<RooRealVarSharedProperties> nullProp(new RooRealVarSharedProperties("00000000-0000-0000-0000-000000000000"));
-  return *nullProp; 
+  return *nullProp;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +101,7 @@ RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(n
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a constant variable with a value and optional unit.
 RooRealVar::RooRealVar(const char *name, const char *title,
-		       Double_t value, const char *unit) :
+             Double_t value, const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
   _binning(new RooUniformBinning(-1,1,100))
 {
@@ -117,8 +117,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 /// Create a variable allowed to float in the given range.
 /// The initial value will be set to the center of the range.
 RooRealVar::RooRealVar(const char *name, const char *title,
-		       Double_t minValue, Double_t maxValue,
-		       const char *unit) :
+             Double_t minValue, Double_t maxValue,
+             const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
   _binning(new RooUniformBinning(minValue,maxValue,100))
 {
@@ -152,8 +152,8 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 /// Create a variable with the given starting value. It is allowed to float
 /// within the defined range. Optionally, a unit can be specified for axis labels.
 RooRealVar::RooRealVar(const char *name, const char *title,
-		       Double_t value, Double_t minValue, Double_t maxValue,
-		       const char *unit) :
+             Double_t value, Double_t minValue, Double_t maxValue,
+             const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1),
   _binning(new RooUniformBinning(minValue,maxValue,100))
 {
@@ -387,7 +387,7 @@ RooAbsBinning& RooRealVar::getBinning(const char* name, Bool_t verbose, Bool_t c
   auto binning = new RooRangeBinning(getMin(),getMax(),name) ;
   if (verbose) {
     coutI(Eval) << "RooRealVar::getBinning(" << GetName() << ") new range named '"
-		<< name << "' created with default bounds" << endl ;
+      << name << "' created with default bounds" << endl ;
   }
   sharedProp()->_altBinning[name] = binning;
 
@@ -491,7 +491,7 @@ void RooRealVar::setMin(const char* name, Double_t value)
   // Check if new limit is consistent
   if (value >= getMax()) {
     coutW(InputArguments) << "RooRealVar::setMin(" << GetName()
-			  << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
+           << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
     binning.setMin(getMax()) ;
   } else {
     binning.setMin(value) ;
@@ -521,7 +521,7 @@ void RooRealVar::setMax(const char* name, Double_t value)
   // Check if new limit is consistent
   if (value < getMin()) {
     coutW(InputArguments) << "RooRealVar::setMax(" << GetName()
-			  << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+           << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setMax(getMin()) ;
   } else {
     binning.setMax(value) ;
@@ -558,7 +558,7 @@ void RooRealVar::setRange(const char* name, Double_t min, Double_t max)
   // Check if new limit is consistent
   if (min>max) {
     coutW(InputArguments) << "RooRealVar::setRange(" << GetName()
-			  << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+           << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setRange(min,min) ;
   } else {
     binning.setRange(min,max) ;
@@ -566,8 +566,8 @@ void RooRealVar::setRange(const char* name, Double_t min, Double_t max)
 
   if (!exists) {
     coutI(Eval) << "RooRealVar::setRange(" << GetName()
-		<< ") new range named '" << name << "' created with bounds ["
-		<< min << "," << max << "]" << endl ;
+      << ") new range named '" << name << "' created with bounds ["
+      << min << "," << max << "]" << endl ;
   }
 
   setShapeDirty() ;
@@ -620,104 +620,104 @@ Bool_t RooRealVar::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
       if (parser.atEOL() || parser.atEOF()) break ;
 
       if (!reprocessToken) {
-	token=parser.readToken() ;
+   token=parser.readToken() ;
       }
       reprocessToken = kFALSE ;
 
       if (!token.CompareTo("+")) {
 
-	// Expect +/- as 3-token sequence
-	if (parser.expectToken("/",kTRUE) ||
-	    parser.expectToken("-",kTRUE)) {
-	  break ;
-	}
+   // Expect +/- as 3-token sequence
+   if (parser.expectToken("/",kTRUE) ||
+       parser.expectToken("-",kTRUE)) {
+     break ;
+   }
 
-	// Next token is error or asymmetric error, check if first char of token is a '('
-	TString tmp = parser.readToken() ;
-	if (tmp.CompareTo("(")) {
-	  // Symmetric error, convert token do double
+   // Next token is error or asymmetric error, check if first char of token is a '('
+   TString tmp = parser.readToken() ;
+   if (tmp.CompareTo("(")) {
+     // Symmetric error, convert token do double
 
-	  Double_t error ;
-	  parser.convertToDouble(tmp,error) ;
-	  setError(error) ;
+     Double_t error ;
+     parser.convertToDouble(tmp,error) ;
+     setError(error) ;
 
-	} else {
-	  // Have error
-	  Double_t asymErrLo=0., asymErrHi=0.;
-	  if (parser.readDouble(asymErrLo,kTRUE) ||
-	      parser.expectToken(",",kTRUE) ||
-	      parser.readDouble(asymErrHi,kTRUE) ||
-	      parser.expectToken(")",kTRUE)) break ;
-	  setAsymError(asymErrLo,asymErrHi) ;
-	}
+   } else {
+     // Have error
+     Double_t asymErrLo=0., asymErrHi=0.;
+     if (parser.readDouble(asymErrLo,kTRUE) ||
+         parser.expectToken(",",kTRUE) ||
+         parser.readDouble(asymErrHi,kTRUE) ||
+         parser.expectToken(")",kTRUE)) break ;
+     setAsymError(asymErrLo,asymErrHi) ;
+   }
 
       } else if (!token.CompareTo("C")) {
 
-	// Set constant
-	setConstant(kTRUE) ;
-	haveConstant = kTRUE ;
+   // Set constant
+   setConstant(kTRUE) ;
+   haveConstant = kTRUE ;
 
       } else if (!token.CompareTo("P")) {
 
-	// Next tokens are plot limits
-	Double_t plotMin(0), plotMax(0) ;
+   // Next tokens are plot limits
+   Double_t plotMin(0), plotMax(0) ;
         Int_t plotBins(0) ;
-	if (parser.expectToken("(",kTRUE) ||
-	    parser.readDouble(plotMin,kTRUE) ||
-	    parser.expectToken("-",kTRUE) ||
-	    parser.readDouble(plotMax,kTRUE) ||
+   if (parser.expectToken("(",kTRUE) ||
+       parser.readDouble(plotMin,kTRUE) ||
+       parser.expectToken("-",kTRUE) ||
+       parser.readDouble(plotMax,kTRUE) ||
             parser.expectToken(":",kTRUE) ||
             parser.readInteger(plotBins,kTRUE) ||
-	    parser.expectToken(")",kTRUE)) break ;
-//   	setPlotRange(plotMin,plotMax) ;
-	coutW(Eval) << "RooRealVar::readFromStrem(" << GetName()
-	     << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
+       parser.expectToken(")",kTRUE)) break ;
+//    setPlotRange(plotMin,plotMax) ;
+   coutW(Eval) << "RooRealVar::readFromStrem(" << GetName()
+        << ") WARNING: plot range deprecated, removed P(...) token" << endl ;
 
       } else if (!token.CompareTo("F")) {
 
-	// Next tokens are fit limits
-	Double_t fitMin, fitMax ;
-	Int_t fitBins ;
-	if (parser.expectToken("(",kTRUE) ||
-	    parser.readDouble(fitMin,kTRUE) ||
-	    parser.expectToken("-",kTRUE) ||
-	    parser.readDouble(fitMax,kTRUE) ||
-	    parser.expectToken(":",kTRUE) ||
-	    parser.readInteger(fitBins,kTRUE) ||
-	    parser.expectToken(")",kTRUE)) break ;
-	//setBins(fitBins) ;
-	//setRange(fitMin,fitMax) ;
-	coutW(Eval) << "RooRealVar::readFromStream(" << GetName()
-	     << ") WARNING: F(lo-hi:bins) token deprecated, use L(lo-hi) B(bins)" << endl ;
-	if (!haveConstant) setConstant(kFALSE) ;
+   // Next tokens are fit limits
+   Double_t fitMin, fitMax ;
+   Int_t fitBins ;
+   if (parser.expectToken("(",kTRUE) ||
+       parser.readDouble(fitMin,kTRUE) ||
+       parser.expectToken("-",kTRUE) ||
+       parser.readDouble(fitMax,kTRUE) ||
+       parser.expectToken(":",kTRUE) ||
+       parser.readInteger(fitBins,kTRUE) ||
+       parser.expectToken(")",kTRUE)) break ;
+   //setBins(fitBins) ;
+   //setRange(fitMin,fitMax) ;
+   coutW(Eval) << "RooRealVar::readFromStream(" << GetName()
+        << ") WARNING: F(lo-hi:bins) token deprecated, use L(lo-hi) B(bins)" << endl ;
+   if (!haveConstant) setConstant(kFALSE) ;
 
       } else if (!token.CompareTo("L")) {
 
-	// Next tokens are fit limits
-	Double_t fitMin = 0.0, fitMax = 0.0;
-//	Int_t fitBins ;
-	if (parser.expectToken("(",kTRUE) ||
-	    parser.readDouble(fitMin,kTRUE) ||
-	    parser.expectToken("-",kTRUE) ||
-	    parser.readDouble(fitMax,kTRUE) ||
-	    parser.expectToken(")",kTRUE)) break ;
-	setRange(fitMin,fitMax) ;
-	if (!haveConstant) setConstant(kFALSE) ;
+   // Next tokens are fit limits
+   Double_t fitMin = 0.0, fitMax = 0.0;
+// Int_t fitBins ;
+   if (parser.expectToken("(",kTRUE) ||
+       parser.readDouble(fitMin,kTRUE) ||
+       parser.expectToken("-",kTRUE) ||
+       parser.readDouble(fitMax,kTRUE) ||
+       parser.expectToken(")",kTRUE)) break ;
+   setRange(fitMin,fitMax) ;
+   if (!haveConstant) setConstant(kFALSE) ;
 
       } else if (!token.CompareTo("B")) {
 
-	// Next tokens are fit limits
-	Int_t fitBins = 0;
-	if (parser.expectToken("(",kTRUE) ||
-	    parser.readInteger(fitBins,kTRUE) ||
-	    parser.expectToken(")",kTRUE)) break ;
-	setBins(fitBins) ;
+   // Next tokens are fit limits
+   Int_t fitBins = 0;
+   if (parser.expectToken("(",kTRUE) ||
+       parser.readInteger(fitBins,kTRUE) ||
+       parser.expectToken(")",kTRUE)) break ;
+   setBins(fitBins) ;
 
       } else {
-	// Token is value
-	if (parser.convertToDouble(token,value)) { parser.zapToEnd() ; break ; }
-	haveValue = kTRUE ;
-	// Defer value assignment to end
+   // Token is value
+   if (parser.convertToDouble(token,value)) { parser.zapToEnd() ; break ; }
+   haveValue = kTRUE ;
+   // Defer value assignment to end
       }
     }
     if (haveValue) setVal(value) ;
@@ -745,10 +745,10 @@ void RooRealVar::writeToStream(ostream& os, Bool_t compact) const
       os << Form(fmtVal,_value) ;
 
       if (hasAsymError()) {
-	os << " +/- (" << Form(fmtErr,getAsymErrorLo())
-	   << ", " << Form(fmtErr,getAsymErrorHi()) << ")" ;
+   os << " +/- (" << Form(fmtErr,getAsymErrorLo())
+      << ", " << Form(fmtErr,getAsymErrorHi()) << ")" ;
       } else  if (hasError()) {
-	os << " +/- " << Form(fmtErr,getError()) ;
+   os << " +/- " << Form(fmtErr,getError()) ;
       }
 
       os << " " ;

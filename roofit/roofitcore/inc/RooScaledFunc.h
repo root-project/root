@@ -32,7 +32,7 @@ public:
   inline Double_t getMaxLimit(UInt_t index) const override { return _func->getMaxLimit(index); }
 
   std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
-    return _func->plotSamplingHint(obs,xlo,xhi) ; 
+    return _func->plotSamplingHint(obs,xlo,xhi) ;
   }
 
 protected:

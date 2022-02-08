@@ -34,7 +34,7 @@ the RooRealVar::setRange() method
 
 using namespace std;
 
-ClassImp(RooRangeBinning); 
+ClassImp(RooRangeBinning);
 ;
 
 
@@ -76,9 +76,9 @@ RooRangeBinning::RooRangeBinning(const RooRangeBinning& other, const char* name)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor 
+/// Destructor
 
-RooRangeBinning::~RooRangeBinning() 
+RooRangeBinning::~RooRangeBinning()
 {
 }
 
@@ -87,7 +87,7 @@ RooRangeBinning::~RooRangeBinning()
 ////////////////////////////////////////////////////////////////////////////////
 /// Change limits of the binning to [xlo,xhi]
 
-void RooRangeBinning::setRange(Double_t xlo, Double_t xhi) 
+void RooRangeBinning::setRange(Double_t xlo, Double_t xhi)
 {
   if (xlo>xhi) {
     oocoutE((TObject*)0,InputArguments) << "RooRangeBinning::setRange: ERROR low bound > high bound" << endl ;

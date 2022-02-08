@@ -73,7 +73,7 @@ RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(kFALSE),
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct integrator on given function binding binding
 
-RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) : 
+RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   RooAbsIntegrator(function)
 {
   _useIntegrandLimits= kTRUE;
@@ -99,7 +99,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
     // Retrieve bin configuration from integrand
     std::unique_ptr<list<Double_t>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
-      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
+      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
       tmp.reset( new list<Double_t> );
       for (Int_t j=0 ; j<=_numBins ; j++) {
@@ -118,20 +118,20 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   }
   checkLimits();
 
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct integrator on given function binding binding
 
-RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) : 
+RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function)
 {
-  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
+  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
   _useIntegrandLimits= kTRUE;
   _numBins = (Int_t) configSet.getRealValue("numBins") ;
   assert(_function && _function->isValid());
-  
+
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
 
@@ -144,11 +144,11 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
     _xmin.push_back(_function->getMinLimit(i));
     _xmax.push_back(_function->getMaxLimit(i));
-    
+
     // Retrieve bin configuration from integrand
     std::unique_ptr<list<Double_t>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
-      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
+      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
       tmp.reset( new list<Double_t> );
       for (Int_t j=0 ; j<=_numBins ; j++) {
@@ -167,7 +167,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntCo
   }
 
   checkLimits();
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +196,7 @@ RooBinIntegrator::~RooBinIntegrator()
 /// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax) 
+Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
@@ -212,7 +212,7 @@ Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 /// Check that our integration range is finite and otherwise return kFALSE.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooBinIntegrator::checkLimits() const 
+Bool_t RooBinIntegrator::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -232,14 +232,14 @@ Bool_t RooBinIntegrator::checkLimits() const
       return kFALSE ;
     }
   }
-  
+
   return kTRUE;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate numeric integral at given set of function binding parameters.
-Double_t RooBinIntegrator::integral(const Double_t *) 
+Double_t RooBinIntegrator::integral(const Double_t *)
 {
   assert(isValid());
 
@@ -279,7 +279,7 @@ Double_t RooBinIntegrator::integral(const Double_t *)
       const double x1hi = binbx[ibin1 + 1];
       const double x1lo = binbx[ibin1];
       Double_t x1center = (x1hi+x1lo)/2 ;
-      
+
       for (unsigned int ibin2=0; ibin2 < binby.size() - 1; ++ibin2) {
         const double x2hi = binby[ibin2 + 1];
         const double x2lo = binby[ibin2];

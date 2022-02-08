@@ -68,14 +68,14 @@ RooGenFunction::RooGenFunction(const RooGenFunction& other) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGenFunction::~RooGenFunction() 
+RooGenFunction::~RooGenFunction()
 {
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooGenFunction::DoEval(double x) const 
+double RooGenFunction::DoEval(double x) const
 {
   return _ftor(x) ;
 }

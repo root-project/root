@@ -32,7 +32,7 @@ namespace RooStats{
 namespace HistFactory{
 
   struct EstimateSummary;
-   
+
   class HistoToWorkspaceFactory: public TObject {
 
     public:
@@ -90,7 +90,7 @@ namespace HistFactory{
       std::string fRowTitle;
       std::vector<std::string> fSystToFix;
       double fNomLumi, fLumiError;
-      int  fLowBin, fHighBin;    
+      int  fLowBin, fHighBin;
       std::stringstream fResultsPrefixStr;
       TFile * fOut_f;
       FILE * pFile;

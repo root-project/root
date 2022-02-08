@@ -141,7 +141,7 @@ Double_t RooBukinPdf::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Bukin distribution.  
+/// Compute multiple values of Bukin distribution.
 void RooBukinPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;

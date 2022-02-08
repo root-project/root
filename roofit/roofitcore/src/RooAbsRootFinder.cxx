@@ -44,7 +44,7 @@ RooAbsRootFinder::RooAbsRootFinder(const RooAbsFunc& function) :
 {
   if(_function->getDimension() != 1) {
     oocoutE((TObject*)0,Eval) << "RooAbsRootFinder:: cannot find roots for function of dimension "
-			      << _function->getDimension() << endl;
+               << _function->getDimension() << endl;
     _valid= kFALSE;
   }
 }

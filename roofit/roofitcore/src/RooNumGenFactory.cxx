@@ -65,17 +65,17 @@ RooNumGenFactory::RooNumGenFactory()
   RooNumGenConfig::defaultConfig().method1D(kTRUE ,kFALSE).setLabel("RooAcceptReject") ;
   RooNumGenConfig::defaultConfig().method1D(kFALSE,kTRUE ).setLabel("RooAcceptReject") ;
   RooNumGenConfig::defaultConfig().method1D(kTRUE, kTRUE ).setLabel("RooAcceptReject") ;
-  
+
   RooNumGenConfig::defaultConfig().method2D(kFALSE,kFALSE).setLabel("RooFoamGenerator") ;
   RooNumGenConfig::defaultConfig().method2D(kTRUE ,kFALSE).setLabel("RooAcceptReject") ;
   RooNumGenConfig::defaultConfig().method2D(kFALSE,kTRUE ).setLabel("RooAcceptReject") ;
   RooNumGenConfig::defaultConfig().method2D(kTRUE, kTRUE ).setLabel("RooAcceptReject") ;
-  
+
   RooNumGenConfig::defaultConfig().methodND(kFALSE,kFALSE).setLabel("RooFoamGenerator") ;
   RooNumGenConfig::defaultConfig().methodND(kTRUE ,kFALSE).setLabel("RooAcceptReject") ;
   RooNumGenConfig::defaultConfig().methodND(kFALSE,kTRUE ).setLabel("RooAcceptReject") ;
   RooNumGenConfig::defaultConfig().methodND(kTRUE, kTRUE ).setLabel("RooAcceptReject") ;
-  
+
 }
 
 
@@ -89,7 +89,7 @@ RooNumGenFactory::~RooNumGenFactory()
   while (iter != _map.end()) {
     delete iter->second ;
     ++iter ;
-  }  
+  }
 }
 
 
@@ -117,7 +117,7 @@ RooNumGenFactory& RooNumGenFactory::instance()
 /// default configuration options and an optional list of names of other numeric integrators
 /// on which this integrator depends. Returns true if integrator was previously registered
 
-Bool_t RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArgSet& defConfig) 
+Bool_t RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArgSet& defConfig)
 {
   TString name = proto->IsA()->GetName() ;
 
@@ -126,12 +126,12 @@ Bool_t RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooA
     return kTRUE ;
   }
 
-  // Add to factory 
+  // Add to factory
   _map[name.Data()] = proto ;
 
   // Add default config to master config
   RooNumGenConfig::defaultConfig().addConfigSection(proto,defConfig) ;
-  
+
   return kFALSE ;
 }
 
@@ -140,12 +140,12 @@ Bool_t RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooA
 ////////////////////////////////////////////////////////////////////////////////
 /// Return prototype integrator with given (class) name
 
-const RooAbsNumGenerator* RooNumGenFactory::getProtoSampler(const char* name) 
+const RooAbsNumGenerator* RooNumGenFactory::getProtoSampler(const char* name)
 {
   if (_map.count(name)==0) {
     return 0 ;
-  } 
-  
+  }
+
   return _map[name] ;
 }
 
@@ -160,7 +160,7 @@ const RooAbsNumGenerator* RooNumGenFactory::getProtoSampler(const char* name)
 /// the number of dimensions, the nature of the limits (open ended vs closed) and the user
 /// preference stated in 'config'
 
-RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& condVars, const RooNumGenConfig& config, Bool_t verbose, RooAbsReal* maxFuncVal) 
+RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& condVars, const RooNumGenConfig& config, Bool_t verbose, RooAbsReal* maxFuncVal)
 {
   // Find method defined configuration
   Int_t ndim = genVars.getSize() ;
@@ -192,13 +192,13 @@ RooAbsNumGenerator* RooNumGenFactory::createSampler(RooAbsReal& func, const RooA
 
   // Check that a method was defined for this case
   if (!method.CompareTo("N/A")) {
-    oocoutE((TObject*)0,Integration) << "RooNumGenFactory::createSampler: No sampler method has been defined for " 
-				     << (cond?"a conditional ":"a ") << ndim << "-dimensional p.d.f" << endl ;
-    return 0 ;    
+    oocoutE((TObject*)0,Integration) << "RooNumGenFactory::createSampler: No sampler method has been defined for "
+                 << (cond?"a conditional ":"a ") << ndim << "-dimensional p.d.f" << endl ;
+    return 0 ;
   }
 
   // Retrieve proto integrator and return clone configured for the requested integration task
-  const RooAbsNumGenerator* proto = getProtoSampler(method) ;  
+  const RooAbsNumGenerator* proto = getProtoSampler(method) ;
   RooAbsNumGenerator* engine =  proto->clone(func,genVars,condVars,config,verbose,maxFuncVal) ;
   return engine ;
 }

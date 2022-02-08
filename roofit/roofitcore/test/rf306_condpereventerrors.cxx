@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #306
-// 
+//
 // Complete example with use of conditional p.d.f. with per-event errors
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -28,7 +28,7 @@ using namespace RooFit ;
 
 class TestBasic306 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic306(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Conditional use of per-event error p.d.f. F(t|dt)",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -65,7 +65,7 @@ public:
   // Specify external dataset with dterr values to use decay_dm as conditional p.d.f.
   RooDataSet* data = decay_gm.generate(dt,ProtoData(*expDataDterr)) ;
 
-  
+
 
   // F i t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
   // ---------------------------------------------------------------------
@@ -74,7 +74,7 @@ public:
   decay_gm.fitTo(*data,ConditionalObservables(dterr)) ;
 
 
-  
+
   // P l o t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
   // ---------------------------------------------------------------------
 
@@ -96,10 +96,10 @@ public:
   RooPlot* frame2 = dt.frame(Title("Projection of decay(dt|dterr) on dt")) ;
   data->plotOn(frame2) ;
 
-  // Make projection of decay(dt|dterr) on dt. 
+  // Make projection of decay(dt|dterr) on dt.
   //
   // Instead of integrating out dterr, make a weighted average of curves
-  // at values dterr_i as given in the external dataset. 
+  // at values dterr_i as given in the external dataset.
   // (The kTRUE argument bins the data before projection to speed up the process)
   decay_gm.plotOn(frame2,ProjWData(*expDataDterr,kTRUE)) ;
 

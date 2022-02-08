@@ -77,7 +77,7 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
   RooRealVar nRefineIter("nRefineIter","Number of refining iterations",5) ;
   RooRealVar nRefinePerDim("nRefinePerDim","Number of refining samples (per dimension)",1000) ;
   RooRealVar nIntPerDim("nIntPerDim","Number of integration samples (per dimension)",5000) ;
-  
+
   // Create prototype integrator
   RooMCIntegrator* proto = new RooMCIntegrator() ;
 
@@ -91,9 +91,9 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor 
-/// 
-/// coverity[UNINIT_CTOR] 
+/// Default constructor
+///
+/// coverity[UNINIT_CTOR]
 
  RooMCIntegrator::RooMCIntegrator()
 {
@@ -109,7 +109,7 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
 /// VEGAS documentation on details of the mode and type parameters.
 
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
-				 GeneratorType genType, Bool_t verbose) :
+             GeneratorType genType, Bool_t verbose) :
   RooAbsIntegrator(function), _grid(function), _verbose(verbose),
   _alpha(1.5),  _mode(mode), _genType(genType),
   _nRefineIter(5),_nRefinePerDim(1000),_nIntegratePerDim(5000)
@@ -117,7 +117,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
   // coverity[UNINIT_CTOR]
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.Print();
-} 
+}
 
 
 
@@ -127,7 +127,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _grid(function)
-{ 
+{
   const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
   _verbose = (Bool_t) configSet.getCatIndex("verbose",0) ;
   _alpha = configSet.getRealValue("alpha",1.5) ;
@@ -140,7 +140,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
   // check that our grid initialized without errors
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.Print();
-} 
+}
 
 
 
@@ -158,7 +158,7 @@ RooAbsIntegrator* RooMCIntegrator::clone(const RooAbsFunc& function, const RooNu
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooMCIntegrator::~RooMCIntegrator() 
+RooMCIntegrator::~RooMCIntegrator()
 {
 }
 
@@ -169,7 +169,7 @@ RooMCIntegrator::~RooMCIntegrator()
 /// is kTRUE we cannot handle the current limits (e.g. where the domain
 /// of one or more observables is open ended.
 
-Bool_t RooMCIntegrator::checkLimits() const 
+Bool_t RooMCIntegrator::checkLimits() const
 {
   return _grid.initialize(*integrand());
 }
@@ -182,7 +182,7 @@ Bool_t RooMCIntegrator::checkLimits() const
 /// over 5 iterations of 1k calls each, and the remaining 5k calls for a single
 /// high statistics integration.
 
-Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/) 
+Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/)
 {
   _timer.Start(kTRUE);
   vegas(AllStages,_nRefinePerDim*_grid.getDimension(),_nRefineIter);
@@ -199,7 +199,7 @@ Double_t RooMCIntegrator::integral(const Double_t* /*yvec*/)
 /// of the integral. Also sets *absError to the estimated absolute error of the integral
 /// estimate if absError is non-zero.
 
-Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError) 
+Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Double_t *absError)
 {
   //cout << "VEGAS stage = " << stage << " calls = " << calls << " iterations = " << iterations << endl ;
 
@@ -230,18 +230,18 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
       // if the dimension is low enough)
       _mode = Importance;
       if (2*boxes >= RooGrid::maxBins) {
-	_mode = Stratified;
-	// adjust the number of bins and boxes to give an integral number >= 1 of boxes per bin
-	Int_t box_per_bin= (boxes > RooGrid::maxBins) ? boxes/RooGrid::maxBins : 1;
-	bins= boxes/box_per_bin;
-	if(bins > RooGrid::maxBins) bins= RooGrid::maxBins;
-	boxes = box_per_bin * bins;	
-	oocxcoutD((TObject*)0,Integration) << "RooMCIntegrator: using stratified sampling with " << bins << " bins and "
-					 << box_per_bin << " boxes/bin" << endl;
+   _mode = Stratified;
+   // adjust the number of bins and boxes to give an integral number >= 1 of boxes per bin
+   Int_t box_per_bin= (boxes > RooGrid::maxBins) ? boxes/RooGrid::maxBins : 1;
+   bins= boxes/box_per_bin;
+   if(bins > RooGrid::maxBins) bins= RooGrid::maxBins;
+   boxes = box_per_bin * bins;
+   oocxcoutD((TObject*)0,Integration) << "RooMCIntegrator: using stratified sampling with " << bins << " bins and "
+                << box_per_bin << " boxes/bin" << endl;
       }
       else {
-	oocxcoutD((TObject*)0,Integration) << "RooMCIntegrator: using importance sampling with " << bins << " bins and "
-					 << boxes << " boxes" << endl;
+   oocxcoutD((TObject*)0,Integration) << "RooMCIntegrator: using importance sampling with " << bins << " bins and "
+                << boxes << " boxes" << endl;
       }
     }
 
@@ -272,9 +272,9 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
   _chisq = 0.0;
   for (UInt_t it = 0; it < iterations; it++) {
     Double_t intgrl(0),intgrl_sq(0),sig(0),jacbin(_jac);
-    
+
     _it_num = _it_start + it;
-    
+
     // reset the values associated with each grid cell
     _grid.resetValues();
 
@@ -300,7 +300,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
       Double_t f_sq_sum = q * _calls_per_box ;
       sig += f_sq_sum ;
 
-      // accumulate the results for this grid box (stratified sampling only)      
+      // accumulate the results for this grid box (stratified sampling only)
       if (_mode == Stratified) _grid.accumulate(bin, f_sq_sum);
 
       // print occasional progress messages
@@ -324,7 +324,7 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
 
     // compute final results for this iteration
     Double_t wgt;
-    sig = sig / (_calls_per_box - 1.0)  ;    
+    sig = sig / (_calls_per_box - 1.0)  ;
     if (sig > 0) {
       wgt = 1.0 / sig;
     }
@@ -337,27 +337,27 @@ Double_t RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, Do
     intgrl_sq = intgrl * intgrl;
     _result = intgrl;
     _sigma  = sqrt(sig);
-    
+
     if (wgt > 0.0) {
       _samples++ ;
       _sum_wgts += wgt;
       _wtd_int_sum += intgrl * wgt;
       _chi_sum += intgrl_sq * wgt;
-      
+
       cum_int = _wtd_int_sum / _sum_wgts;
       cum_sig = sqrt (1 / _sum_wgts);
-      
+
       if (_samples > 1) {
-	_chisq = (_chi_sum - _wtd_int_sum * cum_int)/(_samples - 1.0);
+   _chisq = (_chi_sum - _wtd_int_sum * cum_int)/(_samples - 1.0);
       }
     }
     else {
       cum_int += (intgrl - cum_int) / (it + 1.0);
       cum_sig = 0.0;
-    }         
+    }
     oocxcoutD((TObject*)0,Integration) << "=== Iteration " << _it_num << " : I = " << intgrl << " +/- " << sqrt(sig) << endl
-				     << "    Cumulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
-				     << ")" << endl;
+                 << "    Cumulative : I = " << cum_int << " +/- " << cum_sig << "( chi2 = " << _chisq
+                 << ")" << endl;
     // print the grid after the final iteration
     if (oodologD((TObject*)0,Integration)) {
       if(it + 1 == iterations) _grid.Print("V");

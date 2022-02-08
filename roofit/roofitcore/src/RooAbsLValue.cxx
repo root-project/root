@@ -39,7 +39,7 @@ ClassImp(RooAbsLValue);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsLValue::RooAbsLValue() 
+RooAbsLValue::RooAbsLValue()
 {
 }
 
@@ -48,6 +48,6 @@ RooAbsLValue::RooAbsLValue()
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsLValue::~RooAbsLValue() 
+RooAbsLValue::~RooAbsLValue()
 {
 }

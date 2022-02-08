@@ -49,7 +49,7 @@ RooFunctor::RooFunctor(const RooAbsFunc& func)
 {
   _ownBinding = kFALSE ;
 
-  _x = new Double_t[func.getDimension()] ; 
+  _x = new Double_t[func.getDimension()] ;
 
   _nobs = func.getDimension() ;
   _npar = 0 ;
@@ -61,7 +61,7 @@ RooFunctor::RooFunctor(const RooAbsFunc& func)
 ////////////////////////////////////////////////////////////////////////////////
 /// Store list of observables
 
-RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters) 
+RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters)
 {
   _nset.add(observables) ;
 
@@ -74,7 +74,7 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
   _ownBinding = kTRUE ;
 
   // Allocate transfer array
-  _x = new Double_t[allVars.getSize()] ; 
+  _x = new Double_t[allVars.getSize()] ;
   _nobs = observables.getSize() ;
   _npar = parameters.getSize() ;
 }
@@ -83,7 +83,7 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
 ////////////////////////////////////////////////////////////////////////////////
 /// Store normalization set
 
-RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters, const RooArgSet& nset) 
+RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters, const RooArgSet& nset)
 {
   _nset.add(nset) ;
 
@@ -96,7 +96,7 @@ RooFunctor::RooFunctor(const RooAbsReal& func, const RooArgList& observables, co
   _ownBinding = kTRUE ;
 
   // Allocate transfer array
-  _x = new Double_t[allVars.getSize()] ; 
+  _x = new Double_t[allVars.getSize()] ;
   _nobs = observables.getSize() ;
   _npar = parameters.getSize() ;
 }
@@ -126,9 +126,9 @@ RooFunctor::RooFunctor(const RooFunctor& other) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooFunctor::~RooFunctor() 
+RooFunctor::~RooFunctor()
 {
-  if (_ownBinding) delete _binding ; 
+  if (_ownBinding) delete _binding ;
   delete[] _x ;
 }
 
@@ -152,11 +152,11 @@ Double_t RooFunctor::eval(Double_t x) const
 
 Double_t RooFunctor::eval(const Double_t *x, const Double_t *p) const
 {
-  for (int i=0 ; i<_nobs ; i++) { 
-    _x[i] = x[i] ; 
+  for (int i=0 ; i<_nobs ; i++) {
+    _x[i] = x[i] ;
   }
-  for (int i=0 ; i<_npar ; i++) { 
-    _x[i+_nobs] = p[i] ; 
+  for (int i=0 ; i<_npar ; i++) {
+    _x[i+_nobs] = p[i] ;
   }
   return (*_binding)(_x) ;
 }

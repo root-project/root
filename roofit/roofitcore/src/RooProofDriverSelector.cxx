@@ -38,17 +38,17 @@
 using namespace RooFit;
 using namespace std;
 
-void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/) 
-{  
-  // Retrieve study pack 
+void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
+{
+  // Retrieve study pack
   _pkg=0 ;
-  if (fInput) { 
+  if (fInput) {
     TIter iter = fInput->MakeIterator() ;
     TObject* obj ;
     while((obj=iter.Next())) {
       RooStudyPackage* tmp = dynamic_cast<RooStudyPackage*>(obj) ;
       if (tmp) {
-	_pkg = tmp ;
+   _pkg = tmp ;
       }
      }
   }
@@ -58,12 +58,12 @@ void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
   } else {
     cout << "workspace contents = " << endl ;
     _pkg->wspace().Print() ;
-    
+
     // Initialize study pack
     seed = _pkg->initRandom() ;
     _pkg->initialize() ;
   }
-    
+
 }
 
 Bool_t RooProofDriverSelector::Process(Long64_t entry)
@@ -74,7 +74,7 @@ Bool_t RooProofDriverSelector::Process(Long64_t entry)
 }
 
 
-void RooProofDriverSelector::SlaveTerminate() 
+void RooProofDriverSelector::SlaveTerminate()
 {
   _pkg->finalize() ;
   _pkg->exportData(fOutput,seed) ;

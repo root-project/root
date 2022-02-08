@@ -1,11 +1,11 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'VALIDATION AND MC STUDIES' RooFit tutorial macro #802
-// 
-// RooMCStudy: using separate fit and generator models, using the chi^2 calculator model 
 //
-// 
-// 07/2008 - Wouter Verkerke 
+// RooMCStudy: using separate fit and generator models, using the chi^2 calculator model
+//
+//
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -30,11 +30,11 @@ using namespace RooFit ;
 // Elementary operations on a gaussian PDF
 class TestBasic802 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic802(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Study with chi^2 calculator",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   m o d e l 
+  // C r e a t e   m o d e l
   // -----------------------
 
   // Observables, parameters
@@ -44,7 +44,7 @@ public:
   RooRealVar sigma("sigma","width of gaussian",5,1,10) ;
 
   // Create Gaussian pdf
-  RooGaussian gauss("gauss","gaussian PDF",x,mean,sigma) ;  
+  RooGaussian gauss("gauss","gaussian PDF",x,mean,sigma) ;
 
 
 
@@ -60,7 +60,7 @@ public:
 
   // Generate 200 samples of 1000 events
   mcs->generateAndFit(200,1000) ;
-  
+
   // Fill histograms with distributions chi2 and prob(chi2,ndf) that
   // are calculated by RooChiMCSModule
 
@@ -70,17 +70,17 @@ public:
   TH1* h_chi2  = new TH1F("h_chi2","",40,0,20) ;
   TH1* h_prob  = new TH1F("h_prob","",40,0,1) ;
 
-  mcs->fitParDataSet().fillHistogram(h_chi2,*chi2) ; 
-  mcs->fitParDataSet().fillHistogram(h_prob,*prob) ;   
+  mcs->fitParDataSet().fillHistogram(h_chi2,*chi2) ;
+  mcs->fitParDataSet().fillHistogram(h_prob,*prob) ;
 
 
 
-  // C r e a t e   m a n a g e r  w i t h   s e p a r a t e   f i t   m o d e l 
+  // C r e a t e   m a n a g e r  w i t h   s e p a r a t e   f i t   m o d e l
   // ----------------------------------------------------------------------------
 
   // Create alternate pdf with shifted mean
   RooRealVar mean2("mean2","mean of gaussian 2",0.5) ;
-  RooGaussian gauss2("gauss2","gaussian PDF2",x,mean2,sigma) ;  
+  RooGaussian gauss2("gauss2","gaussian PDF2",x,mean2,sigma) ;
 
   // Create study manager with separate generation and fit model. This configuration
   // is set up to generate bad fits as the fit and generator model have different means
@@ -93,15 +93,15 @@ public:
 
   // Generate 200 samples of 1000 events
   mcs2->generateAndFit(200,1000) ;
-  
+
   // Fill histograms with distributions chi2 and prob(chi2,ndf) that
   // are calculated by RooChiMCSModule
 
   TH1* h2_chi2  = new TH1F("h2_chi2","",40,0,20) ;
   TH1* h2_prob  = new TH1F("h2_prob","",40,0,1) ;
-  
-  mcs2->fitParDataSet().fillHistogram(h2_chi2,*chi2) ; 
-  mcs2->fitParDataSet().fillHistogram(h2_prob,*prob) ;   
+
+  mcs2->fitParDataSet().fillHistogram(h2_chi2,*chi2) ;
+  mcs2->fitParDataSet().fillHistogram(h2_prob,*prob) ;
 
   h_chi2->SetLineColor(kRed) ;
   h_prob->SetLineColor(kRed) ;
@@ -114,6 +114,6 @@ public:
   delete mcs ;
   delete mcs2 ;
 
-  return kTRUE ;  
+  return kTRUE ;
   }
 } ;

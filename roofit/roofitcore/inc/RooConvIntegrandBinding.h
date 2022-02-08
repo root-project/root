@@ -25,7 +25,7 @@ class RooArgSet;
 class RooConvIntegrandBinding : public RooAbsFunc {
 public:
   RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model,
-	             RooAbsReal& x, RooAbsReal& xprime,
+                RooAbsReal& x, RooAbsReal& xprime,
                      const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE);
   ~RooConvIntegrandBinding() override;
 

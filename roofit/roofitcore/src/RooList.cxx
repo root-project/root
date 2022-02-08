@@ -42,7 +42,7 @@ ClassImp(RooList);
 /// string associated with its link. Also print a warning message
 /// if caller is non-zero.
 
-TObjOptLink *RooList::findLink(const char *name, const char *caller) const 
+TObjOptLink *RooList::findLink(const char *name, const char *caller) const
 {
   if(0 == strlen(name)) return 0;
   TObjLink *link = FirstLink();
@@ -65,7 +65,7 @@ TObjOptLink *RooList::findLink(const char *name, const char *caller) const
 /// Move the target object immediately before the specified object,
 /// preserving any Option_t associated with the target link.
 
-Bool_t RooList::moveBefore(const char *before, const char *target, const char *caller) 
+Bool_t RooList::moveBefore(const char *before, const char *target, const char *caller)
 {
   // Find the target object's link
   TObjOptLink *targetLink= findLink(target,caller);
@@ -100,7 +100,7 @@ Bool_t RooList::moveBefore(const char *before, const char *target, const char *c
 /// Move the target object immediately after the specified object,
 /// preserving any Option_t associated with the target link.
 
-Bool_t RooList::moveAfter(const char *after, const char *target, const char *caller) 
+Bool_t RooList::moveAfter(const char *after, const char *target, const char *caller)
 {
   // Find the target object's link
   TObjOptLink *targetLink= findLink(target,caller);

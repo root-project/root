@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'SPECIAL PDFS' RooFit tutorial macro #703
-// 
+//
 // Using a product of an (acceptance) efficiency and a p.d.f as p.d.f.
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -27,7 +27,7 @@ using namespace RooFit ;
 // Elementary operations on a gaussian PDF
 class TestBasic703 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic703(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Efficiency product operator p.d.f",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -45,21 +45,21 @@ public:
 
   // D e f i n e   e f f i c i e n c y   f u n c t i o n
   // ---------------------------------------------------
-  
+
   // Use error function to simulate turn-on slope
   RooFormulaVar eff("eff","0.5*(TMath::Erf((t-1)/0.5)+1)",t) ;
 
 
 
-  // D e f i n e   d e c a y   p d f   w i t h   e f f i c i e n c y 
+  // D e f i n e   d e c a y   p d f   w i t h   e f f i c i e n c y
   // ---------------------------------------------------------------
 
   // Multiply pdf(t) with efficiency in t
   RooEffProd modelEff("modelEff","model with efficiency",model,eff) ;
 
-  
 
-  // P l o t   e f f i c i e n c y ,   p d f  
+
+  // P l o t   e f f i c i e n c y ,   p d f
   // ----------------------------------------
 
   RooPlot* frame1 = t.frame(Title("Efficiency")) ;
@@ -76,10 +76,10 @@ public:
   // ------------------------------------------------------------------------------
 
   // Generate events. If the input pdf has an internal generator, the internal generator
-  // is used and an accept/reject sampling on the efficiency is applied. 
+  // is used and an accept/reject sampling on the efficiency is applied.
   RooDataSet* data = modelEff.generate(t,10000) ;
 
-  // Fit pdf. The normalization integral is calculated numerically. 
+  // Fit pdf. The normalization integral is calculated numerically.
   modelEff.fitTo(*data) ;
 
   // Plot generated data and overlay fitted pdf
@@ -87,7 +87,7 @@ public:
   data->plotOn(frame3) ;
   modelEff.plotOn(frame3) ;
 
-  
+
   regPlot(frame1,"rf703_plot1") ;
   regPlot(frame2,"rf703_plot2") ;
   regPlot(frame3,"rf703_plot3") ;

@@ -235,8 +235,8 @@ public:
   void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
   void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
   void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0,
-			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE,
-			  Bool_t valueOnly=kFALSE, Bool_t recurseNonDerived=kFALSE) const ;
+           Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE,
+           Bool_t valueOnly=kFALSE, Bool_t recurseNonDerived=kFALSE) const ;
 
 
   /// Is this object a fundamental type that can be added to a dataset?
@@ -465,8 +465,8 @@ public:
       return kTRUE ;
     case Auto:
       if (_valueDirty) {
-	_valueDirty = kFALSE ;
-	return isDerived();
+   _valueDirty = kFALSE ;
+   return isDerived();
       }
       return kFALSE ;
     }
@@ -485,9 +485,9 @@ public:
       return kTRUE ;
     case Auto:
       if (_valueDirty || _shapeDirty) {
-	_shapeDirty = kFALSE ;
-	_valueDirty = kFALSE ;
-	return isDerived();
+   _shapeDirty = kFALSE ;
+   _valueDirty = kFALSE ;
+   return isDerived();
       }
       _shapeDirty = kFALSE ;
       _valueDirty = kFALSE ;

@@ -81,7 +81,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   while((arg= (const RooAbsArg*)iterator->Next())) {
     if(!arg->isFundamental()) {
       coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for derived \""
-			<< arg->GetName() << "\"" << endl;
+         << arg->GetName() << "\"" << endl;
       _isValid= kFALSE;
       continue;
     }
@@ -102,17 +102,17 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
     }
     else if(0 != realVar) {
       if(realVar->hasMin() && realVar->hasMax()) {
-	_realVars.add(*realVar);
+   _realVars.add(*realVar);
       }
       else {
-	coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
-			  << realVar->GetName() << "\" with unbound range" << endl;
-	_isValid= kFALSE;
+   coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
+           << realVar->GetName() << "\" with unbound range" << endl;
+   _isValid= kFALSE;
       }
     }
     else {
       coutE(Generation) << fName << "::" << ClassName() << ": cannot generate values for \""
-			<< arg->GetName() << "\" with unexpected type" << endl;
+         << arg->GetName() << "\" with unexpected type" << endl;
       _isValid= kFALSE;
     }
   }
@@ -153,7 +153,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsNumGenerator::~RooAbsNumGenerator() 
+RooAbsNumGenerator::~RooAbsNumGenerator()
 {
   delete _cloneSet;
   delete _cache ;
@@ -165,7 +165,7 @@ RooAbsNumGenerator::~RooAbsNumGenerator()
 ////////////////////////////////////////////////////////////////////////////////
 /// Reattach original parameters to function clone
 
-void RooAbsNumGenerator::attachParameters(const RooArgSet& vars) 
+void RooAbsNumGenerator::attachParameters(const RooArgSet& vars)
 {
   RooArgSet newParams(vars) ;
   newParams.remove(*_cache->get(),kTRUE,kTRUE) ;
@@ -179,7 +179,7 @@ void RooAbsNumGenerator::attachParameters(const RooArgSet& vars)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of the generator
 
-void RooAbsNumGenerator::printName(ostream& os) const 
+void RooAbsNumGenerator::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -189,7 +189,7 @@ void RooAbsNumGenerator::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the title of the generator
 
-void RooAbsNumGenerator::printTitle(ostream& os) const 
+void RooAbsNumGenerator::printTitle(ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -199,7 +199,7 @@ void RooAbsNumGenerator::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the class name of the generator
 
-void RooAbsNumGenerator::printClassName(ostream& os) const 
+void RooAbsNumGenerator::printClassName(ostream& os) const
 {
   os << IsA()->GetName() ;
 }
@@ -209,7 +209,7 @@ void RooAbsNumGenerator::printClassName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the arguments of the generator
 
-void RooAbsNumGenerator::printArgs(ostream& os) const 
+void RooAbsNumGenerator::printArgs(ostream& os) const
 {
   os << "[ function=" << _funcClone->GetName() << " catobs=" << _catVars << " realobs=" << _realVars << " ]" ;
 }

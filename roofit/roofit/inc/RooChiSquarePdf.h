@@ -30,10 +30,10 @@ public:
   TObject* clone(const char* newname) const override { return new RooChiSquarePdf(*this, newname); }
   inline ~RooChiSquarePdf() override { }
 
-  
+
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
-  
+
 
 private:
 

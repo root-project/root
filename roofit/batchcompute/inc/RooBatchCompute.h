@@ -57,7 +57,7 @@ enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShap
  * is selected, and using a virtual call, the computation is dispatched to the best backend.
  *
  * \see RooBatchCompute::dispatch, RooBatchComputeClass, RF_ARCH
- */ 
+ */
 class RooBatchComputeInterface {
   public:
     virtual ~RooBatchComputeInterface() = default;
@@ -66,7 +66,7 @@ class RooBatchComputeInterface {
     virtual double sumReduce(cudaStream_t*, InputArr input, size_t n) = 0;
     virtual Architecture architecture() const = 0;
     virtual std::string architectureName() const = 0;
-       
+
     //cuda functions that need to be interfaced
     virtual void* cudaMalloc(size_t)                { throw std::bad_function_call(); }
     virtual void  cudaFree(void*)                   { throw std::bad_function_call(); }

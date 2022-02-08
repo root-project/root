@@ -13,13 +13,13 @@ namespace HistFactory {
 
     PreprocessFunction();
 
-    
+
     PreprocessFunction(std::string Name, std::string Expression, std::string Dependents);
     std::string GetCommand(std::string Name, std::string Expression, std::string Dependents);
-			   
 
-    void Print(std::ostream& = std::cout);  
-    void PrintXML(std::ostream& );  
+
+    void Print(std::ostream& = std::cout);
+    void PrintXML(std::ostream& );
 
     void SetName( const std::string& Name) { fName = Name; }
     std::string GetName() const { return fName; }
@@ -29,7 +29,7 @@ namespace HistFactory {
 
     void SetDependents( const std::string& Dependents) { fDependents = Dependents; }
     std::string GetDependents() const { return fDependents; }
-    
+
     void SetCommand( const std::string& Command) { fCommand = Command; }
     std::string GetCommand() const { return fCommand; }
 

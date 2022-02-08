@@ -1,5 +1,5 @@
 // @(#)root/roostats:$Id$
-// Author: Kyle Cranmer, George Lewis 
+// Author: Kyle Cranmer, George Lewis
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -37,7 +37,7 @@ RooStats::HistFactory::Constraint::Type RooStats::HistFactory::Constraint::GetTy
     std::cout << "Error: Given empty name for ConstraintType" << std::endl;
     throw hf_exc();
   }
-  
+
   else if ( Name == "Gaussian" || Name == "Gauss" ) {
     return Constraint::Gaussian;
   }
@@ -54,17 +54,17 @@ RooStats::HistFactory::Constraint::Type RooStats::HistFactory::Constraint::GetTy
 }
 
 // Norm Factor
-RooStats::HistFactory::NormFactor::NormFactor() : fName(""), fVal(1.0), 
-						  fLow(1.0), fHigh(1.0), 
-						  fConst(true) {;}
+RooStats::HistFactory::NormFactor::NormFactor() : fName(""), fVal(1.0),
+                    fLow(1.0), fHigh(1.0),
+                    fConst(true) {;}
 
 void RooStats::HistFactory::NormFactor::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
-	 << "\t Val: " << fVal
-	 << "\t Low: " << fLow
-	 << "\t High: " << fHigh
-	 << "\t Const: " << fConst
-	 << std::endl;
+    << "\t Val: " << fVal
+    << "\t Low: " << fLow
+    << "\t High: " << fHigh
+    << "\t Const: " << fConst
+    << std::endl;
 }
 
 void RooStats::HistFactory::NormFactor::PrintXML( std::ostream& xml ) const {
@@ -79,9 +79,9 @@ void RooStats::HistFactory::NormFactor::PrintXML( std::ostream& xml ) const {
 // Overall Sys
 void RooStats::HistFactory::OverallSys::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
-	 << "\t Low: " << fLow
-	 << "\t High: " << fHigh
-	 << std::endl;
+    << "\t Low: " << fLow
+    << "\t High: " << fHigh
+    << std::endl;
 }
 
 void RooStats::HistFactory::OverallSys::PrintXML( std::ostream& xml ) const {
@@ -94,40 +94,40 @@ void RooStats::HistFactory::OverallSys::PrintXML( std::ostream& xml ) const {
 
 void RooStats::HistFactory::HistogramUncertaintyBase::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
-	 << "\t HistoFileLow: " << fInputFileLow
-	 << "\t HistoNameLow: " << fHistoNameLow
-	 << "\t HistoPathLow: " << fHistoPathLow
-	 << "\t HistoFileHigh: " << fInputFileHigh
-	 << "\t HistoNameHigh: " << fHistoNameHigh
-	 << "\t HistoPathHigh: " << fHistoPathHigh
-	 << std::endl;
+    << "\t HistoFileLow: " << fInputFileLow
+    << "\t HistoNameLow: " << fHistoNameLow
+    << "\t HistoPathLow: " << fHistoPathLow
+    << "\t HistoFileHigh: " << fInputFileHigh
+    << "\t HistoNameHigh: " << fHistoNameHigh
+    << "\t HistoPathHigh: " << fHistoPathHigh
+    << std::endl;
 }
 
 void RooStats::HistFactory::HistogramUncertaintyBase::writeToFile( const std::string& FileName,
-						   const std::string& DirName ) {
+                     const std::string& DirName ) {
 
-  // This saves the histograms to a file and 
+  // This saves the histograms to a file and
   // changes the name of the local file and histograms
-  
+
   auto histLow = GetHistoLow();
   if( histLow==NULL ) {
     std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " HistoLow is NULL" 
-	      << std::endl;
+         << " to file: " << FileName
+         << " HistoLow is NULL"
+         << std::endl;
     throw hf_exc();
   }
   histLow->Write();
   fInputFileLow = FileName;
   fHistoPathLow = DirName;
-  fHistoNameLow = histLow->GetName(); 
+  fHistoNameLow = histLow->GetName();
 
   auto histHigh = GetHistoHigh();
   if( histHigh==NULL ) {
     std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " HistoHigh is NULL" 
-	      << std::endl;
+         << " to file: " << FileName
+         << " HistoHigh is NULL"
+         << std::endl;
     throw hf_exc();
   }
   histHigh->Write();
@@ -156,10 +156,10 @@ void RooStats::HistFactory::HistoSys::PrintXML( std::ostream& xml ) const {
 
 void RooStats::HistFactory::ShapeSys::Print( std::ostream& stream ) const {
   stream << "\t \t Name: " << fName
-	 << "\t InputFile: " << fInputFileHigh
-	 << "\t HistoName: " << fHistoNameHigh
-	 << "\t HistoPath: " << fHistoPathHigh
-	 << std::endl;
+    << "\t InputFile: " << fInputFileHigh
+    << "\t HistoName: " << fHistoNameHigh
+    << "\t HistoPath: " << fHistoPathHigh
+    << std::endl;
 }
 
 
@@ -173,15 +173,15 @@ void RooStats::HistFactory::ShapeSys::PrintXML( std::ostream& xml ) const {
 }
 
 
-void RooStats::HistFactory::ShapeSys::writeToFile( const std::string& FileName, 
-						   const std::string& DirName ) {
+void RooStats::HistFactory::ShapeSys::writeToFile( const std::string& FileName,
+                     const std::string& DirName ) {
 
   auto histError = GetErrorHist();
   if( histError==NULL ) {
     std::cout << "Error: Cannot write " << GetName()
-	      << " to file: " << FileName
-	      << " ErrorHist is NULL" 
-	      << std::endl;
+         << " to file: " << FileName
+         << " ErrorHist is NULL"
+         << std::endl;
     throw hf_exc();
   }
   histError->Write();
@@ -216,13 +216,13 @@ void RooStats::HistFactory::HistoFactor::PrintXML( std::ostream& xml ) const {
 void RooStats::HistFactory::ShapeFactor::Print( std::ostream& stream ) const {
 
   stream << "\t \t Name: " << fName << std::endl;
-  
+
   if( fHistoNameHigh != "" ) {
     stream << "\t \t "
-	   << " Shape Hist Name: " << fHistoNameHigh
-	   << " Shape Hist Path Name: " << fHistoPathHigh
-	   << " Shape Hist FileName: " << fInputFileHigh
-	   << std::endl;
+      << " Shape Hist Name: " << fHistoNameHigh
+      << " Shape Hist Path Name: " << fHistoPathHigh
+      << " Shape Hist FileName: " << fInputFileHigh
+      << std::endl;
   }
 
   if( fConstant ) { stream << "\t \t ( Constant ): " << std::endl; }
@@ -230,16 +230,16 @@ void RooStats::HistFactory::ShapeFactor::Print( std::ostream& stream ) const {
 }
 
 
-void RooStats::HistFactory::ShapeFactor::writeToFile( const std::string& FileName, 
-						      const std::string& DirName ) {
+void RooStats::HistFactory::ShapeFactor::writeToFile( const std::string& FileName,
+                        const std::string& DirName ) {
 
   if( HasInitialShape() ) {
     auto histInitialShape = GetInitialShape();
     if( histInitialShape==NULL ) {
       std::cout << "Error: Cannot write " << GetName()
-		<< " to file: " << FileName
-		<< " InitialShape is NULL" 
-		<< std::endl;
+      << " to file: " << FileName
+      << " InitialShape is NULL"
+      << std::endl;
       throw hf_exc();
     }
     histInitialShape->Write();
@@ -257,8 +257,8 @@ void RooStats::HistFactory::ShapeFactor::PrintXML( std::ostream& xml ) const {
   xml << "      <ShapeFactor Name=\"" << GetName() << "\" ";
   if( fHasInitialShape ) {
     xml << " InputFile=\""  << GetInputFile()  << "\" "
-	<< " HistoName=\""  << GetHistoName()  << "\" "
-	<< " HistoPath=\""  << GetHistoPath()  << "\" ";
+   << " HistoName=\""  << GetHistoName()  << "\" "
+   << " HistoPath=\""  << GetHistoPath()  << "\" ";
   }
   xml << "  /> " << std::endl;
 }
@@ -267,14 +267,14 @@ void RooStats::HistFactory::ShapeFactor::PrintXML( std::ostream& xml ) const {
 // Stat Error Config
 void RooStats::HistFactory::StatErrorConfig::Print( std::ostream& stream ) const {
   stream << "\t \t RelErrorThreshold: " << fRelErrorThreshold
-	 << "\t ConstraintType: " << Constraint::Name( fConstraintType )
-	 << std::endl;
-}  
+    << "\t ConstraintType: " << Constraint::Name( fConstraintType )
+    << std::endl;
+}
 
 void RooStats::HistFactory::StatErrorConfig::PrintXML( std::ostream& xml ) const {
-  xml << "    <StatErrorConfig RelErrorThreshold=\"" << GetRelErrorThreshold() 
+  xml << "    <StatErrorConfig RelErrorThreshold=\"" << GetRelErrorThreshold()
       << "\" "
-      << "ConstraintType=\"" << Constraint::Name( GetConstraintType() ) 
+      << "ConstraintType=\"" << Constraint::Name( GetConstraintType() )
       << "\" "
       << "/> " << std::endl << std::endl;
 
@@ -284,45 +284,45 @@ void RooStats::HistFactory::StatErrorConfig::PrintXML( std::ostream& xml ) const
 // Stat Error
 void RooStats::HistFactory::StatError::Print( std::ostream& stream ) const {
   stream << "\t \t Activate: " << fActivate
-	 << "\t InputFile: " << fInputFileHigh
-	 << "\t HistoName: " << fHistoNameHigh
-	 << "\t histoPath: " << fHistoPathHigh
-	 << std::endl;
-}  
+    << "\t InputFile: " << fInputFileHigh
+    << "\t HistoName: " << fHistoNameHigh
+    << "\t histoPath: " << fHistoPathHigh
+    << std::endl;
+}
 
 void RooStats::HistFactory::StatError::PrintXML( std::ostream& xml ) const {
 
   if( GetActivate() ) {
-    xml << "      <StatError Activate=\"" 
-	<< (GetActivate() ? std::string("True") : std::string("False"))  
-	<< "\" "
-	<< " InputFile=\"" << GetInputFile() << "\" "
-	<< " HistoName=\"" << GetHistoName() << "\" "
-	<< " HistoPath=\"" << GetHistoPath() << "\" "
-	<< " /> " << std::endl;
+    xml << "      <StatError Activate=\""
+   << (GetActivate() ? std::string("True") : std::string("False"))
+   << "\" "
+   << " InputFile=\"" << GetInputFile() << "\" "
+   << " HistoName=\"" << GetHistoName() << "\" "
+   << " HistoPath=\"" << GetHistoPath() << "\" "
+   << " /> " << std::endl;
   }
 
 }
 
 
-void RooStats::HistFactory::StatError::writeToFile( const std::string& OutputFileName, 
-						    const std::string& DirName ) {
+void RooStats::HistFactory::StatError::writeToFile( const std::string& OutputFileName,
+                      const std::string& DirName ) {
 
   if( fUseHisto ) {
-    
+
     std::string statErrorHistName = "statisticalErrors";
-    
+
     auto hStatError = GetErrorHist();
     if( hStatError == NULL ) {
       std::cout << "Error: Stat Error error hist is NULL" << std::endl;
       throw hf_exc();
     }
     hStatError->Write(statErrorHistName.c_str());
-    
+
     fInputFileHigh = OutputFileName;
     fHistoNameHigh = statErrorHistName;
     fHistoPathHigh = DirName;
-    
+
   }
 
   return;

@@ -19,7 +19,7 @@
 \class RooSegmentedIntegrator2D
 \ingroup Roofitcore
 
-RooSegmentedIntegrator2D implements an adaptive one-dimensional 
+RooSegmentedIntegrator2D implements an adaptive one-dimensional
 numerical integration algorithm.
 **/
 
@@ -72,7 +72,7 @@ RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() :
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,config)))),config)
 {
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -80,11 +80,11 @@ RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, c
 /// explicit definition of integration range
 
 RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
-				 Double_t ymin, Double_t ymax,
-				 const RooNumIntConfig& config) :
+             Double_t ymin, Double_t ymax,
+             const RooNumIntConfig& config) :
   RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
 {
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,7 +100,7 @@ RooAbsIntegrator* RooSegmentedIntegrator2D::clone(const RooAbsFunc& function, co
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() 
+RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
 {
   delete _xint ;
   delete _xIntegrator ;
@@ -112,7 +112,7 @@ RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
 /// Check that our integration range is finite and otherwise return kFALSE.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooSegmentedIntegrator2D::checkLimits() const 
+Bool_t RooSegmentedIntegrator2D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());

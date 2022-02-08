@@ -271,7 +271,7 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
 /// where a pdf is constructed as "data minus background" and is thus
 /// intended to be displayed as "data" (or at least data-like).
 /// Usage of this signature is triggered by the draw style "P" in RooAbsReal::plotOn.
-/// 
+///
 /// More details.
 /// \param[in] f The function to be plotted.
 /// \param[in] x The variable on the x-axis
@@ -311,7 +311,7 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
     rawPtr= funcPtr;
     funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
   }
-  
+
   // apply a scale factor if necessary
   assert(funcPtr);
 
@@ -330,7 +330,7 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
     _entries += yval;
   }
   _nominalBinWidth = 1.;
-  
+
   // cleanup
   delete funcPtr;
   if(rawPtr) delete rawPtr;

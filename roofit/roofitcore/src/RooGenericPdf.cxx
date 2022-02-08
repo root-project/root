@@ -59,12 +59,12 @@ ClassImp(RooGenericPdf);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with formula expression and list of input variables
 
-RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgList& dependents) : 
-  RooAbsPdf(name,title), 
+RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgList& dependents) :
+  RooAbsPdf(name,title),
   _actualVars("actualVars","Variables used by PDF expression",this),
   _formExpr(title)
-{  
-  _actualVars.add(dependents) ; 
+{
+  _actualVars.add(dependents) ;
   formula();
 
   if (_actualVars.getSize()==0) _value = traceEval(0) ;
@@ -75,12 +75,12 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgLi
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with a name, title, formula expression and a list of variables
 
-RooGenericPdf::RooGenericPdf(const char *name, const char *title, 
-			     const char* inFormula, const RooArgList& dependents) : 
-  RooAbsPdf(name,title), 
+RooGenericPdf::RooGenericPdf(const char *name, const char *title,
+              const char* inFormula, const RooArgList& dependents) :
+  RooAbsPdf(name,title),
   _actualVars("actualVars","Variables used by PDF expression",this),
   _formExpr(inFormula)
-{  
+{
   _actualVars.add(dependents) ;
   formula();
 
@@ -92,8 +92,8 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) : 
-  RooAbsPdf(other, name), 
+RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) :
+  RooAbsPdf(other, name),
   _actualVars("actualVars",this,other._actualVars),
   _formExpr(other._formExpr)
 {
@@ -149,7 +149,7 @@ void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nE
 ////////////////////////////////////////////////////////////////////////////////
 /// Change formula expression to given expression
 
-Bool_t RooGenericPdf::setFormula(const char* inFormula) 
+Bool_t RooGenericPdf::setFormula(const char* inFormula)
 {
   if (formula().reCompile(inFormula)) return kTRUE ;
 
@@ -163,7 +163,7 @@ Bool_t RooGenericPdf::setFormula(const char* inFormula)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if given value is valid
 
-Bool_t RooGenericPdf::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const 
+Bool_t RooGenericPdf::isValidReal(Double_t /*value*/, Bool_t /*printError*/) const
 {
   return kTRUE ;
 }
@@ -185,7 +185,7 @@ Bool_t RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print info about this object to the specified stream. 
+/// Print info about this object to the specified stream.
 
 void RooGenericPdf::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
@@ -203,7 +203,7 @@ void RooGenericPdf::printMultiline(ostream& os, Int_t content, Bool_t verbose, T
 ////////////////////////////////////////////////////////////////////////////////
 /// Add formula expression as meta argument in printing interface
 
-void RooGenericPdf::printMetaArgs(ostream& os) const 
+void RooGenericPdf::printMetaArgs(ostream& os) const
 {
   os << "formula=\"" << _formExpr << "\" " ;
 }

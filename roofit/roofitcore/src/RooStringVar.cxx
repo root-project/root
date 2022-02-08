@@ -39,7 +39,7 @@ RooStringVar::RooStringVar(const char *name, const char *title, const char* valu
   _string(value)
 {
   setValueDirty();
-}  
+}
 
 
 

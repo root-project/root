@@ -86,7 +86,7 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
   _ftor(0),
   _rd(0)
 {
-  if (_order<0 || _order>3) { 
+  if (_order<0 || _order>3) {
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
   }
   _nset.add(nset) ;
@@ -97,8 +97,8 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
 ////////////////////////////////////////////////////////////////////////////////
 
 RooDerivative::RooDerivative(const RooDerivative& other, const char* name) :
-  RooAbsReal(other, name), 
-  _order(other._order),  
+  RooAbsReal(other, name),
+  _order(other._order),
   _eps(other._eps),
   _nset("nset",this,other._nset),
   _func("function",this,other._func),
@@ -113,7 +113,7 @@ RooDerivative::RooDerivative(const RooDerivative& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooDerivative::~RooDerivative() 
+RooDerivative::~RooDerivative()
 {
   if (_rd) delete _rd ;
   if (_ftor) delete _ftor ;
@@ -124,15 +124,15 @@ RooDerivative::~RooDerivative()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooDerivative::evaluate() const 
+Double_t RooDerivative::evaluate() const
 {
   if (!_ftor) {
-    _ftor = _func.arg().functor(_x.arg(),RooArgSet(),_nset)  ;    
+    _ftor = _func.arg().functor(_x.arg(),RooArgSet(),_nset)  ;
     ROOT::Math::WrappedFunction<RooFunctor&> wf(*_ftor);
     _rd = new ROOT::Math::RichardsonDerivator(wf,_eps*(_x.max()-_x.min()),kTRUE) ;
   }
-  
-  switch (_order) {    
+
+  switch (_order) {
   case 1: return _rd->Derivative1(_x);
   case 2: return _rd->Derivative2(_x);
   case 3: return _rd->Derivative3(_x);
@@ -145,10 +145,10 @@ Double_t RooDerivative::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Zap functor and derivator ;
 
-Bool_t RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
+Bool_t RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
 {
   delete _ftor ;
-  delete _rd ; 
+  delete _rd ;
   _ftor = 0 ;
   _rd = 0 ;
   return kFALSE ;

@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #607
-// 
+//
 // Demonstration of options of the RooFitResult class
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -30,7 +30,7 @@ using namespace RooFit ;
 
 class TestBasic607 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic607(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit Result functionality",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -45,10 +45,10 @@ public:
   RooRealVar sigma1("sigma1","width of gaussians",0.5,0.1,10) ;
   RooRealVar sigma2("sigma2","width of gaussians",1,0.1,10) ;
 
-  RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;  
-  RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;  
-  
-  // Build Chebychev polynomial p.d.f.  
+  RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;
+  RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;
+
+  // Build Chebychev polynomial p.d.f.
   RooRealVar a0("a0","a0",0.5,0.,1.) ;
   RooRealVar a1("a1","a1",-0.2) ;
   RooChebychev bkg("bkg","Background",x,RooArgSet(a0,a1)) ;
@@ -57,7 +57,7 @@ public:
   RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
   RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
 
-  // Sum the composite signal and background 
+  // Sum the composite signal and background
   RooRealVar bkgfrac("bkgfrac","fraction of background",0.5,0.,1.) ;
   RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),bkgfrac) ;
 
@@ -66,7 +66,7 @@ public:
 
 
 
-  // F i t   p d f   t o   d a t a ,   s a v e   f i t r e s u l t 
+  // F i t   p d f   t o   d a t a ,   s a v e   f i t r e s u l t
   // -------------------------------------------------------------
 
   // Perform fit and save result
@@ -86,7 +86,7 @@ public:
   // of covariance matrix of fit result
   RooDataSet randPars("randPars","randPars",r->floatParsFinal()) ;
   for (Int_t i=0 ; i<10000 ; i++) {
-    randPars.add(r->randomizePars()) ;    
+    randPars.add(r->randomizePars()) ;
   }
 
   // make histogram of 2D distribution in sigma1 vs sig1frac

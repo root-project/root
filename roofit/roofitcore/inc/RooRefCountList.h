@@ -20,7 +20,7 @@
 
 class RooRefCountList : public RooLinkedList {
 public:
-  RooRefCountList() ; 
+  RooRefCountList() ;
   ~RooRefCountList() override {} ;
 
   void Add(TObject* arg) override { Add(arg,1) ; }
@@ -28,8 +28,8 @@ public:
   Bool_t Remove(TObject* obj) override ;
   virtual Bool_t RemoveAll(TObject* obj) ;
   Int_t refCount(TObject* obj) const;
-  
-protected:  
+
+protected:
   ClassDefOverride(RooRefCountList,1) // RooLinkedList with reference counting
 };
 

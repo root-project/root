@@ -54,7 +54,7 @@ ClassImp(RooFirstMoment);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooFirstMoment::RooFirstMoment() 
+RooFirstMoment::RooFirstMoment()
 {
 }
 
@@ -69,7 +69,7 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
   _if("!if","if",this)
 {
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
-  
+
   string pname=Form("%s_product",name) ;
 
   RooProduct* XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgSet(x,func)) ;
@@ -134,7 +134,7 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooFirstMoment::RooFirstMoment(const RooFirstMoment& other, const char* name) :
-  RooAbsMoment(other, name), 
+  RooAbsMoment(other, name),
   _xf("xf",this,other._xf),
   _ixf("ixf",this,other._ixf),
   _if("if",this,other._if)
@@ -146,16 +146,16 @@ RooFirstMoment::RooFirstMoment(const RooFirstMoment& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooFirstMoment::~RooFirstMoment() 
+RooFirstMoment::~RooFirstMoment()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate value  
+/// Calculate value
 
-Double_t RooFirstMoment::evaluate() const 
+Double_t RooFirstMoment::evaluate() const
 {
   Double_t ratio = _ixf / _if ;
   //cout << "\nRooFirstMoment::eval(" << GetName() << ") val = " << ratio << endl ;

@@ -50,7 +50,7 @@ ClassImp(RooStudyPackage);
 ////////////////////////////////////////////////////////////////////////////////
 
 RooStudyPackage::RooStudyPackage() : _ws(0)
-{  
+{
 }
 
 
@@ -58,7 +58,7 @@ RooStudyPackage::RooStudyPackage() : _ws(0)
 ////////////////////////////////////////////////////////////////////////////////
 
 RooStudyPackage::RooStudyPackage(RooWorkspace& w) : _ws(new RooWorkspace(w))
-{  
+{
 }
 
 
@@ -66,7 +66,7 @@ RooStudyPackage::RooStudyPackage(RooWorkspace& w) : _ws(new RooWorkspace(w))
 ////////////////////////////////////////////////////////////////////////////////
 
 RooStudyPackage::RooStudyPackage(const RooStudyPackage& other) : TNamed(other), _ws(new RooWorkspace(*other._ws))
-{      
+{
   list<RooAbsStudy*>::const_iterator iter = other._studies.begin() ;
   for (;iter!=other._studies.end() ; ++iter) {
     _studies.push_back((*iter)->clone()) ;
@@ -77,7 +77,7 @@ RooStudyPackage::RooStudyPackage(const RooStudyPackage& other) : TNamed(other), 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyPackage::addStudy(RooAbsStudy& study) 
+void RooStudyPackage::addStudy(RooAbsStudy& study)
 {
   _studies.push_back(&study) ;
 }
@@ -91,14 +91,14 @@ void RooStudyPackage::driver(Int_t nExperiments)
   initialize() ;
   run(nExperiments) ;
   finalize() ;
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Make iterator over copy of studies attached to workspace
 
-void RooStudyPackage::initialize() 
+void RooStudyPackage::initialize()
 {
   for (list<RooAbsStudy*>::iterator iter=_studies.begin() ; iter!=_studies.end() ; ++iter) {
     (*iter)->attach(*_ws) ;
@@ -110,14 +110,14 @@ void RooStudyPackage::initialize()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyPackage::run(Int_t nExperiments) 
+void RooStudyPackage::run(Int_t nExperiments)
 {
   // Run the requested number of experiments
   Int_t prescale = nExperiments>100 ? Int_t(nExperiments/100) : 1 ;
   for (Int_t i=0 ; i<nExperiments ; i++) {
     if (i%prescale==0) {
       coutP(Generation) << "RooStudyPackage::run(" << GetName() << ") processing experiment " << i << "/" << nExperiments << endl ;
-    }    
+    }
     runOne() ;
   }
 }
@@ -126,11 +126,11 @@ void RooStudyPackage::run(Int_t nExperiments)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyPackage::runOne() 
+void RooStudyPackage::runOne()
 {
   for (list<RooAbsStudy*>::iterator iter=_studies.begin() ; iter!=_studies.end() ; ++iter) {
     (*iter)->execute() ;
-  }    
+  }
 }
 
 
@@ -139,8 +139,8 @@ void RooStudyPackage::runOne()
 ////////////////////////////////////////////////////////////////////////////////
 /// Finalize all studies
 
-void RooStudyPackage::finalize() 
-{   
+void RooStudyPackage::finalize()
+{
   for (list<RooAbsStudy*>::iterator iter=_studies.begin() ; iter!=_studies.end() ; ++iter) {
     (*iter)->finalize() ;
   }
@@ -168,18 +168,18 @@ void RooStudyPackage::exportData(TList* olist, Int_t seqno)
     if (detailedData && detailedData->GetSize()>0) {
 
       detailedData->SetName(Form("%s_%d",detailedData->GetName(),seqno)) ;
-      cout << "registering detailed dataset " << detailedData->IsA()->GetName() << "::" 
-	   << detailedData->GetName() << " with " << detailedData->GetSize() << " elements" << endl ;
+      cout << "registering detailed dataset " << detailedData->IsA()->GetName() << "::"
+      << detailedData->GetName() << " with " << detailedData->GetSize() << " elements" << endl ;
       TIterator* diter = detailedData->MakeIterator() ;
       TNamed* dobj ;
       while((dobj=(TNamed*)diter->Next())) {
-	dobj->SetName(Form("%s_%d",dobj->GetName(),seqno)) ;
+   dobj->SetName(Form("%s_%d",dobj->GetName(),seqno)) ;
       }
       delete diter ;
       olist->Add(detailedData) ;
       (*iter)->releaseDetailData() ;
     }
-  }        
+  }
 }
 
 
@@ -191,19 +191,19 @@ void RooStudyPackage::exportData(TList* olist, Int_t seqno)
 
 Int_t RooStudyPackage::initRandom()
 {
-  TRandom2 random(0); 
+  TRandom2 random(0);
   //gRandom->SetSeed(0) ;
   Int_t seed = random.Integer(TMath::Limits<Int_t>::Max()) ;
 
-  // get worker number 
+  // get worker number
   TString  worknumber = gEnv->GetValue("ProofServ.Ordinal","undef");
-  int iworker = -1; 
-  if (worknumber != "undef") 
+  int iworker = -1;
+  if (worknumber != "undef")
      iworker = int( worknumber.Atof()*10 + 0.1);
 
   if (iworker >= 0)  {
-     for (int i = 0; i <= iworker; ++i ) 
-        seed = random.Integer( TMath::Limits<Int_t>::Max() ); 
+     for (int i = 0; i <= iworker; ++i )
+        seed = random.Integer( TMath::Limits<Int_t>::Max() );
   }
 
   RooRandom::randomGenerator()->SetSeed(seed) ;
@@ -217,7 +217,7 @@ Int_t RooStudyPackage::initRandom()
 ////////////////////////////////////////////////////////////////////////////////
 /// Read in study package
 
-void RooStudyPackage::processFile(const char* studyName, Int_t nexp) 
+void RooStudyPackage::processFile(const char* studyName, Int_t nexp)
 {
   string name_fin = Form("study_data_%s.root",studyName) ;
   TFile fin(name_fin.c_str()) ;
@@ -226,7 +226,7 @@ void RooStudyPackage::processFile(const char* studyName, Int_t nexp)
     cout << "RooStudyPackage::processFile() ERROR input file " << name_fin << " does not contain a RooStudyPackage named 'studypack'" << endl ;
     return ;
   }
-      
+
   // Initialize random seed
   Int_t seqno = pkg->initRandom() ;
   cout << "RooStudyPackage::processFile() Initial random seed for this run is " << seqno << endl ;
@@ -239,5 +239,5 @@ void RooStudyPackage::processFile(const char* studyName, Int_t nexp)
   pkg->exportData(&res,seqno) ;
   TFile fout(Form("study_result_%s_%d.root",studyName,seqno),"RECREATE") ;
   res.Write() ;
-  fout.Close() ;    
+  fout.Close() ;
 }

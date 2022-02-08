@@ -15,9 +15,9 @@
 
 //////////////////////////////////////////////////////////////////////////////
 /// \class RooLinearCombination
-/// RooLinearCombination is a class that helps perform linear combination of 
-/// floating point numbers and permits handling them as multiprecision 
-/// 
+/// RooLinearCombination is a class that helps perform linear combination of
+/// floating point numbers and permits handling them as multiprecision
+///
 
 #include "RooLinearCombination.h"
 
@@ -115,17 +115,17 @@ Double_t RooLinearCombination::evaluate() const {
     result += this->_coefficients[i] * tmp;
   }
   return result.convert_to<double>();
-#else    
-  const std::size_t n(this->_actualVars.getSize());    
-  std::vector<double> values(n);    
-  for (std::size_t i = 0; i < n; ++i) {    
-    values[i] = _coefficients[i] * static_cast<const RooAbsReal *>(this->_actualVars.at(i))->getVal();    
-  }    
-  // the values might span multiple orders of magnitudes, and to minimize    
-  // precision loss, we sum up the values from the smallest to the largest    
-  // absolute value.    
-  std::sort(values.begin(), values.end(), [](double const& x, double const& y){ return std::abs(x) < std::abs(y); });    
-  return ROOT::Math::KahanSum<double>::Accumulate(values.begin(), values.end()).Sum();    
+#else
+  const std::size_t n(this->_actualVars.getSize());
+  std::vector<double> values(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    values[i] = _coefficients[i] * static_cast<const RooAbsReal *>(this->_actualVars.at(i))->getVal();
+  }
+  // the values might span multiple orders of magnitudes, and to minimize
+  // precision loss, we sum up the values from the smallest to the largest
+  // absolute value.
+  std::sort(values.begin(), values.end(), [](double const& x, double const& y){ return std::abs(x) < std::abs(y); });
+  return ROOT::Math::KahanSum<double>::Accumulate(values.begin(), values.end()).Sum();
 #endif
 }
 

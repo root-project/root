@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #312
-// 
+//
 // Performing fits in multiple (disjoint) ranges in one or more dimensions
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -27,11 +27,11 @@ using namespace RooFit ;
 
 class TestBasic312 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic312(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit in multiple rectangular ranges",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   2 D   p d f   a n d   d a t a 
+  // C r e a t e   2 D   p d f   a n d   d a t a
   // -------------------------------------------
 
   // Define observables x,y
@@ -67,18 +67,18 @@ public:
   // Construct the SideBand1,SideBand2,Signal regions
   //
   //                    |
-  //      +-------------+-----------+                 
-  //      |             |           |             
-  //      |    Side     |   Sig     |        
-  //      |    Band1    |   nal     |             
-  //      |             |           |            
-  //    --+-------------+-----------+--   
-  //      |                         |       
-  //      |           Side          |        
-  //      |           Band2         |            
-  //      |                         |          
-  //      +-------------+-----------+            
-  //                    |                       
+  //      +-------------+-----------+
+  //      |             |           |
+  //      |    Side     |   Sig     |
+  //      |    Band1    |   nal     |
+  //      |             |           |
+  //    --+-------------+-----------+--
+  //      |                         |
+  //      |           Side          |
+  //      |           Band2         |
+  //      |                         |
+  //      +-------------+-----------+
+  //                    |
 
   x.setRange("SB1",-10,+10) ;
   y.setRange("SB1",-10,0) ;
@@ -107,7 +107,7 @@ public:
   // P e r f o r m   f i t s   i n   j o i n t    s i d e b a n d   r e g i o n s
   // -----------------------------------------------------------------------------
 
-  // Now perform fit to joint 'L-shaped' sideband region 'SB1|SB2' 
+  // Now perform fit to joint 'L-shaped' sideband region 'SB1|SB2'
   // (RooAddPdf coefficients will be interpreted in full range)
   RooFitResult* r_sb12 = model.fitTo(*modelData,Range("SB1,SB2"),Save()) ;
 

@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #307
-// 
+//
 // Complete example with use of full p.d.f. with per-event errors
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -29,7 +29,7 @@ using namespace RooFit ;
 
 class TestBasic307 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic307(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Full per-event error p.d.f. F(t|dt)G(dt)",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -72,15 +72,15 @@ public:
   // (Alternatively you could also use the landau shape pdfDtErr)
   //RooProdPdf model("model","model",pdfDtErr,Conditional(decay_gm,dt)) ;
 
-  
 
-  // S a m p l e,   f i t   a n d   p l o t   p r o d u c t   m o d e l 
+
+  // S a m p l e,   f i t   a n d   p l o t   p r o d u c t   m o d e l
   // ------------------------------------------------------------------
 
   // Specify external dataset with dterr values to use model_dm as conditional p.d.f.
   RooDataSet* data = model.generate(RooArgSet(dt,dterr),10000) ;
 
-  
+
 
   // F i t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
   // ---------------------------------------------------------------------
@@ -89,7 +89,7 @@ public:
   model.fitTo(*data) ;
 
 
-  
+
   // P l o t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
   // ---------------------------------------------------------------------
 
@@ -105,7 +105,7 @@ public:
   delete expDataDterr ;
   delete expHistDterr ;
   delete data ;
-  
+
   return kTRUE ;
 
   }

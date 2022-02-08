@@ -89,7 +89,7 @@ Double_t RooNovosibirsk::evaluate() const
   return TMath::Exp(exponent) ;
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Novosibirsk distribution.  
+/// Compute multiple values of Novosibirsk distribution.
 void RooNovosibirsk::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;

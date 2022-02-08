@@ -68,8 +68,8 @@ RooFracRemainder::RooFracRemainder(const char* name, const char* title, const Ro
   RooAbsArg* comp ;
   while((comp = (RooAbsArg*)inputIter->Next())) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
-      coutE(InputArguments) << "RooFracRemainder::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "RooFracRemainder::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
+             << " is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
     }
     _set1.add(*comp) ;
@@ -85,11 +85,11 @@ RooFracRemainder::RooFracRemainder(const char* name, const char* title, const Ro
 /// Copy constructor
 
 RooFracRemainder::RooFracRemainder(const RooFracRemainder& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _set1("set1",this,other._set1)
 {
   _setIter1 = _set1.createIterator() ;
-  
+
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
 }
 
@@ -98,7 +98,7 @@ RooFracRemainder::RooFracRemainder(const RooFracRemainder& other, const char* na
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooFracRemainder::~RooFracRemainder() 
+RooFracRemainder::~RooFracRemainder()
 {
   if (_setIter1) delete _setIter1 ;
 }
@@ -108,7 +108,7 @@ RooFracRemainder::~RooFracRemainder()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooFracRemainder::evaluate() const 
+Double_t RooFracRemainder::evaluate() const
 {
   Double_t sum(1);
   RooAbsReal* comp ;
@@ -119,7 +119,7 @@ Double_t RooFracRemainder::evaluate() const
   while((comp=(RooAbsReal*)_setIter1->Next())) {
     sum -= comp->getVal(nset) ;
   }
-    
+
   return sum ;
 }
 

@@ -99,8 +99,8 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
   TObject* obj ;
   while((obj=iter->Next())) {
     if (!dynamic_cast<RooAbsArg*>(obj)) {
-      coutW(InputArguments) << "RooArgList::RooArgList(TCollection) element " << obj->GetName() 
-			    << " is not a RooAbsArg, ignored" << endl ;
+      coutW(InputArguments) << "RooArgList::RooArgList(TCollection) element " << obj->GetName()
+             << " is not a RooAbsArg, ignored" << endl ;
       continue ;
     }
     add(*(RooAbsArg*)obj) ;
@@ -116,7 +116,7 @@ RooArgList::RooArgList(const TCollection& tcoll, const char* name) :
 /// even the source list is owning. To create an owning copy of
 /// a list (owning or not), use the snaphot() method.
 
-RooArgList::RooArgList(const RooArgList& other, const char *name) 
+RooArgList::RooArgList(const RooArgList& other, const char *name)
   : RooAbsCollection(other,name)
 {
   TRACE_CREATE
@@ -127,7 +127,7 @@ RooArgList::RooArgList(const RooArgList& other, const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooArgList::~RooArgList() 
+RooArgList::~RooArgList()
 {
   TRACE_DESTROY
 }
@@ -135,12 +135,12 @@ RooArgList::~RooArgList()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the contents of the argset in ASCII form to given stream.
-/// 
-/// All elements will be printed on a single line separated by a single 
-/// white space. The contents of each element is written by the arguments' 
+///
+/// All elements will be printed on a single line separated by a single
+/// white space. The contents of each element is written by the arguments'
 /// writeToStream() function
 
-void RooArgList::writeToStream(ostream& os, Bool_t compact) 
+void RooArgList::writeToStream(ostream& os, Bool_t compact)
 {
   if (!compact) {
     coutE(InputArguments) << "RooArgList::writeToStream(" << GetName() << ") non-compact mode not supported" << endl ;
@@ -158,17 +158,17 @@ void RooArgList::writeToStream(ostream& os, Bool_t compact)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read the contents of the argset in ASCII form from given stream.
-/// 
-/// A single line is read, and all elements are assumed to be separated 
-/// by white space. The value of each argument is read by the arguments 
+///
+/// A single line is read, and all elements are assumed to be separated
+/// by white space. The value of each argument is read by the arguments
 /// readFromStream function.
 
-Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose) 
+Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
 {
   if (!compact) {
     coutE(InputArguments) << "RooArgList::readFromStream(" << GetName() << ") non-compact mode not supported" << endl ;
     return kTRUE ;
-  }    
+  }
 
   RooStreamParser parser(is) ;
   for (auto next : _list) {
@@ -177,20 +177,20 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
         parser.zapToEnd() ;
 
         return kTRUE ;
-      }	
+      }
     } else {
     }
   }
-  
+
   if (!parser.atEOL()) {
     TString rest = parser.readLine() ;
     if (verbose) {
-      coutW(InputArguments) << "RooArgSet::readFromStream(" << GetName() 
-			    << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
+      coutW(InputArguments) << "RooArgSet::readFromStream(" << GetName()
+             << "): ignoring extra characters at end of line: '" << rest << "'" << endl ;
     }
   }
 
-  return kFALSE ;  
+  return kFALSE ;
 }
 
 

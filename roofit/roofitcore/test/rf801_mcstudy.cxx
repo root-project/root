@@ -1,11 +1,11 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'VALIDATION AND MC STUDIES' RooFit tutorial macro #801
-// 
+//
 // A Toy Monte Carlo study that perform cycles of
 // event generation and fittting
 //
-// 
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -30,7 +30,7 @@ using namespace RooFit ;
 // Elementary operations on a gaussian PDF
 class TestBasic801 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic801(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Automated MC studies",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -46,10 +46,10 @@ public:
   RooRealVar sigma1("sigma1","width of gaussians",0.5) ;
   RooRealVar sigma2("sigma2","width of gaussians",1) ;
 
-  RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;  
-  RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;  
-  
-  // Build Chebychev polynomial p.d.f.  
+  RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;
+  RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;
+
+  // Build Chebychev polynomial p.d.f.
   RooRealVar a0("a0","a0",0.5,0.,1.) ;
   RooRealVar a1("a1","a1",-0.2,-1,1.) ;
   RooChebychev bkg("bkg","Background",x,RooArgSet(a0,a1)) ;
@@ -58,7 +58,7 @@ public:
   RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
   RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
 
-  // Sum the composite signal and background 
+  // Sum the composite signal and background
   RooRealVar nbkg("nbkg","number of background events,",150,0,1000) ;
   RooRealVar nsig("nsig","number of signal events",150,0,1000) ;
   RooAddPdf  model("model","g1+g2+a",RooArgList(bkg,sig),RooArgList(nbkg,nsig)) ;
@@ -73,19 +73,19 @@ public:
   // The Silence() option kills all messages below the PROGRESS level, leaving only a single message
   // per sample executed, and any error message that occur during fitting
   //
-  // The Extended() option has two effects: 
-  //    1) The extended ML term is included in the likelihood and 
-  //    2) A poisson fluctuation is introduced on the number of generated events 
+  // The Extended() option has two effects:
+  //    1) The extended ML term is included in the likelihood and
+  //    2) A poisson fluctuation is introduced on the number of generated events
   //
   // The FitOptions() given here are passed to the fitting stage of each toy experiment.
-  // If Save() is specified, the fit result of each experiment is saved by the manager  
+  // If Save() is specified, the fit result of each experiment is saved by the manager
   //
   // A Binned() option is added in this example to bin the data between generation and fitting
   // to speed up the study at the expemse of some precision
 
   RooMCStudy* mcstudy = new RooMCStudy(model,x,Binned(kTRUE),Silence(),Extended(),
-				       FitOptions(Save(kTRUE),PrintEvalErrors(0))) ;
-  
+                   FitOptions(Save(kTRUE),PrintEvalErrors(0))) ;
+
 
   // G e n e r a t e   a n d   f i t   e v e n t s
   // ---------------------------------------------
@@ -95,7 +95,7 @@ public:
 
 
 
-  // E x p l o r e   r e s u l t s   o f   s t u d y 
+  // E x p l o r e   r e s u l t s   o f   s t u d y
   // ------------------------------------------------
 
   // Make plots of the distributions of mean, the error on mean and the pull of mean

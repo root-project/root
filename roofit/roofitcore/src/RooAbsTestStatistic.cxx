@@ -193,14 +193,14 @@ Double_t RooAbsTestStatistic::evaluate() const
     } else {
       Double_t sum = 0., carry = 0.;
       for (Int_t i = 0 ; i < _nGof; ++i) {
-	if (i % _numSets == _setNum || (_mpinterl==RooFit::Hybrid && _gofSplitMode[i] != RooFit::SimComponents )) {
-	  Double_t y = _gofArray[i]->getValV();
-	  carry += _gofArray[i]->getCarry();
-	  y -= carry;
-	  const Double_t t = sum + y;
-	  carry = (t - sum) - y;
-	  sum = t;
-	}
+   if (i % _numSets == _setNum || (_mpinterl==RooFit::Hybrid && _gofSplitMode[i] != RooFit::SimComponents )) {
+     Double_t y = _gofArray[i]->getValV();
+     carry += _gofArray[i]->getCarry();
+     y -= carry;
+     const Double_t t = sum + y;
+     carry = (t - sum) - y;
+     sum = t;
+   }
       }
       ret = sum ;
       _evalCarry = carry;
@@ -216,7 +216,7 @@ Double_t RooAbsTestStatistic::evaluate() const
     return ret ;
 
   } else if (MPMaster == _gofOpMode) {
-    
+
     // Start calculations in parallel
     for (Int_t i = 0; i < _nCPU; ++i) _mpfeArray[i]->calculate();
 
@@ -244,26 +244,26 @@ Double_t RooAbsTestStatistic::evaluate() const
 
     // Evaluate as straight FUNC
     Int_t nFirst(0), nLast(_nEvents), nStep(1) ;
-    
+
     switch (_mpinterl) {
     case RooFit::BulkPartition:
       nFirst = _nEvents * _setNum / _numSets ;
       nLast  = _nEvents * (_setNum+1) / _numSets ;
       nStep  = 1 ;
       break;
-      
+
     case RooFit::Interleave:
       nFirst = _setNum ;
       nLast  = _nEvents ;
       nStep  = _numSets ;
       break ;
-      
+
     case RooFit::SimComponents:
       nFirst = 0 ;
       nLast  = _nEvents ;
       nStep  = 1 ;
       break ;
-      
+
     case RooFit::Hybrid:
       throw std::logic_error("this should never happen");
       break ;
@@ -276,7 +276,7 @@ Double_t RooAbsTestStatistic::evaluate() const
       ret /= norm;
       _evalCarry /= norm;
     }
-    
+
     return ret ;
 
   }
@@ -292,7 +292,7 @@ Double_t RooAbsTestStatistic::evaluate() const
 Bool_t RooAbsTestStatistic::initialize()
 {
   if (_init) return kFALSE;
-  
+
   if (MPMaster == _gofOpMode) {
     initMPMode(_func,_data,_projDeps,_rangeName,_addCoefRangeName) ;
   } else if (SimMaster == _gofOpMode) {
@@ -313,15 +313,15 @@ Bool_t RooAbsTestStatistic::redirectServersHook(const RooAbsCollection& newServe
     // Forward to slaves
     for (Int_t i = 0; i < _nGof; ++i) {
       if (_gofArray[i]) {
-	_gofArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange);
+   _gofArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange);
       }
     }
   } else if (MPMaster == _gofOpMode&& _mpfeArray) {
     // Forward to slaves
     for (Int_t i = 0; i < _nCPU; ++i) {
       if (_mpfeArray[i]) {
-	_mpfeArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange);
-// 	cout << "redirecting servers on " << _mpfeArray[i]->GetName() << endl;
+   _mpfeArray[i]->recursiveRedirectServers(newServerList,mustReplaceAll,nameChange);
+//    cout << "redirecting servers on " << _mpfeArray[i]->GetName() << endl;
       }
     }
   }
@@ -341,9 +341,9 @@ void RooAbsTestStatistic::printCompactTreeHook(ostream& os, const char* indent)
     os << indent << "RooAbsTestStatistic begin GOF contents" << endl ;
     for (Int_t i = 0; i < _nGof; ++i) {
       if (_gofArray[i]) {
-	TString indent2(indent);
-	indent2 += Form("[%d] ",i);
-	_gofArray[i]->printCompactTreeHook(os,indent2);
+   TString indent2(indent);
+   indent2 += Form("[%d] ",i);
+   _gofArray[i]->printCompactTreeHook(os,indent2);
       }
     }
     os << indent << "RooAbsTestStatistic end GOF contents" << endl;
@@ -367,7 +367,7 @@ void RooAbsTestStatistic::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t 
       // In SimComponents Splitting strategy only constOptimize the terms that are actually used
       RooFit::MPSplit effSplit = (_mpinterl!=RooFit::Hybrid) ? _mpinterl : _gofSplitMode[i];
       if ( (i % _numSets == _setNum) || (effSplit != RooFit::SimComponents) ) {
-	if (_gofArray[i]) _gofArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
+   if (_gofArray[i]) _gofArray[i]->constOptimizeTestStatistic(opcode,doAlsoTrackingOpt);
       }
     }
   } else if (MPMaster == _gofOpMode) {
@@ -386,7 +386,7 @@ void RooAbsTestStatistic::setMPSet(Int_t inSetNum, Int_t inNumSets)
 {
   _setNum = inSetNum; _numSets = inNumSets;
   _extSet = _mpinterl==RooFit::SimComponents ? _setNum : (_numSets - 1);
-  
+
   if (SimMaster == _gofOpMode) {
     // Forward to slaves
     initialize();
@@ -591,9 +591,9 @@ void RooAbsTestStatistic::initSimMode(RooSimultaneous* simpdf, RooAbsData* data,
 /// in the input dataset is made.  If the test statistic was constructed with
 /// a range specification on the data, the cloneData argument is ignored and
 /// the data is always cloned.
-Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData) 
-{ 
-  // Trigger refresh of likelihood offsets 
+Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
+{
+  // Trigger refresh of likelihood offsets
   if (isOffsetting()) {
     enableOffsetting(kFALSE);
     enableOffsetting(kTRUE);
@@ -646,13 +646,13 @@ Bool_t RooAbsTestStatistic::setData(RooAbsData& indata, Bool_t cloneData)
 
 
 
-void RooAbsTestStatistic::enableOffsetting(Bool_t flag) 
+void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
 {
   // Apply internal value offsetting to control numeric precision
   if (!_init) {
     const_cast<RooAbsTestStatistic*>(this)->initialize() ;
   }
-  
+
   switch(operMode()) {
   case Slave:
     _doOffset = flag ;
@@ -668,7 +668,7 @@ void RooAbsTestStatistic::enableOffsetting(Bool_t flag)
       _gofArray[i]->enableOffsetting(flag);
     }
     break ;
-  case MPMaster:    
+  case MPMaster:
     _doOffset = flag;
     for (Int_t i = 0; i < _nCPU; ++i) {
       _mpfeArray[i]->enableOffsetting(flag);

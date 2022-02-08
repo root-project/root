@@ -1,16 +1,16 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #314
-// 
+//
 // Working with parameterized ranges in a fit. This an example of a
-// fit with an acceptance that changes per-event 
+// fit with an acceptance that changes per-event
 //
 //  pdf = exp(-t/tau) with t[tmin,5]
 //
 //  where t and tmin are both observables in the dataset
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -29,11 +29,11 @@ using namespace RooFit ;
 
 class TestBasic314 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic314(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fit with non-rectangular observable boundaries",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f 
+  // D e f i n e   o b s e r v a b l e s   a n d   d e c a y   p d f
   // ---------------------------------------------------------------
 
   // Declare observables
@@ -49,10 +49,10 @@ public:
 
 
 
-  // C r e a t e   i n p u t   d a t a 
+  // C r e a t e   i n p u t   d a t a
   // ------------------------------------
 
-  // Generate complete dataset without acceptance cuts (for reference)  
+  // Generate complete dataset without acceptance cuts (for reference)
   RooDataSet* dall = model.generate(t,10000) ;
 
   // Generate a (fake) prototype dataset for acceptance limit values
@@ -69,8 +69,8 @@ public:
   RooFitResult* r = model.fitTo(*dacc,Save()) ;
 
 
- 
-  // P l o t   f i t t e d   p d f   o n   f u l l   a n d   a c c e p t e d   d a t a 
+
+  // P l o t   f i t t e d   p d f   o n   f u l l   a n d   a c c e p t e d   d a t a
   // ---------------------------------------------------------------------------------
 
   // Make plot frame, add datasets and overlay model

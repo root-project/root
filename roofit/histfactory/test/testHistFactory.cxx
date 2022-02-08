@@ -37,7 +37,7 @@ TEST(Sample, CopyAssignment)
     s = s1;
     //Now go out of scope. Should delete hist1, that's owned by s1.
   }
-  
+
   auto hist = s.GetHisto();
   ASSERT_EQ(hist->GetNbinsX(), 10);
 }

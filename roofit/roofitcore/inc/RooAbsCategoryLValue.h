@@ -71,8 +71,8 @@ public:
   }
 
 
-  RooAbsArg& operator=(int index) ; 
-  RooAbsArg& operator=(const char* label) ; 
+  RooAbsArg& operator=(int index) ;
+  RooAbsArg& operator=(const char* label) ;
   RooAbsArg& operator=(const RooAbsCategory& other) ;
 
   // Binned fit interface
@@ -82,13 +82,13 @@ public:
     return getCurrentOrdinalNumber();
   }
   Int_t numBins(const char* rangeName=nullptr) const override ;
-  Double_t getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const override { 
+  Double_t getBinWidth(Int_t /*i*/, const char* /*rangeName*/=0) const override {
     // Return volume of i-th bin (according to binning named rangeName if rangeName!=0)
-    return 1.0 ; 
+    return 1.0 ;
   }
-  Double_t volume(const char* rangeName) const override { 
+  Double_t volume(const char* rangeName) const override {
     // Return span of range with given name (=number of states included in this range)
-    return numTypes(rangeName) ; 
+    return numTypes(rangeName) ;
   }
   void randomize(const char* rangeName=0) override;
 
@@ -97,14 +97,14 @@ public:
   Int_t getBin(const RooAbsBinning* /*ptr*/) const override { return getBin((const char*)0) ; }
 
 
-  inline void setConstant(Bool_t value= kTRUE) { 
-    // Declare category constant 
-    setAttribute("Constant",value); 
+  inline void setConstant(Bool_t value= kTRUE) {
+    // Declare category constant
+    setAttribute("Constant",value);
   }
-  
-  inline Bool_t isLValue() const override { 
+
+  inline Bool_t isLValue() const override {
     // Object is an l-value
-    return kTRUE; 
+    return kTRUE;
   }
 
 protected:
@@ -120,7 +120,7 @@ protected:
 
   void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) override ;
 
-  ClassDefOverride(RooAbsCategoryLValue,1) // Abstract modifiable index variable 
+  ClassDefOverride(RooAbsCategoryLValue,1) // Abstract modifiable index variable
 };
 
 #endif

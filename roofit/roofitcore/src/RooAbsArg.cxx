@@ -233,12 +233,12 @@ RooAbsArg::~RooAbsArg()
     if (_verboseDirty) {
 
       if (first) {
-	cxcoutD(Tracing) << "RooAbsArg::dtor(" << GetName() << "," << this << ") DeleteWatch: object is being destroyed" << endl ;
-	first = kFALSE ;
+   cxcoutD(Tracing) << "RooAbsArg::dtor(" << GetName() << "," << this << ") DeleteWatch: object is being destroyed" << endl ;
+   first = kFALSE ;
       }
 
       cxcoutD(Tracing)  << fName << "::" << ClassName() << ":~RooAbsArg: dependent \""
-		       << client->GetName() << "\" should have been deleted first" << endl ;
+             << client->GetName() << "\" should have been deleted first" << endl ;
     }
   }
 
@@ -274,7 +274,7 @@ void RooAbsArg::verboseDirty(Bool_t flag)
 Bool_t RooAbsArg::isCloneOf(const RooAbsArg& other) const
 {
   return (getAttribute(Form("CloneOf(%zx)",(size_t)&other)) ||
-	  other.getAttribute(Form("CloneOf(%zx)",(size_t)this))) ;
+     other.getAttribute(Form("CloneOf(%zx)",(size_t)this))) ;
 }
 
 
@@ -382,13 +382,13 @@ void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp,
 {
   if (_prohibitServerRedirect) {
     cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName()
-			   << "): PROHIBITED SERVER ADDITION REQUESTED: adding server " << server.GetName()
-			   << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+            << "): PROHIBITED SERVER ADDITION REQUESTED: adding server " << server.GetName()
+            << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
     throw std::logic_error("PROHIBITED SERVER ADDITION REQUESTED in RooAbsArg::addServer");
   }
 
   cxcoutD(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): adding server " << server.GetName()
-			 << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
+          << "(" << &server << ") for " << (valueProp?"value ":"") << (shapeProp?"shape":"") << endl ;
 
   if (server.operMode()==ADirty && operMode()!=ADirty && valueProp) {
     setOperMode(ADirty) ;
@@ -433,13 +433,13 @@ void RooAbsArg::removeServer(RooAbsArg& server, Bool_t force)
 {
   if (_prohibitServerRedirect) {
     cxcoutF(LinkStateMgmt) << "RooAbsArg::addServer(" << this << "," << GetName() << "): PROHIBITED SERVER REMOVAL REQUESTED: removing server "
-			   << server.GetName() << "(" << &server << ")" << endl ;
+            << server.GetName() << "(" << &server << ")" << endl ;
     assert(0) ;
   }
 
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::removeServer(" << GetName() << "): removing server "
-			   << server.GetName() << "(" << &server << ")" << endl ;
+            << server.GetName() << "(" << &server << ")" << endl ;
   }
 
   // Remove server link to given server
@@ -469,14 +469,14 @@ void RooAbsArg::changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapePr
 {
   if (!_serverList.containsByNamePtr(&server)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
-	 << server.GetName() << " not registered" << endl ;
+    << server.GetName() << " not registered" << endl ;
     return ;
   }
 
   // This condition should not happen, but check anyway
   if (!server._clientList.containsByNamePtr(this)) {
     coutE(LinkStateMgmt) << "RooAbsArg::changeServer(" << GetName() << "): Server "
-			 << server.GetName() << " doesn't have us registered as client" << endl ;
+          << server.GetName() << " doesn't have us registered as client" << endl ;
     return ;
   }
 
@@ -819,7 +819,7 @@ Bool_t RooAbsArg::recursiveCheckObservables(const RooArgSet* nset) const
   while((arg=iter.next())) {
     if (arg->getAttribute("ServerDied")) {
       coutE(LinkStateMgmt) << "RooAbsArg::recursiveCheckObservables(" << GetName() << "): ERROR: one or more servers of node "
-			   << arg->GetName() << " no longer exists!" << endl ;
+            << arg->GetName() << " no longer exists!" << endl ;
       arg->Print("v") ;
       ret = kTRUE ;
     }
@@ -946,7 +946,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
   } else if (source==this) {
     // Cyclical dependency, abort
     coutE(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << GetName()
-			 << "): cyclical dependency detected, source = " << source->GetName() << endl ;
+          << "): cyclical dependency detected, source = " << source->GetName() << endl ;
     //assert(0) ;
     return ;
   }
@@ -954,7 +954,7 @@ void RooAbsArg::setValueDirty(const RooAbsArg* source)
   // Propagate dirty flag to all clients if this is a down->up transition
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::setValueDirty(" << (source?source->GetName():"self") << "->" << GetName() << "," << this
-			   << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
+            << "): dirty flag " << (_valueDirty?"already ":"") << "raised" << endl ;
   }
 
   _valueDirty = kTRUE ;
@@ -976,7 +976,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
 {
   if (_verboseDirty) {
     cxcoutD(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName()
-			   << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
+            << "): dirty flag " << (_shapeDirty?"already ":"") << "raised" << endl ;
   }
 
   if (_clientListShape.empty()) {
@@ -990,7 +990,7 @@ void RooAbsArg::setShapeDirty(const RooAbsArg* source)
   } else if (source==this) {
     // Cyclical dependency, abort
     coutE(LinkStateMgmt) << "RooAbsArg::setShapeDirty(" << GetName()
-	 << "): cyclical dependency detected" << endl ;
+    << "): cyclical dependency detected" << endl ;
     return ;
   }
 
@@ -1086,13 +1086,13 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 
     if (newServer && _verboseDirty) {
       cxcoutD(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
-			         << " redirected from " << oldServer << " to " << newServer << endl ;
+                  << " redirected from " << oldServer << " to " << newServer << endl ;
     }
 
     if (!newServer) {
       if (mustReplaceAll) {
         coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << (void*)this << "," << GetName() << "): server " << oldServer->GetName()
-			           << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
+                    << " (" << (void*)oldServer << ") not redirected" << (nameChange?"[nameChange]":"") << endl ;
         ret = kTRUE ;
       }
       continue ;
@@ -1217,7 +1217,7 @@ Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_
   Bool_t ret(kFALSE) ;
 
   cxcoutD(LinkStateMgmt) << "RooAbsArg::recursiveRedirectServers(" << this << "," << GetName() << ") newSet = " << newSet << " mustReplaceAll = "
-			 << (mustReplaceAll?"T":"F") << " nameChange = " << (nameChange?"T":"F") << " recurseInNewSet = " << (recurseInNewSet?"T":"F") << endl ;
+          << (mustReplaceAll?"T":"F") << " nameChange = " << (nameChange?"T":"F") << " recurseInNewSet = " << (recurseInNewSet?"T":"F") << endl ;
 
   // Do redirect on self (identify operation as recursion step)
   ret |= redirectServers(newSet,mustReplaceAll,nameChange,kTRUE) ;
@@ -1245,8 +1245,8 @@ void RooAbsArg::registerProxy(RooArgProxy& proxy)
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
     coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named "
-			 << proxy.GetName() << " for arg " << proxy.absArg()->GetName()
-			 << " already registered" << endl ;
+          << proxy.GetName() << " for arg " << proxy.absArg()->GetName()
+          << " already registered" << endl ;
     return ;
   }
 
@@ -1289,7 +1289,7 @@ void RooAbsArg::registerProxy(RooSetProxy& proxy)
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
     coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named "
-			 << proxy.GetName() << " already registered" << endl ;
+          << proxy.GetName() << " already registered" << endl ;
     return ;
   }
 
@@ -1324,7 +1324,7 @@ void RooAbsArg::registerProxy(RooListProxy& proxy)
   // Every proxy can be registered only once
   if (_proxyList.FindObject(&proxy)) {
     coutE(LinkStateMgmt) << "RooAbsArg::registerProxy(" << GetName() << "): proxy named "
-			 << proxy.GetName() << " already registered" << endl ;
+          << proxy.GetName() << " already registered" << endl ;
     return ;
   }
 
@@ -1407,7 +1407,7 @@ void RooAbsArg::setProxyNormSet(const RooArgSet* nset)
 void RooAbsArg::attachToTree(TTree& ,Int_t)
 {
   coutE(Contents) << "RooAbsArg::attachToTree(" << GetName()
-		  << "): Cannot be attached to a TTree" << endl ;
+        << "): Cannot be attached to a TTree" << endl ;
 }
 
 
@@ -1543,9 +1543,9 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
       os << indent << "    " << proxy->name() << " -> " ;
       RooAbsArg* parg = ((RooArgProxy*)proxy)->absArg() ;
       if (parg) {
-	parg->printStream(os,kName,kSingleLine) ;
+   parg->printStream(os,kName,kSingleLine) ;
       } else {
-	os << " (empty)" << endl ; ;
+   os << " (empty)" << endl ; ;
       }
     } else {
       os << indent << "    " << proxy->name() << " -> " ;
@@ -1695,7 +1695,7 @@ void RooAbsArg::optimizeCacheMode(const RooArgSet& observables)
   optimizeCacheMode(observables,opt,proc) ;
 
   coutI(Optimization) << "RooAbsArg::optimizeCacheMode(" << GetName() << ") nodes " << opt << " depend on observables, "
-			<< "changing cache operation mode from change tracking to unconditional evaluation" << endl ;
+         << "changing cache operation mode from change tracking to unconditional evaluation" << endl ;
 }
 
 
@@ -1771,7 +1771,7 @@ Bool_t RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cac
 
   // If node can be optimized and hasn't been identified yet, add it to the list
   coutI(Optimization) << "RooAbsArg::findConstantNodes(" << GetName() << "): components "
-			<< cacheList << " depend exclusively on constant parameters and will be precalculated and cached" << endl ;
+         << cacheList << " depend exclusively on constant parameters and will be precalculated and cached" << endl ;
 
   return ret ;
 }
@@ -2036,7 +2036,7 @@ void RooAbsArg::registerCache(RooAbsCache& cache)
 void RooAbsArg::unRegisterCache(RooAbsCache& cache)
 {
   _cacheList.erase(std::remove(_cacheList.begin(), _cacheList.end(), &cache),
-	  _cacheList.end());
+     _cacheList.end());
 }
 
 
@@ -2214,12 +2214,12 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 //       nodeName  = node->getStringAttribute("factory_tag") ;
 //     } else {
 //       if (node->isFundamental()) {
-// 	nodeName = node->GetName();
+//    nodeName = node->GetName();
 //       } else {
-// 	ostringstream oss ;
-// 	node->printStream(oss,(node->defaultPrintContents(0)&(~kValue)),node->defaultPrintStyle(0)) ;
-// 	nodeName= oss.str() ;
-// // 	nodeName = Form("%s::%s",node->IsA()->GetName(),node->GetName());
+//    ostringstream oss ;
+//    node->printStream(oss,(node->defaultPrintContents(0)&(~kValue)),node->defaultPrintStyle(0)) ;
+//    nodeName= oss.str() ;
+// //    nodeName = Form("%s::%s",node->IsA()->GetName(),node->GetName());
 
 //       }
 //     }

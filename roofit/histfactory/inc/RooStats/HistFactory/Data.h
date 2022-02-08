@@ -22,7 +22,7 @@ namespace RooStats{
 namespace HistFactory {
 
 class Data {
-  
+
 public:
   //friend class Channel;
 
@@ -32,7 +32,7 @@ public:
 
   std::string GetName() const { return fName; }
   void SetName(const std::string& name) { fName=name; }
-  
+
   void SetInputFile(const std::string& InputFile) { fInputFile = InputFile; }
   std::string GetInputFile() const { return fInputFile; }
 
@@ -47,13 +47,13 @@ public:
   void writeToFile( std::string FileName, std::string DirName );
 
   TH1* GetHisto();
-  const TH1* GetHisto() const;  
+  const TH1* GetHisto() const;
   void SetHisto(TH1* Hist) { fhData = Hist; fHistoName=Hist->GetName(); }
-  
+
 protected:
 
   std::string fName;
-  
+
   std::string fInputFile;
   std::string fHistoName;
   std::string fHistoPath;

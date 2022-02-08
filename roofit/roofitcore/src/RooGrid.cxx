@@ -21,7 +21,7 @@
 
 RooGrid is a utility class for RooMCIntegrator which
 implements an adaptive multi-dimensional Monte Carlo numerical
-integration, following the VEGAS algorithm.  
+integration, following the VEGAS algorithm.
 **/
 
 #include "RooFit.h"
@@ -88,7 +88,7 @@ RooGrid::RooGrid(const RooAbsFunc &function)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooGrid::~RooGrid() 
+RooGrid::~RooGrid()
 {
   if(_xl)     delete[] _xl;
   if(_xu)     delete[] _xu;
@@ -105,7 +105,7 @@ RooGrid::~RooGrid()
 /// specified function, and initialize the grid using a single bin.
 /// Return kTRUE, or else kFALSE if the range is not valid.
 
-Bool_t RooGrid::initialize(const RooAbsFunc &function) 
+Bool_t RooGrid::initialize(const RooAbsFunc &function)
 {
   _vol= 1;
   _bins= 1;
@@ -123,7 +123,7 @@ Bool_t RooGrid::initialize(const RooAbsFunc &function)
     Double_t dx= _xu[index] - _xl[index];
     if(dx <= 0) {
       oocoutE((TObject*)0,Integration) << ClassName() << ": bad range for dimension " << index << ": [" << _xl[index]
-				       << "," << _xu[index] << "]" << endl;
+                   << "," << _xu[index] << "]" << endl;
       return kFALSE;
     }
     _delx[index]= dx;
@@ -141,11 +141,11 @@ Bool_t RooGrid::initialize(const RooAbsFunc &function)
 /// bin density. The new binning can be finer or coarser than
 /// the original binning.
 
-void RooGrid::resize(UInt_t bins) 
+void RooGrid::resize(UInt_t bins)
 {
   // is there anything to do?
   if(bins == _bins) return;
-  
+
   // weight is ratio of bin sizes
   Double_t pts_per_bin = (Double_t) _bins / (Double_t) bins;
 
@@ -159,10 +159,10 @@ void RooGrid::resize(UInt_t bins)
     for(k = 1; k <= _bins; k++) {
       dw += 1.0;
       xold = xnew;
-      xnew = coord(k,j);      
+      xnew = coord(k,j);
       while(dw > pts_per_bin) {
-	dw -= pts_per_bin;
-	newCoord(i++)= xnew - (xnew - xold) * dw;
+   dw -= pts_per_bin;
+   newCoord(i++)= xnew - (xnew - xold) * dw;
       }
     }
     // copy the new edges into _xi[j]
@@ -170,7 +170,7 @@ void RooGrid::resize(UInt_t bins)
       coord(k, j) = newCoord(k);
     }
     coord(bins, j) = 1;
-  }  
+  }
   _bins = bins;
 }
 
@@ -178,7 +178,7 @@ void RooGrid::resize(UInt_t bins)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the values associated with each grid cell.
 
-void RooGrid::resetValues() 
+void RooGrid::resetValues()
 {
   for(UInt_t i = 0; i < _bins; i++) {
     for (UInt_t j = 0; j < _dim; j++) {
@@ -196,7 +196,7 @@ void RooGrid::resetValues()
 /// that each range from 0 to getNBoxes()-1.
 
 void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Double_t &vol,
-			    Bool_t useQuasiRandom) const 
+             Bool_t useQuasiRandom) const
 {
   vol= 1;
 
@@ -243,7 +243,7 @@ void RooGrid::generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[], Doub
 /// Reset the specified array of box indices to refer to the first box
 /// in the standard traversal order.
 
-void RooGrid::firstBox(UInt_t box[]) const 
+void RooGrid::firstBox(UInt_t box[]) const
 {
   for(UInt_t i= 0; i < _dim; i++) box[i]= 0;
 }
@@ -255,7 +255,7 @@ void RooGrid::firstBox(UInt_t box[]) const
 /// in the standard traversal order and return kTRUE, or else return
 /// kFALSE if we the indices already refer to the last box.
 
-Bool_t RooGrid::nextBox(UInt_t box[]) const 
+Bool_t RooGrid::nextBox(UInt_t box[]) const
 {
   // try incrementing each index until we find one that does not roll
   // over, starting from the last index.
@@ -274,7 +274,7 @@ Bool_t RooGrid::nextBox(UInt_t box[]) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print info about this object to the specified stream.
 
-void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const 
+void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const
 {
   os << ClassName() << ": volume = " << getVolume() << endl;
   os << indent << "  Has " << getDimension() << " dimension(s) each subdivided into "
@@ -285,7 +285,7 @@ void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TS
     if(!verbose) continue;
     for(UInt_t bin= 0; bin < _bins; bin++) {
       os << indent << "    bin-" << bin << " : x = " << coord(bin,index) << " , y = "
-	 << value(bin,index) << endl;
+    << value(bin,index) << endl;
     }
   }
 }
@@ -294,7 +294,7 @@ void RooGrid::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TS
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of grid object
 
-void RooGrid::printName(ostream& os) const 
+void RooGrid::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -303,7 +303,7 @@ void RooGrid::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print title of grid object
 
-void RooGrid::printTitle(ostream& os) const 
+void RooGrid::printTitle(ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -312,7 +312,7 @@ void RooGrid::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of grid object
 
-void RooGrid::printClassName(ostream& os) const 
+void RooGrid::printClassName(ostream& os) const
 {
   os << IsA()->GetName() ;
 }
@@ -323,7 +323,7 @@ void RooGrid::printClassName(ostream& os) const
 /// Add the specified amount to bin[j] of the 1D histograms associated
 /// with each axis j.
 
-void RooGrid::accumulate(const UInt_t bin[], Double_t amount) 
+void RooGrid::accumulate(const UInt_t bin[], Double_t amount)
 {
   for(UInt_t j = 0; j < _dim; j++) value(bin[j],j) += amount;
 }
@@ -335,7 +335,7 @@ void RooGrid::accumulate(const UInt_t bin[], Double_t amount)
 /// usually be between 1 (stiffer) and 2 (more flexible). A value of zero
 /// prevents any rebinning.
 
-void RooGrid::refine(Double_t alpha) 
+void RooGrid::refine(Double_t alpha)
 {
   for (UInt_t j = 0; j < _dim; j++) {
 
@@ -344,7 +344,7 @@ void RooGrid::refine(Double_t alpha)
     Double_t oldg = value(0,j);
     Double_t newg = value(1,j);
     value(0,j)= (oldg + newg)/2;
-    Double_t grid_tot_j = value(0,j);    
+    Double_t grid_tot_j = value(0,j);
     // this loop implements value(i,j) = ( value(i-1,j)+value(i,j)+value(i+1,j) ) / 3
 
     UInt_t i;
@@ -364,18 +364,18 @@ void RooGrid::refine(Double_t alpha)
     for (i = 0; i < _bins; i++) {
       _weight[i] = 0;
       if (value(i,j) > 0) {
-	oldg = grid_tot_j/value(i,j);
-	/* damped change */
-	_weight[i] = TMath::Power(((oldg-1.0)/oldg/log(oldg)), alpha);
+   oldg = grid_tot_j/value(i,j);
+   /* damped change */
+   _weight[i] = TMath::Power(((oldg-1.0)/oldg/log(oldg)), alpha);
       }
       tot_weight += _weight[i];
     }
 
     Double_t pts_per_bin = tot_weight / _bins;
-    
+
     Double_t xold;
     Double_t xnew = 0;
-    Double_t dw = 0;    
+    Double_t dw = 0;
 
     UInt_t k;
     i = 1;
@@ -383,17 +383,17 @@ void RooGrid::refine(Double_t alpha)
       dw += _weight[k];
       xold = xnew;
       xnew = coord(k+1,j);
-      
+
       while(dw > pts_per_bin) {
-	dw -= pts_per_bin;
-	newCoord(i++) = xnew - (xnew - xold) * dw / _weight[k];
+   dw -= pts_per_bin;
+   newCoord(i++) = xnew - (xnew - xold) * dw / _weight[k];
       }
     }
-    
+
     for (k = 1 ; k < _bins ; k++) {
       coord( k, j) = newCoord(k);
     }
-    
+
     coord(_bins, j) = 1;
   }
 }

@@ -68,9 +68,9 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 using namespace RooFit ;
 using namespace std ;
 
-#define BUFFER_SIZE 64000 
+#define BUFFER_SIZE 64000
 
-ClassImp(RooFactoryWSTool); 
+ClassImp(RooFactoryWSTool);
 ;
 
 RooFactoryWSTool* RooFactoryWSTool::_of = 0 ;
@@ -136,7 +136,7 @@ static Int_t init()
 RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount(0), _autoClassPostFix("")
 
 {
-  // Default constructor  
+  // Default constructor
 }
 
 
@@ -144,7 +144,7 @@ RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooFactoryWSTool::~RooFactoryWSTool() 
+RooFactoryWSTool::~RooFactoryWSTool()
 {
 }
 
@@ -178,7 +178,7 @@ RooRealVar* RooFactoryWSTool::createVariable(const char* name, Double_t xmin, Do
 /// Low-level factory interface for creating a RooCategory with a given list of state names. The State name list
 /// can be of the form 'name1,name2,name3' or of the form 'name1=id1,name2=id2,name3=id3'
 
-RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stateNameList) 
+RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stateNameList)
 {
   // Create variable
   RooCategory cat(name,name) ;
@@ -193,12 +193,12 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
     while(tok) {
       char* sep = strchr(tok,'=') ;
       if (sep) {
-	*sep = 0 ;
-	Int_t id = atoi(sep+1) ;
-	cat.defineType(tok,id) ;
-	*sep = '=' ;
+   *sep = 0 ;
+   Int_t id = atoi(sep+1) ;
+   cat.defineType(tok,id) ;
+   *sep = '=' ;
       } else {
-	cat.defineType(tok) ;
+   cat.defineType(tok) ;
       }
       tok = R__STRTOK_R(0,",",&save) ;
     }
@@ -208,7 +208,7 @@ RooCategory* RooFactoryWSTool::createCategory(const char* name, const char* stat
   cat.setStringAttribute("factory_tag",Form("%s[%s]",name,stateNameList)) ;
 
   // Put in workspace
-  if (_ws->import(cat,Silence())) logError() ;  
+  if (_ws->import(cat,Silence())) logError() ;
 
   return _ws->cat(name) ;
 }
@@ -308,7 +308,7 @@ namespace {
 /// dependent on the p.d.f. Set and List arguments can be passed by substituting a single argument with
 /// the form (a,b,c), i.e. one can set varList to "x,(a0,a1,a2)" to pass a RooAbsReal and a RooArgSet as arguments.
 
-RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objName, const char* varList) 
+RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objName, const char* varList)
 {
   // Find class in ROOT class table
   TClass* tc = resolveClassName(className);
@@ -355,18 +355,18 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR no suitable constructor found for class " << className << endl ;
     logError() ;
     return 0 ;
-  }  
+  }
 
 
   // Check if number of provided args is in valid range (add two to accomodate name and title strings)
   if (_args.size()+2<ca.second || _args.size()+2>ca.first.size()) {
     if (ca.second==ca.first.size()) {
-      coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR number of arguments provided (" << _args.size() << ") for class is invalid, " << className 
-			    << " expects " << ca.first.size()-2 << endl ;
+      coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR number of arguments provided (" << _args.size() << ") for class is invalid, " << className
+             << " expects " << ca.first.size()-2 << endl ;
       logError() ;
     } else {
-      coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR number of arguments provided (" << _args.size() << ") for class is invalid " << className 
-			    << " expect number between " << ca.second-2 << " and " << ca.first.size()-2 << endl ;
+      coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR number of arguments provided (" << _args.size() << ") for class is invalid " << className
+             << " expect number between " << ca.second-2 << " and " << ca.first.size()-2 << endl ;
       logError() ;
     }
     return 0 ;
@@ -375,101 +375,101 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
   // Now construct CINT constructor spec, start with mandatory name and title args
   string cintExpr(Form("new %s(\"%s\",\"%s\"",className,objName,objName)) ;
 
-  // Install argument in static data member to be accessed below through static CINT interface functions  
+  // Install argument in static data member to be accessed below through static CINT interface functions
   _of = this ;
 
-  
+
   try {
     Int_t i(0) ;
     list<string>::iterator ti = ca.first.begin() ; ++ti ; ++ti ;
     for (vector<string>::iterator ai = _args.begin() ; ai != _args.end() ; ++ai,++ti,++i) {
       if ((*ti)=="RooAbsReal&" || (*ti)=="const RooAbsReal&") {
-	RooFactoryWSTool::as_FUNC(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_FUNC(%d)",i) ;
+   RooFactoryWSTool::as_FUNC(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_FUNC(%d)",i) ;
       } else if ((*ti)=="RooAbsArg&" || (*ti)=="const RooAbsArg&") {
-	RooFactoryWSTool::as_ARG(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_ARG(%d)",i) ;
+   RooFactoryWSTool::as_ARG(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_ARG(%d)",i) ;
       } else if ((*ti)=="RooRealVar&" || (*ti)=="const RooRealVar&") {
-	RooFactoryWSTool::as_VAR(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_VAR(%d)",i) ;
+   RooFactoryWSTool::as_VAR(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_VAR(%d)",i) ;
       } else if ((*ti)=="RooAbsRealLValue&" || (*ti)=="const RooAbsRealLValue&") {
-	RooFactoryWSTool::as_VARLV(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_VARLV(%d)",i) ;
+   RooFactoryWSTool::as_VARLV(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_VARLV(%d)",i) ;
       } else if ((*ti)=="RooCategory&" || (*ti)=="const RooCategory&") {
-	RooFactoryWSTool::as_CAT(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_CAT(%d)",i) ;
+   RooFactoryWSTool::as_CAT(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_CAT(%d)",i) ;
       } else if ((*ti)=="RooAbsCategory&" || (*ti)=="const RooAbsCategory&") {
-	RooFactoryWSTool::as_CATFUNC(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_CATFUNC(%d)",i) ;
+   RooFactoryWSTool::as_CATFUNC(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_CATFUNC(%d)",i) ;
       } else if ((*ti)=="RooAbsCategoryLValue&" || (*ti)=="const RooAbsCategoryLValue&") {
-	RooFactoryWSTool::as_CATLV(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_CATLV(%d)",i) ;
+   RooFactoryWSTool::as_CATLV(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_CATLV(%d)",i) ;
       } else if ((*ti)=="RooAbsPdf&" || (*ti)=="const RooAbsPdf&") {
-	RooFactoryWSTool::as_PDF(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_PDF(%d)",i) ;
+   RooFactoryWSTool::as_PDF(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_PDF(%d)",i) ;
       } else if ((*ti)=="RooResolutionModel&" || (*ti)=="const RooResolutionModel&") {
-	RooFactoryWSTool::as_RMODEL(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_RMODEL(%d)",i) ;
+   RooFactoryWSTool::as_RMODEL(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_RMODEL(%d)",i) ;
       } else if ((*ti)=="RooAbsData&" || (*ti)=="const RooAbsData&") {
-	RooFactoryWSTool::as_DATA(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_DATA(%d)",i) ;
+   RooFactoryWSTool::as_DATA(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_DATA(%d)",i) ;
       } else if ((*ti)=="RooDataSet&" || (*ti)=="const RooDataSet&") {
-	RooFactoryWSTool::as_DSET(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_DSET(%d)",i) ;
+   RooFactoryWSTool::as_DSET(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_DSET(%d)",i) ;
       } else if ((*ti)=="RooDataHist&" || (*ti)=="const RooDataHist&") {
-	RooFactoryWSTool::as_DHIST(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_DHIST(%d)",i) ;
+   RooFactoryWSTool::as_DHIST(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_DHIST(%d)",i) ;
       } else if ((*ti)=="const RooArgSet&") {
-	RooFactoryWSTool::as_SET(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_SET(%d)",i) ;
+   RooFactoryWSTool::as_SET(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_SET(%d)",i) ;
       } else if ((*ti)=="const RooArgList&") {
-	RooFactoryWSTool::as_LIST(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_LIST(%d)",i) ;
+   RooFactoryWSTool::as_LIST(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_LIST(%d)",i) ;
       } else if ((*ti)=="const char*") {
-	RooFactoryWSTool::as_STRING(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_STRING(%d)",i) ;	
+   RooFactoryWSTool::as_STRING(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_STRING(%d)",i) ;
       } else if ((*ti)=="Int_t" || (*ti)=="int" || (*ti)=="Bool_t" || (*ti)=="bool") {
-	RooFactoryWSTool::as_INT(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_INT(%d)",i) ;	
+   RooFactoryWSTool::as_INT(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_INT(%d)",i) ;
       } else if ((*ti)=="Double_t") {
-	RooFactoryWSTool::as_DOUBLE(i) ;
-	cintExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;	
+   RooFactoryWSTool::as_DOUBLE(i) ;
+   cintExpr += Form(",RooFactoryWSTool::as_DOUBLE(%d)",i) ;
       } else if (isEnum(ti->c_str())) {
 
-	string qualvalue ;
-	if (_args[i].find(Form("%s::",className)) != string::npos) {		    
-	  qualvalue = _args[i].c_str() ;
-	} else {	
-	  qualvalue =  Form("%s::%s",className,_args[i].c_str()) ;	    
-	}
-	if (isValidEnumValue(ti->c_str(),qualvalue.c_str())) {
-	  cintExpr += Form(",(%s)%s",ti->c_str(),qualvalue.c_str()) ;
-	} else {
-	  throw string(Form("Supplied argument %s does not represent a valid state of enum %s",_args[i].c_str(),ti->c_str())) ;
-	  }
+   string qualvalue ;
+   if (_args[i].find(Form("%s::",className)) != string::npos) {
+     qualvalue = _args[i].c_str() ;
+   } else {
+     qualvalue =  Form("%s::%s",className,_args[i].c_str()) ;
+   }
+   if (isValidEnumValue(ti->c_str(),qualvalue.c_str())) {
+     cintExpr += Form(",(%s)%s",ti->c_str(),qualvalue.c_str()) ;
+   } else {
+     throw string(Form("Supplied argument %s does not represent a valid state of enum %s",_args[i].c_str(),ti->c_str())) ;
+     }
       } else {
-	// Check if generic object store has argument of given name and type
-	TObject& obj = RooFactoryWSTool::as_OBJ(i) ;
+   // Check if generic object store has argument of given name and type
+   TObject& obj = RooFactoryWSTool::as_OBJ(i) ;
 
-	// Strip argument type to bare type (i.e. const X& -> X)
-	string btype ;
-	if (ti->find("const ")==0) {
-	  btype = ti->c_str()+6 ;
-	} else {
-	  btype = *ti ;
-	}
-	if (btype.find("&")) {
-	  btype.erase(btype.size()-1,btype.size()) ;
-	}
+   // Strip argument type to bare type (i.e. const X& -> X)
+   string btype ;
+   if (ti->find("const ")==0) {
+     btype = ti->c_str()+6 ;
+   } else {
+     btype = *ti ;
+   }
+   if (btype.find("&")) {
+     btype.erase(btype.size()-1,btype.size()) ;
+   }
 
-	// If btype if a typedef, substitute it by the true type name
-	btype = string(TEnum::GetEnum(btype.c_str())->GetName());
+   // If btype if a typedef, substitute it by the true type name
+   btype = string(TEnum::GetEnum(btype.c_str())->GetName());
 
-	if (obj.InheritsFrom(btype.c_str())) {
-	  cintExpr += Form(",(%s&)RooFactoryWSTool::as_OBJ(%d)",ti->c_str(),i) ;
-	} else {
-	  throw string(Form("Required argument with name %s of type '%s' is not in the workspace",_args[i].c_str(),ti->c_str())) ;
-	}
+   if (obj.InheritsFrom(btype.c_str())) {
+     cintExpr += Form(",(%s&)RooFactoryWSTool::as_OBJ(%d)",ti->c_str(),i) ;
+   } else {
+     throw string(Form("Required argument with name %s of type '%s' is not in the workspace",_args[i].c_str(),ti->c_str())) ;
+   }
       }
     }
     cintExpr += ") ;" ;
@@ -478,13 +478,13 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
     logError() ;
     return 0 ;
   }
-  
+
   cxcoutD(ObjectHandling) << "RooFactoryWSTool::createArg() Construct expression is " << cintExpr << endl ;
 
   // Call CINT to perform constructor call. Catch any error thrown by argument conversion method
   RooAbsArg* arg = (RooAbsArg*) gROOT->ProcessLineFast(cintExpr.c_str()) ;
 
-  if (arg) {    
+  if (arg) {
     if (string(className)=="RooGenericPdf") {
       arg->setStringAttribute("factory_tag",Form("EXPR::%s(%s)",objName,varList)) ;
     } else if (string(className)=="RooFormulaVar") {
@@ -522,22 +522,22 @@ RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool
     while(tok) {
       char* star=strchr(tok,'*') ;
       if (star) {
-	*star=0 ;
-	pdfList.add(asPDF(star+1)) ;
-	coefList.add(asFUNC(tok)) ;
+   *star=0 ;
+   pdfList.add(asPDF(star+1)) ;
+   coefList.add(asFUNC(tok)) ;
       } else {
-	pdfList2.add(asPDF(tok)) ;
+   pdfList2.add(asPDF(tok)) ;
       }
       tok = R__STRTOK_R(0,",",&save) ;
     }
     pdfList.add(pdfList2) ;
 
   } catch (const string &err) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooAddPdf: " << err << endl ;    
+    coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooAddPdf: " << err << endl ;
     logError() ;
     return nullptr;
   }
-  
+
   RooAddPdf pdf{objName,objName,pdfList,coefList,recursiveCoefs};
   pdf.setStringAttribute("factory_tag",Form("SUM::%s(%s)",objName,specList)) ;
   if (_ws->import(pdf,Silence())) logError() ;
@@ -564,22 +564,22 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
     while(tok) {
       char* star=strchr(tok,'*') ;
       if (star) {
-	*star=0 ;
-	amplList.add(asFUNC(star+1)) ;
-	coefList.add(asFUNC(tok)) ;
+   *star=0 ;
+   amplList.add(asFUNC(star+1)) ;
+   coefList.add(asFUNC(tok)) ;
       } else {
-	amplList2.add(asFUNC(tok)) ;
+   amplList2.add(asFUNC(tok)) ;
       }
       tok = R__STRTOK_R(0,",",&save) ;
     }
     amplList.add(amplList2) ;
 
   } catch (const string &err) {
-    coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooRealSumPdf: " << err << endl ;    
+    coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooRealSumPdf: " << err << endl ;
     logError() ;
     return nullptr;
   }
-  
+
   RooRealSumPdf pdf(objName,objName,amplList,coefList,(amplList.getSize()==coefList.getSize())) ;
   pdf.setStringAttribute("factory_tag",Form("ASUM::%s(%s)",objName,specList)) ;
   if (_ws->import(pdf,Silence())) logError() ;
@@ -589,7 +589,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList) 
+RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
 {
   _of = this ;
 
@@ -610,29 +610,29 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
       // |x is conditional on x, |~x is conditional on all but x
       Bool_t invCond(kFALSE) ;
       if (*sep=='~') {
-	invCond=kTRUE ;
-	sep++ ;
+   invCond=kTRUE ;
+   sep++ ;
       }
-      
+
       try {
- 	cmdList.Add(Conditional(asSET(tok),asSET(sep),!invCond).Clone()) ;
+   cmdList.Add(Conditional(asSET(tok),asSET(sep),!invCond).Clone()) ;
       } catch (const string &err) {
-	coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf Conditional argument: " << err << endl ;
-	logError() ;
-	return 0 ;
+   coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf Conditional argument: " << err << endl ;
+   logError() ;
+   return 0 ;
       }
-      
+
     } else {
       // Regular term
       if (regPdfList.size()>1) {
-	regPdfList += "," ;
+   regPdfList += "," ;
       }
       regPdfList += tok ;
     }
     tok = R__STRTOK_R(0,",",&save) ;
   }
   regPdfList += "}" ;
-  
+
   std::unique_ptr<RooProdPdf> pdf;
   try {
     pdf = std::make_unique<RooProdPdf>(objName,objName,asSET(regPdfList.c_str()),cmdList);
@@ -641,7 +641,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
     logError() ;
   }
   cmdList.Delete() ;
-  
+
   if (pdf) {
     pdf->setStringAttribute("factory_tag",Form("PROD::%s(%s)",objName,pdfList)) ;
     if (_ws->import(*pdf,Silence())) logError() ;
@@ -666,18 +666,18 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   while(tok) {
     char* eq = strchr(tok,'=') ;
     if (!eq) {
-      coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous::" << objName 
-			    << " expect mapping token of form 'state=pdfName', but found '" << tok << "'" << endl ;
+      coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous::" << objName
+             << " expect mapping token of form 'state=pdfName', but found '" << tok << "'" << endl ;
       logError() ;
       return 0 ;
     } else {
       *eq = 0 ;
 
       try {
-	theMap[tok] = &asPDF(eq+1) ;
+   theMap[tok] = &asPDF(eq+1) ;
       } catch (const string &err ) {
-	coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous: " << err << endl ;
-	logError() ;
+   coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous: " << err << endl ;
+   logError() ;
       }
     }
     tok = R__STRTOK_R(0,",",&save) ;
@@ -705,7 +705,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList) 
+RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList)
 {
   RooArgList sumlist1 ;
   RooArgList sumlist2 ;
@@ -719,11 +719,11 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
     while(tok) {
       char* star=strchr(tok,'*') ;
       if (star) {
-	*star=0 ;
-	sumlist2.add(asFUNC(star+1)) ;
-	sumlist1.add(asFUNC(tok)) ;
+   *star=0 ;
+   sumlist2.add(asFUNC(star+1)) ;
+   sumlist1.add(asFUNC(tok)) ;
       } else {
-	sumlist1.add(asFUNC(tok)) ;
+   sumlist1.add(asFUNC(tok)) ;
       }
       tok = R__STRTOK_R(0,",",&save) ;
     }
@@ -747,7 +747,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
   sum->setStringAttribute("factory_tag",Form("sum::%s(%s)",objName,specList)) ;
   if (_ws->import(*sum,Silence())) logError() ;
   return (RooAddition*) _ws->pdf(objName) ;
-  
+
 }
 
 
@@ -755,7 +755,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList) 
+RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 {
   return (RooProduct*) createArg("RooProduct",objName,Form("{%s}",pdfList)) ;
 }
@@ -779,7 +779,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 /// <tr><td> `tag[B0=1,B0bar=-1]`    <td>  Create category tag with given state names and index assignments
 /// <tr><th> Creating functions and p.d.f.s <th>
 /// <tr><td> `MyPdf::g(x,m,s)`       <td> Create p.d.f or function of type MyPdf with name g with argument x,m,s
-///                         Interpretation and number of arguments are mapped to the constructor arguments of the class 
+///                         Interpretation and number of arguments are mapped to the constructor arguments of the class
 ///                         (after the name and title).
 /// <tr><td> `MyPdf(x,m,s)`          <td> As above, but with an implicitly defined (unique) object name
 /// <tr><th> Creating sets and lists (to be used as inputs above) <th>
@@ -790,7 +790,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 /// Objects that are not created, are assumed to exist in the workspace
 /// Object creation expressions as shown above can be nested, e.g. one can do
 /// ```
-///   RooGaussian::g(x[-10,10],m[0],3) 
+///   RooGaussian::g(x[-10,10],m[0],3)
 /// ```
 /// to create a p.d.f and its variables in one go. This nesting can be applied recursively e.g.
 /// ```
@@ -850,7 +850,7 @@ RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 ///                         define aliases for type names. For the definition of meta arguments in operator p.d.f.s
 ///                         see the definitions below.
 /// </table>
-RooAbsArg* RooFactoryWSTool::process(const char* expr) 
+RooAbsArg* RooFactoryWSTool::process(const char* expr)
 {
 
 //   cout << "RooFactoryWSTool::process() " << expr << endl ;
@@ -896,8 +896,8 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
     ws().commitTransaction() ;
   }
 
-  
-  // Delete buffer 
+
+  // Delete buffer
   delete[] buf ;
 
   return out.size() ? ws().arg(out.c_str()) : 0 ;
@@ -915,7 +915,7 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
 /// e.g. 'RooGaussian::g(x,m,s)' --> 'g'
 ///      '{x(-10,10),s}          --> '{x,s}'
 
-std::string RooFactoryWSTool::processExpression(const char* token) 
+std::string RooFactoryWSTool::processExpression(const char* token)
 {
   // Delegate handling to list processor if token starts with {, otherwise
   // call single expression processor
@@ -923,7 +923,7 @@ std::string RooFactoryWSTool::processExpression(const char* token)
     processAliasExpression(token) ;
   }
 
-  if (token[0]=='{') {    
+  if (token[0]=='{') {
     // Process token as list if it starts with '{'
     return processListExpression(token) ;
   } else {
@@ -935,14 +935,14 @@ std::string RooFactoryWSTool::processExpression(const char* token)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Process a single composite expression 
+/// Process a single composite expression
 ///
 /// e.g. 'A=RooGaussian::g[x,m,s]' --> 'A=g'
 /// e.g. 'f[0,1]*RooGaussian::g[x,m,s]' --> 'f*g'
 /// e.g. 'RooGaussian::g(x,y,s)|x' --> g|x'
 /// e.g. '$MetaArg(RooGaussian::g[x,m,s],blah)' --> '$MetaArg(g,blah)'
 
-std::string RooFactoryWSTool::processCompositeExpression(const char* token) 
+std::string RooFactoryWSTool::processCompositeExpression(const char* token)
 {
   // Allocate and fill work buffer
    const size_t bufBaseSize = strlen(token)+1;
@@ -960,7 +960,7 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
     // Keep track of opening and closing brackets
     if (*p=='{' || *p=='(' || *p=='[') blevel++ ;
     if (*p=='}' || *p==')' || *p==']') blevel-- ;
-    
+
     // Keep track of string literals
     if (*p=='"' || *p=='\'') litmode = !litmode ;
 
@@ -977,7 +977,7 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
   if (*buf) {
     singleExpr.push_back(buf) ;
   }
-  if (singleExpr.size()==1) {    
+  if (singleExpr.size()==1) {
     string ret = processSingleExpression(token) ;
     delete[] buf_base ;
     return ret ;
@@ -1007,7 +1007,7 @@ std::string RooFactoryWSTool::processCompositeExpression(const char* token)
 /// e.g. 'RooGaussian::g(x,m,s)' --> 'g'
 /// e.g. 'x[-10,10]' --> 'x'
 
-std::string RooFactoryWSTool::processSingleExpression(const char* arg) 
+std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 {
   // Handle empty strings here
   if (strlen(arg)==0) {
@@ -1033,13 +1033,13 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   char* tmpx = R__STRTOK_R(buf,"([",&save) ;
   func = tmpx ? tmpx : "" ;
   char* p = R__STRTOK_R(0,"",&save) ;
-  
+
   // Return here if token is fundamental
   if (!p) {
     delete[] buf ;
     return arg ;
   }
-    
+
 
   char* tok = p ;
   Int_t blevel=0 ;
@@ -1074,8 +1074,8 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 
   // Finalize last token as argument
   string tmp = tok ;
-  
-  // If there is a suffix left in the work buffer attach it to 
+
+  // If there is a suffix left in the work buffer attach it to
   // this argument
   p = R__STRTOK_R(0,"",&save) ;
   if (p) tmp += p ;
@@ -1089,7 +1089,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   string ret ;
 
   // Determine type of leading bracket
-  char lb = ' ' ;  
+  char lb = ' ' ;
   for(const char* pp=arg ; *pp!=0 ; pp++) {
     if (*pp=='(' || *pp=='[' || *pp=='{') {
       lb = *pp ;
@@ -1105,7 +1105,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
       coutE(ObjectHandling) << "RooFactoryWSTool::processSingleExpression(" << arg << "): ERROR: Syntax error: Class::Instance must be followed by (...)" << endl ;
       logError() ;
     }
-  } else if (func[0]!='$'){    
+  } else if (func[0]!='$'){
     if (lb=='[') {
       // Create variable argument
       ret= processCreateVar(func,args) ;
@@ -1114,20 +1114,20 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
       // Create function argument with autoname
       string autoname ;
       if (!_autoNamePrefix.empty()) {
-	// If we're inside a function creation call to a higher level object, use its
-	// name as base for the autoname
-	autoname = (Form("%s::%s",func.c_str(),_autoNamePrefix.top().c_str())) ;
+   // If we're inside a function creation call to a higher level object, use its
+   // name as base for the autoname
+   autoname = (Form("%s::%s",func.c_str(),_autoNamePrefix.top().c_str())) ;
       } else {
-	// Otherwise find a free global_%d name
-	static Int_t globCounter = 0 ;
-	while(true) {
-	  autoname = Form("gobj%d",globCounter) ;
-	  globCounter++ ;
-	  if (!ws().arg(autoname.c_str())) {
-	    break ;
-	  }
-	}
-	autoname = Form("%s::%s",func.c_str(),autoname.c_str()) ;
+   // Otherwise find a free global_%d name
+   static Int_t globCounter = 0 ;
+   while(true) {
+     autoname = Form("gobj%d",globCounter) ;
+     globCounter++ ;
+     if (!ws().arg(autoname.c_str())) {
+       break ;
+     }
+   }
+   autoname = Form("%s::%s",func.c_str(),autoname.c_str()) ;
       }
       ret= processCreateArg(autoname,args) ;
     } else {
@@ -1156,7 +1156,7 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
 ///
 /// E.g.   '{x(-10,10),s}  --> '{x,s}'
 
-string RooFactoryWSTool::processListExpression(const char* arg) 
+string RooFactoryWSTool::processListExpression(const char* arg)
 {
   // Allocate and fill work buffer
   const size_t bufSize = strlen(arg)+1;
@@ -1168,7 +1168,7 @@ string RooFactoryWSTool::processListExpression(const char* arg)
   // Start running pointer at position 1 to skip opening bracket
   char* tok = buf+1 ;
   char* p = buf+1 ;
-  
+
   // Processing look
   Int_t level(0) ;
   while(*p) {
@@ -1177,7 +1177,7 @@ string RooFactoryWSTool::processListExpression(const char* arg)
     if (*p=='{' || *p=='(' || *p=='[') level++ ;
     if (*p=='}' || *p==')' || *p==']') level-- ;
 
-    
+
     // If we encounter a comma at zero bracket level
     // finalize the current token as a completed argument
     // and start the next token
@@ -1199,7 +1199,7 @@ string RooFactoryWSTool::processListExpression(const char* arg)
   // Delete work buffer
   delete[] buf ;
 
-  // Process each argument in list and construct reduced 
+  // Process each argument in list and construct reduced
   // expression to be returned
   string ret("{") ;
   vector<string>::iterator iter = args.begin() ;
@@ -1226,7 +1226,7 @@ string RooFactoryWSTool::processListExpression(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// Parse token
 
-string RooFactoryWSTool::processAliasExpression(const char* token) 
+string RooFactoryWSTool::processAliasExpression(const char* token)
 {
   vector<string> args = splitFunctionArgs(token) ;
   if (args.size()!=2) {
@@ -1237,7 +1237,7 @@ string RooFactoryWSTool::processAliasExpression(const char* token)
 
   // Insert alias in table
   _typeAliases[args[1]] = args[0] ;
-  
+
   return string() ;
 }
 
@@ -1246,12 +1246,12 @@ string RooFactoryWSTool::processAliasExpression(const char* token)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TClass* RooFactoryWSTool::resolveClassName(const char* className) 
+TClass* RooFactoryWSTool::resolveClassName(const char* className)
 {
   // First do recursive alias expansion
   while (true) {
     map<string,string>::iterator item = _typeAliases.find(className) ;
-    
+
     // If an alias is found, recurse
     if (item != _typeAliases.end()) {
       className = item->second.c_str() ;
@@ -1270,7 +1270,7 @@ TClass* RooFactoryWSTool::resolveClassName(const char* className)
       coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR class " << className << " not defined in ROOT class table" << endl ;
       logError() ;
       return 0 ;
-    } 
+    }
   }
   return tc ;
 }
@@ -1300,7 +1300,7 @@ string RooFactoryWSTool::varTag(string& func, vector<string>& args)
 ////////////////////////////////////////////////////////////////////////////////
 /// Glue function between high-level syntax and low-level factory call to createVariable:
 /// Process a parsed call to create a variable named 'func'
-/// 
+///
 /// If initial token is non-numeric, a RooCategory will be created, and the args are interpreted
 /// as either state names or 'name=id' assignments. Otherwise a RooRealvar is created and the
 /// arg list is interpreted as follows:
@@ -1309,12 +1309,12 @@ string RooFactoryWSTool::varTag(string& func, vector<string>& args)
 /// If list has one arg, this is interpreted as xinit and the variable is set as constant
 
 string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
-{  
+{
 
   // Determine if first arg is numeric
   string first = *(args.begin()) ;
   if (isdigit(first[0]) || first[0]=='.' || first[0]=='+' || first[0]=='-') {
-    
+
     // Create a RooRealVar
     vector<string>::iterator ai = args.begin() ;
     if (args.size()==1) {
@@ -1325,7 +1325,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       RooRealVar tmp(func.c_str(),func.c_str(),xinit) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
       if (_ws->import(tmp,Silence())) {
-	logError() ;
+   logError() ;
       }
 
     } else if (args.size()==2) {
@@ -1337,7 +1337,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       RooRealVar tmp(func.c_str(),func.c_str(),xlo,xhi) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
       if (_ws->import(tmp,Silence())) {
-	logError() ;
+   logError() ;
       }
 
     } else if (args.size()==3) {
@@ -1350,7 +1350,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
       RooRealVar tmp(func.c_str(),func.c_str(),xinit,xlo,xhi) ;
       tmp.setStringAttribute("factory_tag",varTag(func,args).c_str()) ;
       if (_ws->import(tmp,Silence())) {
-	logError() ;
+   logError() ;
       }
     }
   } else {
@@ -1359,7 +1359,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
     string allStates ;
     for (vector<string>::iterator ai = args.begin() ; ai!=args.end() ; ++ai) {
       if (allStates.size()>0) {
-	allStates += "," ;
+   allStates += "," ;
       }
       allStates += *ai ;
     }
@@ -1368,7 +1368,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
   }
   return func ;
 }
-      
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Glue function between high-level syntax and low-level factory call to createArg:
@@ -1379,7 +1379,7 @@ string RooFactoryWSTool::processCreateVar(string& func, vector<string>& args)
 /// all inline object creations must have been compiled)
 
 string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
-{  
+{
   // Allocate and fill work buffer
   char buf[BUFFER_SIZE] ;
   strlcpy(buf,func.c_str(),BUFFER_SIZE) ;
@@ -1420,13 +1420,13 @@ string RooFactoryWSTool::processCreateArg(string& func, vector<string>& args)
 
   return string(instName) ;
 }
-      
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Concatenate list of args into comma separated string
 
-std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std::string>& args) 
+std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std::string>& args)
 {
   char pargs[BUFFER_SIZE] ;
   pargs[0] = 0 ;
@@ -1440,7 +1440,7 @@ std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std:
     ++iter ;
   }
 
-  string ret = func+"("+pargs+")" ;  
+  string ret = func+"("+pargs+")" ;
   return ret ;
 }
 
@@ -1450,7 +1450,7 @@ std::string RooFactoryWSTool::processMetaArg(std::string& func, std::vector<std:
 ////////////////////////////////////////////////////////////////////////////////
 /// Allocate and fill work buffer
 
-vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr) 
+vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 {
   const size_t bufSize = strlen(funcExpr)+1;
   char* buf = new char[bufSize] ;
@@ -1462,10 +1462,10 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 
   // Process token into arguments
   char* save ;
-  char* tmpx = R__STRTOK_R(buf,"(",&save) ;  
+  char* tmpx = R__STRTOK_R(buf,"(",&save) ;
   func = tmpx ? tmpx : "" ;
   char* p = R__STRTOK_R(0,"",&save) ;
-  
+
   // Return here if token is fundamental
   if (!p) {
     delete[] buf ;
@@ -1505,8 +1505,8 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 
   // Finalize last token as argument
   string tmp = tok ;
-  
-  // If there is a suffix left in the work buffer attach it to 
+
+  // If there is a suffix left in the work buffer attach it to
   // this argument
   p = R__STRTOK_R(0,"",&save) ;
   if (p) tmp += p ;
@@ -1514,7 +1514,7 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 
   // Delete the work buffer
   delete[] buf ;
-  
+
   return args ;
 }
 
@@ -1526,7 +1526,7 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 /// Perform basic syntax on given factory expression. If function returns
 /// true syntax errors are found.
 
-Bool_t RooFactoryWSTool::checkSyntax(const char* arg) 
+Bool_t RooFactoryWSTool::checkSyntax(const char* arg)
 {
   // Count parentheses
   Int_t nParentheses(0), nBracket(0), nAccolade(0) ;
@@ -1559,7 +1559,7 @@ Bool_t RooFactoryWSTool::checkSyntax(const char* arg)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooFactoryWSTool::checkIndex(UInt_t idx) 
+void RooFactoryWSTool::checkIndex(UInt_t idx)
 {
   if (idx>_of->_args.size()-1) {
     throw string(Form("Need argument number %d, but only %d args are provided",idx,(Int_t)_of->_args.size())) ;
@@ -1571,7 +1571,7 @@ void RooFactoryWSTool::checkIndex(UInt_t idx)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooAbsArg reference found in workspace
 
-RooAbsArg& RooFactoryWSTool::asARG(const char* arg) 
+RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
   {
   // If arg is a numeric string, make a RooConst() of it here
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
@@ -1591,7 +1591,7 @@ RooAbsArg& RooFactoryWSTool::asARG(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooAbsReal reference found in workspace
 
-RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg) 
+RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 {
   // If arg is a numeric string, make a RooConst() of it here
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
@@ -1614,7 +1614,7 @@ RooAbsReal& RooFactoryWSTool::asFUNC(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooAbsRealLValue reference found in workspace
 
-RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg) 
+RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 {
   // If arg is a numeric string, throw error as lvalue is required
   if (arg[0]=='.' || arg[0]=='+' || arg[0] == '-' || isdigit(arg[0])) {
@@ -1637,7 +1637,7 @@ RooAbsRealLValue& RooFactoryWSTool::asVARLV(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooRealVar reference found in workspace
 
-RooRealVar& RooFactoryWSTool::asVAR(const char* arg) 
+RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 {
   RooRealVar* var = ws().var(arg) ;
   if (!var) {
@@ -1652,7 +1652,7 @@ RooRealVar& RooFactoryWSTool::asVAR(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooAbsPdf reference found in workspace
 
-RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg) 
+RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 {
   RooAbsPdf* pdf = ws().pdf(arg) ;
   if (!pdf) {
@@ -1667,7 +1667,7 @@ RooAbsPdf& RooFactoryWSTool::asPDF(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooResolutionModel reference found in workspace
 
-RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg) 
+RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 {
   RooAbsArg* rarg = ws().arg(arg) ;
   if (!rarg) {
@@ -1686,7 +1686,7 @@ RooResolutionModel& RooFactoryWSTool::asRMODEL(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooAbsCategory reference found in workspace
 
-RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg) 
+RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 {
   RooAbsArg* rarg = ws().arg(arg) ;
   if (!rarg) {
@@ -1704,7 +1704,7 @@ RooAbsCategory& RooFactoryWSTool::asCATFUNC(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooAbsCategoryLValue reference found in workspace
 
-RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg) 
+RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 {
   RooAbsArg* rarg = ws().arg(arg) ;
   if (!rarg) {
@@ -1723,7 +1723,7 @@ RooAbsCategoryLValue& RooFactoryWSTool::asCATLV(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooCategory reference found in workspace
 
-RooCategory& RooFactoryWSTool::asCAT(const char* arg) 
+RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 {
   RooCategory* cat = ws().cat(arg) ;
   if (!cat) {
@@ -1739,13 +1739,13 @@ RooCategory& RooFactoryWSTool::asCAT(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooArgSet of objects found in workspace
 
-RooArgSet RooFactoryWSTool::asSET(const char* arg) 
+RooArgSet RooFactoryWSTool::asSET(const char* arg)
 {
   char tmp[BUFFER_SIZE] ;
   strlcpy(tmp,arg,BUFFER_SIZE) ;
 
   RooArgSet s ;
-  
+
   // If given object is not of {,,,} form, interpret given string as name of defined set
   if (arg[0]!='{') {
     // cout << "asSet(arg='" << arg << "') parsing as defined set" << endl ;
@@ -1772,9 +1772,9 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
     } else {
       RooAbsArg* aarg = ws().arg(tok) ;
       if (aarg) {
-	s.add(*aarg)  ;
+   s.add(*aarg)  ;
       } else {
-	throw string(Form("RooAbsArg named %s not found",tok)) ;
+   throw string(Form("RooAbsArg named %s not found",tok)) ;
       }
     }
     tok = R__STRTOK_R(0,",{}",&save) ;
@@ -1788,7 +1788,7 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooArgList of objects found in workspace
 
-RooArgList RooFactoryWSTool::asLIST(const char* arg) 
+RooArgList RooFactoryWSTool::asLIST(const char* arg)
 {
   char tmp[BUFFER_SIZE] ;
   strlcpy(tmp,arg,BUFFER_SIZE) ;
@@ -1808,14 +1808,14 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
     } else {
       RooAbsArg* aarg = ws().arg(tok) ;
       if (aarg) {
-	l.add(*aarg)  ;
+   l.add(*aarg)  ;
       } else {
-	throw string(Form("RooAbsArg named %s not found",tok)) ;
+   throw string(Form("RooAbsArg named %s not found",tok)) ;
       }
     }
     tok = R__STRTOK_R(0,",{}",&save) ;
   }
-  
+
   return l ;
 }
 
@@ -1824,11 +1824,11 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooAbsData object found in workspace
 
-RooAbsData& RooFactoryWSTool::asDATA(const char* arg) 
+RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 {
   RooAbsData* data = ws().data(arg) ;
   if (!data) {
-      throw string(Form("RooAbsData named %s not found",arg)) ;    
+      throw string(Form("RooAbsData named %s not found",arg)) ;
   }
   return *data ;
 }
@@ -1838,15 +1838,15 @@ RooAbsData& RooFactoryWSTool::asDATA(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooDataHist object found in workspace
 
-RooDataHist& RooFactoryWSTool::asDHIST(const char* arg) 
+RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 {
   RooAbsData* data = ws().data(arg) ;
   if (!data) {
-    throw string(Form("RooAbsData named %s not found",arg)) ;    
+    throw string(Form("RooAbsData named %s not found",arg)) ;
   }
   RooDataHist* hist = dynamic_cast<RooDataHist*>(data) ;
   if (!hist) {
-    throw string(Form("Dataset named %s is not of type RooDataHist",arg)) ;    
+    throw string(Form("Dataset named %s is not of type RooDataHist",arg)) ;
   }
   return *hist ;
 }
@@ -1855,15 +1855,15 @@ RooDataHist& RooFactoryWSTool::asDHIST(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as RooDataSet object found in workspace
 
-RooDataSet& RooFactoryWSTool::asDSET(const char* arg) 
+RooDataSet& RooFactoryWSTool::asDSET(const char* arg)
 {
   RooAbsData* data = ws().data(arg) ;
   if (!data) {
-    throw string(Form("RooAbsData named %s not found",arg)) ;    
+    throw string(Form("RooAbsData named %s not found",arg)) ;
   }
   RooDataSet* dset = dynamic_cast<RooDataSet*>(data) ;
   if (!dset) {
-    throw string(Form("Dataset named %s is not of type RooDataSet",arg)) ;    
+    throw string(Form("Dataset named %s is not of type RooDataSet",arg)) ;
   }
   return *dset ;
 }
@@ -1876,7 +1876,7 @@ TObject& RooFactoryWSTool::asOBJ(const char* arg)
 {
   TObject* obj = ws().obj(arg) ;
   if (!obj) {
-    throw string(Form("Object named %s not found",arg)) ;    
+    throw string(Form("Object named %s not found",arg)) ;
   }
   return *obj ;
 }
@@ -1884,9 +1884,9 @@ TObject& RooFactoryWSTool::asOBJ(const char* arg)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CINT constructor interface, return constructor string argument #idx as const char* 
+/// CINT constructor interface, return constructor string argument #idx as const char*
 
-const char* RooFactoryWSTool::asSTRING(const char* arg) 
+const char* RooFactoryWSTool::asSTRING(const char* arg)
 {
   static vector<string> cbuf(10) ;
   static unsigned int cbuf_idx = 0 ;
@@ -1895,14 +1895,14 @@ const char* RooFactoryWSTool::asSTRING(const char* arg)
   if (arg==0 || strlen(arg)==0) {
     return 0 ;
   }
-  
+
   // Fill cyclical buffer entry with quotation marked stripped version of string literal
   // and return pointer to stripped buffer
   cbuf[cbuf_idx].clear() ;
   const char* p = arg+1 ;
   while(*p && (*p) != '"' && (*p) !='\'' ) {
     cbuf[cbuf_idx] += *(p++) ;
-  }  
+  }
   const char* ret = cbuf[cbuf_idx].c_str() ;
 
   // Increment buffer pointer by one
@@ -1916,7 +1916,7 @@ const char* RooFactoryWSTool::asSTRING(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as Int_t
 
-Int_t RooFactoryWSTool::asINT(const char* arg) 
+Int_t RooFactoryWSTool::asINT(const char* arg)
 {
   return atoi(arg) ;
 }
@@ -1925,7 +1925,7 @@ Int_t RooFactoryWSTool::asINT(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// CINT constructor interface, return constructor string argument #idx as Double_t
 
-Double_t RooFactoryWSTool::asDOUBLE(const char* arg) 
+Double_t RooFactoryWSTool::asDOUBLE(const char* arg)
 {
   return atof(arg) ;
 }
@@ -1934,7 +1934,7 @@ Double_t RooFactoryWSTool::asDOUBLE(const char* arg)
 ////////////////////////////////////////////////////////////////////////////////
 /// Register foreign special objects in factory
 
-void RooFactoryWSTool::registerSpecial(const char* typeName, RooFactoryWSTool::IFace* iface) 
+void RooFactoryWSTool::registerSpecial(const char* typeName, RooFactoryWSTool::IFace* iface)
 {
   hooks()[typeName] = iface ;
 }
@@ -1943,7 +1943,7 @@ void RooFactoryWSTool::registerSpecial(const char* typeName, RooFactoryWSTool::I
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::map<std::string,RooFactoryWSTool::IFace*>& RooFactoryWSTool::hooks() 
+std::map<std::string,RooFactoryWSTool::IFace*>& RooFactoryWSTool::hooks()
 {
   if (_hooks) return *_hooks ;
   _hooks = new map<string,IFace*> ;
@@ -2001,34 +2001,34 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     }
 
   } else if (cl=="EXPR") {
-    
+
     // EXPR::name['expr',var,var,...]
     if (args.size()<=2) {
       ft.createArg("RooGenericPdf",instName,pargs) ;
-    } else {      
+    } else {
       char genargs[BUFFER_SIZE] ;
-      strlcpy(genargs,args[0].c_str(),BUFFER_SIZE) ;      
+      strlcpy(genargs,args[0].c_str(),BUFFER_SIZE) ;
       strlcat(genargs,",{",BUFFER_SIZE) ;
       for (UInt_t i=1 ; i<args.size() ; i++) {
-	if (i!=1) strlcat(genargs,",",BUFFER_SIZE) ;
-	strlcat(genargs,args[i].c_str(),BUFFER_SIZE) ;
+   if (i!=1) strlcat(genargs,",",BUFFER_SIZE) ;
+   strlcat(genargs,args[i].c_str(),BUFFER_SIZE) ;
       }
       strlcat(genargs,"}",BUFFER_SIZE) ;
       ft.createArg("RooGenericPdf",instName,genargs) ;
     }
-  
+
   } else if (cl=="FCONV") {
 
     // FCONV::name[var,pdf1,pdf2]
     ft.createArg("RooFFTConvPdf",instName,pargs) ;
-  
+
   } else if (cl=="NCONV") {
 
     // NCONV::name[var,pdf1,pdf2]
     ft.createArg("RooNumConvPdf",instName,pargs) ;
-  
+
   } else if (cl=="sum") {
-    
+
     // sum::name[a,b,c]
     ft.addfunc(instName,pargs) ;
 
@@ -2036,11 +2036,11 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
 
     // prod::name[a,b,c]
     ft.prodfunc(instName,pargs) ;
-    
+
   } else if (cl == "lagrangianmorph") {
     // Perform syntax check. Warn about any meta parameters other than the ones needed
     const std::array<std::string,4> funcArgs{{"fileName","observableName","couplings","folders"}};
-    map<string,string> mapped_inputs; 
+    map<string,string> mapped_inputs;
 
     for (unsigned int i=1 ; i<pargv.size() ; i++) {
       if (pargv[i].find("$fileName(")!=0 &&
@@ -2051,10 +2051,10 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
         throw string(Form("%s::create() ERROR: unknown token %s encountered",instName, pargv[i].c_str())) ;
       }
     }
- 
+
     char pargsmorph[BUFFER_SIZE];
     pargsmorph[0] = 0;
- 
+
     for (unsigned int i=0 ; i<pargv.size() ; i++) {
       if (pargv[i].find("$NewPhysics(")==0) {
         vector<string> subargs = ft.splitFunctionArgs(pargv[i].c_str()) ;
@@ -2090,19 +2090,19 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
       strlcat(pargsmorph, mapped_inputs[param].c_str(),BUFFER_SIZE);
     }
     ft.createArg("RooLagrangianMorphFunc",instName, pargsmorph);
- 
+
   } else if (cl=="expr") {
 
     // expr::name['expr',var,var,...]
     if (args.size()<=2) {
       ft.createArg("RooFormulaVar",instName,pargs) ;
-    } else {      
+    } else {
       char genargs[BUFFER_SIZE] ;
-      strlcpy(genargs,args[0].c_str(),BUFFER_SIZE) ;      
+      strlcpy(genargs,args[0].c_str(),BUFFER_SIZE) ;
       strlcat(genargs,",{",BUFFER_SIZE) ;
       for (UInt_t i=1 ; i<args.size() ; i++) {
-	if (i!=1) strlcat(genargs,",",BUFFER_SIZE) ;
-	strlcat(genargs,args[i].c_str(),BUFFER_SIZE) ;
+   if (i!=1) strlcat(genargs,",",BUFFER_SIZE) ;
+   strlcat(genargs,args[i].c_str(),BUFFER_SIZE) ;
       }
       strlcat(genargs,"}",BUFFER_SIZE) ;
       ft.createArg("RooFormulaVar",instName,genargs) ;
@@ -2146,19 +2146,19 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
 
     // nconv::name[var,pdf1,pdf2]
     ft.createArg("RooNumConvolution",instName,pargs) ;
-  
+
   } else if (cl=="nll") {
 
     // nll::name[pdf,data]
     RooNLLVar nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDATA(pargv[1].c_str())) ;
     if (ft.ws().import(nll,Silence())) ft.logError() ;
-    
+
   } else if (cl=="chi2") {
 
     // chi2::name[pdf,data]
     RooChi2Var nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDHIST(pargv[1].c_str())) ;
     if (ft.ws().import(nll,Silence())) ft.logError() ;
-    
+
   } else if (cl=="profile") {
 
     // profile::name[func,vars]
@@ -2174,8 +2174,8 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     }
     delete funcClone ;
 
-  } else if (cl=="int") {    
-    
+  } else if (cl=="int") {
+
     // int::name[func,intobs]
     // int::name[func,intobs|range]
     // int::name[func,intobs,normobs]
@@ -2213,9 +2213,9 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
 
     integral->SetName(instName) ;
     if (ft.ws().import(*integral,Silence())) ft.logError() ;
-    
+
   } else if (cl=="deriv") {
-    
+
     // derive::name[func,obs,order]
 
     if (pargv.size()<2 || pargv.size()>3) {
@@ -2275,17 +2275,17 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
       ft.logError() ;
       return string(instName) ;
     }
-    
+
   } else {
 
     throw string(Form("RooFactoryWSTool::SpecialsIFace::create() ERROR: Unknown meta-type %s",typeName)) ;
 
   }
-  return string(instName) ;    
+  return string(instName) ;
 }
 
 
-RooFactoryWSTool* RooFactoryWSTool::of() 
+RooFactoryWSTool* RooFactoryWSTool::of()
 {
   return _of ;
 }

@@ -50,7 +50,7 @@ public:
   RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
-	  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
+     Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   ~RooPlot() override;
 
   static RooPlot* frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);

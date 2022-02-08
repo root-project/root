@@ -49,12 +49,12 @@ namespace RooStats {
       /// Override the distribution used for marginalizing nuisance parameters that is inferred from ModelConfig
       virtual void ForcePriorNuisanceNull(RooAbsPdf& priorNuisance) {
          if(!fPriorNuisanceNullExternal) delete fPriorNuisanceNull;
-         fPriorNuisanceNull = &priorNuisance; 
+         fPriorNuisanceNull = &priorNuisance;
          fPriorNuisanceNullExternal = true;
       }
       virtual void ForcePriorNuisanceAlt(RooAbsPdf& priorNuisance) {
          if(!fPriorNuisanceAltExternal) delete fPriorNuisanceAlt;
-         fPriorNuisanceAlt = &priorNuisance; 
+         fPriorNuisanceAlt = &priorNuisance;
          fPriorNuisanceAltExternal = true;
       }
 
@@ -69,7 +69,7 @@ namespace RooStats {
          fAltModel = &altModel;
          if(!fPriorNuisanceAltExternal) delete fPriorNuisanceAlt;
          fPriorNuisanceAlt = MakeNuisancePdf(altModel, "PriorNuisanceAlt");
-         fPriorNuisanceAltExternal = false; 
+         fPriorNuisanceAltExternal = false;
       }
 
       /// set number of toys

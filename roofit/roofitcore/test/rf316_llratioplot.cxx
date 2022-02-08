@@ -1,14 +1,14 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #316
-// 
+//
 // Using the likelihood ratio techique to construct a signal enhanced
 // one-dimensional projection of a multi-dimensional p.d.f.
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -27,11 +27,11 @@ using namespace RooFit ;
 
 class TestBasic316 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic316(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Likelihood ratio projection plot",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   3 D   p d f   a n d   d a t a 
+  // C r e a t e   3 D   p d f   a n d   d a t a
   // -------------------------------------------
 
   // Create observables
@@ -39,13 +39,13 @@ public:
   RooRealVar y("y","y",-5,5) ;
   RooRealVar z("z","z",-5,5) ;
 
-  // Create signal pdf gauss(x)*gauss(y)*gauss(z) 
+  // Create signal pdf gauss(x)*gauss(y)*gauss(z)
   RooGaussian gx("gx","gx",x,RooConst(0),RooConst(1)) ;
   RooGaussian gy("gy","gy",y,RooConst(0),RooConst(1)) ;
   RooGaussian gz("gz","gz",z,RooConst(0),RooConst(1)) ;
   RooProdPdf sig("sig","sig",RooArgSet(gx,gy,gz)) ;
 
-  // Create background pdf poly(x)*poly(y)*poly(z) 
+  // Create background pdf poly(x)*poly(y)*poly(z)
   RooPolynomial px("px","px",x,RooArgSet(RooConst(-0.1),RooConst(0.004))) ;
   RooPolynomial py("py","py",y,RooArgSet(RooConst(0.1),RooConst(-0.004))) ;
   RooPolynomial pz("pz","pz",z) ;
@@ -66,7 +66,7 @@ public:
   RooPlot* frame = x.frame(Title("Projection of 3D data and pdf on X"),Bins(40)) ;
   data->plotOn(frame) ;
   model.plotOn(frame) ;
-  
+
 
 
   // D e f i n e   p r o j e c t e d   s i g n a l   l i k e l i h o o d   r a t i o
@@ -77,12 +77,12 @@ public:
   RooAbsPdf* sigyz = sig.createProjection(x) ;
   RooAbsPdf* totyz = model.createProjection(x) ;
 
-  // Construct the log of the signal / signal+background probability 
+  // Construct the log of the signal / signal+background probability
   RooFormulaVar llratio_func("llratio","log10(@0)-log10(@1)",RooArgList(*sigyz,*totyz)) ;
 
 
 
-  // P l o t   d a t a   w i t h   a   L L r a t i o   c u t 
+  // P l o t   d a t a   w i t h   a   L L r a t i o   c u t
   // -------------------------------------------------------
 
   // Calculate the llratio value for each event in the dataset
@@ -99,7 +99,7 @@ public:
 
 
 
-  // M a k e   M C   p r o j e c t i o n   o f   p d f   w i t h   s a m e   L L r a t i o   c u t 
+  // M a k e   M C   p r o j e c t i o n   o f   p d f   w i t h   s a m e   L L r a t i o   c u t
   // ---------------------------------------------------------------------------------------------
 
   // Generate large number of events for MC integration of pdf projection
@@ -108,7 +108,7 @@ public:
   // Calculate LL ratio for each generated event and select MC events with llratio)0.7
   mcprojData->addColumn(llratio_func) ;
   RooDataSet* mcprojDataSel = (RooDataSet*) mcprojData->reduce(Cut("llratio>0.7")) ;
-    
+
   // Project model on x, integrating projected observables (y,z) with Monte Carlo technique
   // on set of events with the same llratio cut as was applied to data
   model.plotOn(frame2,ProjWData(*mcprojDataSel)) ;
@@ -116,7 +116,7 @@ public:
 
   regPlot(frame,"rf316_plot1") ;
   regPlot(frame2,"rf316_plot2") ;
-  
+
   delete data ;
   delete dataSel ;
   delete mcprojData ;
@@ -125,5 +125,5 @@ public:
   delete totyz ;
 
   return kTRUE ;
-  }  
+  }
 } ;

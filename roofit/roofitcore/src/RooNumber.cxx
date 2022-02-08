@@ -46,7 +46,7 @@ Double_t RooNumber::_Infinity= 1.0e30 ;  //1./0.;
 ////////////////////////////////////////////////////////////////////////////////
 /// Return internal infinity representation
 
-Double_t RooNumber::infinity() 
+Double_t RooNumber::infinity()
 {
   return _Infinity ;
 }
@@ -55,7 +55,7 @@ Double_t RooNumber::infinity()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if x is infinite by RooNumBer internal specification
 
-Int_t RooNumber::isInfinite(Double_t x) 
+Int_t RooNumber::isInfinite(Double_t x)
 {
   return (x >= +_Infinity) ? +1 : ((x <= -_Infinity) ? -1 : 0);
 }
