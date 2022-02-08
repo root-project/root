@@ -469,7 +469,7 @@ ROOT/TMVA SOFIE (“System for Optimized Fast Inference code Emit”) is a new p
 This is a new development and it is currently still in experimental stage.
 
 From ROOT command line, or in a ROOT macro you can use this code for parsing a model in ONNX file format
-and generate C++ code taht can be used to evaluate the model:
+and generate C++ code that can be used to evaluate the model:
 
 ```
 using namespace TMVA::Experimental;
