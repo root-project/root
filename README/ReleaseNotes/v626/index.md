@@ -179,6 +179,39 @@ Other notable additions and improvements include:
 - Implement the `SetStats` method for `TGraph` to turn ON or OFF the statistics box display
   for an individual `TGraph`.
 
+- Use INT_MAX in TH classes instead of an arbitrary big number.
+
+- Implement option `AXIS`, to draw only axis, for TH2Poly.
+
+- The logic to Paint fit parameters for TGraph was not following the one implemented for
+  histograms. The v field described here was not working the same way. They are now implemente
+  the same way.
+
+- Implement the option X+ and Y+ for reverse axis on TGraph.
+
+- TGLAxisPainter silently modified the histogram's Z axis parameters.
+
+- Call automatically `Deflate` at drawing time of alphanumeric labels. It makes sense as
+  nobody wants to see extra blank labels.
+
+- The Confidence interval colors set by SetConfidenceIntervalColors (TRatioPlot) were inverted.
+
+- Add GetZaxis for THStack.
+
+- Fix Graph Errorbar Offsets for the new Marker Styles and thick markers.
+
+- When the palette width is bigger than the palette height, the palette
+  is automatically drawn horizontally.
+
+- THStack::GetXaxis->SetRange did not auto-zoom Yaxis range.
+
+- The Paint method of THStack always redrew the histograms in the sub-pads defined by the
+  THStack drawing option "pads". Like the "pad dividing" the "histograms' drawing" should be
+  done only the first time the THStack is painted otherwise any additional graphics objects
+  added in one of the pads (created by the "pads" option) will be removed.
+
+- Improve TRatioPlot axes drawing.
+
 ## Math Libraries
 
 - `RVec` has been heavily re-engineered in order to add a small buffer optimization and to streamline its internals. The change should provide a small performance boost to
@@ -288,7 +321,7 @@ sample = ROOT.RooCategory("sample", "sample", {"Sample1": 1, "Sample2": 2, "Samp
 
 #### RooWorkspace accessors
 
-In Python, you can now get objects stored in a [RooWorkspace](https://root.cern/doc/v626/classRooWorkspace.html) with the item retrieval operator, and the return value is also always downcasted to the correcy type. That means in Python you don't have to use [RooWorkspace::var()](https://root.cern/doc/v626/classRooWorkspace.html#acf5f9126ee264c234721a4ed1f9bf837) to access variables or [RooWorkspace::pdf()](https://root.cern/doc/v626/classRooWorkspace.html#afa7384cece424a1a94a644bb05549eee) to access pdfs, but you can always get any object using square brackets. For example:
+In Python, you can now get objects stored in a [RooWorkspace](https://root.cern/doc/v626/classRooWorkspace.html) with the item retrieval operator, and the return value is also always downcasted to the correct type. That means in Python you don't have to use [RooWorkspace::var()](https://root.cern/doc/v626/classRooWorkspace.html#acf5f9126ee264c234721a4ed1f9bf837) to access variables or [RooWorkspace::pdf()](https://root.cern/doc/v626/classRooWorkspace.html#afa7384cece424a1a94a644bb05549eee) to access pdfs, but you can always get any object using square brackets. For example:
 ```Python
 # w is a RooWorkspace instance that contains the variables `x`, `y`, and `z` for which we want to generate toy data:
 model.generate({w["x"], w["y"], w["z"]}, 1000)
@@ -312,7 +345,7 @@ For more details, consult the tutorial [rf409_NumPyPandasToRooFit.py](https://ro
 
 The [**RooLagrangianMorphFunc**](https://root.cern/doc/v626/classRooLagrangianMorphFunc.html) class is a new RooFit class for modeling a continuous distribution of an observable as a function of the parameters of an effective field theory given the distribution sampled at some points in the parameter space.
 Two new classes to help to provide this functionality:
-  * [RooRatio](https://root.cern/doc/v626/classRooRatio.html): computes the ratio of RooFit objects 
+  * [RooRatio](https://root.cern/doc/v626/classRooRatio.html): computes the ratio of RooFit objects
   * [RooPolyFunc](https://root.cern/doc/v626/classRooPolyFunc.html): multi-dimensional polynomial function, were [RooPolyFunc::taylorExpand()](https://root.cern/doc/v626/classRooPolyFunc.html#a21c6671e1b2391d08dbc62c5a5e7be38) can be used to obtain the (multi-dimensional) Taylor expansion up to the second order
 
 For example usage of the RooLagrangianMorphFunc class, please consult the tutorials for a single parameter case ([rf711_lagrangianmorph.C](https://root.cern/doc/v626/rf711__lagrangianmorph_8C.html) / [.py](https://root.cern/doc/v626/rf711__lagrangianmorph_8py.html)) and for a multi-parameter case ([rf712_lagrangianmorphfit.C](https://root.cern/doc/v626/rf712__lagrangianmorphfit_8C.html) / [.py](https://root.cern/doc/v626/rf712__lagrangianmorphfit_8py.html)).
@@ -435,8 +468,8 @@ pdf.fitTo(*data, RooFit::Range("r"));
 ROOT/TMVA SOFIE (“System for Optimized Fast Inference code Emit”) is a new package introduced in this release that generates C++ functions easily invokable for the fast inference of trained neural network models. It takes ONNX model files as inputs and produces C++ header files that can be included and utilized in a “plug-and-go” style.
 This is a new development and it is currently still in experimental stage.
 
-From ROOT command line, or in a ROOT macro you can use this code for parsing a model in ONNX file format 
-and generate C++ code taht can be used to evaluate the model: 
+From ROOT command line, or in a ROOT macro you can use this code for parsing a model in ONNX file format
+and generate C++ code that can be used to evaluate the model:
 
 ```
 using namespace TMVA::Experimental;
@@ -446,42 +479,42 @@ model.Generate();
 model.OutputGenerated(“./example_output.hxx”);
 ```
 And an C++ header file will be generated. In addition also a text file, `example_output.dat` will be also generated. This file will contain the model weight values that will be used to initialize the model.
-A full example for parsing an ONNX input file is given by the tutorial [`TMVA_SOFIE_ONNX.C`](https://root.cern/doc/master/TMVA__SOFIE__ONNX_8C.html). 
+A full example for parsing an ONNX input file is given by the tutorial [`TMVA_SOFIE_ONNX.C`](https://root.cern/doc/master/TMVA__SOFIE__ONNX_8C.html).
 
 To use the generated inference code, you need to create a `Session` class and call the function `Session::inder(float *)`:
 
 ```
 #include "example_output.hxx"
-float input[INPUT_SIZE] = {.....};   // input data 
+float input[INPUT_SIZE] = {.....};   // input data
 TMVA_SOFIE_example_model::Session s("example_output.dat");
 std::vector<float> out = s.infer(input);
 ```
 
-For using the ONNX parser you need to build ROOT with the configure option `tmva-sofie=ON`, which will be enabled when a Google Protocol Buffer library (`protobuf`, see https://developers.google.com/protocol-buffers) is found in your system.   
+For using the ONNX parser you need to build ROOT with the configure option `tmva-sofie=ON`, which will be enabled when a Google Protocol Buffer library (`protobuf`, see https://developers.google.com/protocol-buffers) is found in your system.
 
-If you don't have `protobuf` and you don't want to install you can still use SOFIE, although with some more limited operator support parsing directly Keras `.h5` input files or PyTorch `.pt` files. 
-In tis case you can convert directly the model to a `RModel` representation which can be used as above to generate the header and the weight file. 
+If you don't have `protobuf` and you don't want to install you can still use SOFIE, although with some more limited operator support parsing directly Keras `.h5` input files or PyTorch `.pt` files.
+In tis case you can convert directly the model to a `RModel` representation which can be used as above to generate the header and the weight file.
 
 For parsing a Keras input file you need to do:
 ```
 SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModel.h5");
 ```
 See the tutorial [`TMVA_SOFIE_Keras.C`](https://root.cern/doc/master/TMVA__SOFIE__Keras_8C.html).
-For parsing a PyTorch input file : 
+For parsing a PyTorch input file :
 ```
 SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModel.pt",inputShapes);
 ```
-where `inputShapes` is a `std::vector<std::vector<size_t>>` defining the inputs shape tensors. This information is required by PyTorch since it is not stored in the model. 
-A full example for parsing a PyTorch file is in the [`TMVA_SOFIE_PyTorch.C`](https://root.cern/doc/master/TMVA__SOFIE__PyTorch_8C.html) tutorial. 
+where `inputShapes` is a `std::vector<std::vector<size_t>>` defining the inputs shape tensors. This information is required by PyTorch since it is not stored in the model.
+A full example for parsing a PyTorch file is in the [`TMVA_SOFIE_PyTorch.C`](https://root.cern/doc/master/TMVA__SOFIE__PyTorch_8C.html) tutorial.
 
-For using the Keras and/or the PyTorch parser you need to have installed Keras and/or PyTorch in your Python system and in addition build root with the support for `pymva`, obtained when configuring with `-Dtmva-pymva=On`. 
- 
+For using the Keras and/or the PyTorch parser you need to have installed Keras and/or PyTorch in your Python system and in addition build root with the support for `pymva`, obtained when configuring with `-Dtmva-pymva=On`.
+
 Note that the created `SOFIE::RModel` class after parsing can be stored also in a ROOT file, using standard ROOT I/O functionality:
 ```
 SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModel.h5");
 TFile file("model.root","NEW");
 model.Write();
-file.Close(); 
+file.Close();
 ```
 
 
@@ -510,13 +543,37 @@ canvas->Print(".tex", "Standalone");
 \end{document}
 ```
 
-- Implement `ChangeLabel` in case `SetMoreLogLabels` is set.
+- Implement `ChangeLabel` in case `SetMoreLogLabels` is set. Implement it also for alphanumeric  labels.
+
+- Some extra lines were drawn when histograms have negative content.
+
+- TMathText did not display with high value coordinates.
+
+- When a TCanvas contains TGraph with a huge number of points, the auto-placement of TLegend
+  took ages. It may even look like an infinite loop.
+
+- Fix title offsetting when using absolute-size fonts and multiple pads.
+
+- The function TLatex::DrawLatex() only copied the Text-Attributes, but not the Line-Attributes
+  to the newly created TLatex-Object.
+
+- The .tex file produced when saving canvas as .tex, needed to be included in an existing
+  LateX document to be visualized. The new Standalone option allows to generate a .tex file
+  which can be directly processed by LateX (for example with the pdflatex command) in order
+  to visualise it.
+
+- SaveAs png failed in batch mode with two canvases, one divided.
+
+- The text size computed in TLatex::FirstParse was not correct in case the text precision was 3.
+
+- Return pointer to the ABC object in DrawABC methods. This was not uniform.
 
 ## 3D Graphics Libraries
 
 
 ## Geometry Libraries
 
+- Prevent the TColor palette being silently set by TGeoPainter.
 
 ## Database Libraries
 
@@ -525,6 +582,10 @@ canvas->Print(".tex", "Standalone");
 
 
 ## GUI Libraries
+
+- On Mac, with Cocoa, the pattern selector did not work anymore and the fit panel range did not work.
+
+- Fix in Cocoa. XSGui crashed on Mac M1.
 
 ## WebGUI Libraries
 
@@ -552,12 +613,43 @@ canvas->Print(".tex", "Standalone");
 
 ## Tutorials
 
+- The tutorial games.C was not working properly
+
+- Improve tutorial ErrorIntegral.C
+
+- Schrödinger's Hydrogen Atom example.
+
+- Tutorial demonstrating how the changing of the range can zoom into the histogram.
+
+- Tutorial demonstrating how a Histogram can be read from a ROOT File.
+
+- histMax.C: a tutorial demoing how the hist->GetMaximumBin() can be used.
 
 ## Class Reference Guide
 
 - Images for ROOT7 tutorials can be generated, in json format, using the directive using
   `\macro_image (json)` in the macro header.
 
+- Clarify THStack drawing options.
+
+- Add missing documentation to TH1 functions.
+
+- Restructure the the math reference guide.
+
+- Make the web gui documentation visible in the reference guide
+
+- Make clear THtml is legacy code. Add deprecated flag on PROOF and TGeoTrack.
+
+- Improve many classes documentation: TContext, TTreePlayer, THistPainter, TGraph, TSelector,
+  integrator, GUI, TH1, TH2, TH3, TColor classes ...
+
+- Make the TFile layout doc visible in Reference Guide.
+
+- Update the external links of the reference guide main page
+
+- Implement json output for v7 tutorials in the reference guide.
+
+- Reformat TMVA mathcore Unuran Roostats documentation .
 
 ## Build, Configuration and Testing Infrastructure
 
