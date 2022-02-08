@@ -2808,7 +2808,7 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include <string.h>\n"
                << "#include <assert.h>\n"
                << "#define G__DICTIONARY\n"
-               << "#include \"RConfig.h\"\n"
+               << "#include \"ROOT/RConfig.hxx\"\n"
                << "#include \"TClass.h\"\n"
                << "#include \"TDictAttributeMap.h\"\n"
                << "#include \"TInterpreter.h\"\n"
