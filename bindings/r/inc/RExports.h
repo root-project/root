@@ -11,6 +11,22 @@
  *************************************************************************/
 #ifndef ROOT_R_RExports
 #define ROOT_R_RExports
+
+#if defined(__APPLE__) 
+//This to fix conflict of RVersion.h from ROOT and Rversion.h from R 
+#if !defined(R_Version)
+#define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
+#endif
+// RAW is defined in a MacOS system header
+// but is defined as macro in RInternals.h
+#if defined(RAW)
+#undef RAW
+#endif
+#endif
+
+#include<RcppCommon.h>
+
+
 //ROOT headers
 #include <Rtypes.h>
 
@@ -48,7 +64,6 @@
 //Some useful typedefs
 typedef std::vector<TString> TVectorString;
 
-#include<RcppCommon.h>
 namespace ROOT {
    namespace R {
       class TRFunctionExport;
@@ -121,10 +136,6 @@ namespace Rcpp {
    }
 }
 
-//added to fix bug in last version of Rcpp on mac
-#if !defined(R_Version)
-#define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
-#endif
 
 #include<Rcpp.h>//this headers should be called after templates definitions
 #include<Rcpp/Named.h>
