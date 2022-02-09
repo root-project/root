@@ -1515,15 +1515,16 @@ public:
          RooArgList prodElems(*weight, *obj);
 
          allowNegativeYields = true;
-         RooProduct *prod = new RooProduct(prodname, prodname, prodElems);
+         auto prod = std::make_unique<RooProduct>(prodname, prodname, prodElems);
          if (!allowNegativeYields) {
             auto maxname = std::string(prodname) + "_max0";
             RooArgSet prodset(*prod);
 
-            RooFormulaVar *max = new RooFormulaVar(maxname.c_str(), "max(0," + prodname + ")", prodset);
-            sumElements.add(*max);
+            auto max = std::make_unique<RooFormulaVar>(maxname.c_str(), "max(0," + prodname + ")", prodset);
+            max->addOwnedComponents(std::move(prod));
+            sumElements.addOwned(std::move(max));
          } else {
-            sumElements.add(*prod);
+            sumElements.addOwned(std::move(prod));
          }
          scaleElements.add(*(binWidth));
          i++;
@@ -1544,7 +1545,7 @@ public:
       if (this->_weights.getSize() < 1)
          std::cerr << "unable to access weight objects" << std::endl;
       this->_sumFunc.get()->addOwnedComponents(this->_weights);
-      this->_sumFunc.get()->addOwnedComponents(sumElements);
+      this->_sumFunc.get()->addOwnedComponents(std::move(sumElements));
       this->_sumFunc.get()->addServerList(sumElements);
       this->_sumFunc.get()->addServerList(scaleElements);
 
@@ -2015,6 +2016,9 @@ void RooLagrangianMorphFunc::init()
    nNP4->setStringAttribute("NewPhysics", "4");
    nNP4->setConstant(true);
    this->_flags.add(*nNP4);
+   // we can't use `addOwned` before, because the RooListProxy doesn't overload
+   // `addOwned` correctly (it might in the future, then this can be changed).
+   _flags.takeOwnership();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2071,7 +2075,15 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc()
 ////////////////////////////////////////////////////////////////////////////////
 /// default destructor
 
-RooLagrangianMorphFunc::~RooLagrangianMorphFunc(){TRACE_DESTROY}
+RooLagrangianMorphFunc::~RooLagrangianMorphFunc()
+{
+   for (auto const &diagram : _diagrams) {
+      for (RooListProxy *vertex : diagram) {
+         delete vertex;
+      }
+   }
+   TRACE_DESTROY
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// cloning method
@@ -2642,7 +2654,7 @@ TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name, bool correlateEr
 
    const int nbins = observable->getBins();
 
-   TH1 *hist = new TH1F(name.c_str(), name.c_str(), nbins, observable->getBinning().array());
+   TH1 *hist = new TH1F{name.c_str(), name.c_str(), nbins, observable->getBinning().array()};
 
    RooArgSet *args = mf->getComponents();
    for (int i = 0; i < nbins; ++i) {
