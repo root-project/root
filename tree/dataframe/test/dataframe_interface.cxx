@@ -641,7 +641,7 @@ TEST(RDataFrameInterface, Describe)
 
    // dataframe with various data types
    RDataFrame df2(tree);
-   auto df3 = df2.Define("myVec", "::ROOT::RVec<float>({1, 2, 3})")
+   auto df3 = df2.Define("myVec", "ROOT::RVec<float>({1, 2, 3})")
                  .Define("myLongColumnName", "1u");
    df3.Sum("myInt").GetValue(); // trigger the event loop once
    const auto ref2 = "Dataframe from TTree tree (in-memory)\n"
