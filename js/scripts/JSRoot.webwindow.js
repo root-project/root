@@ -748,5 +748,6 @@ JSROOT.define([], () => {
 
    JSROOT.WebWindowHandle = WebWindowHandle;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 })
