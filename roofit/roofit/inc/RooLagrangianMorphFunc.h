@@ -262,7 +262,10 @@ protected:
    RooListProxy _flags;
    Config _config;
    std::vector<std::vector<RooListProxy *>> _diagrams;
-   mutable const RooArgSet *_curNormSet; //!
+   mutable const RooArgSet *_curNormSet = nullptr; //!
+
+   // TODO: the _nonInterfering is not filled anywhere and also not considered
+   // correctly in the copy constructor. Can it be removed?
    std::vector<RooListProxy *> _nonInterfering;
 
    ClassDefOverride(RooLagrangianMorphFunc, 1)
