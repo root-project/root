@@ -35,6 +35,8 @@ are clone and client-server links need to be redirected.
 #include "RooArgList.h"
 #include "RooAbsArg.h"
 
+#include <exception>
+
 using namespace std;
 
 ClassImp(RooListProxy);
@@ -89,8 +91,9 @@ RooListProxy::~RooListProxy()
 
 Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent)
 {
+  checkValid();
   Bool_t ret=RooArgList::add(var,silent) ;
-  if (ret && _owner) {
+  if (ret) {
     _owner->addServer((RooAbsArg&)var,valueServer,shapeServer) ;
   }
   return ret ;
@@ -113,6 +116,7 @@ Bool_t RooListProxy::add(const RooAbsArg& var, Bool_t silent)
 
 Bool_t RooListProxy::addOwned(RooAbsArg& var, Bool_t silent)
 {
+  checkValid();
   Bool_t ret=RooArgList::addOwned(var,silent) ;
   if (ret) {
     _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
@@ -235,5 +239,13 @@ void RooListProxy::print(ostream& os, Bool_t addContents) const
       arg->printStream(os,kValue|kName,kInline) ;
     }
     os << ")" ;
+  }
+}
+
+
+void RooListProxy::checkValid() const {
+  if(!_owner) {
+    throw std::runtime_error("Attempt to add elements to a RooListProxy without owner!"
+            " Please avoid using the RooListProxy default constructor, which should only be used by IO.");
   }
 }
