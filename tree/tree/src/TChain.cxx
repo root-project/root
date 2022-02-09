@@ -584,8 +584,11 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
 /// Filename formats are similar to TChain::Add. Wildcards are not
 /// applied. urls may also contain query and fragment identifiers
 /// where the tree name can be specified in the url fragment.
-
-Int_t TChain::AddFilelist(const char* filelist, Long64_t nentries /* = TTree::kMaxEntries */, const char* tname /* = "" */)
+/// \param[in] filelist The file which contains a list of files to be added. Each string from file will be passed to TChain::AddFile
+/// \param[in] nentries Number of entries in the file, see TChain::AddFile signature
+/// \param[in] tname Tree name, see TChain::AddFile signature
+/// \returns Sum of returns of TChain::AddFile, see TChain::AddFile signature
+Int_t TChain::AddFileList(const char* filelist, Long64_t nentries /* = TTree::kMaxEntries */, const char* tname /* = "" */)
 {
    if (filelist == 0 || filelist[0] == '\0') {
       Error("AddFilelist", "No file name; no files connected");
@@ -593,7 +596,7 @@ Int_t TChain::AddFilelist(const char* filelist, Long64_t nentries /* = TTree::kM
    }
 
    Int_t sum_results = 0;
-   std::vector<std::string> input_file_list = ROOT::ReadFilelist(filelist);
+   std::vector<std::string> input_file_list = TChain::ReadFileList(filelist);
    for (auto f: input_file_list) {
      Int_t result = AddFile(f.c_str(), nentries, tname);
      sum_results += result;
@@ -3131,3 +3134,22 @@ void TChain::Streamer(TBuffer& b)
 void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read and split into white-space separated components a (txt) file
+/// A component string starting with '#' will be ignored
+/// \param[in] str File to read
+/// \param[out] std::vector<std::string> A vector of strings
+std::vector<std::string> TChain::ReadFileList (const std::string& filelist) {
+    std::vector<std::string> input_file_list;
+    std::fstream infile(filelist, std::ios::in);
+    if (infile.is_open()) {
+        std::string line;
+        while( std::getline(infile, line) ) {
+            for (const auto& p: ROOT::Split(line.c_str(), " ", true)) {
+                if (p[0] != '#') { input_file_list.push_back(p);}
+                }
+            }
+        }
+    return input_file_list;
+    }
