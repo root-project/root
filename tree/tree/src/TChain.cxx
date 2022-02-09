@@ -591,12 +591,13 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
 Int_t TChain::AddFileList(const char* filelist, Long64_t nentries /* = TTree::kMaxEntries */, const char* tname /* = "" */)
 {
    if (filelist == 0 || filelist[0] == '\0') {
-      Error("AddFilelist", "No file name; no files connected");
+      Error("AddFilelist", "No file names; no trees have been added to the chain");
       return 0;
    }
 
    Int_t sum_results = 0;
    std::vector<std::string> input_file_list = TChain::ReadFileList(filelist);
+   if (input_file_list.empty()) { Error("AddFilelist", "Empty or missing filelist; no trees have been added to the chain"); }
    for (auto f: input_file_list) {
      Int_t result = AddFile(f.c_str(), nentries, tname);
      sum_results += result;
