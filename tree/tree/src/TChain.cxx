@@ -585,10 +585,8 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
 /// applied. urls may also contain query and fragment identifiers
 /// where the tree name can be specified in the url fragment.
 /// \param[in] filelist The file which contains a list of files to be added. Each string from file will be passed to TChain::AddFile but if starting with '#' it will be ignored
-/// \param[in] nentries Number of entries in the file, see TChain::AddFile signature
-/// \param[in] tname Tree name, see TChain::AddFile signature
 /// \returns Sum of returns of TChain::AddFile, see TChain::AddFile signature
-Int_t TChain::AddFileList(const char* filelist, Long64_t nentries /* = TTree::kMaxEntries */, const char* tname /* = "" */)
+Int_t TChain::AddFileList(const char* filelist)
 {
    if (filelist == 0 || filelist[0] == '\0') {
       Error("AddFilelist", "No file names; no trees have been added to the chain");
@@ -599,7 +597,7 @@ Int_t TChain::AddFileList(const char* filelist, Long64_t nentries /* = TTree::kM
    std::vector<std::string> input_file_list = TChain::ReadFileList(filelist);
    if (input_file_list.empty()) { Error("AddFilelist", "Empty or missing filelist; no trees have been added to the chain"); }
    for (auto f: input_file_list) {
-     Int_t result = AddFile(f.c_str(), nentries, tname);
+     Int_t result = AddFile(f.c_str());
      sum_results += result;
      }
 
