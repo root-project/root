@@ -3153,5 +3153,8 @@ std::vector<std::string> TChain::ReadFileList (const std::string& filelist) {
                 }
             }
         }
+    else {
+        ::Error("TChain::ReadFileList", "cannot open file %s", filelist.c_str());
+        }
     return input_file_list;
     }
