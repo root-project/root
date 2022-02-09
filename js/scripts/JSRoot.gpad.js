@@ -2974,21 +2974,21 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return this.drawPrimitives(indx+1);
       });
    }
-   
+
    /** @summary Divide pad on subpads
      * @returns {Promise} when finished
      * @private */
    TPadPainter.prototype.divide = function(nx, ny) {
       if (!ny) {
          let ndiv = nx;
-         if (ndiv < 2) return Promise.resolve(this); 
+         if (ndiv < 2) return Promise.resolve(this);
          nx = ny = Math.round(Math.sqrt(ndiv));
          if (nx*ny < ndiv) nx += 1;
       }
-      
+
       if (nx*ny < 2) return Promise.resolve(this);
-      
-      let xmargin = 0.01, ymargin = 0.01, 
+
+      let xmargin = 0.01, ymargin = 0.01,
           dy = 1/ny, dx = 1/nx, n = 0, subpads = [];
       for (let iy = 0; iy < ny; iy++) {
          let y2 = 1 - iy*dy - ymargin,
@@ -3014,15 +3014,15 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                pad.fAbsXlowNDC = x1;
                pad.fAbsYlowNDC = y1;
             }
-            
+
             subpads.push(pad);
          }
       }
-      
+
       const drawNext = () => {
-         if (subpads.length == 0) 
+         if (subpads.length == 0)
             return Promise.resolve(this);
-         return JSROOT.draw(this.getDom(), subpads.shift()).then(drawNext); 
+         return JSROOT.draw(this.getDom(), subpads.shift()).then(drawNext);
       };
 
       return drawNext();
@@ -4788,14 +4788,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       return res;
    }
 
-   /** @summary Check if TGeo objects in the canvas - draw them directly */
-   TCanvasPainter.prototype.directGeoDraw = function() {
-      let lst = this.pad ? this.pad.fPrimitives : null;
-      if (lst && (lst.arr.length == 1))
-         if (lst.arr[0] && lst.arr[0]._typename && (lst.arr[0]._typename.indexOf("TGeo")==0))
-            return JSROOT.draw(this.getDom(), lst.arr[0], lst.opt[0]); // return promise
-   }
-
    let drawCanvas = (divid, can, opt) => {
       let nocanvas = !can;
       if (nocanvas) can = JSROOT.create("TCanvas");
@@ -4810,9 +4802,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             painter._fixed_size = true;
          }
       }
-
-      let direct = painter.directGeoDraw();
-      if (direct) return direct;
 
       painter.decodeOptions(opt);
       painter.normal_canvas = !nocanvas;
