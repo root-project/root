@@ -22,7 +22,6 @@
 namespace ROOT {
 
 std::vector<std::string> Split(std::string_view str, std::string_view delims, bool skipEmpty = false);
-std::vector<std::string> ReadFilelist (std::string filelist);
 
 } // namespace ROOT
 
