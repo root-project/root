@@ -68,6 +68,7 @@ protected:
   Bool_t _defShapeServer ;
 
   Bool_t changePointer(const RooAbsCollection& newServerSet, Bool_t nameChange=kFALSE, Bool_t factoryInitMode=kFALSE) override;
+  void checkValid() const;
 
   ClassDefOverride(RooSetProxy,1) // Proxy class for a RooArgSet
 };

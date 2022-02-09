@@ -38,6 +38,8 @@ the serverRedirect changes.
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 
+#include <exception>
+
 using namespace std;
 
 ClassImp(RooSetProxy);
@@ -116,6 +118,7 @@ RooSetProxy::~RooSetProxy()
 
 Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeServer, Bool_t silent)
 {
+  checkValid();
   Bool_t ret=RooArgSet::add(var,silent) ;
   if (ret) {
     _owner->addServer((RooAbsArg&)var,valueServer,shapeServer) ;
@@ -132,6 +135,7 @@ Bool_t RooSetProxy::add(const RooAbsArg& var, Bool_t valueServer, Bool_t shapeSe
 
 Bool_t RooSetProxy::addOwned(RooAbsArg& var, Bool_t silent)
 {
+  checkValid();
   Bool_t ret=RooArgSet::addOwned(var,silent) ;
   if (ret) {
     _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
@@ -148,6 +152,7 @@ Bool_t RooSetProxy::addOwned(RooAbsArg& var, Bool_t silent)
 
 RooAbsArg* RooSetProxy::addClone(const RooAbsArg& var, Bool_t silent)
 {
+  checkValid();
   RooAbsArg* ret=RooArgSet::addClone(var,silent) ;
   if (ret) {
     _owner->addServer((RooAbsArg&)var,_defValueServer,_defShapeServer) ;
@@ -308,5 +313,13 @@ void RooSetProxy::print(ostream& os, Bool_t addContents) const
     }
     os << ")" ;
     delete iter ;
+  }
+}
+
+
+void RooSetProxy::checkValid() const {
+  if(!_owner) {
+    throw std::runtime_error("Attempt to add elements to a RooSetProxy without owner!"
+            " Please avoid using the RooListProxy default constructor, which should only be used by IO.");
   }
 }
