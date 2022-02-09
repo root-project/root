@@ -1174,6 +1174,5 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    jsrp.closeMenu = closeMenu;
 
    if (JSROOT.nodejs) module.exports = jsrp;
-
    return jsrp;
 });

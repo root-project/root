@@ -4911,14 +4911,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return res;
       }
 
-      /** @summary Check if TGeo objects in the canvas - draw them directly */
-      directGeoDraw() {
-         let lst = this.pad ? this.pad.fPrimitives : null;
-         if (lst && (lst.arr.length == 1))
-            if (lst.arr[0] && lst.arr[0]._typename && (lst.arr[0]._typename.indexOf("TGeo")==0))
-               return JSROOT.draw(this.getDom(), lst.arr[0], lst.opt[0]); // return promise
-      }
-
       /** @summary draw TCanvas */
       static draw(dom, can, opt) {
          let nocanvas = !can;
@@ -4934,9 +4926,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                painter._fixed_size = true;
             }
          }
-
-         let direct = painter.directGeoDraw();
-         if (direct) return direct;
 
          painter.decodeOptions(opt);
          painter.normal_canvas = !nocanvas;
@@ -5004,5 +4993,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    jsrp.ensureTCanvas = ensureTCanvas;
    jsrp.drawTPadSnapshot = drawTPadSnapshot;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 });

@@ -4269,7 +4269,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return Promise.resolve(painter);
    }
 
-   // =================================================================================
 
    /**
     * @summary Painter class for TRatioPlot
@@ -4422,9 +4421,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          return jsrp.ensureTCanvas(painter, false).then(() => painter.redraw());
       }
-   }
 
-   // ==================================================================================================
+   } // class TRatioPlotPainter
+
 
    JSROOT.TF1Painter = TF1Painter;
    JSROOT.TGraphPainter = TGraphPainter;
@@ -4437,6 +4436,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    JSROOT.TGraphTimePainter = TGraphTimePainter;
    JSROOT.TEfficiencyPainter = TEfficiencyPainter;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 
 });

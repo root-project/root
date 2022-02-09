@@ -7614,9 +7614,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }).then(() => painter.drawNextHisto(0, pad_painter));
       }
 
-   } // THStackPainter
-
-   // =================================================================================
+   } // class THStackPainter
 
    jsrp.getColorPalette = getColorPalette;
    jsrp.produceLegend = produceLegend;
@@ -7628,6 +7626,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    JSROOT.TH2Painter = TH2Painter;
    JSROOT.THStackPainter = THStackPainter;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 
 });

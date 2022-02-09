@@ -5370,6 +5370,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    JSROOT.FlexibleDisplay = FlexibleDisplay;
    JSROOT.BatchDisplay = BatchDisplay;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 
 });

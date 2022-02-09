@@ -2882,7 +2882,7 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
       let create_player = 0, finalResolve;
 
-      let process_result = function(obj, intermediate) {
+      const process_result = function(obj, intermediate) {
 
          let drawid;
 
@@ -2917,13 +2917,15 @@ JSROOT.define(['io', 'math'], (jsrio, jsrmath) => {
 
       // use in result handling same function as for progress handling
       return tree.Draw(args).then(obj => process_result(obj));
-   }
+   };
+
 
    JSROOT.TSelector = TSelector;
    JSROOT.TDrawVariable = TDrawVariable;
    JSROOT.TDrawSelector = TDrawSelector;
    jsrio.TTreeMethods = TTreeMethods;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 
 });

@@ -3978,7 +3978,9 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
          return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
       }
-   }
+
+   } // class RHistStatsPainter
+   
 
    JSROOT.RHistPainter      = RHistPainter;
    JSROOT.RH1Painter        = RH1Painter;
@@ -3987,6 +3989,7 @@ JSROOT.define(['d3', 'painter', 'v7gpad'], (d3, jsrp) => {
 
    JSROOT.v7.drawHistDisplayItem = drawHistDisplayItem;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 
 });
