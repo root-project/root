@@ -1122,11 +1122,10 @@ inline void checkNameConflict(const RooLagrangianMorphFunc::ParamMap &inputParam
 /// build the formulas corresponding to the given set of input files and
 ///  the physics process
 
-template <class List>
-inline FormulaList
-buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputParameters,
-              const RooLagrangianMorphFunc::FlagMap &inputFlags, const MorphFuncPattern &morphfunc,
-              const RooArgList &couplings, const List &flags, const std::vector<List *> &nonInterfering)
+FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputParameters,
+                          const RooLagrangianMorphFunc::FlagMap &inputFlags, const MorphFuncPattern &morphfunc,
+                          const RooArgList &couplings, const RooArgList &flags,
+                          const std::vector<RooArgList *> &nonInterfering)
 {
    // example vbf hww:
    //                        Operators kSM,  kHww, kAww, kHdwR,kHzz, kAzz
@@ -1262,11 +1261,10 @@ buildFormulas(const char *mfname, const RooLagrangianMorphFunc::ParamMap &inputP
 ////////////////////////////////////////////////////////////////////////////////
 /// create the weight formulas required for the morphing
 
-template <class T>
-inline FormulaList
-createFormulas(const char *name, const RooLagrangianMorphFunc::ParamMap &inputs,
-               const RooLagrangianMorphFunc::FlagMap &inputFlags, const std::vector<std::vector<T *>> &diagrams,
-               RooArgList &couplings, const T &flags, const std::vector<T *> &nonInterfering)
+FormulaList createFormulas(const char *name, const RooLagrangianMorphFunc::ParamMap &inputs,
+                           const RooLagrangianMorphFunc::FlagMap &inputFlags,
+                           const std::vector<std::vector<RooArgList *>> &diagrams, RooArgList &couplings,
+                           const RooArgList &flags, const std::vector<RooArgList *> &nonInterfering)
 {
    MorphFuncPattern morphfuncpattern;
 
@@ -1390,14 +1388,16 @@ public:
 
    inline void createComponents(const RooLagrangianMorphFunc::ParamMap &inputParameters,
                                 const RooLagrangianMorphFunc::FlagMap &inputFlags, const char *funcname,
-                                const std::vector<std::vector<RooListProxy *>> &diagrams,
-                                const std::vector<RooListProxy *> &nonInterfering, const RooListProxy &flags)
+                                const std::vector<std::vector<RooListProxy *>> &diagramProxyList,
+                                const std::vector<RooArgList *> &nonInterfering, const RooArgList &flags)
    {
       RooArgList operators;
-      // coutD(ObjectHandling) << "collecting couplings" << std::endl;
-      for (const auto &diagram : diagrams) {
-         for (const auto &vertex : diagram) {
+      std::vector<std::vector<RooArgList *>> diagrams;
+      for (const auto &diagram : diagramProxyList) {
+         diagrams.emplace_back();
+         for (RooArgList *vertex : diagram) {
             extractCouplings(*vertex, this->_couplings);
+            diagrams.back().emplace_back(vertex);
          }
       }
       extractOperators(this->_couplings, operators);
@@ -1561,8 +1561,9 @@ public:
       RooLagrangianMorphFunc::ParamSet values = getParams(func->_operators);
 
       RooLagrangianMorphFunc::CacheElem *cache = new RooLagrangianMorphFunc::CacheElem();
+
       cache->createComponents(func->_config.paramCards, func->_config.flagValues, func->GetName(), func->_diagrams,
-                              func->_nonInterfering, func->_flags);
+                              {func->_nonInterfering.begin(), func->_nonInterfering.end()}, func->_flags);
 
       cache->buildMatrix(func->_config.paramCards, func->_config.flagValues, func->_flags);
       if (obsName.size() == 0) {
@@ -1592,8 +1593,9 @@ public:
       RooLagrangianMorphFunc::ParamSet values = getParams(func->_operators);
 
       RooLagrangianMorphFunc::CacheElem *cache = new RooLagrangianMorphFunc::CacheElem();
+
       cache->createComponents(func->_config.paramCards, func->_config.flagValues, func->GetName(), func->_diagrams,
-                              func->_nonInterfering, func->_flags);
+                              {func->_nonInterfering.begin(), func->_nonInterfering.end()}, func->_flags);
 
 #ifndef USE_UBLAS
       cache->_inverse.ResizeTo(inverse.GetNrows(), inverse.GetNrows());
@@ -1867,10 +1869,9 @@ void RooLagrangianMorphFunc::printPhysics() const
 /// constructor with proper arguments
 
 RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const Config &config)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE),
-     _operators("operators", "set of operators", this, kTRUE, kFALSE),
-     _observables("observables", "morphing observables", this, kTRUE, kFALSE),
-     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE), _config(config), _curNormSet(0)
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _physics("physics", "physics", this),
+     _operators("operators", "set of operators", this), _observables("observables", "morphing observables", this),
+     _binWidths("binWidths", "set of binWidth objects", this), _flags("flags", "flags", this), _config(config)
 {
    this->init();
    this->setup(false);
@@ -1883,10 +1884,9 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *title, const char *filename,
                                                const char *observableName, const RooArgSet &couplings,
                                                const RooArgSet &folders)
-   : RooAbsReal(name, title), _cacheMgr(this, 10, kTRUE, kTRUE),
-     _operators("operators", "set of operators", this, kTRUE, kFALSE),
-     _observables("observables", "morphing observables", this, kTRUE, kFALSE),
-     _binWidths("binWidths", "set of binWidth objects", this, kTRUE, kFALSE), _curNormSet(0)
+   : RooAbsReal(name, title), _cacheMgr(this, 10, true, true), _physics("physics", "physics", this),
+     _operators("operators", "set of operators", this), _observables("observables", "morphing observables", this),
+     _binWidths("binWidths", "set of binWidth objects", this), _flags("flags", "flags", this)
 {
    this->_config.fileName = filename;
    this->_config.observableName = observableName;
@@ -1908,6 +1908,9 @@ void RooLagrangianMorphFunc::setup(bool own)
    auto diagrams = this->_diagrams;
 
    if (diagrams.size() > 0) {
+      // TODO: The setup() function is a protected function that is only called
+      // in the RooLagrangianMorphFunc constructor when _diagrams is still
+      // empty. As this code branch is unreachable, can't it be removed?
       RooArgList operators;
       for (auto const &v : diagrams) {
          for (const RooArgList *t : v) {
@@ -1992,7 +1995,6 @@ void RooLagrangianMorphFunc::init()
    checkNameConflict(this->_config.paramCards, this->_operators);
    this->collectInputs(file);
    closeFile(file);
-   this->addServerList(this->_physics);
    RooRealVar *nNP0 = new RooRealVar("nNP0", "nNP0", 1., 0, 1.);
    nNP0->setStringAttribute("NewPhysics", "0");
    nNP0->setConstant(true);
@@ -2023,8 +2025,8 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const RooLagrangianMorphFunc &oth
      _physics(other._physics.GetName(), this, other._physics),
      _operators(other._operators.GetName(), this, other._operators),
      _observables(other._observables.GetName(), this, other._observables),
-     _binWidths(other._binWidths.GetName(), this, other._binWidths), _flags(other._flags.GetName(), this, other._flags),
-     _config(other._config), _curNormSet(0)
+     _binWidths(other._binWidths.GetName(), this, other._binWidths), _flags{other._flags.GetName(), this, other._flags},
+     _config(other._config)
 {
    for (size_t j = 0; j < other._diagrams.size(); ++j) {
       std::vector<RooListProxy *> diagram;
