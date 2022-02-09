@@ -8641,8 +8641,7 @@ void TCling::SetDeclAttr(DeclId_t declId, const char* attribute)
 {
    Decl* decl = static_cast<Decl*>(const_cast<void*>(declId));
    ASTContext &C = decl->getASTContext();
-   SourceRange commentRange; // this is a fake comment range
-   decl->addAttr( new (C) AnnotateAttr( commentRange, C, attribute, 0 ) );
+   decl->addAttr(AnnotateAttr::CreateImplicit(C, attribute));
 }
 
 //______________________________________________________________________________
