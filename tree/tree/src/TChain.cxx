@@ -3147,6 +3147,9 @@ std::vector<std::string> TChain::ReadFileList (const std::string& filelist) {
         std::string line;
         while( std::getline(infile, line) ) {
             for (const auto& p: ROOT::Split(line.c_str(), " ", true)) {
+                int valid_chars_in_line = 0;  // check for whitespace line
+                for (auto& c: p) { if (!std::isspace(static_cast<unsigned char>(c))) { valid_chars_in_line++; } }
+                if (valid_chars_in_line == 0) continue;
                 if (p[0] != '#') { input_file_list.push_back(p);}
                 }
             }
