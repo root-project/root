@@ -1409,8 +1409,15 @@ JSROOT.define(['d3', 'threejs_jsroot', 'painter'], (d3, THREE, jsrp) => {
       let line = this.getObject(),
           main = this.getFramePainter();
 
-      if (!main || !main.mode3d || !main.toplevel || !line)
+      if (!main || !main.mode3d || !line)
          return null;
+
+      if (!main.toplevel) {
+         let main = this.getMainPainter();
+         if (main && typeof main.drawExtras == 'function')
+            return main.drawExtras(line);
+         return null;
+      }
 
       let fN, fP, pnts = [];
 

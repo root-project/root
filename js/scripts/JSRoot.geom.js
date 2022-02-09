@@ -1527,7 +1527,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             break;
          case 17: // Ctrl
             this._tcontrols.setTranslationSnap( Math.ceil( this._overall_size ) / 50 );
-            this._tcontrols.setRotationSnap( THREE.Math.degToRad( 15 ) );
+            this._tcontrols.setRotationSnap( THREE.MathUtils.degToRad( 15 ) );
             break;
          case 84: // T (Translate)
             this._tcontrols.setMode( "translate" );
@@ -2807,6 +2807,9 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       } else if (obj._typename === 'TGeoTrack') {
          if (!add_objects || this.addExtra(obj, itemname))
             promise = this.drawGeoTrack(obj, itemname);
+      } else if (obj._typename === 'TPolyLine3D') {
+         if (!add_objects || this.addExtra(obj, itemname))
+            promise = this.drawPolyLine(obj, itemname);
       } else if ((obj._typename === 'TEveTrack') || (obj._typename === 'ROOT::Experimental::TEveTrack')) {
          if (!add_objects || this.addExtra(obj, itemname))
             promise = this.drawEveTrack(obj, itemname);
@@ -2916,6 +2919,56 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          line.main_track = true;
 
       this.addToExtrasContainer(line);
+
+      return true;
+   }
+
+   /** @summary drawing TPolyLine3D */
+   TGeoPainter.prototype.drawPolyLine = function(line, itemname) {
+      if (!line) return false;
+
+      let track_width = line.fLineWidth || 1,
+          track_color = jsrp.getColor(line.fLineColor) || "#ff00ff";
+
+      if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
+
+      let fN, fP;
+
+      if (line._blob && (line._blob.length == 4)) {
+         // workaround for custom streamer for JSON, should be resolved
+         fN = line._blob[1];
+         fP = line._blob[2];
+      } else {
+         fN = line.fN;
+         fP = line.fP;
+      }
+
+      let npoints = fN,
+          buf = new Float32Array((npoints-1)*6),
+          pos = 0, projv = this.ctrl.projectPos,
+          projx = (this.ctrl.project === "x"),
+          projy = (this.ctrl.project === "y"),
+          projz = (this.ctrl.project === "z");
+
+      for (let k = 0; k < npoints-1; ++k) {
+         buf[pos]   = projx ? projv : fP[k*3];
+         buf[pos+1] = projy ? projv : fP[k*3+1];
+         buf[pos+2] = projz ? projv : fP[k*3+2];
+         buf[pos+3] = projx ? projv : fP[k*3+3];
+         buf[pos+4] = projy ? projv : fP[k*3+4];
+         buf[pos+5] = projz ? projv : fP[k*3+5];
+         pos+=6;
+      }
+
+      let lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width }),
+          line3d = jsrp.createLineSegments(buf, lineMaterial);
+
+      line3d.renderOrder = 1000000; // to bring line to the front
+      line3d.geo_name = itemname;
+      line3d.geo_object = line;
+      line3d.hightlightWidthScale = 2;
+
+      this.addToExtrasContainer(line3d);
 
       return true;
    }
@@ -3219,6 +3272,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             return this.drawCount(uniquevis, spent);
       }
 
+      let promise = Promise.resolve(true);
+
       if (!this._scene) {
 
          // this is limit for the visible faces, number of volumes does not matter
@@ -3226,34 +3281,57 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          this._first_drawing = true;
 
-         // activate worker
-         if (this.ctrl.use_worker > 0) this.startWorker();
+         this._on_pad = !!this.getPadPainter();
 
-         jsrp.assign3DHandler(this);
+         if (this._on_pad) {
+            promise = jsrp.ensureTCanvas(this,"3d").then(() => {
 
-         let size = this.getSizeFor3d(this._webgl ? undefined : 3);
+               let fp = this.getFramePainter(),
+                   render3d = jsrp.getRender3DKind();
+               jsrp.assign3DHandler(fp);
+               fp.mode3d = true;
 
-         this._fit_main_area = (size.can3d === -1);
+               let size = fp.getSizeFor3d(undefined, render3d);
 
-         let dom = this.createScene(size.width, size.height);
+               this._fit_main_area = (size.can3d === -1);
 
-         this.add3dCanvas(size, dom, this._webgl);
+               let dom = this.createScene(size.width, size.height);
 
-         // set top painter only when first child exists
-         this.setAsMainPainter();
+               fp.add3dCanvas(size, dom, render3d === JSROOT.constants.Render3D.WebGL);
+            });
+
+         } else {
+            // activate worker
+            if (this.ctrl.use_worker > 0) this.startWorker();
+
+            jsrp.assign3DHandler(this);
+
+            let size = this.getSizeFor3d(this._webgl ? undefined : 3);
+
+            this._fit_main_area = (size.can3d === -1);
+
+            let dom = this.createScene(size.width, size.height);
+
+            this.add3dCanvas(size, dom, this._webgl);
+         }
       }
 
-      this.createToolbar();
+      return promise.then(() => {
+         // set top painter only when first child exists
+         this.setAsMainPainter();
 
-      if (this._clones)
-         return new Promise(resolveFunc => {
-            this._resolveFunc = resolveFunc;
-            this.showDrawInfo("Drawing geometry");
-            this.startDrawGeometry(true);
-         });
+         this.createToolbar();
 
-      this.completeDraw();
-      return Promise.resolve(this);
+         if (this._clones)
+            return new Promise(resolveFunc => {
+               this._resolveFunc = resolveFunc;
+               this.showDrawInfo("Drawing geometry");
+               this.startDrawGeometry(true);
+            });
+
+         this.completeDraw();
+         return this;
+      });
    }
 
    /** @summary methods show info when first geometry drawing is performed */
@@ -3809,9 +3887,10 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          this.highlightMesh(null);
    }
 
-   /** @summary Assign clipping attributes to the meshes - supported only for webgl */
+   /** @summary Assign clipping attributes to the meshes - do not supported with SVG rendering */
    TGeoPainter.prototype.updateClipping = function(without_render, force_traverse) {
-      if (!this._webgl) return;
+      // do not try clipping with SVG renderer
+      if (this._renderer && this._renderer.jsroot_render3d === JSROOT.constants.Render3D.SVG) return;
 
       let clip = this.ctrl.clip, panels = [], changed = false,
           constants = [ clip[0].value, -1 * clip[1].value, (this.ctrl._yup ? -1 : 1) * clip[2].value ],
@@ -4020,7 +4099,16 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          this.clearTopPainter(); // remove as pointer
 
-         let can3d = this.clear3dCanvas(); // remove 3d canvas from main HTML element
+         let can3d = 0;
+         if (this._on_pad) {
+            let fp = this.getFramePainter();
+            if (fp && fp.mode3d) {
+               fp.clear3dCanvas();
+               fp.mode3d = false;
+            }
+         } else {
+            can3d = this.clear3dCanvas(); // remove 3d canvas from main HTML element
+         }
 
          if (this._toolbar) this._toolbar.cleanup(); // remove toolbar
 
@@ -4135,21 +4223,13 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       jsrp.showProgress(msg);
    }
 
-   /** @summary Check if HTML element was resized and drawing need to be adjusted */
-   TGeoPainter.prototype.checkResize = function(arg) {
-      let cp = this.getCanvPainter();
+   /** @summary perform resize */
+   TGeoPainter.prototype.performResize = function(width, height) {
+      if ((this._scene_width === width) && (this._scene_height === height)) return false;
+      if ((width < 10) || (height < 10)) return false;
 
-      // firefox is the only browser which correctly supports resize of embedded canvas,
-      // for others we should force canvas redrawing at every step
-      if (cp && !cp.checkCanvasResize(arg)) return false;
-
-      let sz = this.getSizeFor3d();
-
-      if ((this._scene_width === sz.width) && (this._scene_height === sz.height)) return false;
-      if ((sz.width<10) || (sz.height<10)) return false;
-
-      this._scene_width = sz.width;
-      this._scene_height = sz.height;
+      this._scene_width = width;
+      this._scene_height = height;
 
       if (this._camera && this._renderer) {
          if (this._camera.type == "PerspectiveCamera")
@@ -4165,6 +4245,19 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       }
 
       return true;
+   }
+
+
+   /** @summary Check if HTML element was resized and drawing need to be adjusted */
+   TGeoPainter.prototype.checkResize = function(arg) {
+      let cp = this.getCanvPainter();
+
+      // firefox is the only browser which correctly supports resize of embedded canvas,
+      // for others we should force canvas redrawing at every step
+      if (cp && !cp.checkCanvasResize(arg)) return false;
+
+      let sz = this.getSizeFor3d();
+      return this.performResize(sz.width, sz.height);
    }
 
    /** @summary Toggle enlarge state */
@@ -4260,6 +4353,21 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
       return true;
    }
+
+   /** @summary Redraw TGeo object inside TPad */
+   TGeoPainter.prototype.redraw = function(reason) {
+      if (!this._on_pad || (reason != "resize")) return;
+
+      let main = this.getFramePainter();
+      if (!main) return;
+
+      let sz = main.getSizeFor3d(main.access3dKind());
+
+      main.apply3dSize(sz);
+
+      return this.performResize(sz.width, sz.height);
+   }
+
 
    /** @summary Create geo painter
      * @private */
@@ -4851,6 +4959,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
    jsrp.GeoDrawingControl = GeoDrawingControl;
    jsrp.drawGeoObject = drawGeoObject;
 
+   if (JSROOT.nodejs) module.exports = geo;
    return geo;
 
 });
