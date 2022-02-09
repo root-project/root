@@ -12,19 +12,6 @@
 #ifndef ROOT_R_RExports
 #define ROOT_R_RExports
 
-#if defined(__APPLE__) 
-//This to fix conflict of RVersion.h from ROOT and Rversion.h from R 
-#if !defined(R_Version)
-#define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
-#endif
-// RAW is defined in a MacOS system header
-// but is defined as macro in RInternals.h
-#if defined(RAW)
-#undef RAW
-#endif
-#endif
-
-#include<RcppCommon.h>
 
 
 //ROOT headers
@@ -59,6 +46,22 @@
 #pragma GCC diagnostic ignored "-Wextra"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
 #endif
+// disable warning for macos
+#if defined(__APPLE__)
+#pragma GCC diagnostic ignored "-Wnonportable-include-path"
+#
+//This to fix conflict of RVersion.h from ROOT and Rversion.h from R 
+#if !defined(R_Version)
+#define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
+#endif
+// RAW is defined in a MacOS system header
+// but is defined as macro in RInternals.h
+#if defined(RAW)
+#undef RAW
+#endif
+#endif
+
+#include<RcppCommon.h>
 
 
 //Some useful typedefs
