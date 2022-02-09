@@ -2927,7 +2927,8 @@ JSROOT.define(['d3', 'painter', 'base3d', 'latex', 'hist'], (d3, jsrp, THREE, lt
          });
       }
 
-   }
+   } // class TH3Painter
+
 
    /** @summary draw TAxis3D
      * @memberof JSROOT.Painter
@@ -2968,7 +2969,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'latex', 'hist'], (d3, jsrp, THREE, lt
       return painter.Draw3DAxis();
    }
 
-   // ===========================================================================================
 
    /**
     * @summary Painter for TGraph2D classes
@@ -3320,21 +3320,30 @@ JSROOT.define(['d3', 'painter', 'base3d', 'latex', 'hist'], (d3, jsrp, THREE, lt
             return painter.redraw();
          });
       }
-   }
 
-   // ===================================================================
+   } // class TGraph2DPainter
+
 
    /** @summary draw TPolyMarker3D object
      * @memberof JSROOT.Painter
      * @private */
    function drawPolyMarker3D() {
 
-      let fp = this.getFramePainter();
+      let fp = this.getFramePainter(),
+          poly = this.getObject();
 
-      if (!fp || !fp.mode3d || !fp.toplevel)
-         return Promise.reject(Error("Fail to draw poly markers without 3D mode"));
+      if (!fp || !fp.mode3d || !poly)
+         return null;
 
-      let step = 1, sizelimit = 50000, numselect = 0, poly = this.getObject();
+      if (!fp.toplevel) {
+         let main = this.getMainPainter();
+         // recognize geom painter
+         if (main && typeof main.drawExtras == 'function')
+            return main.drawExtras(poly);
+         return null;
+      }
+
+      let step = 1, sizelimit = 50000, numselect = 0;
 
       for (let i = 0; i < poly.fP.length; i += 3) {
          if ((poly.fP[i] < fp.scale_xmin) || (poly.fP[i] > fp.scale_xmax) ||
@@ -3425,5 +3434,6 @@ JSROOT.define(['d3', 'painter', 'base3d', 'latex', 'hist'], (d3, jsrp, THREE, lt
    JSROOT.TH3Painter = TH3Painter;
    JSROOT.TGraph2DPainter = TGraph2DPainter;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 })

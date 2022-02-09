@@ -94,8 +94,8 @@
    JSROOT.version_id = "dev";
 
    /** @summary JSROOT version date
-     * @desc Release date in format day/month/year like "19/11/2021"*/
-   JSROOT.version_date = "2/02/2022";
+     * @desc Release date in format day/month/year like "19/11/2021" */
+   JSROOT.version_date = "9/02/2022";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -200,7 +200,7 @@
         * @namespace
         * @private */
       Render3D: {
-         /** @summary Default 3D rendering, normally WebGL, if not supported - SVG*/
+         /** @summary Default 3D rendering, normally WebGL, if not supported - SVG */
          Default: 0,
          /** @summary Use normal WebGL rendering and place as interactive Canvas element on HTML page */
          WebGL: 1,
@@ -467,7 +467,7 @@
             need[indx] = name.substr(5);
          else if (name == "2d")
             need[indx] = "painter";
-         else if (name == "jq2d")
+         else if ((name == "jq2d") || (name == "jq"))
             need[indx] = "hierarchy";
          else if (name == "v6")
             need[indx] = "gpad";
@@ -796,7 +796,7 @@
      * @desc Simple replacement of jQuery.extend method
      * @memberof JSROOT
      * @private */
-   let extend = (tgt, src) => {
+   function extend(tgt, src) {
       if ((src === null) || (typeof src !== 'object')) return tgt;
       if ((tgt === null) || (typeof tgt !== 'object')) tgt = {};
 
@@ -827,7 +827,7 @@
       let obj = (typeof json == 'string') ? JSON.parse(json) : json,
           map = [], newfmt = undefined;
 
-      function unref_value(value) {
+      const unref_value = value => {
          if ((value===null) || (value===undefined)) return;
 
          if (typeof value === 'string') {
@@ -941,7 +941,7 @@
                  res = unref_value(value[i]);
             if (res !== undefined) value[i] = res;
          }
-      }
+      };
 
       unref_value(obj);
 
@@ -1026,7 +1026,7 @@
 
       let map = []; // map of stored objects
 
-      function copy_value(value) {
+      const copy_value = value => {
          if (typeof value === "function") return undefined;
 
          if ((value===undefined) || (value===null) || (typeof value !== 'object')) return value;
@@ -1062,7 +1062,7 @@
          }
 
          return tgt;
-      }
+      };
 
       let tgt = copy_value(obj);
 
@@ -1339,8 +1339,8 @@
          element.setAttribute("href", url);
       } else {
          element = document.createElement("script");
-         element.setAttribute('type', "text/javascript");
-         element.setAttribute('src', url);
+         element.setAttribute("type", "text/javascript");
+         element.setAttribute("src", url);
       }
 
       return new Promise((resolve, reject) => {
@@ -1378,7 +1378,7 @@
      * @param {string} [gui_kind = "gui"] - kind of the gui: "gui", "online", "draw"
      * @returns {Promise} when ready
      * @private */
-   JSROOT.buildGUI = (gui_element, gui_kind) => {
+   JSROOT.buildGUI = function(gui_element, gui_kind) {
       let d = JSROOT.decodeUrl(),
           nobrowser = d.has('nobrowser'),
           requirements = ["hierarchy"];
@@ -1422,7 +1422,7 @@
      * let obj = JSROOT.create("TNamed");
      * obj.fName = "name";
      * obj.fTitle = "title"; */
-   let create = (typename, target) => {
+   function create(typename, target) {
       let obj = target || {};
 
       switch (typename) {
@@ -1695,7 +1695,7 @@
      * h1.fXaxis.fTitle = "xaxis";
      * h1.fYaxis.fTitle = "yaxis";
      * h1.fXaxis.fLabelSize = 0.02; */
-   JSROOT.createHistogram = (typename, nbinsx, nbinsy, nbinsz) => {
+   JSROOT.createHistogram = function(typename, nbinsx, nbinsy, nbinsz) {
       let histo = create(typename);
       if (!histo.fXaxis || !histo.fYaxis || !histo.fZaxis) return null;
       histo.fName = "hist"; histo.fTitle = "title";
@@ -1725,7 +1725,7 @@
    /** @summary Creates TPolyLine object
      * @param {number} npoints - number of points
      * @param {boolean} [use_int32] - use Int32Array type for points, default is Float32Array */
-   JSROOT.createTPolyLine = (npoints, use_int32) => {
+   JSROOT.createTPolyLine = function(npoints, use_int32) {
       let poly = create("TPolyLine");
       if (npoints) {
          poly.fN = npoints;
@@ -1744,7 +1744,7 @@
      * @param {number} npoints - number of points in TGraph
      * @param {array} [xpts] - array with X coordinates
      * @param {array} [ypts] - array with Y coordinates */
-   JSROOT.createTGraph = (npoints, xpts, ypts) => {
+   JSROOT.createTGraph = function(npoints, xpts, ypts) {
       let graph = extend(create("TGraph"), { fBits: 0x408, fName: "graph", fTitle: "title" });
 
       if (npoints > 0) {
@@ -1791,7 +1791,9 @@
       return mgraph;
    }
 
-   let methodsCache = {}; // variable used to keep methods for known classes
+   /** @summary variable used to keep methods for known classes
+     * @private */
+   const methodsCache = {};
 
    /** @summary Returns methods for given typename
      * @private */
@@ -1805,7 +1807,7 @@
       // Due to binary I/O such TObject methods may not be set for derived classes
       // Therefore when methods requested for given object, check also that basic methods are there
       if ((typename=="TObject") || (typename=="TNamed") || (obj && (obj.fBits!==undefined)))
-         if (m.TestBit === undefined) {
+         if (typeof m.TestBit === 'undefined') {
             m.TestBit = function (f) { return (this.fBits & f) != 0; };
             m.InvertBit = function (f) { this.fBits = this.fBits ^ (f & 0xffffff); };
          }
@@ -1948,9 +1950,9 @@
       if (((typename.indexOf("TGraph") == 0) || (typename == "TCutG")) && (typename != "TGraphPolargram") && (typename != "TGraphTime")) {
          // check if point inside figure specified by the TGraph
          m.IsInside = function(xp,yp) {
-            let i, j = this.fNpoints - 1, x = this.fX, y = this.fY, oddNodes = false;
+            let i = 0, j = this.fNpoints - 1, x = this.fX, y = this.fY, oddNodes = false;
 
-            for (i=0; i<this.fNpoints; ++i) {
+            for (; i < this.fNpoints; ++i) {
                if ((y[i]<yp && y[j]>=yp) || (y[j]<yp && y[i]>=yp)) {
                   if (x[i]+(yp-y[i])/(y[j]-y[i])*(x[j]-x[i])<xp) {
                      oddNodes = !oddNodes;
@@ -1963,9 +1965,7 @@
          }
       }
 
-      if (typename.indexOf("TH1") == 0 ||
-          typename.indexOf("TH2") == 0 ||
-          typename.indexOf("TH3") == 0) {
+      if (typename.indexOf("TH1") == 0 || typename.indexOf("TH2") == 0 || typename.indexOf("TH3") == 0) {
          m.getBinError = function(bin) {
             //   -*-*-*-*-*Return value of error associated to bin number bin*-*-*-*-*
             //    if the sum of squares of weights has been defined (via Sumw2),

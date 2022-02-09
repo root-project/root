@@ -175,7 +175,9 @@ JSROOT.define(['painter', 'v7gpad'], jsrp => {
 
         return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
       }
-   }
+
+   } // class RLegendPainter
+
 
    /**
     * @summary Painter for RPaveText class
@@ -218,9 +220,9 @@ JSROOT.define(['painter', 'v7gpad'], jsrp => {
 
          return jsrp.ensureRCanvas(painter, false).then(() => painter.drawPave());
       }
-   }
 
-   // ================================================================================
+   } // class RPaveTextPainter
+
 
    JSROOT.v7.drawText      = drawText;
    JSROOT.v7.drawLine      = drawLine;
@@ -229,6 +231,7 @@ JSROOT.define(['painter', 'v7gpad'], jsrp => {
    JSROOT.RLegendPainter   = RLegendPainter;
    JSROOT.RPaveTextPainter = RPaveTextPainter;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 
 });

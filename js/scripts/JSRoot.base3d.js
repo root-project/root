@@ -83,7 +83,10 @@ JSROOT.define(['d3', 'three', 'painter'], (d3, THREE, jsrp) => {
          } else {
             let elem = (can3d > 0) ? pad : this.getCanvSvg();
             size = { x: 0, y: 0, width: elem.property("draw_width"), height: elem.property("draw_height") };
-            if (fp && !fp.mode3d) {
+            if (isNaN(size.width) || isNaN(size.height)) {
+               size.width = pp.getPadWidth();
+               size.height = pp.getPadHeight();
+            } else if (fp && !fp.mode3d) {
                elem = this.getFrameSvg();
                size.x = elem.property("draw_x");
                size.y = elem.property("draw_y");
@@ -1433,20 +1436,25 @@ JSROOT.define(['d3', 'three', 'painter'], (d3, THREE, jsrp) => {
       let line = this.getObject(),
           main = this.getFramePainter();
 
-      if (!main || !main.mode3d || !main.toplevel || !line)
+      if (!main || !main.mode3d || !line)
          return null;
+
+      if (!main.toplevel) {
+         let main = this.getMainPainter();
+         if (main && typeof main.drawExtras == 'function')
+            return main.drawExtras(line);
+         return null;
+      }
 
       let fN, fP, pnts = [];
 
-      if (line._blob && (line._blob.length==4)) {
+      if (line._blob && (line._blob.length == 4)) {
          // workaround for custom streamer for JSON, should be resolved
          fN = line._blob[1];
          fP = line._blob[2];
-         // fOption = line._blob[3];
       } else {
          fN = line.fN;
          fP = line.fP;
-         // fOption = line.fOption;
       }
 
       for (let n = 3; n < 3*fN; n += 3)

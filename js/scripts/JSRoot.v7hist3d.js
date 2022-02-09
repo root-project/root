@@ -2957,9 +2957,11 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
             return painter;
          });
       }
-   } // RH3Painter
+
+   } // class RH3Painter
 
    JSROOT.RH3Painter = RH3Painter;
 
+   if (JSROOT.nodejs) module.exports = JSROOT;
    return JSROOT;
 });

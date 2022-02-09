@@ -2040,9 +2040,6 @@ JSROOT.define([], () =>  {
       }
    }
 
-   JSROOT.Math = mth;
-   if (JSROOT.nodejs) module.exports = mth;
-
    mth.Polynomialeval = Polynomialeval;
    mth.Polynomial1eval = Polynomial1eval;
    mth.stirf = stirf;
@@ -2084,5 +2081,7 @@ JSROOT.define([], () =>  {
    mth.crystalball_cdf_c = crystalball_cdf_c;
    mth.ChebyshevN = ChebyshevN;
 
+   JSROOT.Math = mth;
+   if (JSROOT.nodejs) module.exports = mth;
    return mth;
 });
