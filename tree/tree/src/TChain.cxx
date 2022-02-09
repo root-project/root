@@ -584,7 +584,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
 /// Filename formats are similar to TChain::Add. Wildcards are not
 /// applied. urls may also contain query and fragment identifiers
 /// where the tree name can be specified in the url fragment.
-/// \param[in] filelist The file which contains a list of files to be added. Each string from file will be passed to TChain::AddFile
+/// \param[in] filelist The file which contains a list of files to be added. Each string from file will be passed to TChain::AddFile but if starting with '#' it will be ignored
 /// \param[in] nentries Number of entries in the file, see TChain::AddFile signature
 /// \param[in] tname Tree name, see TChain::AddFile signature
 /// \returns Sum of returns of TChain::AddFile, see TChain::AddFile signature
