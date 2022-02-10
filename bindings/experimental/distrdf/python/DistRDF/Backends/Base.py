@@ -33,29 +33,6 @@ class BaseBackend(ABC):
             analysis.
     """
 
-    supported_operations = [
-        "AsNumpy",
-        "Count",
-        "Define",
-        "DefinePerSample",
-        "Fill",
-        "Filter",
-        "Graph",
-        "Histo1D",
-        "Histo2D",
-        "Histo3D",
-        "HistoND",
-        "Max",
-        "Mean",
-        "Min",
-        "Profile1D",
-        "Profile2D",
-        "Profile3D",
-        "Redefine",
-        "Snapshot",
-        "Sum"
-    ]
-
     initialization = staticmethod(lambda: None)
 
     headers = set()
@@ -84,24 +61,6 @@ class BaseBackend(ABC):
         """
         cls.initialization = functools.partial(fun, *args, **kwargs)
         fun(*args, **kwargs)
-
-    def check_supported(self, operation_name):
-        """
-        Checks if a given operation is supported
-        by the given backend.
-
-        Args:
-            operation_name (str): Name of the operation to be checked.
-
-        Raises:
-            Exception: This happens when `operation_name` doesn't exist
-            the `supported_operations` instance attribute.
-        """
-        if operation_name not in self.supported_operations:
-            raise Exception(
-                "The current backend doesn't support \"{}\" !"
-                .format(operation_name)
-            )
 
     def execute(self, generator):
         """

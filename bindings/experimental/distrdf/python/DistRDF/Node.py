@@ -20,13 +20,6 @@ class Node(object):
     """
     A Class that represents a node in RDataFrame operations graph. A Node
     houses an operation and has references to children nodes.
-    For details on the types of operations supported, try :
-
-    Example::
-
-        import DistRDF
-        DistRDF.use(...) # Choose your backend
-        print(DistRDF.current_backend.supported_operations)
 
     Attributes:
         get_head (function): A lambda function that returns the head node of
