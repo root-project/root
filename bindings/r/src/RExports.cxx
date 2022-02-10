@@ -11,7 +11,6 @@
 #include<TRFunctionExport.h>
 #include<TRObject.h>
 #include<TRDataFrame.h>
-#include<Rcpp/Vector.h>
 
 namespace ROOT {
    namespace R {
