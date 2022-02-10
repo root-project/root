@@ -69,6 +69,7 @@ class Operation(object):
             "Histo1D": Operation.ACTION,
             "Histo2D": Operation.ACTION,
             "Histo3D": Operation.ACTION,
+            "HistoND": Operation.ACTION,
             "Profile1D": Operation.ACTION,
             "Profile2D": Operation.ACTION,
             "Profile3D": Operation.ACTION,
