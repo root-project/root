@@ -604,14 +604,17 @@ RDataFrame operations currently work with this package. The subset that is curre
 - AsNumpy
 - Count
 - Define
+- DefinePerSample
 - Fill
 - Filter
 - Graph
 - Histo[1,2,3]D
+- HistoND
 - Max
 - Mean
 - Min
 - Profile[1,2,3]D
+- Redefine
 - Snapshot
 - Sum
 
