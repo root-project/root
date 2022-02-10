@@ -1,4 +1,4 @@
-# @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
@@ -9,6 +9,37 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
+from enum import Enum, auto
+
+
+class OpTypes(Enum):
+    ACTION = auto()
+    INSTANT_ACTION = auto()
+    TRANSFORMATION = auto()
+
+
+DISTRDF_SUPPORTED_OPERATIONS = {
+    "AsNumpy": OpTypes.INSTANT_ACTION,
+    "Count": OpTypes.ACTION,
+    "Define": OpTypes.TRANSFORMATION,
+    "DefinePerSample": OpTypes.TRANSFORMATION,
+    "Filter": OpTypes.TRANSFORMATION,
+    "Graph": OpTypes.ACTION,
+    "Histo1D": OpTypes.ACTION,
+    "Histo2D": OpTypes.ACTION,
+    "Histo3D": OpTypes.ACTION,
+    "HistoND": OpTypes.ACTION,
+    "Max": OpTypes.ACTION,
+    "Mean": OpTypes.ACTION,
+    "Min": OpTypes.ACTION,
+    "Profile1D": OpTypes.ACTION,
+    "Profile2D": OpTypes.ACTION,
+    "Profile3D": OpTypes.ACTION,
+    "Redefine": OpTypes.TRANSFORMATION,
+    "Snapshot": OpTypes.INSTANT_ACTION,
+    "Sum": OpTypes.ACTION,
+}
+
 
 class Operation(object):
     """
@@ -16,11 +47,6 @@ class Operation(object):
     transformation, an action or an instant action.
 
     Attributes:
-        ACTION (str): Action type string.
-
-        INSTANT_ACTION (str): Instant action type string.
-
-        TRANSFORMATION (str): Transformation type string.
 
         name (str): Name of the current operation.
 
@@ -32,10 +58,6 @@ class Operation(object):
             (`ACTION`, `TRANSFORMATION` or `INSTANT_ACTION`).
 
     """
-
-    ACTION = "ACTION"
-    INSTANT_ACTION = "INSTANT_ACTION"
-    TRANSFORMATION = "TRANSFORMATION"
 
     def __init__(self, name, *args, **kwargs):
         """
@@ -52,48 +74,11 @@ class Operation(object):
         self.name = name
         self.args = list(args)
         self.kwargs = kwargs
-        self.op_type = self._classify_operation(name)
-
-    def _classify_operation(self, name):
-        """
-        Classifies the given operation as action or transformation and
-        returns the type.
-        """
-
-        operations_dict = {
-            "Define": Operation.TRANSFORMATION,
-            "DefinePerSample": Operation.TRANSFORMATION,
-            "Filter": Operation.TRANSFORMATION,
-            "Range": Operation.TRANSFORMATION,
-            "Aggregate": Operation.ACTION,
-            "Histo1D": Operation.ACTION,
-            "Histo2D": Operation.ACTION,
-            "Histo3D": Operation.ACTION,
-            "HistoND": Operation.ACTION,
-            "Profile1D": Operation.ACTION,
-            "Profile2D": Operation.ACTION,
-            "Profile3D": Operation.ACTION,
-            "Count": Operation.ACTION,
-            "Min": Operation.ACTION,
-            "Max": Operation.ACTION,
-            "Mean": Operation.ACTION,
-            "Sum": Operation.ACTION,
-            "Fill": Operation.ACTION,
-            "Redefine": Operation.TRANSFORMATION,
-            "Reduce": Operation.ACTION,
-            "Report": Operation.ACTION,
-            "Take": Operation.ACTION,
-            "Graph": Operation.ACTION,
-            "Snapshot": Operation.INSTANT_ACTION,
-            "Foreach": Operation.INSTANT_ACTION,
-            "AsNumpy": Operation.INSTANT_ACTION
-        }
-
-        op_type = operations_dict.get(name)
-
-        if not op_type:
-            raise Exception("Invalid operation \"{}\"".format(name))
-        return op_type
+        try:
+            self.op_type = DISTRDF_SUPPORTED_OPERATIONS[name]
+        except KeyError as e:
+            raise RuntimeError(f"Operation '{name}' is either invalid or not supported in distributed mode. "
+                               "See the documentation for a list of supported operations.") from e
 
     def is_action(self):
         """
@@ -102,7 +87,7 @@ class Operation(object):
         Returns:
             bool: True if the current operation is an action, False otherwise.
         """
-        return self.op_type == Operation.ACTION
+        return self.op_type == OpTypes.ACTION
 
     def is_transformation(self):
         """
@@ -112,7 +97,7 @@ class Operation(object):
             bool: True if the current operation is a transformation,
             False otherwise.
         """
-        return self.op_type == Operation.TRANSFORMATION
+        return self.op_type == OpTypes.TRANSFORMATION
 
     def is_instant_action(self):
         """
@@ -122,4 +107,4 @@ class Operation(object):
             bool: True if the current operation is an instant action,
                 False otherwise.
         """
-        return self.op_type == Operation.INSTANT_ACTION
+        return self.op_type == OpTypes.INSTANT_ACTION

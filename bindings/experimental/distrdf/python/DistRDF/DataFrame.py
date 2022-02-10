@@ -14,6 +14,7 @@ from __future__ import print_function
 
 import logging
 
+from DistRDF import Operation
 from DistRDF import Proxy
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ class RDataFrame(object):
         self._headproxy = Proxy.TransformationProxy(self._headnode)
 
     def __dir__(self):
-        opdir = self._headnode.backend.supported_operations + super().__dir__()
+        opdir = list(Operation.DISTRDF_SUPPORTED_OPERATIONS.keys()) + super().__dir__()
         opdir.sort()
         return opdir
 

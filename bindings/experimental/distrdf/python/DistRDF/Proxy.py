@@ -21,7 +21,7 @@ import ROOT
 
 from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
 from DistRDF.Node import Node
-from DistRDF.Operation import Operation
+from DistRDF.Operation import Operation, DISTRDF_SUPPORTED_OPERATIONS
 
 
 @contextmanager
@@ -158,7 +158,7 @@ class TransformationProxy(Proxy):
 
         # if attr is a supported operation, start
         # operation and node creation
-        if attr in self.proxied_node.get_head().backend.supported_operations:
+        if attr in DISTRDF_SUPPORTED_OPERATIONS:
             self.proxied_node._new_op_name = attr  # Stores new operation name
             return self._create_new_op
         else:

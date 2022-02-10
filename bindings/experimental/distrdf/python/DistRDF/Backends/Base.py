@@ -29,8 +29,6 @@ class BaseBackend(ABC):
     Base class for RDataFrame distributed backends.
 
     Attributes:
-        supported_operations (list): List of operations supported by the
-            backend.
         initialization (function): Store user's initialization method, if
             defined.
         headers (list): List of headers that need to be declared for the
@@ -38,29 +36,6 @@ class BaseBackend(ABC):
         shared_libraries (list): List of shared libraries needed for the
             analysis.
     """
-
-    supported_operations = [
-        "AsNumpy",
-        "Count",
-        "Define",
-        "DefinePerSample",
-        "Fill",
-        "Filter",
-        "Graph",
-        "Histo1D",
-        "Histo2D",
-        "Histo3D",
-        "HistoND",
-        "Max",
-        "Mean",
-        "Min",
-        "Profile1D",
-        "Profile2D",
-        "Profile3D",
-        "Redefine",
-        "Snapshot",
-        "Sum"
-    ]
 
     initialization = staticmethod(lambda: None)
 
