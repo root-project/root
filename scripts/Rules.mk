@@ -302,20 +302,12 @@ endif
 distclean: clean
 	$(CMDECHO) rm -rf $(ROOTTEST_LOC)roottiming.root $(ROOTTEST_LOC)runid $(ROOTTEST_LOC)root_version $(ROOTTEST_LOC).root_hist
 
-cleantest: test
+cleantest: clean
+	$(MAKE) -f $(MAKEFILE_NAME) test
 
 # For now logs.tar.gz is a phony target
 logs.tar.gz:
 	$(CMDECHO) rm -f logs.tar logs.tar.gz ; touch logs.tar ; find . -name '*log' | xargs -I{}  tar -uf logs.tar "{}" ; gzip logs.tar
-
-ifeq ($(MAKECMDGOALS),cleantest)
-  ifeq ($(VERBOSE),)
-     ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS) )
-  else
-     ForceRemoveFilesVerbose := $(shell echo rm -rf 'main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS)' 1>&2 )
-     ForceRemoveFiles := $(shell rm -rf main *Dict\.* Event.root .*~ *~ $(CLEAN_TARGETS) )
-  endif
-endif
 
 ifneq ($(MAKECMDGOALS),clean)
 ifeq ($(ROOTBITS),)
