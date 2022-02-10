@@ -642,8 +642,6 @@ canvas->Print(".tex", "Standalone");
 
 - Update the external links of the reference guide main page
 
-- Implement json output for v7 tutorials in the reference guide.
-
 - Reformat TMVA mathcore Unuran Roostats documentation .
 
 ## Build, Configuration and Testing Infrastructure
