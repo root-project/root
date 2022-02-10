@@ -56,6 +56,13 @@ class ReducerMergeTest(unittest.TestCase):
                   .Define("y", "rdfentry_*rdfentry_")\
                   .Define("z", "rdfentry_*rdfentry_*rdfentry_")
 
+    def define_four_columns(self, rdf, colnames):
+        """Helper method to define four columns."""
+        for name in colnames:
+            rdf = rdf.Define(name, "rdfentry_")
+
+        return rdf
+
     def test_histo1d_merge(self):
         """Check the working of Histo1D merge operation in the reducer."""
         # Operations with DistRDF
@@ -101,6 +108,26 @@ class ReducerMergeTest(unittest.TestCase):
 
         # Compare the 2 histograms
         self.assertHistoOrProfile(histo_py, histo_cpp)
+
+    def test_histond_merge(self):
+        """Check the working of HistoND merge operation in the reducer."""
+        nbins = (10, 10, 10, 10)
+        xmin = (0., 0., 0., 0.)
+        xmax = (100., 100., 100., 100.)
+        modelTHND = ("name", "title", 4, nbins, xmin, xmax)
+        colnames = ("x0", "x1", "x2", "x3")
+
+        distrdf = Dask.RDataFrame(100, daskclient=self.client)
+        rdf = ROOT.RDataFrame(100)
+
+        distrdf_withcols = self.define_four_columns(distrdf, colnames)
+        rdf_withcols = self.define_four_columns(rdf, colnames)
+
+        histond_distrdf = distrdf_withcols.HistoND(modelTHND, colnames)
+        histond_rdf = rdf_withcols.HistoND(modelTHND, colnames)
+
+        self.assertEqual(histond_distrdf.GetEntries(), histond_rdf.GetEntries())
+        self.assertEqual(histond_distrdf.GetNbins(), histond_rdf.GetNbins())
 
     def test_profile1d_merge(self):
         """Check the working of Profile1D merge operation in the reducer."""
