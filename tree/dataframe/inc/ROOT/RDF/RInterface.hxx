@@ -2884,9 +2884,9 @@ private:
       const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager);
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
-      auto toJit = RDFInternal::JitBuildAction(
-         validColumnNames, upcastNodeOnHeap, typeid(std::shared_ptr<HelperArgType>), typeid(ActionTag), helperArgOnHeap,
-         tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
+      auto toJit =
+         RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType), typeid(ActionTag),
+                                     helperArgOnHeap, tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
       fLoopManager->Book(jittedAction.get());
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
