@@ -937,10 +937,10 @@ std::string RooFactoryWSTool::processExpression(const char* token)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process a single composite expression
 ///
-/// e.g. 'A=RooGaussian::g[x,m,s]' --> 'A=g'
-/// e.g. 'f[0,1]*RooGaussian::%g[x,m,s]' --> 'f*g'
-/// e.g. 'RooGaussian::g(x,y,s)|x' --> g|x'
-/// e.g. '$MetaArg(RooGaussian::g[x,m,s],blah)' --> '$MetaArg(g,blah)'
+/// - e.g. `A=RooGaussian::g[x,m,s]` --> `A=g`
+/// - e.g. `f[0,1]*RooGaussian::g[x,m,s]` --> `f*g`
+/// - e.g. `RooGaussian::g(x,y,s)|x` --> `g|x`
+/// - e.g. `$MetaArg(RooGaussian::g[x,m,s],blah)` --> `$MetaArg(g,blah)`
 
 std::string RooFactoryWSTool::processCompositeExpression(const char* token)
 {
