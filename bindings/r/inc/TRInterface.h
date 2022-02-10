@@ -142,6 +142,10 @@ namespace ROOT {
          class Binding {
          public:
             Binding(TRInterface *rnt, TString name): fInterface(rnt), fName(name) {}
+            Binding(const Binding &obj) {
+               fInterface = obj.fInterface;
+               fName = obj.fName;
+            }
             Binding &operator=(const Binding &obj)
             {
                fInterface = obj.fInterface;

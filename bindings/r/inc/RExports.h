@@ -38,6 +38,7 @@
 //pragma to disable warnings on Rcpp which have
 //so many noise compiling
 #if defined(__GNUC__)
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunknown-pragmas"
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
@@ -45,11 +46,9 @@
 #pragma GCC diagnostic ignored "-Woverloaded-virtual"
 #pragma GCC diagnostic ignored "-Wextra"
 #pragma GCC diagnostic ignored "-Wignored-qualifiers"
-#endif
 // disable warning for macos
 #if defined(__APPLE__)
 #pragma GCC diagnostic ignored "-Wnonportable-include-path"
-#
 //This to fix conflict of RVersion.h from ROOT and Rversion.h from R 
 #if !defined(R_Version)
 #define R_Version(v,p,s) ((v * 65536) + (p * 256) + (s))
@@ -58,6 +57,7 @@
 // but is defined as macro in RInternals.h
 #if defined(RAW)
 #undef RAW
+#endif
 #endif
 #endif
 
@@ -139,15 +139,18 @@ namespace Rcpp {
    }
 }
 
-
 #include<Rcpp.h>//this headers should be called after templates definitions
-#include<Rcpp/Named.h>
 #undef HAVE_UINTPTR_T
 #include<RInside.h>
 
 #ifdef Free
 // see https://sft.its.cern.ch/jira/browse/ROOT-9258
 # undef Free
+#endif
+
+// restore warning level of before
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
 #endif
 
 namespace ROOT {
