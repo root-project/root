@@ -50,6 +50,7 @@ class BaseBackend(ABC):
         "Histo1D",
         "Histo2D",
         "Histo3D",
+        "HistoND",
         "Max",
         "Mean",
         "Min",
