@@ -13,13 +13,14 @@
 #define ROOSTATS_SamplingDistPlot
 
 #include "Compression.h"
-#include "RooList.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
 #include "TIterator.h"
 #include "TH1F.h"
 #include "TF1.h"
 #include "TLegend.h"
+#include "TList.h"
+
 #include <vector>
 
 #include "RooStats/SamplingDistribution.h"
@@ -116,8 +117,8 @@ namespace RooStats {
     TH1F* fHist;
     TLegend *fLegend;
 
-    RooList fItems;       ///< holds TH1Fs only
-    RooList fOtherItems;  ///< other objects to be drawn like TLine etc.
+    TList fItems;       ///< holds TH1Fs only
+    TList fOtherItems;  ///< other objects to be drawn like TLine etc.
     TIterator* fIterator;
     RooPlot* fRooPlot;
     Bool_t fLogXaxis;
@@ -134,7 +135,7 @@ namespace RooStats {
     void addOtherObject(TObject *obj, Option_t *drawOptions=0);
     void GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, Double_t &theYMax) const;
 
-    ClassDefOverride(SamplingDistPlot,1)  /// Class containing the results of the HybridCalculator
+    ClassDefOverride(SamplingDistPlot,2)  /// Class containing the results of the HybridCalculator
   };
 }
 

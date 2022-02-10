@@ -134,6 +134,7 @@
 #pragma link C++ class RooLinkedList- ;
 #pragma link C++ class RooLinTransBinning+ ;
 #pragma link C++ class RooList+ ;
+#pragma read sourceClass="RooList" targetClass="TList";
 #pragma link C++ class RooListProxy+ ;
 #pragma link C++ class RooCollectionProxy<RooArgList>+ ;
 #pragma read sourceClass="RooListProxy" targetClass="RooCollectionProxy<RooArgList>";
@@ -156,6 +157,9 @@
 #pragma link C++ class RooNumIntFactory+ ;
 #pragma link C++ class RooPlotable+ ;
 #pragma link C++ class RooPlot- ;
+#pragma read sourceClass="RooPlot" targetClass="RooPlot" version="[2]"       \
+             source="TList _items" target="_items"                           \
+             code="{  RooPlot::fillItemsFromTList(_items, onfile._items); }"
 #pragma link C++ class RooPolyFunc+ ;
 #pragma link C++ class RooPolyVar+ ;
 #pragma link C++ class RooPrintable+ ;
