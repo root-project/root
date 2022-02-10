@@ -336,6 +336,28 @@ static void GetTopLevelBranchNamesImpl(TTree &t, std::set<std::string> &bNamesRe
    }
 }
 
+[[noreturn]] void
+ThrowJitBuildActionHelperTypeError(const std::string &actionTypeNameBase, const std::type_info &helperArgType)
+{
+   int err = 0;
+   const char *cname = TClassEdit::DemangleTypeIdName(helperArgType, err);
+   std::string actionHelperTypeName = cname;
+   delete[] cname;
+   if (err != 0)
+      actionHelperTypeName = helperArgType.name();
+
+   std::string exceptionText =
+      "RDataFrame::Jit: cannot just-in-time compile a \"" + actionTypeNameBase + "\" action using helper type \"" +
+      actionHelperTypeName +
+      "\". This typically happens in a custom `Fill` or `Book` invocation where the types of the input columns have "
+      "not been specified as template parameters and the ROOT interpreter has no knowledge of this type of action "
+      "helper. Please add template parameters for the types of the input columns to avoid jitting this action (i.e. "
+      "`df.Fill<float>(..., {\"x\"})`, where `float` is the type of `x`) or declare the action helper type to the "
+      "interpreter, e.g. via gInterpreter->Declare.";
+
+   throw std::runtime_error(exceptionText);
+}
+
 } // anonymous namespace
 
 namespace ROOT {
@@ -734,22 +756,20 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
                            TTree *tree, const unsigned int nSlots, const RColumnRegister &customCols, RDataSource *ds,
                            std::weak_ptr<RJittedAction> *jittedActionOnHeap)
 {
-   // retrieve type of result of the action as a string
-   auto helperArgClass = TClass::GetClass(helperArgType);
-   if (!helperArgClass) {
-      std::string exceptionText = "An error occurred while inferring the result type of an operation.";
-      throw std::runtime_error(exceptionText.c_str());
-   }
-   const auto helperArgClassName = helperArgClass->GetName();
-
    // retrieve type of action as a string
    auto actionTypeClass = TClass::GetClass(at);
    if (!actionTypeClass) {
       std::string exceptionText = "An error occurred while inferring the action type of the operation.";
-      throw std::runtime_error(exceptionText.c_str());
+      throw std::runtime_error(exceptionText);
    }
    const std::string actionTypeName = actionTypeClass->GetName();
    const std::string actionTypeNameBase = actionTypeName.substr(actionTypeName.rfind(':') + 1);
+
+   // retrieve type of result of the action as a string
+   const auto helperArgTypeName = TypeID2TypeName(helperArgType);
+   if (helperArgTypeName.empty()) {
+      ThrowJitBuildActionHelperTypeError(actionTypeNameBase, helperArgType);
+   }
 
    auto definesCopy = new RColumnRegister(customCols); // deleted in jitted CallBuildAction
    auto definesAddr = PrettyPrintAddr(definesCopy);
@@ -771,8 +791,8 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
          createAction_str << ", ";
       createAction_str << '"' << cols[i] << '"';
    }
-   createAction_str << "}, " << cols.size() << ", " << nSlots << ", reinterpret_cast<" << helperArgClassName << "*>("
-                    << PrettyPrintAddr(helperArgOnHeap)
+   createAction_str << "}, " << cols.size() << ", " << nSlots << ", reinterpret_cast<shared_ptr<" << helperArgTypeName
+                    << ">*>(" << PrettyPrintAddr(helperArgOnHeap)
                     << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedAction>*>("
                     << PrettyPrintAddr(jittedActionOnHeap)
                     << "), reinterpret_cast<ROOT::Internal::RDF::RColumnRegister*>(" << definesAddr << "));";
