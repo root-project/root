@@ -32,7 +32,8 @@ The following people have contributed to this new version:
  Enric Tejedor Saavedra, CERN/SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,
+ Wouter Verkerke, NIKHEF/Atlas,\
+ Ivan Kabadzhov, CERN/SFT
 
 ## Deprecation and Removal
 
@@ -50,6 +51,16 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 
 ## TTree Libraries
 
+## RDataFrame
+
+### New features
+
+- Add [`GraphAsymmErrors`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#acea30792eef607489d498bf6547a00a6) action that fills a TGraphAsymmErrors object.
+
+### Notable bug fixes and improvements
+
+- Fix the node counter of [`SaveGraph`](https://root.cern/doc/master/namespaceROOT_1_1RDF.html#ac06a36e745255fb8744b1e0a563074c9), where previously `cling` was getting wrong static initialization.
+- Fix [`Graph`](https://root.cern/doc/master/classROOT_1_1RDF_1_1RInterface.html#a1ca9a94bece4767cac82968910afa02e) action (that fills a TGraph object) to properly handle containers and non-container types.
 
 ## Histogram Libraries
 
