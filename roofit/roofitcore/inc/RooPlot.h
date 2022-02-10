@@ -16,7 +16,6 @@
 #ifndef ROO_PLOT
 #define ROO_PLOT
 
-#include "RooList.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
 
@@ -43,6 +42,8 @@ class TLegend;
 
 class RooPlot : public TNamed, public RooPrintable {
 public:
+  using Items = std::vector<std::pair<TObject*,std::string>>;
+
   RooPlot() ;
   RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins) ;
   RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
@@ -112,7 +113,7 @@ public:
   const char* nameOf(Int_t idx) const ;
   TObject *findObject(const char *name, const TClass* clas=0) const;
   TObject* getObject(Int_t idx) const ;
-  Stat_t numItems() const {return _items.GetSize();}
+  Stat_t numItems() const {return _items.size();}
 
   void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "", Bool_t invisible=kFALSE, Bool_t refreshNorm=kFALSE);
   void addObject(TObject* obj, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
@@ -204,9 +205,11 @@ public:
 
   void SetDirectory(TDirectory *dir);
 
+  static void fillItemsFromTList(Items & items, TList const& tlist);
+
 protected:
 
-  RooPlot(const RooPlot& other); // cannot be copied
+  RooPlot(const RooPlot& other) = delete; // cannot be copied
 
   class DrawOpt {
     public:
@@ -222,31 +225,32 @@ protected:
 
   void initialize();
   TString histName() const ;
-  TString caller(const char *method) const;
+  Items::iterator findItem(std::string const& name);
+  Items::const_iterator findItem(std::string const& name) const;
+
   void updateYAxis(Double_t ymin, Double_t ymax, const char *label= "");
   void updateFitRangeNorm(const TH1* hist);
   void updateFitRangeNorm(const RooPlotable* rp, Bool_t refeshNorm=kFALSE);
 
-  TH1* _hist ;               ///< Histogram that we uses as basis for drawing the content
-
-  RooList _items;            ///< A list of the items we contain.
+  TH1* _hist = nullptr;      ///< Histogram that we uses as basis for drawing the content
+  Items _items;  ///< A list of the items we contain.
   Double_t _padFactor;       ///< Scale our y-axis to _padFactor of our maximum contents.
-  RooAbsRealLValue *_plotVarClone; ///< A clone of the variable we are plotting.
-  RooArgSet *_plotVarSet;    ///< A list owning the cloned tree nodes of the plotVarClone
-  RooArgSet *_normVars;      ///< Variables that PDF plots should be normalized over
+  RooAbsRealLValue *_plotVarClone = nullptr; ///< A clone of the variable we are plotting.
+  RooArgSet *_plotVarSet = nullptr; ///< A list owning the cloned tree nodes of the plotVarClone
+  RooArgSet *_normVars = nullptr; ///< Variables that PDF plots should be normalized over
 
-  const RooPlotable* _normObj ;    ///<! Pointer to normalization object ;
+  const RooPlotable* _normObj = nullptr; ///<! Pointer to normalization object ;
   Double_t _normNumEvts;     ///< Number of events in histogram (for normalization)
   Double_t _normBinWidth;    ///< Histogram bin width (for normalization)
 
-  Double_t _defYmin ;        ///< Default minimum for Yaxis (as calculated from contents)
-  Double_t _defYmax ;        ///< Default maximum for Yaxis (as calculated from contents)
+  Double_t _defYmin = 1e-5; ///< Default minimum for Yaxis (as calculated from contents)
+  Double_t _defYmax = 1.0;  ///< Default maximum for Yaxis (as calculated from contents)
 
-  TDirectory* _dir ;         ///<! non-persistent
+  TDirectory* _dir = nullptr; ///<! non-persistent
 
   static Bool_t _addDirStatus ; ///< static flag controlling AutoDirectoryAdd feature
 
-  ClassDefOverride(RooPlot,2)        // Plot frame and container for graphics objects
+  ClassDefOverride(RooPlot,3)        // Plot frame and container for graphics objects
 };
 
 #endif

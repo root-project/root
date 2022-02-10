@@ -65,8 +65,9 @@ object onto a one-dimensional plot.
 #include "TLegend.h"
 #include "strlcpy.h"
 
-#include <iostream>
+#include <algorithm>
 #include <cstring>
+#include <iostream>
 
 using namespace std;
 
@@ -83,7 +84,7 @@ Bool_t RooPlot::setAddDirectoryStatus(Bool_t flag) { Bool_t ret = flag ; _addDir
 /// Default constructor
 /// coverity[UNINIT_CTOR]
 
-RooPlot::RooPlot() : _hist(0), _plotVarClone(0), _plotVarSet(0), _normVars(0), _normObj(0), _dir(0)
+RooPlot::RooPlot()
 {
   if (gDirectory && addDirectoryStatus()) {
     SetDirectory(gDirectory);
@@ -94,9 +95,7 @@ RooPlot::RooPlot() : _hist(0), _plotVarClone(0), _plotVarSet(0), _normVars(0), _
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of RooPlot with range [xmin,xmax]
 
-RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
-  _hist(0), _items(), _plotVarClone(0), _plotVarSet(0), _normObj(0),
-  _defYmin(1e-5), _defYmax(1), _dir(0)
+RooPlot::RooPlot(Double_t xmin, Double_t xmax)
 {
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
@@ -114,8 +113,7 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax) :
 /// Construct of a two-dimensional RooPlot with ranges [xmin,xmax] x [ymin,ymax]
 
 RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
-  _hist(0), _items(), _plotVarClone(0),
-  _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
+  _defYmax(0)
 {
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
@@ -133,8 +131,7 @@ RooPlot::RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
 /// from variables var1 and var2
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
-  _hist(0), _items(),
-  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
+  _defYmax(0)
 {
   _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
   _hist->Sumw2(kFALSE) ;
@@ -166,8 +163,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
        Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax) :
-  _hist(0), _items(), _plotVarClone(0),
-  _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(0), _dir(0)
+  _defYmax(0)
 {
   _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
@@ -186,9 +182,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
 /// Create an 1-dimensional with all properties taken from 'var', but
 /// with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
-RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
-  _hist(0), _items(),
-  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1), _dir(0)
+RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins)
 {
   _hist = new TH1D(name,title,nbins,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
@@ -212,9 +206,7 @@ RooPlot::RooPlot(const char* name, const char* title, const RooAbsRealLValue &va
 /// Create an 1-dimensional with all properties taken from 'var', but
 /// with an explicit range [xmin,xmax] and a default binning of 'nbins'
 
-RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins) :
-  _hist(0), _items(),
-  _plotVarClone(0), _plotVarSet(0), _normObj(0), _defYmin(1e-5), _defYmax(1), _dir(0)
+RooPlot::RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nbins)
 {
   _hist = new TH1D(histName(),"RooPlot",nbins,xmin,xmax) ;
   _hist->Sumw2(kFALSE) ;
@@ -320,7 +312,6 @@ void RooPlot::initialize()
   // We don't know our normalization yet
   _normNumEvts= 0;
   _normBinWidth = 0;
-  _normVars= 0;
 }
 
 
@@ -347,7 +338,7 @@ RooPlot::~RooPlot()
     _dir->GetList()->RecursiveRemove(this) ;
   }
 
-  _items.Delete();
+  for(auto& item : _items) delete item.first;
   if(_plotVarSet) delete _plotVarSet;
   if(_normVars) delete _normVars;
   delete _hist ;
@@ -427,7 +418,7 @@ void RooPlot::addObject(TObject *obj, Option_t *drawOptions, Bool_t invisible)
   }
   DrawOpt opt(drawOptions) ;
   opt.invisible = invisible ;
-  _items.Add(obj,opt.rawOpt());
+  _items.emplace_back(obj,opt.rawOpt());
 }
 
 
@@ -592,7 +583,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, Bool_t i
 
     DrawOpt opt(drawOptions) ;
     opt.invisible = invisible ;
-    _items.Add(obj,opt.rawOpt());
+    _items.emplace_back(obj,opt.rawOpt());
   }
 }
 
@@ -701,15 +692,14 @@ void RooPlot::Draw(Option_t *option)
     _hist->Draw("FUNC");
   }
 
-  std::unique_ptr<TIterator> _iterator(_items.MakeIterator());
-  TObject *obj = 0;
-  while((obj= _iterator->Next())) {
-    DrawOpt opt(_iterator->GetOption()) ;
+  for(auto const& item : _items) {
+    TObject &obj = *item.first;
+    DrawOpt opt(item.second.c_str()) ;
     if (!opt.invisible) {
        //LM:  in case of a TGraph derived object, do not use default "" option
        // which is "ALP" from 5.34.10 (and will then redrawn the axis) but  use "LP"
-       if (!strlen(opt.drawOptions) && obj->IsA()->InheritsFrom(TGraph::Class()) ) strlcpy(opt.drawOptions,"LP",3);
-       obj->Draw(opt.drawOptions);
+       if (!strlen(opt.drawOptions) && obj.IsA()->InheritsFrom(TGraph::Class()) ) strlcpy(opt.drawOptions,"LP",3);
+       obj.Draw(opt.drawOptions);
     }
   }
 
@@ -765,23 +755,22 @@ void RooPlot::printArgs(ostream& os) const
 void RooPlot::printValue(ostream& os) const
 {
   os << "(" ;
-  std::unique_ptr<TIterator> _iterator(_items.MakeIterator());
-  TObject *obj = 0;
   Bool_t first(kTRUE) ;
-  while((obj= _iterator->Next())) {
+  for(auto const& item : _items) {
+    TObject &obj = *item.first;
     if (first) {
       first=kFALSE ;
     } else {
       os << "," ;
     }
-    if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
-      RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
+    if(obj.IsA()->InheritsFrom(RooPrintable::Class())) {
+      auto po = dynamic_cast<RooPrintable&>(obj) ;
       // coverity[FORWARD_NULL]
-      po->printStream(os,kClassName|kName,kInline) ;
+      po.printStream(os,kClassName|kName,kInline) ;
     }
     // is it a TNamed subclass?
     else {
-      os << obj->ClassName() << "::" << obj->GetName() ;
+      os << obj.ClassName() << "::" << obj.GetName() ;
     }
   }
   os << ")" ;
@@ -802,24 +791,21 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
   else {
     os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") has no associated plot variable" << endl ;
   }
-  os << indent << "  Plot frame contains " << _items.GetSize() << " object(s):" << endl;
+  os << indent << "  Plot frame contains " << _items.size() << " object(s):" << endl;
 
   if(verbose) {
-    std::unique_ptr<TIterator> _iterator(_items.MakeIterator());
-    TObject *obj = 0;
     Int_t i=0 ;
-    while((obj= _iterator->Next())) {
-      os << deeper << "[" << i++ << "] (Options=\"" << _iterator->GetOption() << "\") ";
+    for(auto const& item : _items) {
+      TObject &obj = *item.first;
+      os << deeper << "[" << i++ << "] (Options=\"" << item.second << "\") ";
       // Is this a printable object?
-      if(obj->IsA()->InheritsFrom(RooPrintable::Class())) {
-   RooPrintable* po = dynamic_cast<RooPrintable*>(obj) ;
-   if (po) {
-     po->printStream(os,kName|kClassName|kArgs|kExtras,kSingleLine) ;
-   }
+      if(obj.IsA()->InheritsFrom(RooPrintable::Class())) {
+        auto po = dynamic_cast<RooPrintable&>(obj) ;
+        po.printStream(os,kName|kClassName|kArgs|kExtras,kSingleLine) ;
       }
       // is it a TNamed subclass?
       else {
-   os << obj->ClassName() << "::" << obj->GetName() << endl;
+   os << obj.ClassName() << "::" << obj.GetName() << endl;
       }
     }
   }
@@ -833,7 +819,7 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, Bool_t verbose, TSt
 
 const char* RooPlot::nameOf(Int_t idx) const
 {
-  TObject* obj = _items.At(idx) ;
+  TObject* obj = _items.at(idx).first;
   if (!obj) {
     coutE(InputArguments) << "RooPlot::nameOf(" << GetName() << ") index " << idx << " out of range" << endl ;
     return 0 ;
@@ -849,7 +835,7 @@ const char* RooPlot::nameOf(Int_t idx) const
 
 TObject* RooPlot::getObject(Int_t idx) const
 {
-  TObject* obj = _items.At(idx) ;
+  TObject* obj = _items.at(idx).first;
   if (!obj) {
     coutE(InputArguments) << "RooPlot::getObject(" << GetName() << ") index " << idx << " out of range" << endl ;
     return 0 ;
@@ -923,27 +909,38 @@ RooHist* RooPlot::getHist(const char* name) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove object with given name, or last object added if no name is given.
-/// If deleteToo is true (default), the object removed from the RooPlot is
-/// also deleted.
 
 void RooPlot::remove(const char* name, Bool_t deleteToo)
 {
-  TObject* obj = findObject(name) ;
-  if (!obj) {
-    if (name) {
-      coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: no object found with name " << name << endl ;
+  if(name == nullptr) {
+    if(!_items.empty()) {
+      if(deleteToo) delete _items.back().first;
+      _items.pop_back();
     } else {
       coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: plot frame is empty, cannot remove last object" << endl ;
     }
-    return ;
-  }
-
-  _items.Remove(obj) ;
-
-  if (deleteToo) {
-    delete obj ;
+  } else {
+    auto item = findItem(name);
+    if(item == _items.end()) {
+      coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: no object found with name " << name << endl ;
+    } else {
+      if(deleteToo) delete item->first;
+      _items.erase(item);
+    }
   }
 }
+
+
+namespace {
+
+template<class Iter>
+void moveBefore(Iter before, Iter target) {
+  auto d = std::distance(before, target);
+  if(d > 0) std::rotate(before, target, target + 1);
+  else if(d < 0) std::rotate(target, target+1, before);
+}
+
+} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -953,7 +950,11 @@ void RooPlot::remove(const char* name, Bool_t deleteToo)
 
 Bool_t RooPlot::drawBefore(const char *before, const char *target)
 {
-  return _items.moveBefore(before, target, caller("drawBefore"));
+  auto iterBefore = findItem(before);
+  auto iterTarget = findItem(target);
+  if(iterBefore == _items.end() || iterTarget == _items.end()) return false;
+  moveBefore(iterBefore, iterTarget);
+  return true;
 }
 
 
@@ -964,7 +965,11 @@ Bool_t RooPlot::drawBefore(const char *before, const char *target)
 
 Bool_t RooPlot::drawAfter(const char *after, const char *target)
 {
-  return _items.moveAfter(after, target, caller("drawAfter"));
+  auto iterAfter = findItem(after);
+  auto iterTarget = findItem(target);
+  if(iterAfter == _items.end() || iterTarget == _items.end()) return false;
+  moveBefore(iterAfter + 1, iterTarget);
+  return true;
 }
 
 
@@ -981,22 +986,35 @@ Bool_t RooPlot::drawAfter(const char *after, const char *target)
 
 TObject *RooPlot::findObject(const char *name, const TClass* clas) const
 {
-  TObject *obj = 0;
-  TObject *ret = 0;
+  TObject *ret = nullptr;
 
-  TIterator* iter = _items.MakeIterator() ;
-  while((obj=iter->Next())) {
-    if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj->GetName()))
-        && (!clas || (obj->IsA()==clas))) {
-      ret = obj ;
+  for(auto const& item : _items) {
+    TObject &obj = *item.first;
+    if ((!name || name[0] == '\0' || !TString(name).CompareTo(obj.GetName()))
+        && (!clas || (obj.IsA()==clas))) {
+      ret = &obj ;
     }
   }
-  delete iter ;
 
-  if (ret==0) {
+  if (ret == nullptr) {
     coutE(InputArguments) << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name?name:"<last>") << endl ;
   }
   return ret ;
+}
+
+
+RooPlot::Items::iterator RooPlot::findItem(std::string const& name)
+{
+  return std::find_if(_items.begin(), _items.end(), [&name](auto const& item){
+              return name == item.first->GetName();
+          });
+}
+
+RooPlot::Items::const_iterator RooPlot::findItem(std::string const& name) const
+{
+  return std::find_if(_items.begin(), _items.end(), [&name](auto const& item){
+              return name == item.first->GetName();
+          });
 }
 
 
@@ -1006,9 +1024,10 @@ TObject *RooPlot::findObject(const char *name, const TClass* clas) const
 
 TString RooPlot::getDrawOptions(const char *name) const
 {
-  TObjOptLink *link= _items.findLink(name,caller("getDrawOptions"));
-  DrawOpt opt(0 == link ? "" : link->GetOption()) ;
-  return TString(opt.drawOptions) ;
+  auto item = findItem(name);
+  if(item == _items.end()) return "";
+
+  return DrawOpt{item->second.c_str()}.drawOptions;
 }
 
 
@@ -1018,13 +1037,13 @@ TString RooPlot::getDrawOptions(const char *name) const
 
 Bool_t RooPlot::setDrawOptions(const char *name, TString options)
 {
-  TObjOptLink *link= _items.findLink(name,caller("setDrawOptions"));
-  if(0 == link) return kFALSE;
+  auto item = findItem(name);
+  if(item == _items.end()) return false;
 
-  DrawOpt opt(link->GetOption()) ;
+  DrawOpt opt(item->second.c_str()) ;
   strlcpy(opt.drawOptions,options,128) ;
-  link->SetOption(opt.rawOpt());
-  return kTRUE;
+  item->second = opt.rawOpt();
+  return true;
 }
 
 
@@ -1033,10 +1052,10 @@ Bool_t RooPlot::setDrawOptions(const char *name, TString options)
 
 Bool_t RooPlot::getInvisible(const char* name) const
 {
-  TObjOptLink *link= _items.findLink(name,caller("getInvisible"));
-  if(0 == link) return kFALSE;
+  auto item = findItem(name);
+  if(item == _items.end()) return false;
 
-  return DrawOpt(link->GetOption()).invisible ;
+  return DrawOpt{item->second.c_str()}.invisible ;
 }
 
 
@@ -1046,33 +1065,15 @@ Bool_t RooPlot::getInvisible(const char* name) const
 
 void RooPlot::setInvisible(const char* name, Bool_t flag)
 {
-  TObjOptLink *link= _items.findLink(name,caller("getInvisible"));
-
-  DrawOpt opt ;
-
-  if(link) {
-    opt.initialize(link->GetOption()) ;
-    opt.invisible = flag ;
-    link->SetOption(opt.rawOpt()) ;
+  auto item = findItem(name);
+  if(item != _items.end()) {
+    DrawOpt opt;
+    opt.initialize(item->second.c_str());
+    opt.invisible = flag;
+    item->second = opt.rawOpt();
   }
 
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility function
-
-TString RooPlot::caller(const char *method) const
-{
-  TString name(fName);
-  if(strlen(method)) {
-    name.Append("::");
-    name.Append(method);
-  }
-  return name;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1389,7 +1390,11 @@ void RooPlot::Streamer(TBuffer &R__b)
       SetName(_hist->GetName());
       SetTitle(_hist->GetTitle());
       RooPrintable::Streamer(R__b);
-      _items.Streamer(R__b);
+      {
+        TList itemsList;
+        itemsList.Streamer(R__b);
+        RooPlot::fillItemsFromTList(_items, itemsList);
+      }
       R__b >> _padFactor;
       R__b >> _plotVarClone;
       R__b >> _plotVarSet;
@@ -1416,9 +1421,18 @@ std::unique_ptr<TLegend> RooPlot::BuildLegend() const {
   std::unique_ptr<TLegend> leg(new TLegend(0.5, 0.7, 0.9, 0.9));
   leg->SetBorderSize(0);
   leg->SetFillStyle(0);
-  for (int i=0; i < _items.GetSize(); ++i) {
+  for (std::size_t i=0; i < _items.size(); ++i) {
     leg->AddEntry(getObject(i));
   }
 
   return leg;
+}
+
+/// RooFit-internal function for backwards compatibility.
+void RooPlot::fillItemsFromTList(RooPlot::Items & items, TList const& tlist) {
+  std::unique_ptr<TIterator> iter(tlist.MakeIterator());
+  TObject *obj = nullptr;
+  while((obj= iter->Next())) {
+    items.emplace_back(obj, iter->GetOption());
+  }
 }
