@@ -557,11 +557,6 @@ canvas->Print(".tex", "Standalone");
 - The function TLatex::DrawLatex() only copied the Text-Attributes, but not the Line-Attributes
   to the newly created TLatex-Object.
 
-- The .tex file produced when saving canvas as .tex, needed to be included in an existing
-  LateX document to be visualized. The new Standalone option allows to generate a .tex file
-  which can be directly processed by LateX (for example with the pdflatex command) in order
-  to visualise it.
-
 - SaveAs png failed in batch mode with two canvases, one divided.
 
 - The text size computed in TLatex::FirstParse was not correct in case the text precision was 3.
