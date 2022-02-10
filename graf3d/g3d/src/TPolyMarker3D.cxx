@@ -161,16 +161,8 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
 
 TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
 {
-   if(this!=&tp3) {
-      TObject::operator=(tp3);
-      TAttMarker::operator=(tp3);
-      TAtt3D::operator=(tp3);
-      fN=tp3.fN;
-      fP=tp3.fP;
-      fOption=tp3.fOption;
-      fLastPoint=tp3.fLastPoint;
-      fName=tp3.fName;
-   }
+   if(this != &tp3)
+      tp3.TPolyMarker3D::Copy(*this);
    return *this;
 }
 
@@ -193,7 +185,7 @@ TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
    fN = 0;
    fP = 0;
    fLastPoint = -1;
-   p.Copy(*this);
+   p.TPolyMarker3D::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,18 +193,22 @@ TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
 
 void TPolyMarker3D::Copy(TObject &obj) const
 {
+   auto &tgt = static_cast<TPolyMarker3D &>(obj);
    TObject::Copy(obj);
-   ((TPolyMarker3D&)obj).fN = fN;
+   TAttMarker::Copy(tgt);
+   tgt.fN = fN;
+   if (tgt.fP)
+      delete [] tgt.fP;
    if (fN > 0) {
-      ((TPolyMarker3D&)obj).fP = new Float_t [kDimension*fN];
-      for (Int_t i = 0; i < kDimension*fN; i++)  ((TPolyMarker3D&)obj).fP[i] = fP[i];
+      tgt.fP = new Float_t [kDimension*fN];
+      for (Int_t i = 0; i < kDimension*fN; i++)
+         tgt.fP[i] = fP[i];
    } else {
-      ((TPolyMarker3D&)obj).fP = 0;
+      tgt.fP = nullptr;
    }
-   ((TPolyMarker3D&)obj).SetMarkerStyle(GetMarkerStyle());
-   ((TPolyMarker3D&)obj).fOption = fOption;
-   ((TPolyMarker3D&)obj).fLastPoint = fLastPoint;
-   ((TPolyMarker3D&)obj).fName   = fName;
+   tgt.fOption = fOption;
+   tgt.fLastPoint = fLastPoint;
+   tgt.fName   = fName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
