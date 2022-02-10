@@ -110,6 +110,7 @@ produce many different results in one event loop. Instant actions trigger the ev
 | Display() | Provides a printable representation of the dataset contents. The method returns a ROOT::RDF::RDisplay() instance which can print a tabular representation of the data or return it as a string. |
 | Fill() | Fill a user-defined object with the values of the specified columns, as if by calling `Obj.Fill(col1, col2, ...)`. |
 | Graph() | Fills a TGraph with the two columns provided. If multi-threading is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
+| GraphAsymmErrors() | Fills a TGraphAsymmErrors. If multi-threading is enabled, the order of the points may not be the one expected, it is therefore suggested to sort if before drawing. |
 | Histo1D(), Histo2D(), Histo3D() | Fill a one-, two-, three-dimensional histogram with the processed column values. |
 | Max() | Return the maximum of processed column values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
 | Mean() | Return the mean of processed column values.|
