@@ -11,7 +11,7 @@
  */
 
 #include <RooFit/TestStatistics/RooAbsL.h>
-#include <RooFit/TestStatistics/ConstantTermsOptimizer.h>
+#include "ConstantTermsOptimizer.h"
 #include "RooAbsPdf.h"
 #include "RooAbsData.h"
 

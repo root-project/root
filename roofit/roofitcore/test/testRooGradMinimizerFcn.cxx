@@ -21,8 +21,6 @@
 #include "TFile.h" // for loading the workspace file
 #include <stdio.h> // remove redundant workspace files
 
-#include <RooGradMinimizerFcn.h>
-
 #include "gtest/gtest.h"
 #include "test_lib.h"
 

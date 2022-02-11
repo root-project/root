@@ -13,11 +13,18 @@
 #include <RooFit/TestStatistics/LikelihoodWrapper.h>
 
 #include <RooFit/TestStatistics/RooAbsL.h> // need complete type for likelihood->...
-#include <RooFit/TestStatistics/MinuitFcnGrad.h>
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RooFit/TestStatistics/RooSumL.h> // need complete type for dynamic cast
 
-#include "RooMsgService.h"
+#include <RooMsgService.h>
+
+#include "MinuitFcnGrad.h"
+
+// including derived classes for factory method
+#include "LikelihoodSerial.h"
+#ifdef BUILD_WITH_ROOFIT_MULTIPROCESS
+#include "LikelihoodJob.h"
+#endif // BUILD_WITH_ROOFIT_MULTIPROCESS
 
 namespace RooFit {
 namespace TestStatistics {
@@ -36,12 +43,13 @@ namespace TestStatistics {
 
 /*
  * \param[in] likelihood Shared pointer to the likelihood that must be evaluated
- * \param[in] calculation_is_clean Shared pointer to the object that keeps track of what has been evaluated for the current parameter set provided by Minuit. This information can be used by different calculators, so must be shared between them.
+ * \param[in] calculation_is_clean Shared pointer to the object that keeps track of what has been evaluated for the
+ * current parameter set provided by Minuit. This information can be used by different calculators, so must be shared
+ * between them.
  */
 LikelihoodWrapper::LikelihoodWrapper(std::shared_ptr<RooAbsL> likelihood,
                                      std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean)
-   : likelihood_(std::move(likelihood)),
-     calculation_is_clean_(std::move(calculation_is_clean))
+   : likelihood_(std::move(likelihood)), calculation_is_clean_(std::move(calculation_is_clean))
 {
    // Note to future maintainers: take care when storing the minimizer_fcn pointer. The
    // RooAbsMinimizerFcn subclasses may get cloned inside MINUIT, which means the pointer
@@ -86,7 +94,9 @@ void LikelihoodWrapper::setOffsettingMode(OffsettingMode mode)
 {
    offsetting_mode_ = mode;
    if (isOffsetting()) {
-      oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization) << "LikelihoodWrapper::setOffsettingMode(" << GetName() << "): changed offsetting mode while offsetting was enabled; resetting offset values" << std::endl;
+      oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
+         << "LikelihoodWrapper::setOffsettingMode(" << GetName()
+         << "): changed offsetting mode while offsetting was enabled; resetting offset values" << std::endl;
       offset_ = {};
    }
 }
@@ -99,7 +109,7 @@ ROOT::Math::KahanSum<double> LikelihoodWrapper::applyOffsetting(ROOT::Math::Kaha
       if (offset_ == 0 && current_value != 0) {
          offset_ = current_value;
          if (offsetting_mode_ == OffsettingMode::legacy) {
-            auto sum_likelihood = dynamic_cast<RooSumL*>(likelihood_.get());
+            auto sum_likelihood = dynamic_cast<RooSumL *>(likelihood_.get());
             if (sum_likelihood != nullptr) {
                auto subsidiary_value = sum_likelihood->getSubsidiaryValue();
                // "undo" the addition of the subsidiary value to emulate legacy behavior
@@ -129,9 +139,10 @@ void LikelihoodWrapper::swapOffsets()
 
 void LikelihoodWrapper::setApplyWeightSquared(bool flag)
 {
-   RooUnbinnedL *unbinned_likelihood = dynamic_cast<RooUnbinnedL*>(likelihood_.get());
+   RooUnbinnedL *unbinned_likelihood = dynamic_cast<RooUnbinnedL *>(likelihood_.get());
    if (unbinned_likelihood == nullptr) {
-      throw std::logic_error("LikelihoodWrapper::setApplyWeightSquared can only be used on unbinned likelihoods, but the wrapped likelihood_ member is not a RooUnbinnedL!");
+      throw std::logic_error("LikelihoodWrapper::setApplyWeightSquared can only be used on unbinned likelihoods, but "
+                             "the wrapped likelihood_ member is not a RooUnbinnedL!");
    }
    bool flag_was_changed = unbinned_likelihood->setApplyWeightSquared(flag);
 
@@ -140,8 +151,31 @@ void LikelihoodWrapper::setApplyWeightSquared(bool flag)
    }
 }
 
-void LikelihoodWrapper::updateMinuitInternalParameterValues(const std::vector<double>& /*minuit_internal_x*/) {}
-void LikelihoodWrapper::updateMinuitExternalParameterValues(const std::vector<double>& /*minuit_external_x*/) {}
+void LikelihoodWrapper::updateMinuitInternalParameterValues(const std::vector<double> & /*minuit_internal_x*/) {}
+void LikelihoodWrapper::updateMinuitExternalParameterValues(const std::vector<double> & /*minuit_external_x*/) {}
+
+/// Factory method.
+std::unique_ptr<LikelihoodWrapper>
+LikelihoodWrapper::create(LikelihoodMode likelihoodMode, std::shared_ptr<RooAbsL> likelihood,
+                          std::shared_ptr<WrapperCalculationCleanFlags> calculationIsClean)
+{
+   switch (likelihoodMode) {
+   case LikelihoodMode::serial: {
+      return std::make_unique<LikelihoodSerial>(std::move(likelihood), std::move(calculationIsClean));
+   }
+   case LikelihoodMode::multiprocess: {
+#ifdef BUILD_WITH_ROOFIT_MULTIPROCESS
+      return std::make_unique<LikelihoodJob>(std::move(likelihood), std::move(calculationIsClean));
+#else
+      throw std::runtime_error("MinuitFcnGrad ctor with LikelihoodMode::multiprocess is not available in this build "
+                               "without RooFit::Multiprocess!");
+#endif
+   }
+   default: {
+      throw std::logic_error("In MinuitFcnGrad constructor: likelihoodMode has an unsupported value!");
+   }
+   }
+}
 
 } // namespace TestStatistics
 } // namespace RooFit
