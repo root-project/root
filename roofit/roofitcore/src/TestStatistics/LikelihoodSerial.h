@@ -10,7 +10,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-
 #ifndef ROOT_ROOFIT_LikelihoodSerial
 #define ROOT_ROOFIT_LikelihoodSerial
 
@@ -26,7 +25,8 @@ namespace TestStatistics {
 
 class LikelihoodSerial : public LikelihoodWrapper {
 public:
-   LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood, std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean);
+   LikelihoodSerial(std::shared_ptr<RooAbsL> likelihood,
+                    std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean);
    inline LikelihoodSerial *clone() const override { return new LikelihoodSerial(*this); }
 
    void initVars();
@@ -37,13 +37,13 @@ public:
 private:
    ROOT::Math::KahanSum<double> result;
 
-   RooArgList _vars;      // Variables
-   RooArgList _saveVars;  // Copy of variables
+   RooArgList _vars;     ///< Variables
+   RooArgList _saveVars; ///< Copy of variables
 
    LikelihoodType likelihood_type;
 };
 
-}
-}
+} // namespace TestStatistics
+} // namespace RooFit
 
 #endif // ROOT_ROOFIT_LikelihoodSerial
