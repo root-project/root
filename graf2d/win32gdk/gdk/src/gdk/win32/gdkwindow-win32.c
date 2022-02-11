@@ -46,6 +46,7 @@ BOOL
 SafeAdjustWindowRectEx(RECT * lpRect,
                        DWORD dwStyle, BOOL bMenu, DWORD dwExStyle)
 {
+   LONG top = lpRect->top;
    if (!AdjustWindowRectEx(lpRect, dwStyle, bMenu, dwExStyle)) {
       WIN32_API_FAILED("AdjustWindowRectEx");
       return FALSE;
@@ -55,11 +56,11 @@ SafeAdjustWindowRectEx(RECT * lpRect,
       lpRect->right -= lpRect->left;
       lpRect->left = 0;
    }
-   if (lpRect->top < 0) {
-      lpRect->bottom -= lpRect->top;
-      lpRect->top = 0;
-   }
 #endif
+   if (top > 0 && lpRect->top < 0) {
+      lpRect->bottom += top;
+      lpRect->top = top;
+   }
    return TRUE;
 }
 
