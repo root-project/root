@@ -52,6 +52,7 @@
 #@hasdataframe@ R__HAS_DATAFRAME /**/
 #@use_less_includes@ R__LESS_INCLUDES /**/
 #@hastbb@ R__HAS_TBB /**/
+#@hasroofit_multiprocess@ R__HAS_ROOFIT_MULTIPROCESS /**/
 
 #if defined(R__HAS_VECCORE) && defined(R__HAS_VC)
 #ifndef VECCORE_ENABLE_VC

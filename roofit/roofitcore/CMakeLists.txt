@@ -501,7 +501,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
 
 if (roofit_multiprocess)
   target_link_libraries(RooFitCore PRIVATE RooFitMultiProcess)
-  target_compile_definitions(RooFitCore PRIVATE -DBUILD_WITH_ROOFIT_MULTIPROCESS)
   set(RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/res")
   target_include_directories(RooFitCore PRIVATE ${RooFitCore_MultiProcess_TestStatistics_INCLUDE_DIR})
 endif()
