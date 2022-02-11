@@ -11,6 +11,7 @@ from DistRDF.Backends.Spark import Backend
 
 import ROOT
 
+
 class SparkBackendInitTest(unittest.TestCase):
     """
     Tests to ensure that the instance variables of `SparkBackend` class have the
@@ -80,69 +81,6 @@ class SparkBackendInitTest(unittest.TestCase):
         backend = Backend.SparkBackend(sparkcontext=sc)
 
         self.assertEqual(backend.optimize_npartitions(), ncores)
-
-
-class OperationSupportTest(unittest.TestCase):
-    """
-    Ensure that incoming operations are classified accurately in distributed
-    environment.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Synchronize PYSPARK_PYTHON variable to the current Python executable.
-          Needed to avoid mismatch between python versions on driver and on the
-          fake executor on the same machine.
-        - Ignore `ResourceWarning: unclosed socket` warning triggered by Spark.
-          this is ignored by default in any application, but Python's unittest
-          library overrides the default warning filters thus exposing this
-          warning
-        - Initialize a SparkContext for the tests in this class
-        """
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("ignore", ResourceWarning)
-
-        sparkconf = pyspark.SparkConf().setMaster("local[2]")
-        cls.sc = pyspark.SparkContext(conf=sparkconf)
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("default", ResourceWarning)
-
-        cls.sc.stop()
-
-    def test_action(self):
-        """Check that action nodes are classified accurately."""
-        backend = Backend.SparkBackend()
-        backend.check_supported("Histo1D")
-
-    def test_transformation(self):
-        """Check that transformation nodes are classified accurately."""
-        backend = Backend.SparkBackend()
-        backend.check_supported("Define")
-
-    def test_unsupported_operations(self):
-        """Check that unsupported operations raise an Exception."""
-        backend = Backend.SparkBackend()
-        with self.assertRaises(Exception):
-            backend.check_supported("Take")
-
-        with self.assertRaises(Exception):
-            backend.check_supported("Foreach")
-
-        with self.assertRaises(Exception):
-            backend.check_supported("Range")
-
-    def test_none(self):
-        """Check that incorrect operations raise an Exception."""
-        backend = Backend.SparkBackend()
-        with self.assertRaises(Exception):
-            backend.check_supported("random")
 
 
 class InitializationTest(unittest.TestCase):
@@ -311,7 +249,7 @@ class ChangeAttributeTest(unittest.TestCase):
 
         treename = "mytree"
         filename = "myfile.root"
-        ROOT.RDataFrame(100).Define("x","rdfentry_").Snapshot(treename, filename)
+        ROOT.RDataFrame(100).Define("x", "rdfentry_").Snapshot(treename, filename)
 
         df = Spark.RDataFrame(treename, filename, npartitions=10, sparkcontext=self.sc)
 
