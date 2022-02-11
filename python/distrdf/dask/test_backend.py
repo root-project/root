@@ -51,57 +51,6 @@ class DaskBackendInitTest(unittest.TestCase):
         self.assertEqual(backend.optimize_npartitions(), 2)
 
 
-class OperationSupportTest(unittest.TestCase):
-    """
-    Ensure that incoming operations are classified accurately in distributed
-    environment.
-    """
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Initialize a Dask client for the tests in this class. This uses a
-          `LocalCluster` object that spawns 2 single-threaded Python processes.
-        """
-        cls.client = Client(LocalCluster(n_workers=2, threads_per_worker=1, processes=True))
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        cls.client.shutdown()
-        cls.client.close()
-
-    def test_action(self):
-        """Check that action nodes are classified accurately."""
-        backend = Backend.DaskBackend(daskclient=self.client)
-        backend.check_supported("Histo1D")
-
-    def test_transformation(self):
-        """Check that transformation nodes are classified accurately."""
-        backend = Backend.DaskBackend(daskclient=self.client)
-        backend.check_supported("Define")
-
-    def test_unsupported_operations(self):
-        """Check that unsupported operations raise an Exception."""
-        backend = Backend.DaskBackend(daskclient=self.client)
-        with self.assertRaises(Exception):
-            backend.check_supported("Take")
-
-        with self.assertRaises(Exception):
-            backend.check_supported("Foreach")
-
-        with self.assertRaises(Exception):
-            backend.check_supported("Range")
-
-    def test_none(self):
-        """Check that incorrect operations raise an Exception."""
-        backend = Backend.DaskBackend(daskclient=self.client)
-        with self.assertRaises(Exception):
-            backend.check_supported("random")
-
-
 class InitializationTest(unittest.TestCase):
     """Check initialization method in the Dask backend"""
 
