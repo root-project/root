@@ -283,11 +283,12 @@ endforeach()
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
+                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, js, ui5, etc. to build area")
 
-#----  List of source directories which are copied verbatim into the build directory ---
-set(artifact_dirs "etc;test;icons;fonts;macros;tutorials;README")
+#---- List of directories which completely copied to target directory by each build
+set(artifact_dirs "etc;test;icons;fonts;macros;tutorials")
 
 if(http)
    list(APPEND artifact_dirs js)
