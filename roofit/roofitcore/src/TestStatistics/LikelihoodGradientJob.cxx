@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "TestStatistics/LikelihoodGradientJob.h"
+#include "LikelihoodGradientJob.h"
 
 #include "RooFit/MultiProcess/JobManager.h"
 #include "RooFit/MultiProcess/Messenger.h"

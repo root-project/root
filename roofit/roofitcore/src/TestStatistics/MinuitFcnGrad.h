@@ -31,28 +31,10 @@ class RooMinimizer;
 namespace RooFit {
 namespace TestStatistics {
 
-/// For communication with wrappers, an instance of this struct must be shared between them and MinuitFcnGrad. It keeps
-/// track of what has been evaluated for the current parameter set provided by Minuit.
-struct WrapperCalculationCleanFlags {
-   // indicate whether that part has been calculated since the last parameter update
-   bool likelihood = false;
-   bool gradient = false;
-
-   void set_all(bool value)
-   {
-      likelihood = value;
-      gradient = value;
-   }
-};
-
 class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
 public:
-   enum class LikelihoodMode { serial, multiprocess };
-   enum class LikelihoodGradientMode { multiprocess };
-
    MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
-                 std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                 LikelihoodMode likelihoodMode,
+                 std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                  LikelihoodGradientMode likelihoodGradientMode, bool verbose = false);
 
    inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }

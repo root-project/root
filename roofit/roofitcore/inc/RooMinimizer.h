@@ -29,8 +29,10 @@
 
 #include "RooArgList.h" // cannot just use forward decl due to default argument in lastMinuitFit
 
+#include <RooAbsMinimizerFcn.h>
 #include <RooFit/TestStatistics/RooAbsL.h>
-#include <RooFit/TestStatistics/MinuitFcnGrad.h>
+#include <RooFit/TestStatistics/LikelihoodWrapper.h>
+#include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
 
 #include "RooSentinel.h"
 #include "RooMsgService.h"
@@ -52,10 +54,10 @@ public:
 
   explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
   explicit RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
-                        RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode likelihoodMode =
-                           RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode::serial,
-                        RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode likelihoodGradientMode =
-                           RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode::multiprocess);
+                        RooFit::TestStatistics::LikelihoodMode likelihoodMode =
+                           RooFit::TestStatistics::LikelihoodMode::serial,
+                        RooFit::TestStatistics::LikelihoodGradientMode likelihoodGradientMode =
+                           RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
 
   ~RooMinimizer() override;
 

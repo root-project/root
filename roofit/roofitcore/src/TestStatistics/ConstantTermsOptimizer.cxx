@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/TestStatistics/ConstantTermsOptimizer.h>
+#include "ConstantTermsOptimizer.h"
 
 #include <RooMsgService.h>
 #include <RooVectorDataStore.h> // complete type for dynamic cast
