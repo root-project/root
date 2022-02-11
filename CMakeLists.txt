@@ -287,16 +287,15 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, js, ui5, etc. to build area")
 
-set(artifact_dirs)
 if(http)
-   list(APPEND artifact_dirs js)
+set(jsroot_files js/*)
 endif()
 if(webgui)
-   list(APPEND artifact_dirs ui5)
+set(openui5_files ui5/*)
 endif()
 
 #---Copy files to the build area, with dependency---------------------------------
-file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/*)
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/* ${jsroot_files} ${openui5_files})
 set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
@@ -309,15 +308,6 @@ foreach(artifact_file ${artifact_files})
     list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
   endif()
 endforeach()
-
-foreach(dir ${artifact_dirs})
-   set(tgt copy_dir_${dir})
-   add_custom_target(${tgt}
-                     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/${dir} ${CMAKE_BINARY_DIR}/${dir}
-                     COMMENT "Copy ${dir} directory")
-   list(APPEND artifact_files_builddir ${tgt})
-endforeach()
-
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
 
 add_subdirectory (interpreter)
