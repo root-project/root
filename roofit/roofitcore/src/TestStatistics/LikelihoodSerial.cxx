@@ -10,7 +10,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/TestStatistics/LikelihoodSerial.h>
+#include "LikelihoodSerial.h"
+
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RooFit/TestStatistics/RooBinnedL.h>
