@@ -53,6 +53,7 @@ automatic PDF optimization.
 #include "RooMinimizerFcn.h"
 #include "RooGradMinimizerFcn.h"
 #include "RooFitResult.h"
+#include "TestStatistics/MinuitFcnGrad.h"
 
 #include "TClass.h"
 #include "Math/Minimizer.h"
@@ -132,8 +133,8 @@ RooMinimizer::RooMinimizer(RooAbsReal &function, FcnMode fcnMode) : _fcnMode(fcn
 }
 
 RooMinimizer::RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
-                           RooFit::TestStatistics::MinuitFcnGrad::LikelihoodMode likelihoodMode,
-                           RooFit::TestStatistics::MinuitFcnGrad::LikelihoodGradientMode likelihoodGradientMode)
+                           RooFit::TestStatistics::LikelihoodMode likelihoodMode,
+                           RooFit::TestStatistics::LikelihoodGradientMode likelihoodGradientMode)
    : _fcnMode(FcnMode::generic_wrapper)
 {
    initMinimizerFirstPart();
