@@ -46,7 +46,6 @@ automatic PDF optimization.
 #include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"
 #include "RooRealVar.h"
-#include "RooAbsPdf.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
 #include "RooPlot.h"
@@ -882,11 +881,10 @@ RooAbsMinimizerFcn *RooMinimizer::fitterFcn()
 /// to all RRV parameter representations and give this matrix instead of the
 /// HESSE matrix at the next save() call
 
-void RooMinimizer::applyCovarianceMatrix(TMatrixDSym& V)
+void RooMinimizer::applyCovarianceMatrix(TMatrixDSym const& V)
 {
   _extV.reset(static_cast<TMatrixDSym*>(V.Clone()));
   _fcn->ApplyCovarianceMatrix(*_extV);
-
 }
 
 
