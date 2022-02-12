@@ -90,7 +90,7 @@ Before v6.28, it was ensured that no `RooArgSet` and `RooDataSet` objects on the
 With v6.28, this is not guaranteed anymore.
 Hence, if your code uses pointer comparisons to uniquely identify RooArgSet or RooDataSet instances, please consider using the new `RooArgSet::uniqueId()` or `RooAbsData::uniqueId()`.
 
-## Removal of HistoToWorkspaceFactory (non-Fast)
+### Removal of HistoToWorkspaceFactory (non-Fast)
 
 The original `HistoToWorkspaceFactory` produced models that consisted of a
 Poisson term for each bin.  In this "number counting form" the dataset has one
@@ -106,6 +106,11 @@ histogram.
 Therefore, the original `HistoToWorkspaceFactory` is now removed to avoid
 confusion and maintainance burden.
 
+### Removal of `RooAbsMinimizerFcn` and `RooMinimizerFcn` from the public interface
+
+The `RooAbsMinimizerFcn` class and its implementation `RooMinimizerFcn` were removed from the public interface.
+These classes are implementation details of the RooMinimizer and should not be used in your code.
+In the unlikely case that this causes any problem for you, please open a GitHub issue requesting to extend the RooMinimizer by the needed functionality.
 
 ## 2D Graphics Libraries
 
