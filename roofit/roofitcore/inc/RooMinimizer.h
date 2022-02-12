@@ -106,10 +106,9 @@ public:
 
   int getNPar() const ;
 
-protected:
+  void applyCovarianceMatrix(TMatrixDSym const& V) ;
 
-  friend class RooAbsPdf ;
-  void applyCovarianceMatrix(TMatrixDSym& V) ;
+private:
 
   void profileStart() ;
   void profileStop() ;
@@ -122,7 +121,6 @@ protected:
 
   bool fitFcn() const;
 
-private:
   // constructor helper functions
   void initMinimizerFirstPart();
   void initMinimizerFcnDependentPart(double defaultErrorLevel);
