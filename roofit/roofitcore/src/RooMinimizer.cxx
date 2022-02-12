@@ -40,6 +40,7 @@ automatic PDF optimization.
 
 #include "RooMinimizer.h"
 
+#include "RooAbsMinimizerFcn.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooAbsReal.h"
@@ -60,11 +61,10 @@ automatic PDF optimization.
 #include "TMarker.h"
 #include "TGraph.h"
 #include "Fit/FitConfig.h"
-#include "TStopwatch.h"
-#include "TMatrixDSym.h"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <stdexcept> // logic_error
 
 using namespace std;
 
@@ -996,3 +996,19 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
   return res;
 
 }
+
+void RooMinimizer::setEvalErrorWall(Bool_t flag) { fitterFcn()->SetEvalErrorWall(flag); }
+
+/// \copydoc RooMinimizerFcn::SetRecoverFromNaNStrength()
+void RooMinimizer::setRecoverFromNaNStrength(double strength) { fitterFcn()->SetRecoverFromNaNStrength(strength); }
+void RooMinimizer::setPrintEvalErrors(int numEvalErrors) { fitterFcn()->SetPrintEvalErrors(numEvalErrors); }
+void RooMinimizer::setVerbose(bool flag) { _verbose = flag ; fitterFcn()->SetVerbose(flag); }
+bool RooMinimizer::setLogFile(const char* logf) { return fitterFcn()->SetLogFile(logf); }
+
+int RooMinimizer::evalCounter() const { return fitterFcn()->evalCounter() ; }
+void RooMinimizer::zeroEvalCount() { fitterFcn()->zeroEvalCount() ; }
+
+int RooMinimizer::getNPar() const { return fitterFcn()->getNDim() ; }
+
+std::ofstream* RooMinimizer::logfile() { return fitterFcn()->GetLogFile(); }
+double& RooMinimizer::maxFCN() { return fitterFcn()->GetMaxFCN() ; }
