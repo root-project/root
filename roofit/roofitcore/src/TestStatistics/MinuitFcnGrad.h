@@ -18,7 +18,7 @@
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include <RooFit/TestStatistics/LikelihoodWrapper.h>
 #include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
-#include "RooAbsMinimizerFcn.h"
+#include "../RooAbsMinimizerFcn.h"
 
 #include <Fit/ParameterSettings.h>
 #include <Fit/Fitter.h>

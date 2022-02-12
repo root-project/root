@@ -16,6 +16,7 @@
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RunContext.h> // necessary to complete RooUnbinnedL
 
+#include <RooArgSet.h>
 #include <RooRandom.h>
 #include <RooWorkspace.h>
 #include <RooAbsPdf.h>
@@ -29,6 +30,7 @@
 #include <RooDataHist.h>
 #include <RooRealSumPdf.h>
 #include <RooNLLVar.h>
+#include <RooRealVar.h>
 
 #include <algorithm>  // count_if
 

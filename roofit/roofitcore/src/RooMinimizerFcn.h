@@ -25,7 +25,7 @@
 #include <fstream>
 #include <vector>
 
-#include <RooAbsMinimizerFcn.h>
+#include "RooAbsMinimizerFcn.h"
 
 template<typename T> class TMatrixTSym;
 using TMatrixDSym = TMatrixTSym<double>;
