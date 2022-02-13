@@ -288,27 +288,7 @@ const ROOT::Fit::Fitter* RooMinimizer::fitter() const
 
 
 bool RooMinimizer::fitFcn() const {
-   bool ret;
-
-   switch (_fcnMode) {
-   case FcnMode::classic: {
-      ret = _theFitter->FitFCN(*dynamic_cast<RooMinimizerFcn *>(_fcn));
-      break;
-   }
-   case FcnMode::gradient: {
-      ret = _theFitter->FitFCN(*dynamic_cast<RooGradMinimizerFcn *>(_fcn));
-      break;
-   }
-   case FcnMode::generic_wrapper: {
-      ret = _theFitter->FitFCN(*dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(_fcn));
-      break;
-   }
-   default: {
-      throw std::logic_error("In RooMinimizer::fitFcn: _fcnMode has an unsupported value!");
-   }
-   }
-
-   return ret;
+   return _fcn->fit(*_theFitter);
 }
 
 
@@ -651,7 +631,7 @@ RooFitResult* RooMinimizer::save(const char* userName, const char* userTitle)
   fitRes->setInitParList(saveFloatInitList) ;
 
   // The fitter often clones the function. We therefore have to ask it for its copy.
-  const auto fitFcn = dynamic_cast<const RooMinimizerFcn*>(_theFitter->GetFCN());
+  const auto fitFcn = dynamic_cast<const RooAbsMinimizerFcn*>(_theFitter->GetFCN());
   double removeOffset = 0.;
   if (fitFcn) {
     fitRes->setNumInvalidNLL(fitFcn->GetNumInvalidNLL());
@@ -818,61 +798,10 @@ void RooMinimizer::profileStop()
 }
 
 
-ROOT::Math::IMultiGenFunction* RooMinimizer::getFitterMultiGenFcn() const
-{
-   return fitter()->GetFCN();
-}
-
-
 ROOT::Math::IMultiGenFunction* RooMinimizer::getMultiGenFcn() const
 {
-   if (getFitterMultiGenFcn()) {
-      return getFitterMultiGenFcn();
-   } else {
-      switch (_fcnMode) {
-      case FcnMode::classic: {
-         return static_cast<ROOT::Math::IMultiGenFunction *>(dynamic_cast<RooMinimizerFcn *>(_fcn));
-      }
-      case FcnMode::gradient: {
-         return static_cast<ROOT::Math::IMultiGenFunction *>(dynamic_cast<RooGradMinimizerFcn *>(_fcn));
-      }
-      case FcnMode::generic_wrapper: {
-         return static_cast<ROOT::Math::IMultiGenFunction *>(dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(_fcn));
-      }
-      default: {
-         throw std::logic_error("In RooMinimizer::getMultiGenFcn: _fcnMode has an unsupported value!");
-      }
-      }
-   }
-}
-
-
-const RooAbsMinimizerFcn *RooMinimizer::fitterFcn() const
-{
-   if (getFitterMultiGenFcn()) {
-      switch (_fcnMode) {
-      case FcnMode::classic: {
-         return static_cast<RooAbsMinimizerFcn *>(dynamic_cast<RooMinimizerFcn *>(getFitterMultiGenFcn()));
-      }
-      case FcnMode::gradient: {
-         return static_cast<RooAbsMinimizerFcn *>(dynamic_cast<RooGradMinimizerFcn *>(getFitterMultiGenFcn()));
-      }
-      case FcnMode::generic_wrapper: {
-         return static_cast<RooAbsMinimizerFcn *>(dynamic_cast<RooFit::TestStatistics::MinuitFcnGrad *>(getFitterMultiGenFcn()));
-      }
-      default: {
-         throw std::logic_error("In RooMinimizer::fitterFcn: _fcnMode has an unsupported value!");
-      }
-      }
-   } else {
-      return _fcn;
-   }
-}
-
-RooAbsMinimizerFcn *RooMinimizer::fitterFcn()
-{
-   // to avoid code duplication, we just reuse the const function and cast constness away
-   return const_cast<RooAbsMinimizerFcn *>( static_cast<const RooMinimizer&>(*this).fitterFcn() );
+   auto * fitterFcn = fitter()->GetFCN();
+   return fitterFcn ? fitterFcn : _fcn->getMultiGenFcn();
 }
 
 
@@ -995,18 +924,18 @@ RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
 
 }
 
-void RooMinimizer::setEvalErrorWall(Bool_t flag) { fitterFcn()->SetEvalErrorWall(flag); }
+void RooMinimizer::setEvalErrorWall(bool flag) { _fcn->SetEvalErrorWall(flag); }
 
 /// \copydoc RooMinimizerFcn::SetRecoverFromNaNStrength()
-void RooMinimizer::setRecoverFromNaNStrength(double strength) { fitterFcn()->SetRecoverFromNaNStrength(strength); }
-void RooMinimizer::setPrintEvalErrors(int numEvalErrors) { fitterFcn()->SetPrintEvalErrors(numEvalErrors); }
-void RooMinimizer::setVerbose(bool flag) { _verbose = flag ; fitterFcn()->SetVerbose(flag); }
-bool RooMinimizer::setLogFile(const char* logf) { return fitterFcn()->SetLogFile(logf); }
+void RooMinimizer::setRecoverFromNaNStrength(double strength) { _fcn->SetRecoverFromNaNStrength(strength); }
+void RooMinimizer::setPrintEvalErrors(Int_t numEvalErrors) { _fcn->SetPrintEvalErrors(numEvalErrors); }
+void RooMinimizer::setVerbose(bool flag) { _verbose = flag ; _fcn->SetVerbose(flag); }
+bool RooMinimizer::setLogFile(const char* logf) { return _fcn->SetLogFile(logf); }
 
-int RooMinimizer::evalCounter() const { return fitterFcn()->evalCounter() ; }
-void RooMinimizer::zeroEvalCount() { fitterFcn()->zeroEvalCount() ; }
+int RooMinimizer::evalCounter() const { return _fcn->evalCounter() ; }
+void RooMinimizer::zeroEvalCount() { _fcn->zeroEvalCount() ; }
 
-int RooMinimizer::getNPar() const { return fitterFcn()->getNDim() ; }
+int RooMinimizer::getNPar() const { return _fcn->getNDim() ; }
 
-std::ofstream* RooMinimizer::logfile() { return fitterFcn()->GetLogFile(); }
-double& RooMinimizer::maxFCN() { return fitterFcn()->GetMaxFCN() ; }
+std::ofstream* RooMinimizer::logfile() { return _fcn->GetLogFile(); }
+double& RooMinimizer::maxFCN() { return _fcn->GetMaxFCN() ; }

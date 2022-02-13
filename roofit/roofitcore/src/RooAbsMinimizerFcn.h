@@ -25,6 +25,8 @@
 #include "RooArgList.h"
 #include "RooRealVar.h"
 
+#include <Fit/Fitter.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -99,6 +101,8 @@ public:
 
    /// Enable or disable offsetting on the function to be minimized, which enhances numerical precision.
    virtual void setOffsetting(Bool_t flag) = 0;
+   virtual bool fit(ROOT::Fit::Fitter&) const = 0;
+   virtual ROOT::Math::IMultiGenFunction* getMultiGenFcn() = 0;
 
 protected:
    void optimizeConstantTerms(bool constStatChange, bool constValChange);
