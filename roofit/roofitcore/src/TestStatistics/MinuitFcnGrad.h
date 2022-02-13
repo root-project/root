@@ -21,7 +21,6 @@
 #include "../RooAbsMinimizerFcn.h"
 
 #include <Fit/ParameterSettings.h>
-#include <Fit/Fitter.h>
 #include "Math/IFunction.h" // ROOT::Math::IMultiGradFunction
 
 // forward declaration
@@ -50,6 +49,9 @@ public:
    {
       likelihood->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
    }
+
+   bool fit(ROOT::Fit::Fitter& fitter) const override { return fitter.FitFCN(*this); };
+   ROOT::Math::IMultiGenFunction* getMultiGenFcn() override { return this; };
 
 private:
    /// IMultiGradFunction override necessary for Minuit
