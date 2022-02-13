@@ -101,7 +101,6 @@ public:
   ROOT::Fit::Fitter* fitter() ;
   const ROOT::Fit::Fitter* fitter() const ;
 
-  ROOT::Math::IMultiGenFunction* getFitterMultiGenFcn() const;
   ROOT::Math::IMultiGenFunction* getMultiGenFcn() const;
 
   int getNPar() const ;
@@ -115,9 +114,6 @@ private:
 
   std::ofstream* logfile() ;
   double& maxFCN() ;
-
-  const RooAbsMinimizerFcn *fitterFcn() const;
-  RooAbsMinimizerFcn *fitterFcn();
 
   bool fitFcn() const;
 

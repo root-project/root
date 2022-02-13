@@ -51,6 +51,9 @@ public:
    inline std::string getFunctionTitle() const override { return _funct->GetTitle(); }
    inline void setOffsetting(Bool_t flag) override { _funct->enableOffsetting(flag); }
 
+   bool fit(ROOT::Fit::Fitter& fitter) const override { return fitter.FitFCN(*this); };
+   ROOT::Math::IMultiGenFunction* getMultiGenFcn() override { return this; };
+
 private:
    void runDerivator(unsigned int i_component) const;
 
