@@ -76,6 +76,10 @@ LikelihoodGradientWrapper::create(LikelihoodGradientMode likelihoodGradientMode,
       return std::make_unique<LikelihoodGradientJob>(std::move(likelihood), std::move(calculationIsClean), nDim,
                                                      minimizer);
 #else
+      (void) likelihood;
+      (void) calculationIsClean;
+      (void) nDim;
+      (void) minimizer;
       throw std::runtime_error("MinuitFcnGrad ctor with LikelihoodGradientMode::multiprocess is not available in this "
                                "build without RooFit::Multiprocess!");
 #endif
