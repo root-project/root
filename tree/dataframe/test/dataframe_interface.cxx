@@ -699,22 +699,24 @@ TEST(RDataFrameInterface, DescribeShortFormat)
    ROOT::RDataFrame df2a(tree);
    EXPECT_EQ(df2a.Describe().AsString(/*shortFormat =*/true), "Dataframe from TTree someName (in-memory)");
 
-   // case: ctor from a single file
-   // NOTE: using the RDataFrame("tree", "file.root") ctor, it's always a TChain
-   TFile f1("testDescribeDataset1.root", "recreate");
-   TTree t1("myTree", "foo");
-   t1.Write();
-   f1.Close();
+   {
+      // case: ctor from a single file
+      TFile f("testDescribeDataset1.root", "recreate");
+      TTree t("myTree", "foo");
+      t.Write();
+   }
    ROOT::RDataFrame df2b("myTree", "testDescribeDataset1.root");
    std::stringstream ss1;
+   // NOTE: using the RDataFrame("tree", "file.root") ctor, it's always a TChain
    ss1 << "Dataframe from TChain myTree in file testDescribeDataset1.root";
    EXPECT_EQ(df2b.Describe().AsString(/*shortFormat =*/true), ss1.str());
 
    // case: ctor with multiple files
-   TFile f2("testDescribeDataset2.root", "recreate");
-   TTree t2("myTree", "foo");
-   t2.Write();
-   f2.Close();
+   {
+      TFile f("testDescribeDataset2.root", "recreate");
+      TTree t("myTree", "foo");
+      t.Write();
+   }
    ROOT::RDataFrame df2d("myTree", {"testDescribeDataset1.root", "testDescribeDataset2.root"});
    std::stringstream ss2;
    ss2 << "Dataframe from TChain myTree in files\n"
@@ -723,10 +725,11 @@ TEST(RDataFrameInterface, DescribeShortFormat)
    EXPECT_EQ(df2d.Describe().AsString(/*shortFormat =*/true), ss2.str());
 
    // case: ttree/tchain with friends
-   TFile f3("testDescribeDataset3.root", "recreate");
-   TTree t3("myTree", "foo");
-   t3.Write();
-   f3.Close();
+   {
+      TFile f("testDescribeDataset3.root", "recreate");
+      TTree t("myTree", "foo");
+      t.Write();
+   }
    TFile f4("testDescribeDataset1.root");
    auto t4 = f4.Get<TTree>("myTree");
    TFile f5("testDescribeDataset2.root");
@@ -749,8 +752,6 @@ TEST(RDataFrameInterface, DescribeShortFormat)
        << "    myTree testDescribeDataset2.root\n"
        << "    myTree testDescribeDataset3.root";
    EXPECT_EQ(df2e.Describe().AsString(/*shortFormat =*/true), ss3.str());
-   f3.Close();
-   f4.Close();
 
    // others with an actual fDataSource, like csv
    auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
