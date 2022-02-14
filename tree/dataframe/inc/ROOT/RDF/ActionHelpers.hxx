@@ -453,14 +453,14 @@ public:
 
    // no container arguments
    template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
-   void Exec(unsigned int slot, const ValTypes &...x)
+   auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
    {
       fObjects[slot]->Fill(x...);
    }
 
    // at least one container argument
    template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
-   void Exec(unsigned int slot, const Xs &...xs)
+   auto Exec(unsigned int slot, const Xs &...xs) -> decltype(fObjects[slot]->Fill(*MakeBegin(xs)...), void())
    {
       // array of bools keeping track of which inputs are containers
       constexpr std::array<bool, sizeof...(Xs)> isContainer{IsDataContainer<Xs>::value...};
@@ -483,6 +483,14 @@ public:
       }
 
       ExecLoop<colidx>(slot, xrefend, MakeBegin(xs)...);
+   }
+
+   template <typename T = HIST>
+   void Exec(...)
+   {
+      static_assert(sizeof(T) < 0,
+                    "When filling an object with RDataFrame (e.g. via a Fill action) the number or types of the "
+                    "columns passed did not match the signature of the object's `Fill` method.");
    }
 
    void Initialize() { /* noop */}
