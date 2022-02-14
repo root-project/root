@@ -233,10 +233,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooBinWidthFunction.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
-    RooFitLegacy/RooHashTable.h
     RooFitLegacy/RooMinuit.h
-    RooFitLegacy/RooNameSet.h
-    RooFitLegacy/RooSetPair.h
     RooFitLegacy/RooTreeData.h
     RooFit/TestStatistics/LikelihoodGradientWrapper.h
     RooFit/TestStatistics/LikelihoodWrapper.h
@@ -459,11 +456,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooBinSamplingPdf.cxx
     src/RooBinWidthFunction.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
-    src/RooFitLegacy/RooHashTable.cxx
     src/RooFitLegacy/RooMinuit.cxx
     src/RooFitLegacy/RooMultiCatIter.cxx
-    src/RooFitLegacy/RooNameSet.cxx
-    src/RooFitLegacy/RooSetPair.cxx
     src/TestStatistics/ConstantTermsOptimizer.cxx
     src/TestStatistics/LikelihoodGradientWrapper.cxx
     src/TestStatistics/LikelihoodWrapper.cxx

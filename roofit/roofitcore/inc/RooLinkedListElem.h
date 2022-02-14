@@ -81,7 +81,6 @@ public:
   Int_t decRefCount() { return --_refCount ; }
 
 protected:
-  friend class RooHashTable ;
   friend class RooLinkedList ;
   friend class RooLinkedListImplDetails::Pool;
   friend class RooLinkedListImplDetails::Chunk;
