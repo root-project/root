@@ -119,7 +119,6 @@
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooGenProdProj+ ;
 #pragma link C++ class RooGrid+ ;
-#pragma link C++ class RooHashTable+ ;
 #pragma link C++ class RooHistError+ ;
 #pragma link C++ class RooHist+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
@@ -148,7 +147,6 @@
 #pragma link C++ class RooMPSentinel+ ;
 #pragma link C++ class RooMultiCategory+ ;
 #pragma link off class RooNameReg+ ;
-#pragma link C++ class RooNameSet+ ;
 #pragma link C++ class RooNLLVar+ ;
 #pragma link C++ class RooNormSetCache+ ;
 #pragma link C++ class RooNumber+ ;
@@ -211,7 +209,6 @@
 #pragma link C++ class RooScaledFunc+ ;
 #pragma link C++ class RooSegmentedIntegrator1D+ ;
 #pragma link C++ class RooSegmentedIntegrator2D+ ;
-#pragma link C++ class RooSetPair+ ;
 #pragma link C++ class RooSetProxy+ ;
 #pragma link C++ class RooCollectionProxy<RooArgSet>+ ;
 #pragma read sourceClass="RooSetProxy" targetClass="RooCollectionProxy<RooArgSet>";
