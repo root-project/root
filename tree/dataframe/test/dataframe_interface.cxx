@@ -747,6 +747,9 @@ TEST(RDataFrameInterface, DescribeShortFormat)
    // others with an actual fDataSource, like csv
    auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
    EXPECT_EQ(df3.Describe().AsString(/*shortFormat =*/true), "Dataframe from datasource RCsv");
+
+   for (int i = 1; i <= 3; ++i)
+      gSystem->Unlink(("testDescribeDataset" + std::to_string(i) + ".root").c_str());
 }
 
 // #var is a convenience alias for R_rdf_sizeof_var.
