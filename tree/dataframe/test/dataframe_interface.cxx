@@ -706,10 +706,9 @@ TEST(RDataFrameInterface, DescribeShortFormat)
       t.Write();
    }
    ROOT::RDataFrame df2b("myTree", "testDescribeDataset1.root");
-   std::stringstream ss1;
    // NOTE: using the RDataFrame("tree", "file.root") ctor, it's always a TChain
-   ss1 << "Dataframe from TChain myTree in file testDescribeDataset1.root";
-   EXPECT_EQ(df2b.Describe().AsString(/*shortFormat =*/true), ss1.str());
+   std::string ss1 = "Dataframe from TChain myTree in file testDescribeDataset1.root";
+   EXPECT_EQ(df2b.Describe().AsString(/*shortFormat =*/true), ss1);
 
    // case: ctor with multiple files
    {
@@ -718,11 +717,8 @@ TEST(RDataFrameInterface, DescribeShortFormat)
       t.Write();
    }
    ROOT::RDataFrame df2d("myTree", {"testDescribeDataset1.root", "testDescribeDataset2.root"});
-   std::stringstream ss2;
-   ss2 << "Dataframe from TChain myTree in files\n"
-       << "  testDescribeDataset1.root\n"
-       << "  testDescribeDataset2.root";
-   EXPECT_EQ(df2d.Describe().AsString(/*shortFormat =*/true), ss2.str());
+   std::string ss2 = "Dataframe from TChain myTree in files\n  testDescribeDataset1.root\n  testDescribeDataset2.root";
+   EXPECT_EQ(df2d.Describe().AsString(/*shortFormat =*/true), ss2);
 
    // case: ttree/tchain with friends
    {
@@ -743,15 +739,10 @@ TEST(RDataFrameInterface, DescribeShortFormat)
    t4->AddFriend(t6, "myAlias");
    t4->AddFriend(&chain1, "myAlias2");
    ROOT::RDataFrame df2e(*t4);
-   std::stringstream ss3;
-   ss3 << "Dataframe from TTree myTree in file testDescribeDataset1.root\n"
-       << "with friends\n"
-       << "  myTree testDescribeDataset2.root\n"
-       << "  myTree (myAlias) testDescribeDataset3.root\n"
-       << "  myTree (myAlias2)\n"
-       << "    myTree testDescribeDataset2.root\n"
-       << "    myTree testDescribeDataset3.root";
-   EXPECT_EQ(df2e.Describe().AsString(/*shortFormat =*/true), ss3.str());
+   auto ss3 = std::string("Dataframe from TTree myTree in file testDescribeDataset1.root\nwith friends\n") +
+              "  myTree testDescribeDataset2.root\n  myTree (myAlias) testDescribeDataset3.root\n" +
+              "  myTree (myAlias2)\n    myTree testDescribeDataset2.root\n    myTree testDescribeDataset3.root";
+   EXPECT_EQ(df2e.Describe().AsString(/*shortFormat =*/true), ss3);
 
    // others with an actual fDataSource, like csv
    auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
