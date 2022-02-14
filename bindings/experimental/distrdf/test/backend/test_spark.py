@@ -15,26 +15,9 @@ class SparkBackendInitTest(unittest.TestCase):
     input `config` dict.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Synchronize PYSPARK_PYTHON variable to the current Python executable.
-
-        Needed to avoid mismatch between python versions on driver and on
-        the fake executor on the same machine.
-        """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
     def tearDown(self):
         """Stop any created SparkContext"""
         pyspark.SparkContext.getOrCreate().stop()
-
-    @classmethod
-    def tearDownClass(cls):
-        """
-        Stop the SparkContext and reset environment variable.
-        """
-        os.environ["PYSPARK_PYTHON"] = ""
 
     def test_set_spark_context_default(self):
         """
@@ -79,26 +62,9 @@ class OperationSupportTest(unittest.TestCase):
     environment.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Synchronize PYSPARK_PYTHON variable to the current Python executable.
-
-        Needed to avoid mismatch between python versions on driver and on
-        the fake executor on the same machine.
-        """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
     def tearDown(self):
         """Stop any created SparkContext"""
         pyspark.SparkContext.getOrCreate().stop()
-
-    @classmethod
-    def tearDownClass(cls):
-        """
-        Stop the SparkContext and reset environment variable.
-        """
-        os.environ["PYSPARK_PYTHON"] = ""
 
     def test_action(self):
         """Check that action nodes are classified accurately."""
@@ -141,26 +107,9 @@ class OperationSupportTest(unittest.TestCase):
 class InitializationTest(unittest.TestCase):
     """Check initialization method in the Spark backend"""
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Synchronize PYSPARK_PYTHON variable to the current Python executable.
-
-        Needed to avoid mismatch between python versions on driver and on
-        the fake executor on the same machine.
-        """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
     def tearDown(self):
         """Stop any created SparkContext"""
         pyspark.SparkContext.getOrCreate().stop()
-
-    @classmethod
-    def tearDownClass(cls):
-        """
-        Stop the SparkContext and reset environment variable.
-        """
-        os.environ["PYSPARK_PYTHON"] = ""
 
     def test_initialization(self):
         """
@@ -216,26 +165,9 @@ class EmptyTreeErrorTest(unittest.TestCase):
     Distributed execution fails when the tree has no entries.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Synchronize PYSPARK_PYTHON variable to the current Python executable.
-
-        Needed to avoid mismatch between python versions on driver and on
-        the fake executor on the same machine.
-        """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
     def tearDown(self):
         """Stop any created SparkContext"""
         pyspark.SparkContext.getOrCreate().stop()
-
-    @classmethod
-    def tearDownClass(cls):
-        """
-        Stop the SparkContext and reset environment variable.
-        """
-        os.environ["PYSPARK_PYTHON"] = ""
 
     def test_histo_from_empty_root_file(self):
         """
@@ -256,26 +188,9 @@ class EmptyTreeErrorTest(unittest.TestCase):
 class ChangeAttributeTest(unittest.TestCase):
     """Tests that check correct changes in the class attributes"""
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Synchronize PYSPARK_PYTHON variable to the current Python executable.
-
-        Needed to avoid mismatch between python versions on driver and on
-        the fake executor on the same machine.
-        """
-        os.environ["PYSPARK_PYTHON"] = sys.executable
-
     def tearDown(self):
         """Stop any created SparkContext"""
         pyspark.SparkContext.getOrCreate().stop()
-
-    @classmethod
-    def tearDownClass(cls):
-        """
-        Stop the SparkContext and reset environment variable.
-        """
-        os.environ["PYSPARK_PYTHON"] = ""
 
     def test_change_attribute_when_npartitions_greater_than_clusters(self):
         """

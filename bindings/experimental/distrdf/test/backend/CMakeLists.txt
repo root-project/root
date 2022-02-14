@@ -20,7 +20,10 @@ ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_dist test_dist.py)
 
 # pyspark is required to run this test
 if(test_distrdf_pyspark)
-    ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_spark test_spark.py)
+    # Define environment variables needed in all pyspark tests
+    set(PYSPARK_ENV_VARS PYSPARK_PYTHON=${PYTHON_EXECUTABLE_Development_Main})
+
+    ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_spark test_spark.py ENVIRONMENT ${PYSPARK_ENV_VARS})
 endif()
 
 endif()
