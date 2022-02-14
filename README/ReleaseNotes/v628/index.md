@@ -42,6 +42,7 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 - `ROOT::RVec::shrink_to_fit()` has now been removed after deprecation; it is not needed.
 - `ROOT::RVec::emplace()` has now been removed after deprecation; please use `ROOT::RVec::insert()` instead.
 - The deprecated function `ROOT::Detail::RDF::RActionImpl<Helper>::GetDataBlockCallback()` is removed; please use `GetSampleCallback()` instead.
+- The deprecated RooFit containers `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList` are removed. Please use STL container classes instead, like `std::unordered_map`, `std::set`, and `std::vector`.
 
 ## Core Libraries
 
