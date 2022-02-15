@@ -42,6 +42,7 @@ class RVariationBase;
 class RColumnRegister {
    using ColumnNames_t = std::vector<std::string>;
    using DefinesMap_t = std::unordered_map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
+   /// See fVariations for more information on this type.
    using VariationsMap_t = std::unordered_multimap<std::string, std::shared_ptr<RVariationBase>>;
 
    ////////////////////////////////////////////////////////////////////////////
@@ -59,6 +60,9 @@ private:
    std::shared_ptr<const DefinesMap_t> fDefines;
    /// Immutable map of Aliases, can be shared among several nodes.
    std::shared_ptr<const std::unordered_map<std::string, std::string>> fAliases;
+   /// Immutable multimap of Variations, can be shared among several nodes.
+   /// The key is the name of an existing column, the values are all variations that affect that column.
+   /// As a consequence, Variations that affect multiple columns are inserted multiple times, once per column.
    std::shared_ptr<const VariationsMap_t> fVariations;
    std::shared_ptr<const ColumnNames_t> fColumnNames; ///< Names of Defines and Aliases registered so far.
 
@@ -83,7 +87,7 @@ public:
    const DefinesMap_t &GetColumns() const { return *fDefines; }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns a map of collections of pointers to the registered systematic variations.
+   /// \brief Returns the multimap of systematic variations, see fVariations.
    const VariationsMap_t &GetVariations() const { return *fVariations; }
 
    ////////////////////////////////////////////////////////////////////////////
