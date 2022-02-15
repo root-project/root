@@ -292,6 +292,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             this.fixed_ticks.forEach(v => {
                if ((v >= this.scale_min) && (v <= this.scale_max)) ticks.push(v);
             });
+         } else if ((this.kind == 'labels') && !this.regular_labels) {
+            ticks = [];
+            handle.lbl_pos = [];
+            let axis = this.getObject();
+            for (let n = 0; n < axis.fNbins; ++n) {
+               let x = axis.fXmin + n / axis.fNbins * (axis.fXmax - axis.fXmin);
+               if ((x >= this.scale_min) && (x < this.scale_max)) {
+                  handle.lbl_pos.push(x);
+                  if (x > this.scale_min) ticks.push(x);
+               }
+            }
          } else {
             ticks = this.produceTicks(this.nticks);
          }
@@ -303,15 +314,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if (res[0] > this.scale_min + delta) res.unshift(this.scale_min);
             if (res[res.length-1] < this.scale_max - delta) res.push(this.scale_max);
             return res;
-         }
-
-         if ((this.kind == 'labels') && !this.regular_labels) {
-            handle.lbl_pos = [];
-            let axis = this.getObject();
-            for (let n = 0; n < axis.fNbins; ++n) {
-               let x = axis.fXmin + n / axis.fNbins * (axis.fXmax - axis.fXmin);
-               if ((x >= this.scale_min) && (x < this.scale_max)) handle.lbl_pos.push(x);
-            }
          }
 
          if ((this.nticks2 > 1) && (!this.log || (this.logbase === 10)) && !this.fixed_ticks) {
@@ -1746,7 +1748,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                this.fillatt.setSolidColor('white');
          }
 
-         if (!tframe && pad && (pad.fFrameLineColor!==undefined))
+         if (!tframe && pad && (pad.fFrameLineColor !== undefined))
             this.createAttLine({ color: pad.fFrameLineColor, width: pad.fFrameLineWidth, style: pad.fFrameLineStyle });
          else
             this.createAttLine({ attr: tframe, color: 'black' });
@@ -1926,14 +1928,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this.mode3d) return; // no need to create any elements in 3d mode
 
          // this is svg:g object - container for every other items belonging to frame
-         this.draw_g = this.getLayerSvg("primitives_layer").select(".root_frame");
+         this.draw_g = this.getFrameSvg();
 
          let top_rect, main_svg;
 
          if (this.draw_g.empty()) {
-            let layer = this.getLayerSvg("primitives_layer");
 
-            this.draw_g = layer.append("svg:g").attr("class", "root_frame");
+            this.draw_g = this.getLayerSvg("primitives_layer").append("svg:g").attr("class", "root_frame");
 
             // empty title on the frame required to suppress title of the canvas
             if (!JSROOT.batch_mode)
@@ -2512,6 +2513,34 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
+      /** @summary Returns frame coordiantes - also when frame is not drawn */
+      getFrameRect() {
+         let fp = this.getFramePainter();
+         if (fp) return fp.getFrameRect();
+
+         let w = this.getPadWidth(),
+             h = this.getPadHeight(),
+             rect = {};
+
+         if (this.pad) {
+            rect.szx = Math.round(Math.max(0.0, 0.5 - Math.max(this.pad.fLeftMargin, this.pad.fRightMargin))*w);
+            rect.szy = Math.round(Math.max(0.0, 0.5 - Math.max(this.pad.fBottomMargin, this.pad.fTopMargin))*h);
+         } else {
+            rect.szx = Math.round(0.5*w);
+            rect.szy = Math.round(0.5*h);
+         }
+
+         rect.width = 2*rect.szx;
+         rect.height = 2*rect.szy;
+         rect.x = Math.round(w/2 - rect.szx);
+         rect.y = Math.round(h/2 - rect.szy);
+         rect.hint_delta_x = rect.szx;
+         rect.hint_delta_y = rect.szy;
+         rect.transform = `translate(${rect.x},${rect.y})`;
+
+         return rect;
+      }
+
       /** @summary return RPad object */
       getRootPad(is_root6) {
          return (is_root6 === undefined) || is_root6 ? this.pad : null;
@@ -2537,6 +2566,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let cp = this.getCanvPainter();
          return cp ? cp.custom_palette : null;
       }
+
+      /** @summary Returns number of painters
+        * @private */
+      getNumPainters() { return this.painters.length; }
 
       /** @summary Call function for each painter in pad
         * @param {function} userfunc - function to call
