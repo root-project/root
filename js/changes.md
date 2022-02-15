@@ -22,7 +22,19 @@
 19. Remove "collapsible" and "tabs" layouts which were implemented with jQuery - use "flex" instead
 20. Improve flexible layout, provide context menu with cascading, tiling, selecting frames
 21. Starting from Chrome 96, allow embedding WebGL into SVG - solving problem with lego plots in canvas
-22. All internal JSROOT code rewritten as classes. One have to use class syntax to derive from it.
+22. All internal JSROOT code rewritten as classes; one have to use class syntax to derive from it
+23. Support drawing of TGeo and TAxis3D objects inside TPad
+24. Implement "circular" and "chord" draw options for TH2
+
+
+## Changes in 6.3.4
+1. Fix bug in handling superimposing items via URL syntax
+2. Enable geometry clipping in node.js
+3. Upgrade node.js packages
+4. Let draw TGeo object inside TCanvas
+5. Let superimpose TPolyLine3D and TPolyMarker3D with TGeo drawing
+6. Fix plain #sum and #int parsing in TLatex
+7. Fix ticks position for axes with labels
 
 
 ## Changes in 6.3.3

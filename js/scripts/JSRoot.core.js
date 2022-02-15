@@ -95,7 +95,7 @@
 
    /** @summary JSROOT version date
      * @desc Release date in format day/month/year like "19/11/2021" */
-   JSROOT.version_date = "9/02/2022";
+   JSROOT.version_date = "15/02/2022";
 
    /** @summary JSROOT version id and date
      * @desc Produced by concatenation of {@link JSROOT.version_id} and {@link JSROOT.version_date}
@@ -1659,11 +1659,11 @@
             create("TNamed", obj);
             create("TAttLine", obj);
             create("TAttFill", obj);
-            extend(obj, { fGeoAtt:0, fFinder: null, fMedium: null, fNodes: null, fNtotal: 0, fNumber: 0, fRefCount: 0, fShape: null, fVoxels: null });
+            extend(obj, { fGeoAtt: 0, fFinder: null, fMedium: null, fNodes: null, fNtotal: 0, fNumber: 0, fRefCount: 0, fShape: null, fVoxels: null });
             break;
          case 'TGeoNode':
             create("TNamed", obj);
-            extend(obj, { fGeoAtt:0, fMother: null, fNovlp: 0, fNumber: 0, fOverlaps: null, fVolume: null });
+            extend(obj, { fGeoAtt: 0, fMother: null, fNovlp: 0, fNumber: 0, fOverlaps: null, fVolume: null });
             break;
          case 'TGeoNodeMatrix':
             create("TGeoNode", obj);

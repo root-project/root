@@ -2143,15 +2143,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (this.mode3d) return; // no need for real draw in mode3d
 
          // this is svg:g object - container for every other items belonging to frame
-         this.draw_g = this.getLayerSvg("primitives_layer").select(".root_frame");
+         this.draw_g = this.getFrameSvg();
 
          let top_rect, main_svg;
 
          if (this.draw_g.empty()) {
 
-            let layer = this.getLayerSvg("primitives_layer");
-
-            this.draw_g = layer.append("svg:g").attr("class", "root_frame");
+            this.draw_g = this.getLayerSvg("primitives_layer").append("svg:g").attr("class", "root_frame");
 
             if (!JSROOT.batch_mode)
                this.draw_g.append("svg:title").text("");
@@ -2756,6 +2754,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          }
       }
 
+      /** @summary Returns frame coordiantes - also when frame is not drawn */
+      getFrameRect() {
+         let fp = this.getFramePainter();
+         if (fp) return fp.getFrameRect();
+
+         let w = this.getPadWidth(),
+             h = this.getPadHeight(),
+             rect = {};
+
+         rect.szx = Math.round(0.5*w);
+         rect.szy = Math.round(0.5*h);
+         rect.width = 2*rect.szx;
+         rect.height = 2*rect.szy;
+         rect.x = Math.round(w/2 - rect.szx);
+         rect.y = Math.round(h/2 - rect.szy);
+         rect.hint_delta_x = rect.szx;
+         rect.hint_delta_y = rect.szy;
+         rect.transform = `translate(${rect.x},${rect.y})`;
+         return rect;
+      }
+
       /** @summary return RPad object */
       getRootPad(is_root6) {
          return (is_root6 === undefined) || !is_root6 ? this.pad : null;
@@ -2818,13 +2837,17 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return this.fDfltPalette;
       }
 
+      /** @summary Returns number of painters
+        * @private */
+      getNumPainters() { return this.painters.length; }
+
       /** @summary Call function for each painter in pad
         * @param {function} userfunc - function to call
         * @param {string} kind - "all" for all objects (default), "pads" only pads and subpads, "objects" only for object in current pad
         * @private */
       forEachPainterInPad(userfunc, kind) {
          if (!kind) kind = "all";
-         if (kind!="objects") userfunc(this);
+         if (kind != "objects") userfunc(this);
          for (let k = 0; k < this.painters.length; ++k) {
             let sub = this.painters[k];
             if (typeof sub.forEachPainterInPad === 'function') {

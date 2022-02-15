@@ -528,7 +528,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             if (d.partAsInt(1) > 0) {
               bckgr = jsrp.getColor(d.partAsInt());
             } else {
-               for (let col=0;col<8;++col)
+               for (let col = 0; col < 8; ++col)
                   if (jsrp.getColor(col).toUpperCase() === d.part)
                      bckgr = jsrp.getColor(col);
             }
@@ -2922,18 +2922,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
 
          if (JSROOT.browser.isWin) track_width = 1; // not supported on windows
 
-         let fN, fP;
-
-         if (line._blob && (line._blob.length == 4)) {
-            // workaround for custom streamer for JSON, should be resolved
-            fN = line._blob[1];
-            fP = line._blob[2];
-         } else {
-            fN = line.fN;
-            fP = line.fP;
-         }
-
-         let npoints = fN,
+         let npoints = line.fN,
+             fP = line.fP,
              buf = new Float32Array((npoints-1)*6),
              pos = 0, projv = this.ctrl.projectPos,
              projx = (this.ctrl.project === "x"),
@@ -2947,7 +2937,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             buf[pos+3] = projx ? projv : fP[k*3+3];
             buf[pos+4] = projy ? projv : fP[k*3+4];
             buf[pos+5] = projz ? projv : fP[k*3+5];
-            pos+=6;
+            pos += 6;
          }
 
          let lineMaterial = new THREE.LineBasicMaterial({ color: track_color, linewidth: track_width }),
@@ -3616,7 +3606,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             this._slave_painters[k].startDrawGeometry();
       }
 
-      /** @summary Draw axes if configured, otherwise just remove completely */
+      /** @summary Draw axes if configured, otherwise just remove completely
+        * @returns {Promise} when norender not specified */
       drawSimpleAxis(norender) {
          this.getExtrasContainer('delete', 'axis');
 
@@ -3785,12 +3776,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          }
 
          // after creating axes trigger rendering and recalculation of depth
-         this.changedDepthMethod(norender ? "norender" : undefined);
-      }
-
-      /** @summary  Toggle axes visibility */
-      toggleAxesDraw() {
-         this.setAxesDraw("toggle");
+         return this.changedDepthMethod(norender ? "norender" : undefined);
       }
 
       /** @summary Set axes visibility 0 - off, 1 - on, 2 - centered */
@@ -3799,7 +3785,7 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
             this.ctrl._axis = this.ctrl._axis ? 0 : 1;
          else
             this.ctrl._axis = (typeof on == 'number') ? on : (on ? 1 : 0);
-         this.drawSimpleAxis();
+         return this.drawSimpleAxis();
       }
 
       /** @summary Set auto rotate mode */
@@ -3860,7 +3846,8 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
       changedDepthMethod(arg) {
          // force recalculatiion of render order
          delete this._last_camera_position;
-         if (arg !== "norender") this.render3D();
+         if (arg !== "norender")
+            return this.render3D();
       }
 
       /** @summary Should be called when configuration of highlight is changed */
@@ -4936,6 +4923,55 @@ JSROOT.define(['d3', 'three', 'geobase', 'painter', 'base3d'], (d3, THREE, geo, 
          geo.createItem(parent, subnodes[i]);
 
       return true;
+   }
+
+   /** @summary Draw dummy geometry
+     * @private */
+   geo.drawDummy3DGeom = function(painter) {
+
+      let extra = painter.getObject(),
+          min = [-1, -1, -1], max = [1, 1, 1];
+
+      if (extra.fP && extra.fP.length)
+         for(let k = 0; k < extra.fP.length; k +=3)
+            for (let i = 0; i < 3; ++i) {
+               min[i] = Math.min(min[i], extra.fP[k+i]);
+               max[i] = Math.max(max[i], extra.fP[k+i]);
+            }
+
+
+      let shape = JSROOT.create('TNamed');
+      shape._typename = "TGeoBBox";
+      shape.fDX = max[0] - min[0];
+      shape.fDY = max[1] - min[1];
+      shape.fDZ = max[2] - min[2];
+      shape.fShapeId = 1;
+      shape.fShapeBits = 0;
+      shape.fOrigin= [0,0,0];
+
+      let obj = JSROOT.create("TEveGeoShapeExtract");
+
+      JSROOT.extend(obj, { fTrans: [1,0,0,0, 0,1,0,0, 0,0,1,0, (min[0]+max[0])/2, (min[1]+max[1])/2, (min[2]+max[2])/2, 0],
+                           fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false });
+
+      let opt = "", pp = painter.getPadPainter();
+
+      if (pp && pp.pad && pp.pad.fFillColor && pp.pad.fFillStyle > 1000)
+         opt = "bkgr_" +  pp.pad.fFillColor;
+
+      return TGeoPainter.draw(painter.getDom(), obj, opt)
+                        .then(geop => geop.drawExtras(extra));
+   }
+
+   /** @summary Direct draw function for TAxis3D
+     * @private */
+   jsrp.drawAxis3D = function() {
+      let main = this.getMainPainter();
+
+      if (main && (typeof main.setAxesDraw == 'function'))
+         return main.setAxesDraw(true);
+
+      console.error('no geometry painter found to toggle TAxis3D drawing');
    }
 
    jsrp.addDrawFunc({ name: "TGeoVolumeAssembly", icon: 'img_geoassembly', func: TGeoPainter.draw, expand: geo.expandObject, opt: ";more;all;count" });
