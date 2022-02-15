@@ -62,21 +62,7 @@ def _create_rdf_experimental_distributed_module(parent):
         types.ModuleType: The ROOT.RDF.Experimental.Distributed submodule.
     """
     import DistRDF
-
-    # Create dummy ROOT.RDF.Experimental package
-    experimental = types.ModuleType("ROOT.RDF.Experimental")
-    # PEP302 attributes
-    experimental.__file__ = "<namespace ROOT.RDF>"
-    # experimental.__name__ is the constructor argument
-    experimental.__path__ = []  # this makes it a package
-    # experimental.__loader__ is not defined
-    experimental.__package__ = parent
-
-    # Inject submodules
-    experimental.Distributed = DistRDF.create_distributed_module(
-        experimental)
-
-    return experimental
+    return DistRDF.create_distributed_module(parent)
 
 
 def _subimport(name):
@@ -337,7 +323,7 @@ class ROOTFacade(types.ModuleType):
 
             if sys.version_info >= (3, 7):
                 # Inject Experimental.Distributed package into namespace RDF
-                ns.Experimental = _create_rdf_experimental_distributed_module(ns)
+                ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
         except:
             raise Exception('Failed to pythonize the namespace RDF')
         del type(self).RDF
