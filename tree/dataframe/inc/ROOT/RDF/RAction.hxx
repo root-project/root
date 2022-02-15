@@ -164,8 +164,8 @@ public:
       std::vector<Helper> helpers;
       helpers.reserve(nVariations + 1);
 
-      for (auto i = 0u; i < nVariations + 1; ++i)
-         helpers.emplace_back(fHelper.CallMakeNew(results[i]));
+      for (auto &&res : results)
+         helpers.emplace_back(fHelper.CallMakeNew(res));
 
       return std::unique_ptr<RActionBase>(new RVariedAction<Helper, PrevNode, ColumnTypes_t>{
          std::move(helpers), GetColumnNames(), fPrevNodePtr, GetColRegister()});
