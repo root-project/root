@@ -37,6 +37,7 @@
 #include "TRegexp.h"
 #include "strlcpy.h"
 #include "snprintf.h"
+#include "TVirtualPadPainter.h"
 
 Double_t *gxwork, *gywork, *gxworkl, *gyworkl;
 Int_t TGraphPainter::fgMaxPointsPerLine = 50;
@@ -1595,6 +1596,14 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
    // Draw the graph as a bar chart
    if (optionBar) {
+      if(theGraph->GetFillColor()==gPad->GetFrameFillColor()) {
+         // make sure the bars' color is different from the frame background
+         if (gPad->GetFrameFillColor()==1) {
+            gPad->GetPainter()->SetFillColor(0);
+         } else {
+            gPad->GetPainter()->SetFillColor(1);
+         }
+      }
       if (!optionR) {
          barxmin = x[0];
          barxmax = x[0];
