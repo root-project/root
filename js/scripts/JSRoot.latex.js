@@ -613,12 +613,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (found.special) {
             // this is sum and integral, now make fix height, later can adjust to right-content size
 
-            let subs = extractLowUp(found.low_up);
-            if (!subs) return false;
-
-            let gg = createGG();
-
-            let path = createPath(gg), h = Math.round(curr.fsize*2), w = Math.round(curr.fsize), r = Math.round(h*0.1), x_up, x_low;
+            let subs = extractLowUp() || {},
+                gg = createGG(), path = createPath(gg),
+                h = Math.round(curr.fsize*1.7), w = Math.round(curr.fsize), r = Math.round(h*0.1), x_up, x_low;
 
             if (found.name == "#sum") {
                x_up = x_low = w/2;
@@ -628,6 +625,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                path.attr("d",`M0,${Math.round(0.25*h-r)}a${r},${r},0,0,0,${2*r},0v${2*r-h}a${r},${r},0,1,1,${2*r},0`);
                // path.attr('transform','skewX(-3)'); could use skewX for italic-like style
             }
+
+            extendPosition(curr.x, curr.y - 0.6*h, curr.x + w, curr.y + 0.4*h);
 
             if (subs.low) {
                let subpos1 = createSubPos(0.6);

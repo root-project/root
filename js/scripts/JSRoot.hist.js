@@ -886,6 +886,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
                if (this._palette_vertical) {
                   if ((z1 >= s_height) || (z0 < 0)) continue;
+                  z0 += 1; // ensure correct gap filling between colors
 
                   if (z0 > s_height) {
                      z0 = s_height;
@@ -897,6 +898,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                   d = `M0,${z1}H${s_width}V${z0}H0Z`;
                } else {
                   if ((z0 >= s_width) || (z1 < 0)) continue;
+                  z1 += 1; // ensure correct gap filling between colors
 
                   if (z1 > s_width) {
                      z1 = s_width;
@@ -1463,12 +1465,12 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                  Text: false, TextAngle: 0, TextKind: "", Char: 0, Color: false, Contour: 0, Cjust: false,
                  Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0,
                  Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
-                 Candle: "", Violin: "", Scaled: null,
+                 Candle: "", Violin: "", Scaled: null, Circular: 0,
                  GLBox: 0, GLColor: false, Project: "",
                  System: jsrp.Coord.kCARTESIAN,
                  AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
                  HighRes: 0, Zero: true, Palette: 0, BaseLine: false,
-                 Optimize: JSROOT.settings.OptimizeDraw,
+                 Optimize: JSROOT.settings.OptimizeDraw, adjustFrame: false,
                  Mode3D: false, x3dscale: 1, y3dscale: 1,
                  Render3D: JSROOT.constants.Render3D.Default,
                  FrontBox: true, BackBox: true,
@@ -1504,6 +1506,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (d.check('XTITLE:', true)) histo.fXaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
          if (d.check('YTITLE:', true)) histo.fYaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
          if (d.check('ZTITLE:', true)) histo.fZaxis.fTitle = decodeURIComponent(d.part.toLowerCase());
+
+         if (d.check('_ADJUST_FRAME_')) this.adjustFrame = true;
 
          if (d.check('NOOPTIMIZE')) this.Optimize = 0;
          if (d.check('OPTIMIZE')) this.Optimize = 2;
@@ -1585,6 +1589,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (d.check('GLCOL')) this.GLColor = true;
 
          d.check('GL'); // suppress GL
+
+         if (d.check('CIRCULAR', true) || d.check('CIRC', true)) {
+            this.Circular = 11;
+            if (d.part.indexOf('0') >= 0) this.Circular = 10; // black and white
+            if (d.part.indexOf('1') >= 0) this.Circular = 11; // color
+            if (d.part.indexOf('2') >= 0) this.Circular = 12; // color and width
+         }
+
+         this.Chord = d.check('CHORD');
 
          if (d.check('LEGO', true)) {
             this.Lego = 1;
@@ -2414,6 +2427,34 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             fp.createXY2(opts);
 
             return fp.drawAxes2(opts.second_x, opts.second_y);
+         }
+
+         if (this.options.adjustFrame) {
+            let pad = this.getPadPainter().getRootPad();
+            if (pad) {
+               if (pad.fUxmin < pad.fUxmax) {
+                  fp.fX1NDC = (this.xmin - pad.fUxmin) / (pad.fUxmax - pad.fUxmin);
+                  fp.fX2NDC = (this.xmax - pad.fUxmin) / (pad.fUxmax - pad.fUxmin);
+               }
+               if (pad.fUymin < pad.fUymax) {
+                  fp.fY1NDC = (this.ymin - pad.fUymin) / (pad.fUymax - pad.fUymin);
+                  fp.fY2NDC = (this.ymax - pad.fUymin) / (pad.fUymax - pad.fUymin);
+               }
+
+               pad.fLeftMargin = fp.fX1NDC;
+               pad.fRightMargin = 1 - fp.fX2NDC;
+               pad.fBottomMargin = fp.fY1NDC;
+               pad.fTopMargin = 1 - fp.fY2NDC;
+               pad.fFrameLineColor = 0;
+               pad.fFrameLineWidth = 0;
+               fp.setRootPadRange(pad);
+
+               fp.fillatt.setSolidColor('none');
+
+               fp.redraw();
+            }
+
+            this.options.adjustFrame = false;
          }
 
          fp.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
@@ -4618,9 +4659,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          });
       }
 
-   } // TH1Painter
+   } // class TH1Painter
 
-   // ========================================================================
 
    /**
     * @summary Painter for TH2 classes
@@ -6612,6 +6652,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       /** @summary Draw TH2 bins in 2D mode */
       draw2DBins() {
 
+         if (this._hide_frame && this.isMainPainter()) {
+            this.getFrameSvg().style('display', null);
+            delete this._hide_frame;
+         }
+
          if (!this.draw_content)
             return this.removeG();
 
@@ -6646,6 +6691,236 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
 
          this.tt_handle = handle;
+      }
+
+      /** @summary Draw TH2 in circular mode */
+      drawBinsCircular() {
+
+         this.getFrameSvg().style('display', 'none');
+         this._hide_frame = true;
+
+         let rect = this.getPadPainter().getFrameRect(),
+             hist = this.getHisto(),
+             palette = this.options.Circular > 10 ? this.getHistPalette() : null,
+             text_size = 20,
+             circle_size = 16,
+             axis = hist.fXaxis,
+             getBinLabel = indx => {
+               if (axis.fLabels)
+                  for (let i = 0; i < axis.fLabels.arr.length; ++i) {
+                     const tstr = axis.fLabels.arr[i];
+                     if (tstr.fUniqueID === indx+1) return tstr.fString;
+                  }
+               return indx.toString();
+             };
+
+         this.createG();
+
+         this.draw_g.attr('transform', `translate(${Math.round(rect.x + rect.width/2)},${Math.round(rect.y + rect.height/2)})`);
+
+         let nbins = Math.min(this.nbinsx, this.nbinsy);
+
+         this.startTextDrawing(42, text_size, this.draw_g);
+
+         let pnts = [];
+
+         for (let n = 0; n < nbins; n++) {
+            let angle = (0.5-n/nbins) *Math.PI*2,
+                cx = Math.round((0.9*rect.width/2 - 2*circle_size) * Math.cos(angle)),
+                cy = Math.round((0.9*rect.height/2 - 2*circle_size) * Math.sin(angle)),
+                tx = Math.round(0.9*rect.width/2 * Math.cos(angle)),
+                ty = Math.round(0.9*rect.height/2 * Math.sin(angle)),
+                tangle = Math.round(angle / Math.PI * 180), talign = 12,
+                color = palette ? palette.calcColor(n, nbins) : 'black';
+
+            pnts.push({x: cx, y: cy, a: angle, color: color }); // remember points coordinates
+
+            if ((tangle < -90) || (tangle > 90)) { tangle += 180; talign = 32; }
+
+            let s2 = Math.round(text_size/2), s1 = 2*s2;
+
+            this.draw_g.append("path")
+                       .attr("d",`M${cx-s2},${cy} a${s2},${s2},0,1,0,${s1},0a${s2},${s2},0,1,0,${-s1},0z`)
+                       .style('stroke', color)
+                       .style('fill','none');
+
+            this.drawText({ align: talign, rotate: tangle, text: getBinLabel(n), x: tx, y: ty });
+         }
+
+         let max_width = circle_size/2, max_value = 0, min_value = 0;
+         if (this.options.Circular > 11) {
+            for (let i = 0; i < nbins - 1; ++i)
+              for (let j = i+1; j < nbins; ++j) {
+                 let cont = hist.getBinContent(i+1, j+1);
+                 if (cont > 0) {
+                    max_value = Math.max(max_value, cont);
+                    if (!min_value || (cont < min_value)) min_value = cont;
+                 }
+              }
+         }
+
+         for (let i = 0; i < nbins-1; ++i) {
+            let path = "", pi = pnts[i];
+
+            for (let j = i+1; j < nbins; ++j) {
+               let cont = hist.getBinContent(i+1, j+1);
+               if (cont <= 0) continue;
+
+               let pj = pnts[j],
+                   a = (pi.a + pj.a)/2,
+                   qr = 0.5*(1-Math.abs(pi.a - pj.a)/Math.PI), // how far Q point will be away from center
+                   qx = Math.round(qr*rect.width/2 * Math.cos(a)),
+                   qy = Math.round(qr*rect.height/2 * Math.sin(a));
+
+               path += `M${pi.x},${pi.y}Q${qx},${qy},${pj.x},${pj.y}`;
+
+               if ((this.options.Circular > 11) && (max_value > min_value)) {
+                  let width = Math.round((cont - min_value) / (max_value - min_value) * (max_width - 1) + 1);
+                  this.draw_g.append("path").attr("d", path).style("stroke", pi.color).style("stroke-width", width).style('fill','none');
+                  path = "";
+               }
+            }
+            if (path)
+               this.draw_g.append("path").attr("d", path).style("stroke", pi.color).style('fill','none');
+         }
+
+         return this.finishTextDrawing();
+      }
+
+      /** @summary Draw histogram bins as chord diagram */
+      drawBinsChord() {
+
+         this.getFrameSvg().style('display', 'none');
+         this._hide_frame = true;
+
+         let fullsum = 0, used = [], isint = true,
+             nbins = Math.min(this.nbinsx, this.nbinsy),
+             hist = this.getHisto();
+         for (let i = 0; i < nbins; ++i) {
+            let sum = 0;
+            for (let j = 0; j < nbins; ++j) {
+               let cont = hist.getBinContent(i+1, j+1);
+               if (cont > 0) {
+                  sum += cont;
+                  if (isint && (Math.round(cont) !== cont)) isint = false;
+               }
+            }
+            if (sum > 0) used.push(i);
+            fullsum += sum;
+         }
+
+         // do not show less than 2 elements
+         if (used.length < 2) return Promise.resolve(true);
+
+         let rect = this.getPadPainter().getFrameRect(),
+             palette = this.getHistPalette(),
+             outerRadius = Math.min(rect.width, rect.height) * 0.5 - 60,
+             innerRadius = outerRadius - 10,
+             data = [], labels = [],
+             getColor = indx => palette.calcColor(indx, used.length),
+             ndig = 0, tickStep = 1,
+             formatValue = v => v.toString(),
+             formatTicks = v => ndig > 3 ? v.toExponential(0) : v.toFixed(ndig);
+
+         if (!isint && fullsum < 10) {
+            let lstep = Math.round(Math.log10(fullsum) - 2.3);
+            ndig = -lstep;
+            tickStep = Math.pow(10, lstep);
+         } else if (fullsum > 200) {
+            let lstep = Math.round(Math.log10(fullsum) - 2.3);
+            tickStep = Math.pow(10, lstep);
+         }
+
+         if (tickStep * 250 < fullsum)
+            tickStep *= 5;
+         else if (tickStep * 100 < fullsum)
+            tickStep *= 2;
+
+         for (let i = 0; i < used.length; ++i) {
+            data[i] = [];
+            for (let j = 0; j < used.length; ++j)
+               data[i].push(hist.getBinContent(used[i]+1, used[j]+1));
+            let axis = hist.fXaxis, lbl = "indx_" + used[i].toString();
+            if (axis.fLabels)
+               for (let k = 0; k < axis.fLabels.arr.length; ++k) {
+                  const tstr = axis.fLabels.arr[k];
+                  if (tstr.fUniqueID === used[i]+1) { lbl = tstr.fString; break; }
+               }
+            labels.push(lbl);
+         }
+
+         this.createG();
+
+         this.draw_g.attr('transform', `translate(${Math.round(rect.x + rect.width/2)},${Math.round(rect.y + rect.height/2)})`);
+
+         const chord = d3.chord()
+            .padAngle(10 / innerRadius)
+            .sortSubgroups(d3.descending)
+            .sortChords(d3.descending);
+
+         const chords = chord(data);
+
+         const group = this.draw_g.append("g")
+            .attr("font-size", 10)
+            .attr("font-family", "sans-serif")
+            .selectAll("g")
+            .data(chords.groups)
+            .join("g");
+
+         const arc = d3.arc().innerRadius(innerRadius).outerRadius(outerRadius);
+
+         const ribbon = d3.ribbon().radius(innerRadius - 1).padAngle(1 / innerRadius);
+
+         function ticks({ startAngle, endAngle, value }) {
+            const k = (endAngle - startAngle) / value;
+            let arr = [];
+            for (let z = 0; z <= value; z += tickStep)
+               arr.push({ value: z, angle: z * k + startAngle });
+            return arr;
+         }
+
+         group.append("path")
+            .attr("fill", d => getColor(d.index))
+            .attr("d", arc);
+
+         group.append("title").text(d => `${labels[d.index]} ${formatValue(d.value)}`);
+
+         const groupTick = group.append("g")
+            .selectAll("g")
+            .data(ticks)
+            .join("g")
+            .attr("transform", d => `rotate(${d.angle * 180 / Math.PI - 90}) translate(${outerRadius},0)`);
+         groupTick.append("line")
+            .attr("stroke", "currentColor")
+            .attr("x2", 6);
+
+         groupTick.append("text")
+            .attr("x", 8)
+            .attr("dy", "0.35em")
+            .attr("transform", d => d.angle > Math.PI ? "rotate(180) translate(-16)" : null)
+            .attr("text-anchor", d => d.angle > Math.PI ? "end" : null)
+            .text(d => formatTicks(d.value));
+
+         group.select("text")
+            .attr("font-weight", "bold")
+            .text(function(d) {
+               return this.getAttribute("text-anchor") === "end"
+                  ? `↑ ${labels[d.index]}` : `${labels[d.index]} ↓`;
+            });
+
+         this.draw_g.append("g")
+            .attr("fill-opacity", 0.8)
+            .selectAll("path")
+            .data(chords)
+            .join("path")
+            .style("mix-blend-mode", "multiply")
+            .attr("fill", d => getColor(d.source.index))
+            .attr("d", ribbon)
+            .append("title")
+            .text(d => `${formatValue(d.source.value)} ${labels[d.target.index]} → ${labels[d.source.index]}${d.source.index === d.target.index ? "" : `\n${formatValue(d.target.value)} ${labels[d.source.index]} → ${labels[d.target.index]}`}`);
+
+         return Promise.resolve(true);
+
       }
 
       /** @summary Provide text information (tooltips) for histogram bin */
@@ -7008,6 +7283,17 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
       }
 
+      /** @summary Complete paletted drawing */
+      completePalette(pp) {
+         if (!pp) return true;
+
+         pp.$main_painter = this;
+         this.options.Zvert = pp._palette_vertical;
+
+         // redraw palette till the end when contours are available
+         return pp.drawPave(this.options.Cjust ? "cjust" : "");
+      }
+
       /** @summary Performs 2D drawing of histogram
         * @returns {Promise} when ready */
       draw2D(/* reason */) {
@@ -7018,17 +7304,15 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          // draw new palette, resize frame if required
          return this.drawColorPalette(need_palette, true).then(pp => {
 
+            if (this.options.Circular && this.isMainPainter())
+               return this.drawBinsCircular().then(() => this.completePalette(pp));
+
+            if (this.options.Chord && this.isMainPainter())
+               return this.drawBinsChord().then(() => this.completePalette(pp));
+
             return this.drawAxes().then(() => {
-
                this.draw2DBins();
-
-               if (!pp) return true;
-
-               pp.$main_painter = this;
-               this.options.Zvert = pp._palette_vertical;
-
-               // redraw palette till the end when contours are available
-               return pp.drawPave(this.options.Cjust ? "cjust" : "");
+               return this.completePalette(pp);
             });
          }).then(() => this.drawHistTitle()).then(() => {
 
@@ -7203,9 +7487,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
    /** @summary draw TF2 object
      * @desc TF2 always drawn via temporary TH2 object,
      * therefore there is no special painter class
-     * @memberof JSROOT.Painter
      * @private */
-   function drawTF2(dom, func, opt) {
+   jsrp.drawTF2 = function(dom, func, opt) {
 
       let d = new JSROOT.DrawOptions(opt),
           hist = createTF2Histogram(func);
@@ -7218,6 +7501,13 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          opt = "cont2 same";
       else
          opt = d.opt;
+
+      // workaround for old waves.C
+      if (opt == "SAMECOLORZ" || opt == "SAMECOLOR" || opt == "SAMECOLZ") opt = "SAMECOL";
+
+      if (opt.indexOf("SAME") == 0)
+         if (!jsrp.getElementMainPainter(dom))
+            opt = "A_ADJUST_FRAME_" + opt.substr(4);
 
       return TH2Painter.draw(dom, hist, opt).then(hpainter => {
 
@@ -7618,7 +7908,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
    jsrp.getColorPalette = getColorPalette;
    jsrp.produceLegend = produceLegend;
-   jsrp.drawTF2 = drawTF2;
 
    JSROOT.TPavePainter = TPavePainter;
    JSROOT.THistPainter = THistPainter;

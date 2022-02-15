@@ -951,10 +951,6 @@ JSROOT.define(['d3', 'base3d', 'painter', 'latex', 'v7hist'], (d3, THREE, jsrp, 
       zcont[3].position.set(grminx,grminy,0);
       zcont[3].rotation.z = -3/4*Math.PI;
 
-
-      // for TAxis3D do not show final cube
-      if (this.size_z3d === 0) return;
-
       let linex_geom = jsrp.createLineSegments([grminx,0,0, grmaxx,0,0], lineMaterial, null, true);
       for(let n=0;n<2;++n) {
          let line = new THREE.LineSegments(linex_geom, lineMaterial);

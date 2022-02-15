@@ -1772,11 +1772,10 @@ JSROOT.define(['d3'], (d3) => {
          super(dom);
          // this.draw_g = undefined; // container for all drawn objects
          // this._main_painter = undefined;  // main painter in the correspondent pad
-         if (obj !== undefined) {
-            this.pad_name = dom ? this.selectCurrentPad() : ""; // name of pad where object is drawn
-            this.assignObject(obj);
-            if (typeof opt == "string") this.options = { original: opt };
-         }
+         this.pad_name = dom ? this.selectCurrentPad() : ""; // name of pad where object is drawn
+         this.assignObject(obj);
+         if (typeof opt == "string")
+            this.options = { original: opt };
       }
 
       /** @summary Assign object to the painter
@@ -2044,7 +2043,7 @@ JSROOT.define(['d3'], (d3) => {
          }
 
          if (this.draw_g && this.draw_g.node().parentNode !== layer.node()) {
-            console.log('g element chanes its layer!!');
+            console.log('g element changes its layer!!');
             this.removeG();
          }
 
@@ -2244,7 +2243,17 @@ JSROOT.define(['d3'], (d3) => {
 
       /** @summary Returns svg element for the frame in current pad
         * @protected */
-      getFrameSvg() { return this.getLayerSvg("primitives_layer").select(".root_frame"); }
+      getFrameSvg() {
+         let layer = this.getLayerSvg("primitives_layer");
+         if (layer.empty()) return layer;
+         let node = layer.node().firstChild;
+         while (node) {
+            let elem = d3.select(node);
+            if (elem.classed("root_frame")) return elem;
+            node = node.nextSibling;
+         }
+         return d3.select(null);
+      }
 
       /** @summary Returns frame painter for current pad
         * @desc Pad has direct reference on frame if any
@@ -2390,8 +2399,10 @@ JSROOT.define(['d3'], (d3) => {
         * @returns created handle
         * @protected */
       createAttFill(args) {
-         if (!args || (typeof args !== 'object')) args = { std: true }; else
-            if (args._typename && args.fFillColor !== undefined && args.fFillStyle !== undefined) args = { attr: args, std: false };
+         if (!args || (typeof args !== 'object'))
+            args = { std: true };
+         else if (args._typename && args.fFillColor !== undefined && args.fFillStyle !== undefined)
+            args = { attr: args, std: false };
 
          if (args.std === undefined) args.std = true;
 
@@ -2736,7 +2747,7 @@ JSROOT.define(['d3'], (d3) => {
                   arg.dy = ((arg.align[1] == 'top') ? (arg.top_shift || 1) : (arg.align[1] == 'middle') ? (arg.mid_shift || 0.5) : 0) * arg.box.height;
                }
 
-            } else {
+            } else if (arg.text_rect) {
 
                // handle latext drawing
                let box = arg.text_rect;
@@ -2751,6 +2762,8 @@ JSROOT.define(['d3'], (d3) => {
                   arg.dy = -box.y2*scale;
                else if (arg.align[1] == 'middle')
                   arg.dy = -0.5*(box.y1 + box.y2)*scale;
+            } else {
+               console.error('text rect not calcualted - please check code');
             }
 
             if (!arg.rotate) { arg.x += arg.dx; arg.y += arg.dy; arg.dx = arg.dy = 0; }
@@ -3636,8 +3649,8 @@ JSROOT.define(['d3'], (d3) => {
       { name: "TProfile2D", sameas: "TH2" },
       { name: /^TH3/, icon: 'img_histo3d', prereq: "hist3d", class: "TH3Painter", opt: ";SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL" },
       { name: "THStack", icon: "img_histo1d", prereq: "hist", class: "THStackPainter", expand_item: "fHists", opt: "NOSTACK;HIST;E;PFC;PLC" },
-      { name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "hist3d", func: ".drawPolyMarker3D", direct: true, frame: "3d" },
-      { name: "TPolyLine3D", icon: 'img_graph', prereq: "base3d", func: ".drawPolyLine3D", direct: true },
+      { name: "TPolyMarker3D", icon: 'img_histo3d', prereq: "base3d", func: ".drawPolyMarker3D", direct: true, frame: "3d" },
+      { name: "TPolyLine3D", icon: 'img_graph', prereq: "base3d", func: ".drawPolyLine3D", direct: true, frame: "3d" },
       { name: "TGraphStruct" },
       { name: "TGraphNode" },
       { name: "TGraphEdge" },
@@ -3682,7 +3695,6 @@ JSROOT.define(['d3'], (d3) => {
       { name: "TBox", icon: 'img_graph', prereq: "more", func: ".drawBox", direct: true },
       { name: "TWbox", icon: 'img_graph', prereq: "more", func: ".drawBox", direct: true },
       { name: "TSliderBox", icon: 'img_graph', prereq: "more", func: ".drawBox", direct: true },
-      { name: "TAxis3D", prereq: "hist3d", func: ".drawAxis3D" },
       { name: "TMarker", icon: 'img_graph', prereq: "more", func: ".drawMarker", direct: true },
       { name: "TPolyMarker", icon: 'img_graph', prereq: "more", func: ".drawPolyMarker", direct: true },
       { name: "TASImage", icon: 'img_mgraph', prereq: "more", class: "TASImagePainter", opt: ";z" },
@@ -3693,6 +3705,7 @@ JSROOT.define(['d3'], (d3) => {
       { name: "TGeoOverlap", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", class: "TGeoPainter", opt: ";more;all;count;projx;projz;wire;dflt", dflt: "dflt", ctrl: "expand" },
       { name: "TGeoManager", icon: 'img_histo3d', prereq: "geom", expand: "JSROOT.GEO.expandObject", class: "TGeoPainter", opt: ";more;all;count;projx;projz;wire;tracks;no_screen;dflt", dflt: "expand", ctrl: "dflt" },
       { name: /^TGeo/, icon: 'img_histo3d', prereq: "geom", class: "TGeoPainter", expand: "JSROOT.GEO.expandObject", opt: ";more;all;axis;compa;count;projx;projz;wire;no_screen;dflt", dflt: "dflt", ctrl: "expand" },
+      { name: "TAxis3D", icon: 'img_graph', prereq: "geom", func: ".drawAxis3D", direct: true },
       // these are not draw functions, but provide extra info about correspondent classes
       { name: "kind:Command", icon: "img_execute", execute: true },
       { name: "TFolder", icon: "img_folder", icon2: "img_folderopen", noinspect: true, prereq: "hierarchy", expand: ".folderHierarchy" },
@@ -3952,15 +3965,19 @@ JSROOT.define(['d3'], (d3) => {
             let painter = new JSROOT.RObjectPainter(dom, obj, opt, handle.csstype);
             promise = jsrp.ensureRCanvas(painter, handle.frame || false).then(() => {
                painter.redraw = handle.func;
-               painter.redraw();
-               return painter;
+               let res = painter.redraw();
+               if (!isPromise(res))
+                  return painter;
+               return res.then(() => painter);
             })
          } else if (handle.direct) {
             let painter = new ObjectPainter(dom, obj, opt);
             promise = jsrp.ensureTCanvas(painter, handle.frame || false).then(() => {
                painter.redraw = handle.func;
-               painter.redraw();
-               return painter;
+               let res = painter.redraw();
+               if (!isPromise(res))
+                  return painter;
+               return res.then(() => painter);
             });
          } else {
             promise = handle.func(dom, obj, opt);

@@ -484,7 +484,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       });
    }
 
-   // ===================================================================================
 
    /**
      * @summary Painter for TF1 object
@@ -770,12 +769,10 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             painter.redraw();
             return painter;
          });
-       }
+      }
 
-   }
+   } // class TF1Painter
 
-
-   // =======================================================================
 
    const kNotEditable = JSROOT.BIT(18);   // bit set if graph is non editable
 
@@ -1388,7 +1385,14 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                   drawbins[drawbins.length-1].width = drawbins[drawbins.length-2].width;
             }
 
-            let yy0 = Math.round(funcs.gry(0));
+            let yy0 = Math.round(funcs.gry(0)), usefill = fillatt;
+
+            if (main_block) {
+               let fp = this.getFramePainter(),
+                   fpcol = fp && fp.fillatt && !fp.fillatt.empty() ? fp.fillatt.getFillColor() : -1;
+               if (fpcol === fillatt.getFillColor())
+                  usefill = new JSROOT.TAttFillHandler({ color: fpcol == "white" ? 1 : 0, pattern: 1001 });
+            }
 
             nodes.append("svg:path")
                  .attr("d", d => {
@@ -1399,7 +1403,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                         dh = (options.Bar!==1) ? (h > d.gry1 ? h - d.gry1 : 0) : Math.abs(yy0 - d.gry1);
                     return `M${dx},${dy}h${dw}v${dh}h${-dw}z`;
                  })
-               .call(fillatt.func);
+               .call(usefill.func);
          }
 
          if (options.Rect) {
@@ -1592,7 +1596,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          }
 
          this.createAttLine({ attr: graph, can_excl: true });
-         this.createAttFill({ attr: graph, kind: 1 });
+         this.createAttFill({ attr: graph });
 
          this.fillatt.used = false; // mark used only when really used
 
@@ -2252,10 +2256,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             return painter.drawGraph();
          }).then(() => painter.drawNextFunction(0));
       }
-   }
 
+   } // class TGraphPainter
 
-   // ==============================================================
 
    /**
     * @summary Painter for TGraphPolargram objects.
@@ -2333,10 +2336,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
 
          rect.width = 2*rect.szx;
          rect.height = 2*rect.szy;
-         rect.midx = Math.round(w/2);
-         rect.midy = Math.round(h/2);
-         rect.x = rect.midx - rect.szx;
-         rect.y = rect.midy - rect.szy;
+         rect.x = Math.round(w/2 - rect.szx);
+         rect.y = Math.round(h/2 - rect.szy);
 
          rect.hint_delta_x = rect.szx;
          rect.hint_delta_y = rect.szy;
@@ -2397,11 +2398,11 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          if (!this.isMainPainter()) return;
 
          let polar = this.getObject(),
-             rect = this.getFrameRect();
+             rect = this.getPadPainter().getFrameRect();
 
          this.createG();
 
-         this.draw_g.attr("transform", `translate(${rect.midx},${rect.midy})`);
+         this.draw_g.attr("transform", `translate(${Math.round(rect.x + rect.width/2)},${Math.round(rect.y + rect.height/2)})`);
          this.szx = rect.szx;
          this.szy = rect.szy;
 
@@ -2561,7 +2562,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          });
       }
 
-   }
+   } // class TGraphPolargramPainter
 
    // ==============================================================
 
@@ -2794,7 +2795,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             return painter;
          })
       }
-   }
+
+   } // class TGraphPolarPainter
 
    // ==============================================================
 
@@ -3124,10 +3126,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
          });
       }
 
-   }
+   } // class TSplinePainter
 
-
-   // =============================================================
 
    /**
     * @summary Painter for TGraphTime object
@@ -3271,9 +3271,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             return painter.startDrawing();
          });
       }
-   }
 
-   // =============================================================
+   } // class TGraphTimePainter
+
 
    const kIsBayesian       = JSROOT.BIT(14),  ///< Bayesian statistics are used
          kPosteriorMode    = JSROOT.BIT(15),  ///< Use posterior mean for best estimate (Bayesian statistics)
@@ -3485,9 +3485,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             return painter.drawFunction(0);
          });
       }
-   }
 
-   // =============================================================
+   } // class TEfficiencyPainter
+
 
    /**
     * @summary Painter for TMultiGraph object.
@@ -3732,9 +3732,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
             return painter.drawNextGraph(0, d.remain());
          });
       }
-   }
 
-   // =========================================================================================
+   } // class TMultiGraphPainter
+
 
    /** @summary Draw direct TVirtualX commands into SVG
      * @private */
@@ -3902,8 +3902,6 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return Promise.resolve(painter);
    }
 
-
-   // ===================================================================================
 
    /**
     * @summary Painter for TASImage object.
@@ -4246,9 +4244,9 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
                         return painter;
                     });
       }
-   }
 
-   // ===================================================================================
+   } // class TASImagePainter
+
 
    /** @summary Draw JS image
      * @private */
