@@ -66,6 +66,8 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    /// Column readers per slot and per input column
    std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
 
+   /// Define objects corresponding to systematic variations other than nominal for this defined column.
+   /// The map key is the full variation name, e.g. "pt:up".
    std::unordered_map<std::string, std::unique_ptr<RDefineBase>> fVariedDefines;
 
    template <typename... ColTypes, std::size_t... S>
