@@ -1595,6 +1595,17 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
    // Draw the graph as a bar chart
    if (optionBar) {
+      Int_t FillSave = theGraph->GetFillColor();
+      if(FillSave == gPad->GetFrameFillColor()) {
+         // make sure the bars' color is different from the frame background
+         if (gPad->GetFrameFillColor()==1) {
+            theGraph->SetFillColor(0);
+            theGraph->TAttFill::Modify();
+         } else {
+            theGraph->SetFillColor(1);
+            theGraph->TAttFill::Modify();
+         }
+      }
       if (!optionR) {
          barxmin = x[0];
          barxmax = x[0];
@@ -1650,6 +1661,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             gPad->PaintBox(gxworkl[0],gyworkl[0],gxworkl[1],gyworkl[1]);
          }
       }
+      theGraph->SetFillColor(FillSave);
+      theGraph->TAttFill::Modify();
    }
    gPad->ResetBit(TGraph::kClipFrame);
 
