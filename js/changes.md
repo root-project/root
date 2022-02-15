@@ -1,11 +1,13 @@
 # JSROOT changelog
 
-## Changes in 6.3.x
+## Changes in 6.3.4
 1. Fix bug in handling superimposing items via URL syntax
 2. Enable geometry clipping in node.js
 3. Upgrade node.js packages
 4. Let draw TGeo object inside TCanvas
 5. Let superimpose TPolyLine3D and TPolyMarker3D with TGeo drawing
+6. Fix plain #sum and #int parsing in TLatex
+7. Fix ticks position for axes with labels
 
 
 ## Changes in 6.3.3
