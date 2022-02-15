@@ -750,9 +750,9 @@ struct InnerValueType {
    using type = T; // fallback for when T is not a nested RVec
 };
 
-template <typename T>
-struct InnerValueType<ROOT::VecOps::RVec<ROOT::VecOps::RVec<T>>> {
-   using type = T;
+template <typename Elem>
+struct InnerValueType<ROOT::VecOps::RVec<ROOT::VecOps::RVec<Elem>>> {
+   using type = Elem;
 };
 
 template <typename T>
