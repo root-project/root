@@ -132,10 +132,8 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
 }
 
 // dummy overload for for the case of no columns, to silence compiler warnings
-std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, 0> inline MakeColumnReaders(unsigned int, TTreeReader *,
-                                                                                      TypeList<>,
-                                                                                      const RColumnReadersInfo &,
-                                                                                      const std::string & = "nominal")
+inline std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, 0>
+MakeColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersInfo &, const std::string & = "nominal")
 {
    return {};
 }
