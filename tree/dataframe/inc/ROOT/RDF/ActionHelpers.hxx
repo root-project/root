@@ -256,9 +256,7 @@ public:
 
    std::string GetActionName() { return "Report"; }
 
-   // TODO implement MakeNew. Requires:
-   // - some smartness in passing the appropriate previous node
-   // - support for varied Filters
+   // TODO implement MakeNew. Requires some smartness in passing the appropriate previous node.
 };
 
 class FillHelper : public RActionImpl<FillHelper> {
