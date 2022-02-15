@@ -2058,16 +2058,24 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
             subprefix = ename + ".";
          }
          auto nbranches = search->GetEntriesFast();
+         bool foundRelatedSplit = false;
          for (Int_t bi = 0; bi < nbranches; ++bi) {
             TBranchElement* subbe = (TBranchElement*)search->At(bi);
+            bool matchSubPrefix = strncmp(subbe->GetFullName(), subprefix.Data(), subprefix.Length()) == 0;
+            if (!foundRelatedSplit)
+               foundRelatedSplit = matchSubPrefix;
             if (elementClass == subbe->GetInfo()->GetClass() // Use GetInfo to provoke its creation.
                && subbe->GetOnfileObject()
-               && strncmp(subbe->GetFullName(), subprefix.Data(), subprefix.Length()) == 0)
+               && matchSubPrefix)
             {
                nextinfo = subbe->GetInfo();
                onfileObject = subbe->GetOnfileObject();
                break;
             }
+         }
+
+         if (!foundRelatedSplit) {
+            continue;
          }
 
          if (!nextinfo) {
