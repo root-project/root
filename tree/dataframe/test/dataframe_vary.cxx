@@ -152,6 +152,7 @@ TEST(RDFVary, GetVariations)
                   "Variations {x:0, x:1} affect column x\nVariations {xy:0, xy:1} affect columns {x, y}\n");
 }
 
+
 TEST(RDFVary, VaryDefinePerSample)
 {
    auto df = ROOT::RDataFrame(10).DefinePerSample("x", [](unsigned int, const ROOT::RDF::RSampleInfo &) { return 1; });
@@ -160,6 +161,27 @@ TEST(RDFVary, VaryDefinePerSample)
    EXPECT_EQ(ss["nominal"], 1 * 10);
    EXPECT_EQ(ss["x:0"], -1 * 10);
    EXPECT_EQ(ss["x:1"], 2 * 10);
+}
+
+TEST(RDFVary, SaveGraph)
+{
+   ROOT::RDataFrame df(1);
+   auto c = df.Define("x", [] { return 0; })
+               .Vary(
+                  "x",
+                  [] {
+                     return ROOT::RVecI{0, 0};
+                  },
+                  {}, 2)
+               .Count();
+   auto cs = ROOT::RDF::Experimental::VariationsFor(c);
+   const auto s = ROOT::RDF::SaveGraph(df);
+   // currently, Vary nodes are not shown in SaveGraph, but varied actions are
+   EXPECT_EQ(s,
+             "digraph {\n\t2 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t1 "
+             "[label=<Define<BR/>x>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t0 [label=<Empty "
+             "source<BR/>Entries: 1>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t3 [label=<Varied "
+             "Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t1 -> 2;\n\t0 -> 1;\n\t1 -> 3;\n}");
 }
 
 TEST_P(RDFVary, SimpleSum)
@@ -698,6 +720,184 @@ TEST_P(RDFVary, FillHelperResets)
    EXPECT_EQ(ss2["x:1"].GetMean(), 2);
 }
 
+TEST_P(RDFVary, DISABLED_VaryDefinePerSample)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_WithRange)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryRedefine)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_RedefineVariedColumn)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryAggregate)
+{
+}
+
+TEST_P(RDFVary, DISABLED_VaryBook)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryCache)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryCount)
+{
+
+}
+
+TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-thread only
+{
+   auto d = ROOT::RDataFrame(1)
+      .Define("x", [] { return 0; })
+      .Vary(
+         "x",
+         [] {
+            return ROOT::RVecI{-1, 2};
+         },
+         {}, 2)
+      .Display("x");
+   // Display ignores variations, only displays the nominal values
+   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
+   // cannot vary a Display
+   EXPECT_THROW(ROOT::RDF::Experimental::VariationsFor(d), std::logic_error);
+
+   // must update this test when https://github.com/root-project/root/issues/9894 is addressed
+}
+
+TEST_P(RDFVary, DISABLED_VaryFill)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryGraph)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryGraphAsymmErrors)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryHisto2D)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryHisto3D)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryHistoND)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryMax)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryMean)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryMin)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryProfile1D)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryProfile2D)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryReduce)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryReport)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryStats)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryStdDev)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VarySum)
+{
+
+}
+
+TEST_P(RDFVary, VaryTake)
+{
+   auto sorted = [](const std::vector<int> &v) {
+      std::vector<int> r(v);
+      std::sort(r.begin(), r.end());
+      return r;
+   };
+
+   auto r = ROOT::RDataFrame(3)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Take<int>("x");
+   EXPECT_EQ(sorted(*r), std::vector<int>({0, 1, 2}));
+
+   auto rs = VariationsFor(r);
+   EXPECT_EQ(sorted(rs["nominal"]), std::vector<int>({0, 1, 2}));
+   EXPECT_EQ(sorted(rs["x:0"]), std::vector<int>({-1, 0, 1}));
+   EXPECT_EQ(sorted(rs["x:1"]), std::vector<int>({1, 2, 3}));
+}
+
+TEST_P(RDFVary, DISABLED_VaryForeach)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VarySnapshot)
+{
+
+}
+
+TEST_P(RDFVary, DISABLED_VaryOnPartialResult)
+{
+
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
@@ -705,12 +905,3 @@ INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 #ifdef R__USE_IMT
 INSTANTIATE_TEST_SUITE_P(MT, RDFVary, ::testing::Values(true));
 #endif
-
-// TODO
-// - interaction with Redefine
-// - interaction with SaveGraph
-// - throw a Range into the mix (for now, we should throw if Range + Vary I guess?)
-// - interaction with TriggerChildrenCount
-// - interaction with PartialUpdate
-// - Vary of a result that does not have Clone
-// - all missing actions, e.g. Report, Display, Snapshot
