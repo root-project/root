@@ -225,9 +225,24 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       if (optionNoopt && this.nticks && (this.kind == "normal")) this.noticksopt = true;
 
-      let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func };
+      let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func }, ticks;
 
-      handle.minor = handle.middle = handle.major = this.produceTicks(this.nticks);
+      if ((this.kind == 'labels') && !this.regular_labels) {
+         ticks = [];
+         handle.lbl_pos = [];
+         let axis = this.getObject();
+         for (let n = 0; n < axis.fNbins; ++n) {
+            let x = axis.fXmin + n / axis.fNbins * (axis.fXmax - axis.fXmin);
+            if ((x >= this.scale_min) && (x < this.scale_max)) {
+               handle.lbl_pos.push(x);
+               if (x > this.scale_min) ticks.push(x);
+            }
+         }
+      } else {
+         ticks = this.produceTicks(this.nticks);
+      }
+
+      handle.minor = handle.middle = handle.major = ticks;
 
       if (only_major_as_array) {
          let res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
@@ -236,14 +251,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return res;
       }
 
-      if ((this.kind == 'labels') && !this.regular_labels) {
-         handle.lbl_pos = [];
-         let axis = this.getObject();
-         for (let n = 0; n < axis.fNbins; ++n) {
-            let x = axis.fXmin + n / axis.fNbins * (axis.fXmax - axis.fXmin);
-            if ((x >= this.scale_min) && (x < this.scale_max)) handle.lbl_pos.push(x);
-         }
-      }
 
       if ((this.nticks2 > 1) && (!this.log || (this.logbase === 10))) {
          handle.minor = handle.middle = this.produceTicks(handle.major.length, this.nticks2);

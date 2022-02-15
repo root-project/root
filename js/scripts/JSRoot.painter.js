@@ -2727,7 +2727,7 @@ JSROOT.define(['d3'], (d3) => {
                arg.dy = ((arg.align[1] == 'top') ? (arg.top_shift || 1) : (arg.align[1] == 'middle') ? (arg.mid_shift || 0.5) : 0) * arg.box.height;
             }
 
-         } else {
+         } else if (arg.text_rect) {
 
             // handle latext drawing
             let box = arg.text_rect;
