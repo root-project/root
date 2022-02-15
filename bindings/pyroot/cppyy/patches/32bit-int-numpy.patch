@@ -1,0 +1,23 @@
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Utility.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Utility.cxx
+index 2dbd9addc7..14ea1b83e8 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Utility.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Utility.cxx
+@@ -10,6 +10,7 @@
+ #include "CustomPyTypes.h"
+ #include "TemplateProxy.h"
+ #include "TypeManip.h"
++#include "RConfig.h"
+ 
+ // Standard
+ #include <limits.h>
+@@ -631,8 +632,9 @@ Py_ssize_t CPyCppyy::Utility::GetBuffer(PyObject* pyobject, char tc, int size, v
+         memset(&bufinfo, 0, sizeof(Py_buffer));
+         if (PyObject_GetBuffer(pyobject, &bufinfo, PyBUF_FORMAT) == 0) {
+             if (tc == '*' || strchr(bufinfo.format, tc)
+-#ifdef _WIN32
++#if defined(_WIN32) || ( defined(R__LINUX) && !defined(R__B64) )
+             // ctypes is inconsistent in format on Windows; either way these types are the same size
++            // observed also in 32-bit Linux for a NumPy array
+                 || (tc == 'I' && strchr(bufinfo.format, 'L')) || (tc == 'i' && strchr(bufinfo.format, 'l'))
+ #endif
+             // allow 'signed char' ('b') from array to pass through '?' (bool as from struct)
