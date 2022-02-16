@@ -517,10 +517,7 @@ int  FitUsingRooFit(TH1 * hist, TF1 * func) {
       assert(pdf != 0);
 #define USE_CHI2_FIT
 #ifdef USE_CHI2_FIT
-      RooChi2Var chi2("chi2","chi2",*pdf,data) ;
-      RooMinimizer m(chi2) ;
-      m.setPrintLevel(-1);
-      m.fit("mh") ;
+      pdf->chi2FitTo(data, RooFit::PrintLevel(-1));
 #else
       pdf->fitTo(data);
 #endif

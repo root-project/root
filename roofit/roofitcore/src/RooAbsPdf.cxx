@@ -1611,9 +1611,28 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
   if (!cfg.fitOpt.empty()) {
 
     // Play fit options as historically defined
-    std::unique_ptr<RooFitResult> ret{m.fit(cfg.fitOpt.c_str())};
+    // (code copied from RooMinimizer::fit() instead of calling said function to avoid deprecation warning)
+    TString opts(cfg.fitOpt) ;
+    opts.ToLower() ;
+
+    // Initial configuration
+    if (opts.Contains("v")) m.setVerbose(1) ;
+    if (opts.Contains("t")) m.setProfile(1) ;
+    if (opts.Contains("l")) m.setLogFile(Form("%s.log",nll.GetName())) ;
+    if (opts.Contains("c")) m.optimizeConst(1) ;
+
+    // Fitting steps
+    if (opts.Contains("0")) m.setStrategy(0) ;
+    m.migrad() ;
+    if (opts.Contains("0")) m.setStrategy(1) ;
+    if (opts.Contains("h")||!opts.Contains("m")) m.hesse() ;
+    if (!opts.Contains("m")) m.minos() ;
+
+    auto ret = (opts.Contains("r")) ? m.save() : 0 ;
+
     if (cfg.optConst) m.optimizeConst(0) ;
-    return ret;
+
+    return std::unique_ptr<RooFitResult>(ret);
 
   }
 

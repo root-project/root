@@ -766,9 +766,9 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
   RooFitResult* fr ;
   if (_fitOptList.GetSize()==0) {
     if (_projDeps.getSize()>0) {
-      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFit::ConditionalObservables(_projDeps),RooFit::FitOptions(fitOpt2)) ;
+      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFit::ConditionalObservables(_projDeps),RooFitLegacy::FitOptions(fitOpt2)) ;
     } else {
-      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFit::FitOptions(fitOpt2)) ;
+      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFitLegacy::FitOptions(fitOpt2)) ;
     }
   } else {
     RooCmdArg save  = RooFit::Save() ;

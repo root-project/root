@@ -29,6 +29,7 @@
 #include "RooAbsPdf.h"
 #include "RooFormulaVar.h"
 #include "RooHelpers.h"
+#include "RooMsgService.h"
 #include "TH1.h"
 
 #include <algorithm>
@@ -216,7 +217,22 @@ namespace RooFit {
 
   // RooAbsPdf::fitTo arguments
   RooCmdArg PrefitDataFraction(Double_t data_ratio)  { return RooCmdArg("Prefit",0,0,data_ratio,0,nullptr,nullptr,nullptr,nullptr) ; }
-  RooCmdArg FitOptions(const char* opts) { return RooCmdArg("FitOptions",0,0,0,0,opts,0,0,0) ; }
+  RooCmdArg FitOptions(const char* opts) {
+    oocoutW(static_cast<TObject*>(nullptr), Fitting)
+      << "RooFit::FitOptions(const char* opts) will be removed in ROOT v628!\n"
+      << "Please migrate to the RooCmdArg-based fit configuration.\n"
+      << "The former character flags map to RooFit command arguments as follows:\n"
+      << "    'h' : RooFit::Hesse()\n"
+      << "    'm' : RooFit::Minos()\n"
+      << "    'o' : RooFit::Optimize(1)\n"
+      << "    'r' : RooFit::Save()\n"
+      << "    't' : RooFit::Timer()\n"
+      << "    'v' : RooFit::Verbose()\n"
+      << "    '0' : RooFit::Strategy(0)\n"
+      << "You can alternatively silence this warning by using RooFitLegacy::FitOptions(const char*),\n"
+      << "but this will get removed in ROOT v6.28 as well.\n";
+    return RooFitLegacy::FitOptions(opts);
+  }
   RooCmdArg Optimize(Int_t flag)         { return RooCmdArg("Optimize",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Verbose(Bool_t flag)         { return RooCmdArg("Verbose",flag,0,0,0,0,0,0,0) ; }
   RooCmdArg Save(Bool_t flag)            { return RooCmdArg("Save",flag,0,0,0,0,0,0,0) ; }
@@ -392,6 +408,9 @@ namespace RooFit {
 
 } // End namespace RooFit
 
+namespace RooFitLegacy {
+  RooCmdArg FitOptions(const char* opts) { return RooCmdArg("FitOptions",0,0,0,0,opts,0,0,0) ; }
+}
 
 namespace RooFitShortHand {
 
