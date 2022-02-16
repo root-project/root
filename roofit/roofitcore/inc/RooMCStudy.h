@@ -40,7 +40,9 @@ public:
   RooMCStudy(const RooAbsPdf& genModel, const RooAbsPdf& fitModel,
         const RooArgSet& dependents, const char* genOptions="",
         const char* fitOptions="", const RooDataSet* genProtoData=0,
-        const RooArgSet& projDeps=RooArgSet()) ;
+        const RooArgSet& projDeps=RooArgSet()) R__DEPRECATED(6,28,
+  "please migrate to the other RooMCStudy constructor that doesn't use the deprecated string-based fit options.");
+
   ~RooMCStudy() override ;
 
   // Method to add study modules
