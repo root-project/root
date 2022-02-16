@@ -26,6 +26,7 @@
 #include "ROOT/RDF/RRange.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RDF/RDFDescription.hxx"
+#include "ROOT/RDF/RVariationsDescription.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/RStringView.hxx"
@@ -2710,6 +2711,23 @@ public:
       }
 
       return definedColumns;
+   }
+
+   /// \brief Return a descriptor for the systematic variations registered in this branch of the computation graph.
+   ///
+   /// This is not an action nor a transformation, just a simple utility to
+   /// inspect the systematic variations that have been registered with Vary() up to this node.
+   /// When called on the root node, it returns an empty descriptor.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto variations = d.GetVariations();
+   /// variations.Print();
+   /// ~~~
+   ///
+   RVariationsDescription GetVariations()
+   {
+      return {fColRegister.GetVariations()};
    }
 
    /// \brief Checks if a column is present in the dataset.

@@ -80,6 +80,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RVariation.hxx
     ROOT/RDF/RVariationBase.hxx
     ROOT/RDF/RVariationReader.hxx
+    ROOT/RDF/RVariationsDescription.hxx
     ROOT/RDF/RVariedAction.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
@@ -107,6 +108,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RLoopManager.cxx
     src/RRangeBase.cxx
     src/RVariationBase.cxx
+    src/RVariationsDescription.cxx
     src/RRootDS.cxx
     src/RSlotStack.cxx
     src/RTrivialDS.cxx
