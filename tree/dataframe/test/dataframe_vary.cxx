@@ -552,6 +552,18 @@ TEST_P(RDFVary, VariedColumnIsRVec)
    EXPECT_DOUBLE_EQ(histos["x:1"].GetMaximum(), 10.);
 }
 
+TEST_P(RDFVary, VariedHistosMustHaveNoDirectory)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto h = df.Vary("x", SimpleVariation, {}, 2).Histo1D<int>("x");
+   auto hs = VariationsFor(h);
+
+   EXPECT_EQ(h->GetDirectory(), nullptr);
+   EXPECT_EQ(hs["nominal"].GetDirectory(), nullptr);
+   EXPECT_EQ(hs["x:0"].GetDirectory(), nullptr);
+   EXPECT_EQ(hs["x:1"].GetDirectory(), nullptr);
+}
+
 // instantiate single-thread tests
 INSTANTIATE_TEST_SUITE_P(Seq, RDFVary, ::testing::Values(false));
 
