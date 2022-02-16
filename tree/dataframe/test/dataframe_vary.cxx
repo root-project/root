@@ -72,6 +72,25 @@ TEST(RDFVary, VariationsForWithNoVariations)
    EXPECT_EQ(hs.GetKeys(), std::vector<std::string>{"nominal"});
 }
 
+TEST(RDFVary, GetVariations)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 0; }).Define("y", [] { return 10; });
+   auto df2 = df.Vary("x", SimpleVariation, {}, 2)
+                 .Vary(
+                    {"x", "y"},
+                    [] {
+                       return ROOT::RVec<ROOT::RVecI>{{-1, 1}, {9, 11}};
+                    },
+                    {}, 2, "xy");
+   auto variations = df2.GetVariations();
+
+   // the internal list of variations is unordered, we might get either ordering
+   EXPECT_TRUE(variations.AsString() ==
+                  "Variations {xy:0, xy:1} affect columns {x, y}\nVariations {x:0, x:1} affect column x\n" ||
+               variations.AsString() ==
+                  "Variations {x:0, x:1} affect column x\nVariations {xy:0, xy:1} affect columns {x, y}\n");
+}
+
 TEST_P(RDFVary, SimpleSum)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
