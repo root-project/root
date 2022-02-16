@@ -142,6 +142,7 @@ If you have been trying RNTuple for a while, these are the other important chang
 - `Book` now supports just-in-time compilation, i.e. it can be called without passing the column types as template parameters (with some performance penalty, as usual).
 - As an aid to `RDataSource` implementations with which collection sizes can be retrieved more efficiently than the full collection, `#var` can now be used as a short-hand notation for column name `R_rdf_sizeof_var`.
 - Helpers have been added to export data from `RDataFrame` to RooFit datasets. See the "RooFit Libraries" section below for more details, or see [the tutorial](https://root.cern/doc/master/rf408__RDataFrameToRooFit_8C.html).
+- Add initial support for expressing systematic variations through the `Vary` method and the `VariationsFor` helper function. As a major feature with important performance and usability benefits, we want to get this right: for now `VariationsFor` is kept in the `ROOT::RDF::Experimental` namespace to signal that we might make slight changes to the programming model in the future as we gather more user feedback. More information on working with systematic variations with RDataFrame are available in [the RDF user guide](https://root.cern/doc/master/classROOT_1_1RDataFrame.html).
 
 ### Notable changes in behavior
 
