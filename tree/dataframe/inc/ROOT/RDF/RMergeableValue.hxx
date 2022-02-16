@@ -7,7 +7,7 @@
 */
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,12 +17,16 @@
 #ifndef ROOT_RDF_RMERGEABLEVALUE
 #define ROOT_RDF_RMERGEABLEVALUE
 
+#include <algorithm> // std::find, std::min, std::max
+#include <iterator>  // std::distance
 #include <memory>
 #include <stdexcept>
-#include <algorithm> // std::min, std::max
+#include <string>
+#include <vector>
 
 #include "RtypesCore.h"
-#include "TList.h" // RMergeableFill::Merge
+#include "TError.h" // R__ASSERT
+#include "TList.h"  // RMergeableFill::Merge
 
 namespace ROOT {
 namespace Detail {
@@ -32,12 +36,18 @@ namespace RDF {
 template <typename T>
 class RMergeableValue;
 
+template <typename T>
+class RMergeableVariations;
+
 template <typename T, typename... Ts>
 std::unique_ptr<RMergeableValue<T>> MergeValues(std::unique_ptr<RMergeableValue<T>> OutputMergeable,
                                                 std::unique_ptr<RMergeableValue<Ts>>... InputMergeables);
 
 template <typename T, typename... Ts>
 void MergeValues(RMergeableValue<T> &OutputMergeable, const RMergeableValue<Ts> &... InputMergeables);
+
+template <typename T, typename... Ts>
+void MergeValues(RMergeableVariations<T> &OutputMergeable, const RMergeableVariations<Ts> &... InputMergeables);
 
 /**
 \class ROOT::Detail::RDF::RMergeableValueBase
@@ -546,6 +556,131 @@ public:
    RMergeableSum &operator=(RMergeableSum &&) = delete;
 };
 
+/**
+\class ROOT::Detail::RDF::RMergeableVariationsBase
+\ingroup dataframe
+\brief A container for variation names and variation results.
+
+The class stores two vectors: one with the variation names, the other with
+corresponding mergeable variation values. These are retrieved from an RVariedAction
+(resulting from a call to ROOT::RDF::VariationsFor). The results are stored as
+type-erased RMergeableValueBase objects.
+*/
+class RMergeableVariationsBase : public RMergeableValueBase {
+protected:
+   std::vector<std::string> fKeys;
+   std::vector<std::unique_ptr<RMergeableValueBase>> fValues;
+
+public:
+   /**
+      Default constructor. Needed to allow serialization of ROOT objects. See
+      [TBufferFile::WriteObjectClass]
+      (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
+   */
+   RMergeableVariationsBase() = default;
+   RMergeableVariationsBase(const RMergeableVariationsBase &) = delete;
+   RMergeableVariationsBase &operator=(const RMergeableVariationsBase &) = delete;
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Constructor that moves the data members from the input object.
+   /// \param[in] other The container from which the data members are moved.
+   ///
+   /// This constructor is needed as an helper in the RMergeableVariations
+   /// constructor that takes an RMergeableVariationsBase as input.
+   RMergeableVariationsBase(RMergeableVariationsBase &&other)
+      : fKeys{std::move(other.fKeys)}, fValues{std::move(other.fValues)}
+   {
+   }
+   RMergeableVariationsBase &operator=(RMergeableVariationsBase &&) = delete;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Constructor that initializes data members.
+   /// \param[in] keys The names of the variations.
+   /// \param[in] values The mergeable values containing the results of the
+   ///            variations.
+   RMergeableVariationsBase(std::vector<std::string> &&keys, std::vector<std::unique_ptr<RMergeableValueBase>> &&values)
+      : fKeys{std::move(keys)}, fValues{std::move(values)}
+   {
+   }
+};
+
+/**
+\class ROOT::Detail::RDF::RMergeableVariations
+\ingroup dataframe
+\brief A container for variation names and variation results that knows how to
+       merge with others of the same type.
+\tparam T Type of the action result.
+*/
+template <typename T>
+class RMergeableVariations final : public RMergeableVariationsBase {
+
+   template <typename T1, typename... Ts>
+   friend void
+   MergeValues(RMergeableVariations<T1> &OutputMergeable, const RMergeableVariations<Ts> &... InputMergeables);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Aggregate the information contained in another RMergeableVariations
+   ///        into this.
+   /// \param[in] other The other mergeable.
+   ///
+   /// Iterates over all values of the current object and calls
+   /// ROOT::Detail::RDF::MergeValues to merge with the corresponding value of
+   /// the other object.
+   ///
+   /// \note All the `Merge` methods in the RMergeableValue family are private.
+   /// To merge multiple RMergeableValue objects please use ROOT::Detail::RDF::MergeValues
+   void Merge(const RMergeableVariations<T> &other)
+   {
+      R__ASSERT(fKeys == other.fKeys && "Mergeable variations have different names.");
+
+      for (std::size_t i = 0; i < fValues.size(); i++) {
+         // Cast to concrete types according to MergeValues signature
+         MergeValues(static_cast<RMergeableValue<T> &>(*fValues[i]),
+                     static_cast<const RMergeableValue<T> &>(*other.fValues[i]));
+      }
+   }
+
+public:
+   /**
+      Default constructor. Needed to allow serialization of ROOT objects. See
+      [TBufferFile::WriteObjectClass]
+      (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
+   */
+   RMergeableVariations() = default;
+   RMergeableVariations(const RMergeableVariations &) = delete;
+   RMergeableVariations &operator=(const RMergeableVariations &) = delete;
+   RMergeableVariations(RMergeableVariations &&) = delete;
+   RMergeableVariations &operator=(RMergeableVariations &&) = delete;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Constructor that initializes data members.
+   /// \param[in] base The container of the names and values.
+   ///
+   /// The variation names and values are moved from the base container into this.
+   RMergeableVariations(RMergeableVariationsBase &&base) : RMergeableVariationsBase(std::move(base)) {}
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the list of variation names.
+   const std::vector<std::string> &GetKeys() const { return fKeys; }
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the final value from the mergeable corresponding to a certain
+   ///        variation name.
+   /// \param[in] variationName The name.
+   ///
+   /// The variation name is used to retrieve the corresponding RMergeableValue
+   /// contained in this object. From that, the actual value is retrieved by
+   /// calling the ROOT::Detail::RDF::RMergeableValue::GetValue function.
+   const T &GetVariation(const std::string &variationName) const
+   {
+      auto it = std::find(std::begin(fKeys), std::end(fKeys), variationName);
+      if (it == std::end(fKeys)) {
+         throw std::runtime_error("RMergeableVariations: no result with key \"" + variationName + "\".");
+      } else {
+         auto pos = std::distance(std::begin(fKeys), it);
+         return static_cast<const RMergeableValue<T> &>(*fValues[pos]).GetValue();
+      }
+   }
+};
+
 /// \cond HIDDEN_SYMBOLS
 // What follows mimics C++17 std::conjunction without using recursive template instantiations.
 // Used in `MergeValues` to check that all the mergeables hold values of the same type.
@@ -614,6 +749,40 @@ std::unique_ptr<RMergeableValue<T>> MergeValues(std::unique_ptr<RMergeableValue<
 /// ~~~
 template <typename T, typename... Ts>
 void MergeValues(RMergeableValue<T> &OutputMergeable, const RMergeableValue<Ts> &... InputMergeables)
+{
+   // Check all mergeables are of the same type
+   static_assert(conjunction<std::is_same<Ts, T>...>::value, "Values must all be of the same type.");
+
+   // Using dummy array initialization inspired by https://stackoverflow.com/a/25683817
+   using expander = int[];
+   // Cast to void to suppress unused-value warning in Clang
+   (void)expander{0, (OutputMergeable.Merge(InputMergeables), 0)...};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Merge multiple RMergeableVariations objects into one.
+/// \param[in,out] OutputMergeable The mergeable object where all the
+///                information will be aggregated.
+/// \param[in] InputMergeables Other mergeables containing the partial results.
+///
+/// This overload modifies the mergeable objects in-place. The ownership is left
+/// to the caller. The first argument to the function will get all the
+/// values contained in the other arguments merged into itself. This is a
+/// convenience overload introduced for the ROOT Python API.
+///
+/// Example usage:
+/// ~~~{.cpp}
+/// // mv1, mv2 are std::unique_ptr<RMergeableVariations<TH1D>>
+/// ROOT::Detail::RDF::MergeValues(*mv1, *mv2);
+/// const auto &keys = mv1->GetKeys(); // Names of the variations
+/// // Do stuff with the variations
+/// for(const auto &key: keys){
+///     const auto &histo = mv1->GetVariation(key); // Varied histogram
+///     std::cout << histo.GetEntries() << "\n";
+/// }
+/// ~~~
+template <typename T, typename... Ts>
+void MergeValues(RMergeableVariations<T> &OutputMergeable, const RMergeableVariations<Ts> &... InputMergeables)
 {
    // Check all mergeables are of the same type
    static_assert(conjunction<std::is_same<Ts, T>...>::value, "Values must all be of the same type.");
