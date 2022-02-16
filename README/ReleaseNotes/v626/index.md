@@ -67,6 +67,7 @@ The following people have contributed to this new version:
 - `TBufferMerger` is now out of the `Experimental` namespace (`ROOT::Experimental::TBufferMerger` is deprecated, please use `ROOT::TBufferMerger` instead)
 - RooFit container classes marked as deprecated with this release: `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList`. These classes are still available in this release, but will be removed in the next one. Please migrate to STL container classes, such as `std::unordered_map`, `std::set`, and `std::vector`.
 - `TTree.AsMatrix` has been removed, after being deprecated in 6.24. Instead, please use `RDataFrame.AsNumpy` from now on as a way to read and process data in ROOT files and store it in NumPy arrays (a tutorial can be found [here](https://root.cern/doc/master/df026__AsNumpyArrays_8py.html)).
+- RooFit container classes marked as deprecated with this release: `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList`. These classes are still available in this release, but will be removed in the next one. Please migrate to STL container classes, such as `std::unordered_map`, `std::set`, and `std::vector`.
 
 
 ## Core Libraries
@@ -192,6 +193,39 @@ Other notable additions and improvements include:
 - Implement the `SetStats` method for `TGraph` to turn ON or OFF the statistics box display
   for an individual `TGraph`.
 
+- Use INT_MAX in TH classes instead of an arbitrary big number.
+
+- Implement option `AXIS`, to draw only axis, for TH2Poly.
+
+- The logic to Paint fit parameters for TGraph was not following the one implemented for
+  histograms. The v field described here was not working the same way. They are now implemente
+  the same way.
+
+- Implement the option X+ and Y+ for reverse axis on TGraph.
+
+- TGLAxisPainter silently modified the histogram's Z axis parameters.
+
+- Call automatically `Deflate` at drawing time of alphanumeric labels. It makes sense as
+  nobody wants to see extra blank labels.
+
+- The Confidence interval colors set by SetConfidenceIntervalColors (TRatioPlot) were inverted.
+
+- Add GetZaxis for THStack.
+
+- Fix Graph Errorbar Offsets for the new Marker Styles and thick markers.
+
+- When the palette width is bigger than the palette height, the palette
+  is automatically drawn horizontally.
+
+- THStack::GetXaxis->SetRange did not auto-zoom Yaxis range.
+
+- The Paint method of THStack always redrew the histograms in the sub-pads defined by the
+  THStack drawing option "pads". Like the "pad dividing" the "histograms' drawing" should be
+  done only the first time the THStack is painted otherwise any additional graphics objects
+  added in one of the pads (created by the "pads" option) will be removed.
+
+- Improve TRatioPlot axes drawing.
+
 ## Math Libraries
 
 - `RVec` has been heavily re-engineered in order to add a small buffer optimization and to streamline its internals. The change should provide a small performance boost to
@@ -301,7 +335,7 @@ sample = ROOT.RooCategory("sample", "sample", {"Sample1": 1, "Sample2": 2, "Samp
 
 #### RooWorkspace accessors
 
-In Python, you can now get objects stored in a [RooWorkspace](https://root.cern/doc/v626/classRooWorkspace.html) with the item retrieval operator, and the return value is also always downcasted to the correcy type. That means in Python you don't have to use [RooWorkspace::var()](https://root.cern/doc/v626/classRooWorkspace.html#acf5f9126ee264c234721a4ed1f9bf837) to access variables or [RooWorkspace::pdf()](https://root.cern/doc/v626/classRooWorkspace.html#afa7384cece424a1a94a644bb05549eee) to access pdfs, but you can always get any object using square brackets. For example:
+In Python, you can now get objects stored in a [RooWorkspace](https://root.cern/doc/v626/classRooWorkspace.html) with the item retrieval operator, and the return value is also always downcasted to the correct type. That means in Python you don't have to use [RooWorkspace::var()](https://root.cern/doc/v626/classRooWorkspace.html#acf5f9126ee264c234721a4ed1f9bf837) to access variables or [RooWorkspace::pdf()](https://root.cern/doc/v626/classRooWorkspace.html#afa7384cece424a1a94a644bb05549eee) to access pdfs, but you can always get any object using square brackets. For example:
 ```Python
 # w is a RooWorkspace instance that contains the variables `x`, `y`, and `z` for which we want to generate toy data:
 model.generate({w["x"], w["y"], w["z"]}, 1000)
@@ -448,8 +482,8 @@ pdf.fitTo(*data, RooFit::Range("r"));
 ROOT/TMVA SOFIE (“System for Optimized Fast Inference code Emit”) is a new package introduced in this release that generates C++ functions easily invokable for the fast inference of trained neural network models. It takes ONNX model files as inputs and produces C++ header files that can be included and utilized in a “plug-and-go” style.
 This is a new development and it is currently still in experimental stage.
 
-From ROOT command line, or in a ROOT macro you can use this code for parsing a model in ONNX file format 
-and generate C++ code taht can be used to evaluate the model: 
+From ROOT command line, or in a ROOT macro you can use this code for parsing a model in ONNX file format
+and generate C++ code that can be used to evaluate the model:
 
 ```
 using namespace TMVA::Experimental;
@@ -484,8 +518,10 @@ For parsing a PyTorch input file :
 ```
 SOFIE::RModel model = SOFIE::PyTorch::Parse("PyTorchModel.pt",inputShapes);
 ```
-where `inputShapes` is a `std::vector<std::vector<size_t>>` defining the inputs shape tensors. This information is required by PyTorch since it is not stored in the model. 
-A full example for parsing a PyTorch file is in the [`TMVA_SOFIE_PyTorch.C`](https://root.cern/doc/master/TMVA__SOFIE__PyTorch_8C.html) tutorial. 
+where `inputShapes` is a `std::vector<std::vector<size_t>>` defining the inputs shape tensors. This information is required by PyTorch since it is not stored in the model.
+A full example for parsing a PyTorch file is in the [`TMVA_SOFIE_PyTorch.C`](https://root.cern/doc/master/TMVA__SOFIE__PyTorch_8C.html) tutorial.
+
+For using the Keras and/or the PyTorch parser you need to have installed Keras and/or PyTorch in your Python system and in addition build root with the support for `pymva`, obtained when configuring with `-Dtmva-pymva=On`.
 
 For using the Keras and/or the PyTorch parser you need to have installed Keras and/or PyTorch in your Python system and in addition build root with the support for `pymva`, obtained when configuring with `-Dtmva-pymva=On`. 
  
@@ -523,13 +559,32 @@ canvas->Print(".tex", "Standalone");
 \end{document}
 ```
 
-- Implement `ChangeLabel` in case `SetMoreLogLabels` is set.
+- Implement `ChangeLabel` in case `SetMoreLogLabels` is set. Implement it also for alphanumeric  labels.
+
+- Some extra lines were drawn when histograms have negative content.
+
+- TMathText did not display with high value coordinates.
+
+- When a TCanvas contains TGraph with a huge number of points, the auto-placement of TLegend
+  took ages. It may even look like an infinite loop.
+
+- Fix title offsetting when using absolute-size fonts and multiple pads.
+
+- The function TLatex::DrawLatex() only copied the Text-Attributes, but not the Line-Attributes
+  to the newly created TLatex-Object.
+
+- SaveAs png failed in batch mode with two canvases, one divided.
+
+- The text size computed in TLatex::FirstParse was not correct in case the text precision was 3.
+
+- Return pointer to the ABC object in DrawABC methods. This was not uniform.
 
 ## 3D Graphics Libraries
 
 
 ## Geometry Libraries
 
+- Prevent the TColor palette being silently set by TGeoPainter.
 
 ## Database Libraries
 
@@ -538,6 +593,10 @@ canvas->Print(".tex", "Standalone");
 
 
 ## GUI Libraries
+
+- On Mac, with Cocoa, the pattern selector did not work anymore and the fit panel range did not work.
+
+- Fix in Cocoa. XSGui crashed on Mac M1.
 
 ## WebGUI Libraries
 
@@ -565,12 +624,41 @@ canvas->Print(".tex", "Standalone");
 
 ## Tutorials
 
+- The tutorial games.C was not working properly
+
+- Improve tutorial ErrorIntegral.C
+
+- Schrödinger's Hydrogen Atom example.
+
+- Tutorial demonstrating how the changing of the range can zoom into the histogram.
+
+- Tutorial demonstrating how a Histogram can be read from a ROOT File.
+
+- histMax.C: a tutorial demoing how the hist->GetMaximumBin() can be used.
 
 ## Class Reference Guide
 
 - Images for ROOT7 tutorials can be generated, in json format, using the directive using
   `\macro_image (json)` in the macro header.
 
+- Clarify THStack drawing options.
+
+- Add missing documentation to TH1 functions.
+
+- Restructure the the math reference guide.
+
+- Make the web gui documentation visible in the reference guide
+
+- Make clear THtml is legacy code. Add deprecated flag on PROOF and TGeoTrack.
+
+- Improve many classes documentation: TContext, TTreePlayer, THistPainter, TGraph, TSelector,
+  integrator, GUI, TH1, TH2, TH3, TColor classes ...
+
+- Make the TFile layout doc visible in Reference Guide.
+
+- Update the external links of the reference guide main page
+
+- Reformat TMVA mathcore Unuran Roostats documentation .
 
 ## Build, Configuration and Testing Infrastructure
 
