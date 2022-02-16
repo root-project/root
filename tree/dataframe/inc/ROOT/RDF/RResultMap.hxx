@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, CERN 11/2021
 
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,6 +13,7 @@
 
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RMergeableValue.hxx"
 
 #include <stdexcept>
 #include <string>
@@ -29,6 +30,13 @@ template <typename T>
 class RResultMap;
 } // namespace Experimental
 } // namespace RDF
+
+namespace Detail {
+namespace RDF {
+template <typename T>
+std::unique_ptr<RMergeableVariations<T>> GetMergeableValue(ROOT::RDF::Experimental::RResultMap<T> &rmap);
+} // namespace RDF
+} // namespace Detail
 
 namespace Internal {
 namespace RDF {
@@ -58,6 +66,9 @@ class RResultMap {
                                                            std::vector<std::string> &&keys,
                                                            ROOT::Detail::RDF::RLoopManager &lm,
                                                            std::shared_ptr<ROOT::Internal::RDF::RActionBase> actionPtr);
+
+   friend std::unique_ptr<ROOT::Detail::RDF::RMergeableVariations<T>>
+   ROOT::Detail::RDF::GetMergeableValue<T>(RResultMap<T> &rmap);
 
    // The preconditions are that results and keys have the same size, are ordered the same way, and keys are unique.
    RResultMap(std::vector<std::shared_ptr<T>> &&results, std::vector<std::string> &&keys,
@@ -91,6 +102,41 @@ public:
 
 } // namespace Experimental
 } // namespace RDF
+
+namespace Detail {
+namespace RDF {
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Retrieve mergeable values after calling ROOT::RDF::VariationsFor .
+/// \param[in] rmap lvalue reference of an RResultMap object.
+/// \returns A container with the variation names and then variation values.
+///
+/// This function triggers the execution of the RDataFrame computation graph.
+/// Then retrieves an RMergeableVariations object created with the results held
+/// by the RResultMap input. The user obtains ownership of the mergeable, which
+/// in turn holds a copy variation names and variation results. The RResultMap
+/// is not destroyed in the process and will still retain (shared) ownership of
+/// the original results.
+///
+/// Example usage:
+/// ~~~{.cpp}
+/// auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+/// auto h = df.Vary("x", [](){return ROOT::RVecI{-1, 2};}, {}, 2).Histo1D<int>("x");
+/// auto hs = ROOT::RDF::Experimental::VariationsFor(h);
+/// std::unique_ptr<RMergeableVariations<T>> m = ROOT::Detail::RDF::GetMergeableValue(hs);
+/// ~~~
+template <typename T>
+std::unique_ptr<RMergeableVariations<T>> GetMergeableValue(ROOT::RDF::Experimental::RResultMap<T> &rmap)
+{
+   if (!rmap.fAction->HasRun())
+      rmap.fLoopManager->Run(); // Prevents from using `const` specifier in parameter
+
+   auto mValueBase = rmap.fAction->GetMergeableValue();
+   std::unique_ptr<RMergeableVariationsBase> mVariationsBase{
+      static_cast<RMergeableVariationsBase *>(mValueBase.release())};
+   return std::make_unique<RMergeableVariations<T>>(std::move(*mVariationsBase));
+}
+} // namespace RDF
+} // namespace Detail
 } // namespace ROOT
 
 #endif

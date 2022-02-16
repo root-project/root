@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, CERN 11/2021
 
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,6 +17,7 @@
 #include "RColumnReaderBase.hxx"
 #include "RLoopManager.hxx"
 #include "RJittedFilter.hxx"
+#include "ROOT/RDF/RMergeableValue.hxx"
 
 #include <Rtypes.h> // R__CLING_PTRCHECK
 #include <ROOT/TypeTraits.hxx>
@@ -172,9 +173,21 @@ public:
       return thisNode;
    }
 
-   [[noreturn]] std::unique_ptr<RMergeableValueBase> GetMergeableValue() const
+   /**
+      Retrieve a container holding the names and values of the variations. It
+      knows how to merge with others of the same type.
+   */
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
    {
-      throw std::logic_error("Varied actions cannot provide mergeable values");
+      std::vector<std::string> keys{GetVariations()};
+      keys.insert(keys.begin(), "nominal");
+
+      std::vector<std::unique_ptr<RDFDetail::RMergeableValueBase>> values;
+      values.reserve(fHelpers.size());
+      for (auto &&h : fHelpers)
+         values.emplace_back(h.GetMergeableValue());
+
+      return std::make_unique<RDFDetail::RMergeableVariationsBase>(std::move(keys), std::move(values));
    }
 
    [[noreturn]] std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&)
