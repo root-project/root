@@ -351,6 +351,7 @@ public:
    {
       auto &result = *static_cast<std::shared_ptr<Hist_t> *>(newResult);
       result->Reset();
+      result->SetDirectory(nullptr);
       return FillHelper(result, fNSlots);
    }
 };
@@ -546,6 +547,7 @@ public:
    {
       auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
       result->Reset();
+      UnsetDirectoryIfPossible(result.get());
       return FillParHelper(result, fObjects.size());
    }
 };
