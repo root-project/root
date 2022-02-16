@@ -17,8 +17,8 @@
 
 using namespace ROOT::Detail::RDF;
 
-RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name)
-   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(), /*columnNames*/ {})
+RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations)
+   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(), /*columnNames*/ {}, variations)
 {
 }
 
@@ -115,4 +115,10 @@ std::shared_ptr<RDFGraphDrawing::GraphNode> RJittedFilter::GetGraph()
       return fConcreteFilter->GetGraph();
    }
    throw std::runtime_error("The Jitting should have been invoked before this method.");
+}
+
+std::shared_ptr<RNodeBase> RJittedFilter::GetVariedFilter(const std::string &variationName)
+{
+   assert(fConcreteFilter != nullptr);
+   return fConcreteFilter->GetVariedFilter(variationName);
 }

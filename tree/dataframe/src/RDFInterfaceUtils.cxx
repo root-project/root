@@ -60,6 +60,7 @@ class RDataSource;
 } // namespace ROOT
 
 namespace {
+using ROOT::Internal::RDF::IsStrInVec;
 using ROOT::RDF::ColumnNames_t;
 
 /// A string expression such as those passed to Filter and Define, digested to a standardized form
@@ -72,11 +73,6 @@ struct ParsedExpression {
    /// The list of variable names used in fExpr, with same ordering and size as fUsedCols
    ColumnNames_t fVarNames;
 };
-
-static bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec)
-{
-   return std::find(vec.cbegin(), vec.cend(), str) != vec.cend();
-}
 
 // look at expression `expr` and return a list of column names used, including aliases
 static ColumnNames_t FindUsedColumns(const std::string &expr, const ColumnNames_t &treeBranchNames,
@@ -504,8 +500,10 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
 
    if (customCols.IsAlias(definedCol)) {
       error = "An alias with that name, pointing to column \"" + customCols.ResolveAlias(definedCol) +
-              "\", already exists. Aliases cannot be Redefined.";
-   } else {
+              "\", already exists. Aliases cannot be Redefined or Varied.";
+   }
+
+   if (error.empty()) {
       const bool isAlreadyDefined = customCols.HasName(definedCol);
       // check if definedCol is in the list of tree branches. This is a bit better than interrogating the TTree
       // directly because correct usage of GetBranch, FindBranch, GetLeaf and FindLeaf can be tricky; so let's assume we
@@ -519,7 +517,7 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
    }
 
    if (!error.empty()) {
-      error = "RDataFrame::" + where + ": cannot redefine column \"" + definedCol + "\". " + error;
+      error = "RDataFrame::" + where + ": cannot redefine or vary column \"" + definedCol + "\". " + error;
       throw std::runtime_error(error);
    }
 }
@@ -609,10 +607,9 @@ std::string PrettyPrintAddr(const void *const addr)
 }
 
 /// Book the jitting of a Filter call
-void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
-                   std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name,
-                   std::string_view expression, const ColumnNames_t &branches, const RColumnRegister &customCols,
-                   TTree *tree, RDataSource *ds)
+std::shared_ptr<RDFDetail::RJittedFilter>
+BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name, std::string_view expression,
+              const ColumnNames_t &branches, const RColumnRegister &customCols, TTree *tree, RDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
 
@@ -628,6 +625,10 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
    ROOT::Internal::RDF::RColumnRegister *definesOnHeap = new ROOT::Internal::RDF::RColumnRegister(customCols);
    const auto definesOnHeapAddr = PrettyPrintAddr(definesOnHeap);
    const auto prevNodeAddr = PrettyPrintAddr(prevNodeOnHeap);
+
+   const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(
+      (*prevNodeOnHeap)->GetLoopManagerUnchecked(), name,
+      Union(customCols.GetVariationDeps(parsedExpr.fUsedCols), (*prevNodeOnHeap)->GetVariations()));
 
    // Produce code snippet that creates the filter and registers it with the corresponding RJittedFilter
    // Windows requires std::hex << std::showbase << (size_t)pointer to produce notation "0x1234"
@@ -651,6 +652,8 @@ void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter,
 
    auto lm = jittedFilter->GetLoopManagerUnchecked();
    lm->ToJitExec(filterInvocation.str());
+
+   return jittedFilter;
 }
 
 /// Book the jitting of a Define call
@@ -670,7 +673,7 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 
    auto definesCopy = new RColumnRegister(customCols);
    auto definesAddr = PrettyPrintAddr(definesCopy);
-   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm);
+   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, type, lm, customCols, parsedExpr.fUsedCols);
 
    std::stringstream defineInvocation;
    defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefineTag>("
@@ -707,7 +710,7 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 
    auto definesCopy = new RColumnRegister(customCols);
    auto definesAddr = PrettyPrintAddr(definesCopy);
-   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm);
+   auto jittedDefine = std::make_shared<RDFDetail::RJittedDefine>(name, retType, lm, customCols, ColumnNames_t{});
 
    std::stringstream defineInvocation;
    defineInvocation << "ROOT::Internal::RDF::JitDefineHelper<ROOT::Internal::RDF::DefineTypes::RDefinePerSampleTag>("
@@ -725,6 +728,69 @@ std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std
 
    lm.ToJitExec(defineInvocation.str());
    return jittedDefine;
+}
+
+/// Book the jitting of a Vary call
+std::shared_ptr<RJittedVariation>
+BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
+                 const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
+                 RDataSource *ds, const RColumnRegister &colRegister, const ColumnNames_t &branches,
+                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap)
+{
+   auto *const tree = lm.GetTree();
+   const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
+
+   const auto parsedExpr = ParseRDFExpression(expression, branches, colRegister, dsColumns);
+   const auto exprVarTypes =
+      GetValidatedArgTypes(parsedExpr.fUsedCols, colRegister, tree, ds, "Vary", /*vector2rvec=*/true);
+   const auto lambdaName = DeclareLambda(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
+   const auto type = RetTypeOfLambda(lambdaName);
+
+   if (type.rfind("ROOT::VecOps::RVec", 0) != 0)
+      throw std::runtime_error(
+         "Jitted Vary expressions must return an RVec object. The following expression returns a " + type +
+         " instead:\n" + parsedExpr.fExpr);
+
+   auto colRegisterCopy = new RColumnRegister(colRegister);
+   const auto colRegisterAddr = PrettyPrintAddr(colRegisterCopy);
+   auto jittedVariation = std::make_shared<RJittedVariation>(colNames, variationName, variationTags, type, colRegister,
+                                                             lm, parsedExpr.fUsedCols);
+
+   // build invocation to JitVariationHelper
+   // arrays of strings are passed as const char** plus size.
+   // lifetime of pointees:
+   // - lm is the loop manager, and if that goes out of scope jitting does not happen at all (i.e. will always be valid)
+   // - jittedVariation: heap-allocated weak_ptr that will be deleted by JitDefineHelper after usage
+   // - definesAddr: heap-allocated, will be deleted by JitDefineHelper after usage
+   std::stringstream varyInvocation;
+   varyInvocation << "ROOT::Internal::RDF::JitVariationHelper(" << lambdaName << ", new const char*["
+                  << parsedExpr.fUsedCols.size() << "]{";
+   for (const auto &col : parsedExpr.fUsedCols) {
+      varyInvocation << "\"" << col << "\", ";
+   }
+   if (!parsedExpr.fUsedCols.empty())
+      varyInvocation.seekp(-2, varyInvocation.cur); // remove the last ", "
+   varyInvocation << "}, " << parsedExpr.fUsedCols.size();
+   varyInvocation << ", new const char*[" << colNames.size() << "]{";
+   for (const auto &col : colNames) {
+      varyInvocation << "\"" << col << "\", ";
+   }
+   varyInvocation.seekp(-2, varyInvocation.cur); // remove the last ", "
+   varyInvocation << "}, " << colNames.size() << ", new const char*[" << variationTags.size() << "]{";
+   for (const auto &tag : variationTags) {
+      varyInvocation << "\"" << tag << "\", ";
+   }
+   varyInvocation.seekp(-2, varyInvocation.cur); // remove the last ", "
+   varyInvocation << "}, " << variationTags.size() << ", \"" << variationName
+                  << "\", reinterpret_cast<ROOT::Detail::RDF::RLoopManager*>(" << PrettyPrintAddr(&lm)
+                  << "), reinterpret_cast<std::weak_ptr<ROOT::Internal::RDF::RJittedVariation>*>("
+                  << PrettyPrintAddr(MakeWeakOnHeap(jittedVariation))
+                  << "), reinterpret_cast<ROOT::Internal::RDF::RColumnRegister*>(" << colRegisterAddr
+                  << "), reinterpret_cast<std::shared_ptr<ROOT::Detail::RDF::RNodeBase>*>("
+                  << PrettyPrintAddr(upcastNodeOnHeap) << "));\n";
+
+   lm.ToJitExec(varyInvocation.str());
+   return jittedVariation;
 }
 
 // Jit and call something equivalent to "this->BuildAndBook<ColTypes...>(params...)"

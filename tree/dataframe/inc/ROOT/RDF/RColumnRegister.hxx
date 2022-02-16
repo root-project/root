@@ -31,6 +31,8 @@ namespace RDF {
 
 namespace RDFDetail = ROOT::Detail::RDF;
 
+class RVariationBase;
+
 /**
  * \class ROOT::Internal::RDF::RColumnRegister
  * \ingroup dataframe
@@ -38,12 +40,10 @@ namespace RDFDetail = ROOT::Detail::RDF;
  * The storage is copy-on-write and shared between all instances of the class that have the same values.
  */
 class RColumnRegister {
-   using RDefineBasePtrMap_t = std::unordered_map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
    using ColumnNames_t = std::vector<std::string>;
-
-   // Since RColumnRegister is meant to be an immutable, copy-on-write object, the actual values are set as const
-   using RDefineBasePtrMapPtr_t = std::shared_ptr<const RDefineBasePtrMap_t>;
-   using ColumnNamesPtr_t = std::shared_ptr<const ColumnNames_t>;
+   using DefinesMap_t = std::unordered_map<std::string, std::shared_ptr<RDFDetail::RDefineBase>>;
+   /// See fVariations for more information on this type.
+   using VariationsMap_t = std::unordered_multimap<std::string, std::shared_ptr<RVariationBase>>;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Add a new name to the list returned by `GetNames` without booking a new column.
@@ -57,10 +57,14 @@ private:
    /// Immutable map of Defines, can be shared among several nodes.
    /// When a new define is added (through a call to RInterface::Define or similar) a new map with the extra element is
    /// created.
-   RDefineBasePtrMapPtr_t fDefines;
+   std::shared_ptr<const DefinesMap_t> fDefines;
    /// Immutable map of Aliases, can be shared among several nodes.
    std::shared_ptr<const std::unordered_map<std::string, std::string>> fAliases;
-   ColumnNamesPtr_t fColumnNames; ///< Names of Defines and Aliases registered so far.
+   /// Immutable multimap of Variations, can be shared among several nodes.
+   /// The key is the name of an existing column, the values are all variations that affect that column.
+   /// As a consequence, Variations that affect multiple columns are inserted multiple times, once per column.
+   std::shared_ptr<const VariationsMap_t> fVariations;
+   std::shared_ptr<const ColumnNames_t> fColumnNames; ///< Names of Defines and Aliases registered so far.
 
 public:
    RColumnRegister(const RColumnRegister &) = default;
@@ -68,19 +72,23 @@ public:
    RColumnRegister &operator=(const RColumnRegister &) = default;
 
    RColumnRegister()
-      : fDefines(std::make_shared<RDefineBasePtrMap_t>()),
+      : fDefines(std::make_shared<DefinesMap_t>()),
         fAliases(std::make_shared<std::unordered_map<std::string, std::string>>()),
-        fColumnNames(std::make_shared<ColumnNames_t>())
+        fVariations(std::make_shared<VariationsMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
    {
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the list of the names of the defined columns (Defines + Aliases)
+   /// \brief Returns the list of the names of the defined columns (Defines + Aliases).
    ColumnNames_t GetNames() const { return *fColumnNames; }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns the list of the pointers to the defined columns
-   const RDefineBasePtrMap_t &GetColumns() const { return *fDefines; }
+   /// \brief Returns a map of pointers to the defined columns.
+   const DefinesMap_t &GetColumns() const { return *fDefines; }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Returns the multimap of systematic variations, see fVariations.
+   const VariationsMap_t &GetVariations() const { return *fVariations; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Check if the provided name is tracked in the names list
@@ -104,6 +112,31 @@ public:
    /// Returns the input in case it's not an alias.
    /// Expands `#var` to `R_rdf_sizeof_var` (the #var columns are implicitly-defined aliases).
    std::string ResolveAlias(std::string_view alias) const;
+
+   /// \brief Register a new systematic variation.
+   void AddVariation(const std::shared_ptr<RVariationBase> &variation);
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the names of the variations that directly provide alternative values for this column.
+   std::vector<std::string> GetVariationsFor(const std::string &column) const;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the names of all variations that directly or indirectly affect a given column.
+   ///
+   /// This list includes variations applied to the column as well as variations applied to other
+   /// columns on which the value of this column depends (typically via a Define expression).
+   std::vector<std::string> GetVariationDeps(const std::string &column) const;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Get the names of all variations that directly or indirectly affect the specified columns.
+   ///
+   /// This list includes variations applied to the columns as well as variations applied to other
+   /// columns on which the value of any of these columns depend (typically via Define expressions).
+   std::vector<std::string> GetVariationDeps(const ColumnNames_t &columns) const;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the RVariation object that handles the specified variation of the specified column.
+   RVariationBase &FindVariation(const std::string &colName, const std::string &variationName) const;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Empty the contents of this ledger.

@@ -16,6 +16,7 @@
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "ROOT/RDF/RSlotStack.hxx"
+#include "ROOT/RDF/RVariationBase.hxx"
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TStopwatch.h"
@@ -604,6 +605,9 @@ void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
       ptr->InitSlot(r, slot);
    for (auto &ptr : fBookedDefines)
       ptr->InitSlot(r, slot);
+   for (auto &ptr : fBookedVariations)
+      ptr->InitSlot(r, slot);
+
    for (auto &callback : fCallbacksOnce)
       callback(slot);
 }
@@ -823,6 +827,16 @@ void RLoopManager::Book(RDefineBase *ptr)
 void RLoopManager::Deregister(RDefineBase *ptr)
 {
    RDFInternal::Erase(ptr, fBookedDefines);
+}
+
+void RLoopManager::Book(RDFInternal::RVariationBase *v)
+{
+   fBookedVariations.emplace_back(v);
+}
+
+void RLoopManager::Deregister(RDFInternal::RVariationBase *v)
+{
+   RDFInternal::Erase(v, fBookedVariations);
 }
 
 // dummy call, end of recursive chain of calls
