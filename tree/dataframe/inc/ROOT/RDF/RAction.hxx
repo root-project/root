@@ -17,6 +17,7 @@
 #include "ROOT/RDF/RColumnReaderBase.hxx"
 #include "ROOT/RDF/Utils.hxx" // ColumnNames_t, IsInternalColumn
 #include "ROOT/RDF/RLoopManager.hxx"
+#include "ROOT/RDF/RVariedAction.hxx"
 
 #include <array>
 #include <cstddef> // std::size_t
@@ -64,8 +65,8 @@ class R__CLING_PTRCHECK(off) RAction : public RActionBase {
 
 public:
    RAction(Helper &&h, const ColumnNames_t &columns, std::shared_ptr<PrevNode> pd, const RColumnRegister &colRegister)
-      : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister), fHelper(std::forward<Helper>(h)),
-        fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr), fValues(GetNSlots()), fIsDefine()
+      : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister, pd->GetVariations()),
+        fHelper(std::forward<Helper>(h)), fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr), fValues(GetNSlots())
    {
       const auto nColumns = columns.size();
       const auto &customCols = GetColRegister();
@@ -157,6 +158,21 @@ public:
    /// This method is invoked to update a partial result during the event loop, right before passing the result to a
    /// user-defined callback registered via RResultPtr::RegisterCallback
    void *PartialUpdate(unsigned int slot) final { return fHelper.CallPartialUpdate(slot); }
+
+   std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final
+   {
+      const auto nVariations = GetVariations().size();
+      assert(results.size() == nVariations + 1);
+
+      std::vector<Helper> helpers;
+      helpers.reserve(nVariations + 1);
+
+      for (auto &&res : results)
+         helpers.emplace_back(fHelper.CallMakeNew(res));
+
+      return std::unique_ptr<RActionBase>(new RVariedAction<Helper, PrevNode, ColumnTypes_t>{
+         std::move(helpers), GetColumnNames(), fPrevNodePtr, GetColRegister()});
+   }
 
 private:
 

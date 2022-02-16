@@ -16,11 +16,17 @@
 #include "TError.h"
 
 #include <cassert>
+#include <memory>
 
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
-RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RColumnRegister{}) {}
+RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns,
+                             const ROOT::Internal::RDF::RColumnRegister &colRegister,
+                             const std::vector<std::string> &prevVariations)
+   : RActionBase(&lm, columns, colRegister, prevVariations)
+{
+}
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
@@ -101,4 +107,10 @@ ROOT::RDF::SampleCallback_t RJittedAction::GetSampleCallback()
 {
    assert(fConcreteAction != nullptr);
    return fConcreteAction->GetSampleCallback();
+}
+
+std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::MakeVariedAction(std::vector<void *> &&results)
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->MakeVariedAction(std::move(results));
 }

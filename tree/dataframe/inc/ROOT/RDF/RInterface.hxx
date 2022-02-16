@@ -20,14 +20,17 @@
 #include "ROOT/RDF/RDefine.hxx"
 #include "ROOT/RDF/RDefinePerSample.hxx"
 #include "ROOT/RDF/RFilter.hxx"
+#include "ROOT/RDF/RVariation.hxx"
 #include "ROOT/RDF/RLazyDSImpl.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRange.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RDF/RDFDescription.hxx"
+#include "ROOT/RDF/RVariationsDescription.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/RSnapshotOptions.hxx"
 #include "ROOT/RStringView.hxx"
+#include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h"               // for ULong64_t
 #include "TChain.h" // for checking fLoopManger->GetTree() return type
@@ -343,10 +346,9 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister, fDataSource);
-      const auto jittedFilter = std::make_shared<RDFDetail::RJittedFilter>(fLoopManager, name);
-
-      RDFInternal::BookFilterJit(jittedFilter, upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(),
-                                 fColRegister, fLoopManager->GetTree(), fDataSource);
+      const auto jittedFilter =
+         RDFInternal::BookFilterJit(upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(), fColRegister,
+                                    fLoopManager->GetTree(), fDataSource);
 
       fLoopManager->Book(jittedFilter.get());
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister,
@@ -676,6 +678,297 @@ public:
       newCols.AddColumn(jittedDefine);
 
       RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+
+      return newInterface;
+   }
+
+   /// \brief Register systematic variations for an existing column.
+   /// \param[in] colNames names of the columns for which varied values are provided.
+   /// \param[in] expression a callable that evaluates the varied values for the specified columns. The callable can
+   ///            take any column values as input, similarly to what happens with Filter and Define calls. It must
+   ///            return an RVec of varied values, one for each variation tag, in the same order as the tags.
+   /// \param[in] inputColumns the names of the columns to be passed to the callable.
+   /// \param[in] variationTags names for each of the varied values, e.g. "up" and "down".
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///
+   /// Vary provides a natural and flexible syntax to define systematic variations that automatically propagate to
+   /// Filters, Defines and results. RDataFrame usage of columns with attached variations does not change, but for
+   /// results that depend on any varied quantity a map/dictionary of varied results can be produced with
+   /// ROOT::RDF::Experimental::VariationsFor (see the example below).
+   ///
+   /// The dictionary will contain a "nominal" value (accessed with the "nominal" key) for the unchanged result, and
+   /// values for each of the systematic variations that affected the result (via upstream Filters or via direct or
+   /// indirect dependencies of the column values on some registered variations). The keys will be a composition of
+   /// variation names and tags, e.g. "pt:up" and "pt:down" for the example below.
+   ///
+   /// In the following example we add up/down variations of pt and fill a histogram with a quantity that depends on pt.
+   /// We automatically obtain three histograms in output ("nominal", "pt:up" and "pt:down"):
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", [] (double pt) { return RVecD{pt*0.9, pt*1.1}; }, {"down", "up"})
+   ///       .Filter("pt > k")
+   ///       .Define("x", someFunc, {"pt"})
+   ///       .Histo1D("x");
+   ///
+   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["pt:down"].Draw("SAME");
+   /// ~~~
+   template <typename F>
+   RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
+                                  std::size_t nVariations, std::string_view variationName = "")
+   {
+      R__ASSERT(nVariations > 0 && "Must have at least one variation.");
+
+      std::vector<std::string> variationTags;
+      variationTags.reserve(nVariations);
+      for (std::size_t i = 0u; i < nVariations; ++i)
+         variationTags.emplace_back(std::to_string(i));
+
+      const std::string theVariationName{variationName.empty() ? colName : variationName};
+
+      return Vary(colName, std::forward<F>(expression), inputColumns, std::move(variationTags), theVariationName);
+   }
+
+   /// \brief Register systematic variations for an existing columns using auto-generated variation tags.
+   /// This overload of Vary takes a nVariations parameter instead of a list of tag names. Tag names
+   /// will be auto-generated as the sequence 0...nVariations-1.
+   /// See the documentation of the previous overload for more information.
+   template <typename F>
+   RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
+                                  const std::vector<std::string> &variationTags, std::string_view variationName = "")
+   {
+      std::vector<std::string> colNames{{std::string(colName)}};
+      const std::string theVariationName{variationName.empty() ? colName : variationName};
+
+      return Vary(std::move(colNames), std::forward<F>(expression), inputColumns, variationTags, theVariationName);
+   }
+
+   /// \brief Register a systematic variation that affects multiple columns simultaneously.
+   /// This overload of Vary takes a list of column names as first argument rather than a single name and
+   /// requires that the expression returns an RVec of RVecs of values: one inner RVec for the variations of each
+   /// affected column.
+   /// See the documentation of the first Vary overload for more information.
+   ///
+   /// Example usage:
+   /// ~~~{.cpp}
+   /// // produce variations "ptAndEta:down" and "ptAndEta:up"
+   /// df.Vary({"pt", "eta"},
+   ///         [](double pt, double eta) { return RVec<RVecF>{{pt*0.9, pt*1.1}, {eta*0.9, eta*1.1}}; },
+   ///         {"down", "up"},
+   ///         "ptAndEta");
+   /// ~~~
+   template <typename F>
+   RInterface<Proxied, DS_t>
+   Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
+        const std::vector<std::string> &variationTags, std::string_view variationName)
+   {
+      /* SANITY CHECKS BEGIN */
+      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
+      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationName.empty() && "Must provide a variation name.");
+
+      for (auto &colName : colNames) {
+         RDFInternal::CheckValidCppVarName(colName, "Vary");
+         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      }
+      RDFInternal::CheckValidCppVarName(variationName, "Vary");
+
+      using F_t = std::decay_t<F>;
+      using ColTypes_t = typename TTraits::CallableTraits<F_t>::arg_types;
+      constexpr auto nColumns = ColTypes_t::list_size;
+      const auto validColumnNames = GetValidatedColumnNames(nColumns, inputColumns);
+      CheckAndFillDSColumns(validColumnNames, ColTypes_t{});
+
+      using RetType = typename TTraits::CallableTraits<F_t>::ret_type;
+      static_assert(RDFInternal::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
+
+      if (colNames.size() > 1) {
+         constexpr bool hasInnerRVec = RDFInternal::IsRVec<typename RetType::value_type>::value;
+         if (!hasInnerRVec)
+            throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
+                                     "does not return an RVec of RVecs.");
+
+         auto colTypes = GetColumnTypeNamesList(colNames);
+         auto allColTypesEqual =
+            std::all_of(colTypes.begin() + 1, colTypes.end(), [&](const std::string &t) { return t == colTypes[0]; });
+         if (!allColTypesEqual)
+            throw std::runtime_error("Cannot simultaneously vary multiple columns of different types.");
+
+         const auto &innerTypeID = typeid(RDFInternal::InnerValueType_t<RetType>);
+
+         for (auto i = 0u; i < colTypes.size(); ++i) {
+            if (innerTypeID != RDFInternal::TypeName2TypeID(colTypes[i]))
+               throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
+                                        RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
+                                        colTypes[i] + ").");
+         }
+      } else {
+         const auto &retTypeID = typeid(typename RetType::value_type);
+         const auto &colName = colNames[0]; // we have only one element in there
+         if (retTypeID != RDFInternal::TypeName2TypeID(GetColumnType(colName)))
+            throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
+                                     RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
+                                     GetColumnType(colName) + ").");
+      }
+
+      auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType));
+      if (retTypeName.empty()) {
+         // The type is not known to the interpreter, but we don't want to error out
+         // here, rather if/when this column is used in jitted code, so we inject a broken but telling type name.
+         const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
+         retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
+      }
+      /* SANITY CHECKS END */
+
+      auto variation = std::make_shared<RDFInternal::RVariation<F_t>>(
+         colNames, variationName, std::forward<F>(expression), variationTags, retTypeName, fColRegister, *fLoopManager,
+         validColumnNames);
+      fLoopManager->Book(variation.get());
+
+      RDFInternal::RColumnRegister newCols(fColRegister);
+      newCols.AddVariation(variation);
+
+      RInterface<Proxied> newInterface(fProxiedPtr, *fLoopManager, std::move(newCols), fDataSource);
+
+      return newInterface;
+   }
+
+   /// \brief Register systematic variations for one or more existing columns using auto-generated tags.
+   /// This overload of Vary takes a nVariations parameter instead of a list of tag names. Tag names
+   /// will be auto-generated as the sequence 0...nVariations-1.
+   /// See the documentation of the previous overload for more information.
+   template <typename F>
+   RInterface<Proxied, DS_t>
+   Vary(const std::vector<std::string> &colNames, F &&expression, const ColumnNames_t &inputColumns,
+        std::size_t nVariations, std::string_view variationName)
+   {
+      R__ASSERT(nVariations > 0 && "Must have at least one variation.");
+
+      std::vector<std::string> variationTags;
+      variationTags.reserve(nVariations);
+      for (std::size_t i = 0u; i < nVariations; ++i)
+         variationTags.emplace_back(std::to_string(i));
+
+      return Vary(colNames, std::forward<F>(expression), inputColumns, std::move(variationTags), variationName);
+   }
+
+   /// \brief Register systematic variations for an existing column.
+   /// \param[in] colName name of the column for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
+   ///            values for the specified column.
+   /// \param[in] variationTags names for each of the varied values, e.g. "up" and "down".
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///            colName is used if none is provided.
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary("pt", "ROOT::RVecD{pt*0.9, pt*1.1}", {"down", "up"})
+   ///       .Filter("pt > k")
+   ///       .Define("x", someFunc, {"pt"})
+   ///       .Histo1D("x");
+   ///
+   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["pt:down"].Draw("SAME");
+   /// ~~~
+   RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression,
+                                  const std::vector<std::string> &variationTags, std::string_view variationName = "")
+   {
+      std::vector<std::string> colNames{{std::string(colName)}};
+      const std::string theVariationName{variationName.empty() ? colName : variationName};
+
+      return Vary(std::move(colNames), expression, variationTags, theVariationName);
+   }
+
+   /// \brief Register systematic variations for an existing column.
+   /// \param[in] colName name of the column for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec containing the varied
+   ///            values for the specified column.
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be "0", "1", etc.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///            colName is used if none is provided.
+   ///
+   /// See the documentation for the previous overload for more information.
+   RInterface<Proxied, DS_t> Vary(std::string_view colName, std::string_view expression, std::size_t nVariations,
+                                  std::string_view variationName = "")
+   {
+      std::vector<std::string> colNames{{std::string(colName)}};
+      const std::string theVariationName{variationName.empty() ? colName : variationName};
+
+      return Vary(std::move(colNames), expression, nVariations, theVariationName);
+   }
+
+   /// \brief Register systematic variations for one or more existing columns.
+   /// \param[in] colNames names of the columns for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec or RVecs containing the varied
+   ///            values for the specified columns.
+   /// \param[in] nVariations number of variations returned by the expression. The corresponding tags will be "0", "1", etc.
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.9, x*1.1}, {y*0.9, y*1.1}}", 2, "xy")
+   ///       .Histo1D("x", "y");
+   ///
+   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["xy:0"].Draw("SAME");
+   /// hx["xy:1"].Draw("SAME");
+   /// ~~~
+   RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
+                                  std::size_t nVariations, std::string_view variationName)
+   {
+      std::vector<std::string> variationTags;
+      variationTags.reserve(nVariations);
+      for (std::size_t i = 0u; i < nVariations; ++i)
+         variationTags.emplace_back(std::to_string(i));
+
+      return Vary(colNames, expression, std::move(variationTags), variationName);
+   }
+
+   /// \brief Register systematic variations for one or more existing columns.
+   /// \param[in] colNames names of the columns for which varied values are provided.
+   /// \param[in] expression a string containing valid C++ code that evaluates to an RVec or RVecs containing the varied
+   ///            values for the specified columns.
+   /// \param[in] variationTags names for each of the varied values, e.g. "up" and "down".
+   /// \param[in] variationName a generic name for this set of varied values, e.g. "ptvariation".
+   ///
+   /// ~~~{.cpp}
+   /// auto nominal_hx =
+   ///     df.Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.9, x*1.1}, {y*0.9, y*1.1}}", {"down", "up"}, "xy")
+   ///       .Histo1D("x", "y");
+   ///
+   /// auto hx = ROOT::RDF::VariationsFor(nominal_hx);
+   /// hx["nominal"].Draw();
+   /// hx["xy:down"].Draw("SAME");
+   /// hx["xy:up"].Draw("SAME");
+   /// ~~~
+   RInterface<Proxied, DS_t> Vary(const std::vector<std::string> &colNames, std::string_view expression,
+                                  const std::vector<std::string> &variationTags, std::string_view variationName)
+   {
+      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
+      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationName.empty() && "Must provide a variation name.");
+
+      for (auto &colName : colNames) {
+         RDFInternal::CheckValidCppVarName(colName, "Vary");
+         RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
+                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      }
+      RDFInternal::CheckValidCppVarName(variationName, "Vary");
+
+      auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
+      auto jittedVariation =
+         RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager, fDataSource,
+                                       fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap);
+      fLoopManager->Book(jittedVariation.get());
+
+      RDFInternal::RColumnRegister newColRegister(fColRegister);
+      newColRegister.AddVariation(std::move(jittedVariation));
+
+      RInterface<Proxied, DS_t> newInterface(fProxiedPtr, *fLoopManager, std::move(newColRegister), fDataSource);
 
       return newInterface;
    }
@@ -2473,6 +2766,23 @@ public:
       return definedColumns;
    }
 
+   /// \brief Return a descriptor for the systematic variations registered in this branch of the computation graph.
+   ///
+   /// This is not an action nor a transformation, just a simple utility to
+   /// inspect the systematic variations that have been registered with Vary() up to this node.
+   /// When called on the root node, it returns an empty descriptor.
+   ///
+   /// ### Example usage:
+   /// ~~~{.cpp}
+   /// auto variations = d.GetVariations();
+   /// variations.Print();
+   /// ~~~
+   ///
+   RVariationsDescription GetVariations()
+   {
+      return {fColRegister.GetVariations()};
+   }
+
    /// \brief Checks if a column is present in the dataset.
    /// \return true if the column is available, false otherwise
    ///
@@ -2652,7 +2962,9 @@ public:
    /// * void InitTask(TTreeReader *, unsigned int slot): each working thread shall call this method during the event
    ///   loop, before processing a batch of entries (possibly read from the TTreeReader passed as argument, if not null).
    ///   This method can be used e.g. to prepare the helper to process a batch of entries in a given thread. Can be no-op.
-   /// * void Initialize(): this method is called once before starting the event-loop. Useful for setup operations. Can be no-op.
+   /// * void Initialize(): this method is called once before starting the event-loop. Useful for setup operations.
+   ///   It must reset the state of the helper to the expected state at the beginning of the event loop: the same helper,
+   ///   or copies of it, might be used for multiple event loops (e.g. in the presence of systematic variations).
    /// * void Finalize(): this method is called at the end of the event loop. Commonly used to finalize the contents of the result.
    /// * Result_t &PartialUpdate(unsigned int slot): this method is optional, i.e. can be omitted. If present, it should
    ///   return the value of the partial result of this action for the given 'slot'. Different threads might call this
@@ -2881,7 +3193,8 @@ private:
       using BaseNodeType_t = typename std::remove_pointer_t<decltype(upcastNodeOnHeap)>::element_type;
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister, fDataSource);
 
-      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(*fLoopManager);
+      const auto jittedAction = std::make_shared<RDFInternal::RJittedAction>(
+         *fLoopManager, validColumnNames, fColRegister, fProxiedPtr->GetVariations());
       auto jittedActionOnHeap = RDFInternal::MakeWeakOnHeap(jittedAction);
 
       auto toJit =
