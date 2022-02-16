@@ -639,43 +639,6 @@ inline void extractCouplings(const T1 &inCouplings, T2 &outCouplings)
    }
 }
 
-///////////////////////////////////////////////////////////////////////////////
-/// find and, if necessary, create a parameter from a list
-
-template <class T>
-inline RooAbsArg &get(T &operators, const char *name, double defaultval = 0)
-{
-   RooAbsArg *kappa = operators.find(name);
-   if (kappa)
-      return *kappa;
-   RooRealVar *newKappa = new RooRealVar(name, name, defaultval);
-   newKappa->setConstant(false);
-   operators.add(*newKappa);
-   return *newKappa;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// find and, if necessary, create a parameter from a list
-
-template <class T>
-inline RooAbsArg &get(T &operators, const std::string &name, double defaultval = 0)
-{
-   return get(operators, name.c_str(), defaultval);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// create a new coupling and add it to the set
-
-template <class T>
-inline void addCoupling(T &set, const TString &name, const TString &formula, const RooArgList &components, bool isNP)
-{
-   if (!set.find(name)) {
-      RooFormulaVar *c = new RooFormulaVar(name, formula, components);
-      c->setAttribute("NewPhysics", isNP);
-      set.add(*c);
-   }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// set parameter values first set all values to defaultVal (if value not
 /// present in param_card then it should be 0)
@@ -1401,8 +1364,7 @@ public:
          }
       }
       extractOperators(_couplings, operators);
-      _formulas =
-         ::createFormulas(funcname, inputParameters, inputFlags, diagrams, _couplings, flags, nonInterfering);
+      _formulas = ::createFormulas(funcname, inputParameters, inputFlags, diagrams, _couplings, flags, nonInterfering);
    }
 
    //////////////////////////////////////////////////////////////////////////////
@@ -1779,18 +1741,15 @@ void RooLagrangianMorphFunc::collectInputs(TDirectory *file)
 
    RooRealVar *observable = this->setupObservable(obsName.c_str(), mode, obj);
    if (classname.find("TH1") != std::string::npos) {
-      collectHistograms(this->GetName(), file, _sampleMap, _physics, *observable, obsName,
-                        _config.paramCards);
+      collectHistograms(this->GetName(), file, _sampleMap, _physics, *observable, obsName, _config.paramCards);
    } else if (classname.find("RooHistFunc") != std::string::npos ||
               classname.find("RooParamHistFunc") != std::string::npos ||
               classname.find("PiecewiseInterpolation") != std::string::npos) {
       collectRooAbsReal(this->GetName(), file, _sampleMap, _physics, obsName, _config.paramCards);
    } else if (classname.find("TParameter<double>") != std::string::npos) {
-      collectCrosssections<double>(this->GetName(), file, _sampleMap, _physics, obsName,
-                                   _config.paramCards);
+      collectCrosssections<double>(this->GetName(), file, _sampleMap, _physics, obsName, _config.paramCards);
    } else if (classname.find("TParameter<float>") != std::string::npos) {
-      collectCrosssections<float>(this->GetName(), file, _sampleMap, _physics, obsName,
-                                  _config.paramCards);
+      collectCrosssections<float>(this->GetName(), file, _sampleMap, _physics, obsName, _config.paramCards);
    } else if (classname.find("TPair") != std::string::npos) {
       collectCrosssectionsTPair(this->GetName(), file, _sampleMap, _physics, obsName, folderNames[0],
                                 _config.paramCards);
@@ -1875,6 +1834,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
      _binWidths("binWidths", "set of binWidth objects", this), _flags("flags", "flags", this), _config(config)
 {
    this->init();
+   this->disableInterferences(_config.nonInterfering);
    this->setup(false);
 
    TRACE_CREATE
@@ -1906,44 +1866,8 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 void RooLagrangianMorphFunc::setup(bool own)
 {
    _ownParameters = own;
-   auto diagrams = _diagrams;
 
-   if (diagrams.size() > 0) {
-      // TODO: The setup() function is a protected function that is only called
-      // in the RooLagrangianMorphFunc constructor when _diagrams is still
-      // empty. As this code branch is unreachable, can't it be removed?
-      RooArgList operators;
-      for (auto const &v : diagrams) {
-         for (const RooArgList *t : v) {
-            extractOperators(*t, operators);
-         }
-      }
-
-      if (own) {
-         _operators.addOwned(operators);
-      } else {
-         _operators.add(operators);
-      }
-
-      for (size_t j = 0; j < diagrams.size(); ++j) {
-         std::vector<RooListProxy *> diagram;
-         for (size_t i = 0; i < diagrams[j].size(); ++i) {
-            std::stringstream name;
-            name << "!vertex" << i;
-            std::stringstream title;
-            title << "set of couplings in the vertex " << i;
-            diagram.push_back(new RooListProxy(name.str().c_str(), title.str().c_str(), this, true, false));
-            if (own) {
-               diagram[i]->addOwned(*diagrams[j][i]);
-            } else {
-               diagram[i]->add(*diagrams[j][i]);
-            }
-         }
-         _diagrams.push_back(diagram);
-      }
-   }
-
-   else if (_config.couplings.size() > 0) {
+   if (_config.couplings.size() > 0) {
       RooArgList operators;
       std::vector<RooListProxy *> vertices;
       extractOperators(_config.couplings, operators);
@@ -1982,7 +1906,36 @@ void RooLagrangianMorphFunc::setup(bool own)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// (-?-)
+/// disable interference between terms
+
+void RooLagrangianMorphFunc::disableInterference(const std::vector<const char *> &nonInterfering)
+{
+   // disable interference between the listed operators
+   std::stringstream name;
+   name << "noInteference";
+   for (auto c : nonInterfering) {
+      name << c;
+   }
+   RooListProxy *p = new RooListProxy(name.str().c_str(), name.str().c_str(), this, kTRUE, kFALSE);
+   this->_nonInterfering.push_back(p);
+   for (auto c : nonInterfering) {
+      p->addOwned(*(new RooStringVar(c, c, c)));
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// disable interference between terms
+
+void RooLagrangianMorphFunc::disableInterferences(const std::vector<std::vector<const char *>> &nonInterfering)
+{
+   // disable interferences between the listed groups of operators
+   for (size_t i = 0; i < nonInterfering.size(); ++i) {
+      this->disableInterference(nonInterfering[i]);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// initialise inputs required for the morphing function
 
 void RooLagrangianMorphFunc::init()
 {
@@ -2123,9 +2076,6 @@ int RooLagrangianMorphFunc::countSamples(int nprod, int ndec, int nboth)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// calculate the number of samples needed to morph a certain physics process
-/// usage:
-///   countSamples ( { RooLagrangianMorphFunc::makeHCggfCouplings(),
-///   RooLagrangianMorphFunc::makeHCHZZCouplings() } )
 
 int RooLagrangianMorphFunc::countSamples(std::vector<RooArgList *> &vertices)
 {
@@ -2139,15 +2089,6 @@ int RooLagrangianMorphFunc::countSamples(std::vector<RooArgList *> &vertices)
    MorphFuncPattern morphfuncpattern;
    ::collectPolynomials(morphfuncpattern, diagram);
    return morphfuncpattern.size();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// create TPair containers of the type expected by the RooLagrangianMorph
-
-TPair *RooLagrangianMorphFunc::makeCrosssectionContainer(double xs, double unc)
-{
-   TPair *v = new TPair(new TParameter<double>("xsection", xs), new TParameter<double>("uncertainty", unc));
-   return v;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2637,24 +2578,22 @@ RooRealVar *RooLagrangianMorphFunc::getBinWidth() const
 ////////////////////////////////////////////////////////////////////////////////
 /// retrieve a histogram output of the current morphing settings
 
-TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name
-                                       /*RooFitResult *r*/)
+TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name)
 {
-   return this->createTH1(name, false /*r*/);
+   return this->createTH1(name, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// retrieve a histogram output of the current morphing settings
 
-TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name, bool correlateErrors
-                                       /* RooFitResult *r*/)
+TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name, bool correlateErrors)
 {
    auto mf = std::make_unique<RooRealSumFunc>(*(this->getFunc()));
    RooRealVar *observable = this->getObservable();
 
    const int nbins = observable->getBins();
 
-   TH1 *hist = new TH1F{name.c_str(), name.c_str(), nbins, observable->getBinning().array()};
+   auto hist = std::make_unique<TH1F>(name.c_str(), name.c_str(), nbins, observable->getBinning().array());
 
    RooArgSet *args = mf->getComponents();
    for (int i = 0; i < nbins; ++i) {
@@ -2682,7 +2621,7 @@ TH1 *RooLagrangianMorphFunc::createTH1(const std::string &name, bool correlateEr
       hist->SetBinContent(i + 1, val);
       hist->SetBinError(i + 1, correlateErrors ? unc : sqrt(unc2));
    }
-   return hist;
+   return hist.release();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
