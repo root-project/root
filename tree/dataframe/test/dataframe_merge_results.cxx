@@ -1,6 +1,11 @@
-#include <ROOT/RDataFrame.hxx>
-#include <ROOT/RResultPtr.hxx> // GetMergeableValue
 #include <stdexcept>
+
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDFHelpers.hxx>          // VariationsFor
+#include <ROOT/RResultPtr.hxx>          // GetMergeableValue
+#include <ROOT/RDF/RMergeableValue.hxx> // MergeValues
+#include <ROOT/RDF/RResultMap.hxx>      // GetMergeableValue
+
 #include <gtest/gtest.h>
 
 using ROOT::Detail::RDF::GetMergeableValue;
@@ -361,5 +366,38 @@ TEST(RDataFrameMergeResults, WrongMergeMinMax)
       EXPECT_STREQ(e.what(), "Results from different actions cannot be merged together.");
    } catch (...) {
       FAIL() << "Expected std::invalid_argument error.";
+   }
+}
+
+TEST(RDataFrameMergeResults, MergeVariedHisto)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto h = df.Vary(
+                 "x",
+                 []() {
+                    return ROOT::RVecI{-1, 2};
+                 },
+                 {}, 2)
+               .Histo1D<int>("x");
+   auto hs1 = ROOT::RDF::Experimental::VariationsFor(h);
+   auto hs2 = ROOT::RDF::Experimental::VariationsFor(h);
+
+   auto m1 = GetMergeableValue(hs1);
+   auto m2 = GetMergeableValue(hs2);
+
+   MergeValues(*m1, *m2);
+
+   const auto &keys = m1->GetKeys();
+
+   std::vector<std::string> expectedkeys{"nominal", "x:0", "x:1"};
+   ASSERT_EQ(keys.size(), expectedkeys.size()) << "Vectors 'keys' and 'expectedkeys' are of unequal length";
+   for (std::size_t i = 0; i < keys.size(); ++i) {
+      EXPECT_EQ(keys[i], expectedkeys[i]) << "Vectors 'keys' and 'expectedkeys' differ at index " << i;
+   }
+   std::vector<int> expectedmeans{1, -1, 2};
+   for (auto i = 0; i < 3; i++) {
+      const auto &histo = m1->GetVariation(keys[i]);
+      EXPECT_EQ(histo.GetMean(), expectedmeans[i]);
+      EXPECT_EQ(histo.GetEntries(), 20);
    }
 }
