@@ -120,6 +120,13 @@ Try 'root --help' for more information.
 ROOT's experimental successor of TTree has been upgraded to the version 1 of the binary format specification. Compared to the v0 format, the header is ~40% smaller and the footer ~100% smaller (after zstd compression). More details in PR [#8897](https://github.com/root-project/root/pull/8897).
 RNTuple is still experimental and is scheduled to become production grade in 2024. Thus, we appreciate feedback and suggestions for improvement.
 
+If you have been trying RNTuple for a while, these are the other important changes that you will notice:
+
+- Support for aligned friends (PR [#6979](https://github.com/root-project/root/pull/6979)). Refer to the `RNTupleReader::OpenFriends()` function.
+- Cluster and page sizes in `RNTupleWriteOptions` now refer to their target size in bytes (as opposed to the number of entries). Defaults are 64 kB for the page size and 50 MB for the cluster size (PR [#8703](https://github.com/root-project/root/pull/8703)).
+- Storing objects of user-defined classes via `TClass` now also includes members inherited from all the base classes (PR [#8552](https://github.com/root-project/root/pull/8552)).
+- Support for RFields whose type is a typedef to some other type.
+
 
 ## RDataFrame
 
@@ -649,6 +656,8 @@ canvas->Print(".tex", "Standalone");
 - Reformat TMVA mathcore Unuran Roostats documentation .
 
 ## Build, Configuration and Testing Infrastructure
+
+- For users building from source the `latest-stable` branch and passing `-Droottest=ON` to the CMake command line, the corresponding revision of roottest pointed to by `latest-stable` will be downloaded as required.
 
 ## PyROOT
 
