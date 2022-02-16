@@ -66,8 +66,16 @@ The following people have contributed to this new version:
 - `TTree::GetEntry()` and `TTree::GetEvent()` no longer have 0 as the default value for the first parameter `entry`. We are not aware of correct uses of this function without providing an entry number. If you have one, please simply pass `0` from now on.
 - `TBufferMerger` is now out of the `Experimental` namespace (`ROOT::Experimental::TBufferMerger` is deprecated, please use `ROOT::TBufferMerger` instead)
 - RooFit container classes marked as deprecated with this release: `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList`. These classes are still available in this release, but will be removed in the next one. Please migrate to STL container classes, such as `std::unordered_map`, `std::set`, and `std::vector`.
+- The `RooFit::FitOptions(const char*)` command to steer [RooAbsPdf::fitTo()](https://root.cern.ch/doc/v628/classRooAbsPdf.html) with an option string in now deprecated and will be removed in ROOT v6.28. Please migrate to the RooCmdArg-based fit configuration. The former character flags map to RooFit command arguments as follows:
+    - `'h'` : RooFit::Hesse()
+    - `'m'` : RooFit::Minos()
+    - `'o'` : RooFit::Optimize(1)
+    - `'r'` : RooFit::Save()
+    - `'t'` : RooFit::Timer()
+    - `'v'` : RooFit::Verbose()
+    - `'0'` : RooFit::Strategy(0)
+  Subsequently, the `RooMinimizer::fit(const char*)` function and the [RooMCStudy](https://root.cern.ch/doc/v626/classRooMCStudy.html) constructor that takes an option string is deprecated as well.
 - `TTree.AsMatrix` has been removed, after being deprecated in 6.24. Instead, please use `RDataFrame.AsNumpy` from now on as a way to read and process data in ROOT files and store it in NumPy arrays (a tutorial can be found [here](https://root.cern/doc/master/df026__AsNumpyArrays_8py.html)).
-- RooFit container classes marked as deprecated with this release: `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList`. These classes are still available in this release, but will be removed in the next one. Please migrate to STL container classes, such as `std::unordered_map`, `std::set`, and `std::vector`.
 
 
 ## Core Libraries
