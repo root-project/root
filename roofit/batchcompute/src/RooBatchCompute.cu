@@ -69,20 +69,6 @@ public:
       return out;
    };
 
-   /** Initialize the cuda computation library.
-   This method needs to be called after the dynamic loading of the cuda instance of the
-   RooBatchCompute library. If cuda is not working properly, it will set the dispatchCUDA
-   pointer to nullptr. **/
-   void init()
-   {
-      cudaError_t err = cudaSetDevice(0);
-      if (err == cudaSuccess)
-         cudaFree(nullptr);
-      else {
-         dispatchCUDA = nullptr;
-         Error("RbcClass::init()", cudaGetErrorString(err));
-      }
-   }
    /** Compute multiple values using cuda kernels.
    This method creates a Batches object and passes it to the correct compute function.
    The compute function is launched as a cuda kernel.
