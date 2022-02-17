@@ -186,18 +186,28 @@ void RunGraphs(std::vector<RResultHandle> handles);
 namespace Experimental {
 
 /// \brief Produce all required systematic variations for the given result.
+/// \param[in] resPtr The result for which variations should be produced.
+/// \return A \ref ROOT::RDF::Experimental::RResultMap "RResultMap" object with full variation names as strings
+///         (e.g. "pt:down") and the corresponding varied results as values.
+///
 /// A given input RResultPtr<T> produces a corresponding RResultMap<T> with a "nominal"
 /// key that will return a value identical to the one contained in the original RResultPtr.
 /// Other keys correspond to the varied values of this result, one for each variation
 /// that the result depends on.
 /// VariationsFor does not trigger the event loop. The event loop is only triggered
 /// upon first access to a valid key, similarly to what happens with RResultPtr.
-/// See RDataFrame's Vary method for more information and example usage.
 ///
-/// \note Currently, producing variations for the results of Display, Report and Snapshot
-///       actions is not supported.
+/// If the result does not depend, directly or indirectly, from any registered systematic variation, the
+/// returned RResultMap will contain only the "nominal" key.
+///
+/// See RDataFrame's \ref ROOT::RDF::RInterface::Vary() "Vary" method for more information and example usages.
+///
+/// \note Currently, producing variations for the results of \ref ROOT::RDF::RInterface::Display() "Display",
+///       \ref ROOT::RDF::RInterface::Report() "Report" and \ref ROOT::RDF::RInterface::Snapshot() "Snapshot"
+///       actions is not supported, as well as varying a column defined via
+///       \ref ROOT::RDF::RInterface::DefinePerSample() "DefinePerSample".
 //
-// TODO The current impementation duplicates work for the nominal value. In principle we could rewire things
+// TODO The current implementation duplicates work for the nominal value. In principle we could rewire things
 // so that the nominal value is calculated only once, either in the original action or in the varied action.
 //
 // An overview of how systematic variations work internally. Given N variations (including the nominal):
