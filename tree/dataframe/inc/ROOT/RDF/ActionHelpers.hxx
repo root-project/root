@@ -61,6 +61,8 @@
 namespace ROOT {
 namespace Detail {
 namespace RDF {
+
+/// Base class for action helpers, see RInterface::Book() for more information.
 template <typename Helper>
 class RActionImpl {
 public:
@@ -85,6 +87,20 @@ public:
    [[noreturn]] void *CallPartialUpdate(...)
    {
       throw std::logic_error("This action does not support callbacks!");
+   }
+
+   template <typename T = Helper>
+   auto CallMakeNew(void *typeErasedResSharedPtr) -> decltype(std::declval<T>().MakeNew(typeErasedResSharedPtr))
+   {
+      return static_cast<Helper *>(this)->MakeNew(typeErasedResSharedPtr);
+   }
+
+   template <typename... Args>
+   [[noreturn]] Helper CallMakeNew(void *, Args...)
+   {
+      const auto &actionName = static_cast<Helper *>(this)->GetActionName();
+      throw std::logic_error("The MakeNew method is not implemented for this action helper (" + actionName +
+                             "). Cannot Vary its result.");
    }
 
    // Helper functions for RMergeableValue
@@ -204,6 +220,12 @@ public:
    ULong64_t &PartialUpdate(unsigned int slot);
 
    std::string GetActionName() { return "Count"; }
+
+   CountHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<ULong64_t> *>(newResult);
+      return CountHelper(result, fCounts.size());
+   }
 };
 
 template <typename ProxiedVal_t>
@@ -233,6 +255,8 @@ public:
    }
 
    std::string GetActionName() { return "Report"; }
+
+   // TODO implement MakeNew. Requires some smartness in passing the appropriate previous node.
 };
 
 class FillHelper : public RActionImpl<FillHelper> {
@@ -322,6 +346,14 @@ public:
    }
 
    std::string GetActionName() { return "FillWithUnknownAxes"; }
+
+   FillHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<Hist_t> *>(newResult);
+      result->Reset();
+      result->SetDirectory(nullptr);
+      return FillHelper(result, fNSlots);
+   }
 };
 
 extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
@@ -506,6 +538,18 @@ public:
    }
 
    std::string GetActionName() { return "Fill"; }
+
+   // generic objects might not have a Reset method, in which case we do the safe thing and disable MakeNew:
+   // it would be hard to guarantee that the object copied from the original action is in a clean state, it
+   // might have been copied _after_ the event loop that filled it already happened.
+   template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
+   FillParHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
+      result->Reset();
+      UnsetDirectoryIfPossible(result.get());
+      return FillParHelper(result, fObjects.size());
+   }
 };
 
 class FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
@@ -577,6 +621,13 @@ public:
    std::string GetActionName() { return "Graph"; }
 
    Result_t &PartialUpdate(unsigned int slot) { return *fGraphs[slot]; }
+
+   FillTGraphHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<TGraph> *>(newResult);
+      result->Set(0);
+      return FillTGraphHelper(result, fGraphs.size());
+   }
 };
 
 // In case of the take helper we have 4 cases:
@@ -636,6 +687,13 @@ public:
    COLL &PartialUpdate(unsigned int slot) { return *fColls[slot].get(); }
 
    std::string GetActionName() { return "Take"; }
+
+   TakeHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<COLL> *>(newResult);
+      result->clear();
+      return TakeHelper(result, fColls.size());
+   }
 };
 
 // Case 2.: The column is not an RVec, the collection is a vector
@@ -681,6 +739,13 @@ public:
    std::vector<T> &PartialUpdate(unsigned int slot) { return *fColls[slot]; }
 
    std::string GetActionName() { return "Take"; }
+
+   TakeHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<std::vector<T>> *>(newResult);
+      result->clear();
+      return TakeHelper(result, fColls.size());
+   }
 };
 
 // Case 3.: The column is a RVec, the collection is not a vector
@@ -718,6 +783,13 @@ public:
    }
 
    std::string GetActionName() { return "Take"; }
+
+   TakeHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<COLL> *>(newResult);
+      result->clear();
+      return TakeHelper(result, fColls.size());
+   }
 };
 
 // Case 4.: The column is an RVec, the collection is a vector
@@ -763,6 +835,13 @@ public:
    }
 
    std::string GetActionName() { return "Take"; }
+
+   TakeHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<typename decltype(fColls)::value_type *>(newResult);
+      result->clear();
+      return TakeHelper(result, fColls.size());
+   }
 };
 
 // Extern templates for TakeHelper
@@ -832,6 +911,12 @@ public:
    ResultType &PartialUpdate(unsigned int slot) { return fMins[slot]; }
 
    std::string GetActionName() { return "Min"; }
+
+   MinHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
+      return MinHelper(result, fMins.size());
+   }
 };
 
 // TODO
@@ -883,6 +968,12 @@ public:
    ResultType &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
 
    std::string GetActionName() { return "Max"; }
+
+   MaxHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
+      return MaxHelper(result, fMaxs.size());
+   }
 };
 
 // TODO
@@ -947,6 +1038,13 @@ public:
    ResultType &PartialUpdate(unsigned int slot) { return fSums[slot]; }
 
    std::string GetActionName() { return "Sum"; }
+
+   SumHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<ResultType> *>(newResult);
+      *result = NeutralElement(*result, -1);
+      return SumHelper(result, fSums.size());
+   }
 };
 
 class MeanHelper : public RActionImpl<MeanHelper> {
@@ -985,6 +1083,12 @@ public:
    double &PartialUpdate(unsigned int slot);
 
    std::string GetActionName() { return "Mean"; }
+
+   MeanHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
+      return MeanHelper(result, fSums.size());
+   }
 };
 
 extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
@@ -1033,6 +1137,12 @@ public:
    }
 
    std::string GetActionName() { return "StdDev"; }
+
+   StdDevHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<double> *>(newResult);
+      return StdDevHelper(result, fCounts.size());
+   }
 };
 
 extern template void StdDevHelper::Exec(unsigned int, const std::vector<float> &);
@@ -1504,10 +1614,17 @@ class AggregateHelper : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, 
 
 public:
    using ColumnTypes_t = TypeList<T>;
+
    AggregateHelper(Acc &&f, Merge &&m, const std::shared_ptr<U> &result, const unsigned int nSlots)
       : fAggregate(std::move(f)), fMerge(std::move(m)), fResult(result), fAggregators(nSlots, *result)
    {
    }
+
+   AggregateHelper(Acc &f, Merge &m, const std::shared_ptr<U> &result, const unsigned int nSlots)
+      : fAggregate(f), fMerge(m), fResult(result), fAggregators(nSlots, *result)
+   {
+   }
+
    AggregateHelper(AggregateHelper &&) = default;
    AggregateHelper(const AggregateHelper &) = delete;
 
@@ -1546,6 +1663,12 @@ public:
    U &PartialUpdate(unsigned int slot) { return fAggregators[slot]; }
 
    std::string GetActionName() { return "Aggregate"; }
+
+   AggregateHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<U> *>(newResult);
+      return AggregateHelper(fAggregate, fMerge, result, fAggregators.size());
+   }
 };
 
 } // end of NS RDF

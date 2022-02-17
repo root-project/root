@@ -22,8 +22,10 @@
 #include <ROOT/RDF/RJittedAction.hxx>
 #include <ROOT/RDF/RJittedDefine.hxx>
 #include <ROOT/RDF/RJittedFilter.hxx>
+#include <ROOT/RDF/RJittedVariation.hxx>
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RStringView.hxx>
+#include <ROOT/RDF/RVariation.hxx>
 #include <ROOT/TypeTraits.hxx>
 #include <TError.h> // gErrorIgnoreLevel
 #include <TH1.h>
@@ -300,9 +302,9 @@ void CheckForDefinition(const std::string &where, std::string_view definedColVie
 
 std::string PrettyPrintAddr(const void *const addr);
 
-void BookFilterJit(const std::shared_ptr<RJittedFilter> &jittedFilter, std::shared_ptr<RNodeBase> *prevNodeOnHeap,
-                   std::string_view name, std::string_view expression, const ColumnNames_t &branches,
-                   const RColumnRegister &customCols, TTree *tree, RDataSource *ds);
+std::shared_ptr<RJittedFilter> BookFilterJit(std::shared_ptr<RNodeBase> *prevNodeOnHeap, std::string_view name,
+                                             std::string_view expression, const ColumnNames_t &branches,
+                                             const RColumnRegister &customCols, TTree *tree, RDataSource *ds);
 
 std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
                                              RDataSource *ds, const RColumnRegister &customCols,
@@ -311,6 +313,12 @@ std::shared_ptr<RJittedDefine> BookDefineJit(std::string_view name, std::string_
 std::shared_ptr<RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
                                                       RLoopManager &lm, const RColumnRegister &customCols,
                                                       std::shared_ptr<RNodeBase> *upcastNodeOnHeap);
+
+std::shared_ptr<RJittedVariation>
+BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
+                 const std::vector<std::string> &variationTags, std::string_view expression, RLoopManager &lm,
+                 RDataSource *ds, const RColumnRegister &colRegister, const ColumnNames_t &branches,
+                 std::shared_ptr<RNodeBase> *upcastNodeOnHeap);
 
 std::string JitBuildAction(const ColumnNames_t &bl, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &art, const std::type_info &at, void *rOnHeap, TTree *tree,
@@ -488,6 +496,55 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    // colRegister' destructor in case the rest of the computation graph is gone. Can be safely deleted here.
    delete prevNodeOnHeap;
    delete wkJittedDefine;
+}
+
+template <typename F>
+void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const char **variedCols,
+                        std::size_t variedColsSize, const char **variationTags, std::size_t variationTagsSize,
+                        std::string_view variationName, RLoopManager *lm,
+                        std::weak_ptr<RJittedVariation> *wkJittedVariation, RColumnRegister *colRegister,
+                        std::shared_ptr<RNodeBase> *prevNodeOnHeap) noexcept
+{
+   if (wkJittedVariation->expired()) {
+      // The branch of the computation graph that needed this jitted variation went out of scope between the type
+      // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
+      delete wkJittedVariation;
+      // colRegister must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
+      // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
+      delete colRegister;
+      delete prevNodeOnHeap;
+      return;
+   }
+
+   const ColumnNames_t inputColNames(colsPtr, colsPtr + colsSize);
+   delete[] colsPtr;
+   std::vector<std::string> variedColNames(variedCols, variedCols + variedColsSize);
+   delete[] variedCols;
+   std::vector<std::string> tags(variationTags, variationTags + variationTagsSize);
+   delete[] variationTags;
+
+   auto jittedVariation = wkJittedVariation->lock();
+
+   using Callable_t = std::decay_t<F>;
+   using ColTypes_t = typename TTraits::CallableTraits<Callable_t>::arg_types;
+
+   auto ds = lm->GetDataSource();
+   if (ds != nullptr)
+      AddDSColumns(inputColNames, *lm, *ds, ColTypes_t(), *colRegister);
+
+   // use unique_ptr<RDefineBase> instead of make_unique<NewCol_t> to reduce jit/compile-times
+   std::unique_ptr<RVariationBase> newVariation{
+      new RVariation<std::decay_t<F>>(std::move(variedColNames), variationName, std::forward<F>(f), std::move(tags),
+                                      jittedVariation->GetTypeName(), *colRegister, *lm, std::move(inputColNames))};
+   jittedVariation->SetVariation(std::move(newVariation));
+
+   // colRegister points to the columns structure in the heap, created before the jitted call so that the jitter can
+   // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
+   delete colRegister;
+   // prevNodeOnHeap only serves the purpose of keeping the RLoopManager alive so it can be accessed by
+   // colRegister' destructor in case the rest of the computation graph is gone. Can be safely deleted here.
+   delete prevNodeOnHeap;
+   delete wkJittedVariation;
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
@@ -676,6 +733,19 @@ struct IsDeque_t<std::deque<T>> : std::true_type {};
 void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols);
 
 void TriggerRun(ROOT::RDF::RNode &node);
+
+template <typename T>
+struct InnerValueType {
+   using type = T; // fallback for when T is not a nested RVec
+};
+
+template <typename Elem>
+struct InnerValueType<ROOT::VecOps::RVec<ROOT::VecOps::RVec<Elem>>> {
+   using type = Elem;
+};
+
+template <typename T>
+using InnerValueType_t = typename InnerValueType<T>::type;
 
 } // namespace RDF
 } // namespace Internal

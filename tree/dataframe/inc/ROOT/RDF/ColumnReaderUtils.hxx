@@ -17,6 +17,8 @@
 #include "RDefineReader.hxx"
 #include "RDSColumnReader.hxx"
 #include "RTreeColumnReader.hxx"
+#include "RVariationBase.hxx"
+#include "RVariationReader.hxx"
 
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/TypeTraits.hxx>
@@ -41,14 +43,22 @@ template <typename T>
 std::unique_ptr<RDFDetail::RColumnReaderBase>
 MakeColumnReader(unsigned int slot, RDefineBase *define,
                  const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
-                 ROOT::RDF::RDataSource *ds, const std::string &colName)
+                 ROOT::RDF::RDataSource *ds, const std::string &colName, RVariationBase *variation,
+                 const std::string &variationName)
 {
    using Ret_t = std::unique_ptr<RDFDetail::RColumnReaderBase>;
 
-   // this check must come first!
-   // so that Redefine'd columns have precedence over the original columns
-   if (define != nullptr)
+   // variations have precedence over everything else: if this is not null, it means we are in the
+   // universe where this variation applies.
+   if (variation != nullptr)
+      return Ret_t{new RVariationReader(slot, colName, variationName, *variation, typeid(T))};
+
+   // defines come second, so that Redefine'd columns have precedence over dataset columns
+   if (define != nullptr) {
+      if (variationName != "nominal" && IsStrInVec(variationName, define->GetVariations()))
+         define = &define->GetVariedDefine(variationName);
       return Ret_t{new RDefineReader(slot, *define, typeid(T))};
+   }
 
    const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
    if (DSValuePtrsIt != DSValuePtrsMap.end()) {
@@ -87,7 +97,8 @@ struct RColumnReadersInfo {
 /// Pre-condition: colInfo.isDefine must not be null.
 template <typename... ColTypes>
 std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)>
-MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo)
+MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo,
+                  const std::string &variationName = "nominal")
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
@@ -95,17 +106,36 @@ MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, cons
    const bool *isDefine = colInfo.fIsDefine;
    const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
    auto *ds = colInfo.fDataSource;
+   const auto &colRegister = colInfo.fCustomCols;
+
+   // the i-th element indicates whether variation variationName provides alternative values for the i-th column
+   std::array<bool, sizeof...(ColTypes)> doesVariationApply;
+   if (variationName == "nominal")
+      doesVariationApply.fill(false);
+   else {
+      for (auto i = 0u; i < sizeof...(ColTypes); ++i)
+         doesVariationApply[i] = IsStrInVec(variationName, colRegister.GetVariationsFor(colNames[i]));
+   }
 
    int i = -1;
    std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{
-      {{(++i, MakeColumnReader<ColTypes>(slot, isDefine[i] ? defines.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r,
-                                         ds, colNames[i]))}...}};
+      {{(++i, MakeColumnReader<ColTypes>(
+                 slot, isDefine[i] ? defines.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r, ds, colNames[i],
+                 doesVariationApply[i] ? &colRegister.FindVariation(colNames[i], variationName) : nullptr,
+                 variationName))}...}};
    return ret;
 
    // avoid bogus "unused variable" warnings
    (void)ds;
    (void)slot;
    (void)r;
+}
+
+// dummy overload for for the case of no columns, to silence compiler warnings
+inline std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, 0>
+MakeColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersInfo &, const std::string & = "nominal")
+{
+   return {};
 }
 
 } // namespace RDF

@@ -14,8 +14,10 @@
 #define ROOT_RDF_HELPERS
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RResultHandle.hxx>
 #include <ROOT/RDF/GraphUtils.hxx>
+#include <ROOT/RDF/RActionBase.hxx>
+#include <ROOT/RDF/RResultMap.hxx>
+#include <ROOT/RResultHandle.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm> // std::transform
@@ -181,6 +183,70 @@ RNode AsRNode(NodeType node)
 // clang-format on
 void RunGraphs(std::vector<RResultHandle> handles);
 
+namespace Experimental {
+
+/// \brief Produce all required systematic variations for the given result.
+/// A given input RResultPtr<T> produces a corresponding RResultMap<T> with a "nominal"
+/// key that will return a value identical to the one contained in the original RResultPtr.
+/// Other keys correspond to the varied values of this result, one for each variation
+/// that the result depends on.
+/// VariationsFor does not trigger the event loop. The event loop is only triggered
+/// upon first access to a valid key, similarly to what happens with RResultPtr.
+/// See RDataFrame's Vary method for more information and example usage.
+///
+/// \note Currently, producing variations for the results of Display, Report and Snapshot
+///       actions is not supported.
+//
+// TODO The current impementation duplicates work for the nominal value. In principle we could rewire things
+// so that the nominal value is calculated only once, either in the original action or in the varied action.
+//
+// An overview of how systematic variations work internally. Given N variations (including the nominal):
+//
+// RResultMap   owns    RVariedAction
+//  N results            N action helpers
+//                       N previous filters
+//                       N*#input_cols column readers
+//
+// ...and each RFilter and RDefine knows for what universe it needs to construct column readers ("nominal" by default).
+//
+//
+template <typename T>
+RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
+{
+   R__ASSERT(resPtr != nullptr && "Calling VariationsFor on an empty RResultPtr");
+
+   // populate parts of the computation graph for which we only have "empty shells", e.g. RJittedActions and
+   // RJittedFilters
+   resPtr.fLoopManager->Jit();
+
+   std::shared_ptr<RDFInternal::RActionBase> action = resPtr.fActionPtr;
+
+   // clone the result once for each variation
+   std::vector<std::string> variations = action->GetVariations();
+   variations.insert(variations.begin(), "nominal");
+   const auto nVariations = variations.size();
+   std::vector<std::shared_ptr<T>> results;
+   results.reserve(nVariations);
+   for (auto i = 0u; i < nVariations; ++i)
+      results.emplace_back(new T{*resPtr.fObjPtr}); // implicitly assuming that T is copiable: this should be the case
+                                                    // for all result types in use, as they are copied for each slot
+
+   std::vector<void *> typeErasedResults;
+   typeErasedResults.reserve(results.size());
+   for (auto &res : results)
+      typeErasedResults.emplace_back(&res);
+
+   // create the RVariedAction and inject it in the computation graph
+   // this recursively creates all the required varied column readers and upstream nodes of the computation graph
+   std::unique_ptr<RDFInternal::RActionBase> variedAction{
+      resPtr.fActionPtr->MakeVariedAction(std::move(typeErasedResults))};
+   resPtr.fLoopManager->Book(variedAction.get());
+
+   return RDFInternal::MakeResultMap<T>(std::move(results), std::move(variations), *resPtr.fLoopManager,
+                                        std::move(variedAction));
+}
+
+} // namespace Experimental
 } // namespace RDF
 } // namespace ROOT
 #endif
