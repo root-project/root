@@ -27,7 +27,7 @@ public:
 
   // Default constructor
   RooAbsCachedPdf() : _cacheMgr(this,10) {}
-  RooAbsCachedPdf(const char *name, const char *title, Int_t ipOrder=0);
+  RooAbsCachedPdf(const char *name, const char *title, int ipOrder=0);
   RooAbsCachedPdf(const RooAbsCachedPdf& other, const char* name=nullptr) ;
 
   double getValV(const RooArgSet* set=nullptr) const override ;

@@ -248,7 +248,6 @@ Double_t RooRealVar::getValV(const RooArgSet*) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve data column of this variable.
 /// \param inputData Struct with data arrays.
-/// \param normSet Ignored.
 /// 1. Check if `inputData` has a column of data registered for this variable (checks the pointer).
 /// 2. If not, check if there's an object with the same name, and use this object's values.
 /// 3. If there is no such object, return a batch of size one with the current value of the variable.

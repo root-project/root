@@ -375,7 +375,7 @@ Bool_t RooAbsArg::getTransientAttribute(const Text_t* name) const
 /// we depend on it.
 /// \param server The server to be registered.
 /// \param valueProp In addition to the basic client-server relationship, declare dependence on the server's value.
-/// \param valueProp In addition to the basic client-server relationship, declare dependence on the server's shape.
+/// \param shapeProp In addition to the basic client-server relationship, declare dependence on the server's shape.
 /// \param refCount Optionally add with higher reference count (if multiple components depend on it)
 
 void RooAbsArg::addServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp, std::size_t refCount)
@@ -568,7 +568,7 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 /// function is responsible for deleting the returned argset.
 /// The complement of this function is getObservables()
 
-RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, Bool_t stripDisconnected) const
+RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, bool stripDisconnected) const
 {
   return getParameters(set?set->get():0,stripDisconnected) ;
 }
@@ -1146,7 +1146,7 @@ Bool_t RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, Bool_t mus
 /// Find the new server in the specified set that matches the old server.
 ///
 /// \param[in] newSet Search this set by name for a new server.
-/// \param[in] If true, search for an item with the bool attribute "ORIGNAME:<oldName>" set.
+/// \param[in] nameChange If true, search for an item with the bool attribute "ORIGNAME:<oldName>" set.
 /// Use `<object>.setAttribute("ORIGNAME:<oldName>")` to set this attribute.
 /// \return Pointer to the new server or `nullptr` if there's no unique match.
 RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const
@@ -1194,6 +1194,8 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, Bool_t nameC
 /// *Copied from redirectServers:*
 ///
 /// \copydetails RooAbsArg::redirectServers
+/// \param newSet Roo collection
+/// \param recurseInNewSet be recursive
 Bool_t RooAbsArg::recursiveRedirectServers(const RooAbsCollection& newSet, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t recurseInNewSet)
 {
   // Cyclic recursion protection

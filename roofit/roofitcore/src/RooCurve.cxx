@@ -198,7 +198,7 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 /// \param[in] c1 First curve.
 /// \param[in] c2 Second curve.
 /// \param[in] scale1 Scale y values for c1 by this factor.
-/// \param[in] scale1 Scale y values for c2 by this factor.
+/// \param[in] scale2 Scale y values for c2 by this factor.
 
 RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, Double_t scale1, Double_t scale2) :
   _showProgress(kFALSE)

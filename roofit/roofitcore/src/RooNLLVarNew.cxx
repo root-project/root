@@ -108,6 +108,7 @@ RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
 /** Compute multiple negative logs of propabilities
 
 \param output An array of doubles where the computation results will be stored
+\param nOut not used
 \note nEvents is the number of events to be processed (the dataMap size)
 \param dataMap A map containing spans with the input data for the computation
 **/
