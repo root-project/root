@@ -183,7 +183,7 @@ public:
 
    BufferImpl(std::size_t size)
    {
-      std::queue<Container> &q = _queues[size];
+      std::queue<Container> &q = queues()[size];
       if (q.empty()) {
          _vec = Container(size);
       } else {
@@ -192,7 +192,12 @@ public:
       }
    }
 
-   ~BufferImpl() override { _queues.at(_vec.size()).emplace(std::move(_vec)); }
+   static QueuesMap& queues() {
+      static QueuesMap queuesMap;
+      return queuesMap;
+   }
+
+   ~BufferImpl() override { queues().at(_vec.size()).emplace(std::move(_vec)); }
 
    double const *cpuReadPtr() const override { return _vec.cpuReadPtr(); }
    double const *gpuReadPtr() const override { return _vec.gpuReadPtr(); }
@@ -201,16 +206,12 @@ public:
    double *gpuWritePtr() override { return _vec.gpuWritePtr(); }
 
    Container _vec;
-   static QueuesMap _queues;
 };
 
 using ScalarBuffer = BufferImpl<ScalarBufferContainer>;
 using CPUBuffer = BufferImpl<CPUBufferContainer>;
 using GPUBuffer = BufferImpl<GPUBufferContainer>;
 using PinnedBuffer = BufferImpl<PinnedBufferContainer>;
-
-template <class Container>
-typename BufferImpl<Container>::QueuesMap BufferImpl<Container>::_queues = {};
 
 std::unique_ptr<AbsBuffer> makeScalarBuffer()
 {
