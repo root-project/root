@@ -5,6 +5,8 @@
 
 #include <thread> // std::thread::hardware_concurrency
 
+#include "SimpleFiller.h" // for VaryFill
+
 #include <gtest/gtest.h>
 
 using ROOT::RDF::Experimental::VariationsFor;
@@ -113,8 +115,18 @@ TEST(RDFVary, RequireNVariationsIsConsistent)
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
    auto s = df.Vary("x", SimpleVariation, {}, /*wrong=*/3).Sum<int>("x");
    auto all_s = VariationsFor(s);
+
+   std::cerr << std::flush;
+   std::streambuf *oldCerrStreamBuf = std::cerr.rdbuf();
+   std::ostringstream strCerr;
+   std::cerr.rdbuf(strCerr.rdbuf());
+
    // now, when evaluating `SimpleVariation`, we should notice that it returns 2 values, not 3, and throw
    EXPECT_THROW(all_s["nominal"], std::runtime_error);
+
+   std::cerr.rdbuf(oldCerrStreamBuf);
+   EXPECT_EQ(strCerr.str(), "RDataFrame::Run: event loop was interrupted\n");
+
 }
 
 TEST(RDFVary, VariationsForDoesNotTriggerRun)
@@ -123,6 +135,33 @@ TEST(RDFVary, VariationsForDoesNotTriggerRun)
    auto h = df.Define("x", [] { return 1; }).Histo1D<int>("x");
    auto hs = VariationsFor(h);
    EXPECT_EQ(df.GetNRuns(), 0);
+}
+
+TEST(RDFVary, InvalidQueries)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
+   // x is float, variation expression cannot return RVec<int>, must be RVec<float>
+   EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
+
+   auto df3 = df.Define("z", [] { return 0.f; });
+   // now with multiple columns: x and z are float, variation expression cannot return RVec<RVecI>, must be RVec<RVecF>
+   EXPECT_THROW(df3.Vary(
+                   {"x", "z"},
+                   [] {
+                      return ROOT::RVec<ROOT::RVecI>{{0}, {1}};
+                   },
+                   {}, 1, "broken"),
+                std::runtime_error);
+
+   auto df2 = df.Define("y", [] { return 1; });
+   // cannot simultaneously vary x and y if they don't have the same type
+   EXPECT_THROW(df2.Vary(
+                   {"x", "y"},
+                   [] {
+                      return ROOT::RVec<ROOT::RVecF>{{0.f}, {1.f}};
+                   },
+                   {}, 1, "broken"),
+                std::runtime_error);
 }
 
 TEST(RDFVary, VariationsForWithNoVariations)
@@ -178,10 +217,10 @@ TEST(RDFVary, SaveGraph)
    const auto s = ROOT::RDF::SaveGraph(df);
    // currently, Vary nodes are not shown in SaveGraph, but varied actions are
    EXPECT_EQ(s,
-             "digraph {\n\t2 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t1 "
+             "digraph {\n\t1 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t2 "
              "[label=<Define<BR/>x>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t0 [label=<Empty "
              "source<BR/>Entries: 1>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t3 [label=<Varied "
-             "Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t1 -> 2;\n\t0 -> 1;\n\t1 -> 3;\n}");
+             "Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t2 -> 1;\n\t0 -> 2;\n\t2 -> 3;\n}");
 }
 
 TEST_P(RDFVary, SimpleSum)
@@ -720,56 +759,215 @@ TEST_P(RDFVary, FillHelperResets)
    EXPECT_EQ(ss2["x:1"].GetMean(), 2);
 }
 
-TEST_P(RDFVary, DISABLED_VaryDefinePerSample)
+TEST(RDFVary, WithRange) // no Range in multithreaded runs
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 5, x + 5};
+                  },
+                  {"x"}, 2)
+               .Range(7)
+               .Filter("x > 1")
+               .Range(3)
+               .Sum<int>("x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_EQ(*h, 9);
+   EXPECT_EQ(hs["nominal"], 9);
+   EXPECT_EQ(hs["x:0"], 0);
+   EXPECT_EQ(hs["x:1"], 18);
 }
 
-TEST_P(RDFVary, DISABLED_WithRange)
+TEST_P(RDFVary, VaryRedefine)
 {
+   // first redefine and then vary
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Redefine("x", [] { return 25; })
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Sum<int>("x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_EQ(*h, 250);
+   EXPECT_EQ(hs["nominal"], 250);
+   EXPECT_EQ(hs["x:0"], 240);
+   EXPECT_EQ(hs["x:1"], 260);
 }
 
-TEST_P(RDFVary, DISABLED_VaryRedefine)
+TEST_P(RDFVary, RedefineVariedColumn)
 {
-
+   // first vary and then redefine --> not legal
+   auto h = ROOT::RDataFrame(10).Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+                                .Vary("x", [](int x) { return ROOT::RVecI{x - 1, x + 1}; }, {"x"}, 2);
+   EXPECT_THROW(h.Redefine("x", [] { return 25; }), std::runtime_error);
 }
 
-TEST_P(RDFVary, DISABLED_RedefineVariedColumn)
+TEST_P(RDFVary, VaryAggregate)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Aggregate(std::plus<int>{}, std::plus<int>{}, "x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_EQ(*h, 45);
+   EXPECT_EQ(hs["nominal"], 45);
+   EXPECT_EQ(hs["x:0"], 35);
+   EXPECT_EQ(hs["x:1"], 55);
 }
 
-TEST_P(RDFVary, DISABLED_VaryAggregate)
+struct MyCounter : public ROOT::Detail::RDF::RActionImpl<MyCounter> {
+   std::shared_ptr<int> fFinalResult = std::make_shared<int>(0);
+   std::vector<int> fPerThreadResults;
+   using Result_t = int;
+
+   MyCounter(unsigned int nSlots) : fPerThreadResults(nSlots) {}
+
+   MyCounter(const std::shared_ptr<int> &myc, const unsigned int nSlots)
+   : fFinalResult(myc), fPerThreadResults(nSlots) {}
+
+   std::shared_ptr<int> GetResultPtr() const { return fFinalResult; }
+
+   void Initialize() {}
+
+   void InitTask(TTreeReader *, int) {}
+
+   void Exec(unsigned int slot) { fPerThreadResults[slot]++; }
+
+   void Finalize() { *fFinalResult = std::accumulate(fPerThreadResults.begin(), fPerThreadResults.end(), 0); }
+
+   std::string GetActionName() const { return "MyCounter"; }
+
+   MyCounter MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<int>*>(newResult);
+      return MyCounter(result, fPerThreadResults.size());
+   }
+};
+
+TEST(RDFVary, VaryBook)
 {
+   auto d = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 5, x + 5};
+                  },
+                  {"x"}, 2);
+   auto h = d.Filter([](int x) { return x > 7; }, {"x"}).Book<>(MyCounter{d.GetNSlots()}, {});
+   auto hs = VariationsFor(h);
+   EXPECT_EQ(*h, 2);
+   EXPECT_EQ(hs["nominal"], 2);
+   EXPECT_EQ(hs["x:0"], 0);
+   EXPECT_EQ(hs["x:1"], 7);
+
+   auto g = d.Filter([](int x) { return x < 8; }, {"x"}).Book<>(MyCounter{d.GetNSlots()}, {});
+   auto gs = VariationsFor(g);
+   EXPECT_EQ(*g, 8);
+   EXPECT_EQ(gs["nominal"], 8);
+   EXPECT_EQ(gs["x:0"], 10);
+   EXPECT_EQ(gs["x:1"], 3);
 }
 
-TEST_P(RDFVary, DISABLED_VaryBook)
-{
+struct CounterWithoutVariations : public ROOT::Detail::RDF::RActionImpl<CounterWithoutVariations> {
+   std::shared_ptr<int> fFinalResult = std::make_shared<int>(0);
+   std::vector<int> fPerThreadResults;
+   using Result_t = int;
 
+   CounterWithoutVariations(unsigned int nSlots) : fPerThreadResults(nSlots) {}
+
+   std::shared_ptr<int> GetResultPtr() const { return fFinalResult; }
+
+   void Initialize() {}
+
+   void InitTask(TTreeReader *, int) {}
+
+   void Exec(unsigned int slot) { fPerThreadResults[slot]++; }
+
+   void Finalize() { *fFinalResult = std::accumulate(fPerThreadResults.begin(), fPerThreadResults.end(), 0); }
+
+   std::string GetActionName() const { return "CounterWithoutVariations"; }
+};
+
+TEST_P(RDFVary, VaryClassWithoutMakeNew)
+{
+   auto d = ROOT::RDataFrame(10)
+               .Define("x", [] { return 25; })
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 5, x + 5};
+                  },
+                  {"x"}, 2);
+   auto h = d.Filter([](int x) { return x > 24; }, {"x"}).Book<>(CounterWithoutVariations{10u}, {});
+   EXPECT_EQ(*h, 10);
+   EXPECT_THROW(VariationsFor(h), std::logic_error);
 }
 
-TEST_P(RDFVary, DISABLED_VaryCache)
+TEST_P(RDFVary, VaryCache)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Cache<int>({"x"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Sum<int>("x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_EQ(*h, 45);
+   EXPECT_EQ(hs["nominal"], 45);
+   EXPECT_EQ(hs["x:0"], 35);
+   EXPECT_EQ(hs["x:1"], 55);
 }
 
-TEST_P(RDFVary, DISABLED_VaryCount)
+TEST_P(RDFVary, VaryCount)
 {
-
+   auto h = ROOT::RDataFrame(3)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Filter([](int x) { return x > 1; }, {"x"})
+               .Count();
+   auto hs = VariationsFor(h);
+   EXPECT_EQ(*h, 1);
+   EXPECT_EQ(hs["nominal"], 1);
+   EXPECT_EQ(hs["x:0"], 0);
+   EXPECT_EQ(hs["x:1"], 2);
 }
 
 TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-thread only
 {
    auto d = ROOT::RDataFrame(1)
-      .Define("x", [] { return 0; })
-      .Vary(
-         "x",
-         [] {
-            return ROOT::RVecI{-1, 2};
-         },
-         {}, 2)
-      .Display("x");
+               .Define("x", [] { return 0; })
+               .Vary(
+                  "x",
+                  [] {
+                     return ROOT::RVecI{-1, 2};
+                  },
+                  {}, 2)
+               .Display("x");
    // Display ignores variations, only displays the nominal values
    EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
    // cannot vary a Display
@@ -778,84 +976,351 @@ TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-t
    // must update this test when https://github.com/root-project/root/issues/9894 is addressed
 }
 
-TEST_P(RDFVary, DISABLED_VaryFill)
-{
+struct Jet {
+   double a, b;
+};
 
+struct CustomFiller {
+
+   TH2D h{"", "", 10, 0, 10, 10, 0, 10};
+
+   void Fill(const Jet &j) { h.Fill(j.a, j.b); }
+
+   void Merge(const std::vector<CustomFiller *> &jets)
+   {
+      TList l;
+      for (auto *j : jets)
+         l.Add(&j->h);
+      h.Merge(&l);
+   }
+
+   double GetMeanX() const { return h.GetMean(1); }
+   double GetMeanY() const { return h.GetMean(2); }
+};
+
+TEST_P(RDFVary, VaryCustomObject)
+{
+   auto h = ROOT::RDataFrame(10)
+                   .Define("Jet",
+                           [] {
+                              return Jet{1., 2.};
+                           })
+                   .Vary(
+                      "Jet",
+                      [] {
+                         return ROOT::RVec<Jet>{{}, {4., 5.}};
+                      },
+                      {}, 2)
+                   .Fill<Jet>(CustomFiller{}, {"Jet"});
+   auto hs = VariationsFor(h);
+
+   EXPECT_DOUBLE_EQ(h->GetMeanX(), 1.);
+   EXPECT_DOUBLE_EQ(h->GetMeanY(), 2.);
+   EXPECT_DOUBLE_EQ(hs["nominal"].GetMeanX(), 1.);
+   EXPECT_DOUBLE_EQ(hs["nominal"].GetMeanY(), 2.);
+   EXPECT_DOUBLE_EQ(hs["x:0"].GetMeanX(), 0.);
+   EXPECT_DOUBLE_EQ(hs["x:0"].GetMeanY(), 0.);
+   EXPECT_DOUBLE_EQ(hs["x:1"].GetMeanX(), 4.);
+   EXPECT_DOUBLE_EQ(hs["x:1"].GetMeanY(), 5.);
 }
 
-TEST_P(RDFVary, DISABLED_VaryGraph)
+TEST_P(RDFVary, VaryFill)
 {
+   SimpleFiller sf;
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [] { return 42.; })
+               .Vary(
+                  "x",
+                  [](double x) {
+                     return ROOT::RVecD{x - 1., x + 1.};
+                  },
+                  {"x"}, 2)
+               .Fill<double>(sf, {"x"});
+   auto hs = VariationsFor(h);
 
+   EXPECT_DOUBLE_EQ(h->GetHisto().GetMean(), 42.);
+   EXPECT_DOUBLE_EQ(hs["nominal"].GetHisto().GetMean(), 42.);
+   EXPECT_DOUBLE_EQ(hs["x:0"].GetHisto().GetMean(), 41.);
+   EXPECT_DOUBLE_EQ(hs["x:1"].GetHisto().GetMean(), 43.);
 }
 
-TEST_P(RDFVary, DISABLED_VaryGraphAsymmErrors)
+TEST_P(RDFVary, VaryGraph)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Graph<int, int>("x", "x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_DOUBLE_EQ(h->GetMean(), 4.5);
+   EXPECT_DOUBLE_EQ(hs["nominal"].GetMean(), 4.5);
+   EXPECT_DOUBLE_EQ(hs["x:0"].GetMean(), 3.5);
+   EXPECT_DOUBLE_EQ(hs["x:1"].GetMean(), 5.5);
 }
 
-TEST_P(RDFVary, DISABLED_VaryHisto2D)
+TEST_P(RDFVary, VaryGraphAsymmErrors)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .GraphAsymmErrors<int, int, int, int, int, int>("x", "x", "x", "x", "x", "x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_DOUBLE_EQ(h->GetMean(), 4.5);
+   EXPECT_DOUBLE_EQ(hs["nominal"].GetMean(), 4.5);
+   EXPECT_DOUBLE_EQ(hs["x:0"].GetMean(), 3.5);
+   EXPECT_DOUBLE_EQ(hs["x:1"].GetMean(), 5.5);
 }
 
-TEST_P(RDFVary, DISABLED_VaryHisto3D)
+TEST_P(RDFVary, VaryHistos)
 {
+   auto df = ROOT::RDataFrame(10)
+                .Define("x",
+                        [] {
+                           return ROOT::RVecI{1, 2, 3};
+                        })
+                .Vary(
+                   "x",
+                   [] {
+                      return ROOT::RVec<ROOT::RVecI>{{}, {4, 5}};
+                   },
+                   {}, 2);
+   auto h1 = df.Histo1D<ROOT::RVecI>("x");
+   auto h1s = VariationsFor(h1);
+   auto h2 = df.Histo2D<ROOT::RVecI, ROOT::RVecI>({}, "x", "x");
+   auto h2s = VariationsFor(h2);
+   auto h3 = df.Histo3D<ROOT::RVecI, ROOT::RVecI, ROOT::RVecI>({}, "x", "x", "x");
+   auto h3s = VariationsFor(h3);
 
+   EXPECT_DOUBLE_EQ(h1->GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(h2->GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(h3->GetMean(), 2.);
+
+   EXPECT_DOUBLE_EQ(h1s["nominal"].GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(h2s["nominal"].GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(h3s["nominal"].GetMean(), 2.);
+
+   EXPECT_DOUBLE_EQ(h1s["x:0"].GetMean(), 0.);
+   EXPECT_DOUBLE_EQ(h2s["x:0"].GetMean(), 0.);
+   EXPECT_DOUBLE_EQ(h3s["x:0"].GetMean(), 0.);
+
+   EXPECT_DOUBLE_EQ(h1s["x:1"].GetMean(), 4.5);
+   EXPECT_DOUBLE_EQ(h2s["x:1"].GetMean(), 4.5);
+   EXPECT_DOUBLE_EQ(h3s["x:1"].GetMean(), 4.5);
+
+   int nbins[4] = {10, 10, 10, 10};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {100., 100., 100., 100.};
+   auto hN = df.HistoND<ROOT::RVecI, ROOT::RVecI, ROOT::RVecI, ROOT::RVecI>({"", "", 4, nbins, xmin, xmax},
+                                                                            {"x", "x", "x", "x"});
+   auto hNs = VariationsFor(hN);
+
+   auto res = hN->Projection(3);
+   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
+   delete res;
+   res = hNs["nominal"].Projection(3);
+   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
+   delete res;
+   res = hNs["x:0"].Projection(3);
+   EXPECT_DOUBLE_EQ(res->GetMean(), 0.);
+   delete res;
+   res = hNs["x:1"].Projection(3);
+   EXPECT_DOUBLE_EQ(res->GetMean(), 5.);
+   delete res;
 }
 
-TEST_P(RDFVary, DISABLED_VaryHistoND)
+TEST_P(RDFVary, VaryMax)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Max<int>("x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_EQ(*h, 9);
+   EXPECT_EQ(hs["nominal"], 9);
+   EXPECT_EQ(hs["x:0"], 8);
+   EXPECT_EQ(hs["x:1"], 10);
 }
 
-TEST_P(RDFVary, DISABLED_VaryMax)
+TEST_P(RDFVary, VaryMean)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Mean<int>("x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_DOUBLE_EQ(*h, 4.5);
+   EXPECT_DOUBLE_EQ(hs["nominal"], 4.5);
+   EXPECT_DOUBLE_EQ(hs["x:0"], 3.5);
+   EXPECT_DOUBLE_EQ(hs["x:1"], 5.5);
 }
 
-TEST_P(RDFVary, DISABLED_VaryMean)
+TEST_P(RDFVary, VaryMin)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Min<int>("x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_EQ(*h, 0);
+   EXPECT_EQ(hs["nominal"], 0);
+   EXPECT_EQ(hs["x:0"], -1);
+   EXPECT_EQ(hs["x:1"], 1);
 }
 
-TEST_P(RDFVary, DISABLED_VaryMin)
+TEST_P(RDFVary, VaryProfiles)
 {
+   auto df = ROOT::RDataFrame(10)
+                .Define("x",
+                        [] {
+                           return ROOT::RVecI{1, 2, 3};
+                        })
+                .Vary(
+                   "x",
+                   [] {
+                      return ROOT::RVec<ROOT::RVecI>{{}, {4, 5}};
+                   },
+                   {}, 2);
+   auto h1 = df.Profile1D<ROOT::RVecI, ROOT::RVecI>({"", "", 100, 0, 100, 0, 100}, "x", "x");
+   auto h1s = VariationsFor(h1);
+   auto h2 =
+      df.Profile2D<ROOT::RVecI, ROOT::RVecI, ROOT::RVecI>({"", "", 100, 0, 100, 100, 0, 100}, "x", "x", "x");
+   auto h2s = VariationsFor(h2);
 
+   EXPECT_DOUBLE_EQ(h1->GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(h2->GetMean(), 2.);
+
+   EXPECT_DOUBLE_EQ(h1s["nominal"].GetMean(), 2.);
+   EXPECT_DOUBLE_EQ(h2s["nominal"].GetMean(), 2.);
+
+   EXPECT_DOUBLE_EQ(h1s["x:0"].GetMean(), 0.);
+   EXPECT_DOUBLE_EQ(h2s["x:0"].GetMean(), 0.);
+
+   EXPECT_DOUBLE_EQ(h1s["x:1"].GetMean(), 4.5);
+   EXPECT_DOUBLE_EQ(h2s["x:1"].GetMean(), 4.5);
 }
 
-TEST_P(RDFVary, DISABLED_VaryProfile1D)
+TEST(RDFVary, VaryReduce)
 {
-
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Reduce([](int x, int y) { return x + y; }, "x", 0);
+   auto hs = VariationsFor(h);
+   EXPECT_EQ(*h, 45);
+   EXPECT_EQ(hs["nominal"], 45);
+   EXPECT_EQ(hs["x:0"], 35);
+   EXPECT_EQ(hs["x:1"], 55);
 }
 
-TEST_P(RDFVary, DISABLED_VaryProfile2D)
+TEST_P(RDFVary, VaryReport)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Filter([](int x) { return x > 5; }, {"x"}, "before")
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Filter([](int x) { return x > 7; }, {"x"}, "after")
+               .Report();
+   auto &report = *h;
 
+   EXPECT_EQ(report["before"].GetAll(), 10);
+   EXPECT_FLOAT_EQ(report["before"].GetEff(), 40.);
+   EXPECT_EQ(report["before"].GetPass(), 4);
+   EXPECT_EQ(report["after"].GetAll(), 4);
+   EXPECT_FLOAT_EQ(report["after"].GetEff(), 50.);
+   EXPECT_EQ(report["after"].GetPass(), 2);
+
+   EXPECT_THROW(VariationsFor(h), std::runtime_error); // FIXME not (yet) implemented
 }
 
-TEST_P(RDFVary, DISABLED_VaryReduce)
+TEST_P(RDFVary, VaryStats)
 {
-
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Stats<int>("x");
+   EXPECT_THROW(VariationsFor(h), std::runtime_error); // FIXME not (yet) implemented
 }
 
-TEST_P(RDFVary, DISABLED_VaryReport)
+TEST_P(RDFVary, VaryStdDev)
 {
+   auto h = ROOT::RDataFrame(3)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{1, x + 1};
+                  },
+                  {"x"}, 2)
+               .StdDev<int>("x");
+   auto hs = VariationsFor(h);
 
+   EXPECT_DOUBLE_EQ(*h, 1.);
+   EXPECT_DOUBLE_EQ(hs["nominal"], 1.);
+   EXPECT_DOUBLE_EQ(hs["x:0"], 0.);
+   EXPECT_DOUBLE_EQ(hs["x:1"], 1.);
 }
 
-TEST_P(RDFVary, DISABLED_VaryStats)
+TEST_P(RDFVary, VarySum)
 {
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Sum<int>("x");
+   auto hs = VariationsFor(h);
 
-}
-
-TEST_P(RDFVary, DISABLED_VaryStdDev)
-{
-
-}
-
-TEST_P(RDFVary, DISABLED_VarySum)
-{
-
+   EXPECT_EQ(*h, 45);
+   EXPECT_EQ(hs["nominal"], 45);
+   EXPECT_EQ(hs["x:0"], 35);
+   EXPECT_EQ(hs["x:1"], 55);
 }
 
 TEST_P(RDFVary, VaryTake)
@@ -883,19 +1348,19 @@ TEST_P(RDFVary, VaryTake)
    EXPECT_EQ(sorted(rs["x:1"]), std::vector<int>({1, 2, 3}));
 }
 
-TEST_P(RDFVary, DISABLED_VaryForeach)
+TEST_P(RDFVary, VarySnapshot)
 {
-
-}
-
-TEST_P(RDFVary, DISABLED_VarySnapshot)
-{
-
-}
-
-TEST_P(RDFVary, DISABLED_VaryOnPartialResult)
-{
-
+   const auto fname = "dummy.root";
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 1, x + 1};
+                  },
+                  {"x"}, 2)
+               .Snapshot<int>("t", fname, {"x"});
+   EXPECT_THROW(VariationsFor(h), std::logic_error); // not (yet) implemented
 }
 
 // instantiate single-thread tests
