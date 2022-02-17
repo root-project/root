@@ -39,6 +39,7 @@ protected:
    ULong64_t fNProcessedEntries{0};
    bool fHasStopped{false};    ///< True if the end of the range has been reached
    const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
+   std::unordered_map<std::string, std::shared_ptr<RRangeBase>> fVariedRanges;
 
    void ResetCounters();
 
