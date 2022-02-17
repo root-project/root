@@ -379,38 +379,6 @@ TMultiGraph::TMultiGraph(const char *name, const char *title)
 {
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
-  TNamed (mg),
-  fGraphs(mg.fGraphs),
-  fFunctions(mg.fFunctions),
-  fHistogram(mg.fHistogram),
-  fMaximum(mg.fMaximum),
-  fMinimum(mg.fMinimum)
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator.
-
-TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
-{
-   if (this!=&mg) {
-      TNamed::operator=(mg);
-      fGraphs=mg.fGraphs;
-      fFunctions=mg.fFunctions;
-      fHistogram=mg.fHistogram;
-      fMaximum=mg.fMaximum;
-      fMinimum=mg.fMinimum;
-   }
-   return *this;
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// TMultiGraph destructor.
 
