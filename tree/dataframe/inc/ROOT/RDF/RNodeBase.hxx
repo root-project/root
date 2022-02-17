@@ -12,6 +12,7 @@
 #define ROOT_RDFNODEBASE
 
 #include "RtypesCore.h"
+#include "TError.h" // R__ASSERT
 
 #include <memory>
 #include <string>
@@ -71,8 +72,13 @@ public:
    const std::vector<std::string> &GetVariations() const { return fVariations; }
 
    /// Return a clone of this node that acts as a Filter working with values in the variationName "universe".
-   // The default implementation returns a nullptr: we need it to compile but we expect to never call it at runtime.
-   virtual std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &) { return nullptr; }
+   virtual std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName)
+   {
+      R__ASSERT(false &&
+                "GetVariedFilter was called on a node type that does not implement it. This should never happen.");
+      (void)variationName;
+      return nullptr;
+   }
 };
 } // ns RDF
 } // ns Detail
