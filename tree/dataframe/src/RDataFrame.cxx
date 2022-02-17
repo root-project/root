@@ -90,6 +90,7 @@ Transformations are a way to manipulate the data.
 | Redefine() | Overwrite the value and/or type of an existing column. See Define() for more information. |
 | RedefineSlot() | Overwrite the value and/or type of an existing column. See DefineSlot() for more information. |
 | RedefineSlotEntry() | Overwrite the value and/or type of an existing column. See DefineSlotEntry() for more information. |
+| Vary() | Register systematic variations for an existing column. Varied results are then extracted via VariationsFor(). |
 
 
 ### Actions
