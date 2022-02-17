@@ -62,8 +62,13 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
          prevFilters.resize(variations.size() + 1, nominal);
       } else {
          // create varied versions of the previous filter node
+         const auto &prevVariations = nominal->GetVariations();
          for (const auto &variation : variations) {
-            prevFilters.emplace_back(std::static_pointer_cast<PrevNodeType>(nominal->GetVariedFilter(variation)));
+            if (IsStrInVec(variation, prevVariations)) {
+               prevFilters.emplace_back(std::static_pointer_cast<PrevNodeType>(nominal->GetVariedFilter(variation)));
+            } else {
+               prevFilters.emplace_back(nominal);
+            }
          }
       }
 
