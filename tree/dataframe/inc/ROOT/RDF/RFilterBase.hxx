@@ -47,6 +47,7 @@ protected:
    /// The nth flag signals whether the nth input column is a custom column or not.
    ROOT::RVecB fIsDefine;
    std::string fVariation; ///< This indicates for what variation this filter evaluates values.
+   std::unordered_map<std::string, std::shared_ptr<RFilterBase>> fVariedFilters;
 
 public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots,
