@@ -14,6 +14,8 @@
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "RtypesCore.h"
 
+#include <unordered_map>
+
 namespace ROOT {
 
 // fwd decl
