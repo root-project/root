@@ -1626,10 +1626,21 @@ void TMultiGraph::Print(Option_t *option) const
 
 void TMultiGraph::RecursiveRemove(TObject *obj)
 {
+   if (obj == fHistogram) {
+      fHistogram = nullptr;
+      return;
+   }
+
+   if (fFunctions) {
+      auto f = fFunctions->Remove(obj);
+      if (f) return;
+   }
+
    if (!fGraphs) return;
-   TObject *objr = fGraphs->Remove(obj);
+   auto objr = fGraphs->Remove(obj);
    if (!objr) return;
-   delete fHistogram; fHistogram = 0;
+
+   delete fHistogram; fHistogram = nullptr;
    if (gPad) gPad->Modified();
 }
 
