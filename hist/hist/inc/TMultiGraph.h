@@ -22,16 +22,14 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
-
 #include "TCollection.h"
+#include "TFitResultPtr.h"
 
 class TH1F;
 class TAxis;
 class TBrowser;
 class TGraph;
 class TF1;
-
-#include "TFitResultPtr.h"
 
 class TMultiGraph : public TNamed {
 
@@ -42,8 +40,8 @@ protected:
    Double_t    fMaximum{-1111};      ///< Maximum value for plotting along y
    Double_t    fMinimum{-1111};      ///< Minimum value for plotting along y
 
-   TMultiGraph(const TMultiGraph&);
-   TMultiGraph& operator=(const TMultiGraph&);
+   TMultiGraph(const TMultiGraph&) = delete;
+   TMultiGraph& operator=(const TMultiGraph&) = delete;
 
 public:
    TMultiGraph();
