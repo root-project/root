@@ -62,8 +62,6 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
    const std::shared_ptr<PrevNode> fPrevNodePtr;
    PrevNode &fPrevNode;
 
-   std::unordered_map<std::string, std::shared_ptr<RFilterBase>> fVariedFilters;
-
 public:
    RFilter(FilterF f, const ROOT::RDF::ColumnNames_t &columns, std::shared_ptr<PrevNode> pd,
            const RDFInternal::RColumnRegister &colRegister, std::string_view name = "",
