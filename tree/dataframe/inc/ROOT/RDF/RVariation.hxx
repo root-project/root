@@ -93,12 +93,9 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    using ColumnTypes_t = typename CallableTraits<F>::arg_types;
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
-   // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
-   using ValuesPerSlot_t =
-      std::conditional_t<std::is_same<ret_type, bool>::value, std::deque<ret_type>, std::vector<ret_type>>;
 
    F fExpression;
-   ValuesPerSlot_t fLastResults;
+   std::vector<ret_type> fLastResults;
 
    /// Column readers per slot and per input column
    std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
