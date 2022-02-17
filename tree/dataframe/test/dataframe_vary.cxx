@@ -56,6 +56,26 @@ TEST(RDFVary, RequireVariationsHaveConsistentType)
    EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
 }
 
+TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
+   {
+      auto s = df.Vary("x", "ROOT::RVecD{x*0.1}", 1).Sum<float>("x");
+      auto ss = VariationsFor(s);
+      // before starting the event loop, we jit and notice the mismatch in types
+      EXPECT_THROW(ss["nominal"], std::runtime_error);
+   }
+
+   {
+      auto s2 = df.Define("y", [] { return 1; })
+                   .Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.1}, {y*0.1}}", 1, "broken")
+                   .Sum("y");
+      auto ss2 = VariationsFor(s2);
+      // before starting the event loop, we jit and notice the mismatch in types
+      EXPECT_THROW(ss2["nominal"], std::runtime_error);
+   }
+}
+
 TEST(RDFVary, RequireReturnTypeIsRVec)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });

@@ -73,6 +73,21 @@ std::size_t GetNVariations(const RVec<T> &results)
    return results.size();
 }
 
+template <typename RVec_t, typename Value_t = typename RVec_t::value_type>
+std::enable_if_t<!IsRVec<Value_t>::value, const std::type_info &> GetInnerValueType(std::size_t)
+{
+   return typeid(Value_t);
+}
+
+template <typename RVec_t, typename Value_t = typename RVec_t::value_type>
+std::enable_if_t<IsRVec<Value_t>::value, const std::type_info &> GetInnerValueType(std::size_t nCols)
+{
+   if (nCols == 1) // we are varying one column that is an RVec
+      return typeid(Value_t);
+   else // we are varying multiple columns whose type is the inner type of this RVec
+      return typeid(typename Value_t::value_type);
+}
+
 template <typename F>
 class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    using ColumnTypes_t = typename CallableTraits<F>::arg_types;
@@ -176,7 +191,7 @@ public:
       }
    }
 
-   const std::type_info &GetTypeId() const { return typeid(ret_type); }
+   const std::type_info &GetTypeId() const { return GetInnerValueType<ret_type>(fColNames.size()); }
 
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
