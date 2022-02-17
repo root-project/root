@@ -176,6 +176,13 @@ private:
    //'setup' section
    XMLNodePointer_t  TopProcess(TXMLEngine* gdml, XMLNodePointer_t node);
 
+   // Find defined objects by name
+   TGeoTranslation  *GetPosition(const char *name);
+   TGeoRotation     *GetRotation(const char *name);
+   TGeoScale        *GetScaleObj(const char *name);
+   TGeoShape        *GetSolid(const char *name);
+   TGeoVolume       *GetVolume(const char *name);
+
    typedef TGDMMapHelper<TGeoTranslation> PosMap;
    typedef TGDMMapHelper<TGeoRotation> RotMap;
    typedef TGDMMapHelper<TGeoScale> SclMap;
