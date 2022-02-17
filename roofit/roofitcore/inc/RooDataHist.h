@@ -197,7 +197,7 @@ public:
   R__SUGGEST_ALTERNATIVE("Use binVolume(std::size_t) const.")
   { return _binv[_curIndex]; }
   /// Write `weight` into current bin. \deprecated Use set(std::size_t,double,double)
-  void set(Double_t weight, Double_t wgtErr=-1)
+  void set(double wgt, double wgtErr=-1)
   R__SUGGEST_ALTERNATIVE("Use set(std::size_t,double,double).");
 
   /// Return true if currently loaded coordinate is considered valid within

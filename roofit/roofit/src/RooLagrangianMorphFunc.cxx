@@ -1901,7 +1901,7 @@ RooLagrangianMorphFunc::RooLagrangianMorphFunc(const char *name, const char *tit
 
 ////////////////////////////////////////////////////////////////////////////////
 /// setup this instance with the given set of operators and vertices
-/// if own=true, the class will own the operatorsemplate <class Base>
+/// if own=true, the class will own the operators template `<class Base>`
 
 void RooLagrangianMorphFunc::setup(bool own)
 {

@@ -261,7 +261,7 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the bound object at all locations indicated by the data in `evalData`.
 /// \see RooAbsReal::getValues().
-/// \param[in/out] evalData Struct with spans pointing to the data to be used for evaluation.
+/// \param[in,out] evalData Struct with spans pointing to the data to be used for evaluation.
 /// The spans can either have a size of `n`, in which case a batch of `n` results is returned, or they can have
 /// a size of 1. In the latter case, the value in the span is broadcast to all `n` events.
 /// \return Batch of function values for each coordinate given in the input spans.

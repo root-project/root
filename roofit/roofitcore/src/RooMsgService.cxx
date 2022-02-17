@@ -393,7 +393,7 @@ void RooMsgService::restoreState()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::MsgLevel combination
+/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
 
 Bool_t RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
 {
@@ -402,7 +402,7 @@ Bool_t RooMsgService::isActive(const RooAbsArg* self, RooFit::MsgTopic topic, Ro
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if logging is active for given object/topic/RooFit::MsgLevel combination
+/// Check if logging is active for given object/topic/RooFit::%MsgLevel combination
 
 Bool_t RooMsgService::isActive(const TObject* self, RooFit::MsgTopic topic, RooFit::MsgLevel level)
 {

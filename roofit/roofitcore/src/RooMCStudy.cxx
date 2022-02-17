@@ -89,7 +89,7 @@ fitting the PDF to data and accumulating the fit statistics.
 
 \param[in] model The PDF to be studied
 \param[in] observables The variables of the PDF to be considered observables
-\param[in] argX Arguments from the table below
+\param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 Optional arguments according to table below.
 
 <table>
 <tr><th> Optional arguments <th>

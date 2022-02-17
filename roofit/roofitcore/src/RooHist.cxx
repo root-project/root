@@ -278,6 +278,7 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
 /// \param[in] xErrorFrac Size of the errror in x as a fraction of the bin width
 /// \param[in] scaleFactor arbitrary scaling of the y-values
 /// \param[in] normVars variables over which to normalize
+/// \param[in] fr fit result
 RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, Double_t scaleFactor, const RooArgSet *normVars, const RooFitResult* fr) :
   TGraphAsymmErrors(), _nSigma(1), _rawEntries(-1)
 {

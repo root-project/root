@@ -168,7 +168,7 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the parameter constraint sum to add to the negative log-likelihood.
-/// Returns a `nullptr` if the parameters are unconstrained.
+/// \return a `nullptr` if the parameters are unconstrained.
 /// \param[in] name Name of the created RooConstraintSum object.
 /// \param[in] pdf The pdf model whose parameters should be constrained.
 ///            Constraint terms will be extracted from RooProdPdf instances
@@ -177,7 +177,7 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 ///            used to figure out which are the observables and also to get the
 ///            global observables definition and values if they are stored in
 ///            the dataset.
-/// \param[in] constraints Set of parameters to constrain. If `nullptr`, all
+/// \param[in] constrainedParameters Set of parameters to constrain. If `nullptr`, all
 ///            parameters will be considered.
 /// \param[in] externalConstraints Set of constraint terms that are not
 ///            embedded in the pdf (external constraints).
@@ -196,6 +196,7 @@ RooArgSet const* tryToGetConstraintSetFromWorkspace(
 ///            `globalObservables` or `globalObservablesTag` parameters, the
 ///            values of all global observables that are not stored in the
 ///            dataset are taken from the model.
+/// \param[in] cloneConstraints true to clone constraints
 /// \param[in] workspace RooWorkspace to cache the set of constraints.
 std::unique_ptr<RooAbsReal> RooConstraintSum::createConstraintTerm(
         std::string const& name,

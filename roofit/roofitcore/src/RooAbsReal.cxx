@@ -1324,7 +1324,7 @@ TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
 ///
 /// \param[in] name  Name of the ROOT histogram
 /// \param[in] xvar  Observable to be mapped on x axis of ROOT histogram
-/// \param[in] arg[0-9]  Arguments according to list below
+/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8  Arguments according to list below
 /// \return TH1 *, one of TH{1,2,3}. The caller takes ownership.
 ///
 /// <table>
@@ -1587,6 +1587,9 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// will show a unit normalized curve in the frame variable, taken at the present value
 /// of other observables defined for this PDF.
 ///
+/// \param[in] frame pointer to RooPlot
+/// \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10 Ordered arguments
+///
 /// If a PDF is plotted in a frame in which a dataset has already been plotted, it will
 /// show a projected curve integrated over all variables that were present in the shown
 /// dataset except for the one on the x-axis. The normalization of the curve will also
@@ -1694,7 +1697,7 @@ void RooAbsReal::plotOnCompSelect(RooArgSet* selNodes) const
 /// Details on error band visualization
 /// -----------------------------------
 /// *VisualizeError() uses plotOnWithErrorBand(). Documentation of the latter:*
-/// \copydetails plotOnWithErrorBand()
+/// \see plotOnWithErrorBand()
 
 RooPlot* RooAbsReal::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdArg& arg2,
              const RooCmdArg& arg3, const RooCmdArg& arg4,
@@ -4431,6 +4434,8 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a \f$ \chi^2 \f$ variable from a histogram and this function.
 ///
+/// \param arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8 ordered arguments
+///
 /// The following named arguments are supported
 ///
 ///  | | Options to control construction of the \f$ \chi^2 \f$
@@ -4456,7 +4461,8 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  co
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \copydoc RooAbsReal::createChi2(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
+/// \see RooAbsReal::createChi2(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
+/// \param data hist data
 /// \param cmdList List with RooCmdArg() from the table
 
 RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)

@@ -87,7 +87,7 @@
  * ### Reuse nodes to customise a different PDF
  * By default, the customizer clones the prototype leaf node when splitting a leaf,
  * but the user can feed pre-defined split leafs in leaf list. These leafs
- * must have the name <split_leaf>_<splitcat_label> to be picked up. The list
+ * must have the name `<split_leaf>_<splitcat_label>` to be picked up. The list
  * of pre-supplied leafs may be partial, any missing split leafs will be auto
  * generated.
  *

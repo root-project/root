@@ -95,7 +95,7 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 /// \param title Title for plotting.
 /// \param x The variable of the PDF.
 /// \param x0 Location parameter of the Gaussian component.
-/// \param sigma Width parameter of the Gaussian component.
+/// \param sigmaLR Width parameter of the Gaussian component.
 /// \param alphaL Location of transition to a power law on the left, in standard deviations away from the mean.
 /// \param nL Exponent of power-law tail on the left.
 /// \param alphaR Location of transition to a power law on the right, in standard deviations away from the mean.
@@ -123,7 +123,7 @@ RooCrystalBall::RooCrystalBall(const char *name, const char *title, RooAbsReal &
 /// \param title Title for plotting.
 /// \param x The variable of the PDF.
 /// \param x0 Location parameter of the Gaussian component.
-/// \param sigma Width parameter of the Gaussian component.
+/// \param sigmaLR Width parameter of the Gaussian component.
 /// \param alpha Location of transition to a power law, in standard deviations away from the mean.
 /// \param n Exponent of power-law tail.
 /// \param doubleSided Whether the tail is only on one side or on both sides

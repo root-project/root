@@ -602,7 +602,7 @@ class BatchInterfaceAccessor {
 /// Overwrite the value stored in this object's cache.
 /// This can be used to fake a computation that resulted in `value`.
 /// \param[in] value Value to write.
-/// \param[in] setValDirty If true, notify users of this object that its value changed.
+/// \param[in] notifyClients If true, notify users of this object that its value changed.
 /// This is the default.
 void RooAbsReal::setCachedValue(double value, bool notifyClients) {
   _value = value;

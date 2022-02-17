@@ -1053,6 +1053,7 @@ RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsData::weightError(double&,double&,RooAbsData::ErrorType) const
+/// \param etype error type
 void RooDataSet::weightError(double& lo, double& hi, ErrorType etype) const
 {
   store()->weightError(lo,hi,etype) ;
@@ -1061,6 +1062,7 @@ void RooDataSet::weightError(double& lo, double& hi, ErrorType etype) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsData::weightError(ErrorType)
+/// \param etype error type
 double RooDataSet::weightError(ErrorType etype) const
 {
   return store()->weightError(etype) ;

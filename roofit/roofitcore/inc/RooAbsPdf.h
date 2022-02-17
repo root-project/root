@@ -54,7 +54,9 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////
   /// See RooAbsPdf::generate(const RooArgSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
+  /// \param[in] whatVars Set of observables to generate for each event according to this model.
   /// \param[in] nEvents How many events to generate
+  /// \param arg1,arg2,arg3,arg4,arg5 Optional command arguments.
   RooDataSet *generate(const RooArgSet &whatVars, Int_t nEvents, const RooCmdArg& arg1,
                        const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
                        const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) {
@@ -89,6 +91,7 @@ public:
     Bool_t _resampleProto ;
     TString _dsetName ;
     Bool_t _init ;
+
     ClassDef(GenSpec,0) // Generation specification
   } ;
 
@@ -103,7 +106,9 @@ public:
 
   ////////////////////////////////////////////////////////////////////////////////
   /// As RooAbsPdf::generateBinned(const RooArgSet&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&)
+  /// \param[in] whatVars set
   /// \param[in] nEvents How many events to generate
+  /// \param arg1,arg2,arg3,arg4,arg5 ordered arguments
   virtual RooDataHist *generateBinned(const RooArgSet &whatVars, Double_t nEvents, const RooCmdArg& arg1,
                const RooCmdArg& arg2=RooCmdArg::none(), const RooCmdArg& arg3=RooCmdArg::none(),
                const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none()) const {

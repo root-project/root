@@ -67,23 +67,26 @@ ClassImp(RooAbsTestStatistic);
 /// \param[in] real Function to be used for tests
 /// \param[in] data Data to fit function to
 /// \param[in] projDeps A set of projected observables
-/// \param[in] rangeName Fit data only in range with given name
-/// \param[in] addCoefRangeName If not null, all RooAddPdf components of `real` will be instructed to fix their fraction definitions to the given named range.
-/// \param[in] nCPU If larger than one, the test statistic calculation will be parallelized over multiple processes.
-/// By default the data is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
-/// of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
-/// in each processing block many vary greatly thereby distributing the workload rather unevenly.
-/// \param[in] interleave is set to true, the interleave partitioning strategy is used where each partition
-/// i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
-/// \param[in] verbose Be more verbose.
-/// \param[in] splitCutRange If true, a different rangeName constructed as rangeName_{catName} will be used
-/// as range definition for each index state of a RooSimultaneous. This means that a different range can be defined
-/// for each category such as
-/// ```
-/// myVariable.setRange("range_pi0", 135, 210);
-/// myVariable.setRange("range_gamma", 50, 210);
-/// ```
-/// if the categories are called "pi0" and "gamma".
+/// \param[in] cfg statistic configuration object
+///
+/// cfg contains:
+/// - rangeName Fit data only in range with given name
+/// - addCoefRangeName If not null, all RooAddPdf components of `real` will be instructed to fix their fraction definitions to the given named range.
+/// - nCPU If larger than one, the test statistic calculation will be parallelized over multiple processes.
+///   By default the data is split with 'bulk' partitioning (each process calculates a contigious block of fraction 1/nCPU
+///   of the data). For binned data this approach may be suboptimal as the number of bins with >0 entries
+///   in each processing block many vary greatly thereby distributing the workload rather unevenly.
+/// - interleave is set to true, the interleave partitioning strategy is used where each partition
+///   i takes all bins for which (ibin % ncpu == i) which is more likely to result in an even workload.
+/// - verbose Be more verbose.
+/// - splitCutRange If true, a different rangeName constructed as rangeName_{catName} will be used
+///    as range definition for each index state of a RooSimultaneous. This means that a different range can be defined
+///    for each category such as
+///    ```
+///    myVariable.setRange("range_pi0", 135, 210);
+///    myVariable.setRange("range_gamma", 50, 210);
+///    ```
+///    if the categories are called "pi0" and "gamma".
 
 RooAbsTestStatistic::RooAbsTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
                                          const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) :
