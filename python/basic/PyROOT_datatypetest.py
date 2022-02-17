@@ -19,6 +19,8 @@ from pytest import raises
 
 PYTEST_MIGRATION = True
 
+is_64bit = sys.maxsize > 2**32
+
 def setup_module(mod):
     import sys, os
     if not os.path.exists('DataTypes.C'):
@@ -301,7 +303,12 @@ class TestClassDATATYPES:
 
             # typed passing
             ca = c.pass_array(b)
-            assert ca.typecode == b.typecode
+            if is_64bit:
+                assert ca.typecode == b.typecode
+            else:
+                # 'i','l' and 'I','L' are the same size in 32 bits
+                if t == 'l':   assert ca.typecode in ['i','l']
+                elif t == 'L': assert ca.typecode in ['I','L']
             assert len(b) == self.N
             for i in range(self.N):
                 assert ca[i] == b[i]
