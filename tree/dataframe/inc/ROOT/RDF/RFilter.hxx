@@ -202,7 +202,7 @@ public:
          return it->second;
 
       auto prevNode = fPrevNodePtr;
-      if ((void *)fPrevNodePtr.get() != (void *)fLoopManager)
+      if (static_cast<RNodeBase *>(fPrevNodePtr.get()) != static_cast<RNodeBase *>(fLoopManager))
          prevNode = std::static_pointer_cast<PrevNode>(prevNode->GetVariedFilter(variationName));
 
       // the varied filters get a copy of the callable object.
