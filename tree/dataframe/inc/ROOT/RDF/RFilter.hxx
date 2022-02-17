@@ -193,13 +193,17 @@ public:
       // nobody should ask for a varied filter for the nominal variation: they can just
       // use the nominal filter!
       assert(variationName != "nominal");
+      // nobody should ask for a varied filter for a variation on which this filter does not depend:
+      // they can just use the nominal filter.
+      assert(RDFInternal::IsStrInVec(variationName, fVariations));
 
       auto it = fVariedFilters.find(variationName);
       if (it != fVariedFilters.end())
          return it->second;
 
       auto prevNode = fPrevNodePtr;
-      if (static_cast<RNodeBase *>(fPrevNodePtr.get()) != static_cast<RNodeBase *>(fLoopManager))
+      if (static_cast<RNodeBase *>(fPrevNodePtr.get()) != static_cast<RNodeBase *>(fLoopManager) &&
+          RDFInternal::IsStrInVec(variationName, prevNode->GetVariations()))
          prevNode = std::static_pointer_cast<PrevNode>(prevNode->GetVariedFilter(variationName));
 
       // the varied filters get a copy of the callable object.
