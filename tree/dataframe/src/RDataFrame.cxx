@@ -57,6 +57,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
 - [Actions](\ref actions) -- getting results
 - [Performance tips and parallel execution](\ref parallel-execution) -- how to use it and common pitfalls
 - [More features](\ref more-features)
+   - [Systematic variations](\ref systematics)
    - [RDataFrame objects as function arguments and return values](\ref rnode)
    - [Storing RDataFrame objects in collections](\ref RDFCollections)
    - [Executing callbacks every N events](\ref callbacks)
@@ -903,6 +904,101 @@ Secondly, just-in-time compilation of string expressions or non-templated action
 ## More features
 Here is a list of the most important features that have been omitted in the "Crash course" for brevity.
 You don't need to read all these to start using RDataFrame, but they are useful to save typing time and runtime.
+
+\anchor systematics
+### Systematic variations
+
+Starting from ROOT v6.26, RDataFrame provides a flexible syntax to define systematic variations.
+This is done in two steps: a) variations for one or more existing columns are registered via Vary() and b) variations
+of normal RDataFrame results are extracted with a call to VariationsFor(). In between these steps, no other change
+to the analysis code is required: the presence of systematic variations for certain columns is automatically propagated
+through filters, defines and actions, and RDataFrame will take these dependencies into account when producing varied
+results. VariationsFor() is included in header `ROOT/RDFHelpers.hxx`, which compiled C++ programs must include
+explicitly.
+
+An example usage of Vary() and VariationsFor() in C++:
+
+~~~{.cpp}
+auto nominal_hx =
+   df.Vary("pt", "ROOT::RVecD{pt*0.9f, pt*1.1f}", {"down", "up"})
+     .Filter("pt > pt_cut")
+     .Define("x", someFunc, {"pt"})
+     .Histo1D<float>("x");
+
+// request the generation of varied results from the nominal
+ROOT::RDF::Experimental::RResultMap<TH1D> hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
+
+// the event loop runs here, upon first access to any of the results or varied results:
+hx["nominal"].Draw(); // same effect as nominal_hx->Draw()
+hx["pt:down"].Draw("SAME");
+hx["pt:up"].Draw("SAME");
+~~~
+
+A list of variation "tags" is passed as last argument to Vary(): they give a name to the varied values that are returned
+as elements of an RVec of the appropriate type. The number of variation tags must correspond to the number of elements
+the RVec returned by the expression (2 in the example above: the first element will correspond to tag "down", the second
+to tag "up"). The _full_ variation name will be composed of the varied column name and the variation tags (e.g.
+"pt:down", "pt:up" in this example). Python usage looks similar.
+
+Note how we use the "pt" column as usual in the Filter() and Define() calls and we simply use "x" as the value to fill
+the resulting histogram. To produce the varied results, RDataFrame will automatically execute the Filter and Define
+calls for each variation and fill the histogram with values and cuts that depend on the variation.
+
+There is no limitation to the complexity of a Vary() expression, and just like for Define() and Filter() calls users are
+not limited to string expressions but they can also pass any valid C++ callable, including lambda functions and
+complex functors. The callable can be applied to zero or more existing columns and it will always receive their
+_nominal_ values in input.
+
+**Varying multiple columns in lockstep**
+
+In the following Python snippet we use the Vary() signature that allows varying multiple columns simultaneously or
+"in lockstep":
+
+~~~{.python}
+df.Vary(["pt", "eta"],
+        "RVec<RVecF>{{pt*0.9, pt*1.1}, {eta*0.9, eta*1.1}}",
+        variationTags=["down", "up"],
+        variationName="ptAndEta")
+~~~
+
+The expression returns an RVec of two RVecs: each inner vector contains the varied values for one column, and the
+inner vectors follow the same ordering as the column names passed as first argument. Besides the variation tags, in
+this case we also have to explicitly pass a variation name as there is no one column name that can be used as default.
+
+The call above will produce variations "ptAndEta:down" and "ptAndEta:up".
+
+**Combining multiple variations**
+
+Even if a result depends on multiple variations, only one is applied at a time, i.e. there will be no result produced
+by applying multiple systematic variations at the same time.
+For example, in the following example snippet, the RResultMap instance `all_h` will contain keys "nominal", "pt:down",
+"pt:up", "eta:0", "eta:1", but no "pt:up&&eta:0" or similar:
+
+~~~{.cpp}
+auto df = _df.Vary("pt",
+                   "ROOT::RVecD{pt*0.9, pt*1.1}",
+                   {"down", "up"})
+             .Vary("eta",
+                   [](float eta) { return RVecF{eta*0.9f, eta*1.1f}; },
+                   {"eta"},
+                   2);
+
+auto nom_h = df.Histo2D(histoModel, "pt", "eta");
+auto all_hs = VariationsFor(nom_h);
+all_hs.GetKeys(); // returns {"nominal", "pt:down", "pt:up", "eta:0", "eta:1"}
+~~~
+
+Note how we passed the integer `2` instead of a list of variation tags to the second Vary() invocation: this is a
+shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
+
+\note As of v6.26, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
+      interfaces might still evolve and improve based on user feedback. We expect that some aspects of the related
+      programming model will be streamlined in future versions.
+
+\note As of v6.26, the results of a Snapshot(), Report() or Display() call cannot be varied (i.e. it is not possible to
+      call VariationsFor() on them. Varying a column defined via DefinePerSample() is similarly not supported, but this
+      limitation can be circumvented by interposing an extra Define() between the DefinePerSample() and Vary() calls.
+      These limitations will be lifted in future releases.
 
 \anchor rnode
 ### RDataFrame objects as function arguments and return values
