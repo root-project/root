@@ -39,6 +39,7 @@ and gets destroyed when the fitting ends.
 #include <RooNLLVarNew.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
+#include <RooBatchCompute/Initialisation.h>
 #include <RunContext.h>
 
 #include <ROOT/StringUtils.hxx>
@@ -191,6 +192,9 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
      _batchMode{batchMode}, _dataset{data, *std::unique_ptr<RooArgSet>(topNode.getObservables(data)), rangeName},
      _topNode{topNode}, _normSet{normSet}
 {
+   // Initialize RooBatchCompute
+   RooBatchCompute::init();
+
    // Some checks and logging of used architectures
    {
       auto log = [](std::string_view message) {
@@ -258,7 +262,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    determineOutputSizes(serverSet);
 
    for (auto *arg : serverSet) {
-      auto& info = _nodeInfos[arg];
+      auto &info = _nodeInfos[arg];
 
       // If the node evaluation doesn't involve a loop over entries, we can
       // always use the scalar mode.
@@ -268,11 +272,10 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
       // mode, because the driver takes care of deciding which node needs to be
       // re-evaluated. However, dirty flag propagation must be kept for reducer
       // nodes, because their clients are evaluated in scalar mode.
-      if(!info.computeInScalarMode && !arg->isReducerNode()) {
+      if (!info.computeInScalarMode && !arg->isReducerNode()) {
          setOperMode(arg, RooAbsArg::ADirty);
       }
    }
-
 
    // Extra steps for initializing in cuda mode
    if (_batchMode != RooFit::BatchModeOption::Cuda)
@@ -455,7 +458,8 @@ void RooFitDriver::handleIntegral(const RooAbsArg *node)
          // We don't need dirty flag propagation for nodes evaluated by the
          // RooFitDriver, because the driver takes care of deciding which node
          // needs to be re-evaluated.
-         if(!info.computeInScalarMode) setOperMode(integral, RooAbsArg::ADirty);
+         if (!info.computeInScalarMode)
+            setOperMode(integral, RooAbsArg::ADirty);
       }
 
       computeCPUNode(integral, _integralInfos.at(integral));
