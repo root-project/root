@@ -85,7 +85,7 @@ public:
    virtual void     FitSlicesY(TF1 *f1=0,Int_t firstxbin=0, Int_t lastxbin=-1, Int_t cut=0, Option_t *option="QNR", TObjArray* arr = 0);
            Int_t    GetBin(Int_t binx, Int_t biny, Int_t binz = 0) const override;
    virtual Double_t GetBinWithContent2(Double_t c, Int_t &binx, Int_t &biny, Int_t firstxbin=1, Int_t lastxbin=-1,Int_t firstybin=1, Int_t lastybin=-1, Double_t maxdiff=0) const;
-           Double_t GetBinContent(Int_t bin) const override { return TH1::GetBinContent(bin); }
+   using TH1::GetBinContent;
            Double_t GetBinContent(Int_t binx, Int_t biny) const override { return TH1::GetBinContent( GetBin(binx, biny) ); }
            Double_t GetBinContent(Int_t binx, Int_t biny, Int_t) const override { return TH1::GetBinContent( GetBin(binx, biny) ); }
    using TH1::GetBinErrorLow;
