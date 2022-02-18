@@ -93,8 +93,7 @@ public:
    virtual void     FitSlicesZ(TF1 *f1=0,Int_t binminx=1, Int_t binmaxx=0,Int_t binminy=1, Int_t binmaxy=0,
                                         Int_t cut=0 ,Option_t *option="QNR"); // *MENU*
            Int_t    GetBin(Int_t binx, Int_t biny, Int_t binz) const override;
-           Double_t GetBinContent(Int_t bin) const override { return TH1::GetBinContent(bin); }
-           Double_t GetBinContent(Int_t bin, Int_t) const override { return TH1::GetBinContent(bin); }
+   using TH1::GetBinContent;
            Double_t GetBinContent(Int_t binx, Int_t biny, Int_t binz) const override { return TH1::GetBinContent( GetBin(binx, biny, binz) ); }
    using TH1::GetBinErrorLow;
    using TH1::GetBinErrorUp;
