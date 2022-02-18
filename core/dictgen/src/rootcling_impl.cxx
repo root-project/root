@@ -362,7 +362,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
          // For now we allow only a special macro (ClassDef) to have meaningful comments
          SourceLocation maybeMacroLoc = (*I)->getLocation();
-         bool isClassDefMacro = maybeMacroLoc.isMacroID() && S.findMacroSpelling(maybeMacroLoc, "ClassDef");
+         bool isClassDefMacro = maybeMacroLoc.isMacroID() && (S.findMacroSpelling(maybeMacroLoc, "ClassDef") || S.findMacroSpelling(maybeMacroLoc, "ClassDefOverride"));
          if (isClassDefMacro) {
             while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine") {
                ++I;

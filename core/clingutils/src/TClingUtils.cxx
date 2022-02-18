@@ -4343,7 +4343,7 @@ llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &de
 
    // For now we allow only a special macro (ClassDef) to have meaningful comments
    SourceLocation maybeMacroLoc = DeclFileLineDecl->getLocation();
-   bool isClassDefMacro = maybeMacroLoc.isMacroID() && sema.findMacroSpelling(maybeMacroLoc, "ClassDef");
+   bool isClassDefMacro = maybeMacroLoc.isMacroID() && (sema.findMacroSpelling(maybeMacroLoc, "ClassDef") || sema.findMacroSpelling(maybeMacroLoc, "ClassDefOverride"));
    if (isClassDefMacro) {
       comment = ROOT::TMetaUtils::GetComment(*DeclFileLineDecl, &commentSLoc);
       if (comment.size()) {
