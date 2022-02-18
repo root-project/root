@@ -625,6 +625,10 @@ std::pair<std::string,clang::QualType> GetNameTypeForIO(const clang::QualType& t
 llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0);
 
 //______________________________________________________________________________
+// Returns true if class def macro exists
+bool HasClassDefMacro(const clang::Decl *decl, const cling::Interpreter &interpreter);
+
+//______________________________________________________________________________
 // Returns the comment of the ClassDef macro
 llvm::StringRef GetClassComment(const clang::CXXRecordDecl &decl, clang::SourceLocation *loc, const cling::Interpreter &interpreter);
 
