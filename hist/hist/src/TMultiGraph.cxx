@@ -1606,7 +1606,7 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
       while (lnk) {
          g = lnk->GetObject();
-         g->SavePrimitive(out, Form("multigraph%s",lnk->GetOption()));
+         g->SavePrimitive(out, TString::Format("multigraph%s",lnk->GetOption()).Data());
          lnk = (TObjOptLink*)lnk->Next();
       }
    }
