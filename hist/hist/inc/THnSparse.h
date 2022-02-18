@@ -42,8 +42,8 @@ class THnSparse: public THnBase {
    TExMap     fBinsContinued;               ///<! Filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
    THnSparseCompactBinCoord *fCompactCoord; ///<! Compact coordinate
 
-   THnSparse(const THnSparse&); // Not implemented
-   THnSparse& operator=(const THnSparse&); // Not implemented
+   THnSparse(const THnSparse&) = delete;
+   THnSparse& operator=(const THnSparse&) = delete;
 
  protected:
 

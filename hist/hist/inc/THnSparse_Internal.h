@@ -30,8 +30,8 @@ class THnSparse;
 class THnSparseArrayChunk: public TObject {
  private:
 
-   THnSparseArrayChunk(const THnSparseArrayChunk&); // Not implemented
-   THnSparseArrayChunk& operator=(const THnSparseArrayChunk&); // Not implemented
+   THnSparseArrayChunk(const THnSparseArrayChunk&) = delete;
+   THnSparseArrayChunk& operator=(const THnSparseArrayChunk&) = delete;
 
  public:
    THnSparseArrayChunk():
