@@ -4320,6 +4320,28 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if class has any of class declarations like ClassDef, ClassDefNV, ClassDefOverride
+
+bool ROOT::TMetaUtils::HasClassDefMacro(const clang::Decl *decl, const cling::Interpreter &interpreter)
+{
+   if (!decl) return false;
+
+   auto& sema = interpreter.getCI()->getSema();
+   auto maybeMacroLoc = decl->getLocation();
+
+   if (!maybeMacroLoc.isMacroID()) return false;
+
+   static const std::vector<std::string> signatures =
+     { "ClassDef", "ClassDefOverride", "ClassDefNV", "ClassDefInline", "ClassDefInlineOverride", "ClassDefInlineNV" };
+
+   for (auto &name : signatures)
+      if (sema.findMacroSpelling(maybeMacroLoc, name))
+         return true;
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the class comment after the ClassDef:
 /// class MyClass {
 /// ...
@@ -4331,23 +4353,17 @@ llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &de
                                                   const cling::Interpreter &interpreter)
 {
    using namespace clang;
-   SourceLocation commentSLoc;
-   llvm::StringRef comment;
-
-   Sema& sema = interpreter.getCI()->getSema();
 
    const Decl* DeclFileLineDecl
       = interpreter.getLookupHelper().findFunctionProto(&decl, "DeclFileLine", "",
                                                         cling::LookupHelper::NoDiagnostics);
-   if (!DeclFileLineDecl) return llvm::StringRef();
 
    // For now we allow only a special macro (ClassDef) to have meaningful comments
-   SourceLocation maybeMacroLoc = DeclFileLineDecl->getLocation();
-   bool isClassDefMacro = maybeMacroLoc.isMacroID() && (sema.findMacroSpelling(maybeMacroLoc, "ClassDef") || sema.findMacroSpelling(maybeMacroLoc, "ClassDefOverride"));
-   if (isClassDefMacro) {
-      comment = ROOT::TMetaUtils::GetComment(*DeclFileLineDecl, &commentSLoc);
+   if (HasClassDefMacro(DeclFileLineDecl, interpreter)) {
+      SourceLocation commentSLoc;
+      llvm::StringRef comment = ROOT::TMetaUtils::GetComment(*DeclFileLineDecl, &commentSLoc);
       if (comment.size()) {
-         if (loc){
+         if (loc) {
             *loc = commentSLoc;
          }
          return comment;
