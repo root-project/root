@@ -53,7 +53,28 @@ TEST(RDFVary, VaryTwiceTheSameColumn)
 TEST(RDFVary, RequireVariationsHaveConsistentType)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
+   // x is float, variation expression cannot return RVec<int>, must be RVec<float>
    EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
+
+   auto df3 = df.Define("z", [] { return 0.f; });
+   // now with multiple columns: x and z are float, variation expression cannot return RVec<RVecI>, must be RVec<RVecF>
+   EXPECT_THROW(df3.Vary(
+                   {"x", "z"},
+                   [] {
+                      return ROOT::RVec<ROOT::RVecI>{{0}, {1}};
+                   },
+                   {}, 1, "broken"),
+                std::runtime_error);
+
+   auto df2 = df.Define("y", [] { return 1; });
+   // cannot simultaneously vary x and y if they don't have the same type
+   EXPECT_THROW(df2.Vary(
+                   {"x", "y"},
+                   [] {
+                      return ROOT::RVec<ROOT::RVecF>{{0.f}, {1.f}};
+                   },
+                   {}, 1, "broken"),
+                std::runtime_error);
 }
 
 TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
