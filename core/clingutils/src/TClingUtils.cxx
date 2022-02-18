@@ -2769,10 +2769,10 @@ const char *ROOT::TMetaUtils::ShortTypeName(const char *typeDesc)
 bool ROOT::TMetaUtils::IsStreamableObject(const clang::FieldDecl &m,
                                           const cling::Interpreter& interp)
 {
-   const char *comment = ROOT::TMetaUtils::GetComment( m ).data();
+   auto comment = ROOT::TMetaUtils::GetComment( m );
 
    // Transient
-   if (comment[0] == '!') return false;
+   if ((comment.size() > 0) && (comment[0] == '!')) return false;
 
    clang::QualType type = m.getType();
 
