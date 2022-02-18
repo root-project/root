@@ -2772,7 +2772,8 @@ bool ROOT::TMetaUtils::IsStreamableObject(const clang::FieldDecl &m,
    auto comment = ROOT::TMetaUtils::GetComment( m );
 
    // Transient
-   if ((comment.size() > 0) && (comment[0] == '!')) return false;
+   if (!comment.empty() && comment[0] == '!')
+      return false;
 
    clang::QualType type = m.getType();
 
