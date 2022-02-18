@@ -820,6 +820,13 @@ public:
          const auto demangledType = RDFInternal::DemangleTypeIdName(typeid(RetType));
          retTypeName = "CLING_UNKNOWN_TYPE_" + demangledType;
       }
+
+      // when varying multiple columns, they must be different columns
+      if (colNames.size() > 1) {
+         std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
+         if (uniqueCols.size() != colNames.size())
+            throw std::logic_error("The same column was passed multiple times the same column twice: ");
+      }
       /* SANITY CHECKS END */
 
       auto variation = std::make_shared<RDFInternal::RVariation<F_t>>(
@@ -958,6 +965,13 @@ public:
                                          fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
       }
       RDFInternal::CheckValidCppVarName(variationName, "Vary");
+
+      // when varying multiple columns, they must be different columns
+      if (colNames.size() > 1) {
+         std::set<std::string> uniqueCols(colNames.begin(), colNames.end());
+         if (uniqueCols.size() != colNames.size())
+            throw std::logic_error("The same column was passed multiple times the same column twice: ");
+      }
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedVariation =
