@@ -3631,7 +3631,7 @@ TH3C operator*(Float_t c1, TH3C &h1)
 {
    TH3C hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3643,7 +3643,7 @@ TH3C operator+(TH3C &h1, TH3C &h2)
 {
    TH3C hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3655,7 +3655,7 @@ TH3C operator-(TH3C &h1, TH3C &h2)
 {
    TH3C hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3667,7 +3667,7 @@ TH3C operator*(TH3C &h1, TH3C &h2)
 {
    TH3C hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3679,7 +3679,7 @@ TH3C operator/(TH3C &h1, TH3C &h2)
 {
    TH3C hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3867,7 +3867,7 @@ TH3S operator*(Float_t c1, TH3S &h1)
 {
    TH3S hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3879,7 +3879,7 @@ TH3S operator+(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3891,7 +3891,7 @@ TH3S operator-(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3903,7 +3903,7 @@ TH3S operator*(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3915,7 +3915,7 @@ TH3S operator/(TH3S &h1, TH3S &h2)
 {
    TH3S hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4070,7 +4070,7 @@ TH3I operator*(Float_t c1, TH3I &h1)
 {
    TH3I hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4082,7 +4082,7 @@ TH3I operator+(TH3I &h1, TH3I &h2)
 {
    TH3I hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4094,7 +4094,7 @@ TH3I operator-(TH3I &h1, TH3I &h2)
 {
    TH3I hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4106,7 +4106,7 @@ TH3I operator*(TH3I &h1, TH3I &h2)
 {
    TH3I hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4118,7 +4118,7 @@ TH3I operator/(TH3I &h1, TH3I &h2)
 {
    TH3I hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4285,7 +4285,7 @@ TH3F operator*(Float_t c1, TH3F &h1)
 {
    TH3F hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4297,7 +4297,7 @@ TH3F operator+(TH3F &h1, TH3F &h2)
 {
    TH3F hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4309,7 +4309,7 @@ TH3F operator-(TH3F &h1, TH3F &h2)
 {
    TH3F hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4321,7 +4321,7 @@ TH3F operator*(TH3F &h1, TH3F &h2)
 {
    TH3F hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4333,7 +4333,7 @@ TH3F operator/(TH3F &h1, TH3F &h2)
 {
    TH3F hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4500,7 +4500,7 @@ TH3D operator*(Float_t c1, TH3D &h1)
 {
    TH3D hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4512,7 +4512,7 @@ TH3D operator+(TH3D &h1, TH3D &h2)
 {
    TH3D hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4524,7 +4524,7 @@ TH3D operator-(TH3D &h1, TH3D &h2)
 {
    TH3D hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4536,7 +4536,7 @@ TH3D operator*(TH3D &h1, TH3D &h2)
 {
    TH3D hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4548,6 +4548,6 @@ TH3D operator/(TH3D &h1, TH3D &h2)
 {
    TH3D hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }

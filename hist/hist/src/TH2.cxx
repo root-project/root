@@ -2614,8 +2614,8 @@ void TH2::SetShowProjectionY(Int_t nbins)
 TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 {
 
-   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum2::StaticBackground((TH1*)0x%zx,%d,\"%s\")",
-                                            (size_t)this, niter, option));
+   return (TH1 *)gROOT->ProcessLineFast(TString::Format("TSpectrum2::StaticBackground((TH1*)0x%zx,%d,\"%s\")",
+                                            (size_t)this, niter, option).Data());
 }
 
 
@@ -2630,8 +2630,8 @@ TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 {
 
-   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum2::StaticSearch((TH1*)0x%zx,%g,\"%s\",%g)",
-                                             (size_t)this, sigma, option, threshold));
+   return (Int_t)gROOT->ProcessLineFast(TString::Format("TSpectrum2::StaticSearch((TH1*)0x%zx,%g,\"%s\",%g)",
+                                             (size_t)this, sigma, option, threshold).Data());
 }
 
 
@@ -2992,7 +2992,7 @@ TH2C operator*(Float_t c1, TH2C &h1)
 {
    TH2C hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3004,7 +3004,7 @@ TH2C operator+(TH2C &h1, TH2C &h2)
 {
    TH2C hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3016,7 +3016,7 @@ TH2C operator-(TH2C &h1, TH2C &h2)
 {
    TH2C hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3028,7 +3028,7 @@ TH2C operator*(TH2C &h1, TH2C &h2)
 {
    TH2C hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3040,7 +3040,7 @@ TH2C operator/(TH2C &h1, TH2C &h2)
 {
    TH2C hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3252,7 +3252,7 @@ TH2S operator*(Float_t c1, TH2S &h1)
 {
    TH2S hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3264,7 +3264,7 @@ TH2S operator+(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3276,7 +3276,7 @@ TH2S operator-(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3288,7 +3288,7 @@ TH2S operator*(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3300,7 +3300,7 @@ TH2S operator/(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3477,7 +3477,7 @@ TH2I operator*(Float_t c1, TH2I &h1)
 {
    TH2I hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3489,7 +3489,7 @@ TH2I operator+(TH2I &h1, TH2I &h2)
 {
    TH2I hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3501,7 +3501,7 @@ TH2I operator-(TH2I &h1, TH2I &h2)
 {
    TH2I hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3513,7 +3513,7 @@ TH2I operator*(TH2I &h1, TH2I &h2)
 {
    TH2I hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3525,7 +3525,7 @@ TH2I operator/(TH2I &h1, TH2I &h2)
 {
    TH2I hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3736,7 +3736,7 @@ TH2F operator*(Float_t c1, TH2F &h1)
 {
    TH2F hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3748,7 +3748,7 @@ TH2F operator*(TH2F &h1, Float_t c1)
 {
    TH2F hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3760,7 +3760,7 @@ TH2F operator+(TH2F &h1, TH2F &h2)
 {
    TH2F hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3772,7 +3772,7 @@ TH2F operator-(TH2F &h1, TH2F &h2)
 {
    TH2F hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3784,7 +3784,7 @@ TH2F operator*(TH2F &h1, TH2F &h2)
 {
    TH2F hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3796,7 +3796,7 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 {
    TH2F hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4009,7 +4009,7 @@ TH2D operator*(Float_t c1, TH2D &h1)
 {
    TH2D hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4021,7 +4021,7 @@ TH2D operator+(TH2D &h1, TH2D &h2)
 {
    TH2D hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4033,7 +4033,7 @@ TH2D operator-(TH2D &h1, TH2D &h2)
 {
    TH2D hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4045,7 +4045,7 @@ TH2D operator*(TH2D &h1, TH2D &h2)
 {
    TH2D hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -4057,6 +4057,6 @@ TH2D operator/(TH2D &h1, TH2D &h2)
 {
    TH2D hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
