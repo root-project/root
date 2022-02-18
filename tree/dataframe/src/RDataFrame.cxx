@@ -996,9 +996,7 @@ shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
       programming model will be streamlined in future versions.
 
 \note As of v6.26, the results of a Snapshot(), Report() or Display() call cannot be varied (i.e. it is not possible to
-      call VariationsFor() on them. Varying a column defined via DefinePerSample() is similarly not supported, but this
-      limitation can be circumvented by interposing an extra Define() between the DefinePerSample() and Vary() calls.
-      These limitations will be lifted in future releases.
+      call VariationsFor() on them. These limitations will be lifted in future releases.
 
 \anchor rnode
 ### RDataFrame objects as function arguments and return values

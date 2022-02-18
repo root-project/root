@@ -204,8 +204,7 @@ namespace Experimental {
 ///
 /// \note Currently, producing variations for the results of \ref ROOT::RDF::RInterface::Display() "Display",
 ///       \ref ROOT::RDF::RInterface::Report() "Report" and \ref ROOT::RDF::RInterface::Snapshot() "Snapshot"
-///       actions is not supported, as well as varying a column defined via
-///       \ref ROOT::RDF::RInterface::DefinePerSample() "DefinePerSample".
+///       actions is not supported.
 //
 // TODO The current implementation duplicates work for the nominal value. In principle we could rewire things
 // so that the nominal value is calculated only once, either in the original action or in the varied action.
