@@ -70,11 +70,12 @@ public:
 
    void FinaliseSlot(unsigned int) final {}
 
-   void MakeVariations(const std::vector<std::string> &) final { R__ASSERT(false && "Unimplemented"); }
+   // No-op for RDefinePerSample: it never depends on systematic variations
+   void MakeVariations(const std::vector<std::string> &) final {}
 
    RDefineBase &GetVariedDefine(const std::string &) final
    {
-      R__ASSERT(false && "Unimplemented");
+      R__ASSERT(false && "This should never be called");
       return *this;
    }
 };
