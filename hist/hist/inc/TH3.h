@@ -68,7 +68,7 @@ protected:
 private:
 
    TH3(const TH3&);
-   TH3& operator=(const TH3&); // Not implemented
+   TH3& operator=(const TH3&) = delete;
 
    using TH1::Integral;
    using TH1::IntegralAndError;
