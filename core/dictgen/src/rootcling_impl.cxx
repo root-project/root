@@ -319,7 +319,6 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
    llvm::StringRef comment;
 
    ASTContext &C = CXXRD.getASTContext();
-   Sema &S = interpreter.getCI()->getSema();
 
    SourceRange commentRange;
 
@@ -359,10 +358,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
       if (!(*I)->isImplicit()
             && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I) || isa<VarDecl>(*I))) {
 
-
          // For now we allow only a special macro (ClassDef) to have meaningful comments
-         SourceLocation maybeMacroLoc = (*I)->getLocation();
-         bool isClassDefMacro = maybeMacroLoc.isMacroID() && (S.findMacroSpelling(maybeMacroLoc, "ClassDef") || S.findMacroSpelling(maybeMacroLoc, "ClassDefOverride"));
+         bool isClassDefMacro = TMetaUtils::HasClassDefMacro(*I, interpreter);
          if (isClassDefMacro) {
             while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine") {
                ++I;
