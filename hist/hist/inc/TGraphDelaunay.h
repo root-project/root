@@ -31,8 +31,8 @@ class TGraphDelaunay : public TNamed {
 
 private:
 
-   TGraphDelaunay(const TGraphDelaunay&); // Not implemented
-   TGraphDelaunay& operator=(const TGraphDelaunay&); // Not implemented
+   TGraphDelaunay(const TGraphDelaunay&) = delete;
+   TGraphDelaunay& operator=(const TGraphDelaunay&) = delete;
 
 protected:
 

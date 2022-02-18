@@ -35,8 +35,8 @@ public:
 
 
 private:
-   TGraphDelaunay2D(const TGraphDelaunay2D&);            // Not implemented
-   TGraphDelaunay2D& operator=(const TGraphDelaunay2D&); // Not implemented
+   TGraphDelaunay2D(const TGraphDelaunay2D&) = delete;
+   TGraphDelaunay2D& operator=(const TGraphDelaunay2D&) = delete;
 
 protected:
 
