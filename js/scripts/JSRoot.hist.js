@@ -7059,7 +7059,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
           hlst = this.options.nostack ? stack.fHists : stack.fStack,
           nhists = (hlst && hlst.arr) ? hlst.arr.length : 0;
 
-      if (indx >= nhists)
+      if ((indx >= nhists) || this.options.pads)
          return Promise.resolve(this);
 
       let rindx = this.options.horder ? indx : nhists-indx-1;
@@ -7125,6 +7125,7 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       this.options._pfc = d.check("PFC");
       this.options._plc = d.check("PLC");
       this.options._pmc = d.check("PMC");
+      this.options.pads = d.check("PADS");
 
       this.options.hopt = d.remain(); // use remaining draw options for histogram draw
 
@@ -7252,6 +7253,8 @@ JSROOT.define(['d3', 'painter', 'gpad'], (d3, jsrp) => {
       return jsrp.ensureTCanvas(painter, false).then(() => {
 
          painter.decodeOptions(opt);
+
+         if (painter.options.pads) return;
 
          if (!painter.options.nostack)
              painter.options.nostack = !painter.buildStack(stack);
