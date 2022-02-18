@@ -126,6 +126,16 @@ TEST(RDFVary, GetVariations)
                   "Variations {x:0, x:1} affect column x\nVariations {xy:0, xy:1} affect columns {x, y}\n");
 }
 
+TEST(RDFVary, VaryDefinePerSample)
+{
+   auto df = ROOT::RDataFrame(10).DefinePerSample("x", [](unsigned int, const ROOT::RDF::RSampleInfo &) { return 1; });
+   auto s = df.Vary("x", SimpleVariation, {}, 2).Sum<int>("x");
+   auto ss = ROOT::RDF::Experimental::VariationsFor(s);
+   EXPECT_EQ(ss["nominal"], 1 * 10);
+   EXPECT_EQ(ss["x:0"], -1 * 10);
+   EXPECT_EQ(ss["x:1"], 2 * 10);
+}
+
 TEST_P(RDFVary, SimpleSum)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
