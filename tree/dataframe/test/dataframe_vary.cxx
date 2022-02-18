@@ -35,6 +35,21 @@ TEST(RDFVary, RequireExistingColumn)
    EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
 }
 
+TEST(RDFVary, VaryTwiceTheSameColumn)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   EXPECT_THROW(df.Vary(
+                   {"x", "x"},
+                   [] {
+                      return ROOT::RVec<ROOT::RVecI>{{0}, {0}};
+                   },
+                   {}, 1, "broken"),
+                std::logic_error);
+
+   // and now the jitted version
+   EXPECT_THROW(df.Vary({"x", "x"}, "ROOT::RVec<ROOT::RVecI>{{0}, {0}}", 1, "broken"), std::logic_error);
+}
+
 TEST(RDFVary, RequireVariationsHaveConsistentType)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
