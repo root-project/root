@@ -3555,31 +3555,3 @@ void RooAbsPdf::setNormRangeOverride(const char* rangeName)
     _norm = 0 ;
   }
 }
-
-
-/** Base function for computing multiple values of a RooAbsPdf.
-First, the RooAbsReal base function is called to compute the raw values of the
-pdf. After that, divide by the normalization values found in the dataMap.
-\param stream pointer to cuda stream
-\param output The array where the results are stored
-\param nEvents The number of events to be processed
-\param dataMap A std::map containing the input data for the computations
-**/
-void RooAbsPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
-{
-  RooAbsReal::computeBatch(stream, output, nEvents, dataMap);
-
-  auto integralSpan = dataMap.at(_norm);
-
-  if(integralSpan.size() == 1) {
-    double oneOverNorm = 1. / integralSpan[0];
-    for (std::size_t i=0; i < nEvents; ++i) {
-      output[i] *= oneOverNorm;
-    }
-  } else {
-    assert(integralSpan.size() == nEvents);
-    for (std::size_t i=0; i < nEvents; ++i) {
-      output[i] = normalizeWithNaNPacking(output[i], integralSpan[i]);
-    }
-  }
-}
