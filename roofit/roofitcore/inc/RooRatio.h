@@ -48,10 +48,12 @@ public:
   ~RooRatio() override;
 
 protected:
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
+
   RooRealProxy _numerator;
   RooRealProxy _denominator;
-
-  Double_t evaluate() const override;
 
   ClassDefOverride(RooRatio, 2) // Ratio of two RooAbsReal and/or numbers
 };

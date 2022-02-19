@@ -139,9 +139,6 @@ RooSpan<double> RooGenericPdf::evaluateSpan(RooBatchCompute::RunContext& inputDa
 void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   formula().computeBatch(stream, output, nEvents, dataMap);
-  RooSpan<const double> normVal = dataMap.at(&*_norm);
-  // TODO: also deal with non-scalar integral batch
-  for (size_t i=0; i<nEvents; i++) output[i] = normalizeWithNaNPacking(output[i], normVal[0]);
 }
 
 

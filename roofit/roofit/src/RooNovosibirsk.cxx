@@ -92,7 +92,7 @@ Double_t RooNovosibirsk::evaluate() const
 void RooNovosibirsk::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Novosibirsk, output, nEvents, dataMap, {&*x,&*peak,&*width,&*tail,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::Novosibirsk, output, nEvents, dataMap, {&*x,&*peak,&*width,&*tail});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
