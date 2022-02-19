@@ -115,7 +115,7 @@ double RooJohnson::evaluate() const
 void RooJohnson::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Johnson, output, nEvents, dataMap, {&*_mass,&*_mu,&*_lambda,&*_gamma,&*_delta,&*_norm},{_massThreshold});
+  dispatch->compute(stream, RooBatchCompute::Johnson, output, nEvents, dataMap, {&*_mass,&*_mu,&*_lambda,&*_gamma,&*_delta},{_massThreshold});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

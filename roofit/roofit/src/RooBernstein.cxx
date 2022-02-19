@@ -152,7 +152,7 @@ void RooBernstein::computeBatch(cudaStream_t* stream, double* output, size_t nEv
   extraArgs[nCoef+1] = _x.max();
 
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Bernstein, output, nEvents, dataMap, {&*_x, &*_norm}, extraArgs);
+  dispatch->compute(stream, RooBatchCompute::Bernstein, output, nEvents, dataMap, {&*_x}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

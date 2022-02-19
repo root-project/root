@@ -48,10 +48,12 @@ public:
   virtual ~RooRatio();
 
 protected:
+  Double_t evaluate() const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  inline bool canComputeBatchWithCuda() const { return true; }
+
   RooRealProxy _numerator;
   RooRealProxy _denominator;
-
-  Double_t evaluate() const;
 
   ClassDef(RooRatio, 2) // Ratio of two RooAbsReal and/or numbers
 };

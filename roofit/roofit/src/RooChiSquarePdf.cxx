@@ -67,7 +67,7 @@ Double_t RooChiSquarePdf::evaluate() const
 void RooChiSquarePdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::ChiSquare, output, nEvents, dataMap, {&*_x,&*_norm}, {_ndof});
+  dispatch->compute(stream, RooBatchCompute::ChiSquare, output, nEvents, dataMap, {&*_x}, {_ndof});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
