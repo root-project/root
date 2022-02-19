@@ -508,7 +508,6 @@ void RooProdPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEven
     pdfs.push_back(pdf);
   }
   RooBatchCompute::ArgVector special{ static_cast<double>(pdfs.size()) };
-  pdfs.push_back(&*_norm);
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
   dispatch->compute(stream, RooBatchCompute::ProdPdf, output, nEvents, dataMap, pdfs, special);
 }

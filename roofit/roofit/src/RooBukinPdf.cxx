@@ -145,5 +145,5 @@ Double_t RooBukinPdf::evaluate() const
 void RooBukinPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Bukin, output, nEvents, dataMap, {&*x,&*Xp,&*sigp,&*xi,&*rho1,&*rho2,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::Bukin, output, nEvents, dataMap, {&*x,&*Xp,&*sigp,&*xi,&*rho1,&*rho2});
 }
