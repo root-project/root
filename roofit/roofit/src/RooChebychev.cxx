@@ -191,7 +191,7 @@ void RooChebychev::computeBatch(cudaStream_t* stream, double* output, size_t nEv
   extraArgs.push_back( _x.min(_refRangeName?_refRangeName->GetName() : nullptr) );
   extraArgs.push_back( _x.max(_refRangeName?_refRangeName->GetName() : nullptr) );
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Chebychev, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
+  dispatch->compute(stream, RooBatchCompute::Chebychev, output, nEvents, dataMap, {&*_x}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

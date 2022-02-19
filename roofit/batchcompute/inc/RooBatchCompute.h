@@ -38,7 +38,7 @@ enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
 
 enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShape, Chebychev,
               ChiSquare, DstD0BG, Exponential, Gamma, Gaussian, Johnson, Landau, Lognormal,
-              NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Voigtian};
+              NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Ratio, Voigtian};
 
 /**
  * \class RooBatchComputeInterface

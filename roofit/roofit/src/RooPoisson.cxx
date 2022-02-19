@@ -67,7 +67,7 @@ Double_t RooPoisson::evaluate() const
 void RooPoisson::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Poisson, output, nEvents, dataMap, {&*x,&*mean,&*_norm},
+  dispatch->compute(stream, RooBatchCompute::Poisson, output, nEvents, dataMap, {&*x,&*mean},
     {static_cast<double>(_protectNegative), static_cast<double>(_noRounding)});
 }
 

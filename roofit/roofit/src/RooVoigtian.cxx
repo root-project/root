@@ -102,5 +102,5 @@ Double_t RooVoigtian::evaluate() const
 void RooVoigtian::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Voigtian, output, nEvents, dataMap, {&*x,&*mean,&*width,&*sigma,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::Voigtian, output, nEvents, dataMap, {&*x,&*mean,&*width,&*sigma});
 }

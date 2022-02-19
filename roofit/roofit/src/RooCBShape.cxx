@@ -95,7 +95,7 @@ Double_t RooCBShape::evaluate() const {
 void RooCBShape::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::CBShape, output, nEvents, dataMap, {&*m,&*m0,&*sigma,&*alpha,&*n,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::CBShape, output, nEvents, dataMap, {&*m,&*m0,&*sigma,&*alpha,&*n});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

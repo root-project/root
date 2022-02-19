@@ -65,7 +65,7 @@ Double_t RooExponential::evaluate() const{
 void RooExponential::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
 {
   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  dispatch->compute(stream, RooBatchCompute::Exponential, output, nEvents, dataMap, {&*x,&*c,&*_norm});
+  dispatch->compute(stream, RooBatchCompute::Exponential, output, nEvents, dataMap, {&*x,&*c});
 }
 
 
