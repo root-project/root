@@ -151,11 +151,10 @@ RooFit::BatchModeHelpers::createNLL(RooAbsPdf &pdf, RooAbsData &data, std::uniqu
       RooArgSet parameters;
       pdf.getParameters(data.get(), parameters);
       nll->recursiveRedirectServers(parameters);
-      driver = std::make_unique<ROOT::Experimental::RooFitDriver>(data, *nll, observables, observables, batchMode,
-                                                                  rangeName, &simPdf->indexCat());
+      driver = std::make_unique<ROOT::Experimental::RooFitDriver>(data, *nll, observables, batchMode, rangeName,
+                                                                  &simPdf->indexCat());
    } else {
-      driver =
-         std::make_unique<ROOT::Experimental::RooFitDriver>(data, *nll, observables, observables, batchMode, rangeName);
+      driver = std::make_unique<ROOT::Experimental::RooFitDriver>(data, *nll, observables, batchMode, rangeName);
    }
 
    // Set the fitrange attribute so that RooPlot can automatically plot the fitting range by default

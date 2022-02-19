@@ -84,7 +84,7 @@ TEST(testRooFitDriver, SimpleLikelihoodFit)
 
    // ...and now the new way with RooFitDriver
    ROOT::Experimental::RooNLLVarNew nll("nll", "nll", model, *data->get(), nullptr, false, "");
-   ROOT::Experimental::RooFitDriver driver(*data, nll, x, x, RooFit::BatchModeOption::Cpu, "");
+   ROOT::Experimental::RooFitDriver driver(*data, nll, x, RooFit::BatchModeOption::Cpu, "");
    auto resultBatchNew = doFit(*driver.makeAbsRealWrapper());
    if (verbose)
       std::cout << "-  batch mode fit took " << resultBatchNew.elapsedTime << " ms" << std::endl;
