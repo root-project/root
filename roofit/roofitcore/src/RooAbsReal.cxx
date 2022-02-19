@@ -315,27 +315,19 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
     return item->second;
   }
 
-  if (normSet && normSet != _lastNSet) {
-    // TODO Implement better:
-    // The proxies, i.e. child nodes in the computation graph, sometimes need to know
-    // what to normalise over.
-    // Passing the normalisation as argument in all function calls is the proper way to do it.
-    // Some PDFs, however, might need to have the proxy normset set.
-    const_cast<RooAbsReal*>(this)->setProxyNormSet(normSet);
-    // TODO: This member only seems to be in use in RooFormulaVar. Try removing it (check with
-    // user community):
-    _lastNSet = (RooArgSet*) normSet;
-  }
+  normSet = normSet ? normSet : _lastNSet;
 
-  auto results = evaluateSpan(evalData, normSet ? normSet : _lastNSet);
-
+  ROOT::Experimental::RooFitDriver driver(evalData, *this, normSet ? *normSet : RooArgSet{});
+  auto& results = evalData.ownedMemory[this];
+  results = driver.getValues(); // the compiler should use the move assignment here
+  evalData.spans[this] = results;
   return results;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<double> RooAbsReal::getValues(RooAbsData& data, RooFit::BatchModeOption batchMode) const {
-  ROOT::Experimental::RooFitDriver driver(data, *this, *data.get(), *data.get(), batchMode, "");
+std::vector<double> RooAbsReal::getValues(RooAbsData const& data, RooFit::BatchModeOption batchMode) const {
+  ROOT::Experimental::RooFitDriver driver(data, *this, *data.get(), batchMode, "");
   return driver.getValues();
 }
 

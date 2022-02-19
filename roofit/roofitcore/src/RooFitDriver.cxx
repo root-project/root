@@ -40,7 +40,6 @@ and gets destroyed when the fitting ends.
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooBatchCompute/Initialisation.h>
-#include <RunContext.h>
 
 #include <ROOT/StringUtils.hxx>
 
@@ -54,7 +53,16 @@ namespace Experimental {
 using namespace Detail;
 using namespace std::chrono;
 
-RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName)
+RooFitDriver::Dataset::Dataset(RooBatchCompute::RunContext const &runContext)
+{
+   for (auto const &item : runContext.spans) {
+      _dataSpans[item.first->namePtr()] = item.second;
+      _nEvents = std::max(_nEvents, item.second.size());
+   }
+}
+
+RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName,
+                               RooAbsCategory const *indexCat)
    : _nEvents{static_cast<size_t>(data.numEntries())}
 {
 
@@ -131,6 +139,10 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
          _dataSpans[item.first] = RooSpan<const double>{buffer, _nEvents};
       }
    }
+
+   if (indexCat) {
+      splitByCategory(*indexCat);
+   }
 }
 
 void RooFitDriver::Dataset::splitByCategory(RooAbsCategory const &category)
@@ -184,13 +196,26 @@ there's also some cuda-related initialization.
 \param rangeName the range name
 \param indexCat
 **/
-RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &observables,
-                           RooArgSet const &normSet, RooFit::BatchModeOption batchMode, std::string_view rangeName,
+RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
+                           RooFit::BatchModeOption batchMode, std::string_view rangeName,
                            RooAbsCategory const *indexCat)
    : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _parameters{*std::unique_ptr<RooArgSet>(
                                                               topNode.getParameters(*data.get(), true))},
-     _batchMode{batchMode}, _dataset{data, *std::unique_ptr<RooArgSet>(topNode.getObservables(data)), rangeName},
-     _topNode{topNode}, _normSet{normSet}
+     _batchMode{batchMode}, _dataset{data, *std::unique_ptr<RooArgSet>(topNode.getObservables(data)), rangeName,
+                                     indexCat},
+     _topNode{topNode}, _normSet{std::make_unique<RooArgSet>(normSet)}
+{
+   init();
+}
+
+RooFitDriver::RooFitDriver(RooBatchCompute::RunContext const &data, const RooAbsReal &topNode, RooArgSet const &normSet)
+   : _name{topNode.GetName()}, _title{topNode.GetTitle()},
+     _batchMode{RooFit::BatchModeOption::Cpu}, _dataset{data}, _topNode{topNode}, _normSet{std::make_unique<RooArgSet>(normSet)}
+{
+   init();
+}
+
+void RooFitDriver::init()
 {
    // Initialize RooBatchCompute
    RooBatchCompute::init();
@@ -220,19 +245,7 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
    // treeNodeServelList() is recursive and adds the top node before the children,
    // so reversing the list gives us a topological ordering of the graph.
    RooArgList serverList;
-   _topNode.treeNodeServerList(&serverList, nullptr, true, true, true);
-
-   // The treeNodeServerList recursion stops at fundamental RooAbsArgs, such as
-   // RooRealVar. But there can also be servers to fundamental types if they are
-   // not value servers but define for example the range. That's why we
-   // explicitely add the servers of the observables here.
-   for (auto *obs : observables) {
-      for (auto *server : obs->servers()) {
-         RooArgList tmp;
-         server->treeNodeServerList(&tmp, nullptr, true, true, true);
-         serverList.add(tmp);
-      }
-   }
+   _topNode.treeNodeServerList(&serverList, nullptr, true, true, false, true);
 
    // To remove duplicates via the RooArgSet deduplication, we have to fill the
    // set in reverse order because that's the dependency ordering of the graph.
@@ -247,10 +260,6 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
       }
       instanceMap[arg->namePtr()] = arg;
       serverSet.add(*arg);
-   }
-
-   if (indexCat) {
-      _dataset.splitByCategory(*indexCat);
    }
 
    for (RooAbsArg *arg : serverSet) {
@@ -378,7 +387,7 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 
    if (info.computeInScalarMode) {
       // compute in scalar mode
-      _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal(&_normSet));
+      _nonDerivedValues.push_back(nodeAbsCategory ? nodeAbsCategory->getIndex() : nodeAbsReal->getVal(_normSet.get()));
       _dataMapCPU[node] = _dataMapCUDA[node] = RooSpan<const double>(&_nonDerivedValues.back(), nOut);
    } else if (nOut == 1) {
       handleIntegral(node);
@@ -411,6 +420,8 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 /// Returns the value of the top node in the computation graph
 double RooFitDriver::getVal()
 {
+   ++_getValInvocations;
+
    _nonDerivedValues.clear();
    _nonDerivedValues.reserve(_orderedNodes.size()); // to avoid reallocation
 
@@ -437,7 +448,7 @@ double RooFitDriver::getValHeterogeneous()
 
    // In a cuda fit, use first 3 fits to determine the execution times
    // and the hardware that computes each part of the graph
-   if (_batchMode == RooFit::BatchModeOption::Cuda && ++_getValInvocations <= 3)
+   if (_batchMode == RooFit::BatchModeOption::Cuda && _getValInvocations <= 3)
       markGPUNodes();
 
    // find initial gpu nodes and assign them to gpu
@@ -497,7 +508,7 @@ void RooFitDriver::handleIntegral(const RooAbsArg *node)
    // TODO: Put integrals seperately in the computation queue
    // For now, we just assume they are scalar and assign them some temporary memory
    if (auto pAbsPdf = dynamic_cast<const RooAbsPdf *>(node)) {
-      auto integral = pAbsPdf->getIntegral(_normSet);
+      auto integral = pAbsPdf->getIntegral(*_normSet);
 
       if (_integralInfos.count(integral) == 0) {
          auto &info = _integralInfos[integral];

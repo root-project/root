@@ -377,54 +377,15 @@ Double_t RooAbsPdf::getValV(const RooArgSet* nset) const
 /// \return RooSpan with probabilities. The memory of this span is owned by `evalData`.
 /// \see RooAbsReal::getValues().
 RooSpan<const double> RooAbsPdf::getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  auto item = evalData.spans.find(this);
-  if (item != evalData.spans.end()) {
-    return item->second;
-  }
-
-  auto outputs = evaluateSpan(evalData, normSet);
-  assert(evalData.spans.count(this) > 0);
-
-  if (normSet != nullptr) {
-    if (normSet != _normSet || _norm == nullptr) {
-      syncNormalization(normSet);
-    }
-    // Evaluate denominator
-    // In most cases, the integral will be a scalar.  But it can still happen
-    // that the integral is a vector, for example in a conditional fit where
-    // pdf is parametrized by another observable that is also a batch. That's
-    // why we have to use the batch interface also for the integral.
-    auto const& normVals = _norm->getValues(evalData);
-
-    if(normVals.size() > 1) {
-      for(std::size_t i = 0; i < outputs.size(); ++i) {
-        if (normVals[i] < 0. || (normVals[i] == 0. && outputs[i] != 0)) {
-          logEvalError(Form("p.d.f normalization integral is zero or negative."
-              "\n\tInt(%s) = %f", GetName(), normVals[i]));
-        }
-        if(normVals[i] != 1. && normVals[i] > 0.) {
-          outputs[i] /= normVals[i];
-        }
-      }
-
-    } else {
-      const double normVal = normVals[0];
-      if (normVal < 0.
-          || (normVal == 0. && std::any_of(outputs.begin(), outputs.end(), [](double val){return val != 0;}))) {
-        logEvalError(Form("p.d.f normalization integral is zero or negative."
-            "\n\tInt(%s) = %f", GetName(), normVal));
-      }
-
-      if (normVal != 1. && normVal > 0.) {
-        const double invNorm = 1./normVal;
-        for (double& val : outputs) { //CHECK_VECTORISE
-          val *= invNorm;
-        }
-      }
-    }
-  }
-
-  return outputs;
+  // To avoid side effects of this function, the pointer to the last norm
+  // sets and integral objects are remembered and reset at the end of this
+  // function.
+  auto * prevNorm = _norm;
+  auto * prevNormSet = _normSet;
+  auto out = RooAbsReal::getValues(evalData, normSet);
+  _norm = prevNorm;
+  _normSet = prevNormSet;
+  return out;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
