@@ -54,19 +54,11 @@ std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet 
    RooArgSet observablesInPdf;
    pdf.getObservables(&observables, observablesInPdf);
 
-   RooArgList termList;
-
-   auto pdfIntegralCurrent = pdf.createIntegral(observablesInPdf, &observablesInPdf, nullptr, rangeNames.c_str());
-   auto term =
-      new RooFormulaVar((baseName + "_correctionTerm").c_str(), "(log(x[0]))", RooArgList(*pdfIntegralCurrent));
-   termList.add(*term);
-
-   auto integralFull = pdf.createIntegral(observablesInPdf, &observablesInPdf, nullptr);
-   auto fullRangeTerm = new RooFormulaVar((baseName + "_foobar").c_str(), "-(log(x[0]))", RooArgList(*integralFull));
-   termList.add(*fullRangeTerm);
-
-   auto out =
-      std::unique_ptr<RooAbsReal>{new RooAddition((baseName + "_correction").c_str(), "correction", termList, true)};
+   std::unique_ptr<RooAbsReal> integral{pdf.createIntegral(observablesInPdf,
+                                                           &observablesInPdf,
+                                                           pdf.getIntegratorConfig(), rangeNames.c_str())};
+   auto out = std::make_unique<RooFormulaVar>((baseName + "_correctionTerm").c_str(), "(log(x[0]))", RooArgList(*integral));
+   out->addOwnedComponents(std::move(integral));
    return out;
 }
 
