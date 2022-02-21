@@ -1,4 +1,4 @@
-## @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
@@ -13,8 +13,7 @@
 from __future__ import print_function
 
 import logging
-from abc import ABCMeta
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from contextlib import contextmanager
 
 import ROOT
@@ -41,11 +40,6 @@ def _managed_tcontext():
     finally:
         ctxt.__destruct__()
 
-
-# Abstract class declaration
-# This ensures compatibility between Python 2 and 3 versions, since in
-# Python 2 there is no ABC class
-ABC = ABCMeta('ABC', (object,), {})
 
 logger = logging.getLogger(__name__)
 
