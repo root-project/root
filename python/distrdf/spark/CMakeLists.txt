@@ -49,4 +49,7 @@ if (ROOT_test_distrdf_pyspark_FOUND)
                     MACRO test_reducer_merge.py
                     ENVIRONMENT ${PYSPARK_ENV_VARS})
 
+    ROOTTEST_ADD_TEST(spark_test_variations
+                    MACRO test_variations.py
+                    ENVIRONMENT ${PYSPARK_ENV_VARS})
 endif()

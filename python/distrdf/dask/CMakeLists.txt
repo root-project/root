@@ -26,4 +26,7 @@ ROOTTEST_ADD_TEST(dask_test_rungraphs
 ROOTTEST_ADD_TEST(dask_test_reducer_merge 
                   MACRO test_reducer_merge.py)
 
+ROOTTEST_ADD_TEST(dask_test_variations
+                  MACRO test_variations.py)
+
 endif()
