@@ -1,4 +1,4 @@
-## @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
@@ -11,17 +11,11 @@
 ################################################################################
 
 import functools
-from abc import ABCMeta
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 import ROOT
 
 from DistRDF.Backends import Utils
-
-# Abstract class declaration
-# This ensures compatibility between Python 2 and 3 versions, since in
-# Python 2 there is no ABC class
-ABC = ABCMeta("ABC", (object,), {})
 
 
 class BaseBackend(ABC):
