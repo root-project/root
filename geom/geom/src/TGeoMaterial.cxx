@@ -15,15 +15,15 @@
 Base class describing materials.
 
 ## Important note about units
-Since **v6-17-02** the geometry package adopted a system of units, upon the request to support 
-an in-memory material representation consistent with the one in Geant4. The adoption was done 
-gradually and starting with **v6-19-02** (backported to **v6-18-02**) the package supports changing 
-the default units to either ROOT (CGS) or Geant4 ones. In the same version the Geant4 units were 
-set to be the default ones, changing the previous behavior and making material properties such 
-as radiation and interaction lengths having in memory values an order of magnitude lower. This behavior 
+Since **v6-17-02** the geometry package adopted a system of units, upon the request to support
+an in-memory material representation consistent with the one in Geant4. The adoption was done
+gradually and starting with **v6-19-02** (back-ported to **v6-18-02**) the package supports changing
+the default units to either ROOT (CGS) or Geant4 ones. In the same version the Geant4 units were
+set to be the default ones, changing the previous behavior and making material properties such
+as radiation and interaction lengths having in memory values an order of magnitude lower. This behavior
 affected versions up to **v6-25-01**, after which the default units were restored to be the ROOT ones.
 
-For users needing to restore the CGS behavior for material properties, the following sequence needs 
+For users needing to restore the CGS behavior for material properties, the following sequence needs
 to be called before creating the TGeoManager instance:
  * From **v6-18-02** to **v6-22-06**:
 ```
@@ -55,7 +55,7 @@ to be called before creating the TGeoManager instance:
 ClassImp(TGeoMaterial);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+/// Default constructor.
 
 TGeoMaterial::TGeoMaterial()
              :TNamed(), TAttFill(),
@@ -83,7 +83,9 @@ TGeoMaterial::TGeoMaterial()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
 
 TGeoMaterial::TGeoMaterial(const char *name)
              :TNamed(name, ""), TAttFill(),
@@ -117,7 +119,14 @@ TGeoMaterial::TGeoMaterial(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
+/// \param a      atomic mass.
+/// \param z      atomic number.
+/// \param rho    material density in g/cm3.
+/// \param radlen
+/// \param intlen
 
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
                 Double_t rho, Double_t radlen, Double_t intlen)
@@ -159,6 +168,15 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with state, temperature and pressure.
+///
+/// \param name   material name.
+/// \param a      atomic mass.
+/// \param z      atomic number.
+/// \param rho    material density in g/cm3.
+/// \param state
+/// \param temperature
+/// \param pressure
+
 
 TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rho,
                 EGeoMaterialState state, Double_t temperature, Double_t pressure)
@@ -193,7 +211,11 @@ TGeoMaterial::TGeoMaterial(const char *name, Double_t a, Double_t z, Double_t rh
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor
+/// Constructor.
+///
+/// \param name   material name.
+/// \param elem
+/// \param rho    material density in g/cm3.
 
 TGeoMaterial::TGeoMaterial(const char *name, TGeoElement *elem, Double_t rho)
              :TNamed(name, ""), TAttFill(),
