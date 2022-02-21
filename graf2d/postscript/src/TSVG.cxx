@@ -225,6 +225,102 @@ void TSVG::Off()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Fast version of Print, customised linebreak for SVG (XML)
+
+void TSVG::PrintFast(Int_t len, const char *str)
+{
+   if (!len || !str)
+      return;
+   while ((len + fLenBuffer) > fSizBuffer) {
+      Int_t nWrite = fSizBuffer;
+      Int_t crRank = 5; // linebreak priority level, the smaller the better
+      Bool_t drop = false;
+      Int_t iSearch = nWrite;
+      Bool_t examineSpace = false;
+      char c0, c1;
+      c0 = (iSearch >= fLenBuffer) ? str[iSearch - fLenBuffer] : fBuffer[iSearch];
+      while (iSearch >= 0) {
+         c1 = c0;
+         --iSearch;
+         c0 = (iSearch >= fLenBuffer) ? str[iSearch - fLenBuffer] : fBuffer[iSearch];
+         if (examineSpace) {
+            if (c0 == ' ') {
+               --nWrite;
+               drop = true;
+            }
+            examineSpace = false;
+         }
+         // "><", The best linebreak place. Cut in the middle
+         if (c0 == '>' && c1 == '<') {
+            nWrite = iSearch + 1;
+            crRank = 0;
+            break;
+         }
+         if (crRank > 1 && c1 == '>') {
+            if (c0 == '/') { // "/>", cut on the left
+               nWrite = iSearch;
+               examineSpace = true;
+            } else if (c0 == ' ') { // " >", cut on the left and drop the whitespace
+               nWrite = iSearch;
+               drop = true;
+            } else { // "\S>", cut in the middle
+               nWrite = iSearch + 1;
+            }
+            crRank = 1;
+         } else if (crRank > 2 && c1 == ' ') {
+            // White space which isn't at the beginning of the line
+            // Cut in the middle and drop the white space
+            nWrite = iSearch + 1;
+            drop = true;
+            crRank = 2;
+         } else if (crRank > 3 && c1 == '<') {
+            // "?<", cut in the middle
+            // This might leave an additional white space
+            // at the end of a string on the image
+            nWrite = iSearch + 1;
+            crRank = 3;
+         } else if (crRank > 4 && c0 == '>') {
+            // ">\S", cut in the middle
+            // This would leave an additional white space
+            // at the beginning of a string on the imagetk
+            nWrite = iSearch + 1;
+            crRank = 4;
+         }
+      }
+      if (nWrite >= fLenBuffer) {
+         if (fLenBuffer > 0) {
+            fStream->write(fBuffer, fLenBuffer);
+            fNByte += fLenBuffer;
+            nWrite -= fLenBuffer;
+            fLenBuffer = 0;
+         }
+         if (nWrite > 0) {
+            fStream->write(str, nWrite);
+            fNByte += nWrite;
+         }
+         len -= nWrite + drop;
+         str += nWrite + drop;
+      } else {
+         if (nWrite > 0) {
+            fStream->write(fBuffer, nWrite);
+            fNByte += nWrite;
+            memmove(fBuffer, fBuffer + nWrite + drop,
+                    fLenBuffer - nWrite - drop);     // not strcpy because source and destination overlap
+            fBuffer[fLenBuffer - nWrite - drop] = 0; // not sure if this is needed, but just in case
+            fLenBuffer -= nWrite + drop;
+         }
+      }
+      fStream->write("\n", 1);
+      fNByte++;
+   }
+   if (len > 0) {
+      strlcpy(fBuffer + fLenBuffer, str, len + 1);
+      fLenBuffer += len;
+      fBuffer[fLenBuffer] = 0;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw a Box
 
 void TSVG::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
