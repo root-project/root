@@ -13,12 +13,14 @@
 import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from functools import singledispatch
+from typing import Any
 
 import ROOT
 
 from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
 from DistRDF.Node import Node
-from DistRDF.Operation import Operation
+from DistRDF import Operation
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +151,7 @@ class TransformationProxy(Proxy):
 
         # if attr is a supported operation, start
         # operation and node creation
-        if attr in self.proxied_node.get_head().backend.supported_operations:
+        if attr in Operation.SUPPORTED_OPERATIONS:
             self.proxied_node._new_op_name = attr  # Stores new operation name
             return self._create_new_op
         else:
@@ -174,24 +176,34 @@ class TransformationProxy(Proxy):
         """
         # Create a new `Operation` object for the
         # incoming operation call
-        op = Operation(self.proxied_node._new_op_name, *args, **kwargs)
+        op = Operation.create_op(self.proxied_node._new_op_name, *args, **kwargs)
 
         # Create a new `Node` object to house the operation
-        newNode = Node(operation=op, get_head=self.proxied_node.get_head)
+        newnode = Node(operation=op, get_head=self.proxied_node.get_head)
 
         # Logger debug statements
         logger.debug("Created new {} node".format(op.name))
 
         # Add the new node as a child of the current node
-        self.proxied_node.children.append(newNode)
+        self.proxied_node.children.append(newnode)
 
-        # Return the appropriate proxy object for the node
-        if op.is_action():
-            return ActionProxy(newNode)
-        elif op.name in ["AsNumpy", "Snapshot"]:
-            headnode = self.proxied_node.get_head()
-            generator = ComputationGraphGenerator(headnode)
-            headnode.backend.execute(generator)
-            return newNode.value
-        else:
-            return TransformationProxy(newNode)
+        return get_proxy_for(op, newnode)
+
+
+@singledispatch
+def get_proxy_for(operation: Operation.Transformation, node: Node) -> TransformationProxy:
+    """"Returns appropriate proxy for the input node"""
+    return TransformationProxy(node)
+
+
+@get_proxy_for.register
+def _(operation: Operation.Action, node: Node) -> ActionProxy:
+    return ActionProxy(node)
+
+
+@get_proxy_for.register
+def _(operation: Operation.InstantAction, node: Node) -> Any:
+    headnode = node.get_head()
+    generator = ComputationGraphGenerator(headnode)
+    headnode.backend.execute(generator)
+    return node.value

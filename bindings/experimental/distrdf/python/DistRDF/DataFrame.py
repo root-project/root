@@ -13,6 +13,7 @@
 import logging
 
 from DistRDF import Proxy
+from DistRDF.Operation import SUPPORTED_OPERATIONS
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class RDataFrame(object):
         self._headproxy = Proxy.TransformationProxy(self._headnode)
 
     def __dir__(self):
-        opdir = self._headnode.backend.supported_operations + super().__dir__()
+        opdir = list(SUPPORTED_OPERATIONS.keys()) + super().__dir__()
         opdir.sort()
         return opdir
 
