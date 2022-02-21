@@ -12,12 +12,54 @@
 
 import logging
 
+from functools import singledispatch
+from typing import Any, List, Union
+
 import ROOT
 
 from DistRDF.CppWorkflow import CppWorkflow
+from DistRDF.Node import Node
+from DistRDF.Operation import Action, InstantAction, Operation
 from DistRDF.PythonMergeables import SnapshotResult
 
+
 logger = logging.getLogger(__name__)
+
+
+@singledispatch
+def append_node_to_actions(operation: Operation, node: Node, actions: List[Node]) -> None:
+    """
+    Appends the input node to the list of action nodes, if the operation of the
+    node is an action.
+    """
+    pass
+
+
+@append_node_to_actions.register(Action)
+@append_node_to_actions.register(InstantAction)
+def _(operation: Union[Action, InstantAction], node: Node, actions: List[Node]) -> None:
+    actions.append(node)
+
+
+@singledispatch
+def append_node_to_results(operation: Operation, promise: Any, results: list) -> None:
+    """
+    Appends the input promise to the list of results gathered while creating the
+    computation graph, if the operation is an action. The promise can be of many
+    types, usually a 'ROOT.RDF.RResultPtr'. Exceptions are the 'AsNumpy'
+    operation which promise is an 'AsNumpyResult' and the 'Snapshot' operation
+    for which a 'SnapshotResult' is created and appended to the list of results.
+    """
+    pass
+
+
+@append_node_to_results.register(Action)
+@append_node_to_results.register(InstantAction)
+def _(operation: Union[Action, InstantAction], promise: Any, results: list) -> None:
+    if operation.name == "Snapshot":
+        results.append(SnapshotResult(operation.args[0], [operation.args[1]]))
+    else:
+        results.append(promise)
 
 
 class ComputationGraphGenerator(object):
@@ -56,10 +98,7 @@ class ComputationGraphGenerator(object):
             # current DistRDF node as the head node
             node_py = self.headnode
         else:
-            if (node_py.operation.is_action() or
-                    node_py.operation.is_instant_action()):
-                # Collect all action nodes in order to return them
-                return_nodes.append(node_py)
+            append_node_to_actions(node_py.operation, node_py, return_nodes)
 
         for n in node_py.children:
             # Recurse through children and collect them
@@ -157,11 +196,7 @@ class ComputationGraphGenerator(object):
             # we just retrieved
             previous_node = pyroot_node
 
-            if (operation.is_action() or operation.is_instant_action()):
-                if operation.name == "Snapshot":
-                    future_results.append(SnapshotResult(operation.args[0], [operation.args[1]]))
-                else:
-                    future_results.append(pyroot_node)
+            append_node_to_results(operation, pyroot_node, future_results)
 
         for child_node in distrdf_node.children:
             # Recurse through children and get their output
