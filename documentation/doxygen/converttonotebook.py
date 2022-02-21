@@ -602,7 +602,7 @@ def removePaletteEditor(code):
 
 def runEventExe(code):
     if "copytree" in tutName:
-        return "# <codecell> \n.! $ROOTSYS/test/eventexe 1000 1 1 1 \n" + code
+        return "# <codecell> \n.! " + os.getenv("ROOTSYS") + "/test/eventexe 1000 1 1 1 \n" + code
     return code
 
 
@@ -660,6 +660,7 @@ def tree4GetFiles(code):
 def disableDrawProgressBar(code):
     code = code.replace(":DrawProgressBar",":!DrawProgressBar")
     return code
+
 def fixes(code):
     codeTransformers=[removePaletteEditor, runEventExe, getLibMathMore,
         roofitRemoveSpacesComments,
@@ -857,8 +858,10 @@ if __name__ == "__main__":
         # Extract and define the name of the file as well as its derived names
         tutPathName = str(sys.argv[1])
         tutPath = os.path.dirname(tutPathName)
-        if tutPath.split("/")[-2] == "tutorials":
-            tutRelativePath = "$ROOTSYS/tutorials/%s/" % tutPath.split("/")[-1]
+        global CMAKE_BUILD_DIRECTORY
+        CMAKE_BUILD_DIRECTORY = sys.argv[3]
+        # ~ if tutPath.split("/")[-2] == "tutorials":
+            # ~ tutRelativePath = CMAKE_BUILD_DIRECTORY + "/"
         tutFileName = os.path.basename(tutPathName)
         tutName, extension = tutFileName.split(".")
         #tutTitle = re.sub( r"([A-Z\d])", r" \1", tutName).title()
@@ -882,7 +885,7 @@ if __name__ == "__main__":
 
         # Set DYLD_LIBRARY_PATH. When run without root access or as a different user, especially from Mac systems,
         # it is possible for security reasons that the environment does not include this definition, so it is manually defined.
-        os.environ["DYLD_LIBRARY_PATH"] = os.environ["ROOTSYS"] + "/lib"
+        os.environ["DYLD_LIBRARY_PATH"] = os.getenv("ROOTSYS") + "/lib"
 
         # Open the file to be converted
         with open(tutPathName) as fin:
