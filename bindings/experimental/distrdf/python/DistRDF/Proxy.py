@@ -10,8 +10,6 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from __future__ import print_function
-
 import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
