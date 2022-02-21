@@ -1,4 +1,4 @@
-from DistRDF.Operation import Operation
+from DistRDF import Operation
 import unittest
 
 
@@ -7,23 +7,23 @@ class ClassifyTest(unittest.TestCase):
 
     def test_action(self):
         """Action nodes are classified accurately."""
-        op = Operation("Count")
-        self.assertEqual(op.op_type, Operation.ACTION)
+        op = Operation.create_op("Count")
+        self.assertIsInstance(op, Operation.Action)
 
     def test_instant_action(self):
         """Instant actions are classified accurately."""
-        op = Operation("Snapshot")
-        self.assertEqual(op.op_type, Operation.INSTANT_ACTION)
+        op = Operation.create_op("Snapshot")
+        self.assertIsInstance(op, Operation.InstantAction)
 
     def test_transformation(self):
         """Transformation nodes are classified accurately."""
-        op = Operation("Define", "c1")
-        self.assertEqual(op.op_type, Operation.TRANSFORMATION)
+        op = Operation.create_op("Define")
+        self.assertIsInstance(op, Operation.Transformation)
 
     def test_none(self):
         """Incorrect operations raise an Exception."""
-        with self.assertRaises(Exception):
-            Operation("random")
+        with self.assertRaises(ValueError):
+            Operation.create_op("random")
 
 
 class ArgsTest(unittest.TestCase):
@@ -31,24 +31,24 @@ class ArgsTest(unittest.TestCase):
 
     def test_without_kwargs(self):
         """Check that unnamed arguments are properly set."""
-        op = Operation("Define", 1, "b")
+        op = Operation.create_op("Define", 1, "b")
         self.assertEqual(op.args, [1, "b"])
         self.assertEqual(op.kwargs, {})
 
     def test_without_args(self):
         """Check that no unnamed arguments are properly set."""
-        op = Operation("Define", a=1, b="b")
+        op = Operation.create_op("Define", a=1, b="b")
         self.assertEqual(op.args, [])
         self.assertEqual(op.kwargs, {"a": 1, "b": "b"})
 
     def test_with_args_and_kwargs(self):
         """Check that named and unnamed arguments are properly set."""
-        op = Operation("Define", 2, "p", a=1, b="b")
+        op = Operation.create_op("Define", 2, "p", a=1, b="b")
         self.assertEqual(op.args, [2, "p"])
         self.assertEqual(op.kwargs, {"a": 1, "b": "b"})
 
     def test_without_args_and_kwargs(self):
         """Check Operation constructor without arguments."""
-        op = Operation("Define")
+        op = Operation.create_op("Define")
         self.assertEqual(op.args, [])
         self.assertEqual(op.kwargs, {})
