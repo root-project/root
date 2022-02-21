@@ -20,6 +20,8 @@ from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
 from DistRDF.Node import Node
 from DistRDF.Operation import Operation
 
+logger = logging.getLogger(__name__)
+
 
 @contextmanager
 def _managed_tcontext():
@@ -37,9 +39,6 @@ def _managed_tcontext():
         yield None
     finally:
         ctxt.__destruct__()
-
-
-logger = logging.getLogger(__name__)
 
 
 class Proxy(ABC):
