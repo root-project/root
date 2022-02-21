@@ -11,7 +11,7 @@
 ################################################################################
 import logging
 
-from DistRDF.Operation import Operation
+from DistRDF import Operation
 
 logger = logging.getLogger(__name__)
 
@@ -110,9 +110,9 @@ class Node(object):
         """
         self.children = state['children']
         if state.get('operation_name'):
-            self.operation = Operation(state['operation_name'],
-                                       *state['operation_args'],
-                                       **state["operation_kwargs"])
+            self.operation = Operation.create_op(state['operation_name'],
+                                                 *state['operation_args'],
+                                                 **state["operation_kwargs"])
         else:
             self.operation = None
 
@@ -127,17 +127,16 @@ class Node(object):
         """
         if not self.children:
             # Every pruning condition is written on a separate line
-            if not self.has_user_references or \
-               (self.operation and self.operation.is_action() and self.value):
+            if not self.has_user_references or self.value is not None:
 
                 # ***** Condition 1 *****
                 # If the node is wrapped by a proxy which is not directly
                 # assigned to a variable, then it will be flagged for pruning
 
                 # ***** Condition 2 *****
-                # If the current node's value was already
-                # computed, it should get pruned only if it's
-                # an Action node.
+                # If the current node's value was already computed, it should
+                # get pruned. Only action nodes may possess a value attribute
+                # which is not None
 
                 # Logger debug statements
                 logger.debug("{} node can be pruned".format(
