@@ -1276,7 +1276,7 @@ Cppyy::TCppIndex_t GetLongestInheritancePath(TClass *klass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \fn Cppyy::TCppIndex_t Cppyy::GetNumBasesLongest(TCppType_t klass)
+/// \fn Cppyy::TCppIndex_t Cppyy::GetNumBasesLongestBranch(TCppType_t klass)
 /// \brief Retrieve number of base classes in the longest branch of the
 ///        inheritance tree.
 /// \param[in] klass The class to start the retrieval process from.
