@@ -124,11 +124,12 @@ if(BUILD_DOCUMENTATION)
         #"ClassDef(x,y)=" "ClassImp(x)=" "ClassImpQ(x)=" "templateClassImp(x)=" "NamespaceImp(x)=" "R__SUGGEST_ALTERNATIVE(x)="
         set(DOXYGEN_PREDEFINED             "R__CLING_PTRCHECK" "R__USE_IMT" "__attribute__(x)=" "__declspec(x)=" "__pragma(x)=")
         set(DOXYGEN_INCLUDE_PATH           ../../core/base/inc  # needed for detecting ClassDef and not raising Warning on ::Streamer
+                                           ../../core/meta/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
+                                           ../../io/io/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
                                            ../../bindings/r/inc # needed for bindings/r includes to not raise warnings
                                            ../../interpreter/llvm/src/tools/clang/include # needed to avoid warning of LangOptions.def not found
                                            ../../graf2d/gpadv7/inc # need to avoid getting doxygen confused with macro call on RAttrAxis
                                            ../../tmva/tmva/inc # same for REGISTER_METHOD on tmva
-                                           ../../io/io/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
                                            )
         set(DOXYGEN_GENERATE_TAGFILE       "${DOXYGEN_OUTPUT_DIRECTORY}/html/ROOT.tag")
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO)
