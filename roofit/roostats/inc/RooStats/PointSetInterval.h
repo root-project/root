@@ -41,9 +41,9 @@ namespace RooStats {
     /// return the confidence level for the interval
     double ConfidenceLevel() const override {return fConfidenceLevel;}
 
-    /// Method to return lower limit on a given parameter
-    ///  double LowerLimit(RooRealVar& param) ; // could provide, but misleading?
-    ///      double UpperLimit(RooRealVar& param) ; // could provide, but misleading?
+    // Method to return lower limit on a given parameter
+    // double LowerLimit(RooRealVar& param) ; // could provide, but misleading?
+    // double UpperLimit(RooRealVar& param) ; // could provide, but misleading?
 
     /// return a cloned list with the parameter of interest
     RooArgSet* GetParameters() const override;
