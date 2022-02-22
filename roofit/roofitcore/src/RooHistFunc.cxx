@@ -202,26 +202,19 @@ Double_t RooHistFunc::evaluate() const
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Compute value of the HistFunc for every entry in `evalData`.
-/// \param[in,out] evalData Struct with input data. The computation results will be stored here.
-RooSpan<double> RooHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const {
+void RooHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap& dataMap) const {
   std::vector<RooSpan<const double>> inputValues;
-  std::size_t batchSize = 0;
   for (const auto& obs : _depList) {
     auto realObs = dynamic_cast<const RooAbsReal*>(obs);
     if (realObs) {
-      auto inputs = realObs->getValues(evalData, nullptr);
-      batchSize = std::max(batchSize, inputs.size());
+      auto inputs = dataMap[realObs];
       inputValues.push_back(std::move(inputs));
     } else {
       inputValues.emplace_back();
     }
   }
 
-  auto results = evalData.makeBatch(this, batchSize);
-
-  for (std::size_t i = 0; i < batchSize; ++i) {
+  for (std::size_t i = 0; i < size; ++i) {
     bool skip = false;
 
     for (auto j = 0u; j < _histObsList.size(); ++j) {
@@ -236,10 +229,8 @@ RooSpan<double> RooHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalData,
       }
     }
 
-    results[i] = skip ? 0. : _dataHist->weightFast(_histObsList, _intOrder, false, _cdfBoundaries);
+    output[i] = skip ? 0. : _dataHist->weightFast(_histObsList, _intOrder, false, _cdfBoundaries);
   }
-
-  return results;
 }
 
 
@@ -606,12 +597,12 @@ Int_t RooHistFunc::getBin() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute bin numbers corresponding to all coordinates in `evalData`.
 /// \return Vector of bin numbers. If a bin is not in the current range of the observables, return -1.
-std::vector<Int_t> RooHistFunc::getBins(RooBatchCompute::RunContext& evalData) const {
+std::vector<Int_t> RooHistFunc::getBins(RooBatchCompute::DataMap& dataMap) const {
   std::vector<RooSpan<const double>> depData;
   for (const auto dep : _depList) {
     auto real = dynamic_cast<const RooAbsReal*>(dep);
     if (real) {
-      depData.push_back(real->getValues(evalData, nullptr));
+      depData.push_back(dataMap[real]);
     } else {
       depData.emplace_back(nullptr, 0);
     }

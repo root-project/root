@@ -69,7 +69,6 @@ public:
   void setCacheAndTrackHints(RooArgSet&) override ;
 
 protected:
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
 
   class CacheElem : public RooAbsCacheElement {
   public:
