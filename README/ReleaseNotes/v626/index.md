@@ -1,10 +1,10 @@
 % ROOT Version 6.26 Release Notes
-% 2022-01-27
+% 2022-02-22
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.26/00 is scheduled for release in January, 2022.
+ROOT version 6.26/00 is scheduled for release in February, 2022.
 
 For more information, see:
 
@@ -612,18 +612,9 @@ canvas->Print(".tex", "Standalone");
 
 - Return pointer to the ABC object in DrawABC methods. This was not uniform.
 
-## 3D Graphics Libraries
-
-
 ## Geometry Libraries
 
 - Prevent the TColor palette being silently set by TGeoPainter.
-
-## Database Libraries
-
-
-## Networking Libraries
-
 
 ## GUI Libraries
 
@@ -636,18 +627,11 @@ canvas->Print(".tex", "Standalone");
 - provide `--web=server` mode, which only printout window URLs instead of starting real web browser.
   Dedicated for the case when ROOT should be running as server application, providing different RWebWindow instances for connection.
 
+## PyROOT
 
-## Montecarlo Libraries
-
-
-## PROOF Libraries
-
-
-## Language Bindings
-
-
-## JavaScript ROOT
-
+- A decorator called `@pythonization` is now provided to inject extra behaviour in user C++ classes that are used from Python. The aim here is to make C++ classes more "pythonic" or easier to use from Python. The way it works is the following: the user defines a function - the pythonizor - that is decorated with `@pythonization`; the decorator arguments specify the target C++ class or classes, and the pythonizor is responsible for injecting the new behaviour if those classes are actually used from the application. For a more complete description of the `@pythonization` decorator, please refer to this [entry](https://root.cern.ch/manual/python/#pythonizing-c-user-classes) of the ROOT manual and this [tutorial](https://root.cern/doc/master/pyroot002__pythonizationDecorator_8py.html).
+- The `ROOT` Python module is now properly serializable so that it is automatically available in the Python environment if a function or ROOT object needs to be serialized. See issue [#6764](https://github.com/root-project/root/issues/6764) for a concrete usecase.
+- Improve overload resolution of functions that accept classes with long inheritance trees. Now prefer to call the function overload of the most derived class type (PR [#9092](https://github.com/root-project/root/pull/9092)).
 
 ## Jupyter lab
 
@@ -700,9 +684,3 @@ For users building from source the `latest-stable` branch and passing `-Droottes
 ROOT now requires CMake version 3.16 or later.
 ROOT cannot be built with C++11 anymore; the supported standards are currently C++14 and C++17.
 ROOT's experimental features (RNTuple, RHist, etc) now require C++17.
-
-## PyROOT
-
-- A decorator called `@pythonization` is now provided to inject extra behaviour in user C++ classes that are used from Python. The aim here is to make C++ classes more "pythonic" or easier to use from Python. The way it works is the following: the user defines a function - the pythonizor - that is decorated with `@pythonization`; the decorator arguments specify the target C++ class or classes, and the pythonizor is responsible for injecting the new behaviour if those classes are actually used from the application. For a more complete description of the `@pythonization` decorator, please refer to this [entry](https://root.cern.ch/manual/python/#pythonizing-c-user-classes) of the ROOT manual and this [tutorial](https://root.cern/doc/master/pyroot002__pythonizationDecorator_8py.html).
-- The `ROOT` Python module is now properly serializable so that it is automatically available in the Python environment if a function or ROOT object needs to be serialized. See issue [#6764](https://github.com/root-project/root/issues/6764) for a concrete usecase.
-- Improve overload resolution of functions that accept classes with long inheritance trees. Now prefer to call the function overload of the most derived class type (PR [#9092](https://github.com/root-project/root/pull/9092)).
