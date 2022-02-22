@@ -66,6 +66,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_EXTRACT_ALL            YES)
         set(DOXYGEN_EXTRACT_PRIVATE        YES)
         set(DOXYGEN_EXTRACT_STATIC         YES)
+        set(DOXYGEN_EXTRACT_ANON_NSPACES   YES)
         set(DOXYGEN_HIDE_IN_BODY_DOCS      YES)
         # set(DOXYGEN_WARN_NO_PARAMDOC       YES) # If you set this to yes, you need to set EXTRACT_ALL to false
         set(DOXYGEN_SORT_BRIEF_DOCS        YES)
