@@ -125,6 +125,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_PREDEFINED             "R__CLING_PTRCHECK" "R__USE_IMT" "__attribute__(x)=" "__declspec(x)=" "__pragma(x)=")
         set(DOXYGEN_INCLUDE_PATH           ../../core/base/inc  # needed for detecting ClassDef and not raising Warning on ::Streamer
                                            ../../core/meta/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
+                                           ../../hist/hist/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
                                            ../../io/io/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
                                            ../../tree/tree/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
                                            ../../roofit/roofitcore/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
