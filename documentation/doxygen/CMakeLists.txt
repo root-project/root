@@ -125,6 +125,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_INCLUDE_PATH           ../../core/base/inc  # needed for detecting ClassDef and not raising Warning on ::Streamer
                                            ../../bindings/r/inc # needed for bindings/r includes to not raise warnings
                                            ../../interpreter/llvm/src/tools/clang/include # needed to avoid warning of LangOptions.def not found
+                                           ../../graf2d/gpadv7/inc # need to avoid getting doxygen confused with macro call on RAttrAxis
                                            )
         set(DOXYGEN_GENERATE_TAGFILE       "${DOXYGEN_OUTPUT_DIRECTORY}/html/ROOT.tag")
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO)
