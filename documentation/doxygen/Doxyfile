@@ -2236,7 +2236,7 @@ SEARCH_INCLUDES        = YES
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           = ../../core/base/inc ../../bindings/r/inc
+INCLUDE_PATH           = ../../core/base/inc ../../bindings/r/inc ../../interpreter/llvm/src/tools/clang/include ../../graf2d/gpadv7/inc ../../tmva/tmva/inc
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the
