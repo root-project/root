@@ -43,6 +43,20 @@ def _managed_tcontext():
         ctxt.__destruct__()
 
 
+def execute_graph(node: Node) -> None:
+    """
+    Executes the distributed RDataFrame computation graph the input node
+    belongs to. If the node already has a value, this is a no-op.
+    """
+    if node.value is None:  # If event-loop not triggered
+        # Creating a ROOT.TDirectory.TContext in a context manager so that
+        # ROOT.gDirectory won't be changed by the event loop execution.
+        with _managed_tcontext():
+            headnode = node.get_head()
+            generator = ComputationGraphGenerator(headnode)
+            headnode.backend.execute(generator)
+
+
 class Proxy(ABC):
     """
     Abstract class for proxies objects. These objects help to keep track of
@@ -99,29 +113,13 @@ class ActionProxy(Proxy):
         self._cur_attr = attr  # Stores the name of operation call
         return self._call_action_result
 
-    def execute_graph(self):
-        """
-        Executes the distributed RDataFrame computation graph this proxy
-        belongs to. If the proxied node already has a value, this is a no-op.
-        """
-
-        # Creating a ROOT.TDirectory.TContext in a context manager so that
-        # ROOT.gDirectory won't be changed by the event loop execution.
-        with _managed_tcontext():
-            if not self.proxied_node.value:  # If event-loop not triggered
-                headnode = self.proxied_node.get_head()
-                generator = ComputationGraphGenerator(headnode)
-                headnode.backend.execute(generator)
-
     def GetValue(self):
         """
         Returns the result value of the current action node if it was executed
         before, else triggers the execution of the distributed graph before
         returning the value.
         """
-
-        self.execute_graph()
-
+        execute_graph(self.proxied_node)
         return self.proxied_node.value
 
     def _call_action_result(self, *args, **kwargs):
@@ -203,7 +201,5 @@ def _(operation: Operation.Action, node: Node) -> ActionProxy:
 
 @get_proxy_for.register
 def _(operation: Operation.InstantAction, node: Node) -> Any:
-    headnode = node.get_head()
-    generator = ComputationGraphGenerator(headnode)
-    headnode.backend.execute(generator)
+    execute_graph(node)
     return node.value
