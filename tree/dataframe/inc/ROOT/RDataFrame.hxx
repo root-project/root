@@ -41,13 +41,13 @@ namespace RDFDetail = ROOT::Detail::RDF;
 class RDataFrame : public ROOT::RDF::RInterface<RDFDetail::RLoopManager> {
 public:
    using ColumnNames_t = ROOT::RDF::ColumnNames_t;
-   RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {});
+   RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultColumns = {});
    RDataFrame(std::string_view treename, const std::vector<std::string> &filenames,
-              const ColumnNames_t &defaultBranches = {});
-   RDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
-   RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
+              const ColumnNames_t &defaultColumns = {});
+   RDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultColumns = {});
+   RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns = {});
    RDataFrame(ULong64_t numEntries);
-   RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource>, const ColumnNames_t &defaultBranches = {});
+   RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource>, const ColumnNames_t &defaultColumns = {});
    RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec);
 };
 
