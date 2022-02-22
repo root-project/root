@@ -50,6 +50,22 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
         Get inner typename of a templated C++ typename
         '''
         try:
+            if '<' not in t:
+                # therefore, type must use a shorthand alias
+                typemap = {
+                        'F': 'float',
+                        'D': 'double',
+                        'I': 'int',
+                        'U': 'unsigned int',
+                        'L': 'long',
+                        'UL': 'unsigned long',
+                        'B': 'bool'
+                        }
+                if t[4:] in typemap: # first 3 characters are "RVec"
+                    return typemap[t[4:]]
+                raise Exception(
+                        'Unrecognized type {}. Valid shorthand aliases of RVec are {}'
+                        .format(t, list('RVec' + i for i in typemap.keys())))
             g = re.match('(.*)<(.*)>', t).groups(0)
             return g[1]
         except:
