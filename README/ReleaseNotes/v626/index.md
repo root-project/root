@@ -73,14 +73,16 @@ ROOT's "alien" package has been deprecated and will be removed in 6.28. Please c
 
 RooFit container classes marked as deprecated with this release: `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList`. These classes are still available in this release, but will be removed in the next one. Please migrate to STL container classes, such as `std::unordered_map`, `std::set`, and `std::vector`.
 The `RooFit::FitOptions(const char*)` command to steer [RooAbsPdf::fitTo()](https://root.cern.ch/doc/v628/classRooAbsPdf.html) with an option string in now deprecated and will be removed in ROOT v6.28. Please migrate to the RooCmdArg-based fit configuration. The former character flags map to RooFit command arguments as follows:
-    - `'h'` : RooFit::Hesse()
-    - `'m'` : RooFit::Minos()
-    - `'o'` : RooFit::Optimize(1)
-    - `'r'` : RooFit::Save()
-    - `'t'` : RooFit::Timer()
-    - `'v'` : RooFit::Verbose()
-    - `'0'` : RooFit::Strategy(0)
-  Subsequently, the `RooMinimizer::fit(const char*)` function and the [RooMCStudy](https://root.cern.ch/doc/v626/classRooMCStudy.html) constructor that takes an option string is deprecated as well.
+
+- `'h'` : RooFit::Hesse()
+- `'m'` : RooFit::Minos()
+- `'o'` : RooFit::Optimize(1)
+- `'r'` : RooFit::Save()
+- `'t'` : RooFit::Timer()
+- `'v'` : RooFit::Verbose()
+- `'0'` : RooFit::Strategy(0)
+
+Subsequently, the `RooMinimizer::fit(const char*)` function and the [RooMCStudy](https://root.cern.ch/doc/v626/classRooMCStudy.html) constructor that takes an option string is deprecated as well.
 
 ## Core Libraries
 
@@ -97,7 +99,7 @@ int f() { return; }
 More details at [PR #8737](https://github.com/root-project/root/pull/8737).
 
 Continuation of input lines using backslash `\` is supported in ROOT's prompt, e.g.
-```cpp
+```
 root [0] std::cout \
 root (cont'ed, cancel with .@) [1]<< "ROOT\n";
 ```
