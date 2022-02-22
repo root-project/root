@@ -110,7 +110,6 @@ runtime speed-up. Optimization can be switched with `.O 0`, `.O 1`, etc; the
 current optimization level is shown by `.O`.
 The CPP macro `NDEBUG` is now set unconditionally for interpreted code.
 Note that symbols that have been emitted with a given optimization level will not get
-
 re-emitted once the optimization level changes.
 
 Unless ROOT is used with an interactive prompt (`root [0]`), ROOT does not
