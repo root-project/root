@@ -682,6 +682,38 @@ If an instance of [distributed.Client](http://distributed.dask.org/en/stable/api
 provided to the RDataFrame object, it will be created for you and it will run the computations in the local machine
 using all cores available.
 
+### Choosing the number of distributed tasks
+
+A distributed RDataFrame has internal logic to define in how many chunks the input dataset will be split before sending
+tasks to the distributed backend. Each task reads and processes one of said chunks. The logic is backend-dependent, but
+generically tries to infer how many cores are available in the cluster through the connection object. The number of
+tasks will be equal to the inferred number of cores. There are cases where the connection object of the chosen backend
+doesn't have information about the actual resources of the cluster. An example of this is when using Dask to connect to
+a batch system. The client object created at the beginning of the application does not automatically know how many cores
+will be available during distributed execution, since the jobs are submitted to the batch system after the creation of
+the connection. In such cases, the logic is to default to process the whole dataset in 2 tasks.
+
+The number of tasks submitted for distributed execution can be also set programmatically, by providing the optional
+keyword argument `npartitions` when creating the RDataFrame object. This parameter is accepted irrespectively of the
+backend used:
+
+~~~{.py}
+import ROOT
+
+# Define correct imports and access the distributed RDataFrame appropriate for the
+# backend used in the analysis
+RDataFrame = ROOT.RDF.Experimental.Distributed.[BACKEND].RDataFrame
+
+if __name__ == "__main__":
+    # The `npartitions` optional argument tells the RDataFrame how many tasks are desired
+    df = RDataFrame("mytree","myfile.root", npartitions=NPARTITIONS)
+    # Proceed as usual
+    df.Define("x","someoperation").Histo1D("x")
+~~~
+
+Note that when processing a TTree or TChain dataset, the `npartitions` value should not exceed the number of clusters in
+the dataset. The number of clusters in a TTree can be retrieved by typing `rootls -lt myfile.root` at a command line.
+
 ### Distributed Snapshot
 
 The Snapshot operation behaves slightly differently when executed distributedly. First off, it requires the path
