@@ -61,12 +61,18 @@ The following people have contributed to this new version:
 
 ## Deprecation, Removal, Backward Incompatibilities
 
-- The "Virtual MonteCarlo" facility VMC (`montecarlo/vmc`) has been removed from ROOT. The development of this package has moved to a [separate project](https://github.com/vmc-project/). ROOT's copy of VMC was deprecated since v6.18.
-- `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been removed. `TTreeProcessorMT::SetTasksPerWorkerHint` is a superior alternative.
-- `TTree::GetEntry()` and `TTree::GetEvent()` no longer have 0 as the default value for the first parameter `entry`. We are not aware of correct uses of this function without providing an entry number. If you have one, please simply pass `0` from now on.
-- `TBufferMerger` is now out of the `Experimental` namespace (`ROOT::Experimental::TBufferMerger` is deprecated, please use `ROOT::TBufferMerger` instead)
-- RooFit container classes marked as deprecated with this release: `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList`. These classes are still available in this release, but will be removed in the next one. Please migrate to STL container classes, such as `std::unordered_map`, `std::set`, and `std::vector`.
-- The `RooFit::FitOptions(const char*)` command to steer [RooAbsPdf::fitTo()](https://root.cern.ch/doc/v628/classRooAbsPdf.html) with an option string in now deprecated and will be removed in ROOT v6.28. Please migrate to the RooCmdArg-based fit configuration. The former character flags map to RooFit command arguments as follows:
+The "Virtual MonteCarlo" facility VMC (`montecarlo/vmc`) has been removed from ROOT. The development of this package has moved to a [separate project](https://github.com/vmc-project/). ROOT's copy of VMC was deprecated since v6.18.
+The previously deprecated packages memstat, memcheck have been removed. Please use for instance `valgrind` or memory sanitizers instead.
+ROOT's "alien" package has been deprecated and will be removed in 6.28. Please contact ALICE software support if you still rely on it.
+
+
+`TTree.AsMatrix` has been removed, after being deprecated in 6.24. Instead, please use `RDataFrame.AsNumpy` from now on as a way to read and process data in ROOT files and store it in NumPy arrays (a tutorial can be found [here](https://root.cern/doc/master/df026__AsNumpyArrays_8py.html)).
+`TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been removed. `TTreeProcessorMT::SetTasksPerWorkerHint` is a superior alternative.
+`TTree::GetEntry()` and `TTree::GetEvent()` no longer have 0 as the default value for the first parameter `entry`. We are not aware of correct uses of this function without providing an entry number. If you have one, please simply pass `0` from now on.
+`TBufferMerger` is now production ready and not experimental anymore: `ROOT::Experimental::TBufferMerger` is deprecated, please use `ROOT::TBufferMerger` instead.
+
+RooFit container classes marked as deprecated with this release: `RooHashTable`, `RooNameSet`, `RooSetPair`, and `RooList`. These classes are still available in this release, but will be removed in the next one. Please migrate to STL container classes, such as `std::unordered_map`, `std::set`, and `std::vector`.
+The `RooFit::FitOptions(const char*)` command to steer [RooAbsPdf::fitTo()](https://root.cern.ch/doc/v628/classRooAbsPdf.html) with an option string in now deprecated and will be removed in ROOT v6.28. Please migrate to the RooCmdArg-based fit configuration. The former character flags map to RooFit command arguments as follows:
     - `'h'` : RooFit::Hesse()
     - `'m'` : RooFit::Minos()
     - `'o'` : RooFit::Optimize(1)
@@ -75,14 +81,12 @@ The following people have contributed to this new version:
     - `'v'` : RooFit::Verbose()
     - `'0'` : RooFit::Strategy(0)
   Subsequently, the `RooMinimizer::fit(const char*)` function and the [RooMCStudy](https://root.cern.ch/doc/v626/classRooMCStudy.html) constructor that takes an option string is deprecated as well.
-- `TTree.AsMatrix` has been removed, after being deprecated in 6.24. Instead, please use `RDataFrame.AsNumpy` from now on as a way to read and process data in ROOT files and store it in NumPy arrays (a tutorial can be found [here](https://root.cern/doc/master/df026__AsNumpyArrays_8py.html)).
-
 
 ## Core Libraries
 
 ### Interpreter
 
-- As of v6.26, cling diagnostic messages can be redirected to the ROOT error handler. Users may enable/disable this via `TCling::ReportDiagnosticsToErrorHandler()`, e.g.
+As of v6.26, cling diagnostic messages can be redirected to the ROOT error handler. Users may enable/disable this via `TCling::ReportDiagnosticsToErrorHandler()`, e.g.
 ```cpp
 root [1] gInterpreter->ReportDiagnosticsToErrorHandler();
 root [2] int f() { return; }
@@ -91,11 +95,29 @@ int f() { return; }
           ^
 ```
 More details at [PR #8737](https://github.com/root-project/root/pull/8737).
-- Continuation of input lines using backslash `\` is supported in ROOT's prompt, e.g.
+
+Continuation of input lines using backslash `\` is supported in ROOT's prompt, e.g.
 ```cpp
 root [0] std::cout \
 root (cont'ed, cancel with .@) [1]<< "ROOT\n";
 ```
+
+ROOT now interprets code with optimization (`-O1`) by default, with
+proper inlining optimization and alike. This accelerates especially "modern"
+code (C++ stdlib, RDataFrame, etc) significantly. According to our measurements
+the increased time for just-in-time compiling code is reasonable given the
+runtime speed-up. Optimization can be switched with `.O 0`, `.O 1`, etc; the
+current optimization level is shown by `.O`.
+The CPP macro `NDEBUG` is now set unconditionally for interpreted code.
+Note that symbols that have been emitted with a given optimization level will not get
+re-emitted once the optimization level changes.
+
+Unless ROOT is used with an interactive prompt (`root [0]`), ROOT does not
+inject the pointer checks anymore, accelerating code execution at the cost
+of not diagnosing the dereferencing of `nullptr` or uninitialized pointers.
+
+Several internal optimizations of cling reduce the amount of symbols cling emits,
+and improve the just-in-time compilation time.
 
 ## I/O Libraries
 
@@ -398,7 +420,7 @@ RooFit now contains two RDataFrame action helpers, `RooDataSetHelper` and `RooDa
   RooRealVar y("y", "y", -50., 50.);
   auto myDataSet = rdataframe.Book<double, double>(
     RooDataSetHelper{"dataset",          // Name   (directly forwarded to RooDataSet::RooDataSet())
-                    "Title of dataset",  // Title  (                   ~ " ~                      )
+                    "Title of dataset",  // Title  (                  ~ '' ~                      )
                     RooArgSet(x, y) },   // Variables to create in dataset
     {"x", "y"}                           // Column names from RDataFrame
   );
@@ -671,7 +693,11 @@ canvas->Print(".tex", "Standalone");
 
 ## Build, Configuration and Testing Infrastructure
 
-- For users building from source the `latest-stable` branch and passing `-Droottest=ON` to the CMake command line, the corresponding revision of roottest pointed to by `latest-stable` will be downloaded as required.
+For users building from source the `latest-stable` branch and passing `-Droottest=ON` to the CMake command line, the corresponding revision of roottest pointed to by `latest-stable` will be downloaded as required.
+
+ROOT now requires CMake version 3.16 or later.
+ROOT cannot be built with C++11 anymore; the supported standards are currently C++14 and C++17.
+ROOT's experimental features (RNTuple, RHist, etc) now require C++17.
 
 ## PyROOT
 
