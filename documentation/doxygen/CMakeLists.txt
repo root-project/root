@@ -128,6 +128,7 @@ if(BUILD_DOCUMENTATION)
                                            ../../interpreter/llvm/src/tools/clang/include # needed to avoid warning of LangOptions.def not found
                                            ../../graf2d/gpadv7/inc # need to avoid getting doxygen confused with macro call on RAttrAxis
                                            ../../tmva/tmva/inc # same for REGISTER_METHOD on tmva
+                                           ../../io/io/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
                                            )
         set(DOXYGEN_GENERATE_TAGFILE       "${DOXYGEN_OUTPUT_DIRECTORY}/html/ROOT.tag")
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO)
