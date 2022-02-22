@@ -314,15 +314,16 @@ Double_t PiecewiseInterpolation::evaluate() const
 /// Interpolate between input distributions for all values of the observable in `evalData`.
 /// \param[in,out] evalData Struct holding spans pointing to input data. The results of this function will be stored here.
 /// \param[in] normSet Arguments to normalise over.
-RooSpan<double> PiecewiseInterpolation::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  auto nominal = _nominal->getValues(evalData, normSet);
-  auto sum = evalData.makeBatch(this, nominal.size());
-  std::copy(nominal.begin(), nominal.end(), sum.begin());
+void PiecewiseInterpolation::computeBatch(cudaStream_t*, double* sum, size_t /*size*/, RooBatchCompute::DataMap& dataMap) const {
+  auto nominal = dataMap[&*_nominal];
+  for(unsigned int j=0; j < nominal.size(); ++j) {
+    sum[j] = nominal[j];
+  }
 
   for (unsigned int i=0; i < _paramSet.size(); ++i) {
     const double param = static_cast<RooAbsReal*>(_paramSet.at(i))->getVal();
-    auto low   = static_cast<RooAbsReal*>(_lowSet.at(i) )->getValues(evalData, normSet);
-    auto high  = static_cast<RooAbsReal*>(_highSet.at(i))->getValues(evalData, normSet);
+    auto low   = dataMap[_lowSet.at(i)];
+    auto high  = dataMap[_highSet.at(i)];
     const int icode = _interpCode[i];
 
     switch(icode) {
@@ -432,13 +433,11 @@ RooSpan<double> PiecewiseInterpolation::evaluateSpan(RooBatchCompute::RunContext
   }
 
   if (_positiveDefinite) {
-    for (double& val : sum) {
-      if (val < 0.)
-        val = 0.;
+    for(unsigned int j=0; j < nominal.size(); ++j) {
+      if (sum[j] < 0.)
+        sum[j] = 0.;
     }
   }
-
-  return sum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

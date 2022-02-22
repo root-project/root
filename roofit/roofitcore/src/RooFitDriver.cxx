@@ -223,7 +223,7 @@ void RooFitDriver::init()
    // Some checks and logging of used architectures
    {
       auto log = [](std::string_view message) {
-         oocxcoutI(static_cast<RooAbsArg *>(nullptr), FastEvaluations) << message << std::endl;
+         oocxcoutI(static_cast<RooAbsArg *>(nullptr), Fitting) << message << std::endl;
       };
 
       if (_batchMode == RooFit::BatchModeOption::Cuda && !RooBatchCompute::dispatchCUDA) {
