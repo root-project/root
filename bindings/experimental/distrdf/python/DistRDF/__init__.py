@@ -100,6 +100,8 @@ def RunGraphs(proxies):
 
 
     """
+    # Import here to avoid circular dependencies in main module
+    from DistRDF.Proxy import execute_graph
 
     if not proxies:
         raise ValueError("The list of result pointers passed to RunGraphs is empty.")
@@ -110,7 +112,7 @@ def RunGraphs(proxies):
     # Submit all computation graphs concurrently from multiple Python threads.
     # The submission is not computationally intensive
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
-        futures = [executor.submit(proxy.execute_graph) for proxy in uniqueproxies]
+        futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
         concurrent.futures.wait(futures)
 
 
