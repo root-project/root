@@ -591,23 +591,19 @@ Double_t ParamHistFunc::evaluate() const
 /// the associated parameters.
 /// \param[in,out] evalData Input/output data for evaluating the ParamHistFunc.
 /// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
-RooSpan<double> ParamHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+void ParamHistFunc::computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap& dataMap) const {
   std::vector<double> oldValues;
   std::vector<RooSpan<const double>> data;
-  std::size_t batchSize = 0;
 
   // Retrieve data for all variables
   for (auto arg : _dataVars) {
     const auto* var = static_cast<RooRealVar*>(arg);
     oldValues.push_back(var->getVal());
-    data.push_back(var->getValues(evalData, normSet));
-    batchSize = std::max(batchSize, data.back().size());
+    data.push_back(dataMap[var]);
   }
 
   // Run computation for each entry in the dataset
-  RooSpan<double> output = evalData.makeBatch(this, batchSize);
-
-  for (std::size_t i = 0; i < batchSize; ++i) {
+  for (std::size_t i = 0; i < size; ++i) {
     for (unsigned int j = 0; j < _dataVars.size(); ++j) {
       assert(i < data[j].size());
       auto& var = static_cast<RooRealVar&>(_dataVars[j]);
@@ -624,8 +620,6 @@ RooSpan<double> ParamHistFunc::evaluateSpan(RooBatchCompute::RunContext& evalDat
     auto& var = static_cast<RooRealVar&>(_dataVars[j]);
     var.setCachedValue(oldValues[j], /*notifyClients=*/false);
   }
-
-  return output;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

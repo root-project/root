@@ -386,29 +386,18 @@ Double_t RooProduct::evaluate() const
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate product of input functions for all points found in `evalData`.
-RooSpan<double> RooProduct::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  RooSpan<double> prod;
-
-  assert(_compRSet.nset() == normSet);
+void RooProduct::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  for (unsigned int i = 0; i < nEvents; ++i) {
+    output[i] = 1.;
+  }
 
   for (const auto item : _compRSet) {
     auto rcomp = static_cast<const RooAbsReal*>(item);
-    auto componentValues = rcomp->getValues(evalData, normSet);
+    auto componentValues = dataMap[rcomp];
 
-    if (prod.empty()) {
-      prod = evalData.makeBatch(this, componentValues.size());
-      for (auto& val : prod) val = 1.;
-    } else if (prod.size() == 1 && componentValues.size() > 1) {
-      const double val = prod[0];
-      prod = evalData.makeBatch(this, componentValues.size());
-      std::fill(prod.begin(), prod.end(), val);
-    }
-    assert(prod.size() == componentValues.size() || componentValues.size() == 1);
-
-    for (unsigned int i = 0; i < prod.size(); ++i) {
-      prod[i] *= componentValues.size() == 1 ? componentValues[0] : componentValues[i];
+    for (unsigned int i = 0; i < nEvents; ++i) {
+      output[i] *= componentValues.size() == 1 ? componentValues[0] : componentValues[i];
     }
   }
 
@@ -416,14 +405,11 @@ RooSpan<double> RooProduct::evaluateSpan(RooBatchCompute::RunContext& evalData, 
     auto ccomp = static_cast<const RooAbsCategory*>(item);
     const int catIndex = ccomp->getCurrentIndex();
 
-    for (unsigned int i = 0; i < prod.size(); ++i) {
-      prod[i] *= catIndex;
+    for (unsigned int i = 0; i < nEvents; ++i) {
+      output[i] *= catIndex;
     }
   }
-
-  return prod;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

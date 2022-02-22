@@ -257,7 +257,7 @@ Double_t RooRealSumPdf::evaluate() const
 }
 
 
-void RooRealSumPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
+void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
 
   // To evaluate this RooRealSumPdf, we have to undo the normalization of the
   // pdf servers by convention. TODO: find a less hacky solution for this,
@@ -283,15 +283,11 @@ void RooRealSumPdf::computeBatch(cudaStream_t* stream, double* output, size_t nE
       }
   }
 
-  RooAbsPdf::computeBatch(stream, output, nEvents, dataMapCopy);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Calculate the value for all values of the observable in `evalData`.
-RooSpan<double> RooRealSumPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const {
   // Do running sum of coef/func pairs, calculate lastCoef.
-  RooSpan<double> values;
+  for (unsigned int j = 0; j < nEvents; ++j) {
+    output[j] = 0.0;
+  }
+
   double sumCoeff = 0.;
   for (unsigned int i = 0; i < _funcList.size(); ++i) {
     const auto func = static_cast<RooAbsReal*>(&_funcList[i]);
@@ -299,17 +295,14 @@ RooSpan<double> RooRealSumPdf::evaluateSpan(RooBatchCompute::RunContext& evalDat
     const double coefVal = coef != nullptr ? coef->getVal() : (1. - sumCoeff);
 
     if (func->isSelectedComp()) {
-      auto funcValues = func->getValues(evalData, nullptr); // No normSet here, because we are summing functions!
-      if (values.empty() || (values.size() == 1 && funcValues.size() > 1)) {
-        const double init = values.empty() ? 0. : values[0];
-        values = evalData.makeBatch(this, funcValues.size());
-        for (unsigned int j = 0; j < values.size(); ++j) {
-          values[j] = init + funcValues[j] * coefVal;
+      auto funcValues = dataMapCopy[func];
+      if(funcValues.size() == 1) {
+        for (unsigned int j = 0; j < nEvents; ++j) {
+          output[j] += funcValues[0] * coefVal;
         }
       } else {
-        assert(values.size() == funcValues.size());
-        for (unsigned int j = 0; j < values.size(); ++j) {
-          values[j] += funcValues[j] * coefVal;
+        for (unsigned int j = 0; j < nEvents; ++j) {
+          output[j] += funcValues[j] * coefVal;
         }
       }
     }
@@ -323,7 +316,7 @@ RooSpan<double> RooRealSumPdf::evaluateSpan(RooBatchCompute::RunContext& evalDat
         _haveWarned = true;
       }
       // Signal that we are in an undefined region by handing back one NaN.
-      values[0] = RooNaNPacker::packFloatIntoNaN(100.f * (coefVal < 0. ? -coefVal : coefVal - 1.));
+      output[0] = RooNaNPacker::packFloatIntoNaN(100.f * (coefVal < 0. ? -coefVal : coefVal - 1.));
     }
 
     sumCoeff += coefVal;
@@ -331,12 +324,25 @@ RooSpan<double> RooRealSumPdf::evaluateSpan(RooBatchCompute::RunContext& evalDat
 
   // Introduce floor if so requested
   if (_doFloor || _doFloorGlobal) {
-    for (unsigned int j = 0; j < values.size(); ++j) {
-      values[j] += std::max(0., values[j]);
+    for (unsigned int j = 0; j < nEvents; ++j) {
+      output[j] += std::max(0., output[j]);
     }
   }
 
-  return values;
+  // normalize
+  auto integralSpan = dataMap.at(_norm);
+
+  if(integralSpan.size() == 1) {
+    double oneOverNorm = 1. / integralSpan[0];
+    for (std::size_t i=0; i < nEvents; ++i) {
+      output[i] *= oneOverNorm;
+    }
+  } else {
+    assert(integralSpan.size() == nEvents);
+    for (std::size_t i=0; i < nEvents; ++i) {
+      output[i] = normalizeWithNaNPacking(output[i], integralSpan[i]);
+    }
+  }
 }
 
 
