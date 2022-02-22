@@ -112,8 +112,8 @@ namespace RooStats {
      /// Returns detailed output. The value returned by this function is updated after each call to Evaluate().
      /// The returned RooArgSet contains the following:
      ///
-     ///  - the minimum nll, fitstatus and convergence quality for each fit </li>
-     ///  - for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored </li>
+     ///  - the minimum nll, fitstatus and convergence quality for each fit
+     ///  - for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored
      ///
      const RooArgSet* GetDetailedOutput(void) const override {
       return fDetailedOutput;
