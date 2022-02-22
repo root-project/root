@@ -122,7 +122,7 @@ if(BUILD_DOCUMENTATION)
         #~ set(DOXYGEN_EXPAND_ONLY_PREDEF     YES)
         #~ set(DOXYGEN_SEARCH_INCLUDES        NO)
         #"ClassDef(x,y)=" "ClassImp(x)=" "ClassImpQ(x)=" "templateClassImp(x)=" "NamespaceImp(x)=" "R__SUGGEST_ALTERNATIVE(x)="
-        set(DOXYGEN_PREDEFINED             "R__CLING_PTRCHECK" "R__USE_IMT" )
+        set(DOXYGEN_PREDEFINED             "R__CLING_PTRCHECK" "R__USE_IMT" "__attribute__(x)=" "__declspec(x)=" "__pragma(x)=")
         set(DOXYGEN_INCLUDE_PATH           ../../core/base/inc  # needed for detecting ClassDef and not raising Warning on ::Streamer
                                            ../../bindings/r/inc # needed for bindings/r includes to not raise warnings
                                            ../../interpreter/llvm/src/tools/clang/include # needed to avoid warning of LangOptions.def not found
