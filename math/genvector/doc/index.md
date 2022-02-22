@@ -6,7 +6,7 @@ These classes represent vectors and their operations and transformations, such a
 The 4D space-time is used for physics vectors representing relativistic particles in [Minkowski-space](https://en.wikipedia.org/wiki/Minkowski_space).
 These vectors are different from Linear Algebra vectors or `std::vector` which describe generic N-dimensional vectors.
 
-Hint: the most commonly used Lorentz vector class is ROOT::Math::PtEtaPhiMVector, a typedef to ROOT::Math::LorentzVector < ROOT::Math::PtEtaPhiM4D <double> >.
+Hint: the most commonly used Lorentz vector class is ROOT::Math::PtEtaPhiMVector, a typedef to ROOT::Math::LorentzVector < ROOT::Math::PtEtaPhiM4D < double > >.
 
 ## Points and Vector concept
 
