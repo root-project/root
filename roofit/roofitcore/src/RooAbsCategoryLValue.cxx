@@ -74,7 +74,7 @@ RooAbsCategoryLValue::~RooAbsCategoryLValue()
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator from integer index number
 
-RooAbsArg& RooAbsCategoryLValue::operator=(Int_t index)
+RooAbsArg& RooAbsCategoryLValue::operator=(int index)
 {
   setIndex(index,true) ;
   return *this ;
