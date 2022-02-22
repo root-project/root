@@ -11,7 +11,7 @@ if(ROOT_pyroot_FOUND)
     set(roofit False)
   endif(ROOT_roofit_FOUND)
 
-  find_python_module(pytest REQUIRED)
+  find_python_module(pytest OPTIONAL)
 
   if (PY_PYTEST_FOUND)
     ROOTTEST_ADD_TESTDIRS()
