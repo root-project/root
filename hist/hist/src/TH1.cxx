@@ -4212,7 +4212,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// calling the following functions:
 ///
 /// ~~~ {.cpp}
-///      TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
+///      TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction);
 /// ~~~
 ///
 /// where MyFittingFunction is of type:
@@ -4232,9 +4232,9 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///
 /// If the bin errors are not known, one should use the fit option "W", which gives a weight=1 for each bin (it is an unweighted least-square
 /// fit). When using option "WW" the empty bins will be also considered in the chi-square fit with an error of 1.
-/// Note that in this fitting case (option "W" or "WW ) the resulting fitted parameter errors
+/// Note that in this fitting case (option "W" or "WW") the resulting fitted parameter errors
 /// are corrected by the obtained chi2 value using this scaling expression:
-///`errorp *= sqrt(chisquare/(ndf-1))` as it is done when fitting a TGraph with
+/// `errorp *= sqrt(chisquare/(ndf-1))` as it is done when fitting a TGraph with
 /// no point errors.
 ///
 /// #### Excluding points
@@ -4251,7 +4251,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///
 /// ~~~ {.cpp}
 ///     h.Fit("myFunction", "0"); // fit, store function but do not draw
-///     h.Draw(); function is not drawn
+///     h.Draw(); // function is not drawn
 ///     h.GetFunction("myFunction")->ResetBit(TF1::kNotDraw);
 ///     h.Draw();  // function is visible again
 /// ~~~
