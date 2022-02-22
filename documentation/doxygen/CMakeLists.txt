@@ -126,6 +126,7 @@ if(BUILD_DOCUMENTATION)
                                            ../../bindings/r/inc # needed for bindings/r includes to not raise warnings
                                            ../../interpreter/llvm/src/tools/clang/include # needed to avoid warning of LangOptions.def not found
                                            ../../graf2d/gpadv7/inc # need to avoid getting doxygen confused with macro call on RAttrAxis
+                                           ../../tmva/tmva/inc # same for REGISTER_METHOD on tmva
                                            )
         set(DOXYGEN_GENERATE_TAGFILE       "${DOXYGEN_OUTPUT_DIRECTORY}/html/ROOT.tag")
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO)
