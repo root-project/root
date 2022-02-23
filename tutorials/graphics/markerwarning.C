@@ -126,7 +126,7 @@ void markerwarning()
 These two graphs show how misleading");
    t1.DrawLatex(-5,0.4,"a careless use of symbols can be. The two plots represent\
 the same data sets but because of a bad");
-   t1.DrawLatex(-5,0.2,"symbol choice, the two plots on the top appear further apart\
+   t1.DrawLatex(-5,0.2,"symbol choice, the two plots on the top appear further apart \
 than for the bottom example.");
 
    canvasNc->cd();
