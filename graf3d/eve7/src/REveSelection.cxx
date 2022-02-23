@@ -505,6 +505,10 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
      }
    }
 
+   if (fDeviator && fDeviator->DeviateSelection(this, el, multi, secondary, secondary_idcs)) {
+      return;
+   }
+
    if (gDebug > 0) {
       std::string debug_secondary;
       if (secondary) {
