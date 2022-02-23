@@ -3,24 +3,23 @@
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
-
 import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Any, Union
+from typing import Any, List, Optional, Union
 
 import ROOT
 
-from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
-from DistRDF.Node import Node
 from DistRDF import Operation
+from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
+from DistRDF.Node import Node, VariationsNode
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +92,59 @@ class Proxy(ABC):
         self.proxied_node.has_user_references = False
 
 
+class VariationsProxy(Proxy):
+    """
+    Instances of VariationsProxy act as futures of the result produced
+    by a call to DistRDF.VariationsFor. The aim is to mimic the functionality of
+    ROOT::RDF::Experimental::RResultMap.
+    """
+
+    def __init__(self, node: VariationsNode):
+        super().__init__(node)
+        self._keys: Optional[List[str]] = None
+
+    def __getattr__(self, attr):
+        """
+        The __getattr__ of the Proxy base class is an abstract method. This
+        class has no attributes to present to the user.
+        """
+        raise AttributeError(f"'VariationsProxy' object has no attribute '{attr}'")
+
+    def __getitem__(self, key: str):
+        """
+        Equivalent of 'operator[]' of the RResultMap. Triggers the computation
+        graph, then returns the varied value linked to the 'key' name.
+        """
+        execute_graph(self.proxied_node)
+        try:
+            return self.proxied_node.value.GetVariation(key)
+        except ROOT.std.runtime_error as e:
+            raise KeyError(f"'{key}' is not a valid variation name in this branch of the graph. "
+                           f"Available variations are {self.GetKeys()}") from e
+
+    def GetKeys(self) -> List[str]:
+        """
+        Equivalent of 'GetKeys' of the RResultMap. Unlike its C++ counterpart,
+        at the moment we cannot retrieve the list of variation names for a
+        certain action without triggering the distributed computation graph. For
+        this reason, the function raises an error if the keys are accessed
+        before computations have been triggered. In the future the behaviour
+        should be aligned with the C++ counterpart.
+        """
+        if self.proxied_node.value is None:
+            # TODO:
+            # The event loop has not been triggered yet. Currently we can't retrieve
+            # the list of variation names without starting the distributed computations
+            raise RuntimeError("The list of variation names cannot be (yet) retrieved without starting the "
+                               "distributed computation graph. Please try to retrieve at least one variation value, "
+                               "then the list of variation names will be available. In the future, it will be possible "
+                               "to get the names without triggering.")
+        else:
+            if self._keys is None:
+                self._keys = [str(key) for key in self.proxied_node.value.GetKeys()]
+            return self._keys
+
+
 class ActionProxy(Proxy):
     """
     Instances of ActionProxy act as futures of the result produced
@@ -128,6 +180,17 @@ class ActionProxy(Proxy):
         result of the current action node.
         """
         return getattr(self.GetValue(), self._cur_attr)(*args, **kwargs)
+
+    def create_variations(self) -> VariationsProxy:
+        """
+        Creates a node responsible to signal the creation of variations in the
+        distributed computation graph, returning a specialized proxy to that
+        node. This function is usually called from DistRDF.VariationsFor.
+        """
+        newnode = VariationsNode(operation=Operation.create_op("VariationsFor"), get_head=self.proxied_node.get_head)
+        self.proxied_node.children.append(newnode)
+
+        return VariationsProxy(newnode)
 
 
 class TransformationProxy(Proxy):
