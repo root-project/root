@@ -177,12 +177,7 @@ class BaseBackend(ABC):
 
         # Set the value of every action node
         for node, value in zip(nodes, values):
-            if node.operation.name == "Snapshot":
-                # Retrieving a new distributed RDataFrame from the result of a
-                # distributed Snapshot needs knowledge of the correct backend
-                node.value = value.GetValue(self)
-            else:
-                node.value = value.GetValue()
+            Utils.set_value_on_node(value, node, self)
 
     @abstractmethod
     def ProcessAndMerge(self, ranges, mapper, reducer):

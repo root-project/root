@@ -204,3 +204,19 @@ def _(mergeable_out, mergeable_in):
     `Merge` method.
     """
     mergeable_out.Merge(mergeable_in)
+
+
+@singledispatch
+def set_value_on_node(mergeable, node, backend):
+    """
+    Most mergeables have a `GetValue` method without parameters.
+    SnapshotResult is an exception, accepting a 'backend' parameter because we
+    need to recreate a distributed RDataFrame with the same backend of the input
+    one.
+    """
+    node.value = mergeable.GetValue()
+
+
+@set_value_on_node.register
+def _(mergeable: SnapshotResult, node, backend):
+    node.value = mergeable.GetValue(backend)

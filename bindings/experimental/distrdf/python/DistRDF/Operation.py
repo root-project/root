@@ -32,13 +32,23 @@ class InstantAction(Operation):
     pass
 
 
+class AsNumpy(InstantAction):
+    """An 'AsNumpy' instant action attached to a distributed RDataFrame graph node."""
+    pass
+
+
+class Snapshot(InstantAction):
+    """A 'Snapshot' instant action attached to a distributed RDataFrame graph node."""
+    pass
+
+
 class Transformation(Operation):
     """A trasformation attached to a distributed RDataFrame graph node."""
     pass
 
 
 SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = {
-    "AsNumpy": InstantAction,
+    "AsNumpy": AsNumpy,
     "Count": Action,
     "Define": Transformation,
     "DefinePerSample": Transformation,
@@ -55,7 +65,7 @@ SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = 
     "Profile2D": Action,
     "Profile3D": Action,
     "Redefine": Transformation,
-    "Snapshot": InstantAction,
+    "Snapshot": Snapshot,
     "Sum": Action,
 }
 
