@@ -133,7 +133,6 @@
 #pragma link C++ class RooLinkedListElem+ ;
 #pragma link C++ class RooLinkedList- ;
 #pragma link C++ class RooLinTransBinning+ ;
-#pragma link C++ class RooList+ ;
 #pragma read sourceClass="RooList" targetClass="TList";
 #pragma link C++ class RooListProxy+ ;
 #pragma link C++ class RooCollectionProxy<RooArgList>+ ;
