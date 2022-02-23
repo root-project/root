@@ -1,12 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
 project(ROOT_documentation)
 
-#~ set (QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
-set (QHG_LOCATION /usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator CACHE STRING "Path to qhelpgenerator")
-#~ set (DOCU_LOCATION $HOME/rootdoc CACHE STRING "Documentation output directory")
-set (DOCU_LOCATION /tmp/rootdoc CACHE STRING "Documentation output directory")
+set(CMAKE_VERBOSE_MAKEFILE ON) # set to ON for debugging
+set (QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
+#Pass instead -DQHG_LOCATION=/usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator if qt4dev-tools or qt5/ if qt5-assistant
+#Pass instead -DQHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.h. if custom installation
+set (DOCU_LOCATION $HOME/rootdoc CACHE STRING "Documentation output directory")
+#Pass instead -DDOCU_LOCATION=/tmp/rootdoc if temporary installation
 
-list(APPEND CMAKE_MODULE_PATH "/opt/doxygen")
+#list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
 
 option(BUILD_DOCUMENTATION "Create and install the HTML based ROOT documentation (requires Doxygen)" ON)
 
@@ -16,14 +18,15 @@ if(BUILD_DOCUMENTATION)
     if(DEFINED ROOTSYS)
     set (ROOT_DIR ${ROOTSYS} CACHE STRING "ROOT build directory")
     else()
-    set (ROOT_DIR /opt/root_bld/ CACHE STRING "ROOT build directory")
+    set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
     endif()
-    #~ set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
+
+    set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
     find_package(ROOT 6.25 CONFIG REQUIRED)
-    set(ENV{PYTHONPATH} ${ROOTSYS}/lib)
+    set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
 
     find_package(Doxygen REQUIRED dot)
-    #~ find_package(Doxygen 1.9.4 OPTIONAL_COMPONENTS dot)
+    #find_package(Doxygen 1.9.5 OPTIONAL_COMPONENTS dot) # TODO: change to this one, min doxygen is needed that has many bug fixes
 
     find_package (Python COMPONENTS Interpreter)
 
@@ -37,44 +40,46 @@ if(BUILD_DOCUMENTATION)
 
         add_custom_target(Preparation
 
-            COMMAND mkdir -p ${DOCU_LOCATION}/macros ${DOCU_LOCATION}/images ${DOCU_LOCATION}/notebooks
+            COMMAND mkdir -p ${DOCU_LOCATION}/macros ${DOCU_LOCATION}/images ${DOCU_LOCATION}/notebooks ${DOCU_LOCATION}/pyzdoc
 
-            # Copy stuff
             COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/images/* ${DOCU_LOCATION}/images/
             COMMAND tar xfz ${CMAKE_CURRENT_SOURCE_DIR}/mathjax.tar.gz -C ${DOCU_LOCATION}/
             COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/../../js ${DOCU_LOCATION}/
 
-            COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/makehtmlfooter.sh > htmlfooter.html
+            COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/makehtmlfooter.sh > ${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html
 
             COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${Python_EXECUTABLE}\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx -std=c++14
+
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc
+            COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
         )
 
         set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
         set(DOXYGEN_PROJECT_NAME           "ROOT")
         set(DOXYGEN_PROJECT_BRIEF          "Reference Guide")
-        set(DOXYGEN_PROJECT_LOGO           "./rootlogo.gif")
+        set(DOXYGEN_PROJECT_LOGO           "rootlogo.gif")
         set(DOXYGEN_ALWAYS_DETAILED_SEC    YES)
+        set(DOXYGEN_STRIP_FROM_PATH        "${DOCU_LOCATION}" "../../")
         set(DOXYGEN_JAVADOC_AUTOBRIEF      YES)
-        #~ set(DOXYGEN_NUM_PROC_THREADS 0)
         set(DOXYGEN_QT_AUTOBRIEF           YES)
-        set(DOXYGEN_TAB_SIZE 3)
+        set(DOXYGEN_TAB_SIZE               3  )
         set(DOXYGEN_ALIASES "legacy{1}=\\htmlonly<div class=\\\"legacybox\\\"><h2>Legacy Code</h2> \\1 is a legacy interface: it is not recommended to use it in new code. There will be no bug fixes nor new developments.</div>\\endhtmlonly")
         set(DOXYGEN_EXTENSION_MAPPING      h=C++ icc=C++ def=C++ pyzdoc=C++)
-        set(DOXYGEN_TOC_INCLUDE_HEADINGS   3)
+        set(DOXYGEN_TOC_INCLUDE_HEADINGS   3  )
         set(DOXYGEN_BUILTIN_STL_SUPPORT    YES)
-        set(DOXYGEN_LOOKUP_CACHE_SIZE      4)
+        set(DOXYGEN_LOOKUP_CACHE_SIZE      4  )
         set(DOXYGEN_EXTRACT_ALL            YES)
         set(DOXYGEN_EXTRACT_PRIVATE        YES)
         set(DOXYGEN_EXTRACT_STATIC         YES)
         set(DOXYGEN_EXTRACT_ANON_NSPACES   YES)
         set(DOXYGEN_HIDE_IN_BODY_DOCS      YES)
-        # set(DOXYGEN_WARN_NO_PARAMDOC       YES) # If you set this to yes, you need to set EXTRACT_ALL to false
+        #set(DOXYGEN_WARN_NO_PARAMDOC       YES) # If you set this to yes for finding all missing documentation, you need to set EXTRACT_ALL to false
         set(DOXYGEN_SORT_BRIEF_DOCS        YES)
         set(DOXYGEN_SORT_MEMBERS_CTORS_1ST YES)
         set(DOXYGEN_GENERATE_TODOLIST      NO)
         set(DOXYGEN_GENERATE_BUGLIST       NO)
         set(DOXYGEN_LAYOUT_FILE            DoxygenLayout.xml)
-        #~ set(DOXYGEN_WARN_LOGFILE           ROOT-Doxygen-warnings.txt)
+        #set(DOXYGEN_WARN_LOGFILE           /tmp/ROOT-Doxygen-warnings.txt)
         set(DOXYGEN_FILE_PATTERNS          *.c *.C *.cc *.cpp *.cxx *.def *.dox *.f *.h *.hh *.hpp *.hxx *.icc *.inc *.inl *.js *.m *.md *.mm *.py *.pyzdoc)
         set(DOXYGEN_RECURSIVE YES)
         set(DOXYGEN_EXCLUDE_PATTERNS       #*/G__*
@@ -92,8 +97,8 @@ if(BUILD_DOCUMENTATION)
                                            #~ */io/io/res/*
                                            #~ */src/lexertk.hpp
                                            )
-        #~ set(DOXYGEN_EXCLUDE_SYMBOLS        std
-                                           #~ cling*)
+        #set(DOXYGEN_EXCLUDE_SYMBOLS        std
+                                           #cling*)
         set(DOXYGEN_EXAMPLE_PATH           "${DOCU_LOCATION}/macros")
         set(DOXYGEN_IMAGE_PATH             "${DOCU_LOCATION}/images")
         set(DOXYGEN_INPUT_FILTER           "${CMAKE_CURRENT_BINARY_DIR}/filter")
@@ -103,8 +108,8 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_HTML_HEADER            "htmlheader.html")
         set(DOXYGEN_HTML_FOOTER            "${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html")
         set(DOXYGEN_HTML_EXTRA_STYLESHEET  "ROOT.css")
-        set(DOXYGEN_HTML_EXTRA_FILES       "./rootlogo_s.gif"
-                                           "./notebook.gif")
+        set(DOXYGEN_HTML_EXTRA_FILES       "rootlogo_s.gif"
+                                           "notebook.gif")
         set(DOXYGEN_HTML_TIMESTAMP         YES)
         set(DOXYGEN_GENERATE_QHP           YES)
         set(DOXYGEN_QCH_FILE               "ROOT.qch")
@@ -116,13 +121,13 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_USE_MATHJAX            YES)
         set(DOXYGEN_MATHJAX_RELPATH        ../mathjax)
         set(DOXYGEN_GENERATE_LATEX         NO)
-        #~ set(DOXYGEN_LATEX_CMD_NAME         latex)
+        #set(DOXYGEN_LATEX_CMD_NAME         latex)
         set(DOXYGEN_MACRO_EXPANSION        YES)
-        set(DOXYGEN_SKIP_FUNCTION_MACROS   NO)
-        #~ set(DOXYGEN_EXPAND_ONLY_PREDEF     YES)
-        #~ set(DOXYGEN_SEARCH_INCLUDES        NO)
-        #"ClassDef(x,y)=" "ClassImp(x)=" "ClassImpQ(x)=" "templateClassImp(x)=" "NamespaceImp(x)=" "R__SUGGEST_ALTERNATIVE(x)="
+        set(DOXYGEN_SKIP_FUNCTION_MACROS   NO )
+        #set(DOXYGEN_EXPAND_ONLY_PREDEF     YES)
+        #set(DOXYGEN_SEARCH_INCLUDES        NO)
         set(DOXYGEN_PREDEFINED             "R__CLING_PTRCHECK" "R__USE_IMT" "__attribute__(x)=" "__declspec(x)=" "__pragma(x)=")
+        #"ClassDef(x,y)=" "ClassImp(x)=" "ClassImpQ(x)=" "templateClassImp(x)=" "NamespaceImp(x)=" "R__SUGGEST_ALTERNATIVE(x)="
         set(DOXYGEN_INCLUDE_PATH           ../../core/base/inc  # needed for detecting ClassDef and not raising Warning on ::Streamer
                                            ../../core/meta/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
                                            ../../graf2d/graf/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
@@ -137,21 +142,21 @@ if(BUILD_DOCUMENTATION)
                                            ../../graf2d/gpadv7/inc # need to avoid getting doxygen confused with macro call on RAttrAxis
                                            ../../tmva/tmva/inc # same for REGISTER_METHOD on tmva
                                            )
-        set(DOXYGEN_GENERATE_TAGFILE       "${DOXYGEN_OUTPUT_DIRECTORY}/html/ROOT.tag")
-        set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO)
-        #~ set(DOXYGEN_HAVE_DOT               YES)
-        set(DOXYGEN_HAVE_DOT               NO)
-        set(DOXYGEN_GROUP_GRAPHS           NO)
+        set(DOXYGEN_GENERATE_TAGFILE       "${DOCU_LOCATION}/html/ROOT.tag")
+        set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO )
+        set(DOXYGEN_HAVE_DOT               YES) # set to NO for getting faster results when debugging
+        #set(DOXYGEN_DOT_NUM_THREADS 1) # uncomment this to only use one thread, otherwise all your CPU threads will be used
+        #set(DOXYGEN_NUM_PROC_THREADS 0) # uncomment to use many threads also in doxygen, not just in dot
+        set(DOXYGEN_GROUP_GRAPHS           NO )
         set(DOXYGEN_DOT_IMAGE_FORMAT       svg)
         set(DOXYGEN_INTERACTIVE_SVG        YES)
         set(DOXYGEN_DOT_GRAPH_MAX_NODES    200)
-        #~ set(DOXYGEN_ENABLED_SECTIONS       HIDDEN_SYMBOLS)
+        #set(DOXYGEN_ENABLED_SECTIONS       HIDDEN_SYMBOLS) # uncomment this to also show in the HTML the internal documentation inteded only for ROOT developers
 
-#~ if(NOT GRAPHVIZ_FOUND) set(gvizveto...)
+        #TODO: if(NOT GRAPHVIZ_FOUND) set(gvizveto...)
 
         doxygen_add_docs(dox ALL
             ./mainpage.md
-            ../../core/base
             ../../core/
             ../../geom/
             ../../graf2d
@@ -169,8 +174,14 @@ if(BUILD_DOCUMENTATION)
             ../../roofit/
             ../../tree/
             ../../sql/
-            #~ ../../tutorials/
+            ../../tutorials/
             ../../bindings/
+
+            # Add to the list of files to be analyzed the .pyzdoc files created by extract_docstrings.py
+            # and print_roofit_pyz_doctrings.py
+            #~ ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
+            #~ >> Doxyfile_INPUT
+            ${DOCU_LOCATION}/pyzdoc/
 
             #~ ../../core/base/
             #~ ../../core/dictgen/
@@ -238,6 +249,17 @@ if(BUILD_DOCUMENTATION)
             #~ ../../bindings/pyroot/
             #~ ../../bindings/r/
 
+            # echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
+            # echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
+            # echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
+            # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
+            # echo "        ../../graf2d/mathtext/           \\" >> Doxyfile_INPUT
+            # echo "        ../../graf3d/ftgl/               \\" >> Doxyfile_INPUT
+            # echo "        ../../graf3d/glew/               \\" >> Doxyfile_INPUT
+            # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
+            # echo "        ../../net/rootd/                 \\" >> Doxyfile_INPUT
+            # echo "        ../../net/rpdutils/              \\" >> Doxyfile_INPUT
+
           #ALLOW_DUPLICATE_CUSTOM_TARGETS
           #USE_STAMP_FILE
           COMMENT "Generating doxygen documentation for ${PROJECT_NAME}"
@@ -251,35 +273,25 @@ if(BUILD_DOCUMENTATION)
           #~ OPTIONAL # because available only after "make doc"
         #~ )
 
-        #~ set(ENV{DOXYGEN_OUTPUT_DIRECTORY} ${DOXYGEN_OUTPUT_DIRECTORY})
-        #~ execute_process(COMMAND listlibs.sh)
+        execute_process(COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" listlibs.sh)
+
+        #TODO cleaning:
+        #rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
+        #rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
+        #rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
+        #rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
+        #rm -f ${DOCU_LOCATION}/notebooks/*.root
+        #rm -rf ${DOCU_LOCATION}
 
     else()
          message(FATAL_ERROR "Doxygen is needed to build the documentation.")
     endif()
 
-# echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
-# echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
-# echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
-# echo "        ../../graf2d/mathtext/           \\" >> Doxyfile_INPUT
-# echo "        ../../graf3d/ftgl/               \\" >> Doxyfile_INPUT
-# echo "        ../../graf3d/glew/               \\" >> Doxyfile_INPUT
-# echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
-# echo "        ../../net/rootd/                 \\" >> Doxyfile_INPUT
-# echo "        ../../net/rpdutils/              \\" >> Doxyfile_INPUT
-
-
-# Add to the list of files to be analyzed the .pyzdoc files created by extract_docstrings.py
-# and print_roofit_pyz_doctrings.py
-#~ ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
-#~ >> Doxyfile_INPUT
-
-
     #~ add_custom_target(dox ALL
       #~ #DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/doxygen.stamp
       #~ DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
     #~ )
+    #~ TODO: https://github.com/root-project/root/issues/8999
     #~ include(make_documentation)
     #~ PARSE_CMAKE_DOCUMENTATION(INCLUDES "${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt" EXCLUDES "${CMAKE_CURRENT_BINARY_DIR}/*")
     #~ WRITE_CMAKE_DOCUMENTATION( "${CMAKE_CURRENT_SOURCE_DIR}/cmake.dox" SORTED )
