@@ -365,9 +365,9 @@ void REveDigitSet::DigitSelected(Int_t idx)
 
 void REveDigitSet::SecSelected(REveDigitSet* qs, Int_t idx)
 {
-   Long_t args[2];
-   args[0] = (Long_t) qs;
-   args[1] = (Long_t) idx;
+   Longptr_t args[2];
+   args[0] = (Longptr_t) qs;
+   args[1] = (Longptr_t) idx;
 
    // Emit("SecSelected(REveDigitSet*, Int_t)", args);
 }
