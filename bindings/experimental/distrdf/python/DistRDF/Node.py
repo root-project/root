@@ -1,9 +1,9 @@
-# @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -182,5 +182,13 @@ class HeadNode(Node):
     Helper tag for the headnode of the computation graph. Defined in the Node.py
     module so that other modules who may want to use it in type hints don't need
     to import the HeadNode.py module
+    """
+    pass
+
+
+class VariationsNode(Node):
+    """
+    Helper tag for a node of the computation graph that is responsible for
+    querying systematic variations from another action.
     """
     pass

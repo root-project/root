@@ -1,9 +1,9 @@
-# @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -24,6 +24,14 @@ class Operation:
 
 class Action(Operation):
     """An action attached to a distributed RDataFrame graph node."""
+    pass
+
+
+class VariationsFor(Action):
+    """
+    DistRDF.VariationsFor creates a 'VariationsNode' node in the distributed
+    RDataFrame graph. This acts as an action node.
+    """
     pass
 
 
@@ -67,6 +75,8 @@ SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = 
     "Redefine": Transformation,
     "Snapshot": Snapshot,
     "Sum": Action,
+    "VariationsFor": VariationsFor,
+    "Vary": Transformation
 }
 
 

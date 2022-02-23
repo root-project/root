@@ -1,9 +1,9 @@
-# @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -18,7 +18,7 @@ from typing import Any, List, Union
 import ROOT
 
 from DistRDF.CppWorkflow import CppWorkflow
-from DistRDF.Node import HeadNode, Node
+from DistRDF.Node import HeadNode, Node, VariationsNode
 from DistRDF.Operation import Action, AsNumpy, InstantAction, Operation, Snapshot
 from DistRDF.PythonMergeables import SnapshotResult
 
@@ -143,6 +143,20 @@ def _(distrdf_node: HeadNode, previous_rdf_node: Any, range_id: int) -> List:
     """
     distrdf_node.pyroot_node = previous_rdf_node
     return []
+
+
+@_call_rdf_operation.register
+def _(distrdf_node: VariationsNode, previous_rdf_node: Any, range_id: int) -> List:
+    """
+    Implementation of a state of the computation_graph_generator
+    function that is requesting systematic variations on a previously called
+    action. The 'previous_rdf_node' parameter is the nominal action for which
+    the variations are requested. The function calls
+    ROOT.RDF.Experimental.VariationsFor on it, which returns a
+    ROOT.RDF.Experimental.RResultMap. No other operations can be called on it.
+    So this is the last leaf of a branch of the computation graph.
+    """
+    return [ROOT.RDF.Experimental.VariationsFor(previous_rdf_node)]
 
 
 def generate_computation_graph(distrdf_node: Node, previous_rdf_node: Any, range_id: int) -> List:
