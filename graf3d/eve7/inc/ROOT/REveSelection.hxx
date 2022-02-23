@@ -64,6 +64,13 @@ public:
       bool is_secondary() const { return f_is_sec; }
    };
 
+   class Deviator {
+    public:
+      virtual ~Deviator(){};
+      Deviator() {}
+      virtual bool DeviateSelection(REveSelection*, REveElement*, bool multi, bool secondary, const std::set<int>& secondary_idcs) = 0;
+   };
+
    typedef std::map<REveElement*, Record>  SelMap_t;
    typedef SelMap_t::iterator              SelMap_i;
 
@@ -80,6 +87,8 @@ protected:
    Bool_t           fIsMaster{kFALSE}; ///<!
 
    SelMap_t         fMap;              ///<!
+   
+   Deviator*        fDeviator{nullptr};///<!
 
    Record* find_record(REveElement *el)
    {
@@ -108,6 +117,9 @@ public:
 
    Bool_t GetIsMaster()   const { return fIsMaster; }
    void   SetIsMaster(Bool_t m) { fIsMaster = m; }
+
+   Deviator* GetDeviator() const { return fDeviator; }
+   void   SetDeviator(Deviator* d) { fDeviator = d; }
 
    bool   IsEmpty()  const { return   fMap.empty(); }
    bool   NotEmpty() const { return ! fMap.empty(); }
