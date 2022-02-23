@@ -1496,7 +1496,7 @@ QHP_NAMESPACE          = cern.ch.ROOT
 # The default value is: doc.
 # This tag requires that the tag GENERATE_QHP is set to YES.
 
-QHP_VIRTUAL_FOLDER     = doc
+QHP_VIRTUAL_FOLDER     = rootdoc
 
 # If the QHP_CUST_FILTER_NAME tag is set, it specifies the name of a custom
 # filter to add. For more information please see Qt Help Project / Custom
