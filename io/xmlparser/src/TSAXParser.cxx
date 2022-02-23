@@ -125,9 +125,9 @@ void TSAXParser::OnEndDocument()
 
 void TSAXParser::OnStartElement(const char *name, const TList *attributes)
 {
-   Long_t args[2];
-   args[0] = (Long_t)name;
-   args[1] = (Long_t)attributes;
+   Longptr_t args[2];
+   args[0] = (Longptr_t)name;
+   args[1] = (Longptr_t)attributes;
 
    Emit("OnStartElement(const char *, const TList *)", args);
 }
@@ -196,8 +196,8 @@ Int_t TSAXParser::OnFatalError(const char *text)
 
 void TSAXParser::OnCdataBlock(const char *text, Int_t len)
 {
-   Long_t args[2];
-   args[0] = (Long_t)text;
+   Longptr_t args[2];
+   args[0] = (Longptr_t)text;
    args[1] = len;
 
    Emit("OnCdataBlock(const char *, Int_t)", args);

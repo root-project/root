@@ -1608,7 +1608,7 @@ Bool_t TGListBox::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 
 void TGListBox::Selected(Int_t widgetId, Int_t id)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
    args[0] = widgetId;
    args[1] = id;
@@ -1621,7 +1621,7 @@ void TGListBox::Selected(Int_t widgetId, Int_t id)
 
 void TGListBox::DoubleClicked(Int_t widgetId, Int_t id)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
    args[0] = widgetId;
    args[1] = id;

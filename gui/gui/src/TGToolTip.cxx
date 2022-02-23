@@ -236,7 +236,7 @@ void TGToolTip::Show(Int_t x, Int_t y)
    MapWindow();
    RaiseWindow();
 
-   Long_t args[2];
+   Longptr_t args[2];
    args[0] = x;
    args[1] = y;
 
