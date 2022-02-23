@@ -19,7 +19,7 @@ import ROOT
 
 from DistRDF.CppWorkflow import CppWorkflow
 from DistRDF.Node import Node
-from DistRDF.Operation import Action, InstantAction, Operation
+from DistRDF.Operation import Action, AsNumpy, InstantAction, Operation, Snapshot
 from DistRDF.PythonMergeables import SnapshotResult
 
 
@@ -56,10 +56,54 @@ def append_node_to_results(operation: Operation, promise: Any, results: list) ->
 @append_node_to_results.register(Action)
 @append_node_to_results.register(InstantAction)
 def _(operation: Union[Action, InstantAction], promise: Any, results: list) -> None:
-    if operation.name == "Snapshot":
-        results.append(SnapshotResult(operation.args[0], [operation.args[1]]))
+    results.append(promise)
+
+
+@append_node_to_results.register
+def _(operation: Snapshot, promise: Any, results: list) -> None:
+    results.append(SnapshotResult(operation.args[0], [operation.args[1]]))
+
+
+@singledispatch
+def _make_op_lazy_if_needed(operation: Operation, range_id: int) -> None:
+    """
+    We may need to change the attributes of some operations (currently
+    Snapshot and AsNumpy), to make them lazy before triggering
+    the computation graph.
+    """
+    pass
+
+
+@_make_op_lazy_if_needed.register
+def _(operation: AsNumpy, range_id: int) -> None:
+    operation.kwargs["lazy"] = True
+
+
+@_make_op_lazy_if_needed.register
+def _(operation: Snapshot, range_id: int) -> None:
+    # Retrieve filename and append range boundaries
+    filename = operation.args[1].partition(".root")[0]
+    path_with_range = "{}_{}.root".format(filename, range_id)
+    # Create a partial snapshot on the current range
+    operation.args[1] = path_with_range
+
+    if len(operation.args) == 2:
+        # Only the first two mandatory arguments were passed
+        # Only the following overload is possible
+        # Snapshot(std::string_view treename, std::string_view filename, std::string_view columnNameRegexp = "")
+        operation.args.append("")  # Append empty regex
+
+    if len(operation.args) == 4:
+        # An RSnapshotOptions instance was passed as fourth argument
+        # Make it lazy and keep the other options
+        operation.args[3].fLazy = True
     else:
-        results.append(promise)
+        # We already appended an empty regex for the 2 mandatory arguments overload
+        # All other overloads have 3 mandatory arguments
+        # We just need to append a lazy RSnapshotOptions now
+        lazy_options = ROOT.RDF.RSnapshotOptions()
+        lazy_options.fLazy = True
+        operation.args.append(lazy_options)  # Append RSnapshotOptions
 
 
 class ComputationGraphGenerator(object):
@@ -109,40 +153,6 @@ class ComputationGraphGenerator(object):
 
         return return_nodes
 
-    def _make_op_lazy_if_needed(self, operation, range_id):
-        """
-        We may need to change the attributes of some operations (currently
-        Snapshot and AsNumpy), to make them lazy before triggering
-        the computation graph.
-        """
-
-        if operation.name == "Snapshot":
-            # Retrieve filename and append range boundaries
-            filename = operation.args[1].partition(".root")[0]
-            path_with_range = "{}_{}.root".format(filename, range_id)
-            # Create a partial snapshot on the current range
-            operation.args[1] = path_with_range
-
-            if len(operation.args) == 2:
-                # Only the first two mandatory arguments were passed
-                # Only the following overload is possible
-                # Snapshot(std::string_view treename, std::string_view filename, std::string_view columnNameRegexp = "")
-                operation.args.append("")  # Append empty regex
-
-            if len(operation.args) == 4:
-                # An RSnapshotOptions instance was passed as fourth argument
-                # Make it lazy and keep the other options
-                operation.args[3].fLazy = True
-            else:
-                # We already appended an empty regex for the 2 mandatory arguments overload
-                # All other overloads have 3 mandatory arguments
-                # We just need to append a lazy RSnapshotOptions now
-                lazy_options = ROOT.RDF.RSnapshotOptions()
-                lazy_options.fLazy = True
-                operation.args.append(lazy_options)  # Append RSnapshotOptions
-        elif operation.name == "AsNumpy":
-            operation.kwargs["lazy"] = True  # Make it lazy
-
     def generate_computation_graph(self, previous_node, range_id, distrdf_node=None):
         """
         Generates the RDF computation graph by recursively retrieving
@@ -183,7 +193,7 @@ class ComputationGraphGenerator(object):
             # node
             RDFOperation = getattr(previous_node, distrdf_node.operation.name)
             operation = distrdf_node.operation
-            self._make_op_lazy_if_needed(operation, range_id)
+            _make_op_lazy_if_needed(operation, range_id)
             pyroot_node = RDFOperation(*operation.args, **operation.kwargs)
 
             # The result is a pyroot object which is stored together with
