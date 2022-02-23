@@ -3,7 +3,7 @@
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
@@ -209,14 +209,33 @@ def _(mergeable_out, mergeable_in):
 @singledispatch
 def set_value_on_node(mergeable, node, backend):
     """
-    Most mergeables have a `GetValue` method without parameters.
-    SnapshotResult is an exception, accepting a 'backend' parameter because we
-    need to recreate a distributed RDataFrame with the same backend of the input
-    one.
+    Connects the final value after distributed computation to the corresponding
+    DistRDF node.
+    By default, the `GetValue` method of the mergeable returns the final value.
     """
     node.value = mergeable.GetValue()
 
 
 @set_value_on_node.register
 def _(mergeable: SnapshotResult, node, backend):
+    """
+    Connects the final value after distributed computation to the corresponding
+    DistRDF node.
+    This overload calls the `GetValue` method of `SnapshotResult`. This method
+    accepts a 'backend' parameter because we need to recreate a distributed
+    RDataFrame with the same backend of the input one.
+    """
     node.value = mergeable.GetValue(backend)
+
+
+@set_value_on_node.register
+def _(mergeable: ROOT.Detail.RDF.RMergeableVariationsBase, node, backend):
+    """
+    Connects the final value after distributed computation to the corresponding
+    DistRDF node.
+    In this overload, the node stores the reference to the mergeable variations
+    directly. It is then responsibility of the VariationsProxy object to access
+    the specific varied object asked by the user, calling the right method of
+    the RMergeableVariations class.
+    """
+    node.value = mergeable
