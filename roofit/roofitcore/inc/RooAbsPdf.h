@@ -240,16 +240,6 @@ public:
     return getNorm(&nset) ; 
   }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
-  inline RooAbsReal* getIntegral(RooArgSet const& set) const {
-    syncNormalization(&set,true) ;
-    getVal(set);
-    assert(_norm != nullptr);
-    return _norm;
-  }
-  const RooAbsReal* getCachedLastIntegral() const {
-    return _norm;
-  }
-
 
   virtual void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value, Bool_t allNodes=kFALSE) ;
