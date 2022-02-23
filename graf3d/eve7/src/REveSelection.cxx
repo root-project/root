@@ -484,8 +484,8 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
    static const REveException eh("REveSelection::NewElementPicked ");
 
    REveElement *pel = nullptr, *el = nullptr;
+   REveSecondarySelectable* secondarySelectable = nullptr;
 
-   // AMT the forth/last argument is optional and therefore need to be constant
    std::set<int> secondary_idcs = in_secondary_idcs;
 
    if (id > 0)
@@ -496,18 +496,20 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
 
      el = MapPickedToSelected(pel);
 
+     secondarySelectable = dynamic_cast<REveSecondarySelectable*>(el);
      if (el != pel) {
-        REveSecondarySelectable* ss = dynamic_cast<REveSecondarySelectable*>(el);
-        if (!secondary && ss) {
+        if (!secondary && secondarySelectable) {
+           // case for mapping EveCompound to REveDataCollection
            secondary = true;
-           secondary_idcs = ss->RefSelectedSet();
+           secondary_idcs = secondarySelectable->RefSelectedSet(); 
         }
+     }
+
+     if (fDeviator && fDeviator->DeviateSelection(this, el, multi, secondary, secondary_idcs)) {
+        return;
      }
    }
 
-   if (fDeviator && fDeviator->DeviateSelection(this, el, multi, secondary, secondary_idcs)) {
-      return;
-   }
 
    if (gDebug > 0) {
       std::string debug_secondary;
@@ -550,11 +552,17 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
 
                secondary_idcs  = rec->f_sec_idcs;
                if (!secondary_idcs.empty()) {
-                  AddNiece(el);
                   rec = find_record(el);
                   rec->f_is_sec   = true;
                   rec->f_sec_idcs = secondary_idcs;
+                  // need to update secondarySelectables indices
+                  if (secondarySelectable)
+                      secondarySelectable->RefSelectedSet() = secondary_idcs;
+                  
+                  el->FillImpliedSelectedSet(rec->f_implied);
                }
+               else
+                 RemoveNiece(el);
             }
             else
             {
