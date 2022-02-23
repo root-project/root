@@ -74,8 +74,13 @@ struct OperatorInt {
 };
 
 struct OperatorLong {
+#ifdef _WIN64
+   operator int64_t() { return m_long; }
+   int64_t m_long;
+#else
    operator long() { return m_long; }
    long m_long;
+#endif
 };
 
 struct OperatorDouble {
@@ -94,8 +99,13 @@ struct OperatorUnsignedInt {
 };
 
 struct OperatorUnsignedLong {
+#ifdef _WIN64
+   operator uint64_t() { return m_ulong; }
+   uint64_t m_ulong;
+#else
    operator unsigned long() { return m_ulong; }
    unsigned long m_ulong;
+#endif
 };
 
 struct OperatorFloat {
