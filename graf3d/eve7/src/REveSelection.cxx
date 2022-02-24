@@ -484,7 +484,6 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
    static const REveException eh("REveSelection::NewElementPicked ");
 
    REveElement *pel = nullptr, *el = nullptr;
-   REveSecondarySelectable* secondarySelectable = nullptr;
 
    std::set<int> secondary_idcs = in_secondary_idcs;
 
@@ -495,15 +494,6 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
      if ( ! pel) throw eh + "picked element id=" + id + " not found.";
 
      el = MapPickedToSelected(pel);
-
-     secondarySelectable = dynamic_cast<REveSecondarySelectable*>(el);
-     if (el != pel) {
-        if (!secondary && secondarySelectable) {
-           // case for mapping EveCompound to REveDataCollection
-           secondary = true;
-           secondary_idcs = secondarySelectable->RefSelectedSet(); 
-        }
-     }
 
      if (fDeviator && fDeviator->DeviateSelection(this, el, multi, secondary, secondary_idcs)) {
         return;
@@ -555,7 +545,9 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
                   rec = find_record(el);
                   rec->f_is_sec   = true;
                   rec->f_sec_idcs = secondary_idcs;
-                  // need to update secondarySelectables indices
+
+                  // temporary solution FillImpliedSelectedSet does not passes indices
+                  REveSecondarySelectable* secondarySelectable = dynamic_cast<REveSecondarySelectable*>(el);
                   if (secondarySelectable)
                       secondarySelectable->RefSelectedSet() = secondary_idcs;
                   
