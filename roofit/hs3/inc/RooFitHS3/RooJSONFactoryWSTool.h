@@ -13,13 +13,15 @@
 #ifndef RooFitHS3_RooJSONFactoryWSTool_h
 #define RooFitHS3_RooJSONFactoryWSTool_h
 
-#include <RooArgSet.h>
-#include <RooGlobalFunc.h>
-
 #include <map>
 #include <memory>
+#include <stdexcept>
 #include <string>
+#include <vector>
 
+class RooArgList;
+class RooAbsData;
+class RooArgSet;
 class RooAbsArg;
 class RooAbsReal;
 class RooAbsPdf;
@@ -30,6 +32,7 @@ class RooRealVar;
 class RooWorkspace;
 
 class TH1;
+class TClass;
 
 namespace RooFit {
 namespace Experimental {
@@ -67,13 +70,13 @@ public:
       std::map<std::string, std::string> proxies;
    };
    struct ImportExpression {
-      TClass const* tclass = nullptr;
+      TClass const *tclass = nullptr;
       std::vector<std::string> arguments;
    };
 
    typedef std::map<const std::string, std::vector<std::unique_ptr<const Importer>>> ImportMap;
-   typedef std::map<TClass const*, std::vector<std::unique_ptr<const Exporter>>> ExportMap;
-   typedef std::map<TClass const*, ExportKeys> ExportKeysMap;
+   typedef std::map<TClass const *, std::vector<std::unique_ptr<const Exporter>>> ExportMap;
+   typedef std::map<TClass const *, ExportKeys> ExportKeysMap;
    typedef std::map<const std::string, ImportExpression> ImportExpressionMap;
 
    // The following maps to hold the importers and exporters for runtime lookup
@@ -96,11 +99,11 @@ public:
       Var(const RooFit::Experimental::JSONNode &val);
    };
 
-   std::ostream &log(RooFit::MsgLevel level) const;
+   std::ostream &log(int level) const;
 
 protected:
    struct Scope {
-      RooArgSet observables;
+      std::vector<RooAbsArg *> observables;
       std::map<std::string, RooAbsArg *> objects;
    };
    mutable Scope _scope;
@@ -227,7 +230,7 @@ public:
    readBinnedData(const RooFit::Experimental::JSONNode &n, const std::string &namecomp, RooArgList observables);
    static std::map<std::string, RooJSONFactoryWSTool::Var>
    readObservables(const RooFit::Experimental::JSONNode &n, const std::string &obsnamecomp);
-   RooArgSet getObservables(const RooFit::Experimental::JSONNode &n, const std::string &obsnamecomp);
+   void getObservables(const RooFit::Experimental::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);
    void setScopeObservables(const RooArgList &args);
    RooAbsArg *getScopeObject(const std::string &name);
    void setScopeObject(const std::string &key, RooAbsArg *obj);
