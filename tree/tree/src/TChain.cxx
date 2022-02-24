@@ -1874,7 +1874,7 @@ void TChain::ls(Option_t* option) const
 /// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
-///     ch.Merge(file);
+///     ch.Merge(file, 0);
 /// ~~~
 
 Long64_t TChain::Merge(const char* name, Option_t* option)
@@ -1939,7 +1939,7 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
-///     ch.Merge(file);
+///     ch.Merge(file, 0);
 /// ~~~
 /// If 'option' contains the word 'fast' the merge will be done without
 /// unzipping or unstreaming the baskets (i.e., a direct copy of the raw
