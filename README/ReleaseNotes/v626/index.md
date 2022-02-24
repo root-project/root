@@ -392,8 +392,9 @@ For more details, consult the tutorial [rf409_NumPyPandasToRooFit.py](https://ro
 
 The [**RooLagrangianMorphFunc**](https://root.cern/doc/v626/classRooLagrangianMorphFunc.html) class is a new RooFit class for modeling a continuous distribution of an observable as a function of the parameters of an effective field theory given the distribution sampled at some points in the parameter space.
 Two new classes to help to provide this functionality:
-  * [RooRatio](https://root.cern/doc/v626/classRooRatio.html): computes the ratio of RooFit objects 
-  * [RooPolyFunc](https://root.cern/doc/v626/classRooPolyFunc.html): multi-dimensional polynomial function, were [RooPolyFunc::taylorExpand()](https://root.cern/doc/v626/classRooPolyFunc.html#a21c6671e1b2391d08dbc62c5a5e7be38) can be used to obtain the (multi-dimensional) Taylor expansion up to the second order
+
+* [RooRatio](https://root.cern/doc/v626/classRooRatio.html): computes the ratio of RooFit objects
+* [RooPolyFunc](https://root.cern/doc/v626/classRooPolyFunc.html): multi-dimensional polynomial function, were [RooPolyFunc::taylorExpand()](https://root.cern/doc/v626/classRooPolyFunc.html#a21c6671e1b2391d08dbc62c5a5e7be38) can be used to obtain the (multi-dimensional) Taylor expansion up to the second order
 
 For example usage of the RooLagrangianMorphFunc class, please consult the tutorials for a single parameter case ([rf711_lagrangianmorph.C](https://root.cern/doc/v626/rf711__lagrangianmorph_8C.html) / [.py](https://root.cern/doc/v626/rf711__lagrangianmorph_8py.html)) and for a multi-parameter case ([rf712_lagrangianmorphfit.C](https://root.cern/doc/v626/rf712__lagrangianmorphfit_8C.html) / [.py](https://root.cern/doc/v626/rf712__lagrangianmorphfit_8py.html)).
 
@@ -435,8 +436,9 @@ RooFit groups model variables into *observables* and *parameters*, depending on 
 For fits with parameter constraints, there is a third kind of variables, called *global observables*.
 These represent the results of auxiliary measurements that constrain the nuisance parameters.
 In the RooFit implementation, a likelihood is generally the sum of two terms:
-  * the likelihood of the data given the parameters, where the normalization set is the set of observables (implemented by `RooNLLVar`)
-  * the constraint term, where the normalization set is the set of *global observables* (implemented by `RooConstraintSum`)
+
+* the likelihood of the data given the parameters, where the normalization set is the set of observables (implemented by `RooNLLVar`)
+* the constraint term, where the normalization set is the set of *global observables* (implemented by `RooConstraintSum`)
 
 Before this release, the global observable values were always taken from the model/pdf.
 With this release, a mechanism is added to store a snapshot of global observables in any `RooDataSet` or `RooDataHist`.
