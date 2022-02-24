@@ -159,6 +159,7 @@ int main(int argc, char *argv[])
 
    // Open the input file name.
    f = fopen(gFileName.c_str(),"r");
+   if (!f) return 1;
 
    if (gFileName.find("tutorials") != string::npos) FilterTutorial();
    else                                             FilterClass();
