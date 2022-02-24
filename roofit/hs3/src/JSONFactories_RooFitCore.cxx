@@ -372,7 +372,8 @@ public:
       if (!p.has_child("data")) {
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
-      auto varlist = tool->getObservables(p["data"], name);
+      RooArgSet varlist;
+      tool->getObservables(p["data"], name, varlist);
       RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name.c_str()));
       if (!dh) {
          auto dhForImport = tool->readBinnedData(p["data"], name, varlist);
