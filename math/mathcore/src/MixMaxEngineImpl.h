@@ -21,7 +21,7 @@ namespace {
 
 #ifdef WIN32
 #define __thread __declspec(thread)
-extern "C" int fscanf ( FILE * stream, const char * format, ... );
+extern "C" int fscanf(FILE *stream, const char *format, ...);
 #endif
 
 #include "mixmax.icc"
