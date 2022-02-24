@@ -196,6 +196,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
     }
   } while (overlap);
 
+#ifndef NDEBUG
   // check that we have all variables to be integrated over on the LHS
   // of the map, and all terms in the product do appear on the RHS
   int nVar=0; int nFunc=0;
@@ -205,6 +206,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   }
   assert(nVar==allVars.getSize());
   assert(nFunc==_compRSet.getSize());
+#endif
   return map;
 }
 
