@@ -1,4 +1,4 @@
-## @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
@@ -17,12 +17,6 @@ from DistRDF import HeadNode
 from DistRDF.Backends import Base
 from DistRDF.Backends import Utils
 
-try:
-    import pyspark
-except ImportError:
-    raise ImportError(("cannot import module 'pyspark'. Refer to the Apache Spark documentation "
-                       "for installation instructions."))
-
 
 class SparkBackend(Base.BaseBackend):
     """
@@ -31,7 +25,16 @@ class SparkBackend(Base.BaseBackend):
 
     """
 
-    def __init__(self, sparkcontext=None):
+    # Importing the backend module at class level to avoid injection in the
+    # global Python session at `import DistRDF` time. This makes using any
+    # DistRDF backend truly independent from modules needed in any other backend
+    try:
+        import pyspark
+    except ImportError:
+        raise ImportError(("cannot import module 'pyspark'. Refer to the Apache Spark documentation "
+                           "for installation instructions."))
+
+    def __init__(self, sparkcontext = None):
         """
         Creates an instance of the Spark backend class.
 
@@ -62,7 +65,7 @@ class SparkBackend(Base.BaseBackend):
         if sparkcontext is not None:
             self.sc = sparkcontext
         else:
-            self.sc = pyspark.SparkContext.getOrCreate()
+            self.sc = self.pyspark.SparkContext.getOrCreate()
 
     def optimize_npartitions(self):
         """
@@ -97,6 +100,7 @@ class SparkBackend(Base.BaseBackend):
         # SparkContext. This would cause the errors described in SPARK-5063.
         headers = self.headers
         shared_libraries = self.shared_libraries
+        sparkfiles = self.pyspark.SparkFiles
 
         def spark_mapper(current_range):
             """
@@ -113,14 +117,14 @@ class SparkBackend(Base.BaseBackend):
             """
             # Get and declare headers on each worker
             headers_on_executor = [
-                pyspark.SparkFiles.get(ntpath.basename(filepath))
+                sparkfiles.get(ntpath.basename(filepath))
                 for filepath in headers
             ]
             Utils.declare_headers(headers_on_executor)
 
             # Get and declare shared libraries on each worker
             shared_libs_on_ex = [
-                pyspark.SparkFiles.get(ntpath.basename(filepath))
+                sparkfiles.get(ntpath.basename(filepath))
                 for filepath in shared_libraries
             ]
             Utils.declare_shared_libraries(shared_libs_on_ex)

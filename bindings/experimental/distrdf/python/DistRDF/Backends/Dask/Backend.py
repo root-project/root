@@ -16,16 +16,19 @@ from DistRDF import HeadNode
 from DistRDF.Backends import Base
 from DistRDF.Backends import Utils
 
-try:
-    import dask
-    from dask.distributed import Client, LocalCluster, progress, get_worker
-except ImportError:
-    raise ImportError(("cannot import a Dask component. Refer to the Dask documentation "
-                       "for installation instructions."))
-
 
 class DaskBackend(Base.BaseBackend):
     """Dask backend for distributed RDataFrame."""
+
+    # Importing the backend module at class level to avoid injection in the
+    # global Python session at `import DistRDF` time. This makes using any
+    # DistRDF backend truly independent from modules needed in any other backend
+    try:
+        import dask
+        import dask.distributed
+    except ImportError:
+        raise ImportError(("cannot import a Dask component. Refer to the Dask documentation "
+                           "for installation instructions."))
 
     def __init__(self, daskclient=None):
         super(DaskBackend, self).__init__()
@@ -33,8 +36,10 @@ class DaskBackend(Base.BaseBackend):
         # `daskclient` will be `None`. In this case, we create a default Dask
         # client connected to a cluster instance with N worker processes, where
         # N is the number of cores on the local machine.
+        client_cls = self.dask.distributed.Client
+        localcluster_cls = self.dask.distributed.LocalCluster
         self.client = (daskclient if daskclient is not None else
-                       Client(LocalCluster(n_workers=os.cpu_count(), threads_per_worker=1, processes=True)))
+                       client_cls(localcluster_cls(n_workers=os.cpu_count(), threads_per_worker=1, processes=True)))
 
     def optimize_npartitions(self):
         """
@@ -76,6 +81,7 @@ class DaskBackend(Base.BaseBackend):
         # Which boil down to the self.client object not being serializable
         headers = self.headers
         shared_libraries = self.shared_libraries
+        get_worker = self.dask.distributed.get_worker
 
         def dask_mapper(current_range):
             """
@@ -109,8 +115,8 @@ class DaskBackend(Base.BaseBackend):
 
             return mapper(current_range)
 
-        dmapper = dask.delayed(dask_mapper)
-        dreducer = dask.delayed(reducer)
+        dmapper = self.dask.delayed(dask_mapper)
+        dreducer = self.dask.delayed(reducer)
 
         mergeables_lists = [dmapper(range) for range in ranges]
 
@@ -128,7 +134,7 @@ class DaskBackend(Base.BaseBackend):
         # it in this class, it won't be shown. Full details at
         # https://docs.dask.org/en/latest/diagnostics-distributed.html#dask.distributed.progress
         final_results = mergeables_lists.pop().persist()
-        progress(final_results)
+        self.dask.distributed.progress(final_results)
 
         return final_results.compute()
 
