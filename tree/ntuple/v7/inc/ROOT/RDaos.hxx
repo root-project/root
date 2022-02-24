@@ -70,7 +70,6 @@ public:
    struct ObjClassId {
       daos_oclass_id_t fCid;
 
-      ObjClassId(const ObjClassId&) = default;
       ObjClassId(daos_oclass_id_t cid) : fCid(cid) {}
       ObjClassId(const std::string &name) : fCid(daos_oclass_name2id(name.data())) {}
 
