@@ -522,10 +522,7 @@ Int_t AnalysePS(const TString &filename)
       printf("ERROR1 : File can not open !..\n");
       return 0;
    }
-   while (in.is_open() && !in.eof()) {
-      in >> line;
-      if (!in.good())
-         break;
+   while (in >> line) {
       l = line;
       if (l.Contains("%!PS-Adobe"))  counting = kFALSE;
       if (l.Contains("%%EndProlog")) counting = kTRUE;
