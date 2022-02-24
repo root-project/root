@@ -779,7 +779,28 @@ public:
    }
 };
 
+class FWSelectionDeviator : public REveSelection::Deviator {
+public:
+   FWSelectionDeviator() {}
 
+   using REveSelection::Deviator::DeviateSelection;
+   bool DeviateSelection(REveSelection *selection, REveElement *el, bool multi, bool secondary,
+                         const std::set<int> &secondary_idcs)
+   {
+      if (el) {
+         auto *colItems = dynamic_cast<REveDataItemList *>(el);
+         if (!colItems)
+            return false;
+
+         selection->SetDeviator(nullptr);
+         selection->NewElementPicked(colItems->GetElementId(), multi, true, colItems->RefSelectedSet());
+         selection->SetDeviator(this);
+
+         return true;
+      } else
+         return false;
+   }
+};
 //==============================================================================
 //== main() ====================================================================
 //==============================================================================
@@ -789,6 +810,10 @@ void collection_proxies(bool proj=true)
    eveMng = REveManager::Create();
    auto event = new Event();
    event->Create();
+
+   // divert selection to map proxy builder products with collection
+   auto deviator = new FWSelectionDeviator();
+   eveMng->GetSelection()->SetDeviator(deviator);
 
    // create scenes and views
    REveScene* rhoZEventScene = nullptr;
