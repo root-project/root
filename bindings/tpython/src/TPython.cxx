@@ -304,11 +304,7 @@ void TPython::LoadMacro(const char *name)
 ///    const char* argv[] = { "1", "2", "3" };
 ///    TPython::ExecScript( "test.py", sizeof(argv)/sizeof(argv[0]), argv );
 
-void TPython::ExecScript(const char *name, int argc, const char **
-#if PY_VERSION_HEX < 0x03000000
-        argv
-#endif
-    )
+void TPython::ExecScript(const char *name, int argc, const char **argv)
 {
 
    // setup
@@ -352,6 +348,8 @@ void TPython::ExecScript(const char *name, int argc, const char **
    delete[] argv2;
 #else
 // TODO: fix this to work like above ...
+   (void)argc;
+   (void)argv;
 #endif
 
    // actual script execution
