@@ -24,6 +24,8 @@
 #include "TMatrixTSym.h"
 #include "TMatrixTSparse.h"
 
+#include <initializer_list>
+
 template<class Element> class TVectorT : public TObject {
 
 protected:
@@ -65,6 +67,8 @@ public:
       Allocate(another.GetUpb()-another.GetLwb()+1,another.GetLwb());
       *this = another;
    }
+   /// Construct TVectorX from a list like e.g. `TVectorD({1., 2., 3.})`.
+   TVectorT(std::initializer_list<Element> list) : TVectorT(list.size(), list.begin()) {}
    TVectorT(Int_t lwb,Int_t upb,Double_t iv1, ...);
    ~TVectorT() override { TVectorT::Clear(); }
 
