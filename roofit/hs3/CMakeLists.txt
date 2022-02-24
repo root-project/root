@@ -39,7 +39,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     ${RYMLSources}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
-  DEPENDENCIES
+  LIBRARIES
     RooFit
     RooFitCore
     RooStats
