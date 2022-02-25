@@ -18,7 +18,7 @@ from typing import Any, List, Union
 import ROOT
 
 from DistRDF.CppWorkflow import CppWorkflow
-from DistRDF.Node import Node
+from DistRDF.Node import HeadNode, Node
 from DistRDF.Operation import Action, AsNumpy, InstantAction, Operation, Snapshot
 from DistRDF.PythonMergeables import SnapshotResult
 
@@ -106,6 +106,83 @@ def _(operation: Snapshot, range_id: int) -> None:
         operation.args.append(lazy_options)  # Append RSnapshotOptions
 
 
+@singledispatch
+def _call_rdf_operation(distrdf_node: Node, previous_rdf_node: Any, range_id: int) -> List:
+    """
+    Implementation of a recursive state of the computation_graph_generator
+    function. Retrieves the concrete RDataFrame operation to be performed by
+    querying the 'previous_rdf_node' argument. Forces lazyness on any operation, so
+    they can be all chained before triggering the actual computation. Finally,
+    stores the result of calling such operation in the 'distrdf_node' argument,
+    in order to bind their lifetimes and also have an input RDataFrame node for
+    the next recursive state.
+    """
+    future_results = []
+
+    rdf_operation = getattr(previous_rdf_node, distrdf_node.operation.name)
+    _make_op_lazy_if_needed(distrdf_node.operation, range_id)
+    pyroot_node = rdf_operation(*distrdf_node.operation.args, **distrdf_node.operation.kwargs)
+
+    # The result is a PyROOT object which is stored together with
+    # the DistRDF node. This binds the PyROOT object lifetime to the
+    # DistRDF node, so both nodes will be kept alive as long as there
+    # is a valid reference pointing to the DistRDF node.
+    distrdf_node.pyroot_node = pyroot_node
+
+    append_node_to_results(distrdf_node.operation, pyroot_node, future_results)
+    return future_results
+
+
+@_call_rdf_operation.register
+def _(distrdf_node: HeadNode, previous_rdf_node: Any, range_id: int) -> List:
+    """
+    Implementation of the initial state of the computation_graph_generator
+    function. The 'previous_rdf_node' parameter is some kind of ROOT::RDataFrame.
+    The lifetimes of the DistRDF head node and its RDataFrame counterpart are
+    bound together, in order to provide an input for the next recursive state.
+    """
+    distrdf_node.pyroot_node = previous_rdf_node
+    return []
+
+
+def generate_computation_graph(distrdf_node: Node, previous_rdf_node: Any, range_id: int) -> List:
+    """
+    Generates the RDF computation graph by recursively retrieving
+    information from the DistRDF nodes.
+
+    Args:
+        distrdf_node: The current DistRDF node in
+            the computation graph. In the first recursive state this is None
+            and it will be set equal to the DistRDF headnode.
+        previous_rdf_node: The node in the RDF computation graph on which
+            the operation of the current recursive state is called. In the
+            first recursive state, this corresponds to the RDataFrame
+            object that will be processed. Specifically, if the head node
+            of the computation graph is an EmptySourceHeadNode, then the
+            first current node will actually be the result of a call to the
+            Range operation. If the head node is a TreeHeadNode then the
+            node will be an actual RDataFrame. Successive recursive states
+            will receive the result of an RDF operation call
+            (e.g. Histo1D, Count).
+        range_id: The id of the current range. Needed to assign a
+            file name to a partial Snapshot if it was requested.
+
+    Returns:
+        list: List of actions of the computation graph to be triggered. Each
+        element is some kind of promise of a result (usually an
+        RResultPtr). Exceptions are the 'AsNumpy' operation for which an
+        'AsNumpyResult' is returned and the 'Snapshot' operation for which a
+        'SnapshotResult' is returned.
+    """
+    future_results = _call_rdf_operation(distrdf_node, previous_rdf_node, range_id)
+
+    for child_node in distrdf_node.children:
+        prev_results = generate_computation_graph(child_node, distrdf_node.pyroot_node, range_id)
+        future_results.extend(prev_results)
+
+    return future_results
+
+
 class ComputationGraphGenerator(object):
     """
     Class that generates a callable to parse a DistRDF graph.
@@ -153,70 +230,6 @@ class ComputationGraphGenerator(object):
 
         return return_nodes
 
-    def generate_computation_graph(self, previous_node, range_id, distrdf_node=None):
-        """
-        Generates the RDF computation graph by recursively retrieving
-        information from the DistRDF nodes.
-
-        Args:
-            previous_node (Any): The node in the RDF computation graph on which
-                the operation of the current recursive state is called. In the
-                first recursive state, this corresponds to the RDataFrame
-                object that will be processed. Specifically, if the head node
-                of the computation graph is an EmptySourceHeadNode, then the
-                first current node will actually be the result of a call to the
-                Range operation. If the head node is a TreeHeadNode then the
-                node will be an actual RDataFrame. Successive recursive states
-                will receive the result of an RDF operation call
-                (e.g. Histo1D, Count).
-            range_id (int): The id of the current range. Needed to assign a
-                file name to a partial Snapshot if it was requested.
-            distrdf_node (DistRDF.Node.Node | None): The current DistRDF node in
-                the computation graph. In the first recursive state this is None
-                and it will be set equal to the DistRDF headnode.
-
-        Returns:
-            list: List of actions of the computation graph to be triggered. Each
-            element is some kind of promise of a result (usually an
-            RResultPtr). Exceptions are the 'AsNumpy' operation for which an
-            'AsNumpyResult' is returned and the 'Snapshot' operation for which a
-            'SnapshotResult' is returned.
-        """
-        future_results = []
-
-        if distrdf_node is None:
-            # In the first recursive state, just set the
-            # current DistRDF node as the head node
-            distrdf_node = self.headnode
-        else:
-            # Execute the current operation using the output of the previous
-            # node
-            RDFOperation = getattr(previous_node, distrdf_node.operation.name)
-            operation = distrdf_node.operation
-            _make_op_lazy_if_needed(operation, range_id)
-            pyroot_node = RDFOperation(*operation.args, **operation.kwargs)
-
-            # The result is a pyroot object which is stored together with
-            # the DistRDF node. This binds the pyroot object lifetime to the
-            # DistRDF node, so both nodes will be kept alive as long as there
-            # is a valid reference pointing to the DistRDF node.
-            distrdf_node.pyroot_node = pyroot_node
-
-            # Set the next `previous_node` input argument to the `pyroot_node`
-            # we just retrieved
-            previous_node = pyroot_node
-
-            append_node_to_results(operation, pyroot_node, future_results)
-
-        for child_node in distrdf_node.children:
-            # Recurse through children and get their output
-            prev_results = self.generate_computation_graph(previous_node, range_id, child_node)
-
-            # Attach the output of the children node
-            future_results.extend(prev_results)
-
-        return future_results
-
     def trigger_computation_graph(self, starting_node, range_id):
         """
         Trigger the computation graph.
@@ -237,7 +250,7 @@ class ComputationGraphGenerator(object):
             list: A list of objects that can be either used as or converted into
                 mergeable values.
         """
-        actions = self.generate_computation_graph(starting_node, range_id)
+        actions = generate_computation_graph(self.headnode, starting_node, range_id)
 
         # Trigger computation graph with the GIL released
         rnode = ROOT.RDF.AsRNode(starting_node)
