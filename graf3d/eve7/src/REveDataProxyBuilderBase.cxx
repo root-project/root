@@ -197,11 +197,11 @@ REveDataProxyBuilderBase::LocalModelChanges(int, REveElement*, const REveViewCon
 //------------------------------------------------------------------------------
 
 void
-REveDataProxyBuilderBase::FillImpliedSelected( REveElement::Set_t& impSet)
+REveDataProxyBuilderBase::FillImpliedSelected( REveElement::Set_t& impSet, const std::set<int> &sec_idcs)
 {
    for (auto &prod: m_products)
    {
-      FillImpliedSelected(impSet, prod);
+      FillImpliedSelected(impSet, sec_idcs, prod);
    }
 }
 

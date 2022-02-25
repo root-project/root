@@ -106,7 +106,7 @@ void REveSelection::DoElementSelect(SelMap_i &entry)
 {
    Set_t &imp_set = entry->second.f_implied;
 
-   entry->first->FillImpliedSelectedSet(imp_set);
+   entry->first->FillImpliedSelectedSet(imp_set, entry->second.f_sec_idcs);
 
    auto i = imp_set.begin();
    while (i != imp_set.end())
@@ -174,9 +174,21 @@ bool REveSelection::AcceptNiece(REveElement* el)
 
 void REveSelection::AddNieceInternal(REveElement* el)
 {
-   auto res = fMap.emplace(el, Record(el));
+   fMap.emplace(el, Record(el));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void REveSelection::AddNieceForSelection(REveElement* el, bool secondary, const std::set<int>& sec_idcs)
+{
+   AddNiece(el);
+
+   auto i = fMap.find(el);
+   i->second.f_is_sec = secondary;
+   i->second.f_sec_idcs = sec_idcs;
+
    if (fActive) {
-      DoElementSelect(res.first);
+      DoElementSelect(i);
       SelectionAdded(el);
    }
    StampObjPropsPreChk();
@@ -256,7 +268,7 @@ void REveSelection::RecheckImpliedSet(SelMap_i &smi)
 {
    bool  changed = false;
    Set_t set;
-   smi->first->FillImpliedSelectedSet(set);
+   smi->first->FillImpliedSelectedSet(set, smi->second.f_sec_idcs);
    for (auto &i: set)
    {
       if (smi->second.f_implied.find(i) == smi->second.f_implied.end())
@@ -541,20 +553,11 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
                   rec->f_sec_idcs.erase(dit);
 
                secondary_idcs  = rec->f_sec_idcs;
-               if (!secondary_idcs.empty()) {
-                  rec = find_record(el);
-                  rec->f_is_sec   = true;
-                  rec->f_sec_idcs = secondary_idcs;
 
-                  // temporary solution FillImpliedSelectedSet does not passes indices
-                  REveSecondarySelectable* secondarySelectable = dynamic_cast<REveSecondarySelectable*>(el);
-                  if (secondarySelectable)
-                      secondarySelectable->RefSelectedSet() = secondary_idcs;
-                  
-                  el->FillImpliedSelectedSet(rec->f_implied);
+               RemoveNiece(el);
+               if (!secondary_idcs.empty()) {
+                  AddNieceForSelection(el, secondary, secondary_idcs);
                }
-               else
-                 RemoveNiece(el);
             }
             else
             {
@@ -563,10 +566,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          }
          else
          {
-            AddNiece(el);
-            rec = find_record(el);
-            rec->f_is_sec   = true;
-            rec->f_sec_idcs = secondary_idcs;
+            AddNieceForSelection(el, secondary, secondary_idcs);
          }
       }
       else
@@ -587,10 +587,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
                RemoveNieces();
                // re-adding is needed to refresh implied selected
                if (modified) {
-                  AddNiece(el);
-                  rec = find_record(el);
-                  rec->f_is_sec   = true;
-                  rec->f_sec_idcs = secondary_idcs;
+                  AddNieceForSelection(el, secondary, secondary_idcs);
                }
             }
             else
@@ -601,13 +598,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          else
          {
             if (HasNieces()) RemoveNieces();
-            AddNiece(el);
-            if (secondary)
-            {
-               rec = find_record(el);
-               rec->f_is_sec   = true;
-               rec->f_sec_idcs = secondary_idcs;
-            }
+            AddNieceForSelection(el, secondary, secondary_idcs);
          }
       }
       else // Single selection with zero element --> clear selection.

@@ -62,7 +62,7 @@ protected:
    virtual void BuildItemViewType(const void* data, int index, REveElement* iCollectionHolder, const std::string& viewType, const REveViewContext*) = 0;
 
    void ModelChanges(const REveDataCollection::Ids_t& iIds, Product* p) override;
-   void FillImpliedSelected(REveElement::Set_t& impSet, Product* p) override;
+   void FillImpliedSelected(REveElement::Set_t& impSet, const std::set<int>& sec_idcs, Product* p) override;
    void Clean() override; // Utility
    REveCollectionCompound* CreateCompound(bool set_color=true, bool propagate_color_to_all_children=false);
 
