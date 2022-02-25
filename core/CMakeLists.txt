@@ -271,6 +271,7 @@ target_link_libraries(Core
     ${ZSTD_LIBRARIES}
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${ROOT_ATOMIC_LIBS}
     ${corelinklibs}
 )
 add_dependencies(Core CLING)
