@@ -1202,8 +1202,8 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
     auto idxMultY = _idxMult[varInfo.realVarIdx2];
     auto offsetIdx = centralIdx - idxMultY * ybinC;
 
-    double yarr[10] = {} ;
-    double xarr[10] = {} ;
+    std::vector<double> yarr(intOrder+1);
+    std::vector<double> xarr(intOrder+1);
     for (int i=ybinLo ; i<=intOrder+ybinLo ; i++) {
       int ibin ;
       if (i>=0 && i<ybinM) {
@@ -1231,7 +1231,7 @@ double RooDataHist::weightInterpolated(const RooArgSet& bin, int intOrder, bool 
       for (int q=0; q<=intOrder ; q++) cout << yarr[q] << " " ;
       cout << endl ;
     }
-    wInt = RooMath::interpolate(xarr,yarr,intOrder+1,yval) ;
+    wInt = RooMath::interpolate(xarr.data(),yarr.data(),intOrder+1,yval) ;
 
   } else {
 
@@ -1339,8 +1339,8 @@ double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int
   auto idxMult = _idxMult[iDim];
   auto offsetIdx = centralIdx - idxMult * fbinC;
 
-  double yarr[10] ;
-  double xarr[10] ;
+  std::vector<double> yarr(intOrder+1) ;
+  std::vector<double> xarr(intOrder+1);
   for (int i=fbinLo ; i<=intOrder+fbinLo ; i++) {
     int ibin ;
     if (i>=0 && i<fbinM) {
@@ -1378,7 +1378,7 @@ double RooDataHist::interpolateDim(int iDim, double xval, size_t centralIdx, int
       }
     }
   }
-  return RooMath::interpolate(xarr,yarr,intOrder+1,xval) ;
+  return RooMath::interpolate(xarr.data(),yarr.data(),intOrder+1,xval) ;
 }
 
 
