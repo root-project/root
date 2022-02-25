@@ -159,6 +159,7 @@ int main(int argc, char *argv[])
 
    // Open the input file name.
    f = fopen(gFileName.c_str(),"r");
+   if (!f) return 1;
 
    if (gFileName.find("tutorials") != string::npos) FilterTutorial();
    else                                             FilterClass();
@@ -203,6 +204,7 @@ void FilterClass()
             }
             int ImageSize = 300;
             FILE *f = fopen("ImagesSizes.dat", "r");
+            if (!f) return;
             fscanf(f, "%d", &ImageSize);
             fclose(f);
             remove("ImagesSizes.dat");
@@ -512,6 +514,7 @@ int NumberOfImages()
 {
    int ImageNum;
    FILE *f = fopen("NumberOfImages.dat", "r");
+   if (!f) return 0;
    fscanf(f, "%d", &ImageNum);
    fclose(f);
    remove("NumberOfImages.dat");
@@ -575,6 +578,7 @@ string ImagesList(string& name) {
 
    int ImageSize = 300;
    FILE *f = fopen("ImagesSizes.dat", "r");
+   if (!f) return "";
 
    for (int i = 1; i <= N; i++){
       fscanf(f, "%d", &ImageSize);
