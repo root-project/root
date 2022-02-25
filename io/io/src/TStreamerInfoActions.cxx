@@ -3978,10 +3978,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
       TStreamerInfo::TCompInfo_t *compinfo = sinfo->fCompFull[i];
 
-      Int_t asize = element->GetSize();
-      if (element->GetArrayLength()) {
-         asize /= element->GetArrayLength();
-      }
       Int_t oldType = element->GetType();
       Int_t newType = element->GetNewType();
 
@@ -4083,10 +4079,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             continue;
          }
          TStreamerInfo::TCompInfo *compinfo = sinfo->fCompFull[i];
-         Int_t asize = element->GetSize();
-         if (element->GetArrayLength()) {
-            asize /= element->GetArrayLength();
-         }
          Int_t oldType = element->GetType();
          Int_t offset = element->GetOffset();
 #if defined(CDJ_NO_COMPILE)
