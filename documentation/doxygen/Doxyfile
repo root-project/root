@@ -2261,7 +2261,10 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = R__CLING_PTRCHECK \
                          R__USE_IMT \
-                         R__SUGGEST_ALTERNATIVE(x)=
+                         R__SUGGEST_ALTERNATIVE(x)= \
+                         __attribute__(x)= \
+                         __declspec(x)= \
+                         __pragma(x)=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
