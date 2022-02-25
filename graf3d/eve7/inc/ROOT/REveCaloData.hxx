@@ -176,7 +176,7 @@ public:
    REveCaloData(const char* n="REveCaloData", const char* t="");
    virtual ~REveCaloData() {}
 
-   void    FillImpliedSelectedSet(Set_t& impSelSet) override;
+   void    FillImpliedSelectedSet(Set_t& impSelSet, const std::set<int>& sec_idcs) override;
 
    virtual void    GetCellList(Float_t etaMin, Float_t etaMax,
                                Float_t phi,    Float_t phiRng,

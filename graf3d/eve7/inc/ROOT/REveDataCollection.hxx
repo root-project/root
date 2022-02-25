@@ -64,7 +64,7 @@ class REveDataItemList: public REveElement,
 
 public:
    typedef  std::function<void (REveDataItemList*, const std::vector<int>&)> ItemsChangeFunc_t;
-   typedef  std::function<void (REveDataItemList*, Set_t&)> FillImpliedSelectedFunc_t;
+   typedef  std::function<void (REveDataItemList*, Set_t&, const std::set<int>&)> FillImpliedSelectedFunc_t;
 
    struct TTip {
       std::string    fTooltipTitle;
@@ -85,7 +85,7 @@ public:
 
    virtual void ItemChanged(REveDataItem *item);
    virtual void ItemChanged(Int_t idx);
-   void FillImpliedSelectedSet(Set_t &impSelSet) override;
+   void FillImpliedSelectedSet(Set_t &impSelSet, const std::set<int>& sec_idcs) override;
 
    void SetItemVisible(Int_t idx, Bool_t visible);
    void SetItemColorRGB(Int_t idx, UChar_t r, UChar_t g, UChar_t b);
@@ -105,7 +105,7 @@ public:
    void SetFillImpliedSelectedDelegate (FillImpliedSelectedFunc_t);
 
    static void DummyItemsChange(REveDataItemList*, const std::vector<int>&);
-   static void DummyFillImpliedSelected(REveDataItemList*, Set_t& impSelSet);
+   static void DummyFillImpliedSelected(REveDataItemList*, Set_t& impSelSet, const std::set<int>& sec_idcs);
 
    std::vector< std::unique_ptr<TTip> >& RefToolTipExpressions() {return fTooltipExpressions;}
 };

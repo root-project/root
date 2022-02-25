@@ -307,7 +307,7 @@ public:
    virtual REveElement* GetSelectionMaster();
    void         SetSelectionMaster(REveElement *el) { fSelectionMaster = el; }
 
-   virtual void FillImpliedSelectedSet(Set_t& impSelSet);
+   virtual void FillImpliedSelectedSet(Set_t& impSelSet, const std::set<int>&);
 
    void   IncImpliedSelected() { ++fImpliedSelected; }
    void   DecImpliedSelected() { --fImpliedSelected; }

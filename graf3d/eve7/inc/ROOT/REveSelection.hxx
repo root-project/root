@@ -101,6 +101,8 @@ protected:
 
    void RecheckImpliedSet(SelMap_i &entry);
 
+   void AddNieceForSelection(REveElement*, bool secondary, const std::set<int>&);
+
 public:
    REveSelection(const std::string &n = "REveSelection", const std::string &t = "",
                  Color_t col_visible = kViolet, Color_t col_hidden = kPink);
