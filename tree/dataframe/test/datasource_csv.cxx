@@ -1,6 +1,7 @@
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RCsvDS.hxx>
 #include <ROOT/TSeq.hxx>
+#include <ROOT/TestSupport.hxx>
 #include <TROOT.h>
 
 #include <gtest/gtest.h>
@@ -13,6 +14,7 @@ auto fileName0 = "RCsvDS_test_headers.csv";
 auto fileName1 = "RCsvDS_test_noheaders.csv";
 auto fileName2 = "RCsvDS_test_empty.csv";
 auto fileName3 = "RCsvDS_test_win.csv";
+auto fileName4 = "RCsvDS_test_NaNs.csv";
 
 // must use http: we cannot use https on macOS until we upgrade to the newest Davix
 // and turn on the macOS SecureTransport layer.
@@ -321,6 +323,67 @@ TEST(RCsvDS, ProgressiveReadingRDFMT)
    auto tdf2 = ROOT::RDF::MakeCsvDataFrame(fileName0, true, ',', chunkSize);
    auto c2 = tdf2.Count();
    EXPECT_EQ(6U, *c2);
+}
+
+TEST(RCsvDS, NaNTypeIndentification)
+{
+   RCsvDS tds(fileName4);
+
+   EXPECT_STREQ("double", tds.GetTypeName("col1").c_str());
+   EXPECT_STREQ("double", tds.GetTypeName("col2").c_str());
+   EXPECT_STREQ("bool", tds.GetTypeName("col3").c_str());
+   EXPECT_STREQ("double", tds.GetTypeName("col4").c_str());
+   EXPECT_STREQ("Long64_t", tds.GetTypeName("col5").c_str());
+   EXPECT_STREQ("Long64_t", tds.GetTypeName("col6").c_str());
+   EXPECT_STREQ("std::string", tds.GetTypeName("col7").c_str());
+   EXPECT_STREQ("std::string", tds.GetTypeName("col8").c_str());
+}
+
+TEST(RCsvDS, NanWarningChecks)
+{
+   ROOT::DisableImplicitMT(); // to allow usage of display
+
+   auto rdf = ROOT::RDF::MakeCsvDataFrame(fileName4);
+   auto d = rdf.Display<double, Long64_t, std::string>({"col2", "col5", "col8"});
+
+   const std::string Warn = "Column \"col3\" of bool type contains empty cell(s).\n"
+                            "There is no `nan` equivalent for bool type, hence `false` is stored.\n"
+                            "Column \"col5\" of Long64_t type contains empty cell(s).\n"
+                            "There is no `nan` equivalent for Long64_t type, hence `0` is stored.\n"
+                            "Column \"col6\" of Long64_t type contains empty cell(s).\n"
+                            "There is no `nan` equivalent for Long64_t type, hence `0` is stored.\n"
+                            "To properly handle `nan` of Long64_t type, "
+                            "manually specify the column type to `double`.\n";
+
+   ROOT_EXPECT_WARNING(d->AsString(), "RCsvDS", Warn);
+}
+
+TEST(RCsvDS, SetCustomColumnTypes)
+{
+   RCsvDS tds(fileName4, true, ',', -1LL, {{"col5", 'd'}, {"col6", 'd'}});
+
+   EXPECT_STREQ("double", tds.GetTypeName("col5").c_str());
+   EXPECT_STREQ("double", tds.GetTypeName("col6").c_str());
+
+   EXPECT_THROW(
+      try {
+         ROOT::RDF::MakeCsvDataFrame(fileName4, true, ',', -1LL, {{"col5", 'd'}, {"wrong", 'd'}});
+      } catch (const std::runtime_error &err) {
+         EXPECT_EQ(std::string(err.what()), "There is no column with name \"wrong\".");
+         throw;
+      },
+      std::runtime_error);
+
+   EXPECT_THROW(
+      try {
+         ROOT::RDF::MakeCsvDataFrame(fileName4, true, ',', -1LL, {{"col5", 'd'}, {"col6", 'w'}});
+      } catch (const std::runtime_error &err) {
+         std::string msg = "Type alias 'w' is not supported.\n";
+         msg += "Supported type aliases are 'b' for boolean, 'd' for double, 'l' for Long64_t, 's' for std::string.";
+         EXPECT_EQ(std::string(err.what()), msg);
+         throw;
+      },
+      std::runtime_error);
 }
 
 #endif // R__USE_IMT

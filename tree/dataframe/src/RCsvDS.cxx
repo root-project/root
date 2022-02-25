@@ -1,7 +1,7 @@
 // Author: Enric Tejedor CERN  10/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,14 +16,17 @@
 The RCsvDS class implements a CSV file reader for RDataFrame.
 
 A RDataFrame that reads from a CSV file can be constructed using the factory method
-ROOT::RDF::MakeCsvDataFrame, which accepts three parameters:
+ROOT::RDF::MakeCsvDataFrame, which accepts five parameters:
 1. Path to the CSV file.
 2. Boolean that specifies whether the first row of the CSV file contains headers or
 not (optional, default `true`). If `false`, header names will be automatically generated as Col0, Col1, ..., ColN.
 3. Delimiter (optional, default ',').
+4. Chunk size (optional, bunch of lines to read, use -1 (which is also default) to read all)
+5. Column Types (optional, map where the keys are the column headers, the values are the desired type;
+can specify column names to any subset of columns; by default types are determined from
+the first row - meaning the default value is {})
 
-The types of the columns in the CSV file are automatically inferred. The supported
-types are:
+The supported types are:
 - Integer: stored as a 64-bit long long int.
 - Floating point number: stored with double precision.
 - Boolean: matches the literals `true` and `false`.
@@ -100,12 +103,13 @@ const TRegexp RCsvDS::fgDoubleRegex3("^[-+]?[0-9]*\\.[0-9]+[eEdDqQ][-+]?[0-9]+$"
 const TRegexp RCsvDS::fgTrueRegex("^true$");
 const TRegexp RCsvDS::fgFalseRegex("^false$");
 
-const std::map<RCsvDS::ColType_t, std::string>
+const std::unordered_map<RCsvDS::ColType_t, std::string>
    RCsvDS::fgColTypeMap({{'b', "bool"}, {'d', "double"}, {'l', "Long64_t"}, {'s', "std::string"}});
 
 void RCsvDS::FillHeaders(const std::string &line)
 {
    auto columns = ParseColumns(line);
+   fHeaders.reserve(columns.size());
    for (auto &col : columns) {
       fHeaders.emplace_back(col);
    }
@@ -123,18 +127,28 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
 
       switch (colType) {
       case 'd': {
-         record.emplace_back(new double(std::stod(col)));
+         record.emplace_back(
+            new double((col != fFillValue) ? std::stod(col) : std::numeric_limits<double>::quiet_NaN()));
          break;
       }
       case 'l': {
-         record.emplace_back(new Long64_t(std::stoll(col)));
+         if (col != fFillValue) {
+            record.emplace_back(new Long64_t(std::stoll(col)));
+         } else {
+            fColContainingEmpty.insert(fHeaders[i]);
+            record.emplace_back(new Long64_t(std::stoll("0")));
+         }
          break;
       }
       case 'b': {
          auto b = new bool();
          record.emplace_back(b);
-         std::istringstream is(col);
-         is >> std::boolalpha >> *b;
+         if (col != fFillValue) {
+            std::istringstream(col) >> std::boolalpha >> *b;
+         } else {
+            fColContainingEmpty.insert(fHeaders[i]);
+            std::istringstream("false") >> std::boolalpha >> *b;
+         }
          break;
       }
       case 's': {
@@ -148,7 +162,8 @@ void RCsvDS::FillRecord(const std::string &line, Record_t &record)
 
 void RCsvDS::GenerateHeaders(size_t size)
 {
-   for (size_t i = 0; i < size; ++i) {
+   fHeaders.reserve(size);
+   for (size_t i = 0u; i < size; ++i) {
       fHeaders.push_back("Col" + std::to_string(i));
    }
 }
@@ -187,10 +202,45 @@ std::vector<void *> RCsvDS::GetColumnReadersImpl(std::string_view colName, const
 
 void RCsvDS::InferColTypes(std::vector<std::string> &columns)
 {
-   auto i = 0U;
-   for (auto &col : columns) {
-      InferType(col, i);
-      ++i;
+   for (auto const &col : fColTypes) {
+      if (!HasColumn(col.first)) {
+         std::string msg = "There is no column with name \"" + col.first + "\".";
+         if (!fReadHeaders) {
+            msg += "\nSince the input csv file does not contain headers, valid column names";
+            msg += " are [\"Col0\", ..., \"Col" + std::to_string(columns.size() - 1) + "\"].";
+         }
+         throw std::runtime_error(msg);
+      }
+      if (std::string("bdls").find(col.second) == std::string::npos) {
+         std::string msg = "Type alias '" + std::string(1, col.second) + "' is not supported.\n";
+         msg += "Supported type aliases are 'b' for boolean, 'd' for double, 'l' for Long64_t, 's' for std::string.";
+         throw std::runtime_error(msg);
+      }
+   }
+
+   const auto second_line = fCsvFile->GetFilePos();
+   for (auto i = 0u; i < columns.size(); ++i) {
+      if (fColTypes.find(fHeaders[i]) == fColTypes.end()) { // type is not yet specified
+         if (columns[i] == fFillValue) {
+            // read 10 lines until a non-empty cell on this column is found, so that type is determined
+            // if 10 lines are read, then type is automatically assumed `double`
+            for (auto row = 0u; row < 10u; ++row) {
+               std::string line;
+               if (fCsvFile->Readln(line)) {
+                  const auto temp_columns = ParseColumns(line);
+                  if (temp_columns[i] != fFillValue) {
+                     columns[i] = temp_columns[i];
+                     break;
+                  }
+               } else { // whole column was empty
+                  break;
+               }
+            }
+            // reset the reading from the second line, because the first line is already loaded in `columns`
+            fCsvFile->Seek(second_line);
+         }
+         InferType(columns[i], i);
+      }
    }
 }
 
@@ -199,10 +249,11 @@ void RCsvDS::InferType(const std::string &col, unsigned int idxCol)
    ColType_t type;
    int dummy;
 
-   if (fgIntRegex.Index(col, &dummy) != -1) {
+   if (col == fFillValue) {
+      type = 'd'; // double
+   } else if (fgIntRegex.Index(col, &dummy) != -1) {
       type = 'l'; // Long64_t
-   } else if (fgDoubleRegex1.Index(col, &dummy) != -1 ||
-              fgDoubleRegex2.Index(col, &dummy) != -1 ||
+   } else if (fgDoubleRegex1.Index(col, &dummy) != -1 || fgDoubleRegex2.Index(col, &dummy) != -1 ||
               fgDoubleRegex3.Index(col, &dummy) != -1) {
       type = 'd'; // double
    } else if (fgTrueRegex.Index(col, &dummy) != -1 || fgFalseRegex.Index(col, &dummy) != -1) {
@@ -231,6 +282,7 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 {
    std::stringstream val;
    bool quoted = false;
+   const size_t prev_i = i; // used to check if cell is empty
 
    for (; i < line.size(); ++i) {
       if (line[i] == fDelimiter && !quoted) {
@@ -247,7 +299,11 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
       }
    }
 
+   if (prev_i == i) // empty entry not in the last column
+      val << fFillValue;
    columns.emplace_back(val.str());
+   if (i == line.size() - 1 && line[i] == fDelimiter) // empty entry in the last column
+      columns.emplace_back(fFillValue);
 
    return i;
 }
@@ -259,11 +315,13 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
-RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize) // TODO: Let users specify types?
-   : fReadHeaders(readHeaders),
-     fCsvFile(ROOT::Internal::RRawFile::Create(fileName)),
-     fDelimiter(delimiter),
-     fLinesChunkSize(linesChunkSize)
+/// \param[in] colTypes Allow user to specify custom column types, accepts an unordered map with keys being
+///                     column type, values being type alias ('b' for boolean, 'd' for double, 'l' for
+///                     Long64_t, 's' for std::string)
+RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
+               std::unordered_map<std::string, char> colTypes)
+   : fReadHeaders(readHeaders), fCsvFile(ROOT::Internal::RRawFile::Create(fileName)), fDelimiter(delimiter),
+     fLinesChunkSize(linesChunkSize), fColTypes(colTypes)
 {
    std::string line;
 
@@ -291,7 +349,7 @@ RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long
          GenerateHeaders(columns.size());
       }
 
-      // Infer types of columns with first record
+      // Infer types of columns with first-available record
       InferColTypes(columns);
 
       // rewind
@@ -365,6 +423,18 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
       fRecords.emplace_back();
       FillRecord(line, fRecords.back());
       --linesToRead;
+   }
+
+   if (!fColContainingEmpty.empty()) {
+      std::string msg = "";
+      for (const auto &col : fColContainingEmpty) {
+         const auto colT = GetTypeName(col);
+         msg += "Column \"" + col + "\" of " + colT + " type contains empty cell(s).\n";
+         msg += "There is no `nan` equivalent for " + colT + " type, hence ";
+         msg += std::string(colT == "Long64_t" ? "`0`" : "`false`") + " is stored.\n";
+      }
+      msg += "To properly handle `nan` of Long64_t type, manually specify the column type to `double`.\n";
+      Warning("RCsvDS", "%s", msg.c_str());
    }
 
    if (gDebug > 0) {
@@ -473,10 +543,11 @@ std::string RCsvDS::GetLabel()
    return "RCsv";
 }
 
-RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize)
+RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize,
+                            std::unordered_map<std::string, char> colTypes)
 {
-   ROOT::RDataFrame tdf(std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize));
-   return tdf;
+   ROOT::RDataFrame rdf(std::make_unique<RCsvDS>(fileName, readHeaders, delimiter, linesChunkSize, colTypes));
+   return rdf;
 }
 
 } // ns RDF

@@ -1,7 +1,7 @@
 // Author: Enric Tejedor CERN  10/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,7 +17,7 @@
 #include <cstdint>
 #include <deque>
 #include <list>
-#include <map>
+#include <unordered_map>
 #include <memory>
 #include <vector>
 
@@ -36,7 +36,7 @@ class RCsvDS final : public ROOT::RDF::RDataSource {
 private:
    // Possible values are d, b, l, s. This is possible only because we treat double, bool, Long64_t and string
    using ColType_t = char;
-   static const std::map<ColType_t, std::string> fgColTypeMap;
+   static const std::unordered_map<ColType_t, std::string> fgColTypeMap;
 
    // Regular expressions for type inference
    static const TRegexp fgIntRegex, fgDoubleRegex1, fgDoubleRegex2, fgDoubleRegex3, fgTrueRegex, fgFalseRegex;
@@ -47,10 +47,12 @@ private:
    std::unique_ptr<ROOT::Internal::RRawFile> fCsvFile;
    const char fDelimiter;
    const Long64_t fLinesChunkSize;
+   const std::string fFillValue = "";
    ULong64_t fEntryRangesRequested = 0ULL;
    ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
    std::vector<std::string> fHeaders;
-   std::map<std::string, ColType_t> fColTypes;
+   std::unordered_map<std::string, ColType_t> fColTypes;
+   std::set<std::string> fColContainingEmpty; // store columns which had empty entry
    std::list<ColType_t> fColTypesList;
    std::vector<std::vector<void *>> fColAddresses;         // fColAddresses[column][slot]
    std::vector<Record_t> fRecords;                         // fRecords[entry][column]
@@ -75,7 +77,8 @@ protected:
    std::string AsString();
 
 public:
-   RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
+   RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
+          std::unordered_map<std::string, char> colTypes = {});
    void Finalize();
    void FreeRecords();
    ~RCsvDS();
@@ -95,8 +98,11 @@ public:
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
 /// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
+/// \param[in] colTypes Allow user to specify custom column types, accepts an unordered map with keys being
+///                      column type, values being type alias ('b' for boolean, 'd' for double, 'l' for
+///                      Long64_t, 's' for std::string)
 RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
-                            Long64_t linesChunkSize = -1LL);
+                            Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> colTypes = {});
 
 } // ns RDF
 
