@@ -175,3 +175,12 @@ class Node(object):
 
         self.children = children
         return self.is_prunable()
+
+
+class HeadNode(Node):
+    """
+    Helper tag for the headnode of the computation graph. Defined in the Node.py
+    module so that other modules who may want to use it in type hints don't need
+    to import the HeadNode.py module
+    """
+    pass

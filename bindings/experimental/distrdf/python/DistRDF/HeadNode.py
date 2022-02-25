@@ -3,13 +3,13 @@ import warnings
 
 import ROOT
 
-from DistRDF import Node
 from DistRDF import Ranges
+from DistRDF.Node import HeadNode
 
 logger = logging.getLogger(__name__)
 
 
-def get_headnode(npartitions, *args):
+def get_headnode(npartitions: int, *args) -> HeadNode:
     """
     A factory for different kinds of head nodes of the RDataFrame computation
     graph, depending on the arguments to the RDataFrame constructor. Currently
@@ -42,7 +42,7 @@ def get_headnode(npartitions, *args):
                 "can be processed distributedly.").format(firstarg, type(firstarg)))
 
 
-class EmptySourceHeadNode(Node.Node):
+class EmptySourceHeadNode(HeadNode):
     """
     The head node of a computation graph where the RDataFrame data source is
     empty and a number of sequential entries will be created at runtime. This
@@ -107,7 +107,7 @@ class EmptySourceHeadNode(Node.Node):
 
         return build_rdf_from_range
 
-class TreeHeadNode(Node.Node):
+class TreeHeadNode(HeadNode):
     """
     The head node of a computation graph where the RDataFrame data source is
     a TTree or a TChain. This head node is responsible for the following
