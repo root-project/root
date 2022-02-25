@@ -284,7 +284,7 @@ private:                                                                        
          ++recurseBlocker;                                                                                      \
          return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
       }                                                                                                         \
-      return false; /* unreacheable */                                                                          \
+      return false; /* unreachable */                                                                           \
    } /** \endcond */                                                                                            \
                                                                                                                 \
 public:                                                                                                         \
@@ -397,7 +397,7 @@ public:                                                                         
 // ClassImpT  corresponds to ClassImp
 
 
-/// This ClassDefT is stricly redundant and is kept only for
+/// This ClassDefT is strictly redundant and is kept only for
 /// backward compatibility. \deprecated
 #define ClassDefT(name,id)                          \
    _ClassDefOutline_(name,id,virtual,)              \
