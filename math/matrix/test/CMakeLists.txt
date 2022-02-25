@@ -7,3 +7,4 @@
 ROOT_ADD_GTEST(testMatrixTSparse testMatrixTSparse.cxx LIBRARIES Matrix)
 ROOT_ADD_GTEST(testMatrixTDecomp testMatrixTDecomp.cxx LIBRARIES Matrix)
 ROOT_ADD_GTEST(testMatrixT testMatrixT.cxx LIBRARIES Matrix)
+ROOT_ADD_GTEST(testTVector testTVector.cxx LIBRARIES Matrix)
