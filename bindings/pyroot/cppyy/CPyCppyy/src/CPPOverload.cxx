@@ -366,7 +366,7 @@ static PyObject* mp_func_code(CPPOverload* pymeth, void*)
     return code;
 #else
 // not important for functioning of most code, so not implemented for p3 for now (TODO)
-    pymeth = 0;
+    (void)pymeth;
     Py_RETURN_NONE;
 #endif
 }
