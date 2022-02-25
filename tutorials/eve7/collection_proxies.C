@@ -136,6 +136,7 @@ public:
          }
       }
       REveSelection* sel = (REveSelection*)eveMng->FindElementById(selectionId);
+      fCollection->GetItemList()->RefSelectedSet() = item_set;
       sel->NewElementPicked(fCollection->GetItemList()->GetElementId(),  multi, true, item_set);
    }
 
@@ -441,7 +442,7 @@ public:
    }
 
    using REveDataProxyBuilderBase::FillImpliedSelected;
-   void FillImpliedSelected(REveElement::Set_t& impSet, Product* p) override
+   void FillImpliedSelected(REveElement::Set_t& impSet, const std::set<int>& sec_idcs, Product* p) override
    {
       // printf("RecHit fill implioed ----------------- !!!%zu\n", Collection()->GetItemList()->RefSelectedSet().size());
       impSet.insert(p->m_elements->FirstChild());
@@ -515,11 +516,11 @@ public:
    }
 
    using REveDataProxyBuilderBase::FillImpliedSelected;
-   void FillImpliedSelected(REveElement::Set_t& impSet, Product*) override
+   void FillImpliedSelected(REveElement::Set_t& impSet, const std::set<int>& sec_idcs, Product*) override
    {
       fCaloData->GetSelector()->SetActiveSlice(fSliceIndex);
       impSet.insert(fCaloData);
-      fCaloData->FillImpliedSelectedSet(impSet);
+      fCaloData->FillImpliedSelectedSet(impSet, sec_idcs);
    }
 
   using REveDataProxyBuilderBase::ModelChanges;
@@ -654,9 +655,9 @@ public:
       glBuilder->SetHaveAWindow(true);
       for (auto scene : m_scenes)
       {
-         REveElement *product = glBuilder->CreateProduct(scene->GetTitle(), m_viewContext);
-
          if (strncmp(scene->GetCName(), "Tables", 5) == 0) continue;
+
+         REveElement *product = glBuilder->CreateProduct(scene->GetTitle(), m_viewContext);
 
          if (!strncmp(scene->GetCTitle(), "Projected", 8))
          {
@@ -705,9 +706,9 @@ public:
                                     {
                                        this->ModelChanged( collection, ids );
                                     });
-      collection->GetItemList()->SetFillImpliedSelectedDelegate([&] (REveDataItemList* collection, REveElement::Set_t& impSelSet)
+      collection->GetItemList()->SetFillImpliedSelectedDelegate([&] (REveDataItemList* collection, REveElement::Set_t& impSelSet, const std::set<int>& sec_idcs)
                                     {
-                                       this->FillImpliedSelected( collection,  impSelSet);
+                                       this->FillImpliedSelected( collection,  impSelSet, sec_idcs);
                                     });
    }
 
@@ -739,7 +740,7 @@ public:
       }
    }
 
-   void FillImpliedSelected(REveDataItemList* itemList, REveElement::Set_t& impSelSet)
+   void FillImpliedSelected(REveDataItemList* itemList, REveElement::Set_t& impSelSet, const std::set<int>& sec_idcs)
    {
       if (m_inEventLoading) return;
 
@@ -747,7 +748,7 @@ public:
       {
          if (proxy->Collection()->GetItemList() == itemList)
          {
-            proxy->FillImpliedSelected(impSelSet);
+            proxy->FillImpliedSelected(impSelSet, sec_idcs);
          }
       }
    }
@@ -789,16 +790,15 @@ public:
    {
       if (el) {
          auto *colItems = dynamic_cast<REveDataItemList *>(el);
-         if (!colItems)
-            return false;
-
-         selection->SetDeviator(nullptr);
-         selection->NewElementPicked(colItems->GetElementId(), multi, true, colItems->RefSelectedSet());
-         selection->SetDeviator(this);
-
-         return true;
-      } else
-         return false;
+         if (colItems) {
+            selection->SetDeviator(nullptr);
+            // std::cout << "Deviate " << colItems->RefSelectedSet().size() << " passed set " << secondary_idcs.size() << "\n";
+            selection->NewElementPicked(colItems->GetElementId(), multi, true, colItems->RefSelectedSet());
+            selection->SetDeviator(this);
+            return true;
+         }
+      }
+      return false;
    }
 };
 //==============================================================================
@@ -814,6 +814,7 @@ void collection_proxies(bool proj=true)
    // divert selection to map proxy builder products with collection
    auto deviator = new FWSelectionDeviator();
    eveMng->GetSelection()->SetDeviator(deviator);
+   eveMng->GetHighlight()->SetDeviator(deviator);
 
    // create scenes and views
    REveScene* rhoZEventScene = nullptr;

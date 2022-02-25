@@ -51,7 +51,7 @@ public:
    void RemoveElementLocal(REveElement *el) override;
    void RemoveElementsLocal() override;
 
-   void FillImpliedSelectedSet(Set_t &impSelSet) override;
+   void FillImpliedSelectedSet(Set_t &impSelSet, const std::set<int>&) override;
 
    TClass *ProjectedClass(const REveProjection *p) const override;
 };

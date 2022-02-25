@@ -1374,7 +1374,7 @@ REveElement *REveElement::GetSelectionMaster()
 /// Note that this also takes care of projections of REveCompound
 /// class, which is also a projectable.
 
-void REveElement::FillImpliedSelectedSet(Set_t &impSelSet)
+void REveElement::FillImpliedSelectedSet(Set_t &impSelSet, const std::set<int>&)
 {
    REveProjectable* p = dynamic_cast<REveProjectable*>(this);
    if (p)
