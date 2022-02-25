@@ -16,6 +16,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
 #include "TSystem.h"
+#include "TObjString.h"
 
 using namespace TMVA;
 
@@ -528,23 +529,65 @@ void MethodPyKeras::Train() {
    }
 
    // Callback: Learning rate scheduler
-   if (fLearningRateSchedule!="") {
-      // Setup a python dictionary with the desired learning rate steps
-      PyRunString("strScheduleSteps = '"+fLearningRateSchedule+"'\n"
-                  "schedulerSteps = {}\n"
-                  "for c in strScheduleSteps.split(';'):\n"
-                  "    x = c.split(',')\n"
-                  "    schedulerSteps[int(x[0])] = float(x[1])\n",
-                  "Failed to setup steps for scheduler function from string: "+fLearningRateSchedule,
-                   Py_file_input);
+   if (fLearningRateSchedule != "") {
+      // tokenize learning rate schedule (e.g.   "10,0.01;20,0.001" given as epoch,lr)
+      std::vector<std::pair<std::string, std::string>> scheduleSteps;
+      auto lrSteps = fLearningRateSchedule.Tokenize(";");
+      for (auto  obj : *lrSteps) {
+         TString step = obj->GetName();
+         auto x = step.Tokenize(",");
+         if (!x || x->GetEntries() != 2) {
+            Log() << kFATAL << "Invalid values given in LearningRateSchedule, it should be as \"10,0.1;20,0.01\""
+                  << Endl;
+         }
+         scheduleSteps.push_back(std::make_pair<std::string, std::string>( std::string((*x)[0]->GetName() ) ,
+                                                                           std::string((*x)[1]->GetName() ) ) );
+         std::cout << " add learning rate schedule " << scheduleSteps.back().first << " : " << scheduleSteps.back().second << std::endl;
+      }
+         // Setup a python dictionary with the desired learning rate steps
+         // PyRunString("strScheduleSteps = '" + fLearningRateSchedule +
+         //                "'\n"
+         //                "schedulerSteps = {}\n"
+         //                "epochs=[]\n"
+         //                "lrValues=[]\n"
+         //                "for c in strScheduleSteps.split(';'):\n"
+         //                "    x = c.split(',')\n"
+         //                "    schedulerSteps[int(x[0])] = float(x[1])\n"
+         //                "    epochs.append(int(x[0]))\n"
+         //                "    lrValues.append(float(x[1]))\n",
+         //             "Failed to setup steps for scheduler function from string: " + fLearningRateSchedule,
+         //             Py_file_input);
       // Set scheduler function as piecewise function with given steps
-      PyRunString("def schedule(epoch, model=model, schedulerSteps=schedulerSteps):\n"
-                  "    if epoch in schedulerSteps: return float(schedulerSteps[epoch])\n"
-                  "    else: return float(model.optimizer.lr.get_value())\n",
-                  "Failed to setup scheduler function with string: "+fLearningRateSchedule,
-                  Py_file_input);
+      // PyRunString("def schedule(epoch, model=model, schedulerSteps=schedulerSteps):\n"
+      //             "    if epoch in schedulerSteps: return float(schedulerSteps[epoch])\n"
+      //             "    else: return float(model.optimizer.lr.get_value())\n",
+      //             "Failed to setup scheduler function with string: "+fLearningRateSchedule,
+      //             Py_file_input);
+      TString epochsList = "epochs = [";
+      TString valuesList = "lrValues = ["; 
+      for (size_t i = 0; i < scheduleSteps.size(); i++) {
+         epochsList += TString(scheduleSteps[i].first.c_str());
+         valuesList += TString(scheduleSteps[i].second.c_str());
+         if (i < scheduleSteps.size()-1) { 
+            epochsList += ", ";
+            valuesList += ", ";
+         }
+      }
+      epochsList += "]";
+      valuesList += "]";
+      TString scheduleFunction = "def schedule(epoch, lr):\n"
+                                 "   i = 0\n"
+                                 "   " + epochsList + "\n"
+                                 "   " + valuesList + "\n"
+                                 "   for e in epochs:\n"
+                                 "      if (epoch < e) :\n"
+                                 "         return lrValues[i]\n"
+                                 "      i+=1\n"
+                                 "   return lr\n";
+      PyRunString( scheduleFunction, 
+         "Failed to setup scheduler function with string: " + fLearningRateSchedule, Py_file_input);
       // Setup callback
-      PyRunString("callbacks.append(" + fKerasString + ".callbacks.LearningRateScheduler(schedule))",
+      PyRunString("callbacks.append(" + fKerasString + ".callbacks.LearningRateScheduler(schedule, verbose=True))",
                   "Failed to setup training callback: LearningRateSchedule");
       Log() << kINFO << "Option LearningRateSchedule: Set learning rate during training: " << fLearningRateSchedule << Endl;
    }
