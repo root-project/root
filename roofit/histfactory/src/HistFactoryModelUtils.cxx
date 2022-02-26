@@ -46,15 +46,17 @@ namespace HistFactory{
     std::string realSumPdfName = ChannelName + "_model";
 
     RooAbsPdf* sum_pdf = NULL;
-    TIterator* iter_sum_pdf = sim_channel->getComponents()->createIterator(); //serverIterator();
+    //TIterator* iter_sum_pdf = sim_channel->getComponents()->createIterator(); //serverIterator();
+    //RooAbsArg* sum_pdf_arg=NULL;
+    //while((sum_pdf_arg=(RooAbsArg*)iter_sum_pdf->Next())) 
+    //RooAbsPdf *iter_sum_pdf = sim_channel->getComponents();
     bool FoundSumPdf=false;
-    RooAbsArg* sum_pdf_arg=NULL;
-    while((sum_pdf_arg=(RooAbsArg*)iter_sum_pdf->Next())) {
-      std::string NodeClassName = sum_pdf_arg->ClassName();
-      if( NodeClassName == std::string("RooRealSumPdf") ) {
-   FoundSumPdf=true;
-   sum_pdf = (RooAbsPdf*) sum_pdf_arg;
-   break;
+    for (auto const *sum_pdf_arg : static_range_cast<RooAbsPdf *>(*sim_channel->getComponents())) {
+        std::string NodeClassName = sum_pdf_arg->ClassName();
+        if( NodeClassName == std::string("RooRealSumPdf") ) {
+        FoundSumPdf=true;
+        sum_pdf = (RooAbsPdf*) sum_pdf_arg;
+        break;
       }
     }
     if( ! FoundSumPdf ) {
@@ -68,8 +70,8 @@ namespace HistFactory{
     else {
       if(verbose) std::cout << "Found RooRealSumPdf: " << sum_pdf->GetName() << std::endl;
     }
-    delete iter_sum_pdf;
-    iter_sum_pdf = NULL;
+    //delete iter_sum_pdf;
+    //iter_sum_pdf = NULL;
 
     return sum_pdf;
 
@@ -186,10 +188,11 @@ namespace HistFactory{
 
     // Find the servers of this channel
     //TIterator* iter = channel->serverIterator();
-    TIterator* iter = channel->getComponents()->createIterator(); //serverIterator();
+    //TIterator* iter = channel->getComponents()->createIterator(); //serverIterator();
+    //while(( paramfunc_arg = (RooAbsArg*) iter->Next() )) 
+    //RooAbsArg* paramfunc_arg = NULL;
     bool FoundParamHistFunc=false;
-    RooAbsArg* paramfunc_arg = NULL;
-    while(( paramfunc_arg = (RooAbsArg*) iter->Next() )) {
+    for (auto const *paramfunc_arg : static_range_cast<RooAbsArg *>(*channel->getComponents())) {
       std::string NodeName = paramfunc_arg->GetName();
       std::string NodeClassName = paramfunc_arg->ClassName();
       if( NodeClassName != std::string("ParamHistFunc") ) continue;
@@ -204,8 +207,8 @@ namespace HistFactory{
       return false;
     }
 
-    delete iter;
-    iter = NULL;
+    //delete iter;
+    //iter = NULL;
 
     // Now, get the set of gamma's
     gammaList = (RooArgList*) &( paramfunc->paramList());
@@ -227,10 +230,11 @@ namespace HistFactory{
 
     // get category label
     RooArgSet* allobs = (RooArgSet*) data->get();
-    TIterator* obsIter = allobs->createIterator();
+    //TIterator* obsIter = allobs->createIterator();
+    //RooAbsArg* temp = NULL;
+    //while( (temp=(RooAbsArg*) obsIter->Next())) 
     RooCategory* cat = NULL;
-    RooAbsArg* temp = NULL;
-    while( (temp=(RooAbsArg*) obsIter->Next())) {
+    for (auto const *temp : dynamic_range_cast<RooAbsArg *>(*allobs)) {
       // use dynamic cast here instead
       if( strcmp(temp->ClassName(),"RooCategory")==0){
    cat = (RooCategory*) temp;
@@ -241,7 +245,7 @@ namespace HistFactory{
       if(!cat) std::cout <<"didn't find category"<< std::endl;
       else std::cout <<"found category"<< std::endl;
     }
-    delete obsIter;
+    //delete obsIter;
 
     if (!cat) {
        std::cerr <<"Category not found"<< std::endl;
@@ -312,11 +316,12 @@ namespace HistFactory{
     // To get the constraint term, loop over all constraint terms
     // and look for the gamma_stat name as well as '_constraint'
     // std::string constraintTermName = std::string(gamma_stat->GetName()) + "_constraint";
-    TIterator* iter_list = constraints->createIterator();
-    RooAbsArg* term_constr=NULL;
+    //TIterator* iter_list = constraints->createIterator();
+    //RooAbsArg* term_constr=NULL;
     bool FoundConstraintTerm=false;
     RooAbsPdf* constraintTerm=NULL;
-    while((term_constr=(RooAbsArg*)iter_list->Next())) {
+    //while((term_constr=(RooAbsArg*)iter_list->Next())) 
+    for (auto const *term_constr : static_range_cast<RooAbsArg *>(*constraints)) {
       std::string TermName = term_constr->GetName();
       // std::cout << "Checking if is a constraint term: " << TermName << std::endl;
 
@@ -336,7 +341,7 @@ namespace HistFactory{
       throw std::runtime_error("Failed to find Gamma ConstraintTerm");
       return -1;
     }
-    delete iter_list;
+    //delete iter_list;
 
     /*
     RooAbsPdf* constraintTerm = (RooAbsPdf*) constraints->find( constraintTermName.c_str() );
