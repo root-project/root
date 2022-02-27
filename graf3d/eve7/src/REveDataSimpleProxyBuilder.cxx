@@ -252,15 +252,20 @@ REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompou
 
 void REveDataSimpleProxyBuilder::FillImpliedSelected(REveElement::Set_t &impSet, const std::set<int>& sec_idcs, Product* p)
 {
-   // first check if product is added in any scene
-   if (p->m_elements->GetElementId()) {
-      // printf("[%s] REveDataSimpleProxyBuilder::FillImpliedSelected Fill implied selected %lu \n", p->m_viewType.c_str(),sec_idcs.size());
-      for (auto &s : sec_idcs) {
-         auto spb = fProductMap[p->m_elements];
-         auto it = spb->map.find(s);
-         if (it != spb->map.end()) {
-            it->second->FillImpliedSelectedSet(impSet, sec_idcs);
-         }
+   for (auto &s : sec_idcs) {
+      auto spb = fProductMap[p->m_elements];
+      auto it = spb->map.find(s);
+      if (it != spb->map.end()) {
+         it->second->FillImpliedSelectedSet(impSet, sec_idcs);
+      }
+   }
+
+   // remove elements that are not added in any scene
+   for (auto it = impSet.begin(); it != impSet.end();) {
+      if ((*it)->GetElementId()) {
+         ++it;
+      } else {
+         it = impSet.erase(it);
       }
    }
 }
