@@ -334,6 +334,10 @@ public:
    /// ntuple->PrintInfo(ENTupleInfo::kMetrics);
    /// ~~~
    void EnableMetrics() { fMetrics.Enable(); }
+   /// Enable multi-threaded decompression, if IMT is enabled for this build (otherwise, no-op).
+   ///
+   /// This method has no effect if ROOT::EnableImplicitMT was called before.
+   void EnableMT();
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 };
 
@@ -414,6 +418,10 @@ public:
    std::unique_ptr<REntry> CreateEntry() { return fModel->CreateEntry(); }
 
    void EnableMetrics() { fMetrics.Enable(); }
+   /// Enable multi-threaded compression, if IMT is enabled for this build (otherwise, no-op).
+   ///
+   /// This method has no effect if ROOT::EnableImplicitMT was called before.
+   void EnableMT();
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
    const RNTupleModel *GetModel() const { return fModel.get(); }

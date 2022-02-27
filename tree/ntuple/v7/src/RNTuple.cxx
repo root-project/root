@@ -268,6 +268,17 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleSh
    }
 }
 
+void ROOT::Experimental::RNTupleReader::EnableMT()
+{
+#ifdef R__USE_IMT
+   if (fUnzipTasks) {
+      return;
+   }
+   fUnzipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+   fSource->SetTaskScheduler(fUnzipTasks.get());
+#endif
+}
+
 
 //------------------------------------------------------------------------------
 
@@ -364,6 +375,17 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
 
    if (commitClusterGroup)
       CommitClusterGroup();
+}
+
+void ROOT::Experimental::RNTupleWriter::EnableMT()
+{
+#ifdef R__USE_IMT
+   if (fZipTasks) {
+      return;
+   }
+   fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+   fSink->SetTaskScheduler(fZipTasks.get());
+#endif
 }
 
 
