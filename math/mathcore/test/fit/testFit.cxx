@@ -363,16 +363,16 @@ int testHisto1DFit() {
 
 class Func1D : public ROOT::Math::IParamFunction {
 public:
-   void SetParameters(const double *p) { std::copy(p,p+NPar(),fp);}
-   const double * Parameters() const { return fp; }
-   ROOT::Math::IGenFunction * Clone() const {
+   void SetParameters(const double *p) override { std::copy(p,p+NPar(),fp);}
+   const double * Parameters() const override { return fp; }
+   ROOT::Math::IGenFunction * Clone() const override {
       Func1D * f =  new Func1D();
       f->SetParameters(fp);
       return f;
    };
-   unsigned int NPar() const { return 3; }
+   unsigned int NPar() const override { return 3; }
 private:
-   double DoEvalPar( double x, const double *p) const {
+   double DoEvalPar( double x, const double *p) const override {
       return p[0]*x*x + p[1]*x + p[2];
    }
    double fp[3];
@@ -382,17 +382,17 @@ private:
 // gradient 2D function
 class GradFunc2D : public ROOT::Math::IParamMultiGradFunction {
 public:
-   void SetParameters(const double *p) { std::copy(p,p+NPar(),fp);}
-   const double * Parameters() const { return fp; }
-   ROOT::Math::IMultiGenFunction * Clone() const {
+   void SetParameters(const double *p) override { std::copy(p,p+NPar(),fp);}
+   const double * Parameters() const override { return fp; }
+   ROOT::Math::IMultiGenFunction * Clone() const override {
       GradFunc2D * f =  new GradFunc2D();
       f->SetParameters(fp);
       return f;
    };
-   unsigned int NDim() const { return 2; }
-   unsigned int NPar() const { return 5; }
+   unsigned int NDim() const override { return 2; }
+   unsigned int NPar() const override { return 5; }
 
-   void ParameterGradient( const double * x, const double * , double * grad) const {
+   void ParameterGradient( const double * x, const double * , double * grad) const override {
       grad[0] = x[0]*x[0];
       grad[1] = x[0];
       grad[2] = x[1]*x[1];
@@ -402,7 +402,7 @@ public:
 
 private:
 
-   double DoEvalPar( const double *x, const double * p) const {
+   double DoEvalPar( const double *x, const double * p) const override {
       return p[0]*x[0]*x[0] + p[1]*x[0] + p[2]*x[1]*x[1] + p[3]*x[1] + p[4];
    }
 //    double DoDerivative(const double *x,  unsigned int icoord = 0) const {
@@ -413,7 +413,7 @@ private:
 //          return 2. * fp[2] * x[1] + fp[3];
 //    }
 
-   double DoParameterDerivative(const double * x, const double * p, unsigned int ipar) const {
+   double DoParameterDerivative(const double * x, const double * p, unsigned int ipar) const override {
       std::vector<double> grad(NPar());
       ParameterGradient(x, p, &grad[0] );
       return grad[ipar];

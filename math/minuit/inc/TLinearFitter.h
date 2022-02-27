@@ -216,7 +216,7 @@ public:
    TLinearFitter(Int_t ndim);
    TLinearFitter(TFormula *function, Option_t *opt="D");
    TLinearFitter(const TLinearFitter& tlf);
-   virtual ~TLinearFitter();
+   ~TLinearFitter() override;
 
    TLinearFitter& operator=(const TLinearFitter& tlf);
    virtual void       Add(TLinearFitter *tlf);
@@ -224,39 +224,39 @@ public:
    virtual void       AddTempMatrices();
    virtual void       AssignData(Int_t npoints, Int_t xncols, Double_t *x, Double_t *y, Double_t *e=0);
 
-   virtual void       Clear(Option_t *option="");
+   void       Clear(Option_t *option="") override;
    virtual void       ClearPoints();
    virtual void       Chisquare();
    virtual Int_t      Eval();
    virtual Int_t      EvalRobust(Double_t h=-1);
-   virtual Int_t      ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
-   virtual void       FixParameter(Int_t ipar);
+   Int_t      ExecuteCommand(const char *command, Double_t *args, Int_t nargs) override;
+   void       FixParameter(Int_t ipar) override;
    virtual void       FixParameter(Int_t ipar, Double_t parvalue);
    virtual void       GetAtbVector(TVectorD &v);
    virtual Double_t   GetChisquare();
-   virtual void       GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
-   virtual void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95);
-   virtual Double_t*  GetCovarianceMatrix() const;
+   void       GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95) override;
+   void       GetConfidenceIntervals(TObject *obj, Double_t cl=0.95) override;
+   Double_t*  GetCovarianceMatrix() const override;
    virtual void       GetCovarianceMatrix(TMatrixD &matr);
-   virtual Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const {return fParCovar(i, j);}
+   Double_t   GetCovarianceMatrixElement(Int_t i, Int_t j) const override {return fParCovar(i, j);}
    virtual void       GetDesignMatrix(TMatrixD &matr);
    virtual void       GetErrors(TVectorD &vpar);
-   virtual Int_t      GetNumberTotalParameters() const {return fNfunctions;}
-   virtual Int_t      GetNumberFreeParameters() const {return fNfunctions-fNfixed;}
+   Int_t      GetNumberTotalParameters() const override {return fNfunctions;}
+   Int_t      GetNumberFreeParameters() const override {return fNfunctions-fNfixed;}
    virtual Int_t      GetNpoints() { return fNpoints; }
    virtual void       GetParameters(TVectorD &vpar);
-   virtual Double_t   GetParameter(Int_t ipar) const {return fParams(ipar);}
-   virtual Int_t      GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const;
-   virtual const char *GetParName(Int_t ipar) const;
-   virtual Double_t   GetParError(Int_t ipar) const;
+   Double_t   GetParameter(Int_t ipar) const override {return fParams(ipar);}
+   Int_t      GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const override;
+   const char *GetParName(Int_t ipar) const override;
+   Double_t   GetParError(Int_t ipar) const override;
    virtual Double_t   GetParTValue(Int_t ipar);
    virtual Double_t   GetParSignificance(Int_t ipar);
    virtual void       GetFitSample(TBits& bits);
    virtual Double_t   GetY2() const {return fY2;}
-   virtual Bool_t     IsFixed(Int_t ipar) const {return fFixedParams[ipar];}
+   Bool_t     IsFixed(Int_t ipar) const override {return fFixedParams[ipar];}
    virtual Int_t      Merge(TCollection *list);
-   virtual void       PrintResults(Int_t level, Double_t amin=0) const;
-   virtual void       ReleaseParameter(Int_t ipar);
+   void       PrintResults(Int_t level, Double_t amin=0) const override;
+   void       ReleaseParameter(Int_t ipar) override;
    virtual void       SetBasisFunctions(TObjArray * functions);
    virtual void       SetDim(Int_t n);
    virtual void       SetFormula(const char* formula);
@@ -266,15 +266,15 @@ public:
    virtual Bool_t     UpdateMatrix();
 
    //dummy functions for TVirtualFitter:
-   virtual Double_t  Chisquare(Int_t /*npar*/, Double_t * /*params*/) const {return 0;}
-   virtual Int_t     GetErrors(Int_t /*ipar*/,Double_t & /*eplus*/, Double_t & /*eminus*/, Double_t & /*eparab*/, Double_t & /*globcc*/) const {return 0;}
+   Double_t  Chisquare(Int_t /*npar*/, Double_t * /*params*/) const override {return 0;}
+   Int_t     GetErrors(Int_t /*ipar*/,Double_t & /*eplus*/, Double_t & /*eminus*/, Double_t & /*eparab*/, Double_t & /*globcc*/) const override {return 0;}
 
-   virtual Int_t     GetStats(Double_t& /*amin*/, Double_t& /*edm*/, Double_t& /*errdef*/, Int_t& /*nvpar*/, Int_t& /*nparx*/) const {return 0;}
-   virtual Double_t  GetSumLog(Int_t /*i*/) {return 0;}
-   virtual void      SetFitMethod(const char * /*name*/) {;}
-   virtual Int_t     SetParameter(Int_t /*ipar*/,const char * /*parname*/,Double_t /*value*/,Double_t /*verr*/,Double_t /*vlow*/, Double_t /*vhigh*/) {return 0;}
+   Int_t     GetStats(Double_t& /*amin*/, Double_t& /*edm*/, Double_t& /*errdef*/, Int_t& /*nvpar*/, Int_t& /*nparx*/) const override {return 0;}
+   Double_t  GetSumLog(Int_t /*i*/) override {return 0;}
+   void      SetFitMethod(const char * /*name*/) override {;}
+   Int_t     SetParameter(Int_t /*ipar*/,const char * /*parname*/,Double_t /*value*/,Double_t /*verr*/,Double_t /*vlow*/, Double_t /*vhigh*/) override {return 0;}
 
-   ClassDef(TLinearFitter, 2) //fit a set of data points with a linear combination of functions
+   ClassDefOverride(TLinearFitter, 2) //fit a set of data points with a linear combination of functions
 };
 
 #endif

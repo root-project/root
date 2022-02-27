@@ -34,7 +34,7 @@ public:
    TVector2 (const TVector2&) = default;
    TVector2 (Double_t *s);
    TVector2 (Double_t x0, Double_t y0);
-   virtual ~TVector2();
+   ~TVector2() override;
                                         // ****** unary operators
 
    TVector2&       operator  = (TVector2 const & v);
@@ -103,9 +103,9 @@ public:
    static Double_t Phi_mpi_pi(Double_t x);
 
 
-   void Print(Option_t* option="") const;
+   void Print(Option_t* option="") const override;
 
-   ClassDef(TVector2,3)  // A 2D physics vector
+   ClassDefOverride(TVector2,3)  // A 2D physics vector
 
 };
 

@@ -170,7 +170,7 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~GSLMultiRootSolver ()  {
+   ~GSLMultiRootSolver () override  {
       if (fSolver) gsl_multiroot_fsolver_free(fSolver);
       if (fVec != 0) gsl_vector_free(fVec);
    }
@@ -205,7 +205,7 @@ public:
 
 
    /// set the solver parameters
-   virtual int SetSolver(const std::vector<ROOT::Math::IMultiGenFunction*> & funcVec, const double * x) {
+   int SetSolver(const std::vector<ROOT::Math::IMultiGenFunction*> & funcVec, const double * x) override {
       // create a vector of the fit contributions
       // create function wrapper from an iterator of functions
       assert(fSolver !=0);
@@ -221,29 +221,29 @@ public:
       return gsl_multiroot_fsolver_set(fSolver, fFunctions.GetFunctions(), fVec);
    }
 
-   virtual const std::string & Name() const {
+   const std::string & Name() const override {
       return fName; 
    }
 
-   virtual int Iterate() {
+   int Iterate() override {
       if (fSolver == 0) return -1;
       return gsl_multiroot_fsolver_iterate(fSolver);
    }
 
    /// solution values at the current iteration
-   virtual gsl_vector * GetRoot() const {
+   gsl_vector * GetRoot() const override {
       if (fSolver == 0) return 0;
       return  gsl_multiroot_fsolver_root(fSolver);
    }
 
    /// return function values
-   virtual gsl_vector * GetF() const {
+   gsl_vector * GetF() const override {
       if (fSolver == 0) return 0;
       return  gsl_multiroot_fsolver_f(fSolver);
    }
 
    /// return function steps
-   virtual gsl_vector * GetDx() const {
+   gsl_vector * GetDx() const override {
       if (fSolver == 0) return 0;
       return gsl_multiroot_fsolver_dx(fSolver);
    }
@@ -283,7 +283,7 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~GSLMultiRootDerivSolver ()  {
+   ~GSLMultiRootDerivSolver () override  {
       if (fDerivSolver) gsl_multiroot_fdfsolver_free(fDerivSolver);
       if (fVec != 0) gsl_vector_free(fVec);
    }
@@ -320,7 +320,7 @@ public:
 
 
    /// set the solver parameters for the case of derivative
-   virtual int SetSolver(const std::vector<ROOT::Math::IMultiGenFunction*> & funcVec, const double * x) {
+   int SetSolver(const std::vector<ROOT::Math::IMultiGenFunction*> & funcVec, const double * x) override {
       // create a vector of the fit contributions
       // need to create a vecctor of gradient functions, convert and store in the class
       // the new vector pointer
@@ -345,29 +345,29 @@ public:
       return gsl_multiroot_fdfsolver_set(fDerivSolver, fDerivFunctions.GetFunctions(), fVec);
    }
 
-   virtual const std::string & Name() const {
+   const std::string & Name() const override {
       return fName; 
    }
 
-   virtual int Iterate() {
+   int Iterate() override {
       if (fDerivSolver == 0) return -1;
       return gsl_multiroot_fdfsolver_iterate(fDerivSolver);
    }
 
    /// solution values at the current iteration
-   virtual gsl_vector * GetRoot() const {
+   gsl_vector * GetRoot() const override {
       if (fDerivSolver == 0) return 0;
       return gsl_multiroot_fdfsolver_root(fDerivSolver);
    }
 
    /// return function values
-   virtual gsl_vector * GetF() const {
+   gsl_vector * GetF() const override {
       if (fDerivSolver == 0) return 0;
       return  gsl_multiroot_fdfsolver_f(fDerivSolver);
    }
 
    /// return function steps
-   virtual gsl_vector * GetDx() const {
+   gsl_vector * GetDx() const override {
       if (fDerivSolver == 0) return 0;
       return  gsl_multiroot_fdfsolver_dx(fDerivSolver);
    }

@@ -27,11 +27,11 @@ public:
    {
    }
 
-   ~AnalyticalGradientCalculator() {}
+   ~AnalyticalGradientCalculator() override {}
 
-   virtual FunctionGradient operator()(const MinimumParameters &) const;
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
-   virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const;
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
    virtual bool CheckGradient() const;
 

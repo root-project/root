@@ -21,7 +21,7 @@ public:
    TQuaternion(const TQuaternion &);
    // The copy constructor.
 
-   virtual ~TQuaternion();
+   ~TQuaternion() override;
    // Destructor
 
    Double_t operator () (int) const;
@@ -105,12 +105,12 @@ public:
    void Rotate(TVector3& vect) const;
    TVector3 Rotation(const TVector3& vect) const;
 
-   void Print(Option_t* option="") const;
+   void Print(Option_t* option="") const override;
 
    Double_t fRealPart;          // Real part
    TVector3 fVectorPart; // vector part
 
-   ClassDef(TQuaternion,1) // a quaternion class
+   ClassDefOverride(TQuaternion,1) // a quaternion class
 };
 
 

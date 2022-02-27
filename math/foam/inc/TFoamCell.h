@@ -35,7 +35,7 @@ public:
    TFoamCell();                          // Default Constructor for ROOT streamers
    TFoamCell(Int_t);                     // User Constructor
    TFoamCell(TFoamCell &);               // Copy Constructor
-   virtual ~TFoamCell();                 // Destructor
+   ~TFoamCell() override;                 // Destructor
    void  Fill(Int_t, TFoamCell*, TFoamCell*, TFoamCell*);    // Assigns values of attributes
    TFoamCell&  operator=(const TFoamCell&);       // Substitution operator (never used)
    //--------------- Geometry ----------------------------------
@@ -65,8 +65,8 @@ public:
    void      SetSerial(Int_t Serial){ fSerial=Serial;}    // Set serial number
    Int_t     GetSerial() const { return fSerial;}         // Get serial number
    //--- other ---
-   void Print(Option_t *option) const ;                   // Prints cell content
+   void Print(Option_t *option) const override ;                   // Prints cell content
 
-   ClassDef(TFoamCell,1)  //Single cell of FOAM
+   ClassDefOverride(TFoamCell,1)  //Single cell of FOAM
 };
 #endif

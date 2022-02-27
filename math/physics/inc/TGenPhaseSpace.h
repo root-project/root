@@ -26,7 +26,7 @@ private:
 public:
    TGenPhaseSpace(): fNt(0), fMass(), fBeta(), fTeCmTm(0.), fWtMax(0.) {}
    TGenPhaseSpace(const TGenPhaseSpace &gen);
-   virtual ~TGenPhaseSpace() {}
+   ~TGenPhaseSpace() override {}
    TGenPhaseSpace& operator=(const TGenPhaseSpace &gen);
 
    Bool_t          SetDecay(TLorentzVector &P, Int_t nt, const Double_t *mass, Option_t *opt="");
@@ -36,7 +36,7 @@ public:
    Int_t    GetNt()      const { return fNt;}
    Double_t GetWtMax()   const { return fWtMax;}
 
-   ClassDef(TGenPhaseSpace,1) //Simple Phase Space Generator
+   ClassDefOverride(TGenPhaseSpace,1) //Simple Phase Space Generator
 };
 
 #endif

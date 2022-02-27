@@ -76,7 +76,7 @@ protected:
 public:
    TFoam();                          // Default constructor (used only by ROOT streamer)
    TFoam(const Char_t*);             // Principal user-defined constructor
-   virtual ~TFoam();                 // Default destructor
+   ~TFoam() override;                 // Default destructor
    TFoam(const TFoam&);              // Copy Constructor  NOT USED
    // Initialization
    virtual void Initialize();                // Initialization of the FOAM (grid, cells, etc), mandatory!
@@ -139,7 +139,7 @@ public:
 private:
    Double_t Sqr(Double_t x) const { return x*x;}      // Square function
 
-   ClassDef(TFoam,2);   // General purpose self-adapting Monte Carlo event generator
+   ClassDefOverride(TFoam,2);   // General purpose self-adapting Monte Carlo event generator
 };
 
 #endif

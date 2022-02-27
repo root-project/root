@@ -102,7 +102,7 @@ public :
    /**
       destructor
    */
-   virtual ~BinData();
+   ~BinData() override;
 
    /**
       copy constructors

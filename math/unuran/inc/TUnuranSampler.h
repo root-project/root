@@ -57,13 +57,13 @@ public:
 
 
    /// virtual destructor
-   virtual ~TUnuranSampler();
+   ~TUnuranSampler() override;
 
 
    using DistSampler::SetFunction;
 
    /// Set the parent function distribution to use for random sampling (one dim case).
-   void SetFunction(const ROOT::Math::IGenFunction & func)  {
+   void SetFunction(const ROOT::Math::IGenFunction & func) override  {
       fFunc1D = &func;
       SetFunction<const ROOT::Math::IGenFunction>(func, 1);
    }
@@ -72,36 +72,36 @@ public:
    void SetFunction(TF1 * pdf);
 
    /// set the cumulative distribution function of the PDF used for random sampling (one dim case)
-   void SetCdf(const ROOT::Math::IGenFunction &cdf);
+   void SetCdf(const ROOT::Math::IGenFunction &cdf) override;
 
    /// set the Derivative of the PDF used for random sampling (one dim continuous case)
-   void SetDPdf(const ROOT::Math::IGenFunction &dpdf);
+   void SetDPdf(const ROOT::Math::IGenFunction &dpdf) override;
 
    /**
       initialize the generators with the given algorithm
       If no algorithm is passed used the default one for the type of distribution
    */
-   bool Init(const char * algo ="");
+   bool Init(const char * algo ="") override;
 
 
    /**
       initialize the generators with the given algorithm
       If no algorithm is passed used the default one for the type of distribution
    */
-   bool Init(const ROOT::Math::DistSamplerOptions & opt );
+   bool Init(const ROOT::Math::DistSamplerOptions & opt ) override;
 
    /**
        Set the random engine to be used
        Needs to be called before Init to have effect
    */
-   void SetRandom(TRandom * r);
+   void SetRandom(TRandom * r) override;
 
    /**
        Set the random seed for the TRandom instances used by the sampler
        classes
        Needs to be called before Init to have effect
    */
-   void SetSeed(unsigned int seed);
+   void SetSeed(unsigned int seed) override;
 
    /**
       Set the print level
@@ -112,7 +112,7 @@ public:
    /*
       set the mode (1D distribution)
     */
-   void SetMode(double mode) {
+   void SetMode(double mode) override {
       fMode = mode;
       fHasMode = true;
    }
@@ -120,30 +120,30 @@ public:
    /*
       set the mode (Multidim distribution)
    */
-   void SetMode(const std::vector<double> &modes);
+   void SetMode(const std::vector<double> &modes) override;
 
 
    /*
      set the area
     */
-   void SetArea(double area) {
+   void SetArea(double area) override {
       fArea = area;
       fHasArea = true;
    }
 
    /// Set using of logarithm of PDF (only for 1D continuous case)
-   void SetUseLogPdf(bool on = true) { fUseLogPdf = on; }
+   void SetUseLogPdf(bool on = true) override { fUseLogPdf = on; }
 
    /**
       Get the random engine used by the sampler
     */
-   TRandom * GetRandom();
+   TRandom * GetRandom() override;
 
    /**
       sample one event in one dimension
       better implementation could be provided by the derived classes
    */
-   double Sample1D();//  {
+   double Sample1D() override;//  {
 //       return fUnuran->Sample();
 //    }
 
@@ -151,7 +151,7 @@ public:
       sample one event in multi-dimension by filling the given array
       return false if sampling failed
    */
-   bool Sample(double * x);
+   bool Sample(double * x) override;
 //  {
 //       if (!fOneDim) return fUnuran->SampleMulti(x);
 //       x[0] = Sample1D();
@@ -164,7 +164,7 @@ public:
       divided by the bin width)
       By default do not do random sample, just return the function values
     */
-   bool SampleBin(double prob, double & value, double *error = 0);
+   bool SampleBin(double prob, double & value, double *error = 0) override;
 
 
 
