@@ -149,7 +149,7 @@ public:
    /**
      Destructor
    */
-   virtual ~VavilovAccurate();
+   ~VavilovAccurate() override;
 
 
 public:
@@ -159,7 +159,7 @@ public:
 
        @param x The Landau parameter \f$x = \lambda_L\f$
    */
-   double Pdf (double x) const;
+   double Pdf (double x) const override;
 
    /**
        Evaluate the Vavilov probability density function,
@@ -169,14 +169,14 @@ public:
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
-   double Pdf (double x, double kappa, double beta2);
+   double Pdf (double x, double kappa, double beta2) override;
 
    /**
        Evaluate the Vavilov cumulative probability density function
 
        @param x The Landau parameter \f$x = \lambda_L\f$
    */
-   double Cdf (double x) const;
+   double Cdf (double x) const override;
 
    /**
        Evaluate the Vavilov cumulative probability density function,
@@ -186,14 +186,14 @@ public:
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
-   double Cdf (double x, double kappa, double beta2);
+   double Cdf (double x, double kappa, double beta2) override;
 
    /**
        Evaluate the Vavilov complementary cumulative probability density function
 
        @param x The Landau parameter \f$x = \lambda_L\f$
    */
-   double Cdf_c (double x) const;
+   double Cdf_c (double x) const override;
 
    /**
        Evaluate the Vavilov complementary cumulative probability density function,
@@ -203,14 +203,14 @@ public:
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
-   double Cdf_c (double x, double kappa, double beta2);
+   double Cdf_c (double x, double kappa, double beta2) override;
 
    /**
        Evaluate the inverse of the Vavilov cumulative probability density function
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
    */
-   double Quantile (double z) const;
+   double Quantile (double z) const override;
 
    /**
        Evaluate the inverse of the Vavilov cumulative probability density function,
@@ -220,14 +220,14 @@ public:
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
-   double Quantile (double z, double kappa, double beta2);
+   double Quantile (double z, double kappa, double beta2) override;
 
    /**
        Evaluate the inverse of the complementary Vavilov cumulative probability density function
 
        @param z The argument \f$z\f$, which must be in the range \f$0 \le z \le 1\f$
    */
-   double Quantile_c (double z) const;
+   double Quantile_c (double z) const override;
 
    /**
        Evaluate the inverse of the complementary Vavilov cumulative probability density function,
@@ -237,7 +237,7 @@ public:
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
-   double Quantile_c (double z, double kappa, double beta2);
+   double Quantile_c (double z, double kappa, double beta2) override;
 
    /**
       Change \f$\kappa\f$ and \f$\beta^2\f$ and recalculate coefficients if necessary
@@ -245,7 +245,7 @@ public:
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
-   virtual void SetKappaBeta2 (double kappa, double beta2);
+   void SetKappaBeta2 (double kappa, double beta2) override;
 
 
    /**
@@ -265,28 +265,28 @@ public:
       Return the minimum value of \f$\lambda\f$ for which \f$p(\lambda; \kappa, \beta^2)\f$
       is nonzero in the current approximation
    */
-   virtual double GetLambdaMin() const;
+   double GetLambdaMin() const override;
 
    /**
       Return the maximum value of \f$\lambda\f$ for which \f$p(\lambda; \kappa, \beta^2)\f$
       is nonzero in the current approximation
    */
-   virtual double GetLambdaMax() const;
+   double GetLambdaMax() const override;
 
    /**
       Return the current value of \f$\kappa\f$
    */
-   virtual double GetKappa()     const;
+   double GetKappa()     const override;
 
    /**
       Return the current value of \f$\beta^2\f$
    */
-   virtual double GetBeta2()     const;
+   double GetBeta2()     const override;
 
    /**
       Return the value of \f$\lambda\f$ where the pdf is maximal
    */
-   virtual double Mode() const;
+   double Mode() const override;
 
    /**
       Return the value of \f$\lambda\f$ where the pdf is maximal function,
@@ -295,7 +295,7 @@ public:
        @param kappa The parameter \f$\kappa\f$, which must be in the range \f$\kappa \ge 0.001 \f$
        @param beta2 The parameter \f$\beta^2\f$, which must be in the range \f$0 \le \beta^2 \le 1 \f$
    */
-   virtual double Mode(double kappa, double beta2);
+   double Mode(double kappa, double beta2) override;
 
    /**
       Return the current value of \f$\epsilon^+ = \epsilon^-\f$

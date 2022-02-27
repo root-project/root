@@ -78,27 +78,27 @@ namespace Math {
       BrentMinimizer1D();
 
       /** Default Destructor. */
-      virtual ~BrentMinimizer1D() {}
+      ~BrentMinimizer1D() override {}
 
    public:
 
       /** Return current estimate of the position of the minimum. */
-      virtual double XMinimum() const {   return fXMinimum;  }
+      double XMinimum() const override {   return fXMinimum;  }
 
       /** Return current lower bound of the minimization interval. */
-      virtual double XLower() const {   return fXMin;  }
+      double XLower() const override {   return fXMin;  }
 
       /** Return current upper bound of the minimization interval. */
-      virtual double XUpper() const {   return fXMax;  }
+      double XUpper() const override {   return fXMax;  }
 
       /** Return function value at current estimate of the minimum. */
-      virtual double FValMinimum() const;
+      double FValMinimum() const override;
 
       /** Return function value at current lower bound of the minimization interval. */
-      virtual double FValLower() const;
+      double FValLower() const override;
 
       /** Return function value at current upper bound of the minimization interval. */
-      virtual double FValUpper() const;
+      double FValUpper() const override;
 
       /** Find minimum position iterating until convergence specified by the absolute and relative tolerance or
           the maximum number of iteration is reached.
@@ -107,13 +107,13 @@ namespace Math {
           \@param absTol desired absolute error in the minimum position (default 1.E-8)
           \@param absTol desired relative error in the minimum position (default = 1.E-10)
       */
-      virtual bool Minimize( int maxIter, double absTol = 1.E-8, double relTol = 1.E-10);
+      bool Minimize( int maxIter, double absTol = 1.E-8, double relTol = 1.E-10) override;
 
       /** Return number of iteration used to find minimum */
-      virtual int Iterations() const { return fNIter; }
+      int Iterations() const override { return fNIter; }
 
       /** Return name of minimization algorithm ("BrentMinimizer1D") */
-      virtual const char * Name() const;
+      const char * Name() const override;
 
       /** Sets function to be minimized.
 
@@ -134,7 +134,7 @@ namespace Math {
 
 
       /** Returns status of last estimate. If = 0 is OK */
-      int Status() const { return fStatus; }
+      int Status() const override { return fStatus; }
 
       // static function used to modify the default parameters
 

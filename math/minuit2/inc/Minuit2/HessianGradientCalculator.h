@@ -35,11 +35,11 @@ public:
    {
    }
 
-   virtual ~HessianGradientCalculator() {}
+   ~HessianGradientCalculator() override {}
 
-   virtual FunctionGradient operator()(const MinimumParameters &) const;
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
-   virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const;
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
    std::pair<FunctionGradient, MnAlgebraicVector>
    DeltaGradient(const MinimumParameters &, const FunctionGradient &) const;

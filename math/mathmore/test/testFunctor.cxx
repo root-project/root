@@ -108,16 +108,16 @@ class DerivFunction : public ROOT::Math::IMultiGenFunction {
 public:
 
 
-   unsigned int NDim() const { return 2; }
+   unsigned int NDim() const override { return 2; }
 
-   DerivFunction *  Clone() const {
+   DerivFunction *  Clone() const override {
       return new DerivFunction();
    }
 
 private:
 
 
-   double DoEval(const double *x) const {
+   double DoEval(const double *x) const override {
       return FUNC;
    }
 
@@ -128,14 +128,14 @@ class DerivFunction1D : public ROOT::Math::IGenFunction {
 
 public:
 
-   DerivFunction1D *  Clone() const {
+   DerivFunction1D *  Clone() const override {
       return new DerivFunction1D();
    }
 
 private:
 
 
-   double DoEval(double x) const {
+   double DoEval(double x) const override {
       return FUNC1D;
    }
 

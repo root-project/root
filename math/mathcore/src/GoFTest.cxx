@@ -44,7 +44,7 @@ namespace Math {
       const IGenFunction* fCDF; // cdf pointer (owned by the class)
 
 
-      virtual ~CDFWrapper() { if (fCDF) delete fCDF; }
+      ~CDFWrapper() override { if (fCDF) delete fCDF; }
 
       CDFWrapper(const IGenFunction& cdf, Double_t xmin=0, Double_t xmax=-1) :
          fCDF(cdf.Clone())
@@ -61,13 +61,13 @@ namespace Math {
          }
       }
 
-      Double_t DoEval(Double_t x) const {
+      Double_t DoEval(Double_t x) const override {
          if (x <= fXmin) return 0;
          if (x >= fXmax) return 1.0;
          return (*fCDF)(x)/fNorm;
       }
 
-      IGenFunction* Clone() const {
+      IGenFunction* Clone() const override {
          return new CDFWrapper(*fCDF,fXmin,fXmax);
       }
    };
@@ -81,7 +81,7 @@ namespace Math {
       const IGenFunction* fPDF; // pdf pointer (owned by the class)
    public:
 
-      virtual ~PDFIntegral() { if (fPDF) delete fPDF; }
+      ~PDFIntegral() override { if (fPDF) delete fPDF; }
 
       PDFIntegral(const IGenFunction& pdf, Double_t xmin = 0, Double_t xmax = -1) :
          fXmin(xmin),
@@ -106,7 +106,7 @@ namespace Math {
             fNorm = fIntegral.Integral(fXmin, fXmax);
       }
 
-      Double_t DoEval(Double_t x) const {
+      Double_t DoEval(Double_t x) const override {
          if (x <= fXmin) return 0;
          if (x >= fXmax) return 1.0;
          if (fXmin == -std::numeric_limits<double>::infinity() )
@@ -115,7 +115,7 @@ namespace Math {
             return fIntegral.Integral(fXmin,x)/fNorm;
       }
 
-      IGenFunction* Clone() const {
+      IGenFunction* Clone() const override {
          return new PDFIntegral(*fPDF, fXmin, fXmax);
       }
    };

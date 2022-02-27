@@ -90,27 +90,27 @@ public:
 //    {}
 
    /// clone the function
-   IMultiGenFunction * Clone() const {
+   IMultiGenFunction * Clone() const override {
       return new WrappedParamFunction(fFunc, fDim, fParams.begin(), fParams.end());
    }
 
-   const double * Parameters() const {
+   const double * Parameters() const override {
       return fParams.empty() ? nullptr : &fParams.front();
    }
 
-   void SetParameters(const double * p)  {
+   void SetParameters(const double * p) override  {
       std::copy(p, p+NPar(), fParams.begin() );
    }
 
-   unsigned int NPar() const { return fParams.size(); }
+   unsigned int NPar() const override { return fParams.size(); }
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
 
 private:
 
    /// evaluate the function given values and parameters (requested interface)
-   double DoEvalPar(const double * x, const double * p) const {
+   double DoEvalPar(const double * x, const double * p) const override {
       return (*fFunc)( x, p );
    }
 
@@ -171,7 +171,7 @@ public:
    }
 
    /// clone the function
-   IMultiGenFunction * Clone() const {
+   IMultiGenFunction * Clone() const override {
       return new WrappedParamFunctionGen(fFunc, fDim, fParams.size(), fParams.empty() ? nullptr : &fParams.front(), fParIndices.empty() ? nullptr : &fParIndices.front());
    }
 
@@ -182,19 +182,19 @@ private:
 
 public:
 
-   const double * Parameters() const {
+   const double * Parameters() const override {
       return fParams.empty() ? nullptr : &fParams.front();
    }
 
-   void SetParameters(const double * p)  {
+   void SetParameters(const double * p) override  {
       unsigned int npar = NPar();
       std::copy(p, p+ npar, fParams.begin() );
       SetParValues(npar, p);
    }
 
-   unsigned int NPar() const { return fParams.size(); }
+   unsigned int NPar() const override { return fParams.size(); }
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
 //    // re-implement this since is more efficient
 //    double operator() (const double * x, const double * p) {
@@ -207,7 +207,7 @@ public:
 private:
 
    /// evaluate the function (re-implement for being more efficient)
-   double DoEval(const double * x) const {
+   double DoEval(const double * x) const override {
 
 //       std::cout << this << fDim << " x : ";
 //       std::ostream_iterator<double> oix(std::cout," ,  ");
@@ -234,7 +234,7 @@ private:
    /**
        implement the required IParamFunction interface
    */
-   double DoEvalPar(const double * x, const double * p ) const {
+   double DoEvalPar(const double * x, const double * p ) const override {
       SetParValues(NPar(), p);
       return DoEval(x);
    }

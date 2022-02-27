@@ -48,13 +48,13 @@ public:
 
    FumiliFCNAdapter(const Function &f, unsigned int ndim, double up = 1.) : FumiliFCNBase(ndim), fFunc(f), fUp(up) {}
 
-   ~FumiliFCNAdapter() {}
+   ~FumiliFCNAdapter() override {}
 
-   double operator()(const std::vector<double> &v) const { return fFunc.operator()(&v[0]); }
+   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
-   double Up() const { return fUp; }
+   double Up() const override { return fUp; }
 
-   void SetErrorDef(double up) { fUp = up; }
+   void SetErrorDef(double up) override { fUp = up; }
 
    // virtual std::vector<double> Gradient(const std::vector<double>&) const;
 
@@ -64,7 +64,7 @@ public:
    /**
        evaluate gradient hessian and function value needed by fumili
      */
-   void EvaluateAll(const std::vector<double> &v);
+   void EvaluateAll(const std::vector<double> &v) override;
 
 private:
    // data member

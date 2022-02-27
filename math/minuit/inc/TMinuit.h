@@ -181,9 +181,9 @@ public:
 public:
    TMinuit();
    TMinuit(Int_t maxpar);
-   virtual       ~TMinuit();
+         ~TMinuit() override;
    virtual void   BuildArrays(Int_t maxpar=15);
-   virtual TObject *Clone(const char *newname="") const;   //Clone-Method to copy the function-pointer fFCN
+   TObject *Clone(const char *newname="") const override;   //Clone-Method to copy the function-pointer fFCN
    virtual Int_t  Command(const char *command);
    virtual TObject *Contour(Int_t npoints=10, Int_t pa1=0, Int_t pa2=1);
    virtual Int_t  DefineParameter( Int_t parNo, const char *name, Double_t initVal, Double_t initErr, Double_t lowerLimit, Double_t upperLimit );
@@ -265,7 +265,7 @@ public:
    virtual void   SetObjectFit(TObject *obj) {fObjectFit=obj;}
    virtual Int_t  SetPrintLevel( Int_t printLevel=0 );
 
-   ClassDef(TMinuit,1)  //The MINUIT minimisation package
+   ClassDefOverride(TMinuit,1)  //The MINUIT minimisation package
 };
 
 R__EXTERN TMinuit  *gMinuit;

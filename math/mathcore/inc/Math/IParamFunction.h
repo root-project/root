@@ -197,7 +197,7 @@ namespace ROOT {
          /**
             Implement the ROOT::Math::IBaseFunctionOneDim interface DoEval(x) using the cached parameter values
          */
-         virtual double DoEval(double x) const
+         double DoEval(double x) const override
          {
             return DoEvalPar(x, Parameters());
          }
@@ -232,7 +232,7 @@ namespace ROOT {
          /**
             Virtual Destructor (no operations)
          */
-         virtual ~IParametricGradFunctionMultiDimTempl()  {}
+         ~IParametricGradFunctionMultiDimTempl() override  {}
 
 
          /* Reimplementation instead of using BaseParamFunc::operator();
@@ -284,8 +284,8 @@ namespace ROOT {
             Evaluate the partial derivative w.r.t a parameter ipar , to be implemented by the derived classes
           */
          virtual T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const = 0;
-         virtual T DoEvalPar(const T *x, const double *p) const = 0;
-         virtual T DoEval(const T *x) const
+         virtual T DoEvalPar(const T *x, const double *p) const override = 0;
+         virtual T DoEval(const T *x) const override
          {
             return DoEvalPar(x, Parameters());
          }
@@ -320,7 +320,7 @@ namespace ROOT {
          /**
             Virtual Destructor (no operations)
          */
-         virtual ~IParametricGradFunctionOneDim()  {}
+         ~IParametricGradFunctionOneDim() override  {}
 
 
          using BaseParamFunc::operator();

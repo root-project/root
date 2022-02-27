@@ -42,7 +42,7 @@ class FumiliBuilder : public MinimumBuilder {
 public:
    FumiliBuilder() : fEstimator(VariableMetricEDMEstimator()), fErrorUpdator(FumiliErrorUpdator()) {}
 
-   ~FumiliBuilder() {}
+   ~FumiliBuilder() override {}
 
    /**
 
@@ -71,9 +71,9 @@ public:
 
    */
 
-   virtual FunctionMinimum Minimum(const MnFcn &fMnFcn, const GradientCalculator &fGradienCalculator,
+   FunctionMinimum Minimum(const MnFcn &fMnFcn, const GradientCalculator &fGradienCalculator,
                                    const MinimumSeed &fMinimumSeed, const MnStrategy &fMnStrategy, unsigned int maxfcn,
-                                   double edmval) const;
+                                   double edmval) const override;
 
    /**
 

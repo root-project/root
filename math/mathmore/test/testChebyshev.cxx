@@ -33,13 +33,13 @@ class GammaFunction : public ROOT::Math::IGenFunction {
 public:
 
 
-  ROOT::Math::IGenFunction * Clone() const {
+  ROOT::Math::IGenFunction * Clone() const override {
     return new GammaFunction();
   }
 
 private:
 
-  double DoEval ( double x) const {
+  double DoEval ( double x) const override {
     return ROOT::Math::tgamma(x);
   }
 

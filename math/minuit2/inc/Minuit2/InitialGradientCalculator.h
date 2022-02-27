@@ -30,11 +30,11 @@ public:
    InitialGradientCalculator(const MnFcn &fcn, const MnUserTransformation &par, const MnStrategy &stra)
       : fFcn(fcn), fTransformation(par), fStrategy(stra){};
 
-   virtual ~InitialGradientCalculator() {}
+   ~InitialGradientCalculator() override {}
 
-   virtual FunctionGradient operator()(const MinimumParameters &) const;
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
-   virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const;
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
    const MnFcn &Fcn() const { return fFcn; }
    const MnUserTransformation &Trafo() const { return fTransformation; }

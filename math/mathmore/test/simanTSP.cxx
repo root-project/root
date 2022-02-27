@@ -115,18 +115,18 @@ public:
    }
 
 
-   virtual ~MySimAnFunc() {}
+   ~MySimAnFunc() override {}
 
    unsigned int Route(unsigned int i) const { return fRoute[i]; }
 
    const unsigned int * Route()  const { return fRoute; }
    unsigned int * Route()   { return fRoute; }
 
-   virtual MySimAnFunc * Clone() const { return new MySimAnFunc(*this); }
+   MySimAnFunc * Clone() const override { return new MySimAnFunc(*this); }
 
    std::vector<double> & AllDist() { return *fDist; }
 
-   virtual double Energy() const {
+   double Energy() const override {
       // calculate the energy
 
 
@@ -141,7 +141,7 @@ public:
       return enrg;
    }
 
-   virtual double Distance(const GSLSimAnFunc & f) const {
+   double Distance(const GSLSimAnFunc & f) const override {
       const MySimAnFunc * f2 = dynamic_cast<const MySimAnFunc *> (&f);
       assert (f2 != 0);
       double d = 0;
@@ -151,7 +151,7 @@ public:
       }
       return d;
    }
-   virtual void Step(const GSLRandomEngine & r, double ) {
+   void Step(const GSLRandomEngine & r, double ) override {
       // swap to city in the matrix
       int x1, x2, dummy;
 
@@ -171,7 +171,7 @@ public:
 
    }
 
-   virtual void Print() {
+   void Print() override {
       printf("  [");
       for (unsigned i = 0; i < N_CITIES; ++i) {
          printf(" %d ", fRoute[i]);
@@ -181,7 +181,7 @@ public:
    }
 
    // fast copy (need to keep base class type for using virtuality
-   virtual MySimAnFunc & FastCopy(const GSLSimAnFunc & f) {
+   MySimAnFunc & FastCopy(const GSLSimAnFunc & f) override {
       const MySimAnFunc * rhs = dynamic_cast<const MySimAnFunc *>(&f);
       assert (rhs != 0);
       std::copy(rhs->fRoute, rhs->fRoute + N_CITIES, fRoute);
