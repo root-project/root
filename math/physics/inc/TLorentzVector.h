@@ -58,7 +58,7 @@ public:
    TLorentzVector(const TLorentzVector & lorentzvector);
    // Copy constructor.
 
-   virtual ~TLorentzVector(){};
+   ~TLorentzVector() override{};
    // Destructor
 
    // inline operator TVector3 () const;
@@ -257,9 +257,9 @@ public:
    TLorentzVector & Transform(const TLorentzRotation &);
    // Transformation with HepLorenzRotation.
 
-   virtual void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="") const override;
 
-   ClassDef(TLorentzVector,4) // A four vector with (-,-,-,+) metric
+   ClassDefOverride(TLorentzVector,4) // A four vector with (-,-,-,+) metric
 };
 
 

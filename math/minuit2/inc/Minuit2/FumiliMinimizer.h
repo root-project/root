@@ -60,7 +60,7 @@ public:
 
    FumiliMinimizer() : fMinSeedGen(MnSeedGenerator()), fMinBuilder(FumiliBuilder()) {}
 
-   ~FumiliMinimizer() {}
+   ~FumiliMinimizer() override {}
 
    /**
 
@@ -70,7 +70,7 @@ public:
 
    */
 
-   const MinimumSeedGenerator &SeedGenerator() const { return fMinSeedGen; }
+   const MinimumSeedGenerator &SeedGenerator() const override { return fMinSeedGen; }
 
    /**
 
@@ -80,73 +80,73 @@ public:
 
    */
 
-   const FumiliBuilder &Builder() const { return fMinBuilder; }
-   FumiliBuilder &Builder() { return fMinBuilder; }
+   const FumiliBuilder &Builder() const override { return fMinBuilder; }
+   FumiliBuilder &Builder() override { return fMinBuilder; }
 
    // for Fumili
 
    FunctionMinimum Minimize(const FCNBase &, const MnUserParameterState &, const MnStrategy &, unsigned int maxfcn = 0,
-                            double toler = 0.1) const;
+                            double toler = 0.1) const override;
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameterState &, const MnStrategy &,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const;
+   FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameterState &, const MnStrategy &,
+                                    unsigned int maxfcn = 0, double toler = 0.1) const override;
 
    // need to re-implement all function in ModularFuncitionMinimizer otherwise they will be hided
 
-   virtual FunctionMinimum Minimize(const FCNBase &fcn, const std::vector<double> &par, const std::vector<double> &err,
-                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const
+   FunctionMinimum Minimize(const FCNBase &fcn, const std::vector<double> &par, const std::vector<double> &err,
+                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override
    {
       return ModularFunctionMinimizer::Minimize(fcn, par, err, stra, maxfcn, toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &fcn, const std::vector<double> &par,
+   FunctionMinimum Minimize(const FCNGradientBase &fcn, const std::vector<double> &par,
                                     const std::vector<double> &err, unsigned int stra = 1, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const
+                                    double toler = 0.1) const override
    {
       return ModularFunctionMinimizer::Minimize(fcn, par, err, stra, maxfcn, toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNBase &fcn, const std::vector<double> &par, unsigned int nrow,
+   FunctionMinimum Minimize(const FCNBase &fcn, const std::vector<double> &par, unsigned int nrow,
                                     const std::vector<double> &cov, unsigned int stra = 1, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const
+                                    double toler = 0.1) const override
    {
       return ModularFunctionMinimizer::Minimize(fcn, par, nrow, cov, stra, maxfcn, toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &fcn, const std::vector<double> &par, unsigned int nrow,
+   FunctionMinimum Minimize(const FCNGradientBase &fcn, const std::vector<double> &par, unsigned int nrow,
                                     const std::vector<double> &cov, unsigned int stra = 1, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const
+                                    double toler = 0.1) const override
    {
       return ModularFunctionMinimizer::Minimize(fcn, par, nrow, cov, stra, maxfcn, toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNBase &fcn, const MnUserParameters &par, const MnStrategy &stra,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const
+   FunctionMinimum Minimize(const FCNBase &fcn, const MnUserParameters &par, const MnStrategy &stra,
+                                    unsigned int maxfcn = 0, double toler = 0.1) const override
    {
       return ModularFunctionMinimizer::Minimize(fcn, par, stra, maxfcn, toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &fcn, const MnUserParameters &par, const MnStrategy &stra,
-                                    unsigned int maxfcn = 0, double toler = 0.1) const
+   FunctionMinimum Minimize(const FCNGradientBase &fcn, const MnUserParameters &par, const MnStrategy &stra,
+                                    unsigned int maxfcn = 0, double toler = 0.1) const override
    {
       return ModularFunctionMinimizer::Minimize(fcn, par, stra, maxfcn, toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov,
-                                    const MnStrategy &stra, unsigned int maxfcn = 0, double toler = 0.1) const
+   FunctionMinimum Minimize(const FCNBase &fcn, const MnUserParameters &par, const MnUserCovariance &cov,
+                                    const MnStrategy &stra, unsigned int maxfcn = 0, double toler = 0.1) const override
    {
       return ModularFunctionMinimizer::Minimize(fcn, par, cov, stra, maxfcn, toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &fcn, const MnUserParameters &par,
+   FunctionMinimum Minimize(const FCNGradientBase &fcn, const MnUserParameters &par,
                                     const MnUserCovariance &cov, const MnStrategy &stra, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const
+                                    double toler = 0.1) const override
    {
       return ModularFunctionMinimizer::Minimize(fcn, par, cov, stra, maxfcn, toler);
    }
 
-   virtual FunctionMinimum Minimize(const MnFcn &mfcn, const GradientCalculator &gc, const MinimumSeed &seed,
-                                    const MnStrategy &stra, unsigned int maxfcn, double toler) const
+   FunctionMinimum Minimize(const MnFcn &mfcn, const GradientCalculator &gc, const MinimumSeed &seed,
+                                    const MnStrategy &stra, unsigned int maxfcn, double toler) const override
    {
       return ModularFunctionMinimizer::Minimize(mfcn, gc, seed, stra, maxfcn, toler);
    }

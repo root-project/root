@@ -117,7 +117,7 @@ public:
       TVectorD &ixlow,TVectorD &ixupp,TVectorD &iclow,TVectorD &icupp);
    TQpVar(const TQpVar &another);
 
-   virtual ~TQpVar() {}
+   ~TQpVar() override {}
 
    // Indicates what type is the blocking variable in the step length determination. If kt_block,
    // then the blocking variable is one of the slack variables t for a general lower bound,
@@ -180,13 +180,13 @@ public:
                                                // sanity check.
    virtual Double_t Violation    ();           // The amount by which the current variables violate the
                                                //  non-negativity constraints.
-   virtual void     Print        (Option_t *option="") const;
+   void     Print        (Option_t *option="") const override;
    virtual Double_t Norm1        ();           // compute the 1-norm of the variables
    virtual Double_t NormInf      ();           // compute the inf-norm of the variables
    virtual Bool_t   ValidNonZeroPattern();
 
    TQpVar &operator= (const TQpVar &source);
 
-   ClassDef(TQpVar,1)                          // Qp Variables class
+   ClassDefOverride(TQpVar,1)                          // Qp Variables class
 };
 #endif

@@ -126,10 +126,10 @@ public:
 
    FoamIntegrandFunction(FunctionPtr func) : fFunc(func) {}
 
-   virtual ~FoamIntegrandFunction() {}
+   ~FoamIntegrandFunction() override {}
 
    // evaluate the density using the provided function pointer
-   Double_t Density (Int_t nDim, Double_t * x) {
+   Double_t Density (Int_t nDim, Double_t * x) override {
       return fFunc(nDim,x);
    }
 

@@ -119,7 +119,7 @@ public:
       }
    }
 
-   ~FumiliStandardChi2FCN() {}
+   ~FumiliStandardChi2FCN() override {}
 
    /**
 
@@ -138,7 +138,7 @@ public:
 
    */
 
-   std::vector<double> Elements(const std::vector<double> &par) const;
+   std::vector<double> Elements(const std::vector<double> &par) const override;
 
    /**
 
@@ -150,7 +150,7 @@ public:
 
    */
 
-   virtual const std::vector<double> &GetMeasurement(int Index) const;
+   const std::vector<double> &GetMeasurement(int Index) const override;
 
    /**
 
@@ -161,7 +161,7 @@ public:
 
    */
 
-   virtual int GetNumberOfMeasurements() const;
+   int GetNumberOfMeasurements() const override;
 
    /**
 
@@ -173,7 +173,7 @@ public:
 
    **/
 
-   virtual void EvaluateAll(const std::vector<double> &par);
+   void EvaluateAll(const std::vector<double> &par) override;
 
 private:
    std::vector<double> fMeasurements;

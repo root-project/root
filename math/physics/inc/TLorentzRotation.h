@@ -134,7 +134,7 @@ protected:
                     Double_t, Double_t, Double_t, Double_t);
    // Protected constructor.
 
-   ClassDef(TLorentzRotation,1) // Lorentz transformations including boosts and rotations
+   ClassDefOverride(TLorentzRotation,1) // Lorentz transformations including boosts and rotations
 
 };
 

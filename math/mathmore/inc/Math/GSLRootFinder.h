@@ -74,7 +74,7 @@ namespace Math {
 
  public:
     GSLRootFinder();
-    virtual ~GSLRootFinder();
+    ~GSLRootFinder() override;
 
  private:
     // usually copying is non trivial, so we make this unaccessible
@@ -85,13 +85,13 @@ namespace Math {
 
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
-    bool SetFunction( const IGradFunction & , double ) {
+    bool SetFunction( const IGradFunction & , double ) override {
        std::cerr <<"GSLRootFinder - Error : this method must be used with a Root Finder algorithm using derivatives" << std::endl;
        return false;
     }
 #endif
 
-    bool SetFunction( const IGenFunction & f, double xlow, double xup);
+    bool SetFunction( const IGenFunction & f, double xlow, double xup) override;
 
     typedef double ( * GSLFuncPointer ) ( double, void *);
     bool SetFunction( GSLFuncPointer  f, void * params, double xlow, double xup);
@@ -99,26 +99,26 @@ namespace Math {
     using IRootFinderMethod::SetFunction;
 
     // iterate to find ROOTS return GSL_CONTINUE if iteration was successful or another error
-    int Iterate();
+    int Iterate() override;
 
-    double Root() const;
+    double Root() const override;
 
     //double XLower() const;
 
     //double XUpper() const;
 
     /// Find the root
-    bool Solve( int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
+    bool Solve( int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10) override;
 
     /// Return number of iterations
-    int Iterations() const {
+    int Iterations() const override {
        return fIter;
     }
 
     /// Return the status of last root finding
-    int Status() const { return fStatus; }
+    int Status() const override { return fStatus; }
 
-    const char * Name() const;
+    const char * Name() const override;
 
 
  protected:

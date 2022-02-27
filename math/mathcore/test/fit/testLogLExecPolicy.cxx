@@ -34,7 +34,7 @@ public:
 
    }
 
-   virtual T DoEvalPar(const T *data, const Double_t *p) const
+   T DoEvalPar(const T *data, const Double_t *p) const override
    {
 
       if (data == nullptr) {
@@ -77,17 +77,17 @@ public:
       return f1 + f2;
    }
 
-      virtual ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const {
+      ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const override {
          return new Func<T>(*this); 
       }
-      virtual unsigned int NDim() const { return 1; }
-      virtual unsigned int NPar() const {
+      unsigned int NDim() const override { return 1; }
+      unsigned int NPar() const override {
          return paramSize;
       }
-      virtual const double * Parameters() const {
+      const double * Parameters() const override {
          return params.data(); 
       }
-      virtual void SetParameters(const double * p) {
+      void SetParameters(const double * p) override {
          std::copy(p, p+paramSize, params.begin() );
          ComputeIntegrals(p);
       }

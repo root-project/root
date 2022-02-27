@@ -41,7 +41,7 @@ public:
       fNetwork(&net), fAnalysisTree(0), fIOTree(0) {}
    TMLPAnalyzer(TMultiLayerPerceptron* net):
       fNetwork(net), fAnalysisTree(0), fIOTree(0) {}
-   virtual ~TMLPAnalyzer();
+   ~TMLPAnalyzer() override;
    void DrawNetwork(Int_t neuron, const char* signal, const char* bg);
    void DrawDInput(Int_t i);
    void DrawDInputs();
@@ -55,7 +55,7 @@ public:
    void GatherInformations();
    TTree* GetIOTree() const { return fIOTree;}
 
-   ClassDef(TMLPAnalyzer, 0) // A simple analysis class for MLP
+   ClassDefOverride(TMLPAnalyzer, 0) // A simple analysis class for MLP
 };
 
 #endif

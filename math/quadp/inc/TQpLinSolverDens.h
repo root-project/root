@@ -70,15 +70,15 @@ public:
    TQpLinSolverDens(TQpProbDens *factory,TQpDataDens *data);
    TQpLinSolverDens(const TQpLinSolverDens &another);
 
-   virtual ~TQpLinSolverDens() {}
+   ~TQpLinSolverDens() override {}
 
-   virtual void Factor         (TQpDataBase *prob,TQpVar *vars);
-   virtual void SolveCompressed(TVectorD &rhs);
-   virtual void PutXDiagonal   (TVectorD &xdiag);
-   virtual void PutZDiagonal   (TVectorD &zdiag);
+   void Factor         (TQpDataBase *prob,TQpVar *vars) override;
+   void SolveCompressed(TVectorD &rhs) override;
+   void PutXDiagonal   (TVectorD &xdiag) override;
+   void PutZDiagonal   (TVectorD &zdiag) override;
 
    TQpLinSolverDens &operator= (const TQpLinSolverDens &source);
 
-   ClassDef(TQpLinSolverDens,1)                // Qp linear solver class for Dens formulation
+   ClassDefOverride(TQpLinSolverDens,1)                // Qp linear solver class for Dens formulation
 };
 #endif

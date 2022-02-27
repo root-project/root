@@ -92,18 +92,18 @@ public:
       return *this;
    }
 
-   IMultiGenFunction * Clone() const {
+   IMultiGenFunction * Clone() const override {
       return new LSResidualFunc(*fChi2,fIndex);
    }
 
-   unsigned int NDim() const { return fChi2->NDim(); }
+   unsigned int NDim() const override { return fChi2->NDim(); }
 
-   void Gradient( const double * x, double * g) const {
+   void Gradient( const double * x, double * g) const override {
       double f0 = 0;
       FdF(x,f0,g);
    }
 
-   void FdF (const double * x, double & f, double * g) const {
+   void FdF (const double * x, double & f, double * g) const override {
       unsigned int n = NDim();
       std::copy(x,x+n,fX2.begin());
       const double kEps = 1.0E-4;
@@ -118,11 +118,11 @@ public:
 
 private:
 
-   double DoEval (const double * x) const {
+   double DoEval (const double * x) const override {
       return fChi2->DataElement(x, fIndex);
    }
 
-   double DoDerivative(const double * x, unsigned int icoord) const {
+   double DoDerivative(const double * x, unsigned int icoord) const override {
       //return  ROOT::Math::Derivator::Eval(*this, x, icoord, 1E-8);
       std::copy(x,x+NDim(),fX2.begin());
       const double kEps = 1.0E-4;
@@ -157,7 +157,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~GSLNLSMinimizer ();
+   ~GSLNLSMinimizer () override;
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -178,35 +178,35 @@ private:
 public:
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
    /// set gradient the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
 
 
    /// method to perform the minimization
-   virtual  bool Minimize();
+    bool Minimize() override;
 
 
    /// return expected distance reached from the minimum
-   virtual double Edm() const { return fEdm; } // not impl. }
+   double Edm() const override { return fEdm; } // not impl. }
 
 
    /// return pointer to gradient values at the minimum
-   virtual const double *  MinGradient() const;
+   const double *  MinGradient() const override;
 
    /// number of function calls to reach the minimum
-   virtual unsigned int NCalls() const { return (fChi2Func) ? fChi2Func->NCalls() : 0; }
+   unsigned int NCalls() const override { return (fChi2Func) ? fChi2Func->NCalls() : 0; }
 
    /// number of free variables (real dimension of the problem)
    /// this is <= Function().NDim() which is the total
 //   virtual unsigned int NFree() const { return fNFree; }
 
    /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return true; }
+   bool ProvidesError() const override { return true; }
 
    /// return errors at the minimum
-   virtual const double * Errors() const { return (fErrors.size() > 0) ? &fErrors.front() : 0; }
+   const double * Errors() const override { return (fErrors.size() > 0) ? &fErrors.front() : 0; }
 //  {
 //       static std::vector<double> err;
 //       err.resize(fDim);
@@ -217,10 +217,10 @@ public:
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
    */
-   virtual double CovMatrix(unsigned int , unsigned int ) const;
+   double CovMatrix(unsigned int , unsigned int ) const override;
 
    /// return covariance matrix status
-   virtual int CovMatrixStatus() const;
+   int CovMatrixStatus() const override;
 
 protected:
 

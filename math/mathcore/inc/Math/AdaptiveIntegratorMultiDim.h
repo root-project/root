@@ -110,13 +110,13 @@ public:
    /**
       destructor (no operations)
     */
-   virtual ~AdaptiveIntegratorMultiDim() {}
+   ~AdaptiveIntegratorMultiDim() override {}
 
 
    /**
       evaluate the integral with the previously given function between xmin[] and xmax[]
    */
-   double Integral(const double* xmin, const double * xmax) {
+   double Integral(const double* xmin, const double * xmax) override {
       return DoIntegral(xmin,xmax, false);
    }
 
@@ -125,13 +125,13 @@ public:
    double Integral(const IMultiGenFunction &f, const double* xmin, const double * xmax);
 
    /// set the integration function (must implement multi-dim function interface: IBaseFunctionMultiDim)
-   void SetFunction(const IMultiGenFunction &f);
+   void SetFunction(const IMultiGenFunction &f) override;
 
    /// return result of integration
-   double Result() const { return fResult; }
+   double Result() const override { return fResult; }
 
    /// return integration error
-   double Error() const { return fError; }
+   double Error() const override { return fError; }
 
    /// return relative error
    double RelError() const { return fRelError; }
@@ -146,16 +146,16 @@ public:
    ///    size is too small for the specified number MAXPTS of function evaluations.
    ///  - status = 3
    ///    wrong dimension , N<2 or N > 15. Returned result and error are zero
-   int Status() const { return fStatus; }
+   int Status() const override { return fStatus; }
 
    /// return number of function evaluations in calculating the integral
-   int NEval() const { return fNEval; }
+   int NEval() const override { return fNEval; }
 
    /// set relative tolerance
-   void SetRelTolerance(double relTol);
+   void SetRelTolerance(double relTol) override;
 
    /// set absolute tolerance
-   void SetAbsTolerance(double absTol);
+   void SetAbsTolerance(double absTol) override;
 
    ///set workspace size
    void SetSize(unsigned int size) { fSize = size; }
@@ -167,10 +167,10 @@ public:
    void SetMaxPts(unsigned int n) { fMaxPts = n; }
 
    /// set the options
-   void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt);
+   void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt) override;
 
    ///  get the option used for the integration
-   ROOT::Math::IntegratorMultiDimOptions Options() const;
+   ROOT::Math::IntegratorMultiDimOptions Options() const override;
 
 protected:
 

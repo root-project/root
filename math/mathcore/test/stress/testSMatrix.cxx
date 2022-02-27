@@ -35,7 +35,7 @@ protected:
 
    VectorTest<R_t::kSize> fVectorTest;
 
-   virtual void SetUp()
+   void SetUp() override
    {
       fVectorTest.GenDataN();
       v1.reserve(fNGen);

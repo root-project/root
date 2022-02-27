@@ -136,7 +136,7 @@ protected :
    inline void     SetThresholdPivoting(Double_t piv) { fCntl[1] = piv; }
    inline void     SetTreatAsZero      (Double_t tol) { fCntl[3] = tol; }
 
-   virtual const TMatrixDBase &GetDecompMatrix() const { MayNotUse("GetDecompMatrix()"); return fA; }
+   const TMatrixDBase &GetDecompMatrix() const override { MayNotUse("GetDecompMatrix()"); return fA; }
 
 public :
 
@@ -145,35 +145,35 @@ public :
    TDecompSparse(Int_t row_lwb,Int_t row_upb,Int_t nr_nonZeros,Int_t verbose);
    TDecompSparse(const TMatrixDSparse &a,Int_t verbose);
    TDecompSparse(const TDecompSparse &another);
-   virtual ~TDecompSparse() {}
+   ~TDecompSparse() override {}
 
    inline  void     SetVerbose (Int_t v) { fVerbose = (v) ? 1 : 0;
                                             if (fVerbose) { fIcntl[1] = fIcntl[2] = 1; fIcntl[3] = 2; }
                                             else          { fIcntl[1] = fIcntl[2] = fIcntl[3] = 0; }
                                          }
-   virtual Int_t    GetNrows   () const { return fA.GetNrows(); }
-   virtual Int_t    GetNcols   () const { return fA.GetNcols(); }
+   Int_t    GetNrows   () const override { return fA.GetNrows(); }
+   Int_t    GetNcols   () const override { return fA.GetNcols(); }
 
    virtual void     SetMatrix  (const TMatrixDSparse &a);
 
-   virtual Bool_t   Decompose  ();
-   virtual Bool_t   Solve      (      TVectorD &b);
-   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
-   virtual Bool_t   Solve      (      TMatrixDColumn & /*b*/)
+   Bool_t   Decompose  () override;
+   Bool_t   Solve      (      TVectorD &b) override;
+   TVectorD Solve      (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = Solve(x); return x; }
+   Bool_t   Solve      (      TMatrixDColumn & /*b*/) override
                                { MayNotUse("Solve(TMatrixDColumn &)"); return kFALSE; }
-   virtual Bool_t   TransSolve (      TVectorD &b)            { return Solve(b); }
-   virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
-   virtual Bool_t   TransSolve (      TMatrixDColumn & /*b*/)
+   Bool_t   TransSolve (      TVectorD &b) override            { return Solve(b); }
+   TVectorD TransSolve (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = Solve(x); return x; }
+   Bool_t   TransSolve (      TMatrixDColumn & /*b*/) override
                                { MayNotUse("TransSolve(TMatrixDColumn &)"); return kFALSE; }
 
-   virtual void     Det        (Double_t &/*d1*/,Double_t &/*d2*/)
+   void     Det        (Double_t &/*d1*/,Double_t &/*d2*/) override
                                 { MayNotUse("Det(Double_t&,Double_t&)"); }
 
-   void Print(Option_t *opt ="") const; // *MENU*
+   void Print(Option_t *opt ="") const override; // *MENU*
 
    TDecompSparse &operator= (const TDecompSparse &source);
 
-   ClassDef(TDecompSparse,1) // Matrix Decompositition LU
+   ClassDefOverride(TDecompSparse,1) // Matrix Decompositition LU
 };
 
 #endif

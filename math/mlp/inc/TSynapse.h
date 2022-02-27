@@ -21,7 +21,7 @@ class TSynapse : public TObject {
  public:
    TSynapse();
    TSynapse(TNeuron*, TNeuron*, Double_t w = 1);
-   virtual ~TSynapse() {}
+   ~TSynapse() override {}
    void SetPre(TNeuron* pre);
    void SetPost(TNeuron* post);
    inline TNeuron* GetPre()  const { return fpre; }
@@ -39,7 +39,7 @@ class TSynapse : public TObject {
    Double_t fweight;      ///< the weight of the synapse
    Double_t fDEDw;        ///<! the derivative of the total error wrt the synapse weight
 
-   ClassDef(TSynapse, 1)  ///< simple weighted bidirectional connection between 2 neurons
+   ClassDefOverride(TSynapse, 1)  ///< simple weighted bidirectional connection between 2 neurons
 };
 
 #endif

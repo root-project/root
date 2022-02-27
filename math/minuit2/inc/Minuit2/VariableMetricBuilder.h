@@ -44,10 +44,10 @@ public:
          fErrorUpdator = std::unique_ptr<MinimumErrorUpdator>(new DavidonErrorUpdator());
    }
 
-   ~VariableMetricBuilder() {}
+   ~VariableMetricBuilder() override {}
 
-   virtual FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
-                                   unsigned int, double) const;
+   FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
+                                   unsigned int, double) const override;
 
    FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, std::vector<MinimumState> &,
                            unsigned int, double) const;

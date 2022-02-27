@@ -43,11 +43,11 @@ public:
    {
    }
 
-   ~VariableMetricMinimizer() {}
+   ~VariableMetricMinimizer() override {}
 
-   const MinimumSeedGenerator &SeedGenerator() const { return fMinSeedGen; }
-   const MinimumBuilder &Builder() const { return fMinBuilder; }
-   MinimumBuilder &Builder() { return fMinBuilder; }
+   const MinimumSeedGenerator &SeedGenerator() const override { return fMinSeedGen; }
+   const MinimumBuilder &Builder() const override { return fMinBuilder; }
+   MinimumBuilder &Builder() override { return fMinBuilder; }
 
 private:
    MnSeedGenerator fMinSeedGen;

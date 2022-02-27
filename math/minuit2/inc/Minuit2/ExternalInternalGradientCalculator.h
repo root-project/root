@@ -35,11 +35,11 @@ public:
    {
    }
 
-   ~ExternalInternalGradientCalculator() {}
+   ~ExternalInternalGradientCalculator() override {}
 
-   virtual FunctionGradient operator()(const MinimumParameters &) const;
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
-   virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const;
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 };
 
 } // namespace Minuit2

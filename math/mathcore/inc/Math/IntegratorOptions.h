@@ -119,7 +119,7 @@ public:
    /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
    IntegratorOneDimOptions(IOptions * extraOpts = 0);
 
-   virtual ~IntegratorOneDimOptions() {}
+   ~IntegratorOneDimOptions() override {}
 
    /// copy constructor
    IntegratorOneDimOptions(const IntegratorOneDimOptions & rhs) :
@@ -143,7 +143,7 @@ public:
    unsigned int NPoints() const { return fNCalls; }
 
    /// name of 1D integrator
-   std::string  Integrator() const;
+   std::string  Integrator() const override;
 
    /// type of the integrator (return the enumeration type)
    IntegrationOneDim::Type IntegratorType() const { return (IntegrationOneDim::Type) fIntegType; }
@@ -200,7 +200,7 @@ public:
    /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
    IntegratorMultiDimOptions(IOptions * extraOpts = 0);
 
-   virtual ~IntegratorMultiDimOptions() {}
+   ~IntegratorMultiDimOptions() override {}
 
    /// copy constructor
    IntegratorMultiDimOptions(const IntegratorMultiDimOptions & rhs) :
@@ -222,7 +222,7 @@ public:
    unsigned int NCalls() const { return fNCalls; }
 
    /// name of multi-dim integrator
-   std::string  Integrator() const;
+   std::string  Integrator() const override;
 
    /// type of the integrator (return the enumeration type)
    IntegrationMultiDim::Type IntegratorType() const { return (IntegrationMultiDim::Type) fIntegType; }

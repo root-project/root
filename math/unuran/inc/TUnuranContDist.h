@@ -80,7 +80,7 @@ public:
    /**
       Destructor
    */
-   virtual ~TUnuranContDist ();
+   ~TUnuranContDist () override;
 
 
    /**
@@ -96,7 +96,7 @@ public:
    /**
       Clone (required by base class)
     */
-   virtual TUnuranContDist * Clone() const { return new TUnuranContDist(*this); }
+   TUnuranContDist * Clone() const override { return new TUnuranContDist(*this); }
 
 
    /**
@@ -213,7 +213,7 @@ private:
    bool  fOwnFunc;          ///< flag to indicate if class manages the function pointers
    //mutable double fX[1];  ///<! cached vector for using TF1::EvalPar
 
-   ClassDef(TUnuranContDist,1)  //Wrapper class for one dimensional continuous distribution
+   ClassDefOverride(TUnuranContDist,1)  //Wrapper class for one dimensional continuous distribution
 
 
 };

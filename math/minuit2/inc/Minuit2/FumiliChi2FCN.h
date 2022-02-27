@@ -51,7 +51,7 @@ class FumiliChi2FCN : public FumiliFCNBase {
 public:
    FumiliChi2FCN() {}
 
-   virtual ~FumiliChi2FCN() {}
+   ~FumiliChi2FCN() override {}
 
    /**
 
@@ -129,7 +129,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &par) const
+   double operator()(const std::vector<double> &par) const override
    {
 
       double chiSquare = 0.0;
@@ -148,7 +148,7 @@ public:
 
    */
 
-   virtual double Up() const { return 1.0; }
+   double Up() const override { return 1.0; }
 
 private:
    // A pointer to the model function which describes the data

@@ -29,13 +29,13 @@ class SimplexSeedGenerator : public MinimumSeedGenerator {
 public:
    SimplexSeedGenerator() {}
 
-   ~SimplexSeedGenerator() {}
+   ~SimplexSeedGenerator() override {}
 
-   virtual MinimumSeed
-   operator()(const MnFcn &, const GradientCalculator &, const MnUserParameterState &, const MnStrategy &) const;
+   MinimumSeed
+   operator()(const MnFcn &, const GradientCalculator &, const MnUserParameterState &, const MnStrategy &) const override;
 
-   virtual MinimumSeed operator()(const MnFcn &, const AnalyticalGradientCalculator &, const MnUserParameterState &,
-                                  const MnStrategy &) const;
+   MinimumSeed operator()(const MnFcn &, const AnalyticalGradientCalculator &, const MnUserParameterState &,
+                                  const MnStrategy &) const override;
 
 private:
 };

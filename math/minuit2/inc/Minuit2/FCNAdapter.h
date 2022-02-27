@@ -35,13 +35,13 @@ class FCNAdapter : public FCNBase {
 public:
    FCNAdapter(const Function &f, double up = 1.) : fFunc(f), fUp(up) {}
 
-   ~FCNAdapter() {}
+   ~FCNAdapter() override {}
 
-   double operator()(const std::vector<double> &v) const { return fFunc.operator()(&v[0]); }
+   double operator()(const std::vector<double> &v) const override { return fFunc.operator()(&v[0]); }
    double operator()(const double *v) const { return fFunc.operator()(v); }
-   double Up() const { return fUp; }
+   double Up() const override { return fUp; }
 
-   void SetErrorDef(double up) { fUp = up; }
+   void SetErrorDef(double up) override { fUp = up; }
 
    // virtual std::vector<double> Gradient(const std::vector<double>&) const;
 

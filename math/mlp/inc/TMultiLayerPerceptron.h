@@ -53,7 +53,7 @@ class TMultiLayerPerceptron : public TObject {
                          TEventList* test,
                          TNeuron::ENeuronType type = TNeuron::kSigmoid,
                          const char* extF = "", const char* extD  = "");
-   virtual ~TMultiLayerPerceptron();
+   ~TMultiLayerPerceptron() override;
    void SetData(TTree*);
    void SetTrainingDataSet(TEventList* train);
    void SetTestDataSet(TEventList* test);
@@ -87,7 +87,7 @@ class TMultiLayerPerceptron : public TObject {
    Bool_t LoadWeights(Option_t* filename = "");
    Double_t Evaluate(Int_t index, Double_t* params) const;
    void Export(Option_t* filename = "NNfunction", Option_t* language = "C++") const;
-   virtual void Draw(Option_t *option="");
+   void Draw(Option_t *option="") override;
 
  protected:
    void AttachData();
@@ -148,7 +148,7 @@ class TMultiLayerPerceptron : public TObject {
    Bool_t fTrainingOwner;           ///<! internal flag whether one has to delete fTraining or not
    Bool_t fTestOwner;               ///<! internal flag whether one has to delete fTest or not
 
-   ClassDef(TMultiLayerPerceptron, 4) // a Neural Network
+   ClassDefOverride(TMultiLayerPerceptron, 4) // a Neural Network
 };
 
 #endif

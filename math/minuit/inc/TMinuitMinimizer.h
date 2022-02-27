@@ -65,7 +65,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~TMinuitMinimizer ();
+   ~TMinuitMinimizer () override;
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -83,85 +83,85 @@ private:
 public:
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
 
    /// set free variable
-   virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step);
+   bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) override;
 
    /// set upper/lower limited variable (override if minimizer supports them )
-   virtual bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */);
+   bool SetLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double /* lower */, double /* upper */) override;
 
    /// set lower limit variable  (override if minimizer supports them )
-   virtual bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower );
+   bool SetLowerLimitedVariable(unsigned int  ivar , const std::string & name , double val , double step , double lower ) override;
 
    /// set upper limit variable (override if minimizer supports them )
-   virtual bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper );
+   bool SetUpperLimitedVariable(unsigned int ivar , const std::string & name , double val , double step , double upper ) override;
 
    /// set fixed variable (override if minimizer supports them )
-   virtual bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */);
+   bool SetFixedVariable(unsigned int /* ivar */, const std::string & /* name */, double /* val */) override;
 
    /// set the value of an existing variable
-   virtual bool SetVariableValue(unsigned int , double );
+   bool SetVariableValue(unsigned int , double ) override;
 
    /// set the step size of an existing variable
-   virtual bool SetVariableStepSize(unsigned int , double );
+   bool SetVariableStepSize(unsigned int , double ) override;
    /// set the lower-limit of an existing variable
-   virtual bool SetVariableLowerLimit(unsigned int , double );
+   bool SetVariableLowerLimit(unsigned int , double ) override;
    /// set the upper-limit of an existing variable
-   virtual bool SetVariableUpperLimit(unsigned int , double );
+   bool SetVariableUpperLimit(unsigned int , double ) override;
    /// set the limits of an existing variable
-   virtual bool SetVariableLimits(unsigned int ivar, double lower, double upper);
+   bool SetVariableLimits(unsigned int ivar, double lower, double upper) override;
    /// fix an existing variable
-   virtual bool FixVariable(unsigned int);
+   bool FixVariable(unsigned int) override;
    /// release an existing variable
-   virtual bool ReleaseVariable(unsigned int);
+   bool ReleaseVariable(unsigned int) override;
    /// query if an existing variable is fixed (i.e. considered constant in the minimization)
    /// note that by default all variables are not fixed
-   virtual bool IsFixedVariable(unsigned int) const;
+   bool IsFixedVariable(unsigned int) const override;
    /// get variable settings in a variable object (like ROOT::Fit::ParamsSettings)
-   virtual bool GetVariableSettings(unsigned int, ROOT::Fit::ParameterSettings & ) const;
+   bool GetVariableSettings(unsigned int, ROOT::Fit::ParameterSettings & ) const override;
 
 
    /// method to perform the minimization
-   virtual  bool Minimize();
+    bool Minimize() override;
 
    /// return minimum function value
-   virtual double MinValue() const;
+   double MinValue() const override;
 
    /// return expected distance reached from the minimum
-   virtual double Edm() const;
+   double Edm() const override;
 
    /// return  pointer to X values at the minimum
-   virtual const double *  X() const { return &fParams.front(); }
+   const double *  X() const override { return &fParams.front(); }
 
    /// return pointer to gradient values at the minimum
-   virtual const double *  MinGradient() const { return 0; } // not available in Minuit2
+   const double *  MinGradient() const override { return 0; } // not available in Minuit2
 
    /// number of function calls to reach the minimum
-   virtual unsigned int NCalls() const;
+   unsigned int NCalls() const override;
 
    /// this is <= Function().NDim() which is the total
    /// number of variables (free+ constrained ones)
-   virtual unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
    /// number of free variables (real dimension of the problem)
    /// this is <= Function().NDim() which is the total
-   virtual unsigned int NFree() const;
+   unsigned int NFree() const override;
 
    /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return true; }
+   bool ProvidesError() const override { return true; }
 
    /// return errors at the minimum
-   virtual const double * Errors() const { return  &fErrors.front(); }
+   const double * Errors() const override { return  &fErrors.front(); }
 
    /** return covariance matrices elements
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
    */
-   virtual double CovMatrix(unsigned int i, unsigned int j) const {
+   double CovMatrix(unsigned int i, unsigned int j) const override {
       return ( fCovar.size() > (i + fDim* j) ) ? fCovar[i + fDim* j] : 0;
    }
 
@@ -173,7 +173,7 @@ public:
        This is different from the direct interface of Minuit2 or TMinuit where the
        values were obtained only to variable parameters
    */
-   virtual bool GetCovMatrix(double * cov) const;
+   bool GetCovMatrix(double * cov) const override;
 
    /**
        Fill the passed array with the Hessian matrix elements
@@ -182,52 +182,52 @@ public:
        If the variable is fixed or const the values for that variables are zero.
        The array will be filled as h[i *ndim + j]
    */
-   virtual bool GetHessianMatrix(double * h) const;
+   bool GetHessianMatrix(double * h) const override;
 
    ///return status of covariance matrix
-   virtual int CovMatrixStatus() const;
+   int CovMatrixStatus() const override;
 
    ///global correlation coefficient for variable i
-   virtual double GlobalCC(unsigned int ) const;
+   double GlobalCC(unsigned int ) const override;
 
    /// minos error for variable i, return false if Minos failed
-   virtual bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0);
+   bool GetMinosError(unsigned int i, double & errLow, double & errUp, int = 0) override;
 
    /// minos status code of last Minos run
    /// minos status = -1   : Minos is not run
    ///              =  0   : last MINOS run was succesfull
    ///              >  0   : some problems encountered when running MINOS
-   virtual int MinosStatus() const { return fMinosStatus; }
+   int MinosStatus() const override { return fMinosStatus; }
 
    /**
       perform a full calculation of the Hessian matrix for error calculation
     */
-   virtual bool Hesse();
+   bool Hesse() override;
 
    /**
       scan a parameter i around the minimum. A minimization must have been done before,
       return false if it is not the case
     */
-   virtual bool Scan(unsigned int i, unsigned int &nstep, double * x, double * y, double xmin = 0, double xmax = 0);
+   bool Scan(unsigned int i, unsigned int &nstep, double * x, double * y, double xmin = 0, double xmax = 0) override;
 
    /**
       find the contour points (xi,xj) of the function for parameter i and j around the minimum
       The contour will be find for value of the function = Min + ErrorUp();
     */
-   virtual bool Contour(unsigned int i, unsigned int j, unsigned int & npoints, double *xi, double *xj);
+   bool Contour(unsigned int i, unsigned int j, unsigned int & npoints, double *xi, double *xj) override;
 
 
-   virtual void PrintResults();
+   void PrintResults() override;
 
    /// return reference to the objective function
    ///virtual const ROOT::Math::IGenFunction & Function() const;
 
    /// get name of variables (override if minimizer support storing of variable names)
-   virtual std::string VariableName(unsigned int ivar) const;
+   std::string VariableName(unsigned int ivar) const override;
 
    /// get index of variable given a variable given a name
    /// return always -1 . (It is Not implemented)
-   virtual int VariableIndex(const std::string & name) const;
+   int VariableIndex(const std::string & name) const override;
 
    /// static function to switch on/off usage of static global TMinuit instance (gMinuit)
    /// By default it is used (i.e. is on). Method returns the previous state

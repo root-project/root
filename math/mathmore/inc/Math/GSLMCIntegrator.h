@@ -112,7 +112,7 @@ namespace Math {
       /**
           destructor
       */
-      virtual ~GSLMCIntegrator();
+      ~GSLMCIntegrator() override;
 
       // disable copy ctrs
 
@@ -135,7 +135,7 @@ public:
           */
 
 
-      void SetFunction(const IMultiGenFunction &f);
+      void SetFunction(const IMultiGenFunction &f) override;
 
 
       typedef double ( * GSLMonteFuncPointer ) ( double *, size_t, void *);
@@ -159,7 +159,7 @@ public:
       /**
          evaluate the integral using the previously defined function
        */
-      double Integral(const double* a, const double* b);
+      double Integral(const double* a, const double* b) override;
 
 
       // to be added later
@@ -175,24 +175,24 @@ public:
       /**
          return  the Result of the last Integral calculation
        */
-      double Result() const;
+      double Result() const override;
 
       /**
          return the estimate of the absolute Error of the last Integral calculation
        */
-      double Error() const;
+      double Error() const override;
 
       /**
          return the Error Status of the last Integral calculation
        */
-      int Status() const;
+      int Status() const override;
 
 
       /**
           return number of function evaluations in calculating the integral
           (This is an fixed by the user)
       */
-      int NEval() const { return fCalls; }
+      int NEval() const override { return fCalls; }
 
 
       // setter for control Parameters  (getters are not needed so far )
@@ -200,18 +200,18 @@ public:
       /**
          set the desired relative Error
        */
-      void SetRelTolerance(double relTolerance);
+      void SetRelTolerance(double relTolerance) override;
 
 
       /**
          set the desired absolute Error
        */
-      void SetAbsTolerance(double absTolerance);
+      void SetAbsTolerance(double absTolerance) override;
 
       /**
          set the integration options
        */
-      void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt);
+      void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt) override;
 
 
       /**
@@ -280,7 +280,7 @@ public:
       /**
          get the option used for the integration
       */
-      ROOT::Math::IntegratorMultiDimOptions Options() const;
+      ROOT::Math::IntegratorMultiDimOptions Options() const override;
 
       /**
          get the specific options (for Vegas or Miser)

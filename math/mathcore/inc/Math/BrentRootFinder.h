@@ -68,7 +68,7 @@ namespace Math {
 
 
       /** Default Destructor. */
-      virtual ~BrentRootFinder() {}
+      ~BrentRootFinder() override {}
 
 
       /** Set function to solve and the interval in where to look for the root.
@@ -78,7 +78,7 @@ namespace Math {
           \@param xup Upper bound of the search interval.
       */
       using IRootFinderMethod::SetFunction;
-      bool SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup);
+      bool SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup) override;
 
 
       /** Returns the X value corresponding to the function value fy for (xmin<x<xmax).
@@ -94,7 +94,7 @@ namespace Math {
           \@param absTol desired absolute error in the minimum position.
           \@param absTol desired relative error in the minimum position.
       */
-      bool Solve(int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
+      bool Solve(int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10) override;
 
       /** Set the number of point used to bracket root using a grid */
       void SetNpx(int npx) { fNpx = npx; }
@@ -106,16 +106,16 @@ namespace Math {
       void SetLogScan(bool on) { fLogScan = on; }
 
       /** Returns root value. Need to call first Solve(). */
-      double Root() const { return fRoot; }
+      double Root() const override { return fRoot; }
 
       /** Returns status of last estimate. If = 0 is OK */
-      int Status() const { return fStatus; }
+      int Status() const override { return fStatus; }
 
       /** Return number of iteration used to find minimum */
-      int Iterations() const { return fNIter; }
+      int Iterations() const override { return fNIter; }
 
       /** Return name of root finder algorithm ("BrentRootFinder"). */
-      const char* Name() const;
+      const char* Name() const override;
 
       // static function used to modify the default parameters
 

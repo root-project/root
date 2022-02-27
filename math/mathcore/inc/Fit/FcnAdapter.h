@@ -33,11 +33,11 @@ public:
       fFCN(fcn)
    {}
 
-   virtual ~FcnAdapter() {}
+   ~FcnAdapter() override {}
 
-   virtual  unsigned int NDim() const { return fDim; }
+    unsigned int NDim() const override { return fDim; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const {
+   ROOT::Math::IMultiGenFunction * Clone() const override {
       return new FcnAdapter(fFCN,fDim);
    }
 
@@ -45,7 +45,7 @@ public:
 
 private:
 
-   virtual double DoEval(const double * x) const {
+   double DoEval(const double * x) const override {
       double fval = 0;
       int dim = fDim;
       // call with flag 4

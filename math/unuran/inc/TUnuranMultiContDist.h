@@ -67,7 +67,7 @@ public:
    /**
       Destructor
    */
-   virtual ~TUnuranMultiContDist ();
+   ~TUnuranMultiContDist () override;
 
 
    /**
@@ -83,7 +83,7 @@ public:
    /**
       Clone (required by base class)
     */
-   virtual TUnuranMultiContDist * Clone() const { return new TUnuranMultiContDist(*this); }
+   TUnuranMultiContDist * Clone() const override { return new TUnuranMultiContDist(*this); }
 
 
    /**
@@ -173,7 +173,7 @@ private:
    bool  fOwnFunc;                ///< flag to indicate if class manages the function pointers
 
 
-   ClassDef(TUnuranMultiContDist,1)  //Wrapper class for multi dimensional continuous distribution
+   ClassDefOverride(TUnuranMultiContDist,1)  //Wrapper class for multi dimensional continuous distribution
 
 
 };

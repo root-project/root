@@ -418,7 +418,7 @@ namespace ROOT {
          /**
              Virtual Destructor (no operations)
          */
-         virtual ~IGradientFunctionOneDim() {}
+         ~IGradientFunctionOneDim() override {}
 
 
          /**
@@ -428,7 +428,7 @@ namespace ROOT {
              evaluate value and derivative at the same time
 
          */
-         virtual void FdF(double x, double &f, double &df) const
+         void FdF(double x, double &f, double &df) const override
          {
             f = operator()(x);
             df = Derivative(x);

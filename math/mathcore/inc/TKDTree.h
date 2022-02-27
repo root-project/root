@@ -13,7 +13,7 @@ public:
    TKDTree();
    TKDTree(Index npoints, Index ndim, UInt_t bsize);
    TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data);
-   ~TKDTree();
+   ~TKDTree() override;
 
    void            Build();  // build the tree
 
@@ -97,7 +97,7 @@ public:
                         ///<  that belongs to the first node on the second row.
 
 
-   ClassDef(TKDTree, 1)  // KD tree
+   ClassDefOverride(TKDTree, 1)  // KD tree
 };
 
 

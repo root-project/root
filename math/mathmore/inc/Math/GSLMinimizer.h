@@ -93,7 +93,7 @@ public:
    /**
       Destructor
    */
-   virtual ~GSLMinimizer ();
+   ~GSLMinimizer () override;
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -114,31 +114,31 @@ private:
 public:
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func) { BasicMinimizer::SetFunction(func);}
+   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override { BasicMinimizer::SetFunction(func);}
 
    /// method to perform the minimization
-   virtual  bool Minimize();
+    bool Minimize() override;
 
 
    /// return expected distance reached from the minimum
-   virtual double Edm() const { return 0; } // not impl. }
+   double Edm() const override { return 0; } // not impl. }
 
 
    /// return pointer to gradient values at the minimum
-   virtual const double *  MinGradient() const;
+   const double *  MinGradient() const override;
 
    /// number of function calls to reach the minimum
-   virtual unsigned int NCalls() const;
+   unsigned int NCalls() const override;
 
 
    /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return false; }
+   bool ProvidesError() const override { return false; }
 
    /// return errors at the minimum
-   virtual const double * Errors() const {
+   const double * Errors() const override {
       return 0;
    }
 
@@ -146,7 +146,7 @@ public:
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
    */
-   virtual double CovMatrix(unsigned int , unsigned int ) const { return 0; }
+   double CovMatrix(unsigned int , unsigned int ) const override { return 0; }
 
 
 

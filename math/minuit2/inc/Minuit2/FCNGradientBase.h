@@ -38,7 +38,7 @@ enum class GradientParameterSpace {
 class FCNGradientBase : public FCNBase {
 
 public:
-   virtual ~FCNGradientBase() {}
+   ~FCNGradientBase() override {}
 
    virtual std::vector<double> Gradient(const std::vector<double> &) const = 0;
    virtual std::vector<double> GradientWithPrevResult(const std::vector<double> &parameters, double * /*previous_grad*/,

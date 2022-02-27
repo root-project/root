@@ -32,7 +32,7 @@ namespace ROOT {
          SparseData(const unsigned int dim, double min[], double max[]);
 
          //Destructor
-         ~SparseData();
+         ~SparseData() override;
 
          //Returns the number of points stored
          unsigned int NPoints() const;

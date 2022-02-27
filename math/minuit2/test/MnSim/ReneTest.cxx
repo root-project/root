@@ -28,9 +28,9 @@ class ReneFcn : public FCNBase {
 public:
    ReneFcn(const std::vector<double> &meas) : fMeasurements(meas) {}
 
-   virtual ~ReneFcn() {}
+   ~ReneFcn() override {}
 
-   virtual double operator()(const std::vector<double> &par) const
+   double operator()(const std::vector<double> &par) const override
    {
       double a = par[2];
       double b = par[1];
@@ -63,7 +63,7 @@ public:
       return fval;
    }
 
-   virtual double Up() const { return 1.; }
+   double Up() const override { return 1.; }
 
 private:
    std::vector<double> fMeasurements;

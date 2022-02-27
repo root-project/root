@@ -83,7 +83,7 @@ public:
    /**
       Destructor
    */
-   virtual ~TUnuranDiscrDist ();
+   ~TUnuranDiscrDist () override;
 
    /**
       Copy constructor
@@ -98,7 +98,7 @@ public:
    /**
       Clone (required by base class)
     */
-   virtual TUnuranDiscrDist * Clone() const { return new TUnuranDiscrDist(*this); }
+   TUnuranDiscrDist * Clone() const override { return new TUnuranDiscrDist(*this); }
 
    /**
       set cdf distribution from a generic function interface. If a method requires it
@@ -213,7 +213,7 @@ private:
    bool  fHasSum;                ///< flag to control if distribution has a pre-computed sum of the probabilities
    bool  fOwnFunc;               ///< flag to control if distribution owns the function pointers
 
-   ClassDef(TUnuranDiscrDist,1)  //Wrapper class for one dimensional discrete distribution
+   ClassDefOverride(TUnuranDiscrDist,1)  //Wrapper class for one dimensional discrete distribution
 
 
 };

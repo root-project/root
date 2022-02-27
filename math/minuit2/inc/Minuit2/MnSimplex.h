@@ -77,10 +77,10 @@ public:
    {
    }
 
-   ~MnSimplex() {}
+   ~MnSimplex() override {}
 
-   ModularFunctionMinimizer &Minimizer() { return fMinimizer; }
-   const ModularFunctionMinimizer &Minimizer() const { return fMinimizer; }
+   ModularFunctionMinimizer &Minimizer() override { return fMinimizer; }
+   const ModularFunctionMinimizer &Minimizer() const override { return fMinimizer; }
 
 private:
    SimplexMinimizer fMinimizer;

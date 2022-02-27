@@ -28,11 +28,11 @@ public:
    {
    }
 
-   ~FumiliGradientCalculator() {}
+   ~FumiliGradientCalculator() override {}
 
-   FunctionGradient operator()(const MinimumParameters &) const;
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
-   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const;
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
    const MnUserTransformation &Trafo() const { return fTransformation; }
 

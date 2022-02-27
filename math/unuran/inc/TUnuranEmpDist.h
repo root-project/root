@@ -88,7 +88,7 @@ public:
    /**
       Destructor (no operations)
    */
-   virtual ~TUnuranEmpDist () {}
+   ~TUnuranEmpDist () override {}
 
 
    /**
@@ -105,7 +105,7 @@ public:
    /**
       Clone (required by base class)
     */
-   TUnuranEmpDist * Clone() const { return new TUnuranEmpDist(*this); }
+   TUnuranEmpDist * Clone() const override { return new TUnuranEmpDist(*this); }
 
 
    /**
@@ -144,7 +144,7 @@ private:
    double fMax;                      ///< max values (used in the binned case)
    bool   fBinned;                   ///< flag for binned/unbinned data
 
-   ClassDef(TUnuranEmpDist,1)        //Wrapper class for empirical distribution
+   ClassDefOverride(TUnuranEmpDist,1)        //Wrapper class for empirical distribution
 
 
 };

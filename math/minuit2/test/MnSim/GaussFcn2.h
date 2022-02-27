@@ -26,13 +26,13 @@ public:
    {
       Init();
    }
-   ~GaussFcn2() {}
+   ~GaussFcn2() override {}
 
    virtual void Init();
 
-   virtual double Up() const { return 1.; }
-   virtual double operator()(const std::vector<double> &) const;
-   virtual double ErrorDef() const { return Up(); }
+   double Up() const override { return 1.; }
+   double operator()(const std::vector<double> &) const override;
+   double ErrorDef() const override { return Up(); }
 
    std::vector<double> Measurements() const { return fMeasurements; }
    std::vector<double> Positions() const { return fPositions; }

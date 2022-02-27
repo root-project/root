@@ -46,11 +46,11 @@ public:
 
    TStatistic(const char *name = "") : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.), fMin(TMath::Limits<Double_t>::Max()), fMax(-TMath::Limits<Double_t>::Max()) { }
    TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w = nullptr);
-   ~TStatistic();
+   ~TStatistic() override;
 
    // Getters
-   const char    *GetName() const { return fName; }
-   ULong_t        Hash() const { return fName.Hash(); }
+   const char    *GetName() const override { return fName; }
+   ULong_t        Hash() const override { return fName.Hash(); }
 
    inline       Long64_t GetN() const { return fN; }
    inline       Long64_t GetNeff() const { return fW*fW/fW2; }
@@ -71,10 +71,10 @@ public:
    void Fill(Double_t val, Double_t w = 1.);
 
    // Print
-   void Print(Option_t * = "") const;
-   void ls(Option_t *opt = "") const { Print(opt); }
+   void Print(Option_t * = "") const override;
+   void ls(Option_t *opt = "") const override { Print(opt); }
 
-   ClassDef(TStatistic,3)  // Named statistical variable
+   ClassDefOverride(TStatistic,3)  // Named statistical variable
 };
 
 #endif

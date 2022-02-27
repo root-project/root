@@ -70,7 +70,7 @@ public:
 
    //   FumiliFCNBase(const ParametricFunction& modelFCN) { fModelFunction = &modelFCN; }
 
-   virtual ~FumiliFCNBase() {}
+   ~FumiliFCNBase() override {}
 
    /**
 

@@ -91,7 +91,7 @@ This class does not support copying
       /**
          Destructor: free allocated resources
       */
-      virtual ~GSLMinimizer1D();
+      ~GSLMinimizer1D() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible
@@ -129,32 +129,32 @@ This class does not support copying
       /**
           Return current estimate of the position of the minimum
       */
-      double XMinimum() const;
+      double XMinimum() const override;
 
       /**
          Return current lower bound of the minimization interval
       */
-      double XLower() const;
+      double XLower() const override;
 
       /**
          Return current upper bound of the minimization interval
       */
-      double XUpper() const;
+      double XUpper() const override;
 
       /**
           Return function value at current estimate of the minimum
       */
-      double FValMinimum() const;
+      double FValMinimum() const override;
 
       /**
          Return function value at current lower bound of the minimization interval
       */
-      double FValLower() const;
+      double FValLower() const override;
 
       /**
          Return function value at current upper bound of the minimization interval
       */
-      double FValUpper() const;
+      double FValUpper() const override;
 
 
       /**
@@ -165,25 +165,25 @@ This class does not support copying
          \@param absTol desired absolute error in the minimum position
          \@param absTol desired relative error in the minimum position
       */
-      bool Minimize( int maxIter, double absTol, double relTol);
+      bool Minimize( int maxIter, double absTol, double relTol) override;
 
 
       /**
          Return number of iteration used to find minimum
       */
-      int Iterations() const {
+      int Iterations() const override {
          return fIter;
       }
 
       /**
          Return status of last minimization
        */
-      int Status() const { return fStatus; }
+      int Status() const override { return fStatus; }
 
       /**
          Return name of minimization algorithm
       */
-      const char * Name() const;
+      const char * Name() const override;
 
       /**
          Test convergence of the interval.

@@ -79,18 +79,18 @@ public:
    /**
       Destructor (no operations)
    */
-   ~MultiNumGradFunction ()  {
+   ~MultiNumGradFunction () override  {
       if (fOwner) delete fFunc;
    }
 
 
    // method inheritaed from IFunction interface
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
    unsigned int NCalls() const { return fNCalls; }
 
-   IMultiGenFunction * Clone() const {
+   IMultiGenFunction * Clone() const override {
       if (!fOwner)
          return new MultiNumGradFunction(*fFunc);
       else {
@@ -115,13 +115,13 @@ public:
 private:
 
 
-   double DoEval(const double * x) const {
+   double DoEval(const double * x) const override {
       fNCalls++;
       return (*fFunc)(x);
    }
 
    // calculate derivative using mathcore derivator
-   double DoDerivative (const double * x, unsigned int icoord  ) const;
+   double DoDerivative (const double * x, unsigned int icoord  ) const override;
 
    // adapat internal function type to IMultiGenFunction needed by derivative calculation
    const IMultiGenFunction * fFunc;

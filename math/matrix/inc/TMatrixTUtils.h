@@ -200,7 +200,7 @@ public:
    void operator+=(const TMatrixTRow_const<Element> &r);
    void operator*=(const TMatrixTRow_const<Element> &r);
 
-   ClassDef(TMatrixTRow,0)  // Template of General Matrix Row Access class
+   ClassDefOverride(TMatrixTRow,0)  // Template of General Matrix Row Access class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -302,7 +302,7 @@ public:
    void operator+=(const TMatrixTColumn_const<Element> &c);
    void operator*=(const TMatrixTColumn_const<Element> &c);
 
-   ClassDef(TMatrixTColumn,0)  // Template of General Matrix Column Access class
+   ClassDefOverride(TMatrixTColumn,0)  // Template of General Matrix Column Access class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -392,7 +392,7 @@ public:
    void operator+=(const TMatrixTDiag_const<Element> &d);
    void operator*=(const TMatrixTDiag_const<Element> &d);
 
-   ClassDef(TMatrixTDiag,0)  // Template of General Matrix Diagonal Access class
+   ClassDefOverride(TMatrixTDiag,0)  // Template of General Matrix Diagonal Access class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -478,7 +478,7 @@ public:
    void operator+=(const TMatrixTFlat_const<Element> &f);
    void operator*=(const TMatrixTFlat_const<Element> &f);
 
-   ClassDef(TMatrixTFlat,0)  // Template of General Matrix Flat Representation class
+   ClassDefOverride(TMatrixTFlat,0)  // Template of General Matrix Flat Representation class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -571,7 +571,7 @@ public:
    void operator*=(const TMatrixT         <Element> &m);
    void operator*=(const TMatrixTSym      <Element> &m);
 
-   ClassDef(TMatrixTSub,0)  // Template of Sub Matrix Access class
+   ClassDefOverride(TMatrixTSub,0)  // Template of Sub Matrix Access class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -637,7 +637,7 @@ public:
    void operator+=(const TMatrixTSparseRow_const<Element> &r);
    void operator*=(const TMatrixTSparseRow_const<Element> &r);
 
-   ClassDef(TMatrixTSparseRow,0)  // Template of Sparse Matrix Row Access class
+   ClassDefOverride(TMatrixTSparseRow,0)  // Template of Sparse Matrix Row Access class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -699,7 +699,7 @@ public:
    void operator+=(const TMatrixTSparseDiag_const<Element> &d);
    void operator*=(const TMatrixTSparseDiag_const<Element> &d);
 
-   ClassDef(TMatrixTSparseDiag,0)  // Template of Sparse Matrix Diagonal Access class
+   ClassDefOverride(TMatrixTSparseDiag,0)  // Template of Sparse Matrix Diagonal Access class
 };
 
 Double_t Drand(Double_t &ix);

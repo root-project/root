@@ -24,9 +24,9 @@ class BFGSErrorUpdator : public MinimumErrorUpdator {
 public:
    BFGSErrorUpdator() {}
 
-   virtual ~BFGSErrorUpdator() {}
+   ~BFGSErrorUpdator() override {}
 
-   virtual MinimumError Update(const MinimumState &, const MinimumParameters &, const FunctionGradient &) const;
+   MinimumError Update(const MinimumState &, const MinimumParameters &, const FunctionGradient &) const override;
 
 private:
 };

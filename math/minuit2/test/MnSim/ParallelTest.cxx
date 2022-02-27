@@ -59,7 +59,7 @@ struct LogLikeFCN : public FCNBase {
 
    LogLikeFCN(const Data &data) : fData(data) {}
 
-   double operator()(const std::vector<double> &p) const
+   double operator()(const std::vector<double> &p) const override
    {
       double logl = 0;
       int ndata = fData.size();
@@ -68,7 +68,7 @@ struct LogLikeFCN : public FCNBase {
       }
       return logl;
    }
-   double Up() const { return 0.5; }
+   double Up() const override { return 0.5; }
    const Data &fData;
 };
 

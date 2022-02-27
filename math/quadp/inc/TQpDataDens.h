@@ -81,41 +81,41 @@ public:
                TVectorD &iclow,TVectorD &cupp,TVectorD &icupp);
    TQpDataDens(const TQpDataDens &another);
 
-   virtual ~TQpDataDens() {}
+   ~TQpDataDens() override {}
 
-   virtual void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+   void PutQIntoAt(TMatrixDBase &M,Int_t row,Int_t col) override;
                                                // insert the Hessian Q into the matrix M for the fundamental
                                                // linear system, where M is stored as a TMatrixD
-   virtual void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+   void PutAIntoAt(TMatrixDBase &M,Int_t row,Int_t col) override;
                                                // insert the constraint matrix A into the matrix M for the
                                                // fundamental linear system, where M is stored as a TMatrixD
-   virtual void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col);
+   void PutCIntoAt(TMatrixDBase &M,Int_t row,Int_t col) override;
                                                // insert the constraint matrix C into the matrix M for the
                                                // fundamental linear system, where M is stored as a TMatrixD
 
-   virtual void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+   void Qmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
                                                // y = beta * y + alpha * Q * x
-   virtual void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+   void Amult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
                                                // y = beta * y + alpha * A * x
-   virtual void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+   void Cmult     (Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
                                                // y = beta * y + alpha * C * x
-   virtual void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+   void ATransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
                                                // y = beta * y + alpha * A^T * x
-   virtual void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x);
+   void CTransmult(Double_t beta,TVectorD& y,Double_t alpha,const TVectorD& x) override;
                                                // y = beta * y + alpha * C^T * x
 
-   virtual void GetDiagonalOfQ(TVectorD &dQ);  // extract the diagonal of Q and put it in the vector dQ
+   void GetDiagonalOfQ(TVectorD &dQ) override;  // extract the diagonal of Q and put it in the vector dQ
 
-   virtual Double_t DataNorm();
-   virtual void DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s);
+   Double_t DataNorm() override;
+   void DataRandom(TVectorD &x,TVectorD &y,TVectorD &z,TVectorD &s) override;
                                                // Create a random problem (x,y,z,s)
                                                // the solution to the random problem
-   virtual void Print(Option_t *opt="") const;
+   void Print(Option_t *opt="") const override;
 
-   virtual Double_t ObjectiveValue(TQpVar *vars);
+   Double_t ObjectiveValue(TQpVar *vars) override;
 
    TQpDataDens &operator= (const TQpDataDens &source);
 
-   ClassDef(TQpDataDens,1)                     // Qp Data class for Dens formulation
+   ClassDefOverride(TQpDataDens,1)                     // Qp Data class for Dens formulation
 };
 #endif

@@ -68,7 +68,7 @@ public:
 #ifndef __CINT__
    TVectorT(Int_t lwb,Int_t upb,Double_t iv1, ...);
 #endif
-   virtual ~TVectorT() { TVectorT::Clear(); }
+   ~TVectorT() override { TVectorT::Clear(); }
 
    inline          Int_t     GetLwb       () const { return fRowLwb; }
    inline          Int_t     GetUpb       () const { return fNrows+fRowLwb-1; }
@@ -171,13 +171,13 @@ public:
 
    void Add(const TVectorT<Element> &v);
    void Add(const TVectorT<Element> &v1, const TVectorT<Element> &v2);
-   void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements);
+   void Clear(Option_t * /*option*/ ="") override { if (fIsOwner) Delete_m(fNrows,fElements);
                                            else fElements = 0;
                                            fNrows = 0; }
-   void Draw (Option_t *option=""); // *MENU*
-   void Print(Option_t *option="") const;  // *MENU*
+   void Draw (Option_t *option="") override; // *MENU*
+   void Print(Option_t *option="") const override;  // *MENU*
 
-   ClassDef(TVectorT,4)  // Template of Vector class
+   ClassDefOverride(TVectorT,4)  // Template of Vector class
 };
 
 #ifndef __CINT__

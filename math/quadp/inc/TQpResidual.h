@@ -103,7 +103,7 @@ public:
                TVectorD &ixlow,TVectorD &ixupp,TVectorD &iclow,TVectorD &icupp);
    TQpResidual(const TQpResidual &another);
 
-   virtual ~TQpResidual() {}
+   ~TQpResidual() override {}
 
    Double_t GetResidualNorm() { return fResidualNorm; }
    Double_t GetDualityGap  () { return fDualityGap; };
@@ -136,6 +136,6 @@ public:
 
    TQpResidual &operator= (const TQpResidual &source);
 
-   ClassDef(TQpResidual,1)                     // Qp Residual class
+   ClassDefOverride(TQpResidual,1)                     // Qp Residual class
 };
 #endif

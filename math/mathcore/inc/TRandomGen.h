@@ -57,20 +57,20 @@ public:
       SetName(TString::Format("Random_%s", std::string(fEngine.Name()).c_str()));
       SetTitle(TString::Format("Random number generator: %s", std::string(fEngine.Name()).c_str()));
    }
-   virtual ~TRandomGen() {}
+   ~TRandomGen() override {}
    using TRandom::Rndm;
-   virtual  Double_t Rndm( ) { return fEngine(); }
-   virtual  void     RndmArray(Int_t n, Float_t *array) {
+    Double_t Rndm( ) override { return fEngine(); }
+    void     RndmArray(Int_t n, Float_t *array) override {
       for (int i = 0; i < n; ++i) array[i] = fEngine();
    }
-   virtual  void     RndmArray(Int_t n, Double_t *array) {
+    void     RndmArray(Int_t n, Double_t *array) override {
             for (int i = 0; i < n; ++i) array[i] = fEngine();
    }
-   virtual  void     SetSeed(ULong_t seed=0) {
+    void     SetSeed(ULong_t seed=0) override {
       fEngine.SetSeed(seed);
    }
 
-   ClassDef(TRandomGen,1)  //Generic Random number generator template on the Engine type
+   ClassDefOverride(TRandomGen,1)  //Generic Random number generator template on the Engine type
 };
 
 // some useful typedef

@@ -70,7 +70,7 @@ public:
    TKDTreeBinning(); // default constructor (for I/O)
    TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, Double_t* data, UInt_t nBins = 100, bool adjustBinEdges = false);
    TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, const std::vector<double> & data, UInt_t nBins = 100, bool adjustBinEdges = false);
-   ~TKDTreeBinning();
+   ~TKDTreeBinning() override;
    void SetNBins(UInt_t bins);
    void SortBinsByDensity(Bool_t sortAsc = kTRUE);
    const Double_t* GetBinsMinEdges() const;
@@ -98,7 +98,7 @@ public:
    UInt_t FindBin(const Double_t * point) const;
    std::vector<std::vector<Double_t> > GetPointsInBin(UInt_t bin) const;
 
-   ClassDef(TKDTreeBinning, 1)
+   ClassDefOverride(TKDTreeBinning, 1)
 
 };
 

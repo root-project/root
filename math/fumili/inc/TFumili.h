@@ -71,47 +71,47 @@ private:
 public:
 
    TFumili(Int_t maxpar=25);
-   virtual  ~TFumili();
+    ~TFumili() override;
 
    void             BuildArrays();
-   virtual Double_t Chisquare(Int_t npar, Double_t *params) const;
-   virtual void     Clear(Option_t *opt="");
+   Double_t Chisquare(Int_t npar, Double_t *params) const override;
+   void     Clear(Option_t *opt="") override;
    void             DeleteArrays();
    void             Derivatives(Double_t*,Double_t*);
    Int_t            Eval(Int_t& npar, Double_t *grad, Double_t &fval, Double_t *par, Int_t flag); // Evaluate the minimisation function
    Double_t         EvalTFN(Double_t *,Double_t*);
-   virtual Int_t    ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
+   Int_t    ExecuteCommand(const char *command, Double_t *args, Int_t nargs) override;
    Int_t            ExecuteSetCommand(Int_t );
    virtual void     FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    virtual void     FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    virtual void     FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
    virtual void     FitLikelihoodI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-   virtual void     FixParameter(Int_t ipar);
-   virtual Double_t *GetCovarianceMatrix() const;
-   virtual Double_t GetCovarianceMatrixElement(Int_t i, Int_t j) const;
-   virtual Int_t    GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;
-   virtual Int_t    GetNumberTotalParameters() const;
-   virtual Int_t    GetNumberFreeParameters() const;
+   void     FixParameter(Int_t ipar) override;
+   Double_t *GetCovarianceMatrix() const override;
+   Double_t GetCovarianceMatrixElement(Int_t i, Int_t j) const override;
+   Int_t    GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const override;
+   Int_t    GetNumberTotalParameters() const override;
+   Int_t    GetNumberFreeParameters() const override;
    Double_t*        GetPL0() const { return fPL0;}
-   virtual Double_t GetParError(Int_t ipar) const;
-   virtual Double_t GetParameter(Int_t ipar) const ;
-   virtual Int_t    GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const;
-   virtual const char *GetParName(Int_t ipar) const;
-   virtual Int_t    GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
-   virtual Double_t GetSumLog(Int_t );
+   Double_t GetParError(Int_t ipar) const override;
+   Double_t GetParameter(Int_t ipar) const override ;
+   Int_t    GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const override;
+   const char *GetParName(Int_t ipar) const override;
+   Int_t    GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const override;
+   Double_t GetSumLog(Int_t ) override;
    Double_t*        GetZ() const { return fZ;}
    void             InvertZ(Int_t);
-   virtual Bool_t   IsFixed(Int_t ipar) const;
+   Bool_t   IsFixed(Int_t ipar) const override;
    Int_t            Minimize();
-   virtual void     PrintResults(Int_t k,Double_t p) const;
-   virtual void     ReleaseParameter(Int_t ipar);
+   void     PrintResults(Int_t k,Double_t p) const override;
+   void     ReleaseParameter(Int_t ipar) override;
    Int_t            SGZ();
    void             SetData(Double_t *,Int_t,Int_t);
-   virtual void     SetFitMethod(const char *name);
-   virtual Int_t    SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh);
+   void     SetFitMethod(const char *name) override;
+   Int_t    SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) override;
    void             SetParNumber(Int_t ParNum) { fNpar = ParNum;};
 
-   ClassDef(TFumili,0) //The FUMILI Minimization package
+   ClassDefOverride(TFumili,0) //The FUMILI Minimization package
 };
 
 R__EXTERN TFumili * gFumili;

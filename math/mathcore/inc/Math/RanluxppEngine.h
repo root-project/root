@@ -32,7 +32,7 @@ private:
 
 public:
    RanluxppEngine(uint64_t seed = 314159265);
-   virtual ~RanluxppEngine();
+   ~RanluxppEngine() override;
 
    /// Generate a double-precision random number with 48 bits of randomness
    double Rndm() override;
@@ -66,7 +66,7 @@ private:
 
 public:
    RanluxppCompatEngineJames(uint64_t seed = 314159265);
-   virtual ~RanluxppCompatEngineJames();
+   ~RanluxppCompatEngineJames() override;
 
    /// Generate a floating point random number with 24 bits of randomness
    double Rndm() override;
@@ -105,7 +105,7 @@ private:
 
 public:
    RanluxppCompatEngineGslRanlxs(uint64_t seed = 1);
-   virtual ~RanluxppCompatEngineGslRanlxs();
+   ~RanluxppCompatEngineGslRanlxs() override;
 
    /// Generate a floating point random number with 24 bits of randomness
    double Rndm() override;
@@ -142,7 +142,7 @@ private:
 
 public:
    RanluxppCompatEngineGslRanlxd(uint64_t seed = 1);
-   virtual ~RanluxppCompatEngineGslRanlxd();
+   ~RanluxppCompatEngineGslRanlxd() override;
 
    /// Generate a floating point random number with 48 bits of randomness
    double Rndm() override;
@@ -180,7 +180,7 @@ private:
 
 public:
    RanluxppCompatEngineLuescherRanlxs(uint64_t seed = 314159265);
-   virtual ~RanluxppCompatEngineLuescherRanlxs();
+   ~RanluxppCompatEngineLuescherRanlxs() override;
 
    /// Generate a floating point random number with 24 bits of randomness
    double Rndm() override;
@@ -217,7 +217,7 @@ private:
 
 public:
    RanluxppCompatEngineLuescherRanlxd(uint64_t seed = 314159265);
-   virtual ~RanluxppCompatEngineLuescherRanlxd();
+   ~RanluxppCompatEngineLuescherRanlxd() override;
 
    /// Generate a floating point random number with 48 bits of randomness
    double Rndm() override;
@@ -250,7 +250,7 @@ private:
 
 public:
    RanluxppCompatEngineStdRanlux24(uint64_t seed = 19780503);
-   virtual ~RanluxppCompatEngineStdRanlux24();
+   ~RanluxppCompatEngineStdRanlux24() override;
 
    /// Generate a floating point random number with 24 bits of randomness
    double Rndm() override;
@@ -278,7 +278,7 @@ private:
 
 public:
    RanluxppCompatEngineStdRanlux48(uint64_t seed = 19780503);
-   virtual ~RanluxppCompatEngineStdRanlux48();
+   ~RanluxppCompatEngineStdRanlux48() override;
 
    /// Generate a floating point random number with 48 bits of randomness
    double Rndm() override;

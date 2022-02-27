@@ -50,22 +50,22 @@ namespace ROOT {
             */	
             RMinimizer(Option_t *method);
             ///Destructor
-            virtual ~RMinimizer() {}
+            ~RMinimizer() override {}
             ///Function to find the minimum
-            virtual bool Minimize();
+            bool Minimize() override;
             ///Returns the number of function calls
-            virtual unsigned int NCalls() const;
+            unsigned int NCalls() const override;
             ///Returns the ith jth component of the Hessian matrix
             double HessMatrix(unsigned int i, unsigned int j) const;
             /// minimizer provides error and error matrix
-            virtual bool ProvidesError() const { return !(fErrors.empty()); }
+            bool ProvidesError() const override { return !(fErrors.empty()); }
             /// return errors at the minimum
-            virtual const double * Errors() const { return fErrors.data(); }
+            const double * Errors() const override { return fErrors.data(); }
             /** return covariance matrices element for variables ivar,jvar
             if the variable is fixed the return value is zero
             The ordering of the variables is the same as in the parameter and errors vectors
             */
-           virtual double CovMatrix(unsigned int  ivar , unsigned int jvar ) const {
+           double CovMatrix(unsigned int  ivar , unsigned int jvar ) const override {
               return fCovMatrix(ivar, jvar);
             }
             /**
@@ -76,7 +76,7 @@ namespace ROOT {
             This is different from the direct interface of Minuit2 or TMinuit where the
             values were obtained only to variable parameters
             */
-            virtual bool GetCovMatrix(double * covMat) const {
+            bool GetCovMatrix(double * covMat) const override {
                int ndim = NDim(); 
                if (fCovMatrix.GetNrows() != ndim || fCovMatrix.GetNcols() != ndim ) return false; 
                std::copy(fCovMatrix.GetMatrixArray(), fCovMatrix.GetMatrixArray() + ndim*ndim, covMat);

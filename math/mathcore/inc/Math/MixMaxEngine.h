@@ -116,7 +116,7 @@ http://dx.doi.org/10.1016/j.chaos.2016.05.003
 
          MixMaxEngine(uint64_t seed=1);
 
-         virtual ~MixMaxEngine();
+         ~MixMaxEngine() override;
 
 
          /// Get the size of the generator
@@ -132,7 +132,7 @@ http://dx.doi.org/10.1016/j.chaos.2016.05.003
          void  SetSeed(Result_t seed);
 
          // generate a random number (virtual interface)
-         virtual double Rndm() { return Rndm_impl(); }
+         double Rndm() override { return Rndm_impl(); }
 
          /// generate a double random number (faster interface)
          inline double operator() () { return Rndm_impl(); }

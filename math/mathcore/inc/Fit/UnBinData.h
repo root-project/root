@@ -183,7 +183,7 @@ public:
   /**
     destructor, delete pointer to internal data or external data wrapper
   */
-  virtual ~UnBinData() {
+  ~UnBinData() override {
   }
 
   /**
