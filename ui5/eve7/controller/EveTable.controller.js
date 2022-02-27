@@ -46,6 +46,9 @@ sap.ui.define([
          this.mgr = mgr;
          this.eveViewerId = eveViewerId;
 
+         this.table = this.getView().byId("table");
+
+
          var rh = this.mgr.handle.getUserArgs("TableRowHeight");
          if (rh && (rh > 0))
             this.getView().byId("table").setRowHeight(rh);
@@ -55,9 +58,9 @@ sap.ui.define([
          // loop over scene and add dependency
          for (var k = 0; k < element.childs.length; ++k) {
             var scene = element.childs[k];
-            this.mgr.RegisterSceneReceiver(scene.fSceneId, this);
-            this.onSceneCreate();
-         }
+            this.mgr.RegisterSceneReceiver(scene.fSceneId, this)
+         };
+         this.onSceneCreate();
 
          // attach to changes in 'Collection' scene
          let sceneList = this.mgr.childs[0].childs[2].childs;
@@ -66,7 +69,7 @@ sap.ui.define([
                this.mgr.RegisterSceneReceiver(sceneList[i].fElementId, this);
          }
 
-         let table = this.getView().byId("table");
+         let table = this.table;
          let pthis = this;
          table.attachRowSelectionChange(function (d) {
             if (pthis.mgr.busyProcessingChanges)
@@ -97,7 +100,6 @@ sap.ui.define([
          else {
             console.error("Ctrl modifier not supported !")
          }
-         this.table = table;
 
          // listen to Ctrl key events
          this.multiSelect = false;
@@ -330,6 +332,7 @@ sap.ui.define([
          this.locateEveTable();
          this.buildTableHeader();
          this.buildTableBody(true);
+         this.UpdateSelection(false);
       },
 
       UpdateMgr: function (mgr) {
@@ -527,6 +530,7 @@ sap.ui.define([
             this.locateEveTable();
             this.buildTableHeader();
             this.buildTableBody();
+            this.UpdateSelection(false);
             this.refreshTable = false;
          }
       },
@@ -535,27 +539,38 @@ sap.ui.define([
          var el = this.mgr.GetElement(elId);
       },
 
-      SelectElement: function (selection_obj, element_id, sec_idcs) {
-         let table = this.getView().byId("table");
-         if (selection_obj.fElementId == this.mgr.global_selection_id) {
+      SelectElement: function (selection_obj, element_id, sec_idcs)
+      {
+         if (this.mgr.global_selection_id == selection_obj.fElementId
+            && element_id == this.collection.childs[0].fElementId)
+            this.UpdateSelection(true);
+      },
+
+      UnselectElement: function (selection_obj, element_id)
+      {
+         if (this.mgr.global_selection_id == selection_obj.fElementId
+            && element_id == this.collection.childs[0].fElementId)
+            this.UpdateSelection(true);
+      },
+
+      UpdateSelection: function(curList)
+      {
+         this.table.clearSelection();
+
+         // select rows
+         let sel = this.mgr.GetElement(this.mgr.global_selection_id);
+         let sel_list = curList ? sel.sel_list : sel.prev_sel_list;
+         for (let i = 0; i < sel_list.length; ++i) {
+            let element_id = sel_list[i].primary;
             if (element_id == this.collection.childs[0].fElementId) {
-               table.clearSelection();
+               let sec_idcs = sel_list[i].sec_idcs;
                for (let i = 0; i < sec_idcs.length; i++) {
                   let si = sec_idcs[i];
                   let ui = si;
-
                   if (this.table.sortMap) ui = this.table.sortMap[si];
-                  table.addSelectionInterval(ui, ui);
+                  this.table.addSelectionInterval(ui, ui);
                }
-               this.buildTableBody();
             }
-         }
-      },
-
-
-      UnselectElement: function (selection_obj, element_id) {
-         if (selection_obj.fElementId == this.mgr.global_selection_id) {
-            this.table.clearSelection();
          }
       }
    });
