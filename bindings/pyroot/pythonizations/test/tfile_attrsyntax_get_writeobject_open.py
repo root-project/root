@@ -75,6 +75,20 @@ class TFileOpenReadWrite(unittest.TestCase):
         handle = ROOT.TFile.AsyncOpen("inexistent_file.root")
         self.assertRaises(OSError, ROOT.TFile.Open, handle)
 
+    def test_keys_title(self):
+        """
+        Test that the TKey related to a histogram in the file contains the
+        histogram title as described in #9989.
+        """
+        finput = ROOT.TFile.Open(self.filename)
+        key1 = finput.GetListOfKeys().At(0)
+        key2 = finput.Get("dir1").GetListOfKeys().At(0)
+        key3 = finput.Get("dir1/dir2").GetListOfKeys().At(0)
+        self.assertEqual(key1.GetTitle(), "h")
+        self.assertEqual(key2.GetTitle(), "h1")
+        self.assertEqual(key3.GetTitle(), "h2")
+        finput.Close()
+
 
 if __name__ == '__main__':
     unittest.main()
