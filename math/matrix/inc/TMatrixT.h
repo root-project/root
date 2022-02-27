@@ -80,7 +80,7 @@ public:
    TMatrixT(const TMatrixTSym <Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSym<Element> &b);
    TMatrixT(const TMatrixTLazy<Element> &lazy_constructor);
 
-   virtual ~TMatrixT() { TMatrixT::Clear(); }
+   ~TMatrixT() override { TMatrixT::Clear(); }
 
    // Elementary constructors
 
@@ -107,17 +107,17 @@ public:
    void MultT(const TMatrixTSym<Element> &a,const TMatrixT   <Element> &b);
    void MultT(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b) { Mult(a,b); }
 
-   virtual const Element *GetMatrixArray  () const;
-   virtual       Element *GetMatrixArray  ();
-   virtual const Int_t   *GetRowIndexArray() const { return 0; }
-   virtual       Int_t   *GetRowIndexArray()       { return 0; }
-   virtual const Int_t   *GetColIndexArray() const { return 0; }
-   virtual       Int_t   *GetColIndexArray()       { return 0; }
+   const Element *GetMatrixArray  () const override;
+         Element *GetMatrixArray  () override;
+   const Int_t   *GetRowIndexArray() const override { return 0; }
+         Int_t   *GetRowIndexArray() override       { return 0; }
+   const Int_t   *GetColIndexArray() const override { return 0; }
+         Int_t   *GetColIndexArray() override       { return 0; }
 
-   virtual       TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
-   virtual       TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
+         TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) override { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
+         TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) override { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
-   virtual void Clear(Option_t * /*option*/ ="") { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
+   void Clear(Option_t * /*option*/ ="") override { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
                                                    else fElements = 0;
                                                    this->fNelems = 0; }
 
@@ -130,19 +130,19 @@ public:
            TMatrixT    <Element> &Use     (TMatrixT<Element> &a);
    const   TMatrixT    <Element> &Use     (const TMatrixT<Element> &a) const;
 
-   virtual TMatrixTBase<Element> &GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                           TMatrixTBase<Element> &target,Option_t *option="S") const;
+   TMatrixTBase<Element> &GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                                           TMatrixTBase<Element> &target,Option_t *option="S") const override;
            TMatrixT    <Element>  GetSub  (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-   virtual TMatrixTBase<Element> &SetSub  (Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source);
+   TMatrixTBase<Element> &SetSub  (Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source) override;
 
-   virtual TMatrixTBase<Element> &ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/ =-1);
-   virtual TMatrixTBase<Element> &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t /*nr_nonzeros*/ =-1);
+   TMatrixTBase<Element> &ResizeTo(Int_t nrows,Int_t ncols,Int_t /*nr_nonzeros*/ =-1) override;
+   TMatrixTBase<Element> &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t /*nr_nonzeros*/ =-1) override;
    inline  TMatrixTBase<Element> &ResizeTo(const TMatrixT<Element> &m) {
                                             return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),m.GetColUpb());
                                  }
 
-   virtual Double_t Determinant  () const;
-   virtual void     Determinant  (Double_t &d1,Double_t &d2) const;
+   Double_t Determinant  () const override;
+   void     Determinant  (Double_t &d1,Double_t &d2) const override;
 
            TMatrixT<Element> &Invert      (Double_t *det=0);
            TMatrixT<Element> &InvertFast  (Double_t *det=0);
@@ -156,8 +156,8 @@ public:
    TMatrixT<Element> &NormByRow   (const TVectorT<Element> &v,Option_t *option="D");
 
    // Either access a_ij as a(i,j)
-   inline       Element                     operator()(Int_t rown,Int_t coln) const;
-   inline       Element                    &operator()(Int_t rown,Int_t coln);
+   inline       Element                     operator()(Int_t rown,Int_t coln) const override;
+   inline       Element                    &operator()(Int_t rown,Int_t coln) override;
 
    // or as a[i][j]
    inline const TMatrixTRow_const<Element>  operator[](Int_t rown) const { return TMatrixTRow_const<Element>(*this,rown); }
@@ -204,7 +204,7 @@ public:
 
    const TMatrixT<Element> EigenVectors(TVectorT<Element> &eigenValues) const;
 
-   ClassDef(TMatrixT,4) // Template of General Matrix class
+   ClassDefOverride(TMatrixT,4) // Template of General Matrix class
 };
 
 #ifndef __CINT__

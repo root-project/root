@@ -45,13 +45,13 @@ public:
 
 
    /// virtual destructor
-   virtual ~TFoamSampler();
+   ~TFoamSampler() override;
 
 
    using DistSampler::SetFunction;
 
    /// set the parent function distribution to use for random sampling (one dim case)
-   void SetFunction(const ROOT::Math::IGenFunction & func)  {
+   void SetFunction(const ROOT::Math::IGenFunction & func) override  {
       fFunc1D = &func;
       SetFunction<const ROOT::Math::IGenFunction>(func, 1);
    }
@@ -63,38 +63,38 @@ public:
    /**
       initialize the generators with the default options
    */
-   bool Init(const char * = "");
+   bool Init(const char * = "") override;
 
    /**
       initialize the generators with the given options
    */
-   bool Init(const ROOT::Math::DistSamplerOptions & opt );
+   bool Init(const ROOT::Math::DistSamplerOptions & opt ) override;
 
    /**
        Set the random engine to be used
        Needs to be called before Init to have effect
    */
-   void SetRandom(TRandom * r);
+   void SetRandom(TRandom * r) override;
 
    /**
        Set the random seed for the TRandom instances used by the sampler
        classes
        Needs to be called before Init to have effect
    */
-   void SetSeed(unsigned int seed);
+   void SetSeed(unsigned int seed) override;
 
 
    /**
       Get the random engine used by the sampler
     */
-   TRandom * GetRandom();
+   TRandom * GetRandom() override;
 
 
    /**
       sample one event in multi-dimension by filling the given array
       return false if sampling failed
    */
-   bool Sample(double * x);
+   bool Sample(double * x) override;
 
    /**
       sample one bin given an estimated of the pdf in the bin
@@ -102,7 +102,7 @@ public:
       divided by the bin width)
       By default do not do random sample, just return the function values
     */
-   bool SampleBin(double prob, double & value, double *error = 0);
+   bool SampleBin(double prob, double & value, double *error = 0) override;
 
 
 
@@ -120,7 +120,7 @@ private:
    TFoam *                           fFoam;        // foam engine class
    TFoamIntegrand *                  fFoamDist;    // foam distribution interface
 
-   //ClassDef(TFoamSampler,1)  //Distribution sampler class based on FOAM
+   //ClassDefOverride(TFoamSampler,1)  //Distribution sampler class based on FOAM
 
 };
 

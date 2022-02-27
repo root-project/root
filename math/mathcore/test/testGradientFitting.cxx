@@ -21,26 +21,26 @@
 template <class T>
 class GradFunc2D : public ROOT::Math::IParamMultiGradFunctionTempl<T> {
 public:
-   void SetParameters(const double *p) {
+   void SetParameters(const double *p) override {
       std::copy(p, p + NPar(), fParameters);
       // compute integral in interval [0,1][0,1]
       fIntegral = Integral(p);
    }
 
-   const double *Parameters() const { return fParameters; }
+   const double *Parameters() const override { return fParameters; }
 
-   ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const
+   ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const override
    {
       GradFunc2D<T> *f = new GradFunc2D<T>();
       f->SetParameters(fParameters);
       return f;
    }
 
-   unsigned int NDim() const { return 2; }
+   unsigned int NDim() const override { return 2; }
 
-   unsigned int NPar() const { return 5; }
+   unsigned int NPar() const override { return 5; }
 
-   void ParameterGradient(const T *x, const double * p, T *grad) const
+   void ParameterGradient(const T *x, const double * p, T *grad) const override
    {
       if (p == nullptr) {
          ParameterGradient(x, fParameters, grad);
@@ -73,14 +73,14 @@ private:
       return fval;
    }
 
-   T DoEvalPar(const T *x, const double *p) const
+   T DoEvalPar(const T *x, const double *p) const override
    {
       if (p == nullptr)
          return DoEvalPar(x, fParameters);
       return p[0] * FVal(x,p) / fIntegral;
    }
 
-   T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const
+   T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const override
    {
       std::vector<T> grad(NPar());
       ParameterGradient(x, p, &grad[0]);
@@ -118,7 +118,7 @@ int printLevel = 0;
 template <class T>
 class GradientFittingTest : public ::testing::Test {
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       // Create TF2 from model function and initialize the fit function
       std::stringstream streamTF2;

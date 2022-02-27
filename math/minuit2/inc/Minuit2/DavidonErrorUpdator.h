@@ -24,9 +24,9 @@ class DavidonErrorUpdator : public MinimumErrorUpdator {
 public:
    DavidonErrorUpdator() {}
 
-   virtual ~DavidonErrorUpdator() {}
+   ~DavidonErrorUpdator() override {}
 
-   virtual MinimumError Update(const MinimumState &, const MinimumParameters &, const FunctionGradient &) const;
+   MinimumError Update(const MinimumState &, const MinimumParameters &, const FunctionGradient &) const override;
 
 private:
 };

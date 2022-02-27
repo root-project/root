@@ -41,7 +41,7 @@ private:
    TRotation(const TQuaternion &);
    // Copy constructor.
 
-   virtual ~TRotation() {;};
+   ~TRotation() override {;};
 
    inline Double_t XX() const;
    inline Double_t XY() const;
@@ -182,7 +182,7 @@ protected:
    Double_t fxx, fxy, fxz, fyx, fyy, fyz, fzx, fzy, fzz;
    // The matrix elements.
 
-   ClassDef(TRotation,1) // Rotations of TVector3 objects
+   ClassDefOverride(TRotation,1) // Rotations of TVector3 objects
 
 };
 

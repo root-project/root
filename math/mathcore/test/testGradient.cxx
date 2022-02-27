@@ -325,7 +325,7 @@ struct Chi2GradientTestEvaluation : public GradientTestEvaluation<T, ROOT::Fit::
 
    Chi2GradientTestEvaluation() { SetFitter(); }
 
-   virtual void SetFitter() override
+   void SetFitter() override
    {
       this->fFitter = new ROOT::Fit::Chi2FCN<GradFunctionType, BaseFunctionType>(*(this->fData), *(this->fFitFunction),
                                                                                  T::ExecutionPolicyType());
@@ -340,7 +340,7 @@ struct PoissonLikelihoodGradientTestEvaluation : public GradientTestEvaluation<T
 
    PoissonLikelihoodGradientTestEvaluation() { SetFitter(); }
 
-   virtual void SetFitter() override
+   void SetFitter() override
    {
       this->fFitter = new ROOT::Fit::PoissonLikelihoodFCN<GradFunctionType, BaseFunctionType>(
          *(this->fData), *(this->fFitFunction), 0, true, T::ExecutionPolicyType());
@@ -355,7 +355,7 @@ struct LogLikelihoodGradientTestEvaluation : public GradientTestEvaluation<T, RO
 
    LogLikelihoodGradientTestEvaluation() { SetFitter(); }
 
-   virtual void SetFitter() override
+   void SetFitter() override
    {
       this->fFitter = new ROOT::Fit::LogLikelihoodFCN<GradFunctionType, BaseFunctionType>(
          *(this->fData), *(this->fFitFunction), 0, false, T::ExecutionPolicyType());
@@ -372,7 +372,7 @@ class Chi2GradientTest : public ::testing::Test, public Chi2GradientTestEvaluati
    using typename Chi2GradientTestEvaluation<T>::ScalarSerial;
 
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       T::PrintTypeInfo("Chi2FCN");
 
@@ -397,7 +397,7 @@ class PoissonLikelihoodGradientTest : public ::testing::Test, public PoissonLike
    using typename PoissonLikelihoodGradientTestEvaluation<T>::ScalarSerial;
 
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       T::PrintTypeInfo("PoissonLikelihoodFCN");
 
@@ -422,7 +422,7 @@ class LogLikelihoodGradientTest : public ::testing::Test, public LogLikelihoodGr
    using typename LogLikelihoodGradientTestEvaluation<T>::ScalarSerial;
 
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       T::PrintTypeInfo("LogLikelihoodFCN");
 

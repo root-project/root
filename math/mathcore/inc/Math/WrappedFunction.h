@@ -68,7 +68,7 @@ class WrappedFunction : public IGenFunction {
    // use default copy constructor and assignment operator
 
    /// clone (required by the interface)
-   WrappedFunction * Clone() const {
+   WrappedFunction * Clone() const override {
       return new WrappedFunction(fFunc);
    }
 
@@ -76,7 +76,7 @@ class WrappedFunction : public IGenFunction {
 
 private:
 
-   virtual double DoEval (double x) const {
+   double DoEval (double x) const override {
       return fFunc( x );
    }
 
@@ -119,14 +119,14 @@ class WrappedMemFunction : public IGenFunction {
    // use default  copy constructor and assignment operator
 
    /// clone (required by the interface)
-   WrappedMemFunction * Clone() const {
+   WrappedMemFunction * Clone() const override {
       return new WrappedMemFunction(*fObj,fMemFunc);
    }
 
 
 private:
 
-   virtual double DoEval (double x) const {
+   double DoEval (double x) const override {
       return ((*fObj).*fMemFunc)( x );
    }
 
@@ -167,17 +167,17 @@ class WrappedMultiFunction : public IMultiGenFunction {
    // use default  copy contructor and assignment operator
 
    /// clone (required by the interface)
-   WrappedMultiFunction * Clone() const {
+   WrappedMultiFunction * Clone() const override {
       return new WrappedMultiFunction(fFunc,fDim);
    }
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
    //  virtual ~WrappedFunction() { /**/ }
 
 private:
 
-   virtual double DoEval (const double * x) const {
+   double DoEval (const double * x) const override {
       return fFunc( x );
    }
 
@@ -207,16 +207,16 @@ class WrappedMemMultiFunction : public IMultiGenFunction {
    // use default  copy constructor and assignment operator
 
    /// clone (required by the interface)
-   WrappedMemMultiFunction * Clone() const {
+   WrappedMemMultiFunction * Clone() const override {
       return new WrappedMemMultiFunction(*fObj,fMemFunc,fDim);
    }
 
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
 private:
 
-   virtual double DoEval (const double * x) const {
+   double DoEval (const double * x) const override {
       return ((*fObj).*fMemFunc)( x );
    }
 

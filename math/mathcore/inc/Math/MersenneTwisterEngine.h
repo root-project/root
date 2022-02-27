@@ -61,11 +61,11 @@ namespace ROOT {
             SetSeed(seed);
          }
 
-         virtual ~MersenneTwisterEngine() {}
+         ~MersenneTwisterEngine() override {}
 
          void SetSeed(Result_t seed);
 
-         virtual double Rndm() {
+         double Rndm() override {
             return Rndm_impl();
          }
          inline double operator() () { return Rndm_impl(); }

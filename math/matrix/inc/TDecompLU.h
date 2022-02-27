@@ -35,7 +35,7 @@ protected :
    static Bool_t DecomposeLUCrout(TMatrixD &lu,Int_t *index,Double_t &sign,Double_t tol,Int_t &nrZeros);
    static Bool_t DecomposeLUGauss(TMatrixD &lu,Int_t *index,Double_t &sign,Double_t tol,Int_t &nrZeros);
 
-   virtual const TMatrixDBase &GetDecompMatrix() const { return fLU; }
+   const TMatrixDBase &GetDecompMatrix() const override { return fLU; }
 
 public :
 
@@ -44,35 +44,35 @@ public :
    TDecompLU(Int_t row_lwb,Int_t row_upb);
    TDecompLU(const TMatrixD &m,Double_t tol = 0.0,Int_t implicit = 1);
    TDecompLU(const TDecompLU &another);
-   virtual ~TDecompLU() {if (fIndex) delete [] fIndex; fIndex = 0; }
+   ~TDecompLU() override {if (fIndex) delete [] fIndex; fIndex = 0; }
 
            const TMatrixD  GetMatrix ();
-   virtual       Int_t     GetNrows  () const { return fLU.GetNrows(); }
-   virtual       Int_t     GetNcols  () const { return fLU.GetNcols(); }
+         Int_t     GetNrows  () const override { return fLU.GetNrows(); }
+         Int_t     GetNcols  () const override { return fLU.GetNcols(); }
            const TMatrixD &GetLU     ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                 return fLU; }
 
    virtual       void      SetMatrix (const TMatrixD &a);
 
-   virtual Bool_t   Decompose  ();
-   virtual Bool_t   Solve      (      TVectorD &b);
-   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
-   virtual Bool_t   Solve      (      TMatrixDColumn &b);
-   virtual Bool_t   TransSolve (      TVectorD &b);
-   virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = TransSolve(x); return x; }
-   virtual Bool_t   TransSolve (      TMatrixDColumn &b);
-   virtual void     Det        (Double_t &d1,Double_t &d2);
+   Bool_t   Decompose  () override;
+   Bool_t   Solve      (      TVectorD &b) override;
+   TVectorD Solve      (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = Solve(x); return x; }
+   Bool_t   Solve      (      TMatrixDColumn &b) override;
+   Bool_t   TransSolve (      TVectorD &b) override;
+   TVectorD TransSolve (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = TransSolve(x); return x; }
+   Bool_t   TransSolve (      TMatrixDColumn &b) override;
+   void     Det        (Double_t &d1,Double_t &d2) override;
 
    static  Bool_t   InvertLU  (TMatrixD &a,Double_t tol,Double_t *det=0);
    Bool_t           Invert    (TMatrixD &inv);
    TMatrixD         Invert    (Bool_t &status);
    TMatrixD         Invert    () { Bool_t status; return Invert(status); }
 
-   void Print(Option_t *opt ="") const; // *MENU*
+   void Print(Option_t *opt ="") const override; // *MENU*
 
    TDecompLU &operator= (const TDecompLU &source);
 
-   ClassDef(TDecompLU,1) // Matrix Decompositition LU
+   ClassDefOverride(TDecompLU,1) // Matrix Decompositition LU
 };
 
 #endif

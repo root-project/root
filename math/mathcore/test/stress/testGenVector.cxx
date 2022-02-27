@@ -27,7 +27,7 @@ protected:
    std::vector<typename T::V2_t> fV2;
    const int fDim = T::GetDim();
 
-   virtual void SetUp()
+   void SetUp() override
    {
       fVectorTest.GenData();
       fV1.reserve(fNGen);

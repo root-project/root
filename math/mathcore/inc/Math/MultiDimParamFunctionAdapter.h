@@ -81,7 +81,7 @@ namespace ROOT {
          /**
             Destructor (no operations)
          */
-         virtual ~MultiDimParamFunctionAdapter()
+         ~MultiDimParamFunctionAdapter() override
          {
             if (fOwn && fFunc != 0) delete fFunc;
          }
@@ -105,7 +105,7 @@ namespace ROOT {
          /**
             clone
          */
-         virtual BaseFunc *Clone() const
+         BaseFunc *Clone() const override
          {
             return new MultiDimParamFunctionAdapter(*this);
          }
@@ -113,22 +113,22 @@ namespace ROOT {
       public:
 
          // methods required by interface
-         const double *Parameters() const
+         const double *Parameters() const override
          {
             return  fFunc->Parameters();
          }
 
-         void SetParameters(const double *p)
+         void SetParameters(const double *p) override
          {
             fFunc->SetParameters(p);
          }
 
-         unsigned int NPar() const
+         unsigned int NPar() const override
          {
             return fFunc->NPar();
          }
 
-         unsigned int NDim() const
+         unsigned int NDim() const override
          {
             return 1;
          }
@@ -137,7 +137,7 @@ namespace ROOT {
       private:
 
          /// needed by the interface
-         double DoEvalPar(const double *x, const double *p) const
+         double DoEvalPar(const double *x, const double *p) const override
          {
             return (*fFunc)(*x, p);
          }
@@ -212,7 +212,7 @@ namespace ROOT {
          /**
             Destructor (no operations)
          */
-         virtual ~MultiDimParamGradFunctionAdapter()
+         ~MultiDimParamGradFunctionAdapter() override
          {
             if (fOwn && fFunc != 0) delete fFunc;
          }
@@ -236,7 +236,7 @@ namespace ROOT {
          /**
             clone
          */
-         virtual BaseFunc *Clone() const
+         BaseFunc *Clone() const override
          {
             return new MultiDimParamGradFunctionAdapter(*this);
          }
@@ -244,22 +244,22 @@ namespace ROOT {
       public:
 
          // methods required by interface
-         const double *Parameters() const
+         const double *Parameters() const override
          {
             return  fFunc->Parameters();
          }
 
-         void SetParameters(const double *p)
+         void SetParameters(const double *p) override
          {
             fFunc->SetParameters(p);
          }
 
-         unsigned int NPar() const
+         unsigned int NPar() const override
          {
             return fFunc->NPar();
          }
 
-         unsigned int NDim() const
+         unsigned int NDim() const override
          {
             return 1;
          }
@@ -268,7 +268,7 @@ namespace ROOT {
 //       grad[0] = fFunc->Derivative( *x);
 //    }
 
-         void ParameterGradient(const double *x, const double *p, double *grad) const
+         void ParameterGradient(const double *x, const double *p, double *grad) const override
          {
             fFunc->ParameterGradient(*x, p, grad);
          }
@@ -278,7 +278,7 @@ namespace ROOT {
       private:
 
          /// functions needed by interface
-         double DoEvalPar(const double *x, const double *p) const
+         double DoEvalPar(const double *x, const double *p) const override
          {
             return (*fFunc)(*x, p);
          }
@@ -287,7 +287,7 @@ namespace ROOT {
 //       return fFunc->Derivative(*x);
 //    }
 
-         double DoParameterDerivative(const double *x, const double *p, unsigned int ipar) const
+         double DoParameterDerivative(const double *x, const double *p, unsigned int ipar) const override
          {
             return fFunc->ParameterDerivative(*x, p, ipar);
          }

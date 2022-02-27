@@ -145,7 +145,7 @@ namespace Math {
          */
       GSLIntegrator(const char *  type, int rule, double absTol, double relTol, size_t size );
 
-      virtual ~GSLIntegrator();
+      ~GSLIntegrator() override;
       //~GSLIntegrator();
 
       // disable copy ctrs
@@ -167,7 +167,7 @@ namespace Math {
           */
 
 
-      void SetFunction(const IGenFunction &f);
+      void SetFunction(const IGenFunction &f) override;
 
       /**
          Set function from a GSL pointer function type
@@ -200,7 +200,7 @@ namespace Math {
         @param b lower interval value
         @param c singular value of f
         */
-      double IntegralCauchy(double a, double b, double c);
+      double IntegralCauchy(double a, double b, double c) override;
 
       /**
        evaluate the Cauchy principal value of the integral of  a function f over the defined interval (a,b)
@@ -243,32 +243,32 @@ namespace Math {
        @param b upper value of the integration interval
        */
 
-      double Integral(double a, double b);
+      double Integral(double a, double b) override;
 
 
       /**
          evaluate the Integral over the infinite interval (-inf,+inf) using the function previously set with GSLIntegrator::SetFunction method.
        */
-      double Integral( );
+      double Integral( ) override;
 
       /**
          evaluate the Integral of a function f over the semi-infinite interval (a,+inf) using the function previously set with GSLIntegrator::SetFunction method.
        @param a lower value of the integration interval
        */
-      double IntegralUp(double a );
+      double IntegralUp(double a ) override;
 
       /**
          evaluate the Integral of a function f over the over the semi-infinite interval (-inf,b) using the function previously set with GSLIntegrator::SetFunction method.
        @param b upper value of the integration interval
        */
-      double IntegralLow( double b );
+      double IntegralLow( double b ) override;
 
       /**
          evaluate the Integral over the defined interval (a,b) using the function previously set with GSLIntegrator::SetFunction method. The function has known singular points.
        @param pts vector containing both the function singular points and the lower/upper edges of the interval. The vector must have as first element the lower edge of the integration Integral ( \a a) and last element the upper value.
 
        */
-      double Integral( const std::vector<double> & pts);
+      double Integral( const std::vector<double> & pts) override;
 
       // evaluate using free function pointer (same GSL signature)
 
@@ -315,35 +315,35 @@ namespace Math {
       /**
          return  the Result of the last Integral calculation
        */
-      double Result() const;
+      double Result() const override;
 
       /**
          return the estimate of the absolute Error of the last Integral calculation
        */
-      double Error() const;
+      double Error() const override;
 
       /**
          return the Error Status of the last Integral calculation
        */
-      int Status() const;
+      int Status() const override;
 
       /**
           return number of function evaluations in calculating the integral
       */
-      int NEval() const { return fNEval; }
+      int NEval() const override { return fNEval; }
 
       // setter for control Parameters  (getters are not needed so far )
 
       /**
          set the desired relative Error
        */
-      void SetRelTolerance(double relTolerance);
+      void SetRelTolerance(double relTolerance) override;
 
 
       /**
          set the desired absolute Error
        */
-      void SetAbsTolerance(double absTolerance);
+      void SetAbsTolerance(double absTolerance) override;
 
       /**
          set the integration rule (Gauss-Kronrod rule).
@@ -353,10 +353,10 @@ namespace Math {
       void SetIntegrationRule(Integration::GKRule );
 
       /// set the options
-      virtual void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt);
+      void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) override;
 
       ///  get the option used for the integration
-      virtual ROOT::Math::IntegratorOneDimOptions Options() const;
+      ROOT::Math::IntegratorOneDimOptions Options() const override;
 
       /// get type name
       IntegrationOneDim::Type GetType() const { return fType; }

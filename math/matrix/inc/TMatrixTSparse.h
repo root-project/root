@@ -83,17 +83,17 @@ public:
    TMatrixTSparse(const TMatrixTSparse<Element> &a,EMatrixCreatorsOp2 op,const TMatrixT      <Element> &b);
    TMatrixTSparse(const TMatrixT      <Element> &a,EMatrixCreatorsOp2 op,const TMatrixTSparse<Element> &b);
 
-   virtual ~TMatrixTSparse() { TMatrixTSparse::Clear(); }
+   ~TMatrixTSparse() override { TMatrixTSparse::Clear(); }
 
-   virtual const Element *GetMatrixArray  () const;
-   virtual       Element *GetMatrixArray  ();
-   virtual const Int_t    *GetRowIndexArray() const;
-   virtual       Int_t    *GetRowIndexArray();
-   virtual const Int_t    *GetColIndexArray() const;
-   virtual       Int_t    *GetColIndexArray();
+   const Element *GetMatrixArray  () const override;
+         Element *GetMatrixArray  () override;
+   const Int_t    *GetRowIndexArray() const override;
+         Int_t    *GetRowIndexArray() override;
+   const Int_t    *GetColIndexArray() const override;
+         Int_t    *GetColIndexArray() override;
 
-   virtual TMatrixTBase<Element>   &SetRowIndexArray(Int_t *data) { memmove(fRowIndex,data,(this->fNrows+1)*sizeof(Int_t)); return *this; }
-   virtual TMatrixTBase<Element>   &SetColIndexArray(Int_t *data) { memmove(fColIndex,data,this->fNelems*sizeof(Int_t)); return *this; }
+   TMatrixTBase<Element>   &SetRowIndexArray(Int_t *data) override { memmove(fRowIndex,data,(this->fNrows+1)*sizeof(Int_t)); return *this; }
+   TMatrixTBase<Element>   &SetColIndexArray(Int_t *data) override { memmove(fColIndex,data,this->fNelems*sizeof(Int_t)); return *this; }
 
            TMatrixTSparse<Element> &SetSparseIndex  (Int_t nelem_new);
            TMatrixTSparse<Element> &SetSparseIndex  (const TMatrixTBase<Element> &another);
@@ -102,19 +102,19 @@ public:
            TMatrixTSparse<Element> &SetSparseIndexAB(const TMatrixTSparse<Element> &a,const TMatrixT      <Element> &b)
                                               { return SetSparseIndexAB(b,a); }
 
-   virtual void                     GetMatrix2Array (Element *data,Option_t * /*option*/ ="") const;
-   virtual TMatrixTBase<Element>   &SetMatrixArray  (const Element *data,Option_t * /*option*/="")
+   void                     GetMatrix2Array (Element *data,Option_t * /*option*/ ="") const override;
+   TMatrixTBase<Element>   &SetMatrixArray  (const Element *data,Option_t * /*option*/="") override
                                                     { memcpy(fElements,data,this->fNelems*sizeof(Element)); return *this; }
    virtual TMatrixTBase<Element>   &SetMatrixArray  (Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Element *data);
-   virtual TMatrixTBase<Element>   &InsertRow       (Int_t row,Int_t col,const Element *v,Int_t n=-1);
-   virtual void                     ExtractRow      (Int_t row,Int_t col,      Element *v,Int_t n=-1) const;
+   TMatrixTBase<Element>   &InsertRow       (Int_t row,Int_t col,const Element *v,Int_t n=-1) override;
+   void                     ExtractRow      (Int_t row,Int_t col,      Element *v,Int_t n=-1) const override;
 
-   virtual TMatrixTBase<Element>   &ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1);
-   virtual TMatrixTBase<Element>   &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1);
+   TMatrixTBase<Element>   &ResizeTo(Int_t nrows,Int_t ncols,Int_t nr_nonzeros=-1) override;
+   TMatrixTBase<Element>   &ResizeTo(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros=-1) override;
    inline  TMatrixTBase<Element>   &ResizeTo(const TMatrixTSparse<Element> &m) {return ResizeTo(m.GetRowLwb(),m.GetRowUpb(),m.GetColLwb(),
                                                                                                 m.GetColUpb(),m.GetNoElements()); }
 
-   virtual void Clear(Option_t * /*option*/ ="") { if (this->fIsOwner) {
+   void Clear(Option_t * /*option*/ ="") override { if (this->fIsOwner) {
                                                       if (fElements) { delete [] fElements; fElements = 0; }
                                                       if (fRowIndex) { delete [] fRowIndex; fRowIndex = 0; }
                                                       if (fColIndex) { delete [] fColIndex; fColIndex = 0; }
@@ -139,30 +139,30 @@ public:
            TMatrixTSparse<Element> &Use   (TMatrixTSparse<Element> &a);
    const   TMatrixTSparse<Element> &Use   (const TMatrixTSparse<Element> &a) const;
 
-   virtual TMatrixTBase<Element>   &GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
-                                            TMatrixTBase<Element> &target,Option_t *option="S") const;
+   TMatrixTBase<Element>   &GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
+                                            TMatrixTBase<Element> &target,Option_t *option="S") const override;
            TMatrixTSparse<Element>  GetSub(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Option_t *option="S") const;
-   virtual TMatrixTBase<Element>   &SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source);
+   TMatrixTBase<Element>   &SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase<Element> &source) override;
 
-   virtual Bool_t IsSymmetric() const { return (*this == TMatrixTSparse<Element>(kTransposed,*this)); }
+   Bool_t IsSymmetric() const override { return (*this == TMatrixTSparse<Element>(kTransposed,*this)); }
    TMatrixTSparse<Element> &Transpose (const TMatrixTSparse<Element> &source);
    inline TMatrixTSparse<Element> &T () { return this->Transpose(*this); }
 
    inline void Mult(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b) { AMultB(a,b,0); }
 
-   virtual TMatrixTBase<Element> &Zero       ();
-   virtual TMatrixTBase<Element> &UnitMatrix ();
+   TMatrixTBase<Element> &Zero       () override;
+   TMatrixTBase<Element> &UnitMatrix () override;
 
-   virtual Element RowNorm () const;
-   virtual Element ColNorm () const;
-   virtual Int_t   NonZeros() const { return this->fNelems; }
+   Element RowNorm () const override;
+   Element ColNorm () const override;
+   Int_t   NonZeros() const override { return this->fNelems; }
 
-   virtual TMatrixTBase<Element> &NormByDiag(const TVectorT<Element> &/*v*/,Option_t * /*option*/)
+   TMatrixTBase<Element> &NormByDiag(const TVectorT<Element> &/*v*/,Option_t * /*option*/) override
                                               { MayNotUse("NormByDiag"); return *this; }
 
    // Either access a_ij as a(i,j)
-   Element  operator()(Int_t rown,Int_t coln) const;
-   Element &operator()(Int_t rown,Int_t coln);
+   Element  operator()(Int_t rown,Int_t coln) const override;
+   Element &operator()(Int_t rown,Int_t coln) override;
 
    // or as a[i][j]
    inline const TMatrixTSparseRow_const<Element> operator[](Int_t rown) const { return TMatrixTSparseRow_const<Element>(*this,rown); }
@@ -196,10 +196,10 @@ public:
                                                                                 AMultB(tmp,source,1);
                                                                                 return *this; }
 
-   virtual TMatrixTBase  <Element> &Randomize  (Element alpha,Element beta,Double_t &seed);
+   TMatrixTBase  <Element> &Randomize  (Element alpha,Element beta,Double_t &seed) override;
    virtual TMatrixTSparse<Element> &RandomizePD(Element alpha,Element beta,Double_t &seed);
 
-   ClassDef(TMatrixTSparse,3) // Template of Sparse Matrix class
+   ClassDefOverride(TMatrixTSparse,3) // Template of Sparse Matrix class
 };
 
 #ifndef __CINT__
