@@ -59,7 +59,12 @@
 // specific to this package
 #include "RooStats/HistFactory/LinInterpVar.h"
 #include "RooStats/HistFactory/HistoToWorkspaceFactory.h"
-#include "Helper.h"
+#include "RooStats/HistFactory/EstimateSummary.h"
+#include "RooStats/HistFactory/Measurement.h"
+#include "RooStats/HistFactory/HistFactoryException.h"
+#include "RooWorkspace.h"
+#include "RooStats/ModelConfig.h"
+#include "RooDataSet.h"
 
 #define VERBOSE
 

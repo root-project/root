@@ -24,7 +24,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     RooStats/HistFactory/HistFactoryException.h
     RooStats/HistFactory/HistFactoryModelUtils.h
     RooStats/HistFactory/HistFactoryNavigation.h
-    RooStats/HistFactory/HistFactorySimultaneous.h
     RooStats/HistFactory/HistoToWorkspaceFactoryFast.h
     RooStats/HistFactory/HistoToWorkspaceFactory.h
     RooStats/HistFactory/HistRef.h
@@ -44,16 +43,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/Data.cxx
     src/EstimateSummary.cxx
     src/FlexibleInterpVar.cxx
-    src/Helper.cxx
-    src/Helper.h
     src/HistFactoryModelUtils.cxx
     src/HistFactoryNavigation.cxx
-    src/HistFactorySimultaneous.cxx
     src/HistoToWorkspaceFactory.cxx
     src/HistoToWorkspaceFactoryFast.cxx
     src/HistRef.cxx
     src/LinInterpVar.cxx
-    src/MakeModelAndMeasurements.cxx
     src/MakeModelAndMeasurementsFast.cxx
     src/Measurement.cxx
     src/ParamHistFunc.cxx
@@ -87,7 +82,6 @@ if(NOT MSVC)
 endif()
 
 ROOT_EXECUTABLE(hist2workspace
-  MakeModelAndMeasurements.cxx
   hist2workspace.cxx
   LIBRARIES
     HistFactory

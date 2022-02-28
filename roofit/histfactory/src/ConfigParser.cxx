@@ -20,13 +20,91 @@
 #include "RooStats/HistFactory/HistFactoryException.h"
 #include "RooStats/HistFactory/Measurement.h"
 
-#include "Helper.h"
 #include "HFMsgService.h"
+
+#include <sstream>
 
 using namespace RooStats;
 using namespace HistFactory;
 
 using namespace std;
+
+namespace {
+
+    void AddSubStrings( vector<std::string> & vs, std::string s){
+      const std::string delims("\\ ");
+      std::string::size_type begIdx, endIdx;
+      begIdx=s.find_first_not_of(delims);
+      while(begIdx!=string::npos){
+   endIdx=s.find_first_of(delims, begIdx);
+   if(endIdx==string::npos) endIdx=s.length();
+   vs.push_back(s.substr(begIdx,endIdx-begIdx));
+   begIdx=s.find_first_not_of(delims, endIdx);
+      }
+    }
+
+    // Turn a std::string of "children" (space separated items)
+    // into a vector of std::strings
+    std::vector<std::string> GetChildrenFromString( std::string str ) {
+
+      std::vector<std::string> child_vec;
+
+      const std::string delims("\\ ");
+      std::string::size_type begIdx, endIdx;
+      begIdx=str.find_first_not_of(delims);
+      while(begIdx!=string::npos){
+   endIdx=str.find_first_of(delims, begIdx);
+   if(endIdx==string::npos) endIdx=str.length();
+   std::string child_name = str.substr(begIdx,endIdx-begIdx);
+   child_vec.push_back(child_name);
+   begIdx=str.find_first_not_of(delims, endIdx);
+      }
+
+      return child_vec;
+    }
+
+    // Turn a std::string of "children" (space separated items)
+    // into a vector of std::strings
+    void AddParamsToAsimov( RooStats::HistFactory::Asimov& asimov, std::string str ) {
+
+      // First, split the string into a list
+      // each describing a parameter
+      std::vector<std::string> string_list = GetChildrenFromString( str );
+
+      // Next, go through each one and split based
+      // on the '=' to separate the name from the val
+      // and fill the map
+      std::map<std::string, double> param_map;
+
+      for( unsigned int i=0; i < string_list.size(); ++i) {
+
+   std::string param = string_list.at(i);
+   // Split the string
+   size_t eql_location = param.find("=");
+
+   // If there is no '=' deliminator, we only
+   // set the variable constant
+   if( eql_location==string::npos ) {
+     asimov.SetFixedParam(param);
+   }
+   else {
+
+     std::string param_name = param.substr(0,eql_location);
+     double param_val = atof( param.substr(eql_location+1, param.size()).c_str() );
+
+     std::cout << "ASIMOV - Param Name: " << param_name
+          << " Param Val: " << param_val << std::endl;
+     // Give the params a value AND set them constant
+     asimov.SetParamValue(param_name, param_val);
+     asimov.SetFixedParam(param_name);
+   }
+
+      }
+
+      return;
+
+    }
+}
 
 std::vector< RooStats::HistFactory::Measurement > ConfigParser::GetMeasurementsFromXML( string input ) {
 

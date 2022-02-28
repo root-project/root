@@ -18,7 +18,6 @@
 #include "RooProdPdf.h"
 #include "TH1.h"
 
-#include "RooStats/HistFactory/HistFactorySimultaneous.h"
 #include "RooStats/HistFactory/HistFactoryModelUtils.h"
 
 namespace RooStats{
@@ -83,7 +82,7 @@ namespace HistFactory{
          RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
             FactorizeHistFactoryPdf(observables, *pdfi, obsTerms, constraints);
          }
-      } else if (id == typeid(RooSimultaneous) || id == typeid(HistFactorySimultaneous) ) {    //|| id == typeid(RooSimultaneousOpt)) {
+      } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
          RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
          RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone();
          for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
