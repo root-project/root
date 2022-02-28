@@ -18,10 +18,6 @@
 
 #include <TROOT.h>
 
-//void topDriver(string input); // in MakeModelAndMeasurements
-//void fastDriver(string input); // in MakeModelAndMeasurementsFast
-
-//#include "RooStats/HistFactory/MakeModelAndMeasurements.h"
 #include "RooStats/HistFactory/ConfigParser.h"
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
 #include "HFMsgService.h"

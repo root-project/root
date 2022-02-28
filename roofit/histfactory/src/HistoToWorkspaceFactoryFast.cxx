@@ -69,7 +69,7 @@
 #include "RooStats/HistFactory/FlexibleInterpVar.h"
 #include "RooStats/HistFactory/HistoToWorkspaceFactoryFast.h"
 #include "RooStats/HistFactory/Measurement.h"
-#include "Helper.h"
+#include "RooStats/HistFactory/HistFactoryException.h"
 
 #include <algorithm>
 #include <memory>
