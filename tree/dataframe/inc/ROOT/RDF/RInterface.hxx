@@ -3025,9 +3025,9 @@ public:
    /// \param[in] nMaxCollectionElements Maximum number of collection elements to display per row.
    /// \return the `RDisplay` instance wrapped in a RResultPtr.
    ///
-   /// This function returns a RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
-   /// form. RDisplay will either print on the standard output a summarized version through `Print()` or will return a
-   /// complete version through `AsString()`.
+   /// This function returns a `RResultPtr<RDisplay>` containing all the entries to be displayed, organized in a tabular
+   /// form. RDisplay will either print on the standard output a summarized version through `RDisplay::Print()` or will
+   /// return a complete version through `RDisplay::AsString()`.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. Also see
    /// RResultPtr.
