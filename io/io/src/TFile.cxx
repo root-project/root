@@ -4241,6 +4241,23 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief Call TFile::Open and return a std::unique_ptr.
+///
+/// \param[in] url Full path to the (remote) file.
+/// \param[in] options Options to pass when opening the file.
+/// \param[in] ftitle File title.
+/// \param[in] compress ROOT compression settings.
+/// \param[in] netopt Argument specific to TNetFile.
+///
+/// This function calls TFile::Open passing the input arguments as they are. The
+/// returned file is wrapped in a unique_ptr.
+std::unique_ptr<TFile>
+TFile::MakeUnique(const char *url, Option_t *options, const char *ftitle, Int_t compress, Int_t netopt)
+{
+   return std::unique_ptr<TFile>{TFile::Open(url, options, ftitle, compress, netopt)};
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Submit an asynchronous open request.
 
 /// See TFile::Open(const char *, ...) for an
