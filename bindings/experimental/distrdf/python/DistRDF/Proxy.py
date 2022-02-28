@@ -14,7 +14,7 @@ import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from functools import singledispatch
-from typing import Any
+from typing import Any, Union
 
 import ROOT
 
@@ -203,3 +203,21 @@ def _(operation: Operation.Action, node: Node) -> ActionProxy:
 def _(operation: Operation.InstantAction, node: Node) -> Any:
     execute_graph(node)
     return node.value
+
+
+@get_proxy_for.register
+def _(operation: Operation.Snapshot, node: Node) -> Union[ActionProxy, Any]:
+    if len(operation.args) == 4:
+        # An RSnapshotOptions instance was passed as fourth argument
+        if operation.args[3].fLazy:
+            return get_proxy_for.dispatch(Operation.Action)(operation, node)
+
+    return get_proxy_for.dispatch(Operation.InstantAction)(operation, node)
+
+
+@get_proxy_for.register
+def _(operation: Operation.AsNumpy, node: Node) -> Union[ActionProxy, Any]:
+    if operation.kwargs.get("lazy", False):
+        return get_proxy_for.dispatch(Operation.Action)(operation, node)
+
+    return get_proxy_for.dispatch(Operation.InstantAction)(operation, node)
