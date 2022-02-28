@@ -86,14 +86,17 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(argNominal), _interpBoundary(1.)
 {
-  RooFIter lowIter = lowList.fwdIterator() ;
-  RooAbsReal* val ;
-  while ((val = (RooAbsReal*) lowIter.next())) {
+  //RooFIter lowIter = lowList.fwdIterator() ;
+  //RooAbsReal* val ;
+  //while ((val = (RooAbsReal*) lowIter.next())) 
+  for (auto const *val : static_range_cast<RooAbsReal *>(lowList))
+  {
     _low.push_back(val->getVal()) ;
   }
 
-  RooFIter highIter = highList.fwdIterator() ;
-  while ((val = (RooAbsReal*) highIter.next())) {
+  //RooFIter highIter = highList.fwdIterator() ;
+  //while ((val = (RooAbsReal*) highIter.next())) 
+  for (auto const *val : static_range_cast<RooAbsReal *>(highList)) {
     _high.push_back(val->getVal()) ;
   }
 

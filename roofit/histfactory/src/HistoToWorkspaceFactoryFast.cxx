@@ -1124,21 +1124,24 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
     FILE* covFile = fopen ((filename).c_str(),"w");
 
-    TIter iti = params->createIterator();
-    TIter itj = params->createIterator();
-    RooRealVar *myargi, *myargj;
+    //TIter iti = params->createIterator();
+    //TIter itj = params->createIterator();
+    //RooRealVar *myargi, *myargj;
     fprintf(covFile," ") ;
-    while ((myargi = (RooRealVar *)iti.Next())) {
+    //while ((myargi = (RooRealVar *)iti.Next())) 
+    for (auto const *myargi : static_range_cast<RooRealVar *>(params)) {
       if(myargi->isConstant()) continue;
       fprintf(covFile," & %s",  myargi->GetName());
     }
     fprintf(covFile,"\\\\ \\hline \n" );
-    iti.Reset();
-    while ((myargi = (RooRealVar *)iti.Next())) {
+    //iti.Reset();
+    //while ((myargi = (RooRealVar *)iti.Next())) 
+    for (auto const *myargi : static_range_cast<RooRealVar *>(params)) {
       if(myargi->isConstant()) continue;
       fprintf(covFile,"%s", myargi->GetName());
-      itj.Reset();
-      while ((myargj = (RooRealVar *)itj.Next())) {
+      //itj.Reset();
+      //while ((myargj = (RooRealVar *)itj.Next())) 
+      for (auto const *myargj : static_range_cast<RooRealVar *>(params)) {
         if(myargj->isConstant()) continue;
         cout << myargi->GetName() << "," << myargj->GetName();
         fprintf(covFile, " & %.2f", result->correlation(*myargi, *myargj));

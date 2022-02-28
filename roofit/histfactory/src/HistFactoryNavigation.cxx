@@ -369,9 +369,10 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      TIter paramItr = params->createIterator();
-      RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr.Next()) ) {
+      //TIter paramItr = params->createIterator();
+      //RooRealVar* param = NULL;
+      //while( (param=(RooRealVar*)paramItr.Next()) ) 
+      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
 
    if( !IncludeConstantParams && param->isConstant() ) continue;
 
@@ -405,9 +406,10 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      TIter paramItr = params->createIterator();
+      /*TIter paramItr = params->createIterator();
       RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr.Next()) ) {
+      while( (param=(RooRealVar*)paramItr.Next()) ) */
+      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
 
    if( !IncludeConstantParams && param->isConstant() ) continue;
 
@@ -445,9 +447,10 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      TIter paramItr = params->createIterator();
+      /*TIter paramItr = params->createIterator();
       RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr.Next()) ) {
+      while( (param=(RooRealVar*)paramItr.Next()) ) */
+      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
 
    if( !IncludeConstantParams && param->isConstant() ) continue;
 
@@ -756,9 +759,10 @@ namespace RooStats {
       RooArgSet productComponents = node->components();
 
       // Loop over the subnodes and add
-      TIterator* itr = productComponents.createIterator();
+      /*TIterator* itr = productComponents.createIterator();
       RooAbsArg* arg = NULL;
-      while( (arg=(RooAbsArg*)itr->Next()) ) {
+      while( (arg=(RooAbsArg*)itr->Next()) ) */
+      for (auto const *arg : dynamic_range_cast<RooAbsArg *>(*productComponents)) {
    std::string ClassName = arg->ClassName();
    if( ClassName == "RooProduct" ) {
      RooProduct* prod = dynamic_cast<RooProduct*>(arg);
@@ -839,9 +843,11 @@ namespace RooStats {
    // Based on the mode, we assume that node is
    // the "unconstrained" pdf node for that channel
    RooArgSet* components = pdf->getComponents();
-   TIter argItr = components->createIterator();
-   RooAbsArg* arg = NULL;
-   while( (arg=(RooAbsArg*)argItr.Next()) ) {
+   //TIter argItr = components->createIterator();
+   //RooAbsArg* arg = NULL;
+   //while( (arg=(RooAbsArg*)argItr.Next()) ) 
+    for (auto const *arg : static_range_cast<RooAbsArg *>(components)) {
+         {
      std::string ClassName = arg->ClassName();
      if( ClassName == "RooRealSumPdf" ) {
        fChannelSumNodeMap[ChannelName] = (RooRealSumPdf*) arg;
@@ -871,10 +877,10 @@ namespace RooStats {
    // Loop over the sample nodes in this
    // channel's RooRealSumPdf
    RooArgList nodes = sumPdf->funcList();
-   TIter sampleItr = nodes.createIterator();
-   RooAbsArg* sample;
-   while( (sample=(RooAbsArg*)sampleItr.Next()) ) {
-
+   //TIter sampleItr = nodes.createIterator();
+   //RooAbsArg* sample;
+   //while( (sample=(RooAbsArg*)sampleItr.Next()) ) 
+   for (auto const *sample : static_range_cast<RooAbsArg *>(nodes)) {      
      // Cast this node as a function
      RooAbsReal* func = (RooAbsReal*) sample;
 
@@ -911,9 +917,11 @@ namespace RooStats {
       // Check if it is a "component",
       // ie a sub node:
       RooArgSet* components = parent->getComponents();
-      TIterator* argItr = components->createIterator();
-      RooAbsArg* arg = NULL;
-      while( (arg=(RooAbsArg*)argItr->Next()) ) {
+      //TIterator* argItr = components->createIterator();
+      //RooAbsArg* arg = NULL;
+      //while( (arg=(RooAbsArg*)argItr->Next()) ) 
+      for (auto const *arg : static_range_cast<RooAbsArg *>(*components)) {
+      
    std::string ArgName = arg->GetName();
    if( ArgName == name ) {
      term = arg; //dynamic_cast<RooAbsReal*>(arg);
@@ -921,7 +929,7 @@ namespace RooStats {
    }
       }
       delete components;
-      delete argItr;
+      //delete argItr;
 
       if( term != NULL ) return term;
 
@@ -930,9 +938,10 @@ namespace RooStats {
       // (ie a RooRealVar)
       RooArgSet* args = new RooArgSet();
       RooArgSet* paramSet = parent->getParameters(args);
-      TIterator* paramItr = paramSet->createIterator();
-      RooAbsArg* param = NULL;
-      while( (param=(RooAbsArg*)paramItr->Next()) ) {
+      //TIterator* paramItr = paramSet->createIterator();
+      //RooAbsArg* param = NULL;
+      //while( (param=(RooAbsArg*)paramItr->Next()) ) 
+      for (auto const *param : static_range_cast<RooAbsArg *>(paramSet)) {
    std::string ParamName = param->GetName();
    if( ParamName == name ) {
      term = param; //dynamic_cast<RooAbsReal*>(arg);
@@ -941,7 +950,7 @@ namespace RooStats {
       }
       delete args;
       delete paramSet;
-      delete paramItr;
+      //delete paramItr;
 
       /* Not sure if we want to be silent
     But since we're returning a pointer which can be NULL,
@@ -1127,9 +1136,10 @@ namespace RooStats {
 
       /////// NODE SIZE
       {
-   TIter itr = components.createIterator();
-   RooAbsArg* arg = NULL;
-   while( (arg=(RooAbsArg*)itr.Next()) ) {
+   //TIter itr = components.createIterator();
+   //RooAbsArg* arg = NULL;
+   //while( (arg=(RooAbsArg*)itr.Next()) ) 
+   for (auto const *arg : dynamic_range_cast<RooAbsArg *>(components)) {
      RooAbsReal* component = dynamic_cast<RooAbsReal*>(arg);
      std::string NodeName = component->GetName();
      label_print_width = TMath::Max(label_print_width, (int)NodeName.size()+2);
@@ -1150,9 +1160,10 @@ namespace RooStats {
       }
       std::cout << std::endl;
 
-      TIter itr = components.createIterator();
-      RooAbsArg* arg = NULL;
-      while( (arg=(RooAbsArg*)itr.Next()) ) {
+      //TIter itr = components.createIterator();
+      //RooAbsArg* arg = NULL;
+      //while( (arg=(RooAbsArg*)itr.Next()) ) 
+      for (auto const *arg : dynamic_range_cast<RooAbsArg *>(components)) {
    RooAbsReal* component = dynamic_cast<RooAbsReal*>(arg);
    std::string NodeName = component->GetName();
 
@@ -1282,9 +1293,10 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      TIter paramItr = params->createIterator();
-      RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr.Next()) ) {
+      //TIter paramItr = params->createIterator();
+      //RooRealVar* param = NULL;
+      //while( (param=(RooRealVar*)paramItr.Next()) ) 
+      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
 
    std::string ParamName = param->GetName();
    TString ParamNameTString(ParamName);
