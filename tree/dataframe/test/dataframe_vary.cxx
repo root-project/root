@@ -62,6 +62,8 @@ TEST(RDFVary, RequireVariationsHaveConsistentType)
                 std::runtime_error);
 }
 
+// throwing exceptions from jitted code cause problems on windows
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
@@ -81,6 +83,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
       EXPECT_THROW(ss2["nominal"], std::runtime_error);
    }
 }
+#endif
 
 TEST(RDFVary, RequireReturnTypeIsRVec)
 {
