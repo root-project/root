@@ -5,7 +5,10 @@ from dask.distributed import Client, LocalCluster
 import numpy
 
 import ROOT
+
 from DistRDF.Backends import Dask
+from DistRDF.Proxy import ActionProxy
+
 
 class ReducerMergeTest(unittest.TestCase):
     """Check the working of merge operations in the reducer function."""
@@ -200,21 +203,14 @@ class ReducerMergeTest(unittest.TestCase):
 
         self.assertAlmostEqual(rdf_sum.GetValue(), 45.0)
 
-    def test_distributed_asnumpy(self):
-        """Test support for `AsNumpy` pythonization in distributed backend"""
-
-        # Let's create a simple dataframe with ten rows and two columns
-        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "(int)rdfentry_")\
-            .Define("y", "1.f/(1.f+rdfentry_)")
-
-        # Build a dictionary of numpy arrays.
-        npy = df.AsNumpy()
-        self.assertIsInstance(npy, dict)
+    def check_npy_dict(self, npy_dict):
+        """Checks on correctness of numpy array dictionary returned by 'Asnumpy"""
+        self.assertIsInstance(npy_dict, dict)
 
         # Retrieve the two numpy arrays with the column names of the original
         # RDataFrame as dictionary keys.
-        npy_x = npy["x"]
-        npy_y = npy["y"]
+        npy_x = npy_dict["x"]
+        npy_y = npy_dict["y"]
         self.assertIsInstance(npy_x, numpy.ndarray)
         self.assertIsInstance(npy_y, numpy.ndarray)
 
@@ -228,6 +224,17 @@ class ReducerMergeTest(unittest.TestCase):
         self.assertEqual(npy_x.dtype, int_32_dtype)
         self.assertEqual(npy_y.dtype, float_32_dtype)
 
+    def test_distributed_asnumpy(self):
+        """Test support for `AsNumpy` pythonization in distributed backend"""
+
+        # Let's create a simple dataframe with ten rows and two columns
+        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "(int)rdfentry_")\
+            .Define("y", "1.f/(1.f+rdfentry_)")
+
+        # Build a dictionary of numpy arrays.
+        npy = df.AsNumpy()
+        self.check_npy_dict(npy)
+
     def test_distributed_asnumpy_columns(self):
         """
         Test that distributed AsNumpy correctly accepts the 'columns' keyword
@@ -236,8 +243,8 @@ class ReducerMergeTest(unittest.TestCase):
 
         # Let's create a simple dataframe with ten rows and two columns
         df = Dask.RDataFrame(10, daskclient=self.client)\
-                  .Define("x", "(int)rdfentry_")\
-                  .Define("y", "1.f/(1.f+rdfentry_)")
+            .Define("x", "(int)rdfentry_")\
+            .Define("y", "1.f/(1.f+rdfentry_)")
 
         # Build a dictionary of numpy arrays.
         npy = df.AsNumpy(columns=["x"])
@@ -252,28 +259,32 @@ class ReducerMergeTest(unittest.TestCase):
         int_32_dtype = numpy.dtype("int32")
         self.assertEqual(npy_x.dtype, int_32_dtype)
 
-    def test_distributed_snapshot(self):
-        """Test support for `Snapshot` in distributed backend"""
-        # A simple dataframe with ten sequential numbers from 0 to 9
-        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "rdfentry_")
+    def test_distributed_asnumpy_lazy(self):
+        """Test that `AsNumpy` can be still called lazily in distributed mode"""
 
-        # Count rows in the dataframe
-        nrows = df.Count()
+        # Let's create a simple dataframe with ten rows and two columns
+        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "(int)rdfentry_")\
+            .Define("y", "1.f/(1.f+rdfentry_)")
 
-        # Snapshot to two files, build a ROOT.TChain with them and retrieve a
-        # Dask.RDataFrame
-        snapdf = df.Snapshot("snapTree", "snapFile.root")
+        npy_lazy = df.AsNumpy(lazy=True)
+        # The event loop hasn't been triggered yet
+        self.assertIsInstance(npy_lazy, ActionProxy)
+        self.assertIsNone(npy_lazy.proxied_node.value)
 
+        # Trigger the computations and check final results
+        npy = npy_lazy.GetValue()
+        self.check_npy_dict(npy)
+
+    def check_snapshot_df(self, snapdf, snapfilename):
         # Count the rows in the snapshotted dataframe
         snapcount = snapdf.Count()
 
-        self.assertEqual(nrows.GetValue(), 10)
         self.assertEqual(snapcount.GetValue(), 10)
 
         # Retrieve list of file from the snapshotted dataframe
         input_files = snapdf.proxied_node.inputfiles
         # Create list of supposed filenames for the intermediary files
-        tmp_files = ["snapFile_0.root", "snapFile_1.root"]
+        tmp_files = [f"{snapfilename}_0.root", f"{snapfilename}_1.root"]
         # Check that the two lists are the same
         self.assertListEqual(input_files, tmp_files)
         # Check that the intermediary .root files were created with the right
@@ -282,6 +293,16 @@ class ReducerMergeTest(unittest.TestCase):
             self.assertTrue(os.path.exists(filename))
             os.remove(filename)
 
+    def test_distributed_snapshot(self):
+        """Test support for `Snapshot` in distributed backend"""
+        # A simple dataframe with ten sequential numbers from 0 to 9
+        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "rdfentry_")
+
+        # Snapshot to two files, build a ROOT.TChain with them and retrieve a
+        # Dask.RDataFrame
+        snapdf = df.Snapshot("snapTree", "snapFile.root")
+        self.check_snapshot_df(snapdf, "snapFile")
+
     def test_distributed_snapshot_columnlist(self):
         """
         Test that distributed Snapshot correctly passes also the third input
@@ -289,10 +310,10 @@ class ReducerMergeTest(unittest.TestCase):
         """
         # A simple dataframe with ten sequential numbers from 0 to 9
         df = Dask.RDataFrame(10, daskclient=self.client)\
-                  .Define("a", "rdfentry_")\
-                  .Define("b", "rdfentry_")\
-                  .Define("c", "rdfentry_")\
-                  .Define("d", "rdfentry_")
+            .Define("a", "rdfentry_")\
+            .Define("b", "rdfentry_")\
+            .Define("c", "rdfentry_")\
+            .Define("d", "rdfentry_")
 
         expectedcolumns = ["a", "b"]
         df.Snapshot("snapTree_columnlist", "snapFile_columnlist.root", expectedcolumns)
@@ -307,6 +328,21 @@ class ReducerMergeTest(unittest.TestCase):
 
         for filename in tmp_files:
             os.remove(filename)
+
+    def test_distributed_snapshot_lazy(self):
+        """Test that `Snapshot` can be still called lazily in distributed mode"""
+        # A simple dataframe with ten sequential numbers from 0 to 9
+        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "rdfentry_")
+
+        opts = ROOT.RDF.RSnapshotOptions()
+        opts.fLazy = True
+        snap_lazy = df.Snapshot("snapTree_lazy", "snapFile_lazy.root", ["x"], opts)
+        # The event loop hasn't been triggered yet
+        self.assertIsInstance(snap_lazy, ActionProxy)
+        self.assertIsNone(snap_lazy.proxied_node.value)
+
+        snapdf = snap_lazy.GetValue()
+        self.check_snapshot_df(snapdf, "snapFile_lazy")
 
     def test_redefine_one_column(self):
         """Test that values of one column can be properly redefined."""
