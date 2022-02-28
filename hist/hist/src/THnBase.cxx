@@ -223,7 +223,7 @@ void THnBase::Init(const char* name, const char* title,
       }
 
       nbins[pos] = reqaxis->GetNbins();
-      fAxes.AddAtAndExpand(new TAxis(*reqaxis), pos++);
+      fAxes.AddAtAndExpand(reqaxis, pos++);
    }
    fAxes.SetOwner();
 
