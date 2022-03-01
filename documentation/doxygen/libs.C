@@ -2,7 +2,7 @@
 #include "TInterpreter.h"
 #include "TSystem.h"
 
-void libs(TString classname)
+void libs(TString classname, const int suffix)
 {
    const char *libname;
 
