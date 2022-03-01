@@ -969,19 +969,22 @@ double RooNDKeysPdf::gauss(vector<double>& x, vector<vector<double> >& weights) 
   const double sqrt2pi = std::sqrt(TMath::TwoPi());
 
   double z=0.;
-  map<Int_t,bool> ibMap;
+  std::vector<int> indices;
 
   // determine input loop range for event x
   if (_sortInput) {
     if (_sortTVIdcs.empty())
       const_cast<RooNDKeysPdf*>(this)->sortDataIndices();
 
-    loopRange(x, ibMap);
+    loopRange(x, indices);
+  } else {
+    indices.reserve(_ibNoSort.size());
+    for (const auto& ibMapItr : _ibNoSort) {
+       indices.push_back(ibMapItr.first);
+    }
   }
 
-  for (const auto& ibMapItr : _sortInput ? ibMap : _ibNoSort) {
-     Int_t i = ibMapItr.first;
-
+  for (const auto& i : indices) {
      double g(1.);
 
      if (i >= (Int_t)_idx.size()) {
@@ -1016,7 +1019,7 @@ double RooNDKeysPdf::gauss(vector<double>& x, vector<vector<double> >& weights) 
 ////////////////////////////////////////////////////////////////////////////////
 /// determine closest points to x, to loop over in evaluate()
 
-void RooNDKeysPdf::loopRange(vector<double>& x, map<Int_t,bool>& ibMap) const
+void RooNDKeysPdf::loopRange(vector<double>& x, std::vector<Int_t>& ibMap) const
 {
    ibMap.clear();
    TVectorD xRm(_nDim);
@@ -1033,14 +1036,13 @@ void RooNDKeysPdf::loopRange(vector<double>& x, map<Int_t,bool>& ibMap) const
    for (Int_t j = 0; j < _nDim; j++) {
       xRm[j] -= _nSigma * (_n * (*_sigmaR)[j]);
       xRp[j] += _nSigma * (_n * (*_sigmaR)[j]);
-      // cout<<"xRm["<<j<<"]="<<xRm[j]<<endl;
-      // cout<<"xRp["<<j<<"]="<<xRp[j]<<endl;
   }
 
-  vector<TVectorD> xvecRm(1,xRm);
-  vector<TVectorD> xvecRp(1,xRp);
+  std::vector<TVectorD> xvecRm(1,xRm);
+  std::vector<TVectorD> xvecRp(1,xRp);
 
-  map<Int_t,bool> ibMapRT;
+  // To remember the indices that were selected in the previous dimensions
+  std::vector<Int_t> ibMapRT;
 
   for (Int_t j=0; j<_nDim; j++) {
     ibMap.clear();
@@ -1048,21 +1050,39 @@ void RooNDKeysPdf::loopRange(vector<double>& x, map<Int_t,bool>& ibMap) const
       return (*a.second)[j] < (*b.second)[j];
     };
 
-    auto lo = lower_bound(_sortTVIdcs[j].begin(), _sortTVIdcs[j].end(), itPair(0, xvecRm.begin()), comp);
-    auto hi = upper_bound(_sortTVIdcs[j].begin(), _sortTVIdcs[j].end(), itPair(0, xvecRp.begin()), comp);
+    // Figure out which elements are to be selected in the current dimension
+    auto lo = std::lower_bound(_sortTVIdcs[j].begin(), _sortTVIdcs[j].end(), itPair(0, xvecRm.begin()), comp);
+    auto hi = std::upper_bound(_sortTVIdcs[j].begin(), _sortTVIdcs[j].end(), itPair(0, xvecRp.begin()), comp);
     auto it = lo;
 
     if (j==0) {
-      if (_nDim==1) { for (it=lo; it!=hi; ++it) ibMap[(*it).first] = true; }
-      else { for (it=lo; it!=hi; ++it) ibMapRT[(*it).first] = true; }
+      // In the first dimension, we can skip straight to filling the remembered
+      // indices for the previous dimension, or in the 1-d case, just fill the
+      // output map.
+      auto& m = _nDim==1 ? ibMap : ibMapRT;
+      m.reserve(std::distance(lo, hi));
+      for (it=lo; it!=hi; ++it) {
+        m.push_back(it->first);
+      }
+      // Sort by indices so we can use binary search
+      std::sort(m.begin(), m.end());
       continue;
     }
 
-    for (it=lo; it!=hi; ++it)
-      if (ibMapRT.find((*it).first)!=ibMapRT.end()) { ibMap[(*it).first] = true; }
+    // Iterate over elements in current dimension and add them to the list if
+    // they were also selected in the previous dimension.
+    for (it=lo; it!=hi; ++it) {
+      // Look up in ibMapRT with binary search
+      auto found = std::lower_bound(ibMapRT.begin(), ibMapRT.end(), it->first);
+      if (found != ibMapRT.end() && !(it->first < *found)) {
+          ibMap.push_back(it->first);
+      }
+    }
+    // Sort by indices so we can use binary search
+    std::sort(ibMap.begin(), ibMap.end());
 
     ibMapRT.clear();
-    if (j!=_nDim-1) { ibMapRT = ibMap; }
+    if (j!=_nDim-1) { ibMapRT = std::move(ibMap); }
   }
 }
 
