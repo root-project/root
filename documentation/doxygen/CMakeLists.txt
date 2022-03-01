@@ -278,7 +278,7 @@ if(BUILD_DOCUMENTATION)
 
         #TODO cleaning:
         #rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
-        #rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
+        #rm -rf tmva* data* result* config* test* Roo* My* Freq*
         #rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
         #rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
         #rm -f ${DOCU_LOCATION}/notebooks/*.root
