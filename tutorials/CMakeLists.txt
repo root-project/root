@@ -326,6 +326,10 @@ if( CMAKE_SIZEOF_VOID_P EQUAL 4 )
   set(bits32_veto dataframe/*.C graphs/timeSeriesFrom*.C v7/ntuple/ntpl004_dimuon.C)
 endif()
 
+if (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64)
+   set(macm1_veto dataframe/df107_SingleTopAnalysis.py)
+endif()
+
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   legacy/benchmarks.C
@@ -382,6 +386,7 @@ set(all_veto hsimple.C
              ${mlp_veto}
              ${spectrum_veto}
              ${dataframe_veto}
+             ${macm1_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
