@@ -56,8 +56,9 @@ TEST(RDFVary, RequireVariationsHaveConsistentType)
    EXPECT_THROW(df.Vary("x", SimpleVariation, {}, 2), std::runtime_error);
 }
 
-// throwing exceptions from jitted code cause problems on windows
+// throwing exceptions from jitted code cause problems on windows and MacOS+M1
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+#if !(defined(R__MACOSX) && defined(__arm64__))
 TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
 {
      auto df = ROOT::RDataFrame(10).Define("x", [] { return 1.f; });
@@ -77,6 +78,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
         EXPECT_THROW(ss2["nominal"], std::runtime_error);
      }
 }
+#endif
 #endif
 
 TEST(RDFVary, RequireReturnTypeIsRVec)
