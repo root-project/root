@@ -372,19 +372,17 @@ namespace RooStats {
       //TIter paramItr = params->createIterator();
       //RooRealVar* param = NULL;
       //while( (param=(RooRealVar*)paramItr.Next()) ) 
-      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
+      for (auto const *param : dynamic_range_cast<RooRealVar *>(params)) {
+        if( !IncludeConstantParams && param->isConstant() ) continue;
 
-   if( !IncludeConstantParams && param->isConstant() ) continue;
-
-   std::cout << std::setw(30) << param->GetName();
-   std::cout << std::setw(15) << param->getVal();
-   if( !param->isConstant() ) {
-     std::cout << std::setw(15) << param->getErrorLo() << std::setw(15) << param->getErrorHi();
-   }
-   std::cout<< std::endl;
+        std::cout << std::setw(30) << param->GetName();
+        std::cout << std::setw(15) << param->getVal();
+        if( !param->isConstant() ) {
+            std::cout << std::setw(15) << param->getErrorLo() << std::setw(15) << param->getErrorHi();
+        }
+        std::cout<< std::endl;
       }
-
-      std::cout << std::endl;
+     std::cout << std::endl;
     }
 
     void HistFactoryNavigation::PrintChannelParameters(const std::string& channel,
