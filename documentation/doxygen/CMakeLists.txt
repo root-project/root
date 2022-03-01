@@ -145,6 +145,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_GENERATE_TAGFILE       "${DOCU_LOCATION}/html/ROOT.tag")
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO )
         set(DOXYGEN_HAVE_DOT               YES) # set to NO for getting faster results when debugging
+        set(DOXYGEN_DOT_MULTI_TARGETS      YES)
         #set(DOXYGEN_DOT_NUM_THREADS 1) # uncomment this to only use one thread, otherwise all your CPU threads will be used
         #set(DOXYGEN_NUM_PROC_THREADS 0) # uncomment to use many threads also in doxygen, not just in dot
         set(DOXYGEN_GROUP_GRAPHS           NO )
