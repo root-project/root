@@ -10,7 +10,7 @@
 #include <TSystem.h>
 
 #include <stdio.h>
-#include <iostream>
+//#include <iostream>
 
 void FindImageInPad(TPad *P)
 {
@@ -44,14 +44,14 @@ void FindImageInCanvas(TCanvas *C)
    }
 }
 
-void makeimage(const char *MacroName, const char *ImageName, const char *OutDir, const char *AuxDir, bool cp, bool py)
+void makeimage(const char *MacroName, const char *ImageName, const char *OutDir, const char *AuxDir, bool cp, bool py, const TString suffix)
 {
    // Execute the macro as a C++ one or a Python one.
    if (!py) gROOT->ProcessLine(Form(".x %s",MacroName));
    else     gROOT->ProcessLine(Form("TPython::ExecScript(\"%s\");",MacroName));
 
    // If needed, copy the macro in the documentation directory.
-   cerr << MacroName << " " << ImageName << " " << OutDir << " " << AuxDir << endl;
+   //cerr << MacroName << " " << ImageName << " " << OutDir << " " << AuxDir << endl;
    if (cp) {
       TString MN = MacroName;
       Int_t i = MN.Index("(");
@@ -65,7 +65,7 @@ void makeimage(const char *MacroName, const char *ImageName, const char *OutDir,
    TCanvas* canvas = 0;
    int ImageNum = 0;
 
-   FILE *s = fopen(TString::Format("%s/%s",AuxDir,"ImagesSizes.dat"), "w");
+   FILE *s = fopen(TString::Format("%s/%s%s%s",AuxDir,"ImagesSizes",suffix,".dat"), "w");
 
    int cw;
    while ((canvas = (TCanvas*) iCanvas())) {
@@ -79,7 +79,7 @@ void makeimage(const char *MacroName, const char *ImageName, const char *OutDir,
 
    fclose(s);
 
-   FILE *f = fopen(TString::Format("%s/%s",AuxDir,"NumberOfImages.dat"), "w");
+   FILE *f = fopen(TString::Format("%s/%s%s%s",AuxDir,"NumberOfImages",suffix,".dat"), "w");
    fprintf(f,"%d\n",ImageNum);
    fclose(f);
 }

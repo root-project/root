@@ -5,7 +5,7 @@ import shutil
 import os
 import sys
 
-def makeimage(MacroName, ImageName, OutDir, AuxDir, cp, py, batch):
+def makeimage(MacroName, ImageName, OutDir, AuxDir, cp, py, batch, suffix):
     '''Generates the ImageName output of the macro MacroName'''
 
     ROOT.gStyle.SetImageScaling(3.)
@@ -27,7 +27,7 @@ def makeimage(MacroName, ImageName, OutDir, AuxDir, cp, py, batch):
         shutil.copyfile("%s" %MN,"%s/macros/%s" %(OutDir,MNBase))
 
     ImageNum = 0
-    s = open (AuxDir+"/ImagesSizes.dat","w")
+    s = open (AuxDir+"/ImagesSizes"+suffix+".dat","w")
 
     canvases = ROOT.gROOT.GetListOfCanvases()
     for ImageNum,can in enumerate(canvases):
@@ -38,10 +38,10 @@ def makeimage(MacroName, ImageName, OutDir, AuxDir, cp, py, batch):
 
     s.close()
 
-    f = open (AuxDir+"/NumberOfImages.dat","w")
+    f = open (AuxDir+"/NumberOfImages"+suffix+".dat","w")
     f.write("%d\n" %ImageNum)
     f.close()
 
 if __name__ == "__main__":
     from sys import argv
-    makeimage(argv[1], argv[2], argv[3], argv[4], int(argv[5]), int(argv[6]), int(argv[7]))
+    makeimage(argv[1], argv[2], argv[3], argv[4], int(argv[5]), int(argv[6]), int(argv[7]), argv[8])
