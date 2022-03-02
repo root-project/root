@@ -650,7 +650,7 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
   // get nominal
   int i=0;
-  while( funcInt = (RooAbsReal*)funcIntIter.next()) {
+  while( (funcInt = (RooAbsReal*)funcIntIter.next())) {
     value += funcInt->getVal() ;
     nominal = value;
     i++;
