@@ -16,9 +16,9 @@
 #include "Utility.h"
 #include "PyzCppHelpers.hxx"
 #include "TClass.h"
-#include "TNamed.h"
 #include "TDirectory.h"
 #include "TKey.h"
+#include "TObject.h"
 #include "Python.h"
 
 using namespace CPyCppyy;
@@ -57,9 +57,9 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
    Int_t result = 0;
 
    if (wrtclass->IsTObject()) {
-      // If the found TClass is derived from TObject, cast the object to a TNamed since we are just interested in the
+      // If the found TClass is derived from TObject, cast the object to a TObject since we are just interested in the
       // object title for the purposes of the WriteTObject function.
-      auto objtowrite = static_cast<TNamed *>(wrtclass->DynamicCast(TNamed::Class(), wrtobj));
+      auto objtowrite = static_cast<TObject *>(wrtclass->DynamicCast(TObject::Class(), wrtobj));
 
       if (option != nullptr) {
          result =
