@@ -23,6 +23,7 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 class RDefineBase;
+class RLoopManager;
 }
 } // namespace Detail
 
@@ -54,6 +55,9 @@ class RColumnRegister {
    void AddName(std::string_view name);
 
 private:
+   // N.B. must come before fDefines, to be destructed after them
+   std::shared_ptr<RDFDetail::RLoopManager> fLoopManager;
+
    /// Immutable map of Defines, can be shared among several nodes.
    /// When a new define is added (through a call to RInterface::Define or similar) a new map with the extra element is
    /// created.
@@ -71,8 +75,8 @@ public:
    RColumnRegister(RColumnRegister &&) = default;
    RColumnRegister &operator=(const RColumnRegister &) = default;
 
-   RColumnRegister()
-      : fDefines(std::make_shared<DefinesMap_t>()),
+   RColumnRegister(std::shared_ptr<RDFDetail::RLoopManager> lm)
+      : fLoopManager(lm), fDefines(std::make_shared<DefinesMap_t>()),
         fAliases(std::make_shared<std::unordered_map<std::string, std::string>>()),
         fVariations(std::make_shared<VariationsMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
    {
