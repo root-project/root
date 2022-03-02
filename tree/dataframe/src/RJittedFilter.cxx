@@ -18,7 +18,7 @@
 using namespace ROOT::Detail::RDF;
 
 RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations)
-   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(), /*columnNames*/ {}, variations)
+   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(nullptr), /*columnNames*/ {}, variations)
 {
 }
 

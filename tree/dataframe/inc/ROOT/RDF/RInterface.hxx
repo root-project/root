@@ -224,7 +224,7 @@ public:
    /// This constructor is only available for RInterface<RLoopManager>.
    template <typename T = Proxied, typename = std::enable_if_t<std::is_same<T, RLoopManager>::value, int>>
    RInterface(const std::shared_ptr<RLoopManager> &proxied)
-      : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(proxied->GetDataSource())
+      : fProxiedPtr(proxied), fLoopManager(proxied.get()), fDataSource(proxied->GetDataSource()), fColRegister(proxied)
    {
       AddDefaultColumns();
    }
@@ -3116,8 +3116,6 @@ public:
 private:
    void AddDefaultColumns()
    {
-      RDFInternal::RColumnRegister newCols;
-
       // Entry number column
       const std::string entryColName = "rdfentry_";
       const std::string entryColType = "ULong64_t";
@@ -3125,8 +3123,8 @@ private:
       using NewColEntry_t = RDFDetail::RDefine<decltype(entryColGen), RDFDetail::CustomColExtraArgs::SlotAndEntry>;
 
       auto entryColumn = std::make_shared<NewColEntry_t>(entryColName, entryColType, std::move(entryColGen),
-                                                         ColumnNames_t{}, newCols, *fLoopManager);
-      newCols.AddColumn(entryColumn);
+                                                         ColumnNames_t{}, fColRegister, *fLoopManager);
+      fColRegister.AddColumn(entryColumn);
 
       // Slot number column
       const std::string slotColName = "rdfslot_";
@@ -3135,10 +3133,8 @@ private:
       using NewColSlot_t = RDFDetail::RDefine<decltype(slotColGen), RDFDetail::CustomColExtraArgs::Slot>;
 
       auto slotColumn = std::make_shared<NewColSlot_t>(slotColName, slotColType, std::move(slotColGen), ColumnNames_t{},
-                                                       newCols, *fLoopManager);
-      newCols.AddColumn(slotColumn);
-
-      fColRegister = std::move(newCols);
+                                                       fColRegister, *fLoopManager);
+      fColRegister.AddColumn(slotColumn);
 
       fColRegister.AddAlias("tdfentry_", entryColName);
       fColRegister.AddAlias("tdfslot_", slotColName);
