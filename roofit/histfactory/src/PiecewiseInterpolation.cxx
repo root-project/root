@@ -496,8 +496,8 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   // KC: check if interCode=0 for all
   //RooFIter paramIterExtra(_paramSet.begin()) ;
   int i=0;
-  //while( paramIterExtra.next()) 
-  for (auto const *paramIterExtra : static_range_cast<RooFIter *>(_paramSet)){ 
+  //for (auto const *paramIterExtra : static_range_cast<RooFIter *>(_paramSet)){ 
+  while (!_paramSet.end()) 
     if(!_interpCode.empty() && _interpCode[i]!=0){
       // can't factorize integral
       cout <<"can't factorize integral"<<endl;
@@ -533,9 +533,9 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   cache->_funcIntList.addOwned(*funcInt) ;
 
   // do variations
-  RooFIter lowIter(*_lowSet) ;
-  RooFIter highIter(*_highSet);
-  RooFIter paramIter(*_paramSet);
+  RooFIter lowIter(_lowSet.next()) ;
+  RooFIter highIter(_highSet.next());
+  RooFIter paramIter(_paramSet.next());
 
   //  int i=0;
   i=0;
