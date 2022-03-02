@@ -915,7 +915,7 @@ namespace RooStats {
       // ie a sub node:
       RooArgSet* components = parent->getComponents();
       //TIterator* argItr = components->createIterator();
-      //RooAbsArg* arg = NULL;
+      RooAbsArg* arg = NULL;
       //while( (arg=(RooAbsArg*)argItr->Next()) ) 
       for (auto *arg : static_range_cast<RooAbsArg *>(*components)) {
       
@@ -1160,7 +1160,7 @@ namespace RooStats {
       //TIter itr = components.createIterator();
       //RooAbsArg* arg = NULL;
       //while( (arg=(RooAbsArg*)itr.Next()) ) 
-      for (auto const *arg : dynamic_range_cast<RooAbsArg *>(components)) {
+      for (auto *arg : static_range_cast<RooAbsArg *>(components)) {
    RooAbsReal* component = dynamic_cast<RooAbsReal*>(arg);
    std::string NodeName = component->GetName();
 
@@ -1293,7 +1293,7 @@ namespace RooStats {
       //TIter paramItr = params->createIterator();
       //RooRealVar* param = NULL;
       //while( (param=(RooRealVar*)paramItr.Next()) ) 
-      for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
+      for (auto *param : static_range_cast<RooRealVar *>(*params)) {
 
    std::string ParamName = param->GetName();
    TString ParamNameTString(ParamName);
