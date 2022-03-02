@@ -641,9 +641,9 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   }
 
   // old integral, only works for linear and not positive definite
-  RooFIter funcIntIter = cache->_funcIntList.begin() ;
-  RooFIter lowIntIter = cache->_lowIntList.begin() ;
-  RooFIter highIntIter = cache->_highIntList.begin() ;
+  RooFIter funcIntIter = cache->_funcIntList.fwdIterator();
+  RooFIter lowIntIter = cache->_lowIntList.fwdIterator();
+  RooFIter highIntIter = cache->_highIntList.fwdIterator();
   RooAbsReal *funcInt(0), *low(0), *high(0), *param(0) ;
   Double_t value(0) ;
   Double_t nominal(0);
