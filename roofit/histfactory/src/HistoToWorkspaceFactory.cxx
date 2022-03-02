@@ -1004,7 +1004,7 @@ namespace HistFactory{
     //TIterator* params_itr=POIs->createIterator();
     //TObject* params_obj=0;
     //while((params_obj=params_itr->Next()))
-    for ( *poi : static_range_cast<RooRealVar *>(*POIs)) {
+    for ( poi : static_range_cast<RooRealVar *>(*POIs)) {
       //poi = (RooRealVar*) params_obj;
       cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
     }
