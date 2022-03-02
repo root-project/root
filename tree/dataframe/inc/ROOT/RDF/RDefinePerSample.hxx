@@ -39,7 +39,7 @@ class R__CLING_PTRCHECK(off) RDefinePerSample final : public RDefineBase {
 
 public:
    RDefinePerSample(std::string_view name, std::string_view type, F expression, RLoopManager &lm)
-      : RDefineBase(name, type, /*colRegister*/ {}, lm, /*columnNames*/ {}), fExpression(std::move(expression)),
+      : RDefineBase(name, type, /*colRegister*/ {nullptr}, lm, /*columnNames*/ {}), fExpression(std::move(expression)),
         fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<RetType_t>())
    {
    }
