@@ -913,11 +913,12 @@ namespace RooStats {
 
       // Check if it is a "component",
       // ie a sub node:
-      RooArgSet* components = parent->getComponents();
+      //RooArgSet* components = parent->getComponents();
       //TIterator* argItr = components->createIterator();
       RooAbsArg* arg = NULL;
       //while( (arg=(RooAbsArg*)argItr->Next()) ) 
-      for (arg : *components) {
+      for (arg : static_range_cast<RooAbsArg *>(*parent->getComponents()))
+         {
       
    std::string ArgName = arg->GetName();
    if( ArgName == name ) {
@@ -925,7 +926,7 @@ namespace RooStats {
      break;
    }
       }
-      delete components;
+      //delete components;
       //delete argItr;
 
       if( term != NULL ) return term;
