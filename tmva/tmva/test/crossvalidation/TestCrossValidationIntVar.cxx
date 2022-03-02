@@ -63,7 +63,7 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
    TTree *sigTree = genTree(NUM_EVENTS_SIG, 0.3, 0.3, 100);
    TTree *bkgTree = genTree(NUM_EVENTS_BKG, 0.3, 0.3, 101);
 
-   auto *dataloader = new TMVA::DataLoader("cv-multiproc");
+   auto *dataloader = new TMVA::DataLoader("dataset");
    dataloader->AddSignalTree(sigTree);
    dataloader->AddBackgroundTree(bkgTree);
 
@@ -78,7 +78,7 @@ std::pair<std::string, double> runCrossValidation(UInt_t numWorkers)
 
    // TMVA::CrossValidation takes ownership of dataloader
    std::string splitExpr = "UInt_t([EventNumber])%UInt_t([NumFolds])";
-   TMVA::CrossValidation cv{Form("%i-proc", numWorkers), dataloader,
+   TMVA::CrossValidation cv{"test_cv_intvar", dataloader,
                             Form("!Silent:AnalysisType=Classification"
                                  ":NumWorkerProcs=%i:NumFolds=%i"
                                  ":SplitType=Deterministic:SplitExpr=%s",
@@ -130,7 +130,7 @@ std::vector<float> predictWithFloat(std::string method)
       tree->GetEntry(ievt);
 
       // Convert TTree UInt_t to Float_t of TMVA
-      fid = uid; 
+      fid = uid;
       output[ievt] = reader.EvaluateMVA("BDT1");
    }
    return output;
@@ -139,7 +139,7 @@ std::vector<float> predictWithFloat(std::string method)
 /**
  * @brief Perform prediction using int as spectator variable
  * @param method Path to a method weight file.
- * This tests check if  issue #9115 is fixed since it uses an integer 
+ * This tests check if  issue #9115 is fixed since it uses an integer
  * type in TMVA::Reader
  */
 std::vector<float> predictWithInt(std::string method)
@@ -151,7 +151,7 @@ std::vector<float> predictWithInt(std::string method)
 
    reader.AddVariable("x", &x);
    reader.AddVariable("y", &y);
-   // using Reader::AddVariable passing an int* pointer 
+   // using Reader::AddVariable passing an int* pointer
    reader.AddSpectator("EventNumber", &uid);
 
    reader.BookMVA("BDT1", method.c_str());
