@@ -533,9 +533,9 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   cache->_funcIntList.addOwned(*funcInt) ;
 
   // do variations
-  RooFIter lowIter(_lowSet) ;
-  RooFIter highIter(_highSet);
-  RooFIter paramIter(_paramSet);
+  RooFIter lowIter(*_lowSet) ;
+  RooFIter highIter(*_highSet);
+  RooFIter paramIter(*_paramSet);
 
   //  int i=0;
   i=0;
