@@ -662,7 +662,7 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   RooFIter paramIter(_paramSet.fwdIterator());
 
   // KC: old interp code with new iterator
-  while( (param=(RooAbsReal*)paramIter.next()) {
+  while((param=(RooAbsReal*)paramIter.next())) {
     low = (RooAbsReal*)lowIntIter.next() ;
     high = (RooAbsReal*)highIntIter.next() ;
 
