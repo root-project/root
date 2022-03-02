@@ -650,7 +650,7 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
   // get nominal
   int i=0;
-  while(( funcInt = (RooAbsReal*)funcIntIter.next())) {
+  while( funcInt = (RooAbsReal*)funcIntIter.next()) {
     value += funcInt->getVal() ;
     nominal = value;
     i++;
@@ -659,7 +659,7 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
   // now get low/high variations
   i = 0;
-  //RooFIter paramIter(_paramSet.begin()) ;
+  RooFIter paramIter(_paramSet.fwdIterator());
 
   // KC: old interp code with new iterator
   while( (param=(RooAbsReal*)paramIter.next()) {
