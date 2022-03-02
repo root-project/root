@@ -917,7 +917,7 @@ namespace RooStats {
       //TIterator* argItr = components->createIterator();
       RooAbsArg* arg = NULL;
       //while( (arg=(RooAbsArg*)argItr->Next()) ) 
-      for (arg : static_range_cast<RooAbsArg *>(*components)) {
+      for (arg : *components) {
       
    std::string ArgName = arg->GetName();
    if( ArgName == name ) {
