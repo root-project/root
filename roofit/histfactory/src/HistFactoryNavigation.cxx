@@ -915,6 +915,7 @@ namespace RooStats {
       // ie a sub node:
       //RooArgSet* components = parent->getComponents();
       //TIterator* argItr = components->createIterator();
+      //RooAbsArg* arg = NULL;
       //while( (arg=(RooAbsArg*)argItr->Next()) ) 
       for (auto arg : static_range_cast<RooAbsArg *>(*parent->getComponents()))
          {
@@ -928,7 +929,6 @@ namespace RooStats {
       //delete components;
       //delete argItr;
 
-      RooAbsArg* arg = NULL;
       if( term != NULL ) return term;
 
       // If that failed,
@@ -1137,7 +1137,7 @@ namespace RooStats {
    //TIter itr = components.createIterator();
    //RooAbsArg* arg = NULL;
    //while( (arg=(RooAbsArg*)itr.Next()) ) 
-   for (auto const *arg : dynamic_range_cast<RooAbsArg *>(components)) {
+   for (auto *arg : dynamic_range_cast<RooAbsArg *>(components)) {
      RooAbsReal* component = dynamic_cast<RooAbsReal*>(arg);
      std::string NodeName = component->GetName();
      label_print_width = TMath::Max(label_print_width, (int)NodeName.size()+2);
