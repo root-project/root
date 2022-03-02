@@ -28,6 +28,14 @@ RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &c
 {
 }
 
+RJittedAction::~RJittedAction()
+{
+   // must Deregister objects from the RLoopManager here, before the fConcreteAction data member is destroyed:
+   // otherwise if fConcreteAction is the RLoopManager, it will be destroyed before the calls to Deregister happen.
+   GetColRegister().Clear(); // triggers RDefine deregistration
+   fLoopManager->Deregister(this);
+}
+
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
    assert(fConcreteAction != nullptr);
