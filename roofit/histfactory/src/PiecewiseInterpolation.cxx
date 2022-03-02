@@ -91,7 +91,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   //RooAbsArg* comp ;
   //while ((comp = inputIter1.next()))
   for (auto const *comp : static_range_cast<RooAbsArg *>(lowSet)) {
-    if (!dynamic_cast<RooAbsReal*>(comp)) {
+    if (!dynamic_cast<RooAbsReal*>(*comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " in first list is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
