@@ -143,7 +143,7 @@ public:
    }
    virtual void cudaStreamWaitEvent(cudaStream_t *stream, cudaEvent_t *event)
    {
-      ERRCHECK(::cudaStreamWaitEvent(*stream, *event));
+      ERRCHECK(::cudaStreamWaitEvent(*stream, *event, 0));
    }
    virtual float cudaEventElapsedTime(cudaEvent_t *begin, cudaEvent_t *end)
    {
