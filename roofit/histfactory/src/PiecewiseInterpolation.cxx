@@ -87,9 +87,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
     RooErrorHandler::softAbort() ;
   }
 
-  //RooFIter inputIter1 = lowSet.fwdIterator() ;
-  //RooAbsArg* comp ;
-  //while ((comp = inputIter1.next()))
   for (auto *comp : static_range_cast<RooAbsArg *>(lowSet)) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
@@ -103,8 +100,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   }
 
 
-  //RooFIter inputIter2 = highSet.fwdIterator() ;
-  //while((comp = inputIter2.next())) 
   for (auto *comp : static_range_cast<RooAbsArg *>(highSet)) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
@@ -118,8 +113,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   }
 
 
-  //RooFIter inputIter3 = paramSet.fwdIterator() ;
-  //while((comp = inputIter3.next())) 
   for (auto *comp : static_range_cast<RooAbsArg *>(paramSet)) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
@@ -496,7 +489,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   // KC: check if interCode=0 for all
   RooFIter paramIterExtra(_paramSet.fwdIterator()) ;
   int i=0;
-  while (paramIterExtra.next()){ 
+  while( paramIterExtra.next() ){ 
     if(!_interpCode.empty() && _interpCode[i]!=0){
       // can't factorize integral
       cout <<"can't factorize integral"<<endl;
@@ -532,13 +525,13 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   cache->_funcIntList.addOwned(*funcInt) ;
 
   // do variations
-  RooFIter lowIter(_lowSet.fwdIterator());
-  RooFIter highIter(_highSet.fwdIterator());
-  RooFIter paramIter(_paramSet.fwdIterator());
+  RooFIter lowIter( _lowSet.fwdIterator() ) ;
+  RooFIter highIter( _highSet.fwdIterator() ) ;
+  RooFIter paramIter( _paramSet.fwdIterator() ) ;
 
   //  int i=0;
   i=0;
-  while(paramIter.next() ) {
+  while( paramIter.next() ) {
     func = (RooAbsReal*)lowIter.next() ;
     funcInt = func->createIntegral(analVars) ;
     cache->_lowIntList.addOwned(*funcInt) ;
@@ -650,7 +643,7 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
   // get nominal
   int i=0;
-  while( (funcInt = (RooAbsReal*)funcIntIter.next())) {
+  while( (funcInt = (RooAbsReal*)funcIntIter.next()) ) {
     value += funcInt->getVal() ;
     nominal = value;
     i++;

@@ -374,13 +374,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   // Loop over all POIs and print their fitted values
-  //RooRealVar* poi = NULL; // (RooRealVar*) POIs->first();
-  //TIter params_itr = POIs->createIterator();
-  //TObject* poi_obj=NULL;
-  //while( (poi_obj=params_itr.Next()) ) 
   for (auto const *poi : dynamic_range_cast<RooRealVar *>(*POIs)) {
-    //poi = (RooRealVar*) poi_obj;
-    //poi = dynamic_cast<RooRealVar*>(poi_obj);
     cxcoutIHF << "printing results for " << poi->GetName()
          << " at " << poi->getVal()<< " high "
          << poi->getErrorLo() << " low "

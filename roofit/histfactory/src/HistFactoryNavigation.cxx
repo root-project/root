@@ -369,9 +369,6 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      //TIter paramItr = params->createIterator();
-      //RooRealVar* param = NULL;
-      //while( (param=(RooRealVar*)paramItr.Next()) ) 
       for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
         if( !IncludeConstantParams && param->isConstant() ) continue;
 
@@ -404,23 +401,16 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      /*TIter paramItr = params->createIterator();
-      RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr.Next()) ) */
       for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
-
-   if( !IncludeConstantParams && param->isConstant() ) continue;
-
-   if( findChild(param->GetName(), channel_pdf)==NULL ) continue;
-
-   std::cout << std::setw(30) << param->GetName();
-   std::cout << std::setw(15) << param->getVal();
-   if( !param->isConstant() ) {
-     std::cout << std::setw(15) << param->getErrorLo() << std::setw(15) << param->getErrorHi();
-   }
-   std::cout<< std::endl;
+        if( !IncludeConstantParams && param->isConstant() ) continue;
+        if( findChild(param->GetName(), channel_pdf)==NULL ) continue;
+        std::cout << std::setw(30) << param->GetName();
+        std::cout << std::setw(15) << param->getVal();
+        if( !param->isConstant() ) {
+            std::cout << std::setw(15) << param->getErrorLo() << std::setw(15) << param->getErrorHi();
+        }
+        std::cout<< std::endl;
       }
-
       std::cout << std::endl;
     }
 
@@ -445,26 +435,18 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      /*TIter paramItr = params->createIterator();
-      RooRealVar* param = NULL;
-      while( (param=(RooRealVar*)paramItr.Next()) ) */
       for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
-
-   if( !IncludeConstantParams && param->isConstant() ) continue;
-
-   if( findChild(param->GetName(), sample_func)==NULL ) continue;
-
-   std::cout << std::setw(30) << param->GetName();
-   std::cout << std::setw(15) << param->getVal();
-   if( !param->isConstant() ) {
-     std::cout << std::setw(15) << param->getErrorLo() << std::setw(15) << param->getErrorHi();
-   }
-   std::cout<< std::endl;
+        if( !IncludeConstantParams && param->isConstant() ) continue;
+        if( findChild(param->GetName(), sample_func)==NULL ) continue;
+        std::cout << std::setw(30) << param->GetName();
+        std::cout << std::setw(15) << param->getVal();
+        if( !param->isConstant() ) {
+            std::cout << std::setw(15) << param->getErrorLo() << std::setw(15) << param->getErrorHi();
+        }
+        std::cout<< std::endl;
       }
-
       std::cout << std::endl;
     }
-
 
 
     double HistFactoryNavigation::GetBinValue(int bin, const std::string& channel) {
@@ -757,23 +739,17 @@ namespace RooStats {
       //RooArgSet productComponents = node->components();
 
       // Loop over the subnodes and add
-      /*TIterator* itr = productComponents.createIterator();
-      RooAbsArg* arg = NULL;
-      while( (arg=(RooAbsArg*)itr->Next()) ) */
       for (auto *arg : dynamic_range_cast<RooAbsArg *>(node->components())) {
-   std::string ClassName = arg->ClassName();
-   if( ClassName == "RooProduct" ) {
-     RooProduct* prod = dynamic_cast<RooProduct*>(arg);
-     allTerms.add( _GetAllProducts(prod) );
-   }
-   else {
-     allTerms.add(*arg);
-   }
+        std::string ClassName = arg->ClassName();
+        if( ClassName == "RooProduct" ) {
+            RooProduct* prod = dynamic_cast<RooProduct*>(arg);
+            allTerms.add( _GetAllProducts(prod) );
+        }
+        else {
+            allTerms.add(*arg);
+        }
       }
-      //delete itr;
-
       return allTerms;
-
     }
 
 
@@ -841,16 +817,13 @@ namespace RooStats {
    // Based on the mode, we assume that node is
    // the "unconstrained" pdf node for that channel
    RooArgSet* components = pdf->getComponents();
-   //TIter argItr = components->createIterator();
-   //RooAbsArg* arg = NULL;
-   //while( (arg=(RooAbsArg*)argItr.Next()) ) 
     for (auto const *arg : static_range_cast<RooAbsArg *>(*components)) {
-     std::string ClassName = arg->ClassName();
-     if( ClassName == "RooRealSumPdf" ) {
-       fChannelSumNodeMap[ChannelName] = (RooRealSumPdf*) arg;
-       break;
-     }
-   }
+      std::string ClassName = arg->ClassName();
+      if( ClassName == "RooRealSumPdf" ) {
+      fChannelSumNodeMap[ChannelName] = (RooRealSumPdf*) arg;
+      break;
+      }
+    }
   }
 
       // Okay, now we have all necessary
@@ -913,21 +886,13 @@ namespace RooStats {
 
       // Check if it is a "component",
       // ie a sub node:
-      //RooArgSet* components = parent->getComponents();
-      //TIterator* argItr = components->createIterator();
-      //RooAbsArg* arg = NULL;
-      //while( (arg=(RooAbsArg*)argItr->Next()) ) 
-      for (auto arg : static_range_cast<RooAbsArg *>(*parent->getComponents()))
-         {
-      
-   std::string ArgName = arg->GetName();
-   if( ArgName == name ) {
-     term = arg; //dynamic_cast<RooAbsReal*>(arg);
-     break;
-   }
+      for (auto arg : static_range_cast<RooAbsArg *>(*parent->getComponents())) {
+         std::string ArgName = arg->GetName();
+         if (ArgName == name) {
+            term = arg; // dynamic_cast<RooAbsReal*>(arg);
+            break;
+         }
       }
-      //delete components;
-      //delete argItr;
 
       if( term != NULL ) return term;
 
@@ -935,20 +900,16 @@ namespace RooStats {
       // Check if it's a Parameter
       // (ie a RooRealVar)
       RooArgSet* args = new RooArgSet();
-      RooArgSet* paramSet = parent->getParameters(args);
-      //TIterator* paramItr = paramSet->createIterator();
-      //RooAbsArg* param = NULL;
-      //while( (param=(RooAbsArg*)paramItr->Next()) ) 
+      RooArgSet* paramSet = parent->getParameters(args); 
       for (auto *param : static_range_cast<RooAbsArg *>(*paramSet)) {
-   std::string ParamName = param->GetName();
-   if( ParamName == name ) {
-     term = param; //dynamic_cast<RooAbsReal*>(arg);
-     break;
-   }
+        std::string ParamName = param->GetName();
+        if( ParamName == name ) {
+            term = param; //dynamic_cast<RooAbsReal*>(arg);
+            break;
+        }
       }
       delete args;
       delete paramSet;
-      //delete paramItr;
 
       /* Not sure if we want to be silent
     But since we're returning a pointer which can be NULL,
@@ -1158,33 +1119,31 @@ namespace RooStats {
       }
       std::cout << std::endl;
 
-      //TIter itr = components.createIterator();
-      //RooAbsArg* arg = NULL;
-      //while( (arg=(RooAbsArg*)itr.Next()) ) 
+ 
       for (auto *arg : static_range_cast<RooAbsArg *>(components)) {
-   RooAbsReal* component = dynamic_cast<RooAbsReal*>(arg);
-   std::string NodeName = component->GetName();
+        RooAbsReal* component = dynamic_cast<RooAbsReal*>(arg);
+        std::string NodeName = component->GetName();
 
-   // Make a histogram for this node
-   // Do some horrible things to prevent some really
-   // annoying messages from being printed
-   RooFit::MsgLevel levelBefore = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
-   TH1* hist=NULL;
-   try {
-     hist = MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp");
-   } catch(...) {
-     RooMsgService::instance().setGlobalKillBelow(levelBefore);
-     throw;
-   }
-   RooMsgService::instance().setGlobalKillBelow(levelBefore);
+        // Make a histogram for this node
+        // Do some horrible things to prevent some really
+        // annoying messages from being printed
+        RooFit::MsgLevel levelBefore = RooMsgService::instance().globalKillBelow();
+        RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
+        TH1* hist=NULL;
+        try {
+          hist = MakeHistFromRooFunction( component, observable_list, NodeName+"_tmp");
+        } catch(...) {
+        RooMsgService::instance().setGlobalKillBelow(levelBefore);
+        throw;
+        }
+        RooMsgService::instance().setGlobalKillBelow(levelBefore);
+      
+        // Print the hist
+        std::cout << std::setw(label_print_width) << NodeName;
 
-   // Print the hist
-   std::cout << std::setw(label_print_width) << NodeName;
-
-   // Print the Histogram
-   PrintMultiDimHist(hist, bin_print_width);
-   delete hist;
+        // Print the Histogram
+        PrintMultiDimHist(hist, bin_print_width);
+        delete hist;
       }
       /////
       std::string line_break;
