@@ -90,8 +90,8 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   //RooFIter inputIter1 = lowSet.fwdIterator() ;
   //RooAbsArg* comp ;
   //while ((comp = inputIter1.next()))
-  for (auto const *comp : static_range_cast<RooAbsArg *>(lowSet)) {
-    if (!dynamic_cast<RooAbsReal*>(*comp)) {
+  for (auto *comp : static_range_cast<RooAbsArg *>(lowSet)) {
+    if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " in first list is not of type RooAbsReal" << endl ;
       RooErrorHandler::softAbort() ;
@@ -660,11 +660,11 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
   // now get low/high variations
   i = 0;
-  RooFIter paramIter(_paramSet.begin()) ;
+  //RooFIter paramIter(_paramSet.begin()) ;
 
   // KC: old interp code with new iterator
   //while( (param=(RooAbsReal*)paramIter.next()) ) 
-  for (auto const *param : static_range_cast<RooAbsReal *>(*paramIter)) {
+  for (auto const *param : static_range_cast<RooAbsReal *>(*_paramSet)) {
     low = (RooAbsReal*)lowIntIter.next() ;
     high = (RooAbsReal*)highIntIter.next() ;
 
