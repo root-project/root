@@ -372,7 +372,7 @@ namespace RooStats {
       //TIter paramItr = params->createIterator();
       //RooRealVar* param = NULL;
       //while( (param=(RooRealVar*)paramItr.Next()) ) 
-      for (auto const *param : dynamic_range_cast<RooRealVar *>(params)) {
+      for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
         if( !IncludeConstantParams && param->isConstant() ) continue;
 
         std::cout << std::setw(30) << param->GetName();
