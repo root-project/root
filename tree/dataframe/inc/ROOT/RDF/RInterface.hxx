@@ -216,6 +216,10 @@ public:
    RInterface(RInterface &&) = default;
 
    ////////////////////////////////////////////////////////////////////////////
+   /// \brief Move-assignment operator for RInterface.
+   RInterface &operator=(RInterface &&) = default;
+
+   ////////////////////////////////////////////////////////////////////////////
    /// \brief Build a RInterface from a RLoopManager.
    /// This constructor is only available for RInterface<RLoopManager>.
    template <typename T = Proxied, typename = std::enable_if_t<std::is_same<T, RLoopManager>::value, int>>
