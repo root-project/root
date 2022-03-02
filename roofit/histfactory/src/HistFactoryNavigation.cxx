@@ -877,7 +877,7 @@ namespace RooStats {
    //TIter sampleItr = nodes.createIterator();
    //RooAbsArg* sample;
    //while( (sample=(RooAbsArg*)sampleItr.Next()) ) 
-   for (auto const *sample : static_range_cast<RooAbsArg *>(nodes)) {      
+   for (auto const *sample : static_range_cast<RooAbsArg *>(*nodes)) {      
      // Cast this node as a function
      RooAbsReal* func = (RooAbsReal*) sample;
 
@@ -938,7 +938,7 @@ namespace RooStats {
       //TIterator* paramItr = paramSet->createIterator();
       //RooAbsArg* param = NULL;
       //while( (param=(RooAbsArg*)paramItr->Next()) ) 
-      for (auto const *param : static_range_cast<RooAbsArg *>(paramSet)) {
+      for (auto const *param : static_range_cast<RooAbsArg *>(*paramSet)) {
    std::string ParamName = param->GetName();
    if( ParamName == name ) {
      term = param; //dynamic_cast<RooAbsReal*>(arg);
@@ -1293,7 +1293,7 @@ namespace RooStats {
       //TIter paramItr = params->createIterator();
       //RooRealVar* param = NULL;
       //while( (param=(RooRealVar*)paramItr.Next()) ) 
-      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
+      for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
 
    std::string ParamName = param->GetName();
    TString ParamNameTString(ParamName);
