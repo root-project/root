@@ -917,7 +917,7 @@ namespace RooStats {
       //TIterator* argItr = components->createIterator();
       RooAbsArg* arg = NULL;
       //while( (arg=(RooAbsArg*)argItr->Next()) ) 
-      for (auto *arg : static_range_cast<RooAbsArg *>(*components)) {
+      for (arg : static_range_cast<RooAbsArg *>(*components)) {
       
    std::string ArgName = arg->GetName();
    if( ArgName == name ) {
@@ -933,7 +933,7 @@ namespace RooStats {
       // If that failed,
       // Check if it's a Parameter
       // (ie a RooRealVar)
-      //RooArgSet* args = new RooArgSet();
+      RooArgSet* args = new RooArgSet();
       RooArgSet* paramSet = parent->getParameters(args);
       //TIterator* paramItr = paramSet->createIterator();
       //RooAbsArg* param = NULL;
@@ -945,7 +945,7 @@ namespace RooStats {
      break;
    }
       }
-      //delete args;
+      delete args;
       delete paramSet;
       //delete paramItr;
 
