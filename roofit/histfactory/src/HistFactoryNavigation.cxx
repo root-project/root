@@ -754,13 +754,13 @@ namespace RooStats {
       RooArgSet allTerms;
 
       // Get All Subnodes of this product
-      RooArgSet productComponents = node->components();
+      //RooArgSet productComponents = node->components();
 
       // Loop over the subnodes and add
       /*TIterator* itr = productComponents.createIterator();
       RooAbsArg* arg = NULL;
       while( (arg=(RooAbsArg*)itr->Next()) ) */
-      for (auto const *arg : static_range_cast<RooAbsArg *>(*productComponents)) {
+      for (auto const *arg : static_range_cast<RooAbsArg *>(*node->components())) {
    std::string ClassName = arg->ClassName();
    if( ClassName == "RooProduct" ) {
      RooProduct* prod = dynamic_cast<RooProduct*>(arg);
@@ -877,7 +877,7 @@ namespace RooStats {
    //TIter sampleItr = nodes.createIterator();
    //RooAbsArg* sample;
    //while( (sample=(RooAbsArg*)sampleItr.Next()) ) 
-   for (auto const *sample : static_range_cast<RooAbsArg *>(*nodes)) {      
+   for (auto const *sample : static_range_cast<RooAbsArg *>(nodes)) {      
      // Cast this node as a function
      RooAbsReal* func = (RooAbsReal*) sample;
 

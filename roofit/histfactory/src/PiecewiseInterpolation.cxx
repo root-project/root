@@ -90,7 +90,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   //RooFIter inputIter1 = lowSet.fwdIterator() ;
   //RooAbsArg* comp ;
   //while ((comp = inputIter1.next()))
-  for (auto const *comp : static_range_cast<RooAbsArg *>(*lowSet)) {
+  for (auto const *comp : static_range_cast<RooAbsArg *>(lowSet)) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " in first list is not of type RooAbsReal" << endl ;
@@ -105,7 +105,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
 
   //RooFIter inputIter2 = highSet.fwdIterator() ;
   //while((comp = inputIter2.next())) 
-  for (auto const *comp : static_range_cast<RooAbsArg *>(*highSet)) {
+  for (auto const *comp : static_range_cast<RooAbsArg *>(highSet)) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " in first list is not of type RooAbsReal" << endl ;
@@ -120,7 +120,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
 
   //RooFIter inputIter3 = paramSet.fwdIterator() ;
   //while((comp = inputIter3.next())) 
-  for (auto const *comp : static_range_cast<RooAbsArg *>(*paramSet)) {
+  for (auto const *comp : static_range_cast<RooAbsArg *>(paramSet)) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " in first list is not of type RooAbsReal" << endl ;
@@ -497,7 +497,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   //RooFIter paramIterExtra(_paramSet.fwdIterator()) ;
   int i=0;
   //while( paramIterExtra.next() ) 
-  for (auto const *paramIterExtra : static_range_cast<RooFIter *>(*_paramSet)) {
+  for (auto const *paramIterExtra : static_range_cast<RooFIter *>(_paramSet)) {
     if(!_interpCode.empty() && _interpCode[i]!=0){
       // can't factorize integral
       cout <<"can't factorize integral"<<endl;
@@ -533,9 +533,9 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   cache->_funcIntList.addOwned(*funcInt) ;
 
   // do variations
-  RooFIter lowIter(_lowSet.begin()) ;
-  RooFIter highIter(_highSet.begin()) ;
-  RooFIter paramIter(_paramSet.begin()) ;
+  RooFIter lowIter(*_lowSet.begin()) ;
+  RooFIter highIter(*_highSet.begin()) ;
+  RooFIter paramIter(*_paramSet.begin()) ;
 
   //  int i=0;
   i=0;
