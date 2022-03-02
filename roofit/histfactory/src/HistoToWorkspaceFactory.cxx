@@ -671,19 +671,19 @@ namespace HistFactory{
     //RooRealVar *myargi, *myargj;
     fprintf(pFile," ") ;
     //while ((myargi = (RooRealVar *)iti.Next())) 
-    for (auto const *myargi : static_range_cast<RooRealVar *>(params)) {
+    for (auto const *myargi : static_range_cast<RooRealVar *>(*params)) {
       if(myargi->isConstant()) continue;
       fprintf(pFile," & %s",  myargi->GetName());
     }
     fprintf(pFile,"\\\\ \\hline \n" );
     //iti.Reset();
     //while ((myargi = (RooRealVar *)iti.Next())) 
-    for (auto const *myargi : static_range_cast<RooRealVar *>(params)) {
+    for (auto const *myargi : static_range_cast<RooRealVar *>(*params)) {
       if(myargi->isConstant()) continue;
       fprintf(pFile,"%s", myargi->GetName());
       itj.Reset();
       //while ((myargj = (RooRealVar *)itj.Next())) 
-      for (auto const *myargj : static_range_cast<RooRealVar *>(params)) {
+      for (auto const *myargj : static_range_cast<RooRealVar *>(*params)) {
         if(myargj->isConstant()) continue;
         cout << myargi->GetName() << "," << myargj->GetName();
         fprintf(pFile, " & %.2f", result->correlation(*myargi, *myargj));
@@ -1004,7 +1004,7 @@ namespace HistFactory{
     //TIterator* params_itr=POIs->createIterator();
     //TObject* params_obj=0;
     //while((params_obj=params_itr->Next()))
-    for (auto const *poi : static_range_cast<RooRealVar *>(POIs)) {
+    for (auto const *poi : static_range_cast<RooRealVar *>(*POIs)) {
       //poi = (RooRealVar*) params_obj;
       cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
     }

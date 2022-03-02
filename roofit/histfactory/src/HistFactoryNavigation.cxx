@@ -760,7 +760,7 @@ namespace RooStats {
       /*TIterator* itr = productComponents.createIterator();
       RooAbsArg* arg = NULL;
       while( (arg=(RooAbsArg*)itr->Next()) ) */
-      for (auto const *arg : dynamic_range_cast<RooAbsArg *>(*productComponents)) {
+      for (auto const *arg : dynamic_range_cast<RooAbsArg *>(productComponents)) {
    std::string ClassName = arg->ClassName();
    if( ClassName == "RooProduct" ) {
      RooProduct* prod = dynamic_cast<RooProduct*>(arg);
@@ -830,7 +830,7 @@ namespace RooStats {
       // and find their RooRealSumPdfs
       // std::map< std::string, RooRealSumPdf* > channelSumNodeMap;
 
-      for( unsigned int i = 0; i < fChannelNameVec.size(); ++i ) {
+  for( unsigned int i = 0; i < fChannelNameVec.size(); ++i ) {
 
    std::string ChannelName = fChannelNameVec.at(i);
    RooAbsPdf* pdf = fChannelPdfMap[ChannelName];
@@ -844,15 +844,14 @@ namespace RooStats {
    //TIter argItr = components->createIterator();
    //RooAbsArg* arg = NULL;
    //while( (arg=(RooAbsArg*)argItr.Next()) ) 
-    for (auto const *arg : static_range_cast<RooAbsArg *>(components)) {
-         {
+    for (auto const *arg : static_range_cast<RooAbsArg *>(*components)) {
      std::string ClassName = arg->ClassName();
      if( ClassName == "RooRealSumPdf" ) {
        fChannelSumNodeMap[ChannelName] = (RooRealSumPdf*) arg;
        break;
      }
    }
-      }
+  }
 
       // Okay, now we have all necessary
       // nodes filled for each channel.

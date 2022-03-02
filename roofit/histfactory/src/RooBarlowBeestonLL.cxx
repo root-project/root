@@ -140,7 +140,7 @@ void RooStats::HistFactory::RooBarlowBeestonLL::BarlowCache::SetBinCenter() cons
   //TIterator* iter = bin_center->createIterator() ;
   //RooRealVar* var;
   //while((var=(RooRealVar*)iter->Next())) 
-  for (auto const *var : static_range_cast<RooRealVar *>(bin_center)) {
+  for (auto const *var : static_range_cast<RooRealVar *>(*bin_center)) {
     RooRealVar* target = (RooRealVar*) observables->find(var->GetName()) ;
     target->setVal(var->getVal()) ;
   }
