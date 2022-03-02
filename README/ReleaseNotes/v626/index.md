@@ -922,7 +922,7 @@ ROOT's experimental features (RNTuple, RHist, etc) now require C++17.
 * [[#9523](https://github.com/root-project/root/issues/9523)] - Documentation of `RooAbsReal::getValues` is broken
 * [[#9744](https://github.com/root-project/root/issues/9744)] - GDML module not working with Tessellated solid
 * [[#9899](https://github.com/root-project/root/issues/9899)] - TTree incorrectly run I/O customization rules on "new" data members.
-
+* [[#9967](https://github.com/root-project/root/issues/9967)] - Update builtin XRootD to v5.4.1
 
 ## HEAD of the v6-26-00-patches branch
 
