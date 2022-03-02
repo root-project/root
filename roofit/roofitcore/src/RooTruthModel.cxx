@@ -21,7 +21,7 @@
 
 RooTruthModel is an implementation of RooResolution
 model that provides a delta-function resolution model.
-The truth model supports <i>all</i> basis functions because it evaluates each basis function as  
+The truth model supports <i>all</i> basis functions because it evaluates each basis function as
 as a RooFormulaVar.  The 6 basis functions used in B mixing and decay and 2 basis
 functions used in D mixing have been hand coded for increased execution speed.
 **/
@@ -38,7 +38,7 @@ functions used in D mixing have been hand coded for increased execution speed.
 #include <algorithm>
 using namespace std ;
 
-ClassImp(RooTruthModel); 
+ClassImp(RooTruthModel);
 ;
 
 
@@ -48,7 +48,7 @@ ClassImp(RooTruthModel);
 
 RooTruthModel::RooTruthModel(const char *name, const char *title, RooAbsRealLValue& xIn) :
   RooResolutionModel(name,title,xIn)
-{  
+{
 }
 
 
@@ -56,7 +56,7 @@ RooTruthModel::RooTruthModel(const char *name, const char *title, RooAbsRealLVal
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooTruthModel::RooTruthModel(const RooTruthModel& other, const char* name) : 
+RooTruthModel::RooTruthModel(const RooTruthModel& other, const char* name) :
   RooResolutionModel(other,name)
 {
 }
@@ -78,7 +78,7 @@ RooTruthModel::~RooTruthModel()
 /// generic bases code if implementation relies on TFormula interpretation
 /// of basis name
 
-Int_t RooTruthModel::basisCode(const char* name) const 
+Int_t RooTruthModel::basisCode(const char* name) const
 {
   // Check for optimized basis functions
   if (!TString("exp(-@0/@1)").CompareTo(name)) return expBasisPlus ;
@@ -110,7 +110,7 @@ Int_t RooTruthModel::basisCode(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Changes associated bases function to 'inBasis'
 
-void RooTruthModel::changeBasis(RooFormulaVar* inBasis) 
+void RooTruthModel::changeBasis(RooFormulaVar* inBasis)
 {
   // Process change basis function. Since we actually
   // evaluate the basis function object, we need to
@@ -138,7 +138,7 @@ void RooTruthModel::changeBasis(RooFormulaVar* inBasis)
 /// Evaluate the truth model: a delta function when used as PDF,
 /// the basis function itself, when convoluted with a basis function.
 
-Double_t RooTruthModel::evaluate() const 
+Double_t RooTruthModel::evaluate() const
 {
   // No basis: delta function
   if (_basisCode == noBasis) {
@@ -156,23 +156,23 @@ Double_t RooTruthModel::evaluate() const
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
 
   // Enforce sign compatibility
-  if ((basisSign==Minus && x>0) || 
+  if ((basisSign==Minus && x>0) ||
       (basisSign==Plus  && x<0)) return 0 ;
 
 
   Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
   // Return desired basis function
-  switch(basisType) {    
+  switch(basisType) {
   case expBasis: {
     //cout << " RooTruthModel::eval(" << GetName() << ") expBasis mode ret = " << exp(-fabs((Double_t)x)/tau) << " tau = " << tau << endl ;
     return exp(-fabs((Double_t)x)/tau) ;
   }
   case sinBasis: {
-    Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
+    Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
     return exp(-fabs((Double_t)x)/tau)*sin(x*dm) ;
   }
   case cosBasis: {
-    Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
+    Double_t dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
     return exp(-fabs((Double_t)x)/tau)*cos(x*dm) ;
   }
   case linBasis: {
@@ -182,13 +182,13 @@ Double_t RooTruthModel::evaluate() const
   case quadBasis: {
     Double_t tscaled = fabs((Double_t)x)/tau;
     return exp(-tscaled)*tscaled*tscaled;
-  }  
+  }
   case sinhBasis: {
-    Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
+    Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
     return exp(-fabs((Double_t)x)/tau)*sinh(x*dg/2) ;
   }
   case coshBasis: {
-    Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ; 
+    Double_t dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
     return exp(-fabs((Double_t)x)/tau)*cosh(x*dg/2) ;
   }
   default:
@@ -204,7 +204,7 @@ Double_t RooTruthModel::evaluate() const
 /// Advertise analytical integrals for compiled basis functions and when used
 /// as p.d.f without basis function.
 
-Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
   switch(_basisCode) {
 
@@ -214,7 +214,7 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
     break ;
 
   // Analytical integration capability of convoluted PDF
-  case expBasisPlus: 
+  case expBasisPlus:
   case expBasisMinus:
   case expBasisSum:
   case sinBasisPlus:
@@ -244,7 +244,7 @@ Int_t RooTruthModel::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVa
 /// Implement analytical integrals when used as p.d.f and for compiled
 /// basis functions.
 
-Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) const 
+Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) const
 {
 
   // Code must be 1
@@ -256,7 +256,7 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
   // Precompiled basis functions
   BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
   BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
-  //cout << " calling RooTruthModel::analyticalIntegral with basisType " << basisType << endl; 
+  //cout << " calling RooTruthModel::analyticalIntegral with basisType " << basisType << endl;
 
   Double_t tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
   switch (basisType) {
@@ -266,10 +266,10 @@ Double_t RooTruthModel::analyticalIntegral(Int_t code, const char* rangeName) co
       Double_t result(0) ;
       if (tau==0) return 1 ;
       if ((basisSign != Minus) && (x.max(rangeName)>0)) {
-	result += tau*(-exp(-x.max(rangeName)/tau) -  -exp(-max(0.,x.min(rangeName))/tau) ) ; // plus and both
+   result += tau*(-exp(-x.max(rangeName)/tau) -  -exp(-max(0.,x.min(rangeName))/tau) ) ; // plus and both
       }
       if ((basisSign != Plus) && (x.min(rangeName)<0)) {
-	result -= tau*(-exp(-max(0.,x.min(rangeName))/tau)) - -tau*exp(-x.max(rangeName)/tau) ;   // minus and both
+   result -= tau*(-exp(-max(0.,x.min(rangeName))/tau)) - -tau*exp(-x.max(rangeName)/tau) ;   // minus and both
       }
 
       return result ;
@@ -344,7 +344,7 @@ RooAbsGenContext* RooTruthModel::modelGenContext
   RooArgSet forceDirect(convVar()) ;
   return new RooGenContext(dynamic_cast<const RooAbsPdf&>(convPdf), vars, prototype,
                            auxProto, verbose, &forceDirect) ;
-} 
+}
 
 
 
@@ -353,7 +353,7 @@ RooAbsGenContext* RooTruthModel::modelGenContext
 
 Int_t RooTruthModel::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
 {
-  if (matchArgs(directVars,generateVars,x)) return 1 ;  
+  if (matchArgs(directVars,generateVars,x)) return 1 ;
   return 0 ;
 }
 

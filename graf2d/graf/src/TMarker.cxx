@@ -28,7 +28,25 @@ ClassImp(TMarker);
 /** \class TMarker
 \ingroup BasicGraphics
 
-Manages Markers. Marker attributes are managed by TAttMarker.
+Manages Markers.
+
+Use the TMarker constructor to create a marker.
+
+~~~ {.cpp}
+   TMarker(Double_t x,Double_t y,Int_t marker)
+~~~
+
+The parameters `x` and `y` are the marker coordinates and `marker` is the marker type.
+
+Use the TPolyMarker to create an array on N points in a 2D space.
+At each point `x[i]`, `y[i]` a marker is drawn.
+
+Use the TAttMarker class to change the attributes color, style and size of a marker.
+
+_**Example**_
+
+- Use the `TAttMarker::SetMarkerSize(size)` method to set the `size` of a marker.
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,12 +204,13 @@ void TMarker::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with new coordinates.
 
-void TMarker::DrawMarker(Double_t x, Double_t y)
+TMarker *TMarker::DrawMarker(Double_t x, Double_t y)
 {
    TMarker *newmarker = new TMarker(x, y, 1);
    TAttMarker::Copy(*newmarker);
    newmarker->SetBit(kCanDelete);
    newmarker->AppendPad();
+   return newmarker;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +416,7 @@ Rectangle_t TMarker::GetBBox()
 TPoint TMarker::GetBBoxCenter()
 {
    TPoint p;
-   if (!gPad) return (p); 
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(fX));
    p.SetY(gPad->YtoPixel(fY));
    return(p);

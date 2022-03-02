@@ -12,6 +12,7 @@
 
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Interpreter.h"
+#include "cling/Interpreter/Visibility.h"
 #include "cling/Utils/Validation.h"
 
 #include "clang/Frontend/CompilerInstance.h"
@@ -27,10 +28,9 @@ extern "C" {
 ///\returns void*, const-cast from Arg, to reduce the complexity in the
 /// calling AST nodes, at the expense of possibly doing a
 /// T* -> const void* -> const_cast<void*> -> T* round trip.
+CLING_LIB_EXPORT
 void* cling_runtime_internal_throwIfInvalidPointer(void* Interp, void* Expr,
                                                    const void* Arg) {
-
-  const clang::Expr* const E = (const clang::Expr*)Expr;
 
 #if defined(__APPLE__) && defined(__arm64__)
   // See https://github.com/root-project/root/issues/7541 and
@@ -40,6 +40,8 @@ void* cling_runtime_internal_throwIfInvalidPointer(void* Interp, void* Expr,
   (void)Interp;
   (void)Expr;
 #else
+  const clang::Expr* const E = (const clang::Expr*)Expr;
+
   // The isValidAddress function return true even when the pointer is
   // null thus the checks have to be done before returning successfully from the
   // function in this specific order.
@@ -47,14 +49,16 @@ void* cling_runtime_internal_throwIfInvalidPointer(void* Interp, void* Expr,
     cling::Interpreter* I = (cling::Interpreter*)Interp;
     clang::Sema& S = I->getCI()->getSema();
     // Print a nice backtrace.
-    I->getCallbacks()->PrintStackTrace();
+    // FIXME: re-enable once we have JIT debug symbols!
+    //I->getCallbacks()->PrintStackTrace();
     throw cling::InvalidDerefException(&S, E,
           cling::InvalidDerefException::DerefType::NULL_DEREF);
   } else if (!cling::utils::isAddressValid(Arg)) {
     cling::Interpreter* I = (cling::Interpreter*)Interp;
     clang::Sema& S = I->getCI()->getSema();
     // Print a nice backtrace.
-    I->getCallbacks()->PrintStackTrace();
+    // FIXME: re-enable once we have JIT debug symbols!
+    //I->getCallbacks()->PrintStackTrace();
     throw cling::InvalidDerefException(&S, E,
           cling::InvalidDerefException::DerefType::INVALID_MEM);
   }

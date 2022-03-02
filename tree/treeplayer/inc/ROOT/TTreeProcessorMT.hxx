@@ -20,12 +20,12 @@
 #include "TTreeReader.h"
 #include "TError.h"
 #include "TEntryList.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/InternalTreeUtils.hxx" // RFriendInfo
 
 #include <functional>
+#include <memory>
 #include <vector>
 
 /** \class TTreeView
@@ -68,6 +68,7 @@ public:
                                               const std::vector<std::string> &fileNames, const TreeUtils::RFriendInfo &friendInfo,
                                               const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
                                               const std::vector<std::vector<Long64_t>> &friendEntries);
+   void Reset();
 };
 } // End of namespace Internal
 
@@ -85,7 +86,6 @@ private:
    ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{TNumSlots{ROOT::GetThreadPoolSize()}};
 
    std::vector<std::string> FindTreeNames();
-   static unsigned int fgMaxTasksPerFilePerWorker;
    static unsigned int fgTasksPerWorkerHint;
 
 public:

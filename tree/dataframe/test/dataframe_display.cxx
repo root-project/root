@@ -9,17 +9,56 @@ using namespace ROOT;
 using namespace ROOT::RDF;
 using namespace ROOT::VecOps;
 
-static const std::string DisplayPrintDefaultRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | 2.0000000 | \n   | ... |           | \n "
-   "  | 3   |           | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | ... |           | \n   | 3   |           | \n");
+static const std::string DisplayPrintDefaultRows("+-----+----+----+-----------+\n"
+                                                 "| Row | b1 | b2 | b3        | \n"
+                                                 "+-----+----+----+-----------+\n"
+                                                 "| 0   | 0  | 1  | 2.0000000 | \n"
+                                                 "|     |    | 2  |           | \n"
+                                                 "|     |    | 3  |           | \n"
+                                                 "+-----+----+----+-----------+\n"
+                                                 "| 1   | 0  | 1  | 2.0000000 | \n"
+                                                 "|     |    | 2  |           | \n"
+                                                 "|     |    | 3  |           | \n"
+                                                 "+-----+----+----+-----------+\n"
+                                                 "| 2   | 0  | 1  | 2.0000000 | \n"
+                                                 "|     |    | 2  |           | \n"
+                                                 "|     |    | 3  |           | \n"
+                                                 "+-----+----+----+-----------+\n"
+                                                 "| 3   | 0  | 1  | 2.0000000 | \n"
+                                                 "|     |    | 2  |           | \n"
+                                                 "|     |    | 3  |           | \n"
+                                                 "+-----+----+----+-----------+\n"
+                                                 "| 4   | 0  | 1  | 2.0000000 | \n"
+                                                 "|     |    | 2  |           | \n"
+                                                 "|     |    | 3  |           | \n"
+                                                 "+-----+----+----+-----------+\n"
+);
 
-static const std::string DisplayAsStringDefaultRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n "
-   "  | 3   |           | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n   |     |           | \n");
+static const std::string DisplayAsStringDefaultRows("+-----+----+----+-----------+\n"
+                                                    "| Row | b1 | b2 | b3        | \n"
+                                                    "+-----+----+----+-----------+\n"
+                                                    "| 0   | 0  | 1  | 2.0000000 | \n"
+                                                    "|     |    | 2  |           | \n"
+                                                    "|     |    | 3  |           | \n"
+                                                    "+-----+----+----+-----------+\n"
+                                                    "| 1   | 0  | 1  | 2.0000000 | \n"
+                                                    "|     |    | 2  |           | \n"
+                                                    "|     |    | 3  |           | \n"
+                                                    "+-----+----+----+-----------+\n"
+                                                    "| 2   | 0  | 1  | 2.0000000 | \n"
+                                                    "|     |    | 2  |           | \n"
+                                                    "|     |    | 3  |           | \n"
+                                                    "+-----+----+----+-----------+\n"
+                                                    "| 3   | 0  | 1  | 2.0000000 | \n"
+                                                    "|     |    | 2  |           | \n"
+                                                    "|     |    | 3  |           | \n"
+                                                    "+-----+----+----+-----------+\n"
+                                                    "| 4   | 0  | 1  | 2.0000000 | \n"
+                                                    "|     |    | 2  |           | \n"
+                                                    "|     |    | 3  |           | \n"
+                                                    "|     |    |    |           | \n"
+                                                    "+-----+----+----+-----------+\n"
+);
 
 TEST(RDFDisplayTests, DisplayNoJitDefaultRows)
 {
@@ -102,13 +141,30 @@ TEST(RDFDisplayTests, DisplayRegexDefaultRows)
    EXPECT_EQ(dd->AsString(), DisplayAsStringDefaultRows);
 }
 
-static const std::string
-   DisplayPrintTwoRows("b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |          "
-                       " | \n0  | 1   | 2.0000000 | \n   | ... |           | \n   | 3   |           | \n");
+static const std::string DisplayPrintTwoRows("+-----+----+----+-----------+\n"
+                                             "| Row | b1 | b2 | b3        | \n"
+                                             "+-----+----+----+-----------+\n"
+                                             "| 0   | 0  | 1  | 2.0000000 | \n"
+                                             "|     |    | 2  |           | \n"
+                                             "|     |    | 3  |           | \n"
+                                             "+-----+----+----+-----------+\n"
+                                             "| 1   | 0  | 1  | 2.0000000 | \n"
+                                             "|     |    | 2  |           | \n"
+                                             "|     |    | 3  |           | \n"
+                                             "+-----+----+----+-----------+\n");
 
-static const std::string DisplayAsStringTwoRows(
-   "b1 | b2  | b3        | \n0  | 1   | 2.0000000 | \n   | 2   |           | \n   | 3   |           | \n0  | 1   | "
-   "2.0000000 | \n   | 2   |           | \n   | 3   |           | \n   |     |           | \n");
+static const std::string DisplayAsStringTwoRows("+-----+----+----+-----------+\n"
+                                                "| Row | b1 | b2 | b3        | \n"
+                                                "+-----+----+----+-----------+\n"
+                                                "| 0   | 0  | 1  | 2.0000000 | \n"
+                                                "|     |    | 2  |           | \n"
+                                                "|     |    | 3  |           | \n"
+                                                "+-----+----+----+-----------+\n"
+                                                "| 1   | 0  | 1  | 2.0000000 | \n"
+                                                "|     |    | 2  |           | \n"
+                                                "|     |    | 3  |           | \n"
+                                                "|     |    |    |           | \n"
+                                                "+-----+----+----+-----------+\n");
 
 TEST(RDFDisplayTests, DisplayJitTwoRows)
 {
@@ -137,10 +193,44 @@ TEST(RDFDisplayTests, DisplayJitTwoRows)
    EXPECT_EQ(dd->AsString(), DisplayAsStringTwoRows);
 }
 
-static const std::string DisplayAsStringOneColumn("b1 | \n0  | \n0  | \n0  | \n0  | \n0  | \n   | \n");
-static const std::string DisplayAsStringTwoColumns(
-   "b1 | b2  | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | "
-   "\n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n0  | 1   | \n   | 2   | \n   | 3   | \n   |     | \n");
+static const std::string DisplayAsStringOneColumn("+-----+----+\n"
+                                                  "| Row | b1 | \n"
+                                                  "+-----+----+\n"
+                                                  "| 0   | 0  | \n"
+                                                  "+-----+----+\n"
+                                                  "| 1   | 0  | \n"
+                                                  "+-----+----+\n"
+                                                  "| 2   | 0  | \n"
+                                                  "+-----+----+\n"
+                                                  "| 3   | 0  | \n"
+                                                  "+-----+----+\n"
+                                                  "| 4   | 0  | \n"
+                                                  "|     |    | \n"
+                                                  "+-----+----+\n");
+static const std::string DisplayAsStringTwoColumns("+-----+----+----+\n"
+                                                   "| Row | b1 | b2 | \n"
+                                                   "+-----+----+----+\n"
+                                                   "| 0   | 0  | 1  | \n"
+                                                   "|     |    | 2  | \n"
+                                                   "|     |    | 3  | \n"
+                                                   "+-----+----+----+\n"
+                                                   "| 1   | 0  | 1  | \n"
+                                                   "|     |    | 2  | \n"
+                                                   "|     |    | 3  | \n"
+                                                   "+-----+----+----+\n"
+                                                   "| 2   | 0  | 1  | \n"
+                                                   "|     |    | 2  | \n"
+                                                   "|     |    | 3  | \n"
+                                                   "+-----+----+----+\n"
+                                                   "| 3   | 0  | 1  | \n"
+                                                   "|     |    | 2  | \n"
+                                                   "|     |    | 3  | \n"
+                                                   "+-----+----+----+\n"
+                                                   "| 4   | 0  | 1  | \n"
+                                                   "|     |    | 2  | \n"
+                                                   "|     |    | 3  | \n"
+                                                   "|     |    |    | \n"
+                                                   "+-----+----+----+\n");
 
 TEST(RDFDisplayTests, DisplayAmbiguity)
 {
@@ -156,7 +246,7 @@ TEST(RDFDisplayTests, DisplayAmbiguity)
    EXPECT_EQ(display_2->AsString(), DisplayAsStringTwoColumns);
 }
 
-static const std::string DisplayAsStringString("b1    | \n\"foo\" | \n\"foo\" | \n      | \n");
+static const std::string DisplayAsStringString("+-----+-------+\n| Row | b1    | \n+-----+-------+\n| 0   | \"foo\" | \n+-----+-------+\n| 1   | \"foo\" | \n|     |       | \n+-----+-------+\n");
 
 TEST(RDFDisplayTests, DisplayPrintString)
 {
@@ -193,7 +283,7 @@ TEST(RDFDisplayTests, CharArray)
    }
 
    const auto str = ROOT::RDataFrame("t", "chararray.root").Display()->AsString();
-   EXPECT_EQ(str, "str | \nasd | \nbar | \n    | \n");
+   EXPECT_EQ(str, "+-----+-----+\n| Row | str | \n+-----+-----+\n| 0   | asd | \n+-----+-----+\n| 1   | bar | \n|     |     | \n+-----+-----+\n");
 }
 
 TEST(RDFDisplayTests, BoolArray)
@@ -201,8 +291,25 @@ TEST(RDFDisplayTests, BoolArray)
    auto r = ROOT::RDataFrame(3)
       .Define("v", [] { return ROOT::RVec<bool>{true,false}; })
       .Display<ROOT::RVec<bool>>({"v"});
-   const auto expected = "v     | \ntrue  | \nfalse | \ntrue  | \nfalse | \ntrue  | \nfalse | \ntrue  | \nfalse | "
-                         "\ntrue  | \nfalse | \ntrue  | \nfalse | \n      | \n";
+   const auto expected = "+-----+-------+\n"
+                         "| Row | v     | \n"
+                         "+-----+-------+\n"
+                         "| 0   | true  | \n"
+                         "|     | false | \n"
+                         "+-----+-------+\n"
+                         "| 1   | true  | \n"
+                         "|     | false | \n"
+                         "|     | true  | \n"
+                         "|     | false | \n"
+                         "+-----+-------+\n"
+                         "| 2   | true  | \n"
+                         "|     | false | \n"
+                         "|     | true  | \n"
+                         "|     | false | \n"
+                         "|     | true  | \n"
+                         "|     | false | \n"
+                         "|     |       | \n"
+                         "+-----+-------+\n";
    EXPECT_EQ(r->AsString(), expected);
 }
 
@@ -211,8 +318,12 @@ TEST(RDFDisplayTests, UniquePtr)
    auto r = ROOT::RDataFrame(1)
                .Define("uptr", []() -> std::unique_ptr<int> { return nullptr; })
                .Display<std::unique_ptr<int>>({"uptr"});
-   const auto expected =
-      "uptr                       | \nstd::unique_ptr -> nullptr | \n                           | \n";
+   const auto expected = "+-----+----------------------------+\n"
+                         "| Row | uptr                       | \n"
+                         "+-----+----------------------------+\n"
+                         "| 0   | std::unique_ptr -> nullptr | \n"
+                         "|     |                            | \n"
+                         "+-----+----------------------------+\n";
    EXPECT_EQ(r->AsString(), expected);
 }
 
@@ -226,6 +337,301 @@ TEST(RDFDisplayTests, SubBranch)
    t.Fill();
    ROOT::RDataFrame df(t);
    const auto res = df.Display()->AsString();
-   const auto expected = "p.a | p.b | \n42  | 84  | \n    |     | \n";
+   const auto expected = "+-----+-----+-----+\n| Row | p.a | p.b | \n+-----+-----+-----+\n| 0   | 42  | 84  | \n|     |     |     | \n+-----+-----+-----+\n";
    EXPECT_EQ(res, expected);
 }
+
+// https://github.com/root-project/root/issues/8450
+TEST(RDFDisplayTests, Friends)
+{
+  TTree main("main", "main");
+  main.Fill();
+  TTree fr("friend", "friend");
+  int x = 0;
+  fr.Branch("x", &x);
+  fr.Fill();
+  main.AddFriend(&fr);
+
+  const auto res = ROOT::RDataFrame(main).Display()->AsString();
+  const auto expected = "+-----+----------+\n| Row | friend.x | \n+-----+----------+\n| 0   | 0        | \n|     |          | \n+-----+----------+\n";
+  EXPECT_EQ(res, expected);
+}
+
+static const std::string DisplayPrintVectors("+-----+----+----+----+----+-----+-----+-----+------+\n"
+                                             "| Row | S0 | S1 | S3 | S9 | S10 | S11 | S20 | S20_ | \n"
+                                             "+-----+----+----+----+----+-----+-----+-----+------+\n"
+                                             "| 0   |    | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    |    | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    |    |     | ... | ... | ...  | \n"
+                                             "+-----+----+----+----+----+-----+-----+-----+------+\n"
+                                             "| 1   |    | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    |    | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    |    |     | ... | ... | ...  | \n"
+                                             "+-----+----+----+----+----+-----+-----+-----+------+\n"
+                                             "| 2   |    | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    |    | 0   | 0   | 0   | 0    | \n"
+                                             "|     |    |    |    |    |     | ... | ... | ...  | \n"
+                                             "+-----+----+----+----+----+-----+-----+-----+------+\n");
+
+static const std::string DisplayAsStringVectors("+-----+----+----+----+----+-----+-----+-----+------+\n"
+                                                "| Row | S0 | S1 | S3 | S9 | S10 | S11 | S20 | S20_ | \n"
+                                                "+-----+----+----+----+----+-----+-----+-----+------+\n"
+                                                "| 0   |    | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "+-----+----+----+----+----+-----+-----+-----+------+\n"
+                                                "| 1   |    | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "+-----+----+----+----+----+-----+-----+-----+------+\n"
+                                                "| 2   |    | 0  | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    | 0  | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    | 0  | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    | 0   | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     | 0   | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     | 0   | 0    | \n"
+                                                "|     |    |    |    |    |     |     |     |      | \n"
+                                                "+-----+----+----+----+----+-----+-----+-----+------+\n");
+
+TEST(RDFDisplayTests, Vectors)
+{
+   std::vector<int> v0(0);
+   std::vector<int> v1(1);
+   std::vector<int> v3(3);
+   std::vector<int> v9(9);
+   std::vector<int> v10(10);
+   std::vector<int> v11(11);
+   std::vector<int> v20(20);
+
+   RDataFrame vc(3);
+
+   auto dd = vc.Define("S0", [&v0] { return v0; })
+                .Define("S1", [&v1] { return v1; })
+                .Define("S3", [&v3] { return v3; })
+                .Define("S9", [&v9] { return v9; })
+                .Define("S10", [&v10] { return v10; })
+                .Define("S11", [&v11] { return v11; })
+                .Define("S20", [&v20] { return v20; })
+                .Define("S20_", [&v20] { return v20; })
+                .Display<std::vector<int>, std::vector<int>, std::vector<int>, std::vector<int>, std::vector<int>,
+                         std::vector<int>, std::vector<int>, std::vector<int>>(
+                   {"S0", "S1", "S3", "S9", "S10", "S11", "S20", "S20_"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), DisplayPrintVectors);
+
+   // Testing the string returned
+   EXPECT_EQ(dd->AsString(), DisplayAsStringVectors);
+}
+
+TEST(RDFDisplayTests, CustomMaxWidth)
+{
+
+   std::vector<int> v3(3);
+   ROOT::RDataFrame vc(3);
+   auto dd = vc.Define("S3", [&v3] { return v3; }).Display<std::vector<int>>({"S3"}, 1, 2);
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), "+-----+-----+\n| Row | S3  | \n+-----+-----+\n| 0   | 0   | \n|     | 0   | \n|     | ... | \n+-----+-----+\n");
+}
+
+TEST(RDFDisplayTests, PrintWideTables1)
+{
+  std::vector<std::string> v3(3);
+  v3[0] = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890";
+  v3[1] = v3[0];
+  v3[2] = v3[0];
+  std::vector<int> v0(10);
+  ROOT::RDataFrame vc(3);
+  auto dd = vc.Define("S3", [&v3] { return v3; })
+              .Display<std::vector<std::string>>({"S3"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(),
+   "+-----+--------------------------------------------------------------------------------------------------------+\n"
+   "| Row | S3                                                                                                     | \n"
+   "+-----+--------------------------------------------------------------------------------------------------------+\n"
+   "| 0   | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "|     | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "|     | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "+-----+--------------------------------------------------------------------------------------------------------+\n"
+   "| 1   | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "|     | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "|     | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "+-----+--------------------------------------------------------------------------------------------------------+\n"
+   "| 2   | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "|     | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "|     | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | \n"
+   "+-----+--------------------------------------------------------------------------------------------------------+\n");
+}
+
+TEST(RDFDisplayTests, PrintWideTables2)
+{
+  std::vector<std::string> v3(3);
+  v3[0] = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890";
+  v3[1] = v3[0];
+  v3[2] = v3[0];
+  std::vector<int> v10(10);
+  ROOT::RDataFrame vc(1);
+  auto dd = vc.Define("S10", [&v10] { return v10; })
+              .Define("S3", [&v3] { return v3; })
+              .Display<std::vector<int>, std::vector<std::string>>({"S10", "S3"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(), "+-----+-----+-----+\n"
+                            "| Row | S10 | ... | \n"
+                            "+-----+-----+-----+\n"
+                            "| 0   | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "|     | 0   | ... | \n"
+                            "+-----+-----+-----+\n");
+}
+
+
+TEST(RDFDisplayTests, PrintWideTables3)
+{
+  std::vector<std::string> v3(3);
+  v3[0] = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890";
+  v3[1] = v3[0];
+  v3[2] = v3[0];
+  std::vector<int> v10(10);
+  ROOT::RDataFrame vc(1);
+  auto dd = vc.Define("S10", [&v10] { return v10; })
+              .Define("S3", [&v3] { return v3; })
+              .Display<std::vector<std::string>, std::vector<int>>({"S3", "S10"});
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   dd->Print();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+
+   EXPECT_EQ(strCout.str(),
+   "+-----+--------------------------------------------------------------------------------------------------------+-----+\n"
+   "| Row | S3                                                                                                     | ... | \n"
+   "+-----+--------------------------------------------------------------------------------------------------------+-----+\n"
+   "| 0   | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | ... | \n"
+   "|     | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | ... | \n"
+   "|     | \"Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod 12345678901234567890\" | ... | \n"
+   "+-----+--------------------------------------------------------------------------------------------------------+-----+\n");
+}
+

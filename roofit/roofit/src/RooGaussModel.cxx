@@ -27,10 +27,43 @@ for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
 #include "TMath.h"
 #include "Riostream.h"
 #include "RooGaussModel.h"
+#include "RooMath.h"
 #include "RooRealConstant.h"
 #include "RooRandom.h"
 
 #include "TError.h"
+
+
+namespace {
+
+////////////////////////////////////////////////////////////////////////////////
+/// use the approximation: erf(z) = exp(-z*z)/(std::sqrt(pi)*z)
+/// to explicitly cancel the divergent exp(y*y) behaviour of
+/// CWERF for z = x + i y with large negative y
+
+std::complex<Double_t> evalCerfApprox(Double_t _x, Double_t u, Double_t c)
+{
+  static const Double_t rootpi= std::sqrt(std::atan2(0.,-1.));
+  const std::complex<Double_t> z(_x * c, u + c);
+  const std::complex<Double_t> zc(u + c, - _x * c);
+  const std::complex<Double_t> zsq((z.real() + z.imag()) * (z.real() - z.imag()),
+     2. * z.real() * z.imag());
+  const std::complex<Double_t> v(-zsq.real() - u*u, -zsq.imag());
+  const std::complex<Double_t> ev = std::exp(v);
+  const std::complex<Double_t> mez2zcrootpi = -std::exp(zsq)/(zc*rootpi);
+
+  return 2. * (ev * (mez2zcrootpi + 1.));
+}
+
+// Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
+inline std::complex<Double_t> evalCerf(Double_t swt, Double_t u, Double_t c)
+{
+  std::complex<Double_t> z(swt*c,u+c);
+  return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
+}
+
+} // namespace
+
 
 using namespace std;
 
@@ -439,24 +472,6 @@ Double_t RooGaussModel::analyticalIntegral(Int_t code, const char* rangeName) co
   return 0 ;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// use the approximation: erf(z) = exp(-z*z)/(std::sqrt(pi)*z)
-/// to explicitly cancel the divergent exp(y*y) behaviour of
-/// CWERF for z = x + i y with large negative y
-
-std::complex<Double_t> RooGaussModel::evalCerfApprox(Double_t _x, Double_t u, Double_t c)
-{
-  static const Double_t rootpi= std::sqrt(std::atan2(0.,-1.));
-  const std::complex<Double_t> z(_x * c, u + c);
-  const std::complex<Double_t> zc(u + c, - _x * c);
-  const std::complex<Double_t> zsq((z.real() + z.imag()) * (z.real() - z.imag()),
-     2. * z.real() * z.imag());
-  const std::complex<Double_t> v(-zsq.real() - u*u, -zsq.imag());
-  const std::complex<Double_t> ev = std::exp(v);
-  const std::complex<Double_t> mez2zcrootpi = -std::exp(zsq)/(zc*rootpi);
-
-  return 2. * (ev * (mez2zcrootpi + 1.));
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

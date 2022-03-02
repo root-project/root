@@ -36,6 +36,8 @@ namespace Math {
     The metric used is (-,-,-,+)
 
     @ingroup GenVector
+
+    @sa Overview of the @ref GenVector "physics vector library"
 */
 
 template <class ScalarType = double>

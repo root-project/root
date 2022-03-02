@@ -36,15 +36,15 @@ namespace TMVA {
    class PDEFoamVect : public TObject {
 
    private:
-      Int_t       fDim;                     // Dimension
-      Double_t   *fCoords;                  // [fDim] Coordinates
+      Int_t       fDim;                     ///< Dimension
+      Double_t   *fCoords;                  ///< [fDim] Coordinates
 
    public:
       // constructor
-      PDEFoamVect();                                 // Constructor
-      PDEFoamVect(Int_t);                            // USER Constructor
-      PDEFoamVect(const PDEFoamVect &);              // Copy constructor
-      virtual ~PDEFoamVect();                        // Destructor
+      PDEFoamVect();                                 ///< Constructor
+      PDEFoamVect(Int_t);                            ///< USER Constructor
+      PDEFoamVect(const PDEFoamVect &);              ///< Copy constructor
+      virtual ~PDEFoamVect();                        ///< Destructor
 
       //////////////////////////////////////////////////////////////////////////////
       //                     Overloading operators                                //

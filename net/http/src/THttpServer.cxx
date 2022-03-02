@@ -22,7 +22,6 @@
 #include "RConfigure.h"
 #include "TRegexp.h"
 #include "TObjArray.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include "THttpEngine.h"
 #include "THttpLongPollEngine.h"
@@ -32,11 +31,12 @@
 #include "TCivetweb.h"
 #include "TFastCgi.h"
 
-#include <string>
+#include <chrono>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
-#include <chrono>
+#include <memory>
+#include <string>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1155,8 +1155,9 @@ Bool_t THttpServer::ExecuteWS(std::shared_ptr<THttpCallArg> &arg, Bool_t externa
          TUrl url;
          url.SetOptions(arg->fQuery);
          url.ParseOptions();
-         Int_t connid = url.GetIntValueFromOptions("connection");
-         arg->SetWSId((UInt_t)connid);
+         const char *connid = url.GetValueFromOptions("connection");
+         if (connid)
+            arg->SetWSId(std::stoul(connid));
          if (url.HasOption("close")) {
             arg->SetMethod("WS_CLOSE");
             arg->SetTextContent("OK");

@@ -22,7 +22,7 @@
 **/
 
 #include "RooLegendre.h"
-#include "RooBatchCompute.h"
+#include "RunContext.h"
 #include "RooAbsReal.h"
 
 #include "Math/SpecFunc.h"
@@ -129,7 +129,7 @@ Double_t RooLegendre::evaluate() const
 namespace {
 //Author: Emmanouil Michalainas, CERN 26 August 2019
 
-void compute(	size_t batchSize, const int l1, const int m1, const int l2, const int m2,
+void compute(  size_t batchSize, const int l1, const int m1, const int l2, const int m2,
               double * __restrict output,
               double const * __restrict TH)
 {
@@ -137,13 +137,13 @@ void compute(	size_t batchSize, const int l1, const int m1, const int l2, const 
   double legendre1=1.0, legendreMinus1=1.0;
   if (l1+m1 > 0) {
     legendre1      = ROOT::Math::internal::legendre(l1,m1,1.0);
-    legendreMinus1 = ROOT::Math::internal::legendre(l1,m1,-1.0); 
+    legendreMinus1 = ROOT::Math::internal::legendre(l1,m1,-1.0);
   }
   if (l2+m2 > 0) {
-    legendre1      *= ROOT::Math::internal::legendre(l2,m2,1.0); 
-    legendreMinus1 *= ROOT::Math::internal::legendre(l2,m2,-1.0); 
+    legendre1      *= ROOT::Math::internal::legendre(l2,m2,1.0);
+    legendreMinus1 *= ROOT::Math::internal::legendre(l2,m2,-1.0);
   }
-  
+
   for (size_t i=0; i<batchSize; i++) {
     if (TH[i] <= -1.0) {
       output[i] = legendreMinus1;

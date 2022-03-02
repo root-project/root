@@ -84,7 +84,7 @@ public:
    void           AddLineFast(const char *string) { fTextEdit->AddLineFast(string); }
    TGText        *GetText() const { return fTextEdit->GetText(); }
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleTimer(TTimer *t);
    virtual void   CloseWindow();

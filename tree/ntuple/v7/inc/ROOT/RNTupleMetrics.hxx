@@ -313,7 +313,10 @@ public:
       return ptrCounter;
    }
 
-   /// Searches this object and all the observed sub metrics. Returns nullptr if name is not found.
+   /// Searches counters registered in this object only. Returns nullptr if `name` is not found.
+   const RNTuplePerfCounter *GetLocalCounter(std::string_view name) const;
+   /// Searches this object and all the observed sub metrics. `name` must start with the prefix used
+   /// by this RNTupleMetrics instance. Returns nullptr if `name` is not found.
    const RNTuplePerfCounter *GetCounter(std::string_view name) const;
 
    void ObserveMetrics(RNTupleMetrics &observee);

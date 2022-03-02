@@ -24,21 +24,21 @@ public:
   RooAbsSelfCachedReal() {} ;
   RooAbsSelfCachedReal(const char *name, const char *title, Int_t ipOrder=0);
   RooAbsSelfCachedReal(const RooAbsSelfCachedReal& other, const char* name=0) ;
-  virtual ~RooAbsSelfCachedReal() ;
+  ~RooAbsSelfCachedReal() override ;
 
 protected:
 
-  virtual const char* inputBaseName() const { 
+  const char* inputBaseName() const override {
     // Use own name as base name for caches
-    return GetName() ; 
+    return GetName() ;
   }
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(FuncCacheElem& cache) const ;  
+  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooArgSet* actualParameters(const RooArgSet& nset) const override ;
+  void fillCacheObject(FuncCacheElem& cache) const override ;
 
 private:
 
-  ClassDef(RooAbsSelfCachedReal,0) // Abstract base class for self-caching functions
+  ClassDefOverride(RooAbsSelfCachedReal,0) // Abstract base class for self-caching functions
 };
- 
+
 #endif

@@ -29,13 +29,13 @@ class RooMultiBinomial : public RooAbsReal {
 
   RooMultiBinomial(const char *name, const char *title, const RooArgList& effFuncList, const RooArgList& catList, Bool_t ignoreNonVisible);
   RooMultiBinomial(const RooMultiBinomial& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooMultiBinomial(*this,newname); }
-  virtual ~RooMultiBinomial();
+  TObject* clone(const char* newname) const override { return new RooMultiBinomial(*this,newname); }
+  ~RooMultiBinomial() override;
 
  protected:
 
   // Function evaluation
-  virtual Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
  private:
 
@@ -43,7 +43,7 @@ class RooMultiBinomial : public RooAbsReal {
   RooListProxy _effFuncList ; // Efficiency functions per category
   Bool_t _ignoreNonVisible ; // Ignore combination of only rejects (since invisible)
 
-  ClassDef(RooMultiBinomial,1) // Simultaneous pdf of N Binomial distributions with associated efficiency functions
+  ClassDefOverride(RooMultiBinomial,1) // Simultaneous pdf of N Binomial distributions with associated efficiency functions
   };
 
 #endif

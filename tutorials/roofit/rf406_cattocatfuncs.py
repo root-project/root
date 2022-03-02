@@ -23,15 +23,13 @@ tagCat.defineType("NetTagger-2")
 tagCat.Print()
 
 # Define a category with explicitly numbered states
-b0flav = ROOT.RooCategory("b0flav", "B0 flavour eigenstate")
-b0flav.defineType("B0", -1)
-b0flav.defineType("B0bar", 1)
+b0flav = ROOT.RooCategory("b0flav", "B0 flavour eigenstate", {"B0": -1, "B0bar": 1})
 b0flav.Print()
 
 # Construct a dummy dataset with random values of tagCat and b0flav
 x = ROOT.RooRealVar("x", "x", 0, 10)
 p = ROOT.RooPolynomial("p", "p", x)
-data = p.generate(ROOT.RooArgSet(x, b0flav, tagCat), 10000)
+data = p.generate({x, b0flav, tagCat}, 10000)
 
 # Create a cat -> cat mapping category
 # ---------------------------------------------------------------------
@@ -39,8 +37,7 @@ data = p.generate(ROOT.RooArgSet(x, b0flav, tagCat), 10000)
 # A RooMappedCategory is category.category mapping function based on string expression
 # The constructor takes an input category an a default state name to which unassigned
 # states are mapped
-tcatType = ROOT.RooMappedCategory(
-    "tcatType", "tagCat type", tagCat, "Cut based")
+tcatType = ROOT.RooMappedCategory("tcatType", "tagCat type", tagCat, "Cut based")
 
 # Enter fully specified state mappings
 tcatType.map("Lepton", "Cut based")
@@ -58,8 +55,7 @@ mtable.Print("v")
 
 # A SUPER-category is 'product' of _lvalue_ categories. The state names of a super
 # category is a composite of the state labels of the input categories
-b0Xtcat = ROOT.RooSuperCategory(
-    "b0Xtcat", "b0flav X tagCat", ROOT.RooArgSet(b0flav, tagCat))
+b0Xtcat = ROOT.RooSuperCategory("b0Xtcat", "b0flav X tagCat", {b0flav, tagCat})
 
 # Make a table of the product category state multiplicity in data
 stable = data.table(b0Xtcat)
@@ -70,8 +66,7 @@ b0Xtcat.setLabel("{B0bar;Lepton}")
 
 # A MULTI-category is a 'product' of any category (function). The state names of a super
 # category is a composite of the state labels of the input categories
-b0Xttype = ROOT.RooMultiCategory(
-    "b0Xttype", "b0flav X tagType", ROOT.RooArgSet(b0flav, tcatType))
+b0Xttype = ROOT.RooMultiCategory("b0Xttype", "b0flav X tagType", {b0flav, tcatType})
 
 # Make a table of the product category state multiplicity in data
 xtable = data.table(b0Xttype)

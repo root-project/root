@@ -104,7 +104,7 @@ ClassImp(TRootEmbeddedCanvas);
 ///        destroyed by it ]
 
 TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
-            UInt_t w, UInt_t h, UInt_t options, ULong_t back)
+            UInt_t w, UInt_t h, UInt_t options, Pixel_t back)
    : TGCanvas(p, w, h, options, back)
 {
    fCanvas  = 0;
@@ -134,14 +134,14 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
       }
 
       if (gGLManager)
-         fCWinId = gGLManager->InitGLWindow((ULong_t)GetViewPort()->GetId());
+         fCWinId = gGLManager->InitGLWindow((ULongptr_t)GetViewPort()->GetId());
       //Context creation deferred till TCanvas creation (since there is no way to pass it to TCanvas).
 
       if (!gGLManager || fCWinId == -1)
          gStyle->SetCanvasPreferGL(kFALSE);//TCanvas should not use gl.
    }
    if (fCWinId == -1)
-      fCWinId = gVirtualX->InitWindow((ULong_t)GetViewPort()->GetId());
+      fCWinId = gVirtualX->InitWindow((ULongptr_t)GetViewPort()->GetId());
 
    Window_t win = gVirtualX->GetWindowID(fCWinId);
    fCanvasContainer = new TRootEmbeddedContainer(this, win, GetViewPort());
@@ -438,7 +438,7 @@ Bool_t TRootEmbeddedCanvas::HandleDNDDrop(TDNDData *data)
       if (!obj) return kTRUE;
       gPad->Clear();
       if (obj->InheritsFrom("TKey")) {
-         TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->ReadObj();", (ULong_t)obj));
+         TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%zx)->ReadObj();", (size_t)obj));
          if (!object) return kTRUE;
          if (object->InheritsFrom("TGraph"))
             object->Draw("ALP");

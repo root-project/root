@@ -144,24 +144,21 @@ Double_t RooPolynomial::evaluate() const
   return retVal * std::pow(x, lowestOrder) + (lowestOrder ? 1.0 : 0.0);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Polynomial.  
-RooSpan<double> RooPolynomial::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  RooSpan<const double> xData = _x->getValues(evalData, normSet);
-  int batchSize = xData.size();  
-  RooSpan<double> output = evalData.makeBatch(this, batchSize);
+// The batch mode support for RooPolynomial was commented out, because that
+// implementation can't deal with observables used as polynomial coefficients
+// yet.
 
-  const int nCoef = _coefList.getSize();
-  const RooArgSet* listNormSet = _coefList.nset();
-  std::vector<RooBatchCompute::BracketAdapterWithMask> coefList;
-  for (int i=0; i<nCoef; i++) {
-    auto valBatch = static_cast<RooAbsReal&>(_coefList[i]).getValues(evalData, listNormSet);
-    coefList.emplace_back(valBatch);
-  }
-
-  RooBatchCompute::dispatch->computePolynomial(batchSize, output.data(), xData.data(), _lowestOrder, coefList);
-  return output;
-}
+//////////////////////////////////////////////////////////////////////////////////
+///// Compute multiple values of Polynomial.
+//void RooPolynomial::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+//{
+  //RooBatchCompute::ArgVector extraArgs;
+  //for (auto* coef:_coefList)
+    //extraArgs.push_back( static_cast<const RooAbsReal*>(coef)->getVal() );
+  //extraArgs.push_back(_lowestOrder);
+  //auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  //dispatch->compute(stream, RooBatchCompute::Polynomial, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise to RooFit that this function can be analytically integrated.

@@ -45,13 +45,91 @@ TEST(RNTuple, View)
    }
    EXPECT_EQ(2, n);
 
-   auto viewJetElements = ntuple.GetView<std::int32_t>("jets.std::int32_t");
+   auto viewJetElements = ntuple.GetView<std::int32_t>("jets._0");
    n = 0;
    for (auto i : viewJetElements.GetFieldRange()) {
       n++;
       EXPECT_EQ(n, viewJetElements(i));
    }
    EXPECT_EQ(3, n);
+}
+
+TEST(RNTuple, BulkView)
+{
+   FileRaii fileGuard("test_ntuple_bulk_view.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+   auto eltsPerPage = 10'000;
+   {
+      RNTupleWriteOptions opt;
+      opt.SetApproxUnzippedPageSize(eltsPerPage * sizeof(float));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
+         fileGuard.GetPath(), opt);
+      for (int i = 0; i < 100'000; i++) {
+         ntuple->Fill();
+      }
+   }
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewPt = ntuple->GetView<float>("pt");
+
+   NTupleSize_t nPageItems = 0;
+   const float *buf = viewPt.MapV(0, nPageItems);
+   ASSERT_EQ(eltsPerPage, nPageItems);
+   for (NTupleSize_t i = 0; i < nPageItems; i++) {
+      ASSERT_EQ(42.0f, buf[i]) << i;
+   }
+   // second last element
+   buf = viewPt.MapV(eltsPerPage - 2, nPageItems);
+   ASSERT_EQ(2, nPageItems);
+   for (NTupleSize_t i = 0; i < nPageItems; i++) {
+      ASSERT_EQ(42.0f, buf[i]) << i;
+   }
+   // last element
+   buf = viewPt.MapV(eltsPerPage - 1, nPageItems);
+   ASSERT_EQ(1, nPageItems);
+   for (NTupleSize_t i = 0; i < nPageItems; i++) {
+      ASSERT_EQ(42.0f, buf[i]) << i;
+   }
+}
+
+TEST(RNTuple, BulkViewCollection)
+{
+   FileRaii fileGuard("test_ntuple_bulk_view_collection.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldVec = model->MakeField<std::vector<double>>({"vec", "some data"});
+   auto pageSize = 80 * 1024;
+   {
+      RNTupleWriteOptions opt;
+      opt.SetApproxUnzippedPageSize(pageSize);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple",
+         fileGuard.GetPath(), opt);
+      for (int i = 0; i < 100'000; i++) {
+         *fieldVec = std::vector<double>(i % 5, 100);
+         ntuple->Fill();
+      }
+   }
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewVecOffsets = ntuple->GetView<ClusterSize_t>("vec");
+   auto viewVecData = ntuple->GetView<double>("vec._0");
+
+   NTupleSize_t nPageItems = 0;
+   const ClusterSize_t *offsets_buf = viewVecOffsets.MapV(0, nPageItems);
+   ASSERT_EQ(pageSize / sizeof(ClusterSize_t), nPageItems);
+   std::unique_ptr<ClusterSize_t[]> offsets = std::make_unique<ClusterSize_t[]>(nPageItems + 1);
+   auto raw_offsets = offsets.get();
+   // offsets implicitly start at zero, RNTuple does not store that information
+   raw_offsets[0] = 0;
+   memcpy(raw_offsets + 1, offsets_buf, sizeof(ClusterSize_t) * nPageItems);
+   for (NTupleSize_t i = 1; i < nPageItems + 1; i++) {
+      ASSERT_EQ((i - 1) % 5, raw_offsets[i] - raw_offsets[i-1]) << i;
+   }
+   const double *buf = viewVecData.MapV(0, nPageItems);
+   ASSERT_EQ(pageSize / sizeof(double), nPageItems);
+   for (NTupleSize_t i = 0; i < nPageItems; i++) {
+      ASSERT_EQ(100.0f, buf[i]) << i;
+   }
 }
 
 TEST(RNTuple, Composable)

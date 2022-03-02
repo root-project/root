@@ -11,7 +11,7 @@
 
 // Integration types for
 // one and multidimensional integration
-// eith a common interface
+// with a common interface
 
 #ifndef ROOT_Math_AllIntegrationTypes
 #define ROOT_Math_AllIntegrationTypes
@@ -30,7 +30,7 @@ namespace Math {
      /// enumeration specifying the integration types.
      /// @ingroup Integration
      enum Type {
-        kDEFAULT = -1,     ///< default type specifiend in the static options
+        kDEFAULT = -1,     ///< default type specified in the static options
         kGAUSS,            ///< simple Gauss integration method with fixed rule
         kLEGENDRE,         ///< Gauss-Legendre integration
         kADAPTIVE,         ///< to be used for general functions without singularities

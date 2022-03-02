@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss 
+// Author: Andreas Hoecker, Joerg Stelzer, Helge Voss, Kai Voss
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -16,9 +16,9 @@
  *      Kai Voss        <Kai.Voss@cern.ch>       - U. of Victoria, Canada         *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      U. of Victoria, Canada                                                    * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      U. of Victoria, Canada                                                    *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -43,7 +43,7 @@
 #include "RtypesCore.h"
 
 namespace TMVA {
-  
+
    class Volume {
 
    public:
@@ -63,21 +63,21 @@ namespace TMVA {
       // operators
       Volume& operator=( const Volume& );
 
-      // destruct the volue 
+      // destruct the volue
       void Delete       ( void );
-      // "scale" the volume by multiplying each upper and lower boundary by "f" 
+      // "scale" the volume by multiplying each upper and lower boundary by "f"
       void Scale        ( Double_t f );
       // "scale" the volume by symmetrically blowing up the interval in each dimension
       void ScaleInterval( Double_t f );
       void Print        ( void ) const;
 
       // allow direct access for better speed
-      std::vector<Double_t> *fLower;    // vector with lower volume dimensions
-      std::vector<Double_t> *fUpper;    // vector with upper volume dimensions
+      std::vector<Double_t> *fLower;    ///< vector with lower volume dimensions
+      std::vector<Double_t> *fUpper;    ///< vector with upper volume dimensions
 
    private:
 
-      Bool_t                fOwnerShip; // flag if "boundary vector" is owned by the volume of not
+      Bool_t                fOwnerShip; ///< flag if "boundary vector" is owned by the volume of not
    };
 
 } // namespace TMVA

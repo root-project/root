@@ -42,18 +42,12 @@ ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
 {
 }
 
-ROOT::Experimental::Detail::RNTupleMetrics &ROOT::Experimental::Detail::RPageStorage::GetMetrics()
-{
-   static RNTupleMetrics metrics("");
-   return metrics;
-}
-
 
 //------------------------------------------------------------------------------
 
 
 ROOT::Experimental::Detail::RPageSource::RPageSource(std::string_view name, const RNTupleReadOptions &options)
-   : RPageStorage(name), fOptions(options)
+   : RPageStorage(name), fMetrics(""), fOptions(options)
 {
 }
 
@@ -64,6 +58,12 @@ ROOT::Experimental::Detail::RPageSource::~RPageSource()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSource::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleReadOptions &options)
 {
+   if (ntupleName.empty()) {
+      throw RException(R__FAIL("empty RNTuple name"));
+   }
+   if (location.empty()) {
+      throw RException(R__FAIL("empty storage location"));
+   }
    if (location.find("daos://") == 0)
 #ifdef R__ENABLE_DAOS
       return std::make_unique<RPageSourceDaos>(ntupleName, location, options);
@@ -139,12 +139,103 @@ std::unique_ptr<unsigned char []> ROOT::Experimental::Detail::RPageSource::Unsea
    return pageBuffer;
 }
 
+void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::string &prefix)
+{
+   fMetrics = RNTupleMetrics(prefix);
+   fCounters = std::unique_ptr<RCounters>(new RCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nReadV", "", "number of vector read requests"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nRead", "", "number of byte ranges read"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadPayload", "B", "volume read from storage (required)"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szReadOverhead", "B", "volume read from storage (overhead)"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szUnzip", "B", "volume after unzipping"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nClusterLoaded", "",
+                                                   "number of partial clusters preloaded from storage"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageLoaded", "", "number of pages loaded from storage"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPagePopulated", "", "number of populated pages"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallRead", "ns", "wall clock time spent reading"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallUnzip", "ns", "wall clock time spent decompressing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuRead", "ns", "CPU time spent reading"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuUnzip", "ns",
+                                                                        "CPU time spent decompressing"),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwRead", "MB/s", "bandwidth compressed bytes read per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetLocalCounter("szReadPayload")) {
+               if (const auto szReadOverhead = metrics.GetLocalCounter("szReadOverhead")) {
+                  if (const auto timeWallRead = metrics.GetLocalCounter("timeWallRead")) {
+                     if (auto walltime = timeWallRead->GetValueAsInt()) {
+                        double payload = szReadPayload->GetValueAsInt();
+                        double overhead = szReadOverhead->GetValueAsInt();
+                        // unit: bytes / nanosecond = GB/s
+                        return {true, (1000. * (payload + overhead) / walltime)};
+                     }
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwReadUnzip", "MB/s", "bandwidth uncompressed bytes read per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szUnzip = metrics.GetLocalCounter("szUnzip")) {
+               if (const auto timeWallRead = metrics.GetLocalCounter("timeWallRead")) {
+                  if (auto walltime = timeWallRead->GetValueAsInt()) {
+                     double unzip = szUnzip->GetValueAsInt();
+                     // unit: bytes / nanosecond = GB/s
+                     return {true, 1000. * unzip / walltime};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("bwUnzip", "MB/s", "decompression bandwidth of uncompressed bytes per second",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szUnzip = metrics.GetLocalCounter("szUnzip")) {
+               if (const auto timeWallUnzip = metrics.GetLocalCounter("timeWallUnzip")) {
+                  if (auto walltime = timeWallUnzip->GetValueAsInt()) {
+                     double unzip = szUnzip->GetValueAsInt();
+                     // unit: bytes / nanosecond = GB/s
+                     return {true, 1000. * unzip / walltime};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("rtReadEfficiency", "", "ratio of payload over all bytes read",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetLocalCounter("szReadPayload")) {
+               if (const auto szReadOverhead = metrics.GetLocalCounter("szReadOverhead")) {
+                  if (auto payload = szReadPayload->GetValueAsInt()) {
+                     // r/(r+o) = 1/((r+o)/r) = 1/(1 + o/r)
+                     return {true, 1./(1. + (1. * szReadOverhead->GetValueAsInt()) / payload)};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      ),
+      *fMetrics.MakeCounter<RNTupleCalcPerf*> ("rtCompression", "", "ratio of compressed bytes / uncompressed bytes",
+         fMetrics, [](const RNTupleMetrics &metrics) -> std::pair<bool, double> {
+            if (const auto szReadPayload = metrics.GetLocalCounter("szReadPayload")) {
+               if (const auto szUnzip = metrics.GetLocalCounter("szUnzip")) {
+                  if (auto unzip = szUnzip->GetValueAsInt()) {
+                     return {true, (1. * szReadPayload->GetValueAsInt()) / unzip};
+                  }
+               }
+            }
+            return {false, -1.};
+         }
+      )
+   });
+}
+
 
 //------------------------------------------------------------------------------
 
 
 ROOT::Experimental::Detail::RPageSink::RPageSink(std::string_view name, const RNTupleWriteOptions &options)
-   : RPageStorage(name), fOptions(options)
+   : RPageStorage(name), fMetrics(""), fOptions(options.Clone())
 {
 }
 
@@ -155,6 +246,12 @@ ROOT::Experimental::Detail::RPageSink::~RPageSink()
 std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detail::RPageSink::Create(
    std::string_view ntupleName, std::string_view location, const RNTupleWriteOptions &options)
 {
+   if (ntupleName.empty()) {
+      throw RException(R__FAIL("empty RNTuple name"));
+   }
+   if (location.empty()) {
+      throw RException(R__FAIL("empty storage location"));
+   }
    std::unique_ptr<ROOT::Experimental::Detail::RPageSink> realSink;
    if (location.find("daos://") == 0) {
 #ifdef R__ENABLE_DAOS
@@ -174,52 +271,46 @@ std::unique_ptr<ROOT::Experimental::Detail::RPageSink> ROOT::Experimental::Detai
 ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
-   auto columnId = fLastColumnId++;
-   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetVersion(), column.GetModel(), column.GetIndex());
+   auto columnId = fDescriptorBuilder.GetDescriptor().GetNColumns();
+   fDescriptorBuilder.AddColumn(columnId, fieldId, column.GetModel(), column.GetIndex());
    return ColumnHandle_t{columnId, &column};
 }
 
 
 void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
 {
-   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription(), "undefined author",
-                                model.GetVersion(), model.GetUuid());
+   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto &fieldZero = *model.GetFieldZero();
-   fDescriptorBuilder.AddField(
-      RDanglingFieldDescriptor::FromField(fieldZero)
-         .FieldId(fLastFieldId)
-         .MakeDescriptor()
-         .Unwrap()
-   );
-   fieldZero.SetOnDiskId(fLastFieldId);
-   for (auto& f : *model.GetFieldZero()) {
-      fLastFieldId++;
-      fDescriptorBuilder.AddField(
-         RDanglingFieldDescriptor::FromField(f)
-            .FieldId(fLastFieldId)
-            .MakeDescriptor()
-            .Unwrap()
-      );
-      fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fLastFieldId);
-      f.SetOnDiskId(fLastFieldId);
+   fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
+   fieldZero.SetOnDiskId(0);
+   for (auto &f : fieldZero) {
+      auto fieldId = descriptor.GetNFields();
+      fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
+      fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
+      f.SetOnDiskId(fieldId);
       f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
    }
 
-   auto nColumns = fLastColumnId;
+   auto nColumns = descriptor.GetNColumns();
    for (DescriptorId_t i = 0; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fColumnId = i;
       columnRange.fFirstElementIndex = 0;
       columnRange.fNElements = 0;
-      columnRange.fCompressionSettings = fOptions.GetCompression();
+      columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
       fOpenColumnRanges.emplace_back(columnRange);
       RClusterDescriptor::RPageRange pageRange;
       pageRange.fColumnId = i;
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
-   CreateImpl(model);
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
+   auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
+   fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(buffer.get(), descriptor);
+
+   CreateImpl(model, buffer.get(), fSerializationContext.GetHeaderSize());
 }
 
 
@@ -247,55 +338,116 @@ void ROOT::Experimental::Detail::RPageSink::CommitSealedPage(
 }
 
 
-void ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
+std::uint64_t ROOT::Experimental::Detail::RPageSink::CommitCluster(ROOT::Experimental::NTupleSize_t nEntries)
 {
-   auto locator = CommitClusterImpl(nEntries);
+   auto nbytes = CommitClusterImpl(nEntries);
 
    R__ASSERT((nEntries - fPrevClusterNEntries) < ClusterSize_t(-1));
-   fDescriptorBuilder.AddCluster(fLastClusterId, RNTupleVersion(), fPrevClusterNEntries,
-                                 ClusterSize_t(nEntries - fPrevClusterNEntries));
-   fDescriptorBuilder.SetClusterLocator(fLastClusterId, locator);
-   for (auto &range : fOpenColumnRanges) {
-      fDescriptorBuilder.AddClusterColumnRange(fLastClusterId, range);
-      range.fFirstElementIndex += range.fNElements;
-      range.fNElements = 0;
-   }
-   for (auto &range : fOpenPageRanges) {
+   auto nEntriesInCluster = ClusterSize_t(nEntries - fPrevClusterNEntries);
+   RClusterDescriptorBuilder clusterBuilder(fDescriptorBuilder.GetDescriptor().GetNClusters(), fPrevClusterNEntries,
+                                            nEntriesInCluster);
+   for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
       RClusterDescriptor::RPageRange fullRange;
-      std::swap(fullRange, range);
-      range.fColumnId = fullRange.fColumnId;
-      fDescriptorBuilder.AddClusterPageRange(fLastClusterId, std::move(fullRange));
+      fullRange.fColumnId = i;
+      std::swap(fullRange, fOpenPageRanges[i]);
+      clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex,
+                                       fOpenColumnRanges[i].fCompressionSettings, fullRange);
+      fOpenColumnRanges[i].fFirstElementIndex += fOpenColumnRanges[i].fNElements;
+      fOpenColumnRanges[i].fNElements = 0;
    }
-   ++fLastClusterId;
+   fDescriptorBuilder.AddClusterWithDetails(clusterBuilder.MoveDescriptor().Unwrap());
    fPrevClusterNEntries = nEntries;
+   return nbytes;
 }
 
+void ROOT::Experimental::Detail::RPageSink::CommitClusterGroup()
+{
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   const auto nClusters = descriptor.GetNClusters();
+   std::vector<DescriptorId_t> physClusterIDs;
+   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+      physClusterIDs.emplace_back(fSerializationContext.MapClusterId(i));
+   }
+
+   auto szPageList =
+      Internal::RNTupleSerializer::SerializePageListV1(nullptr, descriptor, physClusterIDs, fSerializationContext);
+   auto bufPageList = std::make_unique<unsigned char[]>(szPageList);
+   Internal::RNTupleSerializer::SerializePageListV1(bufPageList.get(), descriptor, physClusterIDs,
+                                                    fSerializationContext);
+
+   const auto clusterGroupId = descriptor.GetNClusterGroups();
+   const auto locator = CommitClusterGroupImpl(bufPageList.get(), szPageList);
+   RClusterGroupDescriptorBuilder cgBuilder;
+   cgBuilder.ClusterGroupId(clusterGroupId).PageListLocator(locator).PageListLength(szPageList);
+   for (auto i = fNextClusterInGroup; i < nClusters; ++i) {
+      cgBuilder.AddCluster(i);
+   }
+   fDescriptorBuilder.AddClusterGroup(std::move(cgBuilder));
+   fSerializationContext.MapClusterGroupId(clusterGroupId);
+
+   fNextClusterInGroup = nClusters;
+}
+
+void ROOT::Experimental::Detail::RPageSink::CommitDataset()
+{
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   auto szFooter = Internal::RNTupleSerializer::SerializeFooterV1(nullptr, descriptor, fSerializationContext);
+   auto bufFooter = std::make_unique<unsigned char[]>(szFooter);
+   Internal::RNTupleSerializer::SerializeFooterV1(bufFooter.get(), descriptor, fSerializationContext);
+
+   CommitDatasetImpl(bufFooter.get(), szFooter);
+}
 
 ROOT::Experimental::Detail::RPageStorage::RSealedPage
-ROOT::Experimental::Detail::RPageSink::SealPage(
-   const RPage &page, const RColumnElementBase &element, int compressionSetting)
+ROOT::Experimental::Detail::RPageSink::SealPage(const RPage &page,
+   const RColumnElementBase &element, int compressionSetting, void *buf)
 {
-   unsigned char *buffer = reinterpret_cast<unsigned char *>(page.GetBuffer());
+   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(page.GetBuffer());
    bool isAdoptedBuffer = true;
-   auto packedBytes = page.GetSize();
+   auto packedBytes = page.GetNBytes();
 
    if (!element.IsMappable()) {
       packedBytes = element.GetPackedSize(page.GetNElements());
-      buffer = new unsigned char[packedBytes];
+      pageBuf = new unsigned char[packedBytes];
       isAdoptedBuffer = false;
-      element.Pack(buffer, page.GetBuffer(), page.GetNElements());
+      element.Pack(pageBuf, page.GetBuffer(), page.GetNElements());
    }
    auto zippedBytes = packedBytes;
 
    if ((compressionSetting != 0) || !element.IsMappable()) {
-      zippedBytes = fCompressor->Zip(buffer, packedBytes, fOptions.GetCompression());
+      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
       if (!isAdoptedBuffer)
-         delete[] buffer;
-      buffer = const_cast<unsigned char *>(reinterpret_cast<const unsigned char *>(fCompressor->GetZipBuffer()));
+         delete[] pageBuf;
+      pageBuf = reinterpret_cast<unsigned char *>(buf);
       isAdoptedBuffer = true;
    }
 
    R__ASSERT(isAdoptedBuffer);
 
-   return RSealedPage{buffer, zippedBytes, page.GetNElements()};
+   return RSealedPage{pageBuf, zippedBytes, page.GetNElements()};
+}
+
+ROOT::Experimental::Detail::RPageStorage::RSealedPage
+ROOT::Experimental::Detail::RPageSink::SealPage(
+   const RPage &page, const RColumnElementBase &element, int compressionSetting)
+{
+   R__ASSERT(fCompressor);
+   return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
+}
+
+void ROOT::Experimental::Detail::RPageSink::EnableDefaultMetrics(const std::string &prefix)
+{
+   fMetrics = RNTupleMetrics(prefix);
+   fCounters = std::unique_ptr<RCounters>(new RCounters{
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("nPageCommitted", "", "number of pages committed to storage"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szWritePayload", "B", "volume written for committed pages"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("szZip", "B", "volume before zipping"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallWrite", "ns", "wall clock time spent writing"),
+      *fMetrics.MakeCounter<RNTupleAtomicCounter*>("timeWallZip", "ns", "wall clock time spent compressing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*>("timeCpuWrite", "ns", "CPU time spent writing"),
+      *fMetrics.MakeCounter<RNTupleTickCounter<RNTupleAtomicCounter>*> ("timeCpuZip", "ns",
+                                                                        "CPU time spent compressing")
+   });
 }

@@ -12,15 +12,10 @@ file(COPY test_headers DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY 2clusters.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY 4clusters.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY 1000clusters.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY emptytree.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY Slimmed_ntuple.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY 1cluster_20entries.root DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_common test_common.py)
 ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_dist test_dist.py)
-
-# pyspark is required to run this test
-if(test_distrdf_pyspark)
-    ROOT_ADD_PYUNITTEST(distrdf_unit_backend_test_spark test_spark.py)
-endif()
 
 endif()

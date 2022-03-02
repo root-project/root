@@ -54,20 +54,21 @@ Check the tutorial rf506_msgservice.C for details.
 **/
 
 #include "RooFormula.h"
-
-#include "RooFit.h"
+#include "BracketAdapters.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
+#include "RooFit.h"
 #include "RooMsgService.h"
+#include "RunContext.h"
 #include "RooBatchCompute.h"
 
-#include "ROOT/RMakeUnique.hxx"
 #include "TObjString.h"
 #include "TClass.h"
 
-#include <sstream>
+#include <memory>
 #include <regex>
+#include <sstream>
 
 using namespace std;
 
@@ -129,12 +130,12 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
-RooFormula::RooFormula(const RooFormula& other, const char* name) : 
+RooFormula::RooFormula(const RooFormula& other, const char* name) :
   TNamed(name ? name : other.GetName(), other.GetTitle()), RooPrintable(other)
 {
   _origList.add(other._origList);
   _isCategory = findCategoryServers(_origList);
-  
+
   TFormula* newTF = nullptr;
   if (other._tFormula) {
     newTF = new TFormula(*other._tFormula);
@@ -408,10 +409,25 @@ RooSpan<double> RooFormula::evaluateSpan(const RooAbsReal* dataOwner, RooBatchCo
   return output;
 }
 
+void RooFormula::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  const int nPars=_origList.size();
+  std::vector<RooSpan<const double>> inputSpans(nPars);
+  for (int i=0; i<nPars; i++)
+    inputSpans[i] = dataMap.at( static_cast<const RooAbsReal*>(&_origList[i]) );
+
+  std::vector<double> pars(nPars);
+  for (size_t i=0; i<nEvents; i++)
+  {
+    for (int j=0; j<nPars; j++) pars[j] = inputSpans[j].size()>1 ? inputSpans[j][i] : inputSpans[j][0];
+    output[i] = _tFormula->EvalPar( pars.data() );
+  }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Printing interface
 
-void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const 
+void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose*/, TString indent) const
 {
   os << indent << "--- RooFormula ---" << endl;
   os << indent << " Formula:        '" << GetTitle() << "'" << endl;
@@ -425,7 +441,7 @@ void RooFormula::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbos
 ////////////////////////////////////////////////////////////////////////////////
 /// Print value of formula
 
-void RooFormula::printValue(ostream& os) const 
+void RooFormula::printValue(ostream& os) const
 {
   os << const_cast<RooFormula*>(this)->eval(0) ;
 }
@@ -434,7 +450,7 @@ void RooFormula::printValue(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of formula
 
-void RooFormula::printName(ostream& os) const 
+void RooFormula::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -443,7 +459,7 @@ void RooFormula::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print title of formula
 
-void RooFormula::printTitle(ostream& os) const 
+void RooFormula::printTitle(ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -452,7 +468,7 @@ void RooFormula::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of formula
 
-void RooFormula::printClassName(ostream& os) const 
+void RooFormula::printClassName(ostream& os) const
 {
   os << IsA()->GetName() ;
 }
@@ -461,7 +477,7 @@ void RooFormula::printClassName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print arguments of formula, i.e. dependents that are actually used
 
-void RooFormula::printArgs(ostream& os) const 
+void RooFormula::printArgs(ostream& os) const
 {
   os << "[ actualVars=";
   for (const auto arg : usedVariables()) {

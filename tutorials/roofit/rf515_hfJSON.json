@@ -1,0 +1,118 @@
+{
+    "pdfs": {
+        "main": {
+            "dict": {
+                "InterpolationScheme": ""
+            },
+            "index": "channelCat",
+            "type": "simultaneous",
+            "tags": [
+                "toplevel"
+            ],
+            "channels": {
+                "channel1": {
+                    "type": "histfactory",
+                    "observables": {
+                        "obs_x_channel1": {
+                            "nbins": 2,
+                            "min": 1,
+                            "max": 2
+                        }
+                    },
+                    "samples": {
+                        "signal": {
+                            "type": "hist-sample",
+                            "overallSystematics": {
+                                "syst1": {
+                                    "low": 0.95,
+                                    "high": 1.05
+                                }
+                            },
+                            "normFactors": [
+                                "mu"
+                            ],
+                            "statError": 0,
+                            "data": {
+                                "counts": [
+                                    20,
+                                    10
+                                ]
+                            }
+                        },
+                        "background1": {
+                            "type": "hist-sample",
+                            "overallSystematics": {
+                                "syst2": {
+                                    "low": 0.95,
+                                    "high": 1.05
+                                }
+                            },
+                            "statError": 1,
+                            "data": {
+                                "counts": [
+                                    100,
+                                    0
+                                ],
+                                "errors": [
+                                    5,
+                                    0
+                                ]
+                            }
+                        },
+                        "background2": {
+                            "type": "hist-sample",
+                            "overallSystematics": {
+                                "syst3": {
+                                    "low": 0.95,
+                                    "high": 1.05
+                                }
+                            },
+                            "dict": {
+                                "normalizeByTheory": 1
+                            },
+                            "statError": 1,
+                            "data": {
+                                "counts": [
+                                    0,
+                                    100
+                                ],
+                                "errors": [
+                                    0,
+                                    10
+                                ]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "variables": {
+        "mu": {
+            "value": 1,
+            "min": -3,
+            "max": 5,
+            "tags": [
+                "poi"
+            ]
+        }
+    },
+    "data": {
+        "observed": {
+            "index": "channelCat",
+            "channel1": {
+                "observables": {
+                    "obs_x_channel1": {
+                        "nbins": 2,
+                        "min": 1,
+                        "max": 2
+                    }
+                },
+                "counts": [
+                    122,
+                    112
+                ]
+            }
+        }
+    }
+}

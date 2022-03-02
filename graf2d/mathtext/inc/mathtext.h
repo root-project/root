@@ -43,8 +43,8 @@ namespace mathtext {
     * - Illegal TeX syntax may result in not well defined behaviors.
     * Most notably, `a^b^c' or `a_b_c' result in `a^c' and `a_c',
     * i.e. the overwriting of the previous superscripts and
-    * subscripts, and `a \atop b \atop c' or `a \over b \over c'
-    * result in `a \atop {b \atop c}' and `a \over {b \over c}', i.e.
+    * subscripts, and `a \\atop b \\atop c' or `a \\over b \\over c'
+    * result in `a \\atop {b \\atop c}' and `a \\over {b \\over c}', i.e.
     * a right associative interpretation.
     *
     * @see ISO/IEC JTC1/SC2/WG2, ISO/IEC 10646:2003/Amd.2:2006 (ISO,
@@ -355,18 +355,19 @@ namespace mathtext {
           * Returns the interelement spacing between the given left
           * and right atom types, and whether the present style is
           * script or scriptscript, with 0, 1, 2, and 3
-          * representing no space, \thinkmuskip, \medmuskip, and
-          * \thickmuskip, respectively.
+          * representing no space, \\thinkmuskip, \\medmuskip, and
+          * \\thickmuskip, respectively.
           *
-          * TeX defaults to \thinkmuskip to 3 mu, \medmuskip to 4
-          * mu, and \thickmuskip to 5 mu, with 1 mu being 1/18
+          * TeX defaults to \\thinkmuskip to 3 mu, \\medmuskip to 4
+          * mu, and \\thickmuskip to 5 mu, with 1 mu being 1/18
           * quad.
           *
           * @param[in] left_type left (enum) atom type
           * @param[in] right_type right (enum) atom type
+          * @param[in] script boolean
           * @return interelement spacing, with 0, 1, 2, and 3
-          * representing no space, \thinkmuskip, \medmuskip, and
-          * \thickmuskip, respectively
+          * representing no space, \\thinkmuskip, \\medmuskip, and
+          * \\thickmuskip, respectively
           */
          static unsigned int
          spacing(const unsigned int left_type,

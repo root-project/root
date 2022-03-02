@@ -299,7 +299,7 @@ Int_t  TGeoManager::fgMaxDaughters    = 1;
 Int_t  TGeoManager::fgMaxXtruVert     = 1;
 Int_t  TGeoManager::fgNumThreads      = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
-TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kG4Units;
+TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kRootUnits;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
 static Bool_t gGeometryLocked = kTRUE;
 
@@ -518,8 +518,8 @@ TGeoManager::~TGeoManager()
    if (fMaterials) {fMaterials->Delete(); SafeDelete(fMaterials);}
    SafeDelete(fElementTable);
    if (fMedia) {fMedia->Delete(); SafeDelete(fMedia);}
-   if (fHashVolumes) fHashVolumes->Clear("nodelete"); SafeDelete(fHashVolumes);
-   if (fHashGVolumes) fHashGVolumes->Clear("nodelete"); SafeDelete(fHashGVolumes);
+   if (fHashVolumes) { fHashVolumes->Clear("nodelete"); SafeDelete(fHashVolumes); }
+   if (fHashGVolumes) { fHashGVolumes->Clear("nodelete"); SafeDelete(fHashGVolumes); }
    if (fHashPNE) {fHashPNE->Delete(); SafeDelete(fHashPNE);}
    if (fArrayPNE) {delete fArrayPNE;}
    if (fVolumes) {fVolumes->Delete(); SafeDelete(fVolumes);}
@@ -1216,9 +1216,9 @@ TGeoMedium *TGeoManager::Medium(const char *name, Int_t numed, Int_t nmat, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a node called <name_nr> pointing to the volume called <name>
-/// as daughter of the volume called <mother> (gspos). The relative matrix is
-/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// Create a node called `<name_nr>` pointing to the volume called `<name>`
+/// as daughter of the volume called `<mother>` (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named `<matIROT>`.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
 ///  - NAME   Volume name
@@ -1238,9 +1238,9 @@ void TGeoManager::Node(const char *name, Int_t nr, const char *mother,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a node called <name_nr> pointing to the volume called <name>
-/// as daughter of the volume called <mother> (gspos). The relative matrix is
-/// made of : a translation (x,y,z) and a rotation matrix named <matIROT>.
+/// Create a node called `<name_nr>` pointing to the volume called `<name>`
+/// as daughter of the volume called `<mother>` (gspos). The relative matrix is
+/// made of : a translation (x,y,z) and a rotation matrix named `<matIROT>`.
 /// In case npar>0, create the volume to be positioned in mother, according
 /// its actual parameters (gsposp).
 ///  - NAME   Volume name
@@ -4026,14 +4026,14 @@ void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
    }
    else if ( gGeometryLocked )    {
       ::Fatal("TGeoManager","The system of units may only be changed once, \n"
-	      "BEFORE any elements and materials are created! \n"
-	      "Alternatively unlock the default units at own risk.");
+          "BEFORE any elements and materials are created! \n"
+          "Alternatively unlock the default units at own risk.");
    }
    else if ( new_value == kG4Units )   {
-      ::Warning("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
+      ::Info("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
    }
    else if ( new_value == kRootUnits )   {
-      ::Warning("TGeoManager","Changing system of units to ROOT units (cm, s, GeV).");
+      ::Info("TGeoManager","Changing system of units to ROOT units (cm, s, GeV).");
    }
    fgDefaultUnits = new_value;
 }

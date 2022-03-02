@@ -79,7 +79,7 @@ set(DAVIX_LIBRARY ${DAVIX_PREFIX}/lib/${DAVIX_LIBNAME} CACHE INTERNAL "" FORCE)
 set(DAVIX_LIBRARIES ${DAVIX_LIBRARIES} CACHE INTERNAL "" FORCE)
 
 add_library(davix INTERFACE)
-target_include_directories(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_INCLUDE_DIR}>)
+target_include_directories(davix SYSTEM INTERFACE $<BUILD_INTERFACE:${DAVIX_INCLUDE_DIR}>)
 target_link_libraries(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_LIBRARIES}>)
 add_dependencies(davix DAVIX)
 

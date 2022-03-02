@@ -10,14 +10,12 @@
 /// \date August 2018
 /// \author Stefan Wunsch
 
-using namespace ROOT::VecOps;
-
 void vo004_SortAndSelect()
 {
    // Because RVec implements an iterator, the class is fully compatible with
    // the sorting algorithms in the standard library.
-   RVec<double> v1{6., 4., 5.};
-   RVec<double> v2(v1);
+   ROOT::RVecD v1{6., 4., 5.};
+   ROOT::RVecD v2(v1);
    std::sort(v2.begin(), v2.end());
    std::cout << "Sort vector " << v1 << ": " << v2 << std::endl;
 
@@ -35,7 +33,7 @@ void vo004_SortAndSelect()
    auto i = Argsort(v1);
    std::cout << "Indices that sort the vector " << v1 << ": " << i << std::endl;
 
-   RVec<double> v5{9., 7., 8.};
+   ROOT::RVecD v5{9., 7., 8.};
    auto v6 = Take(v5, i);
    std::cout << "Sort vector " << v5 << " respective to the previously"
              << " determined indices: " << v6 << std::endl;

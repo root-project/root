@@ -62,7 +62,7 @@ void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooImproperIntegrator1D::RooImproperIntegrator1D() :  
+RooImproperIntegrator1D::RooImproperIntegrator1D() :
   _case(ClosedBothEnds), _xmin(-10), _xmax(10), _useIntegrandLimits(kTRUE),
   _origFunc(0), _function(0), _integrator1(0), _integrator2(0), _integrator3(0)
 {
@@ -151,15 +151,15 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
   } else {
     function = _origFunc ;
     if (_integrator1) {
-      delete _integrator1 ; 
+      delete _integrator1 ;
       _integrator1 = 0 ;
     }
     if (_integrator2) {
-      delete _integrator2 ; 
+      delete _integrator2 ;
       _integrator2 = 0 ;
     }
     if (_integrator3) {
-      delete _integrator3 ; 
+      delete _integrator3 ;
       _integrator3 = 0 ;
     }
   }
@@ -207,7 +207,7 @@ void RooImproperIntegrator1D::initialize(const RooAbsFunc* function)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooImproperIntegrator1D::~RooImproperIntegrator1D() 
+RooImproperIntegrator1D::~RooImproperIntegrator1D()
 {
   if(0 != _integrator1) delete _integrator1;
   if(0 != _integrator2) delete _integrator2;
@@ -221,7 +221,7 @@ RooImproperIntegrator1D::~RooImproperIntegrator1D()
 /// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax) 
+Bool_t RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooIntegrator1D::setLimits: cannot override integrand's limits" << endl;
@@ -240,7 +240,7 @@ Bool_t RooImproperIntegrator1D::setLimits(Double_t *xmin, Double_t *xmax)
 /// may be necessary to reconfigure (e.g. if an open ended range becomes
 /// a closed range
 
-Bool_t RooImproperIntegrator1D::checkLimits() const 
+Bool_t RooImproperIntegrator1D::checkLimits() const
 {
   // Has either limit changed?
   if (_useIntegrandLimits) {
@@ -286,7 +286,7 @@ Bool_t RooImproperIntegrator1D::checkLimits() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Classify the type of limits we have: OpenBothEnds,ClosedBothEnds,OpenBelow or OpenAbove.
 
-RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const 
+RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
 {
   // Analyze the specified limits to determine which case applies.
   if(0 == integrand() || !integrand()->isValid()) return Invalid;
@@ -329,11 +329,11 @@ RooImproperIntegrator1D::LimitsCase RooImproperIntegrator1D::limitsCase() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the integral at the given parameter values of the function binding
 
-Double_t RooImproperIntegrator1D::integral(const Double_t* yvec) 
+Double_t RooImproperIntegrator1D::integral(const Double_t* yvec)
 {
   Double_t result(0);
   if(0 != _integrator1) result+= _integrator1->integral(yvec);
   if(0 != _integrator2) result+= _integrator2->integral(yvec);
   if(0 != _integrator3) result+= _integrator3->integral(yvec);
-  return result;  
+  return result;
 }

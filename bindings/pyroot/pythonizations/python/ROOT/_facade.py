@@ -15,6 +15,8 @@ if sys.version_info[:3] > _numba_pyversion:
     # Python <= 2.7.5 cannot use exec in an inner function
     from ._numbadeclare import _NumbaDeclareDecorator
 
+from ._pythonization import pythonization
+
 
 class PyROOTConfiguration(object):
     """Class for configuring PyROOT"""
@@ -60,21 +62,7 @@ def _create_rdf_experimental_distributed_module(parent):
         types.ModuleType: The ROOT.RDF.Experimental.Distributed submodule.
     """
     import DistRDF
-
-    # Create dummy ROOT.RDF.Experimental package
-    experimental = types.ModuleType("ROOT.RDF.Experimental")
-    # PEP302 attributes
-    experimental.__file__ = "<namespace ROOT.RDF>"
-    # experimental.__name__ is the constructor argument
-    experimental.__path__ = []  # this makes it a package
-    # experimental.__loader__ is not defined
-    experimental.__package__ = parent
-
-    # Inject submodules
-    experimental.Distributed = DistRDF.create_distributed_module(
-        experimental)
-
-    return experimental
+    return DistRDF.create_distributed_module(parent)
 
 
 def _subimport(name):
@@ -117,6 +105,9 @@ class ROOTFacade(types.ModuleType):
 
         # Initialize configuration
         self.PyConfig = PyROOTConfiguration()
+
+        # @pythonization decorator
+        self.pythonization = pythonization
 
         self._is_ipython = is_ipython
 
@@ -330,11 +321,24 @@ class ROOTFacade(types.ModuleType):
             from libROOTPythonizations import MakeNumpyDataFrame
             ns.MakeNumpyDataFrame = MakeNumpyDataFrame
 
-            # Inject Experimental.Distributed package into namespace RDF
-            ns.Experimental = _create_rdf_experimental_distributed_module(ns)
+            if sys.version_info >= (3, 7):
+                # Inject Experimental.Distributed package into namespace RDF
+                ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
         except:
             raise Exception('Failed to pythonize the namespace RDF')
         del type(self).RDF
+        return ns
+
+    # Overload RooFit namespace
+    @property
+    def RooFit(self):
+        from ._pythonization._roofit import pythonize_roofit_namespace
+        ns = self._fallback_getattr('RooFit')
+        try:
+            pythonize_roofit_namespace(ns)
+        except:
+            raise Exception('Failed to pythonize the namespace RooFit')
+        del type(self).RooFit
         return ns
 
     # Overload TMVA namespace

@@ -1,7 +1,6 @@
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TTreeReaderArray.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include <array>
 #include <memory>

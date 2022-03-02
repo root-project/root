@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'DATA AND CATEGORIES' RooFit tutorial macro #403
-// 
+//
 // Using weights in unbinned datasets
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -21,7 +21,7 @@
 #include "RooGenericPdf.h"
 #include "RooPolynomial.h"
 #include "RooChi2Var.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
 #include "RooFitResult.h"
@@ -30,11 +30,11 @@ using namespace RooFit ;
 
 class TestBasic403 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic403(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Fits with weighted datasets",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   o b s e r v a b l e   a n d   u n w e i g h t e d   d a t a s e t 
+  // C r e a t e   o b s e r v a b l e   a n d   u n w e i g h t e d   d a t a s e t
   // -------------------------------------------------------------------------------
 
   // Declare observable
@@ -47,9 +47,9 @@ public:
   // Sample 1000 events from pdf
   RooDataSet* data = p0.generate(x,1000) ;
 
- 
 
-  // C a l c u l a t e   w e i g h t   a n d   m a k e   d a t a s e t   w e i g h t e d 
+
+  // C a l c u l a t e   w e i g h t   a n d   m a k e   d a t a s e t   w e i g h t e d
   // -----------------------------------------------------------------------------------
 
   // Construct formula to calculate (fake) weight for events
@@ -62,7 +62,7 @@ public:
   data->setWeightVar(*w) ;
 
 
-  // U n b i n n e d   M L   f i t   t o   w e i g h t e d   d a t a 
+  // U n b i n n e d   M L   f i t   t o   w e i g h t e d   d a t a
   // ---------------------------------------------------------------
 
   // Construction quadratic polynomial pdf for fitting
@@ -73,7 +73,7 @@ public:
 
   // Fit quadratic polynomial to weighted data
 
-  // NOTE: Maximum likelihood fit to weighted data does in general 
+  // NOTE: Maximum likelihood fit to weighted data does in general
   //       NOT result in correct error estimates, unless individual
   //       event weights represent Poisson statistics themselves.
   //       In general, parameter error reflect precision of SumOfWeights
@@ -82,7 +82,7 @@ public:
 
 
 
-  // P l o t   w e i g h e d   d a t a   a n d   f i t   r e s u l t 
+  // P l o t   w e i g h e d   d a t a   a n d   f i t   r e s u l t
   // ---------------------------------------------------------------
 
   // Construct plot frame
@@ -98,7 +98,7 @@ public:
 
   // M L  F i t   o f   p d f   t o   e q u i v a l e n t  u n w e i g h t e d   d a t a s e t
   // -----------------------------------------------------------------------------------------
-  
+
   // Construct a pdf with the same shape as p0 after weighting
   RooGenericPdf genPdf("genPdf","x*x+10",x) ;
 
@@ -120,12 +120,12 @@ public:
   RooDataHist* binnedData = data->binnedClone() ;
 
   // Perform chi2 fit to binned weighted dataset using sum-of-weights errors
-  // 
+  //
   // NB: Within the usual approximations of a chi2 fit, a chi2 fit to weighted
   // data using sum-of-weights-squared errors does give correct error
   // estimates
   RooChi2Var chi2("chi2","chi2",p2,*binnedData,DataError(RooAbsData::SumW2)) ;
-  RooMinuit m(chi2) ;
+  RooMinimizer m(chi2) ;
   m.migrad() ;
   m.hesse() ;
 
@@ -135,19 +135,19 @@ public:
 
 
 
-  // C o m p a r e   f i t   r e s u l t s   o f   c h i 2 , M L   f i t s   t o   ( u n ) w e i g h t e d   d a t a 
+  // C o m p a r e   f i t   r e s u l t s   o f   c h i 2 , M L   f i t s   t o   ( u n ) w e i g h t e d   d a t a
   // ---------------------------------------------------------------------------------------------------------------
 
-  // Note that ML fit on 1Kevt of weighted data is closer to result of ML fit on 43Kevt of unweighted data 
+  // Note that ML fit on 1Kevt of weighted data is closer to result of ML fit on 43Kevt of unweighted data
   // than to 1Kevt of unweighted data, whereas the reference chi^2 fit with SumW2 error gives a result closer to
-  // that of an unbinned ML fit to 1Kevt of unweighted data. 
+  // that of an unbinned ML fit to 1Kevt of unweighted data.
 
   regResult(r_ml_unw10,"rf403_ml_unw10") ;
   regResult(r_ml_unw43,"rf403_ml_unw43") ;
   regResult(r_ml_wgt  ,"rf403_ml_wgt") ;
   regResult(r_chi2_wgt ,"rf403_ml_chi2") ;
   regPlot(frame,"rf403_plot1") ;
-  
+
   delete binnedData ;
   delete data ;
   delete data2 ;

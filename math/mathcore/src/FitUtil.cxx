@@ -223,8 +223,8 @@ namespace ROOT {
 // for chi2 functions
 //___________________________________________________________________________________________________________________________
 
-      double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
-                                   ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+      double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
+                                   ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
       {
          // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
          // the actual number of used points
@@ -408,6 +408,10 @@ namespace ROOT {
   } else{
     Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
   }
+
+  // reset the number of fitting data points
+  nPoints = n;  // no points are rejected
+  //if (nRejected != 0)  nPoints = n - nRejected;
 
    return res;
 }
@@ -908,7 +912,7 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    return logPdf;
 }
 
-double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
+double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, const double *p,
                              int iWeight, bool extended, unsigned int &nPoints,
                              ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
 {
@@ -1129,7 +1133,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 }
 
 void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &data, const double *p, double *grad,
-                                   unsigned int &, ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+                                   unsigned int &nPoints, ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the log likelihood function
 
@@ -1250,6 +1254,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
+   nPoints = data.Size();  // npoints
 
 #ifdef DEBUG
    std::cout << "FitUtil.cxx : Final gradient ";

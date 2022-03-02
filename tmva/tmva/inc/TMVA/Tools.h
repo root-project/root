@@ -41,9 +41,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#if __cplusplus > 199711L
 #include <atomic>
-#endif
 
 #include "TXMLEngine.h"
 
@@ -228,11 +226,7 @@ namespace TMVA {
       const TString fRegexp;
       mutable MsgLogger*    fLogger;
       MsgLogger& Log() const { return *fLogger; }
-#if __cplusplus > 199711L
       static std::atomic<Tools*> fgTools;
-#else
-      static Tools* fgTools;
-#endif
 
       // xml tools
 
@@ -274,7 +268,7 @@ namespace TMVA {
 
    private:
 
-      int fXMLBufferSize = 10000000; 
+      int fXMLBufferSize = 10000000;
       // utilities for correlation ratio
       Double_t GetYMean_binX( const TH2& , Int_t bin_x );
 

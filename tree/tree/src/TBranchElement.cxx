@@ -2058,14 +2058,36 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
          // nextinfo_version = ....
          auto search = be ? be->GetListOfBranches() : &branches;
          TVirtualArray *onfileObject = nullptr;
-         for(auto subbe : TRangeDynCast<TBranchElement>( *search )) {
 
-            if (elementClass == subbe->GetInfo()->GetClass() && subbe->GetOnfileObject()) { // Use GetInfo to provoke its creation.
+         TString subprefix;
+         if (prefix.Length() && nextel->IsA() == TStreamerBase::Class()) {
+            // We skip the name of the base class if there is already a prefix.
+            // See TBranchElement::Unroll
+            subprefix = prefix;
+         } else {
+            subprefix = ename + ".";
+         }
+         auto nbranches = search->GetEntriesFast();
+         bool foundRelatedSplit = false;
+         for (Int_t bi = 0; bi < nbranches; ++bi) {
+            TBranchElement* subbe = (TBranchElement*)search->At(bi);
+            bool matchSubPrefix = strncmp(subbe->GetFullName(), subprefix.Data(), subprefix.Length()) == 0;
+            if (!foundRelatedSplit)
+               foundRelatedSplit = matchSubPrefix;
+            if (elementClass == subbe->GetInfo()->GetClass() // Use GetInfo to provoke its creation.
+               && subbe->GetOnfileObject()
+               && matchSubPrefix)
+            {
                nextinfo = subbe->GetInfo();
                onfileObject = subbe->GetOnfileObject();
                break;
             }
          }
+
+         if (!foundRelatedSplit) {
+            continue;
+         }
+
          if (!nextinfo) {
             nextinfo = (TStreamerInfo *)elementClass->GetStreamerInfo();
             if (elementClass->GetCollectionProxy() && elementClass->GetCollectionProxy()->GetValueClass()) {
@@ -2078,14 +2100,6 @@ static void GatherArtificialElements(const TObjArray &branches, TStreamerInfoAct
             ids.back().fNestedIDs->fOwnOnfileObject = kTRUE;
          }
          ids.back().fNestedIDs->fOnfileObject = onfileObject;
-         TString subprefix;
-         if (prefix.Length() && nextel->IsA() == TStreamerBase::Class()) {
-             // We skip the name of the base class if there is already a prefix.
-             // See TBranchElement::Unroll
-             subprefix = prefix;
-         } else {
-             subprefix = ename + ".";
-         }
          GatherArtificialElements(branches, ids.back().fNestedIDs->fIDs, subprefix, nextinfo, offset + nextel->GetOffset());
          if (ids.back().fNestedIDs->fIDs.empty())
             ids.pop_back();
@@ -2230,12 +2244,7 @@ void TBranchElement::InitInfo()
             Bool_t seenExisting = kFALSE;
 
             fOnfileObject = new TVirtualArray( info->GetElement(0)->GetClassPointer(), arrlen );
-            if (fType == 31 || fType == 41) {
-               TBranchElement *parent = (TBranchElement*)GetMother()->GetSubBranch(this);
-               if (parent && parent->fOnfileObject == nullptr)
-                  parent->fOnfileObject = fOnfileObject;
-            }
-            // Propage this to all the other branch of this type.
+            // Propagate this to all the other branches belonging to the same object.
             TObjArray *branches = toplevel ? GetListOfBranches() : GetMother()->GetSubBranch(this)->GetListOfBranches();
             Int_t nbranches = branches->GetEntriesFast();
             TBranchElement *lastbranch = this;
@@ -2248,7 +2257,58 @@ void TBranchElement::InitInfo()
                currentVersion = info->GetClassVersion();
             }
 
-            for (Int_t i = 0; i < nbranches; ++i) {
+            // First find the first branch corresponding to the same class as 'this'
+            // branch
+            Int_t index = branches->IndexOf(this);
+            Int_t firstindex = 0;
+            Int_t lastindex = nbranches - 1;
+            if (index >= 0) {
+               TString fullname( GetFullName() );
+               Ssiz_t lastdot = fullname.Last('.');
+               if (lastdot == TString::kNPOS) {
+                  // No prefix or index, thus this is a first level branch
+                  TBranchElement* subbranch = (TBranchElement*)branches->At(0);
+                  if (!subbranch->fInfo)
+                     subbranch->SetupInfo();
+               } else {
+                  TString &thisprefix = fullname.Remove(lastdot + 1);  // Mod fullname and 'rename' the variable.
+                  for(Int_t i = index - 1; i >= 0; --i) {
+                     TBranchElement* subbranch = (TBranchElement*)branches->At(i);
+                     TString subbranch_name(subbranch->GetFullName());
+                     if ( ! subbranch_name.BeginsWith(thisprefix)) {
+                        // We moved to another data member (of the enclosing class)
+                        firstindex = i + 1;
+                        break;
+                     }
+                     if (!subbranch->fInfo)
+                        subbranch->SetupInfo();
+                  }
+                  for(Int_t i = index; i < nbranches; ++i) {
+                     TBranchElement* subbranch = (TBranchElement*)branches->At(i);
+                     TString subbranch_name(subbranch->GetFullName());
+                     if ( ! subbranch_name.BeginsWith(thisprefix)) {
+                        lastindex = i - 1;
+                        break;
+                     }
+                  }
+               }
+            } else {
+               // Case of a top level branch or 'empty node' (object marker for split sub-object)
+               TString fullname( GetFullName() );
+               Ssiz_t lastdot = fullname.Last('.');
+               if (lastdot != TString::kNPOS) {
+                  TString &thisprefix = fullname.Remove(lastdot + 1);  // Mod fullname and 'rename' the variable.
+                  for(Int_t i = 0; i < nbranches; ++i) {
+                     TBranchElement* subbranch = (TBranchElement*)branches->At(i);
+                     TString subbranch_name(subbranch->GetFullName());
+                     if ( ! subbranch_name.BeginsWith(thisprefix)) {
+                        lastindex = i - 1;
+                        break;
+                     }
+                  }
+               }
+            }
+            for (Int_t i = firstindex; i <= lastindex; ++i) {
                TBranchElement* subbranch = (TBranchElement*)branches->At(i);
                Bool_t match = kFALSE;
                if (this != subbranch) {
@@ -2406,7 +2466,7 @@ void TBranchElement::InitInfo()
                SetOnfileObject(fInfo);
             }
          }
-         if (fType == 3 || fType == 4 || (fType == 0 && fID == -2)) {
+         if (fType == 3 || fType == 4 || (fType == 0 && fID == -2) || fType == 2) {
             // Need to add the rule targeting transient members.
             TStreamerInfo *localInfo = fInfo;
             if (fType == 3 || fType == 4) {
@@ -2416,7 +2476,17 @@ void TBranchElement::InitInfo()
                localInfo = FindOnfileInfo(fClonesClass, fBranches);
             }
 
-            TString prefix(GetName());
+            TString prefix(GetFullName());
+            if (fType == 2 && fID >= 0) {
+               auto start = prefix.Length();
+               if (prefix[start - 1] == '.')
+                  --start;
+               std::string_view view(prefix.Data(), start);
+               auto cutoff = view.find_last_of('.');
+               if (cutoff != std::string::npos) {
+                  prefix.Remove(cutoff + 1);
+               }
+            }
             if (prefix[prefix.Length()-1] != '.') {
                if (fType == 3 || fType == 4 || prefix.Index('.') != TString::kNPOS) {
                   prefix += ".";
@@ -3541,7 +3611,8 @@ void TBranchElement::InitializeOffsets()
             // to remove it's name to get the correct real data offsets
             ////////////////////////////////////////////////////////////////////
 
-            if( dynamic_cast<TBranchSTL*>(fParent) && stlParentName.Length() )
+            const bool isToplevelCollection = (this == GetMother() && (fType == 3 || fType == 4));
+            if( stlParentName.Length() && (dynamic_cast<TBranchSTL*>(fParent) || isToplevelCollection))
             {
                if( !strncmp( stlParentName.Data(), dataName.Data(), stlParentName.Length()-1 )
                   && dataName[ stlParentName.Length() ] == '.' )
@@ -3758,7 +3829,6 @@ static void PrintElements(const TStreamerInfo *info, const TStreamerInfoActions:
             Error("TBranchElement::Print", "Element for id #%d not found in StreamerInfo for %s",
                   id, info->GetName());
             info->ls();
-            TClass::GetClass("PFTauWith")->GetStreamerInfos()->ls();
          }
       } else if (cursor.fNestedIDs) {
          Printf("      Within subobject of type %s offset = %d", cursor.fNestedIDs->fInfo->GetName(), cursor.fNestedIDs->fOffset);
@@ -3772,8 +3842,8 @@ void TBranchElement::Print(Option_t* option) const
    Int_t nbranches = fBranches.GetEntriesFast();
    if (strncmp(option,"debugAddress",strlen("debugAddress"))==0) {
       if (strlen(option)==strlen("debugAddress")) {
-         Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s\n",
-                "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject");
+         Printf("%-24s %-16s %2s %4s %-16s %-16s %8s %8s %s %s\n",
+                "Branch Name", "Streamer Class", "ID", "Type", "Class", "Parent", "pOffset", "fOffset", "fObject", "fOnfileObject");
       }
       if (strlen(GetName())>24) Printf("%-24s\n%-24s ", GetName(),"");
       else Printf("%-24s ", GetName());
@@ -3782,11 +3852,11 @@ void TBranchElement::Print(Option_t* option) const
       Int_t ind = parent ? parent->GetListOfBranches()->IndexOf(this) : -1;
       TVirtualStreamerInfo *info = ((TBranchElement*)this)->GetInfoImp();
 
-      Printf("%-16s %2d %4d %-16s %-16s %8x %8x %p\n",
+      Printf("%-16s %2d %4d %-16s %-16s %8x %8x %p %p%s\n",
              info ? info->GetName() : "StreamerInfo unavailable", GetID(), GetType(),
              GetClassName(), GetParentName(),
              (fBranchOffset&&parent && ind>=0) ? parent->fBranchOffset[ind] : 0,
-             GetOffset(), GetObject());
+             GetOffset(), GetObject(), fOnfileObject, TestBit(kOwnOnfileObj) ? " (owned)" : "");
       for (Int_t i = 0; i < nbranches; ++i) {
          TBranchElement* subbranch = (TBranchElement*)fBranches.At(i);
          subbranch->Print("debugAddressSub");
@@ -4923,7 +4993,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied)
    //  Special case when called from code generated by TTree::MakeClass.
    //
 
-   if (Long_t(addr) == -1) {
+   if (Longptr_t(addr) == -1) {
       // FIXME: Do we have to release an object here?
       // ReleaseObject();
       fAddress = (char*) -1;

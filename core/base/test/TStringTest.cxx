@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TString.h"
 
@@ -12,7 +12,6 @@ TEST(TString, Basics)
    TString p("Test", 1);
    EXPECT_STREQ("T", p);
    TString a = "test";
-   a.Append("s", -5);
-   EXPECT_STREQ("test", a);
    ROOT_EXPECT_ERROR(a.Append("s", -5), "TString::Replace", "Negative number of replacement characters!");
+   EXPECT_STREQ("test", a);
 }

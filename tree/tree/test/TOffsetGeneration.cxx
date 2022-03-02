@@ -6,6 +6,7 @@
 #include "TLeafElement.h"
 #include "TRandom.h"
 
+#include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
 #include "ElementStruct.h"
@@ -13,6 +14,16 @@
 class TOffsetGeneration : public ::testing::Test {
 protected:
    static constexpr int fEventCount = 10000;
+
+   // FIXME: Global suppression of PCM-related warnings for windows
+   static void SetUpTestSuite() {
+      // Suppress file-related warning on Windows throughout
+      // this entire test suite
+      static ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kError,
+         "TCling::LoadPCM",
+         "ROOT PCM", false);
+   }
 
    virtual void SetUp()
    {
@@ -49,6 +60,8 @@ protected:
          tree->Fill();
       }
       file->Write();
+      file->Close();
+      delete file;
 
       file = new TFile("TOffsetGeneration3.root", "RECREATE");
       tree = new TTree("tree", "A test tree");

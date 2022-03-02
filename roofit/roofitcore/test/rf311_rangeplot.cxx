@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #310
-// 
+//
 // Projecting p.d.f and data ranges in continuous observables
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -26,11 +26,11 @@ using namespace RooFit ;
 
 class TestBasic311 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic311(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Data and p.d.f projection in sub range",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   3 D   p d f   a n d   d a t a 
+  // C r e a t e   3 D   p d f   a n d   d a t a
   // -------------------------------------------
 
   // Create observables
@@ -38,13 +38,13 @@ public:
   RooRealVar y("y","y",-5,5) ;
   RooRealVar z("z","z",-5,5) ;
 
-  // Create signal pdf gauss(x)*gauss(y)*gauss(z) 
+  // Create signal pdf gauss(x)*gauss(y)*gauss(z)
   RooGaussian gx("gx","gx",x,RooConst(0),RooConst(1)) ;
   RooGaussian gy("gy","gy",y,RooConst(0),RooConst(1)) ;
   RooGaussian gz("gz","gz",z,RooConst(0),RooConst(1)) ;
   RooProdPdf sig("sig","sig",RooArgSet(gx,gy,gz)) ;
 
-  // Create background pdf poly(x)*poly(y)*poly(z) 
+  // Create background pdf poly(x)*poly(y)*poly(z)
   RooPolynomial px("px","px",x,RooArgSet(RooConst(-0.1),RooConst(0.004))) ;
   RooPolynomial py("py","py",y,RooArgSet(RooConst(0.1),RooConst(-0.004))) ;
   RooPolynomial pz("pz","pz",z) ;
@@ -65,12 +65,12 @@ public:
   RooPlot* frame = x.frame(Title("Projection of 3D data and pdf on X"),Bins(40)) ;
   data->plotOn(frame) ;
   model.plotOn(frame) ;
-  
+
 
 
   // P r o j e c t   p d f   a n d   d a t a   o n   x   i n   s i g n a l   r a n g e
   // ----------------------------------------------------------------------------------
-  
+
   // Define signal region in y and z observables
   y.setRange("sigRegion",-1,1) ;
   z.setRange("sigRegion",-1,1) ;

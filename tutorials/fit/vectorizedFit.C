@@ -13,6 +13,15 @@
 ///
 /// \author Lorenzo Moneta
 
+#include <Math/MinimizerOptions.h>
+#include <TCanvas.h>
+#include <TF1.h>
+#include <TH1D.h>
+#include <TStopwatch.h>
+#include <TStyle.h>
+
+#include <iostream>
+
 void vectorizedFit() {
 
    gStyle->SetOptFit(111111);

@@ -193,7 +193,7 @@ def plot(sig, bkg, data, x_label, filename):
     # Canvas and general style options
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetTextFont(42)
-    d = ROOT.TCanvas("d", "", 800, 700)
+    d = ROOT.TCanvas("", "", 800, 700)
     # Make sure the canvas stays in the list of canvases after the macro execution
     ROOT.SetOwnership(d, False)
     d.SetLeftMargin(0.15)

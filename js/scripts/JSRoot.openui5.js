@@ -1,8 +1,7 @@
 /// @file JSRoot.openui5.js
 /// Bootstraping of OpenUI5 functionality in JSROOT
-/// Openui5 loaded directly in the script
 
-JSROOT.define(['jquery', 'jquery-ui'], () => {
+JSROOT.define([], () => {
 
    "use strict";
 
@@ -10,7 +9,7 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
    if (typeof sap == 'object')
       return sap;
 
-   let resolveFunc, rootui5sys;
+   let resolveFunc, rejectFunc, rootui5sys;
 
    JSROOT._.completeUI5Loading = function() {
       sap.ui.loader.config({
@@ -27,6 +26,13 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
    };
 
    function TryOpenOpenUI(sources) {
+      if (!sources || (sources.length == 0)) {
+         if (rejectFunc) {
+            rejectFunc(Error("openui5 was not possible to load"));
+            rejectFunc = null;
+         }
+         return;
+      }
 
       // where to take openui5 sources
       let src = sources.shift();
@@ -39,7 +45,7 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
       // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
 
       // this is location of openui5 scripts when working with THttpServer or when scripts are installed inside JSROOT
-      element.setAttribute('src', src + "resources/sap-ui-core-nojQuery.js"); // latest openui5 version
+      element.setAttribute('src', src + "resources/sap-ui-core.js"); // latest openui5 version
 
       element.setAttribute('data-sap-ui-libs', JSROOT.openui5libs || "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons");
 
@@ -75,7 +81,7 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
    }
 
    let openui5_sources = [],
-       openui5_dflt = "https://openui5.hana.ondemand.com/1.82.2/",
+       openui5_dflt = "https://openui5.hana.ondemand.com/1.98.0/",
        openui5_root = "";
 
    if (rootui5sys) openui5_root = rootui5sys + "distribution/";
@@ -94,8 +100,9 @@ JSROOT.define(['jquery', 'jquery-ui'], () => {
    if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0)) openui5_sources.push(openui5_dflt);
 
    // return Promise let loader wait before dependent source will be invoked
-   return new Promise(resolve => {
+   return new Promise((resolve, reject) => {
       resolveFunc = resolve;
+      rejectFunc = reject;
       TryOpenOpenUI(openui5_sources);
    });
 

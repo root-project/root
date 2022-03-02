@@ -74,8 +74,8 @@ namespace TMVA {
 
       const Event* fEvent;     // pointer to the event
 
-      Double_t     fBkgWeight; // cumulative background weight for splitting
-      Double_t     fSigWeight; // same for the signal weights
+      Double_t     fBkgWeight; ///< cumulative background weight for splitting
+      Double_t     fSigWeight; ///< same for the signal weights
    };
 }
 

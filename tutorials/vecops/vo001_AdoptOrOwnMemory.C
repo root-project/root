@@ -18,19 +18,16 @@ public:
    UponCopyPrinter(const UponCopyPrinter &) { std::cout << "Invoking copy c'tor!" << std::endl; }
 };
 
-using namespace ROOT::VecOps;
-
 void vo001_AdoptOrOwnMemory()
 {
 
    // One of the essential features of RVec is its ability of adopting and owning memory.
-   // Internally this is handled by the ROOT::Detail::VecOps::RAdoptAllocator class.
 
    // Let's create an RVec of UponCopyPrinter instances. We expect no printout:
-   RVec<UponCopyPrinter> v(3);
+   ROOT::RVec<UponCopyPrinter> v(3);
 
    // Let's adopt the memory from v into v2. We expect no printout:
-   RVec<UponCopyPrinter> v2(v.data(), v.size());
+   ROOT::RVec<UponCopyPrinter> v2(v.data(), v.size());
 
    // OK, let's check the addresses of the memory associated to the two RVecs It is the same!
    std::cout << v.data() << " and " << v2.data() << std::endl;

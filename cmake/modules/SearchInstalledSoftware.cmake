@@ -5,6 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 #---Check for installed packages depending on the build options/components enabled --
+include(CheckCXXSourceCompiles)
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
@@ -73,8 +74,8 @@ if(NOT builtin_nlohmannjson)
   else()
     find_package(nlohmann_json QUIET)
     if(nlohmann_json_FOUND)
-      get_target_property(_nlohmann_json_inlc nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
-      message(STATUS "Found nlohmann/json.hpp in ${_nlohmann_json_inlc} (found version ${nlohmann_json_VERSION})")
+      get_target_property(_nlohmann_json_incl nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+      message(STATUS "Found nlohmann/json.hpp in ${_nlohmann_json_incl} (found version ${nlohmann_json_VERSION})")
     else()
       message(STATUS "nlohmann/json.hpp not found. Switching on builtin_nlohmannjson option")
       set(builtin_nlohmannjson ON CACHE BOOL "Enabled because nlohmann/json.hpp not found" FORCE)
@@ -492,6 +493,14 @@ endif()
 
 #---Check for GSL library---------------------------------------------------------------
 if(mathmore OR builtin_gsl)
+  if(builtin_gsl AND NO_CONNECTION)
+    if(fail-on-missing)
+      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_gsl' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+    else()
+      message(STATUS "No internet connection, disabling 'builtin_gsl' option")
+      set(builtin_gsl OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    endif()
+  endif()
   message(STATUS "Looking for GSL")
   if(NOT builtin_gsl)
     find_package(GSL 1.10)
@@ -654,16 +663,35 @@ if(ssl AND NOT builtin_openssl)
         message(STATUS "Switching OFF 'ssl' option.")
         set(ssl OFF CACHE BOOL "Disabled because OpenSSL not found and builtin version does not work on Windows (${ssl_description})" FORCE)
       else()
-        message(STATUS "OpenSSL not found, switching ON 'builtin_openssl' option.")
-        set(builtin_openssl ON CACHE BOOL "Enabled because ssl requested and OpenSSL not found (${builtin_openssl_description})" FORCE)
+        if(NO_CONNECTION)
+          if(fail-on-missing)
+            message(FATAL_ERROR "No internet connection and OpenSSL was not found. Please check your connection, or either disable the 'ssl' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+          else()
+            message(STATUS "OpenSSL not found, and no internet connection. Disabing the 'ssl' option.")
+            set(ssl OFF CACHE BOOL "Disabled because ssl requested and OpenSSL not found (${builtin_openssl_description}) and there is no internet connection" FORCE)
+          endif()
+        else()
+          message(STATUS "OpenSSL not found, switching ON 'builtin_openssl' option.")
+          set(builtin_openssl ON CACHE BOOL "Enabled because ssl requested and OpenSSL not found (${builtin_openssl_description})" FORCE)
+        endif()
       endif()
     endif()
   endif()
 endif()
 
 if(builtin_openssl)
-  list(APPEND ROOT_BUILTINS OpenSSL)
-  add_subdirectory(builtins/openssl)
+  if(NO_CONNECTION)
+    if(fail-on-missing)
+      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_openssl' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+    else()
+      message(STATUS "No internet connection, disabling the 'ssl' and 'builtin_openssl' options")
+      set(builtin_openssl OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      set(ssl OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    endif()
+  else()
+    list(APPEND ROOT_BUILTINS OpenSSL)
+    add_subdirectory(builtins/openssl)
+  endif()
 endif()
 
 #---Check for MySQL-------------------------------------------------------------------
@@ -779,6 +807,15 @@ if(pythia8)
   endif()
 endif()
 
+if(builtin_fftw3 AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_fftw3' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling 'builtin_fftw3' option")
+    set(builtin_fftw3 OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endif()
+
 #---Check for FFTW3-------------------------------------------------------------------
 if(fftw3)
   if(NOT builtin_fftw3)
@@ -819,6 +856,14 @@ endif()
 
 #---Check for fitsio-------------------------------------------------------------------
 if(fitsio OR builtin_cfitsio)
+  if(builtin_cfitsio AND NO_CONNECTION)
+    if(fail-on-missing)
+      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_cfitsio' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+    else()
+      message(STATUS "No internet connection, disabling 'builtin_cfitsio' option")
+      set(builtin_cfitsio OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    endif()
+  endif()
   if(builtin_cfitsio)
     set(cfitsio_version 3.450)
     string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
@@ -909,13 +954,18 @@ if(monalisa)
 endif()
 
 #---Check for Xrootd support---------------------------------------------------------
+
+foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
+  unset(XROOTD_${suffix} CACHE)
+endforeach()
+
 if(xrootd AND NOT builtin_xrootd)
   message(STATUS "Looking for XROOTD")
   find_package(XROOTD)
   if(NOT XROOTD_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation, "
-                          "or inlcude the installation of XROOTD in the CMAKE_PREFIX_PATH. "
+                          "or include the installation of XROOTD in the CMAKE_PREFIX_PATH. "
                           "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
     else()
       message(STATUS "XROOTD not found, enabling 'builtin_xrootd' option")
@@ -926,76 +976,21 @@ if(xrootd AND NOT builtin_xrootd)
   endif()
 endif()
 
+if(builtin_xrootd AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling 'builtin_xrootd' option")
+    set(builtin_xrootd OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    set(xrootd OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endif()
 if(builtin_xrootd)
-  set(XROOTD_VERSION 4.12.8)
-  set(XROOTD_VERSIONNUM 400120008)
-  set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
-  set(XROOTD_DESTDIR ${CMAKE_BINARY_DIR})
-  set(XROOTD_ROOTDIR ${XROOTD_DESTDIR})
-  message(STATUS "Downloading and building XROOTD version ${xrootd_version}")
-
-  # Guess under which directory XRootD will install its libraires
-  set(XROOTD_LIBDIR "lib")
-  if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND ${CMAKE_SIZEOF_VOID_P} EQUAL 8
-     AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
-    set(XROOTD_LIBDIR "lib64")
-  endif()
-
-  set(XROOTD_LIBRARIES ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/libXrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/libXrdClient${CMAKE_SHARED_LIBRARY_SUFFIX}
-                       ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/libXrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
-  ExternalProject_Add(
-    XROOTD
-    URL ${XROOTD_SRC_URI}
-    URL_HASH SHA256=86d8e4bd7382fb3053002cf3d58b997623d1d26db93c8891080603827f01b4cd
-    INSTALL_DIR ${XROOTD_ROOTDIR}
-    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-               -DCMAKE_BUILD_TYPE=Release
-               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-               -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-               -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
-               -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-               -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-               -DENABLE_PYTHON=OFF
-               -DENABLE_CEPH=OFF
-               -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}
-    INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
-            COMMAND ${CMAKE_COMMAND} -E copy_directory <INSTALL_DIR>/include/xrootd <INSTALL_DIR>/include
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-    BUILD_BYPRODUCTS ${XROOTD_LIBRARIES}
-    TIMEOUT 600
-  )
-  # We cannot call find_package(XROOTD) becuase the package is not yet built. So, we need to emulate what it defines....
-
-  set(XROOTD_INCLUDE_DIRS ${XROOTD_ROOTDIR}/include/xrootd ${XROOTD_ROOTDIR}/include/xrootd/private)
-  set(XROOTD_NOMAIN TRUE)
-  set(XROOTD_CFLAGS "-DROOTXRDVERS=${XROOTD_VERSIONNUM}")
-  install(DIRECTORY ${XROOTD_ROOTDIR}/${XROOTD_LIBDIR}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
-  install(DIRECTORY ${XROOTD_ROOTDIR}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-  if(APPLE)
-    # XRootD libraries on mac need the LC_RPATH variable set. The build process already takes care of setting
-    #   * BUILD_RPATH = build/XROOTD-prefix/../src
-    #   * INSTALL_RPATH = build/lib
-    # Since the install directory for the builtin_xrootd target corresponds to the build directory of the main project.
-    # Use a post install script to change the LC_RPATH variable of the libraries in the ROOT install folder.
-    install(SCRIPT ${CMAKE_CURRENT_LIST_DIR}/XROOTDApplePostInstall.cmake
-            CODE "xrootd_libs_change_rpath(${XROOTD_ROOTDIR}/${XROOTD_LIBDIR} ${CMAKE_INSTALL_FULL_LIBDIR})"
-    )
-  endif()
-  set(XROOTD_TARGET XROOTD)
+  list(APPEND ROOT_BUILTINS XROOTD)
+  add_subdirectory(builtins/xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
 endif()
-if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER 300030005)
-  set(netxng ON)
-else()
-  set(netxng OFF)
-endif()
-if(xrootd AND XROOTD_VERSIONNUM VERSION_LESS 500000000)
-  set(netx ON)
-else()
-  set(netx OFF)
-endif()
+
 if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER_EQUAL 500000000)
   if(xproofd)
     if(fail-on-missing)
@@ -1005,6 +1000,18 @@ if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER_EQUAL 500000000)
       set(xproofd OFF CACHE BOOL "Disabled because xrootd version is 5 or greater" FORCE)
     endif()
   endif()
+endif()
+
+#---check if netxng and netx can be built-------------------------------
+if(xrootd AND XROOTD_VERSIONNUM VERSION_GREATER 300030005)
+  set(netxng ON)
+else()
+  set(netxng OFF)
+endif()
+if(xrootd AND XROOTD_VERSIONNUM VERSION_LESS 500000000)
+  set(netx ON)
+else()
+  set(netx OFF)
 endif()
 
 #---Alien support----------------------------------------------------------------
@@ -1148,8 +1155,18 @@ if(davix AND NOT builtin_davix)
 endif()
 
 if(builtin_davix)
-  list(APPEND ROOT_BUILTINS Davix)
-  add_subdirectory(builtins/davix)
+  if(NO_CONNECTION)
+    if(fail-on-missing)
+      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_davix' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+    else()
+      message(STATUS "No internet connection, disabling the 'davix' and 'builtin_davix' options")
+      set(builtin_davix OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      set(davix OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      endif()
+  else()
+    list(APPEND ROOT_BUILTINS Davix)
+    add_subdirectory(builtins/davix)
+  endif()
 endif()
 
 #---Check for TCMalloc---------------------------------------------------------------
@@ -1238,7 +1255,38 @@ if(imt AND NOT builtin_tbb)
       set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled, but TBB was not found" FORCE)
     endif()
   endif()
+
+  # Check that the found TBB does not use captured exceptions. If the header
+  # <tbb/tbb_config.h> does not exist, assume that we have oneTBB newer than
+  # version 2021, which does not have captured exceptions anyway.
+  if(TBB_FOUND AND EXISTS "${TBB_INCLUDE_DIRS}/tbb/tbb_config.h")
+    set(CMAKE_REQUIRED_INCLUDES "${TBB_INCLUDE_DIRS}")
+    check_cxx_source_compiles("
+#include <tbb/tbb_config.h>
+#if TBB_USE_CAPTURED_EXCEPTION == 1
+#error TBB uses tbb::captured_exception, not suitable for ROOT!
+#endif
+int main() { return 0; }" tbb_exception_result)
+    if(NOT tbb_exception_result)
+      if(fail-on-missing)
+        message(FATAL_ERROR "Found TBB uses tbb::captured_exception, not suitable for ROOT!")
+      endif()
+      message(STATUS "Found TBB uses tbb::captured_exception, enabling 'builtin_tbb' option")
+      set(builtin_tbb ON CACHE BOOL "Enabled because imt is enabled and found TBB is not suitable" FORCE)
+    endif()
+  endif()
+
   set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
+endif()
+
+if(builtin_tbb AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_tbb' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling 'builtin_tbb' and 'imt' options")
+    set(builtin_tbb OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+    set(imt OFF CACHE BOOL "Disabled because 'builtin_tbb' was set but there is no internet connection" FORCE)
+  endif()
 endif()
 
 if(builtin_tbb)
@@ -1270,7 +1318,7 @@ if(builtin_tbb)
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND devenv.exe /useenv /build "Release|${tbb_arch}" build/${vsdir}/makefile.sln
+      BUILD_COMMAND MSBuild.exe build/${vsdir}/makefile.sln /p:Configuration=Release /p:Platform=${tbb_arch}
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
@@ -1345,6 +1393,15 @@ elseif(vc)
   endif()
   if(Vc_FOUND)
     set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
+  endif()
+endif()
+
+if(vc AND NOT Vc_FOUND AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'vc' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling the 'vc' option")
+    set(vc OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
   endif()
 endif()
 
@@ -1431,12 +1488,26 @@ elseif(veccore)
   else()
     find_package(VecCore 0.4.2 CONFIG QUIET COMPONENTS ${VecCore_COMPONENTS})
     if(NOT VecCore_FOUND)
-      message(STATUS "VecCore not found, switching on 'builtin_veccore' option.")
-      set(builtin_veccore ON CACHE BOOL "Enabled because veccore requested and not found externally (${builtin_veccore_description})" FORCE)
+      if(NO_CONNECTION)
+        message(STATUS "VecCore not found and no internet connection, disabling the 'veccore' option")
+        set(veccore OFF CACHE BOOL "Disabled because not found and No internet connection" FORCE)
+      else()
+        message(STATUS "VecCore not found, switching on 'builtin_veccore' option.")
+        set(builtin_veccore ON CACHE BOOL "Enabled because veccore requested and not found externally (${builtin_veccore_description})" FORCE)
+      endif()
     endif()
   endif()
   if(VecCore_FOUND)
       set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${VecCore_INCLUDE_DIRS})
+  endif()
+endif()
+
+if(builtin_veccore AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_veccore' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling the 'builtin_veccore' option")
+    set(builtin_veccore OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
   endif()
 endif()
 
@@ -1504,6 +1575,15 @@ if(builtin_veccore)
   install(DIRECTORY ${VecCore_ROOTDIR}/ DESTINATION ".")
 endif()
 
+if(builtin_vdt AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_vdt' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling the 'builtin_vdt' option")
+    set(builtin_vdt OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endif()
+
 #---Check for Vdt--------------------------------------------------------------------
 if(vdt OR builtin_vdt)
   if(NOT builtin_vdt)
@@ -1514,8 +1594,12 @@ if(vdt OR builtin_vdt)
         message(FATAL_ERROR "VDT not found. Ensure that the installation of VDT is in the CMAKE_PREFIX_PATH")
       else()
         message(STATUS "VDT not found. Ensure that the installation of VDT is in the CMAKE_PREFIX_PATH")
-        message(STATUS "               Switching ON 'builtin_vdt' option")
-        set(builtin_vdt ON CACHE BOOL "Enabled because external vdt not found (${vdt_description})" FORCE)
+        if(NO_CONNECTION)
+          set(vdt OFF CACHE BOOL "Disabled because not found and no internet connection" FORCE)
+        else()
+          message(STATUS "               Switching ON 'builtin_vdt' option")
+          set(builtin_vdt ON CACHE BOOL "Enabled because external vdt not found (${vdt_description})" FORCE)
+        endif()
       endif()
     endif()
   endif()
@@ -1578,6 +1662,30 @@ if (vecgeom)
   endif()
 endif()
 
+#---Check for protobuf-------------------------------------------------------------------
+
+if(tmva-sofie)
+  message(STATUS "Looking for Protobuf")
+  find_package(Protobuf)
+  if(NOT Protobuf_FOUND)
+    if(fail-on-missing)
+      message(FATAL_ERROR "Protobuf libraries not found and they are required (tmva-sofie option enabled)")
+    else()
+      message(STATUS "Protobuf not found. Switching off tmva-sofie option")
+      set(tmva-sofie OFF CACHE BOOL "Disabled because Protobuf not found" FORCE)
+    endif()
+  else()
+    if(Protobuf_VERSION LESS 3.0)
+      if(fail-on-missing)
+        message(FATAL_ERROR "Protobuf libraries found but is less than the version required (3.0) (tmva-sofie option enabled)")
+      else()
+        message(STATUS "Protobuf found but its version is not high enough (>3.0). Switching off tmva-sofie option")
+        set(tmva-sofie OFF CACHE BOOL "Disabled because found Protobuf version is not enough" FORCE)
+      endif()
+    endif()
+  endif()
+endif()
+
 #---Check for CUDA-----------------------------------------------------------------------
 # if tmva-gpu is off and cuda is on cuda is searched but not used in tmva
 #  if cuda is off but tmva-gpu is on cuda is searched and activated if found !
@@ -1618,9 +1726,9 @@ if(cuda OR tmva-gpu)
     ### look for package CuDNN
     if (cudnn)
       if (fail-on-missing)
-        find_package(CuDNN REQUIRED)
+        find_package(CUDNN REQUIRED)
       else()
-        find_package(CuDNN)
+        find_package(CUDNN)
       endif()
       if (CUDNN_FOUND)
         message(STATUS "CuDNN library found: " ${CUDNN_LIBRARIES})
@@ -1629,12 +1737,19 @@ if(cuda OR tmva-gpu)
           set(tmva-cudnn ON)
         endif()
       else()
-        message(STATUS "CuDNN library not found")
+        message(STATUS "CUDNN library not found")
         set(cudnn OFF CACHE BOOL "Disabled because cudnn is not found" FORCE)
       endif()
     endif()
-  elseif(fail-on-missing)
-    message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
+  else()
+    if(fail-on-missing)
+       message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
+    else()
+       message(STATUS "CUDA not found. Disable RooFit and TMVA cuda computation")
+       set(cuda OFF CACHE BOOL "Disabled because Cuda is not found" FORCE)
+       set(cudnn OFF)
+       set(tmva-gpu OFF)
+    endif()
   endif()
 else()
   if (cudnn)
@@ -1745,6 +1860,84 @@ if (mpi)
   endif()
 endif()
 
+if(testing AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'testing' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling 'testing' option")
+    set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endif()
+
+#---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
+
+if (roofit_multiprocess)
+  if(NOT builtin_zeromq)
+    message(STATUS "Looking for ZeroMQ (libzmq)")
+    # Clear cache before calling find_package(ZeroMQ),
+    # necessary to be able to toggle builtin_zeromq and
+    # not have find_package(ZeroMQ) find builtin ZeroMQ.
+    foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
+      unset(ZeroMQ_${suffix} CACHE)
+    endforeach()
+
+    # Temporarily prefer config mode over module mode, so that a CMake-installed system version
+    # gets detected before looking for an autotools-installed system version (which the
+    # FindZeroMQ.cmake module does).
+    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE ${CMAKE_FIND_PACKAGE_PREFER_CONFIG})
+    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+
+    if(fail-on-missing)
+      find_package(ZeroMQ REQUIRED)
+    else()
+      find_package(ZeroMQ)
+      if(NOT ZeroMQ_FOUND)
+        message(STATUS "ZeroMQ not found. Switching on builtin_zeromq option")
+        set(builtin_zeromq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_zeromq_description})" FORCE)
+      endif()
+    endif()
+
+    # Reset default find_package mode
+    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ${CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE})
+    unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG_ORIGINAL_VALUE)
+  endif()
+
+  if(builtin_zeromq)
+    list(APPEND ROOT_BUILTINS ZeroMQ)
+    add_subdirectory(builtins/zeromq/libzmq)
+  endif()
+
+  if(NOT builtin_cppzmq)
+    message(STATUS "Looking for ZeroMQ C++ bindings (cppzmq)")
+    # Clear cache before calling find_package(cppzmq),
+    # necessary to be able to toggle builtin_cppzmq and
+    # not have find_package(cppzmq) find builtin cppzmq.
+    foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS)
+      unset(cppzmq_${suffix} CACHE)
+    endforeach()
+    if(fail-on-missing)
+      find_package(cppzmq REQUIRED)
+    else()
+      find_package(cppzmq QUIET)
+      if(NOT cppzmq_FOUND)
+        message(STATUS "ZeroMQ C++ bindings not found. Switching on builtin_cppzmq option")
+        set(builtin_cppzmq ON CACHE BOOL "Enabled because ZeroMQ C++ bindings not found (${builtin_cppzmq_description})" FORCE)
+      endif()
+    endif()
+  endif()
+
+  if(builtin_cppzmq)
+    list(APPEND ROOT_BUILTINS cppzmq)
+    add_subdirectory(builtins/zeromq/cppzmq)
+  endif()
+
+  # zmq_ppoll is still in the draft API, so enable that transitively
+  target_compile_definitions(libzmq INTERFACE ZMQ_BUILD_DRAFT_API)
+  target_compile_definitions(libzmq INTERFACE ZMQ_NO_EXPORT)
+  target_compile_definitions(cppzmq INTERFACE ZMQ_BUILD_DRAFT_API)
+  target_compile_definitions(cppzmq INTERFACE ZMQ_NO_EXPORT)
+endif (roofit_multiprocess)
+
 #---Download googletest--------------------------------------------------------------
 if (testing)
   # FIXME: Remove our version of gtest in roottest. We can reuse this one.
@@ -1778,7 +1971,7 @@ if (testing)
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_SHALLOW 1
-    GIT_TAG release-1.10.0
+    GIT_TAG release-1.11.0
     UPDATE_COMMAND ""
     # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
@@ -1847,9 +2040,18 @@ if (testing)
 
 endif()
 
+if(webgui AND NOT builtin_openui5 AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either enable the 'builtin_openui5' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, switching to 'builtin_openui5' option")
+    set(builtin_openui5 ON CACHE BOOL "Enabled because there is no internet connection" FORCE)
+  endif()
+endif()
+
 #------------------------------------------------------------------------------------
 if(webgui)
-  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core-nojQuery.js")
+  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core.js")
      # create symbolic link on existing openui5 installation
      # should be used only for debug purposes to be able try different openui5 version
      # cannot be used for installation purposes
@@ -1862,7 +2064,7 @@ if(webgui)
       ExternalProject_Add(
         OPENUI5
         URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
-        URL_HASH SHA256=f40910aae22afb80f0d1a0ff07577ff8073896dd4415e4c64a125b7c29b89b0e
+        URL_HASH SHA256=cc6791ac9c064c3e3f8281870063c549fa5e3f1252095ccc5d542c33db9cf8b2
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -1872,8 +2074,8 @@ if(webgui)
     else()
       ExternalProject_Add(
         OPENUI5
-        URL https://github.com/SAP/openui5/releases/download/1.82.2/openui5-runtime-1.82.2.zip
-        URL_HASH SHA256=b405fa6a3a3621879e8efe80eb193c1071f2bdf37a8ecc8c057194a09635eaff
+        URL https://github.com/SAP/openui5/releases/download/1.98.0/openui5-runtime-1.98.0.zip
+        URL_HASH SHA256=3d3db9ba001141019aae2cdf6eb6d34d655a3652308e03a335794f1231d21d2f
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -1891,7 +2093,6 @@ endif()
 # using atomic operations without the help of a library. Only if it can't do we start
 # looking for libatomic for the build.
 #
-include(CheckCXXSourceCompiles)
 check_cxx_source_compiles("
 #include <atomic>
 #include <cstdint>
@@ -1931,6 +2132,26 @@ if(test_distrdf_pyspark)
     if(NOT PySpark_FOUND)
       message(STATUS "Switching OFF 'test_distrdf_pyspark' option")
       set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because PySpark not found" FORCE)
+    endif()
+
+  endif()
+
+endif()
+
+#------------------------------------------------------------------------------------
+# Check if the dask package is installed on the system.
+# Needed to run tests of the distributed RDataFrame module that use dask.
+if(test_distrdf_dask)
+  message(STATUS "Looking for Dask")
+
+  if(fail-on-missing)
+    find_package(Dask 2020.12 REQUIRED)
+  else()
+
+    find_package(Dask 2020.12)
+    if(NOT Dask_FOUND)
+      message(STATUS "Switching OFF 'test_distrdf_dask' option")
+      set(test_distrdf_dask OFF CACHE BOOL "Disabled because Dask not found" FORCE)
     endif()
 
   endif()

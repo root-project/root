@@ -46,7 +46,7 @@ ClassImp(TGToolBar);
 ////////////////////////////////////////////////////////////////////////////////
 
 TGToolBar::TGToolBar(const TGWindow *p, UInt_t w, UInt_t h,
-                     UInt_t options, ULong_t back) :
+                     UInt_t options, Pixel_t back) :
                      TGCompositeFrame(p, w, h, options, back)
 
 {
@@ -114,7 +114,7 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, ToolBarData_t *button, Int_t s
    fTrash->Add(pbut);
    fTrash->Add(layout);
 
-   fMapOfButtons->Add(pbut, (TObject*)((Long_t)button->fId));
+   fMapOfButtons->Add(pbut, (TObject*)((Longptr_t)button->fId));
 
    Connect(pbut, "Pressed()" , "TGToolBar", this, "ButtonPressed()");
    Connect(pbut, "Released()", "TGToolBar", this, "ButtonReleased()");
@@ -141,7 +141,7 @@ TGButton *TGToolBar::AddButton(const TGWindow *w, TGPictureButton *pbut, Int_t s
    fTrash->Add(pbut);
    fTrash->Add(layout);
 
-   fMapOfButtons->Add(pbut, (TObject*)((Long_t)pbut->WidgetId()));
+   fMapOfButtons->Add(pbut, (TObject*)((Longptr_t)pbut->WidgetId()));
 
    Connect(pbut, "Pressed()" , "TGToolBar", this, "ButtonPressed()");
    Connect(pbut, "Released()", "TGToolBar", this, "ButtonReleased()");
@@ -160,7 +160,7 @@ TGButton *TGToolBar::GetButton(Int_t id) const
    TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {
-      if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
+      if ((Longptr_t)fMapOfButtons->GetValue(item) == id) break;   // found
    }
 
    return item;
@@ -169,7 +169,7 @@ TGButton *TGToolBar::GetButton(Int_t id) const
 ////////////////////////////////////////////////////////////////////////////////
 /// changes id for button.
 
-void TGToolBar::SetId(TGButton *button, Long_t id)
+void TGToolBar::SetId(TGButton *button, Longptr_t id)
 {
    TPair *a = (TPair*) fMapOfButtons->FindObject(button);
    if (a) {
@@ -181,13 +181,13 @@ void TGToolBar::SetId(TGButton *button, Long_t id)
 /// Finds and returns the id of the button.
 /// Returns -1 if the button is not a member of this group.
 
-Long_t TGToolBar::GetId(TGButton *button) const
+Longptr_t TGToolBar::GetId(TGButton *button) const
 {
    TPair *a = (TPair*) fMapOfButtons->FindObject(button);
    if (a)
-      return Long_t(a->Value());
+      return (Longptr_t)a->Value();
    else
-      return Long_t(-1);
+      return (Longptr_t)-1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -230,7 +230,7 @@ void TGToolBar::ButtonPressed()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Pressed(id);
    }
 }
@@ -245,7 +245,7 @@ void TGToolBar::ButtonReleased()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Released(id);
    }
 }
@@ -260,7 +260,7 @@ void TGToolBar::ButtonClicked()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Clicked(id);
    }
 }

@@ -11,7 +11,7 @@
  *************************************************************************/
 
 /** \class TGeoChecker
-\ingroup Geometry_classes
+\ingroup Geometry_painter
 
 Geometry checking package.
 

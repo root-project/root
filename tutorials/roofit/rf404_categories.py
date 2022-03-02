@@ -27,9 +27,7 @@ tagCat.Print()
 # ------------------------------------------------
 
 # Define a category with explicitly numbered states
-b0flav = ROOT.RooCategory("b0flav", "B0 flavour eigenstate")
-b0flav.defineType("B0", -1)
-b0flav.defineType("B0bar", 1)
+b0flav = ROOT.RooCategory("b0flav", "B0 flavour eigenstate", {"B0": -1, "B0bar": 1})
 b0flav.Print()
 
 # Generate dummy data for tabulation demo
@@ -37,8 +35,7 @@ b0flav.Print()
 
 # Generate a dummy dataset
 x = ROOT.RooRealVar("x", "x", 0, 10)
-data = ROOT.RooPolynomial("p", "p", x).generate(
-    ROOT.RooArgSet(x, b0flav, tagCat), 10000)
+data = ROOT.RooPolynomial("p", "p", x).generate({x, b0flav, tagCat}, 10000)
 
 # Print tables of category contents of datasets
 # --------------------------------------------------
@@ -54,7 +51,7 @@ ttable.Print()
 ttable.Print("v")
 
 # Create table for all (tagCat x b0flav) state combinations
-bttable = data.table(ROOT.RooArgSet(tagCat, b0flav))
+bttable = data.table({tagCat, b0flav})
 bttable.Print("v")
 
 # Retrieve number of events from table
@@ -77,5 +74,5 @@ tagCat.addToRange("soso", "NetTagger-1")
 tagCat.addToRange("soso", "NetTagger-2")
 
 # Use category range in dataset reduction specification
-goodData = data.reduce(ROOT.RooFit.CutRange("good"))
+goodData = data.reduce(CutRange="good")
 goodData.table(tagCat).Print("v")

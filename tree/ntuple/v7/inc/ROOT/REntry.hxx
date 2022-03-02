@@ -16,6 +16,7 @@
 #ifndef ROOT7_REntry
 #define ROOT7_REntry
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
@@ -40,6 +41,11 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
+   friend class RNTupleModel;
+
+   /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
+   std::uint64_t fModelId = 0;
+   /// Corresponds to the top-level fields of the linked model
    std::vector<Detail::RFieldValue> fValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
@@ -47,13 +53,10 @@ class REntry {
    /// Points into fValues and indicates the values that are owned by the entry and need to be destructed
    std::vector<std::size_t> fManagedValues;
 
-public:
-   using Iterator_t = decltype(fValues)::iterator;
+   // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
-   REntry(const REntry& other) = delete;
-   REntry& operator=(const REntry& other) = delete;
-   ~REntry();
+   explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
 
    /// Adds a value whose storage is managed by the entry
    void AddValue(const Detail::RFieldValue& value);
@@ -70,24 +73,39 @@ public:
       return ptr;
    }
 
-   Detail::RFieldValue GetValue(std::string_view fieldName) {
+public:
+   using Iterator_t = decltype(fValues)::iterator;
+
+   REntry(const REntry &other) = delete;
+   REntry &operator=(const REntry &other) = delete;
+   REntry(REntry &&other) = default;
+   REntry &operator=(REntry &&other) = default;
+   ~REntry();
+
+   void CaptureValueUnsafe(std::string_view fieldName, void *where);
+
+   Detail::RFieldValue GetValue(std::string_view fieldName) const
+   {
       for (auto& v : fValues) {
          if (v.GetField()->GetName() == fieldName)
             return v;
       }
-      return Detail::RFieldValue();
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
 
-   template<typename T>
-   T* Get(std::string_view fieldName) {
+   template <typename T>
+   T *Get(std::string_view fieldName) const
+   {
       for (auto& v : fValues) {
          if (v.GetField()->GetName() == fieldName) {
             R__ASSERT(v.GetField()->GetType() == RField<T>::TypeName());
-            return static_cast<T*>(v.GetRawPtr());
+            return v.Get<T>();
          }
       }
-      return nullptr;
+      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
    }
+
+   std::uint64_t GetModelId() const { return fModelId; }
 
    Iterator_t begin() { return fValues.begin(); }
    Iterator_t end() { return fValues.end(); }

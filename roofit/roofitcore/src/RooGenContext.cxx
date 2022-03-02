@@ -67,14 +67,14 @@ ClassImp(RooGenContext);
 /// the logic of RooGenContext.
 
 RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
-			     const RooDataSet *prototype, const RooArgSet* auxProto,
-			     Bool_t verbose, const RooArgSet* forceDirect) :  
+              const RooDataSet *prototype, const RooArgSet* auxProto,
+              Bool_t verbose, const RooArgSet* forceDirect) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
-  _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
-  _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0) 
+  _pdfClone(0), _acceptRejectFunc(0), _generator(0),
+  _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0)
 {
-  cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName() 
-			<< " for generation of observable(s) " << vars ;
+  cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName()
+         << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
   if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
   if (forceDirect && forceDirect->getSize()>0)  ccxcoutI(Generation) << " with internal generation forced for observables " << *forceDirect ;
@@ -84,14 +84,13 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // Clone the model and all nodes that it depends on so that this context
   // is independent of any existing objects.
   RooArgSet nodes(model,model.GetName());
-  _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
-  if (!_cloneSet) {
+  if (nodes.snapshot(_cloneSet, true)) {
     coutE(Generation) << "RooGenContext::RooGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     RooErrorHandler::softAbort() ;
   }
 
   // Find the clone in the snapshot list
-  _pdfClone = (RooAbsPdf*)_cloneSet->find(model.GetName());
+  _pdfClone = static_cast<RooAbsPdf*>(_cloneSet.find(model.GetName()));
   _pdfClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
 
   // Optionally fix RooAddPdf normalizations
@@ -100,7 +99,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     fullNormSet.add(*prototype->get()) ;
     _pdfClone->fixAddCoefNormalization(fullNormSet) ;
   }
-      
+
   // Analyze the list of variables to generate...
   _isValid= kTRUE;
   TIterator *iterator= vars.createIterator();
@@ -115,30 +114,30 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       continue;
     }
     // lookup this argument in the cloned set of PDF dependents
-    arg= (const RooAbsArg*)_cloneSet->find(tmp->GetName());
+    arg= static_cast<RooAbsArg const*>(_cloneSet.find(tmp->GetName()));
     if(0 == arg) {
-      coutI(Generation) << "RooGenContext::ctor() WARNING model does not depend on \"" << tmp->GetName() 
-			  << "\" which will have uniform distribution" << endl;
+      coutI(Generation) << "RooGenContext::ctor() WARNING model does not depend on \"" << tmp->GetName()
+           << "\" which will have uniform distribution" << endl;
       _uniformVars.add(*tmp);
     }
     else {
 
       // does the model depend on this variable directly, ie, like "x" in
-      // f(x) or f(x,g(x,y)) or even f(x,x) ?      
+      // f(x) or f(x,g(x,y)) or even f(x,x) ?
       const RooAbsArg *direct= arg ;
       if (forceDirect==0 || !forceDirect->find(direct->GetName())) {
-	if (!_pdfClone->isDirectGenSafe(*arg)) {
-	  cxcoutD(Generation) << "RooGenContext::ctor() observable " << arg->GetName() << " has been determined to be unsafe for internal generation" << endl;
-	  direct=0 ;
-	}
+   if (!_pdfClone->isDirectGenSafe(*arg)) {
+     cxcoutD(Generation) << "RooGenContext::ctor() observable " << arg->GetName() << " has been determined to be unsafe for internal generation" << endl;
+     direct=0 ;
+   }
       }
-      
-      // does the model depend indirectly on this variable through an lvalue chain?	
+
+      // does the model depend indirectly on this variable through an lvalue chain?
       // otherwise, this variable will have to be generated with accept/reject
-      if(direct) { 
-	_directVars.add(*arg);
+      if(direct) {
+   _directVars.add(*arg);
       } else {
-	_otherVars.add(*arg);
+   _otherVars.add(*arg);
       }
     }
   }
@@ -164,14 +163,14 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   if (!staticInitOK) {
     cxcoutD(Generation) << "RooGenContext::ctor() Model depends on supplied protodata observables, static initialization of internal generator will not be allowed" << endl ;
   }
-  
+
   // Can the model generate any of the direct variables itself?
   RooArgSet generatedVars;
   if (_directVars.getSize()>0) {
     _code= _pdfClone->getGenerator(_directVars,generatedVars,staticInitOK);
-    
-    cxcoutD(Generation) << "RooGenContext::ctor() Model indicates that it can internally generate observables " 
-			  << generatedVars << " with configuration identifier " << _code << endl ;
+
+    cxcoutD(Generation) << "RooGenContext::ctor() Model indicates that it can internally generate observables "
+           << generatedVars << " with configuration identifier " << _code << endl ;
   } else {
     _code = 0 ;
   }
@@ -192,39 +191,41 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   ccxcoutI(Generation) << endl ;
 
   // initialize the accept-reject generator
-  RooArgSet *depList= _pdfClone->getObservables(_theEvent);
-  depList->remove(_otherVars);
+  RooArgSet depList;
+  _pdfClone->getObservables(&_theEvent, depList);
+  depList.remove(_otherVars);
 
   TString nname(_pdfClone->GetName()) ;
   nname.Append("_AccRej") ;
   TString ntitle(_pdfClone->GetTitle()) ;
   ntitle.Append(" (Accept/Reject)") ;
-  
 
-  RooArgSet* protoDeps = model.getObservables(_protoVars) ;
-  
+
+  RooArgSet protoDeps;
+  model.getObservables(&_protoVars, protoDeps);
+
 
   if (_protoVars.getSize()==0) {
 
     // No prototype variables
-    
-    if(depList->getSize()==0) {
+
+    if(depList.empty()) {
       // All variable are generated with accept-reject
-      
+
       // Check if PDF supports maximum finding
       Int_t maxFindCode = _pdfClone->getMaxVal(_otherVars) ;
       if (maxFindCode != 0) {
-	coutI(Generation) << "RooGenContext::ctor() no prototype data provided, all observables are generated with numerically and "
-			      << "model supports analytical maximum findin:, can provide analytical pdf maximum to numeric generator" << endl ;
-	Double_t maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(_theEvent) ;
-	_maxVar = new RooRealVar("funcMax","function maximum",maxVal) ;
-	cxcoutD(Generation) << "RooGenContext::ctor() maximum value returned by RooAbsPdf::maxVal() is " << maxVal << endl ;
+   coutI(Generation) << "RooGenContext::ctor() no prototype data provided, all observables are generated with numerically and "
+               << "model supports analytical maximum findin:, can provide analytical pdf maximum to numeric generator" << endl ;
+   Double_t maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(&_theEvent) ;
+   _maxVar = new RooRealVar("funcMax","function maximum",maxVal) ;
+   cxcoutD(Generation) << "RooGenContext::ctor() maximum value returned by RooAbsPdf::maxVal() is " << maxVal << endl ;
       }
     }
 
     if (_otherVars.getSize()>0) {
       _pdfClone->getVal(&vars) ; // WVE debug
-      _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
+      _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,depList,&vars);
       cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
     } else {
       _acceptRejectFunc = 0 ;
@@ -233,10 +234,10 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   } else {
 
     // Generation _with_ prototype variable
-    depList->remove(_protoVars,kTRUE,kTRUE) ;
-    _acceptRejectFunc= (RooRealIntegral*) _pdfClone->createIntegral(*depList,vars) ;
+    depList.remove(_protoVars,true,true);
+    _acceptRejectFunc= (RooRealIntegral*) _pdfClone->createIntegral(depList,vars) ;
     cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
-    
+
     // Check if PDF supports maximum finding for the entire phase space
     RooArgSet allVars(_otherVars);
     allVars.add(_directVars);
@@ -244,7 +245,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     if (maxFindCode != 0) {
       // Special case: PDF supports max-finding in otherVars, no need to scan other+proto space for maximum
       coutI(Generation) << "RooGenContext::ctor() prototype data provided, and "
-                        << "model supports analytical maximum finding in the full phase space: " 
+                        << "model supports analytical maximum finding in the full phase space: "
                         << "can provide analytical pdf maximum to numeric generator" << endl ;
       _maxVar = new RooRealVar("funcMax","function maximum",_pdfClone->maxVal(maxFindCode)) ;
     } else {
@@ -257,55 +258,53 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
                            << "generator" << endl;
          cxcoutD(Generation) << "RooGenContext::ctor() maximum value must be reevaluated for each "
                              << "event with configuration code " << maxFindCode << endl ;
-         _maxVar = new RooRealVar("funcMax","function maximum",1) ;    
+         _maxVar = new RooRealVar("funcMax","function maximum",1) ;
       }
     }
 
     if (!_maxVar) {
-      
+
       // Regular case: First find maximum in other+proto space
       RooArgSet otherAndProto(_otherVars) ;
 
-      otherAndProto.add(*protoDeps) ;
-      
-      if (_otherVars.getSize()>0) {      
+      otherAndProto.add(protoDeps) ;
 
-	cxcoutD(Generation) << "RooGenContext::ctor() prototype data provided, observables are generated numericaly no " 
-			      << "analytical estimate of maximum function value provided by model, must determine maximum value through initial sampling space "
-			      << "of accept/reject observables plus prototype observables: " << otherAndProto << endl ;
+      if (_otherVars.getSize()>0) {
 
-	// Calculate maximum in other+proto space if there are any accept/reject generated observables
-	RooAbsNumGenerator* maxFinder = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,otherAndProto,RooArgSet(_protoVars),
-										   *model.getGeneratorConfig(),_verbose) ;
-// 	RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,RooNumGenConfig::defaultConfig(),_verbose) ;
-	Double_t max = maxFinder->getFuncMax() ;
-	_maxVar = new RooRealVar("funcMax","function maximum",max) ;
+   cxcoutD(Generation) << "RooGenContext::ctor() prototype data provided, observables are generated numericaly no "
+               << "analytical estimate of maximum function value provided by model, must determine maximum value through initial sampling space "
+               << "of accept/reject observables plus prototype observables: " << otherAndProto << endl ;
 
-	if (max==0) {	  
-	  coutE(Generation) << "RooGenContext::ctor(" << model.GetName() 
-			    << ") ERROR: generating conditional p.d.f. which requires prior knowledge of function maximum, " 
-			    << "but chosen numeric generator (" << maxFinder->IsA()->GetName() << ") does not support maximum finding" << endl ;	
-	  delete maxFinder ;	
-	  throw string("RooGenContext::ctor()") ;	  
-	}	
-	delete maxFinder ;	
+   // Calculate maximum in other+proto space if there are any accept/reject generated observables
+   RooAbsNumGenerator* maxFinder = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,otherAndProto,RooArgSet(_protoVars),
+                                 *model.getGeneratorConfig(),_verbose) ;
+//    RooAcceptReject maxFinder(*_acceptRejectFunc,otherAndProto,RooNumGenConfig::defaultConfig(),_verbose) ;
+   Double_t max = maxFinder->getFuncMax() ;
+   _maxVar = new RooRealVar("funcMax","function maximum",max) ;
 
-	cxcoutD(Generation) << "RooGenContext::ctor() maximum function value found through initial sampling is " << max << endl ;
+   if (max==0) {
+     coutE(Generation) << "RooGenContext::ctor(" << model.GetName()
+             << ") ERROR: generating conditional p.d.f. which requires prior knowledge of function maximum, "
+             << "but chosen numeric generator (" << maxFinder->IsA()->GetName() << ") does not support maximum finding" << endl ;
+     delete maxFinder ;
+     throw string("RooGenContext::ctor()") ;
+   }
+   delete maxFinder ;
+
+   cxcoutD(Generation) << "RooGenContext::ctor() maximum function value found through initial sampling is " << max << endl ;
       }
     }
-      
+
   }
 
   if (_acceptRejectFunc && _otherVars.getSize()>0) {
-    _generator = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,_otherVars,RooArgSet(_protoVars),*model.getGeneratorConfig(),_verbose,_maxVar) ;    
+    _generator = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,_otherVars,RooArgSet(_protoVars),*model.getGeneratorConfig(),_verbose,_maxVar) ;
     cxcoutD(Generation) << "RooGenContext::ctor() creating MC sampling generator " << _generator->IsA()->GetName() << "  from function for observables " << _otherVars << endl ;
     //_generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,RooNumGenConfig::defaultConfig(),_verbose,_maxVar);
   } else {
     _generator = 0 ;
   }
 
-  delete protoDeps ;
-  delete depList;
   _otherVars.add(_uniformVars);
 }
 
@@ -313,11 +312,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
-RooGenContext::~RooGenContext() 
+RooGenContext::~RooGenContext()
 {
-  // Clean up the cloned objects used in this context.
-  delete _cloneSet;
-
   // Clean up our accept/reject generator
   if (_generator) delete _generator;
   if (_acceptRejectFunc) delete _acceptRejectFunc;
@@ -330,7 +326,7 @@ RooGenContext::~RooGenContext()
 ////////////////////////////////////////////////////////////////////////////////
 /// Attach the cloned model to the event buffer we will be filling.
 
-void RooGenContext::attach(const RooArgSet& args) 
+void RooGenContext::attach(const RooArgSet& args)
 {
   _pdfClone->recursiveRedirectServers(args,kFALSE);
   if (_acceptRejectFunc) {
@@ -349,7 +345,7 @@ void RooGenContext::attach(const RooArgSet& args)
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform one-time initialization of the generator context
 
-void RooGenContext::initGenerator(const RooArgSet &theEvent) 
+void RooGenContext::initGenerator(const RooArgSet &theEvent)
 {
   RooFIter iter = theEvent.fwdIterator() ;
   RooAbsArg* arg ;
@@ -378,9 +374,9 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate one event. The 'remaining' integer is not used other than
-/// for printing messages 
+/// for printing messages
 
-void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining) 
+void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 {
   if(_otherVars.getSize() > 0) {
     // call the accept-reject generator to generate its variables
@@ -395,17 +391,17 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       Double_t resampleRatio(1) ;
       const RooArgSet *subEvent= _generator->generateEvent(remaining,resampleRatio);
       if (resampleRatio<1) {
-	coutI(Generation) << "RooGenContext::generateEvent INFO: accept/reject generator requests resampling of previously produced events by factor " 
-			  << resampleRatio << " due to increased maximum weight" << endl ; 
-	resampleData(resampleRatio) ;
+   coutI(Generation) << "RooGenContext::generateEvent INFO: accept/reject generator requests resampling of previously produced events by factor "
+           << resampleRatio << " due to increased maximum weight" << endl ;
+   resampleData(resampleRatio) ;
       }
       if(0 == subEvent) {
-	coutE(Generation) << "RooGenContext::generateEvent ERROR accept/reject generator failed" << endl ;
-	return;
+   coutE(Generation) << "RooGenContext::generateEvent ERROR accept/reject generator failed" << endl ;
+   return;
       }
       theEvent.assignValueOnly(*subEvent) ;
       //theEvent= *subEvent;
-      
+
     }
   }
 
@@ -415,19 +411,19 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
     _pdfClone->generateEvent(_code);
   }
 
-  // Generate uniform variables (non-dependents)  
+  // Generate uniform variables (non-dependents)
   if (_uniIter) {
     _uniIter->Reset() ;
     RooAbsArg* uniVar ;
     while((uniVar=(RooAbsArg*)_uniIter->Next())) {
       RooAbsLValue* arglv = dynamic_cast<RooAbsLValue*>(uniVar) ;
       if (!arglv) {
-	coutE(Generation) << "RooGenContext::generateEvent(" << GetName() << ") ERROR: uniform variable " << uniVar->GetName() << " is not an lvalue" << endl ;
-	RooErrorHandler::softAbort() ;
+   coutE(Generation) << "RooGenContext::generateEvent(" << GetName() << ") ERROR: uniform variable " << uniVar->GetName() << " is not an lvalue" << endl ;
+   RooErrorHandler::softAbort() ;
       }
       arglv->randomize() ;
     }
-    theEvent = _uniformVars ;
+    theEvent.assign(_uniformVars) ;
   }
 
 }
@@ -442,7 +438,7 @@ void RooGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, T
   os << indent << " --- RooGenContext --- " << endl ;
   os << indent << "Using PDF ";
   _pdfClone->printStream(os,kName|kArgs|kClassName,kSingleLine,indent);
-  
+
   if(verbose) {
     os << indent << "Use PDF generator for " << _directVars << endl ;
     os << indent << "Use MC sampling generator " << (_generator ? _generator->IsA()->GetName() : "<none>") << " for " << _otherVars << endl ;

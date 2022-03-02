@@ -58,7 +58,7 @@ ClassImp(TGViewFrame);
 /// Create a editor frame.
 
 TGViewFrame::TGViewFrame(TGView *v, UInt_t w, UInt_t h, UInt_t options,
-                         ULong_t back) :
+                         Pixel_t back) :
    TGCompositeFrame(v, w, h, options | kOwnBackground, back)
 {
    fView = v;
@@ -91,7 +91,7 @@ ClassImp(TGView);
 
 TGView::TGView(const TGWindow *p, UInt_t w, UInt_t h, Int_t id,
                UInt_t xMargin, UInt_t yMargin, UInt_t options,
-               UInt_t sboptions, ULong_t back)
+               UInt_t sboptions, Pixel_t back)
        : TGCompositeFrame(p, w, h, options, GetDefaultFrameBackground())
 {
    fWidgetId    = id;
@@ -313,7 +313,7 @@ Bool_t TGView::HandleExpose(Event_t *event)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process scrollbar messages.
 
-Bool_t TGView::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGView::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch(GET_MSG(msg)) {
       case kC_HSCROLL:

@@ -186,44 +186,44 @@ Bool_t TMVA::MethodRuleFit::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ///
 /// #### general
 ///
-///  - RuleFitModule  <string>
+///  - RuleFitModule  `<string>`
 ///    available values are:
 ///    - RFTMVA      - use TMVA implementation
 ///    - RFFriedman  - use Friedmans original implementation
 ///
 /// #### Path search (fitting)
 ///
-///  - GDTau          <float>      gradient-directed path: fit threshold, default
-///  - GDTauPrec      <float>      gradient-directed path: precision of estimated tau
-///  - GDStep         <float>      gradient-directed path: step size
-///  - GDNSteps       <float>      gradient-directed path: number of steps
-///  - GDErrScale     <float>      stop scan when error>scale*errmin
+///  - GDTau          `<float>`      gradient-directed path: fit threshold, default
+///  - GDTauPrec      `<float>`      gradient-directed path: precision of estimated tau
+///  - GDStep         `<float>`      gradient-directed path: step size
+///  - GDNSteps       `<float>`      gradient-directed path: number of steps
+///  - GDErrScale     `<float>`      stop scan when error>scale*errmin
 ///
 /// #### Tree generation
 ///
-///  - fEventsMin     <float>      minimum fraction of events in a splittable node
-///  - fEventsMax     <float>      maximum fraction of events in a splittable node
-///  - nTrees         <float>      number of trees in forest.
-///  - ForestType     <string>
+///  - fEventsMin     `<float>`      minimum fraction of events in a splittable node
+///  - fEventsMax     `<float>`      maximum fraction of events in a splittable node
+///  - nTrees         `<float>`      number of trees in forest.
+///  - ForestType     `<string>`
 ///    available values are:
 ///    - Random    - create forest using random subsample and only random variables subset at each node
 ///    - AdaBoost  - create forest with boosted events
 ///
 /// #### Model creation
 ///
-///  - RuleMinDist    <float>      min distance allowed between rules
-///  - MinImp         <float>      minimum rule importance accepted
-///  - Model          <string>     model to be used
+///  - RuleMinDist    `<float>`      min distance allowed between rules
+///  - MinImp         `<float>`      minimum rule importance accepted
+///  - Model          `<string>`     model to be used
 ///    available values are:
-///    - ModRuleLinear <default>
+///    - ModRuleLinear `<default>`
 ///    - ModRule
 ///    - ModLinear
 ///
 /// #### Friedmans module
 ///
-///  - RFWorkDir      <string>     directory where Friedmans module (rf_go.exe) is installed
-///  - RFNrules       <int>        maximum number of rules allowed
-///  - RFNendnodes    <int>        average number of end nodes in the forest of trees
+///  - RFWorkDir      `<string>`     directory where Friedmans module (rf_go.exe) is installed
+///  - RFNrules       `<int>`        maximum number of rules allowed
+///  - RFNendnodes    `<int>`        average number of end nodes in the forest of trees
 
 void TMVA::MethodRuleFit::DeclareOptions()
 {

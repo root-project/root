@@ -68,8 +68,9 @@ def GetInputVariableHist(dl, className, variableName, numBin, processTrfs=""):
 
 ## Get correlation matrix in JSON format
 # This function is used by OutputTransformer
-# @param dl the object pointer
+# @param varNames the bin labels
 # @param className Signal/Background
+# @param matrix the matrix
 def GetCorrelationMatrixInJSON(className, varNames, matrix):
     m = ROOT.TMatrixD(len(matrix), len(matrix))
     for i in xrange(len(matrix)):

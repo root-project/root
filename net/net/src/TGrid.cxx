@@ -36,14 +36,14 @@ TGrid *gGrid = 0;
 ClassImp(TGrid);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The grid should be of the form:  <grid>://<host>[:<port>],
+/// The grid should be of the form:  `<grid>://<host>[:<port>]`,
 /// e.g.:  alien://alice.cern.ch
 /// The uid is the username and pw the password that should be used for
-/// the connection. Depending on the <grid> the shared library (plugin)
+/// the connection. Depending on the `<grid>` the shared library (plugin)
 /// for the selected system will be loaded. When the connection could not
 /// be opened 0 is returned. For AliEn the supported options are:
-/// -domain=<domain name>
-/// -debug=<debug level from 1 to 10>
+/// -domain=`<domain name>`
+/// -debug=`<debug level from 1 to 10>`
 /// Example: "-domain=cern.ch -debug=5"
 
 TGrid *TGrid::Connect(const char *grid, const char *uid, const char *pw,

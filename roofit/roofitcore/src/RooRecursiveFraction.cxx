@@ -68,12 +68,12 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       std::stringstream errorMsg;
       errorMsg << "RooRecursiveFraction::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
-			    << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << endl ;
       coutE(InputArguments) << errorMsg.str();
       throw std::invalid_argument(errorMsg.str());
     }
 
-    _list.add(*comp) ;    
+    _list.add(*comp) ;
   }
 }
 
@@ -83,7 +83,7 @@ RooRecursiveFraction::RooRecursiveFraction(const char* name, const char* title, 
 /// Copy constructor
 
 RooRecursiveFraction::RooRecursiveFraction(const RooRecursiveFraction& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _list("list",this,other._list)
 {
 
@@ -94,7 +94,7 @@ RooRecursiveFraction::RooRecursiveFraction(const RooRecursiveFraction& other, co
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooRecursiveFraction::~RooRecursiveFraction() 
+RooRecursiveFraction::~RooRecursiveFraction()
 {
 
 }
@@ -103,7 +103,7 @@ RooRecursiveFraction::~RooRecursiveFraction()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of \f$ a_n * \prod_{i=0}^{n-1} (1 - a_i) \f$.
-Double_t RooRecursiveFraction::evaluate() const 
+Double_t RooRecursiveFraction::evaluate() const
 {
   const RooArgSet* nset = _list.nset() ;
 
@@ -113,7 +113,7 @@ Double_t RooRecursiveFraction::evaluate() const
   for (unsigned int i=1; i < _list.size(); ++i) {
     prod *= (1 - static_cast<RooAbsReal&>(_list[i]).getVal(nset));
   }
-    
+
   return prod ;
 }
 

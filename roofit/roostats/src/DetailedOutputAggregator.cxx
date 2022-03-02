@@ -101,7 +101,7 @@ namespace RooStats {
             // we never committed, so by default all columns are expected to not exist
             RooAbsArg* var = v->createFundamental();
             assert(var != NULL);
-            (RooArgSet(*var)) = RooArgSet(*v);
+            RooArgSet(*var).assign(RooArgSet(*v));
             var->SetName(renamed);
             if (RooRealVar* rvar= dynamic_cast<RooRealVar*>(var)) {
                if (v->getAttribute("StoreError"))     var->setAttribute("StoreError");
@@ -114,7 +114,7 @@ namespace RooStats {
          if (RooAbsArg* var = fBuiltSet->find(renamed)) {
             // we already committed an argset once, so we expect all columns to already be in the set
             var->SetName(v->GetName());
-            (RooArgSet(*var)) = RooArgSet(*v); // copy values and errors
+            RooArgSet(*var).assign(RooArgSet(*v)); // copy values and errors
             var->SetName(renamed);
          }
       }

@@ -50,35 +50,40 @@ protected:
    Double_t   fTsumw2;       ///<  Total sum of weights squared; -1 if no errors are calculated
    TArrayD    fTsumwx;       ///<  Total sum of weight*X for each dimension
    TArrayD    fTsumwx2;      ///<  Total sum of weight*X*X for each dimension
-   Double_t  *fIntegral;     ///<! Array with bin weight sums
+   std::vector<Double_t> fIntegral; ///<! vector with bin weight sums
    enum {
       kNoInt,
       kValidInt,
       kInvalidInt
    } fIntegralStatus;        ///<! status of integral
 
-private:
-   THnBase(const THnBase&); // Not implemented
-   THnBase& operator=(const THnBase&); // Not implemented
-
  protected:
-   THnBase():
-      fNdimensions(0), fEntries(0),
-      fTsumw(0), fTsumw2(-1.), fIntegral(0), fIntegralStatus(kNoInt)
-   {}
+    THnBase() : fNdimensions(0), fEntries(0), fTsumw(0), fTsumw2(-1.), fIntegral(), fIntegralStatus(kNoInt) {}
 
-   THnBase(const char* name, const char* title, Int_t dim,
-           const Int_t* nbins, const Double_t* xmin, const Double_t* xmax);
+    THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins, const Double_t *xmin,
+            const Double_t *xmax);
 
-   void UpdateXStat(const Double_t *x, Double_t w = 1.) {
-      if (GetCalculateErrors()) {
-         for (Int_t d = 0; d < fNdimensions; ++d) {
-            const Double_t xd = x[d];
-            fTsumwx[d]  += w * xd;
-            fTsumwx2[d] += w * xd * xd;
-         }
-      }
-   }
+    THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+            const std::vector<std::vector<double>> &xbins);
+
+    THnBase(const THnBase &other);
+
+    THnBase &operator=(const THnBase &other);
+
+    THnBase(THnBase &&other);
+
+    THnBase &operator=(THnBase &&other);
+
+    void UpdateXStat(const Double_t *x, Double_t w = 1.)
+    {
+       if (GetCalculateErrors()) {
+          for (Int_t d = 0; d < fNdimensions; ++d) {
+             const Double_t xd = x[d];
+             fTsumwx[d] += w * xd;
+             fTsumwx2[d] += w * xd * xd;
+          }
+       }
+    }
 
    /// Increment the statistics due to filled weight "w",
    void FillBinBase(Double_t w) {
@@ -118,7 +123,7 @@ private:
                                Int_t chunkSize = 1024 * 16);
 
  public:
-   virtual ~THnBase();
+   ~THnBase() override;
 
    TObjArray* GetListOfAxes() { return &fAxes; }
    const TObjArray* GetListOfAxes() const { return &fAxes; }
@@ -153,6 +158,28 @@ private:
       return bin;
    }
 
+   /// Fill with the provided variadic arguments.
+   /// The number of arguments must be equal to the number of histogram dimensions or, for weighted fills, to the
+   /// number of dimensions + 1; in the latter case, the last function argument is used as weight.
+   /// A separate `firstval` argument is needed so the compiler does not pick this overload instead of the non-templated
+   /// Fill overloads
+   template <typename... MoreTypes>
+   Long64_t Fill(Double_t firstval, MoreTypes... morevals)
+   {
+      const std::array<double, 1 + sizeof...(morevals)> x{firstval, static_cast<double>(morevals)...};
+      if (Int_t(x.size()) == GetNdimensions()) {
+         // without weight
+         return Fill(x.data());
+      } else if (Int_t(x.size()) == (GetNdimensions() + 1)) {
+         // with weight
+         return Fill(x.data(), x.back());
+      } else {
+         Error("Fill", "Wrong number of arguments for number of histogram axes.");
+      }
+
+      return -1;
+   }
+
    virtual void FillBin(Long64_t bin, Double_t w) = 0;
 
    void SetBinEdges(Int_t idim, const Double_t* bins);
@@ -163,7 +190,7 @@ private:
    void SetBinError(Long64_t bin, Double_t e) { SetBinError2(bin, e*e); }
    void AddBinContent(const Int_t* x, Double_t v = 1.) { AddBinContent(GetBin(x), v); }
    void SetEntries(Double_t entries) { fEntries = entries; }
-   void SetTitle(const char *title);
+   void SetTitle(const char *title) override;
 
    Double_t GetBinContent(const Int_t *idx) const { return GetBinContent(GetBin(idx)); } // intentionally non-virtual
    virtual Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const = 0;
@@ -247,19 +274,19 @@ private:
    Double_t ComputeIntegral();
    void GetRandom(Double_t *rand, Bool_t subBinRandom = kTRUE);
 
-   void Print(Option_t* option = "") const;
+   void Print(Option_t* option = "") const override;
    void PrintEntries(Long64_t from = 0, Long64_t howmany = -1, Option_t* options = 0) const;
    void PrintBin(Int_t* coord, Option_t* options) const {
       PrintBin(-1, coord, options);
    }
    void PrintBin(Long64_t idx, Option_t* options) const;
 
-   void Browse(TBrowser *b);
-   Bool_t IsFolder() const { return kTRUE; }
+   void Browse(TBrowser *b) override;
+   Bool_t IsFolder() const override { return kTRUE; }
 
    //void Draw(Option_t* option = "");
 
-   ClassDef(THnBase, 1); // Common base for n-dimensional histogram
+   ClassDefOverride(THnBase, 1); // Common base for n-dimensional histogram
 
    friend class THnIter;
 };
@@ -270,15 +297,15 @@ namespace Internal {
    class THnBaseBrowsable: public TNamed {
    public:
       THnBaseBrowsable(THnBase* hist, Int_t axis);
-      ~THnBaseBrowsable();
-      void Browse(TBrowser *b);
-      Bool_t IsFolder() const { return kFALSE; }
+      ~THnBaseBrowsable() override;
+      void Browse(TBrowser *b) override;
+      Bool_t IsFolder() const override { return kFALSE; }
 
    private:
       THnBase* fHist; // Original histogram
       Int_t    fAxis; // Axis to visualize
       TH1*     fProj; // Projection result
-      ClassDef(THnBaseBrowsable, 0); // Browser-helper for THnBase
+      ClassDefOverride(THnBaseBrowsable, 0); // Browser-helper for THnBase
    };
 
    // Base class for iterating over THnBase bins
@@ -304,7 +331,7 @@ class THnIter: public TObject {
 public:
    THnIter(const THnBase* hist, Bool_t respectAxisRange = kFALSE):
       fIter(hist->CreateIter(respectAxisRange)) {}
-   virtual ~THnIter();
+   ~THnIter() override;
 
    /// Return the next bin's index.
    /// If provided, set coord to that bin's coordinates (bin indexes).
@@ -320,7 +347,7 @@ public:
 
 private:
    ROOT::Internal::THnBaseBinIter* fIter;
-   ClassDef(THnIter, 0); //Iterator over bins of a THnBase.
+   ClassDefOverride(THnIter, 0); //Iterator over bins of a THnBase.
 };
 
 #endif //  ROOT_THnBase

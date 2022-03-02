@@ -28,7 +28,6 @@
 #include "RooNLLVar.h"
 #include "RooMsgService.h"
 
-#include "RooMinuit.h"
 #include "RooMinimizer.h"
 #include "Math/MinimizerOptions.h"
 #include "TStopwatch.h"
@@ -71,7 +70,7 @@ Internally it operates by delegating to a MinNLLTestStat object.
         return *this;
      }
 
-     virtual ~MinNLLTestStat() {
+     ~MinNLLTestStat() override {
    delete fProflts;
      }
 
@@ -85,13 +84,13 @@ Internally it operates by delegating to a MinNLLTestStat object.
      void SetLOffset(Bool_t flag=kTRUE) { fProflts->SetLOffset(flag) ; }
 
      // Main interface to evaluate the test statistic on a dataset
-     virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
+     Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) override {
        return fProflts->EvaluateProfileLikelihood(1, data, paramsOfInterest); //find unconditional NLL minimum
      }
 
      virtual void EnableDetailedOutput( bool e=true ) { fProflts->EnableDetailedOutput(e); }
 
-     virtual const RooArgSet* GetDetailedOutput(void) const {
+     const RooArgSet* GetDetailedOutput(void) const override {
         // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
         // The returned RooArgSet contains the following:
         //
@@ -102,13 +101,13 @@ Internally it operates by delegating to a MinNLLTestStat object.
 
      virtual void SetVarName(const char* name) { fProflts->SetVarName(name); }
 
-     virtual const TString GetVarName() const { return fProflts->GetVarName(); }
+     const TString GetVarName() const override { return fProflts->GetVarName(); }
 
    private:
      ProfileLikelihoodTestStat* fProflts;
 
    protected:
-      ClassDef(MinNLLTestStat,1)   // implements the minimum NLL as a test statistic to be used with several tools
+      ClassDefOverride(MinNLLTestStat,1)   // implements the minimum NLL as a test statistic to be used with several tools
    };
 }
 

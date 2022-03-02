@@ -11,13 +11,18 @@
  *************************************************************************/
 
 /** \class TGeoTube
-\ingroup Geometry_classes
+\ingroup Tubes
 
 Cylindrical tube  class. A tube has 3 parameters :
-  - Rmin - minimum radius
-  - Rmax - maximum radius
-  - dz - half length
-Begin_Macro(source)
+  - `rmin` : minimum radius
+  - `rmax` : maximum radius
+  - `dz` : half length
+
+~~~ {.cpp}
+TGeoTube(Double_t rmin,Double_t rmax,Double_t dz);
+~~~
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("tube", "poza2");
@@ -38,15 +43,24 @@ End_Macro
 */
 
 /** \class TGeoTubeSeg
-\ingroup Geometry_classes
+\ingroup Tubes
 
-A phi segment of a tube. Has 5 parameters :
-  - the same 3 as a tube;
-  - first phi limit (in degrees)
-  - second phi limit
-The segment will be be placed from the first angle (first phi limit)
-to the second angle (second phi limit)
-Begin_Macro(source)
+A tube segment is a tube having a range in phi. The tube segment class
+derives from **`TGeoTube`**, having 2 extra parameters: `phi1` and
+`phi2`.
+
+~~~ {.cpp}
+TGeoTubeSeg(Double_t rmin,Double_t rmax,Double_t dz,
+Double_t phi1,Double_t phi2);
+~~~
+
+Here `phi1` and `phi2 `are the starting and ending `phi `values in
+degrees. The `general phi convention` is that the shape ranges from
+`phi1` to `phi2` going counterclockwise. The angles can be defined with
+either negative or positive values. They are stored such that `phi1` is
+converted to `[0,360]` and `phi2 > phi1`.
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("tubeseg", "poza3");
@@ -63,21 +77,22 @@ Begin_Macro(source)
    TView *view = gPad->GetView();
    view->ShowAxis();
 }
-
 End_Macro
 */
 
 /** \class TGeoCtub
-\ingroup Geometry_classes
+\ingroup Tubes
 
-A tube segment cut with 2 planes. Has 11 parameters :
-  - the same 5 as a tube segment;
-  - x, y, z components of the normal to the -dZ cut plane in
-    point (0, 0, -dZ);
-  - x, y, z components of the normal to the +dZ cut plane in
-    point (0, 0, dZ);
+The cut tubes constructor has the form:
 
-Begin_Macro(source)
+~~~ {.cpp}
+TGeoCtub(Double_t rmin,Double_t rmax,Double_t dz,
+Double_t phi1,Double_t phi2,
+Double_t nxlow,Double_t nylow,Double_t nzlow, Double_t nxhi,
+Double_t nyhi,Double_t nzhi);
+~~~
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("ctub", "poza3");
@@ -107,6 +122,13 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
+A cut tube is a tube segment cut with two planes. The centers of the 2
+sections are positioned at `dZ`. Each cut plane is therefore defined by
+a point `(0,0,dZ)` and its normal unit vector pointing outside the
+shape:
+
+`Nlow=(Nx,Ny,Nz<0)`, `Nhigh=(Nx',Ny',Nz'>0)`.
 */
 
 #include <iostream>

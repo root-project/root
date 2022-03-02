@@ -19,33 +19,31 @@
 
 #include <occi.h>
 
-using namespace oracle::occi;
-
 ClassImp(TOracleResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Oracle query result.
 
-void TOracleResult::initResultSet(Statement *stmt)
+void TOracleResult::initResultSet(oracle::occi::Statement *stmt)
 {
    if (!stmt) {
       Error("initResultSet", "construction: empty statement");
    } else {
       try {
          fStmt = stmt;
-         if (stmt->status() == Statement::RESULT_SET_AVAILABLE) {
+         if (stmt->status() == oracle::occi::Statement::RESULT_SET_AVAILABLE) {
             fResultType  = 1;
             fResult      = stmt->getResultSet();
-            fFieldInfo   = fResult ? new std::vector<MetaData>(fResult->getColumnListMetaData()) : nullptr;
+            fFieldInfo   = fResult ? new std::vector<oracle::occi::MetaData>(fResult->getColumnListMetaData()) : nullptr;
             fFieldCount  = fFieldInfo ? fFieldInfo->size() : 0;
-         } else if (stmt->status() == Statement::UPDATE_COUNT_AVAILABLE) {
+         } else if (stmt->status() == oracle::occi::Statement::UPDATE_COUNT_AVAILABLE) {
             fResultType  = 3; // this is update_count_available
             fResult      = nullptr;
             fFieldInfo   = nullptr;
             fFieldCount  = 0;
             fUpdateCount = stmt->getUpdateCount();
          }
-      } catch (SQLException &oraex) {
+      } catch (oracle::occi::SQLException &oraex) {
          Error("initResultSet", "%s", (oraex.getMessage()).c_str());
          MakeZombie();
       }
@@ -54,7 +52,7 @@ void TOracleResult::initResultSet(Statement *stmt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
+TOracleResult::TOracleResult(oracle::occi::Connection *conn, oracle::occi::Statement *stmt)
 {
    fConn        = conn;
    fResult      = nullptr;
@@ -73,7 +71,7 @@ TOracleResult::TOracleResult(Connection *conn, Statement *stmt)
 ////////////////////////////////////////////////////////////////////////////////
 /// This construction func is only used to get table metainfo.
 
-TOracleResult::TOracleResult(Connection *conn, const char *tableName)
+TOracleResult::TOracleResult(oracle::occi::Connection *conn, const char *tableName)
 {
    fResult      = nullptr;
    fStmt        = nullptr;
@@ -88,8 +86,8 @@ TOracleResult::TOracleResult(Connection *conn, const char *tableName)
    if (!tableName || !conn) {
       Error("TOracleResult", "construction: empty input parameter");
    } else {
-      MetaData connMD = conn->getMetaData(tableName, MetaData::PTYPE_TABLE);
-      fFieldInfo   = new std::vector<MetaData>(connMD.getVector(MetaData::ATTR_LIST_COLUMNS));
+      oracle::occi::MetaData connMD = conn->getMetaData(tableName, oracle::occi::MetaData::PTYPE_TABLE);
+      fFieldInfo   = new std::vector<oracle::occi::MetaData>(connMD.getVector(oracle::occi::MetaData::ATTR_LIST_COLUMNS));
       fFieldCount  = fFieldInfo->size();
       fResultType  = 2; // indicates that this is just an table metainfo
    }
@@ -156,7 +154,7 @@ const char *TOracleResult::GetFieldName(Int_t field)
 {
    if (!IsValid(field))
       return nullptr;
-   fNameBuffer = (*fFieldInfo)[field].getString(MetaData::ATTR_NAME);
+   fNameBuffer = (*fFieldInfo)[field].getString(oracle::occi::MetaData::ATTR_NAME);
    return fNameBuffer.c_str();
 }
 
@@ -181,7 +179,7 @@ TSQLRow *TOracleResult::Next()
          return new TOracleRow(fResult, fFieldInfo);
       } else
          return 0;
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       Error("Next", "%s", (oraex.getMessage()).c_str());
       MakeZombie();
    }

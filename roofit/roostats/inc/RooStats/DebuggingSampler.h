@@ -39,13 +39,13 @@ namespace RooStats {
        fTestStatistic = new RooRealVar("UniformTestStatistic","UniformTestStatistic",0,0,1);
        fRand = new TRandom();
      }
-     virtual ~DebuggingSampler() {
+     ~DebuggingSampler() override {
        delete fRand;
        delete fTestStatistic;
      }
 
-      // Main interface to get a ConfInterval, pure virtual
-     virtual SamplingDistribution* GetSamplingDistribution(RooArgSet& paramsOfInterest)  {
+     /// Main interface to get a ConfInterval, pure virtual
+     SamplingDistribution* GetSamplingDistribution(RooArgSet& paramsOfInterest) override  {
        (void)paramsOfInterest; // avoid warning
        // normally this method would be complex, but here it is simple for debugging
        std::vector<Double_t> testStatVec;
@@ -55,48 +55,46 @@ namespace RooStats {
        return new SamplingDistribution("UniformSamplingDist", "for debugging", testStatVec );
      }
 
-      // Main interface to evaluate the test statistic on a dataset
-     virtual Double_t EvaluateTestStatistic(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/)  {
+     /// Main interface to evaluate the test statistic on a dataset
+     Double_t EvaluateTestStatistic(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/) override  {
        //       data = data; // avoid warning
        //       paramsOfInterest = paramsOfInterest; // avoid warning
        return fRand->Uniform();
      }
 
-      // Get the TestStatistic
-      virtual TestStatistic* GetTestStatistic()  const {
-         // TODO change to Roo... notifications
+      /// Get the TestStatistic
+      TestStatistic* GetTestStatistic()  const override {
          std::cout << "GetTestStatistic() IS NOT IMPLEMENTED FOR THIS SAMPLER. Returning NULL." << std::endl;
          return NULL; /*fTestStatistic;*/
       }
 
-      // Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+      /// Get the Confidence level for the test
+      Double_t ConfidenceLevel()  const override {return 1.-fSize;}
 
-      // Common Initialization
-      virtual void Initialize(RooAbsArg& /* testStatistic */, RooArgSet& /* paramsOfInterest */, RooArgSet& /* nuisanceParameters */ ) {
+      /// Common Initialization
+      void Initialize(RooAbsArg& /* testStatistic */, RooArgSet& /* paramsOfInterest */, RooArgSet& /* nuisanceParameters */ ) override {
       }
 
-      // Set the Pdf, add to the the workspace if not already there
-      virtual void SetPdf(RooAbsPdf&) {}
+      /// Set the Pdf, add to the the workspace if not already there
+      void SetPdf(RooAbsPdf&) override {}
 
-      // specify the parameters of interest in the interval
+      /// specify the parameters of interest in the interval
       virtual void SetParameters(RooArgSet&) {}
-      // specify the nuisance parameters (eg. the rest of the parameters)
-      virtual void SetNuisanceParameters(const RooArgSet&) {}
-      // specify the values of parameters used when evaluating test statistic
-      virtual void SetParametersForTestStat(const RooArgSet& ) {}
-      // specify the conditional observables
-      virtual void SetGlobalObservables(const RooArgSet& ) {}
+      /// specify the nuisance parameters (eg. the rest of the parameters)
+      void SetNuisanceParameters(const RooArgSet&) override {}
+      /// specify the values of parameters used when evaluating test statistic
+      void SetParametersForTestStat(const RooArgSet& ) override {}
+      /// specify the conditional observables
+      void SetGlobalObservables(const RooArgSet& ) override {}
 
 
-      // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) {fSize = size;}
-      // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
+      /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
+      void SetTestSize(Double_t size) override {fSize = size;}
+      /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
+      void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;}
 
-      // Set the TestStatistic (want the argument to be a function of the data & parameter points
-      virtual void SetTestStatistic(TestStatistic* /*testStatistic*/) {
-         // TODO change to Roo... notifications
+      /// Set the TestStatistic (want the argument to be a function of the data & parameter points
+      void SetTestStatistic(TestStatistic* /*testStatistic*/) override {
          std::cout << "SetTestStatistic(...) IS NOT IMPLEMENTED FOR THIS SAMPLER" << std::endl;
       }
 
@@ -106,7 +104,7 @@ namespace RooStats {
       TRandom* fRand;
 
    protected:
-      ClassDef(DebuggingSampler,1)   // A simple implementation of the DistributionCreator interface
+      ClassDefOverride(DebuggingSampler,1)   // A simple implementation of the DistributionCreator interface
    };
 }
 

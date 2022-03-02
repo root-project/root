@@ -33,7 +33,7 @@ ClassImp(TGraphSmooth);
 
 //______________________________________________________________________
 /** \class TGraphSmooth
-    \ingroup Hist
+    \ingroup Graph
 A helper class to smooth TGraph.
 see examples in $ROOTSYS/tutorials/graphs/motorcycle.C and approx.C
 */
@@ -204,6 +204,7 @@ void TGraphSmooth::BDRksmooth(Double_t *x, Double_t *y, Int_t n, Double_t *xp,
 /// x and y which give the coordinates of the smooth.
 ///
 /// \param[in] grin Input graph
+/// \param[in] option specific options
 /// \param[in] span the smoother span. This gives the proportion of points in the plot
 ///     which influence the smooth at each value. Larger values give more smoothness.
 /// \param[in] iter the number of robustifying iterations which should be performed.
@@ -446,6 +447,7 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
 /// Smooth the (x, y) values by Friedman's ``super smoother''.
 ///
 /// \param[in] grin graph for smoothing
+/// \param[in] option specific options
 /// \param[in] span the fraction of the observations in the span of the running lines
 ///    smoother, or 0 to choose this by leave-one-out cross-validation.
 /// \param[in] bass controls the smoothness of the fitted curve.
@@ -479,13 +481,15 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
 ///           Laboratory for Computational Statistics,
 ///           Stanford University Technical Report No. 5.
 
-TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
+TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t * option,
         Double_t bass, Double_t span, Bool_t isPeriodic, Double_t *w)
 {
    if (span < 0 || span > 1) {
       std::cout << "Error: Span must be between 0 and 1" << std::endl;
       return 0;
    }
+   TString opt = option;
+   opt.ToLower();
 
    Smoothin(grin);
 

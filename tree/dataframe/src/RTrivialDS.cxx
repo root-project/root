@@ -9,10 +9,10 @@
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RTrivialDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <TError.h>
 
 #include <limits>
+#include <memory>
 
 namespace ROOT {
 
@@ -88,14 +88,14 @@ bool RTrivialDS::SetEntry(unsigned int slot, ULong64_t entry)
 
 void RTrivialDS::SetNSlots(unsigned int nSlots)
 {
-   R__ASSERT(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
+   assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
 
    fNSlots = nSlots;
    fCounter.resize(fNSlots);
    fCounterAddr.resize(fNSlots);
 }
 
-void RTrivialDS::Initialise()
+void RTrivialDS::Initialize()
 {
    if (fSize == std::numeric_limits<ULong64_t>::max()) {
       // infinite source, nothing to do here
@@ -121,17 +121,17 @@ std::string RTrivialDS::GetLabel()
    return "TrivialDS";
 }
 
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries)
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries)
 {
    auto lm = std::make_unique<RDFDetail::RLoopManager>(std::make_unique<RTrivialDS>(size, skipEvenEntries),
                                                        RDFInternal::ColumnNames_t{});
-   return RInterface<RDFDetail::RLoopManager, RTrivialDS>(std::move(lm));
+   return RInterface<RDFDetail::RLoopManager>(std::move(lm));
 }
 
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame()
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame()
 {
    auto lm = std::make_unique<RDFDetail::RLoopManager>(std::make_unique<RTrivialDS>(), RDFInternal::ColumnNames_t{});
-   return RInterface<RDFDetail::RLoopManager, RTrivialDS>(std::move(lm));
+   return RInterface<RDFDetail::RLoopManager>(std::move(lm));
 }
 
 } // ns RDF

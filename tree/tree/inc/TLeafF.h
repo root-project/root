@@ -50,7 +50,6 @@ public:
    virtual void    SetAddress(void *add=0);
 
    virtual bool    ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool    ReadBasketSerialized(TBuffer&, Long64_t) { return true; }
 
    ClassDef(TLeafF,1);  //A TLeaf for a 32 bit floating point data type.
 };

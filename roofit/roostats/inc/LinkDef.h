@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__ 
+#ifdef __CINT__
 
 #pragma link off all globals;
 #pragma link off all classes;
@@ -39,19 +39,19 @@
 #pragma link C++ class RooStats::IntervalCalculator+; // interface, not concrete
 #pragma link C++ class RooStats::HypoTestCalculator+; // interface, not concrete
 #pragma link C++ class RooStats::CombinedCalculator+; // interface, not concrete
-#pragma link C++ class RooStats::ProfileLikelihoodCalculator+; 
+#pragma link C++ class RooStats::ProfileLikelihoodCalculator+;
 
-#pragma link C++ class RooStats::MCMCCalculator+; 
-#pragma link C++ class RooStats::MCMCInterval+; 
-#pragma link C++ class RooStats::MCMCIntervalPlot+; 
-#pragma link C++ class RooStats::MetropolisHastings+; 
-#pragma link C++ class RooStats::MarkovChain+; 
-#pragma link C++ class RooStats::ProposalFunction+; 
-#pragma link C++ class RooStats::ProposalHelper+; 
-#pragma link C++ class RooStats::UniformProposal+; 
-#pragma link C++ class RooStats::PdfProposal+; 
-#pragma link C++ class RooStats::Heaviside+; 
-#pragma link C++ class RooStats::SequentialProposal+; 
+#pragma link C++ class RooStats::MCMCCalculator+;
+#pragma link C++ class RooStats::MCMCInterval+;
+#pragma link C++ class RooStats::MCMCIntervalPlot+;
+#pragma link C++ class RooStats::MetropolisHastings+;
+#pragma link C++ class RooStats::MarkovChain+;
+#pragma link C++ class RooStats::ProposalFunction+;
+#pragma link C++ class RooStats::ProposalHelper+;
+#pragma link C++ class RooStats::UniformProposal+;
+#pragma link C++ class RooStats::PdfProposal+;
+#pragma link C++ class RooStats::Heaviside+;
+#pragma link C++ class RooStats::SequentialProposal+;
 
 #pragma link C++ class RooStats::HypoTestCalculatorGeneric+;
 #pragma link C++ class RooStats::HybridCalculator+;
@@ -59,9 +59,9 @@
 #pragma link C++ class RooStats::AsymptoticCalculator+;
 #pragma link C++ class RooStats::HybridCalculatorOriginal+;
 #pragma link C++ class RooStats::HybridPlot+;
-#pragma link C++ class RooStats::HybridResult+;				 
+#pragma link C++ class RooStats::HybridResult+;
 
-#pragma link C++ class RooStats::DetailedOutputAggregator+;				 
+#pragma link C++ class RooStats::DetailedOutputAggregator+;
 
 #pragma link C++ class RooStats::TestStatSampler+; // interface, not concrete
 #pragma link C++ class RooStats::DebuggingSampler+;
@@ -92,10 +92,10 @@
 #pragma link C++ class RooStats::HLFactory+;
 
 // in progress
-#pragma link C++ class RooStats::ConfidenceBelt+; 
-#pragma link C++ class RooStats::AcceptanceRegion+; 
-#pragma link C++ class RooStats::SamplingSummary+; 
-#pragma link C++ class RooStats::SamplingSummaryLookup+; 
+#pragma link C++ class RooStats::ConfidenceBelt+;
+#pragma link C++ class RooStats::AcceptanceRegion+;
+#pragma link C++ class RooStats::SamplingSummary+;
+#pragma link C++ class RooStats::SamplingSummaryLookup+;
 
 #pragma link C++ class RooStats::BernsteinCorrection+;
 

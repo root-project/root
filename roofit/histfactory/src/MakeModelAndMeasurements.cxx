@@ -15,10 +15,10 @@
 
 BEGIN_HTML
 <p>
-This is a package that creates a RooFit probability density function from ROOT histograms 
-of expected distributions and histograms that represent the +/- 1 sigma variations 
+This is a package that creates a RooFit probability density function from ROOT histograms
+of expected distributions and histograms that represent the +/- 1 sigma variations
 from systematic effects. The resulting probability density function can then be used
-with any of the statistical tools provided within RooStats, such as the profile 
+with any of the statistical tools provided within RooStats, such as the profile
 likelihood ratio, Feldman-Cousins, etc.  In this version, the model is directly
 fed to a likelihodo ratio test, but it needs to be further factorized.</p>
 
@@ -130,23 +130,23 @@ int main(int argc, char** argv) {
     string input(argv[2]);
     if(flag=="-standard_form")
       try {
-	fastDriver(input);
+   fastDriver(input);
       }
       catch (std::string str) {
-	cerr << "caught exception: " << str << endl ;
+   cerr << "caught exception: " << str << endl ;
       }
       catch( const exception& e ) {
-	cerr << "Caught Exception: " << e.what() << endl;
+   cerr << "Caught Exception: " << e.what() << endl;
       }
     else if(flag=="-number_counting_form")
       try {
          topDriver(input);
       }
       catch (std::string str) {
-	cerr << "caught exception: " << str << endl ;
+   cerr << "caught exception: " << str << endl ;
       }
       catch( const exception& e ) {
-	cerr << "Caught Exception: " << e.what() << endl;
+   cerr << "Caught Exception: " << e.what() << endl;
       }
 
     else
@@ -159,9 +159,9 @@ int main(int argc, char** argv) {
 #endif
 */
 
-void topDriver( string input ) { 
+void topDriver( string input ) {
 
-  
+
   // Make the list of measurements and channels
   std::vector< HistFactory::Measurement > measurement_list;
   //std::vector< HistFactory::Channel >     channel_list;
@@ -176,25 +176,25 @@ void topDriver( string input ) {
 
   // At this point, we have all the information we need
   // from the xml files.
-  
+
 
   // We will make the measurements 1-by-1
   // This part will be migrated to the
   // MakeModelAndMeasurements function,
   // but is here for now.
 
-  
+
   for(unsigned int i = 0; i < measurement_list.size(); ++i) {
-    
+
     HistFactory::Measurement measurement = measurement_list.at(i);
-    
+
     // Add the channels to this measurement
     //for( unsigned int chanItr = 0; chanItr < channel_list.size(); ++chanItr ) {
     //  measurement.channels.push_back( channel_list.at( chanItr ) );
     //}
 
     // This part (OF COURSE) needs to be added:
-    
+
 
     std::string rowTitle = measurement.GetName();
     std::string outputFileName = measurement.GetOutputFilePrefix() + "_" + measurement.GetName() + ".root";
@@ -202,16 +202,16 @@ void topDriver( string input ) {
     double lumiError = measurement.GetLumi()*measurement.GetLumiRelErr();
 
     TFile* outFile = new TFile(outputFileName.c_str(), "recreate");
-    HistoToWorkspaceFactory factory(measurement.GetOutputFilePrefix(), rowTitle, measurement.GetConstantParams(), 
-				    measurement.GetLumi(), lumiError, 
-				    measurement.GetBinLow(), measurement.GetBinHigh(), outFile);
-    
+    HistoToWorkspaceFactory factory(measurement.GetOutputFilePrefix(), rowTitle, measurement.GetConstantParams(),
+                measurement.GetLumi(), lumiError,
+                measurement.GetBinLow(), measurement.GetBinHigh(), outFile);
+
     // Create the workspaces for the channels
     vector<RooWorkspace*> channel_workspaces;
     vector<string>        channel_names;
 
 
-    // Loop over channels and make the individual 
+    // Loop over channels and make the individual
     // channel fits:
 
 
@@ -228,9 +228,9 @@ void topDriver( string input ) {
       std::vector< EstimateSummary > dummy;
       RooWorkspace* ws = factory.MakeSingleChannelModel( dummy, measurement.GetConstantParams() );
       if( ws==NULL ) {
-	std::cout << "Failed to create SingleChannelModel for channel: " << channel.GetName()
-		  << " and measurement: " << measurement.GetName() << std::endl;
-	throw hf_exc();
+   std::cout << "Failed to create SingleChannelModel for channel: " << channel.GetName()
+        << " and measurement: " << measurement.GetName() << std::endl;
+   throw hf_exc();
       }
       //RooWorkspace* ws = factory.MakeSingleChannelModel( channel );
       channel_workspaces.push_back(ws);
@@ -239,10 +239,10 @@ void topDriver( string input ) {
       ModelConfig* proto_config = (ModelConfig *) ws->obj("ModelConfig");
 
       std::cout << "Setting Parameter of Interest as :" << measurement.GetPOI() << endl;
-      RooRealVar* poi = (RooRealVar*) ws->var( (measurement.GetPOI()).c_str() );
+      RooRealVar* poi = (RooRealVar*) ws->var(measurement.GetPOI());
       RooArgSet * params= new RooArgSet;
       if(poi){
-	params->add(*poi);
+   params->add(*poi);
       }
       proto_config->SetParametersOfInterest(*params);
 
@@ -250,18 +250,18 @@ void topDriver( string input ) {
       // Gamma/Uniform Constraints:
       // turn some Gaussian constraints into Gamma/Uniform/LogNorm constraints, rename model newSimPdf
       if( measurement.GetGammaSyst().size()>0 || measurement.GetUniformSyst().size()>0 || measurement.GetLogNormSyst().size()>0) {
-	factory.EditSyst( ws, ("model_"+ch_name).c_str(), measurement.GetGammaSyst(), measurement.GetUniformSyst(), measurement.GetLogNormSyst());
-	proto_config->SetPdf( *ws->pdf("newSimPdf") );
+   factory.EditSyst( ws, ("model_"+ch_name).c_str(), measurement.GetGammaSyst(), measurement.GetUniformSyst(), measurement.GetLogNormSyst());
+   proto_config->SetPdf( *ws->pdf("newSimPdf") );
       }
 
       // fill out ModelConfig and export
       RooAbsData* expData = ws->data("expData");
       if(poi){
-	proto_config->GuessObsAndNuisance(*expData);
+   proto_config->GuessObsAndNuisance(*expData);
       }
       std::string ChannelFileName = measurement.GetOutputFilePrefix() + "_" + ch_name + "_" + rowTitle + "_model.root";
       ws->writeToFile( ChannelFileName.c_str() );
-      
+
       // Now, write the measurement to the file
       // Make a new measurement for only this channel
       RooStats::HistFactory::Measurement meas_chan( measurement );
@@ -273,11 +273,11 @@ void topDriver( string input ) {
 
       // do fit unless exportOnly requested
       if(! measurement.GetExportOnly() ){
-	if(!poi){
-	  cout <<"can't do fit for this channel, no parameter of interest"<<endl;
-	} else{
-	  factory.FitModel(ws, ch_name, "newSimPdf", "expData", false);
-	}
+   if(!poi){
+     cout <<"can't do fit for this channel, no parameter of interest"<<endl;
+   } else{
+     factory.FitModel(ws, ch_name, "newSimPdf", "expData", false);
+   }
       }
       fprintf(factory.pFile, " & " );
     }
@@ -291,15 +291,15 @@ void topDriver( string input ) {
     }
     // Gamma/Uniform Constraints:
     // turn some Gaussian constraints into Gamma/Uniform/logNormal constraints, rename model newSimPdf
-    if( measurement.GetGammaSyst().size()>0 || measurement.GetUniformSyst().size()>0 || measurement.GetLogNormSyst().size()>0) 
+    if( measurement.GetGammaSyst().size()>0 || measurement.GetUniformSyst().size()>0 || measurement.GetLogNormSyst().size()>0)
       factory.EditSyst(ws, "simPdf", measurement.GetGammaSyst(), measurement.GetUniformSyst(), measurement.GetLogNormSyst());
     //
     // set parameter of interest according to the configuration
     //
     ModelConfig * combined_config = (ModelConfig *) ws->obj("ModelConfig");
     cout << "Setting Parameter of Interest as :" << measurement.GetPOI() << endl;
-    RooRealVar* poi = (RooRealVar*) ws->var( (measurement.GetPOI()).c_str() );
-    //RooRealVar* poi = (RooRealVar*) ws->var((POI+"_comb").c_str());
+    RooRealVar* poi = (RooRealVar*) ws->var(measurement.GetPOI());
+    //RooRealVar* poi = (RooRealVar*) ws->var(POI+"_comb");
     RooArgSet * params= new RooArgSet;
     cout << poi << endl;
     if(poi){
@@ -309,12 +309,12 @@ void topDriver( string input ) {
     ws->Print();
 
     // Set new PDF if there are gamma/uniform constraint terms
-    if( measurement.GetGammaSyst().size()>0 || measurement.GetUniformSyst().size()>0 || measurement.GetLogNormSyst().size()>0) 
+    if( measurement.GetGammaSyst().size()>0 || measurement.GetUniformSyst().size()>0 || measurement.GetLogNormSyst().size()>0)
       combined_config->SetPdf(*ws->pdf("newSimPdf"));
 
     RooAbsData* simData = ws->data("simData");
     combined_config->GuessObsAndNuisance(*simData);
-    //	  ws->writeToFile(("results/model_combined_edited.root").c_str());
+    //     ws->writeToFile(("results/model_combined_edited.root").c_str());
     std::string CombinedFileName = measurement.GetOutputFilePrefix()+"_combined_"+rowTitle+"_model.root";
     ws->writeToFile( CombinedFileName.c_str() );
     TFile* combFile = TFile::Open( CombinedFileName.c_str(), "UPDATE" );
@@ -327,9 +327,9 @@ void topDriver( string input ) {
     // Totally factorize the statistical test in "fit Model" to a different area
     if(! measurement.GetExportOnly() ){
       if(!poi){
-	cout <<"can't do fit for this channel, no parameter of interest"<<endl;
+   cout <<"can't do fit for this channel, no parameter of interest"<<endl;
       } else{
-	factory.FitModel(ws, "combined", "simPdf", "simData", false);
+   factory.FitModel(ws, "combined", "simPdf", "simData", false);
       }
     }
 
@@ -345,16 +345,16 @@ void topDriver( string input ) {
 void topDriver(string input ){
 
   // TO DO:
-  // would like to fully factorize the XML parsing.  
+  // would like to fully factorize the XML parsing.
   // No clear need to have some here and some in ConfigParser
 
   / *** read in the input xml *** /
   TDOMParser xmlparser;
   Int_t parseError = xmlparser.ParseFile( input.c_str() );
-  if( parseError ) { 
+  if( parseError ) {
     std::cerr << "Loading of xml document \"" << input
           << "\" failed" << std::endl;
-  } 
+  }
 
   cout << "reading input : " << input << endl;
   TXMLDocument* xmldoc = xmlparser.GetXMLDocument();
@@ -371,7 +371,7 @@ void topDriver(string input ){
         outputFileNamePrefix=string(curAttr->GetValue());
         cout << "output file is : " << outputFileName << endl;
       }
-    } 
+    }
 
     TXMLNode* node = rootNode->GetChildren();
     while( node != 0 ) {
@@ -391,10 +391,10 @@ void topDriver(string input ){
         map<string,double> gammaSyst;
         map<string,double> uniformSyst;
         map<string,double> logNormSyst;
-	bool exportOnly = false;
+   bool exportOnly = false;
 
-	//        TListIter attribIt = node->GetAttributes();
-	//        TXMLAttr* curAttr = 0;
+   //        TListIter attribIt = node->GetAttributes();
+   //        TXMLAttr* curAttr = 0;
         attribIt = node->GetAttributes();
         curAttr = 0;
         while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
@@ -416,21 +416,21 @@ void topDriver(string input ){
             outputFileName=outputFileNamePrefix+"_"+rowTitle+".root";
           }
           if( curAttr->GetName() == TString( "Mode" ) ) {
-	    cout <<"\n INFO: Mode attribute is deprecated, will ignore\n"<<endl;
+       cout <<"\n INFO: Mode attribute is deprecated, will ignore\n"<<endl;
             mode=curAttr->GetValue();
           }
           if( curAttr->GetName() == TString( "ExportOnly" ) ) {
             if(curAttr->GetValue() == TString( "True" ) )
-	      exportOnly = true;
-	    else
-	      exportOnly = false;
+         exportOnly = true;
+       else
+         exportOnly = false;
           }
         }
 
-	if(highBin==0){
-	  cout <<"\nERROR: In -number_counting_form must specify BinLow and BinHigh\n"<<endl;
-	  return;
-	}
+   if(highBin==0){
+     cout <<"\nERROR: In -number_counting_form must specify BinLow and BinHigh\n"<<endl;
+     return;
+   }
 
         lumiError=nominalLumi*lumiRelError;
 
@@ -440,10 +440,10 @@ void topDriver(string input ){
             POI=mnode->GetText();
           }
           if( mnode->GetNodeName() == TString( "ParamSetting" ) ) {
-	    //            TListIter attribIt = mnode->GetAttributes();
+       //            TListIter attribIt = mnode->GetAttributes();
             //TXMLAttr* curAttr = 0;
-	    attribIt = mnode->GetAttributes();
-	    curAttr = 0;
+       attribIt = mnode->GetAttributes();
+       curAttr = 0;
             while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
               if( curAttr->GetName() == TString( "Const" ) ) {
                 if(curAttr->GetValue()==TString("True")){
@@ -455,9 +455,9 @@ void topDriver(string input ){
           if( mnode->GetNodeName() == TString( "ConstraintTerm" ) ) {
             vector<string> syst; string type = ""; double rel = 0;
             AddSubStrings(syst,mnode->GetText());
-	    //            TListIter attribIt = mnode->GetAttributes();
-	    //            TXMLAttr* curAttr = 0;
-	    attribIt = mnode->GetAttributes();
+       //            TListIter attribIt = mnode->GetAttributes();
+       //            TXMLAttr* curAttr = 0;
+       attribIt = mnode->GetAttributes();
             curAttr = 0;
             while( ( curAttr = dynamic_cast< TXMLAttr* >( attribIt() ) ) != 0 ) {
               if( curAttr->GetName() == TString( "Type" ) ) {
@@ -490,7 +490,7 @@ void topDriver(string input ){
 
         / ***
             Construction of Model. Only requirement is that they return vector<vector<EstimateSummary> >
-	    This is where we use the factory.
+       This is where we use the factory.
         *** /
 
         vector<vector<EstimateSummary> > summaries;
@@ -524,88 +524,88 @@ void topDriver(string input ){
           // set poi in ModelConfig
           ModelConfig * proto_config = (ModelConfig *) ws->obj("ModelConfig");
           cout << "Setting Parameter of Interest as :" << POI << endl;
-          RooRealVar* poi = (RooRealVar*) ws->var(POI.c_str());
+          RooRealVar* poi = (RooRealVar*) ws->var(POI);
           RooArgSet * params= new RooArgSet;
-	  if(poi){
-	    params->add(*poi);
-	  }
+     if(poi){
+       params->add(*poi);
+     }
           proto_config->SetParametersOfInterest(*params);
 
 
           // Gamma/Uniform Constraints:
           // turn some Gaussian constraints into Gamma/Uniform/LogNorm constraints, rename model newSimPdf
-	  if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) {
-	    factory.EditSyst(ws,("model_"+oneChannel[0].channel).c_str(),gammaSyst,uniformSyst,logNormSyst);
-	    proto_config->SetPdf(*ws->pdf("newSimPdf"));
+     if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) {
+       factory.EditSyst(ws,("model_"+oneChannel[0].channel).c_str(),gammaSyst,uniformSyst,logNormSyst);
+       proto_config->SetPdf(*ws->pdf("newSimPdf"));
           }
 
-	  // fill out ModelConfig and export
+     // fill out ModelConfig and export
           RooAbsData* expData = ws->data("expData");
-	  if(poi){
-	    proto_config->GuessObsAndNuisance(*expData);
-	  }
-	  ws->writeToFile((outputFileNamePrefix+"_"+ch_name+"_"+rowTitle+"_model.root").c_str());
+     if(poi){
+       proto_config->GuessObsAndNuisance(*expData);
+     }
+     ws->writeToFile((outputFileNamePrefix+"_"+ch_name+"_"+rowTitle+"_model.root").c_str());
 
-	  // do fit unless exportOnly requested
-	  if(!exportOnly){
-	    if(!poi){
-	      cout <<"can't do fit for this channel, no parameter of interest"<<endl;
-	    } else{
-	      factory.FitModel(ws, ch_name, "newSimPdf", "expData", false);
-	    }
-	  }
+     // do fit unless exportOnly requested
+     if(!exportOnly){
+       if(!poi){
+         cout <<"can't do fit for this channel, no parameter of interest"<<endl;
+       } else{
+         factory.FitModel(ws, ch_name, "newSimPdf", "expData", false);
+       }
+     }
           fprintf(factory.pFile, " & " );
         }
 
         / ***
-	    Make the combined model:
+       Make the combined model:
             If you want output histograms in root format, create and pass it to the combine routine.
             "combine" : will do the individual cross-section measurements plus combination
 
         *** /
 
 
-          
+
         if(true || mode.find("comb")!=string::npos){ //KC: deprecating Mode="Comb"
           RooWorkspace* ws=factory.MakeCombinedModel(ch_names,chs);
           // Gamma/Uniform Constraints:
           // turn some Gaussian constraints into Gamma/Uniform/logNormal constraints, rename model newSimPdf
-	  if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) 
-	    factory.EditSyst(ws,"simPdf",gammaSyst,uniformSyst,logNormSyst);
+     if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0)
+       factory.EditSyst(ws,"simPdf",gammaSyst,uniformSyst,logNormSyst);
           //
           // set parameter of interest according to the configuration
           //
           ModelConfig * combined_config = (ModelConfig *) ws->obj("ModelConfig");
           cout << "Setting Parameter of Interest as :" << POI << endl;
-          RooRealVar* poi = (RooRealVar*) ws->var((POI).c_str());
-          //RooRealVar* poi = (RooRealVar*) ws->var((POI+"_comb").c_str());
+          RooRealVar* poi = (RooRealVar*) ws->var(POI);
+          //RooRealVar* poi = (RooRealVar*) ws->var(POI+"_comb");
           RooArgSet * params= new RooArgSet;
           cout << poi << endl;
-	  if(poi){
-	    params->add(*poi);
-	  }
+     if(poi){
+       params->add(*poi);
+     }
           combined_config->SetParametersOfInterest(*params);
           ws->Print();
 
           // Set new PDF if there are gamma/uniform constraint terms
-          if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0) 
-	    combined_config->SetPdf(*ws->pdf("newSimPdf"));
+          if(gammaSyst.size()>0 || uniformSyst.size()>0 || logNormSyst.size()>0)
+       combined_config->SetPdf(*ws->pdf("newSimPdf"));
 
           RooAbsData* simData = ws->data("simData");
-	  combined_config->GuessObsAndNuisance(*simData);
-	  //	  ws->writeToFile(("results/model_combined_edited.root").c_str());
-	  ws->writeToFile((outputFileNamePrefix+"_combined_"+rowTitle+"_model.root").c_str());
+     combined_config->GuessObsAndNuisance(*simData);
+     //    ws->writeToFile(("results/model_combined_edited.root").c_str());
+     ws->writeToFile((outputFileNamePrefix+"_combined_"+rowTitle+"_model.root").c_str());
 
-	  // TO DO:
+     // TO DO:
           // Totally factorize the statistical test in "fit Model" to a different area
-	  if(!exportOnly){
-	    if(!poi){
-	      cout <<"can't do fit for this channel, no parameter of interest"<<endl;
-	    } else{
-	      factory.FitModel(ws, "combined", "simPdf", "simData", false);
-	    }
-	  }
-	
+     if(!exportOnly){
+       if(!poi){
+         cout <<"can't do fit for this channel, no parameter of interest"<<endl;
+       } else{
+         factory.FitModel(ws, "combined", "simPdf", "simData", false);
+       }
+     }
+
         }
 
 

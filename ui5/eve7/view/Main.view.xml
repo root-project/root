@@ -42,18 +42,7 @@
               <contentLeft>
             <MenuButton text="View" type="Transparent"  enabled="true">
               <menu>
-                <Menu itemSelected="onViewMenuAction" id="menuViewId">
-                  <items>
-                    <MenuItem text="New Viewer" enabled="false">
-                      <items>
-                        <MenuItem text="3D"  enabled="false"/>
-                        <MenuItem text="RhoZ" enabled="false" />
-                        <MenuItem text="RhoPhi" enabled="false"/>
-                        <MenuItem text="Table" startsSection="true" enabled="false"/>
-                      </items>
-                    </MenuItem>
-                  </items>
-                </Menu>
+                <Menu itemSelected="onViewMenuAction" id="menuViewId"/>
               </menu>
             </MenuButton>
             <!--MenuButton text="Tools" type="Transparent"  enabled="true">
@@ -73,7 +62,6 @@
                 <FormattedText id="centerTitle" htmlText="ROOT Event Visalization Environment"/>
               </contentMiddle>
               <contentRight>
-              <Button id="logButton" icon="sap-icon://show" text="log" press="showLog"/>
             <MenuButton text="Help" type="Default"  enabled="true">
               <menu>
                 <Menu >

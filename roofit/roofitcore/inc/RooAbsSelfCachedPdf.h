@@ -24,21 +24,21 @@ public:
   RooAbsSelfCachedPdf() {} ;
   RooAbsSelfCachedPdf(const char *name, const char *title, Int_t ipOrder=0);
   RooAbsSelfCachedPdf(const RooAbsSelfCachedPdf& other, const char* name=0) ;
-  virtual ~RooAbsSelfCachedPdf() ;
+  ~RooAbsSelfCachedPdf() override ;
 
 protected:
 
-  virtual const char* inputBaseName() const { 
+  const char* inputBaseName() const override {
     // Use own name as base name for caches
-    return GetName() ; 
+    return GetName() ;
   }
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const ;
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const ;
-  virtual void fillCacheObject(PdfCacheElem& cache) const ;  
+  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooArgSet* actualParameters(const RooArgSet& nset) const override ;
+  void fillCacheObject(PdfCacheElem& cache) const override ;
 
 private:
 
-  ClassDef(RooAbsSelfCachedPdf,0) // Abstract base class for self-caching p.d.f.s
+  ClassDefOverride(RooAbsSelfCachedPdf,0) // Abstract base class for self-caching p.d.f.s
 };
- 
+
 #endif

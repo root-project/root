@@ -41,7 +41,7 @@ ClassImp(RooAbsIntegrator);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(kFALSE), _printEvalCounter(kFALSE) 
+RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(kFALSE), _printEvalCounter(kFALSE)
 {
 }
 
@@ -60,14 +60,14 @@ RooAbsIntegrator::RooAbsIntegrator(const RooAbsFunc& function, Bool_t doPrintEva
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate integral value with given array of parameter values
 
-Double_t RooAbsIntegrator::calculate(const Double_t *yvec) 
+Double_t RooAbsIntegrator::calculate(const Double_t *yvec)
 {
   integrand()->resetNumCall() ;
 
   integrand()->saveXVec() ;
-  Double_t ret = integral(yvec) ; 
+  Double_t ret = integral(yvec) ;
   integrand()->restoreXVec() ;
-  
+
   cxcoutD(NumIntegration) << IsA()->GetName() << "::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << endl ;
   return ret ;
 }
@@ -77,17 +77,17 @@ Double_t RooAbsIntegrator::calculate(const Double_t *yvec)
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface to set limits on integration
 
-Bool_t RooAbsIntegrator::setLimits(Double_t xmin, Double_t xmax) 
-{ 
-  return setLimits(&xmin,&xmax) ; 
+Bool_t RooAbsIntegrator::setLimits(Double_t xmin, Double_t xmax)
+{
+  return setLimits(&xmin,&xmax) ;
 }
- 
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function that allows to defer limit definition to integrand definition
 
-Bool_t RooAbsIntegrator::setUseIntegrandLimits(Bool_t) 
-{ 
-  return kFALSE ; 
-} 
+Bool_t RooAbsIntegrator::setUseIntegrandLimits(Bool_t)
+{
+  return kFALSE ;
+}

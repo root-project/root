@@ -60,6 +60,7 @@
 #include <list>
 #include <shlobj.h>
 #include <conio.h>
+#include <time.h>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -1980,13 +1981,13 @@ __inline BOOL DBL_BSLASH(LPCTSTR psz)
 /// Returns TRUE if the given string is a UNC path.
 ///
 /// TRUE
-///      "\\foo\bar"
-///      "\\foo"         <- careful
-///      "\\"
+///      `\\foo\bar`
+///      `\\foo`         <- careful
+///      `\\`
 /// FALSE
-///      "\foo"
-///      "foo"
-///      "c:\foo"
+///      `\foo`
+///      `foo"`
+///      `c:\foo`
 
 BOOL PathIsUNC(LPCTSTR pszPath)
 {
@@ -2459,7 +2460,7 @@ Bool_t TWinNTSystem::IsAbsoluteFileName(const char *dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert a pathname to a unix pathname. E.g. form \user\root to /user/root.
+/// Convert a pathname to a unix pathname. E.g. from `\user\root` to `/user/root`.
 /// General rules for applications creating names for directories and files or
 /// processing names supplied by the user include the following:
 ///
@@ -4389,7 +4390,7 @@ Bool_t TWinNTSystem::DispatchTimers(Bool_t mode)
 
    fInsideNotify = kTRUE;
 
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
+   TListIter it(fTimers);
    TTimer *t;
    Bool_t  timedout = kFALSE;
 

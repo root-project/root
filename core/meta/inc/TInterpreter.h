@@ -153,6 +153,8 @@ public:
    virtual TClass  *GetClass(const std::type_info& typeinfo, Bool_t load) const = 0;
    virtual Int_t    GetExitCode() const = 0;
    virtual TEnv    *GetMapfile() const { return 0; }
+   ///\brief Returns whether the interpreter is waiting for more input, i.e.
+   /// the collected input is incomplete.
    virtual Int_t    GetMore() const = 0;
    virtual TClass  *GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent = kFALSE) = 0;
    virtual TClass  *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE) = 0;
@@ -267,6 +269,8 @@ public:
            int    SetClassAutoloading(int a) const { return SetClassAutoLoading(a); }  // Deprecated
    virtual int    SetClassAutoparsing(int) {return 0;};
    virtual void   SetErrmsgcallback(void * /* p */) const {;}
+   /// \brief Report diagnostics to the ROOT error handler (see TError.h).
+   virtual void   ReportDiagnosticsToErrorHandler(bool /*enable*/ = true) {}
    virtual void   SetTempLevel(int /* val */) const {;}
    virtual int    UnloadFile(const char * /* path */) const {return 0;}
 

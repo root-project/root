@@ -115,10 +115,10 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
       // via the FileManager.
       clang::Preprocessor &PP = fCI->getPreprocessor();
       clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
-      const clang::DirectoryLookup *CurDir = 0;
+      const clang::DirectoryLookup *CurDir = nullptr;
       const clang::FileEntry *hdrFileEntry
          =  HdrSearch.LookupFile(filename, clang::SourceLocation(),
-                                 true /*isAngled*/, 0 /*FromDir*/, CurDir,
+                                 true /*isAngled*/, nullptr /*FromDir*/, CurDir,
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
                                                            const clang::DirectoryEntry*>>(),
                                  nullptr /*SearchPath*/,/*RelativePath*/ nullptr,
@@ -209,9 +209,9 @@ void TModuleGenerator::ParseArgs(const std::vector<std::string> &args)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write
-/// #ifndef FOO
-/// # define FOO=bar
-/// #endif
+/// `#ifndef FOO`
+/// `# define FOO=bar`
+/// `#endif`
 
 std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
 {
@@ -231,9 +231,9 @@ std::ostream &TModuleGenerator::WritePPDefines(std::ostream &out) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write
-/// #ifdef FOO
-/// # undef FOO
-/// #endif
+/// `#ifdef FOO`
+/// `# undef FOO`
+/// `#endif`
 
 std::ostream &TModuleGenerator::WritePPUndefines(std::ostream &out) const
 {
@@ -281,8 +281,8 @@ int ExtractBufferContent(const std::string& fullHeaderPath, std::string& bufferC
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write
-/// #include "header1.h"
-/// #include "header2.h"
+/// `#include "header1.h"`
+/// `#include "header2.h"`
 /// or, if inlining of headers is requested, dump the content of the files.
 
 std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
@@ -292,7 +292,7 @@ std::ostream &TModuleGenerator::WritePPIncludes(std::ostream &out) const
       if (fInlineInputHeaders){
          bool headerFound = FindHeader(incl,fullHeaderPath);
          if (!headerFound){
-            ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", fullHeaderPath.c_str());
+            ROOT::TMetaUtils::Error(nullptr, "Cannot find header %s: cannot inline it.\n", fullHeaderPath.c_str());
             continue;
          }
 
@@ -316,7 +316,7 @@ std::ostream &TModuleGenerator::WriteStringVec(const std::vector<std::string> &v
    for (auto const & theStr : vec) {
       out << "\"" << theStr << "\",\n";
    }
-   out << "0" << std::endl;
+   out << "nullptr" << std::endl;
    return out;
 }
 
@@ -340,7 +340,7 @@ std::ostream &TModuleGenerator::WriteStringPairVec(const StringPairVec_t &vec,
       }
       out << "\",\n";
    }
-   out << "0" << std::endl;
+   out << "nullptr" << std::endl;
    return out;
 }
 
@@ -470,7 +470,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out, const std::str
    auto findAndAddToInlineHeaders = [&](const std::string& hdrName) {
       bool headerFound = FindHeader(hdrName,hdrFullPath);
       if (!headerFound) {
-         ROOT::TMetaUtils::Error(0, "Cannot find header %s: cannot inline it.\n", hdrName.c_str());
+         ROOT::TMetaUtils::Error(nullptr, "Cannot find header %s: cannot inline it.\n", hdrName.c_str());
       } else {
          std::ifstream headerFile(hdrFullPath.c_str());
          const std::string headerFileAsStr((std::istreambuf_iterator<char>(headerFile)),
@@ -577,10 +577,10 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
    }
    clang::Preprocessor &PP = fCI->getPreprocessor();
    clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
-   const clang::DirectoryLookup *CurDir = 0;
+   const clang::DirectoryLookup *CurDir = nullptr;
    if (const clang::FileEntry *hdrFileEntry
          =  HdrSearch.LookupFile(hdrName, clang::SourceLocation(),
-                                 true /*isAngled*/, 0 /*FromDir*/, CurDir,
+                                 true /*isAngled*/, nullptr /*FromDir*/, CurDir,
                                  clang::ArrayRef<std::pair<const clang::FileEntry*,
                                                          const clang::DirectoryEntry*>>(),
                                  nullptr /*SearchPath*/, nullptr /*RelativePath*/,
@@ -595,7 +595,7 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a header file pulling in the content of this module
-/// through a series of #defined, #undefs and #includes.
+/// through a series of `#defined`, `#undefs` and `#includes`.
 /// The sequence corrsponds to a rootcling invocation with
 ///   -c -DFOO -UBAR header.h
 /// I.e. defines, undefines and finally includes.

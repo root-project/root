@@ -31,15 +31,15 @@ public:
   inline RooMultiCategory() { setShapeDirty(); }
   RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCatList);
   RooMultiCategory(const RooMultiCategory& other, const char *name=0) ;
-  virtual TObject* clone(const char* newname) const override { return new RooMultiCategory(*this,newname); }
-  virtual ~RooMultiCategory();
+  TObject* clone(const char* newname) const override { return new RooMultiCategory(*this,newname); }
+  ~RooMultiCategory() override;
 
   // Printing interface (human readable)
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
 
   /// Multi categories cannot be read from streams.
-  virtual Bool_t readFromStream(std::istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose=kFALSE*/) override { return true; }
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const override;
+  Bool_t readFromStream(std::istream& /*is*/, Bool_t /*compact*/, Bool_t /*verbose=kFALSE*/) override { return true; }
+  void writeToStream(std::ostream& os, Bool_t compact) const override;
 
   const RooArgSet& inputCatList() const { return _catSet ; }
   const char* getCurrentLabel() const override;
@@ -50,8 +50,8 @@ protected:
   value_type evaluate() const override;
   void recomputeShape() override;
 
-  RooSetProxy _catSet ; // Set of input category
-  
+  RooSetProxy _catSet ; ///< Set of input category
+
   friend class RooSuperCategory;
   ClassDefOverride(RooMultiCategory,1) // Product operator for categories
 };

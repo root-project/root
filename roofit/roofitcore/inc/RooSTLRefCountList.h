@@ -16,6 +16,8 @@
 #ifndef ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_
 #define ROOFIT_ROOFITCORE_INC_ROOSTLREFCOUNTLIST_H_
 
+#include "RooNameReg.h"
+
 #include "Rtypes.h"
 
 #include <vector>
@@ -38,13 +40,19 @@ class RooSTLRefCountList {
   public:
     using Container_t = std::vector<T*>;
 
-    RooSTLRefCountList() {}
+    static constexpr std::size_t minSizeForNamePointerOrdering = 7;
+
+    RooSTLRefCountList() {
+      // The static _renameCounter member gets connected to the RooNameReg as
+      // soon as the first RooSTLRefCountList instance is constructed.
+      if(_renameCounter == nullptr) _renameCounter =
+        &RooNameReg::renameCounter();
+    }
     RooSTLRefCountList(const RooSTLRefCountList&) = default;
     RooSTLRefCountList& operator=(const RooSTLRefCountList&) = default;
     RooSTLRefCountList& operator=(RooSTLRefCountList&&) = default;
 
     virtual ~RooSTLRefCountList() {}
-
 
     ///Add an object or increase refCount if it is already present. Only compares
     ///pointers to check for existing objects
@@ -55,8 +63,11 @@ class RooSTLRefCountList {
         _refCount[foundItem - _storage.begin()] += initialCount;
       }
       else {
-        _storage.emplace_back(obj);
-        _refCount.emplace_back(initialCount);
+        if(!_orderedStorage.empty()) {
+          _orderedStorage.insert(lowerBoundByNamePointer(obj), obj);
+        }
+        _storage.push_back(obj);
+        _refCount.push_back(initialCount);
       }
     }
 
@@ -107,6 +118,7 @@ class RooSTLRefCountList {
     void reserve(std::size_t amount) {
       _storage.reserve(amount);
       _refCount.reserve(amount);
+      _orderedStorage.reserve(amount);
     }
 
 
@@ -119,11 +131,7 @@ class RooSTLRefCountList {
     ///Find an item by comparing its adress.
     template<typename Obj_t>
     typename Container_t::const_iterator findByPointer(const Obj_t * item) const {
-      auto byPointer = [item](const T * listItem) {
-        return listItem == item;
-      };
-
-      return std::find_if(_storage.begin(), _storage.end(), byPointer);
+      return std::find(_storage.begin(), _storage.end(), item);
     }
 
 
@@ -141,13 +149,23 @@ class RooSTLRefCountList {
 
 
     ///Find an item by comparing RooAbsArg::namePtr() adresses.
-    typename Container_t::const_iterator findByNamePointer(const T * item) const {
-      auto nptr = item->namePtr();
-      auto byNamePointer = [nptr](const T * element) {
-        return element->namePtr() == nptr;
-      };
+    T* findByNamePointer(const T * item) const {
+      if(size() < minSizeForNamePointerOrdering) {
+        auto nptr = item->namePtr();
+        auto byNamePointer = [nptr](const T * element) {
+          return element->namePtr() == nptr;
+        };
 
-      return std::find_if(_storage.begin(), _storage.end(), byNamePointer);
+        auto found = std::find_if(_storage.begin(), _storage.end(), byNamePointer);
+        return found != _storage.end() ? *found : nullptr;
+      } else {
+        //As the collection is guaranteed to be sorted by namePtr() adress, we
+        //can use a binary search to look for `item` in this collection.
+        auto first = lowerBoundByNamePointer(item);
+        if(first == _orderedStorage.end()) return nullptr;
+        if(item->namePtr() != (*first)->namePtr()) return nullptr;
+        return *first;
+      }
     }
 
 
@@ -160,7 +178,7 @@ class RooSTLRefCountList {
 
     ///Check if list contains an item using findByNamePointer().
     bool containsByNamePtr(const T * obj) const {
-      return findByNamePointer(obj) != _storage.end();
+      return findByNamePointer(obj);
     }
 
 
@@ -184,6 +202,15 @@ class RooSTLRefCountList {
           //Therefore, erase at begin + pos instead of 'item'
           _storage.erase(_storage.begin() + pos);
           _refCount.erase(_refCount.begin() + pos);
+          if(!_orderedStorage.empty()) {
+            // For the ordered storage, we could find by name pointer address
+            // with binary search, but this will not work anymore if one of the
+            // object pointers in this collection is dangling (can happen in
+            // RooFit...). However, the linear search by object address is
+            // acceptable, because we already do a linear search through
+            // _storage at the beginning of Remove().
+            _orderedStorage.erase(std::find(_orderedStorage.begin(), _orderedStorage.end(), obj));
+          }
         }
       }
     }
@@ -196,13 +223,58 @@ class RooSTLRefCountList {
 
 
   private:
-    Container_t _storage;
-    std::vector<std::size_t> _refCount;
+    //Return an iterator to the last element in this sorted collection with a
+    //RooAbsArg::namePtr() adress smaller than for `item`.
+    typename std::vector<T*>::const_iterator lowerBoundByNamePointer(const T * item) const {
 
-    ClassDef(RooSTLRefCountList<T>,1);
+      //If the _orderedStorage has not been initialized yet or needs resorting
+      //for other reasons, (re-)initialize it now.
+      if(orderedStorageNeedsSorting() || _orderedStorage.size() != _storage.size()) initializeOrderedStorage();
+
+      return std::lower_bound(_orderedStorage.begin(), _orderedStorage.end(), item->namePtr(),
+             [](const auto& x, TNamed const* npt) -> bool {
+                return x->namePtr() < npt;
+              });
+    }
+
+    bool orderedStorageNeedsSorting() const {
+      //If an RooAbsArg in this collection was renamed, the collection might
+      //not be sorted correctly anymore! The solution: every time any RooAbsArg
+      //is renamed, the RooNameReg::renameCounter gets incremented. The
+      //RooSTLRefCountList keeps track at which value of the counter it has
+      //been sorted last. If the counter increased in the meantime, a
+      //re-sorting is due.
+      return _renameCounterForLastSorting != *_renameCounter;
+    }
+
+    void initializeOrderedStorage() const {
+      _orderedStorage.clear();
+      _orderedStorage.reserve(_storage.size());
+      for(std::size_t i = 0; i < _storage.size(); ++i) {
+        _orderedStorage.push_back(_storage[i]);
+      }
+      std::sort(_orderedStorage.begin(), _orderedStorage.end(),
+              [](auto& a, auto& b) {
+                return a->namePtr() != b->namePtr() ? a->namePtr() < b->namePtr() : a < b;
+              });
+      _renameCounterForLastSorting = *_renameCounter;
+    }
+
+    Container_t _storage;
+    std::vector<UInt_t> _refCount;
+    mutable std::vector<T*> _orderedStorage; //!
+    mutable unsigned long _renameCounterForLastSorting = 0; ///<!
+
+    // It is expensive to access the RooNameReg instance to get the counter for
+    // the renaming operations. That's why we have out own static pointer to
+    // the counter.
+    static std::size_t const* _renameCounter;
+
+    ClassDef(RooSTLRefCountList<T>,3);
 };
 
-
+template<class T>
+std::size_t const* RooSTLRefCountList<T>::_renameCounter = nullptr;
 
 class RooAbsArg;
 class RooRefCountList;

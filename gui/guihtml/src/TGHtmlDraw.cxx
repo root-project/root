@@ -605,11 +605,11 @@ void TGHtml::AnimateImage(TGHtmlImage * /*image*/)
 ///
 ///    n                  The number of characters of text output
 ///                       associated with this block.  If the block
-///                       renders something other than text (ex: <IMG>)
+///                       renders something other than text (ex: `<IMG>`)
 ///                       then set n to 0.
 ///
 ///    z                  Pointer to malloced memory containing the
-///                       text associated with this block.  NULL if
+///                       text associated with this block. `NULL` if
 ///                       n is 0.
 ///
 /// Return a pointer to the first TGHtmlElement not covered by the block.

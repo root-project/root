@@ -20,7 +20,7 @@ Monte Carlo event generator (integrator) FOAM.
    an arbitrary probability distribution  in n dimensions,
    for which you supply your own method. FOAM can do it for you!
    Even if your distributions has quite strong peaks and is discontinuous!
--  FOAM generates random points with weight one or with variable weight.
+ - FOAM generates random points with weight one or with variable weight.
  - FOAM is capable to integrate using efficient "adaptive" MC method.
    (The distribution does not need to be normalized to one.)
 
@@ -1068,9 +1068,9 @@ Double_t TFoam::Eval(Double_t *xRand)
    Double_t result;
 
    if(!fRho) {   //interactive mode
-      Long_t paramArr[3];
-      paramArr[0]=(Long_t)fDim;
-      paramArr[1]=(Long_t)xRand;
+      Longptr_t paramArr[3];
+      paramArr[0]=(Longptr_t)fDim;
+      paramArr[1]=(Longptr_t)xRand;
       fMethodCall->SetParamPtrs(paramArr);
       fMethodCall->Execute(result);
    } else {       //compiled mode

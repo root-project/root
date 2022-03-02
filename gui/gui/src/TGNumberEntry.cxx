@@ -111,13 +111,13 @@ enum ERealStyle {         // Style of real
 ////////////////////////////////////////////////////////////////////////////////
 
 struct RealInfo_t {
-   ERealStyle fStyle;     // Style of real
-   Int_t fFracDigits;     // Number of fractional digits
-   Int_t fFracBase;       // Base of fractional digits
-   Int_t fIntNum;         // Integer number
-   Int_t fFracNum;        // Fraction
-   Int_t fExpoNum;        // Exponent
-   Int_t fSign;           // Sign
+   ERealStyle fStyle{kRSInt};  // Style of real
+   Int_t fFracDigits{0};       // Number of fractional digits
+   Int_t fFracBase{0};         // Base of fractional digits
+   Int_t fIntNum{0};           // Integer number
+   Int_t fFracNum{0};          // Fraction
+   Int_t fExpoNum{0};          // Exponent
+   Int_t fSign{0};             // Sign
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1081,7 +1081,7 @@ static void IncreaseDate(Long_t & l, TGNumberFormat::EStepSize step, Int_t sign)
 TGNumberEntryField::TGNumberEntryField(const TGWindow * p, Int_t id,
                                        Double_t val, GContext_t norm,
                                        FontStruct_t font, UInt_t option,
-                                       ULong_t back)
+                                       Pixel_t back)
    : TGTextEntry(p, new TGTextBuffer(), id, norm, font, option, back),
      fNeedsVerification(kFALSE), fNumStyle(kNESReal), fNumAttr(kNEAAnyNumber),
      fNumLimits(kNELNoLimits), fNumMin(0.0), fNumMax(1.0)
@@ -1112,52 +1112,51 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * parent,
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (floating point representation).
 
-void TGNumberEntryField::SetNumber(Double_t val)
+void TGNumberEntryField::SetNumber(Double_t val, Bool_t emit)
 {
    switch (fNumStyle) {
    case kNESInteger:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESRealOne:
-      SetIntNumber(Round(10.0 * val));
+      SetIntNumber(Round(10.0 * val), emit);
       break;
    case kNESRealTwo:
-      SetIntNumber(Round(100.0 * val));
+      SetIntNumber(Round(100.0 * val), emit);
       break;
    case kNESRealThree:
-      SetIntNumber(Round(1000.0 * val));
+      SetIntNumber(Round(1000.0 * val), emit);
       break;
    case kNESRealFour:
-      SetIntNumber(Round(10000.0 * val));
-
+      SetIntNumber(Round(10000.0 * val), emit);
       break;
    case kNESReal:
       {
          char text[256];
          snprintf(text, 255, "%g", val);
-         SetText(text);
+         SetText(text, emit);
          break;
       }
    case kNESDegree:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESHourMinSec:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESMinSec:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESHourMin:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESDayMYear:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESMDayYear:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESHex:
-      SetIntNumber((UInt_t) (TMath::Abs(val) + 0.5));
+      SetIntNumber((UInt_t) (TMath::Abs(val) + 0.5), emit);
       break;
    }
 }
@@ -1165,7 +1164,7 @@ void TGNumberEntryField::SetNumber(Double_t val)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (integer representation).
 
-void TGNumberEntryField::SetIntNumber(Long_t val)
+void TGNumberEntryField::SetIntNumber(Long_t val, Bool_t emit)
 {
    char text[256];
    RealInfo_t ri;
@@ -1174,26 +1173,26 @@ void TGNumberEntryField::SetIntNumber(Long_t val)
    } else {
       TranslateToStr(text, val, fNumStyle, ri);
    }
-   SetText(text);
+   SetText(text, emit);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (time format).
 
-void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec)
+void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec, Bool_t emit)
 {
    switch (fNumStyle) {
    case kNESHourMinSec:
       SetIntNumber(3600 * TMath::Abs(hour) + 60 * TMath::Abs(min) +
-                   TMath::Abs(sec));
+                   TMath::Abs(sec), emit);
       break;
    case kNESMinSec:
       {
-         SetIntNumber(60 * min + sec);
+         SetIntNumber(60 * min + sec, emit);
          break;
       }
    case kNESHourMin:
-      SetIntNumber(60 * TMath::Abs(hour) + TMath::Abs(min));
+      SetIntNumber(60 * TMath::Abs(hour) + TMath::Abs(min), emit);
       break;
    default:
       break;
@@ -1203,14 +1202,14 @@ void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (date format).
 
-void TGNumberEntryField::SetDate(Int_t year, Int_t month, Int_t day)
+void TGNumberEntryField::SetDate(Int_t year, Int_t month, Int_t day, Bool_t emit)
 {
    switch (fNumStyle) {
    case kNESDayMYear:
    case kNESMDayYear:
       {
          SetIntNumber(10000 * TMath::Abs(year) + 100 * TMath::Abs(month) +
-                      TMath::Abs(day));
+                      TMath::Abs(day), emit);
       }
    default:
       {
@@ -1222,9 +1221,9 @@ void TGNumberEntryField::SetDate(Int_t year, Int_t month, Int_t day)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (hex format).
 
-void TGNumberEntryField::SetHexNumber(ULong_t val)
+void TGNumberEntryField::SetHexNumber(ULong_t val, Bool_t emit)
 {
-   SetIntNumber((Long_t) val);
+   SetIntNumber((Long_t) val, emit);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2055,7 +2054,7 @@ void TGNumberEntry::SetButtonToNum(Bool_t state)
 /// param % 10000 / 100 != 0 indicates log step
 /// param / 10000 != 0 indicates button down
 
-Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGNumberEntry::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:

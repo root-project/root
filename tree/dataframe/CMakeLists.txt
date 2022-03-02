@@ -38,8 +38,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDataSource.hxx
     ROOT/RDFHelpers.hxx
     ROOT/RLazyDS.hxx
-    ROOT/RResultPtr.hxx
     ROOT/RResultHandle.hxx
+    ROOT/RResultPtr.hxx
     ROOT/RRootDS.hxx
     ROOT/RSnapshotOptions.hxx
     ROOT/RTrivialDS.hxx
@@ -51,7 +51,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/InterfaceUtils.hxx
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
-    ROOT/RDF/RBookedDefines.hxx
+    ROOT/RDF/RColumnRegister.hxx
+    ROOT/RDF/RNewSampleNotifier.hxx
+    ROOT/RDF/RSampleInfo.hxx
     ROOT/RDF/RDefineBase.hxx
     ROOT/RDF/RDefine.hxx
     ROOT/RDF/RDefineReader.hxx
@@ -65,16 +67,24 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RJittedAction.hxx
     ROOT/RDF/RJittedDefine.hxx
     ROOT/RDF/RJittedFilter.hxx
+    ROOT/RDF/RJittedVariation.hxx
     ROOT/RDF/RLazyDSImpl.hxx
     ROOT/RDF/RLoopManager.hxx
     ROOT/RDF/RMergeableValue.hxx
     ROOT/RDF/RNodeBase.hxx
     ROOT/RDF/RRangeBase.hxx
     ROOT/RDF/RRange.hxx
+    ROOT/RDF/RResultMap.hxx
     ROOT/RDF/RSlotStack.hxx
     ROOT/RDF/RTreeColumnReader.hxx
+    ROOT/RDF/RVariation.hxx
+    ROOT/RDF/RVariationBase.hxx
+    ROOT/RDF/RVariationReader.hxx
+    ROOT/RDF/RVariationsDescription.hxx
+    ROOT/RDF/RVariedAction.hxx
     ROOT/RDF/Utils.hxx
     ROOT/RDF/PyROOTHelpers.hxx
+    ROOT/RDF/RDFDescription.hxx
     ${RDATAFRAME_EXTRA_HEADERS}
   SOURCES
     src/RActionBase.cxx
@@ -82,9 +92,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDefineBase.cxx
     src/RCutFlowReport.cxx
     src/RDataFrame.cxx
-    src/RDefineReader.cxx
     src/RDFActionHelpers.cxx
-    src/RDFBookedDefines.cxx
+    src/RDFColumnRegister.cxx
     src/RDFDisplay.cxx
     src/RDFGraphUtils.cxx
     src/RDFHistoModels.cxx
@@ -95,11 +104,15 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RJittedAction.cxx
     src/RJittedDefine.cxx
     src/RJittedFilter.cxx
+    src/RJittedVariation.cxx
     src/RLoopManager.cxx
     src/RRangeBase.cxx
+    src/RVariationBase.cxx
+    src/RVariationsDescription.cxx
     src/RRootDS.cxx
     src/RSlotStack.cxx
     src/RTrivialDS.cxx
+    src/RDFDescription.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
     ${RDATAFRAME_EXTRA_INCLUDES}

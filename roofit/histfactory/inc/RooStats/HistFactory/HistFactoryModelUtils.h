@@ -16,25 +16,25 @@ namespace HistFactory {
   ///\ingroup HistFactory
   std::string channelNameFromPdf( RooAbsPdf* channelPdf );
 
-//   void getChannelsFromModel( RooAbsPdf* model, RooArgSet* channels, 
-// 			     RooArgSet* channelsWithConstraints );
+//   void getChannelsFromModel( RooAbsPdf* model, RooArgSet* channels,
+//               RooArgSet* channelsWithConstraints );
 
   ///\ingroup HistFactory
   void FactorizeHistFactoryPdf(const RooArgSet&, RooAbsPdf&, RooArgList&, RooArgList&);
   ///\ingroup HistFactory
-  bool getStatUncertaintyFromChannel( RooAbsPdf* channel, ParamHistFunc*& paramfunc, 
-				      RooArgList* gammaList );
+  bool getStatUncertaintyFromChannel( RooAbsPdf* channel, ParamHistFunc*& paramfunc,
+                  RooArgList* gammaList );
 
   ///\ingroup HistFactory
   RooAbsPdf* getSumPdfFromChannel( RooAbsPdf* channel );
 
   ///\ingroup HistFactory
-  void getDataValuesForObservables( std::map< std::string, std::vector<double> >& ChannelBinDataMap, 
-				    RooAbsData* data, RooAbsPdf* simPdf );
+  void getDataValuesForObservables( std::map< std::string, std::vector<double> >& ChannelBinDataMap,
+                RooAbsData* data, RooAbsPdf* simPdf );
 
   ///\ingroup HistFactory
-  int getStatUncertaintyConstraintTerm( RooArgList* constraints, RooRealVar* gamma_stat, 
-					RooAbsReal*& pois_mean, RooRealVar*& tau );
+  int getStatUncertaintyConstraintTerm( RooArgList* constraints, RooRealVar* gamma_stat,
+               RooAbsReal*& pois_mean, RooRealVar*& tau );
 
 }
 }

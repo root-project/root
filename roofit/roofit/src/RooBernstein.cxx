@@ -141,19 +141,18 @@ Double_t RooBernstein::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Bernstein distribution.  
-RooSpan<double> RooBernstein::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  RooSpan<const double> xData = _x->getValues(evalData, normSet);
-  const size_t batchSize = xData.size();  
-  RooSpan<double> output = evalData.makeBatch(this, batchSize);
-
+/// Compute multiple values of Bernstein distribution.
+void RooBernstein::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
   const int nCoef = _coefList.size();
-  std::vector<double> coef(nCoef);
-  for (int i=0; i<nCoef; i++) {
-    coef[i] = static_cast<RooAbsReal&>(_coefList[i]).getVal();
-  }
-  RooBatchCompute::dispatch->computeBernstein(batchSize, output.data(), xData.data(), _x.min(), _x.max(), coef);
-  return output;
+  std::vector<double> extraArgs(nCoef+2);
+  for (int i=0; i<nCoef; i++)
+    extraArgs[i] = static_cast<RooAbsReal&>(_coefList[i]).getVal();
+  extraArgs[nCoef] = _x.min();
+  extraArgs[nCoef+1] = _x.max();
+
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Bernstein, output, nEvents, dataMap, {&*_x, &*_norm}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -23,7 +23,7 @@ PyROOT extension module.
 
 #include "PyROOTPythonize.h"
 
-#include "RConfig.h"
+#include "ROOT/RConfig.hxx"
 #include "TInterpreter.h"
 
 #include <sstream>
@@ -62,9 +62,9 @@ PyObject *PyROOT::GetSizeOfType(PyObject * /*self*/, PyObject *args)
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Get pointer to the data of an object
 /// \param[in] self Always null, since this is a module function.
-/// \param[in] args[0] Python representation of the C++ object.
-/// \param[in] args[1] Data-type of the C++ object as Python string
-/// \param[in] args[2] Method to be called on the C++ object to get the data pointer as Python string
+/// \param[in] args [0] Python representation of the C++ object.
+///                 [1] Data-type of the C++ object as Python string.
+///                 [2] Method to be called on the C++ object to get the data pointer as Python string
 ///
 /// This function returns the pointer to the data of an object as an Python
 /// integer retrieved by the given method.
@@ -167,9 +167,8 @@ static bool AddUsingToClass(PyObject *pyclass, const char *method)
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Add base class overloads of a given method to a derived class
 /// \param[in] self Always null, since this is a module function.
-/// \param[in] args[0] Derived class.
-/// \param[in] args[1] Name of the method whose base class overloads to
-///                    inject in the derived class.
+/// \param[in] args [0] Derived class. [1] Name of the method whose base
+/// class overloads to inject in the derived class.
 ///
 /// This function adds base class overloads to a derived class for a given
 /// method. This covers the 'using' case, which is not supported by default

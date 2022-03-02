@@ -21,19 +21,19 @@
 
 class RooIntegratorBinding : public RooAbsFunc {
 public:
-  RooIntegratorBinding(RooAbsIntegrator& integrator) : 
+  RooIntegratorBinding(RooAbsIntegrator& integrator) :
     RooAbsFunc(integrator.integrand()->getDimension()-1), _integrator(&integrator) {} ;
-  virtual ~RooIntegratorBinding() {} ;
+  ~RooIntegratorBinding() override {} ;
 
-  inline virtual Double_t operator()(const Double_t xvector[]) const { _ncall++ ; return _integrator->integral(xvector) ; }
-  inline virtual Double_t getMinLimit(UInt_t index) const { return _integrator->integrand()->getMinLimit(index+1); }
-  inline virtual Double_t getMaxLimit(UInt_t index) const { return _integrator->integrand()->getMaxLimit(index+1); }
+  inline Double_t operator()(const Double_t xvector[]) const override { _ncall++ ; return _integrator->integral(xvector) ; }
+  inline Double_t getMinLimit(UInt_t index) const override { return _integrator->integrand()->getMinLimit(index+1); }
+  inline Double_t getMaxLimit(UInt_t index) const override { return _integrator->integrand()->getMaxLimit(index+1); }
 
 protected:
-  RooAbsIntegrator* _integrator ;  // Numeric integrator
- 
+  RooAbsIntegrator* _integrator ;  ///< Numeric integrator
 
-  ClassDef(RooIntegratorBinding,0) // Function binding representing output of numeric integrator
+
+  ClassDefOverride(RooIntegratorBinding,0) // Function binding representing output of numeric integrator
 };
 
 #endif

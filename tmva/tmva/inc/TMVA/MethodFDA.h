@@ -128,28 +128,28 @@ namespace TMVA {
       void DeclareOptions();
       void ProcessOptions();
 
-      TString                fFormulaStringP;     // string with function
-      TString                fParRangeStringP;    // string with ranges of parameters
-      TString                fFormulaStringT;     // string with function
-      TString                fParRangeStringT;    // string with ranges of parameters
+      TString                fFormulaStringP;     ///< string with function
+      TString                fParRangeStringP;    ///< string with ranges of parameters
+      TString                fFormulaStringT;     ///< string with function
+      TString                fParRangeStringT;    ///< string with ranges of parameters
 
-      TFormula*              fFormula;            // the discrimination function
-      UInt_t                 fNPars;              // number of parameters
-      std::vector<Interval*> fParRange;           // ranges of parameters
-      std::vector<Double_t>  fBestPars;           // the pars that optimise (minimise) the estimator
-      TString                fFitMethod;          // estimator optimisation method
-      TString                fConverger;          // fitmethod uses fConverger as intermediate step to converge into local minimas
-      FitterBase*            fFitter;             // the fitter used in the training
-      IFitterTarget*         fConvergerFitter;    // intermediate fitter
+      TFormula*              fFormula;            ///< the discrimination function
+      UInt_t                 fNPars;              ///< number of parameters
+      std::vector<Interval*> fParRange;           ///< ranges of parameters
+      std::vector<Double_t>  fBestPars;           ///< the pars that optimise (minimise) the estimator
+      TString                fFitMethod;          ///< estimator optimisation method
+      TString                fConverger;          ///< fit method uses fConverger as intermediate step to converge into local minimas
+      FitterBase*            fFitter;             ///< the fitter used in the training
+      IFitterTarget*         fConvergerFitter;    ///< intermediate fitter
 
 
       // sum of weights (this should become centrally available through the dataset)
-      Double_t               fSumOfWeightsSig;    // sum of weights (signal)
-      Double_t               fSumOfWeightsBkg;    // sum of weights (background)
-      Double_t               fSumOfWeights;       // sum of weights
+      Double_t               fSumOfWeightsSig;    ///< sum of weights (signal)
+      Double_t               fSumOfWeightsBkg;    ///< sum of weights (background)
+      Double_t               fSumOfWeights;       ///< sum of weights
 
       //
-      Int_t                  fOutputDimensions;   // number of output values
+      Int_t                  fOutputDimensions;   ///< number of output values
 
       ClassDef(MethodFDA,0);  // Function Discriminant Analysis
    };

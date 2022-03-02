@@ -39,7 +39,7 @@ ClassImp(RooEffGenContext);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of generator context for RooEffProd products
 
-RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, 
+RooEffGenContext::RooEffGenContext(const RooAbsPdf &model,
                                    const RooAbsPdf& pdf, const RooAbsReal& eff,
                                    const RooArgSet &vars,
                                    const RooDataSet *prototype, const RooArgSet* auxProto,
@@ -91,7 +91,7 @@ void RooEffGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       _generator->generateEvent(theEvent, remaining);
       double val = _eff->getVal();
       if (val > _maxEff && !_eff->getMaxVal(*_vars)) {
-         coutE(Generation) << ClassName() << "::" << GetName() 
+         coutE(Generation) << ClassName() << "::" << GetName()
               << ":generateEvent: value of efficiency is larger than assumed maximum of 1."  << std::endl;
          continue;
       }

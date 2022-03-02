@@ -32,32 +32,32 @@ class RooFoamGenerator : public RooAbsNumGenerator {
 public:
   RooFoamGenerator() : _binding(0), _tfoam(0), _xmin(0), _range(0), _vec(0) {} ;
   RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0);
-  RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/, 
-			    const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const {
+  RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/,
+             const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const override {
     return new RooFoamGenerator(func,genVars,config,verbose,maxFuncVal) ;
   }
-  virtual ~RooFoamGenerator();
+  ~RooFoamGenerator() override;
 
-  const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio);
-  
+  const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio) override;
+
   TFoam& engine() { return *_tfoam; }
 
-  virtual Bool_t canSampleConditional() const { return kFALSE ; }
-  virtual Bool_t canSampleCategories() const { return kFALSE ; }
- 
+  Bool_t canSampleConditional() const override { return kFALSE ; }
+  Bool_t canSampleCategories() const override { return kFALSE ; }
+
 protected:
 
   friend class RooNumGenFactory ;
-  static void registerSampler(RooNumGenFactory& fact) ;	
+  static void registerSampler(RooNumGenFactory& fact) ;
 
-  RooTFoamBinding* _binding ; // Binding of RooAbsReal to TFoam function interface
-  TFoam*           _tfoam ;   // Instance of TFOAM generator
-  Double_t*        _xmin ;    // Lower bound of observables to be generated ;
-  Double_t*        _range ;   // Range of observables to be generated ;
-  Double_t*        _vec ;     // Transfer array for FOAM output
+  RooTFoamBinding* _binding ; ///< Binding of RooAbsReal to TFoam function interface
+  TFoam*           _tfoam ;   ///< Instance of TFOAM generator
+  Double_t*        _xmin ;    ///< Lower bound of observables to be generated ;
+  Double_t*        _range ;   ///< Range of observables to be generated ;
+  Double_t*        _vec ;     ///< Transfer array for FOAM output
 
 
-  ClassDef(RooFoamGenerator,0) // Context for generating a dataset from a PDF using the TFoam class
+  ClassDefOverride(RooFoamGenerator,0) // Context for generating a dataset from a PDF using the TFoam class
 };
 
 #endif

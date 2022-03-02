@@ -28,8 +28,8 @@ public:
   RooExponential(const char *name, const char *title,
        RooAbsReal& _x, RooAbsReal& _c);
   RooExponential(const RooExponential& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const override { return new RooExponential(*this,newname); }
-  inline virtual ~RooExponential() { }
+  TObject* clone(const char* newname) const override { return new RooExponential(*this,newname); }
+  inline ~RooExponential() override { }
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
@@ -39,8 +39,9 @@ protected:
   RooRealProxy c;
 
   Double_t evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
-  
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
+
 private:
   ClassDefOverride(RooExponential,1) // Exponential PDF
 };

@@ -9,6 +9,7 @@
 #include "RooAbsReal.h"
 #include "RooStats/ModelConfig.h"
 
+#include "ROOT/StringUtils.hxx"
 #include "TFile.h"
 #include "TSystem.h"
 
@@ -31,7 +32,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
 
    {
       TFile outfile(filename, "RECREATE");
-      
+
       // now create the model config for this problem
       RooWorkspace* w = new RooWorkspace("ws");
       ModelConfig modelConfig("ModelConfig", w);
@@ -43,7 +44,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
       outfile.WriteObject(w, "ws");
       delete w;
    }
-   
+
    RooWorkspace *w2;
    {
       TFile infile(filename, "READ");
@@ -54,7 +55,7 @@ TEST(RooWorkspace, CloneModelConfig_ROOT_9777)
       w2 = new RooWorkspace(*w);
       delete w;
    }
-   
+
    w2->Print();
 
    ModelConfig *mc = dynamic_cast<ModelConfig*>(w2->genobj("ModelConfig"));
@@ -97,7 +98,7 @@ protected:
     outfile.WriteObject(&w, "ws");
   }
 
-  ~TestRooWorkspaceWithGaussian() {
+  ~TestRooWorkspaceWithGaussian() override {
     gSystem->Unlink(_filename);
   }
 
@@ -109,22 +110,24 @@ protected:
 /// implementation.
 TEST(RooHelpers, Tokeniser)
 {
-  std::vector<std::string> tok = RooHelpers::tokenise("abc, def, ghi", ", ");
+  const bool skipEmpty = true;
+
+  std::vector<std::string> tok = ROOT::Split("abc, def, ghi", ", ", skipEmpty);
   EXPECT_EQ(tok.size(), 3U);
   EXPECT_EQ(tok[0], "abc");
   EXPECT_EQ(tok[1], "def");
   EXPECT_EQ(tok[2], "ghi");
 
-  std::vector<std::string> tok2 = RooHelpers::tokenise("abc, def", ":");
+  std::vector<std::string> tok2 = ROOT::Split("abc, def", ":", skipEmpty);
   EXPECT_EQ(tok2.size(), 1U);
   EXPECT_EQ(tok2[0], "abc, def");
 
-  std::vector<std::string> tok3 = RooHelpers::tokenise(",  ,abc, def,", ", ");
+  std::vector<std::string> tok3 = ROOT::Split(",  ,abc, def,", ", ", skipEmpty);
   EXPECT_EQ(tok3.size(), 2U);
   EXPECT_EQ(tok3[0], "abc");
   EXPECT_EQ(tok3[1], "def");
 
-  std::vector<std::string> tok4 = RooHelpers::tokenise(",  ,abc, def,", ",");
+  std::vector<std::string> tok4 = ROOT::Split(",  ,abc, def,", ",", skipEmpty);
   EXPECT_EQ(tok4.size(), 3U);
   EXPECT_EQ(tok4[0], "  ");
   EXPECT_EQ(tok4[1], "abc");

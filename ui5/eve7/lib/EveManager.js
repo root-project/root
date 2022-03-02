@@ -37,36 +37,6 @@ sap.ui.define([], function() {
 
       this.initialized = false;
       this.busyProcessingChanges = false;
-
-
-      // ---------------------------------
-      JSROOT.EVE.console = {};
-      JSROOT.EVE.console.txt = "";
-
-      JSROOT.EVE.console.stdlog = console.log.bind(console);
-      console.log = function () {
-         JSROOT.EVE.console.txt += "<p>";
-         JSROOT.EVE.console.txt += Array.from(arguments);
-         JSROOT.EVE.console.stdlog.apply(console, arguments);
-         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
-      }
-
-      JSROOT.EVE.console.stderror = console.error.bind(console);
-      console.error = function () {
-         JSROOT.EVE.console.txt += "<p style=\"color:red;\">";
-         JSROOT.EVE.console.txt += Array.from(arguments);
-         JSROOT.EVE.console.stderror.apply(console, arguments);
-         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
-      }
-
-      JSROOT.EVE.console.stdwarn = console.warn.bind(console);
-      console.warning = function () {
-         JSROOT.EVE.console.txt += "<p style=\"color:yellow;\">";
-         JSROOT.EVE.console.txt += Array.from(arguments);
-         JSROOT.EVE.console.stdwarn.apply(console, arguments);
-         if (JSROOT.EVE.console.refresh) JSROOT.EVE.console.refresh();
-      }
-
    }
 
    //==============================================================================
@@ -77,6 +47,17 @@ sap.ui.define([], function() {
    EveManager.prototype.GetElement = function(id)
    {
       return this.map[id];
+   }
+
+   EveManager.prototype.globExceptionHandler = function (msg, url, lineNo, columnNo, error) {
+      // NOTE: currently NOT connected, see onWebsocketOpened() below.
+
+      console.log("EveManager got global error", msg, url, lineNo, columnNo, error);
+
+      JSROOT.EVE.alert("Global Exception handler: " + msg + "\n" + url +
+         " line:" + lineNo + " col:" + columnNo);
+      let suppress_alert = false;
+      return suppress_alert;
    }
 
    /** Attach websocket handle to manager, all communication runs through manager */
@@ -113,8 +94,14 @@ sap.ui.define([], function() {
    }
 
 
-   EveManager.prototype.onWebsocketOpened = function() {
-      // console.log("opened!!!");
+   EveManager.prototype.onWebsocketOpened = function () {
+      // console.log("EveManager web socket opened.");
+
+      // Presumably not needed at this point - known places where issues
+      // can cause server-client protocol breach are handled.
+
+      // window.onerror = this.globExceptionHandler.bind(this);
+      // console.log("EveManager registered global error handler in window.onerror");
    },
 
    EveManager.prototype.RegisterController = function (c)
@@ -290,35 +277,33 @@ sap.ui.define([], function() {
 
    //______________________________________________________________________________
 
-   EveManager.prototype.RecursiveRemove = function(elem, delSet)
+   EveManager.prototype.removeElements = function(ids)
    {
-      let elId     = elem.fElementId;
-      let motherId = elem.fMotherId;
-
-      // iterate children
-      if (elem.childs !== undefined) {
-         while (elem.childs.length > 0) {
-            let n = 0;
-            let sub = elem.childs[n];
-            this.RecursiveRemove(sub, delSet);
+      for (let i = 0; i < ids.length; ++i)
+      {
+         let elId = ids[i];
+         let elem = this.GetElement(elId);
+         if (!elem) {
+            console.warning("EveManager.prototype.removeElements REveElement not found in map, id = ", elId);
+            continue;
          }
-      }
 
-      // delete myself from master
-      let mother = this.GetElement(motherId);
-      let mc = mother.childs;
-      for (let i = 0; i < mc.length; ++i) {
+         // remove from parent list of children
+         let mother = this.GetElement(elem.fMotherId);
+         if (mother && mother.childs) {
+            let mc = mother.childs;
+            for (let i = 0; i < mc.length; ++i) {
 
-         if (mc[i].fElementId === elId) {
-            mc.splice(i, 1);
+               if (mc[i].fElementId === elId) {
+                  mc.splice(i, 1);
+               }
+            }
          }
+         else
+            console.warning("EveManager.prototype.removeElements can't remove child from mother, mother id = ", elem.fMotherId);
+
+         delete this.map[elId];
       }
-
-      delete this.map[elId];
-      delSet.delete(elId);
-
-     // console.log(" ecursiveRemove END", elId, delSet);
-     // delete elem;
    }
 
    //______________________________________________________________________________
@@ -333,22 +318,10 @@ sap.ui.define([], function() {
 
       // notify scenes for beginning of changes and
       // notify for element removal
-      let removedIds = msg.header["removedElements"]; // AMT empty set should not be sent at the first place
-      if (removedIds.length)
+      let removedIds = msg.header["removedElements"];
+      if (removedIds.length) {
          this.callSceneReceivers(scene, "elementsRemoved", removedIds);
-
-      let delSet = new Set();
-      for (let r = 0; r < removedIds.length; ++r) {
-         let id  = removedIds[r];
-         delSet.add(id);
-      }
-      // console.log("start with delSet ", delSet);
-      while (delSet.size != 0) {
-         let it = delSet.values();
-         let id = it.next().value;
-         // console.log("going to call RecursiveRemove .... ", this.map[id]);
-         this.RecursiveRemove(this.GetElement(id), delSet);
-         // console.log("complete RecursiveRemove ", delSet);
+         this.removeElements(removedIds);
       }
 
       // wait for binary if needed
@@ -620,11 +593,14 @@ sap.ui.define([], function() {
 
          for (let imp of value.implied)
          {
-            if (JSROOT.EVE.DebugSelection)
-               console.log("UnSel impl", imp, this.GetElement(imp), this.GetElement(imp).fSceneId);
+            let impEl = this.GetElement(imp);
+            if (impEl) {
+               if (JSROOT.EVE.DebugSelection)
+                  console.log("UnSel impl", imp, impEl, impEl.fSceneId);
 
-            this.UnselectElement(sel, imp);
-            changedSet.add(this.GetElement(imp).fSceneId);
+               this.UnselectElement(sel, imp);
+               changedSet.add(impEl.fSceneId);
+            }
          }
       }
 
@@ -727,7 +703,15 @@ sap.ui.define([], function() {
          }
       }
       for (let item of recs) {
-         item.endChanges();
+         try {
+            item.endChanges();
+         } catch (e) {
+            JSROOT.EVE.alert("EveManager: Exception caught during update processing: " + e + "\n" +
+               "You might want to reload the page in browser and / or check error consoles.");
+            console.error("EveManager: Exception caught during update processing", e);
+
+            // XXXX We might want to send e.name, e.message, e.stack back to the server.
+         }
       }
 
       if (this.handle.kind != "file")

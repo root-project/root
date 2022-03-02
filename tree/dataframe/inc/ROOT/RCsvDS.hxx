@@ -76,7 +76,7 @@ protected:
 
 public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
-   void Finalise();
+   void Finalize();
    void FreeRecords();
    ~RCsvDS();
    const std::vector<std::string> &GetColumnNames() const;
@@ -94,6 +94,7 @@ public:
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
+/// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
 RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
                             Long64_t linesChunkSize = -1LL);
 

@@ -26,15 +26,16 @@ class RooNameReg : public TNamed {
 public:
 
   static RooNameReg& instance() ;
-  virtual ~RooNameReg();
+  ~RooNameReg() override;
   const TNamed* constPtr(const char* stringPtr) ;
-  const char* constStr(const TNamed* namePtr) ; 
+  const char* constStr(const TNamed* namePtr) ;
   static const TNamed* ptr(const char* stringPtr) ;
   static const char* str(const TNamed* ptr) ;
   static const TNamed* known(const char* stringPtr) ;
+  static const std::size_t& renameCounter() ;
 
   enum {
-    kRenamedArg = BIT(19)    // TNamed flag to indicate that some RooAbsArg has been renamed (flag set in new name)
+    kRenamedArg = BIT(19)    ///< TNamed flag to indicate that some RooAbsArg has been renamed (flag set in new name)
   };
 
 protected:
@@ -42,9 +43,14 @@ protected:
 //  RooNameReg(Int_t hashSize = 31) ;
   RooNameReg(const RooNameReg& other) = delete;
 
-  std::unordered_map<std::string,std::unique_ptr<TNamed>> _map;
+  friend class RooAbsArg;
+  friend class RooAbsData;
+  static void incrementRenameCounter() ;
 
-//  ClassDef(RooNameReg,1) // String name registry
+  std::unordered_map<std::string,std::unique_ptr<TNamed>> _map;
+  std::size_t _renameCounter = 0;
+
+//  ClassDefOverride(RooNameReg,1) // String name registry
 };
 
 #endif

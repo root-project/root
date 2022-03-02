@@ -24,10 +24,10 @@ class RooAbsPdf ;
 class RooTFoamBinding : public TFoamIntegrand {
 public:
   RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observables) ;
-  virtual ~RooTFoamBinding();
+  ~RooTFoamBinding() override;
 
-  virtual Double_t Density(Int_t ndim, Double_t *) ;
-  
+  Double_t Density(Int_t ndim, Double_t *) override ;
+
   RooRealBinding& binding() { return *_binding ; }
 
 protected:
@@ -35,7 +35,7 @@ protected:
   RooArgSet       _nset ;
   RooRealBinding* _binding ;
 
-  ClassDef(RooTFoamBinding,0) // Function binding to RooAbsReal object
+  ClassDefOverride(RooTFoamBinding,0) // Function binding to RooAbsReal object
 };
 
 #endif

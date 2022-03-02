@@ -63,7 +63,7 @@ namespace TMVA {
    public:
 
       MethodCuts( const TString& jobName,
-                  const TString& methodTitle, 
+                  const TString& methodTitle,
                   DataSetInfo& theData,
                   const TString& theOption = "MC:150:10000:");
 
@@ -95,7 +95,7 @@ namespace TMVA {
 
       // test the method
       void TestClassification();
-     
+
       // also overwrite --> not computed for cuts
       Double_t GetSeparation  ( TH1*, TH1* ) const { return -1; }
       Double_t GetSeparation  ( PDF* = 0, PDF* = 0 ) const { return -1; }
@@ -109,7 +109,7 @@ namespace TMVA {
 
       // accessors for Minuit
       Double_t ComputeEstimator( std::vector<Double_t> & );
-      
+
       Double_t EstimatorFunction( std::vector<Double_t> & );
       Double_t EstimatorFunction( Int_t ievt1, Int_t ievt2 );
 
@@ -152,7 +152,7 @@ namespace TMVA {
 
       // efficiency calculation method
       // - kUseEventSelection: computes efficiencies from given data sample
-      // - kUsePDFs          : creates smoothed PDFs from data samples, and 
+      // - kUsePDFs          : creates smoothed PDFs from data samples, and
       //                       uses this to compute efficiencies
       enum EEffMethod     { kUseEventSelection = 0,
                             kUsePDFs };
@@ -164,56 +164,56 @@ namespace TMVA {
                             kForceSmart };
 
       // general
-      TString                 fFitMethodS;         // chosen fit method (string)
-      EFitMethodType          fFitMethod;          // chosen fit method
-      TString                 fEffMethodS;         // chosen efficiency calculation method (string)
-      EEffMethod              fEffMethod;          // chosen efficiency calculation method
-      std::vector<EFitParameters>* fFitParams;     // vector for series of fit methods
-      Double_t                fTestSignalEff;      // used to test optimized signal efficiency
-      Double_t                fEffSMin;            // used to test optimized signal efficiency
-      Double_t                fEffSMax;            // used to test optimized signal efficiency
-      Double_t*               fCutRangeMin;        // minimum of allowed cut range
-      Double_t*               fCutRangeMax;        // maximum of allowed cut range
-      std::vector<Interval*>  fCutRange;           // allowed ranges for cut optimisation
+      TString                 fFitMethodS;         ///< chosen fit method (string)
+      EFitMethodType          fFitMethod;          ///< chosen fit method
+      TString                 fEffMethodS;         ///< chosen efficiency calculation method (string)
+      EEffMethod              fEffMethod;          ///< chosen efficiency calculation method
+      std::vector<EFitParameters>* fFitParams;     ///< vector for series of fit methods
+      Double_t                fTestSignalEff;      ///< used to test optimized signal efficiency
+      Double_t                fEffSMin;            ///< used to test optimized signal efficiency
+      Double_t                fEffSMax;            ///< used to test optimized signal efficiency
+      Double_t*               fCutRangeMin;        ///< minimum of allowed cut range
+      Double_t*               fCutRangeMax;        ///< maximum of allowed cut range
+      std::vector<Interval*>  fCutRange;           ///< allowed ranges for cut optimisation
 
       // for the use of the binary tree method
       BinarySearchTree*       fBinaryTreeS;
       BinarySearchTree*       fBinaryTreeB;
 
       // MC method
-      Double_t**              fCutMin;             // minimum requirement
-      Double_t**              fCutMax;             // maximum requirement
-      Double_t*               fTmpCutMin;          // temporary minimum requirement
-      Double_t*               fTmpCutMax;          // temporary maximum requirement
-      TString*                fAllVarsI;           // what to do with variables
+      Double_t**              fCutMin;             ///< minimum requirement
+      Double_t**              fCutMax;             ///< maximum requirement
+      Double_t*               fTmpCutMin;          ///< temporary minimum requirement
+      Double_t*               fTmpCutMax;          ///< temporary maximum requirement
+      TString*                fAllVarsI;           ///< what to do with variables
 
       // relevant for all methods
-      Int_t                   fNpar;               // number of parameters in fit (default: 2*Nvar)
-      Double_t                fEffRef;             // reference efficiency
-      std::vector<Int_t>*     fRangeSign;          // used to match cuts to fit parameters (and vice versa)
-      TRandom*                fRandom;             // random generator for MC optimisation method
+      Int_t                   fNpar;               ///< number of parameters in fit (default: 2*Nvar)
+      Double_t                fEffRef;             ///< reference efficiency
+      std::vector<Int_t>*     fRangeSign;          ///< used to match cuts to fit parameters (and vice versa)
+      TRandom*                fRandom;             ///< random generator for MC optimisation method
 
       // basic statistics
-      std::vector<Double_t>*  fMeanS;              // means of variables (signal)
-      std::vector<Double_t>*  fMeanB;              // means of variables (background)
-      std::vector<Double_t>*  fRmsS;               // RMSs of variables (signal)
-      std::vector<Double_t>*  fRmsB;               // RMSs of variables (background)
+      std::vector<Double_t>*  fMeanS;              ///< means of variables (signal)
+      std::vector<Double_t>*  fMeanB;              ///< means of variables (background)
+      std::vector<Double_t>*  fRmsS;               ///< RMSs of variables (signal)
+      std::vector<Double_t>*  fRmsB;               ///< RMSs of variables (background)
 
-      TH1*                    fEffBvsSLocal;       // intermediate eff. background versus eff signal histo
+      TH1*                    fEffBvsSLocal;       ///< intermediate eff. background versus eff signal histo
 
       // PDF section
-      std::vector<TH1*>*      fVarHistS;           // reference histograms (signal)
-      std::vector<TH1*>*      fVarHistB;           // reference histograms (background)
-      std::vector<TH1*>*      fVarHistS_smooth;    // smoothed reference histograms (signal)        
-      std::vector<TH1*>*      fVarHistB_smooth;    // smoothed reference histograms (background)
-      std::vector<PDF*>*      fVarPdfS;            // reference PDFs (signal)
-      std::vector<PDF*>*      fVarPdfB;            // reference PDFs (background)
+      std::vector<TH1*>*      fVarHistS;           ///< reference histograms (signal)
+      std::vector<TH1*>*      fVarHistB;           ///< reference histograms (background)
+      std::vector<TH1*>*      fVarHistS_smooth;    ///< smoothed reference histograms (signal)
+      std::vector<TH1*>*      fVarHistB_smooth;    ///< smoothed reference histograms (background)
+      std::vector<PDF*>*      fVarPdfS;            ///< reference PDFs (signal)
+      std::vector<PDF*>*      fVarPdfB;            ///< reference PDFs (background)
 
       // negative efficiencies
-      Bool_t                  fNegEffWarning;      // flag risen in case of negative efficiency warning
+      Bool_t                  fNegEffWarning;      ///< flag risen in case of negative efficiency warning
 
 
-      // the definition of fit parameters can be different from the actual 
+      // the definition of fit parameters can be different from the actual
       // cut requirements; these functions provide the matching
       void     MatchParsToCuts( const std::vector<Double_t>&, Double_t*, Double_t* );
       void     MatchParsToCuts( Double_t*, Double_t*, Double_t* );
@@ -221,7 +221,7 @@ namespace TMVA {
       void     MatchCutsToPars( std::vector<Double_t>&, Double_t*, Double_t* );
       void     MatchCutsToPars( std::vector<Double_t>&, Double_t**, Double_t**, Int_t ibin );
 
-      // creates PDFs in case these are used to compute efficiencies 
+      // creates PDFs in case these are used to compute efficiencies
       // (corresponds to: EffMethod == kUsePDFs)
       void     CreateVariablePDFs( void );
 

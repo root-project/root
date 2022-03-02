@@ -11,17 +11,53 @@
  *************************************************************************/
 
 /** \class TGeoPcon
-\ingroup Geometry_classes
-A polycone.
+\ingroup Shapes_classes
 
-It has at least 9 parameters:
-           - the lower phi limit;
-           - the range in phi;
-           - the number of z planes (at least two) where the inner/outer
-             radii are changing;
-           - z coordinate, inner and outer radius for each z plane
+A polycone is represented by a sequence of tubes/cones, glued together
+at defined Z planes. The polycone might have a phi segmentation, which
+globally applies to all the pieces. It has to be defined in two steps:
 
-Begin_Macro(source)
+1. First call the TGeoPcon constructor to define a polycone:
+
+   ~~~{.cpp}
+   TGeoPcon(Double_t phi1,Double_t dphi,Int_t nz
+   ~~~
+
+     - `phi1:` starting phi angle in degrees
+     - `dphi:` total phi range
+     - `nz:` number of Z planes defining polycone sections (minimum 2)
+
+2. Define one by one all sections [0, nz-1]
+
+~~~{.cpp}
+void TGeoPcon::DefineSection(Int_t i,Double_t z,
+Double_t rmin, Double_t rmax);
+~~~
+
+  - `i:` section index [0, nz-1]
+  - `z:` z coordinate of the section
+  - `rmin:` minimum radius corresponding too this section
+  - `rmax:` maximum radius.
+
+The first section (`i=0`) has to be positioned always the lowest Z
+coordinate. It defines the radii of the first cone/tube segment at its
+lower Z. The next section defines the end-cap of the first segment, but
+it can represent also the beginning of the next one. Any discontinuity
+in the radius has to be represented by a section defined at the same Z
+coordinate as the previous one. The Z coordinates of all sections must
+be sorted in increasing order. Any radius or Z coordinate of a given
+plane have corresponding getters:
+
+~~~{.cpp}
+Double_t TGeoPcon::GetRmin(Int_t i);
+Double_t TGeoPcon::GetRmax(Int_t i);
+Double_t TGeoPcon::GetZ(Int_t i);
+~~~
+
+Note that the last section should be defined last, since it triggers the
+computation of the bounding box of the polycone.
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("pcon", "poza10");

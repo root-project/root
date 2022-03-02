@@ -637,7 +637,7 @@ TGenCollectionProxy::TGenCollectionProxy(Info_t info, size_t iter_size)
 ////////////////////////////////////////////////////////////////////////////////
 /// Build a proxy for a collection whose type is described by 'collectionClass'.
 
-TGenCollectionProxy::TGenCollectionProxy(const ROOT::TCollectionProxyInfo &info, TClass *cl)
+TGenCollectionProxy::TGenCollectionProxy(const ROOT::Detail::TCollectionProxyInfo &info, TClass *cl)
    : TVirtualCollectionProxy(cl),
      fTypeinfo(info.fInfo), fOnFileClass(0)
 {
@@ -1043,13 +1043,14 @@ void* TGenCollectionProxy::At(UInt_t idx)
    if ( fEnv && fEnv->fObject ) {
       switch (fSTL_type) {
       case ROOT::kSTLvector:
-      case ROOT::kROOTRVec:  // TODO will be unnecessary with RVec 2.0: RVec<bool> won't be a special case
          if ((*fValue).fKind == kBool_t) {
             auto vec = (std::vector<bool> *)(fEnv->fObject);
             fEnv->fLastValueVecBool = (*vec)[idx];
             fEnv->fIdx = idx;
             return &(fEnv->fLastValueVecBool);
          }
+      // intentional fall through
+      case ROOT::kROOTRVec:
          fEnv->fIdx = idx;
          switch( idx ) {
          case 0:

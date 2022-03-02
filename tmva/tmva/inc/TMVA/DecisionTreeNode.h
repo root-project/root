@@ -67,39 +67,39 @@ namespace TMVA {
          fSeparationGain ( -1 )
             {
             }
-      std::vector< Float_t >  fSampleMin; // the minima for each ivar of the sample on the node during training
-      std::vector< Float_t >  fSampleMax; // the maxima for each ivar of the sample on the node during training
-      Double_t fNodeR;           // node resubstitution estimate, R(t)
-      Double_t fSubTreeR;        // R(T) = Sum(R(t) : t in ~T)
-      Double_t fAlpha;           // critical alpha for this node
-      Double_t fG;               // minimum alpha in subtree rooted at this node
-      Int_t    fNTerminal;       // number of terminal nodes in subtree rooted at this node
-      Double_t fNB;              // sum of weights of background events from the pruning sample in this node
-      Double_t fNS;              // ditto for the signal events
-      Float_t  fSumTarget;       // sum of weight*target  used for the calculatio of the variance (regression)
-      Float_t  fSumTarget2;      // sum of weight*target^2 used for the calculatio of the variance (regression)
-      Double_t fCC;  // debug variable for cost complexity pruning ..
+      std::vector< Float_t >  fSampleMin; ///< the minima for each ivar of the sample on the node during training
+      std::vector< Float_t >  fSampleMax; ///< the maxima for each ivar of the sample on the node during training
+      Double_t fNodeR;                    ///< node resubstitution estimate, R(t)
+      Double_t fSubTreeR;                 ///< R(T) = Sum(R(t) : t in ~T)
+      Double_t fAlpha;                    ///< critical alpha for this node
+      Double_t fG;                        ///< minimum alpha in subtree rooted at this node
+      Int_t    fNTerminal;                ///< number of terminal nodes in subtree rooted at this node
+      Double_t fNB;                       ///< sum of weights of background events from the pruning sample in this node
+      Double_t fNS;                       ///< ditto for the signal events
+      Float_t  fSumTarget;                ///< sum of weight*target  used for the calculation of the variance (regression)
+      Float_t  fSumTarget2;               ///< sum of weight*target^2 used for the calculation of the variance (regression)
+      Double_t fCC;                       ///< debug variable for cost complexity pruning ..
 
-      Float_t  fNSigEvents;      // sum of weights of signal event in the node
-      Float_t  fNBkgEvents;      // sum of weights of backgr event in the node
-      Float_t  fNEvents;         // number of events in that entered the node (during training)
-      Float_t  fNSigEvents_unweighted;      // sum of signal event in the node
-      Float_t  fNBkgEvents_unweighted;      // sum of backgr event in the node
-      Float_t  fNEvents_unweighted;         // number of events in that entered the node (during training)
-      Float_t  fNSigEvents_unboosted;      // sum of signal event in the node
-      Float_t  fNBkgEvents_unboosted;      // sum of backgr event in the node
-      Float_t  fNEvents_unboosted;         // number of events in that entered the node (during training)
-      Float_t  fSeparationIndex; // measure of "purity" (separation between S and B) AT this node
-      Float_t  fSeparationGain;  // measure of "purity", separation, or information gained BY this nodes selection
+      Float_t  fNSigEvents;               ///< sum of weights of signal event in the node
+      Float_t  fNBkgEvents;               ///< sum of weights of backgr event in the node
+      Float_t  fNEvents;                  ///< number of events in that entered the node (during training)
+      Float_t  fNSigEvents_unweighted;    ///< sum of signal event in the node
+      Float_t  fNBkgEvents_unweighted;    ///< sum of backgr event in the node
+      Float_t  fNEvents_unweighted;       ///< number of events in that entered the node (during training)
+      Float_t  fNSigEvents_unboosted;     ///< sum of signal event in the node
+      Float_t  fNBkgEvents_unboosted;     ///< sum of backgr event in the node
+      Float_t  fNEvents_unboosted;        ///< number of events in that entered the node (during training)
+      Float_t  fSeparationIndex;          ///< measure of "purity" (separation between S and B) AT this node
+      Float_t  fSeparationGain;           ///< measure of "purity", separation, or information gained BY this nodes selection
 
       // copy constructor
    DTNodeTrainingInfo(const DTNodeTrainingInfo& n) :
-      fSampleMin(),fSampleMax(), // Samplemin and max are reset in copy constructor
+      fSampleMin(),fSampleMax(),          ///< Samplemin and max are reset in copy constructor
          fNodeR(n.fNodeR), fSubTreeR(n.fSubTreeR),
          fAlpha(n.fAlpha), fG(n.fG),
          fNTerminal(n.fNTerminal),
          fNB(n.fNB), fNS(n.fNS),
-         fSumTarget(0),fSumTarget2(0), // SumTarget reset in copy constructor
+         fSumTarget(0),fSumTarget2(0),    ///< SumTarget reset in copy constructor
          fCC(0),
          fNSigEvents ( n.fNSigEvents ), fNBkgEvents ( n.fNBkgEvents ),
          fNEvents ( n.fNEvents ),
@@ -135,133 +135,134 @@ namespace TMVA {
       inline UInt_t GetNFisherCoeff() const { return fFisherCoeff.size();}
       // set fisher coefficients
       void SetFisherCoeff(Int_t ivar, Double_t coeff);
-      // get fisher coefficients
+      /// get fisher coefficients
       Double_t GetFisherCoeff(Int_t ivar) const {return fFisherCoeff.at(ivar);}
 
-      // test event if it decends the tree at this node to the right
+      // test event if it descends the tree at this node to the right
       virtual Bool_t GoesRight( const Event & ) const;
 
-      // test event if it decends the tree at this node to the left
+      // test event if it descends the tree at this node to the left
       virtual Bool_t GoesLeft ( const Event & ) const;
 
-      // set index of variable used for discrimination at this node
+      /// set index of variable used for discrimination at this node
       void SetSelector( Short_t i) { fSelector = i; }
-      // return index of variable used for discrimination at this node
+      /// return index of variable used for discrimination at this node
       Short_t GetSelector() const { return fSelector; }
 
-      // set the cut value applied at this node
+      /// set the cut value applied at this node
       void  SetCutValue ( Float_t c ) { fCutValue  = c; }
-      // return the cut value applied at this node
+      /// return the cut value applied at this node
       Float_t GetCutValue ( void ) const { return fCutValue;  }
 
-      // set true: if event variable > cutValue ==> signal , false otherwise
+      /// set true: if event variable > cutValue ==> signal , false otherwise
       void SetCutType( Bool_t t   ) { fCutType = t; }
-      // return kTRUE: Cuts select signal, kFALSE: Cuts select bkg
+      /// return kTRUE: Cuts select signal, kFALSE: Cuts select bkg
       Bool_t GetCutType( void ) const { return fCutType; }
 
-      // set node type: 1 signal node, -1 bkg leave, 0 intermediate Node
+      /// set node type: 1 signal node, -1 bkg leave, 0 intermediate Node
       void  SetNodeType( Int_t t ) { fNodeType = t;}
-      // return node type: 1 signal node, -1 bkg leave, 0 intermediate Node
+      /// return node type: 1 signal node, -1 bkg leave, 0 intermediate Node
       Int_t GetNodeType( void ) const { return fNodeType; }
 
-      //return  S/(S+B) (purity) at this node (from  training)
+      /// return  S/(S+B) (purity) at this node (from  training)
       Float_t GetPurity( void ) const { return fPurity;}
-      //calculate S/(S+B) (purity) at this node (from  training)
+      // calculate S/(S+B) (purity) at this node (from  training)
       void SetPurity( void );
 
-      //set the response of the node (for regression)
+      /// set the response of the node (for regression)
       void SetResponse( Float_t r ) { fResponse = r;}
 
-      //return the response of the node (for regression)
+      /// return the response of the node (for regression)
       Float_t GetResponse( void ) const { return fResponse;}
 
-      //set the RMS of the response of the node (for regression)
+      /// set the RMS of the response of the node (for regression)
       void SetRMS( Float_t r ) { fRMS = r;}
 
-      //return the RMS of the response of the node (for regression)
+      /// return the RMS of the response of the node (for regression)
       Float_t GetRMS( void ) const { return fRMS;}
 
-      // set the sum of the signal weights in the node
+      /// set the sum of the signal weights in the node
       void SetNSigEvents( Float_t s ) { fTrainInfo->fNSigEvents = s; }
 
-      // set the sum of the backgr weights in the node
+      /// set the sum of the backgr weights in the node
       void SetNBkgEvents( Float_t b ) { fTrainInfo->fNBkgEvents = b; }
 
-      // set the number of events that entered the node (during training)
+      /// set the number of events that entered the node (during training)
       void SetNEvents( Float_t nev ){ fTrainInfo->fNEvents =nev ; }
 
-      // set the sum of the unweighted signal events in the node
+      /// set the sum of the unweighted signal events in the node
       void SetNSigEvents_unweighted( Float_t s ) { fTrainInfo->fNSigEvents_unweighted = s; }
 
-      // set the sum of the unweighted backgr events in the node
+      /// set the sum of the unweighted backgr events in the node
       void SetNBkgEvents_unweighted( Float_t b ) { fTrainInfo->fNBkgEvents_unweighted = b; }
 
-      // set the number of unweighted events that entered the node (during training)
+      /// set the number of unweighted events that entered the node (during training)
       void SetNEvents_unweighted( Float_t nev ){ fTrainInfo->fNEvents_unweighted =nev ; }
 
-      // set the sum of the unboosted signal events in the node
+      /// set the sum of the unboosted signal events in the node
       void SetNSigEvents_unboosted( Float_t s ) { fTrainInfo->fNSigEvents_unboosted = s; }
 
-      // set the sum of the unboosted backgr events in the node
+      /// set the sum of the unboosted backgr events in the node
       void SetNBkgEvents_unboosted( Float_t b ) { fTrainInfo->fNBkgEvents_unboosted = b; }
 
-      // set the number of unboosted events that entered the node (during training)
+      /// set the number of unboosted events that entered the node (during training)
       void SetNEvents_unboosted( Float_t nev ){ fTrainInfo->fNEvents_unboosted =nev ; }
 
-      // increment the sum of the signal weights in the node
+      /// increment the sum of the signal weights in the node
       void IncrementNSigEvents( Float_t s ) { fTrainInfo->fNSigEvents += s; }
 
-      // increment the sum of the backgr weights in the node
+      /// increment the sum of the backgr weights in the node
       void IncrementNBkgEvents( Float_t b ) { fTrainInfo->fNBkgEvents += b; }
 
       // increment the number of events that entered the node (during training)
       void IncrementNEvents( Float_t nev ){ fTrainInfo->fNEvents +=nev ; }
 
-      // increment the sum of the signal weights in the node
+      /// increment the sum of the signal weights in the node
       void IncrementNSigEvents_unweighted( ) { fTrainInfo->fNSigEvents_unweighted += 1; }
 
-      // increment the sum of the backgr weights in the node
+      /// increment the sum of the backgr weights in the node
       void IncrementNBkgEvents_unweighted( ) { fTrainInfo->fNBkgEvents_unweighted += 1; }
 
-      // increment the number of events that entered the node (during training)
+      /// increment the number of events that entered the node (during training)
       void IncrementNEvents_unweighted( ){ fTrainInfo->fNEvents_unweighted +=1 ; }
 
-      // return the sum of the signal weights in the node
+      /// return the sum of the signal weights in the node
       Float_t GetNSigEvents( void ) const  { return fTrainInfo->fNSigEvents; }
 
-      // return the sum of the backgr weights in the node
+      /// return the sum of the backgr weights in the node
       Float_t GetNBkgEvents( void ) const  { return fTrainInfo->fNBkgEvents; }
 
-      // return  the number of events that entered the node (during training)
+      /// return  the number of events that entered the node (during training)
       Float_t GetNEvents( void ) const  { return fTrainInfo->fNEvents; }
 
       // return the sum of unweighted signal weights in the node
       Float_t GetNSigEvents_unweighted( void ) const  { return fTrainInfo->fNSigEvents_unweighted; }
 
-      // return the sum of unweighted backgr weights in the node
+      /// return the sum of unweighted backgr weights in the node
       Float_t GetNBkgEvents_unweighted( void ) const  { return fTrainInfo->fNBkgEvents_unweighted; }
 
-      // return  the number of unweighted events that entered the node (during training)
+      /// return  the number of unweighted events that entered the node (during training)
       Float_t GetNEvents_unweighted( void ) const  { return fTrainInfo->fNEvents_unweighted; }
 
-      // return the sum of unboosted signal weights in the node
+      /// return the sum of unboosted signal weights in the node
       Float_t GetNSigEvents_unboosted( void ) const  { return fTrainInfo->fNSigEvents_unboosted; }
 
-      // return the sum of unboosted backgr weights in the node
+      /// return the sum of unboosted backgr weights in the node
       Float_t GetNBkgEvents_unboosted( void ) const  { return fTrainInfo->fNBkgEvents_unboosted; }
 
-      // return  the number of unboosted events that entered the node (during training)
+      /// return  the number of unboosted events that entered the node (during training)
       Float_t GetNEvents_unboosted( void ) const  { return fTrainInfo->fNEvents_unboosted; }
 
-
-      // set the choosen index, measure of "purity" (separation between S and B) AT this node
+      /// set the chosen index, measure of "purity" (separation between S and B) AT this node
       void SetSeparationIndex( Float_t sep ){ fTrainInfo->fSeparationIndex =sep ; }
-      // return the separation index AT this node
+
+      /// return the separation index AT this node
       Float_t GetSeparationIndex( void ) const  { return fTrainInfo->fSeparationIndex; }
 
-      // set the separation, or information gained BY this nodes selection
+      /// set the separation, or information gained BY this nodes selection
       void SetSeparationGain( Float_t sep ){ fTrainInfo->fSeparationGain =sep ; }
-      // return the gain in separation obtained by this nodes selection
+
+      /// return the gain in separation obtained by this nodes selection
       Float_t GetSeparationGain( void ) const  { return fTrainInfo->fSeparationGain; }
 
       // printout of the node
@@ -287,9 +288,6 @@ namespace TMVA {
       inline virtual void SetLeft  (Node* l) { fLeft   = l;}
       inline virtual void SetRight (Node* r) { fRight  = r;}
       inline virtual void SetParent(Node* p) { fParent = p;}
-
-
-
 
       // the node resubstitution estimate, R(t), for Cost Complexity pruning
       inline void SetNodeR( Double_t r ) { fTrainInfo->fNodeR = r;    }
@@ -319,7 +317,6 @@ namespace TMVA {
       inline Double_t GetNBValidation( ) const  { return fTrainInfo->fNB; }
       inline Double_t GetNSValidation( ) const  { return fTrainInfo->fNS; }
 
-
       inline void SetSumTarget(Float_t t)  {fTrainInfo->fSumTarget = t; }
       inline void SetSumTarget2(Float_t t2){fTrainInfo->fSumTarget2 = t2; }
 
@@ -333,7 +330,7 @@ namespace TMVA {
       // reset the pruning validation data
       void ResetValidationData( );
 
-      // flag indicates whether this node is terminal
+      /// flag indicates whether this node is terminal
       inline Bool_t IsTerminal() const            { return fIsTerminalNode; }
       inline void SetTerminal( Bool_t s = kTRUE ) { fIsTerminalNode = s;    }
       void PrintPrune( std::ostream& os ) const ;
@@ -361,21 +358,21 @@ namespace TMVA {
 
       static MsgLogger& Log();
 
-      static bool fgIsTraining; // static variable to flag training phase in which we need fTrainInfo
-      static UInt_t fgTmva_Version_Code;  // set only when read from weightfile
+      static bool fgIsTraining;           ///< static variable to flag training phase in which we need fTrainInfo
+      static UInt_t fgTmva_Version_Code;  ///< set only when read from weightfile
 
-      std::vector<Double_t>       fFisherCoeff;    // the fisher coeff (offset at the last element)
+      std::vector<Double_t> fFisherCoeff; ///< the fisher coeff (offset at the last element)
 
-      Float_t  fCutValue;        // cut value appplied on this node to discriminate bkg against sig
-      Bool_t   fCutType;         // true: if event variable > cutValue ==> signal , false otherwise
-      Short_t  fSelector;        // index of variable used in node selection (decision tree)
+      Float_t  fCutValue;                 ///< cut value applied on this node to discriminate bkg against sig
+      Bool_t   fCutType;                  ///< true: if event variable > cutValue ==> signal , false otherwise
+      Short_t  fSelector;                 ///< index of variable used in node selection (decision tree)
 
-      Float_t  fResponse;        // response value in case of regression
-      Float_t  fRMS;             // response RMS of the regression node
-      Int_t    fNodeType;        // Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal
-      Float_t  fPurity;          // the node purity
+      Float_t  fResponse;                 ///< response value in case of regression
+      Float_t  fRMS;                      ///< response RMS of the regression node
+      Int_t    fNodeType;                 ///< Type of node: -1 == Bkg-leaf, 1 == Signal-leaf, 0 = internal
+      Float_t  fPurity;                   ///< the node purity
 
-      Bool_t   fIsTerminalNode;    //! flag to set node as terminal (i.e., without deleting its descendants)
+      Bool_t   fIsTerminalNode;           ///<! flag to set node as terminal (i.e., without deleting its descendants)
 
       mutable DTNodeTrainingInfo* fTrainInfo;
 

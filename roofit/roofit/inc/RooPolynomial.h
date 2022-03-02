@@ -34,11 +34,11 @@ public:
       RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=1) ;
 
   RooPolynomial(const RooPolynomial& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooPolynomial(*this, newname); }
-  virtual ~RooPolynomial() ;
+  TObject* clone(const char* newname) const override { return new RooPolynomial(*this, newname); }
+  ~RooPolynomial() override ;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
 
@@ -49,10 +49,11 @@ protected:
   mutable std::vector<Double_t> _wksp; //! do not persist
 
   /// Evaluation
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override;
+  //void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  //inline bool canComputeBatchWithCuda() const { return true; }
 
-  ClassDef(RooPolynomial,1) // Polynomial PDF
+  ClassDefOverride(RooPolynomial,1) // Polynomial PDF
 };
 
 #endif

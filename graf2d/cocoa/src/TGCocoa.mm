@@ -507,7 +507,10 @@ Bool_t TGCocoa::Init(void * /*display*/)
 //______________________________________________________________________________
 Int_t TGCocoa::OpenDisplay(const char * /*dpyName*/)
 {
-   //Noop.
+   // return <0 in case of "error". The only error we have is: no interactive
+   // session, i.e no windows message handler etc.
+   if (CGMainDisplayID() == kCGNullDirectDisplay)
+      return -1;
    return 0;
 }
 

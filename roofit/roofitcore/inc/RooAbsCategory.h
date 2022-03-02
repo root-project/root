@@ -43,8 +43,8 @@ public:
   RooAbsCategory() { };
   RooAbsCategory(const char *name, const char *title);
   RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
-  virtual ~RooAbsCategory();
-  
+  ~RooAbsCategory() override;
+
   // Value accessors
   virtual value_type getCurrentIndex() const ;
   virtual const char* getCurrentLabel() const ;
@@ -56,10 +56,10 @@ public:
   Bool_t operator!=(value_type index) {  return !operator==(index);}
   Bool_t operator==(const char* label) const ;
   Bool_t operator!=(const char* label) { return !operator==(label);}
-  virtual Bool_t operator==(const RooAbsArg& other) const ;
+  Bool_t operator==(const RooAbsArg& other) const override ;
   Bool_t         operator!=(const RooAbsArg& other) { return !operator==(other);}
-  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const;
-  
+  Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const override;
+
   /// Check if a state with name `label` exists.
   bool hasLabel(const std::string& label) const {
     return stateNames().find(label) != stateNames().end();
@@ -78,18 +78,18 @@ public:
   Roo1DTable *createTable(const char *label) const ;
 
   // I/O streaming interface
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) override ;
+  void writeToStream(std::ostream& os, Bool_t compact) const override ;
 
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printValue(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const { 
+  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const {
     // Is this l-value object safe for use as integration observable
-    return kTRUE ; 
+    return kTRUE ;
   }
 
-  RooAbsArg *createFundamental(const char* newname=0) const;
+  RooAbsArg *createFundamental(const char* newname=0) const override;
 
   /// Iterator for category state names. Points to pairs of index and name.
   std::map<std::string, value_type>::const_iterator begin() const {
@@ -188,7 +188,7 @@ protected:
   void defineStateUnchecked(const std::string& label, value_type index);
   void clearTypes() ;
 
-  virtual bool isValid() const {
+  bool isValid() const override {
     return hasIndex(_currentIndex);
   }
 
@@ -200,27 +200,28 @@ protected:
   virtual void recomputeShape() = 0;
 
   friend class RooVectorDataStore ;
-  virtual void syncCache(const RooArgSet* set=0) ;
-  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValueDirty=kTRUE) ;
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
-  virtual void attachToVStore(RooVectorDataStore& vstore) ;
-  virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
-  virtual void fillTreeBranch(TTree& t) ;
+  void syncCache(const RooArgSet* set=0) override ;
+  void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValueDirty=kTRUE) override ;
+  void setCachedValue(double value, bool notifyClients = true) final;
+  void attachToTree(TTree& t, Int_t bufSize=32000) override ;
+  void attachToVStore(RooVectorDataStore& vstore) override ;
+  void setTreeBranchStatus(TTree& t, Bool_t active) override ;
+  void fillTreeBranch(TTree& t) override ;
 
   RooCatType* retrieveLegacyState(value_type index) const;
   value_type nextAvailableStateIndex() const;
 
 
-  mutable value_type _currentIndex{std::numeric_limits<int>::min()}; /// Current category state
-  std::map<std::string, value_type> _stateNames; /// Map state names to index numbers. Make sure state names are updated in recomputeShape().
-  std::vector<std::string> _insertionOrder; /// Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
-  mutable UChar_t _byteValue{0}; //! Transient cache for byte values from tree branches
-  mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; //! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
-  bool _treeVar{false}; /// Is this category attached to a tree?
+  mutable value_type _currentIndex{std::numeric_limits<int>::min()}; ///< Current category state
+  std::map<std::string, value_type> _stateNames;                     ///< Map state names to index numbers. Make sure state names are updated in recomputeShape().
+  std::vector<std::string> _insertionOrder;                          ///< Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
+  mutable UChar_t _byteValue{0};                                     ///<! Transient cache for byte values from tree branches
+  mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; ///<! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
+  bool _treeVar{false}; ///< Is this category attached to a tree?
 
   static const decltype(_stateNames)::value_type& invalidCategory();
 
-  ClassDef(RooAbsCategory, 3) // Abstract discrete variable
+  ClassDefOverride(RooAbsCategory, 3) // Abstract discrete variable
 };
 
 #endif

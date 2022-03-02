@@ -20,7 +20,7 @@
 
 #ifdef _WIN32
 // Turn off 'warning C4355: 'this' : used in base member initializer list'
-// 
+//
 // This message will pop up for any class that initializes member proxy objects
 // Including the pragma here will automatically disable that warning message
 // for all such cases
@@ -37,20 +37,20 @@ public:
     // Destructor
   } ;
 
-  virtual const char* name() const { 
+  virtual const char* name() const {
     // Return name of proxy
-    return "dummy" ; 
-  } ;  
+    return "dummy" ;
+  } ;
 
-  inline const RooArgSet* nset() const { 
+  inline const RooArgSet* nset() const {
     // Return normalization set to be used for evaluation of contents
-    return _nset ; 
+    return _nset ;
   }
   virtual void print(std::ostream& os, Bool_t addContents=kFALSE) const ;
 
 protected:
 
-  RooArgSet* _nset ; //! Normalization set to be used for evaluation of RooAbsPdf contents
+  RooArgSet* _nset ; ///<! Normalization set to be used for evaluation of RooAbsPdf contents
 
   friend class RooAbsArg ;
   friend class RooObjectFactory ;

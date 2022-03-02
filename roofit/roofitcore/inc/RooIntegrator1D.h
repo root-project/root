@@ -27,70 +27,70 @@ public:
   RooIntegrator1D() ;
 
   RooIntegrator1D(const RooAbsFunc& function, SummationRule rule= Trapezoid,
-		  Int_t maxSteps= 0, Double_t eps= 0) ; 
+        Int_t maxSteps= 0, Double_t eps= 0) ;
   RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
-		  SummationRule rule= Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ; 
+        SummationRule rule= Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ;
 
   RooIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
-  RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, 
-		  const RooNumIntConfig& config) ;
+  RooIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
+        const RooNumIntConfig& config) ;
 
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooIntegrator1D();
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooIntegrator1D() override;
 
-  virtual Bool_t checkLimits() const;
-  virtual Double_t integral(const Double_t *yvec=0) ;
+  Bool_t checkLimits() const override;
+  Double_t integral(const Double_t *yvec=0) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax);
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
+  Bool_t setLimits(Double_t* xmin, Double_t* xmax) override;
+  Bool_t setUseIntegrandLimits(Bool_t flag) override {_useIntegrandLimits = flag ; return kTRUE ; }
 
-  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
-  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
-  virtual Bool_t canIntegrateND() const { return kFALSE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  Bool_t canIntegrate1D() const override { return kTRUE ; }
+  Bool_t canIntegrate2D() const override { return kFALSE ; }
+  Bool_t canIntegrateND() const override { return kFALSE ; }
+  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
 
 protected:
 
   friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;	
+  static void registerIntegrator(RooNumIntFactory& fact) ;
 
   Bool_t initialize();
 
-  Bool_t _useIntegrandLimits;  // If true limits of function binding are ued
+  Bool_t _useIntegrandLimits;  ///< If true limits of function binding are used
 
   // Integrator configuration
   SummationRule _rule;
-  Int_t _maxSteps ;      // Maximum number of steps
-  Int_t _minStepsZero ;  // Minimum number of steps to declare convergence to zero
-  Int_t _fixSteps ;      // Fixed number of steps 
-  Double_t _epsAbs ;     // Absolute convergence tolerance
-  Double_t _epsRel ;     // Relative convergence tolerance
-  Bool_t _doExtrap ;     // Apply conversion step?
+  Int_t _maxSteps ;      ///< Maximum number of steps
+  Int_t _minStepsZero ;  ///< Minimum number of steps to declare convergence to zero
+  Int_t _fixSteps ;      ///< Fixed number of steps
+  Double_t _epsAbs ;     ///< Absolute convergence tolerance
+  Double_t _epsRel ;     ///< Relative convergence tolerance
+  Bool_t _doExtrap ;     ///< Apply conversion step?
   enum { _nPoints = 5 };
 
   // Numerical integrator support functions
   Double_t addTrapezoids(Int_t n) ;
   Double_t addMidpoints(Int_t n) ;
   void extrapolate(Int_t n) ;
-  
+
   // Numerical integrator workspace
-  Double_t _xmin;              //! Lower integration bound
-  Double_t _xmax;              //! Upper integration bound
-  Double_t _range;             //! Size of integration range
-  Double_t _extrapValue;               //! Extrapolated value
-  Double_t _extrapError;               //! Error on extrapolated value
-  Double_t *_h ;                       //! Integrator workspace
-  Double_t *_s ;                       //! Integrator workspace
-  Double_t *_c ;                       //! Integrator workspace
-  Double_t *_d ;                       //! Integrator workspace
-  Double_t _savedResult;               //! Integrator workspace
+  Double_t _xmin;              ///<! Lower integration bound
+  Double_t _xmax;              ///<! Upper integration bound
+  Double_t _range;             ///<! Size of integration range
+  Double_t _extrapValue;       ///<! Extrapolated value
+  Double_t _extrapError;       ///<! Error on extrapolated value
+  Double_t *_h ;               ///<! Integrator workspace
+  Double_t *_s ;               ///<! Integrator workspace
+  Double_t *_c ;               ///<! Integrator workspace
+  Double_t *_d ;               ///<! Integrator workspace
+  Double_t _savedResult;       ///<! Integrator workspace
 
   Double_t* xvec(Double_t& xx) { _x[0] = xx ; return _x ; }
 
   Double_t *_x ; //! do not persist
 
-  ClassDef(RooIntegrator1D,0) // 1-dimensional numerical integration engine
+  ClassDefOverride(RooIntegrator1D,0) // 1-dimensional numerical integration engine
 };
 
 #endif

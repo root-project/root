@@ -51,13 +51,13 @@ public:
 
    TSpectrum();
    TSpectrum(Int_t maxpositions, Double_t resolution=1); // resolution is *NOT USED*
-   virtual ~TSpectrum();
+   ~TSpectrum() override;
    virtual TH1        *Background(const TH1 *hist,Int_t niter=20, Option_t *option="");
    TH1                *GetHistogram() const {return fHistogram;}
    Int_t               GetNPeaks() const {return fNPeaks;}
    Double_t            *GetPositionX() const {return fPositionX;}
    Double_t            *GetPositionY() const {return fPositionY;}
-   virtual void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="") const override;
    virtual Int_t       Search(const TH1 *hist, Double_t sigma=2, Option_t *option="", Double_t threshold=0.05);
    static void         SetAverageWindow(Int_t w=3);   //set average window
    static void         SetDeconIterations(Int_t n=3); //set max number of decon iterations
@@ -75,7 +75,7 @@ public:
    static Int_t        StaticSearch(const TH1 *hist, Double_t sigma=2, Option_t *option="goff", Double_t threshold=0.05);
    static TH1         *StaticBackground(const TH1 *hist,Int_t niter=20, Option_t *option="");
 
-   ClassDef(TSpectrum,3)  //Peak Finder, background estimator, Deconvolution
+   ClassDefOverride(TSpectrum,3)  //Peak Finder, background estimator, Deconvolution
 };
 
 #endif

@@ -21,7 +21,6 @@
 #include <queue>
 
 namespace ROOT {
-namespace Experimental {
 
 class TBufferMergerFile;
 
@@ -45,7 +44,8 @@ public:
     * @param option Output file creation options
     * @param compress Output file compression level
     */
-   TBufferMerger(const char *name, Option_t *option = "RECREATE", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+   TBufferMerger(const char *name, Option_t *option = "RECREATE",
+                 Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
 
    /** Constructor
     * @param output Output \c TFile
@@ -168,7 +168,7 @@ private:
 };
 
 /**
- * \class TBufferMerger TBufferMerger.hxx
+ * \class TBufferMergerFile TBufferMerger.hxx
  * \ingroup IO
  *
  * A TBufferMergerFile is similar to a TMemFile, but when data
@@ -213,7 +213,6 @@ public:
    ClassDefOverride(TBufferMergerFile, 0);
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

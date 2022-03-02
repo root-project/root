@@ -31,32 +31,32 @@ class RooBinnedGenContext : public RooAbsGenContext {
 public:
   RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
-  virtual ~RooBinnedGenContext();
-  
-  RooDataSet* generate(Double_t nEvents=0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) ;
+  ~RooBinnedGenContext() override;
 
-  virtual void setProtoDataOrder(Int_t*)  {}
+  RooDataSet* generate(Double_t nEvents=0, Bool_t skipInit=kFALSE, Bool_t extendedMode=kFALSE) override ;
 
-  virtual void attach(const RooArgSet& params) ;
+  void setProtoDataOrder(Int_t*) override  {}
 
-  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void attach(const RooArgSet& params) override ;
 
-  virtual void setExpectedData(Bool_t) ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
+
+  void setExpectedData(Bool_t) override ;
 
 protected:
 
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void initGenerator(const RooArgSet &theEvent) override;
+  void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
   RooBinnedGenContext(const RooBinnedGenContext& other) ;
 
-  const RooArgSet* _vars ;       
-  RooArgSet* _pdfSet ;           //  Set owned all nodes of internal clone of p.d.f
-  RooAbsPdf *_pdf ;              //  Pointer to cloned p.d.f
-  RooDataHist* _hist ;          // Histogram 
-  Bool_t _expectedData ;        // Asimov?
+  const RooArgSet* _vars ;
+  RooArgSet* _pdfSet ;          ///<  Set owned all nodes of internal clone of p.d.f
+  RooAbsPdf *_pdf ;             ///<  Pointer to cloned p.d.f
+  RooDataHist* _hist ;          ///< Histogram
+  Bool_t _expectedData ;        ///< Asimov?
 
-  ClassDef(RooBinnedGenContext,0) // Specialized context for generating a dataset from a binned pdf
+  ClassDefOverride(RooBinnedGenContext,0) // Specialized context for generating a dataset from a binned pdf
 };
 
 #endif

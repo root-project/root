@@ -97,10 +97,10 @@ TEST(RooPoisson, AnalyticalIntegral)
 
     //And first two bins
     runTest(-1., 1., TMath::Poisson(0, lambdaVal) + TMath::Poisson(1, lambdaVal));
-    
+
     //Not defined (should yield zero)
     runTest(-1., -0.5, 0.);
-    
+
     //Some positive ranges
     runTest(0., 10., ROOT::Math::poisson_cdf(10, lambdaVal));
     runTest(0.4, 10.3, ROOT::Math::poisson_cdf(10, lambdaVal));

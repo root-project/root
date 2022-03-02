@@ -25,8 +25,9 @@
 #include "TEnv.h"
 #include "TApplication.h"
 
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RLogger.hxx>
+
+#include <memory>
 
 
 class TCefTimer : public TTimer {
@@ -188,7 +189,10 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> RCefWebDisplayHandle::Cef
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   fCefApp = new SimpleApp(use_views, args.GetHttpServer(), args.GetFullUrl(), args.GetPageContent(), args.GetWidth(), args.GetHeight(), args.IsHeadless());
+   fCefApp = new SimpleApp(use_views, args.GetHttpServer(), args.GetFullUrl(), args.GetPageContent(),
+                                args.GetWidth() > 0 ? args.GetWidth() : 800,
+                                args.GetHeight() > 0 ? args.GetHeight() : 600,
+                                args.IsHeadless());
 
    fCefApp->SetNextHandle(handle.get());
 

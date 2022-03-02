@@ -35,8 +35,8 @@ public:
 
 
 private:
-   TGraphDelaunay2D(const TGraphDelaunay2D&);            // Not implemented
-   TGraphDelaunay2D& operator=(const TGraphDelaunay2D&); // Not implemented
+   TGraphDelaunay2D(const TGraphDelaunay2D&) = delete;
+   TGraphDelaunay2D& operator=(const TGraphDelaunay2D&) = delete;
 
 protected:
 
@@ -65,7 +65,7 @@ public:
    Triangles::const_iterator begin() const { return fDelaunay.begin(); }
    Triangles::const_iterator end()  const { return fDelaunay.end(); }
 
-   ClassDef(TGraphDelaunay2D,1)  // Delaunay triangulation
+   ClassDefOverride(TGraphDelaunay2D,1)  // Delaunay triangulation
 
 private:
 

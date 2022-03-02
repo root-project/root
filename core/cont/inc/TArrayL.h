@@ -27,7 +27,7 @@
 class TArrayL : public TArray {
 
 public:
-   Long_t    *fArray;       //[fN] Array of fN longs
+   Long_t *fArray;       //[fN] Array of fN longs
 
    TArrayL();
    TArrayL(Int_t n);

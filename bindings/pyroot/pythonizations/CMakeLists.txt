@@ -10,9 +10,10 @@
 
 if(dataframe)
     list(APPEND PYROOT_EXTRA_PYSOURCE
-        ROOT/pythonization/_rdf_utils.py
-        ROOT/pythonization/_rdataframe.py
-        ROOT/pythonization/_rtensor.py)
+        ROOT/_pythonization/_rdf_utils.py
+        ROOT/_pythonization/_rdataframe.py
+        ROOT/_pythonization/_rdfdescription.py
+        ROOT/_pythonization/_rtensor.py)
     list(APPEND PYROOT_EXTRA_SOURCE
         src/RDataFramePyz.cxx
         src/RTensorPyz.cxx)
@@ -28,33 +29,53 @@ set(py_sources
   ROOT/_application.py
   ROOT/_numbadeclare.py
   ROOT/_facade.py
-  ROOT/pythonization/__init__.py
-  ROOT/pythonization/_cppinstance.py
-  ROOT/pythonization/_drawables.py
-  ROOT/pythonization/_generic.py
-  ROOT/pythonization/_rbdt.py
-  ROOT/pythonization/_rooabscollection.py
-  ROOT/pythonization/_rooworkspace.py
-  ROOT/pythonization/_rvec.py
-  ROOT/pythonization/_stl_vector.py
-  ROOT/pythonization/_tarray.py
-  ROOT/pythonization/_tclonesarray.py
-  ROOT/pythonization/_tcollection.py
-  ROOT/pythonization/_tcomplex.py
-  ROOT/pythonization/_tdirectory.py
-  ROOT/pythonization/_tdirectoryfile.py
-  ROOT/pythonization/_tfile.py
-  ROOT/pythonization/_tgraph.py
-  ROOT/pythonization/_th1.py
-  ROOT/pythonization/_titer.py
-  ROOT/pythonization/_tobject.py
-  ROOT/pythonization/_tobjstring.py
-  ROOT/pythonization/_tree_inference.py
-  ROOT/pythonization/_tseqcollection.py
-  ROOT/pythonization/_tstring.py
-  ROOT/pythonization/_ttree.py
-  ROOT/pythonization/_tvector3.py
-  ROOT/pythonization/_tvectort.py
+  ROOT/_pythonization/__init__.py
+  ROOT/_pythonization/_cppinstance.py
+  ROOT/_pythonization/_drawables.py
+  ROOT/_pythonization/_generic.py
+  ROOT/_pythonization/_rbdt.py
+  ROOT/_pythonization/_rvec.py
+  ROOT/_pythonization/_stl_vector.py
+  ROOT/_pythonization/_tarray.py
+  ROOT/_pythonization/_tclass.py
+  ROOT/_pythonization/_tclonesarray.py
+  ROOT/_pythonization/_tcollection.py
+  ROOT/_pythonization/_tcomplex.py
+  ROOT/_pythonization/_tdirectory.py
+  ROOT/_pythonization/_tdirectoryfile.py
+  ROOT/_pythonization/_tfile.py
+  ROOT/_pythonization/_tgraph.py
+  ROOT/_pythonization/_th1.py
+  ROOT/_pythonization/_titer.py
+  ROOT/_pythonization/_tobject.py
+  ROOT/_pythonization/_tobjstring.py
+  ROOT/_pythonization/_tree_inference.py
+  ROOT/_pythonization/_tseqcollection.py
+  ROOT/_pythonization/_tstring.py
+  ROOT/_pythonization/_ttree.py
+  ROOT/_pythonization/_tvector3.py
+  ROOT/_pythonization/_tvectort.py
+  ROOT/_pythonization/_roofit/__init__.py
+  ROOT/_pythonization/_roofit/_rooabscollection.py
+  ROOT/_pythonization/_roofit/_rooabsdata.py
+  ROOT/_pythonization/_roofit/_rooabspdf.py
+  ROOT/_pythonization/_roofit/_rooabsreallvalue.py
+  ROOT/_pythonization/_roofit/_rooabsreal.py
+  ROOT/_pythonization/_roofit/_rooarglist.py
+  ROOT/_pythonization/_roofit/_rooargset.py
+  ROOT/_pythonization/_roofit/_roochi2var.py
+  ROOT/_pythonization/_roofit/_roodatahist.py
+  ROOT/_pythonization/_roofit/_roodataset.py
+  ROOT/_pythonization/_roofit/_roodecays.py
+  ROOT/_pythonization/_roofit/_roogenfitstudy.py
+  ROOT/_pythonization/_roofit/_roomcstudy.py
+  ROOT/_pythonization/_roofit/_roomsgservice.py
+  ROOT/_pythonization/_roofit/_roonllvar.py
+  ROOT/_pythonization/_roofit/_rooprodpdf.py
+  ROOT/_pythonization/_roofit/_roosimultaneous.py
+  ROOT/_pythonization/_roofit/_roosimwstool.py
+  ROOT/_pythonization/_roofit/_rooworkspace.py
+  ROOT/_pythonization/_roofit/_utils.py
   ${PYROOT_EXTRA_PYSOURCE}
 )
 
@@ -111,21 +132,14 @@ foreach(val RANGE ${how_many_pythons})
   endif()
 
   target_include_directories(${libname}
-     PRIVATE ${python_include_dir}
-     PUBLIC  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
+     SYSTEM PRIVATE ${python_include_dir})
+
+  target_include_directories(${libname}
+     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
 
   # Disables warnings caused by Py_RETURN_TRUE/Py_RETURN_FALSE
   if(NOT MSVC)
     target_compile_options(${libname} PRIVATE -Wno-strict-aliasing)
-  endif()
-
-  # Disables warnings originating from deprecated register keyword in Python
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
-    target_compile_options(${libname} PRIVATE -Wno-register)
-  endif()
-  if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)
-    target_compile_options(${libname} PRIVATE -Wno-register)
-    target_compile_options(${libname} PRIVATE -Wno-deprecated-register)
   endif()
 
   # Compile .py files

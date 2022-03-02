@@ -409,14 +409,20 @@ namespace Math {
 
   Probability density function of the bi-dimensional (Gaussian) distribution.
 
-  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-(x^2/\sigma_x^2 + y^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]
+  \f[ p(x) = {1 \over 2 \pi \sigma_x \sigma_y \sqrt{1-\rho^2}} \exp (-((x-x0)^2/\sigma_x^2 + (y-y0)^2/\sigma_y^2 - 2 \rho x y/(\sigma_x\sigma_y))/2(1-\rho^2)) \f]
 
   For detailed description see
   <A HREF="http://mathworld.wolfram.com/BivariateNormalDistribution.html">
   Mathworld</A>. It can also be evaluated using #normal_pdf which will
   call the same implementation.
 
- @param rho correlation , must be between -1,1
+  @param x x variable
+  @param y y variable
+  @param sigmax the stdev in x
+  @param sigmay the stdev in y
+  @param rho correlation, must be between -1,1
+  @param x0 the offset in x
+  @param y0 the offset in y
 
   @ingroup PdfFunc
 
@@ -465,6 +471,8 @@ namespace Math {
   for x>0. For detailed description see
   <A HREF="http://mathworld.wolfram.com/LogNormalDistribution.html">
   Mathworld</A>.
+  @param x x variable
+  @param m M = 0 for lognormal
   @param s scale parameter (not the sigma of the distribution which is not even defined)
   @param x0  location parameter, corresponds approximately to the most probable value. For x0 = 0, sigma = 1, the x_mpv = -0.22278
 

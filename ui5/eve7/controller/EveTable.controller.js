@@ -25,7 +25,7 @@ sap.ui.define([
       onInit: function () {
          var viewData = this.getView().getViewData();
          if (viewData) {
-            this.setupManagerAndViewType(viewData.eveViewerId, viewData.kind, viewData.mgr);
+            this.setupManagerAndViewType(viewData.eveViewerId, viewData.mgr);
          }
          else {
              UIComponent.getRouterFor(this).getRoute("Table").attachPatternMatched(this.onTableObjectMatched, this);
@@ -33,19 +33,18 @@ sap.ui.define([
       },
       onTableObjectMatched: function (oEvent) {
          let args = oEvent.getParameter("arguments");
-         this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.view_kind, JSROOT.$eve7tmp.mgr );
+         this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.mgr );
          delete JSROOT.$eve7tmp;
 
          this.checkViewReady();
       },
-      setupManagerAndViewType: function(eveViewerId, kind, mgr)
+      setupManagerAndViewType: function(eveViewerId, mgr)
       {
          this._load_scripts = true;
          this._render_html = false;
 
          this.mgr = mgr;
          this.eveViewerId = eveViewerId;
-         this.kind = kind;
 
          var rh = this.mgr.handle.getUserArgs("TableRowHeight");
          if (rh && (rh > 0))
@@ -77,12 +76,12 @@ sap.ui.define([
             var oData = table.getContextByIndex(idx);
             if (oData) {
                let ui = oData.getPath().substring(6);
-               console.log("idx =", idx, "path idx = ", ui);
+               // console.log("idx =", idx, "path idx = ", ui);
 
                let itemList = pthis.collection.childs[0];
                let secIdcs = [ui];
-               let fcall = "ProcessSelection(" + pthis.mgr.global_selection_id + `, false, true`;
-               fcall += ", { " + secIdcs.join(", ") + " }";
+               let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + ", " + pthis.multiSelect + ", true";
+               fcall += ", \" " + secIdcs.join(", ") + " \"";
                fcall += ")";
                pthis.mgr.SendMIR(fcall, itemList.fElementId, itemList._typename);
             }
@@ -90,7 +89,20 @@ sap.ui.define([
                // console.log("attachRowSelectionChange no path ", oData);
             }
          });
+
+
+         if (table._enableLegacyMultiSelection) {
+            table._enableLegacyMultiSelection();
+         }
+         else {
+            console.error("Ctrl modifier not supported !")
+         }
          this.table = table;
+
+         // listen to Ctrl key events
+         this.multiSelect = false;
+         window.addEventListener('keydown', function(event) { if (event.ctrlKey) pthis.multiSelect = true; });
+         window.addEventListener('keyup',   function(event) { if (event.key == 'Control') pthis.multiSelect = false; });
       },
 
       sortTable: function (e) {
@@ -151,7 +163,6 @@ sap.ui.define([
 
       updateSortMap() {
          // update sorted/unsorted idx map
-         console.log("updateSortMap");
          let oTable = this.getView().byId("table");
          let nr = oTable.getModel().oData.rows.length;
          if (!oTable.sortMap)
@@ -219,8 +230,6 @@ sap.ui.define([
 
          if (this.bindTableColumns) {
             // column definition
-
-            console.log("bind table columns ");
             var columnData = [];
 
             columnData.push({ columnName: "Name" });
@@ -274,7 +283,6 @@ sap.ui.define([
                let ent = sap.ui.getCore().byId("inputExp");
                let sm = ent.getModel();
                sm.setData(this.eveTable.fPublicFunctions);
-               console.log("SHOULD UPDATE SUGGESTION DATA")
             }
 
             this.bindTableColumns = false;
@@ -291,7 +299,6 @@ sap.ui.define([
          var oModel = new JSONModel();
          var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
          var clist = this.mgr.GetElement(collection.fMotherId);
-         // console.log("collection list ", clist);
 
          var mData = {
             "itemx": [
@@ -320,7 +327,6 @@ sap.ui.define([
       },
 
       onSceneCreate: function (element, id) {
-         console.log("EveTable onSceneChanged", id);
          this.locateEveTable();
          this.buildTableHeader();
          this.buildTableBody(true);
@@ -362,7 +368,6 @@ sap.ui.define([
                   },
                   suggestionItemSelected: function (oEvent) {
                      var oItem = oEvent.getParameter("selectedRow");
-                     console.log("sap.m.Input id with suggestion: selected item text is ------ ", oItem.getCells());
                      // fill in title if empty
                      var it = sap.ui.getCore().byId("titleEx");
                      if ((it.getValue() && it.getValue().length) == false) {

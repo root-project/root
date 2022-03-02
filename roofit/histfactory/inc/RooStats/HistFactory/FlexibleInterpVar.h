@@ -27,16 +27,16 @@ namespace HistFactory{
 
     FlexibleInterpVar() ;
     FlexibleInterpVar(const char *name, const char *title,
-		      const RooArgList& _paramList, 
-		      Double_t nominal, const RooArgList& low, const RooArgList& high);
+            const RooArgList& _paramList,
+            Double_t nominal, const RooArgList& low, const RooArgList& high);
 
     FlexibleInterpVar(const char *name, const char *title,
-		      const RooArgList& _paramList, 
-		      double nominal, std::vector<double> low, std::vector<double> high);
+            const RooArgList& _paramList,
+            double nominal, std::vector<double> low, std::vector<double> high);
 
     FlexibleInterpVar(const char *name, const char *title,
-		      const RooArgList& _paramList, double nominal, std::vector<double> low, 
-		      std::vector<double> high,std::vector<int> code);
+            const RooArgList& _paramList, double nominal, std::vector<double> low,
+            std::vector<double> high,std::vector<int> code);
 
     FlexibleInterpVar(const char *name, const char *title);
     FlexibleInterpVar(const FlexibleInterpVar&, const char*);
@@ -50,17 +50,17 @@ namespace HistFactory{
 
     void printAllInterpCodes();
 
-    virtual TObject* clone(const char* newname) const { return new FlexibleInterpVar(*this, newname); }
-    virtual ~FlexibleInterpVar() ;
+    TObject* clone(const char* newname) const override { return new FlexibleInterpVar(*this, newname); }
+    ~FlexibleInterpVar() override ;
 
-    virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose = kFALSE, TString indent = "") const;
+    void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose = kFALSE, TString indent = "") const override;
     virtual void printFlexibleInterpVars(std::ostream& os) const;
 
     const RooListProxy& variables() const;
-    double nominal() const;        
+    double nominal() const;
     const std::vector<double>& low() const;
-    const std::vector<double>& high() const;    
-    
+    const std::vector<double>& high() const;
+
   private:
 
     double PolyInterpValue(int i, double x) const;
@@ -74,12 +74,12 @@ namespace HistFactory{
     std::vector<int> _interpCode;
     Double_t _interpBoundary;
 
-    mutable Bool_t         _logInit ;            //! flag used for caching polynomial coefficients
-    mutable std::vector< double>  _polCoeff;     //! cached polynomial coefficients
+    mutable Bool_t         _logInit ;            ///<! flag used for caching polynomial coefficients
+    mutable std::vector< double>  _polCoeff;     ///<! cached polynomial coefficients
 
-    Double_t evaluate() const;
+    Double_t evaluate() const override;
 
-    ClassDef(RooStats::HistFactory::FlexibleInterpVar,2) // flexible interpolation
+    ClassDefOverride(RooStats::HistFactory::FlexibleInterpVar,2) // flexible interpolation
   };
 }
 }

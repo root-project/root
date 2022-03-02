@@ -25,33 +25,33 @@ public:
   // Constructors, assignment etc
   RooDataWeightedAverage() {
     // Default constructor
-  } ;  
+  } ;
 
   RooDataWeightedAverage(const char *name, const char *title, RooAbsReal& real, RooAbsData& data, const RooArgSet& projDeps,
                          RooAbsTestStatistic::Configuration const& cfg, bool showProgress=false) ;
 
   RooDataWeightedAverage(const RooDataWeightedAverage& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooDataWeightedAverage(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooDataWeightedAverage(*this,newname); }
 
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& adata,
+  RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& real, RooAbsData& adata,
                                       const RooArgSet& projDeps,
-                                      RooAbsTestStatistic::Configuration const& cfg) {
+                                      RooAbsTestStatistic::Configuration const& cfg) override {
     // Virtual constructor
     return new RooDataWeightedAverage(name,title,real,adata,projDeps,cfg) ;
   }
 
-  virtual Double_t globalNormalization() const ;
+  Double_t globalNormalization() const override ;
 
-  virtual ~RooDataWeightedAverage();
+  ~RooDataWeightedAverage() override;
 
 
 protected:
 
-  Double_t _sumWeight ;  // Global sum of weights needed for normalization
-  Bool_t _showProgress ; // Show progress indication during evaluation if true
-  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
-  
-  ClassDef(RooDataWeightedAverage,1) // Optimized calculator of data weighted average of a RooAbsReal
+  Double_t _sumWeight ;  ///< Global sum of weights needed for normalization
+  Bool_t _showProgress ; ///< Show progress indication during evaluation if true
+  Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
+
+  ClassDefOverride(RooDataWeightedAverage,1) // Optimized calculator of data weighted average of a RooAbsReal
 };
 
 #endif

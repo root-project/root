@@ -1,6 +1,8 @@
 #include "gtest/gtest.h"
 #include "gmock/gmock.h"
 
+#include "ROOT/TestSupport.hxx"
+
 #include <ROOT/RError.hxx>
 
 #include <memory>
@@ -125,6 +127,11 @@ TEST(Exception, CheckReturnValue)
 
 TEST(Exception, DoubleThrow)
 {
+   // We have to suppress a warning because of the double throw.
+   ROOT::TestSupport::FilterDiagsRAII filterDiags{ [](int /*severity*/, bool, const char* /*location*/, const char* msg) {
+      EXPECT_STREQ(msg, "unhandled RResult exception during stack unwinding");
+   }};
+
    try {
       auto rv = TestFailure();
       // Throwing ExceptionX will destruct rv along the way. Since rv carries an error state, it would normally

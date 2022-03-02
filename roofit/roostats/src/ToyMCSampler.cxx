@@ -73,7 +73,7 @@ void NuisanceParametersSampler::NextPoint(RooArgSet& nuisPoint, Double_t& weight
    }
 
    // get value
-   nuisPoint =  *fPoints->get(fIndex++);
+   nuisPoint.assign(*fPoints->get(fIndex++));
    weight = fPoints->weight();
 
    // check whether result will have any influence
@@ -275,7 +275,10 @@ const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, cons
         name.Append("_");
         detOutAgg.AppendArgSet(detOut, name);
       }
-      if (saveAll) *allVars = *saveAll;  // restore values, perhaps modified by fTestStatistics[i]->Evaluate()
+      if (saveAll) {
+        // restore values, perhaps modified by fTestStatistics[i]->Evaluate()
+        allVars->assign(*saveAll);
+      }
    }
    delete saveAll;
    delete allVars;
@@ -406,7 +409,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       Double_t valueFirst = -999.0, weight = 1.0;
 
       // set variables to requested parameter point
-      *allVars = *saveAll; // important for example for SimpleLikelihoodRatioTestStat
+      allVars->assign(*saveAll); // important for example for SimpleLikelihoodRatioTestStat
 
       RooAbsData* toydata = GenerateToyData(*paramPoint, weight);
       if (i == 0 && !fPdf->canBeExtended() && dynamic_cast<RooSimultaneous*>(fPdf)) {
@@ -419,7 +422,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
             " extended. Otherwise, the number of events to generate per component cannot be determined." << std::endl;
       }
 
-      *allVars = *fParametersForTestStat;
+      allVars->assign(*fParametersForTestStat);
 
       const RooArgList* allTS = EvaluateAllTestStatistics(*toydata, *fParametersForTestStat, detOutAgg);
       if (allTS->getSize() > Int_t(fTestStatistics.size()))
@@ -445,7 +448,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
    }
 
    // clean up
-   *allVars = *saveAll;
+   allVars->assign(*saveAll);
    delete saveAll;
    delete allVars;
    delete paramPoint;
@@ -476,7 +479,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
          if (!_allVars) {
             _allVars.reset(pdf.getVariables());
          }
-         *_allVars = *values;
+         _allVars->assign(*values);
          delete one;
 
       } else {
@@ -499,7 +502,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
          // Assign generated values to the observables in _obsList
          for (unsigned int i = 0; i < _pdfList.size(); ++i) {
            std::unique_ptr<RooDataSet> tmp( _pdfList[i]->generate(*_gsList[i]) );
-           *_obsList[i] = *tmp->get(0);
+           _obsList[i]->assign(*tmp->get(0));
          }
       }
 
@@ -510,7 +513,7 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
       RooDataSet* one = pdf.generateSimGlobal( *fGlobalObservables, 1 );
       const RooArgSet *values = one->get(0);
       RooArgSet* allVars = pdf.getVariables();
-      *allVars = *values;
+      allVars->assign(*values);
       delete allVars;
       delete one;
 
@@ -533,7 +536,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 
    // assign input paramPoint
    RooArgSet* allVars = fPdf->getVariables();
-   *allVars = paramPoint;
+   allVars->assign(paramPoint);
 
 
    // create nuisance parameter points
@@ -578,7 +581,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 
    // We generated the data with the randomized nuisance parameter (if hybrid)
    // but now we are setting the nuisance parameters back to where they were.
-   *allVars = *saveVars;
+   allVars->assign(*saveVars);
    delete allVars;
    delete saveVars;
 

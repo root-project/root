@@ -1,13 +1,13 @@
- /***************************************************************************** 
-  * Project: RooFit                                                           * 
-  *                                                                           * 
-  * Copyright (c) 2000-2005, Regents of the University of California          * 
-  *                          and Stanford University. All rights reserved.    * 
-  *                                                                           * 
-  * Redistribution and use in source and binary forms,                        * 
-  * with or without modification, are permitted according to the terms        * 
-  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
-  *****************************************************************************/ 
+ /*****************************************************************************
+  * Project: RooFit                                                           *
+  *                                                                           *
+  * Copyright (c) 2000-2005, Regents of the University of California          *
+  *                          and Stanford University. All rights reserved.    *
+  *                                                                           *
+  * Redistribution and use in source and binary forms,                        *
+  * with or without modification, are permitted according to the terms        *
+  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+  *****************************************************************************/
 
 /**
 \file RooAbsCachedReal.cxx
@@ -28,20 +28,20 @@ by the user to getVal() and on which parameters need to be tracked
 for changes to trigger a refilling of the cache histogram.
 **/
 
-#include "Riostream.h" 
+#include "Riostream.h"
 using namespace std ;
 
 #include "RooFit.h"
 #include "TString.h"
-#include "RooAbsCachedReal.h" 
-#include "RooAbsReal.h" 
+#include "RooAbsCachedReal.h"
+#include "RooAbsReal.h"
 #include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistFunc.h"
 #include "RooChangeTracker.h"
 #include "RooExpensiveObjectCache.h"
 
-ClassImp(RooAbsCachedReal); 
+ClassImp(RooAbsCachedReal);
 
 
 
@@ -49,32 +49,32 @@ ClassImp(RooAbsCachedReal);
 /// Constructor
 
 RooAbsCachedReal::RooAbsCachedReal(const char *name, const char *title, Int_t ipOrder) :
-  RooAbsReal(name,title), 
+  RooAbsReal(name,title),
   _cacheMgr(this,10),
   _ipOrder(ipOrder),
   _disableCache(kFALSE)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsCachedReal::RooAbsCachedReal(const RooAbsCachedReal& other, const char* name) :  
-   RooAbsReal(other,name), 
+RooAbsCachedReal::RooAbsCachedReal(const RooAbsCachedReal& other, const char* name) :
+   RooAbsReal(other,name),
    _cacheMgr(other._cacheMgr,this),
    _ipOrder(other._ipOrder),
    _disableCache(other._disableCache)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsCachedReal::~RooAbsCachedReal() 
+RooAbsCachedReal::~RooAbsCachedReal()
 {
 }
 
@@ -86,7 +86,7 @@ RooAbsCachedReal::~RooAbsCachedReal()
 /// rather than return value of evaluate() which is undefined
 /// for RooAbsCachedReal
 
-Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const 
+Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const
 {
   if (_disableCache) {
     return RooAbsReal::getValV(nset) ;
@@ -98,7 +98,7 @@ Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const
   // Calculate current unnormalized value of object
   // coverity[NULL_RETURNS]
   FuncCacheElem* cache = getCache(nset) ;
- 
+
   _value = cache->func()->getVal() ;
 
   return _value ;
@@ -109,9 +109,9 @@ Double_t RooAbsCachedReal::getValV(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark all bins as unitialized (value -1)
 
-void RooAbsCachedReal::clearCacheObject(FuncCacheElem& cache) const 
+void RooAbsCachedReal::clearCacheObject(FuncCacheElem& cache) const
 {
-  cache.hist()->setAllWeights(-1) ;  
+  cache.hist()->setAllWeights(-1) ;
 }
 
 
@@ -140,9 +140,9 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,0,&sterileIdx) ;
   if (cache) {
     if (cache->paramTracker()->hasChanged(kTRUE)) {
-      ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function " 
-		  << cache->func()->GetName() << " requires recalculation as parameters changed" << endl ;
-      fillCacheObject(*cache) ;  
+      ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function "
+        << cache->func()->GetName() << " requires recalculation as parameters changed" << endl ;
+      fillCacheObject(*cache) ;
       cache->func()->setValueDirty() ;
     }
     return cache ;
@@ -157,27 +157,27 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
     arg->setOperMode(ADirty);
   }
 
-  // Check if we have contents registered already in global expensive object cache 
+  // Check if we have contents registered already in global expensive object cache
   RooDataHist* htmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
 
-  if (htmp) {    
+  if (htmp) {
 
     cache->hist()->reset() ;
     cache->hist()->add(*htmp) ;
 
   } else {
 
-    fillCacheObject(*cache) ;  
+    fillCacheObject(*cache) ;
 
     RooDataHist* eoclone = new RooDataHist(*cache->hist()) ;
     eoclone->removeSelfFromDir() ;
     expensiveObjectCache().registerObject(GetName(),cache->hist()->GetName(),*eoclone,cache->paramTracker()->parameters()) ;
-  } 
+  }
 
   // Store this cache configuration
   Int_t code = _cacheMgr.setObj(nset,0,((RooAbsCacheElement*)cache),0) ;
   ccoutD(Caching) << "RooAbsCachedReal("<<this<<")::getCache(" << GetName() << ") creating new cache " << cache->func()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code << endl ;
-  
+
   return cache ;
 }
 
@@ -189,9 +189,9 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 /// Create RooDataHist that will cache function values and create
 /// RooHistFunc that represent s RooDataHist shape as function, create
 /// meta object that tracks changes in declared parameters of p.d.f
-/// through actualParameters() 
+/// through actualParameters()
 
-RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset) 
+RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset)
 {
   // Disable source caching by default
   _cacheSource = kFALSE ;
@@ -203,9 +203,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   self.preferredObservableScanOrder(*nset2,orderedObs) ;
 
   // Create RooDataHist
-  TString hname = self.inputBaseName() ;
-  hname.Append("_CACHEHIST") ;
-  hname.Append(self.cacheNameSuffix(*nset2)) ;
+  auto hname = std::string(self.inputBaseName()) + "_CACHEHIST" + self.cacheNameSuffix(*nset2).Data();
 
   _hist = new RooDataHist(hname,hname,*nset2,self.binningName()) ;
   _hist->removeSelfFromDir() ;
@@ -236,7 +234,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   delete observables ;
   delete params ;
   delete nset2 ;
-  
+
 }
 
 
@@ -254,9 +252,9 @@ RooAbsCachedReal::FuncCacheElem::~FuncCacheElem()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct unique suffix name for cache p.d.f object 
+/// Construct unique suffix name for cache p.d.f object
 
-TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const 
+TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
 {
   TString name ;
   name.Append("_Obs[") ;
@@ -266,9 +264,9 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
     Bool_t first(kTRUE) ;
     while((arg=(RooAbsArg*)iter->Next())) {
       if (first) {
-	first=kFALSE ;
+   first=kFALSE ;
       } else {
-	name.Append(",") ;
+   name.Append(",") ;
       }
       name.Append(arg->GetName()) ;
     }
@@ -288,7 +286,7 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Set interpolation order of RooHistFunct representing cache histogram
 
-void RooAbsCachedReal::setInterpolationOrder(Int_t order) 
+void RooAbsCachedReal::setInterpolationOrder(Int_t order)
 {
   _ipOrder = order ;
 
@@ -305,7 +303,7 @@ void RooAbsCachedReal::setInterpolationOrder(Int_t order)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list of contained RooAbsArg objects
 
-RooArgList RooAbsCachedReal::FuncCacheElem::containedArgs(Action) 
+RooArgList RooAbsCachedReal::FuncCacheElem::containedArgs(Action)
 {
   RooArgList ret(*func()) ;
 
@@ -320,7 +318,7 @@ RooArgList RooAbsCachedReal::FuncCacheElem::containedArgs(Action)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print contents of cache when printing self as part of object tree
 
-void RooAbsCachedReal::FuncCacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem) 
+void RooAbsCachedReal::FuncCacheElem::printCompactTreeHook(ostream& os, const char* indent, Int_t curElem, Int_t maxElem)
 {
   if (curElem==0) {
     os << indent << "--- RooAbsCachedReal begin cache ---" << endl ;
@@ -340,7 +338,7 @@ void RooAbsCachedReal::FuncCacheElem::printCompactTreeHook(ostream& os, const ch
 ////////////////////////////////////////////////////////////////////////////////
 /// Return analytical integration capabilities of the RooHistFunc that corresponds to the set of observables in allVars
 
-Int_t RooAbsCachedReal::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName) const 
+Int_t RooAbsCachedReal::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName) const
 {
   FuncCacheElem* cache = getCache(normSet?normSet:&allVars) ;
   Int_t code = cache->func()->getAnalyticalIntegralWN(allVars,analVars,normSet,rangeName) ;
@@ -355,17 +353,17 @@ Int_t RooAbsCachedReal::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& a
 /// Forward call to implementation in relevant RooHistFunc instance
 
 Double_t RooAbsCachedReal::analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const
-{  
+{
   if (code==0) {
-    return getVal(normSet) ; 
-  }  
+    return getVal(normSet) ;
+  }
 
   const RooArgSet* anaVars = _anaIntMap[code].first ;
   const RooArgSet* normSet2 = _anaIntMap[code].second ;
 
   FuncCacheElem* cache = getCache(normSet2?normSet2:anaVars) ;
   return cache->func()->analyticalIntegralWN(code,normSet,rangeName) ;
-  
+
 }
 
 

@@ -108,7 +108,7 @@ public:
    HistAction(const TGWindow *p, UInt_t w, UInt_t h);
    virtual ~HistAction();
    virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    Int_t getNextTrueIndex(); //returns -1 in case of no index found
    void resetIter() {cursorIter = -1;}
    void resetFlags() { for (int i = 0; i < kMaxHist; i++) flags[i] = kFALSE; }

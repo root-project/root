@@ -22,16 +22,16 @@ class RooRealAnalytic : public RooRealBinding {
 public:
   inline RooRealAnalytic(const RooAbsReal &func, const RooArgSet &vars, Int_t code, const RooArgSet* normSet=0, const TNamed* rangeName=0) :
     RooRealBinding(func,vars,normSet,rangeName), _code(code) { }
-  inline virtual ~RooRealAnalytic() { }
+  inline ~RooRealAnalytic() override { }
 
-  virtual Double_t operator()(const Double_t xvector[]) const override;
+  Double_t operator()(const Double_t xvector[]) const override;
   RooSpan<const double> getValues(std::vector<RooSpan<const double>> coordinates) const override;
 
 protected:
   Int_t _code;
 
 private:
-  mutable std::unique_ptr<std::vector<double>> _batchBuffer; //! Buffer for handing out spans.
+  mutable std::unique_ptr<std::vector<double>> _batchBuffer; ///<! Buffer for handing out spans.
 
   ClassDefOverride(RooRealAnalytic,0) // Function binding to an analytical integral of a RooAbsReal
 };

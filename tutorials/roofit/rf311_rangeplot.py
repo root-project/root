@@ -19,36 +19,28 @@ y = ROOT.RooRealVar("y", "y", -5, 5)
 z = ROOT.RooRealVar("z", "z", -5, 5)
 
 # Create signal pdf gauss(x)*gauss(y)*gauss(z)
-gx = ROOT.RooGaussian(
-    "gx", "gx", x, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
-gy = ROOT.RooGaussian(
-    "gy", "gy", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
-gz = ROOT.RooGaussian(
-    "gz", "gz", z, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
-sig = ROOT.RooProdPdf("sig", "sig", ROOT.RooArgList(gx, gy, gz))
+gx = ROOT.RooGaussian("gx", "gx", x, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
+gy = ROOT.RooGaussian("gy", "gy", y, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
+gz = ROOT.RooGaussian("gz", "gz", z, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(1))
+sig = ROOT.RooProdPdf("sig", "sig", [gx, gy, gz])
 
 # Create background pdf poly(x)*poly(y)*poly(z)
-px = ROOT.RooPolynomial("px", "px", x, ROOT.RooArgList(
-    ROOT.RooFit.RooConst(-0.1), ROOT.RooFit.RooConst(0.004)))
-py = ROOT.RooPolynomial("py", "py", y, ROOT.RooArgList(
-    ROOT.RooFit.RooConst(0.1), ROOT.RooFit.RooConst(-0.004)))
+px = ROOT.RooPolynomial("px", "px", x, [-0.1, 0.004])
+py = ROOT.RooPolynomial("py", "py", y, [0.1, -0.004])
 pz = ROOT.RooPolynomial("pz", "pz", z)
-bkg = ROOT.RooProdPdf("bkg", "bkg", ROOT.RooArgList(px, py, pz))
+bkg = ROOT.RooProdPdf("bkg", "bkg", [px, py, pz])
 
 # Create composite pdf sig+bkg
-fsig = ROOT.RooRealVar("fsig", "signal fraction", 0.1, 0., 1.)
-model = ROOT.RooAddPdf(
-    "model", "model", ROOT.RooArgList(
-        sig, bkg), ROOT.RooArgList(fsig))
+fsig = ROOT.RooRealVar("fsig", "signal fraction", 0.1, 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "model", [sig, bkg], [fsig])
 
-data = model.generate(ROOT.RooArgSet(x, y, z), 20000)
+data = model.generate({x, y, z}, 20000)
 
 # Project pdf and data on x
 # -------------------------------------------------
 
 # Make plain projection of data and pdf on x observable
-frame = x.frame(ROOT.RooFit.Title(
-    "Projection of 3D data and pdf on X"), ROOT.RooFit.Bins(40))
+frame = x.frame(Title="Projection of 3D data and pdf on X", Bins=40)
 data.plotOn(frame)
 model.plotOn(frame)
 
@@ -60,17 +52,16 @@ y.setRange("sigRegion", -1, 1)
 z.setRange("sigRegion", -1, 1)
 
 # Make plot frame
-frame2 = x.frame(ROOT.RooFit.Title(
-    "Same projection on X in signal range of (Y,Z)"), ROOT.RooFit.Bins(40))
+frame2 = x.frame(Title="Same projection on X in signal range of (Y,Z)", Bins=40)
 
 # Plot subset of data in which all observables are inside "sigRegion"
 # For observables that do not have an explicit "sigRegion" range defined (e.g. observable)
 # an implicit definition is used that is identical to the full range (i.e.
 # [-5,5] for x)
-data.plotOn(frame2, ROOT.RooFit.CutRange("sigRegion"))
+data.plotOn(frame2, CutRange="sigRegion")
 
 # Project model on x, projected observables (y,z) only in "sigRegion"
-model.plotOn(frame2, ROOT.RooFit.ProjectionRange("sigRegion"))
+model.plotOn(frame2, ProjectionRange="sigRegion")
 
 c = ROOT.TCanvas("rf311_rangeplot", "rf310_rangeplot", 800, 400)
 c.Divide(2)

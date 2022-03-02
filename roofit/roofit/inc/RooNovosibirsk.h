@@ -35,17 +35,18 @@ public:
 
   RooNovosibirsk(const RooNovosibirsk& other,const char* name=0) ;
 
-  virtual TObject* clone(const char* newname) const { return new RooNovosibirsk(*this,newname);   }
+  TObject* clone(const char* newname) const override { return new RooNovosibirsk(*this,newname);   }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   // An empty constructor is usually ok
-  inline virtual ~RooNovosibirsk() { }
+  inline ~RooNovosibirsk() override { }
 
 protected:
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
   RooRealProxy x;
@@ -53,7 +54,7 @@ private:
   RooRealProxy peak;
   RooRealProxy tail;
 
-  ClassDef(RooNovosibirsk,1) // Novosibirsk PDF
+  ClassDefOverride(RooNovosibirsk,1) // Novosibirsk PDF
 };
 
 #endif

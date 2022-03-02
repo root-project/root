@@ -33,7 +33,7 @@ namespace RooStats{
 
   public:
 
-    ~SPlot();
+    ~SPlot() override;
     SPlot();
     SPlot(const SPlot &other);
     SPlot(const char* name, const char* title);
@@ -81,7 +81,7 @@ namespace RooStats{
 
     RooDataSet* fSData;
 
-    ClassDef(SPlot,1)   // Class used for making sPlots
+    ClassDefOverride(SPlot,1)   // Class used for making sPlots
 
 
       };

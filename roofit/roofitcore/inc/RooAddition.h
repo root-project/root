@@ -30,50 +30,50 @@ public:
   RooAddition() ;
   RooAddition(const char *name, const char *title, const RooArgList& sumSet, Bool_t takeOwnerShip=kFALSE) ;
   RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnerShip=kFALSE) ;
-  virtual ~RooAddition() ;
+  ~RooAddition() override ;
 
   RooAddition(const RooAddition& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooAddition(*this, newname); }
+  TObject* clone(const char* newname) const override { return new RooAddition(*this, newname); }
 
-  virtual Double_t defaultErrorLevel() const ;
+  Double_t defaultErrorLevel() const override ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override ;
 
   const RooArgList& list1() const { return _set ; }
   const RooArgList& list() const { return _set ; }
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const {
+  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
       // Force RooRealIntegral to offer all observables for internal integration
       return kTRUE ;
   }
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=0) const;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=0) const override;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
+  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) override ;
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;     
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
+  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  Bool_t isBinnedDistribution(const RooArgSet& obs) const override  ;
 
-  virtual void enableOffsetting(Bool_t) ;
+  void enableOffsetting(Bool_t) override ;
 
 protected:
 
-  RooArgList   _ownedList ;      // List of owned components
-  RooListProxy _set ;            // set of terms to be summed
+  RooArgList   _ownedList ;      ///< List of owned components
+  RooListProxy _set ;            ///< set of terms to be summed
 
   class CacheElem : public RooAbsCacheElement {
   public:
-      virtual ~CacheElem();
+      ~CacheElem() override;
       // Payload
       RooArgList _I ;
-      virtual RooArgList containedArgs(Action) ;
+      RooArgList containedArgs(Action) override ;
   };
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
-  ClassDef(RooAddition,2) // Sum of RooAbsReal objects
+  ClassDefOverride(RooAddition,3) // Sum of RooAbsReal objects
 };
 
 #endif

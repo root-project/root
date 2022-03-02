@@ -1,8 +1,7 @@
 sap.ui.define([
    'rootui5/eve7/lib/GlViewer',
    'rootui5/eve7/lib/EveElements',
-   'rootui5/eve7/lib/OrbitControlsEve',
-   'rootui5/eve7/lib/OutlinePass',
+   'rootui5/eve7/lib/OutlinePassEve',
    'rootui5/eve7/lib/FXAAShader'
 ], function(GlViewer, EveElements) {
 
@@ -17,7 +16,7 @@ sap.ui.define([
       constructor: GlViewerThree,
 
       g_highlight_update: function(mgr) {
-         let sa = THREE.OutlinePass.selection_atts;
+         let sa = THREE.OutlinePassEve.selection_atts;
          let gs = mgr.GetElement(mgr.global_selection_id);
          let gh = mgr.GetElement(mgr.global_highlight_id);
 
@@ -76,19 +75,18 @@ sap.ui.define([
       //==============================================================================
 
       createThreejsRenderer: function() {
-         var w = this.get_width(), h = this.get_height();
+         let w = this.get_width(), h = this.get_height();
 
          // console.log("createThreejsRenderer", this.controller.kind, "w=", w, "h=", h);
 
          this.scene = new THREE.Scene();
          // this.scene.fog = new THREE.FogExp2( 0xaaaaaa, 0.05 );
 
-         if (this.controller.kind === "3D") {
+         if (this.controller.isEveCameraPerspective())
             this.camera = new THREE.PerspectiveCamera(75, w / h, 1, 5000);
-         }
-         else {
+         else
             this.camera = new THREE.OrthographicCamera(-w / 2, w / 2, -h / 2, h / 2, 0, 2000);
-         }
+
          this.scene.add(this.camera);
 
          this.rot_center = new THREE.Vector3(0, 0, 0);
@@ -113,24 +111,26 @@ sap.ui.define([
          this.point_lights.add(new THREE.PointLight(0xffffff, 0.7)); // B
          this.scene.add(this.point_lights);
 
-         // var plane = new THREE.GridHelper(20, 20, 0x80d080, 0x8080d0);
+         // let plane = new THREE.GridHelper(20, 20, 0x80d080, 0x8080d0);
          // this.scene.add(plane);
 
          this.composer = new THREE.EffectComposer(this.renderer);
          this.composer.addPass(new THREE.RenderPass(this.scene, this.camera));
 
-         this.outline_pass = new THREE.OutlinePass(new THREE.Vector2(w, h), this.scene, this.camera);
+         this.outline_pass = new THREE.OutlinePassEve(new THREE.Vector2(w, h), this.scene, this.camera);
          this.outline_pass.edgeStrength = 5.5;
          this.outline_pass.edgeGlow = 0.7;
          this.outline_pass.edgeThickness = 1.5;
          this.outline_pass.usePatternTexture = false;
          this.outline_pass.downSampleRatio = 1;
          this.outline_pass.glowDownSampleRatio = 3;
+         this.outline_pass.id2obj_map = {};
+
 
          // This does not work ... seems it is not standard pass?
          // this.outline_pass.renderToScreen = true;
          // Tried hacking with this, but would apparently need to load it somehow, sigh.
-         // var copyPass = new ShaderPass( CopyShader );
+         // let copyPass = new ShaderPass( CopyShader );
          // this.composer.addPass( new THREE.ShaderPass(CopyShader) );
 
          this.composer.addPass(this.outline_pass);
@@ -145,14 +145,13 @@ sap.ui.define([
       destroyThreejsRenderer: function() {
          if (this.renderer) {
             this.get_view().getDomRef().removeChild(this.renderer.domElement);
-            this.renderer.domElement.removeEventListener('mousemove', this.mousemove_func);
-            this.renderer.domElement.removeEventListener('mouseleave', this.mouseleave_func);
-            this.renderer.domElement.removeEventListener('mousedown', this.mousedown_func);
+            this.renderer.domElement.removeEventListener('pointermove', this.mousemove_func);
+            this.renderer.domElement.removeEventListener('pointerleave', this.mouseleave_func);
+            this.renderer.domElement.removeEventListener('pointerdown', this.mousedown_func);
             this.renderer.domElement.removeEventListener('dblclick', this.dblclick_func);
             window.removeEventListener('keydown', this.keydown_func);
          }
 
-         this.removeMouseupListener();
          this.removeMouseMoveTimeout();
          delete this.renderer;
          delete this.scene;
@@ -167,8 +166,6 @@ sap.ui.define([
          if (event.movementX == 0 && event.movementY == 0)
             return;
 
-         this.removeMouseupListener();
-
          if (event.buttons === 0) {
             this.removeMouseMoveTimeout();
             this.mousemove_timeout = setTimeout(this.onMouseMoveTimeout.bind(this, event.offsetX, event.offsetY), this.controller.htimeout);
@@ -180,29 +177,41 @@ sap.ui.define([
       mouseLeaveHandler: function(/* event */) {
          this.removeMouseMoveTimeout();
          this.clearHighlight();
-         this.removeMouseupListener();
-      },
-
-      mouseUpHandler: function(e0_buttons, event) {
-         this.removeMouseupListener();
-
-         if (e0_buttons == 1) {// Selection on mouseup without move
-            this.handleMouseSelect(event);
-         } else if (e0_buttons == 2) { // Context menu on delay without move
-            // Was needed for "on press with timeout"
-            // this.controls.resetMouseDown(event);
-
-         }
       },
 
       mouseDownHandler: function(event) {
          this.removeMouseMoveTimeout();
-         if (event.buttons != 1 && event.buttons != 2) this.clearHighlight();
-         this.removeMouseupListener();
+         if (event.buttons != 1 && event.buttons != 2)
+            this.clearHighlight();
+         else if (this.renderer) {
+            // keep track which buttons and where are clicked
+            this.click_event = event;
+            this.click_buttons = event.buttons;
+            this.click_intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+         }
+      },
 
-         if ((event.buttons == 1) && this.renderer) {
-            this.mouseup_listener = this.mouseUpHandler.bind(this, event.buttons);
-            this.renderer.domElement.addEventListener('mouseup', this.mouseup_listener);
+      clearClickedButtons: function() {
+         delete this.click_buttons;
+         delete this.click_intersect;
+      },
+
+      processControlEnd: function() {
+         if (this.click_buttons == 1) {
+            // handle left mouse button click
+            if (this.click_intersect) {
+               let c = this.click_intersect.object.get_ctrl();
+               c.event = this.click_event;
+               c.elementSelected(c.extractIndex(this.click_intersect));
+               this.highlighted_scene = this.click_intersect.object.scene;
+            } else {
+               // XXXX HACK - handlersMIR senders should really be in the mgr
+
+               this.controller.created_scenes[0].processElementSelected(null, [], this.click_event);
+            }
+         } else if (this.click_buttons == 2) {
+            let intersect = this.click_intersect;
+            JSROOT.Painter.createMenu(this.click_event, this).then(menu => this.showContextMenu(intersect, menu));
          }
       },
 
@@ -266,11 +275,6 @@ sap.ui.define([
          this.ttip.appendChild(this.ttip_text);
          this.get_view().getDomRef().appendChild(this.ttip);
 
-         // Setup controls
-         this.controls = new THREE.OrbitControlsEve(this.camera, this.get_view().getDomRef());
-
-         this.controls.addEventListener('change', this.render.bind(this));
-
          // Setup some event pre-handlers
          this.mousemove_func = this.mouseMoveHandler.bind(this);
          this.mouseleave_func = this.mouseLeaveHandler.bind(this);
@@ -278,13 +282,24 @@ sap.ui.define([
          this.dblclick_func = this.dblClickHandler.bind(this);
          this.keydown_func = this.keyDownHandler.bind(this);
 
-         this.renderer.domElement.addEventListener('mousemove', this.mousemove_func);
-         this.renderer.domElement.addEventListener('mouseleave', this.mouseleave_func);
-         this.renderer.domElement.addEventListener('mousedown', this.mousedown_func);
+         this.renderer.domElement.addEventListener('pointermove', this.mousemove_func);
+         this.renderer.domElement.addEventListener('pointerleave', this.mouseleave_func);
+         this.renderer.domElement.addEventListener('pointerdown', this.mousedown_func);
          this.renderer.domElement.addEventListener('dblclick', this.dblclick_func);
 
          // Key-handlers go on window ...
          window.addEventListener('keydown', this.keydown_func);
+
+         // Setup controls
+         this.controls = new THREE.OrbitControls(this.camera, this.get_view().getDomRef());
+         this.controls.addEventListener('change', () => {
+            this.clearClickedButtons();
+            this.render();
+         })
+         this.controls.addEventListener('end', () => {
+            this.processControlEnd();
+            this.clearClickedButtons();
+         });
 
          // This will also call render().
          this.resetThreejsRenderer();
@@ -341,7 +356,8 @@ sap.ui.define([
             this.camera.top = ey;
             this.camera.bottom = -ey;
 
-            this.controls.resetOrthoPanZoom();
+            if (typeof this.controls.resetOrthoPanZoom == 'function')
+               this.controls.resetOrthoPanZoom();
 
             this.controls.screenSpacePanning = true;
             this.controls.enableRotate = false;
@@ -359,6 +375,11 @@ sap.ui.define([
       //==============================================================================
 
       render: function() {
+         // AMT check if controller is attached in the splitter
+         let v = this.get_manager().GetElement(this.controller.eveViewerId);
+         if (!v.fRnrSelf)
+            return;
+
          // Render through composer:
          this.composer.render(this.scene, this.camera);
 
@@ -428,27 +449,40 @@ sap.ui.define([
          this.raycaster.setFromCamera(mouse, this.camera);
 
          let intersects = this.raycaster.intersectObjects(this.scene.children, true);
-         for (let i = 0; i < intersects.length; ++i) {
-            if (intersects[i].object.get_ctrl && intersects[i].object.eve_el &&
-               intersects[i].object.eve_el.fPickable && intersects[i].object.visible) {
-               intersects[i].mouse = mouse;
-               intersects[i].w = w;
-               intersects[i].h = h;
-               return intersects[i];
+         for (let i = 0; i < intersects.length; ++i)
+         {
+            if (!intersects[i].object.get_ctrl)
+               intersects[i].object = intersects[i].object.parent;
+
+            if (intersects[i].object.visible && intersects[i].object.get_ctrl)
+            {
+               let ctrl = intersects[i].object.get_ctrl();
+               if (ctrl && ctrl.obj3d && ctrl.obj3d.eve_el)
+               {
+                  let el = ctrl.obj3d.eve_el;
+                  if (el && el.fPickable)
+                  {
+                     intersects[i].mouse = mouse;
+                     intersects[i].w = w;
+                     intersects[i].h = h;
+                     return intersects[i];
+                  }
+               }
             }
          }
+         return null;
       },
 
       onMouseMoveTimeout: function(x, y) {
          delete this.mousemove_timeout;
 
-         var intersect = this.getIntersectAt(x, y);
+         let intersect = this.getIntersectAt(x, y);
          if (!intersect)
             return this.clearHighlight();
 
-         var c = intersect.object.get_ctrl();
+         let c = intersect.object.get_ctrl();
 
-         var mouse = intersect.mouse;
+         let mouse = intersect.mouse;
 
          c.elementHighlighted(c.extractIndex(intersect));
 
@@ -508,27 +542,17 @@ sap.ui.define([
       // Mouse button handlers, selection, context menu
       //------------------------------------------------------------------------------
 
-      removeMouseupListener: function() {
-         if (this.mouseup_listener) {
-            if (this.render)
-               this.renderer.domElement.removeEventListener('mouseup', this.mouseup_listener);
-            delete this.mouseup_listener;
-         }
-      },
-
-      showContextMenu: function(event, menu) {
+      showContextMenu: function(intersect, menu) {
          // console.log("GLC::showContextMenu", this, menu)
 
          // See js/scripts/JSRootPainter.jquery.js JSROOT.Painter.createMenu(), menu.add()
 
 
-         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
-
          menu.add("header:Context Menu");
 
          if (intersect) {
-            if (intersect.object.eve_el)
-               menu.add("Browse to " + (intersect.object.eve_el.fName || "element"), intersect.object.eve_el.fElementId, this.controller.invokeBrowseOf.bind(this.controller));
+            let el = intersect.object.get_ctrl().obj3d.eve_el;
+            menu.add("Browse to " + (el.fName || "element"), el.fElementId, this.controller.invokeBrowseOf.bind(this.controller));
          }
 
          menu.add("Reset camera", this.resetThreejsRenderer);
@@ -542,7 +566,7 @@ sap.ui.define([
          menu.add("Baz", 'baz', fff);
          menu.add("endsub:");
 
-         menu.show(event);
+         menu.show();
       },
 
       defaultContextMenuAction: function(arg) {
@@ -550,10 +574,10 @@ sap.ui.define([
       },
 
       handleMouseSelect: function(event) {
-         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+         let intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
          if (intersect) {
-            var c = intersect.object.get_ctrl();
+            let c = intersect.object.get_ctrl();
             c.event = event;
             c.elementSelected(c.extractIndex(intersect));
             this.highlighted_scene = intersect.object.scene;
@@ -577,27 +601,27 @@ sap.ui.define([
 
          if (!this.attributes.position || !this.index) return;
 
-         var index = this.index;
-         var attributes = this.attributes;
-         var positions = attributes.position.array;
+         let index = this.index;
+         let attributes = this.attributes;
+         let positions = attributes.position.array;
          if (attributes.normal === undefined) {
             this.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(positions.length), 3));
          } else {
             // reset existing normals to zero
-            var array = attributes.normal.array;
-            for (var i = 0, il = array.length; i < il; i++) {
+            let array = attributes.normal.array;
+            for (let i = 0, il = array.length; i < il; i++) {
                array[i] = 0;
             }
          }
-         var normals = attributes.normal.array;
+         let normals = attributes.normal.array;
 
-         var vA, vB, vC;
-         var pA = new THREE.Vector3(), pB = new THREE.Vector3(), pC = new THREE.Vector3();
-         var cb = new THREE.Vector3(), ab = new THREE.Vector3();
+         let vA, vB, vC;
+         let pA = new THREE.Vector3(), pB = new THREE.Vector3(), pC = new THREE.Vector3();
+         let cb = new THREE.Vector3(), ab = new THREE.Vector3();
 
-         var indices = index.array;
+         let indices = index.array;
 
-         for (var i = start, i_end = start + count; i < i_end; i += 3) {
+         for (let i = start, i_end = start + count; i < i_end; i += 3) {
 
             vA = indices[i + 0] * 3;
             vB = indices[i + 1] * 3;

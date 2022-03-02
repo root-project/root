@@ -95,7 +95,7 @@ public:
 
    // --------------------------------
 
-   void AddQuad(Float_t* verts);
+   void AddQuad(Float_t verts[12]);
 
    void AddQuad(Float_t a, Float_t b);
    void AddQuad(Float_t a, Float_t b, Float_t c);

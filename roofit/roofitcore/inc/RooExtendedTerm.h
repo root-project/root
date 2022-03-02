@@ -25,23 +25,20 @@ public:
   RooExtendedTerm() ;
   RooExtendedTerm(const char *name, const char *title, const RooAbsReal& n) ;
   RooExtendedTerm(const RooExtendedTerm& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooExtendedTerm(*this,newname) ; }
-  virtual ~RooExtendedTerm() ;
+  TObject* clone(const char* newname) const override { return new RooExtendedTerm(*this,newname) ; }
+  ~RooExtendedTerm() override ;
 
-  Double_t evaluate() const { return 1. ; }
+  Double_t evaluate() const override { return 1. ; }
 
-  virtual ExtendMode extendMode() const { return CanBeExtended ; }
-  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
-    // Return number of expected events, i.e. the value of the associated n parameter
-    return expectedEvents(&nset) ; 
-  }
+  ExtendMode extendMode() const override { return CanBeExtended ; }
+  /// Return number of expected events, in other words the value of the associated n parameter.
+  Double_t expectedEvents(const RooArgSet* nset) const override ;
 
 protected:
 
-  RooRealProxy _n ;          // Number of expected events
+  RooRealProxy _n ;          ///< Number of expected events
 
-  ClassDef(RooExtendedTerm,1) // Meta-p.d.f flat in all observables introducing only extended ML term
+  ClassDefOverride(RooExtendedTerm,1) // Meta-p.d.f flat in all observables introducing only extended ML term
 };
 
 #endif

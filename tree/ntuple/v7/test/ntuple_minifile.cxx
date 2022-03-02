@@ -173,6 +173,40 @@ TEST(MiniFile, Failures)
    }
 }
 
+TEST(MiniFile, KeyClassName)
+{
+   FileRaii fileGuard("test_ntuple_minifile_key_class_name.root");
+   auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 209);
+   {
+      auto tree = std::make_unique<TTree>("Events", "");
+      file->Write();
+   }
+   file->Close();
+
+   try {
+      auto readerFail = RNTupleReader::Open("Events", fileGuard.GetPath());
+      FAIL() << "RNTuple should only open Events key of type `RNTuple`";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'Events' in file"));
+   }
+}
+
+TEST(MiniFile, DifferentTKeys)
+{
+   FileRaii fileGuard("test_ntuple_minifile_different_tkeys.root");
+   auto file = std::make_unique<TFile>(fileGuard.GetPath().c_str(), "RECREATE", "", 209);
+   {
+      auto tree = std::make_unique<TTree>("SomeTTree", "");
+      tree->Fill();
+      auto ntuple = RNTupleWriter::Append(RNTupleModel::Create(), "Events", *file);
+      ntuple->Fill();
+      file->Write();
+   }
+
+   file->Close();
+   auto ntuple = RNTupleReader::Open("Events", fileGuard.GetPath());
+   EXPECT_EQ(1, ntuple->GetNEntries());
+}
 
 TEST(MiniFile, FailOnForwardIncompatibility)
 {
@@ -201,7 +235,7 @@ TEST(MiniFile, FailOnForwardIncompatibility)
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("ntuple").Inspect();
    // Construct incompatible version numbers in little-endian binary format
-   std::uint16_t futureVersion = RNTupleDescriptor::kFrameVersionMin + 1;
+   std::uint16_t futureVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
    unsigned char futureVersionLE[2];
    futureVersionLE[0] = (futureVersion & 0x00FF);
    futureVersionLE[1] = (futureVersion & 0xFF00) >> 8;
@@ -218,6 +252,6 @@ TEST(MiniFile, FailOnForwardIncompatibility)
       auto readerFail = RNTupleReader::Open("ntuple", fileGuard.GetPath());
       FAIL() << "unsupported minimum version number should throw";
    } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("RNTuple version too new"));
+      EXPECT_THAT(err.what(), testing::HasSubstr("RNTuple format is too new"));
    }
 }

@@ -69,7 +69,7 @@ sys.modules['libcppyy'] = sys.modules[libcppyy_mod_name]
 # tell cppyy that libcppyy_backend is versioned
 def _check_py_version(lib_name, cbl_var):
     import re
-    if re.match('^libcppyy_backend\d_\d$', lib_name):
+    if re.match('^libcppyy_backend\d+_\d+$', lib_name):
        # library name already has version
        if lib_name.endswith(py_version_str):
            return ''

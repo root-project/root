@@ -13,7 +13,10 @@ auto fileName0 = "RCsvDS_test_headers.csv";
 auto fileName1 = "RCsvDS_test_noheaders.csv";
 auto fileName2 = "RCsvDS_test_empty.csv";
 auto fileName3 = "RCsvDS_test_win.csv";
-auto url0 = "http://root.cern.ch/files/test.txt";
+
+// must use http: we cannot use https on macOS until we upgrade to the newest Davix
+// and turn on the macOS SecureTransport layer.
+auto url0 = "http://root.cern/files/dataframe_test_datasource.csv";
 
 
 TEST(RCsvDS, ColTypeNames)
@@ -54,16 +57,16 @@ TEST(RCsvDS, ColNamesNoHeaders)
 TEST(RCsvDS, EmptyFile)
 {
    // Cannot read headers
-   EXPECT_THROW(new RCsvDS(fileName2), std::runtime_error);
+   EXPECT_THROW(RCsvDS{fileName2}, std::runtime_error);
    // Cannot infer column types
-   EXPECT_THROW(new RCsvDS(fileName2, false), std::runtime_error);
+   EXPECT_THROW(RCsvDS(fileName2, false), std::runtime_error);
 }
 
 TEST(RCsvDS, EntryRanges)
 {
    RCsvDS tds(fileName0);
    tds.SetNSlots(3U);
-   tds.Initialise();
+   tds.Initialize();
 
    // Still dividing in equal parts...
    auto ranges = tds.GetEntryRanges();
@@ -83,7 +86,7 @@ TEST(RCsvDS, ColumnReaders)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<Long64_t>("Age");
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    std::vector<Long64_t> ages = {60, 50, 40, 30, 1, -1};
@@ -131,7 +134,7 @@ TEST(RCsvDS, ColumnReadersString)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
@@ -153,7 +156,7 @@ TEST(RCsvDS, ProgressiveReadingEntryRanges)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
-   tds.Initialise();
+   tds.Initialize();
 
    std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
    auto ranges = tds.GetEntryRanges();

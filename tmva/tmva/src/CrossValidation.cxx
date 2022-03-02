@@ -32,8 +32,6 @@
 #include "TLegend.h"
 #include "TMath.h"
 
-#include "ROOT/RMakeUnique.hxx"
-
 #include <iostream>
 #include <memory>
 
@@ -502,6 +500,7 @@ void TMVA::CrossValidation::SetSplitExpr(TString splitExpr)
 ///   - Stores the evaluation internally
 ///
 /// @param iFold fold to evaluate
+/// @param methodInfo method metadata
 ///
 
 TMVA::CrossValidationFoldResult TMVA::CrossValidation::ProcessFold(UInt_t iFold, const OptionMap & methodInfo)

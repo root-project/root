@@ -33,7 +33,7 @@ ClassImp(TAxis);
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TAxis
-    \ingroup Hist
+    \ingroup Histograms
     \brief Class to manage histogram axis
 
 This class manages histogram axis. It is referenced by TH1 and TGraph.

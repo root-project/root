@@ -15,10 +15,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PgSQL
     TPgSQLServer.h
     TPgSQLStatement.h
   SOURCES
-    src/TPgSQLResult.cxx
-    src/TPgSQLRow.cxx
-    src/TPgSQLServer.cxx
-    src/TPgSQLStatement.cxx
+    TPgSQLResult.cxx
+    TPgSQLRow.cxx
+    TPgSQLServer.cxx
+    TPgSQLStatement.cxx
   DEPENDENCIES
     Core
     Net
@@ -26,5 +26,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PgSQL
     MathCore
 )
 
-target_include_directories(PgSQL PUBLIC ${PostgreSQL_INCLUDE_DIRS})
-target_link_libraries(PgSQL PUBLIC ${PostgreSQL_LIBRARIES})
+target_include_directories(PgSQL PRIVATE ${PostgreSQL_INCLUDE_DIRS})
+target_link_libraries(PgSQL PRIVATE ${PostgreSQL_LIBRARIES})

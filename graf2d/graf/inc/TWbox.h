@@ -32,24 +32,24 @@ public:
 
    TWbox &operator=(const TWbox &src);
 
-   void          Copy(TObject &wbox) const;
-   virtual void  Draw(Option_t *option="");
-   virtual void  DrawWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-                      Color_t color=33 ,Short_t bordersize=5 ,Short_t bordermode=-1);
-   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Short_t       GetBorderMode() const { return fBorderMode;}
-   Short_t       GetBorderSize() const { return fBorderSize;}
-   Int_t         GetDarkColor() const  {return TColor::GetColorDark(GetFillColor());}
-   Int_t         GetLightColor() const {return TColor::GetColorBright(GetFillColor());}
-   virtual void  Paint(Option_t *option="");
-   virtual void  PaintFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-                            Color_t color, Short_t bordersize, Short_t bordermode,
-                            Bool_t tops);
-   virtual void  PaintWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-                 Color_t color=33, Short_t bordersize=5, Short_t bordermode=-1);
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void  SetBorderMode(Short_t bordermode) {fBorderMode = bordermode;} // *MENU*
-   virtual void  SetBorderSize(Short_t bordersize) {fBorderSize = bordersize;} // *MENU*
+   void           Copy(TObject &wbox) const;
+   virtual void   Draw(Option_t *option="");
+   virtual TWbox *DrawWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                           Color_t color=33 ,Short_t bordersize=5 ,Short_t bordermode=-1);
+   virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   Short_t        GetBorderMode() const { return fBorderMode;}
+   Short_t        GetBorderSize() const { return fBorderSize;}
+   Int_t          GetDarkColor() const  {return TColor::GetColorDark(GetFillColor());}
+   Int_t          GetLightColor() const {return TColor::GetColorBright(GetFillColor());}
+   virtual void   Paint(Option_t *option="");
+   virtual void   PaintFrame(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                             Color_t color, Short_t bordersize, Short_t bordermode,
+                             Bool_t tops);
+   virtual void   PaintWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                  Color_t color=33, Short_t bordersize=5, Short_t bordermode=-1);
+   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   virtual void   SetBorderMode(Short_t bordermode) {fBorderMode = bordermode;} // *MENU*
+   virtual void   SetBorderSize(Short_t bordersize) {fBorderSize = bordersize;} // *MENU*
 
    ClassDef(TWbox,1)  //A window box (box with 3-D effects)
 };

@@ -29,7 +29,7 @@ The extras method can be used to print any properties that does not fit in any
 of the other classes. Each object an also override the definitions made
 in defaultPrintStyle and defaultPrintContents to determine what is printed
 (in terms of contents) and how it is printed (inline,single-line or multiline)
-given a Print() option string. 
+given a Print() option string.
 **/
 
 #include "RooFit.h"
@@ -49,16 +49,16 @@ ClassImp(RooPrintable);
 Int_t  RooPrintable::_nameLength(0) ;
 
 namespace RooFit {
-  ostream& operator<<(ostream& os, const RooPrintable& rp) { 
-    // Implement ostream operator on RooPrintable in terms of printStream(InLine)  
-    rp.printStream(os,rp.defaultPrintContents("I"),RooPrintable::kInline) ; return os ; 
+  ostream& operator<<(ostream& os, const RooPrintable& rp) {
+    // Implement ostream operator on RooPrintable in terms of printStream(InLine)
+    rp.printStream(os,rp.defaultPrintContents("I"),RooPrintable::kInline) ; return os ;
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set length of field reserved from printing name of RooAbsArgs in 
-/// multi-line collection printing to given amount. 
+/// Set length of field reserved from printing name of RooAbsArgs in
+/// multi-line collection printing to given amount.
 
 void RooPrintable::nameFieldLength(Int_t newLen)
 {
@@ -72,7 +72,7 @@ void RooPrintable::nameFieldLength(Int_t newLen)
 /// which is interpreted as an OR of 'enum ContentsOptions' values and in the style
 /// given by 'enum StyleOption'. Each message is prefixed by string 'indent' when printed
 
-void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, TString indent) const 
+void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, TString indent) const
 {
   // Handling of 'verbose' and 'treestructure' is delegated to dedicated implementation functions
   if (style==kVerbose||style==kStandard) {
@@ -114,7 +114,7 @@ void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, T
   if (contents&kArgs) {
     printArgs(os) ;
   }
-  
+
   // Print value if requested
   if (contents&kValue) {
     if (contents&kName) {
@@ -143,7 +143,7 @@ void RooPrintable::printStream(ostream& os, Int_t contents, StyleOption style, T
   }
 
   if (style!=kInline) os << endl ;
-  
+
 }
 
 
@@ -187,7 +187,7 @@ void RooPrintable::printTree(ostream& /*os*/, TString /*indent*/) const
 /// are loosely defined as external server objects
 /// in this context
 
-void RooPrintable::printArgs(ostream& /*os*/) const 
+void RooPrintable::printArgs(ostream& /*os*/) const
 {
 }
 
@@ -195,7 +195,7 @@ void RooPrintable::printArgs(ostream& /*os*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of object
 
-void RooPrintable::printName(ostream& /*os*/) const 
+void RooPrintable::printName(ostream& /*os*/) const
 {
 }
 
@@ -203,7 +203,7 @@ void RooPrintable::printName(ostream& /*os*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print title of object
 
-void RooPrintable::printTitle(ostream& /*os*/) const 
+void RooPrintable::printTitle(ostream& /*os*/) const
 {
 }
 
@@ -211,7 +211,7 @@ void RooPrintable::printTitle(ostream& /*os*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of object
 
-void RooPrintable::printClassName(ostream& /*os*/) const 
+void RooPrintable::printClassName(ostream& /*os*/) const
 {
 }
 
@@ -220,7 +220,7 @@ void RooPrintable::printClassName(ostream& /*os*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of object
 
-void RooPrintable::printAddress(ostream& os) const 
+void RooPrintable::printAddress(ostream& os) const
 {
   os << this ;
 }
@@ -231,15 +231,15 @@ void RooPrintable::printAddress(ostream& os) const
 /// Default choice of contents to be printed (name and value)
 
 Int_t RooPrintable::defaultPrintContents(Option_t* /*opt*/) const
-{ 
-  return kName|kValue ; 
+{
+  return kName|kValue ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 RooPrintable::StyleOption RooPrintable::defaultPrintStyle(Option_t* opt) const
-{ 
+{
   if (!opt) {
     return kSingleLine ;
   }
@@ -269,7 +269,7 @@ RooPrintable::StyleOption RooPrintable::defaultPrintStyle(Option_t* opt) const
 /// method allows subclasses to provide an inline implementation of
 /// Print() without pulling in iostream.h.
 
-ostream &RooPrintable::defaultPrintStream(ostream *os) 
+ostream &RooPrintable::defaultPrintStream(ostream *os)
 {
   static ostream *_defaultPrintStream = &cout;
 

@@ -9,7 +9,7 @@
  * @section Neural net implementation
  *
  * An implementation of a neural net for TMVA. This neural net uses multithreading
- * 
+ *
  */
 
 
@@ -74,16 +74,16 @@ namespace TMVA
       class MeanVariance
       {
       public:
-      MeanVariance() 
+      MeanVariance()
           : m_n(0)
               , m_sumWeights(0)
               , m_mean(0)
               , m_squared(0)
           {}
 
-          inline void clear() 
-          { 
-              m_n = 0; 
+          inline void clear()
+          {
+              m_n = 0;
               m_sumWeights = 0;
               m_mean = 0;
               m_squared = 0;
@@ -132,15 +132,15 @@ namespace TMVA
                   return 0;
               return (m_squared/m_sumWeights);
           }
-    
+
           inline double var_corr ()   const
           {
               if (m_n <= 1)
                   return var ();
-        
+
               return (var()*m_n/(m_n-1));    // unbiased for small sample sizes
-          } 
-    
+          }
+
           inline double stdDev_corr () const { return sqrt( var_corr() ); }
           inline double stdDev ()   const { return sqrt( var() ); } // unbiased for small sample sizes
 
@@ -231,7 +231,7 @@ namespace TMVA
        *
        *  Holds a const_iterator to the beginning and the end of one batch in a vector of Pattern
        */
-      class Batch 
+      class Batch
       {
       public:
          typedef typename std::vector<Pattern>::const_iterator const_iterator;
@@ -245,7 +245,7 @@ namespace TMVA
          const_iterator end   () const { return m_itEnd; }
 
          size_t size () const { return std::distance (begin (), end ()); }
-            
+
       private:
          const_iterator m_itBegin; ///< iterator denoting the beginning of the batch
          const_iterator m_itEnd;   ///< iterator denoting the end of the batch
@@ -278,18 +278,18 @@ namespace TMVA
 
 
       template <typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient>
-         void update (ItSource itSource, ItSource itSourceEnd, 
-                      ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
-                      ItTargetGradient itTargetGradientBegin, 
+         void update (ItSource itSource, ItSource itSourceEnd,
+                      ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd,
+                      ItTargetGradient itTargetGradientBegin,
                       ItGradient itGradient);
 
 
 
       template <EnumRegularization Regularization, typename ItSource, typename ItDelta, typename ItTargetGradient, typename ItGradient, typename ItWeight>
-         void update (ItSource itSource, ItSource itSourceEnd, 
-                      ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd, 
-                      ItTargetGradient itTargetGradientBegin, 
-                      ItGradient itGradient, 
+         void update (ItSource itSource, ItSource itSourceEnd,
+                      ItDelta itTargetDeltaBegin, ItDelta itTargetDeltaEnd,
+                      ItTargetGradient itTargetGradientBegin,
+                      ItGradient itGradient,
                       ItWeight itWeight, double weightDecay);
 
 
@@ -300,7 +300,7 @@ namespace TMVA
       // public:
 
       //     template <typename Function, typename Variables, typename PassThrough>
-      //     double operator() (Function& fnc, Variables& vars, PassThrough& passThrough) 
+      //     double operator() (Function& fnc, Variables& vars, PassThrough& passThrough)
       //     {
       //         // auto itVars = begin (vars);
       //         // auto itVarsEnd = end (vars);
@@ -311,7 +311,7 @@ namespace TMVA
       //         double value = fnc (passThrough, myweights);
       //         value = fnc (passThrough, myweights, gradients);
       //         return value;
-      //     } 
+      //     }
       // };
 
 
@@ -336,18 +336,18 @@ namespace TMVA
 
          size_t m_repetitions;
 
-    
+
          /*! \brief c'tor
           *
           *  C'tor
-          * 
+          *
           * \param learningRate denotes the learning rate for the SGD algorithm
           * \param momentum fraction of the velocity which is taken over from the last step
           * \param repetitions re-compute the gradients each "repetitions" steps
           */
-         Steepest (double learningRate = 1e-4, 
-                   double momentum = 0.5, 
-                   size_t repetitions = 10) 
+         Steepest (double learningRate = 1e-4,
+                   double momentum = 0.5,
+                   size_t repetitions = 10)
             : m_repetitions (repetitions)
             , m_alpha (learningRate)
             , m_beta (momentum)
@@ -356,11 +356,11 @@ namespace TMVA
          /*! \brief operator to call the steepest gradient descent algorithm
           *
           *  entry point to start the minimization procedure
-          * 
+          *
           * \param fitnessFunction (templated) function which has to be provided. This function is minimized
-          * \param weights (templated) a reference to a container of weights. The result of the minimization procedure 
+          * \param weights (templated) a reference to a container of weights. The result of the minimization procedure
           *                is returned via this reference (needs to support std::begin and std::end
-          * \param passThrough (templated) object which can hold any data which the fitness function needs. This object 
+          * \param passThrough (templated) object which can hold any data which the fitness function needs. This object
           *                    is not touched by the minimizer; This object is provided to the fitness function when
           *                    called
           */
@@ -372,8 +372,8 @@ namespace TMVA
          double m_beta;  ///< internal parameter (momentum)
          std::vector<double> m_prevGradients; ///< vector remembers the gradients of the previous step
 
-         std::vector<double> m_localWeights; ///< local weights for reuse in thread. 
-         std::vector<double> m_localGradients; ///< local gradients for reuse in thread. 
+         std::vector<double> m_localWeights; ///< local weights for reuse in thread.
+         std::vector<double> m_localGradients; ///< local gradients for reuse in thread.
       };
 
 
@@ -429,9 +429,9 @@ namespace TMVA
 
       /*! \brief LayerData holds the data of one layer
        *
-       *     LayerData holds the data of one layer, but not its layout 
+       *     LayerData holds the data of one layer, but not its layout
        *
-       *  
+       *
        */
       class LayerData
       {
@@ -446,16 +446,16 @@ namespace TMVA
          typedef function_container_type::const_iterator const_function_iterator_type;
 
          typedef DropContainer::const_iterator const_dropout_iterator;
-    
+
          /*! \brief c'tor of LayerData
           *
           *  C'tor of LayerData for the input layer
-          * 
+          *
           * \param itInputBegin iterator to the begin of a vector which holds the values of the nodes of the neural net
           * \param itInputEnd iterator to the end of a vector which holdsd the values of the nodes of the neural net
           * \param eModeOutput indicates a potential tranformation of the output values before further computation
           *                    DIRECT does not further transformation; SIGMOID applies a sigmoid transformation to each
-          *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all 
+          *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all
           *                    output values (mutually exclusive probability)
           */
          LayerData (const_iterator_type itInputBegin, const_iterator_type itInputEnd, ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
@@ -464,7 +464,7 @@ namespace TMVA
          /*! \brief c'tor of LayerData
           *
           *  C'tor of LayerData for the input layer
-          * 
+          *
           * \param inputSize input size of this layer
           */
          LayerData  (size_t inputSize);
@@ -474,7 +474,7 @@ namespace TMVA
          /*! \brief c'tor of LayerData
           *
           *  C'tor of LayerData for all layers which are not the input layer; Used during the training of the DNN
-          * 
+          *
           * \param size size of the layer
           * \param itWeightBegin indicates the start of the weights for this layer on the weight vector
           * \param itGradientBegin indicates the start of the gradients for this layer on the gradient vector
@@ -482,35 +482,35 @@ namespace TMVA
           * \param inverseActivationFunction indicates the inverse activation functions for this layer
           * \param eModeOutput indicates a potential tranformation of the output values before further computation
           *                    DIRECT does not further transformation; SIGMOID applies a sigmoid transformation to each
-          *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all 
+          *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all
           *                    output values (mutually exclusive probability)
           */
-         LayerData (size_t size, 
-                    const_iterator_type itWeightBegin, 
-                    iterator_type itGradientBegin, 
-                    std::shared_ptr<std::function<double(double)>> activationFunction, 
+         LayerData (size_t size,
+                    const_iterator_type itWeightBegin,
+                    iterator_type itGradientBegin,
+                    std::shared_ptr<std::function<double(double)>> activationFunction,
                     std::shared_ptr<std::function<double(double)>> inverseActivationFunction,
                     ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
          /*! \brief c'tor of LayerData
           *
           *  C'tor of LayerData for all layers which are not the input layer; Used during the application of the DNN
-          * 
+          *
           * \param size size of the layer
           * \param itWeightBegin indicates the start of the weights for this layer on the weight vector
           * \param activationFunction indicates the activation function for this layer
           * \param eModeOutput indicates a potential tranformation of the output values before further computation
           *                    DIRECT does not further transformation; SIGMOID applies a sigmoid transformation to each
-          *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all 
+          *                    output value (to create a probability); SOFTMAX applies a softmax transformation to all
           *                    output values (mutually exclusive probability)
           */
-         LayerData (size_t size, const_iterator_type itWeightBegin, 
-                    std::shared_ptr<std::function<double(double)>> activationFunction, 
+         LayerData (size_t size, const_iterator_type itWeightBegin,
+                    std::shared_ptr<std::function<double(double)>> activationFunction,
                     ModeOutputValues eModeOutput = ModeOutputValues::DIRECT);
 
          /*! \brief copy c'tor of LayerData
           *
-          * 
+          *
           */
          LayerData (const LayerData& other)
             : m_size (other.m_size)
@@ -528,12 +528,12 @@ namespace TMVA
             , m_isInputLayer (other.m_isInputLayer)
             , m_hasWeights (other.m_hasWeights)
             , m_hasGradients (other.m_hasGradients)
-            , m_eModeOutput (other.m_eModeOutput) 
+            , m_eModeOutput (other.m_eModeOutput)
             {}
 
          /*! \brief move c'tor of LayerData
           *
-          * 
+          *
           */
          LayerData (LayerData&& other)
             : m_size (other.m_size)
@@ -551,13 +551,13 @@ namespace TMVA
             , m_isInputLayer (other.m_isInputLayer)
             , m_hasWeights (other.m_hasWeights)
             , m_hasGradients (other.m_hasGradients)
-            , m_eModeOutput (other.m_eModeOutput) 
+            , m_eModeOutput (other.m_eModeOutput)
             {}
 
 
          /*! \brief change the input iterators
           *
-          * 
+          *
           * \param itInputBegin indicates the start of the input node vector
           * \param itInputEnd indicates the end of the input node vector
           *
@@ -571,7 +571,7 @@ namespace TMVA
 
          /*! \brief clear the values and the deltas
           *
-          * 
+          *
           */
          void clear ()
          {
@@ -581,12 +581,12 @@ namespace TMVA
 
          const_iterator_type valuesBegin () const { return m_isInputLayer ? m_itInputBegin : begin (m_values); } ///< returns const iterator to the begin of the (node) values
          const_iterator_type valuesEnd   () const { return m_isInputLayer ? m_itInputEnd   : end (m_values); } ///< returns iterator to the end of the (node) values
-    
+
          iterator_type valuesBegin () { assert (!m_isInputLayer); return begin (m_values); }  ///< returns iterator to the begin of the (node) values
          iterator_type valuesEnd   () { assert (!m_isInputLayer); return end (m_values); } ///< returns iterator to the end of the (node) values
 
          ModeOutputValues outputMode () const { return m_eModeOutput; } ///< returns the output mode
-    container_type probabilities () const { return computeProbabilities (); } ///< computes the probabilities from the current node values and returns them 
+    container_type probabilities () const { return computeProbabilities (); } ///< computes the probabilities from the current node values and returns them
 
          iterator_type deltasBegin () { return begin (m_deltas); } ///< returns iterator to the begin of the deltas (back-propagation)
          iterator_type deltasEnd   () { return end   (m_deltas); } ///< returns iterator to the end of the deltas (back-propagation)
@@ -615,32 +615,32 @@ namespace TMVA
 
          /*! \brief clear the drop-out-data for this layer
           *
-          * 
+          *
           */
          void clearDropOut () { m_hasDropOut = false; }
-    
+
          bool hasDropOut () const { return m_hasDropOut; } ///< has this layer drop-out turned on?
     const_dropout_iterator dropOut () const { assert (m_hasDropOut); return m_itDropOut; } ///< return the begin of the drop-out information
-    
+
          size_t size () const { return m_size; } ///< return the size of the layer
 
       private:
 
          /*! \brief compute the probabilities from the node values
           *
-          * 
+          *
           */
     container_type computeProbabilities () const;
 
       private:
-    
+
          size_t m_size; ////< layer size
 
          const_iterator_type m_itInputBegin; ///< iterator to the first of the nodes in the input node vector
          const_iterator_type m_itInputEnd;   ///< iterator to the end of the nodes in the input node vector
 
-         std::vector<double> m_deltas; ///< stores the deltas for the DNN training 
-         std::vector<double> m_valueGradients; ///< stores the gradients of the values (nodes) 
+         std::vector<double> m_deltas; ///< stores the deltas for the DNN training
+         std::vector<double> m_valueGradients; ///< stores the gradients of the values (nodes)
          std::vector<double> m_values; ///< stores the values of the nodes in this layer
          const_dropout_iterator m_itDropOut; ///< iterator to a container indicating if the corresponding node is to be dropped
          bool m_hasDropOut; ///< dropOut is turned on?
@@ -654,7 +654,7 @@ namespace TMVA
          bool m_isInputLayer; ///< is this layer an input layer
          bool m_hasWeights;  ///< does this layer have weights (it does not if it is the input layer)
          bool m_hasGradients; ///< does this layer have gradients (only if in training mode)
- 
+
          ModeOutputValues m_eModeOutput; ///< stores the output mode (DIRECT, SIGMOID, SOFTMAX)
 
       };
@@ -667,7 +667,7 @@ namespace TMVA
        *
        *     Layer defines the layout of a specific layer in the DNN
        *     Objects of this class don't hold the layer data itself (see class "LayerData")
-       *  
+       *
        */
       class Layer
       {
@@ -675,7 +675,7 @@ namespace TMVA
 
          /*! \brief c'tor for defining a Layer
           *
-          * 
+          *
           */
          Layer (size_t numNodes, EnumFunction activationFunction, ModeOutputValues eModeOutputValues = ModeOutputValues::DIRECT);
 
@@ -724,7 +724,7 @@ namespace TMVA
 
       /*! \brief Settings for the training of the neural net
        *
-       * 
+       *
        */
       class Settings
       {
@@ -732,19 +732,19 @@ namespace TMVA
 
          /*! \brief c'tor
           *
-          * 
+          *
           */
          Settings (TString name,
-                   size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
+                   size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7,
                    double _factorWeightDecay = 1e-5, TMVA::DNN::EnumRegularization _regularization = TMVA::DNN::EnumRegularization::NONE,
-                   MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
-                   double _learningRate = 1e-5, double _momentum = 0.3, 
+                   MinimizerType _eMinimizerType = MinimizerType::fSteepest,
+                   double _learningRate = 1e-5, double _momentum = 0.3,
                    int _repetitions = 3,
                    bool _multithreading = true);
-    
+
          /*! \brief d'tor
           *
-          * 
+          *
           */
          virtual ~Settings ();
 
@@ -752,7 +752,7 @@ namespace TMVA
          /*! \brief set the drop-out configuration (layer-wise)
           *
           * \param begin begin of an array or vector denoting the drop-out probabilities for each layer
-          * \param end end of an array or vector denoting the drop-out probabilities for each layer 
+          * \param end end of an array or vector denoting the drop-out probabilities for each layer
           * \param _dropRepetitions denotes after how many repetitions the drop-out setting (which nodes are dropped out exactly) is changed
           */
          template <typename Iterator>
@@ -787,16 +787,16 @@ namespace TMVA
          }
          virtual void endTrainCycle (double /*error*/) {} ///< callback for monitoring and logging
 
-         virtual void setProgressLimits (double minProgress = 0, double maxProgress = 100) ///< for monitoring and logging (set the current "progress" limits for the display of the progress)
-         { 
+         virtual void setProgressLimits (double minProgress = 0, double maxProgress = 100) ///< for monitoring and logging (set the current "progress" limits for the display of the progress) \param minProgress minimum value \param maxProgress maximum value
+         {
             m_minProgress = minProgress;
-            m_maxProgress = maxProgress; 
+            m_maxProgress = maxProgress;
          }
          virtual void startTraining () ///< start drawing the progress bar
          {
             m_timer.DrawProgressBar (Int_t(m_minProgress));
          }
-         virtual void cycle (double progress, TString text) ///< advance on the progress bar
+         virtual void cycle (double progress, TString text) ///< advance on the progress bar \param progress the new value \param text a label
          {
             m_timer.DrawProgressBar (Int_t(m_minProgress+(m_maxProgress-m_minProgress)*(progress/100.0)), text);
          }
@@ -804,9 +804,9 @@ namespace TMVA
          virtual void startTestCycle () {} ///< callback for monitoring and loggging
          virtual void endTestCycle () {} ///< callback for monitoring and loggging
          virtual void testIteration () {} ///< callback for monitoring and loggging
-         virtual void drawSample (const std::vector<double>& /*input*/, const std::vector<double>& /* output */, const std::vector<double>& /* target */, double /* patternWeight */) {} ///< callback for monitoring and loggging
+         virtual void drawSample (const std::vector<double>& /*input*/, const std::vector<double>& /* output */, const std::vector<double>& /* target */, double /* patternWeight */) {} ///< callback for monitoring and logging
 
-         virtual void computeResult (const Net& /* net */, std::vector<double>& /* weights */) {} ///< callback for monitoring and loggging
+         virtual void computeResult (const Net& /* net */, std::vector<double>& /* weights */) {} ///< callback for monitoring and logging
 
          virtual bool hasConverged (double testError); ///< has this training converged already?
 
@@ -827,7 +827,7 @@ namespace TMVA
          size_t convergenceCount () const { return m_convergenceCount; } ///< returns the current convergence count
          size_t maxConvergenceCount () const { return m_maxConvergenceCount; } ///< returns the max convergence count so far
          size_t minError () const { return m_minError; } ///< returns the smallest error so far
-    
+
       public:
          Timer  m_timer; ///< timer for monitoring
          double m_minProgress; ///< current limits for the progress bar
@@ -836,7 +836,7 @@ namespace TMVA
 
          size_t m_convergenceSteps; ///< number of steps without improvement to consider the DNN to have converged
          size_t m_batchSize; ///< mini-batch size
-         size_t m_testRepetitions; 
+         size_t m_testRepetitions;
          double m_factorWeightDecay;
 
          size_t count_E;
@@ -896,15 +896,15 @@ namespace TMVA
       public:
          /*! \brief c'tor
           *
-          * 
+          *
           */
          ClassificationSettings (TString name,
-                                 size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7, 
-                                 double _factorWeightDecay = 1e-5, EnumRegularization _regularization = EnumRegularization::NONE, 
-                                 size_t _scaleToNumEvents = 0, MinimizerType _eMinimizerType = MinimizerType::fSteepest, 
+                                 size_t _convergenceSteps = 15, size_t _batchSize = 10, size_t _testRepetitions = 7,
+                                 double _factorWeightDecay = 1e-5, EnumRegularization _regularization = EnumRegularization::NONE,
+                                 size_t _scaleToNumEvents = 0, MinimizerType _eMinimizerType = MinimizerType::fSteepest,
                                  double _learningRate = 1e-5, double _momentum = 0.3, int _repetitions = 3,
                                  bool _useMultithreading = true)
-            : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay, 
+            : Settings (name, _convergenceSteps, _batchSize, _testRepetitions, _factorWeightDecay,
                         _regularization, _eMinimizerType, _learningRate, _momentum, _repetitions, _useMultithreading)
             , m_ams ()
             , m_sumOfSigWeights (0)
@@ -919,9 +919,9 @@ namespace TMVA
 
          /*! \brief d'tor
           *
-          * 
+          *
           */
-         virtual ~ClassificationSettings () 
+         virtual ~ClassificationSettings ()
             {
             }
 
@@ -1031,9 +1031,9 @@ namespace TMVA
          FETCH
             };
 
-      /*! \brief error functions to be chosen from 
+      /*! \brief error functions to be chosen from
        *
-       * 
+       *
        */
       enum class ModeErrorFunction
       {
@@ -1044,7 +1044,7 @@ namespace TMVA
 
       /*! \brief weight initialization strategies to be chosen from
        *
-       * 
+       *
        */
       enum class WeightInitializationStrategy
       {
@@ -1053,7 +1053,7 @@ namespace TMVA
 
 
 
-      /*! \brief neural net 
+      /*! \brief neural net
        *
        * holds the structure of all layers and some data for the whole net
        * does not know the layer data though (i.e. values of the nodes and weights)
@@ -1069,9 +1069,9 @@ namespace TMVA
 
          /*! \brief c'tor
           *
-          * 
+          *
           */
-         Net () 
+         Net ()
             : m_eErrorFunction (ModeErrorFunction::SUMOFSQUARES)
             , m_sizeInput (0)
             , m_layers ()
@@ -1080,7 +1080,7 @@ namespace TMVA
 
          /*! \brief d'tor
           *
-          * 
+          *
           */
          Net (const Net& other)
             : m_eErrorFunction (other.m_eErrorFunction)
@@ -1092,39 +1092,39 @@ namespace TMVA
          void setInputSize (size_t sizeInput) { m_sizeInput = sizeInput; } ///< set the input size of the DNN
          void setOutputSize (size_t sizeOutput) { m_sizeOutput = sizeOutput; } ///< set the output size of the DNN
          void addLayer (Layer& layer) { m_layers.push_back (layer); } ///< add a layer (layout)
-         void addLayer (Layer&& layer) { m_layers.push_back (layer); } 
+         void addLayer (Layer&& layer) { m_layers.push_back (layer); }
          void setErrorFunction (ModeErrorFunction eErrorFunction) { m_eErrorFunction = eErrorFunction; } ///< which error function is to be used
-    
+
          size_t inputSize () const { return m_sizeInput; } ///< input size of the DNN
          size_t outputSize () const { return m_sizeOutput; } ///< output size of the DNN
 
          /*! \brief set the drop out configuration
           *
-          * 
+          *
           */
          template <typename WeightsType, typename DropProbabilities>
             void dropOutWeightFactor (WeightsType& weights,
-                                      const DropProbabilities& drops, 
+                                      const DropProbabilities& drops,
                                       bool inverse = false);
 
          /*! \brief start the training
           *
           * \param weights weight vector
-          * \param trainPattern training pattern 
+          * \param trainPattern training pattern
           * \param testPattern test pattern
           * \param minimizer use this minimizer for training (e.g. SGD)
           * \param settings settings used for this training run
           */
          template <typename Minimizer>
-            double train (std::vector<double>& weights, 
-                          std::vector<Pattern>& trainPattern, 
-                          const std::vector<Pattern>& testPattern, 
+            double train (std::vector<double>& weights,
+                          std::vector<Pattern>& trainPattern,
+                          const std::vector<Pattern>& testPattern,
                   Minimizer& minimizer,
                   Settings& settings);
 
          /*! \brief pre-training for future use
           *
-          * 
+          *
           */
          template <typename Minimizer>
             void preTrain (std::vector<double>& weights,
@@ -1132,19 +1132,19 @@ namespace TMVA
                            const std::vector<Pattern>& testPattern,
                            Minimizer& minimizer, Settings& settings);
 
-    
+
          /*! \brief executes one training cycle
           *
           * \param minimizer the minimizer to be used
           * \param weights the weight vector to be used
           * \param itPatternBegin the pattern to be trained with
-          * \param itPatternEnd the pattern to be trainied with
+          * \param itPatternEnd the pattern to be trained with
           * \param settings the settings for the training
           * \param dropContainer the configuration for DNN drop-out
           */
          template <typename Iterator, typename Minimizer>
-            inline double trainCycle (Minimizer& minimizer, std::vector<double>& weights, 
-			      Iterator itPatternBegin, Iterator itPatternEnd,
+            inline double trainCycle (Minimizer& minimizer, std::vector<double>& weights,
+                  Iterator itPatternBegin, Iterator itPatternEnd,
                               Settings& settings,
                               DropContainer& dropContainer);
 
@@ -1159,7 +1159,7 @@ namespace TMVA
 
          template <typename Weights, typename PassThrough, typename OutContainer>
             double operator() (PassThrough& settingsAndBatch, const Weights& weights, ModeOutput eFetch, OutContainer& outputContainer) const; ///< execute computation of the DNN for one mini-batch; helper function
-    
+
          template <typename Weights, typename Gradients, typename PassThrough>
         double operator() (PassThrough& settingsAndBatch, Weights& weights, Gradients& gradients) const;  ///< execute computation of the DNN for one mini-batch (used by the minimizer); returns gradients as well
 
@@ -1172,7 +1172,7 @@ namespace TMVA
                                                               Batch& batch,
                                                               const DropContainer& dropContainer,
                                                               ItWeight itWeightBegin,
-                                                              ItWeight itWeightEnd, 
+                                                              ItWeight itWeightEnd,
                                                               ItGradient itGradientBegin,
                                                               ItGradient itGradientEnd,
                                                               size_t& totalNumWeights) const;
@@ -1188,7 +1188,7 @@ namespace TMVA
                            std::vector<double>& valuesMean,
                            std::vector<double>& valuesStdDev,
                            size_t trainFromLayer) const;
-    
+
     template <typename OutputContainer>
         void fetchOutput (const LayerData& lastLayerData, OutputContainer& outputContainer) const;
 
@@ -1209,28 +1209,28 @@ namespace TMVA
                             size_t trainFromLayer,
                             size_t totalNumWeights) const;
 
-    
+
 
     /*! \brief main NN computation function
           *
-          * 
+          *
           */
          template <typename LayerContainer, typename PassThrough, typename ItWeight, typename ItGradient, typename OutContainer>
-            double forward_backward (LayerContainer& layers, PassThrough& settingsAndBatch, 
-			     ItWeight itWeightBegin, ItWeight itWeightEnd, 
-                                     ItGradient itGradientBegin, ItGradient itGradientEnd, 
-                                     size_t trainFromLayer, 
+            double forward_backward (LayerContainer& layers, PassThrough& settingsAndBatch,
+                 ItWeight itWeightBegin, ItWeight itWeightEnd,
+                                     ItGradient itGradientBegin, ItGradient itGradientEnd,
+                                     size_t trainFromLayer,
                                      OutContainer& outputContainer, bool fetchOutput) const;
 
 
-    
+
          double E ();
          void dE ();
 
 
          /*! \brief computes the error of the DNN
           *
-          * 
+          *
           */
          template <typename Container, typename ItWeight>
             double errorFunction (LayerData& layerData,
@@ -1246,7 +1246,7 @@ namespace TMVA
          std::vector<Layer>& layers ()  { return m_layers; } ///< returns the layers (structure)
 
          void removeLayer () { m_layers.pop_back (); } ///< remove one layer
-    
+
 
          void clear () ///< clear one layer
          {
@@ -1256,19 +1256,19 @@ namespace TMVA
 
 
          template <typename OutIterator>
-            void initializeWeights (WeightInitializationStrategy eInitStrategy, 
+            void initializeWeights (WeightInitializationStrategy eInitStrategy,
                                     OutIterator itWeight); ///< initialize the weights with the given strategy
 
       protected:
 
          void fillDropContainer (DropContainer& dropContainer, double dropFraction, size_t numNodes) const; ///< prepare the drop-out-container (select the nodes which are to be dropped out)
-    
-    
+
+
       private:
 
          ModeErrorFunction m_eErrorFunction; ///< denotes the error function
          size_t m_sizeInput; ///< input size of this DNN
-         size_t m_sizeOutput; ///< outut size of this DNN
+         size_t m_sizeOutput; ///< output size of this DNN
          std::vector<Layer> m_layers; ///< layer-structure-data
 
       protected:

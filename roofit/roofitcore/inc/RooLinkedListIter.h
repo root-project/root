@@ -71,7 +71,7 @@ class RooFIterForLinkedList final : public GenericRooFIter
   }
 
  private:
-    const RooLinkedListElem * fPtr{nullptr};  //! Next link element
+    const RooLinkedListElem * fPtr{nullptr};  ///<! Next link element
 };
 
 
@@ -143,7 +143,7 @@ public:
 
   }
 
-  Bool_t operator!=(const TIterator & other) const override {
+  bool operator!=(const TIterator & other) const override {
     const auto * castedOther =
         dynamic_cast<const TIteratorToSTLInterface<STLContainer>*>(&other);
     return !castedOther || &fSTLContainer != &(castedOther->fSTLContainer)
@@ -181,9 +181,9 @@ private:
   }
 
 
-  const STLContainer & fSTLContainer; //!
-  std::size_t fIndex; //!
-  const RooAbsArg * fCurrentElem; //!
+  const STLContainer & fSTLContainer; ///<!
+  std::size_t fIndex; ///<!
+  const RooAbsArg * fCurrentElem; ///<!
 };
 
 
@@ -228,7 +228,7 @@ class RooLinkedListIter final : public TIterator {
 
   TObject * Next() override {return fIterImpl->Next();}
   void Reset() override {fIterImpl->Reset();}
-  Bool_t operator!=(const TIterator & other) const override {return fIterImpl->operator!=(other);}
+  bool operator!=(const TIterator & other) const override {return fIterImpl->operator!=(other);}
   TObject * operator*() const override {return fIterImpl->operator*();}
 
   private:
@@ -242,26 +242,13 @@ class RooLinkedListIter final : public TIterator {
 class RooLinkedListIterImpl final : public TIterator {
 public:
 
-  RooLinkedListIterImpl() {
-    // coverity[UNINIT_CTOR]
-  } ;
+  RooLinkedListIterImpl(const RooLinkedList* list, const RooLinkedListElem* ptr, bool forward) :
+    _list(list), _ptr(ptr), _forward(forward) {}
 
+  RooLinkedListIterImpl(const RooLinkedList* list, bool forward) :
+    RooLinkedListIterImpl(list, forward ? list->_first : list->_last, forward) {}
 
-  RooLinkedListIterImpl(const RooLinkedList* list, Bool_t forward) :
-    TIterator(), _list(list), _ptr(forward ? _list->_first : _list->_last),
-      _forward(forward)
-  { }
-
-  RooLinkedListIterImpl(const RooLinkedListIterImpl& other) :
-    TIterator(other), _list(other._list), _ptr(other._ptr),
-    _forward(other._forward)
-  {
-    // Copy constructor
-  }
-
-  virtual ~RooLinkedListIterImpl() { }
-
-  TIterator& operator=(const TIterator& other) {
+  TIterator& operator=(const TIterator& other) override {
 
     // Iterator assignment operator
 
@@ -275,52 +262,59 @@ public:
     return *this ;
   }
 
-  virtual const TCollection *GetCollection() const {
+  const TCollection *GetCollection() const override {
     // Dummy
     return 0 ;
   }
 
-  virtual TObject *Next() {
+  TObject *Next() override {
     // Return next element in collection
-    if (!_ptr) return 0 ;
-    TObject* arg = _ptr->_arg ;
-    _ptr = _forward ? _ptr->_next : _ptr->_prev ;
-    return arg ;
+    return NextNV();
   }
 
   TObject *NextNV() {
     // Return next element in collection
-    if (!_ptr) return 0 ;
+    if (!_ptr) return nullptr ;
     TObject* arg = _ptr->_arg ;
     _ptr = _forward ? _ptr->_next : _ptr->_prev ;
     return arg ;
   }
 
-
-  virtual void Reset() {
+  void Reset() override {
     // Return iterator to first element in collection
     _ptr = _forward ? _list->_first : _list->_last ;
   }
 
-  bool operator!=(const TIterator &aIter) const {
+  bool operator!=(const TIterator &aIter) const override {
     const RooLinkedListIterImpl *iter(dynamic_cast<const RooLinkedListIterImpl*>(&aIter));
     if (iter) return (_ptr != iter->_ptr);
     return false; // for base class we don't implement a comparison
   }
 
   bool operator!=(const RooLinkedListIterImpl &aIter) const {
-    return (_ptr != aIter._ptr);
+    return _ptr != aIter._ptr;
   }
 
-  virtual TObject *operator*() const {
+  TObject *operator*() const override {
     // Return element iterator points to
-    return (_ptr ? _ptr->_arg : nullptr);
+    return _ptr ? _ptr->_arg : nullptr;
+  }
+
+  RooLinkedListIterImpl &operator++() {
+     if(_ptr) _ptr = _forward ? _ptr->_next : _ptr->_prev ;
+     return *this;
+  }
+
+  RooLinkedListIterImpl operator++(int) {
+     RooLinkedListIterImpl tmp(*this);
+     operator++();
+     return tmp;
   }
 
 protected:
-  const RooLinkedList* _list ;     //! Collection iterated over
-  const RooLinkedListElem* _ptr ;  //! Next link element
-  Bool_t _forward ;                //!  Iterator direction
+  const RooLinkedList* _list ;     ///<! Collection iterated over
+  const RooLinkedListElem* _ptr ;  ///<! Next link element
+  bool _forward ;                  ///<!  Iterator direction
 };
 
 

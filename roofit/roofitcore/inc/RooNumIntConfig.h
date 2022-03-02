@@ -28,7 +28,7 @@ public:
   RooNumIntConfig();
   RooNumIntConfig(const RooNumIntConfig& other) ;
   RooNumIntConfig& operator=(const RooNumIntConfig& other) ;
-  virtual ~RooNumIntConfig();
+  ~RooNumIntConfig() override;
 
   // Return selected integration techniques for 1,2,N dimensional integrals
   RooCategory& method1D() { return _method1D ; }
@@ -49,12 +49,12 @@ public:
   // Set/get absolute and relative precision convergence criteria
   Double_t epsAbs() const { return _epsAbs ; }
   Double_t epsRel() const { return _epsRel ; }
-  void setEpsAbs(Double_t newEpsAbs) ; 
+  void setEpsAbs(Double_t newEpsAbs) ;
   void setEpsRel(Double_t newEpsRel) ;
 
-  // Set/get switch that activates printing of number of required 
+  // Set/get switch that activates printing of number of required
   // function evaluations for each numeric integration
-  Bool_t printEvalCounter() const { return _printEvalCounter ; } 
+  Bool_t printEvalCounter() const { return _printEvalCounter ; }
   void setPrintEvalCounter(Bool_t newVal) { _printEvalCounter = newVal ; }
 
   static RooNumIntConfig& defaultConfig() ;
@@ -63,27 +63,27 @@ public:
   const RooArgSet& getConfigSection(const char* name) const ;
   RooArgSet& getConfigSection(const char* name) ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose, TString indent= "") const override;
 
-  virtual StyleOption defaultPrintStyle(Option_t* opt) const ; 
-  inline virtual void Print(Option_t *options= 0) const {
+  StyleOption defaultPrintStyle(Option_t* opt) const override ;
+  inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
 protected:
-  Double_t _epsAbs          ; // Absolute precision
-  Double_t _epsRel          ; // Relative precision
-  Bool_t   _printEvalCounter ; // Flag to control printing of function evaluation counter
+  Double_t _epsAbs          ; ///< Absolute precision
+  Double_t _epsRel          ; ///< Relative precision
+  Bool_t   _printEvalCounter ; ///< Flag to control printing of function evaluation counter
 
-  RooCategory _method1D     ; // Selects integration method for 1D integrals
-  RooCategory _method2D     ; // Selects integration method for 2D integrals
-  RooCategory _methodND     ; // Selects integration method for ND integrals
-  RooCategory _method1DOpen ; // Selects integration method for open ended 1D integrals
-  RooCategory _method2DOpen ; // Selects integration method for open ended 2D integrals
-  RooCategory _methodNDOpen ; // Selects integration method for open ended ND integrals
-  RooLinkedList _configSets ; // List of configuration sets for individual integration methods
+  RooCategory _method1D     ; ///< Selects integration method for 1D integrals
+  RooCategory _method2D     ; ///< Selects integration method for 2D integrals
+  RooCategory _methodND     ; ///< Selects integration method for ND integrals
+  RooCategory _method1DOpen ; ///< Selects integration method for open ended 1D integrals
+  RooCategory _method2DOpen ; ///< Selects integration method for open ended 2D integrals
+  RooCategory _methodNDOpen ; ///< Selects integration method for open ended ND integrals
+  RooLinkedList _configSets ; ///< List of configuration sets for individual integration methods
 
-  ClassDef(RooNumIntConfig,1) // Numeric Integrator configuration 
+  ClassDefOverride(RooNumIntConfig,1) // Numeric Integrator configuration
 };
 
 #endif

@@ -59,7 +59,7 @@ namespace TMVA {
       // setters
       void     SetValue( std::vector<Float_t>& value, Int_t ievt );
       void     Resize( Int_t entries )  { fRegValues.resize( entries ); }
-      
+
       using TObject::Clear;
       virtual void     Clear(Option_t *)  { fRegValues.clear(); }
 
@@ -77,13 +77,13 @@ namespace TMVA {
 
    private:
 
-      mutable std::vector<std::vector< Float_t> >  fRegValues;        // mva values (Results)
-      mutable MsgLogger* fLogger;                                     //! message logger
+      mutable std::vector<std::vector< Float_t> >  fRegValues;        ///< mva values (Results)
+      mutable MsgLogger* fLogger;                                     ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    protected:
-       
+
        ClassDef(ResultsRegression,2);
-       
+
    };
 }
 

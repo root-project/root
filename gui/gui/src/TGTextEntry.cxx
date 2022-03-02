@@ -34,7 +34,7 @@ Hitting the tab key will generate:
 kC_TEXTENTRY, kTE_TAB, widget id, 0.
 
 This widget has the behaviour e.g. of the "Location" field in
-netscape. That includes handling Control/Shift key modifiers and
+web browsers. That includes handling Control/Shift key modifiers and
 scrolling the text.
 
 enum TGTextEntry::EEchoMode
@@ -246,7 +246,7 @@ ClassImp(TGTextEntry);
 
 TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
                          GContext_t norm, FontStruct_t font, UInt_t options,
-                         ULong_t back) :
+                         Pixel_t back) :
    TGFrame(p, 1, 1, options | kOwnBackground, back)
 {
    TGGC *normgc   = fClient->GetResourcePool()->GetGCPool()->FindGC(norm);
@@ -407,7 +407,7 @@ void TGTextEntry::ShiftTabPressed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This signal is emitted when the <TAB> key is pressed.
+/// This signal is emitted when the `<TAB>` key is pressed.
 
 void TGTextEntry::TabPressed()
 {
@@ -1456,19 +1456,19 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
    if (!IsEnabled()) return kTRUE;
 
    // check this when porting to Win32
-      if (event->fType == kFocusIn) {
-         fCursorOn = kTRUE;
-         if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
-         fCurBlink->Reset();
-         gBlinkingEntry = this;
-         gSystem->AddTimer(fCurBlink);
-      } else {
-         fCursorOn = kFALSE;
-          // fSelectionOn = kFALSE;        // "netscape location behavior"
-         if (fCurBlink) fCurBlink->Remove();
-         gBlinkingEntry = 0;
-      }
-      fClient->NeedRedraw(this);
+   if (event->fType == kFocusIn) {
+      fCursorOn = kTRUE;
+      if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
+      fCurBlink->Reset();
+      gBlinkingEntry = this;
+      gSystem->AddTimer(fCurBlink);
+   } else {
+      fCursorOn = kFALSE;
+       // fSelectionOn = kFALSE;        // "web browser location behavior"
+      if (fCurBlink) fCurBlink->Remove();
+      gBlinkingEntry = 0;
+   }
+   fClient->NeedRedraw(this);
    return kTRUE;
 }
 

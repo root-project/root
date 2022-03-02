@@ -19,7 +19,7 @@
 ClassImp(TGraphTime);
 
 /** \class TGraphTime
-    \ingroup Hist
+    \ingroup Graphs
 TGraphTime is used to draw a set of objects evolving with nsteps in time between tmin and tmax.
 Each time step has a new list of objects. This list can be identical to
 the list of objects in the previous steps, but with different attributes.

@@ -1,13 +1,13 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #305
-// 
-// Multi-dimensional p.d.f.s with conditional p.d.fs in product
-// 
-// pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)    with f(y) = a0 + a1*y
-// 
 //
-// 07/2008 - Wouter Verkerke 
+// Multi-dimensional p.d.f.s with conditional p.d.fs in product
+//
+// pdf = gauss(x,f(y),sx | y ) * gauss(y,ms,sx)    with f(y) = a0 + a1*y
+//
+//
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -28,11 +28,11 @@ using namespace RooFit ;
 
 class TestBasic305 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic305(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Product operator p.d.f. with conditional term",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   c o n d i t i o n a l   p d f   g x ( x | y ) 
+  // C r e a t e   c o n d i t i o n a l   p d f   g x ( x | y )
   // -----------------------------------------------------------
 
   // Create observables
@@ -46,11 +46,11 @@ public:
 
   // Create gaussx(x,f(y),sx)
   RooRealVar sigmax("sigma","width of gaussian",0.5) ;
-  RooGaussian gaussx("gaussx","Gaussian in x with shifting mean in y",x,fy,sigmax) ;  
+  RooGaussian gaussx("gaussx","Gaussian in x with shifting mean in y",x,fy,sigmax) ;
 
 
 
-  // C r e a t e   p d f   g y ( y ) 
+  // C r e a t e   p d f   g y ( y )
   // -----------------------------------------------------------
 
   // Create gaussy(y,0,5)
@@ -75,12 +75,12 @@ public:
   // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
   RooPlot* xframe = x.frame() ;
   data->plotOn(xframe) ;
-  model.plotOn(xframe) ; 
+  model.plotOn(xframe) ;
 
   // Plot x distribution of data and projection of model on y = Int(dx) model(x,y)
   RooPlot* yframe = y.frame() ;
   data->plotOn(yframe) ;
-  model.plotOn(yframe) ; 
+  model.plotOn(yframe) ;
 
   // Make two-dimensional plot in x vs y
   TH1* hh_model = model.createHistogram("hh_model_rf305",x,Binning(50),YVar(y,Binning(50))) ;
@@ -93,7 +93,7 @@ public:
   delete data ;
 
   return kTRUE ;
-  
+
   }
 } ;
 

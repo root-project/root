@@ -11,17 +11,17 @@
 // Include Python.h first before any standard header
 #include "Python.h"
 
-#include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/TSeq.hxx"
 #include "ROOT/RVec.hxx"
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <tuple>
 #include <string>
 #include <typeinfo>
+#include <utility>
 #include <vector>
 
 #ifndef ROOT_RNUMPYDS
@@ -194,7 +194,7 @@ public:
          delete ptrHolder;
    }
 
-   void Initialise()
+   void Initialize()
    {
       ColLenghtChecker(std::index_sequence_for<ColumnTypes...>());
       const auto nEntries = GetEntriesNumber();

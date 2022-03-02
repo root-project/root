@@ -215,7 +215,7 @@ void PyROOT::TMemoryRegulator::ClearProxiedObjects()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// start tracking <object> proxied by <pyobj>
+/// start tracking `object` proxied by `pyobj`
 
 Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* object )
 {
@@ -237,7 +237,7 @@ Bool_t PyROOT::TMemoryRegulator::RegisterObject( ObjectProxy* pyobj, TObject* ob
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// stop tracking <object>, without notification
+/// stop tracking `object`, without notification
 
 Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
 {
@@ -253,7 +253,7 @@ Bool_t PyROOT::TMemoryRegulator::UnregisterObject( TObject* object )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// lookup <object>, return old proxy if tracked
+/// lookup `object`, return old proxy if tracked
 
 PyObject* PyROOT::TMemoryRegulator::RetrieveObject( TObject* object, Cppyy::TCppType_t klass )
 {

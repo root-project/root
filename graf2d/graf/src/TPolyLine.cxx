@@ -233,7 +233,7 @@ void TPolyLine::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this polyline with new coordinates.
 
-void TPolyLine::DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
+TPolyLine *TPolyLine::DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option)
 {
    TPolyLine *newpolyline = new TPolyLine(n,x,y);
    TAttLine::Copy(*newpolyline);
@@ -241,6 +241,7 @@ void TPolyLine::DrawPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option
    newpolyline->fOption = fOption;
    newpolyline->SetBit(kCanDelete);
    newpolyline->AppendPad(option);
+   return newpolyline;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

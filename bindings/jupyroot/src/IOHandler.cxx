@@ -71,15 +71,25 @@ JupyROOTExecutorHandler::JupyROOTExecutorHandler() {}
 
 static void PollImpl(FILE *stdStream, int *pipeHandle, std::string &pipeContent)
 {
+   fflush(stdStream);
+#ifdef _MSC_VER
+   char buffer[60000] = "";
+   struct _stat st;
+   _fstat(pipeHandle[0], &st);
+   if (st.st_size) {
+      _read(pipeHandle[0], buffer, 60000);
+      pipeContent += buffer;
+   }
+#else
    int buf_read;
    char ch;
-   fflush(stdStream);
    while (true) {
       buf_read = read(pipeHandle[0], &ch, 1);
       if (buf_read == 1) {
          pipeContent += ch;
       } else break;
    }
+#endif
 }
 
 void JupyROOTExecutorHandler::Poll()
@@ -94,10 +104,7 @@ static void InitCaptureImpl(int &savedStdStream, int *pipeHandle, int FILENO)
    if (pipe(pipeHandle) != 0) {
       return;
    }
-#ifdef _MSC_VER // Visual Studio
-   unsigned long mode = 1;
-   ioctlsocket(pipeHandle[0], FIONBIO, &mode);
-#else
+#ifndef _MSC_VER
    long flags_stdout = fcntl(pipeHandle[0], F_GETFL);
    if (flags_stdout == -1) return;
    flags_stdout |= O_NONBLOCK;
@@ -105,7 +112,6 @@ static void InitCaptureImpl(int &savedStdStream, int *pipeHandle, int FILENO)
    fcntl(pipeHandle[0], F_SETPIPE_SZ, MAX_PIPE_SIZE);
 #endif
    dup2(pipeHandle[1], FILENO);
-   close(pipeHandle[1]);
 }
 
 void JupyROOTExecutorHandler::InitCapture()
@@ -123,6 +129,12 @@ void JupyROOTExecutorHandler::EndCapture()
       Poll();
       dup2(fSaved_stdout, STDOUT_FILENO);
       dup2(fSaved_stderr, STDERR_FILENO);
+      close(fSaved_stdout);
+      close(fSaved_stderr);
+      close(fStdout_pipe[0]);
+      close(fStdout_pipe[1]);
+      close(fStderr_pipe[0]);
+      close(fStderr_pipe[1]);
       fCapturing = false;
    }
 }

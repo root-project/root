@@ -27,19 +27,19 @@ public:
 
   RooFracRemainder() ;
   RooFracRemainder(const char *name, const char *title, const RooArgSet& sumSet) ;
-  virtual ~RooFracRemainder() ;
+  ~RooFracRemainder() override ;
 
   RooFracRemainder(const RooFracRemainder& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooFracRemainder(*this, newname); }
+  TObject* clone(const char* newname) const override { return new RooFracRemainder(*this, newname); }
 
 protected:
 
-  RooListProxy _set1 ;            // Set of input fractions
-  mutable TIterator* _setIter1 ;  //! Iterator over set of input fractions
+  RooListProxy _set1 ;            ///< Set of input fractions
+  mutable TIterator* _setIter1 ;  ///<! Iterator over set of input fractions
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
-  ClassDef(RooFracRemainder,1) // Utility function calculating remainder fraction, i.e. 1-sum_i(a_i)
+  ClassDefOverride(RooFracRemainder,1) // Utility function calculating remainder fraction, i.e. 1-sum_i(a_i)
 };
 
 #endif

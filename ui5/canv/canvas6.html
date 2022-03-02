@@ -32,17 +32,16 @@
           is_ui5 = !url.has("noopenui") && !is_batch,
           _prereq = 'v6';
 
-      if (is_batch) JSROOT.batch_mode = true;
+      if (is_batch)
+         JSROOT.batch_mode = true;
 
       if (is_ui5)
          _prereq += ";openui5";
-      else if (!is_batch)
-         _prereq += ";jq2d";  // jq2d need for BrowserLayout
 
       JSROOT.connectWebWindow({
          prereq: _prereq,
          prereq_logdiv: "CanvasDiv",
-         // openui5src: "https://openui5.hana.ondemand.com/1.82.2/",
+         // openui5src: "https://openui5.hana.ondemand.com/1.98.0/",
       }).then(handle => {
          let painter = new JSROOT.TCanvasPainter(null, null);
 

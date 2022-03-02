@@ -30,8 +30,12 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate(EColumnType type) {
       return std::make_unique<RColumnElement<float, EColumnType::kReal32>>(nullptr);
    case EColumnType::kReal64:
       return std::make_unique<RColumnElement<double, EColumnType::kReal64>>(nullptr);
+   case EColumnType::kChar:
+      return std::make_unique<RColumnElement<char, EColumnType::kChar>>(nullptr);
    case EColumnType::kByte:
       return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kByte>>(nullptr);
+   case EColumnType::kInt8:
+      return std::make_unique<RColumnElement<std::int8_t, EColumnType::kInt8>>(nullptr);
    case EColumnType::kInt16:
       return std::make_unique<RColumnElement<std::int16_t, EColumnType::kInt16>>(nullptr);
    case EColumnType::kInt32:
@@ -57,7 +61,11 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
       return 32;
    case EColumnType::kReal64:
       return 64;
+   case EColumnType::kChar:
+      return 8;
    case EColumnType::kByte:
+      return 8;
+   case EColumnType::kInt8:
       return 8;
    case EColumnType::kInt16:
       return 16;
@@ -84,8 +92,12 @@ std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnT
       return "Real32";
    case EColumnType::kReal64:
       return "Real64";
+   case EColumnType::kChar:
+      return "Char";
    case EColumnType::kByte:
       return "Byte";
+   case EColumnType::kInt8:
+      return "Int8";
    case EColumnType::kInt16:
       return "Int16";
    case EColumnType::kInt32:

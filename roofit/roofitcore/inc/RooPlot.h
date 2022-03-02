@@ -16,7 +16,6 @@
 #ifndef ROO_PLOT
 #define ROO_PLOT
 
-#include "RooList.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
 
@@ -43,6 +42,8 @@ class TLegend;
 
 class RooPlot : public TNamed, public RooPrintable {
 public:
+  using Items = std::vector<std::pair<TObject*,std::string>>;
+
   RooPlot() ;
   RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins) ;
   RooPlot(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
@@ -50,8 +51,8 @@ public:
   RooPlot(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2);
   RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
-	  Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
-  virtual ~RooPlot();
+     Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
+  ~RooPlot() override;
 
   static RooPlot* frame(const RooAbsRealLValue &var, Double_t xmin, Double_t xmax, Int_t nBins);
   static RooPlot* frameWithLabels(const RooAbsRealLValue &var);
@@ -62,7 +63,7 @@ public:
   virtual Stat_t GetBinContent(Int_t) const;
   virtual Stat_t GetBinContent(Int_t, Int_t) const;
   virtual Stat_t GetBinContent(Int_t, Int_t, Int_t) const;
-  virtual void Draw(Option_t *options= 0);
+  void Draw(Option_t *options= 0) override;
 
   // forwarding of relevant TH1 interface
   TAxis* GetXaxis() const ;
@@ -76,43 +77,43 @@ public:
   void SetAxisRange(Double_t xmin, Double_t xmax, Option_t* axis = "X") ;
   void SetBarOffset(Float_t offset = 0.25) ;
   void SetBarWidth(Float_t width = 0.5) ;
-  void SetContour(Int_t nlevels, const Double_t* levels = 0) ; 
-  void SetContourLevel(Int_t level, Double_t value) ; 
-  void SetDrawOption(Option_t* option = "") ; 
-  void SetFillAttributes() ; 
-  void SetFillColor(Color_t fcolor) ; 
-  void SetFillStyle(Style_t fstyle) ; 
-  void SetLabelColor(Color_t color = 1, Option_t* axis = "X") ; 
-  void SetLabelFont(Style_t font = 62, Option_t* axis = "X") ; 
-  void SetLabelOffset(Float_t offset = 0.005, Option_t* axis = "X") ; 
-  void SetLabelSize(Float_t size = 0.02, Option_t* axis = "X") ; 
-  void SetLineAttributes() ; 
-  void SetLineColor(Color_t lcolor) ; 
-  void SetLineStyle(Style_t lstyle) ; 
-  void SetLineWidth(Width_t lwidth) ; 
-  void SetMarkerAttributes() ; 
-  void SetMarkerColor(Color_t tcolor = 1) ; 
-  void SetMarkerSize(Size_t msize = 1) ; 
-  void SetMarkerStyle(Style_t mstyle = 1) ; 
-  void SetName(const char *name) ;
-  void SetTitle(const char *name) ;
-  void SetNameTitle(const char *name, const char* title) ;
-  void SetNdivisions(Int_t n = 510, Option_t* axis = "X") ; 
-  void SetOption(Option_t* option = " ") ; 
-  void SetStats(Bool_t stats = kTRUE) ; 
-  void SetTickLength(Float_t length = 0.02, Option_t* axis = "X") ; 
-  void SetTitleFont(Style_t font = 62, Option_t* axis = "X") ; 
-  void SetTitleOffset(Float_t offset = 1, Option_t* axis = "X") ; 
-  void SetTitleSize(Float_t size = 0.02, Option_t* axis = "X") ; 
-  void SetXTitle(const char* title) ; 
-  void SetYTitle(const char* title) ; 
-  void SetZTitle(const char* title) ; 
+  void SetContour(Int_t nlevels, const Double_t* levels = 0) ;
+  void SetContourLevel(Int_t level, Double_t value) ;
+  void SetDrawOption(Option_t* option = "") override ;
+  void SetFillAttributes() ;
+  void SetFillColor(Color_t fcolor) ;
+  void SetFillStyle(Style_t fstyle) ;
+  void SetLabelColor(Color_t color = 1, Option_t* axis = "X") ;
+  void SetLabelFont(Style_t font = 62, Option_t* axis = "X") ;
+  void SetLabelOffset(Float_t offset = 0.005, Option_t* axis = "X") ;
+  void SetLabelSize(Float_t size = 0.02, Option_t* axis = "X") ;
+  void SetLineAttributes() ;
+  void SetLineColor(Color_t lcolor) ;
+  void SetLineStyle(Style_t lstyle) ;
+  void SetLineWidth(Width_t lwidth) ;
+  void SetMarkerAttributes() ;
+  void SetMarkerColor(Color_t tcolor = 1) ;
+  void SetMarkerSize(Size_t msize = 1) ;
+  void SetMarkerStyle(Style_t mstyle = 1) ;
+  void SetName(const char *name) override ;
+  void SetTitle(const char *name) override ;
+  void SetNameTitle(const char *name, const char* title) override ;
+  void SetNdivisions(Int_t n = 510, Option_t* axis = "X") ;
+  void SetOption(Option_t* option = " ") ;
+  void SetStats(Bool_t stats = kTRUE) ;
+  void SetTickLength(Float_t length = 0.02, Option_t* axis = "X") ;
+  void SetTitleFont(Style_t font = 62, Option_t* axis = "X") ;
+  void SetTitleOffset(Float_t offset = 1, Option_t* axis = "X") ;
+  void SetTitleSize(Float_t size = 0.02, Option_t* axis = "X") ;
+  void SetXTitle(const char* title) ;
+  void SetYTitle(const char* title) ;
+  void SetZTitle(const char* title) ;
 
   // container management
   const char* nameOf(Int_t idx) const ;
   TObject *findObject(const char *name, const TClass* clas=0) const;
   TObject* getObject(Int_t idx) const ;
-  Stat_t numItems() const {return _items.GetSize();}
+  Stat_t numItems() const {return _items.size();}
 
   void addPlotable(RooPlotable *plotable, Option_t *drawOptions= "", Bool_t invisible=kFALSE, Bool_t refreshNorm=kFALSE);
   void addObject(TObject* obj, Option_t* drawOptions= "", Bool_t invisible=kFALSE);
@@ -122,16 +123,16 @@ public:
   void remove(const char* name=0, Bool_t deleteToo=kTRUE) ;
 
   // ascii printing
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
@@ -167,21 +168,21 @@ public:
   Bool_t setDrawOptions(const char *name, TString options);
 
   Bool_t getInvisible(const char* name) const ;
-  void setInvisible(const char* name, Bool_t flag=kTRUE) ; 
- 
+  void setInvisible(const char* name, Bool_t flag=kTRUE) ;
+
   virtual void SetMaximum(Double_t maximum = -1111) ;
   virtual void SetMinimum(Double_t minimum = -1111) ;
 
   ///Shortcut for RooPlot::chiSquare(const char* pdfname, const char* histname, int nFitParam=0)
-  Double_t chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; } 
+  Double_t chiSquare(int nFitParam=0) const { return chiSquare(0,0,nFitParam) ; }
   Double_t chiSquare(const char* pdfname, const char* histname, int nFitParam=0) const ;
 
   RooHist* residHist(const char* histname=0, const char* pdfname=0,bool normalize=false, bool useAverage=true) const ;
   ///Uses residHist() and sets normalize=true
-  RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=true) const 
+  RooHist* pullHist(const char* histname=0, const char* pdfname=0, bool useAverage=true) const
     { return residHist(histname,pdfname,true,useAverage); }
 
-  void Browse(TBrowser *b) ;
+  void Browse(TBrowser *b) override ;
 
   /// \copydoc AddDirectoryStatus()
   static Bool_t addDirectoryStatus() ;
@@ -204,9 +205,11 @@ public:
 
   void SetDirectory(TDirectory *dir);
 
+  static void fillItemsFromTList(Items & items, TList const& tlist);
+
 protected:
 
-  RooPlot(const RooPlot& other); // cannot be copied
+  RooPlot(const RooPlot& other) = delete; // cannot be copied
 
   class DrawOpt {
     public:
@@ -221,32 +224,33 @@ protected:
 
 
   void initialize();
-  TString histName() const ; 
-  TString caller(const char *method) const;
+  TString histName() const ;
+  Items::iterator findItem(std::string const& name);
+  Items::const_iterator findItem(std::string const& name) const;
+
   void updateYAxis(Double_t ymin, Double_t ymax, const char *label= "");
   void updateFitRangeNorm(const TH1* hist);
   void updateFitRangeNorm(const RooPlotable* rp, Bool_t refeshNorm=kFALSE);
 
-  TH1* _hist ;               // Histogram that we uses as basis for drawing the content
+  TH1* _hist = nullptr;      ///< Histogram that we uses as basis for drawing the content
+  Items _items;  ///< A list of the items we contain.
+  Double_t _padFactor;       ///< Scale our y-axis to _padFactor of our maximum contents.
+  RooAbsRealLValue *_plotVarClone = nullptr; ///< A clone of the variable we are plotting.
+  RooArgSet *_plotVarSet = nullptr; ///< A list owning the cloned tree nodes of the plotVarClone
+  RooArgSet *_normVars = nullptr; ///< Variables that PDF plots should be normalized over
 
-  RooList _items;            // A list of the items we contain.
-  Double_t _padFactor;       // Scale our y-axis to _padFactor of our maximum contents.
-  RooAbsRealLValue *_plotVarClone; // A clone of the variable we are plotting.
-  RooArgSet *_plotVarSet;    // A list owning the cloned tree nodes of the plotVarClone
-  RooArgSet *_normVars;      // Variables that PDF plots should be normalized over
+  const RooPlotable* _normObj = nullptr; ///<! Pointer to normalization object ;
+  Double_t _normNumEvts;     ///< Number of events in histogram (for normalization)
+  Double_t _normBinWidth;    ///< Histogram bin width (for normalization)
 
-  const RooPlotable* _normObj ;    //! Pointer to normalization object ;
-  Double_t _normNumEvts;     // Number of events in histogram (for normalization)
-  Double_t _normBinWidth;    // Histogram bin width (for normalization)
+  Double_t _defYmin = 1e-5; ///< Default minimum for Yaxis (as calculated from contents)
+  Double_t _defYmax = 1.0;  ///< Default maximum for Yaxis (as calculated from contents)
 
-  Double_t _defYmin ;        // Default minimum for Yaxis (as calculated from contents)
-  Double_t _defYmax ;        // Default maximum for Yaxis (as calculated from contents)
+  TDirectory* _dir = nullptr; ///<! non-persistent
 
-  TDirectory* _dir ;         //! non-persistent
+  static Bool_t _addDirStatus ; ///< static flag controlling AutoDirectoryAdd feature
 
-  static Bool_t _addDirStatus ; // static flag controlling AutoDirectoryAdd feature
-
-  ClassDef(RooPlot,2)        // Plot frame and container for graphics objects
+  ClassDefOverride(RooPlot,3)        // Plot frame and container for graphics objects
 };
 
 #endif

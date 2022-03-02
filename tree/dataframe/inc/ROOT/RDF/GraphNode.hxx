@@ -14,7 +14,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "TString.h"
+#include "ROOT/RStringView.hxx"
 
 #include <iostream>
 
@@ -52,23 +52,10 @@ private:
    bool fIsNew = true; ///< A just created node. This means that in no other exploration the node was already created
    ///< (this is needed because branches may share some common node).
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns a static variable to allow each node to retrieve its counter
-   static unsigned int &GetStaticGlobalCounter()
-   {
-      static unsigned int sGlobalCounter = 1;
-      return sGlobalCounter;
-   }
-
 public:
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node with a name and a counter
-   GraphNode(const std::string_view &name) : fName(name) { fCounter = GetStaticGlobalCounter()++; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Resets the counter.
-   /// This is not strictly needed but guarantees that two consecutive request to the graph return the same result.
-   static void ClearCounter() { GraphNode::GetStaticGlobalCounter() = 1; }
+   /// \brief Creates a node with a name
+   GraphNode(const std::string_view &name) : fName(name) {}
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Appends a node on the head of the current node
@@ -101,31 +88,31 @@ public:
    /// \brief Gives a different shape based on the node type
    void SetRoot()
    {
-      fColor = "#e8f8fc";
-      fShape = "oval";
+      fColor = "#f4b400";
+      fShape = "ellipse";
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gives a different shape based on the node type
    void SetFilter()
    {
-      fColor = "#c4cfd4";
-      fShape = "diamond";
+      fColor = "#0f9d58";
+      fShape = "hexagon";
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gives a different shape based on the node type
    void SetDefine()
    {
-      fColor = "#60aef3";
-      fShape = "oval";
+      fColor = "#4285f4";
+      fShape = "ellipse";
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gives a different shape based on the node type
    void SetRange()
    {
-      fColor = "#6F4D8F";
+      fColor = "#9574b4";
       fShape = "diamond";
    }
 
@@ -134,9 +121,10 @@ public:
    void SetAction(bool hasRun)
    {
       if (hasRun) {
-         fColor = "#baf1e5";
+         fName += "<BR/><FONT POINT-SIZE=\"10.0\">Already Run</FONT>";
+         fColor = "#e6e5e6";
       } else {
-         fColor = "#9cbbe5";
+         fColor = "#e47c7e";
       }
       fShape = "box";
    }

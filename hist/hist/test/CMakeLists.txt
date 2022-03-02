@@ -16,6 +16,7 @@ ROOT_ADD_GTEST(test_TEfficiency test_TEfficiency.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(TGraphMultiErrorsTests TGraphMultiErrorsTests.cxx LIBRARIES Hist RIO)
 ROOT_ADD_GTEST(test_TF123_Moments test_TF123_Moments.cxx LIBRARIES Hist)
 ROOT_ADD_GTEST(test_THBinIterator test_THBinIterator.cxx LIBRARIES Hist)
+ROOT_ADD_GTEST(testTMultiGraphGetHistogram test_TMultiGraph_GetHistogram.cxx LIBRARIES Hist Gpad)
 
 if(fftw3)
   ROOT_ADD_GTEST(testTF1 test_tf1.cxx LIBRARIES Hist)
@@ -23,4 +24,5 @@ endif()
 
 if(clad)
   ROOT_ADD_GTEST(TFormulaGradientTests TFormulaGradientTests.cxx LIBRARIES Core MathCore Hist)
+  ROOT_ADD_GTEST(TFormulaHessianTests TFormulaHessianTests.cxx LIBRARIES Core MathCore Hist)
 endif()

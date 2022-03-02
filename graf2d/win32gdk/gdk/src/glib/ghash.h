@@ -98,7 +98,7 @@ guint    g_int_hash  (gconstpointer  v) G_GNUC_CONST;
  * passing NULL into g_hash_table_new() as GHashFunc has the
  * same effect as passing g_direct_hash().
  */
-guint    g_direct_hash  (gconstpointer  v) G_GNUC_CONST;
+gulong   g_direct_hash  (gconstpointer  v) G_GNUC_CONST;
 gboolean g_direct_equal (gconstpointer  v,
                          gconstpointer  v2) G_GNUC_CONST;
 

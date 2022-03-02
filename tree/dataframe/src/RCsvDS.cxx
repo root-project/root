@@ -74,12 +74,12 @@ important to check both how much memory is available and the size of the CSV fil
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RCsvDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <TError.h>
 
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -258,6 +258,7 @@ size_t RCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
+/// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
 RCsvDS::RCsvDS(std::string_view fileName, bool readHeaders, char delimiter, Long64_t linesChunkSize) // TODO: Let users specify types?
    : fReadHeaders(readHeaders),
      fCsvFile(ROOT::Internal::RRawFile::Create(fileName)),
@@ -338,7 +339,7 @@ RCsvDS::~RCsvDS()
    FreeRecords();
 }
 
-void RCsvDS::Finalise()
+void RCsvDS::Finalize()
 {
    fCsvFile->Seek(fDataPos);
    fProcessedLines = 0ULL;
@@ -452,12 +453,12 @@ bool RCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
 
 void RCsvDS::SetNSlots(unsigned int nSlots)
 {
-   R__ASSERT(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
+   assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
 
    fNSlots = nSlots;
 
    const auto nColumns = fHeaders.size();
-   // Initialise the entire set of addresses
+   // Initialize the entire set of addresses
    fColAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
 
    // Initialize the per event data holders

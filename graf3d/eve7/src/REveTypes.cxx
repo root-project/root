@@ -16,6 +16,7 @@
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
+
 /** \class REveException
 \ingroup REve
 Exception class thrown by Eve classes and macros.
@@ -43,7 +44,9 @@ REveException REX::operator+(const REveException &s1,  const char *s2)
 REveException REX::operator+(const REveException &s1, ElementId_t x)
 { REveException r(s1); r.append(std::to_string(x)); return r; }
 
-REX::RLogChannel &REX::EveLog() {
+REX::RLogChannel &REX::REveLog()
+{
    static RLogChannel sLog("ROOT.Eve");
    return sLog;
 }
+

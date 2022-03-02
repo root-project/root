@@ -22,36 +22,36 @@
 class RooDouble : public TNamed {
 public:
 
+  /// Default constructor
   RooDouble() : _value(0) {
-    // Default constructor
   } ;
   RooDouble(Double_t value) ;
   RooDouble(const RooDouble& other) : TNamed(other), _value(other._value) {}
-  virtual ~RooDouble() {
-    // Destructor
+  /// Destructor
+  ~RooDouble() override {
   } ;
 
-  // Double_t cast operator 
-  inline operator Double_t() const { 
-    // Return value of contained double
-    return _value ; 
+  // Double_t cast operator
+  /// Return value of contained double
+  inline operator Double_t() const {
+    return _value ;
   }
-  RooDouble& operator=(Double_t value) { 
-    // Return true if contained double equals value
-    _value = value ; return *this ; 
+  /// Return true if contained double equals value
+  RooDouble& operator=(Double_t value) {
+    _value = value ; return *this ;
   }
 
   // Sorting interface ;
-  Int_t Compare(const TObject* other) const ;
-  virtual Bool_t IsSortable() const { 
-    // We are a sortable object
-    return kTRUE ; 
+  Int_t Compare(const TObject* other) const override ;
+  /// We are a sortable object
+  Bool_t IsSortable() const override {
+    return kTRUE ;
   }
 
 protected:
 
-  Double_t _value ; // Value payload
-  ClassDef(RooDouble,1) // Container class for Double_t
+  Double_t _value ; ///< Value payload
+  ClassDefOverride(RooDouble,1) // Container class for Double_t
 };
 
 #endif

@@ -1,7 +1,14 @@
 #include "ntuple_test.hxx"
+#include <ROOT/RPageStorageDaos.hxx>
+#include "ROOT/TestSupport.hxx"
 
-TEST(RNTuple, Basics)
+TEST(RPageStorageDaos, Basics)
 {
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "in int daos_init()", "This RNTuple build uses libdaos_mock. Use only for testing!");
+   diags.requiredDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos", "The DAOS backend is experimental and still under development.", false);
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 1", false);
+
    std::string daosUri("daos://" R__DAOS_TEST_POOL ":1/a947484e-e3bc-48cb-8f71-3292c19b59a4");
 
    auto model = RNTupleModel::Create();
@@ -30,7 +37,7 @@ TEST(RNTuple, Basics)
    EXPECT_EQ(12.0, *rdPt);
 }
 
-TEST(RNTuple, Extended)
+TEST(RPageStorageDaos, Extended)
 {
    std::string daosUri("daos://" R__DAOS_TEST_POOL ":1/a947484e-e3bc-48cb-8f71-3292c19b59a4");
 
@@ -67,4 +74,38 @@ TEST(RNTuple, Extended)
          chksumRead += v;
    }
    EXPECT_EQ(chksumRead, chksumWrite);
+}
+
+TEST(RPageStorageDaos, Options)
+{
+   std::string daosUri("daos://" R__DAOS_TEST_POOL ":1/a947484e-e3bc-48cb-8f71-3292c19b59a4");
+
+   {
+      auto model = RNTupleModel::Create();
+
+      RNTupleWriteOptionsDaos options;
+      options.SetObjectClass("UNKNOWN");
+      try {
+         auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", daosUri, options);
+         FAIL() << "unknown object class should throw";
+      } catch (const RException& err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("UNKNOWN"));
+      }
+   }
+
+   {
+      auto model = RNTupleModel::Create();
+      auto wrPt = model->MakeField<float>("pt", 42.0);
+
+      RNTupleWriteOptionsDaos options;
+      options.SetObjectClass("RP_XSF");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", daosUri, options);
+      ntuple->Fill();
+      ntuple->CommitCluster();
+   }
+
+   ROOT::Experimental::Detail::RPageSourceDaos source("ntuple", daosUri, RNTupleReadOptions());
+   source.Attach();
+   EXPECT_STREQ("RP_XSF", source.GetObjectClass().c_str());
+   EXPECT_EQ(1U, source.GetNEntries());
 }

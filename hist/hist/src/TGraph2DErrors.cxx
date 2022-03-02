@@ -20,7 +20,7 @@
 ClassImp(TGraph2DErrors);
 
 /** \class TGraph2DErrors
-    \ingroup Hist
+    \ingroup Graphs
 Graph 2D class with errors.
 
 A TGraph2DErrors is a TGraph2D with errors. It behaves like a TGraph2D and has
@@ -304,6 +304,32 @@ void TGraph2DErrors::Print(Option_t *) const
 {
    for (Int_t i = 0; i < fNpoints; i++) {
       printf("x[%d]=%g, y[%d]=%g, z[%d]=%g, ex[%d]=%g, ey[%d]=%g, ez[%d]=%g\n", i, fX[i], i, fY[i], i, fZ[i], i, fEX[i], i, fEY[i], i, fEZ[i]);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values and errors of a TGraph2DErrors by a constant c1.
+///
+/// If option contains "x" the x values and errors are scaled
+/// If option contains "y" the y values and errors are scaled
+/// If option contains "z" the z values and errors are scaled
+/// If option contains "xyz" all three x, y and z values and errors are scaled
+
+void TGraph2DErrors::Scale(Double_t c1, Option_t *option)
+{
+   TGraph2D::Scale(c1, option);
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x") && GetEX()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEX()[i] *= c1;
+   }
+   if (opt.Contains("y") && GetEY()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEY()[i] *= c1;
+   }
+   if (opt.Contains("z") && GetEZ()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEZ()[i] *= c1;
    }
 }
 

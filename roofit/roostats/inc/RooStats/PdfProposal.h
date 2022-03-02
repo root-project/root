@@ -34,16 +34,16 @@ namespace RooStats {
       PdfProposal(RooAbsPdf& pdf);
 
       /// Populate xPrime with a new proposed point
-      virtual void Propose(RooArgSet& xPrime, RooArgSet& x);
+      void Propose(RooArgSet& xPrime, RooArgSet& x) override;
 
       /// Determine whether or not the proposal density is symmetric for
-      /// points x1 and x2 - that is, whether the probabilty of reaching x2
+      /// points x1 and x2 - that is, whether the probability of reaching x2
       /// from x1 is equal to the probability of reaching x1 from x2
-      virtual Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2);
+      Bool_t IsSymmetric(RooArgSet& x1, RooArgSet& x2) override;
 
       /// Return the probability of proposing the point x1 given the starting
       /// point x2
-      virtual Double_t GetProposalDensity(RooArgSet& x1, RooArgSet& x2);
+      Double_t GetProposalDensity(RooArgSet& x1, RooArgSet& x2) override;
 
       /// Set the PDF to be the proposal density function
       virtual void SetPdf(RooAbsPdf& pdf) { fPdf = &pdf; }
@@ -93,7 +93,7 @@ namespace RooStats {
       //virtual void SetIsAlwaysSymmetric(Bool_t isAlwaysSymmetric)
       //{ fIsAlwaysSymmetric = isAlwaysSymmetric; }
 
-      virtual ~PdfProposal()
+      ~PdfProposal() override
       {
          delete fCache;
          if (fOwnsPdf)
@@ -116,7 +116,7 @@ namespace RooStats {
       virtual Bool_t Equals(RooArgSet& x1, RooArgSet& x2);
 
       /// Interface for tools setting limits (producing confidence intervals)
-      ClassDef(PdfProposal,1)
+      ClassDefOverride(PdfProposal,1)
    };
 }
 

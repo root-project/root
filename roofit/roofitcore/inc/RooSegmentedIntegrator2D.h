@@ -28,26 +28,26 @@ public:
 
   RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooSegmentedIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
-		  const RooNumIntConfig& config) ;
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooSegmentedIntegrator2D() ;
+        const RooNumIntConfig& config) ;
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooSegmentedIntegrator2D() override ;
 
-  virtual Bool_t checkLimits() const;
+  Bool_t checkLimits() const override;
 
-  virtual Bool_t canIntegrate1D() const { return kFALSE ; }
-  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
-  virtual Bool_t canIntegrateND() const { return kFALSE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  Bool_t canIntegrate1D() const override { return kFALSE ; }
+  Bool_t canIntegrate2D() const override { return kTRUE ; }
+  Bool_t canIntegrateND() const override { return kFALSE ; }
+  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
 
 protected:
 
   friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;	
+  static void registerIntegrator(RooNumIntFactory& fact) ;
 
   RooSegmentedIntegrator1D* _xIntegrator ;
   RooAbsFunc* _xint ;
 
-  ClassDef(RooSegmentedIntegrator2D,0) // 2-dimensional piece-wise numerical integration engine
+  ClassDefOverride(RooSegmentedIntegrator2D,0) // 2-dimensional piece-wise numerical integration engine
 };
 
 #endif

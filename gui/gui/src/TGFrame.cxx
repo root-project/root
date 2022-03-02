@@ -21,7 +21,7 @@
 **************************************************************************/
 
 
-/** \class The TGFrame
+/** \class TGFrame
     \ingroup guiwidgets
 
 A subclasses of TGWindow, and is used as base
@@ -642,7 +642,7 @@ void TGFrame::MoveResize(Int_t x, Int_t y, UInt_t w, UInt_t h)
 /// Send message (i.e. event) to window w. Message is encoded in one long
 /// as message type and up to two long parameters.
 
-void TGFrame::SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2)
+void TGFrame::SendMessage(const TGWindow *w, Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    Event_t event;
 
@@ -1468,7 +1468,9 @@ TGMainFrame::TGMainFrame(const TGWindow *p, UInt_t w, UInt_t h,
    fWMInitState = (EInitialState) 0;
 
    gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
-                      kKeyControlMask, kTRUE);
+                      kKeyControlMask, kTRUE);//grab CTRL+s
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
+                      kKeyControlMask | kKeyMod2Mask, kTRUE);//grab CTRL+s also if NumLock is active
    if (p == fClient->GetDefaultRoot()) {
       fMWMValue    = kMWMDecorAll;
       fMWMFuncs    = kMWMFuncAll;
@@ -1509,6 +1511,10 @@ TGMainFrame::~TGMainFrame()
       fBindList->Delete();
       delete fBindList;
    }
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
+                      kKeyControlMask, kFALSE);
+   gVirtualX->GrabKey(fId, gVirtualX->KeysymToKeycode(kKey_s),
+                      kKeyControlMask | kKeyMod2Mask, kFALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1528,7 +1534,6 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
       repeat_save = kFALSE;
 
       TGFileInfo fi;
-      TGMainFrame *main = (TGMainFrame*)GetMainFrame();
       fi.fFileTypes = gSaveMacroTypes;
       fi.SetIniDir(dir);
       fi.fOverwrite = overwr;
@@ -1536,42 +1541,61 @@ Bool_t TGMainFrame::SaveFrameAsCodeOrImage()
       if (!fi.fFilename) return kFALSE;
       dir = fi.fIniDir;
       overwr = fi.fOverwrite;
-      TString fname = gSystem->UnixPathName(fi.fFilename);
-      if (fname.EndsWith(".C"))
-         main->SaveSource(fname.Data(), "");
-      else {
-         TImage::EImageFileTypes gtype = TImage::kUnknown;
-         if (fname.EndsWith("gif")) {
-            gtype = TImage::kGif;
-         } else if (fname.EndsWith(".png")) {
-            gtype = TImage::kPng;
-         } else if (fname.EndsWith(".jpg")) {
-            gtype = TImage::kJpeg;
-         } else if (fname.EndsWith(".tiff")) {
-            gtype = TImage::kTiff;
-         } else if (fname.EndsWith(".xpm")) {
-            gtype = TImage::kXpm;
-         }
-         if (gtype != TImage::kUnknown) {
-            Int_t saver = gErrorIgnoreLevel;
-            gErrorIgnoreLevel = kFatal;
-            TImage *img = TImage::Create();
-            RaiseWindow();
-            img->FromWindow(GetId());
-            img->WriteImage(fname, gtype);
-            gErrorIgnoreLevel = saver;
-            delete img;
-         }
-         else {
-            Int_t retval;
-            new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
-                         TString::Format("file (%s) cannot be saved with this extension",
-                                         fname.Data()), kMBIconExclamation,
-                         kMBRetry | kMBCancel, &retval);
-            repeat_save = (retval == kMBRetry);
-         }
+      const Bool_t res = SaveFrameAsCodeOrImage(fi.fFilename);
+      if (!res) {
+         Int_t retval;
+         new TGMsgBox(fClient->GetDefaultRoot(), this, "Error...",
+                      TString::Format("file (%s) cannot be saved with this extension",
+                                      fi.fFilename),
+                      kMBIconExclamation, kMBRetry | kMBCancel, &retval);
+         repeat_save = (retval == kMBRetry);
       }
    } while (repeat_save);
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Saves the frame contents as a ROOT macro or as an image,
+/// depending on the extension of the fileName argument.
+/// If preexisting, the file is overwritten.
+/// Returns kTRUE if something was saved.
+
+Bool_t TGMainFrame::SaveFrameAsCodeOrImage(const TString &fileName)
+{
+   static TString dir(".");
+
+   const TString fname = gSystem->UnixPathName(fileName);
+   if (fname.EndsWith(".C")) {
+      TGMainFrame *main = (TGMainFrame*)GetMainFrame();
+      main->SaveSource(fname.Data(), "");
+   } else {
+      TImage::EImageFileTypes gtype = TImage::kUnknown;
+      if (fname.EndsWith("gif")) {
+         gtype = TImage::kGif;
+      } else if (fname.EndsWith(".png")) {
+         gtype = TImage::kPng;
+      } else if (fname.EndsWith(".jpg")) {
+         gtype = TImage::kJpeg;
+      } else if (fname.EndsWith(".tiff")) {
+         gtype = TImage::kTiff;
+      } else if (fname.EndsWith(".xpm")) {
+         gtype = TImage::kXpm;
+      }
+      if (gtype != TImage::kUnknown) {
+         Int_t saver = gErrorIgnoreLevel;
+         gErrorIgnoreLevel = kFatal;
+         TImage *img = TImage::Create();
+         RaiseWindow();
+         img->FromWindow(GetId());
+         img->WriteImage(fname, gtype);
+         gErrorIgnoreLevel = saver;
+         delete img;
+      } else {
+         Error("SaveFrameAsCodeOrImage", "File cannot be saved with this extension");
+         return kFALSE;
+      }
+   }
 
    return kTRUE;
 }
@@ -1806,9 +1830,11 @@ const TGPicture *TGMainFrame::SetIconPixmap(const char *iconName)
 /// builtin to the source code.
 ///
 /// For example,
+/// \code{.cpp}
 ///    #include "/home/root/icons/bld_rgb.xpm"
 ///    //bld_rgb.xpm contains char *bld_rgb[] array
 ///    main_frame->SetIconPixmap(bld_rgb);
+/// \endcode
 
 void TGMainFrame::SetIconPixmap(char **xpm_array)
 {

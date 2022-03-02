@@ -179,8 +179,8 @@ read_thread (void *parameter)
     g_print ("read_thread %#x: start fd:%d, data_avail:%#x, space_avail:%#x\n",
 	     channel->thread_id,
 	     channel->fd,
-	     (guint) channel->data_avail_event,
-	     (guint) channel->space_avail_event);
+	     (gulong) channel->data_avail_event,
+	     (gulong) channel->space_avail_event);
   
   channel->buffer = g_malloc (BUFFER_SIZE);
   channel->rdp = channel->wrp = 0;
@@ -375,8 +375,8 @@ select_thread (void *parameter)
     g_print ("select_thread %#x: start fd:%d,\n\tdata_avail:%#x, data_avail_noticed:%#x\n",
 	     channel->thread_id,
 	     channel->fd,
-	     (guint) channel->data_avail_event,
-	     (guint) channel->data_avail_noticed_event);
+	     (gulong) channel->data_avail_event,
+	     (gulong) channel->data_avail_noticed_event);
   
   channel->rdp = channel->wrp = 0;
   channel->running = TRUE;
@@ -625,7 +625,7 @@ g_io_win32_create_watch (GIOChannel    *channel,
   if (win32_channel->data_avail_event == NULL)
     create_events (win32_channel);
 
-  watch->pollfd.fd = (gint) win32_channel->data_avail_event;
+  watch->pollfd.fd = (glong) win32_channel->data_avail_event;
   watch->pollfd.events = condition;
   
   if (win32_channel->debug)
@@ -1294,7 +1294,7 @@ static GIOFuncs win32_channel_sock_funcs = {
 };
 
 GIOChannel *
-g_io_channel_win32_new_messages (guint hwnd)
+g_io_channel_win32_new_messages (gulong hwnd)
 {
   GIOWin32Channel *win32_channel = g_new (GIOWin32Channel, 1);
   GIOChannel *channel = (GIOChannel *)win32_channel;
@@ -1445,7 +1445,7 @@ g_io_channel_win32_make_pollfd (GIOChannel   *channel,
   if (win32_channel->data_avail_event == NULL)
     create_events (win32_channel);
   
-  fd->fd = (gint) win32_channel->data_avail_event;
+  fd->fd = (glong) win32_channel->data_avail_event;
   fd->events = condition;
 
   if (win32_channel->thread_id == 0)

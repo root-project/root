@@ -232,7 +232,7 @@ public:
    Int_t         GetScrolling() const { return fScrolling; }
 
    virtual TGDimension GetDefaultSize() const { return TGDimension(fWidth, fHeight); }
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 

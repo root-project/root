@@ -86,11 +86,12 @@ void TPaveLabel::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pavelabel with new coordinates.
 
-void TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *option)
+TPaveLabel *TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *option)
 {
    TPaveLabel *newpavelabel = new TPaveLabel(x1,y1,x2,y2,label,option);
    newpavelabel->SetBit(kCanDelete);
    newpavelabel->AppendPad();
+   return newpavelabel;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

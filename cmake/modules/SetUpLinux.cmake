@@ -65,7 +65,7 @@ if(dev)
   # Only lld and gold support --gdb-index
   if(SUPERIOR_LINKER)
     set(LLVM_USE_LINKER "${SUPERIOR_LINKER}")
-    if(CMAKE_BUILD_TYPE MATCHES "Deb")
+    if(_BUILD_TYPE_UPPER MATCHES "DEB")
       message(STATUS "Using ${SUPERIOR_LINKER} linker with gdb-index")
       set(GDBINDEX "-Wl,--gdb-index")
     else()
@@ -145,7 +145,6 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
   endif()
 
   # Augment optimisation flags:
-  string(TOUPPER BUILD_TYPE ${CMAKE_BUILD_TYPE})
-  set(CMAKE_CXX_FLAGS_${BUILD_TYPE} "${CMAKE_CXX_FLAGS_${BUILD_TYPE}} -fp-model precise")
-  set(CMAKE_C_FLAGS_${BUILD_TYPE}   "${CMAKE_C_FLAGS_${BUILD_TYPE}} -fp-model precise")
+  set(CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER} "${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}} -fp-model precise")
+  set(CMAKE_C_FLAGS_${BUILD_TYPE}   "${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}} -fp-model precise")
 endif()

@@ -11,6 +11,8 @@
 
 #include <ROOT/REveDataTable.hxx>
 #include <ROOT/REveDataCollection.hxx>
+#include <ROOT/REveUtil.hxx>
+#include <ROOT/RLogger.hxx>
 #include "TClass.h"
 #include "TROOT.h"
 
@@ -63,7 +65,14 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       nlohmann::json row;
       for (auto &chld : fChildren) {
          auto clmn = dynamic_cast<REveDataColumn *>(chld);
-         row[chld->GetCName()] = clmn->EvalExpr(data);
+
+         try {
+            row[chld->GetCName()] = clmn->EvalExpr(data);
+         }
+         catch (const std::exception&) {
+            R__LOG_ERROR(REveLog()) << "can't eval expr " << clmn->fExpression.Data();
+            row[chld->GetCName()] = "err";
+         }
       }
       jarr.push_back(row);
    }
@@ -73,14 +82,17 @@ Int_t REveDataTable::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    return ret;
 }
 
-void REveDataTable::AddNewColumn(const std::string& expr, const std::string& title, int prec)
+void REveDataTable::AddNewColumn(const std::string &expr, const std::string &title, int prec)
 {
    auto c = new REveDataColumn(title);
-   AddElement(c);
    c->SetExpressionAndType(expr, REveDataColumn::FT_Double);
    c->SetPrecision(prec);
+   gROOT->ProcessLine(c->GetFunctionExpressionString().c_str());
 
-   StampObjProps();
+   if (c->hasValidExpression()) {
+      AddElement(c);
+      StampObjProps();
+   }
 }
 
 //==============================================================================
@@ -130,7 +142,8 @@ std::string REveDataColumn::GetFunctionExpressionString() const
    }
 
    std::stringstream s;
-   s << "*((std::function<" << rtyp << "(" << fClassType->GetName() << "*)>*)" << std::hex << std::showbase << (size_t)fooptr
+   s  << " *((std::function<" << rtyp << "(" << fClassType->GetName() << "*)>*)"
+     << std::hex << std::showbase << (size_t)fooptr
      << ") = [](" << fClassType->GetName() << "* p){" << fClassType->GetName() << " &i=*p; return (" << fExpression.Data()
      << "); };";
 
@@ -139,10 +152,16 @@ std::string REveDataColumn::GetFunctionExpressionString() const
 }
 
 //______________________________________________________________________________
+bool REveDataColumn::hasValidExpression() const
+{
+   return (fDoubleFoo || fBoolFoo || fStringFoo);
+}
+
+//______________________________________________________________________________
 std::string REveDataColumn::EvalExpr(void *iptr) const
 {
-   if (!(fDoubleFoo || fBoolFoo || fStringFoo))
-      gROOT->ProcessLine(GetFunctionExpressionString().c_str());
+   if (!hasValidExpression())
+      return "ErrFunc";
 
    switch (fType)
    {
@@ -161,5 +180,5 @@ std::string REveDataColumn::EvalExpr(void *iptr) const
          return fStringFoo(iptr);
       }
    }
-   return "XYZ";
+   return "Nn";
 }

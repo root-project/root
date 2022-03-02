@@ -132,7 +132,7 @@ SPlot::SPlot():
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = NULL;
 
@@ -145,7 +145,7 @@ SPlot::SPlot(const char* name, const char* title):
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = NULL;
 
@@ -160,7 +160,7 @@ SPlot::SPlot(const char* name, const char* title, const RooDataSet &data):
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = (RooDataSet*) &data;
 }
@@ -194,7 +194,7 @@ SPlot::SPlot(const SPlot &other):
 ///\param[in] useWeights Include weights of the input data in calculation of s weights.
 ///\param[in] cloneData Make a clone of the incoming data before adding weights.
 ///\param[in] newName New name for the data.
-///\param[in] argX Additional arguments for the fitting step in AddSWeight().
+///\param[in] arg5,arg6,arg7,arg8 Additional arguments for the fitting step in AddSWeight().
 SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* pdf,
         const RooArgList &yieldsList, const RooArgSet &projDeps,
         bool useWeights, bool cloneData, const char* newName,
@@ -394,7 +394,7 @@ Int_t SPlot::GetNumSWeightVars() const
 /// Method which adds the sWeights to the dataset.
 ///
 /// The SPlot will contain two new variables for each yield parameter:
-/// - `L_<varname>` is the the likelihood for each event, *i.e.*, the pdf evaluated for the a given value of the variable "varname".
+/// - `L_<varname>` is the the likelihood for each event, i.e., the pdf evaluated for the a given value of the variable "varname".
 /// - `<varname>_sw` is the value of the sWeight for the variable "varname" for each event.
 ///
 /// Find Parameters in the PDF to be considered fixed when calculating the SWeights
@@ -415,7 +415,7 @@ Int_t SPlot::GetNumSWeightVars() const
 /// \param[in] projDeps These will not be normalized over when calculating the sWeights,
 /// and will be considered parameters, not observables.
 /// \param[in] includeWeights Include weights of the input data in calculation of s weights.
-/// \param[in] argX Optional additional arguments for the fitting step.
+/// \param[in] arg5,arg6,arg7,arg8 Optional additional arguments for the fitting step.
 void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
          const RooArgSet &projDeps, bool includeWeights,
          const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)

@@ -230,7 +230,7 @@ g_bit_nth_lsf (gulong mask,
   do
     {
       nth_bit++;
-      if (mask & (1 << (gulong) nth_bit))
+      if (mask & ((gulong)1 << (gulong) nth_bit))
 	return nth_bit;
     }
   while (nth_bit < 32);
@@ -245,7 +245,7 @@ g_bit_nth_msf (gulong mask,
   do
     {
       nth_bit--;
-      if (mask & (1 << (gulong) nth_bit))
+      if (mask & ((gulong)1 << (gulong) nth_bit))
 	return nth_bit;
     }
   while (nth_bit > 0);

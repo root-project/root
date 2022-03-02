@@ -49,7 +49,7 @@ const RooCmdArg RooCmdArg::_none ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to null argument
 
-const RooCmdArg& RooCmdArg::none() 
+const RooCmdArg& RooCmdArg::none()
 {
   return _none ;
 }
@@ -64,7 +64,7 @@ RooCmdArg::RooCmdArg() : TNamed("","")
   _prefixSubArgs = kTRUE ;
   _c = 0 ;
   _o[0] = 0 ;
-  _o[1] = 0 ; 
+  _o[1] = 0 ;
   _i[0] = 0 ;
   _i[1] = 0 ;
   _d[0] = 0 ;
@@ -76,9 +76,9 @@ RooCmdArg::RooCmdArg() : TNamed("","")
 /// Constructor with full specification of payload: two integers, two doubles,
 /// three string poiners, two object pointers and one RooCmdArg pointer
 
-RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t d2, 
-		     const char* s1, const char* s2, const TObject* o1, const TObject* o2, 
-		     const RooCmdArg* ca, const char* s3, const RooArgSet* c1, const RooArgSet* c2) :
+RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t d2,
+           const char* s1, const char* s2, const TObject* o1, const TObject* o2,
+           const RooCmdArg* ca, const char* s3, const RooArgSet* c1, const RooArgSet* c2) :
   TNamed(name,name)
 {
   _i[0] = i1 ;
@@ -131,7 +131,7 @@ RooCmdArg::RooCmdArg(const RooCmdArg& other) :
   } else {
     _c = 0 ;
   }
-  
+
   _procSubArgs = other._procSubArgs ;
   _prefixSubArgs = other._prefixSubArgs ;
   for (Int_t i=0 ; i<other._argList.GetSize() ; i++) {
@@ -143,7 +143,7 @@ RooCmdArg::RooCmdArg(const RooCmdArg& other) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator
 
-RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other) 
+RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other)
 {
   if (&other==this) return *this ;
 
@@ -166,7 +166,7 @@ RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other)
     _c[0].removeAll() ; _c[0].add(other._c[0]) ;
     _c[1].removeAll() ; _c[1].add(other._c[1]) ;
   }
-  
+
   _procSubArgs = other._procSubArgs ;
   _prefixSubArgs = other._prefixSubArgs ;
 
@@ -193,7 +193,7 @@ RooCmdArg::~RooCmdArg()
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function to add nested RooCmdArg to payload of this RooCmdArg
 
-void RooCmdArg::addArg(const RooCmdArg& arg) 
+void RooCmdArg::addArg(const RooCmdArg& arg)
 {
   _argList.Add(new RooCmdArg(arg)) ;
 }
@@ -211,7 +211,7 @@ const RooArgSet* RooCmdArg::getSet(Int_t idx) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCmdArg::setSet(Int_t idx,const RooArgSet& set) 
+void RooCmdArg::setSet(Int_t idx,const RooArgSet& set)
 {
   if (!_c) {
     _c = new RooArgSet[2] ;
@@ -232,3 +232,5 @@ void RooCmdArg::Print(const char*) const {
 }
 
 RooCmdArg::DataCollection RooCmdArg::_nextSharedData = RooCmdArg::DataCollection{};
+
+RooCmdArg::DataCollection &RooCmdArg::getNextSharedData() { return _nextSharedData; }

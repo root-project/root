@@ -1,3 +1,4 @@
+#include "ROOT/TestSupport.hxx"
 #include "TInterpreter.h"
 
 #include "gtest/gtest.h"
@@ -258,4 +259,37 @@ TEST(TClingCallFunc, DISABLED_OverloadedTemplate)
                              bool k2 = ((bool(&)(X,bool))::operator==<bool>)(x, true);
                            }
                            )cpp");
+}
+
+TEST(TClingCallFunc, FunctionWrapperNodiscard)
+{
+   gInterpreter->Declare(R"cpp(
+                           struct TClingCallFunc_Nodiscard1 {
+                           #if __cplusplus >= 201703L
+                           [[nodiscard]]
+                           #endif
+                             bool foo(int) { return false; }
+                           };
+                           )cpp");
+
+   ClassInfo_t *FooNamespace = gInterpreter->ClassInfo_Factory("TClingCallFunc_Nodiscard1");
+   CallFunc_t *mc = gInterpreter->CallFunc_Factory();
+   Longptr_t offset = 0;
+
+   gInterpreter->CallFunc_SetFuncProto(mc, FooNamespace, "foo", "int", &offset);
+   std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
+
+   {
+      using ::testing::Not;
+      using ::testing::HasSubstr;
+      ROOT::TestSupport::FilterDiagsRAII RAII([] (int /*level*/, Bool_t /*abort*/,
+                                                    const char * /*location*/, const char *msg) {
+         EXPECT_THAT(msg, Not(HasSubstr("-Wunused-result")));
+      });
+      ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
+   }
+
+   // Cleanup
+   gInterpreter->CallFunc_Delete(mc);
+   gInterpreter->ClassInfo_Delete(FooNamespace);
 }

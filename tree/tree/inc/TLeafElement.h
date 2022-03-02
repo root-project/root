@@ -50,6 +50,7 @@ public:
    virtual Int_t   *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
    virtual DeserializeType GetDeserializeType() const;
 
+           Int_t    GetID() const { return fID; }
    virtual TString  GetFullName() const;
    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
    TMethodCall     *GetMethodCall(const char *name);
@@ -63,8 +64,7 @@ public:
    template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, kTRUE);}
 
    virtual bool     ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return GetDeserializeType() != DeserializeType::kDestructive; }
-
+ 
    virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
    virtual Bool_t   IncludeRange(TLeaf *);
    virtual Bool_t   IsOnTerminalBranch() const;

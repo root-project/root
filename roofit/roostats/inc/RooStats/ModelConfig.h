@@ -51,7 +51,7 @@ public:
 
 
    /// clone
-   virtual ModelConfig * Clone(const char * name = "") const override {
+   ModelConfig * Clone(const char * name = "") const override {
       ModelConfig * mc =  new ModelConfig(*this);
       if(strcmp(name,"")==0)
    mc->SetName(this->GetName());
@@ -61,12 +61,12 @@ public:
    }
 
    /// Set a workspace that owns all the necessary components for the analysis.
-   virtual void SetWS(RooWorkspace & ws) override;
+   void SetWS(RooWorkspace & ws) override;
    //// alias for SetWS(...)
    virtual void SetWorkspace(RooWorkspace & ws) { SetWS(ws); }
 
    /// Remove the existing reference to a workspace and replace it with this new one.
-   virtual void ReplaceWS(RooWorkspace *ws) override {
+   void ReplaceWS(RooWorkspace *ws) override {
      fRefWS = nullptr;
      SetWS(*ws);
    }
@@ -269,7 +269,7 @@ public:
    void GuessObsAndNuisance(const RooAbsData& data, bool printModelConfig = true);
 
    /// overload the print method
-   virtual void Print(Option_t* option = "") const override;
+   void Print(Option_t* option = "") const override;
 
 protected:
 
@@ -285,27 +285,27 @@ protected:
    /// internal function to import data in WS
    void ImportDataInWS(RooAbsData & data);
 
-   TRef fRefWS;  /// WS reference used in the file
+   TRef fRefWS;                     ///< WS reference used in the file
 
-   std::string fWSName;  /// name of the WS
+   std::string fWSName;             ///< name of the WS
 
-   std::string fPdfName; /// name of  PDF in workspace
-   std::string fDataName; /// name of data set in workspace
-   std::string fPOIName; /// name for RooArgSet specifying parameters of interest
+   std::string fPdfName;            ///< name of  PDF in workspace
+   std::string fDataName;           ///< name of data set in workspace
+   std::string fPOIName;            ///< name for RooArgSet specifying parameters of interest
 
-   std::string fNuisParamsName; /// name for RooArgSet specifying nuisance parameters
-   std::string fConstrParamsName; /// name for RooArgSet specifying constrained parameters
-   std::string fPriorPdfName; /// name for RooAbsPdf specifying a prior on the parameters
+   std::string fNuisParamsName;     ///< name for RooArgSet specifying nuisance parameters
+   std::string fConstrParamsName;   ///< name for RooArgSet specifying constrained parameters
+   std::string fPriorPdfName;       ///< name for RooAbsPdf specifying a prior on the parameters
 
-   std::string fConditionalObsName; /// name for RooArgSet specifying conditional observables
-   std::string fGlobalObsName; /// name for RooArgSet specifying global observables
-   std::string fProtoDataName; /// name for RooArgSet specifying dataset that should be used as proto-data
+   std::string fConditionalObsName; ///< name for RooArgSet specifying conditional observables
+   std::string fGlobalObsName;      ///< name for RooArgSet specifying global observables
+   std::string fProtoDataName;      ///< name for RooArgSet specifying dataset that should be used as proto-data
 
-   std::string fSnapshotName; /// name for RooArgSet that specifies a particular hypothesis
+   std::string fSnapshotName;       ///< name for RooArgSet that specifies a particular hypothesis
 
-   std::string fObservablesName; /// name for RooArgSet specifying observable parameters.
+   std::string fObservablesName;    ///< name for RooArgSet specifying observable parameters.
 
-   ClassDefOverride(ModelConfig,5) /// A class that holds configuration information for a model using a workspace as a store
+   ClassDefOverride(ModelConfig,5)  ///< A class that holds configuration information for a model using a workspace as a store
 
 };
 

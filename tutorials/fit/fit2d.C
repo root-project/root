@@ -9,16 +9,22 @@
 ///
 /// \author Rene Brun
 
+#include <TCanvas.h>
+#include <TCutG.h>
+#include <TH2F.h>
+#include <TProfile.h>
+#include <TRandom.h>
+
 void fit2d()
 {
    // generate a 2-d histogram using a TCutG
-   const Int_t n = 6;
-   Float_t x[n] = {0.092,0.83,0.94,0.81,0.12,0.1};
-   Float_t y[n] = {0.71,9.4,9,8,0.3,0.71};
+   const int n = 6;
+   float x[n] = {0.092,0.83,0.94,0.81,0.12,0.1};
+   float y[n] = {0.71,9.4,9,8,0.3,0.71};
    TCutG *cut = new TCutG("cut",n,x,y);
    TH2F *h2 = new TH2F("h2","h2",40,0,1,40,0,10);
-   Float_t u,v;
-   for (Int_t i=0;i<100000;i++) {
+   float u,v;
+   for (int i=0;i<100000;i++) {
       u = gRandom->Rndm();
       v = 10*gRandom->Rndm();
       if (cut->IsInside(u,v)) h2->Fill(u,v);

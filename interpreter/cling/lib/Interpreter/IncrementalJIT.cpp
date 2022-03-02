@@ -285,8 +285,6 @@ IncrementalJIT::IncrementalJIT(IncrementalExecutor& exe,
           if (!Sym.getAddress())
             llvm_unreachable("Handle the error case");
           ret.erase(I);
-        } else if (m_ExeMM->findSymbol(symName)) {
-          ret.erase(I);
         }
       }
       return ret;
@@ -295,15 +293,6 @@ IncrementalJIT::IncrementalJIT(IncrementalExecutor& exe,
         llvm::orc::SymbolNameSet Symbols) {
       return llvm::orc::lookupWithLegacyFn(m_ES, *Q, Symbols,
         [&](const std::string& Name) {
-          if (auto Sym = getInjectedSymbols(Name)) {
-            if (auto AddrOrErr = Sym.getAddress())
-              return JITSymbol((uint64_t)*AddrOrErr, Sym.getFlags());
-            else
-              llvm_unreachable("Handle the error case");
-          }
-          if (auto Sym = m_ExeMM->findSymbol(Name))
-            return Sym;
-
           if (auto Sym = getSymbolAddressWithoutMangling(Name, true)) {
             if (auto AddrOrErr = Sym.getAddress())
               return JITSymbol(*AddrOrErr, Sym.getFlags());

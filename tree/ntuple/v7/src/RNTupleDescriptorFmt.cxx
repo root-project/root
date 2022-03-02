@@ -52,6 +52,7 @@ struct ColumnInfo {
    std::uint32_t fElementSize = 0;
    ROOT::Experimental::EColumnType fType;
    std::string fFieldName;
+   std::string fFieldDescription;
 
    bool operator <(const ColumnInfo &other) const {
       if (fFieldName == other.fFieldName)
@@ -67,6 +68,13 @@ static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    if (fieldDesc.GetParentId() == ROOT::Experimental::kInvalidDescriptorId)
       return fieldDesc.GetFieldName();
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
+}
+
+static std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
+   const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
+{
+   const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fFieldId);
+   return fieldDesc.GetFieldDescription();
 }
 
 } // anonymous namespace
@@ -121,8 +129,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       }
       columns.emplace_back(info);
    }
-   auto headerSize = GetHeaderSize();
-   auto footerSize = GetFooterSize();
+   auto headerSize = GetOnDiskHeaderSize();
+   auto footerSize = GetOnDiskFooterSize();
    output << "============================================================" << std::endl;
    output << "NTUPLE:      " << GetName() << std::endl;
    output << "Compression: " << compression << std::endl;
@@ -160,8 +168,10 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    output << "------------------------------------------------------------" << std::endl;
    output << "COLUMN DETAILS" << std::endl;
    output << "------------------------------------------------------------" << std::endl;
-   for (auto &col : columns)
+   for (auto &col : columns) {
       col.fFieldName = GetFieldName(col.fFieldId, *this).substr(1);
+      col.fFieldDescription = GetFieldDescription(col.fFieldId, *this);
+   }
    std::sort(columns.begin(), columns.end());
    for (const auto &col : columns) {
       auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
@@ -170,6 +180,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
          + "  --  " + Detail::RColumnElementBase::GetTypeName(col.fType);
       std::string id = std::string("{id:") + std::to_string(col.fColumnId) + "}";
       output << nameAndType << std::setw(60 - nameAndType.length()) << id << std::endl;
+      if (!col.fFieldDescription.empty())
+         output << "    Description:         " << col.fFieldDescription << std::endl;
       output << "    # Elements:          " << col.fNElements << std::endl;
       output << "    # Pages:             " << col.fNPages << std::endl;
       output << "    Avg elements / page: " << avgElementsPerPage << std::endl;

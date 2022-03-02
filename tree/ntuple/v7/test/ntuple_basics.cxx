@@ -13,6 +13,7 @@ TEST(RNTuple, ReconstructModel)
    {
       RPageSinkFile sink("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions());
       sink.Create(*model.get());
+      sink.CommitClusterGroup();
       sink.CommitDataset();
       model = nullptr;
    }
@@ -21,7 +22,12 @@ TEST(RNTuple, ReconstructModel)
    source.Attach();
 
    auto modelReconstructed = source.GetDescriptor().GenerateModel();
-   EXPECT_EQ(nullptr, modelReconstructed->GetDefaultEntry()->Get<float>("xyz"));
+   try {
+      modelReconstructed->GetDefaultEntry()->Get<float>("xyz");
+      FAIL() << "invalid field name should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name"));
+   }
    auto vecPtr = modelReconstructed->GetDefaultEntry()->Get<std::vector<std::vector<float>>>("nnlo");
    EXPECT_TRUE(vecPtr != nullptr);
    // Don't crash
@@ -220,12 +226,11 @@ TEST(RNTuple, ClusterEntries)
 
    {
       RNTupleWriteOptions opt;
-      opt.SetNEntriesPerCluster(5);
-      auto ntuple = RNTupleWriter::Recreate(
-         std::move(model), "ntuple", fileGuard.GetPath(), opt
-      );
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opt);
       for (int i = 0; i < 100; i++) {
          ntuple->Fill();
+         if (i && ((i % 5) == 0))
+            ntuple->CommitCluster();
       }
    }
 
@@ -234,7 +239,7 @@ TEST(RNTuple, ClusterEntries)
    EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
 }
 
-TEST(RNTuple, ElementsPerPage)
+TEST(RNTuple, PageSize)
 {
    FileRaii fileGuard("test_ntuple_elements_per_page.root");
    auto model = RNTupleModel::Create();
@@ -242,18 +247,18 @@ TEST(RNTuple, ElementsPerPage)
 
    {
       RNTupleWriteOptions opt;
-      opt.SetNElementsPerPage(5);
+      opt.SetApproxUnzippedPageSize(200);
       auto ntuple = RNTupleWriter::Recreate(
          std::move(model), "ntuple", fileGuard.GetPath(), opt
       );
-      for (int i = 0; i < 100; i++) {
+      for (int i = 0; i < 1000; i++) {
          ntuple->Fill();
       }
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    const auto &col0_pages = ntuple->GetDescriptor().GetClusterDescriptor(0).GetPageRange(0);
-   // 100 column elements / 5 elements per page
+   // 1000 column elements / 50 elements per page
    EXPECT_EQ(20, col0_pages.fPageInfos.size());
 }
 
@@ -359,6 +364,52 @@ TEST(RNTupleModel, CollectionFieldDescriptions)
    EXPECT_EQ(std::string("muons after basic selection"), muon_desc.GetFieldDescription());
 }
 
+TEST(RNTupleModel, GetField)
+{
+   auto m = RNTupleModel::Create();
+   m->MakeField<int>("x");
+   m->MakeField<CustomStruct>("cs");
+   EXPECT_EQ(m->GetField("x")->GetName(), "x");
+   EXPECT_EQ(m->GetField("x")->GetType(), "std::int32_t");
+   EXPECT_EQ(m->GetField("cs.v1")->GetName(), "v1");
+   EXPECT_EQ(m->GetField("cs.v1")->GetType(), "std::vector<float>");
+   EXPECT_EQ(m->GetField("nonexistent"), nullptr);
+   EXPECT_EQ(m->GetField(""), nullptr);
+}
+
+TEST(RNTuple, EmptyString)
+{
+   // empty storage string
+   try {
+      auto model = RNTupleModel::Create();
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "");
+      FAIL() << "empty writer storage location should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
+   }
+   try {
+      auto ntuple = RNTupleReader::Open("myNTuple", "");
+      FAIL() << "empty reader storage location should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("empty storage location"));
+   }
+
+   // empty RNTuple name
+   try {
+      auto model = RNTupleModel::Create();
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "", "file.root");
+      FAIL() << "empty RNTuple name should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
+   }
+   try {
+      auto ntuple = RNTupleReader::Open("", "file.root");
+      FAIL() << "empty RNTuple name should throw";
+   } catch (const RException& err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("empty RNTuple name"));
+   }
+}
+
 TEST(RNTuple, NullSafety)
 {
    // RNTupleModel
@@ -436,4 +487,119 @@ TEST(RNTuple, NullSafety)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("null source"));
    }
+}
+
+TEST(RNTuple, ModelId)
+{
+   auto m1 = RNTupleModel::Create();
+   auto m2 = RNTupleModel::Create();
+   EXPECT_FALSE(m1->IsFrozen());
+   EXPECT_EQ(m1->GetModelId(), m2->GetModelId());
+
+   m1->Freeze();
+   EXPECT_TRUE(m1->IsFrozen());
+
+   try {
+      m1->SetDescription("abc");
+      FAIL() << "changing frozen model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
+   }
+   try {
+      m1->MakeField<float>("pt");
+      FAIL() << "changing frozen model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
+   }
+   try {
+      float dummy;
+      m1->AddField<float>("pt", &dummy);
+      FAIL() << "changing frozen model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to modify frozen model"));
+   }
+
+   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
+   // Freeze() should be idempotent call
+   auto id = m1->GetModelId();
+   m1->Freeze();
+   EXPECT_TRUE(m1->IsFrozen());
+   EXPECT_EQ(id, m1->GetModelId());
+
+   m2->Freeze();
+   EXPECT_NE(m1->GetModelId(), m2->GetModelId());
+
+   auto m2c = m2->Clone();
+   EXPECT_EQ(m2->GetModelId(), m2c->GetModelId());
+}
+
+TEST(RNTuple, Entry)
+{
+   auto m1 = RNTupleModel::Create();
+   try {
+      m1->CreateEntry();
+      FAIL() << "creating entry of unfrozen model should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to create entry"));
+   }
+   m1->Freeze();
+   auto e1 = m1->CreateEntry();
+
+   auto m2 = RNTupleModel::Create();
+   m2->Freeze();
+   auto e2 = m2->CreateEntry();
+
+   FileRaii fileGuard("test_ntuple_entry.root");
+   auto ntuple = RNTupleWriter::Recreate(std::move(m1), "ntpl", fileGuard.GetPath());
+   ntuple->Fill();
+   ntuple->Fill(*e1);
+   try {
+      ntuple->Fill(*e2);
+      FAIL() << "filling with wrong entry should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("mismatch between entry and model"));
+   }
+}
+
+TEST(RNTuple, BareEntry)
+{
+   auto m = RNTupleModel::CreateBare();
+   auto f = m->MakeField<float>("pt");
+   EXPECT_FALSE(f);
+
+   FileRaii fileGuard("test_ntuple_bare_entry.root");
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(m), "ntpl", fileGuard.GetPath());
+      const auto model = ntuple->GetModel();
+      try {
+         model->GetDefaultEntry();
+         FAIL() << "accessing default entry of bare model should throw";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
+      }
+      try {
+         model->Get<float>("pt");
+         FAIL() << "accessing default entry of bare model should throw";
+      } catch (const RException &err) {
+         EXPECT_THAT(err.what(), testing::HasSubstr("invalid attempt to use default entry of bare model"));
+      }
+
+      auto e1 = model->CreateEntry();
+      ASSERT_NE(nullptr, e1->Get<float>("pt"));
+      *(e1->Get<float>("pt")) = 1.0;
+      auto e2 = model->CreateBareEntry();
+      EXPECT_EQ(nullptr, e2->Get<float>("pt"));
+      float pt = 2.0;
+      e2->CaptureValueUnsafe("pt", &pt);
+
+      ntuple->Fill(*e1);
+      ntuple->Fill(*e2);
+   }
+
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(2U, ntuple->GetNEntries());
+   ntuple->LoadEntry(0);
+   EXPECT_EQ(1.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
+   ntuple->LoadEntry(1);
+   EXPECT_EQ(2.0, *ntuple->GetModel()->GetDefaultEntry()->Get<float>("pt"));
 }

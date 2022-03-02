@@ -33,7 +33,7 @@ public:
   RooLinkedListElem() :
     _prev(0), _next(0), _arg(0), _refCount(0) {
   }
-   
+
   void init(TObject* arg, RooLinkedListElem* after=0) {
    _arg = arg ;
    _refCount = 1 ;
@@ -44,23 +44,23 @@ public:
      after->_next = this ;
      if (_next) {
        _next->_prev = this ;
-     }     
+     }
    }
  }
- 
+
  void release() {
    if (_prev) _prev->_next = _next ;
-   if (_next) _next->_prev = _prev ;   
+   if (_next) _next->_prev = _prev ;
    _prev = 0 ;
    _next = 0 ;
  }
 
-  RooLinkedListElem(TObject* arg) : 
+  RooLinkedListElem(TObject* arg) :
     // Constructor with payload
     _prev(0), _next(0), _arg(arg), _refCount(1) {
   }
 
-  RooLinkedListElem(TObject* arg, RooLinkedListElem* after) : 
+  RooLinkedListElem(TObject* arg, RooLinkedListElem* after) :
     // Constructor with payload and next chain element
     _prev(after), _next(after->_next), _arg(arg), _refCount(1) {
 
@@ -70,7 +70,7 @@ public:
   }
 
   // Destructor
-  virtual ~RooLinkedListElem() {    
+  virtual ~RooLinkedListElem() {
     // Remove self from link
     if (_prev) _prev->_next = _next ;
     if (_next) _next->_prev = _prev ;
@@ -81,16 +81,15 @@ public:
   Int_t decRefCount() { return --_refCount ; }
 
 protected:
-  friend class RooHashTable ;
   friend class RooLinkedList ;
   friend class RooLinkedListImplDetails::Pool;
   friend class RooLinkedListImplDetails::Chunk;
   friend class RooLinkedListIterImpl ;
   friend class RooFIterForLinkedList ;
-  RooLinkedListElem* _prev ; // Link to previous element in list
-  RooLinkedListElem* _next ; // Link to next element in list
-  TObject*   _arg ;          // Link to contents
-  Int_t      _refCount ;     //! Reference count
+  RooLinkedListElem* _prev ; ///< Link to previous element in list
+  RooLinkedListElem* _next ; ///< Link to next element in list
+  TObject*   _arg ;          ///< Link to contents
+  Int_t      _refCount ;     ///<! Reference count
 
 protected:
 

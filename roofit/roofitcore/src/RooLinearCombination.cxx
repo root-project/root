@@ -15,19 +15,18 @@
 
 //////////////////////////////////////////////////////////////////////////////
 /// \class RooLinearCombination
-/// RooLinearCombination is a class that helps perform linear combination of 
-/// floating point numbers and permits handling them as multiprecision 
-/// 
+/// RooLinearCombination is a class that helps perform linear combination of
+/// floating point numbers and permits handling them as multiprecision
+///
 
 #include "RooLinearCombination.h"
-#include "Floats.h"
 
 #include "Math/Util.h"
 
 ClassImp(RooLinearCombination);
 
 namespace {
-  template <class T> inline void assign(SuperFloat &var, const T &val) {
+  template <class T> inline void assign(RooFit::SuperFloat &var, const T &val) {
   #ifdef USE_UBLAS
     var.assign(val);
   #else
@@ -88,18 +87,18 @@ TObject *RooLinearCombination::clone(const char *newname) const {
   return retval;
 }
 
-void RooLinearCombination::add(SuperFloat c, RooAbsReal *t) {
+void RooLinearCombination::add(RooFit::SuperFloat c, RooAbsReal *t) {
   // add a new term
   _actualVars.add(*t);
   _coefficients.push_back(c);
 }
 
-void RooLinearCombination::setCoefficient(size_t idx, SuperFloat c) {
+void RooLinearCombination::setCoefficient(size_t idx, RooFit::SuperFloat c) {
   // set the coefficient with the given index
   this->_coefficients[idx] = c;
 }
 
-SuperFloat RooLinearCombination::getCoefficient(size_t idx) {
+RooFit::SuperFloat RooLinearCombination::getCoefficient(size_t idx) {
   // get the coefficient with the given index
   return this->_coefficients[idx];
 }
@@ -107,26 +106,26 @@ SuperFloat RooLinearCombination::getCoefficient(size_t idx) {
 Double_t RooLinearCombination::evaluate() const {
   // call the evaluation
 #ifdef USE_UBLAS
-  SuperFloat result;
+    RooFit::SuperFloat result;
   result.assign(0.0);
   const std::size_t n(this->_actualVars.getSize());
   for (std::size_t i = 0; i < n; ++i) {
-    SuperFloat tmp;
+      RooFit::SuperFloat tmp;
     tmp.assign(static_cast<const RooAbsReal *>(this->_actualVars.at(i))->getVal());
     result += this->_coefficients[i] * tmp;
   }
   return result.convert_to<double>();
-#else    
-  const std::size_t n(this->_actualVars.getSize());    
-  std::vector<double> values(n);    
-  for (std::size_t i = 0; i < n; ++i) {    
-    values[i] = _coefficients[i] * static_cast<const RooAbsReal *>(this->_actualVars.at(i))->getVal();    
-  }    
-  // the values might span multiple orders of magnitudes, and to minimize    
-  // precision loss, we sum up the values from the smallest to the largest    
-  // absolute value.    
-  std::sort(values.begin(), values.end(), [](double const& x, double const& y){ return std::abs(x) < std::abs(y); });    
-  return ROOT::Math::KahanSum<double>::Accumulate(values.begin(), values.end()).Sum();    
+#else
+  const std::size_t n(this->_actualVars.getSize());
+  std::vector<double> values(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    values[i] = _coefficients[i] * static_cast<const RooAbsReal *>(this->_actualVars.at(i))->getVal();
+  }
+  // the values might span multiple orders of magnitudes, and to minimize
+  // precision loss, we sum up the values from the smallest to the largest
+  // absolute value.
+  std::sort(values.begin(), values.end(), [](double const& x, double const& y){ return std::abs(x) < std::abs(y); });
+  return ROOT::Math::KahanSum<double>::Accumulate(values.begin(), values.end()).Sum();
 #endif
 }
 

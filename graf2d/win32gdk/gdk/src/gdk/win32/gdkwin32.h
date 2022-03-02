@@ -36,7 +36,7 @@
 extern "C" {
 #endif                          /* __cplusplus */
 
-#define GDK_ROOT_WINDOW()             ((guint32) HWND_DESKTOP)
+#define GDK_ROOT_WINDOW()             ((gulong) HWND_DESKTOP)
 #define GDK_ROOT_PARENT()             ((GdkWindow *) gdk_parent_root)
 #define GDK_DISPLAY()                 NULL
 #define GDK_DRAWABLE_XID(win)         (GDK_DRAWABLE_WIN32DATA(win)->xid)
@@ -51,8 +51,8 @@ extern "C" {
 #define GDK_FONT_XFONT(font)          (((GdkWin32SingleFont *)((GdkFontPrivateWin32 *)font)->fonts->data)->xfont)
 
 /* Functions to create GDK pixmaps and windows from their native equivalents */
-   GdkPixmap *gdk_pixmap_foreign_new(guint32 anid);
-   GdkWindow *gdk_window_foreign_new(guint32 anid);
+   GdkPixmap *gdk_pixmap_foreign_new(gulong anid);
+   GdkWindow *gdk_window_foreign_new(gulong anid);
 
 /* Return a device context to draw in a drawable, given a GDK GC,
  * and a mask indicating which GC values might be used (for efficiency,

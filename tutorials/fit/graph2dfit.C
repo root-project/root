@@ -25,21 +25,21 @@ TCanvas* graph2dfit()
    TCanvas *c = new TCanvas("c","Graph2D example",0,0,600,800);
    c->Divide(2,3);
 
-   Double_t rnd, x, y, z;
-   Double_t e = 0.3;
-   Int_t nd = 400;
-   Int_t np = 10000;
+   double rnd, x, y, z;
+   double e = 0.3;
+   int nd = 400;
+   int np = 10000;
 
    TRandom r;
-   Double_t fl = 6;
+   double fl = 6;
    TF2  *f2 = new TF2("f2","1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+200",
       -fl,fl,-fl,fl);
    f2->SetParameters(1,1);
    TGraph2D *dt = new TGraph2D();
 
    // Fill the 2D graph
-   Double_t zmax = 0;
-   for (Int_t N=0; N<nd; N++) {
+   double zmax = 0;
+   for (int N=0; N<nd; N++) {
       f2->GetRandom2(x,y);
       // Generate a random number in [-e,e]
       rnd = 2*r.Rndm()*e-e;
@@ -48,7 +48,7 @@ TCanvas* graph2dfit()
       dt->SetPoint(N,x,y,z);
    }
 
-   Double_t hr = 350;
+   double hr = 350;
    TH1D *h1 = new TH1D("h1",
    "#splitline{Difference between Original}{#splitline{function and Function}{with noise}}",
    100, -hr, hr);
@@ -65,7 +65,7 @@ TCanvas* graph2dfit()
 
    f2->SetParameters(1,1);
 
-   for (Int_t N=0; N<np; N++) {
+   for (int N=0; N<np; N++) {
       f2->GetRandom2(x,y);
       // Generate a random number in [-e,e]
       rnd = 2*r.Rndm()*e-e;

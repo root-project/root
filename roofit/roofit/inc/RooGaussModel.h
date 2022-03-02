@@ -18,7 +18,6 @@
 
 #include "RooResolutionModel.h"
 #include "RooRealProxy.h"
-#include "RooMath.h"
 
 #include <cmath>
 #include <complex>
@@ -46,15 +45,15 @@ public:
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ;
   RooGaussModel(const RooGaussModel& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooGaussModel(*this,newname) ; }
-  virtual ~RooGaussModel();
+  TObject* clone(const char* newname) const override { return new RooGaussModel(*this,newname) ; }
+  ~RooGaussModel() override;
 
-  virtual Int_t basisCode(const char* name) const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName) const ;
+  Int_t basisCode(const char* name) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
 
   void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
 
@@ -62,15 +61,7 @@ public:
 
 protected:
 
-  virtual Double_t evaluate() const ;
-  static std::complex<Double_t> evalCerfApprox(Double_t swt, Double_t u, Double_t c);
-
-  // Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
-  static inline std::complex<Double_t> evalCerf(Double_t swt, Double_t u, Double_t c)
-  {
-    std::complex<Double_t> z(swt*c,u+c);
-    return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
-  }
+  Double_t evaluate() const override ;
 
   // Calculate common normalization factors
   std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const;
@@ -84,7 +75,7 @@ protected:
   RooRealProxy msf ;
   RooRealProxy ssf ;
 
-  ClassDef(RooGaussModel,1) // Gaussian Resolution Model
+  ClassDefOverride(RooGaussModel,1) // Gaussian Resolution Model
 };
 
 #endif

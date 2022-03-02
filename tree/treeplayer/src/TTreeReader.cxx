@@ -460,7 +460,7 @@ void TTreeReader::Restart() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
 /// of the TTree / TChain, independent of a range set by SetEntriesRange()
-/// by calling TTree/TChain::GetEntriesFast.
+/// by calling TTree/TChain::%GetEntriesFast.
 
 
 Long64_t TTreeReader::GetEntries() const {
@@ -521,7 +521,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
          // don't try to load entries anymore. Can happen in these cases:
          // while (tr.Next()) {something()};
          // while (tr.Next()) {somethingelse()}; // should not be calling somethingelse().
-         fEntryStatus = kEntryNotFound;
+         fEntryStatus = kEntryBeyondEnd;
          return fEntryStatus;
       }
       if (entry >= 0) {
@@ -574,7 +574,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
                value->NotifyNewTree(fTree->GetTree());
             }
          }
-         fEntryStatus = kEntryNotFound;
+         fEntryStatus = kEntryBeyondEnd;
          return fEntryStatus;
       }
 

@@ -29,7 +29,8 @@ def getWorkspace(mode):
         # Make a difficult to normalize  pdf in 3 dimensions that is
         # integrated numerically.
         w.factory(
-            "EXPR::model('1/((x-a)*(x-a)+0.01)+1/((y-a)*(y-a)+0.01)+1/((z-a)*(z-a)+0.01)',x[-1,1],y[-1,1],z[-1,1],a[-5,5])")
+            "EXPR::model('1/((x-a)*(x-a)+0.01)+1/((y-a)*(y-a)+0.01)+1/((z-a)*(z-a)+0.01)',x[-1,1],y[-1,1],z[-1,1],a[-5,5])"
+        )
 
     if mode == 1:
         # Instruct model to precalculate normalization integral that integrate at least
@@ -39,14 +40,15 @@ def getWorkspace(mode):
         # applied)
 
         # w.pdf("model").setNormValueCaching(3)
-        w.pdf("model").setStringAttribute("CACHEPARMINT", "x:y:z")
+        model = w["model"]
+        model.setStringAttribute("CACHEPARMINT", "x:y:z")
 
         # Evaluate pdf once to trigger filling of cache
-        normSet = ROOT.RooArgSet(w.var("x"), w.var("y"), w.var("z"))
-        w.pdf("model").getVal(normSet)
+        normSet = {w["x"], w["y"], w["z"]}
+        model.getVal(normSet)
         w.writeToFile("rf903_numintcache.root")
 
-    if (mode == 2):
+    if mode == 2:
         # Load preexisting workspace from file in mode==2
         f = ROOT.TFile("rf903_numintcache.root")
         w = f.Get("w")
@@ -72,12 +74,11 @@ if mode == 1:
 
     # Show plot of cached integral values
     hhcache = w.expensiveObjectCache().getObj(1)
-    if (hhcache):
+    if hhcache:
         ROOT.TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600)
         hhcache.createHistogram("a").Draw()
     else:
-        ROOT.RooFit.Error("rf903_numintcache",
-                          "Cached histogram is not existing in workspace")
+        ROOT.RooFit.Error("rf903_numintcache", "Cached histogram is not existing in workspace")
         sys.exit()
 
 # Use pdf from workspace for generation and fitting
@@ -85,24 +86,17 @@ if mode == 1:
 
 # ROOT.This is always slow (need to find maximum function value
 # empirically in 3D space)
-d = w.pdf("model").generate(
-    ROOT.RooArgSet(
-        w.var("x"),
-        w.var("y"),
-        w.var("z")),
-    1000)
+model = w["model"]
+d = model.generate({w["x"], w["y"], w["z"]}, 1000)
 
 # ROOT.This is slow in mode 0, fast in mode 1
-w.pdf("model").fitTo(
-    d, ROOT.RooFit.Verbose(
-        ROOT.kTRUE), ROOT.RooFit.Timer(
-            ROOT.kTRUE))
+model.fitTo(d, Verbose=True, Timer=True)
 
 # Projection on x (always slow as 2D integral over Y, at fitted value of a
 # is not cached)
-framex = w.var("x").frame(ROOT.RooFit.Title("Projection of 3D model on X"))
+framex = w["x"].frame(Title="Projection of 3D model on X")
 d.plotOn(framex)
-w.pdf("model").plotOn(framex)
+model.plotOn(framex)
 
 # Draw x projection on canvas
 c = ROOT.TCanvas("rf903_numintcache", "rf903_numintcache", 600, 600)

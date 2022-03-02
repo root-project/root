@@ -256,7 +256,7 @@ HybridResult* HybridCalculatorOriginal::Calculate(TH1& data, unsigned int nToys,
 {
 
    /// convert data TH1 histogram to a RooDataHist
-   TString dataHistName = GetName(); dataHistName += "_roodatahist";
+   auto dataHistName = std::string(GetName()) + "_roodatahist";
    RooDataHist dataHist(dataHistName,"Data distribution as RooDataHist converted from TH1",*fObservables,&data);
 
    HybridResult* result = Calculate(dataHist,nToys,usePriors);
@@ -514,13 +514,13 @@ void HybridCalculatorOriginal::RunToys(std::vector<double>& bVals, std::vector<d
          RooArgSet * sbparams = fSbModel->getParameters(*fObservables);
          if (sbparams) {
             assert(originalSbParams.getSize() == sbparams->getSize());
-            *sbparams = originalSbParams;
+            sbparams->assign(originalSbParams);
             delete sbparams;
          }
          RooArgSet * bparams = fBModel->getParameters(*fObservables);
          if (bparams) {
             assert(originalBParams.getSize() == bparams->getSize());
-            *bparams = originalBParams;
+            bparams->assign(originalBParams);
             delete bparams;
          }
       }

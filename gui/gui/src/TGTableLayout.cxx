@@ -50,7 +50,7 @@ parameter 'homogeneous' is set to kTRUE.
 
 This class describes layout hints used by the TGTableLayout class.
 It specifies the column/row division number on which to attach the
-child frame. This number starts from 0 and goes to #_columns/#_rows
+child frame. This number starts from 0 and goes to #%_columns/#%_rows
 respectively (0 indicates the first row/column).
 
 Below are described all parameters of TGTableLayoutHints constructor
@@ -158,8 +158,8 @@ void TGTableLayout::FindRowColSizesSinglyAttached()
       TGTableLayoutHints *layout =
             dynamic_cast<TGTableLayoutHints*>(ptr->fLayout);
       if (!layout) {
-         Error("FindRowColSizesSinglyAttached", "didn't get TGTableLayoutHints from %s, layout = 0x%lx",
-               ptr->fFrame->GetName(), (ULong_t)ptr->fLayout);
+         Error("FindRowColSizesSinglyAttached", "didn't get TGTableLayoutHints from %s, layout = 0x%zx",
+               ptr->fFrame->GetName(), (size_t)ptr->fLayout);
          return;
       }
       UInt_t col = layout->GetAttachLeft();

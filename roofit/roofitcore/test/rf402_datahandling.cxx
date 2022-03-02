@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'DATA AND CATEGORIES' RooFit tutorial macro #402
-// 
+//
 // Tools for manipulation of (un)binned datasets
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -26,7 +26,7 @@ using namespace RooFit ;
 
 class TestBasic402 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic402(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Basic operations on datasets",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
@@ -43,14 +43,14 @@ public:
 
 
 
-  // B a s i c   O p e r a t i o n s   o n   u n b i n n e d   d a t a s e t s 
+  // B a s i c   O p e r a t i o n s   o n   u n b i n n e d   d a t a s e t s
   // --------------------------------------------------------------
 
   // RooDataSet is an unbinned dataset (a collection of points in N-dimensional space)
   RooDataSet d("d","d",RooArgSet(x,y,c)) ;
 
-  // Unlike RooAbsArgs (RooAbsPdf,RooFormulaVar,....) datasets are not attached to 
-  // the variables they are constructed from. Instead they are attached to an internal 
+  // Unlike RooAbsArgs (RooAbsPdf,RooFormulaVar,....) datasets are not attached to
+  // the variables they are constructed from. Instead they are attached to an internal
   // clone of the supplied set of arguments
 
   // Fill d with dummy values
@@ -70,10 +70,10 @@ public:
   // -------------------------------------------------------------
 
   // The reduce() function returns a new dataset which is a subset of the original
-  RooDataSet* d1 = (RooDataSet*) d.reduce(RooArgSet(x,c)) ; 
-  RooDataSet* d2 = (RooDataSet*) d.reduce(RooArgSet(y)) ;   
-  RooDataSet* d3 = (RooDataSet*) d.reduce("y>5.17") ; 
-  RooDataSet* d4 = (RooDataSet*) d.reduce(RooArgSet(x,c),"y>5.17") ; 
+  RooDataSet* d1 = (RooDataSet*) d.reduce(RooArgSet(x,c)) ;
+  RooDataSet* d2 = (RooDataSet*) d.reduce(RooArgSet(y)) ;
+  RooDataSet* d3 = (RooDataSet*) d.reduce("y>5.17") ;
+  RooDataSet* d4 = (RooDataSet*) d.reduce(RooArgSet(x,c),"y>5.17") ;
 
   regValue(d3->numEntries(),"rf403_nd3") ;
   regValue(d4->numEntries(),"rf403_nd4") ;
@@ -86,10 +86,10 @@ public:
 
   regValue(d1->numEntries(),"rf403_nd1") ;
 
-  
 
 
-  // O p e r a t i o n s   o n   b i n n e d   d a t a s e t s 
+
+  // O p e r a t i o n s   o n   b i n n e d   d a t a s e t s
   // ---------------------------------------------------------
 
   // A binned dataset can be constructed empty, from an unbinned dataset, or

@@ -67,7 +67,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
    }
 
   //______________________________
-  virtual Double_t Evaluate(RooAbsData& data, RooArgSet& /*nullPOI*/) {
+  Double_t Evaluate(RooAbsData& data, RooArgSet& /*nullPOI*/) override {
 
 
     RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
@@ -135,18 +135,18 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
   }
 
-  virtual const TString GetVarName() const {
+  const TString GetVarName() const override {
     TString varName = Form("Maximum Likelihood Estimate of %s",fParameter->GetName());
     return varName;
   }
 
 
   virtual void PValueIsRightTail(bool isright) {  fUpperLimit = isright; }
-  virtual bool PValueIsRightTail(void) const { return fUpperLimit; }
+  bool PValueIsRightTail(void) const override { return fUpperLimit; }
 
    // set the conditional observables which will be used when creating the NLL
    // so the pdf's will not be normalized on the conditional observables when computing the NLL
-   virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+   void SetConditionalObservables(const RooArgSet& set) override {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
 
    private:
@@ -161,7 +161,7 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
 
 
    protected:
-   ClassDef(MaxLikelihoodEstimateTestStat,2)
+   ClassDefOverride(MaxLikelihoodEstimateTestStat,2)
 };
 
 }

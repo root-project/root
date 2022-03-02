@@ -48,7 +48,7 @@ RooLognormal::RooLognormal(const char *name, const char *title,
   k("k","k",this,_k)
 {
     RooHelpers::checkRangeOfParameters(this, {&_x, &_m0, &_k}, 0.);
-    
+
     auto par = dynamic_cast<const RooAbsRealLValue*>(&_k);
     if (par && par->getMin()<=1 && par->getMax()>=1 ) {
       oocoutE(this, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
@@ -81,9 +81,11 @@ Double_t RooLognormal::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Lognormal distribution.  
-RooSpan<double> RooLognormal::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeLognormal(this, evalData, x->getValues(evalData, normSet), m0->getValues(evalData, normSet), k->getValues(evalData, normSet));
+/// Compute multiple values of Lognormal distribution.
+void RooLognormal::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Lognormal, output, nEvents, dataMap, {&*x,&*m0,&*k,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

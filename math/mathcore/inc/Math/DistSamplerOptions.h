@@ -14,14 +14,13 @@
 #include <string>
 
 #include <iostream>
+#include "Math/IOptions.h"
 
 namespace ROOT {
 
 
 namespace Math {
 
-
-class IOptions;
 
 //_______________________________________________________________________________
 /**
@@ -73,7 +72,7 @@ public:
    /// assignment operators
    DistSamplerOptions & operator=(const DistSamplerOptions & opt);
 
-   /** non-static methods for  retrivieng options */
+   /** non-static methods for  retrieving options */
 
    /// set print level
    int PrintLevel() const { return fLevel; }
@@ -84,7 +83,7 @@ public:
    /// type of minimizer
    const std::string & Sampler() const { return fSamplerType; }
 
-   /// type of algorithm
+   /// type of algorithm (method)
    const std::string & Algorithm() const { return fAlgoType; }
 
    /// print all the options
@@ -104,15 +103,24 @@ public:
    /// set extra options (in this case pointer is cloned)
    void  SetExtraOptions(const IOptions & opt);
 
+   /// set a specific algorithm option
+   template <class T>
+   void SetAlgoOption(const char * name, T value) {
+      if (!fExtraOptions) CreateExtraOptions();
+      fExtraOptions->SetValue(name, value);
+   }
+
+protected:
+
+   void CreateExtraOptions();
 
 private:
 
-   int fLevel;               // debug print level
-   std::string fSamplerType;   // DistSampler type (Unuran, Foam, etc...)xs
-   std::string fAlgoType;    // DistSampler algorithmic specification (for Unuran only)
+   int fLevel;               ///< debug print level
+   std::string fSamplerType; ///< DistSampler type (Unuran, Foam, etc...)xs
+   std::string fAlgoType;    ///< DistSampler algorithmic specification (for Unuran only)
 
-   // extra options
-   ROOT::Math::IOptions *   fExtraOptions;  // extra options
+   ROOT::Math::IOptions *   fExtraOptions;  ///< extra options
 
 };
 

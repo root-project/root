@@ -58,12 +58,11 @@ private:
    Int_t              fArgc;            //Number of com   mand line arguments
    char             **fArgv;            //Command line arguments
    TApplicationImp   *fAppImp;          //!Window system specific application implementation
-   Bool_t             fIsRunning;       //True when in event loop (Run() has been called)
+   std::atomic<bool>  fIsRunning;       //True when in event loop (Run() has been called)
    Bool_t             fReturnFromRun;   //When true return from Run()
    Bool_t             fNoLog;           //Do not process logon and logoff macros
    Bool_t             fNoLogo;          //Do not show splash screen and welcome message
    Bool_t             fQuit;            //Exit after having processed input files
-   Bool_t             fUseMemstat;      //Run with TMemStat enabled
    TObjArray         *fFiles;           //Array of input files or C++ expression (TObjString's) specified via argv
    TString            fWorkDir;         //Working directory specified via argv
    TString            fIdleCommand;     //Command to execute while application is idle

@@ -21,16 +21,16 @@
 #include "RooRealProxy.h"
 
 class RooAbsReal;
- 
+
 class RooHypatia2 : public RooAbsPdf {
 public:
   RooHypatia2() {} ;
   RooHypatia2(const char *name, const char *title,
-	      RooAbsReal& x, RooAbsReal& lambda, RooAbsReal& zeta, RooAbsReal& beta,
-	      RooAbsReal& sigma, RooAbsReal& mu, RooAbsReal& a, RooAbsReal& n, RooAbsReal& a2, RooAbsReal& n2);
+         RooAbsReal& x, RooAbsReal& lambda, RooAbsReal& zeta, RooAbsReal& beta,
+         RooAbsReal& sigma, RooAbsReal& mu, RooAbsReal& a, RooAbsReal& n, RooAbsReal& a2, RooAbsReal& n2);
   RooHypatia2(const RooHypatia2& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const override { return new RooHypatia2(*this,newname); }
-  inline virtual ~RooHypatia2() { }
+  TObject* clone(const char* newname) const override { return new RooHypatia2(*this,newname); }
+  inline ~RooHypatia2() override { }
 
   /* Analytical integrals need testing.
 
@@ -39,7 +39,7 @@ public:
 
   */
 
-  
+
 private:
   RooRealProxy _x;
   RooRealProxy _lambda;
@@ -59,5 +59,5 @@ private:
   ClassDefOverride(RooHypatia2, 1);
   /// \endcond
 };
- 
+
 #endif

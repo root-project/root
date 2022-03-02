@@ -1,4 +1,4 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/TSeq.hxx"
 #include "TFile.h"
@@ -611,7 +611,12 @@ TEST(RDFSnapshotMore, ReadWriteNestedLeaves)
    RDataFrame d(treename, fname);
    const auto outfname = "out_readwritenestedleaves.root";
    ROOT::RDF::RNode d2(d);
-   ROOT_EXPECT_INFO((d2 = *d.Snapshot<int, int>(treename, outfname, {"v.a", "v.b"})), "Snapshot", "Column v.a will be saved as v_a\nInfo in <Snapshot>: Column v.b will be saved as v_b");
+   {
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.requiredDiag(kInfo, "Snapshot", "Column v.a will be saved as v_a");
+      diagRAII.requiredDiag(kInfo, "Snapshot", "Column v.b will be saved as v_b");
+      d2 = *d.Snapshot<int, int>(treename, outfname, {"v.a", "v.b"});
+   }
    EXPECT_EQ(d2.GetColumnNames(), std::vector<std::string>({"v_a", "v_b"}));
    auto check_a_b = [](int a, int b) {
       EXPECT_EQ(a, 1);
@@ -810,6 +815,7 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilename)
    // If some other test case called EnableThreadSafety, the error printed here is of the form
    // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
    // but the address printed changes every time
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory"};
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
 }
 
@@ -993,23 +999,28 @@ TEST(RDFSnapshotMore, ColsWithCustomTitlesMT)
 
 TEST(RDFSnapshotMore, TreeWithFriendsMT)
 {
-   const auto fname = "treewithfriendsmt.root";
-   RDataFrame(10).Define("x", []() { return 0; }).Snapshot<int>("t", fname, {"x"});
+   const auto fname1 = "treewithfriendsmt1.root";
+   const auto fname2 = "treewithfriendsmt2.root";
+   RDataFrame(10).Define("x", []() { return 42; }).Snapshot<int>("t", fname1, {"x"});
+   RDataFrame(10).Define("x", []() { return 0; }).Snapshot<int>("t", fname2, {"x"});
 
    ROOT::EnableImplicitMT();
 
-   TFile file(fname);
+   TFile file(fname1);
    auto tree = file.Get<TTree>("t");
-   TFile file2(fname);
+   TFile file2(fname2);
    auto tree2 = file2.Get<TTree>("t");
    tree->AddFriend(tree2);
 
    const auto outfname = "out_treewithfriendsmt.root";
    RDataFrame df(*tree);
-   df.Snapshot<int>("t", outfname, {"x"});
-   ROOT::DisableImplicitMT();
+   auto df_out = df.Snapshot<int>("t", outfname, {"x"});
+   EXPECT_EQ(df_out->Max<int>("x").GetValue(), 42);
+   EXPECT_EQ(df_out->GetColumnNames(), std::vector<std::string>{"x"});
 
-   gSystem->Unlink(fname);
+   ROOT::DisableImplicitMT();
+   gSystem->Unlink(fname1);
+   gSystem->Unlink(fname2);
    gSystem->Unlink(outfname);
 }
 
@@ -1024,7 +1035,9 @@ TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 
    // aliasing a column from a file
    const auto fname2 = "out_aliasedcustomcolumn2.root";
-   df2->Alias("z", "y").Snapshot("t", fname2, "z");
+   auto df3 = df2->Alias("z", "y").Snapshot("t", fname2, "z");
+   EXPECT_EQ(df3->GetColumnNames(), std::vector<std::string>({"z"}));
+   EXPECT_EQ(df3->Max<int>("z").GetValue(), 42);
 
    gSystem->Unlink(fname);
    gSystem->Unlink(fname2);
@@ -1096,6 +1109,9 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilenameMT)
    // the error printed here is
    // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
    // but the address printed changes every time
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.requiredDiag(kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory");
+   diagRAII.optionalDiag(kSysError, "TReentrantRWLock::WriteUnLock", "Write lock already released for", /*wholeStringNeedsToMatch=*/false);
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
 }
 

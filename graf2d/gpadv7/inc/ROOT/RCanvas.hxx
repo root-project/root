@@ -52,8 +52,11 @@ private:
    /// Title of the canvas.
    std::string fTitle;
 
-   /// Size of the canvas in pixels,
-   std::array<RPadLength::Pixel, 2> fSize;
+   /// Width of the canvas in pixels
+   int fWidth{0};
+
+   /// Height of the canvas in pixels
+   int fHeight{0};
 
    /// Modify counter, incremented every time canvas is changed
    Version_t fModified{1}; ///<!
@@ -62,6 +65,9 @@ private:
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
    /// a painter.
    std::unique_ptr<Internal::RVirtualCanvasPainter> fPainter; ///<!
+
+   /// indicate if Show() method was called before
+   bool fShown{false}; ///<!
 
    /// Disable copy construction for now.
    RCanvas(const RCanvas &) = delete;
@@ -76,7 +82,7 @@ public:
    static std::shared_ptr<RCanvas> Create(const std::string &title);
 
    /// Create a temporary RCanvas; for long-lived ones please use Create().
-   RCanvas() = default;
+   RCanvas() : RPadBase("canvas") {}
 
    ~RCanvas() = default;
 
@@ -85,26 +91,30 @@ public:
    /// Access to the top-most canvas, if any (non-const version).
    RCanvas *GetCanvas() override { return this; }
 
-   /// Return canvas pixel size as array with two elements - width and height
-   const std::array<RPadLength::Pixel, 2> &GetSize() const { return fSize; }
-
-   /// Set canvas pixel size as array with two elements - width and height
-   RCanvas &SetSize(const std::array<RPadLength::Pixel, 2> &sz)
-   {
-      fSize = sz;
-      return *this;
-   }
-
    /// Set canvas pixel size - width and height
-   RCanvas &SetSize(const RPadLength::Pixel &width, const RPadLength::Pixel &height)
+   void SetSize(int width, int height)
    {
-      fSize[0] = width;
-      fSize[1] = height;
-      return *this;
+      fWidth = width;
+      fHeight = height;
    }
+
+   /// Set canvas width
+   void SetWidth(int width) { fWidth = width; }
+
+   /// Set canvas height
+   void SetHeight(int height) { fHeight = height; }
+
+   /// Get canvas width
+   int GetWidth() const { return fWidth; }
+
+   /// Get canvas height
+   int GetHeight() const { return fHeight; }
 
    /// Display the canvas.
    void Show(const std::string &where = "");
+
+   bool IsShown() const { return fShown; }
+   void ClearShown() { fShown = false; }
 
    /// Returns window name used to display canvas
    std::string GetWindowAddr() const;
@@ -148,6 +158,9 @@ public:
 
    /// Save canvas in image file
    bool SaveAs(const std::string &filename);
+
+   /// Provide JSON which can be used for offline display
+   std::string CreateJSON();
 
    /// Get the canvas's title.
    const std::string &GetTitle() const { return fTitle; }

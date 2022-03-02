@@ -41,10 +41,10 @@ ClassImp(RooRealAnalytic);
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate our analytic integral at the specified values of the dependents.
 
-Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const 
+Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const
 {
   assert(isValid());
-  loadValues(xvector);  
+  loadValues(xvector);
   _ncall++ ;
   return _code ? _func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0):_func->getVal(_nset) ;
 }

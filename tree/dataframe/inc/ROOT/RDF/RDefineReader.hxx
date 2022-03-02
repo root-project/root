@@ -13,6 +13,7 @@
 
 #include "RColumnReaderBase.hxx"
 #include "RDefineBase.hxx"
+#include "Utils.hxx" // CheckReaderTypeMatches
 #include <Rtypes.h>  // Long64_t, R__CLING_PTRCHECK
 
 #include <limits>
@@ -23,8 +24,6 @@ namespace Internal {
 namespace RDF {
 
 namespace RDFDetail = ROOT::Detail::RDF;
-
-void CheckDefineType(RDFDetail::RDefineBase &define, const std::type_info &tid);
 
 /// Column reader for defined (aka custom) columns.
 class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RColumnReaderBase {
@@ -47,7 +46,7 @@ public:
    RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define, const std::type_info &tid)
       : fDefine(define), fCustomValuePtr(define.GetValuePtr(slot)), fSlot(slot)
    {
-      CheckDefineType(define, tid);
+      CheckReaderTypeMatches(define.GetTypeId(), tid, define.GetName(), "RDefineReader");
    }
 };
 

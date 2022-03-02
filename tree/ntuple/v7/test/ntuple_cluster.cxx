@@ -14,6 +14,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RStringView.hxx>
 
+#include <cstdint>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -22,7 +23,6 @@ using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 using RCluster = ROOT::Experimental::Detail::RCluster;
 using RClusterPool = ROOT::Experimental::Detail::RClusterPool;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using RNTupleVersion = ROOT::Experimental::RNTupleVersion;
 using ROnDiskPage = ROOT::Experimental::Detail::ROnDiskPage;
 using RPage = ROOT::Experimental::Detail::RPage;
 using RPageSource = ROOT::Experimental::Detail::RPageSource;
@@ -45,25 +45,27 @@ public:
 };
 
 /**
- * Used to track LoadCluster calls triggered by ClusterPool::GetCluster
+ * Used to track LoadClusters calls triggered by ClusterPool::GetCluster
  */
 class RPageSourceMock : public RPageSource {
 protected:
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
 
 public:
-   /// Records the cluster IDs requests by LoadCluster() calls
+   /// Records the cluster IDs requests by LoadClusters() calls
    std::vector<ROOT::Experimental::DescriptorId_t> fReqsClusterIds;
-   std::vector<ROOT::Experimental::Detail::RPageSource::ColumnSet_t> fReqsColumns;
+   std::vector<ROOT::Experimental::Detail::RCluster::ColumnSet_t> fReqsColumns;
 
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
       ROOT::Experimental::RNTupleDescriptorBuilder descBuilder;
-      descBuilder.AddCluster(0, RNTupleVersion(), 0, ClusterSize_t(1));
-      descBuilder.AddCluster(1, RNTupleVersion(), 1, ClusterSize_t(1));
-      descBuilder.AddCluster(2, RNTupleVersion(), 2, ClusterSize_t(1));
-      descBuilder.AddCluster(3, RNTupleVersion(), 3, ClusterSize_t(1));
-      descBuilder.AddCluster(4, RNTupleVersion(), 4, ClusterSize_t(1));
+      for (unsigned i = 0; i <= 5; ++i) {
+         descBuilder.AddClusterSummary(i, i, 1);
+      }
       fDescriptor = descBuilder.MoveDescriptor();
+      for (unsigned i = 0; i <= 5; ++i) {
+         fDescriptor.AddClusterDetails(
+            ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
+      }
    }
    std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
    RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::NTupleSize_t) final { return RPage(); }
@@ -72,20 +74,22 @@ public:
    void LoadSealedPage(
       ROOT::Experimental::DescriptorId_t, const ROOT::Experimental::RClusterIndex &, RSealedPage &) final
    { }
-   std::unique_ptr<RCluster> LoadCluster(
-      ROOT::Experimental::DescriptorId_t clusterId,
-      const ROOT::Experimental::Detail::RPageSource::ColumnSet_t &columns) final
+   std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final
    {
-      fReqsClusterIds.emplace_back(clusterId);
-      fReqsColumns.emplace_back(columns);
-      auto cluster = std::make_unique<RCluster>(clusterId);
-      auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
-      for (auto colId : columns) {
-         pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
-         cluster->SetColumnAvailable(colId);
+      std::vector<std::unique_ptr<RCluster>> result;
+      for (auto key : clusterKeys) {
+         fReqsClusterIds.emplace_back(key.fClusterId);
+         fReqsColumns.emplace_back(key.fColumnSet);
+         auto cluster = std::make_unique<RCluster>(key.fClusterId);
+         auto pageMap = std::make_unique<ROOT::Experimental::Detail::ROnDiskPageMap>();
+         for (auto colId : key.fColumnSet) {
+            pageMap->Register(ROnDiskPage::Key(colId, 0), ROnDiskPage(nullptr, 0));
+            cluster->SetColumnAvailable(colId);
+         }
+         cluster->Adopt(std::move(pageMap));
+         result.emplace_back(std::move(cluster));
       }
-      cluster->Adopt(std::move(pageMap));
-      return cluster;
+      return result;
    }
 };
 
@@ -203,72 +207,57 @@ TEST(Cluster, AdoptClusters)
 }
 
 
-TEST(ClusterPool, Windows)
-{
-   RPageSourceMock ps;
-
-   EXPECT_DEATH(RClusterPool(ps, 0), ".*");
-   RClusterPool c1(ps, 1);
-   EXPECT_EQ(0U, c1.GetWindowPre());
-   EXPECT_EQ(1U, c1.GetWindowPost());
-   RClusterPool c2(ps, 2);
-   EXPECT_EQ(0U, c2.GetWindowPre());
-   EXPECT_EQ(2U, c2.GetWindowPost());
-   RClusterPool c3(ps, 3);
-   EXPECT_EQ(1U, c3.GetWindowPre());
-   EXPECT_EQ(2U, c3.GetWindowPost());
-   RClusterPool c5(ps, 5);
-   EXPECT_EQ(1U, c5.GetWindowPre());
-   EXPECT_EQ(4U, c5.GetWindowPost());
-   RClusterPool c6(ps, 6);
-   EXPECT_EQ(2U, c6.GetWindowPre());
-   EXPECT_EQ(4U, c6.GetWindowPost());
-   RClusterPool c9(ps, 9);
-   EXPECT_EQ(2U, c9.GetWindowPre());
-   EXPECT_EQ(7U, c9.GetWindowPost());
-   RClusterPool c10(ps, 10);
-   EXPECT_EQ(3U, c10.GetWindowPre());
-   EXPECT_EQ(7U, c10.GetWindowPost());
-   RClusterPool c15(ps, 15);
-   EXPECT_EQ(3U,  c15.GetWindowPre());
-   EXPECT_EQ(12U, c15.GetWindowPost());
-   RClusterPool c16(ps, 16);
-   EXPECT_EQ(4U,  c16.GetWindowPre());
-   EXPECT_EQ(12U, c16.GetWindowPost());
-}
-
 TEST(ClusterPool, GetClusterBasics)
 {
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
-   ASSERT_EQ(1U, p1.fReqsClusterIds.size());
+   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
-   EXPECT_EQ(RPageSource::ColumnSet_t({0}), p1.fReqsColumns[0]);
+   EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[0]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[1]);
 
    RPageSourceMock p2;
    {
       RClusterPool c2(p2, 2);
       c2.GetCluster(0, {0});
+      c2.WaitForInFlightClusters();
    }
-   ASSERT_EQ(2U, p2.fReqsClusterIds.size());
+   ASSERT_EQ(4U, p2.fReqsClusterIds.size());
    EXPECT_EQ(0U, p2.fReqsClusterIds[0]);
    EXPECT_EQ(1U, p2.fReqsClusterIds[1]);
-   EXPECT_EQ(RPageSource::ColumnSet_t({0}), p2.fReqsColumns[0]);
-   EXPECT_EQ(RPageSource::ColumnSet_t({0}), p2.fReqsColumns[1]);
+   EXPECT_EQ(2U, p2.fReqsClusterIds[2]);
+   EXPECT_EQ(3U, p2.fReqsClusterIds[3]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[0]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[1]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[2]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p2.fReqsColumns[3]);
 
    RPageSourceMock p3;
    {
-      RClusterPool c3(p3, 4);
-      c3.GetCluster(2, {0});
+      RClusterPool c3(p3, 2);
+      c3.GetCluster(0, {0});
+      c3.GetCluster(1, {0});
+      c3.WaitForInFlightClusters();
    }
-   ASSERT_EQ(3U, p3.fReqsClusterIds.size());
-   EXPECT_EQ(2U, p3.fReqsClusterIds[0]);
-   EXPECT_EQ(3U, p3.fReqsClusterIds[1]);
-   EXPECT_EQ(4U, p3.fReqsClusterIds[2]);
-   EXPECT_EQ(RPageSource::ColumnSet_t({0}), p3.fReqsColumns[0]);
-   EXPECT_EQ(RPageSource::ColumnSet_t({0}), p3.fReqsColumns[1]);
-   EXPECT_EQ(RPageSource::ColumnSet_t({0}), p3.fReqsColumns[2]);
+   ASSERT_EQ(4U, p3.fReqsClusterIds.size());
+   EXPECT_EQ(0U, p3.fReqsClusterIds[0]);
+   EXPECT_EQ(1U, p3.fReqsClusterIds[1]);
+   EXPECT_EQ(2U, p3.fReqsClusterIds[2]);
+   EXPECT_EQ(3U, p3.fReqsClusterIds[3]);
+
+   RPageSourceMock p4;
+   {
+      RClusterPool c4(p4, 3);
+      c4.GetCluster(2, {0});
+      c4.WaitForInFlightClusters();
+   }
+   ASSERT_EQ(4U, p4.fReqsClusterIds.size());
+   EXPECT_EQ(2U, p4.fReqsClusterIds[0]);
+   EXPECT_EQ(3U, p4.fReqsClusterIds[1]);
+   EXPECT_EQ(4U, p4.fReqsClusterIds[2]);
+   EXPECT_EQ(5U, p4.fReqsClusterIds[3]);
 }
 
 
@@ -277,24 +266,24 @@ TEST(ClusterPool, GetClusterIncrementally)
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
-   ASSERT_EQ(1U, p1.fReqsClusterIds.size());
+   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
-   EXPECT_EQ(RPageSource::ColumnSet_t({0}), p1.fReqsColumns[0]);
+   EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[0]);
 
    c1.GetCluster(3, {1});
-   ASSERT_EQ(2U, p1.fReqsClusterIds.size());
-   EXPECT_EQ(3U, p1.fReqsClusterIds[1]);
-   EXPECT_EQ(RPageSource::ColumnSet_t({1}), p1.fReqsColumns[1]);
+   ASSERT_EQ(4U, p1.fReqsClusterIds.size());
+   EXPECT_EQ(3U, p1.fReqsClusterIds[2]);
+   EXPECT_EQ(RCluster::ColumnSet_t({1}), p1.fReqsColumns[2]);
 }
 
 
-TEST(PageStorageFile, LoadCluster)
+TEST(PageStorageFile, LoadClusters)
 {
-   FileRaii fileGuard("test_ntuple_clusters.root");
+   FileRaii fileGuard("test_pagestoragefile_loadclusters.root");
 
    auto modelWrite = ROOT::Experimental::RNTupleModel::Create();
    auto wrPt = modelWrite->MakeField<float>("pt", 42.0);
-   auto wrTag = modelWrite->MakeField<int32_t>("tag", 0);
+   auto wrTag = modelWrite->MakeField<std::int32_t>("tag", 0);
 
    {
       ROOT::Experimental::RNTupleWriter ntuple(
@@ -316,7 +305,9 @@ TEST(PageStorageFile, LoadCluster)
    auto colId = source.GetDescriptor().FindColumnId(ptId, 0);
    EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
 
-   auto cluster = source.LoadCluster(0, {});
+   std::vector<ROOT::Experimental::Detail::RCluster::RKey> clusterKeys;
+   clusterKeys.push_back({0, {}});
+   auto cluster = std::move(source.LoadClusters(clusterKeys)[0]);
    EXPECT_EQ(0U, cluster->GetId());
    EXPECT_EQ(0U, cluster->GetNOnDiskPages());
 
@@ -324,10 +315,20 @@ TEST(PageStorageFile, LoadCluster)
       ROOT::Experimental::Detail::RColumn::Create<float, ROOT::Experimental::EColumnType::kReal32>(
          ROOT::Experimental::RColumnModel(ROOT::Experimental::EColumnType::kReal32, false), 0));
    column->Connect(ptId, &source);
-   cluster = source.LoadCluster(1, {colId});
+   clusterKeys[0].fClusterId = 1;
+   clusterKeys[0].fColumnSet.insert(colId);
+   cluster = std::move(source.LoadClusters(clusterKeys)[0]);
    EXPECT_EQ(1U, cluster->GetId());
    EXPECT_EQ(1U, cluster->GetNOnDiskPages());
 
    ROnDiskPage::Key key(colId, 0);
    EXPECT_NE(nullptr, cluster->GetOnDiskPage(key));
+   clusterKeys.push_back({1, {colId}});
+   clusterKeys[0].fClusterId = 0;
+   auto clusters = source.LoadClusters(clusterKeys);
+   EXPECT_EQ(2U, clusters.size());
+   EXPECT_EQ(0U, clusters[0]->GetId());
+   EXPECT_EQ(1U, clusters[0]->GetNOnDiskPages());
+   EXPECT_EQ(1U, clusters[1]->GetId());
+   EXPECT_EQ(1U, clusters[1]->GetNOnDiskPages());
 }

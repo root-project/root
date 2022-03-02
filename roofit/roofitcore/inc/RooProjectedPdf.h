@@ -16,7 +16,7 @@
 #include "RooRealProxy.h"
 #include "RooAbsReal.h"
 #include "RooObjCacheManager.h"
-#include "RooSetProxy.h" 
+#include "RooSetProxy.h"
 
 class RooProjectedPdf : public RooAbsPdf {
 public:
@@ -24,51 +24,51 @@ public:
   RooProjectedPdf() ;
   RooProjectedPdf(const char *name, const char *title,  RooAbsReal& _intpdf, const RooArgSet& intObs);
   RooProjectedPdf(const RooProjectedPdf& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooProjectedPdf(*this,newname); }
-  inline virtual ~RooProjectedPdf() { }
+  TObject* clone(const char* newname) const override { return new RooProjectedPdf(*this,newname); }
+  inline ~RooProjectedPdf() override { }
 
   // Analytical integration support
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void initGenerator(Int_t /*code*/) {} ; // optional pre-generation initialization
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void initGenerator(Int_t /*code*/) override {} ; // optional pre-generation initialization
+  void generateEvent(Int_t code) override;
 
-  virtual Bool_t selfNormalized() const { return kTRUE ; }
+  Bool_t selfNormalized() const override { return kTRUE ; }
 
   // Handle projection of projection explicitly
-  virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;  
+  RooAbsPdf* createProjection(const RooArgSet& iset) override ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override ;
 
 
 protected:
 
-  RooRealProxy intpdf ; // p.d.f that is integrated
-  RooSetProxy intobs ;  // observables that p.d.f is integrated over
-  RooSetProxy deps ;    // dependents of this p.d.f
+  RooRealProxy intpdf ; ///< p.d.f that is integrated
+  RooSetProxy intobs ;  ///< observables that p.d.f is integrated over
+  RooSetProxy deps ;    ///< dependents of this p.d.f
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    virtual ~CacheElem() { delete _projection ; } ;
+    ~CacheElem() override { delete _projection ; } ;
     // Payload
     RooAbsReal* _projection ;
     // Cache management functions
-    virtual RooArgList containedArgs(Action) ; 
-    virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
+    RooArgList containedArgs(Action) override ;
+    void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
-  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
+  Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override ;
 
   const RooAbsReal* getProjection(const RooArgSet* iset, const RooArgSet* nset, const char* rangeName, int& code) const ;
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
 
-  ClassDef(RooProjectedPdf,1) // Operator p.d.f calculating projection of another p.d.f
+  ClassDefOverride(RooProjectedPdf,1) // Operator p.d.f calculating projection of another p.d.f
 };
- 
+
 #endif

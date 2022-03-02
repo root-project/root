@@ -216,27 +216,16 @@ public:
 
     // compare pdfs
     assert(pMC_API->GetPdf() && pMC_XML->GetPdf());
-    RooArgSet* pObservables = (RooArgSet*)(pMC_API->GetObservables()->snapshot());
-    RooArgSet* pGlobalObservables = (RooArgSet*)(pMC_API->GetGlobalObservables()->snapshot());
-    if(pGlobalObservables)
-    {
-      pObservables->addOwned(*pGlobalObservables);
-    }
+    RooArgSet pObservables;
+    pMC_API->GetObservables()->snapshot(pObservables);
+    RooArgSet pGlobalObservables;
+    pMC_API->GetGlobalObservables()->snapshot(pGlobalObservables);
+    pObservables.addOwned(std::move(pGlobalObservables));
 
     if(_verb > 0)
       Info("testCode","comparing PDFs");
-    if(!ComparePDF(*pMC_API->GetPdf(),*pMC_XML->GetPdf(),*pObservables,*pWS_API->data("obsData")))
-    {
-      delete pObservables;
-      // delete pGlobalObservables;
-      return kFALSE;
-    }
 
-    // clean up
-    delete pObservables;
-    // delete pGlobalObservables;
-
-    return kTRUE;
+    return ComparePDF(*pMC_API->GetPdf(),*pMC_XML->GetPdf(),pObservables,*pWS_API->data("obsData"));
   }
 
 private:
@@ -409,8 +398,8 @@ private:
     float fPDF1value, fPDF2value;
     for(Int_t i = 0; i < pSamplingPoints->numEntries(); ++i)
     {
-      *pVars1 = *pSamplingPoints->get(i);
-      *pVars2 = *pSamplingPoints->get(i);
+      pVars1->assign(*pSamplingPoints->get(i));
+      pVars2->assign(*pSamplingPoints->get(i));
 
       fPDF1value = rPDF1.getVal();
       fPDF2value = rPDF2.getVal();
@@ -444,7 +433,7 @@ private:
       return kFALSE;
 
     // check fit result to test data
-    *pVars1 = *pVars2;
+    pVars1->assign(*pVars2);
 
     // do the fit
     std::string minimizerType = "Minuit2";

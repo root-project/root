@@ -36,7 +36,10 @@ target_include_directories(ClingUtils PRIVATE
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
 target_include_directories(ClingUtils SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
+set_target_properties(ClingUtils PROPERTIES
+  COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
 ROOT_INSTALL_HEADERS()
 
@@ -64,6 +67,7 @@ foreach(dict ${stldicts})
                                 STAGE1
                                 NODEPHEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
+                                DICTIONARY_OPTIONS --noIncludePaths
                                 DEPENDENCIES Core)
   target_include_directories(${dict}Dict PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint)
 endforeach()
@@ -134,7 +138,9 @@ foreach(file ${custom_modulemaps}
         Interpreter/RuntimePrintValue.h
         Interpreter/RuntimeUniverse.h
         Interpreter/RuntimeOptions.h
-        Interpreter/Value.h)
+        Interpreter/Value.h
+        Interpreter/Visibility.h
+        )
   get_filename_component(path ${file} PATH)
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")

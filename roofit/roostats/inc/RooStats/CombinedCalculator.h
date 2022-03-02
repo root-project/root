@@ -92,33 +92,30 @@ in a common way for several concrete calculators.
          SetTestSize(size);
       }
 
-
       /// destructor.
-      virtual ~CombinedCalculator() { }
-
-
+      ~CombinedCalculator() override { }
 
       /// Main interface to get a ConfInterval, pure virtual
-      virtual ConfInterval* GetInterval() const = 0;
+      ConfInterval* GetInterval() const override = 0;
       /// main interface to get a HypoTestResult, pure virtual
-      virtual HypoTestResult* GetHypoTest() const = 0;
+      HypoTestResult* GetHypoTest() const override = 0;
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) {fSize = size;}
+      void SetTestSize(Double_t size) override {fSize = size;}
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
+      void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;}
       /// Get the size of the test (eg. rate of Type I error)
-      virtual Double_t Size() const {return fSize;}
+      Double_t Size() const override {return fSize;}
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+      Double_t ConfidenceLevel()  const override {return 1.-fSize;}
 
       /// Set the DataSet, add to the the workspace if not already there
-      virtual void SetData(RooAbsData & data) {
+      void SetData(RooAbsData & data) override {
          fData = &data;
       }
 
       /// set the model (in this case can set only the parameters for the null hypothesis)
-      virtual void SetModel(const ModelConfig & model) {
+      void SetModel(const ModelConfig & model) override {
          fPdf = model.GetPdf();
          if (model.GetParametersOfInterest()) SetParameters(*model.GetParametersOfInterest());
          if (model.GetSnapshot()) SetNullParameters(*model.GetSnapshot());
@@ -127,9 +124,9 @@ in a common way for several concrete calculators.
          if (model.GetGlobalObservables()) SetGlobalObservables(*model.GetGlobalObservables());
       }
 
-      virtual void SetNullModel( const ModelConfig &) {  // to be understood what to do
+      void SetNullModel( const ModelConfig &) override {  // to be understood what to do
       }
-      virtual void SetAlternateModel(const ModelConfig &) {  // to be understood what to do
+      void SetAlternateModel(const ModelConfig &) override {  // to be understood what to do
       }
 
       /* specific setting - keep for convenience-  some of them could be removed */
@@ -161,19 +158,19 @@ in a common way for several concrete calculators.
       RooAbsPdf * GetPdf() const { return fPdf; }
       RooAbsData * GetData() const { return fData; }
 
-      Double_t fSize; // size of the test (eg. specified rate of Type I error)
+      Double_t fSize; ///< size of the test (eg. specified rate of Type I error)
 
       RooAbsPdf  * fPdf;
       RooAbsData * fData;
-      RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
-      RooArgSet fNullParams; // RooArgSet specifying null parameters for hypothesis test
-      RooArgSet fAlternateParams; // RooArgSet specifying alternate parameters for hypothesis test       // Is it used ????
-      RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
-      RooArgSet fConditionalObs; // RooArgSet specifying the conditional observables
-      RooArgSet fGlobalObs; // RooArgSet specifying the global observables 
+      RooArgSet fPOI;             ///< RooArgSet specifying parameters of interest for interval
+      RooArgSet fNullParams;      ///< RooArgSet specifying null parameters for hypothesis test
+      RooArgSet fAlternateParams; ///< RooArgSet specifying alternate parameters for hypothesis test
+      RooArgSet fNuisParams;      ///< RooArgSet specifying nuisance parameters for interval
+      RooArgSet fConditionalObs;  ///< RooArgSet specifying the conditional observables
+      RooArgSet fGlobalObs;       ///< RooArgSet specifying the global observables
 
 
-      ClassDef(CombinedCalculator,2) // A base class that is for tools that can be both HypoTestCalculators and IntervalCalculators
+      ClassDefOverride(CombinedCalculator,2) // A base class that is for tools that can be both HypoTestCalculators and IntervalCalculators
 
    };
 }

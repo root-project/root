@@ -12,7 +12,7 @@
 
 #include "TString.h"
 
-#include <ROOT/RMakeUnique.hxx>
+#include <memory>
 
 /** \class TWebSnapshot
 \ingroup webgui6

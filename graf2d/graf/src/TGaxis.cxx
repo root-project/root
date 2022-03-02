@@ -395,6 +395,11 @@ digits permitted for the axis labels above which the notation with 10^N is used.
 For example, to accept 6 digits number like 900000 on an axis call
 `TGaxis::SetMaxDigits(6)`. The default value is 5.
 `fgMaxDigits` must be greater than 0.
+Warning: even when called on a particular TGaxis* instance, this static function
+changes globally the number of digits for all axes (X, Y, ...) in the canvas.
+If you want to change the maximum number of digits N only of the current TGaxis*,
+and not all the others, use axis->SetNdivisions(N*1000000 + (A1->GetNdiv()%1000000))
+instead of axis->SetMaxDigits(N).
 
 \anchor GA13
 ## Optional grid
@@ -878,9 +883,9 @@ void TGaxis::CenterTitle(Bool_t center)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this axis with new attributes.
 
-void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
-                      Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
-                      Double_t gridlength)
+TGaxis *TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax,
+                         Double_t wmin, Double_t wmax, Int_t ndiv,   Option_t *chopt,
+                         Double_t gridlength)
 {
 
    TGaxis *newaxis = new TGaxis(xmin,ymin,xmax,ymax,wmin,wmax,ndiv,chopt,gridlength);
@@ -903,6 +908,7 @@ void TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax
    newaxis->SetTitle(GetTitle());
    newaxis->SetBit(TAxis::kCenterTitle,TestBit(TAxis::kCenterTitle));
    newaxis->AppendPad();
+   return newaxis;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1059,6 +1065,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 // and the user's coordinates in the pad
 
    Double_t padh   = gPad->GetWh()*gPad->GetAbsHNDC();
+   Double_t padw   = gPad->GetWw()*gPad->GetAbsWNDC();
    Double_t rwxmin = gPad->GetX1();
    Double_t rwxmax = gPad->GetX2();
    Double_t rwymin = gPad->GetY1();
@@ -2299,9 +2306,14 @@ L160:
                      xi1 = gPad->XtoAbsPixel(u);
                      yi1 = gPad->YtoAbsPixel(v);
                      firstintlab = kFALSE;
+                     if (fNModLabs) {
+                        changelablogid++;
+                        ChangeLabelAttributes(changelablogid, 0, textaxis, chtemp);
+                     }
                      typolabel = chtemp;
                      typolabel.ReplaceAll("-", "#minus");
                      textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),typolabel.Data());
+                     if (fNModLabs) ResetLabelAttributes(textaxis);
                   } else {
                      xi2 = gPad->XtoAbsPixel(u);
                      yi2 = gPad->YtoAbsPixel(v);
@@ -2313,9 +2325,14 @@ L160:
                         xi1 = xi2;
                         yi1 = yi2;
                         textaxis->GetBoundingBox(wi, hi); wi=(UInt_t)(wi*1.3); hi=(UInt_t)(hi*1.3);
+                        if (fNModLabs) {
+                           changelablogid++;
+                           ChangeLabelAttributes(changelablogid, 0, textaxis, chtemp);
+                        }
                         typolabel = chtemp;
                         typolabel.ReplaceAll("-", "#minus");
                         textaxis->PaintLatex(u,v,0,textaxis->GetTextSize(),typolabel.Data());
+                        if (fNModLabs) ResetLabelAttributes(textaxis);
                      }
                   }
                }
@@ -2338,7 +2355,7 @@ L200:
       textaxis->SetTextSize (GetTitleSize());
       charheight = GetTitleSize();
       if ((GetTextFont() % 10) > 2) {
-         charheight = charheight/gPad->GetWh();
+         charheight /= ((x1==x0) ? padw : padh);
       }
       if (x1 == x0) {
          if (autotoff) {
@@ -2616,7 +2633,7 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
 /// Change the label attributes of label number i. If needed.
 ///
 /// \param[in] i        Current label number to be changed if needed
-/// \param[in] nlabels  Totals number of labels on for this axis (useful when i is counted from the end)
+/// \param[in] nlabels  Totals number of labels for this axis (useful when i is counted from the end)
 /// \param[in] t        Original TLatex string holding the label to be changed
 /// \param[in] c        Text string to be drawn
 
@@ -2640,7 +2657,13 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
       SavedTextColor = t->GetTextColor();
       SavedTextFont  = t->GetTextFont();
       labNum = ml->GetLabNum();
-      if (labNum < 0) labNum = nlabels + labNum + 2;
+      if (labNum < 0) {
+         if (TestBit(TAxis::kMoreLogLabels)) {
+            Error("ChangeLabelAttributes", "reverse numbering in ChangeLabel doesn't work when more log labels are requested");
+            return;
+         }
+         labNum = nlabels + labNum + 2;
+      }
       if (i == labNum) {
          if (ml->GetAngle()>=0.) t->SetTextAngle(ml->GetAngle());
          if (ml->GetSize()>=0.)  t->SetTextSize(ml->GetSize());
@@ -2654,7 +2677,7 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset the label attributes to the value they have before the last call to
+/// Reset the labels' attributes to the values they had before the last call to
 /// ChangeLabelAttributes.
 
 void TGaxis::ResetLabelAttributes(TLatex* t)
@@ -2672,6 +2695,10 @@ void TGaxis::ResetLabelAttributes(TLatex* t)
 /// notation with 10^N is used.For example, to accept 6 digits number like 900000
 /// on an axis call `TGaxis::SetMaxDigits(6)`. The default value is 5.
 /// `fgMaxDigits` must be greater than 0.
+/// Warning: this static function changes the max number of digits in all axes.
+/// If you only want to change the digits of the current TGaxis instance, use
+/// axis->SetNdivisions(N*1000000 + (A1->GetNdiv()%1000000))
+/// instead of axis->SetMaxDigits(N).
 
 void TGaxis::SetMaxDigits(Int_t maxd)
 {

@@ -96,7 +96,7 @@ mechanism allows total independence of the interacting classes.
 #### Creation and Destruction
 
 GED-frames are constructed during traversal of class hierarchy of the
-selected object, executed from method **`TGedEditor`**`::SetModel()`.
+selected object, executed from method **`TGedEditor::SetModel()`**.
 When a new object of a different class is selected, the unneeded
 GED-frames are cached in memory for potential reuse. The frames are
 deleted automatically when the editor is closed.

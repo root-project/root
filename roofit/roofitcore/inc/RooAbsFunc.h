@@ -30,29 +30,27 @@ public:
   inline RooAbsFunc(const RooAbsFunc& other) : _ncall(0), _dimension(other._dimension), _valid(kTRUE) { }
 
   inline virtual ~RooAbsFunc() { }
-  inline UInt_t getDimension() const { 
+  inline UInt_t getDimension() const {
     // Dimension of function
-    return _dimension; 
+    return _dimension;
   }
-  inline Bool_t isValid() const { 
+  inline Bool_t isValid() const {
     // Is function in valid state
-    return _valid; 
+    return _valid;
   }
 
   virtual Double_t operator()(const Double_t xvector[]) const = 0;
-  virtual RooSpan<const double> getValues(std::vector<RooSpan<const double>> /*coordinates*/) const {
-    throw std::logic_error("Not implemented.");
-  }
   virtual Double_t getMinLimit(UInt_t dimension) const = 0;
   virtual Double_t getMaxLimit(UInt_t dimension) const = 0;
 
-  Int_t numCall() const { 
-    // Return number of function calls since last reset
-    return _ncall ; 
+  /// Return number of function calls since last reset
+  Int_t numCall() const {
+    return _ncall ;
   }
-  void resetNumCall() const { 
-    // Reset function call counter
-    _ncall = 0 ; 
+
+  /// Reset function call counter
+  void resetNumCall() const {
+    _ncall = 0 ;
   }
 
   virtual void saveXVec() const {
@@ -63,24 +61,24 @@ public:
     // by binding implementation)
   } ;
 
-  virtual const char* getName() const { 
-    // Name of function binding
-    return "(unnamed)" ; 
-  }  
+  /// Name of function binding
+  virtual const char* getName() const {
+    return "(unnamed)" ;
+  }
 
-  virtual std::list<Double_t>* binBoundaries(Int_t) const { return 0 ; }
+  virtual std::list<Double_t>* binBoundaries(Int_t) const { return nullptr; }
 
+  /// Interface for returning an optional hint for initial sampling points when constructing a curve
+  /// projected on observable.
   virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const {
-    // Interface for returning an optional hint for initial sampling points when constructing a curve 
-    // projected on observable.  
-    return 0 ; 
+    return nullptr;
   }
 
 protected:
-  mutable Int_t _ncall ; // Function call counter
-  UInt_t _dimension;     // Number of observables
-  Bool_t _valid;         // Is binding in valid state?
-   ClassDef(RooAbsFunc,0) // Abstract real-valued function interface
+  mutable Int_t _ncall ;  ///< Function call counter
+  UInt_t _dimension;      ///< Number of observables
+  Bool_t _valid;          ///< Is binding in valid state?
+   ClassDef(RooAbsFunc,0) ///< Abstract real-valued function interface
 };
 
 #endif

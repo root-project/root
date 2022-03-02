@@ -71,11 +71,11 @@ ClassImp(RooFormulaVar);
 /// \param[in] checkVariables Check that all variables from `dependents` are used in the expression.
 RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* inFormula, const RooArgList& dependents,
     bool checkVariables) :
-  RooAbsReal(name,title), 
+  RooAbsReal(name,title),
   _actualVars("actualVars","Variables used by formula expression",this),
   _formExpr(inFormula)
-{  
-  _actualVars.add(dependents) ; 
+{
+  _actualVars.add(dependents) ;
 
   if (_actualVars.getSize()==0) {
     _value = traceEval(0);
@@ -98,8 +98,8 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
   RooAbsReal(name,title),
   _actualVars("actualVars","Variables used by formula expression",this),
   _formExpr(title)
-{  
-  _actualVars.add(dependents) ; 
+{
+  _actualVars.add(dependents) ;
 
   if (_actualVars.getSize()==0) {
     _value = traceEval(0);
@@ -114,13 +114,13 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) : 
-  RooAbsReal(other, name), 
+RooFormulaVar::RooFormulaVar(const RooFormulaVar& other, const char* name) :
+  RooAbsReal(other, name),
   _actualVars("actualVars",this,other._actualVars),
   _formExpr(other._formExpr)
 {
   if (other._formula && other._formula->ok()) {
-    _formula.reset(new RooFormula(GetName(), _formExpr, _actualVars, /*checkVariables=*/false));
+    _formula = std::make_unique<RooFormula>(*other._formula);
     _formExpr = _formula->formulaString().c_str();
   }
 }
@@ -184,7 +184,7 @@ Bool_t RooFormulaVar::redirectServersHook(const RooAbsCollection& newServerList,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Print info about this object to the specified stream.   
+/// Print info about this object to the specified stream.
 
 void RooFormulaVar::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
 {
@@ -201,7 +201,7 @@ void RooFormulaVar::printMultiline(ostream& os, Int_t contents, Bool_t verbose, 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add formula expression as meta argument in printing interface
 
-void RooFormulaVar::printMetaArgs(ostream& os) const 
+void RooFormulaVar::printMetaArgs(ostream& os) const
 {
   os << "formula=\"" << _formExpr << "\" " ;
 }
@@ -235,7 +235,7 @@ void RooFormulaVar::writeToStream(ostream& os, Bool_t compact) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+/// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
 std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
@@ -247,14 +247,14 @@ std::list<Double_t>* RooFormulaVar::binBoundaries(RooAbsRealLValue& obs, Double_
       return binb;
     }
   }
-  
+
   return nullptr;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+/// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
 std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
@@ -274,14 +274,14 @@ std::list<Double_t>* RooFormulaVar::plotSamplingHint(RooAbsRealLValue& obs, Doub
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the default error level for MINUIT error analysis
-/// If the formula contains one or more RooNLLVars and 
+/// If the formula contains one or more RooNLLVars and
 /// no RooChi2Vars, return the defaultErrorLevel() of
 /// RooNLLVar. If the addition contains one ore more RooChi2Vars
 /// and no RooNLLVars, return the defaultErrorLevel() of
 /// RooChi2Var. If the addition contains neither or both
 /// issue a warning message and return a value of 1
 
-Double_t RooFormulaVar::defaultErrorLevel() const 
+Double_t RooFormulaVar::defaultErrorLevel() const
 {
   RooAbsReal* nllArg(0) ;
   RooAbsReal* chi2Arg(0) ;
@@ -296,19 +296,19 @@ Double_t RooFormulaVar::defaultErrorLevel() const
   }
 
   if (nllArg && !chi2Arg) {
-    coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() 
-			<< ") Formula contains a RooNLLVar, using its error level" << endl ;
+    coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName()
+         << ") Formula contains a RooNLLVar, using its error level" << endl ;
     return nllArg->defaultErrorLevel() ;
   } else if (chi2Arg && !nllArg) {
-    coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() 
-	 << ") Formula contains a RooChi2Var, using its error level" << endl ;
+    coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName()
+    << ") Formula contains a RooChi2Var, using its error level" << endl ;
     return chi2Arg->defaultErrorLevel() ;
   } else if (!nllArg && !chi2Arg) {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
-		      << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
+            << "Formula contains neither RooNLLVar nor RooChi2Var server, using default level of 1.0" << endl ;
   } else {
     coutI(Minimization) << "RooFormulaVar::defaultErrorLevel(" << GetName() << ") WARNING: "
-			<< "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
+         << "Formula contains BOTH RooNLLVar and RooChi2Var server, using default level of 1.0" << endl ;
   }
 
   return 1.0 ;

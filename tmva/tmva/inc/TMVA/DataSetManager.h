@@ -75,14 +75,14 @@ namespace TMVA {
       // access to input data
       DataInputHandler& DataInput() { return *fDataInput; }
 
-      DataInputHandler           *fDataInput;             // source of input data
-      TList                      fDataSetInfoCollection; // all registered dataset definitions
-      MsgLogger*                 fLogger;   //! message logger
+      DataInputHandler           *fDataInput;            ///< source of input data
+      TList                      fDataSetInfoCollection; ///< all registered dataset definitions
+      MsgLogger*                 fLogger;                ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
-       
+
        ClassDef(DataSetManager,1);
-       
+
    };
 }
 

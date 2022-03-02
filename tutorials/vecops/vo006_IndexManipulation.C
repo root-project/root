@@ -9,14 +9,12 @@
 /// \date September 2018
 /// \author Stefan Wunsch
 
-using namespace ROOT::VecOps;
-
 void vo006_IndexManipulation()
 {
    // We assume that we have multiple linked collections, the elements of which
    // represent different objects.
-   RVec<float> muon_pt = {20.0, 30.0, 10.0, 25.0};
-   RVec<float> muon_eta = {1.0, -2.0, 0.5, 2.5};
+   ROOT::RVecF muon_pt = {20.0, 30.0, 10.0, 25.0};
+   ROOT::RVecF muon_eta = {1.0, -2.0, 0.5, 2.5};
 
    for (size_t i = 0; i < muon_pt.size(); i++) {
       std::cout << "Muon " << i + 1 << " (pt, eta): " << muon_pt[i] << ", "

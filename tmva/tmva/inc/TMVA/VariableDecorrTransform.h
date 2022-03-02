@@ -76,8 +76,8 @@ namespace TMVA {
 
    private:
 
-      //      mutable Event*          fTransformedEvent;   //! local event copy
-      std::vector<TMatrixD*>  fDecorrMatrices;     //! Decorrelation matrix [class0/class1/.../all classes]
+      //      mutable Event*          fTransformedEvent;   ///<! local event copy
+      std::vector<TMatrixD*>  fDecorrMatrices;     ///<! Decorrelation matrix [class0/class1/.../all classes]
 
       void CalcSQRMats( const std::vector< Event*>&, Int_t maxCls );
       std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls );

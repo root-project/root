@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #606
-// 
+//
 // Understanding and customizing error handling in likelihood evaluations
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -24,11 +24,11 @@ using namespace RooFit ;
 
 class TestBasic606 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic606(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("NLL error handling",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   m o d e l  a n d   d a t a s e t 
+  // C r e a t e   m o d e l  a n d   d a t a s e t
   // ----------------------------------------------
 
   // Observable
@@ -46,7 +46,7 @@ public:
 
 
 
-  // P l o t   m o d e l   a n d   d a t a 
+  // P l o t   m o d e l   a n d   d a t a
   // --------------------------------------
 
   RooPlot* frame1 = m.frame(Bins(40),Title("Argus model and data")) ;
@@ -55,30 +55,30 @@ public:
 
 
 
-  // F i t   m o d e l   t o   d a t a 
+  // F i t   m o d e l   t o   d a t a
   // ---------------------------------
 
-  argus.fitTo(*data,PrintEvalErrors(10),Warnings(kFALSE)) ;    
+  argus.fitTo(*data,PrintEvalErrors(10),Warnings(kFALSE)) ;
   m0.setError(0.1) ;
-  argus.fitTo(*data,PrintEvalErrors(0),EvalErrorWall(kFALSE),Warnings(kFALSE)) ;    
+  argus.fitTo(*data,PrintEvalErrors(0),EvalErrorWall(kFALSE),Warnings(kFALSE)) ;
 
 
 
-  // P l o t   l i k e l i h o o d   a s   f u n c t i o n   o f   m 0 
+  // P l o t   l i k e l i h o o d   a s   f u n c t i o n   o f   m 0
   // ------------------------------------------------------------------
 
   // Construct likelihood function of model and data
   RooNLLVar nll("nll","nll",argus,*data) ;
 
   // Plot likelihood in m0 in range that includes problematic values
-  // In this configuration the number of errors per likelihood point 
+  // In this configuration the number of errors per likelihood point
   // evaluated for the curve is shown. A positive number in PrintEvalErrors(N)
   // will show details for up to N events. By default the values for likelihood
   // evaluations with errors are shown normally (unlike fitting), but the shape
   // of the curve can be erratic in these regions.
 
   RooPlot* frame2 = m0.frame(Range(5.288,5.293),Title("-log(L) scan vs m0")) ;
-  nll.plotOn(frame2,PrintEvalErrors(0),ShiftToZero(),LineColor(kRed),Precision(1e-4)) ; 
+  nll.plotOn(frame2,PrintEvalErrors(0),ShiftToZero(),LineColor(kRed),Precision(1e-4)) ;
 
 
   // Plot likelihood in m0 in range that includes problematic values
@@ -87,7 +87,7 @@ public:
   // on the curve will be set to the value given in EvalErrorValue().
 
   RooPlot* frame3 = m0.frame(Range(5.288,5.293),Title("-log(L) scan vs m0, problematic regions masked")) ;
-  nll.plotOn(frame3,PrintEvalErrors(-1),ShiftToZero(),EvalErrorValue(nll.getVal()+10),LineColor(kRed)) ; 
+  nll.plotOn(frame3,PrintEvalErrors(-1),ShiftToZero(),EvalErrorValue(nll.getVal()+10),LineColor(kRed)) ;
 
 
   regPlot(frame1,"rf606_plot1") ;

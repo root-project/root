@@ -1790,7 +1790,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    }
 
    if (HasIOConstructor(decl, args, ctorTypes, interp)) {
-      finalString << "   static void *new_" << mappedname.c_str() << "(void *p = 0);" << "\n";
+      finalString << "   static void *new_" << mappedname.c_str() << "(void *p = nullptr);" << "\n";
 
       if (args.size()==0 && NeedDestructor(decl, interp))
       {
@@ -1902,11 +1902,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    finalString << "   static TGenericClassInfo *GenerateInitInstanceLocal(const " << csymbol << "*)" << "\n" << "   {" << "\n";
 
-   finalString << "      " << csymbol << " *ptr = 0;" << "\n";
+   finalString << "      " << csymbol << " *ptr = nullptr;" << "\n";
 
    //fprintf(fp, "      static ::ROOT::ClassInfo< %s > \n",classname.c_str());
    if (ClassInfo__HasMethod(decl,"IsA",interp) ) {
-      finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< "  << csymbol << " >(0);" << "\n";
+      finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< "  << csymbol << " >(nullptr);" << "\n";
    }
    else {
       finalString << "      static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(" << csymbol << "));" << "\n";
@@ -2081,20 +2081,20 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
 
    if (!isStdNotString && !ROOT::TMetaUtils::hasOpaqueTypedef(cl, interp, normCtxt)) {
       // The GenerateInitInstance for STL are not unique and should not be externally accessible
-      finalString << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol << "*)" << "\n" << "   {\n      return GenerateInitInstanceLocal((" << csymbol << "*)0);\n   }" << "\n";
+      finalString << "   TGenericClassInfo *GenerateInitInstance(const " << csymbol << "*)" << "\n" << "   {\n      return GenerateInitInstanceLocal((" << csymbol << "*)nullptr);\n   }" << "\n";
    }
 
    finalString << "   // Static variable to force the class initialization" << "\n";
    // must be one long line otherwise UseDummy does not work
 
 
-   finalString << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const " << csymbol << "*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));" << "\n";
+   finalString << "   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const " << csymbol << "*)nullptr); R__UseDummy(_R__UNIQUE_DICT_(Init));" << "\n";
 
    if (!ClassInfo__HasMethod(decl,"Dictionary",interp) || IsTemplate(*decl)) {
       finalString <<  "\n" << "   // Dictionary for non-ClassDef classes" << "\n"
                   << "   static TClass *" << mappedname << "_Dictionary() {\n"
                   << "      TClass* theClass ="
-                  << "::ROOT::GenerateInitInstanceLocal((const " << csymbol << "*)0x0)->GetClass();\n"
+                  << "::ROOT::GenerateInitInstanceLocal((const " << csymbol << "*)nullptr)->GetClass();\n"
                   << "      " << mappedname << "_TClassManip(theClass);\n";
       finalString << "   return theClass;\n";
       finalString << "   }\n\n";
@@ -2769,10 +2769,11 @@ const char *ROOT::TMetaUtils::ShortTypeName(const char *typeDesc)
 bool ROOT::TMetaUtils::IsStreamableObject(const clang::FieldDecl &m,
                                           const cling::Interpreter& interp)
 {
-   const char *comment = ROOT::TMetaUtils::GetComment( m ).data();
+   auto comment = ROOT::TMetaUtils::GetComment( m );
 
    // Transient
-   if (comment[0] == '!') return false;
+   if (!comment.empty() && comment[0] == '!')
+      return false;
 
    clang::QualType type = m.getType();
 
@@ -4320,6 +4321,28 @@ llvm::StringRef ROOT::TMetaUtils::GetComment(const clang::Decl &decl, clang::Sou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true if class has any of class declarations like ClassDef, ClassDefNV, ClassDefOverride
+
+bool ROOT::TMetaUtils::HasClassDefMacro(const clang::Decl *decl, const cling::Interpreter &interpreter)
+{
+   if (!decl) return false;
+
+   auto& sema = interpreter.getCI()->getSema();
+   auto maybeMacroLoc = decl->getLocation();
+
+   if (!maybeMacroLoc.isMacroID()) return false;
+
+   static const std::vector<std::string> signatures =
+     { "ClassDef", "ClassDefOverride", "ClassDefNV", "ClassDefInline", "ClassDefInlineOverride", "ClassDefInlineNV" };
+
+   for (auto &name : signatures)
+      if (sema.findMacroSpelling(maybeMacroLoc, name))
+         return true;
+
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the class comment after the ClassDef:
 /// class MyClass {
 /// ...
@@ -4331,23 +4354,17 @@ llvm::StringRef ROOT::TMetaUtils::GetClassComment(const clang::CXXRecordDecl &de
                                                   const cling::Interpreter &interpreter)
 {
    using namespace clang;
-   SourceLocation commentSLoc;
-   llvm::StringRef comment;
-
-   Sema& sema = interpreter.getCI()->getSema();
 
    const Decl* DeclFileLineDecl
       = interpreter.getLookupHelper().findFunctionProto(&decl, "DeclFileLine", "",
                                                         cling::LookupHelper::NoDiagnostics);
-   if (!DeclFileLineDecl) return llvm::StringRef();
 
    // For now we allow only a special macro (ClassDef) to have meaningful comments
-   SourceLocation maybeMacroLoc = DeclFileLineDecl->getLocation();
-   bool isClassDefMacro = maybeMacroLoc.isMacroID() && sema.findMacroSpelling(maybeMacroLoc, "ClassDef");
-   if (isClassDefMacro) {
-      comment = ROOT::TMetaUtils::GetComment(*DeclFileLineDecl, &commentSLoc);
+   if (HasClassDefMacro(DeclFileLineDecl, interpreter)) {
+      SourceLocation commentSLoc;
+      llvm::StringRef comment = ROOT::TMetaUtils::GetComment(*DeclFileLineDecl, &commentSLoc);
       if (comment.size()) {
-         if (loc){
+         if (loc) {
             *loc = commentSLoc;
          }
          return comment;
@@ -5200,14 +5217,14 @@ const clang::RecordDecl* ROOT::TMetaUtils::AST2SourceTools::EncloseInScopes(cons
 /// using the fully qualified name
 /// There are different cases:
 /// Case 1: a simple template parameter
-///   E.g. template<typename T> class A;
+///   E.g. `template<typename T> class A;`
 /// Case 2: a non-type: either an integer or an enum
-///   E.g. template<int I, Foo > class A; where Foo is enum Foo {red, blue};
+///   E.g. `template<int I, Foo > class A;` where `Foo` is `enum Foo {red, blue};`
 /// 2 sub cases here:
 ///   SubCase 2.a: the parameter is an enum: bail out, cannot be treated.
 ///   SubCase 2.b: use the fully qualified name
 /// Case 3: a TemplateTemplate argument
-///   E.g. template <template <typename> class T> class container { };
+///   E.g. `template <template <typename> class T> class container { };`
 
 int ROOT::TMetaUtils::AST2SourceTools::PrepareArgsForFwdDecl(std::string& templateArgs,
                           const clang::TemplateParameterList& tmplParamList,

@@ -40,6 +40,11 @@
 
 
 #ifdef R__USE_IMT
+ROOT::Experimental::RNTupleImtTaskScheduler::RNTupleImtTaskScheduler()
+{
+   Reset();
+}
+
 void ROOT::Experimental::RNTupleImtTaskScheduler::Reset()
 {
    fTaskGroup = std::make_unique<TTaskGroup>();
@@ -100,6 +105,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    if (!fModel) {
       throw RException(R__FAIL("null model"));
    }
+   fModel->Freeze();
    InitPageSource();
    ConnectModel(*fModel);
 }
@@ -272,8 +278,6 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    : fSink(std::move(sink))
    , fModel(std::move(model))
    , fMetrics("RNTupleWriter")
-   , fLastCommitted(0)
-   , fNEntries(0)
 {
    if (!fModel) {
       throw RException(R__FAIL("null model"));
@@ -281,13 +285,26 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    if (!fSink) {
       throw RException(R__FAIL("null sink"));
    }
+   fModel->Freeze();
+#ifdef R__USE_IMT
+   if (IsImplicitMTEnabled()) {
+      fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
+      fSink->SetTaskScheduler(fZipTasks.get());
+   }
+#endif
    fSink->Create(*fModel.get());
    fMetrics.ObserveMetrics(fSink->GetMetrics());
+
+   const auto &writeOpts = fSink->GetWriteOptions();
+   fMaxUnzippedClusterSize = writeOpts.GetMaxUnzippedClusterSize();
+   // First estimate is a factor 2 compression if compression is used at all
+   const int scale = writeOpts.GetCompression() ? 2 : 1;
+   fUnzippedClusterSizeEst = scale * writeOpts.GetApproxZippedClusterSize();
 }
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
-   CommitCluster();
+   CommitCluster(true /* commitClusterGroup */);
    fSink->CommitDataset();
 }
 
@@ -314,16 +331,39 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWr
    return std::make_unique<RNTupleWriter>(std::move(model), std::move(sink));
 }
 
-
-void ROOT::Experimental::RNTupleWriter::CommitCluster()
+void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
 {
-   if (fNEntries == fLastCommitted) return;
+   if (fNEntries == fLastCommittedClusterGroup)
+      return;
+   fSink->CommitClusterGroup();
+   fLastCommittedClusterGroup = fNEntries;
+}
+
+void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
+{
+   if (fNEntries == fLastCommitted) {
+      if (commitClusterGroup)
+         CommitClusterGroup();
+      return;
+   }
    for (auto& field : *fModel->GetFieldZero()) {
       field.Flush();
       field.CommitCluster();
    }
-   fSink->CommitCluster(fNEntries);
+   fNBytesCommitted += fSink->CommitCluster(fNEntries);
+   fNBytesFilled += fUnzippedClusterSize;
+
+   // Cap the compression factor at 1000 to prevent overflow of fUnzippedClusterSizeEst
+   const float compressionFactor = std::min(1000.f,
+      static_cast<float>(fNBytesFilled) / static_cast<float>(fNBytesCommitted));
+   fUnzippedClusterSizeEst =
+      compressionFactor * static_cast<float>(fSink->GetWriteOptions().GetApproxZippedClusterSize());
+
    fLastCommitted = fNEntries;
+   fUnzippedClusterSize = 0;
+
+   if (commitClusterGroup)
+      CommitClusterGroup();
 }
 
 

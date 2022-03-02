@@ -62,9 +62,11 @@ class TEntryList: public TNamed
    virtual ~TEntryList();
 
    virtual void        Add(const TEntryList *elist);
+   void                AddSubList(TEntryList *elist);
    virtual Int_t       Contains(Long64_t entry, TTree *tree = 0);
    virtual void        DirectoryAutoAdd(TDirectory *);
    virtual Bool_t      Enter(Long64_t entry, TTree *tree = 0);
+   void                EnterRange(Long64_t start, Long64_t end, TTree *tree = nullptr, UInt_t step = 1U);
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
    virtual TEntryList *GetEntryList(const char *treename, const char *filename, Option_t *opt="");
    virtual Long64_t    GetEntry(Int_t index);

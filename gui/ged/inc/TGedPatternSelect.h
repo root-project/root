@@ -28,7 +28,7 @@ public:
    virtual ~TGedPopup() { }
 
    virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    void           PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void           EndPopup();
 
@@ -74,7 +74,7 @@ public:
    TGedPatternSelector(const TGWindow *p);
    virtual ~TGedPatternSelector();
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    void           SetActive(Int_t newat);
    Int_t          GetActive() const { return fActive; }
 
@@ -90,7 +90,7 @@ public:
    TGedPatternPopup(const TGWindow *p, const TGWindow *m, Style_t pattern);
    virtual ~TGedPatternPopup();
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    ClassDef(TGedPatternPopup,0)  // Color selector popup
 };
@@ -133,7 +133,7 @@ public:
    virtual        TGDimension GetDefaultSize() const { return TGDimension(55, 21); }
    virtual void   PatternSelected(Style_t pattern = 0)
                   { Emit("PatternSelected(Style_t)", pattern ? pattern : GetPattern()); }  // *SIGNAL*
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGedPatternSelect,0)  //pattern selection check-button

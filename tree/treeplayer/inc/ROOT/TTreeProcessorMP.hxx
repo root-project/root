@@ -37,7 +37,7 @@ namespace ROOT {
 
 class TTreeProcessorMP : private TMPClient {
 public:
-   explicit TTreeProcessorMP(unsigned nWorkers = 0); //default number of workers is the number of processors
+   explicit TTreeProcessorMP(UInt_t nWorkers = 0); //default number of workers is the number of processors
    ~TTreeProcessorMP() = default;
    //it doesn't make sense for a TTreeProcessorMP to be copied
    TTreeProcessorMP(const TTreeProcessorMP &) = delete;

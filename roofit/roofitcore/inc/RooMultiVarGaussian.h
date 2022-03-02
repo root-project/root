@@ -39,18 +39,18 @@ public:
   void setAnaIntZ(Double_t z) { _z = z ; }
 
   RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooMultiVarGaussian(*this,newname); }
-  inline virtual ~RooMultiVarGaussian() { }
+  TObject* clone(const char* newname) const override { return new RooMultiVarGaussian(*this,newname); }
+  inline ~RooMultiVarGaussian() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ; 
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ; 
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const; 
-  void initGenerator(Int_t code) ;
-  void generateEvent(Int_t code); 
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void initGenerator(Int_t code) override ;
+  void generateEvent(Int_t code) override;
 
   const TMatrixDSym& covarianceMatrix() const { return _cov ; }
-  
+
   class AnaIntData {
   public:
     TMatrixD    S22bar ;
@@ -73,7 +73,7 @@ public:
   public:
     BitBlock() : b0(0), b1(0), b2(0), b3(0) {} ;
 
-    void setBit(Int_t ibit) ;      
+    void setBit(Int_t ibit) ;
     Bool_t getBit(Int_t ibit) ;
     Bool_t operator==(const BitBlock& other) ;
 
@@ -86,31 +86,31 @@ public:
   static void blockDecompose(const TMatrixD& input, const std::vector<int>& map1, const std::vector<int>& map2, TMatrixDSym& S11, TMatrixD& S12, TMatrixD& S21, TMatrixDSym& S22) ;
 
 protected:
-  
+
   void decodeCode(Int_t code, std::vector<int>& map1, std::vector<int>& map2) const;
   AnaIntData& anaIntData(Int_t code) const ;
   GenData& genData(Int_t code) const ;
 
-  mutable std::map<int,AnaIntData> _anaIntCache ; //!
-  mutable std::map<int,GenData> _genCache ; //!
+  mutable std::map<int,AnaIntData> _anaIntCache ; ///<!
+  mutable std::map<int,GenData> _genCache ; ///<!
 
-  mutable std::vector<BitBlock> _aicMap ; //!
+  mutable std::vector<BitBlock> _aicMap ; ///<!
 
   RooListProxy _x ;
   RooListProxy _mu ;
   TMatrixDSym _cov ;
   TMatrixDSym _covI ;
-  Double_t    _det ; 
-  Double_t    _z ; 
+  Double_t    _det ;
+  Double_t    _z ;
 
   void syncMuVec() const ;
   mutable TVectorD _muVec ; //! Do not persist
 
-  Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
 private:
 
-  ClassDef(RooMultiVarGaussian,1) // Multivariate Gaussian PDF with correlations
+  ClassDefOverride(RooMultiVarGaussian,1) // Multivariate Gaussian PDF with correlations
 };
 
 #endif

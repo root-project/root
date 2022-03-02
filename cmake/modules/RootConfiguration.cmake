@@ -225,8 +225,6 @@ set(gfallibdir ${GFAL_LIBRARY_DIR})
 set(gfallib ${GFAL_LIBRARY})
 set(gfalincdir ${GFAL_INCLUDE_DIR})
 
-set(buildmemstat ${value${memstat}})
-
 set(buildalien ${value${alien}})
 set(alienlibdir ${ALIEN_LIBRARY_DIR})
 set(alienlib ${ALIEN_LIBRARY})
@@ -276,13 +274,8 @@ set(gvizcflags)
 
 set(buildpython ${value${pyroot}})
 set(pythonlibdir ${PYTHON_LIBRARY_DIR})
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
-  set(pythonlib ${PYTHON_LIBRARIES})
-  set(pythonincdir ${PYTHON_INCLUDE_DIRS})
-else()
-  set(pythonlib ${PYTHON_LIBRARY})
-  set(pythonincdir ${PYTHON_INCLUDE_DIR})
-endif()
+set(pythonlib ${PYTHON_LIBRARIES})
+set(pythonincdir ${PYTHON_INCLUDE_DIRS})
 set(pythonlibflags)
 
 set(buildxml ${value${xml}})
@@ -384,6 +377,11 @@ if(CMAKE_USE_PTHREADS_INIT)
   set(haspthread define)
 else()
   set(haspthread undef)
+endif()
+if(cuda)
+  set(hascuda define)
+else()
+  set(hascuda undef)
 endif()
 if(x11)
   set(hasxft define)
@@ -508,6 +506,11 @@ if (uring)
   set(hasuring define)
 else()
   set(hasuring undef)
+endif()
+if (roofit_multiprocess)
+  set(hasroofit_multiprocess define)
+else()
+  set(hasroofit_multiprocess undef)
 endif()
 
 # clear cache to allow reconfiguring
@@ -706,6 +709,11 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cxxflags "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
 
+if(MSVC)
+  string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cxxflags "${__cxxflags}")
+  string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cflags "${__cflags}")
+endif()
+
 if (cxxmodules)
   # Re-add the -Wno-module-import-in-extern-c which we just filtered out.
   # We want it because it changes the module cache hash and causes modules to be
@@ -817,6 +825,12 @@ if(APPLE AND runtime_cxxmodules)
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
 endif()
 
+# ROOTBUILD definition (it is defined in compiledata.h and used by ACLIC
+# to decide whether (by default) to optimize or not optimize the user scripts.)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  set(ROOTBUILD "debug")
+endif()
+
 if(WIN32)
   # We cannot use the compiledata.sh script for windows
   configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${CMAKE_BINARY_DIR}/ginclude/compiledata.h NEWLINE_STYLE UNIX)
@@ -825,14 +839,13 @@ else()
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
         "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "so"
-        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "")
+        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
 endif()
 
 #---Get the value of CMAKE_CXX_FLAGS provided by the user in the command line
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
 file(REMOVE ${CMAKE_BINARY_DIR}/installtree/root-config)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_BINARY_DIR}/installtree/root-config @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
@@ -878,8 +891,7 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
                           WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
-              ${CMAKE_BINARY_DIR}/installtree/root-config
+install(FILES ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv
               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ

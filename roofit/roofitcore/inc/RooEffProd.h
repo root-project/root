@@ -20,59 +20,59 @@
 class RooEffProd: public RooAbsPdf {
 public:
   // Constructors, assignment etc
-  inline RooEffProd() : _nset(0), _fixedNset(0) { };
-  virtual ~RooEffProd();
+  inline RooEffProd() : _cacheMgr(this,10), _nset(0), _fixedNset(0) { };
+  ~RooEffProd() override;
   RooEffProd(const char *name, const char *title, RooAbsPdf& pdf, RooAbsReal& efficiency);
   RooEffProd(const RooEffProd& other, const char* name=0);
 
-  virtual TObject* clone(const char* newname) const { return new RooEffProd(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooEffProd(*this,newname); }
 
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype,
-                                       const RooArgSet* auxProto, Bool_t verbose) const;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype,
+                                       const RooArgSet* auxProto, Bool_t verbose) const override;
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
-    // Return kTRUE to force RooRealIntegral to offer all observables for internal integration
-    return kTRUE ; 
+  /// Return kTRUE to force RooRealIntegral to offer all observables for internal integration
+  Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
+    return kTRUE ;
   }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
-  
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override ;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override ;
+
 protected:
-  
-  const RooAbsPdf* pdf() const { 
-    // Return pointer to pdf in product
-    return (RooAbsPdf*) _pdf.absArg() ; 
+
+  /// Return pointer to pdf in product
+  const RooAbsPdf* pdf() const {
+    return (RooAbsPdf*) _pdf.absArg() ;
   }
-  const RooAbsReal* eff() const { 
-    // Return pointer to efficiency function in product
-    return (RooAbsReal*) _eff.absArg() ; 
+  /// Return pointer to efficiency function in product
+  const RooAbsReal* eff() const {
+    return (RooAbsReal*) _eff.absArg() ;
   }
 
   // Function evaluation
-  virtual Double_t evaluate() const ;
+  Double_t evaluate() const override ;
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    CacheElem() : _clone(0), _int(0) {} 
-    virtual ~CacheElem() { delete _int ; delete _clone ; }
+    CacheElem() : _clone(0), _int(0) {}
+    ~CacheElem() override { delete _int ; delete _clone ; }
     // Payload
     RooArgSet   _intObs ;
     RooEffProd* _clone ;
-    RooAbsReal* _int ;    
+    RooAbsReal* _int ;
     // Cache management functions
-    virtual RooArgList containedArgs(Action) ;
+    RooArgList containedArgs(Action) override ;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
 
   // the real stuff...
-  RooRealProxy _pdf ;               // Probability Density function
-  RooRealProxy _eff;                // Efficiency function
-  mutable const RooArgSet* _nset  ; //! Normalization set to be used in evaluation
+  RooRealProxy _pdf ;               ///< Probability Density function
+  RooRealProxy _eff;                ///< Efficiency function
+  mutable const RooArgSet* _nset  ; ///<! Normalization set to be used in evaluation
 
-  RooArgSet* _fixedNset ; //! Fixed normalization set overriding default normalization set (if provided)
+  RooArgSet* _fixedNset ; ///<! Fixed normalization set overriding default normalization set (if provided)
 
-  ClassDef(RooEffProd,2) // Product operator p.d.f of (PDF x efficiency) implementing optimized generator context
+  ClassDefOverride(RooEffProd,2) // Product operator p.d.f of (PDF x efficiency) implementing optimized generator context
 };
 
 #endif

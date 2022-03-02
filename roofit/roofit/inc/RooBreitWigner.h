@@ -28,11 +28,11 @@ public:
   RooBreitWigner(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _width);
   RooBreitWigner(const RooBreitWigner& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooBreitWigner(*this,newname); }
-  inline virtual ~RooBreitWigner() { }
+  TObject* clone(const char* newname) const override { return new RooBreitWigner(*this,newname); }
+  inline ~RooBreitWigner() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
 
@@ -40,15 +40,16 @@ protected:
   RooRealProxy mean ;
   RooRealProxy width ;
 
-  Double_t evaluate() const ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override ;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 //   void initGenerator();
 //   Int_t generateDependents();
 
 private:
 
-  ClassDef(RooBreitWigner,1) // Breit Wigner PDF
+  ClassDefOverride(RooBreitWigner,1) // Breit Wigner PDF
 };
 
 #endif

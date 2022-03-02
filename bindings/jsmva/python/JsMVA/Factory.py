@@ -238,7 +238,7 @@ class TreeReader:
 
     ## Standard Constructor
     # @param self object pointer
-    # @oaran fileName path to XML file
+    # @param fileName path to XML file
     def __init__(self, fileName):
         self.__xmltree = ElementTree()
         self.__xmltree.parse(fileName)
@@ -808,7 +808,7 @@ def CreateWeightHist(net, selectedLayers):
 
 ## Show DNN weights in a heat map. It will produce an ipywidget element, where the layers can be selected.
 # @param fac object pointer
-# @oaram datasetName name of current dataset
+# @param datasetName name of current dataset
 # @param methodName DNN's name
 def DrawDNNWeights(fac, datasetName, methodName="DNN"):
     m = GetMethodObject(fac, datasetName, methodName)

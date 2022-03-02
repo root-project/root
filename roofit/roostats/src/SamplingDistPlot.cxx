@@ -91,7 +91,7 @@ SamplingDistPlot::SamplingDistPlot(Int_t nbins, Double_t min, Double_t max) :
 ////////////////////////////////////////////////////////////////////////////////
 /// destructors - delete objects contained in the list
 
-SamplingDistPlot::~SamplingDistPlot() 
+SamplingDistPlot::~SamplingDistPlot()
 {
    fItems.Delete();
    fOtherItems.Delete();

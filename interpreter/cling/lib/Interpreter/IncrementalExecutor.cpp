@@ -74,13 +74,13 @@ CreateHostTargetMachine(const clang::CompilerInstance& CI) {
   JTMB->getOptions().EmulatedTLS = false;
 #endif // _WIN32
 
-  std::unique_ptr<TargetMachine> TM = cantFail(JTMB->createTargetMachine());
-
 #if defined(__powerpc64__) || defined(__PPC64__)
   // We have to use large code model for PowerPC64 because TOC and text sections
   // can be more than 2GB apart.
-  assert(TM->getCodeModel() >= CodeModel::Large);
+  JTMB->setCodeModel(CodeModel::Large);
 #endif
+
+  std::unique_ptr<TargetMachine> TM = cantFail(JTMB->createTargetMachine());
 
   // Forcefully disable GlobalISel, it might be enabled on AArch64 without
   // optimizations. In tests on an Apple M1 after the upgrade to LLVM 9, this
@@ -119,10 +119,7 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
   std::atomic_flag_clear( &m_AtExitFuncsSpinLock );
 
   std::unique_ptr<TargetMachine> TM(CreateHostTargetMachine(CI));
-  m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(),
-                                          CI.getTargetOpts(),
-                                          CI.getLangOpts(),
-                                          *TM));
+  auto &TMRef = *TM;
   auto RetainOwnership =
     [this](llvm::orc::VModuleKey K, std::unique_ptr<Module> M) -> void {
     assert (m_PendingModules.count(K) && "Unable to find the module");
@@ -130,6 +127,12 @@ IncrementalExecutor::IncrementalExecutor(clang::DiagnosticsEngine& /*diags*/,
     m_PendingModules.erase(K);
   };
   m_JIT.reset(new IncrementalJIT(*this, std::move(TM), RetainOwnership));
+
+  m_BackendPasses.reset(new BackendPasses(CI.getCodeGenOpts(),
+                                          CI.getTargetOpts(),
+                                          CI.getLangOpts(),
+                                          TMRef,
+                                          *m_JIT));
 }
 
 // Keep in source: ~unique_ptr<ClingJIT> needs ClingJIT
@@ -271,10 +274,6 @@ IncrementalExecutor::runStaticInitializersOnce(Transaction& T) {
   // the init priority, which we ignore.
   llvm::ConstantArray *InitList
     = llvm::dyn_cast<llvm::ConstantArray>(GV->getInitializer());
-
-  // We need to delete it here just in case we have recursive inits, otherwise
-  // it will call inits multiple times.
-  GV->eraseFromParent();
 
   if (InitList == 0)
     return kExeSuccess;

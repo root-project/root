@@ -63,7 +63,7 @@ public:
    virtual ~TGSearchDialog();
 
    virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual void   SetClose(Bool_t on) { fType->fClose = on; }
    virtual Bool_t IsClose() const {  return fType->fClose; }
    virtual void   TextEntered(const char *text); //*SIGNAL*
@@ -100,7 +100,7 @@ public:
 
    virtual void   CloseWindow();
    virtual void   GetPrinters();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    ClassDef(TGPrintDialog,0)  // Print dialog used by TGTextEdit widget
 };
@@ -124,7 +124,7 @@ public:
    virtual ~TGGotoDialog();
 
    virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    ClassDef(TGGotoDialog,0)  // Goto line dialog used by TGTextEdit widget
 };

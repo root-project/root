@@ -13,9 +13,21 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
+/**
+\file RooRealVarSharedProperties.h
+\class RooRealVarSharedProperties
+\ingroup Roofitcore
+
+Class RooRealVarSharedProperties is an implementation of RooSharedProperties
+that stores the properties of a RooRealVar that are shared among clones.
+For RooRealVars these are the definitions of the named ranges.
+**/
+
 #ifndef ROO_REAL_VAR_SHARED_PROPERTY
 #define ROO_REAL_VAR_SHARED_PROPERTY
 
+#include "RooAbsBinning.h"
 #include "RooSharedProperties.h"
 
 #include <memory>
@@ -27,27 +39,31 @@ class RooAbsBinning;
 class RooRealVarSharedProperties : public RooSharedProperties {
 public:
 
-  RooRealVarSharedProperties() ;
-  RooRealVarSharedProperties(const RooRealVarSharedProperties&);
-  RooRealVarSharedProperties(const char* uuidstr) ;
-  virtual ~RooRealVarSharedProperties() ;
-  void disownBinnings() {
-    _ownBinnings = false;
+  /// Default constructor.
+  RooRealVarSharedProperties() {}
+  /// Constructor with unique-id string.
+  RooRealVarSharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr) {}
+
+  /// Destructor
+  ~RooRealVarSharedProperties() override {
+    if (_ownBinnings) {
+      for (auto& item : _altBinning) {
+        delete item.second;
+      }
+    }
   }
 
-  RooSharedProperties* clone() {
-    auto tmp = new RooRealVarSharedProperties(*this);
-    tmp->disownBinnings();
-    return tmp;
+  void disownBinnings() {
+    _ownBinnings = false;
   }
 
 protected:
 
   friend class RooRealVar ;
 
-  std::unordered_map<std::string,RooAbsBinning*> _altBinning ;  // Optional alternative ranges and binnings
+  std::unordered_map<std::string,RooAbsBinning*> _altBinning ;  ///< Optional alternative ranges and binnings
   bool _ownBinnings{true}; //!
-  ClassDef(RooRealVarSharedProperties,2) // Shared properties of a RooRealVar clone set
+  ClassDefOverride(RooRealVarSharedProperties,2) // Shared properties of a RooRealVar clone set
 };
 
 

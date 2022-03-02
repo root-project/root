@@ -1,9 +1,11 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
+
+#include "gmock/gmock.h"
 
 #include <sstream>
 #include <string>

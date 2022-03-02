@@ -63,9 +63,12 @@ Double_t RooPoisson::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of the Poisson distribution.  
-RooSpan<double> RooPoisson::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computePoisson(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), _protectNegative, _noRounding);
+/// Compute multiple values of the Poisson distribution.
+void RooPoisson::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Poisson, output, nEvents, dataMap, {&*x,&*mean,&*_norm},
+    {static_cast<double>(_protectNegative), static_cast<double>(_noRounding)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +99,7 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
       return 0.;
     }
     if (!x.hasMax() || RooNumber::isInfinite(xmax)) {
-      //Integrating the full Poisson distribution here 
+      //Integrating the full Poisson distribution here
       return 1.;
     }
 
@@ -104,7 +107,7 @@ Double_t RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
     const unsigned int ixmin = xmin;
     const unsigned int ixmax = std::min(xmax + 1.,
                                         (double)std::numeric_limits<unsigned int>::max());
-    
+
     // Sum from 0 to just before the bin outside of the range.
     if (ixmin == 0) {
       return ROOT::Math::poisson_cdf(ixmax - 1, mean);

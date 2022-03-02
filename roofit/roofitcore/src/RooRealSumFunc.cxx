@@ -60,7 +60,7 @@ ClassImp(RooRealSumFunc);
 Bool_t RooRealSumFunc::_doFloorGlobal = kFALSE;
 
 //_____________________________________________________________________________
-RooRealSumFunc::RooRealSumFunc()
+RooRealSumFunc::RooRealSumFunc() : _normIntMgr(this, 10)
 {
    // Default constructor
    // coverity[UNINIT_CTOR]
@@ -149,10 +149,10 @@ RooRealSumFunc::RooRealSumFunc(const char *name, const char *title, const RooArg
       _coefList.add(*coef);
    }
 
-   func = (RooAbsReal *)funcIter->Next();
+   func = (RooAbsArg *)funcIter->Next();
    if (func) {
       if (!dynamic_cast<RooAbsReal *>(func)) {
-         coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << GetName() << ") last func " << coef->GetName()
+         coutE(InputArguments) << "RooRealSumFunc::RooRealSumFunc(" << GetName() << ") last func " << func->GetName()
                                << " is not of type RooAbsReal, fatal error" << endl;
          assert(0);
       }
@@ -242,6 +242,37 @@ Double_t RooRealSumFunc::evaluate() const
 
    return value;
 }
+
+
+void RooRealSumFunc::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const {
+
+  // To evaluate this RooRealSumFunc, we have to undo the normalization of the
+  // pdf servers by convention. TODO: find a less hacky solution for this,
+  // which should be easy once the integrals are treated like separate nodes in
+  // the computation queue of the RooFit driver.
+
+  // remember copying a data map is cheap, because it only contains non-owning spans
+  RooBatchCompute::DataMap dataMapCopy = dataMap;
+
+  std::vector<std::vector<double>> buffers;
+
+  for(RooAbsArg const* func : _funcList) {
+      if(auto pdf = dynamic_cast<RooAbsPdf const*>(func)) {
+          auto pdfSpan = dataMapCopy.at(pdf);
+          std::size_t nEntries = pdfSpan.size();
+          auto integralSpan = dataMapCopy.at(pdf->getCachedLastIntegral());
+          buffers.emplace_back(nEntries);
+          auto& buffer = buffers.back();
+          for(std::size_t i = 0; i < nEntries; ++i) {
+            buffer[i] = pdfSpan[i] * integralSpan[integralSpan.size() == 1 ? 0 : i];
+          }
+          dataMapCopy[pdf] = RooSpan<const double>{buffer.begin(), buffer.end()};
+      }
+  }
+
+  RooAbsReal::computeBatch(stream, output, nEvents, dataMapCopy);
+}
+
 
 //_____________________________________________________________________________
 Bool_t RooRealSumFunc::checkObservables(const RooArgSet *nset) const
@@ -356,10 +387,10 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
       // "RooRealSumFunc("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>")
       // << ": reviving cache "<< endl;
       std::unique_ptr<RooArgSet> vars(getParameters(RooArgSet()));
-      std::unique_ptr<RooArgSet> iset(_normIntMgr.nameSet2ByIndex(code - 1)->select(*vars));
-      std::unique_ptr<RooArgSet> nset(_normIntMgr.nameSet1ByIndex(code - 1)->select(*vars));
+      RooArgSet iset = _normIntMgr.selectFromSet2(*vars, code - 1);
+      RooArgSet nset = _normIntMgr.selectFromSet1(*vars, code - 1);
       RooArgSet dummy;
-      Int_t code2 = getAnalyticalIntegralWN(*iset, dummy, nset.get(), rangeName);
+      Int_t code2 = getAnalyticalIntegralWN(iset, dummy, &nset, rangeName);
       assert(code == code2); // must have revived the right (sterilized) slot...
       (void)code2;
       cache = (CacheElem *)_normIntMgr.getObjByIndex(code - 1);

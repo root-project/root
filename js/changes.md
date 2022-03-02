@@ -1,11 +1,108 @@
 # JSROOT changelog
 
 ## Changes in dev
+1. Fully remove jQuery and jQueryUI from JSROOT, replace by plane HTML/JavaScript
+2. Provide bootstrap-based menu - optionally
+3. Make "col" default draw option for TH2 in default JSROOT GUI
+4. Upgrade d3.js to 7.3.0, take only used components: "d3-selection", "d3-drag", "d3-scale", "d3-time-format", "d3-color", "d3-transition"
+5. Upgrade three.js to r136, reduce number of components used in jsroot
+6. Implement proper drawing of TEllipse
+7. Support new TGraphMultiErrors class
+8. Implement all variants of CANDLE and VIOLIN draw options (#194)
+9. Implement "cjust" draw option when drawing color palette
+10. Implement "colhz" draw option to plot horizontal color palette
+11. Implement "pads" draw option for THStack
+12. Improve drawing of TEfficiency, support 2D case
+13. Let disable TGraph dragging via JSROOT.settings.DragGraphs flag (#224)
+14. Use BigInt in I/O when 64bit integer can not be stored as plain Number
+15. In TF1/TF2 always try to use formula, only when fail - apply saved buffer when exist
+16. Add proper support of "Symbols" and "Wingdings" fonts
+17. Add many standard functions to math like "crystalball_pdf", "gaussian_pdf", "tdistribution_pdf"
+18. Correctly display extra data from TGraphQQ
+19. Remove "collapsible" and "tabs" layouts which were implemented with jQuery - use "flex" instead
+20. Improve flexible layout, provide context menu with cascading, tiling, selecting frames
+21. Starting from Chrome 96, allow embedding WebGL into SVG - solving problem with lego plots in canvas
+22. All internal JSROOT code rewritten as classes; one have to use class syntax to derive from it
+23. Support drawing of TGeo and TAxis3D objects inside TPad
+24. Implement "circular" and "chord" draw options for TH2
+
+
+## Changes in 6.3.4
+1. Fix bug in handling superimposing items via URL syntax
+2. Enable geometry clipping in node.js
+3. Upgrade node.js packages
+4. Let draw TGeo object inside TCanvas
+5. Let superimpose TPolyLine3D and TPolyMarker3D with TGeo drawing
+6. Fix plain #sum and #int parsing in TLatex
+7. Fix ticks position for axes with labels
+
+
+## Changes in 6.3.3
+1. Fix TEfficiency drawing
+2. Provide TPadPainter.divide method
+3. Fix browsing remote file via THttpServer
+4. Fix lego draw update while zooming
+
+
+## Changes in 6.3.2
+1. Fix bug in TH1 drawing when minimum or/and maximum was configured for histogram
+
+
+## Changes in 6.3.1
+1. Fix bug with col draw option in TH2/RH2
+
+
+## Changes in 6.3.0
+1. Fully rewrite TLatex parsing, use svg elements instead of plain text/tspan
+2. Make TLatex reliably working in node.js, does not depend from availability of canvas component
+3. Many optimizations to produce smaller (and faster) SVG output
+4. Provide x3dscNNN and y3dscNNN draw option for histogram to resize x/y axis in 3D plots
+5. Provide "Find label" command in TAxis context menu to zoom into bin region
+6. Allows to use JSROOT.define() in external scripts
+7. Provide JSROOT.Painter.setDefaultDrawOpt() to change class default draw option
+8. Provide example of custom entries in histogram context menu
+9. Provide alternative external location for zstd-codec, let use zstd even when not found locally
+10. Let skip HEAD requests when reading files, adding "^" symbol to file name (#223)
+11. Show long histogram names in stats box when possible
+12. Fix logic how "ndiv" parameter of TAxis is handled, showing really the configured number of ticks
+13. Fix problem with curved TGraph drawings (#218)
+14. Fix problems with TGraph drawing updates
+
+
+## Changes in 6.2.2
+1. Fix - proper fill TH1 which drawn with line option
+2. Fix - object drawing from inspector
+3. Fix - error with filling data of TGeoTrack in "extract tracks" example
+4. Fix - error in pad items context menu
+5. Fix - assigned dropped item name only when new painter created
+
+
+## Changes in 6.2.1
+1. Fix logy and logz handling on lego plots
+2. Fix error in statistic calculations for projections
+3. Fix zstd-codec loading with minified jsroot scripts
+
+
+## Changes in 6.2.0
 1. Support fully interactive second X/Y axis for histograms, graphs, functions and spline
 2. Support X+, Y+, RX, RY draw options for TF1
 3. Remove deprecated JSRootCore.js script, one have to use JSRoot.core.js
 4. Upgrade three.js to r127
 5. Upgrade d3.js to 6.7.0
+6. Implement "nozoomx" and "nozoomy" draw options for TPad
+7. Implement "frame" draw option for TGaxis - fix position of axis relative to the frame
+8. Preserve position of TPaletteAxis, if provided with histogram; make default position like in ROOT
+9. Support basic TLatex symbols in lego plos axis title
+10. Use frame margins when create 3D lego drawings
+11. Implement "nomargins" draw option for pad/canvas
+12. Support custom mouse click/dblcklick handlers in lego plots
+13. Implement marker styles 35 - 49
+14. Let switch orthographic camera in geometry via control gui (#217)
+15. Fix drawing of custom markers on 3D, also in node.js (#205)
+
+
+## Changes in 6.1.1
+1. Fix bug in TFrame drawing, some interactive features was not properly working
 
 
 ## Changes in 6.1.0

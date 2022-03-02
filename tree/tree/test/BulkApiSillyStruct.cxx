@@ -77,6 +77,7 @@ TEST_F(BulkApiSillyStructTest, stdReadStruct)
       evF++;
       evD++;
    }
+   delete hfile;
 }
 
 TEST_F(BulkApiSillyStructTest, stdReadSplitBranch)
@@ -99,6 +100,7 @@ TEST_F(BulkApiSillyStructTest, stdReadSplitBranch)
       evF++;
       evD++;
    }
+   delete hfile;
 }
 
 TEST_F(BulkApiSillyStructTest, fastRead)

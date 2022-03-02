@@ -54,7 +54,7 @@ RooTFoamBinding::RooTFoamBinding(const RooAbsReal& pdf, const RooArgSet& observa
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooTFoamBinding::~RooTFoamBinding() 
+RooTFoamBinding::~RooTFoamBinding()
 {
   delete _binding ;
 }
@@ -63,13 +63,13 @@ RooTFoamBinding::~RooTFoamBinding()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooTFoamBinding::Density(Int_t ndim, Double_t *xvec) 
+Double_t RooTFoamBinding::Density(Int_t ndim, Double_t *xvec)
 {
   Double_t x[10] ;
-  for (int i=0 ; i<ndim ; i++) {    
+  for (int i=0 ; i<ndim ; i++) {
     x[i] = xvec[i]*(_binding->getMaxLimit(i)-_binding->getMinLimit(i)) + _binding->getMinLimit(i) ;
     //cout << "RTFB::Density xvec[" << i << "] = " << xvec[i] << " x[i] = " << x[i] << endl ;
   }
-  Double_t ret = (*_binding)(x) ;  
+  Double_t ret = (*_binding)(x) ;
   return ret<0?0:ret ;
 }

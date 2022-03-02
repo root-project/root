@@ -16,12 +16,14 @@
 #ifndef ROOT7_RPageStorageDaos
 #define ROOT7_RPageStorageDaos
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RNTupleMetrics.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <array>
+#include <atomic>
 #include <cstdio>
 #include <memory>
 #include <string>
@@ -45,7 +47,8 @@ class RDaosContainer;
 \ingroup NTuple
 \brief Entry point for an RNTuple in a DAOS container. It encodes essential
 information to read the ntuple; currently, it contains (un)compressed size of
-the header/footer blobs.
+the header/footer blobs and the object class for user data OIDs.
+The length of a serialized anchor cannot be greater than the value returned by the `GetSize` function.
 */
 // clang-format on
 struct RDaosNTupleAnchor {
@@ -59,20 +62,22 @@ struct RDaosNTupleAnchor {
    std::uint32_t fNBytesFooter = 0;
    /// The size of the uncompressed ntuple footer
    std::uint32_t fLenFooter = 0;
+   /// The object class for user data OIDs, e.g. `SX`
+   std::string fObjClass{};
 
    bool operator ==(const RDaosNTupleAnchor &other) const {
       return fVersion == other.fVersion &&
          fNBytesHeader == other.fNBytesHeader &&
          fLenHeader == other.fLenHeader &&
          fNBytesFooter == other.fNBytesFooter &&
-         fLenFooter == other.fLenFooter;
+         fLenFooter == other.fLenFooter &&
+         fObjClass == other.fObjClass;
    }
 
    std::uint32_t Serialize(void *buffer) const;
-   std::uint32_t Deserialize(const void *buffer);
+   RResult<std::uint32_t> Deserialize(const void *buffer, std::uint32_t bufSize);
 
-   static std::uint32_t GetSize()
-   { return RDaosNTupleAnchor().Serialize(nullptr); }
+   static std::uint32_t GetSize();
 };
 
 // clang-format off
@@ -86,7 +91,6 @@ Currently, an object is allocated for each page + 3 additional objects (anchor/h
 // clang-format on
 class RPageSinkDaos : public RPageSink {
 private:
-   RNTupleMetrics fMetrics;
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    /// \brief Underlying DAOS container. An internal `std::shared_ptr` keep the pool connection alive.
@@ -94,18 +98,22 @@ private:
    /// (which calls `daos_cont_close()`; the destructor for the `std::shared_ptr<RDaosPool>` is invoked
    /// after (which calls `daos_pool_disconect()`).
    std::unique_ptr<RDaosContainer> fDaosContainer;
+   /// OID for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
+   std::atomic<std::uint64_t> fOid{0};
    /// \brief A URI to a DAOS pool of the form 'daos://pool-uuid:svc_replicas/container-uuid'
    std::string fURI;
+   /// Tracks the number of bytes committed to the current cluster
+   std::uint64_t fNBytesCurrentCluster{0};
 
    RDaosNTupleAnchor fNTupleAnchor;
 
 protected:
-   void CreateImpl(const RNTupleModel &model) final;
-   RClusterDescriptor::RLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
-   RClusterDescriptor::RLocator CommitSealedPageImpl(DescriptorId_t columnId,
-                                                     const RPageStorage::RSealedPage &sealedPage) final;
-   RClusterDescriptor::RLocator CommitClusterImpl(NTupleSize_t nEntries) final;
-   void CommitDatasetImpl() final;
+   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
+   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
+   RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) final;
+   std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
+   RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
+   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
    void WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
    void WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);
    void WriteNTupleAnchor();
@@ -114,10 +122,8 @@ public:
    RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const RNTupleWriteOptions &options);
    virtual ~RPageSinkDaos();
 
-   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements = 0) final;
+   RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
 };
 
 
@@ -144,24 +150,6 @@ public:
 // clang-format on
 class RPageSourceDaos : public RPageSource {
 private:
-   /// I/O performance counters that get registered in fMetrics
-   struct RCounters {
-      RNTupleAtomicCounter &fNReadV;
-      RNTupleAtomicCounter &fNRead;
-      RNTupleAtomicCounter &fSzReadPayload;
-      RNTupleAtomicCounter &fSzUnzip;
-      RNTupleAtomicCounter &fNClusterLoaded;
-      RNTupleAtomicCounter &fNPageLoaded;
-      RNTupleAtomicCounter &fNPagePopulated;
-      RNTupleAtomicCounter &fTimeWallRead;
-      RNTupleAtomicCounter &fTimeWallUnzip;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuRead;
-      RNTupleTickCounter<RNTupleAtomicCounter> &fTimeCpuUnzip;
-   };
-   std::unique_ptr<RCounters> fCounters;
-   /// Wraps the I/O counters and is observed by the RNTupleReader metrics
-   RNTupleMetrics fMetrics;
-
    /// Populated pages might be shared; the memory buffer is managed by the RPageAllocatorDaos
    std::unique_ptr<RPageAllocatorDaos> fPageAllocator;
    // TODO: the page pool should probably be handled by the base class.
@@ -197,9 +185,10 @@ public:
    void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex,
                        RSealedPage &sealedPage) final;
 
-   std::unique_ptr<RCluster> LoadCluster(DescriptorId_t clusterId, const ColumnSet_t &columns) final;
+   std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
+   /// Return the object class used for user data OIDs in this ntuple.
+   std::string GetObjectClass() const;
 };
 
 

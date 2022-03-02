@@ -10,15 +10,13 @@
 /// \date May 2018
 /// \author Danilo Piparo
 
-using namespace ROOT::VecOps;
-
 void vo002_VectorCalculations()
 {
 
    // Operations on RVec instances are made to be *fast* (vectorisation is exploited)
-   // and easy to use.
-   RVec<float> v1{1., 2., 3.};
-   RVec<float> v2{4., 5., 6.};
+   // and easy to use. RVecF, RVecD, RVecI, ..., are handy aliases for RVec<float>, RVec<double>, RVec<int>, ...
+   ROOT::RVecF v1{1., 2., 3.};
+   ROOT::RVecF v2{4., 5., 6.};
 
    // Arithmetic operations are to be intended on pairs of elements with identical index
    auto v_sum = v1 + v2;

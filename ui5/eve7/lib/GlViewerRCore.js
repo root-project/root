@@ -139,7 +139,7 @@ sap.ui.define([
          let light_class_3d = RC.PointLight; // RC.DirectionalLight; // RC.PointLight;
          let light_class_2d = RC.DirectionalLight;
 
-         if (this.controller.kind === "3D")
+         if (this.controller.isEveCameraPerspective())
          {
             this.camera = new RC.PerspectiveCamera(75, w / h, 1, 5000);
             this.camera.position = new RC.Vector3(-500, 0, 0);
@@ -225,14 +225,10 @@ sap.ui.define([
          this.ttip.appendChild(this.ttip_text);
          dome.appendChild(this.ttip);
 
-         this.controls = new RC.ReveCameraControls(this.camera, this.get_view().getDomRef());
-
-         this.controls.addEventListener('change', this.render.bind(this));
-
          // Setup some event pre-handlers
          var glc = this;
 
-         dome.addEventListener('mousemove', function(event) {
+         dome.addEventListener('pointermove', function(event) {
 
             if (event.movementX == 0 && event.movementY == 0)
                return;
@@ -247,14 +243,14 @@ sap.ui.define([
             }
          });
 
-         dome.addEventListener('mouseleave', function(event) {
+         dome.addEventListener('pointerleave', function(event) {
 
             glc.removeMouseMoveTimeout();
             glc.clearHighlight();
             glc.removeMouseupListener();
          });
 
-         dome.addEventListener('mousedown', function(event) {
+         dome.addEventListener('pointerdown', function(event) {
 
             glc.removeMouseMoveTimeout();
             if (event.buttons != 1 && event.buttons != 2)  glc.clearHighlight();
@@ -264,22 +260,19 @@ sap.ui.define([
 
             glc.mouseup_listener = function(event2)
             {
-               this.removeEventListener('mouseup', glc.mouseup_listener);
+               this.removeEventListener('pointerup', glc.mouseup_listener);
 
-               if (event.buttons == 1) // Selection on mouseup without move
+               if (event2.buttons == 1) // Selection on mouseup without move
                {
                   glc.handleMouseSelect(event2);
                }
                else if (event.buttons == 2) // Context menu on delay without move
                {
-                  // Was needed for "on press with timeout"
-                  // glc.controls.resetMouseDown(event);
-
-                  JSROOT.Painter.createMenu(glc, glc.showContextMenu.bind(glc, event2));
+                  JSROOT.Painter.createMenu(event2, glc).then(menu => { glc.showContextMenu(event2, menu) });
                }
             }
 
-            this.addEventListener('mouseup', glc.mouseup_listener);
+            this.addEventListener('pointerup', glc.mouseup_listener);
          });
 
          dome.addEventListener('dblclick', function(event) {
@@ -344,6 +337,10 @@ sap.ui.define([
             }
          });
 
+         // Was RC.ReveCameraControls
+         this.controls = new THREE.OrbitControls(this.camera, this.get_view().getDomRef());
+         this.controls.addEventListener('change', this.render.bind(this));
+
          // This will also call render().
          this.resetRenderer();
       },
@@ -399,7 +396,8 @@ sap.ui.define([
             this.camera._bottom = -ey;
             this.camera.updateProjectionMatrix();
 
-            this.controls.resetOrthoPanZoom();
+            if (typeof this.controls.resetOrthoPanZoom == 'function')
+               this.controls.resetOrthoPanZoom();
 
             this.controls.screenSpacePanning = true;
             this.controls.enableRotate = false;
@@ -609,7 +607,7 @@ sap.ui.define([
       {
          if (this.mouseup_listener)
          {
-            this.get_view().getDomRef().removeEventListener('mouseup', this.mouseup_listener);
+            this.get_view().getDomRef().removeEventListener('pointerup', this.mouseup_listener);
             this.mouseup_listener = 0;
          }
       },

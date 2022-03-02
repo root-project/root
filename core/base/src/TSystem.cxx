@@ -191,7 +191,8 @@ Bool_t TSystem::Init()
    fSignalHandler       = new TOrdCollection;
    fFileHandler         = new TOrdCollection;
    fStdExceptionHandler = new TOrdCollection;
-   fTimers              = new TOrdCollection;
+   fTimers              = new TList;
+   fTimers->UseRWLock();
 
    fBuildArch     = BUILD_ARCH;
    fBuildCompiler = COMPILER;
@@ -497,7 +498,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 {
    if (!fTimers) return -1;
 
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
+   TListIter it(fTimers);
    TTimer *t, *to = nullptr;
    Long64_t tt, tnow = Now();
    Long_t   timeout = -1;
@@ -2659,7 +2660,7 @@ static void R__WriteDependencyFile(const TString & build_loc, const TString &dep
    }
 #endif
    {
-     const char *dictHeaders[] = { "RVersion.h", "RConfig.h", "TClass.h",
+     const char *dictHeaders[] = { "RVersion.h", "ROOT/RConfig.hxx", "TClass.h",
        "TDictAttributeMap.h","TInterpreter.h","TROOT.h","TBuffer.h",
        "TMemberInspector.h","TError.h","RtypesImp.h","TIsAProxy.h",
        "TFileMergeInfo.h","TCollectionProxyInfo.h"};

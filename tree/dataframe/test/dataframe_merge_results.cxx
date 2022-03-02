@@ -129,6 +129,33 @@ TEST(RDataFrameMergeResults, MergeHisto2D)
    EXPECT_DOUBLE_EQ(mh.GetMean(), 49.5);
 }
 
+TEST(RDataFrameMergeResults, MergeHistoND)
+{
+   ROOT::RDataFrame df{100};
+
+   auto col1 = df.Define("x0", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col2 = col1.Define("x1", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col3 = col2.Define("x2", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col4 = col3.Define("x3", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+
+   int nbins[4] = {10, 10, 10, 10};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {100., 100., 100., 100.};
+   auto hist1 =
+      col4.HistoND<double, double, double, double>({"name", "title", 4, nbins, xmin, xmax}, {"x0", "x1", "x2", "x3"});
+   auto hist2 =
+      col4.HistoND<double, double, double, double>({"name", "title", 4, nbins, xmin, xmax}, {"x0", "x1", "x2", "x3"});
+
+   auto mh1 = GetMergeableValue(hist1);
+   auto mh2 = GetMergeableValue(hist2);
+
+   auto mergedptr = MergeValues(std::move(mh1), std::move(mh2));
+
+   const auto &mh = mergedptr->GetValue();
+
+   EXPECT_EQ(mh.GetEntries(), 200);
+}
+
 TEST(RDataFrameMergeResults, MergeProfile1D)
 {
    ROOT::RDataFrame df{100};

@@ -13,6 +13,8 @@
 /** \class TSpectrum2Painter
     \ingroup Spectrumpainter
 
+\legacy{TSpectrum2Painter}
+
 Two-dimensional graphics function
 
 TSpectrum2Painter is a set of graphical functions developed by Miroslav

@@ -40,7 +40,7 @@ ClassImp(RooInt);
 /// greater or lesser than self. Return zero if other
 /// object is not a RooInt
 
-Int_t RooInt::Compare(const TObject* other) const 
+Int_t RooInt::Compare(const TObject* other) const
 {
   const RooInt* otherD = dynamic_cast<const RooInt*>(other) ;
   if (!otherD) return 0 ;

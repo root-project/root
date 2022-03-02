@@ -29,8 +29,8 @@ public:
               RooAbsReal& _width, RooAbsReal& _sigma,
               Bool_t doFast = kFALSE);
   RooVoigtian(const RooVoigtian& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooVoigtian(*this,newname); }
-  inline virtual ~RooVoigtian() { }
+  TObject* clone(const char* newname) const override { return new RooVoigtian(*this,newname); }
+  inline ~RooVoigtian() override { }
 
 // These methods allow the user to select the fast evaluation
 // of the complex error function using look-up tables
@@ -46,13 +46,14 @@ protected:
   RooRealProxy width ;
   RooRealProxy sigma ;
 
-  Double_t evaluate() const ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override ;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
 
   Bool_t _doFast;
-  ClassDef(RooVoigtian,2) // Voigtian PDF (Gauss (x) BreitWigner)
+  ClassDefOverride(RooVoigtian,2) // Voigtian PDF (Gauss (x) BreitWigner)
 };
 
 #endif

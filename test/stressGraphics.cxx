@@ -515,23 +515,20 @@ Int_t AnalysePS(const TString &filename)
    Bool_t counting = kFALSE;
    Int_t count = 0;
 
-   FILE *fp;
-   Int_t status;
-   if ((fp=fopen(filename.Data(), "r"))==NULL) {
+   char *line = new char[251];
+   TString l;
+   std::ifstream in(filename.Data());
+   if (!in.is_open()) {
       printf("ERROR1 : File can not open !..\n");
       return 0;
    }
-
-   char *line = new char[251];
-   TString l;
-   while((status=fscanf(fp, "%s", line)) != EOF) {
+   while (in >> line) {
       l = line;
       if (l.Contains("%!PS-Adobe"))  counting = kFALSE;
       if (l.Contains("%%EndProlog")) counting = kTRUE;
       if (counting) count = count+l.Length();
    }
    if (gVerbose==1) printf(">>>>>>>>> Number of characters found in %s: %d\n",filename.Data(),count);
-   fclose(fp);
    delete [] line;
    return count;
 }

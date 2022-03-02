@@ -43,10 +43,11 @@ one single I/O buffer or to make several branches.
 Making several branches is particularly interesting in the data analysis phase,
 when it is desirable to have a high reading rate and not all columns are equally interesting
 
-## Table of contents:
-- [Creating a TTree](\ref creatingattree)
-- [Add a Column of Fundamental Types and Arrays thereof](\ref addcolumnoffundamentaltypes)
-- [Add a Column of a STL Collection instances](\ref addingacolumnofstl)
+\anchor creatingattreetoc
+## Create a TTree to store columnar data
+- [Construct a TTree](\ref creatingattree)
+- [Add a column of Fundamental Types and Arrays thereof](\ref addcolumnoffundamentaltypes)
+- [Add a column of a STL Collection instances](\ref addingacolumnofstl)
 - [Add a column holding an object](\ref addingacolumnofobjs)
 - [Add a column holding a TObjectArray](\ref addingacolumnofobjs)
 - [Fill the tree](\ref fillthetree)
@@ -54,7 +55,7 @@ when it is desirable to have a high reading rate and not all columns are equally
 - [An Example](\ref fullexample)
 
 \anchor creatingattree
-## Creating a TTree
+## Construct a TTree
 
 ~~~ {.cpp}
     TTree tree(name, title)
@@ -69,7 +70,7 @@ structures.
 In the following, the details about the creation of different types of branches are given.
 
 \anchor addcolumnoffundamentaltypes
-## Add a column (`branch`) of fundamental types and arrays thereof
+## Add a column ("branch") holding fundamental types and arrays thereof
 This strategy works also for lists of variables, e.g. to describe simple structures.
 It is strongly recommended to persistify those as objects rather than lists of leaves.
 
@@ -113,7 +114,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
 - If the address points to a single numerical variable, the leaflist is optional:
 ~~~ {.cpp}
   int value;
-  `tree->Branch(branchname, &value);`
+  tree->Branch(branchname, &value);
 ~~~
 - If the address points to more than one numerical variable, we strongly recommend
   that the variable be sorted in decreasing order of size.  Any other order will
@@ -130,7 +131,7 @@ It is strongly recommended to persistify those as objects rather than lists of l
   18 bits were sufficient, the syntax would become: `myArr[myArrSize]/d[0,twopi,18]`
 
 \anchor addingacolumnofstl
-## Adding a column of STL collection instances (e.g. std::vector, std::list, std::unordered_map)
+## Adding a column holding STL collection instances (e.g. std::vector, std::list, std::unordered_map)
 
 ~~~ {.cpp}
     auto branch = tree.Branch( branchname, STLcollection, buffsize, splitlevel);
@@ -151,7 +152,7 @@ redefine the branch address before filling the branch again.
 This is done via the TBranch::SetAddress member function.
 
 \anchor addingacolumnofobjs
-## Add a column of objects
+## Add a column holding objects
 
 ~~~ {.cpp}
     MyClass object;
@@ -205,7 +206,7 @@ by TTree::Branch if the pointer p_object is zero, the object will <b>not</b>
 be deleted when the TTree is deleted.
 
 \anchor addingacolumnoftclonesarray
-## Add a column of TClonesArray instances
+## Add a column holding TClonesArray instances
 
 *It is recommended to use STL containers instead of TClonesArrays*.
 
@@ -219,7 +220,7 @@ this function will create one subbranch for each data member of
 the object TTrack.
 
 \anchor fillthetree
-## Fill the Tree:
+## Fill the Tree
 
 A TTree instance is filled with the invocation of the TTree::Fill method:
 ~~~ {.cpp}
@@ -938,6 +939,12 @@ TTree::~TTree()
       TFile *file = fDirectory->GetFile();
       MoveReadCache(file,0);
    }
+
+   // Remove the TTree from any list (linked to to the list of Cleanups) to avoid the unnecessary call to
+   // this RecursiveRemove while we delete our content.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+   ResetBit(kMustCleanup); // Don't redo it.
+
    // We don't own the leaves in fLeaves, the branches do.
    fLeaves.Clear();
    // I'm ready to destroy any objects allocated by
@@ -960,6 +967,11 @@ TTree::~TTree()
    // Get rid of our branches, note that this will also release
    // any memory allocated by TBranchElement::SetAddress().
    fBranches.Delete();
+
+   // The TBranch destructor is using fDirectory to detect whether it
+   // owns the TFile that contains its data (See TBranch::~TBranch)
+   fDirectory = nullptr;
+
    // FIXME: We must consider what to do with the reset of these if we are a clone.
    delete fPlayer;
    fPlayer = 0;
@@ -1012,9 +1024,6 @@ TTree::~TTree()
    fClusterRangeEnd = 0;
    delete [] fClusterSize;
    fClusterSize = 0;
-   // Must be done after the destruction of friends.
-   // Note: We do *not* own our directory.
-   fDirectory = 0;
 
    if (fTransientBuffer) {
       delete fTransientBuffer;
@@ -2776,7 +2785,7 @@ TFile* TTree::ChangeFile(TFile* file)
       file->Remove(obj);
       // Histogram: just change the directory.
       if (obj->InheritsFrom("TH1")) {
-         gROOT->ProcessLine(TString::Format("((%s*)0x%lx)->SetDirectory((TDirectory*)0x%lx);", obj->ClassName(), (Long_t) obj, (Long_t) newfile));
+         gROOT->ProcessLine(TString::Format("((%s*)0x%zx)->SetDirectory((TDirectory*)0x%zx);", obj->ClassName(), (size_t) obj, (size_t) newfile));
          continue;
       }
       // Tree: must save all trees in the old file, reset them.
@@ -3256,8 +3265,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set branch addresses of passed tree equal to ours.
-/// If undo is true, reset the branch address instead of copying them.
-/// This insures 'separation' of a cloned tree from its original
+/// If undo is true, reset the branch addresses instead of copying them.
+/// This ensures 'separation' of a cloned tree from its original.
 
 void TTree::CopyAddresses(TTree* tree, Bool_t undo)
 {
@@ -3361,6 +3370,13 @@ void TTree::CopyAddresses(TTree* tree, Bool_t undo)
             tree->SetBranchAddress(branch->GetName(), (void*) branch->GetAddress());
             TBranch* br = tree->GetBranch(branch->GetName());
             if (br) {
+               if (br->IsA() != branch->IsA()) {
+                  Error(
+                     "CopyAddresses",
+                     "Branch kind mismatch between input tree '%s' and output tree '%s' for branch '%s': '%s' vs '%s'",
+                     tree->GetName(), br->GetTree()->GetName(), br->GetName(), branch->IsA()->GetName(),
+                     br->IsA()->GetName());
+               }
                // The copy does not own any object allocated by SetAddress().
                // FIXME: We do too much here, br may not be a top-level branch.
                if (br->InheritsFrom(TBranchElement::Class())) {
@@ -4484,7 +4500,6 @@ void TTree::DropBaskets()
 void TTree::DropBuffers(Int_t)
 {
    // Be careful not to remove current read/write buffers.
-   Int_t ndrop = 0;
    Int_t nleaves = fLeaves.GetEntriesFast();
    for (Int_t i = 0; i < nleaves; ++i)  {
       TLeaf* leaf = (TLeaf*) fLeaves.UncheckedAt(i);
@@ -4496,7 +4511,7 @@ void TTree::DropBuffers(Int_t)
          }
          TBasket* basket = (TBasket*)branch->GetListOfBaskets()->UncheckedAt(j);
          if (basket) {
-            ndrop += basket->DropBuffers();
+            basket->DropBuffers();
             if (fTotalBuffers < fMaxVirtualSize) {
                return;
             }
@@ -5351,7 +5366,7 @@ Int_t TTree::GetBranchStyle()
 /// A cache sizing factor is taken from the configuration. If this yields zero
 /// and withDefault is true the historical algorithm for default size is used.
 
-Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
+Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
 {
    const char *stcs;
    Double_t cacheFactor = 0.0;
@@ -5368,9 +5383,17 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
 
    Long64_t cacheSize = 0;
 
-   if (fAutoFlush < 0) cacheSize = Long64_t(-cacheFactor*fAutoFlush);
-   else if (fAutoFlush == 0) cacheSize = 0;
-   else cacheSize = Long64_t(cacheFactor*1.5*fAutoFlush*GetZipBytes()/(fEntries+1));
+   if (fAutoFlush < 0) {
+      cacheSize = Long64_t(-cacheFactor * fAutoFlush);
+   } else if (fAutoFlush == 0) {
+      const auto medianClusterSize = GetMedianClusterSize();
+      if (medianClusterSize > 0)
+         cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+      else
+         cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
+   } else {
+      cacheSize = Long64_t(cacheFactor * 1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
+   }
 
    if (cacheSize >= (INT_MAX / 4)) {
       cacheSize = INT_MAX / 4;
@@ -5381,9 +5404,17 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ ) const
    }
 
    if (cacheSize == 0 && withDefault) {
-      if (fAutoFlush < 0) cacheSize = -fAutoFlush;
-      else if (fAutoFlush == 0) cacheSize = 0;
-      else cacheSize = Long64_t(1.5*fAutoFlush*GetZipBytes()/(fEntries+1));
+      if (fAutoFlush < 0) {
+         cacheSize = -fAutoFlush;
+      } else if (fAutoFlush == 0) {
+         const auto medianClusterSize = GetMedianClusterSize();
+         if (medianClusterSize > 0)
+            cacheSize = Long64_t(1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+         else
+            cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
+      } else {
+         cacheSize = Long64_t(1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
+      }
    }
 
    return cacheSize;
@@ -5574,7 +5605,6 @@ Long64_t TTree::GetEntriesFriend() const
 
 Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 {
-
    // We already have been visited while recursively looking
    // through the friends tree, let return
    if (kGetEntry & fFriendLockStatus) return 0;
@@ -6144,10 +6174,10 @@ TLeaf* TTree::GetLeaf(const char* branchname, const char *leafname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to first leaf named \param[name] in any branch of this
+/// Return pointer to first leaf named "name" in any branch of this
 /// tree or its friend trees.
 ///
-/// \param[name] may be in the form 'branch/leaf'
+/// \param[in] name may be in the form 'branch/leaf'
 ///
 
 TLeaf* TTree::GetLeaf(const char *name)
@@ -7814,24 +7844,28 @@ Long64_t TTree::ReadStream(std::istream& inputStream, const char *branchDescript
 void TTree::RecursiveRemove(TObject *obj)
 {
    if (obj == fEventList) {
-      fEventList = 0;
+      fEventList = nullptr;
    }
    if (obj == fEntryList) {
-      fEntryList = 0;
+      fEntryList = nullptr;
    }
    if (fUserInfo) {
       fUserInfo->RecursiveRemove(obj);
    }
    if (fPlayer == obj) {
-      fPlayer = 0;
+      fPlayer = nullptr;
    }
    if (fTreeIndex == obj) {
-      fTreeIndex = 0;
+      fTreeIndex = nullptr;
    }
-   if (fAliases) {
+   if (fAliases == obj) {
+      fAliases = nullptr;
+   } else if (fAliases) {
       fAliases->RecursiveRemove(obj);
    }
-   if (fFriends) {
+   if (fFriends == obj) {
+      fFriends = nullptr;
+   } else if (fFriends) {
       fFriends->RecursiveRemove(obj);
    }
 }
@@ -8212,6 +8246,40 @@ void TTree::MarkEventCluster()
         fClusterSize[fNClusterRange] = fClusterRangeEnd[fNClusterRange] - fClusterRangeEnd[fNClusterRange-1];
     }
     ++fNClusterRange;
+}
+
+/// Estimate the median cluster size for the TTree.
+/// This value provides e.g. a reasonable cache size default if other heuristics fail.
+/// Clusters with size 0 and the very last cluster range, that might not have been committed to fClusterSize yet,
+/// are ignored for the purposes of the calculation.
+Long64_t TTree::GetMedianClusterSize()
+{
+   std::vector<Long64_t> clusterSizesPerRange;
+   clusterSizesPerRange.reserve(fNClusterRange);
+
+   // We ignore cluster sizes of 0 for the purposes of this function.
+   // We also ignore the very last cluster range which might not have been committed to fClusterSize.
+   std::copy_if(fClusterSize, fClusterSize + fNClusterRange, std::back_inserter(clusterSizesPerRange),
+                [](Long64_t size) { return size != 0; });
+
+   std::vector<double> nClustersInRange; // we need to store doubles because of the signature of TMath::Median
+   nClustersInRange.reserve(clusterSizesPerRange.size());
+
+   auto clusterRangeStart = 0ll;
+   for (int i = 0; i < fNClusterRange; ++i) {
+      const auto size = fClusterSize[i];
+      R__ASSERT(size >= 0);
+      if (fClusterSize[i] == 0)
+         continue;
+      const auto nClusters = (1 + fClusterRangeEnd[i] - clusterRangeStart) / fClusterSize[i];
+      nClustersInRange.emplace_back(nClusters);
+      clusterRangeStart = fClusterRangeEnd[i] + 1;
+   }
+
+   R__ASSERT(nClustersInRange.size() == clusterSizesPerRange.size());
+   const auto medianClusterSize =
+      TMath::Median(nClustersInRange.size(), clusterSizesPerRange.data(), nClustersInRange.data());
+   return medianClusterSize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

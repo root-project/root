@@ -27,12 +27,13 @@ A TTreeCache which exploits parallelized decompression of its own content.
 #include "TMath.h"
 #include "TROOT.h"
 #include "TMutex.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TTaskGroup.hxx"
 #endif
+
+#include <memory>
 
 extern "C" void R__unzip(Int_t *nin, UChar_t *bufin, Int_t *lout, char *bufout, Int_t *nout);
 extern "C" int R__unzip_header(Int_t *nin, UChar_t *bufin, Int_t *lout);

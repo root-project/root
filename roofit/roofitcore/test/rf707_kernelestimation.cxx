@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'SPECIAL PDFS' RooFit tutorial macro #707
-// 
+//
 // Using non-parametric (multi-dimensional) kernel estimation p.d.f.s
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -29,11 +29,11 @@ using namespace RooFit ;
 // Elementary operations on a gaussian PDF
 class TestBasic707 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic707(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Kernel estimation p.d.f.s",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   l o w   s t a t s   1 - D   d a t a s e t 
+  // C r e a t e   l o w   s t a t s   1 - D   d a t a s e t
   // -------------------------------------------------------
 
   // Create a toy pdf for sampling
@@ -66,18 +66,18 @@ public:
   // Plot kernel estimation pdfs with and without mirroring over data
   RooPlot* frame = x.frame(Title("Adaptive kernel estimation pdf with and w/o mirroring"),Bins(20)) ;
   data1->plotOn(frame) ;
-  kest1.plotOn(frame) ;    
-  kest2.plotOn(frame,LineStyle(kDashed),LineColor(kRed)) ;    
+  kest1.plotOn(frame) ;
+  kest2.plotOn(frame,LineStyle(kDashed),LineColor(kRed)) ;
 
 
   // Plot kernel estimation pdfs with regular and increased bandwidth
   RooPlot* frame2 = x.frame(Title("Adaptive kernel estimation pdf with regular, increased bandwidth")) ;
-  kest1.plotOn(frame2) ;    
-  kest3.plotOn(frame2,LineColor(kMagenta)) ;    
+  kest1.plotOn(frame2) ;
+  kest3.plotOn(frame2,LineColor(kMagenta)) ;
 
 
 
-  // C r e a t e   l o w   s t a t s   2 - D   d a t a s e t 
+  // C r e a t e   l o w   s t a t s   2 - D   d a t a s e t
   // -------------------------------------------------------
 
   // Construct a 2D toy pdf for sampleing
@@ -91,7 +91,7 @@ public:
   // C r e a t e   2 - D   k e r n e l   e s t i m a t i o n   p d f
   // ---------------------------------------------------------------
 
-  // Create 2D adaptive kernel estimation pdf with mirroring 
+  // Create 2D adaptive kernel estimation pdf with mirroring
   RooNDKeysPdf kest4("kest4","kest4",RooArgSet(x,y),*data2,"am") ;
 
   // Create 2D adaptive kernel estimation pdf with mirroring and double bandwidth
@@ -105,13 +105,13 @@ public:
   TH1* hh_pdf2 = kest5.createHistogram("hh_pdf2",x,Binning(25),YVar(y,Binning(25))) ;
   hh_pdf->SetLineColor(kBlue) ;
   hh_pdf2->SetLineColor(kMagenta) ;
-    
+
   regPlot(frame,"rf707_plot1") ;
   regPlot(frame2,"rf707_plot2") ;
   regTH(hh_data,"rf707_hhdata") ;
   regTH(hh_pdf,"rf707_hhpdf") ;
   regTH(hh_pdf2,"rf707_hhpdf2") ;
-  
+
   delete data1 ;
   delete data2 ;
 

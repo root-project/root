@@ -13,13 +13,14 @@
 #define ROOSTATS_SamplingDistPlot
 
 #include "Compression.h"
-#include "RooList.h"
 #include "RooPrintable.h"
 #include "TNamed.h"
 #include "TIterator.h"
 #include "TH1F.h"
 #include "TF1.h"
 #include "TLegend.h"
+#include "TList.h"
+
 #include <vector>
 
 #include "RooStats/SamplingDistribution.h"
@@ -35,10 +36,9 @@ namespace RooStats {
     /// Constructors for SamplingDistribution
     SamplingDistPlot(Int_t nbins = 100);
     SamplingDistPlot(Int_t nbins, Double_t min, Double_t max);
-//    SamplingDistPlot(const char* name, const char* title, Int_t nbins, Double_t xmin, Double_t xmax);
 
     /// Destructor of SamplingDistribution
-    virtual ~SamplingDistPlot();
+    ~SamplingDistPlot() override;
 
     /// adds the sampling distribution and returns the scale factor
     Double_t AddSamplingDistribution(const SamplingDistribution *samplingDist, Option_t *drawOptions="NORMALIZE HIST");
@@ -55,7 +55,7 @@ namespace RooStats {
     /// set legend
     void SetLegend(TLegend* l){ fLegend = l; }
 
-    void Draw(Option_t *options=0);
+    void Draw(Option_t *options=0) override;
 
     /// Applies a predefined style if fApplyStyle is kTRUE (default).
     void ApplyDefaultStyle(void);
@@ -117,9 +117,9 @@ namespace RooStats {
     TH1F* fHist;
     TLegend *fLegend;
 
-    RooList fItems; /// holds TH1Fs only
-    RooList fOtherItems; /// other objects to be drawn like TLine etc.
-    TIterator* fIterator; /// TODO remove class variable and instantiate locally as necessary
+    TList fItems;       ///< holds TH1Fs only
+    TList fOtherItems;  ///< other objects to be drawn like TLine etc.
+    TIterator* fIterator;
     RooPlot* fRooPlot;
     Bool_t fLogXaxis;
     Bool_t fLogYaxis;
@@ -135,7 +135,7 @@ namespace RooStats {
     void addOtherObject(TObject *obj, Option_t *drawOptions=0);
     void GetAbsoluteInterval(Double_t &theMin, Double_t &theMax, Double_t &theYMax) const;
 
-    ClassDef(SamplingDistPlot,1)  /// Class containing the results of the HybridCalculator
+    ClassDefOverride(SamplingDistPlot,2)  /// Class containing the results of the HybridCalculator
   };
 }
 

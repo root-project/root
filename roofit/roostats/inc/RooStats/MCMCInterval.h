@@ -45,10 +45,10 @@ namespace RooStats {
       enum {DEFAULT_NUM_BINS = 50};
       enum IntervalType {kShortest, kTailFraction};
 
-      virtual ~MCMCInterval();
+      ~MCMCInterval() override;
 
       /// determine whether this point is in the confidence interval
-      virtual Bool_t IsInInterval(const RooArgSet& point) const;
+      Bool_t IsInInterval(const RooArgSet& point) const override;
 
       /// set the desired confidence level (see GetActualConfidenceLevel())
       /// Note: calling this function triggers the algorithm that determines
@@ -56,14 +56,14 @@ namespace RooStats {
       /// of this IntervalCalculator
       /// Also, calling this function again with a different confidence level
       /// re-triggers the calculation of the interval
-      virtual void SetConfidenceLevel(Double_t cl);
+      void SetConfidenceLevel(Double_t cl) override;
 
       /// get the desired confidence level (see GetActualConfidenceLevel())
-      virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
+      Double_t ConfidenceLevel() const override {return fConfidenceLevel;}
 
       /// return a set containing the parameters of this interval
       /// the caller owns the returned RooArgSet*
-      virtual RooArgSet* GetParameters() const;
+      RooArgSet* GetParameters() const override;
 
       /// get the cutoff bin height for being considered in the
       /// confidence interval
@@ -83,7 +83,7 @@ namespace RooStats {
       { fIsHistStrict = isHistStrict; }
 
       /// check if parameters are correct. (dummy implementation to start)
-      Bool_t CheckParameters(const RooArgSet& point) const;
+      Bool_t CheckParameters(const RooArgSet& point) const override;
 
       /// Set the parameters of interest for this interval
       /// and change other internal data members accordingly
@@ -275,54 +275,53 @@ namespace RooStats {
 
    protected:
       // data members
-      RooArgSet  fParameters; // parameters of interest for this interval
-      MarkovChain* fChain; // the markov chain
-      Double_t fConfidenceLevel; // Requested confidence level (eg. 0.95 for 95% CL)
+      RooArgSet  fParameters;     ///< parameters of interest for this interval
+      MarkovChain* fChain;        ///< the markov chain
+      Double_t fConfidenceLevel;  ///< Requested confidence level (eg. 0.95 for 95% CL)
 
-      RooDataHist* fDataHist; // the binned Markov Chain data
-      THnSparse* fSparseHist; // the binned Markov Chain data
-      Double_t fHistConfLevel; // the actual conf level determined by hist
-      Double_t fHistCutoff; // cutoff bin size to be in interval
+      RooDataHist* fDataHist;     ///< the binned Markov Chain data
+      THnSparse* fSparseHist;     ///< the binned Markov Chain data
+      Double_t fHistConfLevel;    ///< the actual conf level determined by hist
+      Double_t fHistCutoff;       ///< cutoff bin size to be in interval
 
-      RooNDKeysPdf* fKeysPdf; // the kernel estimation pdf
-      RooProduct* fProduct; // the (keysPdf * heaviside) product
-      Heaviside* fHeaviside; // the Heaviside function
-      RooDataHist* fKeysDataHist; // data hist representing product
-      RooRealVar* fCutoffVar; // cutoff variable to use for integrating keys pdf
-      Double_t fKeysConfLevel; // the actual conf level determined by keys
-      Double_t fKeysCutoff; // cutoff keys pdf value to be in interval
-      Double_t fFull; // Value of intergral of fProduct
+      RooNDKeysPdf* fKeysPdf;     ///< the kernel estimation pdf
+      RooProduct* fProduct;       ///< the (keysPdf * heaviside) product
+      Heaviside* fHeaviside;      ///< the Heaviside function
+      RooDataHist* fKeysDataHist; ///< data hist representing product
+      RooRealVar* fCutoffVar;     ///< cutoff variable to use for integrating keys pdf
+      Double_t fKeysConfLevel;    ///< the actual conf level determined by keys
+      Double_t fKeysCutoff;       ///< cutoff keys pdf value to be in interval
+      Double_t fFull;             ///< Value of intergral of fProduct
 
-      Double_t fLeftSideTF; // left side tail-fraction for interval
-      Double_t fTFConfLevel; // the actual conf level of tail-fraction interval
-      std::vector<Int_t> fVector; // vector containing the Markov chain data
-      Double_t fVecWeight; // sum of weights of all entries in fVector
-      Double_t fTFLower;   // lower limit of the tail-fraction interval
-      Double_t fTFUpper;   // upper limit of the tail-fraction interval
+      Double_t fLeftSideTF;       ///< left side tail-fraction for interval
+      Double_t fTFConfLevel;      ///< the actual conf level of tail-fraction interval
+      std::vector<Int_t> fVector; ///< vector containing the Markov chain data
+      Double_t fVecWeight;        ///< sum of weights of all entries in fVector
+      Double_t fTFLower;          ///< lower limit of the tail-fraction interval
+      Double_t fTFUpper;          ///< upper limit of the tail-fraction interval
 
-      TH1* fHist; // the binned Markov Chain data
+      TH1* fHist;                 ///< the binned Markov Chain data
 
-      Bool_t fUseKeys; // whether to use kernel estimation
-      Bool_t fUseSparseHist; // whether to use sparse hist (vs. RooDataHist)
-      Bool_t fIsHistStrict; // whether the specified confidence level is a
-                            // floor for the actual confidence level (strict),
-                            // or a ceiling (not strict) for determination by
-                            // histogram
-      Int_t fDimension; // number of variables
-      Int_t fNumBurnInSteps; // number of steps to discard as burn in, starting
-                             // from the first
-      // LM (not used) Double_t fIntervalSum; // sum of heights of bins in the interval
-      RooRealVar** fAxes; // array of pointers to RooRealVars representing
-                          // the axes of the histogram
-                          // fAxes[0] represents x-axis, [1] y, [2] z, etc
+      Bool_t fUseKeys;            ///< whether to use kernel estimation
+      Bool_t fUseSparseHist;      ///< whether to use sparse hist (vs. RooDataHist)
+      Bool_t fIsHistStrict;       ///< whether the specified confidence level is a
+                                  ///< floor for the actual confidence level (strict),
+                                  ///< or a ceiling (not strict) for determination by
+                                  ///< histogram
+      Int_t fDimension;           ///< number of variables
+      Int_t fNumBurnInSteps;      ///< number of steps to discard as burn in, starting
+                                  ///< from the first
+      RooRealVar** fAxes;         ///< array of pointers to RooRealVars representing
+                                  ///< the axes of the histogram
+                                  ///< fAxes[0] represents x-axis, [1] y, [2] z, etc
 
-      Double_t fEpsilon; // acceptable error for Keys interval determination
+      Double_t fEpsilon;          ///< acceptable error for Keys interval determination
 
-      Double_t fDelta; // topCutoff (a) considered == bottomCutoff (b) iff
-                       // (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
-                       // Theoretically, the Abs is not needed here, but
-                       // floating-point arithmetic does not always work
-                       // perfectly, and the Abs doesn't hurt
+      Double_t fDelta;            ///< topCutoff (a) considered == bottomCutoff (b) iff
+                                  ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
+                                  ///< Theoretically, the Abs is not needed here, but
+                                  ///< floating-point arithmetic does not always work
+                                  ///< perfectly, and the Abs doesn't hurt
       enum IntervalType fIntervalType;
 
 
@@ -342,7 +341,7 @@ namespace RooStats {
       virtual void CreateVector(RooRealVar* param);
       inline virtual Double_t CalcConfLevel(Double_t cutoff, Double_t full);
 
-      ClassDef(MCMCInterval,1)  // Concrete implementation of a ConfInterval based on MCMC calculation
+      ClassDefOverride(MCMCInterval,1)  // Concrete implementation of a ConfInterval based on MCMC calculation
 
    };
 }

@@ -175,12 +175,12 @@ public:
    virtual Bool_t HandleDragDrop(TGFrame *, Int_t /*x*/, Int_t /*y*/, TGLayoutHints*)
                      { return kFALSE; }
    virtual void   ProcessedConfigure(Event_t *event)
-                     { Emit("ProcessedConfigure(Event_t*)", (Long_t)event); } //*SIGNAL*
+                     { Emit("ProcessedConfigure(Event_t*)", (Longptr_t)event); } //*SIGNAL*
    virtual void   ProcessedEvent(Event_t *event)
-                     { Emit("ProcessedEvent(Event_t*)", (Long_t)event); } //*SIGNAL*
+                     { Emit("ProcessedEvent(Event_t*)", (Longptr_t)event); } //*SIGNAL*
 
-   virtual void   SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2);
-   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
+   virtual void   SendMessage(const TGWindow *w, Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t) { return kFALSE; }
 
    virtual TGDimension GetDefaultSize() const ;
    virtual void    Move(Int_t x, Int_t y);
@@ -333,7 +333,7 @@ public:
    virtual Bool_t HandleDragMotion(TGFrame *);
    virtual Bool_t HandleDragDrop(TGFrame *frame, Int_t x, Int_t y, TGLayoutHints *lo);
    virtual void   ChangeOptions(UInt_t options);
-   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
+   virtual Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t) { return kFALSE; }
 
    virtual TGLayoutManager *GetLayoutManager() const { return fLayoutManager; }
    virtual void SetLayoutManager(TGLayoutManager *l);
@@ -453,6 +453,7 @@ public:
    virtual Bool_t HandleButton(Event_t *event);
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t SaveFrameAsCodeOrImage();
+   virtual Bool_t SaveFrameAsCodeOrImage(const TString &fileName);
    virtual void   SendCloseMessage();
    virtual void   CloseWindow();   //*SIGNAL*
 

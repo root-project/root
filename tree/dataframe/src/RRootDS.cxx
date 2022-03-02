@@ -13,7 +13,6 @@
 #include <TError.h>
 #include <TROOT.h>         // For the gROOTMutex
 #include <TVirtualMutex.h> // For the R__LOCKGUARD
-#include <ROOT/RMakeUnique.hxx>
 
 #include <algorithm>
 #include <vector>
@@ -52,7 +51,7 @@ RRootDS::RRootDS(std::string_view treeName, std::string_view fileNameGlob)
    fModelChain.Add(fFileNameGlob.c_str());
 
    const TObjArray &lob = *fModelChain.GetListOfBranches();
-   fListOfBranches.resize(lob.GetEntries());
+   fListOfBranches.resize(lob.GetEntriesUnsafe());
 
    TIterCategory<TObjArray> iter(&lob);
    std::transform(iter.Begin(), iter.End(), fListOfBranches.begin(), [](TObject *o) { return o->GetName(); });
@@ -118,7 +117,7 @@ void RRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    fChains[slot].reset(chain);
 }
 
-void RRootDS::FinaliseSlot(unsigned int slot)
+void RRootDS::FinalizeSlot(unsigned int slot)
 {
    fChains[slot].reset(nullptr);
 }
@@ -137,18 +136,18 @@ bool RRootDS::SetEntry(unsigned int slot, ULong64_t entry)
 
 void RRootDS::SetNSlots(unsigned int nSlots)
 {
-   R__ASSERT(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
+   assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
 
    fNSlots = nSlots;
 
    const auto nColumns = fListOfBranches.size();
-   // Initialise the entire set of addresses
+   // Initialize the entire set of addresses
    fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
 
    fChains.resize(fNSlots);
 }
 
-void RRootDS::Initialise()
+void RRootDS::Initialize()
 {
    const auto nentries = fModelChain.GetEntries();
    const auto chunkSize = nentries / fNSlots;

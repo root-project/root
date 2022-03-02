@@ -62,9 +62,9 @@ double my2Dfunc(double *x, double *par) {
 // data need to be globals to be visible by fcn
 TRandom3 rndm;
 TH2D *h1, *h2;
-Int_t npfits;
+int npfits;
 
-void myFcn(Int_t & /*nPar*/, Double_t * /*grad*/ , Double_t &fval, Double_t *p, Int_t /*iflag */  )
+void myFcn(int & /*nPar*/, double * /*grad*/ , double &fval, double *p, int /*iflag */  )
 {
    TAxis *xaxis1  = h1->GetXaxis();
    TAxis *yaxis1  = h1->GetYaxis();
@@ -121,7 +121,7 @@ void FillHisto(TH2D * h, int n, double * p) {
 
    double x, y;
    for (int i = 0; i < n; ++i) {
-      // generate randoms with larger gaussians
+      // generate randoms with larger Gaussians
       rndm.Rannor(x,y);
 
       double r = rndm.Rndm(1);

@@ -161,6 +161,7 @@ private:
    void             SortBranchesByTime();
    Int_t            FlushBasketsImpl() const;
    void             MarkEventCluster();
+   Long64_t         GetMedianClusterSize();
 
 protected:
    virtual void     KeepCircular();
@@ -175,7 +176,7 @@ protected:
    Int_t    SetBranchAddressImp(TBranch *branch, void* addr, TBranch** ptr);
    virtual TLeaf   *GetLeafImpl(const char* branchname, const char* leafname);
 
-   Long64_t         GetCacheAutoSize(Bool_t withDefault = kFALSE) const;
+   Long64_t         GetCacheAutoSize(Bool_t withDefault = kFALSE);
    char             GetNewlineValue(std::istream &inputStream);
    void             ImportClusterRanges(TTree *fromtree);
    void             MoveReadCache(TFile *src, TDirectory *dir);
@@ -377,7 +378,7 @@ public:
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
    }
-   TBranch        *Branch(const char* name, Long_t address, const char* leaflist, Int_t bufsize = 32000)
+   TBranch        *Branch(const char* name, Longptr_t address, const char* leaflist, Int_t bufsize = 32000)
    {
       // Overload to avoid confusion between this signature and the template instance.
       return Branch(name,(void*)address,leaflist,bufsize);
@@ -385,7 +386,7 @@ public:
    TBranch        *Branch(const char* name, int address, const char* leaflist, Int_t bufsize = 32000)
    {
       // Overload to avoid confusion between this signature and the template instance.
-      return Branch(name,(void*)(Long_t)address,leaflist,bufsize);
+      return Branch(name,(void*)(Longptr_t)address,leaflist,bufsize);
    }
    virtual TBranch        *Branch(const char* name, const char* classname, void* addobj, Int_t bufsize = 32000, Int_t splitlevel = 99);
    template <class T> TBranch *Branch(const char* name, const char* classname, T* obj, Int_t bufsize = 32000, Int_t splitlevel = 99)
@@ -460,8 +461,8 @@ public:
    virtual Long64_t        GetEntriesFast() const   { return fEntries; }
    virtual Long64_t        GetEntriesFriend() const;
    virtual Long64_t        GetEstimate() const { return fEstimate; }
-   virtual Int_t           GetEntry(Long64_t entry = 0, Int_t getall = 0);
-           Int_t           GetEvent(Long64_t entry = 0, Int_t getall = 0) { return GetEntry(entry, getall); }
+   virtual Int_t           GetEntry(Long64_t entry, Int_t getall = 0);
+           Int_t           GetEvent(Long64_t entry, Int_t getall = 0) { return GetEntry(entry, getall); }
    virtual Int_t           GetEntryWithIndex(Int_t major, Int_t minor = 0);
    virtual Long64_t        GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor = 0) const;
    virtual Long64_t        GetEntryNumberWithIndex(Long64_t major, Long64_t minor = 0) const;

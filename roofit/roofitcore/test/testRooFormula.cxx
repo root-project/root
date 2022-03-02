@@ -4,6 +4,8 @@
 #include "RooFormula.h"
 #include "RooRealVar.h"
 
+#include "ROOT/TestSupport.hxx"
+
 #include "gtest/gtest.h"
 
 /// Since TFormula does very surprising things,
@@ -15,6 +17,13 @@
 /// is, for example, legal, and silently uses an undefined
 /// value for y. RooFit needs to detect this.
 TEST(RooFormula, TestInvalidFormulae) {
+  ROOT::TestSupport::CheckDiagsRAII checkDiag;
+  checkDiag.requiredDiag(kError, "prepareMethod", "Can't compile function TFormula", false);
+  checkDiag.requiredDiag(kError, "TFormula::InputFormulaIntoCling", "Error compiling formula expression in Cling", true);
+  checkDiag.requiredDiag(kError, "TFormula::ProcessFormula", " is invalid", false);
+  checkDiag.requiredDiag(kError, "TFormula::ProcessFormula", "has not been matched in the formula expression", false);
+  checkDiag.requiredDiag(kError, "cling", "undeclared identifier", false);
+
   RooRealVar x("x", "x", 1.337);
   RooRealVar y("y", "y", -1.);
   RooFormula form("form", "x+10", x);

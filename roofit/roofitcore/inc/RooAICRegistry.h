@@ -40,13 +40,13 @@ public:
 
 protected:
 
-  std::vector<std::vector<Int_t> > _clArr;       //! Array of array of code lists
-  std::vector<pRooArgSet> _asArr1;  //! Array of 1st RooArgSet pointers
-  std::vector<pRooArgSet> _asArr2;  //! Array of 2nd RooArgSet pointers
-  std::vector<pRooArgSet> _asArr3;  //! Array of 3rd RooArgSet pointers
-  std::vector<pRooArgSet> _asArr4;  //! Array of 4th RooArgSet pointers
+  std::vector<std::vector<Int_t> > _clArr; ///<! Array of array of code lists
+  std::vector<pRooArgSet> _asArr1;         ///<! Array of 1st RooArgSet pointers
+  std::vector<pRooArgSet> _asArr2;         ///<! Array of 2nd RooArgSet pointers
+  std::vector<pRooArgSet> _asArr3;         ///<! Array of 3rd RooArgSet pointers
+  std::vector<pRooArgSet> _asArr4;         ///<! Array of 4th RooArgSet pointers
 
   ClassDef(RooAICRegistry,2) // Registry for analytical integration codes
 } ;
 
-#endif 
+#endif

@@ -2415,6 +2415,14 @@ void palette() {
 }
 ```
 
+Since ROOT 6.26, you can also define a palette based on an ASCII text
+file, using `TColor::CreateColorTableFromFile("filename.txt")` or
+`gStyle->SetPalette("filename.txt")`. The input file contains one color
+per line in "r g b" float format. This function is useful to profit from
+a full set of colour-vision deficiency friendly and perceptually uniform
+colour maps that are available to
+[download](https://doi.org/10.5281/zenodo.4491293)
+
 ## The Graphics Editor
 
 

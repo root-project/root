@@ -38,7 +38,7 @@ namespace ROOT {
 
 //___________________________________________________________________________________
 /**
-   Chi2FCN class for binnned fits using the least square methods
+   Chi2FCN class for binned fits using the least square methods
 
    @ingroup  FitMethodFunc
 */
@@ -156,9 +156,9 @@ private:
    }
 
 
-   mutable unsigned int fNEffPoints;  // number of effective points used in the fit
+   mutable unsigned int fNEffPoints;  ///< number of effective points used in the fit
 
-   mutable std::vector<double> fGrad; // for derivatives
+   mutable std::vector<double> fGrad; ///< for derivatives
    ::ROOT::EExecutionPolicy fExecutionPolicy;
 
 };

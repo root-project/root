@@ -23,11 +23,11 @@ using namespace ROOT::Experimental;
 
 void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ranges) const
 {
-   if (axis.HasZoomMin())
-      ranges.AssignMin(ndim, axis.GetZoomMin());
+   if (axis.zoomMin.Has())
+      ranges.AssignMin(ndim, axis.zoomMin);
 
-   if (axis.HasZoomMax())
-      ranges.AssignMax(ndim, axis.GetZoomMax());
+   if (axis.zoomMax.Has())
+      ranges.AssignMax(ndim, axis.zoomMax);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -36,12 +36,13 @@ void RFrame::GetAxisRanges(unsigned ndim, const RAttrAxis &axis, RUserRanges &ra
 void RFrame::AssignZoomRange(unsigned ndim, RAttrAxis &axis, const RUserRanges &ranges)
 {
    if (ranges.IsUnzoom(ndim)) {
-      axis.ClearZoom();
+      axis.zoomMin.Clear();
+      axis.zoomMax.Clear();
    } else {
       if (ranges.HasMin(ndim))
-         axis.SetZoomMin(ranges.GetMin(ndim));
+         axis.zoomMin = ranges.GetMin(ndim);
       if (ranges.HasMax(ndim))
-         axis.SetZoomMax(ranges.GetMax(ndim));
+         axis.zoomMax = ranges.GetMax(ndim);
    }
 }
 
@@ -55,12 +56,12 @@ void RFrame::PopulateMenu(RMenuItems & /* items */)
    auto is_y = items.GetSpecifier() == "y";
 
    if (is_x || is_y) {
-      RAttrAxis &attr = is_x ? AttrX() : AttrY();
-      std::string name = is_x ? "AttrX()" : "AttrY()";
+      RAttrAxis &attr = is_x ? x : y;
+      std::string name = is_x ? "x" : "y";
       auto cl = TClass::GetClass<RAttrAxis>();
       auto log = attr.GetLog();
-      items.AddChkMenuItem("Linear scale", "Set linear scale", !log, name + ".SetLog(0)", cl);
-      items.AddChkMenuItem("Log scale", "Logarithmic scale", !log, name + ".SetLog(10)", cl);
+      items.AddChkMenuItem("Linear scale", "Set linear scale", !log, name + ".log = 0", cl);
+      items.AddChkMenuItem("Log scale", "Logarithmic scale", !log, name + ".log = 10", cl);
    }
 */
 }
@@ -71,11 +72,11 @@ void RFrame::PopulateMenu(RMenuItems & /* items */)
 void RFrame::SetClientRanges(unsigned connid, const RUserRanges &ranges, bool ismainconn)
 {
    if (ismainconn) {
-      AssignZoomRange(0, AttrX(), ranges);
-      AssignZoomRange(1, AttrY(), ranges);
-      AssignZoomRange(2, AttrZ(), ranges);
-      AssignZoomRange(3, AttrX2(), ranges);
-      AssignZoomRange(4, AttrY2(), ranges);
+      AssignZoomRange(0, x, ranges);
+      AssignZoomRange(1, y, ranges);
+      AssignZoomRange(2, z, ranges);
+      AssignZoomRange(3, x2, ranges);
+      AssignZoomRange(4, y2, ranges);
    }
 
    if (fClientRanges.find(connid) == fClientRanges.end()) {
@@ -97,9 +98,9 @@ void RFrame::GetClientRanges(unsigned connid, RUserRanges &ranges)
    if (iter != fClientRanges.end()) {
       ranges = iter->second;
    } else {
-      GetAxisRanges(0, GetAttrX(), ranges);
-      GetAxisRanges(1, GetAttrY(), ranges);
-      GetAxisRanges(2, GetAttrZ(), ranges);
+      GetAxisRanges(0, x, ranges);
+      GetAxisRanges(1, y, ranges);
+      GetAxisRanges(2, z, ranges);
    }
 }
 

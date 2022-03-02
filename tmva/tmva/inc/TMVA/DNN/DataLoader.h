@@ -122,7 +122,7 @@ TBatchIterator(TDataLoader<Data_t, AArchitecture> & dataLoader, size_t index = 0
  * the user to iterate over the batches in one epoch.
  *
  * \tparam AData The input data type.
- * \tparam AArchitecture The achitecture class of the underlying architecture.
+ * \tparam AArchitecture The architecture class of the underlying architecture.
  */
 template<typename Data_t, typename AArchitecture>
 class TDataLoader
@@ -161,10 +161,10 @@ public:
     *  the architecture-specific backend. */
    void  CopyInput(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
    /** Copy output matrix into the given host buffer. Function to be specialized
-    * by the architecture-spcific backend. */
+    * by the architecture-specific backend. */
    void CopyOutput(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
    /** Copy weight matrix into the given host buffer. Function to be specialized
-    * by the architecture-spcific backend. */
+    * by the architecture-specific backend. */
    void CopyWeights(HostBuffer_t &buffer, IndexIterator_t begin, size_t batchSize);
 
    BatchIterator_t begin() {return TBatchIterator<Data_t, AArchitecture>(*this);}

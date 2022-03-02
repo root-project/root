@@ -43,7 +43,7 @@ namespace RooStats {
     SamplingDistribution();
 
     /// Destructor of SamplingDistribution
-    virtual ~SamplingDistribution();
+    ~SamplingDistribution() override;
 
     /// get the inverse of the Cumulative distribution function
     Double_t InverseCDF(Double_t pvalue);
@@ -80,21 +80,20 @@ namespace RooStats {
 
   private:
 
-    mutable std::vector<Double_t> fSamplingDist; /// vector of points for the sampling distribution
-    mutable std::vector<Double_t> fSampleWeights; /// vector of weights for the samples
-    // store a RooRealVar that this distribution corresponds to?
+    mutable std::vector<Double_t> fSamplingDist;  ///< vector of points for the sampling distribution
+    mutable std::vector<Double_t> fSampleWeights; ///< vector of weights for the samples
 
     TString fVarName;
 
-    mutable std::vector<Double_t> fSumW;   //! Cached vector with sum of the weight used to compute integral
-    mutable std::vector<Double_t> fSumW2;  //! Cached vector with sum of the weight used to compute integral error
+    mutable std::vector<Double_t> fSumW;   ///<! Cached vector with sum of the weight used to compute integral
+    mutable std::vector<Double_t> fSumW2;  ///<! Cached vector with sum of the weight used to compute integral error
 
   protected:
 
     /// internal function to sort values
     void SortValues() const;
 
-    ClassDef(SamplingDistribution,2)  /// Class containing the results of the HybridCalculator
+    ClassDefOverride(SamplingDistribution,2)  /// Class containing the results of the HybridCalculator
   };
 }
 

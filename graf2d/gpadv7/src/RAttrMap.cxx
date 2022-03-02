@@ -9,6 +9,7 @@
 #include "ROOT/RAttrMap.hxx"
 
 #include "ROOT/RAttrBase.hxx"
+#include "ROOT/RAttrAggregation.hxx"
 #include "ROOT/RLogger.hxx"
 
 #include <string>
@@ -47,10 +48,16 @@ template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::
 
 RAttrMap &RAttrMap::AddDefaults(const RAttrBase &vis)
 {
-   auto prefix = vis.GetPrefix();
+   RAttrMap defaults = vis.CollectDefaults();
 
-   for (const auto &entry : vis.GetDefaults())
-      m[prefix+entry.first] = entry.second->Copy();
+   std::string prefix;
+   if (dynamic_cast<const RAttrAggregation *>(&vis) && vis.GetPrefix()) {
+      prefix = vis.GetPrefix();
+      if (!prefix.empty()) prefix.append("_");
+   }
+
+   for (auto &entry : defaults.m)
+      m[prefix + entry.first] = std::move(entry.second);
 
    return *this;
 }

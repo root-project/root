@@ -32,6 +32,8 @@ namespace Math {
       For efficiency, gamma is held as well.
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 
 class BoostX {

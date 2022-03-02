@@ -23,17 +23,17 @@ A RooProduct represents the product of a given set of RooAbsReal objects.
 
 **/
 
-
-#include <cmath>
-#include <memory>
-
 #include "RooProduct.h"
+
 #include "RooNameReg.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include "RooErrorHandler.h"
 #include "RooMsgService.h"
+#include "RunContext.h"
 #include "RooTrace.h"
+
+#include <cmath>
+#include <memory>
 
 using namespace std ;
 
@@ -54,7 +54,7 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooProduct::RooProduct()
+RooProduct::RooProduct() : _cacheMgr(this,10)
 {
   TRACE_CREATE
 }
@@ -81,15 +81,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
   _cacheMgr(this,10)
 {
   for (auto comp : prodSet) {
-    if (dynamic_cast<RooAbsReal*>(comp)) {
-      _compRSet.add(*comp) ;
-    } else if (dynamic_cast<RooAbsCategory*>(comp)) {
-      _compCSet.add(*comp) ;
-    } else {
-      coutE(InputArguments) << "RooProduct::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " is not of type RooAbsReal or RooAbsCategory" << endl ;
-      RooErrorHandler::softAbort() ;
-    }
+    addTerm(comp);
   }
   TRACE_CREATE
 }
@@ -100,7 +92,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
 /// Copy constructor
 
 RooProduct::RooProduct(const RooProduct& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _compRSet("!compRSet",this,other._compRSet),
   _compCSet("!compCSet",this,other._compCSet),
   _cacheMgr(other._cacheMgr,this)
@@ -109,6 +101,19 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a term to this product.
+void RooProduct::addTerm(RooAbsArg* term) {
+  if (dynamic_cast<RooAbsReal*>(term)) {
+    _compRSet.add(*term) ;
+  } else if (dynamic_cast<RooAbsCategory*>(term)) {
+    _compCSet.add(*term) ;
+  } else {
+    coutE(InputArguments) << "RooProduct::addTerm(" << GetName() << ") ERROR: component " << term->GetName()
+        << " is not of type RooAbsReal or RooAbsCategory" << endl ;
+    throw std::invalid_argument("RooProduct can only handle terms deriving from RooAbsReal or RooAbsCategory.");
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Force internal handling of integration of given observable if any
@@ -134,7 +139,7 @@ Bool_t RooProduct::forceAnalyticalInt(const RooAbsArg& dep) const
 /// Group observables into subsets in which the product factorizes
 /// and that can thus be integrated separately
 
-RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) const 
+RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) const
 {
   ProdMap* map = new ProdMap ;
 
@@ -158,8 +163,8 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
   while((var=(RooAbsReal*)allVarsIter.next())) {
     RooArgSet *vars  = new RooArgSet(); vars->add(*var);
     RooArgList *comps = new RooArgList();
-    RooAbsReal* rcomp2 ; 
-    
+    RooAbsReal* rcomp2 ;
+
     compRIter = _compRSet.fwdIterator() ;
     while((rcomp2=(RooAbsReal*) compRIter.next())) {
       if( rcomp2->dependsOn(*var) ) comps->add(*rcomp2);
@@ -179,9 +184,9 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
       RooFIter it = i.second->second->fwdIterator() ;
       RooAbsArg* targ ;
       while ((targ = it.next())) {
-	if (!i.first->second->find(*targ)) {
-	  i.first->second->add(*targ) ;
-	}
+   if (!i.first->second->find(*targ)) {
+     i.first->second->add(*targ) ;
+   }
       }
       //i.first->second->add(*i.second->second);
 
@@ -190,7 +195,7 @@ RooProduct::ProdMap* RooProduct::groupProductTerms(const RooArgSet& allVars) con
       map->erase(i.second);
     }
   } while (overlap);
-  
+
   // check that we have all variables to be integrated over on the LHS
   // of the map, and all terms in the product do appear on the RHS
   int nVar=0; int nFunc=0;
@@ -220,18 +225,18 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
     Int_t code = _cacheMgr.lastIndex();
     return code;
   }
-  
+
   ProdMap* map = groupProductTerms(*iset);
 
   cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") groupProductTerms returned map" ;
   if (dologD(Integration)) {
-    dump_map(ccoutD(Integration),map->begin(),map->end()); 
+    dump_map(ccoutD(Integration),map->begin(),map->end());
     ccoutD(Integration) << endl;
   }
-  
+
   // did we find any factorizable terms?
   if (map->size()<2) {
-    
+
     for (ProdMap::iterator iter = map->begin() ; iter != map->end() ; ++iter) {
       delete iter->first ;
       delete iter->second ;
@@ -269,7 +274,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
   Int_t code = _cacheMgr.setObj(iset,iset,(RooAbsCacheElement*)cache,RooNameReg::ptr(isetRange));
 
   cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created list " << cache->_prodList << " with code " << code+1 << endl
-		       << " for iset=" << *iset << " @" << iset << " range: " << (isetRange?isetRange:"<none>") << endl ;
+             << " for iset=" << *iset << " @" << iset << " range: " << (isetRange?isetRange:"<none>") << endl ;
 
   for (ProdMap::iterator iter = map->begin() ; iter != map->end() ; ++iter) {
     delete iter->first ;
@@ -284,8 +289,8 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
 /// Declare that we handle all integrations internally
 
 Int_t RooProduct::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
-					  const RooArgSet* /*normSet*/,
-					  const char* rangeName) const
+                 const RooArgSet* /*normSet*/,
+                 const char* rangeName) const
 {
   if (_forceNumInt) return 0 ;
 
@@ -306,16 +311,16 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   // note: rangeName implicit encoded in code: see _cacheMgr.setObj in getPartIntList...
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1);
-  if (cache==0) { 
+  if (cache==0) {
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
-    std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
-    Int_t code2 = getPartIntList(iset.get(),rangeName)+1;
+    RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1);
+    Int_t code2 = getPartIntList(&iset,rangeName)+1;
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }
   assert(cache!=0);
-  
+
   return calculate(cache->_prodList);
 }
 
@@ -358,7 +363,7 @@ const char* RooProduct::makeFPName(const char *pfx,const RooArgSet& terms) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate product of input functions
 
-Double_t RooProduct::evaluate() const 
+Double_t RooProduct::evaluate() const
 {
   Double_t prod(1) ;
 
@@ -368,41 +373,80 @@ Double_t RooProduct::evaluate() const
 
     prod *= rcomp->getVal(nset) ;
   }
-  
+
   for (const auto item : _compCSet) {
     auto ccomp = static_cast<const RooAbsCategory*>(item);
 
     prod *= ccomp->getCurrentIndex() ;
   }
-  
+
   return prod ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate product of input functions for all points found in `evalData`.
+RooSpan<double> RooProduct::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  RooSpan<double> prod;
+
+  assert(_compRSet.nset() == normSet);
+
+  for (const auto item : _compRSet) {
+    auto rcomp = static_cast<const RooAbsReal*>(item);
+    auto componentValues = rcomp->getValues(evalData, normSet);
+
+    if (prod.empty()) {
+      prod = evalData.makeBatch(this, componentValues.size());
+      for (auto& val : prod) val = 1.;
+    } else if (prod.size() == 1 && componentValues.size() > 1) {
+      const double val = prod[0];
+      prod = evalData.makeBatch(this, componentValues.size());
+      std::fill(prod.begin(), prod.end(), val);
+    }
+    assert(prod.size() == componentValues.size() || componentValues.size() == 1);
+
+    for (unsigned int i = 0; i < prod.size(); ++i) {
+      prod[i] *= componentValues.size() == 1 ? componentValues[0] : componentValues[i];
+    }
+  }
+
+  for (const auto item : _compCSet) {
+    auto ccomp = static_cast<const RooAbsCategory*>(item);
+    const int catIndex = ccomp->getCurrentIndex();
+
+    for (unsigned int i = 0; i < prod.size(); ++i) {
+      prod[i] *= catIndex;
+    }
+  }
+
+  return prod;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+/// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
 std::list<Double_t>* RooProduct::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   for (const auto item : _compRSet) {
     auto func = static_cast<const RooAbsReal*>(item);
 
-    list<Double_t>* binb = func->binBoundaries(obs,xlo,xhi) ;      
+    list<Double_t>* binb = func->binBoundaries(obs,xlo,xhi) ;
     if (binb) {
       return binb ;
     }
   }
-  
-  return 0 ;  
+
+  return 0 ;
 }
 
 
 //_____________________________________________________________________________B
-Bool_t RooProduct::isBinnedDistribution(const RooArgSet& obs) const 
+Bool_t RooProduct::isBinnedDistribution(const RooArgSet& obs) const
 {
   // If all components that depend on obs are binned that so is the product
-  
+
   for (const auto item : _compRSet) {
     auto func = static_cast<const RooAbsReal*>(item);
 
@@ -410,26 +454,26 @@ Bool_t RooProduct::isBinnedDistribution(const RooArgSet& obs) const
       return kFALSE ;
     }
   }
-  
-  return kTRUE  ;  
+
+  return kTRUE  ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Forward the plot sampling hint from the p.d.f. that defines the observable obs  
+/// Forward the plot sampling hint from the p.d.f. that defines the observable obs
 
 std::list<Double_t>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
   for (const auto item : _compRSet) {
     auto func = static_cast<const RooAbsReal*>(item);
 
-    list<Double_t>* hint = func->plotSamplingHint(obs,xlo,xhi) ;      
+    list<Double_t>* hint = func->plotSamplingHint(obs,xlo,xhi) ;
     if (hint) {
       return hint ;
     }
   }
-  
+
   return 0 ;
 }
 
@@ -438,7 +482,7 @@ std::list<Double_t>* RooProduct::plotSamplingHint(RooAbsRealLValue& obs, Double_
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooProduct::CacheElem::~CacheElem() 
+RooProduct::CacheElem::~CacheElem()
 {
 }
 
@@ -446,7 +490,7 @@ RooProduct::CacheElem::~CacheElem()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list of all RooAbsArgs in cache element
 
-RooArgList RooProduct::CacheElem::containedArgs(Action) 
+RooArgList RooProduct::CacheElem::containedArgs(Action)
 {
   RooArgList ret(_ownedList) ;
   return ret ;
@@ -458,18 +502,18 @@ RooArgList RooProduct::CacheElem::containedArgs(Action)
 ////////////////////////////////////////////////////////////////////////////////
 /// Label OK'ed components of a RooProduct with cache-and-track
 
-void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes) 
+void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
 {
   RooArgSet comp(components()) ;
   for (const auto parg : comp) {
     if (parg->isDerived()) {
       if (parg->canNodeBeCached()==Always) {
         trackNodes.add(*parg) ;
-	//cout << "tracking node RooProduct component " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
+   //cout << "tracking node RooProduct component " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
       }
     }
   }
-}							    
+}
 
 
 
@@ -479,7 +523,7 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
 /// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the
 /// product operator construction
 
-void RooProduct::printMetaArgs(ostream& os) const 
+void RooProduct::printMetaArgs(ostream& os) const
 {
   Bool_t first(kTRUE) ;
 
@@ -487,7 +531,7 @@ void RooProduct::printMetaArgs(ostream& os) const
     if (!first) {  os << " * " ; } else {  first = kFALSE ; }
     os << rcomp->GetName() ;
   }
-  
+
   for (const auto item : _compCSet) {
     auto ccomp = static_cast<const RooAbsCategory*>(item);
 
@@ -495,7 +539,7 @@ void RooProduct::printMetaArgs(ostream& os) const
     os << ccomp->GetName() ;
   }
 
-  os << " " ;    
+  os << " " ;
 }
 
 
@@ -504,7 +548,7 @@ void RooProduct::printMetaArgs(ostream& os) const
 
 namespace {
 
-std::pair<RPPMIter,RPPMIter> findOverlap2nd(RPPMIter i, RPPMIter end) 
+std::pair<RPPMIter,RPPMIter> findOverlap2nd(RPPMIter i, RPPMIter end)
 {
   // Utility function finding pairs of overlapping input functions
   for (; i!=end; ++i) for ( RPPMIter j(i+1); j!=end; ++j) {
@@ -515,8 +559,8 @@ std::pair<RPPMIter,RPPMIter> findOverlap2nd(RPPMIter i, RPPMIter end)
   return std::make_pair(end,end);
 }
 
-  
-void dump_map(ostream& os, RPPMIter i, RPPMIter end) 
+
+void dump_map(ostream& os, RPPMIter i, RPPMIter end)
 {
   // Utility dump function for debugging
   Bool_t first(kTRUE);
@@ -526,7 +570,7 @@ void dump_map(ostream& os, RPPMIter i, RPPMIter end)
     else { os << " , " ; }
     os << *(i->first) << " -> " << *(i->second) ;
   }
-  os << " ] " ; 
+  os << " ] " ;
 }
 
 }

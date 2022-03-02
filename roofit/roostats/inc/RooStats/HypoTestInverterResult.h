@@ -38,7 +38,7 @@ public:
    HypoTestInverterResult( const HypoTestInverterResult& other, const char* name );
 
    /// destructor
-   virtual ~HypoTestInverterResult();
+   ~HypoTestInverterResult() override;
 
    /// operator =
    HypoTestInverterResult& operator = (const HypoTestInverterResult& other);
@@ -99,7 +99,7 @@ public:
    virtual void SetTestSize( Double_t size ) { fConfidenceLevel = 1.-size; }
 
    /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-   virtual void SetConfidenceLevel( Double_t cl ) { fConfidenceLevel = cl; }
+   void SetConfidenceLevel( Double_t cl ) override { fConfidenceLevel = cl; }
 
    /// set CLs threshold for exclusion cleanup function
    inline void SetCLsCleanupThreshold( Double_t th ) { fCLsCleanupThreshold = th; }
@@ -113,8 +113,8 @@ public:
    bool IsTwoSided() const { return fIsTwoSided; }
 
    /// lower and upper bound of the confidence interval (to get upper/lower limits, multiply the size( = 1-confidence level ) by 2
-   Double_t LowerLimit();
-   Double_t UpperLimit();
+   Double_t LowerLimit() override;
+   Double_t UpperLimit() override;
 
    /// rough estimation of the error on the computed bound of the confidence interval
    /// Estimate of lower limit error
@@ -187,31 +187,31 @@ private:
 protected:
 
    bool fUseCLs;
-   bool fIsTwoSided;                  /// two sided scan (look for lower/upper limit)
+   bool fIsTwoSided;                  ///< two sided scan (look for lower/upper limit)
    bool fInterpolateLowerLimit;
    bool fInterpolateUpperLimit;
    bool fFittedLowerLimit;
    bool fFittedUpperLimit;
-   InterpolOption_t fInterpolOption;  /// interpolation option (linear or spline)
+   InterpolOption_t fInterpolOption;  ///< interpolation option (linear or spline)
 
    double fLowerLimitError;
    double fUpperLimitError;
 
    double fCLsCleanupThreshold;
 
-   static double fgAsymptoticMaxSigma;  /// max sigma value used to scan asymptotic expected p values
-   static int fgAsymptoticNumPoints;    /// number of points used to build expected p-values
+   static double fgAsymptoticMaxSigma;  ///< max sigma value used to scan asymptotic expected p values
+   static int fgAsymptoticNumPoints;    ///< number of points used to build expected p-values
 
    std::vector<double> fXValues;
 
-   TList fYObjects;       /// list of HypoTestResult for each point
-   TList fExpPValues;     /// list of expected sampling distribution for each point
+   TList fYObjects;       ///< list of HypoTestResult for each point
+   TList fExpPValues;     ///< list of expected sampling distribution for each point
 
    friend class HypoTestInverter;
    friend class HypoTestInverterPlot;
    friend class HypoTestInverterOriginal;
 
-   ClassDef(HypoTestInverterResult,5)  /// HypoTestInverterResult class
+   ClassDefOverride(HypoTestInverterResult,5)  // HypoTestInverterResult class
 };
 }
 

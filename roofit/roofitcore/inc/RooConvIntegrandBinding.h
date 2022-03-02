@@ -24,31 +24,31 @@ class RooArgSet;
 
 class RooConvIntegrandBinding : public RooAbsFunc {
 public:
-  RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model, 
-	             RooAbsReal& x, RooAbsReal& xprime, 
+  RooConvIntegrandBinding(const RooAbsReal& func, const RooAbsReal& model,
+                RooAbsReal& x, RooAbsReal& xprime,
                      const RooArgSet* nset=0, Bool_t clipInvalid=kFALSE);
-  virtual ~RooConvIntegrandBinding();
+  ~RooConvIntegrandBinding() override;
 
-  virtual Double_t operator()(const Double_t xvector[]) const;
-  virtual Double_t getMinLimit(UInt_t dimension) const;
-  virtual Double_t getMaxLimit(UInt_t dimension) const;
-  inline void setNormalizationSet(const RooArgSet* nset) { 
+  Double_t operator()(const Double_t xvector[]) const override;
+  Double_t getMinLimit(UInt_t dimension) const override;
+  Double_t getMaxLimit(UInt_t dimension) const override;
+  inline void setNormalizationSet(const RooArgSet* nset) {
     // Use the supplied nset as normalization set for calls to func and model
-    _nset = nset ; 
+    _nset = nset ;
   }
 
 protected:
   void loadValues(const Double_t xvector[], Bool_t clipInvalid=kFALSE) const;
 
-  const RooAbsReal *_func;   // Pointer to input function
-  const RooAbsReal *_model ; // Pointer to input resolution model
+  const RooAbsReal *_func;   ///< Pointer to input function
+  const RooAbsReal *_model ; ///< Pointer to input resolution model
 
-  RooAbsRealLValue **_vars;  // Array of pointers to variables
-  const RooArgSet *_nset;    // Normalization set to be used for function evaluations
-  mutable Bool_t _xvecValid; // If true _xvec defines a valid point
-  Bool_t _clipInvalid ;      // If true, invalid x values are clipped into their valid range
+  RooAbsRealLValue **_vars;  ///< Array of pointers to variables
+  const RooArgSet *_nset;    ///< Normalization set to be used for function evaluations
+  mutable Bool_t _xvecValid; ///< If true _xvec defines a valid point
+  Bool_t _clipInvalid ;      ///< If true, invalid x values are clipped into their valid range
 
-  ClassDef(RooConvIntegrandBinding,0) // RooAbsFunc representation of convolution integrands
+  ClassDefOverride(RooConvIntegrandBinding,0) // RooAbsFunc representation of convolution integrands
 };
 
 #endif

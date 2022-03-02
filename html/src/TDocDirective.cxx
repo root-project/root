@@ -257,7 +257,7 @@ TDocMacroDirective::~TDocMacroDirective()
 
 void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
    Int_t error = TInterpreter::kNoError;
-   Long_t ret = gROOT->ProcessLine(TString(".x ") + what, &error);
+   Longptr_t ret = gROOT->ProcessLine(TString(".x ") + what, &error);
    Int_t sleepCycles = 50; // 50 = 5 seconds
    while (error == TInterpreter::kProcessing && --sleepCycles > 0)
       gSystem->Sleep(100);

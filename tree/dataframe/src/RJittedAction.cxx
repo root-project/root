@@ -8,57 +8,65 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RJittedAction.hxx"
 // Avoid error: invalid application of ‘sizeof’ to incomplete type in RJittedAction::GetMergeableValue
 #include "ROOT/RDF/RMergeableValue.hxx"
 #include "TError.h"
 
+#include <cassert>
+#include <memory>
+
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
-RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RBookedDefines{}) {}
+RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns,
+                             const ROOT::Internal::RDF::RColumnRegister &colRegister,
+                             const std::vector<std::string> &prevVariations)
+   : RActionBase(&lm, columns, colRegister, prevVariations)
+{
+}
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Run(slot, entry);
 }
 
 void RJittedAction::Initialize()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Initialize();
 }
 
 void RJittedAction::InitSlot(TTreeReader *r, unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->InitSlot(r, slot);
 }
 
 void RJittedAction::TriggerChildrenCount()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->TriggerChildrenCount();
 }
 
 void RJittedAction::FinalizeSlot(unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->FinalizeSlot(slot);
 }
 
 void RJittedAction::Finalize()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Finalize();
 }
 
 void *RJittedAction::PartialUpdate(unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->PartialUpdate(slot);
 }
 
@@ -74,14 +82,15 @@ bool RJittedAction::HasRun() const
 
 void RJittedAction::SetHasRun()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->SetHasRun();
 }
 
-std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph()
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph(
+   std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
 {
-   R__ASSERT(fConcreteAction != nullptr);
-   return fConcreteAction->GetGraph();
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->GetGraph(visitedMap);
 }
 
 /**
@@ -90,6 +99,18 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::Get
 */
 std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> RJittedAction::GetMergeableValue() const
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->GetMergeableValue();
+}
+
+ROOT::RDF::SampleCallback_t RJittedAction::GetSampleCallback()
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->GetSampleCallback();
+}
+
+std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::MakeVariedAction(std::vector<void *> &&results)
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->MakeVariedAction(std::move(results));
 }

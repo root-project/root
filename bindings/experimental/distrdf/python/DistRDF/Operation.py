@@ -10,113 +10,69 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-class Operation(object):
-    """
-    A Generic representation of an operation. The operation could be a
-    transformation, an action or an instant action.
+from typing import Dict, Union
 
-    Attributes:
-        ACTION (str): Action type string.
 
-        INSTANT_ACTION (str): Instant action type string.
+class Operation:
+    """An operation attached to a distributed RDataFrame graph node."""
 
-        TRANSFORMATION (str): Transformation type string.
-
-        name (str): Name of the current operation.
-
-        args (list): Variable length argument list for the current operation.
-
-        kwargs (dict): Arbitrary keyword arguments for the current operation.
-
-        op_type: The type or category of the current operation
-            (`ACTION`, `TRANSFORMATION` or `INSTANT_ACTION`).
-
-    """
-
-    ACTION = "ACTION"
-    INSTANT_ACTION = "INSTANT_ACTION"
-    TRANSFORMATION = "TRANSFORMATION"
-
-    def __init__(self, name, *args, **kwargs):
-        """
-        Creates a new `Operation` for the given name and arguments.
-
-        Args:
-            name (str): Name of the current operation.
-
-            args (list): Variable length argument list for the current
-                operation.
-
-            kwargs (dict): Keyword arguments for the current operation.
-        """
+    def __init__(self, name: str, *args, **kwargs):
         self.name = name
         self.args = list(args)
         self.kwargs = kwargs
-        self.op_type = self._classify_operation(name)
 
-    def _classify_operation(self, name):
-        """
-        Classifies the given operation as action or transformation and
-        returns the type.
-        """
 
-        operations_dict = {
-            "Define": Operation.TRANSFORMATION,
-            "Filter": Operation.TRANSFORMATION,
-            "Range": Operation.TRANSFORMATION,
-            "Aggregate": Operation.ACTION,
-            "Histo1D": Operation.ACTION,
-            "Histo2D": Operation.ACTION,
-            "Histo3D": Operation.ACTION,
-            "Profile1D": Operation.ACTION,
-            "Profile2D": Operation.ACTION,
-            "Profile3D": Operation.ACTION,
-            "Count": Operation.ACTION,
-            "Min": Operation.ACTION,
-            "Max": Operation.ACTION,
-            "Mean": Operation.ACTION,
-            "Sum": Operation.ACTION,
-            "Fill": Operation.ACTION,
-            "Reduce": Operation.ACTION,
-            "Report": Operation.ACTION,
-            "Take": Operation.ACTION,
-            "Graph": Operation.ACTION,
-            "Snapshot": Operation.INSTANT_ACTION,
-            "Foreach": Operation.INSTANT_ACTION,
-            "AsNumpy": Operation.INSTANT_ACTION
-        }
+class Action(Operation):
+    """An action attached to a distributed RDataFrame graph node."""
+    pass
 
-        op_type = operations_dict.get(name)
 
-        if not op_type:
-            raise Exception("Invalid operation \"{}\"".format(name))
-        return op_type
+class InstantAction(Operation):
+    """An instant action attached to a distributed RDataFrame graph node."""
+    pass
 
-    def is_action(self):
-        """
-        Checks if the current operation is an action.
 
-        Returns:
-            bool: True if the current operation is an action, False otherwise.
-        """
-        return self.op_type == Operation.ACTION
+class AsNumpy(InstantAction):
+    """An 'AsNumpy' instant action attached to a distributed RDataFrame graph node."""
+    pass
 
-    def is_transformation(self):
-        """
-        Checks if the current operation is a transformation.
 
-        Returns:
-            bool: True if the current operation is a transformation,
-            False otherwise.
-        """
-        return self.op_type == Operation.TRANSFORMATION
+class Snapshot(InstantAction):
+    """A 'Snapshot' instant action attached to a distributed RDataFrame graph node."""
+    pass
 
-    def is_instant_action(self):
-        """
-        Checks if the current operation is an instant action.
 
-        Returns:
-            bool: True if the current operation is an instant action,
-                False otherwise.
-        """
-        return self.op_type == Operation.INSTANT_ACTION
+class Transformation(Operation):
+    """A trasformation attached to a distributed RDataFrame graph node."""
+    pass
+
+
+SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = {
+    "AsNumpy": AsNumpy,
+    "Count": Action,
+    "Define": Transformation,
+    "DefinePerSample": Transformation,
+    "Filter": Transformation,
+    "Graph": Action,
+    "Histo1D": Action,
+    "Histo2D": Action,
+    "Histo3D": Action,
+    "HistoND": Action,
+    "Max": Action,
+    "Mean": Action,
+    "Min": Action,
+    "Profile1D": Action,
+    "Profile2D": Action,
+    "Profile3D": Action,
+    "Redefine": Transformation,
+    "Snapshot": Snapshot,
+    "Sum": Action,
+}
+
+
+def create_op(name: str, *args, **kwargs) -> Union[Action, InstantAction, Transformation]:
+    try:
+        return SUPPORTED_OPERATIONS[name](name, *args, **kwargs)
+    except KeyError as e:
+        raise ValueError(f"Operation '{name}' is either invalid or not supported in distributed mode. "
+                         "See the documentation for a list of supported operations.") from e

@@ -152,7 +152,7 @@ public:
    static bool IsCudnn() { return true; }
 
    // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes
-   // this function is used by the optimizers to stgore intermidiate weights representations
+   // this function is used by the optimizers to store intermediate weights representations
    static void  CreateWeightTensors( std::vector<Matrix_t> & newWeights, const std::vector<Matrix_t> & weights) {
       if (!newWeights.empty()) newWeights.clear();
       size_t n =  weights.size();
@@ -309,7 +309,7 @@ public:
 
    /** @name Activation Functions
     * For each activation function, the low-level interface contains two routines.
-    * One that applies the acitvation function to a matrix and one that evaluate
+    * One that applies the activation function to a matrix and one that evaluate
     * the derivatives of the activation function at the elements of a given matrix
     * and writes the results into the result matrix.
     */
@@ -344,7 +344,7 @@ public:
    //
    //static void SymmetricRelu(Tensor_t & B);
 
-   // implmentations not used by Cudnn
+   // implementations not used by Cudnn
    static void Relu(Tensor_t &) {}
    static void Sigmoid(Tensor_t &) {}
    static void Tanh(Tensor_t &) {}
@@ -533,8 +533,8 @@ public:
    // return static instance of random generator used for initialization
    // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
    static TRandom &GetRandomGenerator();
-   // set random seed for the static geenrator
-   // if the static geneerator does not exists it is created
+   // set random seed for the static generator
+   // if the static generator does not exists it is created
    static void SetRandomSeed(size_t seed);
    ///@}
 
@@ -652,7 +652,7 @@ public:
     *  tensor \p B. */
    static void Deflatten(Tensor_t &A, const Tensor_t &B); // size_t index, size_t nRows,size_t nCols);
 
-   /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
+   /** Rearrage data according to time fill B x T x D out with T x B x D matrix in*/
    static void Rearrange(Tensor_t &out, const Tensor_t &in);
 
    // RNN functions

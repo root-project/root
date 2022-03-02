@@ -31,23 +31,24 @@ public:
                RooAbsRealLValue& _x, const RooArgList& _coefList) ;
 
   RooBernstein(const RooBernstein& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooBernstein(*this, newname); }
-  inline virtual ~RooBernstein() { }
+  TObject* clone(const char* newname) const override { return new RooBernstein(*this, newname); }
+  inline ~RooBernstein() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+  void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) override ;
 
 private:
-  
+
   RooTemplateProxy<RooAbsRealLValue> _x ;
   RooListProxy _coefList ;
   std::string _refRangeName ;
 
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
-  ClassDef(RooBernstein,2) // Bernstein polynomial PDF
+  ClassDefOverride(RooBernstein,2) // Bernstein polynomial PDF
 };
 
 #endif

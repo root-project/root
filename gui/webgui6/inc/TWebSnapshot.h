@@ -31,12 +31,12 @@ protected:
 public:
 
    enum {
-     kNone = 0,        // dummy
-     kObject = 1,      // object itself
-     kSVG = 2,         // list of SVG primitives
-     kSubPad = 3,      // subpad
-     kColors = 4,      // list of ROOT colors + palette
-     kStyle = 5        // gStyle object
+     kNone = 0,        ///< dummy
+     kObject = 1,      ///< object itself
+     kSVG = 2,         ///< list of SVG primitives
+     kSubPad = 3,      ///< subpad
+     kColors = 4,      ///< list of ROOT colors + palette
+     kStyle = 5        ///< gStyle object
    };
 
    virtual ~TWebSnapshot();
@@ -88,6 +88,7 @@ class TCanvasWebSnapshot : public TPadWebSnapshot {
 protected:
    Long64_t fVersion{0};           ///< actual canvas version
    std::string fScripts;           ///< custom scripts to load
+   bool fHighlightConnect{false};  ///< does HighlightConnect has connection
 public:
    TCanvasWebSnapshot() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TCanvasWebSnapshot(bool readonly, Long64_t v) : TPadWebSnapshot(readonly), fVersion(v) {}
@@ -95,8 +96,12 @@ public:
    Long64_t GetVersion() const { return fVersion; }
 
    void SetScripts(const std::string &src) { fScripts = src; }
+   const std::string &GetScripts() const { return fScripts; }
 
-   ClassDef(TCanvasWebSnapshot, 1) // Canvas painting snapshot, used for JSROOT
+   void SetHighlightConnect(bool on = true) { fHighlightConnect = on; }
+   bool GetHighlightConnect() const { return fHighlightConnect; }
+
+   ClassDef(TCanvasWebSnapshot, 2) // Canvas painting snapshot, used for JSROOT
 };
 
 

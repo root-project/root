@@ -27,28 +27,26 @@ sigma_g2 = ROOT.RooRealVar("sigma_g2", "width of g2", 4, 3.0, 5.0)
 g2 = ROOT.RooGaussian("g2", "g2", x, mean, sigma_g2)
 
 frac = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
-model = ROOT.RooAddPdf(
-    "model", "model", ROOT.RooArgList(
-        g1, g2), ROOT.RooArgList(frac))
+model = ROOT.RooAddPdf("model", "model", [g1, g2], [frac])
 
 # Generate 1000 events
-data = model.generate(ROOT.RooArgSet(x), 1000)
+data = model.generate({x}, 1000)
 
 # Fit model to data
 # ----------------------------------
 
-r = model.fitTo(data, ROOT.RooFit.Save())
+r = model.fitTo(data, Save=True)
 
 # Create MV Gaussian pdf of fitted parameters
 # ------------------------------------------------------------------------------------
 
-parabPdf = r.createHessePdf(ROOT.RooArgSet(frac, mean, sigma_g2))
+parabPdf = r.createHessePdf({frac, mean, sigma_g2})
 
 # Some exercises with the parameter pdf
 # -----------------------------------------------------------------------------
 
 # Generate 100K points in the parameter space, from the MVGaussian pdf
-d = parabPdf.generate(ROOT.RooArgSet(mean, sigma_g2, frac), 100000)
+d = parabPdf.generate({mean, sigma_g2, frac}, 100000)
 
 # Sample a 3-D histogram of the pdf to be visualized as an error
 # ellipsoid using the GLISO draw option
@@ -58,9 +56,9 @@ hh_3d.SetFillColor(ROOT.kBlue)
 # Project 3D parameter pdf down to 3 permutations of two-dimensional pdfs
 # The integrations corresponding to these projections are performed analytically
 # by the MV Gaussian pdf
-pdf_sigmag2_frac = parabPdf.createProjection(ROOT.RooArgSet(mean))
-pdf_mean_frac = parabPdf.createProjection(ROOT.RooArgSet(sigma_g2))
-pdf_mean_sigmag2 = parabPdf.createProjection(ROOT.RooArgSet(frac))
+pdf_sigmag2_frac = parabPdf.createProjection({mean})
+pdf_mean_frac = parabPdf.createProjection({sigma_g2})
+pdf_mean_sigmag2 = parabPdf.createProjection({frac})
 
 # Make 2D plots of the 3 two-dimensional pdf projections
 hh_sigmag2_frac = pdf_sigmag2_frac.createHistogram("sigma_g2,frac", 50, 50)
@@ -79,8 +77,7 @@ hh_3d.Draw("gliso")
 c1.SaveAs("rf608_fitresultaspdf_1.png")
 
 # Draw the 2D projections of the 3D pdf
-c2 = ROOT.TCanvas("rf608_fitresultaspdf_2",
-                  "rf608_fitresultaspdf_2", 900, 600)
+c2 = ROOT.TCanvas("rf608_fitresultaspdf_2", "rf608_fitresultaspdf_2", 900, 600)
 c2.Divide(3, 2)
 c2.cd(1)
 ROOT.gPad.SetLeftMargin(0.15)

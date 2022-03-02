@@ -22,14 +22,15 @@
  * this layer can be used to switch between different implementations.
  */
 
+#include "RConfigure.h"
 
-#if defined(R__HAS_VDT)
+#if defined(R__HAS_VDT) && !defined(__CUDACC__)
 #include "vdt/exp.h"
 #include "vdt/log.h"
 #include "vdt/sqrt.h"
 
 namespace RooBatchCompute{
-  
+
 inline double fast_exp(double x) {
   return vdt::fast_exp(x);
 }
@@ -49,21 +50,20 @@ inline double fast_isqrt(double x) {
 
 namespace RooBatchCompute{
 
-inline double fast_exp(double x) {
+__roodevice__ inline double fast_exp(double x) {
   return std::exp(x);
 }
 
-inline double fast_log(double x) {
+__roodevice__ inline double fast_log(double x) {
   return std::log(x);
 }
 
-inline double fast_isqrt(double x) {
+__roodevice__ inline double fast_isqrt(double x) {
   return 1/std::sqrt(x);
 }
 
 }
 
-#endif
+#endif // defined(R__HAS_VDT) && !defined(__CUDACC__)
 
-
-#endif /* ROOFIT_BATCHCOMPUTE_ROOVDTHEADERS_H_ */
+#endif // ROOFIT_BATCHCOMPUTE_ROOVDTHEADERS_H_

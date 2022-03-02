@@ -49,10 +49,10 @@ void parallelcoordtrans() {
    Double_t s3x, s3y, s3z;
    r = new TRandom();;
 
-   TCanvas *c1 = new TCanvas("c1", "c1",0,0,900,1000);
+   auto c1 = new TCanvas("c1", "c1",0,0,900,1000);
    c1->Divide(1,2);
 
-   TNtuple *nt = new TNtuple("nt","Demo ntuple","x:y:z:u:v:w:a:b:c");
+   auto nt = new TNtuple("nt","Demo ntuple","x:y:z:u:v:w:a:b:c");
 
    int n=0;
    for (Int_t i=0; i<1500; i++) {
@@ -129,7 +129,6 @@ void parallelcoordtrans() {
    c1->Print("parallelcoordtrans.svg");
 
    // Produce transparent lines in batch mode only
-   c1->Print("parallelcoordtrans.gif");
    c1->Print("parallelcoordtrans.jpg");
    c1->Print("parallelcoordtrans.png");
 }

@@ -35,22 +35,22 @@ public:
   HistFactorySimultaneous(const char *name, const char *title, const RooArgList& pdfList, RooAbsCategoryLValue& indexCat) ;
   HistFactorySimultaneous(const HistFactorySimultaneous& other, const char* name=0);
   HistFactorySimultaneous(const RooSimultaneous& other, const char* name=0);
-  ~HistFactorySimultaneous();
+  ~HistFactorySimultaneous() override;
 
-  virtual TObject* clone(const char* newname) const { return new HistFactorySimultaneous(*this,newname) ; }
+  TObject* clone(const char* newname) const override { return new HistFactorySimultaneous(*this,newname) ; }
 
-  virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList);
+  RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList) override;
 
-  virtual RooAbsReal* createNLL(RooAbsData& data, 
-				const RooCmdArg& arg1 = RooCmdArg::none(), const RooCmdArg& arg2 = RooCmdArg::none(), 
-				const RooCmdArg& arg3 = RooCmdArg::none(), const RooCmdArg& arg4 = RooCmdArg::none(), 
-				const RooCmdArg& arg5 = RooCmdArg::none(), const RooCmdArg& arg6 = RooCmdArg::none(), 
-				const RooCmdArg& arg7 = RooCmdArg::none(), const RooCmdArg& arg8 = RooCmdArg::none());
-    
-  
+  RooAbsReal* createNLL(RooAbsData& data,
+            const RooCmdArg& arg1 = RooCmdArg::none(), const RooCmdArg& arg2 = RooCmdArg::none(),
+            const RooCmdArg& arg3 = RooCmdArg::none(), const RooCmdArg& arg4 = RooCmdArg::none(),
+            const RooCmdArg& arg5 = RooCmdArg::none(), const RooCmdArg& arg6 = RooCmdArg::none(),
+            const RooCmdArg& arg7 = RooCmdArg::none(), const RooCmdArg& arg8 = RooCmdArg::none()) override;
+
+
 protected:
 
-  ClassDef(RooStats::HistFactory::HistFactorySimultaneous,2)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
+  ClassDefOverride(RooStats::HistFactory::HistFactorySimultaneous,2)  // Simultaneous operator p.d.f, functions like C++  'switch()' on input p.d.fs operating on index category5A
 };
 
 }

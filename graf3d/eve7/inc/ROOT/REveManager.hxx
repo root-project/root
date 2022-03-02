@@ -13,6 +13,7 @@
 #define ROOT7_REveManager
 
 #include <ROOT/REveElement.hxx>
+#include <ROOT/REveSystem.hxx>
 #include <ROOT/RLogger.hxx>
 
 #include <ROOT/RWebDisplayArgs.hxx>
@@ -98,24 +99,14 @@ public:
 
    struct Logger {
       class Handler : public RLogHandler {
-         Logger *fLogger;
-
-      public:
-         Handler(Logger &logger) : fLogger(&logger) {}
-
-         bool Emit(const RLogEntry &entry) override
-         {
-            fLogger->fLogEntries.emplace_back(entry);
-            return true;
-         }
+        public:
+         bool Emit(const RLogEntry &entry) override;
       };
 
-      std::vector<RLogEntry> fLogEntries;
       Handler *fHandler;
-
       Logger()
       {
-         auto uptr = std::make_unique<Handler>(*this);
+         auto uptr = std::make_unique<Handler>();
          fHandler = uptr.get();
          RLogManager::Get().PushFront(std::move(uptr));
       }
@@ -165,6 +156,7 @@ protected:
    std::unordered_map<std::string, std::shared_ptr<TMethodCall> > fMethCallMap;
 
    Logger            fLogger;
+   REveServerStatus  fServerStatus; 
 
    void WindowConnect(unsigned connid);
    void WindowData(unsigned connid, const std::string &arg);
@@ -276,6 +268,8 @@ public:
    void Show(const RWebDisplayArgs &args = "");
 
    std::shared_ptr<REveGeomViewer> ShowGeometry(const RWebDisplayArgs &args = "");
+
+   void GetServerStatus(REveServerStatus&);
 };
 
 R__EXTERN REveManager* gEve;

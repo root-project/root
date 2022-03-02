@@ -32,7 +32,7 @@ protected:
 
 public:
    THLimitsFinder();
-   virtual ~THLimitsFinder();
+   ~THLimitsFinder() override;
    virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax);
    virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax);
    virtual Int_t      FindGoodLimits(TH1 *h, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
@@ -43,7 +43,7 @@ public:
    static THLimitsFinder *GetLimitsFinder();
    static  void       SetLimitsFinder(THLimitsFinder *finder);
 
-   ClassDef(THLimitsFinder,0)  //Class to find best axis limits
+   ClassDefOverride(THLimitsFinder,0)  //Class to find best axis limits
 };
 
 #endif

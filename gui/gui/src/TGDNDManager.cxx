@@ -424,11 +424,12 @@ Bool_t TGDNDManager::HandleClientMessage(Event_t *event)
       HandleDNDLeave((Window_t) event->fUser[0]);
 
    } else if (event->fHandle == fgDNDPosition) {
-      HandleDNDPosition((Window_t) event->fUser[0],
-                       (Int_t) (event->fUser[2] >> 16) & 0xFFFF,  // x_root
-                       (Int_t) (event->fUser[2] & 0xFFFF),        // y_root
-                       (Atom_t) event->fUser[4],                  // action
-                       (Time_t) event->fUser[3]);                 // timestamp
+      Atom_t action = (Atom_t)event->fUser[4] ? event->fUser[4] : 1;
+      HandleDNDPosition((Window_t)event->fUser[0],
+                        (Int_t)(event->fUser[2] >> 16) & 0xFFFF, // x_root
+                        (Int_t)(event->fUser[2] & 0xFFFF),       // y_root
+                        (Atom_t)action,                          // action
+                        (Time_t)event->fUser[3]);                // timestamp
 
    } else if (event->fHandle == fgDNDStatus) {
       Rectangle_t skip;
@@ -806,8 +807,7 @@ Bool_t TGDNDManager::HandleDNDFinished(Window_t /*target*/)
 Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
 {
    if ((Atom_t)event->fUser[1] == fgDNDSelection) {
-      Event_t xevent;
-      TDNDData *dnddata = 0;
+      TDNDData *dnddata = nullptr;
       char *data;
       int len;
 
@@ -826,7 +826,8 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
       gVirtualX->ChangeProperties(event->fUser[0], event->fUser[3],
                                   event->fUser[2], 8,
                                   (unsigned char *) data, len);
-
+#ifndef R__WIN32
+      Event_t xevent;
       xevent.fType    = kSelectionNotify;
       xevent.fTime    = event->fTime;
       xevent.fUser[0] = event->fUser[0]; // requestor
@@ -834,7 +835,7 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
       xevent.fUser[2] = event->fUser[2]; // target;
       xevent.fUser[3] = event->fUser[3]; // property;
       gVirtualX->SendEvent(event->fUser[0], &xevent);
-
+#endif
       return kTRUE;
    } else {
       return kFALSE;  // not for us...

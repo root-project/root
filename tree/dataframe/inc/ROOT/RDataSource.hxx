@@ -13,7 +13,9 @@
 
 #include "RDF/RColumnReaderBase.hxx"
 #include "ROOT/RStringView.hxx"
+#include "ROOT/RConfig.hxx" // R__DEPRECATED
 #include "RtypesCore.h" // ULong64_t
+#include "TError.h" // Warning
 #include "TString.h"
 
 #include <algorithm> // std::transform
@@ -89,22 +91,29 @@ The sequence of calls that RDataFrame (or any other client of a RDataSource) per
 
  - SetNSlots() : inform RDataSource of the desired level of parallelism
  - GetColumnReaders() : retrieve from RDataSource per-thread readers for the desired columns
- - Initialise() : inform RDataSource that an event-loop is about to start
+ - Initialize() : inform RDataSource that an event-loop is about to start
  - GetEntryRanges() : retrieve from RDataSource a set of ranges of entries that can be processed concurrently
  - InitSlot() : inform RDataSource that a certain thread is about to start working on a certain range of entries
  - SetEntry() : inform RDataSource that a certain thread is about to start working on a certain entry
- - FinaliseSlot() : inform RDataSource that a certain thread finished working on a certain range of entries
- - Finalise() : inform RDataSource that an event-loop finished
+ - FinalizeSlot() : inform RDataSource that a certain thread finished working on a certain range of entries
+ - Finalize() : inform RDataSource that an event-loop finished
 
 RDataSource implementations must support running multiple event-loops consecutively (although sequentially) on the same dataset.
  - \b SetNSlots() is called once per RDataSource object, typically when it is associated to a RDataFrame.
  - \b GetColumnReaders() can be called several times, potentially with the same arguments, also in-between event-loops, but not during an event-loop.
  - \b GetEntryRanges() will be called several times, including during an event loop, as additional ranges are needed.  It will not be called concurrently.
- - \b Initialise() and \b Finalise() are called once per event-loop,  right before starting and right after finishing.
- - \b InitSlot(), \b SetEntry(), and \b FinaliseSlot() can be called concurrently from multiple threads, multiple times per event-loop.
+ - \b Initialize() and \b Finalize() are called once per event-loop,  right before starting and right after finishing.
+ - \b InitSlot(), \b SetEntry(), and \b FinalizeSlot() can be called concurrently from multiple threads, multiple times per event-loop.
 */
 class RDataSource {
    // clang-format on
+private:
+   /// \cond
+   // Temporary boolean value used by the backwards compatibility code for the deprecated spellings Initialise,
+   // Finalise and FinaliseSlot.
+   bool fDeprecatedBaseCalled = false;
+   /// \endcond
+
 protected:
    using Record_t = std::vector<void *>;
    friend std::string cling::printValue(::ROOT::RDF::RDataSource *);
@@ -190,14 +199,38 @@ public:
    /// \brief Convenience method called before starting an event-loop.
    /// This method might be called multiple times over the lifetime of a RDataSource, since
    /// users can run multiple event-loops with the same RDataFrame.
-   /// Ideally, `Initialise` should set the state of the RDataSource so that multiple identical event-loops
+   /// Ideally, `Initialize` should set the state of the RDataSource so that multiple identical event-loops
    /// will produce identical results.
    // clang-format on
-   virtual void Initialise() {}
+   virtual void Initialize() {}
+
+   /// \cond
+   // Unused deprecated struct, it's here to remind us to remove the deprecated spellings Initialise, Finalise and
+   // FinaliseSlot. PR that removes the deprecated code: https://github.com/root-project/root/pull/9521 .
+   struct R__DEPRECATED(6, 30,
+                        "Use Initialize, Finalize and FinalizeSlot instead of the corresponding british spellings.")
+      NeverUsedJustAReminder {
+   };
+
+   virtual void Initialise() { fDeprecatedBaseCalled = true; }
+
+   void CallInitialize()
+   {
+      fDeprecatedBaseCalled = false;
+      Initialise();
+      if (!fDeprecatedBaseCalled) {
+         Warning("RDataSource::Initialise", "Initialise is deprecated. Please rename it to \"Initialize\" (with a z).");
+         return;
+      }
+
+      // `Initialise()` was not overridden, the data source uses the new spelling: good!
+      Initialize();
+   }
+   /// \endcond
 
    // clang-format off
    /// \brief Convenience method called at the start of the data processing associated to a slot.
-   /// \param[in] slot The data processing slot wihch needs to be initialised
+   /// \param[in] slot The data processing slot wihch needs to be initialized
    /// \param[in] firstEntry The first entry of the range that the task will process.
    /// This method might be called multiple times per thread per event-loop.
    // clang-format on
@@ -205,16 +238,50 @@ public:
 
    // clang-format off
    /// \brief Convenience method called at the end of the data processing associated to a slot.
-   /// \param[in] slot The data processing slot wihch needs to be finalised
+   /// \param[in] slot The data processing slot wihch needs to be finalized
    /// This method might be called multiple times per thread per event-loop.
    // clang-format on
-   virtual void FinaliseSlot(unsigned int /*slot*/) {}
+   virtual void FinalizeSlot(unsigned int /*slot*/) {}
+
+   /// \cond
+   virtual void FinaliseSlot(unsigned int) { fDeprecatedBaseCalled = true; }
+
+   void CallFinalizeSlot(unsigned int slot)
+   {
+      fDeprecatedBaseCalled = false;
+      FinaliseSlot(slot);
+      if (!fDeprecatedBaseCalled) {
+         Warning("RDataSource::FinaliseSlot",
+                 "FinaliseSlot is deprecated. Please implement FinalizeSlot (with a z) instead of FinaliseSlot.");
+         return;
+      }
+
+      FinalizeSlot(slot);
+   }
+   /// \endcond
 
    // clang-format off
    /// \brief Convenience method called after concluding an event-loop.
-   /// See Initialise for more details.
+   /// See Initialize for more details.
    // clang-format on
-   virtual void Finalise() {}
+   virtual void Finalize() {}
+
+   /// \cond
+   virtual void Finalise() { fDeprecatedBaseCalled = true; }
+
+   void CallFinalize()
+   {
+      fDeprecatedBaseCalled = false;
+      Finalise();
+      if (!fDeprecatedBaseCalled) {
+         Warning("RDataSource::FinaliseSlot",
+                 "Finalise is deprecated. Please implement Finalize (with a z) instead of Finalise.");
+         return;
+      }
+
+      Finalize();
+   }
+   /// \endcond
 
    /// \brief Return a string representation of the datasource type.
    /// The returned string will be used by ROOT::RDF::SaveGraph() to represent

@@ -290,16 +290,18 @@ if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   endforeach ()
 endif ()
 
-# Lots of cling is needed at runtime (e.g. Value, or Interpreter::Evaluate()).
-# The JIT needs to be able to resolve these symbols from cling; unhide them.
-string(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 # The package needs to be compiler without RTTI information
 if(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
-  if(NOT (MSVC_VERSION LESS 1910))
-    # Add the /std:c++14 flag for Visual Studio 2017 (and up)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -GR-")
+  if(NOT DEFINED ROOT_BINARY_DIR)
+    # Add the /std:c++XX flag for Visual Studio if not building as part of ROOT
+    if(MSVC_VERSION GREATER_EQUAL 1920)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std:c++17")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING")
+    elseif(MSVC_VERSION GREATER_EQUAL 1910)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std:c++14")
+    endif()
   endif()
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
@@ -324,8 +326,11 @@ string(REGEX REPLACE "([0-9]).[0-9]+~[a-zA-Z]+" "\\1" CLING_VERSION_MAJOR ${CLIN
 string(REGEX REPLACE "[0-9].([0-9]+)~[a-zA-Z]+" "\\1" CLING_VERSION_MINOR ${CLING_VERSION})
 
 if(DEFINED ROOT_BINARY_DIR)
-  # Building as part of ROOT.
+  # Building as part of ROOT; visibility is "inherited" from ROOT/interpreter.
   set(CLING_VERSION ROOT_${CLING_VERSION})
+else()
+  # Lots of cling is needed at runtime (e.g. Value, or Interpreter::Evaluate()).
+  # The JIT needs to be able to resolve these symbols from cling; unhide them.
   set(CMAKE_CXX_VISIBILITY_PRESET default)
   set(CMAKE_C_VISIBILITY_PRESET default)
   set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")

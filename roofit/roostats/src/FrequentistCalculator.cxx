@@ -13,7 +13,6 @@
 #include "RooStats/RooStatsUtils.h"
 #include "RooStats/DetailedOutputAggregator.h"
 #include "RooMinimizer.h"
-#include "RooMinuit.h"
 #include "RooProfileLL.h"
 
 /** \class RooStats::FrequentistCalculator
@@ -72,7 +71,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       allButNuisance.remove(*fNullModel->GetNuisanceParameters());
       if( fConditionalMLEsNull ) {
          oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Null." << endl;
-         *allParams = *fConditionalMLEsNull;
+         allParams->assign(*fConditionalMLEsNull);
          // LM: fConditionalMLEsNull must be nuisance parameters otherwise an error message will be printed
          allButNuisance.add( *fConditionalMLEsNull );
          if (fNullModel->GetNuisanceParameters()) {
@@ -102,7 +101,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
       // set minimier options
       profile->minimizer()->setMinimizerType(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str());
-      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); 
+      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1);
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
       // Hack to extract a RooFitResult
@@ -184,7 +183,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       allButNuisance.remove(*fAltModel->GetNuisanceParameters());
       if( fConditionalMLEsAlt ) {
          oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Alt." << endl;
-         *allParams = *fConditionalMLEsAlt;
+         allParams->assign(*fConditionalMLEsAlt);
          // LM: fConditionalMLEsAlt must be nuisance parameters otherwise an error message will be printed
          allButNuisance.add( *fConditionalMLEsAlt );
          if (fAltModel->GetNuisanceParameters()) {
@@ -215,7 +214,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
       // set minimizer options
       profile->minimizer()->setMinimizerType(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str());
-      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); // use -1 to make more silent 
+      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); // use -1 to make more silent
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
       // Hack to extract a RooFitResult

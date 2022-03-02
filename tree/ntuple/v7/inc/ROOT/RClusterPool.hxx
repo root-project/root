@@ -18,7 +18,6 @@
 
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RNTupleUtil.hxx>
-#include <ROOT/RPageStorage.hxx> // for ColumnSet_t
 
 #include <condition_variable>
 #include <memory>
@@ -55,15 +54,13 @@ compressed pages and the page source has to uncompresses pages at a later point 
 // clang-format on
 class RClusterPool {
 private:
-   /// Maximum number of queued cluster requests for the I/O thread. A single request can span mutliple clusters.
-   static constexpr unsigned int kWorkQueueLimit = 4;
-
    /// Request to load a subset of the columns of a particular cluster.
    /// Work items come in groups and are executed by the page source.
    struct RReadItem {
+      /// Items with different bunch ids are scheduled for different vector reads
+      std::int64_t fBunchId = -1;
       std::promise<std::unique_ptr<RCluster>> fPromise;
-      DescriptorId_t fClusterId = kInvalidDescriptorId;
-      RPageSource::ColumnSet_t fColumns;
+      RCluster::RKey fClusterKey;
    };
 
    /// Request to decompress and if necessary unpack compressed pages. The unzipped pages
@@ -77,25 +74,29 @@ private:
    /// work item, first a read item and then an unzip item.
    struct RInFlightCluster {
       std::future<std::unique_ptr<RCluster>> fFuture;
-      DescriptorId_t fClusterId = kInvalidDescriptorId;
-      RPageSource::ColumnSet_t fColumns;
+      RCluster::RKey fClusterKey;
       /// By the time a cluster has been loaded, this cluster might not be necessary anymore. This can happen if
       /// there are jumps in the access pattern (i.e. the access pattern deviates from linear access).
       bool fIsExpired = false;
 
-      bool operator ==(const RInFlightCluster &other) const { return fClusterId == other.fClusterId && fColumns == other.fColumns; }
+      bool operator ==(const RInFlightCluster &other) const {
+         return (fClusterKey.fClusterId == other.fClusterKey.fClusterId) &&
+                (fClusterKey.fColumnSet == other.fClusterKey.fColumnSet); }
       bool operator !=(const RInFlightCluster &other) const { return !(*this == other); }
       /// First order by cluster id, then by number of columns, than by the column ids in fColumns
       bool operator <(const RInFlightCluster &other) const;
    };
 
    /// Every cluster pool is responsible for exactly one page source that triggers loading of the clusters
-   /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadCluster()).
+   /// (GetCluster()) and is used for implementing the I/O and cluster memory allocation (PageSource::LoadClusters()).
    RPageSource &fPageSource;
    /// The number of clusters before the currently active cluster that should stay in the pool if present
-   unsigned int fWindowPre;
-   /// The number of desired clusters in the pool, including the currently active cluster
-   unsigned int fWindowPost;
+   /// Reserved for later use.
+   unsigned int fWindowPre = 0;
+   /// The number of clusters that are being read in a single vector read.
+   unsigned int fClusterBunchSize;
+   /// Used as an ever-growing counter in GetCluster() to separate bunches of clusters from each other
+   std::int64_t fBunchId = 0;
    /// The cache of clusters around the currently active cluster
    std::vector<std::unique_ptr<RCluster>> fPool;
 
@@ -115,7 +116,7 @@ private:
    /// The communication channel between the I/O thread and the unzip thread
    std::queue<RUnzipItem> fUnzipQueue;
 
-   /// The I/O thread calls RPageSource::LoadCluster() asynchronously.  The thread is mostly waiting for the
+   /// The I/O thread calls RPageSource::LoadClusters() asynchronously.  The thread is mostly waiting for the
    /// data to arrive (blocked by the kernel) and therefore can safely run in addition to the application
    /// main threads.
    std::thread fThreadIo;
@@ -137,18 +138,15 @@ private:
    /// Returns the given cluster from the pool, which needs to contain at least the columns `columns`.
    /// Executed at the end of GetCluster when all missing data pieces have been sent to the load queue.
    /// Ideally, the function returns without blocking if the cluster is already in the pool.
-   RCluster *WaitFor(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
+   RCluster *WaitFor(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
 
 public:
-   static constexpr unsigned int kDefaultPoolSize = 4;
-   RClusterPool(RPageSource &pageSource, unsigned int size);
-   explicit RClusterPool(RPageSource &pageSource) : RClusterPool(pageSource, kDefaultPoolSize) {}
+   static constexpr unsigned int kDefaultClusterBunchSize = 1;
+   RClusterPool(RPageSource &pageSource, unsigned int clusterBunchSize);
+   explicit RClusterPool(RPageSource &pageSource) : RClusterPool(pageSource, kDefaultClusterBunchSize) {}
    RClusterPool(const RClusterPool &other) = delete;
    RClusterPool &operator =(const RClusterPool &other) = delete;
    ~RClusterPool();
-
-   unsigned int GetWindowPre() const { return fWindowPre; }
-   unsigned int GetWindowPost() const { return fWindowPost; }
 
    /// Returns the requested cluster either from the pool or, in case of a cache miss, lets the I/O thread load
    /// the cluster in the pool, blocks until done, and then returns it.  Triggers along the way the background loading
@@ -156,7 +154,10 @@ public:
    /// and possibly pages of other columns, too.  If implicit multi-threading is turned on, the uncompressed pages
    /// of the returned cluster are already pushed into the page pool associated with the page source upon return.
    /// The cluster remains valid until the next call to GetCluster().
-   RCluster *GetCluster(DescriptorId_t clusterId, const RPageSource::ColumnSet_t &columns);
+   RCluster *GetCluster(DescriptorId_t clusterId, const RCluster::ColumnSet_t &columns);
+
+   /// Used by the unit tests to drain the queue of clusters to be preloaded
+   void WaitForInFlightClusters();
 }; // class RClusterPool
 
 } // namespace Detail

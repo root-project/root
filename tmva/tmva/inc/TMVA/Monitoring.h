@@ -26,11 +26,11 @@ namespace TMVA
       Monitoring ()
          : fCanvas (NULL)
          {
-         }    
+         }
 
-      ~Monitoring () 
-         { 
-            delete fCanvas; 
+      ~Monitoring ()
+         {
+            delete fCanvas;
             //            delete fApplication;
          }
 

@@ -868,7 +868,7 @@ GdkPixmap *gdk_pixmap_create_from_xpm_d(GdkWindow * window,
                                                 transparent_color, data);
 }
 
-GdkPixmap *gdk_pixmap_foreign_new(guint32 anid)
+GdkPixmap *gdk_pixmap_foreign_new(gulong anid)
 {
    GdkPixmap *pixmap;
    GdkDrawablePrivate *private;

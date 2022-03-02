@@ -119,7 +119,6 @@ Options:
   -h       : print usage
   --help   : print usage
   -config  : print ./configure options
-  -memstat : run with memory usage monitoring
 ```
 
 -   -b ROOT session runs in batch mode, without graphics display. This
@@ -1162,7 +1161,6 @@ Unix.*.Root.UseTTFonts:     true
 Unix.*.Root.TTFontPath:
 ...
 # Activate memory statistics
-Rint.Root.MemStat:       1
 Rint.Load:               rootalias.C
 Rint.Logon:              rootlogon.C
 Rint.Logoff:             rootlogoff.C
@@ -1239,7 +1237,6 @@ use this facility, edit the file `$ROOTSYS/etc/system.rootrc` or
 `.rootrc` if you have this file and add the two following lines:
 
 ```
-Root.MemStat:            1
 Root.ObjectStat:         1
 ```
 
@@ -1254,22 +1251,6 @@ instances for each class. By comparing consecutive print outs, you can
 see objects that you forgot to delete. Note that this method cannot
 show leaks coming from the allocation of non-objects or classes
 unknown to ROOT.
-
-### Memory Checker
-
-
-A memory checking system was developed by D.Bertini and M.Ivanov and
-added in ROOT version 3.02.07. To activate the memory checker you can
-set the resource `Root.MemCheck` to 1 (e.g.: `Root.MemCheck: 1` in the
-`.rootrc` file). You also have to link with `libNew.so` (e.g. use
-`root-config --new --libs`) or to use `rootn.exe`. When these settings
-are in place, you will find a file "`memcheck.out`" in the directory
-where you started your ROOT program after the completion of the
-program execution. You can also set the resource `Root.MemCheckFile`
-to the name of a file. The memory information will be written to that
-file. The contents of this `memcheck.out` can be analyzed and
-transformed into printable text via the `memprobe` program
-(in `$ROOTSYS/bin`).
 
 ## Converting from PAW to ROOT
 

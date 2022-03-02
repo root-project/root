@@ -21,12 +21,13 @@ ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index
-      /STACK:4000000")
+      /STACK:4000000 setargv.obj")
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
 endif()
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
 if(MSVC)
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore)
+  set_property(TARGET hadd APPEND_STRING PROPERTY LINK_FLAGS "setargv.obj")
 else()
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
 endif()
@@ -74,11 +75,10 @@ install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -O -
 configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 
 
-if(NOT MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS} ")
-else()
-  set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS ${CLING_CXXFLAGS})
-endif()
+set_source_files_properties(src/rootcling.cxx PROPERTIES
+  COMPILE_FLAGS "${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
 ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core)
 

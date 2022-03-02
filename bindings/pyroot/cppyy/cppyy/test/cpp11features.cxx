@@ -1,5 +1,3 @@
-#if __cplusplus >= 201103L
-
 #include "cpp11features.h"
 
 
@@ -37,5 +35,3 @@ void implicit_converion_move(TestMoving2&&) {
 // for std::function testing
 std::function<int(const FNTestStruct& t)> FNCreateTestStructFunc() { return [](const FNTestStruct& t) { return t.t; }; }
 std::function<int(const FunctionNS::FNTestStruct& t)> FunctionNS::FNCreateTestStructFunc() { return [](const FNTestStruct& t) { return t.t; }; }
-
-#endif // c++11 and later

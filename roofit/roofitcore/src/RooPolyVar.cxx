@@ -54,7 +54,7 @@ RooPolyVar::RooPolyVar() : _lowestOrder(0)
 /// interpreted as as the 'lowestOrder' coefficients and all
 /// subsequent coeffient elements are shifted by a similar amount.
 RooPolyVar::RooPolyVar(const char* name, const char* title,
-			     RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
+              RooAbsReal& x, const RooArgList& coefList, Int_t lowestOrder) :
   RooAbsReal(name, title),
   _x("x", "Dependent", this, x),
   _coefList("coefList","List of coefficients",this),
@@ -63,7 +63,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   // Check lowest order
   if (_lowestOrder<0) {
     coutE(InputArguments) << "RooPolyVar::ctor(" << GetName()
-			  << ") WARNING: lowestOrder must be >=0, setting value to 0" << endl ;
+           << ") WARNING: lowestOrder must be >=0, setting value to 0" << endl ;
     _lowestOrder=0 ;
   }
 
@@ -72,7 +72,7 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   while((coef = (RooAbsArg*)coefIter.next())) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-			    << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << endl ;
       R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;

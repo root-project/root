@@ -60,7 +60,7 @@ class FTGL_EXPORT FTFace
         bool Attach( const unsigned char *pBufferBytes, size_t bufferSizeInBytes);
 
         /**
-         * Get the freetype face object..
+         * Get the freetype face object.
          *
          * @return pointer to an FT_Face.
          */

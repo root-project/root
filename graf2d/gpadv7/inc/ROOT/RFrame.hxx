@@ -12,7 +12,7 @@
 #include "ROOT/RDrawable.hxx"
 
 #include "ROOT/RDrawableRequest.hxx"
-#include "ROOT/RAttrLine.hxx"
+#include "ROOT/RAttrBorder.hxx"
 #include "ROOT/RAttrFill.hxx"
 #include "ROOT/RAttrMargins.hxx"
 #include "ROOT/RAttrAxis.hxx"
@@ -144,21 +144,6 @@ public:
    };
 
 private:
-   RAttrMargins fMargins{this, "margin"};         ///<! frame margins relative to pad
-   RAttrLine fAttrBorder{this, "border"};         ///<! line attributes for border
-   RAttrFill fAttrFill{this, "fill"};             ///<! fill attributes for the frame
-   RAttrAxis fAttrX{this, "x"};                   ///<! drawing attributes for X axis
-   RAttrAxis fAttrY{this, "y"};                   ///<! drawing attributes for Y axis
-   RAttrAxis fAttrZ{this, "z"};                   ///<! drawing attributes for Z axis
-   RAttrAxis fAttrX2{this, "x2"};                 ///<! drawing attributes for X2 axis
-   RAttrAxis fAttrY2{this, "y2"};                 ///<! drawing attributes for Y2 axis
-   RAttrValue<bool> fDrawAxes{this, "drawaxes", false}; ///<! draw axes by frame
-   RAttrValue<bool> fGridX{this, "gridx", false}; ///<! show grid for X axis
-   RAttrValue<bool> fGridY{this, "gridy", false}; ///<! show grid for Y axis
-   RAttrValue<bool> fSwapX{this, "swapx", false}; ///<! swap position of X axis
-   RAttrValue<bool> fSwapY{this, "swapy", false}; ///<! swap position of Y axis
-   RAttrValue<int> fTicksX{this, "ticksx", 1};    ///<! X ticks drawing:
-   RAttrValue<int> fTicksY{this, "ticksy", 1};    ///<! Y ticks drawing
    std::map<unsigned, RUserRanges> fClientRanges; ///<! individual client ranges
 
    RFrame(const RFrame &) = delete;
@@ -192,62 +177,23 @@ public:
       }
    };
 
+   RAttrMargins margins{this, "margins"};              ///<! frame margins relative to pad
+   RAttrBorder border{this, "border"};                 ///<! frame border attributes
+   RAttrFill fill{this, "fill"};                       ///<! frame fill attributes
+   RAttrAxis x{this, "x"};                             ///<! drawing attributes for X axis
+   RAttrAxis y{this, "y"};                             ///<! drawing attributes for Y axis
+   RAttrAxis z{this, "z"};                             ///<! drawing attributes for Z axis
+   RAttrAxis x2{this, "x2"};                           ///<! drawing attributes for X2 axis
+   RAttrAxis y2{this, "y2"};                           ///<! drawing attributes for Y2 axis
+   RAttrValue<bool> drawAxes{this, "drawAxes", false}; ///<! draw axes by frame
+   RAttrValue<bool> gridX{this, "gridX", false};       ///<! show grid for X axis
+   RAttrValue<bool> gridY{this, "gridY", false};       ///<! show grid for Y axis
+   RAttrValue<bool> swapX{this, "swapX", false};       ///<! swap position of X axis
+   RAttrValue<bool> swapY{this, "swapY", false};       ///<! swap position of Y axis
+   RAttrValue<int> ticksX{this, "ticksX", 1};          ///<! X ticks drawing: 0 - off, 1 - normal, 2 - both sides, 3 - both sides with labels
+   RAttrValue<int> ticksY{this, "ticksY", 1};          ///<! Y ticks drawing: 0 - off, 1 - normal, 2 - both sides, 3 - both sides with labels
+
    RFrame(TRootIOCtor*) : RFrame() {}
-
-   bool GetDrawAxes() const { return fDrawAxes; }
-   RFrame &SetDrawAxes(bool on = true) { fDrawAxes = on; return *this; }
-
-   const RAttrMargins &GetMargins() const { return fMargins; }
-   RFrame &SetMargins(const RAttrMargins &margins) { fMargins = margins; return *this; }
-   RAttrMargins &Margins() { return fMargins; }
-
-   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RFrame &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
-   RAttrLine &AttrBorder() { return fAttrBorder; }
-
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RFrame &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
-   RAttrFill &AttrFill() { return fAttrFill; }
-
-   const RAttrAxis &GetAttrX() const { return fAttrX; }
-   RFrame &SetAttrX(const RAttrAxis &axis) { fAttrX = axis; return *this; }
-   RAttrAxis &AttrX() { return fAttrX; }
-
-   const RAttrAxis &GetAttrY() const { return fAttrY; }
-   RFrame &SetAttrY(const RAttrAxis &axis) { fAttrY = axis; return *this; }
-   RAttrAxis &AttrY() { return fAttrY; }
-
-   const RAttrAxis &GetAttrZ() const { return fAttrZ; }
-   RFrame &SetAttrZ(const RAttrAxis &axis) { fAttrZ = axis; return *this; }
-   RAttrAxis &AttrZ() { return fAttrZ; }
-
-   const RAttrAxis &GetAttrX2() const { return fAttrX2; }
-   RFrame &SetAttrX2(const RAttrAxis &axis) { fAttrX2 = axis; return *this; }
-   RAttrAxis &AttrX2() { return fAttrX2; }
-
-   const RAttrAxis &GetAttrY2() const { return fAttrY2; }
-   RFrame &SetAttrY2(const RAttrAxis &axis) { fAttrY2 = axis; return *this; }
-   RAttrAxis &AttrY2() { return fAttrY2; }
-
-   RFrame &SetGridX(bool on = true) { fGridX = on; return *this; }
-   bool GetGridX() const { return fGridX; }
-
-   RFrame &SetGridY(bool on = true) { fGridY = on; return *this; }
-   bool GetGridY() const { return fGridY; }
-
-   RFrame &SetSwapX(bool on = true) { fSwapX = on; return *this; }
-   bool GetSwapX() const { return fSwapX; }
-
-   RFrame &SetSwapY(bool on = true) { fSwapY = on; return *this; }
-   bool GetSwapY() const { return fSwapY; }
-
-   /** Configure X ticks drawing 0 - off, 1 - as configured for axis, 2 - both sides, 3 - labels on both side */
-   RFrame &SetTicksX(int v = 1) { fTicksX = v; return *this; }
-   int GetTicksX() const { return fTicksX; }
-
-   /** Configure Y ticks drawing 0 - off, 1 - as configured for axis, 2 - both sides, 3 - labels on both side */
-   RFrame &SetTicksY(int v = 1) { fTicksY = v; return *this; }
-   int GetTicksY() const { return fTicksY; }
 
    void GetClientRanges(unsigned connid, RUserRanges &ranges);
 };

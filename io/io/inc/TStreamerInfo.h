@@ -21,11 +21,6 @@
 
 #include "TObjArray.h"
 
-/**
-\class TStreamerInfo
-\ingroup IO
-Describe Streamer information for one class version
-*/
 
 class TFile;
 class TClass;
@@ -54,7 +49,7 @@ class TStreamerInfo : public TVirtualStreamerInfo {
       Int_t             fOffset;
       Int_t             fLength;
       TStreamerElement *fElem;     ///< Not Owned
-      ULong_t           fMethod;
+      ULongptr_t        fMethod;
       TClass           *fClass;    ///< Not Owned
       TClass           *fNewClass; ///< Not Owned
       TString           fClassName;
@@ -97,7 +92,7 @@ private:
    Int_t             fSize;              ///<!size of the persistent class
    Int_t             fNdata;             ///<!number of optimized elements
    Int_t             fNfulldata;         ///<!number of elements
-   Int_t             fNslots;            ///<!total numbrer of slots in fComp.
+   Int_t             fNslots;            ///<!total number of slots in fComp.
    TCompInfo        *fComp;              ///<![fNslots with less than fElements->GetEntries()*1.5 used] Compiled info
    TCompInfo       **fCompOpt;           ///<![fNdata]
    TCompInfo       **fCompFull;          ///<![fElements->GetEntries()]
@@ -220,7 +215,7 @@ public:
    Int_t               GetNelement() const { return fElements->GetEntriesFast(); }
    Int_t               GetNumber()  const {return fNumber;}
    Int_t               GetLength(Int_t id) const {return fComp[id].fLength;}
-   ULong_t             GetMethod(Int_t id) const {return fComp[id].fMethod;}
+   ULongptr_t          GetMethod(Int_t id) const {return fComp[id].fMethod;}
    Int_t               GetNewType(Int_t id) const {return fComp[id].fNewType;}
    Int_t               GetOffset(const char *) const;
    Int_t               GetOffset(Int_t id) const {return fComp[id].fOffset;}

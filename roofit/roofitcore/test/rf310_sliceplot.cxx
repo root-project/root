@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'MULTIDIMENSIONAL MODELS' RooFit tutorial macro #309
-// 
-// Projecting p.d.f and data slices in discrete observables 
+//
+// Projecting p.d.f and data slices in discrete observables
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -26,11 +26,11 @@ using namespace RooFit ;
 
 class TestBasic310 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic310(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Data and p.d.f projection in category slice",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   B   d e c a y   p d f   w it h   m i x i n g 
+  // C r e a t e   B   d e c a y   p d f   w it h   m i x i n g
   // ----------------------------------------------------------
 
   // Decay time observables
@@ -54,18 +54,18 @@ public:
 
   // Build a gaussian resolution model
   RooRealVar bias1("bias1","bias1",0) ;
-  RooRealVar sigma1("sigma1","sigma1",0.01) ;  
+  RooRealVar sigma1("sigma1","sigma1",0.01) ;
   RooGaussModel gm1("gm1","gauss model 1",dt,bias1,sigma1) ;
 
   // Construct a decay pdf, smeared with single gaussian resolution model
   RooBMixDecay bmix_gm1("bmix","decay",dt,mixState,tagFlav,tau,dm,w,dw,gm1,RooBMixDecay::DoubleSided) ;
-  
+
   // Generate BMixing data with above set of event errors
   RooDataSet *data = bmix_gm1.generate(RooArgSet(dt,tagFlav,mixState),20000) ;
 
 
 
-  // P l o t   f u l l   d e c a y   d i s t r i b u t i o n 
+  // P l o t   f u l l   d e c a y   d i s t r i b u t i o n
   // ----------------------------------------------------------
 
   // Create frame, plot data and pdf projection (integrated over tagFlav and mixState)

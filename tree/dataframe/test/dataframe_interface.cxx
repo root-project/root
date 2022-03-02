@@ -1,6 +1,10 @@
-#include "ROOT/RDataFrame.hxx"
-#include "ROOT/RTrivialDS.hxx"
+#include "CounterHelper.h"
+#include "MaxSlotHelper.h"
+
 #include "ROOT/RCsvDS.hxx"
+#include "ROOT/RDataFrame.hxx"
+#include "ROOT/RStringView.hxx"
+#include "ROOT/RTrivialDS.hxx"
 #include "TMemFile.h"
 #include "TSystem.h"
 #include "TTree.h"
@@ -70,7 +74,7 @@ TEST(RDataFrameInterface, CreateAliases)
 TEST(RDataFrameInterface, CheckAliasesPerChain)
 {
    RDataFrame tdf(1);
-   auto d = tdf.Define("c0", []() { return 0; });
+   auto d = tdf.Define("c0", []() { return 42; });
    // Now branch the graph
    auto ok = []() { return true; };
    auto f0 = d.Filter(ok);
@@ -78,8 +82,25 @@ TEST(RDataFrameInterface, CheckAliasesPerChain)
    auto f0a = f0.Alias("c1", "c0");
    // must work
    auto f0aa = f0a.Alias("c2", "c1");
+   EXPECT_EQ(f0aa.Max<int>("c2").GetValue(), 42);
    // must fail
    EXPECT_ANY_THROW(f1.Alias("c2", "c1")) << "No exception thrown when trying to alias a non-existing column.";
+}
+
+TEST(RDataFrameInterface, PerBranchAliases)
+{
+   // test that it's possible to register the same alias in different branches of the computation graph
+   auto df = ROOT::RDataFrame(1).Define("x", [] { return 42; }).Define("y", [] { return 0; });
+   auto dfzx = df.Alias("z", "x");
+   auto dfzy = df.Alias("z", "y");
+
+   EXPECT_ANY_THROW(df.Max<int>("z"))
+      << "No exception thrown when trying to access an alias that is not present at this point of the graph.";
+
+   auto max42 = dfzx.Max<int>("z");
+   auto max0 = dfzy.Max<int>("z");
+   EXPECT_EQ(*max42, 42);
+   EXPECT_EQ(*max0, 0);
 }
 
 TEST(RDataFrameInterface, GetColumnNamesFromScratch)
@@ -114,9 +135,8 @@ TEST(RDataFrameInterface, GetColumnNamesFromOrdering)
    RDataFrame tdf(t);
    auto names = tdf.GetColumnNames();
    EXPECT_EQ(2U, names.size());
-   EXPECT_STREQ("zzz", names[0].c_str());
-   EXPECT_STREQ("aaa", names[1].c_str());
-
+   EXPECT_STREQ("aaa", names[0].c_str());
+   EXPECT_STREQ("zzz", names[1].c_str());
 }
 
 TEST(RDataFrameInterface, GetColumnNamesFromSource)
@@ -367,9 +387,12 @@ TEST(RDataFrameInterface, GetNSlots)
 TEST(RDataFrameInterface, DefineAliasedColumn)
 {
    ROOT::RDataFrame rdf(1);
-   auto r0 = rdf.Define("myVar", [](){return 1;});
+   auto r0 = rdf.Define("myVar", [] { return 1; });
    auto r1 = r0.Alias("newVar", "myVar");
-   EXPECT_ANY_THROW(r0.Define("newVar", [](int i){return i;}, {"myVar"})) << "No exception thrown when defining a column with a name which is already an alias.";
+   auto mdefine = r0.Define("newVar", [] { return 42; }).Max<int>("newVar");
+   auto malias = r1.Max<int>("newVar");
+   EXPECT_EQ(*mdefine, 42);
+   EXPECT_EQ(*malias, 1);
 }
 
 // ROOT-10619
@@ -390,7 +413,9 @@ TEST(RDataFrameInterface, UnusedJittedNodes)
    hasThrown = false;
 
 // ROOT-10458
-#ifdef _WIN32
+#if defined(_WIN64)
+const std::string symbol = "`private: virtual void __cdecl RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody(void) __ptr64'::`2'::SimpleType";
+#elif defined(_WIN32)
 const std::string symbol = "`private: virtual void __thiscall RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody(void)'::`2'::SimpleType";
 #else
 const std::string symbol = "RDataFrameInterface_TypeUnknownToInterpreter_Test::TestBody()::SimpleType";
@@ -446,9 +471,9 @@ TEST(RDataFrameInterface, ColumnWithSimpleStruct)
    EXPECT_NE(t.GetLeaf("c.b"),nullptr);
 
    ROOT::RDataFrame df(t);
-   const std::vector<std::string> expected({ "c.a", "a", "c.b", "b", "c" });
+   const std::vector<std::string> expected({ "a",  "b", "c", "c.a", "c.b" });
    EXPECT_EQ(df.GetColumnNames(), expected);
-   for (const std::string &col : {"c.a", "a"}) {
+   for (std::string_view col : {"c.a", "a"}) {
       EXPECT_DOUBLE_EQ(df.Mean<int>(col).GetValue(), 42.); // compiled
       EXPECT_DOUBLE_EQ(df.Mean(col).GetValue(), 42.); // jitted
    }
@@ -593,7 +618,18 @@ TEST(RDataFrameInterface, Describe)
                      "\n"
                      "Column  Type    Origin\n"
                      "------  ----    ------\n";
-   EXPECT_EQ(df1.Describe(), ref1);
+   EXPECT_EQ(df1.Describe().AsString(), ref1);
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   std::cout << df1.Describe();
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+   EXPECT_EQ(strCout.str(), ref1);
 
    // create in-memory tree
    TTree tree("tree", "tree");
@@ -619,11 +655,11 @@ TEST(RDataFrameInterface, Describe)
                      "\n"
                      "Column                  Type                            Origin\n"
                      "------                  ----                            ------\n"
-                     "myVec                   ROOT::VecOps::RVec<float>       Define\n"
-                     "myLongColumnName        unsigned int                    Define\n"
+                     "myFloat                 Float_t                         Dataset\n"
                      "myInt                   Int_t                           Dataset\n"
-                     "myFloat                 Float_t                         Dataset";
-   EXPECT_EQ(df3.Describe(), ref2);
+                     "myLongColumnName        unsigned int                    Define\n"
+                     "myVec                   ROOT::VecOps::RVec<float>       Define";
+   EXPECT_EQ(df3.Describe().AsString(), ref2);
 }
 
 TEST(RDFSimpleTests, LeafWithDifferentNameThanBranch)
@@ -637,49 +673,59 @@ TEST(RDFSimpleTests, LeafWithDifferentNameThanBranch)
    EXPECT_EQ(*m, 42);
 }
 
-TEST(RDataFrameInterface, DescribeDataset)
+TEST(RDataFrameInterface, DescribeShortFormat)
 {
    // trivial/empty datasource
    ROOT::RDataFrame df1a(1);
-   EXPECT_EQ(df1a.DescribeDataset(), "Empty dataframe filling 1 row");
+   EXPECT_EQ(df1a.Describe().AsString(/*shortFormat =*/true), "Empty dataframe filling 1 row");
+
+   // Testing the std output printing
+   std::cout << std::flush;
+   // Redirect cout.
+   std::streambuf *oldCoutStreamBuf = std::cout.rdbuf();
+   std::ostringstream strCout;
+   std::cout.rdbuf(strCout.rdbuf());
+   df1a.Describe().Print(/*shortFormat =*/true);
+   // Restore old cout.
+   std::cout.rdbuf(oldCoutStreamBuf);
+   EXPECT_EQ(strCout.str(), "Empty dataframe filling 1 row");
 
    ROOT::RDataFrame df1b(2);
-   EXPECT_EQ(df1b.DescribeDataset(), "Empty dataframe filling 2 rows");
+   EXPECT_EQ(df1b.Describe().AsString(/*shortFormat =*/true), "Empty dataframe filling 2 rows");
 
    // ttree/tchain
    // case: in-memory tree
    TTree tree("someName", "someTitle");
    ROOT::RDataFrame df2a(tree);
-   EXPECT_EQ(df2a.DescribeDataset(), "Dataframe from TTree someName (in-memory)");
+   EXPECT_EQ(df2a.Describe().AsString(/*shortFormat =*/true), "Dataframe from TTree someName (in-memory)");
 
-   // case: ctor from a single file
-   // NOTE: using the RDataFrame("tree", "file.root") ctor, it's always a TChain
-   TFile f1("testDescribeDataset1.root", "recreate");
-   TTree t1("myTree", "foo");
-   t1.Write();
-   f1.Close();
+   {
+      // case: ctor from a single file
+      TFile f("testDescribeDataset1.root", "recreate");
+      TTree t("myTree", "foo");
+      t.Write();
+   }
    ROOT::RDataFrame df2b("myTree", "testDescribeDataset1.root");
-   std::stringstream ss1;
-   ss1 << "Dataframe from TChain myTree in file testDescribeDataset1.root";
-   EXPECT_EQ(df2b.DescribeDataset(), ss1.str());
+   // NOTE: using the RDataFrame("tree", "file.root") ctor, it's always a TChain
+   std::string ss1 = "Dataframe from TChain myTree in file testDescribeDataset1.root";
+   EXPECT_EQ(df2b.Describe().AsString(/*shortFormat =*/true), ss1);
 
    // case: ctor with multiple files
-   TFile f2("testDescribeDataset2.root", "recreate");
-   TTree t2("myTree", "foo");
-   t2.Write();
-   f2.Close();
+   {
+      TFile f("testDescribeDataset2.root", "recreate");
+      TTree t("myTree", "foo");
+      t.Write();
+   }
    ROOT::RDataFrame df2d("myTree", {"testDescribeDataset1.root", "testDescribeDataset2.root"});
-   std::stringstream ss2;
-   ss2 << "Dataframe from TChain myTree in files\n"
-       << "  testDescribeDataset1.root\n"
-       << "  testDescribeDataset2.root";
-   EXPECT_EQ(df2d.DescribeDataset(), ss2.str());
+   std::string ss2 = "Dataframe from TChain myTree in files\n  testDescribeDataset1.root\n  testDescribeDataset2.root";
+   EXPECT_EQ(df2d.Describe().AsString(/*shortFormat =*/true), ss2);
 
    // case: ttree/tchain with friends
-   TFile f3("testDescribeDataset3.root", "recreate");
-   TTree t3("myTree", "foo");
-   t3.Write();
-   f3.Close();
+   {
+      TFile f("testDescribeDataset3.root", "recreate");
+      TTree t("myTree", "foo");
+      t.Write();
+   }
    TFile f4("testDescribeDataset1.root");
    auto t4 = f4.Get<TTree>("myTree");
    TFile f5("testDescribeDataset2.root");
@@ -693,19 +739,104 @@ TEST(RDataFrameInterface, DescribeDataset)
    t4->AddFriend(t6, "myAlias");
    t4->AddFriend(&chain1, "myAlias2");
    ROOT::RDataFrame df2e(*t4);
-   std::stringstream ss3;
-   ss3 << "Dataframe from TTree myTree in file testDescribeDataset1.root\n"
-       << "with friends\n"
-       << "  myTree testDescribeDataset2.root\n"
-       << "  myTree (myAlias) testDescribeDataset3.root\n"
-       << "  myTree (myAlias2)\n"
-       << "    myTree testDescribeDataset2.root\n"
-       << "    myTree testDescribeDataset3.root";
-   EXPECT_EQ(df2e.DescribeDataset(), ss3.str());
-   f3.Close();
-   f4.Close();
+   auto ss3 = std::string("Dataframe from TTree myTree in file testDescribeDataset1.root\nwith friends\n") +
+              "  myTree testDescribeDataset2.root\n  myTree (myAlias) testDescribeDataset3.root\n" +
+              "  myTree (myAlias2)\n    myTree testDescribeDataset2.root\n    myTree testDescribeDataset3.root";
+   EXPECT_EQ(df2e.Describe().AsString(/*shortFormat =*/true), ss3);
 
    // others with an actual fDataSource, like csv
    auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
-   EXPECT_EQ(df3.DescribeDataset(), "Dataframe from datasource RCsv");
+   EXPECT_EQ(df3.Describe().AsString(/*shortFormat =*/true), "Dataframe from datasource RCsv");
+
+   for (int i = 1; i <= 3; ++i)
+      gSystem->Unlink(("testDescribeDataset" + std::to_string(i) + ".root").c_str());
+}
+
+// #var is a convenience alias for R_rdf_sizeof_var.
+TEST(RDataFrameInterface, ShortSyntaxForCollectionSizes)
+{
+   auto df = ROOT::RDataFrame(1).Define("R_rdf_sizeof_x", [] { return 42; });
+   auto m1 = df.Max<int>("#x");
+   auto m2 = df.Max("#x");
+   auto m3 = df.Define("y", [] (int xs) { return xs; }, {"#x"}).Max<int>("y");
+   auto m4 = df.Filter("2 + pow(#x, 2) > 0").Max<int>("#x");
+   auto dfWithAlias = df.Alias("szx", "#x");
+   auto m5 = dfWithAlias.Max<int>("szx");
+   auto m6 = dfWithAlias.Max("szx");
+   EXPECT_EQ(*m1, 42);
+   EXPECT_EQ(*m2, 42);
+   EXPECT_EQ(*m3, 42);
+   EXPECT_EQ(*m4, 42);
+   EXPECT_EQ(*m5, 42);
+   EXPECT_EQ(*m6, 42);
+}
+
+// make sure #pragma is ignored, and multiple #var1 #var2 are allowed
+TEST(RDataFrameInterface, StressShortSyntaxForCollectionSizes)
+{
+   gInterpreter->Declare("#define RDF_DO_FILTER 1");
+   auto df = ROOT::RDF::RNode(ROOT::RDataFrame(42));
+   // Define R_rdf_sizeof_var{1,2,...,100}
+   for (int i = 1; i <= 100; ++i)
+      df = df.Define("R_rdf_sizeof_var" + std::to_string(i), [] { return 1; });
+
+   // Filter expression is "#var1 + #var2 + ... + #var100 == 100"
+   std::string expr = "#var1";
+   for (int i = 2; i <= 100; ++i)
+      expr += "+#var" + std::to_string(i);
+   expr = expr + " == 100";
+   expr = "\n#ifdef RDF_DO_FILTER\nreturn " + expr + ";\n#else\nreturn false;\n#endif";
+   df = df.Filter(expr);
+   auto c = df.Count().GetValue();
+   EXPECT_EQ(c, 42ull);
+}
+
+TEST(RDataFrameInterface, MutableForeach)
+{
+   int i = 0;
+   ROOT::RDataFrame(10).Foreach([&](ULong64_t) mutable { ++i; }, {"rdfentry_"});
+   EXPECT_EQ(i, 10);
+}
+
+TEST(RDataFrameInterface, BookWithoutColumns)
+{
+   CounterHelper ch; // defined as a variable to exercise passing lvalues into Book
+   EXPECT_EQ(ROOT::RDataFrame(3).Book<>(ch).GetValue(), 3);
+   EXPECT_THROW(ROOT::RDataFrame(3).Book(MaxSlotHelper(1u)), std::logic_error);
+}
+
+TEST(RDataFrameInterface, SnapshotWithDuplicateColumns)
+{
+   EXPECT_THROW(
+      (ROOT::RDataFrame(1).Snapshot<ULong64_t, ULong64_t>("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})),
+      std::logic_error);
+   EXPECT_THROW((ROOT::RDataFrame(1).Snapshot("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})), std::logic_error);
+}
+
+struct Jet {
+   double a, b;
+};
+
+struct CustomFiller {
+   TH2D h{"", "", 10, 0, 10, 10, 0, 10};
+
+   void Fill(const Jet &j) { h.Fill(j.a, j.b); }
+
+   void Merge(const std::vector<CustomFiller *> &)
+   {
+      // unused, single-thread test
+   }
+
+   double GetMeanX() const { return h.GetMean(1); }
+   double GetMeanY() const { return h.GetMean(2); }
+   double GetEntries() const { return h.GetEntries(); }
+};
+
+// #9428
+TEST(RDataFrameInterface, FillCustomType)
+{
+   auto res = ROOT::RDataFrame(10).Define("Jet", [] { return Jet{1., 2.}; }).Fill<Jet>(CustomFiller{}, {"Jet"});
+   EXPECT_DOUBLE_EQ(res->GetEntries(), 10.);
+   EXPECT_DOUBLE_EQ(res->GetMeanX(), 1.);
+   EXPECT_DOUBLE_EQ(res->GetMeanY(), 2.);
 }

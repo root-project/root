@@ -125,60 +125,23 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    /**
      * @summary Helper class for geometry creation
      *
-     * @class
      * @memberof JSROOT.GEO
      * @private
      */
 
-   function GeometryCreator(numfaces) {
-      this.nfaces = numfaces;
-      this.indx = 0;
-      this.pos = new Float32Array(numfaces*9);
-      this.norm = new Float32Array(numfaces*9);
+   class GeometryCreator {
+      /** @summary Constructor
+        * @param numfaces - number of faces */
+      constructor(numfaces) {
+         this.nfaces = numfaces;
+         this.indx = 0;
+         this.pos = new Float32Array(numfaces*9);
+         this.norm = new Float32Array(numfaces*9);
+      }
 
-      return this;
-   }
-
-   /** @summary Add face with 3 vertices
-     * @private */
-   GeometryCreator.prototype.addFace3 = function(x1,y1,z1,
-                                                 x2,y2,z2,
-                                                 x3,y3,z3) {
-      let indx = this.indx, pos = this.pos;
-      pos[indx] = x1;
-      pos[indx+1] = y1;
-      pos[indx+2] = z1;
-      pos[indx+3] = x2;
-      pos[indx+4] = y2;
-      pos[indx+5] = z2;
-      pos[indx+6] = x3;
-      pos[indx+7] = y3;
-      pos[indx+8] = z3;
-      this.last4 = false;
-      this.indx = indx + 9;
-   }
-
-   /** @summary Start polygon
-     * @private */
-   GeometryCreator.prototype.startPolygon = function() {}
-
-   /** @summary Stop polygon
-     * @private */
-   GeometryCreator.prototype.stopPolygon = function() {}
-
-   /** @summary Add face with 4 vertices
-     * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
-     * if (reduce==1), first face is reduced
-     * if (reduce==2), second face is reduced
-     * @private */
-   GeometryCreator.prototype.addFace4 = function(x1,y1,z1,
-                                                 x2,y2,z2,
-                                                 x3,y3,z3,
-                                                 x4,y4,z4,
-                                                 reduce) {
-      let indx = this.indx, pos = this.pos;
-
-      if (reduce !== 1) {
+      /** @summary Add face with 3 vertices */
+      addFace3(x1,y1,z1, x2,y2,z2, x3,y3,z3) {
+         let indx = this.indx, pos = this.pos;
          pos[indx] = x1;
          pos[indx+1] = y1;
          pos[indx+2] = z1;
@@ -188,344 +151,347 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          pos[indx+6] = x3;
          pos[indx+7] = y3;
          pos[indx+8] = z3;
-         indx+=9;
+         this.last4 = false;
+         this.indx = indx + 9;
       }
 
-      if (reduce !== 2) {
-         pos[indx] = x1;
-         pos[indx+1] = y1;
-         pos[indx+2] = z1;
-         pos[indx+3] = x3;
-         pos[indx+4] = y3;
-         pos[indx+5] = z3;
-         pos[indx+6] = x4;
-         pos[indx+7] = y4;
-         pos[indx+8] = z4;
-         indx+=9;
+      /** @summary Start polygon */
+      startPolygon() {}
+
+      /** @summary Stop polygon */
+      stopPolygon() {}
+
+      /** @summary Add face with 4 vertices
+        * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
+        * if (reduce==1), first face is reduced
+        * if (reduce==2), second face is reduced*/
+      addFace4(x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4, reduce) {
+         let indx = this.indx, pos = this.pos;
+
+         if (reduce !== 1) {
+            pos[indx] = x1;
+            pos[indx+1] = y1;
+            pos[indx+2] = z1;
+            pos[indx+3] = x2;
+            pos[indx+4] = y2;
+            pos[indx+5] = z2;
+            pos[indx+6] = x3;
+            pos[indx+7] = y3;
+            pos[indx+8] = z3;
+            indx+=9;
+         }
+
+         if (reduce !== 2) {
+            pos[indx] = x1;
+            pos[indx+1] = y1;
+            pos[indx+2] = z1;
+            pos[indx+3] = x3;
+            pos[indx+4] = y3;
+            pos[indx+5] = z3;
+            pos[indx+6] = x4;
+            pos[indx+7] = y4;
+            pos[indx+8] = z4;
+            indx+=9;
+         }
+
+         this.last4 = (indx !== this.indx + 9);
+         this.indx = indx;
       }
 
-      this.last4 = (indx !== this.indx + 9);
-      this.indx = indx;
-   }
+      /** @summary Specify normal for face with 4 vertices
+        * @desc same as addFace4, assign normals for each individual vertex
+        * reduce has same meaning and should be the same */
+      setNormal4(nx1,ny1,nz1, nx2,ny2,nz2, nx3,ny3,nz3, nx4,ny4,nz4, reduce) {
+         if (this.last4 && reduce)
+            return console.error('missmatch between addFace4 and setNormal4 calls');
 
-   /** @summary Specify normal for face with 4 vertices
-     * @desc same as addFace4, assign normals for each individual vertex
-     * reduce has same meaning and should be the same
-     * @private */
-   GeometryCreator.prototype.setNormal4 = function(nx1,ny1,nz1,
-                                                   nx2,ny2,nz2,
-                                                   nx3,ny3,nz3,
-                                                   nx4,ny4,nz4,
-                                                   reduce) {
-      if (this.last4 && reduce)
-         return console.error('missmatch between addFace4 and setNormal4 calls');
+         let indx = this.indx - (this.last4 ? 18 : 9), norm = this.norm;
 
-      let indx = this.indx - (this.last4 ? 18 : 9), norm = this.norm;
+         if (reduce!==1) {
+            norm[indx] = nx1;
+            norm[indx+1] = ny1;
+            norm[indx+2] = nz1;
+            norm[indx+3] = nx2;
+            norm[indx+4] = ny2;
+            norm[indx+5] = nz2;
+            norm[indx+6] = nx3;
+            norm[indx+7] = ny3;
+            norm[indx+8] = nz3;
+            indx+=9;
+         }
 
-      if (reduce!==1) {
-         norm[indx] = nx1;
-         norm[indx+1] = ny1;
-         norm[indx+2] = nz1;
-         norm[indx+3] = nx2;
-         norm[indx+4] = ny2;
-         norm[indx+5] = nz2;
-         norm[indx+6] = nx3;
-         norm[indx+7] = ny3;
-         norm[indx+8] = nz3;
-         indx+=9;
+         if (reduce!==2) {
+            norm[indx] = nx1;
+            norm[indx+1] = ny1;
+            norm[indx+2] = nz1;
+            norm[indx+3] = nx3;
+            norm[indx+4] = ny3;
+            norm[indx+5] = nz3;
+            norm[indx+6] = nx4;
+            norm[indx+7] = ny4;
+            norm[indx+8] = nz4;
+         }
       }
 
-      if (reduce!==2) {
-         norm[indx] = nx1;
-         norm[indx+1] = ny1;
-         norm[indx+2] = nz1;
-         norm[indx+3] = nx3;
-         norm[indx+4] = ny3;
-         norm[indx+5] = nz3;
-         norm[indx+6] = nx4;
-         norm[indx+7] = ny4;
-         norm[indx+8] = nz4;
-      }
-   }
+      /** @summary Recalculate Z with provided func */
+      recalcZ(func) {
+         let pos = this.pos,
+             last = this.indx,
+             indx = last - (this.last4 ? 18 : 9);
 
-   /** @summary Recalculate Z with provided func
-     * @private */
-   GeometryCreator.prototype.recalcZ = function(func) {
-      let pos = this.pos,
-          last = this.indx,
-          indx = last - (this.last4 ? 18 : 9);
-
-      while (indx < last) {
-         pos[indx+2] = func(pos[indx], pos[indx+1], pos[indx+2]);
-         indx+=3;
-      }
-   }
-
-   /** @summary Caclualte normal
-     * @private */
-   GeometryCreator.prototype.calcNormal = function() {
-      if (!this.cb) {
-         this.pA = new THREE.Vector3();
-         this.pB = new THREE.Vector3();
-         this.pC = new THREE.Vector3();
-         this.cb = new THREE.Vector3();
-         this.ab = new THREE.Vector3();
+         while (indx < last) {
+            pos[indx+2] = func(pos[indx], pos[indx+1], pos[indx+2]);
+            indx+=3;
+         }
       }
 
-      this.pA.fromArray( this.pos, this.indx - 9 );
-      this.pB.fromArray( this.pos, this.indx - 6 );
-      this.pC.fromArray( this.pos, this.indx - 3 );
+      /** @summary Caclualte normal */
+      calcNormal() {
+         if (!this.cb) {
+            this.pA = new THREE.Vector3();
+            this.pB = new THREE.Vector3();
+            this.pC = new THREE.Vector3();
+            this.cb = new THREE.Vector3();
+            this.ab = new THREE.Vector3();
+         }
 
-      this.cb.subVectors( this.pC, this.pB );
-      this.ab.subVectors( this.pA, this.pB );
-      this.cb.cross( this.ab );
+         this.pA.fromArray( this.pos, this.indx - 9 );
+         this.pB.fromArray( this.pos, this.indx - 6 );
+         this.pC.fromArray( this.pos, this.indx - 3 );
 
-      this.setNormal(this.cb.x, this.cb.y, this.cb.z);
-   }
+         this.cb.subVectors( this.pC, this.pB );
+         this.ab.subVectors( this.pA, this.pB );
+         this.cb.cross( this.ab );
 
-   /** @summary Set normal
-     * @private */
-   GeometryCreator.prototype.setNormal = function(nx,ny,nz) {
-      let indx = this.indx - 9, norm = this.norm;
+         this.setNormal(this.cb.x, this.cb.y, this.cb.z);
+      }
 
-      norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
-      norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
-      norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
+      /** @summary Set normal */
+      setNormal(nx,ny,nz) {
+         let indx = this.indx - 9, norm = this.norm;
 
-      if (this.last4) {
-         indx -= 9;
          norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
          norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
          norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
-      }
-   }
 
-   /** @summary Set normal
-     * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point
-     * @private */
-   GeometryCreator.prototype.setNormal_12_34 = function(nx12,ny12,nz12,nx34,ny34,nz34,reduce) {
-      if (reduce===undefined) reduce = 0;
-
-      let indx = this.indx - ((reduce>0) ? 9 : 18), norm = this.norm;
-
-      if (reduce!==1) {
-         norm[indx]   = nx12;
-         norm[indx+1] = ny12;
-         norm[indx+2] = nz12;
-         norm[indx+3] = nx12;
-         norm[indx+4] = ny12;
-         norm[indx+5] = nz12;
-         norm[indx+6] = nx34;
-         norm[indx+7] = ny34;
-         norm[indx+8] = nz34;
-         indx+=9;
+         if (this.last4) {
+            indx -= 9;
+            norm[indx]   = norm[indx+3] = norm[indx+6] = nx;
+            norm[indx+1] = norm[indx+4] = norm[indx+7] = ny;
+            norm[indx+2] = norm[indx+5] = norm[indx+8] = nz;
+         }
       }
 
-      if (reduce!==2) {
-         norm[indx]   = nx12;
-         norm[indx+1] = ny12;
-         norm[indx+2] = nz12;
-         norm[indx+3] = nx34;
-         norm[indx+4] = ny34;
-         norm[indx+5] = nz34;
-         norm[indx+6] = nx34;
-         norm[indx+7] = ny34;
-         norm[indx+8] = nz34;
-         indx+=9;
+      /** @summary Set normal
+        * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point */
+      setNormal_12_34(nx12,ny12,nz12, nx34,ny34,nz34, reduce) {
+         if (reduce===undefined) reduce = 0;
+
+         let indx = this.indx - ((reduce>0) ? 9 : 18), norm = this.norm;
+
+         if (reduce!==1) {
+            norm[indx]   = nx12;
+            norm[indx+1] = ny12;
+            norm[indx+2] = nz12;
+            norm[indx+3] = nx12;
+            norm[indx+4] = ny12;
+            norm[indx+5] = nz12;
+            norm[indx+6] = nx34;
+            norm[indx+7] = ny34;
+            norm[indx+8] = nz34;
+            indx+=9;
+         }
+
+         if (reduce!==2) {
+            norm[indx]   = nx12;
+            norm[indx+1] = ny12;
+            norm[indx+2] = nz12;
+            norm[indx+3] = nx34;
+            norm[indx+4] = ny34;
+            norm[indx+5] = nz34;
+            norm[indx+6] = nx34;
+            norm[indx+7] = ny34;
+            norm[indx+8] = nz34;
+            indx+=9;
+         }
       }
-   }
 
-   /** @summary Create geometry
-     * @private */
-   GeometryCreator.prototype.create = function() {
-      if (this.nfaces !== this.indx/9)
-         console.error('Mismatch with created ' + this.nfaces + ' and filled ' + this.indx/9 + ' number of faces');
+      /** @summary Create geometry */
+      create() {
+         if (this.nfaces !== this.indx/9)
+            console.error('Mismatch with created ' + this.nfaces + ' and filled ' + this.indx/9 + ' number of faces');
 
-      let geometry = new THREE.BufferGeometry();
-      geometry.setAttribute( 'position', new THREE.BufferAttribute( this.pos, 3 ) );
-      geometry.setAttribute( 'normal', new THREE.BufferAttribute( this.norm, 3 ) );
-      return geometry;
+         let geometry = new THREE.BufferGeometry();
+         geometry.setAttribute( 'position', new THREE.BufferAttribute( this.pos, 3 ) );
+         geometry.setAttribute( 'normal', new THREE.BufferAttribute( this.norm, 3 ) );
+         return geometry;
+      }
    }
 
    // ================================================================================
 
    /** @summary Helper class for ThreeBSP geometry creation
      *
-     * @class
      * @memberof JSROOT.GEO
      * @private
      */
 
-   function PolygonsCreator() {
-      this.polygons = [];
-   }
+   class PolygonsCreator{
 
-   /** @summary Start polygon
-     * @private */
-   PolygonsCreator.prototype.startPolygon = function(normal) {
-      this.multi = 1;
-      this.mnormal = normal;
-   }
+      /** @summary constructor */
+      constructor() {
+         this.polygons = [];
+      }
 
-   /** @summary Stop polygon
-     * @private */
-   PolygonsCreator.prototype.stopPolygon = function() {
-      if (!this.multi) return;
-      this.multi = 0;
-      console.error('Polygon should be already closed at this moment');
-   }
+      /** @summary Start polygon */
+      startPolygon(normal) {
+         this.multi = 1;
+         this.mnormal = normal;
+      }
 
-   /** @summary Add face with 3 vertices
-     * @private */
-   PolygonsCreator.prototype.addFace3 = function(x1,y1,z1,
-                                                 x2,y2,z2,
-                                                 x3,y3,z3) {
-      this.addFace4(x1,y1,z1,x2,y2,z2,x3,y3,z3,x3,y3,z3,2);
-   }
+      /** @summary Stop polygon */
+      stopPolygon() {
+         if (!this.multi) return;
+         this.multi = 0;
+         console.error('Polygon should be already closed at this moment');
+      }
 
-   /** @summary Add face with 4 vertices
-     * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
-     * if (reduce==1), first face is reduced
-     * if (reduce==2), second face is reduced
-     * @private */
-   PolygonsCreator.prototype.addFace4 = function(x1,y1,z1,
-                                                 x2,y2,z2,
-                                                 x3,y3,z3,
-                                                 x4,y4,z4,
-                                                 reduce) {
-      if (reduce === undefined) reduce = 0;
+      /** @summary Add face with 3 vertices */
+      addFace3(x1,y1,z1, x2,y2,z2, x3,y3,z3) {
+         this.addFace4(x1,y1,z1,x2,y2,z2,x3,y3,z3,x3,y3,z3,2);
+      }
 
-      this.v1 = new ThreeBSP.Vertex( x1, y1, z1, 0, 0, 0 );
-      this.v2 = (reduce===1) ? null : new ThreeBSP.Vertex( x2, y2, z2, 0, 0, 0 );
-      this.v3 = new ThreeBSP.Vertex( x3, y3, z3, 0, 0, 0 );
-      this.v4 = (reduce===2) ? null : new ThreeBSP.Vertex( x4, y4, z4, 0, 0, 0 );
+      /** @summary Add face with 4 vertices
+        * @desc From four vertices one normally creates two faces (1,2,3) and (1,3,4)
+        * if (reduce==1), first face is reduced
+        * if (reduce==2), second face is reduced */
+      addFace4(x1,y1,z1, x2,y2,z2, x3,y3,z3, x4,y4,z4, reduce) {
+         if (reduce === undefined) reduce = 0;
 
-      this.reduce = reduce;
+         this.v1 = new ThreeBSP.Vertex( x1, y1, z1, 0, 0, 0 );
+         this.v2 = (reduce===1) ? null : new ThreeBSP.Vertex( x2, y2, z2, 0, 0, 0 );
+         this.v3 = new ThreeBSP.Vertex( x3, y3, z3, 0, 0, 0 );
+         this.v4 = (reduce===2) ? null : new ThreeBSP.Vertex( x4, y4, z4, 0, 0, 0 );
 
-      if (this.multi) {
+         this.reduce = reduce;
 
-         if (reduce!==2) console.error('polygon not supported for not-reduced faces');
+         if (this.multi) {
 
-         let polygon;
+            if (reduce!==2) console.error('polygon not supported for not-reduced faces');
 
-         if (this.multi++ === 1) {
-            polygon = new ThreeBSP.Polygon;
+            let polygon;
 
-            polygon.vertices.push(this.mnormal ? this.v2 : this.v3);
-            this.polygons.push(polygon);
-         } else {
-            polygon = this.polygons[this.polygons.length-1];
-            // check that last vertice equals to v2
-            let last = this.mnormal ? polygon.vertices[polygon.vertices.length-1] : polygon.vertices[0],
-                comp = this.mnormal ? this.v2 : this.v3;
+            if (this.multi++ === 1) {
+               polygon = new ThreeBSP.Polygon;
 
-            if (comp.diff(last) > 1e-12)
-               console.error('vertex missmatch when building polygon');
+               polygon.vertices.push(this.mnormal ? this.v2 : this.v3);
+               this.polygons.push(polygon);
+            } else {
+               polygon = this.polygons[this.polygons.length-1];
+               // check that last vertice equals to v2
+               let last = this.mnormal ? polygon.vertices[polygon.vertices.length-1] : polygon.vertices[0],
+                   comp = this.mnormal ? this.v2 : this.v3;
+
+               if (comp.diff(last) > 1e-12)
+                  console.error('vertex missmatch when building polygon');
+            }
+
+            let first = this.mnormal ? polygon.vertices[0] : polygon.vertices[polygon.vertices.length-1],
+                next = this.mnormal ? this.v3 : this.v2;
+
+            if (next.diff(first) < 1e-12) {
+               //console.log('polygon closed!!!', polygon.vertices.length);
+               this.multi = 0;
+            } else
+            if (this.mnormal) {
+               polygon.vertices.push(this.v3);
+            } else {
+               polygon.vertices.unshift(this.v2);
+            }
+
+            return;
+
          }
 
-         let first = this.mnormal ? polygon.vertices[0] : polygon.vertices[polygon.vertices.length-1],
-             next = this.mnormal ? this.v3 : this.v2;
+         let polygon = new ThreeBSP.Polygon;
 
-         if (next.diff(first) < 1e-12) {
-            //console.log('polygon closed!!!', polygon.vertices.length);
-            this.multi = 0;
-         } else
-         if (this.mnormal) {
-            polygon.vertices.push(this.v3);
-         } else {
-            polygon.vertices.unshift(this.v2);
+         switch (reduce) {
+            case 0: polygon.vertices.push(this.v1, this.v2, this.v3, this.v4); break;
+            case 1: polygon.vertices.push(this.v1, this.v3, this.v4); break;
+            case 2: polygon.vertices.push(this.v1, this.v2, this.v3); break;
          }
 
-         return;
-
+         this.polygons.push(polygon);
       }
 
-      let polygon = new ThreeBSP.Polygon;
-
-      switch (reduce) {
-         case 0: polygon.vertices.push(this.v1, this.v2, this.v3, this.v4); break;
-         case 1: polygon.vertices.push(this.v1, this.v3, this.v4); break;
-         case 2: polygon.vertices.push(this.v1, this.v2, this.v3); break;
+      /** @summary Specify normal for face with 4 vertices
+        * @desc same as addFace4, assign normals for each individual vertex
+        * reduce has same meaning and should be the same */
+      setNormal4(nx1,ny1,nz1, nx2,ny2,nz2, nx3,ny3,nz3, nx4,ny4,nz4) {
+         this.v1.setnormal(nx1,ny1,nz1);
+         if (this.v2) this.v2.setnormal(nx2,ny2,nz2);
+         this.v3.setnormal(nx3,ny3,nz3);
+         if (this.v4) this.v4.setnormal(nx4,ny4,nz4);
       }
 
-      this.polygons.push(polygon);
-   }
-
-   /** @summary Specify normal for face with 4 vertices
-     * @desc same as addFace4, assign normals for each individual vertex
-     * reduce has same meaning and should be the same
-     * @private */
-   PolygonsCreator.prototype.setNormal4 = function(nx1,ny1,nz1,
-                                                   nx2,ny2,nz2,
-                                                   nx3,ny3,nz3,
-                                                   nx4,ny4,nz4) {
-      this.v1.setnormal(nx1,ny1,nz1);
-      if (this.v2) this.v2.setnormal(nx2,ny2,nz2);
-      this.v3.setnormal(nx3,ny3,nz3);
-      if (this.v4) this.v4.setnormal(nx4,ny4,nz4);
-   }
-
-   /** @summary Set normal
-     * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point
-     * @private */
-   PolygonsCreator.prototype.setNormal_12_34 = function(nx12,ny12,nz12,nx34,ny34,nz34) {
-      this.v1.setnormal(nx12,ny12,nz12);
-      if (this.v2) this.v2.setnormal(nx12,ny12,nz12);
-      this.v3.setnormal(nx34,ny34,nz34);
-      if (this.v4) this.v4.setnormal(nx34,ny34,nz34);
-   }
-
-   /** @summary Calculate normal
-     * @private */
-   PolygonsCreator.prototype.calcNormal = function() {
-
-      if (!this.cb) {
-         this.pA = new THREE.Vector3();
-         this.pB = new THREE.Vector3();
-         this.pC = new THREE.Vector3();
-         this.cb = new THREE.Vector3();
-         this.ab = new THREE.Vector3();
+      /** @summary Set normal
+        * @desc special shortcut, when same normals can be applied for 1-2 point and 3-4 point */
+      setNormal_12_34(nx12,ny12,nz12, nx34,ny34,nz34) {
+         this.v1.setnormal(nx12,ny12,nz12);
+         if (this.v2) this.v2.setnormal(nx12,ny12,nz12);
+         this.v3.setnormal(nx34,ny34,nz34);
+         if (this.v4) this.v4.setnormal(nx34,ny34,nz34);
       }
 
-      this.pA.set( this.v1.x, this.v1.y, this.v1.z);
+      /** @summary Calculate normal */
+      calcNormal() {
 
-      if (this.reduce!==1) {
-         this.pB.set( this.v2.x, this.v2.y, this.v2.z);
-         this.pC.set( this.v3.x, this.v3.y, this.v3.z);
-      } else {
-         this.pB.set( this.v3.x, this.v3.y, this.v3.z);
-         this.pC.set( this.v4.x, this.v4.y, this.v4.z);
+         if (!this.cb) {
+            this.pA = new THREE.Vector3();
+            this.pB = new THREE.Vector3();
+            this.pC = new THREE.Vector3();
+            this.cb = new THREE.Vector3();
+            this.ab = new THREE.Vector3();
+         }
+
+         this.pA.set( this.v1.x, this.v1.y, this.v1.z);
+
+         if (this.reduce!==1) {
+            this.pB.set( this.v2.x, this.v2.y, this.v2.z);
+            this.pC.set( this.v3.x, this.v3.y, this.v3.z);
+         } else {
+            this.pB.set( this.v3.x, this.v3.y, this.v3.z);
+            this.pC.set( this.v4.x, this.v4.y, this.v4.z);
+         }
+
+         this.cb.subVectors( this.pC, this.pB );
+         this.ab.subVectors( this.pA, this.pB );
+         this.cb.cross( this.ab );
+
+         this.setNormal(this.cb.x, this.cb.y, this.cb.z);
       }
 
-      this.cb.subVectors( this.pC, this.pB );
-      this.ab.subVectors( this.pA, this.pB );
-      this.cb.cross( this.ab );
+      /** @summary Set normal*/
+      setNormal(nx,ny,nz) {
+         this.v1.setnormal(nx,ny,nz);
+         if (this.v2) this.v2.setnormal(nx,ny,nz);
+         this.v3.setnormal(nx,ny,nz);
+         if (this.v4) this.v4.setnormal(nx,ny,nz);
+      }
 
-      this.setNormal(this.cb.x, this.cb.y, this.cb.z);
-   }
+      /** @summary Recalculate Z with provided func */
+      recalcZ(func) {
+         this.v1.z = func(this.v1.x, this.v1.y, this.v1.z);
+         if (this.v2) this.v2.z = func(this.v2.x, this.v2.y, this.v2.z);
+         this.v3.z = func(this.v3.x, this.v3.y, this.v3.z);
+         if (this.v4) this.v4.z = func(this.v4.x, this.v4.y, this.v4.z);
+      }
 
-   /** @summary Set normal
-     * @private */
-   PolygonsCreator.prototype.setNormal = function(nx,ny,nz) {
-      this.v1.setnormal(nx,ny,nz);
-      if (this.v2) this.v2.setnormal(nx,ny,nz);
-      this.v3.setnormal(nx,ny,nz);
-      if (this.v4) this.v4.setnormal(nx,ny,nz);
-   }
-
-   /** @summary Recalculate Z with provided func
-     * @private */
-   PolygonsCreator.prototype.recalcZ = function(func) {
-      this.v1.z = func(this.v1.x, this.v1.y, this.v1.z);
-      if (this.v2) this.v2.z = func(this.v2.x, this.v2.y, this.v2.z);
-      this.v3.z = func(this.v3.x, this.v3.y, this.v3.z);
-      if (this.v4) this.v4.z = func(this.v4.x, this.v4.y, this.v4.z);
-   }
-
-   /** @summary Create geometry
-     * @private */
-   PolygonsCreator.prototype.create = function() {
-      return { polygons: this.polygons };
+      /** @summary Create geometry
+        * @private */
+      create() {
+         return { polygons: this.polygons };
+      }
    }
 
    // ================= all functions to create geometry ===================================
@@ -687,9 +653,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
-      // let creator = new GeometryCreator(numfaces);
-
-      for (let n=0; n < indicies.length; n+=6) {
+      for (let n = 0; n < indicies.length; n += 6) {
          let i1 = indicies[n]   * 3,
              i2 = indicies[n+1] * 3,
              i3 = indicies[n+2] * 3,
@@ -698,7 +662,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
              i6 = indicies[n+5] * 3,
              norm = null;
 
-         if ((i1>=0) && (i4>=0) && faces_limit) {
+         if ((i1 >= 0) && (i4 >= 0) && faces_limit) {
             // try to identify two faces with same normal - very useful if one can create face4
             if (n===0) norm = new THREE.Vector3(0,0,1); else
             if (n===30) norm = new THREE.Vector3(0,0,-1); else {
@@ -780,13 +744,13 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
           _sint = new Float32Array(heightSegments+1),
           _cost = new Float32Array(heightSegments+1);
 
-      for (let n=0;n<=heightSegments;++n) {
+      for (let n = 0; n <= heightSegments; ++n) {
          let theta = (thetaStart + thetaLength/heightSegments*n)*Math.PI/180;
          _sint[n] = Math.sin(theta);
          _cost[n] = Math.cos(theta);
       }
 
-      for (let n=0;n<=widthSegments;++n) {
+      for (let n = 0; n <= widthSegments; ++n) {
          let phi = (phiStart + phiLength/widthSegments*n)*Math.PI/180;
          _sinp[n] = Math.sin(phi);
          _cosp[n] = Math.cos(phi);
@@ -799,9 +763,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
-      // let creator = new GeometryCreator(numfaces);
-
-      for (let side=0;side<2;++side) {
+      for (let side = 0; side < 2; ++side) {
          if ((side===1) && noInside) break;
 
          let r = radius[side],
@@ -809,7 +771,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
              d1 = 1 - side, d2 = 1 - d1;
 
          // use direct algorithm for the sphere - here normals and position can be calculated directly
-         for (let k=0;k<heightSegments;++k) {
+         for (let k = 0; k < heightSegments; ++k) {
 
             let k1 = k + d1, k2 = k + d2;
 
@@ -835,7 +797,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // top/bottom
-      for (let side=0; side<=heightSegments; side+=heightSegments)
+      for (let side = 0; side <= heightSegments; side += heightSegments)
          if (Math.abs(_sint[side]) >= epsilon) {
             let ss = _sint[side], cc = _cost[side],
                 d1 = (side===0) ? 0 : 1, d2 = 1 - d1;
@@ -916,7 +878,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
           _sin = new Float32Array(radiusSegments+1),
           _cos = new Float32Array(radiusSegments+1);
 
-      for (let seg=0; seg<=radiusSegments; ++seg) {
+      for (let seg = 0; seg <= radiusSegments; ++seg) {
          _cos[seg] = Math.cos(phi0+seg*dphi);
          _sin[seg] = Math.sin(phi0+seg*dphi);
       }
@@ -925,9 +887,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let calcZ;
       if (shape._typename == "TGeoCtub")
-         calcZ = function(x,y,z) {
-            let arr = (z<0) ? shape.fNlow : shape.fNhigh;
-            return ((z<0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
+         calcZ = (x,y,z) => {
+            let arr = (z < 0) ? shape.fNlow : shape.fNhigh;
+            return ((z < 0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
          };
 
       // create outer/inner tube
@@ -946,10 +908,12 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          if (side === 1) { nxy *= -1; nz *= -1; };
 
          let reduce = 0;
-         if (R[0] <= 0) reduce = 2; else
-         if (R[1] <= 0) reduce = 1;
+         if (R[0] <= 0)
+            reduce = 2;
+         else if (R[1] <= 0)
+            reduce = 1;
 
-         for (let seg=0;seg<radiusSegments;++seg) {
+         for (let seg = 0; seg < radiusSegments; ++seg) {
             creator.addFace4(
                   R[0] * _cos[seg+d1], R[0] * _sin[seg+d1],  shape.fDZ,
                   R[1] * _cos[seg+d1], R[1] * _sin[seg+d1], -shape.fDZ,
@@ -1071,9 +1035,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    function createTorusBuffer( shape, faces_limit ) {
       let radius = shape.fR,
           radialSegments = Math.max(6, Math.round(360/geo.GradPerSegm)),
-          tubularSegments = Math.max(8, Math.round(shape.fDphi/geo.GradPerSegm));
-
-      let numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
+          tubularSegments = Math.max(8, Math.round(shape.fDphi/geo.GradPerSegm)),
+          numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
 
       if (faces_limit < 0) return numfaces;
 
@@ -1088,12 +1051,12 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
           _sint = new Float32Array(tubularSegments+1),
           _cost = new Float32Array(tubularSegments+1);
 
-      for (let n=0;n<=radialSegments;++n) {
+      for (let n = 0; n <= radialSegments; ++n) {
          _sinr[n] = Math.sin(n/radialSegments*2*Math.PI);
          _cosr[n] = Math.cos(n/radialSegments*2*Math.PI);
       }
 
-      for (let t=0;t<=tubularSegments;++t) {
+      for (let t = 0; t <= tubularSegments; ++t) {
          let angle = (shape.fPhi1 + shape.fDphi*t/tubularSegments)/180*Math.PI;
          _sint[t] = Math.sin(angle);
          _cost[t] = Math.cos(angle);
@@ -1106,17 +1069,17 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
           n1 = new THREE.Vector3(), n2 = new THREE.Vector3(), n3 = new THREE.Vector3(), n4 = new THREE.Vector3(),
           center1 = new THREE.Vector3(), center2 = new THREE.Vector3();
 
-      for (let side=0;side<2;++side) {
+      for (let side = 0; side < 2; ++side) {
          if ((side > 0) && (shape.fRmin <= 0)) break;
          let tube = (side > 0) ? shape.fRmin : shape.fRmax,
              d1 = 1 - side, d2 = 1 - d1, ns = side>0 ? -1 : 1;
 
-         for (let t=0;t<tubularSegments;++t) {
+         for (let t = 0; t < tubularSegments; ++t) {
             let t1 = t + d1, t2 = t + d2;
             center1.x = radius * _cost[t1]; center1.y = radius * _sint[t1];
             center2.x = radius * _cost[t2]; center2.y = radius * _sint[t2];
 
-            for (let n=0;n<radialSegments;++n) {
+            for (let n = 0; n < radialSegments; ++n) {
                p1.x = (radius + tube * _cosr[n])   * _cost[t1]; p1.y = (radius + tube * _cosr[n])   * _sint[t1]; p1.z = tube*_sinr[n];
                p2.x = (radius + tube * _cosr[n+1]) * _cost[t1]; p2.y = (radius + tube * _cosr[n+1]) * _sint[t1]; p2.z = tube*_sinr[n+1];
                p3.x = (radius + tube * _cosr[n+1]) * _cost[t2]; p3.y = (radius + tube * _cosr[n+1]) * _sint[t2]; p3.z = tube*_sinr[n+1];
@@ -1177,7 +1140,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let usage = new Int16Array(2*shape.fNz), numusedlayers = 0, hasrmin = false;
 
-      for (let layer=0; layer < shape.fNz; ++layer)
+      for (let layer = 0; layer < shape.fNz; ++layer)
          if (shape.fRmin[layer] > 0) hasrmin = true;
 
       // return very rough estimation, number of faces may be much less
@@ -1466,10 +1429,12 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          nz = (shape.fA > 0) ? -1 : 1;
 
          let skip = 0;
-         if (lastr === 0) skip = 1; else
-         if (radius === 0) skip = 2;
+         if (lastr === 0)
+            skip = 1;
+         else if (radius === 0)
+            skip = 2;
 
-         for (let seg=0; seg<radiusSegments; ++seg) {
+         for (let seg = 0; seg < radiusSegments; ++seg) {
             creator.addFace4(radius*_cos[seg],   radius*_sin[seg], layerz,
                              lastr*_cos[seg],    lastr*_sin[seg], lastz,
                              lastr*_cos[seg+1],  lastr*_sin[seg+1], lastz,
@@ -1502,9 +1467,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          return createTubeBuffer(shape, faces_limit);
 
       let radiusSegments = Math.max(4, Math.round(360/geo.GradPerSegm)),
-          heightSegments = 30;
-
-      let numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
+          heightSegments = 30,
+          numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
 
       if (faces_limit < 0) return numfaces;
 
@@ -1524,7 +1488,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
       // in-out side
-      for (let side=0;side<2;++side) {
+      for (let side = 0; side < 2; ++side) {
          if ((side > 0) && (shape.fRmin <= 0)) break;
 
          let r0 = (side > 0) ? shape.fRmin : shape.fRmax,
@@ -1549,20 +1513,19 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // add caps
-      for(let layer=0; layer<2; ++layer) {
+      for (let layer = 0; layer < 2; ++layer) {
          let z = (layer === 0) ? shape.fDz : -shape.fDz,
              r1 = Math.sqrt(shape.fRmax*shape.fRmax + shape.fToutsq*z*z),
              r2 = (shape.fRmin > 0) ? Math.sqrt(shape.fRmin*shape.fRmin + shape.fTinsq*z*z) : 0,
              skip = (shape.fRmin > 0) ? 0 : 1,
              d1 = 1 - layer, d2 = 1 - d1;
-          for (let seg=0; seg<radiusSegments; ++seg) {
+         for (let seg = 0; seg < radiusSegments; ++seg) {
              creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z,
                               r2 * _cos[seg+d1], r2 * _sin[seg+d1], z,
                               r2 * _cos[seg+d2], r2 * _sin[seg+d2], z,
                               r1 * _cos[seg+d2], r1 * _sin[seg+d2], z, skip);
              creator.setNormal(0,0, (layer===0) ? 1 : -1);
           }
-
       }
 
       return creator.create();
@@ -1747,7 +1710,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          return geom.tree.numPolygons();
 
       if (geom.type == 'BufferGeometry') {
-         var attr = geom.getAttribute('position');
+         let attr = geom.getAttribute('position');
          return attr && attr.count ? Math.round(attr.count / 3) : 0;
       }
 
@@ -1779,8 +1742,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    }
 
    /** @summary Returns geometry bounding box
-    * @memberof JSROOT.GEO
-    * @private */
+     * @memberof JSROOT.GEO
+     * @private */
    function geomBoundingBox(geom) {
       if (!geom) return null;
 
@@ -1793,9 +1756,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       if (polygons!==null) {
          let box = new THREE.Box3();
-         for (let n=0;n<polygons.length;++n) {
+         for (let n = 0; n < polygons.length; ++n) {
             let polygon = polygons[n], nvert = polygon.vertices.length;
-            for (let k=0;k<nvert;++k)
+            for (let k = 0; k < nvert; ++k)
                box.expandByPoint(polygon.vertices[k]);
          }
          return box;
@@ -1807,9 +1770,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    }
 
    /** @summary Creates half-space geometry for given shape
-    * @desc Just big-enough triangle to make BSP calculations
-    * @memberof JSROOT.GEO
-    * @private */
+     * @desc Just big-enough triangle to make BSP calculations
+     * @memberof JSROOT.GEO
+     * @private */
    function createHalfSpace(shape, geom) {
       if (!shape || !shape.fN || !shape.fP) return null;
 
@@ -1919,7 +1882,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       if ((n1 + n2 >= faces_limit) || !geom2) {
          if (geom1.polygons)
-            geom1 = ThreeBSP.CreateBufferGeometry(geom1.polygons);
+            geom1 = ThreeBSP.createBufferGeometry(geom1.polygons);
          if (matrix1) geom1.applyMatrix4(matrix1);
          geom1._exceed_limit = true;
          return geom1;
@@ -1981,7 +1944,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          case "z": size = Math.max(sizex,sizey); break;
       }
 
-      let bsp2 = ThreeBSP.CreateNormal(projection, position, size);
+      let bsp2 = ThreeBSP.createNormal(projection, position, size);
 
       bsp1.cut_from_plane(bsp2);
 
@@ -2065,14 +2028,13 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          return info;
       }
 
-      let sz = Math.max(shape.fDX, shape.fDY, shape.fDZ);
-      let useexp = (sz>1e7) || (sz<1e-7);
-
-      function conv(v) {
-         if (v===undefined) return "???";
-         if ((v==Math.round(v) && v<1e7)) return Math.round(v);
-         return useexp ? v.toExponential(4) : v.toPrecision(7);
-      }
+      let sz = Math.max(shape.fDX, shape.fDY, shape.fDZ),
+          useexp = (sz>1e7) || (sz<1e-7),
+          conv = (v) => {
+             if (v===undefined) return "???";
+             if ((v==Math.round(v) && v<1e7)) return Math.round(v);
+             return useexp ? v.toExponential(4) : v.toPrecision(7);
+          };
 
       info.push(shape._typename);
 
@@ -2202,20 +2164,20 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          if (this.containsPoint(pnt)) cnt++;
          pnt.set(box.max.x, box.max.y, box.max.z);
          if (this.containsPoint(pnt)) cnt++;
-         return cnt>5; // only if 6 edges and more are seen, we think that box is fully visible
+         return cnt > 5; // only if 6 edges and more are seen, we think that box is fully visible
       }
 
       return frustum;
    }
 
    /** @summary Compares two stacks.
-     * @returns {number} length where stacks are the same
+     * @returns {Number} length where stacks are the same
      * @private */
    geo.compareStacks = function(stack1, stack2) {
       if (!stack1 || !stack2) return 0;
       if (stack1 === stack2) return stack1.length;
       let len = Math.min(stack1.length, stack2.length);
-      for (let k=0;k<len;++k)
+      for (let k = 0; k < len; ++k)
          if (stack1[k] !== stack2[k]) return k;
       return len;
    }
@@ -2226,7 +2188,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       if (!stack1 || !stack2) return false;
       if (stack1 === stack2) return true;
       if (stack1.length !== stack2.length) return false;
-      for (let k=0;k<stack1.length;++k)
+      for (let k = 0; k < stack1.length; ++k)
          if (stack1[k] !== stack2[k]) return false;
       return true;
    }
@@ -2237,1062 +2199,1062 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    /**
      * @summary class for working with cloned nodes
      *
-     * @class
      * @memberof JSROOT.GEO
      * @private
      */
 
-   function ClonedNodes(obj, clones) {
-      this.toplevel = true; // indicate if object creates top-level structure with Nodes and Volumes folder
-      this.name_prefix = ""; // name prefix used for nodes names
-      this.maxdepth = 1;  // maximal hierarchy depth, required for transparency
-      this.vislevel = 4;  // maximal depth of nodes visibility aka gGeoManager->SetVisLevel, same default
-      this.maxnodes = 10000; // maximal number of visisble nodes aka gGeoManager->fMaxVisNodes
+   class ClonedNodes {
 
-      if (obj) {
-         if (obj.$geoh) this.toplevel = false;
-         this.createClones(obj);
-      } else if (clones) {
-         this.nodes = clones;
-      }
-   }
+      /** @summary Constructor */
+      constructor(obj, clones) {
+         this.toplevel = true; // indicate if object creates top-level structure with Nodes and Volumes folder
+         this.name_prefix = ""; // name prefix used for nodes names
+         this.maxdepth = 1;  // maximal hierarchy depth, required for transparency
+         this.vislevel = 4;  // maximal depth of nodes visibility aka gGeoManager->SetVisLevel, same default
+         this.maxnodes = 10000; // maximal number of visisble nodes aka gGeoManager->fMaxVisNodes
 
-   /** @summary Set maximal depth for nodes visibility */
-   ClonedNodes.prototype.setVisLevel = function(lvl) {
-      this.vislevel = lvl && Number.isInteger(lvl) ? lvl : 4;
-   }
-
-   /** @summary Returns maximal depth for nodes visibility */
-   ClonedNodes.prototype.getVisLevel = function() {
-      return this.vislevel;
-   }
-
-   /** @summary Set maximal number of visible nodes */
-   ClonedNodes.prototype.setMaxVisNodes = function(v) {
-      this.maxnodes = Number.isFinite(v) ? v : 10000;
-   }
-
-   /** @summary Returns configured maximal number of visible nodes */
-   ClonedNodes.prototype.getMaxVisNodes = function() {
-      return this.maxnodes;
-   }
-
-   /** @summary Insert node into existing array */
-   ClonedNodes.prototype.updateNode = function(node) {
-      if (node && Number.isInteger(node.id) && (node.id < this.nodes.length))
-         this.nodes[node.id] = node;
-   }
-
-   /** @summary Returns TGeoShape for element with given indx */
-   ClonedNodes.prototype.getNodeShape = function(indx) {
-      if (!this.origin || !this.nodes) return null;
-      let obj = this.origin[indx], clone = this.nodes[indx];
-      if (!obj || !clone) return null;
-      if (clone.kind === kindGeo) {
-         if (obj.fVolume) return obj.fVolume.fShape;
-      } else {
-         return obj.fShape;
-      }
-      return null;
-   }
-
-   /** @summary function to cleanup as much as possible structures
-     * @desc Provided parameters drawnodes and drawshapes are arrays created during building of geometry */
-   ClonedNodes.prototype.cleanup = function(drawnodes, drawshapes) {
-
-      if (drawnodes) {
-         for (let n=0;n<drawnodes.length;++n) {
-            delete drawnodes[n].stack;
-            drawnodes[n] = undefined;
+         if (obj) {
+            if (obj.$geoh) this.toplevel = false;
+            this.createClones(obj);
+         } else if (clones) {
+            this.nodes = clones;
          }
       }
 
-      if (drawshapes) {
-         for (let n=0;n<drawshapes.length;++n) {
-            delete drawshapes[n].geom;
-            drawshapes[n] = undefined;
-         }
+      /** @summary Set maximal depth for nodes visibility */
+      setVisLevel(lvl) {
+         this.vislevel = lvl && Number.isInteger(lvl) ? lvl : 4;
       }
 
-      if (this.nodes) {
-         for (let n=0;n<this.nodes.length;++n) {
-            if (this.nodes[n])
-               delete this.nodes[n].chlds;
-         }
+      /** @summary Returns maximal depth for nodes visibility */
+      getVisLevel() {
+         return this.vislevel;
       }
 
-      delete this.nodes;
-      delete this.origin;
+      /** @summary Set maximal number of visible nodes */
+      setMaxVisNodes(v) {
+         this.maxnodes = Number.isFinite(v) ? v : 10000;
+      }
 
-      delete this.sortmap;
-   }
+      /** @summary Returns configured maximal number of visible nodes */
+      getMaxVisNodes() {
+         return this.maxnodes;
+      }
 
-   /** @summary Create complete description for provided Geo object
-     * @private */
-   ClonedNodes.prototype.createClones = function(obj, sublevel, kind) {
-       if (!sublevel) {
+      /** @summary Insert node into existing array */
+      updateNode(node) {
+         if (node && Number.isInteger(node.id) && (node.id < this.nodes.length))
+            this.nodes[node.id] = node;
+      }
 
-          if (obj && obj._typename == "$$Shape$$")
-             return this.createClonesForShape(obj);
-
-          this.origin = [];
-          sublevel = 1;
-          kind = geo.getNodeKind(obj);
-       }
-
-       if ((kind < 0) || !obj || ('_refid' in obj)) return;
-
-       obj._refid = this.origin.length;
-       this.origin.push(obj);
-       if (sublevel>this.maxdepth) this.maxdepth = sublevel;
-
-       let chlds = null;
-       if (kind === kindGeo)
-          chlds = (obj.fVolume && obj.fVolume.fNodes) ? obj.fVolume.fNodes.arr : null;
-       else
-          chlds = obj.fElements ? obj.fElements.arr : null;
-
-       if (chlds !== null) {
-          geo.checkDuplicates(obj, chlds);
-          for (let i = 0; i < chlds.length; ++i)
-             this.createClones(chlds[i], sublevel+1, kind);
-       }
-
-       if (sublevel > 1) return;
-
-       this.nodes = [];
-
-       let sortarr = [];
-
-       // first create nodes objects
-       for (let n=0; n<this.origin.length; ++n) {
-          // let obj = this.origin[n];
-          let node = { id: n, kind: kind, vol: 0, nfaces: 0 };
-          this.nodes.push(node);
-          sortarr.push(node); // array use to produce sortmap
-       }
-
-       // than fill children lists
-       for (let n=0;n<this.origin.length;++n) {
-          let obj = this.origin[n], clone = this.nodes[n];
-
-          let chlds = null, shape = null;
-
-          if (kind === kindEve) {
-             shape = obj.fShape;
-             if (obj.fElements) chlds = obj.fElements.arr;
-          } else if (obj.fVolume) {
-             shape = obj.fVolume.fShape;
-             if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
-          }
-
-          let matrix = geo.getNodeMatrix(kind, obj);
-          if (matrix) {
-             clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
-             if (clone.matrix[0] === 1) {
-                let issimple = true;
-                for (let k = 1; (k < clone.matrix.length) && issimple; ++k)
-                   issimple = (clone.matrix[k] === ((k===5) || (k===10) || (k===15) ? 1 : 0));
-                if (issimple) delete clone.matrix;
-             }
-             if (clone.matrix && (kind == kindEve)) clone.abs_matrix = true;
-          }
-          if (shape) {
-             clone.fDX = shape.fDX;
-             clone.fDY = shape.fDY;
-             clone.fDZ = shape.fDZ;
-             clone.vol = shape.fDX*shape.fDY*shape.fDZ;
-             if (shape.$nfaces === undefined)
-                shape.$nfaces = createGeometry(shape, -1);
-             clone.nfaces = shape.$nfaces;
-             if (clone.nfaces <= 0) clone.vol = 0;
-          }
-
-          if (!chlds) continue;
-
-          // in cloned object children is only list of ids
-          clone.chlds = new Array(chlds.length);
-          for (let k=0;k<chlds.length;++k)
-             clone.chlds[k] = chlds[k]._refid;
-       }
-
-       // remove _refid identifiers from original objects
-       for (let n=0;n<this.origin.length;++n)
-          delete this.origin[n]._refid;
-
-       // do sorting once
-       sortarr.sort(function(a,b) { return b.vol - a.vol; });
-
-       // remember sort map and also sortid
-       this.sortmap = new Array(this.nodes.length);
-       for (let n=0;n<this.nodes.length;++n) {
-          this.sortmap[n] = sortarr[n].id;
-          sortarr[n].sortid = n;
-       }
-   }
-
-   /** @summary Create elementary item with single already existing shape
-     * @desc used by details view of geometry shape
-     * @private */
-   ClonedNodes.prototype.createClonesForShape = function(obj) {
-      this.origin = [];
-
-      // indicate that just plain shape is used
-      this.plain_shape = obj;
-
-      let node = {
-            id: 0, sortid: 0, kind: kindShape,
-            name: "Shape",
-            nfaces: obj.nfaces,
-            fDX: 1, fDY: 1, fDZ: 1, vol: 1,
-            vis: true
-         };
-
-      this.nodes = [ node ];
-   }
-
-   /** @summary Count all visisble nodes */
-   ClonedNodes.prototype.countVisibles = function() {
-      let cnt = 0;
-      if (this.nodes)
-         for (let k=0;k<this.nodes.length;++k)
-            if (this.nodes[k].vis)
-               cnt++;
-      return cnt;
-   }
-
-   /** @summary Mark visisble nodes.
-     * @desc Set only basic flags, actual visibility depends from hierarchy */
-   ClonedNodes.prototype.markVisibles = function(on_screen, copy_bits, hide_top_volume) {
-      if (this.plain_shape) return 1;
-      if (!this.origin || !this.nodes) return 0;
-
-      let res = 0;
-
-      for (let n=0;n<this.nodes.length;++n) {
-         let clone = this.nodes[n],
-             obj = this.origin[n];
-
-         clone.vis = 0; // 1 - only with last level
-         delete clone.nochlds;
-
+      /** @summary Returns TGeoShape for element with given indx */
+      getNodeShape(indx) {
+         if (!this.origin || !this.nodes) return null;
+         let obj = this.origin[indx], clone = this.nodes[indx];
+         if (!obj || !clone) return null;
          if (clone.kind === kindGeo) {
-            if (obj.fVolume) {
-               if (on_screen) {
-                  // on screen bits used always, childs always checked
-                  clone.vis = geo.TestBit(obj.fVolume, geo.BITS.kVisOnScreen) ? 99 : 0;
-
-                  if ((n==0) && clone.vis && hide_top_volume) clone.vis = 0;
-
-                  if (copy_bits) {
-                     geo.SetBit(obj.fVolume, geo.BITS.kVisNone, false);
-                     geo.SetBit(obj.fVolume, geo.BITS.kVisThis, (clone.vis > 0));
-                     geo.SetBit(obj.fVolume, geo.BITS.kVisDaughters, true);
-                  }
-               } else {
-                  clone.vis = !geo.TestBit(obj.fVolume, geo.BITS.kVisNone) &&
-                               geo.TestBit(obj.fVolume, geo.BITS.kVisThis) ? 99 : 0;
-
-                  if (!geo.TestBit(obj, geo.BITS.kVisDaughters) ||
-                      !geo.TestBit(obj.fVolume, geo.BITS.kVisDaughters)) clone.nochlds = true;
-
-                  // node with childs only shown in case if it is last level in hierarchy
-                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
-
-                  // special handling for top node
-                  if (n==0) {
-                     if (hide_top_volume) clone.vis = 0;
-                     delete clone.nochlds;
-                  }
-               }
-            }
+            if (obj.fVolume) return obj.fVolume.fShape;
          } else {
-            clone.vis = obj.fRnrSelf ? 99 : 0;
-
-            // when the only node is selected, draw it
-            if ((n===0) && (this.nodes.length===1)) clone.vis = 99;
-
-            this.vislevel = 9999; // automatically take all volumes
+            return obj.fShape;
          }
-
-         // shape with zero volume or without faces will not be observed
-         if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = 0;
-
-         if (clone.vis) res++;
-      }
-
-      return res;
-   }
-
-   /** @summary After visibility flags is set, produce idshift for all nodes as it would be maximum level */
-   ClonedNodes.prototype.produceIdShifts = function() {
-      for (let k=0;k<this.nodes.length;++k)
-         this.nodes[k].idshift = -1;
-
-      function scan_func(nodes, node) {
-         if (node.idshift < 0) {
-            node.idshift = 0;
-            if (node.chlds)
-               for(let k = 0; k<node.chlds.length; ++k)
-                  node.idshift += scan_func(nodes, nodes[node.chlds[k]]);
-         }
-
-         return node.idshift + 1;
-      }
-
-      scan_func(this.nodes, this.nodes[0]);
-   }
-
-   /** @summary Extract only visibility flags
-     * @desc Used to transfer them to the worker */
-   ClonedNodes.prototype.getVisibleFlags = function() {
-      let res = new Array(this.nodes.length);
-      for (let n=0;n<this.nodes.length;++n)
-         res[n] = { vis: this.nodes[n].vis, nochlds: this.nodes[n].nochlds };
-      return res;
-   }
-
-   /** @summary Assign only visibility flags, extracted with getVisibleFlags */
-   ClonedNodes.prototype.setVisibleFlags = function(flags) {
-      if (!this.nodes || !flags || !flags.length != this.nodes.length)
-         return 0;
-
-      let res = 0;
-      for (let n=0;n<this.nodes.length;++n) {
-         let clone = this.nodes[n];
-
-         clone.vis = flags[n].vis;
-         clone.nochlds = flags[n].nochlds;
-         if (clone.vis) res++;
-      }
-
-      return res;
-   }
-
-   /** @summary Scan visible nodes in hierarchy, starting from nodeid
-     * @desc Each entry in hierarchy get its unique id, which is not changed with visibility flags */
-   ClonedNodes.prototype.scanVisible = function(arg, vislvl) {
-
-      if (!this.nodes) return 0;
-
-      if (vislvl === undefined) {
-         if (!arg) arg = {};
-
-         vislvl = arg.vislvl || this.vislevel || 4; // default 3 in ROOT
-         if (vislvl > 88) vislvl = 88;
-
-         arg.stack = new Array(100); // current stack
-         arg.nodeid = 0;
-         arg.counter = 0; // sequence ID of the node, used to identify it later
-         arg.last = 0;
-         arg.CopyStack = function(factor) {
-            let entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
-            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be built as first
-            for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
-            return entry;
-         };
-
-         if (arg.domatrix) {
-            arg.matrices = [];
-            arg.mpool = [ new THREE.Matrix4() ]; // pool of Matrix objects to avoid permanent creation
-            arg.getmatrix = function() { return this.matrices[this.last]; };
-         }
-      }
-
-      let res = 0, node = this.nodes[arg.nodeid];
-
-      if (arg.domatrix) {
-         if (!arg.mpool[arg.last+1])
-            arg.mpool[arg.last+1] = new THREE.Matrix4();
-
-         let prnt = (arg.last > 0) ? arg.matrices[arg.last-1] : new THREE.Matrix4();
-         if (node.matrix) {
-            arg.matrices[arg.last] = arg.mpool[arg.last].fromArray(prnt.elements);
-            arg.matrices[arg.last].multiply(arg.mpool[arg.last+1].fromArray(node.matrix));
-         } else {
-            arg.matrices[arg.last] = prnt;
-         }
-      }
-
-      if (node.nochlds) vislvl = 0;
-
-      if (node.vis > vislvl) {
-         if (!arg.func || arg.func(node)) res++;
-      }
-
-      arg.counter++;
-
-      if ((vislvl > 0) && node.chlds) {
-         arg.last++;
-         for (let i = 0; i < node.chlds.length; ++i) {
-            arg.nodeid = node.chlds[i];
-            arg.stack[arg.last] = i; // in the stack one store index of child, it is path in the hierarchy
-            res += this.scanVisible(arg, vislvl-1);
-         }
-         arg.last--;
-      } else {
-         arg.counter += (node.idshift || 0);
-      }
-
-      if (arg.last === 0) {
-         delete arg.last;
-         delete arg.stack;
-         delete arg.CopyStack;
-         delete arg.counter;
-         delete arg.matrices;
-         delete arg.mpool;
-         delete arg.getmatrix;
-      }
-
-      return res;
-   }
-
-   /** @summary Return node name with given id.
-    * @desc Either original object or description is used */
-   ClonedNodes.prototype.getNodeName = function(nodeid) {
-      if (this.origin) {
-         let obj = this.origin[nodeid];
-         return obj ? geo.getObjectName(obj) : "";
-      }
-      let node = this.nodes[nodeid];
-      return node ? node.name : "";
-   }
-
-   /** @summary Returns description for provide stack */
-   ClonedNodes.prototype.resolveStack = function(stack, withmatrix) {
-
-      let res = { id: 0, obj: null, node: this.nodes[0], name: this.name_prefix };
-
-      // if (!this.toplevel || (this.nodes.length === 1) || (res.node.kind === 1)) res.name = "";
-
-      if (withmatrix) {
-         res.matrix = new THREE.Matrix4();
-         if (res.node.matrix) res.matrix.fromArray(res.node.matrix);
-      }
-
-      if (this.origin)
-         res.obj = this.origin[0];
-
-      //if (!res.name)
-      //   res.name = this.getNodeName(0);
-
-      if (stack)
-         for(let lvl=0;lvl<stack.length;++lvl) {
-            res.id = res.node.chlds[stack[lvl]];
-            res.node = this.nodes[res.id];
-
-            if (this.origin)
-               res.obj = this.origin[res.id];
-
-            let subname = this.getNodeName(res.id);
-            if (subname) {
-               if (res.name) res.name+="/";
-               res.name += subname;
-            }
-
-            if (withmatrix && res.node.matrix)
-               res.matrix.multiply(new THREE.Matrix4().fromArray(res.node.matrix));
-         }
-
-      return res;
-   }
-
-   /** @summary Create stack array based on nodes ids array.
-    * @desc Ids list should correspond to existing nodes hierarchy */
-   ClonedNodes.prototype.buildStackByIds = function(ids) {
-      if (!ids) return null;
-
-      if (ids[0] !== 0) {
-         console.error('wrong ids - first should be 0');
          return null;
       }
 
-      let node = this.nodes[0], stack = [];
+      /** @summary function to cleanup as much as possible structures
+        * @desc Provided parameters drawnodes and drawshapes are arrays created during building of geometry */
+      cleanup(drawnodes, drawshapes) {
 
-      for (let k=1;k<ids.length;++k) {
-         let nodeid = ids[k];
-         if (!node) return null;
-         let chindx = node.chlds.indexOf(nodeid);
-         if (chindx < 0) {
-            console.error('wrong nodes ids ' + ids[k] + ' is not child of ' + ids[k-1]);
-            return null;
+         if (drawnodes) {
+            for (let n=0;n<drawnodes.length;++n) {
+               delete drawnodes[n].stack;
+               drawnodes[n] = undefined;
+            }
          }
 
-         stack.push(chindx);
-         node = this.nodes[nodeid];
-      }
-
-      return stack;
-   }
-
-   /** @summary Retuns ids array which correspond to the stack */
-   ClonedNodes.prototype.buildIdsByStack = function(stack) {
-      if (!stack) return null;
-      let node = this.nodes[0], ids = [0];
-      for (let k=0;k<stack.length;++k) {
-         let id = node.chlds[stack[k]];
-         ids.push(id);
-         node = this.nodes[id];
-      }
-      return ids;
-   }
-
-   /** @summary Returns true if stack includes at any place provided nodeid */
-   ClonedNodes.prototype.isIdInStack = function(nodeid, stack) {
-
-      if (!nodeid) return true;
-
-      let node = this.nodes[0], id = 0;
-
-      for(let lvl = 0; lvl < stack.length; ++lvl) {
-         id = node.chlds[stack[lvl]];
-         if (id == nodeid) return true;
-         node = this.nodes[id];
-      }
-
-      return false;
-   }
-
-   /** @summary Find stack by name which include names of all parents */
-   ClonedNodes.prototype.findStackByName = function(fullname) {
-
-      let names = fullname.split('/'), currid = 0, stack = [];
-
-      if (this.getNodeName(currid) !== names[0]) return null;
-
-      for (let n=1;n<names.length;++n) {
-         let node = this.nodes[currid];
-         if (!node.chlds) return null;
-
-         for (let k=0;k<node.chlds.length;++k) {
-            let chldid = node.chlds[k];
-            if (this.getNodeName(chldid) === names[n]) { stack.push(k); currid = chldid; break; }
+         if (drawshapes) {
+            for (let n=0;n<drawshapes.length;++n) {
+               delete drawshapes[n].geom;
+               drawshapes[n] = undefined;
+            }
          }
 
-         // no new entry - not found stack
-         if (stack.length === n - 1) return null;
-      }
-
-      return stack;
-   }
-
-   /** @summary Set usage of default ROOT colors */
-   ClonedNodes.prototype.setDefaultColors = function(on) {
-      this.use_dflt_colors = on;
-      if (this.use_dflt_colors && !this.dflt_table) {
-
-         let dflt = { kWhite:0,  kBlack:1, kGray:920,
-               kRed:632, kGreen:416, kBlue:600, kYellow:400, kMagenta:616, kCyan:432,
-               kOrange:800, kSpring:820, kTeal:840, kAzure:860, kViolet:880, kPink:900 };
-
-         let nmax = 110, col = [];
-         for (let i=0;i<nmax;i++) col.push(dflt.kGray);
-
-         //  here we should create a new TColor with the same rgb as in the default
-         //  ROOT colors used below
-         col[ 3] = dflt.kYellow-10;
-         col[ 4] = col[ 5] = dflt.kGreen-10;
-         col[ 6] = col[ 7] = dflt.kBlue-7;
-         col[ 8] = col[ 9] = dflt.kMagenta-3;
-         col[10] = col[11] = dflt.kRed-10;
-         col[12] = dflt.kGray+1;
-         col[13] = dflt.kBlue-10;
-         col[14] = dflt.kOrange+7;
-         col[16] = dflt.kYellow+1;
-         col[20] = dflt.kYellow-10;
-         col[24] = col[25] = col[26] = dflt.kBlue-8;
-         col[29] = dflt.kOrange+9;
-         col[79] = dflt.kOrange-2;
-
-         this.dflt_table = col;
-      }
-   }
-
-   /** @summary Provide different properties of draw entry nodeid
-    * @desc Only if node visible, material will be created*/
-   ClonedNodes.prototype.getDrawEntryProperties = function(entry) {
-
-      let clone = this.nodes[entry.nodeid];
-      let visible = true;
-
-      if (clone.kind === kindShape) {
-         let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null };
-         let _opacity = entry.opacity || 1;
-         prop.fillcolor = new THREE.Color( entry.color ? "rgb(" + entry.color + ")" : "blue" );
-         prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
-                          opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                          side: THREE.FrontSide /* THREE.DoubleSide*/, vertexColors: THREE.NoColors /*THREE.VertexColors */,
-                          depthWrite: _opacity == 1 } );
-         prop.material.inherentOpacity = _opacity;
-
-         return prop;
-      }
-
-      if (!this.origin) {
-         console.error('origin not there - kind', clone.kind, entry.nodeid, clone);
-         return null;
-      }
-
-      let node = this.origin[entry.nodeid];
-
-      if (clone.kind === kindEve) {
-         // special handling for EVE nodes
-
-         let prop = { name: geo.getObjectName(node), nname: geo.getObjectName(node), shape: node.fShape, material: null, chlds: null };
-
-         if (node.fElements !== null) prop.chlds = node.fElements.arr;
-
-         if (visible) {
-            let _opacity = Math.min(1, node.fRGBA[3]);
-            prop.fillcolor = new THREE.Color( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
-            prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
-                             opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                             side: THREE.FrontSide /* THREE.DoubleSide*/, vertexColors: THREE.NoColors /*THREE.VertexColors */,
-                             depthWrite: _opacity == 1 } );
-            prop.material.inherentOpacity = _opacity;
+         if (this.nodes) {
+            for (let n=0;n<this.nodes.length;++n) {
+               if (this.nodes[n])
+                  delete this.nodes[n].chlds;
+            }
          }
 
-         return prop;
+         delete this.nodes;
+         delete this.origin;
+
+         delete this.sortmap;
       }
 
-      let volume = node.fVolume;
+      /** @summary Create complete description for provided Geo object */
+      createClones(obj, sublevel, kind) {
+         if (!sublevel) {
 
-      let prop = { name: geo.getObjectName(volume), nname: geo.getObjectName(node), volume: node.fVolume, shape: volume.fShape, material: null, chlds: null };
+            if (obj && obj._typename == "$$Shape$$")
+               return this.createClonesForShape(obj);
 
-      if (node.fVolume.fNodes !== null) prop.chlds = node.fVolume.fNodes.arr;
+            this.origin = [];
+            sublevel = 1;
+            kind = geo.getNodeKind(obj);
+         }
 
-      if (volume) prop.linewidth = volume.fLineWidth;
+         if ((kind < 0) || !obj || ('_refid' in obj)) return;
 
-      if (visible) {
+         obj._refid = this.origin.length;
+         this.origin.push(obj);
+         if (sublevel > this.maxdepth) this.maxdepth = sublevel;
 
-         // TODO: maybe correctly extract ROOT colors here?
-         let _opacity = 1.0, jsrp = JSROOT.Painter,
-             root_colors = jsrp ? jsrp.root_colors : ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
+         let chlds = null;
+         if (kind === kindGeo)
+            chlds = (obj.fVolume && obj.fVolume.fNodes) ? obj.fVolume.fNodes.arr : null;
+         else
+            chlds = obj.fElements ? obj.fElements.arr : null;
 
-         if (entry.custom_color)
-            prop.fillcolor = entry.custom_color;
-         else if ((volume.fFillColor > 1) && (volume.fLineColor == 1))
-            prop.fillcolor = root_colors[volume.fFillColor];
-         else if (volume.fLineColor >= 0)
-            prop.fillcolor = root_colors[volume.fLineColor];
+         if (chlds !== null) {
+            geo.checkDuplicates(obj, chlds);
+            for (let i = 0; i < chlds.length; ++i)
+               this.createClones(chlds[i], sublevel + 1, kind);
+         }
 
-         if (volume.fMedium && volume.fMedium.fMaterial) {
-            let mat = volume.fMedium.fMaterial,
-                fillstyle = mat.fFillStyle,
-                transparency = (fillstyle < 3000 || fillstyle > 3100) ? 0 : fillstyle - 3000;
+         if (sublevel > 1) return;
 
-            if (this.use_dflt_colors) {
-               let matZ = Math.round(mat.fZ),
-                   icol = this.dflt_table[matZ];
-               prop.fillcolor = root_colors[icol];
-               if (mat.fDensity < 0.1) transparency = 60;
+         this.nodes = [];
+
+         let sortarr = [];
+
+         // first create nodes objects
+         for (let n = 0; n < this.origin.length; ++n) {
+            // let obj = this.origin[n];
+            let node = { id: n, kind: kind, vol: 0, nfaces: 0 };
+            this.nodes.push(node);
+            sortarr.push(node); // array use to produce sortmap
+         }
+
+         // than fill children lists
+         for (let n = 0; n < this.origin.length; ++n) {
+            let obj = this.origin[n], clone = this.nodes[n];
+
+            let chlds = null, shape = null;
+
+            if (kind === kindEve) {
+               shape = obj.fShape;
+               if (obj.fElements) chlds = obj.fElements.arr;
+            } else if (obj.fVolume) {
+               shape = obj.fVolume.fShape;
+               if (obj.fVolume.fNodes) chlds = obj.fVolume.fNodes.arr;
             }
 
-            if (transparency > 0)
-               _opacity = (100.0 - transparency) / 100.0;
-            if (prop.fillcolor === undefined)
-               prop.fillcolor = root_colors[mat.fFillColor];
-         }
-         if (prop.fillcolor === undefined)
-            prop.fillcolor = "lightgrey";
-
-         prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
-                              opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                              side: THREE.FrontSide /* THREE.DoubleSide */, vertexColors: THREE.NoColors /*THREE.VertexColors*/,
-                              depthWrite: _opacity == 1 } );
-         prop.material.inherentOpacity = _opacity;
-
-      }
-
-      return prop;
-   }
-
-   /** @summary Creates hierarchy of Object3D for given stack entry
-     * @desc Such hierarchy repeats hierarchy of TGeoNodes and set matrix for the objects drawing
-     * also set renderOrder, required to handle transparency */
-   ClonedNodes.prototype.createObject3D = function(stack, toplevel, options) {
-
-      let node = this.nodes[0], three_prnt = toplevel, draw_depth = 0,
-          force = (typeof options == 'object') || (options==='force');
-
-      for(let lvl=0; lvl<=stack.length; ++lvl) {
-         let nchld = (lvl > 0) ? stack[lvl-1] : 0;
-         // extract current node
-         if (lvl>0)  node = this.nodes[node.chlds[nchld]];
-
-         let obj3d = undefined;
-
-         if (three_prnt.children)
-            for (let i = 0; i < three_prnt.children.length; ++i) {
-               if (three_prnt.children[i].nchld === nchld) {
-                  obj3d = three_prnt.children[i];
-                  break;
+            let matrix = geo.getNodeMatrix(kind, obj);
+            if (matrix) {
+               clone.matrix = matrix.elements; // take only matrix elements, matrix will be constructed in worker
+               if (clone.matrix[0] === 1) {
+                  let issimple = true;
+                  for (let k = 1; (k < clone.matrix.length) && issimple; ++k)
+                     issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
+                  if (issimple) delete clone.matrix;
                }
+               if (clone.matrix && (kind == kindEve)) clone.abs_matrix = true;
+            }
+            if (shape) {
+               clone.fDX = shape.fDX;
+               clone.fDY = shape.fDY;
+               clone.fDZ = shape.fDZ;
+               clone.vol = shape.fDX * shape.fDY * shape.fDZ;
+               if (shape.$nfaces === undefined)
+                  shape.$nfaces = createGeometry(shape, -1);
+               clone.nfaces = shape.$nfaces;
+               if (clone.nfaces <= 0) clone.vol = 0;
             }
 
-         if (obj3d) {
-            three_prnt = obj3d;
-            if (obj3d.$jsroot_drawable) draw_depth++;
-            continue;
+            if (!chlds) continue;
+
+            // in cloned object children is only list of ids
+            clone.chlds = new Array(chlds.length);
+            for (let k = 0; k < chlds.length; ++k)
+               clone.chlds[k] = chlds[k]._refid;
          }
 
-         if (!force) return null;
+         // remove _refid identifiers from original objects
+         for (let n = 0; n < this.origin.length; ++n)
+            delete this.origin[n]._refid;
 
-         obj3d = new THREE.Object3D();
+         // do sorting once
+         sortarr.sort(function(a, b) { return b.vol - a.vol; });
 
-         if (node.abs_matrix) {
-            obj3d.absMatrix = new THREE.Matrix4();
-            obj3d.absMatrix.fromArray(node.matrix);
-         } else if (node.matrix) {
-            obj3d.matrix.fromArray(node.matrix);
-            obj3d.matrix.decompose( obj3d.position, obj3d.quaternion, obj3d.scale );
+         // remember sort map and also sortid
+         this.sortmap = new Array(this.nodes.length);
+         for (let n = 0; n < this.nodes.length; ++n) {
+            this.sortmap[n] = sortarr[n].id;
+            sortarr[n].sortid = n;
          }
-
-         // this.accountNodes(obj3d);
-         obj3d.nchld = nchld; // mark index to find it again later
-
-         // add the mesh to the scene
-         three_prnt.add(obj3d);
-
-         // this is only for debugging - test inversion of whole geometry
-         if ((lvl==0) && (typeof options == 'object') && options.scale) {
-            if ((options.scale.x < 0) || (options.scale.y < 0) || (options.scale.z < 0)) {
-               obj3d.scale.copy(options.scale);
-               obj3d.updateMatrix();
-            }
-         }
-
-         obj3d.updateMatrixWorld();
-
-         three_prnt = obj3d;
       }
 
-      if ((options === 'mesh') || (options === 'delete_mesh')) {
-         let mesh = null;
-         if (three_prnt)
-            for (let n=0; (n<three_prnt.children.length) && !mesh;++n) {
-               let chld = three_prnt.children[n];
-               if ((chld.type === 'Mesh') && (chld.nchld === undefined)) mesh = chld;
+      /** @summary Create elementary item with single already existing shape
+        * @desc used by details view of geometry shape */
+      createClonesForShape(obj) {
+         this.origin = [];
+
+         // indicate that just plain shape is used
+         this.plain_shape = obj;
+
+         let node = {
+               id: 0, sortid: 0, kind: kindShape,
+               name: "Shape",
+               nfaces: obj.nfaces,
+               fDX: 1, fDY: 1, fDZ: 1, vol: 1,
+               vis: true
+            };
+
+         this.nodes = [ node ];
+      }
+
+      /** @summary Count all visisble nodes */
+      countVisibles() {
+         let cnt = 0;
+         if (this.nodes)
+            for (let k = 0; k < this.nodes.length; ++k)
+               if (this.nodes[k].vis)
+                  cnt++;
+         return cnt;
+      }
+
+      /** @summary Mark visisble nodes.
+        * @desc Set only basic flags, actual visibility depends from hierarchy */
+      markVisibles(on_screen, copy_bits, hide_top_volume) {
+         if (this.plain_shape) return 1;
+         if (!this.origin || !this.nodes) return 0;
+
+         let res = 0;
+
+         for (let n=0;n<this.nodes.length;++n) {
+            let clone = this.nodes[n],
+                obj = this.origin[n];
+
+            clone.vis = 0; // 1 - only with last level
+            delete clone.nochlds;
+
+            if (clone.kind === kindGeo) {
+               if (obj.fVolume) {
+                  if (on_screen) {
+                     // on screen bits used always, childs always checked
+                     clone.vis = geo.TestBit(obj.fVolume, geo.BITS.kVisOnScreen) ? 99 : 0;
+
+                     if ((n==0) && clone.vis && hide_top_volume) clone.vis = 0;
+
+                     if (copy_bits) {
+                        geo.SetBit(obj.fVolume, geo.BITS.kVisNone, false);
+                        geo.SetBit(obj.fVolume, geo.BITS.kVisThis, (clone.vis > 0));
+                        geo.SetBit(obj.fVolume, geo.BITS.kVisDaughters, true);
+                     }
+                  } else {
+                     clone.vis = !geo.TestBit(obj.fVolume, geo.BITS.kVisNone) &&
+                                  geo.TestBit(obj.fVolume, geo.BITS.kVisThis) ? 99 : 0;
+
+                     if (!geo.TestBit(obj, geo.BITS.kVisDaughters) ||
+                         !geo.TestBit(obj.fVolume, geo.BITS.kVisDaughters)) clone.nochlds = true;
+
+                     // node with childs only shown in case if it is last level in hierarchy
+                     if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
+
+                     // special handling for top node
+                     if (n==0) {
+                        if (hide_top_volume) clone.vis = 0;
+                        delete clone.nochlds;
+                     }
+                  }
+               }
+            } else {
+               clone.vis = obj.fRnrSelf ? 99 : 0;
+
+               // when the only node is selected, draw it
+               if ((n===0) && (this.nodes.length===1)) clone.vis = 99;
+
+               this.vislevel = 9999; // automatically take all volumes
             }
 
-         if ((options === 'mesh') || !mesh) return mesh;
+            // shape with zero volume or without faces will not be observed
+            if ((clone.vol <= 0) || (clone.nfaces <= 0)) clone.vis = 0;
 
-         let res = three_prnt;
-         while (mesh && (mesh !== toplevel)) {
-            three_prnt = mesh.parent;
-            three_prnt.remove(mesh);
-            mesh = (three_prnt.children.length == 0) ? three_prnt : null;
+            if (clone.vis) res++;
          }
 
          return res;
       }
 
-      if (three_prnt) {
-         three_prnt.$jsroot_drawable = true;
-         three_prnt.$jsroot_depth = draw_depth;
-      }
+      /** @summary After visibility flags is set, produce idshift for all nodes as it would be maximum level */
+      produceIdShifts() {
+         for (let k = 0; k < this.nodes.length; ++k)
+            this.nodes[k].idshift = -1;
 
-      return three_prnt;
-   }
+         function scan_func(nodes, node) {
+            if (node.idshift < 0) {
+               node.idshift = 0;
+               if (node.chlds)
+                  for(let k = 0; k<node.chlds.length; ++k)
+                     node.idshift += scan_func(nodes, nodes[node.chlds[k]]);
+            }
 
-   /** @summary Get volume boundary
-     * @private */
-   ClonedNodes.prototype.getVolumeBoundary = function(viscnt, facelimit, nodeslimit) {
-
-      let result = { min: 0, max: 1, sortidcut: 0 };
-
-      if (!this.sortmap) {
-         console.error('sorting map do not exist');
-         return result;
-      }
-
-      let maxNode, currNode, cnt=0, facecnt=0;
-
-      for (let n = 0; (n < this.sortmap.length) && (cnt < nodeslimit) && (facecnt < facelimit); ++n) {
-         let id = this.sortmap[n];
-         if (viscnt[id] === 0) continue;
-         currNode = this.nodes[id];
-         if (!maxNode) maxNode = currNode;
-         cnt += viscnt[id];
-         facecnt += viscnt[id] * currNode.nfaces;
-      }
-
-      if (!currNode) {
-         console.error('no volumes selected');
-         return result;
-      }
-
-      // console.log('Volume boundary ' + currNode.vol + '  cnt ' + cnt + '  faces ' + facecnt);
-      result.max = maxNode.vol;
-      result.min = currNode.vol;
-      result.sortidcut = currNode.sortid; // latest node is not included
-      return result;
-   }
-
-   /** @summary Collects visible nodes, using maxlimit
-     * @desc One can use map to define cut based on the volume or serious of cuts */
-   ClonedNodes.prototype.collectVisibles = function(maxnumfaces, frustum) {
-
-      // in simple case shape as it is
-      if (this.plain_shape)
-         return { lst: [ { nodeid: 0, seqid: 0, stack: [], factor: 1, shapeid: 0, server_shape: this.plain_shape } ], complete: true };
-
-      let arg = {
-         facecnt: 0,
-         viscnt: new Array(this.nodes.length), // counter for each node
-         vislvl: this.getVisLevel(),
-         reset: function() {
-            this.total = 0;
-            this.facecnt = 0;
-            for (let n=0;n<this.viscnt.length;++n) this.viscnt[n] = 0;
-         },
-         // nodes: this.nodes,
-         func: function(node) {
-            this.total++;
-            this.facecnt += node.nfaces;
-            this.viscnt[node.id]++;
-            return true;
-         }
-      };
-
-      arg.reset();
-
-      let total = this.scanVisible(arg),
-          maxnumnodes = this.getMaxVisNodes();
-
-      if (maxnumnodes > 0) {
-         while ((total > maxnumnodes) && (arg.vislvl > 1)) {
-            arg.vislvl--;
-            arg.reset();
-            total = this.scanVisible(arg);
-         }
-      }
-
-      this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
-
-      let minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
-
-      console.log('Total visible nodes ' + total + ' numfaces ' + arg.facecnt);
-
-      if (arg.facecnt > maxnumfaces) {
-
-         let bignumfaces = maxnumfaces * (frustum ? 0.8 : 1.0),
-             bignumnodes = maxnumnodes * (frustum ? 0.8 : 1.0);
-
-         // define minimal volume, which always to shown
-         let boundary = this.getVolumeBoundary(arg.viscnt, bignumfaces, bignumnodes);
-
-         minVol = boundary.min;
-         maxVol = boundary.max;
-         sortidcut = boundary.sortidcut;
-
-         if (frustum) {
-             arg.domatrix = true;
-             arg.frustum = frustum;
-             arg.totalcam = 0;
-             arg.func = function(node) {
-                if (node.vol <= minVol) // only small volumes are interesting
-                   if (this.frustum.CheckShape(this.getmatrix(), node)) {
-                      this.viscnt[node.id]++;
-                      this.totalcam += node.nfaces;
-                   }
-
-                return true;
-             };
-
-             for (let n=0;n<arg.viscnt.length;++n) arg.viscnt[n] = 0;
-
-             this.scanVisible(arg);
-
-             if (arg.totalcam > maxnumfaces*0.2)
-                camVol = this.getVolumeBoundary(arg.viscnt, maxnumfaces*0.2, maxnumnodes*0.2).min;
-             else
-                camVol = 0;
-
-             camFact = maxVol / ((camVol>0) ? (camVol>0) : minVol);
-
-             // console.log('Limit for camera ' + camVol + '  faces in camera view ' + arg.totalcam);
-         }
-      }
-
-      arg.items = [];
-
-      arg.func = function(node) {
-         if (node.sortid < sortidcut) {
-            this.items.push(this.CopyStack());
-         } else if ((camVol >= 0) && (node.vol > camVol)) {
-            if (this.frustum.CheckShape(this.getmatrix(), node))
-               this.items.push(this.CopyStack(camFact));
-         }
-         return true;
-      };
-
-      this.scanVisible(arg);
-
-      return { lst: arg.items, complete: minVol === 0 };
-   }
-
-   /** @summary Merge list of drawn objects
-     * @desc In current list we should mark if object already exists
-     * from previous list we should collect objects which are not there */
-   ClonedNodes.prototype.mergeVisibles = function(current, prev) {
-
-      let indx2 = 0, del = [];
-      for (let indx1 = 0; (indx1 < current.length) && (indx2 < prev.length); ++indx1) {
-
-         while ((indx2 < prev.length) && (prev[indx2].seqid < current[indx1].seqid)) {
-            del.push(prev[indx2++]); // this entry should be removed
+            return node.idshift + 1;
          }
 
-         if ((indx2 < prev.length) && (prev[indx2].seqid === current[indx1].seqid)) {
-            if (prev[indx2].done) current[indx1].done = true; // copy ready flag
-            indx2++;
-         }
+         scan_func(this.nodes, this.nodes[0]);
       }
 
-      // remove rest
-      while (indx2 < prev.length)
-         del.push(prev[indx2++]);
+      /** @summary Extract only visibility flags
+        * @desc Used to transfer them to the worker */
+      getVisibleFlags() {
+         let res = new Array(this.nodes.length);
+         for (let n=0;n<this.nodes.length;++n)
+            res[n] = { vis: this.nodes[n].vis, nochlds: this.nodes[n].nochlds };
+         return res;
+      }
 
-      return del;
-   }
+      /** @summary Assign only visibility flags, extracted with getVisibleFlags */
+      setVisibleFlags(flags) {
+         if (!this.nodes || !flags || !flags.length != this.nodes.length)
+            return 0;
 
-   /** @summary Collect all uniques shapes which should be built
-    *  @desc Check if same shape used many times for drawing */
-   ClonedNodes.prototype.collectShapes = function(lst) {
+         let res = 0;
+         for (let n=0;n<this.nodes.length;++n) {
+            let clone = this.nodes[n];
 
-      // nothing else - just that single shape
-      if (this.plain_shape)
-         return [ this.plain_shape ];
+            clone.vis = flags[n].vis;
+            clone.nochlds = flags[n].nochlds;
+            if (clone.vis) res++;
+         }
 
-      let shapes = [];
+         return res;
+      }
 
-      for (let i=0;i<lst.length;++i) {
-         let entry = lst[i];
-         let shape = this.getNodeShape(entry.nodeid);
+      /** @summary Scan visible nodes in hierarchy, starting from nodeid
+        * @desc Each entry in hierarchy get its unique id, which is not changed with visibility flags */
+      scanVisible(arg, vislvl) {
 
-         if (!shape) continue; // strange, but avoid misleading
+         if (!this.nodes) return 0;
 
-         if (shape._id === undefined) {
-            shape._id = shapes.length;
+         if (vislvl === undefined) {
+            if (!arg) arg = {};
 
-            shapes.push({ id: shape._id, shape: shape, vol: this.nodes[entry.nodeid].vol, refcnt: 1, factor: 1, ready: false });
+            vislvl = arg.vislvl || this.vislevel || 4; // default 3 in ROOT
+            if (vislvl > 88) vislvl = 88;
 
-            // shapes.push( { obj: shape, vol: this.nodes[entry.nodeid].vol });
+            arg.stack = new Array(100); // current stack
+            arg.nodeid = 0;
+            arg.counter = 0; // sequence ID of the node, used to identify it later
+            arg.last = 0;
+            arg.CopyStack = function(factor) {
+               let entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
+               if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be built as first
+               for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
+               return entry;
+            };
+
+            if (arg.domatrix) {
+               arg.matrices = [];
+               arg.mpool = [ new THREE.Matrix4() ]; // pool of Matrix objects to avoid permanent creation
+               arg.getmatrix = function() { return this.matrices[this.last]; };
+            }
+         }
+
+         let res = 0, node = this.nodes[arg.nodeid];
+
+         if (arg.domatrix) {
+            if (!arg.mpool[arg.last+1])
+               arg.mpool[arg.last+1] = new THREE.Matrix4();
+
+            let prnt = (arg.last > 0) ? arg.matrices[arg.last-1] : new THREE.Matrix4();
+            if (node.matrix) {
+               arg.matrices[arg.last] = arg.mpool[arg.last].fromArray(prnt.elements);
+               arg.matrices[arg.last].multiply(arg.mpool[arg.last+1].fromArray(node.matrix));
+            } else {
+               arg.matrices[arg.last] = prnt;
+            }
+         }
+
+         if (node.nochlds) vislvl = 0;
+
+         if (node.vis > vislvl) {
+            if (!arg.func || arg.func(node)) res++;
+         }
+
+         arg.counter++;
+
+         if ((vislvl > 0) && node.chlds) {
+            arg.last++;
+            for (let i = 0; i < node.chlds.length; ++i) {
+               arg.nodeid = node.chlds[i];
+               arg.stack[arg.last] = i; // in the stack one store index of child, it is path in the hierarchy
+               res += this.scanVisible(arg, vislvl-1);
+            }
+            arg.last--;
          } else {
-            shapes[shape._id].refcnt++;
+            arg.counter += (node.idshift || 0);
          }
 
-         entry.shape = shapes[shape._id]; // remember shape used
+         if (arg.last === 0) {
+            delete arg.last;
+            delete arg.stack;
+            delete arg.CopyStack;
+            delete arg.counter;
+            delete arg.matrices;
+            delete arg.mpool;
+            delete arg.getmatrix;
+         }
 
-         // use maximal importance factor to push element to the front
-         if (entry.factor && (entry.factor>entry.shape.factor))
-            entry.shape.factor = entry.factor;
+         return res;
       }
 
-      // now sort shapes in volume decrease order
-      shapes.sort((a,b) => b.vol*b.factor - a.vol*a.factor);
-
-      // now set new shape ids according to the sorted order and delete temporary field
-      for (let n=0;n<shapes.length;++n) {
-         let item = shapes[n];
-         item.id = n; // set new ID
-         delete item.shape._id; // remove temporary field
+      /** @summary Return node name with given id.
+       * @desc Either original object or description is used */
+      getNodeName(nodeid) {
+         if (this.origin) {
+            let obj = this.origin[nodeid];
+            return obj ? geo.getObjectName(obj) : "";
+         }
+         let node = this.nodes[nodeid];
+         return node ? node.name : "";
       }
 
-      // as last action set current shape id to each entry
-      for (let i=0;i<lst.length;++i) {
-         let entry = lst[i];
-         if (entry.shape) {
-            entry.shapeid = entry.shape.id; // keep only id for the entry
-            delete entry.shape; // remove direct references
+      /** @summary Returns description for provide stack */
+      resolveStack(stack, withmatrix) {
+
+         let res = { id: 0, obj: null, node: this.nodes[0], name: this.name_prefix };
+
+         // if (!this.toplevel || (this.nodes.length === 1) || (res.node.kind === 1)) res.name = "";
+
+         if (withmatrix) {
+            res.matrix = new THREE.Matrix4();
+            if (res.node.matrix) res.matrix.fromArray(res.node.matrix);
+         }
+
+         if (this.origin)
+            res.obj = this.origin[0];
+
+         //if (!res.name)
+         //   res.name = this.getNodeName(0);
+
+         if (stack)
+            for(let lvl=0;lvl<stack.length;++lvl) {
+               res.id = res.node.chlds[stack[lvl]];
+               res.node = this.nodes[res.id];
+
+               if (this.origin)
+                  res.obj = this.origin[res.id];
+
+               let subname = this.getNodeName(res.id);
+               if (subname) {
+                  if (res.name) res.name+="/";
+                  res.name += subname;
+               }
+
+               if (withmatrix && res.node.matrix)
+                  res.matrix.multiply(new THREE.Matrix4().fromArray(res.node.matrix));
+            }
+
+         return res;
+      }
+
+      /** @summary Create stack array based on nodes ids array.
+       * @desc Ids list should correspond to existing nodes hierarchy */
+      buildStackByIds(ids) {
+         if (!ids) return null;
+
+         if (ids[0] !== 0) {
+            console.error('wrong ids - first should be 0');
+            return null;
+         }
+
+         let node = this.nodes[0], stack = [];
+
+         for (let k=1;k<ids.length;++k) {
+            let nodeid = ids[k];
+            if (!node) return null;
+            let chindx = node.chlds.indexOf(nodeid);
+            if (chindx < 0) {
+               console.error('wrong nodes ids ' + ids[k] + ' is not child of ' + ids[k-1]);
+               return null;
+            }
+
+            stack.push(chindx);
+            node = this.nodes[nodeid];
+         }
+
+         return stack;
+      }
+
+      /** @summary Retuns ids array which correspond to the stack */
+      buildIdsByStack(stack) {
+         if (!stack) return null;
+         let node = this.nodes[0], ids = [0];
+         for (let k=0;k<stack.length;++k) {
+            let id = node.chlds[stack[k]];
+            ids.push(id);
+            node = this.nodes[id];
+         }
+         return ids;
+      }
+
+      /** @summary Returns true if stack includes at any place provided nodeid */
+      isIdInStack(nodeid, stack) {
+
+         if (!nodeid) return true;
+
+         let node = this.nodes[0], id = 0;
+
+         for(let lvl = 0; lvl < stack.length; ++lvl) {
+            id = node.chlds[stack[lvl]];
+            if (id == nodeid) return true;
+            node = this.nodes[id];
+         }
+
+         return false;
+      }
+
+      /** @summary Find stack by name which include names of all parents */
+      findStackByName(fullname) {
+
+         let names = fullname.split('/'), currid = 0, stack = [];
+
+         if (this.getNodeName(currid) !== names[0]) return null;
+
+         for (let n = 1; n < names.length; ++n) {
+            let node = this.nodes[currid];
+            if (!node.chlds) return null;
+
+            for (let k=0;k<node.chlds.length;++k) {
+               let chldid = node.chlds[k];
+               if (this.getNodeName(chldid) === names[n]) { stack.push(k); currid = chldid; break; }
+            }
+
+            // no new entry - not found stack
+            if (stack.length === n - 1) return null;
+         }
+
+         return stack;
+      }
+
+      /** @summary Set usage of default ROOT colors */
+      setDefaultColors(on) {
+         this.use_dflt_colors = on;
+         if (this.use_dflt_colors && !this.dflt_table) {
+
+            let dflt = { kWhite:0,  kBlack:1, kGray:920,
+                  kRed:632, kGreen:416, kBlue:600, kYellow:400, kMagenta:616, kCyan:432,
+                  kOrange:800, kSpring:820, kTeal:840, kAzure:860, kViolet:880, kPink:900 };
+
+            let nmax = 110, col = [];
+            for (let i=0;i<nmax;i++) col.push(dflt.kGray);
+
+            //  here we should create a new TColor with the same rgb as in the default
+            //  ROOT colors used below
+            col[ 3] = dflt.kYellow-10;
+            col[ 4] = col[ 5] = dflt.kGreen-10;
+            col[ 6] = col[ 7] = dflt.kBlue-7;
+            col[ 8] = col[ 9] = dflt.kMagenta-3;
+            col[10] = col[11] = dflt.kRed-10;
+            col[12] = dflt.kGray+1;
+            col[13] = dflt.kBlue-10;
+            col[14] = dflt.kOrange+7;
+            col[16] = dflt.kYellow+1;
+            col[20] = dflt.kYellow-10;
+            col[24] = col[25] = col[26] = dflt.kBlue-8;
+            col[29] = dflt.kOrange+9;
+            col[79] = dflt.kOrange-2;
+
+            this.dflt_table = col;
          }
       }
 
-      return shapes;
-   }
+      /** @summary Provide different properties of draw entry nodeid
+       * @desc Only if node visible, material will be created*/
+      getDrawEntryProperties(entry) {
 
-   /** @summary Merge shape lists */
-   ClonedNodes.prototype.mergeShapesLists = function(oldlst, newlst) {
+         let clone = this.nodes[entry.nodeid];
+         let visible = true;
 
-      if (!oldlst) return newlst;
+         if (clone.kind === kindShape) {
+            let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null };
+            let _opacity = entry.opacity || 1;
+            prop.fillcolor = new THREE.Color( entry.color ? "rgb(" + entry.color + ")" : "blue" );
+            prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
+                             opacity: _opacity, wireframe: false, color: prop.fillcolor,
+                             side: THREE.FrontSide, vertexColors: false,
+                             depthWrite: _opacity == 1 } );
+            prop.material.inherentOpacity = _opacity;
 
-      // set geometry to shape object itself
-      for (let n=0;n<oldlst.length;++n) {
-         let item = oldlst[n];
-
-         item.shape._geom = item.geom;
-         delete item.geom;
-
-         if (item.geomZ!==undefined) {
-            item.shape._geomZ = item.geomZ;
-            delete item.geomZ;
+            return prop;
          }
+
+         if (!this.origin) {
+            console.error('origin not there - kind', clone.kind, entry.nodeid, clone);
+            return null;
+         }
+
+         let node = this.origin[entry.nodeid];
+
+         if (clone.kind === kindEve) {
+            // special handling for EVE nodes
+
+            let prop = { name: geo.getObjectName(node), nname: geo.getObjectName(node), shape: node.fShape, material: null, chlds: null };
+
+            if (node.fElements !== null) prop.chlds = node.fElements.arr;
+
+            if (visible) {
+               let _opacity = Math.min(1, node.fRGBA[3]);
+               prop.fillcolor = new THREE.Color( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
+               prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
+                                opacity: _opacity, wireframe: false, color: prop.fillcolor,
+                                side: THREE.FrontSide, vertexColors: false,
+                                depthWrite: _opacity == 1 } );
+               prop.material.inherentOpacity = _opacity;
+            }
+
+            return prop;
+         }
+
+         let volume = node.fVolume;
+
+         let prop = { name: geo.getObjectName(volume), nname: geo.getObjectName(node), volume: node.fVolume, shape: volume.fShape, material: null, chlds: null };
+
+         if (node.fVolume.fNodes !== null) prop.chlds = node.fVolume.fNodes.arr;
+
+         if (volume) prop.linewidth = volume.fLineWidth;
+
+         if (visible) {
+
+            // TODO: maybe correctly extract ROOT colors here?
+            let _opacity = 1.0, jsrp = JSROOT.Painter,
+                root_colors = jsrp ? jsrp.root_colors : ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
+
+            if (entry.custom_color)
+               prop.fillcolor = entry.custom_color;
+            else if ((volume.fFillColor > 1) && (volume.fLineColor == 1))
+               prop.fillcolor = root_colors[volume.fFillColor];
+            else if (volume.fLineColor >= 0)
+               prop.fillcolor = root_colors[volume.fLineColor];
+
+            if (volume.fMedium && volume.fMedium.fMaterial) {
+               let mat = volume.fMedium.fMaterial,
+                   fillstyle = mat.fFillStyle,
+                   transparency = (fillstyle < 3000 || fillstyle > 3100) ? 0 : fillstyle - 3000;
+
+               if (this.use_dflt_colors) {
+                  let matZ = Math.round(mat.fZ),
+                      icol = this.dflt_table[matZ];
+                  prop.fillcolor = root_colors[icol];
+                  if (mat.fDensity < 0.1) transparency = 60;
+               }
+
+               if (transparency > 0)
+                  _opacity = (100.0 - transparency) / 100.0;
+               if (prop.fillcolor === undefined)
+                  prop.fillcolor = root_colors[mat.fFillColor];
+            }
+            if (prop.fillcolor === undefined)
+               prop.fillcolor = "lightgrey";
+
+            prop.material = new THREE.MeshLambertMaterial( { transparent: _opacity < 1,
+                                 opacity: _opacity, wireframe: false, color: prop.fillcolor,
+                                 side: THREE.FrontSide, vertexColors: false,
+                                 depthWrite: _opacity == 1 } );
+            prop.material.inherentOpacity = _opacity;
+
+         }
+
+         return prop;
       }
 
-      // take from shape (if match)
-      for (let n=0;n<newlst.length;++n) {
-         let item = newlst[n];
+      /** @summary Creates hierarchy of Object3D for given stack entry
+        * @desc Such hierarchy repeats hierarchy of TGeoNodes and set matrix for the objects drawing
+        * also set renderOrder, required to handle transparency */
+      createObject3D(stack, toplevel, options) {
 
-         if (item.shape._geom !== undefined) {
-            item.geom = item.shape._geom;
+         let node = this.nodes[0], three_prnt = toplevel, draw_depth = 0,
+             force = (typeof options == 'object') || (options==='force');
+
+         for(let lvl=0; lvl<=stack.length; ++lvl) {
+            let nchld = (lvl > 0) ? stack[lvl-1] : 0;
+            // extract current node
+            if (lvl>0)  node = this.nodes[node.chlds[nchld]];
+
+            let obj3d = undefined;
+
+            if (three_prnt.children)
+               for (let i = 0; i < three_prnt.children.length; ++i) {
+                  if (three_prnt.children[i].nchld === nchld) {
+                     obj3d = three_prnt.children[i];
+                     break;
+                  }
+               }
+
+            if (obj3d) {
+               three_prnt = obj3d;
+               if (obj3d.$jsroot_drawable) draw_depth++;
+               continue;
+            }
+
+            if (!force) return null;
+
+            obj3d = new THREE.Object3D();
+
+            if (node.abs_matrix) {
+               obj3d.absMatrix = new THREE.Matrix4();
+               obj3d.absMatrix.fromArray(node.matrix);
+            } else if (node.matrix) {
+               obj3d.matrix.fromArray(node.matrix);
+               obj3d.matrix.decompose( obj3d.position, obj3d.quaternion, obj3d.scale );
+            }
+
+            // this.accountNodes(obj3d);
+            obj3d.nchld = nchld; // mark index to find it again later
+
+            // add the mesh to the scene
+            three_prnt.add(obj3d);
+
+            // this is only for debugging - test inversion of whole geometry
+            if ((lvl==0) && (typeof options == 'object') && options.scale) {
+               if ((options.scale.x < 0) || (options.scale.y < 0) || (options.scale.z < 0)) {
+                  obj3d.scale.copy(options.scale);
+                  obj3d.updateMatrix();
+               }
+            }
+
+            obj3d.updateMatrixWorld();
+
+            three_prnt = obj3d;
+         }
+
+         if ((options === 'mesh') || (options === 'delete_mesh')) {
+            let mesh = null;
+            if (three_prnt)
+               for (let n=0; (n<three_prnt.children.length) && !mesh;++n) {
+                  let chld = three_prnt.children[n];
+                  if ((chld.type === 'Mesh') && (chld.nchld === undefined)) mesh = chld;
+               }
+
+            if ((options === 'mesh') || !mesh) return mesh;
+
+            let res = three_prnt;
+            while (mesh && (mesh !== toplevel)) {
+               three_prnt = mesh.parent;
+               three_prnt.remove(mesh);
+               mesh = (three_prnt.children.length == 0) ? three_prnt : null;
+            }
+
+            return res;
+         }
+
+         if (three_prnt) {
+            three_prnt.$jsroot_drawable = true;
+            three_prnt.$jsroot_depth = draw_depth;
+         }
+
+         return three_prnt;
+      }
+
+      /** @summary Get volume boundary */
+      getVolumeBoundary(viscnt, facelimit, nodeslimit) {
+
+         let result = { min: 0, max: 1, sortidcut: 0 };
+
+         if (!this.sortmap) {
+            console.error('sorting map do not exist');
+            return result;
+         }
+
+         let maxNode, currNode, cnt=0, facecnt=0;
+
+         for (let n = 0; (n < this.sortmap.length) && (cnt < nodeslimit) && (facecnt < facelimit); ++n) {
+            let id = this.sortmap[n];
+            if (viscnt[id] === 0) continue;
+            currNode = this.nodes[id];
+            if (!maxNode) maxNode = currNode;
+            cnt += viscnt[id];
+            facecnt += viscnt[id] * currNode.nfaces;
+         }
+
+         if (!currNode) {
+            console.error('no volumes selected');
+            return result;
+         }
+
+         // console.log('Volume boundary ' + currNode.vol + '  cnt ' + cnt + '  faces ' + facecnt);
+         result.max = maxNode.vol;
+         result.min = currNode.vol;
+         result.sortidcut = currNode.sortid; // latest node is not included
+         return result;
+      }
+
+      /** @summary Collects visible nodes, using maxlimit
+        * @desc One can use map to define cut based on the volume or serious of cuts */
+      collectVisibles(maxnumfaces, frustum) {
+
+         // in simple case shape as it is
+         if (this.plain_shape)
+            return { lst: [ { nodeid: 0, seqid: 0, stack: [], factor: 1, shapeid: 0, server_shape: this.plain_shape } ], complete: true };
+
+         let arg = {
+            facecnt: 0,
+            viscnt: new Array(this.nodes.length), // counter for each node
+            vislvl: this.getVisLevel(),
+            reset() {
+               this.total = 0;
+               this.facecnt = 0;
+               this.viscnt.fill(0);
+            },
+            // nodes: this.nodes,
+            func(node) {
+               this.total++;
+               this.facecnt += node.nfaces;
+               this.viscnt[node.id]++;
+               return true;
+            }
+         };
+
+         arg.reset();
+
+         let total = this.scanVisible(arg),
+             maxnumnodes = this.getMaxVisNodes();
+
+         if (maxnumnodes > 0) {
+            while ((total > maxnumnodes) && (arg.vislvl > 1)) {
+               arg.vislvl--;
+               arg.reset();
+               total = this.scanVisible(arg);
+            }
+         }
+
+         this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
+
+         let minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
+
+         console.log('Total visible nodes ' + total + ' numfaces ' + arg.facecnt);
+
+         if (arg.facecnt > maxnumfaces) {
+
+            let bignumfaces = maxnumfaces * (frustum ? 0.8 : 1.0),
+                bignumnodes = maxnumnodes * (frustum ? 0.8 : 1.0);
+
+            // define minimal volume, which always to shown
+            let boundary = this.getVolumeBoundary(arg.viscnt, bignumfaces, bignumnodes);
+
+            minVol = boundary.min;
+            maxVol = boundary.max;
+            sortidcut = boundary.sortidcut;
+
+            if (frustum) {
+                arg.domatrix = true;
+                arg.frustum = frustum;
+                arg.totalcam = 0;
+                arg.func = function(node) {
+                   if (node.vol <= minVol) // only small volumes are interesting
+                      if (this.frustum.CheckShape(this.getmatrix(), node)) {
+                         this.viscnt[node.id]++;
+                         this.totalcam += node.nfaces;
+                      }
+
+                   return true;
+                };
+
+                for (let n=0;n<arg.viscnt.length;++n) arg.viscnt[n] = 0;
+
+                this.scanVisible(arg);
+
+                if (arg.totalcam > maxnumfaces*0.2)
+                   camVol = this.getVolumeBoundary(arg.viscnt, maxnumfaces*0.2, maxnumnodes*0.2).min;
+                else
+                   camVol = 0;
+
+                camFact = maxVol / ((camVol>0) ? (camVol>0) : minVol);
+
+                // console.log('Limit for camera ' + camVol + '  faces in camera view ' + arg.totalcam);
+            }
+         }
+
+         arg.items = [];
+
+         arg.func = function(node) {
+            if (node.sortid < sortidcut) {
+               this.items.push(this.CopyStack());
+            } else if ((camVol >= 0) && (node.vol > camVol)) {
+               if (this.frustum.CheckShape(this.getmatrix(), node))
+                  this.items.push(this.CopyStack(camFact));
+            }
+            return true;
+         };
+
+         this.scanVisible(arg);
+
+         return { lst: arg.items, complete: minVol === 0 };
+      }
+
+      /** @summary Merge list of drawn objects
+        * @desc In current list we should mark if object already exists
+        * from previous list we should collect objects which are not there */
+      mergeVisibles(current, prev) {
+
+         let indx2 = 0, del = [];
+         for (let indx1 = 0; (indx1 < current.length) && (indx2 < prev.length); ++indx1) {
+
+            while ((indx2 < prev.length) && (prev[indx2].seqid < current[indx1].seqid)) {
+               del.push(prev[indx2++]); // this entry should be removed
+            }
+
+            if ((indx2 < prev.length) && (prev[indx2].seqid === current[indx1].seqid)) {
+               if (prev[indx2].done) current[indx1].done = true; // copy ready flag
+               indx2++;
+            }
+         }
+
+         // remove rest
+         while (indx2 < prev.length)
+            del.push(prev[indx2++]);
+
+         return del;
+      }
+
+      /** @summary Collect all uniques shapes which should be built
+       *  @desc Check if same shape used many times for drawing */
+      collectShapes(lst) {
+
+         // nothing else - just that single shape
+         if (this.plain_shape)
+            return [ this.plain_shape ];
+
+         let shapes = [];
+
+         for (let i=0;i<lst.length;++i) {
+            let entry = lst[i];
+            let shape = this.getNodeShape(entry.nodeid);
+
+            if (!shape) continue; // strange, but avoid misleading
+
+            if (shape._id === undefined) {
+               shape._id = shapes.length;
+
+               shapes.push({ id: shape._id, shape: shape, vol: this.nodes[entry.nodeid].vol, refcnt: 1, factor: 1, ready: false });
+
+               // shapes.push( { obj: shape, vol: this.nodes[entry.nodeid].vol });
+            } else {
+               shapes[shape._id].refcnt++;
+            }
+
+            entry.shape = shapes[shape._id]; // remember shape used
+
+            // use maximal importance factor to push element to the front
+            if (entry.factor && (entry.factor>entry.shape.factor))
+               entry.shape.factor = entry.factor;
+         }
+
+         // now sort shapes in volume decrease order
+         shapes.sort((a,b) => b.vol*b.factor - a.vol*a.factor);
+
+         // now set new shape ids according to the sorted order and delete temporary field
+         for (let n = 0; n < shapes.length; ++n) {
+            let item = shapes[n];
+            item.id = n; // set new ID
+            delete item.shape._id; // remove temporary field
+         }
+
+         // as last action set current shape id to each entry
+         for (let i = 0; i < lst.length; ++i) {
+            let entry = lst[i];
+            if (entry.shape) {
+               entry.shapeid = entry.shape.id; // keep only id for the entry
+               delete entry.shape; // remove direct references
+            }
+         }
+
+         return shapes;
+      }
+
+      /** @summary Merge shape lists */
+      mergeShapesLists(oldlst, newlst) {
+
+         if (!oldlst) return newlst;
+
+         // set geometry to shape object itself
+         for (let n=0;n<oldlst.length;++n) {
+            let item = oldlst[n];
+
+            item.shape._geom = item.geom;
+            delete item.geom;
+
+            if (item.geomZ!==undefined) {
+               item.shape._geomZ = item.geomZ;
+               delete item.geomZ;
+            }
+         }
+
+         // take from shape (if match)
+         for (let n = 0; n < newlst.length; ++n) {
+            let item = newlst[n];
+
+            if (item.shape._geom !== undefined) {
+               item.geom = item.shape._geom;
+               delete item.shape._geom;
+            }
+
+            if (item.shape._geomZ !== undefined) {
+               item.geomZ = item.shape._geomZ;
+               delete item.shape._geomZ;
+            }
+         }
+
+         // now delete all unused geometries
+         for (let n = 0; n < oldlst.length; ++n) {
+            let item = oldlst[n];
             delete item.shape._geom;
-         }
-
-         if (item.shape._geomZ !== undefined) {
-            item.geomZ = item.shape._geomZ;
             delete item.shape._geomZ;
          }
+
+         return newlst;
       }
 
-      // now delete all unused geometries
-      for (let n=0;n<oldlst.length;++n) {
-         let item = oldlst[n];
-         delete item.shape._geom;
-         delete item.shape._geomZ;
-      }
+      /** @summary Build shapes */
+      buildShapes(lst, limit, timelimit) {
 
-      return newlst;
-   }
+         let created = 0,
+             tm1 = new Date().getTime(),
+             res = { done: false, shapes: 0, faces: 0, notusedshapes: 0 };
 
-   /** @summary Build shapes */
-   ClonedNodes.prototype.buildShapes = function(lst, limit, timelimit) {
+         for (let n=0;n<lst.length;++n) {
+            let item = lst[n];
 
-      let created = 0,
-          tm1 = new Date().getTime(),
-          res = { done: false, shapes: 0, faces: 0, notusedshapes: 0 };
+            // if enough faces are produced, nothing else is required
+            if (res.done) { item.ready = true; continue; }
 
-      for (let n=0;n<lst.length;++n) {
-         let item = lst[n];
-
-         // if enough faces are produced, nothing else is required
-         if (res.done) { item.ready = true; continue; }
-
-         if (!item.ready) {
-            item._typename = "$$Shape$$"; // let reuse item for direct drawing
-            item.ready = true;
-            if (item.geom === undefined) {
-               item.geom = createGeometry(item.shape);
-               if (item.geom) created++; // indicate that at least one shape was created
+            if (!item.ready) {
+               item._typename = "$$Shape$$"; // let reuse item for direct drawing
+               item.ready = true;
+               if (item.geom === undefined) {
+                  item.geom = createGeometry(item.shape);
+                  if (item.geom) created++; // indicate that at least one shape was created
+               }
+               item.nfaces = countGeometryFaces(item.geom);
             }
-            item.nfaces = countGeometryFaces(item.geom);
+
+            res.shapes++;
+            if (!item.used) res.notusedshapes++;
+            res.faces += item.nfaces*item.refcnt;
+
+            if (res.faces >= limit) {
+               res.done = true;
+            } else if ((created > 0.01*lst.length) && (timelimit!==undefined)) {
+               let tm2 = new Date().getTime();
+               if (tm2-tm1 > timelimit) return res;
+            }
          }
 
-         res.shapes++;
-         if (!item.used) res.notusedshapes++;
-         res.faces += item.nfaces*item.refcnt;
+         res.done = true;
 
-         if (res.faces >= limit) {
-            res.done = true;
-         } else if ((created > 0.01*lst.length) && (timelimit!==undefined)) {
-            let tm2 = new Date().getTime();
-            if (tm2-tm1 > timelimit) return res;
-         }
+         return res;
       }
-
-      res.done = true;
-
-      return res;
    }
 
    /// =====================================================================
@@ -3314,14 +3276,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       let names = [], cnts = [];
-      for (let k=0;k<chlds.length;++k) {
+      for (let k = 0; k < chlds.length; ++k) {
          let chld = chlds[k];
          if (!chld || !chld.fName) continue;
          if (!chld.$geo_suffix) {
             let indx = names.indexOf(chld.fName);
             if (indx>=0) {
                let cnt = cnts[indx] || 1;
-               while(names.indexOf(chld.fName+"#"+cnt)>=0) ++cnt;
+               while(names.indexOf(chld.fName+"#"+cnt) >= 0) ++cnt;
                chld.$geo_suffix = "#" + cnt;
                cnts[indx] = cnt+1;
             }
@@ -3335,7 +3297,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
     * one should inverse geometry object, otherwise THREE.js cannot correctly draw it
     * @param {Object} shape - TGeoShape object
     * @param {Object} material - material
-    * @memberof SJROOT.GEO
+    * @memberof JSROOT.GEO
     * @private */
 
    function createFlippedMesh(shape, material) {
@@ -3406,9 +3368,6 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
                face = geom.faces[n++];
                d = face.b; face.b = face.c; face.c = d;
             }
-
-            // normals are calculated with normal geometry and correctly scaled
-            // geom.computeFaceNormals();
          }
       }
 
@@ -3565,17 +3524,17 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
             mesh.$jsroot_distance = dist;
          }
 
-         arr.sort(function(a,b) { return a.$jsroot_distance - b.$jsroot_distance; });
+         arr.sort((a,b) => a.$jsroot_distance - b.$jsroot_distance);
 
          let resort = new Array(arr.length);
 
-         for (let i=0;i<arr.length;++i) {
+         for (let i = 0; i < arr.length; ++i) {
             arr[i].$jsroot_index = i;
             resort[i] = arr[i];
          }
 
          if (method==="ray")
-         for (let i=arr.length-1;i>=0;--i) {
+         for (let i=arr.length - 1; i >= 0; --i) {
             let mesh = arr[i],
                 box3 = mesh.$jsroot_box3,
                 direction = box3.getCenter(tmp_vect);
@@ -3590,7 +3549,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
                let unique = [];
 
-               for (let k1=0;k1<intersects.length;++k1) {
+               for (let k1 = 0; k1 < intersects.length; ++k1) {
                   if (unique.indexOf(intersects[k1].object)<0) unique.push(intersects[k1].object);
                   // if (intersects[k1].object === mesh) break; // trace until object itself
                }
@@ -3610,7 +3569,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
             }
 
             // now push first object in intersects to the front
-            for (let k1=0;k1<intersects.length-1;++k1) {
+            for (let k1 = 0; k1 < intersects.length - 1; ++k1) {
                let mesh1 = intersects[k1], mesh2 = intersects[k1+1],
                    i1 = mesh1.$jsroot_index, i2 = mesh2.$jsroot_index;
                if (i1<i2) continue;
@@ -3624,7 +3583,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
          }
 
-         for (let i=0;i<resort.length;++i) {
+         for (let i = 0; i < resort.length; ++i) {
             resort[i].renderOrder = maxorder - (i+1) / (resort.length+1) * (maxorder-minorder);
             delete resort[i].$jsroot_index;
             delete resort[i].$jsroot_distance;
@@ -3641,14 +3600,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          if (!arr.length) return;
 
          if (minorder === maxorder) {
-            for (let k=0;k<arr.length;++k)
+            for (let k = 0; k < arr.length; ++k)
                arr[k].renderOrder = minorder;
          } else {
            did_sort = sort(arr, minorder, maxorder);
            if (!did_sort) minorder = maxorder = (minorder + maxorder) / 2;
          }
 
-         for (let k=0;k<arr.length;++k) {
+         for (let k = 0; k < arr.length; ++k) {
             let next = arr[k].parent, min = minorder, max = maxorder;
 
             if (did_sort) {

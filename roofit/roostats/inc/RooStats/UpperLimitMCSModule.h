@@ -30,28 +30,28 @@ public:
 
    UpperLimitMCSModule(const RooArgSet* poi, Double_t CL=0.95) ;
    UpperLimitMCSModule(const UpperLimitMCSModule& other) ;
-   virtual ~UpperLimitMCSModule() ;
+   ~UpperLimitMCSModule() override ;
 
-   Bool_t initializeInstance() ;
+   Bool_t initializeInstance() override ;
 
-   Bool_t initializeRun(Int_t /*numSamples*/) ;
-   RooDataSet* finalizeRun() ;
+   Bool_t initializeRun(Int_t /*numSamples*/) override ;
+   RooDataSet* finalizeRun() override ;
 
    //Bool_t processAfterFit(Int_t /*sampleNum*/)  ;
-   Bool_t processBetweenGenAndFit(Int_t /*sampleNum*/) ;
+   Bool_t processBetweenGenAndFit(Int_t /*sampleNum*/) override ;
 
 private:
 
-   std::string _parName ;  // Name of Nsignal parameter
+   std::string _parName ;  ///< Name of Nsignal parameter
    RooStats::ProfileLikelihoodCalculator* _plc;
    RooRealVar* _ul ;
 
-   const RooArgSet* _poi;  // parameters of interest
-   RooDataSet* _data ;     // Summary dataset to store results
+   const RooArgSet* _poi;  ///< parameters of interest
+   RooDataSet* _data ;     ///< Summary dataset to store results
    Double_t _cl;
    RooAbsPdf* _model;
 
-   ClassDef(UpperLimitMCSModule,0) // MCStudy module to calculate upper limit of a given poi
+   ClassDefOverride(UpperLimitMCSModule,0) // MCStudy module to calculate upper limit of a given poi
 };
 
 }

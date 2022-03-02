@@ -1035,7 +1035,10 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
       m1  += t*w; s1 += t*t*w;
       m2  += r*w; s2 += r*r*w;
       s12 += t*r;
-      if ((ievt & 0xFF) == 0) timer.DrawProgressBar(ievt);
+      // print progress
+      Long64_t modulo = Long64_t(nevt / 100);
+      if (ievt % modulo == 0)
+         timer.DrawProgressBar(ievt);
    }
    timer.DrawProgressBar(nevt - 1);
    Log() << kINFO << "Elapsed time for evaluation of " << nevt <<  " events: "

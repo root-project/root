@@ -21,7 +21,7 @@
 
 RooMultiCategory connects several RooAbsCategory objects into
 a single category. The states of the multi-category consist of all the permutations
-of the input categories. 
+of the input categories.
 RooMultiCategory states are automatically defined and updated whenever an input
 category modifies its list of states.
 
@@ -55,12 +55,12 @@ ClassImp(RooMultiCategory);
 
 RooMultiCategory::RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCategories) :
   RooAbsCategory(name, title), _catSet("input","Input category set",this,kTRUE,kTRUE)
-{  
+{
   // Copy category list
   for (const auto arg : inputCategories) {
     if (!dynamic_cast<RooAbsCategory*>(arg)) {
-      coutE(InputArguments) << "RooMultiCategory::RooMultiCategory(" << GetName() << "): input argument " << arg->GetName() 
-			    << " is not a RooAbsCategory" << endl ;
+      coutE(InputArguments) << "RooMultiCategory::RooMultiCategory(" << GetName() << "): input argument " << arg->GetName()
+             << " is not a RooAbsCategory" << endl ;
     }
     _catSet.add(*arg) ;
   }
@@ -83,7 +83,7 @@ RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *na
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooMultiCategory::~RooMultiCategory() 
+RooMultiCategory::~RooMultiCategory()
 {
 }
 
@@ -166,8 +166,8 @@ RooAbsCategory::value_type RooMultiCategory::evaluate() const
 void RooMultiCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   RooAbsCategory::printMultiline(os,content,verbose,indent) ;
-  
-  if (verbose) {     
+
+  if (verbose) {
     os << indent << "--- RooMultiCategory ---" << endl;
     os << indent << "  Input category list:" << endl ;
     TString moreIndent(indent) ;

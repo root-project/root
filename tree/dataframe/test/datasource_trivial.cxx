@@ -28,7 +28,7 @@ TEST(RTrivialDS, EntryRanges)
    RTrivialDS tds(32);
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
 
    EXPECT_EQ(4U, ranges.size());
@@ -48,7 +48,7 @@ TEST(RTrivialDS, ColumnReaders)
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<ULong64_t>("col0");
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    for (auto &&range : ranges) {

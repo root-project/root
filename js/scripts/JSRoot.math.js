@@ -10,10 +10,45 @@ JSROOT.define([], () =>  {
      * @desc Shows available functions for TFormula */
    let mth = {};
 
-   /** @summary lgam function
+   const kMACHEP  = 1.11022302462515654042363166809e-16,
+         kMINLOG  = -708.396418532264078748994506896,
+         kMAXLOG  = 709.782712893383973096206318587,
+         kMAXSTIR = 108.116855767857671821730036754,
+         kBig     = 4.503599627370496e15,
+         kBiginv  =  2.22044604925031308085e-16,
+         kSqrt2   = 1.41421356237309515,
+         M_PI    =  3.14159265358979323846264338328;
+
+   /** @summary Polynomialeval function
+     * @desc calculates a value of a polynomial of the form:
+     * a[0]x^N+a[1]x^(N-1) + ... + a[N]
      * @private */
-   mth.lgam = function( x ) {
-      let p, q, u, w, z, sgngam = 1;
+   function Polynomialeval(x, a, N) {
+      if (N==0) return a[0];
+
+      let pom = a[0];
+      for (let i = 1; i <= N; ++i)
+         pom = pom *x + a[i];
+      return pom;
+   }
+
+   /** @summary Polynomial1eval function
+     * @desc calculates a value of a polynomial of the form:
+     * x^N+a[0]x^(N-1) + ... + a[N-1]
+     * @private */
+   function Polynomial1eval(x, a, N) {
+      if (N==0) return a[0];
+
+      let pom = x + a[0];
+      for (let i = 1; i < N; ++i)
+         pom = pom *x + a[i];
+      return pom;
+   }
+
+   /** @summary lgam function, logarithm from gamma
+     * @private */
+   function lgam(x) {
+      let p, q, u, w, z;
       const kMAXLGM = 2.556348e305,
             LS2PI = 0.91893853320467274178,
       A = [
@@ -39,12 +74,12 @@ JSROOT.define([], () =>  {
          -2.01889141433532773231E6
       ];
 
-      if (x >= Number.POSITIVE_INFINITY)
+      if ((x >= Number.MAX_VALUE) || (x == Number.POSITIVE_INFINITY))
          return Number.POSITIVE_INFINITY;
 
       if ( x < -34.0 ) {
          q = -x;
-         w = mth.lgam(q);
+         w = lgam(q);
          p = Math.floor(q);
          if ( p==q )//_unur_FP_same(p,q)
             return Number.POSITIVE_INFINITY;
@@ -82,11 +117,11 @@ JSROOT.define([], () =>  {
             return Math.log(z);
          p -= 2.0;
          x = x + p;
-         p = x * mth.Polynomialeval(x, B, 5 ) / mth.Polynomial1eval( x, C, 6);
+         p = x * Polynomialeval(x, B, 5 ) / Polynomial1eval( x, C, 6);
          return Math.log(z) + p;
       }
       if ( x > kMAXLGM )
-         return( sgngam * Number.POSITIVE_INFINITY );
+         return Number.POSITIVE_INFINITY;
 
       q = ( x - 0.5 ) * Math.log(x) - x + LS2PI;
       if ( x > 1.0e8 )
@@ -98,39 +133,293 @@ JSROOT.define([], () =>  {
                - 2.7777777777777777777778e-3) *p
                + 0.0833333333333333333333) / x;
       else
-         q += mth.Polynomialeval( p, A, 4 ) / x;
+         q += Polynomialeval( p, A, 4 ) / x;
       return q;
    }
 
-   /** @summary Polynomialeval function
-     * @desc calculates a value of a polynomial of the form:
-     * a[0]x^N+a[1]x^(N-1) + ... + a[N]
+   /** @summary Stirling formula for the gamma function
      * @private */
-   mth.Polynomialeval = function(x, a, N) {
-      if (N==0) return a[0];
+   function stirf(x) {
+      let y, w, v;
 
-      let pom = a[0];
-      for (let i=1; i <= N; ++i)
-         pom = pom *x + a[i];
-      return pom;
+      const STIR = [
+         7.87311395793093628397E-4,
+         -2.29549961613378126380E-4,
+         -2.68132617805781232825E-3,
+         3.47222221605458667310E-3,
+         8.33333333333482257126E-2,
+      ], SQTPI = Math.sqrt(2*Math.PI);
+
+      w = 1.0/x;
+      w = 1.0 + w * Polynomialeval( w, STIR, 4 );
+      y = Math.exp(x);
+
+   /*   #define kMAXSTIR kMAXLOG/log(kMAXLOG)  */
+
+      if( x > kMAXSTIR )
+      { /* Avoid overflow in pow() */
+         v = Math.pow( x, 0.5 * x - 0.25 );
+         y = v * (v / y);
+      }
+      else
+      {
+         y = Math.pow( x, x - 0.5 ) / y;
+      }
+      y = SQTPI * y * w;
+      return y;
    }
 
-   /** @summary Polynomial1eval function
-     * @desc calculates a value of a polynomial of the form:
-     * x^N+a[0]x^(N-1) + ... + a[N-1]
+   /** @summary complementary error function
      * @private */
-   mth.Polynomial1eval = function(x, a, N) {
-      if (N==0) return a[0];
+   function erfc(a) {
+      const erfP = [
+         2.46196981473530512524E-10,
+         5.64189564831068821977E-1,
+         7.46321056442269912687E0,
+         4.86371970985681366614E1,
+         1.96520832956077098242E2,
+         5.26445194995477358631E2,
+         9.34528527171957607540E2,
+         1.02755188689515710272E3,
+         5.57535335369399327526E2
+      ], erfQ = [
+         1.32281951154744992508E1,
+         8.67072140885989742329E1,
+         3.54937778887819891062E2,
+         9.75708501743205489753E2,
+         1.82390916687909736289E3,
+         2.24633760818710981792E3,
+         1.65666309194161350182E3,
+         5.57535340817727675546E2
+      ], erfR = [
+         5.64189583547755073984E-1,
+         1.27536670759978104416E0,
+         5.01905042251180477414E0,
+         6.16021097993053585195E0,
+         7.40974269950448939160E0,
+         2.97886665372100240670E0
+      ], erfS = [
+         2.26052863220117276590E0,
+         9.39603524938001434673E0,
+         1.20489539808096656605E1,
+         1.70814450747565897222E1,
+         9.60896809063285878198E0,
+         3.36907645100081516050E0
+      ];
 
-      let pom = x + a[0];
-      for (let i=1; i < N; ++i)
-         pom = pom *x + a[i];
-      return pom;
+      let p,q,x,y,z;
+
+      if( a < 0.0 )
+         x = -a;
+      else
+         x = a;
+
+      if( x < 1.0 )
+         return 1.0 - mth.erf(a);
+
+      z = -a * a;
+
+      if(z < -kMAXLOG)
+         return (a < 0) ? 2.0 : 0.0;
+
+      z = Math.exp(z);
+
+      if( x < 8.0 ) {
+         p = Polynomialeval( x, erfP, 8 );
+         q = Polynomial1eval( x, erfQ, 8 );
+      } else {
+         p = Polynomialeval( x, erfR, 5 );
+         q = Polynomial1eval( x, erfS, 6 );
+      }
+      y = (z * p)/q;
+
+      if(a < 0)
+         y = 2.0 - y;
+
+      if(y == 0)
+         return (a < 0) ? 2.0 : 0.0;
+
+      return y;
    }
+
+   /** @summary error function
+     * @private */
+   function erf(x) {
+      if(Math.abs(x) > 1.0)
+         return 1.0 - erfc(x);
+
+      const erfT = [
+         9.60497373987051638749E0,
+         9.00260197203842689217E1,
+         2.23200534594684319226E3,
+         7.00332514112805075473E3,
+         5.55923013010394962768E4
+      ], erfU = [
+         3.35617141647503099647E1,
+         5.21357949780152679795E2,
+         4.59432382970980127987E3,
+         2.26290000613890934246E4,
+         4.92673942608635921086E4
+      ];
+
+      let z = x * x;
+      let y = x * Polynomialeval( z, erfT, 4 ) / Polynomial1eval( z, erfU, 5 );
+      return y;
+   }
+
+   /** @summary lognormal_cdf_c function */
+   mth.lognormal_cdf_c = function(x, m, s, x0) {
+      if (x0 === undefined) x0 = 0;
+      let z = (Math.log((x-x0))-m)/(s*kSqrt2);
+      if (z > 1.)  return 0.5*erfc(z);
+      else         return 0.5*(1.0 - erf(z));
+   }
+
+   /** @summary lognormal_cdf_c function */
+   mth.lognormal_cdf = function(x, m, s, x0 = 0) {
+      let z = (Math.log((x-x0))-m)/(s*kSqrt2);
+      if (z < -1.) return 0.5*erfc(-z);
+      else         return 0.5*(1.0 + erf(z));
+   }
+
+   /** @summary normal_cdf_c function */
+   function normal_cdf_c(x, sigma, x0 = 0) {
+      let z = (x-x0)/(sigma*kSqrt2);
+      if (z > 1.)  return 0.5*erfc(z);
+      else         return 0.5*(1.-erf(z));
+   }
+
+   /** @summary normal_cdf function */
+   function normal_cdf(x, sigma, x0 = 0) {
+      let z = (x-x0)/(sigma*kSqrt2);
+      if (z < -1.) return erfc(-z);
+      else         return 0.5*(1.0 + erf(z));
+   }
+
+   /** @summary log normal pdf
+     * @private */
+   function lognormal_pdf(x, m, s, x0 = 0) {
+      if ((x-x0) <= 0)
+         return 0.0;
+      let tmp = (Math.log((x-x0)) - m)/s;
+      return 1.0 / ((x-x0) * Math.abs(s) * Math.sqrt(2 * M_PI)) * Math.exp(-(tmp * tmp) /2);
+   }
+
+   /** @summary normal pdf
+     * @private */
+   function normal_pdf(x, sigma = 1, x0 = 0) {
+      let  tmp = (x-x0)/sigma;
+      return (1.0/(Math.sqrt(2 * M_PI) * Math.abs(sigma))) * Math.exp(-tmp*tmp/2);
+   }
+
+   /** @summary gamma calculation
+     * @private */
+   function gamma(x) {
+      let p, q, z, i, sgngam = 1;
+
+      if (x >= Number.MAX_VALUE)
+         return x;
+
+      q = Math.abs(x);
+
+      if( q > 33.0 )
+      {
+         if( x < 0.0 )
+         {
+            p = Math.floor(q);
+            if( p == q )
+               return Number.POSITIVE_INFINITY;
+            i = Math.round(p);
+            if( (i & 1) == 0 )
+               sgngam = -1;
+            z = q - p;
+            if( z > 0.5 )
+            {
+               p += 1.0;
+               z = q - p;
+            }
+            z = q * Math.sin( Math.PI * z );
+            if( z == 0 )
+            {
+               return sgngam > 0 ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+            }
+            z = Math.abs(z);
+            z = Math.PI / (z * stirf(q) );
+         }
+         else
+         {
+            z = stirf(x);
+         }
+         return sgngam * z;
+      }
+
+      z = 1.0;
+      while( x >= 3.0 )
+      {
+         x -= 1.0;
+         z *= x;
+      }
+
+     let small = false;
+
+      while(( x < 0.0 ) && !small)
+      {
+         if( x > -1.E-9 )
+            small = true;
+         else {
+            z /= x;
+            x += 1.0;
+         }
+      }
+
+      while(( x < 2.0 ) && !small)
+      {
+         if( x < 1.e-9 )
+            small = true;
+         else {
+            z /= x;
+            x += 1.0;
+         }
+      }
+
+      if (small) {
+         if( x == 0 )
+            return Number.POSITIVE_INFINITY;
+         else
+            return z/((1.0 + 0.5772156649015329 * x) * x);
+      }
+
+      if( x == 2.0 )
+         return z;
+
+      const P = [
+         1.60119522476751861407E-4,
+         1.19135147006586384913E-3,
+         1.04213797561761569935E-2,
+         4.76367800457137231464E-2,
+         2.07448227648435975150E-1,
+         4.94214826801497100753E-1,
+         9.99999999999999996796E-1
+      ], Q = [
+         -2.31581873324120129819E-5,
+         5.39605580493303397842E-4,
+         -4.45641913851797240494E-3,
+         1.18139785222060435552E-2,
+         3.58236398605498653373E-2,
+         -2.34591795718243348568E-1,
+         7.14304917030273074085E-2,
+         1.00000000000000000320E0 ];
+
+      x -= 2.0;
+      p = Polynomialeval( x, P, 6 );
+      q = Polynomialeval( x, Q, 7 );
+      return z * p / q;
+   }
+
 
    /** @summary ndtri function
      * @private */
-   mth.ndtri = function( y0 ) {
+   function ndtri(y0) {
       if ( y0 <= 0.0 )
          return Number.NEGATIVE_INFINITY;
       if ( y0 >= 1.0 )
@@ -200,7 +489,7 @@ JSROOT.define([], () =>  {
       if ( y > dd ) {
          y = y - 0.5;
          y2 = y * y;
-         x = y + y * (y2 * mth.Polynomialeval( y2, P0, 4)/ mth.Polynomial1eval( y2, Q0, 8 ));
+         x = y + y * (y2 * Polynomialeval( y2, P0, 4)/ Polynomial1eval( y2, Q0, 8 ));
          x = x * s2pi;
          return x;
       }
@@ -208,9 +497,9 @@ JSROOT.define([], () =>  {
       x0 = x - Math.log(x)/x;
       z = 1.0/x;
       if ( x < 8.0 )
-         x1 = z * mth.Polynomialeval( z, P1, 8 )/ mth.Polynomial1eval( z, Q1, 8 );
+         x1 = z * Polynomialeval( z, P1, 8 )/ Polynomial1eval( z, Q1, 8 );
       else
-         x1 = z * mth.Polynomialeval( z, P2, 8 )/ mth.Polynomial1eval( z, Q2, 8 );
+         x1 = z * Polynomialeval( z, P2, 8 )/ Polynomial1eval( z, Q2, 8 );
       x = x0 - x1;
       if ( code != 0 )
          x = -x;
@@ -219,52 +508,19 @@ JSROOT.define([], () =>  {
 
    /** @summary normal_quantile function
      * @private */
-   mth.normal_quantile = function(z, sigma) {
-      return  sigma * mth.ndtri(z);
+   function normal_quantile(z, sigma) {
+      return  sigma * ndtri(z);
    }
 
-   /** @summary igam function
+   /** @summary normal_quantile_c function
      * @private */
-   mth.igam = function(a,x) {
-      const kMACHEP = 1.11022302462515654042363166809e-16,
-            kMAXLOG = 709.782712893383973096206318587;
-
-      // LM: for negative values returns 1.0 instead of zero
-      // This is correct if a is a negative integer since Gamma(-n) = +/- inf
-      if (a <= 0)  return 1.0;
-
-      if (x <= 0)  return 0.0;
-
-      if( (x > 1.0) && (x > a ) )
-         return 1.0 - mth.igamc(a,x);
-
-      /* Compute  x**a * exp(-x) / gamma(a)  */
-      let ax = a * Math.log(x) - x - mth.lgam(a);
-      if( ax < -kMAXLOG )
-         return 0.0;
-
-      ax = Math.exp(ax);
-
-      /* power series */
-      let r = a, c = 1.0, ans = 1.0;
-
-      do {
-         r += 1.0;
-         c *= x/r;
-         ans += c;
-      } while( c/ans > kMACHEP );
-
-      return ans * ax/a;
+   function normal_quantile_c(z, sigma) {
+      return - sigma * ndtri(z);
    }
 
    /** @summary igamc function
      * @private */
-   mth.igamc = function(a,x) {
-      const kMACHEP = 1.11022302462515654042363166809e-16,
-            kMAXLOG = 709.782712893383973096206318587,
-            kBig = 4.503599627370496e15,
-            kBiginv =  2.22044604925031308085e-16;
-
+   function igamc(a,x) {
       // LM: for negative values returns 0.0
       // This is correct if a is a negative integer since Gamma(-n) = +/- inf
       if (a <= 0)  return 0.0;
@@ -272,9 +528,9 @@ JSROOT.define([], () =>  {
       if (x <= 0) return 1.0;
 
       if( (x < 1.0) || (x < a) )
-         return ( 1.0 - mth.igam(a,x) );
+         return ( 1.0 - mth.igam(a,x) ); // have to use mth.igam while defined later
 
-      let ax = a * Math.log(x) - x - mth.lgam(a);
+      let ax = a * Math.log(x) - x - lgam(a);
       if( ax < -kMAXLOG )
          return 0.0;
 
@@ -322,9 +578,42 @@ JSROOT.define([], () =>  {
       return ans * ax;
    }
 
+   /** @summary igam function
+     * @private */
+   function igam(a,x) {
+
+      // LM: for negative values returns 1.0 instead of zero
+      // This is correct if a is a negative integer since Gamma(-n) = +/- inf
+      if (a <= 0)  return 1.0;
+
+      if (x <= 0)  return 0.0;
+
+      if( (x > 1.0) && (x > a ) )
+         return 1.0 - igamc(a,x);
+
+      /* Compute  x**a * exp(-x) / gamma(a)  */
+      let ax = a * Math.log(x) - x - lgam(a);
+      if( ax < -kMAXLOG )
+         return 0.0;
+
+      ax = Math.exp(ax);
+
+      /* power series */
+      let r = a, c = 1.0, ans = 1.0;
+
+      do {
+         r += 1.0;
+         c *= x/r;
+         ans += c;
+      } while( c/ans > kMACHEP );
+
+      return ans * ax/a;
+   }
+
+
    /** @summary igami function
      * @private */
-   mth.igami = function(a, y0) {
+   function igami(a, y0) {
       // check the domain
       if (a <= 0) {
          console.error("igami : Wrong domain for parameter a (must be > 0)");
@@ -336,21 +625,20 @@ JSROOT.define([], () =>  {
       if (y0 >= 1) {
          return 0;
       }
-      const kMACHEP = 1.11022302462515654042363166809e-16,
-            kMAXNUM = Number.MAX_VALUE;
+      const kMAXNUM = Number.MAX_VALUE;
       let x0 = kMAXNUM, x1 = 0, x, yl = 0, yh = 1, y, d, lgm, dithresh = 5.0 * kMACHEP, i, dir;
 
       /* approximation to inverse function */
       d = 1.0/(9.0*a);
-      y = ( 1.0 - d - mth.ndtri(y0) * Math.sqrt(d) );
+      y = ( 1.0 - d - ndtri(y0) * Math.sqrt(d) );
       x = a * y * y * y;
 
-      lgm = mth.lgam(a);
+      lgm = lgam(a);
 
       for( i=0; i<10; ++i ) {
          if ( x > x0 || x < x1 )
             break;
-         y = mth.igamc(a,x);
+         y = igamc(a,x);
          if ( y < yl || y > yh )
             break;
          if ( y < y0 ) {
@@ -379,7 +667,7 @@ JSROOT.define([], () =>  {
             x = 1.0;
          while ( x0 == kMAXNUM ) {
             x = (1.0 + d) * x;
-            y = mth.igamc( a, x );
+            y = igamc( a, x );
             if ( y < y0 ) {
                x0 = x;
                yl = y;
@@ -393,7 +681,7 @@ JSROOT.define([], () =>  {
 
       for( i=0; i<400; ++i ) {
          x = x1  +  d * (x0 - x1);
-         y = mth.igamc( a, x );
+         y = igamc( a, x );
          lgm = (x0 - x1)/(x1 + x0);
          if ( Math.abs(lgm) < dithresh )
             break;
@@ -432,23 +720,29 @@ JSROOT.define([], () =>  {
       return x;
    }
 
-   /** @summary gamma_quantile_c function
+   /** @summary Probability density function of the beta distribution.
      * @private */
-   mth.gamma_quantile_c = function(z, alpha, theta) {
-      return theta * mth.igami( alpha, z);
-   }
-
-   /** @summary gamma_quantile function
-     * @private */
-   mth.gamma_quantile = function(z, alpha, theta) {
-      return theta * mth.igami( alpha, 1.- z);
+   function beta_pdf(x,a,b) {
+     if (x < 0 || x > 1.0) return 0;
+     if (x == 0 ) {
+        if (a < 1) return Number.POSITIVE_INFINITY;
+        else if (a > 1) return  0;
+        else if ( a == 1) return b; // to avoid a nan from log(0)*0
+      }
+      if (x == 1 ) {
+         if (b < 1) return Number.POSITIVE_INFINITY;
+         else if (b > 1) return  0;
+         else if ( b == 1) return a; // to avoid a nan from log(0)*0
+      }
+      return Math.exp(mth.lgamma(a + b) - mth.lgamma(a) - mth.lgamma(b) +
+                       Math.log(x) * (a -1.) + Math.log1p(-x) * (b - 1.) );
    }
 
    /** @summary landau_pdf function
      * @desc LANDAU pdf : algorithm from CERNLIB G110 denlan
      *  same algorithm is used in GSL
      * @private */
-   mth.landau_pdf = function(x, xi, x0) {
+   function landau_pdf(x, xi, x0) {
       if (x0===undefined) x0 = 0;
       if (xi <= 0) return 0;
       const v = (x - x0)/xi;
@@ -506,43 +800,748 @@ JSROOT.define([], () =>  {
 
    /** @summary Landau function
      * @private */
-   mth.Landau = function(x, mpv, sigma, norm) {
+   function Landau(x, mpv, sigma, norm) {
       if (sigma <= 0) return 0;
-      const den = mth.landau_pdf((x - mpv) / sigma, 1, 0);
+      const den = landau_pdf((x - mpv) / sigma, 1, 0);
       if (!norm) return den;
       return den/sigma;
    }
 
    /** @summary inc_gamma_c
      * @private */
-   mth.inc_gamma_c = function(a,x) {
-      return mth.igamc(a,x);
+   function inc_gamma_c(a,x) {
+      return igamc(a,x);
    }
 
    /** @summary inc_gamma
      * @private */
-   mth.inc_gamma = function(a,x) {
-      return mth.igam(a,x);
+   function inc_gamma(a,x) {
+      return igam(a,x);
    }
 
    /** @summary lgamma
      * @private */
-   mth.lgamma = function(z) {
-      return mth.lgam(z);
+   function lgamma(z) {
+      return lgam(z);
+   }
+
+   /** @summary beta
+     * @private */
+   function beta(x,y) {
+      return Math.exp(lgamma(x)+lgamma(y)-lgamma(x+y));
    }
 
    /** @summary chisquared_cdf_c
      * @private */
-   mth.chisquared_cdf_c = function(x,r,x0) {
+   function chisquared_cdf_c(x,r,x0) {
       if (x0===undefined) x0 = 0;
-      return mth.inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
+      return inc_gamma_c ( 0.5 * r , 0.5*(x-x0) );
+   }
+
+   /** @summary Continued fraction expansion #1 for incomplete beta integral
+     * @private */
+   function incbcf(a,b,x) {
+      let xk, pk, pkm1, pkm2, qk, qkm1, qkm2,
+          k1, k2, k3, k4, k5, k6, k7, k8,
+          r, t, ans, thresh, n;
+
+      k1 = a;
+      k2 = a + b;
+      k3 = a;
+      k4 = a + 1.0;
+      k5 = 1.0;
+      k6 = b - 1.0;
+      k7 = k4;
+      k8 = a + 2.0;
+
+      pkm2 = 0.0;
+      qkm2 = 1.0;
+      pkm1 = 1.0;
+      qkm1 = 1.0;
+      ans = 1.0;
+      r = 1.0;
+      n = 0;
+      thresh = 3.0 * kMACHEP;
+      do
+      {
+
+         xk = -( x * k1 * k2 )/( k3 * k4 );
+         pk = pkm1 +  pkm2 * xk;
+         qk = qkm1 +  qkm2 * xk;
+         pkm2 = pkm1;
+         pkm1 = pk;
+         qkm2 = qkm1;
+         qkm1 = qk;
+
+         xk = ( x * k5 * k6 )/( k7 * k8 );
+         pk = pkm1 +  pkm2 * xk;
+         qk = qkm1 +  qkm2 * xk;
+         pkm2 = pkm1;
+         pkm1 = pk;
+         qkm2 = qkm1;
+         qkm1 = qk;
+
+         if( qk !=0 )
+            r = pk/qk;
+         if( r != 0 )
+         {
+            t = Math.abs( (ans - r)/r );
+            ans = r;
+         }
+         else
+            t = 1.0;
+
+         if( t < thresh )
+            break; // goto cdone;
+
+         k1 += 1.0;
+         k2 += 1.0;
+         k3 += 2.0;
+         k4 += 2.0;
+         k5 += 1.0;
+         k6 -= 1.0;
+         k7 += 2.0;
+         k8 += 2.0;
+
+         if( (Math.abs(qk) + Math.abs(pk)) > kBig )
+         {
+            pkm2 *= kBiginv;
+            pkm1 *= kBiginv;
+            qkm2 *= kBiginv;
+            qkm1 *= kBiginv;
+         }
+         if( (Math.abs(qk) < kBiginv) || (Math.abs(pk) < kBiginv) )
+         {
+            pkm2 *= kBig;
+            pkm1 *= kBig;
+            qkm2 *= kBig;
+            qkm1 *= kBig;
+         }
+      }
+      while( ++n < 300 );
+
+   // cdone:
+      return ans;
+   }
+
+  /** @summary Continued fraction expansion #2 for incomplete beta integral
+    * @private */
+   function incbd(a,b,x) {
+      let xk, pk, pkm1, pkm2, qk, qkm1, qkm2,
+          k1, k2, k3, k4, k5, k6, k7, k8,
+          r, t, ans, z, thresh, n;
+
+      k1 = a;
+      k2 = b - 1.0;
+      k3 = a;
+      k4 = a + 1.0;
+      k5 = 1.0;
+      k6 = a + b;
+      k7 = a + 1.0;;
+      k8 = a + 2.0;
+
+      pkm2 = 0.0;
+      qkm2 = 1.0;
+      pkm1 = 1.0;
+      qkm1 = 1.0;
+      z = x / (1.0-x);
+      ans = 1.0;
+      r = 1.0;
+      n = 0;
+      thresh = 3.0 * kMACHEP;
+      do
+      {
+
+         xk = -( z * k1 * k2 )/( k3 * k4 );
+         pk = pkm1 +  pkm2 * xk;
+         qk = qkm1 +  qkm2 * xk;
+         pkm2 = pkm1;
+         pkm1 = pk;
+         qkm2 = qkm1;
+         qkm1 = qk;
+
+         xk = ( z * k5 * k6 )/( k7 * k8 );
+         pk = pkm1 +  pkm2 * xk;
+         qk = qkm1 +  qkm2 * xk;
+         pkm2 = pkm1;
+         pkm1 = pk;
+         qkm2 = qkm1;
+         qkm1 = qk;
+
+         if( qk != 0 )
+            r = pk/qk;
+         if( r != 0 )
+         {
+            t = Math.abs( (ans - r)/r );
+            ans = r;
+         }
+         else
+            t = 1.0;
+
+         if( t < thresh )
+            break; // goto cdone;
+
+         k1 += 1.0;
+         k2 -= 1.0;
+         k3 += 2.0;
+         k4 += 2.0;
+         k5 += 1.0;
+         k6 += 1.0;
+         k7 += 2.0;
+         k8 += 2.0;
+
+         if( (Math.abs(qk) + Math.abs(pk)) > kBig )
+         {
+            pkm2 *= kBiginv;
+            pkm1 *= kBiginv;
+            qkm2 *= kBiginv;
+            qkm1 *= kBiginv;
+         }
+         if( (Math.abs(qk) < kBiginv) || (Math.abs(pk) < kBiginv) )
+         {
+            pkm2 *= kBig;
+            pkm1 *= kBig;
+            qkm2 *= kBig;
+            qkm1 *= kBig;
+         }
+      }
+      while( ++n < 300 );
+   //cdone:
+      return ans;
+   }
+
+   /** @summary ROOT::Math::Cephes::pseries
+     * @private */
+   function pseries(a,b,x) {
+      let s, t, u, v, n, t1, z, ai;
+
+      ai = 1.0 / a;
+      u = (1.0 - b) * x;
+      v = u / (a + 1.0);
+      t1 = v;
+      t = u;
+      n = 2.0;
+      s = 0.0;
+      z = kMACHEP * ai;
+      while( Math.abs(v) > z )
+      {
+         u = (n - b) * x / n;
+         t *= u;
+         v = t / (a + n);
+         s += v;
+         n += 1.0;
+      }
+      s += t1;
+      s += ai;
+
+      u = a * Math.log(x);
+      if( (a+b) < kMAXSTIR && Math.abs(u) < kMAXLOG )
+      {
+         t = gamma(a+b) / (gamma(a)*gamma(b));
+         s = s * t * Math.pow(x,a);
+      }
+      else
+      {
+         t = lgam(a+b) - lgam(a) - lgam(b) + u + Math.log(s);
+         if( t < kMINLOG )
+            s = 0.0;
+         else
+            s = Math.exp(t);
+      }
+      return s;
+   }
+
+   /** @summary ROOT::Math::Cephes::incbet
+     * @private */
+   function incbet(aa,bb,xx) {
+      let a, b, t, x, xc, w, y, flag;
+
+      if( aa <= 0.0 || bb <= 0.0 )
+         return 0.0;
+
+      // LM: changed: for X > 1 return 1.
+      if  (xx <= 0.0)  return 0.0;
+      if ( xx >= 1.0)  return 1.0;
+
+      flag = 0;
+
+   /* - to test if that way is better for large b/  (comment out from Cephes version)
+      if( (bb * xx) <= 1.0 && xx <= 0.95)
+      {
+      t = pseries(aa, bb, xx);
+      goto done;
+      }
+
+   **/
+      w = 1.0 - xx;
+
+   /* Reverse a and b if x is greater than the mean. */
+   /* aa,bb > 1 -> sharp rise at x=aa/(aa+bb) */
+      if( xx > (aa/(aa+bb)) )
+      {
+         flag = 1;
+         a = bb;
+         b = aa;
+         xc = xx;
+         x = w;
+      }
+      else
+      {
+         a = aa;
+         b = bb;
+         xc = w;
+         x = xx;
+      }
+
+      if( flag == 1 && (b * x) <= 1.0 && x <= 0.95)
+      {
+         t = pseries(a, b, x);
+         // goto done;
+      } else {
+
+      /* Choose expansion for better convergence. */
+         y = x * (a+b-2.0) - (a-1.0);
+         if( y < 0.0 )
+            w = incbcf( a, b, x );
+         else
+            w = incbd( a, b, x ) / xc;
+
+      /* Multiply w by the factor
+         a      b   _             _     _
+         x  (1-x)   | (a+b) / ( a | (a) | (b) ) .   */
+
+         y = a * Math.log(x);
+         t = b * Math.log(xc);
+         if( (a+b) < kMAXSTIR && Math.abs(y) < kMAXLOG && Math.abs(t) < kMAXLOG )
+         {
+            t = Math.pow(xc,b);
+            t *= Math.pow(x,a);
+            t /= a;
+            t *= w;
+            t *= gamma(a+b) / (gamma(a) * gamma(b));
+            // goto done;
+         } else {
+         /* Resort to logarithms.  */
+            y += t + lgam(a+b) - lgam(a) - lgam(b);
+            y += Math.log(w/a);
+            if( y < kMINLOG )
+               t = 0.0;
+            else
+               t = Math.exp(y);
+         }
+      }
+
+   //done:
+
+      if( flag == 1 )
+      {
+         if( t <= kMACHEP )
+            t = 1.0 - kMACHEP;
+         else
+            t = 1.0 - t;
+      }
+      return  t;
+   }
+
+   /** @summary ROOT::Math::Cephes::incbi
+     * @private */
+   function incbi(aa,bb,yy0) {
+      let a, b, y0, d, y, x, x0, x1, lgm, yp, di, dithresh, yl, yh, xt;
+      let i, rflg, dir, nflg, ihalve = true;
+
+      // check the domain
+      if (aa <= 0) {
+         // MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter a (must be > 0)");
+         return 0;
+      }
+      if (bb <= 0) {
+         // MATH_ERROR_MSG("Cephes::incbi","Wrong domain for parameter b (must be > 0)");
+         return 0;
+      }
+
+      const process_done = () => {
+         if( rflg ) {
+            if( x <= kMACHEP )
+               x = 1.0 - kMACHEP;
+            else
+               x = 1.0 - x;
+         }
+         return x;
+      };
+
+      i = 0;
+      if( yy0 <= 0 )
+         return 0.0;
+      if( yy0 >= 1.0 )
+         return 1.0;
+      x0 = 0.0;
+      yl = 0.0;
+      x1 = 1.0;
+      yh = 1.0;
+      nflg = 0;
+
+      if( aa <= 1.0 || bb <= 1.0 )
+      {
+         dithresh = 1.0e-6;
+         rflg = 0;
+         a = aa;
+         b = bb;
+         y0 = yy0;
+         x = a/(a+b);
+         y = incbet( a, b, x );
+         // goto ihalve; // will start
+      }
+      else
+      {
+         dithresh = 1.0e-4;
+   /* approximation to inverse function */
+
+         yp = -ndtri(yy0);
+
+         if( yy0 > 0.5 )
+         {
+            rflg = 1;
+            a = bb;
+            b = aa;
+            y0 = 1.0 - yy0;
+            yp = -yp;
+         }
+         else
+         {
+            rflg = 0;
+            a = aa;
+            b = bb;
+            y0 = yy0;
+         }
+
+         lgm = (yp * yp - 3.0)/6.0;
+         x = 2.0/( 1.0/(2.0*a-1.0)  +  1.0/(2.0*b-1.0) );
+         d = yp * Math.sqrt( x + lgm ) / x
+            - ( 1.0/(2.0*b-1.0) - 1.0/(2.0*a-1.0) )
+            * (lgm + 5.0/6.0 - 2.0/(3.0*x));
+         d = 2.0 * d;
+         if( d < kMINLOG )
+         {
+            // x = 1.0;
+            // goto under;
+            x = 0.0;
+            return process_done();
+         }
+         x = a/( a + b * Math.exp(d) );
+         y = incbet( a, b, x );
+         yp = (y - y0)/y0;
+         if( Math.abs(yp) < 0.2 )
+            ihalve = false; // instead goto newt; exclude ihalve for the first time
+      }
+
+     let mainloop = 1000;
+
+     // endless loop until coverage
+     while (mainloop-- > 0) {
+
+      /* Resort to interval halving if not close enough. */
+      // ihalve:
+         while(ihalve) {
+
+            dir = 0;
+            di = 0.5;
+            for( i=0; i<100; i++ )
+            {
+               if( i != 0 )
+               {
+                  x = x0  +  di * (x1 - x0);
+                  if( x == 1.0 )
+                     x = 1.0 - kMACHEP;
+                  if( x == 0.0 )
+                  {
+                     di = 0.5;
+                     x = x0  +  di * (x1 - x0);
+                     if( x == 0.0 )
+                        return process_done(); // goto under;
+                  }
+                  y = incbet( a, b, x );
+                  yp = (x1 - x0)/(x1 + x0);
+                  if( Math.abs(yp) < dithresh )
+                     break; // goto newt;
+                  yp = (y-y0)/y0;
+                  if( Math.abs(yp) < dithresh )
+                     break; // goto newt;
+               }
+               if( y < y0 )
+               {
+                  x0 = x;
+                  yl = y;
+                  if( dir < 0 )
+                  {
+                     dir = 0;
+                     di = 0.5;
+                  }
+                  else if( dir > 3 )
+                     di = 1.0 - (1.0 - di) * (1.0 - di);
+                  else if( dir > 1 )
+                     di = 0.5 * di + 0.5;
+                  else
+                     di = (y0 - y)/(yh - yl);
+                  dir += 1;
+                  if( x0 > 0.75 )
+                  {
+                     if( rflg == 1 )
+                     {
+                        rflg = 0;
+                        a = aa;
+                        b = bb;
+                        y0 = yy0;
+                     }
+                     else
+                     {
+                        rflg = 1;
+                        a = bb;
+                        b = aa;
+                        y0 = 1.0 - yy0;
+                     }
+                     x = 1.0 - x;
+                     y = incbet( a, b, x );
+                     x0 = 0.0;
+                     yl = 0.0;
+                     x1 = 1.0;
+                     yh = 1.0;
+                     continue; // goto ihalve;
+                  }
+               }
+               else
+               {
+                  x1 = x;
+                  if( rflg == 1 && x1 < kMACHEP )
+                  {
+                     x = 0.0;
+                     return process_done(); // goto done;
+                  }
+                  yh = y;
+                  if( dir > 0 )
+                  {
+                     dir = 0;
+                     di = 0.5;
+                  }
+                  else if( dir < -3 )
+                     di = di * di;
+                  else if( dir < -1 )
+                     di = 0.5 * di;
+                  else
+                     di = (y - y0)/(yh - yl);
+                  dir -= 1;
+               }
+            }
+            //mtherr( "incbi", PLOSS );
+            if( x0 >= 1.0 )
+            {
+               x = 1.0 - kMACHEP;
+               return process_done(); //goto done;
+            }
+            if( x <= 0.0 )
+            {
+            // under:
+               //mtherr( "incbi", UNDERFLOW );
+               x = 0.0;
+               return process_done(); //goto done;
+            }
+            break; // if here, break ihalve
+
+         } // end of ihalve
+
+         ihalve = true; // enter loop next time
+
+      // newt:
+
+         if( nflg )
+            return process_done(); //goto done;
+         nflg = 1;
+         lgm = lgam(a+b) - lgam(a) - lgam(b);
+
+         for( i=0; i<8; i++ )
+         {
+            /* Compute the function at this point. */
+            if( i != 0 )
+               y = incbet(a,b,x);
+            if( y < yl )
+            {
+               x = x0;
+               y = yl;
+            }
+            else if( y > yh )
+            {
+               x = x1;
+               y = yh;
+            }
+            else if( y < y0 )
+            {
+               x0 = x;
+               yl = y;
+            }
+            else
+            {
+               x1 = x;
+               yh = y;
+            }
+            if( x == 1.0 || x == 0.0 )
+               break;
+            /* Compute the derivative of the function at this point. */
+            d = (a - 1.0) * Math.log(x) + (b - 1.0) * Math.log(1.0-x) + lgm;
+            if( d < kMINLOG )
+               return process_done(); // goto done;
+            if( d > kMAXLOG )
+               break;
+            d = Math.exp(d);
+            /* Compute the step to the next approximation of x. */
+            d = (y - y0)/d;
+            xt = x - d;
+            if( xt <= x0 )
+            {
+               y = (x - x0) / (x1 - x0);
+               xt = x0 + 0.5 * y * (x - x0);
+               if( xt <= 0.0 )
+                  break;
+            }
+            if( xt >= x1 )
+            {
+               y = (x1 - x) / (x1 - x0);
+               xt = x1 - 0.5 * y * (x1 - x);
+               if( xt >= 1.0 )
+                  break;
+            }
+            x = xt;
+            if( Math.abs(d/x) < 128.0 * kMACHEP )
+               return process_done(); // goto done;
+         }
+      /* Did not converge.  */
+         dithresh = 256.0 * kMACHEP;
+
+      } // endless loop instead of // goto ihalve;
+
+   // done:
+
+      return process_done();
+   }
+
+   /** @summary Calculates the normalized (regularized) incomplete beta function.
+     * @private */
+   function inc_beta(x,a,b) {
+      return incbet(a,b,x);
+   }
+
+   /** @summary ROOT::Math::beta_quantile
+     * @private */
+   function beta_quantile(z,a,b) {
+      return incbi(a,b,z);
+   }
+
+   /** @summary Complement of the cumulative distribution function of the beta distribution.
+     * @private */
+   function beta_cdf_c(x,a,b) {
+      return inc_beta(1-x, b, a);
    }
 
    /** @summary chisquared_cdf
      * @private */
    mth.chisquared_cdf = function(x,r,x0) {
       if (x0===undefined) x0 = 0;
-      return mth.inc_gamma ( 0.5 * r , 0.5*(x-x0) );
+      return inc_gamma ( 0.5 * r , 0.5*(x-x0) );
+   }
+
+   /** @summary gamma_quantile_c function
+     * @private */
+   mth.gamma_quantile_c = function(z, alpha, theta) {
+      return theta * igami( alpha, z);
+   }
+
+   /** @summary gamma_quantile function
+     * @private */
+   mth.gamma_quantile = function(z, alpha, theta) {
+      return theta * igami( alpha, 1.- z);
+   }
+
+   /** @summary breitwigner_cdf_c function
+     * @private */
+   mth.breitwigner_cdf_c = function(x,gamma, x0 = 0) {
+      return 0.5 - Math.atan(2.0 * (x-x0) / gamma) / M_PI;
+   }
+
+   /** @summary breitwigner_cdf function
+     * @private */
+   mth.breitwigner_cdf = function(x, gamma, x0 = 0) {
+      return 0.5 + Math.atan(2.0 * (x-x0) / gamma) / M_PI;
+   }
+
+   /** @summary cauchy_cdf_c function
+     * @private */
+   mth.cauchy_cdf_c = function(x, b, x0 = 0) {
+      return 0.5 - Math.atan( (x-x0) / b) / M_PI;
+   }
+
+   /** @summary cauchy_pdf function
+     * @private */
+   mth.cauchy_pdf = function(x, b = 1, x0 = 0) {
+      return b/(M_PI * ((x-x0)*(x-x0) + b*b));
+   }
+
+   /** @summary cauchy_cdf function
+     * @private */
+   mth.cauchy_cdf = function(x, b, x0 = 0) {
+      return 0.5 + Math.atan( (x-x0) / b) / M_PI;
+   }
+
+   /** @summary gaussian_pdf function
+     * @private */
+   mth.gaussian_pdf = function(x, sigma = 1, x0 = 0) {
+      let tmp = (x-x0)/sigma;
+      return (1.0/(Math.sqrt(2 * M_PI) * Math.abs(sigma))) * Math.exp(-tmp*tmp/2);
+   }
+
+   /** @summary gamma_pdf function
+     * @private */
+   function gamma_pdf(x, alpha, theta, x0 = 0) {
+      if ((x - x0) < 0) {
+         return 0.0;
+      } else if ((x - x0) == 0) {
+         return (alpha == 1) ? 1.0 / theta : 0;
+      } else if (alpha == 1) {
+         return Math.exp(-(x - x0) / theta) / theta;
+      }
+      return Math.exp((alpha - 1) * Math.log((x - x0) / theta) - (x - x0) / theta - lgamma(alpha)) / theta;
+   }
+
+   /** @summary tdistribution_cdf_c function
+     * @private */
+   mth.tdistribution_cdf_c = function(x, r, x0 = 0) {
+      let p    = x - x0,
+          sign = (p > 0) ? 1. : -1;
+      return .5 - .5*inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
+   }
+
+   /** @summary tdistribution_cdf function
+     * @private */
+   mth.tdistribution_cdf = function(x, r, x0 = 0) {
+      let p    = x - x0,
+          sign = (p > 0) ? 1. : -1;
+      return  .5 + .5*inc_beta(p*p/(r + p*p), .5, .5*r)*sign;
+   }
+
+   /** @summary tdistribution_pdf function
+     * @private */
+   mth.tdistribution_pdf = function(x, r, x0 = 0) {
+      return (Math.exp (lgamma((r + 1.0)/2.0) - lgamma(r/2.0)) / Math.sqrt (M_PI * r))
+             * Math.pow ((1.0 + (x-x0)*(x-x0)/r), -(r + 1.0)/2.0);
+   }
+
+   /** @summary exponential_cdf_c function
+     * @private */
+   mth.exponential_cdf_c = function(x, lambda, x0 = 0) {
+      return ((x-x0) < 0) ? 1.0 : Math.exp(-lambda * (x-x0));
+   }
+
+   /** @summary exponential_cdf function
+     * @private */
+   mth.exponential_cdf = function(x, lambda, x0 = 0) {
+      return ((x-x0) < 0) ? 0.0 : -Math.expm1(-lambda * (x-x0));
    }
 
    /** @summary chisquared_pdf
@@ -554,11 +1553,48 @@ JSROOT.define([], () =>  {
       // let return inf for case x  = x0 and treat special case of r = 2 otherwise will return nan
       if (x == x0 && a == 0) return 0.5;
 
-      return Math.exp ((r/2 - 1) * Math.log((x-x0)/2) - (x-x0)/2 - mth.lgamma(r/2))/2;
+      return Math.exp ((r/2 - 1) * Math.log((x-x0)/2) - (x-x0)/2 - lgamma(r/2))/2;
    }
 
-   /** @summary Prob function
+   /** @summary Probability density function of the F-distribution.
      * @private */
+   function fdistribution_pdf(x, n, m, x0 = 0) {
+      if (n < 0 || m < 0)
+         return Number.NaN;
+      if ((x-x0) < 0)
+         return 0.0;
+
+      return Math.exp((n/2) * Math.log(n) + (m/2) * Math.log(m) + lgamma((n+m)/2) - lgamma(n/2) - lgamma(m/2)
+                    + (n/2 -1) * Math.log(x-x0) - ((n+m)/2) * Math.log(m +  n*(x-x0)) );
+   }
+
+   /** @summary fdistribution_cdf_c function
+     * @private */
+   function fdistribution_cdf_c(x, n, m, x0 = 0) {
+      if (n < 0 || m < 0) return Number.NaN;
+
+      let z = m / (m + n * (x - x0));
+      // fox z->1 and large a and b IB looses precision use complement function
+      if (z > 0.9 && n > 1 && m > 1) return 1. - mth.fdistribution_cdf(x, n, m, x0);
+
+      // for the complement use the fact that IB(x,a,b) = 1. - IB(1-x,b,a)
+      return inc_beta(m / (m + n * (x - x0)), .5 * m, .5 * n);
+   }
+
+   /** @summary fdistribution_cdf function
+     * @private */
+   function fdistribution_cdf(x, n, m, x0 = 0) {
+      if (n < 0 || m < 0) return Number.NaN;
+
+      let z = n * (x - x0) / (m + n * (x - x0));
+      // fox z->1 and large a and b IB looses precision use complement function
+      if (z > 0.9 && n > 1 && m > 1)
+         return 1. - fdistribution_cdf_c(x, n, m, x0);
+
+      return inc_beta(z, .5 * n, .5 * m);
+   }
+
+   /** @summary Prob function */
    mth.Prob = function(chi2, ndf) {
       if (ndf <= 0) return 0; // Set CL to zero in case ndf<=0
 
@@ -567,7 +1603,7 @@ JSROOT.define([], () =>  {
          else          return 1;
       }
 
-      return mth.chisquared_cdf_c(chi2,ndf,0);
+      return chisquared_cdf_c(chi2,ndf,0);
    }
 
    /** @summary Gaus function
@@ -580,6 +1616,75 @@ JSROOT.define([], () =>  {
      * @private */
    mth.BreitWigner = function(x, mean, gamma) {
       return gamma/((x-mean)*(x-mean) + gamma*gamma/4) / 2 / Math.PI;
+   }
+
+   /** @summary Calculates Beta-function Gamma(p)*Gamma(q)/Gamma(p+q).
+     * @private */
+   mth.Beta = function(x,y) {
+      return Math.exp(lgamma(x) + lgamma(y) - lgamma(x+y));
+   }
+
+   /** @summary GammaDist function
+     * @private */
+   mth.GammaDist = function(x, gamma, mu = 0, beta = 1) {
+      if ((x < mu) || (gamma <= 0) || (beta <= 0)) return 0;
+      return gamma_pdf(x, gamma, beta, mu);
+   }
+
+   /** @summary probability density function of Laplace distribution
+     * @private */
+   mth.LaplaceDist = function(x, alpha = 0, beta = 1) {
+      return Math.exp(-Math.abs((x-alpha)/beta)) / (2.*beta);
+   }
+
+   /** @summary distribution function of Laplace distribution
+     * @private */
+   mth.LaplaceDistI = function(x, alpha = 0, beta = 1) {
+      return (x <= alpha) ? 0.5*Math.exp(-Math.abs((x-alpha)/beta)) : 1 - 0.5*Math.exp(-Math.abs((x-alpha)/beta));
+   }
+
+   /** @summary density function for Student's t- distribution
+     * @private */
+   mth.Student = function(T, ndf) {
+      if (ndf < 1) return 0;
+
+      let r   = ndf,
+          rh  = 0.5*r,
+          rh1 = rh + 0.5,
+          denom = Math.sqrt(r*Math.PI)*gamma(rh)*Math.pow(1+T*T/r, rh1);
+      return gamma(rh1)/denom;
+   }
+
+   /** @summary cumulative distribution function of Student's
+     * @private */
+   mth.StudentI = function(T, ndf) {
+      let r = ndf;
+
+      return (T > 0) ? (1 - 0.5*mth.BetaIncomplete((r/(r + T*T)), r*0.5, 0.5))
+                     :  0.5*mth.BetaIncomplete((r/(r + T*T)), r*0.5, 0.5);
+   }
+
+   /** @summary LogNormal function
+     * @private */
+   mth.LogNormal = function(x, sigma, theta = 0, m = 1) {
+      if ((x < theta) || (sigma <= 0) || (m <= 0)) return 0;
+      return lognormal_pdf(x, Math.log(m), sigma, theta);
+   }
+
+   /** @summary Computes the probability density function of the Beta distribution
+     * @private */
+   mth.BetaDist = function(x, p, q) {
+      if ((x < 0) || (x > 1) || (p <= 0) || (q <= 0))
+        return 0;
+      let beta = mth.Beta(p, q);
+      return Math.pow(x, p-1) * Math.pow(1-x, q-1) / beta;
+   }
+
+   /** @summary Computes the distribution function of the Beta distribution.
+     * @private */
+   mth.BetaDistI = function(x, p, q) {
+      if ((x<0) || (x>1) || (p<=0) || (q<=0)) return 0;
+      return mth.BetaIncomplete(x, p, q);
    }
 
    /** @summary gaus function for TFormula */
@@ -605,12 +1710,293 @@ JSROOT.define([], () =>  {
 
    /** @summary landau function for TFormula */
    mth.landau = function(f, x, i) {
-      return mth.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), false);
+      return Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), false);
    }
 
    /** @summary landaun function for TFormula */
    mth.landaun = function(f, x, i) {
-      return mth.Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
+      return Landau(x, f.GetParValue(i+1),f.GetParValue(i+2), true);
+   }
+
+   /** @summary Crystal ball function */
+   function crystalball_function(x, alpha, n, sigma, mean = 0) {
+     if (sigma < 0.)     return 0.;
+     let z = (x - mean)/sigma;
+     if (alpha < 0) z = -z;
+     let abs_alpha = Math.abs(alpha);
+     if (z  > - abs_alpha)
+        return Math.exp(- 0.5 * z * z);
+     let nDivAlpha = n/abs_alpha,
+         AA =  Math.exp(-0.5*abs_alpha*abs_alpha),
+         B = nDivAlpha - abs_alpha,
+         arg = nDivAlpha/(B-z);
+     return AA * Math.pow(arg,n);
+   }
+
+   /** @summary pdf definition of the crystal_ball which is defined only for n > 1 otherwise integral is diverging */
+   function crystalball_pdf(x, alpha, n, sigma, mean = 0) {
+      if (sigma < 0.) return 0.;
+      if (n <= 1) return Number.NaN;  // pdf is not normalized for n <=1
+      let abs_alpha = Math.abs(alpha),
+          C = n/abs_alpha * 1./(n-1.) * Math.exp(-alpha*alpha/2.),
+          D = Math.sqrt(M_PI/2.)*(1.+erf(abs_alpha/Math.sqrt(2.))),
+          N = 1./(sigma*(C+D));
+      return N * crystalball_function(x,alpha,n,sigma,mean);
+   }
+
+   /** @summary compute the integral of the crystal ball function */
+   function crystalball_integral(x, alpha, n, sigma, mean = 0) {
+      if (sigma == 0) return 0;
+      if (alpha==0) return 0.;
+      let useLog = (n == 1.0),
+          z = (x-mean)/sigma;
+      if (alpha < 0 ) z = -z;
+
+      let abs_alpha = Math.abs(alpha),
+          intgaus = 0., intpow  = 0.;
+
+      const sqrtpiover2 = Math.sqrt(M_PI/2.),
+            sqrt2pi = Math.sqrt( 2.*M_PI),
+            oneoversqrt2 = 1./Math.sqrt(2.);
+      if (z <= -abs_alpha) {
+         let A = Math.pow(n/abs_alpha,n) * Math.exp(-0.5 * alpha*alpha),
+             B = n/abs_alpha - abs_alpha;
+
+         if (!useLog) {
+            let C = (n/abs_alpha) * (1./(n-1)) * Math.exp(-alpha*alpha/2.);
+            intpow  = C - A /(n-1.) * Math.pow(B-z,-n+1) ;
+         }
+         else {
+            // for n=1 the primitive of 1/x is log(x)
+            intpow = -A * Math.log( n / abs_alpha ) + A * Math.log( B -z );
+         }
+         intgaus =  sqrtpiover2*(1. + erf(abs_alpha*oneoversqrt2));
+      }
+      else
+      {
+         intgaus = normal_cdf_c(z, 1);
+         intgaus *= sqrt2pi;
+         intpow  =  0;
+      }
+      return sigma * (intgaus + intpow);
+   }
+
+   function crystalball_cdf(x, alpha, n, sigma, mean = 0) {
+      if (n <= 1.)
+         return Number.NaN;
+
+      let abs_alpha = Math.abs(alpha),
+          C = n/abs_alpha * 1./(n-1.) * Math.exp(-alpha*alpha/2.),
+          D = Math.sqrt(M_PI/2.)*(1. + erf(abs_alpha/Math.sqrt(2.))),
+          totIntegral = sigma*(C+D),
+          integral = crystalball_integral(x,alpha,n,sigma,mean);
+
+      return (alpha > 0) ? 1. - integral/totIntegral : integral/totIntegral;
+   }
+
+   function crystalball_cdf_c(x, alpha, n, sigma, mean = 0) {
+      if (n <= 1.)
+         return Number.NaN;
+
+      let abs_alpha = Math.abs(alpha),
+          C = n/abs_alpha * 1./(n-1.) * Math.exp(-alpha*alpha/2.),
+          D = Math.sqrt(M_PI/2.)*(1. + erf(abs_alpha/Math.sqrt(2.))),
+          totIntegral = sigma*(C+D),
+          integral = crystalball_integral(x,alpha,n,sigma,mean);
+
+      return (alpha > 0) ? integral/totIntegral : 1. - (integral/totIntegral);
+   }
+
+
+   function ChebyshevN(n, x, c) {
+      let d1 = 0.0, d2 = 0.0, y2 = 2.0 * x;
+
+      for (let i = n; i >= 1; i--) {
+         let temp = d1;
+         d1 = y2 * d1 - d2 + c[i];
+         d2 = temp;
+      }
+
+      return x * d1 - d2 + c[0];
+   }
+
+   mth.Chebyshev1 = function(x, c0, c1) {
+      return c0 + c1*x;
+   }
+
+   mth.Chebyshev2 = function(x, c0, c1, c2) {
+      return c0 + c1*x + c2*(2.0*x*x - 1.0);
+   }
+
+   mth.Chebyshev3 = function(x, ...args) {
+      return ChebyshevN(3, x, args);
+   }
+
+   mth.Chebyshev4 = function(x, ...args) {
+      return ChebyshevN(4, x, args);
+   }
+
+   mth.Chebyshev5 = function(x, ...args) {
+      return ChebyshevN(5, x, args);
+   }
+
+   mth.Chebyshev6 = function(x, ...args) {
+      return ChebyshevN(6, x, args);
+   }
+
+   mth.Chebyshev7 = function(x, ...args) {
+      return ChebyshevN(7, x, args);
+   }
+
+   mth.Chebyshev8 = function(x, ...args) {
+      return ChebyshevN(8, x, args);
+   }
+
+   mth.Chebyshev9 = function(x, ...args) {
+      return ChebyshevN(9, x, args);
+   }
+
+   mth.Chebyshev10 = function(x, ...args) {
+      return ChebyshevN(10, x, args);
+   }
+
+   // =========================================================================
+
+   function eff_ClopperPearson(total,passed,level,bUpper) {
+      let alpha = (1.0 - level) / 2;
+      if(bUpper)
+         return ((passed == total) ? 1.0 : beta_quantile(1 - alpha,passed + 1,total-passed));
+
+      return ((passed == 0) ? 0.0 : beta_quantile(alpha,passed,total-passed+1.0));
+   }
+
+   /** @summary Caluclate normal
+     * @private */
+   function eff_Normal(total,passed,level,bUpper) {
+      if (total == 0) return bUpper ? 1 : 0;
+
+      let alpha = (1.0 - level)/2,
+          average = passed / total,
+          sigma = Math.sqrt(average * (1 - average) / total),
+          delta = normal_quantile(1 - alpha, sigma);
+
+      if(bUpper)
+         return ((average + delta) > 1) ? 1.0 : (average + delta);
+
+      return ((average - delta) < 0) ? 0.0 : (average - delta);
+   }
+
+   /** @summary Calculates the boundaries for the frequentist Wilson interval
+     * @private */
+   function eff_Wilson(total,passed,level,bUpper) {
+      let alpha = (1.0 - level)/2;
+      if (total == 0) return bUpper ? 1 : 0;
+      let average = passed / total,
+          kappa = normal_quantile(1 - alpha,1),
+          mode = (passed + 0.5 * kappa * kappa) / (total + kappa * kappa),
+          delta = kappa / (total + kappa*kappa) * Math.sqrt(total * average * (1 - average) + kappa * kappa / 4);
+
+      if(bUpper)
+         return ((mode + delta) > 1) ? 1.0 : (mode + delta);
+
+      return ((mode - delta) < 0) ? 0.0 : (mode - delta);
+   }
+
+   /** @summary Calculates the boundaries for the frequentist Agresti-Coull interval
+     * @private */
+   function eff_AgrestiCoull(total,passed,level,bUpper) {
+      let alpha = (1.0 - level)/2,
+          kappa = normal_quantile(1 - alpha,1),
+          mode = (passed + 0.5 * kappa * kappa) / (total + kappa * kappa),
+          delta = kappa * Math.sqrt(mode * (1 - mode) / (total + kappa * kappa));
+
+     if(bUpper)
+        return ((mode + delta) > 1) ? 1.0 : (mode + delta);
+
+     return ((mode - delta) < 0) ? 0.0 : (mode - delta);
+   }
+
+   /** @summary Calculates the boundaries using the  mid-P binomial
+     * @private */
+   function eff_MidPInterval(total,passed,level,bUpper) {
+      const alpha = 1. - level, equal_tailed = true, alpha_min = equal_tailed ? alpha/2 : alpha, tol = 1e-9; // tolerance
+      let pmin = 0, pmax = 1, p = 0;
+
+      // treat special case for 0<passed<1
+      // do a linear interpolation of the upper limit values
+      if ( passed > 0 && passed < 1) {
+         let p0 =  eff_MidPInterval(total,0.0,level,bUpper);
+         let p1 =  eff_MidPInterval(total,1.0,level,bUpper);
+         p = (p1 - p0) * passed + p0;
+         return p;
+      }
+
+      while (Math.abs(pmax - pmin) > tol) {
+         p = (pmin + pmax)/2;
+         //double v = 0.5 * ROOT::Math::binomial_pdf(int(passed), p, int(total));
+         // make it work for non integer using the binomial - beta relationship
+         let v = 0.5 * beta_pdf(p, passed+1., total-passed+1)/(total+1);
+         //if (passed > 0) v += ROOT::Math::binomial_cdf(int(passed - 1), p, int(total));
+         // compute the binomial cdf at passed -1
+         if ( (passed-1) >= 0) v += beta_cdf_c(p, passed, total-passed+1);
+
+         let vmin = bUpper ? alpha_min : 1.- alpha_min;
+         if (v > vmin)
+            pmin = p;
+         else
+            pmax = p;
+      }
+
+      return p;
+   }
+
+   /** @summary for a central confidence interval for a Beta distribution
+     * @private */
+   function eff_Bayesian(total,passed,level,bUpper,alpha,beta) {
+      let  a = passed + alpha,
+           b = total - passed + beta;
+      if(bUpper) {
+         if((a > 0) && (b > 0))
+            return beta_quantile((1+level)/2,a,b);
+         else
+            return 1;
+      } else {
+         if((a > 0) && (b > 0))
+            return beta_quantile((1-level)/2,a,b);
+         else
+            return 0;
+      }
+   }
+
+   /** @summary Return function to calculate boundary of TEfficiency
+     * @private */
+   mth.getTEfficiencyBoundaryFunc = function(option, isbayessian) {
+      const  kFCP = 0,       ///< Clopper-Pearson interval (recommended by PDG)
+             kFNormal = 1,   ///< Normal approximation
+             kFWilson = 2,   ///< Wilson interval
+             kFAC = 3,       ///< Agresti-Coull interval
+             kFFC = 4,       ///< Feldman-Cousins interval, too complicated for JSROOT
+             // kBJeffrey = 5,  ///< Jeffrey interval (Prior ~ Beta(0.5,0.5)
+             // kBUniform = 6,  ///< Prior ~ Uniform = Beta(1,1)
+             // kBBayesian = 7, ///< User specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
+             kMidP = 8;      ///< Mid-P Lancaster interval
+
+      if (isbayessian)
+         return eff_Bayesian;
+
+      switch (option) {
+         case kFCP: return eff_ClopperPearson;
+         case kFNormal: return eff_Normal;
+         case kFWilson: return eff_Wilson;
+         case kFAC: return eff_AgrestiCoull;
+         case kFFC: console.log("Feldman-Cousins interval kFFC not supported; using kFCP"); return eff_ClopperPearson;
+         case kMidP: return eff_MidPInterval;
+         // case kBJeffrey:
+         // case kBUniform:
+         // case kBBayesian: return eff_ClopperPearson;
+      }
+      console.log(`Not recognized stat option ${option}, using kFCP`);
+      return eff_ClopperPearson;
    }
 
    // =========================================================================
@@ -654,8 +2040,48 @@ JSROOT.define([], () =>  {
       }
    }
 
+   mth.Polynomialeval = Polynomialeval;
+   mth.Polynomial1eval = Polynomial1eval;
+   mth.stirf = stirf;
+   mth.gamma = mth.tgamma = mth.Gamma = gamma;
+   mth.gamma_pdf = gamma_pdf;
+   mth.ndtri = ndtri;
+   mth.normal_quantile = normal_quantile;
+   mth.normal_quantile_c = normal_quantile_c;
+   mth.igami = igami;
+   mth.igamc = igamc;
+   mth.igam = igam;
+   mth.erfc = erfc;
+   mth.erf = erf;
+   mth.beta_pdf = beta_pdf;
+   mth.BetaIncomplete = mth.inc_beta = inc_beta;
+   mth.pseries = pseries;
+   mth.incbet = incbet;
+   mth.incbi = incbi;
+   mth.beta_quantile = beta_quantile;
+   mth.lgam = lgam;
+   mth.chisquared_cdf_c = chisquared_cdf_c;
+   mth.lgamma = lgamma;
+   mth.beta = beta;
+   mth.inc_gamma = inc_gamma;
+   mth.inc_gamma_c = inc_gamma_c;
+   mth.landau_pdf = landau_pdf;
+   mth.beta_cdf_c = beta_cdf_c;
+   mth.Landau = Landau;
+   mth.FDist = mth.fdistribution_pdf = fdistribution_pdf;
+   mth.FDistI = mth.fdistribution_cdf = fdistribution_cdf;
+   mth.fdistribution_cdf_c = fdistribution_cdf_c;
+   mth.normal_cdf_c = mth.gaussian_cdf_c = normal_cdf_c;
+   mth.gaussian_cdf = mth.normal_cdf = normal_cdf;
+   mth.lognormal_pdf = lognormal_pdf;
+   mth.normal_pdf = normal_pdf;
+   mth.crystalball_function = crystalball_function;
+   mth.crystalball_pdf = crystalball_pdf;
+   mth.crystalball_cdf = crystalball_cdf;
+   mth.crystalball_cdf_c = crystalball_cdf_c;
+   mth.ChebyshevN = ChebyshevN;
+
    JSROOT.Math = mth;
    if (JSROOT.nodejs) module.exports = mth;
-
    return mth;
 });

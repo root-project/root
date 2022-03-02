@@ -1,7 +1,7 @@
 sap.ui.define([
    'rootui5/eve7/lib/GlViewer',
    'rootui5/eve7/lib/EveElements',
-   'rootui5/eve7/lib/OutlinePass',
+   'rootui5/eve7/lib/OutlinePassEve',
    'rootui5/eve7/lib/FXAAShader'
 ], function(GlViewer, EveElements) {
 
@@ -27,7 +27,8 @@ sap.ui.define([
          this.createGeoPainter();
       },
 
-      cleanup: function() {
+      cleanup: function()
+      {
          if (this.geo_painter) {
             this.geo_painter.cleanup();
             delete this.geo_painter;
@@ -55,7 +56,7 @@ sap.ui.define([
          let options = "outline";
          options += ", mouse_click"; // process mouse click events
          // options += " black, ";
-         if (this.controller.kind != "3D") options += ", ortho_camera";
+         if (!this.controller.isEveCameraPerspective()) options += ", ortho_camera";
 
          // TODO: should be specified somehow in XML file
          // MT-RCORE - why have I removed this ???
@@ -66,21 +67,21 @@ sap.ui.define([
          this.geo_painter._geom_viewer = true; // disable several JSROOT features
 
          // function used by TGeoPainter to create OutlineShader - for the moment remove from JSROOT
-         this.geo_painter.createOutline = function(w,h)
-         {
+         this.geo_painter.createOutline = function(w,h) {
             // this here will be TGeoPainter!
 
-            this.outline_pass = new THREE.OutlinePass( new THREE.Vector2( w, h ), this._scene, this._camera );
+            this.outline_pass = new THREE.OutlinePassEve( new THREE.Vector2( w, h ), this._scene, this._camera );
             this.outline_pass.edgeStrength = 5.5;
             this.outline_pass.edgeGlow = 0.7;
             this.outline_pass.edgeThickness = 1.5;
             this.outline_pass.usePatternTexture = false;
             this.outline_pass.downSampleRatio = 1;
             this.outline_pass.glowDownSampleRatio = 3;
+            // this.outline_pass.id2obj_map = {};
 
-            // const sh = THREE.OutlinePass.selection_enum["select"]; // doesnt stand for spherical harmonics :P
-            // THREE.OutlinePass.selection_atts[sh].visibleEdgeColor.set('#dd1111');
-            // THREE.OutlinePass.selection_atts[sh].hiddenEdgeColor.set('#1111dd');
+            // const sh = THREE.OutlinePassEve.selection_enum["select"]; // doesnt stand for spherical harmonics :P
+            // THREE.OutlinePassEve.selection_atts[sh].visibleEdgeColor.set('#dd1111');
+            // THREE.OutlinePassEve.selection_atts[sh].hiddenEdgeColor.set('#1111dd');
 
             this._effectComposer.addPass( this.outline_pass );
 
@@ -93,6 +94,8 @@ sap.ui.define([
          this.geo_painter.setMouseTmout(this.controller.htimeout);
 
          this.geo_painter.assignObject(null);
+
+         this.geo_painter.addOrbitControls();
 
          this.geo_painter.prepareObjectDraw(null) // and now start everything
              .then(() => this.onGeoPainterReady(this.geo_painter));
@@ -113,80 +116,79 @@ sap.ui.define([
          painter.eveGLcontroller = this.controller;
 
          /** Handler for single mouse click, provided by basic control, used in GeoPainter */
-         painter._controls.ProcessSingleClick = function(intersects)
-         {
-            if (!intersects) return;
-            var intersect = null;
-            for (var k=0;k<intersects.length;++k) {
-               if (intersects[k].object.get_ctrl) {
-                  intersect = intersects[k];
-                  break;
+         if (painter._controls)
+            painter._controls.processSingleClick = function(intersects) {
+               if (!intersects) return;
+               let intersect = null;
+               for (let k=0;k<intersects.length;++k) {
+                  if (intersects[k].object.get_ctrl) {
+                     intersect = intersects[k];
+                     break;
+                  }
                }
-            }
-            if (intersect) {
-               var c = intersect.object.get_ctrl();
-               c.elementSelected(c.extractIndex(intersect));
-            }
-         };
+               if (intersect) {
+                  let c = intersect.object.get_ctrl();
+                  c.elementSelected(c.extractIndex(intersect));
+               }
+            };
 
          /** Handler of mouse double click - either ignore or reset camera position */
-         if (this.controller.dblclick_action != "Reset")
+         if ((this.controller.dblclick_action != "Reset") && painter._controls)
             painter._controls.processDblClick = function() { }
 
-         painter._controls.ProcessMouseMove = function(intersects)
-         {
-            var active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
+         if (painter._controls)
+            painter._controls.processMouseMove = function(intersects) {
+               let active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
 
-            // try to find mesh from intersections
-            for (var k=0;k<intersects.length;++k)
-            {
-               var obj = intersects[k].object, info = null;
-               if (!obj) continue;
-               if (obj.geo_object) info = obj.geo_name; else
-                  if (obj.stack) info = painter.getStackFullName(obj.stack);
-               if (info===null) continue;
+               // try to find mesh from intersections
+               for (let k = 0; k < intersects.length; ++k) {
+                  let obj = intersects[k].object, info = null;
+                  if (!obj) continue;
+                  if (obj.geo_object) info = obj.geo_name; else
+                     if (obj.stack) info = painter.getStackFullName(obj.stack);
+                  if (info===null) continue;
 
-               if (info.indexOf("<prnt>")==0)
-                  info = painter.getItemName() + info.substr(6);
+                  if (info.indexOf("<prnt>")==0)
+                     info = painter.getItemName() + info.substr(6);
 
-               names.push(info);
+                  names.push(info);
 
-               if (!active_mesh) {
-                  active_mesh = obj;
-                  tooltip = info;
-                  geo_object = obj.geo_object;
-                  if (obj.get_ctrl) {
-                     geo_index = obj.get_ctrl().extractIndex(intersects[k]);
-                     if ((geo_index !== undefined) && (typeof tooltip == "string")) tooltip += " indx:" + JSON.stringify(geo_index);
+                  if (!active_mesh) {
+                     active_mesh = obj;
+                     tooltip = info;
+                     geo_object = obj.geo_object;
+                     if (obj.get_ctrl) {
+                        geo_index = obj.get_ctrl().extractIndex(intersects[k]);
+                        if ((geo_index !== undefined) && (typeof tooltip == "string")) tooltip += " indx:" + JSON.stringify(geo_index);
+                     }
+                     if (active_mesh.stack) resolve = painter.resolveStack(active_mesh.stack);
                   }
-                  if (active_mesh.stack) resolve = painter.resolveStack(active_mesh.stack);
                }
+
+               // painter.highlightMesh(active_mesh, undefined, geo_object, geo_index); AMT override
+               if (active_mesh && active_mesh.get_ctrl())
+               {
+                  active_mesh.get_ctrl().elementHighlighted(geo_index);
+               }
+               else
+               {
+                  let sl = painter.eveGLcontroller.created_scenes;
+                  for (let k=0; k < sl.length; ++k)
+                     sl[k].clearHighlight();
+               }
+
+               if (painter.options.update_browser) {
+                  if (painter.options.highlight && tooltip) names = [ tooltip ];
+                  painter.activateInBrowser(names);
+               }
+
+               if (!resolve || !resolve.obj) return tooltip;
+
+               let lines = JSROOT.GEO.provideInfo(resolve.obj);
+               lines.unshift(tooltip);
+
+               return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines: lines };
             }
-
-            // painter.highlightMesh(active_mesh, undefined, geo_object, geo_index); AMT override
-            if (active_mesh && active_mesh.get_ctrl())
-            {
-               active_mesh.get_ctrl().elementHighlighted(geo_index);
-            }
-            else
-            {
-               var sl = painter.eveGLcontroller.created_scenes;
-               for (var k=0; k < sl.length; ++k)
-                  sl[k].clearHighlight();
-            }
-
-            if (painter.options.update_browser) {
-               if (painter.options.highlight && tooltip) names = [ tooltip ];
-               painter.activateInBrowser(names);
-            }
-
-            if (!resolve || !resolve.obj) return tooltip;
-
-            var lines = JSROOT.GEO.provideInfo(resolve.obj);
-            lines.unshift(tooltip);
-
-            return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines: lines };
-         }
 
          // this.geo_painter._highlight_handlers = [ this ]; // register ourself for highlight handling
          this.last_highlight = null;
@@ -194,11 +196,12 @@ sap.ui.define([
          // outline_pass passthrough
          this.outline_pass = this.geo_painter.outline_pass;
 
-         var sz = this.geo_painter.getSizeFor3d();
+         let sz = this.geo_painter.getSizeFor3d();
          this.geo_painter._effectComposer.setSize( sz.width, sz.height);
          this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
 
-         this.geo_painter._controls.contextMenu = this.jsrootOrbitContext.bind(this);
+         if (this.geo_painter._controls)
+            this.geo_painter._controls.contextMenu = this.jsrootOrbitContext.bind(this);
 
          // create only when geo painter is ready
          this.controller.createScenes();
@@ -213,35 +216,35 @@ sap.ui.define([
       /** @summary Used together with the geo painter for processing context menu */
       jsrootOrbitContext: function(evnt, intersects) {
 
-         var browseHandler = this.controller.invokeBrowseOf.bind(this.controller);
+         let browseHandler = this.controller.invokeBrowseOf.bind(this.controller);
 
          JSROOT.Painter.createMenu(evnt, this.geo_painter).then(menu => {
-            var numitems = 0;
+            let numitems = 0;
             if (intersects)
-               for (var n=0;n<intersects.length;++n)
+               for (let n=0;n<intersects.length;++n)
                   if (intersects[n].object.geo_name) numitems++;
 
             if (numitems === 0) {
                // default JSROOT context menu
                menu.painter.fillContextMenu(menu);
             } else {
-               var many = numitems > 1;
+               let many = numitems > 1;
 
                if (many) menu.add("header: Items");
 
-               for (var n=0;n<intersects.length;++n) {
-                  var obj = intersects[n].object;
+               for (let n=0;n<intersects.length;++n) {
+                  let obj = intersects[n].object;
                   if (!obj.geo_name) continue;
 
                   menu.add((many ? "sub:" : "header:") + obj.geo_name, obj.geo_object, browseHandler);
 
                   menu.add("Browse", obj.geo_object, browseHandler);
 
-                  var wireframe = menu.painter.accessObjectWireFrame(obj);
+                  let wireframe = menu.painter.accessObjectWireFrame(obj);
 
                   if (wireframe!==undefined)
                      menu.addchk(wireframe, "Wireframe", n, function(indx) {
-                        var m = intersects[indx].object.material;
+                        let m = intersects[indx].object.material;
                         m.wireframe = !m.wireframe;
                         this.render3D();
                      });
@@ -269,6 +272,9 @@ sap.ui.define([
 
       render: function()
       {
+         //let outline_pass = this.geo_painter.outline_pass;
+         //if (outline_pass) outline_pass._selectedObjects = Object.values(outline_pass.id2obj_map).flat();
+
          this.geo_painter.render3D();
       },
 

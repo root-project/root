@@ -26,14 +26,14 @@ class TH1;
    \class TUnuranEmpDist
    \ingroup Unuran
 
-   TUnuranEmpDist class for describing empiral  distributions. It is used by TUnuran
+   TUnuranEmpDist class for describing empirical distributions. It is used by TUnuran
    to generate double random number according to this distribution via TUnuran::Sample() or
    TUnuran::Sample(double *) in case of multi-dimensional empirical distributions.
 
    An empirical distribution can be one or multi-dimension constructed from a set of unbinned data,
    (the class can be constructed from an iterator to a vector of data) or by using an histogram
-   (with apointer to the TH1 class). If the histogram contains a buffer with the original data they are used by
-   default to estimate the empirical distribution, othewise the bins information is used. In this binned case
+   (with a pointer to the TH1 class). If the histogram contains a buffer with the original data they are used by
+   default to estimate the empirical distribution, otherwise the bins information is used. In this binned case
    only one dimension is now supported.
 
    In the case of unbinned data the density distribution is estimated by UNURAN using kernel smoothing and
@@ -138,13 +138,13 @@ public:
 
 private:
 
-   std::vector<double>  fData;       //pointer to the data vector (used for generation from un-binned data)
-   unsigned int fDim;                 //data dimensionality
-   double fMin;                       // min values (used in the binned case)
-   double fMax;                       // max values (used in the binned case)
-   bool   fBinned;                    // flag for binned/unbinned data
+   std::vector<double>  fData;       ///< pointer to the data vector (used for generation from un-binned data)
+   unsigned int fDim;                ///< data dimensionality
+   double fMin;                      ///< min values (used in the binned case)
+   double fMax;                      ///< max values (used in the binned case)
+   bool   fBinned;                   ///< flag for binned/unbinned data
 
-   ClassDef(TUnuranEmpDist,1)         //Wrapper class for empirical distribution
+   ClassDef(TUnuranEmpDist,1)        //Wrapper class for empirical distribution
 
 
 };

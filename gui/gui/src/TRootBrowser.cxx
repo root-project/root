@@ -371,7 +371,7 @@ void TRootBrowser::BrowseObj(TObject *obj)
 {
    if (fActBrowser)
       fActBrowser->BrowseObj(obj);
-   Emit("BrowseObj(TObject*)", (Long_t)obj);
+   Emit("BrowseObj(TObject*)", (Longptr_t)obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -552,10 +552,10 @@ void TRootBrowser::EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected)
 /// Execute a macro and embed the created frame in the tab "pos"
 /// and tab element "subpos".
 
-Long_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
-                                const char *cmd, Int_t pos, Int_t subpos)
+Longptr_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
+                                   const char *cmd, Int_t pos, Int_t subpos)
 {
-   Long_t retval = 0;
+   Longptr_t retval = 0;
    TBrowserPlugin *p;
    TString command, pname;
    if (cmd && strlen(cmd)) {
@@ -853,7 +853,7 @@ void TRootBrowser::InitPlugins(Option_t *opt)
 
    // File Browser plugin
    if (strchr(opt, 'F')) {
-      cmd.Form("new TGFileBrowser(gClient->GetRoot(), (TBrowser *)0x%lx, 200, 500);", (ULong_t)fBrowser);
+      cmd.Form("new TGFileBrowser(gClient->GetRoot(), (TBrowser *)0x%zx, 200, 500);", (size_t)fBrowser);
       ExecPlugin("Files", 0, cmd.Data(), 0);
       ++fNbInitPlugins;
    }
@@ -1237,7 +1237,7 @@ void TRootBrowser::SwitchMenus(TGCompositeFrame  *from)
 
 void TRootBrowser::DoubleClicked(TObject *obj)
 {
-   Emit("DoubleClicked(TObject*)", (Long_t)obj);
+   Emit("DoubleClicked(TObject*)", (Longptr_t)obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1245,9 +1245,9 @@ void TRootBrowser::DoubleClicked(TObject *obj)
 
 void TRootBrowser::Checked(TObject *obj, Bool_t checked)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)obj;
+   args[0] = (Longptr_t)obj;
    args[1] = checked;
 
    Emit("Checked(TObject*,Bool_t)", args);
@@ -1258,7 +1258,7 @@ void TRootBrowser::Checked(TObject *obj, Bool_t checked)
 
 void TRootBrowser::ExecuteDefaultAction(TObject *obj)
 {
-   Emit("ExecuteDefaultAction(TObject*)", (Long_t)obj);
+   Emit("ExecuteDefaultAction(TObject*)", (Longptr_t)obj);
 }
 
 

@@ -21,7 +21,7 @@
 **************************************************************************/
 
 
-/** \class TGFont and TGFontPool
+/** \class TGFont
     \ingroup guiwidgets
 
 Encapsulate fonts used in the GUI system.
@@ -30,13 +30,13 @@ Encapsulate fonts used in the GUI system.
 \class TGFontPool
 \ingroup guiwidgets
 
-provides a pool of fonts.
+Provides a pool of fonts.
 
 
 \class TGTextLayout
 \ingroup guiwidgets
 
-is used to keep track of string  measurement
+Is used to keep track of string  measurement
 information when  using the text layout facilities.
 It can be displayed with respect to any origin.
 
@@ -1446,7 +1446,7 @@ LayoutChunk_t *TGFont::NewChunk(TGTextLayout *layout, Int_t *maxPtr,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a string of characters on the screen. DrawCharsExp() expands
-/// control characters that occur in the string to \X or \xXX sequences.
+/// control characters that occur in the string to \\X or \\xXX sequences.
 /// DrawChars() just draws the strings.
 ///
 /// dst      -- Window or pixmap in which to draw.

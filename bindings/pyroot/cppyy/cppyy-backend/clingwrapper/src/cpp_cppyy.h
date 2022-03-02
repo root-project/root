@@ -134,6 +134,8 @@ namespace Cppyy {
     RPY_EXPORTED
     TCppIndex_t GetNumBases(TCppType_t type);
     RPY_EXPORTED
+    TCppIndex_t GetNumBasesLongestBranch(TCppType_t type);
+    RPY_EXPORTED
     std::string GetBaseName(TCppType_t type, TCppIndex_t ibase);
     RPY_EXPORTED
     bool        IsSubtype(TCppType_t derived, TCppType_t base);

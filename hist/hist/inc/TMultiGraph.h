@@ -22,8 +22,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
-
 #include "TCollection.h"
+#include "TFitResultPtr.h"
 
 class TH1F;
 class TAxis;
@@ -31,30 +31,28 @@ class TBrowser;
 class TGraph;
 class TF1;
 
-#include "TFitResultPtr.h"
-
 class TMultiGraph : public TNamed {
 
 protected:
-   TList      *fGraphs;     ///< Pointer to list of TGraphs
-   TList      *fFunctions;  ///< Pointer to list of functions (fits and user)
-   TH1F       *fHistogram;  ///< Pointer to histogram used for drawing axis
-   Double_t    fMaximum;    ///< Maximum value for plotting along y
-   Double_t    fMinimum;    ///< Minimum value for plotting along y
+   TList      *fGraphs{nullptr};     ///< Pointer to list of TGraphs
+   TList      *fFunctions{nullptr};  ///< Pointer to list of functions (fits and user)
+   TH1F       *fHistogram{nullptr};  ///< Pointer to histogram used for drawing axis
+   Double_t    fMaximum{-1111};      ///< Maximum value for plotting along y
+   Double_t    fMinimum{-1111};      ///< Minimum value for plotting along y
 
-   TMultiGraph(const TMultiGraph&);
-   TMultiGraph& operator=(const TMultiGraph&);
+   TMultiGraph(const TMultiGraph&) = delete;
+   TMultiGraph& operator=(const TMultiGraph&) = delete;
 
 public:
    TMultiGraph();
    TMultiGraph(const char *name, const char *title);
-   virtual ~TMultiGraph();
+   ~TMultiGraph() override;
 
-   virtual void      Add(TGraph *graph, Option_t *chopt="");
-   virtual void      Add(TMultiGraph *multigraph, Option_t *chopt="");
-   virtual void      Browse(TBrowser *b);
-   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void      Draw(Option_t *chopt="");
+   virtual void      Add(TGraph *graph, Option_t *chopt = "");
+   virtual void      Add(TMultiGraph *multigraph, Option_t *chopt = "");
+   void              Browse(TBrowser *b) override;
+   Int_t             DistancetoPrimitive(Int_t px, Int_t py) override;
+   void              Draw(Option_t *chopt = "") override;
    virtual TFitResultPtr Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
    virtual TFitResultPtr Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t rxmin=0, Axis_t rxmax=0);
    virtual void      FitPanel(); // *MENU*
@@ -74,19 +72,17 @@ public:
    const TList      *GetListOfFunctions() const { return fFunctions; }
    TAxis            *GetXaxis();
    TAxis            *GetYaxis();
-   virtual void      Paint(Option_t *chopt="");
-   void              PaintPads(Option_t *chopt="");
-   void              PaintPolyLine3D(Option_t *chopt="");
-   void              PaintReverse(Option_t *chopt="");
-   virtual void      Print(Option_t *chopt="") const;
-   virtual void      RecursiveRemove(TObject *obj);
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void              Paint(Option_t *chopt = "") override;
+   void              PaintPads(Option_t *chopt = "");
+   void              PaintPolyLine3D(Option_t *chopt = "");
+   void              PaintReverse(Option_t *chopt = "");
+   void              Print(Option_t *chopt="") const override;
+   void              RecursiveRemove(TObject *obj) override;
+   void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void      SetMaximum(Double_t maximum=-1111);
    virtual void      SetMinimum(Double_t minimum=-1111);
 
-   ClassDef(TMultiGraph,2)  //A collection of TGraph objects
+   ClassDefOverride(TMultiGraph,2)  // A collection of TGraph objects
 };
 
 #endif
-
-

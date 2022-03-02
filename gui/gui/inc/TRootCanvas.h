@@ -144,7 +144,7 @@ public:
 
    // overridden from TGMainFrame
    void     CloseWindow();
-   Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    void     ReallyDelete();
 
    ClassDef(TRootCanvas,0)  //ROOT native GUI version of main window with menubar and drawing area

@@ -32,7 +32,7 @@ namespace RooStats{
      public:
 
        /// The "main" method
-       std::vector< RooStats::HistFactory::Measurement > GetMeasurementsFromXML(std::string input); 
+       std::vector< RooStats::HistFactory::Measurement > GetMeasurementsFromXML(std::string input);
        RooStats::HistFactory::Measurement CreateMeasurementFromDriverNode( TXMLNode* node );
        RooStats::HistFactory::Channel ParseChannelXMLFile( std::string filen );
 

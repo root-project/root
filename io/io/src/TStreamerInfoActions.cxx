@@ -103,9 +103,9 @@ namespace TStreamerInfoActions
       aElement->GetSequenceType(sequenceType);
 
       printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-             " %s, offset=%d (%s)\n",
+             " %s, offset=%d (%s), elemnId=%d \n",
              info->GetClass()->GetName(), aElement->GetName(), fElemId, fCompInfo->fType,
-             aElement->ClassName(), fOffset, sequenceType.Data());
+             aElement->ClassName(), fOffset, sequenceType.Data(), fElemId);
    }
 
    void TConfiguration::PrintDebug(TBuffer &buf, void *addr) const
@@ -1693,7 +1693,9 @@ namespace TStreamerInfoActions
 
    ESelectLooper SelectLooper(TVirtualCollectionProxy &proxy)
    {
-      if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
+      if ( (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
+         return kVectorLooper;
+      } else if ( (proxy.GetCollectionType() == ROOT::kSTLvector)) {
          if (proxy.GetProperties() & TVirtualCollectionProxy::kCustomAlloc)
             return kGenericLooper;
          else
@@ -1704,8 +1706,6 @@ namespace TStreamerInfoActions
                  || proxy.GetCollectionType() == ROOT::kSTLunorderedmap || proxy.GetCollectionType() == ROOT::kSTLunorderedmultimap
                  || proxy.GetCollectionType() == ROOT::kSTLbitset) {
          return kAssociativeLooper;
-      } else if (proxy.GetCollectionType() == ROOT::kROOTRVec && proxy.GetType() == EDataType::kBool_t) {
-         return kVectorLooper;
       } else {
          return kGenericLooper;
       }
@@ -2649,6 +2649,8 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         //TODO:  Check whether we can implement this without loading the data in
+         // a temporary variable and whether this is noticeably faster.
          return ReadNumericalCollection<ConvertBasicType<T,T,Numeric > >(buf,addr,conf);
       }
 
@@ -2771,6 +2773,7 @@ static TConfiguredAction GetConvertCollectionReadActionFrom(Int_t newtype, TConf
       default:
          break;
    }
+   Error("GetConvertCollectionReadActionFrom", "UNEXPECTED: newtype == %d", newtype);
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
 }
@@ -2830,6 +2833,7 @@ static TConfiguredAction GetConvertCollectionReadAction(Int_t oldtype, Int_t new
       default:
          break;
    }
+   Error("GetConvertCollectionReadAction", "UNEXPECTED: oldtype == %d", oldtype);
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
 }
@@ -3974,10 +3978,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 
       TStreamerInfo::TCompInfo_t *compinfo = sinfo->fCompFull[i];
 
-      Int_t asize = element->GetSize();
-      if (element->GetArrayLength()) {
-         asize /= element->GetArrayLength();
-      }
       Int_t oldType = element->GetType();
       Int_t newType = element->GetNewType();
 
@@ -4079,10 +4079,6 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
             continue;
          }
          TStreamerInfo::TCompInfo *compinfo = sinfo->fCompFull[i];
-         Int_t asize = element->GetSize();
-         if (element->GetArrayLength()) {
-            asize /= element->GetArrayLength();
-         }
          Int_t oldType = element->GetType();
          Int_t offset = element->GetOffset();
 #if defined(CDJ_NO_COMPILE)
@@ -4197,7 +4193,9 @@ void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
        iter != end;
        ++iter)
    {
-      if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+      // (fElemId == -1) indications that the action is a Push or Pop DataCache.
+      if (iter->fConfiguration->fElemId != (UInt_t)-1 &&
+          !iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
          iter->fConfiguration->AddToOffset(delta);
    }
 }

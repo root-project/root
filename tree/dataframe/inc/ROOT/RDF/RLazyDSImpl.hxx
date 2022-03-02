@@ -11,17 +11,17 @@
 #ifndef ROOT_RLAZYDSIMPL
 #define ROOT_RLAZYDSIMPL
 
-#include "ROOT/RIntegerSequence.hxx"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RResultPtr.hxx"
 #include "ROOT/TSeq.hxx"
 
 #include <algorithm>
 #include <map>
+#include <memory>
 #include <tuple>
 #include <string>
 #include <typeinfo>
+#include <utility> // std::index_sequence
 #include <vector>
 
 namespace ROOT {
@@ -32,7 +32,7 @@ namespace RDF {
 ///
 /// This component allows to create a data source on a set of columns coming from
 /// one or multiple data frames. The processing of the parent data frames starts
-/// only when the event loop is triggered in the data frame initialised with a
+/// only when the event loop is triggered in the data frame initialized with a
 /// RLazyDS.
 ///
 /// The implementation takes care of matching compile time information with runtime
@@ -44,9 +44,9 @@ class RLazyDS final : public ROOT::RDF::RDataSource {
    std::tuple<RResultPtr<std::vector<ColumnTypes>>...> fColumns;
    const std::vector<std::string> fColNames;
    const std::map<std::string, std::string> fColTypesMap;
-   // The role of the fPointerHoldersModels is to be initialised with the pack
+   // The role of the fPointerHoldersModels is to be initialized with the pack
    // of arguments in the constrcutor signature at construction time
-   // Once the number of slots is known, the fPointerHolders are initialised
+   // Once the number of slots is known, the fPointerHolders are initialized
    // according to the models.
    const PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
@@ -179,7 +179,7 @@ public:
          delete ptrHolder;
    }
 
-   void Initialise()
+   void Initialize()
    {
       ColLenghtChecker(std::index_sequence_for<ColumnTypes...>());
       const auto nEntries = GetEntriesNumber();

@@ -28,17 +28,18 @@ Manages histogram axis attributes.
 
 They are:
 
-  - The number of divisions
-  - The line axis' color
-  - The labels' color
-  - The labels' font
-  - The labels' offset
-  - The labels' size
-  - The tick marks'
-  - The axis title's offset
-  - The axis title's size
-  - The axis title's color
-  - The axis title's font
+  - The number of divisions: TAttAxis::SetNdivisions.
+  - The line axis' color: TAttAxis::SetAxisColor.
+  - The axis labels' color: TAttAxis::SetLabelColor.
+  - The axis labels' font: TAttAxis::SetLabelFont.
+  - The axis labels' offset: TAttAxis::SetLabelOffset.
+  - The axis labels' size: TAttAxis::SetLabelSize.
+  - The tick marks's length: TAttAxis::SetTickLength or TAttAxis::SetTickSize .
+  - The axis title's offset: TAttAxis::SetTitleOffset.
+  - The axis title's size: TAttAxis::SetTitleSize.
+  - The axis title's color: TAttAxis::SetTitleColor.
+  - The axis title's font: TAttAxis::SetTitleFont.
+
 */
 
 TAttAxis::TAttAxis()
@@ -188,6 +189,7 @@ void TAttAxis::SetLabelFont(Style_t font)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set distance between the axis and the labels.
 /// The distance is expressed in per cent of the pad width.
+/// A negative value allow to draw the label on the other side of the axis.
 
 void TAttAxis::SetLabelOffset(Float_t offset)
 {
@@ -220,10 +222,17 @@ void TAttAxis::SetLabelSize(Float_t size)
 /// n2 is the number of second order divisions and
 /// n3 is the number of third order divisions.
 ///
-/// e.g. 512 means 12 primary and 5 secondary divisions.
-///
 /// If the number of divisions is "optimized" (see above) n1, n2, n3 are
 /// maximum values.
+///
+/// Examples:
+///
+///  - ndiv = 0: no tick marks.
+///  - ndiv = 2: 2 divisions, one tick mark in the middle of the axis.
+///  - ndiv = 510: 10 primary divisions, 5 secondary divisions.
+///  - ndiv = -10: exactly 10 primary divisions.
+
+
 
 void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 {

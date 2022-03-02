@@ -488,6 +488,10 @@ N: Burt Holzman
 E: burt@fnal.gov
 D: Contribution to TWebFile,rpdutils and sockets.
 
+N: Fernando Hueso-González
+E: fernando.hueso@uv.es
+D: Improve ROOT stability, add GUI functionalities, improve documentation
+
 N: Raphael Isemann
 E: teemperor@gmail.com
 D: c++ modules and runtime c++ modules co-author, integration in the CMS experiment
@@ -615,8 +619,9 @@ E: loizides@MIT.EDU
 D: PROOF testing and debugging
 
 N: Javier Lopez-Gomez
-E: jalopezg@inf.uc3m.es
-D: Cling support for redefinitions
+E: j.lopez@cern.ch
+D: Cling support for redefinitions; cling improvements
+D: RNTuple/DAOS integration
 
 N: Johan Lundberg
 E: johan.lundberg@cern.ch
@@ -779,6 +784,10 @@ N: Katerina Opocenska
 E: opocenska@gmail.com
 D: author of the Event Recorder
 D: author of the sub-merging technology in PROOF
+
+N: Max Orok
+E: maxwellorok@gmail.com
+D: Contributions to the I/O and RNTuple
 
 N: Vincenzo Eduardo Padulano
 E: v.e.padulano@gmail.com

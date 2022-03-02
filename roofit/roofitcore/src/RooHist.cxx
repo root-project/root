@@ -271,13 +271,14 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
 /// where a pdf is constructed as "data minus background" and is thus
 /// intended to be displayed as "data" (or at least data-like).
 /// Usage of this signature is triggered by the draw style "P" in RooAbsReal::plotOn.
-/// 
+///
 /// More details.
 /// \param[in] f The function to be plotted.
 /// \param[in] x The variable on the x-axis
 /// \param[in] xErrorFrac Size of the errror in x as a fraction of the bin width
 /// \param[in] scaleFactor arbitrary scaling of the y-values
 /// \param[in] normVars variables over which to normalize
+/// \param[in] fr fit result
 RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, Double_t scaleFactor, const RooArgSet *normVars, const RooFitResult* fr) :
   TGraphAsymmErrors(), _nSigma(1), _rawEntries(-1)
 {
@@ -311,7 +312,7 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
     rawPtr= funcPtr;
     funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
   }
-  
+
   // apply a scale factor if necessary
   assert(funcPtr);
 
@@ -330,7 +331,7 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
     _entries += yval;
   }
   _nominalBinWidth = 1.;
-  
+
   // cleanup
   delete funcPtr;
   if(rawPtr) delete rawPtr;
@@ -663,7 +664,7 @@ Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const
 /// Return kTRUE if contents of this RooHist is identical within given
 /// relative tolerance to that of 'other'
 
-Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol) const
+Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol, bool verbose) const
 {
   // Make temporary TH1s output of RooHists to perform Kolmogorov test
   TH1::AddDirectory(kFALSE) ;
@@ -679,7 +680,7 @@ Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol) const
   Double_t M = h_self.KolmogorovTest(&h_other,"M") ;
   if (M>tol) {
     Double_t kprob = h_self.KolmogorovTest(&h_other) ;
-    cout << "RooHist::isIdentical() tolerance exceeded M=" << M << " (tol=" << tol << "), corresponding prob = " << kprob << endl ;
+    if(verbose) cout << "RooHist::isIdentical() tolerance exceeded M=" << M << " (tol=" << tol << "), corresponding prob = " << kprob << endl ;
     return kFALSE ;
   }
 

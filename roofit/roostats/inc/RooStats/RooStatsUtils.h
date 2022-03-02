@@ -39,8 +39,8 @@ In addition the namespace contain a set of utility functions.
 
 namespace RooStats {
    struct RooStatsConfig {
-      bool useLikelihoodOffset{false}; /// Offset the likelihood by passing RooFit::Offset to fitTo().
-      bool useEvalErrorWall{true};     /// Use the error wall RooFit::EvalErrorWall to drive the fitter away from disallowed parameter values.
+      bool useLikelihoodOffset{false}; ///< Offset the likelihood by passing RooFit::Offset to fitTo().
+      bool useEvalErrorWall{true};     ///< Use the error wall RooFit::EvalErrorWall to drive the fitter away from disallowed parameter values.
    };
 
    /// Retrieve the config object which can be used to set flags for things like offsetting the likelihood
@@ -58,12 +58,12 @@ namespace RooStats {
    }
 
    /// Compute the Asimov Median significance for a Poisson process
-   /// with s = expected number of signal events, b = expected numner of background events
-   /// and optionally sigma_b = expected uncertainty of backgorund events   
-   Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b = 0.0 ); 
+   /// with s = expected number of signal events, b = expected number of background events
+   /// and optionally sigma_b = expected uncertainty of backgorund events
+   Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b = 0.0 );
 
    inline void SetParameters(const RooArgSet* desiredVals, RooArgSet* paramsToChange){
-      *paramsToChange=*desiredVals ;
+      paramsToChange->assign(*desiredVals) ;
    }
 
    inline void RemoveConstantParameters(RooArgSet* set){
@@ -86,9 +86,9 @@ namespace RooStats {
       set.remove(constSet);
    }
 
+   /// utility function to set all variable constant in a collection
+   /// (from G. Petrucciani)
    inline bool SetAllConstant(const RooAbsCollection &coll, bool constant = true) {
-      // utility function to set all variable constant in a collection
-      // (from G. Petrucciani)
       bool changed = false;
       RooLinkedListIter iter = coll.iterator();
       for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
@@ -102,7 +102,7 @@ namespace RooStats {
    }
 
 
-   // assuming all values in set are RooRealVars, randomize their values
+   /// assuming all values in set are RooRealVars, randomize their values
    inline void RandomizeCollection(RooAbsCollection& set,
                                    Bool_t randomizeConstants = kTRUE)
    {
@@ -128,27 +128,27 @@ namespace RooStats {
 
    void FactorizePdf(RooStats::ModelConfig &model, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints);
 
-   // extract constraint terms from pdf
+   /// extract constraint terms from pdf
    RooAbsPdf * MakeNuisancePdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name);
    RooAbsPdf * MakeNuisancePdf(const RooStats::ModelConfig &model, const char *name);
-   // remove constraints from pdf and return the unconstrained pdf
+   /// remove constraints from pdf and return the unconstrained pdf
    RooAbsPdf * MakeUnconstrainedPdf(RooAbsPdf &pdf, const RooArgSet &observables, const char *name = NULL);
    RooAbsPdf * MakeUnconstrainedPdf(const RooStats::ModelConfig &model, const char *name = NULL);
 
-   // Create a TTree with the given name and description. All RooRealVars in the RooDataSet are represented as branches that contain values of type Double_t.
+   /// Create a TTree with the given name and description. All RooRealVars in the RooDataSet are represented as branches that contain values of type Double_t.
    TTree* GetAsTTree(TString name, TString desc, const RooDataSet& data);
 
-   // useful function to print in one line the content of a set with their values
+   /// useful function to print in one line the content of a set with their values
    void PrintListContent(const RooArgList & l, std::ostream & os = std::cout);
 
-   // function to set a global flag in RooStats to use NLL offset when performing nll computations
-   // Note that not all ROoStats tools implement this capabilities
+   /// function to set a global flag in RooStats to use NLL offset when performing nll computations
+   /// Note that not all ROoStats tools implement this capabilities
    void UseNLLOffset(bool on);
 
-   // function returning if the flag to check if the flag to use  NLLOffset is set
+   /// function returning if the flag to check if the flag to use  NLLOffset is set
    bool IsNLLOffset();
 
-   // function that clones a workspace, copying all needed components and discarding all others
+   /// function that clones a workspace, copying all needed components and discarding all others
    RooWorkspace* MakeCleanWorkspace(RooWorkspace *oldWS, const char *newName, bool copySnapshots,
                                     const char *mcname, const char *newmcname);
 

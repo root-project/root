@@ -5,7 +5,6 @@
 /// This method computes confidence intervals for the fitted function
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
 ///
 /// \author Rene Brun
@@ -21,16 +20,16 @@
 void ConfidenceIntervals()
 {
    TCanvas *myc = new TCanvas("myc",
-      "Confidence intervals on the fitted function",1200, 500);
+      "Confidence intervals on the fitted function",1000, 500);
    myc->Divide(3,1);
 
 //### 1. A graph
    //Create and fill a graph
-   Int_t ngr = 100;
+   int ngr = 100;
    TGraph *gr = new TGraph(ngr);
    gr->SetName("GraphNoError");
-   Double_t x, y;
-   Int_t i;
+   double x, y;
+   int i;
    for (i=0; i<ngr; i++){
       x = gRandom->Uniform(-1, 1);
       y = -1 + 2*x + gRandom->Gaus(0, 1);
@@ -61,9 +60,9 @@ void ConfidenceIntervals()
 //### 2. A histogram
    myc->cd(2);
    //Create, fill and fit a histogram
-   Int_t nh=5000;
+   int nh=5000;
    TH1D *h = new TH1D("h",
-      "Fitted gaussian with .95 conf.band", 100, -3, 3);
+      "Fitted Gaussian with .95 conf.band", 100, -3, 3);
    h->FillRandom("gaus", nh);
    TF1 *f = new TF1("fgaus", "gaus", -3, 3);
    f->SetLineWidth(2);
@@ -72,18 +71,18 @@ void ConfidenceIntervals()
 
    /*Create a histogram to hold the confidence intervals*/
    TH1D *hint = new TH1D("hint",
-      "Fitted gaussian with .95 conf.band", 100, -3, 3);
+      "Fitted Gaussian with .95 conf.band", 100, -3, 3);
    (TVirtualFitter::GetFitter())->GetConfidenceIntervals(hint);
    //Now the "hint" histogram has the fitted function values as the
    //bin contents and the confidence intervals as bin errors
-   hint->SetStats(kFALSE);
+   hint->SetStats(false);
    hint->SetFillColor(2);
    hint->Draw("e3 same");
 
 //### 3. A 2d graph
    //Create and fill the graph
-   Int_t ngr2 = 100;
-   Double_t z, rnd, e=0.3;
+   int ngr2 = 100;
+   double z, rnd, e=0.3;
    TGraph2D *gr2 = new TGraph2D(ngr2);
    gr2->SetName("Graph2DNoError");
    TF2  *f2 = new TF2("f2",

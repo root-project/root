@@ -284,7 +284,6 @@ namespace {
 
 Int_t  TROOT::fgDirLevel = 0;
 Bool_t TROOT::fgRootInit = kFALSE;
-Bool_t TROOT::fgMemCheck = kFALSE;
 
 static void at_exit_of_TROOT() {
    if (ROOT::Internal::gROOTLocal)
@@ -522,6 +521,9 @@ namespace Internal {
    /// a hint for ROOT: it will try to satisfy the request if the execution
    /// scenario allows it. For example, if ROOT is configured to use an external
    /// scheduler, setting a value for 'numthreads' might not have any effect.
+   ///
+   /// \note Use `DisableImplicitMT()` to disable multi-threading (some locks will remain in place as
+   /// described in EnableThreadSafety()). `EnableImplicitMT(1)` creates a thread-pool of size 1.
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
@@ -866,7 +868,11 @@ TROOT::~TROOT()
 
       // Turn-off the global mutex to avoid recreating mutexes that have
       // already been deleted during the destruction phase
-      gGlobalMutex = nullptr;
+      if (gGlobalMutex) {
+          TVirtualMutex *m = gGlobalMutex;
+          gGlobalMutex = nullptr;
+          delete m;
+      }
 
       // Return when error occurred in TCling, i.e. when setup file(s) are
       // out of date
@@ -1977,15 +1983,6 @@ void TROOT::InitSystem()
       if (gDebug > 0 && isatty(2))
          fprintf(stderr, "Info in <TROOT::InitSystem>: running with gDebug = %d\n", gDebug);
 
-      if (gEnv->GetValue("Root.MemStat", 0))
-         TStorage::EnableStatistics();
-      int msize = gEnv->GetValue("Root.MemStat.size", -1);
-      int mcnt  = gEnv->GetValue("Root.MemStat.cnt", -1);
-      if (msize != -1 || mcnt != -1)
-         TStorage::EnableStatistics(msize, mcnt);
-
-      fgMemCheck = gEnv->GetValue("Root.MemCheck", 0);
-
 #if defined(R__HAS_COCOA)
       // create and delete a dummy TUrl so that TObjectStat table does not contain
       // objects that are deleted after recording is turned-off (in next line),
@@ -2821,14 +2818,6 @@ void TROOT::Initialize() {
 Bool_t TROOT::Initialized()
 {
    return fgRootInit;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if the memory leak checker is on.
-
-Bool_t TROOT::MemCheck()
-{
-   return fgMemCheck;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -38,22 +38,22 @@ public:
            Double_t denominator);
   RooRatio(const char *name, const char *title, RooAbsReal &numerator,
            RooAbsReal &denominator);
-  RooRatio(const char *name, const char *title, 
+  RooRatio(const char *name, const char *title,
            const RooArgList &num, const RooArgList &denom);
 
   RooRatio(const RooRatio &other, const char *name = 0);
-  virtual TObject *clone(const char *newname) const {
+  TObject *clone(const char *newname) const override {
     return new RooRatio(*this, newname);
   }
-  virtual ~RooRatio();
+  ~RooRatio() override;
 
 protected:
   RooRealProxy _numerator;
   RooRealProxy _denominator;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
-  ClassDef(RooRatio, 2) // Ratio of two RooAbsReal and/or numbers
+  ClassDefOverride(RooRatio, 2) // Ratio of two RooAbsReal and/or numbers
 };
 
 #endif

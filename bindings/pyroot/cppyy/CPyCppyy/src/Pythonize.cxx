@@ -653,19 +653,38 @@ PyObject* MapContains(PyObject* self, PyObject* obj)
     return result;
 }
 
+
 //- STL container iterator support --------------------------------------------
+static const ptrdiff_t PS_END_ADDR  =  7;   // non-aligned address, so no clash
+static const ptrdiff_t PS_FLAG_ADDR = 11;   // id.
+static const ptrdiff_t PS_COLL_ADDR = 13;   // id.
+
 PyObject* StlSequenceIter(PyObject* self)
 {
 // Implement python's __iter__ for std::iterator<>s
     PyObject* iter = PyObject_CallMethodObjArgs(self, PyStrings::gBegin, nullptr);
     if (iter) {
         PyObject* end = PyObject_CallMethodObjArgs(self, PyStrings::gEnd, nullptr);
-        if (end)
-            PyObject_SetAttr(iter, PyStrings::gEnd, end);
-        Py_XDECREF(end);
+        if (end) {
+            if (CPPInstance_Check(iter)) {
+            // use the data member cache to store extra state on the iterator object,
+            // without it being visible on the Python side
+                auto& dmc = ((CPPInstance*)iter)->GetDatamemberCache();
+                dmc.push_back(std::make_pair(PS_END_ADDR, end));
 
-    // add iterated collection as attribute so its refcount stays >= 1 while it's being iterated over
-        PyObject_SetAttr(iter, CPyCppyy_PyText_FromString("_collection"), self);
+            // set a flag, indicating first iteration (reset in __next__)
+                Py_INCREF(Py_False);
+                dmc.push_back(std::make_pair(PS_FLAG_ADDR, Py_False));
+
+            // make sure the iterated over collection remains alive for the duration
+                Py_INCREF(self);
+                dmc.push_back(std::make_pair(PS_COLL_ADDR, self));
+            } else {
+            // could store "end" on the object's dictionary anyway, but if end() returns
+            // a user-customized object, then its __next__ is probably custom, too
+                Py_DECREF(end);
+            }
+        }
     }
     return iter;
 }
@@ -856,44 +875,47 @@ Py_hash_t StlStringHash(PyObject* self)
 PyObject* StlIterNext(PyObject* self)
 {
 // Python iterator protocol __next__ for STL forward iterators.
-    PyObject* next = nullptr;
-    PyObject* last = PyObject_GetAttr(self, PyStrings::gEnd);
+    bool mustIncrement = true;
+    PyObject* last = nullptr;
+    if (CPPInstance_Check(self)) {
+        auto& dmc = ((CPPInstance*)self)->GetDatamemberCache();
+        for (auto& p: dmc) {
+            if (p.first == PS_END_ADDR) {
+                last = p.second;
+                Py_INCREF(last);
+            } else if (p.first == PS_FLAG_ADDR) {
+                mustIncrement = p.second == Py_True;
+                if (!mustIncrement) {
+                    Py_DECREF(p.second);
+                    Py_INCREF(Py_True);
+                    p.second = Py_True;
+                }
+            }
+        }
+    }
 
+    PyObject* next = nullptr;
     if (last) {
     // handle special case of empty container (i.e. self is end)
-        if (PyObject_RichCompareBool(last, self, Py_EQ) == 0) {
-        // first, get next from the _current_ iterator as internal state may change
-        // when call post or pre increment
-            next = PyObject_CallMethodObjArgs(self, PyStrings::gDeref, nullptr);
-            if (!next) PyErr_Clear();
-
-        // use postinc, even as the C++11 range-based for loops prefer preinc b/c
-        // that allows the current value from the iterator to be had from __deref__,
-        // an issue that does not come up in C++
-            static PyObject* dummy = PyInt_FromLong(1l);
-            PyObject* iter = PyObject_CallMethodObjArgs(self, PyStrings::gPostInc, dummy, nullptr);
-            if (!iter) {
-            // allow preinc, as in that case likely __deref__ is not defined and it
-            // is the iterator rather that is returned in the loop
-                PyErr_Clear();
-                iter = PyObject_CallMethodObjArgs(self, PyStrings::gPreInc, nullptr);
-            }
-            if (iter) {
-            // prefer != as per C++11 range-based for
-                int isNotEnd = PyObject_RichCompareBool(last, iter, Py_NE);
-                if (isNotEnd && !next) {
-                // if no dereference, continue iterating over the iterator
-                    Py_INCREF(iter);
-                    next = iter;
+        if (!PyObject_RichCompareBool(last, self, Py_EQ)) {
+            bool iter_valid = true;
+            if (mustIncrement) {
+            // prefer preinc, but allow post-inc; in both cases, it is "self" that has
+            // the updated state to dereference
+                PyObject* iter = PyObject_CallMethodObjArgs(self, PyStrings::gPreInc, nullptr);
+                if (!iter) {
+                    PyErr_Clear();
+                    static PyObject* dummy = PyInt_FromLong(1l);
+                    iter = PyObject_CallMethodObjArgs(self, PyStrings::gPostInc, dummy, nullptr);
                 }
-                Py_DECREF(iter);
-            } else {
-            // fail current next, even if available
-                Py_XDECREF(next);
-                next = nullptr;
+                iter_valid = iter && PyObject_RichCompareBool(last, self, Py_NE);
+                Py_XDECREF(iter);
             }
-        } else {
-            PyErr_SetString(PyExc_StopIteration, "");
+
+            if (iter_valid) {
+                next = PyObject_CallMethodObjArgs(self, PyStrings::gDeref, nullptr);
+                if (!next) PyErr_Clear();
+            }
         }
         Py_DECREF(last);
     }

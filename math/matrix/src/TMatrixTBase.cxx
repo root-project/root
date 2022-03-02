@@ -622,8 +622,8 @@ Element TMatrixTBase<Element>::Max() const
 template<class Element>
 void TMatrixTBase<Element>::Draw(Option_t *option)
 {
-   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%lx,\"%s\");",
-                           (ULong_t)this, option));
+   gROOT->ProcessLine(Form("THistPainter::PaintSpecialObjects((TObject*)0x%zx,\"%s\");",
+                           (size_t)this, option));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

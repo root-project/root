@@ -26,8 +26,8 @@ public:
   RooStringVar() { }
   RooStringVar(const char *name, const char *title, const char* value, Int_t size=1024) ;
   RooStringVar(const RooStringVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const override { return new RooStringVar(*this,newname); }
-  virtual ~RooStringVar() = default;
+  TObject* clone(const char* newname) const override { return new RooStringVar(*this,newname); }
+  ~RooStringVar() override = default;
 
   // Parameter value and error accessors
   virtual operator TString() {return TString(_string.c_str()); }
@@ -51,7 +51,7 @@ public:
   bool isIdentical(const RooAbsArg& other, Bool_t /*assumeSameType*/) const override { return *this == other; }
 
   // Printing interface (human readable)
-  virtual void printValue(std::ostream& os) const override { os << _string; }
+  void printValue(std::ostream& os) const override { os << _string; }
 
 
   RooAbsArg *createFundamental(const char* newname=0) const override {
@@ -60,15 +60,15 @@ public:
 
 protected:
   // Internal consistency checking (needed by RooDataSet)
-  virtual Bool_t isValid() const override { return true; }
+  Bool_t isValid() const override { return true; }
   virtual Bool_t isValidString(const char*, Bool_t /*printError=kFALSE*/) const { return true; }
 
-  virtual void syncCache(const RooArgSet* /*nset*/ = nullptr) override { }
+  void syncCache(const RooArgSet* /*nset*/ = nullptr) override { }
   void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDiry=kTRUE) override;
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) override;
-  virtual void attachToVStore(RooVectorDataStore&) override { }
-  virtual void fillTreeBranch(TTree& t) override;
-  virtual void setTreeBranchStatus(TTree& t, Bool_t active) override;
+  void attachToTree(TTree& t, Int_t bufSize=32000) override;
+  void attachToVStore(RooVectorDataStore&) override { }
+  void fillTreeBranch(TTree& t) override;
+  void setTreeBranchStatus(TTree& t, Bool_t active) override;
 
 private:
   std::string _string;

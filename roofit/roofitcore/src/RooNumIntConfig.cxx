@@ -45,7 +45,7 @@ ClassImp(RooNumIntConfig)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to instance of default numeric integrator configuration object
 
-RooNumIntConfig& RooNumIntConfig::defaultConfig() 
+RooNumIntConfig& RooNumIntConfig::defaultConfig()
 {
   static RooNumIntConfig theConfig;
   static bool initStarted = false;
@@ -66,9 +66,9 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor 
+/// Constructor
 
-RooNumIntConfig::RooNumIntConfig() : 
+RooNumIntConfig::RooNumIntConfig() :
   _epsAbs(1e-7),
   _epsRel(1e-7),
   _printEvalCounter(kFALSE),
@@ -117,23 +117,20 @@ RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
   _methodNDOpen(other._methodNDOpen)
 {
   // Clone all configuration dat
-  TIterator* iter = other._configSets.MakeIterator() ;
-  RooArgSet* set ;
-  while((set=(RooArgSet*)iter->Next())) {
+  for(auto * set : static_range_cast<RooArgSet*>(other._configSets)) {
     RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
     setCopy->setName(set->GetName()) ;
    _configSets.Add(setCopy);
   }
-  delete iter ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator from other RooNumIntConfig
 
-RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other) 
+RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 {
-  // Prevent self-assignment 
+  // Prevent self-assignment
   if (&other==this) {
     return *this ;
   }
@@ -152,14 +149,11 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
   _configSets.Delete() ;
 
   // Copy new integrator-specific data
-  TIterator* iter = other._configSets.MakeIterator() ;
-  RooArgSet* set ;
-  while((set=(RooArgSet*)iter->Next())) {
+  for(auto * set : static_range_cast<RooArgSet*>(other._configSets)) {
     RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
     setCopy->setName(set->GetName()) ;
    _configSets.Add(setCopy);
   }
-  delete iter ;
 
   return *this ;
 }
@@ -169,7 +163,7 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a configuration section for a particular integrator. Integrator name and capabilities are
 /// automatically determined from instance passed as 'proto'. The defaultConfig object is associated
-/// as the default configuration for the integrator. 
+/// as the default configuration for the integrator.
 
 Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
@@ -196,7 +190,7 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
       _methodNDOpen.defineType(name) ;
     }
   }
-  
+
   // Store default configuration parameters
   RooArgSet* config = (RooArgSet*) inDefaultConfig.snapshot() ;
   config->setName(name.c_str());
@@ -210,7 +204,7 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
 ////////////////////////////////////////////////////////////////////////////////
 /// Return section with configuration parameters for integrator with given (class) name
 
-RooArgSet& RooNumIntConfig::getConfigSection(const char* name)  
+RooArgSet& RooNumIntConfig::getConfigSection(const char* name)
 {
   return const_cast<RooArgSet&>((const_cast<const RooNumIntConfig*>(this)->getConfigSection(name))) ;
 }
@@ -245,8 +239,8 @@ void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
 }
 
 
-RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) const 
-{ 
+RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) const
+{
   if (!opt) {
     return kStandard ;
   }
@@ -257,7 +251,7 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
   if (o.Contains("v")) {
     return kVerbose ;
   }
-  return kStandard ; 
+  return kStandard ;
 }
 
 
@@ -265,7 +259,7 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Set relative convergence criteria (convergence if abs(Err)/abs(Int)<newEpsRel)
 
-void RooNumIntConfig::setEpsRel(Double_t newEpsRel) 
+void RooNumIntConfig::setEpsRel(Double_t newEpsRel)
 {
   if (newEpsRel<0) {
     oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;
@@ -285,7 +279,7 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
   if (_printEvalCounter) {
     os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
   }
-  
+
   os << indent << "1-D integration method: " << _method1D.getCurrentLabel() ;
   if (_method1DOpen.getCurrentIndex()!=_method1D.getCurrentIndex()) {
     os << " (" << _method1DOpen.getCurrentLabel() << " if open-ended)" << endl ;
@@ -304,13 +298,11 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
   } else {
     os << endl ;
   }
-  
+
   if (verbose) {
 
     os << endl << "Available integration methods:" << endl << endl ;
-    TIterator* cIter = _configSets.MakeIterator() ;
-    RooArgSet* configSet ;
-    while ((configSet=(RooArgSet*)cIter->Next())) {
+    for(auto * configSet : static_range_cast<RooArgSet*>(_configSets)) {
 
       os << indent << "*** " << configSet->GetName() << " ***" << endl ;
       os << indent << "Capabilities: " ;
@@ -327,12 +319,10 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
 
       const char* depName = RooNumIntFactory::instance().getDepIntegratorName(configSet->GetName()) ;
       if (strlen(depName)>0) {
-	os << indent << "(Depends on '" << depName << "')" << endl ;
+   os << indent << "(Depends on '" << depName << "')" << endl ;
       }
       os << endl ;
 
     }
-
-    delete cIter ;
   }
 }

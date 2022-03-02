@@ -126,7 +126,8 @@ bool test6() {
    int iret = g.Fit("x++1","Q");
    ok &= (iret == 0);
    iret = g.Fit("1++x","Q");
-   return iret == 0;
+   ok &= (iret == 0);
+   return ok;
 }
 
 bool test7() {
@@ -1048,6 +1049,19 @@ bool test52() {
 }
 
 
+bool test53()
+{
+   // Test if a formula with linear terms in each parameter is correctly expanded,
+   // even if some earlier terms are substrings of later terms.
+   bool ok = true;
+
+   TF1 f1("f1", "1.0 ++ x ++ x*x ++ x*x*x", -1.0, 1.0);
+   ok &= f1.GetNpar() == 4;
+
+   return ok;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////
 
 void PrintError(int itest)  {
@@ -1119,6 +1133,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test50() ) { PrintError(itest); }
    IncrTest(itest); if (!test51() ) { PrintError(itest); }
    IncrTest(itest); if (!test52() ) { PrintError(itest); }
+   IncrTest(itest); if (!test53() ) { PrintError(itest); }
 
    std::cout << ".\n";
 

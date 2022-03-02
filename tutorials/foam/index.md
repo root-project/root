@@ -1,6 +1,6 @@
-\defgroup tutorial_FOAM FOAM tutorials
-\ingroup Tutorials
-\brief Examples showing how to use FOAM.
+\addtogroup tutorial_FOAM
+
+@{
 
 ### What is FOAM ?
 
@@ -15,9 +15,9 @@ the ROOT shell. For more difficult problems the full FOAM may be better.
 ### How to run application programs ?
 
 The application program can be run in two modes: it can be simply
-intepreted by CINT or compiled. The first method is simpler but
+interpreted by CLING or compiled. The first method is simpler but
 results in slower execution. The second method employs ACLiC -
-The Automatic Compiler of Libraries, which automaticates the
+The Automatic Compiler of Libraries, which automatizes the
 process of compilation and linking.
 
 In $(ROOTSYS)/tutorials there are 3 demonstration programs:
@@ -27,13 +27,13 @@ is a simple example how to run FOAM in interactive
 mode. To run this macro issue the  following simple command from the
 Linux shell:
 
-```cpp
+```
   root foam_kanwa.C
 ```
 
-or from CINT:
+or from CLING:
 
-```cpp
+```
   root [0] .x foam_kanwa.C
 ```
 
@@ -50,9 +50,9 @@ abstract class  TFoamIntegrand. User can modify interface to
 integrand function according to their needs but they should
 always remember to define Density  method which provides the
 density distribution.
-Enter CINT interpreter and type:
+Enter CLING interpreter and type:
 
-```cpp
+```
   root [0] gSystem->Load("libFoam.so")
   root [1] .x foam_demo.C+
 ```
@@ -66,12 +66,14 @@ including distribution function will be written to disk.
 demonstrates persistency of FOAM classes.
 To run this macro type:
 
-```cpp
+```
   root [0] .x foam_demopers.C
 ```
 
 Program reads the FOAM object from disk, checks its
 consistency and prints geometry of cells. Next starts the
-the generation. It can be interpreted directly by CINT
+the generation. It can be interpreted directly by CLING
 because compiled TFDISTR class is already available in
-foam_demo_C.so library.
+`foam_demo_C.so` library.
+
+@}

@@ -94,6 +94,9 @@
 #include "RooHelpers.h"
 #include "RooRealBinding.h"
 #include "RunContext.h"
+#include "RooRealVar.h"
+#include "RooGlobalFunc.h"
+#include "RooDataHist.h"
 
 #include "Math/Integrator.h"
 
@@ -304,3 +307,51 @@ double RooBinSamplingPdf::integrate(const RooArgSet* normSet, double low, double
   return integrator()->Integral(low, high);
 }
 
+
+/// Creates a wrapping RooBinSamplingPdf if appropriate.
+/// \param[in] pdf The input pdf.
+/// \param[in] data The dataset to be used in the fit, used to figure out the
+///            observables and whether the dataset is binned.
+/// \param[in] precision Precision argument for all created RooBinSamplingPdfs.
+std::unique_ptr<RooAbsPdf> RooBinSamplingPdf::create(RooAbsPdf& pdf, RooAbsData const &data, double precision) {
+  if (precision < 0.)
+    return nullptr;
+
+  std::unique_ptr<RooArgSet> funcObservables( pdf.getObservables(data) );
+  const bool oneDimAndBinned = (1 == std::count_if(funcObservables->begin(), funcObservables->end(), [](const RooAbsArg* arg) {
+    auto var = dynamic_cast<const RooRealVar*>(arg);
+    return var && var->numBins() > 1;
+  }));
+
+  if (!oneDimAndBinned) {
+    if (precision > 0.) {
+      oocoutE(&pdf, Fitting)
+          << "Integration over bins was requested, but this is currently only implemented for 1-D fits." << std::endl;
+    }
+    return nullptr;
+  }
+
+  // Find the real-valued observable. We don't care about categories.
+  auto theObs = std::find_if(funcObservables->begin(), funcObservables->end(), [](const RooAbsArg* arg){
+    return dynamic_cast<const RooAbsRealLValue*>(arg);
+  });
+  assert(theObs != funcObservables->end());
+
+  std::unique_ptr<RooAbsPdf> newPdf;
+
+  if (precision > 0.) {
+    // User forced integration. Let just apply it.
+    newPdf = std::make_unique<RooBinSamplingPdf>(
+        (std::string(pdf.GetName()) + "_binSampling").c_str(), pdf.GetTitle(),
+        *static_cast<RooAbsRealLValue *>(*theObs), pdf, precision);
+  } else if (dynamic_cast<RooDataHist const *>(&data) != nullptr &&
+             precision == 0. && !pdf.isBinnedDistribution(*data.get())) {
+    // User didn't forbid integration, and it seems appropriate with a
+    // RooDataHist.
+    newPdf = std::make_unique<RooBinSamplingPdf>(
+        (std::string(pdf.GetName()) + "_binSampling").c_str(), pdf.GetTitle(),
+        *static_cast<RooAbsRealLValue *>(*theObs), pdf);
+  }
+
+  return newPdf;
+}

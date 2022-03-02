@@ -188,16 +188,16 @@ TMonaLisaWriter::TMonaLisaWriter(const char *monserver, const char *montag,
 ///
 /// Monitoring information in MonaLisa is structured in the following tree
 /// structure:
-/// <farmname>
+/// `<farmname>`
 ///    |
-///    ---> <nodename1>
+///    ---> `<nodename1>`
 ///              |
-///              ---> <key1> - <value1>
-///              ---> <key2> - <value2>
-///    ---> <nodename2>
+///              ---> `<key1>` - `<value1>`
+///              ---> `<key2>` - `<value2>`
+///    ---> `<nodename2>`
 ///              |
-///              ---> <key3> - <value3>
-///              ---> <key4> - <value4>
+///              ---> `<key3>` - `<value3>`
+///              ---> `<key4>` - `<value4>`
 ///
 /// The parameter monid is equivalent to the MonaLisa node name, for the
 /// case of process monitoring it can be just an identifier to classify
@@ -221,20 +221,20 @@ TMonaLisaWriter::TMonaLisaWriter(const char *monserver, const char *montag,
 /// To use TMonaLisaWriter, libMonaLisa.so has to be loaded.
 ///
 /// According to the fact, that the deepness of the MonaLisa naming scheme
-/// is only 3 (<farm><node><value>), a special naming scheme is used for
+/// is only 3 (`<farm>``<node>``<value>`), a special naming scheme is used for
 /// process monitoring. There is a high-level method to send progress
 /// information of Tree analysis (# of events, datasize).
 /// To distinguish individual nodes running the processing, part of the
-/// information is kept in the <value> parameter of ML.
-/// <value> is named as:
-///    <site-name>:<host-name>:<pid>:<valuetag>
-/// <site-name> is taken from an environment variable in the following order:
+/// information is kept in the `<value>` parameter of ML.
+/// `<value>` is named as:
+///    `<site-name>`:`<host-name>`:`<pid>`:`<valuetag>`
+/// `<site-name>` is taken from an environment variable in the following order:
 /// - PROOF_SITE
 /// - GRID_SITE
 /// - ALIEN_SITE
 /// - default 'none'
-/// <host-name> is taken from gSystem->Hostname()
-/// <pid> is the process ID of the ROOT process
+/// `<host-name>` is taken from gSystem->Hostname()
+/// `<pid>` is the process ID of the ROOT process
 ///
 /// Example of use for Process Monitoring:
 ///   new TMonaLisaWriter("BATCH_ANALYSIS","AnalysisLoop-00001","lxplus050.cern.ch");
@@ -399,8 +399,8 @@ TMonaLisaWriter::~TMonaLisaWriter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sends a <status> text to MonaLisa following the process scheme:
-///    <site> --> <jobid> --> 'status' = <status>
+/// Sends a `<status>` text to MonaLisa following the process scheme:
+///    `<site>` --> `<jobid>` --> 'status' = `<status>`
 /// Used to set a global status for a groupjob, e.g.
 /// a master-job or the general status of PROOF processing.
 
@@ -428,8 +428,8 @@ Bool_t TMonaLisaWriter::SendInfoStatus(const char *status)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sends the <user> text to MonaLisa following the process scheme:
-///    <site> --> <jobid> --> 'user' = <user>
+/// Sends the `<user>` text to MonaLisa following the process scheme:
+///    `<site>` --> `<jobid>` --> 'user' = `<user>`
 
 Bool_t TMonaLisaWriter::SendInfoUser(const char *user)
 {
@@ -467,8 +467,8 @@ Bool_t TMonaLisaWriter::SendInfoUser(const char *user)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sends the description <jobtag> following the processing scheme:
-///    <site> --> <jobid> --> 'jobname' = <jobtag>
+/// Sends the description `<jobtag>` following the processing scheme:
+///    `<site>` --> `<jobid>` --> 'jobname' = `<jobtag>`
 
 Bool_t TMonaLisaWriter::SendInfoDescription(const char *jobtag)
 {
@@ -496,7 +496,7 @@ Bool_t TMonaLisaWriter::SendInfoDescription(const char *jobtag)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sends the current time to MonaLisa following the processing scheme
-///    <site> --> <jobid> --> 'time' = >unixtimestamp<
+///    `<site>` --> `<jobid>` --> 'time' = >unixtimestamp<
 
 Bool_t TMonaLisaWriter::SendInfoTime()
 {
@@ -526,10 +526,10 @@ Bool_t TMonaLisaWriter::SendInfoTime()
 ////////////////////////////////////////////////////////////////////////////////
 /// Send the procesing status 'status' to MonaLisa following the
 /// processing scheme:
-///    <site> --> <jobid> --> 'status' = <status>
+///    `<site>` --> `<jobid>` --> 'status' = `<status>`
 /// Used, to set the processing status of individual subtaks e.g. the
 /// status of a batch (sub-)job or the status of a PROOF slave
-/// participating in query <jobid>
+/// participating in query `<jobid>`
 
 Bool_t TMonaLisaWriter::SendProcessingStatus(const char *status, Bool_t restarttimer)
 {

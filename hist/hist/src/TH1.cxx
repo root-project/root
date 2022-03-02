@@ -53,7 +53,7 @@
 
 #include "TH1Merger.h"
 
-/** \addtogroup Hist
+/** \addtogroup Histograms
 @{
 \class TH1C
 \brief 1-D histogram with a byte per channel (see TH1 documentation)
@@ -69,6 +69,7 @@
 */
 
 /** \class TH1
+    \ingroup Histograms
 TH1 is the base class of all histogram classes in %ROOT.
 
 It provides the common interface for operations such as binning, filling, drawing, which
@@ -87,15 +88,15 @@ will be detailed below.
    - [Associated functions](\ref associated-functions)
    - [Projections of histograms](\ref prof-hist)
    - [Random Numbers and histograms](\ref random-numbers)
-   - [Making a copy of an histogram](\ref making-a-copy)
+   - [Making a copy of a histogram](\ref making-a-copy)
    - [Normalizing histograms](\ref normalizing)
 -# [Drawing histograms](\ref drawing-histograms)
    - [Setting Drawing histogram contour levels (2-D hists only)](\ref cont-level)
    - [Setting histogram graphics attributes](\ref graph-att)
    - [Customising how axes are drawn](\ref axis-drawing)
+-# [Fitting histograms](\ref fitting-histograms)
 -# [Saving/reading histograms to/from a ROOT file](\ref saving-histograms)
 -# [Operations on histograms](\ref operations-on-histograms)
-   - [Fitting histograms](\ref fitting-histograms)
 -# [Miscellaneous operations](\ref misc)
 
 ROOT supports the following histogram types:
@@ -145,15 +146,21 @@ Histograms are created by invoking one of the constructors, e.g.
 ~~~
 Histograms may also be created by:
 
-  -  calling the Clone function, see below
+  -  calling the Clone() function, see below
   -  making a projection from a 2-D or 3-D histogram, see below
-  -  reading an histogram from a file
+  -  reading a histogram from a file
 
  When a histogram is created, a reference to it is automatically added
  to the list of in-memory objects for the current file or directory.
+ Then the pointer to this histogram in the current directory can be found
+ by its name, doing:
+~~~ {.cpp}
+       TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
+~~~
+
  This default behaviour can be changed by:
 ~~~ {.cpp}
-       h->SetDirectory(0);          // for the current histogram h
+       h->SetDirectory(nullptr);          // for the current histogram h
        TH1::AddDirectory(kFALSE);   // sets a global switch disabling the referencing
 ~~~
  When the histogram is deleted, the reference to it is removed from
@@ -236,7 +243,7 @@ For bin labels see \ref binning.
 \anchor alpha
 ### Alphanumeric Bin Labels
 
- By default, an histogram axis is drawn with its numeric bin labels.
+ By default, a histogram axis is drawn with its numeric bin labels.
  One can specify alphanumeric labels instead with:
 
   - call TAxis::SetBinLabel(bin, label);
@@ -293,7 +300,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor auto-bin
 ### Histograms with automatic bins
 
- When an histogram is created with an axis lower limit greater or equal
+ When a histogram is created with an axis lower limit greater or equal
  to its upper limit, the SetBuffer is automatically called with an
  argument fBufferSize equal to fgBufferSize (default value=1000).
  fgBufferSize may be reset via the static function TH1::SetDefaultBufferSize.
@@ -303,7 +310,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor rebinning
 ### Rebinning
 
- At any time, an histogram can be rebinned via TH1::Rebin. This function
+ At any time, a histogram can be rebinned via TH1::Rebin. This function
  returns a new histogram with the rebinned contents.
  If bin errors were stored, they are recomputed during the rebinning.
 
@@ -311,7 +318,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor filling-histograms
 ## Filling histograms
 
- An histogram is typically filled with statements like:
+ A histogram is typically filled with statements like:
 ~~~ {.cpp}
        h1->Fill(x);
        h1->Fill(x, w); //fill with weight
@@ -373,7 +380,7 @@ When using the options 2 or 3 above, the labels are automatically
  One or more object (typically a TF1*) can be added to the list
  of functions (fFunctions) associated to each histogram.
  When TH1::Fit is invoked, the fitted function is added to this list.
- Given an histogram h, one can retrieve an associated function
+ Given a histogram h, one can retrieve an associated function
  with:
 ~~~ {.cpp}
         TF1 *myfunc = h->GetFunction("myfunc");
@@ -385,35 +392,20 @@ When using the options 2 or 3 above, the labels are automatically
 
  Many types of operations are supported on histograms or between histograms
 
-  -  Addition of an histogram to the current histogram.
+  -  Addition of a histogram to the current histogram.
   -  Additions of two histograms with coefficients and storage into the current
      histogram.
   -  Multiplications and Divisions are supported in the same way as additions.
   -  The Add, Divide and Multiply functions also exist to add, divide or multiply
-     an histogram by a function.
+     a histogram by a function.
 
- If an histogram has associated error bars (TH1::Sumw2 has been called),
+ If a histogram has associated error bars (TH1::Sumw2 has been called),
  the resulting error bars are also computed assuming independent histograms.
  In case of divisions, Binomial errors are also supported.
  One can mark a histogram to be an "average" histogram by setting its bit kIsAverage via
    myhist.SetBit(TH1::kIsAverage);
  When adding (see TH1::Add) average histograms, the histograms are averaged and not summed.
 
-\anchor fitting-histograms
-### Fitting histograms
-
- Histograms (1-D, 2-D, 3-D and Profiles) can be fitted with a user
- specified function via TH1::Fit. When an histogram is fitted, the
- resulting function with its parameters is added to the list of functions
- of this histogram. If the histogram is made persistent, the list of
- associated functions is also persistent. Given a pointer (see above)
- to an associated function myfunc, one can retrieve the function/fit
- parameters with calls such as:
-~~~ {.cpp}
-       Double_t chi2 = myfunc->GetChisquare();
-       Double_t par0 = myfunc->GetParameter(0); value of 1st parameter
-       Double_t err0 = myfunc->GetParError(0);  error on first parameter
-~~~
 
 \anchor prof-hist
 ### Projections of histograms
@@ -433,20 +425,20 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor random-numbers
 ### Random Numbers and histograms
 
- TH1::FillRandom can be used to randomly fill an histogram using
+ TH1::FillRandom can be used to randomly fill a histogram using
  the contents of an existing TF1 function or another
  TH1 histogram (for all dimensions).
- For example the following two statements create and fill an histogram
+ For example, the following two statements create and fill a histogram
  10000 times with a default gaussian distribution of mean 0 and sigma 1:
 ~~~ {.cpp}
        TH1F h1("h1", "histo from a gaussian", 100, -3, 3);
        h1.FillRandom("gaus", 10000);
 ~~~
  TH1::GetRandom can be used to return a random number distributed
- according the contents of an histogram.
+ according to the contents of a histogram.
 
 \anchor making-a-copy
-### Making a copy of an histogram
+### Making a copy of a histogram
  Like for any other ROOT object derived from TObject, one can use
  the Clone() function. This makes an identical copy of the original
  histogram including all associated errors and functions, e.g.:
@@ -457,7 +449,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor normalizing
 ### Normalizing histograms
 
- One can scale an histogram such that the bins integral is equal to
+ One can scale a histogram such that the bins integral is equal to
  the normalization parameter via TH1::Scale(Double_t norm), where norm
  is the desired normalization divided by the integral of the histogram.
 
@@ -471,12 +463,12 @@ When using the options 2 or 3 above, the labels are automatically
  See THistPainter::Paint() for more details.
 
  The same histogram can be drawn with different options in different pads.
- When an histogram drawn in a pad is deleted, the histogram is
+ When a histogram drawn in a pad is deleted, the histogram is
  automatically removed from the pad or pads where it was drawn.
- If an histogram is drawn in a pad, then filled again, the new status
+ If a histogram is drawn in a pad, then filled again, the new status
  of the histogram will be automatically shown in the pad next time
  the pad is updated. One does not need to redraw the histogram.
- To draw the current version of an histogram in a pad, one can use
+ To draw the current version of a histogram in a pad, one can use
 ~~~ {.cpp}
         h->DrawCopy();
 ~~~
@@ -513,7 +505,7 @@ When using the options 2 or 3 above, the labels are automatically
  See the member functions of these classes for the list of options.
 
 \anchor axis-drawing
-### Customising how axes are drawn
+### Customizing how axes are drawn
 
  Use the functions of TAxis, such as
 ~~~ {.cpp}
@@ -521,10 +513,19 @@ When using the options 2 or 3 above, the labels are automatically
  histogram.GetYaxis()->SetRangeUser(1., 5.);
 ~~~
 
+\anchor fitting-histograms
+## Fitting histograms
+
+ Histograms (1-D, 2-D, 3-D and Profiles) can be fitted with a user
+ specified function or a pre-defined function via TH1::Fit.
+ See TH1::Fit(TF1*, Option_t *, Option_t *, Double_t, Double_t) for the fitting documentation and the possible [fitting options](\ref HFitOpt)
+
+ The FitPanel can also be used for fitting an histogram. See the [FitPanel documentation](https://root.cern/manual/fitting/#using-the-fit-panel).
+
 \anchor saving-histograms
 ## Saving/reading histograms to/from a ROOT file
 
- The following statements create a ROOT file and store an histogram
+ The following statements create a ROOT file and store a histogram
  on the file. Because TH1 derives from TNamed, the key identifier on
  the file is the histogram name:
 ~~~ {.cpp}
@@ -555,7 +556,7 @@ When using the options 2 or 3 above, the labels are automatically
         TH1::GetMean(int axis) returns the mean value along axis
         TH1::GetStdDev(int axis)  returns the sigma distribution along axis
         TH1::GetEntries() returns the number of entries
-        TH1::Reset() resets the bin contents and errors of an histogram
+        TH1::Reset() resets the bin contents and errors of a histogram
 ~~~
  IMPORTANT NOTE: The returned values for GetMean and GetStdDev depend on how the
  histogram statistics are calculated. By default, if no range has been set, the
@@ -594,18 +595,18 @@ ClassImp(TH1);
 
 TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
-   fDirectory     = 0;
+   fDirectory     = nullptr;
    fFunctions     = new TList;
    fNcells        = 0;
-   fIntegral      = 0;
-   fPainter       = 0;
+   fIntegral      = nullptr;
+   fPainter       = nullptr;
    fEntries       = 0;
    fNormFactor    = 0;
    fTsumw         = fTsumw2=fTsumwx=fTsumwx2=0;
    fMaximum       = -1111;
    fMinimum       = -1111;
    fBufferSize    = 0;
-   fBuffer        = 0;
+   fBuffer        = nullptr;
    fBinStatErrOpt = kNormal;
    fStatOverflows = EStatOverflows::kNeutral;
    fXaxis.SetName("xaxis");
@@ -626,14 +627,14 @@ TH1::~TH1()
       return;
    }
    delete[] fIntegral;
-   fIntegral = 0;
+   fIntegral = nullptr;
    delete[] fBuffer;
-   fBuffer = 0;
+   fBuffer = nullptr;
    if (fFunctions) {
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
       fFunctions->SetBit(kInvalidObject);
-      TObject* obj = 0;
+      TObject* obj = nullptr;
       //special logic to support the case where the same object is
       //added multiple times in fFunctions.
       //This case happens when the same object is added with different
@@ -647,21 +648,21 @@ TH1::~TH1()
             break;
          }
          delete obj;
-         obj = 0;
+         obj = nullptr;
       }
       delete fFunctions;
-      fFunctions = 0;
+      fFunctions = nullptr;
    }
    if (fDirectory) {
       fDirectory->Remove(this);
-      fDirectory = 0;
+      fDirectory = nullptr;
    }
    delete fPainter;
-   fPainter = 0;
+   fPainter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size histograms.
+/// Constructor for fix bin size histograms.
 /// Creates the main histogram structure.
 ///
 /// \param[in] name name of histogram (avoid blanks)
@@ -672,14 +673,7 @@ TH1::~TH1()
 /// \param[in] nbins number of bins
 /// \param[in] xlow low edge of first bin
 /// \param[in] xup upper edge of last bin (not included in last bin)
-///
-/// When an histogram is created, it is automatically added to the list
-/// of special objects in the current directory.
-/// To find the pointer to this histogram in the current directory
-/// by its name, do:
-/// ~~~ {.cpp}
-///  TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
-/// ~~~
+
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -691,7 +685,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size histograms.
+/// Constructor for variable bin size histograms using an input array of type float.
 /// Creates the main histogram structure.
 ///
 /// \param[in] name name of histogram (avoid blanks)
@@ -701,7 +695,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 ///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
-///            This is an array of size nbins+1
+///            This is an array of type float and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -714,7 +708,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size histograms.
+/// Constructor for variable bin size histograms using an input array of type double.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
@@ -723,7 +717,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
-///        This is an array of size nbins+1
+///            This is an array of type double and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -736,8 +730,9 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-/// The list of functions is not copied. (Use Clone if needed)
+/// Private copy constructor.
+/// One should use the copy constructor of the derived classes (e.g. TH1D, TH1F ...).
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
@@ -766,16 +761,16 @@ void TH1::Browse(TBrowser *b)
 
 void TH1::Build()
 {
-   fDirectory     = 0;
-   fPainter       = 0;
-   fIntegral      = 0;
+   fDirectory     = nullptr;
+   fPainter       = nullptr;
+   fIntegral      = nullptr;
    fEntries       = 0;
    fNormFactor    = 0;
    fTsumw         = fTsumw2=fTsumwx=fTsumwx2=0;
    fMaximum       = -1111;
    fMinimum       = -1111;
    fBufferSize    = 0;
-   fBuffer        = 0;
+   fBuffer        = nullptr;
    fBinStatErrOpt = kNormal;
    fStatOverflows = EStatOverflows::kNeutral;
    fXaxis.SetName("xaxis");
@@ -1273,7 +1268,7 @@ void TH1::AddBinContent(Int_t, Double_t)
 /// By default (fAddDirectory = kTRUE), histograms are automatically added
 /// to the list of objects in memory.
 /// Note that one histogram can be removed from its support directory
-/// by calling h->SetDirectory(0) or h->SetDirectory(dir) to add it
+/// by calling h->SetDirectory(nullptr) or h->SetDirectory(dir) to add it
 /// to the list of objects in the directory dir.
 ///
 /// NOTE that this is a static function. To call it, use;
@@ -1412,7 +1407,7 @@ Int_t TH1::BufferEmpty(Int_t action)
       // this will avoid infinite recursion
       if (action > 0) {
          delete [] fBuffer;
-         fBuffer = 0;
+         fBuffer = nullptr;
          fBufferSize = 0;
       }
       return 0;
@@ -1423,8 +1418,8 @@ Int_t TH1::BufferEmpty(Int_t action)
    if (nbentries < 0) {
       nbentries  = -nbentries;
       //  a reset might call BufferEmpty() giving an infinite recursion
-      // Protect it by setting fBuffer = 0
-      fBuffer=0;
+      // Protect it by setting fBuffer = nullptr
+      fBuffer = nullptr;
        //do not reset the list of functions
       Reset("ICES");
       fBuffer = buffer;
@@ -1448,7 +1443,7 @@ Int_t TH1::BufferEmpty(Int_t action)
          if (rc < 0)
             THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmin, xmax);
       } else {
-         fBuffer = 0;
+         fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;
          if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin, &fXaxis);
          if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax, &fXaxis);
@@ -1460,14 +1455,14 @@ Int_t TH1::BufferEmpty(Int_t action)
    // call DoFillN which will not put entries in the buffer as FillN does
    // set fBuffer to zero to avoid re-emptying the buffer from functions called
    // by DoFillN (e.g Sumw2)
-   buffer = fBuffer; fBuffer = 0;
+   buffer = fBuffer; fBuffer = nullptr;
    DoFillN(nbentries,&buffer[2],&buffer[1],2);
    fBuffer = buffer;
 
    // if action == 1 - delete the buffer
    if (action > 0) {
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
       fBufferSize = 0;
    } else {
       // if number of entries is consistent with buffer - set it negative to avoid
@@ -2584,7 +2579,7 @@ Double_t *TH1::GetIntegral()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Return a pointer to an histogram containing the cumulative content.
+///  Return a pointer to a histogram containing the cumulative content.
 ///  The cumulative can be computed both in the forward (default) or backward
 ///  direction; the name of the new histogram is constructed from
 ///  the name of this histogram with the suffix "suffix" appended provided
@@ -2656,7 +2651,7 @@ TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
 /// Copy this histogram structure to newth1.
 ///
 /// Note that this function does not copy the list of associated functions.
-/// Use TObject::Clone to make a full copy of an histogram.
+/// Use TObject::Clone to make a full copy of a histogram.
 ///
 /// Note also that the histogram it will be created in gDirectory (if AddDirectoryStatus()=true)
 /// or will not be added to any directory if  AddDirectoryStatus()=false
@@ -2669,7 +2664,7 @@ void TH1::Copy(TObject &obj) const
       // with TNamed::Copy, to keep things correct, we need to
       // clean up its existing entries.
       ((TH1&)obj).fDirectory->Remove(&obj);
-      ((TH1&)obj).fDirectory = 0;
+      ((TH1&)obj).fDirectory = nullptr;
    }
    TNamed::Copy(obj);
    ((TH1&)obj).fDimension = fDimension;
@@ -2682,9 +2677,9 @@ void TH1::Copy(TObject &obj) const
    ((TH1&)obj).fBufferSize= fBufferSize;
    // copy the Buffer
    // delete first a previously existing buffer
-   if (((TH1&)obj).fBuffer != 0)  {
-      delete []  ((TH1&)obj).fBuffer;
-      ((TH1&)obj).fBuffer = 0;
+   if (((TH1&)obj).fBuffer != nullptr)  {
+      delete [] ((TH1&)obj).fBuffer;
+      ((TH1&)obj).fBuffer = nullptr;
    }
    if (fBuffer) {
       Double_t *buf = new Double_t[fBufferSize];
@@ -2725,13 +2720,13 @@ void TH1::Copy(TObject &obj) const
    // when copying an histogram if the AddDirectoryStatus() is true it
    // will be added to gDirectory independently of the fDirectory stored.
    // and if the AddDirectoryStatus() is false it will not be added to
-   // any directory (fDirectory = 0)
+   // any directory (fDirectory = nullptr)
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
       ((TH1&)obj).fFunctions->UseRWLock();
       ((TH1&)obj).fDirectory = gDirectory;
    } else
-      ((TH1&)obj).fDirectory = 0;
+      ((TH1&)obj).fDirectory = nullptr;
 
 }
 
@@ -2803,7 +2798,7 @@ void TH1::DirectoryAutoAdd(TDirectory *dir)
 /// Compute distance from point px,py to a line.
 ///
 ///  Compute the closest distance of approach from point px,py to elements
-///  of an histogram.
+///  of a histogram.
 ///  The distance is computed in pixels units.
 ///
 ///  #### Algorithm:
@@ -3048,12 +3043,12 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
 /// Histograms are drawn via the THistPainter class. Each histogram has
 /// a pointer to its own painter (to be usable in a multithreaded program).
 /// The same histogram can be drawn with different options in different pads.
-/// When an histogram drawn in a pad is deleted, the histogram is
+/// When a histogram drawn in a pad is deleted, the histogram is
 /// automatically removed from the pad or pads where it was drawn.
-/// If an histogram is drawn in a pad, then filled again, the new status
+/// If a histogram is drawn in a pad, then filled again, the new status
 /// of the histogram will be automatically shown in the pad next time
 /// the pad is updated. One does not need to redraw the histogram.
-/// To draw the current version of an histogram in a pad, one can use
+/// To draw the current version of a histogram in a pad, one can use
 /// `h->DrawCopy();`
 /// This makes a clone of the histogram. Once the clone is drawn, the original
 /// histogram may be modified or deleted without affecting the aspect of the
@@ -3115,7 +3110,7 @@ void TH1::Draw(Option_t *option)
 /// using graphics input will be made on the copy of the histogram,
 /// and not to the original object.
 /// By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case
-/// you want to draw an histogram with the same name
+/// you want to draw a histogram with the same name
 ///
 /// See Draw for the list of options
 
@@ -3124,9 +3119,10 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
    TString opt = option;
    opt.ToLower();
    if (gPad && !opt.Contains("same")) gPad->Clear();
-   TString newName = (name_postfix) ?  TString::Format("%s%s",GetName(),name_postfix) : "";
-   TH1 *newth1 = (TH1 *)Clone(newName);
-   newth1->SetDirectory(0);
+   TString newName;
+   if (name_postfix) newName.Form("%s%s", GetName(), name_postfix);
+   TH1 *newth1 = (TH1 *)Clone(newName.Data());
+   newth1->SetDirectory(nullptr);
    newth1->SetBit(kCanDelete);
    if (gPad) gPad->IncrementPaletteColor(1, opt);
 
@@ -3154,7 +3150,7 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
    Double_t sum = GetSumOfWeights();
    if (sum == 0) {
       Error("DrawNormalized","Sum of weights is null. Cannot normalize histogram: %s",GetName());
-      return 0;
+      return nullptr;
    }
    Bool_t addStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(kFALSE);
@@ -3464,7 +3460,7 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
          else BufferFill(x[i], 1.);
       }
       // fill the remaining entries if the buffer has been deleted
-      if (i < ntimes && fBuffer==0) {
+      if (i < ntimes && !fBuffer) {
          auto weights = w ? &w[i] : nullptr;
          DoFillN((ntimes-i)/stride,&x[i],weights,stride);
       }
@@ -3882,14 +3878,28 @@ TObject *TH1::FindObject(const TObject *obj) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit histogram with function fname.
 ///
-/// fname is the name of an already predefined function created by TF1 or TF2
-/// Predefined functions such as gaus, expo and poln are automatically
-/// created by ROOT.
-/// fname can also be a formula, accepted by the linear fitter (linear parts divided
-/// by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 ///
-///  This function finds a pointer to the TF1 object with name fname
-///  and calls TH1::Fit(TF1 *f1,...)
+/// fname is the name of a function available in the global ROOT list of functions
+/// `gROOT->GetListOfFunctions`
+/// The list include any TF1 object created by the user plus some pre-defined functions
+/// which are automatically created by ROOT the first time a pre-defined function is requested from `gROOT`
+/// (i.e. when calling `gROOT->GetFunction(const char *name)`).
+/// These pre-defined functions are:
+///  - `gaus, gausn` where gausn is the normalized Gaussian
+///  - `landau, landaun`
+///  - `expo`
+///  - `pol1,...9, chebyshev1,...9`.
+///
+/// For printing the list of all available functions do:
+///
+///       TF1::InitStandardFunctions();   // not needed if `gROOT->GetFunction` is called before
+///       gROOT->GetListOfFunctions()->ls()
+///
+/// `fname` can also be a formula that is accepted by the linear fitter containing the special operator `++`,
+/// representing linear components separated by `++` sign, for example `x++sin(x)` for fitting `[0]*x+[1]*sin(x)`
+///
+///  This function finds a pointer to the TF1 object with name `fname` and calls TH1::Fit(TF1 *, Option_t *, Option_t *,
+///  Double_t, Double_t). See there for the fitting options and the details about fitting histograms
 
 TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, Double_t xxmin, Double_t xxmax)
 {
@@ -3918,61 +3928,224 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fit histogram with function f1.
+/// Fit histogram with the function pointer f1.
 ///
-/// \param[in] option fit options is given in parameter option.
-///        - "W"  Ignore the bin uncertainties when fitting using the default least square (chi2) method but skip empty bins
-///        - "WW" Ignore the bin uncertainties when fitting using the default least square (chi2) method and include also the empty bins
-///        - "I"  Use integral of function in bin, normalized by the bin volume,
-///          instead of value at bin center
-///        -  "L"  Use Loglikelihood method (default is chisquare method)
-///        - "WL" Use Loglikelihood method and bin contents are not integer,
-///          i.e. histogram is weighted (must have Sumw2() set)
-///        -"MULTI" Use Loglikelihood method based on multi-nomial distribution.
-///              In this case function must be normalized and one fits only the function shape (a not extended binned
-///              likelihood fit)
-///        - "P"  Use Pearson chi2 (using expected errors instead of observed errors)
-///        - "U"  Use a User specified fitting algorithm (via SetFCN)
-///        - "Q"  Quiet mode (minimum printing)
-///        - "V"  Verbose mode (default is between Q and V)
-///        - "E"  Perform better Errors estimation using Minos technique
-///        - "B"  User defined parameter settings are used for predefined functions
-///          like "gaus", "expo", "poln", "landau".
-///          Use this option when you want to fix one or more parameters for these functions.
-///        - "M"  More. Improve fit results.
-///          It uses the IMPROVE command of TMinuit (see TMinuit::mnimpr).
-///          This algorithm attempts to improve the found local minimum by searching for a
-///          better one.
-///        - "R"  Use the Range specified in the function range
-///        - "N"  Do not store the graphics function, do not draw
-///        - "0"  Do not plot the result of the fit. By default the fitted function
-///          is drawn unless the option"N" above is specified.
-///        - "+"  Add this new fitted function to the list of fitted functions
-///          (by default, any previous function is deleted)
-///        - "C"  In case of linear fitting, don't calculate the chisquare
-///          (saves time)
-///        - "F"  If fitting a polN, switch to minuit fitter
-///        - "S"  The result of the fit is returned in the TFitResultPtr
-///          (see below Access to the Fit Result)
+/// \param[in] f1 pointer to the function object
+/// \param[in] option string defining the fit options (see table below).
 /// \param[in] goption specify a list of graphics options. See TH1::Draw for a complete list of these options.
-/// \param[in] xxmin range
-/// \param[in] xxmax range
+/// \param[in] xxmin lower fitting range
+/// \param[in] xxmax upper fitting range
+/// \return A smart pointer to the TFitResult class
 ///
-/// In order to use the Range option, one must first create a function
-/// with the expression to be fitted. For example, if your histogram
-/// has a defined range between -4 and 4 and you want to fit a gaussian
-/// only in the interval 1 to 3, you can do:
+/// \anchor HFitOpt
+/// ### Histogram Fitting Options
+///
+/// Here is the full list of fit options that can be given in the parameter `option`.
+/// Several options can be used together by concatanating the strings without the need of any delimiters.
+///
+///  option | description
+///  -------|------------
+///   "L"  | Uses a log likelihood method (default is chi-square method). To be used when the histogram represents counts.
+///   "WL" | Weighted log likelihood method. To be used when the histogram has been filled with weights different than 1. This is needed for getting correct parameter uncertainties for weighted fits.
+///   "P"  | Uses Pearson chi-square method. Uses expected errors instead of the observed one (default case). The expected error is instead estimated from the square-root of the bin function value.
+///   "MULTI" | Uses Loglikelihood method based on multi-nomial distribution. In this case the function must be normalized and one fits only the function shape.
+///   "W"  | Fit using the chi-square method and ignoring the bin uncertainties and skip empty bins.
+///   "WW" | Fit using the chi-square method and ignoring the bin uncertainties and include the empty bins.
+///   "I"  | Uses the integral of function in the bin instead of the default bin center value.
+///   "F"  | Uses the default minimizer (e.g. Minuit) when fitting a linear function (e.g. polN) instead of the linear fitter.
+///   "U"  | Uses a user specified objective function (e.g. user providedlikelihood function) defined using `TVirtualFitter::SetFCN`
+///   "E"  | Performs a better parameter errors estimation using the Minos technique for all fit parameters.
+///   "M"  | Uses the IMPROVE algorithm (available only in TMinuit). This algorithm attempts improve the found local minimum by searching for a better one.
+///   "S"  | The full result of the fit is returned in the `TFitResultPtr`. This is needed to get the covariance matrix of the fit. See `TFitResult` and the base class `ROOT::Math::FitResult`.
+///   "Q"  | Quiet mode (minimum printing)
+///   "V"  | Verbose mode (default is between Q and V)
+///   "+"  | Adds this new fitted function to the list of fitted functions. By default, the previous function is deleted and only the last one is kept.
+///   "N"  | Does not store the graphics function, does not draw the histogram with the function after fitting.
+///   "0"  | Does not draw the histogram and the fitted function after fitting, but in contrast to option "N", it stores the fitted function in the histogram list of functions.
+///   "R"  | Fit using a fitting range specified in the function range with `TF1::SetRange`.
+///   "B"  | Use this option when you want to fix one or more parameters and the fitting function is a predefined one (e.g gaus, expo,..), otherwise in case of pre-defined functions, some default initial values and limits are set.
+///   "C"  | In case of linear fitting, do no calculate the chisquare (saves CPU time).
+///   "G"  | Uses the gradient implemented in `TF1::GradientPar` for the minimization. This allows to use Automatic Differentiation when it is supported by the provided TF1 function.
+///   "WIDTH" | Scales the histogran bin content by the bin width (useful for variable bins histograms)
+///   "SERIAL" | Runs in serial mode. By defult if ROOT is built with MT support and MT is enables, the fit is perfomed in multi-thread     - "E"  Perform better Errors estimation using Minos technique
+///   "MULTITHREAD" | Forces usage of multi-thread execution whenever possible
+///
+/// The default fitting of an histogram (when no option is given) is perfomed as following:
+///   - a chi-square fit (see below Chi-square Fits) computed using the bin histogram errors and excluding bins with zero errors (empty bins);
+///   - the full range of the histogram is used;
+///   - the default Minimizer with its default configuration is used (see below Minimizer Configuration) except for linear function;
+///   - for linear functions (`polN`, `chenbyshev` or formula expressions combined using operator `++`) a linear minimization is used.
+///   - only the status of the fit is returned;
+///   - the fit is performed in Multithread whenever is enabled in ROOT;
+///   - only the last fitted function is saved in the histogram;
+///   - the histogram is drawn after fitting overalyed with the resulting fitting function
+///
+/// \anchor HFitMinimizer
+/// ### Minimizer Configuration
+///
+/// The Fit is perfomed using  the default Minimizer, defined in the `ROOT::Math::MinimizerOptions` class.
+/// It is possible to change the default minimizer and its configuration parameters by calling these static functions before fitting (before calling `TH1::Fit`):
+///  - `ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerName, minimizerAgorithm)` for changing the minmizer and/or the corresponding algorithm.
+///     For example `ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS");` will set the usage of the BFGS algorithm of the GSL multi-dimensional minimization
+///     The current defaults are ("Minuit","Migrad").
+///     See the documentation of the `ROOT::Math::MinimizerOptions` for the available minimizers in ROOT  and their corresponding algorithms.
+///  - `ROOT::Math::MinimizerOptions::SetDefaultTolerance` for setting a different tolerance value for the minimization.
+///  - `ROOT::Math::MinimizerOptions::SetDefaultMaxFunctionCalls` for setting the maximum number of function calls.
+///  - `ROOT::Math::MinimizerOptions::SetDefaultPrintLevel` for changing the minimizer print level from level=0 (minimal printing) to level=3 maximum printing
+///
+/// Other options are possible depending on the Minimizer used, see the corresponding documentation.
+/// The default minimizer can be also set in the resource file in etc/system.rootrc. For example
+///
+/// ~~~ {.cpp}
+///     Root.Fitter:      Minuit2
+/// ~~~
+///
+/// \anchor HFitChi2
+/// ### Chi-square Fits
+///
+/// By default a chi-square (least-square) fit is performed on the histogram. The so-called modified least-square method
+/// is used where the residual for each bin is computed using as error the observed value (the bin error) returned by `TH1::GetBinError`
+///
+/// \f[
+///      Chi2 = \sum_{i}{ \left(\frac{y(i) - f(x(i) | p )}{e(i)} \right)^2 }
+/// \f]
+///
+/// where `y(i)` is the bin content for each bin `i`, `x(i)` is the bin center and `e(i)` is the bin error (`sqrt(y(i)` for
+/// an un-weighted histogram). Bins with zero errors are excluded from the fit. See also later the note on the treatment
+/// of empty bins. When using option "I" the residual is computed not using the function value at the bin center, `f(x(i)|p)`,
+/// but the integral of the function in the bin,   Integral{ f(x|p)dx }, divided by the bin volume.
+/// When using option `P` (Pearson chi2), the expected error computed as `e(i) = sqrt(f(x(i)|p))` is used.
+/// In this case empty bins are considered in the fit.
+/// Both chi-square methods should not be used when the bin content represent counts, especially in case of low bin statistics,
+/// because they could return a biased result.
+///
+/// \anchor HFitNLL
+/// ### Likelihood Fits
+///
+/// When using option "L" a likelihood fit is used instead of the default chi-square fit.
+/// The likelihood is built assuming a Poisson probability density function for each bin.
+/// The negative log-likelihood to be minimized is
+///
+/// \f[
+///       NLL = - \sum_{i}{ \log {\mathrm P} ( y(i) | f(x(i) | p ) ) }
+/// \f]
+/// where `P(y|f)` is the Poisson distribution of observing a count `y(i)` in the bin when the expected count is `f(x(i)|p)`.
+/// The exact likelihood used is the Poisson likelihood described in this paper:
+/// S. Baker and R. D. Cousins, “Clarification of the use of chi-square and likelihood functions in fits to histograms,”
+/// Nucl. Instrum. Meth. 221 (1984) 437.
+///
+/// \f[
+///       NLL = \sum_{i}{( f(x(i) | p ) + y(i)\log(y(i)/ f(x(i) | p )) - y(i)) }
+/// \f]
+/// By using this formulation, `2*NLL` can be interpreted as the chi-square resulting from the fit.
+///
+/// This method should be always used when the bin content represents counts (i.e. errors are sqrt(N) ).
+/// The likelihood method has the advantage of treating correctly bins with low statistics. In case of high
+/// statistics/bin the distribution of the bin content becomes a normal distribution and the likelihood and the chi2 fit
+/// give the same result.
+///
+/// The likelihood method, although a bit slower, it is therefore the recommended method,
+/// when the histogram represent counts (Poisson statistics), where the chi-square methods may
+/// give incorrect results, especially in case of low statistics.
+/// In case of a weighted histogram, it is possible to perform also a likelihood fit by using the
+/// option "WL". Note a weighted histogram is a histogram which has been filled with weights and it
+/// has the information on the sum of the weight square for each bin ( TH1::Sumw2() has been called).
+/// The bin error for a weighted histogram is the square root of the sum of the weight square.
+///
+/// \anchor HFitRes
+/// ### Fit Result
+///
+/// The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
+/// By default the TFitResultPtr contains only the status of the fit which is return by an
+/// automatic conversion of the TFitResultPtr to an integer. One can write in this case directly:
+///
+/// ~~~ {.cpp}
+///     Int_t fitStatus =  h->Fit(myFunc);
+/// ~~~
+///
+/// If the option "S" is instead used, TFitResultPtr behaves as a smart
+/// pointer to the TFitResult object. This is useful for retrieving the full result information from the fit, such as the covariance matrix,
+/// as shown in this example code:
+///
+/// ~~~ {.cpp}
+///     TFitResultPtr r = h->Fit(myFunc,"S");
+///     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
+///     Double_t chi2   = r->Chi2(); // to retrieve the fit chi2
+///     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0
+///     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
+///     r->Print("V");     // print full information of fit including covariance matrix
+///     r->Write();        // store the result in a file
+/// ~~~
+///
+/// The fit parameters, error and chi-square (but not covariance matrix) can be retrieved also
+/// directly from the fitted function that is passed to this call.
+/// Given a pointer to an associated fitted function `myfunc`, one can retrieve the function/fit
+/// parameters with calls such as:
+///
+/// ~~~ {.cpp}
+///     Double_t chi2 = myfunc->GetChisquare();
+///     Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
+///     Double_t err0 = myfunc->GetParError(0);  //error on first parameter
+/// ~~~
+///
+/// ##### Associated functions
+///
+/// One or more object ( can be added to the list
+/// of functions (fFunctions) associated to each histogram.
+/// When TH1::Fit is invoked, the fitted function is added to the histogram list of functions (fFunctions).
+/// If the histogram is made persistent, the list of associated functions is also persistent.
+/// Given a histogram h, one can retrieve an associated function with:
+///
+/// ~~~ {.cpp}
+///  TF1 *myfunc = h->GetFunction("myfunc");
+/// ~~~
+/// or by quering directly the list obtained by calling `TH1::GetListOfFunctions`.
+///
+/// \anchor HFitStatus
+/// ### Fit status
+///
+/// The status of the fit is obtained converting the TFitResultPtr to an integer
+/// independently if the fit option "S" is used or not:
+///
+/// ~~~ {.cpp}
+///     TFitResultPtr r = h->Fit(myFunc,opt);
+///     Int_t fitStatus = r;
+/// ~~~
+///
+/// - `status = 0` : the fit has been performed successfully (i.e no error occurred).
+/// - `status < 0` : there is an error not connected with the minimization procedure, for example  when a wrong function is used.
+/// - `status > 0` : return status from Minimizer, depends on used Minimizer. For example for TMinuit and Minuit2 we have:
+///     - `status =  migradStatus + 10*minosStatus + 100*hesseStatus + 1000*improveStatus`.
+///     TMinuit returns 0 (for migrad, minos, hesse or improve) in case of success and 4 in case of error (see the documentation of TMinuit::mnexcm). For example, for an error
+///     only in Minos but not in Migrad a fitStatus of 40 will be returned.
+///     Minuit2 returns 0 in case of success and different values in migrad,minos or
+///     hesse depending on the error. See in this case the documentation of
+///     Minuit2Minimizer::Minimize for the migrad return status, Minuit2Minimizer::GetMinosError for the
+///     minos return status and Minuit2Minimizer::Hesse for the hesse return status.
+///     If other minimizers are used see their specific documentation for the status code returned.
+///     For example in the case of Fumili, see TFumili::Minimize.
+///
+/// \anchor HFitRange
+/// ### Fitting in a range
+///
+/// In order to fit in a sub-range of the histogram you have two options:
+/// -  pass to this function the lower (`xxmin`) and upper (`xxmax`) values for the fitting range;
+/// -  define a specific range in the fitted function and use the fitting option "R".
+///    For example, if your histogram has a defined range between -4 and 4 and you want to fit a gaussian
+///    only in the interval 1 to 3, you can do:
 ///
 /// ~~~ {.cpp}
 ///      TF1 *f1 = new TF1("f1", "gaus", 1, 3);
 ///      histo->Fit("f1", "R");
 /// ~~~
 ///
-/// ## Setting initial conditions
+/// \anchor HFitInitial
+/// ### Setting initial conditions
+///
 /// Parameters must be initialized before invoking the Fit function.
 /// The setting of the parameter initial values is automatic for the
-/// predefined functions : poln, expo, gaus, landau. One can however disable
-/// this automatic computation by specifying the option "B".
+/// predefined functions such as poln, expo, gaus, landau. One can however disable
+/// this automatic computation by using the option "B".
 /// Note that if a predefined function is defined with an argument,
 /// eg, gaus(0), expo(1), you must specify the initial values for
 /// the parameters.
@@ -3982,7 +4155,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///      f1->SetParLimits(p_number, parmin, parmax);
 /// ~~~
 ///
-/// if parmin>=parmax, the parameter is fixed
+/// if `parmin >= parmax`, the parameter is fixed
 /// Note that you are not forced to fix the limits for all parameters.
 /// For example, if you fit a function with 6 parameters, you can do:
 ///
@@ -4000,18 +4173,47 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// When the lower limit and upper limit are equal, the parameter is fixed.
 /// However to fix a parameter to 0, one must call the FixParameter function.
 ///
+/// \anchor HFitStatBox
+/// ### Fit Statistics Box
 ///
-/// #### Changing the fitting objective function
+///   The statistics box can display the result of the fit.
+///   You can change the statistics box to display the fit parameters with
+///   the TStyle::SetOptFit(mode) method. This mode has four digits.
+///   mode = pcev  (default = 0111)
 ///
-/// By default a chi square function is used for fitting. When option "L" (or "LL") is used
-/// a Poisson likelihood function (see note below) is used.
-/// Using option "MULTI" a multinomial likelihood fit is used. In this case the function normalization is not fitted
-/// but only the function shape. Therefore the provided function must be normalized.
-/// The functions are defined in the header Fit/Chi2Func.h or Fit/PoissonLikelihoodFCN and they
+///       v = 1;  print name/values of parameters
+///       e = 1;  print errors (if e=1, v must be 1)
+///       c = 1;  print Chisquare/Number of degrees of freedom
+///       p = 1;  print Probability
+///
+///   For example: gStyle->SetOptFit(1011);
+///   prints the fit probability, parameter names/values, and errors.
+///   You can change the position of the statistics box with these lines
+///   (where g is a pointer to the TGraph):
+///
+///       TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats");
+///       st->SetX1NDC(newx1); //new x start position
+///       st->SetX2NDC(newx2); //new x end position
+///
+/// \anchor HFitExtra
+/// ### Additional Notes on Fitting
+///
+/// #### Fitting a histogram of dimension N with a function of dimension N-1
+///
+/// It is possible to fit a TH2 with a TF1 or a TH3 with a TF2.
+/// In this case the chi-square is computed from the squared error distance between the function values and the bin centers weighted by the bin content.
+/// For correct error scaling, the obtained parameter error are corrected as in the case when the
+/// option "W" is used.
+///
+/// #### User defined objective functions
+///
+/// By default when fitting a chi square function is used for fitting. When option "L" is used
+/// a Poisson likelihood function is used. Using option "MULTI" a multinomial likelihood fit is used.
+/// Thes functions are defined in the header Fit/Chi2Func.h or Fit/PoissonLikelihoodFCN and they
 /// are implemented using the routines FitUtil::EvaluateChi2 or FitUtil::EvaluatePoissonLogL in
 /// the file math/mathcore/src/FitUtil.cxx.
-/// To specify a User defined fitting function, specify option "U" and
-/// call the following functions:
+/// It is possible to specify a user defined fitting function, using option "U" and
+/// calling the following functions:
 ///
 /// ~~~ {.cpp}
 ///      TVirtualFitter::Fitter(myhist)->SetFCN(MyFittingFunction)
@@ -4023,206 +4225,41 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///      extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 /// ~~~
 ///
-/// #### Chi2 Fits
-///
-/// By default a chi2 (least-square) fit is performed on the histogram. The so-called modified least-square method
-/// is used where the residual for each bin is computed using as error the observed value (the bin error)
-///
-/// \f[
-///      Chi2 = \sum{ \left(\frac{y(i) - f(x(i) | p )}{e(i)} \right)^2 }
-/// \f]
-///
-/// where y(i) is the bin content for each bin i, x(i) is the bin center and e(i) is the bin error (sqrt(y(i) for
-/// an un-weighted histogram. Bins with zero errors are excluded from the fit. See also later the note on the treatment
-/// of empty bins. When using option "I" the residual is computed not using the function value at the bin center, f
-/// (x(i) | p), but the integral of the function in the bin,   Integral{ f(x|p)dx } divided by the bin volume
-///
-/// #### Likelihood Fits
-///
-/// When using option "L" a likelihood fit is used instead of the default chi2 square fit.
-/// The likelihood is built assuming a Poisson probability density function for each bin.
-/// The negative log-likelihood to be minimized is
-///
-/// \f[
-///       NLL = \sum{ log Poisson ( y(i) | f(x(i) | p ) ) }
-/// \f]
-///
-/// The exact likelihood used is the Poisson likelihood described in this paper:
-/// S. Baker and R. D. Cousins, “Clarification of the use of chi-square and likelihood functions in fits to histograms,”
-/// Nucl. Instrum. Meth. 221 (1984) 437.
-///
-/// This method can then be used only when the bin content represents counts (i.e. errors are sqrt(N) ).
-/// The likelihood method has the advantage of treating correctly bins with low statistics. In case of high
-/// statistics/bin the distribution of the bin content becomes a normal distribution and the likelihood and chi2 fit
-/// give the same result.
-///
-/// The likelihood method, although a bit slower, it is therefore the recommended method in case of low
-/// bin statistics, where the chi2 method may give incorrect results, in particular when there are
-/// several empty bins (see also below).
-/// In case of a weighted histogram, it is possible to perform a likelihood fit by using the
-/// option "WL". Note a weighted histogram is an histogram which has been filled with weights and it
-/// contains the sum of the weight square ( TH1::Sumw2() has been called). The bin error for a weighted
-/// histogram is the square root of the sum of the weight square.
-///
-/// #### Treatment of Empty Bins
+/// #### Note on treatment of empty bins
 ///
 /// Empty bins, which have the content equal to zero AND error equal to zero,
-/// are excluded by default from the chisquare fit, but they are considered in the likelihood fit.
+/// are excluded by default from the chi-square fit, but they are considered in the likelihood fit.
 /// since they affect the likelihood if the function value in these bins is not negligible.
-/// When using option "WW" these bins will be considered in the chi2 fit with an error of 1.
 /// Note that if the histogram is having bins with zero content and non zero-errors they are considered as
-/// any other bins in the fit. Instead bins with zero error and non-zero content are excluded in the chi2 fit.
-/// A likelihood fit should also not be performed on such an histogram, since we are assuming a wrong pdf for each bin.
-/// In general, one should not fit an histogram with non-empty bins and zero errors, apart if all the bins have zero
-/// errors. In this case one could use the option "w", which gives a weight=1 for each bin (unweighted least-square
-/// fit).
-/// Note that in case of histogram with no errors (chi2 fit with option W or W1) the resulting fitted parameter errors
-/// are corrected by the obtained chi2 value using this  expression:  errorp *= sqrt(chisquare/(ndf-1))
+/// any other bins in the fit. Instead bins with zero error and non-zero content are by default excluded in the chi-squared fit.
+/// In general, one should not fit a histogram with non-empty bins and zero errors.
 ///
-/// #### Fitting a histogram of dimension N with a function of dimension N-1
-///
-/// It is possible to fit a TH2 with a TF1 or a TH3 with a TF2.
-/// In this case the option "Integral" is not allowed and each cell has
-/// equal weight. Also in this case the obtained parameter error are corrected as in the case when the
-/// option "W" is used (see above)
-///
-/// #### Associated functions
-///
-/// One or more object (typically a TF1*) can be added to the list
-/// of functions (fFunctions) associated to each histogram.
-/// When TH1::Fit is invoked, the fitted function is added to this list.
-/// Given an histogram h, one can retrieve an associated function
-/// with:
-///
-/// ~~~ {.cpp}
-///  TF1 *myfunc = h->GetFunction("myfunc");
-/// ~~~
-///
-/// #### Access to the fit result
-///
-/// The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-/// By default the TFitResultPtr contains only the status of the fit which is return by an
-/// automatic conversion of the TFitResultPtr to an integer. One can write in this case directly:
-///
-/// ~~~ {.cpp}
-///     Int_t fitStatus =  h->Fit(myFunc)
-/// ~~~
-///
-/// If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart
-/// pointer to it. For example one can do:
-///
-/// ~~~ {.cpp}
-///     TFitResultPtr r = h->Fit(myFunc,"S");
-///     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-///     Double_t chi2   = r->Chi2(); // to retrieve the fit chi2
-///     Double_t par0   = r->Parameter(0); // retrieve the value for the parameter 0
-///     Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
-///     r->Print("V");     // print full information of fit including covariance matrix
-///     r->Write();        // store the result in a file
-/// ~~~
-///
-/// The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
-/// from the fitted function.
-/// If the histogram is made persistent, the list of
-/// associated functions is also persistent. Given a pointer (see above)
-/// to an associated function myfunc, one can retrieve the function/fit
-/// parameters with calls such as:
-///
-/// ~~~ {.cpp}
-///     Double_t chi2 = myfunc->GetChisquare();
-///     Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
-///     Double_t err0 = myfunc->GetParError(0);  //error on first parameter
-/// ~~~
-///
-/// #### Access to the fit status
-///
-/// The status of the fit can be obtained converting the TFitResultPtr to an integer
-/// independently if the fit option "S" is used or not:
-///
-/// ~~~ {.cpp}
-///     TFitResultPtr r = h->Fit(myFunc,opt);
-///     Int_t fitStatus = r;
-/// ~~~
-///
-/// The fitStatus is 0 if the fit is OK (i.e no error occurred).
-/// The value of the fit status code is negative in case of an error not connected with the
-/// minimization procedure, for example  when a wrong function is used.
-/// Otherwise the return value is the one returned from the minimization procedure.
-/// When TMinuit (default case) or Minuit2 are used as minimizer the status returned is :
-/// `fitStatus =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult`.
-/// TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in
-/// case of error (see the documentation of TMinuit::mnexcm). So for example, for an error
-/// only in Minos but not in Migrad a fitStatus of 40 will be returned.
-/// Minuit2 will return also 0 in case of success and different values in migrad minos or
-/// hesse depending on the error. See in this case the documentation of
-/// Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the
-/// minosResult and Minuit2Minimizer::Hesse for the hesseResult.
-/// If other minimizers are used see their specific documentation for the status code returned.
-/// For example in the case of Fumili, for the status returned see TFumili::Minimize.
+/// If the bin errors are not known, one should use the fit option "W", which gives a weight=1 for each bin (it is an unweighted least-square
+/// fit). When using option "WW" the empty bins will be also considered in the chi-square fit with an error of 1.
+/// Note that in this fitting case (option "W" or "WW ) the resulting fitted parameter errors
+/// are corrected by the obtained chi2 value using this scaling expression:
+///`errorp *= sqrt(chisquare/(ndf-1))` as it is done when fitting a TGraph with
+/// no point errors.
 ///
 /// #### Excluding points
 ///
-/// Use TF1::RejectPoint inside your fitting function to exclude points
-/// within a certain range from the fit. Example:
+/// You can use TF1::RejectPoint inside your fitting function to exclude some points
+/// within a certain range from the fit. See the tutorial `fit/fitExclude.C`.
 ///
-/// ~~~ {.cpp}
-///     Double_t fline(Double_t *x, Double_t *par)
-///     {
-///        if (x[0] > 2.5 && x[0] < 3.5) {
-///           TF1::RejectPoint();
-///           return 0;
-///        }
-///        return par[0] + par[1]*x[0];
-///     }
-///
-///     void exclude() {
-///        TF1 *f1 = new TF1("f1", "[0] +[1]*x +gaus(2)", 0, 5);
-///        f1->SetParameters(6, -1,5, 3, 0.2);
-///        TH1F *h = new TH1F("h", "background + signal", 100, 0, 5);
-///        h->FillRandom("f1", 2000);
-///        TF1 *fline = new TF1("fline", fline, 0, 5, 2);
-///        fline->SetParameters(2, -1);
-///        h->Fit("fline", "l");
-///     }
-/// ~~~
 ///
 /// #### Warning when using the option "0"
 ///
 /// When selecting the option "0", the fitted function is added to
-/// the list of functions of the histogram, but it is not drawn.
-/// You can undo what you disabled in the following way:
+/// the list of functions of the histogram, but it is not drawn when the histogram is drawn.
+/// You can undo this behaviour resetting its corresponding bit in the TF1 object as following:
 ///
 /// ~~~ {.cpp}
 ///     h.Fit("myFunction", "0"); // fit, store function but do not draw
 ///     h.Draw(); function is not drawn
-///     const Int_t kNotDraw = 1<<9;
-///     h.GetFunction("myFunction")->ResetBit(kNotDraw);
+///     h.GetFunction("myFunction")->ResetBit(TF1::kNotDraw);
 ///     h.Draw();  // function is visible again
 /// ~~~
 ///
-/// #### Access to the Minimizer information during fitting
-///
-/// This function calls, the ROOT::Fit::FitObject function implemented in HFitImpl.cxx
-/// which uses the ROOT::Fit::Fitter class. The Fitter class creates the objective function
-/// (e.g. chi2 or likelihood) and uses an implementation of the  Minimizer interface for minimizing
-/// the function.
-/// The default minimizer is Minuit (class TMinuitMinimizer which calls TMinuit).
-/// The default  can be set in the resource file in etc/system.rootrc. For example
-///
-/// ~~~ {.cpp}
-///     Root.Fitter:      Minuit2
-/// ~~~
-///
-/// A different fitter can also be set via ROOT::Math::MinimizerOptions::SetDefaultMinimizer
-/// (or TVirtualFitter::SetDefaultFitter).
-/// For example ROOT::Math::MinimizerOptions::SetDefaultMinimizer("GSLMultiMin","BFGS");
-/// will set the usage of the BFGS algorithm of the GSL multi-dimensional minimization
-/// (implemented in libMathMore). ROOT::Math::MinimizerOptions can be used also to set other
-/// default options, like maximum number of function calls, minimization tolerance or print
-/// level. See the documentation of this class.
-///
-/// For fitting linear functions (containing the "++" sign" and polN functions,
-/// the linear fitter is automatically initialized.
 
 TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Double_t xxmax)
 {
@@ -4268,7 +4305,7 @@ void TH1::FitPanel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an histogram containing the asymmetry of this histogram with h2,
+/// Return a histogram containing the asymmetry of this histogram with h2,
 /// where the asymmetry is defined as:
 ///
 /// ~~~ {.cpp}
@@ -4423,18 +4460,17 @@ Double_t TH1::GetEffectiveEntries() const
 
 void TH1::SetHighlight(Bool_t set)
 {
-   if (IsHighlight() == set) return;
+   if (IsHighlight() == set)
+      return;
    if (fDimension > 2) {
       Info("SetHighlight", "Supported only 1-D or 2-D histograms");
       return;
    }
 
-   if (!fPainter) {
-      Info("SetHighlight", "Need to draw histogram first");
-      return;
-   }
    SetBit(kIsHighlight, set);
-   fPainter->SetHighlight();
+
+   if (fPainter)
+      fPainter->SetHighlight();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5092,8 +5128,8 @@ Double_t TH1::Interpolate(Double_t, Double_t, Double_t) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Check if an histogram is empty
-///  (this a protected method used mainly by TH1Merger )
+/// Check if a histogram is empty
+///  (this is a protected method used mainly by TH1Merger )
 
 Bool_t TH1::IsEmpty() const
 {
@@ -5206,7 +5242,7 @@ void TH1::LabelsDeflate(Option_t *ax)
 
    TH1 *hold = (TH1*)IsA()->New();
    R__ASSERT(hold);
-   hold->SetDirectory(0);
+   hold->SetDirectory(nullptr);
    Copy(*hold);
 
    Bool_t timedisp = axis->GetTimeDisplay();
@@ -5243,7 +5279,7 @@ void TH1::LabelsDeflate(Option_t *ax)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Double the number of bins for axis.
-/// Refill histogram
+/// Refill histogram.
 /// This function is called by TAxis::FindBin(const char *label)
 
 void TH1::LabelsInflate(Option_t *ax)
@@ -5255,9 +5291,10 @@ void TH1::LabelsInflate(Option_t *ax)
    if (iaxis == 3) axis = GetZaxis();
    if (!axis) return;
 
-   TH1 *hold = (TH1*)IsA()->New();;
-   hold->SetDirectory(0);
+   TH1 *hold = (TH1*)IsA()->New();
+   hold->SetDirectory(nullptr);
    Copy(*hold);
+   hold->ResetBit(kMustCleanup);
 
    Bool_t timedisp = axis->GetTimeDisplay();
    Int_t nbins   = axis->GetNbins();
@@ -6412,7 +6449,6 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
    Double_t xmax = axis->GetXmax();
    if (xmin >= xmax) return kFALSE;
    Double_t range = xmax-xmin;
-   Double_t binsize = range / axis->GetNbins();
 
    //recompute new axis limits by doubling the current range
    Int_t ntimes = 0;
@@ -6421,24 +6457,12 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
          return kFALSE;
       xmin = xmin - range;
       range *= 2;
-      binsize *= 2;
-      // // make sure that the merging will be correct
-      // if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
-      //    xmin += 0.5 * binsize;
-      //    xmax += 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
-      // }
    }
    while (point >= xmax) {
       if (ntimes++ > 64)
          return kFALSE;
       xmax = xmax + range;
       range *= 2;
-      binsize *= 2;
-      // // make sure that the merging will be correct
-      // if ( xmin / binsize - TMath::Floor(xmin / binsize) >= 0.5) {
-      //    xmin -= 0.5 * binsize;
-      //    xmax -= 0.5 * binsize;  // won't work with a histogram with only one bin, but I don't care
-      // }
    }
    newMin = xmin;
    newMax = xmax;
@@ -6480,7 +6504,7 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
 
    //save a copy of this histogram
    TH1 *hold = (TH1*)IsA()->New();
-   hold->SetDirectory(0);
+   hold->SetDirectory(nullptr);
    Copy(*hold);
    //set new axis limits
    axis->SetLimits(xmin,xmax);
@@ -6556,7 +6580,7 @@ void TH1::RecursiveRemove(TObject *obj)
 /// If you are not interested in the histogram statistics you can call
 /// Sumw2(kFALSE) or use the option "nosw2"
 ///
-/// One can scale an histogram such that the bins integral is equal to
+/// One can scale a histogram such that the bins integral is equal to
 /// the normalization parameter via TH1::Scale(Double_t norm), where norm
 /// is the desired normalization divided by the integral of the histogram.
 ///
@@ -6648,7 +6672,7 @@ UInt_t TH1::GetAxisLabelStatus() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to set the default buffer size for automatic histograms.
-/// When an histogram is created with one of its axis lower limit greater
+/// When a histogram is created with one of its axis lower limit greater
 /// or equal to its upper limit, the function SetBuffer is automatically
 /// called with the default buffer size.
 
@@ -6904,7 +6928,7 @@ void TH1::Streamer(TBuffer &b)
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (fDirectory) fDirectory->Remove(this);
-      fDirectory = 0;
+      fDirectory = nullptr;
       if (R__v > 2) {
          b.ReadClassBuffer(TH1::Class(), this, R__v, R__s, R__c);
 
@@ -7076,7 +7100,10 @@ void TH1::Reset(Option_t *option)
    TString opt = option;
    opt.ToUpper();
    fSumw2.Reset();
-   if (fIntegral) {delete [] fIntegral; fIntegral = 0;}
+   if (fIntegral) {
+      delete [] fIntegral;
+      fIntegral = nullptr;
+   }
 
    if (opt.Contains("M")) {
       SetMinimum();
@@ -7284,8 +7311,8 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    if (fEntries != 0) {
       out<<"   "<<hname<<"->SetEntries("<<fEntries<<");"<<std::endl;
    }
-   if (fDirectory == 0) {
-      out<<"   "<<hname<<"->SetDirectory(0);"<<std::endl;
+   if (!fDirectory) {
+      out<<"   "<<hname<<"->SetDirectory(nullptr);"<<std::endl;
    }
    if (TestBit(kNoStats)) {
       out<<"   "<<hname<<"->SetStats(0);"<<std::endl;
@@ -7315,7 +7342,7 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
    static Int_t funcNumber = 0;
    while (lnk) {
       obj = lnk->GetObject();
-      obj->SavePrimitive(out,Form("nodraw #%d\n",++funcNumber));
+      obj->SavePrimitive(out, TString::Format("nodraw #%d\n",++funcNumber).Data());
       if (obj->InheritsFrom(TF1::Class())) {
          TString fname;
          fname.Form("%s%d",obj->GetName(),funcNumber);
@@ -7528,7 +7555,7 @@ Double_t TH1::GetStdDev(Int_t axis) const
 /// Value returned is standard deviation of sample standard deviation.
 /// Note that it is an approximated value which is valid only in the case that the
 /// original data distribution is Normal. The correct one would require
-/// the 4-th momentum value, which cannot be accurately estimated from an histogram since
+/// the 4-th momentum value, which cannot be accurately estimated from a histogram since
 /// the x-information for all entries is not kept.
 ///
 /// IMPORTANT NOTE: The returned value depends on how the histogram statistics
@@ -7937,6 +7964,7 @@ Double_t TH1::DoIntegral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int
 /// Binned data are considered as un-binned data
 /// with identical observation happening in the bin center.
 ///
+/// \param[in] h2 Pointer to 1D histogram
 /// \param[in] option is a character string to specify options
 ///    - "D" Put out a line of "Debug" printout
 ///    - "T" Return the normalized A-D test statistic
@@ -8303,7 +8331,7 @@ void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
    }
    if (buffersize <= 0) {
       fBufferSize = 0;
@@ -8312,7 +8340,7 @@ void TH1::SetBuffer(Int_t buffersize, Option_t * /*option*/)
    if (buffersize < 100) buffersize = 100;
    fBufferSize = 1 + buffersize*(fDimension+1);
    fBuffer = new Double_t[fBufferSize];
-   memset(fBuffer,0,sizeof(Double_t)*fBufferSize);
+   memset(fBuffer, 0, sizeof(Double_t)*fBufferSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8372,15 +8400,18 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return maximum value smaller than maxval of bins in the range,
 /// unless the value has been overridden by TH1::SetMaximum,
-/// in which case it returns that value. (This happens, for example,
+/// in which case it returns that value. This happens, for example,
 /// when the histogram is drawn and the y or z axis limits are changed
 ///
 /// To get the maximum value of bins in the histogram regardless of
-/// whether the value has been overridden, use
+/// whether the value has been overridden (using TH1::SetMaximum), use
 ///
 /// ~~~ {.cpp}
 ///  h->GetBinContent(h->GetMaximumBin())
 /// ~~~
+///
+/// TH1::GetMaximumBin can be used to get the location of the maximum
+/// value.
 
 Double_t TH1::GetMaximum(Double_t maxval) const
 {
@@ -8411,6 +8442,8 @@ Double_t TH1::GetMaximum(Double_t maxval) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return location of bin with maximum value in the range.
+///
+/// TH1::GetMaximum can be used to get the maximum value.
 
 Int_t TH1::GetMaximumBin() const
 {
@@ -8457,15 +8490,18 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return minimum value larger than minval of bins in the range,
 /// unless the value has been overridden by TH1::SetMinimum,
-/// in which case it returns that value. (This happens, for example,
+/// in which case it returns that value. This happens, for example,
 /// when the histogram is drawn and the y or z axis limits are changed
 ///
 /// To get the minimum value of bins in the histogram regardless of
-/// whether the value has been overridden, use
+/// whether the value has been overridden (using TH1::SetMinimum), use
 ///
 /// ~~~ {.cpp}
 /// h->GetBinContent(h->GetMinimumBin())
 /// ~~~
+///
+/// TH1::GetMinimumBin can be used to get the location of the
+/// minimum value.
 
 Double_t TH1::GetMinimum(Double_t minval) const
 {
@@ -8757,7 +8793,7 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// By default when an histogram is created, it is added to the list
+/// By default, when a histogram is created, it is added to the list
 /// of histogram objects in the current directory in memory.
 /// Remove reference to this histogram from current directory and add
 /// reference to new directory dir. dir can be 0 in which case the
@@ -9121,9 +9157,8 @@ void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Double_t error)
 
 TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 {
-
-   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum::StaticBackground((TH1*)0x%zx,%d,\"%s\")",
-                                            (size_t)this, niter, option));
+   return (TH1*)gROOT->ProcessLineFast(TString::Format("TSpectrum::StaticBackground((TH1*)0x%zx,%d,\"%s\")",
+                                            (size_t)this, niter, option).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9136,8 +9171,8 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 
 Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 {
-   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%zx,%g,\"%s\",%g)",
-                                             (size_t)this, sigma, option, threshold));
+   return (Int_t)gROOT->ProcessLineFast(TString::Format("TSpectrum::StaticSearch((TH1*)0x%zx,%g,\"%s\",%g)",
+                                             (size_t)this, sigma, option, threshold).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9360,6 +9395,7 @@ TH1C::~TH1C()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
 {
@@ -9429,7 +9465,7 @@ TH1C operator*(Double_t c1, const TH1C &h1)
 {
    TH1C hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9440,7 +9476,7 @@ TH1C operator+(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9451,7 +9487,7 @@ TH1C operator-(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9462,7 +9498,7 @@ TH1C operator*(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9473,7 +9509,7 @@ TH1C operator/(const TH1C &h1, const TH1C &h2)
 {
    TH1C hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9541,6 +9577,7 @@ TH1S::~TH1S()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
 {
@@ -9610,7 +9647,7 @@ TH1S operator*(Double_t c1, const TH1S &h1)
 {
    TH1S hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9621,7 +9658,7 @@ TH1S operator+(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9632,7 +9669,7 @@ TH1S operator-(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9643,7 +9680,7 @@ TH1S operator*(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9654,7 +9691,7 @@ TH1S operator/(const TH1S &h1, const TH1S &h2)
 {
    TH1S hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9723,6 +9760,7 @@ TH1I::~TH1I()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
 {
@@ -9793,7 +9831,7 @@ TH1I operator*(Double_t c1, const TH1I &h1)
 {
    TH1I hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9804,7 +9842,7 @@ TH1I operator+(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9815,7 +9853,7 @@ TH1I operator-(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9826,7 +9864,7 @@ TH1I operator*(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9837,7 +9875,7 @@ TH1I operator/(const TH1I &h1, const TH1I &h2)
 {
    TH1I hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9915,6 +9953,7 @@ TH1F::TH1F(const TVectorF &v)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {
@@ -9972,7 +10011,7 @@ TH1F operator*(Double_t c1, const TH1F &h1)
 {
    TH1F hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9983,7 +10022,7 @@ TH1F operator+(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -9994,7 +10033,7 @@ TH1F operator-(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -10005,7 +10044,7 @@ TH1F operator*(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -10016,7 +10055,7 @@ TH1F operator/(const TH1F &h1, const TH1F &h2)
 {
    TH1F hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -10151,7 +10190,7 @@ TH1D operator*(Double_t c1, const TH1D &h1)
 {
    TH1D hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -10162,7 +10201,7 @@ TH1D operator+(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -10173,7 +10212,7 @@ TH1D operator-(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -10184,7 +10223,7 @@ TH1D operator*(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -10195,7 +10234,7 @@ TH1D operator/(const TH1D &h1, const TH1D &h2)
 {
    TH1D hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 

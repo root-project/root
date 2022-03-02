@@ -72,7 +72,7 @@ RooPullVar::RooPullVar(const char* name, const char* title, RooRealVar& meas, Ro
 /// Copy constructor
 
 RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _meas("meas",this,other._meas),
   _true("true",this,other._true)
 {
@@ -83,7 +83,7 @@ RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooPullVar::~RooPullVar() 
+RooPullVar::~RooPullVar()
 {
 }
 
@@ -94,7 +94,7 @@ RooPullVar::~RooPullVar()
 /// otherwise use symmetric error. If measurement has no error
 /// return zero.
 
-Double_t RooPullVar::evaluate() const 
+Double_t RooPullVar::evaluate() const
 {
   const auto& meas = _meas.arg();
   if (meas.hasAsymError()) {
@@ -105,7 +105,7 @@ Double_t RooPullVar::evaluate() const
       return -delta/meas.getAsymErrorLo() ;
     }
   } else if (meas.hasError()) {
-    return (_meas-_true)/meas.getError() ;    
+    return (_meas-_true)/meas.getError() ;
   } else {
     return 0 ;
   }

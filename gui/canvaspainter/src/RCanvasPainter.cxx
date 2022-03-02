@@ -157,6 +157,8 @@ public:
 
    bool ProduceBatchOutput(const std::string &fname, int width, int height) final;
 
+   std::string ProduceJSON() final;
+
    void NewDisplay(const std::string &where) final;
 
    int NumDisplays() const final;
@@ -474,6 +476,17 @@ bool RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Produce JSON for the canvas
+
+std::string RCanvasPainter::ProduceJSON()
+{
+   RDrawable::RDisplayContext ctxt(&fCanvas, &fCanvas, 0);
+   ctxt.SetConnection(1, true);
+
+   return CreateSnapshot(ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Process data from the client
 
 void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
@@ -613,15 +626,18 @@ void RCanvasPainter::NewDisplay(const std::string &where)
 {
    CreateWindow();
 
-   auto sz = fCanvas.GetSize();
+   int width = fCanvas.GetWidth();
+   int height = fCanvas.GetHeight();
 
    RWebDisplayArgs args(where);
 
-   if ((sz[0].fVal > 10) && (sz[1].fVal > 10)) {
+   if ((width > 10) && (height > 10)) {
       // extra size of browser window header + ui5 menu
-      args.SetWidth((int) sz[0].fVal + 1);
-      args.SetHeight((int) sz[1].fVal + 40);
+      args.SetWidth(width + 4);
+      args.SetHeight(height + 36);
    }
+
+   args.SetWidgetKind("RCanvas");
 
    fWindow->Show(args);
 }
@@ -695,7 +711,7 @@ std::string RCanvasPainter::CreateSnapshot(RDrawable::RDisplayContext &ctxt)
    fCanvas.DisplayPrimitives(*canvitem, ctxt);
 
    canvitem->SetTitle(fCanvas.GetTitle());
-   canvitem->SetWindowSize(fCanvas.GetSize());
+   canvitem->SetWindowSize(fCanvas.GetWidth(), fCanvas.GetHeight());
 
    canvitem->BuildFullId(""); // create object id which unique identify it via pointer and position in subpads
    canvitem->SetObjectID("canvas"); // for canvas itself use special id

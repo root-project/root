@@ -14,6 +14,8 @@ import logging
 import sys
 import types
 
+import concurrent.futures
+
 from DistRDF.Backends import build_backends_submodules
 
 logger = logging.getLogger(__name__)
@@ -63,6 +65,57 @@ def create_logger(level="WARNING", log_path="./DistRDF.log"):
     return logger
 
 
+def RunGraphs(proxies):
+    """
+    Trigger the execution of multiple RDataFrame computation graphs on a certain
+    distributed backend. If the backend doesn't support multiple job
+    submissions concurrently, the distributed computation graphs will be
+    executed sequentially.
+
+    Args:
+        proxies(list): List of action proxies that should be triggered. Only
+            actions belonging to different RDataFrame graphs will be
+            triggered to avoid useless calls.
+
+    Example:
+
+        @code{.py}
+        import ROOT
+        RDataFrame = ROOT.RDF.Experimental.Distributed.Dask.RDataFrame
+        RunGraphs = ROOT.RDF.Experimental.Distributed.RunGraphs
+
+        # Create 3 different dataframes and book an histogram on each one
+        histoproxies = [
+            RDataFrame(100)
+                .Define("x", "rdfentry_")
+                .Histo1D(("name", "title", 10, 0, 100), "x")
+            for _ in range(4)
+        ]
+
+        # Execute the 3 computation graphs
+        RunGraphs(histoproxies)
+        # Retrieve all the histograms in one go
+        histos = [histoproxy.GetValue() for histoproxy in histoproxies]
+        @endcode
+
+
+    """
+    # Import here to avoid circular dependencies in main module
+    from DistRDF.Proxy import execute_graph
+
+    if not proxies:
+        raise ValueError("The list of result pointers passed to RunGraphs is empty.")
+
+    # Get proxies belonging to distinct computation graphs
+    uniqueproxies = list({proxy.proxied_node.get_head(): proxy for proxy in proxies}.values())
+
+    # Submit all computation graphs concurrently from multiple Python threads.
+    # The submission is not computationally intensive
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
+        futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
+        concurrent.futures.wait(futures)
+
+
 def create_distributed_module(parentmodule):
     """
     Helper function to create the ROOT.RDF.Experimental.Distributed module.
@@ -84,5 +137,9 @@ def create_distributed_module(parentmodule):
     # Inject top-level functions
     distributed.initialize = initialize
     distributed.create_logger = create_logger
+    distributed.RunGraphs = RunGraphs
+
+    # Set non-optimized default mode
+    distributed.optimized = False
 
     return distributed

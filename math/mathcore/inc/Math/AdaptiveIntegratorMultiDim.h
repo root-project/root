@@ -179,18 +179,18 @@ protected:
 
  private:
 
-   unsigned int fDim;     // dimensionality of integrand
-   unsigned int fMinPts;  // minimum number of function evaluation requested
-   unsigned int fMaxPts;  // maximum number of function evaluation requested
-   unsigned int fSize;    // max size of working array (explode with dimension)
-   double fAbsTol;        // absolute tolerance
-   double fRelTol;        // relative tolerance
+   unsigned int fDim;     ///< dimensionality of integrand
+   unsigned int fMinPts;  ///< minimum number of function evaluation requested
+   unsigned int fMaxPts;  ///< maximum number of function evaluation requested
+   unsigned int fSize;    ///< max size of working array (explode with dimension)
+   double fAbsTol;        ///< absolute tolerance
+   double fRelTol;        ///< relative tolerance
 
-   double fResult;        // last integration result
-   double fError;         // integration error
-   double fRelError;      // Relative error
-   int    fNEval;         // number of function evaluation
-   int fStatus;           // status of algorithm (error if not zero)
+   double fResult;        ///< last integration result
+   double fError;         ///< integration error
+   double fRelError;      ///< Relative error
+   int    fNEval;         ///< number of function evaluation
+   int fStatus;           ///< status of algorithm (error if not zero)
 
    const IMultiGenFunction* fFun;   // pointer to integrand function
 

@@ -106,7 +106,6 @@ private: // Static Data Members
 
 private: // Data Members
 
-   Int_t           fMore;             // The brace indent level for the cint command line processor.
    Int_t           fExitCode;         // Value passed to exit() in interpreter.
    char            fPrompt[64];       // Command line prompt string.
    //cling::DictPosition fDictPos;          // dictionary context after initialization is complete.
@@ -212,7 +211,7 @@ public: // Public Interface
    TClass *GetClass(const std::type_info& typeinfo, Bool_t load) const;
    Int_t   GetExitCode() const { return fExitCode; }
    TEnv*   GetMapfile() const { return fMapfile; }
-   Int_t   GetMore() const { return fMore; }
+   Int_t   GetMore() const;
    TClass *GenerateTClass(const char *classname, Bool_t emulation, Bool_t silent = kFALSE);
    TClass *GenerateTClass(ClassInfo_t *classinfo, Bool_t silent = kFALSE);
    Int_t   GenerateDictionary(const char* classes, const char* includes = "", const char* options = 0);
@@ -354,6 +353,7 @@ public: // Public Interface
    virtual int    SetClassAutoparsing(int) ;
            Bool_t IsAutoParsingSuspended() const { return fIsAutoParsingSuspended; }
    virtual void   SetErrmsgcallback(void* p) const;
+   virtual void   ReportDiagnosticsToErrorHandler(bool enable = true);
    virtual void   SetTempLevel(int val) const;
    virtual int    UnloadFile(const char* path) const;
 

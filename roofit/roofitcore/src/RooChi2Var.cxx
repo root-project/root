@@ -15,25 +15,25 @@
  *****************************************************************************/
 
 //////////////////////////////////////////////////////////////////////////////
-/**
-// \class RooChi2Var 
-// RooChi2Var implements a simple \f$ \chi^2 \f$ calculation from a binned dataset
-// and a PDF. It calculates
-\f{align*}{
-  \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2, \\
-  \text{where} \\
-  N_\mathrm{PDF,bin} &=
-    \begin{cases}
-        \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{if normal PDF}\\
-        \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{if extended PDF}
-    \end{cases} \\
-  \text{and} \\
-  \Delta_\mathrm{bin} &=
-    \begin{cases}
-        \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}\\
-        \mathtt{data{\rightarrow}weightError()} &\text{otherwise} \\
-    \end{cases}
-\f}
+/** \class RooChi2Var
+    \ingroup Roofitcore
+    \brief RooChi2Var implements a simple \f$ \chi^2 \f$ calculation from a binned dataset and a PDF.
+ *
+ * It calculates:
+ *
+ \f{align*}{
+   \chi^2 &= \sum_{\mathrm{bins}}  \left( \frac{N_\mathrm{PDF,bin} - N_\mathrm{Data,bin}}{\Delta_\mathrm{bin}} \right)^2 \\
+   N_\mathrm{PDF,bin} &=
+     \begin{cases}
+         \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,tot}  &\text{normal PDF}\\
+         \mathrm{pdf}(\text{bin centre}) \cdot V_\mathrm{bin} \cdot N_\mathrm{Data,expected} &\text{extended PDF}
+     \end{cases} \\
+   \Delta_\mathrm{bin} &=
+     \begin{cases}
+         \sqrt{N_\mathrm{PDF,bin}} &\text{if } \mathtt{DataError == RooAbsData::Expected}\\
+         \mathtt{data{\rightarrow}weightError()} &\text{otherwise} \\
+     \end{cases}
+ \f}
  * If the dataset doesn't have user-defined errors, errors are assumed to be \f$ \sqrt{N} \f$.
  * In extended PDF mode, N_tot (total number of data events) is substituted with N_expected, the
  * expected number of events that the PDF predicts.
@@ -41,7 +41,7 @@
  * \note If the dataset has errors stored, empty bins will prevent the calculation of \f$ \chi^2 \f$, because those have
  * zero error. This leads to messages like:
  * ```
- *   [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
+ * [#0] ERROR:Eval -- RooChi2Var::RooChi2Var(chi2_GenPdf_data_hist) INFINITY ERROR: bin 2 has zero error
  * ```
  *
  * \note In this case, one can use the expected errors of the PDF instead of the data errors:
@@ -97,11 +97,11 @@ RooArgSet RooChi2Var::_emptySet ;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  RooChi2Var constructor. Optional arguments are:
-///  \param[in] name Name of the PDF 
+///  \param[in] name Name of the PDF
 ///  \param[in] title Title for plotting etc.
 ///  \param[in] func  Function
 ///  \param[in] hdata Data histogram
-///  \param[in] argX Optional arguments according to table below.
+///  \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9 Optional arguments according to table below.
 ///  <table>
 ///  <tr><th> Argument  <th> Effect
 ///  <tr><td>
@@ -114,15 +114,16 @@ RooArgSet RooChi2Var::_emptySet ;
 ///  Verbose()    <td> Verbose output of GOF framework
 ///  <tr><td>
 ///  IntegrateBins()  <td> Integrate PDF within each bin. This sets the desired precision. Only useful for binned fits.
+
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata,
-		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
-		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
-		       const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
+             const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
+             const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
+             const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
   RooAbsOptTestStatistic(name,title,func,hdata,_emptySet,
           makeRooAbsTestStatisticCfgForFunc(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9))
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
-  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;  
+  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
   pc.allowUndefined() ;
 
@@ -144,15 +145,14 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 ///  RooChi2Var constructor. Optional arguments taken
-///  
-///  \param[in] name Name of the PDF 
+///
+///  \param[in] name Name of the PDF
 ///  \param[in] title Title for plotting etc.
 ///  \param[in] pdf  PDF to fit
 ///  \param[in] hdata Data histogram
-///  \param[in] argX Optional arguments according to table below.
+///  \param[in] arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9 Optional arguments according to table below.
 ///  <table>
 ///  <tr><th> Argument  <th> Effect
 ///  <tr><td>
@@ -164,19 +164,20 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, Ro
 ///  <tr><td>
 ///  Range()      <td> Fit only selected region
 ///  <tr><td>
-///  SumCoefRange() <td> Set the range in which to interpret the coefficients of RooAddPdf components 
+///  SumCoefRange() <td> Set the range in which to interpret the coefficients of RooAddPdf components
 ///  <tr><td>
-///  SplitRange() <td> Fit range is split by index catory of simultaneous PDF
+///  SplitRange() <td> Fit range is split by index category of simultaneous PDF
 ///  <tr><td>
-///  ConditionalObservables() <td> Define projected observables 
+///  ConditionalObservables() <td> Define projected observables
 ///  <tr><td>
 ///  Verbose()    <td> Verbose output of GOF framework
 ///  <tr><td>
 ///  IntegrateBins()  <td> Integrate PDF within each bin. This sets the desired precision.
+
 RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooDataHist& hdata,
-		       const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
-		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
-		       const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
+             const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3,
+             const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,
+             const RooCmdArg& arg7,const RooCmdArg& arg8,const RooCmdArg& arg9) :
   RooAbsOptTestStatistic(name,title,pdf,hdata,
                          *static_cast<const RooArgSet*>(RooCmdConfig::decodeObjOnTheFly("RooChi2Var::RooChi2Var","ProjectedObservables",0,&_emptySet,
                                  arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9)),
@@ -184,7 +185,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 {
   RooCmdConfig pc("RooChi2Var::RooChi2Var") ;
   pc.defineInt("extended","Extended",0,kFALSE) ;
-  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;  
+  pc.defineInt("etype","DataError",0,(Int_t)RooDataHist::Auto) ;
   pc.allowUndefined() ;
 
   pc.process(arg1) ;  pc.process(arg2) ;  pc.process(arg3) ;
@@ -199,7 +200,6 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a chi2 for given p.d.f. with respect given binned
 /// dataset. If cutRange is specified the calculation of the chi2 is
@@ -207,7 +207,7 @@ RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsPdf& pdf, RooD
 /// interpretation of fractions for all component RooAddPdfs that do
 /// not have a frozen range interpretation is set to chosen range
 /// name. If nCPU is greater than one the chi^2 calculation is
-/// paralellized over the specified number of processors. If
+/// parallelized over the specified number of processors. If
 /// interleave is true the partitioning of event over processors
 /// follows a (i % n == i_set) strategy rather than a bulk
 /// partitioning strategy which may result in unequal load balancing
@@ -224,7 +224,6 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a chi2 for given p.d.f. with respect given binned
 /// dataset taking the observables specified in projDeps as projected
@@ -233,7 +232,7 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 /// the interpretation of fractions for all component RooAddPdfs that
 /// do not have a frozen range interpretation is set to chosen range
 /// name. If nCPU is greater than one the chi^2 calculation is
-/// paralellized over the specified number of processors. If
+/// parallelized over the specified number of processors. If
 /// interleave is true the partitioning of event over processors
 /// follows a (i % n == i_set) strategy rather than a bulk
 /// partitioning strategy which may result in unequal load balancing
@@ -245,24 +244,22 @@ RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsPdf& pdf, RooD
 RooChi2Var::RooChi2Var(const char *name, const char *title, RooAbsReal& func, RooDataHist& hdata,
                        const RooArgSet& projDeps, RooChi2Var::FuncMode fmode,
                        RooAbsTestStatistic::Configuration const& cfg,
-                       RooDataHist::ErrorType etype) : 
+                       RooDataHist::ErrorType etype) :
   RooAbsOptTestStatistic(name,title,func,hdata,projDeps,cfg),
   _etype(etype), _funcMode(fmode)
 {
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) : 
+RooChi2Var::RooChi2Var(const RooChi2Var& other, const char* name) :
   RooAbsOptTestStatistic(other,name),
   _etype(other._etype),
   _funcMode(other._funcMode)
 {
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,16 +270,16 @@ RooChi2Var::~RooChi2Var()
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate chi^2 in partition from firstEvent to lastEvent using given stepSize
+/// Throughout the calculation, we use Kahan's algorithm for summing to
+/// prevent loss of precision - this is a factor four more expensive than
+/// straight addition, but since evaluating the PDF is usually much more
+/// expensive than that, we tolerate the additional cost...
 
 Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
-  // Throughout the calculation, we use Kahan's algorithm for summing to
-  // prevent loss of precision - this is a factor four more expensive than
-  // straight addition, but since evaluating the PDF is usually much more
-  // expensive than that, we tolerate the additional cost...
+
   Double_t result(0), carry(0);
 
   _dataClone->store()->recalculateCache( _projDeps, firstEvent, lastEvent, stepSize, kFALSE) ;
@@ -299,7 +296,7 @@ Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
   // Loop over bins of dataset
   RooDataHist* hdata = (RooDataHist*) _dataClone ;
   for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
-    
+
     // get the data values for this event
     hdata->get(i);
 
@@ -320,29 +317,26 @@ Double_t RooChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
     } else {
       eInt = sqrt(nPdf) ;
     }
-    
+
     // Skip cases where pdf=0 and there is no data
     if (0. == eInt * eInt && 0. == nData * nData && 0. == nPdf * nPdf) continue ;
-    
+
     // Return 0 if eInt=0, special handling in MINUIT will follow
     if (0. == eInt * eInt) {
-      coutE(Eval) << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i 
-		  << " has zero error" << endl ;
+      coutE(Eval) << "RooChi2Var::RooChi2Var(" << GetName() << ") INFINITY ERROR: bin " << i
+        << " has zero error" << endl ;
       return 0.;
     }
-    
+
 //     cout << "Chi2Var[" << i << "] nData = " << nData << " nPdf = " << nPdf << " errorExt = " << eExt << " errorInt = " << eInt << " contrib = " << eExt*eExt/(eInt*eInt) << endl ;
-    
+
     Double_t term = eExt*eExt/(eInt*eInt) ;
     Double_t y = term - carry;
     Double_t t = result + y;
     carry = (t - result) - y;
     result = t;
   }
-    
+
   _evalCarry = carry;
   return result ;
 }
-
-
-

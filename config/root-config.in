@@ -347,7 +347,7 @@ win32)
    ;;
 win32gcc | win64gcc)
    # Windows (32 or 64) with cygwin gcc
-   auxcflags="-std=gnu++11"
+   auxcflags="-std=gnu++14"
    auxlibs=
    forcelibs=$rootulibs
    forceglibs=$rootuglibs

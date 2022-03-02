@@ -1126,11 +1126,11 @@ You can have multiple lines, and e.g. align each line at the '=' sign by passing
 the argument <tt>separator='='</tt>. You can also specify how to align these parts;
 if you want the part left of the separator to be right aligned, and the right part
 to be left aligned, you could specify <tt>align='rl'</tt>.
-THtml uses a <a href="http://root.cern.ch/root/html/TDocLatexDirective.html">TDocLatexDirective</a>
+THtml uses a `<a href="http://root.cern.ch/root/html/TDocLatexDirective.html">TDocLatexDirective</a>`
 object to process the directive.
-This is an example output with arguments <tt>separator='=', align='rl'</tt>:</p>
-END_HTML BEGIN_LATEX(separator='=', align='rl')#kappa(x)^{2}=sin(x)^{x}
-x=#chi^{2} END_LATEX
+This is an example output with arguments `<tt>separator='=', align='rl'</tt>:</p>`
+END_HTML BEGIN_LATEX(separator='=', align='rl')#%kappa(x)^{2}=sin(x)^{x}
+x=#%chi^{2} END_LATEX
 
 BEGIN_HTML
 
@@ -1524,8 +1524,8 @@ void THtml::Convert(const char *filename, const char *title,
 
    TDocOutput output(*this);
    if (!fGClient)
-      gROOT->ProcessLine(TString::Format("*((TGClient**)0x%lx) = gClient;",
-                                         (ULong_t)&fGClient));
+      gROOT->ProcessLine(TString::Format("*((TGClient**)0x%zx) = gClient;",
+                                         (size_t)&fGClient));
    if (includeOutput && !fGClient)
       Warning("Convert", "Output requested but cannot initialize graphics: GUI  and GL windows not be available");
    output.Convert(sourceFile, realFilename, tmp1, title, relpath, includeOutput, context, fGClient);

@@ -19,8 +19,7 @@ import ROOT
 x = ROOT.RooRealVar("x", "x", -10, 10)
 
 # Create pdf gaussx(x,-2,3)
-gx = ROOT.RooGaussian(
-    "gx", "gx", x, ROOT.RooFit.RooConst(-2), ROOT.RooFit.RooConst(3))
+gx = ROOT.RooGaussian("gx", "gx", x, ROOT.RooFit.RooConst(-2), ROOT.RooFit.RooConst(3))
 
 # Retrieve raw & normalized values of RooFit pdfs
 # --------------------------------------------------------------------------------------------------
@@ -29,12 +28,12 @@ gx = ROOT.RooGaussian(
 print("gx = ", gx.getVal())
 
 # Return value of gx normalized over x in range [-10,10]
-nset = ROOT.RooArgSet(x)
+nset = {x}
 print("gx_Norm[x] = ", gx.getVal(nset))
 
 # Create object representing integral over gx
 # which is used to calculate  gx_Norm[x] == gx / gx_Int[x]
-igx = gx.createIntegral(ROOT.RooArgSet(x))
+igx = gx.createIntegral({x})
 print("gx_Int[x] = ", igx.getVal())
 
 # Integrate normalized pdf over subrange
@@ -46,8 +45,8 @@ x.setRange("signal", -5, 5)
 # Create an integral of gx_Norm[x] over x in range "signal"
 # ROOT.This is the fraction of of pdf gx_Norm[x] which is in the
 # range named "signal"
-xset = ROOT.RooArgSet(x)
-igx_sig = gx.createIntegral(xset, ROOT.RooFit.NormSet(xset), ROOT.RooFit.Range("signal"))
+xset = {x}
+igx_sig = gx.createIntegral(xset, NormSet=xset, Range="signal")
 print("gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal())
 
 # Construct cumulative distribution function from pdf
@@ -55,15 +54,14 @@ print("gx_Int[x|signal]_Norm[x] = ", igx_sig.getVal())
 
 # Create the cumulative distribution function of gx
 # i.e. calculate Int[-10,x] gx(x') dx'
-gx_cdf = gx.createCdf(ROOT.RooArgSet(x))
+gx_cdf = gx.createCdf({x})
 
 # Plot cdf of gx versus x
-frame = x.frame(ROOT.RooFit.Title("cdf of Gaussian pdf"))
+frame = x.frame(Title="cdf of Gaussian pdf")
 gx_cdf.plotOn(frame)
 
 # Draw plot on canvas
-c = ROOT.TCanvas("rf110_normintegration",
-                 "rf110_normintegration", 600, 600)
+c = ROOT.TCanvas("rf110_normintegration", "rf110_normintegration", 600, 600)
 ROOT.gPad.SetLeftMargin(0.15)
 frame.GetYaxis().SetTitleOffset(1.6)
 frame.Draw()

@@ -48,7 +48,7 @@ ClassImp(TGraph);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class TGraph
-    \ingroup Hist
+    \ingroup Graphs
 A TGraph is an object made of two arrays X and Y with npoints each.
 The TGraph painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.
@@ -380,18 +380,18 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// Graph constructor reading input from filename.
 ///
 /// `filename` is assumed to contain at least two columns of numbers.
-/// the string format is by default `"%lg %lg"`.
+/// The string format is by default `"%lg %lg"`.
 /// This is a standard c formatting for `scanf()`.
 ///
 /// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column
 /// can be added,  e.g. `"%lg %*lg %lg"` would read x-values from the first and
 /// y-values from the third column.
 ///
-/// For files separated by a specific delimiter different from ' ' and '\t' (e.g.
+/// For files separated by a specific delimiter different from ' ' and '\\t' (e.g.
 /// ';' in csv files) you can avoid using `%*s` to bypass this delimiter by explicitly
 /// specify the `option` argument,
-/// e.g. option=`" \t,;"` for columns of figures separated by any of these characters
-/// (' ', '\t', ',', ';')
+/// e.g. option=`" \\t,;"` for columns of figures separated by any of these characters
+/// (' ', '\\t', ',', ';')
 /// used once (e.g. `"1;1"`) or in a combined way (`" 1;,;;  1"`).
 /// Note in that case, the instantiation is about two times slower.
 
@@ -1059,15 +1059,133 @@ TObject *TGraph::FindObject(const TObject *obj) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fit this graph with function with name fname.
+/// Fit this graph with function f1.
+/// 
+/// \param[in] f1 pointer to the function object 
+/// \param[in] option string defining the fit options (see table below). 
+/// \param[in] goption specify a list of graphics options. See TGraph::Draw and TGraphPainter for a complete list of these possible options.
+/// \param[in] rxmin lower fitting range
+/// \param[in] rxmax upper fitting range
 ///
-/// interface to TGraph::Fit(TF1 *f1...
+/// \anchor GFitOpt
+/// ### Graph Fitting Options
+/// The list of fit options is given in parameter option.
 ///
-/// fname is the name of an already predefined function created by TF1 or TF2
+/// option | description
+/// -------|------------
+/// "S"  | The full result of the fit is returned in the `TFitResultPtr`. This is needed to get the covariance matrix of the fit. See `TFitResult` and the base class `ROOT::Math::FitResult`.
+/// "W"  | Ignore all point errors when fitting a TGraphErrors or TGraphAsymmErrors
+/// "F"  | Uses the default minimizer (e.g. Minuit) when fitting a linear function (e.g. polN) instead of the linear fitter.
+/// "U"  | Uses a user specified objective function (e.g. user providedlikelihood function) defined using `TVirtualFitter::SetFCN`
+/// "E"  | Performs a better parameter errors estimation using the Minos technique for all fit parameters.
+/// "M"  | Uses the IMPROVE algorithm (available only in TMinuit). This algorithm attempts improve the found local minimum by searching for a better one.
+/// "Q"  | Quiet mode (minimum printing)
+/// "V"  | Verbose mode (default is between Q and V)
+/// "+"  | Adds this new fitted function to the list of fitted functions. By default, the previous function is deleted and only the last one is kept.
+/// "N"  | Does not store the graphics function, does not draw the histogram with the function after fitting.
+/// "0"  | Does not draw the histogram and the fitted function after fitting, but in contrast to option "N", it stores the fitted function in the histogram list of functions.
+/// "R"  | Fit using a fitting range specified in the function range with `TF1::SetRange`.
+/// "B"  | Use this option when you want to fix one or more parameters and the fitting function is a predefined one (e.g gaus, expo,..), otherwise in case of pre-defined functions, some default initial values and limits are set.
+/// "C"  | In case of linear fitting, do no calculate the chisquare (saves CPU time).
+/// "G"  | Uses the gradient implemented in `TF1::GradientPar` for the minimization. This allows to use Automatic Differentiation when it is supported by the provided TF1 function.
+/// "EX0" | When fitting a TGraphErrors or TGraphAsymErrors do not consider errors in the X coordinates
+/// "ROB" | In case of linear fitting, compute the LTS regression coefficients (robust (resistant) regression), using the default fraction of good points "ROB=0.x" - compute the LTS regression coefficients, using 0.x as a fraction of good points
+///
+///
+/// This function is used for fitting also the derived TGraph classes such as TGraphErrors or TGraphAsymmErrors.
+/// See the note below on how the errors are used when fitting a TGraphErrors or TGraphAsymmErrors.
+/// 
+/// The fitting of the TGraph, i.e simple data points without any error associated, is performed using the 
+/// un-weighted least-square (chi-square) method.
+/// 
+///
+///\anchor GFitErrors
+/// ### TGraphErrors fit:
+///
+///   In case of a TGraphErrors or TGraphAsymmErrors object, when `x` errors are present, the error along x,
+///   is projected along the y-direction by calculating the function at the points `x-ex_low` and
+///   `x+ex_high`, where `ex_low` and `ex_high` are the corresponding lower and upper error in x.
+///   The chi-square is then computed as the sum of the quantity below at each data point:
+///
+/// \f[
+///   \frac{(y-f(x))^{2}}{ey^{2}+(\frac{1}{2}(exl+exh)f'(x))^{2}}
+/// \f]
+///
+///   where `x` and `y` are the point coordinates, and `f'(x)` is the derivative of the
+///   function `f(x)`.
+///
+///   In case of asymmetric errors, if the function lies below (above) the data point, `ey` is `ey_low` (`ey_high`).
+///
+///   The approach used to approximate the uncertainty in y because of the
+///   errors in x is to make it equal the error in x times the slope of the line.
+///   This approach is called "effective variance method" and 
+///   the implementation is provided in the function FitUtil::EvaluateChi2Effective
+///
+/// \anchor GFitLinear
+/// ### Linear fitting:
+///   When the fitting function is linear (contains the `++` sign) or the fitting
+///   function is a polynomial, a linear fitter is initialised.
+///   To create a linear function, use the following syntax: linear parts
+///   separated by `++` sign.
+///   Example: to fit the parameters of the function `p0*x + p1*sin(x)`, you can create a
+///   TF1 object as 
+///
+///       TF1 *f1 = new TF1("f1", "x++sin(x)", xmin, xmax);
+///
+///   For such a TF1 you don't have to set the initial conditions and the linear fitter is used.
+///   Going via the linear fitter for functions, linear in parameters, gives a
+///   considerable advantage in speed.
+///   When using the linear fitting it is also possible to perform a robust fitting with the 
+///   Least Trimmed Square (LTS) regression algorithm, by using the fit option `ROB`.
+///   See the tutorial `fitLinearRobust.C`.
+///
+/// ### Notes on TGraph/TGraphErrors Fitting:
+///
+/// 1. By using the "effective variance" method a simple linear regression
+///    becomes a non-linear case, which takes several iterations
+///    instead of 0 as in the linear case.
+/// 2. The effective variance technique assumes that there is no correlation
+///    between the x and y coordinate.
+/// 3. The standard chi2 (least square) method without error in the coordinates (x) can
+///    be forced by using option "EX0"
+/// 4. The linear fitter doesn't take into account the errors in x. When fitting a
+///    TGraphErrors with a linear functions the errors in x will not be considered.
+///    If errors in x are important, use option "F" for linear function fitting.
+/// 5. When fitting a TGraph (i.e. no errors associated with each point),
+///    a correction is applied to the errors on the parameters with the following
+///    formula: 
+///    `parameter_error *= sqrt(chisquare/(ndf-1))`
+///
+/// ### General Fitting documentation
+///
+/// See in TH1::Fit for the documentation of  
+///  - [Fit Result](\ref HFitRes)
+///  - [Fit Status](\ref HFitStatus)
+///  - [Fit Statistics Box](\ref HFitStatBox)
+///  - [Fitting in a Range](\ref HFitRange)
+///  - [Setting Initial Conditions](\ref HFitInitial)
+
+TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
+{
+   Foption_t fitOption;
+   ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph, option, fitOption);
+   // create range and minimizer options with default values
+   ROOT::Fit::DataRange range(rxmin, rxmax);
+   ROOT::Math::MinimizerOptions minOption;
+   return ROOT::Fit::FitObject(this, f1 , fitOption , minOption, goption, range);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fit this graph with function with name `fname`.
+///
+/// This is a different interface to TGraph fitting using TGraph::Fit(TF1 *f1,Option_t *, Option_t *, Axis_t, Axis_t)
+/// See there for the details about fitting a TGraph. 
+///
+/// The parameter `fname` is the name of an already predefined function created by TF1 or TF2
 /// Predefined functions such as gaus, expo and poln are automatically
 /// created by ROOT.
 ///
-/// fname can also be a formula, accepted by the linear fitter (linear parts divided
+/// The parameter `fname` can also be a formula, accepted by the linear fitter (linear parts divided
 /// by "++" sign), for example "x++sin(x)" for fitting "[0]*x+[1]*sin(x)"
 
 TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
@@ -1084,243 +1202,6 @@ TFitResultPtr TGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_
       return -1;
    }
    return Fit(f1, option, "", xmin, xmax);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Fit this graph with function f1.
-///
-/// f1 is an already predefined function created by TF1.
-/// Predefined functions such as gaus, expo and poln are automatically
-/// created by ROOT.
-///
-/// The list of fit options is given in parameter option.
-///
-/// option | description
-/// -------|------------
-/// "W" | Ignore all point errors when fitting a TGraphErrors or TGraphAsymmErrors
-/// "U" | Use a User specified fitting algorithm (via SetFCN)
-/// "Q" | Quiet mode (minimum printing)
-/// "V" | Verbose mode (default is between Q and V)
-/// "E" | Perform better Errors estimation using Minos technique
-/// "B" | User defined parameter settings are used for predefined functions like "gaus", "expo", "poln", "landau". Use this option when you want to fix one or more parameters for these functions.
-/// "M" | More. Improve fit results. It uses the IMPROVE command of TMinuit (see TMinuit::mnimpr). This algorithm attempts to improve the found local minimum by searching for a better one.
-/// "R" | Use the Range specified in the function range
-/// "N" | Do not store the graphics function, do not draw
-/// "0" | Do not plot the result of the fit. By default the fitted function is drawn unless the option "N" above is specified.
-/// "+" | Add this new fitted function to the list of fitted functions (by default, any previous function is deleted)
-/// "C" | In case of linear fitting, do not calculate the chisquare (saves time)
-/// "F" | If fitting a polN, use the minuit fitter
-/// "EX0" | When fitting a TGraphErrors or TGraphAsymErrors do not consider errors in the X coordinates
-/// "ROB" | In case of linear fitting, compute the LTS regression coefficients (robust (resistant) regression), using the default fraction of good points "ROB=0.x" - compute the LTS regression coefficients, using 0.x as a fraction of good points
-/// "S" |  The result of the fit is returned in the TFitResultPtr (see below Access to the Fit Result)
-///
-/// When the fit is drawn (by default), the parameter goption may be used
-/// to specify a list of graphics options. See TGraphPainter for a complete
-/// list of these options.
-///
-/// In order to use the Range option, one must first create a function
-/// with the expression to be fitted. For example, if your graph
-/// has a defined range between -4 and 4 and you want to fit a gaussian
-/// only in the interval 1 to 3, you can do:
-///
-///        TF1 *f1 = new TF1("f1","gaus",1,3);
-///        graph->Fit("f1","R");
-///
-/// Who is calling this function:
-///
-/// Note that this function is called when calling TGraphErrors::Fit
-/// or TGraphAsymmErrors::Fit ot TGraphBentErrors::Fit
-/// See the discussion below on error calculation.
-///
-/// ### Linear fitting:
-///   When the fitting function is linear (contains the "++" sign) or the fitting
-///   function is a polynomial, a linear fitter is initialised.
-///   To create a linear function, use the following syntax: linear parts
-///   separated by "++" sign.
-///   Example: to fit the parameters of "[0]*x + [1]*sin(x)", create a
-///    TF1 *f1=new TF1("f1", "x++sin(x)", xmin, xmax);
-///   For such a TF1 you don't have to set the initial conditions.
-///   Going via the linear fitter for functions, linear in parameters, gives a
-///   considerable advantage in speed.
-///
-/// ### Setting initial conditions:
-///
-///   Parameters must be initialized before invoking the Fit function.
-///   The setting of the parameter initial values is automatic for the
-///   predefined functions : poln, expo, gaus, landau. One can however disable
-///   this automatic computation by specifying the option "B".
-///   You can specify boundary limits for some or all parameters via
-///
-///        f1->SetParLimits(p_number, parmin, parmax);
-///   If parmin>=parmax, the parameter is fixed
-///   Note that you are not forced to fix the limits for all parameters.
-///   For example, if you fit a function with 6 parameters, you can do:
-///
-///     func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
-///     func->SetParLimits(4,-10,-4);
-///     func->SetParLimits(5, 1,1);
-///   With this setup, parameters 0->3 can vary freely.
-///   Parameter 4 has boundaries [-10,-4] with initial value -8.
-///   Parameter 5 is fixed to 100.
-///
-/// ### Fit range:
-///
-///   The fit range can be specified in two ways:
-///     - specify rxmax > rxmin (default is rxmin=rxmax=0)
-///     - specify the option "R". In this case, the function will be taken
-///       instead of the full graph range.
-///
-/// ### Changing the fitting function:
-///
-///   By default a chi2 fitting function is used for fitting a TGraph.
-///   The function is implemented in FitUtil::EvaluateChi2.
-///   In case of TGraphErrors an effective chi2 is used (see below TGraphErrors fit)
-///   To specify a User defined fitting function, specify option "U" and
-///   call the following functions:
-///
-///      TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
-///   where MyFittingFunction is of type:
-///   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f,
-///                                 Double_t *u, Int_t flag);
-///
-///
-/// ### TGraphErrors fit:
-///
-///   In case of a TGraphErrors object, when x errors are present, the error along x,
-///   is projected along the y-direction by calculating the function at the points x-exlow and
-///   x+exhigh. The chisquare is then computed as the sum of the quantity below at each point:
-///
-/// \f[
-///   \frac{(y-f(x))^{2}}{ey^{2}+(\frac{1}{2}(exl+exh)f'(x))^{2}}
-/// \f]
-///
-///   where x and y are the point coordinates, and f'(x) is the derivative of the
-///   function f(x).
-///
-///   In case the function lies below (above) the data point, ey is ey_low (ey_high).
-///
-///   thanks to Andy Haas (haas@yahoo.com) for adding the case with TGraphAsymmErrors
-///             University of Washington
-///
-///   The approach used to approximate the uncertainty in y because of the
-///   errors in x is to make it equal the error in x times the slope of the line.
-///   The improvement, compared to the first method (f(x+ exhigh) - f(x-exlow))/2
-///   is of (error of x)**2 order. This approach is called "effective variance method".
-///   This improvement has been made in version 4.00/08 by Anna Kreshuk.
-///   The implementation is provided in the function FitUtil::EvaluateChi2Effective
-///
-/// NOTE:
-/// 1. By using the "effective variance" method a simple linear regression
-///    becomes a non-linear case, which takes several iterations
-///    instead of 0 as in the linear case.
-/// 2. The effective variance technique assumes that there is no correlation
-///    between the x and y coordinate.
-/// 3. The standard chi2 (least square) method without error in the coordinates (x) can
-///    be forced by using option "EX0"
-/// 4. The linear fitter doesn't take into account the errors in x. When fitting a
-///    TGraphErrors with a linear functions the errors in x will not be considered.
-///    If errors in x are important, go through minuit (use option "F" for polynomial fitting).
-/// 5. When fitting a TGraph (i.e. no errors associated with each point),
-///    a correction is applied to the errors on the parameters with the following
-///    formula: errorp *= sqrt(chisquare/(ndf-1))
-///
-///  ## Access to the fit result
-///  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-///  By default the TFitResultPtr contains only the status of the fit which is return by an
-///  automatic conversion of the TFitResultPtr to an integer. One can write in this case
-///  directly:
-///
-///      Int_t fitStatus =  h->Fit(myFunc)
-///
-///  If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves
-///  as a smart pointer to it. For example one can do:
-///
-///      TFitResultPtr r = h->Fit(myFunc,"S");
-///      TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-///      Double_t chi2   = r->Chi2(); // to retrieve the fit chi2
-///      Double_t par0   = r->Value(0); // retrieve the value for the parameter 0
-///      Double_t err0   = r->ParError(0); // retrieve the error for the parameter 0
-///      r->Print("V");     // print full information of fit including covariance matrix
-///      r->Write();        // store the result in a file
-///
-///  The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
-///  from the fitted function.
-///  If the histogram is made persistent, the list of
-///  associated functions is also persistent. Given a pointer (see above)
-///  to an associated function myfunc, one can retrieve the function/fit
-///  parameters with calls such as:
-///
-///      Double_t chi2 = myfunc->GetChisquare();
-///      Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
-///      Double_t err0 = myfunc->GetParError(0);  //error on first parameter
-///
-///
-/// ### Access to the fit status
-///  The status of the fit can be obtained converting the TFitResultPtr to an integer
-///  independently if the fit option "S" is used or not:
-///
-///       TFitResultPtr r = h->Fit(myFunc,opt);
-///       Int_t fitStatus = r;
-///
-///  The fitStatus is 0 if the fit is OK (i.e. no error occurred).
-///  The value of the fit status code is negative in case of an error not connected with the
-///  minimization procedure, for example when a wrong function is used.
-///  Otherwise the return value is the one returned from the minimization procedure.
-///  When TMinuit (default case) or Minuit2 are used as minimizer the status returned is :
-///  fitStatus =  migradResult + 10*minosResult + 100*hesseResult + 1000*improveResult.
-///  TMinuit will return 0 (for migrad, minos, hesse or improve) in case of success and 4 in
-///  case of error (see the documentation of TMinuit::mnexcm). So for example, for an error
-///  only in Minos but not in Migrad a fitStatus of 40 will be returned.
-///  Minuit2 will return also 0 in case of success and different values in migrad, minos or
-///  hesse depending on the error.   See in this case the documentation of
-///  Minuit2Minimizer::Minimize for the migradResult, Minuit2Minimizer::GetMinosError for the
-///  minosResult and Minuit2Minimizer::Hesse for the hesseResult.
-///  If other minimizers are used see their specific documentation for the status code
-///  returned. For example in the case of Fumili, for the status returned see TFumili::Minimize.
-///
-/// ### Associated functions:
-///   One or more object (typically a TF1*) can be added to the list
-///   of functions (fFunctions) associated with each graph.
-///   When TGraph::Fit is invoked, the fitted function is added to this list.
-///   Given a graph gr, one can retrieve an associated function
-///   with:  TF1 *myfunc = gr->GetFunction("myfunc");
-///
-///   If the graph is made persistent, the list of associated functions is also
-///   persistent. Given a pointer (see above) to an associated function myfunc,
-///   one can retrieve the function/fit parameters with calls such as:
-///
-///       Double_t chi2 = myfunc->GetChisquare();
-///       Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
-///       Double_t err0 = myfunc->GetParError(0);  //error on first parameter
-///
-/// ### Fit Statistics
-///   You can change the statistics box to display the fit parameters with
-///   the TStyle::SetOptFit(mode) method. This mode has four digits.
-///   mode = pcev  (default = 0111)
-///
-///       v = 1;  print name/values of parameters
-///       e = 1;  print errors (if e=1, v must be 1)
-///       c = 1;  print Chisquare/Number of degrees of freedom
-///       p = 1;  print Probability
-///
-///   For example: gStyle->SetOptFit(1011);
-///   prints the fit probability, parameter names/values, and errors.
-///   You can change the position of the statistics box with these lines
-///   (where g is a pointer to the TGraph):
-///
-///       Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
-///       Root > st->SetX1NDC(newx1); //new x start position
-///       Root > st->SetX2NDC(newx2); //new x end position
-///
-
-TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t rxmin, Axis_t rxmax)
-{
-   Foption_t fitOption;
-   ROOT::Fit::FitOptionsMake(ROOT::Fit::kGraph, option, fitOption);
-   // create range and minimizer options with default values
-   ROOT::Fit::DataRange range(rxmin, rxmax);
-   ROOT::Math::MinimizerOptions minOption;
-   return ROOT::Fit::FitObject(this, f1 , fitOption , minOption, goption, range);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1413,7 +1294,6 @@ Double_t TGraph::GetRMS(Int_t axis) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 
 Double_t TGraph::GetErrorX(Int_t) const
@@ -1422,7 +1302,6 @@ Double_t TGraph::GetErrorX(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 
 Double_t TGraph::GetErrorY(Int_t) const
@@ -1431,7 +1310,6 @@ Double_t TGraph::GetErrorY(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1441,7 +1319,6 @@ Double_t TGraph::GetErrorXhigh(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1451,7 +1328,6 @@ Double_t TGraph::GetErrorXlow(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1461,7 +1337,6 @@ Double_t TGraph::GetErrorYhigh(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -2212,6 +2087,26 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values of a TGraph by a constant c1.
+///
+/// If option contains "x" the x values are scaled
+/// If option contains "y" the y values are scaled
+/// If option contains "xy" both x and y values are scaled
+
+void TGraph::Scale(Double_t c1, Option_t *option)
+{
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetX()[i] *= c1;
+   }
+   if (opt.Contains("y")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetY()[i] *= c1;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set number of points in the graph
 /// Existing coordinates are preserved
 /// New coordinates above fNpoints are preset to 0.
@@ -2360,6 +2255,30 @@ void TGraph::SetNameTitle(const char *name, const char *title)
 {
    SetName(name);
    SetTitle(title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set statistics option on/off.
+///
+/// By default, the statistics box is drawn.
+/// The paint options can be selected via gStyle->SetOptStats.
+/// This function sets/resets the kNoStats bit in the graph object.
+/// It has priority over the Style option.
+
+void TGraph::SetStats(Bool_t stats)
+{
+   ResetBit(kNoStats);
+   if (!stats) {
+      SetBit(kNoStats);
+      //remove the "stats" object from the list of functions
+      if (fFunctions) {
+         TObject *obj = fFunctions->FindObject("stats");
+         if (obj) {
+            fFunctions->Remove(obj);
+            delete obj;
+         }
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

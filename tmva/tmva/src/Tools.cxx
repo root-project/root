@@ -65,15 +65,10 @@ Global auxiliary applications and data treatment routines.
 
 using namespace std;
 
-#if __cplusplus > 199711L
 std::atomic<TMVA::Tools*> TMVA::Tools::fgTools{0};
-#else
-TMVA::Tools* TMVA::Tools::fgTools = 0;
-#endif
 
 TMVA::Tools& TMVA::gTools()                 { return TMVA::Tools::Instance(); }
 TMVA::Tools& TMVA::Tools::Instance()        {
-#if __cplusplus > 199711L
    if(!fgTools) {
       Tools* tmp = new Tools();
       Tools* expected = 0;
@@ -83,18 +78,11 @@ TMVA::Tools& TMVA::Tools::Instance()        {
       }
    }
    return *fgTools;
-#else
-   return fgTools?*(fgTools): *(fgTools = new Tools());
-#endif
 }
 void         TMVA::Tools::DestroyInstance() {
    //NOTE: there is no thread safe way to do this so
    // one must only call this method ones in an executable
-#if __cplusplus > 199711L
    if (fgTools != 0) { delete fgTools.load(); fgTools=0; }
-#else
-   if (fgTools != 0) { delete fgTools; fgTools=0; }
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

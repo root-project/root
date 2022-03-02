@@ -157,7 +157,7 @@ void TPySelector::SetupPySelf()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Forward <method> to python.
+/// Forward `method` to python.
 
 PyObject* TPySelector::CallSelf( const char* method, PyObject* pyobject )
 {

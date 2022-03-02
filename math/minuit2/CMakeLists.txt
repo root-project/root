@@ -28,6 +28,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/CombinedMinimumBuilder.h
       Minuit2/ContoursError.h
       Minuit2/DavidonErrorUpdator.h
+      Minuit2/ExternalInternalGradientCalculator.h
       Minuit2/FCNAdapter.h
       Minuit2/FCNBase.h
       Minuit2/FCNGradAdapter.h
@@ -106,6 +107,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/ModularFunctionMinimizer.h
       Minuit2/NegativeG2LineSearch.h
       Minuit2/Numerical2PGradientCalculator.h
+      Minuit2/NumericalDerivator.h
       Minuit2/ParametricFunction.h
       Minuit2/ScanBuilder.h
       Minuit2/ScanMinimizer.h
@@ -128,7 +130,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/CMakeLists.txt
       src/CombinedMinimumBuilder.cxx
       src/DavidonErrorUpdator.cxx
-      src/FitterUtil.h
+      src/ExternalInternalGradientCalculator.cxx
       src/FumiliBuilder.cxx
       src/FumiliErrorUpdator.cxx
       src/FumiliGradientCalculator.cxx
@@ -176,6 +178,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/ModularFunctionMinimizer.cxx
       src/NegativeG2LineSearch.cxx
       src/Numerical2PGradientCalculator.cxx
+      src/NumericalDerivator.cxx
       src/ParametricFunction.cxx
       src/ScanBuilder.cxx
       src/SimplexBuilder.cxx

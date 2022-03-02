@@ -19,12 +19,10 @@
 
 ClassImp(TOracleRow);
 
-using namespace oracle::occi;
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of query result.
 
-TOracleRow::TOracleRow(ResultSet *rs, std::vector<MetaData> *fieldMetaData)
+TOracleRow::TOracleRow(oracle::occi::ResultSet *rs, std::vector<oracle::occi::MetaData> *fieldMetaData)
 {
    fResult      = rs;
    fFieldInfo   = fieldMetaData;
@@ -85,9 +83,9 @@ ULong_t TOracleRow::GetFieldLength(Int_t field)
    if (!IsValid(field) || fFieldInfo->size() <= 0)
       return 0;
 
-   MetaData fieldMD = (*fFieldInfo)[field];
+   oracle::occi::MetaData fieldMD = (*fFieldInfo)[field];
 
-   return fieldMD.getInt(MetaData::ATTR_DATA_SIZE);
+   return fieldMD.getInt(oracle::occi::MetaData::ATTR_DATA_SIZE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,12 +122,12 @@ void TOracleRow::GetRowData()
    for (int field=0;field<fFieldCount;field++) {
       if (fResult->isNull(field+1)) continue;
 
-      fDataType = (*fFieldInfo)[field].getInt(MetaData::ATTR_DATA_TYPE);
+      fDataType = (*fFieldInfo)[field].getInt(oracle::occi::MetaData::ATTR_DATA_TYPE);
 
       switch (fDataType) {
         case SQLT_NUM: //NUMBER
-           fPrecision = (*fFieldInfo)[field].getInt(MetaData::ATTR_PRECISION);
-           fScale = (*fFieldInfo)[field].getInt(MetaData::ATTR_SCALE);
+           fPrecision = (*fFieldInfo)[field].getInt(oracle::occi::MetaData::ATTR_PRECISION);
+           fScale = (*fFieldInfo)[field].getInt(oracle::occi::MetaData::ATTR_SCALE);
 
            if ((fScale == 0) || (fPrecision == 0)) {
               res = fResult->getString(field+1);
@@ -170,7 +168,7 @@ void TOracleRow::GetRowData()
       }
    }
 
-   } catch (SQLException &oraex) {
+   } catch (oracle::occi::SQLException &oraex) {
       Error("GetRowData", "%s", (oraex.getMessage()).c_str());
    }
 }

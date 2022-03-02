@@ -13,10 +13,11 @@
 #include <QApplication>
 #include <QWebEngineView>
 #include <qtwebengineglobal.h>
+#include <QWebEngineDownloadItem>
+
 #include <QThread>
 #include <QWebEngineSettings>
 #include <QWebEngineProfile>
-#include <QWebEngineDownloadItem>
 #include <QtGlobal>
 
 #if QT_VERSION >= 0x050C00
@@ -38,7 +39,6 @@
 #include <memory>
 
 #include <ROOT/RWebDisplayHandle.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RLogger.hxx>
 
 /** \class TQt5Timer

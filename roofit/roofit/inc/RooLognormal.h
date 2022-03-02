@@ -22,14 +22,14 @@ public:
   RooLognormal(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _m0, RooAbsReal& _k);
   RooLognormal(const RooLognormal& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooLognormal(*this,newname); }
-  inline virtual ~RooLognormal() { }
+  TObject* clone(const char* newname) const override { return new RooLognormal(*this,newname); }
+  inline ~RooLognormal() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  void generateEvent(Int_t code) override;
 
 protected:
 
@@ -37,12 +37,13 @@ protected:
   RooRealProxy m0 ;
   RooRealProxy k ;
 
-  Double_t evaluate() const ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
-  
+  Double_t evaluate() const override ;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
+
 private:
 
-  ClassDef(RooLognormal,1) // log-normal PDF
+  ClassDefOverride(RooLognormal,1) // log-normal PDF
 };
 
 #endif

@@ -82,13 +82,15 @@ for advanced uses of categories.
 #include "RooFitLegacy/RooCategorySharedProperties.h"
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
+#include "ROOT/StringUtils.hxx"
+
 #include "TBuffer.h"
 #include "TString.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "TList.h"
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <memory>
 
 using namespace std;
 
@@ -102,20 +104,20 @@ std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_shar
 
 RooCategory::RooCategory()
 {
-  TRACE_CREATE 
+  TRACE_CREATE
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Types must be defined using defineType() before variable can be used
-RooCategory::RooCategory(const char *name, const char *title) : 
+RooCategory::RooCategory(const char *name, const char *title) :
   RooAbsCategoryLValue(name,title),
   _ranges(new RangeMap_t())
 {
-  setValueDirty() ;  
-  setShapeDirty() ;  
-  TRACE_CREATE 
+  setValueDirty() ;
+  setShapeDirty() ;
+  TRACE_CREATE
 }
 
 
@@ -140,7 +142,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
   RooAbsCategoryLValue(other, name),
   _ranges(other._ranges)
 {
-  TRACE_CREATE   
+  TRACE_CREATE
 }
 
 
@@ -160,7 +162,7 @@ RooCategory::~RooCategory()
 /// If printError is set, a message will be printed if
 /// the specified index does not represent a valid state.
 /// \return bool signalling if an error occurred.
-Bool_t RooCategory::setIndex(Int_t index, Bool_t printError) 
+Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
 {
   if (!hasIndex(index)) {
     if (printError) {
@@ -182,7 +184,7 @@ Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
 /// If printError is set, a message will be printed if
 /// the specified label does not represent a valid state.
 /// \return false on success.
-Bool_t RooCategory::setLabel(const char* label, Bool_t printError) 
+Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
 {
   const auto item = stateNames().find(label);
   if (item != stateNames().end()) {
@@ -206,7 +208,7 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
 /// state labels may not contain semicolons.
 /// \return True in case of an error.
 bool RooCategory::defineType(const std::string& label)
-{ 
+{
   if (label.find(';') != std::string::npos) {
     coutE(InputArguments) << "RooCategory::defineType(" << GetName()
         << "): semicolons not allowed in label name" << endl ;
@@ -225,7 +227,7 @@ bool RooCategory::defineType(const std::string& label, Int_t index)
 {
   if (label.find(';') != std::string::npos) {
     coutE(InputArguments) << "RooCategory::defineType(" << GetName()
-			<< "): semicolons not allowed in label name" << endl ;
+         << "): semicolons not allowed in label name" << endl ;
     return true;
   }
 
@@ -284,7 +286,7 @@ std::map<std::string, RooAbsCategory::value_type>& RooCategory::states() {
 /// Read object contents from given stream. If token is a decimal digit, try to
 /// find a corresponding state for it. If that succeeds, the state denoted by this
 /// index is used. Otherwise, interpret it as a label.
-Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose) 
+Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose)
 {
   // Read single token
   RooStreamParser parser(is) ;
@@ -325,14 +327,14 @@ void RooCategory::clearRange(const char* name, Bool_t silent)
       coutE(InputArguments) << "RooCategory::clearRange(" << GetName() << ") ERROR: must specify valid range name" << endl ;
     return;
   }
-  
+
   _ranges->erase(item);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCategory::setRange(const char* name, const char* stateNameList) 
+void RooCategory::setRange(const char* name, const char* stateNameList)
 {
   clearRange(name,kTRUE) ;
   addToRange(name,stateNameList) ;
@@ -354,7 +356,7 @@ void RooCategory::addToRange(const char* name, RooAbsCategory::value_type stateI
     }
 
     item = _ranges->emplace(name, std::vector<value_type>()).first;
-    coutI(Contents) << "RooCategory::setRange(" << GetName() 
+    coutI(Contents) << "RooCategory::setRange(" << GetName()
         << ") new range named '" << name << "' created for state " << stateIndex << endl ;
   }
 
@@ -376,13 +378,13 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
   }
 
   // Parse list of state names, verify that each is valid and add them to the list
-  for (const auto& token : RooHelpers::tokenise(stateNameList, ",")) {
+  for (const auto& token : ROOT::Split(stateNameList, ",")) {
     const value_type idx = lookupIndex(token);
     if (idx != invalidCategory().second) {
       addToRange(name, idx);
     } else {
-      coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '" 
-			    << token << "' in state name list" << endl ;
+      coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '"
+             << token << "' in state name list" << endl ;
     }
   }
 }
@@ -432,7 +434,7 @@ void RooCategory::Streamer(TBuffer &R__b)
 {
   UInt_t R__s, R__c;
   if (R__b.IsReading()) {
-    
+
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
     if (R__v==1) {
@@ -461,7 +463,7 @@ void RooCategory::Streamer(TBuffer &R__b)
     }
 
     R__b.CheckByteCount(R__s, R__c, RooCategory::IsA());
-    
+
   } else {
     // Since we cannot write shared pointers yet, assign the shared ranges to a normal pointer,
     // write, and restore.
@@ -490,8 +492,7 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
     auto& rangesMap = *_ranges;
 
     // Copy the data:
-    std::unique_ptr<TIterator> iter(props->_altRanges.MakeIterator());
-    while (TList* olist = (TList*)iter->Next()) {
+    for (auto * olist : static_range_cast<TList*>(props->_altRanges)) {
       std::vector<value_type>& vec = rangesMap[olist->GetName()];
 
 

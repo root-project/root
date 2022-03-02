@@ -137,8 +137,8 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 #include "TGlobal.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RConcurrentHashColl.hxx"
+#include <memory>
 
 using std::sqrt;
 
@@ -203,12 +203,13 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///
 /// Option | Description
 /// -------|------------
-/// NEW or CREATE | Create a new file and open it for writing, if the file already exists the file is not opened.
-/// RECREATE      | Create a new file, if the file already exists it will be overwritten.
-/// UPDATE        | Open an existing file for writing. If no file exists, it is created.
-/// READ          | Open an existing file for reading (default).
-/// NET           | Used by derived remote file access classes, not a user callable option.
-/// WEB           | Used by derived remote http access class, not a user callable option.
+/// NEW or CREATE                     | Create a new file and open it for writing, if the file already exists the file is not opened.
+/// RECREATE                          | Create a new file, if the file already exists it will be overwritten.
+/// UPDATE                            | Open an existing file for writing. If no file exists, it is created.
+/// READ                              | Open an existing file for reading (default).
+/// NET                               | Used by derived remote file access classes, not a user callable option.
+/// WEB                               | Used by derived remote http access class, not a user callable option.
+/// READ_WITHOUT_GLOBALREGISTRATION   | Used by TTreeProcessorMT, not a user callable option.
 ///
 /// If option = "" (default), READ is assumed.
 /// The file can be specified as a URL of the form:
@@ -274,6 +275,15 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// ~~~{.cpp}
 /// TFile f("file.root");
 /// if (f.IsZombie()) {
+///    std::cout << "Error opening file" << std::endl;
+///    exit(-1);
+/// }
+/// ~~~
+/// If you open a file instead with TFile::Open("file.root") use rather
+/// the following code as a nullptr is returned.
+/// ~~~{.cpp}
+/// TFile* f = TFile::Open("file.root");
+/// if (!f) {
 ///    std::cout << "Error opening file" << std::endl;
 ///    exit(-1);
 /// }
@@ -373,6 +383,14 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
    if (fOption == "NEW")
       fOption = "CREATE";
+
+   if (fOption == "READ_WITHOUT_GLOBALREGISTRATION") {
+      fOption = "READ";
+      fGlobalRegistration = false;
+      if (fList) {
+         fList->UseRWLock(false);
+      }
+   }
 
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
@@ -493,7 +511,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
 zombie:
    // error in file opening occurred, make this object a zombie
-   {
+   if (fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
@@ -531,7 +549,9 @@ TFile::~TFile()
 
    {
       R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfClosedObjects()->Remove(this);
+      if (fGlobalRegistration) {
+         gROOT->GetListOfClosedObjects()->Remove(this);
+      }
       gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
    }
 
@@ -816,8 +836,10 @@ void TFile::Init(Bool_t create)
 
    {
       R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfFiles()->Add(this);
-      gROOT->GetUUIDs()->AddUUID(fUUID,this);
+      if (fGlobalRegistration) {
+         gROOT->GetListOfFiles()->Add(this);
+      }
+      gROOT->GetUUIDs()->AddUUID(fUUID, this);
    }
 
    // Create StreamerInfo index
@@ -853,10 +875,11 @@ void TFile::Init(Bool_t create)
       }
       fProcessIDs = new TObjArray(fNProcessIDs+1);
    }
+
    return;
 
 zombie:
-   {
+   if (fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
@@ -962,7 +985,7 @@ void TFile::Close(Option_t *option)
    }
    pidDeleted.Delete();
 
-   if (!IsZombie()) {
+   if (!IsZombie() && fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFiles()->Remove(this);
       gROOT->GetListOfBrowsers()->RecursiveRemove(this);
@@ -1206,6 +1229,8 @@ TFileCacheWrite *TFile::GetCacheWrite() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Read the logical record header starting at a certain postion.
 ///
+/// \param[in] buf pointer to buffer
+/// \param[in] first read offset
 /// \param[in] maxbytes Bytes which are read into buf.
 /// \param[out] nbytes Number of bytes in record if negative, this is a deleted
 /// record if 0, cannot read record, wrong value of argument first
@@ -1315,7 +1340,9 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
 
 #ifdef R__USE_IMT
       if (lookupSICache) {
-         hash = fgTsSIHashes.Hash(buf, fNbytesInfo);
+         // key data must be excluded from the hash, otherwise the timestamp will
+         // always lead to unique hashes for each file
+         hash = fgTsSIHashes.Hash(buf + key->GetKeylen(), fNbytesInfo - key->GetKeylen());
          if (fgTsSIHashes.Find(hash)) {
             if (gDebug > 0) Info("GetStreamerInfo", "The streamer info record for file %s has already been treated, skipping it.", GetName());
             return {nullptr, 0, hash};
@@ -2586,7 +2613,7 @@ void TFile::WriteHeader()
 /// object does not exist.
 ///
 /// The code generated includes:
-///   - <em>dirnameProjectHeaders.h</em>, which contains one #include statement per generated header file
+///   - <em>dirnameProjectHeaders.h</em>, which contains one `#include` statement per generated header file
 ///   - <em>dirnameProjectSource.cxx</em>,which contains all the constructors and destructors implementation.
 /// and one header per class that is not nested inside another class.
 /// The header file name is the fully qualified name of the class after all the special characters
@@ -3799,7 +3826,6 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
       ::Info("TFile::OpenFromCache", "set cache directory using TFile::SetCacheFileDir()");
    } else {
       TUrl fileurl(name);
-      TUrl tagurl;
 
       if ((!strcmp(fileurl.GetProtocol(), "file"))) {
          // it makes no sense to read local files through a file cache
@@ -3930,30 +3956,33 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
             // try to fetch the file (disable now the forced caching)
             Bool_t forcedcache = fgCacheFileForce;
             fgCacheFileForce = kFALSE;
-            if (need2copy && !TFile::Cp(name, cachefilepath)) {
-               ::Warning("TFile::OpenFromCache", "you want to read through a cache, but I "
-                         "cannot make a cache copy of %s - CACHEREAD disabled",
-                         cachefilepathbasedir.Data());
-               fgCacheFileForce = forcedcache;
-               if (fgOpenTimeout != 0)
+            if (need2copy) {
+               const auto cachefilepathtmp = cachefilepath + std::to_string(gSystem->GetPid()) + ".tmp";
+               if (!TFile::Cp(name, cachefilepathtmp)) {
+                  ::Warning("TFile::OpenFromCache",
+                            "you want to read through a cache, but I "
+                            "cannot make a cache copy of %s - CACHEREAD disabled",
+                            cachefilepathbasedir.Data());
+                  fgCacheFileForce = forcedcache;
                   return nullptr;
-            } else {
-               fgCacheFileForce = forcedcache;
-               ::Info("TFile::OpenFromCache", "using local cache copy of %s [%s]",
-                       name, cachefilepath.Data());
-               // finally we have the file and can open it locally
-               fileurl.SetProtocol("file");
-               fileurl.SetFile(cachefilepath);
-
-               tagurl = fileurl;
-               TString tagfile;
-               tagfile = cachefilepath;
-               tagfile += ".ROOT.cachefile";
-               tagurl.SetFile(tagfile);
-               // we symlink this file as a ROOT cached file
-               gSystem->Symlink(gSystem->BaseName(cachefilepath), tagfile);
-               return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
+               }
+               if (gSystem->AccessPathName(cachefilepath)) // then file _does not_ exist (weird convention)
+                  gSystem->Rename(cachefilepathtmp, cachefilepath);
+               else // another process or thread already wrote a file with the same name while we were copying it
+                  gSystem->Unlink(cachefilepathtmp);
             }
+            fgCacheFileForce = forcedcache;
+            ::Info("TFile::OpenFromCache", "using local cache copy of %s [%s]", name, cachefilepath.Data());
+            // finally we have the file and can open it locally
+            fileurl.SetProtocol("file");
+            fileurl.SetFile(cachefilepath);
+
+            TString tagfile;
+            tagfile = cachefilepath;
+            tagfile += ".ROOT.cachefile";
+            // we symlink this file as a ROOT cached file
+            gSystem->Symlink(gSystem->BaseName(cachefilepath), tagfile);
+            return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
          }
       }
    }
@@ -3983,11 +4012,11 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// TNetFile use either TNetFile directly or specify as host "localhost".
 /// The netopt argument is only used by TNetFile. For the meaning of the
 /// options and other arguments see the constructors of the individual
-/// file classes. In case of error returns 0.
+/// file classes. In case of error, it returns a nullptr.
 ///
 /// For TFile implementations supporting asynchronous file open, see
 /// TFile::AsyncOpen(...), it is possible to request a timeout with the
-/// option <b>TIMEOUT=<secs></b>: the timeout must be specified in seconds and
+/// option <b>`TIMEOUT=<secs>`</b>: the timeout must be specified in seconds and
 /// it will be internally checked with granularity of one millisec.
 /// For remote files there is the option: <b>CACHEREAD</b> opens an existing
 /// file for reading through the file cache. The file will be downloaded to
@@ -3995,6 +4024,10 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// The file will be downloaded to the directory specified by SetCacheFileDir().
 ///
 /// *The caller is responsible for deleting the pointer.*
+/// In READ mode, a nullptr is returned if the file does not exist or cannot be opened.
+/// In CREATE mode, a nullptr is returned if the file already exists or cannot be created.
+/// In RECREATE mode, a nullptr is returned if the file can not be created.
+/// In UPDATE mode, a nullptr is returned if the file cannot be created or opened.
 
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)

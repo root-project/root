@@ -366,6 +366,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             title: "Select file name to save",
             filter: "Any files",
             filters: ["Text files (*.txt)", "C++ files (*.cxx *.cpp *.c)", "Any files (*)"],
+            // working_path: "/Home",
             onOk: fname => {
                let p = Math.max(fname.lastIndexOf("/"), fname.lastIndexOf("\\"));
                let title = (p > 0) ? fname.substr(p+1) : fname;
@@ -375,8 +376,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this.syncEditor(tab, "SAVE");
                this.doReload(true); // while new file appears, one should reload items on server
             },
-            onCancel: function() { },
-            onFailure: function() { }
+            onCancel: () => { },
+            onFailure: () => { }
          });
       },
 
@@ -483,6 +484,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                oEditor.setType('markdown');
                break;
             case "py":
+               oModel.setProperty("/runEnabled", true);
                oEditor.setType('python');
                break;
             case "tex":
@@ -1021,7 +1023,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             case "editor": this.createCodeEditor(par1, par2, par3); break;
             case "image": this.createImageViewer(par1, par2, par3); break;
             case "geom": this.createGeomViewer(par1, par2, par3); break;
+            case "catched": this.createCatchedWidget(par1, par2, par3); break;
             default: this.createCanvas(kind, par1, par2, par3);
+         }
+      },
+
+      createCatchedWidget: function(url, name, catched_kind) {
+         switch(catched_kind) {
+            case "rcanvas": this.createCanvas("rcanvas", url, name, "Catched RCanvas"); break;
+            case "tcanvas": this.createCanvas("tcanvas", url, name, "Catched RCanvas"); break;
+            case "geom": this.createGeomViewer(url, name, "Catched geom viewer"); break;
+            default: console.error("Not supported cacthed kind", catched_kind);
          }
       },
 
@@ -1063,7 +1075,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
 
          let painter = await ((kind == "rcanvas")
-                ? JSROOT.require("v7").then(() => new JSROOT.v7.RCanvasPainter(null, null))
+                ? JSROOT.require("v7").then(() => new JSROOT.RCanvasPainter(null, null))
                 : JSROOT.require("v6").then(() => new JSROOT.TCanvasPainter(null, null)));
 
          painter.online_canvas = true; // indicates that canvas gets data from running server

@@ -3,7 +3,6 @@
 
 #include "TString.h"
 #include "TXMLEngine.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include "TMVA/RTensor.hxx"
 #include "TMVA/Reader.h"

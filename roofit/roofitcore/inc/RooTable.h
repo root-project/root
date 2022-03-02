@@ -25,17 +25,17 @@ public:
 
   // Constructors, cloning and assignment
   RooTable() {} ;
-  virtual ~RooTable() ;
+  ~RooTable() override ;
   RooTable(const char *name, const char *title);
   RooTable(const RooTable& other) ;
 
   virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) = 0 ;
 
-  virtual Bool_t isIdentical(const RooTable& other) = 0 ;
+  virtual Bool_t isIdentical(const RooTable& other, bool verbose) = 0 ;
 
 protected:
 
-  ClassDef(RooTable,1) // Abstract interface for tables
+  ClassDefOverride(RooTable,1) // Abstract interface for tables
 };
 
 #endif

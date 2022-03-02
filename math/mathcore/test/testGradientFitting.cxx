@@ -1,6 +1,7 @@
 // @(#)root/test:$Id$
 // Author: Alejandro García Montoro 08/2017
 
+#include "RConfigure.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/Fitter.h"
@@ -278,12 +279,15 @@ TYPED_TEST_P(GradientFittingTest, Sequential)
    EXPECT_TRUE(TestFixture::RunFit(ROOT::EExecutionPolicy::kSequential));
 }
 
+#ifdef R__HAS_IMT
 TYPED_TEST_P(GradientFittingTest, Multithread)
 {
    EXPECT_TRUE(TestFixture::RunFit(ROOT::EExecutionPolicy::kMultiThread));
 }
-
 REGISTER_TYPED_TEST_SUITE_P(GradientFittingTest,Sequential,Multithread);
+#else
+REGISTER_TYPED_TEST_SUITE_P(GradientFittingTest,Sequential);
+#endif
 
 INSTANTIATE_TYPED_TEST_SUITE_P(GradientFitting, GradientFittingTest, TestTypes);
 

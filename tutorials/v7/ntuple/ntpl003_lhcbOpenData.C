@@ -52,8 +52,8 @@ void Convert() {
    std::unique_ptr<TFile> f(TFile::Open(kTreeFileName));
    assert(f && ! f->IsZombie());
 
-   // Get a unique pointer to an empty RNTuple model
-   auto model = RNTupleModel::Create();
+   // Get a unique pointer to an empty RNTuple model without a default entry
+   auto model = RNTupleModel::CreateBare();
 
    // We create RNTuple fields based on the types found in the TTree
    // This simple approach only works for trees with simple branches and only one leaf per branch
@@ -73,20 +73,24 @@ void Convert() {
       // Hand over ownership of the field to the ntuple model.  This will also create a memory location attached
       // to the model's default entry, that will be used to place the data supposed to be written
       model->AddField(std::move(field));
-
-      // We connect the model's default entry's memory location for the new field to the branch, so that we can
-      // fill the ntuple with the data read from the TTree
-      void *fieldDataPtr = model->GetDefaultEntry()->GetValue(l->GetName()).GetRawPtr();
-      tree->SetBranchAddress(b->GetName(), fieldDataPtr);
    }
 
    // The new ntuple takes ownership of the model
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "DecayTree", kNTupleFileName);
 
+   auto entry = ntuple->GetModel()->CreateEntry();
+   for (auto b : TRangeDynCast<TBranch>(*tree->GetListOfBranches())) {
+      auto l = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
+      // We connect the model's default entry's memory location for the new field to the branch, so that we can
+      // fill the ntuple with the data read from the TTree
+      void *fieldDataPtr = entry->GetValue(l->GetName()).GetRawPtr();
+      tree->SetBranchAddress(b->GetName(), fieldDataPtr);
+   }
+
    auto nEntries = tree->GetEntries();
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
       tree->GetEntry(i);
-      ntuple->Fill();
+      ntuple->Fill(*entry);
 
       if (i && i % 100000 == 0)
          std::cout << "Wrote " << i << " entries" << std::endl;

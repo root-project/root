@@ -31,12 +31,12 @@ public:
         RooAbsReal& _a, RooAbsReal& _b);
 
   RooDstD0BG(const RooDstD0BG& other, const char *name=0) ;
-  virtual TObject *clone(const char *newname) const {
+  TObject *clone(const char *newname) const override {
     return new RooDstD0BG(*this,newname); }
-  inline virtual ~RooDstD0BG() { };
+  inline ~RooDstD0BG() override { };
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 protected:
 
@@ -44,12 +44,13 @@ protected:
   RooRealProxy dm0 ;
   RooRealProxy C,A,B ;
 
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
 
-  ClassDef(RooDstD0BG,1) // D*-D0 mass difference background PDF
+  ClassDefOverride(RooDstD0BG,1) // D*-D0 mass difference background PDF
 };
 
 #endif

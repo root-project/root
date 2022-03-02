@@ -8,7 +8,7 @@
  *                                                                    *
  **********************************************************************/
 
-// random engines based on ROOT 
+// random engines based on ROOT
 
 #ifndef ROOT_Math_MersenneTwisterEngine
 #define ROOT_Math_MersenneTwisterEngine
@@ -26,7 +26,7 @@ namespace ROOT {
       /**
          Random number generator class based on
          M. Matsumoto and T. Nishimura,
-         Mersenne Twister: A 623-diminsionally equidistributed
+         Mersenne Twister: A 623-dimensionally equidistributed
          uniform pseudorandom number generator
          ACM Transactions on Modeling and Computer Simulation,
          Vol. 8, No. 1, January 1998, pp 3--30.
@@ -34,13 +34,13 @@ namespace ROOT {
          For more information see the Mersenne Twister homepage
          [http://www.math.keio.ac.jp/~matumoto/emt.html]
 
-         Advantage: 
+         Advantage:
 
          -  large period 2**19937 -1
-         -  relativly fast (slightly slower than TRandom1 and TRandom2 but much faster than TRandom1)
+         -  relatively fast (slightly slower than TRandom1 and TRandom2 but much faster than TRandom1)
 
          Note that this is a 32 bit implementation. Only 32 bits of the returned double numbers are random.
-         in case more precision is needed, one should use an engine providing at least 48 random bits. 
+         in case more precision is needed, one should use an engine providing at least 48 random bits.
 
          Drawback:  a relative large internal state of 624 integers
 
@@ -73,10 +73,10 @@ namespace ROOT {
          uint32_t IntRndm() {
             return IntRndm_impl();
          }
-       
+
          /// minimum integer taht can be generated
          static unsigned int MinInt() { return 0; }
-         /// maximum integer taht can be generated
+         /// maximum integer that can be generated
          static unsigned int MaxInt() { return 0xffffffff; }  //  2^32 -1
 
          static int Size() { return kSize; }
@@ -87,7 +87,7 @@ namespace ROOT {
 
       protected:
          // functions used for testing
-         
+
          void SetState(const std::vector<uint32_t> & state) {
             for (unsigned int i = 0; i < kSize; ++i)
                fMt[i] = state[i];
@@ -106,9 +106,9 @@ namespace ROOT {
       private:
 
          double Rndm_impl();
-         uint32_t IntRndm_impl(); 
+         uint32_t IntRndm_impl();
 
-         enum { 
+         enum {
             kSize=624
          };
          uint32_t  fMt[kSize];

@@ -52,7 +52,7 @@ public:
    {
    }
 
-   void OnWindowCreated(CefRefPtr<CefWindow> window) OVERRIDE
+   void OnWindowCreated(CefRefPtr<CefWindow> window) override
    {
       // Add the browser view and show the window.
       window->AddChildView(fBrowserView);
@@ -62,9 +62,9 @@ public:
       fBrowserView->RequestFocus();
    }
 
-   void OnWindowDestroyed(CefRefPtr<CefWindow> window) OVERRIDE { fBrowserView = nullptr; }
+   void OnWindowDestroyed(CefRefPtr<CefWindow> window) override { fBrowserView = nullptr; }
 
-   bool CanClose(CefRefPtr<CefWindow> window) OVERRIDE
+   bool CanClose(CefRefPtr<CefWindow> window) override
    {
       // Allow the window to close if the browser says it's OK.
       CefRefPtr<CefBrowser> browser = fBrowserView->GetBrowser();
@@ -73,7 +73,7 @@ public:
       return true;
    }
 
-   CefSize GetPreferredSize(CefRefPtr<CefView> view) OVERRIDE
+   CefSize GetPreferredSize(CefRefPtr<CefView> view) override
    {
      return CefSize(fWidth, fHeight);
    }
@@ -92,7 +92,7 @@ class SimpleBrowserViewDelegate : public CefBrowserViewDelegate {
 
   bool OnPopupBrowserViewCreated(CefRefPtr<CefBrowserView> browser_view,
                                  CefRefPtr<CefBrowserView> popup_browser_view,
-                                 bool is_devtools) OVERRIDE {
+                                 bool is_devtools) override {
     // Create a new top-level Window for the popup. It will show itself after
     // creation.
     CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(popup_browser_view));

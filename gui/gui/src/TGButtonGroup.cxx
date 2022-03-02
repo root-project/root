@@ -112,7 +112,7 @@ TGButtonGroup::TGButtonGroup(const TGWindow *parent,
                              UInt_t options,
                              GContext_t norm,
                              FontStruct_t font,
-                             ULong_t back) :
+                             Pixel_t back) :
    TGGroupFrame(parent, new TGString(title), options, norm, font, back)
 {
    Init();
@@ -138,7 +138,7 @@ TGButtonGroup::TGButtonGroup(const TGWindow *parent,
                              const TString &title,
                              GContext_t norm ,
                              FontStruct_t font ,
-                             ULong_t back) :
+                             Pixel_t back) :
    TGGroupFrame(parent, new TGString(title), 0, norm, font, back)
 {
    Init();
@@ -384,7 +384,7 @@ Int_t TGButtonGroup::Insert(TGButton *button, Int_t id)
    button->Associate(this);
 
    static Int_t seq_no = -2;
-   Long_t bid;
+   Longptr_t bid;
 
    if (id < -1)       bid = seq_no--;
    else if (id == -1) bid = GetCount()+1;
@@ -430,7 +430,7 @@ TGButton *TGButtonGroup::Find(Int_t id) const
    TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {
-      if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
+      if ((Longptr_t)fMapOfButtons->GetValue(item) == id) break;   // found
    }
 
    return item;
@@ -452,7 +452,7 @@ Int_t TGButtonGroup::GetId(TGButton *button) const
 {
    TPair *a = (TPair*) fMapOfButtons->FindObject(button);
    if (a)
-      return (Int_t)Long_t(a->Value());
+      return (Int_t)Longptr_t(a->Value());
    else
       return -1;
 }
@@ -481,7 +481,7 @@ void TGButtonGroup::ButtonPressed()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Pressed(id);
    }
 }
@@ -496,7 +496,7 @@ void TGButtonGroup::ButtonReleased()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Released(id);
    }
 }
@@ -511,7 +511,7 @@ void TGButtonGroup::ButtonClicked()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Clicked(id);
    }
 }

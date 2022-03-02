@@ -165,7 +165,7 @@ void TAttLineEditor::DoLineColor(Pixel_t color)
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot connected to the color with alpha.
 
-void TAttLineEditor::DoLineAlphaColor(ULong_t p)
+void TAttLineEditor::DoLineAlphaColor(ULongptr_t p)
 {
    TColor *color = (TColor *)p;
 

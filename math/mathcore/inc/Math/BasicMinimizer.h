@@ -40,10 +40,10 @@ namespace Math {
 
 //_______________________________________________________________________________
 /**
-   Base Minimizer class, which defines the basic funcionality of various minimizer
+   Base Minimizer class, which defines the basic functionality of various minimizer
    implementations (apart from Minuit and Minuit2)
    It provides support for storing parameter values, step size,
-   parameter transofrmation etc.. in case real minimizer impelmentations do not provide
+   parameter transformation etc.. in case real minimizer implementations do not provide
    such functionality.
    This is an internal class and should not be used directly by the user
 
@@ -185,8 +185,8 @@ private:
    std::vector<double> fValues;
    std::vector<double> fSteps;
    std::vector<std::string> fNames;
-   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;  // vector specifyng the type of variables
-   std::map< unsigned int, std::pair<double, double> > fBounds; // map specifying the bound using as key the parameter index
+   std::vector<ROOT::Math::EMinimVariableType> fVarTypes;       ///< vector specifying the type of variables
+   std::map< unsigned int, std::pair<double, double> > fBounds; ///< map specifying the bound using as key the parameter index
 
 };
 

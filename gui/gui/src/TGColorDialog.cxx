@@ -30,7 +30,7 @@ A widget showing an matrix of color cells. The colors can be set and selected.
 */
 
 
-/** \class The TGColorPick
+/** \class TGColorPick
     \ingroup guiwidgets
 
 A widget which allows a color to be picked from HLS color space.
@@ -1060,7 +1060,7 @@ void TGColorPick::DrawLcursor(Int_t onoff)
 /// It uses 2 TGColorPalette's and the TGColorPick widgets.
 
 TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
-                             Int_t *retc, ULong_t *color, Bool_t wait) :
+                             Int_t *retc, Pixel_t *color, Bool_t wait) :
    TGTransientFrame(p, m, 200, 150)
 {
    const Int_t kC_X = 175;  // Win95: 177
@@ -1362,7 +1362,7 @@ void TGColorDialog::ColorSelected(Pixel_t color)
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit signal about selected alpha and color.
 
-void TGColorDialog::AlphaColorSelected(ULong_t color)
+void TGColorDialog::AlphaColorSelected(ULongptr_t color)
 {
    Emit("AlphaColorSelected(ULong_t)", color);
 }
@@ -1378,11 +1378,11 @@ void TGColorDialog::CloseWindow()
 
    if (*fRetc != kMBOk) {
       ColorSelected(fInitColor);
-      ULong_t ptr;
-      if((ptr = (ULong_t)gROOT->GetColor(TColor::GetColor(fInitColor)))) AlphaColorSelected(ptr);
+      ULongptr_t ptr;
+      if((ptr = (ULongptr_t)gROOT->GetColor(TColor::GetColor(fInitColor)))) AlphaColorSelected(ptr);
    } else {
       ColorSelected(*fRetColor);
-      AlphaColorSelected((ULong_t)fRetTColor);
+      AlphaColorSelected((ULongptr_t)fRetTColor);
    }
    // don't call DeleteWindow() here since that will cause access
    // to the deleted dialog in the WaitFor() method (see ctor)
@@ -1471,7 +1471,7 @@ void TGColorDialog::UpdateHLSentries(ULong_t *c)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages for the color selection dialog.
 
-Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
+Bool_t TGColorDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /*parm2*/)
 {
    ULong_t color;
    Int_t h, l, s;
@@ -1636,12 +1636,12 @@ void TGColorDialog::DoPreview()
 
    if (fClient->IsEditable()) {
       ColorSelected(fSample->GetBackground());
-      AlphaColorSelected((ULong_t)tcolor);
+      AlphaColorSelected((ULongptr_t)tcolor);
       return;
    }
    TGColorPopup *p = (TGColorPopup *)GetMain();
    if (p && p->InheritsFrom("TGColorPopup")) {
-      if (tcolor) p->PreviewAlphaColor((ULong_t)tcolor);
+      if (tcolor) p->PreviewAlphaColor((ULongptr_t)tcolor);
       else p->PreviewColor(fSample->GetBackground());
    }
 }

@@ -14,6 +14,8 @@
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "RtypesCore.h"
 
+#include <unordered_map>
+
 namespace ROOT {
 
 // fwd decl
@@ -39,18 +41,20 @@ protected:
    ULong64_t fNProcessedEntries{0};
    bool fHasStopped{false};    ///< True if the end of the range has been reached
    const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
+   std::unordered_map<std::string, std::shared_ptr<RRangeBase>> fVariedRanges;
 
    void ResetCounters();
 
 public:
    RRangeBase(RLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
-              const unsigned int nSlots);
+              const unsigned int nSlots, const std::vector<std::string> &prevVariations);
 
    RRangeBase &operator=(const RRangeBase &) = delete;
    virtual ~RRangeBase();
 
    void InitNode() { ResetCounters(); }
-   virtual std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() = 0;
+   virtual std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) = 0;
 };
 
 } // ns RDF

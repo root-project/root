@@ -50,7 +50,7 @@ Will be present if there are any referenced objects.
 The title of a TProcessID object is a globally unique identifier of the
 ROOTIO process that created it.  It is derived from the following quantities.
 
-  1. The creation time ("fTime) of the TProcessID record.  This is a 60 bit time
+  1. The creation time ("fTime") of the TProcessID record.  This is a 60 bit time
      in 100ns ticks since Oct. 15, 1582.
 
   2. A 16 bit random unsigned integer ("clockeq") generated from a seed that is the

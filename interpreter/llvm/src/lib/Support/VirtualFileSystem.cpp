@@ -1305,10 +1305,9 @@ class llvm::vfs::RedirectingFileSystemParser {
 
         NameValueNode = I.getValue();
         if (FS->UseCanonicalizedPaths) {
-          SmallString<256> Path(Value);
           // Guarantee that old YAML files containing paths with ".." and "."
           // are properly canonicalized before read into the VFS.
-          Path = sys::path::remove_leading_dotslash(Path);
+          SmallString<256> Path = sys::path::remove_leading_dotslash(Value);
           sys::path::remove_dots(Path, /*remove_dot_dot=*/true);
           Name = Path.str();
         } else {
@@ -1369,7 +1368,8 @@ class llvm::vfs::RedirectingFileSystemParser {
         if (FS->UseCanonicalizedPaths) {
           // Guarantee that old YAML files containing paths with ".." and "."
           // are properly canonicalized before read into the VFS.
-          FullPath = sys::path::remove_leading_dotslash(FullPath);
+          SmallString<256> Path = sys::path::remove_leading_dotslash(FullPath);
+          FullPath = Path;
           sys::path::remove_dots(FullPath, /*remove_dot_dot=*/true);
         }
         ExternalContentsPath = FullPath.str();
@@ -1610,7 +1610,8 @@ RedirectingFileSystem::lookupPath(const Twine &Path_) const {
   // a VFS request, do bot bother about symlinks in the path components
   // but canonicalize in order to perform the correct entry search.
   if (UseCanonicalizedPaths) {
-    Path = sys::path::remove_leading_dotslash(Path);
+    SmallString<256> PathNoDotSlash = sys::path::remove_leading_dotslash(Path);
+    Path = PathNoDotSlash;
     sys::path::remove_dots(Path, /*remove_dot_dot=*/true);
   }
 

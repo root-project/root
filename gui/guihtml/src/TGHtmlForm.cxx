@@ -63,7 +63,7 @@ void TGHtml::UnmapControls()
 /// Map any control that should be visible according to the
 /// current scroll position. At the same time, if any controls that
 /// should not be visible are mapped, unmap them. After this routine
-/// finishes, all <INPUT> controls should be in their proper places
+/// finishes, all `<INPUT>` controls should be in their proper places
 /// regardless of where they might have been before.
 ///
 /// Return the number of controls that are currently visible.
@@ -125,7 +125,7 @@ void TGHtml::DeleteControls()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an appropriate type value for the given <INPUT> markup.
+/// Return an appropriate type value for the given `<INPUT>` markup.
 
 static int InputType(TGHtmlElement *p)
 {
@@ -291,14 +291,14 @@ protected:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The "p" argument points to a <select>.  This routine scans all
-/// subsequent elements (up to the next </select>) looking for
-/// <option> tags.  For each option tag, it appends the corresponding
+/// The "p" argument points to a `<select>`.  This routine scans all
+/// subsequent elements (up to the next `</select>`) looking for
+/// `<option>` tags.  For each option tag, it appends the corresponding
 /// entry to the "lb" listbox element.
 ///
 /// lb   -- An TGListBox object
-/// p    -- The <SELECT> markup
-/// pEnd -- The </SELECT> markup
+/// p    -- The `<SELECT>` markup
+/// pEnd -- The `</SELECT>` markup
 
 void TGHtml::AddSelectOptions(TGListBox *lb, TGHtmlElement *p,
                               TGHtmlElement *pEnd)
@@ -343,14 +343,14 @@ void TGHtml::AddSelectOptions(TGListBox *lb, TGHtmlElement *p,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This routine implements the Sizer() function for <INPUT>,
-/// <SELECT> and <TEXTAREA> markup.
+/// This routine implements the Sizer() function for `<INPUT>`,
+/// `<SELECT>` and `<TEXTAREA>` markup.
 ///
 /// A side effect of sizing these markups is that widgets are
 /// created to represent the corresponding input controls.
 ///
 /// The function normally returns 0.  But if it is dealing with
-/// a <SELECT> or <TEXTAREA> that is incomplete, 1 is returned.
+/// a `<SELECT>` or `<TEXTAREA>` that is incomplete, 1 is returned.
 /// In that case, the sizer will be called again at some point in
 /// the future when more information is available.
 
@@ -667,7 +667,7 @@ void TGHtml::EncodeText(TGString *str, const char *z)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages (GUI events) in the html widget.
 
-Bool_t TGHtml::ProcessMessage(Long_t msg, Long_t p1, Long_t p2)
+Bool_t TGHtml::ProcessMessage(Longptr_t msg, Longptr_t p1, Longptr_t p2)
 {
 /*
   OWidgetMessage *wmsg = (OWidgetMessage *) msg;

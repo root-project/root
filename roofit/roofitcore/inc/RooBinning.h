@@ -32,37 +32,39 @@ public:
   RooBinning(Int_t nBins, Double_t xlo, Double_t xhi, const char* name = 0);
   RooBinning(Int_t nBins, const Double_t* boundaries, const char* name = 0);
   RooBinning(const RooBinning& other, const char* name = 0);
-  RooAbsBinning* clone(const char* name = 0) const { return new RooBinning(*this,name?name:GetName()); }
-  ~RooBinning();
+  RooAbsBinning* clone(const char* name = 0) const override { return new RooBinning(*this,name?name:GetName()); }
+  ~RooBinning() override;
 
-  virtual Int_t numBoundaries() const {
-    // Return the number boundaries
+  /// Return the number boundaries
+  Int_t numBoundaries() const override {
     return _nbins+1;
   }
-  virtual Int_t binNumber(Double_t x) const;
-  virtual Int_t rawBinNumber(Double_t x) const;
+  Int_t binNumber(Double_t x) const override;
+  Int_t rawBinNumber(Double_t x) const override;
   virtual Double_t nearestBoundary(Double_t x) const;
 
-  virtual void setRange(Double_t xlo, Double_t xhi);
+  void setRange(Double_t xlo, Double_t xhi) override;
 
-  virtual Double_t lowBound() const {
-    // Return the lower bound value
+  /// Return the lower bound value
+  Double_t lowBound() const override {
     return _xlo;
   }
-  virtual Double_t highBound() const {
-    // Return the upper bound value
+
+  /// Return the upper bound value
+  Double_t highBound() const override {
     return _xhi;
   }
-  virtual Double_t averageBinWidth() const {
-    // Return the average bin width
+
+  /// Return the average bin width
+  Double_t averageBinWidth() const override {
     return (highBound() - lowBound()) / numBins();
   }
-  virtual Double_t* array() const;
+  Double_t* array() const override;
 
-  virtual Double_t binCenter(Int_t bin) const;
-  virtual Double_t binWidth(Int_t bin) const;
-  virtual Double_t binLow(Int_t bin) const;
-  virtual Double_t binHigh(Int_t bin) const;
+  Double_t binCenter(Int_t bin) const override;
+  Double_t binWidth(Int_t bin) const override;
+  Double_t binLow(Int_t bin) const override;
+  Double_t binHigh(Int_t bin) const override;
 
   Bool_t addBoundary(Double_t boundary);
   void addBoundaryPair(Double_t boundary, Double_t mirrorPoint = 0);
@@ -76,17 +78,17 @@ protected:
   Bool_t binEdges(Int_t bin, Double_t& xlo, Double_t& xhi) const;
   void updateBinCount();
 
-  Double_t _xlo;          // Lower bound
-  Double_t _xhi;          // Upper bound
-  Bool_t _ownBoundLo;     // Does the lower bound coincide with a bin boundary
-  Bool_t _ownBoundHi;     // Does the upper bound coincide with a bin boundary
-  Int_t _nbins;           // Numer of bins
+  Double_t _xlo;          ///< Lower bound
+  Double_t _xhi;          ///< Upper bound
+  Bool_t _ownBoundLo;     ///< Does the lower bound coincide with a bin boundary
+  Bool_t _ownBoundHi;     ///< Does the upper bound coincide with a bin boundary
+  Int_t _nbins;           ///< Numer of bins
 
-  std::vector<Double_t> _boundaries;   // Boundaries
-  mutable Double_t* _array;         //! Array of boundaries
-  mutable Int_t _blo; //! bin number for _xlo
+  std::vector<Double_t> _boundaries; ///< Boundaries
+  mutable Double_t* _array;          ///<! Array of boundaries
+  mutable Int_t _blo;                ///<! bin number for _xlo
 
-  ClassDef(RooBinning,3) // Generic binning specification
+  ClassDefOverride(RooBinning,3) // Generic binning specification
 };
 
 #endif

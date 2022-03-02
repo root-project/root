@@ -1,6 +1,6 @@
 /****** Run RDataFrame tests both with and without IMT enabled *******/
 #include <gtest/gtest.h>
-#include <ROOTUnitTestSupport.h>
+#include <ROOT/TestSupport.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TChain.h>
@@ -20,6 +20,7 @@
 #include <random>
 
 #include "MaxSlotHelper.h"
+#include "SimpleFiller.h"
 
 using namespace ROOT;
 using namespace ROOT::RDF;
@@ -846,16 +847,17 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
    const auto errmsg = "file %s/doesnotexist.root does not exist";
    TString expecteddiag;
    expecteddiag.Form(errmsg, gSystem->pwd());
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kError, "TFile::TFile", expecteddiag.Data()};
    // in the single-thread case the error happens when TTreeReader is calling LoadTree the first time
    // otherwise we notice the file does not exist beforehand, e.g. in TTreeProcessorMT
    if (!ROOT::IsImplicitMTEnabled())
-      expecteddiag += "\nWarning in <TTreeReader::SetEntryBase()>: There was an issue opening the last file associated "
-                      "to the TChain being processed.";
+      diagRAII.requiredDiag(kWarning, "TTreeReader::SetEntryBase()", "There was an issue opening the last file associated "
+                                                                     "to the TChain being processed.");
 
    bool exceptionCaught = false;
    try {
-      ROOT_EXPECT_ERROR(df.Count().GetValue(), "TFile::TFile", expecteddiag.Data());
-   } catch (const std::runtime_error &e) {
+      df.Count().GetValue();
+   } catch (const std::exception &e) {
       const std::string expected_msg =
          ROOT::IsImplicitMTEnabled()
             ? "TTreeProcessorMT::Process: an error occurred while opening file \"doesnotexist.root\""
@@ -957,6 +959,23 @@ TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)
 TEST_P(RDFSimpleTests, WritingToFundamentalType)
 {
    EXPECT_THROW(ROOT::RDataFrame(1).Define("x", [] { return 1; }).Filter("x = 42"), std::runtime_error);
+}
+
+TEST_P(RDFSimpleTests, FillWithCustomClass)
+{
+   SimpleFiller sf; // defined as a variable to exercise passing lvalues into `Fill`
+   auto simplefilled = ROOT::RDataFrame(10).Define("x", [] { return 42.; }).Fill<double>(sf, {"x"});
+   auto &h = simplefilled->GetHisto();
+   EXPECT_DOUBLE_EQ(h.GetMean(), 42.);
+   EXPECT_EQ(h.GetEntries(), 10);
+}
+
+TEST_P(RDFSimpleTests, FillWithCustomClassJitted)
+{
+   auto simplefilled = ROOT::RDataFrame(10).Define("x", [] { return 42.; }).Fill(SimpleFiller{}, {"x"});
+   auto &h = simplefilled->GetHisto();
+   EXPECT_DOUBLE_EQ(h.GetMean(), 42.);
+   EXPECT_EQ(h.GetEntries(), 10);
 }
 
 // run single-thread tests

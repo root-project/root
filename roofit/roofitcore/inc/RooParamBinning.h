@@ -28,34 +28,34 @@ public:
   RooParamBinning(const char* name=0) ;
   RooParamBinning(RooAbsReal& xlo, RooAbsReal& xhi, Int_t nBins, const char* name=0) ;
   RooParamBinning(const RooParamBinning& other, const char* name=0) ;
-  RooAbsBinning* clone(const char* name=0) const { return new RooParamBinning(*this,name?name:GetName()) ; }
-  virtual ~RooParamBinning() ;
+  RooAbsBinning* clone(const char* name=0) const override { return new RooParamBinning(*this,name?name:GetName()) ; }
+  ~RooParamBinning() override ;
 
-  virtual void setRange(Double_t xlo, Double_t xhi) ;
+  void setRange(Double_t xlo, Double_t xhi) override ;
 
-  virtual Int_t numBoundaries() const { return _nbins + 1 ; }
-  virtual Int_t binNumber(Double_t x) const  ;
+  Int_t numBoundaries() const override { return _nbins + 1 ; }
+  Int_t binNumber(Double_t x) const override  ;
 
-  virtual Double_t lowBound() const { return xlo()->getVal() ; }
-  virtual Double_t highBound() const { return xhi()->getVal() ; }
+  Double_t lowBound() const override { return xlo()->getVal() ; }
+  Double_t highBound() const override { return xhi()->getVal() ; }
 
-  virtual Double_t binCenter(Int_t bin) const ;
-  virtual Double_t binWidth(Int_t bin) const ;
-  virtual Double_t binLow(Int_t bin) const ;
-  virtual Double_t binHigh(Int_t bin) const ;
+  Double_t binCenter(Int_t bin) const override ;
+  Double_t binWidth(Int_t bin) const override ;
+  Double_t binLow(Int_t bin) const override ;
+  Double_t binHigh(Int_t bin) const override ;
 
-  virtual Double_t averageBinWidth() const { return _binw ; }
-  virtual Double_t* array() const ;
+  Double_t averageBinWidth() const override { return _binw ; }
+  Double_t* array() const override ;
 
-  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  virtual void insertHook(RooAbsRealLValue&) const  ;
-  virtual void removeHook(RooAbsRealLValue&) const  ;
+  void insertHook(RooAbsRealLValue&) const override  ;
+  void removeHook(RooAbsRealLValue&) const override  ;
 
-  virtual Bool_t isShareable() const { return kFALSE ; } // parameterized binning cannot be shared across instances
-  virtual Bool_t isParameterized() const { return kTRUE ; } // binning is parameterized, range will need special handling in integration
-  virtual RooAbsReal* lowBoundFunc() const { return xlo() ; }
-  virtual RooAbsReal* highBoundFunc() const { return xhi() ; }
+  Bool_t isShareable() const override { return kFALSE ; } // parameterized binning cannot be shared across instances
+  Bool_t isParameterized() const override { return kTRUE ; } // binning is parameterized, range will need special handling in integration
+  RooAbsReal* lowBoundFunc() const override { return xlo() ; }
+  RooAbsReal* highBoundFunc() const override { return xhi() ; }
 
 protected:
 
@@ -70,7 +70,7 @@ protected:
   RooAbsReal* xlo() const { return _lp ? ((RooAbsReal*)_lp->at(0)) : _xlo ; }
   RooAbsReal* xhi() const { return _lp ? ((RooAbsReal*)_lp->at(1)) : _xhi ; }
 
-  ClassDef(RooParamBinning,2) // Binning specification with ranges parameterized by external RooAbsReal functions
+  ClassDefOverride(RooParamBinning,3) // Binning specification with ranges parameterized by external RooAbsReal functions
 };
 
 #endif

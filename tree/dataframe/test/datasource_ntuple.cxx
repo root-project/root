@@ -51,12 +51,12 @@ TEST_F(RNTupleDSTest, ColTypeNames)
 
    EXPECT_TRUE(tds.HasColumn("pt"));
    EXPECT_TRUE(tds.HasColumn("energy"));
-   EXPECT_TRUE(tds.HasColumn("__rdf_sizeof_nnlo"));
+   EXPECT_TRUE(tds.HasColumn("R_rdf_sizeof_nnlo"));
    EXPECT_FALSE(tds.HasColumn("Address"));
 
    EXPECT_STREQ("std::string", tds.GetTypeName("tag").c_str());
    EXPECT_STREQ("float", tds.GetTypeName("energy").c_str());
-   EXPECT_STREQ("ROOT::Experimental::ClusterSize_t::ValueType", tds.GetTypeName("__rdf_sizeof_jets").c_str());
+   EXPECT_STREQ("std::size_t", tds.GetTypeName("R_rdf_sizeof_jets").c_str());
 }
 
 
@@ -64,11 +64,21 @@ TEST_F(RNTupleDSTest, CardinalityColumn)
 {
    auto df = ROOT::Experimental::MakeNTupleDataFrame(fNtplName, fFileName);
 
-   // Check that the special column #<collection> works with jitting
-   auto max_njets = df.Define("njets", "__rdf_sizeof_jets").Max("njets");
-   EXPECT_EQ(2, *max_njets);
-}
+   // Check that the special column #<collection> works without jitting...
+   auto identity = [](std::size_t sz) { return sz; };
+   auto max_njets = df.Define("njets", identity, {"R_rdf_sizeof_jets"}).Max<std::size_t>("njets");
+   auto max_njets2 = df.Max<std::size_t>("#jets");
+   EXPECT_EQ(*max_njets, *max_njets2);
+   EXPECT_EQ(*max_njets, 2);
 
+   // ...and with jitting
+   auto max_njets_jitted = df.Define("njets", "R_rdf_sizeof_jets").Max<std::size_t>("njets");
+   auto max_njets_jitted2 = df.Define("njets", "#jets").Max<std::size_t>("njets");
+   auto max_njets_jitted3 = df.Max("#jets");
+   EXPECT_EQ(*max_njets_jitted, *max_njets_jitted2);
+   EXPECT_EQ(*max_njets_jitted3, *max_njets_jitted2);
+   EXPECT_EQ(2, *max_njets_jitted);
+}
 
 void ReadTest(const std::string &name, const std::string &fname) {
    auto df = ROOT::Experimental::MakeNTupleDataFrame(name, fname);
@@ -76,9 +86,9 @@ void ReadTest(const std::string &name, const std::string &fname) {
    auto count = df.Count();
    auto sumpt = df.Sum<float>("pt");
    auto tag = df.Take<std::string>("tag");
-   auto njets = df.Take<ROOT::Experimental::ClusterSize_t::ValueType>("__rdf_sizeof_jets");
+   auto njets = df.Take<ROOT::Experimental::ClusterSize_t::ValueType>("R_rdf_sizeof_jets");
    auto sumjets = df.Sum<std::vector<float>>("jets");
-   auto sumnnlosize = df.Sum<std::vector<ROOT::Experimental::ClusterSize_t::ValueType>>("__rdf_sizeof_nnlo");
+   auto sumnnlosize = df.Sum<std::vector<ROOT::Experimental::ClusterSize_t::ValueType>>("R_rdf_sizeof_nnlo");
    auto sumvec = [](float red, const std::vector<std::vector<float>> &nnlo) {
       auto sum = 0.f;
       for (auto &v : nnlo)

@@ -13,15 +13,11 @@
 #define ROOPROFILELL
 
 #include "RooAbsReal.h"
+#include "RooMinimizer.h"
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include <map>
 #include <string>
-
-class RooMinimizer ;
-class RooMinuit ; 
-
-#define MINIMIZER RooMinimizer
 
 class RooProfileLL : public RooAbsReal {
 public:
@@ -29,20 +25,19 @@ public:
   RooProfileLL() ;
   RooProfileLL(const char *name, const char *title, RooAbsReal& nll, const RooArgSet& observables);
   RooProfileLL(const RooProfileLL& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooProfileLL(*this,newname); }
-  virtual ~RooProfileLL() ;
+  TObject* clone(const char* newname) const override { return new RooProfileLL(*this,newname); }
 
   void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
   Bool_t alwaysStartFromMin() const { return _startFromMin ; }
 
-  MINIMIZER* minimizer() { if (!_minimizer) initializeMinimizer(); return _minimizer ; }
+  RooMinimizer* minimizer() { if (!_minimizer) initializeMinimizer(); return _minimizer.get() ; }
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
   const RooArgSet& bestFitParams() const ;
   const RooArgSet& bestFitObs() const ;
 
-  virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
-  
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) ;
+  RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) override ;
+
+  Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override ;
 
   void clearAbsMin() { _absMinValid = kFALSE ; }
 
@@ -54,28 +49,28 @@ protected:
   void validateAbsMin() const ;
   void initializeMinimizer() const ;
 
-  RooRealProxy _nll ;    // Input -log(L) function
-  RooSetProxy _obs ;     // Parameters of profile likelihood
-  RooSetProxy _par ;     // Marginialized parameters of likelihood
-  Bool_t _startFromMin ; // Always start minimization for global minimum?
+  RooRealProxy _nll ;    ///< Input -log(L) function
+  RooSetProxy _obs ;     ///< Parameters of profile likelihood
+  RooSetProxy _par ;     ///< Marginalised parameters of likelihood
+  Bool_t _startFromMin ; ///< Always start minimization for global minimum?
 
-  TIterator* _piter ; //! Iterator over profile likelihood parameters to be minimized 
-  TIterator* _oiter ; //! Iterator of profile likelihood output parameter(s)
+  TIterator* _piter ; ///<! Iterator over profile likelihood parameters to be minimized
+  TIterator* _oiter ; ///<! Iterator of profile likelihood output parameter(s)
 
-  mutable MINIMIZER* _minimizer ; //! Internal minuit instance
+  mutable std::unique_ptr<RooMinimizer> _minimizer = nullptr ; ///<! Internal minimizer instance
 
-  mutable Bool_t _absMinValid ; // flag if absmin is up-to-date
-  mutable Double_t _absMin ; // absolute minimum of -log(L)
-  mutable RooArgSet _paramAbsMin ; // Parameter values at absolute minimum
-  mutable RooArgSet _obsAbsMin ; // Observable values at absolute minimum
-  mutable std::map<std::string,bool> _paramFixed ; // Parameter constant status at last time of use
-  mutable Int_t _neval ; // Number evaluations used in last minimization
-  Double_t evaluate() const ;
+  mutable Bool_t _absMinValid ; ///< flag if absmin is up-to-date
+  mutable Double_t _absMin ; ///< absolute minimum of -log(L)
+  mutable RooArgSet _paramAbsMin ; ///< Parameter values at absolute minimum
+  mutable RooArgSet _obsAbsMin ; ///< Observable values at absolute minimum
+  mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
+  mutable Int_t _neval ; ///< Number evaluations used in last minimization
+  Double_t evaluate() const override ;
 
 
 private:
 
-  ClassDef(RooProfileLL,0) // Real-valued function representing profile likelihood of external (likelihood) function
+  ClassDefOverride(RooProfileLL,0) // Real-valued function representing profile likelihood of external (likelihood) function
 };
- 
+
 #endif

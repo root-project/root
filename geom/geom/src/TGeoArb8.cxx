@@ -21,31 +21,41 @@
 ClassImp(TGeoArb8);
 
 /** \class TGeoArb8
-\ingroup Geometry_classes
+\ingroup Trapezoids
 
-An arbitrary trapezoid with less than 8 vertices standing on
-two parallel planes perpendicular to Z axis. Parameters :
-  - dz - half length in Z;
-  - xy[8][2] - vector of (x,y) coordinates of vertices
-     - first four points (xy[i][j], i<4, j<2) are the (x,y)
-       coordinates of the vertices sitting on the -dz plane;
-     - last four points (xy[i][j], i>=4, j<2) are the (x,y)
-       coordinates of the vertices sitting on the +dz plane;
+\brief An arbitrary trapezoid with less than 8 vertices standing on two parallel planes perpendicular to Z axis.
 
-The order of defining the vertices of an arb8 is the following :
-  - point 0 is connected with points 1,3,4
-  - point 1 is connected with points 0,2,5
-  - point 2 is connected with points 1,3,6
-  - point 3 is connected with points 0,2,7
-  - point 4 is connected with points 0,5,7
-  - point 5 is connected with points 1,4,6
-  - point 6 is connected with points 2,5,7
-  - point 7 is connected with points 3,4,6
 
-Points can be identical in order to create shapes with less than
-8 vertices.
+An `Arb8` is defined by two quadrilaterals sitting on parallel planes,
+at `dZ`. These are defined each by 4 vertices having the coordinates
+`(Xi,Yi,+/-dZ)`,` i=0`,` 3`. The lateral surface of the `Arb8` is
+defined by the 4 pairs of edges corresponding to vertices (`i,i+1`) on
+both `-dZ` and `+dZ`. If M and M' are the middles of the segments
+`(i,i+1)` at `-dZ` and `+dZ`, a lateral surface is obtained by sweeping
+the edge at `-dZ` along MM' so that it will match the corresponding one
+at `+dZ`. Since the points defining the edges are arbitrary, the lateral
+surfaces are not necessary planes - but twisted planes having a twist
+angle linear-dependent on Z.
 
-Begin_Macro(source)
+~~~ {.cpp}
+TGeoArb8::TGeoArb8(Double_t dz,Double_t ivert);
+~~~
+
+  - `dz:` half-length in Z;
+  - `ivert = [0,7]`
+
+Vertices have to be defined clockwise in the XY pane, both at `+dz` and
+`-dz`. The quadrilateral at `-dz` is defined by indices [0,3], whereas
+the one at `+dz` by vertices [4,7]. The vertex with `index=7` has to be
+defined last, since it triggers the computation of the bounding box of
+the shape. Any two or more vertices in each Z plane can have the same
+(X,Y) coordinates. It this case, the top and bottom quadrilaterals
+become triangles, segments or points. The lateral surfaces are not
+necessary defined by a pair of segments, but by pair segment-point
+(making a triangle) or point-point (making a line). Any choice is valid
+as long as at one of the end-caps is at least a triangle.
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("arb8", "poza12");
@@ -75,19 +85,20 @@ End_Macro
 */
 
 /** \class TGeoGtra
-\ingroup Geometry_classes
+\ingroup Trapezoids
+\brief A twisted trapezoid.
 
-Gtra is a twisted trapezoid.
-i.e. one for which the faces perpendicular
-to z are trapezia and their centres are not the same x, y. It has 12
-parameters: the half length in z, the polar angles from the centre of
-the face at low z to that at high z, twist, H1 the half length in y at low z,
-LB1 the half length in x at low z and y low edge, LB2 the half length
-in x at low z and y high edge, TH1 the angle w.r.t. the y axis from the
-centre of low y edge to the centre of the high y edge, and H2, LB2,
-LH2, TH2, the corresponding quantities at high z.
+A twisted trapezoid is a general trapezoid defined in the same way but
+that is twisted along the Z-axis. The twist is defined as the rotation
+angle between the lower and the higher Z faces.
 
-Begin_Macro(source)
+~~~ {.cpp}
+TGeoGtra(Double_t dz,Double_t theta,Double_t phi,Double_t twist,
+Double_t h1,Double_t bl1,Double_t tl1,Double_t alpha1,
+Double_t h2,Double_t bl2,Double_t tl2,Double_t alpha2 );
+~~~
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("gtra", "poza11");
@@ -108,18 +119,14 @@ End_Macro
 */
 
 /** \class TGeoTrap
-\ingroup Geometry_classes
+\ingroup Trapezoids
+\brief A general trapezoid.
 
-TRAP is a general trapezoid, i.e. one for which the faces perpendicular
-to z are trapezia and their centres are not the same x, y. It has 11
-parameters: the half length in z, the polar angles from the centre of
-the face at low z to that at high z, H1 the half length in y at low z,
-LB1 the half length in x at low z and y low edge, LB2 the half length
-in x at low z and y high edge, TH1 the angle w.r.t. the y axis from the
-centre of low y edge to the centre of the high y edge, and H2, LB2,
-LH2, TH2, the corresponding quantities at high z.
+A general trapezoid is one for which the faces perpendicular to z are
+trapezes but their centers are not necessary at the same x, y
+coordinates.
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("trap", "poza10");
@@ -137,6 +144,20 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
+It has eleven parameters: the half length in z, the polar angles from
+the center of the face at low z to that at high z, `H1` the half length
+in y at low z, `LB1` the half length in x at low z and y low edge, `LB2`
+the half length in x at low z and y high edge, **`TH1`** the angle with
+respect to the y axis from the center of low y edge to the center of the
+high y edge, and `H2,LB2,LH2,TH2`, the corresponding quantities at high
+z.
+
+~~~ {.cpp}
+TGeoTrap(Double_t dz,Double_t theta,Double_t phi,
+Double_t h1,Double_t bl1,Double_t tl1,Double_t alpha1,
+Double_t h2,Double_t bl2,Double_t tl2,Double_t alpha2);
+~~~
 */
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -47,6 +47,14 @@ ROOT::Experimental::Detail::RDaosPool::~RDaosPool() {
 ////////////////////////////////////////////////////////////////////////////////
 
 
+std::string ROOT::Experimental::Detail::RDaosObject::ObjClassId::ToString() const
+{
+   char name[kOCNameMaxLength + 1] = {};
+   daos_oclass_id2name(fCid, name);
+   return std::string{name};
+}
+
+
 ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs&& fua)
   : fDkey(fua.fDkey), fAkey(fua.fAkey),
     fIods{fua.fIods[0]}, fSgls{fua.fSgls[0]}, fIovs(std::move(fua.fIovs)), fEv(fua.fEv)
@@ -74,9 +82,10 @@ ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs
 }
 
 ROOT::Experimental::Detail::RDaosObject::RDaosObject(RDaosContainer &container, daos_obj_id_t oid,
-                                                     daos_oclass_id_t cid)
+                                                     ObjClassId cid)
 {
-   daos_obj_generate_id(&oid, DAOS_OF_DKEY_UINT64 | DAOS_OF_AKEY_UINT64 /*| DAOS_OF_ARRAY_BYTE*/, cid, 0);
+   if (!cid.IsUnknown())
+      daos_obj_generate_id(&oid, DAOS_OF_DKEY_UINT64 | DAOS_OF_AKEY_UINT64 /*| DAOS_OF_ARRAY_BYTE*/, cid.fCid, 0);
    if (int err = daos_obj_open(container.fContainerHandle, oid, DAOS_OO_RW, &fObjectHandle, nullptr))
       throw RException(R__FAIL("daos_obj_open: error: " + std::string(d_errstr(err))));
 }
@@ -89,13 +98,14 @@ ROOT::Experimental::Detail::RDaosObject::~RDaosObject()
 int ROOT::Experimental::Detail::RDaosObject::Fetch(FetchUpdateArgs &args)
 {
    args.fIods[0].iod_size = (daos_size_t)DAOS_REC_ANY;
-   return daos_obj_fetch(fObjectHandle, DAOS_TX_NONE, 0, &args.fDistributionKey, 1,
-                         args.fIods, args.fSgls, nullptr, args.fEv);
+   return daos_obj_fetch(fObjectHandle, DAOS_TX_NONE,
+                         DAOS_COND_DKEY_FETCH | DAOS_COND_AKEY_FETCH,
+                         &args.fDistributionKey, 1, args.fIods, args.fSgls, nullptr, args.fEv);
 }
 
 int ROOT::Experimental::Detail::RDaosObject::Update(FetchUpdateArgs &args)
 {
-   return daos_obj_update(fObjectHandle, DAOS_TX_NONE, DAOS_COND_DKEY_INSERT, &args.fDistributionKey, 1,
+   return daos_obj_update(fObjectHandle, DAOS_TX_NONE, 0, &args.fDistributionKey, 1,
                           args.fIods, args.fSgls, args.fEv);
 }
 
@@ -153,30 +163,22 @@ ROOT::Experimental::Detail::RDaosContainer::~RDaosContainer() {
    daos_cont_close(fContainerHandle, nullptr);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::ReadObject(daos_obj_id_t oid, void *buffer, std::size_t length,
-                                                           DistributionKey_t dkey, AttributeKey_t akey)
+int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
+                                                               DistributionKey_t dkey, AttributeKey_t akey,
+                                                               ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], buffer, length);
    RDaosObject::FetchUpdateArgs args(dkey, akey, iovs);
-   return RDaosObject(*this, oid).Fetch(args);
+   return RDaosObject(*this, oid, cid.fCid).Fetch(args);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::WriteObject(daos_obj_id_t oid, const void *buffer, std::size_t length,
-                                                            DistributionKey_t dkey, AttributeKey_t akey)
+int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
+                                                                DistributionKey_t dkey, AttributeKey_t akey,
+                                                                ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], const_cast<void *>(buffer), length);
    RDaosObject::FetchUpdateArgs args(dkey, akey, iovs);
-   return RDaosObject(*this, oid).Update(args);
-}
-
-std::tuple<daos_obj_id_t, int>
-ROOT::Experimental::Detail::RDaosContainer::WriteObject(const void *buffer, std::size_t length,
-                                                        DistributionKey_t dkey, AttributeKey_t akey)
-{
-   auto ret = std::make_tuple(fSequentialWrOid,
-                              WriteObject(fSequentialWrOid, buffer, length, dkey, akey));
-   fSequentialWrOid.lo++;
-   return ret;
+   return RDaosObject(*this, oid, cid.fCid).Update(args);
 }

@@ -28,9 +28,9 @@
 #include "TVirtualMutex.h"
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include <stdlib.h>
+#include <memory>
 #include <vector>
 #include <string.h>
 
@@ -761,8 +761,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
    } else if (obj->InheritsFrom(TDirectory::Class())) {
       TDirectory *dir = (TDirectory *)obj;
       ScanCollection(rec, dir->GetList(), nullptr, dir->GetListOfKeys());
-   }
-   if (rec.CanExpandItem()) {
+   } else if (rec.CanExpandItem()) {
       ScanObjectMembers(rec, obj->IsA(), (char *)obj);
    }
 }
@@ -1231,13 +1230,12 @@ Bool_t TRootSniffer::ExecuteCmd(const std::string &path, const std::string &opti
    }
 
    if (item_obj) {
-      method =
-         TString::Format("((%s*)%zu)->%s", item_obj->ClassName(), (size_t)item_obj, method.Data() + separ + 3);
+      method.Form("((%s*)%zu)->%s", item_obj->ClassName(), (size_t)item_obj, method.Data() + separ + 3);
       if (gDebug > 2)
          Info("ExecuteCmd", "Executing %s", method.Data());
    }
 
-   Long_t v = gROOT->ProcessLineSync(method.Data());
+   auto v = gROOT->ProcessLineSync(method.Data());
 
    res = std::to_string(v);
 

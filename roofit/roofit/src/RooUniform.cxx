@@ -20,11 +20,12 @@
 Flat p.d.f. in N dimensions
 **/
 
-#include "RooUniform.h"
-#include "RooBatchCompute.h"
 #include "RooAbsReal.h"
-#include "RooRealVar.h"
 #include "RooArgSet.h"
+#include "RooRealVar.h"
+#include "RooUniform.h"
+#include "RunContext.h"
+
 
 ClassImp(RooUniform);
 
@@ -57,7 +58,14 @@ RooSpan<double> RooUniform::evaluateSpan(RooBatchCompute::RunContext& evalData, 
 {
   size_t nEvents = 1;
   for (auto elm : x) {
-    nEvents *= static_cast<const RooAbsReal*>(elm)->getValues(evalData).size();
+    size_t nEventsCurrent = static_cast<const RooAbsReal*>(elm)->getValues(evalData).size();
+    if(nEventsCurrent != 1 && nEvents != 1 && nEventsCurrent != nEvents) {
+      auto errorMsg = std::string("RooUniform::evaluateSpan(): number of entries for input variables does not match")
+                      + "in RooUniform with name \"" + GetName() + "\".";
+      coutE(FastEvaluations) << errorMsg << std::endl ;
+      throw std::runtime_error(errorMsg);
+    }
+    nEvents = std::max(nEvents, nEventsCurrent);
   }
   RooSpan<double> values = evalData.makeBatch(this, nEvents);
   for (size_t i=0; i<nEvents; i++) {

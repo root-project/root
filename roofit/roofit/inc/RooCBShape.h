@@ -29,16 +29,16 @@ public:
         RooAbsReal& _alpha, RooAbsReal& _n);
 
   RooCBShape(const RooCBShape& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooCBShape(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooCBShape(*this,newname); }
 
-  inline virtual ~RooCBShape() { }
+  inline ~RooCBShape() override { }
 
-  virtual Int_t getAnalyticalIntegral( RooArgSet& allVars,  RooArgSet& analVars, const char* rangeName=0 ) const;
-  virtual Double_t analyticalIntegral( Int_t code, const char* rangeName=0 ) const;
+  Int_t getAnalyticalIntegral( RooArgSet& allVars,  RooArgSet& analVars, const char* rangeName=0 ) const override;
+  Double_t analyticalIntegral( Int_t code, const char* rangeName=0 ) const override;
 
   // Optimized accept/reject generator support
-  virtual Int_t getMaxVal(const RooArgSet& vars) const ;
-  virtual Double_t maxVal(Int_t code) const ;
+  Int_t getMaxVal(const RooArgSet& vars) const override ;
+  Double_t maxVal(Int_t code) const override ;
 
 protected:
 
@@ -50,12 +50,14 @@ protected:
   RooRealProxy alpha;
   RooRealProxy n;
 
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
+
 
 private:
 
-  ClassDef(RooCBShape,1) // Crystal Ball lineshape PDF
+  ClassDefOverride(RooCBShape,1) // Crystal Ball lineshape PDF
 };
 
 #endif

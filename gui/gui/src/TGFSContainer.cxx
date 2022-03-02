@@ -21,13 +21,26 @@
 **************************************************************************/
 
 
-/** \class TGFileIcon, TGFileEntry, TGFSContainer
+/** \class TGFileIcon
     \ingroup guiwidgets
 
-Utility classes used by the file selection dialog (TGFSDialog).
+Utility class used by the file selection dialog (TGFSDialog).
 
 */
 
+/** \class TGFileEntry
+    \ingroup guiwidgets
+
+Utility class used by the file selection dialog (TGFSDialog).
+
+*/
+
+/** \class TGFSContainer
+    \ingroup guiwidgets
+
+Utility class used by the file selection dialog (TGFSDialog).
+
+*/
 
 #include "TGFSContainer.h"
 #include "TGIcon.h"
@@ -253,7 +266,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
                        const TGPicture *spic, const TGPicture *slpic,
                        TGString *name, Int_t type, Long64_t size, Int_t uid,
                        Int_t gid, Long_t modtime, EListViewMode viewMode,
-                       UInt_t options, ULong_t back) :
+                       UInt_t options, Pixel_t back) :
    TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
 {
    FileStat_t buf;
@@ -275,7 +288,7 @@ TGFileItem::TGFileItem(const TGWindow *p,
                        const TGPicture *bpic, const TGPicture *blpic,
                        const TGPicture *spic, const TGPicture *slpic,
                        TGString *name, FileStat_t &stat, EListViewMode viewMode,
-                       UInt_t options, ULong_t back) :
+                       UInt_t options, Pixel_t back) :
    TGLVEntry(p, bpic, spic, name, 0, viewMode, options, back)
 {
    Init(blpic, slpic, stat, viewMode);
@@ -479,7 +492,7 @@ void TGFileItem::SetDNDObject(TObject *obj)
 /// the current directory.
 
 TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
-                                 UInt_t options, ULong_t back) :
+                                 UInt_t options, Pixel_t back) :
    TGLVContainer(p, w, h, options, back)
 {
    fSortType  = kSortByName;
@@ -514,7 +527,7 @@ TGFileContainer::TGFileContainer(const TGWindow *p, UInt_t w, UInt_t h,
 /// Create a list view container which will hold the contents of
 /// the current directory.
 
-TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, ULong_t back) :
+TGFileContainer::TGFileContainer(TGCanvas *p, UInt_t options, Pixel_t back) :
    TGLVContainer(p,options, back)
 {
    fSortType  = kSortByName;

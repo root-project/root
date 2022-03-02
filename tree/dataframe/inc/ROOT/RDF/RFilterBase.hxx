@@ -11,11 +11,13 @@
 #ifndef ROOT_RFILTERBASE
 #define ROOT_RFILTERBASE
 
-#include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/RNodeBase.hxx"
+#include "ROOT/RDF/Utils.hxx" // ColumnNames_t
+#include "ROOT/RVec.hxx"
 #include "RtypesCore.h"
-#include "TError.h" // R_ASSERT
 
+#include <cassert>
 #include <string>
 #include <vector>
 
@@ -40,13 +42,17 @@ protected:
    std::vector<ULong64_t> fAccepted = {0};
    std::vector<ULong64_t> fRejected = {0};
    const std::string fName;
-   const unsigned int fNSlots; ///< Number of thread slots used by this node, inherited from parent node.
-
-   RDFInternal::RBookedDefines fDefines;
+   const ROOT::RDF::ColumnNames_t fColumnNames;
+   RDFInternal::RColumnRegister fColRegister;
+   /// The nth flag signals whether the nth input column is a custom column or not.
+   ROOT::RVecB fIsDefine;
+   std::string fVariation; ///< This indicates for what variation this filter evaluates values.
+   std::unordered_map<std::string, std::shared_ptr<RFilterBase>> fVariedFilters;
 
 public:
    RFilterBase(RLoopManager *df, std::string_view name, const unsigned int nSlots,
-               const RDFInternal::RBookedDefines &defines);
+               const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
+               const std::vector<std::string> &prevVariations, const std::string &variation = "nominal");
    RFilterBase &operator=(const RFilterBase &) = delete;
 
    virtual ~RFilterBase();
@@ -58,15 +64,14 @@ public:
    virtual void TriggerChildrenCount() = 0;
    virtual void ResetReportCount()
    {
-      R__ASSERT(!fName.empty()); // this method is to only be called on named filters
+      assert(!fName.empty()); // this method is to only be called on named filters
       // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
       std::fill(fAccepted.begin(), fAccepted.end(), 0);
       std::fill(fRejected.begin(), fRejected.end(), 0);
    }
    /// Clean-up operations to be performed at the end of a task.
-   virtual void FinaliseSlot(unsigned int slot) = 0;
+   virtual void FinalizeSlot(unsigned int slot) = 0;
    virtual void InitNode();
-   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
 };
 
 } // ns RDF

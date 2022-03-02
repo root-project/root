@@ -14,9 +14,7 @@
 #include "TStopwatch.h"
 
 // matrix size
-#ifndef N
-#define N 5
-#endif
+constexpr unsigned int N = 5;
 
 bool doSelfTest = true;
 

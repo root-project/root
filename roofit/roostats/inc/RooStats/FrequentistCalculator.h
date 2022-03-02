@@ -43,10 +43,10 @@ namespace RooStats {
       {
       }
 
-      ~FrequentistCalculator() {
+      ~FrequentistCalculator() override {
          if( fConditionalMLEsNull ) delete fConditionalMLEsNull;
-    if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
-    if( fFitInfo ) delete fFitInfo;
+         if( fConditionalMLEsAlt ) delete fConditionalMLEsAlt;
+         if( fFitInfo ) delete fFitInfo;
       }
 
 
@@ -78,19 +78,19 @@ namespace RooStats {
          fStoreFitInfo = val;
       }
 
-      const RooArgSet* GetFitInfo() const {
+      const RooArgSet* GetFitInfo() const override {
          return fFitInfo;
       }
 
    protected:
       /// configure TestStatSampler for the Null run
-      int PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const;
+      int PreNullHook(RooArgSet *parameterPoint, double obsTestStat) const override;
 
       /// configure TestStatSampler for the Alt run
-      int PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const;
+      int PreAltHook(RooArgSet *parameterPoint, double obsTestStat) const override;
 
-      void PreHook() const;
-      void PostHook() const;
+      void PreHook() const override;
+      void PostHook() const override;
 
    protected:
       // MLE inputs
@@ -110,7 +110,7 @@ namespace RooStats {
       bool fStoreFitInfo;
 
    protected:
-      ClassDef(FrequentistCalculator,1)
+      ClassDefOverride(FrequentistCalculator,1)
    };
 }
 

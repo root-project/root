@@ -6,17 +6,18 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/m/library',
                'sap/m/Button',
                'sap/m/MenuItem',
-               'rootui5/eve7/lib/EveManager'
-], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, EveManager) {
+               'sap/m/MessageBox',
+               'rootui5/eve7/lib/EveManager',
+               "sap/ui/core/mvc/XMLView",
+               'sap/ui/model/json/JSONModel'
+], function(Component, UIComponent, Controller, Splitter, SplitterLayoutData, MobileLibrary, mButton, mMenuItem, MessageBox, EveManager, XMLView, JSONModel) {
 
    "use strict";
 
    return Controller.extend("rootui5.eve7.controller.Main", {
       onInit: function () {
-
-         console.log('MAIN CONTROLLER INIT');
-
          this.mgr = new EveManager();
+         this.initClientLog();
 
          var conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
          this.mgr.UseConnection(conn_handle);
@@ -27,6 +28,7 @@ sap.ui.define(['sap/ui/core/Component',
          var elem = this.byId("Summary");
          var ctrl = elem.getController();
          ctrl.SetMgr(this.mgr);
+
       },
 
       onDisconnect : function() {
@@ -40,6 +42,71 @@ sap.ui.define(['sap/ui/core/Component',
          t.$().css('color', below ? 'yellow' : '')
       },
 
+      initClientLog: function() {
+         var consoleObj = {};
+         consoleObj.data = [];
+
+         consoleObj.model = new JSONModel();
+         consoleObj.model.setData(consoleObj.data);
+
+         consoleObj.cntInfo = 0;
+         consoleObj.cntWarn = 0;
+         consoleObj.cntErr = 0;
+
+         consoleObj.stdlog = console.log.bind(console);
+         console.log = function ()
+         {
+            consoleObj.data.push({ type: "Information", title: Array.from(arguments), counter: ++consoleObj.cntInfo });
+            consoleObj.stdlog.apply(console, arguments);
+            consoleObj.model.setData(consoleObj.data);
+            consoleObj.model.refresh(true);
+         };
+
+         consoleObj.stdwarn = console.warn.bind(console);
+         console.warning = function ()
+         {
+            consoleObj.data.push({ type: "Warning", title: Array.from(arguments), counter: ++consoleObj.cntWarn });
+            consoleObj.stdwarn.apply(console, arguments);
+            consoleObj.model.setData(consoleObj.data);
+            consoleObj.model.refresh(true);
+         };
+
+         consoleObj.stderror = console.error.bind(console);
+         console.error = function ()
+         {
+            consoleObj.data.push({ type: "Error", title: Array.from(arguments), counter: ++consoleObj.cntErr });
+            consoleObj.stderror.apply(console, arguments);
+            consoleObj.model.setData(consoleObj.data);
+            consoleObj.model.refresh(true);
+         };
+
+         // create GUI ClientLog
+         let pthis = this;
+         XMLView.create({
+            viewName: "rootui5.eve7.view.ClientLog",
+         }).then(function (oView)
+         {
+            oView.setModel(consoleObj.model);
+            oView.getController().oDialog.setModel(consoleObj.model);
+            let logCtrl = oView.getController();
+            var toolbar = pthis.byId("otb1");
+            toolbar.addContentRight(logCtrl.getButton());
+         });
+         consoleObj.alert = true;
+         JSROOT.EVE.alert = function (oText)
+         {
+            if (consoleObj.alert)
+            {
+               MessageBox.error(oText, {
+                  actions: ["Stop Alerts", MessageBox.Action.CLOSE],
+                  onClose: function (sAction)
+                  {
+                     if (sAction == "Stop Alerts") { consoleObj.alert = false; }
+                  }
+               });
+            }
+         };
+      },
 
       UpdateCommandsButtons: function(cmds) {
          if (!cmds || this.commands) return;
@@ -59,16 +126,18 @@ sap.ui.define(['sap/ui/core/Component',
 
       viewItemPressed: function (elem, oEvent) {
          var item = oEvent.getSource();
-         console.log('item pressed', item.getText(), elem);
+         // console.log('item pressed', item.getText(), elem);
 
          var name = item.getText();
          if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
          // FIXME: one need better way to deliver parameters to the selected view
-         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind };
+         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
 
          var oRouter = UIComponent.getRouterFor(this);
          if (name == "Table")
             oRouter.navTo("Table", { viewName: name });
+         else if (name == "Lego")
+            oRouter.navTo("Lego", { viewName: name });
          else
             oRouter.navTo("View", { viewName: name });
       },
@@ -80,18 +149,19 @@ sap.ui.define(['sap/ui/core/Component',
          var staged = [];
          for (var n=0;n<viewers.length;++n) {
             var el = viewers[n];
-            if (!el.$view_created && el.fRnrSelf) staged.push(el);
+            if (!el.$view_created) staged.push(el);
          }
          if (staged.length == 0) return;
 
-         console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
-
-         if (staged.length > 1) {
-            var vMenu = this.getView().byId("menuViewId");
-            var item = new mMenuItem({text:"Browse to"});
-            vMenu.addItem(item);
-            for (var n=0;n<staged.length;++n)
-               item.addItem(new mMenuItem({text: staged[n].fName, press: this.viewItemPressed.bind(this, staged[n]) }));
+         // console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
+         var vMenu = this.getView().byId("menuViewId");
+         for (var n = 0; n < staged.length; ++n) {
+            let ipath = staged[n].fRnrSelf ? "sap-icon://decline" : "sap-icon://accept";
+            let vi = new mMenuItem({ text: staged[n].fName });
+            vMenu.addItem(vi);
+            vi.addItem(new mMenuItem({ text: "Switch Visible", icon: ipath, press: this.switchViewVisibility.bind(this, staged[n]) }));
+            vi.addItem(new mMenuItem({ text: "Switch Sides", icon: "sap-icon://resize-horizontal",   press: this.switchViewSides.bind(this, staged[n])}));
+            vi.addItem(new mMenuItem({ text: "Single", icon: "sap-icon://expand",  press: this.switchSingle.bind(this, staged[n]) }));
          }
 
          var main = this, vv = null, sv = this.getView().byId("MainAreaSplitter");
@@ -111,36 +181,126 @@ sap.ui.define(['sap/ui/core/Component',
             var vtype = "rootui5.eve7.view.GL";
             if (elem.fName === "Table")
                vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
-            else
-               elem.view_kind = (n==0) ? "3D" : "2D"; // FIXME: should be property of GL view
-
+            else if (elem.fName === "Lego")
+               vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
 
             var oOwnerComponent = Component.getOwnerComponentFor(this.getView());
             var view = oOwnerComponent.runAsOwner(function() {
                return new sap.ui.xmlview({
                   id: viewid,
                   viewName: vtype,
-                  viewData: { mgr: main.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind },
+                  viewData: { mgr: main.mgr, eveViewerId: elem.fElementId },
                   layoutData: oLd
                });
             });
 
-            if (n == 0) {
-               sv.addContentArea(view);
-               continue;
+            if (elem.fRnrSelf) {
+               if (sv.getContentAreas().length == 1) {
+                  sv.addContentArea(view);
+               }
+               else {
+                  if (!vv) {
+                     vv = new Splitter("SecondaryViewSplitter", { orientation: "Vertical" });
+                     sv.addContentArea(vv);
+                  }
+                  vv.addContentArea(view);
+               }
             }
-
-            if (!vv) {
-               vv = new Splitter("SecondaryViewSplitter", { orientation : "Vertical" });
-               sv.addContentArea(vv);
-            }
-
-            vv.addContentArea(view);
+            elem.ca = view;
          }
       },
 
+      switchSingle: function (elem, oEvent) {
+         let viewer = this.mgr.GetElement(elem.fElementId);
+         // console.log('item pressed', item.getText(), elem);
+
+         var name = viewer.fName;
+         if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
+         // FIXME: one need better way to deliver parameters to the selected view
+         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
+
+         var oRouter = UIComponent.getRouterFor(this);
+         if (name == "Table")
+            oRouter.navTo("Table", { viewName: name });
+         else if (name == "Lego")
+            oRouter.navTo("Lego", { viewName: name });
+         else
+            oRouter.navTo("View", { viewName: name });
+
+      },
+
+      switchViewVisibility: function (elem, oEvent) {
+         var sc = oEvent.getSource();
+         let viewer = this.mgr.GetElement(elem.fElementId);
+         let primary = this.getView().byId("MainAreaSplitter");
+         let secondary;
+         if (primary.getContentAreas().length == 3)
+            secondary = primary.getContentAreas()[2];
+
+
+         if (viewer.fRnrSelf) {
+            let pa = primary.getContentAreas()[1];
+            if (elem.fElementId == pa.oViewData.eveViewerId) {
+               viewer.ca = pa;
+               let ss = secondary.getContentAreas();
+               let ssf = ss[0];
+             secondary.removeContentArea(ssf);
+               primary.removeContentArea(pa);
+               primary.removeContentArea(secondary);
+               primary.addContentArea(ssf);
+               primary.addContentArea(secondary);
+            }
+            else {
+               secondary.getContentAreas().forEach(ca => {
+                  if (elem.fElementId == ca.oViewData.eveViewerId) {
+                     viewer.ca = ca;
+                     secondary.removeContentArea(ca);
+                     return false;
+                  }
+               });
+            }
+         }
+         else {
+            if (secondary)
+               secondary.addContentArea(viewer.ca);
+            else
+               primary.addContentArea(viewer.ca);
+         }
+         viewer.fRnrSelf = !viewer.fRnrSelf;
+
+         sc.setIcon(viewer.fRnrSelf  ?"sap-icon://decline" : "sap-icon://accept");
+      },
+
+
+      switchViewSides: function (elem, oEvent) {
+         let viewer = this.mgr.GetElement(elem.fElementId);
+         let primary = this.getView().byId("MainAreaSplitter");
+         let secondary;
+         if (primary.getContentAreas().length == 3)
+            secondary = primary.getContentAreas()[2];
+
+         let pa = primary.getContentAreas()[1];
+
+         if (elem.fElementId == pa.oViewData.eveViewerId) 
+         { 
+            let sa = secondary.getContentAreas()[0];
+            primary.removeContentArea(pa);
+            secondary.removeContentArea(sa);
+            primary.insertContentArea(sa, 1);
+            secondary.insertContentArea(pa, 0);
+         }
+         else {
+            let idx = secondary.indexOfContentArea(viewer.ca);
+            primary.removeContentArea(pa);
+            secondary.removeContentArea(viewer.ca);
+            primary.insertContentArea(viewer.ca, 1);
+            secondary.insertContentArea(pa, idx);
+         }
+         secondary.resetContentAreasSizes();
+      },
+      
       onEveManagerInit: function() {
-         console.log("manager updated");
+         // console.log("manager updated");
          this.UpdateCommandsButtons(this.mgr.commands);
          this.updateViewers();
       },
@@ -192,50 +352,6 @@ sap.ui.define(['sap/ui/core/Component',
 
       showHelp : function(oEvent) {
          alert("User support: root-webgui@cern.ch");
-      },
-
-      showLog: function (oEvent) {
-         let oPopover = sap.ui.getCore().byId("logView");
-         if (!oPopover)
-         {
-            let oFT = new sap.m.FormattedText("EveConsoleText", {
-               convertLinksToAnchorTags: sap.m.LinkConversion.All,
-               width: "100%",
-               height: "auto"
-            });
-
-            oPopover = new sap.m.Popover("logView", {
-               placement: sap.m.PlacementType.Auto,
-               title: "Console log",
-               content: [
-                  oFT
-               ]
-            });
-
-            // footer
-            let fa = new sap.m.OverflowToolbar();
-            let btnDebug = new sap.m.CheckBox({ text: "Debug", selected: JSROOT.EVE.gDebug ? false : JSROOT.EVE.gDebug });
-            btnDebug.attachSelect(
-               function (oEvent) {
-                  JSROOT.EVE.gDebug = this.getSelected();
-               }
-            );
-            fa.addContent(btnDebug);
-            let cBtn = new sap.m.Button({ text: "Close", icon: "sap-icon://sys-cancel", press: function () { oPopover.close(); }});
-            fa.addContent(cBtn);
-            oPopover.setFooter(fa);
-
-            // set callback function
-            JSROOT.EVE.console.refresh = this.loadLog;
-         }
-
-         this.loadLog();
-         oPopover.openBy(this.getView().byId("logButton"));
-      },
-
-      loadLog: function () {
-         let oFT = sap.ui.getCore().byId("EveConsoleText");
-         oFT.setHtmlText(JSROOT.EVE.console.txt.replace(/\n/g, "<p>"));
       },
 
       showUserURL : function(oEvent) {

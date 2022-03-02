@@ -45,7 +45,7 @@ TThreadImp     *TThread::fgThreadImp = nullptr;
 Long_t          TThread::fgMainId = 0;
 TThread        *TThread::fgMain = nullptr;
 TMutex         *TThread::fgMainMutex;
-char  *volatile TThread::fgXAct = nullptr;
+std::atomic<char *> volatile TThread::fgXAct{nullptr};
 TMutex         *TThread::fgXActMutex = nullptr;
 TCondition     *TThread::fgXActCondi = 0;
 void **volatile TThread::fgXArr = nullptr;
@@ -562,10 +562,13 @@ Long_t TThread::SelfId()
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the thread. This starts the static method TThread::Function()
 /// which calls the user function specified in the TThread ctor with
-/// the arg argument. Returns 0 on success, otherwise an error number will
+/// the arg argument. 
+/// If affinity is specified (>=0), a CPU affinity will be associated
+/// with the current thread.
+/// Returns 0 on success, otherwise an error number will
 /// be returned.
 
-Int_t TThread::Run(void *arg)
+Int_t TThread::Run(void *arg, const int affinity)
 {
    if (arg) fThreadArg = arg;
 
@@ -573,7 +576,7 @@ Int_t TThread::Run(void *arg)
    ThreadInternalLock();
    SetComment("Run: MainMutex locked");
 
-   int iret = fgThreadImp->Run(this);
+   int iret = fgThreadImp->Run(this, affinity);
 
    fState = iret ? kInvalidState : kRunningState;
 
@@ -947,7 +950,10 @@ again:
 
    void *arr[2];
    arr[1] = (void*) buf;
-   if (XARequest("PRTF", 2, arr, 0)) return;
+   if (XARequest("PRTF", 2, arr, 0)) {
+      delete [] buf;
+      return;
+   }
 
    printf("%s\n", buf);
    fflush(stdout);
@@ -1201,7 +1207,7 @@ TThreadTimer::TThreadTimer(Long_t ms) : TTimer(ms, kTRUE)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Periodically execute the TThread::XAxtion() method in the main thread.
+/// Periodically execute the TThread::XAction() method in the main thread.
 
 Bool_t TThreadTimer::Notify()
 {

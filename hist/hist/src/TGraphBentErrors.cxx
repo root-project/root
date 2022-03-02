@@ -25,7 +25,7 @@ ClassImp(TGraphBentErrors);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class  TGraphBentErrors
-    \ingroup Hist
+    \ingroup Graphs
 A TGraphBentErrors is a TGraph with bent, asymmetric error bars.
 
 The TGraphBentErrors painting is performed thanks to the TGraphPainter
@@ -389,7 +389,6 @@ Bool_t TGraphBentErrors::DoMerge(const TGraph *g)
 
 }
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along X at point `i`.
 
 Double_t TGraphBentErrors::GetErrorX(Int_t i) const
@@ -404,7 +403,6 @@ Double_t TGraphBentErrors::GetErrorX(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along Y at point `i`.
 
 Double_t TGraphBentErrors::GetErrorY(Int_t i) const
@@ -494,6 +492,50 @@ void TGraphBentErrors::Print(Option_t *) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values and errors of a TGraphBentErrors by a constant c1.
+///
+/// If option contains "x" the x values and errors are scaled
+/// If option contains "y" the y values and errors are scaled
+/// If option contains "xy" both x and y values and errors are scaled
+
+void TGraphBentErrors::Scale(Double_t c1, Option_t *option)
+{
+   TGraph::Scale(c1, option);
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x") && GetEXlow()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEXlow()[i] *= c1;
+   }
+   if (opt.Contains("x") && GetEXhigh()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEXhigh()[i] *= c1;
+   }
+   if (opt.Contains("y") && GetEYlow()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEYlow()[i] *= c1;
+   }
+   if (opt.Contains("y") && GetEYhigh()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEYhigh()[i] *= c1;
+   }
+   if (opt.Contains("x") && GetEXlowd()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEXlowd()[i] *= c1;
+   }
+   if (opt.Contains("x") && GetEXhighd()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEXhighd()[i] *= c1;
+   }
+   if (opt.Contains("y") && GetEYlowd()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEYlowd()[i] *= c1;
+   }
+   if (opt.Contains("y") && GetEYhighd()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEYhighd()[i] *= c1;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out.

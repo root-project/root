@@ -104,7 +104,7 @@ namespace RooStats {
       virtual RooRealVar* GetWeightVar() const
       { return (RooRealVar*)fWeight->Clone(); }
 
-      virtual ~MarkovChain()
+      ~MarkovChain() override
       {
          delete fParameters;
          delete fDataEntry;
@@ -118,7 +118,7 @@ namespace RooStats {
       RooRealVar* fNLL;
       RooRealVar* fWeight;
 
-      ClassDef(MarkovChain,1);
+      ClassDefOverride(MarkovChain,1);
    };
 }
 

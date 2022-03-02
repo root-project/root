@@ -243,7 +243,7 @@ public:
    /**
       Fit using the given FCN function represented by a multi-dimensional function interface
       (ROOT::Math::IMultiGenFunction).
-      Give optionally the initial arameter values, data size to have the fit Ndf correctly
+      Give optionally the initial parameter values, data size to have the fit Ndf correctly
       set in the FitResult and flag specifying if it is a chi2 fit.
       Note that if the parameters values are not given (params=0) the
       current parameter settings are used. The parameter settings can be created before
@@ -389,7 +389,7 @@ public:
 
    /**
       perform an error analysis on the result using the Hessian
-      Errors are obtaied from the inverse of the Hessian matrix
+      Errors are obtained from the inverse of the Hessian matrix
       To be called only after fitting and when a minimizer supporting the Hessian calculations is used
       otherwise an error (false) is returned.
       A new  FitResult with the Hessian result will be produced
@@ -401,7 +401,7 @@ public:
       To be called only after fitting and when a minimizer supporting MINOS is used
       otherwise an error (false) is returned.
       The result will be appended in the fit result class
-      Optionally a vector of parameter indeces can be passed for selecting
+      Optionally a vector of parameter indices can be passed for selecting
       the parameters to analyse using FitConfig::SetMinosErrors
     */
    bool CalculateMinosErrors();
@@ -417,15 +417,15 @@ public:
    FitConfig & Config() { return fConfig; }
 
    /**
-      query if fit is binned. In cse of false teh fit can be unbinned
-      or is not defined (like in case of fitting through a ::FitFCN)
+      query if fit is binned. In cse of false the fit can be unbinned
+      or is not defined (like in case of fitting through a ROOT::Fit::Fitter::FitFCN)
     */
    bool IsBinFit() const { return fBinFit; }
 
    /**
       return pointer to last used minimizer
       (is NULL in case fit is not yet done)
-      This pointer is guranteed to be valid as far as the fitter class is valid and a new fit is not redone.
+      This pointer is guaranteed to be valid as far as the fitter class is valid and a new fit is not redone.
       To be used only after fitting.
       The pointer should not be stored and will be invalided after performing a new fitting.
       In this case a new instance of ROOT::Math::Minimizer will be re-created and can be
@@ -448,7 +448,7 @@ public:
    /**
       apply correction in the error matrix for the weights for likelihood fits
       This method can be called only after a fit. The
-      passed function (loglw2) is a log-likelihood function impelemented using the
+      passed function (loglw2) is a log-likelihood function implemented using the
       sum of weight squared
       When using FitConfig.SetWeightCorrection() this correction is applied
       automatically when doing a likelihood fit (binned or unbinned)
@@ -511,29 +511,29 @@ protected:
 
 private:
 
-   bool fUseGradient;       // flag to indicate if using gradient or not
+   bool fUseGradient;       ///< flag to indicate if using gradient or not
 
-   bool fBinFit;            // flag to indicate if fit is binned
-                            // in case of false the fit is unbinned or undefined)
-                            // flag it is used to compute chi2 for binned likelihood fit
+   bool fBinFit;            ///< flag to indicate if fit is binned
+                            ///< in case of false the fit is unbinned or undefined)
+                            ///< flag it is used to compute chi2 for binned likelihood fit
 
-   int fFitType;   // type of fit   (0 undefined, 1 least square, 2 likelihood)
+   int fFitType;   ///< type of fit   (0 undefined, 1 least square, 2 likelihood)
 
-   int fDataSize;  // size of data sets (need for Fumili or LM fitters)
+   int fDataSize;  ///< size of data sets (need for Fumili or LM fitters)
 
-   FitConfig fConfig;       // fitter configuration (options and parameter settings)
+   FitConfig fConfig;       ///< fitter configuration (options and parameter settings)
 
-   std::shared_ptr<IModelFunction_v> fFunc_v;  //! copy of the fitted  function containing on output the fit result
+   std::shared_ptr<IModelFunction_v> fFunc_v;  ///<! copy of the fitted  function containing on output the fit result
 
-   std::shared_ptr<IModelFunction> fFunc;  //! copy of the fitted  function containing on output the fit result
+   std::shared_ptr<IModelFunction> fFunc;  ///<! copy of the fitted  function containing on output the fit result
 
-   std::shared_ptr<ROOT::Fit::FitResult>  fResult;  //! pointer to the object containing the result of the fit
+   std::shared_ptr<ROOT::Fit::FitResult>  fResult;  ///<! pointer to the object containing the result of the fit
 
-   std::shared_ptr<ROOT::Math::Minimizer>  fMinimizer;  //! pointer to used minimizer
+   std::shared_ptr<ROOT::Math::Minimizer>  fMinimizer;  ///<! pointer to used minimizer
 
-   std::shared_ptr<ROOT::Fit::FitData>  fData;  //! pointer to the fit data (binned or unbinned data)
+   std::shared_ptr<ROOT::Fit::FitData>  fData;  ///<! pointer to the fit data (binned or unbinned data)
 
-   std::shared_ptr<ROOT::Math::IMultiGenFunction>  fObjFunction;  //! pointer to used objective function
+   std::shared_ptr<ROOT::Math::IMultiGenFunction>  fObjFunction;  ///<! pointer to used objective function
 
 };
 

@@ -18,7 +18,9 @@
 #include <ROOT/REveClient.hxx>
 #include <ROOT/REveGeomViewer.hxx>
 #include <ROOT/RWebWindow.hxx>
+#include <ROOT/RFileDialog.hxx>
 #include <ROOT/RLogger.hxx>
+#include <ROOT/REveSystem.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -50,6 +52,7 @@ namespace REX = ROOT::Experimental;
 
 REveManager *REX::gEve = nullptr;
 
+thread_local std::vector<RLogEntry> gEveLogEntries;
 /** \class REveManager
 \ingroup REve
 Central application manager for Eve.
@@ -80,6 +83,9 @@ REveManager::REveManager()
       throw eh + "There can be only one REve!";
 
    REX::gEve = this;
+
+   fServerStatus.fPid = gSystem->GetPid();
+   fServerStatus.fTStart = std::time(nullptr);
 
    fExcHandler = new RExceptionHandler;
 
@@ -565,7 +571,7 @@ TGeoManager *REveManager::GetGeometryByAlias(const TString &alias)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the default geometry.
-/// It should be registered via RegisterGeometryName("Default", <URL>).
+/// It should be registered via RegisterGeometryName("Default", `<URL>`).
 
 TGeoManager *REveManager::GetDefaultGeometry()
 {
@@ -690,6 +696,7 @@ void REveManager::QuitRoot()
 void REveManager::WindowConnect(unsigned connid)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
+
    while (fServerState.fVal == ServerState::UpdatingScenes)
    {
        fServerState.fCV.wait(lock);
@@ -697,6 +704,11 @@ void REveManager::WindowConnect(unsigned connid)
 
    fConnList.emplace_back(connid);
    printf("connection established %u\n", connid);
+
+   // QQQQ do we want mir-time here as well? maybe set it at the end of function?
+   // Note, this is all under lock, so nobody will get state out in between.
+   fServerStatus.fTLastMir = fServerStatus.fTLastConnect = std::time(nullptr);
+   ++fServerStatus.fNConnects;
 
    // This prepares core and render data buffers.
    printf("\nEVEMNG ............. streaming the world scene.\n");
@@ -761,6 +773,10 @@ void REveManager::WindowDisconnect(unsigned connid)
       }
       fWorld->RemoveSubscriber(connid);
    }
+
+   fServerStatus.fTLastDisconnect = std::time(nullptr);
+   ++fServerStatus.fNDisconnects;
+
    fServerState.fCV.notify_all();
 }
 
@@ -782,12 +798,12 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 
    // this should not happen, just check
    if (!found) {
-      R__LOG_ERROR(EveLog()) << "Internal error - no connection with id " << connid << " found";
+      R__LOG_ERROR(REveLog()) << "Internal error - no connection with id " << connid << " found";
       return;
    }
    // client status data
-   if (arg.compare("__REveDoneChanges") == 0) {
-
+   if (arg.compare("__REveDoneChanges") == 0)
+   {
       std::unique_lock<std::mutex> lock(fServerState.fMutex);
 
       for (auto &conn : fConnList) {
@@ -803,6 +819,11 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       }
 
       return;
+   }
+   else if (arg.compare( 0, 10, "FILEDIALOG") == 0)
+   {
+       RFileDialog::Embedded(fWebWindow, arg);
+       return;
    }
 
    nlohmann::json cj = nlohmann::json::parse(arg);
@@ -821,6 +842,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std::string& ctype)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
+   fServerStatus.fTLastMir = std::time(nullptr);
    fMIRqueue.push(std::shared_ptr<MIR>(new MIR(cmd, id, ctype)));
    if (fServerState.fVal == ServerState::Waiting)
       fServerState.fCV.notify_all();
@@ -898,9 +920,9 @@ void REveManager::ExecuteMIR(std::shared_ptr<MIR> mir)
       // std::cout << cmd.str() << std::endl;
       // gROOT->ProcessLine(cmd.str().c_str());
    } catch (std::exception &e) {
-      R__LOG_ERROR(EveLog()) << "REveManager::ExecuteCommand " << e.what() << std::endl;
+      R__LOG_ERROR(REveLog()) << "REveManager::ExecuteCommand " << e.what() << std::endl;
    } catch (...) {
-      R__LOG_ERROR(EveLog()) << "REveManager::ExecuteCommand unknow execption \n";
+      R__LOG_ERROR(REveLog()) << "REveManager::ExecuteCommand unknow execption \n";
    }
 }
 
@@ -917,29 +939,22 @@ void REveManager::PublishChanges()
    fScenes->ProcessSceneChanges();
    jobj["content"] = "EndChanges";
 
-   if (!fLogger.fLogEntries.empty()) {
+   if (!gEveLogEntries.empty()) {
 
       constexpr static int numLevels = static_cast<int>(ELogLevel::kDebug) + 1;
       constexpr static std::array<const char *, numLevels> sTag{
          {"{unset-error-level please report}", "FATAL", "Error", "Warning", "Info", "Debug"}};
 
       std::stringstream strm;
-      for (auto entry : fLogger.fLogEntries) {
-
-         auto channel = entry.fChannel;
-         if (channel && !channel->GetName().empty())
-            strm << '[' << channel->GetName() << "] ";
-
+      for (auto entry : gEveLogEntries) {
          int cappedLevel = std::min(static_cast<int>(entry.fLevel), numLevels - 1);
          strm << sTag[cappedLevel];
-
-         if (!entry.fLocation.fFile.empty())
-            strm << " " << entry.fLocation.fFile << ':' << entry.fLocation.fLine;
          if (!entry.fLocation.fFuncName.empty())
-            strm << " in " << entry.fLocation.fFuncName;
+            strm << " " << entry.fLocation.fFuncName;
+         strm << " " << entry.fMessage; 
       }
       jobj["log"] = strm.str();
-      fLogger.fLogEntries.clear();
+      gEveLogEntries.clear();
    }
 
    fWebWindow->Send(0, jobj.dump());
@@ -1082,6 +1097,19 @@ void REveManager::EndChange()
    fServerState.fCV.notify_all();
 }
 
+//____________________________________________________________________
+void REveManager::GetServerStatus(REveServerStatus& st)
+{
+   std::unique_lock<std::mutex> lock(fServerState.fMutex);
+   gSystem->GetProcInfo(&fServerStatus.fProcInfo);
+#if defined(_MSC_VER)
+   std::timespec_get(&fServerStatus.fTReport, TIME_UTC);
+#else
+   fServerStatus.fTReport = std::time_t(nullptr);
+#endif
+   st = fServerStatus;
+}
+
 /** \class REveManager::ChangeGuard
 \ingroup REve
 RAII guard for locking Eve manager (ctor) and processing changes (dtor).
@@ -1119,4 +1147,14 @@ TStdExceptionHandler::EStatus REveManager::RExceptionHandler::Handle(std::except
       return kSEHandled;
    }
    return kSEProceed;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Utility to stream loggs to client.
+
+bool REveManager::Logger::Handler::Emit(const RLogEntry &entry)
+{
+   gEveLogEntries.emplace_back(entry);
+   return true;
 }

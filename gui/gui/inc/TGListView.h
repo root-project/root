@@ -148,7 +148,7 @@ public:
    virtual void   ResizeColumns();
    virtual void   Layout();
    virtual void   LayoutHeader(TGFrame *head);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual void   ScrollHeader(Int_t pos);
    virtual void   SetContainer(TGFrame *f);
    virtual void   AdjustHeaders() { fJustChanged = kTRUE; LayoutHeader(0); }

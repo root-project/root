@@ -16,7 +16,7 @@
 
 #include "gtest/gtest.h"
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 static void Fill(TTree *tree, int init, int count)
 {
@@ -228,7 +228,7 @@ TEST(TBufferMerger, SetMaxTreeSize)
    ROOT::EnableThreadSafety();
 
    {
-      ROOT::Experimental::TBufferMerger merger{"tbuffermerger_setmaxtreesize.root"};
+      TBufferMerger merger{"tbuffermerger_setmaxtreesize.root"};
 
       auto tbmfile = merger.GetFile(); // std::shared_ptr<TBufferMergerFile>
 

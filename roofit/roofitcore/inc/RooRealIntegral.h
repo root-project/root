@@ -37,17 +37,17 @@ public:
   // Constructors, assignment etc
   RooRealIntegral() ;
   RooRealIntegral(const char *name, const char *title, const RooAbsReal& function, const RooArgSet& depList,
-		  const RooArgSet* funcNormSet=0, const RooNumIntConfig* config=0, const char* rangeName=0) ;
+        const RooArgSet* funcNormSet=0, const RooNumIntConfig* config=0, const char* rangeName=0) ;
   RooRealIntegral(const RooRealIntegral& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooRealIntegral(*this,newname); }
-  virtual ~RooRealIntegral();
+  TObject* clone(const char* newname) const override { return new RooRealIntegral(*this,newname); }
+  ~RooRealIntegral() override;
 
-  virtual Double_t getValV(const RooArgSet* set=0) const ;
+  Double_t getValV(const RooArgSet* set=0) const override ;
 
-  Bool_t isValid() const { return _valid; }
+  Bool_t isValid() const override { return _valid; }
 
-  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
-  void printMetaArgs(std::ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  void printMetaArgs(std::ostream& os) const override ;
 
   const RooArgSet& numIntCatVars() const { return _sumList ; }
   const RooArgSet& numIntRealVars() const { return _intList ; }
@@ -57,13 +57,13 @@ public:
   const char* intRange() { return _rangeName ? _rangeName->GetName() : 0 ; }
   const RooAbsReal& integrand() const { return _function.arg() ; }
 
-  void setCacheNumeric(Bool_t flag) { 
-    // If true, value of this interal is cached if it is (partially numeric)
+  void setCacheNumeric(Bool_t flag) {
+    // If true, value of this integral is cached if it is (partially numeric)
     _cacheNum = flag ;
   }
 
-  Bool_t getCacheNumeric() { 
-    // If true, value of this interal is cached if it is (partially numeric)
+  Bool_t getCacheNumeric() {
+    // If true, value of this integral is cached if it is (partially numeric)
     return _cacheNum ;
   }
 
@@ -71,16 +71,16 @@ public:
 
   static Int_t getCacheAllNumeric() ;
 
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const {
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
     // Forward plot sampling hint of integrand
     return _function.arg().plotSamplingHint(obs,xlo,xhi) ;
   }
 
-  virtual RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const ;  
+  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=0, const RooNumIntConfig* cfg=0, const char* rangeName=0) const override ;
 
   void setAllowComponentSelection(Bool_t allow);
   Bool_t getAllowComponentSelection() const;
-  
+
 protected:
 
   mutable Bool_t _valid;
@@ -99,47 +99,47 @@ protected:
   virtual Double_t jacobianProduct() const ;
 
   // Evaluation and validation implementation
-  Double_t evaluate() const ;
-  virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
+  Double_t evaluate() const override ;
+  Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const override ;
   Bool_t servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches, const RooArgSet& allBranches) const ;
 
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, 
-				     Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
+  Bool_t redirectServersHook(const RooAbsCollection& newServerList,
+                 Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) override ;
 
   // Function pointer and integrands list
-  mutable RooSetProxy _sumList ; // Set of discrete observable over which is summed numerically
-  mutable RooSetProxy _intList ; // Set of continuous observables over which is integrated numerically
-  mutable RooSetProxy _anaList ; // Set of observables over which is integrated/summed analytically
-  mutable RooSetProxy _jacList ; // Set of lvalue observables over which is analytically integration that have a non-unit Jacobian
-  mutable RooSetProxy _facList ; // Set of observables on which function does not depends, which are integrated nevertheless
+  mutable RooSetProxy _sumList ; ///< Set of discrete observable over which is summed numerically
+  mutable RooSetProxy _intList ; ///< Set of continuous observables over which is integrated numerically
+  mutable RooSetProxy _anaList ; ///< Set of observables over which is integrated/summed analytically
+  mutable RooSetProxy _jacList ; ///< Set of lvalue observables over which is analytically integration that have a non-unit Jacobian
+  mutable RooSetProxy _facList ; ///< Set of observables on which function does not depends, which are integrated nevertheless
 
-  mutable RooArgSet   _facListOwned ;  // Owned components in _facList
-  RooRealProxy       _function ;     // Function being integration
-  RooArgSet*      _funcNormSet ;     // Optional normalization set passed to function
+  mutable RooArgSet   _facListOwned ;  ///< Owned components in _facList
+  RooRealProxy       _function ;     ///<Function being integration
+  RooArgSet*      _funcNormSet ;     ///< Optional normalization set passed to function
 
-  mutable RooArgSet       _saveInt ; //! do not persist
-  mutable RooArgSet       _saveSum ; //! do not persist 
+  mutable RooArgSet       _saveInt ; ///<! do not persist
+  mutable RooArgSet       _saveSum ; ///<! do not persist
 
   RooNumIntConfig* _iconfig ;
 
-  mutable RooListProxy _sumCat ; //! do not persist  
-  
+  mutable RooListProxy _sumCat ; ///<! do not persist
+
   Int_t _mode ;
-  IntOperMode _intOperMode ;   // integration operation mode
+  IntOperMode _intOperMode ;   ///< integration operation mode
 
-  mutable Bool_t _restartNumIntEngine ; //! do not persist
-  mutable RooAbsIntegrator* _numIntEngine ;  //! do not persist
-  mutable RooAbsFunc *_numIntegrand;         //! do not persist
+  mutable Bool_t _restartNumIntEngine ; ///<! do not persist
+  mutable RooAbsIntegrator* _numIntEngine ;  ///<! do not persist
+  mutable RooAbsFunc *_numIntegrand;         ///<! do not persist
 
-  TNamed* _rangeName ; 
-  
-  mutable RooArgSet* _params ; //! cache for set of parameters
+  TNamed* _rangeName ;
 
-  Bool_t _cacheNum ;           // Cache integral if numeric
-  static Int_t _cacheAllNDim ; //! Cache all integrals with given numeric dimension
+  mutable RooArgSet* _params ; ///<! cache for set of parameters
 
-  ClassDef(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
+  Bool_t _cacheNum ;           ///< Cache integral if numeric
+  static Int_t _cacheAllNDim ; ///<! Cache all integrals with given numeric dimension
+
+  ClassDefOverride(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
 };
 
 #endif

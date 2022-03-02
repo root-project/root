@@ -25,10 +25,7 @@ model = ROOT.RooExponential("model", "model", t, tau)
 # ---------------------------------------------------
 
 # Use error function to simulate turn-on slope
-eff = ROOT.RooFormulaVar(
-    "eff",
-    "0.5*(TMath::Erf((t-1)/0.5)+1)",
-    ROOT.RooArgList(t))
+eff = ROOT.RooFormulaVar("eff", "0.5*(TMath::Erf((t-1)/0.5)+1)", [t])
 
 # Define decay pdf with efficiency
 # ---------------------------------------------------------------
@@ -39,12 +36,12 @@ modelEff = ROOT.RooEffProd("modelEff", "model with efficiency", model, eff)
 # Plot efficiency, pdf
 # ----------------------------------------
 
-frame1 = t.frame(ROOT.RooFit.Title("Efficiency"))
-eff.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+frame1 = t.frame(Title="Efficiency")
+eff.plotOn(frame1, LineColor="r")
 
-frame2 = t.frame(ROOT.RooFit.Title("Pdf with and without efficiency"))
+frame2 = t.frame(Title="Pdf with and without efficiency")
 
-model.plotOn(frame2, ROOT.RooFit.LineStyle(ROOT.kDashed))
+model.plotOn(frame2, LineStyle="--")
 modelEff.plotOn(frame2)
 
 # Generate toy data, fit model eff to data
@@ -52,13 +49,13 @@ modelEff.plotOn(frame2)
 
 # Generate events. If the input pdf has an internal generator, internal generator
 # is used and an accept/reject sampling on the efficiency is applied.
-data = modelEff.generate(ROOT.RooArgSet(t), 10000)
+data = modelEff.generate({t}, 10000)
 
 # Fit pdf. The normalization integral is calculated numerically.
 modelEff.fitTo(data)
 
 # Plot generated data and overlay fitted pdf
-frame3 = t.frame(ROOT.RooFit.Title("Fitted pdf with efficiency"))
+frame3 = t.frame(Title="Fitted pdf with efficiency")
 data.plotOn(frame3)
 modelEff.plotOn(frame3)
 

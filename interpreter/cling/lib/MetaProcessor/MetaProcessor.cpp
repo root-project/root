@@ -348,6 +348,11 @@ namespace cling {
     m_InputValidator->reset();
   }
 
+  bool MetaProcessor::awaitingMoreInput() const {
+    return m_InputValidator->getLastResult() ==
+           InputValidator::ValidationResult::kIncomplete;
+  }
+
   int MetaProcessor::getExpectedIndent() const {
     return m_InputValidator->getExpectedIndent();
   }
@@ -488,6 +493,8 @@ namespace cling {
     if (content.back() != ';')
       content.append(";");
 
+    Interpreter::InputFlagsRAII RAII(m_Interp, Interpreter::kInputFromFile |
+                                               (lineByLine ? Interpreter::kIFFLineByLine : 0));
     Interpreter::CompilationResult ret = Interpreter::kSuccess;
     if (lineByLine) {
       int rslt = 0;

@@ -569,7 +569,7 @@ int HypoTestInverterResult::FindIndex(double xvalue) const
   for (int i=0; i<ArraySize(); i++) {
      double xpoint = fXValues[i];
      if ( (std::abs(xvalue) > 1 && TMath::AreEqualRel( xvalue, xpoint, tol) ) ||
-          (std::abs(xvalue) < 1 && TMath::AreEqualAbs( xvalue, xpoint, tol) ) )
+          (std::abs(xvalue) <= 1 && TMath::AreEqualAbs( xvalue, xpoint, tol) ) )
         return i;
   }
   return -1;
@@ -610,10 +610,10 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    double ymax = TMath::MaxElement(n,y);
    // cannot find intercept in the full range - return min or max valie
    if (ymax < y0) {
-      return (lowSearch) ? varmax : varmin; 
+      return (lowSearch) ? varmax : varmin;
    }
    if (ymin > y0) {
-      return (lowSearch) ? varmin : varmax; 
+      return (lowSearch) ? varmin : varmax;
    }
 
    double xmin = axmin;
@@ -634,7 +634,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
 
       // distinguish the case we have lower /upper limits
       // check if a possible crossing exists otherwise return variable min/max
-      
+
       // do lower extrapolation
       if ( (ymax < y0 && !lowSearch) || ( yfirst > y0 && lowSearch) ) {
          xmin = varmin;
@@ -657,7 +657,7 @@ double HypoTestInverterResult::GetGraphX(const TGraph & graph, double y0, bool l
    std::cout << "findind root for " << xmin << " ,  "<< xmax << "f(x) : " << graph.Eval(xmin) << " , " << graph.Eval(0.5*(xmax+xmin))
              << " , " << graph.Eval(xmax) << " target " << y0 << std::endl;
 #endif
-   
+
    bool ret = brf.Solve(100, 1.E-16, 1.E-6);
    if (!ret) {
       ooccoutE(this,Eval) << "HypoTestInverterResult - interpolation failed for interval [" << xmin << "," << xmax

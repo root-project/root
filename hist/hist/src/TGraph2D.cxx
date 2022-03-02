@@ -39,8 +39,20 @@ ClassImp(TGraph2D);
 
 
 /** \class TGraph2D
-    \ingroup Hist
+    \ingroup Graphs
 Graphics object made of three arrays X, Y and Z with the same number of points each.
+
+- [Creating a TGraph2D](\ref G2D00)
+- [Drawing options](\ref G2D01)
+- [Examples](\ref G2D02)
+   - [SURF1 Example](\ref G2D021)
+   - [Fitting Example](\ref G2D022)
+   - [PCOL Example](\ref G2D023)
+- [Definition of the Delaunay triangulation (After B. Delaunay)](\ref G2D03)
+
+
+\anchor G2D00
+## Creating a TGraph2D
 
 This class has different constructors:
 - With an array's dimension and three arrays x, y, and z:
@@ -74,12 +86,15 @@ Note that in any of these three cases, `SetPoint()` can be used to change a data
 point or add a new one. If the data point index (`i`) is greater than the
 current size of the internal arrays, they are automatically extended.
 
-Like TGraph the TGraph2D constructors do not have the TGraph2D title and name as parameters.
-A TGraph2D has the default title and name "Graph2D". To change the default title
-and name `SetTitle` and `SetName` should be called on the TGraph2D after its creation.
+Like TGraph some TGraph2D constructors do not have the TGraph2D title and name as parameters.
+For these constructors TGraph2D has the default title and name "Graph2D". To change the
+default title and name `SetTitle` and `SetName` should be called on the TGraph2D after its
+creation.
+
+\anchor G2D01
+## Drawing options
 
 Specific drawing options can be used to paint a TGraph2D:
-
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
@@ -127,7 +142,11 @@ at drawing time only. Therefore they should called after the TGraph2D is drawn:
      g->GetXaxis()->SetTitle("X axis title");
 ~~~
 
-Example:
+\anchor G2D02
+## Examples
+
+\anchor G2D021
+### SURF1 Example
 
 Begin_Macro(source)
 {
@@ -149,11 +168,17 @@ Begin_Macro(source)
 }
 End_Macro
 
+\anchor G2D022
+### Fitting Example
+
 2D graphs can be fitted as shown by the following example:
 
 Begin_Macro(source)
 ../../../tutorials/fit/graph2dfit.C
 End_Macro
+
+\anchor G2D023
+### PCOL Example
 
 Example showing the PCOL option.
 
@@ -189,7 +214,9 @@ Begin_Macro(source)
 }
 End_Macro
 
-### Definition of Delaunay triangulation (After B. Delaunay)
+\anchor G2D03
+## Definition of the Delaunay triangulation (After B. Delaunay)
+
 For a set S of points in the Euclidean plane, the unique triangulation DT(S)
 of S such that no point in S is inside the circumcircle of any triangle in
 DT(S). DT(S) is the dual of the Voronoi diagram of S.
@@ -375,9 +402,9 @@ TGraph2D::TGraph2D(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Graph2D constructor reading input from filename
 /// filename is assumed to contain at least three columns of numbers.
-/// For files separated by a specific delimiter different from ' ' and '\t' (e.g. ';' in csv files)
+/// For files separated by a specific delimiter different from ' ' and '\\t' (e.g. ';' in csv files)
 /// you can avoid using %*s to bypass this delimiter by explicitly specify the "option" argument,
-/// e.g. option=" \t,;" for columns of figures separated by any of these characters (' ', '\t', ',', ';')
+/// e.g. option=" \\t,;" for columns of figures separated by any of these characters (' ', '\\t', ',', ';')
 /// used once (e.g. "1;1") or in a combined way (" 1;,;;  1").
 /// Note in that case, the instantiation is about 2 times slower.
 
@@ -786,137 +813,9 @@ TFitResultPtr TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 /// Fits this 2D graph with function f2
 ///
 ///  f2 is an already predefined function created by TF2.
-///  Predefined functions such as gaus, expo and poln are automatically
-///  created by ROOT.
 ///
-///  The list of fit options is given in parameter option:
+/// See TGraph::Fit for the available fitting options and fitting notes 
 ///
-/// | Option   | Description                                                       |
-/// |----------|-------------------------------------------------------------------|
-/// | "W"      | Ignore all point errors when fitting a TGraph2DErrors |
-/// | "U"      | Use a User specified fitting algorithm (via SetFCN) |
-/// | "Q"      | Quiet mode (minimum printing) |
-/// | "V"      | Verbose mode (default is between Q and V) |
-/// | "R"      | Use the Range specified in the function range |
-/// | "N"      | Do not store the graphics function, do not draw |
-/// | "0"      | Do not plot the result of the fit. By default the fitted function is drawn unless the option "N" above is specified. |
-/// | "+"      | Add this new fitted function to the list of fitted functions (by default, any previous function is deleted) |
-/// | "C"      | In case of linear fitting, not calculate the chisquare (saves time) |
-/// | "EX0"    | When fitting a TGraph2DErrors do not consider errors in the X,Y coordinates |
-/// | "ROB"    | In case of linear fitting, compute the LTS regression coefficients (robust (resistant) regression), using the default fraction of good points "ROB=0.x" - compute the LTS regression coefficients, using 0.x as a fraction of good points |
-/// | "S"      | The result of the fit is returned in the TFitResultPtr (see below Access to the Fit Result) |
-///
-///  In order to use the Range option, one must first create a function
-///  with the expression to be fitted. For example, if your graph2d
-///  has a defined range between -4 and 4 and you want to fit a gaussian
-///  only in the interval 1 to 3, you can do:
-/// ~~~ {.cpp}
-///       TF2 *f2 = new TF2("f2","gaus",1,3);
-///       graph2d->Fit("f2","R");
-/// ~~~
-///
-///  ### Setting initial conditions
-///
-///  Parameters must be initialized before invoking the Fit function.
-///  The setting of the parameter initial values is automatic for the
-///  predefined functions : poln, expo, gaus. One can however disable
-///  this automatic computation by specifying the option "B".
-///  You can specify boundary limits for some or all parameters via
-/// ~~~ {.cpp}
-///       f2->SetParLimits(p_number, parmin, parmax);
-/// ~~~
-///  if parmin>=parmax, the parameter is fixed
-///  Note that you are not forced to fix the limits for all parameters.
-///  For example, if you fit a function with 6 parameters, you can do:
-/// ~~~ {.cpp}
-///    func->SetParameters(0,3.1,1.e-6,0.1,-8,100);
-///    func->SetParLimits(4,-10,-4);
-///    func->SetParLimits(5, 1,1);
-/// ~~~
-///  With this setup, parameters 0->3 can vary freely
-///  Parameter 4 has boundaries [-10,-4] with initial value -8
-///  Parameter 5 is fixed to 100.
-///
-///  ### Fit range
-///
-///  The fit range can be specified in two ways:
-///    - specify rxmax > rxmin (default is rxmin=rxmax=0)
-///    - specify the option "R". In this case, the function will be taken
-///      instead of the full graph range.
-///
-///  ### Changing the fitting function
-///
-///   By default a chi2 fitting function is used for fitting a TGraph.
-///   The function is implemented in FitUtil::EvaluateChi2.
-///   In case of TGraph2DErrors an effective chi2 is used
-///   (see TGraphErrors fit in TGraph::Fit) and is implemented in
-///   FitUtil::EvaluateChi2Effective
-///   To specify a User defined fitting function, specify option "U" and
-///   call the following functions:
-/// ~~~ {.cpp}
-///   TVirtualFitter::Fitter(mygraph)->SetFCN(MyFittingFunction)
-/// ~~~
-///   where MyFittingFunction is of type:
-/// ~~~ {.cpp}
-///   extern void MyFittingFunction(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-/// ~~~
-///
-///  ### Associated functions
-///
-///  One or more object (typically a TF2*) can be added to the list
-///  of functions (fFunctions) associated to each graph.
-///  When TGraph::Fit is invoked, the fitted function is added to this list.
-///  Given a graph gr, one can retrieve an associated function
-///  with:  TF2 *myfunc = gr->GetFunction("myfunc");
-///
-///  ### Access to the fit results
-///
-///  The function returns a TFitResultPtr which can hold a  pointer to a TFitResult object.
-///  By default the TFitResultPtr contains only the status of the fit and it converts automatically to an
-///  integer. If the option "S" is instead used, TFitResultPtr contains the TFitResult and behaves as a smart
-///  pointer to it. For example one can do:
-/// ~~~ {.cpp}
-///     TFitResultPtr r = graph->Fit("myFunc","S");
-///     TMatrixDSym cov = r->GetCovarianceMatrix();  //  to access the covariance matrix
-///     Double_t par0   = r->Value(0); // retrieve the value for the parameter 0
-///     Double_t err0   = r->Error(0); // retrieve the error for the parameter 0
-///     r->Print("V");     // print full information of fit including covariance matrix
-///     r->Write();        // store the result in a file
-/// ~~~
-///
-///  The fit parameters, error and chi2 (but not covariance matrix) can be retrieved also
-///  from the fitted function.
-///  If the graph is made persistent, the list of
-///  associated functions is also persistent. Given a pointer (see above)
-///  to an associated function myfunc, one can retrieve the function/fit
-///  parameters with calls such as:
-/// ~~~ {.cpp}
-///    Double_t chi2 = myfunc->GetChisquare();
-///    Double_t par0 = myfunc->GetParameter(0); //value of 1st parameter
-///    Double_t err0 = myfunc->GetParError(0);  //error on first parameter
-/// ~~~
-///
-///  ### Fit Statistics
-///
-///  You can change the statistics box to display the fit parameters with
-///  the TStyle::SetOptFit(mode) method. This mode has four digits.
-///  mode = pcev  (default = 0111)
-///  - v = 1;  print name/values of parameters
-///  - e = 1;  print errors (if e=1, v must be 1)
-///  - c = 1;  print Chisquare/Number of degrees of freedom
-///  - p = 1;  print Probability
-///
-///  For example: gStyle->SetOptFit(1011);
-///  prints the fit probability, parameter names/values, and errors.
-///  You can change the position of the statistics box with these lines
-///  (where g is a pointer to the TGraph):
-///
-/// ~~~ {.cpp}
-///  Root > TPaveStats *st = (TPaveStats*)g->GetListOfFunctions()->FindObject("stats")
-///  Root > st->SetX1NDC(newx1); //new x start position
-///  Root > st->SetX2NDC(newx2); //new x end position
-/// ~~~
-
 TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 {
    // internal graph2D fitting methods
@@ -1564,6 +1463,30 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   graph2d->Draw(" << quote << option << quote << ");" << std::endl;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values of a TGraph2D by a constant c1.
+///
+/// If option contains "x" the x values are scaled
+/// If option contains "y" the y values are scaled
+/// If option contains "z" the z values are scaled
+/// If option contains "xyz" all three x, y and z values are scaled
+
+void TGraph2D::Scale(Double_t c1, Option_t *option)
+{
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetX()[i] *= c1;
+   }
+   if (opt.Contains("y")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetY()[i] *= c1;
+   }
+   if (opt.Contains("z")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetZ()[i] *= c1;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of points in the 2D graph.

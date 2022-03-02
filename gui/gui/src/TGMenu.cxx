@@ -1353,7 +1353,7 @@ Bool_t TGPopupMenu::HandleButton(Event_t *event)
          fCurrent->fStatus &= ~kMenuActiveMask;
          if (fCurrent->fStatus & kMenuEnableMask) {
             SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), id,
-                        (Long_t)ud);
+                        (Longptr_t)ud);
             Activated(id);
          }
       }
@@ -1453,7 +1453,7 @@ void TGPopupMenu::Activate(TGMenuEntry *entry)
       } else if (entry->fType == kMenuEntry) {
          // test...
          SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENUSELECT),
-                     entry->fEntryId, (Long_t)entry->fUserData);
+                     entry->fEntryId, (Longptr_t)entry->fUserData);
          Highlighted(entry->fEntryId);
       }
    }
@@ -2133,7 +2133,7 @@ void TGMenuTitle::DoSendMessage()
    if (fMenu)
       if (fTitleId != -1) {
          SendMessage(fMenu->fMsgWindow, MK_MSG(kC_COMMAND, kCM_MENU), fTitleId,
-                     (Long_t)fTitleData);
+                     (Longptr_t)fTitleData);
          fMenu->Activated(fTitleId);
       }
 }

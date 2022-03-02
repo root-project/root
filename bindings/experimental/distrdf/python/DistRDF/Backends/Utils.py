@@ -1,4 +1,4 @@
-## @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
@@ -13,7 +13,12 @@
 import logging
 import os
 
+from functools import singledispatch
+
 import ROOT
+from ROOT._pythonization._rdataframe import AsNumpyResult
+
+from DistRDF.PythonMergeables import SnapshotResult
 
 logger = logging.getLogger(__name__)
 
@@ -145,3 +150,73 @@ def check_pcm_in_library_path(shared_library_path):
     }
 
     return pcm_paths, libraries_path
+
+
+@singledispatch
+def get_mergeablevalue(resultptr):
+    """
+    Generally the input argument to this function is an RResultPtr, for which a
+    corresponding RMergeableValue type already exists. Call into the C++
+    function to handle this case.
+    """
+    return ROOT.Detail.RDF.GetMergeableValue(resultptr)
+
+
+@get_mergeablevalue.register(AsNumpyResult)
+def _(resultptr):
+    """
+    Results coming from an `AsNumpy` operation can be merged with others, but
+    we need to make sure to call its `GetValue` method since that will populate
+    the private attribute `_py_arrays` (which is the actual dictionary of
+    numpy arrays extracted from the RDataFrame columns). This extra call is an
+    insurance against backends that do not automatically serialize objects
+    returned by the mapper function (otherwise this would be taken care by the
+    `AsNumpyResult`'s `__getstate__` method).
+    """
+    resultptr.GetValue()
+    return resultptr
+
+
+@get_mergeablevalue.register(SnapshotResult)
+def _(resultptr):
+    """
+    When performing a distributed Snapshot we return an object holding the name
+    of the dataset and the path to the partial snapshot. We can directly return
+    the object, no extra work needed.
+    """
+    return resultptr
+
+
+@singledispatch
+def merge_values(mergeable_out, mergeable_in):
+    """
+    Generally the arguments are `RMergeableValue` instances that can be directly
+    passed to the C++ function responsible for merging them.
+    """
+    ROOT.Detail.RDF.MergeValues(mergeable_out, mergeable_in)
+
+
+@merge_values.register(AsNumpyResult)
+@merge_values.register(SnapshotResult)
+def _(mergeable_out, mergeable_in):
+    """
+    Mergeables coming from `Snapshot` or `AsNumpy` operations have their own
+    `Merge` method.
+    """
+    mergeable_out.Merge(mergeable_in)
+
+
+@singledispatch
+def set_value_on_node(mergeable, node, backend):
+    """
+    Most mergeables have a `GetValue` method without parameters.
+    SnapshotResult is an exception, accepting a 'backend' parameter because we
+    need to recreate a distributed RDataFrame with the same backend of the input
+    one.
+    """
+    node.value = mergeable.GetValue()
+
+
+@set_value_on_node.register
+def _(mergeable: SnapshotResult, node, backend):
+    node.value = mergeable.GetValue(backend)

@@ -47,7 +47,7 @@ struct EvaluatorOneDim< const ROOT::Math::IParamMultiFunction &> {
    Given a f(x1,x2,x3,....xn) transforms in a f( x_i) given the coordinate intex i and the vector x[]
    of the coordinates.
    It provides the possibility to copy and own the data array of the coordinates or to maintain internally a pointer to an external array
-   for being more efficient. In this last case the user must garantee the life of the given passed pointer
+   for being more efficient. In this last case the user must guarantee the life of the given passed pointer
 
    @ingroup  GenFunc
 
@@ -198,7 +198,7 @@ private:
 
 
 /**
-   OneDimParamFunctionAdapter class to wrap a multi-dim parameteric function in
+   OneDimParamFunctionAdapter class to wrap a multi-dim parametric function in
    one dimensional one.
    Given a f(x[],p1,...pn) transforms in a f( p_i) given the param index i and the vectors x[] and p[]
    of the coordinates and parameters

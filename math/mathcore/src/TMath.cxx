@@ -1149,6 +1149,7 @@ Bool_t TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double
 ///  \param[in] prob        probabilities where to compute quantiles
 ///  \param[in] nprob       size of prob array
 ///  \param[in] isSorted    is the input array x sorted ?
+///  \param[in] index       parameter index
 ///  \param[in] type        method to compute (from 1 to 9).
 ///
 /// #### NOTE:
@@ -1279,8 +1280,9 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
 /// Bubble sort variant to obtain the order of an array's elements into
 /// an index in order to do more useful things than the standard built
 /// in functions.
+/// \param[in] Narr   number of array elements
 /// \param[in] *arr1  is unchanged;
-/// \param[in] *arr2  is the array of indicies corresponding to the descending value
+/// \param[in] *arr2  is the array of indices corresponding to the descending value
 ///            of arr1 with arr2[0] corresponding to the largest arr1 value and
 ///            arr2[Narr] the smallest.
 ///
@@ -1369,7 +1371,7 @@ void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
 ///
 /// The quality of hash method is good enough, that
 /// "random" numbers made as R = Hash(1), Hash(2), ...Hash(N)
-/// tested by <R>, <R*R>, <Ri*Ri+1> gives the same result
+/// tested by `<R>`, `<R*R>`, `<Ri*Ri+1>` gives the same result
 /// as for libc rand().
 ///
 ///  - For string:  i = TMath::Hash(string,nstring);
@@ -2097,8 +2099,8 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 /// Suppose an event occurs with probability _p_ per trial
 /// Then the probability P of its occurring _k_ or more times
 /// in _n_ trials is termed a cumulative binomial probability
-/// the formula is P = sum_from_j=k_to_n(TMath::Binomial(n, j)*
-/// *TMath::Power(p, j)*TMath::Power(1-p, n-j)
+/// the formula is P = sum_from_j=k_to_n(TMath::Binomial (n, j)*
+/// *TMath::Power (p, j)*TMath::Power (1-p, n-j)
 /// For _n_ larger than 12 BetaIncomplete is a much better way
 /// to evaluate the sum than would be the straightforward sum calculation
 /// for _n_ smaller than 12 either method is acceptable
@@ -2265,6 +2267,7 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes the density function of Gamma distribution at point x.
 ///
+/// \param[in] x       evaluation point
 /// \param[in] gamma   shape parameter
 /// \param[in] mu      location parameter
 /// \param[in] beta    scale parameter
@@ -2353,6 +2356,7 @@ Double_t TMath::LaplaceDistI(Double_t x, Double_t alpha, Double_t beta)
 /// Computes the density of LogNormal distribution at point x.
 /// Variable X has lognormal distribution if Y=Ln(X) has normal distribution
 ///
+/// \param[in] x      is the evaluation point
 /// \param[in] sigma  is the shape parameter
 /// \param[in] theta  is the location parameter
 /// \param[in] m      is the scale parameter

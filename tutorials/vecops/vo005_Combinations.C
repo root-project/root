@@ -9,14 +9,12 @@
 /// \date August 2018
 /// \author Stefan Wunsch
 
-using namespace ROOT::VecOps;
-
 void vo005_Combinations()
 {
    // The starting point are two collections and we want to calculate the result
    // of combinations of the elements.
-   RVec<double> v1{1., 2., 3.};
-   RVec<double> v2{-4., -5.};
+   ROOT::RVecD v1{1., 2., 3.};
+   ROOT::RVecD v2{-4., -5.};
 
    // To get the indices, which result in all combinations, you can call the
    // following helper.
@@ -40,7 +38,7 @@ void vo005_Combinations()
    // single RVec, you can perform this as follows.
 
    // Get the indices of unique triples for the given vector.
-   RVec<double> v4{1., 2., 3., 4.};
+   ROOT::RVecD v4{1., 2., 3., 4.};
    auto idx2 = Combinations(v4, 3);
 
    // Take the elements and compute any operation on the returned collections.

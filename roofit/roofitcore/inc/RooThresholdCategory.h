@@ -31,27 +31,27 @@ public:
   RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar,
       const char* defCatName="Default", Int_t defCatIdx=0);
   RooThresholdCategory(const RooThresholdCategory& other, const char *name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooThresholdCategory(*this, newname); }
+  TObject* clone(const char* newname) const override { return new RooThresholdCategory(*this, newname); }
 
   // Mapping function
   Bool_t addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx=-99999) ;
 
   // Printing interface (human readable)
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
-  void writeToStream(std::ostream& os, Bool_t compact) const ;
+  void writeToStream(std::ostream& os, Bool_t compact) const override ;
 
 protected:
-  
+
   RooRealProxy _inputVar ;
   const value_type _defIndex{std::numeric_limits<value_type>::min()};
   std::vector<std::pair<double,value_type>> _threshList;
 
-  virtual value_type evaluate() const ;
+  value_type evaluate() const override ;
   /// No shape recomputation is necessary. This category does not depend on other categories.
-  void recomputeShape() { }
+  void recomputeShape() override { }
 
-  ClassDef(RooThresholdCategory, 3) // Real-to-Category function defined by series of thresholds
+  ClassDefOverride(RooThresholdCategory, 3) // Real-to-Category function defined by series of thresholds
 };
 
 #endif

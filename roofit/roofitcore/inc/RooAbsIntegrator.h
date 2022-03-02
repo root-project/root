@@ -23,28 +23,29 @@ class RooAbsIntegrator : public TObject {
 public:
   RooAbsIntegrator() ;
   RooAbsIntegrator(const RooAbsFunc& function, Bool_t printEvalCounter=kFALSE);
-  inline virtual ~RooAbsIntegrator() { 
-    // Destructor
+  /// Destructor
+  inline ~RooAbsIntegrator() override {
   }
   virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const = 0 ;
-  
-  inline Bool_t isValid() const { 
-    // Is integrator in valid state
-    return _valid; 
+
+  /// Is integrator in valid state
+  inline Bool_t isValid() const {
+    return _valid;
   }
 
-  inline Double_t integrand(const Double_t x[]) const { 
-    // Return value of integrand at given observable values
-    return (*_function)(x); 
-  }
-  inline const RooAbsFunc *integrand() const { 
-    // Return integrand function binding
-    return _function; 
+  /// Return value of integrand at given observable values
+  inline Double_t integrand(const Double_t x[]) const {
+    return (*_function)(x);
   }
 
-  inline virtual Bool_t checkLimits() const { 
-    // If true, finite limits are required on the observable range
-    return kTRUE; 
+  /// Return integrand function binding
+  inline const RooAbsFunc *integrand() const {
+    return _function;
+  }
+
+  /// If true, finite limits are required on the observable range
+  inline virtual Bool_t checkLimits() const {
+    return kTRUE;
   }
 
   Double_t calculate(const Double_t *yvec=0) ;
@@ -64,11 +65,11 @@ public:
 
 protected:
 
-  const RooAbsFunc *_function; // Pointer to function binding of integrand
-  Bool_t _valid;               // Is integrator in valid state?
-  Bool_t _printEvalCounter ;   // If true print number of function evaluation required for integration
+  const RooAbsFunc *_function; ///< Pointer to function binding of integrand
+  Bool_t _valid;               ///< Is integrator in valid state?
+  Bool_t _printEvalCounter ;   ///< If true print number of function evaluation required for integration
 
-  ClassDef(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
+  ClassDefOverride(RooAbsIntegrator,0) // Abstract interface for real-valued function integrators
 };
 
 #endif

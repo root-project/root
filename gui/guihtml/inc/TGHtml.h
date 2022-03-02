@@ -882,7 +882,7 @@ public:
    virtual Bool_t HandleIdleEvent(TGIdleHandler *i);
    virtual Bool_t HandleTimer(TTimer *timer);
 
-   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t);
+   virtual Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t);
 
    virtual void   DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual Bool_t ItemLayout();

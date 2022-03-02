@@ -31,24 +31,24 @@ public:
   // Constructors, assignment etc.
   RooMultiCatIter(const RooArgSet& catList, const char* rangeName=0) ;
   RooMultiCatIter(const RooMultiCatIter& other) ;
-  virtual ~RooMultiCatIter() ;
+  ~RooMultiCatIter() override ;
 
   // Iterator implementation
-  virtual const TCollection* GetCollection() const ;
-  virtual TObject* Next() ;
-  virtual void Reset() ;
-  virtual bool operator!=(const TIterator &aIter) const ;
-  virtual TObject *operator*() const ;
+  const TCollection* GetCollection() const override ;
+  TObject* Next() override ;
+  void Reset() override ;
+  bool operator!=(const TIterator &aIter) const override ;
+  TObject *operator*() const override ;
 
 protected:
-  
-  TIterator& operator=(const TIterator&) { return *this ; } // forbidden for now
+
+  TIterator& operator=(const TIterator&) override { return *this ; } // forbidden for now
 
   void initialize(const RooArgSet& catList) ;
   TObjString* compositeLabel() ;
 
   RooArgSet        _catList  ;   // Set of categories iterated over
-  pTIterator*      _iterList ;   // Array of category type iterators 
+  pTIterator*      _iterList ;   // Array of category type iterators
   pRooCategory*  _catPtrList ;   // Array of pointers to original categories
   RooCatType*   _curTypeList ;   // List of current types
   Int_t _nIter ;                 // Number of categories/iterators in use
@@ -57,7 +57,7 @@ protected:
   TString _rangeName ;           // Range name (optional)
   TObject* _curItem;             // Current item returned by Next()
 
-//  ClassDef(RooMultiCatIter,0) // Iterator over all state permutations of a list of categories
+//  ClassDefOverride(RooMultiCatIter,0) // Iterator over all state permutations of a list of categories
 };
 
 #endif

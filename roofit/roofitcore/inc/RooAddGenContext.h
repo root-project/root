@@ -35,33 +35,33 @@ public:
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
   RooAddGenContext(const RooAddModel &model, const RooArgSet &vars, const RooDataSet *prototype= 0,
                    const RooArgSet* auxProto=0, Bool_t _verbose= kFALSE);
-  virtual ~RooAddGenContext();
+  ~RooAddGenContext() override;
 
-  virtual void setProtoDataOrder(Int_t* lut) ;
+  void setProtoDataOrder(Int_t* lut) override ;
 
-  virtual void attach(const RooArgSet& params) ;
+  void attach(const RooArgSet& params) override ;
 
-  virtual void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printMultiline(std::ostream &os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override ;
 
 protected:
 
-  virtual void initGenerator(const RooArgSet &theEvent);
-  virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
+  void initGenerator(const RooArgSet &theEvent) override;
+  void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
   void updateThresholds() ;
 
   RooAddGenContext(const RooAddGenContext& other) ;
 
-  const RooArgSet* _vars ;       
-  RooArgSet* _pdfSet ;           //  Set owned all nodes of internal clone of p.d.f
-  RooAbsPdf *_pdf ;              //  Pointer to cloned p.d.f
-  std::vector<RooAbsGenContext*> _gcList ;  //  List of component generator contexts
-  Int_t  _nComp ;                //  Number of PDF components
-  Double_t* _coefThresh ;        //[_nComp] Array of coefficient thresholds 
-  Bool_t _isModel ;              // Are we generating from a RooAddPdf or a RooAddModel
-  RooAddModel::CacheElem* _mcache ; //! RooAddModel cache element
-  RooAddPdf::CacheElem* _pcache ; //! RooAddPdf cache element
+  const RooArgSet* _vars ;
+  RooArgSet* _pdfSet ;              ///<  Set owned all nodes of internal clone of p.d.f
+  RooAbsPdf *_pdf ;                 ///<  Pointer to cloned p.d.f
+  std::vector<RooAbsGenContext*> _gcList ;  ///<  List of component generator contexts
+  Int_t  _nComp ;                   ///<  Number of PDF components
+  Double_t* _coefThresh ;           ///<[_nComp] Array of coefficient thresholds
+  Bool_t _isModel ;                 ///< Are we generating from a RooAddPdf or a RooAddModel
+  RooAddModel::CacheElem* _mcache ; ///<! RooAddModel cache element
+  RooAddPdf::CacheElem* _pcache ;   ///<! RooAddPdf cache element
 
-  ClassDef(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
+  ClassDefOverride(RooAddGenContext,0) // Specialized context for generating a dataset from a RooAddPdf
 };
 
 #endif

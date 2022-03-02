@@ -19,7 +19,6 @@ import os
 import sys
 import select
 import tempfile
-import pty
 import itertools
 import re
 import fnmatch
@@ -37,7 +36,7 @@ from JupyROOT.helpers import handlers
 
 # We want iPython to take over the graphics
 ROOT.gROOT.SetBatch()
-
+ROOT.gROOT.SetWebDisplay("jupyter")
 
 cppMIME = 'text/x-c++src'
 
@@ -56,14 +55,29 @@ _jsCode = """
      style="width: {jsCanvasWidth}px; height: {jsCanvasHeight}px">
 </div>
 <script>
-if (typeof require !== 'undefined') {{
+
+function display_{jsDivId}(Core) {{
+   let obj = Core.parse({jsonContent});
+   Core.settings.HandleKeys = false;
+   Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
+}}
+
+function script_load_{jsDivId}(src, on_error) {{
+    let script = document.createElement('script');
+    script.src = src;
+    script.onload = function() {{ display_{jsDivId}(JSROOT); }};
+    script.onerror = function() {{ script.remove(); on_error(); }};
+    document.head.appendChild(script);
+}}
+
+if (typeof requirejs !== 'undefined') {{
 
     // We are in jupyter notebooks, use require.js which should be configured already
-    require(['scripts/JSRoot.core'],
-        function(Core) {{
-           display_{jsDivId}(Core);
-        }}
-    );
+    requirejs.config({{
+       paths: {{ 'JSRootCore' : [ 'scripts/JSRoot.core', 'https://root.cern/js/6.1.1/scripts/JSRoot.core.min', 'https://jsroot.gsi.de/6.1.1/scripts/JSRoot.core.min' ] }}
+    }})(['JSRootCore'],  function(Core) {{
+       display_{jsDivId}(Core);
+    }});
 
 }} else if (typeof JSROOT !== 'undefined') {{
 
@@ -81,31 +95,14 @@ if (typeof require !== 'undefined') {{
     }}
 
     // Try loading a local version of requirejs and fallback to cdn if not possible.
-    script_load(base_url + 'static/scripts/JSRoot.core.js', script_success, function(){{
-        console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file')
-        script_load('https://root.cern/js/6.1.0/scripts/JSRoot.core.min.js', script_success, function(){{
+    script_load_{jsDivId}(base_url + 'static/scripts/JSRoot.core.js', function(){{
+        console.error('Fail to load JSROOT locally, please check your jupyter_notebook_config.py file');
+        script_load_{jsDivId}('https://root.cern/js/6.1.1/scripts/JSRoot.core.min.js', function(){{
             document.getElementById("{jsDivId}").innerHTML = "Failed to load JSROOT";
         }});
     }});
 }}
 
-function script_load(src, on_load, on_error) {{
-    var script = document.createElement('script');
-    script.src = src;
-    script.onload = on_load;
-    script.onerror = on_error;
-    document.head.appendChild(script);
-}}
-
-function script_success() {{
-   display_{jsDivId}(JSROOT);
-}}
-
-function display_{jsDivId}(Core) {{
-   var obj = Core.parse({jsonContent});
-   Core.settings.HandleKeys = false;
-   Core.draw("{jsDivId}", obj, "{jsDrawOptions}");
-}}
 </script>
 """
 
@@ -116,6 +113,13 @@ def TBufferJSONAvailable():
        return True
    print(TBufferJSONErrorMessage, file=sys.stderr)
    return False
+
+def RCanvasAvailable():
+   if not hasattr(ROOT,"Experimental"):
+       return False
+   if not hasattr(ROOT.Experimental,"RCanvas"):
+       return False
+   return True
 
 _enableJSVis = False
 _enableJSVisDebug = False
@@ -321,7 +325,7 @@ def produceCanvasJson(canvas):
 
    ROOT.TColor.DefinedColors()
 
-   canvas_json = ROOT.TBufferJSON.ConvertToJSON(canvas, 3)
+   canvas_json = ROOT.TBufferJSON.ConvertToJSON(canvas, 23)
 
    # Cleanup primitives after conversion
    if style is not None: prim.Remove(style)
@@ -407,6 +411,11 @@ def GetCanvasDrawers():
     lOfC = ROOT.gROOT.GetListOfCanvases()
     return [NotebookDrawer(can) for can in lOfC if can.IsDrawn()]
 
+def GetRCanvasDrawers():
+    if not RCanvasAvailable(): return []
+    lOfC = ROOT.Experimental.RCanvas.GetCanvases()
+    return [NotebookDrawer(can.__smartptr__().get()) for can in lOfC if can.IsShown()]
+
 def GetGeometryDrawer():
     if not hasattr(ROOT,'gGeoManager'): return
     if not ROOT.gGeoManager: return
@@ -416,7 +425,7 @@ def GetGeometryDrawer():
         return NotebookDrawer(vol)
 
 def GetDrawers():
-    drawers = GetCanvasDrawers()
+    drawers = GetCanvasDrawers() + GetRCanvasDrawers()
     geometryDrawer = GetGeometryDrawer()
     if geometryDrawer: drawers.append(geometryDrawer)
     return drawers
@@ -431,9 +440,15 @@ def DrawCanvases():
     for drawer in drawers:
         drawer.Draw()
 
+def DrawRCanvases():
+    rdrawers = GetRCanvasDrawers()
+    for drawer in rdrawers:
+        drawer.Draw()
+
 def NotebookDraw():
     DrawGeometry()
     DrawCanvases()
+    DrawRCanvases()
 
 class CaptureDrawnPrimitives(object):
     '''
@@ -456,13 +471,20 @@ class NotebookDrawer(object):
 
     def __init__(self, theObject):
         self.drawableObject = theObject
-        self.isCanvas = self.drawableObject.ClassName() == "TCanvas"
+        self.isRCanvas = False
+        self.isCanvas = False
+        if hasattr(self.drawableObject,"ResolveSharedPtrs"):
+            self.isRCanvas = True
+        else:
+            self.isCanvas = self.drawableObject.ClassName() == "TCanvas"
 
     def __del__(self):
-       if self.isCanvas:
-           self.drawableObject.ResetDrawn()
-       else:
-           ROOT.gGeoManager.SetUserPaintVolume(None)
+        if self.isRCanvas:
+            self.drawableObject.ClearShown()
+        elif self.isCanvas:
+            self.drawableObject.ResetDrawn()
+        else:
+            ROOT.gGeoManager.SetUserPaintVolume(None)
 
     def _getListOfPrimitivesNamesAndTypes(self):
        """
@@ -487,6 +509,7 @@ class NotebookDrawer(object):
     def _canJsDisplay(self):
         if not TBufferJSONAvailable():
            return False
+        if self.isRCanvas: return True
         if not self.isCanvas: return True
         # to be optimised
         if not _enableJSVis: return False
@@ -500,7 +523,10 @@ class NotebookDrawer(object):
 
     def _getJsCode(self):
         # produce JSON for the canvas
-        json = produceCanvasJson(self.drawableObject)
+        if self.isRCanvas:
+            json = self.drawableObject.CreateJSON()
+        else:
+            json = produceCanvasJson(self.drawableObject).Data()
 
         # Here we could optimise the string manipulation
         divId = 'root_plot_' + str(self._getUID())
@@ -514,9 +540,14 @@ class NotebookDrawer(object):
             width = self.drawableObject.GetWh()
             options = ""
 
+        if self.isRCanvas:
+            if (self.drawableObject.GetWidth() > 0): width = self.drawableObject.GetWidth()
+            if (self.drawableObject.GetHeight() > 0): height = self.drawableObject.GetHeight()
+            options = ""
+
         thisJsCode = _jsCode.format(jsCanvasWidth = height,
                                     jsCanvasHeight = width,
-                                    jsonContent = json.Data(),
+                                    jsonContent = json,
                                     jsDrawOptions = options,
                                     jsDivId = divId)
         return thisJsCode
@@ -529,10 +560,12 @@ class NotebookDrawer(object):
         return 0
 
     def _getPngImage(self):
-        ofile = tempfile.NamedTemporaryFile(suffix=".png")
+        ofile = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
         with _setIgnoreLevel(ROOT.kError):
             self.drawableObject.SaveAs(ofile.name)
         img = IPython.display.Image(filename=ofile.name, format='png', embed=True)
+        ofile.close()
+        os.unlink(ofile.name)
         return img
 
     def _pngDisplay(self):

@@ -257,7 +257,7 @@ public:
    RTensor<Value_t, Container_t> Squeeze() const;
    RTensor<Value_t, Container_t> ExpandDims(int idx) const;
    RTensor<Value_t, Container_t> Reshape(const Shape_t &shape) const;
-   RTensor<Value_t, Container_t> Slice(const Slice_t &slice); 
+   RTensor<Value_t, Container_t> Slice(const Slice_t &slice);
 
    // Iterator class
    class Iterator : public std::iterator<std::random_access_iterator_tag, Value_t> {

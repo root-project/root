@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/// \file ROOT/RSysFile.cxx
+/// \file
 /// \ingroup rbrowser
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2019-10-15
@@ -511,7 +511,11 @@ std::string RSysFile::GetContent(const std::string &kind)
 
       auto pos = GetName().rfind(".");
 
-      return "data:image/"s  + GetName().substr(pos+1) + ";base64,"s + encode.Data();
+      std::string image_kind = GetName().substr(pos+1);
+      std::transform(image_kind.begin(), image_kind.end(), image_kind.begin(), ::tolower);
+      if (image_kind == "svg") image_kind = "svg+xml";
+
+      return "data:image/"s  + image_kind + ";base64,"s + encode.Data();
    }
 
    if (GetContentKind(kind) == kFileName) {

@@ -13,12 +13,12 @@ set(Foundation_dict_headers
   RStringView.h
   TClassEdit.h
   TError.h
-  ROOT/RIntegerSequence.hxx
   ROOT/RLogger.hxx
-  ROOT/RMakeUnique.hxx
   ROOT/RNotFn.hxx
+  ROOT/RRangeCast.hxx
   ROOT/RSpan.hxx
   ROOT/RStringView.hxx
+  ROOT/StringUtils.hxx
   ROOT/span.hxx
   ROOT/TypeTraits.hxx
   PARENT_SCOPE
@@ -28,6 +28,7 @@ set(FOUNDATION_SOURCES
   src/FoundationUtils.cxx
   src/RConversionRuleParser.cxx
   src/RLogger.cxx
+  src/StringUtils.cxx
   src/TClassEdit.cxx
   src/TError.cxx
 )
@@ -63,7 +64,10 @@ if(MSVC)
    target_include_directories(Foundation_Stage1 PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
 endif()
 
-set_target_properties(Foundation_Stage1 PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}")
+set_target_properties(Foundation_Stage1 PROPERTIES
+  COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
 ROOT_INSTALL_HEADERS(${FOUNDATION_HEADER_DIRS})
 ROOT_ADD_TEST_SUBDIRECTORY(test)

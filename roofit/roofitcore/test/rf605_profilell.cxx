@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #605
-// 
+//
 // Working with the profile likelihood estimator
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -19,7 +19,7 @@
 #include "RooAddPdf.h"
 #include "RooNLLVar.h"
 #include "RooProfileLL.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "TCanvas.h"
 #include "RooPlot.h"
 using namespace RooFit ;
@@ -27,11 +27,11 @@ using namespace RooFit ;
 
 class TestBasic605 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic605(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Profile Likelihood operator",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // C r e a t e   m o d e l   a n d   d a t a s e t 
+  // C r e a t e   m o d e l   a n d   d a t a s e t
   // -----------------------------------------------
 
   // Observable
@@ -50,7 +50,7 @@ public:
 
   // Generate 1000 events
   RooDataSet* data = model.generate(x,1000) ;
-  
+
 
 
   // C o n s t r u c t   p l a i n   l i k e l i h o o d
@@ -60,9 +60,9 @@ public:
   RooNLLVar nll("nll","nll",model,*data) ;
 
   // Minimize likelihood w.r.t all parameters before making plots
-  RooMinuit(nll).migrad() ;
+  RooMinimizer(nll).migrad() ;
 
-  // Plot likelihood scan frac 
+  // Plot likelihood scan frac
   RooPlot* frame1 = frac.frame(Bins(10),Range(0.01,0.95),Title("LL and profileLL in frac")) ;
   nll.plotOn(frame1,ShiftToZero()) ;
 
@@ -88,7 +88,7 @@ public:
 
 
 
-  // C o n s t r u c t   p r o f i l e   l i k e l i h o o d   i n   s i g m a _ g 2 
+  // C o n s t r u c t   p r o f i l e   l i k e l i h o o d   i n   s i g m a _ g 2
   // -------------------------------------------------------------------------------
 
   // The profile likelihood estimator on nll for sigma_g2 will minimize nll

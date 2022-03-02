@@ -26,19 +26,26 @@ public:
    TPaveLabel();
    TPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, Option_t *option="br");
    TPaveLabel(const TPaveLabel &pavelabel);
+   TPaveLabel& operator=(const TPaveLabel &pavelabel)
+   {
+     if (this != &pavelabel) {
+       ((TPaveLabel&)pavelabel).Copy(*this);
+     }
+     return *this;
+   }
    virtual ~TPaveLabel();
 
-   void          Copy(TObject &pavelabel) const;
-   virtual void  Draw(Option_t *option="");
-   virtual void  DrawPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-                      const char *label, Option_t *option="");
-   const char   *GetLabel() const {return fLabel.Data();}
-   const char   *GetTitle() const {return fLabel.Data();}
-   virtual void  Paint(Option_t *option="");
-   virtual void  PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-                      const char *label, Option_t *option="");
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void  SetLabel(const char *label) {fLabel = label;} // *MENU*
+   void                Copy(TObject &pavelabel) const;
+   virtual void        Draw(Option_t *option="");
+   virtual TPaveLabel *DrawPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                                     const char *label, Option_t *option="");
+   const char         *GetLabel() const {return fLabel.Data();}
+   const char         *GetTitle() const {return fLabel.Data();}
+   virtual void        Paint(Option_t *option="");
+   virtual void        PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                                      const char *label, Option_t *option="");
+   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
+   virtual void        SetLabel(const char *label) {fLabel = label;} // *MENU*
 
    ClassDef(TPaveLabel,1)  //PaveLabel. A Pave with a label
 };

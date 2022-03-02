@@ -1,9 +1,9 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'SPECIAL PDFS' RooFit tutorial macro #702
-// 
-// Unbinned maximum likelihood fit of an efficiency eff(x) function to 
-// a dataset D(x,cut), where cut is a category encoding a selection whose 
+//
+// Unbinned maximum likelihood fit of an efficiency eff(x) function to
+// a dataset D(x,cut), where cut is a category encoding a selection whose
 // efficiency as function of x should be described by eff(x)
 //
 //
@@ -29,20 +29,20 @@ using namespace RooFit ;
 // Elementary operations on a gaussian PDF
 class TestBasic702 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic702(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Efficiency operator p.d.f. 2D",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
   Bool_t flat=kFALSE ;
 
-  // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x , y ) 
+  // C o n s t r u c t   e f f i c i e n c y   f u n c t i o n   e ( x , y )
   // -----------------------------------------------------------------------
 
   // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
   RooRealVar x("x","x",-10,10) ;
   RooRealVar y("y","y",-10,10) ;
 
-  // Efficiency function eff(x;a,b) 
+  // Efficiency function eff(x;a,b)
   RooRealVar ax("ax","ay",0.6,0,1) ;
   RooRealVar bx("bx","by",5) ;
   RooRealVar cx("cx","cy",-1,-10,10) ;
@@ -51,7 +51,7 @@ public:
   RooRealVar by("by","by",5) ;
   RooRealVar cy("cy","cy",-1,-10,10) ;
 
-  RooFormulaVar effFunc("effFunc","((1-ax)+ax*cos((x-cx)/bx))*((1-ay)+ay*cos((y-cy)/by))",RooArgList(ax,bx,cx,x,ay,by,cy,y)) ; 
+  RooFormulaVar effFunc("effFunc","((1-ax)+ax*cos((x-cx)/bx))*((1-ay)+ay*cos((y-cy)/by))",RooArgList(ax,bx,cx,x,ay,by,cy,y)) ;
 
   // Acceptance state cut (1 or 0)
   RooCategory cut("cut","cutr") ;
@@ -60,7 +60,7 @@ public:
 
 
 
-  // C o n s t r u c t   c o n d i t i o n a l    e f f i c i e n c y   p d f   E ( c u t | x , y ) 
+  // C o n s t r u c t   c o n d i t i o n a l    e f f i c i e n c y   p d f   E ( c u t | x , y )
   // ---------------------------------------------------------------------------------------------
 
   // Construct efficiency p.d.f eff(cut|x)
@@ -68,10 +68,10 @@ public:
 
 
 
-  // G e n e r a t e   d a t a   ( x , y , c u t )   f r o m   a   t o y   m o d e l 
+  // G e n e r a t e   d a t a   ( x , y , c u t )   f r o m   a   t o y   m o d e l
   // -------------------------------------------------------------------------------
 
-  // Construct global shape p.d.f shape(x) and product model(x,cut) = eff(cut|x)*shape(x) 
+  // Construct global shape p.d.f shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
   // (These are _only_ needed to generate some toy MC here to be used later)
   RooPolynomial shapePdfX("shapePdfX","shapePdfX",x,RooConst(flat?0:-0.095)) ;
   RooPolynomial shapePdfY("shapePdfY","shapePdfY",y,RooConst(flat?0:+0.095)) ;
@@ -83,7 +83,7 @@ public:
 
 
 
-  // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a 
+  // F i t   c o n d i t i o n a l   e f f i c i e n c y   p d f   t o   d a t a
   // --------------------------------------------------------------------------
 
   // Fit conditional efficiency p.d.f to data
@@ -91,7 +91,7 @@ public:
 
 
 
-  // P l o t   f i t t e d ,   d a t a   e f f i c i e n c y  
+  // P l o t   f i t t e d ,   d a t a   e f f i c i e n c y
   // --------------------------------------------------------
 
   // Make 2D histograms of all data, selected data and efficiency function
@@ -108,7 +108,7 @@ public:
   regTH(hh_data_all,"rf702_hh_data_all") ;
   regTH(hh_data_sel,"rf702_hh_data_sel") ;
   regTH(hh_eff,"rf702_hh_eff") ;
-  
+
   delete data ;
 
   return kTRUE;

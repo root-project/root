@@ -77,8 +77,8 @@ protected:
       {
          _frac.add(flist);
       };
-      virtual ~CacheElem();
-      virtual RooArgList containedArgs(Action);
+      ~CacheElem() override;
+      RooArgList containedArgs(Action) override;
       RooAbsReal *_sumFunc;
       RooChangeTracker *_tracker;
       RooArgList _frac;
@@ -99,15 +99,15 @@ public:
    RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name = 0);
    RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                         const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting);
-   virtual ~RooMomentMorphFuncND();
-   virtual TObject *clone(const char *newname) const { return new RooMomentMorphFuncND(*this, newname); }
+   ~RooMomentMorphFuncND() override;
+   TObject *clone(const char *newname) const override { return new RooMomentMorphFuncND(*this, newname); }
 
    void setMode(const Setting &setting) { _setting = setting; }
    virtual Bool_t selfNormalized() const { return kTRUE; }
    Bool_t setBinIntegrator(RooArgSet &allVars);
    void useHorizontalMorphing(Bool_t val) { _useHorizMorph = val; }
 
-   Double_t evaluate() const;
+   Double_t evaluate() const override;
    virtual Double_t getVal(const RooArgSet *set = 0) const;
 
 protected:
@@ -134,7 +134,7 @@ protected:
    friend class CacheElem;
    friend class Grid2;
 
-   mutable RooObjCacheManager _cacheMgr;
+   mutable RooObjCacheManager _cacheMgr; ///<! Transient cache manager
    mutable RooArgSet *_curNormSet;
 
    RooListProxy _parList;
@@ -155,7 +155,7 @@ protected:
 
    inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
 
-   ClassDef(RooMomentMorphFuncND, 1)
+   ClassDefOverride(RooMomentMorphFuncND, 2)
 };
 
 #endif

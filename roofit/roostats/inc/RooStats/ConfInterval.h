@@ -40,13 +40,13 @@ Note, one could use the same class for a Bayesian "credible interval".
       explicit ConfInterval(const char* name = 0) : TNamed(name,name) {}
 
       /// destructor
-      virtual ~ConfInterval() {}
+      ~ConfInterval() override {}
 
       /// operator=
       ConfInterval& operator=(const ConfInterval& other) {
-   if (&other==this) { return *this; }
-   TNamed::operator=(other);
-   return *this;
+         if (&other==this) { return *this; }
+         TNamed::operator=(other);
+         return *this;
       }
 
       /// check if given point is in the interval
@@ -67,7 +67,7 @@ Note, one could use the same class for a Bayesian "credible interval".
 
    protected:
 
-      ClassDef(ConfInterval,1) // Interface for Confidence Intervals
+      ClassDefOverride(ConfInterval,1) // Interface for Confidence Intervals
 
    };
 }

@@ -40,7 +40,7 @@ ClassImp(RooInvTransform);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor. 
+/// Constructor.
 
 RooInvTransform::RooInvTransform(const RooAbsFunc &func) :
   RooAbsFunc(func.getDimension()), _func(&func)

@@ -1684,7 +1684,6 @@ Double_t TUnfoldDensity::GetScanVariable
    }
    if(rhoi) {
       Double_t sum=0.0;
-      Double_t sumSquare=0.0;
       Double_t rhoMax=0.0;
       Int_t n=0;
       for(Int_t i=0;i<=rhoi->GetNbinsX()+1;i++) {
@@ -1692,7 +1691,6 @@ Double_t TUnfoldDensity::GetScanVariable
          if(c>=0.) {
             if(c>rhoMax) rhoMax=c;
             sum += c;
-            sumSquare += c*c;
             n ++;
          }
       }

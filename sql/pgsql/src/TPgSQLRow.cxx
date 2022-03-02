@@ -11,16 +11,18 @@
 
 #include "TPgSQLRow.h"
 
+#include <libpq-fe.h>
+
 
 ClassImp(TPgSQLRow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of query result.
 
-TPgSQLRow::TPgSQLRow(void *res, ULong_t rowHandle)
+TPgSQLRow::TPgSQLRow(PGresult *res, ULong_t rowHandle)
 {
-   fResult = (PGresult *) res;
-   fRowNum = (ULong_t) rowHandle;
+   fResult = res;
+   fRowNum = rowHandle;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,7 +42,7 @@ void TPgSQLRow::Close(Option_t *)
    if (!fRowNum)
       return;
 
-   fResult = 0;
+   fResult = nullptr;
    fRowNum = 0;
 }
 
@@ -80,7 +82,7 @@ ULong_t TPgSQLRow::GetFieldLength(Int_t field)
 const char *TPgSQLRow::GetField(Int_t field)
 {
    if (!IsValid(field))
-      return 0;
+      return nullptr;
 
    return PQgetvalue(fResult, fRowNum, field);
 }

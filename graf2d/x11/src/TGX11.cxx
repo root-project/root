@@ -584,18 +584,18 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
 /// Fill area described by polygon.
 ///
 ///  \param [in] n     number of points
-///  \param [in] xyt   list of points
+///  \param [in] xy   list of points
 
-void TGX11::DrawFillArea(int n, TPoint *xyt)
+void TGX11::DrawFillArea(int n, TPoint *xy)
 {
-   XPoint *xy = (XPoint*)xyt;
+   XPoint *xyp = (XPoint*)xy;
 
    if (gFillHollow)
-      XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCfill, xy, n, CoordModeOrigin);
+      XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCfill, xyp, n, CoordModeOrigin);
 
    else {
       XFillPolygon((Display*)fDisplay, gCws->fDrawing, *gGCfill,
-                   xy, n, Nonconvex, CoordModeOrigin);
+                   xyp, n, Nonconvex, CoordModeOrigin);
    }
 }
 
@@ -605,7 +605,7 @@ void TGX11::DrawFillArea(int n, TPoint *xyt)
 ///  \param [in] x1,y1        : begin of line
 ///  \param [in] x2,y2        : end of line
 
-void TGX11::DrawLine(int x1, int y1, int x2, int y2)
+void TGX11::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    if (gLineStyle == LineSolid)
       XDrawLine((Display*)fDisplay, gCws->fDrawing, *gGCline, x1, y1, x2, y2);
@@ -619,11 +619,11 @@ void TGX11::DrawLine(int x1, int y1, int x2, int y2)
 /// Draw a line through all points.
 ///
 ///  \param [in] n     number of points
-///  \param [in] xyt   list of points
+///  \param [in] xy   list of points
 
-void TGX11::DrawPolyLine(int n, TPoint *xyt)
+void TGX11::DrawPolyLine(int n, TPoint *xy)
 {
-   XPoint *xy = (XPoint*)xyt;
+   XPoint *xyp = (XPoint*)xy;
 
    const Int_t kMaxPoints = 1000001;
 
@@ -631,27 +631,27 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
       int ibeg = 0;
       int iend = kMaxPoints - 1;
       while (iend < n) {
-         DrawPolyLine( kMaxPoints, &xyt[ibeg] );
+         DrawPolyLine( kMaxPoints, &xy[ibeg] );
          ibeg = iend;
          iend += kMaxPoints - 1;
       }
       if (ibeg < n) {
          int npt = n - ibeg;
-         DrawPolyLine( npt, &xyt[ibeg] );
+         DrawPolyLine( npt, &xy[ibeg] );
       }
    } else if (n > 1) {
       if (gLineStyle == LineSolid)
-         XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCline, xy, n, CoordModeOrigin);
+         XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCline, xyp, n, CoordModeOrigin);
       else {
          int i;
          XSetDashes((Display*)fDisplay, *gGCdash,
                     gDashOffset, gDashList, gDashSize);
-         XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCdash, xy, n, CoordModeOrigin);
+         XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCdash, xyp, n, CoordModeOrigin);
 
          // calculate length of line to update dash offset
          for (i = 1; i < n; i++) {
-            int dx = xy[i].x - xy[i-1].x;
-            int dy = xy[i].y - xy[i-1].y;
+            int dx = xyp[i].x - xyp[i-1].x;
+            int dy = xyp[i].y - xyp[i-1].y;
             if (dx < 0) dx = - dx;
             if (dy < 0) dy = - dy;
             gDashOffset += dx > dy ? dx : dy;
@@ -660,8 +660,8 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
       }
    } else {
       int px,py;
-      px=xy[0].x;
-      py=xy[0].y;
+      px=xyp[0].x;
+      py=xyp[0].y;
       XDrawPoint((Display*)fDisplay, gCws->fDrawing,
                  gLineStyle == LineSolid ? *gGCline : *gGCdash, px, py);
    }
@@ -671,20 +671,20 @@ void TGX11::DrawPolyLine(int n, TPoint *xyt)
 /// Draw n markers with the current attributes at position x, y.
 ///
 ///  \param [in] n     number of markers to draw
-///  \param [in] xyt   x,y coordinates of markers
+///  \param [in] xy   x,y coordinates of markers
 
-void TGX11::DrawPolyMarker(int n, TPoint *xyt)
+void TGX11::DrawPolyMarker(int n, TPoint *xy)
 {
-   XPoint *xy = (XPoint*)xyt;
+   XPoint *xyp = (XPoint*)xy;
 
    if (gMarker.n <= 0) {
       const int kNMAX = 1000000;
       int nt = n/kNMAX;
       for (int it=0;it<=nt;it++) {
          if (it < nt) {
-            XDrawPoints((Display*)fDisplay, gCws->fDrawing, *gGCmark, &xy[it*kNMAX], kNMAX, CoordModeOrigin);
+            XDrawPoints((Display*)fDisplay, gCws->fDrawing, *gGCmark, &xyp[it*kNMAX], kNMAX, CoordModeOrigin);
          } else {
-            XDrawPoints((Display*)fDisplay, gCws->fDrawing, *gGCmark, &xy[it*kNMAX], n-it*kNMAX, CoordModeOrigin);
+            XDrawPoints((Display*)fDisplay, gCws->fDrawing, *gGCmark, &xyp[it*kNMAX], n-it*kNMAX, CoordModeOrigin);
          }
       }
    } else {
@@ -699,20 +699,20 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
 
             case 0:        // hollow circle
                XDrawArc((Display*)fDisplay, gCws->fDrawing, *gGCmark,
-                        xy[m].x - r, xy[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
+                        xyp[m].x - r, xyp[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
                break;
 
             case 1:        // filled circle
                XFillArc((Display*)fDisplay, gCws->fDrawing, *gGCmark,
-                        xy[m].x - r, xy[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
+                        xyp[m].x - r, xyp[m].y - r, gMarker.n, gMarker.n, 0, 360*64);
                break;
 
             case 2:        // hollow polygon
                hollow = 1;
             case 3:        // filled polygon
                for (i = 0; i < gMarker.n; i++) {
-                  gMarker.xy[i].x += xy[m].x;
-                  gMarker.xy[i].y += xy[m].y;
+                  gMarker.xy[i].x += xyp[m].x;
+                  gMarker.xy[i].y += xyp[m].y;
                }
                if (hollow)
                   XDrawLines((Display*)fDisplay, gCws->fDrawing, *gGCmark,
@@ -721,16 +721,16 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
                   XFillPolygon((Display*)fDisplay, gCws->fDrawing, *gGCmark,
                                gMarker.xy, gMarker.n, Nonconvex, CoordModeOrigin);
                for (i = 0; i < gMarker.n; i++) {
-                  gMarker.xy[i].x -= xy[m].x;
-                  gMarker.xy[i].y -= xy[m].y;
+                  gMarker.xy[i].x -= xyp[m].x;
+                  gMarker.xy[i].y -= xyp[m].y;
                }
                break;
 
             case 4:        // segmented line
                for (i = 0; i < gMarker.n; i += 2)
                   XDrawLine((Display*)fDisplay, gCws->fDrawing, *gGCmark,
-                            xy[m].x + gMarker.xy[i].x, xy[m].y + gMarker.xy[i].y,
-                            xy[m].x + gMarker.xy[i+1].x, xy[m].y + gMarker.xy[i+1].y);
+                            xyp[m].x + gMarker.xy[i].x, xyp[m].y + gMarker.xy[i].y,
+                            xyp[m].x + gMarker.xy[i+1].x, xyp[m].y + gMarker.xy[i+1].y);
                break;
          }
       }
@@ -748,7 +748,7 @@ void TGX11::DrawPolyMarker(int n, TPoint *xyt)
 ///  \param [in] mgn        : magnification factor
 ///  \param [in] text       : text string
 
-void TGX11::DrawText(int x, int y, float angle, float mgn,
+void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                      const char *text, ETextMode mode)
 {
    XRotSetMagnification(mgn);
@@ -1045,7 +1045,7 @@ void TGX11::GetRGB(int index, float &r, float &g, float &b)
 ///  \param [in] h          : text height
 ///  \param [in] mess        : message
 
-void TGX11::GetTextExtent(unsigned int &w, unsigned int &h, char *mess)
+void TGX11::GetTextExtent(UInt_t &w, UInt_t &h, char *mess)
 {
    w=0; h=0;
    if (strlen(mess)==0) return;
@@ -1077,7 +1077,7 @@ Window_t TGX11::GetWindowID(int wid)
 ///  \param [in] x    : x new window position
 ///  \param [in] y    : y new window position
 
-void TGX11::MoveWindow(int wid, int x, int y)
+void TGX11::MoveWindow(Int_t wid, Int_t x, Int_t y)
 {
    gTws = &fWindows[wid];
    if (!gTws->fOpen) return;
@@ -1451,7 +1451,7 @@ void TGX11::RemoveWindow(ULong_t qwid)
 ///  \param [in] iy       : Y coordinate of pointer
 /// (both coordinates are relative to the origin of the root window)
 
-void TGX11::QueryPointer(int &ix, int &iy)
+void TGX11::QueryPointer(Int_t &ix, Int_t &iy)
 {
    Window    root_return, child_return;
    int       win_x_return, win_y_return;
@@ -1916,7 +1916,7 @@ int TGX11::ResizePixmap(int wid, unsigned int w, unsigned int h)
 ////////////////////////////////////////////////////////////////////////////////
 /// Resize the current window if necessary.
 
-void TGX11::ResizeWindow(int wid)
+void TGX11::ResizeWindow(Int_t wid)
 {
    int i;
    int xval=0, yval=0;
@@ -2073,7 +2073,7 @@ void  TGX11::SetColor(void *gci, int ci)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the cursor.
 
-void  TGX11::SetCursor(int wid, ECursor cursor)
+void  TGX11::SetCursor(Int_t wid, ECursor cursor)
 {
    gTws = &fWindows[wid];
    XDefineCursor((Display*)fDisplay, gTws->fWindow, fCursors[cursor]);
@@ -2287,7 +2287,7 @@ void TGX11::SetLineColor(Color_t cindex)
 /// Set line type.
 ///
 ///  \param [in] n         : length of dash list
-///  \param [in] dash(n)   : dash segment lengths
+///  \param [in] dash      : dash segment lengths
 ///
 ///  - if n <= 0 use solid lines
 ///  - if n >  0 use dashed lines described by DASH(N)
@@ -3447,8 +3447,8 @@ Int_t TGX11::WriteGIF(char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw image.
 
-void TGX11::PutImage(int offset,int itran,int x0,int y0,int nx,int ny,int xmin,
-                     int ymin,int xmax,int ymax, unsigned char *image,Drawable_t wid)
+void TGX11::PutImage(Int_t offset,Int_t itran,Int_t x0,Int_t y0,Int_t nx,Int_t ny,Int_t xmin,
+                     Int_t ymin,Int_t xmax,Int_t ymax, UChar_t *image,Drawable_t wid)
 {
    const int maxSegment = 20;
    int           i, n, x, y, xcur, x1, x2, y1, y2;

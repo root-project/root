@@ -20,7 +20,7 @@
 \ingroup Roofitcore
 
 RooAbsCacheElement is the abstract base class for objects to be stored
-in RooAbsCache cache manager objects. Each storage element has an 
+in RooAbsCache cache manager objects. Each storage element has an
 interface to pass on calls for server redirection, operation mode
 change calls and constant term optimization management calls
 **/
@@ -33,18 +33,18 @@ change calls and constant term optimization management calls
 
 using namespace std;
 
-ClassImp(RooAbsCacheElement); 
+ClassImp(RooAbsCacheElement);
    ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface for server redirect calls
 
-Bool_t RooAbsCacheElement::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
-					       Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
-{ 
-  return kFALSE ; 
-} 
+Bool_t RooAbsCacheElement::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/,
+                      Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
+{
+  return kFALSE ;
+}
 
 
 
@@ -61,12 +61,12 @@ void RooAbsCacheElement::printCompactTreeHook(std::ostream&, const char *, Int_t
 /// Interface for cache optimization calls. The default implementation is to forward all these
 /// calls to all contained RooAbsArg objects as publicized through containedArg()
 
-void RooAbsCacheElement::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes) 
+void RooAbsCacheElement::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optNodes, RooLinkedList& processedNodes)
 {
   RooArgList list = containedArgs(OptimizeCaching) ;
   TIterator* iter = list.createIterator() ;
   RooAbsArg* arg ;
-  while((arg=(RooAbsArg*)iter->Next())) {    
+  while((arg=(RooAbsArg*)iter->Next())) {
     arg->optimizeCacheMode(obs, optNodes, processedNodes) ;
   }
   delete iter ;
@@ -78,7 +78,7 @@ void RooAbsCacheElement::optimizeCacheMode(const RooArgSet& obs, RooArgSet& optN
 /// Interface for constant term optimization calls. The default implementation is to forward all these
 /// calls to all contained RooAbsArg objects as publicized through containedArg()
 
-void RooAbsCacheElement::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes) 
+void RooAbsCacheElement::findConstantNodes(const RooArgSet& obs, RooArgSet& cacheList, RooLinkedList& processedNodes)
 {
   RooArgList list = containedArgs(FindConstantNodes) ;
   for (const auto arg : list) {

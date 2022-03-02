@@ -33,24 +33,23 @@ gaussy = ROOT.RooGaussian("gaussy", "gaussian PDF", y, meany, sigmay)
 # -------------------------------------------------------------------
 
 # Multiply gaussx and gaussy into a two-dimensional pdf gaussxy
-gaussxy = ROOT.RooProdPdf(
-    "gaussxy", "gaussx*gaussy", ROOT.RooArgList(gaussx, gaussy))
+gaussxy = ROOT.RooProdPdf("gaussxy", "gaussx*gaussy", [gaussx, gaussy])
 
 # Sample pdf, plot projection on x and y
 # ---------------------------------------------------------------------------
 
 # Generate 10000 events in x and y from gaussxy
-data = gaussxy.generate(ROOT.RooArgSet(x, y), 10000)
+data = gaussxy.generate({x, y}, 10000)
 
 # Plot x distribution of data and projection of gaussxy x = Int(dy)
 # gaussxy(x,y)
-xframe = x.frame(ROOT.RooFit.Title("X projection of gauss(x)*gauss(y)"))
+xframe = x.frame(Title="X projection of gauss(x)*gauss(y)")
 data.plotOn(xframe)
 gaussxy.plotOn(xframe)
 
 # Plot x distribution of data and projection of gaussxy y = Int(dx)
 # gaussxy(x,y)
-yframe = y.frame(ROOT.RooFit.Title("Y projection of gauss(x)*gauss(y)"))
+yframe = y.frame(Title="Y projection of gauss(x)*gauss(y)")
 data.plotOn(yframe)
 gaussxy.plotOn(yframe)
 

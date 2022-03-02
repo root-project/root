@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,11 +9,11 @@
 #ifndef ROOT7_RText
 #define ROOT7_RText
 
-#include <ROOT/RDrawable.hxx>
+#include <ROOT/ROnFrameDrawable.hxx>
 #include <ROOT/RAttrText.hxx>
-#include <ROOT/RAttrOnFrame.hxx>
 #include <ROOT/RPadPos.hxx>
 
+#include <initializer_list>
 #include <string>
 
 namespace ROOT {
@@ -28,14 +28,15 @@ namespace Experimental {
 welcome!
 */
 
-class RText : public RDrawable, public RAttrOnFrame {
+class RText : public ROnFrameDrawable {
 
-   std::string fText;                 ///< text to display
-   RPadPos fPos;                      ///< position
-   RAttrText fAttrText{this, "text"}; ///<! text attributes
+   std::string fText;                                  ///< text to display
+   RPadPos fPos;                                       ///< position
 
 public:
-   RText() : RDrawable("text"), RAttrOnFrame(this) {}
+   RAttrText text{this, "text"};                  ///<! text attributes
+
+   RText() : ROnFrameDrawable("text") {}
 
    RText(const std::string &txt) : RText() { fText = txt; }
 
@@ -45,27 +46,11 @@ public:
       fPos = p;
    }
 
-   RText &SetText(const std::string &t)
-   {
-      fText = t;
-      return *this;
-   }
+   RText &SetText(const std::string &t) { fText = t; return *this; }
    const std::string &GetText() const { return fText; }
 
-   RText &SetPos(const RPadPos &p)
-   {
-      fPos = p;
-      return *this;
-   }
+   RText &SetPos(const RPadPos &p) { fPos = p; return *this; }
    const RPadPos &GetPos() const { return fPos; }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RText &SetAttrText(const RAttrText &attr)
-   {
-      fAttrText = attr;
-      return *this;
-   }
-   RAttrText &AttrText() { return fAttrText; }
 };
 
 } // namespace Experimental

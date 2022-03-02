@@ -42,24 +42,24 @@ namespace RooStats {
       );
 
 
-      ~HypoTestCalculatorGeneric();
+      ~HypoTestCalculatorGeneric() override;
 
 
    public:
 
       /// inherited methods from HypoTestCalculator interface
-      virtual HypoTestResult* GetHypoTest() const;
+      HypoTestResult* GetHypoTest() const override;
 
-      // set the model for the null hypothesis (only B)
-      virtual void SetNullModel(const ModelConfig &nullModel) { fNullModel = &nullModel; }
+      /// set the model for the null hypothesis (only B)
+      void SetNullModel(const ModelConfig &nullModel) override { fNullModel = &nullModel; }
       const RooAbsData * GetData(void) const { return fData; }
       const ModelConfig* GetNullModel(void) const { return fNullModel; }
       virtual const RooArgSet* GetFitInfo() const { return NULL; }
       /// Set the model for the alternate hypothesis  (S+B)
-      virtual void SetAlternateModel(const ModelConfig &altModel) { fAltModel = &altModel; }
+      void SetAlternateModel(const ModelConfig &altModel) override { fAltModel = &altModel; }
       const ModelConfig* GetAlternateModel(void) const { return fAltModel; }
       /// Set the DataSet
-      virtual void SetData(RooAbsData &data) { fData = &data; }
+      void SetData(RooAbsData &data) override { fData = &data; }
 
       /// Returns instance of TestStatSampler. Use to change properties of
       /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
@@ -101,7 +101,7 @@ namespace RooStats {
 
 
    protected:
-   ClassDef(HypoTestCalculatorGeneric,2)
+   ClassDefOverride(HypoTestCalculatorGeneric,2)
 };
 }
 

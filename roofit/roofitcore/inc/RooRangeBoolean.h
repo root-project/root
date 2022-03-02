@@ -30,20 +30,20 @@ public:
   RooRangeBoolean() ;
   RooRangeBoolean(const char* name, const char* title, RooAbsRealLValue& x, const char* rangeName) ;
   RooRangeBoolean(const RooRangeBoolean& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooRangeBoolean(*this, newname); }
-  virtual ~RooRangeBoolean() ;
+  TObject* clone(const char* newname) const override { return new RooRangeBoolean(*this, newname); }
+  ~RooRangeBoolean() override ;
 
 
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override ;
 
 protected:
 
   RooRealProxy _x;
   TString _rangeName ;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
-  ClassDef(RooRangeBoolean,1) // Polynomial function
+  ClassDefOverride(RooRangeBoolean,1) // Polynomial function
 };
 
 #endif

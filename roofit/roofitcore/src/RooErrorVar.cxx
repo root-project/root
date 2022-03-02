@@ -61,19 +61,13 @@ RooErrorVar::RooErrorVar(const RooErrorVar& other, const char* name) :
   _binning = other._binning->clone() ;
 
   // Copy constructor
-
-  TIterator* iter = other._altBinning.MakeIterator() ;
-  RooAbsBinning* binning ;
-  while((binning=(RooAbsBinning*)iter->Next())) {
-    _altBinning.Add(binning->clone()) ;
-  }
-  delete iter ;
+  for(auto * binning : static_range_cast<RooAbsBinning*>(other._altBinning)) _altBinning.Add(binning->clone());
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor 
+/// Destructor
 
 RooErrorVar::~RooErrorVar()
 {
@@ -85,8 +79,8 @@ RooErrorVar::~RooErrorVar()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return value, i.e. error on input variable
 
-Double_t RooErrorVar::getValV(const RooArgSet*) const 
-{ 
+Double_t RooErrorVar::getValV(const RooArgSet*) const
+{
   return evaluate();
 }
 
@@ -106,7 +100,7 @@ Bool_t RooErrorVar::hasBinning(const char* name) const
 /// Return binning with given name. If no binning exists with such a name, clone the default
 /// binning on the fly if so requested
 
-const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const 
+const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, Bool_t createOnTheFly) const
 {
   return const_cast<RooErrorVar*>(this)->getBinning(name,verbose,createOnTheFly) ;
 }
@@ -117,13 +111,13 @@ const RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t verbose, B
 /// Return binning with given name. If no binning exists with such a name, clone the default
 /// binning on the fly if so requested
 
-RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t /*verbose*/, Bool_t createOnTheFly) 
+RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t /*verbose*/, Bool_t createOnTheFly)
 {
   // Return default (normalization) binning and range if no name is specified
   if (name==0) {
     return *_binning ;
   }
-  
+
   // Check if binning with this name has been created already
   RooAbsBinning* binning = (RooAbsBinning*) _altBinning.FindObject(name) ;
   if (binning) {
@@ -137,8 +131,8 @@ RooAbsBinning& RooErrorVar::getBinning(const char* name, Bool_t /*verbose*/, Boo
 
   // Create a new RooRangeBinning with this name with default range
   binning = new RooRangeBinning(getMin(),getMax(),name) ;
-  coutI(Contents) << "RooErrorVar::getBinning(" << GetName() << ") new range named '" 
-		  << name << "' created with default bounds" << endl ;
+  coutI(Contents) << "RooErrorVar::getBinning(" << GetName() << ") new range named '"
+        << name << "' created with default bounds" << endl ;
 
   _altBinning.Add(binning) ;
 
@@ -153,9 +147,7 @@ std::list<std::string> RooErrorVar::getBinningNames() const
 {
   std::list<std::string> binningNames(1, "");
 
-  RooFIter iter = _altBinning.fwdIterator();
-  const RooAbsArg* binning = 0;
-  while((binning = iter.next())) {
+  for(auto * binning : static_range_cast<RooAbsArg*>(_altBinning)) {
     const char* name = binning->GetName();
     binningNames.push_back(name);
   }
@@ -185,7 +177,7 @@ void RooErrorVar::removeRange(const char* name) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Store given binning with this variable under the given name
 
-void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name) 
+void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
 {
   if (!name) {
     if (_binning) delete _binning ;
@@ -206,7 +198,7 @@ void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
     _altBinning.Add(newBinning) ;
 
   }
-  
+
 
 }
 
@@ -216,15 +208,15 @@ void RooErrorVar::setBinning(const RooAbsBinning& binning, const char* name)
 /// Set the lower bound of the range with the given name to the given value
 /// If name is a null pointer, set the lower bound of the default range
 
-void RooErrorVar::setMin(const char* name, Double_t value) 
+void RooErrorVar::setMin(const char* name, Double_t value)
 {
-  // Set new minimum of fit range 
+  // Set new minimum of fit range
   RooAbsBinning& binning = getBinning(name) ;
 
   // Check if new limit is consistent
   if (value >= getMax()) {
-    coutW(InputArguments) << "RooErrorVar::setMin(" << GetName() 
-			  << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
+    coutW(InputArguments) << "RooErrorVar::setMin(" << GetName()
+           << "): Proposed new fit min. larger than max., setting min. to max." << endl ;
     binning.setMin(getMax()) ;
   } else {
     binning.setMin(value) ;
@@ -237,7 +229,7 @@ void RooErrorVar::setMin(const char* name, Double_t value)
       setVal(clipValue) ;
     }
   }
-    
+
   setShapeDirty() ;
 }
 
@@ -248,13 +240,13 @@ void RooErrorVar::setMin(const char* name, Double_t value)
 
 void RooErrorVar::setMax(const char* name, Double_t value)
 {
-  // Set new maximum of fit range 
+  // Set new maximum of fit range
   RooAbsBinning& binning = getBinning(name) ;
 
   // Check if new limit is consistent
   if (value < getMin()) {
-    coutW(InputArguments) << "RooErrorVar::setMax(" << GetName() 
-			  << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+    coutW(InputArguments) << "RooErrorVar::setMax(" << GetName()
+           << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setMax(getMin()) ;
   } else {
     binning.setMax(value) ;
@@ -280,29 +272,29 @@ void RooErrorVar::setBins(Int_t nBins) {
 /// Set the upper and lower lower bound of the range with the given name to the given values
 /// If name is a null pointer, set the upper and lower bounds of the default range
 
-void RooErrorVar::setRange( const char* name, Double_t min, Double_t max) 
+void RooErrorVar::setRange( const char* name, Double_t min, Double_t max)
 {
   Bool_t exists = name ? (_altBinning.FindObject(name)?kTRUE:kFALSE) : kTRUE ;
 
-  // Set new fit range 
+  // Set new fit range
   RooAbsBinning& binning = getBinning(name,kFALSE) ;
 
   // Check if new limit is consistent
   if (min>max) {
-    coutW(InputArguments) << "RooErrorVar::setRange(" << GetName() 
-			  << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
+    coutW(InputArguments) << "RooErrorVar::setRange(" << GetName()
+           << "): Proposed new fit max. smaller than min., setting max. to min." << endl ;
     binning.setRange(min,min) ;
   } else {
     binning.setRange(min,max) ;
   }
 
   if (!exists) {
-    coutI(InputArguments) << "RooErrorVar::setRange(" << GetName() 
-			  << ") new range named '" << name << "' created with bounds [" 
-			  << min << "," << max << "]" << endl ;
+    coutI(InputArguments) << "RooErrorVar::setRange(" << GetName()
+           << ") new range named '" << name << "' created with bounds ["
+           << min << "," << max << "]" << endl ;
   }
 
-  setShapeDirty() ;  
+  setShapeDirty() ;
 }
 
 
@@ -310,7 +302,7 @@ void RooErrorVar::setRange( const char* name, Double_t min, Double_t max)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from given stream
 
-Bool_t RooErrorVar::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose) 
+Bool_t RooErrorVar::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose)
 {
   TString token,errorPrefix("RooErrorVar::readFromStream(") ;
   errorPrefix.Append(GetName()) ;
@@ -342,9 +334,9 @@ void RooErrorVar::writeToStream(ostream& os, Bool_t /*compact*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Force the internal value cache to be up to date
 
-void RooErrorVar::syncCache(const RooArgSet*) 
-{ 
-  _value = evaluate() ; 
+void RooErrorVar::syncCache(const RooArgSet*)
+{
+  _value = evaluate() ;
 }
 
 

@@ -23,6 +23,8 @@ namespace Internal {
 
 namespace RDF {
 
+/// This class is unused and it has only been implemented as a proof of concept.
+/// It shows how to implement the RDataSource API for a complex kind of source such as TTrees.
 class RRootDS final : public ROOT::RDF::RDataSource {
 private:
    unsigned int fNSlots = 0U;
@@ -47,11 +49,11 @@ public:
    const std::vector<std::string> &GetColumnNames() const;
    bool HasColumn(std::string_view colName) const;
    void InitSlot(unsigned int slot, ULong64_t firstEntry);
-   void FinaliseSlot(unsigned int slot);
+   void FinalizeSlot(unsigned int slot);
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    bool SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
-   void Initialise();
+   void Initialize();
    std::string GetLabel();
 };
 

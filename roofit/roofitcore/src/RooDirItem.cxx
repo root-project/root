@@ -40,19 +40,19 @@ ClassImp(RooDirItem);
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove object from directory it was added to
 
-void RooDirItem::removeFromDir(TObject* obj) 
+void RooDirItem::removeFromDir(TObject* obj)
 {
   if (_dir) {
     _dir->GetList()->Remove(obj) ;
   }
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Append object to directory. If forceMemoryResident is
 /// true, nothing happens.
-void RooDirItem::appendToDir(TObject* obj, Bool_t forceMemoryResident) 
+void RooDirItem::appendToDir(TObject* obj, Bool_t forceMemoryResident)
 {
   if (forceMemoryResident) {
     // If we are not going into a file, appending to a directory

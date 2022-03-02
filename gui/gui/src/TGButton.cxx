@@ -368,9 +368,9 @@ Bool_t TGButton::HandleButton(Event_t *event)
    }
    if (click) {
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                  (Long_t) fUserData);
+                  (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                           (Long_t) fUserData);
+                           (Longptr_t) fUserData);
    }
    if ((fStyle > 0) && (event->fType == kButtonRelease)) {
       fBgndColor = fBackground;
@@ -814,6 +814,8 @@ void TGTextButton::DoRedraw()
 
 Bool_t TGTextButton::HandleKey(Event_t *event)
 {
+   if (fState == kButtonDisabled || !(event->fState & kKeyMod1Mask)) return kFALSE;
+   
    Bool_t click = kFALSE;
    Bool_t was = !IsDown();   // kTRUE if button was off
 
@@ -824,8 +826,6 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
    }
 
    if (fTip && event->fType == kGKeyPress) fTip->Hide();
-
-   if (fState == kButtonDisabled) return kTRUE;
 
    // We don't need to check the key number as GrabKey will only
    // allow fHotchar events if Alt button is pressed (kKeyMod1Mask)
@@ -844,9 +844,9 @@ Bool_t TGTextButton::HandleKey(Event_t *event)
    }
    if (click) {
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                  (Long_t) fUserData);
+                  (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                           (Long_t) fUserData);
+                           (Longptr_t) fUserData);
    }
    EmitSignals(was);
 
@@ -1360,9 +1360,9 @@ Bool_t TGCheckButton::HandleButton(Event_t *event)
       Clicked();
       Toggled(fStateOn);
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
-                  fWidgetId, (Long_t) fUserData);
+                  fWidgetId, (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON),
-                           fWidgetId, (Long_t) fUserData);
+                           fWidgetId, (Longptr_t) fUserData);
    }
    DoRedraw();
    return kTRUE;
@@ -1424,9 +1424,9 @@ Bool_t TGCheckButton::HandleKey(Event_t *event)
    }
    if (click) {
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON), fWidgetId,
-                  (Long_t) fUserData);
+                  (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_CHECKBUTTON), fWidgetId,
-                           (Long_t) fUserData);
+                           (Longptr_t) fUserData);
    }
    return kTRUE;
 }
@@ -1726,9 +1726,9 @@ Bool_t TGRadioButton::HandleButton(Event_t *event)
    if (click) {
       Clicked();
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
-                  fWidgetId, (Long_t) fUserData);
+                  fWidgetId, (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
-                           fWidgetId, (Long_t) fUserData);
+                           fWidgetId, (Longptr_t) fUserData);
    }
    if (toggled) {
       Toggled(fStateOn);
@@ -1787,9 +1787,9 @@ Bool_t TGRadioButton::HandleKey(Event_t *event)
    if ((event->fType == kGKeyPress) && (event->fState & kKeyMod1Mask)) {
       PSetState(kButtonDown, kTRUE);
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
-                  fWidgetId, (Long_t) fUserData);
+                  fWidgetId, (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_RADIOBUTTON),
-                           fWidgetId, (Long_t) fUserData);
+                           fWidgetId, (Longptr_t) fUserData);
    } else if ((event->fType == kKeyRelease) && (event->fState & kKeyMod1Mask)) {
       fPrevState = fState;
    }
@@ -2451,9 +2451,9 @@ Bool_t TGSplitButton::HandleSButton(Event_t *event)
    if (bclick) {
       Clicked();
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                  (Long_t) fUserData);
+                  (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                           (Long_t) fUserData);
+                           (Longptr_t) fUserData);
    }
    if (activate) {
       TGMenuEntry *entry =  fPopMenu->GetCurrent();
@@ -2470,9 +2470,9 @@ Bool_t TGSplitButton::HandleSButton(Event_t *event)
    //   if (mbclick) {
    //      MBClicked();
    //      SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-   //             (Long_t) fUserData);
+   //             (Longptr_t) fUserData);
    //      fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-   //                      (Long_t) fUserData);
+   //                      (Longptr_t) fUserData);
    // }
    return kTRUE;
 }
@@ -2559,9 +2559,9 @@ Bool_t TGSplitButton::HandleSKey(Event_t *event)
    if (click) {
       Clicked();
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                  (Long_t) fUserData);
+                  (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                           (Long_t) fUserData);
+                           (Longptr_t) fUserData);
    }
 
    return kTRUE;
@@ -2985,9 +2985,9 @@ Bool_t TGSplitButton::HandleButton(Event_t *event)
    if (click) {
       Clicked();
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                  (Long_t) fUserData);
+                  (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                           (Long_t) fUserData);
+                           (Longptr_t) fUserData);
    }
    if (activate && !fKeyNavigate) {
       TGMenuEntry *entry =  fPopMenu->GetCurrent();
@@ -3144,9 +3144,9 @@ Bool_t TGSplitButton::HandleKey(Event_t *event)
    if (click) {
       Clicked();
       SendMessage(fMsgWindow, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                  (Long_t) fUserData);
+                  (Longptr_t) fUserData);
       fClient->ProcessLine(fCommand, MK_MSG(kC_COMMAND, kCM_BUTTON), fWidgetId,
-                           (Long_t) fUserData);
+                           (Longptr_t) fUserData);
    }
 
    return kTRUE;

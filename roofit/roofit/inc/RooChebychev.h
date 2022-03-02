@@ -30,26 +30,27 @@ public:
                RooAbsReal& _x, const RooArgList& _coefList) ;
 
   RooChebychev(const RooChebychev& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooChebychev(*this, newname); }
-  inline virtual ~RooChebychev() { }
+  TObject* clone(const char* newname) const override { return new RooChebychev(*this, newname); }
+  inline ~RooChebychev() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
-  
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
+
+  void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) override ;
+
 private:
 
   RooRealProxy _x;
   RooListProxy _coefList ;
-  mutable TNamed* _refRangeName ; 
+  mutable TNamed* _refRangeName ;
 
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
-  
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
+
   Double_t evalAnaInt(const Double_t a, const Double_t b) const;
 
-  ClassDef(RooChebychev,2) // Chebychev polynomial PDF
+  ClassDefOverride(RooChebychev,2) // Chebychev polynomial PDF
 };
 
 #endif

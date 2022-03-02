@@ -9,7 +9,7 @@
  *************************************************************************/
 
 /** \class TGeoPainter
-\ingroup Geometry_classes
+\ingroup Geometry_painter
 
 Class implementing all draw interfaces for a generic 3D viewer
 using TBuffer3D mechanism.
@@ -320,7 +320,7 @@ Int_t TGeoPainter::GetColor(Int_t base, Float_t light) const
    red[1] = r;
    green[1] = g;
    blue[1] = b;
-   Int_t color_map_idx = TColor::CreateGradientColorTable(2, stop, red, green, blue, ncolors);
+   Int_t color_map_idx = TColor::CreateGradientColorTable(2, stop, red, green, blue, ncolors, 1., kFALSE);
    colmap[color] = color_map_idx;
    return (color_map_idx + light*(ncolors-1));
 }

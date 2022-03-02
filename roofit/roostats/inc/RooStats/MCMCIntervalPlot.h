@@ -32,7 +32,7 @@ namespace RooStats {
       MCMCIntervalPlot(MCMCInterval& interval);
 
       /// Destructor of SamplingDistribution
-      virtual ~MCMCIntervalPlot();
+      ~MCMCIntervalPlot() override;
 
       void SetMCMCInterval(MCMCInterval& interval);
       void SetLineColor(Color_t color) {fLineColor = color;}
@@ -40,7 +40,7 @@ namespace RooStats {
       void SetShadeColor(Color_t color) {fShadeColor = color;}
       void SetShowBurnIn(Bool_t showBurnIn) { fShowBurnIn = showBurnIn; }
 
-      void Draw(const Option_t* options = NULL);
+      void Draw(const Option_t* options = NULL) override;
 
       void DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar);
       void DrawParameterVsTime(RooRealVar& param);
@@ -83,7 +83,7 @@ namespace RooStats {
       void DrawKeysPdfInterval(const Option_t* options = NULL);
       void DrawTailFractionInterval(const Option_t* options = NULL);
 
-      ClassDef(MCMCIntervalPlot,1)  /// Class containing the results of the MCMCCalculator
+      ClassDefOverride(MCMCIntervalPlot,1)  // Class containing the results of the MCMCCalculator
    };
 }
 

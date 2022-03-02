@@ -1060,15 +1060,15 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    fListTree->ClearViewPort();
    if (selected && (selected->IsA() != TClass::Class())) {
       if (selected->InheritsFrom("TLeaf"))
-         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", (ULong_t)selected));
+         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%zx)->GetBranch()->GetTree();", (size_t)selected));
       if (selected->InheritsFrom("TBranch"))
-         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", (ULong_t)selected));
+         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%zx)->GetTree();", (size_t)selected));
       if (selected->InheritsFrom("TTree")) {
          // if a tree not attached to any directory (e.g. in a TFolder)
          // then attach it to the current directory (gDirectory)
-         TDirectory *tdir = (TDirectory *)gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->GetDirectory();", (ULong_t)selected));
+         TDirectory *tdir = (TDirectory *)gROOT->ProcessLine(TString::Format("((TTree *)0x%zx)->GetDirectory();", (size_t)selected));
          if (!tdir) {
-            gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->SetDirectory(gDirectory);", (ULong_t)selected));
+            gROOT->ProcessLine(TString::Format("((TTree *)0x%zx)->SetDirectory(gDirectory);", (size_t)selected));
          }
       }
    }
@@ -1479,12 +1479,12 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                TString fullname = f.GetTitle();
                fullname.ReplaceAll("\\", "\\\\");
                if (embed->InheritsFrom("TGTextEditor")) {
-                  gROOT->ProcessLine(TString::Format("((TGTextEditor *)0x%lx)->LoadFile(\"%s\");",
-                                     (ULong_t)embed, fullname.Data()));
+                  gROOT->ProcessLine(TString::Format("((TGTextEditor *)0x%zx)->LoadFile(\"%s\");",
+                                     (size_t)embed, fullname.Data()));
                }
                else if (embed->InheritsFrom("TGTextEdit")) {
-                  gROOT->ProcessLine(TString::Format("((TGTextEdit *)0x%lx)->LoadFile(\"%s\");",
-                                     (ULong_t)embed, fullname.Data()));
+                  gROOT->ProcessLine(TString::Format("((TGTextEdit *)0x%zx)->LoadFile(\"%s\");",
+                                     (size_t)embed, fullname.Data()));
                }
                else {
                   XXExecuteDefaultAction(&f);
@@ -1752,10 +1752,10 @@ void TGFileBrowser::PadModified()
          if (fe)
             embed = (TGCompositeFrame *)fe->fFrame;
          if (embed && embed->InheritsFrom("TRootCanvas")) {
-            ULong_t canvas = gROOT->ProcessLine(TString::Format("((TRootCanvas *)0x%lx)->Canvas();",
-                                                (ULong_t)embed));
-            if ((canvas) && (canvas == (ULong_t)gPad ||
-                canvas == (ULong_t)gPad->GetCanvas())) {
+            ULongptr_t canvas = gROOT->ProcessLine(TString::Format("((TRootCanvas *)0x%zx)->Canvas();",
+                                                (size_t)embed));
+            if ((canvas) && (canvas == (ULongptr_t)gPad ||
+                canvas == (ULongptr_t)gPad->GetCanvas())) {
                tabRight->SetTab(i, kTRUE);
                break;
             }

@@ -17,6 +17,7 @@
 #include <map>
 #include <iomanip>
 #include <string>
+#include <vector>
 
 namespace ROOT {
       namespace Math {
@@ -38,7 +39,7 @@ public:
 
    // use default copy constructor and assignment operator
 
-   /** generic  methods for  retrivieng options */
+   /** generic  methods for  retrieving options */
 
 
    // methods implementing the  IOptions interface
@@ -84,6 +85,30 @@ public:
       InsertValue(name, fNamOpts, std::string(val));
    }
 
+   std::vector<std::string>  GetAllNamedKeys() {
+      std::vector<std::string> names;
+      names.reserve(fNamOpts.size());
+      // start by named options
+      for (auto const & e : fNamOpts)
+         names.push_back(e.first);
+      return names;
+   }
+   std::vector<std::string>  GetAllRealKeys() {
+      std::vector<std::string> names;
+      names.reserve(fRealOpts.size());
+      // start by named options
+      for (auto const & e : fRealOpts)
+         names.push_back(e.first);
+      return names;
+   }
+   std::vector<std::string>  GetAllIntKeys() {
+      std::vector<std::string> names;
+      names.reserve(fIntOpts.size());
+      // start by named options
+      for (auto const & e : fIntOpts)
+         names.push_back(e.first);
+      return names;
+   }
 
    /// print options
    virtual void Print(std::ostream & os = std::cout ) const {
@@ -142,10 +167,9 @@ private:
          os << std::setw(25) << pos->first << " : " << std::setw(15) << pos->second << std::endl;
    }
 
-
-   std::map<std::string, double>      fRealOpts;   // map of the real options
-   std::map<std::string, int>         fIntOpts;    // map of the integer options
-   std::map<std::string, std::string> fNamOpts;    // map of the named options
+   std::map<std::string, int>         fIntOpts;    ///< map of the integer options
+   std::map<std::string, double>      fRealOpts;   ///< map of the real options
+   std::map<std::string, std::string> fNamOpts;    ///< map of the named options
 
 };
 

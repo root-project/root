@@ -135,17 +135,17 @@ namespace TMVA {
 
    protected:
 
-      Node*   fParent;              // the previous (parent) node
-      Node*   fLeft;                // pointers to the two "daughter" nodes
-      Node*   fRight;               // pointers to the two "daughter" nodes
+      Node*   fParent;              ///< the previous (parent) node
+      Node*   fLeft;                ///< pointers to the two "daughter" nodes
+      Node*   fRight;               ///< pointers to the two "daughter" nodes
 
-      char    fPos;                 // position, i.e. it is a left (l) or right (r) daughter
-      UInt_t  fDepth;               // depth of the node within the tree (seen from root node)
+      char    fPos;                 ///< position, i.e. it is a left (l) or right (r) daughter
+      UInt_t  fDepth;               ///< depth of the node within the tree (seen from root node)
 
-      BinaryTree*  fParentTree;     // pointer to the parent tree to which the Node belongs
+      BinaryTree*  fParentTree;     ///< pointer to the parent tree to which the Node belongs
    private:
 
-      static Int_t fgCount;         // counter of all nodes present.. for debug.. to spot memory leaks...
+      static Int_t fgCount;         ///< counter of all nodes present.. for debug.. to spot memory leaks...
 
    public:
       ClassDef(Node,0); // Node for the BinarySearch or Decision Trees

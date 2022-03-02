@@ -32,10 +32,11 @@ class Factory {
       public:
 
    /**
-      static method to create the corrisponding Minimizer given the string
+      static method to create the corresponding Minimizer given the string
       Supported Minimizers types are:
       Minuit (TMinuit), Minuit2, GSLMultiMin, GSLMultiFit, GSLSimAn, Linear, Fumili, Genetic
-      If no name is given use default values defined in  MinimizerOptions
+      If no name is given use default values defined in  ROOT::Math::MinimizerOptions
+      See also there for the possible options and algorithms available
     */
    static ROOT::Math::Minimizer * CreateMinimizer(const std::string & minimizerType = "", const std::string & algoType = "");
 

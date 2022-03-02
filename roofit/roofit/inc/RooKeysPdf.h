@@ -36,21 +36,21 @@ public:
              RooAbsReal& x, RooRealVar& xdata, RooDataSet& data, Mirror mirror= NoMirror,
         Double_t rho=1);
   RooKeysPdf(const RooKeysPdf& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const {return new RooKeysPdf(*this,newname); }
-  virtual ~RooKeysPdf();
+  TObject* clone(const char* newname) const override {return new RooKeysPdf(*this,newname); }
+  ~RooKeysPdf() override;
 
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
-     const char* rangeName = 0) const;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName = 0) const;
-  virtual Int_t getMaxVal(const RooArgSet& vars) const;
-  virtual Double_t maxVal(Int_t code) const;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
+     const char* rangeName = 0) const override;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName = 0) const override;
+  Int_t getMaxVal(const RooArgSet& vars) const override;
+  Double_t maxVal(Int_t code) const override;
 
   void LoadDataSet( RooDataSet& data);
 
 protected:
 
   RooRealProxy _x ;
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
 private:
   // how far you have to go out in a Gaussian until it is smaller than the
@@ -76,7 +76,7 @@ private:
   Double_t _lo, _hi, _binWidth;
   Double_t _rho;
 
-  ClassDef(RooKeysPdf,2) // One-dimensional non-parametric kernel estimation p.d.f.
+  ClassDefOverride(RooKeysPdf,2) // One-dimensional non-parametric kernel estimation p.d.f.
 };
 
 #endif

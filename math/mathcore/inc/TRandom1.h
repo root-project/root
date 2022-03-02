@@ -37,7 +37,7 @@ protected:
   const Int_t     fIntModulus;
   static Int_t    fgNumEngines;
   static Int_t    fgMaxIndex;
-  const UInt_t   *fTheSeeds;
+  const UInt_t   *fTheSeeds;           //! Temporary array of seed values (transient)
   const Double_t  fMantissaBit24;
   const Double_t  fMantissaBit12;
 
@@ -65,7 +65,7 @@ public:
                      // array of seeds. Only the first seed is used.
    virtual  void     SetSeed(ULong_t seed);
 
-   ClassDef(TRandom1,1)  //Ranlux Random number generators with periodicity > 10**14
+   ClassDef(TRandom1,2)  //Ranlux Random number generators with periodicity > 10**14
 };
 
 R__EXTERN TRandom *gRandom;

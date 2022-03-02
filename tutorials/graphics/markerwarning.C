@@ -124,9 +124,9 @@ void markerwarning()
    t1.SetTextFont(12); t1.SetTextSize(0.0525);
    t1.DrawLatex(-5,0.6,"Non-symmetric symbols should be used carefully in plotting.\
 These two graphs show how misleading");
-   t1.DrawLatex(-5,0.4,"a careless use of symbols can be. The two plots represent\
+   t1.DrawLatex(-5,0.4,"a careless use of symbols can be. The two plots represent \
 the same data sets but because of a bad");
-   t1.DrawLatex(-5,0.2,"symbol choice, the two plots on the top appear further apart\
+   t1.DrawLatex(-5,0.2,"symbol choice, the two plots on the top appear further apart \
 than for the bottom example.");
 
    canvasNc->cd();

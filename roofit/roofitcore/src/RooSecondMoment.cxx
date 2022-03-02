@@ -56,7 +56,7 @@ ClassImp(RooSecondMoment);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooSecondMoment::RooSecondMoment() 
+RooSecondMoment::RooSecondMoment()
 {
 }
 
@@ -72,24 +72,23 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   _xfOffset(0)
 {
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
-  
+
   RooAbsReal* XF(0) ;
   if (centr) {
 
     string m1name=Form("%s_moment1",GetName()) ;
-    RooAbsReal* mom1 = func.mean(x) ;
-    _mean.setArg(*mom1) ;
-    
+    _mean.putOwnedArg(std::unique_ptr<RooAbsMoment>{func.mean(x)}) ;
+
     string pname=Form("%s_product",name) ;
-    _xfOffset = mom1->getVal() ;
-    XF = new RooFormulaVar(pname.c_str(),Form("pow((@0-%f),2)*@1",_xfOffset),RooArgList(x,func)) ;  
-        
+    _xfOffset = _mean->getVal() ;
+    XF = new RooFormulaVar(pname.c_str(),Form("pow((@0-%f),2)*@1",_xfOffset),RooArgList(x,func)) ;
+
   } else {
 
     string pname=Form("%s_product",name) ;
     XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgList(x,x,func)) ;
   }
-    
+
   XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
@@ -109,8 +108,8 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, 
-		     Bool_t centr, Bool_t takeRoot, Bool_t intNSet) :
+RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset,
+           Bool_t centr, Bool_t takeRoot, Bool_t intNSet) :
   RooAbsMoment(name, title,func,x,2,takeRoot),
   _xf("!xf","xf",this,kFALSE,kFALSE),
   _ixf("!ixf","ixf",this),
@@ -125,12 +124,11 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
   if (centr) {
 
     string m1name=Form("%s_moment1",GetName()) ;
-    RooAbsReal* mom1 = func.mean(x,nset) ;
-    _mean.setArg(*mom1) ;
-    
+    _mean.putOwnedArg(std::unique_ptr<RooAbsMoment>{func.mean(x,nset)}) ;
+
     string pname=Form("%s_product",name) ;
-    _xfOffset = mom1->getVal() ;
-    XF = new RooFormulaVar(pname.c_str(),Form("pow((@0-%f),2)*@1",_xfOffset),RooArgList(x,func)) ;  
+    _xfOffset = _mean->getVal() ;
+    XF = new RooFormulaVar(pname.c_str(),Form("pow((@0-%f),2)*@1",_xfOffset),RooArgList(x,func)) ;
 
 
   } else {
@@ -139,7 +137,7 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
     XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgList(x,x,func)) ;
 
   }
-  
+
   XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
@@ -168,7 +166,7 @@ RooSecondMoment::RooSecondMoment(const char* name, const char* title, RooAbsReal
 ////////////////////////////////////////////////////////////////////////////////
 
 RooSecondMoment::RooSecondMoment(const RooSecondMoment& other, const char* name) :
-  RooAbsMoment(other, name), 
+  RooAbsMoment(other, name),
   _xf("xf",this,other._xf),
   _ixf("ixf",this,other._ixf),
   _if("if",this,other._if),
@@ -181,22 +179,22 @@ RooSecondMoment::RooSecondMoment(const RooSecondMoment& other, const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooSecondMoment::~RooSecondMoment() 
+RooSecondMoment::~RooSecondMoment()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate value  
+/// Calculate value
 
-Double_t RooSecondMoment::evaluate() const 
+Double_t RooSecondMoment::evaluate() const
 {
   Double_t ratio = _ixf / _if ;
 
   if (_mean.absArg()) {
     ratio -= (_mean - _xfOffset)*(_mean-_xfOffset) ;
-  }  
+  }
 
   Double_t ret =  _takeRoot ? sqrt(ratio) : ratio ;
   return ret ;

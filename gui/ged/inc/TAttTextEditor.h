@@ -45,8 +45,8 @@ public:
    virtual ~TAttTextEditor();
 
    virtual void     SetModel(TObject* obj);
-   virtual Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual void     DoTextAlphaColor(ULong_t p);
+   virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   virtual void     DoTextAlphaColor(ULongptr_t p);
    virtual void     DoAlpha();
    virtual void     DoAlphaField();
    virtual void     DoLiveAlpha(Int_t a);

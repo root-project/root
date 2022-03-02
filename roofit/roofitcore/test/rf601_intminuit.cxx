@@ -1,11 +1,11 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #601
-// 
+//
 // Interactive minimization with MINUIT
 //
 //
-// 07/2008 - Wouter Verkerke 
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -17,7 +17,7 @@
 #include "RooGaussian.h"
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
-#include "RooMinuit.h"
+#include "RooMinimizer.h"
 #include "RooNLLVar.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
@@ -28,11 +28,11 @@ using namespace RooFit ;
 
 class TestBasic601 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic601(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Interactive Minuit",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
-  // S e t u p   p d f   a n d   l i k e l i h o o d 
+  // S e t u p   p d f   a n d   l i k e l i h o o d
   // -----------------------------------------------
 
   // Observable
@@ -51,7 +51,7 @@ public:
 
   // Generate 1000 events
   RooDataSet* data = model.generate(x,1000) ;
-  
+
   // Construct unbinned likelihood
   RooNLLVar nll("nll","nll",model,*data) ;
 
@@ -60,7 +60,7 @@ public:
   // -------------------------------------------------------------------------------
 
   // Create MINUIT interface object
-  RooMinuit m(nll) ;
+  RooMinimizer m(nll) ;
 
   // Call MIGRAD to minimize the likelihood
   m.migrad() ;
@@ -72,7 +72,7 @@ public:
   m.minos(sigma_g2) ;
 
 
-  // S a v i n g   r e s u l t s ,   c o n t o u r   p l o t s 
+  // S a v i n g   r e s u l t s ,   c o n t o u r   p l o t s
   // ---------------------------------------------------------
 
   // Save a snapshot of the fit result. This object contains the initial
@@ -89,7 +89,7 @@ public:
   // At any moment you can manually change the value of a (constant)
   // parameter
   mean = 0.3 ;
-  
+
   // Rerun MIGRAD,HESSE
   m.migrad() ;
   m.hesse() ;
@@ -109,5 +109,5 @@ public:
   delete data ;
 
   return kTRUE ;
-  } 
+  }
 } ;

@@ -41,13 +41,14 @@
 #include "TTabCom.h"
 #include <cstdlib>
 #include <algorithm>
-
+#include <iostream>
 #include "Getline.h"
 #include "strlcpy.h"
 #include "snprintf.h"
 
 #ifdef R__UNIX
 #include <signal.h>
+#include <unistd.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,17 +136,50 @@ Bool_t TTermInputHandler::Notify()
 
 ClassImp(TRint);
 
+
+namespace {
+static int SetExtraClingArgsBeforeTAppCtor(Int_t *argc, char **argv)
+{
+   bool forcePtrCheck = false;
+   for (int iarg = 1; iarg < *argc; ++iarg) {
+      if (!strcmp(argv[iarg], "--ptrcheck")) {
+         // Hide this, by moving all other args one down...
+         for (int jarg = iarg + 1; jarg < *argc; ++jarg)
+            argv[jarg - 1] = argv[jarg];
+         // ... and updating argc accordingly.
+         --*argc;
+         forcePtrCheck = true;
+         break;
+      }
+   }
+#ifdef R__UNIX
+   if (forcePtrCheck || isatty(0) || isatty(1))
+#endif
+         TROOT::AddExtraInterpreterArgs({"--ptrcheck"});
+      return 0;
+}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an application environment. The TRint environment provides an
 /// interface to the WM manager functionality and eventloop via inheritance
 /// of TApplication and in addition provides interactive access to
 /// the Cling C++ interpreter via the command line.
 
-TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
-             Int_t numOptions, Bool_t noLogo):
-   TApplication(appClassName, argc, argv, options, numOptions),
-   fCaughtSignal(-1)
+TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options, Int_t numOptions, Bool_t noLogo)
+   : TApplication(appClassName, argc, argv, options, numOptions + SetExtraClingArgsBeforeTAppCtor(argc, argv)),
+     fCaughtSignal(-1)
 {
+
+   if (*argc > 1) {
+      // Early exit if there are remaining unrecognized options
+      for (auto n = 1; n < *argc; n++) {
+         std::cerr << "root: unrecognized option '" << argv[n] << "'\n";
+      }
+      std::cerr << "Try 'root --help' for more information.\n";
+      TApplication::Terminate(0);
+   }
+
    fNcmd          = 0;
    fDefaultPrompt = "root [%d] ";
    fInterrupt     = kFALSE;
@@ -415,7 +449,6 @@ void TRint::Run(Bool_t retrn)
             }
             Getlinem(kCleanUp, 0);
             Gl_histadd(cmd);
-            fNcmd++;
 
             // The ProcessLine might throw an 'exception'.  In this case,
             // GetLinem(kInit,"Root >") is called and we are jump back
@@ -423,6 +456,7 @@ void TRint::Run(Bool_t retrn)
             needGetlinemInit = kFALSE;
             retval = ProcessLineNr("ROOT_cli_", cmd, &error);
             gCling->EndOfLineAction();
+            fNcmd++;
 
             // The ProcessLine has successfully completed and we need
             // to call Getlinem(kInit, GetPrompt());
@@ -592,8 +626,6 @@ Bool_t TRint::HandleTermInput()
 
       fInterrupt = kFALSE;
 
-      if (!gCling->GetMore() && !sline.IsNull()) fNcmd++;
-
       // prevent recursive calling of this input handler
       fInputHandler->DeActivate();
 
@@ -637,6 +669,14 @@ Bool_t TRint::HandleTermInput()
          if (!added) fInputHandler->Activate();
          Error("HandleTermInput()", "Exception caught!");
       }
+
+      // `ProcessLineNr()` only prepends a `#line` directive if the previous
+      // input line was not terminated by a '\' (backslash-newline).
+      // Thus, to match source locations included in cling diagnostics, we only
+      // increment `fNcmd` if the next call to `ProcessLineNr()` will issue
+      // a new `#line`.
+      if (!fBackslashContinue && !sline.IsNull())
+         fNcmd++;
 
       if (gROOT->Timer()) timer.Print("u");
 
@@ -737,9 +777,10 @@ Longptr_t TRint::ProcessRemote(const char *line, Int_t *)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calls ProcessLine() possibly prepending a #line directive for
-/// better diagnostics. Must be called after fNcmd has been increased for
-/// the next line.
+/// Calls TRint::ProcessLine() possibly prepending a `#line` directive for
+/// better diagnostics.
+/// The user is responsible for incrementing `fNcmd`, where appropriate, after
+/// a call to this function.
 
 Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
 {
@@ -747,9 +788,12 @@ Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *e
    if (!error)
       error = &err;
    if (line && line[0] != '.') {
-      TString lineWithNr = TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
-      int res = ProcessLine(lineWithNr + line, kFALSE, error);
-      if (*error == TInterpreter::kProcessing) {
+      TString input;
+      if (!fBackslashContinue)
+         input += TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd);
+      input += line;
+      int res = ProcessLine(input, kFALSE, error);
+      if (gCling->GetMore()) {
          if (!fNonContinuePrompt.Length())
             fNonContinuePrompt = fDefaultPrompt;
          SetPrompt("root (cont'ed, cancel with .@) [%d]");
@@ -757,6 +801,10 @@ Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *e
          SetPrompt(fNonContinuePrompt);
          fNonContinuePrompt.Clear();
       }
+      std::string_view sv(line);
+      auto lastNonSpace = sv.find_last_not_of(" \t");
+      fBackslashContinue = (lastNonSpace != std::string_view::npos
+                            && sv[lastNonSpace] == '\\');
       return res;
    }
    if (line && line[0] == '.' && line[1] == '@') {

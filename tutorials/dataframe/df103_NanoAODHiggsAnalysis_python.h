@@ -16,14 +16,13 @@
 #include "Math/Vector4D.h"
 #include "TStyle.h"
 
+using namespace ROOT;
 using namespace ROOT::VecOps;
 using RNode = ROOT::RDF::RNode;
-using rvec_f = const RVec<float> &;
-using rvec_i = const RVec<int> &;
 const auto z_mass = 91.2;
 
 // Reconstruct two Z candidates from four leptons of the same kind
-RVec<RVec<size_t>> reco_zz_to_4l(rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass, rvec_i charge)
+RVec<RVec<size_t>> reco_zz_to_4l(RVecF pt, RVecF eta, RVecF phi, RVecF mass, RVecI charge)
 {
    RVec<RVec<size_t>> idx(2);
    idx[0].reserve(2); idx[1].reserve(2);
@@ -61,9 +60,9 @@ RVec<RVec<size_t>> reco_zz_to_4l(rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass,
 }
 
 // Compute Z masses from four leptons of the same kind and sort ascending in distance to Z mass
-RVec<float> compute_z_masses_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass)
+RVecF compute_z_masses_4l(const RVec<RVec<size_t>> &idx, RVecF pt, RVecF eta, RVecF phi, RVecF mass)
 {
-   RVec<float> z_masses(2);
+   RVecF z_masses(2);
    for (size_t i = 0; i < 2; i++) {
       const auto i1 = idx[i][0]; const auto i2 = idx[i][1];
       ROOT::Math::PtEtaPhiMVector p1(pt[i1], eta[i1], phi[i1], mass[i1]);
@@ -78,7 +77,7 @@ RVec<float> compute_z_masses_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f
 }
 
 // Compute mass of Higgs from four leptons of the same kind
-float compute_higgs_mass_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass)
+float compute_higgs_mass_4l(const RVec<RVec<size_t>> &idx, RVecF pt, RVecF eta, RVecF phi, RVecF mass)
 {
    const auto i1 = idx[0][0]; const auto i2 = idx[0][1];
    const auto i3 = idx[1][0]; const auto i4 = idx[1][1];
@@ -90,8 +89,8 @@ float compute_higgs_mass_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f eta
 }
 
 // Compute mass of two Z candidates from two electrons and two muons and sort ascending in distance to Z mass
-RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, rvec_f el_mass, rvec_f mu_pt,
-                                  rvec_f mu_eta, rvec_f mu_phi, rvec_f mu_mass)
+RVecF compute_z_masses_2el2mu(RVecF el_pt, RVecF el_eta, RVecF el_phi, RVecF el_mass, RVecF mu_pt,
+                              RVecF mu_eta, RVecF mu_phi, RVecF mu_mass)
 {
    ROOT::Math::PtEtaPhiMVector p1(mu_pt[0], mu_eta[0], mu_phi[0], mu_mass[0]);
    ROOT::Math::PtEtaPhiMVector p2(mu_pt[1], mu_eta[1], mu_phi[1], mu_mass[1]);
@@ -99,7 +98,7 @@ RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, 
    ROOT::Math::PtEtaPhiMVector p4(el_pt[1], el_eta[1], el_phi[1], el_mass[1]);
    auto mu_z = (p1 + p2).M();
    auto el_z = (p3 + p4).M();
-   RVec<float> z_masses(2);
+   RVecF z_masses(2);
    if (std::abs(mu_z - z_mass) < std::abs(el_z - z_mass)) {
       z_masses[0] = mu_z;
       z_masses[1] = el_z;
@@ -111,8 +110,8 @@ RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, 
 }
 
 // Compute Higgs mass from two electrons and two muons
-float compute_higgs_mass_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, rvec_f el_mass, rvec_f mu_pt, rvec_f mu_eta,
-                                rvec_f mu_phi, rvec_f mu_mass)
+float compute_higgs_mass_2el2mu(RVecF el_pt, RVecF el_eta, RVecF el_phi, RVecF el_mass, RVecF mu_pt, RVecF mu_eta,
+                                RVecF mu_phi, RVecF mu_mass)
 {
    ROOT::Math::PtEtaPhiMVector p1(mu_pt[0], mu_eta[0], mu_phi[0], mu_mass[0]);
    ROOT::Math::PtEtaPhiMVector p2(mu_pt[1], mu_eta[1], mu_phi[1], mu_mass[1]);
@@ -121,7 +120,7 @@ float compute_higgs_mass_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, rvec
    return (p1 + p2 + p3 + p4).M();
 }
 
-bool filter_z_dr(const RVec<RVec<size_t>> &idx, rvec_f eta, rvec_f phi)
+bool filter_z_dr(const RVec<RVec<size_t>> &idx, RVecF eta, RVecF phi)
 {
    for (size_t i = 0; i < 2; i++) {
       const auto i1 = idx[i][0];
@@ -134,7 +133,7 @@ bool filter_z_dr(const RVec<RVec<size_t>> &idx, rvec_f eta, rvec_f phi)
    return true;
 };
 
-bool pt_cuts(rvec_f mu_pt, rvec_f el_pt)
+bool pt_cuts(RVecF mu_pt, RVecF el_pt)
 {
    auto mu_pt_sorted = Reverse(Sort(mu_pt));
    if (mu_pt_sorted[0] > 20 && mu_pt_sorted[1] > 10) {
@@ -147,7 +146,7 @@ bool pt_cuts(rvec_f mu_pt, rvec_f el_pt)
    return false;
 }
 
-bool dr_cuts(rvec_f mu_eta, rvec_f mu_phi, rvec_f el_eta, rvec_f el_phi)
+bool dr_cuts(RVecF mu_eta, RVecF mu_phi, RVecF el_eta, RVecF el_phi)
 {
    auto mu_dr = DeltaR(mu_eta[0], mu_eta[1], mu_phi[0], mu_phi[1]);
    auto el_dr = DeltaR(el_eta[0], el_eta[1], el_phi[0], el_phi[1]);

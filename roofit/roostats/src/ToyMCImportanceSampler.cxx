@@ -288,7 +288,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
 
    // assign input paramPoint
    RooArgSet* allVars = fPdf->getVariables();
-   *allVars = paramPoint;
+   allVars->assign(paramPoint);
 
 
    // create nuisance parameter points
@@ -334,13 +334,15 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    RooAbsData* data = NULL;
    if( fGenerateFromNull ) {
       //cout << "gen from null" << endl;
-      *allVars = *fNullSnapshots[fIndexGenDensity];
+      allVars->assign(*fNullSnapshots[fIndexGenDensity]);
       data = Generate(*fNullDensities[fIndexGenDensity], observables);
    }else{
       // need to be careful here not to overwrite the current state of the
       // nuisance parameters, ie they must not be part of the snapshot
       //cout << "gen from imp" << endl;
-      if(fImportanceSnapshots[fIndexGenDensity]) *allVars = *fImportanceSnapshots[fIndexGenDensity];
+      if(fImportanceSnapshots[fIndexGenDensity]) {
+        allVars->assign(*fImportanceSnapshots[fIndexGenDensity]);
+      }
       data = Generate(*fImportanceDensities[fIndexGenDensity], observables);
    }
    //cout << "data generated: " << data << endl;
@@ -360,7 +362,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       //oocoutI((TObject*)0,InputArguments) << "Setting variables to nullSnapshot["<<i<<"]"<<endl;
       //fNullSnapshots[i]->Print("v");
 
-      *allVars = *fNullSnapshots[i];
+      allVars->assign(*fNullSnapshots[i]);
       if( !fNullNLLs[i] ) {
          RooArgSet* allParams = fNullDensities[i]->getParameters(*data);
          fNullNLLs[i] = fNullDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
@@ -384,7 +386,9 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       //oocoutI((TObject*)0,InputArguments) << "Setting variables to impSnapshot["<<i<<"]"<<endl;
       //fImportanceSnapshots[i]->Print("v");
 
-      if( fImportanceSnapshots[i] ) *allVars = *fImportanceSnapshots[i];
+      if( fImportanceSnapshots[i] ) {
+        allVars->assign(*fImportanceSnapshots[i]);
+      }
       if( !fImpNLLs[i] ) {
          RooArgSet* allParams = fImportanceDensities[i]->getParameters(*data);
          fImpNLLs[i] = fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
@@ -421,7 +425,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
 
 
 
-   *allVars = *saveVars;
+   allVars->assign(*saveVars);
    delete allVars;
    delete saveVars;
 

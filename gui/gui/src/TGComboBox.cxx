@@ -67,7 +67,7 @@ ClassImp(TGFontTypeComboBox);
 /// Create a combo box popup frame.
 
 TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
-                                 UInt_t options, ULong_t back) :
+                                 UInt_t options, Pixel_t back) :
    TGCompositeFrame (p, w, h, options, back), fListBox(0), fSelected(0)
 {
    SetWindowAttributes_t wattr;
@@ -227,7 +227,7 @@ void TGComboBoxPopup::KeyPressed(TGFrame *f, UInt_t keysym, UInt_t)
 /// Create a combo box widget.
 
 TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
-                       ULong_t back) :
+                       Pixel_t back) :
    TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
 {
    fWidgetId  = id;
@@ -246,7 +246,7 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
 /// Create an editable combo box widget.
 
 TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
-                       UInt_t options, ULong_t back) :
+                       UInt_t options, Pixel_t back) :
             TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
 {
    fWidgetId  = id;
@@ -585,7 +585,7 @@ Bool_t TGComboBox::HandleSelectionRequest(Event_t *event)
 /// messages to the combobox message handling window. Parm2 contains
 /// the id of the selected listbox entry.
 
-Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
+Bool_t TGComboBox::ProcessMessage(Longptr_t msg, Longptr_t, Longptr_t parm2)
 {
    TGLBEntry *e;
 
@@ -632,7 +632,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
 
 void TGComboBox::Selected(Int_t widgetId, Int_t id)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
    args[0] = widgetId;
    args[1] = id;

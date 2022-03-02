@@ -30,6 +30,8 @@ size(), clear(), resize(). resize() may be a void operation.
 #include "TStreamerElement.h"
 #include "TVirtualCollectionIterators.h"
 
+#include <memory>
+
 TGenCollectionStreamer::TGenCollectionStreamer(const TGenCollectionStreamer& copy)
       : TGenCollectionProxy(copy), fReadBufferFunc(&TGenCollectionStreamer::ReadBufferDefault)
 {
@@ -42,7 +44,7 @@ TGenCollectionStreamer::TGenCollectionStreamer(Info_t info, size_t iter_size)
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
 }
 
-TGenCollectionStreamer::TGenCollectionStreamer(const ::ROOT::TCollectionProxyInfo &info, TClass *cl)
+TGenCollectionStreamer::TGenCollectionStreamer(const ROOT::TCollectionProxyInfo &info, TClass *cl)
       : TGenCollectionProxy(info, cl), fReadBufferFunc(&TGenCollectionStreamer::ReadBufferDefault)
 {
    // Build a Streamer for a collection whose type is described by 'collectionClass'.
@@ -367,8 +369,6 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion() <= 3;
    size_t len = fValDiff * nElements;
    StreamHelper* itm = 0;
-   char   buffer[8096];
-   void*  memory = 0;
 
    TClass* onFileValClass = (onFileClass ? onFileClass->GetCollectionProxy()->GetValueClass() : 0);
 
@@ -431,9 +431,10 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
       case ROOT::kSTLmultiset:
       case ROOT::kSTLset:
       case ROOT::kSTLunorderedset:
-      case ROOT::kSTLunorderedmultiset:
+      case ROOT::kSTLunorderedmultiset: {
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
-         fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
+         auto buffer = std::make_unique<char[]>(len);
+         fEnv->fStart = itm = reinterpret_cast<StreamHelper *>(buffer.get());
          fConstruct(itm,nElements);
          switch (fVal->fCase) {
             case kIsClass:
@@ -461,11 +462,9 @@ void TGenCollectionStreamer::ReadObjects(int nElements, TBuffer &b, const TClass
          }
 #undef DOLOOP
          break;
+      }
       default:
          break;
-   }
-   if (memory) {
-      ::operator delete(memory);
    }
 }
 
@@ -476,8 +475,6 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
    Bool_t vsn3 = b.GetInfo() && b.GetInfo()->GetOldVersion() <= 3;
    size_t len = fValDiff * nElements;
    StreamHelper* itm = 0;
-   char   buffer[8096];
-   void*  memory = 0;
 
    TStreamerInfo *pinfo = (TStreamerInfo*)fVal->fType->GetStreamerInfo();
    R__ASSERT(pinfo);
@@ -543,9 +540,10 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
       case ROOT::kSTLmultiset:
       case ROOT::kSTLset:
       case ROOT::kSTLunorderedset:
-      case ROOT::kSTLunorderedmultiset:
+      case ROOT::kSTLunorderedmultiset: {
 #define DOLOOP(x) {int idx=0; while(idx<nElements) {StreamHelper* i=(StreamHelper*)(((char*)itm) + fValDiff*idx); { x ;} ++idx;}}
-         fEnv->fStart = itm = (StreamHelper*)(len < sizeof(buffer) ? buffer : memory =::operator new(len));
+         auto buffer = std::make_unique<char[]>(len);
+         fEnv->fStart = itm = reinterpret_cast<StreamHelper *>(buffer.get());
          fConstruct(itm,nElements);
          switch (fVal->fCase) {
             case kIsClass:
@@ -559,11 +557,9 @@ void TGenCollectionStreamer::ReadPairFromMap(int nElements, TBuffer &b)
          }
 #undef DOLOOP
          break;
+      }
       default:
          break;
-   }
-   if (memory) {
-      ::operator delete(memory);
    }
 }
 

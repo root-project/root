@@ -1,9 +1,10 @@
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RTrivialDS.hxx>
 #include <TTree.h>
 
 #include <gtest/gtest.h>
+
+#include <memory>
 
 TEST(Redefine, NoJitting)
 {
@@ -128,7 +129,7 @@ TEST(Redefine, OriginalBranchAsInputJitted)
 TEST(Redefine, OriginalDefineAsInput)
 {
    auto r = ROOT::RDataFrame(1)
-               .Define("x", [] { return 1; })
+               .Define("x", [] (ULong64_t e) { return int(e + 1); }, {"rdfentry_"})
                .Redefine("x", [](int x) { return x * 42; }, {"x"})
                .Max<int>("x");
    EXPECT_EQ(*r, 42);
@@ -138,7 +139,7 @@ TEST(Redefine, OriginalDefineAsInputJitted)
 {
    auto r = ROOT::RDataFrame(1)
                .Define("x", [] { return 1; })
-               .Redefine("x", [](int x) { return x * 42; }, {"x"})
+               .Redefine("x", "x*42")
                .Max<int>("x");
    EXPECT_EQ(*r, 42);
 }

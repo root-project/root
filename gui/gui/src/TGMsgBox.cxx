@@ -358,7 +358,7 @@ void TGMsgBox::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process message dialog box event.
 
-Bool_t TGMsgBox::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGMsgBox::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

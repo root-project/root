@@ -43,15 +43,15 @@ ClassImp(RooEllipse);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooEllipse::RooEllipse() 
-{ 
+RooEllipse::RooEllipse()
+{
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooEllipse::~RooEllipse() 
+RooEllipse::~RooEllipse()
 {
 }
 
@@ -73,7 +73,7 @@ RooEllipse::~RooEllipse()
 /// The degenerate case |rho|=1 corresponds to a straight line and
 /// is handled as a special case.
 
-RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, Double_t s2, Double_t rho, Int_t points) 
+RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, Double_t s2, Double_t rho, Int_t points)
 {
   SetName(name);
   SetTitle(name);
@@ -107,12 +107,12 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
       xx2= x2 + r*u2*s2;
       SetPoint(index, xx1, xx2);
       if(index == 0) {
-	setYAxisLimits(xx2,xx2);
-	// add an extra segment to close the curve
-	SetPoint(points, xx1, xx2);
+   setYAxisLimits(xx2,xx2);
+   // add an extra segment to close the curve
+   SetPoint(points, xx1, xx2);
       }
       else {
-	updateYAxisLimits(xx2);
+   updateYAxisLimits(xx2);
       }
     }
   }
@@ -123,7 +123,7 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of ellipse on ostream
 
-void RooEllipse::printName(ostream& os) const 
+void RooEllipse::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -132,7 +132,7 @@ void RooEllipse::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print title of ellipse on ostream
 
-void RooEllipse::printTitle(ostream& os) const 
+void RooEllipse::printTitle(ostream& os) const
 {
   os << GetName() ;
 }
@@ -141,7 +141,7 @@ void RooEllipse::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of ellipse on ostream
 
-void RooEllipse::printClassName(ostream& os) const 
+void RooEllipse::printClassName(ostream& os) const
 {
   os << IsA()->GetName() ;
 }

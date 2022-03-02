@@ -23,12 +23,12 @@
 //using namespace RooStats;
 
 Double_t RooStats::NumberCountingUtils::BinomialExpP(Double_t signalExp, Double_t backgroundExp, Double_t relativeBkgUncert){
-  // Expected P-value for s=0 in a ratio of Poisson means.  
-  // Here the background and its uncertainty are provided directly and 
-  // assumed to be from the double Poisson counting setup described in the 
-  // BinomialWithTau functions.  
+  // Expected P-value for s=0 in a ratio of Poisson means.
+  // Here the background and its uncertainty are provided directly and
+  // assumed to be from the double Poisson counting setup described in the
+  // BinomialWithTau functions.
   // Normally one would know tau directly, but here it is determiend from
-  // the background uncertainty.  This is not strictly correct, but a useful 
+  // the background uncertainty.  This is not strictly correct, but a useful
   // approximation.
 
 
@@ -38,10 +38,10 @@ Double_t RooStats::NumberCountingUtils::BinomialExpP(Double_t signalExp, Double_
   Double_t mainInf = signalExp+backgroundExp;  //Given
   Double_t tau = 1./backgroundExp/(relativeBkgUncert*relativeBkgUncert);
   Double_t auxiliaryInf = backgroundExp*tau;  //Given
-  
+
   Double_t P_Bi = TMath::BetaIncomplete(1./(1.+tau),mainInf,auxiliaryInf+1);
   return P_Bi;
-  
+
 /*
 Now, if instead the mean background level b in the signal region is
 specified, along with Gaussian rms sigb, then one can fake a Poisson
@@ -58,9 +58,9 @@ x = 150.    //Given
 b = 100.    //Given
 sigb = 10.  //Given
 tau = b/(sigb*sigb)
-y = tau*b   
-Z_Bi = TMath::BetaIncomplete(1./(1.+tau),x,y+1)    
-S = sqrt(2)*TMath::ErfInverse(1 - 2*Z_Bi)     
+y = tau*b
+Z_Bi = TMath::BetaIncomplete(1./(1.+tau),x,y+1)
+S = sqrt(2)*TMath::ErfInverse(1 - 2*Z_Bi)
 
 */
 
@@ -68,7 +68,7 @@ S = sqrt(2)*TMath::ErfInverse(1 - 2*Z_Bi)
 
 
 Double_t RooStats::NumberCountingUtils::BinomialWithTauExpP(Double_t signalExp, Double_t backgroundExp, Double_t tau){
-  // Expected P-value for s=0 in a ratio of Poisson means.  
+  // Expected P-value for s=0 in a ratio of Poisson means.
   // Based on two expectations, a main measurement that might have signal
   // and an auxiliarly measurement for the background that is signal free.
   // The expected background in the auxiliary measurement is a factor
@@ -76,36 +76,36 @@ Double_t RooStats::NumberCountingUtils::BinomialWithTauExpP(Double_t signalExp, 
 
   Double_t mainInf = signalExp+backgroundExp;  //Given
   Double_t auxiliaryInf = backgroundExp*tau;  //Given
-  
+
   Double_t P_Bi = TMath::BetaIncomplete(1./(1.+tau),mainInf,auxiliaryInf+1);
-  
+
   return P_Bi;
-  
+
 }
 
 Double_t RooStats::NumberCountingUtils::BinomialObsP(Double_t mainObs, Double_t backgroundObs, Double_t relativeBkgUncert){
-  // P-value for s=0 in a ratio of Poisson means.  
-  // Here the background and its uncertainty are provided directly and 
-  // assumed to be from the double Poisson counting setup.  
+  // P-value for s=0 in a ratio of Poisson means.
+  // Here the background and its uncertainty are provided directly and
+  // assumed to be from the double Poisson counting setup.
   // Normally one would know tau directly, but here it is determiend from
-  // the background uncertainty.  This is not strictly correct, but a useful 
+  // the background uncertainty.  This is not strictly correct, but a useful
   // approximation.
-  
+
   Double_t tau = 1./backgroundObs/(relativeBkgUncert*relativeBkgUncert);
   Double_t auxiliaryInf = backgroundObs*tau;  //Given
-  
-    
+
+
   //SIDE BAND EXAMPLE
   //See Eqn. (19) of Cranmer and pp. 36-37 of Linnemann.
   Double_t P_Bi = TMath::BetaIncomplete(1./(1.+tau),mainObs,auxiliaryInf+1);
-  
+
   return P_Bi;
 
 }
 
 
 Double_t RooStats::NumberCountingUtils::BinomialWithTauObsP(Double_t mainObs, Double_t auxiliaryObs, Double_t tau){
-  // P-value for s=0 in a ratio of Poisson means.  
+  // P-value for s=0 in a ratio of Poisson means.
   // Based on two observations, a main measurement that might have signal
   // and an auxiliarly measurement for the background that is signal free.
   // The expected background in the auxiliary measurement is a factor
@@ -114,12 +114,12 @@ Double_t RooStats::NumberCountingUtils::BinomialWithTauObsP(Double_t mainObs, Do
   //SIDE BAND EXAMPLE
   //See Eqn. (19) of Cranmer and pp. 36-37 of Linnemann.
   Double_t P_Bi = TMath::BetaIncomplete(1./(1.+tau),mainObs,auxiliaryObs+1);
-  
+
   return P_Bi;
-  
+
 }
 
-Double_t RooStats::NumberCountingUtils::BinomialExpZ(Double_t signalExp, Double_t backgroundExp, Double_t relativeBkgUncert) {    
+Double_t RooStats::NumberCountingUtils::BinomialExpZ(Double_t signalExp, Double_t backgroundExp, Double_t relativeBkgUncert) {
   // See BinomialExpP
   return RooStats::PValueToSignificance( BinomialExpP(signalExp,backgroundExp,relativeBkgUncert) ) ;
   }
@@ -137,5 +137,5 @@ Double_t RooStats::NumberCountingUtils::BinomialObsZ(Double_t mainObs, Double_t 
 
 Double_t RooStats::NumberCountingUtils::BinomialWithTauObsZ(Double_t mainObs, Double_t auxiliaryObs, Double_t tau){
   // See BinomialWithTauObsP
-  return RooStats::PValueToSignificance( BinomialWithTauObsP(mainObs,auxiliaryObs,tau) ) ;  
+  return RooStats::PValueToSignificance( BinomialWithTauObsP(mainObs,auxiliaryObs,tau) ) ;
 }

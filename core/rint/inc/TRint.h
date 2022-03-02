@@ -38,6 +38,7 @@ private:
    Bool_t        fInterrupt;          // if true macro execution will be stopped
    Int_t         fCaughtSignal;       // TRint just caught a signal
    TFileHandler *fInputHandler;       // terminal input handler
+   Bool_t        fBackslashContinue{};// whether the last line ended with '\'
 
    TRint(const TRint&) = delete;
    TRint& operator=(const TRint&) = delete;
@@ -47,8 +48,8 @@ private:
    Longptr_t ProcessLineNr(const char* filestem, const char *line, Int_t *error = nullptr);
 
 public:
-   TRint(const char *appClassName, int *argc, char **argv,
-         void *options = 0, int numOptions = 0, Bool_t noLogo = kFALSE);
+   TRint(const char *appClassName, Int_t *argc, char **argv,
+         void *options = 0, Int_t numOptions = 0, Bool_t noLogo = kFALSE);
    virtual             ~TRint();
    virtual char       *GetPrompt();
    virtual const char *SetPrompt(const char *newPrompt);

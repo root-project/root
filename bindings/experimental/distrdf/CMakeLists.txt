@@ -25,15 +25,12 @@ set(py_sources
   DistRDF/Backends/Spark/Backend.py
 )
 
-foreach(val RANGE ${how_many_pythons})
-  list(GET python_executables ${val} python_executable)
-
-  # Compile .py files
-  foreach(py_source ${py_sources})
-    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source})")
-    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
-  endforeach()
-
+# Compile .py files
+# We include DistRDF in the build only if Python 3.7+ is used,
+# so we can directly use the main Python executable to compile the sources
+foreach(py_source ${py_sources})
+  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -O -m py_compile ${localruntimedir}/${py_source})")
 endforeach()
 
 # Install Python sources and bytecode

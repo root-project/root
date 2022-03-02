@@ -32,6 +32,7 @@ protected:
    unsigned fConnId{0}; ///<! default connection id
 
    bool fUseRCanvas{false};             ///<!  which canvas should be used
+   bool fCatchWindowShow{true};         ///<! if arbitrary RWebWindow::Show calls should be catched by browser
    std::string fActiveWidgetName;        ///<! name of active widget
    std::vector<std::shared_ptr<RBrowserWidget>> fWidgets; ///<!  all browser widgets
    int fWidgetCnt{0};                                     ///<! counter for created widgets
@@ -41,6 +42,7 @@ protected:
    RBrowserData  fBrowsable;                   ///<! central browsing element
 
    std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
+   std::shared_ptr<RBrowserWidget> AddCatchedWidget(const std::string &url, const std::string &kind);
    std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name) const;
    std::shared_ptr<RBrowserWidget> GetActiveWidget() const { return FindWidget(fActiveWidgetName); }
 
@@ -49,7 +51,7 @@ protected:
    std::string ProcessBrowserRequest(const std::string &msg);
    std::string ProcessDblClick(std::vector<std::string> &args);
    std::string NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget);
-   long ProcessRunMacro(const std::string &file_path);
+   void ProcessRunMacro(const std::string &file_path);
    void ProcessSaveFile(const std::string &fname, const std::string &content);
    std::string GetCurrentWorkingDirectory();
 
@@ -59,6 +61,8 @@ protected:
    void SendInitMsg(unsigned connid);
    void ProcessMsg(unsigned connid, const std::string &arg);
 
+   void AddInitWidget(const std::string &kind);
+
 public:
    RBrowser(bool use_rcanvas = true);
    virtual ~RBrowser();
@@ -66,11 +70,22 @@ public:
    bool GetUseRCanvas() const { return fUseRCanvas; }
    void SetUseRCanvas(bool on = true) { fUseRCanvas = on; }
 
+   void AddTCanvas() { AddInitWidget("tcanvas"); }
+   void AddRCanvas() { AddInitWidget("rcanvas"); }
+
    /// show Browser in specified place
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
 
    /// hide Browser
    void Hide();
+
+   void SetWorkingPath(const std::string &path);
+
+   /// Enable/disable catch of RWebWindow::Show calls to embed created widgets, default on
+   void SetCatchWindowShow(bool on = true) { fCatchWindowShow = on; }
+
+   /// Is RWebWindow::Show calls catched for embeding of created widgets
+   bool GetCatchWindowShow() const { return fCatchWindowShow; }
 
 };
 

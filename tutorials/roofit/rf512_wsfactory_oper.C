@@ -13,7 +13,6 @@
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooWorkspace.h"
@@ -60,6 +59,15 @@ void rf512_wsfactory_oper()
 
    // Function addition is done with sum(func1,func2)
    w->factory("sum::uv2(u,v)");
+
+   // Lagrangian morphing function for the example shown in rf711_lagrangianmorph 
+   std::string infilename = std::string(gROOT->GetTutorialDir()) + "/roofit/input_histos_rf_lagrangianmorph.root";
+   w->factory(("lagrangianmorph::morph($fileName('"+infilename+"'),$observableName('pTV'),$couplings({cHq3[0,1],SM[1]}),$NewPhysics(cHq3=1,SM=0),$folders({'SM_NPsq0','cHq3_NPsq1','cHq3_NPsq2'}))").c_str());
+
+   
+   // Taylor expansion is done with taylorexpand(func,{var1,var2,...},val,order)
+   w->factory("taylorexpand::te(expr::poly('x^4+5*x^3+2*x^2+x+1',x),{x},0.0,2)");
+
 
    // I n t e r p r e t e d   a n d   c o m p i l e d   e x p r e s s i o n   b a s e d   p . d . f . s .
    // ---------------------------------------------------------------------------------------------------

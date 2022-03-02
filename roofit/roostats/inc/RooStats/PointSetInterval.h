@@ -29,30 +29,30 @@ namespace RooStats {
     PointSetInterval(const char* name, RooAbsData&);
 
     /// destructor
-    virtual ~PointSetInterval();
+    ~PointSetInterval() override;
 
 
     /// check if parameter is in the interval
-    virtual Bool_t IsInInterval(const RooArgSet&) const;
+    Bool_t IsInInterval(const RooArgSet&) const override;
 
     /// set the confidence level for the interval
-    virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl;}
+    void SetConfidenceLevel(Double_t cl) override {fConfidenceLevel = cl;}
 
     /// return the confidence level for the interval
-    virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
+    Double_t ConfidenceLevel() const override {return fConfidenceLevel;}
 
     /// Method to return lower limit on a given parameter
     ///  Double_t LowerLimit(RooRealVar& param) ; // could provide, but misleading?
     ///      Double_t UpperLimit(RooRealVar& param) ; // could provide, but misleading?
 
     /// return a cloned list with the parameter of interest
-    virtual RooArgSet* GetParameters() const;
+    RooArgSet* GetParameters() const override;
 
     /// return a copy of the data set (points) defining this interval
     RooAbsData* GetParameterPoints() const {return (RooAbsData*)fParameterPointsInInterval->Clone();}
 
     /// return a cloned list with the parameter of interest
-    Bool_t CheckParameters(const RooArgSet&) const ;
+    Bool_t CheckParameters(const RooArgSet&) const override ;
 
     /// return lower limit on a given parameter
     Double_t LowerLimit(RooRealVar& param) ;
@@ -63,13 +63,12 @@ namespace RooStats {
 
   protected:
 
-    ClassDef(PointSetInterval,1)  /// Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
+    ClassDefOverride(PointSetInterval,1)  // Concrete implementation of ConfInterval for simple 1-D intervals in the form [a,b]
 
   private:
 
-    //    RooArgSet* fParameters; // parameter of interest
-    Double_t fConfidenceLevel; /// confidence level
-    RooAbsData* fParameterPointsInInterval; /// either a histogram (RooDataHist) or a tree (RooDataSet)
+    Double_t fConfidenceLevel;              ///< confidence level
+    RooAbsData* fParameterPointsInInterval; ///< either a histogram (RooDataHist) or a tree (RooDataSet)
 
 
   };

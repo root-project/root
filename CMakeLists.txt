@@ -1,17 +1,19 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-if(MSVC)
-  # required for the following feature & bug fix:
-  # 3.15: Added $<REMOVE_DUPLICATES:list> generator expression
-  # 3.16: Bug fix with CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS: the auto-generated exports
-  #       are now updated only when the object files providing the symbols are updated
-  cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+if(APPLE)
+  cmake_minimum_required(VERSION 3.19 FATAL_ERROR)
 else()
-  cmake_minimum_required(VERSION 3.9 FATAL_ERROR)
+  cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+endif()
+
+if(WIN32)
+  # Set CMP0091 (MSVC runtime library flags are selected by an abstraction) to OLD
+  # to keep the old way of selecting the runtime library with the -MD/-MDd compiler flag
+  cmake_policy(SET CMP0091 OLD)
 endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
@@ -118,6 +120,34 @@ else()
   message(STATUS "Detected ROOT_VERSION ${ROOT_VERSION}")
 endif()
 
+#---Try to download a file to check internet connection-----------------------------------------
+message(STATUS "Checking internet connectivity...")
+file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
+  TIMEOUT 10 STATUS DOWNLOAD_STATUS
+)
+# Get the status code from the download status
+list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
+# Check if download was successful.
+if(${STATUS_CODE} EQUAL 0)
+  # Succcess
+  message(STATUS "Yes")
+  # Now let's delete the file
+  file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
+  set(NO_CONNECTION FALSE)
+else()
+  # Error
+  message(STATUS "No: will not automatically download external dependencies")
+  set(NO_CONNECTION TRUE)
+endif()
+
+if(NO_CONNECTION)
+  if(clad AND fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  elseif(clad)
+    message(STATUS "No internet connection, disabling the 'clad' option")
+  endif()
+  set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+endif()
 
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
@@ -135,9 +165,8 @@ include(CheckIntrinsics)
 
 #---Enable asserts------------------------------------------------------------------------------
 if(asserts)
-  string(TOUPPER BUILD_TYPE ${CMAKE_BUILD_TYPE})
-  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" CMAKE_CXX_FLAGS_${BUILD_TYPE} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}})
-  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" CMAKE_C_FLAGS_${BUILD_TYPE} ${CMAKE_C_FLAGS_${BUILD_TYPE}})
+  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" "CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}" "${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")
+  string(REGEX REPLACE "-[UD]NDEBUG(=.*)?" "" "CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}" "${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}")
 endif()
 
 #---Enable CCache ------------------------------------------------------------------------------
@@ -479,6 +508,25 @@ install(
    PATTERN "pkgconfig" EXCLUDE
 )
 
+if(Vc_INCLUDE_DIR)
+  set(MODULES_ROOT_INCPATH "ROOT_INCLUDE_PATH=${Vc_INCLUDE_DIR}:${ROOT_INCLUDE_PATH}")
+endif()
+
+# modules.idx
+if(runtime_cxxmodules)
+
+  add_custom_command(OUTPUT ${CMAKE_INSTALL_LIBDIR}/modules.idx
+                     COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
+                     COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                             ROOTIGNOREPREFIX=1 ROOT_HIST=0
+                             $<TARGET_FILE:root.exe> -l -q -b
+                     WORKING_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
+                     DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts ${modules_idx_deps})
+  add_custom_target(modules_idx ALL DEPENDS ${CMAKE_INSTALL_LIBDIR}/modules.idx)
+  add_dependencies(modules_idx ${modules_idx_deps})
+  set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_INSTALL_LIBDIR}/modules.timestamp")
+endif()
+
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
@@ -491,13 +539,17 @@ if(WIN32)
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 else()
   add_custom_command(OUTPUT tutorials/hsimple.root
-                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                     COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
                              ROOTIGNOREPREFIX=1 ROOT_HIST=0
                              $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return
                      WORKING_DIRECTORY tutorials
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+
+if(runtime_cxxmodules)
+  add_dependencies(hsimple modules_idx)
+endif()
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
@@ -575,6 +627,7 @@ endif()
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)
   include(RootCTest)
+
   if(roottest)
     #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
@@ -594,15 +647,22 @@ if(testing)
       find_package(Git REQUIRED)
 
       if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-        execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+        execute_process(COMMAND ${GIT_EXECUTABLE} for-each-ref --points-at=HEAD --count=1 --format=%\(refname:short\)
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
       else()
         set(GIT_BRANCH v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION})
       endif()
 
+      # Resolve the `latest-stable` branch to the latest merged head/tag
+      if("${GIT_BRANCH}" STREQUAL "latest-stable")
+        execute_process(COMMAND ${GIT_EXECUTABLE} for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\)
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+      endif()
+
       execute_process(COMMAND
-        ${GIT_EXECUTABLE} ls-remote --heads
+        ${GIT_EXECUTABLE} ls-remote --heads --tags
         https://github.com/root-project/roottest.git ${GIT_BRANCH}
         OUTPUT_VARIABLE ROOTTEST_GIT_BRANCH)
 
@@ -650,12 +710,7 @@ if(testing)
   endif()
 endif()
 
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10.0")
-  if (${CMAKE_MINIMUM_REQUIRED_VERSION} VERSION_GREATER_EQUAL "3.10.0")
-    message(FATAL_ERROR "Remove this condition")
-  endif()
-  cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
-endif()
+cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
 
 message(STATUS "ROOT Configuration \n
 System          ${CMAKE_SYSTEM}
@@ -664,8 +719,8 @@ Build type      ${CMAKE_BUILD_TYPE}
 Install path    ${CMAKE_INSTALL_PREFIX}
 Compiler        ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
 Compiler flags:
-C               ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${BUILD_TYPE}}
-C++             ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}
+C               ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}
+C++             ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}
 Linker flags:
 Executable      ${CMAKE_EXE_LINKER_FLAGS}
 Module          ${CMAKE_MODULE_LINKER_FLAGS}

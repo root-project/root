@@ -152,60 +152,60 @@ namespace TMVA {
       void DeclareOptions();
       void ProcessOptions();
 
-      RuleFit                      fRuleFit;        // RuleFit instance
-      std::vector<TMVA::Event *>   fEventSample;    // the complete training sample
-      Double_t                     fSignalFraction; // scalefactor for bkg events to modify initial s/b fraction in training data
+      RuleFit                      fRuleFit;        ///< RuleFit instance
+      std::vector<TMVA::Event *>   fEventSample;    ///< the complete training sample
+      Double_t                     fSignalFraction; ///< scalefactor for bkg events to modify initial s/b fraction in training data
 
       // ntuple
-      TTree                       *fMonitorNtuple;  // pointer to monitor rule ntuple
-      Double_t                     fNTImportance;   // ntuple: rule importance
-      Double_t                     fNTCoefficient;  // ntuple: rule coefficient
-      Double_t                     fNTSupport;      // ntuple: rule support
-      Int_t                        fNTNcuts;        // ntuple: rule number of cuts
-      Int_t                        fNTNvars;        // ntuple: rule number of vars
-      Double_t                     fNTPtag;         // ntuple: rule P(tag)
-      Double_t                     fNTPss;          // ntuple: rule P(tag s, true s)
-      Double_t                     fNTPsb;          // ntuple: rule P(tag s, true b)
-      Double_t                     fNTPbs;          // ntuple: rule P(tag b, true s)
-      Double_t                     fNTPbb;          // ntuple: rule P(tag b, true b)
-      Double_t                     fNTSSB;          // ntuple: rule S/(S+B)
-      Int_t                        fNTType;         // ntuple: rule type (+1->signal, -1->bkg)
+      TTree                       *fMonitorNtuple;  ///< pointer to monitor rule ntuple
+      Double_t                     fNTImportance;   ///< ntuple: rule importance
+      Double_t                     fNTCoefficient;  ///< ntuple: rule coefficient
+      Double_t                     fNTSupport;      ///< ntuple: rule support
+      Int_t                        fNTNcuts;        ///< ntuple: rule number of cuts
+      Int_t                        fNTNvars;        ///< ntuple: rule number of vars
+      Double_t                     fNTPtag;         ///< ntuple: rule P(tag)
+      Double_t                     fNTPss;          ///< ntuple: rule P(tag s, true s)
+      Double_t                     fNTPsb;          ///< ntuple: rule P(tag s, true b)
+      Double_t                     fNTPbs;          ///< ntuple: rule P(tag b, true s)
+      Double_t                     fNTPbb;          ///< ntuple: rule P(tag b, true b)
+      Double_t                     fNTSSB;          ///< ntuple: rule S/(S+B)
+      Int_t                        fNTType;         ///< ntuple: rule type (+1->signal, -1->bkg)
 
       // options
-      TString                      fRuleFitModuleS;// which rulefit module to use
-      Bool_t                       fUseRuleFitJF;  // if true interface with J.Friedmans RuleFit module
-      TString                      fRFWorkDir;     // working directory from Friedmans module
-      Int_t                        fRFNrules;      // max number of rules (only Friedmans module)
-      Int_t                        fRFNendnodes;   // max number of rules (only Friedmans module)
-      std::vector<DecisionTree *>  fForest;        // the forest
-      Int_t                        fNTrees;        // number of trees in forest
-      Double_t                     fTreeEveFrac;   // fraction of events used for training each tree
-      SeparationBase              *fSepType;       // the separation used in node splitting
-      Double_t                     fMinFracNEve;   // min fraction of number events
-      Double_t                     fMaxFracNEve;   // ditto max
-      Int_t                        fNCuts;         // grid used in cut applied in node splitting
-      TString                      fSepTypeS;        // forest generation: separation type - see DecisionTree
-      TString                      fPruneMethodS;    // forest generation: prune method - see DecisionTree
-      TMVA::DecisionTree::EPruneMethod fPruneMethod; // forest generation: method used for pruning - see DecisionTree
-      Double_t                     fPruneStrength;   // forest generation: prune strength - see DecisionTree
-      TString                      fForestTypeS;     // forest generation: how the trees are generated
-      Bool_t                       fUseBoost;        // use boosted events for forest generation
+      TString                      fRuleFitModuleS;///< which rulefit module to use
+      Bool_t                       fUseRuleFitJF;  ///< if true interface with J.Friedmans RuleFit module
+      TString                      fRFWorkDir;     ///< working directory from Friedmans module
+      Int_t                        fRFNrules;      ///< max number of rules (only Friedmans module)
+      Int_t                        fRFNendnodes;   ///< max number of rules (only Friedmans module)
+      std::vector<DecisionTree *>  fForest;        ///< the forest
+      Int_t                        fNTrees;        ///< number of trees in forest
+      Double_t                     fTreeEveFrac;   ///< fraction of events used for training each tree
+      SeparationBase              *fSepType;       ///< the separation used in node splitting
+      Double_t                     fMinFracNEve;   ///< min fraction of number events
+      Double_t                     fMaxFracNEve;   ///< ditto max
+      Int_t                        fNCuts;         ///< grid used in cut applied in node splitting
+      TString                      fSepTypeS;        ///< forest generation: separation type - see DecisionTree
+      TString                      fPruneMethodS;    ///< forest generation: prune method - see DecisionTree
+      TMVA::DecisionTree::EPruneMethod fPruneMethod; ///< forest generation: method used for pruning - see DecisionTree
+      Double_t                     fPruneStrength;   ///< forest generation: prune strength - see DecisionTree
+      TString                      fForestTypeS;     ///< forest generation: how the trees are generated
+      Bool_t                       fUseBoost;        ///< use boosted events for forest generation
       //
-      Double_t                     fGDPathEveFrac; //  GD path: fraction of subsamples used for the fitting
-      Double_t                     fGDValidEveFrac; // GD path: fraction of subsamples used for the fitting
-      Double_t                     fGDTau;          // GD path: def threshold fraction [0..1]
-      Double_t                     fGDTauPrec;      // GD path: precision of estimated tau
-      Double_t                     fGDTauMin;       // GD path: min threshold fraction [0..1]
-      Double_t                     fGDTauMax;       // GD path: max threshold fraction [0..1]
-      UInt_t                       fGDTauScan;      // GD path: number of points to scan
-      Double_t                     fGDPathStep;     // GD path: step size in path
-      Int_t                        fGDNPathSteps;   // GD path: number of steps
-      Double_t                     fGDErrScale;     // GD path: stop
-      Double_t                     fMinimp;         // rule/linear: minimum importance
+      Double_t                     fGDPathEveFrac;  ///< GD path: fraction of subsamples used for the fitting
+      Double_t                     fGDValidEveFrac; ///< GD path: fraction of subsamples used for the fitting
+      Double_t                     fGDTau;          ///< GD path: def threshold fraction [0..1]
+      Double_t                     fGDTauPrec;      ///< GD path: precision of estimated tau
+      Double_t                     fGDTauMin;       ///< GD path: min threshold fraction [0..1]
+      Double_t                     fGDTauMax;       ///< GD path: max threshold fraction [0..1]
+      UInt_t                       fGDTauScan;      ///< GD path: number of points to scan
+      Double_t                     fGDPathStep;     ///< GD path: step size in path
+      Int_t                        fGDNPathSteps;   ///< GD path: number of steps
+      Double_t                     fGDErrScale;     ///< GD path: stop
+      Double_t                     fMinimp;         ///< rule/linear: minimum importance
       //
-      TString                      fModelTypeS;     // rule ensemble: which model (rule,linear or both)
-      Double_t                     fRuleMinDist;    // rule min distance - see RuleEnsemble
-      Double_t                     fLinQuantile;    // quantile cut to remove outliers - see RuleEnsemble
+      TString                      fModelTypeS;     ///< rule ensemble: which model (rule,linear or both)
+      Double_t                     fRuleMinDist;    ///< rule min distance - see RuleEnsemble
+      Double_t                     fLinQuantile;    ///< quantile cut to remove outliers - see RuleEnsemble
 
       ClassDef(MethodRuleFit,0);  // Friedman's RuleFit method
    };

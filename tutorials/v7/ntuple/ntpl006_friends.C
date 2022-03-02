@@ -81,8 +81,8 @@ void ntpl006_friends()
    auto c = new TCanvas("c", "", 200, 10, 700, 500);
    TH1F h("h", "pz {pt > 3.}", 100, -15, 35);
 
-   auto viewPz = ntuple->GetView<float>("data.pz.float");
-   auto viewPt = ntuple->GetView<float>("reco.pt.float");
+   auto viewPz = ntuple->GetView<float>("data.pz._0");
+   auto viewPt = ntuple->GetView<float>("reco.pt._0");
    for (auto i : viewPt.GetFieldRange()) {
       if (viewPt(i) > 3.)
          h.Fill(viewPz(i));

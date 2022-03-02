@@ -88,7 +88,7 @@ public:
 
   /// Return the address of this section with an offset.
   uint8_t *getAddressWithOffset(unsigned OffsetBytes) const {
-    assert(OffsetBytes <= AllocationSize && "Offset out of bounds!");
+    // AXEL: assert(OffsetBytes <= AllocationSize && "Offset out of bounds!");
     return Address + OffsetBytes;
   }
 
@@ -99,7 +99,7 @@ public:
 
   /// Return the load address of this section with an offset.
   uint64_t getLoadAddressWithOffset(unsigned OffsetBytes) const {
-    assert(OffsetBytes <= AllocationSize && "Offset out of bounds!");
+    // AXEL: assert(OffsetBytes <= AllocationSize && "Offset out of bounds!");
     return LoadAddress + OffsetBytes;
   }
 

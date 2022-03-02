@@ -41,6 +41,52 @@
    Helgrind:Race
    fun:_ZN11TBufferFile12WriteVersionEPK6TClassb
 }
+{
+   Due to TApplication::fIsRunning which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:load
+   fun:_ZNKSt6atomicIbEcvbEv
+   fun:_ZNK12TApplication9IsRunningEv
+}
+{
+   Due to TReentrantRWLock::fWriter which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:load
+   fun:_ZNKSt6atomicIbEcvbEv
+   fun:_ZN4ROOT16TReentrantRWLockISt5mutexNS_8Internal22RecurseCountsTBBUniqueEE8ReadLockEv
+}
+{
+   Due to TSystem::fInsideNotify which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:store
+   fun:_ZNSt13__atomic_baseIbEaSEb
+   fun:_ZNSt6atomicIbEaSEb
+   fun:_ZN11TUnixSystem14DispatchTimersEb
+}
+{
+   Due to TThread::fgXAct which is a std::atomic ... may hide other problems.
+   Helgrind:Race
+   fun:load
+   fun:_ZNVKSt13__atomic_baseIPcEcvS0_Ev
+   fun:_ZNVKSt6atomicIPcEcvS0_Ev
+   fun:_ZN12TThreadTimer6NotifyEv
+}
+{
+   Due to TThread::fgXAct which is a std::atomic ... may hide other problems.
+   Helgrind:Race
+   fun:store
+   fun:_ZNVSt13__atomic_baseIPcEaSES0_
+   fun:_ZNVSt6atomicIPcEaSES0_
+   fun:_ZN7TThread9XARequestEPKciPPvPi
+}
+{
+   Due to TGClient::fGlobalNeedRedraw which is a std::atomic<bool> ... may hide other problems.
+   Helgrind:Race
+   fun:store
+   fun:_ZNSt13__atomic_baseIbEaSEb
+   fun:_ZNSt6atomicIbEaSEb
+   fun:_ZN8TGClient10NeedRedrawEP8TGWindowb
+}
 
 {
    Due to TClass::fLastReadInfo which is an std::atomic ... may hide other problems.

@@ -11,6 +11,7 @@
 
 #include <ROOT/RWebWindow.hxx>
 #include <iostream>
+#include <chrono>
 
 std::shared_ptr<ROOT::Experimental::RWebWindow> window;
 
@@ -20,12 +21,18 @@ bool call_show = true;
 bool batch_mode = false;
 int current_counter = 0;
 
+auto start_tm = std::chrono::high_resolution_clock::now();
+auto firstmsg_tm = start_tm;
+auto stop_tm = start_tm;
+std::string round_trip = "<not defined>";
+
 void ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg.find("PING:") == 0) {
       window->Send(connid, arg);
    } else if (arg == "first") {
       // first message to provide config
+      firstmsg_tm = std::chrono::high_resolution_clock::now();
       window->Send(connid, std::string("CLIENTS:") + std::to_string(num_clients));
    } else if (arg.find("SHOW:") == 0) {
       std::string msg = arg.substr(5);
@@ -36,6 +43,9 @@ void ProcessData(unsigned connid, const std::string &arg)
          if (counter > 0)
             current_counter = counter;
       }
+
+      auto p = msg.find("round-trip:");
+      if (p > 0) round_trip = msg.substr(p);
 
    } else if (arg == "halt") {
       // terminate ROOT
@@ -142,11 +152,18 @@ void ping(int nclients = 1, int test_mode = 0)
    // provide blocking method to let run
    if (batch_mode) {
       const int run_limit = 200;
-      const double run_time = 50.;
-      window->WaitFor([=](double tm) { return (current_counter >= run_limit) || (tm > run_time) ? 1 : 0; });
+      const double fullrun_time = 40., startup_time = 15.;
+      start_tm = firstmsg_tm = std::chrono::high_resolution_clock::now();
+      window->WaitFor([=](double tm) { return (current_counter >= run_limit) || (tm > fullrun_time) || ((current_counter == 0) && (tm > startup_time))  ? 1 : 0; });
+      stop_tm = std::chrono::high_resolution_clock::now();
+      auto startuptime_int = std::chrono::duration_cast<std::chrono::milliseconds>(firstmsg_tm - start_tm);
+      auto runttime_int = std::chrono::duration_cast<std::chrono::milliseconds>(stop_tm - firstmsg_tm);
+
       if (current_counter >= run_limit)
-         std::cout << "PING-PONG TEST COMPLETED" << std::endl;
+         std::cout << "PING-PONG TEST COMPLETED " << round_trip;
       else
-         std::cout << "PING-PONG TEST FAIL" << std::endl;
+         std::cout << "PING-PONG TEST FAIL cnt:" << current_counter;
+
+      std::cout << " startup: " << startuptime_int.count() << "ms" << " run: " << runttime_int.count() << "ms" << std::endl;
    }
 }

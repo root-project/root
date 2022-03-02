@@ -24,7 +24,7 @@
 #include "TVirtualFFT.h"
 
 /** \class TF1Convolution
-    \ingroup Hist
+    \ingroup Functions
     \brief Class wrapping convolution of two functions
 
 Class wrapping convolution of two functions: evaluation of \f$\int f(x)g(x-t)dx\f$
@@ -40,6 +40,8 @@ One should use also a not too small number of points for the DFT (a minimum of 1
 
 ClassImp(TF1Convolution);
 
+Double_t TF1Convolution::fgExtraRangeFraction = 0.1;
+
 class TF1Convolution_EvalWrapper
 {
    TF1 *  fFunc1;
@@ -47,7 +49,7 @@ class TF1Convolution_EvalWrapper
    Double_t fT0;
 
 public:
-   TF1Convolution_EvalWrapper(TF1 &f1, TF1 &f2, Double_t t) : 
+   TF1Convolution_EvalWrapper(TF1 &f1, TF1 &f2, Double_t t) :
       fFunc1(&f1),
       fFunc2(&f2),
       fT0(t)
@@ -63,7 +65,8 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Use copy instead of Clone
+/// Internal function to initialize data members.
+/// Use TF1::Copy instead of Clone.
 
 void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_t useFFT)
 {
@@ -90,11 +93,12 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
    fFunction1->SetBit(TF1::kNotGlobal, kTRUE);
    fFunction2->SetBit(TF1::kNotGlobal, kTRUE);
 
-   // add by default an extra 10% on  each side
+   // use by default range of first function
    fFunction1->GetRange(fXmin, fXmax);
-   Double_t range = fXmax - fXmin;
-   fXmin       -= 0.1*range;
-   fXmax       += 0.1*range;
+   // when using FFT add by default an extra 10% on  each side
+   if (useFFT) {
+      SetExtraRange(fgExtraRangeFraction);
+   }
    fNofParams1 = fFunction1->GetNpar();
    fNofParams2 = fFunction2->GetNpar();
    fParams1    = std::vector<Double_t>(fNofParams1);
@@ -126,7 +130,7 @@ void TF1Convolution::InitializeDataMembers(TF1* function1, TF1* function2, Bool_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor without arguments
+/// constructor without arguments.
 
 TF1Convolution::TF1Convolution()
 {
@@ -134,7 +138,7 @@ TF1Convolution::TF1Convolution()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor from the two function pointer and a flag is using FFT
+/// constructor from the two function pointer and a flag is using FFT.
 
 TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Bool_t useFFT)
 {
@@ -142,7 +146,7 @@ TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Bool_t useFFT)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from the two function pointer and the convolution range
+/// Constructor from the two function pointer and the convolution range.
 
 TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Double_t xmax, Bool_t useFFT)
 {
@@ -150,6 +154,7 @@ TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Do
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+      if (useFFT) SetExtraRange(fgExtraRangeFraction);
    } else {
       Info("TF1Convolution", "Using default range [-inf, inf] for TF1Convolution");
       SetRange(-TMath::Infinity(), TMath::Infinity());
@@ -157,7 +162,7 @@ TF1Convolution::TF1Convolution(TF1* function1, TF1* function2, Double_t xmin, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from a formula expression as f1 * f2 where f1 and f2 are two functions known to ROOT
+/// Constructor from a formula expression as f1 * f2 where f1 and f2 are two functions known to ROOT.
 
 TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, Bool_t useFFT)
 {
@@ -186,6 +191,7 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
    if (xmin < xmax) {
       fXmin      = xmin;
       fXmax      = xmax;
+      if (useFFT) SetExtraRange(fgExtraRangeFraction);
    } else {
       Info("TF1Convolution", "Using default range [-inf, inf] for TF1Convolution");
       SetRange(-TMath::Infinity(), TMath::Infinity());
@@ -193,11 +199,11 @@ TF1Convolution::TF1Convolution(TString formula,  Double_t xmin, Double_t xmax, B
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// constructor from 2 function names where f1 and f2 are two functions known to
-/// ROOT
+/// Constructor from 2 function names where f1 and f2 are two functions known to
+/// ROOT.
 ///
-/// if the function names are not known to ROOT, tries to interpret them as
-/// TFormula
+/// If the function names are not known to ROOT, tries to interpret them as
+/// TFormula.
 TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmin, Double_t xmax, Bool_t useFFT)
 {
    TF1::InitStandardFunctions();
@@ -228,7 +234,7 @@ TF1Convolution::TF1Convolution(TString formula1, TString formula2,  Double_t xmi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor (necessary to hold unique_ptr as member variable)
+/// Copy constructor (necessary to hold unique_ptr as member variable).
 
 TF1Convolution::TF1Convolution(const TF1Convolution &conv)
 {
@@ -246,7 +252,7 @@ TF1Convolution &TF1Convolution::operator=(const TF1Convolution &rhs)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform the FFT of the two functions
+/// Perform the FFT of the two functions.
 
 void TF1Convolution::MakeFFTConv()
 {
@@ -313,10 +319,11 @@ void TF1Convolution::MakeFFTConv()
    // delete the fft objects
    delete fft1;
    delete fft2;
-   delete fftinverse; 
+   delete fftinverse;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Perform FFT convolution.
 
 Double_t TF1Convolution::EvalFFTConv(Double_t t)
 {
@@ -331,10 +338,11 @@ Double_t TF1Convolution::EvalFFTConv(Double_t t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Perform numerical convolution.
-/// Could in principle cache the integral  in a Graph as it is done for the FFTW
+///
 
 Double_t TF1Convolution::EvalNumConv(Double_t t)
 {
+   /// Could in principle cache the integral  in a Graph as it is done for the FFTW
    TF1Convolution_EvalWrapper fconv( *fFunction1, *fFunction2, t);
    Double_t result = 0;
 
@@ -367,6 +375,7 @@ Double_t TF1Convolution::operator()(const Double_t *x, const Double_t *p)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the number of points used for the FFT convolution.
 
 void TF1Convolution::SetNofPointsFFT(Int_t n)
 {
@@ -377,6 +386,7 @@ void TF1Convolution::SetNofPointsFFT(Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the vector of parameters p for the convolution function g(x,p) = f1 * f2.
 
 void TF1Convolution::SetParameters(const Double_t *params)
 {
@@ -408,6 +418,7 @@ void TF1Convolution::SetParameters(const Double_t *params)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the parameter values for the convolution function.
 
 void TF1Convolution::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p3,
                                    Double_t p4, Double_t p5, Double_t p6, Double_t p7)
@@ -417,17 +428,24 @@ void TF1Convolution::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the fraction of extra range used when doing an FFT convolution.
+/// The extra range is often needed to avoid mirroring effect of the resulting convolution
+/// function at the borders.
+/// By default an extra range of 0.1 is used.
 
 void TF1Convolution::SetExtraRange(Double_t percentage)
 {
    if (percentage<0) return;
-   double range = fXmax = fXmin;
+   double range = fXmax - fXmin;
    fXmin -= percentage * range;
    fXmax += percentage * range;
    fFlagGraph = false;  // to indicate we need to re-do the convolution
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the actual range used for the convolution.
+/// In case  a or b are -inf or +inf and FFT convolution is used, then the
+/// range of the first function will be used and extended by the default extra range fraction.
 
 void TF1Convolution::SetRange(Double_t a, Double_t b)
 {
@@ -444,12 +462,25 @@ void TF1Convolution::SetRange(Double_t a, Double_t b)
       if (a ==-TMath::Infinity()) fXmin = fFunction1 -> GetXmin();
       if ( b== TMath::Infinity()) fXmax = fFunction1 -> GetXmax();
       // add a spill over of 10% in this case
-      SetExtraRange(0.1);
+      SetExtraRange(fgExtraRangeFraction);
    }
    fFlagGraph = false;  // to indicate we need to re-do the convolution
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the default extra range fraction used when doing a FFT convolution.
+/// By default the value is 0.1 (10%).
+/// The function return the previous default defined value.
+
+Double_t TF1Convolution::SetDefaultExtraRange(Double_t fraction)
+{
+   Double_t prevValue = fgExtraRangeFraction;
+   fgExtraRangeFraction = fraction;
+   return prevValue;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the range used for the convolution.
 
 void TF1Convolution::GetRange(Double_t &a, Double_t &b) const
 {
@@ -458,7 +489,7 @@ void TF1Convolution::GetRange(Double_t &a, Double_t &b) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   Update the two component functions of the convolution
+///   Update the two component functions of the convolution.
 
 void TF1Convolution::Update()
 {
@@ -488,7 +519,7 @@ void TF1Convolution::Copy(TObject &obj) const
    // we need to copy the content of the  unique_ptr's
    ((TF1Convolution &)obj).fFunction1 = std::unique_ptr<TF1>((TF1 *)new TF1() );
    ((TF1Convolution &)obj).fFunction2 = std::unique_ptr<TF1>((TF1 *)new TF1() );
-   fFunction1->Copy(*(((TF1Convolution &)obj).fFunction1 ) ); 
-   fFunction2->Copy(*(((TF1Convolution &)obj).fFunction2 ) ); 
+   fFunction1->Copy(*(((TF1Convolution &)obj).fFunction1 ) );
+   fFunction2->Copy(*(((TF1Convolution &)obj).fFunction2 ) );
    // fGraphConv is transient anyway, so we don't bother to copy it
 }

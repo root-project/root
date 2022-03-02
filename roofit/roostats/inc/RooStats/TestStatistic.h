@@ -53,9 +53,9 @@ public:
    /// interface to set global observables. If a test statistics needs them it will re-implement this function
    virtual void SetGlobalObservables(const RooArgSet& ) {}
 
-   
+
 protected:
-   ClassDef(TestStatistic,1) /// Interface for a TestStatistic
+   ClassDef(TestStatistic,1) // Interface for a TestStatistic
 };
 
 } // end namespace RooStats

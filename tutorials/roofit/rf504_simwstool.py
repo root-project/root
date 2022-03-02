@@ -22,13 +22,12 @@ s = ROOT.RooRealVar("s", "s", 1, -10, 10)
 gauss = ROOT.RooGaussian("g", "g", x, m, s)
 
 # Construct poly(x,p0)
-p0 = ROOT.RooRealVar("p0", "p0", 0.01, 0., 1.)
-poly = ROOT.RooPolynomial("p", "p", x, ROOT.RooArgList(p0))
+p0 = ROOT.RooRealVar("p0", "p0", 0.01, 0.0, 1.0)
+poly = ROOT.RooPolynomial("p", "p", x, [p0])
 
 # model = f*gauss(x) + (1-f)*poly(x)
-f = ROOT.RooRealVar("f", "f", 0.5, 0., 1.)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(
-    gauss, poly), ROOT.RooArgList(f))
+f = ROOT.RooRealVar("f", "f", 0.5, 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "model", [gauss, poly], [f])
 
 # Create category observables for splitting
 # ----------------------------------------------------------------------------------
@@ -47,7 +46,7 @@ d.defineType("bar")
 
 # Import ingredients in a workspace
 w = ROOT.RooWorkspace("w", "w")
-w.Import(ROOT.RooArgSet(model, c, d))
+w.Import({model, c, d})
 
 # Make Sim builder tool
 sct = ROOT.RooSimWSTool(w)
@@ -63,8 +62,7 @@ sct = ROOT.RooSimWSTool(w)
 #             = model_run2(x) if c=="run2"
 #
 # Returned pdf is owned by the workspace
-model_sim = sct.build("model_sim", "model",
-                      ROOT.RooFit.SplitParam("m", "c"))
+model_sim = sct.build("model_sim", "model", SplitParam=("m", "c"))
 
 # Print tree structure of model
 model_sim.Print("t")
@@ -80,8 +78,7 @@ w.Print("v")
 # -----------------------------------------------------------------------------------------
 
 # Build another simultaneous pdf using a composite split in states c X d
-model_sim2 = sct.build("model_sim2", "model",
-                       ROOT.RooFit.SplitParam("p0", "c,d"))
+model_sim2 = sct.build("model_sim2", "model", SplitParam=("p0", "c,d"))
 
 # Print tree structure of self model
 model_sim2.Print("t")

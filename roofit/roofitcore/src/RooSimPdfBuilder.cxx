@@ -451,7 +451,8 @@
 #include "RooDataHist.h"
 #include "RooGenericPdf.h"
 #include "RooMsgService.h"
-#include "RooHelpers.h"
+
+#include "ROOT/StringUtils.hxx"
 
 using namespace std ;
 
@@ -724,7 +725,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
       const char* splitCatName ;
       RooAbsCategory* splitCat(0) ;
 
-      for (const auto& token : RooHelpers::tokenise(ruleStr->getVal(), spaceChars)) {
+      for (const auto& token : ROOT::Split(ruleStr->getVal(), spaceChars)) {
 
         switch (mode) {
         case SplitCat:
@@ -741,7 +742,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
               // Build now
 
               RooArgSet compCatSet ;
-              for (const auto& catName2 : RooHelpers::tokenise(token, ",")) {
+              for (const auto& catName2 : ROOT::Split(token, ",")) {
                 RooAbsArg* cat = splitCatSet.find(catName2.data()) ;
 
                 // If not, check if it is an auxiliary splitcat
@@ -831,7 +832,7 @@ RooSimultaneous* RooSimPdfBuilder::buildPdf(const RooArgSet& buildConfig, const 
 
           const bool lastCharIsComma = (token[token.size()-1]==',') ;
 
-          for (const auto& paramName : RooHelpers::tokenise(token, ",")) {
+          for (const auto& paramName : ROOT::Split(token, ",", /*skipEmpty= */ true)) {
             // Check for fractional split option 'param_name[remainder_state]'
             std::string remainderState;
             {

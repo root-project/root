@@ -28,6 +28,7 @@ the trees in the chain.
 
 #include <iostream>
 #include <cfloat>
+#include <string>
 
 #include "TBranch.h"
 #include "TBrowser.h"
@@ -67,25 +68,17 @@ ClassImp(TChain);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TChain::TChain()
-: TTree()
-, fTreeOffsetLen(100)
-, fNtrees(0)
-, fTreeNumber(-1)
-, fTreeOffset(0)
-, fCanDeleteRefs(kFALSE)
-, fTree(0)
-, fFile(0)
-, fFiles(0)
-, fStatus(0)
-, fProofChain(0)
+TChain::TChain(Mode mode)
+   : TTree(), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(0), fCanDeleteRefs(kFALSE), fTree(0),
+     fFile(0), fFiles(0), fStatus(0), fProofChain(0), fGlobalRegistration(mode == kWithGlobalRegistration)
 {
    fTreeOffset = new Long64_t[fTreeOffsetLen];
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   if (gDirectory) gDirectory->Remove(this);
-   gROOT->GetListOfSpecials()->Add(this);
+   if (fGlobalRegistration) {
+      gROOT->GetListOfSpecials()->Add(this);
+   }
    fFile = 0;
    fDirectory = 0;
 
@@ -93,12 +86,14 @@ TChain::TChain()
    ResetBit(kProofUptodate);
    ResetBit(kProofLite);
 
-   // Add to the global list
-   gROOT->GetListOfDataSets()->Add(this);
+   if (fGlobalRegistration) {
+      // Add to the global list
+      gROOT->GetListOfDataSets()->Add(this);
 
-   // Make sure we are informed if the TFile is deleted.
-   R__LOCKGUARD(gROOTMutex);
-   gROOT->GetListOfCleanups()->Add(this);
+      // Make sure we are informed if the TFile is deleted.
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfCleanups()->Add(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,18 +136,10 @@ TChain::TChain()
 ///     }
 /// ~~~
 
-TChain::TChain(const char* name, const char* title)
-:TTree(name, title, /*splitlevel*/ 99, nullptr)
-, fTreeOffsetLen(100)
-, fNtrees(0)
-, fTreeNumber(-1)
-, fTreeOffset(0)
-, fCanDeleteRefs(kFALSE)
-, fTree(0)
-, fFile(0)
-, fFiles(0)
-, fStatus(0)
-, fProofChain(0)
+TChain::TChain(const char *name, const char *title, Mode mode)
+   : TTree(name, title, /*splitlevel*/ 99, nullptr), fTreeOffsetLen(100), fNtrees(0), fTreeNumber(-1), fTreeOffset(0),
+     fCanDeleteRefs(kFALSE), fTree(0), fFile(0), fFiles(0), fStatus(0), fProofChain(0),
+     fGlobalRegistration(mode == kWithGlobalRegistration)
 {
    //
    //*-*
@@ -167,14 +154,16 @@ TChain::TChain(const char* name, const char* title)
    ResetBit(kProofUptodate);
    ResetBit(kProofLite);
 
-   R__LOCKGUARD(gROOTMutex);
+   if (fGlobalRegistration) {
+      R__LOCKGUARD(gROOTMutex);
 
-   // Add to the global lists
-   gROOT->GetListOfSpecials()->Add(this);
-   gROOT->GetListOfDataSets()->Add(this);
+      // Add to the global lists
+      gROOT->GetListOfSpecials()->Add(this);
+      gROOT->GetListOfDataSets()->Add(this);
 
-   // Make sure we are informed if the TFile is deleted.
-   gROOT->GetListOfCleanups()->Add(this);
+      // Make sure we are informed if the TFile is deleted.
+      gROOT->GetListOfCleanups()->Add(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +173,7 @@ TChain::~TChain()
 {
    bool rootAlive = gROOT && !gROOT->TestBit(TObject::kInvalidObject);
 
-   if (rootAlive) {
+   if (rootAlive && fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Remove(this);
    }
@@ -212,7 +201,7 @@ TChain::~TChain()
    fTreeOffset = 0;
 
    // Remove from the global lists
-   if (rootAlive) {
+   if (rootAlive && fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSpecials()->Remove(this);
       gROOT->GetListOfDataSets()->Remove(this);
@@ -267,87 +256,108 @@ Int_t TChain::Add(TChain* chain)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a new file to this chain.
+/// \brief Add a new file to this chain.
 ///
-/// Argument name may have either of two set of formats. The first:
-/// ~~~ {.cpp}
-///     [//machine]/path/file_name[?query[#tree_name]]
-///  or [//machine]/path/file_name.root[.oext][/tree_name]
+/// \param[in] name The path to the file to be added. See below for details.
+/// \param[in] nentries Number of entries in the file. This can be an estimate
+///            or queried from the file. See below for details.
+/// \returns There are different possible return values:
+/// - If nentries>0 (including the default of TTree::kMaxEntries) and no
+///   wildcarding is used, ALWAYS returns 1 irrespective of whether the file
+///   exists or contains the correct tree.
+/// - If wildcarding is used, regardless of the value of \p nentries, returns
+///   the number of files matching the name irrespective of whether they contain
+///   the correct tree.
+/// - If nentries<=0 and wildcarding is not used, returns 1 if the file
+///  exists and contains the correct tree and 0 otherwise.
+///
+/// <h4>Details of the name parameter</h4>
+/// There are two sets of formats accepted for the parameter \p name . The first
+/// one is:
+///
+/// ~~~{.cpp}
+///    [//machine]/path/file_name[?[query][#tree_name]]
+/// or [//machine]/path/file_name.root[.oext][/tree_name]
 /// ~~~
-/// If tree_name is missing the chain name will be assumed. Tagging the
-/// tree_name with a slash [/tree_name] is only supported for backward
-/// compatibility; it requires the file name to contain the string '.root'
-/// and its use is deprecated.
-/// Wildcard treatment is triggered by the any of the special characters []*?
-/// which may be used in the file name, eg. specifying "xxx*.root" adds
-/// all files starting with xxx in the current file system directory.
 ///
-/// Alternatively name may have the format of a url, eg.
+/// Note the following:
+/// - If the \p tree_name part is missing, it will be assumed that
+///   the file contains a tree with the same name as the chain.
+/// - Tagging the name of the tree with a slash (e.g. \p /tree_name ) is only
+///   supported for backward compatibility; it requires the file name to contain
+///   the string '.root' and its use is deprecated. Instead, use the form
+///   \p ?#%tree_name (that is an "?" followed by an empty query), for example:
+///   ~~~{.cpp}
+///   TChain c;
+///   // DO NOT DO THIS
+///   // c.Add("myfile.root/treename");
+///   // DO THIS INSTEAD
+///   c.Add("myfile.root?#treename");
+///   ~~~
+/// - Wildcard treatment is triggered by any of the special characters:
+///   <b>[]*?</b> which may be used in the file name, eg. specifying "xxx*.root"
+///   adds all files starting with xxx in the current file system directory.
+///
+/// The second format accepted for \p name may have the form of a URL, e.g.:
+///
 /// ~~~ {.cpp}
-///         root://machine/path/file_name[?query[#tree_name]]
+///         root://machine/path/file_name[?[query][#tree_name]]
 ///     or  root://machine/path/file_name
 ///     or  root://machine/path/file_name.root[.oext]/tree_name
 ///     or  root://machine/path/file_name.root[.oext]/tree_name?query
 /// ~~~
-/// where "query" is to be interpreted by the remote server. Wildcards may be
-/// supported in urls, depending on the protocol plugin and the remote server.
-/// http or https urls can contain a query identifier without tree_name, but
-/// generally urls can not be written with them because of ambiguity with the
-/// wildcard character. (Also see the documentation for TChain::AddFile,
-/// which does not support wildcards but allows the url name to contain query).
-/// Again, tagging the tree_name with a slash [/tree_name] is only supported
-/// for backward compatibility; it requires the file name ot contain the string
-/// '.root' and its use is deprecated.
 ///
-/// NB. To add all the files of a TChain to a chain, use Add(TChain *chain).
+/// Note the following:
+/// - The optional "query" token is to be interpreted by the remote server.
+/// - Wildcards may be supported in URLs, depending on the protocol plugin and
+///   the remote server.
+/// - \p http or \p https URLs can contain a query identifier without
+///   \p tree_name, but generally URLs can not be written with them because of
+///   ambiguity with the wildcard character. (Also see the documentation for
+///   TChain::AddFile, which does not support wildcards but allows the URL name
+///   to contain a query).
+/// - The rules for tagging the name of the tree in the file are the same as
+///   in the format above.
 ///
-/// A. if nentries <= 0, the file is connected and the tree header read
-///    in memory to get the number of entries.
+/// <h4>Details of the nentries parameter</h4>
+/// Depending on the value of the parameter, the number of entries in the file
+/// is retrieved differently:
+/// - If <tt>nentries <= 0</tt>, the file is connected and the tree header read
+///   in memory to get the number of entries.
+/// - If <tt>nentries > 0</tt>, the file is not connected, \p nentries is
+///   assumed to be the number of entries in the file. In this case, no check is
+///   made that the file exists and that the corresponding tree exists as well.
+///   This second mode is interesting in case the number of entries in the file
+///   is already stored in a run data base for example.
+/// - If <tt>nentries == TTree::kMaxEntries</tt> (default), the file is not
+///   connected. The number of entries in each file will be read only when the
+///   file will need to be connected to read an entry. This option is the
+///   default and very efficient if one processes the chain sequentially. Note
+///   that in case TChain::GetEntry(entry) is called and entry refers to an
+///   entry in the 3rd file, for example, this forces the tree headers in the
+///   first and second file to be read to find the number of entries in these
+///   files. Note that calling TChain::GetEntriesFast after having
+///   created a chain with this default returns TTree::kMaxEntries ! Using
+///   TChain::GetEntries instead will force all the tree headers in the chain to
+///   be read to get the number of entries in each tree.
 ///
-/// B. if (nentries > 0, the file is not connected, nentries is assumed to be
-///    the number of entries in the file. In this case, no check is made that
-///    the file exists and the Tree existing in the file. This second mode
-///    is interesting in case the number of entries in the file is already stored
-///    in a run data base for example.
-///
-/// C. if (nentries == TTree::kMaxEntries) (default), the file is not connected.
-///    the number of entries in each file will be read only when the file
-///    will need to be connected to read an entry.
-///    This option is the default and very efficient if one process
-///    the chain sequentially. Note that in case TChain::GetEntry(entry)
-///    is called and entry refers to an entry in the 3rd file, for example,
-///    this forces the Tree headers in the first and second file
-///    to be read to find the number of entries in these files.
-///    Note that if one calls TChain::GetEntriesFast() after having created
-///    a chain with this default, GetEntriesFast will return TTree::kMaxEntries!
-///    TChain::GetEntries will force of the Tree headers in the chain to be
-///    read to read the number of entries in each Tree.
-///
-/// D. The TChain data structure
-///    Each TChainElement has a name equal to the tree name of this TChain
-///    and a title equal to the file name. So, to loop over the
-///    TFiles that have been added to this chain:
+/// <h4>The %TChain data structure</h4>
+/// Each element of the chain is a TChainElement object. It has a name equal to
+/// the tree name of this chain (or the name of the specific tree in the added
+/// file if it was explicitly tagged) and a title equal to the file name. So, to
+/// loop over the files that have been added to this chain:
 /// ~~~ {.cpp}
-///        TObjArray *fileElements=chain->GetListOfFiles();
-///        TIter next(fileElements);
-///        TChainElement *chEl=0;
-///        while (( chEl=(TChainElement*)next() )) {
-///           TFile f(chEl->GetTitle());
-///           ... do something with f ...
-///        }
+///  TObjArray *fileElements=chain->GetListOfFiles();
+///  for (TObject *op: *fileElements) {
+///     auto chainElement = static_cast<TChainElement *>(op);
+///     TFile f{chainElement->GetTitle()};
+///     TTree *tree = f.Get<TTree>(chainElement->GetName());
+///     // Do something with the file or the tree
+///  }
 /// ~~~
-/// Return value:
 ///
-/// - If nentries>0 (including the default of TTree::kMaxEntries) and no
-///   wildcarding is used, ALWAYS returns 1 without regard to whether
-///   the file exists or contains the correct tree.
-///
-/// - If wildcarding is used, regardless of the value of nentries,
-///   returns the number of files matching the name without regard to
-///   whether they contain the correct tree.
-///
-/// - If nentries<=0 and wildcarding is not used, return 1 if the file
-///  exists and contains the correct tree and 0 otherwise.
+/// \note To add all the files of a another \p TChain to this one, use
+///       TChain::Add(TChain* chain).
 
 Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */)
 {
@@ -498,7 +508,8 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
       TFile* file;
       {
          TDirectory::TContext ctxt;
-         file = TFile::Open(filename);
+         const char *option = fGlobalRegistration ? "READ" : "READ_WITHOUT_GLOBALREGISTRATION";
+         file = TFile::Open(filename, option);
       }
       if (!file || file->IsZombie()) {
          delete file;
@@ -1279,7 +1290,6 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 /// In case of error, LoadTree returns a negative number:
 ///   * -1: The chain is empty.
 ///   * -2: The requested entry number is less than zero or too large for the chain.
-///       or too large for the large TTree.
 ///   * -3: The file corresponding to the entry could not be correctly open
 ///   * -4: The TChainElement corresponding to the entry is missing or
 ///       the TTree is missing from the file.
@@ -1486,8 +1496,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
    //        if we did not delete it above.
    {
       TDirectory::TContext ctxt;
-      fFile = TFile::Open(element->GetTitle());
-      if (fFile) fFile->SetBit(kMustCleanup);
+      const char *option = fGlobalRegistration ? "READ" : "READ_WITHOUT_GLOBALREGISTRATION";
+      fFile = TFile::Open(element->GetTitle(), option);
+      if (fFile && fGlobalRegistration)
+         fFile->SetBit(kMustCleanup);
    }
 
    // ----- Begin of modifications by MvL
@@ -1514,6 +1526,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
          // We do not return yet so that 'fEntries' can be updated with the
          // sum of the entries of all the other trees.
          returnCode = -4;
+      } else if (!fGlobalRegistration) {
+         fTree->ResetBit(kMustCleanup);
       }
    }
 
@@ -1860,7 +1874,7 @@ void TChain::ls(Option_t* option) const
 /// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
-///     ch.Merge(file);
+///     ch.Merge(file, 0);
 /// ~~~
 
 Long64_t TChain::Merge(const char* name, Option_t* option)
@@ -1925,7 +1939,7 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
-///     ch.Merge(file);
+///     ch.Merge(file, 0);
 /// ~~~
 /// If 'option' contains the word 'fast' the merge will be done without
 /// unzipping or unstreaming the baskets (i.e., a direct copy of the raw
@@ -2113,7 +2127,7 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///     [xxx://host]/a/path/file#treename
 /// ~~~
 /// i.e. anchor but no options (query), the filename will be the full path, as
-/// the anchor may be the internal file name of an archive. Use '?#treename' to
+/// the anchor may be the internal file name of an archive. Use '?#%treename' to
 /// pass the treename if the query field is empty.
 ///
 /// \param[in] name        is the original name
@@ -2644,13 +2658,28 @@ void TChain::SetDirectory(TDirectory* dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the input entry list (processing the entries of the chain will then be
-/// limited to the entries in the list).
+/// \brief Set the input entry list (processing the entries of the chain will
+///        then be limited to the entries in the list).
+///
+/// \param[in] elist The entry list to be assigned to this chain.
+/// \param[in] opt An option string. Possible values are:
+///   - "" (default): both the file names of the chain elements and the file
+///     names of the TEntryList sublists are expanded to full path name.
+///   - "ne": the file names are taken as they are and not expanded
+///   - "sync": the TChain will go through the TEntryList in lockstep with the
+///        trees in the chain rather than performing a lookup based on
+///        treename and filename. This is mostly useful when the TEntryList
+///        has multiple sublists for the same tree and filename.
+/// \throws std::runtime_error If option "sync" was chosen and either:
+///           - \p elist doesn't have sub entry lists.
+///           - the number of sub entry lists in \p elist is different than the
+///             number of trees in the chain.
+///           - any of the sub entry lists in \p elist doesn't correspond to the
+///             tree of the chain with the same index (i.e. it doesn't share the
+///             same tree name and file name).
+///
 /// This function finds correspondence between the sub-lists of the TEntryList
 /// and the trees of the TChain.
-/// By default (opt=""), both the file names of the chain elements and
-/// the file names of the TEntryList sublists are expanded to full path name.
-/// If opt = "ne", the file names are taken as they are and not expanded
 
 void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
 {
@@ -2692,11 +2721,61 @@ void TChain::SetEntryList(TEntryList *elist, Option_t *opt)
    TString treename, filename;
 
    TEntryList *templist = 0;
+
+   const auto *subentrylists = elist->GetLists();
+   if(strcmp(opt, "sync") == 0){
+      if(!subentrylists){
+         std::string msg{"In 'TChain::SetEntryList': "};
+         msg += "the input TEntryList doesn't have sub entry lists. Please make sure too add them through ";
+         msg += "TEntryList::AddSubList";
+         throw std::runtime_error(msg);
+      }
+      const auto nsubelists = subentrylists->GetEntries();
+      if(nsubelists != ne){
+         std::string msg{"In 'TChain::SetEntryList': "};
+         msg += "the number of sub entry lists in the input TEntryList (";
+         msg += std::to_string(nsubelists);
+         msg += ") is not equal to the number of files in the chain (";
+         msg += std::to_string(ne);
+         msg += ")";
+         throw std::runtime_error(msg);
+      }
+   }
+
    for (Int_t ie = 0; ie<ne; ie++){
       auto chainElement = (TChainElement*)fFiles->UncheckedAt(ie);
       treename = chainElement->GetName();
       filename = chainElement->GetTitle();
-      templist = elist->GetEntryList(treename, filename, opt);
+
+      if(strcmp(opt, "sync") == 0){
+         // If the user asked for "sync" option, there should be a 1:1 mapping
+         // between trees in the chain and sub entry lists in the argument elist
+         // We have already checked that the input TEntryList has a number of
+         // sub entry lists equal to the number of files in the chain.
+         templist = static_cast<TEntryList*>(subentrylists->At(ie));
+         auto elisttreename = templist->GetTreeName();
+         auto elistfilename = templist->GetFileName();
+
+         if (strcmp(treename, elisttreename) != 0 || strcmp(filename, elistfilename) != 0){
+            std::string msg{"In 'TChain::SetEntryList': "};
+            msg += "the sub entry list at index ";
+            msg += std::to_string(ie);
+            msg += " doesn't correspond to treename '";
+            msg += treename;
+            msg += "' and filename '";
+            msg += filename;
+            msg += "': it has treename '";
+            msg += elisttreename;
+            msg += "' and filename '";
+            msg += elistfilename;
+            msg += "'";
+            throw std::runtime_error(msg);
+         }
+
+      }else{
+         templist = elist->GetEntryList(treename, filename, opt);
+      }
+
       if (templist) {
          listfound++;
          templist->SetTreeNumber(ie);
@@ -2870,7 +2949,7 @@ void TChain::SetEventList(TEventList *evlist)
 
 void TChain::SetName(const char* name)
 {
-   {
+   if (fGlobalRegistration) {
       // Should this be extended to include the call to TTree::SetName?
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex); // Take the lock once rather than 3 times.
       gROOT->GetListOfCleanups()->Remove(this);
@@ -2878,14 +2957,13 @@ void TChain::SetName(const char* name)
       gROOT->GetListOfDataSets()->Remove(this);
    }
    TTree::SetName(name);
-   {
+   if (fGlobalRegistration) {
       // Should this be extended to include the call to TTree::SetName?
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex); // Take the lock once rather than 3 times.
       gROOT->GetListOfCleanups()->Add(this);
       gROOT->GetListOfSpecials()->Add(this);
       gROOT->GetListOfDataSets()->Add(this);
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -24,12 +24,16 @@
 #include "RooAbsCache.h"
 #include "RooNameReg.h"
 #include "RooLinkedListIter.h"
-#include <map>
-#include <set>
+#include <RooBatchCompute/DataKey.h>
+#include <RooStringView.h>
+
 #include <deque>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <set>
 #include <stack>
 #include <string>
-#include <iostream>
 
 #ifndef R__LESS_INCLUDES
 #include "TClass.h"
@@ -46,8 +50,10 @@ class RooAbsData ;
 class RooAbsDataStore ;
 class RooAbsProxy ;
 class RooArgProxy ;
-class RooSetProxy ;
-class RooListProxy ;
+template<class RooCollection_t>
+class RooCollectionProxy;
+using RooSetProxy = RooCollectionProxy<RooArgSet>;
+using RooListProxy = RooCollectionProxy<RooArgList>;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
 
@@ -58,9 +64,9 @@ class RooRefArray : public TObjArray {
   RooRefArray(const RooRefArray& other) : TObjArray(other) {
   }
   RooRefArray& operator=(const RooRefArray& other) = default;
-  virtual ~RooRefArray() {} ;
+  ~RooRefArray() override {} ;
  protected:
-  ClassDef(RooRefArray,1) // Helper class for proxy lists
+  ClassDefOverride(RooRefArray,1) // Helper class for proxy lists
 } ;
 
 class RooAbsArg;
@@ -76,12 +82,12 @@ public:
 
   // Constructors, cloning and assignment
   RooAbsArg() ;
-  virtual ~RooAbsArg();
+  ~RooAbsArg() override;
   RooAbsArg(const char *name, const char *title);
   RooAbsArg(const RooAbsArg& other, const char* name=0) ;
   RooAbsArg& operator=(const RooAbsArg& other);
   virtual TObject* clone(const char* newname=0) const = 0 ;
-  virtual TObject* Clone(const char* newname = 0) const {
+  TObject* Clone(const char* newname = 0) const override {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);
   }
   virtual RooAbsArg* cloneTree(const char* newname=0) const ;
@@ -206,8 +212,7 @@ public:
   }
   /// Return server of `this` that has the same name as `arg`. Returns `nullptr` if not found.
   inline RooAbsArg* findServer(const RooAbsArg& arg) const {
-    const auto serverIt = _serverList.findByNamePointer(&arg);
-    return serverIt != _serverList.end() ? *serverIt : nullptr;
+    return _serverList.findByNamePointer(&arg);
   }
   /// Return i-th server from server list.
   inline RooAbsArg* findServer(Int_t index) const {
@@ -232,8 +237,8 @@ public:
   void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
   void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
   void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0,
-			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE,
-			  Bool_t valueOnly=kFALSE, Bool_t recurseNonDerived=kFALSE) const ;
+           Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE,
+           Bool_t valueOnly=kFALSE, Bool_t recurseNonDerived=kFALSE) const ;
 
 
   /// Is this object a fundamental type that can be added to a dataset?
@@ -260,7 +265,25 @@ public:
   // Server redirection interface
   Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t isRecursionStep=kFALSE) ;
   Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t recurseInNewSet=kTRUE) ;
-  virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) { return kFALSE ; } ;
+
+  /// Function that is called at the end of redirectServers(). Can be overloaded
+  /// to inject some class-dependent behavior after server redirection, e.g.
+  /// resetting of caches. The return value is meant to be an error flag, so in
+  /// case something goes wrong the function should return `true`.
+  ///
+  /// \see redirectServers() For a detailed explanation of the function parameters.
+  ///
+  // \param[in] newServerList One of the original parameters passed to redirectServers().
+  // \param[in] mustReplaceAll One of the original parameters passed to redirectServers().
+  // \param[in] nameChange  One of the original parameters passed to redirectServers().
+  // \param[in] isRecursiveStep  One of the original parameters passed to redirectServers().
+  virtual bool redirectServersHook(const RooAbsCollection & /*newServerList*/, bool /*mustReplaceAll*/,
+                                   bool /*nameChange*/, bool /*isRecursiveStep*/)
+  {
+    return false;
+  }
+
+
   virtual void serverNameChangeHook(const RooAbsArg* /*oldServer*/, const RooAbsArg* /*newServer*/) { } ;
 
   void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE, std::size_t refCount = 1);
@@ -301,7 +324,7 @@ public:
     return getObservables(&data) ;
   }
   RooArgSet* getObservables(const RooArgSet* depList, bool valueOnly=true) const ;
-  bool getObservables(const RooArgSet* depList, RooArgSet& outputSet, bool valueOnly=true) const;
+  bool getObservables(const RooAbsCollection* depList, RooArgSet& outputSet, bool valueOnly=true) const;
   Bool_t observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   Bool_t observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;
@@ -310,6 +333,7 @@ public:
 
 
 
+  void attachArgs(const RooAbsCollection &set);
   void attachDataSet(const RooAbsData &set);
   void attachDataStore(const RooAbsDataStore &set);
 
@@ -319,21 +343,21 @@ public:
 
   /// Print the object to the defaultPrintStream().
   /// \param[in] options **V** print verbose. **T** print a tree structure with all children.
-  virtual void Print(Option_t *options= 0) const {
+  void Print(Option_t *options= 0) const override {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printAddress(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printAddress(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
   virtual void printMetaArgs(std::ostream& /*os*/) const {} ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
-  virtual void printTree(std::ostream& os, TString indent="") const ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printTree(std::ostream& os, TString indent="") const override ;
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
 
   // Accessors to attributes
   void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
@@ -365,8 +389,8 @@ public:
   RooLinkedList getCloningAncestors() const ;
 
   // Sorting
-  Int_t Compare(const TObject* other) const ;
-  virtual Bool_t IsSortable() const {
+  Int_t Compare(const TObject* other) const override ;
+  Bool_t IsSortable() const override {
     // Object is sortable in ROOT container class
     return kTRUE ;
   }
@@ -443,8 +467,8 @@ public:
       return kTRUE ;
     case Auto:
       if (_valueDirty) {
-	_valueDirty = kFALSE ;
-	return isDerived();
+   _valueDirty = kFALSE ;
+   return isDerived();
       }
       return kFALSE ;
     }
@@ -463,9 +487,9 @@ public:
       return kTRUE ;
     case Auto:
       if (_valueDirty || _shapeDirty) {
-	_shapeDirty = kFALSE ;
-	_valueDirty = kFALSE ;
-	return isDerived();
+   _shapeDirty = kFALSE ;
+   _valueDirty = kFALSE ;
+   return isDerived();
       }
       _shapeDirty = kFALSE ;
       _valueDirty = kFALSE ;
@@ -502,6 +526,12 @@ public:
   RooExpensiveObjectCache& expensiveObjectCache() const ;
   virtual void setExpensiveObjectCache(RooExpensiveObjectCache &cache) { _eocache = &cache; }
 
+  /// Overwrite the current value stored in this object, making it look like this object computed that value.
+  // \param[in] value Value to store.
+  // \param[in] notifyClients Notify users of this object that they need to
+  /// recompute their values.
+  virtual void setCachedValue(double /*value*/, bool /*notifyClients*/ = true) {};
+
   /// @}
   ////////////////////////////////////////////////////////////////////////////
 
@@ -518,7 +548,26 @@ public:
   void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
   virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
 
-  Bool_t addOwnedComponents(const RooArgSet& comps) ;
+  // We want to support three cases here:
+  //   * passing a RooArgSet
+  //   * passing a RooArgList
+  //   * passing an initializer list
+  // Before, there was only an overload taking a RooArg set, which caused an
+  // implicit creation of a RooArgSet when a RooArgList was passed. This needs
+  // to be avoided, because if the passed RooArgList is owning the argumnets,
+  // this information will be lost with the copy. The solution is to have one
+  // overload that takes a general RooAbsCollection, and one overload for
+  // RooArgList that is invoked in the case of passing an initializer list.
+  bool addOwnedComponents(const RooAbsCollection& comps) ;
+  bool addOwnedComponents(RooAbsCollection&& comps) ;
+  bool addOwnedComponents(RooArgList&& comps) ;
+
+  // Transfer the ownership of one or more other RooAbsArgs to this RooAbsArg
+  // via a `std::unique_ptr`.
+  template<typename... Args_t>
+  bool addOwnedComponents(std::unique_ptr<Args_t>... comps) {
+    return addOwnedComponents({*comps.release() ...});
+  }
   const RooArgSet* ownedComponents() const { return _ownedComponents ; }
 
   void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
@@ -538,8 +587,8 @@ public:
     return _namePtr ;
   }
 
-  void SetName(const char* name) ;
-  void SetNameTitle(const char *name, const char *title) ;
+  void SetName(const char* name) override ;
+  void SetNameTitle(const char *name, const char *title) override ;
 
   virtual Bool_t importWorkspaceHook(RooWorkspace &ws)
   {
@@ -547,6 +596,10 @@ public:
      return kFALSE;
   };
 
+  virtual bool canComputeBatchWithCuda() const { return false; }
+  virtual bool isReducerNode() const { return false; }
+
+  operator RooBatchCompute::DataKey() const { return RooBatchCompute::DataKey::create(this); }
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
@@ -582,7 +635,8 @@ protected:
 
 
 private:
-  void addParameters(RooArgSet& params, const RooArgSet* nset=0, Bool_t stripDisconnected=kTRUE) const;
+  void addParameters(RooAbsCollection& params, const RooArgSet* nset = nullptr, bool stripDisconnected = true) const;
+  std::size_t getParametersSizeEstimate(const RooArgSet* nset = nullptr) const;
 
   RefCountListLegacyIterator_t * makeLegacyIterator(const RefCountList_t& list) const;
 
@@ -604,18 +658,18 @@ private:
   RefCountList_t _clientListValue; // subset of clients that requested value dirty flag propagation
 
   RooRefArray _proxyList        ; // list of proxies
-  std::deque<RooAbsCache*> _cacheList ; // list of caches
+
+  std::vector<RooAbsCache*> _cacheList ; //! list of caches
 
 
   // Proxy management
   friend class RooAddModel ;
   friend class RooArgProxy ;
-  friend class RooSetProxy ;
-  friend class RooListProxy ;
+  template<class RooCollection_t>
+  friend class RooCollectionProxy;
   friend class RooObjectFactory ;
   friend class RooHistPdf ;
   friend class RooHistFunc ;
-  friend class RooHistFunc2 ;
   void registerProxy(RooArgProxy& proxy) ;
   void registerProxy(RooSetProxy& proxy) ;
   void registerProxy(RooListProxy& proxy) ;
@@ -654,6 +708,12 @@ private:
   friend std::istream& operator>>(std::istream& is, RooAbsArg &arg) ;
   friend void RooRefArray::Streamer(TBuffer&);
 
+  struct ProxyListCache {
+    std::vector<RooAbsProxy*> cache;
+    bool isDirty = true;
+  };
+  ProxyListCache _proxyListCache; //! cache of the list of proxies. Avoids type casting.
+
   // Debug stuff
   static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
   static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
@@ -681,7 +741,7 @@ private:
 
   mutable RooExpensiveObjectCache* _eocache{nullptr}; // Pointer to global cache manager for any expensive components created by this object
 
-  mutable TNamed* _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
+  mutable const TNamed * _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
   Bool_t _isConstant ; //! Cached isConstant status
 
   mutable Bool_t _localNoInhibitDirty ; //! Prevent 'AlwaysDirty' mode for this node
@@ -701,7 +761,7 @@ private:
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
   /// \endcond
 
-  ClassDef(RooAbsArg,7) // Abstract variable
+  ClassDefOverride(RooAbsArg,8) // Abstract variable
 };
 
 std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);

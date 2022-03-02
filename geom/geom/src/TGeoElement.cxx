@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TGeoElement
-\ingroup Geometry_classes
+\ingroup Materials_classes
 Base class for chemical elements
 */
 
@@ -251,16 +251,21 @@ TGeoElementTable *TGeoElement::GetElementTable()
 void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
 {
    if (!fIsotopes) {
-      Fatal("AddIsotope", "Cannot add isotopes to normal elements. Use constructor with number of isotopes.");
-      return;
+      fNisotopes = 1;
+      fIsotopes = new TObjArray();
+      fAbundances = new Double_t[1];
    }
    Int_t ncurrent = 0;
    TGeoIsotope *isocrt;
    for (ncurrent=0; ncurrent<fNisotopes; ncurrent++)
       if (!fIsotopes->At(ncurrent)) break;
    if (ncurrent==fNisotopes) {
-      Error("AddIsotope", "All %d isotopes of element %s already defined", fNisotopes, GetName());
-      return;
+      // User requested overwriting a standard element - we need to extend dynamically the support arrays
+      Double_t *abundances = new Double_t[fNisotopes + 1];
+      memcpy(abundances, fAbundances, fNisotopes * sizeof(Double_t));
+      delete[] fAbundances;
+      fAbundances = abundances;
+      fNisotopes++;
    }
    // Check Z of the new isotope
    if ((fZ!=0) && (isotope->GetZ()!=fZ)) {

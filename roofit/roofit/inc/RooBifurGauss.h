@@ -28,11 +28,11 @@ public:
       RooAbsReal& _mean, RooAbsReal& _sigmaL, RooAbsReal& _sigmaR);
 
   RooBifurGauss(const RooBifurGauss& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooBifurGauss(*this,newname); }
-  inline virtual ~RooBifurGauss() { }
+  TObject* clone(const char* newname) const override { return new RooBifurGauss(*this,newname); }
+  inline ~RooBifurGauss() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
 
 protected:
@@ -42,13 +42,13 @@ protected:
   RooRealProxy sigmaL;
   RooRealProxy sigmaR;
 
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
-
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
 
-  ClassDef(RooBifurGauss,1) // Bifurcated Gaussian PDF
+  ClassDefOverride(RooBifurGauss,1) // Bifurcated Gaussian PDF
 };
 
 #endif

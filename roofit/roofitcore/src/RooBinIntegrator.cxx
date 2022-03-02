@@ -23,12 +23,8 @@ RooBinIntegrator computes the integral over a binned distribution by summing the
 contents of all bins.
 **/
 
-
-#include "RooFit.h"
-#include "Riostream.h"
-
-#include "TClass.h"
 #include "RooBinIntegrator.h"
+
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooNumber.h"
@@ -36,6 +32,11 @@ contents of all bins.
 #include "RooNumIntConfig.h"
 #include "RooNumIntFactory.h"
 #include "RooMsgService.h"
+#include "RunContext.h"
+#include "RooRealBinding.h"
+
+#include "TClass.h"
+#include "Math/Util.h"
 
 #include <assert.h>
 
@@ -72,11 +73,11 @@ RooBinIntegrator::RooBinIntegrator() : _numBins(0), _useIntegrandLimits(kFALSE),
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct integrator on given function binding binding
 
-RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) : 
+RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   RooAbsIntegrator(function)
 {
   _useIntegrandLimits= kTRUE;
-  assert(0 != integrand() && integrand()->isValid());
+  assert(_function && _function->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions
   _x = new Double_t[_function->getDimension()] ;
@@ -85,62 +86,88 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
   _xmin.resize(_function->getDimension()) ;
   _xmax.resize(_function->getDimension()) ;
 
-  for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
-    _xmin[i]= integrand()->getMinLimit(i);
-    _xmax[i]= integrand()->getMaxLimit(i);
-
-    // Retrieve bin configuration from integrand
-    list<Double_t>* tmp = integrand()->binBoundaries(i) ;
-    if (!tmp) {
-      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
-				     << i << " substituting default binning of " << _numBins << " bins" << endl ;
-      tmp = new list<Double_t> ;
-      for (Int_t j=0 ; j<=_numBins ; j++) {
-	tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
-      }
-    }
-    _binb.emplace_back(tmp->begin(), tmp->end());
-    delete tmp;
+  auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
+  if (realBinding) {
+    _evalData.reset(new RooBatchCompute::RunContext());
+    _evalDataOrig.reset(new RooBatchCompute::RunContext());
   }
-  checkLimits();
-
-} 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Construct integrator on given function binding binding
-
-RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) : 
-  RooAbsIntegrator(function)
-{
-  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;  
-  _useIntegrandLimits= kTRUE;
-  _numBins = (Int_t) configSet.getRealValue("numBins") ;
-  assert(0 != integrand() && integrand()->isValid());
-  
-  // Allocate coordinate buffer size after number of function dimensions
-  _x = new Double_t[_function->getDimension()] ;
 
   for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
-    _xmin.push_back(integrand()->getMinLimit(i));
-    _xmax.push_back(integrand()->getMaxLimit(i));
-    
+    _xmin[i]= _function->getMinLimit(i);
+    _xmax[i]= _function->getMaxLimit(i);
+
     // Retrieve bin configuration from integrand
-    list<Double_t>* tmp = integrand()->binBoundaries(i) ;
+    std::unique_ptr<list<Double_t>> tmp{ _function->binBoundaries(i) };
     if (!tmp) {
-      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #" 
+      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
           << i << " substituting default binning of " << _numBins << " bins" << endl ;
-      tmp = new list<Double_t> ;
+      tmp.reset( new list<Double_t> );
       for (Int_t j=0 ; j<=_numBins ; j++) {
         tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
       }
     }
     _binb.emplace_back(tmp->begin(), tmp->end());
-    delete tmp;
+
+    if (realBinding) {
+      const std::vector<double>& binb = _binb.back();
+      RooSpan<double> binCentres = _evalDataOrig->makeBatch(realBinding->observable(i), binb.size() - 1);
+      for (unsigned int ibin = 0; ibin < binb.size() - 1; ++ibin) {
+        binCentres[ibin] = (binb[ibin + 1] + binb[ibin]) / 2.;
+      }
+    }
+  }
+  checkLimits();
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Construct integrator on given function binding binding
+
+RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
+  RooAbsIntegrator(function)
+{
+  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
+  _useIntegrandLimits= kTRUE;
+  _numBins = (Int_t) configSet.getRealValue("numBins") ;
+  assert(_function && _function->isValid());
+
+  // Allocate coordinate buffer size after number of function dimensions
+  _x = new Double_t[_function->getDimension()] ;
+
+  auto realBinding = dynamic_cast<const RooRealBinding*>(_function);
+  if (realBinding) {
+    _evalData.reset(new RooBatchCompute::RunContext());
+    _evalDataOrig.reset(new RooBatchCompute::RunContext());
+  }
+
+  for (UInt_t i=0 ; i<_function->getDimension() ; i++) {
+    _xmin.push_back(_function->getMinLimit(i));
+    _xmax.push_back(_function->getMaxLimit(i));
+
+    // Retrieve bin configuration from integrand
+    std::unique_ptr<list<Double_t>> tmp{ _function->binBoundaries(i) };
+    if (!tmp) {
+      oocoutW((TObject*)0,Integration) << "RooBinIntegrator::RooBinIntegrator WARNING: integrand provide no binning definition observable #"
+          << i << " substituting default binning of " << _numBins << " bins" << endl ;
+      tmp.reset( new list<Double_t> );
+      for (Int_t j=0 ; j<=_numBins ; j++) {
+        tmp->push_back(_xmin[i]+j*(_xmax[i]-_xmin[i])/_numBins) ;
+      }
+    }
+    _binb.emplace_back(tmp->begin(), tmp->end());
+
+    if (realBinding) {
+      const std::vector<double>& binb = _binb.back();
+      RooSpan<double> binCentres = _evalDataOrig->makeBatch(realBinding->observable(i), binb.size() - 1);
+      for (unsigned int ibin = 0; ibin < binb.size() - 1; ++ibin) {
+        binCentres[ibin] = (binb[ibin + 1] + binb[ibin]) / 2.;
+      }
+    }
   }
 
   checkLimits();
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -169,7 +196,7 @@ RooBinIntegrator::~RooBinIntegrator()
 /// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax) 
+Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,Integration) << "RooBinIntegrator::setLimits: cannot override integrand's limits" << endl;
@@ -185,7 +212,7 @@ Bool_t RooBinIntegrator::setLimits(Double_t *xmin, Double_t *xmax)
 /// Check that our integration range is finite and otherwise return kFALSE.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooBinIntegrator::checkLimits() const 
+Bool_t RooBinIntegrator::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -205,33 +232,46 @@ Bool_t RooBinIntegrator::checkLimits() const
       return kFALSE ;
     }
   }
-  
+
   return kTRUE;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate numeric integral at given set of function binding parameters
-
-Double_t RooBinIntegrator::integral(const Double_t *) 
+/// Calculate numeric integral at given set of function binding parameters.
+Double_t RooBinIntegrator::integral(const Double_t *)
 {
   assert(isValid());
 
-  double sum = 0. ;
+  ROOT::Math::KahanSum<double> sum;
 
   if (_function->getDimension() == 1) {
     const std::vector<double>& binb = _binb[0];
 
-    for (unsigned int ibin=0; ibin < binb.size() - 1; ++ibin) {
-      const double xhi = binb[ibin + 1];
-      const double xlo = binb[ibin];
-      const double xcenter = (xhi+xlo)/2.;
-      const double binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
-      sum += binInt ;
-    }
-  }
+    if (_evalData) {
+      // Real bindings support batch evaluations. Can fast track now.
+      auto realBinding = static_cast<const RooRealBinding*>(integrand());
 
-  if (_function->getDimension()==2) {
+      // Reset computation results to only contain known bin centres, and keep all memory intact:
+      _evalData->spans = _evalDataOrig->spans;
+      auto results = realBinding->getValuesOfBoundFunction(*_evalData);
+      assert(results.size() == binb.size() - 1);
+
+      for (unsigned int ibin = 0; ibin < binb.size() - 1; ++ibin) {
+        const double width = binb[ibin + 1] - binb[ibin];
+        sum += results[ibin] * width;
+      }
+    } else {
+      // Need to use single-value interface
+      for (unsigned int ibin=0; ibin < binb.size() - 1; ++ibin) {
+        const double xhi = binb[ibin + 1];
+        const double xlo = binb[ibin];
+        const double xcenter = (xhi+xlo)/2.;
+        const double binInt = integrand(xvec(xcenter))*(xhi-xlo) ;
+        sum += binInt ;
+      }
+    }
+  } else if (_function->getDimension() == 2) {
     const std::vector<double>& binbx = _binb[0];
     const std::vector<double>& binby = _binb[1];
 
@@ -239,7 +279,7 @@ Double_t RooBinIntegrator::integral(const Double_t *)
       const double x1hi = binbx[ibin1 + 1];
       const double x1lo = binbx[ibin1];
       Double_t x1center = (x1hi+x1lo)/2 ;
-      
+
       for (unsigned int ibin2=0; ibin2 < binby.size() - 1; ++ibin2) {
         const double x2hi = binby[ibin2 + 1];
         const double x2lo = binby[ibin2];
@@ -249,9 +289,7 @@ Double_t RooBinIntegrator::integral(const Double_t *)
         sum += binInt ;
       }
     }
-  }
-
-  if (_function->getDimension()==3) {
+  } else if (_function->getDimension() == 3) {
     const std::vector<double>& binbx = _binb[0];
     const std::vector<double>& binby = _binb[1];
     const std::vector<double>& binbz = _binb[2];

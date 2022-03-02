@@ -19,6 +19,7 @@
 }
 
 .jsroot .h_tree a {
+    color: inherit;
     white-space: nowrap;
     text-decoration: none;
     vertical-align: top;
@@ -399,78 +400,174 @@
 }
 
 .jsroot svg:not(:root) {
-    overflow: hidden;
+   overflow: hidden;
 }
 
 
 /*--------------------------------------------------
-  context menu
+  standalone context menu
   --------------------------------------------------*/
 
-.jsroot_ctxmenu {
-    position: absolute;
-    min-width: 48px;
-    height: auto;
-    margin: 0;
-    margin-left: 0px;
-    margin-top: 0px;
-    border: 1px solid #999;
-    background: #F8F8F8;
-    box-shadow: 2px 2px 2px #AAA;
-    z-index: 101;
-    overflow: visible;
-    line-height: 14px;
+.jsroot_ctxt_container {
+   position: absolute;
+   top: 0;
+   user-select: none;
+   z-index: 100000;
+   background-color: rgb(250, 250, 250);
+   margin: 0;
+   padding: 0px;
+   width: auto;
+   min-width: 100px;
+   box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2);
+   border: 3px solid rgb(215, 215, 215);
+   font-family: Arial, helvetica, sans-serif, serif;
+   font-size: 13px;
+   color: rgb(0, 0, 0, 0.8);
 }
 
-.jsroot_ctxmenu li {
-    font-size: 12px;
-    padding: 1px;
-    white-space: nowrap;
+.jsroot_ctxt_divider {
+   width: 85%;
+   margin: 3px auto;
+   border: 1px solid rgb(0, 0, 0, 0.15);
 }
 
-.jsroot .fast_command {
-    width: 30px;
-    height: 30px;
-    margin: 2px;
-    padding: 2px;
-    border-width: 2px;
+.jsroot_ctxt_header {
+   background-color: lightblue;
+   padding: 3px 7px;
+   font-weight: bold;
+   border-bottom: 1px;
 }
 
-.jsroot .fast_command img {
-    max-width: 100%;
-    max-height: 100%;
+.jsroot_ctxt_text {
+   margin: 0;
+   padding: 3px 7px;
+   pointer-events: none;
+   white-space: nowrap;
+}
+
+.jsroot_ctxt_extraText {
+   margin: 0;
+   padding: 3px 7px;
+   color: rgb(0, 0, 0, 0.6);
+}
+
+.jsroot_ctxt_focus {
+   background-color: rgb(220, 220, 220);
+}
+
+.jsroot_ctxt_item:hover {
+   background-color: rgb(235, 235, 235);
+}
+
+/*--------------------------------------------------
+  Standalone dialog
+  --------------------------------------------------*/
+
+.jsroot_dialog_block {
+   z-index: 100000;
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   opacity: 0.2;
+   background-color: white;
+}
+
+.jsroot_dialog {
+   z-index: 100001;
+   position: absolute;
+   left: 50%;
+   top: 50%;
+}
+
+.jsroot_dialog_body {
+   position: relative;
+   left: -50%;
+   top: -50%;
+   border: solid green 3px;
+   padding: 5px;
+   display: flex;
+   flex-flow: column;
+   background-color: white;
+}
+
+.jsroot_dialog_header {
+   flex: 0 1 auto;
+   padding: 5px;
+}
+
+.jsroot_dialog_content {
+   flex: 1 1 auto;
+   padding: 5px;
+}
+
+.jsroot_dialog_footer {
+   flex: 0 1 auto;
+   padding: 5px;
+}
+
+.jsroot_dialog_button {
+   float: right;
+   margin-right: 1em;
 }
 
 /*--------------------------------------------------
   Flexible MDI display
   --------------------------------------------------*/
 
-.jsroot .flex_header {
-    height: 23px;
-    overflow: hidden;
+.jsroot_flex_top {
+   overflow: auto;
+   position: relative;
+   height: 100%;
+   width: 100%;
 }
 
-.jsroot .flex_header p {
-    margin: 1px;
-    float: left;
-    font-size: 14px;
-    padding-left: 5px;
+.jsroot_flex_btn {
+   float: right;
+   padding: 0;
+   width: 1.4em;
+   text-align: center;
+   font-size: 10px;
+   margin-top: 2px;
+   margin-right: 4px;
 }
 
-.jsroot .flex_draw {
-    overflow: hidden;
-    width: 100%;
-    height: calc(100% - 26px);
-    background: white;
+.jsroot_flex_header {
+   height: 23px;
+   overflow: hidden;
+   background-color: lightblue;
 }
 
-.jsroot .flex_frame {
-    border: 1px solid black;
-    box-shadow: 1px 1px 2px 2px #aaa;
+.jsroot_flex_header p {
+   margin: 1px;
+   float: left;
+   font-size: 14px;
+   padding-left: 5px;
 }
 
-.jsroot-flex-resizable-helper {
-    border: 2px dotted #00F;
+.jsroot_flex_draw {
+   overflow: hidden;
+   width: 100%;
+   height: calc(100% - 24px);
+}
+
+.jsroot_flex_frame {
+   border: 1px solid black;
+   box-shadow: 1px 1px 2px 2px #aaa;
+   background: white;
+}
+
+.jsroot_flex_resize {
+   position: absolute;
+   right: 2px;
+   bottom: 2px;
+   overflow: hidden;
+   cursor: nwse-resize;
+}
+
+.jsroot_flex_resizable_helper {
+   border: 2px dotted #00F;
 }
 
 /* stylesheet for floating browser */
@@ -584,12 +681,12 @@
 /* stylesheet for browser */
 
 .jsroot_browser {
-	pointer-events: none;
-	position: absolute;
-	left: 0;
-	top: 0;
-	bottom: 0;
-	right:0;
+   pointer-events: none;
+   position: absolute;
+   left: 0;
+   top: 0;
+   bottom: 0;
+   right:0;
    margin: 0;
    border: 0;
    overflow: hidden;
@@ -600,13 +697,27 @@
    font-size: 12px;
    font-family: Verdana;
    pointer-events: all;
+   box-sizing: initial;
 }
 
 .jsroot_browser_btns {
    pointer-events: all;
-	opacity: 0;
-	display:flex;
-	flex-direction: column;
+   opacity: 0;
+   display:flex;
+   flex-direction: column;
+}
+
+
+.jsroot_fastcmd_btn {
+   height: 32px;
+   width: 32px;
+   display: inline-block;
+   margin: 2px;
+   padding: 2px;
+   background-position: left 2px top 2px;
+   background-repeat: no-repeat;
+   background-size: 24px 24px;
+   border-color: inherit;
 }
 
 .jsroot_browser_btns:hover {
@@ -614,8 +725,8 @@
 }
 
 .jsroot_browser_hierarchy {
-	flex:1;
-	margin-top:2px;
+   flex:1;
+   margin-top:2px;
 }
 
 .jsroot_status_area {
@@ -637,8 +748,18 @@
    font-size: 20px;
 }
 
+.jsroot_browser_resize {
+   position: absolute;
+   right: 3px;
+   bottom: 3px;
+   margin-bottom: 0px;
+   margin-right: 0px;
+   opacity: 0.5;
+   cursor: se-resize;
+}
+
 .jsroot_float_browser {
-	border: solid 3px white;
+   border: solid 3px white;
 }
 
 .jsroot_draw_area {
@@ -646,6 +767,10 @@
    overflow: hidden;
    margin: 0;
    border: 0;
+}
+
+.jsroot_drag_area {
+   background-color: #007fff;
 }
 
 .jsroot_inspector {
@@ -683,12 +808,12 @@
 }
 
 .jsroot_h_separator {
-	cursor: ns-resize;
+   cursor: ns-resize;
    background-color: azure;
 }
 
 .jsroot_v_separator {
-	cursor: ew-resize;
+   cursor: ew-resize;
    background-color: azure;
 }
 
@@ -701,7 +826,7 @@
 }
 
 .jsroot .canvas_menu {
-	 float: left;
+    float: left;
     display: block;
     text-align: center;
     padding: 0px 5px;

@@ -95,7 +95,7 @@ RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nse
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooRealBinding::~RooRealBinding() 
+RooRealBinding::~RooRealBinding()
 {
   if (_xsave) delete[] _xsave ;
 }
@@ -108,14 +108,14 @@ RooRealBinding::~RooRealBinding()
 void RooRealBinding::saveXVec() const
 {
   if (!_xsave) {
-    _xsave = new Double_t[getDimension()] ;    
+    _xsave = new Double_t[getDimension()] ;
     RooArgSet* comps = _func->getComponents() ;
     RooFIter iter = comps->fwdIterator() ;
     RooAbsArg* arg ;
     while ((arg=iter.next())) {
       if (dynamic_cast<RooAbsReal*>(arg)) {
-	_compList.push_back((RooAbsReal*)(arg)) ;
-	_compSave.push_back(0) ;
+   _compList.push_back((RooAbsReal*)(arg)) ;
+   _compSave.push_back(0) ;
       }
     }
     delete comps ;
@@ -130,10 +130,10 @@ void RooRealBinding::saveXVec() const
     ++si;
     ++ci;
   }
-  
+
   for (UInt_t i=0 ; i<getDimension() ; i++) {
     _xsave[i] = _vars[i]->getVal() ;
-  } 
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -168,7 +168,7 @@ void RooRealBinding::restoreXVec() const
 /// as variables with the bound RooAbsReal function.
 /// \warning This will load as many values as the dimensionality of the function
 /// requires. The size of `xvector` is not checked.
-void RooRealBinding::loadValues(const Double_t xvector[]) const 
+void RooRealBinding::loadValues(const Double_t xvector[]) const
 {
   _xvecValid = kTRUE ;
   const char* range = RooNameReg::instance().constStr(_rangeName) ;
@@ -180,13 +180,13 @@ void RooRealBinding::loadValues(const Double_t xvector[]) const
     }
   }
 
-}  
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the bound RooAbsReal at the variable values provided in xvector
 
-Double_t RooRealBinding::operator()(const Double_t xvector[]) const 
+Double_t RooRealBinding::operator()(const Double_t xvector[]) const
 {
   assert(isValid());
   _ncall++ ;
@@ -197,6 +197,8 @@ Double_t RooRealBinding::operator()(const Double_t xvector[]) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the bound object at all locations indicated by the data in `coordinates`.
+/// If `_clipInvalid` is set, the function is set to zero at all points in the arguments
+/// that are not within the range of the observables.
 /// \param coordinates Vector of spans that contain the points where the function should be evaluated.
 /// The ordinal position in the vector corresponds to the ordinal position in the set of
 /// {observables, parameters} that were passed to the constructor.
@@ -233,8 +235,7 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
   if (!parametersValid)
     return {};
 
-  auto results = _func->getValues(*_evalData, _nset);
-  assert(coordinates.front().size() == results.size());
+  auto results = getValuesOfBoundFunction(*_evalData);
 
   if (_clipInvalid) {
     RooSpan<double> resultsWritable(_evalData->getWritableBatch(_func));
@@ -258,9 +259,21 @@ RooSpan<const double> RooRealBinding::getValues(std::vector<RooSpan<const double
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return lower limit on i-th variable 
+/// Evaluate the bound object at all locations indicated by the data in `evalData`.
+/// \see RooAbsReal::getValues().
+/// \param[in,out] evalData Struct with spans pointing to the data to be used for evaluation.
+/// The spans can either have a size of `n`, in which case a batch of `n` results is returned, or they can have
+/// a size of 1. In the latter case, the value in the span is broadcast to all `n` events.
+/// \return Batch of function values for each coordinate given in the input spans.
+RooSpan<const double> RooRealBinding::getValuesOfBoundFunction(RooBatchCompute::RunContext& evalData) const {
+  return _func->getValues(evalData, _nset);
+}
 
-Double_t RooRealBinding::getMinLimit(UInt_t index) const 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return lower limit on i-th variable
+
+Double_t RooRealBinding::getMinLimit(UInt_t index) const
 {
   assert(isValid());
 
@@ -269,9 +282,9 @@ Double_t RooRealBinding::getMinLimit(UInt_t index) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return upper limit on i-th variable 
+/// Return upper limit on i-th variable
 
-Double_t RooRealBinding::getMaxLimit(UInt_t index) const 
+Double_t RooRealBinding::getMaxLimit(UInt_t index) const
 {
   assert(isValid());
   return _vars[index]->getMax(RooNameReg::str(_rangeName));
@@ -281,17 +294,17 @@ Double_t RooRealBinding::getMaxLimit(UInt_t index) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return name of function
 
-const char* RooRealBinding::getName() const 
-{ 
-  return _func->GetName() ; 
-} 
+const char* RooRealBinding::getName() const
+{
+  return _func->GetName() ;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::list<Double_t>* RooRealBinding::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+std::list<Double_t>* RooRealBinding::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
 {
-  return _func->plotSamplingHint(obs,xlo,xhi) ; 
+  return _func->plotSamplingHint(obs,xlo,xhi) ;
 }
 
 

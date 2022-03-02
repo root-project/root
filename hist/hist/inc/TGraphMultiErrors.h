@@ -41,16 +41,16 @@ protected:
    std::vector<TAttFill> fAttFill;      ///<  The AttFill attributes of the different errors
    std::vector<TAttLine> fAttLine;      ///<  The AttLine attributes of the different errors
 
-   virtual Double_t **Allocate(Int_t size);
+   Double_t **Allocate(Int_t size) override;
    Bool_t CtorAllocate();
 
-   virtual void CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend, Int_t obegin);
-   virtual Bool_t CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin);
-   virtual void FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE);
+   void CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t iend, Int_t obegin) override;
+   Bool_t CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin) override;
+   void FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE) override;
 
    void CalcYErrorsSum() const;
-   virtual Bool_t DoMerge(const TGraph *tg);
-   virtual void SwapPoints(Int_t pos1, Int_t pos2);
+   Bool_t DoMerge(const TGraph *tg) override;
+   void SwapPoints(Int_t pos1, Int_t pos2) override;
 
 public:
    enum ESummationModes {
@@ -117,30 +117,30 @@ public:
    TGraphMultiErrors(const TH1 *th, Int_t ne = 1);
    TGraphMultiErrors(const TH1 *pass, const TH1 *total, Int_t ne = 1, Option_t *option = "");
 
-   virtual ~TGraphMultiErrors();
+   ~TGraphMultiErrors() override;
 
    virtual void AddYError(Int_t np, const Double_t *eyL = nullptr, const Double_t *eyH = nullptr);
-   virtual void Apply(TF1 *f);
+   void Apply(TF1 *f) override;
    virtual void BayesDivide(const TH1 *pass, const TH1 *total, Option_t *opt = "");
    void Divide(const TH1 *pass, const TH1 *total, Option_t *opt = "cp");
-   virtual void ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
+   void ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const override;
    virtual void DeleteYError(Int_t e);
 
-   virtual Double_t GetErrorX(Int_t i) const;
-   virtual Double_t GetErrorY(Int_t i) const;
+   Double_t GetErrorX(Int_t i) const override;
+   Double_t GetErrorY(Int_t i) const override;
    virtual Double_t GetErrorY(Int_t i, Int_t e) const;
 
-   virtual Double_t GetErrorXlow(Int_t i) const;
-   virtual Double_t GetErrorXhigh(Int_t i) const;
-   virtual Double_t GetErrorYlow(Int_t i) const;
-   virtual Double_t GetErrorYhigh(Int_t i) const;
+   Double_t GetErrorXlow(Int_t i) const override;
+   Double_t GetErrorXhigh(Int_t i) const override;
+   Double_t GetErrorYlow(Int_t i) const override;
+   Double_t GetErrorYhigh(Int_t i) const override;
    virtual Double_t GetErrorYlow(Int_t i, Int_t e) const;
    virtual Double_t GetErrorYhigh(Int_t i, Int_t e) const;
 
-   virtual Double_t *GetEXlow() const { return fExL; }
-   virtual Double_t *GetEXhigh() const { return fExH; }
-   virtual Double_t *GetEYlow() const;
-   virtual Double_t *GetEYhigh() const;
+   Double_t *GetEXlow() const override { return fExL; }
+   Double_t *GetEXhigh() const override { return fExH; }
+   Double_t *GetEYlow() const override;
+   Double_t *GetEYhigh() const override;
    virtual Double_t *GetEYlow(Int_t e);
    virtual Double_t *GetEYhigh(Int_t e);
 
@@ -164,8 +164,9 @@ public:
    Int_t GetSumErrorsMode() const { return fSumErrorsMode; }
    Int_t GetNYErrors() const { return fNYErrors; }
 
-   virtual void Print(Option_t *chopt = "") const;
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void Print(Option_t *chopt = "") const override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void Scale(Double_t c1=1., Option_t *option="y") override; // *MENU*
 
    virtual void SetPointError(Double_t exL, Double_t exH, Double_t eyL1, Double_t eyH1, Double_t eyL2 = 0.,
                               Double_t eyH2 = 0., Double_t eyL3 = 0., Double_t eyH3 = 0.); // *MENU*
@@ -208,7 +209,7 @@ public:
    virtual void SetLineStyle(Int_t e, Style_t lstyle);
    virtual void SetLineWidth(Int_t e, Width_t lwidth);
 
-   ClassDef(TGraphMultiErrors, 1) // A Graph with asymmetric error bars and multiple y error dimensions
+   ClassDefOverride(TGraphMultiErrors, 1) // A Graph with asymmetric error bars and multiple y error dimensions
 };
 
 #endif // ROOT_TGraphMultiErrors

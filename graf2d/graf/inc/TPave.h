@@ -45,21 +45,21 @@ public:
    TPave &operator=(const TPave &src);
 
    void  Copy(TObject &pave) const;
-   virtual void  ConvertNDCtoPad();
-   virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void  Draw(Option_t *option="");
-   virtual void  DrawPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+   virtual void   ConvertNDCtoPad();
+   virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
+   virtual void   Draw(Option_t *option="");
+   virtual TPave *DrawPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                           Int_t bordersize=4 ,Option_t *option="br");
-   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   Int_t       GetBorderSize() const { return fBorderSize;}
-   Double_t    GetCornerRadius() const {return fCornerRadius;}
-   Option_t   *GetName() const {return fName.Data();}
-   Option_t   *GetOption() const {return fOption.Data();}
-   Int_t       GetShadowColor() const {return fShadowColor;}
-   Double_t    GetX1NDC() const {return fX1NDC;}
-   Double_t    GetX2NDC() const {return fX2NDC;}
-   Double_t    GetY1NDC() const {return fY1NDC;}
-   Double_t    GetY2NDC() const {return fY2NDC;}
+   virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   Int_t          GetBorderSize() const { return fBorderSize;}
+   Double_t       GetCornerRadius() const {return fCornerRadius;}
+   Option_t      *GetName() const {return fName.Data();}
+   Option_t      *GetOption() const {return fOption.Data();}
+   Int_t          GetShadowColor() const {return fShadowColor;}
+   Double_t       GetX1NDC() const {return fX1NDC;}
+   Double_t       GetX2NDC() const {return fX2NDC;}
+   Double_t       GetY1NDC() const {return fY1NDC;}
+   Double_t       GetY2NDC() const {return fY2NDC;}
    virtual ULong_t  Hash() const { return fName.Hash(); }
    virtual Bool_t   IsSortable() const { return kTRUE; }
    virtual void  ls(Option_t *option="") const;

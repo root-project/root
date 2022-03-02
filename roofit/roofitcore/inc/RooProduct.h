@@ -33,28 +33,31 @@ public:
   RooProduct(const char *name, const char *title, const RooArgList& _prodSet) ;
 
   RooProduct(const RooProduct& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
+
+  void addTerm(RooAbsArg* term);
+
+  TObject* clone(const char* newname) const override { return new RooProduct(*this, newname); }
+  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                                                    const RooArgSet* normSet,
-                                                   const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const;
+                                                   const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
 
 
   RooArgList components() { RooArgList tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
 
-  virtual ~RooProduct() ;
+  ~RooProduct() override ;
 
   class ProdMap ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override ;
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const ;
+  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override ;
+  Bool_t isBinnedDistribution(const RooArgSet& obs) const override ;
 
-  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
-  virtual void setCacheAndTrackHints(RooArgSet&) ;
+  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
+  void setCacheAndTrackHints(RooArgSet&) override ;
 
 protected:
 
@@ -63,25 +66,24 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-      virtual ~CacheElem();
+      ~CacheElem() override;
       // Payload
       RooArgList _prodList ;
       RooArgList _ownedList ;
-      virtual RooArgList containedArgs(Action) ;
+      RooArgList containedArgs(Action) override ;
   };
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
-                                                                                                                                                             
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+
 
   Double_t calculate(const RooArgList& partIntList) const;
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;
   Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=0) const;
-    
 
-
-
-  ClassDef(RooProduct,2) // Product of RooAbsReal and/or RooAbsCategory terms
+  ClassDefOverride(RooProduct,3) // Product of RooAbsReal and/or RooAbsCategory terms
 };
 
 #endif

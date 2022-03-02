@@ -182,7 +182,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   }
   if(bad)
   {
-    cout << "Roo2DKeysPdf::Roo2DKeysPdf Unable to initilize object; incompatible RooDataSet doesn't contain"<<endl;
+    cout << "Roo2DKeysPdf::Roo2DKeysPdf Unable to initialize object; incompatible RooDataSet doesn't contain"<<endl;
     cout << "                           all of the RooAbsReal arguments"<<endl;
     return 1;
   }
@@ -377,9 +377,9 @@ Double_t Roo2DKeysPdf::evaluateFull(Double_t thisX, Double_t thisY) const
       if(_hy[j] != 0.0) zy = exp(-0.5*ry2*ry2)/_hy[j];
 
       zx += highBoundaryCorrection(thisX, _hx[j], x.max(), _x[j])
- 	 +   lowBoundaryCorrection(thisX, _hx[j], x.min(), _x[j]);
+    +   lowBoundaryCorrection(thisX, _hx[j], x.min(), _x[j]);
       zy += highBoundaryCorrection(thisY, _hy[j], y.max(), _y[j])
- 	 +   lowBoundaryCorrection(thisY, _hy[j], y.min(), _y[j]);
+    +   lowBoundaryCorrection(thisY, _hy[j], y.min(), _y[j]);
       f += zy * zx;
       //      f += _n * zy * zx; // ooops this is a normalisation factor :(
     }

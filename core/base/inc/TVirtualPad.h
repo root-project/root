@@ -181,6 +181,7 @@ public:
    virtual void     Print(const char *filename, Option_t *option) = 0;
    virtual void     Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2) = 0;
    virtual void     RangeAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) = 0;
+   virtual void     RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
            void     RecursiveRemove(TObject *obj) override = 0;
    virtual void     RedrawAxis(Option_t *option="") = 0;
    virtual void     ResetView3D(TObject *view=0) = 0;

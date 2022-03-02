@@ -35,21 +35,21 @@ public:
   RooXYChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataSet& data, RooRealVar& yvar, Bool_t integrate=kFALSE) ;
   RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& data, Bool_t integrate=kFALSE) ;
   RooXYChi2Var(const char *name, const char* title, RooAbsPdf& extPdf, RooDataSet& data, RooRealVar& yvar, Bool_t integrate=kFALSE) ;
-  
-  RooXYChi2Var(const RooXYChi2Var& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooXYChi2Var(*this,newname); }
 
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
-                                      const RooArgSet&, RooAbsTestStatistic::Configuration const&) {
+  RooXYChi2Var(const RooXYChi2Var& other, const char* name=0);
+  TObject* clone(const char* newname) const override { return new RooXYChi2Var(*this,newname); }
+
+  RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
+                                      const RooArgSet&, RooAbsTestStatistic::Configuration const&) override {
     // Virtual constructor
     return new RooXYChi2Var(name,title,pdf,(RooDataSet&)adata) ;
   }
-  
-  virtual ~RooXYChi2Var();
 
-  virtual Double_t defaultErrorLevel() const { 
+  ~RooXYChi2Var() override;
+
+  Double_t defaultErrorLevel() const override {
     // The default error level for MINUIT error analysis for a chi^2 is 1.0
-    return 1.0 ; 
+    return 1.0 ;
   }
 
   RooNumIntConfig& binIntegratorConfig() { return _intConfig ; }
@@ -57,34 +57,34 @@ public:
 
 protected:
 
-  Bool_t allowFunctionCache() { 
+  Bool_t allowFunctionCache() override {
     // Disable function (component) caching if integration is requested as the function
     // will be evaluated at coordinates other than the points in the dataset
-    return !_integrate ; 
+    return !_integrate ;
   }
 
-  RooArgSet requiredExtraObservables() const ;
+  RooArgSet requiredExtraObservables() const override ;
 
-  Double_t fy() const ; 
+  Double_t fy() const ;
 
-  Bool_t _extended ; // Is the input function and extended p.d.f.
-  Bool_t _integrate ; // Is integration over the bin volume requested
- 
-  RooRealVar* _yvar ; // Y variable if so designated
-  RooArgSet _rrvArgs ; // Set of real-valued observables
-  TIterator* _rrvIter ; //! Iterator over set of real-valued observables
+  Bool_t _extended ; ///< Is the input function and extended p.d.f.
+  Bool_t _integrate ; ///< Is integration over the bin volume requested
+
+  RooRealVar* _yvar ; ///< Y variable if so designated
+  RooArgSet _rrvArgs ; ///< Set of real-valued observables
+  TIterator* _rrvIter ; ///<! Iterator over set of real-valued observables
 
   void initialize() ;
   void initIntegrator() ;
   Double_t xErrorContribution(Double_t ydata) const ;
 
-  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const ;
+  Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override ;
 
-  RooNumIntConfig   _intConfig ; // Numeric integrator configuration for integration of function over bin
-  RooAbsReal*       _funcInt ; //! Function integral
-  std::list<RooAbsBinning*> _binList ; //! Bin ranges
+  RooNumIntConfig   _intConfig ; ///< Numeric integrator configuration for integration of function over bin
+  RooAbsReal*       _funcInt ; ///<! Function integral
+  std::list<RooAbsBinning*> _binList ; ///<! Bin ranges
 
-  ClassDef(RooXYChi2Var,1) // Chi^2 function of p.d.f w.r.t a unbinned dataset with X and Y values
+  ClassDefOverride(RooXYChi2Var,1) // Chi^2 function of p.d.f w.r.t a unbinned dataset with X and Y values
 };
 
 

@@ -39,7 +39,7 @@ namespace RooStats {
 
 
 
-    virtual HypoTestInverterResult* GetInterval() const { return fResults; } ;
+    HypoTestInverterResult* GetInterval() const override { return fResults; } ;
 
     bool RunAutoScan( double xMin, double xMax, double target, double epsilon=0.005, unsigned int numAlgorithm=0 );
 
@@ -49,28 +49,28 @@ namespace RooStats {
 
     void UseCLs( bool on = true) { fUseCLs = on; if (fResults) fResults->UseCLs(on);   }
 
-    virtual void  SetData(RooAbsData &) { } // not needed
+    void  SetData(RooAbsData &) override { } // not needed
 
-    virtual void SetModel(const ModelConfig &) { } // not needed
+    void SetModel(const ModelConfig &) override { } // not needed
 
-    // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-     virtual void SetTestSize(Double_t size) {fSize = size; if (fResults) fResults->SetTestSize(size); }
-    // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-    virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
-    // Get the size of the test (eg. rate of Type I error)
-    virtual Double_t Size() const {return fSize;}
-    // Get the Confidence level for the test
-    virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+    /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
+     void SetTestSize(Double_t size) override {fSize = size; if (fResults) fResults->SetTestSize(size); }
+    /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
+    void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
+    /// Get the size of the test (eg. rate of Type I error)
+    Double_t Size() const override {return fSize;}
+    /// Get the Confidence level for the test
+    Double_t ConfidenceLevel()  const override {return 1.-fSize;}
 
-    // destructor
-    virtual ~HypoTestInverterOriginal() ;
+    /// destructor
+    ~HypoTestInverterOriginal() override ;
 
   private:
 
     void CreateResults();
 
-    HypoTestCalculator* fCalculator0;   // pointer to the calculator passed in the constructor
-    RooRealVar* fScannedVariable;     // pointer to the constrained variable
+    HypoTestCalculator* fCalculator0; ///< pointer to the calculator passed in the constructor
+    RooRealVar* fScannedVariable;     ///< pointer to the constrained variable
     HypoTestInverterResult* fResults;
 
     bool fUseCLs;
@@ -78,7 +78,7 @@ namespace RooStats {
 
   protected:
 
-    ClassDef(HypoTestInverterOriginal,1)  // HypoTestInverterOriginal class
+    ClassDefOverride(HypoTestInverterOriginal,1)  // HypoTestInverterOriginal class
 
   };
 }

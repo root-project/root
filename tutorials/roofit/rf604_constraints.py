@@ -26,62 +26,43 @@ gauss = ROOT.RooGaussian("gauss", "gauss(x,m,s)", x, m, s)
 poly = ROOT.RooPolynomial("poly", "poly(x)", x)
 
 # model = f*gauss + (1-f)*poly
-f = ROOT.RooRealVar("f", "f", 0.5, 0., 1.)
-model = ROOT.RooAddPdf(
-    "model",
-    "model",
-    ROOT.RooArgList(
-        gauss,
-        poly),
-    ROOT.RooArgList(f))
+f = ROOT.RooRealVar("f", "f", 0.5, 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "model", [gauss, poly], [f])
 
 # Generate small dataset for use in fitting below
-d = model.generate(ROOT.RooArgSet(x), 50)
+d = model.generate({x}, 50)
 
 # Create constraint pdf
 # -----------------------------------------
 
 # Construct Gaussian constraint pdf on parameter f at 0.8 with
 # resolution of 0.1
-fconstraint = ROOT.RooGaussian(
-    "fconstraint",
-    "fconstraint",
-    f,
-    ROOT.RooFit.RooConst(0.8),
-    ROOT.RooFit.RooConst(0.1))
+fconstraint = ROOT.RooGaussian("fconstraint", "fconstraint", f, ROOT.RooFit.RooConst(0.8), ROOT.RooFit.RooConst(0.1))
 
 # Method 1 - add internal constraint to model
 # -------------------------------------------------------------------------------------
 
-# Multiply constraint term with regular pdf using ROOT.RooProdPdf
-# Specify in fitTo() that internal constraints on parameter f should be
-# used
+# Multiply constraint term with regular pdf using ROOT.RooProdPdf Specify in
+# fitTo() that internal constraints on parameter f should be used
 
 # Multiply constraint with pdf
-modelc = ROOT.RooProdPdf(
-    "modelc", "model with constraint", ROOT.RooArgList(model, fconstraint))
+modelc = ROOT.RooProdPdf("modelc", "model with constraint", [model, fconstraint])
 
 # Fit model (without use of constraint term)
-r1 = model.fitTo(d, ROOT.RooFit.Save())
+r1 = model.fitTo(d, Save=True, PrintLevel=-1)
 
 # Fit modelc with constraint term on parameter f
-r2 = modelc.fitTo(
-    d,
-    ROOT.RooFit.Constrain(
-        ROOT.RooArgSet(f)),
-    ROOT.RooFit.Save())
+r2 = modelc.fitTo(d, Constrain={f}, Save=True, PrintLevel=-1)
 
 # Method 2 - specify external constraint when fitting
 # ------------------------------------------------------------------------------------------
 
 # Construct another Gaussian constraint pdf on parameter f at 0.8 with
 # resolution of 0.1
-fconstext = ROOT.RooGaussian("fconstext", "fconstext", f, ROOT.RooFit.RooConst(
-    0.2), ROOT.RooFit.RooConst(0.1))
+fconstext = ROOT.RooGaussian("fconstext", "fconstext", f, ROOT.RooFit.RooConst(0.2), ROOT.RooFit.RooConst(0.1))
 
 # Fit with external constraint
-r3 = model.fitTo(d, ROOT.RooFit.ExternalConstraints(
-    ROOT.RooArgSet(fconstext)), ROOT.RooFit.Save())
+r3 = model.fitTo(d, ExternalConstraints={fconstext}, Save=True, PrintLevel=-1)
 
 # Print the fit results
 print("fit result without constraint (data generated at f=0.5)")

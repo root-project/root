@@ -48,16 +48,16 @@ class TTensorDataLoader<AData, TReference<AReal>> {
 private:
    using BatchIterator_t = TTensorBatchIterator<AData, TReference<AReal>>;
 
-   const AData &fData; ///< The data that should be loaded in the batches.
-   
+   const AData &fData;      ///< The data that should be loaded in the batches.
+
    size_t fNSamples;        ///< The total number of samples in the dataset.
-   //size_t fBatchSize;       ///< The size of a batch.
+   //size_t fBatchSize;     ///< The size of a batch.
    size_t fBatchDepth;      ///< The number of matrices in the tensor.
    size_t fBatchHeight;     ///< The number od rows in each matrix.
    size_t fBatchWidth;      ///< The number of columns in each matrix.
    size_t fNOutputFeatures; ///< The number of outputs from the classifier/regressor.
    size_t fBatchIndex;      ///< The index of the batch when there are multiple batches in parallel.
-   
+
    std::vector<size_t> fInputShape;     ///< Defines the batch depth, no. of channels and spatial dimensions of an input tensor
 
    std::vector<TMatrixT<AReal>> inputTensor; ///< The 3D tensor used to keep the input data.
@@ -68,8 +68,8 @@ private:
 
 public:
    /*! Constructor. */
-   TTensorDataLoader(const AData &data, size_t nSamples, size_t batchDepth, 
-                     size_t batchHeight, size_t batchWidth, size_t nOutputFeatures, 
+   TTensorDataLoader(const AData &data, size_t nSamples, size_t batchDepth,
+                     size_t batchHeight, size_t batchWidth, size_t nOutputFeatures,
                      std::vector<size_t> inputShape, size_t nStreams = 1);
 
    TTensorDataLoader(const TTensorDataLoader &) = default;
@@ -81,10 +81,10 @@ public:
     *  the architecture-specific backend. */
    void CopyTensorInput(std::vector<TMatrixT<AReal>> &tensor, IndexIterator_t sampleIterator);
    /** Copy output matrix into the given host buffer. Function to be specialized
-    * by the architecture-spcific backend. */
+    * by the architecture-specific backend. */
    void CopyTensorOutput(TMatrixT<AReal> &matrix, IndexIterator_t sampleIterator);
    /** Copy weight matrix into the given host buffer. Function to be specialized
-    * by the architecture-spcific backend. */
+    * by the architecture-specific backend. */
    void CopyTensorWeights(TMatrixT<AReal> &matrix, IndexIterator_t sampleIterator);
 
    BatchIterator_t begin() { return BatchIterator_t(*this); }
@@ -106,7 +106,7 @@ public:
 // TTensorDataLoader Class.
 //______________________________________________________________________________
 template <typename AData, typename AReal>
-TTensorDataLoader<AData, TReference<AReal>>::TTensorDataLoader(const AData &data, size_t nSamples, size_t batchDepth, 
+TTensorDataLoader<AData, TReference<AReal>>::TTensorDataLoader(const AData &data, size_t nSamples, size_t batchDepth,
                                                                size_t batchHeight, size_t batchWidth, size_t nOutputFeatures,
                                                                std::vector<size_t> inputShape, size_t /* nStreams */)
    : fData(data), fNSamples(nSamples), fBatchDepth(batchDepth), fBatchHeight(batchHeight),

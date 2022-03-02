@@ -9,6 +9,11 @@ ROOT_GENERATE_DICTIONARY(ElementStructDict ElementStruct.h LINKDEF ElementStruct
 ROOT_ADD_GTEST(testTOffsetGeneration TOffsetGeneration.cxx ElementStruct.cxx ElementStructDict.cxx
   LIBRARIES RIO Tree MathCore
 )
+if(MSVC)
+  add_custom_command(TARGET testTOffsetGeneration POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libElementStructDict_rdict.pcm
+                                     ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libElementStructDict_rdict.pcm)
+endif()
 target_include_directories(testTOffsetGeneration PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 ROOT_STANDARD_LIBRARY_PACKAGE(SillyStruct NO_INSTALL_HEADERS HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/SillyStruct.h SOURCES SillyStruct.cxx LINKDEF SillyStructLinkDef.h DEPENDENCIES RIO)
 ROOT_ADD_GTEST(testBulkApi BulkApi.cxx LIBRARIES RIO Tree TreePlayer)
@@ -31,3 +36,6 @@ ROOT_ADD_GTEST(testTChainSaveAsCxx TChainSaveAsCxx.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(testTChainRegressions TChainRegressions.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(testTTreeTruncatedDatatypes TTreeTruncatedDatatypes.cxx LIBRARIES RIO Tree)
 ROOT_ADD_GTEST(testTTreeRegressions TTreeRegressions.cxx LIBRARIES RIO Tree)
+ROOT_ADD_GTEST(entrylist_addsublist entrylist_addsublist.cxx LIBRARIES RIO Tree)
+ROOT_ADD_GTEST(chain_setentrylist chain_setentrylist.cxx LIBRARIES RIO Tree)
+ROOT_ADD_GTEST(entrylist_enterrange entrylist_enterrange.cxx LIBRARIES RIO Tree)

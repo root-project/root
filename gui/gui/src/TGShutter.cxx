@@ -155,7 +155,7 @@ TGShutterItem *TGShutter::AddPage(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle shutter messages.
 
-Bool_t TGShutter::ProcessMessage(Long_t /*msg*/, Long_t parm1, Long_t /*parm2*/)
+Bool_t TGShutter::ProcessMessage(Longptr_t /*msg*/, Longptr_t parm1, Longptr_t /*parm2*/)
 {
    if (!fList) return kFALSE;
 

@@ -85,7 +85,8 @@
 #include "TError.h"
 #include "TClass.h"
 #include "TVirtualMutex.h"
-#include <ROOT/RMakeUnique.hxx>
+
+#include <memory>
 
 ClassImp(TXMLFile);
 
@@ -889,20 +890,20 @@ void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo *info)
 /// TXMLSetup::kSpecialized = 2
 ///    This is default layout of the file, when xml nodes names class names and data member
 ///    names are used. For instance:
-///          <TAttLine version="1">
-///            <fLineColor v="1"/>
-///            <fLineStyle v="1"/>
-///            <fLineWidth v="1"/>
-///          </TAttLine>
+///          `<TAttLine version="1">`
+///            `<fLineColor v="1"/>`
+///            `<fLineStyle v="1"/>`
+///            `<fLineWidth v="1"/>`
+///          `</TAttLine>`
 ///
 /// TXMLSetup::kGeneralized = 3
 ///    For this layout all nodes name does not depend from class definitions.
 ///    The same class looks like
-///          <Class name="TAttLine" version="1">
-///            <Member name="fLineColor" v="1"/>
-///            <Member name="fLineStyle" v="1"/>
-///            <Member name="fLineWidth" v="1"/>
-///          </Member>
+///          `<Class name="TAttLine" version="1">`
+///            `<Member name="fLineColor" v="1"/>`
+///            `<Member name="fLineStyle" v="1"/>`
+///            `<Member name="fLineWidth" v="1"/>`
+///          `</Member>`
 ///
 
 void TXMLFile::SetXmlLayout(EXMLLayout layout)
@@ -938,11 +939,11 @@ void TXMLFile::SetUsedDtd(Bool_t use)
 /// Specify usage of namespaces in xml file
 /// In current implementation every instrumented class in file gets its unique namespace,
 /// which is equal to name of class and refer to root documentation page like
-/// <TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">
+/// `<TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">`
 /// And xml node for class member gets its name as combination of class name and member name
-///            <TAttPad:fLeftMargin v="0.100000"/>
-///            <TAttPad:fRightMargin v="0.100000"/>
-///            <TAttPad:fBottomMargin v="0.100000"/>
+///            `<TAttPad:fLeftMargin v="0.100000"/>`
+///            `<TAttPad:fRightMargin v="0.100000"/>`
+///            `<TAttPad:fBottomMargin v="0.100000"/>`
 ///            and so on
 /// Usage of namespace increase size of xml file, but makes file more readable
 /// and allows to produce DTD in the case, when in several classes data member has same name

@@ -37,18 +37,18 @@ public:
 
   RooGenFitStudy(const char* name=0, const char* title=0) ;
   RooGenFitStudy(const RooGenFitStudy& other) ;
-  virtual ~RooGenFitStudy() ;
-  virtual RooAbsStudy* clone(const char* newname="") const { return new RooGenFitStudy(newname?newname:GetName(),GetTitle()) ; }
+  ~RooGenFitStudy() override ;
+  RooAbsStudy* clone(const char* newname="") const override { return new RooGenFitStudy(newname?newname:GetName(),GetTitle()) ; }
 
   void setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
   void setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
- 
-  virtual Bool_t attach(RooWorkspace& w) ;
-  virtual Bool_t initialize() ;
-  virtual Bool_t execute() ;
-  virtual Bool_t finalize() ;
 
-  void Print(Option_t *options= 0) const;
+  Bool_t attach(RooWorkspace& w) override ;
+  Bool_t initialize() override ;
+  Bool_t execute() override ;
+  Bool_t finalize() override ;
+
+  void Print(Option_t *options= 0) const override;
 
  protected:
 
@@ -57,21 +57,21 @@ public:
   std::string _genObsName ;
   std::string _fitPdfName ;
   std::string _fitObsName ;
-  RooLinkedList _genOpts ; 
+  RooLinkedList _genOpts ;
   RooLinkedList _fitOpts ;
 
-  RooAbsPdf* _genPdf ; //!
-  RooArgSet _genObs ;  //!
-  RooAbsPdf* _fitPdf ; //!
-  RooArgSet _fitObs ; //!
+  RooAbsPdf* _genPdf ; ///<!
+  RooArgSet _genObs ; ///<!
+  RooAbsPdf* _fitPdf ; ///<!
+  RooArgSet _fitObs ; ///<!
 
-  RooAbsPdf::GenSpec* _genSpec ; //!
-  RooRealVar* _nllVar ; //!
-  RooRealVar* _ngenVar ; //!
-  RooArgSet* _params ; //!
-  RooArgSet* _initParams; //!
-  
-  ClassDef(RooGenFitStudy,1) // Generate-and-Fit study module
+  RooAbsPdf::GenSpec* _genSpec ; ///<!
+  RooRealVar* _nllVar ; ///<!
+  RooRealVar* _ngenVar ; ///<!
+  RooArgSet* _params ; ///<!
+  RooArgSet* _initParams; ///<!
+
+  ClassDefOverride(RooGenFitStudy,1) // Generate-and-Fit study module
 } ;
 
 

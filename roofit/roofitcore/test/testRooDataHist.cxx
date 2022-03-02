@@ -15,11 +15,11 @@
 #include "TH2D.h"
 #include "TMath.h"
 #include "TFile.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include "gtest/gtest.h"
 
 #include <algorithm>
+#include <memory>
 
 /// ROOT-8163
 /// The RooDataHist warns that it has to adjust the binning of x to the next bin boundary

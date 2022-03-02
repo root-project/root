@@ -83,12 +83,12 @@ public:
                Bool_t sortInput = kTRUE);
 
   RooNDKeysPdf(const RooNDKeysPdf& other, const char* name=0);
-  virtual ~RooNDKeysPdf();
+  ~RooNDKeysPdf() override;
 
-  virtual TObject* clone(const char* newname) const { return new RooNDKeysPdf(*this,newname); }
+  TObject* clone(const char* newname) const override { return new RooNDKeysPdf(*this,newname); }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
+  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;
 
   inline void fixShape(Bool_t fix) {
     createPdf(kFALSE);
@@ -115,7 +115,7 @@ protected:
   RooListProxy _varList ;
   RooListProxy _rhoList;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
   void createPdf(Bool_t firstCall = kTRUE);
   void setOptions();
@@ -207,7 +207,7 @@ protected:
 
   RooChangeTracker *_tracker{nullptr}; //
 
-  ClassDef(RooNDKeysPdf, 1) // General N-dimensional non-parametric kernel estimation p.d.f
+  ClassDefOverride(RooNDKeysPdf, 1) // General N-dimensional non-parametric kernel estimation p.d.f
 };
 
 #endif

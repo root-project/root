@@ -28,11 +28,11 @@ public:
     // Default constructor
     // coverity[UNINIT_CTOR]
   } ;
-  virtual ~Roo1DTable();
+  ~Roo1DTable() override;
   Roo1DTable(const char *name, const char *title, const RooAbsCategory &cat);
   Roo1DTable(const Roo1DTable& other) ;
 
-  virtual void fill(RooAbsCategory& cat, Double_t weight=1.0) ;
+  void fill(RooAbsCategory& cat, Double_t weight=1.0) override ;
   Double_t get(const char* label, Bool_t silent=kFALSE) const ;
   Double_t getFrac(const char* label, Bool_t silent=kFALSE) const ;
   Double_t get(const int index, Bool_t silent=kFALSE) const ;
@@ -40,29 +40,29 @@ public:
   Double_t getOverflow() const ;
 
   // Printing interface (human readable)
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const override ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual Bool_t isIdentical(const RooTable& other) ;
+  Bool_t isIdentical(const RooTable& other, bool verbose) override ;
 
 protected:
 
-  
-  TObjArray _types ;             // Array of defined category states
-  std::vector<Double_t> _count ; // Array of counters for each state
-  Double_t  _total ;             // Total number of entries
-  Double_t  _nOverflow ;         // Number of overflow entries
 
-  ClassDef(Roo1DTable,1) // 1-dimensional table
+  TObjArray _types ;             ///< Array of defined category states
+  std::vector<Double_t> _count ; ///< Array of counters for each state
+  Double_t  _total ;             ///< Total number of entries
+  Double_t  _nOverflow ;         ///< Number of overflow entries
+
+  ClassDefOverride(Roo1DTable,1) // 1-dimensional table
 };
 
 #endif

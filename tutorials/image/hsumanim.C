@@ -2,7 +2,10 @@
 /// \ingroup tutorial_image
 /// \notebook
 /// This script is a slightly modified version of hsum.C.
-/// When run in batch mode, it produces an animated gif file.
+///
+/// At the end of this macro, after `c1->Modified();` calling `c1->Print("hsumanim.gif++");`
+/// will produce an animated gif file. The option "++" makes an infinite animation.
+/// The animated file `hsumanim.gif` can be visualized within a web browser
 ///
 /// \macro_image
 /// \macro_code
@@ -69,10 +72,6 @@ void hsumanim() {
    slider->SetRange(0,1);
    total->Draw("sameaxis"); // to redraw axis hidden by the fill area
    c1->Modified();
-   // make infinite animation by adding "++" to the file name
-   if (gROOT->IsBatch()) c1->Print("hsumanim.gif++");
-
-   //You can view the animated file hsumanim.gif with Netscape/IE or mozilla
 
    gBenchmark->Show("hsum");
 }

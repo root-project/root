@@ -11,9 +11,9 @@
  *              Large Gini Indices (maximum 0.5) mean , that the sample is well   *
  *              mixed (same amount of signal and bkg)                             *
  *              bkg. Small Indices mean, well separated.                          *
- *              general defniniton:                                               *
+ *              general definition:                                               *
  *              Gini(Sample M) = 1 - (c(1)/N)^2 - (c(2)/N)^2 .... - (c(k)/N)^2    *
- *              Where: M is a smaple of whatever N elements (events)              *
+ *              Where: M is a sample of whatever N elements (events)              *
  *                     that belong to K different classes                         *
  *                     c(k) is the number of elements that belong to class k      *
  *              for just Signal and Background classes this boils down to:        *

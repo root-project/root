@@ -20,7 +20,7 @@
 \ingroup Roofitcore
 
 RooExtendedTerm is a p.d.f with no observables that only introduces
-an extended ML term for a given number of expected events term when an extended ML 
+an extended ML term for a given number of expected events term when an extended ML
 is constructed.
 **/
 
@@ -69,7 +69,7 @@ RooExtendedTerm::RooExtendedTerm(const RooExtendedTerm& other, const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooExtendedTerm::~RooExtendedTerm() 
+RooExtendedTerm::~RooExtendedTerm()
 {
 }
 
@@ -77,7 +77,7 @@ RooExtendedTerm::~RooExtendedTerm()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return number of expected events from associated event count variable
 
-Double_t RooExtendedTerm::expectedEvents(const RooArgSet* /*nset*/) const 
+Double_t RooExtendedTerm::expectedEvents(const RooArgSet* /*nset*/) const
 {
   return _n ;
 }

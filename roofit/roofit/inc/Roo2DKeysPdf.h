@@ -28,9 +28,9 @@ public:
   Roo2DKeysPdf(const char *name, const char *title,
              RooAbsReal& xx, RooAbsReal &yy, RooDataSet& data, TString options = "a", Double_t widthScaleFactor = 1.0);
   Roo2DKeysPdf(const Roo2DKeysPdf& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new Roo2DKeysPdf(*this,newname); }
+  TObject* clone(const char* newname) const override { return new Roo2DKeysPdf(*this,newname); }
 
-  virtual ~Roo2DKeysPdf();
+  ~Roo2DKeysPdf() override;
 
 //load in a new dataset and re-calculate the PDF
 //return 0 if successful
@@ -78,7 +78,7 @@ public:
   RooRealProxy x;
   RooRealProxy y;
 
-  Double_t evaluate() const;
+  Double_t evaluate() const override;
 
 protected:
 
@@ -86,7 +86,7 @@ private:
   // these are used in calculating bandwidths for x and y
   Double_t evaluateFull(Double_t thisX, Double_t thisY) const;
   Double_t g(Double_t var1, Double_t * _var1, Double_t sigma1, Double_t var2,
-	     Double_t * _var2, Double_t sigma2) const;
+        Double_t * _var2, Double_t sigma2) const;
 
   //mirror corrections for the boundaries
   Double_t highBoundaryCorrection(Double_t thisVar, Double_t thisH, Double_t high, Double_t tVar) const;
@@ -118,7 +118,7 @@ private:
   Int_t      _verbosedebug;
   Int_t      _vverbosedebug;
 
-  ClassDef(Roo2DKeysPdf,0) // Two-dimensional kernel estimation p.d.f.
+  ClassDefOverride(Roo2DKeysPdf,0) // Two-dimensional kernel estimation p.d.f.
 };
 
 inline void  Roo2DKeysPdf::setWidthScaleFactor(Double_t widthScaleFactor) { _widthScaleFactor = widthScaleFactor; }

@@ -150,7 +150,6 @@ Fields of simple types with a Map() method will use that and thus expose zero-co
 // clang-format on
 template <typename T>
 class RNTupleView {
-   friend class RNTupleReader;
    friend class RNTupleViewCollection;
 
    using FieldT = RField<T>;
@@ -160,6 +159,8 @@ private:
    FieldT fField;
    /// Used as a Read() destination for fields that are not mappable
    Detail::RFieldValue fValue;
+
+public:
 
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
@@ -173,7 +174,6 @@ private:
       }
    }
 
-public:
    RNTupleView(const RNTupleView& other) = delete;
    RNTupleView(RNTupleView&& other) = default;
    RNTupleView& operator=(const RNTupleView& other) = delete;
@@ -202,6 +202,18 @@ public:
    operator()(const RClusterIndex &clusterIndex) {
       fField.Read(clusterIndex, &fValue);
       return *fValue.Get<T>();
+   }
+
+   template <typename C = T>
+   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C*>
+   MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fField.MapV(globalIndex, nItems);
+   }
+
+   template <typename C = T>
+   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C*>
+   MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fField.MapV(clusterIndex, nItems);
    }
 };
 

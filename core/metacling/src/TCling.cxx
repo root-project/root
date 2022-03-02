@@ -40,6 +40,7 @@ clang/LLVM technology.
 #include "TClassEdit.h"
 #include "TClassTable.h"
 #include "TClingCallbacks.h"
+#include "TClingDiagnostics.h"
 #include "TBaseClass.h"
 #include "TDataMember.h"
 #include "TMemberInspector.h"
@@ -663,7 +664,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 /// Find a template decl within N nested namespaces, 0<=N<inf
 /// Assumes 1 and only 1 template present and 1 and only 1 entity contained
-/// by the namespace. Example: ns1::ns2::..::nsN::myTemplate
+/// by the namespace. Example: `ns1::ns2::..::%nsN::%myTemplate`
 /// Returns nullptr in case of error
 
 static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)
@@ -1233,9 +1234,14 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       // FIXME: Hist is not a core module but is very entangled to MathCore and
       // causes issues.
       std::vector<std::string> FIXMEModules = {"Hist"};
+      clang::CompilerInstance &CI = *clingInterp.getCI();
+      clang::Preprocessor &PP = CI.getPreprocessor();
+      ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
+      if (MMap.findModule("RInterface"))
+         FIXMEModules.push_back("RInterface");
+
       LoadModules(FIXMEModules, clingInterp);
 
-      clang::CompilerInstance &CI = *clingInterp.getCI();
       GlobalModuleIndex *GlobalIndex = nullptr;
       // Conservatively enable platform by platform.
       bool supportedPlatform =
@@ -1274,10 +1280,8 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       if (GlobalIndex)
          GlobalIndex->getKnownModuleFileNames(KnownModuleFileNames);
 
-      clang::Preprocessor &PP = CI.getPreprocessor();
       std::vector<std::string> PendingModules;
       PendingModules.reserve(256);
-      ModuleMap &MMap = PP.getHeaderSearchInfo().getModuleMap();
       for (auto I = MMap.module_begin(), E = MMap.module_end(); I != E; ++I) {
          clang::Module *M = I->second;
          assert(M);
@@ -1360,11 +1364,13 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
+/// \param name name for TInterpreter
+/// \param title title for TInterpreter
 /// \param argv - array of arguments passed to the cling::Interpreter constructor
 ///               e.g. `-DFOO=bar`. The last element of the array must be `nullptr`.
 
 TCling::TCling(const char *name, const char *title, const char* const argv[])
-: TInterpreter(name, title), fMore(0), fGlobalsListSerial(-1), fMapfile(nullptr),
+: TInterpreter(name, title), fGlobalsListSerial(-1), fMapfile(nullptr),
   fRootmapFiles(nullptr), fLockProcessLine(true), fNormalizedCtxt(0),
   fPrevLoadedDynLibInfo(0), fClingCallbacks(0), fAutoLoadCallBack(0),
   fTransactionCount(0), fHeaderParsingOnDemand(true), fIsAutoParsingSuspended(kFALSE)
@@ -1397,6 +1403,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
       // Add include path to etc/cling.
       clingArgsStorage.push_back("-I" + interpInclude + "/cling");
 
+      // Add include path to etc/cling.
+      clingArgsStorage.push_back("-I" + interpInclude + "/cling/plugins/include");
+
       // Add the root include directory and etc/ to list searched by default.
       clingArgsStorage.push_back(std::string(("-I" + TROOT::GetIncludeDir()).Data()));
 
@@ -1417,6 +1426,16 @@ TCling::TCling(const char *name, const char *title, const char* const argv[])
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
+      // The -O1 optimization flag has nasty side effects on Windows (32 and 64 bit)
+      // See the GitHub issues #9809 and #9944
+      // TODO: to be reviewed after the upgrade of LLVM & Clang
+#ifndef _MSC_VER
+      clingArgsStorage.push_back("-O1");
+      // Disable optimized register allocation which is turned on automatically
+      // by -O1, but seems to require -O2 to not explode in run time.
+      clingArgsStorage.push_back("-mllvm");
+      clingArgsStorage.push_back("-optimize-regalloc=0");
+#endif
    }
 
    // Process externally passed arguments if present.
@@ -2001,7 +2020,7 @@ void TCling::ProcessClassesToUpdate()
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Inject the module named "modulename" into cling; load all headers.
-/// headers is a 0-terminated array of header files to #include after
+/// headers is a 0-terminated array of header files to `#include` after
 /// loading the module. The module is searched for in all $LD_LIBRARY_PATH
 /// entries (or %PATH% on Windows).
 /// This function gets called by the static initialization of dictionary
@@ -2430,7 +2449,7 @@ static int HandleInterpreterException(cling::MetaProcessor* metaProcessor,
    }
    catch (cling::InterpreterException& ex)
    {
-      Error("HandleInterpreterException", "%s.\n%s", ex.what(), "Execution of your code was aborted.");
+      Error("HandleInterpreterException", "%s\n%s", ex.what(), "Execution of your code was aborted.");
       ex.diagnose();
       compRes = cling::Interpreter::kFailure;
    }
@@ -3047,7 +3066,7 @@ void TCling::ClearStack()
 /// that could trigger a re-interpretation of the code. I.e. make cling
 /// behave like a compiler: no dynamic lookup, no input wrapping for
 /// subsequent execution, no automatic provision of declarations but just a
-/// plain #include.
+/// plain `#include`.
 /// Returns true on success, false on failure.
 
 bool TCling::Declare(const char* code)
@@ -3358,7 +3377,7 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
    // used to resolve symbols.
    cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
    if (!DLM->isLibraryLoaded(filename)) {
-      DLM->loadLibrary(filename, true /*permanent*/);
+      DLM->loadLibrary(filename, true /*permanent*/, true /*resolved*/);
    }
 
 #if defined(R__MACOSX)
@@ -3387,6 +3406,17 @@ void TCling::RegisterLoadedSharedLibrary(const char* filename)
        || strstr(filename, "/usr/lib/libAudioToolboxUtility")
        || strstr(filename, "/usr/lib/liboah")
        || strstr(filename, "/usr/lib/libRosetta")
+       || strstr(filename, "/usr/lib/libCoreEntitlements")
+       || strstr(filename, "/usr/lib/libssl.")
+       || strstr(filename, "/usr/lib/libcrypto.")
+       // These are candidates for suppression, too:
+       //   -lfakelink -lapple_nghttp2 -lnetwork -lsqlite3 -lenergytrace -lCoreEntitlements
+       //   -lMobileGestalt -lcoretls -lcoretls_cfhelpers -lxar.1 -lcompression -larchive.2
+       //   -lxml2.2 -lpcap.A -ldns_services -llzma.5 -lbz2.1.0 -liconv.2 -lcharset.1
+       //   -lCheckFix -lmecabra -lmecab -lgermantok -lThaiTokenizer -lChineseTokenizer
+       //   -lcmph -lutil -lapp_launch_measurement -lxslt.1 -lspindump -late -lexpat.1
+       //   -lAudioStatistics -lSMC -lperfcheck -lmis -lIOReport -lheimdal-asn1
+
        // "cannot link directly with dylib/framework, your binary is not an allowed client of
        // /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/
        // SDKs/MacOSX.sdk/usr/lib/libAudioToolboxUtility.tbd for architecture x86_64
@@ -3444,7 +3474,7 @@ Int_t TCling::Load(const char* filename, Bool_t system)
       = cling::DynamicLibraryManager::kLoadLibNotFound;
    if (!canonLib.empty()) {
       if (system)
-         res = DLM->loadLibrary(filename, system);
+         res = DLM->loadLibrary(filename, system, true);
       else {
          // For the non system libs, we'd like to be able to unload them.
          // FIXME: Here we lose the information about kLoadLibAlreadyLoaded case.
@@ -4061,7 +4091,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 /// (expected) error messages.  Currently the only way to avoid this is to
 /// specifically check that each level of nesting is already loaded.
 /// In case of templates the idea is that everything between the outer
-/// '<' and '>' has to be skipped, e.g.: aap<pippo<noot>::klaas>::a_class
+/// '<' and '>' has to be skipped, e.g.: `aap<pippo<noot>::klaas>::a_class`
 
 TInterpreter::ECheckClassInfo
 TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/)
@@ -4425,6 +4455,14 @@ void TCling::CreateListOfMethodArgs(TFunction* m) const
    m->fMethodArgs = arglist;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return whether we are waiting for more input either because the collected
+/// input contains unbalanced braces or last seen token was a `\` (backslash-newline)
+
+Int_t TCling::GetMore() const
+{
+   return fMetaProcessor->awaitingMoreInput();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a TClass for the given class.
@@ -4593,7 +4631,7 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
 /// Generate the dictionary for the C++ classes listed in the first
 /// argument (in a semi-colon separated list).
 /// 'includes' contains a semi-colon separated list of file to
-/// #include in the dictionary.
+/// `#include` in the dictionary.
 /// For example:
 /// ~~~ {.cpp}
 ///    gInterpreter->GenerateDictionary("vector<vector<float> >;list<vector<float> >","list;vector");
@@ -5522,11 +5560,11 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a resource table and read the (possibly) three resource files,
-/// i.e.\ $ROOTSYS/etc/system<name> (or ROOTETCDIR/system<name>), $HOME/<name>
-/// and $PWD/<name>. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You
+/// i.e. `$ROOTSYS/etc/system<name>` (or `ROOTETCDIR/system<name>`), `$HOME/<name>`
+/// and `$PWD/<name>`. ROOT always reads ".rootrc" (in TROOT::InitSystem()). You
 /// can read additional user defined resource files by creating additional TEnv
 /// objects. By setting the shell variable ROOTENV_NO_HOME=1 the reading of
-/// the $HOME/<name> resource file will be skipped. This might be useful in
+/// the `$HOME/<name>` resource file will be skipped. This might be useful in
 /// case the home directory resides on an automounted remote file system
 /// and one wants to avoid the file system from being mounted.
 
@@ -6890,7 +6928,7 @@ void TCling::InvalidateCachedDecl(const std::tuple<TListOfDataMembers*,
       // Try to invalidate enumerators (for unscoped enumerations).
       for (TIter I = E->GetConstants(); auto EC = (TEnumConstant *)I(); )
          RemoveAndInvalidateObject(LODM,
-      	       	         	   (TEnumConstant *)LODM.FindObject(EC->GetName()));
+                               (TEnumConstant *)LODM.FindObject(EC->GetName()));
 
       RemoveAndInvalidateObject(LOE, E);
    } else if (isa<RecordDecl>(D) || isa<NamespaceDecl>(D)) {
@@ -7569,6 +7607,28 @@ void TCling::SetErrmsgcallback(void* p) const
    Warning("SetErrmsgcallback", "Interface not available yet.");
 #endif
 #endif
+}
+
+void TCling::ReportDiagnosticsToErrorHandler(bool enable)
+{
+   if (enable) {
+      auto consumer = new TClingDelegateDiagnosticPrinter(
+         &fInterpreter->getDiagnostics().getDiagnosticOptions(),
+         fInterpreter->getCI()->getLangOpts(),
+         [] (clang::DiagnosticsEngine::Level Level, const std::string &Info) {
+            if (Level == clang::DiagnosticsEngine::Warning) {
+               ::Warning("cling", "%s", Info.c_str());
+            } else if (Level == clang::DiagnosticsEngine::Error
+                       || Level == clang::DiagnosticsEngine::Fatal) {
+               ::Error("cling", "%s", Info.c_str());
+            } else {
+               ::Info("cling", "%s", Info.c_str());
+            }
+         });
+      fInterpreter->replaceDiagnosticConsumer(consumer, /*Own=*/true);
+   } else {
+      fInterpreter->replaceDiagnosticConsumer(nullptr);
+   }
 }
 
 

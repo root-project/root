@@ -18,6 +18,7 @@
 #define ROO_CMD_CONFIG
 
 #include "TObject.h"
+#include "TObjString.h"
 #include "TString.h"
 #include "TList.h"
 #include "RooCmdArg.h"
@@ -29,27 +30,24 @@ public:
 
   RooCmdConfig(const char* methodName);
   RooCmdConfig(const RooCmdConfig& other) ;
-  ~RooCmdConfig();
 
-  void setVerbose(Bool_t flag) { 
-    // If flag is true verbose messaging is activated
-    _verbose = flag ; 
+  /// If flag is true verbose messaging is activated
+  void setVerbose(Bool_t flag) {
+    _verbose = flag ;
   }
-
-  void allowUndefined(Bool_t flag=kTRUE) { 
-    // If flag is true the processing of unrecognized RooCmdArgs
-    // is not considered an error
-    _allowUndefined = flag ; 
+  /// If flag is true the processing of unrecognized RooCmdArgs
+  /// is not considered an error
+  void allowUndefined(Bool_t flag=kTRUE) {
+    _allowUndefined = flag ;
   }
   void defineDependency(const char* refArgName, const char* neededArgName) ;
-  void defineMutex(const char* argName1, const char* argName2) ;
-  void defineMutex(const char* argName1, const char* argName2, const char* argName3) ;
-  void defineMutex(const char* argName1, const char* argName2, const char* argName3, const char* argName4) ;
-  void defineMutex(const char* argName1, const char* argName2, const char* argName3, const char* argName4, const char* argName5) ;
-  void defineRequiredArgs(const char* argName1, const char* argName2=0,
-			  const char* argName3=0, const char* argName4=0,
-			  const char* argName5=0, const char* argName6=0,
-			  const char* argName7=0, const char* argName8=0) ;
+
+  template<class... Args_t>
+  void defineRequiredArgs(const char* first, Args_t && ... args);
+
+  template<class... Args_t>
+  void defineMutex(const char* head, Args_t && ... tail);
+  void defineMutex(const char*) {} // to end the recursion of defineMutex()
 
   Bool_t defineInt(const char* name, const char* argName, Int_t intNum, Int_t defValue=0) ;
   Bool_t defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defValue=0.) ;
@@ -58,20 +56,11 @@ public:
   Bool_t defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* set=0) ;
 
   Bool_t process(const RooCmdArg& arg) ;
-  Bool_t process(const RooCmdArg& arg1, const RooCmdArg& arg2, 
-                 const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), 
-                 const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(), 
-                 const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+  template<class... Args_t>
+  bool process(const RooCmdArg& arg, Args_t && ...args);
   Bool_t process(const RooLinkedList& argList) ;
-  /// Process several RooCmdArg using iterators.
   template<typename It_t>
-  bool process(It_t begin, It_t end) {
-    bool result = false;
-    for (auto it = begin; it != end; ++it) {
-      result |= process(*it);
-    }
-    return result;
-  }
+  bool process(It_t begin, It_t end);
 
   Int_t getInt(const char* name, Int_t defaultValue=0) ;
   Double_t getDouble(const char* name, Double_t defaultValue=0) ;
@@ -82,29 +71,26 @@ public:
 
   Bool_t ok(Bool_t verbose) const ;
 
-  const char* missingArgs() const ;
+  std::string missingArgs() const ;
 
-  RooLinkedList filterCmdList(RooLinkedList& cmdInList, const char* cmdNameList, Bool_t removeFromInList=kTRUE) ;
-  void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) ;
+  RooLinkedList filterCmdList(RooLinkedList& cmdInList, const char* cmdNameList, bool removeFromInList=true) const;
+  void stripCmdList(RooLinkedList& cmdList, const char* cmdsToPurge) const;
   Bool_t hasProcessed(const char* cmdName) const ;
 
-  void print() ;
+  void print() const;
 
 
-  static Int_t decodeIntOnTheFly(const char* callerID, const char* cmdArgName, Int_t intIdx, Int_t defVal, const RooCmdArg& arg1, 
-				 const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-				 const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
-				 const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
+  template<class ...Args_t>
+  static Int_t decodeIntOnTheFly(
+          const char* callerID, const char* cmdArgName, Int_t intIdx, Int_t defVal, Args_t && ...args);
 
-  static std::string decodeStringOnTheFly(const char* callerID, const char* cmdArgName, Int_t intIdx, const char* defVal, const RooCmdArg& arg1,
-					 const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-					 const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
-					 const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
+  template<class ...Args_t>
+  static std::string decodeStringOnTheFly(
+          const char* callerID, const char* cmdArgName, Int_t intIdx, const char* defVal, Args_t && ...args);
 
-  static TObject* decodeObjOnTheFly(const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, const RooCmdArg& arg1, 
-				     const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-				     const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(), const RooCmdArg& arg7=RooCmdArg(),
-				     const RooCmdArg& arg8=RooCmdArg(), const RooCmdArg& arg9=RooCmdArg()) ;
+  template<class ...Args_t>
+  static TObject* decodeObjOnTheFly(
+          const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, Args_t && ...args);
 
   static double decodeDoubleOnTheFly(const char* callerID, const char* cmdArgName, int idx, double defVal,
       std::initializer_list<std::reference_wrapper<const RooCmdArg>> args);
@@ -112,37 +98,120 @@ public:
 protected:
 
   TString _name ;
-  
-  Bool_t _verbose ;
-  Bool_t _error ;
-  Bool_t _allowUndefined ;
 
-  TList _iList ; // Integer list
-  TList _dList ; // Double list
-  TList _sList ; // String list
-  TList _oList ; // Object list
-  TList _cList ; // RooArgSet list
+  Bool_t _verbose = false;
+  Bool_t _error = false;
+  Bool_t _allowUndefined = false;
 
-  TList _rList ; // Required cmd list
-  TList _fList ; // Forbidden cmd list
-  TList _mList ; // Mutex cmd list 
-  TList _yList ; // Dependency cmd list
-  TList _pList ; // Processed cmd list 
+  TList _iList ; ///< Integer list
+  TList _dList ; ///< Double list
+  TList _sList ; ///< String list
+  TList _oList ; ///< Object list
+  TList _cList ; ///< RooArgSet list
 
-  TIterator* _iIter ; // Iterator over integer list
-  TIterator* _dIter ; // Iterator over double list
-  TIterator* _sIter ; // Iterator over string list
-  TIterator* _oIter ; // Iterator over object list
-  TIterator* _cIter ; // Iterator over RooArgSet list
-  TIterator* _rIter ; // Iterator over required cmd list
-  TIterator* _fIter ; // Iterator over forbidden cmd list
-  TIterator* _mIter ; // Iterator over mutex list
-  TIterator* _yIter ; // Iterator over dependency list
-  TIterator* _pIter ; // Iterator over processed cmd list
+  TList _rList ; ///< Required cmd list
+  TList _fList ; ///< Forbidden cmd list
+  TList _mList ; ///< Mutex cmd list
+  TList _yList ; ///< Dependency cmd list
+  TList _pList ; ///< Processed cmd list
 
-  ClassDef(RooCmdConfig,0) // Configurable parse of RooCmdArg objects
+  ClassDefOverride(RooCmdConfig,0) // Configurable parse of RooCmdArg objects
 };
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add condition that any of listed arguments must be processed
+/// for parsing to be declared successful
+template<class... Args_t>
+void RooCmdConfig::defineRequiredArgs(const char* first, Args_t && ... args) {
+  for(auto const& arg : {first, args...}) {
+      if (arg) _rList.Add(new TObjString(arg));
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// Define arguments where any pair is mutually exclusive
+template<class... Args_t>
+void RooCmdConfig::defineMutex(const char* head, Args_t && ... tail) {
+  for(auto const& item : {tail...}) {
+    _mList.Add(new TNamed(head,item));
+    _mList.Add(new TNamed(item,head));
+  }
+  defineMutex(tail...);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process given RooCmdArgs
+template<class... Args_t>
+bool RooCmdConfig::process(const RooCmdArg& arg, Args_t && ...args) {
+  bool result = false;
+  for(auto r : {process(arg), process(std::forward<Args_t>(args))...}) result |= r;
+  return result;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process several RooCmdArg using iterators.
+template<typename It_t>
+bool RooCmdConfig::process(It_t begin, It_t end) {
+  bool result = false;
+  for (auto it = begin; it != end; ++it) {
+    result |= process(*it);
+  }
+  return result;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static decoder function allows to retrieve integer property from set of RooCmdArgs
+/// For use in base member initializers in constructors
+
+template<class ...Args_t>
+Int_t RooCmdConfig::decodeIntOnTheFly(
+        const char* callerID, const char* cmdArgName, Int_t intIdx, Int_t defVal, Args_t && ...args)
+{
+  RooCmdConfig pc(callerID) ;
+  pc.allowUndefined() ;
+  pc.defineInt("theInt",cmdArgName,intIdx,defVal) ;
+  pc.process(std::forward<Args_t>(args)...);
+  return pc.getInt("theInt") ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static decoder function allows to retrieve string property from set of RooCmdArgs
+/// For use in base member initializers in constructors
+
+template<class ...Args_t>
+std::string RooCmdConfig::decodeStringOnTheFly(
+        const char* callerID, const char* cmdArgName, Int_t strIdx, const char* defVal, Args_t && ...args)
+{
+  RooCmdConfig pc(callerID) ;
+  pc.allowUndefined() ;
+  pc.defineString("theString",cmdArgName,strIdx,defVal) ;
+  pc.process(std::forward<Args_t>(args)...);
+  const char* ret =  pc.getString("theString",0,kTRUE) ;
+
+  return ret ? ret : "";
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static decoder function allows to retrieve object property from set of RooCmdArgs
+/// For use in base member initializers in constructors
+
+template<class ...Args_t>
+TObject* RooCmdConfig::decodeObjOnTheFly(
+        const char* callerID, const char* cmdArgName, Int_t objIdx, TObject* defVal, Args_t && ...args)
+{
+  RooCmdConfig pc(callerID) ;
+  pc.allowUndefined() ;
+  pc.defineObject("theObj",cmdArgName,objIdx,defVal) ;
+  pc.process(std::forward<Args_t>(args)...);
+  return pc.getObject("theObj") ;
+}
+
+
 #endif
-
-

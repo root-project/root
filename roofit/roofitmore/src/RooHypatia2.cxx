@@ -90,9 +90,10 @@
  */
 
 #include "RooHypatia2.h"
-#include "RooBatchCompute.h"
+#include "BracketAdapters.h"
 #include "RooAbsReal.h"
 #include "RooHelpers.h"
+#include "RunContext.h"
 
 #include "TMath.h"
 #include "Math/SpecFunc.h"
@@ -110,7 +111,7 @@
 /// \param[in] zeta Shape parameter (\f$ \zeta >= 0 \f$).
 /// \param[in] beta Asymmetry parameter \f$ \beta \f$. Symmetric case is \f$ \beta = 0 \f$,
 /// choose values close to zero.
-/// \param[in] sigma Width parameter. If \f$ \beta = 0, \ \sigma \f$ is the RMS width.
+/// \param[in] argSigma Width parameter. If \f$ \beta = 0, \ \sigma \f$ is the RMS width.
 /// \param[in] mu Location parameter. Shifts the distribution left/right.
 /// \param[in] a Start of the left tail (\f$ a \geq 0 \f$, to the left of the peak). Note that when setting \f$ a = \sigma = 1 \f$,
 /// the tail region is to the left of \f$ x = \mu - 1 \f$, so a should be positive.

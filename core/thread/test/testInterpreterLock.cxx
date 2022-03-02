@@ -1,4 +1,4 @@
-#include "RConfig.h"
+#include "ROOT/RConfig.hxx"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif

@@ -47,7 +47,7 @@ extern "C" {
                                        guchar ** data,
                                        GdkAtom * prop_type,
                                        gint * prop_format);
-   void gdk_selection_send_notify(guint32 requestor,
+   void gdk_selection_send_notify(gulong requestor,
                                   GdkAtom selection,
                                   GdkAtom target,
                                   GdkAtom property, guint32 time);

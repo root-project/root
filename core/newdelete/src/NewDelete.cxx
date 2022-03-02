@@ -60,7 +60,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "MemCheck.h"
 #include "TObjectTable.h"
 #include "TError.h"
 #include "TStorage.h" // for ROOT::Internal::gFreeIfTMapFile
@@ -182,10 +181,6 @@ static int gNewInit = 0;
 
 void *operator new(size_t size)
 {
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size);
-
    static const char *where = "operator new";
 
    if (!gNewInit) {
@@ -239,10 +234,6 @@ void *operator new(size_t size, void *vp)
    }
 
    if (vp == 0) {
-      // use memory checker
-      if (TROOT::MemCheck())
-         return TMemHashTable::AddPointer(size);
-
       void *vp;
       if (ROOT::Internal::gMmallocDesc)
          vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size), sizeof(char));
@@ -262,12 +253,6 @@ void *operator new(size_t size, void *vp)
 
 void operator delete(void *ptr) noexcept
 {
-   // use memory checker
-   if (TROOT::MemCheck()) {
-      TMemHashTable::FreePointer(ptr);
-      return;
-   }
-
    static const char *where = "operator delete";
 
    if (!gNewInit)
@@ -397,10 +382,6 @@ void operator delete[](void * /* ptr */, std::size_t, std::align_val_t /* al */)
 
 void *CustomReAlloc1(void *ovp, size_t size)
 {
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size, ovp);
-
    static const char *where = "CustomReAlloc1";
 
    if (ovp == 0)
@@ -433,10 +414,6 @@ void *CustomReAlloc1(void *ovp, size_t size)
 
 void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
 {
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size, ovp);
-
    static const char *where = "CustomReAlloc2";
 
    if (ovp == 0)

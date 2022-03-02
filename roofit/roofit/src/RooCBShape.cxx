@@ -91,9 +91,11 @@ Double_t RooCBShape::evaluate() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Crystal ball Shape distribution.  
-RooSpan<double> RooCBShape::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeCBShape(this, evalData, m->getValues(evalData, normSet), m0->getValues(evalData, normSet), sigma->getValues(evalData, normSet), alpha->getValues(evalData, normSet), n->getValues(evalData, normSet));
+/// Compute multiple values of Crystal ball Shape distribution.
+void RooCBShape::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::CBShape, output, nEvents, dataMap, {&*m,&*m0,&*sigma,&*alpha,&*n,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

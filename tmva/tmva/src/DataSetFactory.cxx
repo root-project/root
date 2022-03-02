@@ -174,11 +174,16 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    }
 
    std::vector<VariableInfo>& spectatorinfos = dsi.GetSpectatorInfos();
-   it = spectatorinfos.begin();
-   for (;it!=spectatorinfos.end();++it) evdyn->push_back( (Float_t*)(*it).GetExternalLink() );
+   std::vector<char> spectatorTypes;
+   spectatorTypes.reserve(spectatorinfos.size());
+   for (auto &&info: spectatorinfos) {
+      evdyn->push_back( (Float_t*)info.GetExternalLink() );
+      spectatorTypes.push_back(info.GetVarType());
+   }
 
    TMVA::Event * ev = new Event((const std::vector<Float_t*>*&)evdyn, varinfos.size());
-   std::vector<Event*>* newEventVector = new std::vector<Event*>;
+   ev->SetSpectatorTypes(spectatorTypes);
+   std::vector<Event *> *newEventVector = new std::vector<Event *>;
    newEventVector->push_back(ev);
 
    ds->SetEventCollection(newEventVector, Types::kTraining);
@@ -1491,10 +1496,7 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
 
    // print rescaling info
    // ---------------------------------
-   // compute sizes and sums of weights
-   Int_t trainingSize = 0;
-   Int_t testingSize  = 0;
-
+   // compute sums of weights
    ValuePerClass trainingSumWeightsPerClass( dsi.GetNClasses() );
    ValuePerClass testingSumWeightsPerClass( dsi.GetNClasses() );
 
@@ -1511,9 +1513,6 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    for( UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
       trainingSizePerClass.at(cls) = tmpEventVector[Types::kTraining].at(cls).size();
       testingSizePerClass.at(cls)  = tmpEventVector[Types::kTesting].at(cls).size();
-
-      trainingSize += trainingSizePerClass.back();
-      testingSize  += testingSizePerClass.back();
 
       // the functional solution
       // sum up the weights in Double_t although the individual weights are Float_t to prevent rounding issues in addition of floating points

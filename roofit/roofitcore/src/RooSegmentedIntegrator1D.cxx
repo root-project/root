@@ -19,7 +19,7 @@
 \class RooSegmentedIntegrator1D
 \ingroup Roofitcore
 
-RooSegmentedIntegrator1D implements an adaptive one-dimensional 
+RooSegmentedIntegrator1D implements an adaptive one-dimensional
 numerical integration algorithm.
 **/
 
@@ -54,7 +54,7 @@ void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
   RooRealVar numSeg("numSeg","Number of segments",3) ;
   fact.storeProtoIntegrator(new RooSegmentedIntegrator1D(),numSeg,RooIntegrator1D::Class()->GetName()) ;
 }
- 
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -79,7 +79,7 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, c
   _useIntegrandLimits= kTRUE;
 
   _valid= initialize();
-} 
+}
 
 
 
@@ -88,8 +88,8 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, c
 /// explicit definition of integration range
 
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax,
-						   const RooNumIntConfig& config) :
-  RooAbsIntegrator(function), _config(config) 
+                     const RooNumIntConfig& config) :
+  RooAbsIntegrator(function), _config(config)
 {
   _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= kFALSE;
@@ -97,7 +97,7 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, D
   _xmax= xmax;
 
   _valid= initialize();
-} 
+}
 
 
 
@@ -119,8 +119,8 @@ typedef RooIntegrator1D* pRooIntegrator1D ;
 Bool_t RooSegmentedIntegrator1D::initialize()
 {
   _array = 0 ;
-  
-  Bool_t limitsOK = checkLimits(); 
+
+  Bool_t limitsOK = checkLimits();
   if (!limitsOK) return kFALSE ;
 
   // Make array of integrators for each segment
@@ -133,7 +133,7 @@ Bool_t RooSegmentedIntegrator1D::initialize()
   // Adjust integrator configurations for reduced intervals
   _config.setEpsRel(_config.epsRel()/sqrt(1.*_nseg)) ;
   _config.setEpsAbs(_config.epsAbs()/sqrt(1.*_nseg)) ;
-    
+
   for (i=0 ; i<_nseg ; i++) {
     _array[i] = new RooIntegrator1D(*_function,_xmin+i*segSize,_xmin+(i+1)*segSize,_config) ;
   }
@@ -147,7 +147,7 @@ Bool_t RooSegmentedIntegrator1D::initialize()
 /// Destructor
 
 RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
-{  
+{
   if (_array) {
     for (Int_t i=0 ; i<_nseg ; i++) {
       delete _array[i] ;
@@ -163,7 +163,7 @@ RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
 /// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax) 
+Bool_t RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 {
   if(_useIntegrandLimits) {
     oocoutE((TObject*)0,InputArguments) << "RooSegmentedIntegrator1D::setLimits: cannot override integrand's limits" << endl;
@@ -180,7 +180,7 @@ Bool_t RooSegmentedIntegrator1D::setLimits(Double_t* xmin, Double_t* xmax)
 /// Check that our integration range is finite and otherwise return kFALSE.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooSegmentedIntegrator1D::checkLimits() const 
+Bool_t RooSegmentedIntegrator1D::checkLimits() const
 {
   if(_useIntegrandLimits) {
     assert(0 != integrand() && integrand()->isValid());
@@ -212,7 +212,7 @@ Bool_t RooSegmentedIntegrator1D::checkLimits() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate integral at given function binding parameter values
 
-Double_t RooSegmentedIntegrator1D::integral(const Double_t *yvec) 
+Double_t RooSegmentedIntegrator1D::integral(const Double_t *yvec)
 {
   assert(isValid());
 

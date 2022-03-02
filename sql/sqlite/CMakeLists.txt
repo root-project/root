@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT sql/pgsql package
+# CMakeLists.txt file for building ROOT sql/sqlite package
 ############################################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
@@ -25,5 +25,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RSQLite
     RIO
 )
 
-target_include_directories(RSQLite PUBLIC ${SQLITE_INCLUDE_DIR})
+target_include_directories(RSQLite SYSTEM PUBLIC ${SQLITE_INCLUDE_DIR})
 target_link_libraries(RSQLite PUBLIC ${SQLITE_LIBRARIES})

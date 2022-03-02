@@ -2,7 +2,7 @@
 // Author: Valeriy Onuchin & Fons Rademakers   15/10/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -15,7 +15,7 @@
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // This is the ROOT implementation of the Qt object communication       //
-// mechanism (see also http://www.troll.no/qt/metaobjects.html)         //
+// mechanism (see also https://doc.qt.io/qt-5/metaobjects.html)         //
 //                                                                      //
 // Signals and slots are used for communication between objects.        //
 // When an object has changed in some way that might be interesting     //
@@ -29,7 +29,7 @@
 // to the signal. This mechanism allows objects to be easily reused,    //
 // because the object that emits a signal does not need to know         //
 // to what the signals are connected to.                                //
-// Together, signals and slots make up a powerfull component            //
+// Together, signals and slots make up a powerful component             //
 // programming mechanism.                                               //
 //                                                                      //
 // This implementation is provided by                                   //
@@ -113,14 +113,14 @@ public:
 
       TString signal = CompressName(signal_name);
 
-      TVirtualQConnection *connection = 0;
+      TVirtualQConnection *connection = nullptr;
 
       // execute class signals
       TList *sigList;
       TIter  nextSigList(&classSigLists);
-      while ((sigList = (TList*) nextSigList())) {
+      while ((sigList = (TList*) nextSigList()) != nullptr) {
          TIter nextcl((TList*) sigList->FindObject(signal));
-         while ((connection = static_cast<TVirtualQConnection*>(nextcl()))) {
+         while ((connection = static_cast<TVirtualQConnection*>(nextcl())) != nullptr) {
             gTQSender = GetSender();
             connection->SetArgs(params...);
             connection->SendSignal();
@@ -131,7 +131,7 @@ public:
 
       // execute object signals
       TIter next((TList*) fListOfSignals->FindObject(signal));
-      while (fListOfSignals && (connection = static_cast<TVirtualQConnection*>(next()))) {
+      while (fListOfSignals && (connection = static_cast<TVirtualQConnection*>(next())) != nullptr) {
          gTQSender = GetSender();
          connection->SetArgs(params...);
          connection->SendSignal();
@@ -146,7 +146,7 @@ public:
    /// ~~~
    ///
    /// If we call Emit with an array of the parameters, they should be converted
-   /// to long type.
+   /// to Longptr_t type.
    /// Example:
    /// ~~~ {.cpp}
    ///    TQObject *processor; // data processor
@@ -155,13 +155,14 @@ public:
    ///    processor->Connect("Evaluated(Float_t,Float_t)",
    ///                       "TH1F",hist,"Fill12(Axis_t,Axis_t)");
    ///
-   ///    Long_t args[2];
-   ///    args[0] = (Long_t)processor->GetValue(1);
-   ///    args[1] = (Long_t)processor->GetValue(2);
+   ///    Longptr_t args[2];
+   ///    args[0] = (Longptr_t)processor->GetValue(1);
+   ///    args[1] = (Longptr_t)processor->GetValue(2);
    ///
    ///    processor->Emit("Evaluated(Float_t,Float_t)",args);
    /// ~~~
-   template <typename T> void Emit(const char *signal, const T& arg) {
+   template <typename T> void Emit(const char *signal, const T& arg)
+   {
       Int_t placeholder = 0;
       EmitVA(signal, placeholder, arg);
    }
@@ -177,15 +178,15 @@ public:
                   void *receiver,
                   const char *slot);
 
-   Bool_t Disconnect(const char *signal = 0,
-                     void *receiver = 0,
-                     const char *slot = 0);
+   Bool_t Disconnect(const char *signal = nullptr,
+                     void *receiver = nullptr,
+                     const char *slot = nullptr);
 
    virtual void   HighPriority(const char *signal_name,
-                               const char *slot_name = 0);
+                               const char *slot_name = nullptr);
 
    virtual void   LowPriority(const char *signal_name,
-                              const char *slot_name = 0);
+                              const char *slot_name = nullptr);
 
    virtual Bool_t HasConnection(const char *signal_name) const;
    virtual Int_t  NumberOfSignals() const;
@@ -213,14 +214,14 @@ public:
                           const char *slot);
 
    static Bool_t  Disconnect(TQObject *sender,
-                             const char *signal = 0,
-                             void *receiver = 0,
-                             const char *slot = 0);
+                             const char *signal = nullptr,
+                             void *receiver = nullptr,
+                             const char *slot = nullptr);
 
    static Bool_t  Disconnect(const char *class_name,
                              const char *signal,
-                             void *receiver = 0,
-                             const char *slot = 0);
+                             void *receiver = nullptr,
+                             const char *slot = nullptr);
 
    static Bool_t  AreAllSignalsBlocked();
    static Bool_t  BlockAllSignals(Bool_t b);
@@ -239,8 +240,8 @@ protected:
    virtual const char *GetSenderClassName() const { return fSenderClass; }
 
 private:
-   TQObjSender(const TQObjSender&);            // not implemented
-   TQObjSender& operator=(const TQObjSender&); // not implemented
+   TQObjSender(const TQObjSender&) = delete;
+   TQObjSender& operator=(const TQObjSender&) = delete;
 
 public:
    TQObjSender() : TQObject(), fSender(0), fSenderClass() { }

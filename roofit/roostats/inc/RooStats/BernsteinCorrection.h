@@ -38,9 +38,9 @@ namespace RooStats {
 
    private:
 
-      Int_t    fMaxDegree;     // maximum polynomial degree correction (default is 10)
-      Double_t fMaxCorrection; // maximum correction factor at any point (default is 100)
-      Double_t fTolerance;     // probability to add an unnecessary term
+      Int_t    fMaxDegree;     ///< maximum polynomial degree correction (default is 10)
+      Double_t fMaxCorrection; ///< maximum correction factor at any point (default is 100)
+      Double_t fTolerance;     ///< probability to add an unnecessary term
 
 
    protected:

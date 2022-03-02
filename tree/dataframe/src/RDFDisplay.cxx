@@ -10,7 +10,11 @@
 #include "TInterpreter.h"
 
 #include <iomanip>
+#include <iostream>
 #include <limits>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace ROOT {
 namespace Internal {
@@ -135,14 +139,14 @@ void RDisplay::AddCollectionToRow(const std::vector<std::string> &collection)
       // Update the width if this element is the biggest found
       EnsureCurrentColumnWidth(stringEle.length());
 
-      if (index == 0 || index == collectionSize - 1) {
+      if (index < fNMaxCollectionElements) {
          // Do nothing, by default DisplayElement is printed
-      } else if (index == 1) {
+      } else if (index == fNMaxCollectionElements) {
          element.SetDots();
          // Be sure the "..." fit
          EnsureCurrentColumnWidth(3);
       } else {
-         // In the Print(), after the dots, all element will just be ignored except the last one.
+         // In the Print(), after the dots, all element will just be ignored.
          element.SetIgnore();
       }
 
@@ -172,15 +176,16 @@ void RDisplay::MovePosition()
    }
 }
 
-RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries)
+RDisplay::RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries, size_t nMaxCollectionElements)
    : fTypes(types), fWidths(columnNames.size(), 0), fRepresentations(columnNames.size()),
-     fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries)
+     fCollectionsRepresentations(columnNames.size()), fNColumns(columnNames.size()), fEntries(entries),
+     fNMaxCollectionElements(nMaxCollectionElements)
 {
-
    // Add the first row with the names of the columns
    fTable.push_back(std::vector<DElement_t>(columnNames.size()));
-   for (auto name : columnNames) {
-      AddToRow(name);
+   AddToRow("Row"); // Change the name of the first column from rdfentry_ to Row
+   for (auto name = columnNames.begin() + 1; name != columnNames.end(); ++name) {
+      AddToRow(*name);
    }
 }
 
@@ -190,33 +195,64 @@ size_t RDisplay::GetNColumnsToShorten() const
 
    auto size = fWidths.size();
    for (size_t i = 0; i < size; ++i) {
-      totalWidth += fWidths[i];
+      // The total width of the printed table also includes two spaces and a |,
+      // which are 3 extra characters per entry on the table.
+      totalWidth += fWidths[i] + 3;
       if (totalWidth > fgMaxWidth) {
          return size - i;
       }
    }
-
    return 0;
+}
+
+std::string RDisplay::DashesBetweenLines(size_t lastColToPrint, bool allColumnsFit) const
+{
+   std::string DashesStr = "+";
+   for (size_t i = 0; i < lastColToPrint; ++i){
+      DashesStr += std::string(fWidths[i] + 2, '-'); // Need to add 2, because of the spaces, when printing
+      DashesStr += "+";
+   }
+   if (!allColumnsFit){ // The Print method has ... in case of long columns, which need to be surrounded by dashes  
+      DashesStr += "-----+";
+   }
+   DashesStr += "\n";
+   return DashesStr;
 }
 
 void RDisplay::Print() const
 {
-   auto columnsToPrint =
-      fNColumns - GetNColumnsToShorten(); // Get the number of columns that fit in the characters limit
-   std::vector<bool> hasPrintedNext(fNColumns,
-                                    false); // Keeps track if the collection as already been shortened, allowing to skip
-                                            // all elements until the next printable element.
-
-   if (columnsToPrint < fNColumns)
+   size_t columnsToPrint = fNColumns;
+   const size_t columnsToShorten = GetNColumnsToShorten();
+   bool allColumnsFit = true;
+   if (fNColumns > 2u && columnsToShorten > 0u){ // Checking 2u, since first column is keeping track of rows
+      if (fNColumns > columnsToShorten + 1) { // Provided that the first column is "Row",
+                                              // columnsToShorten is guaranteed to be smaller than fNColumns
+                                              // Need to check if actual first column is being shortened
+         columnsToPrint = fNColumns - columnsToShorten;
+      } else { // Table has many columns and the first column is very wide;
+               // Thus, the first column is only the Row column and the actual first column is printed
+         columnsToPrint = 2;
+      }
       Info("Print", "Only showing %lu columns out of %lu\n", columnsToPrint, fNColumns);
+      allColumnsFit = false;
+   }
+
+   if (fNMaxCollectionElements < 1)
+      Info("Print", "No collections shown since fNMaxCollectionElements is %lu\n", fNMaxCollectionElements);
 
    auto nrRows = fTable.size();
+   std::cout << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the top of the table
    for (size_t rowIndex = 0; rowIndex < nrRows; ++rowIndex) {
       auto &row = fTable[rowIndex];
 
       std::stringstream stringRow;
       bool isRowEmpty = true; // It may happen during compacting that some rows are empty, this happens for example if
                               // collections have different size. Thanks to this flag, these rows are just ignored.
+      if (std::any_of(row[0].GetRepresentation().begin(), row[0].GetRepresentation().end(), ::isdigit)){
+         // Check if the first column (Row) contains a digit to use it as indication for new row/entry
+         std::cout << DashesBetweenLines(columnsToPrint, allColumnsFit);
+      }
+      stringRow << "| ";
       for (size_t columnIndex = 0; columnIndex < columnsToPrint; ++columnIndex) {
          const auto &element = row[columnIndex];
          std::string printedElement = "";
@@ -224,23 +260,9 @@ void RDisplay::Print() const
          if (element.IsDot()) {
             printedElement = "...";
          } else if (element.IsPrint()) {
-            // Maybe the element is part of a collection that is being shortened, and so it was already printed.
-            if (!hasPrintedNext[columnIndex]) {
-               printedElement = element.GetRepresentation();
-            }
-            hasPrintedNext[columnIndex] =
-               false; // Encountered "next printable element", shortening can start again when needed.
+            printedElement = element.GetRepresentation();
          } else {     // IsIgnore
-            // Shortening is starting here. Print directly the last element, to have something like 1 ... 3, and don't
-            // print anything else.
-            if (!hasPrintedNext[columnIndex]) {
-               size_t i = rowIndex + 1; // Starting from the next row...
-               for (; !fTable[i][columnIndex].IsPrint(); ++i) {
-                  // .. look for the first element that can be printed, it will be the last of the collection.
-               }
-               printedElement = fTable[i][columnIndex].GetRepresentation(); // Print the element
-               hasPrintedNext[columnIndex] = true; // And start ignoring anything else until the next collection.
-            }
+            // Do nothing, printedElement remains ""
          }
          if (!printedElement.empty()) {
             // Found at least one element, so the row is not empty.
@@ -251,9 +273,14 @@ void RDisplay::Print() const
                    << " | ";
       }
       if (!isRowEmpty) {
+         if (!allColumnsFit){ // If there are column(s), that do not fit, a single column of dots is displayed
+                              // in the right end of each (non-empty) row.
+            stringRow << "... | ";
+         }
          std::cout << stringRow.str() << std::endl;
       }
    }
+   std::cout << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the bottom of the table
 }
 
 std::string RDisplay::AsString() const
@@ -261,13 +288,20 @@ std::string RDisplay::AsString() const
    // This method works as Print() but without any check on collection. It just returns a string with the whole
    // representation
    std::stringstream stringRepresentation;
+   auto size = fWidths.size(); // To be used for the number of columns passed to the DashesBetweenLines
+   stringRepresentation << DashesBetweenLines(size, true); // 'true' since no columns are skipped
    for (auto row : fTable) {
+      if (std::any_of(row[0].GetRepresentation().begin(), row[0].GetRepresentation().end(), ::isdigit)){
+         stringRepresentation << DashesBetweenLines(size, true);
+      }
+      stringRepresentation << "| ";
       for (size_t i = 0; i < row.size(); ++i) {
          stringRepresentation << std::left << std::setw(fWidths[i]) << std::setfill(fgSeparator)
                               << row[i].GetRepresentation() << " | ";
       }
       stringRepresentation << "\n";
    }
+   stringRepresentation << DashesBetweenLines(size, true);
    return stringRepresentation.str();
 }
 

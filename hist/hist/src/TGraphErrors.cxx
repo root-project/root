@@ -33,7 +33,7 @@ ClassImp(TGraphErrors);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class TGraphErrors
-    \ingroup Hist
+    \ingroup Graphs
 A TGraphErrors is a TGraph with error bars.
 
 The TGraphErrors painting is performed thanks to the TGraphPainter
@@ -218,15 +218,15 @@ TGraphErrors::TGraphErrors(const TH1 *h)
 ///
 /// `filename` is assumed to contain at least 2 columns of numbers
 ///
-/// Convention for format (default="%lg %lg %lg %lg)
+/// Convention for format (default=`"%lg %lg %lg %lg"`)
 ///
 ///   - format = `%lg %lg`         read only 2 first columns into X,Y
 ///   - format = `%lg %lg %lg`     read only 3 first columns into X,Y and EY
 ///   - format = `%lg %lg %lg %lg` read only 4 first columns into X,Y,EX,EY.
 ///
-/// For files separated by a specific delimiter different from ' ' and `\t` (e.g. `;` in csv files)
+/// For files separated by a specific delimiter different from ' ' and `\\t` (e.g. `;` in csv files)
 /// you can avoid using `%*s` to bypass this delimiter by explicitly specify the `option` argument,
-/// e.g. `option=" \t,;"` for columns of figures separated by any of these characters (`' ', '\t', ',', ';'`)
+/// e.g. `option=" \\t,;"` for columns of figures separated by any of these characters (`' ', '\\t', ',', ';'`)
 /// used once (e.g. `"1;1"`) or in a combined way (`" 1;,;;  1"`).
 ///
 /// Note in that case, the instantiation is about 2 times slower.
@@ -601,7 +601,6 @@ void TGraphErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along X at point `i`.
 
 Double_t TGraphErrors::GetErrorX(Int_t i) const
@@ -613,7 +612,6 @@ Double_t TGraphErrors::GetErrorX(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It returns the error along Y at point `i`.
 
 Double_t TGraphErrors::GetErrorY(Int_t i) const
@@ -625,8 +623,8 @@ Double_t TGraphErrors::GetErrorY(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
-/// It returns the error along X at point `i`.
+/// It returns the error along X at point `i`. For TGraphErrors this method is
+/// the same as GetErrorX.
 
 Double_t TGraphErrors::GetErrorXhigh(Int_t i) const
 {
@@ -637,8 +635,8 @@ Double_t TGraphErrors::GetErrorXhigh(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
-/// It returns the error along X at point `i`.
+/// It returns the error along X at point `i`. For TGraphErrors this method is
+/// the same as GetErrorX.
 
 Double_t TGraphErrors::GetErrorXlow(Int_t i) const
 {
@@ -649,8 +647,8 @@ Double_t TGraphErrors::GetErrorXlow(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
-/// It returns the error along X at point `i`.
+/// It returns the error along Y at point `i`. For TGraphErrors this method is
+/// the same as GetErrorY.
 
 Double_t TGraphErrors::GetErrorYhigh(Int_t i) const
 {
@@ -661,8 +659,8 @@ Double_t TGraphErrors::GetErrorYhigh(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
-/// It returns the error along X at point `i`.
+/// It returns the error along Y at point `i`. For TGraphErrors this method is
+/// the same as GetErrorY.
 
 Double_t TGraphErrors::GetErrorYlow(Int_t i) const
 {
@@ -790,6 +788,26 @@ void TGraphErrors::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values and errors of a TGraphErrors by a constant c1.
+///
+/// If option contains "x" the x values and errors are scaled
+/// If option contains "y" the y values and errors are scaled
+/// If option contains "xy" both x and y values and errors are scaled
+
+void TGraphErrors::Scale(Double_t c1, Option_t *option)
+{
+   TGraph::Scale(c1, option);
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x") && GetEX()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEX()[i] *= c1;
+   }
+   if (opt.Contains("y") && GetEY()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEY()[i] *= c1;
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set `ex` and `ey` values for point pointed by the mouse.

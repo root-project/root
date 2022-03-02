@@ -26,6 +26,7 @@ extern "C" void d_rank_list_free(d_rank_list_t *rank_list);
 
 #include <functional>
 #include <memory>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -63,7 +64,25 @@ private:
 public:
    using DistributionKey_t = std::uint64_t;
    using AttributeKey_t = std::uint64_t;
-  
+
+   /// \brief Wrap around a `daos_oclass_id_t`. An object class describes the schema of data distribution
+   /// and protection.
+   struct ObjClassId {
+      daos_oclass_id_t fCid;
+
+      ObjClassId(daos_oclass_id_t cid) : fCid(cid) {}
+      ObjClassId(const std::string &name) : fCid(daos_oclass_name2id(name.data())) {}
+
+      bool IsUnknown() const { return fCid == OC_UNKNOWN; }
+      std::string ToString() const;
+
+      /// This limit is currently not defined in any header and any call to
+      /// `daos_oclass_id2name()` within DAOS uses a stack-allocated buffer
+      /// whose length varies from 16 to 50, e.g. `https://github.com/daos-stack/daos/blob/master/src/utils/daos_dfs_hdlr.c#L78`.
+      /// As discussed with the development team, 64 is a reasonable limit.
+      static constexpr std::size_t kOCNameMaxLength = 64;
+   };
+
    /// \brief Contains required information for a single fetch/update operation.
    struct FetchUpdateArgs {
       FetchUpdateArgs() = default;
@@ -87,7 +106,9 @@ public:
    };
 
    RDaosObject() = delete;
-   RDaosObject(RDaosContainer &container, daos_obj_id_t oid, daos_oclass_id_t cid = OC_RP_XSF);
+   /// Provides low-level access to an object. If `cid` is OC_UNKNOWN, the user is responsible for
+   /// calling `daos_obj_generate_id()` to fill the reserved bits in `oid` before calling this constructor.
+   RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid = OC_UNKNOWN);
    ~RDaosObject();
 
    int Fetch(FetchUpdateArgs &args);
@@ -101,8 +122,9 @@ public:
 class RDaosContainer {
    friend class RDaosObject;
 public:
-   using DistributionKey_t = std::uint64_t;
-   using AttributeKey_t = std::uint64_t;
+   using DistributionKey_t = RDaosObject::DistributionKey_t;
+   using AttributeKey_t = RDaosObject::AttributeKey_t;
+   using ObjClassId_t = RDaosObject::ObjClassId;
   
    /// \brief Describes a read/write operation on multiple objects; see the `ReadV`/`WriteV` functions.
    struct RWOperation {
@@ -132,24 +154,24 @@ private:
    daos_handle_t fContainerHandle{};
    uuid_t fContainerUuid{};
    std::shared_ptr<RDaosPool> fPool;
-   /// OID that will be used by the next call to `WriteObject(const void *, std::size_t, DistributionKey_t, AttributeKey_t)`.
-   daos_obj_id_t fSequentialWrOid{};
+   ObjClassId_t fDefaultObjectClass{OC_SX};
 
    /**
      \brief Perform a vector read/write operation on different objects.
      \param vec A `std::vector<RWOperation>` that describes read/write operations to perform.
+     \param cid The `daos_oclass_id_t` used to qualify OIDs.
      \param fn Either `std::mem_fn<&RDaosObject::Fetch>` (read) or `std::mem_fn<&RDaosObject::Update>` (write).
      \return Number of requests that did not complete; this should be 0 after a successful call.
      */
    template <typename Fn>
-   int VectorReadWrite(std::vector<RWOperation> &vec, Fn fn) {
+   int VectorReadWrite(std::vector<RWOperation> &vec, ObjClassId_t cid, Fn fn) {
       int ret;
       DaosEventQueue eventQueue(vec.size());
       {
          std::vector<std::tuple<std::unique_ptr<RDaosObject>, RDaosObject::FetchUpdateArgs>> requests{};
          requests.reserve(vec.size());
          for (size_t i = 0; i < vec.size(); ++i) {
-            requests.push_back(std::make_tuple(std::unique_ptr<RDaosObject>(new RDaosObject(*this, vec[i].fOid)),
+           requests.push_back(std::make_tuple(std::unique_ptr<RDaosObject>(new RDaosObject(*this, vec[i].fOid, cid.fCid)),
                                                RDaosObject::FetchUpdateArgs{
                                                  vec[i].fDistributionKey, vec[i].fAttributeKey,
                                                  vec[i].fIovs, &eventQueue.fEvs[i]}));
@@ -164,54 +186,60 @@ public:
    RDaosContainer(std::shared_ptr<RDaosPool> pool, std::string_view containerUuid, bool create = false);
    ~RDaosContainer();
 
+   ObjClassId_t GetDefaultObjectClass() const { return fDefaultObjectClass; }
+   void SetDefaultObjectClass(const ObjClassId_t cid) { fDefaultObjectClass = cid; }
+
    /**
-     \brief Read data from an object in this container to the given buffer.
-     \param oid A 128-bit DAOS object identifier.
+     \brief Read data from a single object attribute key to the given buffer.
      \param buffer The address of a buffer that has capacity for at least `length` bytes.
      \param length Length of the buffer.
-     \param dkey The distribution key used for this operation.
-     \param akey The attribute key used for this operation.
-     \return 0 if the operation succeeded; a negative DAOS error number otherwise.
-     */
-   int ReadObject(daos_obj_id_t oid, void *buffer, std::size_t length, DistributionKey_t dkey, AttributeKey_t akey);
-
-   /**
-     \brief Write the given buffer to an object in this container.
      \param oid A 128-bit DAOS object identifier.
-     \param buffer The address of the source buffer.
-     \param length Length of the buffer.
      \param dkey The distribution key used for this operation.
      \param akey The attribute key used for this operation.
+     \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int WriteObject(daos_obj_id_t oid, const void *buffer, std::size_t length, DistributionKey_t dkey, AttributeKey_t akey);
+   int ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
+                      DistributionKey_t dkey, AttributeKey_t akey, ObjClassId_t cid);
+   int ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
+                      DistributionKey_t dkey, AttributeKey_t akey)
+   { return ReadSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass); }
 
    /**
-     \brief Write the given buffer to an object in this container and return a generated OID.
+     \brief Write the given buffer to a single object attribute key.
      \param buffer The address of the source buffer.
      \param length Length of the buffer.
+     \param oid A 128-bit DAOS object identifier.
      \param dkey The distribution key used for this operation.
      \param akey The attribute key used for this operation.
-     \return A `std::tuple<>` that contains the generated OID and a DAOS error number (0 if the operation succeeded).
+     \param cid An object class ID.
+     \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   std::tuple<daos_obj_id_t, int>
-   WriteObject(const void *buffer, std::size_t length, DistributionKey_t dkey, AttributeKey_t akey);
+   int WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
+                       DistributionKey_t dkey, AttributeKey_t akey, ObjClassId_t cid);
+   int WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
+                       DistributionKey_t dkey, AttributeKey_t akey)
+   { return WriteSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass); }
 
    /**
      \brief Perform a vector read operation on (possibly) multiple objects.
      \param vec A `std::vector<RWOperation>` that describes read operations to perform.
+     \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int ReadV(std::vector<RWOperation> &vec)
-   { return VectorReadWrite(vec, std::mem_fn(&RDaosObject::Fetch)); }
+   int ReadV(std::vector<RWOperation> &vec, ObjClassId_t cid)
+   { return VectorReadWrite(vec, cid, std::mem_fn(&RDaosObject::Fetch)); }
+   int ReadV(std::vector<RWOperation> &vec) { return ReadV(vec, fDefaultObjectClass); }
 
    /**
      \brief Perform a vector write operation on (possibly) multiple objects.
      \param vec A `std::vector<RWOperation>` that describes write operations to perform.
+     \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int WriteV(std::vector<RWOperation> &vec)
-   { return VectorReadWrite(vec, std::mem_fn(&RDaosObject::Update)); }
+   int WriteV(std::vector<RWOperation> &vec, ObjClassId_t cid)
+   { return VectorReadWrite(vec, cid, std::mem_fn(&RDaosObject::Update)); }
+   int WriteV(std::vector<RWOperation> &vec) { return WriteV(vec, fDefaultObjectClass); }
 };
 
 } // namespace Detail

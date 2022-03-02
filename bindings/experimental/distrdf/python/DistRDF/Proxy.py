@@ -1,4 +1,4 @@
-## @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
@@ -10,18 +10,19 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from __future__ import print_function
-
 import logging
-from abc import ABCMeta
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from functools import singledispatch
+from typing import Any, Union
 
 import ROOT
 
 from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
 from DistRDF.Node import Node
-from DistRDF.Operation import Operation
+from DistRDF import Operation
+
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -42,12 +43,18 @@ def _managed_tcontext():
         ctxt.__destruct__()
 
 
-# Abstract class declaration
-# This ensures compatibility between Python 2 and 3 versions, since in
-# Python 2 there is no ABC class
-ABC = ABCMeta('ABC', (object,), {})
-
-logger = logging.getLogger(__name__)
+def execute_graph(node: Node) -> None:
+    """
+    Executes the distributed RDataFrame computation graph the input node
+    belongs to. If the node already has a value, this is a no-op.
+    """
+    if node.value is None:  # If event-loop not triggered
+        # Creating a ROOT.TDirectory.TContext in a context manager so that
+        # ROOT.gDirectory won't be changed by the event loop execution.
+        with _managed_tcontext():
+            headnode = node.get_head()
+            generator = ComputationGraphGenerator(headnode)
+            headnode.backend.execute(generator)
 
 
 class Proxy(ABC):
@@ -108,24 +115,11 @@ class ActionProxy(Proxy):
 
     def GetValue(self):
         """
-        Returns the result value of the current action
-        node if it was executed before, else triggers
-        the execution of the entire DistRDF graph before
+        Returns the result value of the current action node if it was executed
+        before, else triggers the execution of the distributed graph before
         returning the value.
-
-        Returns:
-            The value of the current action node, obtained after executing the
-            current action node in the computational graph.
         """
-
-        # Creating a ROOT.TDirectory.TContext in a context manager so that
-        # ROOT.gDirectory won't be changed by the event loop execution.
-        with _managed_tcontext():
-            if not self.proxied_node.value:  # If event-loop not triggered
-                headnode = self.proxied_node.get_head()
-                generator = ComputationGraphGenerator(headnode)
-                headnode.backend.execute(generator)
-
+        execute_graph(self.proxied_node)
         return self.proxied_node.value
 
     def _call_action_result(self, *args, **kwargs):
@@ -155,7 +149,7 @@ class TransformationProxy(Proxy):
 
         # if attr is a supported operation, start
         # operation and node creation
-        if attr in self.proxied_node.get_head().backend.supported_operations:
+        if attr in Operation.SUPPORTED_OPERATIONS:
             self.proxied_node._new_op_name = attr  # Stores new operation name
             return self._create_new_op
         else:
@@ -180,24 +174,50 @@ class TransformationProxy(Proxy):
         """
         # Create a new `Operation` object for the
         # incoming operation call
-        op = Operation(self.proxied_node._new_op_name, *args, **kwargs)
+        op = Operation.create_op(self.proxied_node._new_op_name, *args, **kwargs)
 
         # Create a new `Node` object to house the operation
-        newNode = Node(operation=op, get_head=self.proxied_node.get_head)
+        newnode = Node(operation=op, get_head=self.proxied_node.get_head)
 
         # Logger debug statements
         logger.debug("Created new {} node".format(op.name))
 
         # Add the new node as a child of the current node
-        self.proxied_node.children.append(newNode)
+        self.proxied_node.children.append(newnode)
 
-        # Return the appropriate proxy object for the node
-        if op.is_action():
-            return ActionProxy(newNode)
-        elif op.name in ["AsNumpy", "Snapshot"]:
-            headnode = self.proxied_node.get_head()
-            generator = ComputationGraphGenerator(headnode)
-            headnode.backend.execute(generator)
-            return newNode.value
-        else:
-            return TransformationProxy(newNode)
+        return get_proxy_for(op, newnode)
+
+
+@singledispatch
+def get_proxy_for(operation: Operation.Transformation, node: Node) -> TransformationProxy:
+    """"Returns appropriate proxy for the input node"""
+    return TransformationProxy(node)
+
+
+@get_proxy_for.register
+def _(operation: Operation.Action, node: Node) -> ActionProxy:
+    return ActionProxy(node)
+
+
+@get_proxy_for.register
+def _(operation: Operation.InstantAction, node: Node) -> Any:
+    execute_graph(node)
+    return node.value
+
+
+@get_proxy_for.register
+def _(operation: Operation.Snapshot, node: Node) -> Union[ActionProxy, Any]:
+    if len(operation.args) == 4:
+        # An RSnapshotOptions instance was passed as fourth argument
+        if operation.args[3].fLazy:
+            return get_proxy_for.dispatch(Operation.Action)(operation, node)
+
+    return get_proxy_for.dispatch(Operation.InstantAction)(operation, node)
+
+
+@get_proxy_for.register
+def _(operation: Operation.AsNumpy, node: Node) -> Union[ActionProxy, Any]:
+    if operation.kwargs.get("lazy", False):
+        return get_proxy_for.dispatch(Operation.Action)(operation, node)
+
+    return get_proxy_for.dispatch(Operation.InstantAction)(operation, node)

@@ -116,7 +116,7 @@ void TGTextView::Init(ULong_t back)
 /// Create a text view widget.
 
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
-                       UInt_t sboptions, ULong_t back) :
+                       UInt_t sboptions, Pixel_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
    Init(back);
@@ -126,7 +126,7 @@ TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
 /// Create a text view widget.
 
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-                       Int_t id, UInt_t sboptions, ULong_t back) :
+                       Int_t id, UInt_t sboptions, Pixel_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
    Init(back);
@@ -143,7 +143,7 @@ TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
 
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h,
                        const char *string, Int_t id, UInt_t sboptions,
-                       ULong_t back) :
+                       Pixel_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
    Init(back);

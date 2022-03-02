@@ -43,22 +43,22 @@ namespace RooStats {
       LikelihoodInterval(const char* name, RooAbsReal*, const RooArgSet*,  RooArgSet * = 0);
 
       /// destructor
-      virtual ~LikelihoodInterval();
+      ~LikelihoodInterval() override;
 
       /// check if given point is in the interval
-      virtual Bool_t IsInInterval(const RooArgSet&) const;
+      Bool_t IsInInterval(const RooArgSet&) const override;
 
       /// set the confidence level for the interval (e.g 0.682 for a 1-sigma interval)
-      virtual void SetConfidenceLevel(Double_t cl) {fConfidenceLevel = cl; ResetLimits(); }
+      void SetConfidenceLevel(Double_t cl) override {fConfidenceLevel = cl; ResetLimits(); }
 
       /// return confidence level
-      virtual Double_t ConfidenceLevel() const {return fConfidenceLevel;}
+      Double_t ConfidenceLevel() const override {return fConfidenceLevel;}
 
       /// return a cloned list of parameters of interest.  User manages the return object
-      virtual  RooArgSet* GetParameters() const;
+       RooArgSet* GetParameters() const override;
 
       /// check if parameters are correct (i.e. they are the POI of this interval)
-      Bool_t CheckParameters(const RooArgSet&) const ;
+      Bool_t CheckParameters(const RooArgSet&) const override ;
 
 
       /// return the lower bound of the interval on a given parameter
@@ -96,17 +96,17 @@ namespace RooStats {
 
    private:
 
-      RooArgSet   fParameters; /// parameters of interest for this interval
-      RooArgSet * fBestFitParams; /// snapshot of the model parameters with best fit value (managed internally)
-      RooAbsReal* fLikelihoodRatio; /// likelihood ratio function used to make contours (managed internally)
-      Double_t fConfidenceLevel; /// Requested confidence level (eg. 0.95 for 95% CL)
-      std::map<std::string, double> fLowerLimits; /// map with cached lower bound values
-      std::map<std::string, double> fUpperLimits; /// map with cached upper bound values
-      std::shared_ptr<ROOT::Math::Minimizer > fMinimizer; //! transient pointer to minimizer class used to find limits and contour
-      std::shared_ptr<RooFunctor>           fFunctor;   //! transient pointer to functor class used by the minimizer
-      std::shared_ptr<ROOT::Math::IMultiGenFunction> fMinFunc; //! transient pointer to the minimization function
+      RooArgSet   fParameters;      ///< parameters of interest for this interval
+      RooArgSet * fBestFitParams;   ///< snapshot of the model parameters with best fit value (managed internally)
+      RooAbsReal* fLikelihoodRatio; ///< likelihood ratio function used to make contours (managed internally)
+      Double_t fConfidenceLevel;    ///< Requested confidence level (eg. 0.95 for 95% CL)
+      std::map<std::string, double> fLowerLimits; ///< map with cached lower bound values
+      std::map<std::string, double> fUpperLimits; ///< map with cached upper bound values
+      std::shared_ptr<ROOT::Math::Minimizer > fMinimizer;      ///<! transient pointer to minimizer class used to find limits and contour
+      std::shared_ptr<RooFunctor>           fFunctor;          ///<! transient pointer to functor class used by the minimizer
+      std::shared_ptr<ROOT::Math::IMultiGenFunction> fMinFunc; ///<! transient pointer to the minimization function
 
-      ClassDef(LikelihoodInterval,1)  /// Concrete implementation of a ConfInterval based on a likelihood ratio
+      ClassDefOverride(LikelihoodInterval,1)  // Concrete implementation of a ConfInterval based on a likelihood ratio
 
    };
 }

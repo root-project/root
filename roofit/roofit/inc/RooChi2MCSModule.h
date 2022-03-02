@@ -24,12 +24,12 @@ public:
 
   RooChi2MCSModule() ;
   RooChi2MCSModule(const RooChi2MCSModule& other) ;
-  virtual ~RooChi2MCSModule() ;
+  ~RooChi2MCSModule() override ;
 
-  Bool_t initializeInstance() ;
-  Bool_t initializeRun(Int_t /*numSamples*/) ;
-  RooDataSet* finalizeRun() ;
-  Bool_t processAfterFit(Int_t /*sampleNum*/)  ;
+  Bool_t initializeInstance() override ;
+  Bool_t initializeRun(Int_t /*numSamples*/) override ;
+  RooDataSet* finalizeRun() override ;
+  Bool_t processAfterFit(Int_t /*sampleNum*/) override  ;
 
 private:
 
@@ -39,7 +39,7 @@ private:
   RooRealVar* _chi2red ; // Reduced Chi^2 w.r.t data
   RooRealVar* _prob ;    // Probability of chi^2,nDOF combination
 
-  ClassDef(RooChi2MCSModule,0) // MCStudy module to calculate chi2 between binned data and fit
+  ClassDefOverride(RooChi2MCSModule,0) // MCStudy module to calculate chi2 between binned data and fit
 } ;
 
 

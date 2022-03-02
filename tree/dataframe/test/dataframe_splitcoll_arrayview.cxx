@@ -7,6 +7,7 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "gtest/gtest.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TwoFloats.h"
 
@@ -28,17 +29,23 @@ void fill_tree(const char *filename, const char *treeName)
 
 void test_splitcoll_arrayview(const std::string &fileName, const std::string &treeName)
 {
-   ROOT::RDataFrame d1(treeName, fileName, {"v.a"});
-   auto c1 = d1.Filter([](ROOT::VecOps::RVec<float> d) {
-                  float ex_v = 0.f;
-                  for (auto v : d) {
-                     EXPECT_DOUBLE_EQ(v, ex_v);
-                     ex_v += 1.f;
-                  }
-                  return d[0] > 5;
-               })
-                .Count();
-   EXPECT_EQ(*c1, 0ull);
+   {
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
+      diagRAII.optionalDiag(kWarning,
+          "RTreeColumnReader::Get",
+          "Branch v.a hangs from a non-split branch. A copy is being performed in order to properly read the content.");
+      ROOT::RDataFrame d1(treeName, fileName, {"v.a"});
+      auto c1 = d1.Filter([](ROOT::VecOps::RVec<float> d) {
+                     float ex_v = 0.f;
+                     for (auto v : d) {
+                        EXPECT_DOUBLE_EQ(v, ex_v);
+                        ex_v += 1.f;
+                     }
+                     return d[0] > 5;
+                  })
+                   .Count();
+      EXPECT_EQ(*c1, 0ull);
+   }
 
    ROOT::RDataFrame d2(treeName, fileName, {"v"});
    auto c2 = d2.Filter([](ROOT::VecOps::RVec<TwoFloats> d) {

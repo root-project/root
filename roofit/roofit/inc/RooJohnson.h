@@ -32,7 +32,7 @@ public:
 
   RooJohnson(const RooJohnson& other, const char* newName = nullptr);
 
-  virtual ~RooJohnson() = default;
+  ~RooJohnson() override = default;
 
   TObject* clone(const char* newname) const override {
     return new RooJohnson(*this,newname);
@@ -57,7 +57,8 @@ private:
   double _massThreshold{-1.E300};
 
   Double_t evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooJohnson,1)
 };

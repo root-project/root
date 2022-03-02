@@ -20,12 +20,14 @@
 
 using namespace std::string_literals;
 
-ROOT::Experimental::RPadBase::~RPadBase() = default;
+using namespace ROOT::Experimental;
+
+RPadBase::~RPadBase() = default;
 
 ///////////////////////////////////////////////////////////////////////////
 /// Use provided style for pad and all primitives inside
 
-void ROOT::Experimental::RPadBase::UseStyle(const std::shared_ptr<RStyle> &style)
+void RPadBase::UseStyle(const std::shared_ptr<RStyle> &style)
 {
    RDrawable::UseStyle(style);
    for (auto &drawable : fPrimitives)
@@ -35,7 +37,7 @@ void ROOT::Experimental::RPadBase::UseStyle(const std::shared_ptr<RStyle> &style
 ///////////////////////////////////////////////////////////////////////////
 /// Find primitive with specified id
 
-std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::FindPrimitive(const std::string &id) const
+std::shared_ptr<RDrawable> RPadBase::FindPrimitive(const std::string &id) const
 {
    for (auto &drawable : fPrimitives) {
 
@@ -59,7 +61,7 @@ std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::Fin
 /// Find primitive with unique id, produce for RDisplayItem
 /// Such id used for client-server identification of objects
 
-std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::FindPrimitiveByDisplayId(const std::string &id) const
+std::shared_ptr<RDrawable> RPadBase::FindPrimitiveByDisplayId(const std::string &id) const
 {
    auto p = id.find("_");
    if (p == std::string::npos)
@@ -82,7 +84,7 @@ std::shared_ptr<ROOT::Experimental::RDrawable> ROOT::Experimental::RPadBase::Fin
 ///////////////////////////////////////////////////////////////////////////
 /// Find subpad which contains primitive with given display id
 
-const ROOT::Experimental::RPadBase *ROOT::Experimental::RPadBase::FindPadForPrimitiveWithDisplayId(const std::string &id) const
+const RPadBase *RPadBase::FindPadForPrimitiveWithDisplayId(const std::string &id) const
 {
    auto p = id.find("_");
    if (p == std::string::npos)
@@ -107,7 +109,7 @@ const ROOT::Experimental::RPadBase *ROOT::Experimental::RPadBase::FindPadForPrim
 /// Each display item gets its special id, which used later for client-server communication
 /// Second parameter is version id which already delivered to the client
 
-void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem, RDisplayContext &ctxt)
+void RPadBase::DisplayPrimitives(RPadBaseDisplayItem &paditem, RDisplayContext &ctxt)
 {
    paditem.SetAttributes(&GetAttrMap());
    paditem.SetPadStyle(fStyle.lock());
@@ -131,11 +133,25 @@ void ROOT::Experimental::RPadBase::DisplayPrimitives(RPadBaseDisplayItem &padite
 }
 
 ///////////////////////////////////////////////////////////////////////////
+/// Add subpad
+
+std::shared_ptr<RPad> RPadBase::AddPad(const RPadPos &pos, const RPadExtent &extent)
+{
+   auto pad = new RPad(pos, extent);
+
+   pad->SetParent(this);
+   std::shared_ptr<RPad> pshared(pad);
+
+   fPrimitives.emplace_back(pshared);
+   return pshared;
+}
+
+///////////////////////////////////////////////////////////////////////////
 /// Divide pad on nHoriz X nVert subpads
 /// Return array of array of pads
 
-std::vector<std::vector<std::shared_ptr<ROOT::Experimental::RPad>>>
-ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &padding)
+std::vector<std::vector<std::shared_ptr<RPad>>>
+RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &padding)
 {
    std::vector<std::vector<std::shared_ptr<RPad>>> ret;
    if (!nHoriz)
@@ -158,41 +174,36 @@ ROOT::Experimental::RPadBase::Divide(int nHoriz, int nVert, const RPadExtent &pa
          RPadPos subPos = offset;
          subPos *= {1. * iHoriz, 1. * iVert};
 
-         auto subpad = Draw<RPad>(this, subPos, size);
+         auto subpad = AddPad(subPos, size);
 
          ret.back().emplace_back(subpad);
-         // printf("Create subpad pos %5.2f %5.2f\n", subPos.fHoriz.fNormal.fVal, subPos.fVert.fNormal.fVal);
       }
    }
    return ret;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
-/// Get a frame object for the pad.
-/// If frame not exists - creates and add to the end of primitives list
+/// Add a frame object for the pad.
+/// If frame already exists - just return it
 
-
-std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetOrCreateFrame()
+std::shared_ptr<RFrame> RPadBase::AddFrame()
 {
    auto frame = GetFrame();
    if (!frame) {
-      frame.reset(new RFrame());
+      frame.reset(new RFrame);
       fPrimitives.emplace_back(frame);
    }
-
    return frame;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Get a frame object if exists
 
-const std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetFrame() const
+const std::shared_ptr<RFrame> RPadBase::GetFrame() const
 {
    for (auto &drawable : fPrimitives) {
-      if (drawable->GetCssType() == "frame") {
-         const std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared());
-         if (frame) return frame;
-      }
+      if (const std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared()))
+        return frame;
    }
    return nullptr;
 }
@@ -200,13 +211,11 @@ const std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Get a frame object if exists
 
-std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetFrame()
+std::shared_ptr<RFrame> RPadBase::GetFrame()
 {
    for (auto &drawable : fPrimitives) {
-      if (drawable->GetCssType() == "frame") {
-         std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared());
-         if (frame) return frame;
-      }
+      if (std::shared_ptr<RFrame> frame = std::dynamic_pointer_cast<RFrame>(drawable.get_shared()))
+         return frame;
    }
    return nullptr;
 }
@@ -214,7 +223,7 @@ std::shared_ptr<ROOT::Experimental::RFrame> ROOT::Experimental::RPadBase::GetFra
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Collect all shared items to resolve shared_ptr after IO
 
-void ROOT::Experimental::RPadBase::CollectShared(Internal::RIOSharedVector_t &vect)
+void RPadBase::CollectShared(Internal::RIOSharedVector_t &vect)
 {
    for (auto &handle : fPrimitives) {
       vect.emplace_back(&handle);
@@ -226,7 +235,7 @@ void ROOT::Experimental::RPadBase::CollectShared(Internal::RIOSharedVector_t &ve
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /// Assign drawable version - for pad itself and all primitives
 
-void ROOT::Experimental::RPadBase::SetDrawableVersion(Version_t vers)
+void RPadBase::SetDrawableVersion(Version_t vers)
 {
    RDrawable::SetDrawableVersion(vers);
 

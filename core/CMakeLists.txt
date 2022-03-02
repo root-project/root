@@ -81,6 +81,9 @@ add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(lz4)
 add_subdirectory(zstd)
+if(testing)
+  add_subdirectory(testsupport)
+endif()
 if(asan)
   add_subdirectory(sanitizer)
 endif()
@@ -178,10 +181,14 @@ endif()
 # Darwin's complex.h does not implement C11's __STDC_NO_COMPLEX__, use the
 # header guard instead. This prevents inclusion of complex.h in Darwin.pcm.
 # GCC <=5 has _COMPLEX_H but none of the others.
+# __CLANG_STDATOMIC_H prevents inclusion of stdatomic in our Darwin.pcm: its
+# macros cause conflics with boost.
 target_compile_definitions(Core PRIVATE
   __STDC_NO_COMPLEX__
   __COMPLEX_H__
   _COMPLEX_H
+
+  __CLANG_STDATOMIC_H
  )
 
 #while basic libs do not depend on Core, we have to add includes directly
@@ -264,6 +271,7 @@ target_link_libraries(Core
     ${ZSTD_LIBRARIES}
     ${CMAKE_DL_LIBS}
     ${CMAKE_THREAD_LIBS_INIT}
+    ${ROOT_ATOMIC_LIBS}
     ${corelinklibs}
 )
 add_dependencies(Core CLING)

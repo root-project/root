@@ -57,8 +57,9 @@ the following replacements should be used:
 #include "TString.h"
 #include "TTree.h"
 #include "TLeaf.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "TBranch.h"
+
+#include <memory>
 
 using namespace std;
 
@@ -241,13 +242,13 @@ const std::map<std::string, RooAbsCategory::value_type>::value_type& RooAbsCateg
 
   if (hasIndex(index)) {
     coutE(InputArguments) << "RooAbsCategory::" << __func__ << "(" << GetName() << "): index "
-			  << index << " already assigned" << endl ;
+           << index << " already assigned" << endl ;
     return invalidCategory();
   }
 
   if (hasLabel(label)) {
     coutE(InputArguments) << "RooAbsCategory::" << __func__ << "(" << GetName() << "): label "
-			  << label << " already assigned or not allowed" << endl ;
+           << label << " already assigned or not allowed" << endl ;
     return invalidCategory();
   }
 
@@ -341,7 +342,7 @@ const RooCatType* RooAbsCategory::lookupType(const char* label, Bool_t printErro
 
   if (printError) {
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":lookupType: no match for label "
-			  << label << endl;
+           << label << endl;
   }
   return nullptr;
 }
@@ -454,7 +455,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
       // Imported TTree: attach only index field as branch
 
       coutI(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") TTree branch " << GetName()
-			  << " will be interpreted as category index" << endl ;
+           << " will be interpreted as category index" << endl ;
 
       t.SetBranchAddress(cleanName, &_currentIndex) ;
       setAttribute("INTIDXONLY_TREE_BRANCH",kTRUE) ;
@@ -462,7 +463,7 @@ void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
       return ;
     } else if (!typeName.CompareTo("UChar_t")) {
       coutI(DataHandling) << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName()
-			  << " will be interpreted as category index" << endl ;
+           << " will be interpreted as category index" << endl ;
       t.SetBranchAddress(cleanName,&_byteValue) ;
       setAttribute("UCHARIDXONLY_TREE_BRANCH",kTRUE) ;
       _treeVar = true;
@@ -561,6 +562,24 @@ void RooAbsCategory::copyCache(const RooAbsArg *source, Bool_t /*valueOnly*/, Bo
      }
    }
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Overwrite the value stored in this object's cache.
+/// This can be used to fake a computation that resulted in `value`.
+/// \param[in] value Value to write. The argument is reinterpreted as a category state.
+/// If such a state does not exist, this will create undefined behaviour.
+/// \param[in] notifyClients If true, notify users of this object that its value changed.
+/// This is the default.
+void RooAbsCategory::setCachedValue(double value, bool notifyClients) {
+  _currentIndex = static_cast<value_type>(value);
+
+  if (notifyClients) {
+    setValueDirty();
+    _valueDirty = false;
+  }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return name and index of the `n`th defined state. When states are defined using

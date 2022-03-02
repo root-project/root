@@ -54,7 +54,7 @@ that holds the proxy. When the value of the proxied object is changed, the owner
 notified, and can recalculate its own value. Renaming or exchanging objects that
 serve values to the owner of the proxy is handled automatically.
 
-## Modernisation of proxies in %ROOT 6.22
+## Modernisation of proxies in ROOT 6.22
 In ROOT 6.22, the classes RooRealProxy and RooCategoryProxy were replaced by RooTemplateProxy<class T>.
 
 Two typedefs have been defined for backward compatibility:
@@ -71,7 +71,7 @@ and increment the class version of the owner.
 // In .h: Declare member
 RooRealProxy pdfProxy;
 
-ClassDef(MyPdf, 1)
+ClassDefOverride(MyPdf, 1)
 };
 
 // In .cxx: Initialise proxy in constructor
@@ -94,7 +94,7 @@ pdf->fitTo(...);
 // In .h: Declare member
 RooTemplateProxy<RooAbsPdf> pdfProxy;
 
-ClassDef(MyPdf, 2)
+ClassDefOverride(MyPdf, 2)
 };
 
 // In .cxx: Initialise proxy in constructor
@@ -201,8 +201,8 @@ public:
     }
   }
 
-  virtual TObject* Clone(const char* newName=0) const { return new RooTemplateProxy<T>(newName,_owner,*this); }
- 
+  TObject* Clone(const char* newName=0) const override { return new RooTemplateProxy<T>(newName,_owner,*this); }
+
 
   /// Return reference to the proxied object.
   T& operator*() const {
@@ -235,6 +235,37 @@ public:
     }
   }
 
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Create a new object held and owned by proxy.
+  /// Can only be done if the proxy was non-owning before.
+  template<class U, class... ConstructorArgs>
+  U& emplaceOwnedArg(ConstructorArgs&&... constructorArgs) {
+    if(_ownArg) {
+      // let's maybe not support overwriting owned args unless it becomes necessary
+      throw std::runtime_error("Error in RooTemplateProxy: emplaceOwnedArg<>() called on a proxy already owning an arg.");
+    }
+    auto ownedArg = new U{std::forward<ConstructorArgs>(constructorArgs)...};
+    setArg(*ownedArg);
+    _ownArg = true;
+    return *ownedArg;
+  }
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Move a new object held and owned by proxy.
+  /// Can only be done if the proxy was non-owning before.
+  template<class U>
+  U& putOwnedArg(std::unique_ptr<U> ownedArg) {
+    if(_ownArg) {
+      // let's maybe not support overwriting owned args unless it becomes necessary
+      throw std::runtime_error("Error in RooTemplateProxy: putOwnedArg<>() called on a proxy already owning an arg.");
+    }
+    auto argPtr = ownedArg.get();
+    setArg(*ownedArg.release());
+    _ownArg = true;
+    return *argPtr;
+  }
 
   /// \name Legacy interface
   /// In ROOT versions before 6.22, RooFit didn't have this typed proxy. Therefore, a number of functions
@@ -295,7 +326,7 @@ private:
   /// - in a debug build, a dynamic_cast with an assertion is used.
   /// - in a release build, a static_cast is forced, irrespective of what the type of the object actually is. This
   /// is dangerous, but equivalent to the behaviour before refactoring the RooFit proxies.
-  /// \deprecated This function is unneccessary if the template parameter is RooAbsRealLValue (+ derived types) or
+  /// \deprecated This function is unnecessary if the template parameter is RooAbsRealLValue (+ derived types) or
   /// RooAbsCategoryLValue (+derived types), as arg() will always return the correct type.
   const LValue_t* lvptr(const LValue_t*) const {
     return static_cast<const LValue_t*>(_arg);
@@ -338,7 +369,7 @@ private:
     return real.getVal(_nset);
   }
 
-  ClassDef(RooTemplateProxy,1) // Proxy for a RooAbsReal object
+  ClassDefOverride(RooTemplateProxy,1) // Proxy for a RooAbsReal object
 };
 
 #endif

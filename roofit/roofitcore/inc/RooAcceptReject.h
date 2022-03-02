@@ -30,42 +30,42 @@ class RooAcceptReject : public RooAbsNumGenerator {
 public:
   RooAcceptReject() : _nextCatVar(0), _nextRealVar(0) {
     // coverity[UNINIT_CTOR]
-  } ; 
+  } ;
   RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0);
-  RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/, 
-			    const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const {
+  RooAbsNumGenerator* clone(const RooAbsReal& func, const RooArgSet& genVars, const RooArgSet& /*condVars*/,
+             const RooNumGenConfig& config, Bool_t verbose=kFALSE, const RooAbsReal* maxFuncVal=0) const override {
     return new RooAcceptReject(func,genVars,config,verbose,maxFuncVal) ;
   }
-  virtual ~RooAcceptReject();
+  ~RooAcceptReject() override;
 
-  const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio);
-  Double_t getFuncMax() ;
+  const RooArgSet *generateEvent(UInt_t remaining, Double_t& resampleRatio) override;
+  Double_t getFuncMax() override ;
 
 
   // Advertisement of capabilities
-  virtual Bool_t canSampleConditional() const { return kTRUE ; }
-  virtual Bool_t canSampleCategories() const { return kTRUE ; }
+  Bool_t canSampleConditional() const override { return kTRUE ; }
+  Bool_t canSampleCategories() const override { return kTRUE ; }
 
- 
+
 protected:
 
   friend class RooNumGenFactory ;
-  static void registerSampler(RooNumGenFactory& fact) ;	
+  static void registerSampler(RooNumGenFactory& fact) ;
 
   void addEventToCache();
   const RooArgSet *nextAcceptedEvent();
 
-  Double_t _maxFuncVal, _funcSum;      // Maximum function value found, and sum of all samples made
-  UInt_t _realSampleDim,_catSampleMult;// Number of real and discrete dimensions to be samplesd
-  UInt_t _minTrials;                   // Minimum number of max.finding trials, total number of samples
-  UInt_t _totalEvents;                 // Total number of function samples
-  UInt_t _eventsUsed;                  // Accepted number of function samples
-  TIterator *_nextCatVar;              // Iterator of categories to be generated
-  TIterator *_nextRealVar;             // Iterator over variables to be generated
+  Double_t _maxFuncVal, _funcSum;       ///< Maximum function value found, and sum of all samples made
+  UInt_t _realSampleDim,_catSampleMult; ///< Number of real and discrete dimensions to be sampled
+  UInt_t _minTrials;                    ///< Minimum number of max.finding trials, total number of samples
+  UInt_t _totalEvents;                  ///< Total number of function samples
+  UInt_t _eventsUsed;                   ///< Accepted number of function samples
+  TIterator *_nextCatVar;               ///< Iterator of categories to be generated
+  TIterator *_nextRealVar;              ///< Iterator over variables to be generated
 
-  UInt_t _minTrialsArray[4];           // Minimum number of trials samples for 1,2,3 dimensional problems
+  UInt_t _minTrialsArray[4];            ///< Minimum number of trials samples for 1,2,3 dimensional problems
 
-  ClassDef(RooAcceptReject,0) // Context for generating a dataset from a PDF
+  ClassDefOverride(RooAcceptReject,0) // Context for generating a dataset from a PDF
 };
 
 #endif

@@ -295,7 +295,7 @@ PyObject* PyROOT::TMethodHolder::GetPrototype()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Method priorities exist (in lieu of true overloading) there to prevent
-/// void* or <unknown>* from usurping otherwise valid calls. TODO: extend this
+/// `void*` or `unknown*` from usurping otherwise valid calls. TODO: extend this
 /// to favour classes that are not bases.
 
 Int_t PyROOT::TMethodHolder::GetPriority()

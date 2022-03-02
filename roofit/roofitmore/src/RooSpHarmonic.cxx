@@ -138,7 +138,7 @@ namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TODO: check that phi.max - phi.min = 2 pi... ctheta.max = +1, and ctheta.min = -1
-/// we don't support indefinite integrals... maybe one day, when there is a use for it.....
+/// we don't support indefinite integrals. maybe one day, when there is a use for it.
 
 Int_t RooSpHarmonic::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {

@@ -44,18 +44,18 @@ using namespace std;
 
 ClassImp(RooAddGenContext);
 ;
-  
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars, 
-				   const RooDataSet *prototype, const RooArgSet* auxProto,
-				   Bool_t verbose) :
+RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars,
+               const RooDataSet *prototype, const RooArgSet* auxProto,
+               Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _isModel(kFALSE)
 {
-  cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName() 
-			<< " for generation of observable(s) " << vars ;
+  cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName()
+         << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
   if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
   ccxcoutI(Generation) << endl ;
@@ -66,7 +66,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   _pdf->setOperMode(RooAbsArg::ADirty,kTRUE) ;
 
   // Fix normalization set of this RooAddPdf
-  if (prototype) 
+  if (prototype)
     {
       RooArgSet coefNSet(vars) ;
       coefNSet.add(*prototype->get()) ;
@@ -87,10 +87,10 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
 
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
     _gcList.push_back(cx) ;
-  }  
+  }
 
   ((RooAddPdf*)_pdf)->getProjCache(_vars) ;
-  _pdf->recursiveRedirectServers(*_theEvent) ;
+  _pdf->recursiveRedirectServers(_theEvent) ;
 
   _mcache = 0 ;
   _pcache = 0 ;
@@ -101,13 +101,13 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &vars, 
-				   const RooDataSet *prototype, const RooArgSet* auxProto,
-				   Bool_t verbose) :
+RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &vars,
+               const RooDataSet *prototype, const RooArgSet* auxProto,
+               Bool_t verbose) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose), _isModel(kTRUE)
 {
-  cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum resolution model " << model.GetName() 
-			<< " for generation of observable(s) " << vars ;
+  cxcoutI(Generation) << "RooAddGenContext::ctor() setting up event special generator context for sum resolution model " << model.GetName()
+         << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
   if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
   ccxcoutI(Generation) << endl ;
@@ -124,10 +124,10 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
     auto pdf = static_cast<RooAbsPdf*>(obj);
     RooAbsGenContext* cx = pdf->genContext(vars,prototype,auxProto,verbose) ;
     _gcList.push_back(cx) ;
-  }  
+  }
 
   ((RooAddModel*)_pdf)->getProjCache(_vars) ;
-  _pdf->recursiveRedirectServers(*_theEvent) ;
+  _pdf->recursiveRedirectServers(_theEvent) ;
 
   _mcache = 0 ;
   _pcache = 0 ;
@@ -153,7 +153,7 @@ RooAddGenContext::~RooAddGenContext()
 ////////////////////////////////////////////////////////////////////////////////
 /// Attach given set of variables to internal p.d.f. clone
 
-void RooAddGenContext::attach(const RooArgSet& args) 
+void RooAddGenContext::attach(const RooArgSet& args)
 {
   _pdf->recursiveRedirectServers(args) ;
 
@@ -167,21 +167,21 @@ void RooAddGenContext::attach(const RooArgSet& args)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// One-time initialization of generator contex. Attach theEvent
-/// to internal p.d.f clone and forward initialization call to 
+/// to internal p.d.f clone and forward initialization call to
 /// the component generators
 
 void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
 {
   _pdf->recursiveRedirectServers(theEvent) ;
 
-  if (_isModel) {    
+  if (_isModel) {
     RooAddModel* amod = (RooAddModel*) _pdf ;
     _mcache = amod->getProjCache(_vars) ;
   } else {
     RooAddPdf* apdf = (RooAddPdf*) _pdf ;
     _pcache = apdf->getProjCache(_vars,0,"FULL_RANGE_ADDGENCONTEXT") ;
   }
-  
+
   // Forward initGenerator call to all components
   for (vector<RooAbsGenContext*>::iterator iter=_gcList.begin() ; iter!=_gcList.end() ; ++iter) {
     (*iter)->initGenerator(theEvent) ;
@@ -215,7 +215,7 @@ void RooAddGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
 void RooAddGenContext::updateThresholds()
 {
   if (_isModel) {
-    
+
     RooAddModel* amod = (RooAddModel*) _pdf ;
     amod->updateCoefficients(*_mcache,_vars) ;
 
@@ -229,9 +229,9 @@ void RooAddGenContext::updateThresholds()
   } else {
 
     RooAddPdf* apdf = (RooAddPdf*) _pdf ;
-    
+
     apdf->updateCoefficients(*_pcache,_vars) ;
-    
+
     _coefThresh[0] = 0. ;
     Int_t i ;
     for (i=0 ; i<_nComp ; i++) {
@@ -239,7 +239,7 @@ void RooAddGenContext::updateThresholds()
       _coefThresh[i+1] += _coefThresh[i] ;
 //       cout << "RooAddGenContext::updateThresholds(" << GetName() << ") _coefThresh[" << i+1 << "] = " << _coefThresh[i+1] << endl ;
     }
-    
+
   }
 
 }
@@ -261,13 +261,13 @@ void RooAddGenContext::setProtoDataOrder(Int_t* lut)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the details of the context
 
-void RooAddGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const 
+void RooAddGenContext::printMultiline(ostream &os, Int_t content, Bool_t verbose, TString indent) const
 {
   RooAbsGenContext::printMultiline(os,content,verbose,indent) ;
   os << indent << "--- RooAddGenContext ---" << endl ;
   os << indent << "Using PDF ";
   _pdf->printStream(os,kName|kArgs|kClassName,kSingleLine,indent);
-  
+
   os << indent << "List of component generators" << endl ;
   TString indent2(indent) ;
   indent2.Append("    ") ;

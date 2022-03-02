@@ -1,8 +1,3 @@
-[![Travis status](https://travis-ci.org/root-project/cling.svg?branch=master)](https://travis-ci.org/root-project/cling)
-<!-- a target="_blank" href="https://ci.appveyor.com/project/root-project/cling-j0wdg">
-  ![Appveyor status](https://ci.appveyor.com/api/projects/status/github/root-project/cling?svg=true&branch=master)
-</a -->
-
 Cling - The Interactive C++ Interpreter
 =========================================
 
@@ -18,7 +13,7 @@ concept, in order to leverage rapid application development. Implemented as a
 small extension to LLVM and Clang, the interpreter reuses their strengths such
 as the praised concise and expressive compiler diagnostics.
 
-See also [cling's web page.](https://cdn.rawgit.com/root-project/cling/master/www/index.html)
+See also [cling's web page.](https://rawcdn.githack.com/root-project/cling/d59d27ad61f2f3a78cd46e652cd9fb8adb893565/www/index.html)
 
 Please note that some of the resources are rather old and most of the stated
 limitations are outdated.

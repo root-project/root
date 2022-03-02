@@ -75,6 +75,7 @@ public:
       auto cl = elem->GetClass();
 
       auto nchilds = elem->GetNumChilds();
+      if ((nchilds == 0) && elem->IsFolder()) nchilds = -1; // indicate that TObject is container
 
       auto item = std::make_unique<TObjectItem>(elem->GetName(), nchilds);
 
@@ -106,7 +107,6 @@ public:
 
       return RLevelIter::Find(name, -1);
    }
-
 
 };
 
@@ -318,7 +318,7 @@ std::string TObjectElement::GetTitle() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns IsFolder of contained TObject
 
-bool TObjectElement::IsFolder()
+bool TObjectElement::IsFolder() const
 {
    return fObj ? fObj->IsFolder() : false;
 }

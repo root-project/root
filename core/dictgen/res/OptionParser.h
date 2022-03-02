@@ -112,14 +112,14 @@ Bugs Fixed 8-7-12:
  *
  * @par Changelog:
  * <b>Version 1.3:</b> Compatible with Microsoft Visual C++. @n
- * <b>Version 1.2:</b> Added @ref option::Option::namelen "Option::namelen" and removed the extraction
+ * <b>Version 1.2:</b> Added @ref ROOT::option::Option::namelen "Option::namelen" and removed the extraction
  *                     of short option characters into a special buffer. @n
- *                     Changed @ref option::Arg::Optional "Arg::Optional" to accept arguments if they are attached
+ *                     Changed @ref ROOT::option::Arg::Optional "Arg::Optional" to accept arguments if they are attached
  *                     rather than separate. This is what GNU getopt() does and how POSIX recommends
  *                     utilities should interpret their arguments.@n
  * <b>Version 1.1:</b> Optional mode with argument reordering as done by GNU getopt(), so that
  *                     options and non-options can be mixed. See
- *                     @ref option::Parser::parse() "Parser::parse()".
+ *                     @ref ROOT::option::Parser::parse() "Parser::parse()".
  *
  * @par Feedback:
  * Send questions, bug reports, feature requests etc. to: <tt><b>optionparser-feedback<span id="antispam">&nbsp;(a)&nbsp;</span>lists.sourceforge.net</b></tt>
@@ -200,7 +200,7 @@ Bugs Fixed 8-7-12:
  * @li Arguments to both short and long options may start with a @c '-' character. E.g.
  *     <code> -X-X </code>, <code>-X -X</code> or <code> --long-X=-X </code>. If @c -X
  *     and @c --long-X take an argument, that argument will be @c "-X" in all 3 cases.
- * @li If using the built-in @ref option::Arg::Optional "Arg::Optional", optional arguments must
+ * @li If using the built-in @ref ROOT::option::Arg::Optional "Arg::Optional", optional arguments must
  *     be attached.
  * @li the special option @c -- (i.e. without a name) terminates the list of
  *     options. Everything that follows is a non-option argument, even if it starts with
@@ -212,7 +212,7 @@ Bugs Fixed 8-7-12:
  *     NOTE: This behaviour is mandated by POSIX, but GNU getopt() only honours this if it is
  *     explicitly requested (e.g. by setting POSIXLY_CORRECT). @n
  *     You can enable the GNU behaviour by passing @c true as first argument to
- *     e.g. @ref option::Parser::parse() "Parser::parse()".
+ *     e.g. @ref ROOT::option::Parser::parse() "Parser::parse()".
  * @li Arguments that look like options (i.e. @c '-' followed by at least 1 character) but
  *     aren't, are NOT treated as non-option arguments. They are treated as unknown options and
  *     are collected into a list of unknown options for error reporting. @n
@@ -224,7 +224,7 @@ Bugs Fixed 8-7-12:
  *     @endcode
  *     In this example, @c --strange-filename is a non-option argument. If the @c --
  *     were omitted, it would be treated as an unknown option. @n
- *     See @ref option::Descriptor::longopt for information on how to collect unknown options.
+ *     See @ref ROOT::option::Descriptor::longopt for information on how to collect unknown options.
  *
  */
 

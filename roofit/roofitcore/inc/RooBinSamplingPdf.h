@@ -31,11 +31,11 @@ public:
   RooBinSamplingPdf() { };
   RooBinSamplingPdf(const char *name, const char *title, RooAbsRealLValue& observable, RooAbsPdf& inputPdf,
       double epsilon = 1.E-4);
-  virtual ~RooBinSamplingPdf() {};
+  ~RooBinSamplingPdf() override {};
 
   RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = 0);
 
-  virtual TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname) const override {
     return new RooBinSamplingPdf(*this, newname);
   }
 
@@ -66,8 +66,7 @@ public:
   bool selfNormalized() const override { return true; }
 
   ExtendMode extendMode() const override { return _pdf->extendMode(); }
-  using RooAbsPdf::expectedEvents;
-  virtual Double_t expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
+  Double_t expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
 
   /// Forwards to the PDF's implementation.
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet& generateVars, bool staticInitOK = true) const override {
@@ -94,6 +93,11 @@ public:
 
   std::unique_ptr<ROOT::Math::IntegratorOneDim>& integrator() const;
 
+  static std::unique_ptr<RooAbsPdf> create(RooAbsPdf& pdf, RooAbsData const &data, double precision);
+
+  double epsilon() const { return _relEpsilon; }
+  const RooAbsPdf& pdf() const { return _pdf.arg(); }
+  const RooAbsReal& observable() const { return _observable.arg(); }
 
 protected:
   double evaluate() const override;
@@ -110,11 +114,11 @@ private:
 
   RooTemplateProxy<RooAbsPdf> _pdf;
   RooTemplateProxy<RooAbsRealLValue> _observable;
-  double _relEpsilon{1.E-4}; /// Default integrator precision.
+  double _relEpsilon{1.E-4}; ///< Default integrator precision.
 
-  mutable std::unique_ptr<ROOT::Math::IntegratorOneDim> _integrator{nullptr}; //! Integrator used to sample bins.
-  mutable std::vector<double> _binBoundaries; //! Workspace to store data for bin sampling
-  mutable const RooArgSet* _normSetForIntegrator{nullptr}; //! Normalisation set for operator() calls.
+  mutable std::unique_ptr<ROOT::Math::IntegratorOneDim> _integrator{nullptr}; ///<! Integrator used to sample bins.
+  mutable std::vector<double> _binBoundaries; ///<! Workspace to store data for bin sampling
+  mutable const RooArgSet* _normSetForIntegrator{nullptr}; ///<! Normalisation set for operator() calls.
 
   ClassDefOverride(RooBinSamplingPdf,1)
 };

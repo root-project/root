@@ -23,18 +23,19 @@
 ///
 /// ###ROOT::TTreeProcessorMP::Process
 /// The possible usages of the Process method are the following:\n
-/// * Process(<dataset>, F func, const std::string& treeName, ULong64_t nToProcess):
+/// * `Process(<dataset>, F func, const std::string& treeName, ULong64_t nToProcess)`:
 ///     func is executed nToProcess times with argument a TTreeReader&, initialized for
-///     the TTree with name treeName, from the dataset <dataset>. The dataset can be
+///     the TTree with name treeName, from the dataset `<dataset>`. The dataset can be
 ///     expressed as:
+/// \code{.cpp}
 ///                     const std::string& fileName  -> single file name
 ///                     const std::vector<std::string>& fileNames -> vector of file names
 ///                     TFileCollection& files       -> collection of TFileInfo objects
 ///                     TChain& files                -> TChain with the file paths
 ///                     TTree& tree                  -> Reference to an existing TTree object
-///
+/// \endcode
 /// For legacy, the following signature is also supported:
-/// * Process(<dataset>, TSelector& selector, const std::string& treeName, ULong64_t nToProcess):
+/// * `Process(<dataset>, TSelector& selector, const std::string& treeName, ULong64_t nToProcess)`:
 ///   where selector is a TSelector derived class describing the analysis and the other arguments
 ///   have the same meaning as above.
 ///

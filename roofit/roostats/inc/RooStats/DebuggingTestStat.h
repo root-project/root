@@ -42,13 +42,13 @@ namespace RooStats {
        fTestStatistic = new RooRealVar("UniformTestStatistic","UniformTestStatistic",0,0,1);
        fRand = new TRandom();
      }
-     virtual ~DebuggingTestStat() {
+     ~DebuggingTestStat() override {
        //       delete fRand;
        //       delete fTestStatistic;
      }
 
-     // Main interface to evaluate the test statistic on a dataset
-     virtual Double_t Evaluate(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/)  {
+     /// Main interface to evaluate the test statistic on a dataset
+     Double_t Evaluate(RooAbsData& /*data*/, RooArgSet& /*paramsOfInterest*/) override  {
        //data = data; // avoid warning
        //paramsOfInterest = paramsOfInterest; //avoid warning
        return fRand->Uniform();
@@ -63,7 +63,7 @@ namespace RooStats {
       TRandom* fRand;
 
    protected:
-      ClassDef(DebuggingTestStat,1)   // A concrete implementation of the TestStatistic interface, useful for debugging.
+      ClassDefOverride(DebuggingTestStat,1)   // A concrete implementation of the TestStatistic interface, useful for debugging.
    };
 
 }

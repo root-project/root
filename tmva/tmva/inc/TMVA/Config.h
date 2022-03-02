@@ -36,9 +36,7 @@
 // Singleton class for global configuration settings used by TMVA       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-#if __cplusplus > 199711L
 #include <atomic>
-#endif
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -136,27 +134,15 @@ namespace TMVA {
       Config( const Config& );
       Config& operator=( const Config&);
       virtual ~Config();
-#if __cplusplus > 199711L
       static std::atomic<Config*> fgConfigPtr;
-#else
-      static Config* fgConfigPtr;
-#endif
    private:
 
-#if __cplusplus > 199711L
-      std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
-      std::atomic<UInt_t> fNWorkers;              // Default number of workers for multi-process jobs
-      std::atomic<Bool_t> fUseColoredConsole;     // coloured standard output
-      std::atomic<Bool_t> fSilent;                // no output at all
-      std::atomic<Bool_t> fWriteOptionsReference; // if set true: Configurable objects write file with option reference
-#else
-      Bool_t fDrawProgressBar;       // draw progress bar to indicate training evolution
-      UInt_t fNWorkers;              // Default number of workers for multi-process jobs
-      Bool_t fUseColoredConsole;     // coloured standard output
-      Bool_t fSilent;                // no output at all
-      Bool_t fWriteOptionsReference; // if set true: Configurable objects write file with option reference
-#endif
-      mutable MsgLogger* fLogger;   // message logger
+      std::atomic<Bool_t> fDrawProgressBar;       ///< draw progress bar to indicate training evolution
+      std::atomic<UInt_t> fNWorkers;              ///< Default number of workers for multi-process jobs
+      std::atomic<Bool_t> fUseColoredConsole;     ///< coloured standard output
+      std::atomic<Bool_t> fSilent;                ///< no output at all
+      std::atomic<Bool_t> fWriteOptionsReference; ///< if set true: Configurable objects write file with option reference
+      mutable MsgLogger* fLogger;                 ///< message logger
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(Config,0); // Singleton class for global configuration settings

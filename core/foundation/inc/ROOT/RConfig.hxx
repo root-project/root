@@ -44,10 +44,10 @@
 #  define R__NULLPTR
 # endif
 #else
-# if defined(__cplusplus) && (__cplusplus < 201103L)
-#  error "ROOT requires support for C++11 or higher."
+# if defined(__cplusplus) && (__cplusplus < 201402L)
+#  error "ROOT requires support for C++14 or higher."
 #  if defined(__GNUC__) || defined(__clang__)
-#   error "Pass `-std=c++11` as compiler argument."
+#   error "Pass `-std=c++14` as compiler argument."
 #  endif
 # endif
 #endif
@@ -333,16 +333,14 @@
 #   endif
 #endif
 
-#if __cplusplus >= 201402L
-#   if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_12)
-      // At least on 10.11, the compiler defines but the c++ library does not provide the size operator delete.
-      // See for example https://llvm.org/bugs/show_bug.cgi?id=22951 or
-      // https://github.com/gperftools/gperftools/issues/794.
-#   elif !defined(__GNUC__)
-#      define R__SIZEDDELETE
-#   elif __GNUC__ > 4
-#      define R__SIZEDDELETE
-#   endif
+#if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_12)
+   // At least on 10.11, the compiler defines but the c++ library does not provide the size operator delete.
+   // See for example https://llvm.org/bugs/show_bug.cgi?id=22951 or
+   // https://github.com/gperftools/gperftools/issues/794.
+#elif !defined(__GNUC__)
+#   define R__SIZEDDELETE
+#elif __GNUC__ > 4
+#   define R__SIZEDDELETE
 #endif
 
 /* allows symbols to be hidden from the shared library export symbol table */
@@ -494,12 +492,12 @@
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
 #endif
 
-/* USE AS `R__DEPRECATED(6,28, "Not threadsafe; use TFoo::Bar().")`
-   To be removed by 6.28 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,27,0)
-# define _R__DEPRECATED_628(REASON) _R__DEPRECATED_LATER(REASON)
+/* USE AS `R__DEPRECATED(6,30, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.30 */
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,29,0)
+# define _R__DEPRECATED_630(REASON) _R__DEPRECATED_LATER(REASON)
 #else
-# define _R__DEPRECATED_628(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+# define _R__DEPRECATED_630(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
 /* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`
@@ -531,9 +529,9 @@
 /*---- misc ------------------------------------------------------------------*/
 
 #ifdef R__GNU
-#   define SafeDelete(p) { if (p) { delete p; p = 0; } }
+#   define SafeDelete(p) { if (p) { delete p; p = nullptr; } }
 #else
-#   define SafeDelete(p) { delete p; p = 0; }
+#   define SafeDelete(p) { delete p; p = nullptr; }
 #endif
 
 #ifdef __FAST_MATH__

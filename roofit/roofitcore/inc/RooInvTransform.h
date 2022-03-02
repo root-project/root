@@ -21,19 +21,19 @@
 class RooInvTransform : public RooAbsFunc {
 public:
   RooInvTransform(const RooAbsFunc &func);
-  inline virtual ~RooInvTransform() { }
+  inline ~RooInvTransform() override { }
 
-  inline virtual Double_t operator()(const Double_t xvector[]) const {
+  inline Double_t operator()(const Double_t xvector[]) const override {
     Double_t xinv= 1./xvector[0];
     return (*_func)(&xinv)*xinv*xinv;
   }
-  inline virtual Double_t getMinLimit(UInt_t index) const { return 1/_func->getMaxLimit(index); }
-  inline virtual Double_t getMaxLimit(UInt_t index) const { return 1/_func->getMinLimit(index); }
+  inline Double_t getMinLimit(UInt_t index) const override { return 1/_func->getMaxLimit(index); }
+  inline Double_t getMaxLimit(UInt_t index) const override { return 1/_func->getMinLimit(index); }
 
 protected:
-  const RooAbsFunc *_func; // Input function binding
+  const RooAbsFunc *_func; ///< Input function binding
 
-  ClassDef(RooInvTransform,0) // Function binding returning inverse of other function binding
+  ClassDefOverride(RooInvTransform,0) // Function binding returning inverse of other function binding
 };
 
 #endif

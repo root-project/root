@@ -1,11 +1,11 @@
 /////////////////////////////////////////////////////////////////////////
 //
 // 'VALIDATION AND MC STUDIES' RooFit tutorial macro #804
-// 
+//
 // Using RooMCStudy on models with constrains
 //
-// 
-// 07/2008 - Wouter Verkerke 
+//
+// 07/2008 - Wouter Verkerke
 //
 /////////////////////////////////////////////////////////////////////////
 
@@ -27,7 +27,7 @@ using namespace RooFit ;
 
 class TestBasic804 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic804(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("MC Studies with aux. obs. constraints",refFile,writeRef,verbose) {} ;
 
   Double_t htol() { return 0.1 ; } // numerically very difficult test
@@ -66,8 +66,8 @@ public:
   // Perform toy study with internal constraint on f
   RooMCStudy mcs(sumc,x,Constrain(f),Silence(),Binned(),FitOptions(PrintLevel(-1))) ;
 
-  // Run 50 toys of 2000 events.  
-  // Before each toy is generated, a value for the f is sampled from the constraint pdf and 
+  // Run 50 toys of 2000 events.
+  // Before each toy is generated, a value for the f is sampled from the constraint pdf and
   // that value is used for the generation of that toy.
   mcs.generateAndFit(50,2000) ;
 
@@ -87,7 +87,7 @@ public:
   regTH(h_f_gen,"rf804_h_f_gen") ;
   regPlot(frame1,"rf804_plot1") ;
   regPlot(frame2,"rf804_plot2") ;
-  
+
   return kTRUE ;
   }
 } ;

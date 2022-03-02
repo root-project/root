@@ -16,14 +16,22 @@
 
 import ast
 import sys
-from os import path, scandir
+from os import path
 
-if len(sys.argv) < 2:
-    print("Please provide the directory where documented .py files are.")
+# Inspired from https://pypi.org/project/scandir/:
+# Use the built-in version of scandir/walk if possible, otherwise
+# use the scandir module
+try:
+    from os import scandir
+except ImportError:
+    from scandir import scandir
+
+if len(sys.argv) < 3:
+    print("Please provide the directory where documented .py files are, and the output folder for the .pyzdoc files.")
     exit(1)
 
 pyz_dir = sys.argv[1]
-
+pyz_dir_out = sys.argv[2]
 
 def run_fast_scandir(dir, ext):    # dir: str, ext: list
     subfolders, files = [], []
@@ -56,6 +64,12 @@ for pyz_file_path in filenames:
     module = ast.parse(file_contents)
     ds = ast.get_docstring(module)
     if ds is not None:
-        with open(pyz_file_path + '.pyzdoc', 'w') as pyz_doc_file:
+        # The output file will sit in the $(DOXYGEN_PYZDOC_PATH)/pyzdoc folder. The output
+        # file name is build from the input file name which is extracted from pyz_file_path.
+        # The extracted file name has the extension ".py". We want the ouput file name has the
+        # extension ".pyzdoc". Therefore it is enough to concatenate the string "zdoc" at the
+        # end of the input file name to get the desired extension for the output file name.
+        pyz_filename_out = pyz_dir_out + '/' + pyz_file_path[pyz_file_path.rfind("_"):] + 'zdoc'
+        with open(pyz_filename_out, 'w') as pyz_doc_file:
             pyz_doc_file.write(ds)
 

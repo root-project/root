@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////
 //
 // 'DATA AND CATEGORIES' RooFit tutorial macro #405
-// 
+//
 // Demonstration of real-->discrete mapping functions
 //
 //
 //
-// 07/2008 - Wouter Verkerke 
-// 
+// 07/2008 - Wouter Verkerke
+//
 /////////////////////////////////////////////////////////////////////////
 
 #ifndef __CINT__
@@ -28,20 +28,20 @@ using namespace RooFit ;
 
 class TestBasic405 : public RooFitTestUnit
 {
-public: 
+public:
   TestBasic405(TFile* refFile, Bool_t writeRef, Int_t verbose) : RooFitTestUnit("Real-to-category functions",refFile,writeRef,verbose) {} ;
   Bool_t testCode() {
 
 
-  // D e f i n e   p d f   i n   x ,   s a m p l e   d a t a s e t   i n   x 
+  // D e f i n e   p d f   i n   x ,   s a m p l e   d a t a s e t   i n   x
   // ------------------------------------------------------------------------
 
 
-  // Define a dummy PDF in x 
+  // Define a dummy PDF in x
   RooRealVar x("x","x",0,10) ;
   RooArgusBG a("a","argus(x)",x,RooRealConstant::value(10),RooRealConstant::value(-1)) ;
 
-  // Generate a dummy dataset 
+  // Generate a dummy dataset
   RooDataSet *data = a.generate(x,10000) ;
 
 
@@ -49,23 +49,23 @@ public:
   // C r e a t e   a   t h r e s h o l d   r e a l - > c a t   f u n c t i o n
   // --------------------------------------------------------------------------
 
-  // A RooThresholdCategory is a category function that maps regions in a real-valued 
+  // A RooThresholdCategory is a category function that maps regions in a real-valued
   // input observable observables to state names. At construction time a 'default'
   // state name must be specified to which all values of x are mapped that are not
   // otherwise assigned
   RooThresholdCategory xRegion("xRegion","region of x",x,"Background") ;
 
-  // Specify thresholds and state assignments one-by-one. 
-  // Each statement specifies that all values _below_ the given value 
+  // Specify thresholds and state assignments one-by-one.
+  // Each statement specifies that all values _below_ the given value
   // (and above any lower specified threshold) are mapped to the
   // category state with the given name
   //
   // Background | SideBand | Signal | SideBand | Background
-  //           4.23       5.23     8.23       9.23 
+  //           4.23       5.23     8.23       9.23
   xRegion.addThreshold(4.23,"Background") ;
   xRegion.addThreshold(5.23,"SideBand") ;
   xRegion.addThreshold(8.23,"Signal") ;
-  xRegion.addThreshold(9.23,"SideBand") ; 
+  xRegion.addThreshold(9.23,"SideBand") ;
 
 
 
@@ -87,7 +87,7 @@ public:
   // C r e a t e   a   b i n n i n g    r e a l - > c a t   f u n c t i o n
   // ----------------------------------------------------------------------
 
-  // A RooBinningCategory is a category function that maps bins of a (named) binning definition 
+  // A RooBinningCategory is a category function that maps bins of a (named) binning definition
   // in a real-valued input observable observables to state names. The state names are automatically
   // constructed from the variable name, the binning name and the bin number. If no binning name
   // is specified the default binning is mapped
@@ -107,9 +107,9 @@ public:
   // Add values of xBins function to dataset so that it can be used as observable
   RooCategory* xb = (RooCategory*) data->addColumn(xBins) ;
 
-  // Define range "alt" as including bins 1,3,5,7,9 
+  // Define range "alt" as including bins 1,3,5,7,9
   xb->setRange("alt","x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_coarse_bin9") ;
-  
+
   // Construct subset of data matching range "alt" but only for the first 5000 events and plot it on the fram
   RooDataSet* dataSel = (RooDataSet*) data->reduce(CutRange("alt"),EventRange(0,5000)) ;
 //   dataSel->plotOn(xframe,MarkerColor(kGreen),LineColor(kGreen),Name("data_sel")) ;
@@ -117,7 +117,7 @@ public:
 
   regTable(xbtable,"rf405_xbtable") ;
   regPlot(xframe,"rf405_plot1") ;
-  
+
   delete data ;
   delete dataSel ;
 

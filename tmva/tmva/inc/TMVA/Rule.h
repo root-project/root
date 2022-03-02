@@ -169,18 +169,18 @@ namespace TMVA {
       // get the name of variable with index i
       const TString & GetVarName( Int_t i) const;
 
-      RuleCut*             fCut;           // all cuts associated with the rule
-      Double_t             fNorm;          // normalization - usually 1.0/t(k)
-      Double_t             fSupport;       // s(k)
-      Double_t             fSigma;         // t(k) = sqrt(s*(1-s))
-      Double_t             fCoefficient;   // rule coeff. a(k)
-      Double_t             fImportance;    // importance of rule
-      Double_t             fImportanceRef; // importance ref
-      const RuleEnsemble*  fRuleEnsemble;  // pointer to parent RuleEnsemble
-      Double_t             fSSB;           // S/(S+B) for rule
-      Double_t             fSSBNeve;       // N(events) reaching the last node in reevaluation
+      RuleCut*             fCut;           ///< all cuts associated with the rule
+      Double_t             fNorm;          ///< normalization - usually 1.0/t(k)
+      Double_t             fSupport;       ///< s(k)
+      Double_t             fSigma;         ///< t(k) = sqrt(s*(1-s))
+      Double_t             fCoefficient;   ///< rule coeff. a(k)
+      Double_t             fImportance;    ///< importance of rule
+      Double_t             fImportanceRef; ///< importance ref
+      const RuleEnsemble*  fRuleEnsemble;  ///< pointer to parent RuleEnsemble
+      Double_t             fSSB;           ///< S/(S+B) for rule
+      Double_t             fSSBNeve;       ///< N(events) reaching the last node in reevaluation
 
-      mutable MsgLogger*   fLogger;        //! message logger
+      mutable MsgLogger*   fLogger;        ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    };

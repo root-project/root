@@ -60,12 +60,12 @@ RooSuperCategory::RooSuperCategory(const char *name, const char *title, const Ro
   RooAbsCategoryLValue(name, title),
   _multiCat("MultiCatProxy", "Stores a RooMultiCategory", this,
       *new RooMultiCategory((std::string(name) + "_internalMultiCat").c_str(), title, inputCategories), true, true, true)
-{  
+{
   // Check category list
   for (const auto arg : inputCategories) {
     if (!arg->IsA()->InheritsFrom(RooAbsCategoryLValue::Class())) {
-      coutE(InputArguments) << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName() 
-			    << " is not an lvalue. Use RooMultiCategory instead." << endl ;
+      coutE(InputArguments) << "RooSuperCategory::RooSuperCategory(" << GetName() << "): input category " << arg->GetName()
+             << " is not an lvalue. Use RooMultiCategory instead." << endl ;
       throw std::invalid_argument("Arguments of RooSuperCategory must be lvalues.");
     }
   }
@@ -87,10 +87,10 @@ RooSuperCategory::RooSuperCategory(const RooSuperCategory& other, const char *na
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Make an iterator over all state permutations of 
+/// Make an iterator over all state permutations of
 /// the input categories of this supercategory.
 /// The iterator just generates state names, it does not set them.
-TIterator* RooSuperCategory::MakeIterator() const 
+TIterator* RooSuperCategory::MakeIterator() const
 {
   return new RooMultiCatIter(_multiCat->inputCatList());
 }
@@ -142,8 +142,8 @@ Bool_t RooSuperCategory::setLabel(const char* label, Bool_t printError)
 void RooSuperCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
 {
   RooAbsCategory::printMultiline(os,content,verbose,indent) ;
-  
-  if (verbose) {     
+
+  if (verbose) {
     os << indent << "--- RooSuperCategory ---" << '\n';
     os << indent << "  Internal RooMultiCategory:" << '\n';
     _multiCat->printMultiline(os, content, verbose, indent+"  ");
@@ -155,7 +155,7 @@ void RooSuperCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that all input category states are in the given range.
-Bool_t RooSuperCategory::inRange(const char* rangeName) const 
+Bool_t RooSuperCategory::inRange(const char* rangeName) const
 {
   for (const auto c : _multiCat->inputCatList()) {
     auto cat = static_cast<RooAbsCategoryLValue*>(c);
@@ -170,7 +170,7 @@ Bool_t RooSuperCategory::inRange(const char* rangeName) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check that any of the input categories has a range with the given name.
-Bool_t RooSuperCategory::hasRange(const char* rangeName) const 
+Bool_t RooSuperCategory::hasRange(const char* rangeName) const
 {
   for (const auto c : _multiCat->inputCatList()) {
     auto cat = static_cast<RooAbsCategoryLValue*>(c);

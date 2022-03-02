@@ -12,14 +12,30 @@
 /// \date March 2018
 /// \author Jan Musinsky
 
-void HighlightTitle(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb);
+TText *info = nullptr;
 
-TText *info;
-
+void HighlightTitle(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
+{
+   auto h2 = dynamic_cast<TH2F*>(obj);
+   if (!h2) return;
+   if (!h2->IsHighlight()) { // after highlight disabled
+      h2->SetTitle("Disable highlight");
+      return;
+   }
+   if (info) info->SetTitle("");
+   TString t;
+   t.Form("bin[%02d, %02d] (%5.2f, %5.2f) content %g", xhb, yhb,
+          h2->GetXaxis()->GetBinCenter(xhb), h2->GetYaxis()->GetBinCenter(yhb),
+          h2->GetBinContent(xhb, yhb));
+   h2->SetTitle(t.Data());
+   pad->Update();
+}
 
 void hlHisto1()
 {
-   auto Canvas = new TCanvas();
+   auto c1 = new TCanvas();
+   c1->HighlightConnect("HighlightTitle(TVirtualPad*,TObject*,Int_t,Int_t)");
+
    auto h2 = new TH2F("h2", "", 50, -5.0, 5.0, 50, -5.0, 5.0);
    for (Int_t i = 0; i < 10000; i++) h2->Fill(gRandom->Gaus(), gRandom->Gaus());
    h2->Draw();
@@ -29,26 +45,10 @@ void hlHisto1()
    info->SetTextColor(kRed+1);
    info->SetBit(kCannotPick);
    info->Draw();
-   Canvas->Update();
+   c1->Update();
 
+   // call after update to apply changes in the histogram painter
    h2->SetHighlight();
-   Canvas->HighlightConnect("HighlightTitle(TVirtualPad*,TObject*,Int_t,Int_t)");
 }
 
 
-void HighlightTitle(TVirtualPad *pad, TObject *obj, Int_t xhb, Int_t yhb)
-{
-   auto h2 = (TH2F *)obj;
-   if (!h2) return;
-   if (!h2->IsHighlight()) { // after highlight disabled
-      h2->SetTitle("");
-      return;
-   }
-   info->SetTitle("");
-   TString t;
-   t.Form("bin[%02d, %02d] (%5.2f, %5.2f) content %g", xhb, yhb,
-          h2->GetXaxis()->GetBinCenter(xhb), h2->GetYaxis()->GetBinCenter(yhb),
-          h2->GetBinContent(xhb, yhb));
-   h2->SetTitle(t.Data());
-   pad->Update();
-}

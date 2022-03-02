@@ -1010,7 +1010,7 @@ Int_t TLinearFitter::Eval()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Fixes paramter #ipar at its current value.
+///Fixes paramter `#ipar` at its current value.
 
 void TLinearFitter::FixParameter(Int_t ipar)
 {
@@ -1033,7 +1033,7 @@ void TLinearFitter::FixParameter(Int_t ipar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Fixes parameter #ipar at value parvalue.
+///Fixes parameter `#ipar` at value `parvalue`.
 
 void TLinearFitter::FixParameter(Int_t ipar, Double_t parvalue)
 {
@@ -1055,7 +1055,7 @@ void TLinearFitter::FixParameter(Int_t ipar, Double_t parvalue)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Releases parameter #ipar.
+///Releases parameter `#ipar`.
 
 void TLinearFitter::ReleaseParameter(Int_t ipar)
 {
@@ -1361,7 +1361,7 @@ void TLinearFitter::GetParameters(TVectorD &vpar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the value and the name of the parameter #ipar
+///Returns the value and the name of the parameter `#ipar`
 ///NB: In the calling function the argument name must be set large enough
 
 Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t& /*verr*/,Double_t& /*vlow*/, Double_t& /*vhigh*/) const
@@ -1380,7 +1380,7 @@ Int_t TLinearFitter::GetParameter(Int_t ipar,char* name,Double_t& value,Double_t
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the error of parameter #ipar
+///Returns the error of parameter `#ipar`
 
 Double_t TLinearFitter::GetParError(Int_t ipar) const
 {
@@ -1394,7 +1394,7 @@ Double_t TLinearFitter::GetParError(Int_t ipar) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns name of parameter #ipar
+///Returns name of parameter `#ipar`
 
 const char *TLinearFitter::GetParName(Int_t ipar) const
 {
@@ -1408,7 +1408,7 @@ const char *TLinearFitter::GetParName(Int_t ipar) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the t-value for parameter #ipar
+///Returns the t-value for parameter `#ipar`
 
 Double_t TLinearFitter::GetParTValue(Int_t ipar)
 {
@@ -1422,7 +1422,7 @@ Double_t TLinearFitter::GetParTValue(Int_t ipar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the significance of parameter #ipar
+///Returns the significance of parameter `#ipar`
 
 Double_t TLinearFitter::GetParSignificance(Int_t ipar)
 {

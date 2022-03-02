@@ -137,7 +137,8 @@ std::string ComposeRVecTypeName(const std::string &valueType)
 
 std::string GetLeafTypeName(TLeaf *leaf, const std::string &colName)
 {
-   std::string colType = leaf->GetTypeName();
+   const char *colTypeCStr = leaf->GetTypeName();
+   std::string colType = colTypeCStr == nullptr ? "" : colTypeCStr;
    if (colType.empty())
       throw std::runtime_error("Could not deduce type of leaf " + colName);
    if (leaf->GetLeafCount() != nullptr && leaf->GetLenStatic() == 1) {
@@ -202,7 +203,7 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
             }
             return be->GetClassName();
          }
-      } else if (branch->IsA() == TBranch::Class() && branch->GetListOfLeaves()->GetEntries() == 1) {
+      } else if (branch->IsA() == TBranch::Class() && branch->GetListOfLeaves()->GetEntriesUnsafe() == 1) {
          // normal branch (not a TBranchElement): if it has only one leaf, we pick the type of the leaf:
          // RDF and TTreeReader allow referring to branch.leaf as just branch if branch has only one leaf
          leaf = static_cast<TLeaf *>(branch->GetListOfLeaves()->UncheckedAt(0));
@@ -332,17 +333,36 @@ Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 {
    R__LOG_DEBUG(10, RDFLogChannel()) << "Jitting and executing the following code:\n\n" << code << '\n';
 
-   TInterpreter::EErrorCode errorCode(TInterpreter::kNoError);
-   auto res = gInterpreter->Calc(code.c_str(), &errorCode);
-   if (errorCode != TInterpreter::EErrorCode::kNoError) {
-      std::string msg = "\nAn error occurred during just-in-time compilation";
-      if (!context.empty())
-         msg += " in " + context;
-      msg += ". The lines above might indicate the cause of the crash\nAll RDF objects that have not run their event "
-             "loop yet should be considered in an invalid state.\n";
-      throw std::runtime_error(msg);
+   TInterpreter::EErrorCode errorCode(TInterpreter::kNoError); // storage for cling errors
+
+   auto callCalc = [&errorCode, &context](const std::string &codeSlice) {
+      gInterpreter->Calc(codeSlice.c_str(), &errorCode);
+      if (errorCode != TInterpreter::EErrorCode::kNoError) {
+         std::string msg = "\nAn error occurred during just-in-time compilation";
+         if (!context.empty())
+            msg += " in " + context;
+         msg +=
+            ". The lines above might indicate the cause of the crash\nAll RDF objects that have not run their event "
+            "loop yet should be considered in an invalid state.\n";
+         throw std::runtime_error(msg);
+      }
+   };
+
+   // Call Calc every 1000 newlines in order to avoid jitting a very large function body, which is slow:
+   // see https://github.com/root-project/root/issues/9312 and https://github.com/root-project/root/issues/7604
+   std::size_t substr_start = 0;
+   std::size_t substr_end = 0;
+   while (substr_end != std::string::npos && substr_start != code.size() - 1) {
+      for (std::size_t i = 0u; i < 1000u && substr_end != std::string::npos; ++i) {
+         substr_end = code.find('\n', substr_end + 1);
+      }
+      const std::string subs = code.substr(substr_start, substr_end - substr_start);
+      substr_start = substr_end;
+
+      callCalc(subs);
    }
-   return res;
+
+   return 0; // we used to forward the return value of Calc, but that's not possible anymore.
 }
 
 bool IsInternalColumn(std::string_view colName)
@@ -364,6 +384,44 @@ unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigne
    }
    columnWidth = (columnWidth / minColumnSpace + 1) * minColumnSpace;
    return columnWidth;
+}
+
+void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
+                            const std::string &colName, const std::string &where)
+{
+   // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
+   // and a jitted one.
+   const auto diffTypes = (0 != std::strcmp(colType.name(), requestedType.name()));
+   auto inheritedType = [&]() {
+      auto colTClass = TClass::GetClass(colType);
+      return colTClass && colTClass->InheritsFrom(TClass::GetClass(requestedType));
+   };
+
+   if (diffTypes && !inheritedType()) {
+      const auto tName = TypeID2TypeName(requestedType);
+      const auto colTypeName = TypeID2TypeName(colType);
+      std::string errMsg = where + ": type mismatch: column \"" + colName + "\" is being used as ";
+      if (tName.empty()) {
+         errMsg += requestedType.name();
+         errMsg += " (extracted from type info)";
+      } else {
+         errMsg += tName;
+      }
+      errMsg += " but the Define or Vary node advertises it as ";
+      if (colTypeName.empty()) {
+         auto &id = colType;
+         errMsg += id.name();
+         errMsg += " (extracted from type info)";
+      } else {
+         errMsg += colTypeName;
+      }
+      throw std::runtime_error(errMsg);
+   }
+}
+
+bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec)
+{
+   return std::find(vec.cbegin(), vec.cend(), str) != vec.cend();
 }
 
 } // end NS RDF

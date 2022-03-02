@@ -34,16 +34,16 @@ by many other classes (graphics, histograms). It holds all the text attributes.
 ## Text attributes
 Text attributes are:
 
-  - [Text Alignment](\ref T1)
-  - [Text Angle](\ref T2)
-  - [Text Color](\ref T3)
-  - [Text Size](\ref T4)
-  - [Text Font and Precision](\ref T5)
-     - [Font quality and speed](\ref T51)
-     - [How to use True Type Fonts](\ref T52)
-     - [List of the currently supported fonts](\ref T53)
+  - [Text Alignment](\ref ATTTEXT1)
+  - [Text Angle](\ref ATTTEXT2)
+  - [Text Color](\ref ATTTEXT3)
+  - [Text Size](\ref ATTTEXT4)
+  - [Text Font and Precision](\ref ATTTEXT5)
+     - [Font quality and speed](\ref ATTTEXT51)
+     - [How to use True Type Fonts](\ref ATTTEXT52)
+     - [List of the currently supported fonts](\ref ATTTEXT53)
 
-\anchor T1
+\anchor ATTTEXT1
 ## Text Alignment
 
 The text alignment is an integer number (`align`) allowing to control
@@ -93,7 +93,7 @@ They allow to write:
 object->SetTextAlign(kHAlignLeft+kVAlignTop);
 ~~~
 
-\anchor T2
+\anchor ATTTEXT2
 ## Text Angle
 
 Text angle in degrees.
@@ -106,7 +106,7 @@ Begin_Macro(source)
 textangle.C
 End_Macro
 
-\anchor T3
+\anchor ATTTEXT3
 ## Text Color
 
 The text color is a color index (integer) pointing in the ROOT
@@ -138,7 +138,7 @@ The transparency is available on all platforms when the flag `OpenGL.CanvasPrefe
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 
-\anchor T4
+\anchor ATTTEXT4
 ## Text Size
 
 If the text precision (see next paragraph) is smaller than 3, the text
@@ -169,7 +169,7 @@ The text size of any class inheriting from `TAttText` can
 be changed using the method `SetTextSize` and retrieved using the
 method `GetTextSize`.
 
-\anchor T5
+\anchor ATTTEXT5
 ## Text Font and Precision
 
 The text font code is combination of the font number and the precision.
@@ -190,7 +190,7 @@ The text font and precision of any class inheriting from `TAttText` can
 be changed using the method `SetTextFont` and retrieved using the
 method `GetTextFont`.
 
-\anchor T51
+\anchor ATTTEXT51
 ### Font quality and speed
 
 When precision 0 is used, only the original non-scaled system fonts are
@@ -201,7 +201,7 @@ Precision 1 and 2 fonts have a different behaviour depending if the
 True Type Fonts (TTF) are used or not. If TTF are used, you always get very good
 quality scalable and rotatable fonts. However TTF are slow.
 
-\anchor T52
+\anchor ATTTEXT52
 ### How to use True Type Fonts
 
 One can activate the TTF by adding (or activating) the following line
@@ -225,7 +225,7 @@ printout given by this command:
    Unix.*.Root.UseTTFonts:   true                           [Global]
 ~~~
 
-\anchor T53
+\anchor ATTTEXT53
 ### List of the currently supported fonts
 
 ~~~ {.cpp}
@@ -304,6 +304,29 @@ void TAttText::Copy(TAttText &atttext) const
    atttext.fTextColor  = fTextColor;
    atttext.fTextFont   = fTextFont;
    atttext.fTextSize   = fTextSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the text in percent of the pad size.
+///
+/// If the font precision is greater than 2, the text size returned is the size in pixel
+/// converted into percent of the pad size, otherwise the size returned is the same as the
+/// size given as input parameter.
+
+Float_t TAttText::GetTextSizePercent(Float_t size)
+{
+   Float_t rsize = size;
+   if (fTextFont%10 > 2 && gPad) {
+      UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
+                            gPad->XtoAbsPixel(gPad->GetX1()));
+      UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
+                            gPad->YtoAbsPixel(gPad->GetY1()));
+      if (w < h)
+         rsize = rsize/w;
+      else
+         rsize = rsize/h;
+   }
+   return rsize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

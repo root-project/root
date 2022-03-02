@@ -37,20 +37,20 @@
 
 class RooMappedCategoryCache : public RooAbsCache {
   public:
-    RooMappedCategoryCache(RooAbsArg* owner = 0) : RooAbsCache(owner)
+    RooMappedCategoryCache(RooAbsArg* owner) : RooAbsCache(owner)
   { initialise(); }
-    RooMappedCategoryCache(const RooAbsCache& other, RooAbsArg* owner = 0) :
-      RooAbsCache(other, owner)
+    RooMappedCategoryCache(const RooAbsCache& /*other*/, RooAbsArg* owner) :
+      RooAbsCache(owner)
     { initialise(); }
 
     // look up our parent's output based on our parent's input category index
     RooAbsCategory::value_type lookup(Int_t idx) const
     { return _map[idx]; }
 
-    virtual void wireCache()
+    void wireCache() override
     { _map.clear(); initialise(); }
 
-    virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
+    Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) override
     { _map.clear(); initialise(); return kFALSE; }
 
   private:

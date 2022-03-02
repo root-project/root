@@ -37,9 +37,9 @@ namespace Math {
 
    // class DefaultEngineType {};
 
-   
+
    /**
-       Documentation for the RandomFunction class 
+       Documentation for the RandomFunction class
 
        @ingroup  Random
    */
@@ -50,35 +50,35 @@ namespace Math {
 
 
 
-      /**
-      Definition of the generic impelmentation class for the RandomFunctions.
-      Needs to have specialized implementations on the different type of engines      
+   /**
+      Definition of the generic implementation class for the RandomFunctions.
+      Needs to have specialized implementations on the different type of engines
     */
-   template <class EngineBaseType> 
+   template <class EngineBaseType>
    class  RandomFunctionsImpl {
    public:
       void SetEngine(void *) {}
    };
 
    /**
-      Implementation class for the RandomFunction for all the engined that derives from 
+      Implementation class for the RandomFunction for all the engined that derives from
       TRandomEngine class, which defines an interface which has TRandomEngine::Rndm()
       In this way we can have a common implementation for the RandomFunctions
     */
 
    template<>
-   class RandomFunctionsImpl<TRandomEngine> { 
+   class RandomFunctionsImpl<TRandomEngine> {
 
-   public: 
+   public:
 
-      /// class constructor 
+      /// class constructor
       RandomFunctionsImpl() : fBaseEngine(0) {}
 
       void SetEngine(void *r) {
          fBaseEngine = static_cast<TRandomEngine*>(r);
-         assert(fBaseEngine);  // to be sure the static cast works 
+         assert(fBaseEngine);  // to be sure the static cast works
       }
-      
+
 
       ///Generate binomial numbers
       int Binomial(int ntot, double prob);
@@ -94,11 +94,11 @@ namespace Math {
       /// Returns an exponential deviate.
       ///    exp( -t/tau )
       double  Exp(double tau);
-      
+
       /// generate Gaussian number using Box-Muller method
       double GausBM( double mean, double sigma);
 
-      /// generate random numbers according to the Accemptance-Complemet-Ratio method
+      /// generate random numbers according to the Acceptance-Complement-Ratio method
       double GausACR( double mean, double sigma);
 
       /// Generate a random number following a Landau distribution
@@ -112,7 +112,7 @@ namespace Math {
       double PoissonD(double mean);
 
       /// Generate numbers distributed following a gaussian with mean=0 and sigma=1.
-      /// Using the Box-Muller method 
+      /// Using the Box-Muller method
       void Rannor(double &a, double  &b);
 
       /// Generates random vectors, uniformly distributed over the surface
@@ -127,7 +127,7 @@ namespace Math {
       TRandomEngine* fBaseEngine;
 
    private:
-      // Internal method used by the functions 
+      // Internal method used by the functions
       double Rndm() { return fBaseEngine->Rndm(); }
       // for internal usage
       double Gaus(double mean, double sigma) { return GausACR(mean,sigma); }
@@ -142,13 +142,13 @@ namespace Math {
 
    public:
 
-      //RandomFunctions() {} 
+      //RandomFunctions() {}
 
       RandomFunctions(Engine & rng) : fEngine(&rng) {
          fImpl.SetEngine(&rng);
       }
 
-      /// destructor (no op) we do not mantain the engine)
+      /// destructor (no op) we do not maintain the engine)
       ~RandomFunctions() {}
 
 
@@ -158,7 +158,7 @@ namespace Math {
 
       ///Generate binomial numbers
       int Binomial(int ntot, double prob) {
-         return fImpl.Binomial(ntot,prob); 
+         return fImpl.Binomial(ntot,prob);
       }
 
       /// Return a number distributed following a BreitWigner function with mean and gamma.
@@ -176,24 +176,24 @@ namespace Math {
       /// Returns an exponential deviate.
       ///    exp( -t/tau )
       double  Exp(double tau) {
-         return fImpl.Exp(tau); 
+         return fImpl.Exp(tau);
       }
-      
+
       /// generate Gaussian number using Box-Muller method
       double GausBM( double mean, double sigma) {
          return fImpl.GausBM(mean,sigma);
       }
 
-      /// generate random numbers according to the Accemptance-Complemet-Ratio method
+      /// generate random numbers according to the Acceptance-Complement-Ratio method
       double GausACR( double mean, double sigma) {
-         return fImpl.GausACR(mean, sigma); 
+         return fImpl.GausACR(mean, sigma);
       }
 
       /// Generate a random number following a Landau distribution
       /// with location parameter mu and scale parameter sigma:
       ///      Landau( (x-mu)/sigma )
       double Landau(double mu, double sigma) {
-         return fImpl.Landau(mu,sigma); 
+         return fImpl.Landau(mu,sigma);
       }
 
       /// Generates a random integer N according to a Poisson law.
@@ -202,7 +202,7 @@ namespace Math {
       double PoissonD(double mean) { return fImpl.PoissonD(mean); }
 
       /// Generate numbers distributed following a gaussian with mean=0 and sigma=1.
-      /// Using the Box-Muller method 
+      /// Using the Box-Muller method
       void Rannor(double &a, double  &b) {
          return fImpl.Rannor(a,b);
       }
@@ -215,38 +215,38 @@ namespace Math {
 
       /// generate random numbers following a Uniform distribution in the [a,b] interval
       double Uniform(double a, double b) {
-         return (b-a) * Rndm_impl() + a; 
+         return (b-a) * Rndm_impl() + a;
       }
-     
+
       /// generate random numbers following a Uniform distribution in the [0,a] interval
       double Uniform(double a) {
-         return a * Rndm_impl() ; 
+         return a * Rndm_impl() ;
       }
 
 
-      /// generate Gaussian number using defqault method
+      /// generate Gaussian number using default method
       inline double Gaus( double mean, double sigma) {
          return fImpl.GausACR(mean,sigma);
       }
 
 
-      // /// re-implement Gaussian 
+      // /// re-implement Gaussian
       // double GausBM2(double mean, double sigma) {
       //    double y =  Rndm_impl();
       //    double z =  Rndm_impl();
       //    double x = z * 6.28318530717958623;
       //    double radius = std::sqrt(-2*std::log(y));
       //    double g = radius * std::sin(x);
-      //    return mean + g * sigma; 
+      //    return mean + g * sigma;
       // }
 
 
-      /// methods which are only for GSL random generators 
-      
+      /// methods which are only for GSL random generators
+
 
       /// Gamma functions (not implemented here, requires a GSL random engine)
       double Gamma( double , double ) {
-         //r.Error("Error: Gamma() requires a GSL Engine type"); 
+         //r.Error("Error: Gamma() requires a GSL Engine type");
          static_assert(std::is_fundamental<Engine>::value,"Error: Gamma() requires a GSL Engine type");
          return 0;
       }
@@ -296,16 +296,16 @@ namespace Math {
 
       Engine & Rng() { assert(fEngine); return *fEngine; }
 
-      /// Internal impelmentation to return random number
+      /// Internal implementation to return random number
       /// Since this one is not a virtual function is faster than Rndm
       inline double Rndm_impl() { return (*fEngine)(); }
 
 
-   private:    
+   private:
 
       Engine * fEngine;   //! random number generator engine
       RandomFunctionsImpl<EngineBaseType> fImpl;   //! instance of the class implementing the functions
-      
+
 
   };
 

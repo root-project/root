@@ -22,7 +22,7 @@ class TIterator;
 #include "RooAbsCategoryLValue.h"
 #include "RooArgSet.h"
 #include "RooTemplateProxy.h"
- 
+
 
 class RooSuperCategory : public RooAbsCategoryLValue {
 public:
@@ -30,23 +30,23 @@ public:
   RooSuperCategory();
   RooSuperCategory(const char *name, const char *title, const RooArgSet& inputCatList);
   RooSuperCategory(const RooSuperCategory& other, const char *name=0) ;
-  virtual TObject* clone(const char* newname) const override { return new RooSuperCategory(*this,newname); }
-  virtual ~RooSuperCategory() { };
+  TObject* clone(const char* newname) const override { return new RooSuperCategory(*this,newname); }
+  ~RooSuperCategory() override { };
 
-  virtual bool setIndex(value_type index, bool printError = true) override ;
+  bool setIndex(value_type index, bool printError = true) override ;
   using RooAbsCategoryLValue::setIndex;
-  virtual Bool_t setLabel(const char* label, Bool_t printError=kTRUE) override;
+  Bool_t setLabel(const char* label, Bool_t printError=kTRUE) override;
   using RooAbsCategoryLValue::setLabel;
 
   // Printing interface (human readable)
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
+  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const override;
 
   /// \deprecated Use begin(), end() or range-based for loops to iterate through state names.
   TIterator* MakeIterator() const ;
   const RooArgSet& inputCatList() const { return _multiCat->inputCatList(); }
 
-  virtual Bool_t inRange(const char* rangeName) const override;
-  virtual Bool_t hasRange(const char* rangeName) const override;
+  Bool_t inRange(const char* rangeName) const override;
+  Bool_t hasRange(const char* rangeName) const override;
 
 protected:
   value_type evaluate() const override {

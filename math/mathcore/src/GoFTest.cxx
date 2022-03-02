@@ -120,16 +120,17 @@ namespace Math {
       }
    };
 
-   void GoFTest::SetDistribution(EDistribution dist) {
+   void GoFTest::SetDistribution(EDistribution dist, const std::vector<double>  & distParams ) {
       if (!(kGaussian <= dist && dist <= kExponential)) {
-         MATH_ERROR_MSG("SetDistribution", "Cannot set distribution type! Distribution type option must be ennabled.");
+         MATH_ERROR_MSG("SetDistribution", "Cannot set distribution type! Distribution type option must be enabled.");
          return;
       }
       fDist = dist;
+      SetParameters(distParams);
       SetCDF();
    }
 
-   GoFTest::GoFTest( UInt_t sample1Size, const Double_t* sample1, UInt_t sample2Size, const Double_t* sample2 )
+   GoFTest::GoFTest( size_t sample1Size, const Double_t* sample1, size_t sample2Size, const Double_t* sample2 )
    : fDist(kUndefined),
      fSamples(std::vector<std::vector<Double_t> >(2)),
      fTestSampleFromH0(kFALSE) {
@@ -148,16 +149,15 @@ namespace Math {
          assert(!badSampleArg);
       }
       std::vector<const Double_t*> samples(2);
-      std::vector<UInt_t> samplesSizes(2);
+      std::vector<size_t> samplesSizes(2);
       samples[0] = sample1;
       samples[1] = sample2;
       samplesSizes[0] = sample1Size;
       samplesSizes[1] = sample2Size;
       SetSamples(samples, samplesSizes);
-      SetParameters();
    }
 
-   GoFTest::GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist)
+   GoFTest::GoFTest(size_t sampleSize, const Double_t* sample, EDistribution dist, const std::vector<double> & distParams)
    : fDist(dist),
      fSamples(std::vector<std::vector<Double_t> >(1)),
      fTestSampleFromH0(kTRUE) {
@@ -169,21 +169,21 @@ namespace Math {
          assert(!badSampleArg);
       }
       std::vector<const Double_t*> samples(1, sample);
-      std::vector<UInt_t> samplesSizes(1, sampleSize);
+      std::vector<size_t> samplesSizes(1, sampleSize);
       SetSamples(samples, samplesSizes);
-      SetParameters();
+      SetParameters(distParams);
       SetCDF();
    }
 
    GoFTest::~GoFTest() {}
 
-   void GoFTest::SetSamples(std::vector<const Double_t*> samples, const std::vector<UInt_t> samplesSizes) {
+   void GoFTest::SetSamples(std::vector<const Double_t*> samples, const std::vector<size_t> samplesSizes) {
       fCombinedSamples.assign(std::accumulate(samplesSizes.begin(), samplesSizes.end(), 0u), 0.0);
-      UInt_t combinedSamplesSize = 0;
-      for (UInt_t i = 0; i < samples.size(); ++i) {
+      size_t combinedSamplesSize = 0;
+      for (size_t i = 0; i < samples.size(); ++i) {
          fSamples[i].assign(samples[i], samples[i] + samplesSizes[i]);
          std::sort(fSamples[i].begin(), fSamples[i].end());
-         for (UInt_t j = 0; j < samplesSizes[i]; ++j) {
+         for (size_t j = 0; j < samplesSizes[i]; ++j) {
             fCombinedSamples[combinedSamplesSize + j] = samples[i][j];
          }
          combinedSamplesSize += samplesSizes[i];
@@ -200,9 +200,8 @@ namespace Math {
       }
    }
 
-   void GoFTest::SetParameters() {
-      fMean = std::accumulate(fSamples[0].begin(), fSamples[0].end(), 0.0) / fSamples[0].size();
-      fSigma = TMath::Sqrt(1. / (fSamples[0].size() - 1) * (std::inner_product(fSamples[0].begin(), fSamples[0].end(),     fSamples[0].begin(), 0.0) - fSamples[0].size() * TMath::Power(fMean, 2)));
+   void GoFTest::SetParameters(const std::vector<double> & distParams) {
+      fParams = distParams;
    }
 
    void GoFTest::operator()(ETestType test, Double_t& pvalue, Double_t& testStat) const {
@@ -246,12 +245,15 @@ namespace Math {
       switch (fDist) {
       case kLogNormal:
          LogSample();
+         if (fParams.empty()) fParams = {0,1};
          /* fall through */
       case kGaussian :
          cdf = new ROOT::Math::WrappedMemFunction<GoFTest, Double_t (GoFTest::*)(Double_t) const>(*this, &GoFTest::GaussianCDF);
+         if (fParams.empty()) fParams = {0,1};
          break;
       case kExponential:
          cdf = new ROOT::Math::WrappedMemFunction<GoFTest, Double_t (GoFTest::*)(Double_t) const>(*this, &GoFTest::ExponentialCDF);
+         if (fParams.empty()) fParams = {1};
          break;
       case kUserDefined:
       case kUndefined:
@@ -273,7 +275,7 @@ namespace Math {
          fCDF.reset(new CDFWrapper(f, xmin, xmax) );
    }
 
-   void GoFTest::Instantiate(const Double_t* sample, UInt_t sampleSize) {
+   void GoFTest::Instantiate(const Double_t* sample, size_t sampleSize) {
       // initialization function for the template constructors
       Bool_t badSampleArg = sample == 0 || sampleSize == 0;
       if (badSampleArg) {
@@ -284,36 +286,33 @@ namespace Math {
       }
       fCDF.reset((IGenFunction*)0);
       fDist = kUserDefined;
-      fMean = 0;
-      fSigma = 0;
       fSamples = std::vector<std::vector<Double_t> >(1);
       fTestSampleFromH0 = kTRUE;
-      SetSamples(std::vector<const Double_t*>(1, sample), std::vector<UInt_t>(1, sampleSize));
+      SetSamples(std::vector<const Double_t*>(1, sample), std::vector<size_t>(1, sampleSize));
    }
 
    Double_t GoFTest::GaussianCDF(Double_t x) const {
-      return ROOT::Math::normal_cdf(x, fSigma, fMean);
+      return ROOT::Math::normal_cdf(x, fParams[1], fParams[0]);
    }
 
    Double_t GoFTest::ExponentialCDF(Double_t x) const {
-      return ROOT::Math::exponential_cdf(x, 1.0 / fMean);
+      return ROOT::Math::exponential_cdf(x, fParams[0]);
    }
 
    void GoFTest::LogSample() {
       transform(fSamples[0].begin(), fSamples[0].end(), fSamples[0].begin(),
                 std::function<Double_t(Double_t)>(TMath::Log));
-      SetParameters();
    }
 
 /* 
   Taken from (1)
 */ 
-   Double_t GoFTest::GetSigmaN(const std::vector<UInt_t> & ns, UInt_t N) {
+   Double_t GoFTest::GetSigmaN(const std::vector<size_t> & ns, size_t N) {
       // compute moments of AD distribution (from Scholz-Stephen paper, paragraph 3)
 
       Double_t sigmaN = 0.0, h = 0.0, H = 0.0, g = 0.0, a, b, c, d, k = ns.size();
 
-      for (UInt_t i = 0; i < ns.size(); ++i) {
+      for (size_t i = 0; i < ns.size(); ++i) {
          H += 1.0 /  double( ns[i] );
       }
 
@@ -321,13 +320,13 @@ namespace Math {
       // cache Sum( 1 / i)
       if (N < 2000) { 
          std::vector<double> invI(N); 
-         for (UInt_t i = 1; i <= N - 1; ++i) {
+         for (size_t i = 1; i <= N - 1; ++i) {
             invI[i] = 1.0 / i; 
             h += invI[i]; 
          }
-         for (UInt_t i = 1; i <= N - 2; ++i) {
+         for (size_t i = 1; i <= N - 2; ++i) {
             double tmp = invI[N-i];
-            for (UInt_t j = i + 1; j <= N - 1; ++j) {
+            for (size_t j = i + 1; j <= N - 1; ++j) {
                g += tmp * invI[j];
             }
          }
@@ -350,7 +349,7 @@ namespace Math {
    }
 
 
-   Double_t GoFTest::PValueADKSamples(UInt_t nsamples, Double_t tx)  {
+   Double_t GoFTest::PValueADKSamples(size_t nsamples, Double_t tx)  {
 
       /*
        Computation of p-values according to 
@@ -655,9 +654,9 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       // for example unique of v={1,2,2,3,1,2,3,3} results in {1,2,3,1,2,3}  which is exactly what we wants 
       std::vector<Double_t>::iterator endUnique = std::unique(z.begin(), z.end()); //z_j's in (1)
       z.erase(endUnique, z.end() ); 
-      std::vector<UInt_t> h; // h_j's in (1)
+      std::vector<size_t> h; // h_j's in (1)
       std::vector<Double_t> H; // H_j's in (1)
-      UInt_t N = fCombinedSamples.size();
+      size_t N = fCombinedSamples.size();
       Double_t A2 = 0.0; // Anderson-Darling A^2 Test Statistic
 
 #ifdef USE_OLDIMPL      
@@ -668,7 +667,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
 
       // old implementation 
       for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
-         UInt_t n = std::count(fCombinedSamples.begin(), fCombinedSamples.end(), *data);
+         size_t n = std::count(fCombinedSamples.begin(), fCombinedSamples.end(), *data);
          h.push_back(n);
          H.push_back(std::count_if(fCombinedSamples.begin(), fCombinedSamples.end(),
                      std::bind(std::less<Double_t>(), std::placeholders::_1, *data)) + n / 2.);
@@ -677,18 +676,18 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       w.Print();
       w.Reset(); w.Start();
       std::vector<std::vector<Double_t> > F(nSamples); // F_ij's in (1)
-      for (UInt_t i = 0; i < nSamples; ++i) {
+      for (size_t i = 0; i < nSamples; ++i) {
          for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
-            UInt_t n = std::count(fSamples[i].begin(), fSamples[i].end(), *data);
+            size_t n = std::count(fSamples[i].begin(), fSamples[i].end(), *data);
             F[i].push_back(std::count_if(fSamples[i].begin(), fSamples[i].end(),
                            std::bind(std::less<Double_t>(), std::placeholders::_1, *data)) + n / 2.);
          }
       }
       std::cout << "time for F";
       w.Print();
-      for (UInt_t i = 0; i < nSamples; ++i) {
+      for (size_t i = 0; i < nSamples; ++i) {
          Double_t sum_result = 0.0;
-         UInt_t j = 0;
+         size_t j = 0;
          w.Reset(); w.Start();      
          for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
             sum_result += h[j] *  TMath::Power(N * F[i][j]- fSamples[i].size() * H[j], 2) / (H[j] * (N - H[j]) - N * h[j] / 4.0);
@@ -728,7 +727,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
 
       // compute the normalized test statistic 
 
-      std::vector<UInt_t> ns(fSamples.size());
+      std::vector<size_t> ns(fSamples.size());
       for (unsigned int k = 0; k < ns.size(); ++k) ns[k] = fSamples[k].size();
       Double_t sigmaN = GetSigmaN(ns, N);
       A2 -= fSamples.size() - 1;
@@ -833,7 +832,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       double A2 = adsum / nall; 
 
       // compute the normalized test statistic 
-      std::vector<unsigned int> ns(2); 
+      std::vector<size_t> ns(2); 
       ns[0] = ntot1; 
       ns[1] = ntot2;
       //std::cout << " ad2 = " << A2 << " nall " << nall;
@@ -900,8 +899,8 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
          MATH_ERROR_MSG("KolmogorovSmirnov2SamplesTest", "Only 1-sample tests can be issued with a 1-sample constructed GoFTest object!");
          return;
       }
-      const UInt_t na = fSamples[0].size();
-      const UInt_t nb = fSamples[1].size();
+      const size_t na = fSamples[0].size();
+      const size_t nb = fSamples[1].size();
       std::vector<Double_t> a(na);
       std::vector<Double_t> b(nb);
       std::copy(fSamples[0].begin(), fSamples[0].end(), a.begin());
@@ -930,11 +929,11 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
          return;
       }
       Double_t Fo = 0.0, Dn = 0.0;
-      UInt_t n = fSamples[0].size();
-      for (UInt_t i = 0; i < n; ++i) {
+      size_t n = fSamples[0].size();
+      for (size_t i = 0; i < n; ++i) {
          Double_t Fn = (i + 1.0) / n;
          Double_t F = (*fCDF)(fSamples[0][i]);
-         Double_t result = std::max(TMath::Abs(Fn - F), TMath::Abs(Fo - Fn));
+         Double_t result = std::max(TMath::Abs(Fn - F), TMath::Abs(Fo - F));
          if (result > Dn) Dn = result;
          Fo = Fn;
       }

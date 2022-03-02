@@ -387,7 +387,7 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
       // get T[end[]]
 
       Tensor_t tmp = arrOutput.At(fTimeSteps - 1); // take last time step
-      // shape of tmp is  for CPU (columnwise) B x D ,   need to reshape to  make a B x D x 1
+      // shape of tmp is  for CPU (column wise) B x D ,   need to reshape to  make a B x D x 1
       //  and transpose it to 1 x D x B  (this is how output is expected in columnmajor format)
       tmp = tmp.Reshape({tmp.GetShape()[0], tmp.GetShape()[1], 1});
       assert(tmp.GetSize() == this->GetOutput().GetSize());

@@ -165,7 +165,7 @@ TClassEdit::TSplitType::TSplitType(const char *type2split, EModType mode) : fNam
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  type     : type name: vector<list<classA,allocator>,allocator>[::iterator]
+///  type     : type name: `vector<list<classA,allocator>,allocator>[::%iterator]`
 ///  result:    0          : not stl container and not declared inside an stl container.
 ///             result: code of container that the type or is the scope of the type
 

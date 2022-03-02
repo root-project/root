@@ -34,8 +34,8 @@ public:
    RooMomentMorphFunc(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                       const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting = NonLinearPosFractions);
    RooMomentMorphFunc(const RooMomentMorphFunc &other, const char *name = 0);
-   virtual TObject *clone(const char *newname) const { return new RooMomentMorphFunc(*this, newname); }
-   virtual ~RooMomentMorphFunc();
+   TObject *clone(const char *newname) const override { return new RooMomentMorphFunc(*this, newname); }
+   ~RooMomentMorphFunc() override;
 
    void setMode(const Setting &setting) { _setting = setting; }
 
@@ -51,9 +51,9 @@ public:
    RooAbsReal *sumFunc(const RooArgSet *nset);
    const RooAbsReal *sumFunc(const RooArgSet *nset) const;
 
-   virtual std::list<Double_t> *plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const;
-   virtual std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const;
-   Bool_t isBinnedDistribution(const RooArgSet &obs) const;
+   std::list<Double_t> *plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const override;
+   std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
+   Bool_t isBinnedDistribution(const RooArgSet &obs) const override;
 
 protected:
    class CacheElem : public RooAbsCacheElement {
@@ -63,8 +63,8 @@ protected:
       {
          _frac.add(flist);
       };
-      virtual ~CacheElem();
-      virtual RooArgList containedArgs(Action);
+      ~CacheElem() override;
+      RooArgList containedArgs(Action) override;
       RooAbsReal *_sumFunc;
       RooChangeTracker *_tracker;
       RooArgList _frac;
@@ -78,7 +78,7 @@ protected:
 
    friend class CacheElem; // Cache needs to be able to clear _norm pointer
 
-   Double_t evaluate() const;
+   Double_t evaluate() const override;
 
    void initialize();
    CacheElem *getCache(const RooArgSet *nset) const;
@@ -100,7 +100,7 @@ protected:
 
    bool _useHorizMorph;
 
-   ClassDef(RooMomentMorphFunc, 3) // Your description goes here...
+   ClassDefOverride(RooMomentMorphFunc, 3) // Your description goes here...
 };
 
 #endif

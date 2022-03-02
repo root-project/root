@@ -11,10 +11,11 @@
 
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RAttrText.hxx>
-#include <ROOT/RAttrLine.hxx>
+#include <ROOT/RAttrBorder.hxx>
 #include <ROOT/RAttrFill.hxx>
 #include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadPos.hxx>
+#include <ROOT/RPadExtent.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -30,41 +31,31 @@ namespace Experimental {
 
 class RPave : public RDrawable {
 
-   RAttrText               fAttrText{this, "text"};          ///<! text attributes
-   RAttrLine               fAttrBorder{this, "border"};      ///<! border attributes
-   RAttrFill               fAttrFill{this, "fill"};          ///<! line attributes
-   RAttrValue<RPadLength>  fCornerX{this, "cornerx", 0.02};  ///<! X corner
-   RAttrValue<RPadLength>  fCornerY{this, "cornery", 0.02};  ///<! Y corner
-   RAttrValue<RPadLength>  fWidth{this, "width", 0.4};       ///<! pave width
-   RAttrValue<RPadLength>  fHeight{this, "height", 0.2};     ///<! pave height
+protected:
+
+   RPave(const char *csstype) : RDrawable(csstype) {}
 
 public:
 
-   RPave(const std::string &csstype = "pave") : RDrawable(csstype) {}
+   enum ECorner {
+      kTopLeft = 1,
+      kTopRight = 2,
+      kBottomLeft = 3,
+      kBottomRight = 4
+   };
 
-   RPave &SetCornerX(const RPadLength &pos) { fCornerX = pos; return *this; }
-   RPadLength GetCornerX() const { return fCornerX; }
+   RAttrBorder border{this, "border"};                     ///<! border attributes
+   RAttrFill fill{this, "fill"};                           ///<! fill attributes
+   RAttrText text{this, "text"};                           ///<! text attributes
+   RAttrValue<RPadLength> width{this, "width", 0.4};       ///<! pave width
+   RAttrValue<RPadLength> height{this, "height", 0.2};     ///<! pave height
+   RAttrValue<bool> onFrame{this, "onFrame", true};        ///<! is pave assigned to frame (true) or to pad corner (false)
+   RAttrValue<ECorner> corner{this, "corner", kTopRight};  ///<! frame/pad corner to which pave is bound
+   RAttrValue<RPadLength> offsetX{this, "offsetX", 0.02};  ///<! offset X relative to selected frame or pad corner
+   RAttrValue<RPadLength> offsetY{this, "offsetY", 0.02};  ///<! offset Y relative to selected frame or pad corner
 
-   RPave &SetCornerY(const RPadLength &pos) { fCornerY = pos; return *this; }
-   RPadLength GetCornerY() const { return fCornerY; }
+   RPave() : RPave("pave") {}
 
-   RPave &SetWidth(const RPadLength &width) { fWidth = width; return *this; }
-   RPadLength GetWidth() const { return fWidth; }
-
-   RPave &SetHeight(const RPadLength &height) { fHeight = height; return *this; }
-   RPadLength GetHeight() const { return fHeight; }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RPave &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
-   RAttrText &AttrText() { return fAttrText; }
-
-   const RAttrLine &GetAttrBorder() const { return fAttrBorder; }
-   RPave &SetAttrBorder(const RAttrLine &border) { fAttrBorder = border; return *this; }
-   RAttrLine &AttrBorder() { return fAttrBorder; }
-
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RPave &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
-   RAttrFill &AttrFill() { return fAttrFill; }
 };
 
 } // namespace Experimental

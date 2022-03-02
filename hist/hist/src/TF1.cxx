@@ -200,7 +200,7 @@ public:
       if (par) fFunc->SetParameters(par);
    }
 
-   ROOT::Math::IGenFunction *Clone()  const
+   ROOT::Math::IGenFunction *Clone()  const override
    {
       // use default copy constructor
       TF1_EvalWrapper *f =  new TF1_EvalWrapper(*this);
@@ -208,7 +208,7 @@ public:
       return f;
    }
    // evaluate |f(x)|
-   Double_t DoEval(Double_t x) const
+   Double_t DoEval(Double_t x) const override
    {
       // use evaluation with stored parameters (i.e. pass zero)
       fX[0] = x;
@@ -239,7 +239,7 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TF1
-    \ingroup Hist
+    \ingroup Functions
     \brief 1-Dim function class
 
 
@@ -530,13 +530,13 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fXmax = xmin;
    }
    // Create rep formula (no need to add to gROOT list since we will add the TF1 object)
-
+   const auto formulaLength = strlen(formula);
    // First check if we are making a convolution
-   if (TString(formula, 5) == "CONV(" && formula[strlen(formula) - 1] == ')') {
+   if (strncmp(formula, "CONV(", 5) == 0 && formula[formulaLength - 1] == ')') {
       // Look for single ',' delimiter
       int delimPosition = -1;
       int parenCount = 0;
-      for (unsigned int i = 5; i < strlen(formula) - 1; i++) {
+      for (unsigned int i = 5; i < formulaLength - 1; i++) {
          if (formula[i] == '(')
             parenCount++;
          else if (formula[i] == ')')
@@ -553,7 +553,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
       // Having found the delimiter, define the first and second formulas
       TString formula1 = TString(TString(formula)(5, delimPosition - 5));
-      TString formula2 = TString(TString(formula)(delimPosition + 1, strlen(formula) - 1 - (delimPosition + 1)));
+      TString formula2 = TString(TString(formula)(delimPosition + 1, formulaLength - 1 - (delimPosition + 1)));
       // remove spaces from these formulas
       formula1.ReplaceAll(' ', "");
       formula2.ReplaceAll(' ', "");
@@ -567,7 +567,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
       // std::cout << "functions have been defined" << std::endl;
 
-      TF1Convolution *conv = new TF1Convolution(function1, function2);
+      TF1Convolution *conv = new TF1Convolution(function1, function2,xmin,xmax);
 
       // (note: currently ignoring `useFFT` option)
       fNpar = conv->GetNpar();
@@ -605,11 +605,11 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       }
 
       // Then check if we need NSUM syntax:
-   } else if (TString(formula, 5) == "NSUM(" && formula[strlen(formula) - 1] == ')') {
+   } else if (strncmp(formula, "NSUM(", 5) == 0 && formula[formulaLength - 1] == ')') {
       // using comma as delimiter
       char delimiter = ',';
       // first, remove "NSUM(" and ")" and spaces
-      TString formDense = TString(formula)(5,strlen(formula)-5-1);
+      TString formDense = TString(formula)(5,formulaLength-5-1);
       formDense.ReplaceAll(' ', "");
 
       // make sure standard functions are defined (e.g. gaus, expo)
@@ -717,7 +717,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 ///
 ///  This constructor is called for functions of type C by the C++ interpreter.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kInterpreted, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
@@ -743,7 +743,12 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor using a pointer to a real function.
 ///
-/// \param npar is the number of free parameters used by the function
+/// \param[in] name object name
+/// \param[in] fcn pointer to function
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor creates a function of type C when invoked
 /// with the normal C++ compiler.
@@ -751,16 +756,21 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
 /// see test program test/stress.cxx (function stress1) for an example.
 /// note the interface with an intermediate pointer.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor using a pointer to real function.
+/// Constructor using a pointer to (const) real function.
 ///
-/// \param npar is the number of free parameters used by the function
+/// \param[in] name object name
+/// \param[in] fcn pointer to function
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor creates a function of type C when invoked
 /// with the normal C++ compiler.
@@ -768,7 +778,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
 /// see test program test/stress.cxx (function stress1) for an example.
 /// note the interface with an intermediate pointer.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
@@ -777,9 +787,13 @@ TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor using the Functor class.
 ///
+/// \param[in] name object name
+/// \param f parameterized functor
 /// \param xmin and
 /// \param xmax define the plotting range of the function
-/// \param npar is the number of free parameters used by the function
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor can be used only in compiled code
 ///

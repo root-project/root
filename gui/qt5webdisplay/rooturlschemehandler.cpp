@@ -85,7 +85,7 @@ public:
    /** provide WS kind  */
    const char *GetWSKind() const override { return "rawlongpoll"; }
 
-   /** provide WS platform */
+   /** provide WS platform, intentionally keep qt5 here while it only used on client side */
    const char *GetWSPlatform() const override { return "qt5"; }
 
    void SendFile(const char *fname)

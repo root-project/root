@@ -35,7 +35,7 @@ TEST(RCanvas, SimpleIO)
          line->SetP1({0.0_normal, 0.0_normal});
          line->SetP2({1.0_normal, 1.0_normal});
 
-         line->AttrLine().SetColor(col);
+         line->line.color = col;
 
          line->SetId("line"s + std::to_string(n));
       }
@@ -56,9 +56,9 @@ TEST(RCanvas, SimpleIO)
 
       ASSERT_NE(line, nullptr);
 
-      RColor col( 10 + n*10, 50 + n*5, 90 + n);
+      RColor col(10 + n*10, 50 + n*5, 90 + n);
 
-      EXPECT_EQ(line->AttrLine().GetColor(), col);
+      EXPECT_EQ(line->line.color, col);
    }
 
 }

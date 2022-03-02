@@ -9,159 +9,175 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+
 /** \class TGeoCompositeShape
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
-Class handling Boolean composition of shapes
+Composite shapes are Boolean combinations of two or more shape
+components. The supported Boolean operations are union (+), intersection
+(\*) and subtraction(-). Composite shapes derive from the base
+**`TGeoShape`** class, therefore providing all shape features:
+computation of bounding box, finding if a given point is inside or
+outside the combination, as well as computing the distance to
+entering/exiting. They can be directly used for creating volumes or used
+in the definition of other composite shapes.
 
-  Composite shapes are Boolean combination of two or more shape
-components. The supported boolean operations are union (+), intersection (*)
-and subtraction. Composite shapes derive from the base TGeoShape class,
-therefore providing all shape features : computation of bounding box, finding
-if a given point is inside or outside the combination, as well as computing the
-distance to entering/exiting. It can be directly used for creating volumes or
-used in the definition of other composite shapes.
+Composite shapes are provided in order to complement and extend the set
+of basic shape primitives. They have a binary tree internal structure,
+therefore all shape-related geometry queries are signals propagated from
+top level down to the final leaves, while the provided answers are
+assembled and interpreted back at top. This `CSG`
+`(composite solid geometry)` hierarchy is effective for small number of
+components, while performance drops dramatically for large structures.
+Building a complete geometry in this style is virtually possible but
+highly not recommended.
 
-  Composite shapes are provided in order to complement and extend the set of
-basic shape primitives. They have a binary tree internal structure, therefore
-all shape-related geometry queries are signals propagated from top level down
-to the final leaves, while the provided answers are assembled and interpreted
-back at top. This CSG hierarchy is effective for small number of components,
-while performance drops dramatically for large structures. Building a complete
-geometry in this style is virtually possible but highly not recommended.
+#### The Structure of Composite Shapes
 
-### Structure of composite shapes
+A composite shape can always be looked as the result of a Boolean
+operation between only two shape components. All information identifying
+these two components as well as their positions with respect to the
+frame of the composite is represented by an object called Boolean node.
+A composite shape has a pointer to such a Boolean node. Since the shape
+components may also be composites, they will also contain binary Boolean
+nodes branching out other two shapes in the hierarchy. Any such branch
+ends-up when the final leaves are no longer composite shapes, but basic
+primitives. The figure shows the composite shapes structure.
 
-  A composite shape can always be regarded as the result of a Boolean operation
-between only two shape components. All information identifying these two
-components as well as their positions with respect to the frame of the composite
-is represented by an object called Boolean node. A composite shape just have
-a pointer to such a Boolean node. Since the shape components may also be
-composites, they will also contain binary Boolean nodes branching other two
-shapes in the hierarchy. Any such branch ends-up when the final leaves are no
-longer composite shapes, but basic primitives.
+\image html geom_composite_shape001.png "The composite shapes structure" width=600px
 
-\image html geom_booltree.png
+Suppose that A, B, C and D represent basic shapes, we will illustrate
+how the internal representation of few combinations look like. We do
+this only for understanding how to create them in a proper way, since
+the user interface for this purpose is in fact very simple. We will
+ignore for the time being the positioning of components. The definition
+of a composite shape takes an expression where the identifiers are shape
+names. The expression is parsed and decomposed in 2 sub-expressions and
+the top-level Boolean operator.
 
-  Suppose that A, B, C and D represent basic shapes, we will illustrate
-how the internal representation of few combinations look like. We do this
-only for the sake of understanding how to create them in a proper way, since
-the user interface for this purpose is in fact very simple. We will ignore
-for the time being the positioning of components. The definition of a composite
-shape takes an expression where the identifiers are shape names. The
-expression is parsed and decomposed in 2 sub-expressions and the top-level
-Boolean operator.
+1. Union: `A+B+C`
 
-#### A+B+C
+Just to illustrate the Boolean expression parsing and the composite
+shape structure, let's take a simple example. We will describe the union
+of A, B and C. Both union operators are at the same level. Since:
 
-  This represent the union of A, B and C. Both union operators are at the
-same level. Since:
+`A+B+C = (A+B)+C = A+(B+C)`
 
-~~~ {.cpp}
-       A+B+C = (A+B)+C = A+(B+C)
+The first` (+)` is taken as separator, hence the expression split in:
+`A` and `(B+C)`. A Boolean node of type **`TGeoUnion`**`("A","B+C")` is
+created. This tries to replace the 2 expressions by actual pointers to
+corresponding shapes. The first expression (A) contains no operators
+therefore is interpreted as representing a shape. The shape named "A" is
+searched into the list of shapes handled by the manager class and stored
+as the "left" shape in the Boolean union node. Since the second
+expression is not yet fully decomposed, the "right" shape in the
+combination is created as a new composite shape. This will split at its
+turn B+C into B and C and create a **`TGeoUnion`**`("B","C")`. The B and
+C identifiers will be looked for and replaced by the pointers to the
+actual shapes into the new node. Finally, the composite "`A+B+C`" will
+be represented as shown in Fig.17-23.**
+
+\image html geom_composite_shape002.png "Representation of A+B+C" width=600px
+
+To build this composite shape:
+
+~~~{.cpp}
+TGeoCompositeShape *cs1 = new TGeoCompositeShape("CS1","A+B+C");
 ~~~
 
-the first (+) is taken as separator, hence the expression split:
+Any shape entering a Boolean combination can be prior positioned. In
+order to do so, one has to attach a matrix name to the shape name by
+using a colon (:). As for shapes, the named matrix has to be prior
+defined:
 
-~~~ {.cpp}
-       A and B+C
+~~~{.cpp}
+TGeoMatrix *mat;
+// ... code creating some geometrical transformation
+mat->SetName("mat1");
+mat->RegisterYourself();  // see Geometrical transformations
 ~~~
 
-A Boolean node of type TGeoUnion("A", "B+C") is created. This tries to replace
-the 2 expressions by actual pointers to corresponding shapes.
-The first expression (A) contains no operators therefore is interpreted as
-representing a shape. The shape named "A" is searched into the list of shapes
-handled by the manager class and stored as the "left" shape in the Boolean
-union node. Since the second expression is not yet fully decomposed, the "right"
-shape in the combination is created as a new composite shape. This will split
-at its turn B+C into B and C and create a TGeoUnion("B","C"). The B and C
-identifiers will be looked for and replaced by the pointers to the actual shapes
-into the new node. Finally, the composite "A+B+C" will be represented as:
+An identifier `shape:matrix` have the meaning: `shape` is translated or
+rotated with `matrix` with respect to the Boolean combination it enters
+as operand. Note that in the expression A+B+C no matrix identifier was
+provided, therefore the identity matrix was used for positioning the
+shape components. The next example will illustrate a more complex case.
 
-~~~ {.cpp}
-                A
-               |
-  [A+B+C] = (+)             B
-               |           |
-                [B+C] = (+)
-                           |
-                            C
+2. `(A:m1+B):m2-(C:m3*D:m4):m5`
+
+Let's try to understand the expression above. This expression means:
+subtract the intersection of **C** and **D** from the union of **A** and
+**B**. The usage of parenthesis to force the desired precedence is
+always recommended. One can see that not only the primitive shapes have
+some geometrical transformations, but also their intermediate
+compositions.
+
+
+\image html geom_composite_shape003.png "Internal representation for composite shapes" width=600px
+
+~~~{.cpp}
+TGeoCompositeShape *cs2 = new TGeoCompositeShape("CS2",
+"(A:m1+B):m2-(C:m3*D:m4):m5");
 ~~~
 
-where [] is a composite shape, (+) is a Boolean node of type union and A, B,
-C are pointers to the corresponding shapes.
-  Building this composite shapes takes the following line :
+Building composite shapes as in the first example is not always quite
+useful since we were using un-positioned shapes. When supplying just
+shape names as identifiers, the created Boolean nodes will assume that
+the shapes are positioned with an identity transformation with respect
+to the frame of the created composite. In order to provide some
+positioning of the combination components, we have to attach after each
+shape identifier the name of an existing transformation, separated by a
+colon. Obviously all transformations created for this purpose have to be
+objects with unique names in order to be properly substituted during
+parsing.
 
-~~~ {.cpp}
-     TGeoCompositeShape *cs1 = new TGeoCompositeShape("CS1", "A+B+C");
+#### Composite Shape Example
+
+One should have in mind that the same shape or matrix identifiers can be
+used many times in the same expression, as in the following example:
+
+~~~{.cpp}
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   const Double_t sq2 = TMath::Sqrt(2.);
+   TGeoManager *mgr =
+      new TGeoManager("Geom","composite shape example");
+   TGeoMedium *medium = 0;
+   TGeoVolume *top = mgr->MakeBox("TOP",medium,100,250,250);
+   mgr->SetTopVolume(top);
+
+   // make shape components
+   TGeoBBox *sbox  = new TGeoBBox("B",100,125*sq2,125*sq2);
+   TGeoTube *stub  = new TGeoTube("T",0,100,250);
+   TGeoPgon *spgon = new TGeoPgon("P",0.,360.,6,2);
+   spgon->DefineSection(0,-250,0,80);
+   spgon->DefineSection(1,250,0,80);
+
+   // define some rotations
+   TGeoRotation *r1 = new TGeoRotation("r1",90,0,0,180,90,90);
+   r1->RegisterYourself();
+   TGeoRotation *r2 = new TGeoRotation("r2",90,0,45,90,45,270);
+   r2->RegisterYourself();
+   // create a composite
+   TGeoCompositeShape *cs = new TGeoCompositeShape("cs", "((T+T:r1)-(P+P:r1))*B:r2");
+   TGeoVolume *comp = new TGeoVolume("COMP",cs);
+   comp->SetLineColor(kRed);
+
+   // put it in the top volume
+   top->AddNode(comp,1);
+   mgr->CloseGeometry();
+   // visualize it with ray tracing
+   top->Raytrace();
+}
 ~~~
 
-#### (A+B)-(C+D)
-  This expression means: subtract the union of C and D from the union of A and
-B. The usage of parenthesis to force operator precedence is always recommended.
-The representation of the corresponding composite shape looks like:
+\image html geom_composite_shape004.png "A composite shape example" width=400px
 
-~~~ {.cpp}
-                                  A
-                                 |
-                      [A+B] = (+)
-                     |           |
-  [(A+B)-(C+D)] = (-)           C B
-                     |         |
-                      [C+D]=(+)
-                               |
-                                D
-~~~
 
-~~~ {.cpp}
-     TGeoCompositeShape *cs2 = new TGeoCompositeShape("CS2", "(A+B)-(C+D)");
-~~~
+Composite shapes can be subsequently used for defining volumes.
+Moreover, these volumes contain other volumes, following the general
+criteria. Volumes created based on composite shapes cannot be divided.
 
-  Building composite shapes as in the 2 examples above is not always quite
-useful since we were using un-positioned shapes. When supplying just shape
-names as identifiers, the created boolean nodes will assume that the shapes
-are positioned with an identity transformation with respect to the frame of
-the created composite. In order to provide some positioning of the combination
-components, we have to attach after each shape identifier the name of an
-existing transformation, separated by a colon. Obviously all transformations
-created for this purpose have to be objects with unique names in order to be
-properly substituted during parsing.
-  Let's look at the code implementing the second example :
-
-~~~ {.cpp}
-     TGeoTranslation *t1 = new TGeoTranslation("t1",0,0,-20);
-     TGeoTranslation *t2 = new TGeoTranslation("t2",0,0, 20);
-     TGeoRotation *r1 = new TGeoRotation("r1"); // transformations need names
-     r1->SetAngles(90,30,90,120,0,0); // rotation with 30 degrees about Z
-     TGeoTube *a = new TGeoTube(0, 10,20);
-     a->SetName("A");                 // shapes need names too
-     TGeoTube *b = new TGeoTube(0, 20,20);
-     b->SetName("B");
-     TGeoBBox *c = new TGeoBBox(10,10,50);
-     c->SetName("C");
-     TGeoBBox *d = new TGeoBBox(50,10,10);
-     d->SetName("D");
-
-     TGeoCompositeShape *cs;
-     cs = new TGeoCompositeShape("CS", "(A:t1+B:t2)-(C+D:r1)");
-~~~
-
-  The newly created composite looks like 2 cylinders of different radii sitting
-one on top of the other and having 2 rectangular holes : a longitudinal one
-along Z axis corresponding to C and an other one in the XY plane due to D.
-  One should have in mind that the same shape or matrix identifier can be
-used many times in the same expression. For instance:
-
-~~~ {.cpp}
-     (A:t1-A:t2)*B:t1
-~~~
-
-is a valid expression. Expressions that cannot be parsed or identifiers that
-cannot be substituted by existing objects generate error messages.
-  Composite shapes can be subsequently used for defining volumes. Moreover,
-these volumes may have daughters but these have to obey overlapping/extruding
-rules (see TGeoVolume). Volumes created based on composite shapes cannot be
-divided. Visualization of such volumes is currently not implemented.
 */
 
 #include <iostream>

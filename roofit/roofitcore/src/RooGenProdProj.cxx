@@ -52,7 +52,7 @@ ClassImp(RooGenProdProj);
 /// Default constructor
 
 RooGenProdProj::RooGenProdProj() :
-  _compSetOwnedN(0), 
+  _compSetOwnedN(0),
   _compSetOwnedD(0),
   _haveD(kFALSE)
 {
@@ -63,10 +63,10 @@ RooGenProdProj::RooGenProdProj() :
 /// Constructor for a normalization projection of the product of p.d.f.s _prodSet
 /// integrated over _intSet in range isetRangeName while normalized over _normSet
 
-RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet, 
-			       const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, Bool_t doFactorize) :
+RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet,
+                const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, Bool_t doFactorize) :
   RooAbsReal(name, title),
-  _compSetOwnedN(0), 
+  _compSetOwnedN(0),
   _compSetOwnedD(0),
   _compSetN("compSetN","Set of integral components owned by numerator",this,kFALSE),
   _compSetD("compSetD","Set of integral components owned by denominator",this,kFALSE),
@@ -91,7 +91,7 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   // Copy all components in (non-owning) set proxy
   _compSetN.add(*_compSetOwnedN) ;
   _compSetD.add(*_compSetOwnedD) ;
-  
+
   _intList.add(*numerator) ;
   if (denominator) {
     _intList.add(*denominator) ;
@@ -105,8 +105,8 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
 /// Copy constructor
 
 RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
-  RooAbsReal(other, name), 
-  _compSetOwnedN(0), 
+  RooAbsReal(other, name),
+  _compSetOwnedN(0),
   _compSetOwnedD(0),
   _compSetN("compSetN","Set of integral components owned by numerator",this),
   _compSetD("compSetD","Set of integral components owned by denominator",this),
@@ -128,7 +128,7 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   _compSetD.add(*_compSetOwnedD) ;
 
   RooAbsArg* arg ;
-  TIterator* nIter = _compSetOwnedN->createIterator() ;  
+  TIterator* nIter = _compSetOwnedN->createIterator() ;
   while((arg=(RooAbsArg*)nIter->Next())) {
 //     cout << "ownedN elem " << arg->GetName() << "(" << arg << ")" << endl ;
     arg->setOperMode(_operMode) ;
@@ -175,8 +175,8 @@ RooGenProdProj::~RooGenProdProj()
 /// \return A RooAbsReal object representing the requested integral. The object is owned by `saveSet`.
 ///
 /// The integration is factorized into components as much as possible and done analytically as far as possible.
-RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, 
-					 RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize) 
+RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet,
+                RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize)
 {
   RooArgSet anaIntSet, numIntSet ;
 
@@ -189,13 +189,13 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 
     if (count==1) {
       anaIntSet.add(*arg) ;
-    }    
+    }
   }
 
   // Determine which of the factorizable integrals can be done analytically
   RooArgSet prodSet ;
   numIntSet.add(intSet) ;
-  
+
   for (const auto pdfAsArg : compSet) {
     auto pdf = static_cast<const RooAbsPdf*>(pdfAsArg);
 
@@ -218,7 +218,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
       } else {
         // Analytic integration of factorizable observable not possible, add straight pdf to product
         prodSet.add(*pdf) ;
-      }      
+      }
     } else {
       // Non-factorizable observables, add straight pdf to product
       prodSet.add(*pdf) ;
@@ -241,20 +241,21 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   // don't participate in any caching, which are used to compute integrals.
   RooArgSet prodSetClone;
   prodSet.snapshot(prodSetClone, false);
-  saveSet.addOwned(prodSetClone);
-  prodSetClone.releaseOwnership();
 
-  RooProduct* prod = new RooProduct(prodName, "product", prodSetClone);
+  auto prod = std::make_unique<RooProduct>(prodName, "product", prodSetClone);
   prod->setExpensiveObjectCache(expensiveObjectCache()) ;
   prod->setOperMode(_operMode) ;
 
-  // Declare ownership of product
-  saveSet.addOwned(*prod);
-
   // Create integral performing remaining numeric integration over (partial) analytic product
-  RooAbsReal* ret = prod->createIntegral(numIntSet,isetRangeName) ;
-  ret->setOperMode(_operMode) ;
-  saveSet.addOwned(*ret) ;
+  std::unique_ptr<RooAbsReal> integral{prod->createIntegral(numIntSet,isetRangeName)};
+  integral->setOperMode(_operMode) ;
+  auto ret = integral.get();
+
+  // Declare ownership of prodSet, product, and integral
+  saveSet.addOwned(std::move(prodSetClone));
+  saveSet.addOwned(std::move(prod));
+  saveSet.addOwned(std::move(integral)) ;
+
 
   // Caller owners returned master integral object
   return ret ;
@@ -265,8 +266,8 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of normalization projection
 
-Double_t RooGenProdProj::evaluate() const 
-{  
+Double_t RooGenProdProj::evaluate() const
+{
   Double_t nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
 
   if (!_haveD) return nom ;
@@ -283,12 +284,12 @@ Double_t RooGenProdProj::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Intercept cache mode operation changes and propagate them to the components
 
-void RooGenProdProj::operModeHook() 
+void RooGenProdProj::operModeHook()
 {
   // WVE use cache manager here!
 
   RooAbsArg* arg ;
-  TIterator* nIter = _compSetOwnedN->createIterator() ;  
+  TIterator* nIter = _compSetOwnedN->createIterator() ;
   while((arg=(RooAbsArg*)nIter->Next())) {
     arg->setOperMode(_operMode) ;
   }

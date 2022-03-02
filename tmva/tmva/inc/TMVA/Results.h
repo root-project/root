@@ -86,16 +86,16 @@ namespace TMVA {
       virtual const std::vector< Float_t >&  operator [] ( Int_t ievt ) const = 0;
 
    private:
-      Types::ETreeType fTreeType;                // tree type for this result
-      const DataSetInfo *fDsi;                   //-> a pointer to the datasetinfo-object
-      TList *fStorage;                           //-> stores all the result-histograms
-      std::map<TString, TObject *> *fHistAlias;  //-> internal map for quick access to stored histograms
-      mutable MsgLogger*           fLogger;      //! message logger
-      MsgLogger& Log() const { return *fLogger; }    
+      Types::ETreeType fTreeType;                ///< tree type for this result
+      const DataSetInfo *fDsi;                   ///<-> a pointer to the datasetinfo-object
+      TList *fStorage;                           ///<-> stores all the result-histograms
+      std::map<TString, TObject *> *fHistAlias;  ///<-> internal map for quick access to stored histograms
+      mutable MsgLogger*           fLogger;      ///<! message logger
+      MsgLogger& Log() const { return *fLogger; }
    public:
-       
+
        ClassDef(Results,1);
-       
+
    };
 }
 

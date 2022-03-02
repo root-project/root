@@ -19,9 +19,15 @@ if(NOT MSVC)
     ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
 endif()
 
+# @pythonization decorator
+ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
+
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
+
+# STL vector pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_stl_vector stl_vector.py)
 
 # TObject and subclasses pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_contains tobject_contains.py)
@@ -42,9 +48,6 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch_attr ttree_branch_attr.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_iterable ttree_iterable.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_setbranchaddress ttree_setbranchaddress.py PYTHON_DEPS numpy)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_branch ttree_branch.py PYTHON_DEPS numpy)
-if (dataframe)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_ttree_asmatrix ttree_asmatrix.py PYTHON_DEPS numpy)
-endif()
 
 # TH1 and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_th1_operators th1_operators.py)
@@ -108,6 +111,11 @@ if (dataframe)
     endif()
 endif()
 
+# RDFDescription pythonization
+if (dataframe)
+    ROOT_ADD_PYUNITTEST(pyroot_rdfdescription rdfdescription.py)
+endif()
+
 # RTensor pythonizations
 if (dataframe AND tmva)
     ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
@@ -118,7 +126,8 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tf_pycallables tf_pycallables.py)
 
 if(roofit)
   # RooAbsCollection and subclasses pythonizations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection_len roofit/rooabscollection_len.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabscollection roofit/rooabscollection.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
 
   # RooDataHist pythonisations
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_ploton roofit/roodatahist_ploton.py)
@@ -127,7 +136,19 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooarglist roofit/rooarglist.py)
+
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roolinkedlist roofit/roolinkedlist.py)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
+
+  if(NOT MSVC OR win_broken_tests)
+    # Test pythonizations for the RooFitHS3 package, which is not built on Windows.
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
+
+    # NumPy compatibility
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
+  endif()
+
 endif()
 
 if (dataframe)

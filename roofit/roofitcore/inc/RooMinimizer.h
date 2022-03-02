@@ -6,6 +6,7 @@
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
  *   AL, Alfio Lazzaro,   INFN Milan,        alfio.lazzaro@mi.infn.it        *
+ *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
  *                                                                           *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
@@ -13,10 +14,10 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef __ROOFIT_NOROOMINIMIZER
-
 #ifndef ROO_MINIMIZER
 #define ROO_MINIMIZER
+
+#include <memory>  // shared_ptr, unique_ptr
 
 #include "TObject.h"
 #include "TStopwatch.h"
@@ -26,8 +27,16 @@
 #include <utility>
 #include "TMatrixDSymfwd.h"
 
+#include <RooAbsMinimizerFcn.h>
+#include <RooFit/TestStatistics/RooAbsL.h>
+#include <RooFit/TestStatistics/LikelihoodWrapper.h>
+#include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
+
+#include "RooSentinel.h"
+#include "RooMsgService.h"
+
 #include "Fit/Fitter.h"
-#include "RooMinimizerFcn.h"
+#include <stdexcept> // logic_error
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -39,59 +48,72 @@ class RooPlot ;
 
 class RooMinimizer : public TObject {
 public:
+  enum class FcnMode { classic, gradient, generic_wrapper };
 
-  RooMinimizer(RooAbsReal& function) ;
-  virtual ~RooMinimizer() ;
+  explicit RooMinimizer(RooAbsReal &function, FcnMode fcnMode = FcnMode::classic);
+  explicit RooMinimizer(std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood,
+                        RooFit::TestStatistics::LikelihoodMode likelihoodMode =
+                           RooFit::TestStatistics::LikelihoodMode::serial,
+                        RooFit::TestStatistics::LikelihoodGradientMode likelihoodGradientMode =
+                           RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+
+  ~RooMinimizer() override;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
-  void setStrategy(Int_t strat) ;
-  void setErrorLevel(Double_t level) ;
-  void setEps(Double_t eps) ;
-  void optimizeConst(Int_t flag) ;
-  void setEvalErrorWall(Bool_t flag) { fitterFcn()->SetEvalErrorWall(flag); }
+  void setStrategy(int strat) ;
+  void setErrorLevel(double level) ;
+  void setEps(double eps) ;
+  void optimizeConst(int flag) ;
+  void setEvalErrorWall(bool flag) { fitterFcn()->SetEvalErrorWall(flag); }
   /// \copydoc RooMinimizerFcn::SetRecoverFromNaNStrength()
   void setRecoverFromNaNStrength(double strength) { fitterFcn()->SetRecoverFromNaNStrength(strength); }
-  void setOffsetting(Bool_t flag) ;
-  void setMaxIterations(Int_t n) ;
-  void setMaxFunctionCalls(Int_t n) ;
+  void setOffsetting(bool flag) ;
+  void setMaxIterations(int n) ;
+  void setMaxFunctionCalls(int n) ;
 
-  RooFitResult* fit(const char* options) ;
+  int migrad() ;
+  int hesse() ;
+  int minos() ;
+  int minos(const RooArgSet& minosParamList) ;
+  int seek() ;
+  int simplex() ;
+  int improve() ;
 
-  Int_t migrad() ;
-  Int_t hesse() ;
-  Int_t minos() ;
-  Int_t minos(const RooArgSet& minosParamList) ;
-  Int_t seek() ;
-  Int_t simplex() ;
-  Int_t improve() ;
-
-  Int_t minimize(const char* type, const char* alg=0) ;
+  int minimize(const char* type, const char* alg=0) ;
 
   RooFitResult* save(const char* name=0, const char* title=0) ;
-  RooPlot* contour(RooRealVar& var1, RooRealVar& var2, 
-		   Double_t n1=1, Double_t n2=2, Double_t n3=0,
-		   Double_t n4=0, Double_t n5=0, Double_t n6=0, unsigned int npoints = 50) ;
+  RooPlot* contour(RooRealVar& var1, RooRealVar& var2,
+         double n1=1, double n2=2, double n3=0,
+         double n4=0, double n5=0, double n6=0, unsigned int npoints = 50) ;
 
-  Int_t setPrintLevel(Int_t newLevel) ; 
-  void setPrintEvalErrors(Int_t numEvalErrors) { fitterFcn()->SetPrintEvalErrors(numEvalErrors); }
-  void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; fitterFcn()->SetVerbose(flag); }
-  void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
-  Bool_t setLogFile(const char* logf=0) { return fitterFcn()->SetLogFile(logf); }
+  int setPrintLevel(int newLevel) ;
+  void setPrintEvalErrors(int numEvalErrors) { fitterFcn()->SetPrintEvalErrors(numEvalErrors); }
+  void setVerbose(bool flag=true) { _verbose = flag ; fitterFcn()->SetVerbose(flag); }
+  void setProfile(bool flag=true) { _profile = flag ; }
+  bool setLogFile(const char* logf=nullptr) { return fitterFcn()->SetLogFile(logf); }
+
+  int getPrintLevel() const { return _printLevel; }
 
   void setMinimizerType(const char* type) ;
 
   static void cleanup() ;
-  static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
+  static RooFitResult* lastMinuitFit() ;
+  static RooFitResult* lastMinuitFit(const RooArgList& varList) ;
 
-  void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
+  void saveStatus(const char* label, int status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
 
-  Int_t evalCounter() const { return fitterFcn()->evalCounter() ; }
+  int evalCounter() const { return fitterFcn()->evalCounter() ; }
   void zeroEvalCount() { fitterFcn()->zeroEvalCount() ; }
 
   ROOT::Fit::Fitter* fitter() ;
   const ROOT::Fit::Fitter* fitter() const ;
-  
+
+  ROOT::Math::IMultiGenFunction* getFitterMultiGenFcn() const;
+  ROOT::Math::IMultiGenFunction* getMultiGenFcn() const;
+
+  inline int getNPar() const { return fitterFcn()->getNDim() ; }
+
 protected:
 
   friend class RooAbsPdf ;
@@ -100,41 +122,41 @@ protected:
   void profileStart() ;
   void profileStop() ;
 
-  inline Int_t getNPar() const { return fitterFcn()->NDim() ; }
   inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
-  inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
-  
-  const RooMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
-  RooMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? ((RooMinimizerFcn*) fitter()->GetFCN()) : _fcn ) ; }
+  inline double& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
+
+  const RooAbsMinimizerFcn *fitterFcn() const;
+  RooAbsMinimizerFcn *fitterFcn();
+
+  bool fitFcn() const;
 
 private:
+  // constructor helper functions
+  void initMinimizerFirstPart();
+  void initMinimizerFcnDependentPart(double defaultErrorLevel);
 
-  Int_t       _printLevel ;
-  Int_t       _status ;
-  Bool_t      _optConst ;
-  Bool_t      _profile ;
-  RooAbsReal* _func ;
+  int _printLevel = 1;
+  int _status = -99;
+  bool _profile = false;
 
-  Bool_t      _verbose ;
-  TStopwatch  _timer ;
-  TStopwatch  _cumulTimer ;
-  Bool_t      _profileStart ;
+  bool _verbose = false;
+  TStopwatch _timer;
+  TStopwatch _cumulTimer;
+  bool _profileStart = false;
 
-  TMatrixDSym* _extV ;
+  std::unique_ptr<TMatrixDSym> _extV;
 
-  RooMinimizerFcn *_fcn;
-  std::string _minimizerType;
+  RooAbsMinimizerFcn *_fcn;
+  std::string _minimizerType = "Minuit";
+  FcnMode _fcnMode;
 
-  static ROOT::Fit::Fitter *_theFitter ;
+  static std::unique_ptr<ROOT::Fit::Fitter> _theFitter ;
 
   std::vector<std::pair<std::string,int> > _statusHistory ;
 
   RooMinimizer(const RooMinimizer&) ;
-	
-  ClassDef(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
+
+  ClassDefOverride(RooMinimizer,0) // RooFit interface to ROOT::Fit::Fitter
 } ;
-
-
-#endif
 
 #endif

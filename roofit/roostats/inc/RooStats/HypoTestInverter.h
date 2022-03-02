@@ -39,38 +39,38 @@ public:
 
    enum ECalculatorType { kUndefined = 0, kHybrid = 1, kFrequentist = 2, kAsymptotic = 3};
 
-   // default constructor (used only for I/O)
+   /// default constructor (used only for I/O)
    HypoTestInverter();
 
-   // constructor from generic hypotest calculator
+   /// constructor from generic hypotest calculator
    HypoTestInverter( HypoTestCalculatorGeneric & hc,
                      RooRealVar* scannedVariable =0,
                      double size = 0.05) ;
 
 
-   // constructor from hybrid calculator
+   /// constructor from hybrid calculator
    HypoTestInverter( HybridCalculator & hc,
                      RooRealVar* scannedVariable = 0,
                      double size = 0.05) ;
 
-   // constructor from frequentist calculator
+   /// constructor from frequentist calculator
    HypoTestInverter( FrequentistCalculator & hc,
                      RooRealVar* scannedVariable,
                      double size = 0.05) ;
 
-   // constructor from asymptotic calculator
+   /// constructor from asymptotic calculator
    HypoTestInverter( AsymptoticCalculator & hc,
                      RooRealVar* scannedVariable,
                      double size = 0.05) ;
 
-   // constructor from two ModelConfigs (first sb (the null model) then b (the alt model)
-   // creating a calculator inside
+   /// constructor from two ModelConfigs (first sb (the null model) then b (the alt model)
+   /// creating a calculator inside
    HypoTestInverter( RooAbsData& data, ModelConfig &sb, ModelConfig &b,
            RooRealVar * scannedVariable = 0,  ECalculatorType type = kFrequentist,
            double size = 0.05) ;
 
 
-   virtual HypoTestInverterResult* GetInterval() const;
+   HypoTestInverterResult* GetInterval() const override;
 
    void Clear();
 
@@ -103,67 +103,67 @@ public:
 
    void UseCLs( bool on = true) { fUseCLs = on; if (fResults) fResults->UseCLs(on);   }
 
-   virtual void  SetData(RooAbsData &);
+   void  SetData(RooAbsData &) override;
 
-   virtual void SetModel(const ModelConfig &) { } // not needed
+   void SetModel(const ModelConfig &) override { } // not needed
 
-   // set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-   virtual void SetTestSize(Double_t size) {fSize = size; if (fResults) fResults->SetTestSize(size); }
-   // set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-   virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
-   // Get the size of the test (eg. rate of Type I error)
-   virtual Double_t Size() const {return fSize;}
-   // Get the Confidence level for the test
-   virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+   /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
+   void SetTestSize(Double_t size) override {fSize = size; if (fResults) fResults->SetTestSize(size); }
+   /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
+   void SetConfidenceLevel(Double_t cl) override {fSize = 1.-cl;  if (fResults) fResults->SetConfidenceLevel(cl); }
+   /// Get the size of the test (eg. rate of Type I error)
+   Double_t Size() const override {return fSize;}
+   /// Get the Confidence level for the test
+   Double_t ConfidenceLevel()  const override {return 1.-fSize;}
 
-   // destructor
-   virtual ~HypoTestInverter() ;
+   /// destructor
+   ~HypoTestInverter() override ;
 
-   // retrieved a reference to the internally used HypoTestCalculator
-   // it might be invalid when the class is deleted
+   /// retrieved a reference to the internally used HypoTestCalculator
+   /// it might be invalid when the class is deleted
    HypoTestCalculatorGeneric * GetHypoTestCalculator() const { return fCalculator0; }
 
-   // get the upper/lower limit distribution
+   /// get the upper/lower limit distribution
    SamplingDistribution * GetLowerLimitDistribution(bool rebuild=false, int nToys = 100);
    SamplingDistribution * GetUpperLimitDistribution(bool rebuild=false, int nToys = 100);
 
-   // function to rebuild the distributions
+   /// function to rebuild the distributions
    SamplingDistribution * RebuildDistributions(bool isUpper=true, int nToys = 100,
                                                TList * clsDist = 0, TList *clsbDist= 0, TList * clbDist = 0, const char *  outputfile = "HypoTestInverterRebuiltDist.root");
 
-   // get the test statistic
+   /// get the test statistic
    TestStatistic * GetTestStatistic() const;
 
-   // set the test statistic
+   /// set the test statistic
    bool SetTestStatistic(TestStatistic& stat);
 
-   // set verbose level (0,1,2)
+   /// set verbose level (0,1,2)
    void SetVerbose(int level=1) { fVerbose = level; }
 
-   // set maximum number of toys
+   /// set maximum number of toys
    void SetMaximumToys(int ntoys) { fMaxToys = ntoys;}
 
-   // set numerical error in test statistic evaluation (default is zero)
+   /// set numerical error in test statistic evaluation (default is zero)
    void SetNumErr(double err) { fNumErr = err; }
 
-   // set flag to close proof for every new run
+   /// set flag to close proof for every new run
    static void SetCloseProof(Bool_t flag);
 
 
 protected:
 
-   // copy c-tor
+   /// copy c-tor
    HypoTestInverter(const HypoTestInverter & rhs);
 
-   // assignment
+   /// assignment
    HypoTestInverter & operator=(const HypoTestInverter & rhs);
 
    void CreateResults() const;
 
-   // run the hybrid at a single point
+   /// run the hybrid at a single point
    HypoTestResult * Eval( HypoTestCalculatorGeneric &hc, bool adaptive , double clsTarget) const;
 
-   // helper functions
+   /// helper functions
    static RooRealVar * GetVariableToScan(const HypoTestCalculatorGeneric &hc);
    static void CheckInputModels(const HypoTestCalculatorGeneric &hc, const RooRealVar & scanVar);
 
@@ -178,17 +178,17 @@ private:
    static std::string fgAlgo;
 
    // graph, used to compute the limit, not just for plotting!
-   mutable std::unique_ptr<TGraphErrors> fLimitPlot;  //! plot of limits
+   mutable std::unique_ptr<TGraphErrors> fLimitPlot;  ///<! plot of limits
 
 
    // performance counter: remember how many toys have been thrown
    mutable int fTotalToysRun;
-   int fMaxToys;  // maximum number of toys to run
+   int fMaxToys;  ///< maximum number of toys to run
 
-   HypoTestCalculatorGeneric* fCalculator0;   // pointer to the calculator passed in the constructor
-   std::unique_ptr<HypoTestCalculatorGeneric> fHC;  //! pointer to the generic hypotest calculator used
-   RooRealVar* fScannedVariable;     // pointer to the constrained variable
-   mutable HypoTestInverterResult* fResults; // pointer to the result
+   HypoTestCalculatorGeneric* fCalculator0;        ///< pointer to the calculator passed in the constructor
+   std::unique_ptr<HypoTestCalculatorGeneric> fHC; ///<! pointer to the generic hypotest calculator used
+   RooRealVar* fScannedVariable;                   ///< pointer to the constrained variable
+   mutable HypoTestInverterResult* fResults;       ///< pointer to the result
 
    bool fUseCLs;
    bool fScanLog;
@@ -202,7 +202,7 @@ private:
 
 protected:
 
-   ClassDef(HypoTestInverter,4)  // HypoTestInverter class
+   ClassDefOverride(HypoTestInverter,4)  // HypoTestInverter class
 
 };
 

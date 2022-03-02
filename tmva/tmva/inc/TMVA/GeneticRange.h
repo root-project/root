@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$    
+// @(#)root/tmva $Id$
 // Author: Peter Speckmayer
 
 /**********************************************************************************
@@ -14,8 +14,8 @@
  *      Peter Speckmayer <speckmay@mail.cern.ch>  - CERN, Switzerland             *
  *                                                                                *
  * Copyright (c) 2005:                                                            *
- *      CERN, Switzerland                                                         * 
- *      MPI-K Heidelberg, Germany                                                 * 
+ *      CERN, Switzerland                                                         *
+ *      MPI-K Heidelberg, Germany                                                 *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -55,11 +55,11 @@ namespace TMVA {
 
    private:
 
-      Double_t fFrom, fTo;    // the constraints of the coefficient
+      Double_t fFrom, fTo;    ///< the constraints of the coefficient
       Int_t fNbins;
-      
-      Interval *fInterval;     // holds the complete information of the interval
-      Double_t fTotalLength;  // the distance between the lower and upper constraints
+
+      Interval *fInterval;     ///< holds the complete information of the interval
+      Double_t fTotalLength;  ///< the distance between the lower and upper constraints
 
       // maps the values thrown outside of the ]from,to] interval back to the interval
       // the values which leave the range on the from-side, are mapped in to the to-side
@@ -68,7 +68,7 @@ namespace TMVA {
       // same as before, but the values leaving the allowed range, are mirrored into the range.
       Double_t ReMapMirror( Double_t val );
 
-      TRandom3* fRandomGenerator;  // the randomGenerator for calculating the new values
+      TRandom3* fRandomGenerator;  ///< the randomGenerator for calculating the new values
 
       ClassDef(GeneticRange,0); // Range definition for genetic algorithm
    };

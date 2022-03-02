@@ -49,8 +49,8 @@ namespace Math {
    a small value speeds the algorithm up many times.
    Then, Brent's method is applied on the bracketed interval.
    It will use the Brent Method for finding function roots in a given interval.
-   If the Brent method fails to converge the bracketing is repeted on the latest best estimate of the
-   interval. The procedure is repeted with a maximum value (default =10) which can be set for all
+   If the Brent method fails to converge the bracketing is repeated on the latest best estimate of the
+   interval. The procedure is repeated with a maximum value (default =10) which can be set for all
    BrentRootFinder classes with the method SetDefaultNSearch
 
    This class is implemented from TF1::GetX() method.
@@ -132,14 +132,14 @@ namespace Math {
 
    private:
 
-      const IGenFunction* fFunction; // Pointer to the function.
-      bool fLogScan;                 // flag to control usage of a log scan
-      int fNIter;                    // Number of iterations needed for the last estimation.
-      int fNpx;                      // Number of points to bracket root with initial grid (def is 100)
-      int fStatus;                   // Status of code of the last estimate
-      double fXMin;                  // Lower bound of the search interval.
-      double fXMax;                  // Upper bound of the search interval
-      double fRoot;                  // Current stimation of the function root.
+      const IGenFunction* fFunction; ///< Pointer to the function.
+      bool fLogScan;                 ///< flag to control usage of a log scan
+      int fNIter;                    ///< Number of iterations needed for the last estimation.
+      int fNpx;                      ///< Number of points to bracket root with initial grid (def is 100)
+      int fStatus;                   ///< Status of code of the last estimate
+      double fXMin;                  ///< Lower bound of the search interval.
+      double fXMax;                  ///< Upper bound of the search interval
+      double fRoot;                  ///< Current estimation of the function root.
    };
 
 } // namespace Math

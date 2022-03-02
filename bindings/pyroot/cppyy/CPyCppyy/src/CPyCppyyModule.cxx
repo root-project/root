@@ -431,15 +431,14 @@ static PyObject* addressof(PyObject* /* dummy */, PyObject* args, PyObject* kwds
 
 // error message if not already set
     if (!PyErr_Occurred()) {
-        PyErr_SetString(PyExc_TypeError, "aap");
-        /*if (PyTuple_CheckExact(args) && PyTuple_GET_SIZE(args)) {
+        if (PyTuple_CheckExact(args) && PyTuple_GET_SIZE(args)) {
             PyObject* str = PyObject_Str(PyTuple_GET_ITEM(args, 0));
             if (str && CPyCppyy_PyText_Check(str))
                 PyErr_Format(PyExc_TypeError, "unknown object %s", CPyCppyy_PyText_AsString(str));
             else
                 PyErr_Format(PyExc_TypeError, "unknown object at %p", (void*)PyTuple_GET_ITEM(args, 0));
             Py_XDECREF(str);
-        } */
+        }
     }
     return nullptr;
 }
@@ -810,7 +809,9 @@ LIBCPPYY_INIT_FUNCTION(extern "C" void initlibcppyy, PY_MAJOR_VERSION, _, PY_MIN
         CPYCPPYY_INIT_ERROR;
 
 // setup interpreter
+#if PY_VERSION_HEX < 0x03090000
     PyEval_InitThreads();
+#endif
 
 // prepare for lazyness (the insert is needed to capture the most generic lookup
 // function, just in case ...)

@@ -60,7 +60,9 @@ RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _cu
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert map by label to map by index for more efficient internal use
 
-RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
+RooCompositeDataStore::RooCompositeDataStore(
+        RooStringView name, RooStringView title,
+        const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
   RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _indexCat(&indexCat), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
   for (const auto& iter : inputData) {
@@ -102,7 +104,7 @@ RooCompositeDataStore::RooCompositeDataStore(const RooCompositeDataStore& other,
   for (map<Int_t,RooAbsDataStore*>::const_iterator iter=other._dataMap.begin() ; iter!=other._dataMap.end() ; ++iter) {
     RooAbsDataStore* clonedata = iter->second->clone(vars) ;
     _dataMap[iter->first] = clonedata ;
-  }  
+  }
   TRACE_CREATE
 }
 
@@ -116,7 +118,7 @@ RooCompositeDataStore::~RooCompositeDataStore()
 {
   if (_ownComps) {
     map<int,RooAbsDataStore*>::const_iterator iter ;
-    for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+    for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
       delete iter->second ;
     }
   }
@@ -125,24 +127,12 @@ RooCompositeDataStore::~RooCompositeDataStore()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if currently loaded coordinate is considered valid within
-/// the current range definitions of all observables
-
-Bool_t RooCompositeDataStore::valid() const 
-{
-  return kTRUE ;
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Forward recalculate request to all subsets
 
-void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, Bool_t skipZeroWeights) 
+void RooCompositeDataStore::recalculateCache(const RooArgSet* proj, Int_t firstEvent, Int_t lastEvent, Int_t stepSize, Bool_t skipZeroWeights)
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     iter->second->recalculateCache(proj,firstEvent,lastEvent,stepSize,skipZeroWeights) ;
   }
 }
@@ -154,7 +144,7 @@ Bool_t RooCompositeDataStore::hasFilledCache() const
 {
   Bool_t ret(kFALSE) ;
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     ret |= iter->second->hasFilledCache() ;
   }
   return ret ;
@@ -166,7 +156,7 @@ Bool_t RooCompositeDataStore::hasFilledCache() const
 void RooCompositeDataStore::forceCacheUpdate()
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     iter->second->forceCacheUpdate() ;
   }
 }
@@ -188,17 +178,17 @@ Int_t RooCompositeDataStore::fill()
 ////////////////////////////////////////////////////////////////////////////////
 /// Forward fill request to appropriate subset
 
-Double_t RooCompositeDataStore::sumEntries() const 
+Double_t RooCompositeDataStore::sumEntries() const
 {
   Double_t sum(0) ;
 
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     sum+= iter->second->sumEntries() ;
   }
   return sum ;
 }
- 
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,21 +196,21 @@ Double_t RooCompositeDataStore::sumEntries() const
 /// and return a pointer to the internal RooArgSet
 /// holding its coordinates.
 
-const RooArgSet* RooCompositeDataStore::get(Int_t idx) const 
+const RooArgSet* RooCompositeDataStore::get(Int_t idx) const
 {
   Int_t offset(0) ;
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     if (idx>=(offset+iter->second->numEntries())) {
       offset += iter->second->numEntries() ;
       continue ;
-    }    
-    const_cast<RooCompositeDataStore*>(this)->_vars = (*iter->second->get(idx-offset)) ;
+    }
+    _vars.assign(*iter->second->get(idx-offset)) ;
 
     _indexCat->setIndex(iter->first) ;
     _curStore = iter->second ;
     _curIndex = idx-offset ;
-    
+
     return &_vars ;
   }
   return 0 ;
@@ -230,32 +220,18 @@ const RooArgSet* RooCompositeDataStore::get(Int_t idx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCompositeDataStore::weight() const 
-{  
+Double_t RooCompositeDataStore::weight() const
+{
   if (!_curStore) get(0) ;
   // coverity[FORWARD_NULL]
   return _curStore->weight(_curIndex) ;
 }
 
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCompositeDataStore::weight(Int_t idx) const 
+Double_t RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const
 {
-  get(idx) ;
-  return weight() ;
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-Double_t RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const 
-{  
   if (!_curStore) get(0) ;
   // coverity[FORWARD_NULL]
   return _curStore->weightError(etype) ;
@@ -266,7 +242,7 @@ Double_t RooCompositeDataStore::weightError(RooAbsData::ErrorType etype) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype) const 
+void RooCompositeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype) const
 {
   if (!_curStore) get(0) ;
   // coverity[FORWARD_NULL]
@@ -278,10 +254,10 @@ void RooCompositeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooCompositeDataStore::isWeighted() const 
+Bool_t RooCompositeDataStore::isWeighted() const
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     if (iter->second->isWeighted()) return kTRUE ;
   }
   return kFALSE ; ;
@@ -300,7 +276,7 @@ void RooCompositeDataStore::loadValues(const RooAbsDataStore*, const RooFormulaV
 ////////////////////////////////////////////////////////////////////////////////
 /// Change name of internal observable named 'from' into 'to'
 
-Bool_t RooCompositeDataStore::changeObservableName(const char* from, const char* to) 
+Bool_t RooCompositeDataStore::changeObservableName(const char* from, const char* to)
 {
 
   // Find observable to be changed
@@ -311,21 +287,21 @@ Bool_t RooCompositeDataStore::changeObservableName(const char* from, const char*
     coutE(InputArguments) << "RooCompositeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
     return kTRUE ;
   }
-  
+
   // Process name change
-  var->SetName(to) ;  
+  var->SetName(to) ;
 
   // Forward name change request to component datasets
   Bool_t ret(kFALSE) ;
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     ret |= iter->second->changeObservableName(from,to) ;
   }
-    
+
   return ret ;
 }
 
-  
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// WVE ownership issue here!! Caller (a RooAbsData) should take ownership of all
@@ -335,7 +311,7 @@ RooAbsArg* RooCompositeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRang
 {
   RooAbsArg* ret(0) ;
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     ret = iter->second->addColumn(newVar,adjustRange) ;
   }
   if (ret) {
@@ -354,7 +330,7 @@ RooArgSet* RooCompositeDataStore::addColumns(const RooArgList& varList)
 {
   RooArgSet* ret(0) ;
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     ret = iter->second->addColumns(varList) ;
   }
   if (ret) {
@@ -379,11 +355,11 @@ RooAbsDataStore* RooCompositeDataStore::merge(const RooArgSet& /*allVars*/, list
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::append(RooAbsDataStore& other) 
+void RooCompositeDataStore::append(RooAbsDataStore& other)
 {
   Int_t nevt = other.numEntries() ;
-  for (int i=0 ; i<nevt ; i++) {  
-    _vars = *other.get(i) ;
+  for (int i=0 ; i<nevt ; i++) {
+    _vars.assign(*other.get(i)) ;
     fill() ;
   }
 }
@@ -392,11 +368,11 @@ void RooCompositeDataStore::append(RooAbsDataStore& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooCompositeDataStore::numEntries() const 
+Int_t RooCompositeDataStore::numEntries() const
 {
   Int_t n(0) ;
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     n += iter->second->numEntries() ;
   }
   return n ;
@@ -407,10 +383,10 @@ Int_t RooCompositeDataStore::numEntries() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::reset() 
+void RooCompositeDataStore::reset()
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     iter->second->reset() ;
   }
 }
@@ -419,10 +395,10 @@ void RooCompositeDataStore::reset()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, Bool_t skipZeroWeights) 
+void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, Bool_t skipZeroWeights)
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     iter->second->cacheArgs(owner,newVarSet,nset,skipZeroWeights) ;
   }
 }
@@ -431,10 +407,10 @@ void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::setArgStatus(const RooArgSet& set, Bool_t active) 
+void RooCompositeDataStore::setArgStatus(const RooArgSet& set, Bool_t active)
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     RooArgSet* subset = (RooArgSet*) set.selectCommon(*iter->second->get()) ;
     iter->second->setArgStatus(*subset,active) ;
     delete subset ;
@@ -448,10 +424,10 @@ void RooCompositeDataStore::setArgStatus(const RooArgSet& set, Bool_t active)
 /// Initialize cache of dataset: attach variables of cache ArgSet
 /// to the corresponding TTree branches
 
-void RooCompositeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& inCachedVars) 
+void RooCompositeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& inCachedVars)
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     iter->second->attachCache(newOwner,inCachedVars) ;
   }
   return ;
@@ -461,10 +437,10 @@ void RooCompositeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgS
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::resetCache() 
+void RooCompositeDataStore::resetCache()
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     iter->second->resetCache() ;
   }
   return ;
@@ -474,10 +450,10 @@ void RooCompositeDataStore::resetCache()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::attachBuffers(const RooArgSet& extObs) 
+void RooCompositeDataStore::attachBuffers(const RooArgSet& extObs)
 {
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     iter->second->attachBuffers(extObs);
   }
   return ;
@@ -487,14 +463,14 @@ void RooCompositeDataStore::attachBuffers(const RooArgSet& extObs)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCompositeDataStore::resetBuffers() 
-{ 
+void RooCompositeDataStore::resetBuffers()
+{
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     iter->second->resetBuffers();
   }
   return ;
-}  
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -503,7 +479,7 @@ void RooCompositeDataStore::dump()
 {
   cout << "RooCompositeDataStore::dump()" << endl ;
   map<int,RooAbsDataStore*>::const_iterator iter ;
-  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {    
+  for (iter = _dataMap.begin() ; iter!=_dataMap.end() ; ++iter) {
     cout << "state number " << iter->first << " has store " << iter->second->IsA()->GetName() << " with variables " << *iter->second->get() ;
     if (iter->second->isWeighted()) cout << " and is weighted " ;
     cout << endl ;

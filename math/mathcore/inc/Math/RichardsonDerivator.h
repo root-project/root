@@ -231,10 +231,10 @@ public:
 
 protected:
 
-   bool fFunctionCopied;     // flag to control if function is copied in the class
-   double fStepSize;         // step size used for derivative calculation
-   double fLastError;        //  error estimate of last derivative calculation
-   const IGenFunction* fFunction;  // pointer to function
+   bool fFunctionCopied;     ///< flag to control if function is copied in the class
+   double fStepSize;         ///< step size used for derivative calculation
+   double fLastError;        ///<  error estimate of last derivative calculation
+   const IGenFunction* fFunction;  ///< pointer to function
 
 };
 

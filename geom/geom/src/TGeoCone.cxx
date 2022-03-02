@@ -11,14 +11,24 @@
  *************************************************************************/
 
 /** \class TGeoCone
-\ingroup Geometry_classes
+\ingroup Cones
 
-Conical tube  class. It has 5 parameters :
-  - dz - half length in z
-  - Rmin1, Rmax1 - inside and outside radii at -dz
-  - Rmin2, Rmax2 - inside and outside radii at +dz
+The cones are defined by 5 parameters:
 
-Begin_Macro(source)
+~~~{.cpp}
+TGeoCone(Double_t dz,Double_t rmin1,Double_t rmax1,
+Double_t rmin2,Double_t rmax2);
+~~~
+
+  - `rmin1:` internal radius at Z is `-dz`
+  - `rmax1:` external radius at Z is `-dz`
+  - `rmin2:` internal radius at Z is `+dz`
+  - `rmax2:` external radius at Z is `+dz`
+  - `dz:` half length in Z (a cone ranges from `-dz` to +`dz`)
+
+A cone has Z-axis as its symmetry axis.
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("cone", "poza4");
@@ -40,14 +50,21 @@ End_Macro
 
 
 /** \class TGeoConeSeg
-\ingroup Geometry_classes
+\ingroup Cones
 
-A phi segment of a conical tube. Has 7 parameters :
-  - the same 5 as a cone;
-  - first phi limit (in degrees)
-  - second phi limit
+A cone segment is a cone having a range in `phi`. The cone segment class
+derives from **`TGeoCone`**, having two extra parameters: `phi1` and
+`phi2`.
 
-Begin_Macro(source)
+~~~{.cpp}
+TGeoConeSeg(Double_t dz,Double_t rmin1,Double_t rmax1,
+Double_t rmin2,Double_t rmax2,Double_t phi1,Double_t phi2);
+~~~
+
+Parameters `phi1` and `phi2` have the same meaning and convention as for
+tube segments.
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("coneseg", "poza5");

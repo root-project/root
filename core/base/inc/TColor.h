@@ -44,8 +44,9 @@ public:
    static void   CreateColorsGray();
    static void   CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb);
    static void   CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb);
+   static Int_t  CreateColorTableFromFile(TString fileName, Float_t alpha=1.);
    static Int_t  CreateGradientColorTable(UInt_t Number, Double_t* Stops,
-                    Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors, Float_t alpha=1.);
+                    Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors, Float_t alpha=1., Bool_t setPalette=kTRUE);
    static Int_t  GetColorPalette(Int_t i);
    static Int_t  GetNumberOfColors();
    virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) const

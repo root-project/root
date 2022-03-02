@@ -19,7 +19,11 @@
 #include "TGeoTrack.h"
 
 /** \class TGeoTrack
-\ingroup Geometry_classes
+\ingroup Geometry_painter
+
+\deprecated
+Use of TGeoTrack is deprecated. For the event display please switch to TEve (using TEveTracks
+or TEvePointSet to display tracks specifically) or to [REve](https://root.cern/doc/master/tracks_8C_source.html).
 
 Class for user-defined tracks attached to a geometry.
 Tracks are 3D objects made of points and they store a

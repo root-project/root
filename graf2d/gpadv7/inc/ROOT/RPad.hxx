@@ -24,24 +24,38 @@ namespace Experimental {
 
 class RPad: public RPadBase {
 
+   friend class RPadBase; ///< required to set parent
+
    /// Pad containing this pad as a sub-pad.
    RPadBase *fParent{nullptr};             ///< The parent pad, if this pad has one.
 
    RPadPos fPos;                           ///< pad position
    RPadExtent fSize;                       ///< pad size
 
-   RAttrLine fAttrLine{this, "border"};    ///<! border attributes
+   /// Create default pad
+   RPad() : RPadBase("pad") {}
+
+   /// Create a pad.
+   RPad(const RPadPos &pos, const RPadExtent &size) : RPad()
+   {
+      fPos = pos;
+      fSize = size;
+   }
+
+   // Assign parent
+   void SetParent(RPadBase *parent) { fParent = parent; }
 
 protected:
 
    std::unique_ptr<RDisplayItem> Display(const RDisplayContext &) final;
 
-public:
-   /// Create a topmost, non-paintable pad.
-   RPad() = default;
 
-   /// Create a child pad.
-   RPad(RPadBase *parent, const RPadPos &pos, const RPadExtent &size): fParent(parent) { fPos = pos; fSize = size; }
+public:
+
+   RAttrBorder border{this, "border"};    ///<! border attributes
+
+   /// Constructor must be used only for I/O
+   RPad(TRootIOCtor*) : RPad() {}
 
    /// Destructor to have a vtable.
    virtual ~RPad();
@@ -69,10 +83,6 @@ public:
 
    /// Set position
    void SetPos(const RPadPos &p) { fPos = p; }
-
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RPad &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
-   RAttrLine &AttrLine() { return fAttrLine; }
 };
 
 } // namespace Experimental

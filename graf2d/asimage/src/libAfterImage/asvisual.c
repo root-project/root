@@ -642,7 +642,7 @@ make_reverse_colorhash( unsigned long *cmap, size_t size, int depth, unsigned sh
 	if( hash )
 	{
 		for( i = 0 ; i < size ; i++ )
-			add_hash_item( hash, (ASHashableValue)cmap[i], (void*)((long)MAKE_ARGB32( 0xFF, (i>>(shift<<1))& mask, (i>>(shift))&mask, i&mask)) );
+			add_hash_item( hash, (ASHashableValue)cmap[i], (void*)((intptr_t)MAKE_ARGB32( 0xFF, (i>>(shift<<1))& mask, (i>>(shift))&mask, i&mask)) );
 	}
 	return hash;
 }
@@ -1591,8 +1591,9 @@ create_visual_ximage( ASVisual *asv, unsigned int width, unsigned int height, un
 #endif
 	if( ximage == NULL )
 	{
-		ximage = XCreateImage (asv->dpy, asv->visual_info.visual, (depth==0)?asv->visual_info.depth/*true_depth*/:depth, ZPixmap, 0, NULL, MAX(width,(unsigned int)1), MAX(height,(unsigned int)1),
-						   	unit, 0);
+		ximage = XCreateImage (asv->dpy, asv->visual_info.visual, (depth==0)?asv->visual_info.depth/*true_depth*/:depth, ZPixmap,
+                                       0, NULL, MAX(width,(unsigned int)1), MAX(height,(unsigned int)1),
+                                       unit, 0);
 		if (ximage != NULL)
 		{
 			_XInitImageFuncPtrs (ximage);
@@ -1645,9 +1646,9 @@ create_visual_scratch_ximage( ASVisual *asv, unsigned int width, unsigned int he
 	if( ximage == NULL )
 	{
 		ximage = XCreateImage (asv->dpy, asv->visual_info.visual, 
-			                   (depth==0)?asv->visual_info.depth/*true_depth*/:depth, ZPixmap, 
-							   0, NULL, MAX(width,(unsigned int)1), MAX(height,(unsigned int)1),
-						   	   unit, 0);
+                                       (depth==0)?asv->visual_info.depth/*true_depth*/:depth, ZPixmap, 
+                                       0, NULL, MAX(width,(unsigned int)1), MAX(height,(unsigned int)1),
+                                       unit, 0);
 		if (ximage != NULL)
 		{
 			data = get_scratch_data(ximage->bytes_per_line * ximage->height);

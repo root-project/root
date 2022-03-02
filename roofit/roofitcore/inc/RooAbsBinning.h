@@ -18,7 +18,7 @@
 
 #include "Rtypes.h"
 #include "RooPrintable.h"
-#include "TNamed.h" 
+#include "TNamed.h"
 class TIterator ;
 class RooAbsRealLValue ;
 class RooAbsReal ;
@@ -30,13 +30,13 @@ public:
   RooAbsBinning(const RooAbsBinning& other, const char* name=0) : TNamed(name,name), RooPrintable(other) {
     // Copy constructor
   }
-  virtual TObject* Clone(const char* newname=0) const { return clone(newname) ; }
+  TObject* Clone(const char* newname=0) const override { return clone(newname) ; }
   virtual RooAbsBinning* clone(const char* name=0) const = 0 ;
-  virtual ~RooAbsBinning() ;
+  ~RooAbsBinning() override ;
 
   /// Return number of bins.
-  Int_t numBins() const { 
-    return numBoundaries()-1 ; 
+  Int_t numBins() const {
+    return numBoundaries()-1 ;
   }
   virtual Int_t numBoundaries() const = 0 ;
   virtual Int_t binNumber(Double_t x) const = 0 ;
@@ -49,12 +49,12 @@ public:
 
   virtual void setRange(Double_t xlo, Double_t xhi) = 0 ;
   /// Change lower bound to xlo.
-  virtual void setMin(Double_t xlo) { 
-    setRange(xlo,highBound()) ; 
+  virtual void setMin(Double_t xlo) {
+    setRange(xlo,highBound()) ;
   }
   /// Change upper bound to xhi.
-  virtual void setMax(Double_t xhi) { 
-    setRange(lowBound(),xhi) ; 
+  virtual void setMax(Double_t xhi) {
+    setRange(lowBound(),xhi) ;
   }
 
   virtual Double_t lowBound() const = 0 ;
@@ -64,33 +64,33 @@ public:
 
   virtual Double_t* array() const = 0 ;
 
-  inline virtual void Print(Option_t *options= 0) const {
+  inline void Print(Option_t *options= 0) const override {
     // Printing interface
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
-  virtual void printValue(std::ostream& os) const ;
-  
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
+
   /// Interface function. If true, min/max of binning is parameterized by external RooAbsReals.
   /// Default to `false`, unless overridden by a sub class.
-  virtual Bool_t isParameterized() const { 
-    return kFALSE ; 
+  virtual Bool_t isParameterized() const {
+    return kFALSE ;
   }
   /// Return pointer to RooAbsReal parameterized lower bound, if any.
-  virtual RooAbsReal* lowBoundFunc() const { 
-    return 0 ; 
+  virtual RooAbsReal* lowBoundFunc() const {
+    return 0 ;
   }
   /// Return pointer to RooAbsReal parameterized upper bound, if any.
-  virtual RooAbsReal* highBoundFunc() const { 
-    return 0 ; 
+  virtual RooAbsReal* highBoundFunc() const {
+    return 0 ;
   }
   /// If true (default), the range definition can be shared across clones of a RooRealVar.
-  virtual Bool_t isShareable() const { 
-    return kTRUE ; 
+  virtual Bool_t isShareable() const {
+    return kTRUE ;
   }
   /// Hook interface function to execute code upon insertion into a RooAbsRealLValue.
   virtual void insertHook(RooAbsRealLValue&) const {  }
@@ -98,9 +98,9 @@ public:
   virtual void removeHook(RooAbsRealLValue&) const {  }
 
 
-protected:  
+protected:
 
-  ClassDef(RooAbsBinning,2) // Abstract base class for binning specification
+  ClassDefOverride(RooAbsBinning,2) // Abstract base class for binning specification
 };
 
 #endif

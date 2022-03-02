@@ -2,6 +2,9 @@
 #include "ROOT/RTaskArena.hxx"
 #include "ROOT/TThreadExecutor.hxx"
 #include "../src/ROpaqueTaskArena.hxx"
+
+#include "ROOT/TestSupport.hxx"
+
 #include <fstream>
 #include <random>
 #include <thread>
@@ -15,6 +18,11 @@
 const unsigned maxConcurrency = ROOT::Internal::LogicalCPUBandwithControl();
 std::mt19937 randGenerator(0);                                      // seed the generator
 std::uniform_int_distribution<> plausibleNCores(1, maxConcurrency); // define the range
+
+/// Suppress the task arena diagnostics for tests where we try to create the task arena multiple times.
+#define SUPPRESS_DIAG \
+   ROOT::TestSupport::CheckDiagsRAII raii; \
+   raii.optionalDiag(kWarning, "RTaskArenaWrapper", "There's already an active task arena", false);
 
 TEST(RTaskArena, Size0WhenNoInstance)
 {
@@ -52,6 +60,7 @@ TEST(RTaskArena, Reconstruction)
 
 TEST(RTaskArena, SingleInstance)
 {
+   SUPPRESS_DIAG;
    const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance1 = ROOT::Internal::GetGlobalTaskArena(nCores);
    auto gTAInstance2 = ROOT::Internal::GetGlobalTaskArena(plausibleNCores(randGenerator));
@@ -68,6 +77,7 @@ TEST(RTaskArena, AccessWorkingTBBtaskArena)
 
 TEST(RTaskArena, KeepSize)
 {
+   SUPPRESS_DIAG
    const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance1 = ROOT::Internal::GetGlobalTaskArena(nCores);
    auto gTAInstance2 = ROOT::Internal::GetGlobalTaskArena(plausibleNCores(randGenerator));
@@ -79,6 +89,7 @@ TEST(RTaskArena, KeepSize)
 
 TEST(RTaskArena, CorrectSizeIMT)
 {
+   SUPPRESS_DIAG
    auto gTAInstance1 = ROOT::Internal::GetGlobalTaskArena();
    ROOT::EnableImplicitMT(plausibleNCores(randGenerator));
    ASSERT_EQ(ROOT::Internal::RTaskArenaWrapper::TaskArenaSize(), maxConcurrency);
@@ -87,6 +98,7 @@ TEST(RTaskArena, CorrectSizeIMT)
 
 TEST(RTaskArena, KeepSizeTThreadExecutor)
 {
+   SUPPRESS_DIAG
    const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance = ROOT::Internal::GetGlobalTaskArena(nCores);
    ROOT::TThreadExecutor threadExecutor(plausibleNCores(randGenerator));
@@ -95,6 +107,7 @@ TEST(RTaskArena, KeepSizeTThreadExecutor)
 
 TEST(RTaskArena, InterleaveAndNest)
 {
+   SUPPRESS_DIAG
    unsigned nCores;
 
    // IMT + GTA

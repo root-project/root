@@ -197,7 +197,7 @@ namespace FitUtil {
 
      double Integral(const double *x1, const double *x2)
      {
-        // return unormalized integral
+        // return unnormalized integral
         return (fIg1Dim) ? fIg1Dim->Integral(*x1, *x2) : fIgNDim->Integral(x1, x2);
      }
 
@@ -267,7 +267,7 @@ namespace FitUtil {
       evaluate the Chi2 given a model function and the data at the point x.
       return also nPoints as the effective number of used points in the Chi2 evaluation
   */
-  double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints,
+  double EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
                       ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks = 0);
 
   /**
@@ -278,10 +278,10 @@ namespace FitUtil {
   double EvaluateChi2Effective(const IModelFunction &func, const BinData &data, const double *x, unsigned int &nPoints);
 
   /**
-      evaluate the Chi2 gradient given a model function and the data at the point x.
+      evaluate the Chi2 gradient given a model function and the data at the point p.
       return also nPoints as the effective number of used points in the Chi2 evaluation
   */
-  void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
+  void EvaluateChi2Gradient(const IModelFunction &func, const BinData &data, const double *p, double *grad,
                             unsigned int &nPoints,
                             ::ROOT::EExecutionPolicy executionPolicy = ::ROOT::EExecutionPolicy::kSequential,
                             unsigned nChunks = 0);
@@ -294,10 +294,10 @@ namespace FitUtil {
                       unsigned int &nPoints, ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks = 0);
 
   /**
-      evaluate the LogL gradient given a model function and the data at the point x.
+      evaluate the LogL gradient given a model function and the data at the point p.
       return also nPoints as the effective number of used points in the LogL evaluation
   */
-  void EvaluateLogLGradient(const IModelFunction &func, const UnBinData &data, const double *x, double *grad,
+  void EvaluateLogLGradient(const IModelFunction &func, const UnBinData &data, const double *p, double *grad,
                             unsigned int &nPoints,
                             ::ROOT::EExecutionPolicy executionPolicy = ::ROOT::EExecutionPolicy::kSequential,
                             unsigned nChunks = 0);
@@ -309,19 +309,19 @@ namespace FitUtil {
   // #endif
 
   /**
-      evaluate the Poisson LogL given a model function and the data at the point x.
+      evaluate the Poisson LogL given a model function and the data at the point p.
       return also nPoints as the effective number of used points in the LogL evaluation
-      By default is extended, pass extedend to false if want to be not extended (MultiNomial)
+      By default is extended, pass extend to false if want to be not extended (MultiNomial)
   */
-  double EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *x, int iWeight,
+  double EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight,
                              bool extended, unsigned int &nPoints, ::ROOT::EExecutionPolicy executionPolicy,
                              unsigned nChunks = 0);
 
   /**
-      evaluate the Poisson LogL given a model function and the data at the point x.
+      evaluate the Poisson LogL given a model function and the data at the point p.
       return also nPoints as the effective number of used points in the LogL evaluation
   */
-  void EvaluatePoissonLogLGradient(const IModelFunction &func, const BinData &data, const double *x, double *grad,
+  void EvaluatePoissonLogLGradient(const IModelFunction &func, const BinData &data, const double *p, double *grad,
                                    unsigned int &nPoints,
                                    ::ROOT::EExecutionPolicy executionPolicy = ::ROOT::EExecutionPolicy::kSequential,
                                    unsigned nChunks = 0);
@@ -334,7 +334,7 @@ namespace FitUtil {
       If the function provides parameter derivatives they are used otherwise a simple derivative calculation
       is used
   */
-  double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *x, unsigned int ipoint,
+  double EvaluateChi2Residual(const IModelFunction &func, const BinData &data, const double *p, unsigned int ipoint,
                               double *g = 0);
 
   /**
@@ -344,7 +344,7 @@ namespace FitUtil {
       is used
   */
   double
-  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *x, unsigned int ipoint, double *g = 0);
+  EvaluatePdf(const IModelFunction &func, const UnBinData &data, const double *p, unsigned int ipoint, double *g = 0);
 
 #ifdef R__HAS_VECCORE
    template <class NotCompileIfScalarBackend = std::enable_if<!(std::is_same<double, ROOT::Double_v>::value)>>
@@ -380,7 +380,7 @@ namespace FitUtil {
          // normal chi2 using only error on values (from fitting histogram)
          // optionally the integral of function in the bin is used
 
-         //Info("EvalChi2","Using vecorized implementation %d",(int) data.Opt().fIntegral);
+         //Info("EvalChi2","Using vectorized implementation %d",(int) data.Opt().fIntegral);
 
          unsigned int n = data.Size();
          nPoints = data.Size();  // npoints
@@ -401,7 +401,7 @@ namespace FitUtil {
          (const_cast<IModelFunctionTempl<T> &>(func)).SetParameters(p);
 
          double maxResValue = std::numeric_limits<double>::max() / n;
-         std::vector<double> ones{1, 1, 1, 1};
+         std::vector<double> ones{1., 1., 1., 1.};
          auto vecSize = vecCore::VectorSize<T>();
 
          auto mapFunction = [&](unsigned int i) {
@@ -437,7 +437,7 @@ namespace FitUtil {
             T chi2 = tmp * tmp;
 
 
-            // avoid inifinity or nan in chi2 values due to wrong function values
+            // avoid infinity or nan in chi2 values due to wrong function values
             auto m = vecCore::Mask_v<T>(chi2 > maxResValue);
 
             vecCore::MaskedAssign<T>(chi2, m, maxResValue);
@@ -471,7 +471,7 @@ namespace FitUtil {
             res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
          } else {
-            Error("FitUtil::EvaluateChi2", "Execution policy unknown. Avalaible choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n ::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+            Error("FitUtil::EvaluateChi2", "Execution policy unknown. Available choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n ::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
          }
 
          // Last SIMD vector of elements (if padding needed)
@@ -533,7 +533,7 @@ namespace FitUtil {
             } else {
                // use (-inf +inf)
                data.Range().GetRange(&xmin[0], &xmax[0]);
-               // check if funcition is zero at +- inf
+               // check if function is zero at +- inf
                T xmin_v, xmax_v;
                vecCore::Load<T>(xmin_v, xmin.data());
                vecCore::Load<T>(xmax_v, xmax.data());
@@ -646,7 +646,7 @@ namespace FitUtil {
             resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 #endif
          } else {
-            Error("FitUtil::EvaluateLogL", "Execution policy unknown. Avalaible choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n ::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+            Error("FitUtil::EvaluateLogL", "Execution policy unknown. Available choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n ::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
          }
 
          logl_v = resArray.logvalue;
@@ -691,7 +691,7 @@ namespace FitUtil {
                } else {
                   // use (-inf +inf)
                   data.Range().GetRange(&xmin[0], &xmax[0]);
-                  // check if funcition is zero at +- inf
+                  // check if function is zero at +- inf
                   T xmin_v, xmax_v;
                   vecCore::Load<T>(xmin_v, xmin.data());
                   vecCore::Load<T>(xmax_v, xmax.data());
@@ -740,7 +740,7 @@ namespace FitUtil {
          // for binned likelihood fits
          // this is Sum ( f(x_i)  -  y_i * log( f (x_i) ) )
          // add as well constant term for saturated model to make it like a Chi2/2
-         // by default is etended. If extended is false the fit is not extended and
+         // by default is extended. If extended is false the fit is not extended and
          // the global poisson term is removed (i.e is a binomial fit)
          // (remember that in this case one needs to have a function with a fixed normalization
          // like in a non extended binned fit)
@@ -812,7 +812,7 @@ namespace FitUtil {
 
             } else {
                // standard case no weights or iWeight=1
-               // this is needed for Poisson likelihood (which are extened and not for multinomial)
+               // this is needed for Poisson likelihood (which are extended and not for multinomial)
                // the formula below  include constant term due to likelihood of saturated model (f(x) = y)
                // (same formula as in Baker-Cousins paper, page 439 except a factor of 2
                if (extended) nloglike = fval - y;
@@ -852,7 +852,7 @@ namespace FitUtil {
          } else {
             Error(
                "FitUtil::Evaluate<T>::EvalPoissonLogL",
-               "Execution policy unknown. Avalaible choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n ::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
+               "Execution policy unknown. Available choices:\n ::ROOT::EExecutionPolicy::kSequential (default)\n ::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
          }
 
          // Last padded SIMD vector of elements
@@ -1025,7 +1025,7 @@ namespace FitUtil {
          else {
             Error(
                "FitUtil::EvaluateChi2Gradient",
-               "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+               "Execution policy unknown. Available choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
          }
 
          // Compute the contribution from the remaining points
@@ -1206,7 +1206,7 @@ namespace FitUtil {
          }
 #endif
          else {
-            Error("FitUtil::EvaluatePoissonLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+            Error("FitUtil::EvaluatePoissonLogLGradient", "Execution policy unknown. Available choices:\n "
                                                           "::ROOT::EExecutionPolicy::kSequential (default)\n "
                                                           "::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
          }
@@ -1356,7 +1356,7 @@ namespace FitUtil {
          }
 #endif
          else {
-            Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
+            Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Available choices:\n "
                                                    "::ROOT::EExecutionPolicy::kSequential (default)\n "
                                                    "::ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
          }
@@ -1399,7 +1399,7 @@ namespace FitUtil {
          // optionally the integral of function in the bin is used
 
 
-         //Info("EvalChi2","Using non-vecorized implementation %d",(int) data.Opt().fIntegral);
+         //Info("EvalChi2","Using non-vectorized implementation %d",(int) data.Opt().fIntegral);
 
          return FitUtil::EvaluateChi2(func, data, p, nPoints, executionPolicy, nChunks);
       }

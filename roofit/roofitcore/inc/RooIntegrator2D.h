@@ -25,33 +25,33 @@ public:
   // Constructors, assignment etc
   RooIntegrator2D() ;
   RooIntegrator2D(const RooAbsFunc& function, RooIntegrator1D::SummationRule rule=RooIntegrator1D::Trapezoid,
-		  Int_t maxSteps= 0, Double_t eps= 0) ; 
+        Int_t maxSteps= 0, Double_t eps= 0) ;
   RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
-		  SummationRule rule= Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ; 
+        SummationRule rule= Trapezoid, Int_t maxSteps= 0, Double_t eps= 0) ;
 
   RooIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) ;
   RooIntegrator2D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax,
-		  const RooNumIntConfig& config) ;
+        const RooNumIntConfig& config) ;
 
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooIntegrator2D() ;
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooIntegrator2D() override ;
 
-  virtual Bool_t checkLimits() const;
+  Bool_t checkLimits() const override;
 
-  virtual Bool_t canIntegrate1D() const { return kFALSE ; }
-  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
-  virtual Bool_t canIntegrateND() const { return kFALSE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  Bool_t canIntegrate1D() const override { return kFALSE ; }
+  Bool_t canIntegrate2D() const override { return kTRUE ; }
+  Bool_t canIntegrateND() const override { return kFALSE ; }
+  Bool_t canIntegrateOpenEnded() const override { return kFALSE ; }
 
 protected:
 
   friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;	
+  static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  RooIntegrator1D* _xIntegrator ; // Integrator in first dimension
-  RooAbsFunc* _xint ; // Function binding representing integral over first dimension
+  RooIntegrator1D* _xIntegrator ; ///< Integrator in first dimension
+  RooAbsFunc* _xint ; ///< Function binding representing integral over first dimension
 
-  ClassDef(RooIntegrator2D,0) // 2-dimensional numerical integration engine
+  ClassDefOverride(RooIntegrator2D,0) // 2-dimensional numerical integration engine
 };
 
 #endif
