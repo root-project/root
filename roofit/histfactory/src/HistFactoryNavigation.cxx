@@ -915,9 +915,8 @@ namespace RooStats {
       // ie a sub node:
       //RooArgSet* components = parent->getComponents();
       //TIterator* argItr = components->createIterator();
-      RooAbsArg* arg = NULL;
       //while( (arg=(RooAbsArg*)argItr->Next()) ) 
-      for (auto arg : dynamic_range_cast<RooAbsArg *>(*parent->getComponents()))
+      for (auto arg : static_range_cast<RooAbsArg *>(*parent->getComponents()))
          {
       
    std::string ArgName = arg->GetName();
@@ -929,6 +928,7 @@ namespace RooStats {
       //delete components;
       //delete argItr;
 
+      RooAbsArg* arg = NULL;
       if( term != NULL ) return term;
 
       // If that failed,
