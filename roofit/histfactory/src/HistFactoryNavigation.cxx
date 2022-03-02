@@ -934,11 +934,11 @@ namespace RooStats {
       // Check if it's a Parameter
       // (ie a RooRealVar)
       //RooArgSet* args = new RooArgSet();
-      //RooArgSet* paramSet = parent->getParameters(args);
+      RooArgSet* paramSet = parent->getParameters(args);
       //TIterator* paramItr = paramSet->createIterator();
       //RooAbsArg* param = NULL;
       //while( (param=(RooAbsArg*)paramItr->Next()) ) 
-      for (auto const *param : static_range_cast<RooAbsArg *>(*paramSet)) {
+      for (auto *param : static_range_cast<RooAbsArg *>(*paramSet)) {
    std::string ParamName = param->GetName();
    if( ParamName == name ) {
      term = param; //dynamic_cast<RooAbsReal*>(arg);
@@ -946,7 +946,7 @@ namespace RooStats {
    }
       }
       //delete args;
-      //delete paramSet;
+      delete paramSet;
       //delete paramItr;
 
       /* Not sure if we want to be silent
