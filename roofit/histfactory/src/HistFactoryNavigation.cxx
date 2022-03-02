@@ -760,7 +760,7 @@ namespace RooStats {
       /*TIterator* itr = productComponents.createIterator();
       RooAbsArg* arg = NULL;
       while( (arg=(RooAbsArg*)itr->Next()) ) */
-      for (auto const *arg : dynamic_range_cast<RooAbsArg *>(productComponents)) {
+      for (auto const *arg : static_range_cast<RooAbsArg *>(*productComponents)) {
    std::string ClassName = arg->ClassName();
    if( ClassName == "RooProduct" ) {
      RooProduct* prod = dynamic_cast<RooProduct*>(arg);
@@ -770,7 +770,7 @@ namespace RooStats {
      allTerms.add(*arg);
    }
       }
-      delete itr;
+      //delete itr;
 
       return allTerms;
 
