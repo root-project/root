@@ -496,7 +496,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   // KC: check if interCode=0 for all
   RooFIter paramIterExtra(_paramSet.fwdIterator()) ;
   int i=0;
-  while (paramIterExtra.next()) 
+  while (paramIterExtra.next()){ 
     if(!_interpCode.empty() && _interpCode[i]!=0){
       // can't factorize integral
       cout <<"can't factorize integral"<<endl;
