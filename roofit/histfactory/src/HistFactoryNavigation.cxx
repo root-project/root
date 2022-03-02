@@ -917,7 +917,7 @@ namespace RooStats {
       //TIterator* argItr = components->createIterator();
       //RooAbsArg* arg = NULL;
       //while( (arg=(RooAbsArg*)argItr->Next()) ) 
-      for (auto const *arg : dynamic_range_cast<RooAbsArg *>(*components)) {
+      for (auto const *arg : dynamic_range_cast<RooAbsArg *>(components)) {
       
    std::string ArgName = arg->GetName();
    if( ArgName == name ) {
@@ -933,20 +933,20 @@ namespace RooStats {
       // If that failed,
       // Check if it's a Parameter
       // (ie a RooRealVar)
-      RooArgSet* args = new RooArgSet();
-      RooArgSet* paramSet = parent->getParameters(args);
+      //RooArgSet* args = new RooArgSet();
+      //RooArgSet* paramSet = parent->getParameters(args);
       //TIterator* paramItr = paramSet->createIterator();
       //RooAbsArg* param = NULL;
       //while( (param=(RooAbsArg*)paramItr->Next()) ) 
-      for (auto const *param : dynamic_range_cast<RooAbsArg *>(*paramSet)) {
+      for (auto const *param : static_range_cast<RooAbsArg *>(*paramSet)) {
    std::string ParamName = param->GetName();
    if( ParamName == name ) {
      term = param; //dynamic_cast<RooAbsReal*>(arg);
      break;
    }
       }
-      delete args;
-      delete paramSet;
+      //delete args;
+      //delete paramSet;
       //delete paramItr;
 
       /* Not sure if we want to be silent
