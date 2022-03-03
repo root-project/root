@@ -1681,6 +1681,8 @@ TGeoTranslation *TGDMLParse::GetPosition(const char *name)
    if (!pos && fposmap.find(name) != fposmap.end())
       pos = fposmap[name];
 
+   if (!pos)
+      Error("GetPosition", "Position %s not defined", name);
    return pos;
 }
 
@@ -1698,6 +1700,8 @@ TGeoRotation *TGDMLParse::GetRotation(const char *name)
    if (!rot && frotmap.find(name) != frotmap.end())
       rot = frotmap[name];
 
+   if (!rot)
+      Error("GetRotation", "Rotation %s not defined", name);
    return rot;
 }
 
@@ -1715,6 +1719,8 @@ TGeoScale *TGDMLParse::GetScaleObj(const char *name)
    if (!scl && fsclmap.find(name) != fsclmap.end())
       scl = fsclmap[name];
 
+   if (!scl)
+      Error("GetScale", "Scale %s not defined", name);
    return scl;
 }
 
@@ -1732,6 +1738,8 @@ TGeoShape *TGDMLParse::GetSolid(const char *name)
    if (!sol && fsolmap.find(name) != fsolmap.end())
       sol = fsolmap[name];
 
+   if (!sol)
+      Error("GetSolid", "Solid %s not defined", name);
    return sol;
 }
 
@@ -1749,6 +1757,8 @@ TGeoVolume *TGDMLParse::GetVolume(const char *name)
    if (!vol && fvolmap.find(name) != fvolmap.end())
       vol = fvolmap[name];
 
+   if (!vol)
+      Error("GetVolume", "Volume %s not defined", name);
    return vol;
 }
 
