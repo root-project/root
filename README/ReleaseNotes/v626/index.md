@@ -1,10 +1,10 @@
 % ROOT Version 6.26 Release Notes
-% 2022-03-02
+% 2022-03-03
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.26/00 was released on March 02, 2022.
+ROOT version 6.26/00 was released on March 03, 2022.
 
 For more information, see:
 
