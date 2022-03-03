@@ -8,7 +8,8 @@
 
 #include <ROOT/TObjectDrawable.hxx>
 
-#include <ROOT/RDisplayItem.hxx>
+#include <ROOT/TObjectDisplayItem.hxx>
+#include <ROOT/RColor.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RMenuItems.hxx>
 
@@ -17,35 +18,177 @@
 #include "TObjArray.h"
 #include "TObjString.h"
 #include "TROOT.h"
+#include "TList.h"
 #include "TStyle.h"
+#include "TMethodCall.h"
 
 #include <exception>
 #include <sstream>
 #include <iostream>
+#include <cstring>
 
 using namespace ROOT::Experimental;
 
-TObjectDrawable::TObjectDrawable(EKind kind, bool persistent) : RDrawable("tobject"), fKind(kind)
-{
-   if (!persistent) return;
+////////////////////////////////////////////////////////////////////
+/// Checks object ownership - used for TH1 directory handling and TF1 globals lists
 
-   fOpts = "persistent";
-   fObj = CreateSpecials(kind);
+void TObjectDrawable::CheckOwnership(TObject *obj)
+{
+   if (obj && obj->InheritsFrom("TH1")) {
+      TMethodCall call(obj->IsA(), "SetDirectory", "nullptr");
+      call.Execute((void *)(obj));
+   } else if (obj && obj->InheritsFrom("TF1")) {
+      TMethodCall call(obj->IsA(), "AddToGlobalList", "kFALSE");
+      call.Execute((void *)(obj));
+   }
+}
+
+////////////////////////////////////////////////////////////////////
+/// Provide css type
+
+const char *TObjectDrawable::DetectCssType(const TObject *obj)
+{
+   if (!obj) return "tobject";
+
+   const char *clname = obj->ClassName();
+   if (strncmp(clname, "TH3", 3) == 0) return "th3";
+   if (strncmp(clname, "TH2", 3) == 0) return "th2";
+   if ((strncmp(clname, "TH1", 3) == 0) || obj->InheritsFrom("TH1")) return "th1";
+   if (strncmp(clname, "TGraph", 6) == 0) return "tgraph";
+   if (strcmp(clname, "TLine") == 0) return "tline";
+   if (strcmp(clname, "TBox") == 0) return "tbox";
+   return "tobject";
+}
+
+////////////////////////////////////////////////////////////////////
+/// Default constructor
+
+TObjectDrawable::TObjectDrawable() : RDrawable("tobject")
+{
+}
+
+////////////////////////////////////////////////////////////////////
+/// Constructor, can take ownership over the object is isowner specified
+
+TObjectDrawable::TObjectDrawable(TObject *obj, bool isowner) : RDrawable(DetectCssType(obj))
+{
+   fKind = kObject;
+   if (isowner) {
+      CheckOwnership(obj);
+      fObj = std::shared_ptr<TObject>(obj);
+   } else {
+      fExtObj = obj;
+   }
+}
+
+////////////////////////////////////////////////////////////////////
+/// Constructor, can take ownership over the object is isowner specified
+
+TObjectDrawable::TObjectDrawable(TObject *obj, const std::string &opt, bool isowner) : TObjectDrawable(obj, isowner)
+{
+   options = opt;
+}
+
+////////////////////////////////////////////////////////////////////
+/// Constructor
+
+TObjectDrawable::TObjectDrawable(const std::shared_ptr<TObject> &obj) : RDrawable(DetectCssType(obj.get()))
+{
+   fKind = kObject;
+   CheckOwnership(obj.get());
+   fObj = obj;
+}
+
+
+////////////////////////////////////////////////////////////////////
+/// Constructor
+
+TObjectDrawable::TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : TObjectDrawable(obj)
+{
+   options = opt;
+}
+
+////////////////////////////////////////////////////////////////////
+/// Creates special kind for for palette or list of colors
+/// One can create persistent, which does not updated to actual values
+
+TObjectDrawable::TObjectDrawable(EKind kind, bool persistent) : RDrawable("tobject")
+{
+   fKind = kind;
+
+   if (persistent)
+      fObj = CreateSpecials(kind);
+}
+
+////////////////////////////////////////////////////////////////////
+/// Destructor
+
+TObjectDrawable::~TObjectDrawable() = default;
+
+
+////////////////////////////////////////////////////////////////////
+/// Reset object
+
+void TObjectDrawable::Reset()
+{
+   fKind = kNone;
+   fObj = nullptr;
+   fExtObj = nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////
+/// Return assigned object
+
+const TObject *TObjectDrawable::Get()
+{
+   // weak pointer - when object deleted outside only indirect way to handle it :(
+   if (fExtObj) {
+      if (!fExtObj->TestBit(TObject::kNotDeleted)) fExtObj = nullptr;
+      return fExtObj;
+   }
+
+   return fObj.get();
+}
+
+
+////////////////////////////////////////////////////////////////////
+/// Set object
+
+void TObjectDrawable::Set(TObject *obj, bool isowner)
+{
+   Reset();
+
+   SetCssType(DetectCssType(obj));
+   fKind = kObject;
+
+   if (isowner) {
+      CheckOwnership(obj);
+      fObj = std::shared_ptr<TObject>(obj);
+   } else {
+      fExtObj = obj;
+   }
+}
+
+////////////////////////////////////////////////////////////////////
+/// Set object
+
+void TObjectDrawable::Set(TObject *obj, const std::string &opt, bool isowner)
+{
+   Set(obj, isowner);
+   options = opt;
 }
 
 ////////////////////////////////////////////////////////////////////
 /// Convert TColor to RGB string for using with SVG
 
-const char *TObjectDrawable::GetColorCode(TColor *col)
+std::string TObjectDrawable::GetColorCode(TColor *col)
 {
-   static TString code;
+   RColor rcol((uint8_t) (255*col->GetRed()), (uint8_t) (255*col->GetGreen()), (uint8_t) (255*col->GetBlue()));
+   if (col->GetAlpha() != 1)
+      rcol.SetAlphaFloat(col->GetAlpha());
 
-   if (col->GetAlpha() == 1)
-      code.Form("rgb(%d,%d,%d)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()));
-   else
-      code.Form("rgba(%d,%d,%d,%5.3f)", (int) (255*col->GetRed()), (int) (255*col->GetGreen()), (int) (255*col->GetBlue()), col->GetAlpha());
-
-   return code.Data();
+   return rcol.AsSVG();
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -63,7 +206,7 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
          for (int n = 0; n <= cols->GetLast(); ++n) {
             auto col = dynamic_cast<TColor *>(cols->At(n));
             if (!col) continue;
-            auto code = TString::Format("%d=%s", n, GetColorCode(col));
+            auto code = TString::Format("%d=%s", n, GetColorCode(col).c_str());
             arr->Add(new TObjString(code));
          }
 
@@ -80,13 +223,56 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
          auto palette = TColor::GetPalette();
          for (int n = 0; n < palette.GetSize(); ++n) {
             auto col = gROOT->GetColor(palette[n]);
-            arr->Add(new TObjString(GetColorCode(col)));
+            arr->Add(new TObjString(GetColorCode(col).c_str()));
          }
 
          return arr;
       }
    }
    return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////
+/// Check if object has specified color value and store it in display item
+/// Ensure that color matches on client side too
+
+void TObjectDrawable::ExtractObjectColors(std::unique_ptr<TObjectDisplayItem> &item, const TObject *obj)
+{
+   if (!obj) return;
+
+   TClass *cl = obj->IsA();
+
+   auto ExtractColor = [&item, cl, obj](const char *class_name, const char *class_member) {
+      if (!cl->GetBaseClass(class_name)) return;
+
+      auto offset = cl->GetDataMemberOffset(class_member);
+      if (offset <= 0) return;
+
+      Color_t *icol = (Color_t *)((char *) obj + offset);
+      if (*icol < 10) return;
+
+      TColor *col = gROOT->GetColor(*icol);
+      if (col) item->UpdateColor(*icol, GetColorCode(col));
+   };
+
+   ExtractColor("TAttLine", "fLineColor");
+   ExtractColor("TAttFill", "fFillColor");
+   ExtractColor("TAttMarker", "fMarkerColor");
+   ExtractColor("TAttText", "fTextColor");
+   ExtractColor("TAttPad", "fFrameFillColor");
+   ExtractColor("TAttPad", "fFrameLineColor");
+   ExtractColor("TAttAxis", "fAxisColor");
+   ExtractColor("TAttAxis", "fLabelColor");
+   ExtractColor("TAttAxis", "fTitleColor");
+
+   if (cl->InheritsFrom("TH1")) {
+      auto offx = cl->GetDataMemberOffset("fXaxis");
+      if (offx > 0) ExtractObjectColors(item, (TObject *) ((char *) obj + offx));
+      auto offy = cl->GetDataMemberOffset("fYaxis");
+      if (offy > 0) ExtractObjectColors(item, (TObject *) ((char *) obj + offy));
+      auto offz = cl->GetDataMemberOffset("fZaxis");
+      if (offz > 0) ExtractObjectColors(item, (TObject *) ((char *) obj + offz));
+   }
 }
 
 
@@ -96,28 +282,60 @@ std::unique_ptr<TObject> TObjectDrawable::CreateSpecials(int kind)
 std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ctxt)
 {
    if (GetVersion() > ctxt.GetLastVersion()) {
-      if ((fKind == kObject) || (fOpts == "persistent"))
-         return std::make_unique<TObjectDisplayItem>(fKind, fObj.get(), fOpts);
+
+      auto obj = Get();
+
+      if ((fKind == kObject) || obj) {
+         auto item = std::make_unique<TObjectDisplayItem>(*this, fKind, obj);
+         if ((fKind == kObject) && obj) {
+            ExtractObjectColors(item, obj);
+
+            // special handling of THStack to support any custom colors inside
+            if (strcmp(obj->ClassName(), "THStack") == 0) {
+               TClass *cl = gROOT->GetClass("THStack");
+               // do not call stack->GetHistogram() to avoid it auto-creation
+               auto off1 = cl->GetDataMemberOffset("fHistogram");
+               if (off1 > 0) ExtractObjectColors(item, *((TObject **) ((char *) obj + off1)));
+               // here make identical to fHistogram, one also can use TMethodCall
+               auto off2 = cl->GetDataMemberOffset("fHists");
+               if (off2 > 0) {
+                  TIter iter(*(TList **) (((char *) obj + off2)));
+                  TObject *hist = nullptr;
+                  while ((hist = iter()) != nullptr)
+                     ExtractObjectColors(item, hist);
+               }
+
+            }
+         }
+
+         return item;
+      }
 
       auto specials = CreateSpecials(fKind);
-      return std::make_unique<TObjectDisplayItem>(fKind, specials.release(), fOpts, true);
+      return std::make_unique<TObjectDisplayItem>(fKind, specials.release());
    }
 
    return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////
+/// fill context menu items for the ROOT class
+
 void TObjectDrawable::PopulateMenu(RMenuItems &items)
 {
-   // fill context menu items for the ROOT class
-   if (fKind == kObject)
-      items.PopulateObjectMenu(fObj.get(), fObj.get()->IsA());
+   auto obj = Get();
+   if ((fKind == kObject) && obj)
+      items.PopulateObjectMenu((void *)obj, obj->IsA());
 }
+
+////////////////////////////////////////////////////////////////////
+/// Execute object method
 
 void TObjectDrawable::Execute(const std::string &exec)
 {
-   if (fKind != kObject) return;
+   auto obj = Get();
 
-   TObject *obj = fObj.get();
+   if ((fKind != kObject) || !obj) return;
 
    std::string sub, ex = exec;
    if (ex.compare(0, 6, "xaxis#") == 0) {
@@ -132,7 +350,7 @@ void TObjectDrawable::Execute(const std::string &exec)
    }
 
    std::stringstream cmd;
-   cmd << "((" << obj->ClassName() << "* ) " << std::hex << std::showbase << (size_t)obj << ")->" << ex << ";";
+   cmd << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << ex << ";";
    std::cout << "TObjectDrawable::Execute Obj " << obj->GetName() << "Cmd " << cmd.str() << std::endl;
    gROOT->ProcessLine(cmd.str().c_str());
 }

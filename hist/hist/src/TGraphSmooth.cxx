@@ -33,7 +33,7 @@ ClassImp(TGraphSmooth);
 
 //______________________________________________________________________
 /** \class TGraphSmooth
-    \ingroup Hist
+    \ingroup Graph
 A helper class to smooth TGraph.
 see examples in $ROOTSYS/tutorials/graphs/motorcycle.C and approx.C
 */
@@ -532,7 +532,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
 /// Friedmanns super smoother (Friedman, 1984).
 ///
 ///  version 10/10/84
-///  coded and copywrite (c) 1984 by:
+///  coded and copyright (c) 1984 by:
 ///
 ///                         Jerome H. Friedman
 ///                      department of statistics

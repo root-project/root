@@ -98,6 +98,12 @@ public:
 
   void Print(const char* = "") const;
 
+  template<class T>
+  static T const& take(T && obj) {
+    getNextSharedData().emplace_back(new T{std::move(obj)});
+    return static_cast<T const&>(*getNextSharedData().back());
+  }
+
 protected:
 
   static const RooCmdArg _none  ; // Static instance of null object
@@ -116,6 +122,13 @@ private:
   RooArgSet* _c ;        // Payload RooArgSets 
   RooLinkedList _argList ; // Payload sub-arguments
   Bool_t _prefixSubArgs ; // Prefix subarguments with container name?
+
+  using DataCollection = std::vector<std::unique_ptr<TObject>>;
+  std::shared_ptr<DataCollection> _sharedData; //!
+
+  // the next RooCmdArg created will take ownership of this data
+  static DataCollection _nextSharedData;
+  static DataCollection &getNextSharedData();
   
   ClassDef(RooCmdArg,2) // Generic named argument container
 };

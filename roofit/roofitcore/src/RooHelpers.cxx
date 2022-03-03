@@ -15,8 +15,14 @@
  *****************************************************************************/
 
 #include "RooHelpers.h"
+#include "RooAbsPdf.h"
+#include "RooAbsData.h"
+#include "RooDataHist.h"
+#include "RooDataSet.h"
 #include "RooAbsRealLValue.h"
+#include "RooArgList.h"
 
+#include "ROOT/StringUtils.hxx"
 #include "TClass.h"
 
 namespace RooHelpers {
@@ -53,30 +59,6 @@ LocalChangeMsgLevel::~LocalChangeMsgLevel() {
 }
 
 
-/// Tokenise the string by splitting at the characters in delims.
-/// Consecutive delimiters are collapsed, so that no delimiters will appear in the
-/// tokenised strings, and no emtpy strings are returned.
-/// \param[in] str String to tokenise.
-/// \param[in] delims One or more delimiters used to split the string.
-/// \param[in] returnEmptyToken If the string is empty, return one empty token. Default is to return an empty vector.
-std::vector<std::string> tokenise(const std::string &str, const std::string &delims, bool returnEmptyToken /*= true*/) {
-  if (str.empty())
-    return std::vector<std::string>(returnEmptyToken ? 1 : 0);
-
-  std::vector<std::string> tokens;
-
-  auto beg = str.find_first_not_of(delims, 0);
-  auto end = str.find_first_of(delims, beg);
-  do {
-    tokens.emplace_back(str.substr(beg, end-beg));
-    beg = str.find_first_not_of(delims, end);
-    end = str.find_first_of(delims, beg);
-  } while (beg != std::string::npos);
-
-  return tokens;
-}
-
-
 /// Hijack all messages with given level and topics while this object is alive.
 /// \param[in] level Minimum level to hijack. Higher levels also get captured.
 /// \param[in] topics Topics to hijack. Use `|` to combine different topics, and cast to `RooFit::MsgTopic` if necessary.
@@ -85,26 +67,45 @@ HijackMessageStream::HijackMessageStream(RooFit::MsgLevel level, RooFit::MsgTopi
 {
   auto& msg = RooMsgService::instance();
   _oldKillBelow = msg.globalKillBelow();
-  msg.setGlobalKillBelow(level);
+  if (_oldKillBelow > level)
+    msg.setGlobalKillBelow(level);
+
+  std::vector<RooMsgService::StreamConfig> tmpStreams;
   for (int i = 0; i < msg.numStreams(); ++i) {
     _oldConf.push_back(msg.getStream(i));
-    msg.getStream(i).removeTopic(topics);
-    msg.setStreamStatus(i, true);
+    if (msg.getStream(i).match(level, topics, static_cast<RooAbsArg*>(nullptr))) {
+      tmpStreams.push_back(msg.getStream(i));
+      msg.setStreamStatus(i, false);
+    }
   }
 
   _thisStream = msg.addStream(level,
       RooFit::Topic(topics),
       RooFit::OutputStream(_str),
       objectName ? RooFit::ObjectName(objectName) : RooCmdArg());
+
+  for (RooMsgService::StreamConfig& st : tmpStreams) {
+    msg.addStream(st.minLevel,
+        RooFit::Topic(st.topic),
+        RooFit::OutputStream(*st.os),
+        RooFit::ObjectName(st.objectName.c_str()),
+        RooFit::ClassName(st.className.c_str()),
+        RooFit::BaseClassName(st.baseClassName.c_str()),
+        RooFit::TagName(st.tagName.c_str()));
+  }
 }
 
+/// Deregister the hijacked stream and restore the stream state of all previous streams.
 HijackMessageStream::~HijackMessageStream() {
   auto& msg = RooMsgService::instance();
   msg.setGlobalKillBelow(_oldKillBelow);
   for (unsigned int i = 0; i < _oldConf.size(); ++i) {
     msg.getStream(i) = _oldConf[i];
   }
-  msg.deleteStream(_thisStream);
+
+  while (_thisStream < msg.numStreams()) {
+    msg.deleteStream(_thisStream);
+  }
 }
 
 
@@ -115,7 +116,7 @@ HijackMessageStream::~HijackMessageStream() {
 /// \param[in] limitsInAllowedRange If true, the limits passed as parameters are part of the allowed range.
 /// \param[in] extraMessage Message that should be appended to the warning.
 void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_list<const RooAbsReal*> pars,
-    double min, double max, bool limitsInAllowedRange, std::string extraMessage) {
+    double min, double max, bool limitsInAllowedRange, std::string const& extraMessage) {
   const char openBr = limitsInAllowedRange ? '[' : '(';
   const char closeBr = limitsInAllowedRange ? ']' : ')';
 
@@ -145,6 +146,17 @@ void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_lis
 }
 
 
+namespace {
+  std::pair<double, double> getBinningInterval(RooAbsBinning const& binning) {
+    if (!binning.isParameterized()) {
+      return {binning.lowBound(), binning.highBound()};
+    } else {
+      return {binning.lowBoundFunc()->getVal(), binning.highBoundFunc()->getVal()};
+    }
+  }
+} // namespace
+
+
 /// Get the lower and upper bound of parameter range if arg can be casted to RooAbsRealLValue.
 /// If no range with rangeName is defined for the argument, this will check if a binning of the
 /// same name exists and return the interval covered by the binning.
@@ -155,18 +167,111 @@ void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_lis
 std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const char* rangeName) {
   auto rlv = dynamic_cast<RooAbsRealLValue const*>(arg);
   if (rlv) {
-    const RooAbsBinning* binning = rlv->getBinningPtr(rangeName);
     if (rangeName && rlv->hasRange(rangeName)) {
       return {rlv->getMin(rangeName), rlv->getMax(rangeName)};
-    } else if (binning) {
-      if (!binning->isParameterized()) {
-        return {binning->lowBound(), binning->highBound()};
-      } else {
-        return {binning->lowBoundFunc()->getVal(), binning->highBoundFunc()->getVal()};
-      }
+    } else if (auto binning = rlv->getBinningPtr(rangeName)) {
+      return getBinningInterval(*binning);
     }
   }
   return {-std::numeric_limits<double>::infinity(), +std::numeric_limits<double>::infinity()};
+}
+
+
+/// Check if there is any overlap when a list of ranges is applied to a set of observables.
+/// \param[in] arg RooAbsCollection with the observables to check for overlap.
+/// \param[in] rangeName The names of the ranges.
+bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vector<std::string> const& rangeNames) {
+
+  auto observables = *pdf.getObservables(data);
+
+  auto getLimits = [&](RooAbsRealLValue const& rlv, const char* rangeName) {
+    
+    // RooDataHistCase
+    if(dynamic_cast<RooDataHist const*>(&data)) {
+      if (auto binning = rlv.getBinningPtr(rangeName)) {
+        return getBinningInterval(*binning);
+      } else {
+        // default binning if range is not defined
+        return getBinningInterval(*rlv.getBinningPtr(nullptr));
+      }
+    }
+
+    // RooDataSet and other cases
+    if (rlv.hasRange(rangeName)) {
+      return std::pair<double, double>{rlv.getMin(rangeName), rlv.getMax(rangeName)};
+    }
+    // default range if range with given name is not defined
+    return std::pair<double, double>{rlv.getMin(), rlv.getMax()};
+  };
+
+  auto nObs = observables.size();
+  auto nRanges = rangeNames.size();
+
+  // cache the range limits in a flat vector
+  std::vector<std::pair<double,double>> limits;
+  limits.reserve(nRanges * nObs);
+
+  for (auto const& range : rangeNames) {
+    for (auto const& obs : observables) {
+      auto rlv = dynamic_cast<RooAbsRealLValue const*>(obs);
+      if(!rlv) {
+        throw std::logic_error("Classes that represent observables are expected to inherit from RooAbsRealLValue!");
+      }
+      limits.push_back(getLimits(*rlv, range.c_str()));
+    }
+  }
+
+  // loop over pairs of ranges
+  for(size_t ir1 = 0; ir1 < nRanges; ++ir1) {
+    for(size_t ir2 = ir1 + 1; ir2 < nRanges; ++ir2) {
+
+      // Loop over observables. If all observables have overlapping limits for
+      // these ranges, the hypercubes defining the range are overlapping and we
+      // can return `true`.
+      size_t overlaps = 0;
+      for(size_t io1 = 0; io1 < nObs; ++io1) {
+        auto r1 = limits[ir1 * nObs + io1];
+        auto r2 = limits[ir2 * nObs + io1];
+        overlaps += (r1.second > r2.first && r1.first < r2.second)
+                 || (r2.second > r1.first && r2.first < r1.second);
+      }
+      if(overlaps == nObs) return true;
+    }
+  }
+
+  return false;
+}
+
+
+/// Create a string with all sorted names of RooArgSet elements separated by colons.
+/// \param[in] arg argSet The input RooArgSet.
+std::string getColonSeparatedNameString(RooArgSet const& argSet) {
+
+  RooArgList tmp(argSet);
+  tmp.sort();
+
+  std::string content;
+  for(auto const& arg : tmp) {
+    content += arg->GetName();
+    content += ":";
+  }
+  if(!content.empty()) {
+    content.pop_back();
+  }
+  return content;
+}
+
+
+/// Construct a RooArgSet of objects in a RooArgSet whose names match to those
+/// in the names string.
+/// \param[in] arg argSet The input RooArgSet.
+/// \param[in] arg names The names of the objects to select in a colon-separated string.
+RooArgSet selectFromArgSet(RooArgSet const& argSet, std::string const& names) {
+  RooArgSet output;
+  for(auto const& name : ROOT::Split(names, ":")) {
+    if(auto arg = argSet.find(name.c_str())) output.add(*arg);
+  }
+  return output;
 }
 
 

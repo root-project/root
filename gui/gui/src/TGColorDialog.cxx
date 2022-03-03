@@ -21,27 +21,40 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGColorPalette, TGColorPick and TGColorDialog.                       //
-//                                                                      //
-// The TGColorPalette is a widget showing an matrix of color cells. The //
-// colors can be set and selected.                                      //
-//                                                                      //
-// The TGColorPick is a widget which allows a color to be picked from   //
-// HLS space. It consists of two elements: a color map window from      //
-// where the user can select the hue and saturation level of a color,   //
-// and a slider to select color's lightness.                            //
-//                                                                      //
-// Selecting a color in these two widgets will generate the event:      //
-// kC_COLORSEL, kCOL_CLICK, widget id, 0.                               //
-// and the signal:                                                      //
-// ColorSelected(Pixel_t color)                                         //
-//                                                                      //
-// The TGColorDialog presents a full featured color selection dialog.   //
-// It uses 2 TGColorPalette's and the TGColorPick widgets.              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGColorPalette
+    \ingroup guiwidgets
+
+A widget showing an matrix of color cells. The colors can be set and selected.
+
+*/
+
+
+/** \class TGColorPick
+    \ingroup guiwidgets
+
+A widget which allows a color to be picked from HLS color space.
+It consists of two elements: a color map window from
+where the user can select the hue and saturation level of a color,
+and a slider to select color's lightness.
+
+Selecting a color in these two widgets will generate the event:
+  - kC_COLORSEL, kCOL_CLICK, widget id, 0.
+
+and the signal:
+  - ColorSelected(Pixel_t color)
+
+*/
+
+
+/** \class TGColorDialog
+    \ingroup guiwidgets
+
+A full featured color selection dialog.
+It uses 2 TGColorPalette's and the TGColorPick widgets.
+
+*/
+
 
 #include <cstdlib>
 
@@ -1349,7 +1362,7 @@ void TGColorDialog::ColorSelected(Pixel_t color)
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit signal about selected alpha and color.
 
-void TGColorDialog::AlphaColorSelected(ULong_t color)
+void TGColorDialog::AlphaColorSelected(ULongptr_t color)
 {
    Emit("AlphaColorSelected(ULong_t)", color);
 }
@@ -1365,11 +1378,11 @@ void TGColorDialog::CloseWindow()
 
    if (*fRetc != kMBOk) {
       ColorSelected(fInitColor);
-      ULong_t ptr;
-      if((ptr = (ULong_t)gROOT->GetColor(TColor::GetColor(fInitColor)))) AlphaColorSelected(ptr);
+      ULongptr_t ptr;
+      if((ptr = (ULongptr_t)gROOT->GetColor(TColor::GetColor(fInitColor)))) AlphaColorSelected(ptr);
    } else {
       ColorSelected(*fRetColor);
-      AlphaColorSelected((ULong_t)fRetTColor);
+      AlphaColorSelected((ULongptr_t)fRetTColor);
    }
    // don't call DeleteWindow() here since that will cause access
    // to the deleted dialog in the WaitFor() method (see ctor)
@@ -1383,7 +1396,7 @@ void TGColorDialog::CloseWindow()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Upadate Opacity text entry with alpha value of color c.
+/// Update Opacity text entry with alpha value of color c.
 
 void TGColorDialog::UpdateAlpha(ULong_t *c)
 {
@@ -1458,7 +1471,7 @@ void TGColorDialog::UpdateHLSentries(ULong_t *c)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages for the color selection dialog.
 
-Bool_t TGColorDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t /*parm2*/)
+Bool_t TGColorDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t /*parm2*/)
 {
    ULong_t color;
    Int_t h, l, s;
@@ -1623,12 +1636,12 @@ void TGColorDialog::DoPreview()
 
    if (fClient->IsEditable()) {
       ColorSelected(fSample->GetBackground());
-      AlphaColorSelected((ULong_t)tcolor);
+      AlphaColorSelected((ULongptr_t)tcolor);
       return;
    }
    TGColorPopup *p = (TGColorPopup *)GetMain();
    if (p && p->InheritsFrom("TGColorPopup")) {
-      if (tcolor) p->PreviewAlphaColor((ULong_t)tcolor);
+      if (tcolor) p->PreviewAlphaColor((ULongptr_t)tcolor);
       else p->PreviewColor(fSample->GetBackground());
    }
 }

@@ -16,7 +16,7 @@
 
 (function(factory){
 
-    var JSROOT_source_dir = "https://root.cern.ch/js/notebook/scripts/";
+    var JSROOT_source_dir = "https://root.cern/js/5.9.1/scripts/";
 
     var url = "";
     if (requirejs.s.contexts.hasOwnProperty("_")) {
@@ -33,7 +33,7 @@
     require.config({
         paths: {
             'd3': JSROOT_source_dir+'d3.min',
-            'JsRootCore': JSROOT_source_dir+'JSRoot.core.min',
+            'JsRootCore': JSROOT_source_dir+'JSRootCore.min',
             'nn': url+'NeuralNetwork.min',
             'dtree': url+'DecisionTree.min',
             'NetworkDesigner': url+'NetworkDesigner.min'

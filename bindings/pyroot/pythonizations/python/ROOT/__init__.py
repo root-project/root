@@ -33,40 +33,9 @@ importlib.import_module(librootpyz_mod_name)
 # ensure 'import libROOTPythonizations' will find the versioned module
 sys.modules['libROOTPythonizations'] = sys.modules[librootpyz_mod_name]
 
-import ROOT.pythonization as pyz
-
-import functools
-import pkgutil
-
-def pythonization(lazy = True):
-    """
-    Pythonizor decorator to be used in pythonization modules for pythonizations.
-    These pythonizations functions are invoked upon usage of the class.
-    Parameters
-    ----------
-    lazy : boolean
-        If lazy is true, the class is pythonized upon first usage, otherwise
-        upon import of the ROOT module.
-    """
-    def pythonization_impl(fn):
-        """
-        The real decorator. This structure is adopted to deal with parameters
-        fn : function
-            Function that implements some pythonization.
-            The function must accept two parameters: the class
-            to be pythonized and the name of that class.
-        """
-        if lazy:
-            cppyy.py.add_pythonization(fn)
-        else:
-            fn()
-    return pythonization_impl
-
 # Trigger the addition of the pythonizations
-exclude = [ '_rdf_utils' ]
-for _, module_name, _ in  pkgutil.walk_packages(pyz.__path__):
-    if module_name not in exclude:
-        module = importlib.import_module(pyz.__name__ + '.' + module_name)
+from ._pythonization import _register_pythonizations
+_register_pythonizations()
 
 # Check if we are in the IPython shell
 if major == 3:

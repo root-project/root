@@ -13,26 +13,6 @@
 #define ROOT_TGComboBox
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGComboBox, TGComboBoxPopup                                          //
-//                                                                      //
-// A combobox (also known as a drop down listbox) allows the selection  //
-// of one item out of a list of items. The selected item is visible in  //
-// a little window. To view the list of possible items one has to click //
-// on a button on the right of the little window. This will drop down   //
-// a listbox. After selecting an item from the listbox the box will     //
-// disappear and the newly selected item will be shown in the little    //
-// window.                                                              //
-//                                                                      //
-// The TGComboBox is user callable. The TGComboBoxPopup is a service    //
-// class of the combobox.                                               //
-//                                                                      //
-// Selecting an item in the combobox will generate the event:           //
-// kC_COMMAND, kCM_COMBOBOX, combobox id, item id.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGListBox.h"
 
 class TGScrollBarElement;
@@ -71,15 +51,15 @@ private:
    TGComboBox& operator=(const TGComboBox&) = delete;
 
 protected:
-   TGLBEntry           *fSelEntry;      // selected item frame
-   TGTextEntry         *fTextEntry;     // text entry
-   TGScrollBarElement  *fDDButton;      // button controlling drop down of popup
-   TGComboBoxPopup     *fComboFrame;    // popup containing a listbox
-   TGListBox           *fListBox;       // the listbox with text items
-   const TGPicture     *fBpic;          // down arrow picture used in fDDButton
-   TGLayoutHints       *fLhs;           // layout hints for selected item frame
-   TGLayoutHints       *fLhb;           // layout hints for fDDButton
-   TGLayoutHints       *fLhdd;          // layout hints for fListBox
+   TGLBEntry           *fSelEntry;      ///< selected item frame
+   TGTextEntry         *fTextEntry;     ///< text entry
+   TGScrollBarElement  *fDDButton;      ///< button controlling drop down of popup
+   TGComboBoxPopup     *fComboFrame;    ///< popup containing a listbox
+   TGListBox           *fListBox;       ///< the listbox with text items
+   const TGPicture     *fBpic;          ///< down arrow picture used in fDDButton
+   TGLayoutHints       *fLhs;           ///< layout hints for selected item frame
+   TGLayoutHints       *fLhb;           ///< layout hints for fDDButton
+   TGLayoutHints       *fLhdd;          ///< layout hints for fListBox
 
    virtual void Init();
 
@@ -101,7 +81,7 @@ public:
    virtual Bool_t HandleMotion(Event_t *event);
    virtual Bool_t HandleSelection(Event_t *event);
    virtual Bool_t HandleSelectionRequest(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    virtual void AddEntry(TGString *s, Int_t id)
                         { fListBox->AddEntry(s, id); Resize(); }
@@ -151,12 +131,10 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TGLineStyleComboBox user callable and it creates                 //
-// a combobox for selecting the line style.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLineStyleComboBox
+The TGLineStyleComboBox user callable and it creates
+a combobox for selecting the line style.
+*/
 
 class TGLineStyleComboBox : public TGComboBox {
 
@@ -168,17 +146,13 @@ public:
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGLineStyleComboBox, 0)  // Line style combobox widget
-
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TGLineWidthComboBox user callable and it creates                 //
-// a combobox for selecting the line width.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
+/** \class TGLineWidthComboBox
+The TGLineWidthComboBox user callable and it creates
+a combobox for selecting the line width.
+*/
 
 class TGLineWidthComboBox : public TGComboBox {
 
@@ -190,17 +164,13 @@ public:
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
 
    ClassDef(TGLineWidthComboBox, 0)  // Line width combobox widget
-
-
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TGFontTypeComboBox is user callable and it creates               //
-// a combobox for selecting the font.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGFontTypeComboBox
+The TGFontTypeComboBox is user callable and it creates
+a combobox for selecting the font.
+*/
 
 const Int_t kMaxFonts = 20;
 

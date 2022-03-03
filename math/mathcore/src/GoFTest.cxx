@@ -120,12 +120,13 @@ namespace Math {
       }
    };
 
-   void GoFTest::SetDistribution(EDistribution dist) {
+   void GoFTest::SetDistribution(EDistribution dist, const std::vector<double>  & distParams ) {
       if (!(kGaussian <= dist && dist <= kExponential)) {
-         MATH_ERROR_MSG("SetDistribution", "Cannot set distribution type! Distribution type option must be ennabled.");
+         MATH_ERROR_MSG("SetDistribution", "Cannot set distribution type! Distribution type option must be enabled.");
          return;
       }
       fDist = dist;
+      SetParameters(distParams);
       SetCDF();
    }
 
@@ -154,10 +155,9 @@ namespace Math {
       samplesSizes[0] = sample1Size;
       samplesSizes[1] = sample2Size;
       SetSamples(samples, samplesSizes);
-      SetParameters();
    }
 
-   GoFTest::GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist)
+   GoFTest::GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist, const std::vector<double> & distParams)
    : fDist(dist),
      fSamples(std::vector<std::vector<Double_t> >(1)),
      fTestSampleFromH0(kTRUE) {
@@ -171,7 +171,7 @@ namespace Math {
       std::vector<const Double_t*> samples(1, sample);
       std::vector<UInt_t> samplesSizes(1, sampleSize);
       SetSamples(samples, samplesSizes);
-      SetParameters();
+      SetParameters(distParams);
       SetCDF();
    }
 
@@ -200,9 +200,8 @@ namespace Math {
       }
    }
 
-   void GoFTest::SetParameters() {
-      fMean = std::accumulate(fSamples[0].begin(), fSamples[0].end(), 0.0) / fSamples[0].size();
-      fSigma = TMath::Sqrt(1. / (fSamples[0].size() - 1) * (std::inner_product(fSamples[0].begin(), fSamples[0].end(),     fSamples[0].begin(), 0.0) - fSamples[0].size() * TMath::Power(fMean, 2)));
+   void GoFTest::SetParameters(const std::vector<double> & distParams) {
+      fParams = distParams;
    }
 
    void GoFTest::operator()(ETestType test, Double_t& pvalue, Double_t& testStat) const {
@@ -246,12 +245,15 @@ namespace Math {
       switch (fDist) {
       case kLogNormal:
          LogSample();
+         if (fParams.empty()) fParams = {0,1};
          /* fall through */
       case kGaussian :
          cdf = new ROOT::Math::WrappedMemFunction<GoFTest, Double_t (GoFTest::*)(Double_t) const>(*this, &GoFTest::GaussianCDF);
+         if (fParams.empty()) fParams = {0,1};
          break;
       case kExponential:
          cdf = new ROOT::Math::WrappedMemFunction<GoFTest, Double_t (GoFTest::*)(Double_t) const>(*this, &GoFTest::ExponentialCDF);
+         if (fParams.empty()) fParams = {1};
          break;
       case kUserDefined:
       case kUndefined:
@@ -284,25 +286,22 @@ namespace Math {
       }
       fCDF.reset((IGenFunction*)0);
       fDist = kUserDefined;
-      fMean = 0;
-      fSigma = 0;
       fSamples = std::vector<std::vector<Double_t> >(1);
       fTestSampleFromH0 = kTRUE;
       SetSamples(std::vector<const Double_t*>(1, sample), std::vector<UInt_t>(1, sampleSize));
    }
 
    Double_t GoFTest::GaussianCDF(Double_t x) const {
-      return ROOT::Math::normal_cdf(x, fSigma, fMean);
+      return ROOT::Math::normal_cdf(x, fParams[1], fParams[0]);
    }
 
    Double_t GoFTest::ExponentialCDF(Double_t x) const {
-      return ROOT::Math::exponential_cdf(x, 1.0 / fMean);
+      return ROOT::Math::exponential_cdf(x, fParams[0]);
    }
 
    void GoFTest::LogSample() {
       transform(fSamples[0].begin(), fSamples[0].end(), fSamples[0].begin(),
                 std::function<Double_t(Double_t)>(TMath::Log));
-      SetParameters();
    }
 
 /* 
@@ -934,7 +933,7 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       for (UInt_t i = 0; i < n; ++i) {
          Double_t Fn = (i + 1.0) / n;
          Double_t F = (*fCDF)(fSamples[0][i]);
-         Double_t result = std::max(TMath::Abs(Fn - F), TMath::Abs(Fo - Fn));
+         Double_t result = std::max(TMath::Abs(Fn - F), TMath::Abs(Fo - F));
          if (result > Dn) Dn = result;
          Fo = Fn;
       }

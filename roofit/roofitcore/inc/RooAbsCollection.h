@@ -22,11 +22,44 @@
 #include "RooPrintable.h"
 #include "RooCmdArg.h"
 #include "RooLinkedListIter.h"
+
+// The range casts are not used in this file, but if you want to work with
+// RooFit collections you also want to have static_range_cast and
+// dynamic_range_cast available without including RangeCast.h every time.
+#include "ROOT/RRangeCast.hxx"
+
+#include "ROOT/RSpan.hxx"
+
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <type_traits>
+#include <memory>
+
+
+// To make ROOT::RangeStaticCast available under the name static_range_cast.
+template <typename T, typename Range_t>
+ROOT::RRangeCast<T, false, Range_t> static_range_cast(Range_t &&coll)
+{
+   return ROOT::RangeStaticCast<T>(std::forward<Range_t>(coll));
+}
+
+
+// To make ROOT::RangeDynCast available under the dynamic_range_cast.
+template <typename T, typename Range_t>
+ROOT::RRangeCast<T, true, Range_t> dynamic_range_cast(Range_t &&coll)
+{
+   return ROOT::RangeDynCast<T>(std::forward<Range_t>(coll));
+}
+
 
 class RooCmdArg;
+
+namespace RooFit {
+namespace Detail {
+struct HashAssistedFind;
+}
+}
 
 class RooAbsCollection : public TObject, public RooPrintable {
 public:
@@ -49,8 +82,13 @@ public:
   // of the original variables.
   RooAbsCollection(const RooAbsCollection& other, const char *name="");
   RooAbsCollection& operator=(const RooAbsCollection& other);
-  RooAbsCollection& assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe=kFALSE) ;
-  void assignFast(const RooAbsCollection& other, Bool_t setValDirty=kTRUE) ;
+
+  void assign(const RooAbsCollection& other) const;
+  RooAbsCollection &assignValueOnly(const RooAbsCollection& other, bool forceIfSizeOne=false);
+  void assignFast(const RooAbsCollection& other, bool setValDirty=true) const;
+
+  // Move constructor
+  RooAbsCollection(RooAbsCollection && other);
 
   // Copy list and contents (and optionally 'deep' servers)
   RooAbsCollection *snapshot(Bool_t deepCopy=kTRUE) const ;
@@ -67,16 +105,37 @@ public:
     return _sizeThresholdForMapSearch;
   }
 
+  /// Const access to the underlying stl container.
+  Storage_t const& get() const { return _list; }
+
   // List content management
   virtual Bool_t add(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual Bool_t addOwned(RooAbsArg& var, Bool_t silent=kFALSE);
+  bool addOwned(std::unique_ptr<RooAbsArg> var, bool silent=false);
   virtual RooAbsArg *addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;
   virtual Bool_t replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
   virtual Bool_t remove(const RooAbsArg& var, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
   virtual void removeAll() ;
 
-  virtual Bool_t add(const RooAbsCollection& list, Bool_t silent=kFALSE) ;
-  virtual Bool_t addOwned(const RooAbsCollection& list, Bool_t silent=kFALSE);
+  template<typename Iterator_t,
+      typename value_type = typename std::remove_pointer<typename std::iterator_traits<Iterator_t>::value_type>,
+      typename = std::enable_if<std::is_convertible<const value_type*, const RooAbsArg*>::value> >
+  bool add(Iterator_t beginIt, Iterator_t endIt, bool silent=false) {
+    bool result = false ;
+    _list.reserve(_list.size() + std::distance(beginIt, endIt));
+    for (auto it = beginIt; it != endIt; ++it) {
+      result |= add(**it,silent);
+    }
+    return result;
+  }
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Add a collection of arguments to this collection by calling add()
+  /// for each element in the source collection
+  bool add(const RooAbsCollection& list, bool silent=kFALSE) {
+    return add(list._list.begin(), list._list.end(), silent);
+  }
+  virtual bool addOwned(const RooAbsCollection& list, bool silent=false);
+  bool addOwned(RooAbsCollection&& list, bool silent=false);
   virtual void   addClone(const RooAbsCollection& list, Bool_t silent=kFALSE);
   Bool_t replace(const RooAbsCollection &other);
   Bool_t remove(const RooAbsCollection& list, Bool_t silent=kFALSE, Bool_t matchByNameOnly=kFALSE) ;
@@ -108,20 +167,45 @@ public:
   RooAbsArg *find(const char *name) const ;
   RooAbsArg *find(const RooAbsArg&) const ;
 
+  /// Find object by name in the collection
+  TObject* FindObject(const char* name) const { return find(name); }
+
+  /// Find object in the collection, Note: matching by object name, like the find() method
+  TObject* FindObject(const TObject* obj) const { auto arg = dynamic_cast<const RooAbsArg*>(obj); return (arg) ? find(*arg) : nullptr; }
+
   /// Check if collection contains an argument with the same name as var.
   /// To check for a specific instance, use containsInstance().
   Bool_t contains(const RooAbsArg& var) const { 
     return find(var) != nullptr;
   }
   /// Check if this exact instance is in this collection.
-  Bool_t containsInstance(const RooAbsArg& var) const { 
+  virtual Bool_t containsInstance(const RooAbsArg& var) const { 
     return std::find(_list.begin(), _list.end(), &var) != _list.end();
   }
   RooAbsCollection* selectByAttrib(const char* name, Bool_t value) const ;
+  bool selectCommon(const RooAbsCollection& refColl, RooAbsCollection& outColl) const ;
   RooAbsCollection* selectCommon(const RooAbsCollection& refColl) const ;
   RooAbsCollection* selectByName(const char* nameList, Bool_t verbose=kFALSE) const ;
   Bool_t equals(const RooAbsCollection& otherColl) const ; 
-  Bool_t overlaps(const RooAbsCollection& otherColl) const ;
+  bool hasSameLayout(const RooAbsCollection& other) const;
+
+  template<typename Iterator_t,
+      typename value_type = typename std::remove_pointer<typename std::iterator_traits<Iterator_t>::value_type>,
+      typename = std::enable_if<std::is_convertible<const value_type*, const RooAbsArg*>::value> >
+  bool overlaps(Iterator_t otherCollBegin, Iterator_t otherCollEnd) const  {
+    for (auto it = otherCollBegin; it != otherCollEnd; ++it) {
+      if (find(**it)) {
+        return true ;
+      }
+    }
+    return false ;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////
+  /// Check if this and other collection have common entries
+  bool overlaps(const RooAbsCollection& otherColl) const {
+    return overlaps(otherColl._list.begin(), otherColl._list.end());
+  }
 
   /// TIterator-style iteration over contained elements.
   /// \note These iterators are slow. Use begin() and end() or
@@ -256,6 +340,17 @@ public:
 
   void useHashMapForFind(bool flag) const;
 
+  // For use in the RooArgList/Set(std::vector<RooAbsArgPtrOrDouble> const&) constructor.
+  // Can be replaced with std::variant when C++17 is the minimum supported standard.
+  struct RooAbsArgPtrOrDouble {
+    RooAbsArgPtrOrDouble(RooAbsArg & arg) : ptr{&arg}, hasPtr{true} {}
+    RooAbsArgPtrOrDouble(double x) : val{x}, hasPtr{false} {}
+
+    RooAbsArg * ptr = nullptr;
+    double val = 0.0;
+    bool hasPtr = false;
+  };
+
 protected:
   Storage_t _list; // Actual object storage
   using LegacyIterator_t = TIteratorToSTLInterface<Storage_t>;
@@ -264,7 +359,7 @@ protected:
   TString _name;    // Our name.
   Bool_t _allRRV ; // All contents are RRV
 
-  void safeDeleteList() ;
+  void deleteList() ;
 
   // Support for snapshot method 
   Bool_t addServerClonesToList(const RooAbsArg& var) ;
@@ -279,13 +374,27 @@ protected:
 
   void makeStructureTag() ;
   void makeTypedStructureTag() ;
-  
+
+  /// Determine whether it's possible to add a given RooAbsArg to the collection or not.
+  virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const = 0;
+
+  template<class T>
+  static void assert_is_no_temporary(T &&) {
+    static_assert(!std::is_rvalue_reference<T&&>::value,
+      "A reference to a temporary RooAbsArg will be passed to a RooAbsCollection constructor! "
+      "This is not allowed, because the collection will not own the arguments. "
+      "Hence, the collection will contain dangling pointers when the temporary goes out of scope."
+    );
+  }
+
 private:
   std::unique_ptr<LegacyIterator_t> makeLegacyIterator (bool forward = true) const;
-  mutable std::unique_ptr<std::unordered_map<const TNamed*, Storage_t::value_type>> _nameToItemMap; //!
+
+  using HashAssistedFind = RooFit::Detail::HashAssistedFind;
+  mutable std::unique_ptr<HashAssistedFind> _hashAssistedFind; //!
   std::size_t _sizeThresholdForMapSearch; //!
+
   void insert(RooAbsArg*);
-  RooAbsArg* tryFastFind(const TNamed* namePtr) const;
 
   ClassDef(RooAbsCollection,3) // Collection of RooAbsArg objects
 };

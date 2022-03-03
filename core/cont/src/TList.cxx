@@ -1080,7 +1080,6 @@ TIterator &TListIter::operator=(const TIterator &rhs)
    const TListIter *rhs1 = dynamic_cast<const TListIter *>(&rhs);
    if (this != &rhs && rhs1) {
       R__COLLECTION_ITER_GUARD(rhs1->fList);
-      TIterator::operator=(rhs);
       fList      = rhs1->fList;
       fCurCursor = rhs1->fCurCursor;
       fCursor    = rhs1->fCursor;
@@ -1097,7 +1096,6 @@ TListIter &TListIter::operator=(const TListIter &rhs)
 {
    if (this != &rhs) {
       R__COLLECTION_ITER_GUARD(rhs.fList);
-      TIterator::operator=(rhs);
       fList      = rhs.fList;
       fCurCursor = rhs.fCurCursor;
       fCursor    = rhs.fCursor;

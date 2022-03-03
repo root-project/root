@@ -42,7 +42,7 @@ protected:
   virtual void initGenerator(const RooArgSet &theEvent);
   virtual void generateEvent(RooArgSet &theEvent, Int_t remaining);
 
-  RooArgSet *_cloneSet;   // Clone of all nodes of input p.d.f
+  RooArgSet _cloneSet;    // Clone of all nodes of input p.d.f
   RooAbsPdf *_pdfClone;   // Clone of input p.d.f
   RooArgSet _directVars,_uniformVars,_otherVars; // List of observables generated internally, randomly, and by accept/reject sampling
   Int_t _code;                        // Internal generation code

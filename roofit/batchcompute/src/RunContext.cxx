@@ -44,15 +44,17 @@
 
 
 #include "RunContext.h"
+#include "RooBatchCompute.h"
 
 #include <limits>
+#include <iostream>
 
-class RooAbsReal;
+class RooAbsArg;
 
 namespace RooBatchCompute {
 
 /// Check if there is a span of data corresponding to the object passed as owner.
-RooSpan<const double> RunContext::getBatch(const RooAbsReal* owner) const {
+RooSpan<const double> RunContext::getBatch(const RooAbsArg* owner) const {
   const auto item = spans.find(owner);
   if (item != spans.end())
     return item->second;
@@ -63,7 +65,7 @@ RooSpan<const double> RunContext::getBatch(const RooAbsReal* owner) const {
 
 /// Check if there is a writable span of data corresponding to the object passed as owner.
 /// The span can be used both for reading and writing.
-RooSpan<double> RunContext::getWritableBatch(const RooAbsReal* owner) {
+RooSpan<double> RunContext::getWritableBatch(const RooAbsArg* owner) {
   auto item = ownedMemory.find(owner);
   if (item != ownedMemory.end()) {
     assert(spans.count(owner) > 0); // If we can write, the span must also be registered for reading
@@ -84,7 +86,7 @@ RooSpan<double> RunContext::getWritableBatch(const RooAbsReal* owner) {
 /// \param size Requested size of the span.
 /// \return A writeable RooSpan of the requested size, whose memory is owned by
 /// the RunContext.
-RooSpan<double> RunContext::makeBatch(const RooAbsReal* owner, std::size_t size) {
+RooSpan<double> RunContext::makeBatch(const RooAbsArg* owner, std::size_t size) {
   auto item = ownedMemory.find(owner);
   if (item == ownedMemory.end() || item->second.size() != size) {
     std::vector<double>& data = ownedMemory[owner];
@@ -98,6 +100,11 @@ RooSpan<double> RunContext::makeBatch(const RooAbsReal* owner, std::size_t size)
 
   spans[owner] = RooSpan<const double>(item->second);
   return {item->second};
+}
+
+void RunContext::clear() {
+  spans.clear();
+  rangeName = nullptr;
 }
 
 }

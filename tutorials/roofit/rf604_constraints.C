@@ -62,10 +62,10 @@ void rf604_constraints()
    RooProdPdf modelc("modelc", "model with constraint", RooArgSet(model, fconstraint));
 
    // Fit model (without use of constraint term)
-   RooFitResult *r1 = model.fitTo(*d, Save());
+   RooFitResult *r1 = model.fitTo(*d, Save(), PrintLevel(-1));
 
    // Fit modelc with constraint term on parameter f
-   RooFitResult *r2 = modelc.fitTo(*d, Constrain(f), Save());
+   RooFitResult *r2 = modelc.fitTo(*d, Constrain(f), Save(), PrintLevel(-1));
 
    // M E T H O D   2   -     S p e c i f y   e x t e r n a l   c o n s t r a i n t   w h e n   f i t t i n g
    // -------------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ void rf604_constraints()
    RooGaussian fconstext("fconstext", "fconstext", f, RooConst(0.2), RooConst(0.1));
 
    // Fit with external constraint
-   RooFitResult *r3 = model.fitTo(*d, ExternalConstraints(fconstext), Save());
+   RooFitResult *r3 = model.fitTo(*d, ExternalConstraints(fconstext), Save(), PrintLevel(-1));
 
    // Print the fit results
    cout << "fit result without constraint (data generated at f=0.5)" << endl;

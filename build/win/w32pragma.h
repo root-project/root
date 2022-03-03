@@ -29,8 +29,6 @@
 #pragma warning (disable: 4661)
 /* "deprecated, use ISO C++ conformant name" */
 #pragma warning (disable: 4996)
-/* "new behavior: elements default initialized" */
-#pragma warning (disable: 4351)
 /* local static not thread safe */
 #pragma warning (disable: 4640)
 /*forcing int to bool (performance warning) */
@@ -45,10 +43,6 @@
 #pragma warning (disable: 4554)
 /* qualifier applied to reference type; ignored */
 #pragma warning (disable: 4181)
-/* /GS can not buffer overrun protect parameters and locals: function not optimized */
-#pragma warning (disable: 4748)
-/* function(): resolved overload was found by argument-dependent lookup */
-#pragma warning (disable: 4675)
 /* X needs to have dll-interface to be used by clients of class Y */
 #pragma warning (disable: 4251)
 /* decorated name length exceeded, name was truncated */
@@ -62,16 +56,23 @@
 #define WIN32 1
 #define _WINDOWS 1
 #define WINVER 0x0500
-#define CRTAPI1 _cdecl 
+#define CRTAPI1 _cdecl
 #define CRTAPI2 _cdecl
-#define _X86_ 1 
-// #define _DLL  - used to be explicitly defined, 
+// #define _DLL  - used to be explicitly defined,
 // but it's implicitely defined via /MD(d)
 #define G__REDIRECTIO 1
 #define G__SHAREDLIB 1
 #define G__UNIX 1
 #define G__ROOT 1
 #define G__WIN32 1
+
+#ifdef _WIN64
+#define __x86_64__ 1
+#define WIN64 1
+#define G__WIN64 1
+#else
+#define _X86_ 1
+#endif
 
 #if (_MSC_VER >= 1310)
 #  define G__NEWSTDHEADER 1

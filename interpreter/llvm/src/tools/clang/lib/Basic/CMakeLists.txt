@@ -4,8 +4,15 @@ set(LLVM_LINK_COMPONENTS
   Support
   )
 
-find_first_existing_vc_file("${LLVM_MAIN_SRC_DIR}" llvm_vc)
-find_first_existing_vc_file("${CLANG_SOURCE_DIR}" clang_vc)
+# Cut dependency on git to prevent rebuild of large parts of ROOT.
+# This will be solved "properly" in llvm upstream, resurrecting
+# https://reviews.llvm.org/rGd452126cb333cbd6b289b01d9bc9a48b111ffe9a
+# which got lost in (mono-repo) 23fdd5a37ff4e0512af0b40f6ff3e6db4694e937
+# 2019-02-06 03:51 +0000 Petr Hosek
+# o [CMake] Unify scripts for generating VCS headers
+#
+#find_first_existing_vc_file("${LLVM_MAIN_SRC_DIR}" llvm_vc)
+#find_first_existing_vc_file("${CLANG_SOURCE_DIR}" clang_vc)
 
 # The VC revision include that we want to generate.
 set(version_inc "${CMAKE_CURRENT_BINARY_DIR}/VCSVersion.inc")
@@ -92,3 +99,13 @@ add_clang_library(clangBasic
   ${version_inc}
   )
 
+# Some versions of Debian/Ubuntu have a buggy LLVM/Clang package.
+# We workaround this case by defining a preprocessor symbol.
+if (NOT builtin_llvm)
+  file(READ ${LLVM_DIR}/include/llvm/ADT/Triple.h TMPTXT)
+  string(FIND "${TMPTXT}" "KFreeBSD" matchres)
+  if(${matchres} EQUAL -1)
+    set_property(SOURCE Targets.cpp APPEND PROPERTY
+                 COMPILE_DEFINITIONS "KFreeBSD=kFreeBSD")
+  endif ()
+endif()

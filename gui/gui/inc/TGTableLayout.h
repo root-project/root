@@ -23,13 +23,7 @@ enum ETableLayoutHints {
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTableLayoutHints                                                   //
-//                                                                      //
-// This class describes layout hints used by the TGTableLayout class.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
 
 class TGTableLayoutHints : public TGLayoutHints {
 
@@ -38,10 +32,10 @@ private:
    TGTableLayoutHints& operator=(const TGTableLayoutHints&) = delete;
 
 protected:
-   UInt_t fAttachLeft;         // Column/row division number on which
-   UInt_t fAttachRight;        // to attach the frame.  Starts at 0
-   UInt_t fAttachTop;          // and goes to # columns / # rows
-   UInt_t fAttachBottom;       // respectively
+   UInt_t fAttachLeft;         ///< Column/row division number on which
+   UInt_t fAttachRight;        ///< to attach the frame.  Starts at 0
+   UInt_t fAttachTop;          ///< and goes to # columns / # rows
+   UInt_t fAttachBottom;       ///< respectively
 
 public:
    TGTableLayoutHints(UInt_t attach_left, UInt_t attach_right,
@@ -66,20 +60,7 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTableLayout                                                        //
-//                                                                      //
-// A LayoutManager which places child frames in a table. This uses      //
-// TGTableLayoutHints (not TGLayoutHints). See TGTableLayoutHints       //
-// for how to use these. This manager works like TGMatrixLayout with    //
-// the addition that:                                                   //
-//  - Child frames can span more than one column/row.                   //
-//  - Child frames can resize with the frame.                           //
-//  - Column and row sizes are not fixed nor (optionally) homogeneous.  //
-//  - The number of columns and rows must be fully specified.           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
 
 class TGTableLayout : public TGLayoutManager {
 
@@ -89,19 +70,19 @@ private:
 
 protected:
    struct TableData_t {
-      UInt_t fDefSize;        // Default size of col/rows
-      UInt_t fRealSize;       // Real size of col/rows (eg, if table resize)
+      UInt_t fDefSize;        ///< Default size of col/rows
+      UInt_t fRealSize;       ///< Real size of col/rows (eg, if table resize)
       Bool_t fNeedExpand;
       Bool_t fNeedShrink;
       Bool_t fExpand;
       Bool_t fShrink;
       Bool_t fEmpty;
    };
-   TableData_t        *fRow;          // info about each row
-   TableData_t        *fCol;          // info about each column
-   TGCompositeFrame   *fMain;         // container frame
-   TList              *fList;         // list of frames to arrange
-   Bool_t              fHomogeneous;  // all cols/rows same size
+   TableData_t        *fRow;          ///< info about each row
+   TableData_t        *fCol;          ///< info about each column
+   TGCompositeFrame   *fMain;         ///< container frame
+   TList              *fList;         ///< list of frames to arrange
+   Bool_t              fHomogeneous;  ///< all cols/rows same size
 
    void FindRowColSizes();
    void FindRowColSizesInit();
@@ -119,10 +100,10 @@ protected:
 
 public:
    // these are public in TGMatrixLayout ???  Perpetuate it.
-   Int_t   fSep;               // interval between frames
-   Int_t   fHints;             // layout hints (currently not used)
-   UInt_t  fNrows;             // number of rows
-   UInt_t  fNcols;             // number of columns
+   Int_t   fSep;               ///< interval between frames
+   Int_t   fHints;             ///< layout hints (currently not used)
+   UInt_t  fNrows;             ///< number of rows
+   UInt_t  fNcols;             ///< number of columns
 
    TGTableLayout(TGCompositeFrame *main, UInt_t nrows, UInt_t ncols,
                  Bool_t homogeneous = kFALSE, Int_t sep = 0, Int_t hints = 0);

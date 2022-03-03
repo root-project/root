@@ -54,6 +54,7 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "TAxis.h"
 #include "TMatrixD.h"
 #include "TVectorD.h"
+#include "Math/Util.h"
 #include <iomanip>
 #include <deque>
 #include <algorithm>
@@ -375,11 +376,11 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   if (wmode==Extended) {
     // Add two points to make curve jump from 0 to yval at the left end of the plotting range.
     // This ensures that filled polygons are drawn properly. The first point needs to be to the
-    // left of the second. Since points are sorted later, its x coordinate is shifted by 1/1000 dx.
+    // left of the second, so it's shifted by 1/1000 more than the second.
     addPoint(xlo-dx*1.001, 0);
     addPoint(xlo-dx,yval[0]) ;
   } else if (wmode==Straight) {
-    addPoint(xlo,0) ;
+    addPoint(xlo-dx*0.001,0) ;
   }
 
   addPoint(xlo,yval[0]);
@@ -406,11 +407,11 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
 
   if (wmode==Extended) {
     // Add two points to close polygon. The order matters. Since they are sorted in x later, the second
-    // point is shifted by 1/1000 * dx.
+    // point is shifted by 1/1000 more than the second-to-last point.
     addPoint(xhi+dx,yval[minPoints-1]) ;
     addPoint(xhi+dx*1.001, 0);
   } else if (wmode==Straight) {
-    addPoint(xhi,0) ;
+    addPoint(xhi+dx*0.001,0) ;
   }
 }
 
@@ -567,7 +568,7 @@ Double_t RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
 
   Int_t nbin(0) ;
 
-  Double_t chisq(0) ;
+  ROOT::Math::KahanSum<double> chisq;
   for (i=0 ; i<np ; i++) {   
 
     // Retrieve histogram contents
@@ -883,7 +884,7 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Doub
 /// Return true if curve is identical to other curve allowing for given
 /// absolute tolerance on each point compared point.
 
-Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const 
+Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol, bool verbose) const 
 {
   // Determine X range and Y range
   Int_t n= min(GetN(),other.GetN());
@@ -902,6 +903,7 @@ Bool_t RooCurve::isIdentical(const RooCurve& other, Double_t tol) const
     Double_t rdy = fabs(yTest-other.fY[i])/Yrange ;
     if (rdy>tol) {
       ret = false;
+      if(!verbose) continue;
       cout << "RooCurve::isIdentical[" << std::setw(3) << i << "] Y tolerance exceeded (" << std::setprecision(5) << std::setw(10) << rdy << ">" << tol << "),";
       cout << "  x,y=(" << std::right << std::setw(10) << fX[i] << "," << std::setw(10) << fY[i] << ")\tref: y="
           << std::setw(10) << other.interpolate(fX[i], 1.E-15) << ". [Nearest point from ref: ";

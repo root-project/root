@@ -20,36 +20,40 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGCanvas and TGViewPort and TGContainer                              //
-//                                                                      //
-// A TGCanvas is a frame containing two scrollbars (a horizontal and    //
-// a vertical) and a viewport. The viewport acts as the window through  //
-// which we look at the contents of the container frame.                //
-//                                                                      //
-// A TGContainer frame manages a content area. It can display and       //
-// control a hierarchy of multi-column items, and provides the ability  //
-// to add new items at any time. By default it doesn't map subwindows   //
-// which are items of the container. In this case subwindow must        //
-// provide DrawCopy method, see for example TGLVEntry class.            //
-// It is also possible to use option which allow to map subwindows.     //
-// This option has much slower drawing speed in case of more than 1000  //
-// items placed in container. To activate this option the fMapSubwindows//
-// data member must be set to kTRUE (for example TTVLVContainer class)  //
-//                                                                      //
-//   The TGContainer class can handle the keys:                         //
-//                                                                      //
-//    o  F7, Ctnrl-F - activate search dialog                           //
-//    o  F3, Ctnrl-G - continue search                                  //
-//    o  End - go to the last item in container                         //
-//    o  Home - go to the first item in container                       //
-//    o  PageUp,PageDown,arrow keys - navigate inside container         //
-//    o  Return/Enter - equivalent to double click of the mouse button  //
-//    o  Contrl-A - select/activate all items.                          //
-//    o  Space - invert selection.                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGCanvas
+    \ingroup guiwidgets
+
+A frame containing two scrollbars (a horizontal and
+a vertical) and a viewport. The viewport acts as the window through
+which we look at the contents of the container frame.
+
+\class TGContainer
+\ingroup guiwidgets
+
+Manages a content area. It can display and
+control a hierarchy of multi-column items, and provides the ability
+to add new items at any time. By default it doesn't map subwindows
+which are items of the container. In this case subwindow must
+provide DrawCopy method, see for example TGLVEntry class.
+It is also possible to use option which allow to map subwindows.
+This option has much slower drawing speed in case of more than 1000
+items placed in container. To activate this option the fMapSubwindows
+data member must be set to kTRUE (for example TTVLVContainer class)
+
+  The TGContainer class can handle the keys:
+
+  - F7, Ctnrl-F - activate search dialog
+  - F3, Ctnrl-G - continue search
+  - End - go to the last item in container
+  - Home - go to the first item in container
+  - PageUp,PageDown,arrow keys - navigate inside container
+  - Return/Enter - equivalent to double click of the mouse button
+  - Ctnrl-A - select/activate all items.
+  - Space - invert selection.
+
+*/
+
 
 #include "TGCanvas.h"
 #include "TGListView.h"
@@ -228,7 +232,7 @@ void TGViewPort::SetVPos(Int_t ypos)
 
    if (!fContainer) return;
 
-   // for backward comatibility
+   // for backward compatibility
    if (!fContainer->InheritsFrom(TGContainer::Class())) {
       fContainer->Move(fX0, fY0 = ypos);
       return;
@@ -429,7 +433,7 @@ void TGContainer::Layout()
 
 void TGContainer::CurrentChanged(Int_t x, Int_t y)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
    args[0] = x;
    args[1] = y;
@@ -442,7 +446,7 @@ void TGContainer::CurrentChanged(Int_t x, Int_t y)
 
 void TGContainer::CurrentChanged(TGFrame* f)
 {
-   Emit("CurrentChanged(TGFrame*)", (Long_t)f);
+   Emit("CurrentChanged(TGFrame*)", (Longptr_t)f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,10 +469,10 @@ void TGContainer::CurrentChanged(TGFrame* f)
 
 void TGContainer::KeyPressed(TGFrame *frame, UInt_t keysym, UInt_t mask)
 {
-   Long_t args[3];
-   args[0] = (Long_t)frame;
-   args[1] = (Long_t)keysym;
-   args[2] = (Long_t)mask;
+   Longptr_t args[3];
+   args[0] = (Longptr_t)frame;
+   args[1] = (Longptr_t)keysym;
+   args[2] = (Longptr_t)mask;
    Emit("KeyPressed(TGFrame*,UInt_t,UInt_t)", args);
    SendMessage(fMsgWindow, MK_MSG(kC_CONTAINER, kCT_KEY), keysym, mask);
 }
@@ -479,7 +483,7 @@ void TGContainer::KeyPressed(TGFrame *frame, UInt_t keysym, UInt_t mask)
 
 void TGContainer::ReturnPressed(TGFrame* f)
 {
-   Emit("ReturnPressed(TGFrame*)", (Long_t)f);
+   Emit("ReturnPressed(TGFrame*)", (Longptr_t)f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -488,7 +492,7 @@ void TGContainer::ReturnPressed(TGFrame* f)
 
 void TGContainer::SpacePressed(TGFrame* f)
 {
-   Emit("SpacePressed(TGFrame*)", (Long_t)f);
+   Emit("SpacePressed(TGFrame*)", (Longptr_t)f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -496,7 +500,7 @@ void TGContainer::SpacePressed(TGFrame* f)
 
 void TGContainer::OnMouseOver(TGFrame* f)
 {
-   if (!fOnMouseOver) Emit("OnMouseOver(TGFrame*)", (Long_t)f);
+   if (!fOnMouseOver) Emit("OnMouseOver(TGFrame*)", (Longptr_t)f);
    fOnMouseOver = kTRUE;
 }
 
@@ -505,9 +509,9 @@ void TGContainer::OnMouseOver(TGFrame* f)
 
 void TGContainer::Clicked(TGFrame *entry, Int_t btn)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
 
    Emit("Clicked(TGFrame*,Int_t)", args);
@@ -518,9 +522,9 @@ void TGContainer::Clicked(TGFrame *entry, Int_t btn)
 
 void TGContainer::Clicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y)
 {
-   Long_t args[4];
+   Longptr_t args[4];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
    args[2] = x;
    args[3] = y;
@@ -533,9 +537,9 @@ void TGContainer::Clicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y)
 
 void TGContainer::DoubleClicked(TGFrame *entry, Int_t btn)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
 
    Emit("DoubleClicked(TGFrame*,Int_t)", args);
@@ -546,9 +550,9 @@ void TGContainer::DoubleClicked(TGFrame *entry, Int_t btn)
 
 void TGContainer::DoubleClicked(TGFrame *entry, Int_t btn, Int_t x, Int_t y)
 {
-   Long_t args[4];
+   Longptr_t args[4];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
    args[2] = x;
    args[3] = y;
@@ -1686,7 +1690,7 @@ TGFrameElement *TGContainer::FindFrame(Int_t x, Int_t y, Bool_t exclude)
 void *TGContainer::FindItem(const TString& name, Bool_t direction,
                             Bool_t caseSensitive, Bool_t subString)
 {
-   // Find a frame which assosiated object has a name containing a "name"
+   // Find a frame which associated object has a name containing a "name"
    // string.
 
    if (name.IsNull()) return 0;
@@ -2172,8 +2176,8 @@ void TGCanvas::MapSubwindows()
       container->MapSubwindows();
       fVport->MapSubwindows();
       fVport->MapWindow();
+      Layout();
    }
-   Layout();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2337,7 +2341,7 @@ void TGCanvas::Layout()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle message generated by the canvas scrollbars.
 
-Bool_t TGCanvas::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGCanvas::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_HSCROLL:

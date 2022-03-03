@@ -20,7 +20,11 @@
 #include <Math/MinimizerOptions.h>
 #include <TFormula.h>
 #include <TF1.h>
+#include <TF2.h>
 #include <TFitResult.h>
+
+#include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 TEST(TFormulaGradientPar, Sanity)
 {
@@ -28,7 +32,7 @@ TEST(TFormulaGradientPar, Sanity)
    double p[] = {30, 60};
    f.SetParameters(p);
    double x[] = {1, 2};
-   TFormula::GradientStorage result(2);
+   TFormula::CladStorage result(2);
    f.GradientPar(x, result);
 
    ASSERT_FLOAT_EQ(x[0] * std::cos(30), result[0]);
@@ -40,7 +44,7 @@ TEST(TFormulaGradientPar, ResultUpsize)
    TFormula f("f", "std::sin([1]) - std::cos([0])");
    double p[] = {60, 30};
    f.SetParameters(p);
-   TFormula::GradientStorage result;
+   TFormula::CladStorage result;
    double x[] = {2, 1};
 
    ASSERT_TRUE(0 == result.size());
@@ -59,7 +63,7 @@ TEST(TFormulaGradientPar, ResultDownsize)
    TFormula f("f", "std::sin([0])");
    double p[] = {60};
    f.SetParameters(p);
-   TFormula::GradientStorage result(2);
+   TFormula::CladStorage result(2);
    double x[] = {1};
 
    ASSERT_TRUE(2 == result.size());
@@ -79,10 +83,10 @@ TEST(TFormulaGradientPar, GausCrossCheck)
    double p[] = {3, 1, 2};
    h->SetParameters(p);
    double x[] = {0};
-   TFormula::GradientStorage result_clad(3);
+   TFormula::CladStorage result_clad(3);
    h->GetFormula()->GradientPar(x, result_clad);
 
-   TFormula::GradientStorage result_num(3);
+   TFormula::CladStorage result_num(3);
    h->GradientPar(x, result_num.data());
 
    ASSERT_FLOAT_EQ(result_num[0], result_clad[0]);
@@ -96,10 +100,10 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheck)
    double p[] = {3, 1, 2.1};
    h->SetParameters(p);
    double x[] = {0};
-   TFormula::GradientStorage result_clad(3);
+   TFormula::CladStorage result_clad(3);
    TFormula* formula = h->GetFormula();
    formula->GradientPar(x, result_clad);
-   TFormula::GradientStorage result_num(3);
+   TFormula::CladStorage result_num(3);
    h->GradientPar(x, result_num.data());
 
    ASSERT_FLOAT_EQ(result_num[0], result_clad[0]);
@@ -113,10 +117,10 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheckAccuracyDemo)
    double p[] = {3, 1, 2};
    h->SetParameters(p);
    double x[] = {0};
-   TFormula::GradientStorage result_clad(3);
+   TFormula::CladStorage result_clad(3);
    TFormula* formula = h->GetFormula();
    formula->GradientPar(x, result_clad);
-   TFormula::GradientStorage result_num(3);
+   TFormula::CladStorage result_num(3);
    h->GradientPar(x, result_num.data());
 
    // This is a classical example why clad is better.
@@ -129,17 +133,35 @@ TEST(TFormulaGradientPar, BreitWignerCrossCheckAccuracyDemo)
    EXPECT_NEAR(0, result_num[2], /*abs_error*/1e-13);
 }
 
-// FIXME: Add more: crystalball, cheb3, bigaus?
+TEST(TFormulaGradientPar, BigausCrossCheck)
+{
+   auto h = new TF2("f1", "bigaus");
+   const unsigned len = 6;
+   double p[] = {/*Constant=*/1,/*MeanX=*/0,/*SigmaX=*/1,/*MeanY=*/1,/*SigmaY=*/2,/*Rho=*/0.};
+   h->SetParameters(p);
+   double x[] = {0};
+   TFormula::CladStorage result_clad(len);
+   TFormula* formula = h->GetFormula();
+   formula->GradientPar(x, result_clad);
+   TFormula::CladStorage result_num(len);
+   h->GradientPar(x, result_num.data());
 
-// FIXME: Disable because of a known failure in -Druntime_cxxmodules=On.
-// This is identical to getFuncBody test failure in roottest.
-TEST(DISABLED_TFormulaGradientPar, GetGradFormula)
+   for (unsigned i = 0; i < len; ++i)
+     ASSERT_FLOAT_EQ(result_num[i], result_clad[i]);
+}
+
+// FIXME: Add more: crystalball, cheb3?
+
+TEST(TFormulaGradientPar, GetGradFormula)
 {
    TFormula f("f", "gaus");
    double p[] = {3, 1, 2};
    f.SetParameters(p);
    ASSERT_TRUE(f.GenerateGradientPar());
    std::string s = f.GetGradientFormula().Data();
-   ASSERT_THAT(s, testing::ContainsRegex("void TFormula____id[0-9]*_grad"));
+   // Windows does not support posix regex which are necessary here.
+#ifndef R__WIN32
+   ASSERT_THAT(s, testing::ContainsRegex("void TFormula____id[0-9]*_grad_1"));
+#endif // R__WIN32
 }
 

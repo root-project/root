@@ -24,7 +24,7 @@ namespace ROOT {
 
       <p>
       The TRObject class lets you obtain ROOT's objects from R's objects.<br>
-      It has some basic template opetarors to convert R's objects into ROOT's datatypes<br>
+      It has some basic template operators to convert R's objects into ROOT's datatypes<br>
       </p>
       A simple example<br>
       <p>
@@ -70,7 +70,7 @@ namespace ROOT {
       class TRObject: public TObject {
          friend SEXP Rcpp::wrap<TRObject>(const TRObject &f);
       private:
-         Rcpp::RObject fObj; //insternal Rcpp::RObject
+         Rcpp::RObject fObj; //internal Rcpp::RObject
          Bool_t fStatus;//status tell if is a valid object
       public:
          /**
@@ -155,7 +155,7 @@ namespace ROOT {
                T data =::Rcpp::as<T>(fObj);
                return data;
             } else {
-               Error("Cast Operator", "Can not make the requested data, returning an unknow value");
+               Error("Cast Operator", "Can not make the requested data, returning an unknown value");
                return T();
             }
          }
@@ -187,7 +187,7 @@ namespace ROOT {
                T data =::Rcpp::as<T>(fObj);
                return data;
             } else {
-               Error("Cast Operator", "Can not make the requested data, returning an unknow value");
+               Error("Cast Operator", "Can not make the requested data, returning an unknown value");
                return T();
             }
          }

@@ -77,18 +77,16 @@ class TWebGuiCallArg : public THttpCallArg {
 protected:
    UrlRequestJobHolder fRequest;
 
-   void CheckWSPageContent(THttpWSHandler *) override
-   {
-      std::string search = "JSROOT.connectWebWindow({";
-      std::string replace = search + "platform:\"qt5\",socket_kind:\"rawlongpoll\",";
-
-      ReplaceAllinContent(search, replace, true);
-   }
-
 public:
    explicit TWebGuiCallArg(QWebEngineUrlRequestJob *req = nullptr) : THttpCallArg(), fRequest(req) {}
 
    virtual ~TWebGuiCallArg() {}
+
+   /** provide WS kind  */
+   const char *GetWSKind() const override { return "rawlongpoll"; }
+
+   /** provide WS platform, intentionally keep qt5 here while it only used on client side */
+   const char *GetWSPlatform() const override { return "qt5"; }
 
    void SendFile(const char *fname)
    {

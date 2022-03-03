@@ -39,7 +39,7 @@ static gint gdk_colormap_match_color(GdkColormap * cmap,
                                      const gchar * available);
 static void gdk_colormap_add(GdkColormap * cmap);
 static void gdk_colormap_remove(GdkColormap * cmap);
-static guint gdk_colormap_hash(Colormap * cmap);
+static gulong gdk_colormap_hash(Colormap * cmap);
 static gint gdk_colormap_cmp(Colormap * a, Colormap * b);
 
 static GHashTable *colormap_hash = NULL;
@@ -162,7 +162,7 @@ terms specified in this license.
  *----------------------------------------------------------------------
  */
 
-static int alloc_color(Colormap colormap, XColor * color, gulong * pixelp)
+static int alloc_color(Colormap colormap, XColor * color, unsigned long * pixelp)
 {
    PALETTEENTRY entry, closeEntry;
    unsigned int i;
@@ -271,7 +271,7 @@ static int alloc_color(Colormap colormap, XColor * color, gulong * pixelp)
 
 static void
 free_colors(Colormap colormap,
-            gulong * pixels, gint npixels, gulong planes)
+            unsigned long * pixels, gint npixels, unsigned long planes)
 {
    gint i;
    PALETTEENTRY entries[256];
@@ -1496,8 +1496,8 @@ void gdk_colormap_change(GdkColormap * colormap, gint ncolors)
 gboolean
 gdk_colors_alloc(GdkColormap * colormap,
                  gint contiguous,
-                 gulong * planes,
-                 gint nplanes, gulong * pixels, gint npixels)
+                 unsigned long * planes,
+                 gint nplanes, unsigned long * pixels, gint npixels)
 {
    GdkColormapPrivateWin32 *private;
    gint return_val;
@@ -1537,10 +1537,10 @@ gboolean gdk_color_parse(const gchar * spec, GdkColor * color)
  */
 void
 gdk_colors_free(GdkColormap * colormap,
-                gulong * in_pixels, gint in_npixels, gulong planes)
+                unsigned long * in_pixels, gint in_npixels, unsigned long planes)
 {
    GdkColormapPrivateWin32 *private;
-   gulong *pixels;
+   unsigned long *pixels;
    gint npixels = 0;
    gint i;
 
@@ -1553,10 +1553,10 @@ gdk_colors_free(GdkColormap * colormap,
        (private->base.visual->type != GDK_VISUAL_GRAYSCALE))
       return;
 
-   pixels = g_new(gulong, in_npixels);
+   pixels = g_new(unsigned long, in_npixels);
 
    for (i = 0; i < in_npixels; i++) {
-      gulong pixel = in_pixels[i];
+      unsigned long pixel = in_pixels[i];
 
       if (private->info[pixel].ref_count) {
          private->info[pixel].ref_count--;
@@ -1585,7 +1585,7 @@ gdk_colormap_free_colors(GdkColormap * colormap,
                          GdkColor * colors, gint ncolors)
 {
    GdkColormapPrivateWin32 *private;
-   gulong *pixels;
+   unsigned long *pixels;
    gint npixels = 0;
    gint i;
 
@@ -1598,10 +1598,10 @@ gdk_colormap_free_colors(GdkColormap * colormap,
        (private->base.visual->type != GDK_VISUAL_GRAYSCALE))
       return;
 
-   pixels = g_new(gulong, ncolors);
+   pixels = g_new(unsigned long, ncolors);
 
    for (i = 0; i < ncolors; i++) {
-      gulong pixel = colors[i].pixel;
+      unsigned long pixel = colors[i].pixel;
 
       if (private->info[pixel].ref_count) {
          private->info[pixel].ref_count--;
@@ -1672,7 +1672,7 @@ gdk_colormap_alloc_colors_writable(GdkColormap * colormap,
                                     gboolean * success)
 {
    GdkColormapPrivateWin32 *private;
-   gulong *pixels;
+   unsigned long *pixels;
    Status status;
    gint i, index;
 
@@ -1695,7 +1695,7 @@ gdk_colormap_alloc_colors_writable(GdkColormap * colormap,
       }
       return i;
    } else {
-      pixels = g_new(gulong, ncolors);
+      pixels = g_new(unsigned long, ncolors);
       /* Allocation of a writable color cells */
 
       status = alloc_color_cells(private->xcolormap, FALSE, NULL,
@@ -2068,9 +2068,9 @@ static void gdk_colormap_remove(GdkColormap * cmap)
    g_hash_table_remove(colormap_hash, &private->xcolormap);
 }
 
-static guint gdk_colormap_hash(Colormap * cmap)
+static gulong gdk_colormap_hash(Colormap * cmap)
 {
-   return (guint) * cmap;
+   return (gulong) * cmap;
 }
 
 static gint gdk_colormap_cmp(Colormap * a, Colormap * b)

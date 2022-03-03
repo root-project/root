@@ -155,7 +155,7 @@ XSGui::CloseWindow()
 
 /* ----- ProcessMenuMessage ----- */
 Bool_t
-XSGui::ProcessMenuMessage( Long_t param )
+XSGui::ProcessMenuMessage( Longptr_t param )
 {
    switch (param) {
       case M_FILE_OPEN:
@@ -198,7 +198,7 @@ XSGui::ProcessMenuMessage( Long_t param )
 
 /* ----- ProcessMessage ----- */
 Bool_t
-XSGui::ProcessMessage(Long_t msg, Long_t param1, Long_t)
+XSGui::ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t)
 {
    // Handle messages send to the XSGui object.
    char   str[100];

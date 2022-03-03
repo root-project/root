@@ -12,14 +12,6 @@
 #ifndef ROOT_TTreeInput
 #define ROOT_TTreeInput
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Tree Input Dialog Widget                                              //
-//                                                                       //
-// An input dialog box to select the variables and the cuts from         //
-// a TTree                                                               //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -30,12 +22,12 @@ class TGTextButton;
 class TTreeInput : public TGTransientFrame {
 
 private:
-   TGTextEntry      *fTEVars;  // text entry widget for variables
-   TGTextEntry      *fTECuts;  // text entry widget for cuts
-   TGTextButton     *fOk;      // ok button
-   TGTextButton     *fCancel;  // cancel button
-   char             *fStrvars;  // address to store variables string
-   char             *fStrcuts;  // address to store cuts string
+   TGTextEntry      *fTEVars;   ///< text entry widget for variables
+   TGTextEntry      *fTECuts;   ///< text entry widget for cuts
+   TGTextButton     *fOk;       ///< ok button
+   TGTextButton     *fCancel;   ///< cancel button
+   char             *fStrvars;  ///< address to store variables string
+   char             *fStrcuts;  ///< address to store cuts string
 
    TTreeInput(const TTreeInput&);  // Not implemented
    TTreeInput &operator= (const TTreeInput&); // Not implemented
@@ -44,7 +36,7 @@ public:
    TTreeInput(const TGWindow *p, const TGWindow *main,
               char *strvars, char* strcuts);
    ~TTreeInput();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
 
    ClassDef(TTreeInput, 0)  // Simple input dialog
 

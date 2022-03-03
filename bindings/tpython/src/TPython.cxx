@@ -143,7 +143,12 @@ Bool_t TPython::Initialize()
       PySys_SetArgv(sizeof(argv) / sizeof(argv[0]), argv);
 
       // force loading of the ROOT module
-      PyRun_SimpleString(const_cast<char *>("import ROOT"));
+      const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
+      if( ret != 0 )
+      {
+          std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
+          return kFALSE;
+      }
    }
 
    if (!gMainDict) {
@@ -409,7 +414,7 @@ const TPyReturn TPython::Eval(const char *expr)
       return TPyReturn();
    }
 
-   // results that require no convserion
+   // results that require no conversion
    if (result == Py_None || CPyCppyy::CPPInstance_Check(result) || PyBytes_Check(result) || PyFloat_Check(result) ||
        PyLong_Check(result) || PyInt_Check(result))
       return TPyReturn(result);

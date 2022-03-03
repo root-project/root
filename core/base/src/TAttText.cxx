@@ -34,16 +34,17 @@ by many other classes (graphics, histograms). It holds all the text attributes.
 ## Text attributes
 Text attributes are:
 
-  - [Text Alignment](#T1)
-  - [Text Angle](#T2)
-  - [Text Color](#T3)
-  - [Text Size](#T4)
-  - [Text Font and Precision](#T5)
-     - [Font quality and speed](#T51)
-     - [How to use True Type Fonts](#T52)
-     - [List of the currently supported fonts](#T53)
+  - [Text Alignment](\ref ATTTEXT1)
+  - [Text Angle](\ref ATTTEXT2)
+  - [Text Color](\ref ATTTEXT3)
+  - [Text Size](\ref ATTTEXT4)
+  - [Text Font and Precision](\ref ATTTEXT5)
+     - [Font quality and speed](\ref ATTTEXT51)
+     - [How to use True Type Fonts](\ref ATTTEXT52)
+     - [List of the currently supported fonts](\ref ATTTEXT53)
 
-## <a name="T1"></a> Text Alignment
+\anchor ATTTEXT1
+## Text Alignment
 
 The text alignment is an integer number (`align`) allowing to control
 the horizontal and vertical position of the text string with respect
@@ -92,7 +93,8 @@ They allow to write:
 object->SetTextAlign(kHAlignLeft+kVAlignTop);
 ~~~
 
-## <a name="T2"></a> Text Angle
+\anchor ATTTEXT2
+## Text Angle
 
 Text angle in degrees.
 The text angle of any class inheriting from `TAttText` can
@@ -104,7 +106,8 @@ Begin_Macro(source)
 textangle.C
 End_Macro
 
-## <a name="T3"></a> Text Color
+\anchor ATTTEXT3
+## Text Color
 
 The text color is a color index (integer) pointing in the ROOT
 color table.
@@ -135,7 +138,8 @@ The transparency is available on all platforms when the flag `OpenGL.CanvasPrefe
 in `$ROOTSYS/etc/system.rootrc`, or on Mac with the Cocoa backend. On the file output
 it is visible with PDF, PNG, Gif, JPEG, SVG, TeX ... but not PostScript.
 
-## <a name="T4"></a> Text Size
+\anchor ATTTEXT4
+## Text Size
 
 If the text precision (see next paragraph) is smaller than 3, the text
 size (`textsize`) is a fraction of the current pad size. Therefore the
@@ -165,7 +169,8 @@ The text size of any class inheriting from `TAttText` can
 be changed using the method `SetTextSize` and retrieved using the
 method `GetTextSize`.
 
-## <a name="T5"></a> Text Font and Precision
+\anchor ATTTEXT5
+## Text Font and Precision
 
 The text font code is combination of the font number and the precision.
 ~~~ {.cpp}
@@ -185,7 +190,8 @@ The text font and precision of any class inheriting from `TAttText` can
 be changed using the method `SetTextFont` and retrieved using the
 method `GetTextFont`.
 
-### <a name="T51"></a> Font quality and speed
+\anchor ATTTEXT51
+### Font quality and speed
 
 When precision 0 is used, only the original non-scaled system fonts are
 used. The fonts have a minimum (4) and maximum (37) size in pixels. These
@@ -195,7 +201,8 @@ Precision 1 and 2 fonts have a different behaviour depending if the
 True Type Fonts (TTF) are used or not. If TTF are used, you always get very good
 quality scalable and rotatable fonts. However TTF are slow.
 
-### <a name="T52"></a> How to use True Type Fonts
+\anchor ATTTEXT52
+### How to use True Type Fonts
 
 One can activate the TTF by adding (or activating) the following line
 in the `.rootrc` file:
@@ -218,7 +225,8 @@ printout given by this command:
    Unix.*.Root.UseTTFonts:   true                           [Global]
 ~~~
 
-### <a name="T53"></a> List of the currently supported fonts
+\anchor ATTTEXT53
+### List of the currently supported fonts
 
 ~~~ {.cpp}
    Font number         X11 Names             Win32/TTF Names
@@ -296,6 +304,29 @@ void TAttText::Copy(TAttText &atttext) const
    atttext.fTextColor  = fTextColor;
    atttext.fTextFont   = fTextFont;
    atttext.fTextSize   = fTextSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the text in percent of the pad size.
+///
+/// If the font precision is greater than 2, the text size returned is the size in pixel
+/// converted into percent of the pad size, otherwise the size returned is the same as the
+/// size given as input parameter.
+
+Float_t TAttText::GetTextSizePercent(Float_t size)
+{
+   Float_t rsize = size;
+   if (fTextFont%10 > 2 && gPad) {
+      UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
+                            gPad->XtoAbsPixel(gPad->GetX1()));
+      UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
+                            gPad->YtoAbsPixel(gPad->GetY1()));
+      if (w < h)
+         rsize = rsize/w;
+      else
+         rsize = rsize/h;
+   }
+   return rsize;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

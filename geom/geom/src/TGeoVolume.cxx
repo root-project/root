@@ -11,7 +11,7 @@
  *************************************************************************/
 
 /** \class TGeoVolume
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
 TGeoVolume, TGeoVolumeMulti, TGeoVolumeAssembly are the volume classes
 
@@ -107,7 +107,7 @@ elements in the hierarchy of volumes. Nodes are unique and distinct geometrical
 objects ONLY from their container point of view. Since volumes can be replicated
 in the geometry, the same node may be found on different branches.
 
-\image html geom_t_example.png
+\image html geom_t_example.png width=600px
 
   An important observation is that volume objects are owned by the TGeoManager
 class. This stores a list of all volumes in the geometry, that is cleaned
@@ -1677,7 +1677,7 @@ Bool_t TGeoVolume::GetOptimalVoxels() const
 char *TGeoVolume::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("p%s_%lx", GetName(), (ULong_t)this);
+   name = TString::Format("p%s_%zx", GetName(), (size_t)this);
    return (char*)name.Data();
 }
 

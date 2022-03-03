@@ -45,7 +45,7 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooProjectedPdf::RooProjectedPdf()
+RooProjectedPdf::RooProjectedPdf() : _cacheMgr(this,10)
 {
 }
 
@@ -187,24 +187,17 @@ Double_t RooProjectedPdf::analyticalIntegralWN(Int_t code, const RooArgSet* /*no
   CacheElem *cache = (CacheElem*) _cacheMgr.getObjByIndex(code-1) ;
   
   if (cache) {
-    Double_t ret= cache->_projection->getVal() ;
-    return ret ;
+    return cache->_projection->getVal() ;
   } else {
     
-    RooArgSet* vars = getParameters(RooArgSet()) ;
+    std::unique_ptr<RooArgSet> vars{getParameters(RooArgSet())} ;
     vars->add(intobs) ;
-    RooArgSet* iset = _cacheMgr.nameSet1ByIndex(code-1)->select(*vars) ;
-    RooArgSet* nset = _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) ;
+    RooArgSet iset = _cacheMgr.selectFromSet1(*vars, code-1) ;
+    RooArgSet nset = _cacheMgr.selectFromSet2(*vars, code-1) ;
     
-    Int_t code2(-1) ;
-    const RooAbsReal* proj = getProjection(iset,nset,rangeName,code2) ;
-    
-    delete vars ;
-    delete nset ;
-    delete iset ;
-    
-    Double_t ret =  proj->getVal() ;
-    return ret ;
+    int code2 = -1 ;
+
+    return getProjection(&iset,&nset,rangeName,code2)->getVal() ;
   } 
   
 } 

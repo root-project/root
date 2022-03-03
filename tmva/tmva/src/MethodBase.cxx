@@ -934,6 +934,17 @@ std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// get all the MVA values for the events of the given Data type
+// (this is used by Method Category and it does not need to be re-implmented by derived classes )
+std::vector<Double_t> TMVA::MethodBase::GetDataMvaValues(DataSet * data, Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+   fTmpData = data;
+   auto result = GetMvaValues(firstEvt, lastEvt, logProgress);
+   fTmpData = nullptr;
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// prepare tree branch with the method's discriminating variable
 
 void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
@@ -1024,7 +1035,10 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
       m1  += t*w; s1 += t*t*w;
       m2  += r*w; s2 += r*r*w;
       s12 += t*r;
-      if ((ievt & 0xFF) == 0) timer.DrawProgressBar(ievt);
+      // print progress
+      Long64_t modulo = Long64_t(nevt / 100);
+      if (ievt % modulo == 0)
+         timer.DrawProgressBar(ievt);
    }
    timer.DrawProgressBar(nevt - 1);
    Log() << kINFO << "Elapsed time for evaluation of " << nevt <<  " events: "

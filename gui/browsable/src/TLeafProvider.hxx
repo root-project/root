@@ -21,11 +21,8 @@ using namespace ROOT::Experimental::Browsable;
 
 /** Provider for drawing of branches / leafs in the TTree */
 
-template<typename T>
 class TLeafProvider : public RProvider {
 public:
-
-   virtual ~TLeafProvider() = default;
 
    TH1 *DrawTree(TTree *ttree, const std::string &expr, const std::string &hname)
    {

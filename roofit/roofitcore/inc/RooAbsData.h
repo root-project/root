@@ -16,11 +16,16 @@
 #ifndef ROO_ABS_DATA
 #define ROO_ABS_DATA
 
-#include "TNamed.h"
 #include "RooPrintable.h"
+#include "RooAbsCategory.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooSpan.h"
+#include "RooNameReg.h"
+
+#include "ROOT/RStringView.hxx"
+#include "TNamed.h"
+
 #include <map>
 #include <string>
 
@@ -28,11 +33,11 @@ class RooAbsArg;
 class RooAbsReal ;
 class RooRealVar;
 class RooAbsRealLValue;
-class RooAbsCategory ;
 class RooAbsCategoryLValue;
 class Roo1DTable ;
 class RooPlot;
 class RooArgList;
+class RooSimultaneous;
 class TH1;
 class TH2F;
 class RooAbsBinning ;
@@ -44,6 +49,33 @@ class RooFormulaVar;
 namespace RooBatchCompute{
 struct RunContext;
 }
+namespace RooFit {
+namespace TestStatistics {
+class RooAbsL;
+struct ConstantTermsOptimizer;
+}
+}
+
+
+// Writes a templated constructor for compatibility with ROOT builds using the
+// C++14 standard or earlier, taking `ROOT::Internal::TStringView` instead of
+// `std::string_view`. This means one can still use a `TString` for the name or
+// title parameter. The condition in the following `#if` should be kept in
+// sync with the one in TString.h.
+#if (__cplusplus >= 201700L) && !defined(_MSC_VER) && (!defined(__clang_major__) || __clang_major__ > 5)
+#define WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(Class_t) // does nothing
+#else
+#define WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(Class_t)                                             \
+  template<typename ...Args_t>                                                                    \
+  Class_t(ROOT::Internal::TStringView name, ROOT::Internal::TStringView title, Args_t &&... args) \
+    : Class_t(std::string_view(name), std::string_view(title), std::forward<Args_t>(args)...) {}  \
+  template<typename ...Args_t>                                                                    \
+  Class_t(ROOT::Internal::TStringView name, std::string_view title, Args_t &&... args)            \
+    : Class_t(std::string_view(name), title, std::forward<Args_t>(args)...) {}                    \
+  template<typename ...Args_t>                                                                    \
+  Class_t(std::string_view name, ROOT::Internal::TStringView title, Args_t &&... args)            \
+    : Class_t(name, std::string_view(title), std::forward<Args_t>(args)...) {}
+#endif
 
 
 class RooAbsData : public TNamed, public RooPrintable {
@@ -51,8 +83,11 @@ public:
 
   // Constructors, factory methods etc.
   RooAbsData() ; 
-  RooAbsData(const char *name, const char *title, const RooArgSet& vars, RooAbsDataStore* store=0) ;
+  RooAbsData(std::string_view name, std::string_view title, const RooArgSet& vars, RooAbsDataStore* store=0) ;
   RooAbsData(const RooAbsData& other, const char* newname = 0) ;
+
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooAbsData)
+
   RooAbsData& operator=(const RooAbsData& other);
   virtual ~RooAbsData() ;
   virtual RooAbsData* emptyClone(const char* newName=0, const char* newTitle=0, const RooArgSet* vars=0, const char* wgtVarName=0) const = 0 ;
@@ -96,24 +131,39 @@ public:
   virtual Double_t weight() const = 0 ; // DERIVED
   virtual Double_t weightSquared() const = 0 ; // DERIVED
   virtual Bool_t valid() const { return kTRUE ; }
+
   enum ErrorType { Poisson, SumW2, None, Auto, Expected } ;
-  virtual Double_t weightError(ErrorType etype=Poisson) const ;
-  virtual void weightError(Double_t& lo, Double_t& hi, ErrorType etype=Poisson) const ; 
+  /// Return the symmetric error on the current weight.
+  /// See also weightError(double&,double&,ErrorType) const for asymmetric errors.
+  /// \param[in] etype Type of error to compute. May throw if not supported.
+  virtual double weightError(ErrorType /*etype*/=Poisson) const {
+    // Dummy implementation returning zero, because not all deriving classes
+    // need to implement a non-zero weight error.
+    return 0.0;
+  }
+  /// Return the asymmetric errors on the current weight.
+  /// See also weightError(ErrorType) const for symmetric error.
+  /// \param[out] lo Low error.
+  /// \param[out] hi High error.
+  /// \param[in] etype Type of error to compute. May throw if not supported.
+  virtual void weightError(double& lo, double& hi, ErrorType /*etype*/=Poisson) const {
+    // Dummy implementation returning zero, because not all deriving classes
+    // need to implement a non-zero weight error.
+    lo=0;
+    hi=0;
+  }
+
   virtual const RooArgSet* get(Int_t index) const ;
 
-  /// Retrieve batches of data for each real-valued variable in this dataset.
-  /// \param[out]  evalData Store references to all data batches in this struct.
-  /// \param first Index of first event that ends up in the batch.
-  /// \param len   Number of events in each batch.
-  /// Needs to be overridden by derived classes. This implementation returns an empty RunContext.
   virtual void getBatches(RooBatchCompute::RunContext& evalData,
-      std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const = 0;
+      std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
+  virtual std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> getCategoryBatches(std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const;
 
   ////////////////////////////////////////////////////////////////////////////////
   /// Return event weights of all events in range [first, first+len).
   /// If no contiguous structure of weights is stored, an empty batch can be returned.
   /// This indicates that the weight is constant. Use weight() to retrieve it.
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const = 0;
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2=false) const = 0;
 
   /// Return number of entries in dataset, *i.e.*, count unweighted entries.
   virtual Int_t numEntries() const ;
@@ -123,6 +173,7 @@ public:
   /// \param[in] cutSpec Apply given cut when counting (*e.g.* `0 < x && x < 5`). Passing `"1"` selects all events.
   /// \param[in] cutRange If the observables have a range with this name, only count events inside this range.
   virtual Double_t sumEntries(const char* cutSpec, const char* cutRange=0) const = 0 ; // DERIVED
+  double sumEntriesW2() const;
   virtual Bool_t isWeighted() const { 
     // Do events in dataset have weights?
     return kFALSE ; 
@@ -171,6 +222,9 @@ public:
 	
   // Split a dataset by a category
   virtual TList* split(const RooAbsCategory& splitCat, Bool_t createEmptyDataSets=kFALSE) const ;
+
+  // Split a dataset by categories of a RooSimultaneous
+  virtual TList* split(const RooSimultaneous& simpdf, Bool_t createEmptyDataSets=kFALSE) const ;
 
   // Fast splitting for SimMaster setData
   Bool_t canSplitFast() const ; 
@@ -251,6 +305,27 @@ public:
 
   static StorageType getDefaultStorageType();
 
+  /// Returns snapshot of global observables stored in this data.
+  /// \return Pointer to a RooArgSet with the snapshot of global observables
+  ///         stored in the data. Can be `nullptr` if no global observales are
+  ///         stored.
+  RooArgSet const* getGlobalObservables() const { return _globalObservables.get(); }
+  void setGlobalObservables(RooArgSet const& globalObservables);
+
+  /// De-duplicated pointer to this object's name.
+  /// This can be used for fast name comparisons.
+  /// like `if (namePtr() == other.namePtr())`.
+  /// \note TNamed::GetName() will return a pointer that's
+  /// different for each object, but namePtr() always points
+  /// to a unique instance.
+  inline const TNamed* namePtr() const {
+    return _namePtr ;
+  }
+
+  void SetName(const char* name) ;
+  void SetNameTitle(const char *name, const char *title) ;
+
+
 protected:
 
   static StorageType defaultStorageType ;
@@ -275,6 +350,9 @@ protected:
   friend class RooAbsReal ;
   friend class RooAbsOptTestStatistic ;
   friend class RooAbsCachedPdf ;
+  friend struct RooFit::TestStatistics::ConstantTermsOptimizer;
+  // for access into copied dataset:
+  friend class RooFit::TestStatistics::RooAbsL;
 
   virtual void cacheArgs(const RooAbsArg* owner, RooArgSet& varSet, const RooArgSet* nset=0, Bool_t skipZeroWeights=kFALSE) ;
   virtual void resetCache() ;
@@ -295,8 +373,14 @@ protected:
 
   std::map<std::string,RooAbsData*> _ownedComponents ; // Owned external components
 
+  std::unique_ptr<RooArgSet> _globalObservables; // Snapshot of global observables
+
+  mutable const TNamed * _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
+
 private:
-   ClassDef(RooAbsData, 5) // Abstract data collection
+  void copyGlobalObservables(const RooAbsData& other);
+
+   ClassDef(RooAbsData, 6) // Abstract data collection
 };
 
 #endif

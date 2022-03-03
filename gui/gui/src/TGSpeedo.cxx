@@ -9,28 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGSpeedo                                                             //
-//                                                                      //
-// TGSpeedo is a widget looking like a speedometer, with a needle,      //
-// a counter and a small odometer window.                               //
-//                                                                      //
-//Begin_Html
-/*
-<img src="gif/speedometer.gif">
+
+/** \class TGSpeedo
+    \ingroup guiwidgets
+
+TGSpeedo is a widget looking like a speedometer, with a needle,
+a counter and a small odometer window.
+
+Three thresholds are configurable, with their glowing color
+A peak mark can be enabled, allowing to keep track of the highest
+value displayed. The mark can be reset by right-clicking on the
+widget.
+
+Two signals are available:
+  - OdoClicked(): when user click on the small odometer window
+  - LedClicked(): when user click on the small led near the counter
+
 */
-//End_Html                                                              //
-//                                                                      //
-// Three thresholds are configurable, with their glowing color          //
-// A peak mark can be enabled, allowing to keep track of the highest    //
-// value displayed. The mark can be reset by right-clicking on the      //
-// widget.                                                              //
-// Two signals are available:                                           //
-//    OdoClicked(): when user click on the small odometer window        //
-//    LedClicked(): when user click on the small led near the counter   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
 
 #include "TSystem.h"
 #include "TGResourcePool.h"

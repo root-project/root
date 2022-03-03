@@ -121,4 +121,5 @@ void df013_InspectAnalysis()
       return; // in case root -b was invoked
    browserPad->cd();
    clone->Draw();
+   browserPad->Update();
 }

@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -22,41 +22,90 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-
 template<typename T>
 class RAttrValue : public RAttrBase {
+
+   template <typename Q, bool = std::is_enum<Q>::value>
+   struct ValueExtractor {
+      Q Get(const RAttrMap::Value_t *value)
+      {
+         return (Q) RAttrMap::Value_t::GetValue<int>(value);
+      }
+   };
+
+   template <typename Q>
+   struct ValueExtractor<Q, false> {
+      Q Get(const RAttrMap::Value_t *value) {
+         return RAttrMap::Value_t::GetValue<Q>(value);
+      }
+   };
+
 protected:
 
-   RAttrMap  fDefaults;    ///<!    map with default values
+   T fDefault{};          ///<!    default value
 
-   const RAttrMap &GetDefaults() const override { return fDefaults; }
-
-   bool IsValue() const override { return true; }
+   RAttrMap CollectDefaults() const override
+   {
+      return RAttrMap().AddValue(GetName(), fDefault);
+   }
 
 public:
 
-   RAttrValue() = default;
+   RAttrValue() : RAttrBase("") {}
 
-   RAttrValue(RDrawable *drawable, const std::string &name, const T &dflt = T())
+   RAttrValue(const T& dflt) : RAttrBase(""), fDefault(dflt) {}
+
+   RAttrValue(RDrawable *drawable, const char *name, const T &dflt = T()) : RAttrBase(drawable, name ? name : ""), fDefault(dflt) { }
+
+   RAttrValue(RAttrBase *parent, const char *name, const T &dflt = T()) : RAttrBase(parent, name ? name : ""), fDefault(dflt) { }
+
+   RAttrValue(const RAttrValue& src) : RAttrBase("")
    {
-      fDefaults.AddValue("", dflt);
-      AssignDrawable(drawable, name);
+      Set(src.Get());
+      fDefault = src.GetDefault();
    }
 
-   RAttrValue(RAttrBase *parent, const std::string &name, const T &dflt = T())
+   T GetDefault() const { return fDefault; }
+
+   void Set(const T &v)
    {
-      fDefaults.AddValue("", dflt);
-      AssignParent(parent, name);
+      if (auto access = EnsureAttr(GetName()))
+         access.attr->AddValue(access.fullname, v);
    }
 
-   void Set(const T &v) { SetValue("", v); }
-   T Get() const { return GetValue<T>(""); }
-   void Clear() { ClearValue(""); }
-   bool Has() const { return HasValue<T>(""); }
+   T Get() const
+   {
+      if (auto v = AccessValue(GetName(), true))
+         return ValueExtractor<T>().Get(v.value);
+      return fDefault;
+   }
+
+   const char *GetName() const { return GetPrefix(); }
+
+   void Clear() override { ClearValue(GetName()); }
+
+   bool Has() const
+   {
+      if (auto v = AccessValue(GetName(), true)) {
+         auto res = RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,T>(v.value);
+         return res ? (res->Kind() != RAttrMap::kNoValue) : false;
+      }
+
+      return false;
+   }
 
    RAttrValue &operator=(const T &v) { Set(v); return *this; }
 
+   RAttrValue &operator=(const RAttrValue &v) { Set(v.Get()); return *this; }
+
    operator T() const { return Get(); }
+
+   friend bool operator==(const RAttrValue& lhs, const RAttrValue& rhs) { return lhs.Get() == rhs.Get(); }
+   friend bool operator!=(const RAttrValue& lhs, const RAttrValue& rhs) { return lhs.Get() != rhs.Get(); }
+
+   friend bool operator==(const RAttrValue& lhs, const T& rhs) { return lhs.Get() == rhs; }
+   friend bool operator!=(const RAttrValue& lhs, const T& rhs) { return lhs.Get() != rhs; }
+
 };
 
 } // namespace Experimental

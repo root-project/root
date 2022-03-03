@@ -1,3 +1,4 @@
+#include "ROOTUnitTestSupport.h"
 #include "TInterpreter.h"
 
 #include "gtest/gtest.h"
@@ -22,7 +23,7 @@ TEST(TClingCallFunc, FunctionWrapper)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFunc", "int, float", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -44,7 +45,7 @@ TEST(TClingCallFunc, FunctionWrapperPointer)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFuncPtr", "int, float", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -69,7 +70,7 @@ TEST(TClingCallFunc, FunctionWrapperReference)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFuncRef", "int*, float", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -94,7 +95,7 @@ TEST(TClingCallFunc, FunctionWrapperVoid)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFuncVoid", "int", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -114,7 +115,7 @@ TEST(TClingCallFunc, FunctionWrapperRValueRefArg)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFuncRValueRefArg", "int&&", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -134,7 +135,7 @@ TEST(TClingCallFunc, FunctionWrapperVariadic)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFuncVariadic", "int", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -156,7 +157,7 @@ TEST(TClingCallFunc, FunctionWrapperDefaultArg)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperFuncDefaultArg", "", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -182,7 +183,7 @@ TEST(TClingCallFunc, TemplateFunctionWrapper)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "TemplateFunctionWrapperFunc", "int", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -205,7 +206,7 @@ TEST(TClingCallFunc, FunctionWrapperIncompleteReturnType)
 
    ClassInfo_t *GlobalNamespace = gInterpreter->ClassInfo_Factory("");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, GlobalNamespace, "FunctionWrapperIncompleteType", "", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -227,7 +228,7 @@ TEST(TClingCallFunc, MemberMethodWrapper)
 
    ClassInfo_t *FooNamespace = gInterpreter->ClassInfo_Factory("TClingCallFunc_TestClass1");
    CallFunc_t *mc = gInterpreter->CallFunc_Factory();
-   long offset = 0;
+   Longptr_t offset = 0;
 
    gInterpreter->CallFunc_SetFuncProto(mc, FooNamespace, "foo", "int", &offset);
    std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
@@ -258,4 +259,37 @@ TEST(TClingCallFunc, DISABLED_OverloadedTemplate)
                              bool k2 = ((bool(&)(X,bool))::operator==<bool>)(x, true);
                            }
                            )cpp");
+}
+
+TEST(TClingCallFunc, FunctionWrapperNodiscard)
+{
+   gInterpreter->Declare(R"cpp(
+                           struct TClingCallFunc_Nodiscard1 {
+                           #if __cplusplus >= 201703L
+                           [[nodiscard]]
+                           #endif
+                             bool foo(int) { return false; }
+                           };
+                           )cpp");
+
+   ClassInfo_t *FooNamespace = gInterpreter->ClassInfo_Factory("TClingCallFunc_Nodiscard1");
+   CallFunc_t *mc = gInterpreter->CallFunc_Factory();
+   Longptr_t offset = 0;
+
+   gInterpreter->CallFunc_SetFuncProto(mc, FooNamespace, "foo", "int", &offset);
+   std::string wrapper = gInterpreter->CallFunc_GetWrapperCode(mc);
+
+   {
+      using ::testing::Not;
+      using ::testing::HasSubstr;
+      ROOTUnitTestSupport::FilterDiagsRAII RAII([] (int /*level*/, Bool_t /*abort*/,
+                                                    const char * /*location*/, const char *msg) {
+         EXPECT_THAT(msg, Not(HasSubstr("-Wunused-result")));
+      });
+      ASSERT_TRUE(gInterpreter->Declare(wrapper.c_str()));
+   }
+
+   // Cleanup
+   gInterpreter->CallFunc_Delete(mc);
+   gInterpreter->ClassInfo_Delete(FooNamespace);
 }

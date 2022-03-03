@@ -53,7 +53,7 @@ replaces it with a more meaningful name. In addition, TGeoPNEntry objects are
 faster to search by name and they may optionally store an additional user
 matrix.
 
-For more details please read the misalignment section in the Users Guide.
+For more details please read the [misalignment section](\ref GP05).
 */
 
 #include "TGeoManager.h"
@@ -148,9 +148,9 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
    }
    // Refresh the node since other Align calls may have altered the stored nodes
    Refresh();
-   TGeoNode *nnode = 0;
+   TGeoNode *nnode = nullptr;
    TGeoVolume *vm = GetVolume(0);
-   TGeoVolume *vd = 0;
+   TGeoVolume *vd = nullptr;
    Int_t i;
    if (!IsAligned()) {
       Int_t *id = new Int_t[fLevel];
@@ -205,6 +205,11 @@ Bool_t TGeoPhysicalNode::Align(TGeoMatrix *newmat, TGeoShape *newshape, Bool_t c
    } else {
       nnode = GetNode();
    }
+   if (!node) {
+      Fatal("Align", "Cannot get node %s", GetName());
+      return kFALSE;
+   }
+
    // Now nnode is a cloned node of the one that need to be aligned
    TGeoNodeMatrix *aligned = (TGeoNodeMatrix*)nnode;
    vm = nnode->GetMotherVolume();

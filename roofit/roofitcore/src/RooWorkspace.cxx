@@ -46,7 +46,6 @@ and try reading again.
 **/
 
 #include "RooWorkspace.h"
-#include "RooHelpers.h"
 #include "RooFit.h"
 #include "RooWorkspaceHandle.h"
 #include "RooAbsPdf.h"
@@ -74,6 +73,8 @@ and try reading again.
 #include "TH1.h"
 #include "TClass.h"
 #include "strlcpy.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include <map>
 #include <sstream>
@@ -183,22 +184,14 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   other._allOwnedNodes.snapshot(_allOwnedNodes,kTRUE) ;
 
   // Copy datasets
-  TIterator* iter = other._dataList.MakeIterator() ;
-  TObject* data2 ;
-  while((data2=iter->Next())) {
-    _dataList.Add(data2->Clone()) ;
-  }
-  delete iter ;
+  for(TObject *data2 : other._dataList) _dataList.Add(data2->Clone());
 
   // Copy snapshots
-  TIterator* iter2 = other._snapshots.MakeIterator() ;
-  RooArgSet* snap ;
-  while((snap=(RooArgSet*)iter2->Next())) {
-    RooArgSet* snapClone = (RooArgSet*) snap->snapshot() ;
+  for(auto * snap : static_range_cast<RooArgSet*>(other._snapshots)) {
+    auto snapClone = static_cast<RooArgSet*>(snap->snapshot());
     snapClone->setName(snap->GetName()) ;
     _snapshots.Add(snapClone) ;
   }
-  delete iter2 ;
 
   // Copy named sets
   for (map<string,RooArgSet>::const_iterator iter3 = other._namedSets.begin() ; iter3 != other._namedSets.end() ; ++iter3) {
@@ -247,6 +240,11 @@ RooWorkspace::~RooWorkspace()
   // WVE named sets too?
 
   _genObjects.Delete() ;
+
+   _embeddedDataList.Delete();
+   _views.Delete();
+   _studyMods.Delete();
+
 }
 
 
@@ -260,7 +258,7 @@ Bool_t RooWorkspace::import(const char* fileSpec,
 			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
 {
   // Parse file/workspace/objectname specification
-  std::vector<std::string> tokens = RooHelpers::tokenise(fileSpec, ":");
+  std::vector<std::string> tokens = ROOT::Split(fileSpec, ":");
 
   // Check that parsing was successful
   if (tokens.size() != 3) {
@@ -424,8 +422,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   if (strlen(varChangeIn)>0) {
 
     // Parse comma separated lists into map<string,string>
-    const std::vector<std::string> tokIn = RooHelpers::tokenise(varChangeIn, ", ");
-    const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ", ");
+    const std::vector<std::string> tokIn = ROOT::Split(varChangeIn, ", ", /*skipEmpty= */ true);
+    const std::vector<std::string> tokOut = ROOT::Split(varChangeOut, ", ", /*skipEmpty= */ true);
     for (unsigned int i=0; i < tokIn.size(); ++i) {
       varMap.insert(std::make_pair(tokIn[i], tokOut[i]));
     }
@@ -437,7 +435,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   // First convert exception list if provided
   std::set<string> exceptVarNames ;
   if (exceptVars && strlen(exceptVars)) {
-    const std::vector<std::string> toks = RooHelpers::tokenise(exceptVars, ", ");
+    const std::vector<std::string> toks = ROOT::Split(exceptVars, ", ", /*skipEmpty= */ true);
     exceptVarNames.insert(toks.begin(), toks.end());
   }
 
@@ -475,7 +473,9 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
         return kTRUE ;
       }
     } else {
-      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Recycling existing object " << inArg.GetName() << " created with identical factory specification" << endl ;
+      if(!silence) {
+        coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Recycling existing object " << inArg.GetName() << " created with identical factory specification" << endl ;
+      }
     }
   }
 
@@ -503,10 +503,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Now create a working copy of the incoming object tree
-  RooArgSet* cloneSet = new RooArgSet();
-  cloneSet->useHashMapForFind(true); // Accelerate finding
-  RooArgSet(inArg).snapshot(*cloneSet, !noRecursion);
-  RooAbsArg* cloneTop = cloneSet->find(inArg.GetName()) ;
+  RooArgSet cloneSet;
+  cloneSet.useHashMapForFind(true); // Accelerate finding
+  RooArgSet(inArg).snapshot(cloneSet, !noRecursion);
+  RooAbsArg* cloneTop = cloneSet.find(inArg.GetName()) ;
 
   // Mark all nodes for renaming if we are not in conflictOnly mode
   if (!conflictOnly) {
@@ -519,7 +519,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   if (!renameConflictOrig) {
     // Mark all nodes to be imported for renaming following conflict resolution protocol
     for (const auto cnode : conflictNodes) {
-      RooAbsArg* cnode2 = cloneSet->find(cnode->GetName()) ;
+      RooAbsArg* cnode2 = cloneSet.find(cnode->GetName()) ;
       string origName = cnode2->GetName() ;
       cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
       cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
@@ -585,7 +585,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   if (strlen(varChangeIn)>0 || (suffixV && strlen(suffixV)>0)) {
 
     // Process all changes in variable names
-    for (const auto cnode : *cloneSet) {
+    for (const auto cnode : cloneSet) {
 
       if (varMap.find(cnode->GetName())!=varMap.end()) {
         string origName = cnode->GetName() ;
@@ -611,10 +611,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Now clone again with renaming effective
-  RooArgSet* cloneSet2 = new RooArgSet();
-  cloneSet2->useHashMapForFind(true); // Faster finding
-  RooArgSet(*cloneTop).snapshot(*cloneSet2, !noRecursion);
-  RooAbsArg* cloneTop2 = cloneSet2->find(topName2.c_str()) ;
+  RooArgSet cloneSet2;
+  cloneSet2.useHashMapForFind(true); // Faster finding
+  RooArgSet(*cloneTop).snapshot(cloneSet2, !noRecursion);
+  RooAbsArg* cloneTop2 = cloneSet2.find(topName2.c_str()) ;
 
   // Make final check list of conflicting nodes
   RooArgSet conflictNodes2 ;
@@ -633,7 +633,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Perform any auxiliary imports at this point
-  for (const auto node : *cloneSet2) {
+  for (const auto node : cloneSet2) {
     if (node->importWorkspaceHook(*this)) {
       coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << node->GetName()
 			        << " has an error in importing in one or more of its auxiliary objects, aborting" << endl ;
@@ -643,7 +643,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
   RooArgSet recycledNodes ;
   RooArgSet nodesToBeDeleted ;
-  for (const auto node : *cloneSet2) {
+  for (const auto node : cloneSet2) {
     if (_autoClass) {
       if (!_classes.autoImportClass(node->IsA())) {
         coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object "
@@ -693,24 +693,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
     }
   }
 
-  // Release working copy
-  // no need to do a safe list erase since it was generated from a snapshot
-  // just take ownership and delte elements by hand
-  cloneSet->releaseOwnership();
-  for (auto cloneNode : *cloneSet){
-    delete cloneNode;
-  }
-  delete cloneSet ;
-
   // Reconnect any nodes that need to be
   if (recycledNodes.getSize()>0) {
-    for (const auto node : *cloneSet2) {
+    for (const auto node : cloneSet2) {
       node->redirectServers(recycledNodes) ;
     }
   }
 
-  cloneSet2->releaseOwnership() ;
-  delete cloneSet2 ;
+  cloneSet2.releaseOwnership() ;
 
   return kFALSE ;
 }
@@ -805,8 +795,8 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   // Process any change in variable names
   if (strlen(varChangeIn)>0) {
     // Parse comma separated lists of variable name changes
-    const std::vector<std::string> tokIn  = RooHelpers::tokenise(varChangeIn, ",");
-    const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ",");
+    const std::vector<std::string> tokIn  = ROOT::Split(varChangeIn, ",");
+    const std::vector<std::string> tokOut = ROOT::Split(varChangeOut, ",");
     for (unsigned int i=0; i < tokIn.size(); ++i) {
       if (!silence)
         coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << tokIn[i] << " to " << tokOut[i] << endl ;
@@ -863,9 +853,9 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  TIterator* iter = aset.createIterator() ;
+  TIter iter = aset.createIterator() ;
   RooAbsArg* sarg ;
-  while((sarg=(RooAbsArg*)iter->Next())) {
+  while((sarg=(RooAbsArg*)iter.Next())) {
     // If missing, either import or report error
     if (!arg(sarg->GetName())) {
       if (importMissing) {
@@ -878,7 +868,7 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
     }
     wsargs.add(*arg(sarg->GetName())) ;
   }
-  delete iter ;
+
 
   // Install named set
   _namedSets[name].removeAll() ;
@@ -923,7 +913,7 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  for (const std::string& token : RooHelpers::tokenise(contentList, ",")) {
+  for (const std::string& token : ROOT::Split(contentList, ",")) {
     // If missing, either import or report error
     if (!arg(token.c_str())) {
       coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
@@ -952,7 +942,7 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  for (const std::string& token : RooHelpers::tokenise(newContents, ",")) {
+  for (const std::string& token : ROOT::Split(newContents, ",")) {
     // If missing, either import or report error
     if (!arg(token.c_str())) {
       coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
@@ -1183,7 +1173,7 @@ Bool_t RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, Boo
   snapshot->setName(name) ;
 
   if (importValues) {
-    *snapshot = params ;
+    snapshot->assign(params) ;
   }
 
   RooArgSet* oldSnap = (RooArgSet*) _snapshots.FindObject(name) ;
@@ -1214,7 +1204,7 @@ Bool_t RooWorkspace::loadSnapshot(const char* name)
   }
 
   RooArgSet* actualParams = (RooArgSet*) _allOwnedNodes.selectCommon(*snap) ;
-  *actualParams = *snap ;
+  actualParams->assign(*snap) ;
   delete actualParams ;
 
   return kTRUE ;
@@ -1334,7 +1324,7 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
 {
   RooArgSet ret ;
 
-  for (const std::string& token : RooHelpers::tokenise(nameList, ",")) {
+  for (const std::string& token : ROOT::Split(nameList, ",")) {
     RooAbsArg* oneArg = arg(token.c_str()) ;
     if (oneArg) {
       ret.add(*oneArg) ;
@@ -1433,9 +1423,9 @@ RooArgSet RooWorkspace::allFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) &&
 	!parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
 	!parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
@@ -1456,9 +1446,9 @@ RooArgSet RooWorkspace::allCatFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) &&
 	!parg->IsA()->InheritsFrom(RooCategory::Class())) {
       ret.add(*parg) ;
@@ -1477,9 +1467,9 @@ RooArgSet RooWorkspace::allResolutionModels() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       if (!((RooResolutionModel*)parg)->isConvolved()) {
 	ret.add(*parg) ;
@@ -1498,9 +1488,9 @@ RooArgSet RooWorkspace::allPdfs() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
+  TIter iter = _allOwnedNodes.createIterator() ;
   RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  while((parg=(RooAbsArg*)iter.Next())) {
     if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
 	!parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       ret.add(*parg) ;
@@ -1938,10 +1928,10 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Make list of all immediate base classes of this class
   TString baseNameList ;
   TList* bl = tc->GetListOfBases() ;
-  TIterator* iter = bl->MakeIterator() ;
+  TIter iter = bl->MakeIterator() ;
   TBaseClass* base ;
   list<TClass*> bases ;
-  while((base=(TBaseClass*)iter->Next())) {
+  while((base=(TBaseClass*)iter.Next())) {
     if (baseNameList.Length()>0) {
       baseNameList += "," ;
     }
@@ -1986,9 +1976,9 @@ Bool_t RooWorkspace::makeDir()
   TString title= Form("TDirectory representation of RooWorkspace %s",GetName()) ;
   _dir = new WSDir(GetName(),title.Data(),this) ;
 
-  TIterator* iter = componentIterator() ;
+  TIter iter = componentIterator() ;
   RooAbsArg* darg ;
-  while((darg=(RooAbsArg*)iter->Next())) {
+  while((darg=(RooAbsArg*)iter.Next())) {
     if (darg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(darg) ;
     }
@@ -2680,19 +2670,19 @@ void RooWorkspace::Streamer(TBuffer &R__b)
      // Reinstate clients here
 
 
-     for (auto iterx : extClients) {
+     for (auto &iterx : extClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientList.Add(client);
        }
      }
 
-     for (auto iterx : extValueClients) {
+     for (auto &iterx : extValueClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientListValue.Add(client);
        }
      }
 
-     for (auto iterx : extShapeClients) {
+     for (auto &iterx : extShapeClients) {
        for (auto client : iterx.second) {
          iterx.first->_clientListShape.Add(client);
        }
@@ -3102,7 +3092,7 @@ void RooWorkspace::exportObj(TObject* wobj)
   }
 
   // Declare correctly typed reference to object in CINT in the namespace associated with this workspace
-  string cintExpr = Form("namespace %s { %s& %s = *(%s *)0x%lx ; }",_exportNSName.c_str(),wobj->IsA()->GetName(),wobj->GetName(),wobj->IsA()->GetName(),(ULong_t)wobj) ;
+  string cintExpr = Form("namespace %s { %s& %s = *(%s *)0x%zx ; }",_exportNSName.c_str(),wobj->IsA()->GetName(),wobj->GetName(),wobj->IsA()->GetName(),(size_t)wobj) ;
   gROOT->ProcessLine(cintExpr.c_str()) ;
 }
 
@@ -3162,7 +3152,7 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
    _genObjects.RecursiveRemove(removedObj);
    _studyMods.RecursiveRemove(removedObj);
 
-   for(auto c : _namedSets) {
+   for(auto &c : _namedSets) {
       c.second.RecursiveRemove(removedObj);
    }
 

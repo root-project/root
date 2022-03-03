@@ -1,9 +1,9 @@
 #include <ROOT/RConcurrentHashColl.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/TRWSpinLock.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RSha256.hxx>
 
+#include <memory>
 #include <set>
 
 namespace ROOT {

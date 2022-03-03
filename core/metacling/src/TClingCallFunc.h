@@ -190,7 +190,7 @@ public:
                               int nargs = 0,
                               void* ret = 0);
    void Exec(void* address, TInterpreterValue* interpVal = 0);
-   long ExecInt(void* address);
+   Longptr_t ExecInt(void* address);
    long long ExecInt64(void* address);
    double ExecDouble(void* address);
    TClingMethodInfo* FactoryMethod() const;
@@ -226,26 +226,26 @@ public:
    void SetArg(double arg);
    void SetArg(long long arg);
    void SetArg(unsigned long long arg);
-   void SetArgArray(long* argArr, int narg);
+   void SetArgArray(Longptr_t* argArr, int narg);
    void SetArgs(const char* args);
    void SetFunc(const TClingClassInfo* info, const char* method,
-                const char* arglist, long* poffset);
+                const char* arglist, Longptr_t* poffset);
    void SetFunc(const TClingClassInfo* info, const char* method,
-                const char* arglist, bool objectIsConst, long* poffset);
+                const char* arglist, bool objectIsConst, Longptr_t* poffset);
    void SetFunc(const TClingMethodInfo* info);
    void SetFuncProto(const TClingClassInfo* info, const char* method,
-                     const char* proto, long* poffset,
+                     const char* proto, Longptr_t* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void SetFuncProto(const TClingClassInfo* info, const char* method,
-                     const char* proto, bool objectIsConst, long* poffset,
-                     ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
-   void SetFuncProto(const TClingClassInfo* info, const char* method,
-                     const llvm::SmallVectorImpl<clang::QualType>& proto,
-                     long* poffset,
+                     const char* proto, bool objectIsConst, Longptr_t* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void SetFuncProto(const TClingClassInfo* info, const char* method,
                      const llvm::SmallVectorImpl<clang::QualType>& proto,
-                     bool objectIsConst, long* poffset,
+                     Longptr_t* poffset,
+                     ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void SetFuncProto(const TClingClassInfo* info, const char* method,
+                     const llvm::SmallVectorImpl<clang::QualType>& proto,
+                     bool objectIsConst, Longptr_t* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
 };
 

@@ -13,12 +13,6 @@
 #define ROOT_TVirtualDragManager
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TVirtualDragManager                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 enum EDragType { kDragNone, kDragMove, kDragCopy,
@@ -28,15 +22,15 @@ enum EDragType { kDragNone, kDragMove, kDragCopy,
 class TVirtualDragManager  {
 
 protected:
-   Bool_t         fMoveWaiting;  // kTRUE if source is clicked but not moved
-   Bool_t         fDragging;     // in dragging mode?
-   Bool_t         fDropping;     // drop is in progress
-   Bool_t         fPasting;      // paste action is in progress
-   EDragType      fDragType;     // dragging type
-   TGFrame       *fSource;       // frame being dragged
-   TGFrame       *fFrameUnder;   // frame under drag
-   TGFrame       *fTarget;       // drop target
-   TGFrame       *fPasteFrame;   //
+   Bool_t         fMoveWaiting;  ///< kTRUE if source is clicked but not moved
+   Bool_t         fDragging;     ///< in dragging mode?
+   Bool_t         fDropping;     ///< drop is in progress
+   Bool_t         fPasting;      ///< paste action is in progress
+   EDragType      fDragType;     ///< dragging type
+   TGFrame       *fSource;       ///< frame being dragged
+   TGFrame       *fFrameUnder;   ///< frame under drag
+   TGFrame       *fTarget;       ///< drop target
+   TGFrame       *fPasteFrame;   ///<
 
 protected:
    virtual void  Init();

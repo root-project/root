@@ -127,6 +127,7 @@ TEST_F(BulkApiVariableTest, stdRead)
       ev++;
    }
    ASSERT_EQ(ev, events+1);
+   delete hfile;
 
    sw.Stop();
    printf("TTreeReader: Successful read of all events.\n");

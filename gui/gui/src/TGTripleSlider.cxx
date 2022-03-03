@@ -22,44 +22,78 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TGTripleVSlider and TGTripleHSlider                                  //
-//                                                                      //
-// TripleSlider inherit from DoubleSlider widgets and allow easy        //
-// selection of a min, max and pointer value out of a range.            //
-// The pointer position can be constrained to edges of slider and / or  //
-// can be relative to the slider position.                              //
-//                                                                      //
-// To change the min value press the mouse near to the left / bottom    //
-// edge of the slider.                                                  //
-// To change the max value press the mouse near to the right / top      //
-// edge of the slider.                                                  //
-// To change both values simultaneously press the mouse near to the     //
-// center of the slider.                                                //
-// To change pointer value press the mouse on the pointer and drag it   //
-// to the desired position                                              //
-//                                                                      //
-// Dragging the slider will generate the event:                         //
-// kC_VSLIDER, kSL_POS, slider id, 0  (for vertical slider)             //
-// kC_HSLIDER, kSL_POS, slider id, 0  (for horizontal slider)           //
-//                                                                      //
-// Pressing the mouse will generate the event:                          //
-// kC_VSLIDER, kSL_PRESS, slider id, 0  (for vertical slider)           //
-// kC_HSLIDER, kSL_PRESS, slider id, 0  (for horizontal slider)         //
-//                                                                      //
-// Releasing the mouse will generate the event:                         //
-// kC_VSLIDER, kSL_RELEASE, slider id, 0  (for vertical slider)         //
-// kC_HSLIDER, kSL_RELEASE, slider id, 0  (for horizontal slider)       //
-//                                                                      //
-// Moving the pointer will generate the event:                          //
-// kC_VSLIDER, kSL_POINTER, slider id, 0  (for vertical slider)         //
-// kC_HSLIDER, kSL_POINTER, slider id, 0  (for horizontal slider)       //
-//                                                                      //
-// Use the functions GetMinPosition(), GetMaxPosition() and             //
-// GetPosition() to retrieve the position of the slider.                //
-// Use the function GetPointerPosition() to retrieve the position of    //
-// the pointer                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGTripleVSlider
+    \ingroup guiwidgets
+
+TripleSlider inherit from DoubleSlider widgets and allow easy
+selection of a min, max and pointer value out of a range.
+The pointer position can be constrained to edges of slider and / or
+can be relative to the slider position.
+
+To change the min value press the mouse near to the left / bottom
+edge of the slider.
+To change the max value press the mouse near to the right / top
+edge of the slider.
+To change both values simultaneously press the mouse near to the
+center of the slider.
+To change pointer value press the mouse on the pointer and drag it
+to the desired position
+
+Dragging the slider will generate the event:
+  - kC_VSLIDER, kSL_POS, slider id, 0
+
+Pressing the mouse will generate the event:
+  - kC_VSLIDER, kSL_PRESS, slider id, 0
+
+Releasing the mouse will generate the event:
+  - kC_VSLIDER, kSL_RELEASE, slider id, 0
+
+Moving the pointer will generate the event:
+  - kC_VSLIDER, kSL_POINTER, slider id, 0
+
+Use the functions GetMinPosition(), GetMaxPosition() and
+GetPosition() to retrieve the position of the slider.
+Use the function GetPointerPosition() to retrieve the position of
+the pointer
+
+*/
+
+
+/** \class TGTripleHSlider
+    \ingroup guiwidgets
+TripleSlider inherit from DoubleSlider widgets and allow easy
+selection of a min, max and pointer value out of a range.
+The pointer position can be constrained to edges of slider and / or
+can be relative to the slider position.
+
+To change the min value press the mouse near to the left / bottom
+edge of the slider.
+To change the max value press the mouse near to the right / top
+edge of the slider.
+To change both values simultaneously press the mouse near to the
+center of the slider.
+To change pointer value press the mouse on the pointer and drag it
+to the desired position
+
+Dragging the slider will generate the event:
+  - kC_HSLIDER, kSL_POS, slider id, 0
+
+Pressing the mouse will generate the event:
+  - kC_HSLIDER, kSL_PRESS, slider id, 0
+
+Releasing the mouse will generate the event:
+  - kC_HSLIDER, kSL_RELEASE, slider id, 0
+
+Moving the pointer will generate the event:
+  - kC_HSLIDER, kSL_POINTER, slider id, 0
+
+Use the functions GetMinPosition(), GetMaxPosition() and
+GetPosition() to retrieve the position of the slider.
+Use the function GetPointerPosition() to retrieve the position of
+the pointer
+
+*/
+
 
 #include "TGTripleSlider.h"
 #include "TGPicture.h"

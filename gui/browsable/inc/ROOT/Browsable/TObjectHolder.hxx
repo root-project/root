@@ -30,8 +30,15 @@ protected:
    void *AccessObject() final { return fOwner ? nullptr : fObj; }
    void *TakeObject() final;
    RHolder *DoCopy() const final { return new TObjectHolder(fObj); }
+   void ClearROOTOwnership(TObject *obj);
 public:
-   TObjectHolder(TObject *obj, bool owner = false) { fObj = obj; fOwner = owner; }
+   TObjectHolder(TObject *obj, bool owner = false)
+   {
+      fObj = obj;
+      fOwner = owner;
+      if (fOwner) ClearROOTOwnership(fObj);
+   }
+
    virtual ~TObjectHolder()
    {
       if (fOwner) delete fObj;

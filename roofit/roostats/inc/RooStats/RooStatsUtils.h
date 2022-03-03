@@ -63,7 +63,7 @@ namespace RooStats {
    Double_t AsimovSignificance(Double_t s, Double_t b, Double_t sigma_b = 0.0 ); 
 
    inline void SetParameters(const RooArgSet* desiredVals, RooArgSet* paramsToChange){
-      *paramsToChange=*desiredVals ;
+      paramsToChange->assign(*desiredVals) ;
    }
 
    inline void RemoveConstantParameters(RooArgSet* set){
@@ -148,7 +148,9 @@ namespace RooStats {
    // function returning if the flag to check if the flag to use  NLLOffset is set
    bool IsNLLOffset();
 
-
+   // function that clones a workspace, copying all needed components and discarding all others
+   RooWorkspace* MakeCleanWorkspace(RooWorkspace *oldWS, const char *newName, bool copySnapshots,
+                                    const char *mcname, const char *newmcname);
 
 }
 

@@ -38,6 +38,12 @@ public:
                                             Bool_t) const { return 0; }
 
   Double_t getValV(const RooArgSet* nset=0) const ;
+
+  // If used as regular PDF, it also has to be normalized. If this resolution
+  // model is used in a convolution, return unnormalized value regardless of
+  // specified normalization set.
+  bool selfNormalized() const { return isConvolved() ; }
+
   virtual RooResolutionModel* convolution(RooFormulaVar* basis, RooAbsArg* owner) const ;
   /// Return the convolution variable of the resolution model.
   RooAbsRealLValue& convVar() const {return *x;}
@@ -50,7 +56,7 @@ public:
   Double_t getNorm(const RooArgSet* nset=0) const ;
 
   inline const RooFormulaVar& basis() const { return _basis?*_basis:*identity() ; }
-  Bool_t isConvolved() { return _basis ? kTRUE : kFALSE ; }
+  Bool_t isConvolved() const { return _basis ? true : false ; }
 
   virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
 

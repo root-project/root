@@ -57,7 +57,7 @@ public:
    void                    SetFolder(Bool_t isFolder) { fIsFolder = isFolder; }
    void                    SetKeyObjectName(const char *name) { fKeyObjectName = name; }
    void                    SetKeyClassName(const char *name) { fKeyClassName = name; }
-   void                    SetRemoteAddress(Long_t addr) { fRemoteAddress = addr; }
+   void                    SetRemoteAddress(Longptr_t addr) { fRemoteAddress = addr; }
 
    ClassDef(TRemoteObject,0)  //A remote object
 };

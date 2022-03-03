@@ -27,15 +27,12 @@
 #include <list>
 #include <string>
 
-namespace RooBatchCompute {
-struct RunContext;
-}
-
 typedef RooArgList* pRooArgList ;
 typedef RooLinkedList* pRooLinkedList ;
 
 class RooProdPdf : public RooAbsPdf {
 public:
+
   RooProdPdf() ;
   RooProdPdf(const char *name, const char *title, Double_t cutOff=0);
   RooProdPdf(const char *name, const char *title,
@@ -68,7 +65,6 @@ public:
 
   virtual ExtendMode extendMode() const ;
   virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { return expectedEvents(&nset) ; }
 
   const RooArgList& pdfList() const { return _pdfList ; }
 
@@ -99,11 +95,13 @@ public:
 
   RooArgSet* findPdfNSet(RooAbsPdf& pdf) const ; 
   
+  void writeCacheToStream(std::ostream& os, RooArgSet const* nset) const;
 
 private:
 
   Double_t evaluate() const ;
-  virtual RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  inline bool canComputeBatchWithCuda() const { return true; }
 
   RooAbsReal* makeCondPdfRatioCorr(RooAbsReal& term, const RooArgSet& termNset, const RooArgSet& termImpSet, const char* normRange, const char* refRange) const ;
 
@@ -116,7 +114,7 @@ private:
                         RooLinkedList& impDepList, RooLinkedList& crossDepList,
                         RooLinkedList& intList) const;
   std::string makeRGPPName(const char* pfx, const RooArgSet& term, const RooArgSet& iset, const RooArgSet& nset, const char* isetRangeName) const ;
-  void groupProductTerms(RooLinkedList& groupedTerms, RooArgSet& outerIntDeps,
+  void groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTerms, RooArgSet& outerIntDeps,
                          const RooLinkedList& terms, const RooLinkedList& norms, 
                          const RooLinkedList& imps, const RooLinkedList& ints, const RooLinkedList& cross) const ;
   
@@ -133,10 +131,10 @@ private:
   virtual void setCacheAndTrackHints(RooArgSet&) ;
 
   // The cache object
-  class CacheElem : public RooAbsCacheElement {
+  class CacheElem final : public RooAbsCacheElement {
   public:
     CacheElem() : _isRearranged(kFALSE) { } 
-    virtual ~CacheElem() = default;
+    ~CacheElem() override = default;
     // Payload
     RooArgList _partList ;
     RooArgList _numList ;
@@ -147,13 +145,13 @@ private:
     std::unique_ptr<RooAbsReal> _rearrangedNum{};
     std::unique_ptr<RooAbsReal> _rearrangedDen{};
     // Cache management functions
-    virtual RooArgList containedArgs(Action) ;
-    virtual void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) ;
-  private:
-    CacheElem(const CacheElem&) ;
+    RooArgList containedArgs(Action) override ;
+    void printCompactTreeHook(std::ostream&, const char *, Int_t, Int_t) override ;
+    void writeToStream(std::ostream& os) const ;
   } ;
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
 
+  CacheElem* getCacheElem(RooArgSet const* nset) const ;
   void rearrangeProduct(CacheElem&) const;
   RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
   RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
@@ -169,7 +167,7 @@ private:
 
   Double_t _cutOff ;       //  Cutoff parameter for running product
   RooListProxy _pdfList ;  //  List of PDF components
-  RooLinkedList _pdfNSetList ; // List of PDF component normalization sets
+  std::vector<std::unique_ptr<RooArgSet>> _pdfNSetList ; // List of PDF component normalization sets
   Int_t _extendedIndex ;   //  Index of extended PDF (if any) 
 
   void useDefaultGen(Bool_t flag=kTRUE) { _useDefaultGen = flag ; }
@@ -182,7 +180,7 @@ private:
   
 private:
 
-  ClassDef(RooProdPdf,4) // PDF representing a product of PDFs
+  ClassDef(RooProdPdf,6) // PDF representing a product of PDFs
 };
 
 

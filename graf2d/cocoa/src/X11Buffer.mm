@@ -278,16 +278,19 @@ void DrawBoxXor::Execute()const
    //Noop.
 }
 
+const auto rootToNs = [](Point rp) {
+    return NSPoint{CGFloat(rp.fX), CGFloat(rp.fY)};
+};
+
 //______________________________________________________________________________
 void DrawBoxXor::Execute(CGContextRef ctx)const
 {
-   //
-   assert(ctx != 0 && "Execute, ctx parameter is null");
-
-   CGContextSetRGBStrokeColor(ctx, 0., 0., 0., 1.);
-   CGContextSetLineWidth(ctx, 1.);
-
-   CGContextStrokeRect(ctx, CGRectMake(fP1.fX, fP1.fY, fP2.fX - fP1.fX, fP2.fY - fP1.fY));
+   assert(ctx && "Execute, 'ctx' parameter is nullptr");
+   // XOR window/view is not flipped, thus this mess with coordinates :(
+   const auto height = fP2.fY - fP1.fY; // Presumably, cannot be negative?
+   NSPoint btLeft = [view convertPoint : rootToNs(fP1) toView : nil];
+   btLeft.y -= height;
+   CGContextStrokeRect(ctx, CGRectMake(btLeft.x, btLeft.y, fP2.fX - fP1.fX, height));
 }
 
 //______________________________________________________________________________
@@ -305,9 +308,21 @@ void DrawLineXor::Execute()const
 }
 
 //______________________________________________________________________________
-void DrawLineXor::Execute(CGContextRef)const
+void DrawLineXor::Execute(CGContextRef ctx)const
 {
-   //Noop.
+   assert(ctx && "Execute, invalid (nullptr) parameter 'ctx'");
+
+   // Line's colour and thickness were set elsewhere.
+   NSPoint line[] = {rootToNs(fP1), rootToNs(fP2)};
+   for (auto &point : line) {
+      // From the view's coordinates to window's:
+      point = [view convertPoint : point toView : nil];
+   };
+
+   CGContextBeginPath(ctx);
+   CGContextMoveToPoint(ctx, line[0].x, line[0].y);
+   CGContextAddLineToPoint(ctx, line[1].x, line[1].y);
+   CGContextStrokePath(ctx);
 }
 
 //______________________________________________________________________________
@@ -592,64 +607,37 @@ void CommandBuffer::Flush(Details::CocoaPrivate *impl)
 //______________________________________________________________________________
 void CommandBuffer::FlushXOROps(Details::CocoaPrivate *impl)
 {
-   // The only XOR operations we ever had to support was drawing
-   // lines of a crosshair in a TCanvas. We were using a deprecated
-   // (since 10.14) trick with locking a focus on a view, drawing,
-   // flushing CGContext and then unlocking. This is not working
-   // starting from 10.15. So now the only thing we do - we draw
-   // a crosshair into the special transparent window which is
+   // The only XOR operations we ever had to support were the drawing
+   // of lines for a crosshair in a TCanvas and drawing the histogram's
+   // range when using a fit panel/interactive fitting. In the past
+   // we were using a deprecated (since 10.14) trick with locking
+   // a focus on a view, drawing, flushing CGContext and then unlocking.
+   // This stopped working since 10.15. So now the only thing
+   // we can do is to draw into a special transparent window which is
    // attached on top of the canvas.
-   assert(impl != 0 && "FlushXOROps, impl parameter is null");
+   if (!fXorOps.size())
+      return;
 
-   if (fXorOps.size() < 2) {
-       ClearXOROperations();
-       return;
-   }
+   assert(impl != 0 && "FlushXOROps, impl parameter is null");
 
    NSObject<X11Drawable> * const drawable = impl->GetDrawable(fXorOps.back()->fID);
    assert([drawable isKindOfClass : [QuartzView class]] &&
           "FlushXOROps, drawable must be of type QuartzView");
    QuartzView * const view = (QuartzView *)drawable;
+   for (auto *op : fXorOps)
+       op->setView(view);
    QuartzWindow * const window = view.fQuartzWindow;
-   auto crosshairWindow = [window findCrosshairWindow];
-   if (!crosshairWindow) {
-      ::Warning("FlushXOROps", "No CrosshairWindow found to draw into");
+   auto xorWindow = [window findXorWindow];
+   if (!xorWindow) {
+      ::Warning("FlushXOROps", "No XorDrawingWindow found to draw into");
        ClearXOROperations();
        return;
    }
 
-   for (auto *candidateOp : fXorOps) {
-       if (!dynamic_cast<DrawLineXor *>(candidateOp)) {
-           NSLog(@"XOR mode supports DrawLine only, unexpected operation was found");
-           ClearXOROperations();
-           return;
-       }
-   }
-
-   // If size is > 2, we take the last two operations.
-   DrawLineXor *line1 = static_cast<DrawLineXor *>(*(fXorOps.end() - 2));
-   DrawLineXor *line2 = static_cast<DrawLineXor *>(fXorOps.back());
-
-   auto rootToNs = [](Point rp) {
-      return NSPoint{CGFloat(rp.fX), CGFloat(rp.fY)};
-   };
-
-   NSPoint cross[] = {rootToNs(line1->start()), rootToNs(line1->end()),
-                      rootToNs(line2->start()), rootToNs(line2->end())};
-
-   for (auto &point : cross) {
-      // From the view's coordinates to window's:
-      point = [view convertPoint : point toView : nil];
-   }
-
-   CrosshairView *cv = (CrosshairView *)crosshairWindow.contentView;
-   cv.start1 = cross[0];
-   cv.end1 = cross[1];
-   cv.start2 = cross[2];
-   cv.end2 = cross[3];
+   XorDrawingView *cv = (XorDrawingView *)xorWindow.contentView;
+   [cv setXorOperations: fXorOps]; // Pass the ownership of those objects.
+   fXorOps.clear(); // A view will free the memory.
    [cv setNeedsDisplay : YES];
-
-   ClearXOROperations();
 }
 
 //______________________________________________________________________________

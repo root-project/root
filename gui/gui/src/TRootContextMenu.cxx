@@ -9,22 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootContextMenu                                                     //
-//                                                                      //
-// This class provides an interface to context sensitive popup menus.   //
-// These menus pop up when the user hits the right mouse button, and    //
-// are destroyed when the menu pops downs.                              //
-// The picture below shows a canvas with a pop-up menu.                 //
-//                                                                      //
-//Begin_Html <img src="gif/hsumMenu.gif"> End_Html                      //
-//                                                                      //
-// The picture below shows a canvas with a pop-up menu and a dialog box.//
-//                                                                      //
-//Begin_Html <img src="gif/hsumDialog.gif"> End_Html                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootContextMenu
+    \ingroup guiwidgets
+
+This class provides an interface to context sensitive popup menus.
+These menus pop up when the user hits the right mouse button, and
+are destroyed when the menu pops downs.
+The picture below shows a canvas with a pop-up menu.
+
+*/
+
 
 #include "TRootContextMenu.h"
 #include "TROOT.h"
@@ -500,16 +495,13 @@ void TRootContextMenu::Dialog(TObject *object, TFunction *function)
                        !strncmp(basictype, "int", 3)  ||
                        !strncmp(basictype, "long", 4) ||
                        !strncmp(basictype, "short", 5)) {
-               Long_t ldefval;
+               Longptr_t ldefval;
                m->GetterMethod()->Execute(object, "", ldefval);
-               snprintf(val,256, "%li", ldefval);
+               snprintf(val, 256, "%zi", (size_t)ldefval);
             }
 
             // Find out whether we have options ...
-
-            TList *opt;
-            // coverity[returned_pointer]: keep for later use
-            if ((opt = m->GetOptions())) {
+            if (m->GetOptions()) {
                Warning("Dialog", "option menu not yet implemented");
 #if 0
                TMotifOptionMenu *o= new TMotifOptionMenu(argname);
@@ -699,7 +691,7 @@ void TRootContextMenu::OnlineHelp()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle context menu messages.
 
-Bool_t TRootContextMenu::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TRootContextMenu::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    TObjectSpy savedPad;
    if (GetContextMenu()->GetSelectedPad()) {

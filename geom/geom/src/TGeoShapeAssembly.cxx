@@ -20,7 +20,7 @@
 #include "TMath.h"
 
 /** \class TGeoShapeAssembly
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
 The shape encapsulating an assembly (union) of volumes.
 Automatically created by TGeoVolumeAssembly class

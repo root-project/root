@@ -126,7 +126,7 @@ void TDatabasePDG::BuildPdgMap() const
    TIter next(fParticleList);
    TParticlePDG *p;
    while ((p = (TParticlePDG*)next())) {
-      fPdgMap->Add((Long_t)p->PdgCode(), (Long_t)p);
+      fPdgMap->Add((Long64_t)p->PdgCode(), (Long64_t)p);
    }
 }
 
@@ -160,7 +160,7 @@ TParticlePDG* TDatabasePDG::AddParticle(const char *name, const char *title,
                                      TrackingCode);
    fParticleList->Add(p);
    if (fPdgMap)
-      fPdgMap->Add((Long_t)PDGcode, (Long_t)p);
+      fPdgMap->Add((Long64_t)PDGcode, (Long64_t)p);
 
    TParticleClassPDG* pclass = GetParticleClass(ParticleClass);
 
@@ -234,7 +234,7 @@ TParticlePDG *TDatabasePDG::GetParticle(Int_t PDGcode) const
    if (fParticleList == 0)  ((TDatabasePDG*)this)->ReadPDGTable();
    if (fPdgMap       == 0)  BuildPdgMap();
 
-   return (TParticlePDG*) (Long_t)fPdgMap->GetValue((Long_t)PDGcode);
+   return (TParticlePDG *)fPdgMap->GetValue((Long64_t)PDGcode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -19,7 +19,7 @@
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::RFrameTitle
+/** \class RFrameTitle
 \ingroup GrafROOT7
 \brief A title for the RFrame.
 \author Sergey Linev <s.linev@gsi.de>
@@ -31,14 +31,17 @@ welcome!
 class RFrameTitle final : public RDrawable {
 
    std::string fText;                                           ///< title to display
-   RAttrText fAttrText{this, "text"};                           ///<! title text attributes
-   RAttrValue<RPadLength> fMargin{this, "margin", 0.02_normal}; ///<! title margin
-   RAttrValue<RPadLength> fHeight{this, "height", 0.05_normal}; ///<! title height
 
 protected:
+
    bool IsFrameRequired() const final { return true; }
 
 public:
+
+   RAttrText text{this, "text", 0.07};                         ///<! title text attributes
+   RAttrValue<RPadLength> margin{this, "margin", 0.02_normal}; ///<! title margin to frame
+   RAttrValue<RPadLength> height{this, "height", 0.05_normal}; ///<! title height
+
    RFrameTitle() : RDrawable("title") {}
 
    RFrameTitle(const std::string &txt) : RFrameTitle() { fText = txt; }
@@ -49,28 +52,6 @@ public:
       return *this;
    }
    const std::string &GetText() const { return fText; }
-
-   RFrameTitle &SetMargin(const RPadLength &pos)
-   {
-      fMargin = pos;
-      return *this;
-   }
-   RPadLength GetMargin() const { return fMargin; }
-
-   RFrameTitle &SetHeight(const RPadLength &pos)
-   {
-      fHeight = pos;
-      return *this;
-   }
-   RPadLength GetHeight() const { return fHeight; }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RFrameTitle &SetAttrText(const RAttrText &attr)
-   {
-      fAttrText = attr;
-      return *this;
-   }
-   RAttrText &AttrText() { return fAttrText; }
 };
 
 } // namespace Experimental

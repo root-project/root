@@ -11,7 +11,7 @@
 
 #include <ROOT/REveGeomViewer.hxx>
 
-#include <ROOT/REveUtil.hxx> // EveLog()
+#include <ROOT/REveUtil.hxx> // REveLog()
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RWebWindow.hxx>
 
@@ -90,6 +90,9 @@ void ROOT::Experimental::REveGeomViewer::Show(const RWebDisplayArgs &args, bool 
    if (!GetShowHierarchy()) user_args = "{ nobrowser: true }";
    fWebWindow->SetUserArgs(user_args);
 
+   if (args.GetWidgetKind().empty())
+      const_cast<RWebDisplayArgs *>(&args)->SetWidgetKind("REveGeomViewer");
+
    if ((fWebWindow->NumConnections(true) == 0) || always_start_new_browser)
       fWebWindow->Show(args);
    else
@@ -125,7 +128,7 @@ std::vector<int> ROOT::Experimental::REveGeomViewer::GetStackFromJson(const std:
                else res = *stack;
       delete stack;
    } else {
-      R__LOG_ERROR(EveLog()) << "Fail convert " << json << " into vector<int>";
+      R__LOG_ERROR(REveLog()) << "Fail convert " << json << " into vector<int>";
    }
 
    return res;
@@ -141,7 +144,7 @@ void ROOT::Experimental::REveGeomViewer::SendGeometry(unsigned connid)
 
    auto &json = fDesc.GetDrawJson();
 
-   R__LOG_DEBUG(0, EveLog()) << "Produce geometry JSON len: " << json.length();
+   R__LOG_DEBUG(0, REveLog()) << "Produce geometry JSON len: " << json.length();
 
    fWebWindow->Send(connid, json);
 }

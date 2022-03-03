@@ -36,7 +36,7 @@ namespace HistFactory {
 
     virtual void Print(std::ostream& = std::cout);
     virtual void writeToFile(const std::string& FileName,
-			     const std::string& Directory);
+              const std::string& Directory);
 
 
   };

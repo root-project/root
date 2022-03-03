@@ -23,7 +23,7 @@ namespace ROOT {
   namespace Math {
 
 
-    // forward declaretions of Lorentz Vectors and type defs definitions
+    // forward declarations of Lorentz Vectors and type defs definitions
 
     template<class CoordSystem> class LorentzVector;
 
@@ -38,6 +38,10 @@ namespace ROOT {
 
     /**
        LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in double precision with metric (-,-,-,+)
+
+       To use it add the line `#include <Vector4D.h>`
+
+       See the documentation on the LorentzVector page.
     */
     typedef LorentzVector<PxPyPzE4D<double> > XYZTVector;
     // for consistency
@@ -45,23 +49,39 @@ namespace ROOT {
 
 
     /**
-     LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+)
+       LorentzVector based on x,y,x,t (or px,py,pz,E) coordinates in float precision with metric (-,-,-,+)
+
+       To use it add the line `#include <Vector4D.h>`
+
+       See the documentation on the LorentzVector page.
     */
     typedef LorentzVector< PxPyPzE4D <float> > XYZTVectorF;
 
 
     /**
        LorentzVector based on the x, y, z,  and Mass in double precision
+
+       To use it add the line `#include <Vector4D.h>`
+
+       See the documentation on the LorentzVector page.
     */
     typedef LorentzVector<PxPyPzM4D<double> > PxPyPzMVector;
 
     /**
        LorentzVector based on the cylindrical coordinates Pt, eta, phi and E (rho, eta, phi, t) in double precision
+
+       To use it add the line `#include <Vector4D.h>`
+
+       See the documentation on the LorentzVector page.
     */
     typedef LorentzVector<PtEtaPhiE4D<double> > PtEtaPhiEVector;
 
     /**
        LorentzVector based on the cylindrical coordinates pt, eta, phi and Mass in double precision
+
+       To use it add the line `#include <Vector4D.h>`
+
+       See the documentation on the LorentzVector page.
     */
     typedef LorentzVector<PtEtaPhiM4D<double> > PtEtaPhiMVector;
 

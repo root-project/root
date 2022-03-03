@@ -299,7 +299,9 @@ public:
     phi_iterator_impl() = default;
 
     // Allow conversion between instantiations where valid.
-    template <typename PHINodeU, typename BBIteratorU>
+    template <typename PHINodeU, typename BBIteratorU,
+              typename = typename std::enable_if<
+                  std::is_convertible<PHINodeU *, PHINodeT *>::value>::type>
     phi_iterator_impl(const phi_iterator_impl<PHINodeU, BBIteratorU> &Arg)
         : PN(Arg.PN) {}
 

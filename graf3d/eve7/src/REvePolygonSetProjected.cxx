@@ -20,6 +20,8 @@
 
 #include <cassert>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 
 namespace

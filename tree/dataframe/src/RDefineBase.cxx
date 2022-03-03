@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h" // Long64_t
@@ -18,25 +19,25 @@
 #include <atomic>
 
 using ROOT::Detail::RDF::RDefineBase;
-namespace RDFInternal = ROOT::Internal::RDF;
+namespace RDFInternal = ROOT::Internal::RDF; // redundant (already present in the header), but Windows needs it
 
-unsigned int RDefineBase::GetNextID()
+RDefineBase::RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RColumnRegister &colRegister,
+                         ROOT::Detail::RDF::RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columnNames,
+                         const std::string &variationName)
+   : fName(name), fType(type), fLastCheckedEntry(lm.GetNSlots() * RDFInternal::CacheLineStep<Long64_t>(), -1),
+     fColRegister(colRegister), fLoopManager(&lm), fColumnNames(columnNames), fIsDefine(columnNames.size()),
+     fVariationDeps(fColRegister.GetVariationDeps(fColumnNames)), fVariation(variationName)
 {
-   static std::atomic_uint id(0U);
-   return ++id;
-}
-
-RDefineBase::RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                         const RDFInternal::RBookedDefines &defines,
-                         const std::map<std::string, std::vector<void *>> &DSValuePtrs, ROOT::RDF::RDataSource *ds)
-   : fName(name), fType(type), fNSlots(nSlots),
-     fLastCheckedEntry(fNSlots * RDFInternal::CacheLineStep<Long64_t>(), -1), fDefines(defines),
-     fIsInitialized(nSlots, false), fDSValuePtrs(DSValuePtrs), fDataSource(ds)
-{
+   const auto nColumns = fColumnNames.size();
+   for (auto i = 0u; i < nColumns; ++i) {
+      fIsDefine[i] = fColRegister.HasName(fColumnNames[i]);
+      if (fVariation != "nominal" && fIsDefine[i])
+         fColRegister.GetColumns().at(fColumnNames[i])->MakeVariations({fVariation});
+   }
 }
 
 // pin vtable. Work around cling JIT issue.
-RDefineBase::~RDefineBase() {}
+RDefineBase::~RDefineBase() { fLoopManager->Deregister(this); }
 
 std::string RDefineBase::GetName() const
 {

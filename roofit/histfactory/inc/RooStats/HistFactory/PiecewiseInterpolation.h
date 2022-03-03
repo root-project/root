@@ -37,6 +37,11 @@ public:
   PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name = 0);
   virtual TObject* clone(const char* newname) const { return new PiecewiseInterpolation(*this, newname); }
 
+  /// Return pointer to the nominal hist function.
+  const RooAbsReal* nominalHist() const {
+    return &_nominal.arg();
+  }
+
   //  virtual Double_t defaultErrorLevel() const ;
 
   //  void printMetaArgs(std::ostream& os) const ;
@@ -44,6 +49,7 @@ public:
   const RooArgList& lowList() const { return _lowSet ; }
   const RooArgList& highList() const { return _highSet ; }
   const RooArgList& paramList() const { return _paramSet ; }
+  const std::vector<int>&  interpolationCodes() const { return _interpCode; }
 
   //virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
   Bool_t setBinIntegrator(RooArgSet& allVars) ;
@@ -53,12 +59,12 @@ public:
 
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
 
-  void setInterpCode(RooAbsReal& param, int code);
+  void setInterpCode(RooAbsReal& param, int code, bool silent=false);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
   virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
+  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ;
   virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const ;
 
 protected:
@@ -66,33 +72,34 @@ protected:
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    virtual ~CacheElem() {} ; 
-    virtual RooArgList containedArgs(Action) { 
-      RooArgList ret(_funcIntList) ; 
-      ret.add(_lowIntList); 
+    virtual ~CacheElem() {} ;
+    virtual RooArgList containedArgs(Action) {
+      RooArgList ret(_funcIntList) ;
+      ret.add(_lowIntList);
       ret.add(_highIntList);
-      return ret ; 
+      return ret ;
     }
     RooArgList _funcIntList ;
     RooArgList _lowIntList ;
     RooArgList _highIntList ;
     // will want std::vector<RooRealVar*> for low and high also
   } ;
-  mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
+  mutable RooObjCacheManager _normIntMgr ; ///<! The integration cache manager
 
-  RooRealProxy _nominal;           // The nominal value
-  RooArgList   _ownedList ;       // List of owned components
-  RooListProxy _lowSet ;            // Low-side variation
-  RooListProxy _highSet ;            // High-side varaition
-  RooListProxy _paramSet ;            // interpolation parameters
-  RooListProxy _normSet ;            // interpolation parameters
-  Bool_t _positiveDefinite; // protect against negative and 0 bins.
+  RooRealProxy _nominal;           ///< The nominal value
+  RooArgList   _ownedList ;        ///< List of owned components
+  RooListProxy _lowSet ;           ///< Low-side variation
+  RooListProxy _highSet ;          ///< High-side variation
+  RooListProxy _paramSet ;         ///< interpolation parameters
+  RooListProxy _normSet ;          ///< interpolation parameters
+  Bool_t _positiveDefinite;        ///< protect against negative and 0 bins.
 
   std::vector<int> _interpCode;
 
   Double_t evaluate() const;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
 
-  ClassDef(PiecewiseInterpolation,3) // Sum of RooAbsReal objects
+  ClassDef(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };
 
 #endif

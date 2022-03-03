@@ -14,8 +14,6 @@ sap.ui.define(['sap/ui/core/Component',
    return Controller.extend("rootui5.eve7.controller.Main", {
       onInit: function () {
 
-         console.log('MAIN CONTROLLER INIT');
-
          this.mgr = new EveManager();
 
          var conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
@@ -59,16 +57,20 @@ sap.ui.define(['sap/ui/core/Component',
 
       viewItemPressed: function (elem, oEvent) {
          var item = oEvent.getSource();
-         console.log('item pressed', item.getText(), elem);
+         // console.log('item pressed', item.getText(), elem);
 
          var name = item.getText();
-         if (name.indexOf(" ")>0) name = name.substr(0, name.indexOf(" "));
-
+         if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
          // FIXME: one need better way to deliver parameters to the selected view
-         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind };
+         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
 
          var oRouter = UIComponent.getRouterFor(this);
-         oRouter.navTo("View", { viewName: name });
+         if (name == "Table")
+            oRouter.navTo("Table", { viewName: name });
+         else if (name == "Lego")
+            oRouter.navTo("Lego", { viewName: name });
+         else
+            oRouter.navTo("View", { viewName: name });
       },
 
       updateViewers: function(loading_done) {
@@ -82,7 +84,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
          if (staged.length == 0) return;
 
-         console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
+         // console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
 
          if (staged.length > 1) {
             var vMenu = this.getView().byId("menuViewId");
@@ -109,16 +111,15 @@ sap.ui.define(['sap/ui/core/Component',
             var vtype = "rootui5.eve7.view.GL";
             if (elem.fName === "Table")
                vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
-            else
-               elem.view_kind = (n==0) ? "3D" : "2D"; // FIXME: should be property of GL view
-
+            else if (elem.fName === "Lego")
+               vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
 
             var oOwnerComponent = Component.getOwnerComponentFor(this.getView());
             var view = oOwnerComponent.runAsOwner(function() {
                return new sap.ui.xmlview({
                   id: viewid,
                   viewName: vtype,
-                  viewData: { mgr: main.mgr, eveViewerId: elem.fElementId, kind: elem.view_kind },
+                  viewData: { mgr: main.mgr, eveViewerId: elem.fElementId },
                   layoutData: oLd
                });
             });
@@ -138,7 +139,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       onEveManagerInit: function() {
-         console.log("manager updated");
+         // console.log("manager updated");
          this.UpdateCommandsButtons(this.mgr.commands);
          this.updateViewers();
       },
@@ -233,7 +234,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       loadLog: function () {
          let oFT = sap.ui.getCore().byId("EveConsoleText");
-         oFT.setHtmlText(JSROOT.EVE.console.txt);
+         oFT.setHtmlText(JSROOT.EVE.console.txt.replace(/\n/g, "<p>"));
       },
 
       showUserURL : function(oEvent) {

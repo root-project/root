@@ -51,7 +51,7 @@
 #include "RooArgList.h"
 #include "RooSentinel.h"
 #include "RooMsgService.h"
-#include "ROOT/RMakeUnique.hxx"
+#include "RooConstVar.h"
 #include "strlcpy.h"
 
 #include <iostream>
@@ -154,10 +154,10 @@ RooArgSet::RooArgSet() :
 /// Constructor from a RooArgList. If the list contains multiple
 /// objects with the same name, only the first is store in the set.
 /// Warning messages will be printed for dropped items.
-RooArgSet::RooArgSet(const RooArgList& list) :
-  RooAbsCollection(list.GetName())
+RooArgSet::RooArgSet(const RooAbsCollection& coll) :
+  RooAbsCollection(coll.GetName())
 {
-  add(list,kTRUE) ; // verbose to catch duplicate errors
+  add(coll,true) ; // verbose to catch duplicate errors
   TRACE_CREATE
 }
 
@@ -245,52 +245,6 @@ RooArgSet::~RooArgSet()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add contents of a RooArgList to the set.
-void RooArgSet::processArg(const RooArgList& list) {
-  add(list);
-  if (_name.Length() == 0)
-    _name = list.GetName();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add element to non-owning set. The operation will fail if
-/// a similarly named object already exists in the set, or
-/// the set is specified to own its elements. Eventual error messages
-/// can be suppressed with the silent flag
-
-Bool_t RooArgSet::add(const RooAbsArg& var, Bool_t silent) 
-{
-  return checkForDup(var,silent)? kFALSE : RooAbsCollection::add(var,silent) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add element to an owning set. The operation will fail if
-/// a similarly named object already exists in the set, or
-/// the set is not specified to own its elements. Eventual error messages
-/// can be suppressed with the silent flag
-
-Bool_t RooArgSet::addOwned(RooAbsArg& var, Bool_t silent)
-{
-  return checkForDup(var,silent)? kFALSE : RooAbsCollection::addOwned(var,silent) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add clone of specified element to an owning set. If sucessful, the
-/// set will own the clone, not the original. The operation will fail if
-/// a similarly named object already exists in the set, or
-/// the set is not specified to own its elements. Eventual error messages
-/// can be suppressed with the silent flag
-
-RooAbsArg* RooArgSet::addClone(const RooAbsArg& var, Bool_t silent) 
-{
-  return checkForDup(var,silent)? 0 : RooAbsCollection::addClone(var,silent) ;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get reference to an element using its name. Named element must exist in set.
@@ -692,3 +646,6 @@ Bool_t RooArgSet::isInRange(const char* rangeSpec)
   delete iter ;
   return kFALSE ;
 }
+
+
+void RooArgSet::processArg(double value) { processArg(RooFit::RooConst(value)); }

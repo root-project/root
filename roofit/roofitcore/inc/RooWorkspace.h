@@ -24,8 +24,8 @@
 #include "TUUID.h"
 #include <map>
 #include <list>
+#include <memory>
 #include <string>
-#include "ROOT/RMakeUnique.hxx"
 
 class TClass ;
 class RooAbsPdf ;
@@ -92,6 +92,9 @@ public:
   Bool_t saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues=kFALSE) ;
   Bool_t loadSnapshot(const char* name) ;  
   const RooArgSet* getSnapshot(const char* name) const ;
+
+  // Retrieve list of parameter snapshots
+  RooLinkedList getSnapshots(){ return this->_snapshots; }
 
   void merge(const RooWorkspace& /*other*/) {} ;
 
@@ -245,6 +248,7 @@ public:
  private:
     friend class RooAbsArg;
     friend class RooAbsPdf;
+    friend class RooConstraintSum;
     Bool_t defineSetInternal(const char *name, const RooArgSet &aset);
 
     Bool_t isValidCPPID(const char *name);

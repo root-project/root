@@ -9,11 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBldEditor - the property editor                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGuiBldEditor
+    \ingroup guibuilder
+
+The property editor
+
+*/
+
 
 #include "TGuiBldEditor.h"
 #include "TRootGuiBuilder.h"
@@ -404,7 +406,7 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
    if (fBorderFrame) fBorderFrame->ChangeSelected(fSelected);
    if (fGeomFrame) fGeomFrame->ChangeSelected(fSelected);
 
-   Emit("ChangeSelected(TGFrame*)", (long)fSelected);
+   Emit("ChangeSelected(TGFrame*)", (Longptr_t)fSelected);
 
    MapRaised();
 }
@@ -414,7 +416,7 @@ void TGuiBldEditor::ChangeSelected(TGFrame *frame)
 
 void TGuiBldEditor::UpdateSelected(TGFrame *frame)
 {
-   Emit("UpdateSelected(TGFrame*)", (long)frame);
+   Emit("UpdateSelected(TGFrame*)", (Longptr_t)frame);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -489,8 +491,8 @@ void TGuiBldEditor::Reset()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Popup dialog to set layout of editted frame off. If layout is on, all
-/// the elements in the frame get layouted automatically.
+/// Popup dialog to set layout of edited frame off. If layout is on, all
+/// the elements in the frame get laid out automatically.
 
 void TGuiBldEditor::SwitchLayout()
 {

@@ -10,46 +10,81 @@
  *************************************************************************/
 
 /** \class  TGeoXtru
-\ingroup Geometry_classes
-  An extrusion with fixed outline shape in x-y and a sequence
-of z extents (segments).  The overall scale of the outline scales
-linearly between z points and the center can have an x-y offset.
+\ingroup Shapes_classes
+A TGeoXtru shape is represented by the extrusion of an arbitrary
+polygon with fixed outline between several Z sections. Each Z section is
+a scaled version of the same "blueprint" polygon. Different global XY
+translations are allowed from section to section. Corresponding polygon
+vertices from consecutive sections are connected.
 
-Based on the initial implementation of R. Hatcher
+An extruded polygon can be created using the constructor:
 
-### Creation of TGeoXtru shape
+~~~ {.cpp}
+TGeoXtru::TGeoXtru(Int_t nplanes);
+~~~
 
-A TGeoXtru represents a polygonal extrusion. It is defined by the:
-1. 'Blueprint' of the arbitrary polygon representing any Z section. This
-   is an arbitrary polygon (convex or not) defined by the X/Y positions of
-   its vertices.
-1. A sequence of Z sections ordered on the Z axis. Each section defines the
-  'actual' parameters of the polygon at a given Z. The sections may be
-   translated with respect to the blueprint and/or scaled. The TGeoXtru
-  segment in between 2 Z sections is a solid represented by the linear
-  extrusion between the 2 polygons. Two consecutive sections may be defined
-  at same Z position.
+  - `nplanes:  `number of Z sections (minimum 2)
 
-1. `TGeoXtru *xtru = TGeoXtru(Int_t nz);`
+Begin_Macro
+{
+   new TGeoManager("xtru", "poza12");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeXtru("XTRU",med,4);
+   TGeoXtru *xtru = (TGeoXtru*)vol->GetShape();
+   Double_t x[8] = {-30,-30,30,30,15,15,-15,-15};
+   Double_t y[8] = {-30,30,30,-30,-30,15,15,-30};
+   xtru->DefinePolygon(8,x,y);
+   xtru->DefineSection(0,-40, -20., 10., 1.5);
+   xtru->DefineSection(1, 10, 0., 0., 0.5);
+   xtru->DefineSection(2, 10, 0., 0., 0.7);
+   xtru->DefineSection(3, 40, 10., 20., 0.9);
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 
-   where nz=number of Z planes
+The lists of X and Y positions for all vertices have to be provided for
+the "blueprint" polygon:
 
-2. `Double_t x[nvertices]; // array of X positions of blueprint polygon vertices`
+~~~{.cpp}
+TGeoXtru::DefinePolygon (Int_t nvertices, Double_t *xv,
+Double_t *yv);
+~~~
 
-   `Double_t y[nvertices]; // array of Y positions of blueprint polygon vertices`
+  - `nvertices:  `number of vertices of the polygon
+  - `xv,yv:  `arrays of X and Y coordinates for polygon vertices
 
-3. `xtru->DefinePolygon(nvertices,x,y);`
+The method creates an object of the class **`TGeoPolygon`** for which
+the convexity is automatically determined . The polygon is decomposed
+into convex polygons if needed.
 
-4. `DefineSection(0, z0, x0, y0, scale0); // Z position, offset and scale for first section`
+Next step is to define the Z positions for each section plane as well as
+the XY offset and scaling for the corresponding polygons.
 
-   `DefineSection(1, z1, x1, y1, scale1); // -''- second section`
-   `....`
-   `DefineSection(nz-1, zn, xn, yn, scalen); // parameters for last section`
+~~~{.cpp}
+TGeoXtru::DefineSection(Int_t snum,Double_t zsection,Double_t x0,
+Double_t y0, Double_t scale);
+~~~
 
-#### NOTES
-Currently navigation functionality not fully implemented (only Contains()).
-Decomposition in concave polygons not implemented - drawing in solid mode
-within x3d produces incorrect end-faces
+  - `snum: `Z section index (0, nplanes-1). The section with
+    `snum = nplanes-1` must be defined last and triggers the computation
+    of the bounding box for the whole shape
+  - `zsection: `Z position of section `snum`. Sections must be defined
+    in increasing order of Z (e.g. `snum=0` correspond to the minimum Z
+    and `snum=nplanes-1` to the maximum one).
+  - `x0,y0: `offset of section `snum` with respect to the local shape
+    reference frame `T`
+  - `scale: `factor that multiplies the X/Y coordinates of each vertex
+    of the polygon at section `snum`:
+  - `x[ivert] = x0 + scale*xv[ivert]`
+  - `y[ivert] = y0 + scale*yv[ivert]`
 */
 
 #include "TGeoXtru.h"
@@ -555,7 +590,6 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
    Double_t stepmax = step;
    if (stepmax>TGeoShape::Big()) stepmax = TGeoShape::Big();
    Double_t snext = 0.;
-   Double_t dist = TGeoShape::Big();
    Int_t i, iv;
    Double_t pt[3];
    memcpy(pt,point,3*sizeof(Double_t));
@@ -593,7 +627,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
    }
    // Check if the bounding box is missed by the track
    if (!TGeoBBox::Contains(pt)) {
-      dist = TGeoBBox::DistFromOutside(pt,dir,3);
+      Double_t dist = TGeoBBox::DistFromOutside(pt,dir,3);
       if (dist>stepmax) return TGeoShape::Big();
       if (dist>1E-6) dist-=1E-6; // decrease snext to make sure we do not cross the xtru
       else dist = 0;
@@ -613,7 +647,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
       // loop lateral planes to see if we cross something
       xtru->SetIz(iz);
       for (iv=0; iv<fNvert; iv++) {
-         dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
+         Double_t dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
          if (dist<stepmax) {
             xtru->SetSeg(iv);
             if (convex) return (snext+dist);
@@ -631,7 +665,7 @@ Double_t TGeoXtru::DistFromOutside(const Double_t *point, const Double_t *dir, I
       xtru->SetIz(iz);
       if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) xtru->SetIz(-1);
       for (iv=0; iv<fNvert; iv++) {
-         dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
+         Double_t dist = DistToPlane(pt,dir,iz,iv,stepmax,kFALSE);
          if (dist<stepmax) {
             // HIT
             xtru->SetSeg(iv);
@@ -874,8 +908,7 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
    Int_t c = GetBasicColor();
 
    Int_t i,j;
-   Int_t indx, indx2, k;
-   indx = indx2 = 0;
+   Int_t indx = 0, indx2, k;
    for (i=0; i<nz; i++) {
       // loop Z planes
       indx2 = i*nvert;
@@ -936,11 +969,9 @@ void TGeoXtru::SetSegsAndPols(TBuffer3D &buff) const
 Double_t TGeoXtru::SafetyToSector(const Double_t *point, Int_t iz, Double_t safmin, Bool_t in)
 {
    ThreadData_t& td = GetThreadData();
-   Double_t safz = TGeoShape::Big();
-   Double_t saf1, saf2;
+   Double_t saf1, saf2, safz, safe;
    Bool_t in1, in2;
    Int_t iseg;
-   Double_t safe = TGeoShape::Big();
    // segment-break case
    if (TGeoShape::IsSameWithinTolerance(fZ[iz],fZ[iz+1])) {
       safz = TMath::Abs(point[2]-fZ[iz]);

@@ -28,17 +28,17 @@ class THnSparse;
 class TF1;
 
 class THn: public THnBase {
-private:
-   THn(const THn&); // Not implemented
-   THn& operator=(const THn&); // Not implemented
 
 protected:
    void AllocCoordBuf() const;
    void InitStorage(Int_t* nbins, Int_t chunkSize);
 
-   THn(): fCoordBuf() {}
+   THn() = default;
    THn(const char* name, const char* title, Int_t dim, const Int_t* nbins,
        const Double_t* xmin, const Double_t* xmax);
+
+   THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+       const std::vector<std::vector<double>> &xbins);
 
 public:
    virtual ~THn();
@@ -57,18 +57,20 @@ public:
       return GetArray().GetBin(idx);
    }
    Long64_t GetBin(const Double_t* x) const {
-      if (!fCoordBuf) AllocCoordBuf();
+      if (fCoordBuf.empty())
+         AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
          fCoordBuf[d] = GetAxis(d)->FindFixBin(x[d]);
       }
-      return GetArray().GetBin(fCoordBuf);
+      return GetArray().GetBin(fCoordBuf.data());
    }
    Long64_t GetBin(const char* name[]) const {
-      if (!fCoordBuf) AllocCoordBuf();
+      if (fCoordBuf.empty())
+         AllocCoordBuf();
       for (Int_t d = 0; d < fNdimensions; ++d) {
          fCoordBuf[d] = GetAxis(d)->FindBin(name[d]);
       }
-      return GetArray().GetBin(fCoordBuf);
+      return GetArray().GetBin(fCoordBuf.data());
    }
 
    Long64_t GetBin(const Int_t* idx, Bool_t /*allocate*/ = kTRUE) {
@@ -81,9 +83,8 @@ public:
       return const_cast<const THn*>(this)->GetBin(name);
    }
 
+   /// Increment the bin content of "bin" by "w", return the bin index.
    void FillBin(Long64_t bin, Double_t w) {
-      // Increment the bin content of "bin" by "w",
-      // return the bin index.
       GetArray().AddAt(bin, w);
       if (GetCalculateErrors()) {
          fSumw2.AddAt(bin, w * w);
@@ -91,21 +92,21 @@ public:
       FillBinBase(w);
    }
 
+   /// Forwards to THnBase::SetBinContent().
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    void SetBinContent(const Int_t* idx, Double_t v) {
-      // Forwards to THnBase::SetBinContent().
-      // Non-virtual, CINT-compatible replacement of a using declaration.
       THnBase::SetBinContent(idx, v);
    }
-    void SetBinContent(Long64_t bin, Double_t v) {
+   void SetBinContent(Long64_t bin, Double_t v) {
       GetArray().SetAsDouble(bin, v);
    }
    void SetBinError2(Long64_t bin, Double_t e2) {
       if (!GetCalculateErrors()) Sumw2();
       fSumw2.At(bin) = e2;
    }
+   /// Forwards to THnBase::SetBinContent().
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
-      // Forwards to THnBase::SetBinContent().
-      // Non-virtual, CINT-compatible replacement of a using declaration.
       THnBase::AddBinContent(idx, v);
    }
    void AddBinContent(Long64_t bin, Double_t v = 1.) {
@@ -114,13 +115,13 @@ public:
    void AddBinError2(Long64_t bin, Double_t e2) {
       fSumw2.At(bin) += e2;
    }
+   /// Forwards to THnBase::GetBinContent() overload.
+   /// Non-virtual, CINT-compatible replacement of a using declaration.
    Double_t GetBinContent(const Int_t *idx) const {
-      // Forwards to THnBase::GetBinContent() overload.
-      // Non-virtual, CINT-compatible replacement of a using declaration.
       return THnBase::GetBinContent(idx);
    }
+   /// Get the content of bin, and set its index if idx is != 0.
    Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const {
-      // Get the content of bin, and set its index if idx is != 0.
       if (idx) {
          const TNDArray& arr = GetArray();
          Long64_t prevCellSize = arr.GetNbins();
@@ -141,26 +142,23 @@ public:
 
    void Sumw2();
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
    TH1D*      Projection(Int_t xDim, Option_t* option = "") const {
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(xDim, option);
    }
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
    TH2D*      Projection(Int_t yDim, Int_t xDim,
                          Option_t* option = "") const {
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(yDim, xDim, option);
    }
 
+   /// Forwards to THnBase::Projection().
+   /// Non-virtual, as a CINT-compatible replacement of a using declaration.
    TH3D*      Projection(Int_t xDim, Int_t yDim, Int_t zDim,
                          Option_t* option = "") const {
-      // Forwards to THnBase::Projection().
-      // Non-virtual, as a CINT-compatible replacement of a using
-      // declaration.
       return THnBase::Projection(xDim, yDim, zDim, option);
    }
 
@@ -180,11 +178,10 @@ public:
 
 protected:
    TNDArrayT<Double_t> fSumw2; // bin error, lazy allocation happens in TNDArrayT
-   mutable Int_t* fCoordBuf; //! Temporary buffer
+   mutable std::vector<Int_t> fCoordBuf; //! Temporary buffer
 
    ClassDef(THn, 1); //Base class for multi-dimensional histogram
 };
-
 
 
 //______________________________________________________________________________
@@ -197,7 +194,7 @@ protected:
  what the format for the bin content is. The actual storage is delegated to
  TNDArrayT<T>.
 
- Typedefs exist for template parematers with ROOT's generic types:
+ Typedefs exist for template parameters with ROOT's generic types:
 
  Templated name   |     Typedef   |    Bin content type
  -----------------|---------------|--------------------
@@ -210,7 +207,7 @@ protected:
 
  We recommend to use THnC wherever possible, and to map its value space
  of 256 possible values to e.g. float values outside the class. This saves an
- enourmous amount of memory. Only if more than 256 values need to be
+ enormous amount of memory. Only if more than 256 values need to be
  distinguished should e.g. THnS or even THnF be chosen.
 
  Implementation detail: the derived, templated class is kept extremely small
@@ -229,12 +226,18 @@ public:
    THn(name, title, dim, nbins, xmin, xmax),
    fArray(dim, nbins, true)  {}
 
+   THnT(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+        const std::vector<std::vector<double>> &xbins)
+      : THn(name, title, dim, nbins, xbins), fArray(dim, nbins, true)
+   {
+   }
+
    const TNDArray& GetArray() const { return fArray; }
    TNDArray& GetArray() { return fArray; }
 
 protected:
-   TNDArrayT<T> fArray; // bin content
-   ClassDef(THnT, 1); // multi-dimensional histogram with templated storage
+   TNDArrayT<T> fArray; ///< Bin content
+   ClassDef(THnT, 1);   ///< Multi-dimensional histogram with templated storage
 };
 
 typedef THnT<Float_t>  THnF;

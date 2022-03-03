@@ -21,37 +21,67 @@
 #include "TMath.h"
 
 /** \class TGeoHype
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
-Hyperboloid class defined by 5 parameters. Bounded by:
-  - Two z planes at z=+/-dz
-  - Inner and outer lateral surfaces. These represent the surfaces
-    described by the revolution of 2 hyperbolas about the Z axis:
-     r^2 - (t*z)^2 = a^2
+A hyperboloid is represented as a solid limited by two planes
+perpendicular to the Z axis (top and bottom planes) and two hyperbolic
+surfaces of revolution about Z axis (inner and outer surfaces). The
+class describing hyperboloids is TGeoHype has 5 input parameters:
 
-  - r = distance between hyperbola and Z axis at coordinate z
-  - t = tangent of the stereo angle (angle made by hyperbola
-        asymptotic lines and Z axis). t=0 means cylindrical surface.
-  - a = distance between hyperbola and Z axis at z=0
+~~~ {.cpp}
+TGeoHype(Double_t rin,Double_t stin,Double_t rout,
+Double_t stout,Double_t dz);
+~~~
 
-The inner hyperbolic surface is described by:
-    r^2 - (tin*z)^2 = rin^2
-  - absence of the inner surface (filled hyperboloid can be forced
-    by rin=0 and sin=0
-The outer hyperbolic surface is described by:
-    r^2 - (tout*z)^2 = rout^2
-TGeoHype parameters: dz[cm], rin[cm], sin[deg], rout[cm], sout[deg].
-MANDATORY conditions:
+Begin_Macro
+{
+   TCanvas *c = new TCanvas("c", "c",0,0,600,600);
+   new TGeoManager("hype", "hyperboloid");
+   TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
+   TGeoMedium *med = new TGeoMedium("MED",1,mat);
+   TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
+   gGeoManager->SetTopVolume(top);
+   TGeoVolume *vol = gGeoManager->MakeHype("HYPE",med,10, 45 ,20,45,40);
+   TGeoHype *hype = (TGeoHype*)vol->GetShape();
+   top->AddNode(vol,1);
+   gGeoManager->CloseGeometry();
+   gGeoManager->SetNsegments(80);
+   top->Draw();
+   TView *view = gPad->GetView();
+   view->ShowAxis();
+}
+End_Macro
 
-  - rin < rout
-  - rout > 0
-  - rin^2 + (tin*dz)^2 > rout^2 + (tout*dz)^2
+The hyperbolic surface equation is taken in the form:
 
-SUPPORTED CASES:
+~~~{.cpp}
+r2 - z2tan2() = r2min
+~~~
 
-  - rin = 0, tin != 0     => inner surface conical
-  - tin=0 AND/OR tout=0   => corresponding surface(s) cylindrical
-    e.g. tin=0 AND tout=0 => shape becomes a tube with: rmin,rmax,dz
+-   `r,z:` cylindrical coordinates for a point on the surface
+-   `:` stereo angle between the hyperbola asymptotic lines and Z axis
+-   `r2min:` minimum distance between hyperbola and Z axis (at `z=0`)
+
+The input parameters represent:
+
+-   `rin, stin:` minimum radius and tangent of stereo angle for inner
+    surface
+-   `rout, stout:` minimum radius and tangent of stereo angle for outer
+    surface
+-   `dz:` half length in Z (bounding planes positions at `+/-dz`)
+
+The following conditions are mandatory in order to avoid intersections
+between the inner and outer hyperbolic surfaces in the range `+/-dz`:
+
+-   `rin<rout`
+-   `rout>0`
+-   `rin2 + dz2*stin2 > rout2 + dz2*stout2`
+
+Particular cases:
+
+-   `rin=0, stin0:` the inner surface is conical
+-   `stin=0 / stout=0:` cylindrical surface(s)
+
 */
 
 ClassImp(TGeoHype);
@@ -268,12 +298,11 @@ Double_t TGeoHype::DistFromOutside(const Double_t *point, const Double_t *dir, I
    // find distance to shape
    // Do Z
    Double_t xi, yi, zi;
-   Double_t sz = TGeoShape::Big();
    if (TMath::Abs(point[2])>=fDz) {
       // We might find Z plane crossing
       if ((point[2]*dir[2]) < 0) {
          // Compute distance to Z (always positive)
-         sz = (TMath::Abs(point[2])-fDz)/TMath::Abs(dir[2]);
+         Double_t sz = (TMath::Abs(point[2])-fDz)/TMath::Abs(dir[2]);
          // Extrapolate
          xi = point[0]+sz*dir[0];
          yi = point[1]+sz*dir[1];
@@ -421,17 +450,16 @@ void TGeoHype::GetBoundingCylinder(Double_t *param) const
 
 TGeoShape *TGeoHype::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
-   if (!TestShapeBit(kGeoRunTimeShape)) return 0;
-   Double_t dz;
+   if (!TestShapeBit(kGeoRunTimeShape)) return nullptr;
+   Double_t dz = fDz;
    Double_t zmin,zmax;
-   dz = fDz;
-   if (fDz<0) {
+   if (fDz < 0) {
       mother->GetAxisRange(3,zmin,zmax);
-      if (zmax<0) return 0;
-      dz=zmax;
+      if (zmax<0) return nullptr;
+      dz = zmax;
    } else {
       Error("GetMakeRuntimeShape", "Shape %s does not have negative Z range", GetName());
-      return 0;
+      return nullptr;
    }
    TGeoShape *hype = new TGeoHype(GetName(), dz, fRmax, fStOut, fRmin, fStIn);
    return hype;

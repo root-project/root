@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootHelpDialog                                                      //
-//                                                                      //
-// A TRootHelpDialog is used to display help text (or any text in a     //
-// dialog window). There is on OK button to popdown the dialog.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootHelpDialog
+    \ingroup guiwidgets
+
+A TRootHelpDialog is used to display help text (or any text in a
+dialog window). There is on OK button to popdown the dialog.
+
+*/
+
 
 #include "TRootHelpDialog.h"
 #include "TGButton.h"
@@ -99,7 +100,7 @@ void TRootHelpDialog::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process OK button.
 
-Bool_t TRootHelpDialog::ProcessMessage(Long_t msg, Long_t, Long_t)
+Bool_t TRootHelpDialog::ProcessMessage(Longptr_t msg, Longptr_t, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

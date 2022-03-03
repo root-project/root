@@ -148,17 +148,6 @@
 #   define UTMP_NO_ADDR
 #endif
 
-#if (defined(R__AIX) && !defined(_AIX43)) || \
-    (defined(R__SUNGCC3) && !defined(__arch64__))
-#   define USE_SIZE_T
-#elif defined(R__GLIBC) || defined(R__FBSD) || \
-      (defined(R__SUNGCC3) && defined(__arch64__)) || \
-      defined(R__OBSD) || defined(MAC_OS_X_VERSION_10_4) || \
-      (defined(R__AIX) && defined(_AIX43)) || \
-      (defined(R__SOLARIS) && defined(_SOCKLEN_T))
-#   define USE_SOCKLEN_T
-#endif
-
 #if defined(R__LYNXOS)
 extern "C" {
    extern int putenv(const char *);
@@ -214,7 +203,6 @@ extern "C" {
 
 // FPE handling includes
 #if (defined(R__LINUX) && !defined(R__WINGCC))
-#include <fpu_control.h>
 #include <fenv.h>
 #include <sys/prctl.h>    // for prctl() function used in StackTrace()
 #endif
@@ -686,7 +674,7 @@ void TUnixSystem::SetDisplay()
                char hbuf[NI_MAXHOST + 4];
                if (getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD) == 0) {
                   assert( strlen(hbuf) < NI_MAXHOST );
-                  strcat(hbuf, ":0.0");
+                  strlcat(hbuf, ":0.0", sizeof(hbuf));
                   Setenv("DISPLAY", hbuf);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           hbuf);
@@ -2945,7 +2933,7 @@ Bool_t TUnixSystem::DispatchTimers(Bool_t mode)
 
    fInsideNotify = kTRUE;
 
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
+   TListIter it(fTimers);
    TTimer *t;
    Bool_t  timedout = kFALSE;
 
@@ -3074,13 +3062,7 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 TInetAddress TUnixSystem::GetSockName(int sock)
 {
    struct sockaddr addr;
-#if defined(USE_SIZE_T)
-   size_t len = sizeof(addr);
-#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
-#else
-   int len = sizeof(addr);
-#endif
 
    TInetAddress ia;
    if (getsockname(sock, &addr, &len) == -1) {
@@ -3110,13 +3092,7 @@ TInetAddress TUnixSystem::GetSockName(int sock)
 TInetAddress TUnixSystem::GetPeerName(int sock)
 {
    struct sockaddr addr;
-#if defined(USE_SIZE_T)
-   size_t len = sizeof(addr);
-#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
-#else
-   int len = sizeof(addr);
-#endif
 
    TInetAddress ia;
    if (getpeername(sock, &addr, &len) == -1) {
@@ -3483,13 +3459,7 @@ int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
 {
    if (sock < 0) return -1;
 
-#if defined(USE_SOCKLEN_T) || defined(_AIX43)
    socklen_t optlen = sizeof(*val);
-#elif defined(USE_SIZE_T)
-   size_t optlen = sizeof(*val);
-#else
-   int optlen = sizeof(*val);
-#endif
 
    switch (opt) {
    case kSendBuffer:
@@ -4243,7 +4213,7 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
               sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
-   strcpy(unserver.sun_path, sockpath);
+   strlcpy(unserver.sun_path, sockpath, sizeof(unserver.sun_path));
 
    // Open socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -4455,7 +4425,7 @@ int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
               sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
-   strcpy(unserver.sun_path, sockpath);
+   strlcpy(unserver.sun_path, sockpath, sizeof(unserver.sun_path));
 
    // Create socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {

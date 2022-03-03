@@ -1,0 +1,67 @@
+{
+    "RooGaussian": {
+        "type": "Gaussian",
+        "proxies": {
+            "x": "x",
+            "mean": "mean",
+            "sigma": "sigma"
+        }
+    },
+    "RooPoisson": {
+        "type": "Poisson",
+        "proxies": {
+            "x": "x",
+            "mean": "mean"
+        }
+    },
+    "RooExponential": {
+        "type": "Exponential",
+        "proxies": {
+            "x": "x",
+            "c": "c"
+        }
+    },    
+    "RooProduct": {
+        "type": "prod",
+        "proxies": {
+            "compRSet": "factors",
+            "compCSet": "factors"
+        }
+    },
+    "RooProdPdf": {
+        "type": "pdfprod",
+        "proxies": {
+            "pdfs": "factors"
+        }
+    },
+    "ParamHistFunc": {
+        "type": "paramhist",
+        "proxies": {
+            "dataVars": "observables",
+            "paramSet": "parameters"
+        }
+    },
+    "RooAddPdf": {
+        "type": "pdfsum",
+        "proxies": {
+            "refCoefNorm": "coefnormset",
+            "pdfs": "summands",
+            "coefficients": "coefficients"
+        }
+    },
+    "RooAddition": {
+        "type": "sum",
+        "proxies": {
+            "set": "summands"
+        }
+    },    
+    "RooArgusBG": {
+        "type": "ARGUS",
+        "proxies": {
+            "m": "mass",
+            "m0": "resonance",
+            "c": "slope",
+            "p": "power"
+        }
+    }
+}

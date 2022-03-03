@@ -12,13 +12,6 @@
 #ifndef ROOT_TGInputDialog
 #define ROOT_TGInputDialog
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// Input Dialog Widget                                                   //
-//                                                                       //
-// An Input dialog box                                                   //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -29,12 +22,12 @@ class TGTextButton;
 class TGInputDialog : public TGTransientFrame {
 
 private:
-   TGLabel          *fLabel{nullptr};   // text entry label
-   TGTextEntry      *fTE{nullptr};      // text entry widget
-   TGTextButton     *fOk{nullptr};      // ok button
-   TGTextButton     *fCancel{nullptr};  // cancel button
-   char             *fRetStr{nullptr};  // address to store return string
-   char             *fOwnBuf{nullptr};  // internal buffer when return string not specified
+   TGLabel          *fLabel{nullptr};   ///< text entry label
+   TGTextEntry      *fTE{nullptr};      ///< text entry widget
+   TGTextButton     *fOk{nullptr};      ///< ok button
+   TGTextButton     *fCancel{nullptr};  ///< cancel button
+   char             *fRetStr{nullptr};  ///< address to store return string
+   char             *fOwnBuf{nullptr};  ///< internal buffer when return string not specified
 
    TGInputDialog(const TGInputDialog&) = delete;
    TGInputDialog &operator= (const TGInputDialog&) = delete;
@@ -44,7 +37,7 @@ public:
                  const char *prompt = nullptr, const char *defval = nullptr,
                  char *retstr = nullptr, UInt_t options = kVerticalFrame);
    ~TGInputDialog();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
 
    ClassDef(TGInputDialog, 0)  // Simple input dialog
 

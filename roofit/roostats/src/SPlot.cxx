@@ -132,7 +132,7 @@ SPlot::SPlot():
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = NULL;
 
@@ -145,7 +145,7 @@ SPlot::SPlot(const char* name, const char* title):
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = NULL;
 
@@ -160,7 +160,7 @@ SPlot::SPlot(const char* name, const char* title, const RooDataSet &data):
 {
   RooArgList Args;
 
-  fSWeightVars = Args;
+  fSWeightVars.assign(Args);
 
   fSData = (RooDataSet*) &data;
 }
@@ -201,7 +201,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
         const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8):
   TNamed(name, title)
 {
-  if(cloneData == 1) {
+  if(cloneData) {
     fSData = (RooDataSet*) data.Clone(newName);
     SetBit(kOwnData);
   }

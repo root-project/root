@@ -27,7 +27,7 @@
 ClassImp(TF3);
 
 /** \class TF3
-    \ingroup Hist
+    \ingroup Functions
 A 3-Dim function with parameters
 */
 
@@ -246,7 +246,7 @@ Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
       xxmin = x[0];
       yymin = x[1];
       zzmin = x[2];
-      zzmin = function(xx);
+      zzmin = function(x);
    }
    xx[0] = xxmin;
    xx[1] = yymin;
@@ -324,7 +324,7 @@ Double_t TF3::GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z)
 
 void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom, TRandom * rng)
 {
-   //  Check if integral array must be build
+   //  Check if integral array must be built
    Int_t i,j,k,cell;
    Double_t dx   = (fXmax-fXmin)/fNpx;
    Double_t dy   = (fYmax-fYmin)/fNpy;

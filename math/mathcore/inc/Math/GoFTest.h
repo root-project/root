@@ -63,7 +63,7 @@ public:
    GoFTest(UInt_t sample1Size, const Double_t* sample1, UInt_t sample2Size, const Double_t* sample2);
 
    /* Constructor for using only with 1-sample tests with a specified distribution */
-   GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist = kUndefined);
+   GoFTest(UInt_t sampleSize, const Double_t* sample, EDistribution dist = kUndefined, const std::vector<double>  & distParams = {});
 
    /* Templated constructor for using only with 1-sample tests with a user specified distribution */
    template<class Dist>
@@ -119,8 +119,8 @@ public:
    }
 
 
-   /* Sets the distribution for the predefined distribution types  */
-   void SetDistribution(EDistribution dist);
+   /* Sets the distribution for the predefined distribution types and optionally its parameters */
+   void SetDistribution(EDistribution dist, const std::vector<double>  & distParams = {});
 
 
    virtual ~GoFTest();
@@ -182,11 +182,9 @@ private:
    std::unique_ptr<IGenFunction> fCDF;
 
 
-   EDistribution fDist;
-
-   Double_t fMean;
-   Double_t fSigma;
-
+   EDistribution fDist;                /// Type of distribution 
+   std::vector<Double_t> fParams;      /// The distribution parameters (e.g. fParams[0] = mean, fParams[1] = sigma for a Gaussian)
+  
    std::vector<Double_t> fCombinedSamples;
 
    std::vector<std::vector<Double_t> > fSamples;
@@ -214,7 +212,7 @@ private:
 
    void SetSamples(std::vector<const Double_t*> samples, const std::vector<UInt_t> samplesSizes);
 
-   void SetParameters(); // Sets the estimated mean and standard-deviation from the samples
+   void SetParameters(const std::vector<double> & params); // Sets the distribution parameters
 }; // end GoFTest class
 
 

@@ -23,6 +23,9 @@ class RooDataHist;
 
 #include "RooAbsData.h"
 #include "RooDirItem.h"
+
+#include "ROOT/RStringView.hxx"
+
 #include <list>
 
 
@@ -43,26 +46,27 @@ public:
   RooDataSet() ; 
 
   // Empty constructor 
-  RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName=0) ;
+  RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const char* wgtVarName=0) ;
 
   // Universal constructor
-  RooDataSet(const char* name, const char* title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(), 
+  RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg(), 
 	     const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),
 	     const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ; 
 
     // Constructor for subset of existing dataset
-  RooDataSet(const char *name, const char *title, RooDataSet *data, const RooArgSet& vars, 
+  RooDataSet(std::string_view name, std::string_view title, RooDataSet *data, const RooArgSet& vars, 
              const char *cuts=0, const char* wgtVarName=0);
-  RooDataSet(const char *name, const char *title, RooDataSet *data, const RooArgSet& vars,  
+  RooDataSet(std::string_view name, std::string_view title, RooDataSet *data, const RooArgSet& vars,  
 	     const RooFormulaVar& cutVar, const char* wgtVarName=0) ;  
 
 
   // Constructor importing data from external ROOT Tree
-  RooDataSet(const char *name, const char *title, TTree *tree, const RooArgSet& vars,
+  RooDataSet(std::string_view name, std::string_view title, TTree *tree, const RooArgSet& vars,
 	     const char *cuts=0, const char* wgtVarName=0); 
-  RooDataSet(const char *name, const char *title, TTree *tree, const RooArgSet& vars,
+  RooDataSet(std::string_view name, std::string_view title, TTree *tree, const RooArgSet& vars,
 	     const RooFormulaVar& cutVar, const char* wgtVarName=0) ;  
-  
+
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooDataSet)
 
   RooDataSet(RooDataSet const & other, const char* newname=0) ;  
   virtual TObject* Clone(const char* newname = "") const override {
@@ -101,16 +105,16 @@ public:
   virtual Bool_t isNonPoissonWeighted() const override;
 
   virtual Double_t weight() const override;
+  /// Returns a pointer to the weight variable (if set).
+  RooRealVar* weightVar() const { return _wgtVar; }
   virtual Double_t weightSquared() const override;
-  virtual void weightError(Double_t& lo, Double_t& hi,ErrorType etype=SumW2) const override;
-  Double_t weightError(ErrorType etype=SumW2) const override;
+  virtual void weightError(double& lo, double& hi,ErrorType etype=SumW2) const override;
+  double weightError(ErrorType etype=SumW2) const override;
 
   virtual const RooArgSet* get(Int_t index) const override;
   virtual const RooArgSet* get() const override;
 
-  void getBatches(RooBatchCompute::RunContext& evalData,
-      std::size_t first = 0, std::size_t len = std::numeric_limits<std::size_t>::max()) const override;
-  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
+  virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
 
   // Add one ore more rows of data
   virtual void add(const RooArgSet& row, Double_t weight=1.0, Double_t weightError=0) override;
@@ -155,7 +159,7 @@ protected:
   // Cache copy feature is not publicly accessible
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0, 
 	                std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max(), Bool_t copyCache=kTRUE) override;
-  RooDataSet(const char *name, const char *title, RooDataSet *ntuple, 
+  RooDataSet(std::string_view name, std::string_view title, RooDataSet *ntuple, 
 	     const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange, std::size_t nStart, std::size_t nStop, Bool_t copyCache, const char* wgtVarName=0);
   
   RooArgSet addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar) ; 
@@ -170,6 +174,8 @@ private:
 #endif
   unsigned short _errorMsgCount{0}; //! Counter to silence error messages when filling dataset.
   bool _doWeightErrorCheck{true}; //! When adding events with weights, check that weights can actually be stored.
+
+  mutable std::unique_ptr<std::vector<double>> _sumW2Buffer; //! Buffer for sumW2 in case a batch of values is requested.
 
   ClassDefOverride(RooDataSet,2) // Unbinned data set
 };

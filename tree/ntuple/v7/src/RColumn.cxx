@@ -22,18 +22,18 @@
 #include <iostream>
 
 ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model, std::uint32_t index)
-   : fModel(model), fIndex(index), fPageSink(nullptr), fPageSource(nullptr), fHeadPage(), fNElements(0),
-     fCurrentPage(),
-     fColumnIdSource(kInvalidColumnId)
+   : fModel(model), fIndex(index)
 {
 }
 
 ROOT::Experimental::Detail::RColumn::~RColumn()
 {
-   if (!fHeadPage.IsNull())
-      fPageSink->ReleasePage(fHeadPage);
-   if (!fCurrentPage.IsNull())
-      fPageSource->ReleasePage(fCurrentPage);
+   if (!fWritePage[0].IsNull())
+      fPageSink->ReleasePage(fWritePage[0]);
+   if (!fWritePage[1].IsNull())
+      fPageSink->ReleasePage(fWritePage[1]);
+   if (!fReadPage.IsNull())
+      fPageSource->ReleasePage(fReadPage);
    if (fHandleSink)
       fPageSink->DropColumn(fHandleSink);
    if (fHandleSource)
@@ -44,9 +44,14 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
 {
    switch (pageStorage->GetType()) {
    case EPageStorageType::kSink:
-      fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fHeadPage on AddColumn
+      fPageSink = static_cast<RPageSink*>(pageStorage); // the page sink initializes fWritePage on AddColumn
       fHandleSink = fPageSink->AddColumn(fieldId, *this);
-      fHeadPage = fPageSink->ReservePage(fHandleSink);
+      fApproxNElementsPerPage = fPageSink->GetWriteOptions().GetApproxUnzippedPageSize() / fElement->GetSize();
+      if (fApproxNElementsPerPage < 2)
+         throw RException(R__FAIL("page size too small for writing"));
+      // We now have 0 < fApproxNElementsPerPage / 2 < fApproxNElementsPerPage
+      fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
+      fWritePage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
       break;
    case EPageStorageType::kSource:
       fPageSource = static_cast<RPageSource*>(pageStorage);
@@ -61,20 +66,32 @@ void ROOT::Experimental::Detail::RColumn::Connect(DescriptorId_t fieldId, RPageS
 
 void ROOT::Experimental::Detail::RColumn::Flush()
 {
-   if (fHeadPage.GetSize() == 0) return;
+   auto otherIdx = 1 - fWritePageIdx;
+   if (fWritePage[fWritePageIdx].IsEmpty() && fWritePage[otherIdx].IsEmpty())
+      return;
 
-   fPageSink->CommitPage(fHandleSink, fHeadPage);
-   fHeadPage.Reset(fNElements);
+   if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) && !fWritePage[otherIdx].IsEmpty()) {
+      // Small tail page: merge with previously used page; we know that there is enough space in the shadow page
+      void *dst = fWritePage[otherIdx].GrowUnchecked(fWritePage[fWritePageIdx].GetNElements());
+      RColumnElementBase elem(fWritePage[fWritePageIdx].GetBuffer(), fWritePage[fWritePageIdx].GetElementSize());
+      elem.WriteTo(dst, fWritePage[fWritePageIdx].GetNElements());
+      fWritePage[fWritePageIdx].Reset(0);
+      std::swap(fWritePageIdx, otherIdx);
+   }
+
+   R__ASSERT(fWritePage[otherIdx].IsEmpty());
+   fPageSink->CommitPage(fHandleSink, fWritePage[fWritePageIdx]);
+   fWritePage[fWritePageIdx].Reset(fNElements);
 }
 
 void ROOT::Experimental::Detail::RColumn::MapPage(const NTupleSize_t index)
 {
-   fPageSource->ReleasePage(fCurrentPage);
-   fCurrentPage = fPageSource->PopulatePage(fHandleSource, index);
+   fPageSource->ReleasePage(fReadPage);
+   fReadPage = fPageSource->PopulatePage(fHandleSource, index);
 }
 
 void ROOT::Experimental::Detail::RColumn::MapPage(const RClusterIndex &clusterIndex)
 {
-   fPageSource->ReleasePage(fCurrentPage);
-   fCurrentPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
+   fPageSource->ReleasePage(fReadPage);
+   fReadPage = fPageSource->PopulatePage(fHandleSource, clusterIndex);
 }

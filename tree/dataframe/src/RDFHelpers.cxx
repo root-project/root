@@ -47,7 +47,7 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    std::vector<RResultHandle> uniqueLoops(s.begin(), s.end());
 
    // Trigger the unique event loops
-   auto run = [](RResultHandle &h) { h.fLoopManager->Run(); };
+   auto run = [](RResultHandle &h) { if (h.fLoopManager) h.fLoopManager->Run(); };
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
       ROOT::TThreadExecutor{}.Foreach(run, uniqueLoops);

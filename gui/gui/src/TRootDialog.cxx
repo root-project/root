@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootDialog                                                          //
-//                                                                      //
-// A TRootDialog is used to prompt for the arguments of an object's     //
-// member function. A TRootDialog is created via the context menu's     //
-// when selecting a member function taking arguments.                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootDialog
+    \ingroup guiwidgets
+
+A TRootDialog is used to prompt for the arguments of an object's
+member function. A TRootDialog is created via the context menu's
+when selecting a member function taking arguments.
+
+*/
+
 
 #include "TRootDialog.h"
 #include "TRootContextMenu.h"
@@ -136,8 +137,8 @@ const char *TRootDialog::GetParameters()
       // if necessary, replace the selected object by it's address
       if (selfobjpos == nparam-1) {
          if (params.Length()) params += ",";
-         param = TString::Format("(TObject*)0x%lx",
-               (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
+         param = TString::Format("(TObject*)0x%zx",
+               (size_t)fMenu->GetContextMenu()->GetSelectedObject());
          params += param;
       }
 
@@ -156,8 +157,8 @@ const char *TRootDialog::GetParameters()
    // if selected object is the last argument, have to insert it here
    if (selfobjpos == nparam) {
       if (params.Length()) params += ",";
-      param = TString::Format("(TObject*)0x%lx",
-            (Long_t)fMenu->GetContextMenu()->GetSelectedObject());
+      param = TString::Format("(TObject*)0x%zx",
+            (size_t)fMenu->GetContextMenu()->GetSelectedObject());
       params += param;
    }
 

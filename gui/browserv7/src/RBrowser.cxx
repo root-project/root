@@ -12,22 +12,17 @@
 
 #include <ROOT/RBrowser.hxx>
 
-#include <ROOT/Browsable/RGroup.hxx>
-#include <ROOT/Browsable/RWrapper.hxx>
-#include <ROOT/Browsable/RProvider.hxx>
-#include <ROOT/Browsable/TObjectHolder.hxx>
 #include <ROOT/Browsable/RSysFile.hxx>
 
 #include <ROOT/RLogger.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RFileDialog.hxx>
+#include <ROOT/RWebWindowsManager.hxx>
 
 #include "RBrowserWidget.hxx"
 
 #include "TString.h"
 #include "TSystem.h"
 #include "TROOT.h"
-#include "TFolder.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
 #include "TRint.h"
@@ -121,10 +116,39 @@ public:
 
 };
 
+class RBrowserCatchedWidget : public RBrowserWidget {
+public:
+
+   std::string fUrl;   // url of catched widget
+   std::string fCatchedKind;  // kind of catched widget
+
+   void Show(const std::string &) override {}
+
+   std::string GetKind() const override { return "catched"; }
+
+   std::string GetUrl() override { return fUrl; }
+
+   std::string GetTitle() override { return fCatchedKind; }
+
+   RBrowserCatchedWidget(const std::string &name, const std::string &url, const std::string &kind) :
+      RBrowserWidget(name),
+      fUrl(url),
+      fCatchedKind(kind)
+   {
+   }
+};
+
 
 /** \class ROOT::Experimental::RBrowser
 \ingroup rbrowser
 \brief Web-based %ROOT file browser
+
+RBrowser requires one of the supported web browsers:
+  - Google Chrome (preferable)
+  - Mozilla Firefox
+
+\image html v7_rbrowser.png
+
 */
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,23 +158,7 @@ RBrowser::RBrowser(bool use_rcanvas)
 {
    SetUseRCanvas(use_rcanvas);
 
-   auto comp = std::make_shared<Browsable::RGroup>("top","Root browser");
-
-   auto seldir = Browsable::RSysFile::ProvideTopEntries(comp);
-
-   std::unique_ptr<Browsable::RHolder> rootfold = std::make_unique<Browsable::TObjectHolder>(gROOT->GetRootFolder(), kFALSE);
-   auto elem_root = Browsable::RProvider::Browse(rootfold);
-   if (elem_root)
-      comp->Add(std::make_shared<Browsable::RWrapper>("root", elem_root));
-
-   std::unique_ptr<Browsable::RHolder> rootfiles = std::make_unique<Browsable::TObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
-   auto elem_files = Browsable::RProvider::Browse(rootfiles);
-   if (elem_files)
-      comp->Add(std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files));
-
-   fBrowsable.SetTopElement(comp);
-
-   fBrowsable.SetWorkingPath(seldir);
+   fBrowsable.CreateDefaultElements();
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -161,6 +169,29 @@ RBrowser::RBrowser(bool use_rcanvas)
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
+
+   fWebWindow->GetManager()->SetShowCallback([this](RWebWindow &win, const RWebDisplayArgs &args) -> bool {
+
+      std::string kind;
+
+      if (args.GetWidgetKind() == "RCanvas")
+         kind = "rcanvas";
+      else if (args.GetWidgetKind() == "TCanvas")
+         kind = "tcanvas";
+      else if (args.GetWidgetKind() == "REveGeomViewer")
+         kind = "geom";
+
+      if (!fWebWindow || !fCatchWindowShow || kind.empty()) return false;
+
+      std::string url = fWebWindow->GetRelativeAddr(win);
+
+      auto widget = AddCatchedWidget(url, kind);
+
+      if (widget && fWebWindow && (fWebWindow->NumConnections() > 0))
+         fWebWindow->Send(0, NewWidgetMsg(widget));
+
+      return widget ? true : false;
+   });
 
    Show();
 
@@ -181,6 +212,7 @@ RBrowser::RBrowser(bool use_rcanvas)
 
 RBrowser::~RBrowser()
 {
+   fWebWindow->GetManager()->SetShowCallback(nullptr);
 }
 
 
@@ -202,6 +234,9 @@ std::string RBrowser::ProcessBrowserRequest(const std::string &msg)
    if (!request)
       return ""s;
 
+   if (request->path.empty() && fWidgets.empty() && fBrowsable.GetWorkingPath().empty())
+      fBrowsable.ClearCache();
+
    return "BREPL:"s + fBrowsable.ProcessRequest(*request.get());
 }
 
@@ -217,11 +252,17 @@ void RBrowser::ProcessSaveFile(const std::string &fname, const std::string &cont
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Process file save command in the editor
+/// Process run macro command in the editor
 
-long RBrowser::ProcessRunMacro(const std::string &file_path)
+void RBrowser::ProcessRunMacro(const std::string &file_path)
 {
-   return gInterpreter->ExecuteMacro(file_path.c_str());
+   if (file_path.rfind(".py") == file_path.length() - 3) {
+      TString exec;
+      exec.Form("TPython::ExecScript(\"%s\");", file_path.c_str());
+      gROOT->ProcessLine(exec.Data());
+   } else {
+      gInterpreter->ExecuteMacro(file_path.c_str());
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -242,6 +283,31 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
    auto elem = fBrowsable.GetSubElement(path);
    if (!elem) return ""s;
 
+   auto dflt_action = elem->GetDefaultAction();
+
+   // special case when canvas is clicked - always start new widget
+   if (dflt_action == Browsable::RElement::kActCanvas) {
+      std::string widget_kind;
+
+      if (elem->IsCapable(Browsable::RElement::kActDraw7))
+         widget_kind = "rcanvas";
+      else
+         widget_kind = "tcanvas";
+
+      std::string name = widget_kind + std::to_string(++fWidgetCnt);
+
+      auto new_widget = RBrowserWidgetProvider::CreateWidgetFor(widget_kind, name, elem);
+
+      if (!new_widget)
+         return ""s;
+
+      new_widget->Show("embed");
+      fWidgets.emplace_back(new_widget);
+      fActiveWidgetName = new_widget->GetName();
+
+      return NewWidgetMsg(new_widget);
+   }
+
    auto widget = GetActiveWidget();
    if (widget && widget->DrawElement(elem, drawingOptions)) {
       widget->SetPath(path);
@@ -254,8 +320,6 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
 
    if (iter != fWidgets.end())
       return "SELECT_WIDGET:"s + (*iter)->GetName();
-
-   auto dflt_action = elem->GetDefaultAction();
 
    // check if object can be drawn in RCanvas even when default action is drawing in TCanvas
    if ((dflt_action == Browsable::RElement::kActDraw6) && GetUseRCanvas() && elem->IsCapable(Browsable::RElement::kActDraw7))
@@ -346,6 +410,35 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
    fActiveWidgetName = name;
 
    return widget;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Add widget catched from external scripts
+
+std::shared_ptr<RBrowserWidget> RBrowser::AddCatchedWidget(const std::string &url, const std::string &kind)
+{
+   if (url.empty()) return nullptr;
+
+   std::string name = "catched"s + std::to_string(++fWidgetCnt);
+
+   auto widget = std::make_shared<RBrowserCatchedWidget>(name, url, kind);
+
+   fWidgets.emplace_back(widget);
+
+   fActiveWidgetName = name;
+
+   return widget;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Create new widget and send init message to the client
+
+void RBrowser::AddInitWidget(const std::string &kind)
+{
+   auto widget = AddWidget(kind);
+   if (widget && fWebWindow && (fWebWindow->NumConnections() > 0))
+      fWebWindow->Send(0, NewWidgetMsg(widget));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -504,8 +597,10 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       if (arr && (arr->size() > 2))
          reply = ProcessDblClick(*arr);
 
-      if (!reply.empty())
-         fWebWindow->Send(connid, reply);
+      if (reply.empty())
+         reply = "NOPE";
+
+      fWebWindow->Send(connid, reply);
 
    } else if (kind == "WIDGET_SELECTED") {
       fActiveWidgetName = msg;
@@ -566,12 +661,34 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
                ProcessSaveFile(editor->fFileName, editor->fContent);
                ProcessRunMacro(editor->fFileName);
             }
-
          }
       }
    } else if (kind == "NEWWIDGET") {
       auto widget = AddWidget(msg);
       if (widget)
          fWebWindow->Send(connid, NewWidgetMsg(widget));
+   } else if (kind == "CDWORKDIR") {
+      auto wrkdir = Browsable::RSysFile::GetWorkingPath();
+      if (fBrowsable.GetWorkingPath() != wrkdir) {
+         fBrowsable.SetWorkingPath(wrkdir);
+      } else {
+         fBrowsable.SetWorkingPath({});
+      }
+      fWebWindow->Send(connid, GetCurrentWorkingDirectory());
    }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set working path in the browser
+
+void RBrowser::SetWorkingPath(const std::string &path)
+{
+   auto p = Browsable::RElement::ParsePath(path);
+   auto elem = fBrowsable.GetSubElement(p);
+   if (elem) {
+      fBrowsable.SetWorkingPath(p);
+      if (fWebWindow && (fWebWindow->NumConnections() > 0))
+         fWebWindow->Send(0, GetCurrentWorkingDirectory());
+   }
+}
+

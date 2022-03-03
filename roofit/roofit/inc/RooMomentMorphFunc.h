@@ -63,7 +63,6 @@ protected:
       {
          _frac.add(flist);
       };
-      void operModeHook(RooAbsArg::OperMode){};
       virtual ~CacheElem();
       virtual RooArgList containedArgs(Action);
       RooAbsReal *_sumFunc;

@@ -55,7 +55,7 @@ sap.ui.define([
          let options = "outline";
          options += ", mouse_click"; // process mouse click events
          // options += " black, ";
-         if (this.controller.kind != "3D") options += ", ortho_camera";
+         if (!this.controller.isEveCameraPerspective()) options += ", ortho_camera";
 
          // TODO: should be specified somehow in XML file
          // MT-RCORE - why have I removed this ???
@@ -94,6 +94,8 @@ sap.ui.define([
 
          this.geo_painter.assignObject(null);
 
+         this.geo_painter.addOrbitControls();
+
          this.geo_painter.prepareObjectDraw(null) // and now start everything
              .then(() => this.onGeoPainterReady(this.geo_painter));
       },
@@ -113,6 +115,7 @@ sap.ui.define([
          painter.eveGLcontroller = this.controller;
 
          /** Handler for single mouse click, provided by basic control, used in GeoPainter */
+         if (painter._controls)
          painter._controls.ProcessSingleClick = function(intersects)
          {
             if (!intersects) return;
@@ -130,9 +133,10 @@ sap.ui.define([
          };
 
          /** Handler of mouse double click - either ignore or reset camera position */
-         if (this.controller.dblclick_action != "Reset")
+         if ((this.controller.dblclick_action != "Reset") && painter._controls)
             painter._controls.processDblClick = function() { }
 
+         if (painter._controls)
          painter._controls.ProcessMouseMove = function(intersects)
          {
             var active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
@@ -198,6 +202,7 @@ sap.ui.define([
          this.geo_painter._effectComposer.setSize( sz.width, sz.height);
          this.geo_painter.fxaa_pass.uniforms[ 'resolution' ].value.set( 1 / sz.width, 1 / sz.height );
 
+         if (this.geo_painter._controls)
          this.geo_painter._controls.contextMenu = this.jsrootOrbitContext.bind(this);
 
          // create only when geo painter is ready

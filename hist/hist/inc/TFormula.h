@@ -87,25 +87,25 @@ class TFormula : public TNamed
 {
 private:
 
-   // All data members are transient apart from the string defining the formula and the parameter values
-
-   TString           fClingInput;           //! input function passed to Cling
-   std::vector<Double_t>  fClingVariables;       //!  cached variables
-   std::vector<Double_t>  fClingParameters;      //  parameter values
-   Bool_t            fReadyToExecute;       //! trasient to force initialization
-   std::atomic<Bool_t>  fClingInitialized;  //!  transient to force re-initialization
-   Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
-   Bool_t            fLazyInitialization = kFALSE;  //! transient flag to control lazy initialization (needed for reading from files)
-   std::unique_ptr<TMethodCall> fMethod; //! pointer to methodcall
-   std::unique_ptr<TMethodCall> fGradMethod; //! pointer to a methodcall
-   TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
-   std::string       fSavedInputFormula;  //! unique name used to defined the function and used in the global map (need to be saved in case of lazy initialization)
+// All data members are transient apart from the string defining the formula and the parameter values
+   TString           fClingInput;                  ///<! Input function passed to Cling
+   std::vector<Double_t>  fClingVariables;         ///<! Cached variables
+   std::vector<Double_t>  fClingParameters;        ///<  Parameter values
+   Bool_t            fReadyToExecute;              ///<! Transient to force initialization
+   std::atomic<Bool_t>  fClingInitialized;         ///<! Transient to force re-initialization
+   Bool_t            fAllParametersSetted;         ///<  Flag to control if all parameters are setted
+   Bool_t            fLazyInitialization = kFALSE; ///<! Transient flag to control lazy initialization (needed for reading from files)
+   std::unique_ptr<TMethodCall> fMethod;           ///<! Pointer to methodcall
+   TString           fClingName;                   ///<! Unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
+   std::string       fSavedInputFormula;           ///<! Unique name used to defined the function and used in the global map (need to be saved in case of lazy initialization)
 
    using CallFuncSignature = TInterpreter::CallFuncIFacePtr_t::Generic_t;
-   std::string       fGradGenerationInput; //! input query to clad to generate a gradient
-   CallFuncSignature fFuncPtr = nullptr; //!  function pointer, owned by the JIT.
-   CallFuncSignature fGradFuncPtr = nullptr; //!  function pointer, owned by the JIT.
-   void *   fLambdaPtr = nullptr;            //!  pointer to the lambda function
+   std::string       fGradGenerationInput;         ///<! Input query to clad to generate a gradient
+   std::string       fHessGenerationInput;         ///<! Input query to clad to generate a hessian
+   CallFuncSignature fFuncPtr = nullptr;           ///<! Function pointer, owned by the JIT.
+   CallFuncSignature fGradFuncPtr = nullptr;       ///<! Function pointer, owned by the JIT.
+   CallFuncSignature fHessFuncPtr = nullptr;       ///<! Function pointer, owned by the JIT.
+   void *   fLambdaPtr = nullptr;                  ///<! Pointer to the lambda function
    static bool       fIsCladRuntimeIncluded;
 
    void     InputFormulaIntoCling();
@@ -125,25 +125,32 @@ private:
    void ReInitializeEvalMethod();
    std::string GetGradientFuncName() const {
       assert(fClingName.Length() && "TFormula is not initialized yet!");
-      return std::string(fClingName.Data()) + "_grad";
+      return std::string(fClingName.Data()) + "_grad_1";
+   }
+   std::string GetHessianFuncName() const {
+      assert(fClingName.Length() && "TFormula is not initialized yet!");
+      return std::string(fClingName.Data()) + "_hessian_1";
    }
    bool HasGradientGenerationFailed() const {
-      return !fGradMethod && !fGradGenerationInput.empty();
+      return !fGradFuncPtr && !fGradGenerationInput.empty();
+   }
+   bool HasHessianGenerationFailed() const {
+      return !fHessFuncPtr && !fHessGenerationInput.empty();
    }
 
 protected:
 
-   std::list<TFormulaFunction>         fFuncs;    //!
-   std::map<TString,TFormulaVariable>  fVars;     //!  list of  variable names
-   std::map<TString,Int_t,TFormulaParamOrder>   fParams;   //|| list of  parameter names
-   std::map<TString,Double_t>          fConsts;   //!
-   std::map<TString,TString>           fFunctionsShortcuts;  //!
-   TString                             fFormula;  // string representing the formula expression
-   Int_t                               fNdim;  //   Dimension - needed for lambda expressions
-   Int_t                               fNpar;  //!  Number of parameter (transient since we save the vector)
-   Int_t                               fNumber;  //!
-   std::vector<TObject*>               fLinearParts;  // vector of linear functions
-   Bool_t                              fVectorized = false;      // whether we should use vectorized or regular variables
+   std::list<TFormulaFunction>         fFuncs;              ///<!
+   std::map<TString,TFormulaVariable>  fVars;               ///<!  List of  variable names
+   std::map<TString,Int_t,TFormulaParamOrder>   fParams;    ///<|| List of  parameter names
+   std::map<TString,Double_t>          fConsts;             ///<!
+   std::map<TString,TString>           fFunctionsShortcuts; ///<!
+   TString                             fFormula;            ///<   String representing the formula expression
+   Int_t                               fNdim;               ///<   Dimension - needed for lambda expressions
+   Int_t                               fNpar;               ///<!  Number of parameter (transient since we save the vector)
+   Int_t                               fNumber;             ///<!
+   std::vector<TObject*>               fLinearParts;        ///<   Vector of linear functions
+   Bool_t                              fVectorized = false; ///<   Whether we should use vectorized or regular variables
    // (we default to false since a lot of functions still cannot be expressed in vectorized form)
 
    static Bool_t IsOperator(const char c);
@@ -169,12 +176,12 @@ protected:
 public:
 
    enum EStatusBits {
-      kNotGlobal     = BIT(10),    // don't store in gROOT->GetListOfFunction (it should be protected)
-      kNormalized    = BIT(14),    // set to true if the TFormula (ex gausn) is normalized
-      kLinear        = BIT(16),    //set to true if the TFormula is for linear fitting
-      kLambda        = BIT(17)     // set to true if TFormula has been build with a lambda
+      kNotGlobal     = BIT(10),    ///< Don't store in gROOT->GetListOfFunction (it should be protected)
+      kNormalized    = BIT(14),    ///< Set to true if the TFormula (ex gausn) is normalized
+      kLinear        = BIT(16),    ///< Set to true if the TFormula is for linear fitting
+      kLambda        = BIT(17)     ///< Set to true if TFormula has been build with a lambda
    };
-   using GradientStorage = std::vector<Double_t>;
+   using CladStorage = std::vector<Double_t>;
 
                   TFormula();
    virtual        ~TFormula();
@@ -200,18 +207,37 @@ public:
    /// \returns true if a gradient was generated and GradientPar can be called.
    bool GenerateGradientPar();
 
+   /// Generate hessian computation routine with respect to the parameters.
+   /// \returns true if a hessian was generated and HessianPar can be called.
+   bool GenerateHessianPar();
+
    /// Compute the gradient employing automatic differentiation.
    ///
    /// \param[in] x - The given variables, if nullptr the already stored
    ///                variables are used.
    /// \param[out] result - The result of the computation wrt each direction.
-   void GradientPar(const Double_t *x, TFormula::GradientStorage& result);
+   void GradientPar(const Double_t *x, TFormula::CladStorage& result);
 
    void GradientPar(const Double_t *x, Double_t *result);
 
+   /// Compute the gradient employing automatic differentiation.
+   ///
+   /// \param[in] x - The given variables, if nullptr the already stored
+   ///                variables are used.
+   /// \param[out] result - The 2D hessian matrix flattened to form a vector
+   ///                      in row-major order.
+   void HessianPar(const Double_t *x, TFormula::CladStorage& result);
+
+   void HessianPar(const Double_t *x, Double_t *result);
+
    // query if TFormula provides gradient computation using AD (CLAD)
    bool HasGeneratedGradient() const {
-      return fGradMethod != nullptr;
+      return fGradFuncPtr != nullptr;
+   }
+
+   // query if TFormula provides hessian computation using AD (CLAD)
+   bool HasGeneratedHessian() const {
+      return fHessFuncPtr != nullptr;
    }
 
    // template <class T>
@@ -225,6 +251,7 @@ public:
 #endif
    TString        GetExpFormula(Option_t *option="") const;
    TString        GetGradientFormula() const;
+   TString        GetHessianFormula() const;
    const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}
    Int_t          GetNpar() const {return fNpar;}

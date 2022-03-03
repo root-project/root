@@ -29,6 +29,7 @@ class RWebDisplayHandle {
    std::string fContent; ///!< page content
 
 protected:
+
    class Creator {
    public:
       virtual std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) = 0;
@@ -40,6 +41,7 @@ protected:
    protected:
       std::string fProg;  ///< browser executable
       std::string fExec;  ///< standard execute line
+      std::string fHeadlessExec; ///< headless execute line
       std::string fBatchExec; ///< batch execute line
 
       void TestProg(const std::string &nexttry, bool check_std_paths = false);
@@ -79,14 +81,18 @@ protected:
 
 public:
 
+   /// constructor
    RWebDisplayHandle(const std::string &url) : fUrl(url) {}
 
-   // required virtual destructor for correct cleanup at the end
+   /// required virtual destructor for correct cleanup at the end
    virtual ~RWebDisplayHandle() = default;
 
+   /// returns url of start web display
    const std::string &GetUrl() const { return fUrl; }
 
+   /// set content
    void SetContent(const std::string &cont) { fContent = cont; }
+   /// get content
    const std::string &GetContent() const { return fContent; }
 
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);

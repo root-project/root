@@ -11,17 +11,18 @@
  *************************************************************************/
 
 /** \class TGeoSphere
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
-Spherical shell class. It takes 6 parameters :
+TGeoSphere are not just balls having internal and external
+radii, but sectors of a sphere having defined theta and phi ranges. The
+TGeoSphere class has the following constructor.
 
-   - spherical shell class. It takes 6 parameters :
-   - inner and outer radius Rmin, Rmax
-   - the theta limits Tmin, Tmax
-   - the phi limits Pmin, Pmax (the sector in phi is considered
-     starting from Pmin to Pmax counter-clockwise
+~~~{.cpp}
+TGeoSphere(Double_t rmin,Double_t rmax,Double_t theta1,
+Double_t theta2,Double_t phi1, Double_t phi2);
+~~~
 
-Begin_Macro(source)
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("sphere", "poza7");
@@ -39,6 +40,12 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
+  - `rmin: ` internal radius of the spherical sector
+  - `rmax:` external radius
+  - `theta1:` starting theta value [0, 180) in degrees
+  - `theta2:` ending theta value (0, 180] in degrees (`theta1<theta2`)
+
 */
 
 #include <iostream>
@@ -653,8 +660,6 @@ Double_t TGeoSphere::DistFromOutside(const Double_t *point, const Double_t *dir,
       Double_t phim = 0.5*(fPhi1+fPhi2);
       Double_t sm = TMath::Sin(phim*TMath::DegToRad());
       Double_t cm = TMath::Cos(phim*TMath::DegToRad());
-      Double_t sfi1=TGeoShape::Big();
-      Double_t sfi2=TGeoShape::Big();
       Double_t s=0;
       Double_t safety, un;
       safety = point[0]*s1-point[1]*c1;
@@ -666,7 +671,7 @@ Double_t TGeoSphere::DistFromOutside(const Double_t *point, const Double_t *dir,
             ptnew[1] = point[1]+s*dir[1];
             ptnew[2] = point[2]+s*dir[2];
             if ((ptnew[1]*cm-ptnew[0]*sm)<=0) {
-               sfi1=s;
+               Double_t sfi1 = s;
                if (IsPointInside(&ptnew[0], kTRUE, kTRUE, kFALSE) && sfi1<snxt) return sfi1;
             }
          }
@@ -680,7 +685,7 @@ Double_t TGeoSphere::DistFromOutside(const Double_t *point, const Double_t *dir,
             ptnew[1] = point[1]+s*dir[1];
             ptnew[2] = point[2]+s*dir[2];
             if ((ptnew[1]*cm-ptnew[0]*sm)>=0) {
-               sfi2=s;
+               Double_t sfi2 = s;
                if (IsPointInside(&ptnew[0], kTRUE, kTRUE, kFALSE) && sfi2<snxt) return sfi2;
             }
          }
@@ -737,7 +742,6 @@ Double_t TGeoSphere::DistFromInside(const Double_t *point, const Double_t *dir, 
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to shape
-   Double_t snxt = TGeoShape::Big();
    if (rzero) {
 //      gGeoManager->SetNormalChecked(1.);
       return fRmax;
@@ -755,16 +759,14 @@ Double_t TGeoSphere::DistFromInside(const Double_t *point, const Double_t *dir, 
          if (rdotn<0) sn1 = DistToSphere(point, dir, fRmin, kFALSE);
       }
    }
-   Double_t sn2 = TGeoShape::Big();
    // Outer sphere
    if (r >= fRmax-TGeoShape::Tolerance()) {
       if (rdotn>=0) return 0.0;
    }
-   sn2 = DistToSphere(point, dir, fRmax, kFALSE, kFALSE);
+   Double_t sn2 = DistToSphere(point, dir, fRmax, kFALSE, kFALSE);
    Double_t sr = TMath::Min(sn1, sn2);
    // check theta conical surfaces
-   sn1 = TGeoShape::Big();
-   sn2 = TGeoShape::Big();
+   sn1 = sn2 = TGeoShape::Big();
    if (TestShapeBit(kGeoThetaSeg)) {
       if (TGeoShape::IsSameWithinTolerance(fTheta1,90)) {
       // surface is a plane
@@ -799,7 +801,7 @@ Double_t TGeoSphere::DistFromInside(const Double_t *point, const Double_t *dir, 
             } else {
                TGeoCone::DistToCone(ptnew, dir, dz, r1, r2, b, delta);
                if (delta>0) {
-                  snxt = -b-delta;
+                  Double_t snxt = -b-delta;
                   znew = ptnew[2]+snxt*dir[2];
                   if (snxt>0 && TMath::Abs(znew)<dz) {
                      if (!TestShapeBit(kGeoPhiSeg)) sn1=snxt;
@@ -864,10 +866,10 @@ Double_t TGeoSphere::DistFromInside(const Double_t *point, const Double_t *dir, 
             } else {
                TGeoCone::DistToCone(ptnew, dir, dz, r1, r2, b, delta);
                if (delta>0) {
-                  snxt = -b-delta;
+                  Double_t snxt = -b-delta;
                   znew = ptnew[2]+snxt*dir[2];
                   if (snxt>0 && TMath::Abs(znew)<dz) {
-                     if (!TestShapeBit(kGeoPhiSeg)) sn2=snxt;
+                     if (!TestShapeBit(kGeoPhiSeg)) sn2 = snxt;
                      else {
                         xnew = ptnew[0]+snxt*dir[0];
                         ynew = ptnew[1]+snxt*dir[1];
@@ -881,7 +883,7 @@ Double_t TGeoSphere::DistFromInside(const Double_t *point, const Double_t *dir, 
                      snxt = -b+delta;
                      znew = ptnew[2]+snxt*dir[2];
                      if (snxt>0 && TMath::Abs(znew)<dz) {
-                        if (!TestShapeBit(kGeoPhiSeg)) sn2=snxt;
+                        if (!TestShapeBit(kGeoPhiSeg)) sn2 = snxt;
                         else {
                            xnew = ptnew[0]+snxt*dir[0];
                            ynew = ptnew[1]+snxt*dir[1];
@@ -909,7 +911,7 @@ Double_t TGeoSphere::DistFromInside(const Double_t *point, const Double_t *dir, 
       Double_t cm = TMath::Cos(phim*TMath::DegToRad());
       sp = TGeoShape::DistToPhiMin(point, dir, s1, c1, s2, c2, sm, cm);
    }
-   snxt = TMath::Min(sr, st);
+   Double_t snxt = TMath::Min(sr, st);
    snxt = TMath::Min(snxt, sp);
    return snxt;
 }
@@ -920,7 +922,6 @@ Double_t TGeoSphere::DistFromInside(const Double_t *point, const Double_t *dir, 
 Double_t TGeoSphere::DistToSphere(const Double_t *point, const Double_t *dir, Double_t rsph, Bool_t check, Bool_t firstcross) const
 {
    if (rsph<=0) return TGeoShape::Big();
-   Double_t s=TGeoShape::Big();
    Double_t r2 = point[0]*point[0]+point[1]*point[1]+point[2]*point[2];
    Double_t b = point[0]*dir[0]+point[1]*dir[1]+point[2]*dir[2];
    Double_t c = r2-rsph*rsph;
@@ -932,6 +933,7 @@ Double_t TGeoSphere::DistToSphere(const Double_t *point, const Double_t *dir, Do
    Double_t pt[3];
    Int_t i;
    d = TMath::Sqrt(d);
+   Double_t s;
    if (in) {
       s=-b+d;
    } else {
@@ -1142,30 +1144,30 @@ TBuffer3D *TGeoSphere::MakeBuffer3D() const
 
 void TGeoSphere::SetSegsAndPols(TBuffer3D & buff) const
 {
-   Bool_t full = kTRUE;
-   if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
-   Int_t ncenter = 1;
-   if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
-   Int_t nup = (fTheta1>0)?0:1;
-   Int_t ndown = (fTheta2<180)?0:1;
+   // Bool_t full = kTRUE;
+   // if (TestShapeBit(kGeoThetaSeg) || TestShapeBit(kGeoPhiSeg)) full = kFALSE;
+   // Int_t ncenter = 1;
+   // if (full || TestShapeBit(kGeoRSeg)) ncenter = 0;
+   Int_t nup = (fTheta1 > 0) ? 0 : 1;
+   Int_t ndown = (fTheta2 < 180) ? 0 : 1;
    // number of different latitudes, excluding 0 and 180 degrees
    Int_t nlat = fNz+1-(nup+ndown);
    // number of different longitudes
    Int_t nlong = fNseg;
    if (TestShapeBit(kGeoPhiSeg)) nlong++;
 
-   Int_t nbPnts = nlat*nlong+nup+ndown+ncenter;
-   if (TestShapeBit(kGeoRSeg)) nbPnts *= 2;
+   // Int_t nbPnts = nlat*nlong+nup+ndown+ncenter;
+   // if (TestShapeBit(kGeoRSeg)) nbPnts *= 2;
 
-   Int_t nbSegs = nlat*fNseg + (nlat-1+nup+ndown)*nlong; // outer sphere
-   if (TestShapeBit(kGeoRSeg)) nbSegs *= 2; // inner sphere
-   if (TestShapeBit(kGeoPhiSeg)) nbSegs += 2*nlat+nup+ndown; // 2 phi planes
-   nbSegs += nlong * (2-nup - ndown);  // connecting cones
+   // Int_t nbSegs = nlat*fNseg + (nlat-1+nup+ndown)*nlong; // outer sphere
+   // if (TestShapeBit(kGeoRSeg)) nbSegs *= 2; // inner sphere
+   // if (TestShapeBit(kGeoPhiSeg)) nbSegs += 2*nlat+nup+ndown; // 2 phi planes
+   // nbSegs += nlong * (2-nup - ndown);  // connecting cones
 
-   Int_t nbPols = fNz*fNseg; // outer
-   if (TestShapeBit(kGeoRSeg)) nbPols *=2;  // inner
-   if (TestShapeBit(kGeoPhiSeg)) nbPols += 2*fNz; // 2 phi planes
-   nbPols += (2-nup-ndown)*fNseg; // connecting
+   // Int_t nbPols = fNz*fNseg; // outer
+   // if (TestShapeBit(kGeoRSeg)) nbPols *=2;  // inner
+   // if (TestShapeBit(kGeoPhiSeg)) nbPols += 2*fNz; // 2 phi planes
+   // nbPols += (2-nup-ndown)*fNseg; // connecting
 
    Int_t c = GetBasicColor();
    Int_t i, j;
@@ -1530,14 +1532,13 @@ Double_t TGeoSphere::Safety(const Double_t *point, Bool_t in) const
       if (fTheta2<180)  saf[3] = r*TMath::Sin((fTheta2-th)*TMath::DegToRad());
    }
    Double_t safphi = TGeoShape::Big();
-   Double_t safe = TGeoShape::Big();
    if (TestShapeBit(kGeoPhiSeg)) safphi = TGeoShape::SafetyPhi(point,in,fPhi1,fPhi2);
    if (in) {
-      safe = saf[TMath::LocMin(4,saf)];
+      Double_t safe = saf[TMath::LocMin(4,saf)];
       return TMath::Min(safe,safphi);
    }
    for (Int_t i=0; i<4; i++) saf[i]=-saf[i];
-   safe = saf[TMath::LocMax(4, saf)];
+   Double_t safe = saf[TMath::LocMax(4, saf)];
    if (TestShapeBit(kGeoPhiSeg)) return TMath::Max(safe, safphi);
    return safe;
 }

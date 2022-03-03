@@ -11,7 +11,7 @@
 
 
 /** \class TGeoMedium
-\ingroup Geometry_classes
+\ingroup Materials_classes
 
 Media are used to store properties related to tracking and which are useful
 only when using geometry with a particle transport MC package (via VMC). One

@@ -42,7 +42,7 @@ See picture in TTree.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default contructor.
+/// Default constructor.
 
 TBasket::TBasket()
 {
@@ -365,7 +365,7 @@ Int_t TBasket::ReadBasketBuffersUncompressedCase()
    // Indicate that this buffer is weird.
    fBufferRef->SetBit(TBufferFile::kNotDecompressed);
 
-   // Usage of this mode assume the existance of only ONE
+   // Usage of this mode assume the existence of only ONE
    // entry in this basket.
    ResetEntryOffset();
    delete [] fDisplacement; fDisplacement = 0;
@@ -458,7 +458,7 @@ void TBasket::ResetEntryOffset()
 /// receiving only a pointer to that buffer (so we shall not
 /// delete that pointer), although we get a new buffer in case
 /// it's not found in the cache.
-/// There is a lot of code duplication but it was necesary to assure
+/// There is a lot of code duplication but it was necessary to assure
 /// the expected behavior when there is no cache.
 
 Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
@@ -675,7 +675,7 @@ AfterBuffer:
       }
    }
    fReadEntryOffset = kTRUE;
-   // Read the array of diplacement if any.
+   // Read the array of displacement if any.
    delete [] fDisplacement;
    fDisplacement = 0;
    if (fBufferRef->Length() != len) {
@@ -821,12 +821,12 @@ void TBasket::WriteReset()
    Int_t curSize = fBufferRef->BufferSize();
    // fBufferLen at this point is already reset, so use indirect measurements
    Int_t curLen = (GetObjlen() + GetKeylen());
-   Long_t newSize = -1;
+   Longptr_t newSize = -1;
    if (curSize > 2*curLen)
    {
-      Long_t curBsize = fBranch->GetBasketSize();
+      Longptr_t curBsize = fBranch->GetBasketSize();
       if (curSize > 2*curBsize ) {
-         Long_t avgSize = (Long_t)(fBranch->GetTotBytes() / (1+fBranch->GetWriteBasket())); // Average number of bytes per basket so far
+         Longptr_t avgSize = (Longptr_t)(fBranch->GetTotBytes() / (1+fBranch->GetWriteBasket())); // Average number of bytes per basket so far
          if (curSize > 2*avgSize) {
             newSize = curBsize;
             if (curLen > newSize) {

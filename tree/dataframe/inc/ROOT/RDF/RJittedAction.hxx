@@ -41,8 +41,9 @@ private:
    std::unique_ptr<RActionBase> fConcreteAction;
 
 public:
-   RJittedAction(RLoopManager &lm);
-   ~RJittedAction() { fLoopManager->Deregister(this); }
+   RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns, const RColumnRegister &colRegister,
+                 const std::vector<std::string> &prevVariations);
+   ~RJittedAction();
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
@@ -61,7 +62,9 @@ public:
    // Helper for RMergeableValue
    std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> GetMergeableValue() const final;
 
-   std::function<void(unsigned int)> GetDataBlockCallback() final;
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final;
+
+   std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final;
 };
 
 } // ns RDF

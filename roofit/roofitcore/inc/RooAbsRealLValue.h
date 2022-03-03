@@ -109,6 +109,7 @@ public:
 
   // Test a value against our fit range
   Bool_t inRange(Double_t value, const char* rangeName, Double_t* clippedValue=0) const;
+  void inRange(std::span<const double> values, std::string const& rangeName, std::vector<bool>& out) const;
   virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
 
   // Constant and Projected flags

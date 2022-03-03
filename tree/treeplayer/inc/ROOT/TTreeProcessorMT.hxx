@@ -20,13 +20,12 @@
 #include "TTreeReader.h"
 #include "TError.h"
 #include "TEntryList.h"
-#include "TFriendElement.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // RFriendInfo
 
 #include <functional>
-#include <utility> // std::pair
+#include <memory>
 #include <vector>
 
 /** \class TTreeView
@@ -48,15 +47,6 @@ the threaded object.
 
 namespace ROOT {
 namespace Internal {
-/// Names, aliases, and file names of a TTree's or TChain's friends
-using NameAlias = std::pair<std::string, std::string>;
-struct FriendInfo {
-   /// Pairs of names and aliases of friend trees/chains
-   std::vector<Internal::NameAlias> fFriendNames;
-   /// Names of the files where each friend is stored. fFriendFileNames[i] is the list of files for friend with
-   /// name fFriendNames[i]
-   std::vector<std::vector<std::string>> fFriendFileNames;
-};
 
 class TTreeView {
 private:
@@ -67,7 +57,7 @@ private:
    std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
 
    void MakeChain(const std::vector<std::string> &treeName, const std::vector<std::string> &fileNames,
-                  const FriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
+                  const TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
                   const std::vector<std::vector<Long64_t>> &friendEntries);
 
 public:
@@ -75,7 +65,7 @@ public:
    // no-op, we don't want to copy the local TChains
    TTreeView(const TTreeView &) {}
    std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeName,
-                                              const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
+                                              const std::vector<std::string> &fileNames, const TreeUtils::RFriendInfo &friendInfo,
                                               const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
                                               const std::vector<std::vector<Long64_t>> &friendEntries);
 };
@@ -87,16 +77,14 @@ private:
    const std::vector<std::string> fTreeNames; ///< TTree names (always same size and ordering as fFileNames)
    /// User-defined selection of entry numbers to be processed, empty if none was provided
    TEntryList fEntryList;
-   const Internal::FriendInfo fFriendInfo;
+   const Internal::TreeUtils::RFriendInfo fFriendInfo;
    ROOT::TThreadExecutor fPool; ///<! Thread pool for processing.
 
    /// Thread-local TreeViews
    // Must be declared after fPool, for IMT to be initialized first!
    ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{TNumSlots{ROOT::GetThreadPoolSize()}};
 
-   Internal::FriendInfo GetFriendInfo(TTree &tree);
    std::vector<std::string> FindTreeNames();
-   static unsigned int fgMaxTasksPerFilePerWorker;
    static unsigned int fgTasksPerWorkerHint;
 
 public:
@@ -108,10 +96,6 @@ public:
 
    void Process(std::function<void(TTreeReader &)> func);
 
-   R__DEPRECATED(6, 26, "Please use SetTasksPerWorkerHint instead. This setting will be ignored.")
-   static void SetMaxTasksPerFilePerWorker(unsigned int m);
-   R__DEPRECATED(6, 26, "Please use SetTasksPerWorkerHint and GetTasksPerWorkerHint instead. This setting is ignored.")
-   static unsigned int GetMaxTasksPerFilePerWorker();
    static void SetTasksPerWorkerHint(unsigned int m);
    static unsigned int GetTasksPerWorkerHint();
 };

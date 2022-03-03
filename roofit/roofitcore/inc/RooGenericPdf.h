@@ -42,6 +42,9 @@ public:
   // Debugging
   void dumpFormula() { formula().dump() ; }
 
+  const char* expression() const { return _formExpr.Data(); }
+  const RooArgList& dependents() const { return _actualVars; }  
+
 protected:
 
   RooFormula& formula() const ;
@@ -50,6 +53,7 @@ protected:
   RooListProxy _actualVars ; 
   virtual Double_t evaluate() const ;
   RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
 
   Bool_t setFormula(const char* formula) ;
 

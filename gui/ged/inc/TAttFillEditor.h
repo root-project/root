@@ -12,13 +12,6 @@
 #ifndef ROOT_TAttFillEditor
 #define ROOT_TAttFillEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttFillEditor                                                      //
-//                                                                      //
-//  Implements GUI for editing fill attributes.                         //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -30,10 +23,10 @@ class TGNumberEntryField;
 class TAttFillEditor : public TGedFrame {
 
 protected:
-   TAttFill            *fAttFill;          // fill attribute object
-   TGColorSelect       *fColorSelect;      // fill color widget
-   TGedPatternSelect   *fPatternSelect;    // fill pattern widget
-   TGHSlider           *fAlpha;            // fill opacity
+   TAttFill            *fAttFill;          ///< fill attribute object
+   TGColorSelect       *fColorSelect;      ///< fill color widget
+   TGedPatternSelect   *fPatternSelect;    ///< fill pattern widget
+   TGHSlider           *fAlpha;            ///< fill opacity
    TGNumberEntryField  *fAlphaField;
 
    virtual void ConnectSignals2Slots();
@@ -47,7 +40,7 @@ public:
 
    virtual void   SetModel(TObject* obj);
    virtual void   DoFillColor(Pixel_t color);
-   virtual void   DoFillAlphaColor(ULong_t p);
+   virtual void   DoFillAlphaColor(ULongptr_t p);
    virtual void   DoFillPattern(Style_t color);
    virtual void   DoAlpha();
    virtual void   DoAlphaField();

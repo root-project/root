@@ -34,6 +34,7 @@
 #include "TList.h"
 #include "TEnv.h"
 #include "TROOT.h"
+#include "TFile.h"
 #include "TClass.h"
 #include "TBufferJSON.h"
 #include "TBase64.h"
@@ -155,6 +156,8 @@ public:
    void DoWhenReady(const std::string &name, const std::string &arg, bool async, CanvasCallback_t callback) final;
 
    bool ProduceBatchOutput(const std::string &fname, int width, int height) final;
+
+   std::string ProduceJSON() final;
 
    void NewDisplay(const std::string &where) final;
 
@@ -410,7 +413,7 @@ void RCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg
       connid = fWindow->GetConnectionId();
    } else {
       // create batch job to execute action
-      connid = fWindow->MakeBatch();
+      // connid = fWindow->MakeBatch();
    }
 
    if (!connid) {
@@ -457,7 +460,30 @@ bool RCanvasPainter::ProduceBatchOutput(const std::string &fname, int width, int
 
    auto snapshot = CreateSnapshot(ctxt);
 
+   auto len = fname.length();
+   if ((len > 4) && ((fname.compare(len-4,4,".json") == 0) || (fname.compare(len-4,4,".JSON") == 0))) {
+      std::ofstream f(fname);
+      if (!f) {
+         R__LOG_ERROR(CanvasPainerLog()) << "Fail to open file " << fname << " to store canvas snapshot";
+         return false;
+      }
+      R__LOG_INFO(CanvasPainerLog()) << "Store canvas in " << fname;
+      f << snapshot;
+      return true;
+   }
+
    return RWebDisplayHandle::ProduceImage(fname, snapshot, width, height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Produce JSON for the canvas
+
+std::string RCanvasPainter::ProduceJSON()
+{
+   RDrawable::RDisplayContext ctxt(&fCanvas, &fCanvas, 0);
+   ctxt.SetConnection(1, true);
+
+   return CreateSnapshot(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -512,6 +538,12 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       }
    } else if (check_header("SAVE:")) {
       SaveCreatedFile(cdata);
+   } else if (check_header("PRODUCE:")) {
+      R__LOG_DEBUG(0, CanvasPainerLog()) << "Create file " << cdata;
+
+      TFile *f = TFile::Open(cdata.c_str(), "RECREATE");
+      f->WriteObject(&fCanvas, "Canvas");
+      delete f;
    } else if (check_header("REQ:")) {
       auto req = TBufferJSON::FromJSON<RDrawableRequest>(cdata);
       if (req) {
@@ -594,15 +626,18 @@ void RCanvasPainter::NewDisplay(const std::string &where)
 {
    CreateWindow();
 
-   auto sz = fCanvas.GetSize();
+   int width = fCanvas.GetWidth();
+   int height = fCanvas.GetHeight();
 
    RWebDisplayArgs args(where);
 
-   if ((sz[0].fVal > 10) && (sz[1].fVal > 10)) {
+   if ((width > 10) && (height > 10)) {
       // extra size of browser window header + ui5 menu
-      args.SetWidth((int) sz[0].fVal + 1);
-      args.SetHeight((int) sz[1].fVal + 40);
+      args.SetWidth(width + 4);
+      args.SetHeight(height + 36);
    }
+
+   args.SetWidgetKind("RCanvas");
 
    fWindow->Show(args);
 }
@@ -676,7 +711,7 @@ std::string RCanvasPainter::CreateSnapshot(RDrawable::RDisplayContext &ctxt)
    fCanvas.DisplayPrimitives(*canvitem, ctxt);
 
    canvitem->SetTitle(fCanvas.GetTitle());
-   canvitem->SetWindowSize(fCanvas.GetSize());
+   canvitem->SetWindowSize(fCanvas.GetWidth(), fCanvas.GetHeight());
 
    canvitem->BuildFullId(""); // create object id which unique identify it via pointer and position in subpads
    canvitem->SetObjectID("canvas"); // for canvas itself use special id

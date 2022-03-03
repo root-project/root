@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RCutFlowReport.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/Utils.hxx"
 #include <numeric> // std::accumulate
@@ -16,11 +17,21 @@
 using namespace ROOT::Detail::RDF;
 
 RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
-                         const RDFInternal::RBookedDefines &defines)
-   : RNodeBase(implPtr), fLastResult(nSlots * RDFInternal::CacheLineStep<int>()),
+                         const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
+                         const std::vector<std::string> &prevVariations, const std::string &variation)
+   : RNodeBase(ROOT::Internal::RDF::Union(colRegister.GetVariationDeps(columns), prevVariations), implPtr),
+     fLastCheckedEntry(std::vector<Long64_t>(nSlots * RDFInternal::CacheLineStep<Long64_t>(), -1)),
+     fLastResult(nSlots * RDFInternal::CacheLineStep<int>()),
      fAccepted(nSlots * RDFInternal::CacheLineStep<ULong64_t>()),
-     fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fNSlots(nSlots), fDefines(defines)
+     fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fColumnNames(columns),
+     fColRegister(colRegister), fIsDefine(columns.size()), fVariation(variation)
 {
+   const auto nColumns = fColumnNames.size();
+   for (auto i = 0u; i < nColumns; ++i) {
+      fIsDefine[i] = fColRegister.HasName(fColumnNames[i]);
+      if (fVariation != "nominal" && fIsDefine[i])
+         fColRegister.GetColumns().at(fColumnNames[i])->MakeVariations({fVariation});
+   }
 }
 
 // outlined to pin virtual table
@@ -47,7 +58,6 @@ void RFilterBase::FillReport(ROOT::RDF::RCutFlowReport &rep) const
 
 void RFilterBase::InitNode()
 {
-   fLastCheckedEntry = std::vector<Long64_t>(fNSlots * RDFInternal::CacheLineStep<Long64_t>(), -1);
    if (!fName.empty()) // if this is a named filter we care about its report count
       ResetReportCount();
 }

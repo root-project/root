@@ -39,16 +39,14 @@ ROOT.RooAbsReal.defaultIntegratorConfig().setEpsRel(1e-6)
 # Construct pdf without support for analytical integrator for
 # demonstration purposes
 x = ROOT.RooRealVar("x", "x", -10, 10)
-landau = ROOT.RooLandau("landau", "landau", x,
-                        ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.1))
+landau = ROOT.RooLandau("landau", "landau", x, ROOT.RooFit.RooConst(0), ROOT.RooFit.RooConst(0.1))
 
 # Activate debug-level messages for topic integration to be able to follow
 # actions below
-ROOT.RooMsgService.instance().addStream(
-    ROOT.RooFit.DEBUG, ROOT.RooFit.Topic(ROOT.RooFit.Integration))
+ROOT.RooMsgService.instance().addStream(ROOT.RooFit.DEBUG, Topic=ROOT.RooFit.Integration)
 
 # Calculate integral over landau with default choice of numeric integrator
-intLandau = landau.createIntegral(ROOT.RooArgSet(x))
+intLandau = landau.createIntegral({x})
 val = intLandau.getVal()
 print(" [1] int_dx landau(x) = ", val)  # setprecision(15)
 
@@ -57,15 +55,13 @@ print(" [1] int_dx landau(x) = ", val)  # setprecision(15)
 
 # Construct a custom configuration which uses the adaptive Gauss-Kronrod technique
 # for closed 1D integrals
-customConfig = ROOT.RooNumIntConfig(
-    ROOT.RooAbsReal.defaultIntegratorConfig())
+customConfig = ROOT.RooNumIntConfig(ROOT.RooAbsReal.defaultIntegratorConfig())
 integratorGKNotExisting = customConfig.method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
-if (integratorGKNotExisting) :
-   print("WARNING: RooAdaptiveGaussKronrodIntegrator is not existing because ROOT is built without Mathmore support")
+if integratorGKNotExisting:
+    print("WARNING: RooAdaptiveGaussKronrodIntegrator is not existing because ROOT is built without Mathmore support")
 
 # Calculate integral over landau with custom integral specification
-intLandau2 = landau.createIntegral(
-    ROOT.RooArgSet(x), ROOT.RooFit.NumIntConfig(customConfig))
+intLandau2 = landau.createIntegral({x}, NumIntConfig=customConfig)
 val2 = intLandau2.getVal()
 print(" [2] int_dx landau(x) = ", val2)
 
@@ -78,32 +74,27 @@ landau.setIntegratorConfig(customConfig)
 
 # Calculate integral over landau custom numeric integrator specified as
 # object default
-intLandau3 = landau.createIntegral(ROOT.RooArgSet(x))
+intLandau3 = landau.createIntegral({x})
 val3 = intLandau3.getVal()
 print(" [3] int_dx landau(x) = ", val3)
 
 # Another possibility: Change global default for 1D numeric integration
 # strategy on finite domains
-if (not integratorGKNotExisting) :
-   ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel(
-       "RooAdaptiveGaussKronrodIntegrator1D")
+if not integratorGKNotExisting:
+    ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")
 
-# Adjusting parameters of a speficic technique
-# ---------------------------------------------------------------------------------------
+    # Adjusting parameters of a speficic technique
+    # ---------------------------------------------------------------------------------------
 
-# Adjust maximum number of steps of ROOT.RooIntegrator1D in the global
-# default configuration
-   ROOT.RooAbsReal.defaultIntegratorConfig().getConfigSection(
-       "RooIntegrator1D").setRealValue("maxSteps", 30)
+    # Adjust maximum number of steps of ROOT.RooIntegrator1D in the global
+    # default configuration
+    ROOT.RooAbsReal.defaultIntegratorConfig().getConfigSection("RooIntegrator1D").setRealValue("maxSteps", 30)
 
-# Example of how to change the parameters of a numeric integrator
-# (Each config section is a ROOT.RooArgSet with ROOT.RooRealVars holding real-valued parameters
-#  and ROOT.RooCategories holding parameters with a finite set of options)
-   customConfig.getConfigSection(
-       "RooAdaptiveGaussKronrodIntegrator1D").setRealValue("maxSeg", 50)
-   customConfig.getConfigSection(
-       "RooAdaptiveGaussKronrodIntegrator1D").setCatLabel("method", "15Points")
+    # Example of how to change the parameters of a numeric integrator
+    # (Each config section is a ROOT.RooArgSet with ROOT.RooRealVars holding real-valued parameters
+    #  and ROOT.RooCategories holding parameters with a finite set of options)
+    customConfig.getConfigSection("RooAdaptiveGaussKronrodIntegrator1D").setRealValue("maxSeg", 50)
+    customConfig.getConfigSection("RooAdaptiveGaussKronrodIntegrator1D").setCatLabel("method", "15Points")
 
-# Example of how to print set of possible values for "method" category
-   customConfig.getConfigSection(
-       "RooAdaptiveGaussKronrodIntegrator1D").find("method").Print("v")
+    # Example of how to print set of possible values for "method" category
+    customConfig.getConfigSection("RooAdaptiveGaussKronrodIntegrator1D").find("method").Print("v")

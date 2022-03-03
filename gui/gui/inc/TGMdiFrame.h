@@ -33,13 +33,6 @@
 #ifndef ROOT_TGMdiFrame
 #define ROOT_TGMdiFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiFrame.                                                          //
-//                                                                      //
-// This file contains the TGMdiFrame class.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -56,8 +49,8 @@ friend class TGMdiDecorFrame;
 protected:
    enum { kDontCallClose = BIT(14) };
 
-   TGMdiMainFrame  *fMain;       // pointer to the MDI main frame
-   ULong_t          fMdiHints;   // MDI hints, also used to identify titlebar buttons
+   TGMdiMainFrame  *fMain;       ///< pointer to the MDI main frame
+   ULong_t          fMdiHints;   ///< MDI hints, also used to identify titlebar buttons
 
    TString GetMdiHintsString() const;
 

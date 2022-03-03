@@ -18,7 +18,6 @@
 
 #include "RooResolutionModel.h"
 #include "RooRealProxy.h"
-#include "RooMath.h"
 
 #include <cmath>
 #include <complex>
@@ -63,14 +62,6 @@ public:
 protected:
 
   virtual Double_t evaluate() const ;
-  static std::complex<Double_t> evalCerfApprox(Double_t swt, Double_t u, Double_t c);
-
-  // Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
-  static inline std::complex<Double_t> evalCerf(Double_t swt, Double_t u, Double_t c)
-  {
-    std::complex<Double_t> z(swt*c,u+c);
-    return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
-  }
 
   // Calculate common normalization factors
   std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const;

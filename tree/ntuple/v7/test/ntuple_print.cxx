@@ -63,7 +63,7 @@ TEST(RNtuplePrint, Vector)
    testField.AcceptVisitor(visitor);
    std::string expected{std::string("")
        + "$ Field 1       : floatVecTest (std::vector<float>)                            $\n"
-       + "$   Field 1.1   : float (float)                                                $\n"};
+       + "$   Field 1.1   : _0 (float)                                                   $\n"};
    EXPECT_EQ(expected, os.str());
 }
 
@@ -79,8 +79,8 @@ TEST(RNtuplePrint, VectorNested)
    testField.AcceptVisitor(visitor);
    std::string expected{std::string("")
        + "x Field 1           : floatVecVecTest (std::vector<std::vector<float>>)        x\n"
-       + "x   Field 1.1       : std::vector<float> (std::vector<float>)                  x\n"
-       + "x     Field 1.1.1   : float (float)                                            x\n"};
+       + "x   Field 1.1       : _0 (std::vector<float>)                                  x\n"
+       + "x     Field 1.1.1   : _0 (float)                                               x\n"};
    EXPECT_EQ(expected, os.str());
 }
 
@@ -96,8 +96,8 @@ TEST(RNtuplePrint, NarrowManyEntriesVecVecTraverse)
    testField.AcceptVisitor(visitor);
    std::string expected{std::string("")
        + "  Field 1    : floatV... \n"
-       + "    Field... : std::v... \n"
-       + "      Fie... : float ... \n"};
+       + "    Field... : _0 (st... \n"
+       + "      Fie... : _0 (fl... \n"};
    EXPECT_EQ(expected, os.str());
 }
 

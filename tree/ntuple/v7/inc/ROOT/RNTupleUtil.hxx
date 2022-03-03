@@ -33,6 +33,28 @@ struct RNTuple;
 
 namespace Internal {
 
+namespace RNTupleSerialization {
+
+std::uint32_t SerializeInt64(std::int64_t val, void *buffer);
+std::uint32_t SerializeUInt64(std::uint64_t val, void *buffer);
+std::uint32_t DeserializeInt64(const void *buffer, std::int64_t *val);
+std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t *val);
+
+std::uint32_t SerializeInt32(std::int32_t val, void *buffer);
+std::uint32_t SerializeUInt32(std::uint32_t val, void *buffer);
+std::uint32_t DeserializeInt32(const void *buffer, std::int32_t *val);
+std::uint32_t DeserializeUInt32(const void *buffer, std::uint32_t *val);
+
+std::uint32_t SerializeInt16(std::int16_t val, void *buffer);
+std::uint32_t SerializeUInt16(std::uint16_t val, void *buffer);
+std::uint32_t DeserializeInt16(const void *buffer, std::int16_t *val);
+std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t *val);
+
+std::uint32_t SerializeString(const std::string &val, void *buffer);
+std::uint32_t DeserializeString(const void *buffer, std::string *val);
+
+} // namespace RNTupleSerialization
+
 void PrintRNTuple(const RNTuple& ntuple, std::ostream& output);
 
 } // namespace Internal
@@ -43,12 +65,12 @@ void PrintRNTuple(const RNTuple& ntuple, std::ostream& output);
  * materialization on the primitive column layer.
  */
 enum ENTupleStructure {
-  kLeaf,
-  kCollection,
-  kRecord,
-  kVariant,
-  kReference, // unimplemented so far
-  kInvalid,
+   kLeaf,
+   kCollection,
+   kRecord,
+   kVariant,
+   kReference, // unimplemented so far
+   kInvalid,
 };
 
 /// Integer type long enough to hold the maximum number of entries in a column
@@ -148,6 +170,21 @@ public:
    std::uint32_t GetVersionUse() const { return fVersionUse; }
    std::uint32_t GetVersionMin() const { return fVersionMin; }
    NTupleFlags_t GetFlags() const { return fFlags; }
+};
+
+
+/// Generic information about the physical location of data. Values depend on the concrete storage type.  E.g.,
+/// for a local file fUrl might be unsused and fPosition might be a file offset. Objects on storage can be compressed
+/// and therefore we need to store their actual size.
+/// TODO(jblomer): should move the RNTUpleDescriptor and should be an std::variant
+struct RNTupleLocator {
+   std::int64_t fPosition = 0;
+   std::uint32_t fBytesOnStorage = 0;
+   std::string fUrl;
+
+   bool operator==(const RNTupleLocator &other) const {
+      return fPosition == other.fPosition && fBytesOnStorage == other.fBytesOnStorage && fUrl == other.fUrl;
+   }
 };
 
 } // namespace Experimental

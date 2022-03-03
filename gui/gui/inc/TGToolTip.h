@@ -13,17 +13,6 @@
 #define ROOT_TGToolTip
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGToolTip                                                            //
-//                                                                      //
-// A tooltip can be a one or multiple lines help text that is displayed //
-// in a window when the mouse cursor overs a widget, without clicking   //
-// it. A small box appears with suplementary information regarding the  //
-// item being hovered over.                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGLabel;
@@ -35,14 +24,14 @@ class TBox;
 class TGToolTip : public TGCompositeFrame {
 
 private:
-   TGLabel           *fLabel;   // help text
-   TGLayoutHints     *fL1;      // layout used to place text in frame
-   TTimer            *fDelay;   // popup delay timer
-   const TGFrame     *fWindow;  // frame to which tool tip is associated
-   const TVirtualPad *fPad;     // pad to which tooltip is associated
-   const TBox        *fBox;     // box in pad to which tooltip is associated
-   Int_t              fX;       // X position in fWindow where to popup
-   Int_t              fY;       // Y position in fWindow where to popup
+   TGLabel           *fLabel;   ///< help text
+   TGLayoutHints     *fL1;      ///< layout used to place text in frame
+   TTimer            *fDelay;   ///< popup delay timer
+   const TGFrame     *fWindow;  ///< frame to which tool tip is associated
+   const TVirtualPad *fPad;     ///< pad to which tooltip is associated
+   const TBox        *fBox;     ///< box in pad to which tooltip is associated
+   Int_t              fX;       ///< X position in fWindow where to popup
+   Int_t              fY;       ///< Y position in fWindow where to popup
 
    TGToolTip(const TGToolTip&) = delete;
    TGToolTip& operator=(const TGToolTip&) = delete;

@@ -211,7 +211,7 @@ void RooCFunction2Ref<VO,VI1,VI2>::Streamer(TBuffer &R__b)
      // Lookup name of reference C function
      TString tmpName = fmap().lookupName(_ptr) ;
      if (tmpName.Length()==0) {
-       coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("0x%lx", (ULong_t)_ptr)
+       coutW(ObjectHandling) << "WARNING: Cannot persist unknown function pointer " << Form("0x%zx", (size_t)_ptr)
               << " written object will not be functional when read back" <<  std::endl ;
        tmpName="UNKNOWN" ;
      }

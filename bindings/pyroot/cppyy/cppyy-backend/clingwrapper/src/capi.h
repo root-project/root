@@ -124,6 +124,8 @@ extern "C" {
     RPY_EXPORTED
     int cppyy_num_bases(cppyy_type_t type);
     RPY_EXPORTED
+    int cppyy_num_bases_longest_branch(cppyy_type_t type);
+    RPY_EXPORTED
     char* cppyy_base_name(cppyy_type_t type, int base_index);
     RPY_EXPORTED
     int cppyy_is_subtype(cppyy_type_t derived, cppyy_type_t base);

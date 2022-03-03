@@ -13,25 +13,6 @@
 #define ROOT_TGView
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGView                                                               //
-//                                                                      //
-// A TGView provides the infrastructure for text viewer and editor      //
-// widgets. It provides a canvas (TGViewFrame) and (optionally) a       //
-// vertical and horizontal scrollbar and methods for marking and        //
-// scrolling.                                                           //
-//                                                                      //
-// The TGView (and derivatives) will generate the following             //
-// event messages:                                                      //
-// kC_TEXTVIEW, kTXT_ISMARKED, widget id, [true|false]                  //
-// kC_TEXTVIEW, kTXT_DATACHANGE, widget id, 0                           //
-// kC_TEXTVIEW, kTXT_CLICK2, widget id, position (y << 16) | x)         //
-// kC_TEXTVIEW, kTXT_CLICK3, widget id, position (y << 16) | x)         //
-// kC_TEXTVIEW, kTXT_F3, widget id, true                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGWidget.h"
 
@@ -48,22 +29,22 @@ public:
    enum { kHorizontal = 0, kVertical = 1 };
 
 protected:
-   TGLongPosition    fVisible;      // position of visible region
-   TGLongPosition    fMousePos;     // position of mouse
-   TGLongPosition    fScrollVal;    // scroll value
-   TGDimension       fVirtualSize;  // the current virtual window size
-   TGRectangle       fExposedRegion;// exposed area
+   TGLongPosition    fVisible;      ///< position of visible region
+   TGLongPosition    fMousePos;     ///< position of mouse
+   TGLongPosition    fScrollVal;    ///< scroll value
+   TGDimension       fVirtualSize;  ///< the current virtual window size
+   TGRectangle       fExposedRegion;///< exposed area
 
-   Int_t             fScrolling;    // scrolling direction
-   Atom_t            fClipboard;    // clipboard property
-   UInt_t            fXMargin;      // x margin
-   UInt_t            fYMargin;      // y margin
-   TGViewFrame      *fCanvas;       // frame containing the text
-   TGHScrollBar     *fHsb;          // horizontal scrollbar
-   TGVScrollBar     *fVsb;          // vertical scrollbar
+   Int_t             fScrolling;    ///< scrolling direction
+   Atom_t            fClipboard;    ///< clipboard property
+   UInt_t            fXMargin;      ///< x margin
+   UInt_t            fYMargin;      ///< y margin
+   TGViewFrame      *fCanvas;       ///< frame containing the text
+   TGHScrollBar     *fHsb;          ///< horizontal scrollbar
+   TGVScrollBar     *fVsb;          ///< vertical scrollbar
 
-   TGGC              fWhiteGC;      // graphics context used for scrolling
-                                    // generates GraphicsExposure events
+   TGGC              fWhiteGC;      ///< graphics context used for scrolling
+                                    ///< generates GraphicsExposure events
 
    virtual void DoRedraw();
    virtual void UpdateRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
@@ -87,7 +68,7 @@ public:
    virtual void   Clear(Option_t * = "");
    virtual void   SetVisibleStart(Int_t newTop, Int_t direction);
    virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual void   DrawBorder();
    virtual void   Layout();
    virtual void   SetLayoutManager(TGLayoutManager*) { }

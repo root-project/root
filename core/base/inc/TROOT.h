@@ -101,7 +101,6 @@ private:
 
    static Int_t    fgDirLevel;            //Indentation level for ls()
    static Bool_t   fgRootInit;            //Singleton initialization flag
-   static Bool_t   fgMemCheck;            //Turn on memory leak checker
 
    TROOT(const TROOT&) = delete;
    TROOT& operator=(const TROOT&) = delete;
@@ -291,13 +290,13 @@ public:
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
    Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
-   Long_t            Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
+   Longptr_t         Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
    TCanvas          *MakeDefCanvas() const;
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
-   Long_t            ProcessLine(const char *line, Int_t *error = 0);
-   Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
-   Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
+   Longptr_t         ProcessLine(const char *line, Int_t *error = 0);
+   Longptr_t         ProcessLineSync(const char *line, Int_t *error = 0);
+   Longptr_t         ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const;
    void              RecursiveRemove(TObject *obj);
    void              RefreshBrowsers();
@@ -344,7 +343,6 @@ public:
    static void        IndentLevel();
    static void        Initialize();
    static Bool_t      Initialized();
-   static Bool_t      MemCheck();
    static void        SetDirLevel(Int_t level = 0);
    static Int_t       ConvertVersionCode2Int(Int_t code);
    static Int_t       ConvertVersionInt2Code(Int_t v);

@@ -17,6 +17,8 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveSelection.hxx>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
@@ -98,6 +100,21 @@ void REveViewer::RemoveElementsLocal()
 \ingroup REve
 List of Viewers providing common operations on REveViewer collections.
 */
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stream Camera Info.
+/// Virtual from REveElement.
+int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   std::string ct;
+   switch (fCameraType)
+   {
+      case kCameraPerspXOZ: ct = "PerspXOZ"; break;
+      case kCameraOrthoXOY: ct = "OrthoXOY"; break;
+   }
+   j["CameraType"] = ct;
+   return REveElement::WriteCoreJson(j, rnr_offset);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

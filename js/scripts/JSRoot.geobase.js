@@ -687,9 +687,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
-      // let creator = new GeometryCreator(numfaces);
-
-      for (let n=0; n < indicies.length; n+=6) {
+      for (let n = 0; n < indicies.length; n += 6) {
          let i1 = indicies[n]   * 3,
              i2 = indicies[n+1] * 3,
              i3 = indicies[n+2] * 3,
@@ -698,7 +696,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
              i6 = indicies[n+5] * 3,
              norm = null;
 
-         if ((i1>=0) && (i4>=0) && faces_limit) {
+         if ((i1 >= 0) && (i4 >= 0) && faces_limit) {
             // try to identify two faces with same normal - very useful if one can create face4
             if (n===0) norm = new THREE.Vector3(0,0,1); else
             if (n===30) norm = new THREE.Vector3(0,0,-1); else {
@@ -780,13 +778,13 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
           _sint = new Float32Array(heightSegments+1),
           _cost = new Float32Array(heightSegments+1);
 
-      for (let n=0;n<=heightSegments;++n) {
+      for (let n = 0; n <= heightSegments; ++n) {
          let theta = (thetaStart + thetaLength/heightSegments*n)*Math.PI/180;
          _sint[n] = Math.sin(theta);
          _cost[n] = Math.cos(theta);
       }
 
-      for (let n=0;n<=widthSegments;++n) {
+      for (let n = 0; n <= widthSegments; ++n) {
          let phi = (phiStart + phiLength/widthSegments*n)*Math.PI/180;
          _sinp[n] = Math.sin(phi);
          _cosp[n] = Math.cos(phi);
@@ -799,9 +797,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
-      // let creator = new GeometryCreator(numfaces);
-
-      for (let side=0;side<2;++side) {
+      for (let side = 0; side < 2; ++side) {
          if ((side===1) && noInside) break;
 
          let r = radius[side],
@@ -809,7 +805,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
              d1 = 1 - side, d2 = 1 - d1;
 
          // use direct algorithm for the sphere - here normals and position can be calculated directly
-         for (let k=0;k<heightSegments;++k) {
+         for (let k = 0; k < heightSegments; ++k) {
 
             let k1 = k + d1, k2 = k + d2;
 
@@ -835,7 +831,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // top/bottom
-      for (let side=0; side<=heightSegments; side+=heightSegments)
+      for (let side = 0; side <= heightSegments; side += heightSegments)
          if (Math.abs(_sint[side]) >= epsilon) {
             let ss = _sint[side], cc = _cost[side],
                 d1 = (side===0) ? 0 : 1, d2 = 1 - d1;
@@ -916,7 +912,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
           _sin = new Float32Array(radiusSegments+1),
           _cos = new Float32Array(radiusSegments+1);
 
-      for (let seg=0; seg<=radiusSegments; ++seg) {
+      for (let seg = 0; seg <= radiusSegments; ++seg) {
          _cos[seg] = Math.cos(phi0+seg*dphi);
          _sin[seg] = Math.sin(phi0+seg*dphi);
       }
@@ -925,9 +921,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let calcZ;
       if (shape._typename == "TGeoCtub")
-         calcZ = function(x,y,z) {
-            let arr = (z<0) ? shape.fNlow : shape.fNhigh;
-            return ((z<0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
+         calcZ = (x,y,z) => {
+            let arr = (z < 0) ? shape.fNlow : shape.fNhigh;
+            return ((z < 0) ? -shape.fDz : shape.fDz) - (x*arr[0] + y*arr[1]) / arr[2];
          };
 
       // create outer/inner tube
@@ -946,10 +942,12 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          if (side === 1) { nxy *= -1; nz *= -1; };
 
          let reduce = 0;
-         if (R[0] <= 0) reduce = 2; else
-         if (R[1] <= 0) reduce = 1;
+         if (R[0] <= 0)
+            reduce = 2;
+         else if (R[1] <= 0)
+            reduce = 1;
 
-         for (let seg=0;seg<radiusSegments;++seg) {
+         for (let seg = 0; seg < radiusSegments; ++seg) {
             creator.addFace4(
                   R[0] * _cos[seg+d1], R[0] * _sin[seg+d1],  shape.fDZ,
                   R[1] * _cos[seg+d1], R[1] * _sin[seg+d1], -shape.fDZ,
@@ -1071,9 +1069,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    function createTorusBuffer( shape, faces_limit ) {
       let radius = shape.fR,
           radialSegments = Math.max(6, Math.round(360/geo.GradPerSegm)),
-          tubularSegments = Math.max(8, Math.round(shape.fDphi/geo.GradPerSegm));
-
-      let numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
+          tubularSegments = Math.max(8, Math.round(shape.fDphi/geo.GradPerSegm)),
+          numfaces = (shape.fRmin > 0 ? 4 : 2) * radialSegments * (tubularSegments + (shape.fDphi !== 360 ? 1 : 0));
 
       if (faces_limit < 0) return numfaces;
 
@@ -1088,12 +1085,12 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
           _sint = new Float32Array(tubularSegments+1),
           _cost = new Float32Array(tubularSegments+1);
 
-      for (let n=0;n<=radialSegments;++n) {
+      for (let n = 0; n <= radialSegments; ++n) {
          _sinr[n] = Math.sin(n/radialSegments*2*Math.PI);
          _cosr[n] = Math.cos(n/radialSegments*2*Math.PI);
       }
 
-      for (let t=0;t<=tubularSegments;++t) {
+      for (let t = 0; t <= tubularSegments; ++t) {
          let angle = (shape.fPhi1 + shape.fDphi*t/tubularSegments)/180*Math.PI;
          _sint[t] = Math.sin(angle);
          _cost[t] = Math.cos(angle);
@@ -1106,17 +1103,17 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
           n1 = new THREE.Vector3(), n2 = new THREE.Vector3(), n3 = new THREE.Vector3(), n4 = new THREE.Vector3(),
           center1 = new THREE.Vector3(), center2 = new THREE.Vector3();
 
-      for (let side=0;side<2;++side) {
+      for (let side = 0; side < 2; ++side) {
          if ((side > 0) && (shape.fRmin <= 0)) break;
          let tube = (side > 0) ? shape.fRmin : shape.fRmax,
              d1 = 1 - side, d2 = 1 - d1, ns = side>0 ? -1 : 1;
 
-         for (let t=0;t<tubularSegments;++t) {
+         for (let t = 0; t < tubularSegments; ++t) {
             let t1 = t + d1, t2 = t + d2;
             center1.x = radius * _cost[t1]; center1.y = radius * _sint[t1];
             center2.x = radius * _cost[t2]; center2.y = radius * _sint[t2];
 
-            for (let n=0;n<radialSegments;++n) {
+            for (let n = 0; n < radialSegments; ++n) {
                p1.x = (radius + tube * _cosr[n])   * _cost[t1]; p1.y = (radius + tube * _cosr[n])   * _sint[t1]; p1.z = tube*_sinr[n];
                p2.x = (radius + tube * _cosr[n+1]) * _cost[t1]; p2.y = (radius + tube * _cosr[n+1]) * _sint[t1]; p2.z = tube*_sinr[n+1];
                p3.x = (radius + tube * _cosr[n+1]) * _cost[t2]; p3.y = (radius + tube * _cosr[n+1]) * _sint[t2]; p3.z = tube*_sinr[n+1];
@@ -1177,7 +1174,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let usage = new Int16Array(2*shape.fNz), numusedlayers = 0, hasrmin = false;
 
-      for (let layer=0; layer < shape.fNz; ++layer)
+      for (let layer = 0; layer < shape.fNz; ++layer)
          if (shape.fRmin[layer] > 0) hasrmin = true;
 
       // return very rough estimation, number of faces may be much less
@@ -1466,10 +1463,12 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          nz = (shape.fA > 0) ? -1 : 1;
 
          let skip = 0;
-         if (lastr === 0) skip = 1; else
-         if (radius === 0) skip = 2;
+         if (lastr === 0)
+            skip = 1;
+         else if (radius === 0)
+            skip = 2;
 
-         for (let seg=0; seg<radiusSegments; ++seg) {
+         for (let seg = 0; seg < radiusSegments; ++seg) {
             creator.addFace4(radius*_cos[seg],   radius*_sin[seg], layerz,
                              lastr*_cos[seg],    lastr*_sin[seg], lastz,
                              lastr*_cos[seg+1],  lastr*_sin[seg+1], lastz,
@@ -1502,9 +1501,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          return createTubeBuffer(shape, faces_limit);
 
       let radiusSegments = Math.max(4, Math.round(360/geo.GradPerSegm)),
-          heightSegments = 30;
-
-      let numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
+          heightSegments = 30,
+          numfaces = radiusSegments * (heightSegments + 1) * ((shape.fRmin > 0) ? 4 : 2);
 
       if (faces_limit < 0) return numfaces;
 
@@ -1524,7 +1522,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
 
       // in-out side
-      for (let side=0;side<2;++side) {
+      for (let side = 0; side < 2; ++side) {
          if ((side > 0) && (shape.fRmin <= 0)) break;
 
          let r0 = (side > 0) ? shape.fRmin : shape.fRmax,
@@ -1549,20 +1547,19 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // add caps
-      for(let layer=0; layer<2; ++layer) {
+      for (let layer = 0; layer < 2; ++layer) {
          let z = (layer === 0) ? shape.fDz : -shape.fDz,
              r1 = Math.sqrt(shape.fRmax*shape.fRmax + shape.fToutsq*z*z),
              r2 = (shape.fRmin > 0) ? Math.sqrt(shape.fRmin*shape.fRmin + shape.fTinsq*z*z) : 0,
              skip = (shape.fRmin > 0) ? 0 : 1,
              d1 = 1 - layer, d2 = 1 - d1;
-          for (let seg=0; seg<radiusSegments; ++seg) {
+         for (let seg = 0; seg < radiusSegments; ++seg) {
              creator.addFace4(r1 * _cos[seg+d1], r1 * _sin[seg+d1], z,
                               r2 * _cos[seg+d1], r2 * _sin[seg+d1], z,
                               r2 * _cos[seg+d2], r2 * _sin[seg+d2], z,
                               r1 * _cos[seg+d2], r1 * _sin[seg+d2], z, skip);
              creator.setNormal(0,0, (layer===0) ? 1 : -1);
           }
-
       }
 
       return creator.create();
@@ -1747,7 +1744,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          return geom.tree.numPolygons();
 
       if (geom.type == 'BufferGeometry') {
-         var attr = geom.getAttribute('position');
+         let attr = geom.getAttribute('position');
          return attr && attr.count ? Math.round(attr.count / 3) : 0;
       }
 
@@ -1793,9 +1790,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       if (polygons!==null) {
          let box = new THREE.Box3();
-         for (let n=0;n<polygons.length;++n) {
+         for (let n = 0; n < polygons.length; ++n) {
             let polygon = polygons[n], nvert = polygon.vertices.length;
-            for (let k=0;k<nvert;++k)
+            for (let k = 0; k < nvert; ++k)
                box.expandByPoint(polygon.vertices[k]);
          }
          return box;
@@ -1813,11 +1810,9 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    function createHalfSpace(shape, geom) {
       if (!shape || !shape.fN || !shape.fP) return null;
 
-      // shape.fP = [0,0,15]; shape.fN = [0,1,1];
+      let vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]),
+          normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
 
-      let vertex = new THREE.Vector3(shape.fP[0], shape.fP[1], shape.fP[2]);
-
-      let normal = new THREE.Vector3(shape.fN[0], shape.fN[1], shape.fN[2]);
       normal.normalize();
 
       let sz = 1e10;
@@ -1829,32 +1824,32 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       // console.log('normal', normal, 'vertex', vertex, 'size', sz);
 
-      let v1 = new THREE.Vector3(-sz, -sz/2, 0),
-          v2 = new THREE.Vector3(0, sz, 0),
-          v3 = new THREE.Vector3(sz, -sz/2, 0),
-          v4 = new THREE.Vector3(0, 0, -sz);
-
-      let geometry = new THREE.Geometry();
-
-      geometry.vertices.push(v1, v2, v3, v4);
-
-      geometry.faces.push( new THREE.Face3( 0, 2, 1 ) );
-      geometry.faces.push( new THREE.Face3( 0, 1, 3 ) );
-      geometry.faces.push( new THREE.Face3( 1, 2, 3 ) );
-      geometry.faces.push( new THREE.Face3( 2, 0, 3 ) );
+      let v0 = new THREE.Vector3(-sz, -sz/2, 0),
+          v1 = new THREE.Vector3(0, sz, 0),
+          v2 = new THREE.Vector3(sz, -sz/2, 0),
+          v3 = new THREE.Vector3(0, 0, -sz),
+          geometry = new THREE.BufferGeometry(),
+          positions = new Float32Array([ v0.x,v0.y,v0.z, v2.x,v2.y,v2.z, v1.x,v1.y,v1.z,
+                                         v0.x,v0.y,v0.z, v1.x,v1.y,v1.z, v3.x,v3.y,v3.z,
+                                         v1.x,v1.y,v1.z, v2.x,v2.y,v2.z, v3.x,v3.y,v3.z,
+                                         v2.x,v2.y,v2.z, v0.x,v0.y,v0.z, v3.x,v3.y,v3.z ]);
+      geometry.setAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) );
+      geometry.computeVertexNormals();
 
       geometry.lookAt(normal);
-      geometry.computeFaceNormals();
+      geometry.computeVertexNormals();
 
-      v1.add(vertex);
-      v2.add(vertex);
-      v3.add(vertex);
-      v4.add(vertex);
+      for(let k=0;k<positions.length;k+=3) {
+         positions[k] = positions[k] + vertex.x;
+         positions[k+1] = positions[k+1] + vertex.y;
+         positions[k+2] = positions[k+2] + vertex.z;
+      }
+
       return geometry;
    }
 
    /** @summary Returns number of faces for provided geometry
-     * @param geom  - can be THREE.Geometry, THREE.BufferGeometry, ThreeBSP.Geometry or interim array of polygons
+     * @param geom  - can be THREE.BufferGeometry, ThreeBSP.Geometry or interim array of polygons
      * @memberof JSROOT.GEO
      * @private */
    function countGeometryFaces(geom) {
@@ -2067,14 +2062,13 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          return info;
       }
 
-      let sz = Math.max(shape.fDX, shape.fDY, shape.fDZ);
-      let useexp = (sz>1e7) || (sz<1e-7);
-
-      function conv(v) {
-         if (v===undefined) return "???";
-         if ((v==Math.round(v) && v<1e7)) return Math.round(v);
-         return useexp ? v.toExponential(4) : v.toPrecision(7);
-      }
+      let sz = Math.max(shape.fDX, shape.fDY, shape.fDZ),
+          useexp = (sz>1e7) || (sz<1e-7),
+          conv = (v) => {
+             if (v===undefined) return "???";
+             if ((v==Math.round(v) && v<1e7)) return Math.round(v);
+             return useexp ? v.toExponential(4) : v.toPrecision(7);
+          };
 
       info.push(shape._typename);
 
@@ -2140,7 +2134,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       let cameraProjectionMatrix = new THREE.Matrix4();
 
       camera.updateMatrixWorld();
-      camera.matrixWorldInverse.getInverse( camera.matrixWorld );
+
+      camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
       cameraProjectionMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse);
 
       return cameraProjectionMatrix;
@@ -2203,7 +2198,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          if (this.containsPoint(pnt)) cnt++;
          pnt.set(box.max.x, box.max.y, box.max.z);
          if (this.containsPoint(pnt)) cnt++;
-         return cnt>5; // only if 6 edges and more are seen, we think that box is fully visible
+         return cnt > 5; // only if 6 edges and more are seen, we think that box is fully visible
       }
 
       return frustum;
@@ -2216,7 +2211,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       if (!stack1 || !stack2) return 0;
       if (stack1 === stack2) return stack1.length;
       let len = Math.min(stack1.length, stack2.length);
-      for (let k=0;k<len;++k)
+      for (let k = 0; k < len; ++k)
          if (stack1[k] !== stack2[k]) return k;
       return len;
    }
@@ -2227,7 +2222,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       if (!stack1 || !stack2) return false;
       if (stack1 === stack2) return true;
       if (stack1.length !== stack2.length) return false;
-      for (let k=0;k<stack1.length;++k)
+      for (let k = 0; k < stack1.length; ++k)
          if (stack1[k] !== stack2[k]) return false;
       return true;
    }
@@ -2366,7 +2361,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
        let sortarr = [];
 
        // first create nodes objects
-       for (let n=0; n<this.origin.length; ++n) {
+      for (let n = 0; n < this.origin.length; ++n) {
           // let obj = this.origin[n];
           let node = { id: n, kind: kind, vol: 0, nfaces: 0 };
           this.nodes.push(node);
@@ -2588,7 +2583,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          arg.last = 0;
          arg.CopyStack = function(factor) {
             let entry = { nodeid: this.nodeid, seqid: this.counter, stack: new Array(this.last) };
-            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be build as first
+            if (factor) entry.factor = factor; // factor used to indicate importance of entry, will be built as first
             for (let n=0;n<this.last;++n) entry.stack[n] = this.stack[n+1]; // copy stack
             return entry;
          };
@@ -2761,7 +2756,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       if (this.getNodeName(currid) !== names[0]) return null;
 
-      for (let n=1;n<names.length;++n) {
+      for (let n = 1; n < names.length; ++n) {
          let node = this.nodes[currid];
          if (!node.chlds) return null;
 
@@ -3139,7 +3134,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
    ClonedNodes.prototype.mergeVisibles = function(current, prev) {
 
       let indx2 = 0, del = [];
-      for (let indx1=0; (indx1<current.length) && (indx2<prev.length); ++indx1) {
+      for (let indx1 = 0; (indx1 < current.length) && (indx2 < prev.length); ++indx1) {
 
          while ((indx2 < prev.length) && (prev[indx2].seqid < current[indx1].seqid)) {
             del.push(prev[indx2++]); // this entry should be removed
@@ -3152,14 +3147,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // remove rest
-      while (indx2<prev.length)
+      while (indx2 < prev.length)
          del.push(prev[indx2++]);
 
-      return del; //
+      return del;
    }
 
-   /** @summary Collect all uniques shapes which should be build
-    *  @desc Check if same shape used many time for drawing */
+   /** @summary Collect all uniques shapes which should be built
+    *  @desc Check if same shape used many times for drawing */
    ClonedNodes.prototype.collectShapes = function(lst) {
 
       // nothing else - just that single shape
@@ -3195,14 +3190,14 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       shapes.sort((a,b) => b.vol*b.factor - a.vol*a.factor);
 
       // now set new shape ids according to the sorted order and delete temporary field
-      for (let n=0;n<shapes.length;++n) {
+      for (let n = 0; n < shapes.length; ++n) {
          let item = shapes[n];
          item.id = n; // set new ID
          delete item.shape._id; // remove temporary field
       }
 
       // as last action set current shape id to each entry
-      for (let i=0;i<lst.length;++i) {
+      for (let i = 0; i < lst.length; ++i) {
          let entry = lst[i];
          if (entry.shape) {
             entry.shapeid = entry.shape.id; // keep only id for the entry
@@ -3232,7 +3227,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // take from shape (if match)
-      for (let n=0;n<newlst.length;++n) {
+      for (let n = 0; n < newlst.length; ++n) {
          let item = newlst[n];
 
          if (item.shape._geom !== undefined) {
@@ -3247,7 +3242,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
       }
 
       // now delete all unused geometries
-      for (let n=0;n<oldlst.length;++n) {
+      for (let n = 0; n < oldlst.length; ++n) {
          let item = oldlst[n];
          delete item.shape._geom;
          delete item.shape._geomZ;
@@ -3752,7 +3747,7 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
 
       let toplevel = new THREE.Object3D();
 
-      for (let n=0; n < draw_nodes.length;++n) {
+      for (let n = 0; n < draw_nodes.length; ++n) {
          let entry = draw_nodes[n];
          if (entry.done) continue;
 
@@ -3788,6 +3783,8 @@ JSROOT.define(['three', 'csg'], (THREE, ThreeBSP) => {
          } else {
             mesh = createFlippedMesh(shape, prop.material);
          }
+
+         mesh.name = clones.getNodeName(entry.nodeid);
 
          obj3d.add(mesh);
 

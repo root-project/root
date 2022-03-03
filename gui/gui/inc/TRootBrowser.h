@@ -24,19 +24,20 @@ class TGStatusBar;
 class TGVSplitter;
 class TGHSplitter;
 
-//_____________________________________________________________________________
-//
-// TBrowserPlugin
-//
-// Helper class used to manage plugins (command or macro to be executed).
-//_____________________________________________________________________________
+
+/** \class TBrowserPlugin
+    \ingroup guiwidgets
+
+Helper class used to manage plugins (command or macro to be executed).
+*/
+
 
 class TBrowserPlugin : public TNamed
 {
 public:
-   Int_t    fTab{0};             // Tab number
-   Int_t    fSubTab{0};          // Tab element number
-   TString  fCommand;            // Command to be executed
+   Int_t    fTab{0};             ///< Tab number
+   Int_t    fSubTab{0};          ///< Tab element number
+   TString  fCommand;            ///< Command to be executed
 
    TBrowserPlugin(const char *name, const char *cmd = "", Int_t tab = 1,
                   Int_t sub = -1) : TNamed(name, cmd), fTab(tab),
@@ -56,42 +57,42 @@ class TRootBrowser : public TGMainFrame, public TBrowserImp {
 
 protected:
 
-   TGLayoutHints     *fLH0, *fLH1, *fLH2, *fLH3;   // Layout hints, part 1
-   TGLayoutHints     *fLH4, *fLH5, *fLH6, *fLH7;   // Layout hints, part 2
-   TGTab             *fTabLeft;                    // Left Tab
-   TGTab             *fTabRight;                   // Right Tab
-   TGTab             *fTabBottom;                  // Bottom Tab
-   TGTab             *fEditTab;                    // Tab in "Edit" mode
-   Int_t              fEditPos;                    // Id of tab in "Edit" mode
-   Int_t              fEditSubPos;                 // Id of subtab in "Edit" mode
-   TGVerticalFrame   *fVf;                         // Vertical frame
-   TGHorizontalFrame *fHf;                         // Horizontal frame
-   TGHorizontalFrame *fH1;                         // Horizontal frame
-   TGHorizontalFrame *fH2;                         // Horizontal frame
-   TGVerticalFrame   *fV1;                         // Vertical frame
-   TGVerticalFrame   *fV2;                         // Vertical frame
-   TGVSplitter       *fVSplitter;                  // Vertical splitter
-   TGHSplitter       *fHSplitter;                  // Horizontal splitter
-   TGCompositeFrame  *fEditFrame;                  // Frame in "Edit" mode
-   TGHorizontalFrame *fTopMenuFrame;               // Top menu frame
-   TGHorizontalFrame *fPreMenuFrame;               // First (owned) menu frame
-   TGHorizontalFrame *fMenuFrame;                  // Shared menu frame
-   TGHorizontalFrame *fToolbarFrame;               // Toolbar frame
-   TGMenuBar         *fMenuBar;                    // Main (owned) menu bar
-   TGPopupMenu       *fMenuFile;                   // "File" popup menu
-   TGPopupMenu       *fMenuExecPlugin;             // "Exec Plugin" popup menu
-   TGPopupMenu       *fMenuHelp;                   // "Browser Help" popup menu
-   TGCompositeFrame  *fActMenuBar;                 // Actual (active) menu bar
-   TBrowserImp       *fActBrowser;                 // Actual (active) browser imp
-   TList              fBrowsers;                   // List of (sub)browsers
-   TList              fPlugins;                    // List of plugins
-   TGStatusBar       *fStatusBar;                  // Status bar
-   Int_t              fNbInitPlugins;              // Number of initial plugins (from .rootrc)
-   Int_t              fNbTab[3];                   // Number of tab elements (for each Tab)
-   Int_t              fCrTab[3];                   // Actual (active) tab elements (for each Tab)
-   Int_t              fPid;                        // Current process id
-   Bool_t             fShowCloseTab;               // kTRUE to show close icon on tab elements
-   const TGPicture   *fIconPic;                    // icon picture
+   TGLayoutHints     *fLH0, *fLH1, *fLH2, *fLH3;   ///< Layout hints, part 1
+   TGLayoutHints     *fLH4, *fLH5, *fLH6, *fLH7;   ///< Layout hints, part 2
+   TGTab             *fTabLeft;                    ///< Left Tab
+   TGTab             *fTabRight;                   ///< Right Tab
+   TGTab             *fTabBottom;                  ///< Bottom Tab
+   TGTab             *fEditTab;                    ///< Tab in "Edit" mode
+   Int_t              fEditPos;                    ///< Id of tab in "Edit" mode
+   Int_t              fEditSubPos;                 ///< Id of subtab in "Edit" mode
+   TGVerticalFrame   *fVf;                         ///< Vertical frame
+   TGHorizontalFrame *fHf;                         ///< Horizontal frame
+   TGHorizontalFrame *fH1;                         ///< Horizontal frame
+   TGHorizontalFrame *fH2;                         ///< Horizontal frame
+   TGVerticalFrame   *fV1;                         ///< Vertical frame
+   TGVerticalFrame   *fV2;                         ///< Vertical frame
+   TGVSplitter       *fVSplitter;                  ///< Vertical splitter
+   TGHSplitter       *fHSplitter;                  ///< Horizontal splitter
+   TGCompositeFrame  *fEditFrame;                  ///< Frame in "Edit" mode
+   TGHorizontalFrame *fTopMenuFrame;               ///< Top menu frame
+   TGHorizontalFrame *fPreMenuFrame;               ///< First (owned) menu frame
+   TGHorizontalFrame *fMenuFrame;                  ///< Shared menu frame
+   TGHorizontalFrame *fToolbarFrame;               ///< Toolbar frame
+   TGMenuBar         *fMenuBar;                    ///< Main (owned) menu bar
+   TGPopupMenu       *fMenuFile;                   ///< "File" popup menu
+   TGPopupMenu       *fMenuExecPlugin;             ///< "Exec Plugin" popup menu
+   TGPopupMenu       *fMenuHelp;                   ///< "Browser Help" popup menu
+   TGCompositeFrame  *fActMenuBar;                 ///< Actual (active) menu bar
+   TBrowserImp       *fActBrowser;                 ///< Actual (active) browser imp
+   TList              fBrowsers;                   ///< List of (sub)browsers
+   TList              fPlugins;                    ///< List of plugins
+   TGStatusBar       *fStatusBar;                  ///< Status bar
+   Int_t              fNbInitPlugins;              ///< Number of initial plugins (from .rootrc)
+   Int_t              fNbTab[3];                   ///< Number of tab elements (for each Tab)
+   Int_t              fCrTab[3];                   ///< Actual (active) tab elements (for each Tab)
+   Int_t              fPid;                        ///< Current process id
+   Bool_t             fShowCloseTab;               ///< kTRUE to show close icon on tab elements
+   const TGPicture   *fIconPic;                    ///< icon picture
 
 public:
    enum ENewBrowserMessages {
@@ -164,7 +165,7 @@ public:
    Option_t         *GetDrawOption() const override;
    TGMainFrame      *GetMainFrame() const override { return (TGMainFrame *)this; }
 
-   Long_t            ExecPlugin(const char *name = nullptr, const char *fname = nullptr,
+   Longptr_t         ExecPlugin(const char *name = nullptr, const char *fname = nullptr,
                                 const char *cmd = nullptr, Int_t pos = kRight,
                                 Int_t subpos = -1) override;
    void              SetStatusText(const char *txt, Int_t col) override;

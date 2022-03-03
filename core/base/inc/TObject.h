@@ -40,8 +40,8 @@ private:
    UInt_t         fUniqueID;   ///< object unique identifier
    UInt_t         fBits;       ///< bit field status word
 
-   static Long_t  fgDtorOnly;    ///< object for which to call dtor only (i.e. no delete)
-   static Bool_t  fgObjectStat;  ///< if true keep track of objects in TObjectTable
+   static Longptr_t fgDtorOnly;    ///< object for which to call dtor only (i.e. no delete)
+   static Bool_t    fgObjectStat;  ///< if true keep track of objects in TObjectTable
 
    static void AddToTObjectTable(TObject *);
 
@@ -220,7 +220,7 @@ public:
    void     Obsolete(const char *method, const char *asOfVers, const char *removedFromVers) const;
 
    //---- static functions
-   static Long_t    GetDtorOnly();
+   static Longptr_t GetDtorOnly();
    static void      SetDtorOnly(void *obj);
    static Bool_t    GetObjectStat();
    static void      SetObjectStat(Bool_t stat);
@@ -234,7 +234,7 @@ public:
 /// TObject constructor. It sets the two data words of TObject to their
 /// initial values. The unique ID is set to 0 and the status word is
 /// set depending if the object is created on the stack or allocated
-/// on the heap. Depending on the ROOT environment variable "Root.MemStat"
+/// on the heap. Depending on the ROOT environment variable "Root.ObjStat"
 /// (see TEnv) the object is added to the global TObjectTable for
 /// bookkeeping.
 

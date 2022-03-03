@@ -40,7 +40,7 @@ private:
 
 protected:
 
-   TGraph2D   *fGraph2D;               ///<!2D graph containing the user data
+   TGraph2D   *fGraph2D;               ///<! 2D graph containing the user data
    ROOT::Math::Delaunay2D   fDelaunay; ///<! Delaunay interpolator class
 
 public:

@@ -29,16 +29,16 @@ class TTreeFormula;
 class TTreeIndex : public TVirtualIndex {
 
 protected:
-   TString        fMajorName;           // Index major name
-   TString        fMinorName;           // Index minor name
-   Long64_t       fN;                   // Number of entries
-   Long64_t      *fIndexValues;         //[fN] Sorted index values, higher 64bits
-   Long64_t      *fIndexValuesMinor;    //[fN] Sorted index values, lower 64bits
-   Long64_t      *fIndex;               //[fN] Index of sorted values
-   TTreeFormula  *fMajorFormula;        //! Pointer to major TreeFormula
-   TTreeFormula  *fMinorFormula;        //! Pointer to minor TreeFormula
-   TTreeFormula  *fMajorFormulaParent;  //! Pointer to major TreeFormula in Parent tree (if any)
-   TTreeFormula  *fMinorFormulaParent;  //! Pointer to minor TreeFormula in Parent tree (if any)
+   TString        fMajorName;           ///< Index major name
+   TString        fMinorName;           ///< Index minor name
+   Long64_t       fN;                   ///< Number of entries
+   Long64_t      *fIndexValues;         ///<[fN] Sorted index values, higher 64bits
+   Long64_t      *fIndexValuesMinor;    ///<[fN] Sorted index values, lower 64bits
+   Long64_t      *fIndex;               ///<[fN] Index of sorted values
+   TTreeFormula  *fMajorFormula;        ///<! Pointer to major TreeFormula
+   TTreeFormula  *fMinorFormula;        ///<! Pointer to minor TreeFormula
+   TTreeFormula  *fMajorFormulaParent;  ///<! Pointer to major TreeFormula in Parent tree (if any)
+   TTreeFormula  *fMinorFormulaParent;  ///<! Pointer to minor TreeFormula in Parent tree (if any)
 
    TTreeFormula  *GetMajorFormulaParent(const TTree *parent);
    TTreeFormula  *GetMinorFormulaParent(const TTree *parent);

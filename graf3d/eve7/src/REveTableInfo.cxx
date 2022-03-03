@@ -21,67 +21,11 @@
 
 #include <sstream>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 
-REveTableViewInfo::REveTableViewInfo(const std::string &name, const std::string &title)
-   : REveElement(name, title), fConfigChanged(false)
-{
-}
-
-void REveTableViewInfo::SetDisplayedCollection(ElementId_t collectionId)
-{
-   fDisplayedCollection = collectionId;
-
-   fConfigChanged = true;
-   for (auto &it : fDelegates)
-      it();
-
-   fConfigChanged = false;
-   StampObjProps();
-}
-
-void REveTableViewInfo::AddNewColumnToCurrentCollection(const std::string &expr, const std::string &title, int prec)
-{
-   if (!fDisplayedCollection)
-      return;
-
-   REveDataCollection *col = dynamic_cast<REveDataCollection *>(gEve->FindElementById(fDisplayedCollection));
-   if (!col) {
-      printf("REveTableViewInfo::AddNewColumnToCurrentCollection error: collection not found\n");
-      return;
-   }
-
-   const char *rtyp = "void";
-   auto icls = col->GetItemClass();
-   std::function<void(void *)> fooptr;
-   std::stringstream s;
-   s << "*((std::function<" << rtyp << "(" << icls->GetName() << "*)>*)" << std::hex << std::showbase
-     << (size_t)(&fooptr) << ") = [](" << icls->GetName() << "* p){" << icls->GetName() << " &i=*p; return (" << expr
-     << "); }";
-
-   int err;
-   gROOT->ProcessLine(s.str().c_str(), &err);
-   if (err != TInterpreter::kNoError) {
-      std::cout << "REveTableViewInfo::AddNewColumnToCurrentCollection failed." << std::endl;
-      return;
-   }
-
-   fConfigChanged = true;
-   table(col->GetItemClass()->GetName()).column(title, prec, expr);
-
-   for (auto &it : fDelegates)
-      it();
-
-   fConfigChanged = false;
-
-   StampObjProps();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Find column definitions for given class name.
-//  Look for definition also in base classes
-REveTableHandle::Entries_t &REveTableViewInfo::RefTableEntries(std::string cname)
-{
+namespace {
    struct TableDictHelper {
       void fillPublicMethods(REveTableHandle::Entries_t &entries, TClass *c)
       {
@@ -130,6 +74,80 @@ REveTableHandle::Entries_t &REveTableViewInfo::RefTableEntries(std::string cname
       }
    };
 
+}
+
+REveTableViewInfo::REveTableViewInfo(const std::string &name, const std::string &title)
+   : REveElement(name, title), fConfigChanged(false)
+{
+}
+
+void REveTableViewInfo::SetDisplayedCollection(ElementId_t collectionId)
+{
+   fDisplayedCollection = collectionId;
+
+   fConfigChanged = true;
+   for (auto &it : fDelegates)
+      it();
+
+   fConfigChanged = false;
+   StampObjProps();
+}
+
+void REveTableViewInfo::AddNewColumnToCurrentCollection(const char* expr, const char* title, int prec)
+{
+   if (!fDisplayedCollection)
+      return;
+
+   REveDataCollection *col = dynamic_cast<REveDataCollection *>(gEve->FindElementById(fDisplayedCollection));
+   if (!col) {
+      printf("REveTableViewInfo::AddNewColumnToCurrentCollection error: collection not found\n");
+      return;
+   }
+
+   const char *rtyp = "void";
+   auto icls = col->GetItemClass();
+   std::function<void(void *)> fooptr;
+   std::stringstream s;
+   s << "*((std::function<" << rtyp << "(" << icls->GetName() << "*)>*)" << std::hex << std::showbase
+     << (size_t)(&fooptr) << ") = [](" << icls->GetName() << "* p){" << icls->GetName() << " &i=*p; return (" << expr
+     << "); }";
+
+   // make ProcessLine() call to check if expr is valid
+   // there may be more efficient check 
+   int err;
+   gROOT->ProcessLine(s.str().c_str(), &err);
+   if (err != TInterpreter::kNoError) {
+      std::cout << "REveTableViewInfo::AddNewColumnToCurrentCollection failed." << std::endl;
+      return;
+   }
+
+   fConfigChanged = true;
+
+   auto sit = fSpecs.find(icls->GetName());
+   if (sit != fSpecs.end()) {
+      table(icls->GetName()).column(title, prec, expr);
+   } else {
+      TableDictHelper helper;
+      TClass *b = helper.searchMatchInBaseClasses(icls, fSpecs);
+      std::string n = b->GetName();
+      for (REveTableHandle::Entries_t::iterator e = fSpecs[n].begin(); e != fSpecs[n].end(); ++e) {
+        table(col->GetItemClass()->GetName()).column(e->fName, e->fPrecision, e->fExpression);
+      }
+      table(col->GetItemClass()->GetName()).column(title, prec, expr);
+   }
+   for (auto &it : fDelegates)
+      it();
+
+   fConfigChanged = false;
+
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find column definitions for given class name.
+//  Look for definition also in base classes
+REveTableHandle::Entries_t &REveTableViewInfo::RefTableEntries(std::string cname)
+{
    TableDictHelper helper;
    auto search = fSpecs.find(cname);
    if (search != fSpecs.end()) {

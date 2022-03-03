@@ -42,43 +42,48 @@ namespace Internal {
 
 class THnBase: public TNamed {
 protected:
-   Int_t      fNdimensions;  // number of dimensions
-   TObjArray  fAxes;         // axes of the histogram
-   TObjArray  fBrowsables;   //! browser-helpers for each axis
-   Double_t   fEntries;      // number of entries, spread over chunks
-   Double_t   fTsumw;        // total sum of weights
-   Double_t   fTsumw2;       // total sum of weights squared; -1 if no errors are calculated
-   TArrayD    fTsumwx;       // total sum of weight*X for each dimension
-   TArrayD    fTsumwx2;      // total sum of weight*X*X for each dimension
-   Double_t  *fIntegral;     //! array with bin weight sums
+   Int_t      fNdimensions;  ///<  Number of dimensions
+   TObjArray  fAxes;         ///<  Axes of the histogram
+   TObjArray  fBrowsables;   ///<! Browser-helpers for each axis
+   Double_t   fEntries;      ///<  Number of entries, spread over chunks
+   Double_t   fTsumw;        ///<  Total sum of weights
+   Double_t   fTsumw2;       ///<  Total sum of weights squared; -1 if no errors are calculated
+   TArrayD    fTsumwx;       ///<  Total sum of weight*X for each dimension
+   TArrayD    fTsumwx2;      ///<  Total sum of weight*X*X for each dimension
+   std::vector<Double_t> fIntegral; ///<! vector with bin weight sums
    enum {
       kNoInt,
       kValidInt,
       kInvalidInt
-   } fIntegralStatus;        //! status of integral
-
-private:
-   THnBase(const THnBase&); // Not implemented
-   THnBase& operator=(const THnBase&); // Not implemented
+   } fIntegralStatus;        ///<! status of integral
 
  protected:
-   THnBase():
-      fNdimensions(0), fEntries(0),
-      fTsumw(0), fTsumw2(-1.), fIntegral(0), fIntegralStatus(kNoInt)
-   {}
+    THnBase() : fNdimensions(0), fEntries(0), fTsumw(0), fTsumw2(-1.), fIntegral(), fIntegralStatus(kNoInt) {}
 
-   THnBase(const char* name, const char* title, Int_t dim,
-           const Int_t* nbins, const Double_t* xmin, const Double_t* xmax);
+    THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins, const Double_t *xmin,
+            const Double_t *xmax);
 
-   void UpdateXStat(const Double_t *x, Double_t w = 1.) {
-      if (GetCalculateErrors()) {
-         for (Int_t d = 0; d < fNdimensions; ++d) {
-            const Double_t xd = x[d];
-            fTsumwx[d]  += w * xd;
-            fTsumwx2[d] += w * xd * xd;
-         }
-      }
-   }
+    THnBase(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+            const std::vector<std::vector<double>> &xbins);
+
+    THnBase(const THnBase &other);
+
+    THnBase &operator=(const THnBase &other);
+
+    THnBase(THnBase &&other);
+
+    THnBase &operator=(THnBase &&other);
+
+    void UpdateXStat(const Double_t *x, Double_t w = 1.)
+    {
+       if (GetCalculateErrors()) {
+          for (Int_t d = 0; d < fNdimensions; ++d) {
+             const Double_t xd = x[d];
+             fTsumwx[d] += w * xd;
+             fTsumwx2[d] += w * xd * xd;
+          }
+       }
+    }
 
    /// Increment the statistics due to filled weight "w",
    void FillBinBase(Double_t w) {
@@ -151,6 +156,28 @@ private:
       Long64_t bin = GetBin(name, kTRUE /*alloc*/);
       FillBin(bin, w);
       return bin;
+   }
+
+   /// Fill with the provided variadic arguments.
+   /// The number of arguments must be equal to the number of histogram dimensions or, for weighted fills, to the
+   /// number of dimensions + 1; in the latter case, the last function argument is used as weight.
+   /// A separate `firstval` argument is needed so the compiler does not pick this overload instead of the non-templated
+   /// Fill overloads
+   template <typename... MoreTypes>
+   Long64_t Fill(Double_t firstval, MoreTypes... morevals)
+   {
+      const std::array<double, 1 + sizeof...(morevals)> x{firstval, static_cast<double>(morevals)...};
+      if (Int_t(x.size()) == GetNdimensions()) {
+         // without weight
+         return Fill(x.data());
+      } else if (Int_t(x.size()) == (GetNdimensions() + 1)) {
+         // with weight
+         return Fill(x.data(), x.back());
+      } else {
+         Error("Fill", "Wrong number of arguments for number of histogram axes.");
+      }
+
+      return -1;
    }
 
    virtual void FillBin(Long64_t bin, Double_t w) = 0;

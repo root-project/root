@@ -20,22 +20,23 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGListTree and TGListTreeItem                                        //
-//                                                                      //
-// A list tree is a widget that can contain a number of items           //
-// arranged in a tree structure. The items are represented by small     //
-// folder icons that can be either open or closed.                      //
-//                                                                      //
-// The TGListTree is user callable. The TGListTreeItem is a service     //
-// class of the list tree.                                              //
-//                                                                      //
-// A list tree can generate the following events:                       //
-// kC_LISTTREE, kCT_ITEMCLICK, which button, location (y<<16|x).        //
-// kC_LISTTREE, kCT_ITEMDBLCLICK, which button, location (y<<16|x).     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGListTree
+    \ingroup guiwidgets
+
+A list tree is a widget that can contain a number of items
+arranged in a tree structure. The items are represented by small
+folder icons that can be either open or closed.
+
+The TGListTree is user callable. The TGListTreeItem is a service
+class of the list tree.
+
+A list tree can generate the following events:
+  - kC_LISTTREE, kCT_ITEMCLICK, which button, location (y<<16|x).
+  - kC_LISTTREE, kCT_ITEMDBLCLICK, which button, location (y<<16|x).
+
+*/
+
 
 #include <cstdlib>
 #include <iostream>
@@ -537,7 +538,7 @@ void TGListTree::HighlightItem(TGListTreeItem *item, Bool_t state, Bool_t draw)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Higlight item children.
+/// Highlight item children.
 
 void TGListTree::HighlightChildren(TGListTreeItem *item, Bool_t state, Bool_t draw)
 {
@@ -790,10 +791,10 @@ Bool_t TGListTree::HandleDNDDrop(TDNDData *data)
 
 void TGListTree::DataDropped(TGListTreeItem *item, TDNDData *data)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)item;
-   args[1] = (Long_t)data;
+   args[0] = (Longptr_t)item;
+   args[1] = (Longptr_t)data;
 
    Emit("DataDropped(TGListTreeItem*,TDNDData*)", args);
 }
@@ -1049,7 +1050,7 @@ Bool_t TGListTree::HandleKey(Event_t *event)
 
 void TGListTree::MouseOver(TGListTreeItem *entry)
 {
-   Emit("MouseOver(TGListTreeItem*)", (Long_t)entry);
+   Emit("MouseOver(TGListTreeItem*)", (Longptr_t)entry);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1057,8 +1058,8 @@ void TGListTree::MouseOver(TGListTreeItem *entry)
 
 void TGListTree::MouseOver(TGListTreeItem *entry, UInt_t mask)
 {
-   Long_t args[2];
-   args[0] = (Long_t)entry;
+   Longptr_t args[2];
+   args[0] = (Longptr_t)entry;
    args[1] = mask;
    Emit("MouseOver(TGListTreeItem*,UInt_t)", args);
 }
@@ -1083,11 +1084,11 @@ void TGListTree::MouseOver(TGListTreeItem *entry, UInt_t mask)
 
 void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
 {
-   Long_t args[3];
-   args[0] = (Long_t)entry;
-   args[1] = (Long_t)keysym;
-   args[2] = (Long_t)mask;
-   Emit("KeyPressed(TGListTreeItem*,ULong_t,ULong_t)", args);
+   Longptr_t args[3];
+   args[0] = (Longptr_t)entry;
+   args[1] = (Longptr_t)keysym;
+   args[2] = (Longptr_t)mask;
+   Emit("KeyPressed(TGListTreeItem*,UInt_t,UInt_t)", args);
    SendMessage(fMsgWindow, MK_MSG(kC_LISTTREE, kCT_KEY), keysym, mask);
 }
 
@@ -1096,7 +1097,7 @@ void TGListTree::KeyPressed(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)
 
 void TGListTree::ReturnPressed(TGListTreeItem *entry)
 {
-   Emit("ReturnPressed(TGListTreeItem*)", (Long_t)entry);
+   Emit("ReturnPressed(TGListTreeItem*)", (Longptr_t)entry);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1104,9 +1105,9 @@ void TGListTree::ReturnPressed(TGListTreeItem *entry)
 
 void TGListTree::Checked(TObject *entry, Bool_t on)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = on;
 
    Emit("Checked(TObject*,Bool_t)", args);
@@ -1117,9 +1118,9 @@ void TGListTree::Checked(TObject *entry, Bool_t on)
 
 void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
 
    Emit("Clicked(TGListTreeItem*,Int_t)", args);
@@ -1130,9 +1131,9 @@ void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn)
 
 void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y)
 {
-   Long_t args[4];
+   Longptr_t args[4];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
    args[2] = x;
    args[3] = y;
@@ -1145,9 +1146,9 @@ void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y)
 
 void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, UInt_t mask, Int_t x, Int_t y)
 {
-   Long_t args[5];
+   Longptr_t args[5];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
    args[2] = mask;
    args[3] = x;
@@ -1161,9 +1162,9 @@ void TGListTree::Clicked(TGListTreeItem *entry, Int_t btn, UInt_t mask, Int_t x,
 
 void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
 
    Emit("DoubleClicked(TGListTreeItem*,Int_t)", args);
@@ -1174,9 +1175,9 @@ void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn)
 
 void TGListTree::DoubleClicked(TGListTreeItem *entry, Int_t btn, Int_t x, Int_t y)
 {
-   Long_t args[4];
+   Longptr_t args[4];
 
-   args[0] = (Long_t)entry;
+   args[0] = (Longptr_t)entry;
    args[1] = btn;
    args[2] = x;
    args[3] = y;
@@ -1481,7 +1482,7 @@ Int_t TGListTree::DrawChildren(Handle_t id, TGListTreeItem *item,
 void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
                           Int_t *xroot, UInt_t *retwidth, UInt_t *retheight)
 {
-   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext = 0, xline, yline, xc;
+   Int_t  xpic1, ypic1, xbranch, ybranch, xtext, ytext = 0, yline, xc;
    Int_t  xpic2 = 0;
    UInt_t height;
    const TGPicture *pic1 = item->GetPicture();
@@ -1490,22 +1491,15 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
    // Compute the height of this line
    height = FontHeight();
 
-   xline = 0;
    xpic1 = x;
    xtext = x + fHspacing + (Int_t)item->GetPicWidth();
    if (pic2) {
       if (pic2->GetHeight() > height) {
-         ytext = y + (Int_t)((pic2->GetHeight() - height) >> 1);
          height = pic2->GetHeight();
-      } else {
-         ytext = y;
       }
       if (pic1) xpic2 = xpic1 + pic1->GetWidth() + 1;
       else xpic2 = xpic1 + 1;
       xtext += pic2->GetWidth();
-   } else {
-      ypic1 = y;
-      xline = 0;
    }
    if (pic1) {
       if (pic1->GetHeight() > height) {
@@ -1522,12 +1516,10 @@ void TGListTree::DrawItem(Handle_t id, TGListTreeItem *item, Int_t x, Int_t y,
       xbranch = xpic1 + (Int_t)(pic1->GetWidth() >> 1);
       ybranch = ypic1 + (Int_t)pic1->GetHeight();
       yline = ypic1 + (Int_t)(pic1->GetHeight() >> 1);
-      if (xline == 0) xline = xpic1;
    } else {
-      if (xline == 0) xline = xpic1;
       ypic1 = ytext = y;
       xbranch = xpic1 + (Int_t)(item->GetPicWidth() >> 1);
-      yline = ybranch = ypic1 + (Int_t)(height >> 1);
+      ybranch = ypic1 + (Int_t)(height >> 1);
       yline = ypic1 + (Int_t)(height >> 1);
    }
 

@@ -27,7 +27,6 @@ as a MIGRAD minimization step is executed for each function evaluation
 #include "RooFit.h"
 #include "RooProfileLL.h" 
 #include "RooAbsReal.h" 
-#include "RooMinuit.h"
 #include "RooMinimizer.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
@@ -47,13 +46,10 @@ ClassImp(RooProfileLL);
    _obs("paramOfInterest","Parameters of interest",this), 
    _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE), 
    _startFromMin(kTRUE), 
-   _minimizer(0), 
    _absMinValid(kFALSE), 
    _absMin(0),
    _neval(0)
 { 
-  _piter = _par.createIterator() ; 
-  _oiter = _obs.createIterator() ; 
 } 
 
 
@@ -70,23 +66,13 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   _obs("paramOfInterest","Parameters of interest",this),
   _par("nuisanceParam","Nuisance parameters",this,kFALSE,kFALSE),
   _startFromMin(kTRUE),
-  _minimizer(0),
   _absMinValid(kFALSE),
   _absMin(0),
   _neval(0)
 { 
   // Determine actual parameters and observables
-  RooArgSet* actualObs = nllIn.getObservables(observables) ;
-  RooArgSet* actualPars = nllIn.getParameters(observables) ;
-
-  _obs.add(*actualObs) ;
-  _par.add(*actualPars) ;
-
-  delete actualObs ;
-  delete actualPars ;
-
-  _piter = _par.createIterator() ;
-  _oiter = _obs.createIterator() ;
+  nllIn.getObservables(&observables, _obs) ;
+  nllIn.getParameters(&observables, _par) ;
 } 
 
 
@@ -100,37 +86,15 @@ RooProfileLL::RooProfileLL(const RooProfileLL& other, const char* name) :
   _obs("obs",this,other._obs),
   _par("par",this,other._par),
   _startFromMin(other._startFromMin),
-  _minimizer(0),
   _absMinValid(kFALSE),
   _absMin(0),
   _paramFixed(other._paramFixed),
   _neval(0)
 { 
-  _piter = _par.createIterator() ;
-  _oiter = _obs.createIterator() ;
-
   _paramAbsMin.addClone(other._paramAbsMin) ;
   _obsAbsMin.addClone(other._obsAbsMin) ;
     
 } 
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooProfileLL::~RooProfileLL()
-{
-  // Delete instance of minuit if it was ever instantiated
-  if (_minimizer) {
-    delete _minimizer ;
-  }
-
-  delete _piter ;
-  delete _oiter ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -174,12 +138,9 @@ void RooProfileLL::initializeMinimizer() const
   
   Bool_t smode = RooMsgService::instance().silentMode() ;
   RooMsgService::instance().setSilentMode(kTRUE) ;
-  _minimizer = new MINIMIZER(const_cast<RooAbsReal&>(_nll.arg())) ;
+  _minimizer = std::make_unique<RooMinimizer>(const_cast<RooAbsReal&>(_nll.arg())) ;
   if (!smode) RooMsgService::instance().setSilentMode(kFALSE) ;
   
-  //_minimizer->setPrintLevel(-999) ;
-  //_minimizer->setNoWarn() ;
-  //_minimizer->setVerbose(1) ;
 }
 
 
@@ -197,7 +158,8 @@ Double_t RooProfileLL::evaluate() const
   }
 
   // Save current value of observables
-  RooArgSet* obsSetOrig = (RooArgSet*) _obs.snapshot() ;
+  RooArgSet obsSetOrig;
+  _obs.snapshot(obsSetOrig) ;
 
   validateAbsMin() ;
 
@@ -208,7 +170,7 @@ Double_t RooProfileLL::evaluate() const
 
   // If requested set initial parameters to those corresponding to absolute minimum
   if (_startFromMin) {
-    const_cast<RooProfileLL&>(*this)._par = _paramAbsMin ;
+    _par.assign(_paramAbsMin) ;
   }
 
   _minimizer->zeroEvalCount() ;
@@ -222,15 +184,13 @@ Double_t RooProfileLL::evaluate() const
   _neval = _minimizer->evalCounter() ;
 
   // Restore original values and constant status of observables
-  TIterator* iter = obsSetOrig->createIterator() ;
-  RooRealVar* var ;
-  while((var=dynamic_cast<RooRealVar*>(iter->Next()) ) )  {
-    RooRealVar* target = (RooRealVar*) _obs.find(var->GetName()) ;
+  for(auto const& arg : obsSetOrig) {
+    assert(dynamic_cast<RooRealVar*>(arg));
+    auto var = static_cast<RooRealVar*>(arg);
+    auto target = static_cast<RooRealVar*>(_obs.find(var->GetName())) ;
     target->setVal(var->getVal()) ;
     target->setConstant(var->isConstant()) ;
   }
-  delete iter ;
-  delete obsSetOrig ;
 
   return _nll - _absMin ; 
 } 
@@ -246,9 +206,7 @@ void RooProfileLL::validateAbsMin() const
 {
   // Check if constant status of any of the parameters have changed
   if (_absMinValid) {
-    _piter->Reset() ;
-    RooAbsArg* par ;
-    while((par=(RooAbsArg*)_piter->Next())) {
+    for(auto const& par : _par) {
       if (_paramFixed[par->GetName()] != par->isConstant()) {
 	cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") constant status of parameter " << par->GetName() << " has changed from " 
 				<< (_paramFixed[par->GetName()]?"fixed":"floating") << " to " << (par->isConstant()?"fixed":"floating") 
@@ -271,7 +229,8 @@ void RooProfileLL::validateAbsMin() const
     }
     
     // Save current values of non-marginalized parameters
-    RooArgSet* obsStart = (RooArgSet*) _obs.snapshot(kFALSE) ;
+    RooArgSet obsStart;
+    _obs.snapshot(obsStart, false) ;
 
     // Start from previous global minimum 
     if (_paramAbsMin.getSize()>0) {
@@ -298,35 +257,29 @@ void RooProfileLL::validateAbsMin() const
     _paramAbsMin.removeAll() ;
 
     // Only store non-constant parameters here!
-    RooArgSet* tmp = (RooArgSet*) _par.selectByAttrib("Constant",kFALSE) ;
-    _paramAbsMin.addClone(*tmp) ;
-    delete tmp ;
+    _paramAbsMin.addClone(*std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(_par.selectByAttrib("Constant",false))});
 
     _obsAbsMin.addClone(_obs) ;
 
     // Save constant status of all parameters
-    _piter->Reset() ;
-    RooAbsArg* par ;
-    while((par=(RooAbsArg*)_piter->Next())) {
+    for(auto const& par : _par) {
       _paramFixed[par->GetName()] = par->isConstant() ;
     }
     
     if (dologI(Minimization)) {
       cxcoutI(Minimization) << "RooProfileLL::evaluate(" << GetName() << ") minimum found at (" ;
 
-      RooAbsReal* arg ;
       Bool_t first=kTRUE ;
-      _oiter->Reset() ;
-      while ((arg=(RooAbsReal*)_oiter->Next())) {
-	ccxcoutI(Minimization) << (first?"":", ") << arg->GetName() << "=" << arg->getVal() ;	
-	first=kFALSE ;
+      for(auto const& arg : _obs) {
+        ccxcoutI(Minimization) << (first?"":", ") << arg->GetName() << "="
+                               << static_cast<RooAbsReal const*>(arg)->getVal() ;
+        first=kFALSE ;
       }      
       ccxcoutI(Minimization) << ")" << endl ;            
     }
 
     // Restore original parameter values
-    const_cast<RooSetProxy&>(_obs) = *obsStart ;
-    delete obsStart ;
+    _obs.assign(obsStart) ;
 
   }
 }
@@ -338,10 +291,7 @@ void RooProfileLL::validateAbsMin() const
 Bool_t RooProfileLL::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, 
 					 Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
 { 
-  if (_minimizer) {
-    delete _minimizer ;
-    _minimizer = 0 ;
-  }
+  _minimizer.reset(nullptr);
   return kFALSE ;
 } 
 

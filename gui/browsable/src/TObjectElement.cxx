@@ -18,6 +18,7 @@
 #include "TBrowserImp.h"
 #include "TFolder.h"
 #include "TList.h"
+#include "TColor.h"
 #include "TDirectory.h"
 #include "TBufferJSON.h"
 
@@ -74,6 +75,7 @@ public:
       auto cl = elem->GetClass();
 
       auto nchilds = elem->GetNumChilds();
+      if ((nchilds == 0) && elem->IsFolder()) nchilds = -1; // indicate that TObject is container
 
       auto item = std::make_unique<TObjectItem>(elem->GetName(), nchilds);
 
@@ -82,6 +84,10 @@ public:
       item->SetIcon(RProvider::GetClassIcon(cl, nchilds > 0));
 
       item->SetTitle(elem->GetTitle());
+
+      auto sz = elem->GetSize();
+      if (sz >= 0)
+         item->SetSize(std::to_string(sz));
 
       return item;
    }
@@ -101,7 +107,6 @@ public:
 
       return RLevelIter::Find(name, -1);
    }
-
 
 };
 
@@ -185,6 +190,11 @@ public:
       item->SetIcon(RProvider::GetClassIcon(obj->IsA(), obj->IsFolder()));
 
       item->SetTitle(obj->GetTitle());
+
+      if (obj->IsA() == TColor::Class()) {
+         if (item->GetName().empty())
+            item->SetName("Color"s + std::to_string(static_cast<TColor *>(obj)->GetNumber()));
+      }
 
       return item;
    }
@@ -308,7 +318,7 @@ std::string TObjectElement::GetTitle() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns IsFolder of contained TObject
 
-bool TObjectElement::IsFolder()
+bool TObjectElement::IsFolder() const
 {
    return fObj ? fObj->IsFolder() : false;
 }
@@ -365,6 +375,7 @@ RElement::EActionKind TObjectElement::GetDefaultAction() const
 {
    auto cl = GetClass();
    if (!cl) return kActNone;
+   if ("TCanvas"s == cl->GetName()) return kActCanvas;
    if (("TGeoManager"s == cl->GetName()) || ("TGeoVolume"s == cl->GetName())) return kActGeom;
    if (RProvider::CanDraw6(cl)) return kActDraw6;
    if (RProvider::CanDraw7(cl)) return kActDraw7;
@@ -386,6 +397,7 @@ bool TObjectElement::IsCapable(RElement::EActionKind action) const
       case kActImage:
       case kActDraw6: return RProvider::CanDraw6(cl); // if can draw in TCanvas, can produce image
       case kActDraw7: return RProvider::CanDraw7(cl);
+      case kActCanvas: return "TCanvas"s == cl->GetName();
       case kActGeom: return ("TGeoManager"s == cl->GetName()) || ("TGeoVolume"s == cl->GetName());
       default: return false;
    }
@@ -424,12 +436,14 @@ public:
 
    RTObjectProvider()
    {
-      RegisterTObject("TTree", "sap-icon://tree", true, 0);
-      RegisterTObject("TNtuple", "sap-icon://tree", true, 0);
+      RegisterClass("TTree", "sap-icon://tree", "libROOTBranchBrowseProvider");
+      RegisterClass("TNtuple", "sap-icon://tree", "libROOTBranchBrowseProvider");
       RegisterClass("TBranchElement", "sap-icon://e-care", "libROOTBranchBrowseProvider", "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
       RegisterClass("TLeaf", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
-      RegisterClass("TBranch", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
+      RegisterClass("TBranch", "sap-icon://e-care", "libROOTBranchBrowseProvider"s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
       RegisterClass("TVirtualBranchBrowsable", "sap-icon://e-care", ""s, "libROOTLeafDraw6Provider", "libROOTLeafDraw7Provider");
+      RegisterClass("TColor", "sap-icon://palette");
+      RegisterClass("TStyle", "sap-icon://badge");
 
       RegisterTObject("TDirectory", "sap-icon://folder-blank", true, 0);
       RegisterTObject("TH1", "sap-icon://bar-chart");

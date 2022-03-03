@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -100,8 +100,7 @@ public:
 /** \class RDrawable
 \ingroup GpadROOT7
 \brief Base class for drawable entities: objects that can be painted on a `RPad`.
-\author Axel Naumann <axel@cern.ch>
-\author Sergey Linev <s.linev@gsi.de>
+\authors Axel Naumann <axel@cern.ch>, Sergey Linev <s.linev@gsi.de>
 \date 2015-08-07
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
@@ -109,6 +108,7 @@ public:
 class RDrawable {
 
 friend class RPadBase; // to access Display method and IsFrameRequired
+friend class RCanvas; // to access SetDrawableVersion
 friend class RAttrBase;
 friend class RStyle;
 friend class RLegend; // to access CollectShared method
@@ -169,12 +169,12 @@ public:
    };
 
 private:
-   RAttrMap fAttr;               ///< attributes values
-   std::weak_ptr<RStyle> fStyle; ///<! style applied for RDrawable, not stored when canvas is saved
-   std::string fCssType;         ///<! drawable type, not stored in the root file, must be initialized in constructor
-   std::string fCssClass;        ///< user defined drawable class, can later go inside map
-   std::string fId;              ///< optional object identifier, may be used in CSS as well
-   Version_t fVersion{1};        ///<! drawable version, changed from the canvas
+   RAttrMap fAttr;                ///< attributes values
+   std::weak_ptr<RStyle> fStyle;  ///<! style applied for RDrawable, not stored when canvas is saved
+   const char *fCssType{nullptr}; ///<! drawable type, not stored in the root file, must be initialized in constructor
+   std::string fCssClass;         ///< user-defined CSS class, used for RStyle
+   std::string fId;               ///< user-defined CSS id, used for RStyle
+   Version_t fVersion{1};         ///<! drawable version, changed from the canvas
 
 protected:
 
@@ -188,6 +188,8 @@ protected:
    bool MatchSelector(const std::string &selector) const;
 
    virtual std::unique_ptr<RDisplayItem> Display(const RDisplayContext &);
+
+   void SetCssType(const char *csstype) { fCssType = csstype; }
 
    virtual void OnDisplayItemDestroyed(RDisplayItem *) const {}
 
@@ -203,20 +205,20 @@ protected:
 
 public:
 
-   explicit RDrawable(const std::string &type) : fCssType(type) {}
+   explicit RDrawable(const char *csstype) : fCssType(csstype) {}
 
    virtual ~RDrawable();
 
    virtual void UseStyle(const std::shared_ptr<RStyle> &style) { fStyle = style; }
    void ClearStyle() { UseStyle(nullptr); }
 
+   const char *GetCssType() const { return fCssType; }
+
    void SetCssClass(const std::string &cl) { fCssClass = cl; }
    const std::string &GetCssClass() const { return fCssClass; }
 
-   const std::string &GetCssType() const { return fCssType; }
-
-   const std::string &GetId() const { return fId; }
    void SetId(const std::string &id) { fId = id; }
+   const std::string &GetId() const { return fId; }
 };
 
 /// Central method to insert drawable in list of pad primitives

@@ -7,10 +7,14 @@
  * @date 2013-07-07
  */
 #ifndef _WIN32
+
+#include "BidirMMapPipe.h"
+
+#include <RooFit/Common.h>
+
 #include <map>
 #include <cerrno>
 #include <limits>
-#include <string>
 #include <cstdlib>
 #include <cstring>
 #include <cassert>
@@ -22,13 +26,10 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <sys/socket.h>
-
-#include "BidirMMapPipe.h"
 
 #define BEGIN_NAMESPACE_ROOFIT namespace RooFit {
 #define END_NAMESPACE_ROOFIT }
@@ -294,7 +295,7 @@ namespace BidirMMapPipe_impl {
     Pages& Pages::operator=(const Pages& other)
     {
         if (&other == this) return *this;
-        if (--(m_pimpl->m_refcnt)) {
+        if (!--(m_pimpl->m_refcnt)) {
             if (m_pimpl->m_parent) m_pimpl->m_parent->push(*this);
             delete m_pimpl;
         }
@@ -460,12 +461,12 @@ namespace BidirMMapPipe_impl {
             return retVal;
         }
         if (FileBacked == s_mmapworks || Unknown == s_mmapworks) {
-            char name[] = "/tmp/BidirMMapPipe-XXXXXX";
+            std::string name = RooFit::tmpPath() + "BidirMMapPipe-XXXXXX";
             int fd;
             // open temp file
-            if (-1 == (fd = ::mkstemp(name))) throw Exception("mkstemp", errno);
+            if (-1 == (fd = ::mkstemp(const_cast<char*>(name.c_str())))) throw Exception("mkstemp", errno);
             // remove it, but keep fd open
-            if (-1 == ::unlink(name)) {
+            if (-1 == ::unlink(name.c_str())) {
                 int errsv = errno;
                 ::close(fd);
                 throw Exception("unlink", errsv);
@@ -477,7 +478,7 @@ namespace BidirMMapPipe_impl {
                 throw Exception("lseek", errsv);
             }
             // make it the right size: write a byte
-            if (1 != ::write(fd, name, 1)) {
+            if (1 != ::write(fd, name.c_str(), 1)) {
                 int errsv = errno;
                 ::close(fd);
                 throw Exception("write", errsv);
@@ -1442,8 +1443,14 @@ int BidirMMapPipe::poll(BidirMMapPipe::PollVector& pipes, int timeout)
             ++it, ++mit) {
         PollEntry& pe = *it;
         pe.revents = None;
-        // null pipe pointer or closed pipe is invalid
-        if (!pe.pipe || pe.pipe->closed()) pe.revents |= Invalid;
+        // null pipe is invalid
+        if (!pe.pipe) {
+           pe.revents |= Invalid;
+           canskiptimeout = true;
+           continue;
+        }
+        // closed pipe is invalid
+        if (pe.pipe->closed()) pe.revents |= Invalid;
         // check for error
         if (pe.pipe->bad()) pe.revents |= Error;
         // check for end of file

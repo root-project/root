@@ -38,6 +38,7 @@ parallelized calculation of test statistics.
 #include "RooFit.h"
 
 #include "Riostream.h"
+#include "TClass.h"
 #include <string.h>
 
 
@@ -114,15 +115,14 @@ RooAbsOptTestStatistic:: RooAbsOptTestStatistic()
 /// \param[in] cloneInputData Not used. Data is always cloned.
 /// \param[in] integrateOverBinsPrecision If > 0, PDF in binned fits are integrated over the bins. This sets the precision. If = 0,
 /// only unbinned PDFs fit to RooDataHist are integrated. If < 0, PDFs are never integrated.
-RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& indata,
-					       const RooArgSet& projDeps, const char* rangeName, const char* addCoefRangeName,
-					       Int_t nCPU, RooFit::MPSplit interleave, Bool_t verbose, Bool_t splitCutRange, Bool_t /*cloneInputData*/,
-					       double integrateOverBinsPrecision) :
-  RooAbsTestStatistic(name,title,real,indata,projDeps,rangeName, addCoefRangeName, nCPU, interleave, verbose, splitCutRange),
+RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real,
+                                               RooAbsData& indata, const RooArgSet& projDeps,
+                                               RooAbsTestStatistic::Configuration const& cfg) :
+  RooAbsTestStatistic(name,title,real,indata,projDeps,cfg),
   _projDeps(0),
   _sealed(kFALSE), 
   _optimized(kFALSE),
-  _integrateBinsPrecision(integrateOverBinsPrecision)
+  _integrateBinsPrecision(cfg.integrateOverBinsPrecision)
 {
   // Don't do a thing in master mode
 
@@ -142,7 +142,7 @@ RooAbsOptTestStatistic::RooAbsOptTestStatistic(const char *name, const char *tit
   _origFunc = 0 ; //other._origFunc ;
   _origData = 0 ; // other._origData ;
 
-  initSlave(real,indata,projDeps,rangeName,addCoefRangeName) ;
+  initSlave(real, indata, projDeps, _rangeName.c_str(), _addCoefRangeName.c_str()) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -411,6 +411,13 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   optimizeCaching() ;
 
+  // It would be unusual if the global observables are used in the likelihood
+  // outside of the constraint terms, but if they are we have to be consistent
+  // and also redirect them to the snapshots in the dataset if appropriate.
+  if(_takeGlobalObservablesFromData && _data->getGlobalObservables()) {
+    recursiveRedirectServers(*_data->getGlobalObservables()) ;
+  }
+
 }
 
 
@@ -607,6 +614,19 @@ void RooAbsOptTestStatistic::optimizeConstantTerms(Bool_t activate, Bool_t apply
     // so that cache contents can be processed immediately
     _funcClone->getVal(_normSet) ;
 
+
+    //  WVE - Patch to allow customization of optimization level per component pdf
+    if (_funcClone->getAttribute("NoOptimizeLevel1")) {
+      coutI(Minimization) << " Optimization customization: Level-1 constant-term optimization prohibited by attribute NoOptimizeLevel1 set on top-level pdf  " 
+                          << _funcClone->IsA()->GetName() << "::" << _funcClone->GetName() << endl ;
+      return ;
+    }
+    if (_funcClone->getAttribute("NoOptimizeLevel2")) {
+      coutI(Minimization) << " Optimization customization: Level-2 constant-term optimization prohibited by attribute NoOptimizeLevel2 set on top-level pdf  " 
+                          << _funcClone->IsA()->GetName() << "::" << _funcClone->GetName() << endl ;
+      applyTrackingOpt=kFALSE ;
+    }
+    
     // Apply tracking optimization here. Default strategy is to track components
     // of RooAddPdfs and RooRealSumPdfs. If these components are a RooProdPdf
     // or a RooProduct respectively, track the components of these products instead
@@ -717,10 +737,15 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
   //indata.Print("v") ;
 
 
-  // Delete previous dataset now, if it was owned
+  // If the current dataset is owned, transfer the ownership to unique pointer
+  // that will get out of scope at the end of this function. We can't delete it
+  // right now, because there might be global observables in the model that
+  // first need to be redirected to the new dataset with a later call to
+  // RooAbsArg::recursiveRedirectServers.
+  std::unique_ptr<RooAbsData> oldOwnedData;
   if (_ownData) {
-    delete _dataClone ;
-    _dataClone = 0 ;
+    oldOwnedData.reset(_dataClone);
+    _dataClone = nullptr ;
   }
 
   if (!cloneData && _rangeName.size()>0) {
@@ -761,7 +786,12 @@ Bool_t RooAbsOptTestStatistic::setDataSlave(RooAbsData& indata, Bool_t cloneData
 
   setValueDirty() ;
 
-//   cout << "RAOTS::setDataSlave(" << this << ") END" << endl ;
+  // It would be unusual if the global observables are used in the likelihood
+  // outside of the constraint terms, but if they are we have to be consistent
+  // and also redirect them to the snapshots in the dataset if appropriate.
+  if(_takeGlobalObservablesFromData && _data->getGlobalObservables()) {
+    recursiveRedirectServers(*_data->getGlobalObservables()) ;
+  }
 
   return kTRUE ;
 }
@@ -809,51 +839,11 @@ const RooAbsData& RooAbsOptTestStatistic::data() const
 /// - = 0: Only enable feature if fitting unbinned PDF to RooDataHist.
 /// - > 0: Enable as requested.
 void RooAbsOptTestStatistic::setUpBinSampling() {
-  if (_integrateBinsPrecision < 0.)
-    return;
 
-  std::unique_ptr<RooArgSet> funcObservables( _funcClone->getObservables(*_dataClone) );
-  const bool oneDimAndBinned = (1 == std::count_if(funcObservables->begin(), funcObservables->end(), [](const RooAbsArg* arg) {
-    auto var = dynamic_cast<const RooRealVar*>(arg);
-    return var && var->numBins() > 1;
-  }));
-
-  if (!oneDimAndBinned) {
-    if (_integrateBinsPrecision > 0.) {
-      coutE(Fitting) << "Integration over bins was requested, but this is currently only implemented for 1-D fits." << std::endl;
-    }
-    return;
-  }
-
-  // Find the real-valued observable. We don't care about categories.
-  auto theObs = std::find_if(funcObservables->begin(), funcObservables->end(), [](const RooAbsArg* arg){
-    return dynamic_cast<const RooAbsRealLValue*>(arg);
-  });
-  assert(theObs != funcObservables->end());
-
-  RooBinSamplingPdf* newPdf = nullptr;
-
-  if (_integrateBinsPrecision > 0.) {
-    // User forced integration. Let just apply it.
-    newPdf = new RooBinSamplingPdf((std::string(_funcClone->GetName()) + "_binSampling").c_str(),
-        _funcClone->GetTitle(),
-        *static_cast<RooAbsRealLValue*>(*theObs),
-        *static_cast<RooAbsPdf*>(_funcClone),
-        _integrateBinsPrecision);
-  } else if (dynamic_cast<RooDataHist*>(_dataClone) != nullptr
-      && _integrateBinsPrecision == 0.
-      && !_funcClone->isBinnedDistribution(*_dataClone->get())) {
-    // User didn't forbid integration, and it seems appropriate with a RooDataHist.
-    coutI(Fitting) << "The PDF '" << _funcClone->GetName() << "' is continuous, but fit to binned data.\n"
-        << "RooFit will integrate it in each bin using the RooBinSamplingPdf." << std::endl;
-    newPdf = new RooBinSamplingPdf((std::string(_funcClone->GetName()) + "_binSampling").c_str(),
-        _funcClone->GetTitle(),
-        *static_cast<RooAbsRealLValue*>(*theObs),
-        *static_cast<RooAbsPdf*>(_funcClone));
-  }
-
-  if (newPdf) {
+  auto& pdf = static_cast<RooAbsPdf&>(*_funcClone);
+  if (auto newPdf = RooBinSamplingPdf::create(pdf, *_dataClone, _integrateBinsPrecision)) {
     newPdf->addOwnedComponents(*_funcClone);
-    _funcClone = newPdf;
+    _funcClone = newPdf.release();
   }
+
 }

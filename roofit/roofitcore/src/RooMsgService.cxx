@@ -89,7 +89,7 @@ RooMsgService::RooMsgService()
   _levelNames[FATAL]="FATAL" ;
 
   _topicNames[Generation]="Generation" ;
-  _topicNames[Minimization]="Minization" ;
+  _topicNames[Minimization]="Minimization" ;
   _topicNames[Plotting]="Plotting" ;
   _topicNames[Fitting]="Fitting" ;
   _topicNames[Integration]="Integration" ;
@@ -120,7 +120,7 @@ void RooMsgService::reset() {
   _debugWorkspace = nullptr;
   _debugCode = 0 ;
 
-  for (auto item : _files) {
+  for (auto &item : _files) {
     delete item.second;
   }
   _files.clear();

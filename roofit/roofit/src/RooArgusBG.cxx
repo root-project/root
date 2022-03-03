@@ -83,14 +83,15 @@ Double_t RooArgusBG::evaluate() const {
   if(t >= 1) return 0;
 
   Double_t u= 1 - t*t;
-  //cout << "c = " << c << " result = " << m*TMath::Power(u,p)*exp(c*u) << endl ;
   return m*TMath::Power(u,p)*exp(c*u) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Argus distribution.  
-RooSpan<double> RooArgusBG::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeArgusBG(this, evalData, m->getValues(evalData, normSet), m0->getValues(evalData, normSet), c->getValues(evalData, normSet), p->getValues(evalData, normSet));
+
+void RooArgusBG::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::ArgusBG, output, nEvents, dataMap, {&*m,&*m0,&*c,&*p,&*_norm});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

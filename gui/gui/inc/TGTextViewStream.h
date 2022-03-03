@@ -11,16 +11,6 @@
 #ifndef ROOT_TGTextViewStream
 #define ROOT_TGTextViewStream
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextViewStream                                                     //
-//                                                                      //
-// A TGTextViewStream is a text viewer widget. It is a specialization   //
-// of TGTextView and std::ostream, and it uses a TGTextViewStreamBuf,   //
-// who inherits from std::streambuf, allowing to stream text directly   //
-// to the text view in a cout-like fashion                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGTextView.h"
 #include <vector>

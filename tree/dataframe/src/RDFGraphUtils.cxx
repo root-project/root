@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RColumnRegister.hxx"
 #include "ROOT/RDF/GraphUtils.hxx"
 
 #include <algorithm> // std::find
@@ -140,17 +140,16 @@ std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *
    return node;
 }
 
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RDFInternal::RBookedDefines &defines,
+std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines)
 {
    auto upmostNode = node;
-   const auto &defineNames = defines.GetNames();
-   const auto &defineMap = defines.GetColumns();
+   const auto &defineNames = colRegister.GetNames();
+   const auto &defineMap = colRegister.GetColumns();
    for (auto i = int(defineNames.size()) - 1; i >= 0; --i) { // walk backwards through the names of defined columns
       const auto colName = defineNames[i];
       const bool isAlias = defineMap.find(colName) == defineMap.end();
-      if (isAlias || RDFInternal::IsInternalColumn(colName))
+      if (isAlias || IsInternalColumn(colName))
          continue; // aliases appear in the list of defineNames but we don't support them yet
       const bool isANewDefine =
          std::find(prevNodeDefines.begin(), prevNodeDefines.end(), colName) == prevNodeDefines.end();

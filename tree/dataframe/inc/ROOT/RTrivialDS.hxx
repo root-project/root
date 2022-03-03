@@ -18,6 +18,9 @@ namespace ROOT {
 
 namespace RDF {
 
+/// \brief A simple data-source implementation, for demo purposes.
+///
+/// Constructing an RDataFrame as `RDataFrame(nEntries)` is a superior alternative.
 class RTrivialDS final : public ROOT::RDF::RDataSource {
 private:
    unsigned int fNSlots = 0U;
@@ -47,10 +50,12 @@ public:
    std::string GetLabel();
 };
 
-// Make a RDF wrapping a RTrivialDS with the specified amount of entries
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
-// Make a RDF wrapping a RTrivialDS with infinite entries
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame();
+/// \brief Make a RDF wrapping a RTrivialDS with the specified amount of entries.
+///
+/// Constructing an RDataFrame as `RDataFrame(nEntries)` is a superior alternative.
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
+/// \brief Make a RDF wrapping a RTrivialDS with infinite entries, for demo purposes.
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame();
 
 } // ns RDF
 

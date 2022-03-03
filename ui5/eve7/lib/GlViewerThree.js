@@ -83,7 +83,7 @@ sap.ui.define([
          this.scene = new THREE.Scene();
          // this.scene.fog = new THREE.FogExp2( 0xaaaaaa, 0.05 );
 
-         if (this.controller.kind === "3D") {
+         if (this.controller.isEveCameraPerspective()) {
             this.camera = new THREE.PerspectiveCamera(75, w / h, 1, 5000);
          }
          else {
@@ -191,7 +191,7 @@ sap.ui.define([
          } else if (e0_buttons == 2) { // Context menu on delay without move
             // Was needed for "on press with timeout"
             // this.controls.resetMouseDown(event);
-
+            JSROOT.Painter.createMenu(event, this).then(menu => { this.showContextMenu(event, menu) });
          }
       },
 
@@ -200,7 +200,7 @@ sap.ui.define([
          if (event.buttons != 1 && event.buttons != 2) this.clearHighlight();
          this.removeMouseupListener();
 
-         if ((event.buttons == 1) && this.renderer) {
+         if ((event.buttons == 1 || event.buttons == 2) && this.renderer) {
             this.mouseup_listener = this.mouseUpHandler.bind(this, event.buttons);
             this.renderer.domElement.addEventListener('mouseup', this.mouseup_listener);
          }
@@ -359,6 +359,11 @@ sap.ui.define([
       //==============================================================================
 
       render: function() {
+         // AMT check if controller is attached in the splitter
+         let v = this.get_manager().GetElement(this.controller.eveViewerId);
+         if (!v.fRnrSelf)
+            return;
+         
          // Render through composer:
          this.composer.render(this.scene, this.camera);
 
@@ -428,28 +433,40 @@ sap.ui.define([
          this.raycaster.setFromCamera(mouse, this.camera);
 
          let intersects = this.raycaster.intersectObjects(this.scene.children, true);
+         for (let i = 0; i < intersects.length; ++i)
+         {
+            if (!intersects[i].object.get_ctrl)
+               intersects[i].object = intersects[i].object.parent;
 
-         for (let i = 0; i < intersects.length; ++i) {
-            if (intersects[i].object.get_ctrl && intersects[i].object.visible) {
-               intersects[i].mouse = mouse;
-               intersects[i].w = w;
-               intersects[i].h = h;
-               return intersects[i];
+            if (intersects[i].object.visible && intersects[i].object.get_ctrl)
+            {
+               let ctrl = intersects[i].object.get_ctrl();
+               if (ctrl && ctrl.obj3d && ctrl.obj3d.eve_el)
+               {
+                  let el = ctrl.obj3d.eve_el;
+                  if (el && el.fPickable)
+                  {
+                     intersects[i].mouse = mouse;
+                     intersects[i].w = w;
+                     intersects[i].h = h;
+                     return intersects[i];
+                  }
+               }
             }
          }
+         return null;
       },
 
       onMouseMoveTimeout: function(x, y) {
          delete this.mousemove_timeout;
 
-         var intersect = this.getIntersectAt(x, y);
-
+         let intersect = this.getIntersectAt(x, y);
          if (!intersect)
             return this.clearHighlight();
 
-         var c = intersect.object.get_ctrl();
+         let c = intersect.object.get_ctrl();
 
-         var mouse = intersect.mouse;
+         let mouse = intersect.mouse;
 
          c.elementHighlighted(c.extractIndex(intersect));
 
@@ -523,13 +540,13 @@ sap.ui.define([
          // See js/scripts/JSRootPainter.jquery.js JSROOT.Painter.createMenu(), menu.add()
 
 
-         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+         let intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
          menu.add("header:Context Menu");
 
          if (intersect) {
-            if (intersect.object.eve_el)
-               menu.add("Browse to " + (intersect.object.eve_el.fName || "element"), intersect.object.eve_el.fElementId, this.controller.invokeBrowseOf.bind(this.controller));
+            let el = intersect.object.get_ctrl().obj3d.eve_el;
+            menu.add("Browse to " + (el.fName || "element"), el.fElementId, this.controller.invokeBrowseOf.bind(this.controller));
          }
 
          menu.add("Reset camera", this.resetThreejsRenderer);
@@ -551,10 +568,10 @@ sap.ui.define([
       },
 
       handleMouseSelect: function(event) {
-         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+         let intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
          if (intersect) {
-            var c = intersect.object.get_ctrl();
+            let c = intersect.object.get_ctrl();
             c.event = event;
             c.elementSelected(c.extractIndex(intersect));
             this.highlighted_scene = intersect.object.scene;

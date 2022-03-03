@@ -26,7 +26,6 @@
 #include "TCanvas.h"
 #include "TH1D.h"
 #include "TLatex.h"
-#include "Math/Vector4D.h"
 #include "TStyle.h"
 
 using namespace ROOT::VecOps;
@@ -46,8 +45,8 @@ void df102_NanoAODDimuonAnalysis()
    // Compute invariant mass of the dimuon system
    auto df_mass = df_os.Define("Dimuon_mass", InvariantMass<float>, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
 
-   // Make histogram of dimuon mass spectrum
-   auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 30000, 0.25, 300}, "Dimuon_mass");
+   // Make histogram of dimuon mass spectrum. Note how we can set title and axis labels in one go
+   auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon mass;m_{#mu#mu} (GeV);N_{Events}", 30000, 0.25, 300}, "Dimuon_mass");
 
    // Request cut-flow report
    auto report = df_mass.Report();
@@ -57,9 +56,8 @@ void df102_NanoAODDimuonAnalysis()
    auto c = new TCanvas("c", "", 800, 700);
    c->SetLogx(); c->SetLogy();
 
-   h->SetTitle("");
-   h->GetXaxis()->SetTitle("m_{#mu#mu} (GeV)"); h->GetXaxis()->SetTitleSize(0.04);
-   h->GetYaxis()->SetTitle("N_{Events}"); h->GetYaxis()->SetTitleSize(0.04);
+   h->GetXaxis()->SetTitleSize(0.04);
+   h->GetYaxis()->SetTitleSize(0.04);
    h->DrawClone();
 
    TLatex label; label.SetNDC(true);

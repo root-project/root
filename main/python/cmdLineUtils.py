@@ -21,8 +21,10 @@ from time import sleep
 # Support both Python2 and Python3 at the same time
 if sys.version_info.major > 2 :
     _input = input
+    from itertools import zip_longest
 else:
     _input = raw_input
+    from itertools import izip_longest as zip_longest
 
 def fileno(file_or_fd):
     """
@@ -639,11 +641,11 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
                         retcode += retcodeTemp
                         continue
                     else:
-                        obj.SetName(setName)
+                        if isinstance(obj, ROOT.TNamed): obj.SetName(setName)
                         changeDirectory(destFile,destPathSplit)
                         obj.Write()
                 else:
-                    obj.SetName(setName)
+                    if isinstance(obj, ROOT.TNamed): obj.SetName(setName)
                     changeDirectory(destFile,destPathSplit)
                     obj.Write()
             elif issubclass(obj.__class__, ROOT.TCollection):
@@ -652,9 +654,9 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
                 obj.Write(setName, ROOT.TObject.kSingleKey)
             else:
                 if setName != "":
-                    obj.SetName(setName)
+                    if isinstance(obj, ROOT.TNamed): obj.SetName(setName)
                 else:
-                    obj.SetName(objectName)
+                    if isinstance(obj, ROOT.TNamed): obj.SetName(objectName)
                 changeDirectory(destFile,destPathSplit)
                 obj.Write()
             obj.Delete()
@@ -942,9 +944,8 @@ def _prepareTime(time):
 
 MONTH = {1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'May',6:'Jun', \
          7:'Jul',8:'Aug',9:'Sep',10:'Oct',11:'Nov',12:'Dec'}
-LONG_TEMPLATE = \
-    isSpecial(ANSI_BOLD,"{0:{classWidth}}")+"{1:{timeWidth}}" + \
-    "{2:{nameWidth}}{3:{titleWidth}}"
+LONG_TEMPLATE = isSpecial(ANSI_BOLD, "{0:{classWidth}}") + "{1:{timeWidth}}" + \
+    "{2:{nameWidth}}{3:{titleWidth}}{4:{cycleWidth}}"
 
 def _printClusters(tree, indent):
     clusterStart = 0
@@ -961,39 +962,99 @@ def _printClusters(tree, indent):
         clusterStart = clusterIter()
     write(isSpecial(ANSI_BOLD,"The total number of clusters is %d\n" % nTotClusters), indent)
 
-def _rootLsPrintLongLs(keyList,indent,treeListing):
-    """Print a list of Tkey in columns
-    pattern : classname, datetime, name and title"""
-    if len(keyList) > 0: # Width informations
-        maxCharClass = max([len(key.GetClassName()) for key in keyList])
-        maxCharTime = 12
-        maxCharName = max([len(key.GetName()) for key in keyList])
-        dic = { \
-            "classWidth":maxCharClass+2, \
-            "timeWidth":maxCharTime+2, \
-            "nameWidth":maxCharName+2, \
-            "titleWidth":1}
-    for key in keyList:
-        datime = key.GetDatime()
+
+def _rootLsPrintLongLs(keyList, indent, treeListing):
+    """Prints a list of `TKey`s and some information.
+
+    The information of each key is printed with the following pattern:
+
+    TKeyClassName  {date time pattern} TKeyName;TKeyCycle  TKeyTitle  {optional: [current/backup cycle]}
+
+    An example:
+
+    ```
+    $ rootls -l https://root.cern/files/tutorials/hsimple.root
+    TProfile  Jun 30 23:59 2018 hprof;1  "Profile of pz versus px"
+    TH1F      Jun 30 23:59 2018 hpx;1    "This is the px distribution"
+    TH2F      Jun 30 23:59 2018 hpxpy;1  "py vs px"
+    TNtuple   Jun 30 23:59 2018 ntuple;1 "Demo ntuple"
+    ```
+    """
+    # Early return if the keyList is empty
+    if not keyList:
+        return
+
+    maxCharClass = max([len(key.GetClassName()) for key in keyList])
+    maxCharTime = 12
+    maxCharName = max([len(key.GetName()) for key in keyList])
+    dic = {
+        "classWidth": maxCharClass+2,
+        "timeWidth": maxCharTime+2,
+        "nameWidth": maxCharName+2,
+        "titleWidth": 1,
+        "cycleWidth": 1}
+
+    # Input keyList is a THashList. Convert it to a Python list to make it work
+    # with zip_longest later
+    keyList = [key for key in keyList]
+    # Mimic the logic used in TDirectoryFile::ls(Option_t *option)
+    # For any key in the list, we need to grab the previous one and the next one.
+    # To do this, we use the iterator returned by zip_longest. The three input
+    # lists to zip_longest can be visualized as follows:
+    #
+    # a = ["key_1","key_2","key_3"]
+    # a_lagright = [None] + a[:-1]
+    # a_lagleft = a[1:]
+    # list(zip_longest(a_lagright, a, a_lagleft))
+    # [(None, 'key_1', 'key_2'), ('key_1', 'key_2', 'key_3'), ('key_2', 'key_3', None)]
+    #
+    # So that for any key, we can have a correct reference to the previous and
+    # following keys of `keyList`. The first key has no previous key and the last
+    # key has no following key, so the respective elements of the zip_longest
+    # iterator are `None`.
+    for previouskey, currentkey, nextkey in zip_longest([None]+keyList[:-1], keyList, keyList[1:]):
+        # If this key is the first one in the list, or if it has a different
+        # name than the previous one, it means that it's the first object of
+        # that kind in the list.
+        if previouskey is None or currentkey.GetName() != previouskey.GetName():
+            # Then we check the following key. If the current key is not
+            # the last key in the list and if the following key has the same
+            # name, then it means it's another cycle of the same object.
+            # Thus, it's gonna be a backup cycle of the same object.
+            # Otherwise, it's just a key with one cycle so we don't need
+            # to print information two distinguish between different cycles
+            # of the same key.
+            if nextkey is not None and currentkey.GetName() == nextkey.GetName():
+                cyclestr = "[current cycle]"
+            else:
+                cyclestr = ""
+        else:
+            # This key is a subsequent cycle of a previous key
+            cyclestr = "[backup cycle]"
+
+        datime = currentkey.GetDatime()
         time = datime.GetTime()
         date = datime.GetDate()
         year = datime.GetYear()
         time = _prepareTime(time)
-        rec = \
-            [key.GetClassName(), \
-            MONTH[int(str(date)[4:6])]+" " +str(date)[6:]+ \
-            " "+time[:2]+":"+time[2:4]+" "+str(year)+" ", \
-            key.GetName(), \
-            "\""+key.GetTitle()+"\""]
-        write(LONG_TEMPLATE.format(*rec,**dic),indent,end="\n")
-        if treeListing and isTreeKey(key):
-            tree = key.ReadObj()
-            _recursifTreePrinter(tree,indent+2)
+
+        rec = [
+            currentkey.GetClassName(),
+            MONTH[int(str(date)[4:6])]+" " + str(date)[6:] + " "+time[:2]+":" + time[2:4]+" "+str(year)+" ",
+            currentkey.GetName()+";"+str(currentkey.GetCycle()),
+            " \""+currentkey.GetTitle()+"\"",
+            " " + cyclestr
+        ]
+
+        write(LONG_TEMPLATE.format(*rec, **dic), indent, end="\n")
+        if treeListing and isTreeKey(currentkey):
+            tree = currentkey.ReadObj()
+            _recursifTreePrinter(tree, indent+2)
             tree = tree.GetTree()
             _printClusters(tree, indent+2)
-        if treeListing and isTHnSparseKey(key):
-            hs = key.ReadObj()
-            hs.Print('all')
+        if treeListing and isTHnSparseKey(currentkey):
+            hs = currentkey.ReadObj()
+            hs.Print("all")
 
 ##
 # The code of the getTerminalSize function can be found here :

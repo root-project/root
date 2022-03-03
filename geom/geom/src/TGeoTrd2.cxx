@@ -11,12 +11,12 @@
  *************************************************************************/
 
 /** \class TGeoTrd2
-\ingroup Geometry_classes
-A trapezoid with both x and y lengths varying with z. It
-has 5 parameters, the half lengths in x at -dz and +dz, the half
-lengths in y at -dz and +dz, and the half length in z (dz).
+\ingroup Trapezoids
 
-Begin_Macro(source)
+A trapezoid with only X varying with Z. It is defined by the
+half-length in Z, the half-length in X at the lowest and highest Z
+planes and the half-length in Y:
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("trd2", "poza9");
@@ -33,6 +33,7 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
 */
 
 #include <iostream>
@@ -212,7 +213,6 @@ Bool_t TGeoTrd2::Contains(const Double_t *point) const
 
 Double_t TGeoTrd2::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-   Double_t snxt = TGeoShape::Big();
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kTRUE);
@@ -265,8 +265,7 @@ Double_t TGeoTrd2::DistFromInside(const Double_t *point, const Double_t *dir, In
       s /= cn;
       if (s<dist[2]) dist[2] = s;
    }
-   snxt = dist[TMath::LocMin(3,dist)];
-   return snxt;
+   return dist[TMath::LocMin(3,dist)];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -275,7 +274,6 @@ Double_t TGeoTrd2::DistFromInside(const Double_t *point, const Double_t *dir, In
 
 Double_t TGeoTrd2::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-   Double_t snxt = TGeoShape::Big();
    if (iact<3 && safe) {
    // compute safe distance
       *safe = Safety(point, kFALSE);
@@ -300,7 +298,7 @@ Double_t TGeoTrd2::DistFromOutside(const Double_t *point, const Double_t *dir, I
       cn = -dir[2];
       if (cn>=0) return TGeoShape::Big();
       in = kFALSE;
-      snxt = (fDz+point[2])/cn;
+      Double_t snxt = (fDz+point[2])/cn;
       // find extrapolated X and Y
       xnew = point[0]+snxt*dir[0];
       if (TMath::Abs(xnew) < fDx1) {
@@ -311,7 +309,7 @@ Double_t TGeoTrd2::DistFromOutside(const Double_t *point, const Double_t *dir, I
       cn = dir[2];
       if (cn>=0) return TGeoShape::Big();
       in = kFALSE;
-      snxt = (fDz-point[2])/cn;
+      Double_t snxt = (fDz-point[2])/cn;
       // find extrapolated X and Y
       xnew = point[0]+snxt*dir[0];
       if (TMath::Abs(xnew) < fDx2) {
@@ -324,7 +322,7 @@ Double_t TGeoTrd2::DistFromOutside(const Double_t *point, const Double_t *dir, I
       cn = -dir[0]+fx*dir[2];
       if (cn>=0) return TGeoShape::Big();
       in = kFALSE;
-      snxt = (point[0]+distx)/cn;
+      Double_t snxt = (point[0]+distx)/cn;
       // find extrapolated Y and Z
       znew = point[2]+snxt*dir[2];
       if (TMath::Abs(znew) < fDz) {
@@ -337,7 +335,7 @@ Double_t TGeoTrd2::DistFromOutside(const Double_t *point, const Double_t *dir, I
       cn = dir[0]+fx*dir[2];
       if (cn>=0) return TGeoShape::Big();
       in = kFALSE;
-      snxt = (distx-point[0])/cn;
+      Double_t snxt = (distx-point[0])/cn;
       // find extrapolated Y and Z
       znew = point[2]+snxt*dir[2];
       if (TMath::Abs(znew) < fDz) {
@@ -351,7 +349,7 @@ Double_t TGeoTrd2::DistFromOutside(const Double_t *point, const Double_t *dir, I
       cn = -dir[1]+fy*dir[2];
       in = kFALSE;
       if (cn>=0) return TGeoShape::Big();
-      snxt = (point[1]+disty)/cn;
+      Double_t snxt = (point[1]+disty)/cn;
       // find extrapolated X and Z
       znew = point[2]+snxt*dir[2];
       if (TMath::Abs(znew) < fDz) {
@@ -364,7 +362,7 @@ Double_t TGeoTrd2::DistFromOutside(const Double_t *point, const Double_t *dir, I
       cn = dir[1]+fy*dir[2];
       if (cn>=0) return TGeoShape::Big();
       in = kFALSE;
-      snxt = (disty-point[1])/cn;
+      Double_t snxt = (disty-point[1])/cn;
       // find extrapolated X and Z
       znew = point[2]+snxt*dir[2];
       if (TMath::Abs(znew) < fDz) {

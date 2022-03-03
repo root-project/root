@@ -20,7 +20,6 @@
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
-#include <list>
 
 class RooRealSumPdf : public RooAbsPdf {
 public:
@@ -37,6 +36,8 @@ public:
   Double_t evaluate() const ;
   virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
 
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
+
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& arg) const { return arg.isFundamental() ; }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
@@ -46,12 +47,9 @@ public:
 
   virtual ExtendMode extendMode() const ; 
 
+  /// Return expected number of events for extended likelihood calculation, which
+  /// is the sum of all coefficients.
   virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
-    // Return expected number of events for extended likelihood calculation
-    // which is the sum of all coefficients
-    return expectedEvents(&nset) ; 
-  }
 
   virtual Bool_t selfNormalized() const { return getAttribute("BinnedLikelihoodActive") ; }
 
@@ -71,6 +69,7 @@ public:
   virtual void setCacheAndTrackHints(RooArgSet&) ;
 
 protected:
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
   
   class CacheElem : public RooAbsCacheElement {
   public:
@@ -80,14 +79,14 @@ protected:
     RooArgList _funcIntList ;
     RooArgList _funcNormList ;
   } ;
-  mutable RooObjCacheManager _normIntMgr ; // The integration cache manager
+  mutable RooObjCacheManager _normIntMgr ; //! The integration cache manager
 
 
-  RooListProxy _funcList ;   //  List of component FUNCs
+  RooListProxy _funcList ;  //  List of component FUNCs
   RooListProxy _coefList ;  //  List of coefficients
   Bool_t _extended ;        // Allow use as extended p.d.f.
 
-  Bool_t _doFloor ; // Introduce floor at zero in pdf
+  Bool_t _doFloor = false; // Introduce floor at zero in pdf
   mutable bool _haveWarned{false}; //!
   static Bool_t _doFloorGlobal ; // Global flag for introducing floor at zero in pdf
   
@@ -97,7 +96,7 @@ private:
     return _funcList.size() == _coefList.size();
   }
 
-  ClassDef(RooRealSumPdf, 4) // PDF constructed from a sum of (non-pdf) functions
+  ClassDef(RooRealSumPdf, 5) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

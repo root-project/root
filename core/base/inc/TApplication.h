@@ -58,12 +58,11 @@ private:
    Int_t              fArgc;            //Number of com   mand line arguments
    char             **fArgv;            //Command line arguments
    TApplicationImp   *fAppImp;          //!Window system specific application implementation
-   Bool_t             fIsRunning;       //True when in event loop (Run() has been called)
+   std::atomic<bool>  fIsRunning;       //True when in event loop (Run() has been called)
    Bool_t             fReturnFromRun;   //When true return from Run()
    Bool_t             fNoLog;           //Do not process logon and logoff macros
    Bool_t             fNoLogo;          //Do not show splash screen and welcome message
    Bool_t             fQuit;            //Exit after having processed input files
-   Bool_t             fUseMemstat;      //Run with TMemStat enabled
    TObjArray         *fFiles;           //Array of input files or C++ expression (TObjString's) specified via argv
    TString            fWorkDir;         //Working directory specified via argv
    TString            fIdleCommand;     //Command to execute while application is idle
@@ -84,7 +83,7 @@ protected:
 
    TApplication();
 
-   virtual Long_t     ProcessRemote(const char *line, Int_t *error = 0);
+   virtual Longptr_t  ProcessRemote(const char *line, Int_t *error = 0);
    virtual void       Help(const char *line);
    virtual void       LoadGraphicsLibs();
    virtual void       MakeBatch();
@@ -111,8 +110,8 @@ public:
    virtual void    HandleIdleTimer();   //*SIGNAL*
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
-   virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
-   virtual Long_t  ProcessFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   virtual Longptr_t ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
+   virtual Longptr_t ProcessFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();
@@ -155,7 +154,7 @@ public:
    virtual void    ReturnPressed(char *text );        //*SIGNAL*
    virtual Int_t   TabCompletionHook(char *buf, int *pLoc, std::ostream& out);
 
-   static Long_t   ExecuteFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   static Longptr_t ExecuteFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
    static TList   *GetApplications();
    static void     CreateApplication();
    static void     NeedGraphicsLibs();

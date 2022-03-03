@@ -72,16 +72,20 @@ ClassImp(TS3WebFile);
 /// Construct a TS3WebFile object. The path argument is a URL of one of the
 /// following forms:
 ///
-///         s3://host.example.com/bucket/path/to/my/file
-///     s3http://host.example.com/bucket/path/to/my/file
-///    s3https://host.example.com/bucket/path/to/my/file
-///        as3://host.example.com/bucket/path/to/my/file
+/// ```
+/// s3://host.example.com/bucket/path/to/my/file
+/// s3http://host.example.com/bucket/path/to/my/file
+/// s3https://host.example.com/bucket/path/to/my/file
+/// as3://host.example.com/bucket/path/to/my/file
+/// ```
 ///
 /// For files hosted by Google Storage, use the following forms:
 ///
-///        gs://storage.googleapis.com/bucket/path/to/my/file
-///    gshttp://storage.googleapis.com/bucket/path/to/my/file
+///  ```
+///  gs://storage.googleapis.com/bucket/path/to/my/file
+///  gshttp://storage.googleapis.com/bucket/path/to/my/file
 ///  gsthttps://storage.googleapis.com/bucket/path/to/my/file
+///  ```
 ///
 /// The 'as3' scheme is accepted for backwards compatibility but its usage is
 /// deprecated.
@@ -89,8 +93,10 @@ ClassImp(TS3WebFile);
 /// The recommended way to create an instance of this class is through
 /// TFile::Open, for instance:
 ///
+/// ```c++
 /// TFile* f1 = TFile::Open("s3://host.example.com/bucket/path/to/my/file")
 /// TFile* f2 = TFile::Open("gs://storage.googleapis.com/bucket/path/to/my/file")
+/// ```
 ///
 /// The specified scheme (i.e. s3, s3http, s3https, ...) determines the underlying
 /// transport protocol to use for downloading the file contents, namely HTTP or HTTPS.
@@ -120,12 +126,14 @@ ClassImp(TS3WebFile);
 /// "NOPROXY AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+"
 ///
 /// Examples:
+/// ```
 ///    TFile* f1 = TFile::Open("s3://host.example.com/bucket/path/to/my/file",
 ///                            "NOPROXY AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+");
 ///    TFile* f2 = TFile::Open("s3://host.example.com/bucket/path/to/my/file",
 ///                            "AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+");
 ///    TFile* f3 = TFile::Open("s3://host.example.com/bucket/path/to/my/file",
 ///                            "TOKEN=AQoDYXdzEM///////////wEa8AHEYmCinjD+TsGEjtgKSMAT6wnY");
+/// ```
 ///
 /// If there is no authentication information in the 'options' argument
 /// (i.e. not AUTH="....") the values of the environmental variables

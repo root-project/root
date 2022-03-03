@@ -25,12 +25,12 @@ namespace ROOT {
 namespace RDF {
 
 class RResultHandle {
-   ROOT::Detail::RDF::RLoopManager* fLoopManager; //< Pointer to the loop manager
+   ROOT::Detail::RDF::RLoopManager *fLoopManager = nullptr; //< Pointer to the loop manager
    /// Owning pointer to the action that will produce this result.
    /// Ownership is shared with RResultPtrs and RResultHandles that refer to the same result.
    std::shared_ptr<ROOT::Internal::RDF::RActionBase> fActionPtr;
    std::shared_ptr<void> fObjPtr; ///< Type erased shared pointer encapsulating the wrapped result
-   const std::type_info& fType; ///< Type of the wrapped result
+   const std::type_info *fType = nullptr; ///< Type of the wrapped result
 
    // The ROOT::RDF::RunGraphs helper has to access the loop manager to check whether two RResultHandles belong to the same computation graph
    friend void RunGraphs(std::vector<RResultHandle>);
@@ -48,21 +48,28 @@ class RResultHandle {
    /// Compare given type to the type of the wrapped result and throw if the types don't match.
    void CheckType(const std::type_info& type)
    {
-      if (fType != type) {
+      if (*fType != type) {
          std::stringstream ss;
          ss << "Got the type " << ROOT::Internal::RDF::TypeID2TypeName(type)
-            << " but the RResultHandle refers to a result of type " << ROOT::Internal::RDF::TypeID2TypeName(fType)
+            << " but the RResultHandle refers to a result of type " << ROOT::Internal::RDF::TypeID2TypeName(*fType)
             << ".";
          throw std::runtime_error(ss.str());
       }
    }
 
+   void ThrowIfNull()
+   {
+      if (fObjPtr == nullptr)
+         throw std::runtime_error("Trying to access the contents of a null RResultHandle.");
+   }
+
 public:
    template <class T>
-   RResultHandle(const RResultPtr<T> &resultPtr) : fLoopManager(resultPtr.fLoopManager), fActionPtr(resultPtr.fActionPtr), fObjPtr(resultPtr.fObjPtr), fType(typeid(T)) {}
+   RResultHandle(const RResultPtr<T> &resultPtr) : fLoopManager(resultPtr.fLoopManager), fActionPtr(resultPtr.fActionPtr), fObjPtr(resultPtr.fObjPtr), fType(&typeid(T)) {}
 
    RResultHandle(const RResultHandle&) = default;
    RResultHandle(RResultHandle&&) = default;
+   RResultHandle() = default;
 
    /// Get the pointer to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated RLoopManager.
@@ -70,6 +77,7 @@ public:
    template <class T>
    T* GetPtr()
    {
+      ThrowIfNull();
       CheckType(typeid(T));
       return static_cast<T*>(Get());
    }
@@ -80,8 +88,18 @@ public:
    template <class T>
    const T& GetValue()
    {
+      ThrowIfNull();
       CheckType(typeid(T));
       return *static_cast<T*>(Get());
+   }
+
+   /// Get an RResultPtr to the encapsulated object.
+   /// \tparam T Type of the action result
+   template <class T>
+   RResultPtr<T> GetResultPtr()
+   {
+      CheckType(typeid(T));
+      return RResultPtr<T>(std::static_pointer_cast<T>(fObjPtr), fLoopManager, fActionPtr);
    }
 
    /// Check whether the result has already been computed
@@ -94,6 +112,8 @@ public:
    /// res.IsReady(); // true
    /// ~~~
    bool IsReady() const {
+      if (fActionPtr == nullptr)
+         return false;
       return fActionPtr->HasRun();
    }
 

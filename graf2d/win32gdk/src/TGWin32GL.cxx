@@ -323,7 +323,7 @@ Bool_t TGWin32GLManager::CreateDIB(TGLContext &ctx)const
 
    BMPGuard bmpGuard(hDIB);
 
-   ctx.fPixmapIndex = gVirtualX->AddPixmap((ULong_t)hDIB, ctx.fW, ctx.fH);
+   ctx.fPixmapIndex = gVirtualX->AddPixmap((Handle_t)hDIB, ctx.fW, ctx.fH);
    ctx.fHBitmap = hDIB;
    ctx.fDIBData = static_cast<UChar_t *>(bmpCnt);
 

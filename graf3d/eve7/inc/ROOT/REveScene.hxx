@@ -144,7 +144,7 @@ public:
 
    // void DestroyElementRenderers(REveElement* element);
    void AcceptChanges(bool);
-
+   bool AnyChanges() const;
    void ProcessSceneChanges();
 };
 

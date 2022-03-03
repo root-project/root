@@ -9,13 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TFitParametersDialog                                                //
-//                                                                      //
-//  Create a dialog for fit function parameter settings.                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TFitParametersDialog
+    \ingroup fitpanel
+
+Create a dialog for fit function parameter settings.
+
+*/
+
 
 #include "TFitParametersDialog.h"
 #include "TF1.h"
@@ -84,7 +85,7 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
       fPerr[i] = fFunc->GetParError(i);
       if (fPerr[i] > 1E-16)
          fPstp[i] = TMath::Power(10, TMath::Floor(TMath::Log10(fPerr[i])));
-      else { 
+      else {
          if (TMath::Abs(fPval[i]) > 1.)
             // if error is zero use as step approx 10% of current value
             fPstp[i] = TMath::Power(10, TMath::Floor(TMath::Log10(fPval[i])) - 1);
@@ -324,10 +325,10 @@ TFitParametersDialog::TFitParametersDialog(const TGWindow *p,
          if (fPmin[i]*fPmax[i] == 0 && fPmin[i] >= fPmax[i]) { //init
             // round again the values on the percent level
             Double_t u = TMath::Power(10, TMath::Floor(TMath::Log10(TMath::Abs(fPval[i])) )-2 );
-            Double_t roundVal = int(fPval[i]/ u) * u; 
-            // set min at +/- 100 step size 
-            fParMin[i]->SetNumber( roundVal - 100* fPstp[i]); 
-            fParMax[i]->SetNumber( roundVal + 100* fPstp[i]); 
+            Double_t roundVal = int(fPval[i]/ u) * u;
+            // set min at +/- 100 step size
+            fParMin[i]->SetNumber( roundVal - 100* fPstp[i]);
+            fParMax[i]->SetNumber( roundVal + 100* fPstp[i]);
             // if (!fPval[i]) {
             //    fParMin[i]->SetNumber(-10);
             //    fParMax[i]->SetNumber(10);
@@ -603,7 +604,7 @@ void TFitParametersDialog::SetParameters()
 
 void TFitParametersDialog::DoOK()
 {
-   if (fHasChanges) 
+   if (fHasChanges)
       DrawFunction();
 
    SetParameters();
@@ -612,7 +613,7 @@ void TFitParametersDialog::DoOK()
    // it is like having changed them
    *fRetCode = kFPDChange;
 
-   
+
    CloseWindow();
 }
 

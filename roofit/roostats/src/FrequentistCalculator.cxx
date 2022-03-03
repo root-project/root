@@ -13,7 +13,6 @@
 #include "RooStats/RooStatsUtils.h"
 #include "RooStats/DetailedOutputAggregator.h"
 #include "RooMinimizer.h"
-#include "RooMinuit.h"
 #include "RooProfileLL.h"
 
 /** \class RooStats::FrequentistCalculator
@@ -72,7 +71,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       allButNuisance.remove(*fNullModel->GetNuisanceParameters());
       if( fConditionalMLEsNull ) {
          oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Null." << endl;
-         *allParams = *fConditionalMLEsNull;
+         allParams->assign(*fConditionalMLEsNull);
          // LM: fConditionalMLEsNull must be nuisance parameters otherwise an error message will be printed
          allButNuisance.add( *fConditionalMLEsNull );
          if (fNullModel->GetNuisanceParameters()) {
@@ -184,7 +183,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       allButNuisance.remove(*fAltModel->GetNuisanceParameters());
       if( fConditionalMLEsAlt ) {
          oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Alt." << endl;
-         *allParams = *fConditionalMLEsAlt;
+         allParams->assign(*fConditionalMLEsAlt);
          // LM: fConditionalMLEsAlt must be nuisance parameters otherwise an error message will be printed
          allButNuisance.add( *fConditionalMLEsAlt );
          if (fAltModel->GetNuisanceParameters()) {

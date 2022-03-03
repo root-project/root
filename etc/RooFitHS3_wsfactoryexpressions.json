@@ -1,0 +1,61 @@
+{
+    "Gaussian": {
+        "class": "RooGaussian",
+        "arguments": [
+            "x",
+            "mean",
+            "sigma"
+        ]
+    },
+    "Exponential": {
+        "class": "RooExponential",
+        "arguments": [
+            "x",
+            "c"
+        ]
+    },    
+    "Poisson": {
+        "class": "RooPoisson",
+        "arguments": [
+            "x",
+            "mean"
+        ]
+    },
+    "prod": {
+        "class": "RooProduct",
+        "arguments": [
+            "factors"
+        ]
+    },
+    "interpolation0d": {
+        "class": "RooStats::HistFactory::FlexibleInterpVar",
+        "arguments": [
+            "vars",
+            "nom",
+            "low",
+            "high"
+        ]
+    },
+    "sum": {
+        "class": "RooAddition",
+        "arguments": [
+            "summands"
+        ]
+    },    
+    "paramhist": {
+        "class": "ParamHistFunc",
+        "arguments": [
+            "observables",
+            "parameters"
+        ]
+    },
+    "ARGUS": {
+        "class": "RooArgusBG",
+        "arguments": [
+            "mass",
+            "resonance",
+            "slope",
+            "power"
+        ]
+    }
+}

@@ -9,19 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttMarkerEditor                                                    //
-//                                                                      //
-//  Implements GUI for editing marker attributes.                       //
-//            color, style and size                                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TAttMarkerEditor.gif">
+/** \class TAttMarkerEditor
+    \ingroup ged
+
+Implements GUI for editing marker attributes.
+        color, style and size
+
 */
-//End_Html
 
 
 #include "TAttMarkerEditor.h"
@@ -180,7 +174,7 @@ void TAttMarkerEditor::DoMarkerColor(Pixel_t color)
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot connected to the color with alpha.
 
-void TAttMarkerEditor::DoMarkerAlphaColor(ULong_t p)
+void TAttMarkerEditor::DoMarkerAlphaColor(ULongptr_t p)
 {
    TColor *color = (TColor *)p;
 

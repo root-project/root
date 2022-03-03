@@ -31,17 +31,6 @@
 #include <netdb.h>
 #include <errno.h>
 
-#if (defined(R__AIX) && !defined(_AIX43)) || \
-    (defined(R__SUNGCC3) && !defined(__arch64__))
-#   define USE_SIZE_T
-#elif defined(R__GLIBC) || defined(R__FBSD) || \
-     (defined(R__SUNGCC3) && defined(__arch64__)) || \
-     defined(R__OBSD) || defined(MAC_OS_X_VERSION_10_4) || \
-     (defined(R__AIX) && defined(_AIX43)) || \
-     (defined(R__SOLARIS) && defined(_SOCKLEN_T))
-#   define USE_SOCKLEN_T
-#endif
-
 #include "rpdp.h"
 #include "rpderr.h"
 
@@ -307,15 +296,20 @@ int NetRecvAllocate(void *&buf, int &len, EMessageTypes &kind)
 
 int NetRecv(char *msg, int len, EMessageTypes &kind)
 {
-   int   mlen;
+   int   mlen = 0;
+   void *tmpbuf = nullptr;
 
-   void *tmpbuf = 0;
-   if (NetRecvAllocate(tmpbuf, mlen, kind) < 0)
-      return -1;
+   int res = NetRecvAllocate(tmpbuf, mlen, kind);
    char *buf = static_cast<char *>(tmpbuf);
+
+   if (res < 0) {
+      delete [] buf;
+      return -1;
+   }
 
    if (mlen == 0) {
       msg[0] = 0;
+      delete [] buf;
       return 0;
    } else if (mlen > len-1) {
       strncpy(msg, buf, len-1);
@@ -352,13 +346,7 @@ int NetRecv(char *msg, int max)
 
 int NetOpen(int inetdflag, EService service)
 {
-#if defined(USE_SIZE_T)
-   size_t clilen = sizeof(gTcpCliAddr);
-#elif defined(USE_SOCKLEN_T)
    socklen_t clilen = sizeof(gTcpCliAddr);
-#else
-   int clilen = sizeof(gTcpCliAddr);
-#endif
 
    if (inetdflag) {
 
@@ -583,13 +571,7 @@ void NetSetOptions(EService serv, int sock, int tcpwindowsize)
          ErrorInfo("NetSetOptions: set SO_RCVBUF %d", val);
 
    if (gDebug > 0) {
-#if defined(USE_SIZE_T)
-      size_t optlen = sizeof(val);
-#elif defined(USE_SOCKLEN_T)
       socklen_t optlen = sizeof(val);
-#else
-      int optlen = sizeof(val);
-#endif
       if (serv == kROOTD) {
          getsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (char*)&val, &optlen);
          ErrorInfo("NetSetOptions: get TCP_NODELAY: %d", val);

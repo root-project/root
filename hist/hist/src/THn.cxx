@@ -120,7 +120,7 @@ namespace {
 
 
 /** \class THn
-    \ingroup Hist
+    \ingroup Histograms
 Multidimensional histogram.
 
 Use a THn if you really, really have to store more than three dimensions,
@@ -187,12 +187,17 @@ THn::THn(const char* name, const char* title,
    fCoordBuf() {
 }
 
+THn::THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+         const std::vector<std::vector<double>> &xbins)
+   : THnBase(name, title, dim, nbins, xbins), fSumw2(dim, nbins, kTRUE /*overflow*/), fCoordBuf()
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destruct a THn
 
 THn::~THn()
 {
-   delete [] fCoordBuf;
 }
 
 
@@ -226,7 +231,7 @@ void THn::Sumw2() {
 
 void THn::AllocCoordBuf() const
 {
-   fCoordBuf = new Int_t[fNdimensions]();
+   fCoordBuf.assign(fNdimensions, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,7 +239,7 @@ void THn::AllocCoordBuf() const
 
 void THn::InitStorage(Int_t* nbins, Int_t /*chunkSize*/)
 {
-   fCoordBuf = new Int_t[fNdimensions]();
+   fCoordBuf.assign(fNdimensions, 0);
    GetArray().Init(fNdimensions, nbins, true /*addOverflow*/);
    fSumw2.Init(fNdimensions, nbins, true /*addOverflow*/);
 }

@@ -58,9 +58,12 @@ public:
 //    TLockGuard guard(mutex);                                          //
 //    ... // do something                                               //
 // }                                                                    //
-// when guard goes out of scope the mutex is unlocked in the TLockGuard //
+// where mutex is a pointer to a TMutex object.                         //
+// When guard goes out of scope the mutex is unlocked in the TLockGuard //
 // destructor. The exception mechanism takes care of calling the dtors  //
 // of local objects so it is exception safe.                            //
+// In contrast to std::lock_guard, TLockGuard constructor expects a     //
+// pointer, not the mutex object itself.                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -86,7 +89,11 @@ public:
    ClassDefNV(TLockGuard,0)  // Exception safe locking/unlocking of mutex
 };
 
-// Zero overhead macros in case not compiled with thread support
+// Zero overhead macros in case not compiled with thread support (-pthread)
+// Use with a trailing semicolon and pass a pointer as argument, e.g.:
+// TMutex m; R__LOCKGUARD(&m);
+// Warning: if program is compiled without pthread support, _REENTRANT will
+// be undefined and the macro has (silently) no effect, no locks are performed.
 #if defined (_REENTRANT) || defined (WIN32)
 
 #define R__LOCKGUARD(mutex) TLockGuard _R__UNIQUE_(R__guard)(mutex)
@@ -101,6 +108,7 @@ public:
 #define R__LOCKGUARD_NAMED(name,mutex) TLockGuard _NAME2_(R__guard,name)(mutex)
 #define R__LOCKGUARD_UNLOCK(name) _NAME2_(R__guard,name).UnLock()
 #else
+//@todo: mutex is not checked to be of type TVirtualMutex*.
 #define R__LOCKGUARD(mutex)  (void)(mutex); { }
 #define R__LOCKGUARD_NAMED(name,mutex) (void)(mutex); { }
 #define R__LOCKGUARD2(mutex) (void)(mutex); { }

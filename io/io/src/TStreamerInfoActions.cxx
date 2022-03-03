@@ -103,9 +103,9 @@ namespace TStreamerInfoActions
       aElement->GetSequenceType(sequenceType);
 
       printf("StreamerInfoAction, class:%s, name=%s, fType[%d]=%d,"
-             " %s, offset=%d (%s)\n",
+             " %s, offset=%d (%s), elemnId=%d \n",
              info->GetClass()->GetName(), aElement->GetName(), fElemId, fCompInfo->fType,
-             aElement->ClassName(), fOffset, sequenceType.Data());
+             aElement->ClassName(), fOffset, sequenceType.Data(), fElemId);
    }
 
    void TConfiguration::PrintDebug(TBuffer &buf, void *addr) const
@@ -1502,6 +1502,17 @@ namespace TStreamerInfoActions
       return 0;
    }
 
+   Int_t PushDataCacheVectorPtr(TBuffer &b, void *, const void *, const TConfiguration *conf)
+   {
+      TConfigurationPushDataCache *config = (TConfigurationPushDataCache*)conf;
+      auto onfileObject = config->fOnfileObject;
+
+      // onfileObject->SetSize(n);
+      b.PushDataCache( onfileObject );
+
+      return 0;
+   }
+
    Int_t PushDataCacheGenericCollection(TBuffer &b, void *, const void *, const TLoopConfiguration *loopconfig, const TConfiguration *conf)
    {
       TConfigurationPushDataCache *config = (TConfigurationPushDataCache*)conf;
@@ -1517,6 +1528,12 @@ namespace TStreamerInfoActions
    }
 
    Int_t PopDataCache(TBuffer &b, void *, const TConfiguration *)
+   {
+      b.PopDataCache();
+      return 0;
+   }
+
+   Int_t PopDataCacheVectorPtr(TBuffer &b, void *, const void *, const TConfiguration *)
    {
       b.PopDataCache();
       return 0;
@@ -1676,7 +1693,9 @@ namespace TStreamerInfoActions
 
    ESelectLooper SelectLooper(TVirtualCollectionProxy &proxy)
    {
-      if ( (proxy.GetCollectionType() == ROOT::kSTLvector) || (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
+      if ( (proxy.GetProperties() & TVirtualCollectionProxy::kIsEmulated) ) {
+         return kVectorLooper;
+      } else if ( (proxy.GetCollectionType() == ROOT::kSTLvector)) {
          if (proxy.GetProperties() & TVirtualCollectionProxy::kCustomAlloc)
             return kGenericLooper;
          else
@@ -2630,6 +2649,8 @@ namespace TStreamerInfoActions
       template <typename T>
       static INLINE_TEMPLATE_ARGS Int_t ReadCollectionBasicType(TBuffer &buf, void *addr, const TConfiguration *conf)
       {
+         //TODO:  Check whether we can implement this without loading the data in
+         // a temporary variable and whether this is noticeably faster.
          return ReadNumericalCollection<ConvertBasicType<T,T,Numeric > >(buf,addr,conf);
       }
 
@@ -2752,6 +2773,7 @@ static TConfiguredAction GetConvertCollectionReadActionFrom(Int_t newtype, TConf
       default:
          break;
    }
+   Error("GetConvertCollectionReadActionFrom", "UNEXPECTED: newtype == %d", newtype);
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
 }
@@ -2811,6 +2833,7 @@ static TConfiguredAction GetConvertCollectionReadAction(Int_t oldtype, Int_t new
       default:
          break;
    }
+   Error("GetConvertCollectionReadAction", "UNEXPECTED: oldtype == %d", oldtype);
    R__ASSERT(0); // We should never be here
    return TConfiguredAction();
 }
@@ -3024,10 +3047,10 @@ void TStreamerInfo::Compile()
    else fWriteMemberWise = new TStreamerInfoActions::TActionSequence(this,ndata);
 
    if (fReadMemberWiseVecPtr) fReadMemberWiseVecPtr->fActions.clear();
-   else fReadMemberWiseVecPtr = new TStreamerInfoActions::TActionSequence(this,ndata);
+   else fReadMemberWiseVecPtr = new TStreamerInfoActions::TActionSequence(this, ndata, kTRUE);
 
    if (fWriteMemberWiseVecPtr) fWriteMemberWiseVecPtr->fActions.clear();
-   else fWriteMemberWiseVecPtr = new TStreamerInfoActions::TActionSequence(this,ndata);
+   else fWriteMemberWiseVecPtr = new TStreamerInfoActions::TActionSequence(this, ndata, kTRUE);
 
    if (fWriteText) fWriteText->fActions.clear();
    else fWriteText = new TStreamerInfoActions::TActionSequence(this,ndata);
@@ -4178,7 +4201,9 @@ void TStreamerInfoActions::TActionSequence::AddToOffset(Int_t delta)
        iter != end;
        ++iter)
    {
-      if (!iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
+      // (fElemId == -1) indications that the action is a Push or Pop DataCache.
+      if (iter->fConfiguration->fElemId != (UInt_t)-1 &&
+          !iter->fConfiguration->fInfo->GetElements()->At(iter->fConfiguration->fElemId)->TestBit(TStreamerElement::kCache))
          iter->fConfiguration->AddToOffset(delta);
    }
 }
@@ -4202,7 +4227,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
 {
    // Create a copy of this sequence.
 
-   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,fActions.size());
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, fActions.size(), IsForVectorPtrLooper());
 
    sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
 
@@ -4232,15 +4257,24 @@ void TStreamerInfoActions::TActionSequence::AddToSubSequence(TStreamerInfoAction
                auto conf = new TConfigurationPushDataCache(element_ids[id].fNestedIDs->fInfo, element_ids[id].fNestedIDs->fOnfileObject, offset);
                if ( sequence->fLoopConfig )
                   sequence->AddAction( PushDataCacheGenericCollection, conf );
+               else if ( sequence->IsForVectorPtrLooper() )
+                  sequence->AddAction( PushDataCacheVectorPtr, conf );
                else
                   sequence->AddAction( PushDataCache, conf );
             }
 
             original->AddToSubSequence(sequence, element_ids[id].fNestedIDs->fIDs, element_ids[id].fNestedIDs->fOffset, create);
 
-            if (element_ids[id].fNestedIDs->fOnfileObject)
-               sequence->AddAction( PopDataCache,
-                  new TConfigurationPushDataCache(element_ids[id].fNestedIDs->fInfo, nullptr, element_ids[id].fNestedIDs->fOffset) );
+            if (element_ids[id].fNestedIDs->fOnfileObject) {
+               auto conf =
+                  new TConfigurationPushDataCache(element_ids[id].fNestedIDs->fInfo, nullptr, element_ids[id].fNestedIDs->fOffset);
+               if ( sequence->fLoopConfig )
+                  sequence->AddAction( PopDataCacheGenericCollection, conf );
+               else if ( sequence->IsForVectorPtrLooper() )
+                  sequence->AddAction( PopDataCacheVectorPtr, conf );
+               else
+                  sequence->AddAction( PopDataCache, conf );
+            }
          } else {
             TStreamerInfoActions::ActionContainer_t::iterator end = fActions.end();
             for(TStreamerInfoActions::ActionContainer_t::iterator iter = fActions.begin();
@@ -4285,7 +4319,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    // Create a sequence containing the subset of the action corresponding to the SteamerElement whose ids is contained in the vector.
    // 'offset' is the location of this 'class' within the object (address) that will be passed to ReadBuffer when using this sequence.
 
-   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,element_ids.size());
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, element_ids.size(), IsForVectorPtrLooper());
 
    sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
 
@@ -4299,7 +4333,7 @@ TStreamerInfoActions::TActionSequence *TStreamerInfoActions::TActionSequence::Cr
    // Create a sequence containing the subset of the action corresponding to the SteamerElement whose ids is contained in the vector.
    // 'offset' is the location of this 'class' within the object (address) that will be passed to ReadBuffer when using this sequence.
 
-   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo,element_ids.size());
+   TStreamerInfoActions::TActionSequence *sequence = new TStreamerInfoActions::TActionSequence(fStreamerInfo, element_ids.size(), IsForVectorPtrLooper());
 
    sequence->fLoopConfig = fLoopConfig ? fLoopConfig->Copy() : 0;
 

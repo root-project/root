@@ -67,6 +67,7 @@ foreach(dict ${stldicts})
                                 STAGE1
                                 NODEPHEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
+                                DICTIONARY_OPTIONS --noIncludePaths
                                 DEPENDENCIES Core)
   target_include_directories(${dict}Dict PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint)
 endforeach()

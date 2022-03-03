@@ -27,11 +27,34 @@
 #include "TTimer.h"
 #include "TROOT.h"
 #include "TEnv.h"
+#include "TExec.h"
 
 #include <thread>
 #include <chrono>
+#include <iostream>
 
 using namespace ROOT::Experimental;
+
+///////////////////////////////////////////////////////////////
+/// Parse boolean gEnv variable which should be "yes" or "no"
+/// Returns 1 for true or 0 for false
+/// Returns \param dflt if result is not defined
+
+int RWebWindowWSHandler::GetBoolEnv(const std::string &name, int dflt)
+{
+   const char *undef = "<undefined>";
+   const char *value = gEnv->GetValue(name.c_str(), undef);
+   if (!value) return dflt;
+   std::string svalue = value;
+   if (svalue == undef) return dflt;
+
+   if (svalue == "yes") return 1;
+   if (svalue == "no") return 0;
+
+   R__LOG_ERROR(WebGUILog()) << name << " has to be yes or no";
+   return dflt;
+}
+
 
 /** \class ROOT::Experimental::RWebWindowsManager
 \ingroup webdisplay
@@ -63,6 +86,7 @@ std::shared_ptr<RWebWindowsManager> &RWebWindowsManager::Instance()
 /// Main thread can only make sense if special processing runs there and one can inject own functionality there
 
 static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
+static bool gWebWinMainThrdSet = true;
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true when called from main process
@@ -73,7 +97,7 @@ static std::thread::id gWebWinMainThrd = std::this_thread::get_id();
 
 bool RWebWindowsManager::IsMainThrd()
 {
-   return std::this_thread::get_id() == gWebWinMainThrd;
+   return gWebWinMainThrdSet && (std::this_thread::get_id() == gWebWinMainThrd);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -85,15 +109,23 @@ bool RWebWindowsManager::IsMainThrd()
 
 void RWebWindowsManager::AssignMainThrd()
 {
+   gWebWinMainThrdSet = true;
    gWebWinMainThrd = std::this_thread::get_id();
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
-RWebWindowsManager::RWebWindowsManager() = default;
+RWebWindowsManager::RWebWindowsManager()
+{
+   fExternalProcessEvents = RWebWindowWSHandler::GetBoolEnv("WebGui.ExternalProcessEvents") == 1;
+   if (fExternalProcessEvents) {
+      gWebWinMainThrdSet = false;
+      fAssgnExec = std::make_unique<TExec>("init_threadid", "ROOT::Experimental::RWebWindowsManager::AssignMainThrd();");
+      TTimer::SingleShot(0, "TExec",  fAssgnExec.get(), "Exec()");
+   }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager destructor
@@ -104,6 +136,20 @@ RWebWindowsManager::~RWebWindowsManager()
    if (gApplication && fServer && !fServer->IsTerminated()) {
       gApplication->Disconnect("Terminate(Int_t)", fServer.get(), "SetTerminate()");
       fServer->SetTerminate();
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Assign thread id for window
+/// Required in case of external process events
+
+void RWebWindowsManager::AssignWindowThreadId(RWebWindow &win)
+{
+   if (fExternalProcessEvents && gWebWinMainThrdSet) {
+      win.fUseServerThreads = false;
+      win.fProcessMT = false;
+      win.fCallbacksThrdIdSet = true;
+      win.fCallbacksThrdId = gWebWinMainThrd;
    }
 }
 
@@ -135,6 +181,16 @@ RWebWindowsManager::~RWebWindowsManager()
 ///      WebGui.UseHttps: yes
 ///      WebGui.ServerCert: sertificate_filename.pem
 ///
+/// All incoming requests processed in THttpServer in timer handler with 10 ms timeout.
+/// One may decrease value to improve latency or increase value to minimize CPU load
+///
+///      WebGui.HttpTimer: 10
+///
+/// To processing incoming http requests and websockets, THttpServer allocate 10 threads
+/// One have to increase this number if more simultaneous connections are expected:
+///
+///      WebGui.HttpThrds: 10
+///
 /// One also can configure usage of special thread of processing of http server requests
 ///
 ///      WebGui.HttpThrd: no
@@ -150,11 +206,18 @@ RWebWindowsManager::~RWebWindowsManager()
 /// By default, THttpServer created in restricted mode which only allows websocket handlers
 /// and processes only very few other related http requests. For security reasons such mode
 /// should be always enabled. Only if it is really necessary to process all other kinds
-/// of HTTP requests, one could specify 0 for following parameter (default 1):
+/// of HTTP requests, one could specify no for following parameter (default yes):
 ///
-///      WebGui.WSOnly: 1
+///      WebGui.WSOnly: yes
+///
+/// In some applications one may need to force longpoll websocket emulations from the beginning,
+/// for instance when clients connected via proxys. Although JSROOT should automatically fallback
+/// to longpoll engine, one can configure this directly (default no)
+///
+///      WebGui.WSLongpoll: no
 ///
 /// Following parameter controls browser max-age caching parameter for files (default 3600)
+/// When 0 is specified, browser cache will be disabled
 ///
 ///      WebGui.HttpMaxAge: 3600
 ///
@@ -171,6 +234,9 @@ RWebWindowsManager::~RWebWindowsManager()
 
 bool RWebWindowsManager::CreateServer(bool with_http)
 {
+   if (gROOT->GetWebDisplay() == "off")
+      return false;
+
    // explicitly protect server creation
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
@@ -178,21 +244,17 @@ bool RWebWindowsManager::CreateServer(bool with_http)
 
       fServer = std::make_unique<THttpServer>("basic_sniffer");
 
-      const char *serv_thrd = gEnv->GetValue("WebGui.HttpThrd", "");
-      if (serv_thrd && strstr(serv_thrd, "yes"))
-         fUseHttpThrd = true;
-      else if (serv_thrd && strstr(serv_thrd, "no"))
+      if (fExternalProcessEvents) {
          fUseHttpThrd = false;
-
-      const char *send_thrds = gEnv->GetValue("WebGui.SenderThrds", "");
-      if (send_thrds && *send_thrds) {
-         if (strstr(send_thrds, "yes"))
-            fUseSenderThreads = true;
-         else if (strstr(send_thrds, "no"))
-            fUseSenderThreads = false;
-         else
-            R__LOG_ERROR(WebGUILog()) << "WebGui.SenderThrds has to be yes or no";
+      } else {
+         auto serv_thrd = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpThrd");
+         if (serv_thrd != -1)
+            fUseHttpThrd = serv_thrd != 0;
       }
+
+      auto send_thrds = RWebWindowWSHandler::GetBoolEnv("WebGui.SenderThrds");
+      if (send_thrds != -1)
+         fUseSenderThreads = send_thrds != 0;
 
       if (IsUseHttpThread())
          fServer->CreateServerThread();
@@ -200,8 +262,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       if (gApplication)
          gApplication->Connect("Terminate(Int_t)", "THttpServer", fServer.get(), "SetTerminate()");
 
-      Int_t wsonly = gEnv->GetValue("WebGui.WSOnly", 1);
-      fServer->SetWSOnly(wsonly != 0);
+      fServer->SetWSOnly(RWebWindowWSHandler::GetBoolEnv("WebGui.WSOnly", 1) != 0);
 
       // this is location where all ROOT UI5 sources are collected
       // normally it is $ROOTSYS/ui5 or <prefix>/ui5 location
@@ -226,25 +287,28 @@ bool RWebWindowsManager::CreateServer(bool with_http)
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
+   int http_timer = gEnv->GetValue("WebGui.HttpTimer", 10);
+   int http_thrds = gEnv->GetValue("WebGui.HttpThreads", 10);
    int http_wstmout = gEnv->GetValue("WebGui.HttpWSTmout", 10000);
    int http_maxage = gEnv->GetValue("WebGui.HttpMaxAge", -1);
    int fcgi_port = gEnv->GetValue("WebGui.FastCgiPort", 0);
    int fcgi_thrds = gEnv->GetValue("WebGui.FastCgiThreads", 10);
    const char *fcgi_serv = gEnv->GetValue("WebGui.FastCgiServer", "");
    fLaunchTmout = gEnv->GetValue("WebGui.LaunchTmout", 30.);
-   const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
+   bool assign_loopback = RWebWindowWSHandler::GetBoolEnv("WebGui.HttpLoopback", 1) == 1;
    const char *http_bind = gEnv->GetValue("WebGui.HttpBind", "");
-   const char *http_ssl = gEnv->GetValue("WebGui.UseHttps", "no");
+   bool use_secure = RWebWindowWSHandler::GetBoolEnv("WebGui.UseHttps", 0) == 1;
    const char *ssl_cert = gEnv->GetValue("WebGui.ServerCert", "rootserver.pem");
 
-   bool assign_loopback = http_loopback && strstr(http_loopback, "yes");
-   bool use_secure = http_ssl && strstr(http_ssl, "yes");
    int ntry = 100;
 
    if ((http_port < 0) && (fcgi_port <= 0)) {
       R__LOG_ERROR(WebGUILog()) << "Not allowed to create HTTP server, check WebGui.HttpPort variable";
       return false;
    }
+
+   if ((http_timer > 0) && !IsUseHttpThread())
+      fServer->SetTimer(http_timer);
 
    if (http_port < 0) {
       ntry = 0;
@@ -280,7 +344,7 @@ bool RWebWindowsManager::CreateServer(bool with_http)
          fcgi_port = 0;
       } else if (http_port > 0) {
          url = use_secure ? "https://" : "http://";
-         engine.Form("%s:%d?websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_wstmout);
+         engine.Form("%s:%d?thrds=%d&websocket_timeout=%d", (use_secure ? "https" : "http"), http_port, http_thrds, http_wstmout);
          if (assign_loopback) {
             engine.Append("&loopback");
             url.Append("localhost");
@@ -319,7 +383,6 @@ bool RWebWindowsManager::CreateServer(bool with_http)
 
 std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
 {
-
    // we book manager mutex for a longer operation, locked again in server creation
    std::lock_guard<std::recursive_mutex> grd(fMutex);
 
@@ -349,6 +412,14 @@ std::shared_ptr<RWebWindow> RWebWindowsManager::CreateWindow()
       }
       win->RecordData(fname, prefix);
    }
+
+   if (fExternalProcessEvents) {
+      if (gWebWinMainThrdSet)
+         AssignWindowThreadId(*win.get());
+      else
+         win->UseServerThreads(); // let run window until thread is obtained
+   } else if (IsUseHttpThread())
+      win->UseServerThreads();
 
    const char *token = gEnv->GetValue("WebGui.ConnToken", "");
    if (token && *token)
@@ -400,48 +471,55 @@ std::string RWebWindowsManager::GetUrl(const RWebWindow &win, bool remote)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Show web window in specified location.
 ///
-/// \param batch_mode indicates that browser will run in headless mode
 /// \param user_args specifies where and how display web window
 ///
 /// As display args one can use string like "firefox" or "chrome" - these are two main supported web browsers.
 /// See RWebDisplayArgs::SetBrowserKind() for all available options. Default value for the browser can be configured
-/// when starting root with --web argument like: "root --web=chrome"
+/// when starting root with --web argument like: "root --web=chrome". When root started in web server mode "root --web=server",
+/// no any web browser will be started - just URL will be printout, which can be entered in any running web browser
 ///
-///  If allowed, same window can be displayed several times (like for TCanvas)
+/// If allowed, same window can be displayed several times (like for RCanvas or TCanvas)
 ///
-///  Following parameters can be configured in rootrc file:
+/// Following parameters can be configured in rootrc file:
 ///
-///   WebGui.Chrome:  full path to Google Chrome executable
-///   WebGui.ChromeBatch: command to start chrome in batch
-///   WebGui.ChromeInteractive: command to start chrome in interactive mode
-///   WebGui.Firefox: full path to Mozialla Firefox executable
-///   WebGui.FirefoxBatch: command to start Firefox in batch mode
-///   WebGui.FirefoxInteractive: command to start Firefox in interactive mode
-///   WebGui.FirefoxProfile: name of Firefox profile to use
-///   WebGui.FirefoxProfilePath: file path to Firefox profile
-///   WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for batch mode (dflt), 1 - always
-///   WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
-///   WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
-///   WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
-///   WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
-///   WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
-///   WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
-///   WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
-///   WebGui.openui5src:   alternative location for openui5 like https://openui5.hana.ondemand.com/
-///   WebGui.openui5libs:  list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
-///   WebGui.openui5theme:  openui5 theme like sap_belize (default) or sap_fiori_3
+///      WebGui.Chrome: full path to Google Chrome executable
+///      WebGui.ChromeBatch: command to start chrome in batch, used for image production, like "$prog --headless --disable-gpu $geometry $url"
+///      WebGui.ChromeHeadless: command to start chrome in headless mode, like "fork: --headless --disable-gpu $geometry $url"
+///      WebGui.ChromeInteractive: command to start chrome in interactive mode, like "$prog $geometry --app=\'$url\' &"
+///      WebGui.Firefox: full path to Mozilla Firefox executable
+///      WebGui.FirefoxHeadless: command to start Firefox in headless mode, like "fork:--headless --private-window --no-remote $profile $url"
+///      WebGui.FirefoxInteractive: command to start Firefox in interactive mode, like "$prog --private-window \'$url\' &"
+///      WebGui.FirefoxProfile: name of Firefox profile to use
+///      WebGui.FirefoxProfilePath: file path to Firefox profile
+///      WebGui.FirefoxRandomProfile: usage of random Firefox profile -1 never, 0 - only for headless mode (dflt), 1 - always
+///      WebGui.LaunchTmout: time required to start process in seconds (default 30 s)
+///      WebGui.OperationTmout: time required to perform WebWindow operation like execute command or update drawings
+///      WebGui.RecordData: if specified enables data recording for each web window 0 - off, 1 - on
+///      WebGui.JsonComp: compression factor for JSON conversion, if not specified - each widget uses own default values
+///      WebGui.ForceHttp: 0 - off (default), 1 - always create real http server to run web window
+///      WebGui.Console: -1 - output only console.error(), 0 - add console.warn(), 1  - add console.log() output
+///      WebGui.ConnCredits: 10 - number of packets which can be send by server or client without acknowledge from receiving side
+///      WebGui.openui5src: alternative location for openui5 like https://openui5.hana.ondemand.com/
+///      WebGui.openui5libs: list of pre-loaded ui5 libs like sap.m, sap.ui.layout, sap.ui.unified
+///      WebGui.openui5theme: openui5 theme like sap_belize (default) or sap_fiori_3
 ///
-///   HTTP-server related parameters documented in RWebWindowsManager::CreateServer() method
+/// THttpServer-related parameters documented in \ref CreateServer method
 
-unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const RWebDisplayArgs &user_args)
+unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &user_args)
 {
    // silently ignore regular Show() calls in batch mode
-   if (!batch_mode && gROOT->IsWebDisplayBatch())
+   if (!user_args.IsHeadless() && gROOT->IsWebDisplayBatch())
       return 0;
 
    // for embedded window no any browser need to be started
-   if (user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded)
+   // also when off is specified, no browser should be started
+   if ((user_args.GetBrowserKind() == RWebDisplayArgs::kEmbedded) || (user_args.GetBrowserKind() == RWebDisplayArgs::kOff))
       return 0;
+
+   // catch window showing, used by the RBrowser to embed some of ROOT widgets
+   if (fShowCallback)
+      if (fShowCallback(win, user_args))
+         return 0;
 
    // place here while involves conn mutex
    auto token = win.GetConnToken();
@@ -467,12 +545,11 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const 
 
    RWebDisplayArgs args(user_args);
 
-   if (batch_mode && !args.IsSupportHeadless()) {
+   if (args.IsHeadless() && !args.IsSupportHeadless()) {
       R__LOG_ERROR(WebGUILog()) << "Cannot use batch mode with " << args.GetBrowserName();
       return 0;
    }
 
-   args.SetHeadless(batch_mode);
    if (args.GetWidth() <= 0) args.SetWidth(win.GetWidth());
    if (args.GetHeight() <= 0) args.SetHeight(win.GetHeight());
 
@@ -493,9 +570,14 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const 
    args.SetUrl(url);
 
    args.AppendUrlOpt(std::string("key=") + key);
-   if (batch_mode) args.AppendUrlOpt("batch_mode");
+   if (args.IsHeadless()) args.AppendUrlOpt("headless"); // used to create holder request
    if (!token.empty())
       args.AppendUrlOpt(std::string("token=") + token);
+
+   if (!args.IsHeadless() && (gROOT->GetWebDisplay() == "server")) {
+      std::cout << "New web window: " << args.GetUrl() << std::endl;
+      return 0;
+   }
 
    if (!normal_http)
       args.SetHttpServer(GetServer());
@@ -507,7 +589,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const 
       return 0;
    }
 
-   return win.AddDisplayHandle(batch_mode, key, handle);
+   return win.AddDisplayHandle(args.IsHeadless(), key, handle);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -522,22 +604,25 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, bool batch_mode, const 
 
 int RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool timed, double timelimit)
 {
-   int res = 0;
-   int cnt = 0;
-   double spent = 0;
+   int res = 0, cnt = 0;
+   double spent = 0.;
 
    auto start = std::chrono::high_resolution_clock::now();
 
    win.Sync(); // in any case call sync once to ensure
 
+   auto is_main_thread = IsMainThrd();
+
    while ((res = check(spent)) == 0) {
 
-      if (IsMainThrd())
+      if (is_main_thread)
          gSystem->ProcessEvents();
 
       win.Sync();
 
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      // only when first 1000 events processed, invoke sleep
+      if (++cnt > 1000)
+         std::this_thread::sleep_for(std::chrono::milliseconds(cnt > 5000 ? 10 : 1));
 
       std::chrono::duration<double, std::milli> elapsed = std::chrono::high_resolution_clock::now() - start;
 
@@ -545,8 +630,6 @@ int RWebWindowsManager::WaitFor(RWebWindow &win, WebWindowWaitFunc_t check, bool
 
       if (timed && (spent > timelimit))
          return -3;
-
-      cnt++;
    }
 
    return res;

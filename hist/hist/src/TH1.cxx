@@ -53,7 +53,7 @@
 
 #include "TH1Merger.h"
 
-/** \addtogroup Hist
+/** \addtogroup Histograms
 @{
 \class TH1C
 \brief 1-D histogram with a byte per channel (see TH1 documentation)
@@ -69,6 +69,7 @@
 */
 
 /** \class TH1
+    \ingroup Histograms
 TH1 is the base class of all histogram classes in %ROOT.
 
 It provides the common interface for operations such as binning, filling, drawing, which
@@ -87,7 +88,7 @@ will be detailed below.
    - [Associated functions](\ref associated-functions)
    - [Projections of histograms](\ref prof-hist)
    - [Random Numbers and histograms](\ref random-numbers)
-   - [Making a copy of an histogram](\ref making-a-copy)
+   - [Making a copy of a histogram](\ref making-a-copy)
    - [Normalizing histograms](\ref normalizing)
 -# [Drawing histograms](\ref drawing-histograms)
    - [Setting Drawing histogram contour levels (2-D hists only)](\ref cont-level)
@@ -145,12 +146,18 @@ Histograms are created by invoking one of the constructors, e.g.
 ~~~
 Histograms may also be created by:
 
-  -  calling the Clone function, see below
+  -  calling the Clone() function, see below
   -  making a projection from a 2-D or 3-D histogram, see below
-  -  reading an histogram from a file
+  -  reading a histogram from a file
 
  When a histogram is created, a reference to it is automatically added
  to the list of in-memory objects for the current file or directory.
+ Then the pointer to this histogram in the current directory can be found
+ by its name, doing:
+~~~ {.cpp}
+       TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
+~~~
+
  This default behaviour can be changed by:
 ~~~ {.cpp}
        h->SetDirectory(0);          // for the current histogram h
@@ -236,7 +243,7 @@ For bin labels see \ref binning.
 \anchor alpha
 ### Alphanumeric Bin Labels
 
- By default, an histogram axis is drawn with its numeric bin labels.
+ By default, a histogram axis is drawn with its numeric bin labels.
  One can specify alphanumeric labels instead with:
 
   - call TAxis::SetBinLabel(bin, label);
@@ -293,7 +300,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor auto-bin
 ### Histograms with automatic bins
 
- When an histogram is created with an axis lower limit greater or equal
+ When a histogram is created with an axis lower limit greater or equal
  to its upper limit, the SetBuffer is automatically called with an
  argument fBufferSize equal to fgBufferSize (default value=1000).
  fgBufferSize may be reset via the static function TH1::SetDefaultBufferSize.
@@ -303,7 +310,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor rebinning
 ### Rebinning
 
- At any time, an histogram can be rebinned via TH1::Rebin. This function
+ At any time, a histogram can be rebinned via TH1::Rebin. This function
  returns a new histogram with the rebinned contents.
  If bin errors were stored, they are recomputed during the rebinning.
 
@@ -311,7 +318,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor filling-histograms
 ## Filling histograms
 
- An histogram is typically filled with statements like:
+ A histogram is typically filled with statements like:
 ~~~ {.cpp}
        h1->Fill(x);
        h1->Fill(x, w); //fill with weight
@@ -373,7 +380,7 @@ When using the options 2 or 3 above, the labels are automatically
  One or more object (typically a TF1*) can be added to the list
  of functions (fFunctions) associated to each histogram.
  When TH1::Fit is invoked, the fitted function is added to this list.
- Given an histogram h, one can retrieve an associated function
+ Given a histogram h, one can retrieve an associated function
  with:
 ~~~ {.cpp}
         TF1 *myfunc = h->GetFunction("myfunc");
@@ -385,14 +392,14 @@ When using the options 2 or 3 above, the labels are automatically
 
  Many types of operations are supported on histograms or between histograms
 
-  -  Addition of an histogram to the current histogram.
+  -  Addition of a histogram to the current histogram.
   -  Additions of two histograms with coefficients and storage into the current
      histogram.
   -  Multiplications and Divisions are supported in the same way as additions.
   -  The Add, Divide and Multiply functions also exist to add, divide or multiply
-     an histogram by a function.
+     a histogram by a function.
 
- If an histogram has associated error bars (TH1::Sumw2 has been called),
+ If a histogram has associated error bars (TH1::Sumw2 has been called),
  the resulting error bars are also computed assuming independent histograms.
  In case of divisions, Binomial errors are also supported.
  One can mark a histogram to be an "average" histogram by setting its bit kIsAverage via
@@ -403,7 +410,7 @@ When using the options 2 or 3 above, the labels are automatically
 ### Fitting histograms
 
  Histograms (1-D, 2-D, 3-D and Profiles) can be fitted with a user
- specified function via TH1::Fit. When an histogram is fitted, the
+ specified function via TH1::Fit. When a histogram is fitted, the
  resulting function with its parameters is added to the list of functions
  of this histogram. If the histogram is made persistent, the list of
  associated functions is also persistent. Given a pointer (see above)
@@ -433,20 +440,20 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor random-numbers
 ### Random Numbers and histograms
 
- TH1::FillRandom can be used to randomly fill an histogram using
+ TH1::FillRandom can be used to randomly fill a histogram using
  the contents of an existing TF1 function or another
  TH1 histogram (for all dimensions).
- For example the following two statements create and fill an histogram
+ For example, the following two statements create and fill a histogram
  10000 times with a default gaussian distribution of mean 0 and sigma 1:
 ~~~ {.cpp}
        TH1F h1("h1", "histo from a gaussian", 100, -3, 3);
        h1.FillRandom("gaus", 10000);
 ~~~
  TH1::GetRandom can be used to return a random number distributed
- according the contents of an histogram.
+ according to the contents of a histogram.
 
 \anchor making-a-copy
-### Making a copy of an histogram
+### Making a copy of a histogram
  Like for any other ROOT object derived from TObject, one can use
  the Clone() function. This makes an identical copy of the original
  histogram including all associated errors and functions, e.g.:
@@ -457,7 +464,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor normalizing
 ### Normalizing histograms
 
- One can scale an histogram such that the bins integral is equal to
+ One can scale a histogram such that the bins integral is equal to
  the normalization parameter via TH1::Scale(Double_t norm), where norm
  is the desired normalization divided by the integral of the histogram.
 
@@ -471,12 +478,12 @@ When using the options 2 or 3 above, the labels are automatically
  See THistPainter::Paint() for more details.
 
  The same histogram can be drawn with different options in different pads.
- When an histogram drawn in a pad is deleted, the histogram is
+ When a histogram drawn in a pad is deleted, the histogram is
  automatically removed from the pad or pads where it was drawn.
- If an histogram is drawn in a pad, then filled again, the new status
+ If a histogram is drawn in a pad, then filled again, the new status
  of the histogram will be automatically shown in the pad next time
  the pad is updated. One does not need to redraw the histogram.
- To draw the current version of an histogram in a pad, one can use
+ To draw the current version of a histogram in a pad, one can use
 ~~~ {.cpp}
         h->DrawCopy();
 ~~~
@@ -524,7 +531,7 @@ When using the options 2 or 3 above, the labels are automatically
 \anchor saving-histograms
 ## Saving/reading histograms to/from a ROOT file
 
- The following statements create a ROOT file and store an histogram
+ The following statements create a ROOT file and store a histogram
  on the file. Because TH1 derives from TNamed, the key identifier on
  the file is the histogram name:
 ~~~ {.cpp}
@@ -555,7 +562,7 @@ When using the options 2 or 3 above, the labels are automatically
         TH1::GetMean(int axis) returns the mean value along axis
         TH1::GetStdDev(int axis)  returns the sigma distribution along axis
         TH1::GetEntries() returns the number of entries
-        TH1::Reset() resets the bin contents and errors of an histogram
+        TH1::Reset() resets the bin contents and errors of a histogram
 ~~~
  IMPORTANT NOTE: The returned values for GetMean and GetStdDev depend on how the
  histogram statistics are calculated. By default, if no range has been set, the
@@ -661,7 +668,7 @@ TH1::~TH1()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for fix bin size histograms.
+/// Constructor for fix bin size histograms.
 /// Creates the main histogram structure.
 ///
 /// \param[in] name name of histogram (avoid blanks)
@@ -672,14 +679,7 @@ TH1::~TH1()
 /// \param[in] nbins number of bins
 /// \param[in] xlow low edge of first bin
 /// \param[in] xup upper edge of last bin (not included in last bin)
-///
-/// When an histogram is created, it is automatically added to the list
-/// of special objects in the current directory.
-/// To find the pointer to this histogram in the current directory
-/// by its name, do:
-/// ~~~ {.cpp}
-///  TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
-/// ~~~
+
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -691,7 +691,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size histograms.
+/// Constructor for variable bin size histograms using an input array of type float.
 /// Creates the main histogram structure.
 ///
 /// \param[in] name name of histogram (avoid blanks)
@@ -701,7 +701,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 ///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
-///            This is an array of size nbins+1
+///            This is an array of type float and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -714,7 +714,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Normal constructor for variable bin size histograms.
+/// Constructor for variable bin size histograms using an input array of type double.
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
@@ -723,7 +723,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
-///        This is an array of size nbins+1
+///            This is an array of type double and size nbins+1
 
 TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
@@ -736,8 +736,9 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-/// The list of functions is not copied. (Use Clone if needed)
+/// Private copy constructor.
+/// One should use the copy constructor of the derived classes (e.g. TH1D, TH1F ...).
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
@@ -2584,7 +2585,7 @@ Double_t *TH1::GetIntegral()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Return a pointer to an histogram containing the cumulative content.
+///  Return a pointer to a histogram containing the cumulative content.
 ///  The cumulative can be computed both in the forward (default) or backward
 ///  direction; the name of the new histogram is constructed from
 ///  the name of this histogram with the suffix "suffix" appended provided
@@ -2656,7 +2657,7 @@ TH1 *TH1::GetCumulative(Bool_t forward, const char* suffix) const
 /// Copy this histogram structure to newth1.
 ///
 /// Note that this function does not copy the list of associated functions.
-/// Use TObject::Clone to make a full copy of an histogram.
+/// Use TObject::Clone to make a full copy of a histogram.
 ///
 /// Note also that the histogram it will be created in gDirectory (if AddDirectoryStatus()=true)
 /// or will not be added to any directory if  AddDirectoryStatus()=false
@@ -2803,7 +2804,7 @@ void TH1::DirectoryAutoAdd(TDirectory *dir)
 /// Compute distance from point px,py to a line.
 ///
 ///  Compute the closest distance of approach from point px,py to elements
-///  of an histogram.
+///  of a histogram.
 ///  The distance is computed in pixels units.
 ///
 ///  #### Algorithm:
@@ -3048,12 +3049,12 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
 /// Histograms are drawn via the THistPainter class. Each histogram has
 /// a pointer to its own painter (to be usable in a multithreaded program).
 /// The same histogram can be drawn with different options in different pads.
-/// When an histogram drawn in a pad is deleted, the histogram is
+/// When a histogram drawn in a pad is deleted, the histogram is
 /// automatically removed from the pad or pads where it was drawn.
-/// If an histogram is drawn in a pad, then filled again, the new status
+/// If a histogram is drawn in a pad, then filled again, the new status
 /// of the histogram will be automatically shown in the pad next time
 /// the pad is updated. One does not need to redraw the histogram.
-/// To draw the current version of an histogram in a pad, one can use
+/// To draw the current version of a histogram in a pad, one can use
 /// `h->DrawCopy();`
 /// This makes a clone of the histogram. Once the clone is drawn, the original
 /// histogram may be modified or deleted without affecting the aspect of the
@@ -3115,7 +3116,7 @@ void TH1::Draw(Option_t *option)
 /// using graphics input will be made on the copy of the histogram,
 /// and not to the original object.
 /// By default a postfix "_copy" is added to the histogram name. Pass an empty postfix in case
-/// you want to draw an histogram with the same name
+/// you want to draw a histogram with the same name
 ///
 /// See Draw for the list of options
 
@@ -4060,7 +4061,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// bin statistics, where the chi2 method may give incorrect results, in particular when there are
 /// several empty bins (see also below).
 /// In case of a weighted histogram, it is possible to perform a likelihood fit by using the
-/// option "WL". Note a weighted histogram is an histogram which has been filled with weights and it
+/// option "WL". Note a weighted histogram is a histogram which has been filled with weights and it
 /// contains the sum of the weight square ( TH1::Sumw2() has been called). The bin error for a weighted
 /// histogram is the square root of the sum of the weight square.
 ///
@@ -4072,8 +4073,8 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// When using option "WW" these bins will be considered in the chi2 fit with an error of 1.
 /// Note that if the histogram is having bins with zero content and non zero-errors they are considered as
 /// any other bins in the fit. Instead bins with zero error and non-zero content are excluded in the chi2 fit.
-/// A likelihood fit should also not be performed on such an histogram, since we are assuming a wrong pdf for each bin.
-/// In general, one should not fit an histogram with non-empty bins and zero errors, apart if all the bins have zero
+/// A likelihood fit should also not be performed on such a histogram, since we are assuming a wrong pdf for each bin.
+/// In general, one should not fit a histogram with non-empty bins and zero errors, apart if all the bins have zero
 /// errors. In this case one could use the option "w", which gives a weight=1 for each bin (unweighted least-square
 /// fit).
 /// Note that in case of histogram with no errors (chi2 fit with option W or W1) the resulting fitted parameter errors
@@ -4091,7 +4092,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 /// One or more object (typically a TF1*) can be added to the list
 /// of functions (fFunctions) associated to each histogram.
 /// When TH1::Fit is invoked, the fitted function is added to this list.
-/// Given an histogram h, one can retrieve an associated function
+/// Given a histogram h, one can retrieve an associated function
 /// with:
 ///
 /// ~~~ {.cpp}
@@ -4268,7 +4269,7 @@ void TH1::FitPanel()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return an histogram containing the asymmetry of this histogram with h2,
+/// Return a histogram containing the asymmetry of this histogram with h2,
 /// where the asymmetry is defined as:
 ///
 /// ~~~ {.cpp}
@@ -5092,8 +5093,8 @@ Double_t TH1::Interpolate(Double_t, Double_t, Double_t) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Check if an histogram is empty
-///  (this a protected method used mainly by TH1Merger )
+/// Check if a histogram is empty
+///  (this is a protected method used mainly by TH1Merger )
 
 Bool_t TH1::IsEmpty() const
 {
@@ -5243,7 +5244,7 @@ void TH1::LabelsDeflate(Option_t *ax)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Double the number of bins for axis.
-/// Refill histogram
+/// Refill histogram.
 /// This function is called by TAxis::FindBin(const char *label)
 
 void TH1::LabelsInflate(Option_t *ax)
@@ -5255,9 +5256,10 @@ void TH1::LabelsInflate(Option_t *ax)
    if (iaxis == 3) axis = GetZaxis();
    if (!axis) return;
 
-   TH1 *hold = (TH1*)IsA()->New();;
+   TH1 *hold = (TH1*)IsA()->New();
    hold->SetDirectory(0);
    Copy(*hold);
+   hold->ResetBit(kMustCleanup);
 
    Bool_t timedisp = axis->GetTimeDisplay();
    Int_t nbins   = axis->GetNbins();
@@ -6556,7 +6558,7 @@ void TH1::RecursiveRemove(TObject *obj)
 /// If you are not interested in the histogram statistics you can call
 /// Sumw2(kFALSE) or use the option "nosw2"
 ///
-/// One can scale an histogram such that the bins integral is equal to
+/// One can scale a histogram such that the bins integral is equal to
 /// the normalization parameter via TH1::Scale(Double_t norm), where norm
 /// is the desired normalization divided by the integral of the histogram.
 ///
@@ -6648,7 +6650,7 @@ UInt_t TH1::GetAxisLabelStatus() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to set the default buffer size for automatic histograms.
-/// When an histogram is created with one of its axis lower limit greater
+/// When a histogram is created with one of its axis lower limit greater
 /// or equal to its upper limit, the function SetBuffer is automatically
 /// called with the default buffer size.
 
@@ -7419,13 +7421,6 @@ void TH1::UseCurrentStyle()
 /// See TH1::GetStats.
 ///
 /// Return mean value of this histogram along the X axis.
-///
-/// Note that the mean value/StdDev is computed using the bins in the currently
-/// defined range (see TAxis::SetRange). By default the range includes
-/// all bins from 1 to nbins included, excluding underflows and overflows.
-/// To force the underflows and overflows in the computation, one must
-/// call the static function TH1::StatOverflows(kTRUE) before filling
-/// the histogram.
 
 Double_t TH1::GetMean(Int_t axis) const
 {
@@ -7535,7 +7530,7 @@ Double_t TH1::GetStdDev(Int_t axis) const
 /// Value returned is standard deviation of sample standard deviation.
 /// Note that it is an approximated value which is valid only in the case that the
 /// original data distribution is Normal. The correct one would require
-/// the 4-th momentum value, which cannot be accurately estimated from an histogram since
+/// the 4-th momentum value, which cannot be accurately estimated from a histogram since
 /// the x-information for all entries is not kept.
 ///
 /// IMPORTANT NOTE: The returned value depends on how the histogram statistics
@@ -8379,15 +8374,18 @@ void TH1::SetContourLevel(Int_t level, Double_t value)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return maximum value smaller than maxval of bins in the range,
 /// unless the value has been overridden by TH1::SetMaximum,
-/// in which case it returns that value. (This happens, for example,
+/// in which case it returns that value. This happens, for example,
 /// when the histogram is drawn and the y or z axis limits are changed
 ///
 /// To get the maximum value of bins in the histogram regardless of
-/// whether the value has been overridden, use
+/// whether the value has been overridden (using TH1::SetMaximum), use
 ///
 /// ~~~ {.cpp}
 ///  h->GetBinContent(h->GetMaximumBin())
 /// ~~~
+///
+/// TH1::GetMaximumBin can be used to get the location of the maximum
+/// value.
 
 Double_t TH1::GetMaximum(Double_t maxval) const
 {
@@ -8418,6 +8416,8 @@ Double_t TH1::GetMaximum(Double_t maxval) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return location of bin with maximum value in the range.
+///
+/// TH1::GetMaximum can be used to get the maximum value.
 
 Int_t TH1::GetMaximumBin() const
 {
@@ -8464,15 +8464,18 @@ Int_t TH1::GetMaximumBin(Int_t &locmax, Int_t &locmay, Int_t &locmaz) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return minimum value larger than minval of bins in the range,
 /// unless the value has been overridden by TH1::SetMinimum,
-/// in which case it returns that value. (This happens, for example,
+/// in which case it returns that value. This happens, for example,
 /// when the histogram is drawn and the y or z axis limits are changed
 ///
 /// To get the minimum value of bins in the histogram regardless of
-/// whether the value has been overridden, use
+/// whether the value has been overridden (using TH1::SetMinimum), use
 ///
 /// ~~~ {.cpp}
 /// h->GetBinContent(h->GetMinimumBin())
 /// ~~~
+///
+/// TH1::GetMinimumBin can be used to get the location of the
+/// minimum value.
 
 Double_t TH1::GetMinimum(Double_t minval) const
 {
@@ -8764,7 +8767,7 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// By default when an histogram is created, it is added to the list
+/// By default, when a histogram is created, it is added to the list
 /// of histogram objects in the current directory in memory.
 /// Remove reference to this histogram from current directory and add
 /// reference to new directory dir. dir can be 0 in which case the
@@ -9129,8 +9132,8 @@ void TH1::SetBinError(Int_t binx, Int_t biny, Int_t binz, Double_t error)
 TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 {
 
-   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum::StaticBackground((TH1*)0x%lx,%d,\"%s\")",
-                                            (ULong_t)this, niter, option));
+   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum::StaticBackground((TH1*)0x%zx,%d,\"%s\")",
+                                            (size_t)this, niter, option));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9143,8 +9146,8 @@ TH1 *TH1::ShowBackground(Int_t niter, Option_t *option)
 
 Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 {
-   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%lx,%g,\"%s\",%g)",
-                                             (ULong_t)this, sigma, option, threshold));
+   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum::StaticSearch((TH1*)0x%zx,%g,\"%s\",%g)",
+                                             (size_t)this, sigma, option, threshold));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -9367,6 +9370,7 @@ TH1C::~TH1C()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1C::TH1C(const TH1C &h1c) : TH1(), TArrayC()
 {
@@ -9548,6 +9552,7 @@ TH1S::~TH1S()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1S::TH1S(const TH1S &h1s) : TH1(), TArrayS()
 {
@@ -9730,6 +9735,7 @@ TH1I::~TH1I()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1I::TH1I(const TH1I &h1i) : TH1(), TArrayI()
 {
@@ -9922,6 +9928,7 @@ TH1F::TH1F(const TVectorF &v)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH1F::TH1F(const TH1F &h) : TH1(), TArrayF()
 {

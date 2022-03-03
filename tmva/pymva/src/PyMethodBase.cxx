@@ -94,6 +94,7 @@ PyMethodBase::PyMethodBase(Types::EMVA methodType,
 
 PyMethodBase::~PyMethodBase()
 {
+   // should we delete here fLocalNS ?
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,22 +137,26 @@ void PyMethodBase::PyInitialize()
       _import_array();
    }
 
+   // note fMain is a borrowed reference
    fMain = PyImport_AddModule("__main__");
    if (!fMain) {
       Log << kFATAL << "Can't import __main__" << Endl;
       Log << Endl;
    }
+   Py_INCREF(fMain);
 
    fGlobalNS = PyModule_GetDict(fMain);
    if (!fGlobalNS) {
       Log << kFATAL << "Can't init global namespace" << Endl;
       Log << Endl;
    }
+   Py_INCREF(fGlobalNS);
 
    #if PY_MAJOR_VERSION < 3
    //preparing objects for eval
    PyObject *bName =  PyUnicode_FromString("__builtin__");
    // Import the file as a Python module.
+   // returns a new reference
    fModuleBuiltin = PyImport_Import(bName);
    if (!fModuleBuiltin) {
       Log << kFATAL << "Can't import __builtin__" << Endl;
@@ -168,26 +173,34 @@ void PyMethodBase::PyInitialize()
    }
    #endif
 
+   // note mDict is a borrowed reference
    PyObject *mDict = PyModule_GetDict(fModuleBuiltin);
    fEval = PyDict_GetItemString(mDict, "eval");
    fOpen = PyDict_GetItemString(mDict, "open");
+    // fEval and fOpen are borrowed referencers and we need to keep them alive
+   if (fEval) Py_INCREF(fEval);
+   if (fOpen) Py_INCREF(fOpen);
 
+   // bName is a new reference (from PyUnicode_FromString)
    Py_DECREF(bName);
-   Py_DECREF(mDict);
+
    //preparing objects for pickle
    PyObject *pName = PyUnicode_FromString("pickle");
    // Import the file as a Python module.
+   // return object is a new reference !
    fModulePickle = PyImport_Import(pName);
    if (!fModulePickle) {
       Log << kFATAL << "Can't import pickle" << Endl;
       Log << Endl;
    }
    PyObject *pDict = PyModule_GetDict(fModulePickle);
+   // note the following return objects are borrowed references
    fPickleDumps = PyDict_GetItemString(pDict, "dump");
    fPickleLoads = PyDict_GetItemString(pDict, "load");
+   if (fPickleDumps) Py_INCREF(fPickleDumps);
+   if (fPickleLoads) Py_INCREF(fPickleLoads);
 
    Py_DECREF(pName);
-   Py_DECREF(pDict);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -195,12 +208,14 @@ void PyMethodBase::PyInitialize()
 
 void PyMethodBase::PyFinalize()
 {
-   Py_Finalize();
    if (fEval) Py_DECREF(fEval);
+   if (fOpen) Py_DECREF(fOpen);
    if (fModuleBuiltin) Py_DECREF(fModuleBuiltin);
    if (fPickleDumps) Py_DECREF(fPickleDumps);
    if (fPickleLoads) Py_DECREF(fPickleLoads);
    if(fMain) Py_DECREF(fMain);//objects fGlobalNS and fLocalNS will be free here
+   if (fGlobalNS) Py_DECREF(fGlobalNS);
+   Py_Finalize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -322,4 +337,66 @@ void PyMethodBase::PyRunString(TString code, TString errorMessage, int start) {
       PyErr_Print();
       Log() << kFATAL << errorMessage << Endl;
    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Execute Python code from string
+///
+/// \param[in] code Python code as string
+/// \param[in] globalNS Global Namespace for Python Session
+/// \param[in] localNS Local Namespace for Python Session
+///
+/// Overloaded static Helper function to run python code
+/// from string and throw runtime error if the Python session
+/// is unable to execute the code
+
+void PyMethodBase::PyRunString(TString code, PyObject *globalNS, PyObject *localNS){
+   PyObject *fPyReturn = PyRun_String(code, Py_single_input, globalNS, localNS);
+   if (!fPyReturn) {
+      std::cout<<"\nPython error message:\n";
+      PyErr_Print();
+      throw std::runtime_error("\nFailed to run python code: "+code);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Returns `const char*` from Python string in PyObject
+///
+/// \param[in] string Python String object
+/// \return String representation in `const char*`
+
+const char* PyMethodBase::PyStringAsString(PyObject* string){
+   PyObject* encodedString = PyUnicode_AsUTF8String(string);
+   const char* cstring = PyBytes_AsString(encodedString);
+   return cstring;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Utility function which retrieves and returns the values of the Tuple
+///        object as a vector of size_t
+///
+/// \param[in] tupleObject Python Tuple object
+/// \return vector of tuple members
+
+std::vector<size_t> PyMethodBase::GetDataFromTuple(PyObject* tupleObject){
+   std::vector<size_t>tupleVec;
+   for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(tupleObject);++tupleIter){
+               tupleVec.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(tupleObject,tupleIter)));
+         }
+   return tupleVec;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Utility function which retrieves and returns the values of the List
+///        object as a vector of size_t
+///
+/// \param[in] listObject Python List object
+/// \return vector of list members
+
+std::vector<size_t> PyMethodBase::GetDataFromList(PyObject* listObject){
+   std::vector<size_t>listVec;
+   for(Py_ssize_t listIter=0; listIter<PyList_Size(listObject);++listIter){
+               listVec.push_back((size_t)PyLong_AsLong(PyList_GetItem(listObject,listIter)));
+         }
+   return listVec;
 }

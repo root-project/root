@@ -8,18 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// clang-format off
-/** \class ROOT::RDF::RSqliteDS
-    \ingroup dataframe
-    \brief RDataFrame data source class for reading SQlite files.
-*/
-
-// clang-format on
 
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RDF/Utils.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RRawFile.hxx>
 
 #include "TError.h"
@@ -379,6 +371,15 @@ RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
+   // Certain complex queries trigger creation of temporary tables. Depending on the build options of sqlite,
+   // sqlite may try to store such temporary tables on disk, using our custom VFS module to do so.
+   // Creation of new database files, however, is not supported by the custom VFS module.  Thus we set the behavior
+   // of the database connection to "temp_store=2", meaning that temporary tables should always be maintained
+   // in memory.
+   retval = sqlite3_exec(fDataSet->fDb, "PRAGMA temp_store=2;", nullptr, nullptr, nullptr);
+   if (retval != SQLITE_OK)
+      SqliteError(retval);
+
    retval = sqlite3_prepare_v2(fDataSet->fDb, query.c_str(), -1, &fDataSet->fQuery, nullptr);
    if (retval != SQLITE_OK)
       SqliteError(retval);
@@ -552,7 +553,8 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 /// Stores the result of the current active sqlite query row as a C++ value.
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
-   R__ASSERT(entry + 1 == fNRow);
+   assert(entry + 1 == fNRow);
+   (void)entry;
    unsigned N = fValues.size();
    for (unsigned i = 0; i < N; ++i) {
       if (!fValues[i].fIsActive)

@@ -13,16 +13,6 @@
 #define ROOT_TGWidget
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWidget                                                             //
-//                                                                      //
-// The widget base class. It is light weight (all inline service        //
-// methods) and is typically used as mixin class (via multiple          //
-// inheritance), see for example TGButton.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "GuiTypes.h"
 #include "WidgetMessageTypes.h"
 #include "TString.h"
@@ -53,10 +43,10 @@ class TGWindow;
 class TGWidget {
 
 protected:
-   Int_t            fWidgetId;     // the widget id (used for event processing)
-   Int_t            fWidgetFlags;  // widget status flags (OR of EWidgetStatus)
-   const TGWindow  *fMsgWindow;    // window which handles widget events
-   TString          fCommand;      // command to be executed
+   Int_t            fWidgetId;     ///< the widget id (used for event processing)
+   Int_t            fWidgetFlags;  ///< widget status flags (OR of EWidgetStatus)
+   const TGWindow  *fMsgWindow;    ///< window which handles widget events
+   TString          fCommand;      ///< command to be executed
 
    TGWidget(const TGWidget& tgw):
      fWidgetId(tgw.fWidgetId), fWidgetFlags(tgw.fWidgetFlags),

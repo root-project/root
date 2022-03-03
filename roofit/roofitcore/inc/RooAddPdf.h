@@ -21,9 +21,9 @@
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
 #include "RooNormSetCache.h"
-#include "RooNameSet.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
+#include "RooTrace.h"
 
 #include <vector>
 #include <list>
@@ -32,40 +32,37 @@
 class RooAddPdf : public RooAbsPdf {
 public:
 
-  RooAddPdf() ;
+  RooAddPdf() : _projCacheMgr(this,10) { TRACE_CREATE }
   RooAddPdf(const char *name, const char *title=0);
   RooAddPdf(const char *name, const char *title,
-	    RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
+            RooAbsPdf& pdf1, RooAbsPdf& pdf2, RooAbsReal& coef1) ;
   RooAddPdf(const char *name, const char *title, const RooArgList& pdfList) ;
-  RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, Bool_t recursiveFraction=kFALSE) ;
+  RooAddPdf(const char *name, const char *title, const RooArgList& pdfList, const RooArgList& coefList, bool recursiveFraction=false) ;
   
   RooAddPdf(const RooAddPdf& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooAddPdf(*this,newname) ; }
-  virtual ~RooAddPdf() ;
+  TObject* clone(const char* newname) const override { return new RooAddPdf(*this,newname) ; }
+  ~RooAddPdf() override { TRACE_DESTROY }
 
-  virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
+  bool checkObservables(const RooArgSet* nset) const override;
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const { 
-    // Force RooRealIntegral to offer all observables for internal integration
-    return kTRUE ; 
+  /// Force RooRealIntegral to offer all observables for internal integration.
+  bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
+    return true ; 
   }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
-  virtual Bool_t selfNormalized() const { 
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const override;
+  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const override;
+  bool selfNormalized() const override {
     // P.d.f is self normalized
-    return kTRUE ; 
+    return true ; 
   }
 
-  virtual ExtendMode extendMode() const { 
+  ExtendMode extendMode() const override {
     // Return extended mode capabilities
     return ((_haveLastCoef&&!_recursive) || _allExtendable) ? MustBeExtended : CanNotBeExtended; 
   }
-  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
-  virtual Double_t expectedEvents(const RooArgSet& nset) const { 
-    // Return expected number of events for extended likelihood calculation
-    // which is the sum of all coefficients
-    return expectedEvents(&nset) ; 
-  }
+  /// Return expected number of events for extended likelihood calculation, which
+  /// is the sum of all coefficients.
+  Double_t expectedEvents(const RooArgSet* nset) const override;
 
   const RooArgList& pdfList() const { 
     // Return list of component p.d.fs
@@ -82,26 +79,26 @@ public:
   const RooArgSet& getCoefNormalization() const { return _refCoefNorm ; }
   const char* getCoefRange() const { return _refCoefRangeName?RooNameReg::str(_refCoefRangeName):"" ; }
 
-  virtual void resetErrorCounters(Int_t resetValue=10) ;
+  void resetErrorCounters(Int_t resetValue=10) override;
 
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ; 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
+  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
+  std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const override;
+  bool isBinnedDistribution(const RooArgSet& obs) const override;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override;
 
-  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
-  virtual void setCacheAndTrackHints(RooArgSet&) ;
+  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; };
+  void setCacheAndTrackHints(RooArgSet&) override;
 
 protected:
 
-  virtual void selectNormalization(const RooArgSet* depSet=0, Bool_t force=kFALSE) ;
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
+  void selectNormalization(const RooArgSet* depSet=0, bool force=false) override;
+  void selectNormalizationRange(const char* rangeName=0, bool force=false) override;
 
   mutable RooSetProxy _refCoefNorm ;   // Reference observable set for coefficient interpretation
-  mutable TNamed* _refCoefRangeName ;  // Reference range name for coefficient interpreation
+  mutable TNamed* _refCoefRangeName = nullptr ;  // Reference range name for coefficient interpreation
 
-  Bool_t _projectCoefs ;         // If true coefficients need to be projected for use in evaluate()
+  bool _projectCoefs = false;   // If true coefficients need to be projected for use in evaluate()
   std::vector<double> _coefCache; //! Transient cache with transformed values of coefficients
 
 
@@ -110,7 +107,7 @@ protected:
     virtual ~CacheElem() {} ;
 
     RooArgList _suppNormList ; // Supplemental normalization list
-    Bool_t    _needSupNorm ; // Does the above list contain any non-unit entries?
+    bool    _needSupNorm ; // Does the above list contain any non-unit entries?
 
     RooArgList _projList ; // Projection integrals to be multiplied with coefficients
     RooArgList _suppProjList ; // Projection integrals to be multiplied with coefficients for supplemental normalization terms
@@ -120,38 +117,48 @@ protected:
     virtual RooArgList containedArgs(Action) ;
 
   } ;
-  mutable RooObjCacheManager _projCacheMgr ;  // Manager of cache with coefficient projections and transformations
+  mutable RooObjCacheManager _projCacheMgr ;  //! Manager of cache with coefficient projections and transformations
   CacheElem* getProjCache(const RooArgSet* nset, const RooArgSet* iset=0, const char* rangeName=0) const ;
   void updateCoefficients(CacheElem& cache, const RooArgSet* nset) const ;
 
   
   friend class RooAddGenContext ;
-  virtual RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
-                                       const RooArgSet* auxProto=0, Bool_t verbose= kFALSE) const ;
+  RooAbsGenContext* genContext(const RooArgSet &vars, const RooDataSet *prototype=0, 
+                               const RooArgSet* auxProto=0, bool verbose= false) const override;
 
 
-  Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  Double_t evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 
-  mutable RooAICRegistry _codeReg ;  //! Registry of component analytical integration codes
+  mutable RooAICRegistry _codeReg; //! Registry of component analytical integration codes
 
   RooListProxy _pdfList ;   //  List of component PDFs
   RooListProxy _coefList ;  //  List of coefficients
   mutable RooArgList* _snormList{nullptr};  //!  List of supplemental normalization factors
   
-  Bool_t _haveLastCoef ;    //  Flag indicating if last PDFs coefficient was supplied in the ctor
-  Bool_t _allExtendable ;   //  Flag indicating if all PDF components are extendable
-  Bool_t _recursive ;       //  Flag indicating is fractions are treated recursively
+  bool _haveLastCoef = false;  //  Flag indicating if last PDFs coefficient was supplied in the ctor
+  bool _allExtendable = false; //  Flag indicating if all PDF components are extendable
+  bool _recursive = false;     //  Flag indicating is fractions are treated recursively
 
   mutable Int_t _coefErrCount ; //! Coefficient error counter
 
+  bool redirectServersHook(const RooAbsCollection&, bool, bool, bool) override {
+    // If a server is redirected, the cached normalization set might not point
+    // to the right observables anymore. We need to reset it.
+    _copyOfLastNormSet.reset();
+    return false;
+  }
+
 private:
   std::pair<const RooArgSet*, CacheElem*> getNormAndCache(const RooArgSet* defaultNorm = nullptr) const;
-  mutable RooArgSet const* _pointerToLastUsedNormSet = nullptr; //!
+  mutable RooFit::UniqueId<RooArgSet>::Value_t _idOfLastUsedNormSet = RooFit::UniqueId<RooArgSet>::nullval; //!
   mutable std::unique_ptr<const RooArgSet> _copyOfLastNormSet = nullptr; //!
 
-  ClassDef(RooAddPdf,3) // PDF representing a sum of PDFs
+  void finalizeConstruction();
+
+  ClassDefOverride(RooAddPdf,4) // PDF representing a sum of PDFs
 };
 
 #endif

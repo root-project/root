@@ -57,6 +57,7 @@ public:
   void SetData( TH1* hData );
   /// get data object
   RooStats::HistFactory::Data& GetData() { return fData; }
+  const RooStats::HistFactory::Data& GetData() const { return fData; }  
 
   /// add additional data object
   void AddAdditionalData( const RooStats::HistFactory::Data& data ) { fAdditionalData.push_back(data); }

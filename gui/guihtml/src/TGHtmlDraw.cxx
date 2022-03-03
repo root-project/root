@@ -146,7 +146,7 @@ static void GetLetterIndex(char *zBuf, int index, int isUpper)
       zBuf[2] = 0;
    }
 
-   strcat(zBuf, ".");
+   strcat(zBuf, "."); // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -205,7 +205,7 @@ static void GetRomanIndex(char *zBuf, int index, int isUpper)
       }
    }
 
-   strcat(zBuf, ".");
+   strcat(zBuf, "."); // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////

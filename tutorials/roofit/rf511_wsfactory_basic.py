@@ -12,7 +12,7 @@
 import ROOT
 
 
-compact = ROOT.kFALSE
+compact = False
 w = ROOT.RooWorkspace("w")
 
 # Creating and adding basic pdfs
@@ -41,7 +41,8 @@ else:
 
     w.factory(
         "SUM::model(bkgfrac[0.5,0.,1.]*Chebychev::bkg(x[-10,10],{a0[0.5,0.,1],a1[-0.2,0.,1.]}), "
-        "SUM(sig1frac[0.8,0.,1.]*Gaussian(x,mean[5,0,10],0.5), Gaussian(x,mean,1)))")
+        "SUM(sig1frac[0.8,0.,1.]*Gaussian(x,mean[5,0,10],0.5), Gaussian(x,mean,1)))"
+    )
 
 # Advanced pdf constructor arguments
 # ----------------------------------------------------------------
@@ -55,18 +56,17 @@ else:
 # class
 
 # Make a dummy dataset pdf 'model' and import it in the workspace
-data = w.pdf("model").generate(ROOT.RooArgSet(w.var("x")), 1000)
+data = w["model"].generate({w["x"]}, 1000)
 # Cannot call 'import' directly because this is a python keyword:
-w.Import(data, ROOT.RooFit.Rename("data"))
+w.Import(data, Rename="data")
 
 # Construct a KEYS pdf passing a dataset name and an enum type defining the
 # mirroring strategy
 # w.factory("KeysPdf::k(x,data,NoMirror,0.2)")
 # Workaround for pyROOT
-x = w.var("x")
+x = w["x"]
 k = ROOT.RooKeysPdf("k", "k", x, data, ROOT.RooKeysPdf.NoMirror, 0.2)
-w.Import(k, ROOT.RooFit.RenameAllNodes("workspace"))
+w.Import(k, RenameAllNodes="workspace")
 
 # Print workspace contents
 w.Print()
-

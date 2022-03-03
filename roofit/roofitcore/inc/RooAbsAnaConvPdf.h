@@ -115,11 +115,11 @@ protected:
     RooArgList _coefVarList ;
     RooArgList _normList ;
   } ;
-  mutable RooObjCacheManager _coefNormMgr ; // Coefficient normalization manager
+  mutable RooObjCacheManager _coefNormMgr ; //! Coefficient normalization manager
 
   mutable RooAICRegistry _codeReg ;   //! Registry of analytical integration codes
 
-  ClassDef(RooAbsAnaConvPdf,2) // Abstract Composite Convoluted PDF
+  ClassDef(RooAbsAnaConvPdf,3) // Abstract Composite Convoluted PDF
 };
 
 #endif

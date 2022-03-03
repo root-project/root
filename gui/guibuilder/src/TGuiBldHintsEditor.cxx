@@ -20,12 +20,14 @@
 #include "TRootGuiBuilder.h"
 #include "TGTableLayout.h"
 
-//_____________________________________________________________________________
-//
-// TGuiBldHintsEditor
-//
-// Editor of widget's layout hints used by the ROOT GUI builder.
-//_____________________________________________________________________________
+
+/** \class TGuiBldHintsEditor
+    \ingroup guibuilder
+
+Editor of widget's layout hints used by the ROOT GUI builder.
+
+*/
+
 
 ClassImp(TGuiBldHintsEditor);
 
@@ -102,7 +104,7 @@ TGuiBldHintsManager::TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *e,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// action whne selcted/grabbed frame was changed
+/// action when selected/grabbed frame was changed
 
 void TGuiBldHintsManager::ChangeSelected(TGFrame *frame)
 {

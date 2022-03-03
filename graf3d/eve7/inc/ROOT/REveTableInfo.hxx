@@ -94,7 +94,7 @@ public:
    void SetDisplayedCollection(ElementId_t);
    ElementId_t GetDisplayedCollection() const  { return fDisplayedCollection; }
 
-   void AddNewColumnToCurrentCollection(const std::string& expr, const std::string& title, int prec = 2);
+   void AddNewColumnToCurrentCollection(const char* expr, const char* title, int prec = 2);
 
    void AddDelegate(Delegate_t d) { fDelegates.push_back(d); }
 
@@ -112,7 +112,7 @@ public:
 
    bool GetConfigChanged() const { return fConfigChanged; }
 
-
+   REveTableHandle::Specs_t& RefSpecs() { return fSpecs; }
 private:
    int fDisplayedCollection{0};
    std::vector<Delegate_t> fDelegates;

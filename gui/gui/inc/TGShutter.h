@@ -13,17 +13,6 @@
 #define ROOT_TGShutter
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGShutter, TGShutterItem                                             //
-//                                                                      //
-// A shutter widget contains a set of shutter items that can be         //
-// open and closed like a shutter.                                      //
-// This widget is usefull to group a large number of options in         //
-// a number of categories.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGCanvas.h"
 #include "TGWidget.h"
@@ -41,10 +30,10 @@ class TGShutterItem : public TGVerticalFrame, public TGWidget {
 friend class TGShutter;
 
 protected:
-   TGButton      *fButton;     // shutter item button
-   TGCanvas      *fCanvas;     // canvas of shutter item
-   TGFrame       *fContainer;  // container in canvas containing shutter items
-   TGLayoutHints *fL1, *fL2;   // positioning hints
+   TGButton      *fButton;     ///< shutter item button
+   TGCanvas      *fCanvas;     ///< canvas of shutter item
+   TGFrame       *fContainer;  ///< container in canvas containing shutter items
+   TGLayoutHints *fL1, *fL2;   ///< positioning hints
 
 private:
    TGShutterItem(const TGShutterItem&) = delete;
@@ -69,15 +58,15 @@ public:
 class TGShutter : public TGCompositeFrame {
 
 protected:
-   TTimer         *fTimer;                  // Timer for animation
-   TGShutterItem  *fSelectedItem;           // Item currently open
-   TGShutterItem  *fClosingItem;            // Item closing down
-   TList          *fTrash;                  // Items that need to be cleaned up
-   Int_t           fHeightIncrement;        // Height delta
-   Int_t           fClosingHeight;          // Closing items current height
-   Int_t           fClosingHadScrollbar;    // Closing item had a scroll bar
-   UInt_t          fDefWidth;               // Default width
-   UInt_t          fDefHeight;              // Default height
+   TTimer         *fTimer;                  ///< Timer for animation
+   TGShutterItem  *fSelectedItem;           ///< Item currently open
+   TGShutterItem  *fClosingItem;            ///< Item closing down
+   TList          *fTrash;                  ///< Items that need to be cleaned up
+   Int_t           fHeightIncrement;        ///< Height delta
+   Int_t           fClosingHeight;          ///< Closing items current height
+   Int_t           fClosingHadScrollbar;    ///< Closing item had a scroll bar
+   UInt_t          fDefWidth;               ///< Default width
+   UInt_t          fDefHeight;              ///< Default height
 
 private:
    TGShutter(const TGShutter&) = delete;
@@ -106,7 +95,7 @@ public:
 
    virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
 
-   virtual Bool_t ProcessMessage(Long_t cmd, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t cmd, Longptr_t parm1, Longptr_t parm2);
    virtual void   Selected(TGShutterItem *item) { Emit(" Selected(TGShutterItem*)", item); } //*SIGNAL*
 
    ClassDef(TGShutter,0)  // Shutter widget

@@ -1,14 +1,24 @@
+/*
+ * Project: RooFit
+ * Authors:
+ *   Emmanouil Michalainas, CERN 6 January 2021
+ *
+ * Copyright (c) 2021, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
-#include "RooSpan.h"
-#include "RooVDTHeaders.h"
-#include "RunContext.h"
-#include "BracketAdapter.h"
-#include "DllImport.h" //for R__EXTERN, needed for windows
+#include "RooBatchComputeTypes.h"
 
-class RooAbsReal;
-class RooListProxy;
+#include "DllImport.h" //for R__EXTERN, needed for windows
+#include "TError.h"
+
+#include <functional>
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
@@ -23,49 +33,64 @@ class RooListProxy;
  * on a specific platform.
  */
 namespace RooBatchCompute {
-  /**
-   * \brief The interface which should be implemented to provide optimised computation functions for implementations of RooAbsReal::evaluateSpan().
-   *
-   * This interface contains the signatures of the compute functions of every PDF that has an optimised implementation available.
-   * These are the functions that perform the actual computations in batches.
-   *
-   * Several implementations of this interface may be provided, e.g. SSE, AVX, AVX2 etc. At run time, the fastest implementation of this interface
-   * is selected, and using a virtual call, the computation is dispatched to the best backend.
-   *
-   * \see RooBatchCompute::dispatch, RooBatchComputeClass, RF_ARCH
-   */ 
-  class RooBatchComputeInterface {
+
+enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
+
+enum Computer{AddPdf, ArgusBG, Bernstein, BifurGauss, BreitWigner, Bukin, CBShape, Chebychev,
+              ChiSquare, DstD0BG, Exponential, Gamma, Gaussian, Johnson, Landau, Lognormal,
+              NegativeLogarithms, Novosibirsk, Poisson, Polynomial, ProdPdf, Voigtian};
+
+/**
+ * \class RooBatchComputeInterface
+ * \ingroup Roobatchcompute
+ * \brief The interface which should be implemented to provide optimised computation functions for implementations of RooAbsReal::evaluateSpan().
+ *
+ * The class RooBatchComputeInterface provides the mechanism for external modules (like RooFit) to call
+ * functions from the library. The power lies in the virtual functions that can resolve to different
+ * implementations for the functionality; for example, calling a function through dispatchCuda
+ * will resolve to efficient cuda implementations.
+ *
+ * This interface contains the signatures of the compute functions of every PDF that has an optimised implementation available.
+ * These are the functions that perform the actual computations in batches.
+ *
+ * Several implementations of this interface may be provided, e.g. SSE, AVX, AVX2 etc. At run time, the fastest implementation of this interface
+ * is selected, and using a virtual call, the computation is dispatched to the best backend.
+ *
+ * \see RooBatchCompute::dispatch, RooBatchComputeClass, RF_ARCH
+ */ 
+class RooBatchComputeInterface {
   public:
     virtual ~RooBatchComputeInterface() = default;
-    virtual RooSpan<double> computeArgusBG(const RooAbsReal*, RunContext&, RooSpan<const double> m, RooSpan<const double> m0, RooSpan<const double> c, RooSpan<const double> p) = 0;
-    virtual void computeBernstein(size_t batchSize, double * __restrict output, const double * __restrict const xData, double xmin, double xmax, std::vector<double> coef) = 0;
-    virtual RooSpan<double> computeBifurGauss(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> sigmaL, RooSpan<const double> sigmaR) = 0;
-    virtual RooSpan<double> computeBukin(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> Xp, RooSpan<const double> sigp, RooSpan<const double> xi, RooSpan<const double> rho1, RooSpan<const double> rho2) = 0;
-    virtual RooSpan<double> computeBreitWigner(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> width) = 0;
-    virtual RooSpan<double> computeCBShape(const RooAbsReal*, RunContext&, RooSpan<const double> m, RooSpan<const double> m0, RooSpan<const double> sigma, RooSpan<const double> alpha, RooSpan<const double> n) = 0;
-    virtual void computeChebychev(size_t batchSize, double * __restrict output, const double * __restrict const xData, double xmin, double xmax, std::vector<double> coef) = 0;
-    virtual RooSpan<double> computeChiSquare(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> ndof) = 0;
-    virtual RooSpan<double> computeDstD0BG(const RooAbsReal*, RunContext&, RooSpan<const double> dm, RooSpan<const double> dm0, RooSpan<const double> C, RooSpan<const double> A, RooSpan<const double> B) = 0;
-    virtual RooSpan<double> computeExponential(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> c) = 0;
-    virtual RooSpan<double> computeGamma(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> gamma, RooSpan<const double> beta, RooSpan<const double> mu) = 0;
-    virtual RooSpan<double> computeGaussian(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> sigma) = 0;
-    virtual RooSpan<double> computeJohnson(const RooAbsReal*, RunContext&, RooSpan<const double> mass, RooSpan<const double> mu, RooSpan<const double> lambda, RooSpan<const double> gamma, RooSpan<const double> delta, double massThreshold) = 0;
-    virtual RooSpan<double> computeLandau(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> sigma) = 0;
-    virtual RooSpan<double> computeLognormal(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> m0, RooSpan<const double> k) = 0;
-    virtual RooSpan<double> computeNovosibirsk(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> peak, RooSpan<const double> width, RooSpan<const double> tail) = 0;
-    virtual RooSpan<double> computePoisson(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> mean, bool protectNegative, bool noRounding) = 0;
-    virtual void computePolynomial(size_t batchSize, double * __restrict output, const double * __restrict const xData, int lowestOrder, std::vector<BracketAdapterWithMask> &coef) = 0;
-    virtual RooSpan<double> computeVoigtian(const RooAbsReal*, RunContext&, RooSpan<const double> x, RooSpan<const double> mean, RooSpan<const double> width, RooSpan<const double> sigma) = 0;
-  };
+    virtual void   compute(cudaStream_t*, Computer, RestrictArr, size_t, const DataMap&, const VarVector&, const ArgVector& ={}) = 0;
+    virtual double sumReduce(cudaStream_t*, InputArr input, size_t n) = 0;
+    virtual Architecture architecture() const = 0;
+    virtual std::string architectureName() const = 0;
+       
+    //cuda functions that need to be interfaced
+    virtual void* cudaMalloc(size_t)                { throw std::bad_function_call(); }
+    virtual void  cudaFree(void*)                   { throw std::bad_function_call(); }
+    virtual void* cudaMallocHost(size_t)            { throw std::bad_function_call(); }
+    virtual void  cudaFreeHost(void*)               { throw std::bad_function_call(); }
+    virtual cudaEvent_t* newCudaEvent(bool /*forTiming*/) { throw std::bad_function_call(); }
+    virtual void  deleteCudaEvent(cudaEvent_t*)     { throw std::bad_function_call(); }
+    virtual cudaStream_t* newCudaStream()           { throw std::bad_function_call(); }
+    virtual void  deleteCudaStream(cudaStream_t*)   { throw std::bad_function_call(); }
+    virtual bool  streamIsActive(cudaStream_t*)     { throw std::bad_function_call(); }
+    virtual void  cudaEventRecord(cudaEvent_t*, cudaStream_t*)     { throw std::bad_function_call(); }
+    virtual void  cudaStreamWaitEvent(cudaStream_t*, cudaEvent_t*) { throw std::bad_function_call(); }
+    virtual float cudaEventElapsedTime(cudaEvent_t*, cudaEvent_t*) { throw std::bad_function_call(); }
+    virtual void  memcpyToCUDA(void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
+    virtual void  memcpyToCPU (void*, const void*, size_t, cudaStream_t* =nullptr) { throw std::bad_function_call(); }
+};
 
-  /**
-   * This dispatch pointer points to an implementation of the compute library, provided one has been loaded.
-   * Using a virtual call, computation requests are dispatched to backends with architecture-specific functions
-   * such as SSE, AVX, AVX2, etc.
-   *
-   * \see RooBatchComputeInterface, RooBatchComputeClass, RF_ARCH
-   */
-  R__EXTERN RooBatchComputeInterface* dispatch;
-}
+/**
+ * This dispatch pointer points to an implementation of the compute library, provided one has been loaded.
+ * Using a virtual call, computation requests are dispatched to backends with architecture-specific functions
+ * such as SSE, AVX, AVX2, etc.
+ *
+ * \see RooBatchComputeInterface, RooBatchComputeClass, RF_ARCH
+ */
+R__EXTERN RooBatchComputeInterface *dispatchCPU, *dispatchCUDA;
+} // End namespace RooBatchCompute
 
 #endif

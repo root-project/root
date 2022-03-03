@@ -21,7 +21,7 @@ mean = ROOT.RooRealVar("mean", "mean", -3, -10, 10)
 gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, sigma)
 
 # Generate a sample of 1000 events with sigma=3
-data = gauss.generate(ROOT.RooArgSet(x), 1000)
+data = gauss.generate({x}, 1000)
 
 # Fit pdf to data
 gauss.fitTo(data)
@@ -30,8 +30,7 @@ gauss.fitTo(data)
 # -------------------------------------
 
 # Overlay projection of gauss on data
-frame = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title(
-    "RooPlot with decorations"), ROOT.RooFit.Bins(40))
+frame = x.frame(Name="xframe", Title="RooPlot with decorations", Bins=40)
 data.plotOn(frame)
 gauss.plotOn(frame)
 
@@ -39,14 +38,14 @@ gauss.plotOn(frame)
 # -----------------------------------------------------
 
 # Left edge of box starts at 55% of Xaxis)
-gauss.paramOn(frame, ROOT.RooFit.Layout(0.55))
+gauss.paramOn(frame, Layout=0.55)
 
 # Add box with data statistics
 # -------------------------------------------------------
 
 # X size of box is from 55% to 99% of Xaxis range, of box is at 80% of
 # Yaxis range)
-data.statOn(frame, ROOT.RooFit.Layout(0.55, 0.99, 0.8))
+data.statOn(frame, Layout=(0.55, 0.99, 0.8))
 
 # Add text and arrow
 # -----------------------------------

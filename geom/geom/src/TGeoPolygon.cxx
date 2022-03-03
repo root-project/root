@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TGeoPolygon
-\ingroup Geometry_classes
+\ingroup Shapes_classes
 
 An arbitrary polygon defined by vertices. The vertices
 have to be defined CLOCKWISE in the XY plane, making either a convex

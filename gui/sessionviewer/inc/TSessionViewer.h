@@ -9,14 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSessionViewer                                                       //
-//                                                                      //
-// Widget used to manage PROOF or local sessions, PROOF connections,    //
-// queries construction and results handling.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #ifndef ROOT_TSessionViewer
 #define ROOT_TSessionViewer
@@ -236,7 +228,7 @@ public:
    void        OnConfigFileClicked();
    void        Update(TSessionDescription* desc);
    virtual Bool_t HandleExpose(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    ClassDef(TSessionServerFrame, 0) // Server frame
 };
@@ -577,7 +569,7 @@ public:
    TSessionViewer(const char *title, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual ~TSessionViewer();
    virtual void Build();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
 
    TSessionServerFrame    *GetServerFrame() const { return fServerFrame; }
    TSessionFrame          *GetSessionFrame() const { return fSessionFrame; }

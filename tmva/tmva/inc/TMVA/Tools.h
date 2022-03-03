@@ -41,9 +41,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
-#if __cplusplus > 199711L
 #include <atomic>
-#endif
 
 #include "TXMLEngine.h"
 
@@ -228,11 +226,7 @@ namespace TMVA {
       const TString fRegexp;
       mutable MsgLogger*    fLogger;
       MsgLogger& Log() const { return *fLogger; }
-#if __cplusplus > 199711L
       static std::atomic<Tools*> fgTools;
-#else
-      static Tools* fgTools;
-#endif
 
       // xml tools
 

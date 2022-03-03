@@ -4,7 +4,7 @@
 # This should also help provide suggested reviewers for PRs.
 
 # For more information, see:
-# 
+#
 #   - https://github.com/blog/2392-introducing-code-owners
 
 # Coarse-grained ownership
@@ -26,17 +26,19 @@
 /io/xml/ @pcanal @linev
 /main/ @pcanal
 /math/ @lmoneta
+/math/vecops @eguiraud
 /misc/ @Axel-Naumann
 /montecarlo/ @Axel-Naumann
 /net/ @gganis
 /proof/ @gganis
-/roofit/ @lmoneta @hageboeck
+/roofit/ @lmoneta @guitargeek @hageboeck
 /rootx/ @Axel-Naumann
 /sql/ @pcanal @linev
 /tmva/ @lmoneta @ashlaban @stwunsch @sitongan
 /tree/ @pcanal
 /tutorials/ @couet
 /tree/dataframe @eguiraud
+/tree/ntuple/v7/ @jblomer
 
 # Projects that span over several code modules:
 /bindings/r/ @omazapa
@@ -60,7 +62,7 @@
 /gui/canvaspainter/ @Axel-Naumann @linev
 /ui5/ @linev
 
-/cmake/ @oshadura
-*.cmake @oshadura
-*/CMakeLists.txt @oshadura
-CMakeLists.txt @oshadura
+/cmake/ @bellenot
+*.cmake @bellenot
+*/CMakeLists.txt @bellenot
+CMakeLists.txt @bellenot

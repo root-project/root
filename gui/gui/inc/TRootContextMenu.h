@@ -13,16 +13,6 @@
 #define ROOT_TRootContextMenu
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootContextMenu                                                     //
-//                                                                      //
-// This class provides an interface to context sensitive popup menus.   //
-// These menus pop up when the user hits the right mouse button, and    //
-// are destroyed when the menu pops downs.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TContextMenuImp.h"
 #include "TGMenu.h"
 
@@ -32,8 +22,8 @@ class TRootDialog;
 class TRootContextMenu : public TGPopupMenu, public TContextMenuImp {
 
 private:
-   TRootDialog *fDialog;    // dialog prompting for command line arguments
-   TList       *fTrash;     // list of objects to be deleted before refilling menu
+   TRootDialog *fDialog;    ///< dialog prompting for command line arguments
+   TList       *fTrash;     ///< list of objects to be deleted before refilling menu
 
    TRootContextMenu(const TRootContextMenu&);
    TRootContextMenu& operator=(const TRootContextMenu&);
@@ -54,7 +44,7 @@ public:
    virtual void   OnlineHelp();
    virtual void   RecursiveRemove(TObject *obj);
 
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
 protected:
    TGPopupMenu * FindHierarchy(const char *commentstring, TString &last_component);

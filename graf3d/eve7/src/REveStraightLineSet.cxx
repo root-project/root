@@ -15,6 +15,8 @@
 
 #include "TClass.h"
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -345,4 +347,5 @@ void REveStraightLineSetProjected::UpdateProjection()
       proj.ProjectPointfv(trans, m.fV, pp, fDepth);
       AddMarker(pp, m.fLineId);
    }
+   StampObjProps();
 }

@@ -34,7 +34,6 @@
 #include "RooSimultaneous.h"
 #include "RooMultiVarGaussian.h"
 #include "RooNumIntConfig.h"
-#include "RooMinuit.h"
 #include "RooNLLVar.h"
 #include "RooProfileLL.h"
 #include "RooFitResult.h"
@@ -1005,6 +1004,11 @@ namespace HistFactory{
       poi = (RooRealVar*) params_obj;
       cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
     }
+    delete params_itr;
+    if (!poi) {
+       cerr << "found no POI" << endl;
+       return;
+    }
     fprintf(pFile, " %.4f / %.4f  ", poi->getErrorLo(), poi->getErrorHi());
 
     RooAbsReal* nll = model->createNLL(*simData);
@@ -1045,18 +1049,6 @@ namespace HistFactory{
     Double_t* curve_x=curve->GetX();
     delete frame; delete c1;
 
-    //
-    // Verbose output from MINUIT
-    //
-    /*
-    RooMsgService::instance().setGlobalKillBelow(RooFit::DEBUG) ;
-    profile->getVal();
-    RooMinuit* minuit = ((RooProfileLL*) profile)->minuit();
-    minuit->setPrintLevel(5) ; // Print MINUIT messages
-    minuit->setVerbose(5) ; // Print RooMinuit messages with parameter 
-                                // changes (corresponds to the Verbose() option of fitTo()
-    */
-  
     Double_t * x_arr = new Double_t[curve_N];
     Double_t * y_arr_nll = new Double_t[curve_N];
 //     Double_t y_arr_prof_nll[curve_N];

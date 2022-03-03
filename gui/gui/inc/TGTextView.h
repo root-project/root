@@ -13,18 +13,6 @@
 #define ROOT_TGTextView
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextView                                                           //
-//                                                                      //
-// A TGTextView is a text viewer widget. It is a specialization of      //
-// TGView. It uses the TGText class (which contains all text            //
-// manipulation code, i.e. loading a file in memory, changing,          //
-// removing lines, etc.). Use a TGTextView to view non-editable text.   //
-// For supported messages see TGView.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGView.h"
 #include "TGText.h"
 #include "TTimer.h"
@@ -34,25 +22,25 @@ class TViewTimer;
 class TGTextView : public TGView {
 
 protected:
-   TGText         *fText;         // text buffer
-   TGText         *fClipText;     // clipboard text buffer
-   FontStruct_t    fFont;         // text font
-   Int_t           fMaxAscent;    // maximum ascent in font
-   Int_t           fMaxDescent;   // maximum descent in font
-   Int_t           fMaxWidth;     // maximum width of character in font
-   TGGC            fNormGC;       // graphics context for drawing text
-   TGGC            fSelGC;        // graphics context for drawing marked text
-   TGGC            fSelbackGC;    // graphics context for drawing marked background
-   Bool_t          fMarkedFromX;  // true if text is marked from x
-   Bool_t          fMarkedFromY;  // true if text is marker from y
-   Bool_t          fIsMarked;     // true if text is marked/selected
-   Bool_t          fIsMarking;    // true if in marking mode
-   Bool_t          fIsSaved;      // true is content is saved
-   Bool_t          fReadOnly;     // text cannot be editted
-   TGLongPosition  fMarkedStart;  // start position of marked text
-   TGLongPosition  fMarkedEnd;    // end position of marked text
-   TViewTimer     *fScrollTimer;  // scrollbar timer
-   Atom_t         *fDNDTypeList;  // handles DND types
+   TGText         *fText;         ///< text buffer
+   TGText         *fClipText;     ///< clipboard text buffer
+   FontStruct_t    fFont;         ///< text font
+   Int_t           fMaxAscent;    ///< maximum ascent in font
+   Int_t           fMaxDescent;   ///< maximum descent in font
+   Int_t           fMaxWidth;     ///< maximum width of character in font
+   TGGC            fNormGC;       ///< graphics context for drawing text
+   TGGC            fSelGC;        ///< graphics context for drawing marked text
+   TGGC            fSelbackGC;    ///< graphics context for drawing marked background
+   Bool_t          fMarkedFromX;  ///< true if text is marked from x
+   Bool_t          fMarkedFromY;  ///< true if text is marker from y
+   Bool_t          fIsMarked;     ///< true if text is marked/selected
+   Bool_t          fIsMarking;    ///< true if in marking mode
+   Bool_t          fIsSaved;      ///< true is content is saved
+   Bool_t          fReadOnly;     ///< text cannot be edited
+   TGLongPosition  fMarkedStart;  ///< start position of marked text
+   TGLongPosition  fMarkedEnd;    ///< end position of marked text
+   TViewTimer     *fScrollTimer;  ///< scrollbar timer
+   Atom_t         *fDNDTypeList;  ///< handles DND types
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;

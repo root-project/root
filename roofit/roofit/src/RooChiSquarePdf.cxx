@@ -64,8 +64,10 @@ Double_t RooChiSquarePdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of ChiSquare distribution.  
-RooSpan<double> RooChiSquarePdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeChiSquare(this, evalData, _x->getValues(evalData, normSet), _ndof->getValues(evalData, normSet));
+void RooChiSquarePdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::ChiSquare, output, nEvents, dataMap, {&*_x,&*_norm}, {_ndof});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

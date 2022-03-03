@@ -37,6 +37,7 @@ sap.ui.define(['rootui5/panel/Controller',
 
          this.kind = "None"; // not yet known
          this.oModel = new JSONModel({ canEditName: (this.kind == "SaveAs") || (this.kind == "NewFile"),
+                                       canChangePath: true,
                                        dialogTitle: "Dialog Title",
                                        fileName: "",
                                        filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}],
@@ -103,15 +104,17 @@ sap.ui.define(['rootui5/panel/Controller',
          return this._currentPath.slice(); // make copy of original array
       },
 
-      // returns full file name as array
+      /** @summary returns full file name as array */
       getFullFileName: function() {
          let path = this.getBreadcrumbPath();
          path.push(this.oModel.getProperty("/fileName"));
          return path;
       },
 
-      /** Handler for Breadcrumbs press event */
+      /** @summary Handler for Breadcrumbs press event */
       onBreadcrumbsPress: function(oEvent) {
+         if (!this.oModel.getProperty("/canChangePath")) return;
+
          let path = this.getBreadcrumbPath(oEvent.getSource().sId);
          if (this.kind == "OpenFile")
             this.oModel.setProperty("/fileName", "");
@@ -123,26 +126,31 @@ sap.ui.define(['rootui5/panel/Controller',
          let item = event.getParameters().listItem;
          if (!item) return;
 
+         let ctxt = item.getBindingContext(),
+             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null,
+             is_folder = prop && (prop.icon == "sap-icon://folder-blank");
+
          let tm = new Date().getTime();
 
-         if (this._last_item === item) {
-            let diff = tm - this._last_tm;
-            if ((diff < 300) && (this.kind == "OpenFile"))
+         if ((this._last_item === item) && ((tm - this._last_tm) < 300)) {
+            // handle double click
+            delete this._last_item;
+            if ((this.kind == "OpenFile") && !is_folder)
                return this.onOkPress();
+            else
+               return;
          }
 
          this._last_item = item;
          this._last_tm = tm;
 
-         let ctxt = item.getBindingContext(),
-             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
-
-         if (prop && (prop.icon == "sap-icon://folder-blank")) {
+         if (is_folder) {
             if (this.kind == "OpenFile")
                this.oModel.setProperty("/fileName", "");
 
             let path = this.getBreadcrumbPath();
             path.push(item.getTitle());
+            if (!this.oModel.getProperty("/canChangePath")) return;
             return this.websocket.send("CHPATH:" + JSON.stringify(path));
          }
 
@@ -155,6 +163,8 @@ sap.ui.define(['rootui5/panel/Controller',
          this.websocket.send("CHEXT:" + extName);
       },
 
+      /** @summary Process init dialog message
+        * @private */
       processInitMsg: function(msg) {
          let cfg = JSON.parse(msg);
 
@@ -171,6 +181,9 @@ sap.ui.define(['rootui5/panel/Controller',
          this.updateBReadcrumbs(cfg.path);
 
          this.oModel.setProperty("/fileName", cfg.fname);
+
+         if (cfg.can_change_path !== undefined)
+            this.oModel.setProperty("/canChangePath", cfg.can_change_path);
 
          if (cfg.filters && cfg.filters.length) {
             let arr = [];
@@ -265,7 +278,7 @@ sap.ui.define(['rootui5/panel/Controller',
          }
       },
 
-      /** Shown when warning message about overwritten file should appear */
+      /** @summary Show warning message about overwritten file should appear */
       showWarningDialog: function() {
          let oWarnDlg = new Dialog({
             title: "Warning",
@@ -320,6 +333,7 @@ sap.ui.define(['rootui5/panel/Controller',
 
          this.kind = kind;
          this.oModel = new JSONModel({ canEditName: (this.kind == "SaveAs") || (this.kind == "NewFile"),
+                                       canChangePath: args.can_change_path === undefined ? true : args.can_change_path,
                                        dialogTitle: args.title || "Title",
                                        fileName: fname, // will be returned from the server, just for initialization
                                        filesList: [{name:"first.txt", counter: 11}, {name:"second.txt", counter: 22}, {name:"third.xml", counter: 33}],
@@ -373,6 +387,12 @@ sap.ui.define(['rootui5/panel/Controller',
 
          let server_args = [ this.kind, args.filename || "", this.websocket.getChannelId().toString() ];
 
+         if (args.can_change_path !== undefined)
+            server_args.push(args.can_change_path ? "__canChangePath__" : "__cannotChangePath__");
+
+         if (args.working_path && typeof args.working_path == "string")
+            server_args.push("__workingPath__", args.working_path);
+
          // add at the end filter and filter array
          if (args.filter || args.filters) {
             server_args.push(args.filter || "Any files");
@@ -412,33 +432,36 @@ sap.ui.define(['rootui5/panel/Controller',
       }
    });
 
-   /** Function to initiate SaveAs dialog from client side
-    * Following arguments has to be specified:
+   /** @summary Function to initiate SaveAs dialog from client side
+    * @desc Following arguments has to be specified:
     * args.websocket - current available connection, used to send "FILEDIALOG:" request
     * args.filename - initial file name in the dialog
     * args.title - title used for the dialog
+    * args.can_change_path - if it is allowed to change path
+    * args.working_path - initial working path in dialog like "/Home/storage"
+    * args.filters - array of supported extensions like ["C++ files (*.cxx *.cpp *.c)", "Text files (*.txt)", "Any files (*)" ]
+    * args.filter - selected extension like "Any files"
     * args.onOk - handler when file is selected and "Ok" button is pressed
     * args.onCancel - handler when "Cancel" button is pressed
-    * args.onFailure - handler when any failure appears, dialog will be closed afterwards
-    */
+    * args.onFailure - handler when any failure appears, dialog will be closed afterwards */
    FileDialog.SaveAs = function(args) {
       let controller = new FileDialog();
-
       return controller._initDialog("SaveAs", args);
    }
 
+   /** @summary Function to initiate NewFile dialog from client side,
+     * @desc See @ref FileDialog.SaveAs for supported parameters */
    FileDialog.NewFile = function(args) {
       let controller = new FileDialog();
-
       return controller._initDialog("NewFile", args);
    }
 
+   /** @summary Function to initiate OpenFile dialog from client side,
+     * @desc See @ref FileDialog.SaveAs for supported parameters */
    FileDialog.OpenFile = function(args) {
       let controller = new FileDialog();
-
       return controller._initDialog("OpenFile", args);
    }
-
 
    return FileDialog;
 

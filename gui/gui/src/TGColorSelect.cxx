@@ -20,29 +20,47 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGColorFrame, TG16ColorSelector, TGColorPopup and TGColorSelect.     //
-//                                                                      //
-// The TGColorFrame is a small frame with border showing a specific     //
-// color.                                                               //
-//                                                                      //
-// The TG16ColorSelector is a composite frame with 16 TGColorFrames.    //
-//                                                                      //
-// The TGColorPopup is a popup containing a TG16ColorSelector and a     //
-// "More..." button which popups up a TGColorDialog allowing custom     //
-// color selection.                                                     //
-//                                                                      //
-// The TGColorSelect widget is like a checkbutton but instead of the    //
-// check mark there is color area with a little down arrow. When        //
-// clicked on the arrow the TGColorPopup pops up.                       //
-//                                                                      //
-// Selecting a color in this widget will generate the event:            //
-// kC_COLORSEL, kCOL_SELCHANGED, widget id, pixel.                      //
-// and the signal:                                                      //
-// ColorSelected(Pixel_t color)                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGColorFrame
+    \ingroup guiwidgets
+
+A small frame with border showing a specific color.
+
+*/
+
+
+/** \class TG16ColorSelector
+    \ingroup guiwidgets
+
+A composite frame with 16 TGColorFrames.
+
+*/
+
+
+/** \class TGColorPopup
+    \ingroup guiwidgets
+
+A popup containing a TG16ColorSelector and a "More..." button which popups up a
+TGColorDialog allowing custom color selection.
+
+*/
+
+
+/** \class TGColorSelect
+\ingroup guiwidgets
+
+Like a checkbutton but instead of the check mark there is color area with a little down
+arrow. When clicked on the arrow the TGColorPopup pops up.
+
+Selecting a color in this widget will generate the event:
+  - kC_COLORSEL, kCOL_SELCHANGED, widget id, pixel.
+
+and the signal:
+
+  - ColorSelected(Pixel_t color)
+
+*/
+
 
 #include "TGClient.h"
 #include "TGMsgBox.h"   // for kMBOk
@@ -167,7 +185,7 @@ void TG16ColorSelector::SetActive(Int_t newat)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages for TG16ColorSelector.
 
-Bool_t TG16ColorSelector::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TG16ColorSelector::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
@@ -326,7 +344,7 @@ Bool_t TGColorPopup::HandleButton(Event_t *event)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages for TGColorPopup.
 
-Bool_t TGColorPopup::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGColorPopup::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
@@ -370,13 +388,13 @@ void TGColorPopup::PreviewColor(Pixel_t color)
 ////////////////////////////////////////////////////////////////////////////////
 /// Emit a signal to see preview.
 
-void TGColorPopup::PreviewAlphaColor(ULong_t color)
+void TGColorPopup::PreviewAlphaColor(ULongptr_t color)
 {
    if (fClient->IsEditable()) return;
 
    TColor *tcolor = (TColor *)color;
    fCurrentColor = tcolor->GetPixel();
-   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), 0, (ULong_t)tcolor);
+   SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), 0, (ULongptr_t)tcolor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -415,7 +433,7 @@ TGColorSelect::~TGColorSelect()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages for TGColorSelect.
 
-Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGColorSelect::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
       case kC_COLORSEL:
@@ -424,13 +442,13 @@ Bool_t TGColorSelect::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                {
                   if (parm1 == 0) {
                      SetAlphaColor((ULong_t)parm2);
-                     parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id
+                     parm1 = (Longptr_t)fWidgetId;  // parm1 needs to pass the widget Id
                      SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
                                  parm1, parm2);
                   }
                   else {
                      SetColor(parm2);
-                     parm1 = (Long_t)fWidgetId;  // parm1 needs to pass the widget Id
+                     parm1 = (Longptr_t)fWidgetId;  // parm1 needs to pass the widget Id
                      SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
                                  parm1, parm2);
                   }
@@ -541,7 +559,7 @@ void TGColorSelect::DoRedraw()
       //Adjustment for Quartz 2D is required:
       //first, I DO not try to fit filled rectangle into outline - this
       //simply DOES NOT work (with retina/non-retina display, for example.
-      //First - fill rectable, then draw outline.
+      //First - fill rectangle, then draw outline.
       gVirtualX->FillRectangle(fId, fDrawGC(), x + 1, y + 1, w - 1, h - 1);
       gVirtualX->DrawRectangle(fId, GetShadowGC()(), x + 1, y + 1, w - 1, h - 1);
 #else

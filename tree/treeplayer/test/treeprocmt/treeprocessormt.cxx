@@ -294,14 +294,27 @@ TEST(TreeProcessorMT, LimitNTasks_CheckEntries)
       }
    };
 
-   ROOT::EnableImplicitMT(4);
+   const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
+   ROOT::EnableImplicitMT(nslots);
 
    ROOT::TTreeProcessorMT p(filename, treename);
    p.Process(f);
 
-   EXPECT_EQ(nTasks, 96U) << "Wrong number of tasks generated!\n";
-   EXPECT_EQ(nEntriesCountsMap[10], 65U) << "Wrong number of tasks with 10 clusters each!\n";
-   EXPECT_EQ(nEntriesCountsMap[11], 31U) << "Wrong number of tasks with 11 clusters each!\n";
+   if (nslots == 4) {
+      EXPECT_EQ(nTasks, 40U) << "Wrong number of tasks generated!\n";
+      EXPECT_EQ(nEntriesCountsMap[24], 9U) << "Wrong number of tasks with 24 clusters each!\n";
+      EXPECT_EQ(nEntriesCountsMap[25], 31U) << "Wrong number of tasks with 25 clusters each!\n";
+   }
+   else if (nslots == 2) {
+      EXPECT_EQ(nTasks, 20U) << "Wrong number of tasks generated!\n";
+      EXPECT_EQ(nEntriesCountsMap[49], 9U) << "Wrong number of tasks with 49 clusters each!\n";
+      EXPECT_EQ(nEntriesCountsMap[50], 11U) << "Wrong number of tasks with 50 clusters each!\n";
+   }
+   else if (nslots == 1) {
+      EXPECT_EQ(nTasks, 10U) << "Wrong number of tasks generated!\n";
+      EXPECT_EQ(nEntriesCountsMap[99], 9U) << "Wrong number of tasks with 99 clusters each!\n";
+      EXPECT_EQ(nEntriesCountsMap[100], 1U) << "Wrong number of tasks with 100 clusters each!\n";
+   }
 
    gSystem->Unlink(filename);
    ROOT::DisableImplicitMT();

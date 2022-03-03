@@ -106,16 +106,10 @@ class ActionProxy(Proxy):
         self._cur_attr = attr  # Stores the name of operation call
         return self._call_action_result
 
-    def GetValue(self):
+    def execute_graph(self):
         """
-        Returns the result value of the current action
-        node if it was executed before, else triggers
-        the execution of the entire DistRDF graph before
-        returning the value.
-
-        Returns:
-            The value of the current action node, obtained after executing the
-            current action node in the computational graph.
+        Executes the distributed RDataFrame computation graph this proxy
+        belongs to. If the proxied node already has a value, this is a no-op.
         """
 
         # Creating a ROOT.TDirectory.TContext in a context manager so that
@@ -125,6 +119,15 @@ class ActionProxy(Proxy):
                 headnode = self.proxied_node.get_head()
                 generator = ComputationGraphGenerator(headnode)
                 headnode.backend.execute(generator)
+
+    def GetValue(self):
+        """
+        Returns the result value of the current action node if it was executed
+        before, else triggers the execution of the distributed graph before
+        returning the value.
+        """
+
+        self.execute_graph()
 
         return self.proxied_node.value
 

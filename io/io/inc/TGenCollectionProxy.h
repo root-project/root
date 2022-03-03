@@ -429,7 +429,7 @@ public:
    virtual TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t version);
    virtual TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions();
 
-   // Set of functions to iterate easily throught the collection
+   // Set of functions to iterate easily through the collection
 
    virtual CreateIterators_t GetFunctionCreateIterators(Bool_t read = kTRUE);
    // typedef void (*CreateIterators_t)(void *collection, void **begin_arena, void **end_arena);

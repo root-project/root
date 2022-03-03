@@ -201,7 +201,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    RooArgSet parameters;
    parameters.add(*fMC->GetParametersOfInterest());
    parameters.add(*fMC->GetNuisanceParameters());
-   TIterator *it = parameters.createIterator();
+   TIter it = parameters.createIterator();
    RooRealVar *param = NULL;
 
    // BB: This is the part needed in order to have scrollbars
@@ -212,7 +212,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    // And that't it!
    // Obviously, the parent of other subframes is now fVFrame instead of "this"...
 
-   while ((param = (RooRealVar *)it->Next())) {
+   while ((param = (RooRealVar *)it.Next())) {
       cout << "Adding Slider for " << param->GetName() << endl;
       TGHorizontalFrame *hframek = new TGHorizontalFrame(fVFrame, 0, 0, 0);
 

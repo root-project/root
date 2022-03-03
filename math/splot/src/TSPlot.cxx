@@ -25,6 +25,8 @@ ClassImp(TSPlot);
 
 /** \class TSPlot
 
+\legacy{TSPlot}
+
 A common method used in High Energy Physics to perform measurements is
 the maximum Likelihood method, exploiting discriminating variables to
 disentangle signal from background. The crucial point for such an
@@ -53,7 +55,7 @@ TSPlot is optimal if the control variable is uncorrelated with the discriminatin
 
 
 A detail description of the formalism itself, called \f$\hbox{$_s$}{\cal P}lot\f$, is given
-in [<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/node1.html#bib:sNIM">1</a>].
+in [[1](https://arxiv.org/abs/physics/0402083)].
 
 ### The method
 
@@ -69,9 +71,9 @@ The different terms of the log-Likelihood are:
   - \f$N\f$ : the total number of events in the data sample,
   - \f${\rm N}_{\rm s}\f$ : the number of species of events populating the data sample,
   - \f$N_i\f$ : the number of events expected on the average for the \f$i^{\rm th}\f$ species,
-  - \f${\rm f}_i(y_e)\f$" : the value of the PDFs of the discriminating variables
-    \f$y\f$" for the\f$i^{th}\f$ species and for event\f$e\f$",
-  - \f$x\f$" : the set of control variables which, by definition, do not appear in
+  - \f${\rm f}_i(y_e)\f$ : the value of the PDFs of the discriminating variables
+    \f$y\f$ for the\f$i^{th}\f$ species and for event\f$e\f$,
+  - \f$x\f$ : the set of control variables which, by definition, do not appear in
     the expression of the Likelihood function \f${\cal L}\f$.
 
 The extended log-Likelihood reads:
@@ -137,11 +139,11 @@ Beside reproducing the true distribution,\f$\hbox {$_s$}{\cal P}lots\f$ bear rem
 \sum_{l=1}^{{\rm N}_{\rm s}} {_s{\cal P}}_l(y_e) ~=~1 ~. \tag{5}
 \f]
 
-    That is to say that, summing up the \f${\rm N}_{\rm s}\f$ \f$\hbox {$_s$}{\cal P}lots\f$,
-    one recovers the data sample distribution in \f$x\f$, and summing up the number of events
-    entering in a \f$\hbox{$_s$}{\cal P}lot\f$ for a given species, one recovers the yield of the
-    species, as provided by the fit.
-    The property <a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:NormalizationOK">4</a> is implemented in the TSPlot class as a check.
+That is to say that, summing up the \f${\rm N}_{\rm s}\f$ \f$\hbox {$_s$}{\cal P}lots\f$,
+one recovers the data sample distribution in \f$x\f$, and summing up the number of events
+entering in a \f$\hbox{$_s$}{\cal P}lot\f$ for a given species, one recovers the yield of the
+species, as provided by the fit.
+The property 4 is implemented in the TSPlot class as a check.
 
   - the sum of the statistical uncertainties per bin
 
@@ -149,11 +151,11 @@ Beside reproducing the true distribution,\f$\hbox {$_s$}{\cal P}lots\f$ bear rem
 \sigma[N_{\rm n}\  _s\tilde{\rm M}_{\rm n}(x) {\delta x}]~=~\sqrt{\sum_{e \subset {\delta x}} ({_s{\cal P}}_{\rm n})^2} ~. \tag{6}
 \f]
 
-    reproduces the statistical uncertainty on the yield \f$N_{\rm n}\f$, as provided by the fit:
-    \f$\sigma[N_{\rm n}]\equiv\sqrt{\hbox{ V}_{{\rm n}{\rm n}}}\f$ .
-    Because of that and since the determination of the yields is optimal
-    when obtained using a Likelihood fit, one can conclude that the \f$\hbox{$_s$}{\cal P}lot\f$
-    technique is itself an optimal method to reconstruct distributions of control variables.
+reproduces the statistical uncertainty on the yield \f$N_{\rm n}\f$, as provided by the fit:
+\f$\sigma[N_{\rm n}]\equiv\sqrt{\hbox{ V}_{{\rm n}{\rm n}}}\f$ .
+Because of that and since the determination of the yields is optimal
+when obtained using a Likelihood fit, one can conclude that the \f$\hbox{$_s$}{\cal P}lot\f$
+technique is itself an optimal method to reconstruct distributions of control variables.
 
 
 ### Different steps followed by TSPlot
@@ -165,12 +167,12 @@ Beside reproducing the true distribution,\f$\hbox {$_s$}{\cal P}lots\f$ bear rem
      the later is therefore totally absent from the fit.
 
   2. The weights \f${_s{\cal P}}\f$ are calculated using Eq.
-     (<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>)
+     (2)
      where the covariance matrix is taken from Minuit.
 
   3. Histograms of \f$x\f$ are filled by weighting the events with \f${_s{\cal P}}\f$ .
 
-  4. Error bars per bin are given by Eq. (<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:ErrorPerBin">6</a>).
+  4. Error bars per bin are given by Eq. (6).
 
 
 The \f$\hbox {$_s$}{\cal P}lots\f$ reproduce the true distributions of the species
@@ -189,12 +191,10 @@ variables collectively denoted \f$y\f$ which are chosen within three possible
 variables denoted \f${m_{\rm ES}}\f$ , \f$\Delta E\f$ and \f${\cal F}\f$.
 The variable which is not incorporated in \f$y\f$ is used as the control variable
 \f$x\f$ . The six distributions of the three variables are assumed to be the ones
-depicted in Fig. <a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.
+depicted in Fig. 1.
 
 
-\image html splot_pdfmesNIM.png width=800
-
-#### Figure 1:
+\image html splot_pdfmesNIM.png Figure 1 width=800
 
 Distributions of the three discriminating variables available to perform the Likelihood fit:
 \f${m_{\rm ES}}\f$ , \f$\Delta E\f$ , \f${\cal F}\f$ .
@@ -207,22 +207,19 @@ slices the histograms in 25 bins.
 
 A data sample being built through a Monte Carlo simulation based on the
 distributions shown in Fig.
-<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>,
-one obtains the three distributions of Fig.
-<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfstot">2</a>.
+1,
+one obtains the three distributions of Fig. 2.
 Whereas the distribution of \f$\Delta E\f$  clearly indicates the presence of the signal,
 the distribution of \f${m_{\rm ES}}\f$ and \f${\cal F}\f$  are less obviously populated by signal.
 
 
-\image html splot_genfiTOTNIM.png  width=800
-
-#### Figure 2:
+\image html splot_genfiTOTNIM.png Figure 2 width=800
 
 Distributions of the three discriminating variables for signal plus
 background. The three distributions are the ones obtained from a data
 sample obtained through a Monte Carlo simulation based on the
 distributions shown in Fig.
-<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:pdfs">1</a>.
+1.
 The data sample consists of 500 signal events and 5000 background events.
 
 
@@ -230,7 +227,7 @@ Choosing \f$\Delta E\f$ and \f${\cal F}\f$ as discriminating variables to determ
 \f$N_1\f$ and \f$N_2\f$ through a maximum Likelihood fit, one builds, for the control
 variable \f${m_{\rm ES}}\f$  which is unknown to the fit, the two \f$\hbox {$_s$}{\cal P}lots\f$
 for signal and background shown in
-Fig. <a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:messPlots">3</a>.
+Fig. 3.
 One observes that the \f$\hbox{$_s$}{\cal P}lot\f$
 for signal reproduces correctly the PDF even where the latter vanishes,
 although the error bars remain sizeable. This results from the almost
@@ -238,7 +235,7 @@ complete cancellation between positive and negative weights: the sum of
 weights is close to zero while the sum of weights squared is not. The
 occurence of negative weights occurs through the appearance of the
 covariance matrix, and its negative components, in the definition of
-Eq. (<a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#eq:weightxnotiny">2</a>).
+Eq. (2).
 
 
 A word of caution is in order with respect to the error bars. Whereas
@@ -259,9 +256,7 @@ are consistent with the actual observation, at a given confidence
 level.
 
 
-\image html splot_mass-bkg-sPlot.png  width=600
-
-#### Figure 3:
+\image html splot_mass-bkg-sPlot.png Figure 3 width=600
 
 The \f$\hbox {$_s$}{\cal P}lots\f$ (signal on top, background on bottom)
 obtained for \f${m_{\rm ES}}\f$ are represented as dots with error bars.
@@ -273,14 +268,12 @@ Choosing \f${m_{\rm ES}}\f$ and \f$\Delta E\f$ as discriminating variables to
 determine \f$N_1\f$ and \f$N_2\f$ through a maximum Likelihood fit, one builds,
 for the control variable \f${\cal F}\f$ which is unknown to the fit, the two
 \f$\hbox {$_s$}{\cal P}lots\f$ for signal and background shown in
-Fig. <a href="http://www.slac.stanford.edu/%7Epivk/sPlot/sPlot_ROOT/sPlot_ROOT.html#fig:FisPlots">4</a>.
+Fig. 4.
 In the \f$\hbox{$_s$}{\cal P}lot\f$ for signal one observes that error bars are
 the largest in the \f$x\f$ regions where the background is the largest.
 
 
-\image html splot_fisher-bkg-sPlot.png width=600
-
-#### Figure 4:
+\image html splot_fisher-bkg-sPlot.png Figure 4 width=600
 
 The \f$\hbox {$_s$}{\cal P}lots\f$ (signal on top, background on bottom) obtained
 for \f${\cal F}\f$ are represented as dots with error bars. They are obtained

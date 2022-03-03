@@ -42,7 +42,7 @@ XSStepButton::~XSStepButton( )
 
 /* ----- ProcessMessage ----- */
 Bool_t
-XSStepButton::ProcessMessage(Long_t msg, Long_t param1, Long_t /* param2 */)
+XSStepButton::ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t /* param2 */)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

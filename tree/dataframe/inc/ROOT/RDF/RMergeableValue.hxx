@@ -224,6 +224,7 @@ actions:
 - [Graph](classROOT_1_1RDF_1_1RInterface.html#a804b466ebdbddef5c7e3400cc6b89301)
 - [Histo{1D,2D,3D}]
   (classROOT_1_1RDF_1_1RInterface.html#a247ca3aeb7ce5b95015b7fae72983055)
+- [HistoND](classROOT_1_1RDF_1_1RInterface.html#a0c9956a0f48c26f8e4294e17376c7fea)
 - [Profile{1D,2D}]
   (classROOT_1_1RDF_1_1RInterface.html#a8ef7dc16b0e9f7bc9cfbe2d9e5de0cef)
 - [Stats](classROOT_1_1RDF_1_1RInterface.html#abc68922c464e472f5f856e8981955af6)
@@ -231,6 +232,27 @@ actions:
 */
 template <typename T>
 class RMergeableFill final : public RMergeableValue<T> {
+
+   // RDataFrame's generic Fill method supports two possible signatures for Merge.
+   // Templated to create a dependent type to SFINAE on - in reality, `U` will always be `T`.
+   // This overload handles Merge(TCollection*)...
+   template <typename U, std::enable_if_t<std::is_base_of<TObject, U>::value, int> = 0>
+   auto DoMerge(const RMergeableFill<U> &other, int /*toincreaseoverloadpriority*/)
+      -> decltype(((U &)this->fValue).Merge((TCollection *)nullptr), void())
+   {
+      TList l;                               // The `Merge` method accepts a TList
+      l.Add(const_cast<U *>(&other.fValue)); // Ugly but needed because of the signature of TList::Add
+      this->fValue.Merge(&l); // if `T == TH1D` Eventually calls TH1::ExtendAxis that creates new instances of TH1D
+   }
+
+   // ...and this one handles Merge(const std::vector<T*> &)
+   template <typename U>
+   auto DoMerge(const RMergeableFill<U> &other, double /*todecreaseoverloadpriority*/)
+      -> decltype(this->fValue.Merge(std::vector<U *>{}), void())
+   {
+      this->fValue.Merge({const_cast<U *>(&other.fValue)});
+   }
+
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Aggregate the information contained in another RMergeableValue
    ///        into this.
@@ -250,9 +272,7 @@ class RMergeableFill final : public RMergeableValue<T> {
    {
       try {
          const auto &othercast = dynamic_cast<const RMergeableFill<T> &>(other);
-         TList l;                                     // The `Merge` method accepts a TList
-         l.Add(const_cast<T *>(&(othercast.fValue))); // Ugly but needed because of the signature of TList::Add
-         this->fValue.Merge(&l); // if `T == TH1D` Eventually calls TH1::ExtendAxis that creates new instances of TH1D
+         DoMerge(othercast, /*toselecttherightoverload=*/0);
       } catch (const std::bad_cast &) {
          throw std::invalid_argument("Results from different actions cannot be merged together.");
       }

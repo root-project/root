@@ -33,7 +33,7 @@ RLogChannel &ROOT::Experimental::WebGUILog()
 
 Holds different arguments for starting browser with RWebDisplayHandle::Display() method
 
- */
+*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Default constructor - browser kind configured from gROOT->GetWebDisplay()
@@ -54,7 +54,7 @@ RWebDisplayArgs::RWebDisplayArgs(const std::string &browser)
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor - browser kind specified as const char *
-/// See SetBrowserKind() method for description of allowed parameters
+/// See \ref SetBrowserKind method for description of allowed parameters
 
 RWebDisplayArgs::RWebDisplayArgs(const char *browser)
 {
@@ -79,14 +79,11 @@ RWebDisplayArgs::RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel
    SetMasterWindow(master, channel);
 }
 
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Destructor
+/// must be defined in source code to correctly call RWebWindow destructor
 
-RWebDisplayArgs::~RWebDisplayArgs()
-{
-  // must be defined here to correctly call RWebWindow destructor
-}
+RWebDisplayArgs::~RWebDisplayArgs() = default;
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set size of web browser window as string like "800x600"
@@ -139,14 +136,15 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 ///////////////////////////////////////////////////////////////////////////////////////////
 /// Set browser kind as string argument
 /// Recognized values:
-///  chrome  - use Google Chrome web browser, supports headless mode from v60, default
+///   chrome - use Google Chrome web browser, supports headless mode from v60, default
 ///  firefox - use Mozilla Firefox browser, supports headless mode from v57
 ///   native - (or empty string) either chrome or firefox, only these browsers support batch (headless) mode
 ///  browser - default system web-browser, no batch mode
 ///   safari - Safari browser on Mac
 ///      cef - Chromium Embeded Framework, local display, local communication
-///      qt5 - Qt5 WebEngine, local display, local communication
-///    local - either cef or qt5
+///      qt5 - Qt5 QWebEngine, local display, local communication
+///      qt6 - Qt6 QWebEngineCore, local display, local communication
+///    local - either cef or qt5 or qt6
 ///   <prog> - any program name which will be started instead of default browser, like /usr/bin/opera
 
 RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
@@ -178,9 +176,16 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       kind.erase(pos, epos-pos);
    }
 
-   // very special handling of qt5 which can specify pointer as a string
-   if (kind.find("qt5:") == 0) {
-      SetDriverData((void *) std::stoul(kind.substr(4)));
+   pos = kind.rfind("headless");
+   if ((pos != std::string::npos) && (pos == kind.length() - 8)) {
+      SetHeadless(true);
+      kind.resize(pos);
+      if ((pos > 0) && (kind[pos-1] == ';')) kind.resize(pos-1);
+   }
+
+   // very special handling of qt5/qt6 which can specify pointer as a string
+   if ((kind.find("qt5:") == 0) || (kind.find("qt6:") == 0)) {
+      SetDriverData((void *) std::stoull(kind.substr(4)));
       kind.resize(3);
    }
 
@@ -206,8 +211,12 @@ RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
       SetBrowserKind(kCEF);
    else if ((kind == "qt") || (kind == "qt5"))
       SetBrowserKind(kQt5);
+   else if (kind == "qt6")
+      SetBrowserKind(kQt6);
    else if ((kind == "embed") || (kind == "embedded"))
       SetBrowserKind(kEmbedded);
+   else if (kind == "off")
+      SetBrowserKind(kOff);
    else if (!SetSizeAsStr(kind))
       SetCustomExec(kind);
 
@@ -225,9 +234,11 @@ std::string RWebDisplayArgs::GetBrowserName() const
       case kNative: return "native";
       case kCEF: return "cef";
       case kQt5: return "qt5";
+      case kQt6: return "qt6";
       case kLocal: return "local";
       case kStandard: return "default";
       case kEmbedded: return "embed";
+      case kOff: return "off";
       case kCustom:
           auto pos = fExec.find(" ");
           return (pos == std::string::npos) ? fExec : fExec.substr(0,pos);
@@ -319,7 +330,7 @@ std::string RWebDisplayArgs::GetQt5EmbedQualifier(const void *qparent, const std
    std::string where = "qt5";
    if (qparent) {
       where.append(":");
-      where.append(std::to_string((unsigned long) qparent));
+      where.append(std::to_string((uintptr_t) qparent));
    }
    if (!urlopt.empty()) {
       where.append("?");

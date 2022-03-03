@@ -19,16 +19,14 @@
 #include "RooPrintable.h"
 #include "RooArgList.h"
 #include "RooArgSet.h"
+
+#include "RooBatchComputeTypes.h"
 #include "TFormula.h"
-#include "RooSpan.h"
 
 #include <memory>
 #include <vector>
 #include <string>
 
-namespace RooBatchCompute {
-  struct RunContext;
-}
 class RooAbsReal;
 
 class RooFormula : public TNamed, public RooPrintable {
@@ -60,6 +58,7 @@ public:
   /// Evalute all parameters/observables, and then evaluate formula.
   Double_t eval(const RooArgSet* nset=0) const;
   RooSpan<double> evaluateSpan(const RooAbsReal* dataOwner, RooBatchCompute::RunContext& inputData, const RooArgSet* nset = nullptr) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
 
   /// DEBUG: Dump state information
   void dump() const;

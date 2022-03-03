@@ -131,15 +131,69 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    serv->ExecuteWS(arg, kTRUE, kTRUE);
 }
 
+
+//////////////////////////////////////////////////////////////////////////
+
+void websocket_close_handler(const struct mg_connection *conn, void *)
+{
+   const struct mg_request_info *request_info = mg_get_request_info(conn);
+
+   // check if connection was already closed
+   if (mg_get_user_connection_data(conn) == (void *) conn)
+      return;
+
+   TCivetweb *engine = (TCivetweb *)request_info->user_data;
+   if (!engine || engine->IsTerminating())
+      return;
+   THttpServer *serv = engine->GetServer();
+   if (!serv)
+      return;
+
+   auto arg = std::make_shared<THttpCallArg>();
+   arg->SetPathAndFileName(request_info->local_uri); // path and file name
+   arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
+   arg->SetMethod("WS_CLOSE");
+
+   serv->ExecuteWS(arg, kTRUE, kFALSE); // do not wait for result of execution
+}
+
 //////////////////////////////////////////////////////////////////////////
 
 int websocket_data_handler(struct mg_connection *conn, int code, char *data, size_t len, void *)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
-   // do not handle empty data
+   // check if connection data set to connection itself - means connection was closed already
+   std::string *conn_data = (std::string *) mg_get_user_connection_data(conn);
+   if ((void *) conn_data == (void *) conn)
+      return 1;
+
+   // see https://datatracker.ietf.org/doc/html/rfc6455#section-5.2
+   int fin = code & 0x80, opcode = code & 0x0F;
+
+   // recognized operation codes, all other should fails
+   enum { OP_CONTINUE = 0, OP_TEXT = 1, OP_BINARY = 2, OP_CLOSE = 8 };
+
+   // close when normal close is detected
+   if (fin && (opcode == OP_CLOSE)) {
+      if (conn_data) delete conn_data;
+      websocket_close_handler(conn, nullptr);
+      mg_set_user_connection_data(conn, conn); // mark connection as closed
+      return 1;
+   }
+
+   // ignore empty data
    if (len == 0)
       return 1;
+
+   // close connection when unrecognized opcode is detected
+   if ((opcode != OP_CONTINUE) && (opcode != OP_TEXT) && (opcode != OP_BINARY)) {
+      if (conn_data) delete conn_data;
+      websocket_close_handler(conn, nullptr);
+      mg_set_user_connection_data(conn, conn); // mark connection as closed
+      return 1;
+   }
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
    if (!engine || engine->IsTerminating())
@@ -148,10 +202,8 @@ int websocket_data_handler(struct mg_connection *conn, int code, char *data, siz
    if (!serv)
       return 1;
 
-   std::string *conn_data = (std::string *) mg_get_user_connection_data(conn);
-
    // this is continuation of the request
-   if (!(code & 0x80)) {
+   if (!fin) {
       if (!conn_data) {
          conn_data = new std::string(data,len);
          mg_set_user_connection_data(conn, conn_data);
@@ -181,27 +233,6 @@ int websocket_data_handler(struct mg_connection *conn, int code, char *data, siz
    return 1;
 }
 
-//////////////////////////////////////////////////////////////////////////
-
-void websocket_close_handler(const struct mg_connection *conn, void *)
-{
-   const struct mg_request_info *request_info = mg_get_request_info(conn);
-
-   TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (!engine || engine->IsTerminating())
-      return;
-   THttpServer *serv = engine->GetServer();
-   if (!serv)
-      return;
-
-   auto arg = std::make_shared<THttpCallArg>();
-   arg->SetPathAndFileName(request_info->local_uri); // path and file name
-   arg->SetQuery(request_info->query_string);        // query arguments
-   arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
-   arg->SetMethod("WS_CLOSE");
-
-   serv->ExecuteWS(arg, kTRUE, kFALSE); // do not wait for result of execution
-}
 
 //////////////////////////////////////////////////////////////////////////
 

@@ -56,12 +56,14 @@ TGDNDManager *gDNDManager = 0;
 
 Cursor_t TGDragWindow::fgDefaultCursor = kNone;
 
-//_____________________________________________________________________________
-//
-// TGDragWindow
-//
-// Window used as drag icon during drag and drop operations.
-//_____________________________________________________________________________
+
+/** \class TGDragWindow
+    \ingroup guiwidgets
+
+Window used as drag icon during drag and drop operations.
+
+*/
+
 
 ClassImp(TGDragWindow);
 
@@ -95,7 +97,7 @@ TGDragWindow::TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
    wattr.fOverrideRedirect = kTRUE;
 
    // This input window is used to make the dragging smoother when using
-   // highly complicated shapped windows (like labels and semitransparent
+   // highly complicated shaped windows (like labels and semitransparent
    // icons), for some obscure reason most of the motion events get lost
    // while the pointer is over the shaped window.
 
@@ -422,11 +424,12 @@ Bool_t TGDNDManager::HandleClientMessage(Event_t *event)
       HandleDNDLeave((Window_t) event->fUser[0]);
 
    } else if (event->fHandle == fgDNDPosition) {
-      HandleDNDPosition((Window_t) event->fUser[0],
-                       (Int_t) (event->fUser[2] >> 16) & 0xFFFF,  // x_root
-                       (Int_t) (event->fUser[2] & 0xFFFF),        // y_root
-                       (Atom_t) event->fUser[4],                  // action
-                       (Time_t) event->fUser[3]);                 // timestamp
+      Atom_t action = (Atom_t)event->fUser[4] ? event->fUser[4] : 1;
+      HandleDNDPosition((Window_t)event->fUser[0],
+                        (Int_t)(event->fUser[2] >> 16) & 0xFFFF, // x_root
+                        (Int_t)(event->fUser[2] & 0xFFFF),       // y_root
+                        (Atom_t)action,                          // action
+                        (Time_t)event->fUser[3]);                // timestamp
 
    } else if (event->fHandle == fgDNDStatus) {
       Rectangle_t skip;
@@ -550,7 +553,7 @@ void TGDNDManager::SendDNDPosition(Window_t target, int x, int y,
    event.fUser[0] = fMain->GetId();  // from;
    event.fUser[1] = 0L;
 
-   event.fUser[2] = (x << 16) | y;   // root coodinates
+   event.fUser[2] = (x << 16) | y;   // root coordinates
    event.fUser[3] = timestamp;       // timestamp for retrieving data
    event.fUser[4] = action;          // requested action
 
@@ -664,7 +667,7 @@ Bool_t TGDNDManager::HandleDNDEnter(Window_t src, Long_t vers, Atom_t dataTypes[
       fDraggerTypes[3] = kNone;
    }
 
-   // the following is not strictly neccessary, unless the previous
+   // the following is not strictly necessary, unless the previous
    // dragging application crashed without sending XdndLeave
    if (fLocalTarget) fLocalTarget->HandleDNDLeave();
    fLocalTarget = 0;
@@ -824,7 +827,7 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
       gVirtualX->ChangeProperties(event->fUser[0], event->fUser[3],
                                   event->fUser[2], 8,
                                   (unsigned char *) data, len);
-
+#ifndef R__WIN32
       xevent.fType    = kSelectionNotify;
       xevent.fTime    = event->fTime;
       xevent.fUser[0] = event->fUser[0]; // requestor
@@ -832,7 +835,7 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
       xevent.fUser[2] = event->fUser[2]; // target;
       xevent.fUser[3] = event->fUser[3]; // property;
       gVirtualX->SendEvent(event->fUser[0], &xevent);
-
+#endif
       return kTRUE;
    } else {
       return kFALSE;  // not for us...

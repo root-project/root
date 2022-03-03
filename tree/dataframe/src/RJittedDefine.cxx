@@ -9,36 +9,61 @@
  *************************************************************************/
 
 #include <ROOT/RDF/RJittedDefine.hxx>
-#include <TError.h> // R__ASSERT
+#include <ROOT/RDF/RLoopManager.hxx>
+
+#include <cassert>
 
 using namespace ROOT::Detail::RDF;
 
+RJittedDefine::~RJittedDefine()
+{
+   fLoopManager->Deregister(this);
+}
+
 void RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
 {
-   R__ASSERT(fConcreteDefine != nullptr);
+   assert(fConcreteDefine != nullptr);
    fConcreteDefine->InitSlot(r, slot);
 }
 
 void *RJittedDefine::GetValuePtr(unsigned int slot)
 {
-   R__ASSERT(fConcreteDefine != nullptr);
+   assert(fConcreteDefine != nullptr);
    return fConcreteDefine->GetValuePtr(slot);
 }
 
 const std::type_info &RJittedDefine::GetTypeId() const
 {
-   R__ASSERT(fConcreteDefine != nullptr);
+   assert(fConcreteDefine != nullptr);
    return fConcreteDefine->GetTypeId();
 }
 
 void RJittedDefine::Update(unsigned int slot, Long64_t entry)
 {
-   R__ASSERT(fConcreteDefine != nullptr);
+   assert(fConcreteDefine != nullptr);
    fConcreteDefine->Update(slot, entry);
+}
+
+void RJittedDefine::Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)
+{
+   assert(fConcreteDefine != nullptr);
+   fConcreteDefine->Update(slot, id);
 }
 
 void RJittedDefine::FinaliseSlot(unsigned int slot)
 {
-   R__ASSERT(fConcreteDefine != nullptr);
+   assert(fConcreteDefine != nullptr);
    fConcreteDefine->FinaliseSlot(slot);
+}
+
+void RJittedDefine::MakeVariations(const std::vector<std::string> &variations)
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->MakeVariations(variations);
+}
+
+RDefineBase &RJittedDefine::GetVariedDefine(const std::string &variationName)
+{
+   assert(fConcreteDefine != nullptr);
+   return fConcreteDefine->GetVariedDefine(variationName);
 }

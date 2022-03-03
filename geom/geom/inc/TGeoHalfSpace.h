@@ -19,6 +19,10 @@ class TGeoHalfSpace : public TGeoBBox
 private:
    Double_t              fP[3];
    Double_t              fN[3];
+
+   TGeoHalfSpace(const TGeoHalfSpace&) = delete;
+   TGeoHalfSpace& operator=(const TGeoHalfSpace&) = delete;
+
 public:
    // constructors
    TGeoHalfSpace();

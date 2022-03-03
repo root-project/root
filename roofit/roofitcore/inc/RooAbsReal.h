@@ -23,7 +23,7 @@
 #include "RooArgList.h"
 #include "RooGlobalFunc.h"
 #include "RooSpan.h"
-#include <map>
+#include "RooBatchComputeTypes.h"
 
 class RooArgList ;
 class RooDataSet ;
@@ -42,20 +42,22 @@ class RooFitResult ;
 class RooAbsMoment ;
 class RooDerivative ;
 class RooVectorDataStore ;
-namespace RooBatchCompute{
-class BatchInterfaceAccessor;
-struct RunContext;
-}
 struct TreeReadBuffer; /// A space to attach TBranches
+namespace ROOT {
+namespace Experimental {
+class RooFitDriver ;
+}
+}
 
 class TH1;
 class TH1F;
 class TH2F;
 class TH3F;
 
-#include <list>
-#include <string>
 #include <iostream>
+#include <list>
+#include <map>
+#include <string>
 #include <sstream>
 
 class RooAbsReal : public RooAbsArg {
@@ -133,8 +135,9 @@ public:
     throw std::logic_error("Deprecated getValBatch() has been removed in favour of the faster getValues(). If your code is affected by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition. https://root.cern/doc/v624/release-notes.html");
   }
 #endif
-  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
+  /// \copydoc getValBatch(std::size_t, std::size_t, const RooArgSet*)
   virtual RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
+  std::vector<double> getValues(RooAbsData& data, RooFit::BatchModeOption batchMode=RooFit::BatchModeOption::Cpu) const;
 
   Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
@@ -309,7 +312,7 @@ public:
   virtual void printValue(std::ostream& os) const ;
   virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
 
-  static void setCacheCheck(Bool_t flag) ;
+  inline void setCachedValue(double value, bool notifyClients = true) final;
 
   // Evaluation error logging 
   class EvalError {
@@ -388,10 +391,11 @@ protected:
 
   
  public:
-  const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars) const ;
   const RooAbsReal* createPlotProjection(const RooArgSet& depVars, const RooArgSet& projVars, RooArgSet*& cloneSet) const ;
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
 				         RooArgSet *&cloneSet, const char* rangeName=0, const RooArgSet* condObs=0) const;
+  virtual void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
+
  protected:
 
   RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;
@@ -421,8 +425,11 @@ protected:
 
 
   // Internal consistency checking (needed by RooDataSet)
-  virtual Bool_t isValid() const ;
-  virtual Bool_t isValidReal(Double_t value, Bool_t printError=kFALSE) const ;
+  /// Check if current value is valid.
+  virtual bool isValid() const { return isValidReal(_value); }
+  /// Interface function to check if given value is a valid value for this object. Returns true unless overridden.
+  virtual bool isValidReal(double /*value*/, bool printError = false) const { (void)printError; return true; }
+
 
   // Function evaluation and error tracing
   Double_t traceEval(const RooArgSet* set) const ;
@@ -444,6 +451,7 @@ protected:
 #endif
 
   virtual RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+
 
   //---------- Interface to access batch data ---------------------------
   //
@@ -588,6 +596,22 @@ class BatchInterfaceAccessor {
       theReal.checkBatchComputation(evalData, evtNo, normSet, relAccuracy);
     }
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Overwrite the value stored in this object's cache.
+/// This can be used to fake a computation that resulted in `value`.
+/// \param[in] value Value to write.
+/// \param[in] setValDirty If true, notify users of this object that its value changed.
+/// This is the default.
+void RooAbsReal::setCachedValue(double value, bool notifyClients) {
+  _value = value;
+
+  if (notifyClients) {
+    setValueDirty();
+    _valueDirty = false;
+  }
+}
 
 
 #endif

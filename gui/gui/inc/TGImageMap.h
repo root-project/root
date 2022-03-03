@@ -12,14 +12,6 @@
 #ifndef ROOT_TGImageMap
 #define ROOT_TGImageMap
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGImageMap (with TGRegion and TGRegionWithId help classes)           //
-//                                                                      //
-// A TGImageMap provides the functionality like a clickable image in    //
-// a web browser with sensitive regions (MAP HTML tag).                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGButton.h"
 #include "TPoint.h"
@@ -87,9 +79,9 @@ private:
    TGRegionWithId& operator=(const TGRegionWithId&) = delete;
 
 protected:
-   Int_t         fId;      // region id
-   TGToolTip    *fTip;     // tooltip
-   TGPopupMenu  *fPopup;   // popup menu
+   Int_t         fId;      ///< region id
+   TGToolTip    *fTip;     ///< tooltip
+   TGPopupMenu  *fPopup;   ///< popup menu
 
 public:
    TGRegionWithId();
@@ -123,13 +115,13 @@ public:
    enum ENavMode { kNavRegions, kNavGrid };
 
 protected:
-   TList      *fListOfRegions;   // list of regions
-   ENavMode    fNavMode;         // navigation mode
-   ECursor     fCursorMouseOver; // cursor shape in regions
-   ECursor     fCursorMouseOut;  // cursor shape out of regions
-   Int_t       fLastVisited;     // id of the last visited region
-   TGToolTip  *fMainTip;         // tooltip text for main region
-   TList      *fTrash;           // collect all objects that need to be cleaned up
+   TList      *fListOfRegions;   ///< list of regions
+   ENavMode    fNavMode;         ///< navigation mode
+   ECursor     fCursorMouseOver; ///< cursor shape in regions
+   ECursor     fCursorMouseOut;  ///< cursor shape out of regions
+   Int_t       fLastVisited;     ///< id of the last visited region
+   TGToolTip  *fMainTip;         ///< tooltip text for main region
+   TList      *fTrash;           ///< collect all objects that need to be cleaned up
 
 public:
    TGImageMap(const TGWindow *p = nullptr, const TGPicture *pic = nullptr);

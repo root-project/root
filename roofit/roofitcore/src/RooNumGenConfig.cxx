@@ -119,14 +119,11 @@ RooNumGenConfig::RooNumGenConfig(const RooNumGenConfig& other) :
   _methodNDCondCat(other._methodNDCondCat)
 {
   // Clone all configuration dat
-  TIterator* iter = other._configSets.MakeIterator() ;
-  RooArgSet* set ;
-  while((set=(RooArgSet*)iter->Next())) {
+  for (auto * set : static_range_cast<RooArgSet*>(other._configSets)) {
     RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
     setCopy->setName(set->GetName()) ;
    _configSets.Add(setCopy);
   }
-  delete iter ;
 }
 
 
@@ -160,14 +157,11 @@ RooNumGenConfig& RooNumGenConfig::operator=(const RooNumGenConfig& other)
   _configSets.Delete() ;
 
   // Copy new integrator-specific data
-  TIterator* iter = other._configSets.MakeIterator() ;
-  RooArgSet* set ;
-  while((set=(RooArgSet*)iter->Next())) {
+  for(auto * set : static_range_cast<RooArgSet*>(other._configSets)) {
     RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
     setCopy->setName(set->GetName()) ;
    _configSets.Add(setCopy);
   }
-  delete iter ;
 
   return *this ;
 }
@@ -368,9 +362,7 @@ void RooNumGenConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
   if (verbose) {
 
     os << endl << "Available sampling methods:" << endl << endl ;
-    TIterator* cIter = _configSets.MakeIterator() ;
-    RooArgSet* configSet ;
-    while ((configSet=(RooArgSet*)cIter->Next())) {
+    for(auto * configSet : static_range_cast<RooArgSet*>(_configSets)) {
 
       os << indent << "*** " << configSet->GetName() << " ***" << endl ;
       os << indent << "Capabilities: " ;
@@ -384,7 +376,5 @@ void RooNumGenConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
       os << endl ;
 
     }
-
-    delete cIter ;
   }
 }

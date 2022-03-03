@@ -82,13 +82,15 @@ for advanced uses of categories.
 #include "RooFitLegacy/RooCategorySharedProperties.h"
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
+#include "ROOT/StringUtils.hxx"
+
 #include "TBuffer.h"
 #include "TString.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "TList.h"
 
-#include <iostream>
 #include <cstdlib>
+#include <iostream>
+#include <memory>
 
 using namespace std;
 
@@ -376,7 +378,7 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
   }
 
   // Parse list of state names, verify that each is valid and add them to the list
-  for (const auto& token : RooHelpers::tokenise(stateNameList, ",")) {
+  for (const auto& token : ROOT::Split(stateNameList, ",")) {
     const value_type idx = lookupIndex(token);
     if (idx != invalidCategory().second) {
       addToRange(name, idx);
@@ -490,8 +492,7 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
     auto& rangesMap = *_ranges;
 
     // Copy the data:
-    std::unique_ptr<TIterator> iter(props->_altRanges.MakeIterator());
-    while (TList* olist = (TList*)iter->Next()) {
+    for (auto * olist : static_range_cast<TList*>(props->_altRanges)) {
       std::vector<value_type>& vec = rangesMap[olist->GetName()];
 
 
@@ -544,9 +545,9 @@ void RooCategory::installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap) {
   if (existingMap && checkRangeMapsEqual(*rangeMap, *existingMap)) {
     // We know this map, use the shared one.
     _ranges = std::move(existingMap);
-    if (rangeMap.get() == existingMap.get()) {
+    if (rangeMap.get() == _ranges.get()) {
       // This happens when ROOT's IO has written the same pointer twice. We cannot delete now.
-      (void) rangeMap.release(); // clang-tidy is normally right that this leaks. Here, we need to leave the result unused, though.
+      (void) rangeMap.release(); // NOLINT: clang-tidy is normally right that this leaks. Here, we need to leave the result unused, though.
     }
   } else {
     // We don't know this map. Register for sharing.

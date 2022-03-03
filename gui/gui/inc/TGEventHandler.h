@@ -12,11 +12,6 @@
 #ifndef ROOT_TGEventHandler
 #define ROOT_TGEventHandler
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGEventHandler                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TNamed.h"
 #include "TQObject.h"
@@ -31,7 +26,7 @@ private:
    TGEventHandler(const TGEventHandler&) = delete;
    TGEventHandler& operator=(const TGEventHandler&) = delete;
 
-   Bool_t   fIsActive;    // kTRUE if handler is active, kFALSE if not active
+   Bool_t   fIsActive;    ///< kTRUE if handler is active, kFALSE if not active
    TGWindow *fWindow;
    TObject  *fObject;
 
@@ -58,10 +53,10 @@ public:
    virtual Bool_t HandleSelectionClear(Event_t *) { return kFALSE; }
    virtual Bool_t HandleColormapChange(Event_t *) { return kFALSE; }
    virtual void   ProcessedEvent(Event_t *event)
-                     { Emit("ProcessedEvent(Event_t*)", (Long_t)event); } //*SIGNAL*
+                     { Emit("ProcessedEvent(Event_t*)", (Longptr_t)event); } //*SIGNAL*
 
-   virtual void   SendMessage(const TGWindow *w, Long_t msg, Long_t parm1, Long_t parm2);
-   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t) { return kFALSE; }
+   virtual void   SendMessage(const TGWindow *w, Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t) { return kFALSE; }
    virtual void   Repaint() { }
 
    ClassDef(TGEventHandler,0)  // Abstract event handler

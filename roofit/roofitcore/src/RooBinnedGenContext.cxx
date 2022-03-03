@@ -70,7 +70,7 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
       _pdf->fixAddCoefNormalization(coefNSet) ;
     }
 
-  _pdf->recursiveRedirectServers(*_theEvent) ;
+  _pdf->recursiveRedirectServers(_theEvent) ;
   _vars = _pdf->getObservables(vars) ;
 
   // If pdf has boundary definitions, follow those for the binning 

@@ -259,7 +259,7 @@ void TGL5DPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%zx)->Paint()", (size_t)this));
       else
          Paint();
    }

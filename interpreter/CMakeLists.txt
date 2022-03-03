@@ -90,7 +90,7 @@ elseif(ROOT_ARCHITECTURE MATCHES macosxarm64)
   set(ROOT_CLING_TARGET "AArch64")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
   set(ROOT_CLING_TARGET "X86")
-elseif(ROOT_ARCHITECTURE MATCHES win32)
+elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
   set(ROOT_CLING_TARGET "X86")
 else()
   set(ROOT_CLING_TARGET "all")
@@ -132,6 +132,12 @@ else()
   set(CMAKE_C_VISIBILITY_PRESET hidden)
 endif()
 if (NOT MSVC AND NOT APPLE)
+  # Requires the linker to resolve the symbol internally and prevents
+  # conflicts when linked with another software using also LLVM like in
+  # the problem reported for Julia in
+  # https://github.com/JuliaHEP/ROOT.jl/issues/17#issuecomment-882719292
+  # Only needed for Linux: Mac uses linker namespaces and  Windows explicit export/import
+  string(APPEND CMAKE_SHARED_LINKER_FLAGS " -Wl,-Bsymbolic")
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS "-fno-semantic-interposition")
 endif()
 set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
@@ -238,7 +244,7 @@ if(builtin_llvm)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-9.0")
+  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-9")
   if(LLVM_CONFIG)
     message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
     set(CONFIG_COMMAND ${LLVM_CONFIG}
@@ -249,7 +255,8 @@ else()
       "--prefix"
       "--src-root"
       "--cmakedir"
-      "--build-mode")
+      "--build-mode"
+      "--version")
     execute_process(
       COMMAND ${CONFIG_COMMAND}
       RESULT_VARIABLE HAD_ERROR
@@ -276,6 +283,9 @@ else()
   list(GET CONFIG_OUTPUT 5 MAIN_SRC_DIR)
   list(GET CONFIG_OUTPUT 6 LLVM_CONFIG_CMAKE_PATH)
   list(GET CONFIG_OUTPUT 7 LLVM_BUILD_MODE)
+  list(GET CONFIG_OUTPUT 8 LLVM_VERSION_S)
+
+  set(LLVM_VERSION_SAVE "${LLVM_VERSION_S}")
 
   message(STATUS "External llvm built in ${LLVM_BUILD_MODE} mode.")
 
@@ -425,10 +435,18 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
   # We cannot include LLVMConfig.cmake here. We reply on builtin clang to discover the available
   # llvm version and set it in clang version.
   # FIXME: This is a very ugly workaround. Is there a better way to do this?
-  set(LLVM_VERSION ${CLANG_VERSION} PARENT_SCOPE)
+  if ($CLANG_VERSION)
+    set(LLVM_VERSION ${CLANG_VERSION} PARENT_SCOPE)
+  else()
+    set(LLVM_VERSION ${LLVM_VERSION_SAVE} PARENT_SCOPE)
+  endif()
 
   # We are in the case of NOT builtin_llvm
   if (builtin_clang)
+    # remove clang-cpp from CLANG_LINKS_TO_CREATE to avoid clashes with
+    # install-clang-cpp target defined by LLVM's cmake module
+    set(CLANG_LINKS_TO_CREATE clang++ clang-cl)
+
     add_subdirectory(llvm/src/tools/clang EXCLUDE_FROM_ALL)
   endif(builtin_clang)
 
@@ -437,8 +455,13 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
 endif(builtin_llvm)
 
 if (builtin_clang)
-  # For builtin LLVM this is set in interpreter/llvm/src/CMakeLists.txt
-  set(Clang_DIR "${LLVM_BINARY_DIR}/tools/clang/")
+  if (builtin_llvm)
+    # For builtin LLVM this is set in interpreter/llvm/src/CMakeLists.txt
+    set(Clang_DIR "${LLVM_BINARY_DIR}/tools/clang/")
+  else()
+    set(Clang_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/")
+    set(Clang_Config_ExtraPathHints "${Clang_DIR}cmake/modules/CMakeFiles")
+  endif()
   set(CLANG_INCLUDE_DIRS
     ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
     ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
@@ -457,9 +480,11 @@ if (builtin_cling)
   # LLVM doesn't really give us a API to get this with an in-source build
   # so we just use the normal way of doing this and read the llvm directory
   # compilation properties.
-  get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
-  # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
-  string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
+  if (builtin_llvm)
+    get_directory_property(LLVM_DEFS DIRECTORY llvm/src COMPILE_DEFINITIONS)
+    # Turns DEFINE1;DEFINE2 to -DDEFINE1 -DDEFINE2
+    string (REPLACE ";" " -D" LLVM_DEFS ";${LLVM_DEFS}")
+  endif()
 
   # FIXME: Reduce the usage of CLING_CXXFLAGS by adding a cmake routine in
   # RootMacros.cmake for all cling-dependent libraries
@@ -474,13 +499,13 @@ if (builtin_cling)
   set(CLING_CXXFLAGS ${CLING_CXXFLAGS} PARENT_SCOPE)
 
   string(APPEND CMAKE_CXX_FLAGS ${CLING_CXXFLAGS})
-  if (LLVM_ENABLE_PIC)
+  if (LLVM_ENABLE_PIC AND NOT MSVC)
     # FIXME: LLVM_ENABLE_PIC is ON by default, however not propagated to cling.
     # FIXME: fPIC is required by the linker for libCling. Can we do that using
     # cmake: set_property(TARGET clingInterpreter PROPERTY POSITION_INDEPENDENT_CODE ON)?
     string(APPEND CMAKE_CXX_FLAGS " -fPIC")
     string(APPEND CMAKE_C_FLAGS " -fPIC")
-  endif(LLVM_ENABLE_PIC)
+  endif(LLVM_ENABLE_PIC AND NOT MSVC)
   # Avoid cling being installed under ROOTSYS/include.
   add_subdirectory(cling EXCLUDE_FROM_ALL)
   add_dependencies(CLING ${CLING_LIBRARIES})

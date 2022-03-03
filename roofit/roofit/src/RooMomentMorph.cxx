@@ -34,7 +34,8 @@ ClassImp(RooMomentMorph);
 ////////////////////////////////////////////////////////////////////////////////
 /// coverity[UNINIT_CTOR]
 
-RooMomentMorph::RooMomentMorph() : _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
+RooMomentMorph::RooMomentMorph()
+  : _cacheMgr(this,10,true,true), _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
 {
   _varItr    = _varList.createIterator() ;
   _pdfItr    = _pdfList.createIterator() ;

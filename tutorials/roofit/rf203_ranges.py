@@ -25,18 +25,17 @@ gx = ROOT.RooGaussian("gx", "gx", x, mx, ROOT.RooFit.RooConst(1))
 px = ROOT.RooPolynomial("px", "px", x)
 
 # model = f*gx + (1-f)px
-f = ROOT.RooRealVar("f", "f", 0., 1.)
-model = ROOT.RooAddPdf(
-    "model", "model", ROOT.RooArgList(gx, px), ROOT.RooArgList(f))
+f = ROOT.RooRealVar("f", "f", 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "model", [gx, px], [f])
 
 # Generated 10000 events in (x,y) from pdf model
-modelData = model.generate(ROOT.RooArgSet(x), 10000)
+modelData = model.generate({x}, 10000)
 
 # Fit full range
 # ---------------------------
 
 # Fit pdf to all data
-r_full = model.fitTo(modelData, ROOT.RooFit.Save(ROOT.kTRUE))
+r_full = model.fitTo(modelData, Save=True)
 
 # Fit partial range
 # ----------------------------------
@@ -45,19 +44,15 @@ r_full = model.fitTo(modelData, ROOT.RooFit.Save(ROOT.kTRUE))
 x.setRange("signal", -3, 3)
 
 # Fit pdf only to data in "signal" range
-r_sig = model.fitTo(modelData, ROOT.RooFit.Save(
-    ROOT.kTRUE), ROOT.RooFit.Range("signal"))
+r_sig = model.fitTo(modelData, Save=True, Range="signal")
 
 # Plot/print results
 # ---------------------------------------
 
 # Make plot frame in x and add data and fitted model
-frame = x.frame(ROOT.RooFit.Title("Fitting a sub range"))
+frame = x.frame(Title="Fitting a sub range")
 modelData.plotOn(frame)
-model.plotOn(
-    frame, ROOT.RooFit.Range("Full"), ROOT.RooFit.LineStyle(
-        ROOT.kDashed), ROOT.RooFit.LineColor(
-            ROOT.kRed)) # Add shape in full ranged dashed
+model.plotOn(frame, Range="Full", LineColor="r", LineStyle="--")  # Add shape in full ranged dashed
 model.plotOn(frame)  # By default only fitted range is shown
 
 # Print fit results

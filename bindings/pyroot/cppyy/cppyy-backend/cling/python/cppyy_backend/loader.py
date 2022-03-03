@@ -25,6 +25,14 @@ def _load_helper(bkname):
     except OSError:
          pass
 
+ # failed ... try absolute path
+ # needed on MacOS12 with soversion
+    try:
+        libpath = os.path.dirname(os.path.dirname(__file__))
+        return ctypes.CDLL(os.path.join(libpath, bkname), ctypes.RTLD_GLOBAL)
+    except OSError:
+        pass
+
  # failed ... load dependencies explicitly
     try:
         pkgpath = os.path.dirname(bkname)
@@ -85,21 +93,7 @@ def set_cling_compile_options(add_defaults = False):
         CURRENT_ARGS = os.environ['EXTRA_CLING_ARGS']
 
     if add_defaults:
-        has_avx = False
-        try:
-            with open('/proc/cpuinfo', 'r') as ci:
-                for line in ci:
-                    if 'avx' in line:
-                        has_avx = True
-                        break
-        except Exception:
-            try:
-                cli_arg = subprocess.check_output(['sysctl', 'machdep.cpu.features'])
-                has_avx = 'avx' in cli_arg.decode("utf-8").strip().lower()
-            except Exception:
-                pass
         CURRENT_ARGS += ' -O2'
-        if has_avx: CURRENT_ARGS += ' -mavx'
         os.putenv('EXTRA_CLING_ARGS', CURRENT_ARGS)
         os.environ['EXTRA_CLING_ARGS'] = CURRENT_ARGS
 

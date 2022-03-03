@@ -26,6 +26,14 @@ namespace RDF {
 template <typename T>
 class RResultPtr;
 
+namespace Experimental {
+template <typename T>
+class RResultMap;
+
+template <typename T>
+RResultMap<T> VariationsFor(RResultPtr<T> resPtr);
+} // namespace Experimental
+
 template <typename Proxied, typename DataSource>
 class RInterface;
 } // namespace RDF
@@ -103,6 +111,10 @@ class RResultPtr {
    template <typename T1>
    friend RResultPtr<T1> RDFDetail::MakeResultPtr(const std::shared_ptr<T1> &, ::ROOT::Detail::RDF::RLoopManager &,
                                                   std::shared_ptr<RDFInternal::RActionBase>);
+
+   template <typename T1>
+   friend ROOT::RDF::Experimental::RResultMap<T1> ROOT::RDF::Experimental::VariationsFor(RResultPtr<T1> resPtr);
+
    template <class T1, class T2>
    friend bool operator==(const RResultPtr<T1> &lhs, const RResultPtr<T2> &rhs);
    template <class T1, class T2>
@@ -180,14 +192,19 @@ public:
    RResultPtr &operator=(const RResultPtr &) = default;
    RResultPtr &operator=(RResultPtr &&) = default;
    explicit operator bool() const { return bool(fObjPtr); }
-   ~RResultPtr() { ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this); }
+   ~RResultPtr()
+   {
+      if (fObjPtr.use_count() == 1) {
+         ROOT::Internal::RDF::WarnOnLazySnapshotNotTriggered(*this);
+      }
+   }
 
    /// Convert a RResultPtr<T2> to a RResultPtr<T>.
    ///
    /// Useful e.g. to store a number of RResultPtr<TH1D> and RResultPtr<TH2D> in a std::vector<RResultPtr<TH1>>.
    /// The requirements on T2 and T are the same as for conversion between std::shared_ptr<T2> and std::shared_ptr<T>.
-   template <typename T2, typename std::enable_if<std::is_constructible<std::shared_ptr<T>, std::shared_ptr<T2>>::value,
-                                                  int>::type = 0>
+   template <typename T2,
+             std::enable_if_t<std::is_constructible<std::shared_ptr<T>, std::shared_ptr<T2>>::value, int> = 0>
    RResultPtr(const RResultPtr<T2> &r) : fLoopManager(r.fLoopManager), fObjPtr(r.fObjPtr), fActionPtr(r.fActionPtr)
    {
    }
@@ -438,7 +455,7 @@ MakeResultPtr(const std::shared_ptr<T> &r, RLoopManager &lm, std::shared_ptr<RDF
 template <typename T>
 std::unique_ptr<RMergeableValue<T>> GetMergeableValue(RResultPtr<T> &rptr)
 {
-
+   rptr.ThrowIfNull();
    if (!rptr.fActionPtr->HasRun())
       rptr.TriggerRun(); // Prevents from using `const` specifier in parameter
    return std::unique_ptr<RMergeableValue<T>>{

@@ -164,6 +164,10 @@ void DeclareFailingClasses()
 
 TEST(HashRecursiveRemove, GetClassClassDefInline)
 {
+   // On windows, the following might trigger a warning. Suppress it here:
+   ROOTUnitTestSupport::CheckDiagsRAII diagRAII;
+   diagRAII.optionalDiag(kWarning, "TClassTable::Add", "class WrongSetup already in TClassTable");
+
    DeclareFailingClasses();
 
    auto getcl = TClass::GetClass("FirstOverload");

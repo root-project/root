@@ -30,9 +30,9 @@ sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
 sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
 # Build Chebychev polynomial pdf
-a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
-a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
-bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
+a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
+a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
+bkg = ROOT.RooChebychev("bkg", "Background", x, [a0, a1])
 
 
 # Method 1 - Two RooAddPdfs
@@ -40,43 +40,35 @@ bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
 # Add signal components
 
 # Sum the signal components into a composite signal pdf
-sig1frac = ROOT.RooRealVar(
-    "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
-sig = ROOT.RooAddPdf("sig", "Signal", ROOT.RooArgList(
-    sig1, sig2), ROOT.RooArgList(sig1frac))
+sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
+sig = ROOT.RooAddPdf("sig", "Signal", [sig1, sig2], [sig1frac])
 
 # Add signal and background
 # ------------------------------------------------
 
 # Sum the composite signal and background
-bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0., 1.)
-model = ROOT.RooAddPdf(
-    "model", "g1+g2+a", ROOT.RooArgList(bkg, sig), ROOT.RooArgList(bkgfrac))
+bkgfrac = ROOT.RooRealVar("bkgfrac", "fraction of background", 0.5, 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 
 # Sample, fit and plot model
 # ---------------------------------------------------
 
 # Generate a data sample of 1000 events in x from model
-data = model.generate(ROOT.RooArgSet(x), 1000)
+data = model.generate({x}, 1000)
 
 # Fit model to data
 model.fitTo(data)
 
 # Plot data and PDF overlaid
-xframe = x.frame(ROOT.RooFit.Title(
-    "Example of composite pdf=(sig1+sig2)+bkg"))
+xframe = x.frame(Title="Example of composite pdf=(sig1+sig2)+bkg")
 data.plotOn(xframe)
 model.plotOn(xframe)
 
 # Overlay the background component of model with a dashed line
-ras_bkg = ROOT.RooArgSet(bkg)
-model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg),
-             ROOT.RooFit.LineStyle(ROOT.kDashed))
+model.plotOn(xframe, Components={bkg}, LineStyle="--")
 
 # Overlay the background+sig2 components of model with a dotted line
-ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
-model.plotOn(xframe, ROOT.RooFit.Components(ras_bkg_sig2),
-             ROOT.RooFit.LineStyle(ROOT.kDotted))
+model.plotOn(xframe, Components={bkg, sig2}, LineStyle=":")
 
 # Print structure of composite pdf
 model.Print("t")
@@ -88,17 +80,7 @@ model.Print("t")
 #
 #   model2 = bkg + (sig1 + sig2)
 #
-model2 = ROOT.RooAddPdf(
-    "model",
-    "g1+g2+a",
-    ROOT.RooArgList(
-        bkg,
-        sig1,
-        sig2),
-    ROOT.RooArgList(
-        bkgfrac,
-        sig1frac),
-    ROOT.kTRUE)
+model2 = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig1, sig2], [bkgfrac, sig1frac], True)
 
 # NB: Each coefficient is interpreted as the fraction of the
 # left-hand component of the i-th recursive sum, i.e.
@@ -109,15 +91,8 @@ model2 = ROOT.RooAddPdf(
 
 # Plot recursive addition model
 # ---------------------------------------------------------
-model2.plotOn(xframe, ROOT.RooFit.LineColor(ROOT.kRed),
-              ROOT.RooFit.LineStyle(ROOT.kDashed))
-model2.plotOn(
-    xframe,
-    ROOT.RooFit.Components(ras_bkg_sig2),
-    ROOT.RooFit.LineColor(
-        ROOT.kRed),
-    ROOT.RooFit.LineStyle(
-        ROOT.kDashed))
+model2.plotOn(xframe, LineColor="r", LineStyle="--")
+model2.plotOn(xframe, Components={bkg, sig2}, LineColor="r", LineStyle="--")
 model2.Print("t")
 
 # Draw the frame on the canvas

@@ -37,7 +37,7 @@ struct IndexSortComparator {
          return *(fValMajor + i1) < *(fValMajor + i2);
    }
 
-  // pointers to the start of index values tables keeping uppder 64bit and lower 64bit
+  // pointers to the start of index values tables keeping upper 64bit and lower 64bit
   // of combined indexed 128bit value
   Long64_t *fValMajor, *fValMinor;
 };
@@ -177,19 +177,8 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          fMajorFormula->UpdateFormulaLeaves();
          fMinorFormula->UpdateFormulaLeaves();
       }
-      auto GetAndRangeCheck = [this](bool isMajor, Long64_t entry) {
-         LongDouble_t ldRet = (isMajor ? fMajorFormula : fMinorFormula)->EvalInstance<LongDouble_t>();
-         Long64_t ret = (Long64_t) ldRet;
-         Long64_t retCloserToZero = ret > 0 ? ret - 1 : ret + 1;
-         if (retCloserToZero == ret) {
-            Warning("TTreeIndex",
-               "In tree entry %lld, %s value %s=%lld possibly out of range for internal `long double`",
-               entry, isMajor ? "major" : "minor", isMajor ? fMajorName.Data() : fMinorName.Data(), ret);
-         }
-         return ret;
-      };
-      tmp_major[i] = GetAndRangeCheck(true, i);
-      tmp_minor[i] = GetAndRangeCheck(false, i);
+      tmp_major[i] = (Long64_t) fMajorFormula->EvalInstance<LongDouble_t>();
+      tmp_minor[i] = (Long64_t) fMinorFormula->EvalInstance<LongDouble_t>();
    }
    fIndex = new Long64_t[fN];
    for(i = 0; i < fN; i++) { fIndex[i] = i; }
@@ -397,7 +386,7 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 /// If it finds a pair that maches val, it returns directly the
 /// index in the table.
 /// If an entry corresponding to major and minor is not found, the function
-/// returns the index of the major,minor pair immediatly lower than the
+/// returns the index of the major,minor pair immediately lower than the
 /// requested value, ie it will return -1 if the pair is lower than
 /// the first entry in the index.
 ///

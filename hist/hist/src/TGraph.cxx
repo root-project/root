@@ -48,7 +48,7 @@ ClassImp(TGraph);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class TGraph
-    \ingroup Hist
+    \ingroup Graphs
 A TGraph is an object made of two arrays X and Y with npoints each.
 The TGraph painting is performed thanks to the TGraphPainter
 class. All details about the various painting options are given in this class.
@@ -380,7 +380,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// Graph constructor reading input from filename.
 ///
 /// `filename` is assumed to contain at least two columns of numbers.
-/// the string format is by default `"%lg %lg"`.
+/// The string format is by default `"%lg %lg"`.
 /// This is a standard c formatting for `scanf()`.
 ///
 /// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column
@@ -1413,7 +1413,6 @@ Double_t TGraph::GetRMS(Int_t axis) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 
 Double_t TGraph::GetErrorX(Int_t) const
@@ -1422,7 +1421,6 @@ Double_t TGraph::GetErrorX(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 
 Double_t TGraph::GetErrorY(Int_t) const
@@ -1431,7 +1429,6 @@ Double_t TGraph::GetErrorY(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1441,7 +1438,6 @@ Double_t TGraph::GetErrorXhigh(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1451,7 +1447,6 @@ Double_t TGraph::GetErrorXlow(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -1461,7 +1456,6 @@ Double_t TGraph::GetErrorYhigh(Int_t) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called by GraphFitChisquare.
 /// It always returns a negative value. Real implementation in TGraphErrors
 /// and TGraphAsymmErrors
 
@@ -2212,6 +2206,26 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values of a TGraph by a constant c1.
+///
+/// If option contains "x" the x values are scaled
+/// If option contains "y" the y values are scaled
+/// If option contains "xy" both x and y values are scaled
+
+void TGraph::Scale(Double_t c1, Option_t *option)
+{
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetX()[i] *= c1;
+   }
+   if (opt.Contains("y")) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetY()[i] *= c1;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set number of points in the graph
 /// Existing coordinates are preserved
 /// New coordinates above fNpoints are preset to 0.
@@ -2360,6 +2374,30 @@ void TGraph::SetNameTitle(const char *name, const char *title)
 {
    SetName(name);
    SetTitle(title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set statistics option on/off.
+///
+/// By default, the statistics box is drawn.
+/// The paint options can be selected via gStyle->SetOptStats.
+/// This function sets/resets the kNoStats bit in the graph object.
+/// It has priority over the Style option.
+
+void TGraph::SetStats(Bool_t stats)
+{
+   ResetBit(kNoStats);
+   if (!stats) {
+      SetBit(kNoStats);
+      //remove the "stats" object from the list of functions
+      if (fFunctions) {
+         TObject *obj = fFunctions->FindObject("stats");
+         if (obj) {
+            fFunctions->Remove(obj);
+            delete obj;
+         }
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2557,7 +2595,7 @@ void TGraph::UseCurrentStyle()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds all graphs from the collection to this graph.
-/// Returns the total number of poins in the result or -1 in case of an error.
+/// Returns the total number of points in the result or -1 in case of an error.
 
 Int_t TGraph::Merge(TCollection* li)
 {

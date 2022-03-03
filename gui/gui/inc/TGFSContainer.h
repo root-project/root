@@ -13,14 +13,6 @@
 #define ROOT_TGFSContainer
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFileIcon, TGFileEntry, TGFSContainer                               //
-//                                                                      //
-// Utility classes used by the file selection dialog (TGFileDialog).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGListView.h"
 #include "TGDNDManager.h"
 
@@ -50,16 +42,16 @@ struct FileStat_t;
 class TGFileItem : public TGLVEntry {
 
 protected:
-   const TGPicture  *fBlpic;        // big icon
-   const TGPicture  *fSlpic;        // small icon
-   const TGPicture  *fLcurrent;     // current icon
-   Int_t             fType;         // file type
-   Int_t             fUid, fGid;    // file uid and gid
-   Bool_t            fIsLink;       // true if symbolic link
-   Long_t            fModTime;      // modification time
-   Long64_t          fSize;         // file size
-   TBufferFile      *fBuf;          // buffer used for Drag and Drop
-   TDNDData          fDNDData;      // Drag and Drop data
+   const TGPicture  *fBlpic;        ///< big icon
+   const TGPicture  *fSlpic;        ///< small icon
+   const TGPicture  *fLcurrent;     ///< current icon
+   Int_t             fType;         ///< file type
+   Int_t             fUid, fGid;    ///< file uid and gid
+   Bool_t            fIsLink;       ///< true if symbolic link
+   Long_t            fModTime;      ///< modification time
+   Long64_t          fSize;         ///< file size
+   TBufferFile      *fBuf;          ///< buffer used for Drag and Drop
+   TDNDData          fDNDData;      ///< Drag and Drop data
 
    void         Init(const TGPicture *blpic, const TGPicture *slpic,
                      FileStat_t &stat, EListViewMode viewMode);
@@ -125,23 +117,23 @@ class TGFileContainer : public TGLVContainer {
 friend class TGFSFrameElement;
 
 protected:
-   EFSSortMode       fSortType;       // sorting mode of contents
-   TRegexp          *fFilter;         // file filter
-   TViewUpdateTimer *fRefresh;        // refresh timer
-   ULong_t           fMtime;          // directory modification time
-   TString           fDirectory;      // current directory
-   TList            *fCleanups;       // list of pictures to cleanup
-   const TGPicture  *fFolder_t;       // small folder icon
-   const TGPicture  *fFolder_s;       // big folder icon
-   const TGPicture  *fApp_t;          // small application icon
-   const TGPicture  *fApp_s;          // big application icon
-   const TGPicture  *fDoc_t;          // small document icon
-   const TGPicture  *fDoc_s;          // big document icon
-   const TGPicture  *fSlink_t;        // small symbolic link icon
-   const TGPicture  *fSlink_s;        // big symbolic link icon
-   Bool_t            fCachePictures;  // kTRUE use caching
-   Bool_t            fDisplayStat;    // kFALSE to interrupt display directory
-                                      // contents in case of many files inside
+   EFSSortMode       fSortType;       ///< sorting mode of contents
+   TRegexp          *fFilter;         ///< file filter
+   TViewUpdateTimer *fRefresh;        ///< refresh timer
+   ULong_t           fMtime;          ///< directory modification time
+   TString           fDirectory;      ///< current directory
+   TList            *fCleanups;       ///< list of pictures to cleanup
+   const TGPicture  *fFolder_t;       ///< small folder icon
+   const TGPicture  *fFolder_s;       ///< big folder icon
+   const TGPicture  *fApp_t;          ///< small application icon
+   const TGPicture  *fApp_s;          ///< big application icon
+   const TGPicture  *fDoc_t;          ///< small document icon
+   const TGPicture  *fDoc_s;          ///< big document icon
+   const TGPicture  *fSlink_t;        ///< small symbolic link icon
+   const TGPicture  *fSlink_s;        ///< big symbolic link icon
+   Bool_t            fCachePictures;  ///< kTRUE use caching
+   Bool_t            fDisplayStat;    ///< kFALSE to interrupt display directory
+                                      ///< contents in case of many files inside
 
    void CreateFileList();
 

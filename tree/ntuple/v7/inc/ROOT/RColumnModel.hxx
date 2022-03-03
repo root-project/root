@@ -41,14 +41,16 @@ enum class EColumnType {
    // in order to serialize std::variant
    kSwitch,
    kByte,
+   kChar,
    kBit,
    kReal64,
    kReal32,
    kReal16,
-   kReal8,
    kInt64,
    kInt32,
    kInt16,
+   kInt8,
+   kMax,
 };
 
 // clang-format off

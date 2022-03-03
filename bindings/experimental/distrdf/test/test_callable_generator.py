@@ -1,7 +1,14 @@
 import unittest
 
-from DistRDF import ComputationGraphGenerator, Node, Proxy
+from DistRDF import ComputationGraphGenerator, HeadNode, Proxy
 from DistRDF.Backends import Base
+
+
+def create_dummy_headnode(*args):
+    """Create dummy head node instance needed in the test"""
+    # Pass None as `npartitions`. The tests will modify this member
+    # according to needs
+    return HeadNode.get_headnode(None, *args)
 
 
 class ComputationGraphGeneratorTest(unittest.TestCase):
@@ -58,7 +65,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         t = ComputationGraphGeneratorTest.Temp()
 
         # Head node
-        hn = Node.HeadNode(1)
+        hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
         node = Proxy.TransformationProxy(hn)
         # Set of operations to build the graph
@@ -71,15 +78,15 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Generate and execute the mapper
         generator = ComputationGraphGenerator.ComputationGraphGenerator(
             node.proxied_node)
-        mapper_func = generator.get_callable()
-        values = mapper_func(t)
+        mapper_func = generator.generate_computation_graph
+        triggerables = mapper_func(t, 0)
         nodes = generator.get_action_nodes()
 
         reqd_order = [1, 3, 2, 2, 3, 2]
 
         self.assertEqual(t.ord_list, reqd_order)
         self.assertListEqual(nodes, [n5.proxied_node, n4.proxied_node])
-        self.assertListEqual(values, [t, t])
+        self.assertListEqual(triggerables, [t, t])
 
     def test_mapper_with_pruning(self):
         """
@@ -91,7 +98,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         t = ComputationGraphGeneratorTest.Temp()
 
         # Head node
-        hn = Node.HeadNode(1)
+        hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
         node = Proxy.TransformationProxy(hn)
 
@@ -108,12 +115,14 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Generate and execute the mapper
         generator = ComputationGraphGenerator.ComputationGraphGenerator(
             node.proxied_node)
-        mapper_func = generator.get_callable()
-        values = mapper_func(t)
+        # Prune first
+        generator.headnode.graph_prune()
+        mapper_func = generator.generate_computation_graph
+        triggerables = mapper_func(t, 0)
         nodes = generator.get_action_nodes()
 
         reqd_order = [1, 2, 2, 2, 3, 2]
 
         self.assertEqual(t.ord_list, reqd_order)
         self.assertListEqual(nodes, [n4.proxied_node])
-        self.assertListEqual(values, [t])
+        self.assertListEqual(triggerables, [t])

@@ -158,10 +158,10 @@ void TMVA::BinarySearchTreeNode::Print( std::ostream& os ) const
    os << std::setw(10) << "Class: " << GetClass() << std::endl;
 
    os << "Selector: " <<  this->GetSelector() <<std::endl;
-   os << "My address is " << long(this) << ", ";
-   if (this->GetParent() != NULL) os << " parent at addr: " << long(this->GetParent()) ;
-   if (this->GetLeft() != NULL) os << " left daughter at addr: " << long(this->GetLeft());
-   if (this->GetRight() != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
+   os << "My address is " << (Longptr_t)this << ", ";
+   if (this->GetParent() != NULL) os << " parent at addr: " << (Longptr_t)this->GetParent();
+   if (this->GetLeft() != NULL) os << " left daughter at addr: " << (Longptr_t)this->GetLeft();
+   if (this->GetRight() != NULL) os << " right daughter at addr: " << (Longptr_t)this->GetRight();
 
    os << " **** > "<< std::endl;
 }

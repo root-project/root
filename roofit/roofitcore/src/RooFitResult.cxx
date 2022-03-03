@@ -375,7 +375,7 @@ const RooArgList& RooFitResult::randomizePars() const
   }
   else {
     // reset to the final fit values
-    *_randomPars= *_finalPars;
+    _randomPars->assign(*_finalPars);
   }
 
   // create a vector of unit Gaussian variables
@@ -790,14 +790,26 @@ void RooFitResult::fillPrefitCorrMatrix()
    }
 }
 
+
+namespace {
+
+void isIdenticalErrMsg(std::string const& msgHead, const RooAbsReal* tv, const RooAbsReal* ov, bool verbose) {
+  if(!verbose) return;
+  std::cout << "RooFitResult::isIdentical: " << msgHead << " " << tv->GetName() << " differs in value:\t"
+      << tv->getVal() << " vs.\t" << ov->getVal()
+      << "\t(" << (tv->getVal()-ov->getVal())/ov->getVal() << ")" << std::endl;
+}
+
+} // namespace
+
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Return true if this fit result is identical to other within tolerances.
+/// Return true if this fit result is identical to other within tolerances, ignoring the correlation matrix.
 /// \param[in] other Fit result to test against.
 /// \param[in] tol **Relative** tolerance for parameters and NLL.
-/// \param[in] tolCorr **absolute** tolerance for correlation coefficients.
-/// \param[in] verbose Ignored.
+/// \param[in] verbose If this function will log to the standard output when comparisions fail.
 
-Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double_t tolCorr, Bool_t /*verbose*/) const 
+bool RooFitResult::isIdenticalNoCov(const RooFitResult& other, double tol, bool verbose) const 
 {
   Bool_t ret = kTRUE ;
   auto deviation = [tol](const double left, const double right){
@@ -807,14 +819,8 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       return fabs(left) >= tol;
   };
 
-  auto errMsg = [](std::string msgHead, const RooAbsReal* tv, const RooAbsReal* ov) {
-    cout << "RooFitResult::isIdentical: " << msgHead << " " << tv->GetName() << " differs in value:\t"
-        << tv->getVal() << " vs.\t" << ov->getVal()
-        << "\t(" << (tv->getVal()-ov->getVal())/ov->getVal() << ")" << endl;
-  };
-
   if (deviation(_minNLL, other._minNLL)) {
-    cout << "RooFitResult::isIdentical: minimized value of -log(L) is different " << _minNLL << " vs. " << other._minNLL << endl ;
+    if(verbose) cout << "RooFitResult::isIdentical: minimized value of -log(L) is different " << _minNLL << " vs. " << other._minNLL << endl ;
     ret = kFALSE ;
   }
 
@@ -822,11 +828,11 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
     auto tv = static_cast<const RooAbsReal*>(_constPars->at(i));
     auto ov = static_cast<const RooAbsReal*>(other._constPars->find(tv->GetName())) ;
     if (!ov) {
-      cout << "RooFitResult::isIdentical: cannot find constant parameter " << _constPars->at(i)->GetName() << " in reference" << endl ;
+      if(verbose) cout << "RooFitResult::isIdentical: cannot find constant parameter " << _constPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
     if (ov && deviation(tv->getVal(), ov->getVal())) {
-      errMsg("constant parameter", tv, ov);
+      isIdenticalErrMsg("constant parameter", tv, ov, verbose);
       ret = kFALSE ;
     }
   }
@@ -835,11 +841,11 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
     auto ov = static_cast<const RooAbsReal*>(other._initPars->find(_initPars->at(i)->GetName())) ;
     auto tv = static_cast<const RooAbsReal*>(_initPars->at(i));
     if (!ov) {
-      cout << "RooFitResult::isIdentical: cannot find initial parameter " << _initPars->at(i)->GetName() << " in reference" << endl ;
+      if(verbose) cout << "RooFitResult::isIdentical: cannot find initial parameter " << _initPars->at(i)->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
     if (ov && deviation(tv->getVal(), ov->getVal())) {
-      errMsg("initial parameter", tv, ov);
+      isIdenticalErrMsg("initial parameter", tv, ov, verbose);
       ret = kFALSE ;
     }
   }
@@ -848,14 +854,29 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
     auto tv = static_cast<const RooAbsReal*>(_finalPars->at(i));
     auto ov = static_cast<const RooAbsReal*>(other._finalPars->find(tv->GetName())) ;
     if (!ov) {
-      cout << "RooFitResult::isIdentical: cannot find final parameter " << tv->GetName() << " in reference" << endl ;
+      if(verbose) cout << "RooFitResult::isIdentical: cannot find final parameter " << tv->GetName() << " in reference" << endl ;
       ret = kFALSE ;
     }
     if (ov && deviation(tv->getVal(), ov->getVal())) {
-      errMsg("final parameter", tv, ov);
+      isIdenticalErrMsg("final parameter", tv, ov, verbose);
       ret = kFALSE ;
     }
   }
+
+  return ret;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if this fit result is identical to other within tolerances.
+/// \param[in] other Fit result to test against.
+/// \param[in] tol **Relative** tolerance for parameters and NLL.
+/// \param[in] tolCorr **absolute** tolerance for correlation coefficients.
+/// \param[in] verbose If this function will log to the standard output when comparisions fail.
+
+bool RooFitResult::isIdentical(const RooFitResult& other, double tol, double tolCorr, bool verbose) const 
+{
+  bool ret = isIdenticalNoCov(other, tol, verbose);
 
   auto deviationCorr = [tolCorr](const double left, const double right){
     return fabs(left - right) >= tolCorr;
@@ -871,11 +892,11 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
       auto tv = static_cast<const RooAbsReal*>(_globalCorr->at(i));
       auto ov = static_cast<const RooAbsReal*>(other._globalCorr->find(_globalCorr->at(i)->GetName())) ;
       if (!ov) {
-        cout << "RooFitResult::isIdentical: cannot find global correlation coefficient " << tv->GetName() << " in reference" << endl ;
+        if(verbose) cout << "RooFitResult::isIdentical: cannot find global correlation coefficient " << tv->GetName() << " in reference" << endl ;
         ret = kFALSE ;
       }
       if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
-        errMsg("global correlation coefficient", tv, ov);
+        isIdenticalErrMsg("global correlation coefficient", tv, ov, verbose);
         ret = kFALSE ;
       }
     }
@@ -887,11 +908,11 @@ Bool_t RooFitResult::isIdentical(const RooFitResult& other, Double_t tol, Double
         auto tv = static_cast<const RooAbsReal*>(row->at(i));
         auto ov = static_cast<const RooAbsReal*>(orow->find(tv->GetName())) ;
         if (!ov) {
-          cout << "RooFitResult::isIdentical: cannot find correlation coefficient " << tv->GetName() << " in reference" << endl ;
+          if(verbose) cout << "RooFitResult::isIdentical: cannot find correlation coefficient " << tv->GetName() << " in reference" << endl ;
           ret = kFALSE ;
         }
         if (ov && deviationCorr(tv->getVal(), ov->getVal())) {
-          errMsg("correlation coefficient", tv, ov);
+          isIdenticalErrMsg("correlation coefficient", tv, ov, verbose);
           ret = kFALSE ;
         }
       }
@@ -917,15 +938,14 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
   }
 
   // Verify that all members of varList are of type RooRealVar
-  TIterator* iter = varList.createIterator() ;
+  TIter iter = varList.createIterator() ;
   RooAbsArg* arg  ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  while((arg=(RooAbsArg*)iter.Next())) {
     if (!dynamic_cast<RooRealVar*>(arg)) {
       oocoutE((TObject*)0,InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName() << "' is not of type RooRealVar" << endl ;
       return 0 ;
     }
   }
-  delete iter ;
 
   RooFitResult* r = new RooFitResult("lastMinuitFit","Last MINUIT fit") ;
 
@@ -1003,13 +1023,13 @@ RooFitResult* RooFitResult::lastMinuitFit(const RooArgList& varList)
 RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
 {
    // Verify that all members of varList are of type RooRealVar
-   TIterator *iter = paramList.createIterator();
+   TIter iter = paramList.createIterator();
    RooAbsArg *arg;
-   while ((arg = (RooAbsArg *)iter->Next())) {
+   while ((arg = (RooAbsArg *)iter.Next())) {
       if (!dynamic_cast<RooRealVar *>(arg)) {
          oocoutE((TObject *)0, InputArguments) << "RooFitResult::lastMinuitFit: ERROR: variable '" << arg->GetName()
                                                << "' is not of type RooRealVar" << endl;
-         return 0;
+         return nullptr;
       }
    }
 
@@ -1020,15 +1040,14 @@ RooFitResult *RooFitResult::prefitResult(const RooArgList &paramList)
    RooArgList constPars("constPars");
    RooArgList floatPars("floatPars");
 
-   iter->Reset();
-   while ((arg = (RooAbsArg *)iter->Next())) {
+   iter.Reset();
+   while ((arg = (RooAbsArg *)iter.Next())) {
       if (arg->isConstant()) {
          constPars.addClone(*arg);
       } else {
          floatPars.addClone(*arg);
       }
    }
-   delete iter;
 
    r->setConstParList(constPars);
    r->setInitParList(floatPars);

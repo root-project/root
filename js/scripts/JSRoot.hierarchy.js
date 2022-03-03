@@ -673,6 +673,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       main.insert('div', ".jsroot_browser_btns").classed('jsroot_browser_area', true)
           .style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('width','250px')
+          .style('overflow', 'hidden')
           .style('padding-left','5px')
           .style('display','flex').style('flex-direction', 'column')   /* use the flex model */
           .html("<p class='jsroot_browser_title'>title</p>" +  guiCode);
@@ -1016,35 +1017,37 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let hitem = this.findItem(itemname),
           url = this.getOnlineItemUrl(hitem) + "/cmd.json",
-          d3node = d3.select(elem);
+          d3node = d3.select(elem),
+          promise = Promise.resolve("");
 
-      if ('_numargs' in hitem)
-         for (let n = 0; n < hitem._numargs; ++n) {
-            let argname = "arg" + (n+1), argvalue = undefined;
-            if (n+2 < arguments.length) argvalue = arguments[n+2];
-            if ((argvalue===undefined) && elem)
-               argvalue = prompt("Input argument " + argname + " for command " + hitem._name, "");
-            if (argvalue===null) return Promise.resolve(false);
-            url += ((n==0) ? "?" : "&") + argname + "=" + argvalue;
-         }
-
-      if (!d3node.empty()) {
-         d3node.style('background','yellow');
-         if (hitem && hitem._title) d3node.attr('title', "Executing " + hitem._title);
+      if ('_numargs' in hitem) {
+         let cmdargs = [];
+         for (let n = 0; n < hitem._numargs; ++n)
+            cmdargs.push((n+2 < arguments.length) ? arguments[n+2] : "");
+         promise = JSROOT.require("jq2d").then(() => this.commandArgsDialog(hitem._name, cmdargs));
       }
 
-      return JSROOT.httpRequest(url, 'text').then(res => {
-         if (!d3node.empty()) {
-            let col = ((res != null) && (res != 'false')) ? 'green' : 'red';
-            if (hitem && hitem._title) d3node.attr('title', hitem._title + " lastres=" + res);
-            d3node.style('background', col);
-            setTimeout(() => d3node.style('background', ''), 2000);
-            if ((col == 'green') && ('_hreload' in hitem))
-               this.reload();
-            if ((col == 'green') && ('_update_item' in hitem))
-               this.updateItems(hitem._update_item.split(";"));
+      return promise.then(urlargs => {
+         if (typeof urlargs != "string") return false;
+
+        if (!d3node.empty()) {
+            d3node.style('background','yellow');
+            if (hitem && hitem._title) d3node.attr('title', "Executing " + hitem._title);
          }
-         return res;
+
+         return JSROOT.httpRequest(url + urlargs, 'text').then(res => {
+            if (!d3node.empty()) {
+               let col = ((res != null) && (res != 'false')) ? 'green' : 'red';
+               if (hitem && hitem._title) d3node.attr('title', hitem._title + " lastres=" + res);
+               d3node.style('background', col);
+               setTimeout(() => d3node.style('background', ''), 2000);
+               if ((col == 'green') && ('_hreload' in hitem))
+                  this.reload();
+               if ((col == 'green') && ('_update_item' in hitem))
+                  this.updateItems(hitem._update_item.split(";"));
+            }
+            return res;
+         });
       });
    }
 
@@ -1104,7 +1107,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             if ((arg.rest == d.rest) || (arg.rest.length <= d.rest.length))
                return Promise.resolve(result);
 
-         return this.expandItem(parentname, null, true).then(res => {
+         return this.expandItem(parentname, undefined, options != "hierarchy_expand_verbose").then(res => {
             if (!res) return result;
             let newparentname = this.itemFullName(d.last);
             if (newparentname.length > 0) newparentname += "/";
@@ -1253,8 +1256,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
                let handle = null;
                if (obj._typename) handle = jsrp.getDrawHandle("ROOT." + obj._typename);
-               if (handle && handle.draw_field && obj[handle.draw_field])
+               if (handle && handle.draw_field && obj[handle.draw_field]) {
                   obj = obj[handle.draw_field];
+                  if (!drawopt) drawopt = handle.draw_field_opt || "";
+               }
 
                if ((typeof p.redrawObject == 'function') && p.redrawObject(obj, drawopt)) painter = p;
             });
@@ -1296,8 +1301,8 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
       if (opt && typeof opt === 'function') { call_back = opt; opt = ""; }
       if (opt===undefined) opt = "";
 
-      let drop_complete = drop_painter => {
-         if (drop_painter && (typeof drop_painter === 'object') && (typeof drop_painter.setItemName == 'function'))
+      let drop_complete = (drop_painter, is_main_painter) => {
+         if (drop_painter && !is_main_painter && (typeof drop_painter === 'object') && (typeof drop_painter.setItemName == 'function'))
             drop_painter.setItemName(itemname, null, this);
          return drop_painter;
       }
@@ -1315,10 +1320,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          let main_painter = jsrp.getElementMainPainter(divid);
 
          if (main_painter && (typeof main_painter.performDrop === 'function'))
-            return main_painter.performDrop(res.obj, itemname, res.item, opt).then(p => drop_complete(p));
+            return main_painter.performDrop(res.obj, itemname, res.item, opt).then(p => drop_complete(p, main_painter === p));
 
          if (main_painter && main_painter.accept_drops)
-            return JSROOT.draw(divid, res.obj, "same " + opt).then(p => drop_complete(p));
+            return JSROOT.draw(divid, res.obj, "same " + opt).then(p => drop_complete(p, main_painter === p));
 
          this.cleanupFrame(divid);
          return JSROOT.draw(divid, res.obj, opt).then(p => drop_complete(p));
@@ -1526,7 +1531,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
             items[indx] = null; // mark item as ready
 
             for (let cnt = 0; cnt < items.length; ++cnt) {
-               if (dropitems[cnt]) isany = true;
                if (items[cnt]===null) continue; // ignore completed item
                if (items_wait[cnt] && items.indexOf(items[cnt])===cnt) {
                   items_wait[cnt] = false;
@@ -1734,7 +1738,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          jsrp.showProgress("Loading " + itemname);
 
-         return this.getObject(itemname, "hierarchy_expand").then(res => {
+         return this.getObject(itemname, silent ? "hierarchy_expand" : "hierarchy_expand_verbose").then(res => {
 
             jsrp.showProgress();
 
@@ -1821,7 +1825,6 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @param {string} filepath - URL to ROOT file
      * @returns {Promise} when file is opened */
    HierarchyPainter.prototype.openRootFile = function(filepath) {
-      // first check that file with such URL already opened
 
       let isfileopened = false;
       this.forEachRootFile(item => { if (item._fullurl===filepath) isfileopened = true; });
@@ -1846,8 +1849,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          return this.refreshHtml();
       }).catch(() => {
          // make CORS warning
-         if (!d3.select("#gui_fileCORS").style("background","red").empty())
-             setTimeout(function() { d3.select("#gui_fileCORS").style("background",''); }, 5000);
+         if (JSROOT.batch_mode)
+            console.error(`Fail to open ${filepath} - check CORS headers`);
+         else if (!d3.select("#gui_fileCORS").style("background","red").empty())
+            setTimeout(() => d3.select("#gui_fileCORS").style("background",''), 5000);
          return false;
       }).finally(() => jsrp.showProgress());
    }
@@ -1925,7 +1930,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
       let url = itemname, h_get = false, req = "", req_kind = "object", draw_handle = null;
 
-      if (option === 'hierarchy_expand') { h_get = true; option = undefined; }
+      if ((typeof option == "string") && (option.indexOf('hierarchy_expand')==0)) {
+         h_get = true;
+         option = undefined;
+      }
 
       if (item) {
          url = this.getOnlineItemUrl(item);
@@ -2012,25 +2020,27 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
 
          this.h._expand = onlineHierarchy;
 
-         let scripts = [], modules = [];
+         let styles = [], scripts = [], modules = [];
          this.forEachItem(item => {
             if ('_childs' in item) item._expand = onlineHierarchy;
 
             if ('_autoload' in item) {
                let arr = item._autoload.split(";");
-               for (let n = 0; n < arr.length; ++n)
-                  if ((arr[n].length>3) &&
-                      ((arr[n].lastIndexOf(".js")==arr[n].length-3) ||
-                      (arr[n].lastIndexOf(".css")==arr[n].length-4))) {
-                     if (!scripts.find(elem => elem == arr[n])) scripts.push(arr[n]);
-                  } else {
-                     if (arr[n] && !modules.find(elem => elem ==arr[n])) modules.push(arr[n]);
+               arr.forEach(name => {
+                  if ((name.length > 3) && (name.lastIndexOf(".js") == name.length-3)) {
+                     if (!scripts.find(elem => elem == name)) scripts.push(name);
+                  } else if ((name.length > 4) && (name.lastIndexOf(".css") == name.length-4)) {
+                     if (!styles.find(elem => elem == name)) styles.push(name);
+                  } else if (name && !modules.find(elem => elem == name)) {
+                     modules.push(name);
                   }
+               });
             }
          });
 
          return JSROOT.require(modules)
-               .then(() => JSROOT.loadScript(scripts))
+               .then(() => JSROOT.require(scripts))
+               .then(() => JSROOT.loadScript(styles))
                .then(() => {
                   this.forEachItem(item => {
                      if (!('_drawfunc' in item) || !('_kind' in item)) return;
@@ -2416,6 +2426,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
           localfile = GetOption("localfile"),
           jsonarr = GetOptionAsArray("#json;jsons"),
           expanditems = GetOptionAsArray("expand"),
+          focusitem = GetOption("focus"),
           itemsarr = GetOptionAsArray("#item;items"),
           optionsarr = GetOptionAsArray("#opt;opts"),
           monitor = GetOption("monitoring"),
@@ -2529,6 +2540,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          else
             return this.refreshHtml()
                    .then(() => this.displayItems(itemsarr, optionsarr))
+                   .then(() => focusitem ? this.focusOnItem(focusitem) : this)
                    .then(() => {
                       this.setMonitoring(monitor);
                       return itemsarr ? this.refreshHtml() : this; // this is final return
@@ -2574,13 +2586,13 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
                document.title = this.h._toptitle;
 
             if (gui_div)
-               this.prepareGuiDiv(gui_div, this.disp_kind);
+               this.prepareGuiDiv(gui_div.attr('id'), this.disp_kind);
 
             return openAllFiles();
          });
 
       if (gui_div)
-         this.prepareGuiDiv(gui_div, this.disp_kind);
+         this.prepareGuiDiv(gui_div.attr('id'), this.disp_kind);
 
       return openAllFiles();
    }
@@ -2589,7 +2601,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
      * @private */
    HierarchyPainter.prototype.prepareGuiDiv = function(myDiv, layout) {
 
-      this.gui_div = myDiv.attr('id');
+      this.gui_div = (typeof myDiv == "string") ? myDiv : myDiv.attr('id');
 
       this.brlayout = new BrowserLayout(this.gui_div, this);
 
@@ -2663,7 +2675,10 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
    JSROOT.buildNobrowserGUI = function(gui_element, gui_kind) {
 
       let myDiv = (typeof gui_element == 'string') ? d3.select('#' + gui_element) : d3.select(gui_element);
-      if (myDiv.empty()) return alert('no div for simple nobrowser gui found');
+      if (myDiv.empty()) {
+         alert('no div for simple nobrowser gui found');
+         return Promise.resolve(null);
+      }
 
       let online = false, drawing = false;
       if (gui_kind == 'online')
@@ -2707,7 +2722,7 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (d.has("websocket")) opt+=";websocket";
          console.log('try to draw first object');
 
-         return hpainter.display("", opt).then(() => { return hpainter; });
+         return hpainter.display("", opt).then(() => hpainter);
       });
    }
 
@@ -2756,9 +2771,9 @@ JSROOT.define(['d3', 'painter'], (d3, jsrp) => {
          if (sett.opts)
             menu.addDrawMenu("nosub:Draw", sett.opts, function(arg) {
                if (!hitem || !hitem._obj) return;
-               let obj = hitem._obj, dom = this.selectDom();
+               let obj = hitem._obj, dom = this.selectDom().node();
                if (this.removeInspector) {
-                  dom = dom.node().parentNode;
+                  dom = dom.parentNode;
                   this.removeInspector();
                   if (arg == "inspect")
                      return this.showInspector(obj);

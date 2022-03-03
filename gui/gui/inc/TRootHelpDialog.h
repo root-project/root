@@ -13,15 +13,6 @@
 #define ROOT_TRootHelpDialog
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootHelpDialog                                                      //
-//                                                                      //
-// A TRootHelpDialog is used to display help text (or any text in a     //
-// dialog window). There is on OK button to popdown the dialog.         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGTextView;
@@ -31,10 +22,10 @@ class TGTextButton;
 class TRootHelpDialog : public TGTransientFrame {
 
 private:
-   TGTextView       *fView;   // text view
-   TGTextButton     *fOK;     // OK button
-   TGLayoutHints    *fL1;     // layout of TGTextView
-   TGLayoutHints    *fL2;     // layout of OK button
+   TGTextView       *fView;   ///< text view
+   TGTextButton     *fOK;     ///< OK button
+   TGLayoutHints    *fL1;     ///< layout of TGTextView
+   TGLayoutHints    *fL2;     ///< layout of OK button
 
 private:
    TRootHelpDialog(const TRootHelpDialog&) = delete;
@@ -50,7 +41,7 @@ public:
 
    void   Popup();
    void   CloseWindow();
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    ClassDef(TRootHelpDialog,0)  //Dialog to display help text
 };

@@ -112,7 +112,7 @@ Redo is Undo for undo action. Use TQUndoManager::Redo method for that
 ClassImp(TQCommand);
 ClassImp(TQUndoManager);
 
-static TQCommand *gActiveCommand = 0;
+static TQCommand *gActiveCommand = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Common protected method used in several constructors
@@ -126,11 +126,11 @@ void TQCommand::Init(const char *clname, void *obj, const char *redo, const char
    fNewDelete = kFALSE;
    fObject = obj;
 
-   fRedo = redo ? new TQConnection(clname, obj, credo) : 0;
+   fRedo = redo ? new TQConnection(clname, obj, credo) : nullptr;
    fUndo = undo ? new TQConnection(clname, obj, cundo) : fRedo;
 
-   fRedoArgs = 0;
-   fUndoArgs = 0;
+   fRedoArgs = nullptr;
+   fUndoArgs = nullptr;
    fStatus = 0;
    fState = 0;
 
@@ -200,7 +200,7 @@ TQCommand::TQCommand(TObject *obj, const char *redo, const char *undo) :
            TList(), TQObject()
 {
    if (obj) Init(obj->ClassName(), obj, redo, undo);
-   else Init(0, 0, redo, undo);
+   else Init(nullptr, nullptr, redo, undo);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,8 +211,8 @@ TQCommand::TQCommand(const TQCommand &com) : TList(), TQObject()
    fRedo = new TQConnection(*(com.fRedo));
    fUndo = new TQConnection(*(com.fUndo));
 
-   fRedoArgs = 0;
-   fUndoArgs = 0;
+   fRedoArgs = nullptr;
+   fUndoArgs = nullptr;
    fNRargs = com.fNRargs;
    fNUargs = com.fNUargs;
 
@@ -616,7 +616,7 @@ void TQCommand::Redo(Option_t *)
    if (done) Emit("Redo()");
    fStatus++;
    fState = 0;
-   gActiveCommand = 0;
+   gActiveCommand = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -659,7 +659,7 @@ void TQCommand::Undo(Option_t *)
    if (done) Emit("Undo()");
    fStatus--;
    fState = 0;
-   gActiveCommand = 0;
+   gActiveCommand = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -735,7 +735,7 @@ const char *TQCommand::GetTitle() const
 
 const char *TQCommand::GetRedoName() const
 {
-   return (fRedo ? fRedo->GetName() : 0);
+   return (fRedo ? fRedo->GetName() : nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -743,7 +743,7 @@ const char *TQCommand::GetRedoName() const
 
 const char *TQCommand::GetUndoName() const
 {
-   return (fUndo ? fUndo->GetName() : 0);
+   return (fUndo ? fUndo->GetName() : nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -874,13 +874,13 @@ Recorder of operations for undo and redo
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-TQUndoManager::TQUndoManager() : TQCommand(0, 0, 0, 0)
+TQUndoManager::TQUndoManager() : TQCommand(nullptr, nullptr, nullptr, nullptr)
 {
-   fCursor = 0;
+   fCursor = nullptr;
    fLimit = kMaxUInt;   // maximum value for UInt_t
    fLogging = kFALSE;
-   fLogBook = 0;
-   fCurrent = 0;
+   fLogBook = nullptr;
+   fCurrent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1012,7 +1012,7 @@ void TQUndoManager::Add(TObject *obj, Option_t *opt)
 
 void TQUndoManager::CurrentChanged(TQCommand *c)
 {
-   Emit("CurrentChanged(TQCommand*)", (long)c);
+   Emit("CurrentChanged(TQCommand*)", (Longptr_t)c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1089,7 +1089,7 @@ Bool_t TQUndoManager::CanRedo() const
    TQCommand *c = (TQCommand*)fCursor->GetObject();
    if (c->CanRedo()) return kTRUE;
 
-   c = fCursor->Next() ? (TQCommand*)fCursor->Next()->GetObject() : 0;
+   c = fCursor->Next() ? (TQCommand*)fCursor->Next()->GetObject() : nullptr;
    return (c && c->CanRedo());
 }
 
@@ -1103,7 +1103,7 @@ Bool_t TQUndoManager::CanUndo() const
    TQCommand *c = (TQCommand*)fCursor->GetObject();
    if (c->CanUndo()) return kTRUE;
 
-   c = fCursor->Prev() ? (TQCommand*)fCursor->Prev()->GetObject() : 0;
+   c = fCursor->Prev() ? (TQCommand*)fCursor->Prev()->GetObject() : nullptr;
    return (c && c->CanUndo());
 }
 
@@ -1128,7 +1128,7 @@ TQCommand *TQUndoManager::GetCurrent() const
 
 TQCommand *TQUndoManager::GetCursor() const
 {
-   return (TQCommand*)(fCursor ? fCursor->GetObject() : 0);
+   return (TQCommand*)(fCursor ? fCursor->GetObject() : nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

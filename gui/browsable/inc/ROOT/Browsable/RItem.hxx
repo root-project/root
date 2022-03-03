@@ -10,6 +10,7 @@
 #define ROOT7_Browsable_RItem
 
 #include <string>
+#include "RtypesCore.h"
 
 namespace ROOT {
 namespace Experimental {
@@ -26,8 +27,9 @@ protected:
    int nchilds{0};       ///< number of childs
    std::string icon;     ///< icon associated with item
    std::string title;    ///< item title
-   bool checked{false};  ///< is checked, not used yet
-   bool expanded{false}; ///< is expanded, not used yet
+   std::string fsize;    ///< item size
+   bool checked{false};  ///< is checked, not yet used
+   bool expanded{false}; ///< is expanded
 public:
 
    RItem() = default;
@@ -38,13 +40,32 @@ public:
    const std::string &GetName() const { return name; }
    const std::string &GetIcon() const { return icon; }
    const std::string &GetTitle() const { return title; }
-   virtual bool IsFolder() const { return false; }
+   const std::string &GetSize() const { return fsize; }
+   virtual bool IsFolder() const { return nchilds != 0; }
    virtual bool IsHidden() const { return false; }
 
    void SetChecked(bool on = true) { checked = on; }
    void SetExpanded(bool on = true) { expanded = on; }
-   void SetIcon(const std::string &_icon) { icon = _icon; }
+
+   void SetName(const std::string &_name) { name = _name; }
    void SetTitle(const std::string &_title) { title = _title; }
+   void SetIcon(const std::string &_icon) { icon = _icon; }
+   void SetSize(const std::string &_size) { fsize = _size; }
+
+   void SetSize(Long64_t _size)
+   {
+      if (_size > 1024) {
+         Long64_t _ksize = _size / 1024;
+         if (_ksize > 1024) {
+            // 3.7MB is more informative than just 3MB
+            fsize = std::to_string(_ksize/1024) + "." + std::to_string((_ksize%1024)/103) + "M";
+         } else {
+            fsize = std::to_string(_ksize) + "." + std::to_string((_size%1024)/103) + "K";
+         }
+      } else {
+         fsize = std::to_string(_size);
+      }
+   }
 
    virtual bool Compare(const RItem *b, const std::string &) const
    {

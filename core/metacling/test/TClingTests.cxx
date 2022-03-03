@@ -5,6 +5,8 @@
 #include "TROOT.h"
 #include "TSystem.h"
 
+#include "gmock/gmock.h"
+
 #include <sstream>
 #include <string>
 #include <vector>

@@ -45,6 +45,7 @@
 #include "RooAbsCategoryLValue.h"
 #include "RooTrace.h"
 #include "RooMsgService.h"
+#include "RooConstVar.h"
 
 #include <stdexcept>
 
@@ -65,12 +66,12 @@ RooArgList::RooArgList() :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from a RooArgSet. 
+/// Constructor from another RooAbsCollection.
 
-RooArgList::RooArgList(const RooArgSet& set) :
-  RooAbsCollection(set.GetName())
+RooArgList::RooArgList(const RooAbsCollection& coll) :
+  RooAbsCollection(coll.GetName())
 {
-  add(set) ;
+  add(coll) ;
   TRACE_CREATE
 }
 
@@ -130,30 +131,6 @@ RooArgList::~RooArgList()
 {
   TRACE_DESTROY
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Array operator. Element in slot `idx` must exist.
-/// \throws std::invalid_argument if `idx` is out of range.
-///
-/// When used as
-/// ```
-///  myArgList[4] = x;
-/// ```
-/// note that the element contained in the list will not be
-/// replaced! Instead, `operator=` of the existing element is called.
-RooAbsArg& RooArgList::operator[](Int_t idx) const 
-{     
-  RooAbsArg* arg = at(idx) ;
-  if (!arg) {
-    coutE(InputArguments) << "RooArgList::operator[](" << GetName() << ") ERROR: index " 
-			  << idx << " out of range (0," << getSize() << ")" << endl ;
-    throw std::invalid_argument(std::string("Index ") + to_string(idx) + " is out of range.");
-  }
-  return *arg ; 
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,3 +193,5 @@ Bool_t RooArgList::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
   return kFALSE ;  
 }
 
+
+void RooArgList::processArg(double value) { processArg(RooFit::RooConst(value)); }

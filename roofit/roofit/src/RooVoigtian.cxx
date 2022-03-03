@@ -99,8 +99,9 @@ Double_t RooVoigtian::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Voigtian distribution.  
-RooSpan<double> RooVoigtian::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeVoigtian(this, evalData, x->getValues(evalData, normSet), mean->getValues(evalData, normSet), width->getValues(evalData, normSet), sigma->getValues(evalData, normSet));
+/// Compute multiple values of Voigtian distribution. 
+void RooVoigtian::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Voigtian, output, nEvents, dataMap, {&*x,&*mean,&*width,&*sigma,&*_norm});
 }
-

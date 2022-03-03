@@ -12,9 +12,6 @@
 #ifndef ROOT_TGCommandPlugin
 #define ROOT_TGCommandPlugin
 
-/** \class TGCommandPlugin
-Class used to redirect the command line input/output.
-**/
 
 #include "TGFrame.h"
 
@@ -28,17 +25,17 @@ class TTimer;
 class TGCommandPlugin : public TGMainFrame {
 
 protected:
-   Bool_t             fHistAdd;           // flag to add commands to history
-   Int_t              fPid;               // current process id
-   Int_t              fPos;               // current history position
-   TGHorizontalFrame *fHf;                // horizontal frame
-   TGLabel           *fLabel;             // "command :" label
-   TGComboBox        *fComboCmd;          // commands combobox
-   TGTextEntry       *fCommand;           // command text entry widget
-   TGTextBuffer      *fCommandBuf;        // command text buffer
-   TGTextView        *fStatus;            // output capture view
-   TTimer            *fTimer;             // for local/remote update
-   TString           fTempString;         // temporary command string
+   Bool_t             fHistAdd;           ///< flag to add commands to history
+   Int_t              fPid;               ///< current process id
+   Int_t              fPos;               ///< current history position
+   TGHorizontalFrame *fHf;                ///< horizontal frame
+   TGLabel           *fLabel;             ///< "command :" label
+   TGComboBox        *fComboCmd;          ///< commands combobox
+   TGTextEntry       *fCommand;           ///< command text entry widget
+   TGTextBuffer      *fCommandBuf;        ///< command text buffer
+   TGTextView        *fStatus;            ///< output capture view
+   TTimer            *fTimer;             ///< for local/remote update
+   TString           fTempString;         ///< temporary command string
 
 public:
 
@@ -54,6 +51,7 @@ public:
    void           SetHistAdd(Bool_t add = kTRUE);
 
    virtual Bool_t HandleTimer(TTimer *t);
+   void           ToggleTimer(Bool_t on);
 
    ClassDef(TGCommandPlugin, 0) // Command (I/O redirection) plugin for the new ROOT Browser
 };

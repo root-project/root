@@ -29,7 +29,6 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooAbsCollection.h"
 
 #include "TClass.h"
-#include "TStopwatch.h"
 #include "TRegexp.h"
 #include "RooStreamParser.h"
 #include "RooFormula.h"
@@ -43,13 +42,13 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-#include <ROOT/RMakeUnique.hxx>
 #include "strlcpy.h"
 
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <memory>
 
 using std::endl;
 using std::vector;
@@ -62,7 +61,65 @@ char* operator+( streampos&, char* );
 #endif
 
 ClassImp(RooAbsCollection);
-  ;
+
+namespace RooFit {
+namespace Detail {
+
+/**
+ * Helper for hash-map-assisted finding of elements by name.
+ * Create this helper if finding of elements by name is needed.
+ * Upon creation, this object checks the global
+ * RooNameReg::renameCounter()
+ * and tracks elements of this collection by name. If an element
+ * gets renamed, this counter will be increased, and the name to
+ * object map becomes invalid. In this case, it has to be recreated.
+ */
+struct HashAssistedFind {
+
+  /// Inititalise empty hash map for fast finding by name.
+  template<typename It_t>
+  HashAssistedFind(It_t first, It_t last) :
+    currentRooNameRegCounter{ RooNameReg::instance().renameCounter() },
+    rooNameRegCounterWhereMapWasValid{ currentRooNameRegCounter }
+  {
+    nameToItemMap.reserve(std::distance(first, last));
+    for (auto it = first; it != last; ++it) {
+      nameToItemMap.emplace((*it)->namePtr(), *it);
+    }
+  }
+
+  bool isValid() const {
+    return (currentRooNameRegCounter == rooNameRegCounterWhereMapWasValid);
+  }
+
+  RooAbsArg * find(const TNamed * nptr) const {
+    assert(isValid());
+
+    auto item = nameToItemMap.find(nptr);
+    return item != nameToItemMap.end() ? const_cast<RooAbsArg *>(item->second) : nullptr;
+  }
+
+  void replace(const RooAbsArg * out, const RooAbsArg * in) {
+    nameToItemMap.erase(out->namePtr());
+    nameToItemMap.emplace(in->namePtr(), in);
+  }
+
+  void insert(const RooAbsArg * elm) {
+    nameToItemMap.emplace(elm->namePtr(), elm);
+  }
+
+  void erase(const RooAbsArg * elm) {
+    nameToItemMap.erase(elm->namePtr());
+  }
+
+  std::unordered_map<const TNamed *, const RooAbsArg * const> nameToItemMap;
+  const std::size_t & currentRooNameRegCounter;
+  std::size_t rooNameRegCounterWhereMapWasValid = 0;
+};
+
+}
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -114,10 +171,24 @@ RooAbsCollection::RooAbsCollection(const RooAbsCollection& other, const char *na
   _list.reserve(other._list.size());
 
   for (auto item : other._list) {
-    add(*item);
+    insert(item);
   }
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move constructor.
+
+RooAbsCollection::RooAbsCollection(RooAbsCollection&& other) :
+  TObject(other),
+  RooPrintable(other),
+  _list(std::move(other._list)),
+  _ownCont(other._ownCont),
+  _name(std::move(other._name)),
+  _allRRV(other._allRRV),
+  _sizeThresholdForMapSearch(other._sizeThresholdForMapSearch)
+{
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,51 +198,20 @@ RooAbsCollection::~RooAbsCollection()
 {
   // Delete all variables in our list if we own them
   if(_ownCont){
-    safeDeleteList() ;
+    deleteList() ;
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Examine client server dependencies in list and
-/// delete contents in safe order: any client
-/// is deleted before a server is deleted
+/// Delete contents of the list.
+/// The RooAbsArg destructor ensures clients and servers can be deleted in any
+/// order.
+/// Also cleans the hash-map for fast lookups if present.
 
-void RooAbsCollection::safeDeleteList()
+void RooAbsCollection::deleteList()
 {
-  _nameToItemMap = nullptr;
-
-  // Handle trivial case here
-  if (_list.size() > 1) {
-    std::vector<RooAbsArg*> tmp;
-    tmp.reserve(_list.size());
-    do {
-      tmp.clear();
-      for (auto arg : _list) {
-        // Check if arg depends on remainder of list
-        if (!arg->dependsOn(*this, arg)) tmp.push_back(arg);
-      }
-
-      // sort and uniquify, in case some elements occur more than once
-      std::sort(tmp.begin(), tmp.end());
-
-      tmp.erase(std::unique(tmp.begin(), tmp.end()), tmp.end());
-      // okay, can remove and delete what's in tmp
-      auto newEnd = _list.end();
-      for (auto item : tmp) {
-        newEnd = std::remove(_list.begin(), newEnd, item);
-        delete item;
-      }
-      _list.erase(newEnd, _list.end());
-    } while (!tmp.empty() && _list.size() > 1);
-
-    // Check if there are any remaining elements
-    if (_list.size() > 1) {
-      coutW(ObjectHandling) << "RooAbsCollection::safeDeleteList(" << GetName()
-	    << ") WARNING: unable to delete following elements in client-server order " ;
-      Print("1") ;
-    }
-  }
+  _hashAssistedFind = nullptr;
 
   // Built-in delete remaining elements
   for (auto item : _list) {
@@ -304,12 +344,25 @@ Bool_t RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The assignment operator sets the value of any argument in our set
-/// that also appears in the other set.
+/// Assign values from the elements in `other` to our elements.
+/// \warning This is not a conventional assignment operator. To avoid confusion, prefer using RooAbsCollection::assign().
 
 RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
 {
-  if (&other==this) return *this ;
+  assign(other);
+  return *this;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sets the value, cache and constant attribute of any argument in our set
+/// that also appears in the other set. Note that this function changes the
+/// values of the elements in this collection, but is still marked `const` as
+/// it does not change which elements this collection points to.
+
+void RooAbsCollection::assign(const RooAbsCollection& other) const
+{
+  if (&other==this) return ;
 
   for (auto elem : _list) {
     auto theirs = other.find(*elem);
@@ -318,24 +371,26 @@ RooAbsCollection &RooAbsCollection::operator=(const RooAbsCollection& other)
     elem->copyCache(theirs) ;
     elem->setAttribute("Constant",theirs->isConstant()) ;
   }
-  return *this;
+  return ;
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// The assignment operator sets the value of any argument in our set
-/// that also appears in the other set.
+/// Sets the value of any argument in our set that also appears in the other set.
+/// \param[in] other Collection holding the arguments to syncronize values with.
+/// \param[in] forceIfSizeOne If set to true and both our collection
+///                and the other collection have a size of one, the arguments are
+///                always syncronized without checking if they have the same name.
 
-RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, Bool_t oneSafe)
+RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& other, bool forceIfSizeOne)
 {
-  if (&other==this) return *this ;
+  if (&other==this) return *this;
 
   // Short cut for 1 element assignment
-  if (getSize()==1 && getSize()==other.getSize() && oneSafe) {
+  if (size()==1 && size() == other.size() && forceIfSizeOne) {
     other.first()->syncCache() ;
     first()->copyCache(other.first(),kTRUE) ;
-    return *this ;
+    return *this;
   }
 
   for (auto elem : _list) {
@@ -350,13 +405,13 @@ RooAbsCollection &RooAbsCollection::assignValueOnly(const RooAbsCollection& othe
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Functional equivalent of operator=() but assumes this and other collection
+/// Functional equivalent of assign() but assumes this and other collection
 /// have same layout. Also no attributes are copied
 
-void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDirty)
+void RooAbsCollection::assignFast(const RooAbsCollection& other, bool setValDirty) const
 {
   if (&other==this) return ;
-  assert(_list.size() == other._list.size());
+  assert(hasSameLayout(other));
 
   auto iter2 = other._list.begin();
   for (auto iter1 = _list.begin();
@@ -378,26 +433,53 @@ void RooAbsCollection::assignFast(const RooAbsCollection& other, Bool_t setValDi
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Add the specified argument to list. Returns kTRUE if successful, or
-/// else kFALSE if a variable of the same name is already in the list.
-/// This method can only be called on a list that is flagged as owning
-/// all of its contents, or else on an empty list (which will force the
-/// list into that mode).
+/// Add an argument and transfer the ownership to the collection. Returns `true`
+/// if successful, or `false` if the argument could not be added to the
+/// collection (e.g. in the RooArgSet case when an argument with the same name
+/// is already in the list). This method can only be called on a list that is
+/// flagged as owning all of its contents, or else on an empty list (which will
+/// force the list into that mode).
+///
+/// If the argument you want to add is owned by a `std::unique_ptr`, you should
+/// prefer RooAbsCollection::addOwned(std::unique_ptr<RooAbsArg>, bool).
 
-Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
+bool RooAbsCollection::addOwned(RooAbsArg& var, bool silent)
 {
+  if(!canBeAdded(var, silent)) return false;
+
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addOwned: can only add to an owned list" << endl;
-    return kFALSE;
+    return false;
   }
-  _ownCont= kTRUE;
+  _ownCont= true;
 
   insert(&var);
 
-  return kTRUE;
+  return true;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add an argument and transfer the ownership to the collection from a
+/// `std::unique_ptr`. Always returns `true`. If the argument can not be added
+/// to the collection (e.g. in the RooArgSet case when an argument with the
+/// same name is already in the list), a `std::runtime_exception` will be
+/// thrown, as nobody is owning the argument anymore. This method can only be
+/// called on a list that is flagged as owning all of its contents, or else on
+/// an empty list (which will force the list into that mode).
+///
+/// If you want to pass an argument that is not owned by a `std::unique_ptr`,
+/// you can use RooAbsCollection::addOwned(RooAbsArg&, bool).
+
+bool RooAbsCollection::addOwned(std::unique_ptr<RooAbsArg> var, bool silent) {
+  bool result = addOwned(*var.release(), silent);
+  if(!result) {
+    throw std::runtime_error(std::string("RooAbsCollection::addOwned could not add the argument to the")
+                             + " collection! The ownership would not be well defined if we ignore this.");
+  }
+  return result;
 }
 
 
@@ -411,6 +493,8 @@ Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent)
 
 RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
 {
+  if(!canBeAdded(var, silent)) return nullptr;
+
   // check that we own our variables or else are empty
   if(!_ownCont && (getSize() > 0) && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::addClone: can only add to an owned list" << endl;
@@ -436,6 +520,8 @@ RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent)
 
 Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 {
+  if(!canBeAdded(var, silent)) return false;
+
   // check that this isn't a copy of a list
   if(_ownCont && !silent) {
     coutE(ObjectHandling) << ClassName() << "::" << GetName() << "::add: cannot add to an owned list" << endl;
@@ -449,32 +535,30 @@ Bool_t RooAbsCollection::add(const RooAbsArg& var, Bool_t silent)
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a collection of arguments to this collection by calling add()
-/// for each element in the source collection
+// Add a collection of arguments to this collection by calling addOwned()
+/// for each element in the source collection. The input list can't be an
+/// owning collection itself, otherwise the arguments would be owned by two
+/// collections.
+///
+/// If you want to transfer arguments from one owning collection to another,
+/// you have two options:
+///  1. `std::move` the input collection and use
+///     RooAbsCollection::addOwned(RooAbsCollection&&, bool) (preferred)
+///  2. release the ownership of the input collection first, using
+///     RooAbsCollection::releaseOwnership()
 
-Bool_t RooAbsCollection::add(const RooAbsCollection& list, Bool_t silent)
+bool RooAbsCollection::addOwned(const RooAbsCollection& list, bool silent)
 {
-  Bool_t result(false) ;
-  _list.reserve(_list.size() + list._list.size());
+  if(list.isOwning()) {
+    throw std::invalid_argument("Passing an owning RooAbsCollection by const& to"
+            " RooAbsCollection::addOwned is forbidden because the ownership"
+            " would be ambiguous! Please std::move() the RooAbsCollection in this case."
+            " Note that the passed RooAbsCollection is invalid afterwards.");
 
-  for (auto item : list._list) {
-    result |= add(*item,silent);
   }
 
-  return result;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add a collection of arguments to this collection by calling addOwned()
-/// for each element in the source collection
-
-Bool_t RooAbsCollection::addOwned(const RooAbsCollection& list, Bool_t silent)
-{
-  Bool_t result(false) ;
+  bool result(false) ;
   _list.reserve(_list.size() + list._list.size());
 
   for (auto item : list._list) {
@@ -484,6 +568,36 @@ Bool_t RooAbsCollection::addOwned(const RooAbsCollection& list, Bool_t silent)
   return result;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a collection of arguments to this collection by calling addOwned()
+/// for each element in the source collection. Unlike
+/// RooAbsCollection::addOwned(const RooAbsCollection&, bool), this function
+/// also accepts owning source collections because their content will be
+/// moved out.
+
+bool RooAbsCollection::addOwned(RooAbsCollection&& list, bool silent)
+{
+  if(list.isOwning()) {
+    list.releaseOwnership();
+  }
+  if(list.empty()) return false;
+
+  bool result = addOwned(list, silent);
+
+  if(!result) {
+    throw std::runtime_error(std::string("RooAbsCollection::addOwned could not add the argument to the")
+                             + " collection! The ownership would not be well defined if we ignore this.");
+  }
+
+  // So far, comps has only released the ownership, but it is still valid.
+  // However, we don't want users to keep using objects after moving them, so
+  // we make sure to keep our promise that the RooArgSet is really moved.
+  // Just like a `std::unique_ptr` is also reset when moved.
+  list.clear();
+
+  return result;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -560,9 +674,8 @@ Bool_t RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   }
 
   // replace var1 with var2
-  if (_nameToItemMap) {
-    _nameToItemMap->erase((*var1It)->namePtr());
-    (*_nameToItemMap)[var2.namePtr()] = const_cast<RooAbsArg*>(&var2);
+  if (_hashAssistedFind) {
+    _hashAssistedFind->replace(*var1It, &var2);
   }
   *var1It = const_cast<RooAbsArg*>(&var2); //FIXME try to get rid of const_cast
 
@@ -609,8 +722,8 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
     _list.erase(std::remove(_list.begin(), _list.end(), &var), _list.end());
   }
 
-  if (_nameToItemMap && sizeBefore != _list.size()) {
-    _nameToItemMap->erase(var.namePtr());
+  if (_hashAssistedFind && sizeBefore != _list.size()) {
+    _hashAssistedFind->erase(&var);
   }
 
   return sizeBefore != _list.size();
@@ -619,15 +732,55 @@ Bool_t RooAbsCollection::remove(const RooAbsArg& var, Bool_t , Bool_t matchByNam
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Remove each argument in the input list from our list using remove(const RooAbsArg&).
+/// Remove each argument in the input list from our list.
+/// An exact pointer match is required, not just a match by name.
+/// If `matchByNameOnly` is set, items will be looked up by name. In this case, if
+/// the collection also owns the items, it will delete them.
 /// Return kFALSE in case of problems.
 
-Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Bool_t matchByNameOnly)
+Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t /*silent*/, Bool_t matchByNameOnly)
 {
 
   auto oldSize = _list.size();
-  for (auto item : list._list) {
-    remove(*item, silent, matchByNameOnly);
+  std::vector<const RooAbsArg*> markedItems;
+
+  if (matchByNameOnly) {
+
+    // Instead of doing two passes on the list as in remove(RooAbsArg&), we do
+    // everything in one pass, by using side effects of the predicate.
+    auto nameMatchAndMark = [&list, &markedItems](const RooAbsArg* elm) {
+      if( list.contains(*elm) ) {
+        markedItems.push_back(elm);
+        return true;
+      }
+      return false;
+    };
+
+    _list.erase(std::remove_if(_list.begin(), _list.end(), nameMatchAndMark), _list.end());
+
+    std::set<const RooAbsArg*> toBeDeleted(markedItems.begin(), markedItems.end());
+    if (_ownCont) {
+      for (auto arg : toBeDeleted) {
+        delete arg;
+      }
+    }
+  }
+  else {
+    auto argMatchAndMark = [&list, &markedItems](const RooAbsArg* elm) {
+      if( list.containsInstance(*elm) ) {
+        markedItems.push_back(elm);
+        return true;
+      }
+      return false;
+    };
+
+    _list.erase(std::remove_if(_list.begin(), _list.end(), argMatchAndMark), _list.end());
+  }
+
+  if (_hashAssistedFind && oldSize != _list.size()) {
+    for( auto& var : markedItems ) {
+      _hashAssistedFind->erase(var);
+    }
   }
 
   return oldSize != _list.size();
@@ -642,10 +795,10 @@ Bool_t RooAbsCollection::remove(const RooAbsCollection& list, Bool_t silent, Boo
 
 void RooAbsCollection::removeAll()
 {
-  _nameToItemMap = nullptr;
+  _hashAssistedFind = nullptr;
 
   if(_ownCont) {
-    safeDeleteList() ;
+    deleteList() ;
     _ownCont= kFALSE;
   }
   else {
@@ -690,6 +843,27 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, Bool_t valu
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Create a subset of the current collection, consisting only of those
+/// elements that are contained as well in the given reference collection.
+/// Returns `true` only if something went wrong.
+/// The complement of this function is getParameters().
+/// \param[in] refColl The collection to check for common elements.
+/// \param[out] outColl Output collection.
+
+bool RooAbsCollection::selectCommon(const RooAbsCollection& refColl, RooAbsCollection& outColl) const
+{
+  outColl.clear();
+  outColl.setName((std::string(GetName()) + "_selection").c_str());
+
+  // Scan set contents for matching attribute
+  for (auto arg : _list) {
+    if (refColl.find(*arg))
+      outColl.add(*arg) ;
+  }
+
+  return false;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -699,20 +873,10 @@ RooAbsCollection* RooAbsCollection::selectByAttrib(const char* name, Bool_t valu
 
 RooAbsCollection* RooAbsCollection::selectCommon(const RooAbsCollection& refColl) const
 {
-  // Create output set
-  TString selName(GetName()) ;
-  selName.Append("_selection") ;
-  RooAbsCollection *sel = (RooAbsCollection*) create(selName.Data()) ;
-
-  // Scan set contents for matching attribute
-  for (auto arg : _list) {
-    if (refColl.find(*arg))
-      sel->add(*arg) ;
-  }
-
+  auto sel = static_cast<RooAbsCollection*>(create("")) ;
+  selectCommon(refColl, *sel);
   return sel ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -776,21 +940,6 @@ Bool_t RooAbsCollection::equals(const RooAbsCollection& otherColl) const
 }
 
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if this and other collection have common entries
-
-Bool_t RooAbsCollection::overlaps(const RooAbsCollection& otherColl) const
-{
-  for (auto arg : _list) {
-    if (otherColl.find(*arg)) {
-      return kTRUE ;
-    }
-  }
-  return kFALSE ;
-}
-
 namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Linear search through list of stored objects.
@@ -819,9 +968,15 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
   const TNamed* nptr = RooNameReg::known(name);
   if (!nptr) return nullptr;
 
-  RooAbsArg* item = tryFastFind(nptr);
+  if (_hashAssistedFind || _list.size() >= _sizeThresholdForMapSearch) {
+    if (!_hashAssistedFind || !_hashAssistedFind->isValid()) {
+      _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+    }
 
-  return item ? item : findUsingNamePointer(_list, nptr);
+    return _hashAssistedFind->find(nptr);
+  }
+
+  return findUsingNamePointer(_list, nptr);
 }
 
 
@@ -832,9 +987,16 @@ RooAbsArg * RooAbsCollection::find(const char *name) const
 RooAbsArg * RooAbsCollection::find(const RooAbsArg& arg) const
 {
   const auto nptr = arg.namePtr();
-  RooAbsArg* item = tryFastFind(nptr);
 
-  return item ? item : findUsingNamePointer(_list, nptr);
+  if (_hashAssistedFind || _list.size() >= _sizeThresholdForMapSearch) {
+    if (!_hashAssistedFind || !_hashAssistedFind->isValid()) {
+      _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+    }
+
+    return _hashAssistedFind->find(nptr);
+  }
+
+  return findUsingNamePointer(_list, nptr);
 }
 
 
@@ -1279,18 +1441,15 @@ void RooAbsCollection::printLatex(ostream& ofs, Int_t ncol, const char* option, 
   // Make list of lists ;
   RooLinkedList listList ;
   listList.Add((RooAbsArg*)this) ;
-  RooFIter sIter = siblingList.fwdIterator() ;
-  RooAbsCollection* col ;
-  while((col=(RooAbsCollection*)sIter.next())) {
+  for(auto * col : static_range_cast<RooAbsCollection*>(siblingList)) {
     listList.Add(col) ;
   }
 
   RooLinkedList listListRRV ;
 
   // Make list of RRV-only components
-  RooFIter lIter = listList.fwdIterator() ;
   RooArgList* prevList = 0 ;
-  while((col=(RooAbsCollection*)lIter.next())) {
+  for(auto * col : static_range_cast<RooAbsCollection*>(listList)) {
     RooArgList* list = new RooArgList ;
     RooFIter iter = col->fwdIterator() ;
     RooAbsArg* arg ;
@@ -1475,58 +1634,27 @@ void RooAbsCollection::insert(RooAbsArg* item) {
     _allRRV= false;
   }
 
-  if (_nameToItemMap) {
-    (*_nameToItemMap)[item->namePtr()] = item;
+  if (_hashAssistedFind) {
+    _hashAssistedFind->insert(item);
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Install an internal hash map for fast finding of elements by name.
+/// \param[in] flag Switch hash map on or off.
 void RooAbsCollection::useHashMapForFind(bool flag) const {
-  if (!flag && _nameToItemMap){
-    _nameToItemMap = nullptr;
-  }
-
-  if (flag && !_nameToItemMap) {
-    _nameToItemMap.reset(new std::unordered_map<const TNamed*, Storage_t::value_type>());
-    for (const auto item : _list) {
-      (*_nameToItemMap)[item->namePtr()] = item;
-    }
-  }
+  if (flag && !_hashAssistedFind) _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+  if (!flag) _hashAssistedFind = nullptr;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Perform a search in a hash map.
-/// This only happens if this collection is larger than _sizeThresholdForMapSearch.
-/// This search is *not guaranteed* to find an existing
-/// element because elements can be renamed while
-/// being stored in the collection.
-RooAbsArg* RooAbsCollection::tryFastFind(const TNamed* namePtr) const {
-  if (_list.size() >= _sizeThresholdForMapSearch && !_nameToItemMap) {
-    useHashMapForFind(true);
-    assert(_nameToItemMap);
+/// Check that all entries where the collections overlap have the same name.
+bool RooAbsCollection::hasSameLayout(const RooAbsCollection& other) const {
+  for (unsigned int i=0; i < std::min(_list.size(), other.size()); ++i) {
+    if (_list[i]->namePtr() != other._list[i]->namePtr())
+      return false;
   }
 
-  if (!_nameToItemMap) {
-    return nullptr;
-  }
-
-  auto item = _nameToItemMap->find(namePtr);
-  if (item != _nameToItemMap->end()) {
-    // Have an element. Check that it didn't get renamed.
-    if (item->second->namePtr() == item->first) {
-      return item->second;
-    } else {
-      // Item has been renamed / replaced.
-      _nameToItemMap->erase(item);
-      if (auto arg = findUsingNamePointer(_list, namePtr)) {
-        (*_nameToItemMap)[arg->namePtr()] = arg;
-        return arg;
-      }
-    }
-  }
-
-  return nullptr;
+  return true;
 }

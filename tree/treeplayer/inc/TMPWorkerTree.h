@@ -31,9 +31,7 @@
 #include <vector>
 
 class TMPWorkerTree : public TMPWorker {
-   /// \cond
-//   ClassDef(TMPWorkerTree, 0);
-   /// \endcond
+
 public:
    TMPWorkerTree();
    TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries, const std::string &treeName,
@@ -98,8 +96,10 @@ private:
    void SendResult();
 
    F  fProcFunc; ///< copy the function to be executed
-   typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type fReducedResult; ///< the results of the executions of fProcFunc merged together
-   bool fCanReduce; ///< true if fReducedResult can be reduced with a new result, false until we have produced one result
+   /// the results of the executions of fProcFunc merged together
+   std::result_of_t<F(std::reference_wrapper<TTreeReader>)> fReducedResult;
+   /// true if fReducedResult can be reduced with a new result, false until we have produced one result
+   bool fCanReduce;
 };
 
 class TMPWorkerTreeSel : public TMPWorkerTree {
@@ -126,15 +126,15 @@ private:
 };
 
 //////////////////////////////////////////////////////////////////////////
-/// Auxilliary templated functions
+/// Auxiliary templated functions
 /// If the user lambda returns a TH1F*, TTree*, TEventList*, we incur in the
 /// problem of that object being automatically owned by the current open file.
 /// For these three types, we call SetDirectory(nullptr) to detach the returned
 /// object from the file we are reading the TTree from.
 /// Note: the only sane case in which this should happen is when a TH1F* is
 /// returned.
-template <class T, typename std::enable_if<std::is_pointer<T>::value && std::is_constructible<TObject *, T>::value &&
-                                           !std::is_constructible<TCollection *, T>::value>::type * = nullptr>
+template <class T, std::enable_if_t<std::is_pointer<T>::value && std::is_constructible<TObject *, T>::value &&
+                                    !std::is_constructible<TCollection *, T>::value> * = nullptr>
 void DetachRes(T res)
 {
    auto th1p = dynamic_cast<TH1*>(res);
@@ -161,8 +161,8 @@ void DetachRes(T res)
 }
 
 // Specialization for TCollections
-template <class T, typename std::enable_if<std::is_pointer<T>::value &&
-                                           std::is_constructible<TCollection *, T>::value>::type * = nullptr>
+template <class T,
+          std::enable_if_t<std::is_pointer<T>::value && std::is_constructible<TCollection *, T>::value> * = nullptr>
 void DetachRes(T res)
 {
    if (res) {

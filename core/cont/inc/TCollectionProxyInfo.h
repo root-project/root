@@ -39,6 +39,10 @@
 class TVirtualCollectionProxy;
 
 namespace ROOT {
+namespace VecOps {
+template <typename T>
+class RVec;
+}
 
 namespace Internal {
 template <typename T> class TStdBitsetHelper {

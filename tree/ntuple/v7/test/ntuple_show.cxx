@@ -226,6 +226,7 @@ TEST(RNTupleShow, Objects)
       auto customStructfield = model->MakeField<CustomStruct>("CustomStruct");
       auto customStructVec = model->MakeField<std::vector<CustomStruct>>("CustomStructVec");
       auto customStructArray = model->MakeField<std::array<CustomStruct, 2>>("CustomStructArray");
+      auto derivedAfield = model->MakeField<DerivedA>("DerivedA");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
 
       *customStructfield = CustomStruct{4.1f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "Example1String"};
@@ -238,12 +239,14 @@ TEST(RNTupleShow, Objects)
       CustomStruct{4.5f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.3f}, {2.1f, 2.2f, 2.3f}}, "AnotherString1"},
       CustomStruct{4.6f, std::vector<float>{0.1f, 0.2f, 0.3f}, std::vector<std::vector<float>>{{1.1f, 1.2f, 1.3f}, {2.1f, 2.3f}}, "AnotherString2"}
       };
+      *derivedAfield = {};
       ntuple->Fill();
    }
    auto model2 = RNTupleModel::Create();
    auto customStructfield = model2->MakeField<CustomStruct>("CustomStruct");
    auto customStructVec = model2->MakeField<std::vector<CustomStruct>>("CustomStructVec");
    auto customStructArray = model2->MakeField<std::array<CustomStruct, 2>>("CustomStructArray");
+   auto derivedAfield = model2->MakeField<DerivedA>("DerivedA");
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
@@ -263,7 +266,63 @@ TEST(RNTupleShow, Objects)
       +      "\"s\": \"Example4String\"}],\n"
       + "  \"CustomStructArray\": [{\"a\": 4.5, \"v1\": [0.1, 0.2, 0.3], \"v2\": [[1.1, 1.3], [2.1, 2.2, 2.3]], "
       +      "\"s\": \"AnotherString1\"}, {\"a\": 4.6, \"v1\": [0.1, 0.2, 0.3], "
-      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"AnotherString2\"}]\n"
+      +      "\"v2\": [[1.1, 1.2, 1.3], [2.1, 2.3]], \"s\": \"AnotherString2\"}],\n"
+      + "  \"DerivedA\": {\n"
+      + "    \":_0\": {\n"
+      + "      \"a\": 0,\n"
+      + "      \"v1\": [],\n"
+      + "      \"v2\": [],\n"
+      + "      \"s\": \"\"\n"
+      + "    },\n"
+      + "    \"a_v\": [],\n"
+      + "    \"a_s\": \"\"\n"
+      + "  }\n"
       + "}\n" };
    EXPECT_EQ(fString, os.str());
+}
+
+
+TEST(RNTupleShow, Collections)
+{
+   std::string rootFileName{"test_ntuple_show_collection.root"};
+   std::string ntupleName{"Collections"};
+   FileRaii fileGuard(rootFileName);
+   {
+      auto model = RNTupleModel::Create();
+      auto collection_model = RNTupleModel::Create();
+      auto int_field = collection_model->MakeField<int>("myInt");
+      auto float_field = collection_model->MakeField<float>("myFloat");
+      auto collection = model->MakeCollection("collection", std::move(collection_model));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
+      *int_field = 0;
+      *float_field = 10.0;
+      collection->Fill();
+      *int_field = 1;
+      *float_field = 20.0;
+      collection->Fill();
+      ntuple->Fill();
+    }
+
+   auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
+   std::ostringstream osData;
+   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, osData);
+   std::string outputData{ std::string("")
+      + "{\n"
+      + "  \"collection\": [{\"myInt\": 0, \"myFloat\": 10}, {\"myInt\": 1, \"myFloat\": 20}]\n"
+      + "}\n" };
+   EXPECT_EQ(outputData, osData.str());
+
+   std::ostringstream osFields;
+   ntuple->PrintInfo(ROOT::Experimental::ENTupleInfo::kSummary, osFields);
+   std::string outputFields{ std::string("")
+      + "************************************ NTUPLE ************************************\n"
+      + "* N-Tuple : Collections                                                        *\n"
+      + "* Entries : 1                                                                  *\n"
+      + "********************************************************************************\n"
+      + "* Field 1           : collection (std::vector<>)                               *\n"
+      + "*   Field 1.1       : _0                                                       *\n"
+      + "*     Field 1.1.1   : myInt (std::int32_t)                                     *\n"
+      + "*     Field 1.1.2   : myFloat (float)                                          *\n"
+      + "********************************************************************************\n" };
+   EXPECT_EQ(outputFields, osFields.str());
 }

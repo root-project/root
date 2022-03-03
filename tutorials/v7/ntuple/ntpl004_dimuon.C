@@ -44,7 +44,7 @@ R__LOAD_LIBRARY(ROOTNTuple)
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleDS = ROOT::Experimental::RNTupleDS;
 
-constexpr char const* kNTupleFileName = "http://root.cern.ch/files/tutorials/ntpl004_dimuon_v0.root";
+constexpr char const* kNTupleFileName = "http://root.cern.ch/files/tutorials/ntpl004_dimuon_v1rc1.root";
 
 
 /// A wrapper for ROOT's InvariantMass function that takes std::vector instead of RVecs
@@ -73,12 +73,12 @@ void ntpl004_dimuon() {
    // InvariantMassStdVector instead of InvariantMass (to be fixed in a later version of RNTuple)
 
    // For simplicity, select only events with exactly two muons and require opposite charge
-   auto df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons");
-   auto df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite charge");
+   auto df_2mu = df.Filter("#Muon == 2", "Events with exactly two muons");
+   auto df_os = df_2mu.Filter("Muon.charge[0] != Muon.charge[1]", "Muons with opposite charge");
 
    // Compute invariant mass of the dimuon system
-   auto df_mass = df_os.Define("Dimuon_mass", InvariantMassStdVector<float>, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass"});
-   auto df_size = df_os.Define("eta_size", "Muon_mass.size()");
+   auto df_mass = df_os.Define("Dimuon_mass", InvariantMassStdVector<float>, {"Muon.pt", "Muon.eta", "Muon.phi", "Muon.mass"});
+   auto df_size = df_os.Define("eta_size", "Muon.mass.size()");
 
    // Make histogram of dimuon mass spectrum
    auto h = df_mass.Histo1D({"Dimuon_mass", "Dimuon_mass", 30000, 0.25, 300}, "Dimuon_mass");

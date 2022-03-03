@@ -37,7 +37,7 @@ public:
    void   LoadBuffer(const char *buffer);
    void   LoadFile(const char *file);
 
-   Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    void   CloseWindow();
    void   ClearLogView();

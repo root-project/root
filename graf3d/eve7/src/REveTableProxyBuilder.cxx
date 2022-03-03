@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include "TClass.h"
+#include "TROOT.h"
 #include <ROOT/REveTableProxyBuilder.hxx>
 #include <ROOT/REveTableInfo.hxx>
 #include <ROOT/REveViewContext.hxx>
@@ -35,36 +36,61 @@ void REveTableProxyBuilder::Clean()
 {
 }
 
-void REveTableProxyBuilder::Build(const REveDataCollection* collection, REveElement* product, const REveViewContext* context)
+void REveTableProxyBuilder::Build()
 {
-   REveTableViewInfo* info = context->GetTableViewInfo();
-   if (info->GetDisplayedCollection() != Collection()->GetElementId())
+   if (Collection())
    {
-      return;
-   }
+      // printf("REveDataProxyBuilderBase::Build %p %s products %lu\n", m_collection, m_collection->GetCName(), m_products.size());
+      try
+      {
 
-   if (product->NumChildren() == 0) {
-      product->AddElement(fTable);
-   }
+         Clean();
 
-   // printf("-----REveTableProxyBuilder::Build() body for %s (%p, %p)\n",collection->GetCName(), collection, Collection() );
+         for (auto &pp: m_products)
+         {
+           
+            REveElement* product = pp->m_elements; 
+            const REveViewContext* context = pp->m_viewContext;
 
-   if (info->GetConfigChanged() || fTable->NumChildren() == 0) {
-      fTable->DestroyElements();
-      REveTableHandle::Entries_t& tableEntries =  context->GetTableViewInfo()->RefTableEntries(collection->GetItemClass()->GetName());
-      for (const REveTableEntry& spec : tableEntries) {
-         auto c = new REveDataColumn(spec.fName.c_str());
-         fTable->AddElement(c);
-         using namespace std::string_literals;
-         std::string exp  =  spec.fExpression;
-         c->SetExpressionAndType(exp.c_str(), spec.fType);
-         c->SetPrecision(spec.fPrecision);
+            REveTableViewInfo *info = context->GetTableViewInfo();
+            if (info->GetDisplayedCollection() != Collection()->GetElementId()) {
+               return;
+            }
+
+            if (product->NumChildren() == 0) {
+               product->AddElement(fTable);
+            }
+
+            // printf("-----REveTableProxyBuilder::Build() body for %s (%p, %p)\n",collection->GetCName(), collection,
+            // Collection() );
+
+            if (info->GetConfigChanged() || fTable->NumChildren() == 0) {
+               fTable->DestroyElements();
+               std::stringstream ss;
+               REveTableHandle::Entries_t &tableEntries =
+                  context->GetTableViewInfo()->RefTableEntries(Collection()->GetItemClass()->GetName());
+               for (const REveTableEntry &spec : tableEntries) {
+                  auto c = new REveDataColumn(spec.fName.c_str());
+                  fTable->AddElement(c);
+                  using namespace std::string_literals;
+                  std::string exp = spec.fExpression;
+                  c->SetPrecision(spec.fPrecision);
+                  c->SetExpressionAndType(exp.c_str(), spec.fType);
+                  ss << c->GetFunctionExpressionString();
+                  ss << "\n";
+               }
+               // std::cout << ss.str();
+               gROOT->ProcessLine(ss.str().c_str());
+            }
+            fTable->StampObjProps();
+         }
+      }
+      catch (const std::runtime_error &iException) {
+         R__LOG_ERROR(REveLog()) << "Caught exception in build function for item " << Collection()->GetName() << ":\n"
+                 << iException.what() << std::endl;
       }
    }
-   fTable->StampObjProps();
 }
-
-
 
 void REveTableProxyBuilder::SetCollection(REveDataCollection* collection)
 {

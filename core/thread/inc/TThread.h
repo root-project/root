@@ -78,7 +78,7 @@ private:
    EState         fState;                 // thread state
    EState         fStateComing;           // coming thread state
    Long_t         fId;                    // thread id
-   Long_t         fHandle;                // Win32 thread handle
+   Longptr_t      fHandle;                // Win32 thread handle
    Bool_t         fDetached;              // kTRUE if thread is Detached
    Bool_t         fNamed;                 // kTRUE if thread is Named
    VoidRtnFunc_t  fFcnRetn;               // void* start function of thread
@@ -88,7 +88,7 @@ private:
    char           fComment[100];          // thread specific state comment
 
    static TThreadImp      *fgThreadImp;   // static pointer to thread implementation
-   static char  * volatile fgXAct;        // Action name to do by main thread
+   static std::atomic<char  *> volatile fgXAct; // Action name to do by main thread
    static void ** volatile fgXArr;        // pointer to control array of void pointers for action
    static volatile Int_t   fgXAnb;        // size of array above
    static volatile Int_t   fgXArt;        // return XA flag
@@ -122,7 +122,7 @@ public:
    virtual ~TThread();
 
    Int_t            Kill();
-   Int_t            Run(void *arg = nullptr);
+   Int_t            Run(void *arg = nullptr, const int affinity = -1);
    void             SetPriority(EPriority pri);
    void             Delete(Option_t *option="") { TObject::Delete(option); }
    EPriority        GetPriority() const { return fPriority; }

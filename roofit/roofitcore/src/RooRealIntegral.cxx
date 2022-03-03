@@ -49,11 +49,10 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 #include "RooTrace.h"
 #include "RooHelpers.h"
 
-#include "ROOT/RMakeUnique.hxx"
-
 #include "TClass.h"
 
 #include <iostream>
+#include <memory>
 
 using namespace std;
 
@@ -858,8 +857,8 @@ Double_t RooRealIntegral::evaluate() const
         }
         
         // Save current integral dependent values 
-        _saveInt = _intList ;
-        _saveSum = _sumList ;
+        _saveInt.assign(_intList) ;
+        _saveSum.assign(_sumList) ;
         
         // Evaluate sum/integral
         retVal = sum() ;
@@ -869,8 +868,8 @@ Double_t RooRealIntegral::evaluate() const
         setDirtyInhibit(origState) ;
         
         // Restore integral dependent values
-        _intList=_saveInt ;
-        _sumList=_saveSum ;
+        _intList.assign(_saveInt) ;
+        _sumList.assign(_saveSum) ;
         
         // Cache numeric integrals in >1d expensive object cache
         if ((_cacheNum && _intList.getSize()>0) || _intList.getSize()>=_cacheAllNDim) {
@@ -1042,22 +1041,6 @@ const RooArgSet& RooRealIntegral::parameters() const
 
   return *_params ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Dummy
-
-void RooRealIntegral::operModeHook()
-{
-  if (_operMode==ADirty) {    
-//     cout << "RooRealIntegral::operModeHook(" << GetName() << " warning: mode set to ADirty" << endl ;
-//     if (TString(GetName()).Contains("FULL")) {
-//       cout << "blah" << endl ;
-//     }
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

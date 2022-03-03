@@ -95,10 +95,10 @@ static void CallEndOfProcessCleanups()
 /// Default ctor. Can be used by classes deriving from TApplication.
 
 TApplication::TApplication() :
-   fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
-   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
-   fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
-   fAppRemote(0)
+   fArgc(0), fArgv(nullptr), fAppImp(nullptr), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
+   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE),
+   fFiles(nullptr), fIdleTimer(nullptr), fSigHandler(nullptr), fExitOnException(kDontExit),
+   fAppRemote(nullptr)
 {
    ResetBit(kProcessRemotely);
 }
@@ -119,10 +119,10 @@ TApplication::TApplication() :
 
 TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
                            void * /*options*/, Int_t numOptions) :
-   fArgc(0), fArgv(0), fAppImp(0), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
-   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE), fUseMemstat(kFALSE),
-   fFiles(0), fIdleTimer(0), fSigHandler(0), fExitOnException(kDontExit),
-   fAppRemote(0)
+   fArgc(0), fArgv(nullptr), fAppImp(nullptr), fIsRunning(kFALSE), fReturnFromRun(kFALSE),
+   fNoLog(kFALSE), fNoLogo(kFALSE), fQuit(kFALSE),
+   fFiles(nullptr), fIdleTimer(nullptr), fSigHandler(nullptr), fExitOnException(kDontExit),
+   fAppRemote(nullptr)
 {
    R__LOCKGUARD(gInterpreterMutex);
 
@@ -139,7 +139,7 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    if (gApplication && gApplication->TestBit(kDefaultApplication)) {
       // allow default TApplication to be replaced by a "real" TApplication
       delete gApplication;
-      gApplication = 0;
+      gApplication = nullptr;
       gROOT->SetBatch(kFALSE);
       fgGraphInit = kFALSE;
    }
@@ -198,17 +198,6 @@ TApplication::TApplication(const char *appClassName, Int_t *argc, char **argv,
    // to allow user to interact with TCanvas's under WIN32
    gROOT->SetLineHasBeenProcessed();
 
-   // activate TMemStat
-   if (fUseMemstat || gEnv->GetValue("Root.TMemStat", 0)) {
-      fUseMemstat = kTRUE;
-      Int_t buffersize = gEnv->GetValue("Root.TMemStat.buffersize", 100000);
-      Int_t maxcalls   = gEnv->GetValue("Root.TMemStat.maxcalls", 5000000);
-      const char *ssystem = gEnv->GetValue("Root.TMemStat.system","gnubuiltin");
-      if (maxcalls > 0) {
-         gROOT->ProcessLine(Form("new TMemStat(\"%s\",%d,%d);",ssystem,buffersize,maxcalls));
-      }
-   }
-
    //Needs to be done last
    gApplication = this;
    gROOT->SetApplication(this);
@@ -227,16 +216,10 @@ TApplication::~TApplication()
    if (fgApplications)
       fgApplications->Remove(this);
 
-   //close TMemStat
-   if (fUseMemstat) {
-      ProcessLine("TMemStat::Close()");
-      fUseMemstat = kFALSE;
-   }
-
    // Reduce the risk of the files or sockets being closed after the
    // end of 'main' (or more exactly before the library start being
    // unloaded).
-   if (fgApplications == 0 || fgApplications->FirstLink() == 0 ) {
+   if (fgApplications == nullptr || fgApplications->FirstLink() == nullptr ) {
       TROOT::ShutDown();
    }
 
@@ -341,11 +324,11 @@ char *TApplication::Argv(Int_t index) const
    if (fArgv) {
       if (index >= fArgc) {
          Error("Argv", "index (%d) >= number of arguments (%d)", index, fArgc);
-         return 0;
+         return nullptr;
       }
       return fArgv[index];
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -358,7 +341,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 
    fNoLog = kFALSE;
    fQuit  = kFALSE;
-   fFiles = 0;
+   fFiles = nullptr;
 
    if (!argc)
       return;
@@ -385,9 +368,6 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
       } else if (!strcmp(argv[i], "-config")) {
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
-      } else if (!strcmp(argv[i], "-memstat")) {
-         fUseMemstat = kTRUE;
-         argv[i] = null;
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
          argv[i] = null;
@@ -421,7 +401,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          TString argw;
          if (gROOT->IsBatch()) argw = "batch";
          if (*opt == '=') argw.Append(opt+1);
-         if (gSystem->Load("libROOTWebDisplay") >= 0) {
+         if (argw == "off") {
+            gROOT->SetWebDisplay(argw.Data());
+            gEnv->SetValue("Browser.Name", "TRootBrowser"); // force usage of TBrowser back
+         } else if (gSystem->Load("libROOTWebDisplay") >= 0) {
             gROOT->SetWebDisplay(argw.Data());
             gEnv->SetValue("Gui.Factory", "web");
          } else {
@@ -446,11 +429,12 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
 
          if (fFiles) {
             for (auto f: *fFiles) {
-               TObjString* file = dynamic_cast<TObjString*>(f);
+               TObjString *file = dynamic_cast<TObjString *>(f);
                if (!file) {
                   if (!dynamic_cast<TNamed*>(f)) {
                      Error("GetOptions()", "Inconsistent file entry (not a TObjString)!");
-                     f->Dump();
+                     if (f)
+                        f->Dump();
                   } // else we did not find the file.
                   continue;
                }
@@ -683,7 +667,7 @@ static TString UrlGenerator(TString scopeName, EUrl scopeType)
    // We start the URL with a static part, the same for all scopes and members.
    TString url = "https://root.cern/doc/";
    // Then we check the ROOT version used.
-   TPRegexp re4(R"(.*/v(\d)-(\d\d)-00-patches)");
+   TPRegexp re4(R"(.*/(v\d)-(\d\d)-00-patches)");
    const char *branchName = gROOT->GetGitBranch();
    TObjArray *objarr = re4.MatchS(branchName);
    TString version;
@@ -1223,7 +1207,7 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
             script = tkn;
             script.Insert(0, "\"");
             script += "\"";
-            isScript = kFALSE;
+            // isScript = kFALSE; // [clang-tidy] never read
             break;
          }
       }
@@ -1246,7 +1230,7 @@ Int_t TApplication::ParseRemoteLine(const char *ln,
 /// The last argument 'script' allows to specify an alternative script to
 /// be executed remotely to startup the session.
 
-Long_t TApplication::ProcessRemote(const char *line, Int_t *)
+Longptr_t TApplication::ProcessRemote(const char *line, Int_t *)
 {
    if (!line) return 0;
 
@@ -1281,12 +1265,12 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
          delete fAppRemote;
       }
       // Return to local run
-      fAppRemote = 0;
+      fAppRemote = nullptr;
       // Done
       return 1;
    } else if (rc == 1) {
       // close an existing remote application
-      TApplication *ap = TApplication::Open(hostdir, 0, 0);
+      TApplication *ap = TApplication::Open(hostdir, 0, nullptr);
       if (ap) {
          TApplication::Close(ap);
          delete ap;
@@ -1295,7 +1279,7 @@ Long_t TApplication::ProcessRemote(const char *line, Int_t *)
    // Attach or start a remote application
    if (user.Length() > 0)
       hostdir.Insert(0,Form("%s@", user.Data()));
-   const char *sc = (script.Length() > 0) ? script.Data() : 0;
+   const char *sc = (script.Length() > 0) ? script.Data() : nullptr;
    TApplication *ap = TApplication::Open(hostdir, dbg, sc);
    if (ap) {
       fAppRemote = ap;
@@ -1326,7 +1310,7 @@ namespace {
 /// command starting with a ".".
 /// Return the return value of the command cast to a long.
 
-Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
+Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 {
    if (!line || !*line) return 0;
 
@@ -1390,7 +1374,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    }
 
    if (!strncmp(line, ".ls", 3)) {
-      const char *opt = 0;
+      const char *opt = nullptr;
       if (line[3]) opt = &line[3];
       if (gDirectory) gDirectory->ls(opt);
       return 1;
@@ -1420,7 +1404,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
          Warning("ProcessLine", "argument(s) \"%s\" ignored with .%c", arguments.Data(),
                  line[1]);
       }
-      Long_t retval = 0;
+      Longptr_t retval = 0;
       if (!mac)
          Error("ProcessLine", "macro %s not found in path %s", fname.Data(),
                TROOT::GetMacroPath());
@@ -1474,7 +1458,7 @@ Long_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process a file containing a C++ macro.
 
-Long_t TApplication::ProcessFile(const char *file, Int_t *error, Bool_t keep)
+Longptr_t TApplication::ProcessFile(const char *file, Int_t *error, Bool_t keep)
 {
    return ExecuteFile(file, error, keep);
 }
@@ -1483,7 +1467,7 @@ Long_t TApplication::ProcessFile(const char *file, Int_t *error, Bool_t keep)
 /// Execute a file containing a C++ macro (static method). Can be used
 /// while TApplication is not yet created.
 
-Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
+Longptr_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
 {
    static const Int_t kBufSize = 1024;
 
@@ -1519,9 +1503,9 @@ Long_t TApplication::ExecuteFile(const char *file, Int_t *error, Bool_t keep)
    int comment  = 0;
    int ifndefc  = 0;
    int ifdef    = 0;
-   char *s      = 0;
+   char *s      = nullptr;
    Bool_t execute = kFALSE;
-   Long_t retval = 0;
+   Longptr_t retval = 0;
 
    while (1) {
       bool res = (bool)macro.getline(currentline, kBufSize);
@@ -1688,12 +1672,6 @@ void TApplication::Terminate(Int_t status)
    if (fReturnFromRun)
       gSystem->ExitLoop();
    else {
-      //close TMemStat
-      if (fUseMemstat) {
-         ProcessLine("TMemStat::Close()");
-         fUseMemstat = kFALSE;
-      }
-
       gSystem->Exit(status);
    }
 }
@@ -1746,7 +1724,7 @@ void TApplication::CreateApplication()
       Int_t argc = 2;
       argv[0] = a;
       argv[1] = b;
-      new TApplication("RootApp", &argc, argv, 0, 0);
+      new TApplication("RootApp", &argc, argv, nullptr, 0);
       if (gDebug > 0)
          Printf("<TApplication::CreateApplication>: "
                 "created default TApplication");
@@ -1762,7 +1740,7 @@ void TApplication::CreateApplication()
 TApplication *TApplication::Open(const char *url,
                                   Int_t debug, const char *script)
 {
-   TApplication *ap = 0;
+   TApplication *ap = nullptr;
    TUrl nu(url);
    Int_t nnew = 0;
 
@@ -1797,7 +1775,7 @@ TApplication *TApplication::Open(const char *url,
    }
 
    // Instantiate the TApplication object to be run
-   TPluginHandler *h = 0;
+   TPluginHandler *h = nullptr;
    if ((h = gROOT->GetPluginManager()->FindHandler("TApplication","remote"))) {
       if (h->LoadPlugin() == 0) {
          ap = (TApplication *) h->ExecPlugin(3, nu.GetUrl(), debug, script);
@@ -1851,7 +1829,7 @@ void TApplication::ls(Option_t *opt) const
 {
    if (fgApplications) {
       TIter nxa(fgApplications);
-      TApplication *a = 0;
+      TApplication *a = nullptr;
       while ((a = (TApplication *) nxa())) {
          a->Print(opt);
       }

@@ -39,7 +39,7 @@ void rf109_chi2residpull()
    RooDataSet *data = gauss.generate(x, 10000);
 
    // Change sigma to 3.15
-   sigma = 3.15;
+   sigma.setVal(3.15);
 
    // P l o t   d a t a   a n d   s l i g h t l y   d i s t o r t e d   m o d e l
    // ---------------------------------------------------------------------------

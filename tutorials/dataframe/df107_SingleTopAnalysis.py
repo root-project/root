@@ -72,9 +72,9 @@ for p in processes:
 
 # Just-in-time compile custom helper function performing complex computations
 ROOT.gInterpreter.Declare("""
-using VecF_t = const ROOT::RVec<float>&;
-using VecI_t = const ROOT::RVec<int>&;
-int FindGoodLepton(VecI_t goodlep, VecI_t type, VecF_t lep_pt, VecF_t lep_eta, VecF_t lep_phi, VecF_t lep_e, VecF_t trackd0pv, VecF_t tracksigd0pv, VecF_t z0)
+using cRVecF = const ROOT::RVecF &;
+using cRVecI = const ROOT::RVecI &;
+int FindGoodLepton(cRVecI goodlep, cRVecI type, cRVecF lep_pt, cRVecF lep_eta, cRVecF lep_phi, cRVecF lep_e, cRVecF trackd0pv, cRVecF tracksigd0pv, cRVecF z0)
 {
     int idx = -1; // Return -1 if no good lepton is found.
     for(auto i = 0; i < type.size(); i++) {
@@ -99,7 +99,7 @@ int FindGoodLepton(VecI_t goodlep, VecI_t type, VecF_t lep_pt, VecF_t lep_eta, V
 """)
 
 for s in samples:
-    # Select events with electron or muon trigger and with a missing tranverse energy above 30 GeV
+    # Select events with electron or muon trigger and with a missing transverse energy above 30 GeV
     df[s] = df[s].Filter("trigE || trigM")\
                  .Filter("met_et > 30000")
 
@@ -112,7 +112,7 @@ for s in samples:
                  .Filter("idx_lep != -1")
 
     # Compute transverse mass of the W boson using the missing transverse energy and the good lepton
-    # Use only events with a transverse mass of the reconstruced W boson larger than 60 GeV
+    # Use only events with a transverse mass of the reconstructed W boson larger than 60 GeV
     df[s] = df[s].Define("mtw", "sqrt(2 * lep_pt[idx_lep] * met_et * (1 - cos(lep_phi[idx_lep] - met_phi)))")\
                  .Filter("mtw > 60000")
 

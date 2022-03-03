@@ -40,7 +40,7 @@ ClassImp(RooBukinPdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a Bukin PDF.
-/// \param name  The name of the PDF for RooFit's bookeeping.
+/// \param name  The name of the PDF for RooFit's bookkeeping.
 /// \param title The title for e.g. plotting it.
 /// \param _x    The variable.
 /// \param _Xp   The peak position.
@@ -142,6 +142,8 @@ Double_t RooBukinPdf::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Bukin distribution.  
-RooSpan<double> RooBukinPdf::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeBukin(this, evalData, x->getValues(evalData, normSet), Xp->getValues(evalData, normSet), sigp->getValues(evalData, normSet), xi->getValues(evalData, normSet), rho1->getValues(evalData, normSet), rho2->getValues(evalData, normSet));
+void RooBukinPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Bukin, output, nEvents, dataMap, {&*x,&*Xp,&*sigp,&*xi,&*rho1,&*rho2,&*_norm});
 }

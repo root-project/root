@@ -15,9 +15,8 @@
 #include "TUrl.h"
 #include "THttpServer.h"
 
-#include "ROOT/RMakeUnique.hxx"
-
 #include <cstring>
+#include <memory>
 
 #ifdef WIN32
 #include <io.h>
@@ -31,17 +30,14 @@ class TFastCgiCallArg : public THttpCallArg {
 
    bool fCanPostpone{false};
 
-protected:
-
-   void CheckWSPageContent(THttpWSHandler *) override
-   {
-      std::string search = "JSROOT.connectWebWindow({";
-      std::string replace = search + "socket_kind:\"longpoll\",";
-      ReplaceAllinContent(search, replace, true);
-   }
-
 public:
-   TFastCgiCallArg(bool can_postpone) : THttpCallArg(), fCanPostpone(can_postpone) {};
+   TFastCgiCallArg(bool can_postpone) : THttpCallArg(), fCanPostpone(can_postpone) {}
+
+   /** provide WS kind  */
+   const char *GetWSKind() const override { return "longpoll"; }
+
+   /** provide WS platform */
+   const char *GetWSPlatform() const override { return "fastcgi"; }
 
    /** All FastCGI requests should be immediately replied to get slot for next */
    Bool_t CanPostpone() const override { return fCanPostpone; }

@@ -12,6 +12,7 @@
 #define ROOT_RJITTEDCUSTOMCOLUMN
 
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 
@@ -32,11 +33,12 @@ class RJittedDefine : public RDefineBase {
    std::unique_ptr<RDefineBase> fConcreteDefine = nullptr;
 
 public:
-   RJittedDefine(std::string_view name, std::string_view type, unsigned int nSlots,
-                       const std::map<std::string, std::vector<void *>> &DSValuePtrs)
-      : RDefineBase(name, type, nSlots, RDFInternal::RBookedDefines(), DSValuePtrs, nullptr)
+   RJittedDefine(std::string_view name, std::string_view type, RLoopManager &lm,
+                 const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns)
+      : RDefineBase(name, type, colRegister, lm, columns)
    {
    }
+   ~RJittedDefine();
 
    void SetDefine(std::unique_ptr<RDefineBase> c) { fConcreteDefine = std::move(c); }
 
@@ -44,7 +46,10 @@ public:
    void *GetValuePtr(unsigned int slot) final;
    const std::type_info &GetTypeId() const final;
    void Update(unsigned int slot, Long64_t entry) final;
+   void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id) final;
    void FinaliseSlot(unsigned int slot) final;
+   void MakeVariations(const std::vector<std::string> &variations) final;
+   RDefineBase &GetVariedDefine(const std::string &variationName) final;
 };
 
 } // ns RDF

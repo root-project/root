@@ -10,9 +10,9 @@ find_package(libuuid REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-set(DAVIX_VERSION "0.7.5")
+set(DAVIX_VERSION "0.7.6")
 set(DAVIX_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources")
-set(DAVIX_URLHASH "SHA256=d920ca976846875d83af4dc50c99280bb3741fcf8351d5733453e70fa5fe6fc8")
+set(DAVIX_URLHASH "SHA256=fc9b5341d006482755684052328740449f2decc33ad7b5ba3e2c614fe602e6e2")
 set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
 set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
 
@@ -79,7 +79,7 @@ set(DAVIX_LIBRARY ${DAVIX_PREFIX}/lib/${DAVIX_LIBNAME} CACHE INTERNAL "" FORCE)
 set(DAVIX_LIBRARIES ${DAVIX_LIBRARIES} CACHE INTERNAL "" FORCE)
 
 add_library(davix INTERFACE)
-target_include_directories(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_INCLUDE_DIR}>)
+target_include_directories(davix SYSTEM INTERFACE $<BUILD_INTERFACE:${DAVIX_INCLUDE_DIR}>)
 target_link_libraries(davix INTERFACE $<BUILD_INTERFACE:${DAVIX_LIBRARIES}>)
 add_dependencies(davix DAVIX)
 

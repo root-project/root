@@ -28,8 +28,8 @@ namespace ROOT {
       </p>
       <p>
       The next example was based in <br>
-      <a href="http://root.cern.ch/root/html/tutorials/fit/NumericalMinimization.C.html">
-      http://root.cern.ch/root/html/tutorials/fit/NumericalMinimization.C.html
+      <a href="https://root.cern/doc/master/NumericalMinimization_8C.html">
+      https://root.cern/doc/master/NumericalMinimization_8C.html
       </a><br>
       <a href="http://stat.ethz.ch/R-manual/R-devel/library/stats/html/optim.html">
       http://stat.ethz.ch/R-manual/R-devel/library/stats/html/optim.html</a><br>
@@ -42,7 +42,7 @@ namespace ROOT {
       It's known that this function has a minimum when \f$ y = x^{2}\f$ , and \f$ x = 1.\f$
       Let's get the minimum using R's optim package through ROOTR's interface.
       In the code this function was called "Double_t RosenBrock(const TVectorD xx )", because for
-      optim, the input in your function deﬁnition must be a single vector.
+      optim, the input in your function definition must be a single vector.
 
       The Gradient is formed by
 

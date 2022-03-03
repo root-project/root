@@ -9,19 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttTextEditor                                                      //
-//                                                                      //
-//  Implements GUI for editing text attributes.                         //
-//          color, font, font size and alignment                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TAttTextEditor.gif">
+
+/** \class TAttTextEditor
+    \ingroup ged
+
+Implements GUI for editing text attributes.
+      color, font, font size and alignment
+
 */
-//End_Html
 
 
 #include "TAttTextEditor.h"
@@ -180,7 +175,7 @@ void TAttTextEditor::DoTextColor(Pixel_t color)
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot connected to the color with alpha.
 
-void TAttTextEditor::DoTextAlphaColor(ULong_t p)
+void TAttTextEditor::DoTextAlphaColor(ULongptr_t p)
 {
    TColor *color = (TColor *)p;
 
@@ -195,7 +190,7 @@ void TAttTextEditor::DoTextAlphaColor(ULong_t p)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process message.
 
-Bool_t TAttTextEditor::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TAttTextEditor::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    if(!fGedEditor || !fGedEditor->GetModel()) return kTRUE;
 

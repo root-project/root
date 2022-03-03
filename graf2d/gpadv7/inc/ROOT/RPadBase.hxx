@@ -13,11 +13,11 @@
 #include "ROOT/RFrame.hxx"
 #include "ROOT/RPadExtent.hxx"
 #include "ROOT/RPadPos.hxx"
-#include "ROOT/RPadUserAxis.hxx"
 #include "ROOT/TypeTraits.hxx"
 
 #include <memory>
 #include <vector>
+#include <algorithm>
 
 namespace ROOT {
 namespace Experimental {
@@ -53,12 +53,12 @@ private:
    void TestIfFrameRequired(const RDrawable *drawable)
    {
       if (drawable->IsFrameRequired())
-         GetOrCreateFrame();
+         AddFrame();
    }
 
 protected:
    /// Allow derived classes to default construct a RPadBase.
-   RPadBase() : RDrawable("pad") {}
+   explicit RPadBase(const char *csstype) : RDrawable(csstype) {}
 
    void CollectShared(Internal::RIOSharedVector_t &) override;
 
@@ -74,36 +74,6 @@ public:
 
    void UseStyle(const std::shared_ptr<RStyle> &style) override;
 
-   /// Divide this pad into a grid of subpads with padding in between.
-   /// \param nHoriz Number of horizontal pads.
-   /// \param nVert Number of vertical pads.
-   /// \param padding Padding between pads.
-   /// \returns vector of vector (ret[x][y]) of created pads.
-   std::vector<std::vector<std::shared_ptr<RPad>>> Divide(int nHoriz, int nVert, const RPadExtent &padding = {});
-
-   /// Create drawable of specified class T
-   template<class T, class... ARGS>
-   auto Draw(ARGS... args)
-   {
-      auto drawable = std::make_shared<T>(args...);
-
-      TestIfFrameRequired(drawable.get());
-
-      fPrimitives.emplace_back(drawable);
-
-      return drawable;
-   }
-
-   /// Add existing drawable instance to canvas
-   auto Draw(std::shared_ptr<RDrawable> &&drawable)
-   {
-      TestIfFrameRequired(drawable.get());
-
-      fPrimitives.emplace_back(std::move(drawable));
-
-      return fPrimitives.back().get_shared();
-   }
-
    /// Add object to be painted.
    /// Correspondent drawable will be created via GetDrawable() function which should be defined and be accessed at calling time.
    /// If required, extra arguments for GetDrawable() function can be provided.
@@ -118,6 +88,44 @@ public:
       fPrimitives.emplace_back(drawable);
 
       return drawable;
+   }
+
+   /// Create drawable of specified class T
+   template<class T, class... ARGS>
+   std::shared_ptr<T> Draw(ARGS... args)
+   {
+      auto drawable = std::make_shared<T>(args...);
+
+      TestIfFrameRequired(drawable.get());
+
+      fPrimitives.emplace_back(drawable);
+
+      return drawable;
+   }
+
+   /// Add drawable of specified class T
+   template<class T, class... ARGS>
+   std::shared_ptr<T> Add(ARGS... args)
+   {
+      auto drawable = std::make_shared<T>(args...);
+
+      TestIfFrameRequired(drawable.get());
+
+      fPrimitives.emplace_back(drawable);
+
+      return drawable;
+   }
+
+   /// Add existing drawable instance to canvas
+   std::shared_ptr<RDrawable> Draw(std::shared_ptr<RDrawable> &&drawable)
+   {
+      TestIfFrameRequired(drawable.get());
+
+      auto dr = std::move(drawable);
+
+      fPrimitives.emplace_back(dr);
+
+      return dr;
    }
 
    /// returns number of primitives in the pad
@@ -181,40 +189,24 @@ public:
    /// Wipe the pad by clearing the list of primitives.
    void Wipe() { fPrimitives.clear(); }
 
-   std::shared_ptr<RFrame> GetOrCreateFrame();
+   std::shared_ptr<RFrame> AddFrame();
    std::shared_ptr<RFrame> GetFrame();
    const std::shared_ptr<RFrame> GetFrame() const;
 
-   RPadUserAxisBase* GetOrCreateAxis(size_t dimension);
-   RPadUserAxisBase* GetAxis(size_t dimension) const;
+   std::shared_ptr<RPad> AddPad(const RPadPos &, const RPadExtent &);
 
-   void SetAxisBounds(int dimension, double begin, double end);
-   void SetAxisBound(int dimension, RPadUserAxisBase::EAxisBoundsKind boundsKind, double bound);
-   void SetAxisAutoBounds(int dimension);
-
-   void SetAllAxisBounds(const std::vector<std::array<double, 2>> &vecBeginAndEnd);
-
-   /// Simple struct representing an axis bound.
-   struct BoundKindAndValue {
-      RPadUserAxisBase::EAxisBoundsKind fKind = RPadUserAxisBase::kAxisBoundsAuto;
-      double fBound = 0.;
-   };
-   void SetAllAxisBound(const std::vector<BoundKindAndValue> &vecBoundAndKind);
-   void SetAllAxisAutoBounds();
-
-   /// Convert a `Pixel` position to Canvas-normalized positions.
-   virtual std::array<RPadLength::Normal, 2> PixelsToNormal(const std::array<RPadLength::Pixel, 2> &pos) const = 0;
+   /// Divide this pad into a grid of subpads with padding in between.
+   /// \param nHoriz Number of horizontal pads.
+   /// \param nVert Number of vertical pads.
+   /// \param padding Padding between pads.
+   /// \returns vector of vector (ret[x][y]) of created pads.
+   std::vector<std::vector<std::shared_ptr<RPad>>> Divide(int nHoriz, int nVert, const RPadExtent &padding = {});
 
    /// Access to the top-most canvas, if any (const version).
    virtual const RCanvas *GetCanvas() const = 0;
 
    /// Access to the top-most canvas, if any (non-const version).
    virtual RCanvas *GetCanvas() = 0;
-
-   /// Convert user coordinates to normal coordinates.
-   std::array<RPadLength::Normal, 2> UserToNormal(const std::array<RPadLength::User, 2> &pos) const;
-
-   void AssignAutoColors();
 };
 
 } // namespace Experimental

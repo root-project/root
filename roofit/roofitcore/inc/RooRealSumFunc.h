@@ -35,6 +35,8 @@ public:
    Double_t evaluate() const;
    virtual Bool_t checkObservables(const RooArgSet *nset) const;
 
+   void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
+
    virtual Bool_t forceAnalyticalInt(const RooAbsArg &arg) const { return arg.isFundamental(); }
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
                                  const char *rangeName = 0) const;
@@ -71,7 +73,7 @@ protected:
       RooArgList _funcIntList;
       RooArgList _funcNormList;
    };
-   mutable RooObjCacheManager _normIntMgr; // The integration cache manager
+   mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
 
    Bool_t _haveLastCoef;
 
@@ -84,7 +86,7 @@ protected:
    static Bool_t _doFloorGlobal; // Global flag for introducing floor at zero in pdf
 
 private:
-   ClassDef(RooRealSumFunc, 3) // PDF constructed from a sum of (non-pdf) functions
+   ClassDef(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

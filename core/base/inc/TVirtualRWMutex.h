@@ -100,9 +100,12 @@ public:
 //    TReadLockGuard guard(mutex);                                      //
 //    ... // read something                                             //
 // }                                                                    //
-// when guard goes out of scope the mutex is unlocked in the TLockGuard //
+// where mutex is a pointer to a TMutex object.                         //
+// When guard goes out of scope the mutex is unlocked in the TLockGuard //
 // destructor. The exception mechanism takes care of calling the dtors  //
 // of local objects so it is exception safe.                            //
+// In contrast to std::lock_guard, TLockGuard constructor expects a     //
+// pointer, not the mutex object itself.                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -146,7 +149,11 @@ public:
 
 } // namespace ROOT.
 
-// Zero overhead macros in case not compiled with thread support
+// Zero overhead macros in case not compiled with thread support (-pthread)
+// Use with a trailing semicolon and pass a pointer as argument, e.g.:
+// TMutex m; R__READ_LOCKGUARD(&m);
+// Warning: if program is compiled without pthread support, _REENTRANT will
+// be undefined and the macro has (silently) no effect, no locks are performed.
 #if defined (_REENTRANT) || defined (WIN32)
 
 #define R__READ_LOCKGUARD(mutex) ::ROOT::TReadLockGuard _R__UNIQUE_(R__readguard)(mutex)
@@ -156,7 +163,7 @@ public:
 #define R__WRITE_LOCKGUARD_NAMED(name,mutex) ::ROOT::TWriteLockGuard _NAME2_(R__readguard,name)(mutex)
 
 #else
-
+//@todo: mutex is not checked to be of type TVirtualMutex*.
 #define R__READ_LOCKGUARD(mutex) (void)mutex
 #define R__READ_LOCKGUARD_NAMED(name,mutex) (void)mutex
 

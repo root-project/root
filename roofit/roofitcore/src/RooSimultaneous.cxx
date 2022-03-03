@@ -68,7 +68,9 @@ in each category.
 #include "RooDataHist.h"
 #include "RooRandom.h"
 #include "RooArgSet.h"
-#include "RooHelpers.h"
+#include "RooBinSamplingPdf.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include <iostream>
 
@@ -598,6 +600,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   pc.defineDouble("scaleFactor","Normalization",0,1.0) ;
   pc.defineInt("scaleType","Normalization",0,RooAbsPdf::Relative) ;
   pc.defineObject("sliceCatList","SliceCat",0,0,kTRUE) ;
+  // This dummy is needed for plotOn to recognize the "SliceCatMany" command.
+  // It is not used directly, but the "SliceCat" commands are nested in it.
+  // Removing this dummy definition results in "ERROR: unrecognized command: SliceCatMany".
+  pc.defineObject("dummy1","SliceCatMany",0) ;
   pc.defineObject("projSet","Project",0) ;
   pc.defineObject("sliceSet","SliceVars",0) ;
   pc.defineObject("projDataSet","ProjData",0) ;
@@ -631,13 +637,11 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     }
 
     // Prepare comma separated label list for parsing
-    auto catTokens = RooHelpers::tokenise(sliceCatState, ",");
+    auto catTokens = ROOT::Split(sliceCatState, ",");
 
     // Loop over all categories provided by (multiple) Slice() arguments
-    TIterator* iter = sliceCatList.MakeIterator() ;
-    RooCategory* scat ;
     unsigned int tokenIndex = 0;
-    while((scat=(RooCategory*)iter->Next())) {
+    for(auto * scat : static_range_cast<RooCategory*>(sliceCatList)) {
       const char* slabel = tokenIndex >= catTokens.size() ? nullptr : catTokens[tokenIndex++].c_str();
 
       if (slabel) {
@@ -647,7 +651,6 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
         sliceSet->add(*scat,kFALSE) ;
       }
     }
-    delete iter ;
   }
 
   // Check if we have a projection dataset
@@ -805,9 +808,9 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   RooArgList wgtCompList ;
 //RooAbsPdf* pdf ;
   RooRealProxy* proxy ;
-  TIterator* pIter = _pdfProxyList.MakeIterator() ;
+  TIter pIter = _pdfProxyList.MakeIterator() ;
   Double_t sumWeight(0) ;
-  while((proxy=(RooRealProxy*)pIter->Next())) {
+  while((proxy=(RooRealProxy*)pIter.Next())) {
 
     idxCatClone->setLabel(proxy->name()) ;
 
@@ -1110,7 +1113,7 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
       RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
 
       // Transfer values to output placeholder
-      *globClone = *tmp->get(0) ;
+      globClone->assign(*tmp->get(0)) ;
 
       // Cleanup
       delete globtmp ;
@@ -1121,4 +1124,81 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
 
   delete globClone ;
   return data ;
+}
+
+
+/// Wraps the components of this RooSimultaneous in RooBinSamplingPdfs.
+/// \param[in] data The dataset to be used in the eventual fit, used to figure
+///            out the observables and whether the dataset is binned.
+/// \param[in] precisions Precision argument for all created RooBinSamplingPdfs.
+void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data, double precision) {
+
+  if (precision < 0.) return;
+
+  RooArgSet newSamplingPdfs;
+
+  for (auto const &item : this->indexCat()) {
+
+    auto const &catName = item.first;
+    auto &pdf = *this->getPdf(catName.c_str());
+
+    if (auto newSamplingPdf = RooBinSamplingPdf::create(pdf, data, precision)) {
+      // Set the "ORIGNAME" attribute the indicate to
+      // RooAbsArg::redirectServers() wich pdf should be replaced by this
+      // RooBinSamplingPdf in the RooSimultaneous.
+      newSamplingPdf->setAttribute(
+          (std::string("ORIGNAME:") + pdf.GetName()).c_str());
+      newSamplingPdfs.addOwned(std::move(newSamplingPdf));
+    }
+  }
+
+  this->redirectServers(newSamplingPdfs, false, true);
+  this->addOwnedComponents(std::move(newSamplingPdfs));
+}
+
+
+/// Wraps the components of this RooSimultaneous in RooBinSamplingPdfs, with a
+/// different precision parameter for each component.
+/// \param[in] data The dataset to be used in the eventual fit, used to figure
+///            out the observables and whether the dataset is binned.
+/// \param[in] precisions The map that gives the precision argument for each
+///            component in the RooSimultaneous. The keys are the pdf names. If
+///            there is no value for a given component, it will not use the bin
+///            integration. Otherwise, the value has the same meaning than in
+///            the IntegrateBins() command argument for RooAbsPdf::fitTo().
+/// \param[in] useCategoryNames If this flag is set, the category names will be
+///            used to look up the precision in the precisions map instead of
+///            the pdf names.
+void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data,
+                                                std::map<std::string, double> const& precisions,
+                                                bool useCategoryNames /*=false*/) {
+
+  constexpr double defaultPrecision = -1.;
+
+  RooArgSet newSamplingPdfs;
+
+  for (auto const &item : this->indexCat()) {
+
+    auto const &catName = item.first;
+    auto &pdf = *this->getPdf(catName.c_str());
+    std::string pdfName = pdf.GetName();
+
+    auto found = precisions.find(useCategoryNames ? catName : pdfName);
+    const double precision =
+        found != precisions.end() ? found->second : defaultPrecision;
+    if (precision < 0.)
+      continue;
+
+    if (auto newSamplingPdf = RooBinSamplingPdf::create(pdf, data, precision)) {
+      // Set the "ORIGNAME" attribute the indicate to
+      // RooAbsArg::redirectServers() wich pdf should be replaced by this
+      // RooBinSamplingPdf in the RooSimultaneous.
+      newSamplingPdf->setAttribute(
+          (std::string("ORIGNAME:") + pdf.GetName()).c_str());
+      newSamplingPdfs.addOwned(std::move(newSamplingPdf));
+    }
+  }
+
+  this->redirectServers(newSamplingPdfs, false, true);
+  this->addOwnedComponents(std::move(newSamplingPdfs));
 }

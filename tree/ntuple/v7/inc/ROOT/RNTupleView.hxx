@@ -150,7 +150,6 @@ Fields of simple types with a Map() method will use that and thus expose zero-co
 // clang-format on
 template <typename T>
 class RNTupleView {
-   friend class RNTupleReader;
    friend class RNTupleViewCollection;
 
    using FieldT = RField<T>;
@@ -161,13 +160,20 @@ private:
    /// Used as a Read() destination for fields that are not mappable
    Detail::RFieldValue fValue;
 
+public:
+
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
      : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
    {
-      Detail::RFieldFuse::ConnectRecursively(fieldId, *pageSource, fField);
+      fField.SetOnDiskId(fieldId);
+      fField.ConnectPageSource(*pageSource);
+      for (auto &f : fField) {
+         auto subFieldId = pageSource->GetDescriptor().FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
+         f.SetOnDiskId(subFieldId);
+         f.ConnectPageSource(*pageSource);
+      }
    }
 
-public:
    RNTupleView(const RNTupleView& other) = delete;
    RNTupleView(RNTupleView&& other) = default;
    RNTupleView& operator=(const RNTupleView& other) = delete;
@@ -196,6 +202,18 @@ public:
    operator()(const RClusterIndex &clusterIndex) {
       fField.Read(clusterIndex, &fValue);
       return *fValue.Get<T>();
+   }
+
+   template <typename C = T>
+   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C*>
+   MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
+      return fField.MapV(globalIndex, nItems);
+   }
+
+   template <typename C = T>
+   typename std::enable_if_t<Internal::IsMappable<FieldT>::value, const C*>
+   MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+      return fField.MapV(clusterIndex, nItems);
    }
 };
 
@@ -242,13 +260,25 @@ public:
                                  collectionStart.GetIndex() + size);
    }
 
+   /// Raises an exception if there is no field with the given name.
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
+            + fSource->GetDescriptor().GetName() + "'"
+         ));
+      }
       return RNTupleView<T>(fieldId, fSource);
    }
+   /// Raises an exception if there is no field with the given name.
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
       auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      if (fieldId == kInvalidDescriptorId) {
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
+            + fSource->GetDescriptor().GetName() + "'"
+         ));
+      }
       return RNTupleViewCollection(fieldId, fSource);
    }
 

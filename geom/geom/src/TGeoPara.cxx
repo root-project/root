@@ -11,17 +11,31 @@
  *************************************************************************/
 
 /** \class TGeoPara
-\ingroup Geometry_classes
+\ingroup Shapes_classes
+\brief Parallelepiped class.
 
-Parallelepiped class. It has 6 parameters :
+A parallelepiped is a shape having 3 pairs of parallel faces out of
+which one is parallel with the XY plane (Z faces). All faces are
+parallelograms in the general case. The Z faces have 2 edges parallel
+with the X-axis.
 
-  - dx, dy, dz - half lengths in X, Y, Z
-  - alpha - angle w.r.t the Y axis from center of low Y edge to
-    center of high Y edge [deg]
-  - theta, phi - polar and azimuthal angles of the segment between
-    low and high Z surfaces [deg]
+The shape has the center in the origin and it is defined by:
 
-Begin_Macro(source)
+  - `dX, dY, dZ:` half-lengths of the projections of the edges on X, Y
+    and Z. The lower Z face is positioned at `-dZ`, while the upper at `+dZ`.
+  - `alpha:` angle between the segment defined by the centers of the
+    X-parallel edges and Y axis `[-90,90]` in degrees
+  -   `theta:` theta angle of the segment defined by the centers of the Z faces;
+  - `phi:` phi angle of the same segment
+
+~~~ {.cpp}
+TGeoPara(dX,dY,dZ,alpha,theta,phi);
+~~~
+
+A box is a particular parallelepiped having the parameters:
+`(dX,dY,dZ,0.,0.,0.)`.
+
+Begin_Macro
 {
    TCanvas *c = new TCanvas("c", "c",0,0,600,600);
    new TGeoManager("para", "poza1");
@@ -39,6 +53,7 @@ Begin_Macro(source)
    view->ShowAxis();
 }
 End_Macro
+
 */
 
 #include <iostream>
@@ -272,7 +287,6 @@ Double_t TGeoPara::DistFromInside(const Double_t *point, const Double_t *dir, In
 
 Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
-   Double_t snxt=TGeoShape::Big();
    if (iact<3 && safe) {
       // compute safe distance
       *safe = Safety(point, kFALSE);
@@ -316,7 +330,7 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
    }
    Double_t xnew,ynew,znew;
    if (safz>0) {
-      snxt = safz/TMath::Abs(dir[2]);
+      Double_t snxt = safz/TMath::Abs(dir[2]);
       xnew = point[0]+snxt*dir[0];
       ynew = point[1]+snxt*dir[1];
       znew = (point[2]>0)?fZ:(-fZ);
@@ -327,7 +341,7 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
    }
    if (safy>0) {
-      snxt = safy/TMath::Abs(dy);
+      Double_t snxt = safy/TMath::Abs(dy);
       znew = point[2]+snxt*dir[2];
       if (TMath::Abs(znew)<=fZ) {
          Double_t ytn = (yt>0)?fY:(-fY);
@@ -337,7 +351,7 @@ Double_t TGeoPara::DistFromOutside(const Double_t *point, const Double_t *dir, I
       }
    }
    if (safx>0) {
-      snxt = safx/TMath::Abs(dx);
+      Double_t snxt = safx/TMath::Abs(dx);
       znew = point[2]+snxt*dir[2];
       if (TMath::Abs(znew)<=fZ) {
          ynew = point[1]+snxt*dir[1];
@@ -490,10 +504,9 @@ Int_t TGeoPara::GetFittingBox(const TGeoBBox *parambox, TGeoMatrix *mat, Double_
    upper[6]=z*fTxz-fTxy*fY+fX;
    upper[7]=-fY+z*fTyz;
 
-   Double_t ddmin=TGeoShape::Big();
    for (Int_t iaxis=0; iaxis<2; iaxis++) {
       if (dd[iaxis]>=0) continue;
-      ddmin=TGeoShape::Big();
+      Double_t ddmin = TGeoShape::Big();
       for (Int_t ivert=0; ivert<4; ivert++) {
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-lower[2*ivert+iaxis]));
          ddmin = TMath::Min(ddmin, TMath::Abs(origin[iaxis]-upper[2*ivert+iaxis]));

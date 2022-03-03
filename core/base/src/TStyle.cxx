@@ -64,9 +64,9 @@ style is created simply by:
 auto default = new TStyle("Default","Default Style");
 ~~~
 
-The "**Plain**" style can be used if you are working on a monochrome display or
+The `Plain` style can be used if you are working on a monochrome display or
 if you want to get a "conventional" Postscript output. These are the instructions
-in the ROOT constructor to create the "Plain*" style.
+in the ROOT constructor to create the `Plain` style.
 
 ```
 auto plain  = new TStyle("Plain","Plain Style (no colors/fill areas)");
@@ -150,12 +150,12 @@ TStyle::TStyle() :TNamed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TStyle.
 /// The following names are reserved to create special styles
-///   - `Classic`: the default style set in TStyle::Reset
+///   - `Classic`: Similar to 'Default` style set in TStyle::Reset
 ///   - `Plain`: a black&white oriented style
 ///   - `Bold`
 ///   - `Video`
 ///   - `Pub`
-///   - `Modern`
+///   - `Modern` Used when ROOT starts
 ///   - `ATLAS`: style used by the ATLAS experiment
 ///   - `BELLE2`: style used by the BELLE II experiment
 ///     (see the definition of these styles below).
@@ -269,7 +269,7 @@ TStyle::TStyle(const char *name, const char *title)
    }
    if (strcmp(style_name,"Bold") == 0) {
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
-      SetPalette(1,0);
+      SetPalette(1,nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -296,7 +296,7 @@ TStyle::TStyle(const char *name, const char *title)
    }
    if (strcmp(style_name,"Video") == 0) {
       // Author: Art Poskanzer, LBNL, Oct. 1999
-      SetPalette(1,0);
+      SetPalette(1,nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -323,7 +323,7 @@ TStyle::TStyle(const char *name, const char *title)
       // Authors: Art Poskanzer and Jim Thomas, LBNL, Oct. 2000
       SetOptTitle(0);
       SetOptStat(0);
-      SetPalette(8,0);
+      SetPalette(8,nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -445,7 +445,7 @@ TStyle::TStyle(const char *name, const char *title)
       SetLabelOffset(0.015,"z");
 
       SetTickLength(0.03,"x");
-      SetTickLength(0.02,"y");  // This way we slighty achive equal length ticks for x and y
+      SetTickLength(0.02,"y");  // This way we slightly achieve equal length ticks for x and y
 
       // use bold lines and markers
       SetMarkerStyle(20);
@@ -852,7 +852,7 @@ void TStyle::Reset(Option_t *opt)
       return;
    }
    if (strcmp(style_name,"Bold") == 0) {
-      SetPalette(1,0);
+      SetPalette(1,nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -878,7 +878,7 @@ void TStyle::Reset(Option_t *opt)
       return;
    }
    if (strcmp(style_name,"Video") == 0) {
-      SetPalette(1,0);
+      SetPalette(1,nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -904,7 +904,7 @@ void TStyle::Reset(Option_t *opt)
    if (strcmp(style_name,"Pub") == 0) {
       SetOptTitle(0);
       SetOptStat(0);
-      SetPalette(8,0);
+      SetPalette(8,nullptr);
       SetCanvasColor(10);
       SetCanvasBorderMode(0);
       SetFrameLineWidth(3);
@@ -1782,6 +1782,13 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 void TStyle::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
 {
    TColor::SetPalette(ncolors,colors,alpha);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \see TColor::CreateColorTableFromFile, (which calls TColor::SetPalette)
+void TStyle::SetPalette(TString fileName, Float_t alpha)
+{
+   TColor::CreateColorTableFromFile(fileName, alpha);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

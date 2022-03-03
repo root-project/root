@@ -8,11 +8,12 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawText() {
       let text      = this.getObject(),
           pp        = this.getPadPainter(),
-          use_frame = false,
-          p         = pp.getCoordinate(text.fPos),
+          onframe   = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
+          clipping  = onframe ? this.v7EvalAttr("clipping", false) : false,
+          p         = pp.getCoordinate(text.fPos, onframe),
           textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 });
 
-      this.createG(use_frame);
+      this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
       this.startTextDrawing(textFont, 'font');
 
@@ -21,20 +22,20 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
       return this.finishTextDrawing();
    }
 
-
    // =================================================================================
 
    function drawLine() {
 
        let line         = this.getObject(),
            pp           = this.getPadPainter(),
-           p1           = pp.getCoordinate(line.fP1),
-           p2           = pp.getCoordinate(line.fP2),
-           line_width   = this.v7EvalAttr("line_width", 1),
-           line_style   = this.v7EvalAttr("line_style", 1),
-           line_color   = this.v7EvalColor("line_color", "black");
+           onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
+           clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
+           p1           = pp.getCoordinate(line.fP1, onframe),
+           p2           = pp.getCoordinate(line.fP2, onframe);
 
-       this.createG();
+       this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
+
+       this.createv7AttLine();
 
        this.draw_g
            .append("svg:line")
@@ -42,10 +43,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
            .attr("y1", p1.y)
            .attr("x2", p2.x)
            .attr("y2", p2.y)
-           .style("stroke", line_color)
-           .attr("stroke-width", line_width)
-//        .attr("stroke-opacity", line_opacity)
-           .style("stroke-dasharray", jsrp.root_line_styles[line_style]);
+           .call(this.lineatt.func);
    }
 
    // =================================================================================
@@ -54,19 +52,16 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
        let box          = this.getObject(),
            pp           = this.getPadPainter(),
-           p1           = pp.getCoordinate(box.fP1),
-           p2           = pp.getCoordinate(box.fP2),
-           line_width   = this.v7EvalAttr( "box_border_width", 1),
-           line_style   = this.v7EvalAttr( "box_border_style", 1),
-           line_color   = this.v7EvalColor( "box_border_color", "black"),
-           fill_color   = this.v7EvalColor( "box_fill_color", "white"),
-           fill_style   = this.v7EvalAttr( "box_fill_style", 1),
-           round_width  = this.v7EvalAttr( "box_round_width", 0), // not yet exists
-           round_height = this.v7EvalAttr( "box_round_height", 0); // not yet exists
+           onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
+           clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
+           p1           = pp.getCoordinate(box.fP1, onframe),
+           p2           = pp.getCoordinate(box.fP2, onframe);
 
-    this.createG();
+    this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
 
-    if (fill_style == 0) fill_color = "none";
+    this.createv7AttLine("border_");
+
+    this.createv7AttFill();
 
     this.draw_g
         .append("svg:rect")
@@ -74,12 +69,8 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
         .attr("width", p2.x-p1.x)
         .attr("y", p2.y)
         .attr("height", p1.y-p2.y)
-        .attr("rx", round_width)
-        .attr("ry", round_height)
-        .style("stroke", line_color)
-        .attr("stroke-width", line_width)
-        .attr("fill", fill_color)
-        .style("stroke-dasharray", jsrp.root_line_styles[line_style]);
+        .call(this.lineatt.func)
+        .call(this.fillatt.func);
    }
 
    // =================================================================================
@@ -87,26 +78,27 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
    function drawMarker() {
        let marker       = this.getObject(),
            pp           = this.getPadPainter(),
-           p            = pp.getCoordinate(marker.fP),
-           marker_size  = this.v7EvalAttr( "marker_size", 1),
-           marker_style = this.v7EvalAttr( "marker_style", 1),
-           marker_color = this.v7EvalColor( "marker_color", "black"),
-           att          = new JSROOT.TAttMarkerHandler({ style: marker_style, color: marker_color, size: marker_size }),
-           path         = att.create(p.x, p.y);
+           onframe      = this.v7EvalAttr("onFrame", false) ? pp.getFramePainter() : null,
+           clipping     = onframe ? this.v7EvalAttr("clipping", false) : false,
+           p            = pp.getCoordinate(marker.fP, onframe);
 
-       this.createG();
+       this.createG(clipping ? "main_layer" : (onframe ? "upper_layer" : false));
+
+       this.createv7AttMarker();
+
+       let path = this.markeratt.create(p.x, p.y);
 
        if (path)
           this.draw_g.append("svg:path")
                      .attr("d", path)
-                     .call(att.func);
+                     .call(this.markeratt.func);
    }
 
    // =================================================================================
 
    function drawLegendContent() {
       let legend     = this.getObject(),
-          textFont  = this.v7EvalFont("legend_text", { size: 12, color: "black", align: 22 }),
+          textFont   = this.v7EvalFont("text", { size: 12, color: "black", align: 22 }),
           width      = this.pave_width,
           height     = this.pave_height,
           nlines     = legend.fEntries.length,
@@ -122,12 +114,11 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
       this.startTextDrawing(textFont, 'font' );
 
       if (legend.fTitle) {
-         this.drawText({ align: 22, latex: 1,
-                         width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
+         this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: legend.fTitle });
          posy += stepy;
       }
 
-      for (let i=0; i<legend.fEntries.length; ++i) {
+      for (let i = 0; i<legend.fEntries.length; ++i) {
          let objp = null, entry = legend.fEntries[i];
 
          this.drawText({ latex: 1, width: 0.75*width - 3*margin_x, height: stepy, x: 2*margin_x + width*0.25, y: posy, text: entry.fLabel });
@@ -159,6 +150,15 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
               .attr("y2", Math.round(posy + stepy/2))
               .call(objp.lineatt.func);
 
+         if (objp && entry.fError && objp.lineatt)
+            this.draw_g
+              .append("svg:line")
+              .attr("x1", Math.round(margin_x + width/8))
+              .attr("y1", Math.round(posy + stepy*0.2))
+              .attr("x2", Math.round(margin_x + width/8))
+              .attr("y2", Math.round(posy + stepy*0.8))
+              .call(objp.lineatt.func);
+
          if (objp && entry.fMarker && objp.markeratt)
             this.draw_g.append("svg:path")
                 .attr("d", objp.markeratt.create(margin_x + width/8, posy + stepy/2))
@@ -182,7 +182,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
    function drawPaveTextContent() {
       let pavetext  = this.getObject(),
-          textFont  = this.v7EvalFont("pavetext_text", { size: 12, color: "black", align: 22 }),
+          textFont  = this.v7EvalFont("text", { size: 12, color: "black", align: 22 }),
           width     = this.pave_width,
           height    = this.pave_height,
           nlines    = pavetext.fText.length;
@@ -195,7 +195,7 @@ JSROOT.define(['painter', 'v7gpad'], (jsrp) => {
 
       this.startTextDrawing(textFont, 'font');
 
-      for (let i=0; i < pavetext.fText.length; ++i) {
+      for (let i = 0; i < pavetext.fText.length; ++i) {
          let line = pavetext.fText[i];
 
          this.drawText({ latex: 1, width: width - 2*margin_x, height: stepy, x: margin_x, y: posy, text: line });

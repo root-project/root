@@ -26,7 +26,6 @@ public:
 RVec_UponCopyPrinter = ROOT.ROOT.VecOps.RVec(ROOT.UponCopyPrinter)
 
 # One of the essential features of RVec is its ability of adopting and owning memory.
-# Internally this is handled by the ROOT::Detail::VecOps::RAdoptAllocator class.
 
 # Let's create an RVec of UponCopyPrinter instances. We expect no printout:
 v = RVec_UponCopyPrinter(3)

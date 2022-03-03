@@ -83,7 +83,8 @@ ClassImp(RooAbsAnaConvPdf);
 /// Default constructor, required for persistence
 
 RooAbsAnaConvPdf::RooAbsAnaConvPdf() :
-  _isCopy(kFALSE)
+  _isCopy(false),
+  _coefNormMgr(this,10)
 {
 }
 
@@ -512,7 +513,7 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
       Double_t coef = getCoefNorm(index++,intCoefSet,_rangeName) ; 
       //cout << "coefInt[" << index << "] = " << coef << " " ; intCoefSet->Print("1") ; 
       if (coef!=0) {
-	integral += coef*(_rangeName ? conv->getNormObj(0,intConvSet,_rangeName)->getVal() :  conv->getNorm(intConvSet) ) ;       
+	integral += coef* conv->getNormObj(0,intConvSet,_rangeName)->getVal();
 	cxcoutD(Eval) << "RooAbsAnaConv::aiWN(" << GetName() << ") [" << index-1 << "] integral += " << conv->getNorm(intConvSet) << endl ;
       }
 
@@ -531,14 +532,14 @@ Double_t RooAbsAnaConvPdf::analyticalIntegralWN(Int_t code, const RooArgSet* nor
       Double_t coefInt = getCoefNorm(index,intCoefSet,_rangeName) ;
       //cout << "coefInt[" << index << "] = " << coefInt << "*" << term << " " << (intCoefSet?*intCoefSet:RooArgSet()) << endl ;
       if (coefInt!=0) {
-	Double_t term = (_rangeName ? conv->getNormObj(0,intConvSet,_rangeName)->getVal() : conv->getNorm(intConvSet) ) ;
+	Double_t term = conv->getNormObj(0,intConvSet,_rangeName)->getVal();
 	integral += coefInt*term ;
       }
 
       Double_t coefNorm = getCoefNorm(index,normCoefSet) ;
       //cout << "coefNorm[" << index << "] = " << coefNorm << "*" << term << " " << (normCoefSet?*normCoefSet:RooArgSet()) << endl ;
       if (coefNorm!=0) {
-	Double_t term = conv->getNorm(normConvSet) ;
+	Double_t term = conv->getNormObj(0,normConvSet)->getVal();
 	norm += coefNorm*term ;
       }
 
@@ -677,9 +678,9 @@ void RooAbsAnaConvPdf::printMultiline(ostream& os, Int_t contents, Bool_t verbos
   RooAbsPdf::printMultiline(os,contents,verbose,indent);
 
   os << indent << "--- RooAbsAnaConvPdf ---" << endl;
-  TIterator* iter = _convSet.createIterator() ;
+  TIter iter = _convSet.createIterator() ;
   RooResolutionModel* conv ;
-  while (((conv=(RooResolutionModel*)iter->Next()))) {
+  while (((conv=(RooResolutionModel*)iter.Next()))) {
     conv->printMultiline(os,contents,verbose,indent) ;
   }
 }

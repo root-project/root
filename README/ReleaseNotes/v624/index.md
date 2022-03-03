@@ -1,9 +1,10 @@
 % ROOT Version 6.24 Release Notes
-% 2021-09-01
+% 2020-05-19
+<a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.24/00 was released on April 14, 2022.
+ROOT version 6.24/00 is scheduled for release in November 2020.
 
 For more information, see:
 
@@ -18,8 +19,6 @@ The following people have contributed to this new version:
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
  Olivier Couet, CERN/SFT,\
- Anirudh Dagar, CERN-SFT/GSOC,\
- Hans Dembinski, TU Dortmund/LHCb,\
  Massimiliano Galli, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Hadrien Grasland, IJCLab/LAL,\
@@ -38,27 +37,20 @@ The following people have contributed to this new version:
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Jonas Rembser, CERN/SFT,\
- Andrea Sciandra, SCIPP-UCSC/Atlas,\
+ Andrea Sciandra, SCIPP-UCSC/Atlas, \
  Oksana Shadura, UNL/CMS,\
  Enric Tejedor Saavedra, CERN/SFT,\
- Christian Tacke, GSI,\
+ Christian Tacke, GSI, \
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas,\
- Stefan Wunsch, CERN/SFT
+ Stefan Wunsch, CERN/SFT,\
+ Anirudh Dagar, CERN-HSF/GSoC
 
-## General
-
-### Deprecation and Removal
+## Deprecation and Removal
 
 - [`RooAbsReal::evaluateBatch()`](https://root.cern/doc/v624/classRooAbsReal.html#a261580dfe94f2b107f9b9a77cad78a62) has been removed in favour of the faster evaluateSpan(). See section "RooFit Libraries" for instructions on how to use [`RooAbsReal::evaluateSpan()`](https://root.cern/doc/v624/classRooAbsReal.html#a1e5129ffbc63bfd04c01511fd354b1b8).
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` has been deprecated in favour of `TTreeProcessorMT::SetTasksPerWorkerHint`.
-
-### Header Dependency Reduction
-
-As always, ROOT tries to reduce the amount of code exposed through its headers.
-To that end, `#include`s were replaced by forward declarations in several headers.
-This might cause compilation errors ("missing definition of type...") in your code, if that code was relying on indirect includes, instead of including the required headers itself. Please correct that simply by including the required header directly.
 
 ## Core Libraries
 
@@ -89,7 +81,6 @@ separated list of paths, on Windows a semicolon separated list. It is
 intended to be cross platform and to be specific to ROOT (and thus not
 interfere with the system's shared linker).
 The final "Dynamic Path" is now composed of these sources in order:
-
 1. `ROOT_LIBRARY_PATH` environment variable
 2. System specific shared linker environment variables like
    `LD_LIBRARY_PATH`, `LIBPATH`, or `PATH`.
@@ -115,7 +106,7 @@ The final "Dynamic Path" is now composed of these sources in order:
 - `TTree` now supports the inclusion of leaves of types `long` and `unsigned long` (and therefore also `std::size_t` on most systems) also for branches in "leaflist mode". The corresponding leaflist letters are 'G' and 'g'.
 - when looping over a `TTree` with a friend with a larger number of entries, `TTreeReader` now ends the event loop when the entries in the _main_ `TTree` are exhausted, consistently with other interfaces. See [#6518](https://github.com/root-project/root/issues/6518) for more details.
 - `TTreeProcessorMT::SetMaxTasksPerFilePerWorker` is now deprecated in favor of the more flexible and newly introduced `TTreeProcessorMT::SetTasksPerWorkerHint`. See the relevant entries in our reference guide for more information.
-- The name of the sub-branches of a split collection no longer have 2 consecutive dots if the top level branche name has a trailing dot.  The name of the collection's index leaf also no longer include the dot. For example for "t." the names where "t._" and "t..fValue" and are now "t_" and "t.fValue".
+- The name of the sub-branches of a split collection no longer have 2 consecutive dots if the top level branche name has a trailing dot.  The name of the collection's index leaf also no longer include the dot. For example for "t." the names where "t._" and "t..fValue" and are now "t_" and "t.fValue". 
 
 ## RDataFrame
 
@@ -144,7 +135,6 @@ The final "Dynamic Path" is now composed of these sources in order:
 The full list of bug fixes for this release is available below.
 
 ### Distributed computing with RDataFrame
-
 ROOT 6.24 introduces `ROOT.RDF.Experimental.Distributed`, an experimental python package that enhances RDataFrame with distributed computing capabilities. The new package allows distributing RDataFrame applications through one of the supported distributed backends. The package was designed so that different backends can be easily plugged in. Currently the [Apache Spark](http://spark.apache.org/) backend is supported and support for [Dask](https://dask.org/) is coming soon. The backend submodules of this package expose their own `RDataFrame` objects. The only needed change in user code is to substitute `ROOT.RDataFrame` calls with such backend-specific `RDataFrame`s. For example:
 
 ```python
@@ -187,12 +177,6 @@ Tests for the Spark backend can be turned ON/OFF with the new build option `test
 
 ## Histogram Libraries
 
-- Add a new `THistRange` class for defining a generic bin range and iteration in a 1d and multi-dimensional histogram
-- Fix a memory leak in `TF1::Copy` and `TFormula::Copy`
-- Enable using automatic differentiation when computing parameter gradient in formula based TF1
-- Add several fixes and improvements to the `TKDE` class using kernel estimation for estimating a density from data.
-- Improve `TF1::GetRandom`, `TH1::GetRandom` and `TH1::FillRandom`  (and same for TF2,TF3, TH2 and TH3 functions) to pass optionally a random number generator instance. This allows to use these
-function with a user provided random number generator instead of using the default `gRandom`.  
 
 ## Math Libraries
 
@@ -204,27 +188,11 @@ function with a user provided random number generator instead of using the defau
   `RVec <-> std::vector` conversion rather than writing `RVec`s to disk. Note that, currently, `RVecs` written e.g. in a `TTree` cannot be read back
   using certain ROOT interfaces (e.g. `TTreeReaderArray`, `RDataFrame` and the experimental `RNTuple`). All these limitations will be lifted in v6.26.
 - Portable implementation of the RANLUX++ generator, see [RanluxppEngine](https://root.cern/doc/master/classROOT_1_1Math_1_1RanluxppEngine.html) and [our blog post](https://root.cern/blog/ranluxpp/).
-- Change `TRandom3::GetSeed` to return the current state element in the contained seed vector of TRandom3. The return value will now change after every call of `TRandom3::Rndm` (when generating a random number). Before the function was returning the first element of the state, which was changing only after 624 calls to `Rndm()`.
-- Fix a bug in `ROOT::Fit::BinData` copy constructor
-- Fix a bug in applying a correction factor used for the computation of the fit confidence level in `ROOT::Fit::FitResult`.
-- TMatrix: optimize implementation of `TPrincipal::AddRow` that is heavily used by CMS.
-
-### Minuit2
-
-- Add a new improved message logging system. Debug message now can be enabled in Minuit2 when using maximum print level.
-- When using external provided gradient, compute in MnSeed still numerical gradients to obtain correct step sizes and  initial estimate of covariance matrix. This allows to start with a good first state estimation, reducing significantly the number of  subsequent iterations.
 
 ## TMVA
 
 - Introducing TMVA PyTorch Interface, a method to use PyTorch internally with TMVA for deep learning. This can be used as an alternative to PyKeras Interface for complex models providing more flexibility and power.
-- Add support in the TMVA Keras interface for Tensorflow.Keras (the version embedded in Tensorflow) and for standalone Keras versions up to it latest 2.3. For using  Tensorflow.Keras one needs to use
-the booking option `tf.keras=True`.
-- Update the TMVA Keras tutorials to use now tensorflow.keras.
-- Deprecate the MethodDNN in favour of MethodDL supporting both CNN and RNN
-- Add possibility to customize all relevant minimizer parameters used for training in MethodDL
-- Add support in MethodDL for the Cudnn version 8 when using the Cuda implementation for CNN and RNN Minuit2
-- Implement the missing support for MethodCategory for multiclass classifiers.
-- Add possibility to retrieve a ROC curve made with the training dataset instead of the default test dataset.
+
 
 ## RooFit Libraries
 
@@ -238,9 +206,7 @@ the booking option `tf.keras=True`.
   These points will be skipped, and HypoTestInverter can continue.
 - Tweak pull / residual plots. ROOT automatically zoomed out a bit when a pull / residual plot is created. Now, the
   axis range of the original plot is transferred to the residual plot, so the pulls can be drawn below the main plot.
-- Improve plotting of `RooBinSamplingPdf`
-- Print a Warning message when the `RooAddPdf` is evaluated without passing a normalization set and the class has not a normalization set defined.
- Without a normalization set the `RooAddPdf` is not properly defined and its shape will be different depending on which normalization range is used.
+
 
 ### Massive speed up of RooFit's `BatchMode` on CPUs with vector extensions
 
@@ -266,6 +232,7 @@ The library that contains the optimised computation functions is called `RooBatc
 #### Benefiting from batch computations by overriding `evaluateSpan()`
 
 For PDFs that are not part of RooFit, it is possible to benefit from batch computations without vector extensions. To do so, consult the [RooBatchCompute readme](https://github.com/root-project/root/tree/v6-24-00-patches/roofit/batchcompute).
+
 
 #### Migrating PDFs that override the deprecated `evaluateBatch()`
 
@@ -339,17 +306,17 @@ or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details 
 
 - Reduced side effects. This code produces undefined behaviour because the side effect of `get(i)`, i.e., loading the new weight into `_curWeight`
   is not guaranteed to happen before `weight()` is called:
-```c++
+```
   processEvent(dataHist.get(i), dataHist.weight()); // Dangerous! Order of evaluation is not guaranteed.
 ```
   With the modernised interface, one would use:
-```c++
+```
   processEvent(dataHist.get(i), dataHist.weight(i));
 ```
   To modernise old code, one should replace patterns like `h.get(i); h.func()` by `h.func(i);`. One may `#define R__SUGGEST_NEW_INTERFACE` to switch on
   deprecation warnings for the functions in question.
   Similarly, the bin content can now be set using an index, making prior loading of a certain coordinate unnecessary:
-```diff
+```
    for (int i=0 ; i<hist->numEntries() ; i++) {
 -    hist->get(i) ;
 -    hist->set(hist->weight() / sum);
@@ -358,7 +325,7 @@ or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details 
 ```
 - More const correctness. `calcTreeIndex()` doesn't rely on side effects, any more. Instead of overwriting the internal
   coordinates with new values:
-```c++
+```
   // In a RooDataHist subclass:
   _vars = externalCoordinates;
   auto index = calcTreeIndex();
@@ -367,7 +334,7 @@ or better `get_wgt(i)`, which were also supported in ROOT \<v6.24. More details 
   auto index = dataHist.getIndex(externalCoordinates); // Side effect: Active bin is now `index`.
 ```
   coordinates are now passed into calcTreeIndex without side effects:
-```c++
+```
   // In a subclass:
   auto index = calcTreeIndex(externalCoordinates, fast=<true/false>); // No side effect
 
@@ -387,16 +354,16 @@ These two overloads previously behaved inconsistently when the `correctForBinSiz
 If you use the `RooDataHist::sum()` function in you own classes, please check that it can still be used with its new logic.
 The new and corrected bin correction behaviour is:
 
-- `correctForBinSize`: multiply counts in each bin by the bin volume corresponding to the variables in `sumSet`
-- `inverseBinCor`: divide counts in each bin by the bin volume corresponding to the variables *not* in `sumSet`
+  - `correctForBinSize`: multiply counts in each bin by the bin volume corresponding to the variables in `sumSet`
+  - `inverseBinCor`: divide counts in each bin by the bin volume corresponding to the variables *not* in `sumSet`
 
 ### New fully parametrised Crystal Ball shape class
 
 So far, the Crystal Ball distribution has been represented in RooFit only by the `RooCBShape` class, which has a Gaussian core and a single power-law tail on one side.
 This release introduces [`RooCrystalBall`](https://root.cern/doc/v624/classRooCrystalBall.html), which implements some common generalizations of the Crystal Ball shape:
 
-- symmetric or asymmetric power-law tails on both sides
-- different width parameters for the left and right sides of the Gaussian core
+  - symmetric or asymmetric power-law tails on both sides
+  - different width parameters for the left and right sides of the Gaussian core
 
 The new `RooCrystalBall` class can substitute the `RooDSCBShape` and `RooSDSCBShape`, which were passed around in the community.
 
@@ -405,7 +372,15 @@ The new `RooCrystalBall` class can substitute the `RooDSCBShape` and `RooSDSCBSh
 - Add the method `AddPoint`to `TGraph(x,y)` and `TGraph2D(x,y,z)`, equivalent to `SetPoint(g->GetN(),x,y)`and `SetPoint(g->GetN(),x,y,z)`
 - Option `E0` draws error bars and markers are drawn for bins with 0 contents. Now, combined
   with options E1 and E2, it avoids error bars clipping.
-- Fix `TAxis::ChangeLabel` for vertical axes and 3D plots
+
+## 3D Graphics Libraries
+
+
+## Geometry Libraries
+
+
+## Database Libraries
+
 
 ## Networking Libraries
 
@@ -424,16 +399,12 @@ this makes usage of webgui components in public networks more secure.
 
 ### Enabled WLCG Bearer Tokens support in RDavix
 
-Bearer tokens are part of WLCG capability-based infrastructure with capability-based scheme which uses an infrastructure that describes what the bearer is allowed to do as opposed to who that bearer is. Token discovery procedure are developed according to the [WLCG Bearer Token Discovery specification document](https://github.com/WLCG-AuthZ-WG/bearer-token-discovery/blob/master/specification.md). Short overview:
+Bearer tokens are part of WLCG capability-based infrastructure with capability-based scheme which uses an infrastructure that describes what the bearer is allowed to do as opposed to who that bearer is. Token discovery procedure are developed according WLCG Bearer Token Discovery specification document (https://github.com/WLCG-AuthZ-WG/bearer-token-discovery/blob/master/specification.md). Short overview:
 
    1. If the `BEARER_TOKEN` environment variable is set, then the value is taken to be the token contents.
    2. If the `BEARER_TOKEN_FILE` environment variable is set, then its value is interpreted as a filename. The contents of the specified file are taken to be the token contents.
    3. If the `XDG_RUNTIME_DIR` environment variable is set, then take the token from the contents of `$XDG_RUNTIME_DIR/bt_u$ID`(this additional location is intended to provide improved security for shared login environments as `$XDG_RUNTIME_DIR` is defined to be user-specific as opposed to a system-wide directory.).
    4. Otherwise, take the token from `/tmp/bt_u$ID`.
-
-### Xrootd client support
-
-ROOT can now be built with Xrootd 5 client libraries.
 
 ## GUI Libraries
 
@@ -447,6 +418,16 @@ ROOT can now be built with Xrootd 5 client libraries.
 - rbrowser content is fully recovered when web-browser is reloaded
 - load of widgets code only when really required (shorter startup time for RBrowser)
 
+
+## Montecarlo Libraries
+
+
+## PROOF Libraries
+
+
+## Language Bindings
+
+
 ## JavaScript ROOT
 
 ### Major JSROOT update to version 6
@@ -456,13 +437,14 @@ ROOT can now be built with Xrootd 5 client libraries.
 - change scripts names, core scripts name now `JSRoot.core.js`
 - unify function/methods naming conventions, many changes in method names
 - provide central code loader via `JSROOT.require`, supporting 4 different loading engines
-- many nice features and many bug fixes; see [JSROOT v6 release notes](https://github.com/root-project/jsroot/blob/master/changes.md#changes-in-600)
+- many nice features and many bug fixes; see JSROOT v6 release notes
+
+
+## Tutorials
+
 
 ## Class Reference Guide
 
-One can now select a class's documentation for a specific version.
-If a class does not exist in a given version, that version is grayed out,
-see for instance the documentation for [`ROOT::Experimental::RNTupleReader`](https://root.cern/doc/master/classROOT_1_1Experimental_1_1RNTupleReader.html).
 
 ## Build, Configuration and Testing Infrastructure
 
@@ -473,311 +455,7 @@ see for instance the documentation for [`ROOT::Experimental::RNTupleReader`](htt
 The following builtins have been updated:
 
 - VecCore 0.7.0
-- LZ4 1.9.3
-- openui5
-- Xrootd 4.12.8
-- Zstd   1.4.8
 
 ## PyROOT
 
 - Deprecate `TTree.AsMatrix` in this release and mark for removal in v6.26. Please use instead `RDataFrame.AsNumpy`.
-
-## Bugs and Issues fixed in this release
-
-- [[ROOT-9790](https://sft.its.cern.ch/jira/browse/ROOT-9790)] - [DF] Lazy jitting of Cache and Snapshot
-- [[ROOT-3579](https://sft.its.cern.ch/jira/browse/ROOT-3579)] - `RooTreeDataStore` not Cloning the tree properly (and const correctness)
-- [[ROOT-3635](https://sft.its.cern.ch/jira/browse/ROOT-3635)] - integration for PDF value in binned fit
-- [[ROOT-3874](https://sft.its.cern.ch/jira/browse/ROOT-3874)] - problem with binned likelihood fit in RooFit
-- [[ROOT-5334](https://sft.its.cern.ch/jira/browse/ROOT-5334)] - RooFit  `RooAbsPdf::getLogVal()` returns `log((double)0)` (==inf !)  
-- [[ROOT-5380](https://sft.its.cern.ch/jira/browse/ROOT-5380)] - 2D fit not converging when using `RooProdPDF` and `RooFFTConvPdf`
-- [[ROOT-5464](https://sft.its.cern.ch/jira/browse/ROOT-5464)] - `GetEntries` reports warning when friend chain with index
-- [[ROOT-6505](https://sft.its.cern.ch/jira/browse/ROOT-6505)] - ROOT fails to read a file with particular branch names interactively
-- [[ROOT-6892](https://sft.its.cern.ch/jira/browse/ROOT-6892)] - Memory leak in `TSocket::SendProcessIDs`
-- [[ROOT-7182](https://sft.its.cern.ch/jira/browse/ROOT-7182)] - `gSystem->cd` has negative effect on `TFile` with relative path
-- [[ROOT-7199](https://sft.its.cern.ch/jira/browse/ROOT-7199)] - Clang error dumping Expr originated by a typo at the prompt
-- [[ROOT-7506](https://sft.its.cern.ch/jira/browse/ROOT-7506)] - Problem with axis in `TMVAMultiClassGui` when showing "Classifier Output Distributions"
-- [[ROOT-7507](https://sft.its.cern.ch/jira/browse/ROOT-7507)] - Setting number of signal or background events by hand does not update the numbers
-- [[ROOT-7720](https://sft.its.cern.ch/jira/browse/ROOT-7720)] - Bug in the caching optimisation  when fitting with a `RooProdPdf`
-- [[ROOT-7894](https://sft.its.cern.ch/jira/browse/ROOT-7894)] - `hadd` bug for `TProfile` with alphanumeric  bin labels
-- [[ROOT-8095](https://sft.its.cern.ch/jira/browse/ROOT-8095)] - `TGraph::GetHistogram` needlessly removes identically named objects from directory
-- [[ROOT-8133](https://sft.its.cern.ch/jira/browse/ROOT-8133)] - `TROOT::ProcessLine`: `TString::Replace` out of range
-- [[ROOT-8173](https://sft.its.cern.ch/jira/browse/ROOT-8173)] - `RooStreamParser` not working for float number with negative exponent
-- [[ROOT-8331](https://sft.its.cern.ch/jira/browse/ROOT-8331)] - Error in the member function `Multiply(const Double_t *vin, Double_t* vout, Double_t w)` in `TEveTrans` of Eve package
-- [[ROOT-8489](https://sft.its.cern.ch/jira/browse/ROOT-8489)] - Toy generation using `RooCBShape` with conditional PDF
-- [[ROOT-8497](https://sft.its.cern.ch/jira/browse/ROOT-8497)] - Wrong likelihood is computed for RooProdPdf containing a `RooFFTConvPdf`
-- [[ROOT-8535](https://sft.its.cern.ch/jira/browse/ROOT-8535)] - Non unique UUID
-- [[ROOT-8885](https://sft.its.cern.ch/jira/browse/ROOT-8885)] - Cannot create a branch of `long`, `unsigned long`, `std::size_t` types
-- [[ROOT-9062](https://sft.its.cern.ch/jira/browse/ROOT-9062)] - `$HOME` is not automatically extended in `TCling`
-- [[ROOT-9240](https://sft.its.cern.ch/jira/browse/ROOT-9240)] - Compiled program with `libNew.so` crash
-- [[ROOT-9324](https://sft.its.cern.ch/jira/browse/ROOT-9324)] - [cling] segfault when calling `cout` both from jitted and compiled code
-- [[ROOT-9483](https://sft.its.cern.ch/jira/browse/ROOT-9483)] - `TMVAGui::mvaeffs` crashes when compiled stand-alone
-- [[ROOT-9497](https://sft.its.cern.ch/jira/browse/ROOT-9497)] - `TCling::Calc()` must not abort
-- [[ROOT-9563](https://sft.its.cern.ch/jira/browse/ROOT-9563)] - [TreeProcMT] Trees in subdirectories are not supported (and their usage lead to a crash)
-- [[ROOT-9583](https://sft.its.cern.ch/jira/browse/ROOT-9583)] - `TF1::Random`
-- [[ROOT-9674](https://sft.its.cern.ch/jira/browse/ROOT-9674)] - [DF] Wrong branch type inference in some cases
-- [[ROOT-9731](https://sft.its.cern.ch/jira/browse/ROOT-9731)] - [DF] Cannot read columns holding `TVector3` pointers
-- [[ROOT-9975](https://sft.its.cern.ch/jira/browse/ROOT-9975)] - [DF] Cannot access certain sub-branches
-- [[ROOT-9977](https://sft.its.cern.ch/jira/browse/ROOT-9977)] - [DF] `SaveGraph` produces an empty graph
-- [[ROOT-10023](https://sft.its.cern.ch/jira/browse/ROOT-10023)] - [TTreeReader] Unable to read `TBranchObject`
-- [[ROOT-10152](https://sft.its.cern.ch/jira/browse/ROOT-10152)] - [DF] Cannot analyze friend trees in subdirectories with MT
-- [[ROOT-10215](https://sft.its.cern.ch/jira/browse/ROOT-10215)] - `RDataFrame` can't Snapshot an `std::array`
-- [[ROOT-10464](https://sft.its.cern.ch/jira/browse/ROOT-10464)] - TBB Deprecation Warning
-- [[ROOT-10468](https://sft.its.cern.ch/jira/browse/ROOT-10468)] - Crash when users rootlogon contains std::cout in embedded python
-- [[ROOT-10499](https://sft.its.cern.ch/jira/browse/ROOT-10499)] - `TROOT::ProcessLine("cout ...")` crashes when called from compiled code
-- [[ROOT-10623](https://sft.its.cern.ch/jira/browse/ROOT-10623)] - Functions `TF2::Moment2`, `TF2::CentralMoment2`, and similar for `TF3` work only for Formula based object
-- [[ROOT-10639](https://sft.its.cern.ch/jira/browse/ROOT-10639)] - [DF] Handle errors in opening `Snapshot` output files
-- [[ROOT-10663](https://sft.its.cern.ch/jira/browse/ROOT-10663)] - ROOT dictionary for ATLAS persistent class can't load correctly
-- [[ROOT-10692](https://sft.its.cern.ch/jira/browse/ROOT-10692)] - CMake should use system default C++ standard
-- [[ROOT-10702](https://sft.its.cern.ch/jira/browse/ROOT-10702)] - [TTree] Wrong data could be silently written if data-member of object has same name as another branch
-- [[ROOT-10703](https://sft.its.cern.ch/jira/browse/ROOT-10703)] - `TCling` fails to catch compiled exception on Mac OS
-- [[ROOT-10752](https://sft.its.cern.ch/jira/browse/ROOT-10752)] - segmentation violation in `TFractionFitter` destructor
-- [[ROOT-10753](https://sft.its.cern.ch/jira/browse/ROOT-10753)] - [TTreeReader] Wrong entries are loaded in case of `TChain`+`TEntryList`
-- [[ROOT-10762](https://sft.its.cern.ch/jira/browse/ROOT-10762)] - [MT] Concurrent construction (or destruction?) of two different `TThreadedExecutors` is racy
-- [[ROOT-10776](https://sft.its.cern.ch/jira/browse/ROOT-10776)] - Fail compilation
-- [[ROOT-10779](https://sft.its.cern.ch/jira/browse/ROOT-10779)] - `HistFactory` models that are written to a file, then retrieved with updated histograms find only old histograms
-- [[ROOT-10782](https://sft.its.cern.ch/jira/browse/ROOT-10782)] - With gcc10 STL headers don't include implicitly `stdexcept`
-- [[ROOT-10784](https://sft.its.cern.ch/jira/browse/ROOT-10784)] - Mistake in what is reported in documentation
-- [[ROOT-10790](https://sft.its.cern.ch/jira/browse/ROOT-10790)] - [DF] Single-thread `Snapshot` into a directory also creates a spurious `TTree` outside of it
-- [[ROOT-10792](https://sft.its.cern.ch/jira/browse/ROOT-10792)] - [DF] `Snapshot` of `TClonesArrays` read via `TTreeReaderArray` is broken
-- [[ROOT-10800](https://sft.its.cern.ch/jira/browse/ROOT-10800)] - `TClass::GetListOfAllPublicMethods()` lists deleted copy constructor of `std::unique_ptr`
-- [[ROOT-10804](https://sft.its.cern.ch/jira/browse/ROOT-10804)] - assertion in `clang::Sema::LookupSpecialMember`
-- [[ROOT-10810](https://sft.its.cern.ch/jira/browse/ROOT-10810)] - Segmentation fault in pickling of  weighted RooFit datasets
-- [[ROOT-10815](https://sft.its.cern.ch/jira/browse/ROOT-10815)] - Error in parsing  `TFormula` expression using pre-defined functions in function names
-- [[ROOT-10822](https://sft.its.cern.ch/jira/browse/ROOT-10822)] - [DF] `RVec`s of non-split branches can read from invalid addresses
-- [[ROOT-10824](https://sft.its.cern.ch/jira/browse/ROOT-10824)] - [TTreeReader] Reading entries from a friend with a `TTreeIndex` results in wrong entries silently read, or an infinite event loop
-- [[ROOT-10835](https://sft.its.cern.ch/jira/browse/ROOT-10835)] - zero/zero computed in test case `stressRooStats`
-- [[ROOT-10837](https://sft.its.cern.ch/jira/browse/ROOT-10837)] - `hadd` crashes when slow merging file with multiple array with same index
-- [[ROOT-10839](https://sft.its.cern.ch/jira/browse/ROOT-10839)] - Missing lock guard in `THashTable`
-- [[ROOT-10845](https://sft.its.cern.ch/jira/browse/ROOT-10845)] - `RooArgSet` `IsOnHeap` result incorrect
-- [[ROOT-10846](https://sft.its.cern.ch/jira/browse/ROOT-10846)] - `TPython` documentation is gone
-- [[ROOT-10849](https://sft.its.cern.ch/jira/browse/ROOT-10849)] - Recursive ASTReader assertion Fedora32 C++17
-- [[ROOT-10880](https://sft.its.cern.ch/jira/browse/ROOT-10880)] - df007*py broken
-- [[ROOT-10882](https://sft.its.cern.ch/jira/browse/ROOT-10882)] - Drawing crashes when histogram title contain special characters
-- [[ROOT-10884](https://sft.its.cern.ch/jira/browse/ROOT-10884)] - Error importing JupyROOT with conda ROOT
-- [[ROOT-10886](https://sft.its.cern.ch/jira/browse/ROOT-10886)] - 6.22/00 Build failure with Clang 7.0.0 on SL7 with `-Druntime_cxxmodules:BOOL=ON`
-- [[ROOT-10889](https://sft.its.cern.ch/jira/browse/ROOT-10889)] - [RDF] Unexpected/broken behaviour of the `Display` action
-- [[ROOT-10890](https://sft.its.cern.ch/jira/browse/ROOT-10890)] - `TMath::Gcgs()` problem
-- [[ROOT-10891](https://sft.its.cern.ch/jira/browse/ROOT-10891)] - [DF] `Display` of `char*` branches is broken
-- [[ROOT-10895](https://sft.its.cern.ch/jira/browse/ROOT-10895)] - ROOT version 6.20/06: Instantiating `TPythia8` brings program to halt
-- [[ROOT-10896](https://sft.its.cern.ch/jira/browse/ROOT-10896)] - IMT `Snapshot` segfault when `TTree` switches over multiple files
-- [[ROOT-10912](https://sft.its.cern.ch/jira/browse/ROOT-10912)] - Regression in standalone roottest: `cppyy_backend` cannot be imported
-- [[ROOT-10913](https://sft.its.cern.ch/jira/browse/ROOT-10913)] - `RooCategory` doesn't update its label when its state is dirty.
-- [[ROOT-10917](https://sft.its.cern.ch/jira/browse/ROOT-10917)] - prompt: pressing ctrl-R when no root_hist file is present results in a segfault
-- [[ROOT-10925](https://sft.its.cern.ch/jira/browse/ROOT-10925)] - Can not compile ROOT macro on Windows
-- [[ROOT-10927](https://sft.its.cern.ch/jira/browse/ROOT-10927)] - Dramatic increase of memory usage while reading trees containing histograms
-- [[ROOT-10931](https://sft.its.cern.ch/jira/browse/ROOT-10931)] - Polygon doesn't close when drawing PDF as filled curve
-- [[ROOT-10935](https://sft.its.cern.ch/jira/browse/ROOT-10935)] - `RooDataSet::read()` no longer accepts `RooCategory` numbers
-- [[ROOT-10936](https://sft.its.cern.ch/jira/browse/ROOT-10936)] - Build fails with cuDNN 8
-- [[ROOT-10942](https://sft.its.cern.ch/jira/browse/ROOT-10942)] - [DF] Regression in recognition of nested branch names
-- [[ROOT-10944](https://sft.its.cern.ch/jira/browse/ROOT-10944)] - hadd: wrong `TH2` sum with x-labels only
-- [[ROOT-10946](https://sft.its.cern.ch/jira/browse/ROOT-10946)] - Error messages from `RooMomentMorphND`
-- [[ROOT-10956](https://sft.its.cern.ch/jira/browse/ROOT-10956)] - New jupyroot missing jupyterlab fixes in pyroot_legacy - Causes jsroot to fail in jupyterlab
-- [[ROOT-10962](https://sft.its.cern.ch/jira/browse/ROOT-10962)] - Uncaught exceptions from `RDataFrame` operations exit root prompt.
-- [[ROOT-10963](https://sft.its.cern.ch/jira/browse/ROOT-10963)] - [Tree] `TLeaf::GetName` and `TLeaf::GetFullName` disagree on leaf name
-- [[ROOT-10964](https://sft.its.cern.ch/jira/browse/ROOT-10964)] - `README/INSTALL` should point to web
-- [[ROOT-10969](https://sft.its.cern.ch/jira/browse/ROOT-10969)] - Can not compile ROOT macro on Win10: picking up paths to other SW
-- [[ROOT-10982](https://sft.its.cern.ch/jira/browse/ROOT-10982)] - ODR Violation in TMVA
-- [[ROOT-10987](https://sft.its.cern.ch/jira/browse/ROOT-10987)] - RooFit's caching can lead to wrong results when batch computations used.
-- [[ROOT-10993](https://sft.its.cern.ch/jira/browse/ROOT-10993)] - ROOT fails in loading `nlohmann/json`
-- [[ROOT-10994](https://sft.its.cern.ch/jira/browse/ROOT-10994)] - `TFormula::DoEval` and `DoEvalVec` have a thread safety issue
-- [[ROOT-10995](https://sft.its.cern.ch/jira/browse/ROOT-10995)] - Possible data race in `TFormula::TFormula()` constructor
-- [[ROOT-11000](https://sft.its.cern.ch/jira/browse/ROOT-11000)] - `rootcling` fails for Gaudi classes
-- [[ROOT-11001](https://sft.its.cern.ch/jira/browse/ROOT-11001)] - unable to create `TChain` on ROOT file
-- [[ROOT-11005](https://sft.its.cern.ch/jira/browse/ROOT-11005)] - ROOT crashes when creating a `TCanvas` with `gDebug=1`
-- [[ROOT-11009](https://sft.its.cern.ch/jira/browse/ROOT-11009)] - [RDataFrame] Silent "bugs" with assignment in `Filter` expressions
-- [[ROOT-11013](https://sft.its.cern.ch/jira/browse/ROOT-11013)] - "Impossible code path" in `TGenCollectionProxy.cxx` when using `rootcling`
-- [[ROOT-11015](https://sft.its.cern.ch/jira/browse/ROOT-11015)] - OpenGL rendering is incorrect for "pgon - pgon"
-- [[ROOT-10830](https://sft.its.cern.ch/jira/browse/ROOT-10830)] - `vector<string>` behaviour in loops in PyROOT 6.20 vs 6.22
-- [[ROOT-9559](https://sft.its.cern.ch/jira/browse/ROOT-9559)] - [DF] Treat indexed Friend trees
-- [[ROOT-10832](https://sft.its.cern.ch/jira/browse/ROOT-10832)] - Make `TH1::GetCumulative` account for underflows and overflows
-- [[ROOT-8013](https://sft.its.cern.ch/jira/browse/ROOT-8013)] - equalising roofit tutorials for easier digestion
-- [[ROOT-8142](https://sft.its.cern.ch/jira/browse/ROOT-8142)] - Provide corrupt line when XML parsing fails
-- [[ROOT-10022](https://sft.its.cern.ch/jira/browse/ROOT-10022)] - [DF] Add support for `TBranchObjects` (e.g. branches containing `TH2F`)
-- [[ROOT-10781](https://sft.its.cern.ch/jira/browse/ROOT-10781)] - Performance penalty from `RooRealVar` not allowing to use hash table on `RooLinkedList` member
-- [[#6408](https://github.com/root-project/root/issues/6408)] - Creating `RooDataSet` causes SegFault
-- [[#6529](https://github.com/root-project/root/issues/6529)] - segfault in `RooWorkspace::import`
-- [[#6489](https://github.com/root-project/root/issues/6489)] - Test Issue
-- [[#6540](https://github.com/root-project/root/issues/6540)] - Crash message should point to github
-- [[#6479](https://github.com/root-project/root/issues/6479)] - [TMVA] `TMVAGui` functions crash in batch mode
-- [[#6553](https://github.com/root-project/root/issues/6553)] - [TMVA] Provide support in `MethodPyKeras` for tensorflow.keras
-- [[#6403](https://github.com/root-project/root/issues/6403)] - [Hist] Bugs in `TProfile`,`TProfile2D::LabelsOption`
-- [[#6527](https://github.com/root-project/root/issues/6527)] - Double delete error with `TTree::ChangeFile` and a `TFile` on the stack
-- [[#6455](https://github.com/root-project/root/issues/6455)] - [DF] `RDataSource` does not early-quit event loops when all Ranges are exhausted
-- [[#6435](https://github.com/root-project/root/issues/6435)] - [DF] Jitted `Min` method breaks with `RVec` columns
-- [[#6425](https://github.com/root-project/root/issues/6425)] - Typo in void `TEnv::SetValue(const char *name, double value)` implementation
-- [[#6406](https://github.com/root-project/root/issues/6406)] - root7 is turned off by default even if the default C++ standard of the compiler is C++14 or above
-- [[#6371](https://github.com/root-project/root/issues/6371)] - [DF] `Display` doesn't work with non-top-level `TTree` branches
-- [[#6448](https://github.com/root-project/root/issues/6448)] - Disable `NDEBUG` for PR builds
-- [[#6482](https://github.com/root-project/root/issues/6482)] - `TClass::GetListOfFunctions()` fails to enumerate using decls.
-- [[#6393](https://github.com/root-project/root/issues/6393)] - `PyROOT` cannot call templated ctors on Windows
-- [[#6359](https://github.com/root-project/root/issues/6359)] - python: /workspace/build/projects/ROOT-HEAD/src/ROOT/HEAD/interpreter/llvm/src/include/llvm/Support/Casting.h:106: `static bool llvm::isa_impl_cl<To, const From*>::doit(const From*) [with To = clang::UsingDecl; From = clang::Decl]`: Assertion `Val && "isa<> used on a null pointer"` failed.
-- [[#6350](https://github.com/root-project/root/issues/6350)] - When in-memory `TTree` are written, they are not compressed.
-- [[#6453](https://github.com/root-project/root/issues/6453)] - Potential null pointer dereference in `TPad::Close`
-- [[#6449](https://github.com/root-project/root/issues/6449)] - Floating point exception in `TPad` (part 3)
-- [[#6578](https://github.com/root-project/root/issues/6578)] - Using declaration of `TGMainFrame` constructor not taken into account
-- [[#6381](https://github.com/root-project/root/issues/6381)] - `TH3` missing labels
-- [[#6379](https://github.com/root-project/root/issues/6379)] - Floating point exception in `TCanvas`
-- [[#6374](https://github.com/root-project/root/issues/6374)] - Floating point exception in `TPad`
-- [[#6642](https://github.com/root-project/root/issues/6642)] - `THStack` behaviour is not aligned with behaviour of other objects when drawing - TopMargin is non-zero
-- [[#6446](https://github.com/root-project/root/issues/6446)] - Possible Null pointer dereference in `TPad`
-- [[#6375](https://github.com/root-project/root/issues/6375)] - Segmentation violation in `TPaveLabel` class
-- [[#6552](https://github.com/root-project/root/issues/6552)] - PyROOT (de)serialization using pickle (or  dill)  fails without pre-import of ROOT for new PyROOT
-- [[#6468](https://github.com/root-project/root/issues/6468)] - 6.22 PyROOT seg faults when accessing array members
-- [[#6675](https://github.com/root-project/root/issues/6675)] - Jitted `RDataFrame.Histo1D` broken for `vector<bool>` types
-- [[#6465](https://github.com/root-project/root/issues/6465)] - ROOT signed-char conversion issue on AARCH64
-- [[#6666](https://github.com/root-project/root/issues/6666)] - `TClass::GetListOfDataMembers` returns an empty list even-though the information is available.
-- [[#6725](https://github.com/root-project/root/issues/6725)] - rootpcm does not record `TEnum`'s underlying type
-- [[#6726](https://github.com/root-project/root/issues/6726)] - `TStreamerInfo::GenerateInfoForPair` generates the wrong offset if an enum type is first.
-- [[#6670](https://github.com/root-project/root/issues/6670)] - segfault in `TClass::InheritsFrom()` depending on linking order
-- [[#6443](https://github.com/root-project/root/issues/6443)] - Spurrious auto-parsing (as seen with CMS file and libraries)
-- [[#6509](https://github.com/root-project/root/issues/6509)] - [ROOT I/O] Warning: writing 1 byte into a region of size 0
-- [[#6597](https://github.com/root-project/root/issues/6597)] - pytest shipped in roottest is not compatible with py3.9
-- [[#6677](https://github.com/root-project/root/issues/6677)] - [bug] Clang builds ROOT libraries that emit FPEs
-- [[#6784](https://github.com/root-project/root/issues/6784)] - external `nlohmann/json.hpp` is not forwarded as dependency or should be linked PRIVATE?
-- [[#6523](https://github.com/root-project/root/issues/6523)] - `TBufferMerger` cannot handle `TTree` spanning over multiple files
-- [[#6743](https://github.com/root-project/root/issues/6743)] - ROOT crashes with no helpful error messages if a `TApplication` is not present and `tree->StartViewer()` is called
-- [[#6840](https://github.com/root-project/root/issues/6840)] - `TClass` for pair sometimes have the wrong offset/size
-- [[#6839](https://github.com/root-project/root/issues/6839)] - Compilation fails on macosx 11.0 with arm processor
-- [[#6838](https://github.com/root-project/root/issues/6838)] - `build/unix/compiledata.sh` assumes macOS will always have major version 10
-- [[#6817](https://github.com/root-project/root/issues/6817)] - macOS packaging broken in master
-- [[#6856](https://github.com/root-project/root/issues/6856)] - error when creating a python class inheriting from a ROOT class, 6.22/02
-- [[#6797](https://github.com/root-project/root/issues/6797)] - `TCling::UpdateListOfLoadedSharedLibraries()` Linux thread safety
-- [[#6483](https://github.com/root-project/root/issues/6483)] - [GUI] Crashes when creating `TGClient` in a standalone application
-- [[#6563](https://github.com/root-project/root/issues/6563)] - Test failures on MacOS with Xcode 12
-- [[#6624](https://github.com/root-project/root/issues/6624)] - `TRandom`: signature mismatch between getter and setter
-- [[#6815](https://github.com/root-project/root/issues/6815)] - PowerShell version of `thisroot.bat`
-- [[#6853](https://github.com/root-project/root/issues/6853)] - [DF] `SaveGraph` can be confused by shared upstream `Defines`
-- [[#6731](https://github.com/root-project/root/issues/6731)] - Compilation error on CentOS 7 of root V6.22.02 c++17
-- [[#6974](https://github.com/root-project/root/issues/6974)] -  pyROOT doesn't work with `ipyparallel`
-- [[#6964](https://github.com/root-project/root/issues/6964)] - [TTree] `GetLeaf` ignores the branchname arg if friend trees are present
-- [[#6944](https://github.com/root-project/root/issues/6944)] - `RDataFrame` misidentifies `vector<XYZTVector>` type of a friend tree with identical branch name to another friend tree
-- [[#6345](https://github.com/root-project/root/issues/6345)] - 6.22.00 pyroot regression: Can't derive from `TProfile`.
-- [[#6903](https://github.com/root-project/root/issues/6903)] - Builtin TBB is broken on MacOS M1
-- [[#7016](https://github.com/root-project/root/issues/7016)] - Memory leak during schema evolution of some classes
-- [[#6993](https://github.com/root-project/root/issues/6993)] - [TTreeReader] Segfault when reading branch of "automatically loaded" friend
-- [[#6741](https://github.com/root-project/root/issues/6741)] - [DF] When dataset is specified as treename/filename, the `TTree` is read without its friends
-- [[#6470](https://github.com/root-project/root/issues/6470)] - PyROOT:  virtual  C++ method overriden in python ignored with further inheritance chain  
-- [[#7058](https://github.com/root-project/root/issues/7058)] - [DF] crash when asking for type of aliased columns
-- [[#6848](https://github.com/root-project/root/issues/6848)] - [DF] Warnings printed from `Snapshot` of a `TChain` when no entry passes upstream `Filters`
-- [[#6518](https://github.com/root-project/root/issues/6518)] - [TreeReader] When looping over a `TTree` with a friend with a larger number of entries, the loop spans all entries in the friend
-- [[#7143](https://github.com/root-project/root/issues/7143)] - `TTreeProcessorMT`: Fails when iterating over different treenames within same ROOT file
-- [[#7039](https://github.com/root-project/root/issues/7039)] - `TExecutor`: handling of non-IMT/... case
-- [[#6933](https://github.com/root-project/root/issues/6933)] - ROOT 6.22 should reject TBB 2021.1.1 and above during configuration (fails to compile)
-- [[#6765](https://github.com/root-project/root/issues/6765)] - PyROOT breaks if ROOT objects are unpickled in a multiprocess environment
-- [[#6915](https://github.com/root-project/root/issues/6915)] - `roottest-python-regression-regression` requires OpenGL but still run when it is disable
-- [[#6472](https://github.com/root-project/root/issues/6472)] - `TThreadExecutor::Map` should be able to accept `const std::vector` arguments
-- [[#6363](https://github.com/root-project/root/issues/6363)] - [IMT] `ROOT::GetThreadPoolSize` does not reflect tbb::global_control settings
-- [[#7055](https://github.com/root-project/root/issues/7055)] - Fatal error after running `make install` when built against LLVM 9
-- [[#7067](https://github.com/root-project/root/issues/7067)] - RooFit `RooAbsArg::graphVizTree` produces invalid dot files for graph titles including spaces
-- [[#7115](https://github.com/root-project/root/issues/7115)] - `regex_error` when selecting pdf components to plot
-- [[#7164](https://github.com/root-project/root/issues/7164)] - `TGSpeedo` mean value calculation
-- [[#7195](https://github.com/root-project/root/issues/7195)] - ROOT crash when parameter by value passed to slot: `StrDup`
-- [[#7240](https://github.com/root-project/root/issues/7240)] - [RF] Batch mode returns broken logarithms when `-DVDT=OFF`
-- [[#7180](https://github.com/root-project/root/issues/7180)] - `TGCommandLinePlugin` Up-Down Arrows and Tab Keys
-- [[#7181](https://github.com/root-project/root/issues/7181)] - `RDataFrame` `Snapshot` of friend trees
-- [[#7258](https://github.com/root-project/root/issues/7258)] - [RF] Update crystal ball shapes in RooFit
-- [[#7086](https://github.com/root-project/root/issues/7086)] - [DF] Section of RDF reference guide about RDF+`RVec`
-- [[#7182](https://github.com/root-project/root/issues/7182)] - Range not considered when computing integral of `RooParamHistFunc`
-- [[#7547](https://github.com/root-project/root/issues/7547)] - [DF] Crash in lazy jitted `Snapshot`
-- [[#7010](https://github.com/root-project/root/issues/7010)] - fifo in `$CWD` causes `TCanvas` to hang on macOS
-- [[#7676](https://github.com/root-project/root/issues/7676)] - `hadd` reverses order of object cycles
-- [[#6343](https://github.com/root-project/root/issues/6343)] - Problem with `using namespace std` in generated dictionary files
-- [[#7657](https://github.com/root-project/root/issues/7657)] - New dictionary-related crash in 6.24.00-patches
-- [[#7718](https://github.com/root-project/root/issues/7718)] - PyROOT in root 6.24 branch hangs while loading CMSSW library
-- [[#7090](https://github.com/root-project/root/issues/7090)] - Apple M1: bug in jitting argument of type `short`
-- [[#6802](https://github.com/root-project/root/issues/6802)] - Allow to pass Bearer token authentication header to Davix client
-- [[#7345](https://github.com/root-project/root/issues/7345)] - Issue building built-in `libafterimage`
-- [[#6812](https://github.com/root-project/root/issues/6812)] - root REPL problem with unsigned num assigned to a not declared item
-- [[#7292](https://github.com/root-project/root/issues/7292)] - compilation fails on xrootd: `_STAT_VER` was not declared
-- [[#7481](https://github.com/root-project/root/issues/7481)] - String parse error in `RooSimPdfBuilder.cxx`
-- [[#7433](https://github.com/root-project/root/issues/7433)] - Segmentation fault after quitting Cling in CUDA mode
-- [[#7239](https://github.com/root-project/root/issues/7239)] - [RF] Use integral of PDF curves for pull plots and residuals
-- [[#7390](https://github.com/root-project/root/issues/7390)] - Must not forward declare template specialization with enumerator as template arg
-- [[#7454](https://github.com/root-project/root/issues/7454)] - [RF][Docs] Breaking changes of batch computation interface not documented in release notes
-- [[#7558](https://github.com/root-project/root/issues/7558)] - AfterImage compilation broken with binutils 2.36
-- [[#7507](https://github.com/root-project/root/issues/7507)] - [tree] Possible error in `TLeaf::GetLeafCounter`
-- [[#7361](https://github.com/root-project/root/issues/7361)] - RooFit backend library: force to specific architecture
-- [[#7362](https://github.com/root-project/root/issues/7362)] - Incremental build problems
-- [[#7319](https://github.com/root-project/root/issues/7319)] - [Hist] Wrong computation in `TH3::GetCovariance` for diagonal elements
-- [[#7206](https://github.com/root-project/root/issues/7206)] - Unable to build with `builtin_cling=OFF` for LLVM 9
-- [[#7157](https://github.com/root-project/root/issues/7157)] - `RooFFTConvPdf` doesn't work with `RooProdPdf`
-- [[#7076](https://github.com/root-project/root/issues/7076)] - `RNTuple`, parallel unzip tear down race condition
-- [[#7021](https://github.com/root-project/root/issues/7021)] - cling depends on exact macOS SDK headers
-- [[#6953](https://github.com/root-project/root/issues/6953)] - Missing documentation for `ROOT.RDF.MakeNumpyDataFrame`
-- [[#6421](https://github.com/root-project/root/issues/6421)] - Proposal to unify logging in Minuit2
-- [[#7302](https://github.com/root-project/root/issues/7302)] - `TGraph` copy constructor error
-- [[#7212](https://github.com/root-project/root/issues/7212)] - `TMathText` does not display with high value coordinates
-- [[#6997](https://github.com/root-project/root/issues/6997)] - Fill attribute is not fully reflected in `THStack`
-- [[#6360](https://github.com/root-project/root/issues/6360)] - [Docs] Missing figures in RDF tutorials 10[5,6,7] on doxygen
-- [[#7093](https://github.com/root-project/root/issues/7093)] - Race condition affecting (at least) `TEnum::GetEnum`
-- [[#7054](https://github.com/root-project/root/issues/7054)] - sporadic `roottest-python-cmdLineUtils` failures
-- [[#6939](https://github.com/root-project/root/issues/6939)] - Problems when `TFile` object is opened and closed on different threads.
-- [[#6715](https://github.com/root-project/root/issues/6715)] - [bug] Type overflow in `TMessageHandler`
-- [[#7281](https://github.com/root-project/root/issues/7281)] - Trailing dot dropped in top level branch name
-
-## Release 6.24/02
-
-Published on June 28, 2021
-
-### RDataFrame
-
-- Scaling behavior at high core counts (32+ cores) has been improved (see also [PR #8007](https://github.com/root-project/root/pull/8007)).
-
-### Bugs and Issues fixed in this release
-
-* [[ROOT-9558](https://sft.its.cern.ch/jira/browse/ROOT-9558')] - [DF] RDataFrame Snapshot throws for branches with branch name!=variable name
-* [[ROOT-10625](https://sft.its.cern.ch/jira/browse/ROOT-10625)] - Issues with RDataFrame if name and leaflist of a TBranch are different
-* [[#6881](https://github.com/root-project/root/issues/6881)] - [TTreeReader] Partial leaf/branch names not recognized in cases that TTree::Draw supports
-* [[#7912](https://github.com/root-project/root/issues/7912)] - TStreamerInfo Crash - V5 File Backward incompatibility introduced somewhere since 6.22.00
-* [[#7903](https://github.com/root-project/root/issues/7903)] - Invalid read in `TClassEdit`
-* [[#7890](https://github.com/root-project/root/issues/7890)] - Memory  leak when running FrequentistCalculator scan in RooStats
-* [[#7933](https://github.com/root-project/root/issues/7933)] - Memory leak when using `MemPoolForRooSets`
-* [[#7169](https://github.com/root-project/root/issues/7169)] - RDataFrame and CreatePoxy/TTreeReaderValue error for selection on string branch in Filter method
-* [[#8226](https://github.com/root-project/root/issues/8226)] - [DF] Crash in multi-thread `Snapshot` in sub-directory
-* [[#8276](https://github.com/root-project/root/issues/8276)] - [DF] Possible use after delete of the functor passed to PassAsVec
-* [[#8071](https://github.com/root-project/root/issues/8071)] - Problems compiling root 6.24.00 with gcc 11 on Fedora 34
-* [[#8307](https://github.com/root-project/root/issues/8307)] - Issue with `RooSimultaneous` in 6.24.00 ?
-* [[#8295](https://github.com/root-project/root/issues/8295)] - `TChain::AddClone` failing for sub-branches of branch of type with ClassDef
-* [[#7727](https://github.com/root-project/root/issues/7727)] - `TChain::CopyAddresses`:0 warning in `RDataFrame` `Snapshot` of `TChain` with multiple files with objects
-* [[#6520](https://github.com/root-project/root/issues/6520)] - Integer types not available for Bulk API
-* [[#8317](https://github.com/root-project/root/issues/8317)] - [DF] Compilation failure when a mutable lambda is passed to `Foreach`
-* [[#8155](https://github.com/root-project/root/issues/8155)] - Error opening remote root file LCG_100
-* [[#8280](https://github.com/root-project/root/issues/8280)] - ROOT CMake fails if an external package sets a higher minimum CMake version
-* [[#8281](https://github.com/root-project/root/issues/8281)] - ROOT 6.24 fails to compile with GCC 11.1 in C++11 mode
-* [[#8180](https://github.com/root-project/root/issues/8180)] - ROOT 6.24 breaks Alice O2 due to symbol confusion with system llvm 11
-* [[#8033](https://github.com/root-project/root/issues/8033)] - `StreamerElement` retrieved from file has incorrect element name for (some) arrays.
-* [[#8022](https://github.com/root-project/root/issues/8022)] - TBB exposed in public includes of Thread library
-* [[#7905](https://github.com/root-project/root/issues/7905)] - `sqrt` without `std::` in `Math/GenVector/PxPyPzE4D.h`
-* [[#8196](https://github.com/root-project/root/issues/8196)] - `TUnuranContDist` ctor clones the dpdf but does not use the clone causing a segfault later on
-* [[#8011](https://github.com/root-project/root/issues/8011)] - Bug in `RooAbsPdf::extendedTerm` when expected events is negative
-* [[#8499](https://github.com/root-project/root/issues/8499)] - Dict type alias fwd decl: underlying type not fwd declared
-* [[#6454](https://github.com/root-project/root/issues/6454)] - ROOT fails to parse `<boost/shared_ptr.hpp>` at runtime on macOS
-
-
-## Release 6.24/04
-
-Published on August 26, 2021
-
-### Bugs and Issues fixed in this release
-
-* [[#8503](https://github.com/root-project/root/issues/8503)] - ranluxpp code is using left shift of negative value -1 which is undefined per the C standard
-* [[#8641](https://github.com/root-project/root/issues/8641)] - `RooStats::HypoTestInverterResult::FindIndex` fails if `xvalue == 1`
-* [[#8767](https://github.com/root-project/root/issues/8767)] - [netxng] Crash in on-exit destruction of an `TNetXNGFile` object
-* [[#8739](https://github.com/root-project/root/issues/8739)] - [DF] Cannot read files that don't have a `.root` extension with IMT on
-* [[#8713](https://github.com/root-project/root/issues/8713)] - [tree] `TTreeCache` is turned off when `fAutoFlush == 0`
-
-
-## Release 6.24/06
-
-Published on September 1, 2021
-
-### Bugs and Issues fixed in this release
-
-* [[#8931](https://github.com/root-project/root/issues/8931)] - `TDirectory::RegisterGDirectory` is MT unsafe
-* [[#8011](https://github.com/root-project/root/issues/8011)] - Bug in `RooAbsPdf::extendedTerm` when expected events is negative
-
-## HEAD of the v6-24-00-patches branch
-
-These changes will be part of a future 6.24/08.
-
-- None so far.

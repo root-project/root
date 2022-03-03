@@ -49,6 +49,7 @@ allows a simple partial implementation for new OS'es.
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <sys/stat.h>
@@ -190,7 +191,8 @@ Bool_t TSystem::Init()
    fSignalHandler       = new TOrdCollection;
    fFileHandler         = new TOrdCollection;
    fStdExceptionHandler = new TOrdCollection;
-   fTimers              = new TOrdCollection;
+   fTimers              = new TList;
+   fTimers->UseRWLock();
 
    fBuildArch     = BUILD_ARCH;
    fBuildCompiler = COMPILER;
@@ -358,7 +360,7 @@ loop_entry:
    }
    catch (std::exception& exc) {
       TIter next(fStdExceptionHandler);
-      TStdExceptionHandler* eh = 0;
+      TStdExceptionHandler* eh = nullptr;
       while ((eh = (TStdExceptionHandler*) next())) {
          switch (eh->Handle(exc))
          {
@@ -496,7 +498,7 @@ Long_t TSystem::NextTimeOut(Bool_t mode)
 {
    if (!fTimers) return -1;
 
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
+   TListIter it(fTimers);
    TTimer *t, *to = nullptr;
    Long64_t tt, tnow = Now();
    Long_t   timeout = -1;
@@ -1146,7 +1148,7 @@ again:
    iter++; c = inp; ier = 0;
    x = out; x[0] = 0;
 
-   p = 0; e = 0;
+   p = nullptr; e = nullptr;
    if (c[0] == '~' && c[1] == '/') { // ~/ case
       std::string hd = GetHomeDirectory();
       p = hd.c_str();
@@ -1180,7 +1182,7 @@ again:
 
    for ( ; c[0]; c++) {
 
-      p = 0; e = 0;
+      p = nullptr; e = nullptr;
 
       if (c[0] == '.' && c[1] == '/' && c[-1] == ' ') { // $cwd
          std::string wd = GetWorkingDirectory();
@@ -1813,7 +1815,7 @@ static bool R__MatchFilename(const char *left, const char *right)
 {
    if (left == right) return kTRUE;
 
-   if (left==0 || right==0) return kFALSE;
+   if (left==nullptr || right==nullptr) return kFALSE;
 
    if ( (strcmp(right,left)==0) ) {
       return kTRUE;
@@ -1973,7 +1975,7 @@ UInt_t TSystem::LoadAllLibraries()
    std::set<std::string> loadedlibs;
    std::set<std::string> failedlibs;
 
-   TEnvRec* rec = 0;
+   TEnvRec* rec = nullptr;
    TIter iEnvRec(mapfile->GetTable());
    while ((rec = (TEnvRec*) iEnvRec())) {
       TString libs = rec->GetValue();
@@ -2841,21 +2843,21 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Analyze the options
    Bool_t keep = kFALSE;
    Bool_t recompile = kFALSE;
-   EAclicMode mode = fAclicMode;
+   int mode = fAclicMode;
    Bool_t loadLib = kTRUE;
    Bool_t withInfo = kTRUE;
    Bool_t verbose = kFALSE;
    Bool_t internalDebug = kFALSE;
    if (opt) {
-      keep = (strchr(opt,'k')!=0);
-      recompile = (strchr(opt,'f')!=0);
-      if (strchr(opt,'O')!=0) {
-         mode = kOpt;
+      keep = (strchr(opt,'k')!=nullptr);
+      recompile = (strchr(opt,'f')!=nullptr);
+      if (strchr(opt,'O')!=nullptr) {
+         mode |= kOpt;
       }
-      if (strchr(opt,'g')!=0) {
-         mode = kDebug;
+      if (strchr(opt,'g')!=nullptr) {
+         mode |= kDebug;
       }
-      if (strchr(opt,'c')!=0) {
+      if (strchr(opt,'c')!=nullptr) {
          loadLib = kFALSE;
       }
       withInfo = strchr(opt, 's') == nullptr;
@@ -2865,13 +2867,13 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    if (mode==kDefault) {
       TString rootbuild = ROOTBUILD;
       if (rootbuild.Index("debug",0,TString::kIgnoreCase)==kNPOS) {
-         mode=kOpt;
+         mode = kOpt;
       } else {
-         mode=kDebug;
+         mode = kDebug;
       }
    }
    UInt_t verboseLevel = verbose ? 7 : gDebug;
-   Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt,'-')!=0);
+   Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (opt && strchr(opt,'-')!=nullptr);
 
    // if non-zero, build_loc indicates where to build the shared library.
    TString build_loc = ExpandFileName(GetBuildDir());
@@ -3139,8 +3141,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
       Long_t lib_time, file_time;
 
-      if ((gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) != 0) ||
-          (gSystem->GetPathInfo( expFileName, 0, (Long_t*)0, 0, &file_time ) == 0 &&
+      if ((gSystem->GetPathInfo( library, nullptr, (Long_t*)nullptr, nullptr, &lib_time ) != 0) ||
+          (gSystem->GetPathInfo( expFileName, nullptr, (Long_t*)nullptr, nullptr, &file_time ) == 0 &&
           (lib_time < file_time))) {
 
          // the library does not exist or is older than the script.
@@ -3149,7 +3151,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
       } else {
 
-         if ( gSystem->GetPathInfo( depfilename, 0,(Long_t*) 0, 0, &file_time ) != 0 ) {
+         if ( gSystem->GetPathInfo( depfilename, nullptr,(Long_t*) nullptr, nullptr, &file_time ) != 0 ) {
             if (!canWrite) {
                depdir = emergency_loc;
                AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
@@ -3163,7 +3165,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
          // We need to check the dependencies
          FILE * depfile = fopen(depfilename.Data(),"r");
-         if (depfile==0) {
+         if (depfile==nullptr) {
             // there is no accessible dependency file, let's assume the library has been
             // modified
             modified = kTRUE;
@@ -3208,7 +3210,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
                         if (hasversion) {
                            modified |= strcmp(ROOT_RELEASE,line)!=0;
                            hasversion = kFALSE;
-                        } else if ( gSystem->GetPathInfo( line, 0, (Long_t*)0, 0, &filetime ) == 0 ) {
+                        } else if ( gSystem->GetPathInfo( line, nullptr, (Long_t*)nullptr, nullptr, &filetime ) == 0 ) {
                            modified |= ( lib_time <= filetime );
                         }
                      }
@@ -3248,7 +3250,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (libinfo) {
          Long_t load_time = libinfo->GetUniqueID();
          Long_t lib_time;
-         if ( gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time ) == 0
+         if ( gSystem->GetPathInfo( library, nullptr, (Long_t*)nullptr, nullptr, &lib_time ) == 0
               && (lib_time>load_time)) {
             reload = kTRUE;
          }
@@ -3267,11 +3269,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (libinfo) {
             fCompiled->Remove(libinfo);
             delete libinfo;
-            libinfo = 0;
+            libinfo = nullptr;
          }
          TNamed *k = new TNamed(library,library);
          Long_t lib_time;
-         gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+         gSystem->GetPathInfo( library, nullptr, (Long_t*)nullptr, nullptr, &lib_time );
          k->SetUniqueID(lib_time);
          if (!keep) k->SetBit(kMustCleanup);
          fCompiled->Add(k);
@@ -3297,7 +3299,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          if (libinfo) {
             fCompiled->Remove(libinfo);
             delete libinfo;
-            libinfo = 0;
+            libinfo = nullptr;
          }
          Unlink(library);
       }
@@ -3367,7 +3369,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       if (loadLib) {
          TNamed *k = new TNamed(library,library);
          Long_t lib_time;
-         gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+         gSystem->GetPathInfo( library, nullptr, (Long_t*)nullptr, nullptr, &lib_time );
          k->SetUniqueID(lib_time);
          if (!keep) k->SetBit(kMustCleanup);
          fCompiled->Add(k);
@@ -3658,7 +3660,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString librariesWithQuotes;
    TString singleLibrary;
    Bool_t collectingSingleLibraryNameTokens = kFALSE;
-   for (auto tokenObj : *linkLibrariesNoQuotes.Tokenize(" ")) {
+   std::unique_ptr<TObjArray> tokens( linkLibrariesNoQuotes.Tokenize(" ") );
+   for (auto tokenObj : *tokens) {
       singleLibrary = ((TObjString*)tokenObj)->GetString();
       if (singleLibrary[0]=='-' || !AccessPathName(singleLibrary)) {
          if (collectingSingleLibraryNameTokens) {
@@ -3707,11 +3710,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("\"$BuildDir","$BuildDir");
    cmd.ReplaceAll("$BuildDir","\"$BuildDir\"");
    cmd.ReplaceAll("$BuildDir",build_loc);
-   if (mode==kDebug) {
-      cmd.ReplaceAll("$Opt",fFlagsDebug);
-   } else {
-      cmd.ReplaceAll("$Opt",fFlagsOpt);
-   }
+   TString optdebFlags;
+   if (mode & kDebug)
+      optdebFlags = fFlagsDebug + " ";
+   if (mode & kOpt)
+      optdebFlags += fFlagsOpt;
+   cmd.ReplaceAll("$Opt", optdebFlags);
 #ifdef WIN32
    R__FixLink(cmd);
    cmd.ReplaceAll("-std=", "-std:");
@@ -3796,7 +3800,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
       TNamed *k = new TNamed(library,library);
       Long_t lib_time;
-      gSystem->GetPathInfo( library, 0, (Long_t*)0, 0, &lib_time );
+      gSystem->GetPathInfo( library, nullptr, (Long_t*)nullptr, nullptr, &lib_time );
       k->SetUniqueID(lib_time);
       if (!keep) k->SetBit(kMustCleanup);
       fCompiled->Add(k);
@@ -4132,7 +4136,7 @@ void TSystem::SetMakeSharedLib(const char *directives)
 /// \param[in] includePath The path to the directory.
 /// \note This interface is mostly relevant for ACLiC and it does *not* inform
 ///       gInterpreter for this include path. If the TInterpreter needs to know
-///       about the include path please use \c gInterpreter->AddIncludePath .
+///       about the include path please use TInterpreter::AddIncludePath() .
 /// \warning The path should start with the \c -I prefix, i.e.
 ///          <tt>gSystem->AddIncludePath("-I /path/to/my/includes")</tt>.
 void TSystem::AddIncludePath(const char *includePath)

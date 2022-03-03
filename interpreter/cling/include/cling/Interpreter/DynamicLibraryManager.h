@@ -20,7 +20,6 @@
 namespace cling {
   class Dyld;
   class InterpreterCallbacks;
-  class InvocationOptions;
 
   ///\brief A helper class managing dynamic shared objects.
   ///
@@ -59,10 +58,6 @@ namespace cling {
     DyLibs m_DyLibs;
     llvm::StringSet<> m_LoadedLibraries;
 
-    ///\brief Contains the list of the current include paths.
-    ///
-    const InvocationOptions& m_Opts;
-
     ///\brief System's include path, get initialized at construction time.
     ///
     SearchPathInfos m_SearchPaths;
@@ -73,29 +68,42 @@ namespace cling {
 
     ///\brief Concatenates current include paths and the system include paths
     /// and performs a lookup for the filename.
+    /// See more information for RPATH and RUNPATH: https://en.wikipedia.org/wiki/Rpath
     ///\param[in] libStem - The filename being looked up
+    ///\param[in] RPath - RPATH as provided by loader library, searching for libStem
+    ///\param[in] RunPath - RUNPATH as provided by loader library, searching for libStem
+    ///\param[in] libLoader - The library that loads libStem. Use "" for main program.
     ///
     ///\returns the canonical path to the file or empty string if not found
     ///
-    std::string lookupLibInPaths(llvm::StringRef libStem) const;
-
+    std::string lookupLibInPaths(llvm::StringRef libStem,
+                                 llvm::SmallVector<llvm::StringRef,2> RPath = {},
+                                 llvm::SmallVector<llvm::StringRef,2> RunPath = {},
+                                 llvm::StringRef libLoader = "") const;
 
     ///\brief Concatenates current include paths and the system include paths
     /// and performs a lookup for the filename. If still not found it tries to
     /// add the platform-specific extensions (such as so, dll, dylib) and
     /// retries the lookup (from lookupLibInPaths)
+    /// See more information for RPATH and RUNPATH: https://en.wikipedia.org/wiki/Rpath
     ///\param[in] filename - The filename being looked up
+    ///\param[in] RPath - RPATH as provided by loader library, searching for libStem
+    ///\param[in] RunPath - RUNPATH as provided by loader library, searching for libStem
+    ///\param[in] libLoader - The library that loads libStem. Use "" for main program.
     ///
     ///\returns the canonical path to the file or empty string if not found
     ///
-    std::string lookupLibMaybeAddExt(llvm::StringRef filename) const;
+    std::string lookupLibMaybeAddExt(llvm::StringRef filename,
+                                     llvm::SmallVector<llvm::StringRef,2> RPath = {},
+                                     llvm::SmallVector<llvm::StringRef,2> RunPath = {},
+                                     llvm::StringRef libLoader = "") const;
 
     /// On a success returns to full path to a shared object that holds the
     /// symbol pointed by func.
     ///
     static std::string getSymbolLocation(void* func);
   public:
-    DynamicLibraryManager(const InvocationOptions& Opts);
+    DynamicLibraryManager();
     ~DynamicLibraryManager();
     DynamicLibraryManager(const DynamicLibraryManager&) = delete;
     DynamicLibraryManager& operator=(const DynamicLibraryManager&) = delete;
@@ -112,17 +120,33 @@ namespace cling {
        return m_SearchPaths;
     }
 
-    void addSearchPath(llvm::StringRef dir) {
-      m_SearchPaths.emplace_back(SearchPathInfo{dir, /*IsUser*/ true});
+    void addSearchPath(llvm::StringRef dir, bool isUser = true,
+                       bool prepend = false) {
+       if (!dir.empty()) {
+          for (auto & item : m_SearchPaths)
+            if (dir.equals(item.Path)) return;
+          auto pos = prepend ? m_SearchPaths.begin() : m_SearchPaths.end();
+          m_SearchPaths.insert(pos, SearchPathInfo{dir, isUser});
+       }
     }
 
     ///\brief Looks up a library taking into account the current include paths
     /// and the system include paths.
+    /// See more information for RPATH and RUNPATH: https://en.wikipedia.org/wiki/Rpath
     ///\param[in] libStem - The filename being looked up
+    ///\param[in] RPath - RPATH as provided by loader library, searching for libStem
+    ///\param[in] RunPath - RUNPATH as provided by loader library, searching for libStem
+    ///\param[in] libLoader - The library that loads libStem. Use "" for main program.
+    ///\param[in] variateLibStem - If this param is true, and libStem is "L", then
+    ///              we search for "L", "libL", "L.so", "libL.so"", etc.
     ///
     ///\returns the canonical path to the file or empty string if not found
     ///
-    std::string lookupLibrary(llvm::StringRef libStem) const;
+    std::string lookupLibrary(llvm::StringRef libStem,
+                              llvm::SmallVector<llvm::StringRef,2> RPath = {},
+                              llvm::SmallVector<llvm::StringRef,2> RunPath = {},
+                              llvm::StringRef libLoader = "",
+                              bool variateLibStem = true) const;
 
     ///\brief Loads a shared library.
     ///
@@ -135,7 +159,7 @@ namespace cling {
     /// was already loaded, kLoadLibError if the library cannot be found or any
     /// other error was encountered.
     ///
-    LoadLibResult loadLibrary(const std::string& libStem, bool permanent,
+    LoadLibResult loadLibrary(llvm::StringRef, bool permanent,
                               bool resolved = false);
 
     void unloadLibrary(llvm::StringRef libStem);
@@ -161,8 +185,10 @@ namespace cling {
     ///
     ///\returns the library name if found, and empty string otherwise.
     ///
-    std::string searchLibrariesForSymbol(const std::string& mangledName,
+    std::string searchLibrariesForSymbol(llvm::StringRef mangledName,
                                          bool searchSystem = true) const;
+
+    void dump(llvm::raw_ostream* S = nullptr) const;
 
     /// On a success returns to full path to a shared object that holds the
     /// symbol pointed by func.

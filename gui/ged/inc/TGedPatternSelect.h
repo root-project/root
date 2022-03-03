@@ -12,33 +12,6 @@
 #ifndef ROOT_TGedPatternSelect
 #define ROOT_TGedPatternSelect
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGedPatternFrame, TGedPatternSelector, TGedPatternPopup              //
-// and TGedPatternColor.                                                //
-//                                                                      //
-// The TGedPatternFrame is a small frame with border showing a          //
-// specific pattern (fill style).                                       //
-//                                                                      //
-// The TGedPatternSelector is a composite frame with TGedPatternFrames  //
-// of all diferent styles                                               //
-//                                                                      //
-// The TGedPattern is a popup containing a TGPatternSelector.           //
-//                                                                      //
-// The TGedPatternSelect widget is a button with pattern area with      //
-// a little down arrow. When clicked on the arrow the                   //
-// TGedPatternPopup pops up.                                            //
-//                                                                      //
-// Selecting a pattern in this widget will generate the event:          //
-// kC_PATTERNSEL, kPAT_SELCHANGED, widget id, style.                    //
-//                                                                      //
-// and the signal:                                                      //
-// PatternSelected(Style_t pattern)                                     //
-//                                                                      //
-// TGedSelect is button that shows popup window when clicked.           //
-// TGedPopup is a popup window.                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGButton.h"
 #include "TGToolTip.h"
@@ -55,7 +28,7 @@ public:
    virtual ~TGedPopup() { }
 
    virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    void           PlacePopup(Int_t x, Int_t y, UInt_t w, UInt_t h);
    void           EndPopup();
 
@@ -69,7 +42,7 @@ protected:
    Bool_t          fActive;
    Style_t         fPattern;
    static TGGC    *fgGC;
-   TGToolTip      *fTip;         // tool tip associated with a button
+   TGToolTip      *fTip;         ///< tool tip associated with a button
    char            fTipText[7];
 
    virtual void    DoRedraw();
@@ -101,7 +74,7 @@ public:
    TGedPatternSelector(const TGWindow *p);
    virtual ~TGedPatternSelector();
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    void           SetActive(Int_t newat);
    Int_t          GetActive() const { return fActive; }
 
@@ -117,7 +90,7 @@ public:
    TGedPatternPopup(const TGWindow *p, const TGWindow *m, Style_t pattern);
    virtual ~TGedPatternPopup();
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    ClassDef(TGedPatternPopup,0)  // Color selector popup
 };
@@ -160,7 +133,7 @@ public:
    virtual        TGDimension GetDefaultSize() const { return TGDimension(55, 21); }
    virtual void   PatternSelected(Style_t pattern = 0)
                   { Emit("PatternSelected(Style_t)", pattern ? pattern : GetPattern()); }  // *SIGNAL*
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
 
    ClassDef(TGedPatternSelect,0)  //pattern selection check-button

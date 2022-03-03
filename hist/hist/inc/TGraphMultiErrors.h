@@ -29,17 +29,17 @@ class TArrayD;
 class TGraphMultiErrors : public TGraph {
 
 protected:
-   Int_t fNYErrors;           ///< The amount of different y-errors
-   Int_t fSumErrorsMode;      ///< How y errors are summed: kOnlyFirst = Only First; kSquareSum = Squared Sum; kSum =
-                              ///< Absolute Addition
-   Double_t *fExL;            ///<[fNpoints] array of X low errors
-   Double_t *fExH;            ///<[fNpoints] array of X high errors
-   std::vector<TArrayD> fEyL; ///< two dimensional array of Y low errors
-   std::vector<TArrayD> fEyH; ///< two dimensional array of Y high errors
-   mutable Double_t *fEyLSum = nullptr; ///<! array of summed Y low errors for fitting
-   mutable Double_t *fEyHSum = nullptr; ///<! array of summed Y high errors for fitting
-   std::vector<TAttFill> fAttFill;      ///< the AttFill attributes of the different errors
-   std::vector<TAttLine> fAttLine;      ///< the AttLine attributes of the different errors
+   Int_t fNYErrors;                     ///<  The amount of different y-errors
+   Int_t fSumErrorsMode;                ///<  How y errors are summed: kOnlyFirst = Only First; kSquareSum = Squared Sum; kSum =
+                                        ///<  Absolute Addition
+   Double_t *fExL;                      ///<[fNpoints] array of X low errors
+   Double_t *fExH;                      ///<[fNpoints] array of X high errors
+   std::vector<TArrayD> fEyL;           ///<  Two dimensional array of Y low errors
+   std::vector<TArrayD> fEyH;           ///<  Two dimensional array of Y high errors
+   mutable Double_t *fEyLSum = nullptr; ///<! Array of summed Y low errors for fitting
+   mutable Double_t *fEyHSum = nullptr; ///<! Array of summed Y high errors for fitting
+   std::vector<TAttFill> fAttFill;      ///<  The AttFill attributes of the different errors
+   std::vector<TAttLine> fAttLine;      ///<  The AttLine attributes of the different errors
 
    virtual Double_t **Allocate(Int_t size);
    Bool_t CtorAllocate();
@@ -166,6 +166,7 @@ public:
 
    virtual void Print(Option_t *chopt = "") const;
    virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   virtual void Scale(Double_t c1=1., Option_t *option="y"); // *MENU*
 
    virtual void SetPointError(Double_t exL, Double_t exH, Double_t eyL1, Double_t eyH1, Double_t eyL2 = 0.,
                               Double_t eyH2 = 0., Double_t eyL3 = 0., Double_t eyH3 = 0.); // *MENU*

@@ -13,17 +13,6 @@
 #define ROOT_TGMenu
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuBar, TGPopupMenu, TGMenuTitle and TGMenuEntry                  //
-//                                                                      //
-// This header contains all different menu classes.                     //
-//                                                                      //
-// Selecting a menu item will generate the event:                       //
-// kC_COMMAND, kCM_MENU, menu id, user data.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGString.h"
 #include "TGPicture.h"
@@ -57,14 +46,13 @@ class TGMenuTitle;
 class TTimer;
 class TGSplitButton;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuEntry                                                          //
-//                                                                      //
-// This class contains all information about a menu entry.              //
-// It is a fully protected class used internally by TGPopupMenu.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGMenuEntry
+
+This class contains all information about a menu entry.
+It is a fully protected class used internally by TGPopupMenu.
+
+*/
+
 
 class TGMenuEntry : public TObject {
 
@@ -72,16 +60,16 @@ friend class TGPopupMenu;
 friend class TGMenuBar;
 
 protected:
-   Int_t             fEntryId;   // the entry id (used for event processing)
-   void             *fUserData;  // pointer to user data structure
-   EMenuEntryType    fType;      // type of entry
-   Int_t             fStatus;    // entry status (OR of EMenuEntryState)
-   Int_t             fEx, fEy;   // position of entry
-   UInt_t            fEw, fEh;   // width and height of entry
-   TGHotString      *fLabel;     // menu entry label
-   TGString         *fShortcut;  // menu entry shortcut
-   const TGPicture  *fPic;       // menu entry icon
-   TGPopupMenu      *fPopup;     // pointer to popup menu (in case of cascading menus)
+   Int_t             fEntryId;   ///< the entry id (used for event processing)
+   void             *fUserData;  ///< pointer to user data structure
+   EMenuEntryType    fType;      ///< type of entry
+   Int_t             fStatus;    ///< entry status (OR of EMenuEntryState)
+   Int_t             fEx, fEy;   ///< position of entry
+   UInt_t            fEw, fEh;   ///< width and height of entry
+   TGHotString      *fLabel;     ///< menu entry label
+   TGString         *fShortcut;  ///< menu entry shortcut
+   const TGPicture  *fPic;       ///< menu entry icon
+   TGPopupMenu      *fPopup;     ///< pointer to popup menu (in case of cascading menus)
 
 private:
    TGMenuEntry(const TGMenuEntry&) = delete;
@@ -111,14 +99,13 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGPopupMenu                                                          //
-//                                                                      //
-// This class creates a popup menu object. Popup menu's are attached    //
-// to TGMenuBar objects.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGPopupMenu
+
+This class creates a popup menu object. Popup menu's are attached
+to TGMenuBar objects.
+
+*/
+
 
 class TGPopupMenu : public TGFrame {
 
@@ -127,25 +114,25 @@ friend class TGMenuBar;
 friend class TGSplitButton;
 
 protected:
-   TList             *fEntryList;     // list of menu entries
-   TGMenuEntry       *fCurrent;       // currently selected menu entry
-   Bool_t             fStick;         // stick mode (popup menu stays sticked on screen)
-   Bool_t             fHasGrab;       // true if menu has grabbed pointer
-   Bool_t             fPoppedUp;      // true if menu is currently popped up
-   UInt_t             fXl;            // Max width of all menu entries
-   UInt_t             fMenuWidth;     // width of popup menu
-   UInt_t             fMenuHeight;    // height of popup menu
-   TTimer            *fDelay;         // delay before poping up cascading menu
-   GContext_t         fNormGC;        // normal drawing graphics context
-   GContext_t         fSelGC;         // graphics context for drawing selections
-   GContext_t         fSelbackGC;     // graphics context for drawing selection background
-   FontStruct_t       fFontStruct;    // font to draw menu entries
-   FontStruct_t       fHifontStruct;  // font to draw highlighted entries
-   Cursor_t           fDefaultCursor; // right pointing cursor
-   const TGWindow    *fMsgWindow;     // window which handles menu events
-   TGMenuBar         *fMenuBar;       // menu bar (if any)
-   TGSplitButton     *fSplitButton;   // split button (if any)
-   UInt_t             fEntrySep;      // separation distance between ebtris
+   TList             *fEntryList;     ///< list of menu entries
+   TGMenuEntry       *fCurrent;       ///< currently selected menu entry
+   Bool_t             fStick;         ///< stick mode (popup menu stays sticked on screen)
+   Bool_t             fHasGrab;       ///< true if menu has grabbed pointer
+   Bool_t             fPoppedUp;      ///< true if menu is currently popped up
+   UInt_t             fXl;            ///< Max width of all menu entries
+   UInt_t             fMenuWidth;     ///< width of popup menu
+   UInt_t             fMenuHeight;    ///< height of popup menu
+   TTimer            *fDelay;         ///< delay before popping up cascading menu
+   GContext_t         fNormGC;        ///< normal drawing graphics context
+   GContext_t         fSelGC;         ///< graphics context for drawing selections
+   GContext_t         fSelbackGC;     ///< graphics context for drawing selection background
+   FontStruct_t       fFontStruct;    ///< font to draw menu entries
+   FontStruct_t       fHifontStruct;  ///< font to draw highlighted entries
+   Cursor_t           fDefaultCursor; ///< right pointing cursor
+   const TGWindow    *fMsgWindow;     ///< window which handles menu events
+   TGMenuBar         *fMenuBar;       ///< menu bar (if any)
+   TGSplitButton     *fSplitButton;   ///< split button (if any)
+   UInt_t             fEntrySep;      ///< separation distance between entries
 
    static const TGFont *fgDefaultFont;
    static const TGFont *fgHilightFont;
@@ -235,28 +222,27 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuTitle                                                          //
-//                                                                      //
-// This class creates a menu title. A menu title is a frame             //
-// to which a popup menu can be attached. Menu titles are automatically //
-// created when adding a popup menu to a menubar.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGMenuTitle
+
+This class creates a menu title. A menu title is a frame
+to which a popup menu can be attached. Menu titles are automatically
+created when adding a popup menu to a menubar.
+
+*/
+
 
 class TGMenuTitle : public TGFrame {
 
 protected:
-   TGPopupMenu    *fMenu;             // attached popup menu
-   TGHotString    *fLabel;            // menu title
-   Int_t           fTitleId;          // id of selected menu item
-   void           *fTitleData;        // user data associated with selected item
-   Bool_t          fState;            // menu title state (active/not active)
-   Int_t           fHkeycode;         // hot key code
-   FontStruct_t    fFontStruct;       // font
-   Pixel_t         fTextColor;        // text color
-   GContext_t      fNormGC, fSelGC;   // normal and selection graphics contexts
+   TGPopupMenu    *fMenu;             ///< attached popup menu
+   TGHotString    *fLabel;            ///< menu title
+   Int_t           fTitleId;          ///< id of selected menu item
+   void           *fTitleData;        ///< user data associated with selected item
+   Bool_t          fState;            ///< menu title state (active/not active)
+   Int_t           fHkeycode;         ///< hot key code
+   FontStruct_t    fFontStruct;       ///< font
+   Pixel_t         fTextColor;        ///< text color
+   GContext_t      fNormGC, fSelGC;   ///< normal and selection graphics contexts
 
    virtual void DoRedraw();
 
@@ -293,30 +279,22 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMenuBar                                                            //
-//                                                                      //
-// This class creates a menu bar.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 class TGMenuBar : public TGHorizontalFrame {
 
 friend class TGPopupMenu;
 
 protected:
-   TGMenuTitle   *fCurrent;            // current menu title
-   TList         *fTitles;             // list of menu titles
-   Cursor_t       fDefaultCursor;      // right pointing cursor
-   Bool_t         fStick;              // stick mode (popup menu stays sticked on screen)
-   TList         *fTrash;              // garbage
-   Bool_t         fKeyNavigate;        // kTRUE if arrow key navigation is on
-   TGPopupMenu   *fMenuMore;           // extra >> menu
-   TGLayoutHints *fMenuBarMoreLayout;  // layout of the extra menu
-   Bool_t         fWithExt;            // indicates whether the >> menu is shown or not
-   TList         *fOutLayouts;         // keeps trace of layouts of hidden menus
-   TList         *fNeededSpace;        // keeps trace of space needed for hidden menus
+   TGMenuTitle   *fCurrent;            ///< current menu title
+   TList         *fTitles;             ///< list of menu titles
+   Cursor_t       fDefaultCursor;      ///< right pointing cursor
+   Bool_t         fStick;              ///< stick mode (popup menu stays sticked on screen)
+   TList         *fTrash;              ///< garbage
+   Bool_t         fKeyNavigate;        ///< kTRUE if arrow key navigation is on
+   TGPopupMenu   *fMenuMore;           ///< extra >> menu
+   TGLayoutHints *fMenuBarMoreLayout;  ///< layout of the extra menu
+   Bool_t         fWithExt;            ///< indicates whether the >> menu is shown or not
+   TList         *fOutLayouts;         ///< keeps trace of layouts of hidden menus
+   TList         *fNeededSpace;        ///< keeps trace of space needed for hidden menus
 
    virtual void AddFrameBefore(TGFrame *f, TGLayoutHints *l = nullptr,
                                TGPopupMenu *before = nullptr);

@@ -30,13 +30,14 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiMainFrame.                                                      //
-//                                                                      //
-// This file contains the TGMdiMainFrame class.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGMdiMainFrame.
+    \ingroup guiwidgets
+
+This file contains the TGMdiMainFrame class.
+
+*/
+
 
 #include "KeySymbols.h"
 #include "TGFrame.h"
@@ -291,7 +292,7 @@ Bool_t TGMdiMainFrame::SetCurrent(UInt_t id)
          fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
                               fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
 
-      Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
+      Emit("SetCurrent(TGMdiFrame*)", (Longptr_t)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
 
@@ -312,7 +313,7 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrame *f)
       if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
          fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
                               fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
-      Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
+      Emit("SetCurrent(TGMdiFrame*)", (Longptr_t)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
 
@@ -333,7 +334,7 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
       if (fCurrent->GetDecorFrame()->IsMaximized() && fMenuBar)
          fMenuBar->ShowFrames(fCurrent->GetDecorFrame()->GetTitleBar()->GetWinIcon(),
                               fCurrent->GetDecorFrame()->GetTitleBar()->GetButtons());
-      Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
+      Emit("SetCurrent(TGMdiFrame*)", (Longptr_t)fCurrent->GetDecorFrame()->GetMdiFrame());
       return kTRUE;
    }
 
@@ -379,7 +380,7 @@ Bool_t TGMdiMainFrame::SetCurrent(TGMdiFrameList *newcurrent)
                                                                   fFontCurrent);
 
    fCurrent->GetDecorFrame()->RaiseWindow();
-   Emit("SetCurrent(TGMdiFrame*)", (long)fCurrent->GetDecorFrame()->GetMdiFrame());
+   Emit("SetCurrent(TGMdiFrame*)", (Longptr_t)fCurrent->GetDecorFrame()->GetMdiFrame());
 
    fWinListMenu->RCheckEntry(fCurrent->GetDecorFrame()->GetId(), 0, kMaxInt);
 
@@ -584,7 +585,7 @@ void TGMdiMainFrame::UpdateMdiButtons()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Automatic repositionning and resizing of every MDI child window.
+/// Automatic repositioning and resizing of every MDI child window.
 /// depending on mode : tile horizontal, tile vertical, or cascade.
 
 void TGMdiMainFrame::ArrangeFrames(Int_t mode)
@@ -739,7 +740,7 @@ void TGMdiMainFrame::ArrangeMinimized()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages MDI main frame.
 
-Bool_t TGMdiMainFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGMdiMainFrame::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
       case kC_MDI:

@@ -8,20 +8,26 @@
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
-/**
-  \defgroup proof PROOF
 
-  Classes defining the Parallel ROOT Facility, PROOF, a framework for parallel analysis of ROOT TTrees.
+/**
+\defgroup proof PROOF
+
+Classes defining the Parallel ROOT Facility, PROOF, a framework for parallel analysis of ROOT TTrees.
+
+\deprecated
+We keep PROOF for those who still need it for legacy use cases.
+PROOF is not developed anymore and receiving only limited support.
+%ROOT has since a few years moved to RDataFrame and related products as multi-core/multi-processing engines.
 
 */
 
 /**
-  \defgroup proofkernel PROOF kernel Libraries
-  \ingroup proof
+\defgroup proofkernel PROOF kernel Libraries
+\ingroup proof
 
-  The PROOF kernel libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
-  the kernel of the PROOF facility, i.e. the protocol and the utilities to steer data processing
-  and handling of results.
+The PROOF kernel libraries (libProof, libProofPlayer, libProofDraw) contain the classes defining
+the kernel of the PROOF facility, i.e. the protocol and the utilities to steer data processing
+and handling of results.
 
 */
 
@@ -9264,7 +9270,7 @@ void TProof::Feedback(TList *objs)
       objs->ls();
    }
 
-   Emit("Feedback(TList *objs)", (Long_t) objs);
+   Emit("Feedback(TList *objs)", (Longptr_t) objs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

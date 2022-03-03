@@ -31,8 +31,7 @@ ROOT.RooClassFactory.makePdf("MyPdfV1", "x,A,B")
 # To use this class,
 #    - Compile and link class with '.x MyPdfV2.cxx+'
 #
-ROOT.RooClassFactory.makePdf(
-    "MyPdfV2", "x,A,B", "", "A*fabs(x)+pow(x-B,2)")
+ROOT.RooClassFactory.makePdf("MyPdfV2", "x,A,B", "", "A*fabs(x)+pow(x-B,2)")
 
 # With added analytical integral expression
 # ---------------------------------------------------------------------------------
@@ -47,9 +46,10 @@ ROOT.RooClassFactory.makePdf(
     "x,A,B",
     "",
     "A*fabs(x)+pow(x-B,2)",
-    ROOT.kTRUE,
-    ROOT.kFALSE,
-    "x:(A/2)*(pow(x.max(rangeName),2)+pow(x.min(rangeName),2))+(1./3)*(pow(x.max(rangeName)-B,3)-pow(x.min(rangeName)-B,3))")
+    True,
+    False,
+    "x:(A/2)*(pow(x.max(rangeName),2)+pow(x.min(rangeName),2))+(1./3)*(pow(x.max(rangeName)-B,3)-pow(x.min(rangeName)-B,3))",
+)
 
 # Use instance of created class
 # ---------------------------------------------------------
@@ -64,8 +64,8 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 pdf = ROOT.MyPdfV3("pdf", "pdf", y, a, b)
 
 # Generate toy data from pdf and plot data and pdf on frame
-frame1 = y.frame(ROOT.RooFit.Title("Compiled class MyPdfV3"))
-data = pdf.generate(ROOT.RooArgSet(y), 1000)
+frame1 = y.frame(Title="Compiled class MyPdfV3")
+data = pdf.generate({y}, 1000)
 pdf.fitTo(data)
 data.plotOn(frame1)
 pdf.plotOn(frame1)
@@ -82,21 +82,16 @@ x = ROOT.RooRealVar("x", "x", -20, 20)
 # replacement of ROOT.RooGenericPdf
 
 alpha = ROOT.RooRealVar("alpha", "alpha", 5, 0.1, 10)
-genpdf = ROOT.RooClassFactory.makePdfInstance(
-    "GenPdf",
-    "(1+0.1*fabs(x)+sin(sqrt(fabs(x*alpha+0.1))))",
-    ROOT.RooArgList(
-        x,
-        alpha))
+genpdf = ROOT.RooClassFactory.makePdfInstance("GenPdf", "(1+0.1*fabs(x)+sin(sqrt(fabs(x*alpha+0.1))))", [x, alpha])
 
 # Generate a toy dataset from the interpreted pdf
-data2 = genpdf.generate(ROOT.RooArgSet(x), 50000)
+data2 = genpdf.generate({x}, 50000)
 
 # Fit the interpreted pdf to the generated data
 genpdf.fitTo(data2)
 
 # Make a plot of the data and the pdf overlaid
-frame2 = x.frame(ROOT.RooFit.Title("Compiled version of pdf of rf103"))
+frame2 = x.frame(Title="Compiled version of pdf of rf103")
 data2.plotOn(frame2)
 genpdf.plotOn(frame2)
 

@@ -56,13 +56,13 @@ public:
 class TTVLVEntry : public TGLVEntry {
 
 protected:
-   TTVLVContainer *fContainer;  // container to whom this item belongs
-   TString         fTrueName;   // name for this entry
-   TString         fAlias;      // alias for this entry
-   TString         fConvName;   // name converted into true expressions
-   TGToolTip      *fTip;        // tool tip associated with item
-   Bool_t          fIsCut;      // flag for cut type items
-   TGItemContext  *fContext;    // associated context menu
+   TTVLVContainer *fContainer;  ///< Container to whom this item belongs
+   TString         fTrueName;   ///< Name for this entry
+   TString         fAlias;      ///< Alias for this entry
+   TString         fConvName;   ///< Name converted into true expressions
+   TGToolTip      *fTip;        ///< Tool tip associated with item
+   Bool_t          fIsCut;      ///< Flag for cut type items
+   TGItemContext  *fContext;    ///< Associated context menu
 
 protected:
    Bool_t         FullConverted();
@@ -112,11 +112,12 @@ class TTVLVContainer : public TGLVContainer {
 friend class TGClient;
 
 private:
-   Cursor_t     fCursor;             // current cursor
-   Cursor_t     fDefaultCursor;      // default cursor
-   TGListView  *fListView;           // associated list view
-   TTreeViewer *fViewer;             // pointer to tree viewer
-   TList       *fExpressionList;     // list of user defined expression widgets
+   Cursor_t     fCursor;             ///< Current cursor
+   Cursor_t     fDefaultCursor;      ///< Default cursor
+   TGListView  *fListView;           ///< Associated list view
+   TTreeViewer *fViewer;             ///< Pointer to tree viewer
+   TList       *fExpressionList;     ///< List of user defined expression widgets
+
 public:
    TTVLVContainer(const TGWindow *p, UInt_t w, UInt_t h, UInt_t options=kSunkenFrame);
    virtual ~TTVLVContainer();
@@ -156,19 +157,19 @@ public:
 class TGSelectBox : public TGTransientFrame {
 
 private:
-   TTreeViewer       *fViewer;        // pointer to tree viewer
-   TGLabel           *fLabel;         // label
-   TTVLVEntry        *fEntry;         // edited expression entry
-   TGTextEntry       *fTe;            // text entry box
-   TGLabel           *fLabelAlias;    // alias label
-   TGTextEntry       *fTeAlias;       // alias text entry
-   TString            fOldAlias;      // old alias for edited entry
-   TGLayoutHints     *fLayout;        // layout hints for widgets inside
-   TGLayoutHints     *fBLayout;       // layout for cancel button
-   TGLayoutHints     *fBLayout1;      // layout for close button
-   TGHorizontalFrame *fBf;            // buttons frame
-   TGTextButton      *fDONE;          // close button
-   TGTextButton      *fCANCEL;        // cancel button
+   TTreeViewer       *fViewer;        ///< Pointer to tree viewer
+   TGLabel           *fLabel;         ///< Label
+   TTVLVEntry        *fEntry;         ///< Edited expression entry
+   TGTextEntry       *fTe;            ///< Text entry box
+   TGLabel           *fLabelAlias;    ///< Alias label
+   TGTextEntry       *fTeAlias;       ///< Alias text entry
+   TString            fOldAlias;      ///< Old alias for edited entry
+   TGLayoutHints     *fLayout;        ///< Layout hints for widgets inside
+   TGLayoutHints     *fBLayout;       ///< Layout for cancel button
+   TGLayoutHints     *fBLayout1;      ///< Layout for close button
+   TGHorizontalFrame *fBf;            ///< Buttons frame
+   TGTextButton      *fDONE;          ///< Close button
+   TGTextButton      *fCANCEL;        ///< Cancel button
 
 protected:
    static TGSelectBox *fgInstance;// pointer to this select box
@@ -183,7 +184,7 @@ public:
    void           SetEntry(TTVLVEntry *entry);
    void           SaveText();
    void           InsertText(const char* text);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    Bool_t         ValidateAlias();
 
    static TGSelectBox *GetInstance();

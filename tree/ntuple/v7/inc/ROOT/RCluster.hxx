@@ -45,7 +45,7 @@ private:
    /// The memory location of the bytes
    const void *fAddress = nullptr;
    /// The compressed and packed size of the page
-   std::size_t fSize = 0;
+   std::uint32_t fSize = 0;
 
 public:
    /// On-disk pages within a page source are identified by the column and page number. The key is used for
@@ -60,10 +60,10 @@ public:
    };
 
    ROnDiskPage() = default;
-   ROnDiskPage(void *address, std::size_t size) : fAddress(address), fSize(size) {}
+   ROnDiskPage(void *address, std::uint32_t size) : fAddress(address), fSize(size) {}
 
    const void *GetAddress() const { return fAddress; }
-   std::size_t GetSize() const { return fSize; }
+   std::uint32_t GetSize() const { return fSize; }
 
    bool IsNull() const { return fAddress == nullptr; }
 };
@@ -152,13 +152,21 @@ Binds together several page maps that represent all the pages of certain columns
 */
 // clang-format on
 class RCluster {
+public:
+   using ColumnSet_t = std::unordered_set<DescriptorId_t>;
+   /// The identifiers that specifies the content of a (partial) cluster
+   struct RKey {
+      DescriptorId_t fClusterId = kInvalidDescriptorId;
+      ColumnSet_t fColumnSet;
+   };
+
 protected:
    /// References the cluster identifier in the page source that created the cluster
    DescriptorId_t fClusterId;
    /// Multiple page maps can be combined in a single RCluster
    std::vector<std::unique_ptr<ROnDiskPageMap>> fPageMaps;
    /// Set of the (complete) columns represented by the RCluster
-   std::unordered_set<DescriptorId_t> fAvailColumns;
+   ColumnSet_t fAvailColumns;
    /// Lookup table for the on-disk pages
    std::unordered_map<ROnDiskPage::Key, ROnDiskPage> fOnDiskPages;
 
@@ -187,7 +195,7 @@ public:
    const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;
 
    DescriptorId_t GetId() const { return fClusterId; }
-   const std::unordered_set<DescriptorId_t> &GetAvailColumns() const { return fAvailColumns; }
+   const ColumnSet_t &GetAvailColumns() const { return fAvailColumns; }
    bool ContainsColumn(DescriptorId_t columnId) const { return fAvailColumns.count(columnId) > 0; }
    size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
 };

@@ -129,6 +129,38 @@ namespace ROOT {
          std::fill(std::begin(fCarry), std::end(fCarry), 0.);
        }
 
+       /// Initialise with a sum value and a carry value.
+       /// \param[in] initialSumValue Initialise the sum with this value.
+       /// \param[in] initialCarryValue Initialise the carry with this value.
+       KahanSum(T initialSumValue, T initialCarryValue) {
+          fSum[0] = initialSumValue;
+          fCarry[0] = initialCarryValue;
+          std::fill(std::begin(fSum)+1, std::end(fSum), 0.);
+          std::fill(std::begin(fCarry)+1, std::end(fCarry), 0.);
+       }
+
+       /// Initialise the sum with a pre-existing state.
+       /// \param[in] sumBegin Begin of iterator range with values to initialise the sum with.
+       /// \param[in] sumEnd End of iterator range with values to initialise the sum with.
+       /// \param[in] carryBegin Begin of iterator range with values to initialise the carry with.
+       /// \param[in] carryEnd End of iterator range with values to initialise the carry with.
+       template<class Iterator>
+       KahanSum(Iterator sumBegin, Iterator sumEnd, Iterator carryBegin, Iterator carryEnd) {
+          assert(std::distance(sumBegin, sumEnd) == N);
+          assert(std::distance(carryBegin, carryEnd) == N);
+          std::copy(sumBegin, sumEnd, std::begin(fSum));
+          std::copy(carryBegin, carryEnd, std::begin(fCarry));
+       }
+
+       /// Constructor to create a KahanSum from another KahanSum with a different number of accumulators
+       template <unsigned int M>
+       KahanSum(KahanSum<T,M> const& other) {
+         fSum[0] = other.Sum();
+         fCarry[0] = other.Carry();
+         std::fill(std::begin(fSum)+1, std::end(fSum), 0.);
+         std::fill(std::begin(fCarry)+1, std::end(fCarry), 0.);
+       }
+
        /// Single-element accumulation. Will not vectorise.
        void Add(T x) {
           auto y = x - fCarry[0];
@@ -227,6 +259,26 @@ namespace ROOT {
        /// Add `arg` into accumulator. Does not vectorise.
        KahanSum<T, N>& operator+=(T arg) {
          Add(arg);
+         return *this;
+       }
+
+       /// Add `arg` into accumulator. Does not vectorise.
+       template<typename U>
+       KahanSum& operator+=(const KahanSum<U>& arg) {
+         Add(arg.Sum());
+         fCarry[0] += arg.Carry();
+         return *this;
+       }
+
+       /// Subtract other KahanSum. Does not vectorise.
+       ///
+       /// This is only meaningfull when both the sum and carry of each operand are of similar order of magnitude.
+       KahanSum<T, N>& operator-=(KahanSum<T, N> const& other) {
+         fSum[0]   -= other.Sum();
+         fCarry[0] -= other.Carry();
+         // add zero such that if the summed carry is large enough to be partly represented in the sum,
+         // it will happen
+         Add(T{});
          return *this;
        }
 

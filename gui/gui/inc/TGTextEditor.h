@@ -13,12 +13,6 @@
 #define ROOT_TGTextEditor
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEditor                                                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGTextEdit.h"
 
@@ -40,26 +34,26 @@ class TGTextEditor : public TGMainFrame {
 
 protected:
 
-   TTimer           *fTimer;              // for statusbar and toolbar update
-   TGStatusBar      *fStatusBar;          // for file name, line and col number
-   TGToolBar        *fToolBar;            // toolbar with common tool buttons
-   TGTextEdit       *fTextEdit;           // text edit widget
-   TGLabel          *fLabel;              // "command" label
-   TGComboBox       *fComboCmd;           // commands combobox
-   TGTextEntry      *fCommand;            // command text entry widget
-   TGTextBuffer     *fCommandBuf;         // command text buffer
-   TGLayoutHints    *fMenuBarLayout;      // used for the menubar
-   TGLayoutHints    *fMenuBarItemLayout;  // used for for menubar items
-   TGMenuBar        *fMenuBar;            // editor's menu bar
-   TGPopupMenu      *fMenuFile;           // "File" menu entry
-   TGPopupMenu      *fMenuEdit;           // "Edit" menu entry
-   TGPopupMenu      *fMenuSearch;         // "Search" menu entry
-   TGPopupMenu      *fMenuTools;          // "Tools" menu entry
-   TGPopupMenu      *fMenuHelp;           // "Help" menu entry
-   Bool_t            fExiting;            // true if editor is closing
-   Bool_t            fTextChanged;        // true if text has changed
-   TString           fFilename;           // name of the opened file
-   TMacro           *fMacro;              // pointer on the opened macro
+   TTimer           *fTimer;              ///< for statusbar and toolbar update
+   TGStatusBar      *fStatusBar;          ///< for file name, line and col number
+   TGToolBar        *fToolBar;            ///< toolbar with common tool buttons
+   TGTextEdit       *fTextEdit;           ///< text edit widget
+   TGLabel          *fLabel;              ///< "command" label
+   TGComboBox       *fComboCmd;           ///< commands combobox
+   TGTextEntry      *fCommand;            ///< command text entry widget
+   TGTextBuffer     *fCommandBuf;         ///< command text buffer
+   TGLayoutHints    *fMenuBarLayout;      ///< used for the menubar
+   TGLayoutHints    *fMenuBarItemLayout;  ///< used for for menubar items
+   TGMenuBar        *fMenuBar;            ///< editor's menu bar
+   TGPopupMenu      *fMenuFile;           ///< "File" menu entry
+   TGPopupMenu      *fMenuEdit;           ///< "Edit" menu entry
+   TGPopupMenu      *fMenuSearch;         ///< "Search" menu entry
+   TGPopupMenu      *fMenuTools;          ///< "Tools" menu entry
+   TGPopupMenu      *fMenuHelp;           ///< "Help" menu entry
+   Bool_t            fExiting;            ///< true if editor is closing
+   Bool_t            fTextChanged;        ///< true if text has changed
+   TString           fFilename;           ///< name of the opened file
+   TMacro           *fMacro;              ///< pointer on the opened macro
    virtual void      Build();
 
 public:
@@ -90,7 +84,7 @@ public:
    void           AddLineFast(const char *string) { fTextEdit->AddLineFast(string); }
    TGText        *GetText() const { return fTextEdit->GetText(); }
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual Bool_t HandleKey(Event_t *event);
    virtual Bool_t HandleTimer(TTimer *t);
    virtual void   CloseWindow();

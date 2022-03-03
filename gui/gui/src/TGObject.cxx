@@ -20,15 +20,16 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGObject                                                             //
-//                                                                      //
-// This class is the baseclass for all ROOT GUI widgets.                //
-// The ROOT GUI components emulate the Win95 look and feel and the code //
-// is based on the XClass'95 code (see Copyleft in source).             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGObject
+    \ingroup guiwidgets
+
+This class is the baseclass for all ROOT GUI widgets.
+The ROOT GUI components emulate the Win95 look and feel and the code
+is based on the XClass'95 code (see Copyleft in source).
+
+*/
+
 
 #include "TGObject.h"
 #include "TVirtualX.h"

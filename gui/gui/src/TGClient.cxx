@@ -20,14 +20,15 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGClient                                                             //
-//                                                                      //
-// Window client. In client server windowing systems, like X11 this     //
-// class is used to make the initial connection to the window server.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGClient
+    \ingroup guiwidgets
+
+Window client. In client server windowing systems, like X11 this
+class is used to make the initial connection to the window server.
+
+*/
+
 
 #include "RConfigure.h"
 
@@ -73,7 +74,7 @@ public:
    TGClientInit() {
       TROOT *rootlocal = ROOT::Internal::gROOTLocal;
       if (rootlocal && rootlocal->IsBatch()) {
-         // For now check if the heaeder files (or the module containing them)
+         // For now check if the header files (or the module containing them)
          // has been loaded in Cling.
          // This is required because the dictionaries must be initialized
          // __before__ the TGClient creation which will induce the creation
@@ -145,8 +146,6 @@ TGClient::TGClient(const char *dpyName)
 
    // Open the connection to the display
    if ((fXfd = gVirtualX->OpenDisplay(dpyName)) < 0) {
-      Error("TGClient", "can't open display \"%s\", switching to batch mode...\n In case you run from a remote ssh session, reconnect with ssh -Y",
-            gVirtualX->DisplayName(dpyName));
       MakeZombie();
       return;
    }
@@ -373,7 +372,7 @@ void TGClient::FreeFont(const TGFont *font)
 void TGClient::NeedRedraw(TGWindow *w, Bool_t force)
 {
    if (!w) return;
-   if (gVirtualX->NeedRedraw((ULong_t)w,force)) return;
+   if (gVirtualX->NeedRedraw((ULongptr_t)w,force)) return;
    if (force) {
       w->DoRedraw();
       return;
@@ -406,7 +405,7 @@ Bool_t TGClient::GetColorByName(const char *name, Pixel_t &pixel) const
       status = kFALSE;
    } else if (!gVirtualX->AllocColor(attributes.fColormap, color)) {
       Warning("GetColorByName", "couldn't retrieve color %s.\n"
-              "Please close any other application, like netscape, "
+              "Please close any other application, like web browsers, "
               "that might exhaust\nthe colormap and start ROOT again", name);
       status = kFALSE;
    }
@@ -952,9 +951,9 @@ void TGClient::SetEditDisabled(Bool_t on)
 
 void TGClient::ProcessedEvent(Event_t *event, Window_t wid)
 {
-   Long_t args[2];
-   args[0] = (Long_t) event;
-   args[1] = (Long_t) wid;
+   Longptr_t args[2];
+   args[0] = (Longptr_t) event;
+   args[1] = (Longptr_t) wid;
 
    Emit("ProcessedEvent(Event_t*, Window_t)", args);
 }

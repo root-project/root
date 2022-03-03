@@ -1,7 +1,6 @@
 #include <ROOTUnitTestSupport.h>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/TSeq.hxx>
 
@@ -11,7 +10,6 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <memory>
 
 using namespace ROOT::RDF;
 
@@ -204,6 +202,7 @@ TEST(RSqliteDS, IMT)
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
+   ROOTUnitTestSupport::CheckDiagsRAII diagRAII{kWarning, "SetNSlots", "Currently the SQlite data source faces performance degradation in multi-threaded mode. Consider turning off IMT."};
    auto rdf = MakeSqliteDataFrame(fileName0, query0);
    EXPECT_EQ(3, *rdf.Sum("fint"));
    EXPECT_NEAR(3.0, *rdf.Sum("freal"), epsilon);

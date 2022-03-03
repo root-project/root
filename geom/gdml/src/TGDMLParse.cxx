@@ -816,7 +816,7 @@ Double_t TGDMLParse::Value(const char *svalue) const
    TFormula f("TFormula", expanded.c_str());
 
    // Tell the TFormula about every parameter we know about
-   for (auto it : fconsts)
+   for (auto &it : fconsts)
       f.SetParameter(it.first.c_str(), it.second);
 
    val = f.Eval(0);

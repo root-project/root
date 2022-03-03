@@ -495,12 +495,12 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
       Int_t nEvt(nEvtPerSample) ;
 
       // Reset generator parameters to initial values
-      *_genParams = *_genInitParams ;
+      _genParams->assign(*_genInitParams) ;
 
       // If constraints are present, sample generator values from constraints
       if (_constrPdf) {
 	RooDataSet* tmp = _constrGenContext->generate(1) ;
-	*_genParams = *tmp->get() ;
+	_genParams->assign(*tmp->get()) ;
 	delete tmp ;
       }
 
@@ -737,7 +737,7 @@ Bool_t RooMCStudy::fit(Int_t nSamples, TList& dataSetList)
 
 void RooMCStudy::resetFitParams()
 {
-  *_fitParams = *_fitInitParams ;
+  _fitParams->assign(*_fitInitParams) ;
 }
 
 
@@ -766,9 +766,9 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
   RooFitResult* fr ;
   if (_fitOptList.GetSize()==0) {
     if (_projDeps.getSize()>0) {
-      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFit::ConditionalObservables(_projDeps),RooFit::FitOptions(fitOpt2)) ;
+      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFit::ConditionalObservables(_projDeps),RooFitLegacy::FitOptions(fitOpt2)) ;
     } else {
-      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFit::FitOptions(fitOpt2)) ;
+      fr = (RooFitResult*) _fitModel->fitTo(*data,RooFitLegacy::FitOptions(fitOpt2)) ;
     }
   } else {
     RooCmdArg save  = RooFit::Save() ;
@@ -885,7 +885,7 @@ Bool_t RooMCStudy::addFitResult(const RooFitResult& fr)
   }
   
   // Transfer contents of fit result to fitParams ;
-  *_fitParams = RooArgSet(fr.floatParsFinal()) ;
+  _fitParams->assign(RooArgSet(fr.floatParsFinal())) ;
   
   // If fit converged, store parameters and NLL
   Bool_t ok = (fr.status()==0) ;

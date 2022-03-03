@@ -6,6 +6,9 @@
     \brief Advanced 1-dimensional orthogonal transform functions
     \author Miroslav Morhac
 
+ \legacy{TSpectrumTransform}
+
+
  Class to carry out transforms of 1D spectra, its filtering and
  enhancement. It allows to calculate classic Fourier, Cosine, Sin,
  Hartley, Walsh, Haar transforms as well as mixed transforms (Fourier-

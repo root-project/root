@@ -29,13 +29,6 @@ Boston, MA 02111-1307, USA.  */
 #include <cygwin/version.h>
 #endif /* __CYGWIN__ */
 
-#if defined(R__LINUX) && !defined(R__GLIBC) && !defined(__CYGWIN__) \
-   || (defined(__CYGWIN__) && (CYGWIN_VERSION_API_MAJOR > 0 || CYGWIN_VERSION_API_MINOR < 213))
-extern size_t getpagesize PARAMS ((void));
-#else
-extern int getpagesize PARAMS ((void));
-#endif
-
 #ifdef VMS
 #undef _SC_PAGE_SIZE
 #undef _SC_PAGESIZE

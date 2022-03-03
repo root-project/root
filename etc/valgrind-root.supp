@@ -1275,7 +1275,7 @@
    ROOT:X11 - XQueryExtension
    Memcheck:Param
    writev(vector[...])
-   fun:writev
+   ...
    obj:*/libxcb.*
    obj:*/libxcb.*
    fun:xcb_writev

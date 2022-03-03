@@ -23,7 +23,7 @@ mean = ROOT.RooRealVar("mean", "mean", -3, -10, 10)
 gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, sigma)
 
 # Generate a sample of 100 events with sigma=3
-data = gauss.generate(ROOT.RooArgSet(x), 100)
+data = gauss.generate({x}, 100)
 
 # Fit pdf to data
 gauss.fitTo(data)
@@ -32,54 +32,40 @@ gauss.fitTo(data)
 # -------------------------------
 
 # Make four plot frames to demonstrate various plotting features
-frame1 = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title(
-    "Red Curve / SumW2 Histo errors"), ROOT.RooFit.Bins(20))
-frame2 = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title(
-    "Dashed Curve / No XError bars"), ROOT.RooFit.Bins(20))
-frame3 = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title(
-    "Filled Curve / Blue Histo"), ROOT.RooFit.Bins(20))
-frame4 = x.frame(ROOT.RooFit.Name("xframe"), ROOT.RooFit.Title(
-    "Partial Range / Filled Bar chart"), ROOT.RooFit.Bins(20))
+frame1 = x.frame(Name="xframe", Title="Red Curve / SumW2 Histo errors", Bins=20)
+frame2 = x.frame(Name="xframe", Title="Dashed Curve / No XError bars", Bins=20)
+frame3 = x.frame(Name="xframe", Title="Filled Curve / Blue Histo", Bins=20)
+frame4 = x.frame(Name="xframe", Title="Partial Range / Filled Bar chart", Bins=20)
 
 # Data plotting styles
 # ---------------------------------------
 
 # Use sqrt(sum(weights^2)) error instead of Poisson errors
-data.plotOn(frame1, ROOT.RooFit.DataError(ROOT.RooAbsData.SumW2))
+data.plotOn(frame1, DataError="SumW2")
 
 # Remove horizontal error bars
-data.plotOn(frame2, ROOT.RooFit.XErrorSize(0))
+data.plotOn(frame2, XErrorSize=0)
 
 # Blue markers and error bors
-data.plotOn(frame3, ROOT.RooFit.MarkerColor(
-    ROOT.kBlue), ROOT.RooFit.LineColor(ROOT.kBlue))
+data.plotOn(frame3, MarkerColor="b", LineColor="b")
 
 # Filled bar chart
-data.plotOn(
-    frame4,
-    ROOT.RooFit.DrawOption("B"),
-    ROOT.RooFit.DataError(
-        ROOT.RooAbsData.ErrorType(2)),
-    ROOT.RooFit.XErrorSize(0),
-    ROOT.RooFit.FillColor(
-        ROOT.kGray))
+data.plotOn(frame4, DrawOption="B", DataError=None, XErrorSize=0, FillColor="kGray")
 
 # Function plotting styles
 # -----------------------------------------------
 
 # Change line color to red
-gauss.plotOn(frame1, ROOT.RooFit.LineColor(ROOT.kRed))
+gauss.plotOn(frame1, LineColor="r")
 
 # Change line style to dashed
-gauss.plotOn(frame2, ROOT.RooFit.LineStyle(ROOT.kDashed))
+gauss.plotOn(frame2, LineStyle="--")
 
 # Filled shapes in green color
-gauss.plotOn(frame3, ROOT.RooFit.DrawOption("F"),
-             ROOT.RooFit.FillColor(ROOT.kOrange), ROOT.RooFit.MoveToBack())
+gauss.plotOn(frame3, MoveToBack=True, DrawOption="F", FillColor="kOrange")
 
 #
-gauss.plotOn(frame4, ROOT.RooFit.Range(-8, 3),
-             ROOT.RooFit.LineColor(ROOT.kMagenta))
+gauss.plotOn(frame4, Range=(-8, 3), LineColor="m")
 
 c = ROOT.TCanvas("rf107_plotstyles", "rf107_plotstyles", 800, 800)
 c.Divide(2, 2)

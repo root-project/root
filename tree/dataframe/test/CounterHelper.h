@@ -12,7 +12,7 @@ class CounterHelper : public ROOT::Detail::RDF::RActionImpl<CounterHelper> {
 public:
    CounterHelper() : fNCalls(std::make_shared<std::atomic_uint>(0u)) {}
    CounterHelper(CounterHelper &&) = default;
-   CounterHelper(const CounterHelper &) = delete;
+   CounterHelper(const CounterHelper &) = default;
 
    using Result_t = std::atomic_uint;
    std::shared_ptr<std::atomic_uint> GetResultPtr() const { return fNCalls; }
@@ -22,9 +22,9 @@ public:
    void Exec(unsigned int) { ++(*fNCalls); }
 #else
    void Exec(unsigned int) {}
-   std::function<void(unsigned int)> GetDataBlockCallback() final
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
    {
-      return [this](unsigned int) mutable { ++(*this->fNCalls); };
+      return [this](unsigned int, const ROOT::RDF::RSampleInfo &) mutable { ++(*this->fNCalls); };
    }
 #endif
    void Finalize() {}

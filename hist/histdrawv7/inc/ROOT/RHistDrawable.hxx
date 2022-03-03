@@ -1,5 +1,5 @@
 /// \file ROOT/RHistDrawable.hxx
-/// \ingroup HistDraw ROOT7
+/// \ingroup HistDrawV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -35,13 +35,8 @@ namespace ROOT {
 namespace Experimental {
 
 class RHistDrawableBase : public RDrawable {
-   RAttrValue<std::string>  fKind{this, "kind", ""};        ///<! hist draw kind
-   RAttrValue<int>          fSub{this, "sub", -1};          ///<! hist draw sub kind
-   RAttrLine                fAttrLine{this, "line"};        ///<! hist line attributes
-   RAttrFill                fAttrFill{this, "fill"};        ///<! hist fill attributes
-   RAttrText                fAttrText{this, "text"};        ///<! hist text attributes
-   RAttrMarker              fMarkerAttr{this, "marker"};    ///<! hist marker attributes
-   RAttrValue<bool>         fOptimize{this, "optimize", false}; ///<! optimize drawing
+   RAttrValue<std::string> fKind{this, "kind", ""};     ///<! hist draw kind
+   RAttrValue<int> fSub{this, "sub", -1};               ///<! hist draw sub kind
 
 protected:
 
@@ -66,7 +61,7 @@ protected:
 
    std::unique_ptr<RDisplayItem> Display(const RDisplayContext &ctxt) override
    {
-      if (fOptimize)
+      if (optimize)
          return CreateHistDisplay(ctxt);
 
       return RDrawable::Display(ctxt);
@@ -93,25 +88,13 @@ public:
 
    friend class RRequest;
 
+   RAttrLine line{this, "line"};                   ///<! hist line attributes
+   RAttrFill fill{this, "fill"};                   ///<! hist fill attributes
+   RAttrMarker marker{this, "marker"};             ///<! hist marker attributes
+   RAttrText text{this, "text"};                   ///<! hist text attributes
+   RAttrValue<bool> optimize{this, "optimize", false}; ///<! optimize drawing
+
    RHistDrawableBase() : RDrawable("hist") {}
-
-   const RAttrLine &GetAttrLine() const { return fAttrLine; }
-   RHistDrawableBase &SetAttrLine(const RAttrLine &attr) { fAttrLine = attr; return *this; }
-   RAttrLine &AttrLine() { return fAttrLine; }
-
-   const RAttrFill &GetAttrFill() const { return fAttrFill; }
-   RHistDrawableBase &SetAttrFill(const RAttrFill &fill) { fAttrFill = fill; return *this; }
-   RAttrFill &AttrFill() { return fAttrFill; }
-
-   const RAttrText &GetAttrText() const { return fAttrText; }
-   RHistDrawableBase &SetAttrText(const RAttrText &attr) { fAttrText = attr; return *this; }
-   RAttrText &AttrText() { return fAttrText; }
-
-   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
-   RHistDrawableBase &SetAttrMarker(const RAttrMarker &attr) { fMarkerAttr = attr; return *this; }
-   RAttrMarker &AttrMarker() { return fMarkerAttr; }
-
-   RHistDrawableBase &Optimize(bool on = true) { fOptimize = on; return *this; }
 };
 
 
@@ -141,39 +124,44 @@ public:
 
 
 class RHist1Drawable final : public RHistDrawable<1> {
-   RAttrValue<double> fBarOffset{this, "bar_offset", 0.}; ///<!  bar offset
-   RAttrValue<double> fBarWidth{this, "bar_width", 1.};   ///<!  bar width
-   RAttrValue<bool> fText{this, "text", false};           ///<! draw text
-
 protected:
    std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) override;
 
    bool Is3D() const final { return GetDrawKind() == "lego"; }
 
 public:
+   RAttrValue<bool> drawtext{this, "drawtext", false}; ///<! draw text
+   RAttrValue<bool> secondx{this, "secondx", false};   ///<! is draw second x axis for histogram
+   RAttrValue<bool> secondy{this, "secondy", false};   ///<! is draw second y axis for histogram
+   RAttrValue<double> baroffset{this, "baroffset", 0.}; ///<!  bar offset
+   RAttrValue<double> barwidth{this, "barwidth", 1.};   ///<!  bar width
+
    RHist1Drawable() = default;
 
    template <class HIST>
    RHist1Drawable(const std::shared_ptr<HIST> &hist) : RHistDrawable<1>(hist) {}
 
-   RHist1Drawable &Bar() { SetDrawKind("bar", 0); fBarOffset.Clear(); fBarWidth.Clear(); return *this; }
-   RHist1Drawable &Bar(double offset, double width, bool mode3d = false) { SetDrawKind("bar", mode3d ? 1 : 0); fBarOffset = offset; fBarWidth = width; return *this; }
+   RHist1Drawable &Bar() { SetDrawKind("bar", 0); return *this; }
+   RHist1Drawable &Bar(double _offset, double _width, bool mode3d = false) { SetDrawKind("bar", mode3d ? 1 : 0); baroffset = _offset; barwidth = _width; return *this; }
    RHist1Drawable &Error(int kind = 0) { SetDrawKind("err", kind); return *this; }
    RHist1Drawable &Marker() { SetDrawKind("p"); return *this; }
-   RHist1Drawable &Star() { AttrMarker().SetStyle(3); return Marker(); }
+   RHist1Drawable &Star() { marker.style = RAttrMarker::kStar; return Marker(); }
    RHist1Drawable &Hist() { SetDrawKind("hist"); return *this; }
    RHist1Drawable &Line() { SetDrawKind("l"); return *this; }
    RHist1Drawable &Lego(int kind = 0) { SetDrawKind("lego", kind); return *this; }
-   RHist1Drawable &Text(bool on = true) { fText = on; return *this; }
+   RHist1Drawable &Text() { drawtext = true; return *this; }
 
-   double GetBarOffset() const { return fBarOffset; }
-   double GetBarWidth() const { return fBarWidth; }
+   bool IsBar() const { return GetDrawKind() == "bar"; }
+   bool IsError() const { return GetDrawKind() == "err"; }
+   bool IsMarker() const { return GetDrawKind() == "p"; }
+   bool IsHist() const { return GetDrawKind() == "hist"; }
+   bool IsLine() const { return GetDrawKind() == "l"; }
+   bool IsLego() const { return GetDrawKind() == "lego"; }
+   bool IsText() const { return drawtext; }
 };
 
 
 class RHist2Drawable final : public RHistDrawable<2> {
-   RAttrValue<bool> fText{this, "text", false};               ///<! draw text
-
 protected:
 
    std::unique_ptr<RDisplayItem> CreateHistDisplay(const RDisplayContext &) override;
@@ -181,6 +169,8 @@ protected:
    bool Is3D() const final { return (GetDrawKind() == "lego") || (GetDrawKind() == "surf") || (GetDrawKind() == "err"); }
 
 public:
+   RAttrValue<bool> drawtext{this, "drawtext", false};               ///<! draw text
+
    RHist2Drawable() = default;
 
    template <class HIST>
@@ -194,7 +184,17 @@ public:
    RHist2Drawable &Contour(int kind = 0) { SetDrawKind("cont", kind); return *this; }
    RHist2Drawable &Scatter() { SetDrawKind("scat"); return *this; }
    RHist2Drawable &Arrow() { SetDrawKind("arr"); return *this; }
-   RHist2Drawable &Text(bool on = true) { fText = on; return *this; }
+   RHist2Drawable &Text() { drawtext = true; return *this; }
+
+   bool IsColor() const { return GetDrawKind() == "col"; }
+   bool IsBox() const { return GetDrawKind() == "box"; }
+   bool IsLego() const { return GetDrawKind() == "lego"; }
+   bool IsSurf() const { return GetDrawKind() == "surf"; }
+   bool IsError() const { return GetDrawKind() == "err"; }
+   bool IsContour() const { return GetDrawKind() == "cont"; }
+   bool IsScatter() const { return GetDrawKind() == "scat"; }
+   bool IsArrow() const { return GetDrawKind() == "arr"; }
+   bool IsText() const { return drawtext; }
 };
 
 

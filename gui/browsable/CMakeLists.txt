@@ -100,3 +100,30 @@ ROOT_LINKER_LIBRARY(ROOTLeafDraw7Provider
      ROOTGpadv7
 )
 
+# provider for browsing of RNTuple
+
+ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
+     src/RNTupleBrowseProvider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+)
+
+ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
+     src/RNTupleDraw6Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+     Hist
+     Gpad
+)
+
+ROOT_LINKER_LIBRARY(ROOTNTupleDraw7Provider
+     src/RNTupleDraw7Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+     Hist
+     ROOTGpadv7
+)
+

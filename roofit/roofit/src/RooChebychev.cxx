@@ -184,21 +184,15 @@ Double_t RooChebychev::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Chebychev.  
-RooSpan<double> RooChebychev::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-
-  RooSpan<const double> xData = _x->getValues(evalData, normSet);  
-  size_t batchSize = xData.size();
-  RooSpan<double> output = evalData.makeBatch(this, batchSize);
-  const Double_t xmin = _x.min(_refRangeName?_refRangeName->GetName() : nullptr);
-  const Double_t xmax = _x.max(_refRangeName?_refRangeName->GetName() : nullptr);
-
-  const size_t nCoef = _coefList.size();
-  std::vector<double> coef(nCoef);
-  for (size_t i=0; i<nCoef; i++) {
-    coef[i] = static_cast<const RooAbsReal &>(_coefList[i]).getVal();
-  }
-  RooBatchCompute::dispatch->computeChebychev(batchSize, output.data(), xData.data(), xmin, xmax, coef);
-  return output;
+void RooChebychev::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  RooBatchCompute::ArgVector extraArgs;
+  for (auto* coef:_coefList)
+    extraArgs.push_back( static_cast<const RooAbsReal*>(coef)->getVal() );
+  extraArgs.push_back( _x.min(_refRangeName?_refRangeName->GetName() : nullptr) );
+  extraArgs.push_back( _x.max(_refRangeName?_refRangeName->GetName() : nullptr) );
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Chebychev, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

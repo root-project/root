@@ -25,6 +25,13 @@
 
 #include "ESTLType.h"
 
+#ifdef _MSC_VER
+// On Windows, Disable the warning:
+// 'kIgnoreTObjectStreamer': illegal qualified name in member declaration
+#pragma warning( push )
+#pragma warning( disable : 4596 )
+#endif
+
 class TFile;
 class TClass;
 class TObjArray;
@@ -77,7 +84,7 @@ public:
       // we can not change its value without breaking forward compatibility.
       // Furthermore, TObject::kInvalidObject and its semantic is not (and should not be)
       // used in TVirtualStreamerInfo
-      kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer,
+      kIgnoreTObjectStreamer  = TVirtualStreamerInfo::kIgnoreTObjectStreamer
    };
 
    enum EReadWrite {
@@ -180,11 +187,12 @@ public:
    static void         SetCanDelete(Bool_t opt=kTRUE);
    static void         SetFactory(TVirtualStreamerInfo *factory);
 
-   // \brief Generate the TClass and TStreamerInfo for the requested pair.
-   // This creates a TVirtualStreamerInfo for the pair and trigger the BuildCheck/Old to
-   // provokes the creation of the corresponding TClass.  This relies on the dictionary for
-   // std::pair<const int, int> to already exist (or the interpreter information being available)
-   // as it is used as a template.
+   /// \brief Generate the TClass and TStreamerInfo for the requested pair.
+   /// This creates a TVirtualStreamerInfo for the pair and trigger the BuildCheck/Old to
+   /// provokes the creation of the corresponding TClass.  This relies on the dictionary for
+   /// std::pair<const int, int> to already exist (or the interpreter information being available)
+   /// as it is used as a template.
+   /// \note The returned object is owned by the caller.
    virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &pairclassname, bool silent, size_t hint_pair_offset, size_t hint_pair_size) = 0;
    virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &firstname, const std::string &secondname, bool silent, size_t hint_pair_offset, size_t hint_pair_size) = 0;
 
@@ -197,5 +205,9 @@ public:
    //WARNING this class version must be the same as TStreamerInfo
    ClassDef(TVirtualStreamerInfo,6)  //Abstract Interface describing Streamer information for one class
 };
+
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 #endif

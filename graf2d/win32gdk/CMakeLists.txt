@@ -31,12 +31,13 @@ set(gdkliba  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.lib)
 set(gdkdlla  ${CMAKE_CURRENT_BINARY_DIR}/gdk/src/gdk/gdk-1.3.dll)
 
 if(winrtdebug)
-  set(nmcxxflags "${CMAKE_CXX_FLAGS}" DEBUG=1)
+  set(nmcxxflags "${CMAKE_CXX_FLAGS_DEBUG}" DEBUG=1)
 else()
-  set(nmcxxflags "${CMAKE_CXX_FLAGS}")
+  set(nmcxxflags "${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
-
-string(REPLACE "-std=c++14" "" nmcxxflags "${nmcxxflags}")
+if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+  set(nmcxxflags "${nmcxxflags} -D_WIN64")
+endif()
 
 # Build iconv
 

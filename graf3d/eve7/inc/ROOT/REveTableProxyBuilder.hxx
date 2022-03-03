@@ -38,7 +38,7 @@ public:
    virtual void ModelChanges(const REveDataCollection::Ids_t&, REveDataProxyBuilderBase::Product* p) override;
 
    using REveDataProxyBuilderBase::Build;
-   virtual void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext* context) override;
+   virtual void Build() override;
 
    void SetCollection(REveDataCollection*) override;
    void ConfigChanged();

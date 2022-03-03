@@ -4,13 +4,13 @@ TEST(RNTuple, Descriptor)
 {
    RNTupleDescriptorBuilder descBuilder;
    descBuilder.SetNTuple("MyTuple", "Description", "Me", RNTupleVersion(1, 2, 3), ROOT::Experimental::RNTupleUuid());
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .FieldName("")
       .Structure(ENTupleStructure::kRecord)
       .MakeDescriptor()
       .Unwrap());
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(1)
       .FieldName("list")
       .TypeName("std::vector<std::int32_t>")
@@ -19,7 +19,7 @@ TEST(RNTuple, Descriptor)
       .Unwrap());
    descBuilder.AddFieldLink(0, 1);
 
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(2)
       .FieldName("list") // at different levels, duplicate names are fine
       .TypeName("std::int32_t")
@@ -28,7 +28,7 @@ TEST(RNTuple, Descriptor)
       .Unwrap());
    descBuilder.AddFieldLink(1, 2);
 
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(42)
       .FieldName("x")
       .TypeName("std::string")
@@ -154,10 +154,10 @@ TEST(RNTuple, Descriptor)
    delete[] headerBuffer;
 }
 
-TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
+TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
 {
    // minimum requirements for making a field descriptor from scratch
-   RFieldDescriptor fieldDesc = RDanglingFieldDescriptor()
+   RFieldDescriptor fieldDesc = RFieldDescriptorBuilder()
       .FieldId(1)
       .Structure(ENTupleStructure::kCollection)
       .FieldName("someField")
@@ -168,20 +168,21 @@ TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
    // -- here we check the error cases
 
    // must set field id
-   RResult<RFieldDescriptor> fieldDescRes = RDanglingFieldDescriptor().MakeDescriptor();
+   RResult<RFieldDescriptor> fieldDescRes = RFieldDescriptorBuilder().MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "default constructed dangling descriptors should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field id"));
 
    // must set field structure
-   fieldDescRes = RDanglingFieldDescriptor()
+   fieldDescRes = RFieldDescriptorBuilder()
       .FieldId(1)
       .MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "field descriptors without structure should throw";
    EXPECT_THAT(fieldDescRes.GetError()->GetReport(), testing::HasSubstr("invalid field structure"));
 
    // must set field name
-   fieldDescRes = RDanglingFieldDescriptor()
+   fieldDescRes = RFieldDescriptorBuilder()
       .FieldId(1)
+      .ParentId(1)
       .Structure(ENTupleStructure::kCollection)
       .MakeDescriptor();
    ASSERT_FALSE(fieldDescRes) << "unnamed field descriptors should throw";
@@ -191,12 +192,12 @@ TEST(RDanglingFieldDescriptor, MakeDescriptorErrors)
 TEST(RNTupleDescriptorBuilder, CatchBadLinks)
 {
    RNTupleDescriptorBuilder descBuilder;
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(0)
       .Structure(ENTupleStructure::kRecord)
       .MakeDescriptor()
       .Unwrap());
-   descBuilder.AddField(RDanglingFieldDescriptor()
+   descBuilder.AddField(RFieldDescriptorBuilder()
       .FieldId(1)
       .FieldName("field")
       .TypeName("int32_t")
@@ -252,12 +253,12 @@ TEST(RNTupleDescriptor, QualifiedFieldName)
    auto fldIdInts = desc.FindFieldId("ints");
    EXPECT_STREQ("ints", desc.GetQualifiedFieldName(fldIdInts).c_str());
    auto fldIdJets = desc.FindFieldId("jets");
-   auto fldIdInner = desc.FindFieldId("float", fldIdJets);
+   auto fldIdInner = desc.FindFieldId("_0", fldIdJets);
    EXPECT_STREQ("jets", desc.GetQualifiedFieldName(fldIdJets).c_str());
-   EXPECT_STREQ("jets.float", desc.GetQualifiedFieldName(fldIdInner).c_str());
+   EXPECT_STREQ("jets._0", desc.GetQualifiedFieldName(fldIdInner).c_str());
 }
 
-TEST(RFieldDescriptorRange, IterateOverFieldNames)
+TEST(RFieldDescriptorIterable, IterateOverFieldNames)
 {
    auto model = RNTupleModel::Create();
    auto floats = model->MakeField<std::vector<float>>("jets");
@@ -290,16 +291,16 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
    // iterate over child field ranges
    const auto& float_vec_desc = *top_level_fields.begin();
    EXPECT_EQ(float_vec_desc.GetFieldName(), std::string("jets"));
-   auto float_vec_child_range = ntuple_desc.GetFieldRange(float_vec_desc);
+   auto float_vec_child_range = ntuple_desc.GetFieldIterable(float_vec_desc);
    std::vector<std::string> child_names{};
    for (auto& child_field: float_vec_child_range) {
       child_names.push_back(child_field.GetFieldName());
       // check the empty range
-      auto float_child_range = ntuple_desc.GetFieldRange(child_field);
+      auto float_child_range = ntuple_desc.GetFieldIterable(child_field);
       EXPECT_EQ(float_child_range.begin(), float_child_range.end());
    }
    ASSERT_EQ(child_names.size(), 1);
-   EXPECT_EQ(child_names[0], std::string("float"));
+   EXPECT_EQ(child_names[0], std::string("_0"));
 
    // check if canonical iterator methods work
    auto iter = top_level_fields.begin();
@@ -308,14 +309,14 @@ TEST(RFieldDescriptorRange, IterateOverFieldNames)
    EXPECT_EQ(bool_vec_vec_desc.GetFieldName(), std::string("bool_vec_vec"));
 
    child_names.clear();
-   for (auto& child_field: ntuple_desc.GetFieldRange(bool_vec_vec_desc)) {
+   for (auto& child_field: ntuple_desc.GetFieldIterable(bool_vec_vec_desc)) {
       child_names.push_back(child_field.GetFieldName());
    }
    ASSERT_EQ(child_names.size(), 1);
-   EXPECT_EQ(child_names[0], std::string("std::vector<bool>"));
+   EXPECT_EQ(child_names[0], std::string("_0"));
 }
 
-TEST(RFieldDescriptorRange, SortByLambda)
+TEST(RFieldDescriptorIterable, SortByLambda)
 {
    auto model = RNTupleModel::Create();
    auto floats = model->MakeField<std::vector<float>>("jets");
@@ -378,7 +379,7 @@ TEST(RFieldDescriptorRange, SortByLambda)
 }
 
 
-TEST(RColumnDescriptorRange, IterateOverColumns)
+TEST(RColumnDescriptorIterable, IterateOverColumns)
 {
    auto model = RNTupleModel::Create();
    auto floats = model->MakeField<std::vector<float>>("jets");
@@ -396,14 +397,14 @@ TEST(RColumnDescriptorRange, IterateOverColumns)
 
    // No column attached to the zero field
    unsigned int counter = 0;
-   for (const auto &c : desc.GetColumnRange(desc.GetFieldZeroId())) {
+   for (const auto &c : desc.GetColumnIterable(desc.GetFieldZeroId())) {
       (void)c;
       counter++;
    }
    EXPECT_EQ(0u, counter);
 
    const auto tagId = desc.FindFieldId("tag");
-   for (const auto &c : desc.GetColumnRange(tagId)) {
+   for (const auto &c : desc.GetColumnIterable(tagId)) {
       EXPECT_EQ(tagId, c.GetFieldId());
       EXPECT_EQ(counter, c.GetIndex());
       counter++;
@@ -411,9 +412,35 @@ TEST(RColumnDescriptorRange, IterateOverColumns)
    EXPECT_EQ(2, counter);
 
    const auto jetsId = desc.FindFieldId("jets");
-   for (const auto &c : desc.GetColumnRange(desc.FindFieldId("jets"))) {
+   for (const auto &c : desc.GetColumnIterable(desc.FindFieldId("jets"))) {
       EXPECT_EQ(jetsId, c.GetFieldId());
       counter++;
    }
    EXPECT_EQ(3, counter);
+}
+
+TEST(RClusterDescriptor, GetBytesOnStorage)
+{
+   auto model = RNTupleModel::Create();
+   auto fldJets = model->MakeField<std::vector<float>>("jets");
+   auto fldTag = model->MakeField<std::string>("tag");
+
+   FileRaii fileGuard("test_descriptor_bytes_on_storage.root");
+   {
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      RNTupleWriter ntuple(std::move(model),
+         std::make_unique<RPageSinkFile>("ntuple", fileGuard.GetPath(), options));
+      fldJets->push_back(1.0);
+      fldJets->push_back(2.0);
+      *fldTag = "abc";
+      ntuple.Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   const auto &desc = ntuple->GetDescriptor();
+
+   auto clusterID = desc.FindClusterId(0, 0);
+   ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
+   EXPECT_EQ(4 + 8 + 4 + 3, desc.GetClusterDescriptor(clusterID).GetBytesOnStorage());
 }

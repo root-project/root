@@ -221,6 +221,16 @@ namespace ROOT {
 
 #include "Math/Functor.h"
 
+/**
+ * Solve `f(x) = 0`, given a derivative `d`.
+ * @param f Function whose root should be found.
+ * @param d Derivative of the function.
+ * @param start Starting point for iteration.
+ * @param maxIter Maximum number of iterations, passed to Solve(int,double,double)
+ * @param absTol Absolute tolerance, as in Solve(int,double,double)
+ * @param relTol Relative tolerance, passed to Solve(int,double,double)
+ * @return true if a root was found. Retrieve the result using Root().
+ */
 template<class Function, class Derivative>
 bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,
                                   int maxIter, double absTol, double relTol)
@@ -232,6 +242,16 @@ bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,
    return Solve(maxIter, absTol, relTol);
 }
 
+/**
+ * Solve `f(x) = 0` numerically.
+ * @param f Function whose root should be found.
+ * @param min Minimum allowed value of `x`.
+ * @param max Maximum allowed value of `x`.
+ * @param maxIter Maximum number of iterations, passed to Solve(int,double,double)
+ * @param absTol Absolute tolerance, as in Solve(int,double,double)
+ * @param relTol Relative tolerance, passed to Solve(int,double,double)
+ * @return true if a root was found. Retrieve the result using Root().
+ */
 template<class Function>
 bool ROOT::Math::RootFinder::Solve(Function &f, double min, double max,
                                   int maxIter, double absTol, double relTol)

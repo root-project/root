@@ -69,7 +69,7 @@ private:
    using VecStr_t = std::vector<std::string>;
    using DElement_t = ROOT::Internal::RDF::RDisplayElement;
    static constexpr char fgSeparator = ' '; ///< Spacing used to align the table entries
-   static constexpr unsigned fgMaxWidth = 80;
+   static constexpr unsigned fgMaxWidth = 100; ///< Maximum width of the table that Print() displays
 
    VecStr_t fTypes; ///< This attribute stores the type of each column. It is needed by the interpreter to print it.
    std::vector<bool> fIsCollection; ///< True if the column contains a collection. Collections are treated differently
@@ -90,6 +90,8 @@ private:
 
    size_t fEntries; ///< Number of events to process for each column (i.e. number of rows).
 
+   size_t fNMaxCollectionElements = 10; // threshold on number of elements in collections to be Print()
+
    ////////////////////////////////////////////////////////////////////////////
    /// Appends a cling::printValue call to the stringstream.
    /// \tparam T the type of the event to convert
@@ -97,7 +99,7 @@ private:
    /// \param[in] element The event to convert to its string representation
    /// \param[in] index To which column the event belongs to
    /// \return false, the event is not a collection
-   template <typename T, typename std::enable_if<!ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<!ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    bool AddInterpreterString(std::stringstream &stream, T &element, const int &index)
    {
       stream << "*((std::string*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(fRepresentations[index]))
@@ -113,7 +115,7 @@ private:
    /// \param[in] index To which column the event belongs to
    /// \return true, the event is a collection
    /// This function chains a sequence of call to cling::printValue, one for each element of the collection.
-   template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    bool AddInterpreterString(std::stringstream &stream, T &collection, const int &index)
    {
       size_t collectionSize = std::distance(std::begin(collection), std::end(collection));
@@ -196,6 +198,10 @@ private:
    size_t GetNColumnsToShorten() const;
 
    ////////////////////////////////////////////////////////////////////////////
+   /// Generate dashes between entries in Print() and AsString() Methods
+   std::string DashesBetweenLines(size_t lastColToPrint, bool allColumnsFit) const;
+
+   ////////////////////////////////////////////////////////////////////////////
    /// Adds a row of events to the table
    template <typename... Columns>
    void AddRow(Columns &... columns)
@@ -234,7 +240,7 @@ public:
    /// \param[in] columnNames Columns to print
    /// \param[in] types The type of each column
    /// \param[in] entries How many events per column (row) must be processed.
-   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries);
+   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries, size_t nMaxCollectionElements);
 
    ////////////////////////////////////////////////////////////////////////////
    /// Prints the representation to the standard output

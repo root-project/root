@@ -32,7 +32,6 @@ public:
    int64_t size{0};         ///<! file size
 
    // this is part for browser, visible for I/O
-   std::string fsize;    ///< file size
    std::string mtime;    ///< modification time
    std::string ftype;    ///< file attributes
    std::string fuid;     ///< user id
@@ -46,10 +45,12 @@ public:
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~RSysFileItem() = default;
 
+   // only subdir is folder for files items
    bool IsFolder() const override { return isdir; }
 
    // return true for hidden files
-   bool IsHidden() const override {
+   bool IsHidden() const override
+   {
       auto &n = GetName();
       if ((n.length() == 0) || (n[0] != '.')) return false;
       return (n != ".") && (n != "..");

@@ -114,7 +114,7 @@ const char *TLeafObject::GetTypeName() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method must be overridden to handle object notifcation.
+/// This method must be overridden to handle object notification.
 
 Bool_t TLeafObject::Notify()
 {
@@ -127,7 +127,7 @@ Bool_t TLeafObject::Notify()
 
 void TLeafObject::PrintValue(Int_t) const
 {
-   printf("%lx\n",(Long_t)GetValuePointer());
+   printf("%zx\n",(size_t)GetValuePointer());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -145,7 +145,7 @@ void TLeafObject::ReadBasket(TBuffer &b)
    if (fClass) {
       TObject *object;
       if (!fObjAddress) {
-         Long_t *voidobj = new Long_t[1];
+         Longptr_t *voidobj = new Longptr_t[1];
          fObjAddress  = (void **)voidobj;
          *fObjAddress = (TObject *)fClass->New();
       }

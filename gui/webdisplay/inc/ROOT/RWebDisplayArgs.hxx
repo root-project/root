@@ -37,10 +37,12 @@ public:
       kFirefox,  ///< Mozilla Firefox browser
       kNative,   ///< either Chrome or Firefox - both support major functionality
       kCEF,      ///< Chromium Embedded Framework - local display with CEF libs
-      kQt5,      ///< QWebEngine libraries - Chrome code packed in qt5
+      kQt5,      ///< Qt5 QWebEngine libraries - Chromium code packed in qt5
+      kQt6,      ///< Qt6 QWebEngine libraries - Chromium code packed in qt6
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
       kStandard, ///< standard system web browser, not recognized by ROOT, without batch mode
       kEmbedded, ///< window will be embedded into other, no extra browser need to be started
+      kOff,      ///< disable web display, do not start any browser
       kCustom    ///< custom web browser, execution string should be provided
    };
 
@@ -50,6 +52,8 @@ protected:
    std::string fExtraArgs;        ///<! extra arguments which will be append to exec string
    std::string fPageContent;      ///<! HTML page content
    std::string fRedirectOutput;   ///<! filename where browser output should be redirected
+   std::string fWidgetKind;       ///<! widget kind, used to identify that will be displayed in the web window
+   bool fBatchMode{false};        ///<! is browser runs in batch mode
    bool fHeadless{false};         ///<! is browser runs in headless mode
    bool fStandalone{true};        ///<! indicates if browser should run isolated from other browser instances
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
@@ -92,19 +96,24 @@ public:
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
    bool IsLocalDisplay() const
    {
-      return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
+      return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }
 
-   /// returns true if browser supports headless (batch) mode, used for image production
+   /// returns true if browser supports headless mode
    bool IsSupportHeadless() const
    {
-      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
+      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }
 
    /// set window url
    RWebDisplayArgs &SetUrl(const std::string &url) { fUrl = url; return *this; }
    /// returns window url
    const std::string &GetUrl() const { return fUrl; }
+
+   /// set widget kind
+   RWebDisplayArgs &SetWidgetKind(const std::string &kind) { fWidgetKind = kind; return *this; }
+   /// returns widget kind
+   const std::string &GetWidgetKind() const { return fWidgetKind; }
 
    /// set window url
    RWebDisplayArgs &SetPageContent(const std::string &cont) { fPageContent = cont; return *this; }
@@ -128,6 +137,11 @@ public:
    /// returns window url with append options
    std::string GetFullUrl() const;
 
+   /// set batch mode
+   void SetBatchMode(bool on = true) { fBatchMode = on; }
+   /// returns batch mode
+   bool IsBatchMode() const { return fBatchMode; }
+
    /// set headless mode
    void SetHeadless(bool on = true) { fHeadless = on; }
    /// returns headless mode
@@ -137,12 +151,14 @@ public:
    RWebDisplayArgs &SetWidth(int w = 0) { fWidth = w; return *this; }
    /// set preferable web window height
    RWebDisplayArgs &SetHeight(int h = 0) { fHeight = h; return *this; }
+   /// set preferable web window width and height
    RWebDisplayArgs &SetSize(int w, int h) { fWidth = w; fHeight = h; return *this; }
 
    /// set preferable web window x position, negative is default
    RWebDisplayArgs &SetX(int x = -1) { fX = x; return *this; }
    /// set preferable web window y position, negative is default
    RWebDisplayArgs &SetY(int y = -1) { fY = y; return *this; }
+   /// set preferable web window x and y position, negative is default
    RWebDisplayArgs &SetPos(int x = -1, int y = -1) { fX = x; fY = y; return *this; }
 
    /// returns preferable web window width
@@ -154,10 +170,14 @@ public:
    /// set preferable web window y position
    int GetY() const { return fY; }
 
+   /// set extra command line arguments for starting web browser command
    void SetExtraArgs(const std::string &args) { fExtraArgs = args; }
+   /// get extra command line arguments for starting web browser command
    const std::string &GetExtraArgs() const { return fExtraArgs; }
 
+   /// specify file name to which web browser output should be redirected
    void SetRedirectOutput(const std::string &fname = "") { fRedirectOutput = fname; }
+   /// get file name to which web browser output should be redirected
    const std::string &GetRedirectOutput() const { return fRedirectOutput; }
 
    /// set custom executable to start web browser

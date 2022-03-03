@@ -22,6 +22,9 @@
 #include "RooChangeTracker.h"
 #include "RooRealVar.h"
 
+#include "ROOT/RStringView.hxx"
+#include "Rtypes.h"
+
 #include <list>
 #include <vector>
 #include <algorithm>
@@ -40,7 +43,10 @@ public:
   RooVectorDataStore() ; 
 
   // Empty ctor
-  RooVectorDataStore(const char* name, const char* title, const RooArgSet& vars, const char* wgtVarName=0) ;
+  RooVectorDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, const char* wgtVarName=0) ;
+
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooVectorDataStore)
+
   virtual RooAbsDataStore* clone(const char* newname=0) const override { return new RooVectorDataStore(*this,newname) ; }
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const override { return new RooVectorDataStore(*this,vars,newname) ; }
 
@@ -49,11 +55,38 @@ public:
   RooVectorDataStore(const RooVectorDataStore& other, const RooArgSet& vars, const char* newname=0) ;
 
 
-  RooVectorDataStore(const char *name, const char *title, RooAbsDataStore& tds, 
+  RooVectorDataStore(std::string_view name, std::string_view title, RooAbsDataStore& tds, 
 		     const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 		     std::size_t nStart, std::size_t nStop, Bool_t /*copyCache*/, const char* wgtVarName=0) ;
 
   virtual ~RooVectorDataStore() ;
+
+  /// \class ArraysStruct
+  /// Output struct for the RooVectorDataStore::getArrays() helper function.
+  /// Meant to be used for RooFit internal use and might change without warning.
+  struct ArraysStruct {
+
+    template<class T>
+    struct ArrayInfo {
+        ArrayInfo(std::string_view n, T const* d) : name{n}, data{d} {}
+        std::string name;
+        T const* data;
+    };
+
+    std::vector<ArrayInfo<double>> reals;
+    std::vector<ArrayInfo<RooAbsCategory::value_type>> cats;
+
+    std::size_t size;
+  };
+
+  /// \name Internal RooFit interface.
+  /// The classes and functions in the internal RooFit interface are
+  /// implementaion details and not part of the public user interface.
+  /// Everything in this group might change without warning.
+  /// @{
+  ArraysStruct getArrays() const;
+  void recomputeSumWeight();
+  /// @}
 
 private:
   RooArgSet varsNoWeight(const RooArgSet& allVars, const char* wgtName);
@@ -72,6 +105,7 @@ public:
 
   virtual const RooArgSet* getNative(Int_t index) const;
 
+  using RooAbsDataStore::weight ;
   /// Return the weight of the last-retrieved data point.
   Double_t weight() const override
   {
@@ -84,10 +118,10 @@ public:
   }
   virtual Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const override;
   virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const override;
-  virtual Double_t weight(Int_t index) const override;
   virtual Bool_t isWeighted() const override { return _wgtVar || _extWgtArray; }
 
   RooBatchCompute::RunContext getBatches(std::size_t first, std::size_t len) const override;
+  std::map<const std::string, RooSpan<const RooAbsCategory::value_type>> getCategoryBatches(std::size_t /*first*/, std::size_t len) const override;
   virtual RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len) const override;
 
   // Change observable name
@@ -104,7 +138,6 @@ public:
   virtual void append(RooAbsDataStore& other) override;
 
   // General & bookkeeping methods
-  virtual Bool_t valid() const override;
   virtual Int_t numEntries() const override { return static_cast<int>(size()); }
   virtual Double_t sumEntries() const override { return _sumWeight ; }
   /// Get size of stored dataset.
@@ -291,6 +324,8 @@ public:
       return _vec;
     }
 
+    std::vector<double>& data() { return _vec; }
+
   protected:
     std::vector<double> _vec;
 
@@ -476,6 +511,10 @@ public:
       if (_vecEH) _vecEH->reserve(siz);
     }
 
+    std::vector<double>* dataE() { return _vecE; }
+    std::vector<double>* dataEL() { return _vecEL; }
+    std::vector<double>* dataEH() { return _vecEH; }
+
   private:
     friend class RooVectorDataStore ;
     Double_t *_bufE ; //!
@@ -556,6 +595,14 @@ public:
       *_buf = _vec[idx];
     }
 
+    RooSpan<const RooAbsCategory::value_type> getRange(std::size_t first, std::size_t last) const {
+      auto beg = std::min(_vec.cbegin() + first, _vec.cend());
+      auto end = std::min(_vec.cbegin() + last,  _vec.cend());
+
+      return RooSpan<const RooAbsCategory::value_type>(beg, end);
+    }
+
+
     inline void loadToNative(std::size_t idx) const {
       *_nativeBuf = _vec[idx];
     }
@@ -584,6 +631,8 @@ public:
     void setBufArg(RooAbsCategory* arg) { _cat = arg; }
     const RooAbsCategory* bufArg() const { return _cat; }
 
+    std::vector<RooAbsCategory::value_type>& data() { return _vec; }
+
   private:
     friend class RooVectorDataStore ;
     RooAbsCategory* _cat;
@@ -593,15 +642,15 @@ public:
     ClassDef(CatVector,2) // STL-vector-based Data Storage class
   } ;
   
+  std::vector<RealVector*>& realStoreList() { return _realStoreList ; }
+  std::vector<RealFullVector*>& realfStoreList() { return _realfStoreList ; }
+  std::vector<CatVector*>& catStoreList() { return _catStoreList ; }
 
  protected:
 
   friend class RooAbsReal ;
   friend class RooAbsCategory ;
   friend class RooRealVar ;
-  std::vector<RealVector*>& realStoreList() { return _realStoreList ; }
-  std::vector<RealFullVector*>& realfStoreList() { return _realfStoreList ; }
-  std::vector<CatVector*>& catStoreList() { return _catStoreList ; }
 
   CatVector* addCategory(RooAbsCategory* cat);
 
@@ -626,7 +675,6 @@ public:
   std::vector<RealVector*> _realStoreList ;
   std::vector<RealFullVector*> _realfStoreList ;
   std::vector<CatVector*> _catStoreList ;
-  std::vector<double> _weights;
 
   void setAllBuffersNative() ;
 
@@ -638,14 +686,14 @@ public:
   const Double_t* _extWgtErrHiArray ;    //! External weight array - high error
   const Double_t* _extSumW2Array ;       //! External sum of weights array
 
-  mutable std::size_t _currentWeightIndex{0}; //
+  mutable ULong64_t _currentWeightIndex{0}; //
 
   RooVectorDataStore* _cache ; //! Optimization cache
   RooAbsArg* _cacheOwner ; //! Cache owner
 
   Bool_t _forcedUpdate ; //! Request for forced cache update 
 
-  ClassDefOverride(RooVectorDataStore, 5) // STL-vector-based Data Storage class
+  ClassDefOverride(RooVectorDataStore, 7) // STL-vector-based Data Storage class
 };
 
 

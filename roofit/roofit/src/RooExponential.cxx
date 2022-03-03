@@ -55,13 +55,19 @@ RooExponential::RooExponential(const RooExponential& other, const char* name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///cout << "exp(x=" << x << ",c=" << c << ")=" << exp(c*x) << endl ;
 
 Double_t RooExponential::evaluate() const{
   return exp(c*x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Exponential distribution.
+void RooExponential::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooBatchCompute::DataMap& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Exponential, output, nEvents, dataMap, {&*x,&*c,&*_norm});
+}
+
 
 Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
 {
@@ -86,10 +92,3 @@ Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) c
   return (exp(constant*integrand.max(rangeName)) - exp(constant*integrand.min(rangeName)))
       / constant;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Compute multiple values of Exponential distribution.  
-RooSpan<double> RooExponential::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  return RooBatchCompute::dispatch->computeExponential(this, evalData, x->getValues(evalData, normSet), c->getValues(evalData, normSet));
-}
-

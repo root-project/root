@@ -30,7 +30,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include <ROOT/RConfig.hxx> // for R__DEPRECATED
 #include <DllImport.h> // for R__EXTERN
 #include "RtypesCore.h"
 
@@ -39,16 +38,15 @@
 
 
 class TVirtualMutex;
-R__EXTERN TVirtualMutex *gErrorMutex R__DEPRECATED(6,26, "ROOT stopped exporting gErrorMutex.");
 
-const Int_t kUnset    =  -1;
-const Int_t kPrint    =   0;
-const Int_t kInfo     =   1000;
-const Int_t kWarning  =   2000;
-const Int_t kError    =   3000;
-const Int_t kBreak    =   4000;
-const Int_t kSysError =   5000;
-const Int_t kFatal    =   6000;
+constexpr Int_t kUnset    =  -1;
+constexpr Int_t kPrint    =   0;
+constexpr Int_t kInfo     =   1000;
+constexpr Int_t kWarning  =   2000;
+constexpr Int_t kError    =   3000;
+constexpr Int_t kBreak    =   4000;
+constexpr Int_t kSysError =   5000;
+constexpr Int_t kFatal    =   6000;
 
 
 // TROOT sets the error ignore level handler, the system error message handler, and the error abort handler on

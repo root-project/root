@@ -70,7 +70,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 			     const RooDataSet *prototype, const RooArgSet* auxProto,
 			     Bool_t verbose, const RooArgSet* forceDirect) :  
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
-  _cloneSet(0), _pdfClone(0), _acceptRejectFunc(0), _generator(0),
+  _pdfClone(0), _acceptRejectFunc(0), _generator(0),
   _maxVar(0), _uniIter(0), _updateFMaxPerEvent(0) 
 {
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName() 
@@ -84,14 +84,13 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   // Clone the model and all nodes that it depends on so that this context
   // is independent of any existing objects.
   RooArgSet nodes(model,model.GetName());
-  _cloneSet= (RooArgSet*) nodes.snapshot(kTRUE);
-  if (!_cloneSet) {
+  if (nodes.snapshot(_cloneSet, true)) {
     coutE(Generation) << "RooGenContext::RooGenContext(" << GetName() << ") Couldn't deep-clone PDF, abort," << endl ;
     RooErrorHandler::softAbort() ;
   }
 
   // Find the clone in the snapshot list
-  _pdfClone = (RooAbsPdf*)_cloneSet->find(model.GetName());
+  _pdfClone = static_cast<RooAbsPdf*>(_cloneSet.find(model.GetName()));
   _pdfClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
 
   // Optionally fix RooAddPdf normalizations
@@ -115,7 +114,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       continue;
     }
     // lookup this argument in the cloned set of PDF dependents
-    arg= (const RooAbsArg*)_cloneSet->find(tmp->GetName());
+    arg= static_cast<RooAbsArg const*>(_cloneSet.find(tmp->GetName()));
     if(0 == arg) {
       coutI(Generation) << "RooGenContext::ctor() WARNING model does not depend on \"" << tmp->GetName() 
 			  << "\" which will have uniform distribution" << endl;
@@ -192,8 +191,9 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   ccxcoutI(Generation) << endl ;
 
   // initialize the accept-reject generator
-  RooArgSet *depList= _pdfClone->getObservables(_theEvent);
-  depList->remove(_otherVars);
+  RooArgSet depList;
+  _pdfClone->getObservables(&_theEvent, depList);
+  depList.remove(_otherVars);
 
   TString nname(_pdfClone->GetName()) ;
   nname.Append("_AccRej") ;
@@ -201,14 +201,15 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   ntitle.Append(" (Accept/Reject)") ;
   
 
-  RooArgSet* protoDeps = model.getObservables(_protoVars) ;
+  RooArgSet protoDeps;
+  model.getObservables(&_protoVars, protoDeps);
   
 
   if (_protoVars.getSize()==0) {
 
     // No prototype variables
     
-    if(depList->getSize()==0) {
+    if(depList.empty()) {
       // All variable are generated with accept-reject
       
       // Check if PDF supports maximum finding
@@ -216,7 +217,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       if (maxFindCode != 0) {
 	coutI(Generation) << "RooGenContext::ctor() no prototype data provided, all observables are generated with numerically and "
 			      << "model supports analytical maximum findin:, can provide analytical pdf maximum to numeric generator" << endl ;
-	Double_t maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(_theEvent) ;
+	Double_t maxVal = _pdfClone->maxVal(maxFindCode) / _pdfClone->getNorm(&_theEvent) ;
 	_maxVar = new RooRealVar("funcMax","function maximum",maxVal) ;
 	cxcoutD(Generation) << "RooGenContext::ctor() maximum value returned by RooAbsPdf::maxVal() is " << maxVal << endl ;
       }
@@ -224,7 +225,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
     if (_otherVars.getSize()>0) {
       _pdfClone->getVal(&vars) ; // WVE debug
-      _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,*depList,&vars);
+      _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,depList,&vars);
       cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
     } else {
       _acceptRejectFunc = 0 ;
@@ -233,8 +234,8 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
   } else {
 
     // Generation _with_ prototype variable
-    depList->remove(_protoVars,kTRUE,kTRUE) ;
-    _acceptRejectFunc= (RooRealIntegral*) _pdfClone->createIntegral(*depList,vars) ;
+    depList.remove(_protoVars,true,true);
+    _acceptRejectFunc= (RooRealIntegral*) _pdfClone->createIntegral(depList,vars) ;
     cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
     
     // Check if PDF supports maximum finding for the entire phase space
@@ -266,7 +267,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
       // Regular case: First find maximum in other+proto space
       RooArgSet otherAndProto(_otherVars) ;
 
-      otherAndProto.add(*protoDeps) ;
+      otherAndProto.add(protoDeps) ;
       
       if (_otherVars.getSize()>0) {      
 
@@ -304,8 +305,6 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
     _generator = 0 ;
   }
 
-  delete protoDeps ;
-  delete depList;
   _otherVars.add(_uniformVars);
 }
 
@@ -315,9 +314,6 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
 RooGenContext::~RooGenContext() 
 {
-  // Clean up the cloned objects used in this context.
-  delete _cloneSet;
-
   // Clean up our accept/reject generator
   if (_generator) delete _generator;
   if (_acceptRejectFunc) delete _acceptRejectFunc;
@@ -370,6 +366,7 @@ void RooGenContext::initGenerator(const RooArgSet &theEvent)
 
   // Create iterator for uniform vars (if any)
   if (_uniformVars.getSize()>0) {
+    delete _uniIter;
     _uniIter = _uniformVars.createIterator() ;
   }
 }
@@ -426,7 +423,7 @@ void RooGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       }
       arglv->randomize() ;
     }
-    theEvent = _uniformVars ;
+    theEvent.assign(_uniformVars) ;
   }
 
 }

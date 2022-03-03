@@ -21,8 +21,8 @@ TEST(RNTuple, ClassVector)
    EXPECT_EQ(1U, ntuple.GetNEntries());
 
    auto viewKlassVec = ntuple.GetViewCollection("klassVec");
-   auto viewKlass = viewKlassVec.GetView<CustomStruct>("CustomStruct");
-   auto viewKlassA = viewKlassVec.GetView<float>("CustomStruct.a");
+   auto viewKlass = viewKlassVec.GetView<CustomStruct>("_0");
+   auto viewKlassA = viewKlassVec.GetView<float>("_0.a");
 
    for (auto entryId : ntuple.GetEntryRange()) {
       EXPECT_EQ(42.0, viewKlass(entryId).a);
@@ -56,15 +56,17 @@ TEST(RNTuple, InsideCollection)
 
    auto idKlassVec = source->GetDescriptor().FindFieldId("klassVec");
    ASSERT_NE(idKlassVec, ROOT::Experimental::kInvalidDescriptorId);
-   auto idKlass = source->GetDescriptor().FindFieldId("CustomStruct", idKlassVec);
+   auto idKlass = source->GetDescriptor().FindFieldId("_0", idKlassVec);
    ASSERT_NE(idKlass, ROOT::Experimental::kInvalidDescriptorId);
    auto idA = source->GetDescriptor().FindFieldId("a", idKlass);
    ASSERT_NE(idA, ROOT::Experimental::kInvalidDescriptorId);
    auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec.a", "float").Unwrap());
-   RFieldFuse::ConnectRecursively(idA, *source, *fieldInner);
+   fieldInner->SetOnDiskId(idA);
+   fieldInner->ConnectPageSource(*source);
 
    auto field = std::make_unique<ROOT::Experimental::RVectorField>("klassVec", std::move(fieldInner));
-   RFieldFuse::Connect(idKlassVec, *source, *field);
+   field->SetOnDiskId(idKlassVec);
+   field->ConnectPageSource(*source);
 
    auto value = field->GenerateValue();
    field->Read(0, &value);
@@ -170,4 +172,73 @@ TEST(RNTuple, BoolVector)
    EXPECT_FALSE((*rdBoolRVec)[1]);
    EXPECT_TRUE((*rdBoolRVec)[2]);
    EXPECT_FALSE((*rdBoolRVec)[3]);
+}
+
+
+TEST(RNTuple, ComplexVector)
+{
+   FileRaii fileGuard("test_ntuple_vec_complex.root");
+
+   auto model = RNTupleModel::Create();
+   auto wrV = model->MakeField<std::vector<ComplexStruct>>("v");
+
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "T", fileGuard.GetPath());
+      ntuple->Fill();
+      for (unsigned i = 0; i < 10; ++i)
+         wrV->push_back(ComplexStruct());
+      ntuple->Fill();
+      wrV->clear();
+      for (unsigned i = 0; i < 10000; ++i)
+         wrV->push_back(ComplexStruct());
+      ntuple->Fill();
+      wrV->clear();
+      for (unsigned i = 0; i < 100; ++i)
+         wrV->push_back(ComplexStruct());
+      ntuple->Fill();
+      for (unsigned i = 0; i < 100; ++i)
+         wrV->push_back(ComplexStruct());
+      ntuple->Fill();
+      wrV->clear();
+      ntuple->Fill();
+      wrV->push_back(ComplexStruct());
+      ntuple->Fill();
+   }
+
+   ComplexStruct::SetNCallConstructor(0);
+   ComplexStruct::SetNCallDestructor(0);
+   {
+      auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
+      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<ComplexStruct>>("v");
+
+      ntuple->LoadEntry(0);
+      EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
+      EXPECT_TRUE(rdV->empty());
+      ntuple->LoadEntry(1);
+      EXPECT_EQ(10, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(10u, rdV->size());
+      ntuple->LoadEntry(2);
+      EXPECT_EQ(10000, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(10000u, rdV->size());
+      ntuple->LoadEntry(3);
+      EXPECT_EQ(10000, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(9900, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(100u, rdV->size());
+      ntuple->LoadEntry(4);
+      EXPECT_EQ(10100, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(9900, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(200u, rdV->size());
+      ntuple->LoadEntry(5);
+      EXPECT_EQ(10100, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(10100, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(0u, rdV->size());
+      ntuple->LoadEntry(6);
+      EXPECT_EQ(10101, ComplexStruct::GetNCallConstructor());
+      EXPECT_EQ(10100, ComplexStruct::GetNCallDestructor());
+      EXPECT_EQ(1u, rdV->size());
+   }
+   EXPECT_EQ(10101u, ComplexStruct::GetNCallDestructor());
 }

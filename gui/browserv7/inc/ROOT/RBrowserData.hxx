@@ -62,6 +62,8 @@ public:
 
    void SetWorkingPath(const Browsable::RElementPath_t &path);
 
+   void CreateDefaultElements();
+
    const Browsable::RElementPath_t &GetWorkingPath() const { return fWorkingPath; }
 
    std::string ProcessRequest(const RBrowserRequest &request);
@@ -72,7 +74,7 @@ public:
    Browsable::RElementPath_t DecomposePath(const std::string &path, bool relative_to_work_element);
    std::shared_ptr<Browsable::RElement> GetSubElement(const Browsable::RElementPath_t &path);
 
-
+   void ClearCache();
 };
 
 

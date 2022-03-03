@@ -46,7 +46,8 @@ interpreted as a parameter.
 #include "RooAbsData.h"
 #include "RooRealVar.h"
 #include "RooMsgService.h"
-#include "RooHelpers.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include "TH1.h"
 #include "TH2.h"
@@ -116,6 +117,23 @@ Bool_t RooAbsRealLValue::inRange(Double_t value, const char* rangeName, Double_t
   return isInRange ;
 }
 
+
+void RooAbsRealLValue::inRange(std::span<const double> values, std::string const& rangeName, std::vector<bool>& out) const {
+  if(rangeName.empty()) {
+    return;
+  }
+
+  const RooAbsBinning& binning = getBinning(rangeName.c_str()) ;
+  const double min = binning.lowBound() ;
+  const double max = binning.highBound() ;
+  const bool infiniteMin = RooNumber::isInfinite(min);
+  const bool infiniteMax = RooNumber::isInfinite(max);
+
+  for(std::size_t i = 0; i < values.size(); ++i) {
+    out[i] = out[i] & ((infiniteMax | (values[i] <= (max+1e-6))) && (infiniteMin | (values[i] >= (min-1e-6))));
+  }
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -510,7 +528,7 @@ Bool_t RooAbsRealLValue::inRange(const char* name) const
     return minMax.first - epsilon <= val && val <= minMax.second + epsilon;
   }
 
-  const auto& ranges = RooHelpers::tokenise(name, ",");
+  const auto& ranges = ROOT::Split(name, ",");
   return std::any_of(ranges.begin(), ranges.end(), [val,epsilon,this](const std::string& range){
     const auto minMax = this->getRange(range.c_str());
     return minMax.first - epsilon <= val && val <= minMax.second + epsilon;

@@ -139,9 +139,6 @@ protected:
   Bool_t _cacheNum ;           // Cache integral if numeric
   static Int_t _cacheAllNDim ; //! Cache all integrals with given numeric dimension
 
-
-  virtual void operModeHook() ; // cache operation mode
-
   ClassDef(RooRealIntegral,3) // Real-valued function representing an integral over a RooAbsReal object
 };
 

@@ -33,6 +33,9 @@ public:
   RooProduct(const char *name, const char *title, const RooArgList& _prodSet) ;
 
   RooProduct(const RooProduct& other, const char* name = 0);
+
+  void addTerm(RooAbsArg* term);
+
   virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
   virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
@@ -69,11 +72,13 @@ protected:
       RooArgList _ownedList ;
       virtual RooArgList containedArgs(Action) ;
   };
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
                                                                                                                                                              
 
   Double_t calculate(const RooArgList& partIntList) const;
   Double_t evaluate() const;
+  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;
   Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=0) const;
@@ -81,7 +86,7 @@ protected:
 
 
 
-  ClassDef(RooProduct,2) // Product of RooAbsReal and/or RooAbsCategory terms
+  ClassDef(RooProduct,3) // Product of RooAbsReal and/or RooAbsCategory terms
 };
 
 #endif

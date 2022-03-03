@@ -32,7 +32,7 @@ ClassImp(THStack);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class THStack
-    \ingroup Hist
+    \ingroup Histograms
 The Histogram stack class
 
 A THStack is a collection of TH1 or TH2 histograms.
@@ -42,7 +42,7 @@ to the drawing option.
 THStack::Add() allows to add a new histogram to the list.
 The THStack does not own the objects in the list.
 
-### <a name="HS00"></a> Stack painting
+### Stack painting
 
 By default, histograms are shown stacked.
   - the first histogram is paint
@@ -51,7 +51,7 @@ By default, histograms are shown stacked.
 The axis ranges are computed automatically along the X and Y axis in
 order to show the complete histogram collection.
 
-### <a name="HS01"></a> Stack's drawing options
+### Stack's drawing options
 
 The specific stack's drawing options are:
 
@@ -234,7 +234,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
       }
       TAxis* haxis= useX ? hist->GetYaxis() : hist->GetXaxis();
       if (!haxis) {
-         Warning("HStack","Histogram axis is NULL");
+         Warning("THStack","Histogram axis is NULL");
          return;
       }
       Int_t nbins = haxis->GetNbins();
@@ -270,7 +270,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
          else if (sAxis.First('z')==kNPOS)
             haxis=hist->GetZaxis();
          if (!haxis) {
-            Warning("HStack","Histogram axis is NULL");
+            Warning("THStack","Histogram axis is NULL");
             return;
          }
 
@@ -304,7 +304,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
             haxis2=hist->GetYaxis();
          }
          if (!haxis1 || !haxis2) {
-            Warning("HStack","Histogram axis is NULL");
+            Warning("THStack","Histogram axis is NULL");
             return;
          }
 
@@ -525,11 +525,16 @@ Double_t THStack::GetMaximum(Option_t *option)
    if (!opt.Contains("nostack")) {
       BuildStack();
       h = (TH1*)fStack->At(nhists-1);
+      if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                              fHistogram->GetXaxis()->GetLast());
       themax = h->GetMaximum();
    } else {
       for (Int_t i=0;i<nhists;i++) {
          h = (TH1*)fHists->At(i);
+         if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                                 fHistogram->GetXaxis()->GetLast());
          them = h->GetMaximum();
+         if (fHistogram) h->GetXaxis()->SetRange(0,0);
          if (them > themax) themax = them;
       }
    }
@@ -622,14 +627,14 @@ TObjArray *THStack::GetStack()
 
 TAxis *THStack::GetXaxis() const
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get x axis of the histogram used to draw the stack.
+/// Get y axis of the histogram used to draw the stack.
 ///
 /// IMPORTANT NOTE
 ///  You must call Draw before calling this function. The returned histogram
@@ -637,10 +642,26 @@ TAxis *THStack::GetXaxis() const
 
 TAxis *THStack::GetYaxis() const
 {
-   if (!gPad) return 0;
+   if (!gPad) return nullptr;
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get z axis of the histogram used to draw the stack.
+///
+/// IMPORTANT NOTE
+///  You must call Draw before calling this function. The returned histogram
+///  depends on the selected Draw options.
+
+TAxis *THStack::GetZaxis() const
+{
+   if (!gPad) return nullptr;
+   TH1 *h = GetHistogram();
+   if (!h->IsA()->InheritsFrom(TH2::Class())) Warning("THStack","1D Histograms don't have a Z axis");
+   if (!h) return nullptr;
+   return h->GetZaxis();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -766,18 +787,19 @@ void THStack::Paint(Option_t *choptin)
          Int_t ny = nx;
          if (((nx*ny)-nx) >= npads) ny--;
          padsav->Divide(nx,ny);
+
+         TH1 *h;
+         Int_t i = 0;
+         TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
+         while (lnk) {
+            i++;
+            padsav->cd(i);
+            h = (TH1*)lnk->GetObject();
+            h->Draw(lnk->GetOption());
+            lnk = (TObjOptLink*)lnk->Next();
+         }
+         padsav->cd();
       }
-      TH1 *h;
-      Int_t i = 0;
-      TObjOptLink *lnk = (TObjOptLink*)fHists->FirstLink();
-      while (lnk) {
-         i++;
-         padsav->cd(i);
-         h = (TH1*)lnk->GetObject();
-         h->Draw(lnk->GetOption());
-         lnk = (TObjOptLink*)lnk->Next();
-      }
-      padsav->cd();
       return;
    }
 

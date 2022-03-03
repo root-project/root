@@ -1,6 +1,6 @@
-\defgroup tutorial_dataframe Data Frame tutorials
-\ingroup Tutorials
-\brief These examples show various features of [RDataFrame](classROOT_1_1RDataFrame.html): ROOT's declarative analysis interface.
+\addtogroup tutorial_dataframe
+
+@{
 
 [RDataFrame](classROOT_1_1RDataFrame.html) offers a high level interface for the analysis of data stored in [TTree](classTTree.html)s, [CSV files](classROOT_1_1RDF_1_1RCsvDS.html) and [other data formats](classROOT_1_1RDF_1_1RDataSource.html).
 
@@ -19,3 +19,5 @@ histoB->Draw(); // HistoB has already been filled, no event loop is run here
 ~~~
 
 Explore the examples below or go to [RDataFrame's user guide](classROOT_1_1RDataFrame.html).
+
+@}

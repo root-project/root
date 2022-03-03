@@ -67,6 +67,10 @@ being read stays in RAM.
 
 For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 
+
+### Creating a dataset using RDataFrame
+\see RooAbsDataHelper, rf408_RDataFrameToRooFit.C
+
 **/
 
 #include "RooDataSet.h"
@@ -88,17 +92,19 @@ For the inverse conversion, see `RooAbsData::convertToVectorStore()`.
 #include "RooCompositeDataStore.h"
 #include "RooSentinel.h"
 #include "RooTrace.h"
-#include "RooHelpers.h"
 
+#include "ROOT/StringUtils.hxx"
+
+#include "Math/Util.h"
 #include "TTree.h"
 #include "TH2.h"
 #include "TFile.h"
 #include "TBuffer.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "strlcpy.h"
 #include "snprintf.h"
 
 #include <iostream>
+#include <memory>
 #include <fstream>
 
 
@@ -209,10 +215,12 @@ RooDataSet::RooDataSet() : _wgtVar(0)
 ///     <td> Interpret the given variable as event weight rather than as observable
 /// <tr><td> StoreError(const RooArgSet&)     <td> Store symmetric error along with value for given subset of observables
 /// <tr><td> StoreAsymError(const RooArgSet&) <td> Store asymmetric error along with value for given subset of observables
+/// <tr><td> `GlobalObservables(const RooArgSet&)` <td> Define the set of global observables to be stored in this RooDataSet.
+///                                                     A snapshot of the passed RooArgSet is stored, meaning the values wont't change unexpectedly.
 /// </table>
 ///
 
-RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
 		       const RooCmdArg& arg4,const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)  :
   RooAbsData(name,title,RooArgSet(vars,(RooAbsArg*)RooCmdConfig::decodeObjOnTheFly("RooDataSet::RooDataSet", "IndexCat",0,0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)))
 {
@@ -239,6 +247,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
   pc.defineObject("dummy2","LinkDataSliceMany",0) ;
   pc.defineSet("errorSet","StoreError",0) ;
   pc.defineSet("asymErrSet","StoreAsymError",0) ;
+  pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineMutex("ImportTree","ImportData","ImportDataSlice","LinkDataSlice","ImportFromFile") ;
   pc.defineMutex("CutSpec","CutVar") ;
   pc.defineMutex("WeightVarName","WeightVar") ;
@@ -259,6 +268,8 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     assert(0) ;
     return ;
   }
+
+  if(pc.getSet("glObs")) setGlobalObservables(*pc.getSet("glObs"));
 
   // Extract relevant objects
   TTree* impTree = static_cast<TTree*>(pc.getObject("impTree")) ;
@@ -372,7 +383,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
     map<string,RooDataSet*> hmap ;  
     if (indexCat) {
       TIterator* hiter = impSliceData.MakeIterator() ;
-      for (const auto& token : RooHelpers::tokenise(impSliceNames, ",")) {
+      for (const auto& token : ROOT::Split(impSliceNames, ",")) {
         hmap[token] = (RooDataSet*) hiter->Next() ;
       }
       delete hiter ;
@@ -617,7 +628,7 @@ RooDataSet::RooDataSet(const char* name, const char* title, const RooArgSet& var
 /// Constructor of an empty data set from a RooArgSet defining the dimensions
 /// of the data space.
 
-RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& vars, const char* wgtVarName) :
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, const RooArgSet& vars, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
 //   cout << "RooDataSet::ctor(" << this << ") storageType = " << ((defaultStorageType==Tree)?"Tree":"Vector") << endl ;
@@ -649,7 +660,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, const RooArgSet& var
 /// subset of an existing data
 ///
 
-RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset, 
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, RooDataSet *dset, 
 		       const RooArgSet& vars, const char *cuts, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
@@ -690,7 +701,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 /// uses this constructor, is the most convenient way to create a
 /// subset of an existing data
 
-RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset, 
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, RooDataSet *dset, 
 		       const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
@@ -730,7 +741,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset,
 /// operating exclusively and directly on the data set dimensions, the equivalent
 /// constructor with a string based cut expression is recommended.
 
-RooDataSet::RooDataSet(const char *name, const char *title, TTree *theTree,
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, TTree *theTree,
     const RooArgSet& vars, const RooFormulaVar& cutVar, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
@@ -778,7 +789,7 @@ RooDataSet::RooDataSet(const char *name, const char *title, TTree *theTree,
 /// If other expressions are needed, such as intermediate formula objects, use
 /// RooDataSet::RooDataSet(const char*,const char*,TTree*,const RooArgSet&,const RooFormulaVar&,const char*)
 /// \param[in] wgtVarName Name of the variable in `vars` that represents an event weight.
-RooDataSet::RooDataSet(const char* name, const char* title, TTree* theTree,
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, TTree* theTree,
     const RooArgSet& vars, const char* cuts, const char* wgtVarName) :
   RooAbsData(name,title,vars)
 {
@@ -819,7 +830,7 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Protected constructor for internal use only
 
-RooDataSet::RooDataSet(const char *name, const char *title, RooDataSet *dset, 
+RooDataSet::RooDataSet(std::string_view name, std::string_view title, RooDataSet *dset, 
 		       const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
 		       std::size_t nStart, std::size_t nStop, Bool_t copyCache, const char* wgtVarName) :
   RooAbsData(name,title,vars)
@@ -969,16 +980,17 @@ RooDataSet::~RooDataSet()
 
 RooDataHist* RooDataSet::binnedClone(const char* newName, const char* newTitle) const 
 {
-  TString title, name ;
+  std::string title;
+  std::string name;
   if (newName) {
     name = newName ;
   } else {
-    name = Form("%s_binned",GetName()) ;
+    name = std::string(GetName()) + "_binned" ;
   }
   if (newTitle) {
     title = newTitle ;
   } else {
-    title = Form("%s_binned",GetTitle()) ;
+    name = std::string(GetTitle()) + "_binned" ;
   }
 
   return new RooDataHist(name,title,*get(),*this) ;
@@ -1007,42 +1019,52 @@ Double_t RooDataSet::weightSquared() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \see RooAbsData::getWeightBatch().
-RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t len) const {
-  return _dstore->getWeightBatch(first, len);
-}
+RooSpan<const double> RooDataSet::getWeightBatch(std::size_t first, std::size_t len, bool sumW2 /*=false*/) const {
 
+  std::size_t nEntries = this->numEntries(); // for the casting to std::size_t
 
-////////////////////////////////////////////////////////////////////////////////
-/// Write information to retrieve data columns into `evalData.spans`.
-/// All spans belonging to variables of this dataset are overwritten. Spans to other
-/// variables remain intact.
-/// \param[out] evalData Store references to all data batches in this struct's `spans`.
-/// The key to retrieve an item is the pointer of the variable that owns the data.
-/// \param first Index of first event that ends up in the batch.
-/// \param len   Number of events in each batch.
-void RooDataSet::getBatches(RooBatchCompute::RunContext& evalData, std::size_t begin, std::size_t len) const {
-  for (auto&& batch : store()->getBatches(begin, len).spans) {
-    evalData.spans[batch.first] = std::move(batch.second);
+  if(first >= nEntries || (first + len) > nEntries) {
+    throw std::runtime_error("RooDataSet::getWeightBatch(): requested range not valid for dataset.");
   }
+
+  RooSpan<const double> allWeights = _dstore->getWeightBatch(0, numEntries());
+  if(allWeights.empty()) return {};
+
+  if(!sumW2) return {std::cbegin(allWeights) + first, std::cbegin(allWeights) + first + len};
+
+  // Treat the sumW2 case with a result buffer, first reset buffer if the
+  // number of entries doesn't match with the dataset anymore
+  if(_sumW2Buffer && _sumW2Buffer->size() != nEntries) _sumW2Buffer.reset(nullptr);
+
+  if (!_sumW2Buffer) {
+    _sumW2Buffer = std::make_unique<std::vector<double>>();
+    _sumW2Buffer->reserve(nEntries);
+
+    for (std::size_t i = 0; i < nEntries; ++i) {
+      // Unlike in the RooDataHist case, the sum of weights squared for each
+      // entry is simply the square of the weight.
+      _sumW2Buffer->push_back(allWeights[i] * allWeights[i]);
+    }
+  }
+
+  return RooSpan<const double>(_sumW2Buffer->begin() + first, _sumW2Buffer->begin() + first + len);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooDataSet::weightError(Double_t& lo, Double_t& hi, ErrorType etype) const 
+/// \copydoc RooAbsData::weightError(double&,double&,RooAbsData::ErrorType) const
+void RooDataSet::weightError(double& lo, double& hi, ErrorType etype) const
 {
   store()->weightError(lo,hi,etype) ;
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-
-Double_t RooDataSet::weightError(ErrorType etype) const 
+/// \copydoc RooAbsData::weightError(ErrorType)
+double RooDataSet::weightError(ErrorType etype) const
 {
   return store()->weightError(etype) ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1060,26 +1082,6 @@ const RooArgSet* RooDataSet::get(Int_t index) const
 Double_t RooDataSet::sumEntries() const 
 {
   return store()->sumEntries() ;
-  
-  //---------
-
-  // Shortcut for unweighted unselected datasets
-  if (!isWeighted()) {
-    return numEntries() ;
-  }
-
-  // Otherwise sum the weights in the event
-  Double_t sumw(0), carry(0);
-  Int_t i ;
-  for (i=0 ; i<numEntries() ; i++) {
-    get(i) ;
-    Double_t y = weight() - carry;
-    Double_t t = sumw + y;
-    carry = (t - sumw) - y;
-    sumw = t;
-  }  
-
-  return sumw ;  
 }
 
 
@@ -1090,9 +1092,9 @@ Double_t RooDataSet::sumEntries() const
 Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const 
 {
   // Setup RooFormulaVar for cutSpec if it is present
-  RooFormula* select = 0 ;
+  std::unique_ptr<RooFormula> select = nullptr ;
   if (cutSpec && strlen(cutSpec) > 0) {
-    select = new RooFormula("select",cutSpec,*get()) ;
+    select = std::make_unique<RooFormula>("select",cutSpec,*get()) ;
   }
   
   // Shortcut for unweighted unselected datasets
@@ -1101,21 +1103,15 @@ Double_t RooDataSet::sumEntries(const char* cutSpec, const char* cutRange) const
   }
 
   // Otherwise sum the weights in the event
-  Double_t sumw(0), carry(0);
-  Int_t i ;
-  for (i=0 ; i<numEntries() ; i++) {
+  ROOT::Math::KahanSum<double> sumw{0.0};
+  for (int i = 0 ; i<numEntries() ; i++) {
     get(i) ;
     if (select && select->eval()==0.) continue ;
     if (cutRange && !_vars.allInRange(cutRange)) continue ;
-    Double_t y = weight() - carry;
-    Double_t t = sumw + y;
-    carry = (t - sumw) - y;
-    sumw = t;
+    sumw += weight();
   }
 
-  if (select) delete select ;
-
-  return sumw ;  
+  return sumw.Sum() ;
 }
 
 
@@ -1180,7 +1176,7 @@ void RooDataSet::add(const RooArgSet& data, Double_t wgt, Double_t wgtError)
 
   const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
 
-  _varsNoWgt = data;
+  _varsNoWgt.assign(data);
 
   if (_wgtVar) {
     _wgtVar->setVal(wgt) ;
@@ -1232,7 +1228,7 @@ void RooDataSet::add(const RooArgSet& indata, Double_t inweight, Double_t weight
 
   const double oldW = _wgtVar ? _wgtVar->getVal() : 0.;
 
-  _varsNoWgt = indata;
+  _varsNoWgt.assign(indata);
   if (_wgtVar) {
     _wgtVar->setVal(inweight) ;
     _wgtVar->setAsymError(weightErrorLo,weightErrorHi) ;
@@ -1793,7 +1789,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
 
   // Loop over all names in comma separated list
   Int_t fileSeqNum(0);
-  for (const auto& filename : RooHelpers::tokenise(std::string(fileList), ", ")) {
+  for (const auto& filename : ROOT::Split(std::string(fileList), ", ")) {
     // Determine index category number, if this option is active
     if (indexCat) {
 
@@ -1853,7 +1849,7 @@ RooDataSet *RooDataSet::read(const char *fileList, const RooArgList &varList,
       } else {
         // Read single line
         Bool_t readError = variables.readFromStream(file,kTRUE,verbose) ;
-        data->_vars = variables ;
+        data->_vars.assign(variables) ;
 
         // Stop on read error
         if(!file.good()) {
@@ -2084,3 +2080,15 @@ void RooDataSet::convertToTreeStore()
    }
 }
 
+
+// Compile-time test if we can still use TStrings for the constructors of
+// RooDataClasses, either for both name and title or for only one of them.
+namespace {
+  TString tstr = "tstr";
+  const char * cstr = "cstr";
+  RooRealVar x{"x", "x", 1.0};
+  RooArgSet vars{x};
+  RooDataSet d1(tstr, tstr, vars, nullptr);
+  RooDataSet d2(tstr, cstr, vars, nullptr);
+  RooDataSet d3(cstr, tstr, vars, nullptr);
+}

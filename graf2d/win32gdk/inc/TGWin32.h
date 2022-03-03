@@ -29,7 +29,7 @@
 typedef unsigned long DWORD;
 typedef void* HANDLE;
 
-typedef unsigned long XID;
+typedef ULongptr_t XID;
 typedef XID GdkDrawable;
 typedef XID GdkCursor;
 typedef XID GdkColormap;
@@ -183,8 +183,8 @@ public:
    Float_t   GetTextMagnitude() {return fTextMagnitude;}
    Window_t  GetWindowID(Int_t wid);
    Bool_t    HasTTFonts() const { return fHasTTFonts; }
-   Int_t     InitWindow(ULong_t window);
-   Int_t     AddPixmap(ULong_t pix, UInt_t w, UInt_t h);
+   Int_t     InitWindow(ULongptr_t window);
+   Int_t     AddPixmap(ULongptr_t pix, UInt_t w, UInt_t h);
    void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    Int_t     OpenPixmap(UInt_t w, UInt_t h);
    void      QueryPointer(Int_t &ix, Int_t &iy);
@@ -374,8 +374,8 @@ public:
                          UInt_t w, UInt_t h);
    void         DeleteImage(Drawable_t img);
    unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height);
-   Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
-   void         RemoveWindow(ULong_t qwid);
+   Int_t        AddWindow(ULongptr_t qwid, UInt_t w, UInt_t h);
+   void         RemoveWindow(ULongptr_t qwid);
    void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask);
    UInt_t       ScreenWidthMM() const;
 

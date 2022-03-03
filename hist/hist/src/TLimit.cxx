@@ -32,8 +32,8 @@
     \ingroup Hist
  Algorithm to compute 95% C.L. limits using the Likelihood ratio
  semi-bayesian method.
- 
- Implemented by C. Delaere from the mclimit code written by Tom Junk [HEP-EX/9902006]. 
+
+ Implemented by C. Delaere from the mclimit code written by Tom Junk [HEP-EX/9902006].
  See [http://cern.ch/thomasj/searchlimits/ecl.html](http://cern.ch/thomasj/searchlimits/ecl.html) for more details.
 
  It takes signal, background and data histograms wrapped in a
@@ -231,14 +231,14 @@ bool TLimit::Fluctuate(TLimitDataSource * input, TLimitDataSource * output,
    // initialisation: create a sorted list of all the names of systematics
    if (init) {
       // create a "map" with the systematics names
-      TIterator *errornames = input->GetErrorNames()->MakeIterator();
+      TIter errornames = input->GetErrorNames()->MakeIterator();
       TObjArray *listofnames = 0;
       delete fgSystNames;
       fgSystNames = new TOrdCollection();
-      while ((listofnames = ((TObjArray *) errornames->Next()))) {
+      while ((listofnames = ((TObjArray *) errornames.Next()))) {
          TObjString *name = 0;
-         TIterator *loniter = listofnames->MakeIterator();
-         while ((name = (TObjString *) (loniter->Next())))
+         TIter loniter = listofnames->MakeIterator();
+         while ((name = (TObjString *) loniter.Next()))
             if ((fgSystNames->IndexOf(name)) < 0)
                fgSystNames->AddLast(name);
       }

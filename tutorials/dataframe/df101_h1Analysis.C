@@ -10,21 +10,20 @@
 /// \authors Axel Naumann, Danilo Piparo (CERN)
 
 auto Select = [](ROOT::RDataFrame &dataFrame) {
-   using Farray_t = ROOT::VecOps::RVec<float>;
-   using Iarray_t = ROOT::VecOps::RVec<int>;
+   using namespace ROOT;
 
    auto ret = dataFrame.Filter("TMath::Abs(md0_d - 1.8646) < 0.04")
                  .Filter("ptds_d > 2.5")
                  .Filter("TMath::Abs(etads_d) < 1.5")
-                 .Filter([](int ik, int ipi, Iarray_t& nhitrp) { return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1; },
+                 .Filter([](int ik, int ipi, RVecI& nhitrp) { return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1; },
                          {"ik", "ipi", "nhitrp"})
-                 .Filter([](int ik, Farray_t& rstart, Farray_t& rend) { return rend[ik - 1] - rstart[ik - 1] > 22; },
+                 .Filter([](int ik, RVecF& rstart, RVecF& rend) { return rend[ik - 1] - rstart[ik - 1] > 22; },
                          {"ik", "rstart", "rend"})
-                 .Filter([](int ipi, Farray_t& rstart, Farray_t& rend) { return rend[ipi - 1] - rstart[ipi - 1] > 22; },
+                 .Filter([](int ipi, RVecF& rstart, RVecF& rend) { return rend[ipi - 1] - rstart[ipi - 1] > 22; },
                          {"ipi", "rstart", "rend"})
-                 .Filter([](int ik, Farray_t& nlhk) { return nlhk[ik - 1] > 0.1; }, {"ik", "nlhk"})
-                 .Filter([](int ipi, Farray_t& nlhpi) { return nlhpi[ipi - 1] > 0.1; }, {"ipi", "nlhpi"})
-                 .Filter([](int ipis, Farray_t& nlhpi) { return nlhpi[ipis - 1] > 0.1; }, {"ipis", "nlhpi"})
+                 .Filter([](int ik, RVecF& nlhk) { return nlhk[ik - 1] > 0.1; }, {"ik", "nlhk"})
+                 .Filter([](int ipi, RVecF& nlhpi) { return nlhpi[ipi - 1] > 0.1; }, {"ipi", "nlhpi"})
+                 .Filter([](int ipis, RVecF& nlhpi) { return nlhpi[ipis - 1] > 0.1; }, {"ipis", "nlhpi"})
                  .Filter("njets >= 1");
 
    return ret;
@@ -59,7 +58,6 @@ void FitAndPlotHdmd(TH1 &hdmd)
    // create the canvas for the h1analysis fit
    gStyle->SetOptFit();
    auto c1 = new TCanvas("c1", "h1analysis analysis", 10, 10, 800, 600);
-   hdmd.GetXaxis()->SetTitle("m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]");
    hdmd.GetXaxis()->SetTitleOffset(1.4);
 
    // fit histogram hdmd with function f5 using the loglikelihood option
@@ -109,7 +107,8 @@ void df101_h1Analysis()
 
    ROOT::RDataFrame dataFrame(chain);
    auto selected = Select(dataFrame);
-   auto hdmdARP = selected.Histo1D({"hdmd", "Dm_d", 40, 0.13, 0.17}, "dm_d");
+   // Note: The title syntax is "<Title>;<Label x axis>;<Label y axis>"
+   auto hdmdARP = selected.Histo1D({"hdmd", "Dm_d;m_{K#pi#pi} - m_{K#pi}[GeV/c^{2}]", 40, 0.13, 0.17}, "dm_d");
    auto selectedAddedBranch = selected.Define("h2_y", "rpd0_t / 0.029979f * 1.8646f / ptd0_d");
    auto h2ARP = selectedAddedBranch.Histo2D({"h2", "ptD0 vs Dm_d", 30, 0.135, 0.165, 30, -3, 6}, "dm_d", "h2_y");
 

@@ -45,7 +45,7 @@ TThreadImp     *TThread::fgThreadImp = nullptr;
 Long_t          TThread::fgMainId = 0;
 TThread        *TThread::fgMain = nullptr;
 TMutex         *TThread::fgMainMutex;
-char  *volatile TThread::fgXAct = nullptr;
+std::atomic<char *> volatile TThread::fgXAct{nullptr};
 TMutex         *TThread::fgXActMutex = nullptr;
 TCondition     *TThread::fgXActCondi = 0;
 void **volatile TThread::fgXArr = nullptr;
@@ -354,7 +354,7 @@ void TThread::Init()
         // taking the same lock as 'tls_get_addr_tail', we can not use UniqueLockRecurseCount.
 #ifdef R__HAS_TBB
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCountsTBBUnique>();
-#else   
+#else
         ROOT::gCoreMutex = new ROOT::TRWMutexImp<std::mutex, ROOT::Internal::RecurseCounts>();
 #endif
      }
@@ -562,10 +562,13 @@ Long_t TThread::SelfId()
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the thread. This starts the static method TThread::Function()
 /// which calls the user function specified in the TThread ctor with
-/// the arg argument. Returns 0 on success, otherwise an error number will
+/// the arg argument. 
+/// If affinity is specified (>=0), a CPU affinity will be associated
+/// with the current thread.
+/// Returns 0 on success, otherwise an error number will
 /// be returned.
 
-Int_t TThread::Run(void *arg)
+Int_t TThread::Run(void *arg, const int affinity)
 {
    if (arg) fThreadArg = arg;
 
@@ -573,7 +576,7 @@ Int_t TThread::Run(void *arg)
    ThreadInternalLock();
    SetComment("Run: MainMutex locked");
 
-   int iret = fgThreadImp->Run(this);
+   int iret = fgThreadImp->Run(this, affinity);
 
    fState = iret ? kInvalidState : kRunningState;
 
@@ -863,7 +866,7 @@ void TThread::Ps()
    for (l = fgMain; l; l = l->fNext) { // loop over threads
       memset(cbuf, ' ', sizeof(cbuf));
       snprintf(cbuf, sizeof(cbuf), "%3d  %s:0x%lx", num--, l->GetName(), l->fId);
-      i = strlen(cbuf);
+      i = (int)strlen(cbuf);
       if (i < 30)
          cbuf[i] = ' ';
       cbuf[30] = 0;
@@ -947,7 +950,10 @@ again:
 
    void *arr[2];
    arr[1] = (void*) buf;
-   if (XARequest("PRTF", 2, arr, 0)) return;
+   if (XARequest("PRTF", 2, arr, 0)) {
+      delete [] buf;
+      return;
+   }
 
    printf("%s\n", buf);
    fflush(stdout);
@@ -985,7 +991,7 @@ again:
       bp = buf;
 
    void *arr[4];
-   arr[1] = (void*) Long_t(level);
+   arr[1] = (void*) Longptr_t(level);
    arr[2] = (void*) location;
    arr[3] = (void*) bp;
    if (XARequest("ERRO", 4, arr, 0)) return;
@@ -1095,7 +1101,7 @@ void TThread::XAction()
 
       case kERRO:
          {
-            int level = (int)Long_t(fgXArr[1]);
+            int level = (int)Longptr_t(fgXArr[1]);
             const char *location = (const char*)fgXArr[2];
             char *mess = (char*)fgXArr[3];
             if (level != kFatal)
@@ -1122,7 +1128,7 @@ void TThread::XAction()
 
             case 2:
                //((TCanvas*)fgXArr[1])->Constructor();
-               cmd = Form("((TCanvas *)0x%lx)->Constructor();",(Long_t)fgXArr[1]);
+               cmd = Form("((TCanvas *)0x%zx)->Constructor();",(size_t)fgXArr[1]);
                gROOT->ProcessLine(cmd);
                break;
 
@@ -1131,7 +1137,7 @@ void TThread::XAction()
                //                 (char*)fgXArr[2],
                //                 (char*)fgXArr[3],
                //                *((Int_t*)(fgXArr[4])));
-               cmd = Form("((TCanvas *)0x%lx)->Constructor((char*)0x%lx,(char*)0x%lx,*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4]);
+               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4]);
                gROOT->ProcessLine(cmd);
                break;
             case 6:
@@ -1140,7 +1146,7 @@ void TThread::XAction()
                //                 (char*)fgXArr[3],
                //                *((Int_t*)(fgXArr[4])),
                //                *((Int_t*)(fgXArr[5])));
-               cmd = Form("((TCanvas *)0x%lx)->Constructor((char*)0x%lx,(char*)0x%lx,*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4],(Long_t)fgXArr[5]);
+               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5]);
                gROOT->ProcessLine(cmd);
                break;
 
@@ -1152,7 +1158,7 @@ void TThread::XAction()
                //               *((Int_t*)(fgXArr[5])),
                //               *((Int_t*)(fgXArr[6])),
                //               *((Int_t*)(fgXArr[7])));
-               cmd = Form("((TCanvas *)0x%lx)->Constructor((char*)0x%lx,(char*)0x%lx,*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)),*((Int_t*)(0x%lx)));",(Long_t)fgXArr[1],(Long_t)fgXArr[2],(Long_t)fgXArr[3],(Long_t)fgXArr[4],(Long_t)fgXArr[5],(Long_t)fgXArr[6],(Long_t)fgXArr[7]);
+               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5],(size_t)fgXArr[6],(size_t)fgXArr[7]);
                gROOT->ProcessLine(cmd);
                break;
 
@@ -1161,7 +1167,7 @@ void TThread::XAction()
 
       case kCDEL:
          //((TCanvas*)fgXArr[1])->Destructor();
-         cmd = Form("((TCanvas *)0x%lx)->Destructor();",(Long_t)fgXArr[1]);
+         cmd = Form("((TCanvas *)0x%zx)->Destructor();",(size_t)fgXArr[1]);
          gROOT->ProcessLine(cmd);
          break;
 
@@ -1201,7 +1207,7 @@ TThreadTimer::TThreadTimer(Long_t ms) : TTimer(ms, kTRUE)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Periodically execute the TThread::XAxtion() method in the main thread.
+/// Periodically execute the TThread::XAction() method in the main thread.
 
 Bool_t TThreadTimer::Notify()
 {

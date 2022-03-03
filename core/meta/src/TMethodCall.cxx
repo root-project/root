@@ -35,7 +35,7 @@ ClassImp(TMethodCall);
 /// environment.
 
 TMethodCall::TMethodCall():
-fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
+fFunc(nullptr), fOffset(0), fClass(nullptr), fMetPtr(nullptr), fDtorOnly(kFALSE), fRetType(kNone)
 {
 }
 
@@ -43,8 +43,8 @@ fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 /// Create a method invocation environment for a specific class, method
 /// described by the callfunc.
 
-TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset):
-fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
+TMethodCall::TMethodCall(TClass *cl, CallFunc_t *callfunc, Longptr_t offset):
+fFunc(nullptr), fOffset(0), fClass(nullptr), fMetPtr(nullptr), fDtorOnly(kFALSE), fRetType(kNone)
 {
    Init(cl, callfunc, offset);
 }
@@ -57,7 +57,7 @@ fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 /// every invocation TInterpreter::Execute(...).
 
 TMethodCall::TMethodCall(TClass *cl, const char *method, const char *params):
-fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
+fFunc(nullptr), fOffset(0), fClass(nullptr), fMetPtr(nullptr), fDtorOnly(kFALSE), fRetType(kNone)
 {
    Init(cl, method, params);
 }
@@ -70,7 +70,7 @@ fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 /// every invocation TInterpreter::Execute(...).
 
 TMethodCall::TMethodCall(const char *function, const char *params):
-fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
+fFunc(nullptr), fOffset(0), fClass(nullptr), fMetPtr(nullptr), fDtorOnly(kFALSE), fRetType(kNone)
 {
    Init(function, params);
 }
@@ -82,7 +82,7 @@ fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 /// every invocation TInterpreter::Execute(...).
 
 TMethodCall::TMethodCall(const TFunction *func):
-fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
+fFunc(nullptr), fOffset(0), fClass(nullptr), fMetPtr(nullptr), fDtorOnly(kFALSE), fRetType(kNone)
 {
    Init(func);
 }
@@ -91,8 +91,8 @@ fFunc(0), fOffset(0), fClass(0), fMetPtr(0), fDtorOnly(kFALSE), fRetType(kNone)
 
 TMethodCall::TMethodCall(const TMethodCall &orig) :
 TObject(orig),
-fFunc(orig.fFunc ? gCling->CallFunc_FactoryCopy(orig.fFunc) : 0),
-fOffset(orig.fOffset), fClass(orig.fClass), fMetPtr(0 /*!*/),
+fFunc(orig.fFunc ? gCling->CallFunc_FactoryCopy(orig.fFunc) : nullptr),
+fOffset(orig.fOffset), fClass(orig.fClass), fMetPtr(nullptr /*!*/),
 fMethod(orig.fMethod), fParams(orig.fParams), fProto(orig.fProto),
 fDtorOnly(orig.fDtorOnly), fRetType(orig.fRetType)
 {
@@ -105,7 +105,7 @@ TMethodCall &TMethodCall::operator=(const TMethodCall &rhs)
 {
    if (this != &rhs) {
       gCling->CallFunc_Delete(fFunc);
-      fFunc     = rhs.fFunc ? gCling->CallFunc_FactoryCopy(rhs.fFunc) : 0;
+      fFunc     = rhs.fFunc ? gCling->CallFunc_FactoryCopy(rhs.fFunc) : nullptr;
       fOffset   = rhs.fOffset;
       fClass    = rhs.fClass;
       fMethod   = rhs.fMethod;
@@ -115,7 +115,7 @@ TMethodCall &TMethodCall::operator=(const TMethodCall &rhs)
       fRetType  = rhs.fRetType;
 
       delete fMetPtr;
-      fMetPtr = 0;
+      fMetPtr = nullptr;
    }
 
    return *this;
@@ -155,7 +155,7 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
       for(int i=strlen(function); i>=0; --i) {
          switch(function[i]) {
             case '<': ++nested; break;
-            case '>': if (nested==0) { Error("TMethodCall R__FindScope","%s is not well formed function name",function); return 0; }
+            case '>': if (nested==0) { Error("TMethodCall R__FindScope","%s is not well formed function name",function); return nullptr; }
                       --nested; break;
             case ':':
                if (nested==0) {
@@ -172,14 +172,14 @@ static TClass *R__FindScope(const char *function, UInt_t &pos, ClassInfo_t *cinf
          }
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the method invocation environment based on
 /// the CallFunc object and the TClass describing the function context.
 
-void TMethodCall::Init(TClass *cl, CallFunc_t *function, Long_t offset)
+void TMethodCall::Init(TClass *cl, CallFunc_t *function, Longptr_t offset)
 {
    if (!function) {
       fOffset = 0;
@@ -230,7 +230,7 @@ void TMethodCall::Init(const TFunction *function)
       gCling->CallFunc_Init(fFunc);
 
    const TMethod *m = dynamic_cast<const TMethod*>(function);
-   fClass = m ? m->GetClass() : 0;
+   fClass = m ? m->GetClass() : nullptr;
    fMetPtr = (TFunction*)function->Clone();
    fMethod = fMetPtr->GetName();
    fParams = "";
@@ -262,7 +262,7 @@ void TMethodCall::Init(TClass *cl, const char *method, const char *params, Bool_
       cl = R__FindScope(method,pos,cinfo);
       method = method+pos;
    }
-   InitImplementation(method,params,0,objectIsConst,cl,cinfo);
+   InitImplementation(method,params,nullptr,objectIsConst,cl,cinfo);
    gCling->ClassInfo_Delete(cinfo);
 }
 
@@ -280,7 +280,7 @@ void TMethodCall::Init(const char *function, const char *params)
    UInt_t pos = 0;
    ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    TClass *cl = R__FindScope(function,pos,cinfo);
-   InitImplementation(function+pos, params, 0, false, cl, cinfo);
+   InitImplementation(function+pos, params, nullptr, false, cl, cinfo);
    gCling->ClassInfo_Delete(cinfo);
 }
 
@@ -303,14 +303,14 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
       gCling->CallFunc_Init(fFunc);
 
    fClass    = cl;
-   fMetPtr   = 0;
+   fMetPtr   = nullptr;
    fMethod   = methodname;
    fParams   = params ? params : "";
    fProto    = proto ? proto : "";
    fDtorOnly = kFALSE;
    fRetType  = kNone;
 
-   ClassInfo_t *scope = 0;
+   ClassInfo_t *scope = nullptr;
    if (cl) scope = (ClassInfo_t*)cl->GetClassInfo();
    else    scope = (ClassInfo_t*)cinfo;
 
@@ -344,7 +344,7 @@ void TMethodCall::InitWithPrototype(TClass *cl, const char *method, const char *
       cl = R__FindScope(method,pos,cinfo);
       method = method+pos;
    }
-   InitImplementation(method, 0, proto, objectIsConst, cl, cinfo, mode);
+   InitImplementation(method, nullptr, proto, objectIsConst, cl, cinfo, mode);
    gCling->ClassInfo_Delete(cinfo);
 }
 
@@ -362,7 +362,7 @@ void TMethodCall::InitWithPrototype(const char *function, const char *proto, ROO
    UInt_t pos = 0;
    ClassInfo_t *cinfo = gCling->ClassInfo_Factory();
    TClass *cl = R__FindScope(function,pos,cinfo);
-   InitImplementation(function+pos, 0, proto, false, cl, cinfo, mode);
+   InitImplementation(function+pos, nullptr, proto, false, cl, cinfo, mode);
    gCling->ClassInfo_Delete(cinfo);
 }
 
@@ -419,8 +419,8 @@ void TMethodCall::Execute(void *object)
 {
    if (!fFunc) return;
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   void *address = nullptr;
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    if (!fDtorOnly && fMethod[0]=='~') {
       Error("Execute","TMethodCall can no longer be use to call the operator delete and the destructor at the same time");
    }
@@ -437,8 +437,8 @@ void TMethodCall::Execute(void *object, const char *params)
    // SetArgs contains the necessary lock.
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   void *address = nullptr;
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    gCling->CallFunc_Exec(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -447,12 +447,12 @@ void TMethodCall::Execute(void *object, const char *params)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the method (with preset arguments) for the specified object.
 
-void TMethodCall::Execute(void *object, Long_t &retLong)
+void TMethodCall::Execute(void *object, Longptr_t &retLong)
 {
    if (!fFunc) return;
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   void *address = nullptr;
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    retLong = gCling->CallFunc_ExecInt(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -461,15 +461,15 @@ void TMethodCall::Execute(void *object, Long_t &retLong)
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the method for the specified object and argument values.
 
-void TMethodCall::Execute(void *object, const char *params, Long_t &retLong)
+void TMethodCall::Execute(void *object, const char *params, Longptr_t &retLong)
 {
    if (!fFunc) return;
 
    // SetArgs contains the necessary lock.
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   void *address = nullptr;
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    retLong = gCling->CallFunc_ExecInt(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -482,8 +482,8 @@ void TMethodCall::Execute(void *object, Double_t &retDouble)
 {
    if (!fFunc) return;
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   void *address = nullptr;
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    retDouble = gCling->CallFunc_ExecDouble(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -498,8 +498,8 @@ void TMethodCall::Execute(void *object, const char *params, Double_t &retDouble)
 
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   void *address = nullptr;
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    retDouble = gCling->CallFunc_ExecDouble(fFunc,address);
    gCling->SetTempLevel(-1);
@@ -512,8 +512,8 @@ void TMethodCall::Execute(void *object, char **retText)
 {
    if (!fFunc) return;
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   void *address = nullptr;
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    *retText =(char*) (gCling->CallFunc_ExecInt(fFunc,address));
    gCling->SetTempLevel(-1);
@@ -529,8 +529,8 @@ void TMethodCall::Execute(void *object, const char *params, char **retText)
    // SetArgs contains the necessary lock.
    gCling->CallFunc_SetArgs(fFunc, (char *)params);
 
-   void *address = 0;
-   if (object) address = (void*)((Long_t)object + fOffset);
+   void *address = nullptr;
+   if (object) address = (void*)((Longptr_t)object + fOffset);
    gCling->SetTempLevel(1);
    *retText =(char*)(gCling->CallFunc_ExecInt(fFunc,address));
    gCling->SetTempLevel(-1);
@@ -563,7 +563,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 {
    if ( fRetType == kNone) {
       TFunction *func = GetMethod();
-      if (func == 0) {
+      if (func == nullptr) {
          fRetType = kOther;
          Error("ReturnType","Unknown method");
          return kOther;
@@ -585,7 +585,7 @@ TMethodCall::EReturnType TMethodCall::ReturnType()
 void TMethodCall::SetParamPtrs(void *paramArr, Int_t nparam)
 {
    if (!fFunc) return;
-   gCling->CallFunc_SetArgArray(fFunc,(Long_t *)paramArr, nparam);
+   gCling->CallFunc_SetArgArray(fFunc,(Longptr_t *)paramArr, nparam);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -39,23 +39,24 @@ ClassImp(TMultiGraph);
 ////////////////////////////////////////////////////////////////////////////////
 
 /** \class TMultiGraph
-    \ingroup Hist
+    \ingroup Graphs
      \brief A TMultiGraph is a collection of TGraph (or derived) objects.
 
-- [Introduction](#MG00)
-- [MultiGraphs' drawing](#MG01)
-    - [Setting drawing options](#MG01a)
-    - [Titles setting](#MG01b)
-    - [The option "3D"](#MG01c)
-    - [Legend drawing](#MG01d)
-    - [Automatic coloring](#MG01e)
-    - [Reverse axis](#MG01f)
-- [MultiGraphs' fitting](#MG02)
-    - [Fit box position](#MG02a)
-- [Axis' limits setting](#MG03)
+- [Introduction](\ref MG00)
+- [MultiGraphs' drawing](\ref MG01)
+    - [Setting drawing options](\ref MG01a)
+    - [Titles setting](\ref MG01b)
+    - [The option \"3D\"](\ref MG01c)
+    - [Legend drawing](\ref MG01d)
+    - [Automatic coloring](\ref MG01e)
+    - [Reverse axis](\ref MG01f)
+- [MultiGraphs' fitting](\ref MG02)
+    - [Fit box position](\ref MG02a)
+- [Axis' limits setting](\ref MG03)
 
 
-### <a name="MG00"></a> Introduction
+\anchor MG00
+### Introduction
 
 A TMultiGraph allows to manipulate a set of graphs as a single entity. In particular,
 when drawn, the X and Y axis ranges are automatically computed such as all the graphs
@@ -70,7 +71,8 @@ The number of graphs in a multigraph can be retrieve with:
 mg->GetListOfGraphs()->GetEntries();
 ~~~
 
-### <a name="MG00"></a> MultiGraphs' Drawing
+\anchor MG01
+### MultiGraphs' Drawing
 
 The drawing options are the same as for TGraph.
 Like for TGraph, the painting is performed thanks to the TGraphPainter
@@ -86,7 +88,8 @@ Example:
      mg->Draw("a");
 ~~~
 
-#### <a name="MG01a"></a> Setting drawing options
+\anchor MG01a
+#### Setting drawing options
 
 The drawing option for each TGraph may be specified as an optional
 second argument of the `Add` function.
@@ -95,7 +98,8 @@ If a draw option is specified, it will be used to draw the graph,
 otherwise the graph will be drawn with the option specified in
 `TMultiGraph::Draw`
 
-#### <a name="MG01b"></a> Titles setting
+\anchor MG01b
+#### Titles setting
 
 The global title and the axis titles can be modified the following way:
 
@@ -108,7 +112,8 @@ The global title and the axis titles can be modified the following way:
    mg->Draw("apl");
 ~~~
 
-#### <a name="MG01c"></a> The option "3D"
+\anchor MG01c
+#### The option "3D"
 
 A special option `3D` allows to draw the graphs in a 3D space. See the
 following example:
@@ -150,7 +155,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-#### <a name="MG01d"></a> Legend drawing
+\anchor MG01d
+#### Legend drawing
 
 The method TPad::BuildLegend is able to extract the graphs inside a
 multigraph. The following example demonstrate this.
@@ -211,7 +217,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-#### <a name="MG01e"></a> Automatic coloring
+\anchor MG01e
+#### Automatic coloring
 
 Automatic coloring according to the current palette is available as shown in the
 following example:
@@ -220,7 +227,8 @@ Begin_Macro(source)
 ../../../tutorials/graphs/multigraphpalettecolor.C
 End_Macro
 
-#### <a name="MG01f"></a> Reverse axis
+\anchor MG01f
+#### Reverse axis
 
 \since **ROOT version 6.19/02**
 
@@ -269,7 +277,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="MG02"></a> MultiGraphs' fitting
+\anchor MG02
+### MultiGraphs' fitting
 
 The following example shows how to fit a TMultiGraph.
 
@@ -307,7 +316,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-#### <a name="MG02a"></a> Fit box position
+\anchor MG02a
+#### Fit box position
 
 When the graphs in a TMultiGraph are fitted, the fit parameters boxes
 overlap. The following example shows how to make them all visible.
@@ -317,7 +327,8 @@ Begin_Macro(source)
 ../../../tutorials/graphs/multigraph.C
 End_Macro
 
-### <a name="MG03"></a> Axis' limits setting
+\anchor MG03
+### Axis' limits setting
 
 The axis limits can be changed the like for TGraph. The same methods apply on
 the multigraph.
@@ -1084,8 +1095,15 @@ TH1F *TMultiGraph::GetHistogram()
    double dy = 0.05*(rwymax-rwymin);
    rwxmin = rwxmin - dx;
    rwxmax = rwxmax + dx;
-   rwymin = rwymin - dy;
-   rwymax = rwymax + dy;
+   if (gPad && gPad->GetLogy()) {
+      if (rwymin <= 0) rwymin = 0.001*rwymax;
+      double r = rwymax/rwymin;
+      rwymin = rwymin/(1+0.5*TMath::Log10(r));
+      rwymax = rwymax*(1+0.2*TMath::Log10(r));
+   } else {
+      rwymin = rwymin - dy;
+      rwymax = rwymax + dy;
+   }
    fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
    if (!fHistogram) return 0;
    fHistogram->SetMinimum(rwymin);
@@ -1608,10 +1626,21 @@ void TMultiGraph::Print(Option_t *option) const
 
 void TMultiGraph::RecursiveRemove(TObject *obj)
 {
+   if (obj == fHistogram) {
+      fHistogram = nullptr;
+      return;
+   }
+
+   if (fFunctions) {
+      auto f = fFunctions->Remove(obj);
+      if (f) return;
+   }
+
    if (!fGraphs) return;
-   TObject *objr = fGraphs->Remove(obj);
+   auto objr = fGraphs->Remove(obj);
    if (!objr) return;
-   delete fHistogram; fHistogram = 0;
+
+   delete fHistogram; fHistogram = nullptr;
    if (gPad) gPad->Modified();
 }
 

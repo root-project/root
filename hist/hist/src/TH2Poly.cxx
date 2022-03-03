@@ -21,7 +21,7 @@
 ClassImp(TH2Poly);
 
 /** \class TH2Poly
-    \ingroup Hist
+    \ingroup Histograms
 2D Histogram with Polygonal Bins
 
 ## Overview
@@ -740,8 +740,8 @@ Double_t TH2Poly::Integral(Option_t* option) const
          integral += w * (bin->GetContent());
       }
    } else {
-      // need to recompute integral in case somebith called SetBinContent and
-      // cannot use fTsumw since it is not updated in that case
+      // need to recompute integral in case SetBinContent was called.
+      // fTsumw cannot be used since it is not updated in that case
       while ((obj = next())) {
          bin = (TH2PolyBin *)obj;
          integral += (bin->GetContent());
@@ -1322,7 +1322,7 @@ void TH2Poly::GetStats(Double_t *stats) const
 }
 
 /** \class TH2PolyBin
-    \ingroup Hist
+    \ingroup Histograms
 Helper class to represent a bin in the TH2Poly histogram
 */
 
@@ -1562,7 +1562,7 @@ Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
 
 ////////////////////////////////////////////////////////////////////////
 /// RE-implement dummy functions to avoid users calling the
-/// corresponding implemntations in TH1 or TH2
+/// corresponding implementations in TH1 or TH2
 //////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////

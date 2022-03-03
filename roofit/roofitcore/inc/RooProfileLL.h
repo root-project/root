@@ -13,15 +13,11 @@
 #define ROOPROFILELL
 
 #include "RooAbsReal.h"
+#include "RooMinimizer.h"
 #include "RooRealProxy.h"
 #include "RooSetProxy.h"
 #include <map>
 #include <string>
-
-class RooMinimizer ;
-class RooMinuit ; 
-
-#define MINIMIZER RooMinimizer
 
 class RooProfileLL : public RooAbsReal {
 public:
@@ -30,12 +26,11 @@ public:
   RooProfileLL(const char *name, const char *title, RooAbsReal& nll, const RooArgSet& observables);
   RooProfileLL(const RooProfileLL& other, const char* name=0) ;
   virtual TObject* clone(const char* newname) const { return new RooProfileLL(*this,newname); }
-  virtual ~RooProfileLL() ;
 
   void setAlwaysStartFromMin(Bool_t flag) { _startFromMin = flag ; }
   Bool_t alwaysStartFromMin() const { return _startFromMin ; }
 
-  MINIMIZER* minimizer() { if (!_minimizer) initializeMinimizer(); return _minimizer ; }
+  RooMinimizer* minimizer() { if (!_minimizer) initializeMinimizer(); return _minimizer.get() ; }
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
   const RooArgSet& bestFitParams() const ;
   const RooArgSet& bestFitObs() const ;
@@ -62,7 +57,7 @@ protected:
   TIterator* _piter ; //! Iterator over profile likelihood parameters to be minimized 
   TIterator* _oiter ; //! Iterator of profile likelihood output parameter(s)
 
-  mutable MINIMIZER* _minimizer ; //! Internal minuit instance
+  mutable std::unique_ptr<RooMinimizer> _minimizer = nullptr ; //! Internal minimizer instance
 
   mutable Bool_t _absMinValid ; // flag if absmin is up-to-date
   mutable Double_t _absMin ; // absolute minimum of -log(L)

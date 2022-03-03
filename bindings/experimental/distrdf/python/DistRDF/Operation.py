@@ -62,12 +62,14 @@ class Operation(object):
 
         operations_dict = {
             "Define": Operation.TRANSFORMATION,
+            "DefinePerSample": Operation.TRANSFORMATION,
             "Filter": Operation.TRANSFORMATION,
             "Range": Operation.TRANSFORMATION,
             "Aggregate": Operation.ACTION,
             "Histo1D": Operation.ACTION,
             "Histo2D": Operation.ACTION,
             "Histo3D": Operation.ACTION,
+            "HistoND": Operation.ACTION,
             "Profile1D": Operation.ACTION,
             "Profile2D": Operation.ACTION,
             "Profile3D": Operation.ACTION,
@@ -77,6 +79,7 @@ class Operation(object):
             "Mean": Operation.ACTION,
             "Sum": Operation.ACTION,
             "Fill": Operation.ACTION,
+            "Redefine": Operation.TRANSFORMATION,
             "Reduce": Operation.ACTION,
             "Report": Operation.ACTION,
             "Take": Operation.ACTION,

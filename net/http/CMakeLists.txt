@@ -55,7 +55,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
 )
 
 if(ssl)
-  target_include_directories(RHTTP PRIVATE ${OPENSSL_INCLUDE_DIR})
+  target_include_directories(RHTTP SYSTEM PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif()
 
 if(FASTCGI_FOUND)

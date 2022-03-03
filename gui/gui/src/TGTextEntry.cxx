@@ -20,72 +20,62 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEntry                                                          //
-//                                                                      //
-// A TGTextEntry is a one line text input widget.                       //
-//                                                                      //
-// Changing text in the text entry widget will generate the event:      //
-// kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
-// Hitting the enter key will generate:                                 //
-// kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
-// Hitting the tab key will generate:                                   //
-// kC_TEXTENTRY, kTE_TAB, widget id, 0.                                 //
-//                                                                      //
-// This widget has the behaviour e.g. of the "Location" field in        //
-// netscape. That includes handling Control/Shift key modifiers and     //
-// scrolling the text.                                                  //
-//
-//
-// enum TGTextEntry::EEchoMode
-//
-// This enum type describes the ways in which TGTextEntry can display
-// its contents. The currently defined values are:
-//
-/*
+
+/** \class TGTextEntry
+    \ingroup guiwidgets
+
+A TGTextEntry is a one line text input widget.
+
+Changing text in the text entry widget will generate the event:
+kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.
+Hitting the enter key will generate:
+kC_TEXTENTRY, kTE_ENTER, widget id, 0.
+Hitting the tab key will generate:
+kC_TEXTENTRY, kTE_TAB, widget id, 0.
+
+This widget has the behaviour e.g. of the "Location" field in
+web browsers. That includes handling Control/Shift key modifiers and
+scrolling the text.
+
+enum TGTextEntry::EEchoMode
+
+This enum type describes the ways in which TGTextEntry can display
+its contents. The currently defined values are:
+
 <ul>
 <li>  kNormal - display characters as they are entered. This is the default.
 <li>  kNoEcho - do not display anything.
 <li>  kPassword - display asterisks instead of the characters actually entered.
 </ul>
-*/
-//
-// See also SetEchoMode(), GetEchoMode().
-//
-// enum TGTextEntry::EInsertMode
-//
-// This enum type describes the way how typed characters are
-// inserted in the text entry. This mode is switched by "Insert" key.
-//
-/*
+
+See also SetEchoMode(), GetEchoMode().
+
+enum TGTextEntry::EInsertMode
+
+This enum type describes the way how typed characters are
+inserted in the text entry. This mode is switched by "Insert" key.
+
 <ul>
 <li>  kInsert - typed character are inserted (cursor has shape of short line).
 <li>  kReplace - typed characters substitute already typed ones
                  (cursor has the shape of filled rectangle).
 </ul>
-*/
-//
-//
-// enum TGWidget::ETextJustification
-//
-// This enum type (defined in TGWidget.h) describes the text alignment modes.
-// These modes are valid until text fits the frame width
-//
-/*
+
+enum TGWidget::ETextJustification
+
+This enum type (defined in TGWidget.h) describes the text alignment modes.
+These modes are valid until text fits the frame width
+
 <ul>
 <li>  kTextLeft    - left-side text alignment
 <li>  kTextRight   - right-side text alignment
 <li>  kTextCenterX - center text alignment
 </ul>
-*/
-//
-//
-//
-// The key press event handler converts a key press to some line editor action.
-// Here are the default key bindings:
-//
-/*
+
+The key press event handler converts a key press to some line editor action.
+Here are the default key bindings:
+
+
 <ul>
 <li><i> Left Arrow </i>
         Move the cursor one character leftwards.
@@ -153,9 +143,7 @@
 </ul>
 All other keys with valid ASCII codes insert themselves into the line.
 */
-//
-//
-////////////////////////////////////////////////////////////////////////////////
+
 
 //******************* TGTextEntry signals *************************************
 //______________________________________________________________________________
@@ -1468,19 +1456,19 @@ Bool_t TGTextEntry::HandleFocusChange(Event_t *event)
    if (!IsEnabled()) return kTRUE;
 
    // check this when porting to Win32
-      if (event->fType == kFocusIn) {
-         fCursorOn = kTRUE;
-         if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
-         fCurBlink->Reset();
-         gBlinkingEntry = this;
-         gSystem->AddTimer(fCurBlink);
-      } else {
-         fCursorOn = kFALSE;
-          // fSelectionOn = kFALSE;        // "netscape location behavior"
-         if (fCurBlink) fCurBlink->Remove();
-         gBlinkingEntry = 0;
-      }
-      fClient->NeedRedraw(this);
+   if (event->fType == kFocusIn) {
+      fCursorOn = kTRUE;
+      if (!fCurBlink) fCurBlink = new TBlinkTimer(this, 500);
+      fCurBlink->Reset();
+      gBlinkingEntry = this;
+      gSystem->AddTimer(fCurBlink);
+   } else {
+      fCursorOn = kFALSE;
+       // fSelectionOn = kFALSE;        // "web browser location behavior"
+      if (fCurBlink) fCurBlink->Remove();
+      gBlinkingEntry = 0;
+   }
+   fClient->NeedRedraw(this);
    return kTRUE;
 }
 
@@ -1617,7 +1605,6 @@ void TGTextEntry::ScrollByChar()
          d -= offset;
          fOffset -= d;
          fCursorX -= d;
-         charWidth += d;
       }
    } else if (fCursorX > w-offset) {
       fOffset -= charWidth;
@@ -1628,7 +1615,6 @@ void TGTextEntry::ScrollByChar()
          d -= offset;
          fOffset += d;
          fCursorX += d;
-         charWidth += d;
       }
    }
 }

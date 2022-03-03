@@ -40,8 +40,8 @@ void rf603_multicpu()
    RooProdPdf sig("sig", "sig", RooArgSet(gx, gy, gz));
 
    // Create background pdf poly(x)*poly(y)*poly(z)
-   RooPolynomial px("px", "px", x, RooArgSet(RooConst(-0.1), RooConst(0.004)));
-   RooPolynomial py("py", "py", y, RooArgSet(RooConst(0.1), RooConst(-0.004)));
+   RooPolynomial px("px", "px", x, RooArgSet(-0.1, 0.004));
+   RooPolynomial py("py", "py", y, RooArgSet(0.1, -0.004));
    RooPolynomial pz("pz", "pz", z);
    RooProdPdf bkg("bkg", "bkg", RooArgSet(px, py, pz));
 

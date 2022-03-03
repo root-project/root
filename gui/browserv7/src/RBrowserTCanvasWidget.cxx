@@ -15,6 +15,8 @@
 #include <ROOT/Browsable/RProvider.hxx>
 
 #include "TCanvas.h"
+#include "TROOT.h"
+#include "TClass.h"
 #include "TWebCanvas.h"
 
 using namespace ROOT::Experimental;
@@ -29,6 +31,33 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
 
    std::unique_ptr<Browsable::RHolder> fObject; // TObject drawing in the TCanvas
 
+   void SetPrivateCanvasFields(bool on_init)
+   {
+      Long_t offset = TCanvas::Class()->GetDataMemberOffset("fCanvasID");
+      if (offset > 0) {
+         Int_t *id = (Int_t *)((char*) fCanvas.get() + offset);
+         if (*id == fCanvas->GetCanvasID()) *id = on_init ? 111222333 : -1;
+      } else {
+         printf("ERROR: Cannot modify TCanvas::fCanvasID data member\n");
+      }
+
+      offset = TCanvas::Class()->GetDataMemberOffset("fPixmapID");
+      if (offset > 0) {
+         Int_t *id = (Int_t *)((char*) fCanvas.get() + offset);
+         if (*id == fCanvas->GetPixmapID()) *id = on_init ? 332211 : -1;
+      } else {
+         printf("ERROR: Cannot modify TCanvas::fPixmapID data member\n");
+      }
+
+      offset = TCanvas::Class()->GetDataMemberOffset("fMother");
+      if (offset > 0) {
+         TPad **moth = (TPad **)((char*) fCanvas.get() + offset);
+         if (*moth == fCanvas->GetMother()) *moth = on_init ? fCanvas.get() : nullptr;
+      } else {
+         printf("ERROR: Cannot set TCanvas::fMother data member\n");
+      }
+   }
+
 public:
 
    RBrowserTCanvasWidget(const std::string &name) : RBrowserWidget(name)
@@ -38,6 +67,7 @@ public:
       fCanvas->SetTitle(name.c_str());
       fCanvas->ResetBit(TCanvas::kShowEditor);
       fCanvas->ResetBit(TCanvas::kShowToolBar);
+      fCanvas->SetBit(TCanvas::kMenuBar, kTRUE);
       fCanvas->SetCanvas(fCanvas.get());
       fCanvas->SetBatch(kTRUE); // mark canvas as batch
       fCanvas->SetEditable(kTRUE); // ensure fPrimitives are created
@@ -47,11 +77,40 @@ public:
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
+
+      SetPrivateCanvasFields(true);
+      fCanvas->cd();
    }
 
-   virtual ~RBrowserTCanvasWidget() = default;
+   RBrowserTCanvasWidget(const std::string &name, std::unique_ptr<TCanvas> &canv) : RBrowserWidget(name)
+   {
+      fCanvas = std::move(canv);
+      fCanvas->SetBatch(kTRUE); // mark canvas as batch
+
+      // create implementation
+      fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600);
+
+      // assign implementation
+      fCanvas->SetCanvasImp(fWebCanvas);
+      SetPrivateCanvasFields(true);
+      fCanvas->cd();
+   }
+
+   virtual ~RBrowserTCanvasWidget()
+   {
+      SetPrivateCanvasFields(false);
+
+      gROOT->GetListOfCanvases()->Remove(fCanvas.get());
+
+      fCanvas->Close();
+   }
 
    std::string GetKind() const override { return "tcanvas"s; }
+
+   void SetActive() override
+   {
+      fCanvas->cd();
+   }
 
    void Show(const std::string &arg) override
    {
@@ -61,6 +120,11 @@ public:
    std::string GetUrl() override
    {
       return "../"s + fWebCanvas->GetWebWindow()->GetAddr() + "/"s;
+   }
+
+   std::string GetTitle() override
+   {
+      return fCanvas->GetName();
    }
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt) override
@@ -88,6 +152,18 @@ protected:
    {
       return std::make_shared<RBrowserTCanvasWidget>(name);
    }
+
+   std::shared_ptr<RBrowserWidget> CreateFor(const std::string &name, std::shared_ptr<Browsable::RElement> &elem) final
+   {
+      auto holder = elem->GetObject();
+      if (!holder) return nullptr;
+
+      auto canv = holder->get_unique<TCanvas>();
+      if (!canv) return nullptr;
+
+      return std::make_shared<RBrowserTCanvasWidget>(name, canv);
+   }
+
 public:
    RBrowserTCanvasProvider() : RBrowserWidgetProvider("tcanvas") {}
    ~RBrowserTCanvasProvider() = default;

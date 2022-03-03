@@ -73,6 +73,9 @@ protected:
    std::string fCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
    std::vector<std::string> fCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
    Bool_t fCanCreateObjects{kTRUE}; ///<! indicates if canvas allowed to create extra objects for interactive painting
+   Bool_t fLongerPolling{kFALSE};  ///<! when true, make longer polling in blocking operations
+   Bool_t fProcessingData{kFALSE}; ///<! flag used to prevent blocking methods when process data is invoked
+   Bool_t fAsyncMode{kFALSE};      ///<! when true, methods like TCanvas::Update will never block
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal; ///<! signal emitted when active pad changed in the canvas
@@ -183,10 +186,16 @@ public:
    void SetPrimitivesMerge(Int_t cnt) { fPrimitivesMerge = cnt; }
    Int_t GetPrimitivesMerge() const { return fPrimitivesMerge; }
 
+   void SetLongerPolling(Bool_t on) { fLongerPolling = on; }
+   Bool_t GetLongerPolling() const { return fLongerPolling; }
+
    void SetCustomScripts(const std::string &src);
 
    void AddCustomClass(const std::string &clname, bool with_derived = false);
    bool IsCustomClass(const TClass *cl) const;
+
+   void SetAsyncMode(Bool_t on = kTRUE) { fAsyncMode = on; }
+   Bool_t IsAsyncMode() const { return fAsyncMode; }
 
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");

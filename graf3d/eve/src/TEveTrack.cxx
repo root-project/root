@@ -545,7 +545,7 @@ void TEveTrack::PrintPathMarks()
 
 void TEveTrack::SecSelected(TEveTrack* track)
 {
-   Emit("SecSelected(TEveTrack*)", (Long_t)track);
+   Emit("SecSelected(TEveTrack*)", (Longptr_t)track);
 }
 
 /** \class TEveTrackList

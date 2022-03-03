@@ -28,8 +28,8 @@ fast searches and comparisons.
 #include "RooNameReg.h"
 
 #include "RooFit.h"
-#include "ROOT/RMakeUnique.hxx"
 #include <iostream>
+#include <memory>
 using namespace std ;
 
 
@@ -117,4 +117,23 @@ const TNamed* RooNameReg::known(const char* inStr)
   RooNameReg& reg = instance();
   const auto elm = reg._map.find(inStr);
   return elm != reg._map.end() ? elm->second.get() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// The renaming counter has to be incremented every time a RooAbsArg is
+/// renamed. This is a protected function, and only the friend class RooAbsArg
+/// should call it when it gets renamed.
+
+void RooNameReg::incrementRenameCounter() {
+  ++instance()._renameCounter;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Return a reference to a counter that keeps track how often a RooAbsArg was
+/// renamed in this RooFit process.
+
+const std::size_t& RooNameReg::renameCounter() {
+  return instance()._renameCounter;
 }

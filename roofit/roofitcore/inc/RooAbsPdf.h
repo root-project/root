@@ -17,8 +17,6 @@
 #define ROO_ABS_PDF
 
 #include "RooAbsReal.h"
-//#include "RooRealIntegral.h"
-#include "RooNameSet.h"
 #include "RooObjCacheManager.h"
 #include "RooCmdArg.h"
 
@@ -34,8 +32,10 @@ class TH1F;
 class TH2F;
 class TList ;
 class RooLinkedList ;
+class RooMinimizer ;
 class RooNumGenConfig ;
 class RooRealIntegral ;
+
 namespace RooBatchCompute {
 struct RunContext;
 }
@@ -137,8 +137,8 @@ public:
                            const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
   virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
-			   Option_t *options = "NELU", Double_t xmin=0.50,
-			   Double_t xmax= 0.99,Double_t ymax=0.95) ;
+			   Option_t *options = "NELU", Double_t xmin=0.65,
+			   Double_t xmax = 0.9, Double_t ymax = 0.9) ;
 
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
@@ -159,6 +159,32 @@ public:
                               const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),  
                               const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
   virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList) ;
+
+  /// Configuration struct for RooAbsPdf::minimizeNLL with all the default
+  //values that also should be taked as the default values for
+  //RooAbsPdf::fitTo.
+  struct MinimizerConfig {
+      double recoverFromNaN = 10.;
+      std::string fitOpt = "";
+      int optConst = 2;
+      int verbose = 0;
+      int doSave = 0;
+      int doTimer = 0;
+      int printLevel = 1;
+      int strat = 1;
+      int initHesse = 0;
+      int hesse = 1;
+      int minos = 0;
+      int numee = 10;
+      int doEEWall = 1;
+      int doWarn = 1;
+      int doSumW2 = -1;
+      int doAsymptotic = -1;
+      const RooArgSet* minosSet = nullptr;
+      std::string minType = "Minuit";
+      std::string minAlg = "minuit";
+  };
+  std::unique_ptr<RooFitResult> minimizeNLL(RooAbsReal & nll, RooAbsData const& data, MinimizerConfig const& cfg);
 
   virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList) ;
   virtual RooAbsReal* createNLL(RooAbsData& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),  
@@ -203,22 +229,32 @@ public:
   virtual Double_t getLogVal(const RooArgSet* set=0) const ;
 
   RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  using RooAbsReal::getValues;
   RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
       const RooArgSet* normSet = nullptr) const;
   RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
+  void getLogProbabilities(RooSpan<const double> pdfValues, double * output) const;
+
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
 
   /// \copydoc getNorm(const RooArgSet*) const
   Double_t getNorm(const RooArgSet& nset) const { 
     return getNorm(&nset) ; 
   }
   virtual Double_t getNorm(const RooArgSet* set=0) const ;
+  inline RooAbsReal* getIntegral(RooArgSet const& set) const {
+    syncNormalization(&set,true) ;
+    getVal(set);
+    assert(_norm != nullptr);
+    return _norm;
+  }
+  const RooAbsReal* getCachedLastIntegral() const {
+    return _norm;
+  }
+
 
   virtual void resetErrorCounters(Int_t resetValue=10) ;
   void setTraceCounter(Int_t value, Bool_t allNodes=kFALSE) ;
-private:
-  Bool_t traceEvalPdf(Double_t value) const;
-
-public:
 
   Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
 
@@ -242,9 +278,14 @@ public:
   inline Bool_t mustBeExtended() const {
     return (extendMode() == MustBeExtended) ; 
   }
+  /// Return expected number of events to be used in calculation of extended
+  /// likelihood.
   virtual Double_t expectedEvents(const RooArgSet* nset) const ; 
-  /// Return expected number of events to be used in calculation of extended likelihood.
-  virtual Double_t expectedEvents(const RooArgSet& nset) const {
+  /// Return expected number of events to be used in calculation of extended
+  /// likelihood. This function should not be overridden, as it just redirects
+  /// to the actual virtual function but takes a RooArgSet reference instead of
+  /// pointer (\see expectedEvents(const RooArgSet*) const).
+  double expectedEvents(const RooArgSet& nset) const {
     return expectedEvents(&nset) ; 
   }
 
@@ -255,7 +296,8 @@ public:
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
 
-  virtual Double_t extendedTerm(Double_t observedEvents, const RooArgSet* nset=0) const ;
+  double extendedTerm(double observedEvents, const RooArgSet* nset=0) const;
+  double extendedTerm(RooAbsData const& data, bool weightSquared) const;
 
   void setNormRange(const char* rangeName) ;
   const char* normRange() const { 
@@ -265,9 +307,6 @@ public:
 
   const RooAbsReal* getNormIntegral(const RooArgSet& nset) const { return getNormObj(0,&nset,0) ; }
   
-protected:   
-
-public:
   virtual const RooAbsReal* getNormObj(const RooArgSet* set, const RooArgSet* iset, const TNamed* rangeName=0) const ;
 
   virtual RooAbsGenContext* binnedGenContext(const RooArgSet &vars, Bool_t verbose= kFALSE) const ;
@@ -277,7 +316,7 @@ public:
 
   virtual RooAbsGenContext* autoGenContext(const RooArgSet &vars, const RooDataSet* prototype=0, const RooArgSet* auxProto=0, 
 					   Bool_t verbose=kFALSE, Bool_t autoBinned=kTRUE, const char* binnedTag="") const ;
-
+  
 private:
 
   RooDataSet *generate(RooAbsGenContext& context, const RooArgSet& whatVars, const RooDataSet* prototype,
@@ -290,8 +329,12 @@ private:
 			   Double_t xmax= 0.99,Double_t ymax=0.95, const RooCmdArg* formatCmd=0) ;
 
   void logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const;
+  Bool_t traceEvalPdf(Double_t value) const;
+
 
 protected:
+  double normalizeWithNaNPacking(double rawVal, double normVal) const;
+
   virtual RooPlot *plotOn(RooPlot *frame, PlotOpt o) const;  
 
   friend class RooEffGenContext ;
@@ -318,18 +361,18 @@ protected:
 
   friend class RooAbsAnaConvPdf ;
   mutable Double_t _rawValue ;
-  mutable RooAbsReal* _norm   ;      //! Normalization integral (owned by _normMgr)
-  mutable RooArgSet* _normSet ;      //! Normalization set with for above integral
+  mutable RooAbsReal* _norm = nullptr; //! Normalization integral (owned by _normMgr)
+  mutable RooArgSet const* _normSet = nullptr; //! Normalization set with for above integral
+  inline const RooArgSet* getNormSet() { return _normSet; }
 
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem(RooAbsReal& norm) : _norm(&norm) {} ;
-    void operModeHook(RooAbsArg::OperMode) ;
     virtual ~CacheElem() ; 
     virtual RooArgList containedArgs(Action) { return RooArgList(*_norm) ; }
     RooAbsReal* _norm ;
   } ;
-  mutable RooObjCacheManager _normMgr ; // The cache manager
+  mutable RooObjCacheManager _normMgr ; //! The cache manager
 
   friend class CacheElem ; // Cache needs to be able to clear _norm pointer
   
@@ -339,8 +382,13 @@ protected:
 
     // Object is own by _normCacheManager that will delete object as soon as cache
     // is sterilized by server redirect
-    _norm = 0 ;
-    return kFALSE ; 
+    _norm = nullptr ;
+
+    // Similar to the situation with the normalization integral above: if a
+    // server is redirected, the cached normalization set might not point to
+    // the right observables anymore. We need to reset it.
+    _normSet = nullptr ;
+    return false ;
   } ;
 
   
@@ -356,14 +404,13 @@ protected:
   static TString _normRangeOverride ; 
 
 private:
-  template<class Minimizer>
-  int calculateAsymptoticCorrectedCovMatrix(Minimizer& minimizer, RooAbsData const& data);
-
-  template<class Minimizer>
-  int calculateSumW2CorrectedCovMatrix(Minimizer& minimizer, RooAbsReal const& nll) const;
+  int calcAsymptoticCorrectedCovariance(RooMinimizer& minimizer, RooAbsData const& data);
+  int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal const& nll) const;
   
-  ClassDef(RooAbsPdf,4) // Abstract PDF with normalization support
+  ClassDef(RooAbsPdf,5) // Abstract PDF with normalization support
 };
+
+
 
 
 #endif

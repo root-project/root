@@ -60,7 +60,9 @@ RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _cu
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert map by label to map by index for more efficient internal use
 
-RooCompositeDataStore::RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
+RooCompositeDataStore::RooCompositeDataStore(
+        std::string_view name, std::string_view title,
+        const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
   RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _indexCat(&indexCat), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
   for (const auto& iter : inputData) {
@@ -122,18 +124,6 @@ RooCompositeDataStore::~RooCompositeDataStore()
   }
   TRACE_DESTROY
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return true if currently loaded coordinate is considered valid within
-/// the current range definitions of all observables
-
-Bool_t RooCompositeDataStore::valid() const 
-{
-  return kTRUE ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,7 +205,7 @@ const RooArgSet* RooCompositeDataStore::get(Int_t idx) const
       offset += iter->second->numEntries() ;
       continue ;
     }    
-    const_cast<RooCompositeDataStore*>(this)->_vars = (*iter->second->get(idx-offset)) ;
+    _vars.assign(*iter->second->get(idx-offset)) ;
 
     _indexCat->setIndex(iter->first) ;
     _curStore = iter->second ;
@@ -236,20 +226,6 @@ Double_t RooCompositeDataStore::weight() const
   // coverity[FORWARD_NULL]
   return _curStore->weight(_curIndex) ;
 }
-
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-Double_t RooCompositeDataStore::weight(Int_t idx) const 
-{
-  get(idx) ;
-  return weight() ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,7 +359,7 @@ void RooCompositeDataStore::append(RooAbsDataStore& other)
 {
   Int_t nevt = other.numEntries() ;
   for (int i=0 ; i<nevt ; i++) {  
-    _vars = *other.get(i) ;
+    _vars.assign(*other.get(i)) ;
     fill() ;
   }
 }

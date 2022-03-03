@@ -25,7 +25,7 @@ Bool_t TProfile3D::fgApproximate = kFALSE;
 ClassImp(TProfile3D);
 
 /** \class TProfile3D
-    \ingroup Hist
+    \ingroup Histograms
  Profile3D histograms are used to display the mean
  value of T and its RMS for each cell in X,Y,Z.
  Profile3D histograms are in many cases an
@@ -760,7 +760,7 @@ Option_t *TProfile3D::GetErrorOption() const
 ////////////////////////////////////////////////////////////////////////////////
 /// fill the array stats from the contents of this profile.
 ///
-/// The array stats must be correctly dimensionned in the calling program.
+/// The array stats must be correctly dimensioned in the calling program.
 ///
 ///  - stats[0] = sumw
 ///  - stats[1] = sumw2
@@ -788,7 +788,7 @@ void TProfile3D::GetStats(Double_t *stats) const
    // Loop on bins
    if ( (fTsumw == 0 /* && fEntries > 0 */) || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
 
-      // check for labels axis . In that case corresponsing statistics do not make sense and it is set to zero
+      // check for labels axis . In that case corresponding statistics do not make sense and it is set to zero
       Bool_t labelXaxis = ((const_cast<TAxis &>(fXaxis)).GetLabels() && fXaxis.CanExtend());
       Bool_t labelYaxis = ((const_cast<TAxis &>(fYaxis)).GetLabels() && fYaxis.CanExtend());
       Bool_t labelZaxis = ((const_cast<TAxis &>(fZaxis)).GetLabels() && fZaxis.CanExtend());

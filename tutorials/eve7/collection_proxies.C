@@ -38,9 +38,9 @@
 #include <iostream>
 
 
-const Double_t kR_min = 300;
-const Double_t kR_max = 299;
-const Double_t kZ_d   = 300;
+const Double_t kR_min = 299;
+const Double_t kR_max = 300;
+const Double_t kZ_d   = 500;
 
 
 namespace fw3dlego {
@@ -311,9 +311,8 @@ class JetProxyBuilder: public REveDataSimpleProxyBuilderTemplate<Jet>
 {
    bool HaveSingleProduct() const override { return false; }
 
-   using REveDataSimpleProxyBuilderTemplate<Jet>::BuildViewType;
-
-   void BuildViewType(const Jet& dj, int idx, REveElement* iItemHolder,
+   using REveDataSimpleProxyBuilderTemplate<Jet>::BuildItemViewType;
+   void BuildItemViewType(const Jet& dj, int idx, REveElement* iItemHolder,
                       const std::string& viewType, const REveViewContext* context) override
    {
       auto jet = new REveJetCone();
@@ -379,7 +378,7 @@ class TParticleProxyBuilder : public REveDataSimpleProxyBuilderTemplate<TParticl
 {
    using REveDataSimpleProxyBuilderTemplate<TParticle>::Build;
 
-   void Build(const TParticle& p, int idx, REveElement* iItemHolder, const REveViewContext* context) override
+   void BuildItem(const TParticle& p, int idx, REveElement* iItemHolder, const REveViewContext* context) override
    {
       const TParticle *x = &p;
       auto track = new REveTrack((TParticle*)(x), 1, context->GetPropagator());
@@ -428,7 +427,7 @@ private:
 
 public:
    using REveDataProxyBuilderBase::Build;
-   void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext*)override
+   void BuildProduct(const REveDataCollection* collection, REveElement* product, const REveViewContext*)override
    {
       // printf("-------------------------FBOXSET proxy builder %d \n",  collection->GetNItems());
       auto boxset = new REveBoxSet();
@@ -488,7 +487,7 @@ public:
    CaloTowerProxyBuilder(REveCaloDataHist* cd) : fCaloData(cd) {}
 
    using REveDataProxyBuilderBase::Build;
-   void Build(const REveDataCollection* collection, REveElement* product, const REveViewContext*)override
+   void BuildProduct(const REveDataCollection* collection, REveElement* product, const REveViewContext*)override
    {
       assertSlice();
       fHist->Reset();
@@ -525,7 +524,7 @@ public:
   using REveDataProxyBuilderBase::ModelChanges;
    void ModelChanges(const REveDataCollection::Ids_t& ids, Product* product) override
    {
-      Build();
+      BuildProduct(Collection(), nullptr, nullptr);
    }
 
 }; // CaloTowerProxyBuilder
@@ -686,7 +685,7 @@ public:
          if (strncmp(s->GetCTitle(), "Table", 5) == 0)
          {
             s->AddElement(tablep);
-            tableBuilder->Build(collection, tablep, m_viewContext );
+            tableBuilder->Build();
          }
       }
       tableMng->AddDelegate([=]() { tableBuilder->ConfigChanged(); });
@@ -772,12 +771,10 @@ public:
 
    virtual void NextEvent()
    {
-      eveMng->DisableRedraw();
       eveMng->GetSelection()->ClearSelection();
       eveMng->GetHighlight()->ClearSelection();
       fEvent->Create();
       fCMng->LoadEvent();
-      eveMng->EnableRedraw();
    }
 };
 
@@ -805,6 +802,7 @@ void collection_proxies(bool proj=true)
    g_projMng->SetImportEmpty(true);
 
    auto rhoZView = eveMng->SpawnNewViewer("RhoZ View");
+   rhoZView->SetCameraType(REveViewer::kCameraOrthoXOY);
    rhoZView->AddScene(rhoZEventScene);
    auto pgeoScene = eveMng->SpawnNewScene("Geometry projected");
    rhoZView->AddScene(pgeoScene);
@@ -826,6 +824,7 @@ void collection_proxies(bool proj=true)
    REveDataCollection* jetCollection = new REveDataCollection("Jets");
    jetCollection->SetItemClass(Jet::Class());
    jetCollection->SetMainColor(kYellow);
+   jetCollection->SetFilterExpr("i.Pt() > 14");
    collectionMng->addCollection(jetCollection, new JetProxyBuilder());
 
    REveDataCollection* hitCollection = new REveDataCollection("RecHits");

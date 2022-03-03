@@ -13,16 +13,6 @@
 #define ROOT_TGTextEdit
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEdit                                                           //
-//                                                                      //
-// A TGTextEdit is a specialization of TGTextView. It provides the      //
-// text edit functionality to the static text viewing widget.           //
-// For the messages supported by this widget see the TGView class.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGTextView.h"
 
 class TGPopupMenu;
@@ -44,18 +34,18 @@ public:
    };
 
 protected:
-   GContext_t       fCursor0GC;     // graphics context for erasing cursor
-   GContext_t       fCursor1GC;     // graphics context for drawing cursor
-   Int_t            fCursorState;   // cursor state (1=drawn, 2=erased)
-   TViewTimer      *fCurBlink;      // cursor blink timer
-   TGPopupMenu     *fMenu;          // popup menu with editor actions
-   TGSearchType    *fSearch;        // structure used by search dialog
-   TGLongPosition   fCurrent;       // current cursor position
-   EInsertMode      fInsertMode;    // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
-   Bool_t           fEnableMenu;    // enable context menu with editor actions
-   TGTextEditHist  *fHistory;       // undo manager
-   Bool_t           fEnableCursorWithoutFocus; // enable cursor visibility when focus went out from
-                                               // text editor window (default is kTRUE)
+   GContext_t       fCursor0GC;     ///< graphics context for erasing cursor
+   GContext_t       fCursor1GC;     ///< graphics context for drawing cursor
+   Int_t            fCursorState;   ///< cursor state (1=drawn, 2=erased)
+   TViewTimer      *fCurBlink;      ///< cursor blink timer
+   TGPopupMenu     *fMenu;          ///< popup menu with editor actions
+   TGSearchType    *fSearch;        ///< structure used by search dialog
+   TGLongPosition   fCurrent;       ///< current cursor position
+   EInsertMode      fInsertMode;    ///< *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
+   Bool_t           fEnableMenu;    ///< enable context menu with editor actions
+   TGTextEditHist  *fHistory;       ///< undo manager
+   Bool_t           fEnableCursorWithoutFocus; ///< enable cursor visibility when focus went out from
+                                               ///< text editor window (default is kTRUE)
 
    static TGGC     *fgCursor0GC;
    static TGGC     *fgCursor1GC;
@@ -130,7 +120,7 @@ public:
    virtual Bool_t HandleCrossing(Event_t *event);
    virtual Bool_t HandleFocusChange(Event_t *event);
    virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
 
    virtual void   FindAgain() { Emit("FindAgain()"); }  //*SIGNAL*
    virtual void   Closed() { Emit("Closed()"); }        //*SIGNAL*

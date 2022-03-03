@@ -9,11 +9,11 @@
 
 #include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
-#include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Utils/Paths.h"
 #include "cling/Utils/Platform.h"
 #include "cling/Utils/Output.h"
 
+#include "llvm/ADT/StringSet.h"
 #include "llvm/BinaryFormat/Magic.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/Path.h"
@@ -21,9 +21,11 @@
 #include <system_error>
 #include <sys/stat.h>
 
+// FIXME: Implement debugging output stream in cling.
+constexpr unsigned DEBUG = 0;
+
 namespace cling {
-  DynamicLibraryManager::DynamicLibraryManager(const InvocationOptions& Opts)
-    : m_Opts(Opts) {
+  DynamicLibraryManager::DynamicLibraryManager()  {
     const llvm::SmallVector<const char*, 10> kSysLibraryEnv = {
       "LD_LIBRARY_PATH",
   #if __APPLE__
@@ -43,54 +45,182 @@ namespace cling {
     // Behaviour is to not add paths that don't exist...In an interpreted env
     // does this make sense? Path could pop into existance at any time.
     for (const char* Var : kSysLibraryEnv) {
-      if (Opts.Verbose())
-        cling::log() << "Adding library paths from '" << Var << "':\n";
       if (const char* Env = ::getenv(Var)) {
         llvm::SmallVector<llvm::StringRef, 10> CurPaths;
-        SplitPaths(Env, CurPaths, utils::kPruneNonExistant, platform::kEnvDelim,
-                   Opts.Verbose());
+        SplitPaths(Env, CurPaths, utils::kPruneNonExistant, platform::kEnvDelim);
         for (const auto& Path : CurPaths)
-          m_SearchPaths.push_back({Path.str(), /*IsUser*/true});
+          addSearchPath(Path);
       }
     }
+
+    // $CWD is the last user path searched.
+    addSearchPath(".");
 
     llvm::SmallVector<std::string, 64> SysPaths;
     platform::GetSystemLibraryPaths(SysPaths);
 
     for (const std::string& P : SysPaths)
-      m_SearchPaths.push_back({P, /*IsUser*/false});
+      addSearchPath(P, /*IsUser*/ false);
+  }
 
-    // This will currently be the last path searched, should it be pushed to
-    // the front of the line, or even to the front of user paths?
-    m_SearchPaths.push_back({".", /*IsUser*/true});
+  ///\returns substitution of pattern in the front of original with replacement
+  /// Example: substFront("@rpath/abc", "@rpath/", "/tmp") -> "/tmp/abc"
+  static std::string substFront(llvm::StringRef original, llvm::StringRef pattern,
+                                llvm::StringRef replacement) {
+    if (!original.startswith_lower(pattern))
+      return original.str();
+    llvm::SmallString<512> result(replacement);
+    result.append(original.drop_front(pattern.size()));
+    return result.str();
+  }
+
+  ///\returns substitution of all known linker variables in \c original
+  static std::string substAll(llvm::StringRef original,
+                              llvm::StringRef libLoader) {
+
+    // Handle substitutions (MacOS):
+    // @rpath - This function does not substitute @rpath, becouse
+    //          this variable is already handled by lookupLibrary where
+    //          @rpath is replaced with all paths from RPATH one by one.
+    // @executable_path - Main program path.
+    // @loader_path - Loader library (or main program) path.
+    //
+    // Handle substitutions (Linux):
+    // https://man7.org/linux/man-pages/man8/ld.so.8.html
+    // $origin - Loader library (or main program) path.
+    // $lib - lib lib64
+    // $platform - x86_64 AT_PLATFORM
+
+    std::string result;
+#ifdef __APPLE__
+    llvm::SmallString<512> mainExecutablePath(llvm::sys::fs::getMainExecutable(nullptr, nullptr));
+    llvm::sys::path::remove_filename(mainExecutablePath);
+    llvm::SmallString<512> loaderPath;
+    if (libLoader.empty()) {
+      loaderPath = mainExecutablePath;
+    } else {
+      loaderPath = libLoader.str();
+      llvm::sys::path::remove_filename(loaderPath);
+    }
+
+    result = substFront(original, "@executable_path", mainExecutablePath);
+    result = substFront(result, "@loader_path", loaderPath);
+    return result;
+#else
+    llvm::SmallString<512> loaderPath;
+    if (libLoader.empty()) {
+      loaderPath = llvm::sys::fs::getMainExecutable(nullptr, nullptr);
+    } else {
+      loaderPath = libLoader.str();
+    }
+    llvm::sys::path::remove_filename(loaderPath);
+
+    result = substFront(original, "$origin", loaderPath);
+    //result = substFront(result, "$lib", true?"lib":"lib64");
+    //result = substFront(result, "$platform", "x86_64");
+    return result;
+#endif
   }
 
   std::string
-  DynamicLibraryManager::lookupLibInPaths(llvm::StringRef libStem) const {
-    llvm::SmallVector<SearchPathInfo, 128> Paths;
-    for (const std::string &P : m_Opts.LibSearchPath)
-      Paths.push_back({P, /*IsUser*/true});
+  DynamicLibraryManager::lookupLibInPaths(llvm::StringRef libStem,
+                                          llvm::SmallVector<llvm::StringRef,2> RPath /*={}*/,
+                                          llvm::SmallVector<llvm::StringRef,2> RunPath /*={}*/,
+                                          llvm::StringRef libLoader /*=""*/) const {
 
-    Paths.append(m_SearchPaths.begin(), m_SearchPaths.end());
+    if (DEBUG > 7) {
+      cling::errs() << "Dyld::lookupLibInPaths:" << libStem.str() <<
+        ", ..., libLodaer=" << libLoader << "\n";
+    }
+
+    // Lookup priority is: RPATH, LD_LIBRARY_PATH/m_SearchPaths, RUNPATH
+    // See: https://en.wikipedia.org/wiki/Rpath
+    // See: https://amir.rachum.com/blog/2016/09/17/shared-libraries/
+
+    if (DEBUG > 7) {
+      cling::errs() << "Dyld::lookupLibInPaths: \n";
+      cling::errs() << ":: RPATH\n";
+      for (auto Info : RPath) {
+        cling::errs() << ":::: " << Info.str() << "\n";
+      }
+      cling::errs() << ":: SearchPaths (LD_LIBRARY_PATH, etc...)\n";
+      for (auto Info : getSearchPaths()) {
+        cling::errs() << ":::: " << Info.Path << ", user=" << (Info.IsUser?"true":"false") << "\n";
+      }
+      cling::errs() << ":: RUNPATH\n";
+      for (auto Info : RunPath) {
+        cling::errs() << ":::: " << Info.str() << "\n";
+      }
+    }
 
     llvm::SmallString<512> ThisPath;
-    for (const SearchPathInfo& Info : Paths) {
+    // RPATH
+    for (auto Info : RPath) {
+      ThisPath = substAll(Info, libLoader);
+      llvm::sys::path::append(ThisPath, libStem);
+      // to absolute path?
+      if (DEBUG > 7) {
+        cling::errs() << "## Try: " << ThisPath;
+      }
+      if (isSharedLibrary(ThisPath.str())) {
+        if (DEBUG > 7) {
+          cling::errs() << " ... Found (in RPATH)!\n";
+        }
+        return ThisPath.str();
+      }
+    }
+    // m_SearchPaths
+    for (const SearchPathInfo& Info : m_SearchPaths) {
       ThisPath = Info.Path;
       llvm::sys::path::append(ThisPath, libStem);
-      bool exists;
-      if (isSharedLibrary(ThisPath.str(), &exists))
+      // to absolute path?
+      if (DEBUG > 7) {
+        cling::errs() << "## Try: " << ThisPath;
+      }
+      if (isSharedLibrary(ThisPath.str())) {
+        if (DEBUG > 7) {
+          cling::errs() << " ... Found (in SearchPaths)!\n";
+        }
         return ThisPath.str();
-      if (exists)
-        return "";
+      }
     }
+    // RUNPATH
+    for (auto Info : RunPath) {
+      ThisPath = substAll(Info, libLoader);
+      llvm::sys::path::append(ThisPath, libStem);
+      // to absolute path?
+      if (DEBUG > 7) {
+        cling::errs() << "## Try: " << ThisPath;
+      }
+      if (isSharedLibrary(ThisPath.str())) {
+        if (DEBUG > 7) {
+          cling::errs() << " ... Found (in RUNPATH)!\n";
+        }
+        return ThisPath.str();
+      }
+    }
+
+    if (DEBUG > 7) {
+      cling::errs() << "## NotFound!!!\n";
+    }
+
     return "";
   }
 
   std::string
-  DynamicLibraryManager::lookupLibMaybeAddExt(llvm::StringRef libStem) const {
+  DynamicLibraryManager::lookupLibMaybeAddExt(llvm::StringRef libStem,
+                                              llvm::SmallVector<llvm::StringRef,2> RPath /*={}*/,
+                                              llvm::SmallVector<llvm::StringRef,2> RunPath /*={}*/,
+                                              llvm::StringRef libLoader /*=""*/) const {
+
     using namespace llvm::sys;
 
-    std::string foundDyLib = lookupLibInPaths(libStem);
+    if (DEBUG > 7) {
+      cling::errs() << "Dyld::lookupLibMaybeAddExt: " << libStem.str() <<
+        ", ..., libLoader=" << libLoader << "\n";
+    }
+
+    std::string foundDyLib = lookupLibInPaths(libStem, RPath, RunPath, libLoader);
 
     if (foundDyLib.empty()) {
       // Add DyLib extension:
@@ -106,12 +236,12 @@ namespace cling {
 # error "Unsupported platform."
 #endif
       filenameWithExt += DyLibExt;
-      foundDyLib = lookupLibInPaths(filenameWithExt);
+      foundDyLib = lookupLibInPaths(filenameWithExt, RPath, RunPath, libLoader);
 #ifdef __APPLE__
       if (foundDyLib.empty()) {
         filenameWithExt.erase(IStemEnd + 1, filenameWithExt.end());
         filenameWithExt += ".dylib";
-        foundDyLib = lookupLibInPaths(filenameWithExt);
+        foundDyLib = lookupLibInPaths(filenameWithExt, RPath, RunPath, libLoader);
       }
 #endif
     }
@@ -142,8 +272,28 @@ namespace cling {
     return NPath;
   }
 
+  std::string RPathToStr2(llvm::SmallVector<llvm::StringRef,2> V) {
+    std::string result;
+    for (auto item : V)
+      result += item.str() + ",";
+    if (!result.empty())
+      result.pop_back();
+    return result;
+  }
+
   std::string
-  DynamicLibraryManager::lookupLibrary(llvm::StringRef libStem) const {
+  DynamicLibraryManager::lookupLibrary(llvm::StringRef libStem,
+                                       llvm::SmallVector<llvm::StringRef,2> RPath /*={}*/,
+                                       llvm::SmallVector<llvm::StringRef,2> RunPath /*={}*/,
+//                                       llvm::StringRef RPath /*=""*/,
+//                                       llvm::StringRef RunPath /*=""*/,
+                                       llvm::StringRef libLoader /*=""*/,
+                                       bool variateLibStem /*=true*/) const {
+    if (DEBUG > 7) {
+      cling::errs() << "Dyld::lookupLibrary: " << libStem.str() << ", " <<
+        RPathToStr2(RPath) << ", " << RPathToStr2(RunPath) << ", " << libLoader.str() << "\n";
+    }
+
     // If it is an absolute path, don't try iterate over the paths.
     if (llvm::sys::path::is_absolute(libStem)) {
       if (isSharedLibrary(libStem))
@@ -152,23 +302,61 @@ namespace cling {
         return std::string();
     }
 
-    std::string foundName = lookupLibMaybeAddExt(libStem);
-    if (foundName.empty() && !libStem.startswith("lib")) {
-      // try with "lib" prefix:
-      foundName = lookupLibMaybeAddExt("lib" + libStem.str());
+    // Subst all known linker variables ($origin, @rpath, etc.)
+#ifdef __APPLE__
+    // On MacOS @rpath is preplaced by all paths in RPATH one by one.
+    if (libStem.startswith_lower("@rpath")) {
+      for (auto& P : RPath) {
+        std::string result = substFront(libStem, "@rpath", P);
+        if (isSharedLibrary(result))
+          return normalizePath(result);
+      }
+    } else {
+#endif
+      std::string result = substAll(libStem, libLoader);
+      if (isSharedLibrary(result))
+        return normalizePath(result);
+#ifdef __APPLE__
+    }
+#endif
+
+    // Expand libStem with paths, extensions, etc.
+    std::string foundName;
+    if (variateLibStem) {
+      foundName = lookupLibMaybeAddExt(libStem, RPath, RunPath, libLoader);
+      if (foundName.empty()) {
+        llvm::StringRef libStemName = llvm::sys::path::filename(libStem);
+        if (!libStemName.startswith("lib")) {
+          // try with "lib" prefix:
+          foundName = lookupLibMaybeAddExt(
+             libStem.str().insert(libStem.size()-libStemName.size(), "lib"),
+             RPath,
+             RunPath,
+             libLoader
+          );
+        }
+      }
+    } else {
+      foundName = lookupLibInPaths(libStem, RPath, RunPath, libLoader);
     }
 
-    if (!foundName.empty() && isSharedLibrary(foundName))
+    if (!foundName.empty())
       return platform::NormalizePath(foundName);
 
     return std::string();
   }
 
   DynamicLibraryManager::LoadLibResult
-  DynamicLibraryManager::loadLibrary(const std::string& libStem,
+  DynamicLibraryManager::loadLibrary(llvm::StringRef libStem,
                                      bool permanent, bool resolved) {
+    if (DEBUG > 7) {
+      cling::errs() << "Dyld::loadLibrary: " << libStem.str() << ", " <<
+        (permanent ? "permanent" : "not-permanent") << ", " <<
+        (resolved ? "resolved" : "not-resolved") << "\n";
+    }
+
     std::string lResolved;
-    const std::string& canonicalLoadedLib = resolved ? libStem : lResolved;
+    const std::string& canonicalLoadedLib = resolved ? libStem.str() : lResolved;
     if (!resolved) {
       lResolved = lookupLibrary(libStem);
       if (lResolved.empty())
@@ -185,7 +373,7 @@ namespace cling {
     if (!dyLibHandle) {
       // We emit callback to LibraryLoadingFailed when we get error with error message.
       if (InterpreterCallbacks* C = getCallbacks()) {
-        if (C->LibraryLoadingFailed(errMsg, libStem, permanent, resolved))
+        if (C->LibraryLoadingFailed(errMsg, libStem.str(), permanent, resolved))
           return kLoadLibSuccess;
       }
 
@@ -242,6 +430,17 @@ namespace cling {
     return false;
   }
 
+  void DynamicLibraryManager::dump(llvm::raw_ostream* S /*= nullptr*/) const {
+    llvm::raw_ostream &OS = S ? *S : cling::outs();
+
+    // FIXME: print in a stable order the contents of m_SearchPaths
+    for (const auto& Info : getSearchPaths()) {
+      if (!Info.IsUser)
+        OS << "[system] ";
+      OS << Info.Path.c_str() << "\n";
+    }
+  }
+
   void DynamicLibraryManager::ExposeHiddenSharedLibrarySymbols(void* handle) {
     llvm::sys::DynamicLibrary::addPermanentLibrary(const_cast<void*>(handle));
   }
@@ -249,6 +448,7 @@ namespace cling {
   bool DynamicLibraryManager::isSharedLibrary(llvm::StringRef libFullPath,
                                               bool* exists /*=0*/) {
     using namespace llvm;
+
     auto filetype = sys::fs::get_file_type(libFullPath, /*Follow*/ true);
     if (filetype != sys::fs::file_type::regular_file) {
       if (exists) {
@@ -263,7 +463,7 @@ namespace cling {
     if (exists)
       *exists = !Error;
 
-    return !Error &&
+    bool result = !Error &&
 #ifdef __APPLE__
       (Magic == file_magic::macho_fixed_virtual_memory_shared_lib
        || Magic == file_magic::macho_dynamically_linked_shared_lib
@@ -276,12 +476,16 @@ namespace cling {
       (Magic == file_magic::elf_shared_object)
 #endif
 #elif defined(_WIN32)
-      (Magic == file_magic::pecoff_executable
-       || platform::IsDLL(libFullPath.str()))
+      // We should only include dll libraries without including executables,
+      // object code and others...
+      (Magic == file_magic::pecoff_executable &&
+       platform::IsDLL(libFullPath.str()))
 #else
 # error "Unsupported platform."
 #endif
       ;
+
+      return result;
   }
 
 } // end namespace cling

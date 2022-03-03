@@ -299,7 +299,7 @@ Int_t  TGeoManager::fgMaxDaughters    = 1;
 Int_t  TGeoManager::fgMaxXtruVert     = 1;
 Int_t  TGeoManager::fgNumThreads      = 0;
 UInt_t TGeoManager::fgExportPrecision = 17;
-TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kG4Units;
+TGeoManager::EDefaultUnits TGeoManager::fgDefaultUnits = TGeoManager::kRootUnits;
 TGeoManager::ThreadsMap_t *TGeoManager::fgThreadId = 0;
 static Bool_t gGeometryLocked = kTRUE;
 
@@ -1691,7 +1691,8 @@ void TGeoManager::AnimateTracks(Double_t tmin, Double_t tmax, Int_t nframes, Opt
    if (opt.Contains("/G")) geomanim = kTRUE;
    SetTminTmax(0,0);
    DrawTracks(opt.Data());
-   Double_t start[6], end[6];
+   Double_t start[6] = {0,0,0,0,0,0};
+   Double_t end[6] = {0,0,0,0,0,0};
    Double_t dd[6] = {0,0,0,0,0,0};
    Double_t dlat=0, dlong=0, dpsi=0;
    if (geomanim) {
@@ -4029,10 +4030,10 @@ void TGeoManager::SetDefaultUnits(EDefaultUnits new_value)
 	      "Alternatively unlock the default units at own risk.");
    }
    else if ( new_value == kG4Units )   {
-      ::Warning("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
+      ::Info("TGeoManager","Changing system of units to Geant4 units (mm, ns, MeV).");
    }
    else if ( new_value == kRootUnits )   {
-      ::Warning("TGeoManager","Changing system of units to ROOT units (cm, s, GeV).");
+      ::Info("TGeoManager","Changing system of units to ROOT units (cm, s, GeV).");
    }
    fgDefaultUnits = new_value;
 }

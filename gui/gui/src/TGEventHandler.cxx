@@ -9,11 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGEventHandler                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGEventHandler
+    \ingroup guiwidgets
+*/
+
 
 #include "TGEventHandler.h"
 #include "TGWindow.h"
@@ -34,8 +33,8 @@ Bool_t TGEventHandler::HandleEvent(Event_t *ev)
 /// Send message (i.e. event) to window w. Message is encoded in one long
 /// as message type and up to two long parameters.
 
-void TGEventHandler::SendMessage(const TGWindow *w, Long_t msg, Long_t parm1,
-                                 Long_t parm2)
+void TGEventHandler::SendMessage(const TGWindow *w, Longptr_t msg, Longptr_t parm1,
+                                 Longptr_t parm2)
 {
    Event_t event;
 

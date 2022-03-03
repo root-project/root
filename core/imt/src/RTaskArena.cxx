@@ -1,3 +1,6 @@
+// Require TBB without captured exceptions
+#define TBB_USE_CAPTURED_EXCEPTION 0
+
 #include "ROOT/RTaskArena.hxx"
 #include "ROpaqueTaskArena.hxx"
 #include "TError.h"
@@ -40,6 +43,7 @@
 namespace ROOT {
 namespace Internal {
 
+// To honor cgroup quotas if set: see https://github.com/oneapi-src/oneTBB/issues/190
 int LogicalCPUBandwithControl()
 {
 #ifdef R__LINUX

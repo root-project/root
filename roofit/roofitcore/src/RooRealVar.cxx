@@ -40,6 +40,7 @@ or integrals to sub ranges. The range without any name is used as default range.
 #include "RooRealVarSharedProperties.h"
 #include "RooUniformBinning.h"
 #include "RunContext.h"
+#include "RooSentinel.h"
 
 #include "TTree.h"
 #include "TBuffer.h"
@@ -54,11 +55,30 @@ ClassImp(RooRealVar);
 Bool_t RooRealVar::_printScientific(kFALSE) ;
 Int_t  RooRealVar::_printSigDigits(5) ;
 
+static bool staticSharedPropListCleanedUp = false;
+
 /// Return a reference to a map of weak pointers to RooRealVarSharedProperties.
-std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>& RooRealVar::_sharedPropList() 
+std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>* RooRealVar::sharedPropList()
 {
-  static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>> sharedPropList;
-  return sharedPropList; 
+  RooSentinel::activate();
+  if(!staticSharedPropListCleanedUp) {
+    static auto * staticSharedPropList = new std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>();
+    return staticSharedPropList;
+  }
+  return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Explicitely deletes the shared properties list on exit to avoid problems
+/// with the initialization order. Meant to be only used internally in RooFit
+/// by RooSentinel.
+
+void RooRealVar::cleanup()
+{
+  if(sharedPropList()) {
+    delete sharedPropList();
+    staticSharedPropListCleanedUp = true;
+  }
 }
 
 /// Return a dummy object to use when properties are not initialised.
@@ -207,6 +227,11 @@ RooRealVar& RooRealVar::operator=(const RooRealVar& other) {
 
 RooRealVar::~RooRealVar()
 {
+  // We should not forget to explicitely call deleteSharedProperties() in the
+  // destructor, because this is where the expired weak_ptrs in the
+  // _sharedPropList get erased.
+  deleteSharedProperties();
+
   TRACE_DESTROY
 }
 
@@ -236,7 +261,7 @@ RooSpan<const double> RooRealVar::getValues(RooBatchCompute::RunContext& inputDa
 
   for (const auto& var_span : inputData.spans) {
     auto var = var_span.first;
-    if (strcmp(var->GetName(), GetName()) == 0) {
+    if (var->namePtr() == namePtr()) {
       // A variable with the same name exists in the input data. Use their values as ours.
       inputData.spans[this] = var_span.second;
       return var_span.second;
@@ -1292,7 +1317,7 @@ void RooRealVar::installSharedProp(std::shared_ptr<RooRealVarSharedProperties>&&
   }
 
 
-  auto& weakPtr = _sharedPropList()[prop->asString().Data()];
+  auto& weakPtr = (*sharedPropList())[prop->asString().Data()];
   std::shared_ptr<RooRealVarSharedProperties> existingProp;
   if ( (existingProp = weakPtr.lock()) ) {
     // Property exists, discard incoming
@@ -1311,14 +1336,26 @@ void RooRealVar::installSharedProp(std::shared_ptr<RooRealVarSharedProperties>&&
 /// Stop sharing properties.
 void RooRealVar::deleteSharedProperties()
 {
+  // Nothing to do if there were no shared properties to begin with.
+  if(!_sharedProp) return;
+
+  // Get the key for the _sharedPropList.
+  const std::string key = _sharedProp->asString().Data();
+
+  // Actually delete the shared properties object.
   _sharedProp.reset();
 
-  for (auto it = _sharedPropList().begin(); it != _sharedPropList().end();) {
-    if (it->second.expired()) {
-      it = _sharedPropList().erase(it);
-    } else {
-      ++it;
-    }
+  // If the _sharedPropList was already deleted, we can return now.
+  if(!sharedPropList()) return;
+
+  // Find the std::weak_ptr that the _sharedPropList holds to our
+  // _sharedProp.
+  auto iter = sharedPropList()->find(key);
+
+  // If no other RooRealVars shared the shared properties with us, the
+  // weak_ptr in _sharedPropList is expired and we can erase it from the map.
+  if(iter->second.expired()) {
+    sharedPropList()->erase(iter);
   }
 }
 

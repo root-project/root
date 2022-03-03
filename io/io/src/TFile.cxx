@@ -14,6 +14,7 @@
 
   The library collecting the ROOT classes dedicated to data input and output.
 
+  The detailed internal description of the \ref rootio is available.
 */
 
 /**
@@ -136,8 +137,8 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "TSchemaRuleSet.h"
 #include "TThreadSlots.h"
 #include "TGlobal.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/RConcurrentHashColl.hxx"
+#include <memory>
 
 using std::sqrt;
 
@@ -273,6 +274,15 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 /// ~~~{.cpp}
 /// TFile f("file.root");
 /// if (f.IsZombie()) {
+///    std::cout << "Error opening file" << std::endl;
+///    exit(-1);
+/// }
+/// ~~~
+/// If you open a file instead with TFile::Open("file.root") use rather
+/// the following code as a nullptr is returned.
+/// ~~~{.cpp}
+/// TFile* f = TFile::Open("file.root");
+/// if (!f) {
 ///    std::cout << "Error opening file" << std::endl;
 ///    exit(-1);
 /// }
@@ -541,7 +551,7 @@ TFile::~TFile()
    }
 
    if (gDebug)
-      Info("~TFile", "dtor called for %s [%lx]", GetName(),(Long_t)this);
+      Info("~TFile", "dtor called for %s [%zx]", GetName(),(size_t)this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1881,7 +1891,7 @@ TProcessID  *TFile::ReadProcessID(UShort_t pidf)
    snprintf(pidname,32,"ProcessID%d",pidf);
    pid = (TProcessID *)Get(pidname);
    if (gDebug > 0) {
-      printf("ReadProcessID, name=%s, file=%s, pid=%lx\n",pidname,GetName(),(Long_t)pid);
+      printf("ReadProcessID, name=%s, file=%s, pid=%zx\n",pidname,GetName(),(size_t)pid);
    }
    if (!pid) {
       //file->Error("ReadProcessID","Cannot find %s in file %s",pidname,file->GetName());
@@ -3798,7 +3808,6 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
       ::Info("TFile::OpenFromCache", "set cache directory using TFile::SetCacheFileDir()");
    } else {
       TUrl fileurl(name);
-      TUrl tagurl;
 
       if ((!strcmp(fileurl.GetProtocol(), "file"))) {
          // it makes no sense to read local files through a file cache
@@ -3929,30 +3938,33 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
             // try to fetch the file (disable now the forced caching)
             Bool_t forcedcache = fgCacheFileForce;
             fgCacheFileForce = kFALSE;
-            if (need2copy && !TFile::Cp(name, cachefilepath)) {
-               ::Warning("TFile::OpenFromCache", "you want to read through a cache, but I "
-                         "cannot make a cache copy of %s - CACHEREAD disabled",
-                         cachefilepathbasedir.Data());
-               fgCacheFileForce = forcedcache;
-               if (fgOpenTimeout != 0)
+            if (need2copy) {
+               const auto cachefilepathtmp = cachefilepath + std::to_string(gSystem->GetPid()) + ".tmp";
+               if (!TFile::Cp(name, cachefilepathtmp)) {
+                  ::Warning("TFile::OpenFromCache",
+                            "you want to read through a cache, but I "
+                            "cannot make a cache copy of %s - CACHEREAD disabled",
+                            cachefilepathbasedir.Data());
+                  fgCacheFileForce = forcedcache;
                   return nullptr;
-            } else {
-               fgCacheFileForce = forcedcache;
-               ::Info("TFile::OpenFromCache", "using local cache copy of %s [%s]",
-                       name, cachefilepath.Data());
-               // finally we have the file and can open it locally
-               fileurl.SetProtocol("file");
-               fileurl.SetFile(cachefilepath);
-
-               tagurl = fileurl;
-               TString tagfile;
-               tagfile = cachefilepath;
-               tagfile += ".ROOT.cachefile";
-               tagurl.SetFile(tagfile);
-               // we symlink this file as a ROOT cached file
-               gSystem->Symlink(gSystem->BaseName(cachefilepath), tagfile);
-               return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
+               }
+               if (gSystem->AccessPathName(cachefilepath)) // then file _does not_ exist (weird convention)
+                  gSystem->Rename(cachefilepathtmp, cachefilepath);
+               else // another process or thread already wrote a file with the same name while we were copying it
+                  gSystem->Unlink(cachefilepathtmp);
             }
+            fgCacheFileForce = forcedcache;
+            ::Info("TFile::OpenFromCache", "using local cache copy of %s [%s]", name, cachefilepath.Data());
+            // finally we have the file and can open it locally
+            fileurl.SetProtocol("file");
+            fileurl.SetFile(cachefilepath);
+
+            TString tagfile;
+            tagfile = cachefilepath;
+            tagfile += ".ROOT.cachefile";
+            // we symlink this file as a ROOT cached file
+            gSystem->Symlink(gSystem->BaseName(cachefilepath), tagfile);
+            return TFile::Open(fileurl.GetUrl(), "READ", ftitle, compress, netopt);
          }
       }
    }
@@ -3982,7 +3994,7 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// TNetFile use either TNetFile directly or specify as host "localhost".
 /// The netopt argument is only used by TNetFile. For the meaning of the
 /// options and other arguments see the constructors of the individual
-/// file classes. In case of error returns 0.
+/// file classes. In case of error, it returns a nullptr.
 ///
 /// For TFile implementations supporting asynchronous file open, see
 /// TFile::AsyncOpen(...), it is possible to request a timeout with the
@@ -3994,6 +4006,10 @@ TFile *TFile::OpenFromCache(const char *name, Option_t *, const char *ftitle,
 /// The file will be downloaded to the directory specified by SetCacheFileDir().
 ///
 /// *The caller is responsible for deleting the pointer.*
+/// In READ mode, a nullptr is returned if the file does not exist or cannot be opened.
+/// In CREATE mode, a nullptr is returned if the file already exists or cannot be created.
+/// In RECREATE mode, a nullptr is returned if the file can not be created.
+/// In UPDATE mode, a nullptr is returned if the file cannot be created or opened.
 
 TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                    Int_t compress, Int_t netopt)

@@ -12,13 +12,6 @@
 #ifndef ROOT_TGMsgBox
 #define ROOT_TGMsgBox
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TMsgBox                                                              //
-//                                                                      //
-// A message dialog box.                                                //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGWidget.h"
@@ -59,17 +52,17 @@ class TGLabel;
 class TGMsgBox : public TGTransientFrame {
 
 protected:
-   TGButton            *fYes, *fNo, *fOK, *fApply;   // buttons in dialog box
-   TGButton            *fRetry, *fIgnore, *fCancel;  // buttons in dialog box
-   TGButton            *fClose, *fYesAll, *fNoAll;   // buttons in dialog box
-   TGButton            *fNewer, *fAppend, *fDismiss; // buttons in dialog box
-   TGIcon              *fIcon;                       // icon
-   TGHorizontalFrame   *fButtonFrame;                // frame containing buttons
-   TGHorizontalFrame   *fIconFrame;                  // frame containing icon and text
-   TGVerticalFrame     *fLabelFrame;                 // frame containing text
-   TGLayoutHints       *fL1, *fL2, *fL3, *fL4, *fL5; // layout hints
-   TList               *fMsgList;                    // text (list of TGLabels)
-   Int_t               *fRetCode;                    // address to store return code
+   TGButton            *fYes, *fNo, *fOK, *fApply;   ///< buttons in dialog box
+   TGButton            *fRetry, *fIgnore, *fCancel;  ///< buttons in dialog box
+   TGButton            *fClose, *fYesAll, *fNoAll;   ///< buttons in dialog box
+   TGButton            *fNewer, *fAppend, *fDismiss; ///< buttons in dialog box
+   TGIcon              *fIcon;                       ///< icon
+   TGHorizontalFrame   *fButtonFrame;                ///< frame containing buttons
+   TGHorizontalFrame   *fIconFrame;                  ///< frame containing icon and text
+   TGVerticalFrame     *fLabelFrame;                 ///< frame containing text
+   TGLayoutHints       *fL1, *fL2, *fL3, *fL4, *fL5; ///< layout hints
+   TList               *fMsgList;                    ///< text (list of TGLabels)
+   Int_t               *fRetCode;                    ///< address to store return code
 
    void PMsgBox(const char *title, const char *msg, const TGPicture *icon,
                 Int_t buttons, Int_t *ret_code, Int_t text_align);
@@ -92,7 +85,7 @@ public:
    virtual ~TGMsgBox();
 
    virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
    virtual Bool_t HandleKey(Event_t* event);
 
    ClassDef(TGMsgBox,0)  // A message dialog box

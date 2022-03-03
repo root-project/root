@@ -219,7 +219,7 @@ TSQLObjectData *TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo *sqlinf
             Info("SqlObjectData", "Before request to %s", sqlinfo->GetClassTableName());
          TSQLResult *alldata = fSQL->GetNormalClassDataAll(fFirstObjId, fLastObjId, sqlinfo);
          if (gDebug > 4)
-            Info("SqlObjectData", "After request res = 0x%lx", (Long_t)alldata);
+            Info("SqlObjectData", "After request res = 0x%zx", (size_t)alldata);
          if (!alldata) {
             Error("SqlObjectData", "Cannot get data from table %s", sqlinfo->GetClassTableName());
             return nullptr;
@@ -1868,7 +1868,7 @@ void TBufferSQL2::ReadCharP(Char_t *c)
 {
    const char *buf = SqlReadCharStarValue();
    if (buf)
-      strcpy(c, buf);
+      strcpy(c, buf);  // NOLINT unfortunately, we do not know size of target buffer
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1890,7 +1890,7 @@ void TBufferSQL2::ReadTString(TString &s)
          else
             nbig = nwh;
 
-         char *data = new char[nbig];
+         char *data = new char[nbig+1];
          data[nbig] = 0;
          ReadFastArray(data, nbig);
          s = data;

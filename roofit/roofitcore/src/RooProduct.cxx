@@ -23,17 +23,17 @@ A RooProduct represents the product of a given set of RooAbsReal objects.
 
 **/
 
-
-#include <cmath>
-#include <memory>
-
 #include "RooProduct.h"
+
 #include "RooNameReg.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include "RooErrorHandler.h"
 #include "RooMsgService.h"
+#include "RunContext.h"
 #include "RooTrace.h"
+
+#include <cmath>
+#include <memory>
 
 using namespace std ;
 
@@ -54,7 +54,7 @@ namespace {
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooProduct::RooProduct()
+RooProduct::RooProduct() : _cacheMgr(this,10)
 {
   TRACE_CREATE
 }
@@ -81,15 +81,7 @@ RooProduct::RooProduct(const char* name, const char* title, const RooArgList& pr
   _cacheMgr(this,10)
 {
   for (auto comp : prodSet) {
-    if (dynamic_cast<RooAbsReal*>(comp)) {
-      _compRSet.add(*comp) ;
-    } else if (dynamic_cast<RooAbsCategory*>(comp)) {
-      _compCSet.add(*comp) ;
-    } else {
-      coutE(InputArguments) << "RooProduct::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " is not of type RooAbsReal or RooAbsCategory" << endl ;
-      RooErrorHandler::softAbort() ;
-    }
+    addTerm(comp);
   }
   TRACE_CREATE
 }
@@ -109,6 +101,19 @@ RooProduct::RooProduct(const RooProduct& other, const char* name) :
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a term to this product.
+void RooProduct::addTerm(RooAbsArg* term) {
+  if (dynamic_cast<RooAbsReal*>(term)) {
+    _compRSet.add(*term) ;
+  } else if (dynamic_cast<RooAbsCategory*>(term)) {
+    _compCSet.add(*term) ;
+  } else {
+    coutE(InputArguments) << "RooProduct::addTerm(" << GetName() << ") ERROR: component " << term->GetName()
+        << " is not of type RooAbsReal or RooAbsCategory" << endl ;
+    throw std::invalid_argument("RooProduct can only handle terms deriving from RooAbsReal or RooAbsCategory.");
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Force internal handling of integration of given observable if any
@@ -309,8 +314,8 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
   if (cache==0) { 
     // cache got sterilized, trigger repopulation of this slot, then try again...
     std::unique_ptr<RooArgSet> vars( getParameters(RooArgSet()) );
-    std::unique_ptr<RooArgSet> iset(  _cacheMgr.nameSet2ByIndex(code-1)->select(*vars) );
-    Int_t code2 = getPartIntList(iset.get(),rangeName)+1;
+    RooArgSet iset = _cacheMgr.selectFromSet2(*vars, code-1);
+    Int_t code2 = getPartIntList(&iset,rangeName)+1;
     assert(code==code2); // must have revived the right (sterilized) slot...
     return analyticalIntegral(code2,rangeName);
   }
@@ -325,10 +330,9 @@ Double_t RooProduct::analyticalIntegral(Int_t code, const char* rangeName) const
 
 Double_t RooProduct::calculate(const RooArgList& partIntList) const
 {
-  RooAbsReal *term(0);
   Double_t val=1;
-  RooFIter i = partIntList.fwdIterator() ;
-  while((term=(RooAbsReal*)i.next())) {
+  for (const auto arg : partIntList) {
+    const auto term = static_cast<const RooAbsReal*>(arg);
     double x = term->getVal();
     val*= x;
   }
@@ -377,6 +381,45 @@ Double_t RooProduct::evaluate() const
   }
   
   return prod ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Evaluate product of input functions for all points found in `evalData`.
+RooSpan<double> RooProduct::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+  RooSpan<double> prod;
+
+  assert(_compRSet.nset() == normSet);
+
+  for (const auto item : _compRSet) {
+    auto rcomp = static_cast<const RooAbsReal*>(item);
+    auto componentValues = rcomp->getValues(evalData, normSet);
+
+    if (prod.empty()) {
+      prod = evalData.makeBatch(this, componentValues.size());
+      for (auto& val : prod) val = 1.;
+    } else if (prod.size() == 1 && componentValues.size() > 1) {
+      const double val = prod[0];
+      prod = evalData.makeBatch(this, componentValues.size());
+      std::fill(prod.begin(), prod.end(), val);
+    }
+    assert(prod.size() == componentValues.size() || componentValues.size() == 1);
+
+    for (unsigned int i = 0; i < prod.size(); ++i) {
+      prod[i] *= componentValues.size() == 1 ? componentValues[0] : componentValues[i];
+    }
+  }
+
+  for (const auto item : _compCSet) {
+    auto ccomp = static_cast<const RooAbsCategory*>(item);
+    const int catIndex = ccomp->getCurrentIndex();
+
+    for (unsigned int i = 0; i < prod.size(); ++i) {
+      prod[i] *= catIndex;
+    }
+  }
+
+  return prod;
 }
 
 

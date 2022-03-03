@@ -27,34 +27,34 @@ class TMapFile : public TObject {
 friend class TMapRec;
 
 private:
-   Int_t       fFd;             ///< Descriptor of mapped file
+   Longptr_t   fFd;             ///< Descriptor of mapped file
    Int_t       fVersion;        ///< ROOT version (or -1 for shadow map file)
    char       *fName;           ///< Name of mapped file
    char       *fTitle;          ///< Title of mapped file
    char       *fOption;         ///< Directory creation options
    void       *fMmallocDesc;    ///< Pointer to mmalloc descriptor
-   ULong_t     fBaseAddr;       ///< Base address of mapped memory region
+   ULongptr_t  fBaseAddr;       ///< Base address of mapped memory region
    Int_t       fSize;           ///< Original start size of memory mapped region
    TMapRec    *fFirst;          ///< List of streamed objects is shared memory
    TMapRec    *fLast;           ///< Last object in list of shared objects
-   Long_t      fOffset;         ///< Offset in bytes for region mapped by reader
+   Longptr_t   fOffset;         ///< Offset in bytes for region mapped by reader
    TDirectory *fDirectory;      ///< Pointer to directory associated to this mapfile
    TList      *fBrowseList;     ///< List of KeyMapFile objects
    Bool_t      fWritable;       ///< TRUE if mapped file opened in RDWR mode
-   Int_t       fSemaphore;      ///< Modification semaphore (or getpid() for WIN32)
-   ULong_t     fhSemaphore;     ///< HANDLE of WIN32 Mutex object to implement semaphore
+   Longptr_t   fSemaphore;      ///< Modification semaphore (or getpid() for WIN32)
+   ULongptr_t  fhSemaphore;     ///< HANDLE of WIN32 Mutex object to implement semaphore
    TObject    *fGetting;        ///< Don't deadlock in update mode, when from Get() Add() is called
-   Int_t       fWritten;        ///< Number of objects written sofar
-   Double_t    fSumBuffer;      ///< Sum of buffer sizes of objects written sofar
+   Int_t       fWritten;        ///< Number of objects written so far
+   Double_t    fSumBuffer;      ///< Sum of buffer sizes of objects written so far
    Double_t    fSum2Buffer;     ///< Sum of squares of buffer sizes of objects written so far
 
-   static Long_t fgMapAddress;  ///< Map to this address, set address via SetMapAddress()
+   static Longptr_t fgMapAddress;  ///< Map to this address, set address via SetMapAddress()
    static void  *fgMmallocDesc; ///< Used in Close() and operator delete()
 
 protected:
    TMapFile();
    TMapFile(const char *name, const char *title, Option_t *option, Int_t size, TMapFile *&newMapFile);
-   TMapFile(const TMapFile &f, Long_t offset = 0);
+   TMapFile(const TMapFile &f, Longptr_t offset = 0);
 
    TMapFile &operator=(const TMapFile &rhs) = delete;
 
@@ -94,11 +94,11 @@ public:
    Int_t         GetSize() const { return fSize; }
    const char   *GetOption() const { return fOption; }
    const char   *GetTitle() const { return fTitle; }
-   TMapRec      *GetFirst() const { return (TMapRec*)((Long_t) fFirst + fOffset); }
-   TMapRec      *GetLast() const { return (TMapRec*)((Long_t) fLast + fOffset); }
+   TMapRec      *GetFirst() const { return (TMapRec*)((Longptr_t) fFirst + fOffset); }
+   TMapRec      *GetLast() const { return (TMapRec*)((Longptr_t) fLast + fOffset); }
    Bool_t        IsFolder() const;
    Bool_t        IsWritable() const { return fWritable; }
-   void         *OrgAddress(void *addr) const { return (void *)((Long_t)addr - fOffset); }
+   void         *OrgAddress(void *addr) const { return (void *)((Longptr_t)addr - fOffset); }
    void          Print(Option_t *option="") const;
    void          ls(Option_t *option="") const;
    Bool_t        cd(const char *path = 0);
@@ -112,7 +112,7 @@ public:
 
    static TMapFile *Create(const char *name, Option_t *option="READ", Int_t size=kDefaultMapSize, const char *title="");
    static TMapFile *WhichMapFile(void *addr);
-   static void      SetMapAddress(Long_t addr);
+   static void      SetMapAddress(Longptr_t addr);
 
    ClassDef(TMapFile,0)  // Memory mapped directory structure
 };
@@ -147,12 +147,12 @@ private:
 public:
    TMapRec(const char *name, const TObject *obj, Int_t size, void *buf);
    ~TMapRec();
-   const char   *GetName(Long_t offset = 0) const { return (char *)((Long_t) fName + offset); }
-   const char   *GetClassName(Long_t offset = 0) const { return (char *)((Long_t) fClassName + offset); }
-   void         *GetBuffer(Long_t offset = 0) const { return (void *)((Long_t) fBuffer + offset); }
+   const char   *GetName(Longptr_t offset = 0) const { return (char *)((Longptr_t) fName + offset); }
+   const char   *GetClassName(Longptr_t offset = 0) const { return (char *)((Longptr_t) fClassName + offset); }
+   void         *GetBuffer(Longptr_t offset = 0) const { return (void *)((Longptr_t) fBuffer + offset); }
    Int_t         GetBufSize() const { return fBufSize; }
    TObject      *GetObject() const;
-   TMapRec      *GetNext(Long_t offset = 0) const { return (TMapRec *)((Long_t) fNext + offset); }
+   TMapRec      *GetNext(Longptr_t offset = 0) const { return (TMapRec *)((Longptr_t) fNext + offset); }
 };
 
 #endif

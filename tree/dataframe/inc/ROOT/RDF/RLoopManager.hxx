@@ -12,7 +12,8 @@
 #define ROOT_RLOOPMANAGER
 
 #include "ROOT/RDF/RNodeBase.hxx"
-#include "ROOT/RDF/RDataBlockNotifier.hxx"
+#include "ROOT/RDF/RNewSampleNotifier.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <functional>
 #include <map>
@@ -35,12 +36,54 @@ namespace Internal {
 namespace RDF {
 std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
 
-class RActionBase;
 class GraphNode;
+class RActionBase;
+class RVariationBase;
 
 namespace GraphDrawing {
 class GraphCreatorHelper;
 } // ns GraphDrawing
+
+using Callback_t = std::function<void(unsigned int)>;
+
+class RCallback {
+   const Callback_t fFun;
+   const ULong64_t fEveryN;
+   std::vector<ULong64_t> fCounters;
+
+public:
+   RCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
+      : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
+   {
+   }
+
+   void operator()(unsigned int slot)
+   {
+      auto &c = fCounters[slot];
+      ++c;
+      if (c == fEveryN) {
+         c = 0ull;
+         fFun(slot);
+      }
+   }
+};
+
+class ROneTimeCallback {
+   const Callback_t fFun;
+   std::vector<int> fHasBeenCalled; // std::vector<bool> is thread-unsafe for our purposes (and generally evil)
+
+public:
+   ROneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
+
+   void operator()(unsigned int slot)
+   {
+      if (fHasBeenCalled[slot] == 1)
+         return;
+      fFun(slot);
+      fHasBeenCalled[slot] = 1;
+   }
+};
+
 } // ns RDF
 } // ns Internal
 
@@ -50,51 +93,14 @@ namespace RDFInternal = ROOT::Internal::RDF;
 
 class RFilterBase;
 class RRangeBase;
+class RDefineBase;
 using ROOT::RDF::RDataSource;
-using ColumnNames_t = std::vector<std::string>;
 
 /// The head node of a RDF computation graph.
 /// This class is responsible of running the event loop.
 class RLoopManager : public RNodeBase {
+   using ColumnNames_t = std::vector<std::string>;
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
-   using Callback_t = std::function<void(unsigned int)>;
-   class TCallback {
-      const Callback_t fFun;
-      const ULong64_t fEveryN;
-      std::vector<ULong64_t> fCounters;
-
-   public:
-      TCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
-         : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
-      {
-      }
-
-      void operator()(unsigned int slot)
-      {
-         auto &c = fCounters[slot];
-         ++c;
-         if (c == fEveryN) {
-            c = 0ull;
-            fFun(slot);
-         }
-      }
-   };
-
-   class TOneTimeCallback {
-      const Callback_t fFun;
-      std::vector<int> fHasBeenCalled; // std::vector<bool> is thread-unsafe for our purposes (and generally evil)
-
-   public:
-      TOneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
-
-      void operator()(unsigned int slot)
-      {
-         if (fHasBeenCalled[slot] == 1)
-            return;
-         fFun(slot);
-         fHasBeenCalled[slot] = 1;
-      }
-   };
 
    friend struct RCallCleanUpTask;
 
@@ -103,6 +109,8 @@ class RLoopManager : public RNodeBase {
    std::vector<RFilterBase *> fBookedFilters;
    std::vector<RFilterBase *> fBookedNamedFilters; ///< Contains a subset of fBookedFilters, i.e. only the named filters
    std::vector<RRangeBase *> fBookedRanges;
+   std::vector<RDefineBase *> fBookedDefines;
+   std::vector<RDFInternal::RVariationBase *> fBookedVariations;
 
    /// Shared pointer to the input TTree. It does not delete the pointee if the TTree/TChain was passed directly as an
    /// argument to RDataFrame's ctor (in which case we let users retain ownership).
@@ -113,11 +121,13 @@ class RLoopManager : public RNodeBase {
    bool fMustRunNamedFilters{true};
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    const std::unique_ptr<RDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
-   std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
-   std::vector<TCallback> fCallbacks;                      ///< Registered callbacks
-   std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
-   std::vector<Callback_t> fDataBlockCallbacks; ///< Registered callbacks to call at the beginning of each "data block"
-   RDFInternal::RDataBlockNotifier fDataBlockNotifier;
+   std::vector<RDFInternal::RCallback> fCallbacks;         ///< Registered callbacks
+   /// Registered callbacks to invoke just once before running the loop
+   std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
+   /// Registered callbacks to call at the beginning of each "data block"
+   std::vector<ROOT::RDF::SampleCallback_t> fSampleCallbacks;
+   RDFInternal::RNewSampleNotifier fNewSampleNotifier;
+   std::vector<ROOT::RDF::RSampleInfo> fSampleInfos;
    unsigned int fNRuns{0}; ///< Number of event loops run
 
    /// Registry of per-slot value pointers for booked data-source columns
@@ -139,7 +149,9 @@ class RLoopManager : public RNodeBase {
    void CleanUpNodes();
    void CleanUpTask(TTreeReader *r, unsigned int slot);
    void EvalChildrenCounts();
-   void SetupDataBlockCallbacks(TTreeReader *r, unsigned int slot);
+   void SetupSampleCallbacks(TTreeReader *r, unsigned int slot);
+   void UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
+   void UpdateSampleInfo(unsigned int slot, TTreeReader &r);
 
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -163,6 +175,10 @@ public:
    void Deregister(RFilterBase *filterPtr);
    void Book(RRangeBase *rangePtr);
    void Deregister(RRangeBase *rangePtr);
+   void Book(RDefineBase *definePtr);
+   void Deregister(RDefineBase *definePtr);
+   void Book(RDFInternal::RVariationBase *varPtr);
+   void Deregister(RDFInternal::RVariationBase *varPtr);
    bool CheckFilters(unsigned int, Long64_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
@@ -172,8 +188,6 @@ public:
    void IncrChildrenCount() final { ++fNChildren; }
    void StopProcessing() final { ++fNStopsReceived; }
    void ToJitExec(const std::string &) const;
-   void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
-   const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
    bool HasDSValuePtrs(const std::string &col) const;
@@ -192,12 +206,11 @@ public:
    /// Return all actions, either booked or already run
    std::vector<RDFInternal::RActionBase *> GetAllActions() const;
 
-   std::vector<RDFInternal::RActionBase *> GetBookedActions() { return fBookedActions; }
    std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph();
 
    const ColumnNames_t &GetBranchNames();
 
-   void AddDataBlockCallback(std::function<void(unsigned int)> &&callback);
+   void AddSampleCallback(ROOT::RDF::SampleCallback_t &&callback);
 };
 
 } // ns RDF

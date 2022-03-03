@@ -27,7 +27,7 @@ extern "C" {
                                          GdkPixmap * mask,
                                          GdkColor * fg,
                                          GdkColor * bg, gint x, gint y);
-   GdkCursor *gdk_syscursor_new(unsigned long syscur);
+   GdkCursor *gdk_syscursor_new(gulong syscur);
    GdkCursor *gdk_cursor_ref(GdkCursor * cursor);
    void gdk_cursor_unref(GdkCursor * cursor);
 

@@ -65,8 +65,8 @@ BXX="`basename $CXX`"
 COMPILERVERS="$BXX"
 case $BXX in
 g++* | c++*)
-   cxxTemp=`$CXX -dumpversion`
-   COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i gcc | sed -n '1p'`"
+   cxxTemp=`$CXX -dumpfullversion -dumpversion`
+   COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i $BXX | sed -n '1p'`"
    COMPILERVERS="gcc"
    if [ `uname` == "Darwin" ]; then
       if [ "x$COMPILERVERSSTR" == "x" ]; then
@@ -76,12 +76,12 @@ g++* | c++*)
    fi
    ;;
 icc)
-   cxxTemp=`$CXX -dumpversion`
+   cxxTemp=`$CXX -dumpfullversion -dumpversion`
    COMPILERVERSSTR="Intel icc $cxxTemp"
    COMPILERVERS="icc"
    ;;
 clang++*)
-   cxxTemp=`$CXX -dumpversion`
+   cxxTemp=`$CXX -dumpfullversion -dumpversion`
    COMPILERVERSSTR="`$CXX --version 2>&1 | grep -i clang | sed -n '1p'`"
    COMPILERVERS="clang"
    ;;

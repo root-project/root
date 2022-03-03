@@ -13,14 +13,6 @@
 #ifndef ROOT_TRootEmbeddedCanvas
 #define ROOT_TRootEmbeddedCanvas
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootEmbeddedCanvas                                                  //
-//                                                                      //
-// This class creates a TGCanvas in which a TCanvas is created. Use     //
-// GetCanvas() to get a pointer to the TCanvas.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGCanvas.h"
 
@@ -34,12 +26,12 @@ class TRootEmbeddedCanvas : public TGCanvas {
 friend class TRootEmbeddedContainer;
 
 protected:
-   Int_t                   fCWinId;           // window id used by embedded TCanvas
-   TRootEmbeddedContainer *fCanvasContainer;  // container in canvas widget
-   TCanvas                *fCanvas;           // pointer to TCanvas
-   Bool_t                  fAutoFit;          // canvas container keeps same size as canvas
-   Int_t                   fButton;           // currently pressed button
-   Atom_t                 *fDNDTypeList;      // handles DND types
+   Int_t                   fCWinId;           ///< window id used by embedded TCanvas
+   TRootEmbeddedContainer *fCanvasContainer;  ///< container in canvas widget
+   TCanvas                *fCanvas;           ///< pointer to TCanvas
+   Bool_t                  fAutoFit;          ///< canvas container keeps same size as canvas
+   Int_t                   fButton;           ///< currently pressed button
+   Atom_t                 *fDNDTypeList;      ///< handles DND types
 
    virtual Bool_t HandleContainerButton(Event_t *ev);
    virtual Bool_t HandleContainerDoubleClick(Event_t *ev);

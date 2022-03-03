@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
 
 /**********************************************************************
  *                                                                    *
@@ -31,14 +31,28 @@ namespace Minuit2 {
     "false".
  */
 
+enum class GradientParameterSpace {
+  External, Internal
+};
+
 class FCNGradientBase : public FCNBase {
 
 public:
    virtual ~FCNGradientBase() {}
 
    virtual std::vector<double> Gradient(const std::vector<double> &) const = 0;
+   virtual std::vector<double> GradientWithPrevResult(const std::vector<double> &parameters, double * /*previous_grad*/,
+                                                      double * /*previous_g2*/, double * /*previous_gstep*/) const
+   {
+      return Gradient(parameters);
+   };
 
    virtual bool CheckGradient() const { return true; }
+
+   virtual GradientParameterSpace gradParameterSpace() const {
+      return GradientParameterSpace::External;
+   };
+
 };
 
 } // namespace Minuit2

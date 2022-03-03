@@ -13,14 +13,6 @@
 #define ROOT_TProofProgressDialog
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofProgressDialog                                                 //
-//                                                                      //
-// This class provides a query progress bar.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TTime.h"
 #include "TString.h"
 

@@ -13,17 +13,6 @@
 #define ROOT_TGDockableFrame
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TGDockableFrame is a frame with handles that allow it to be        //
-// undocked (i.e. put in a transient frame of its own) and to be docked //
-// again or hidden and shown again. It uses the TGDockButton, which is  //
-// a button with two vertical bars (||) and TGDockHideButton, which is  //
-// a button with a small triangle. The TGUndockedFrame is a transient   //
-// frame that on closure will put the frame back in the dock.           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 #include "TGWidget.h"
@@ -38,9 +27,9 @@ class TGDockableFrame;
 
 class TGDockButton : public TGButton {
 protected:
-   Bool_t     fMouseOn;    // true when mouse on button
-   ULong_t    fNormBg;     // normal background color
-   ULong_t    fHiBg;       // highlighted background color
+   Bool_t     fMouseOn;    ///< true when mouse on button
+   ULong_t    fNormBg;     ///< normal background color
+   ULong_t    fHiBg;       ///< highlighted background color
 
    virtual void DrawBorder();
    virtual void DoRedraw();
@@ -57,7 +46,7 @@ public:
 
 class TGDockHideButton : public TGDockButton {
 protected:
-   Int_t     fAspectRatio;   // triangle orientation
+   Int_t     fAspectRatio;   ///< triangle orientation
 
    virtual void DoRedraw();
 
@@ -77,7 +66,7 @@ private:
    TGUndockedFrame& operator=(const TGUndockedFrame&) = delete;
 
 protected:
-   TGDockableFrame    *fDockable;   // orignal dockable frame
+   TGDockableFrame    *fDockable;   ///< orignal dockable frame
 
 public:
    TGUndockedFrame(const TGWindow *p = 0, TGDockableFrame *dockable = 0);
@@ -98,19 +87,19 @@ private:
    TGDockableFrame& operator=(const TGDockableFrame&) = delete;
 
 protected:
-   Bool_t            fHidden;        // if frame is hidden
-   Bool_t            fEnableHide;    // if frame can be hidden
-   Bool_t            fEnableUndock;  // if frame can be undocked
-   Bool_t            fDeleted;       // kTRUE if it is being deleted
-   Bool_t            fFixedSize;     // kTRUE if fixed size when undocked
-   TString           fDockName;      // name of frame
-   TGCompositeFrame *fContainer;     // container containing dockable frame
-   TGCompositeFrame *fButtons;       // container containing dock and hide buttons
-   TGDockButton     *fDockButton;    // dock button
-   TGDockHideButton *fHideButton;    // hide button
-   TGUndockedFrame  *fFrame;         // undocked frame
-   TGLayoutHints    *fHints;         // layout hints
-   TGLayoutHints    *fLb, *fLc;      // layout hints
+   Bool_t            fHidden;        ///< if frame is hidden
+   Bool_t            fEnableHide;    ///< if frame can be hidden
+   Bool_t            fEnableUndock;  ///< if frame can be undocked
+   Bool_t            fDeleted;       ///< kTRUE if it is being deleted
+   Bool_t            fFixedSize;     ///< kTRUE if fixed size when undocked
+   TString           fDockName;      ///< name of frame
+   TGCompositeFrame *fContainer;     ///< container containing dockable frame
+   TGCompositeFrame *fButtons;       ///< container containing dock and hide buttons
+   TGDockButton     *fDockButton;    ///< dock button
+   TGDockHideButton *fHideButton;    ///< hide button
+   TGUndockedFrame  *fFrame;         ///< undocked frame
+   TGLayoutHints    *fHints;         ///< layout hints
+   TGLayoutHints    *fLb, *fLc;      ///< layout hints
 
 public:
    TGDockableFrame(const TGWindow *p = nullptr, Int_t id = -1,
@@ -119,7 +108,7 @@ public:
 
    virtual void AddFrame(TGFrame *f, TGLayoutHints *hints);
 
-   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t);
+   virtual Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t);
    virtual void Docked() { Emit("Docked()"); }        //*SIGNAL*
    virtual void Undocked() { Emit("Undocked()"); }    //*SIGNAL*
 

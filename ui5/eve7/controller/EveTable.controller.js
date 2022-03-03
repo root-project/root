@@ -1,5 +1,7 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
+   'sap/ui/core/Component',
+   'sap/ui/core/UIComponent',
    'sap/ui/model/json/JSONModel',
    'sap/ui/model/Sorter',
    'sap/m/Column',
@@ -12,7 +14,7 @@ sap.ui.define([
    "sap/ui/layout/HorizontalLayout",
    "sap/ui/table/Column",
    "sap/m/MessageBox"
-], function (Controller, JSONModel, Sorter,
+], function (Controller,Component, UIComponent, JSONModel, Sorter,
    mColumn, mColumnListItem, mInput, mLabel, mButton,
    FormattedText, VerticalLayout, HorizontalLayout, tableColumn, MessageBox) {
 
@@ -21,18 +23,28 @@ sap.ui.define([
    return Controller.extend("rootui5.eve7.controller.EveTable", {
 
       onInit: function () {
-         var data = this.getView().getViewData();
-         // console.log("VIEW DATA", data);
+         var viewData = this.getView().getViewData();
+         if (viewData) {
+            this.setupManagerAndViewType(viewData.eveViewerId, viewData.mgr);
+         }
+         else {
+             UIComponent.getRouterFor(this).getRoute("Table").attachPatternMatched(this.onTableObjectMatched, this);
+         }
+      },
+      onTableObjectMatched: function (oEvent) {
+         let args = oEvent.getParameter("arguments");
+         this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.mgr );
+         delete JSROOT.$eve7tmp;
 
-         var id = this.getView().getId();
-         console.log("eve.GL.onInit id = ", id);
-
+         this.checkViewReady();
+      },
+      setupManagerAndViewType: function(eveViewerId, mgr)
+      {
          this._load_scripts = true;
          this._render_html = false;
 
-         this.mgr = data.mgr;
-         this.eveViewerId = data.eveViewerId;
-         this.kind = data.kind;
+         this.mgr = mgr;
+         this.eveViewerId = eveViewerId;
 
          var rh = this.mgr.handle.getUserArgs("TableRowHeight");
          if (rh && (rh > 0))
@@ -64,12 +76,12 @@ sap.ui.define([
             var oData = table.getContextByIndex(idx);
             if (oData) {
                let ui = oData.getPath().substring(6);
-               console.log("idx =", idx, "path idx = ", ui);
+               // console.log("idx =", idx, "path idx = ", ui);
 
                let itemList = pthis.collection.childs[0];
                let secIdcs = [ui];
-               let fcall = "ProcessSelection(" + pthis.mgr.global_selection_id + `, false, true`;
-               fcall += ", { " + secIdcs.join(", ") + " }";
+               let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + `, false, true`;
+               fcall += ", \" " + secIdcs.join(", ") + " \"";
                fcall += ")";
                pthis.mgr.SendMIR(fcall, itemList.fElementId, itemList._typename);
             }
@@ -81,9 +93,7 @@ sap.ui.define([
       },
 
       sortTable: function (e) {
-         var col = e.mParameters.column;
-         var colId = col.getId();
-
+         // var colId = col.getId();
          var col = e.mParameters.column;
          var bDescending = (e.mParameters.sortOrder == sap.ui.core.SortOrder.Descending);
          var sv = bDescending;
@@ -140,7 +150,6 @@ sap.ui.define([
 
       updateSortMap() {
          // update sorted/unsorted idx map
-         console.log("updateSortMap");
          let oTable = this.getView().byId("table");
          let nr = oTable.getModel().oData.rows.length;
          if (!oTable.sortMap)
@@ -194,7 +203,7 @@ sap.ui.define([
             var xr = rowData[r];
             for (var xri = 0; xri < xr.length; xri++) {
                var nv = parseFloat(xr[i]);
-               if (nv != NaN) {
+               if (!isNaN(nv)) {
                   rowData[r][ri] = nv;
                }
             }
@@ -208,8 +217,6 @@ sap.ui.define([
 
          if (this.bindTableColumns) {
             // column definition
-
-            console.log("bind table columns ");
             var columnData = [];
 
             columnData.push({ columnName: "Name" });
@@ -263,7 +270,6 @@ sap.ui.define([
                let ent = sap.ui.getCore().byId("inputExp");
                let sm = ent.getModel();
                sm.setData(this.eveTable.fPublicFunctions);
-               console.log("SHOULD UPDATE SUGGESTION DATA")
             }
 
             this.bindTableColumns = false;
@@ -280,7 +286,6 @@ sap.ui.define([
          var oModel = new JSONModel();
          var collection = this.mgr.GetElement(this.eveTable.fCollectionId);
          var clist = this.mgr.GetElement(collection.fMotherId);
-         // console.log("collection list ", clist);
 
          var mData = {
             "itemx": [
@@ -309,7 +314,6 @@ sap.ui.define([
       },
 
       onSceneCreate: function (element, id) {
-         console.log("EveTable onSceneChanged", id);
          this.locateEveTable();
          this.buildTableHeader();
          this.buildTableBody(true);
@@ -351,7 +355,6 @@ sap.ui.define([
                   },
                   suggestionItemSelected: function (oEvent) {
                      var oItem = oEvent.getParameter("selectedRow");
-                     console.log("sap.m.Input id with suggestion: selected item text is ------ ", oItem.getCells());
                      // fill in title if empty
                      var it = sap.ui.getCore().byId("titleEx");
                      if ((it.getValue() && it.getValue().length) == false) {

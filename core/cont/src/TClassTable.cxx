@@ -132,7 +132,7 @@ namespace ROOT {
       void Print() {
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
          for (const_iterator iter = fMap.begin(); iter != fMap.end(); ++iter) {
-            printf("Key: %40s 0x%lx\n", iter->first.c_str(), (unsigned long)iter->second);
+            printf("Key: %40s 0x%zx\n", iter->first.c_str(), (size_t)iter->second);
          }
       }
 #else
@@ -592,7 +592,7 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
    if (!CheckClassTableInit()) return nullptr;
 
    if (gDebug > 9) {
-      ::Info("GetDict", "searches for %s at 0x%lx", info.name(), (Long_t)&info);
+      ::Info("GetDict", "searches for %s at 0x%zx", info.name(), (size_t)&info);
       fgIdMap->Print();
    }
 

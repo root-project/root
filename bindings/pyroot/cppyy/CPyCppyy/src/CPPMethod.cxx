@@ -45,7 +45,7 @@ inline void CPyCppyy::CPPMethod::Copy_(const CPPMethod& /* other */)
 }
 
 //----------------------------------------------------------------------------
-inline void CPyCppyy::CPPMethod::Destroy_() const
+inline void CPyCppyy::CPPMethod::Destroy_()
 {
 // destroy executor and argument converters
     if (fExecutor && fExecutor->HasState()) delete fExecutor;
@@ -55,6 +55,11 @@ inline void CPyCppyy::CPPMethod::Destroy_() const
     }
 
     delete fArgIndices;
+
+    fExecutor = nullptr;
+    fArgIndices = nullptr;
+    fConverters.clear();
+    fArgsRequired = -1;
 }
 
 //----------------------------------------------------------------------------
@@ -404,7 +409,7 @@ int CPyCppyy::CPPMethod::GetPriority()
             const std::string& clean_name = TypeManip::clean_type(aname, false);
             Cppyy::TCppScope_t scope = Cppyy::GetScope(clean_name);
             if (scope)
-                priority += (int)Cppyy::GetNumBases(scope);
+                priority += static_cast<int>(Cppyy::GetNumBasesLongestBranch(scope));
 
             if (Cppyy::IsEnum(clean_name))
                 priority -= 100;

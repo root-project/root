@@ -373,7 +373,7 @@ HistFactory::Measurement ConfigParser::CreateMeasurementFromDriverNode( TXMLNode
 	}
 	else {
 	  cxcoutEHF << "Found tag attribute with unknown name in ParamSetting: "
-		    << curAttr->GetName() << std::endl;
+		    << curParam->GetName() << std::endl;
 	  throw hf_exc();
 	}
       }
@@ -542,7 +542,7 @@ HistFactory::Channel ConfigParser::ParseChannelXMLFile( string filen ) {
   lumiStr.ReplaceAll(' ', TString());
   */
 
-  cxcoutIHF << "Parsing file: " << filen ;
+  cxcoutIHF << "Parsing file: " << filen << std::endl;
 
   TDOMParser xmlparser;
 

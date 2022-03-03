@@ -19,6 +19,9 @@ if(NOT GENERATOR_IS_MULTI_CONFIG AND NOT CMAKE_BUILD_TYPE)
   endif()
 endif()
 
+# Make the build-type check case insensitive. This is variable is used in multiple places:
+string(TOUPPER "${CMAKE_BUILD_TYPE}" _BUILD_TYPE_UPPER)
+
 include(CheckLanguage)
 #---Enable FORTRAN (unfortunatelly is not not possible in all cases)-------------------------------
 if(fortran)
@@ -112,13 +115,19 @@ include(CheckCCompilerFlag)
 # so we check the value of __cplusplus.
 # This default value can be overridden by specifying one at the prompt.
 if (MSVC)
-   set(CXX_STANDARD_STRING 2011)
+   set(CXX_STANDARD_STRING "201703L")
 else()
    execute_process(COMMAND echo __cplusplus
                    COMMAND ${CMAKE_CXX_COMPILER} -E -x c++ -
                    COMMAND tail -n1
                    OUTPUT_VARIABLE CXX_STANDARD_STRING
+                   ERROR_QUIET
                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+   # if the above command fails to set the variable for any reason, let's default to 2011 with a warning
+   if (NOT CXX_STANDARD_STRING)
+      message(WARNING "Could not detect the default C++ standard in use by the detected compiler (${CMAKE_CXX_COMPILER}). Falling back to C++14 as a default, can be overridden by setting CMAKE_CXX_STANDARD.")
+      set(CXX_STANDARD_STRING 2014)
+   endif()
 endif()
 # Lexicographically compare the value of __cplusplus (e.g. "201703L" for C++17) to figure out
 # what standard CMAKE_CXX_COMPILER uses by default.
@@ -130,11 +139,9 @@ if (${CXX_STANDARD_STRING} STRGREATER "201703L")
    set(CXX_STANDARD_STRING 20 CACHE STRING "")
 elseif(${CXX_STANDARD_STRING} STRGREATER "201402L")
    set(CXX_STANDARD_STRING 17 CACHE STRING "")
-elseif(${CXX_STANDARD_STRING} STRGREATER "201103L")
-   set(CXX_STANDARD_STRING 14 CACHE STRING "")
 else()
-   # We stick to C++11 as a minimum value
-   set(CXX_STANDARD_STRING 11 CACHE STRING "")
+   # We stick to C++14 as a minimum value
+   set(CXX_STANDARD_STRING 14 CACHE STRING "")
 endif()
 set(CMAKE_CXX_STANDARD ${CXX_STANDARD_STRING} CACHE STRING "")
 set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
@@ -157,7 +164,7 @@ if(cxx11 OR cxx14 OR cxx17)
   unset(cxx11 CACHE)
 endif()
 
-if(NOT CMAKE_CXX_STANDARD MATCHES "11|14|17")
+if(NOT CMAKE_CXX_STANDARD MATCHES "14|17|20")
   message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}")
 endif()
 
@@ -234,10 +241,9 @@ int main() {}
 " GLIBCXX_USE_CXX11_ABI)
 
 #---Print the final compiler flags--------------------------------------------------------------------
-string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE)
 message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
 message(STATUS "ROOT Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS "ROOT Processor: ${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
-message(STATUS "Build Type: '${CMAKE_BUILD_TYPE}' (flags = '${CMAKE_CXX_FLAGS_${BUILD_TYPE}}')")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE}}")
+message(STATUS "Build Type: '${CMAKE_BUILD_TYPE}' (flags = '${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}')")
+message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")

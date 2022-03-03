@@ -9,75 +9,84 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// The TGButtonGroup widget organizes TGButton widgets in a group.      //
-//                                                                      //
-// A button group widget makes it easier to deal with groups of buttons.//
-// A button in a button group is associated with a unique identifier.   //
-// The button group emits a Clicked() signal with this identifier when  //
-// the button is clicked. Thus, a button group is an ideal solution     //
-// when you have several similar buttons and want to connect all their  //
-// Clicked() signals, for example, to one slot.                         //
-//                                                                      //
-// An exclusive button group switches off all toggle buttons except     //
-// the one that was clicked. A button group is by default non-exclusive.//
-// All radio buttons that are inserted, will be mutually exclusive even //
-// if the button group is non-exclusive.                                //
-//                                                                      //
-//                                                                      //
-// There are two ways of using a button group:                          //
-//                                                                      //
-//    The button group is a parent widget of a number of buttons,       //
-//    i.e. the button group is the parent argument in the button        //
-//    constructor. The buttons are assigned identifiers 1, 2, 3 etc.    //
-//    in the order they are created or you can specify button id in     //
-//    the button constructor. A TGButtonGroup can display a frame and   //
-//    a title because it inherits from TGGroupFrame.                    //
-//                                                                      //
-// Example:                                                             //
-//                                                                      //
-//    // vertical frame without border and title                        //
-//    TGVButtonGroup *bg = new TGVButtonGroup(main_frame);              //
-//                                                                      //
-//    // create text button with id=1                                   //
-//    TGTextButton *button1 = new TGTextButton(bg,"some text");         //
-//                                                                      //
-//    // create another text button with id=2                           //
-//    TGTextButton *button2 = new TGTextButton(bg,"another text");      //
-//                                                                      //
-//    // map all buttons                                                //
-//    bg->Show();                                                       //
-//                                                                      //
-// NOTE: there is no need to call AddFrame() since the buttons are      //
-// automatically added with a default layout hint to their parent,      //
-// i.e. the buttongroup. To override the default layout hints use the   //
-// SetLayoutHints() method.                                             //
-//                                                                      //
-//  ButtonGroup Signals:                                                //
-//                                                                      //
-//    Pressed(Int_t id)  -->  is emitted when a button in the group is  //
-//                            pressed down. The id argument is the      //
-//                            button's identifier.                      //
-//    Released(Int_t id) -->  is emitted when a button in the group is  //
-//                            released. The id argument is the button's //
-//                            identifier.                               //
-//    Clicked(Int_t id)  -->  is emitted when a button in the group is  //
-//                            clicked. The id argument is the button's  //
-//                            identifier.                               //
-//                                                                      //
-//                                                                      //
-// The TGHButtonGroup widget organizes TGButton widgets in a group      //
-// with one horizontal row. TGHButtonGroup is a convenience class that  //
-// offers a thin layer on top of TGButtonGroup. It inherits from        //
-// TGButtonGroup.                                                       //
-//                                                                      //
-// The TGVButtonGroup widget organizes TGButton widgets in a group      //
-// with one vertical column. TGVButtonGroup is a convenience class that //
-// offers a thin layer on top of TGButtonGroup. It inherits from        //
-// TGButtonGroup.                                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGButtonGroup
+    \ingroup guiwidgets
+
+Organizes TGButton widgets in a group.
+A button group widget makes it easier to deal with groups of buttons.
+A button in a button group is associated with a unique identifier.
+The button group emits a Clicked() signal with this identifier when
+the button is clicked. Thus, a button group is an ideal solution
+when you have several similar buttons and want to connect all their
+Clicked() signals, for example, to one slot.
+
+An exclusive button group switches off all toggle buttons except
+the one that was clicked. A button group is by default non-exclusive.
+All radio buttons that are inserted, will be mutually exclusive even
+if the button group is non-exclusive.
+
+
+There are two ways of using a button group:
+
+   The button group is a parent widget of a number of buttons,
+   i.e. the button group is the parent argument in the button
+   constructor. The buttons are assigned identifiers 1, 2, 3 etc.
+   in the order they are created or you can specify button id in
+   the button constructor. A TGButtonGroup can display a frame and
+   a title because it inherits from TGGroupFrame.
+
+Example:
+
+```
+   // vertical frame without border and title
+   TGVButtonGroup *bg = new TGVButtonGroup(main_frame);
+
+   // create text button with id=1
+   TGTextButton *button1 = new TGTextButton(bg,"some text");
+
+   // create another text button with id=2
+   TGTextButton *button2 = new TGTextButton(bg,"another text");
+
+   // map all buttons
+   bg->Show();
+```
+
+NOTE: there is no need to call AddFrame() since the buttons are
+automatically added with a default layout hint to their parent,
+i.e. the buttongroup. To override the default layout hints use the
+SetLayoutHints() method.
+
+ ButtonGroup Signals:
+
+  - Pressed(Int_t id)  -->  is emitted when a button in the group is
+                            pressed down. The id argument is the
+                            button's identifier.
+  - Released(Int_t id) -->  is emitted when a button in the group is
+                            released. The id argument is the button's
+                            identifier.
+  - Clicked(Int_t id)  -->  is emitted when a button in the group is
+                            clicked. The id argument is the button's
+                            identifier.
+
+
+\class TGHButtonGroup
+\ingroup guiwidgets
+
+Organizes TGButton widgets in a group with one horizontal row. TGHButtonGroup is a
+convenience class that offers a thin layer on top of TGButtonGroup. It inherits from
+TGButtonGroup.
+
+
+\class TGVButtonGroup
+\ingroup guiwidgets
+
+Organizes TGButton widgets in a group with one vertical column. TGVButtonGroup is a
+convenience class that offers a thin layer on top of TGButtonGroup. It inherits from
+TGButtonGroup.
+
+*/
+
 
 #include "TGButtonGroup.h"
 #include "TGButton.h"
@@ -375,7 +384,7 @@ Int_t TGButtonGroup::Insert(TGButton *button, Int_t id)
    button->Associate(this);
 
    static Int_t seq_no = -2;
-   Long_t bid;
+   Longptr_t bid;
 
    if (id < -1)       bid = seq_no--;
    else if (id == -1) bid = GetCount()+1;
@@ -421,7 +430,7 @@ TGButton *TGButtonGroup::Find(Int_t id) const
    TGButton *item = 0;
 
    while ((item = (TGButton*)next())) {
-      if ((Long_t)fMapOfButtons->GetValue(item) == id) break;   // found
+      if ((Longptr_t)fMapOfButtons->GetValue(item) == id) break;   // found
    }
 
    return item;
@@ -443,7 +452,7 @@ Int_t TGButtonGroup::GetId(TGButton *button) const
 {
    TPair *a = (TPair*) fMapOfButtons->FindObject(button);
    if (a)
-      return (Int_t)Long_t(a->Value());
+      return (Int_t)Longptr_t(a->Value());
    else
       return -1;
 }
@@ -472,7 +481,7 @@ void TGButtonGroup::ButtonPressed()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Pressed(id);
    }
 }
@@ -487,7 +496,7 @@ void TGButtonGroup::ButtonReleased()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Released(id);
    }
 }
@@ -502,7 +511,7 @@ void TGButtonGroup::ButtonClicked()
 
    TPair *a = (TPair*) fMapOfButtons->FindObject(btn);
    if (a) {
-      Int_t id = (Int_t)Long_t(a->Value());
+      Int_t id = (Int_t)Longptr_t(a->Value());
       Clicked(id);
    }
 }

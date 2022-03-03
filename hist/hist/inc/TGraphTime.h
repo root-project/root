@@ -30,14 +30,14 @@ class TGraphTime : public TNamed {
 
 protected:
 
-   Int_t              fSleepTime; //Time (msec) to wait between time steps
-   Int_t              fNsteps;    //Number of time steps
-   Double_t           fXmin;      //Minimum for X axis
-   Double_t           fXmax;      //Maximum for X axis
-   Double_t           fYmin;      //Minimum for Y axis
-   Double_t           fYmax;      //Maximum for Y axis
-   TObjArray         *fSteps;     //array of TLists for each time step
-   TH1               *fFrame;     //TH1 object used for the pad range
+   Int_t              fSleepTime; ///< Time (msec) to wait between time steps
+   Int_t              fNsteps;    ///< Number of time steps
+   Double_t           fXmin;      ///< Minimum for X axis
+   Double_t           fXmax;      ///< Maximum for X axis
+   Double_t           fYmin;      ///< Minimum for Y axis
+   Double_t           fYmax;      ///< Maximum for Y axis
+   TObjArray         *fSteps;     ///< Array of TLists for each time step
+   TH1               *fFrame;     ///< TH1 object used for the pad range
 
 public:
 

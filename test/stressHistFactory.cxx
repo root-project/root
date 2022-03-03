@@ -19,7 +19,6 @@
 #include "RooResolutionModel.h"
 #include "RooAbsData.h"
 #include "RooTrace.h"
-#include "RooMath.h"
 #include "RooUnitTest.h"
 
 // Tests file

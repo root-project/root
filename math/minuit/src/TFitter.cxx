@@ -22,16 +22,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \class TFitter
+/// \legacy{TFitter}
 ///
 /// The ROOT standard fitter based on TMinuit
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-// extern void H1FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-// extern void H1FitLikelihood(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-// extern void GraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-// extern void Graph2DFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
-// extern void MultiGraphFitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void F2Fit(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 extern void F3Fit(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
@@ -59,14 +55,15 @@ TFitter::~TFitter()
    delete fMinuit;
 }
 
-// ////////////////////////////////////////////////////////////////////////////////
-// /// return a chisquare equivalent
+////////////////////////////////////////////////////////////////////////////////
+/// \deprecated
+/// Use ROOT::Fit::Chisquare class instead.
+///
+/// return a chisquare equivalent
 
 Double_t TFitter::Chisquare(Int_t , Double_t * )  const
 {
     Error("Chisquare","This function is deprecated - use ROOT::Fit::Chisquare class");
-    //Double_t amin = 0;
-    //H1FitChisquare(npar,params,amin,params,1);
     return TMath::QuietNaN();
 }
 
@@ -107,17 +104,17 @@ void TFitter::FixParameter(Int_t ipar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Computes point-by-point confidence intervals for the fitted function
+/// Computes point-by-point confidence intervals for the fitted function
 ///
-///Parameters:
-/// - n - number of points
-/// - ndim - dimensions of points
-/// - x - points, at which to compute the intervals, for ndim > 1
+/// Parameters:
+///  - n - number of points
+///  - ndim - dimensions of points
+///  - x - points, at which to compute the intervals, for ndim > 1
 ///    should be in order: (x0,y0, x1, y1, ... xn, yn)
-/// - ci - computed intervals are returned in this array
-/// - cl - confidence level, default=0.95
+///  - ci - computed intervals are returned in this array
+///  - cl - confidence level, default=0.95
 ///
-///NOTE, that the intervals are approximate for nonlinear(in parameters) models
+/// NOTE, that the intervals are approximate for nonlinear(in parameters) models
 
 void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl)
 {
@@ -206,28 +203,28 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Computes confidence intervals at level cl. Default is 0.95
+/// Computes confidence intervals at level cl. Default is 0.95
 ///
-///The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH1,2,3.
-///For Graphs, confidence intervals are computed for each point,
-///the value of the graph at that point is set to the function value at that
-///point, and the graph y-errors (or z-errors) are set to the value of
-///the confidence interval at that point.
-///For Histograms, confidence intervals are computed for each bin center
-///The bin content of this bin is then set to the function value at the bin
-///center, and the bin error is set to the confidence interval value.
-///NOTE: confidence intervals are approximate for nonlinear models!
+/// The TObject parameter can be a TGraphErrors, a TGraph2DErrors or a TH1,2,3.
+/// For Graphs, confidence intervals are computed for each point,
+/// the value of the graph at that point is set to the function value at that
+/// point, and the graph y-errors (or z-errors) are set to the value of
+/// the confidence interval at that point.
+/// For Histograms, confidence intervals are computed for each bin center
+/// The bin content of this bin is then set to the function value at the bin
+/// center, and the bin error is set to the confidence interval value.
+/// NOTE: confidence intervals are approximate for nonlinear models!
 ///
-///Allowed combinations:
+/// Allowed combinations:
 ///
-/// - Fitted object               Passed object
-/// - TGraph                      TGraphErrors, TH1
-/// - TGraphErrors, AsymmErrors   TGraphErrors, TH1
-/// - TH1                         TGraphErrors, TH1
-/// - TGraph2D                    TGraph2DErrors, TH2
-/// - TGraph2DErrors              TGraph2DErrors, TH2
-/// - TH2                         TGraph2DErrors, TH2
-/// - TH3                         TH3
+///  - Fitted object               Passed object
+///  - TGraph                      TGraphErrors, TH1
+///  - TGraphErrors, AsymmErrors   TGraphErrors, TH1
+///  - TH1                         TGraphErrors, TH1
+///  - TGraph2D                    TGraph2DErrors, TH2
+///  - TGraph2DErrors              TGraph2DErrors, TH2
+///  - TH2                         TGraph2DErrors, TH2
+///  - TH3                         TH3
 
 void TFitter::GetConfidenceIntervals(TObject *obj, Double_t cl)
 {
@@ -473,7 +470,7 @@ Double_t TFitter::GetParameter(Int_t ipar) const
 ///  - vlow     : lower value for the parameter
 ///  - vhigh    : upper value for the parameter
 ///
-///  WARNING! parname must be suitably dimensionned in the calling function.
+///  WARNING! parname must be suitably dimensioned in the calling function.
 
 Int_t TFitter::GetParameter(Int_t ipar, char *parname,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const
 {
@@ -532,7 +529,7 @@ Double_t TFitter::GetSumLog(Int_t n)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///return kTRUE if parameter ipar is fixed, kFALSE othersise)
+///return kTRUE if parameter ipar is fixed, kFALSE otherwise)
 
 Bool_t TFitter::IsFixed(Int_t ipar) const
 {
@@ -569,16 +566,11 @@ void TFitter::SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// ret fit method (chisquare or loglikelihood)
+/// ret fit method (chisquare or log-likelihood)
 
 void TFitter::SetFitMethod(const char *name)
 {
    if (fCovar)  {delete [] fCovar; fCovar = 0;}
-   // if (!strcmp(name,"H1FitChisquare"))    SetFCN(H1FitChisquare);
-   // if (!strcmp(name,"H1FitLikelihood"))   SetFCN(H1FitLikelihood);
-   // if (!strcmp(name,"GraphFitChisquare")) SetFCN(GraphFitChisquare);
-   // if (!strcmp(name,"Graph2DFitChisquare")) SetFCN(Graph2DFitChisquare);
-   // if (!strcmp(name,"MultiGraphFitChisquare")) SetFCN(MultiGraphFitChisquare);
    if (!strcmp(name,"F2Minimizer")) SetFCN(F2Fit);
    if (!strcmp(name,"F3Minimizer")) SetFCN(F3Fit);
 }

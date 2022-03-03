@@ -163,7 +163,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    // set parameters back ... in case the evaluation of the test statistic
    // modified something (e.g. a nuisance parameter that is not randomized
    // must be set here)
-   *bothParams = *saveAll;
+   bothParams->assign(*saveAll);
 
 
 
@@ -187,7 +187,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    }else samp_null = fTestStatSampler->GetSamplingDistribution(paramPointNull);
 
    // set parameters back
-   *bothParams = *saveAll;
+   bothParams->assign(*saveAll);
 
    // Generate sampling distribution for alternate
    SetupSampler(*fAltModel);
@@ -237,12 +237,12 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
 
    const RooArgSet *aset = GetFitInfo();
    if (aset != NULL) {
-      RooDataSet *dset = new RooDataSet(NULL, NULL, *aset);
+      RooDataSet *dset = new RooDataSet("", "", *aset);
       dset->add(*aset);
       res->SetFitInfo( dset );
    }
 
-   *bothParams = *saveAll;
+   bothParams->assign(*saveAll);
    delete allTS;
    delete bothParams;
    delete saveAll;

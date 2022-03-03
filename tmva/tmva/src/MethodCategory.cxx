@@ -293,6 +293,10 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
    dsi->SetRootDir(oldDSI.GetRootDir());
    TString norm(oldDSI.GetNormalization().Data());
    dsi->SetNormalization(norm);
+   // need to add split options to normalize with cut efficiency
+   TString splitOpt = dsi->GetSplitOptions();
+   splitOpt += ":ScaleWithPreselEff";
+   dsi->SetSplitOptions(splitOpt);
 
    DataSetInfo& dsiReference= (*dsi);
 
@@ -312,6 +316,7 @@ void TMVA::MethodCategory::Init()
 void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
 {
    delete fCatTree;
+   fCatTree = nullptr;
 
    std::vector<VariableInfo>::const_iterator viIt;
    const std::vector<VariableInfo>& vars  = dsi.GetVariableInfos();
@@ -624,7 +629,84 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
    Double_t mvaValue = dynamic_cast<MethodBase*>(fMethods[methodToUse])->GetMvaValue(ev,err,errUpper);
    ev->SetVariableArrangement(0);
 
+   std::cout << "Event  is for method " << methodToUse << " spectator is " << ev->GetSpectator(0) << "  "
+             << fVarMaps[0][0] << " classID " << DataInfo().IsSignal(ev) << " value " <<  mvaValue
+             << " type " << Data()->GetCurrentType() << std::endl;
+
    return mvaValue;
+}
+
+///////////////////////////////////////////////////////////////
+/// returns the mva values of the right sub-classifier
+///
+std::vector<Double_t>
+TMVA::MethodCategory::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
+
+   std::vector<Double_t> result;
+
+   Info("GetMVaValues", "Evaluate MethodCategory for %d events type %d on the dataset %s", int(lastEvt - firstEvt),
+        (int)Data()->GetCurrentType(), DataInfo().GetName());
+
+   if (fMethods.empty())
+      return result;
+
+   auto data = Data();
+
+   // it is faster to evaluate all categories
+   std::vector<std::vector<Double_t>> mvaValues(fMethods.size());
+   for (UInt_t i = 0; i < fMethods.size(); ++i) {
+      // need to set variable map
+      for (UInt_t iev = firstEvt; iev < lastEvt; ++iev) {
+          data->SetCurrentEvent(iev);
+          const Event *ev = GetEvent(data->GetEvent());
+          ev->SetVariableArrangement(&fVarMaps[i]);
+      }
+      // need to set correct data in the different method
+      mvaValues[i] = dynamic_cast<MethodBase *>(fMethods[i])->GetDataMvaValues(data,firstEvt, lastEvt, logProgress);
+   }
+
+   // now loop on all events
+   result.resize(lastEvt - firstEvt);
+
+   for (UInt_t iev = firstEvt; iev < lastEvt; ++iev)
+   {
+      //std::cout << "Loop on event " << iev << " of " << DataInfo().GetName() << std::endl;
+      data->SetCurrentEvent(iev);
+      UInt_t methodToUse = 0;
+      const Event *ev = GetEvent(data->GetEvent());
+
+      // determine which sub-classifier to use for this event
+      Int_t suitableCutsN = 0;
+
+      for (UInt_t i = 0; i < fMethods.size(); ++i) {
+         if (PassesCut(ev, i)) {
+            ++suitableCutsN;
+            methodToUse = i;
+         }
+      }
+
+      if (suitableCutsN == 0) {
+         Log() << kWARNING << "Event does not lie within the cut of any sub-classifier." << Endl;
+         result[iev] = 0;
+      }
+
+      if (suitableCutsN > 1) {
+         Log() << kFATAL << "The defined categories are not disjoint." << Endl;
+         return result;
+      }
+
+
+      result[iev - firstEvt] = mvaValues[methodToUse][iev - firstEvt];
+
+      // std::cout << "Event " << iev << " is for method " << methodToUse << " spectator is " << ev->GetSpectator(0)
+      //           << "  " << fVarMaps[0][0] << " classID " << DataInfo().IsSignal(ev) << " value "
+      //           << result[iev - firstEvt] << " type " << data->GetCurrentType() << std::endl;
+
+      // reset variable map which was set it before
+      ev->SetVariableArrangement(nullptr);
+   }
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -664,7 +746,7 @@ const std::vector<Float_t> &TMVA::MethodCategory::GetMulticlassValues()
    }
    // get mva value from the suitable sub-classifier
    ev->SetVariableArrangement(&fVarMaps[methodToUse]);
-   auto & result =  meth->GetMulticlassValues();
+   auto &result = meth->GetMulticlassValues();
    ev->SetVariableArrangement(nullptr);
    return result;
 }

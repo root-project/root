@@ -388,7 +388,7 @@ namespace ROOT {
          }
 
          /**
-         Method to get the number of colunms
+         Method to get the number of columns
          \return number of cols
          */
          Int_t GetNcols() { return df.size(); }
@@ -399,7 +399,7 @@ namespace ROOT {
          Int_t GetNrows() { return df.nrows(); }
          /**
          Method to get labels of dataframe
-         \return colunms names
+         \return columns names
          */
          TVectorString GetColNames()
          {
@@ -422,7 +422,7 @@ namespace ROOT {
 
          /**
          Method to print the dataframe in stdout or a column given the label
-         \param label nomber of the column to print
+         \param label number of the column to print
          */
          void Print(const Char_t *label = "")
          {

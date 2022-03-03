@@ -21,11 +21,6 @@
 
 #include "TObjArray.h"
 
-/**
-\class TStreamerInfo
-\ingroup IO
-Describe Streamer information for one class version
-*/
 
 class TFile;
 class TClass;
@@ -54,7 +49,7 @@ class TStreamerInfo : public TVirtualStreamerInfo {
       Int_t             fOffset;
       Int_t             fLength;
       TStreamerElement *fElem;     ///< Not Owned
-      ULong_t           fMethod;
+      ULongptr_t        fMethod;
       TClass           *fClass;    ///< Not Owned
       TClass           *fNewClass; ///< Not Owned
       TString           fClassName;
@@ -97,7 +92,7 @@ private:
    Int_t             fSize;              ///<!size of the persistent class
    Int_t             fNdata;             ///<!number of optimized elements
    Int_t             fNfulldata;         ///<!number of elements
-   Int_t             fNslots;            ///<!total numbrer of slots in fComp.
+   Int_t             fNslots;            ///<!total number of slots in fComp.
    TCompInfo        *fComp;              ///<![fNslots with less than fElements->GetEntries()*1.5 used] Compiled info
    TCompInfo       **fCompOpt;           ///<![fNdata]
    TCompInfo       **fCompFull;          ///<![fElements->GetEntries()]
@@ -220,7 +215,7 @@ public:
    Int_t               GetNelement() const { return fElements->GetEntriesFast(); }
    Int_t               GetNumber()  const {return fNumber;}
    Int_t               GetLength(Int_t id) const {return fComp[id].fLength;}
-   ULong_t             GetMethod(Int_t id) const {return fComp[id].fMethod;}
+   ULongptr_t          GetMethod(Int_t id) const {return fComp[id].fMethod;}
    Int_t               GetNewType(Int_t id) const {return fComp[id].fNewType;}
    Int_t               GetOffset(const char *) const;
    Int_t               GetOffset(Int_t id) const {return fComp[id].fOffset;}
@@ -275,11 +270,12 @@ private:
 public:
    virtual void        Update(const TClass *oldClass, TClass *newClass);
 
-   // \brief Generate the TClass and TStreamerInfo for the requested pair.
-   // This creates a TVirtualStreamerInfo for the pair and trigger the BuildCheck/Old to
-   // provokes the creation of the corresponding TClass.  This relies on the dictionary for
-   // std::pair<const int, int> to already exist (or the interpreter information being available)
-   // as it is used as a template.
+   /// \brief Generate the TClass and TStreamerInfo for the requested pair.
+   /// This creates a TVirtualStreamerInfo for the pair and trigger the BuildCheck/Old to
+   /// provokes the creation of the corresponding TClass.  This relies on the dictionary for
+   /// std::pair<const int, int> to already exist (or the interpreter information being available)
+   /// as it is used as a template.
+   /// \note The returned object is owned by the caller.
    virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &pairclassname, bool silent, size_t hint_pair_offset, size_t hint_pair_size);
    virtual TVirtualStreamerInfo *GenerateInfoForPair(const std::string &firstname, const std::string &secondname, bool silent, size_t hint_pair_offset, size_t hint_pair_size);
 

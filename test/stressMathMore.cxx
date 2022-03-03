@@ -436,7 +436,7 @@ int testGammaFunction(int n = 100) {
    dist.SetScaleInv(10000); // few tests fail here
    // vary shape of gamma parameter
    for (int i =1; i <= 5; ++i) {
-      double k = std::pow(2.,double(i-1));
+      double k = std::pow(2.,i-1);
       double theta = 2./double(i);
       dist.SetParameters(k,theta);
       if (k <=1 )

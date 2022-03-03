@@ -54,22 +54,23 @@ ClassImp(TGraphPainter);
     \ingroup Histpainter
     \brief The graph painter class. Implements all graphs' drawing's options.
 
-- [Introduction](#GP00)
-- [Graphs' plotting options](#GP01)
-- [Exclusion graphs](#GP02)
-- [Graphs with error bars](#GP03)
-   - [TGraphErrors](#GP03a)
-   - [TGraphAsymmErrors](#GP03b)
-   - [TGraphBentErrors](#GP03c)
-   - [TGraphMultiErrors](#GP03d)
-- [TGraphPolar options](#GP04)
-- [Colors automatically picked in palette](#GP05)
-- [Reverse graphs' axis](#GP06)
-- [Graphs in logarithmic scale](#GP07)
-- [Highlight mode for graph](#GP08)
+- [Introduction](\ref GrP0)
+- [Graphs' plotting options](\ref GrP1)
+- [Exclusion graphs](\ref GrP2)
+- [Graphs with error bars](\ref GrP3)
+   - [TGraphErrors](\ref GrP3a)
+   - [TGraphAsymmErrors](\ref GrP3b)
+   - [TGraphBentErrors](\ref GrP3c)
+   - [TGraphMultiErrors](\ref GrP3d)
+- [TGraphPolar options](\ref GrP4)
+- [Colors automatically picked in palette](\ref GrP5)
+- [Reverse graphs' axis](\ref GrP6)
+- [Graphs in logarithmic scale](\ref GrP7)
+- [Highlight mode for graph](\ref GrP8)
 
 
-### <a name="GP00"></a> Introduction
+\anchor GrP0
+### Introduction
 
 Graphs are drawn via the painter `TGraphPainter` class. This class
 implements techniques needed to display the various kind of
@@ -101,7 +102,8 @@ after one of these three actions:
 2.  a click inside the pad,
 3.  a call to `TPad::Update`.
 
-### <a name="GP01"></a> Graphs' plotting options
+\anchor GrP1
+### Graphs' plotting options
 Graphs can be drawn with the following options:
 
 | Option   | Description                                                       |
@@ -162,6 +164,13 @@ End_Macro
 The following macro shows the option "B" usage. It can be combined with the
 option "1".
 
+The bar width is equal to:
+
+    bar_width  = 0.5*delta*gStyle->GetBarWidth();
+
+Where `delta` is equal to the X maximal value minus the X minimal value divided by the
+number of points in the graph.
+
 Begin_Macro(source)
 {
    auto c47 = new TCanvas("c47","c47",200,10,600,400);
@@ -179,7 +188,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="GP02"></a> Exclusion graphs
+\anchor GrP2
+### Exclusion graphs
 
 When a graph is painted with the option `C` or `L` it is
 possible to draw a filled area on one side of the line. This is useful to show
@@ -201,7 +211,8 @@ Begin_Macro(source)
 ../../../tutorials/graphs/exclusiongraph.C
 End_Macro
 
-### <a name="GP03"></a> Graphs with error bars
+\anchor GrP3
+### Graphs with error bars
 Three classes are available to handle graphs with error bars:
 `TGraphErrors`, `TGraphAsymmErrors` and `TGraphBentErrors`.
 The following drawing options are specific to graphs with error bars:
@@ -228,7 +239,8 @@ The following drawing options are specific to graphs with error bars:
 at the end of the error bars (when option 1 is used).
 By default `np=1`. (np represents the number of pixels).
 
-#### <a name="GP03a"></a> TGraphErrors
+\anchor GrP3a
+#### TGraphErrors
 
 A `TGraphErrors` is a `TGraph` with error bars. The errors are
 defined along X and Y and are symmetric: The left and right errors are the same
@@ -345,7 +357,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-#### <a name="GP03b"></a> TGraphAsymmErrors
+\anchor GrP3b
+#### TGraphAsymmErrors
 A `TGraphAsymmErrors` is like a `TGraphErrors` but the errors
 defined along X and Y are not symmetric: The left and right errors are
 different along X and the bottom and up errors are different along Y.
@@ -368,7 +381,8 @@ Begin_Macro(source)
 End_Macro
 
 
-#### <a name="GP03c"></a> TGraphBentErrors
+\anchor GrP3c
+#### TGraphBentErrors
 A `TGraphBentErrors` is like a `TGraphAsymmErrors`.
 An extra parameter allows to bend the error bars to better see them
 when several graphs are drawn on the same plot.
@@ -396,7 +410,8 @@ Begin_Macro(source)
 End_Macro
 
 
-#### <a name="GP03d"></a> TGraphMultiErrors
+\anchor GrP3d
+#### TGraphMultiErrors
 A `TGraphMultiErrors` works basically the same way like a `TGraphAsymmErrors`.
 It has the possibility to define more than one type / dimension of y-Errors.
 This is useful if you want to plot statistic and systematic errors at once.
@@ -447,7 +462,8 @@ Begin_Macro(source)
 End_Macro
 
 
-### <a name="GP04"></a> TGraphPolar options
+\anchor GrP4
+### TGraphPolar options
 
 The drawing options for the polar graphs are the following:
 
@@ -488,7 +504,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="GP05"></a> Colors automatically picked in palette
+\anchor GrP5
+### Colors automatically picked in palette
 
 \since **ROOT version 6.09/01**
 
@@ -510,7 +527,8 @@ Begin_Macro(source)
 ../../../tutorials/graphs/multigraphpalettecolor.C
 End_Macro
 
-### <a name="GP06"></a> Reverse graphs' axis
+\anchor GrP6
+### Reverse graphs' axis
 
 \since **ROOT version 6.09/03**
 
@@ -550,7 +568,8 @@ Begin_Macro(source)
 }
 End_Macro
 
-### <a name="GP07"></a> Graphs in logarithmic scale
+\anchor GrP7
+### Graphs in logarithmic scale
 
 Like histograms, graphs can be drawn in logarithmic scale along X and Y. When
 a pad is set to logarithmic scale with TPad::SetLogx() and/or with TPad::SetLogy()
@@ -591,7 +610,8 @@ Begin_Macro(source)
 
 End_Macro
 
-#### <a name="GP08"></a> Highlight mode for graph
+\anchor GrP8
+#### Highlight mode for graph
 
 \since **ROOT version 6.15/01**
 
@@ -787,8 +807,8 @@ void TGraphPainter::DrawPanelHelper(TGraph *theGraph)
    }
    TVirtualPadEditor *editor = TVirtualPadEditor::GetPadEditor();
    editor->Show();
-   gROOT->ProcessLine(Form("((TCanvas*)0x%lx)->Selected((TVirtualPad*)0x%lx,(TObject*)0x%lx,1)",
-                           (ULong_t)gPad->GetCanvas(), (ULong_t)gPad, (ULong_t)theGraph));
+   gROOT->ProcessLine(Form("((TCanvas*)0x%zx)->Selected((TVirtualPad*)0x%zx,(TObject*)0x%zx,1)",
+                           (size_t)gPad->GetCanvas(), (size_t)gPad, (size_t)theGraph));
 }
 
 
@@ -1255,14 +1275,14 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
             }
          }
       }
-      if (fit) PaintStats(theGraph, fit);
+      if (fit && !theGraph->TestBit(TGraph::kNoStats)) PaintStats(theGraph, fit);
 
    }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Control function to draw a graph.]($GP01)
+/// [Control function to draw a graph.](\ref GrP1)
 
 void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt)
 {
@@ -2393,7 +2413,7 @@ do_cleanup:
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphAsymmErrors with its current attributes.](#GP03)
+/// [Paint this TGraphAsymmErrors with its current attributes.](\ref GrP3)
 
 void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 {
@@ -2407,8 +2427,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    const Int_t kBASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
-   static Float_t cxx[15] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6,1,0.6,1,1};
-   static Float_t cyy[15] = {1,1,1,1,1,1,1,1,1,0.5,0.6,1,1,1,1};
+   static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
+   static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
    Double_t *theX  = theGraph->GetX();
    Double_t *theY  = theGraph->GetY();
@@ -2474,10 +2494,10 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 
    symbolsize  = theGraph->GetMarkerSize();
    sbase       = symbolsize*kBASEMARKER;
-   Int_t mark  = theGraph->GetMarkerStyle();
+   Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
    Double_t cx  = 0;
    Double_t cy  = 0;
-   if (mark >= 20 && mark <= 34) {
+   if (mark >= 20 && mark <= 49) {
       cx = cxx[mark-20];
       cy = cyy[mark-20];
    }
@@ -2639,7 +2659,7 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphMultiErrors with its current attributes.]($GP03)
+/// [Paint this TGraphMultiErrors with its current attributes.](\ref GrP3)
 
 void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 {
@@ -2691,8 +2711,8 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    const Int_t kBASEMARKER = 8;
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
-   static Float_t cxx[15] = {1., 1., 0.6, 0.6, 1., 1., 0.6, 0.5, 1., 0.6, 0.6, 1., 0.6, 1., 1.};
-   static Float_t cyy[15] = {1., 1., 1., 1., 1., 1., 1., 1., 1., 0.5, 0.6, 1., 1., 1., 1.};
+   static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
+   static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = tg->GetN();
    Double_t *theX = tg->GetX();
    Double_t *theY = tg->GetY();
@@ -2851,11 +2871,11 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
    symbolsize = tg->GetMarkerSize();
    sbase = symbolsize * kBASEMARKER;
-   Int_t mark = tg->GetMarkerStyle();
+   Int_t mark = TAttMarker::GetMarkerStyleBase(tg->GetMarkerStyle());
    Double_t cx = 0.;
    Double_t cy = 0.;
 
-   if (mark >= 20 && mark <= 34) {
+   if (mark >= 20 && mark <= 49) {
       cx = cxx[mark - 20];
       cy = cyy[mark - 20];
    }
@@ -3110,7 +3130,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphBentErrors with its current attributes.]($GP03)
+/// [Paint this TGraphBentErrors with its current attributes.](\ref GrP3)
 
 void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 {
@@ -3125,8 +3145,8 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    Double_t bxl, bxh, byl, byh;
-   static Float_t cxx[15] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6,1,0.6,1,1};
-   static Float_t cyy[15] = {1,1,1,1,1,1,1,1,1,0.5,0.6,1,1,1,1};
+   static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
+   static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
    Double_t *theX  = theGraph->GetX();
    Double_t *theY  = theGraph->GetY();
@@ -3196,10 +3216,10 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 
    symbolsize  = theGraph->GetMarkerSize();
    sbase       = symbolsize*kBASEMARKER;
-   Int_t mark  = theGraph->GetMarkerStyle();
+   Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
    Double_t cx  = 0;
    Double_t cy  = 0;
-   if (mark >= 20 && mark <= 34) {
+   if (mark >= 20 && mark <= 49) {
       cx = cxx[mark-20];
       cy = cyy[mark-20];
    }
@@ -3366,7 +3386,7 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphErrors with its current attributes.]($GP03)
+/// [Paint this TGraphErrors with its current attributes.](\ref GrP3)
 
 void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 {
@@ -3380,8 +3400,8 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    const Int_t kBASEMARKER=8;
    Double_t s2x, s2y, symbolsize, sbase;
    Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
-   static Float_t cxx[15] = {1,1,0.6,0.6,1,1,0.6,0.5,1,0.6,0.6,1,0.6,1,1};
-   static Float_t cyy[15] = {1,1,1,1,1,1,1,1,1,0.5,0.6,1,1,1,1};
+   static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
+   static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
    Double_t *theX  = theGraph->GetX();
    Double_t *theY  = theGraph->GetY();
@@ -3445,10 +3465,10 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
    symbolsize  = theGraph->GetMarkerSize();
    sbase       = symbolsize*kBASEMARKER;
-   Int_t mark  = theGraph->GetMarkerStyle();
+   Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
    Double_t cx  = 0;
    Double_t cy  = 0;
-   if (mark >= 20 && mark <= 34) {
+   if (mark >= 20 && mark <= 49) {
       cx = cxx[mark-20];
       cy = cyy[mark-20];
    }
@@ -3613,7 +3633,7 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// [Paint this TGraphPolar with its current attributes.]($GP04)
+/// [Paint this TGraphPolar with its current attributes.](\ref GrP4)
 
 void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
 {
@@ -3979,6 +3999,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
 
    Bool_t lrx = opt.Contains("rx");
    Bool_t lry = opt.Contains("ry");
+   Bool_t lxp = opt.Contains("x+");
+   Bool_t lyp = opt.Contains("y+");
    Bool_t axis = opt.Contains("a");
    opt.ReplaceAll("a", "");
 
@@ -4000,7 +4022,10 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
          theHist->GetYaxis()->SetLabelOffset(999.);
          theHist->GetYaxis()->SetAxisColor(gPad->GetFrameFillColor());
       }
-      theHist->Paint("0");
+      TString opth = "0";
+      if (lxp) opth.Append("x+");
+      if (lyp) opth.Append("y+");
+      theHist->Paint(opth.Data());
    }
 
    Int_t     N  = theGraph->GetN();
@@ -4038,10 +4063,13 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
             GL = (YA2 - YA1) / (gPad->GetY2() - gPad->GetY1());
             optax.Append("W");
          }
+         Double_t ypos;
+         if (lxp) ypos = gPad->GetUymax();
+         else     ypos = gPad->GetUymin();
          auto *theNewAxis = new TGaxis(gPad->GetUxmax(),
-                                       gPad->GetUymin(),
+                                       ypos,
                                        gPad->GetUxmin(),
-                                       gPad->GetUymin(),
+                                       ypos,
                                        theGraph->GetXaxis()->GetXmin(),
                                        theGraph->GetXaxis()->GetXmax(),
                                        theHist->GetNdivisions("X"),
@@ -4071,9 +4099,12 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
             GL = (XA2 - XA1) / (gPad->GetX2() - gPad->GetX1());
             optax.Append("W");
          }
-         auto *theNewAxis = new TGaxis(gPad->GetUxmin(),
+         Double_t xpos;
+         if (lyp) xpos = gPad->GetUxmax();
+         else     xpos = gPad->GetUxmin();
+         auto *theNewAxis = new TGaxis(xpos,
                                        gPad->GetUymax(),
-                                       gPad->GetUxmin(),
+                                       xpos,
                                        gPad->GetUymin(),
                                        theGraph->GetYaxis()->GetXmin(),
                                        theGraph->GetYaxis()->GetXmax(),
@@ -4386,7 +4417,10 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
    Int_t print_fchi2   = (dofit/100)%10;
    Int_t print_fprob   = (dofit/1000)%10;
    Int_t nlinesf = print_fval + print_fchi2 + print_fprob;
-   if (fit) nlinesf += fit->GetNpar();
+   if (fit) {
+      if (print_fval < 2) nlinesf += fit->GetNumberFreeParameters();
+      else                nlinesf += fit->GetNpar();
+   }
    Bool_t done = kFALSE;
    Double_t  statw  = 1.8*gStyle->GetStatW();
    Double_t  stath  = 0.25*(nlines+nlinesf)*gStyle->GetStatH();
@@ -4431,7 +4465,10 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
       stats->AddText(t);
    }
    if (print_fval || print_ferrors) {
+      Double_t parmin,parmax;
       for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
+         fit->GetParLimits(ipar,parmin,parmax);
+         if (print_fval < 2 && parmin*parmax != 0 && parmin >= parmax) continue;
          if (print_ferrors) {
             snprintf(textstats,50,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
             snprintf(t,64,textstats,(Float_t)fit->GetParameter(ipar)

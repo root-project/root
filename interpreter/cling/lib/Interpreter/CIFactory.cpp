@@ -570,6 +570,10 @@ namespace {
     llvm::SmallString<256> servIncLoc(getIncludePathForHeader(HS, "windows.h"));
 #endif
     llvm::SmallString<128> cIncLoc(getIncludePathForHeader(HS, "time.h"));
+    // FIXME: Diagnose this until we teach cling how to work without libc.
+    if (!llvm::sys::fs::exists(cIncLoc))
+      llvm::errs()
+         << "C system headers (glibc/Xcode/Windows SDK) must be installed.\n";
 
     llvm::SmallString<256> stdIncLoc(getIncludePathForHeader(HS, "cassert"));
     llvm::SmallString<256> boostIncLoc(getIncludePathForHeader(HS, "boost/version.hpp"));
@@ -759,19 +763,19 @@ namespace {
     }
   }
 
-#if defined(_MSC_VER) || defined(NDEBUG)
-static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
-                                    const std::string &Name, int Val) {
-  smallstream Strm;
-  Strm << Name << "=" << Val;
-  if (std::find(PPOpts.Macros.begin(), PPOpts.Macros.end(),
-                std::make_pair(Name, true))
-      == PPOpts.Macros.end()
-      && std::find(PPOpts.Macros.begin(), PPOpts.Macros.end(),
-                   std::make_pair(Name, false))
-      == PPOpts.Macros.end())
-    PPOpts.addMacroDef(Strm.str());
-}
+#if defined(_MSC_VER)
+  static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
+                                      const std::string &Name, int Val) {
+    smallstream Strm;
+    Strm << Name << "=" << Val;
+    if (std::find(PPOpts.Macros.begin(), PPOpts.Macros.end(),
+                  std::make_pair(Name, true))
+        == PPOpts.Macros.end()
+        && std::find(PPOpts.Macros.begin(), PPOpts.Macros.end(),
+                    std::make_pair(Name, false))
+        == PPOpts.Macros.end())
+      PPOpts.addMacroDef(Strm.str());
+  }
 
 #define STRINGIFY_PREPROC_SETTING(PP, name) \
   stringifyPreprocSetting(PP, #name, name)
@@ -787,9 +791,10 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
 #endif
 #endif
 
-#ifdef NDEBUG
-    STRINGIFY_PREPROC_SETTING(PPOpts, NDEBUG);
-#endif
+    // cling wants to JIT O1 by default. Might want to revisit once we have
+    // debug symbols.
+    PPOpts.addMacroDef("NDEBUG=1");
+
     // Since cling, uses clang instead, macros always sees __CLANG__ defined
     // In addition, clang also defined __GNUC__, we add the following two macros
     // to allow scripts, and more important, dictionary generation to know which
@@ -806,7 +811,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     // FIXME: Silly workaround for cling not being able to parse the STL
     //        headers anymore after the update of Visual Studio v16.7.0
     //        To be checked/removed after the upgrade of LLVM & Clang
-    PPOpts.addMacroDef("__CUDACC__");
+    PPOpts.addMacroDef("_HAS_CONDITIONAL_EXPLICIT=0");
 #endif
 #endif
 
@@ -1354,7 +1359,9 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     // e.g. in CUDA mode
     std::string ExeName = "";
     if (COpts.CUDAHost)
-      ExeName = COpts.CUDADevice ? "cling-ptx" : "cling";
+      ExeName = "cling";
+    if (COpts.CUDADevice)
+      ExeName = "cling-ptx";
     llvm::IntrusiveRefCntPtr<DiagnosticsEngine> Diags =
         SetupDiagnostics(DiagOpts, ExeName);
     if (!Diags) {
@@ -1640,11 +1647,6 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CGOpts.EmitCodeView = 1;
     CGOpts.CXXCtorDtorAliases = 1;
 #endif
-    // Reduce amount of emitted symbols by optimizing more.
-    // FIXME: We have a bug when we switch to -O2, for some cases it takes
-    // several minutes to optimize, while the same code compiled by clang -O2
-    // takes only a few seconds.
-    CGOpts.OptimizationLevel = 0;
     // Taken from a -O2 run of clang:
     CGOpts.DiscardValueNames = 1;
     CGOpts.OmitLeafFramePointer = 1;
@@ -1653,9 +1655,10 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CGOpts.VectorizeSLP = 1;
     CGOpts.DisableO0ImplyOptNone = 1; // Enable dynamic opt level switching.
 
-    CGOpts.setInlining((CGOpts.OptimizationLevel == 0)
-                       ? CodeGenOptions::OnlyAlwaysInlining
-                       : CodeGenOptions::NormalInlining);
+    // Set up inlining, even if we switch to O0 later: some transactions' code
+    // might pass `#pragma cling optimize` levels that require it. This is
+    // adjusted per transaction in IncrementalParser::codeGenTransaction().
+    CGOpts.setInlining(CodeGenOptions::NormalInlining);
 
     // CGOpts.setDebugInfo(clang::CodeGenOptions::FullDebugInfo);
     // CGOpts.EmitDeclMetadata = 1; // For unloading, for later

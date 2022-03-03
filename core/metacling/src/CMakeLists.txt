@@ -10,9 +10,11 @@
 
 if(MSVC)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingDiagnostics.cxx COMPILE_FLAGS -GR-)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -GR-)
 else()
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -fno-rtti)
+  set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingDiagnostics.cxx COMPILE_FLAGS -fno-rtti)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -fno-rtti)
 endif()
 
@@ -25,6 +27,7 @@ ROOT_OBJECT_LIBRARY(MetaCling
   TClingClassInfo.cxx
   TClingDataMemberInfo.cxx
   TClingDeclInfo.cxx
+  TClingDiagnostics.cxx
   TClingMemberIter.cxx
   TClingMethodArgInfo.cxx
   TClingMethodInfo.cxx
@@ -107,22 +110,53 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:MetaCling>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
+string(TOUPPER "${LLVM_BUILD_TYPE}" THE_BUILD_TYPE)
+if("${THE_BUILD_TYPE}" STREQUAL DEBUG OR "${THE_BUILD_TYPE}" STREQUAL RELWITHDEBINFO)
+  # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
+  add_dependencies(Cling rootcling_stage1)
+endif()
+
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  set(cling_exports
+  set(cling_exports ${cling_exports}
+      ??_7type_info@@6B@
+      ?nothrow@std@@3Unothrow_t@1@B
       __std_reverse_trivially_swappable_1
       __std_reverse_trivially_swappable_2
       __std_reverse_trivially_swappable_4
       __std_reverse_trivially_swappable_8
       __std_terminate
+      cling_runtime_internal_throwIfInvalidPointer
+  )
+  if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+    set(cling_exports ${cling_exports}
+      ??2@YAPEAX_K@Z
+      ??3@YAXPEAX@Z
+      ??3@YAXPEAX_K@Z
+      ??_U@YAPEAX_K@Z
+      ??_V@YAXPEAX@Z
+      ??_V@YAXPEAX_K@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@H@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@M@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@N@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@PEBX@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QEAAAEAV01@P6AAEAV01@AEAV01@@Z@Z
+      ??$?6U?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@D@Z
+      ??$?6U?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@PEBD@Z
+      ??$endl@DU?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@@Z
+      ?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z
+    )
+    if($<CONFIG:Debug>)
+       set(cling_exports ${cling_exports} ??$dyn_cast@VValueDecl@clang@@$$CBVDecl@2@@llvm@@YAPEBVValueDecl@clang@@PEBVDecl@2@@Z)
+    endif()
+  else()
+    set(cling_exports ${cling_exports}
       ??2@YAPAXI@Z
       ??3@YAXPAX@Z
       ??3@YAXPAXI@Z
       ??_U@YAPAXI@Z
       ??_V@YAXPAX@Z
       ??_V@YAXPAXI@Z
-      ??_7type_info@@6B@
-      ?nothrow@std@@3Unothrow_t@1@B
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@M@Z
       ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@N@Z
@@ -131,11 +165,11 @@ if(MSVC)
       ??$?6U?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@D@Z
       ??$?6U?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@PBD@Z
       ??$endl@DU?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@@Z
-      cling_runtime_internal_throwIfInvalidPointer
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
     )
-  if(MSVC_VERSION LESS 1914)
-    set(cling_exports ${cling_exports} ??3@YAXPAX0@Z ??_V@YAXPAX0@Z)
+    if(MSVC_VERSION LESS 1914)
+      set(cling_exports ${cling_exports} ??3@YAXPAX0@Z ??_V@YAXPAX0@Z)
+    endif()
   endif()
   foreach(sym ${cling_exports})
     set(cling_link_str "${cling_link_str} /EXPORT:${sym}")

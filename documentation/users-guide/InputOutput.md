@@ -1648,7 +1648,7 @@ identify the referenced **`TObject`**.
 When a referenced object is read from a file (its bit `kIsReferenced` is
 set), this object is entered into the objects table of the corresponding
 **`TProcessID`**. Each **`TFile`** has a list of **`TProcessIDs`** (see
-**`TFile`**`::fProcessIDs`) also accessible` from `TProcessID::fgPIDs`
+`TFile::fProcessIDs`) also accessible from `TProcessID::fgPIDs`
 (for all files). When this object is deleted, it is removed from the
 table via the cleanup mechanism invoked by the **`TObject`** destructor.
 Each **`TProcessID`** has a table (`TObjArray *fObjects`) that keeps
@@ -2149,7 +2149,7 @@ fXbins.Set( xbins ); \
      - The field is obligatory and defines the name of the in-memory class that
        this rule can be applied to.
   * target
-     - A semicolon-separated list of target class data member names that this rule
+     - A comma-separated list of target class data member names that this rule
        is capable of calculating.
   * embed
      - This property tells the system if the rule should be written in the output

@@ -235,7 +235,7 @@ enum ESendRecvOptions {
 #ifdef __CINT__
 typedef void *Func_t;
 #else
-typedef void ((*Func_t)());
+typedef void (*Func_t)();
 #endif
 
 R__EXTERN const char  *gRootDir;
@@ -283,7 +283,7 @@ protected:
    Int_t            fSigcnt{0};                 //Number of pending signals
    TString          fWdpath;                    //Working directory
    TString          fHostname;                  //Hostname
-   Bool_t           fInsideNotify{kFALSE};      //Used by DispatchTimers()
+   std::atomic<Bool_t> fInsideNotify{kFALSE};   //Used by DispatchTimers()
    Int_t            fBeepFreq{0};               //Used by Beep()
    Int_t            fBeepDuration{0};           //Used by Beep()
 
@@ -291,7 +291,7 @@ protected:
    Bool_t           fDone{kFALSE};              //True if eventloop should be finished
    Int_t            fLevel{0};                  //Level of nested eventloops
 
-   TSeqCollection  *fTimers{nullptr};           //List of timers
+   TList           *fTimers{nullptr};           //List of timers
    TSeqCollection  *fSignalHandler{nullptr};    //List of signal handlers
    TSeqCollection  *fFileHandler{nullptr};      //List of file handlers
    TSeqCollection  *fStdExceptionHandler{nullptr}; //List of std::exception handlers
@@ -389,7 +389,7 @@ public:
 
    //---- Time & Date
    virtual TTime           Now();
-   virtual TSeqCollection *GetListOfTimers() const { return fTimers; }
+   virtual TList          *GetListOfTimers() const { return fTimers; }
    virtual void            AddTimer(TTimer *t);
    virtual TTimer         *RemoveTimer(TTimer *t);
    virtual void            ResetTimer(TTimer *) { }

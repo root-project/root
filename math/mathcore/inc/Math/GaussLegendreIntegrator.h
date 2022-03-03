@@ -37,7 +37,7 @@ namespace Math {
 class GaussLegendreIntegrator: public GaussIntegrator {
 public:
 
-   /** Basic contructor of GaussLegendreIntegrator.
+   /** Basic constructor of GaussLegendreIntegrator.
        \@param num Number of desired points to calculate the integration.
        \@param eps Desired relative error.
    */
@@ -83,7 +83,7 @@ public:
 private:
 
    /**
-      Integration surrugate method. Return integral of passed function in  interval [a,b]
+      Integration surrogate method. Return integral of passed function in  interval [a,b]
       Reimplement method of GaussIntegrator using CalcGaussLegendreSamplingPoints
    */
    virtual double DoIntegral (double a, double b, const IGenFunction* func);
@@ -110,9 +110,9 @@ private:
 
 
 protected:
-   int fNum;                         // Number of points used in the stimation of the integral.
-   double* fX;                       // Abscisa of the points used.
-   double* fW;                       // Weights of the points used.
+   int fNum;                 ///< Number of points used in the estimation of the integral.
+   double* fX;               ///< Abscisa of the points used.
+   double* fW;               ///< Weights of the points used.
 
 };
 

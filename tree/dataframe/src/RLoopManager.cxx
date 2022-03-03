@@ -1,11 +1,22 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/GraphNode.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // GetTreeFullPaths
 #include "ROOT/RDF/RActionBase.hxx"
+#include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "ROOT/RDF/RSlotStack.hxx"
+#include "ROOT/RDF/RVariationBase.hxx"
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TStopwatch.h"
@@ -27,6 +38,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cassert>
 #include <exception>
 #include <functional>
 #include <iostream>
@@ -61,12 +73,11 @@ static bool ContainsLeaf(const std::set<TLeaf *> &leaves, TLeaf *leaf)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// This overload does not perform any check on the duplicates.
-/// It is used for TBranch objects.
-static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
-                       const std::string &friendName)
+/// This overload does not check whether the leaf/branch is already in bNamesReg. In case this is a friend leaf/branch,
+/// `allowDuplicates` controls whether we add both `friendname.bname` and `bname` or just the shorter version.
+static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                             const std::string &friendName, bool allowDuplicates)
 {
-
    if (!friendName.empty()) {
       // In case of a friend tree, users might prepend its name/alias to the branch names
       const auto friendBName = friendName + "." + branchName;
@@ -74,27 +85,30 @@ static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, 
          bNames.push_back(friendBName);
    }
 
-   if (bNamesReg.insert(branchName).second)
-      bNames.push_back(branchName);
+   if (allowDuplicates || friendName.empty()) {
+      if (bNamesReg.insert(branchName).second)
+         bNames.push_back(branchName);
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// This overloads makes sure that the TLeaf has not been already inserted.
-static void UpdateList(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
-                       const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf, bool allowDuplicates)
+/// This overload makes sure that the TLeaf has not been already inserted.
+static void InsertBranchName(std::set<std::string> &bNamesReg, ColumnNames_t &bNames, const std::string &branchName,
+                             const std::string &friendName, std::set<TLeaf *> &foundLeaves, TLeaf *leaf,
+                             bool allowDuplicates)
 {
    const bool canAdd = allowDuplicates ? true : !ContainsLeaf(foundLeaves, leaf);
    if (!canAdd) {
       return;
    }
 
-   UpdateList(bNamesReg, bNames, branchName, friendName);
+   InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
 
    foundLeaves.insert(leaf);
 }
 
 static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, TBranch *b,
-                          std::string prefix, std::string &friendName)
+                          std::string prefix, std::string &friendName, bool allowDuplicates)
 {
    for (auto sb : *b->GetListOfBranches()) {
       TBranch *subBranch = static_cast<TBranch *>(sb);
@@ -105,16 +119,17 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
       if (!prefix.empty())
          newPrefix = fullName + ".";
 
-      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName);
+      ExploreBranch(t, bNamesReg, bNames, subBranch, newPrefix, friendName, allowDuplicates);
 
       auto branchDirectlyFromTree = t.GetBranch(fullName.c_str());
       if (!branchDirectlyFromTree)
          branchDirectlyFromTree = t.FindBranch(fullName.c_str()); // try harder
       if (branchDirectlyFromTree)
-         UpdateList(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName);
+         InsertBranchName(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName,
+                          allowDuplicates);
 
       if (t.GetBranch(subBranchName.c_str()))
-         UpdateList(bNamesReg, bNames, subBranchName, friendName);
+         InsertBranchName(bNamesReg, bNames, subBranchName, friendName, allowDuplicates);
    }
 }
 
@@ -142,21 +157,21 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
          if (branch->IsA() == TBranch::Class()) {
             // Leaf list
             auto listOfLeaves = branch->GetListOfLeaves();
-            if (listOfLeaves->GetEntries() == 1) {
+            if (listOfLeaves->GetEntriesUnsafe() == 1) {
                auto leaf = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
-               UpdateList(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
+               InsertBranchName(bNamesReg, bNames, branchName, friendName, foundLeaves, leaf, allowDuplicates);
             }
 
             for (auto leaf : *listOfLeaves) {
                auto castLeaf = static_cast<TLeaf *>(leaf);
                const auto leafName = std::string(leaf->GetName());
                const auto fullName = branchName + "." + leafName;
-               UpdateList(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
+               InsertBranchName(bNamesReg, bNames, fullName, friendName, foundLeaves, castLeaf, allowDuplicates);
             }
          } else if (branch->IsA() == TBranchObject::Class()) {
             // TBranchObject
-            ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
-            UpdateList(bNamesReg, bNames, branchName, friendName);
+            ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
+            InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
          } else {
             // TBranchElement
             // Check if there is explicit or implicit dot in the name
@@ -170,11 +185,11 @@ static void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, Colum
                dotIsImplied = true;
 
             if (dotIsImplied || branchName.back() == '.')
-               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName);
+               ExploreBranch(t, bNamesReg, bNames, branch, "", friendName, allowDuplicates);
             else
-               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName);
+               ExploreBranch(t, bNamesReg, bNames, branch, branchName + ".", friendName, allowDuplicates);
 
-            UpdateList(bNamesReg, bNames, branchName, friendName);
+            InsertBranchName(bNamesReg, bNames, branchName, friendName, allowDuplicates);
          }
       }
    }
@@ -274,6 +289,7 @@ DatasetLogInfo TreeDatasetLogInfo(const TTreeReader &r, unsigned int slot)
       }
       what.back() = '}';
    } else {
+      assert(tree != nullptr); // to make clang-tidy happy
       const auto treeName = tree->GetName();
       what = std::string("tree \"") + treeName + "\"";
       const auto file = tree->GetCurrentFile();
@@ -324,20 +340,21 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fDataBlockNotifier(fNSlots)
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
    : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
-     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fDataBlockNotifier(fNSlots)
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds)), fDataBlockNotifier(fNSlots)
+     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
 {
    fDataSource->SetNSlots(fNSlots);
 }
@@ -378,6 +395,7 @@ void RLoopManager::RunEmptySourceMT()
       InitNodeSlots(nullptr, slot);
       R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
+         UpdateSampleInfo(slot, range);
          for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
             RunAndCheckFilters(slot, currEntry);
          }
@@ -401,6 +419,7 @@ void RLoopManager::RunEmptySource()
    R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
    RCallCleanUpTask cleanup(*this);
    try {
+      UpdateSampleInfo(/*slot*/0, {0, fNEmptyEntries});
       for (ULong64_t currEntry = 0; currEntry < fNEmptyEntries && fNStopsReceived < fNChildren; ++currEntry) {
          RunAndCheckFilters(0, currEntry);
       }
@@ -432,11 +451,21 @@ void RLoopManager::RunTreeProcessorMT()
       try {
          // recursive call to check filters and conditionally execute actions
          while (r.Next()) {
+            if (fNewSampleNotifier.CheckFlag(slot)) {
+               UpdateSampleInfo(slot, r);
+            }
             RunAndCheckFilters(slot, count++);
          }
       } catch (...) {
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
+      }
+      // fNStopsReceived < fNChildren is always true at the moment as we don't support event loop early quitting in
+      // multi-thread runs, but it costs nothing to be safe and future-proof in case we add support for that later.
+      if (r.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
+         // something went wrong in the TTreeReader event loop
+         throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
+                                  std::to_string(r.GetEntryStatus()));
       }
    });
 #endif // no-op otherwise (will not be called)
@@ -456,13 +485,16 @@ void RLoopManager::RunTreeReader()
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
    try {
       while (r.Next() && fNStopsReceived < fNChildren) {
+         if (fNewSampleNotifier.CheckFlag(0)) {
+            UpdateSampleInfo(/*slot*/0, r);
+         }
          RunAndCheckFilters(0, r.GetCurrentEntry());
       }
    } catch (...) {
       std::cerr << "RDataFrame::Run: event loop was interrupted\n";
       throw;
    }
-   if (r.GetEntryStatus() != TTreeReader::kEntryNotFound && fNStopsReceived < fNChildren) {
+   if (r.GetEntryStatus() != TTreeReader::kEntryBeyondEnd && fNStopsReceived < fNChildren) {
       // something went wrong in the TTreeReader event loop
       throw std::runtime_error("An error was encountered while processing the data. TTreeReader status code is: " +
                                std::to_string(r.GetEntryStatus()));
@@ -472,7 +504,7 @@ void RLoopManager::RunTreeReader()
 /// Run event loop over data accessed through a DataSource, in sequence.
 void RLoopManager::RunDataSource()
 {
-   R__ASSERT(fDataSource != nullptr);
+   assert(fDataSource != nullptr);
    fDataSource->Initialise();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
@@ -504,7 +536,7 @@ void RLoopManager::RunDataSource()
 void RLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
-   R__ASSERT(fDataSource != nullptr);
+   assert(fDataSource != nullptr);
    RSlotStack slotStack(fNSlots);
    ROOT::TThreadExecutor pool;
 
@@ -546,11 +578,11 @@ void RLoopManager::RunDataSourceMT()
 void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 {
    // data-block callbacks run before the rest of the graph
-   if (fDataBlockNotifier.CheckFlag(slot)) {
-      for (auto &callback : fDataBlockCallbacks) {
-         callback(slot);
+   if (fNewSampleNotifier.CheckFlag(slot)) {
+      for (auto &callback : fSampleCallbacks) {
+         callback(slot, fSampleInfos[slot]);
       }
-      fDataBlockNotifier.UnsetFlag(slot);
+      fNewSampleNotifier.UnsetFlag(slot);
    }
 
    for (auto &actionPtr : fBookedActions)
@@ -566,27 +598,55 @@ void RLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 /// calls their `InitSlot` method, to get them ready for running a task.
 void RLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
-   SetupDataBlockCallbacks(r, slot);
+   SetupSampleCallbacks(r, slot);
    for (auto &ptr : fBookedActions)
       ptr->InitSlot(r, slot);
    for (auto &ptr : fBookedFilters)
       ptr->InitSlot(r, slot);
+   for (auto &ptr : fBookedDefines)
+      ptr->InitSlot(r, slot);
+   for (auto &ptr : fBookedVariations)
+      ptr->InitSlot(r, slot);
+
    for (auto &callback : fCallbacksOnce)
       callback(slot);
 }
 
-void RLoopManager::SetupDataBlockCallbacks(TTreeReader *r, unsigned int slot) {
+void RLoopManager::SetupSampleCallbacks(TTreeReader *r, unsigned int slot) {
    if (r != nullptr) {
       // we need to set a notifier so that we run the callbacks every time we switch to a new TTree
       // `PrependLink` inserts this notifier into the TTree/TChain's linked list of notifiers
-      fDataBlockNotifier.GetChainNotifyLink(slot).PrependLink(*r->GetTree());
+      fNewSampleNotifier.GetChainNotifyLink(slot).PrependLink(*r->GetTree());
    }
    // Whatever the data source, initially set the "new data block" flag:
    // - for TChains, this ensures that we don't skip the first data block because
    //   the correct tree is already loaded
    // - for RDataSources and empty sources, which currently don't have data blocks, this
    //   ensures that we run once per task
-   fDataBlockNotifier.SetFlag(slot);
+   fNewSampleNotifier.SetFlag(slot);
+}
+
+void RLoopManager::UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range) {
+   fSampleInfos[slot] = RSampleInfo(
+      "Empty source, range: {" + std::to_string(range.first) + ", " + std::to_string(range.second) + "}", range);
+}
+
+void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
+   // one GetTree to retrieve the TChain, another to retrieve the underlying TTree
+   auto *tree = r.GetTree()->GetTree();
+   R__ASSERT(tree != nullptr);
+   const std::string treename = ROOT::Internal::TreeUtils::GetTreeFullPaths(*tree)[0];
+   auto *file = tree->GetCurrentFile();
+   const std::string fname = file != nullptr ? file->GetName() : "#inmemorytree#";
+
+
+   std::pair<Long64_t, Long64_t> range = r.GetEntriesRange();
+   R__ASSERT(range.first >= 0);
+   if (range.second == -1) {
+      range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
+   }
+
+   fSampleInfos[slot] = RSampleInfo(fname + "/" + treename, range);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -626,17 +686,19 @@ void RLoopManager::CleanUpNodes()
 
    fCallbacks.clear();
    fCallbacksOnce.clear();
-   fDataBlockCallbacks.clear();
+   fSampleCallbacks.clear();
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.
 void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
 {
    if (r != nullptr)
-      fDataBlockNotifier.GetChainNotifyLink(slot).RemoveLink(*r->GetTree());
+      fNewSampleNotifier.GetChainNotifyLink(slot).RemoveLink(*r->GetTree());
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedFilters)
+      ptr->FinaliseSlot(slot);
+   for (auto &ptr : fBookedDefines)
       ptr->FinaliseSlot(slot);
 }
 
@@ -757,6 +819,26 @@ void RLoopManager::Deregister(RRangeBase *rangePtr)
    RDFInternal::Erase(rangePtr, fBookedRanges);
 }
 
+void RLoopManager::Book(RDefineBase *ptr)
+{
+   fBookedDefines.emplace_back(ptr);
+}
+
+void RLoopManager::Deregister(RDefineBase *ptr)
+{
+   RDFInternal::Erase(ptr, fBookedDefines);
+}
+
+void RLoopManager::Book(RDFInternal::RVariationBase *v)
+{
+   fBookedVariations.emplace_back(v);
+}
+
+void RLoopManager::Deregister(RDFInternal::RVariationBase *v)
+{
+   RDFInternal::Erase(v, fBookedVariations);
+}
+
 // dummy call, end of recursive chain of calls
 bool RLoopManager::CheckFilters(unsigned int, Long64_t)
 {
@@ -848,8 +930,8 @@ void RLoopManager::AddDSValuePtrs(const std::string &col, const std::vector<void
    fDSValuePtrMap[col] = ptrs;
 }
 
-void RLoopManager::AddDataBlockCallback(std::function<void(unsigned int)> &&callback)
+void RLoopManager::AddSampleCallback(SampleCallback_t &&callback)
 {
    if (callback)
-      fDataBlockCallbacks.emplace_back(std::move(callback));
+      fSampleCallbacks.emplace_back(std::move(callback));
 }

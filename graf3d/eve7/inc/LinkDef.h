@@ -75,9 +75,11 @@
 // REveTrans
 #pragma link C++ class ROOT::Experimental::REveTrans-;
 
+// REveTypes
+#pragma link C++ class ROOT::Experimental::REveException+;
+
 // REveUtil
 #pragma link C++ class ROOT::Experimental::REveUtil+;
-#pragma link C++ class ROOT::Experimental::REveException+;
 #pragma link C++ class ROOT::Experimental::REveGeoManagerHolder+;
 #pragma link C++ class ROOT::Experimental::REveRefCnt+;
 #pragma link C++ class ROOT::Experimental::REveRefBackPtr+;
@@ -85,8 +87,6 @@
 // REveManager
 #pragma link C++ class ROOT::Experimental::REveManager+;
 #pragma link C++ global ROOT::Experimental::gEve;
-#pragma link C++ class ROOT::Experimental::REveManager::RRedrawDisabler+;
-#pragma link C++ class ROOT::Experimental::REveManager::RExceptionHandler+;
 
 // REveVSD
 #pragma link C++ class ROOT::Experimental::REveMCTrack+;
@@ -158,6 +158,10 @@
 #pragma link C++ typedef ROOT::Experimental::REveProjection::vPreScale_t;
 #pragma link C++ class ROOT::Experimental::REveRhoZProjection+;
 #pragma link C++ class ROOT::Experimental::REveRPhiProjection+;
+#pragma link C++ class ROOT::Experimental::REveXZProjection+;
+#pragma link C++ class ROOT::Experimental::REveYZProjection+;
+#pragma link C++ class ROOT::Experimental::REveZXProjection+;
+#pragma link C++ class ROOT::Experimental::REveZYProjection+;
 #pragma link C++ class ROOT::Experimental::REve3DProjection+;
 
 #pragma link C++ class ROOT::Experimental::REveProjectionManager+;
@@ -255,5 +259,6 @@
 #pragma link C++ class ROOT::Experimental::REveGeomRequest+;
 #pragma link C++ class ROOT::Experimental::REveGeomNodeInfo+;
 #pragma link C++ class ROOT::Experimental::REveGeomConfig+;
+#pragma link C++ class ROOT::Experimental::REveGeoPainter+;
 
 #endif

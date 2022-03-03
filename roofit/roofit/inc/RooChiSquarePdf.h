@@ -41,8 +41,9 @@ private:
   RooRealProxy _ndof;
 
   Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
-    
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
+  inline bool canComputeBatchWithCuda() const { return true; }
+
   ClassDef(RooChiSquarePdf,1) // Chi Square distribution (eg. the PDF )
 };
 

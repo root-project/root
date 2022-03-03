@@ -143,7 +143,7 @@ public:
 
   }
 
-  Bool_t operator!=(const TIterator & other) const override {
+  bool operator!=(const TIterator & other) const override {
     const auto * castedOther =
         dynamic_cast<const TIteratorToSTLInterface<STLContainer>*>(&other);
     return !castedOther || &fSTLContainer != &(castedOther->fSTLContainer)
@@ -210,16 +210,25 @@ class RooLinkedListIter final : public TIterator {
   }
 
   RooLinkedListIter(const RooLinkedListIter &) = delete;
-  RooLinkedListIter(RooLinkedListIter &&) = default;
   RooLinkedListIter & operator=(const RooLinkedListIter &) = delete;
-  RooLinkedListIter & operator=(RooLinkedListIter &&) = default;
+
+  // Setting the move constructor and assignment operator to = default might
+  // seem to work, but it causes linker errors when using it because
+  // TIterator::operator= is not implemented.
+  RooLinkedListIter(RooLinkedListIter && other)
+    : fIterImpl{std::move(other.fIterImpl)}
+  {}
+  RooLinkedListIter & operator=(RooLinkedListIter && other) {
+    fIterImpl = std::move(other.fIterImpl);
+    return *this;
+  }
 
   TIterator &operator=(const TIterator & other) override {fIterImpl->operator=(other); return *this;}
   const TCollection *GetCollection() const override {return nullptr;}
 
   TObject * Next() override {return fIterImpl->Next();}
   void Reset() override {fIterImpl->Reset();}
-  Bool_t operator!=(const TIterator & other) const override {return fIterImpl->operator!=(other);}
+  bool operator!=(const TIterator & other) const override {return fIterImpl->operator!=(other);}
   TObject * operator*() const override {return fIterImpl->operator*();}
 
   private:
@@ -233,24 +242,11 @@ class RooLinkedListIter final : public TIterator {
 class RooLinkedListIterImpl final : public TIterator {
 public:
 
-  RooLinkedListIterImpl() {
-    // coverity[UNINIT_CTOR]
-  } ;
+  RooLinkedListIterImpl(const RooLinkedList* list, const RooLinkedListElem* ptr, bool forward) :
+    _list(list), _ptr(ptr), _forward(forward) {}
 
-
-  RooLinkedListIterImpl(const RooLinkedList* list, Bool_t forward) :
-    TIterator(), _list(list), _ptr(forward ? _list->_first : _list->_last),
-      _forward(forward)
-  { }
-
-  RooLinkedListIterImpl(const RooLinkedListIterImpl& other) :
-    TIterator(other), _list(other._list), _ptr(other._ptr),
-    _forward(other._forward)
-  {
-    // Copy constructor
-  }
-
-  virtual ~RooLinkedListIterImpl() { }
+  RooLinkedListIterImpl(const RooLinkedList* list, bool forward) :
+    RooLinkedListIterImpl(list, forward ? list->_first : list->_last, forward) {}
 
   TIterator& operator=(const TIterator& other) {
 
@@ -273,20 +269,16 @@ public:
 
   virtual TObject *Next() {
     // Return next element in collection
-    if (!_ptr) return 0 ;
-    TObject* arg = _ptr->_arg ;
-    _ptr = _forward ? _ptr->_next : _ptr->_prev ;
-    return arg ;
+    return NextNV();
   }
 
   TObject *NextNV() {
     // Return next element in collection
-    if (!_ptr) return 0 ;
+    if (!_ptr) return nullptr ;
     TObject* arg = _ptr->_arg ;
     _ptr = _forward ? _ptr->_next : _ptr->_prev ;
     return arg ;
   }
-
 
   virtual void Reset() {
     // Return iterator to first element in collection
@@ -300,18 +292,29 @@ public:
   }
 
   bool operator!=(const RooLinkedListIterImpl &aIter) const {
-    return (_ptr != aIter._ptr);
+    return _ptr != aIter._ptr;
   }
 
   virtual TObject *operator*() const {
     // Return element iterator points to
-    return (_ptr ? _ptr->_arg : nullptr);
+    return _ptr ? _ptr->_arg : nullptr;
+  }
+
+  RooLinkedListIterImpl &operator++() {
+     if(_ptr) _ptr = _forward ? _ptr->_next : _ptr->_prev ;
+     return *this;
+  }
+
+  RooLinkedListIterImpl operator++(int) {
+     RooLinkedListIterImpl tmp(*this);
+     operator++();
+     return tmp;
   }
 
 protected:
   const RooLinkedList* _list ;     //! Collection iterated over
   const RooLinkedListElem* _ptr ;  //! Next link element
-  Bool_t _forward ;                //!  Iterator direction
+  bool _forward ;                  //!  Iterator direction
 };
 
 

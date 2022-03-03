@@ -237,7 +237,7 @@ void TObjArray::AddAtAndExpand(TObject *obj, Int_t idx)
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    if (idx < fLowerBound) {
-      Error("AddAt", "out of bounds at %d in %lx", idx, (Long_t)this);
+      Error("AddAt", "out of bounds at %d in %zx", idx, (size_t)this);
       return;
    }
    if (idx-fLowerBound >= fSize)
@@ -657,7 +657,7 @@ TIterator *TObjArray::MakeIterator(Bool_t dir) const
 
 Bool_t TObjArray::OutOfBoundsError(const char *where, Int_t i) const
 {
-   Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fSize, (Long_t)this);
+   Error(where, "index %d out of bounds (size: %d, this: 0x%zx)", i, fSize, (size_t)this);
    return kFALSE;
 }
 

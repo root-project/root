@@ -1960,10 +1960,10 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
          return -1;
       }
       callEnv.ResetParam();
-      callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+      callEnv.SetParam((Longptr_t) fProof->GetListOfActiveSlaves());
       callEnv.SetParam((Long64_t) nentries);
-      callEnv.SetParam((Long_t) fInput);
-      callEnv.SetParam((Long_t) fProgressStatus);
+      callEnv.SetParam((Longptr_t) fInput);
+      callEnv.SetParam((Longptr_t) fProgressStatus);
 
    } else if (dset->TestBit(TDSet::kMultiDSet)) {
 
@@ -1994,12 +1994,12 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
          return -1;
       }
       callEnv.ResetParam();
-      callEnv.SetParam((Long_t) dset);
-      callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+      callEnv.SetParam((Longptr_t) dset);
+      callEnv.SetParam((Longptr_t) fProof->GetListOfActiveSlaves());
       callEnv.SetParam((Long64_t) first);
       callEnv.SetParam((Long64_t) nentries);
-      callEnv.SetParam((Long_t) fInput);
-      callEnv.SetParam((Long_t) fProgressStatus);
+      callEnv.SetParam((Longptr_t) fInput);
+      callEnv.SetParam((Longptr_t) fProgressStatus);
 
       // We are going to test validity during the packetizer initialization
       dset->SetBit(TDSet::kValidityChecked);
@@ -2065,12 +2065,12 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
          return -1;
       }
       callEnv.ResetParam();
-      callEnv.SetParam((Long_t) dset);
-      callEnv.SetParam((Long_t) fProof->GetListOfActiveSlaves());
+      callEnv.SetParam((Longptr_t) dset);
+      callEnv.SetParam((Longptr_t) fProof->GetListOfActiveSlaves());
       callEnv.SetParam((Long64_t) first);
       callEnv.SetParam((Long64_t) nentries);
-      callEnv.SetParam((Long_t) fInput);
-      callEnv.SetParam((Long_t) fProgressStatus);
+      callEnv.SetParam((Longptr_t) fInput);
+      callEnv.SetParam((Longptr_t) fProgressStatus);
 
       // We are going to test validity during the packetizer initialization
       dset->SetBit(TDSet::kValidityChecked);
@@ -2078,7 +2078,7 @@ Int_t TProofPlayerRemote::InitPacketizer(TDSet *dset, Long64_t nentries,
    }
 
    // Get an instance of the packetizer
-   Long_t ret = 0;
+   Longptr_t ret = 0;
    callEnv.Execute(ret);
    if ((fPacketizer = (TVirtualPacketizer *)ret) == 0) {
       Error("InitPacketizer", "cannot construct '%s'", cl->GetName());
@@ -3135,7 +3135,7 @@ void TProofPlayerRemote::MergeOutput(Bool_t saveMemValues)
          if (obj->IsA())
             callEnv.InitWithPrototype(obj->IsA(), "Merge", "TCollection*");
          if (callEnv.IsValid()) {
-            callEnv.SetParam((Long_t) list);
+            callEnv.SetParam((Longptr_t) list);
             callEnv.Execute(obj);
          } else {
             // No Merge interface, return individual objects
@@ -3675,7 +3675,7 @@ Int_t TProofPlayerRemote::Incorporate(TObject *newobj, TList *outlist, Bool_t &m
       static TList *xlist = new TList;
       xlist->Add(newobj);
       // Call the method
-      callEnv.SetParam((Long_t) xlist);
+      callEnv.SetParam((Longptr_t) xlist);
       callEnv.Execute(obj);
       // Ready for next call
       xlist->Clear();
@@ -4009,7 +4009,7 @@ TList *TProofPlayerRemote::MergeFeedback()
       if (obj->IsA())
          callEnv.InitWithPrototype(obj->IsA(), "Merge", "TCollection*");
       if (callEnv.IsValid()) {
-         callEnv.SetParam((Long_t) list);
+         callEnv.SetParam((Longptr_t) list);
          callEnv.Execute(obj);
       } else {
          // No Merge interface, return copy of individual objects

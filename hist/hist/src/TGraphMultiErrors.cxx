@@ -27,7 +27,7 @@
 ClassImp(TGraphMultiErrors)
 
 /** \class TGraphMultiErrors
-    \ingroup Hist
+    \ingroup Graphs
 TGraph with asymmetric error bars and multiple y error dimensions.
 
 The TGraphMultiErrors painting is performed thanks to the TGraphPainter
@@ -88,7 +88,7 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with `name`, `title`, `np` points and `ne` y-errors.
 ///
 /// All values are initialized to 0.
 
@@ -99,10 +99,10 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with np points and a single y-error.
+/// TGraphMultiErrors normal constructor with `np` points and a single y-error.
 ///
 /// The signature of this constructor is equal to the corresponding constructor of TGraphAsymmErrors.
-/// If exL,H or eyL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` or `eyL`,`exH` are NULL, the corresponding values are preset to zero.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Float_t *x, const Float_t *y, const Float_t *exL,
                                      const Float_t *exH, const Float_t *eyL, const Float_t *eyH, Int_t m)
@@ -134,9 +134,9 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Float_t *x, const Float_t *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with name, title, np points and a single y-error.
+/// TGraphMultiErrors normal constructor with `name`, `title`, `np` points and a single y-error.
 ///
-/// If exL,H or eyL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` or `eyL`,`eyH` are NULL, the corresponding values are preset to zero.
 
 TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Float_t *x,
                                      const Float_t *y, const Float_t *exL, const Float_t *exH, const Float_t *eyL,
@@ -147,10 +147,10 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with np points and a single y-error.
+/// TGraphMultiErrors normal constructor with `np` points and a single y-error.
 ///
 /// The signature of this constructor is equal to the corresponding constructor of TGraphAsymmErrors.
-/// If exL,H or eyL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` or `eyL`,`exH` are NULL, the corresponding values are preset to zero.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Double_t *x, const Double_t *y, const Double_t *exL,
                                      const Double_t *exH, const Double_t *eyL, const Double_t *eyH, Int_t m)
@@ -184,9 +184,9 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, const Double_t *x, const Double_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with name, title, np points and a single y-error.
+/// TGraphMultiErrors normal constructor with name, title, `np` points and a single y-error.
 ///
-/// If exL,H or eyL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` or `eyL`,`exH` are NULL, the corresponding values are preset to zero.
 
 TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, const Double_t *x,
                                      const Double_t *y, const Double_t *exL, const Double_t *exH, const Double_t *eyL,
@@ -197,9 +197,9 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with `np` points and `ne` y-errors.
 ///
-/// If exL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` are NULL, the corresponding values are preset to zero.
 /// The multiple y-errors are passed as std::vectors of std::vectors.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL,
@@ -236,9 +236,9 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with name, title, `np` points and `ne` y-errors.
 ///
-/// If exL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` are NULL, the corresponding values are preset to zero.
 /// The multiple y-errors are passed as std::vectors of std::vectors.
 
 TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Float_t *x,
@@ -251,9 +251,9 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with `np` points and `ne` y-errors.
 ///
-/// If exL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` are NULL, the corresponding values are preset to zero.
 /// The multiple y-errors are passed as std::vectors of std::vectors.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL,
@@ -292,9 +292,9 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with `name`, `title`, `np` points and `ne` y-errors.
 ///
-/// If exL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` are NULL, the corresponding values are preset to zero.
 /// The multiple y-errors are passed as std::vectors of std::vectors.
 
 TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Double_t *x,
@@ -307,9 +307,9 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with `np` points and `ne` y-errors.
 ///
-/// If exL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` are NULL, the corresponding values are preset to zero.
 /// The multiple y-errors are passed as std::vectors of TArrayF objects.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const Float_t *y, const Float_t *exL,
@@ -345,9 +345,9 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Float_t *x, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with name, title, `np` points and `ne` y-errors.
 ///
-/// If exL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` are NULL, the corresponding values are preset to zero.
 /// The multiple y-errors are passed as std::vectors of TArrayF objects.
 
 TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Float_t *x,
@@ -359,9 +359,9 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with `np` points and `ne` y-errors.
 ///
-/// If exL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` are NULL, the corresponding values are preset to zero.
 /// The multiple y-errors are passed as std::vectors of TArrayD objects.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, const Double_t *y, const Double_t *exL,
@@ -399,9 +399,9 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t np, Int_t ne, const Double_t *x, cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors normal constructor with name, title, np points and ne y-errors.
+/// TGraphMultiErrors normal constructor with `name`, `title`, `np` points and `ne` y-errors.
 ///
-/// If exL,H are NULL, the corresponding values are preset to zero.
+/// If `exL`,`exH` are NULL, the corresponding values are preset to zero.
 /// The multiple y-errors are passed as std::vectors of TArrayD objects.
 
 TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, Int_t np, Int_t ne, const Double_t *x,
@@ -413,12 +413,12 @@ TGraphMultiErrors::TGraphMultiErrors(const Char_t *name, const Char_t *title, In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with six vectors of floats in input and a single y error dimension
+/// Constructor with six vectors of floats in input and a single y error dimension.
 /// The signature of this constructor is equal to the corresponding constructor of TGraphAsymmErrors.
-/// A grapherrors is built with the X coordinates taken from tvX and Y coord from tvY
-/// and the errors from vectors tvExL/H and tvEyL/H.
+/// A grapherrors is built with the X coordinates taken from `tvX` the Y coordinates from `tvY`
+/// and the errors from vectors `tvExL`, `tvExH` and `tvEyL`, `tvEyH`.
 /// The number of points in the graph is the minimum of number of points
-/// in tvX and tvY.
+/// in `tvX` and `tvY`.
 
 TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL,
                                      const TVectorF &tvExH, const TVectorF &tvEyL, const TVectorF &tvEyH, Int_t m)
@@ -452,12 +452,12 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorF &tvX, const TVectorF &tvY, c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with six vectors of doubles in input and a single y error dimension
+/// Constructor with six vectors of doubles in input and a single y error dimension.
 /// The signature of this constructor is equal to the corresponding constructor of TGraphAsymmErrors.
-/// A grapherrors is built with the X coordinates taken from tvX and Y coord from tvY
-/// and the errors from vectors tvExL/H and tvEyL/H.
+/// A grapherrors is built with the X coordinates taken from `tvX` the Y coordinates from `tvY`
+/// and the errors from vectors `tvExL`, `tvExH` and `tvEyL`, `tvEyH`.
 /// The number of points in the graph is the minimum of number of points
-/// in tvX and tvY.
+/// in `tvX` and `tvY`.
 
 TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL,
                                      const TVectorD &tvExH, const TVectorD &tvEyL, const TVectorD &tvEyH, Int_t m)
@@ -491,11 +491,11 @@ TGraphMultiErrors::TGraphMultiErrors(const TVectorD &tvX, const TVectorD &tvY, c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with multiple vectors of floats in input and multiple y error dimensions
-/// A grapherrors is built with the X coordinates taken from tvX and Y coord from tvY
-/// and the errors from vectors tvExL/H and tvEyL/H[yErrorDimension].
+/// Constructor with multiple vectors of floats in input and multiple y error dimension.
+/// A grapherrors is built with the X coordinates taken from `tvX` the Y coordinates from `tvY`
+/// and the errors from vectors `tvExL`, `tvExH` and `tvEyL/H[yErrorDimension]`.
 /// The number of points in the graph is the minimum of number of points
-/// in tvX and tvY.
+/// in `tvX` and `tvY`.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorF &tvX, const TVectorF &tvY, const TVectorF &tvExL,
                                      const TVectorF &tvExH, const TVectorF *tvEyL, const TVectorF *tvEyH, Int_t m)
@@ -531,10 +531,10 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorF &tvX, const TVecto
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with multiple vectors of doubles in input and multiple y error dimensions
-/// A grapherrors is built with the X coordinates taken from tvX and Y coord from tvY
-/// and the errors from vectors tvExL/H and tvEyL/H[yErrorDimension].
+/// A grapherrors is built with the X coordinates taken from `tvX` the Y coordinates from `tvY`
+/// and the errors from vectors `tvExL`, `tvExH` and `tvEyL/H[yErrorDimension]`.
 /// The number of points in the graph is the minimum of number of points
-/// in tvX and tvY.
+/// in `tvX` and `tvY`.
 
 TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorD &tvX, const TVectorD &tvY, const TVectorD &tvExL,
                                      const TVectorD &tvExH, const TVectorD *tvEyL, const TVectorD *tvEyH, Int_t m)
@@ -569,7 +569,7 @@ TGraphMultiErrors::TGraphMultiErrors(Int_t ne, const TVectorD &tvX, const TVecto
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors copy constructor
+/// TGraphMultiErrors copy constructor.
 
 TGraphMultiErrors::TGraphMultiErrors(const TGraphMultiErrors &tgme) : TGraph(tgme)
 {
@@ -594,7 +594,7 @@ TGraphMultiErrors::TGraphMultiErrors(const TGraphMultiErrors &tgme) : TGraph(tgm
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors assignment operator
+/// TGraphMultiErrors assignment operator.
 
 TGraphMultiErrors &TGraphMultiErrors::operator=(const TGraphMultiErrors &tgme)
 {
@@ -633,8 +633,8 @@ TGraphMultiErrors &TGraphMultiErrors::operator=(const TGraphMultiErrors &tgme)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TGraphMultiErrors constructor importing its parameters from the TH1 object passed as argument
-/// the low and high errors are set to the bin error of the histogram.
+/// TGraphMultiErrors constructor importing its parameters from the TH1 object passed as argument.
+/// The low and high errors are set to the bin error of the histogram.
 
 TGraphMultiErrors::TGraphMultiErrors(const TH1 *h, Int_t ne)
    : TGraph(h), fNYErrors(ne), fSumErrorsMode(TGraphMultiErrors::kOnlyFirst)
@@ -711,7 +711,7 @@ TGraphMultiErrors::~TGraphMultiErrors()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Should be called from ctors after fNpoints has been set
+/// Should be called from ctors after `fNpoints` has been set
 /// Note: This function should be called only from the constructor
 /// since it does not delete previously existing arrays
 
@@ -771,8 +771,8 @@ void TGraphMultiErrors::CopyAndRelease(Double_t **newarrays, Int_t ibegin, Int_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy errors from fE*** to arrays[***]
-/// or to f*** Copy points.
+/// Copy errors from `fE***` to `arrays[***]`
+/// or to `f***` Copy points.
 
 Bool_t TGraphMultiErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend, Int_t obegin)
 {
@@ -797,7 +797,7 @@ Bool_t TGraphMultiErrors::CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set zero values for point arrays in the range [begin, end)
+/// Set zero values for point arrays in the range `[begin, end]`.
 
 void TGraphMultiErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 {
@@ -817,7 +817,7 @@ void TGraphMultiErrors::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Recalculates the summed y error arrays
+/// Recalculates the summed y error arrays.
 
 void TGraphMultiErrors::CalcYErrorsSum() const
 {
@@ -833,7 +833,7 @@ void TGraphMultiErrors::CalcYErrorsSum() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  protected function to perform the merge operation of a graph with multiple asymmetric errors
+/// Protected function to perform the merge operation of a graph with multiple asymmetric errors.
 
 Bool_t TGraphMultiErrors::DoMerge(const TGraph *tg)
 {
@@ -880,7 +880,7 @@ void TGraphMultiErrors::SwapPoints(Int_t pos1, Int_t pos2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a new y error to the graph and fill it with the values from eyL and eyH
+/// Add a new y error to the graph and fill it with the values from `eyL` and `eyH`
 
 void TGraphMultiErrors::AddYError(Int_t np, const Double_t *eyL, const Double_t *eyH)
 {
@@ -904,15 +904,17 @@ Double_t **TGraphMultiErrors::Allocate(Int_t size)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Apply a function to all data points `y = f(x,y)`
+/// Apply a function to all data points \f$ y = f(x,y) \f$.
 ///
-/// Errors are calculated as `eyh = f(x,y+eyh)-f(x,y)` and
-/// `eyl = f(x,y)-f(x,y-eyl)`
-/// Only the first error dimension is affected!!!
+/// Errors are calculated as \f$ eyh = f(x,y+eyh)-f(x,y) \f$ and
+/// \f$ eyl = f(x,y)-f(x,y-eyl) \f$
+///
+/// Only the first error dimension is affected.
 ///
 /// Special treatment has to be applied for the functions where the
 /// role of "up" and "down" is reversed.
-/// function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
+///
+/// Function suggested/implemented by Miroslav Helbich <helbich@mail.desy.de>
 
 void TGraphMultiErrors::Apply(TF1 *f)
 {
@@ -962,7 +964,7 @@ void TGraphMultiErrors::BayesDivide(const TH1 *pass, const TH1 *total, Option_t 
 /// This function was adapted from the TGraphAsymmErrors class.
 /// See TGraphAsymmErrors::Divide for the documentation
 ///
-/// Only the first error dimension is affected!!!
+/// Only the first error dimension is affected.
 
 void TGraphMultiErrors::Divide(const TH1 *pass, const TH1 *total, Option_t *opt)
 {
@@ -1340,7 +1342,7 @@ void TGraphMultiErrors::Divide(const TH1 *pass, const TH1 *total, Option_t *opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute Range
+/// Compute Range.
 
 void TGraphMultiErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const
 {
@@ -1382,7 +1384,7 @@ void TGraphMultiErrors::ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &x
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Deletes the y error with the index e
+/// Deletes the y error with the index `e`.
 /// Note that you must keep at least 1 error
 
 void TGraphMultiErrors::DeleteYError(Int_t e)
@@ -1399,7 +1401,7 @@ void TGraphMultiErrors::DeleteYError(Int_t e)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get error on x coordinate for point i
+/// Get error on x coordinate for point `i`.
 /// In case of asymmetric errors the mean of the square sum is returned
 
 Double_t TGraphMultiErrors::GetErrorX(Int_t i) const
@@ -1413,8 +1415,8 @@ Double_t TGraphMultiErrors::GetErrorX(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get error on y coordinate for point i
-/// The multiple errors of the dimensions are summed according to fSumErrorsMode
+/// Get error on y coordinate for point `i`.
+/// The multiple errors of the dimensions are summed according to `fSumErrorsMode`.
 /// In case of asymmetric errors the mean of the square sum is returned
 
 Double_t TGraphMultiErrors::GetErrorY(Int_t i) const
@@ -1428,7 +1430,7 @@ Double_t TGraphMultiErrors::GetErrorY(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get error e on y coordinate for point i
+/// Get error e on y coordinate for point `i`.
 /// In case of asymmetric errors the mean of the square sum is returned
 
 Double_t TGraphMultiErrors::GetErrorY(Int_t i, Int_t e) const
@@ -1442,7 +1444,7 @@ Double_t TGraphMultiErrors::GetErrorY(Int_t i, Int_t e) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get low error on x coordinate for point i
+/// Get low error on x coordinate for point `i`.
 
 Double_t TGraphMultiErrors::GetErrorXlow(Int_t i) const
 {
@@ -1453,7 +1455,7 @@ Double_t TGraphMultiErrors::GetErrorXlow(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get high error on x coordinate for point i
+/// Get high error on x coordinate for point `i`.
 
 Double_t TGraphMultiErrors::GetErrorXhigh(Int_t i) const
 {
@@ -1464,8 +1466,8 @@ Double_t TGraphMultiErrors::GetErrorXhigh(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get low error on y coordinate for point i
-/// The multiple errors of the dimensions are summed according to fSumErrorsMode
+/// Get low error on y coordinate for point `i`.
+/// The multiple errors of the dimensions are summed according to `fSumErrorsMode`.
 
 Double_t TGraphMultiErrors::GetErrorYlow(Int_t i) const
 {
@@ -1490,8 +1492,8 @@ Double_t TGraphMultiErrors::GetErrorYlow(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get high error on y coordinate for point i
-/// The multiple errors of the dimensions are summed according to fSumErrorsMode
+/// Get high error on y coordinate for point `i`.
+/// The multiple errors of the dimensions are summed according to `fSumErrorsMode`.
 
 Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i) const
 {
@@ -1516,7 +1518,7 @@ Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get low error e on y coordinate for point i
+/// Get low error e on y coordinate for point `i`.
 
 Double_t TGraphMultiErrors::GetErrorYlow(Int_t i, Int_t e) const
 {
@@ -1527,7 +1529,7 @@ Double_t TGraphMultiErrors::GetErrorYlow(Int_t i, Int_t e) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get high error e on y coordinate for point i
+/// Get high error e on y coordinate for point `i`.
 
 Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i, Int_t e) const
 {
@@ -1538,7 +1540,7 @@ Double_t TGraphMultiErrors::GetErrorYhigh(Int_t i, Int_t e) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get all low errors on y coordinates as an array summed according to fSumErrorsMode
+/// Get all low errors on y coordinates as an array summed according to `fSumErrorsMode`.
 
 Double_t *TGraphMultiErrors::GetEYlow() const
 {
@@ -1549,7 +1551,7 @@ Double_t *TGraphMultiErrors::GetEYlow() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get all high errors on y coordinates as an array summed according to fSumErrorsMode
+/// Get all high errors on y coordinates as an array summed according to `fSumErrorsMode`.
 
 Double_t *TGraphMultiErrors::GetEYhigh() const
 {
@@ -1560,7 +1562,7 @@ Double_t *TGraphMultiErrors::GetEYhigh() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get all low errors e on y coordinates as an array
+/// Get all low errors `e` on y coordinates as an array.
 
 Double_t *TGraphMultiErrors::GetEYlow(Int_t e)
 {
@@ -1571,7 +1573,7 @@ Double_t *TGraphMultiErrors::GetEYlow(Int_t e)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get all high errors e on y coordinates as an array
+/// Get all high errors `e` on y coordinates as an array.
 
 Double_t *TGraphMultiErrors::GetEYhigh(Int_t e)
 {
@@ -1582,7 +1584,7 @@ Double_t *TGraphMultiErrors::GetEYhigh(Int_t e)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get AttFill pointer for specified error dimension
+/// Get AttFill pointer for specified error dimension.
 
 TAttFill *TGraphMultiErrors::GetAttFill(Int_t e)
 {
@@ -1593,7 +1595,7 @@ TAttFill *TGraphMultiErrors::GetAttFill(Int_t e)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get AttLine pointer for specified error dimension
+/// Get AttLine pointer for specified error dimension.
 
 TAttLine *TGraphMultiErrors::GetAttLine(Int_t e)
 {
@@ -1604,7 +1606,7 @@ TAttLine *TGraphMultiErrors::GetAttLine(Int_t e)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Fill Color for specified error e (-1 = Global and x errors)
+/// Get Fill Color for specified error e (-1 = Global and x errors).
 
 Color_t TGraphMultiErrors::GetFillColor(Int_t e) const
 {
@@ -1617,7 +1619,7 @@ Color_t TGraphMultiErrors::GetFillColor(Int_t e) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Fill Style for specified error e (-1 = Global and x errors)
+/// Get Fill Style for specified error e (-1 = Global and x errors).
 
 Style_t TGraphMultiErrors::GetFillStyle(Int_t e) const
 {
@@ -1630,7 +1632,7 @@ Style_t TGraphMultiErrors::GetFillStyle(Int_t e) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Line Color for specified error e (-1 = Global and x errors)
+/// Get Line Color for specified error e (-1 = Global and x errors).
 
 Color_t TGraphMultiErrors::GetLineColor(Int_t e) const
 {
@@ -1643,7 +1645,7 @@ Color_t TGraphMultiErrors::GetLineColor(Int_t e) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Line Style for specified error e (-1 = Global and x errors)
+/// Get Line Style for specified error e (-1 = Global and x errors).
 
 Style_t TGraphMultiErrors::GetLineStyle(Int_t e) const
 {
@@ -1656,7 +1658,7 @@ Style_t TGraphMultiErrors::GetLineStyle(Int_t e) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get Line Width for specified error e (-1 = Global and x errors)
+/// Get Line Width for specified error e (-1 = Global and x errors).
 
 Width_t TGraphMultiErrors::GetLineWidth(Int_t e) const
 {
@@ -1755,6 +1757,35 @@ void TGraphMultiErrors::SavePrimitive(std::ostream &out, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values and errors of a TGraphMultiErrors by a constant c1.
+///
+/// If option contains "x" the x values and errors are scaled
+/// If option contains "y" the y values and (multiple) errors are scaled
+/// If option contains "xy" both x and y values and (multiple) errors are scaled
+
+void TGraphMultiErrors::Scale(Double_t c1, Option_t *option)
+{
+   TGraph::Scale(c1, option);
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x") && GetEXlow()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEXlow()[i] *= c1;
+   }
+   if (opt.Contains("x") && GetEXhigh()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEXhigh()[i] *= c1;
+   }
+   if (opt.Contains("y")) {
+      for (size_t d=0; d<fEyL.size(); d++)
+         for (Int_t i=0; i<fEyL[d].GetSize(); i++)
+            fEyL[d][i] *= c1;
+      for (size_t d=0; d<fEyH.size(); d++)
+         for (Int_t i=0; i<fEyH[d].GetSize(); i++)
+            fEyH[d][i] *= c1;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set ex and ey values for point pointed by the mouse.
 ///
 /// Up to 3 y error dimensions possible.
@@ -1794,7 +1825,7 @@ void TGraphMultiErrors::SetPointError(Double_t exL, Double_t exH, Double_t eyL1,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set ex and ey values for point i.
+/// Set ex and ey values for point `i`.
 
 void TGraphMultiErrors::SetPointError(Int_t i, Int_t ne, Double_t exL, Double_t exH, const Double_t *eyL,
                                       const Double_t *eyH)
@@ -1804,7 +1835,7 @@ void TGraphMultiErrors::SetPointError(Int_t i, Int_t ne, Double_t exL, Double_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set ex values for point i.
+/// Set ex values for point `i`.
 
 void TGraphMultiErrors::SetPointEX(Int_t i, Double_t exL, Double_t exH)
 {
@@ -1813,7 +1844,7 @@ void TGraphMultiErrors::SetPointEX(Int_t i, Double_t exL, Double_t exH)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set exL value for point i.
+/// Set exL value for point `i`.
 
 void TGraphMultiErrors::SetPointEXlow(Int_t i, Double_t exL)
 {
@@ -1829,7 +1860,7 @@ void TGraphMultiErrors::SetPointEXlow(Int_t i, Double_t exL)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set exH value for point i.
+/// Set exH value for point `i`.
 
 void TGraphMultiErrors::SetPointEXhigh(Int_t i, Double_t exH)
 {
@@ -1845,7 +1876,7 @@ void TGraphMultiErrors::SetPointEXhigh(Int_t i, Double_t exH)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set ey values for point i.
+/// Set ey values for point `i`.
 
 void TGraphMultiErrors::SetPointEY(Int_t i, Int_t ne, const Double_t *eyL, const Double_t *eyH)
 {
@@ -1854,7 +1885,7 @@ void TGraphMultiErrors::SetPointEY(Int_t i, Int_t ne, const Double_t *eyL, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set eyL values for point i.
+/// Set eyL values for point `i`.
 
 void TGraphMultiErrors::SetPointEYlow(Int_t i, Int_t ne, const Double_t *eyL)
 {
@@ -1867,7 +1898,7 @@ void TGraphMultiErrors::SetPointEYlow(Int_t i, Int_t ne, const Double_t *eyL)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set eyH values for point i.
+/// Set eyH values for point `i`.
 
 void TGraphMultiErrors::SetPointEYhigh(Int_t i, Int_t ne, const Double_t *eyH)
 {
@@ -1880,7 +1911,7 @@ void TGraphMultiErrors::SetPointEYhigh(Int_t i, Int_t ne, const Double_t *eyH)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set error e ey values for point i.
+/// Set error e ey values for point `i`.
 
 void TGraphMultiErrors::SetPointEY(Int_t i, Int_t e, Double_t eyL, Double_t eyH)
 {
@@ -1889,7 +1920,7 @@ void TGraphMultiErrors::SetPointEY(Int_t i, Int_t e, Double_t eyL, Double_t eyH)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set error e eyL value for point i.
+/// Set error e eyL value for point `i`.
 
 void TGraphMultiErrors::SetPointEYlow(Int_t i, Int_t e, Double_t eyL)
 {
@@ -1911,7 +1942,7 @@ void TGraphMultiErrors::SetPointEYlow(Int_t i, Int_t e, Double_t eyL)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set error e eyH value for point i.
+/// Set error e eyH value for point `i`.
 
 void TGraphMultiErrors::SetPointEYhigh(Int_t i, Int_t e, Double_t eyH)
 {
@@ -1933,7 +1964,7 @@ void TGraphMultiErrors::SetPointEYhigh(Int_t i, Int_t e, Double_t eyH)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set error e ey values
+/// Set error e ey values.
 
 void TGraphMultiErrors::SetEY(Int_t e, Int_t np, const Double_t *eyL, const Double_t *eyH)
 {
@@ -1942,7 +1973,7 @@ void TGraphMultiErrors::SetEY(Int_t e, Int_t np, const Double_t *eyL, const Doub
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set error e eyL values
+/// Set error e eyL values.
 
 void TGraphMultiErrors::SetEYlow(Int_t e, Int_t np, const Double_t *eyL)
 {
@@ -1955,7 +1986,7 @@ void TGraphMultiErrors::SetEYlow(Int_t e, Int_t np, const Double_t *eyL)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set error e eyH values
+/// Set error e eyH values.
 
 void TGraphMultiErrors::SetEYhigh(Int_t e, Int_t np, const Double_t *eyH)
 {
@@ -1968,7 +1999,7 @@ void TGraphMultiErrors::SetEYhigh(Int_t e, Int_t np, const Double_t *eyH)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the sum errors mode and recalculate summed errors
+/// Set the sum errors mode and recalculate summed errors.
 void TGraphMultiErrors::SetSumErrorsMode(Int_t m)
 {
    if (fSumErrorsMode == m)
@@ -1978,7 +2009,7 @@ void TGraphMultiErrors::SetSumErrorsMode(Int_t m)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set TAttFill parameters of error e by copying from another TAttFill (-1 = Global and x errors)
+/// Set TAttFill parameters of error e by copying from another TAttFill (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetAttFill(Int_t e, TAttFill *taf)
 {
@@ -1989,7 +2020,7 @@ void TGraphMultiErrors::SetAttFill(Int_t e, TAttFill *taf)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set TAttLine parameters of error e by copying from another TAttLine (-1 = Global and x errors)
+/// Set TAttLine parameters of error e by copying from another TAttLine (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetAttLine(Int_t e, TAttLine *taf)
 {
@@ -2000,7 +2031,7 @@ void TGraphMultiErrors::SetAttLine(Int_t e, TAttLine *taf)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Fill Color of error e (-1 = Global and x errors)
+/// Set Fill Color of error e (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetFillColor(Int_t e, Color_t fcolor)
 {
@@ -2011,7 +2042,7 @@ void TGraphMultiErrors::SetFillColor(Int_t e, Color_t fcolor)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Fill Color and Alpha of error e (-1 = Global and x errors)
+/// Set Fill Color and Alpha of error e (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetFillColorAlpha(Int_t e, Color_t fcolor, Float_t falpha)
 {
@@ -2022,7 +2053,7 @@ void TGraphMultiErrors::SetFillColorAlpha(Int_t e, Color_t fcolor, Float_t falph
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Fill Style of error e (-1 = Global and x errors)
+/// Set Fill Style of error e (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetFillStyle(Int_t e, Style_t fstyle)
 {
@@ -2033,7 +2064,7 @@ void TGraphMultiErrors::SetFillStyle(Int_t e, Style_t fstyle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Line Color of error e (-1 = Global and x errors)
+/// Set Line Color of error e (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetLineColor(Int_t e, Color_t lcolor)
 {
@@ -2044,7 +2075,7 @@ void TGraphMultiErrors::SetLineColor(Int_t e, Color_t lcolor)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Line Color and Alpha of error e (-1 = Global and x errors)
+/// Set Line Color and Alpha of error e (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetLineColorAlpha(Int_t e, Color_t lcolor, Float_t lalpha)
 {
@@ -2055,7 +2086,7 @@ void TGraphMultiErrors::SetLineColorAlpha(Int_t e, Color_t lcolor, Float_t lalph
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Line Style of error e (-1 = Global and x errors)
+/// Set Line Style of error e (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetLineStyle(Int_t e, Style_t lstyle)
 {
@@ -2066,7 +2097,7 @@ void TGraphMultiErrors::SetLineStyle(Int_t e, Style_t lstyle)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set Line Width of error e (-1 = Global and x errors)
+/// Set Line Width of error e (-1 = Global and x errors).
 
 void TGraphMultiErrors::SetLineWidth(Int_t e, Width_t lwidth)
 {

@@ -25,8 +25,9 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <cstring>
+#include <deque>
 #include <iostream>
+#include <set>
 #include <utility>
 
 namespace {
@@ -50,98 +51,7 @@ namespace {
 /// vectors store the number of items followed by the items. Time stamps are stored in number of seconds since the
 /// UNIX epoch.
 
-std::uint32_t SerializeInt64(std::int64_t val, void *buffer)
-{
-   if (buffer != nullptr) {
-      auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes[0] = (val & 0x00000000000000FF);
-      bytes[1] = (val & 0x000000000000FF00) >> 8;
-      bytes[2] = (val & 0x0000000000FF0000) >> 16;
-      bytes[3] = (val & 0x00000000FF000000) >> 24;
-      bytes[4] = (val & 0x000000FF00000000) >> 32;
-      bytes[5] = (val & 0x0000FF0000000000) >> 40;
-      bytes[6] = (val & 0x00FF000000000000) >> 48;
-      bytes[7] = (val & 0xFF00000000000000) >> 56;
-   }
-   return 8;
-}
-
-std::uint32_t SerializeUInt64(std::uint64_t val, void *buffer)
-{
-   return SerializeInt64(val, buffer);
-}
-
-std::uint32_t DeserializeInt64(const void *buffer, std::int64_t *val)
-{
-   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   *val = std::int64_t(bytes[0]) + (std::int64_t(bytes[1]) << 8) +
-          (std::int64_t(bytes[2]) << 16) + (std::int64_t(bytes[3]) << 24) +
-          (std::int64_t(bytes[4]) << 32) + (std::int64_t(bytes[5]) << 40) +
-          (std::int64_t(bytes[6]) << 48) + (std::int64_t(bytes[7]) << 56);
-   return 8;
-}
-
-std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t *val)
-{
-   return DeserializeInt64(buffer, reinterpret_cast<std::int64_t *>(val));
-}
-
-std::uint32_t SerializeInt32(std::int32_t val, void *buffer)
-{
-   if (buffer != nullptr) {
-      auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes[0] = (val & 0x000000FF);
-      bytes[1] = (val & 0x0000FF00) >> 8;
-      bytes[2] = (val & 0x00FF0000) >> 16;
-      bytes[3] = (val & 0xFF000000) >> 24;
-   }
-   return 4;
-}
-
-std::uint32_t SerializeUInt32(std::uint32_t val, void *buffer)
-{
-   return SerializeInt32(val, buffer);
-}
-
-std::uint32_t DeserializeInt32(const void *buffer, std::int32_t *val)
-{
-   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   *val = std::int32_t(bytes[0]) + (std::int32_t(bytes[1]) << 8) +
-          (std::int32_t(bytes[2]) << 16) + (std::int32_t(bytes[3]) << 24);
-   return 4;
-}
-
-std::uint32_t DeserializeUInt32(const void *buffer, std::uint32_t *val)
-{
-   return DeserializeInt32(buffer, reinterpret_cast<std::int32_t *>(val));
-}
-
-std::uint32_t SerializeInt16(std::int16_t val, void *buffer)
-{
-   if (buffer != nullptr) {
-      auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes[0] = (val & 0x00FF);
-      bytes[1] = (val & 0xFF00) >> 8;
-   }
-   return 2;
-}
-
-std::uint32_t SerializeUInt16(std::uint16_t val, void *buffer)
-{
-   return SerializeInt16(val, buffer);
-}
-
-std::uint32_t DeserializeInt16(const void *buffer, std::int16_t *val)
-{
-   auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   *val = std::int16_t(bytes[0]) + (std::int16_t(bytes[1]) << 8);
-   return 2;
-}
-
-std::uint32_t DeserializeUInt16(const void *buffer, std::uint16_t *val)
-{
-   return DeserializeInt16(buffer, reinterpret_cast<std::int16_t *>(val));
-}
+using namespace ROOT::Experimental::Internal::RNTupleSerialization;
 
 std::uint32_t SerializeClusterSize(ROOT::Experimental::ClusterSize_t val, void *buffer)
 {
@@ -156,28 +66,7 @@ std::uint32_t DeserializeClusterSize(const void *buffer, ROOT::Experimental::Clu
    return nbytes;
 }
 
-std::uint32_t SerializeString(const std::string &val, void *buffer)
-{
-   if (buffer != nullptr) {
-      auto pos = reinterpret_cast<unsigned char *>(buffer);
-      pos += SerializeUInt32(val.length(), pos);
-      memcpy(pos, val.data(), val.length());
-   }
-   return SerializeUInt32(val.length(), nullptr) + val.length();
-}
-
-std::uint32_t DeserializeString(const void *buffer, std::string *val)
-{
-   auto base = reinterpret_cast<const unsigned char *>(buffer);
-   auto bytes = base;
-   std::uint32_t length;
-   bytes += DeserializeUInt32(buffer, &length);
-   val->resize(length);
-   memcpy(&(*val)[0], bytes, length);
-   return bytes + length - base;
-}
-
-std::uint32_t SerializeLocator(const ROOT::Experimental::RClusterDescriptor::RLocator &val, void *buffer)
+std::uint32_t SerializeLocator(const ROOT::Experimental::RNTupleLocator &val, void *buffer)
 {
    // In order to keep the meta-data small, we don't wrap the locator in a frame
    if (buffer != nullptr) {
@@ -189,7 +78,7 @@ std::uint32_t SerializeLocator(const ROOT::Experimental::RClusterDescriptor::RLo
    return SerializeString(val.fUrl, nullptr) + 12;
 }
 
-std::uint32_t DeserializeLocator(const void *buffer, ROOT::Experimental::RClusterDescriptor::RLocator *val)
+std::uint32_t DeserializeLocator(const void *buffer, ROOT::Experimental::RNTupleLocator *val)
 {
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
    bytes += DeserializeInt64(bytes, &val->fPosition);
@@ -218,8 +107,11 @@ std::uint32_t DeserializeFrame(std::uint16_t protocolVersion, const void *buffer
    std::uint16_t protocolVersionMinRequired;
    bytes += DeserializeUInt16(bytes, &protocolVersionAtWrite);
    bytes += DeserializeUInt16(bytes, &protocolVersionMinRequired);
-   R__ASSERT(protocolVersionAtWrite >= protocolVersionMinRequired);
-   R__ASSERT(protocolVersion >= protocolVersionMinRequired);
+   if (protocolVersion < protocolVersionMinRequired) {
+      throw ROOT::Experimental::RException(R__FAIL("RNTuple version too new (version "
+         + std::to_string(protocolVersionMinRequired)
+         + "), version <= " + std::to_string(protocolVersion) + " required"));
+   }
    bytes += DeserializeUInt32(bytes, size);
    return 8;
 }
@@ -394,7 +286,8 @@ void VerifyCrc32(const unsigned char *data, std::uint32_t length)
    checksumReal = R__crc32(checksumReal, data, length);
    std::uint32_t checksumFound;
    DeserializeUInt32(data + length, &checksumFound);
-   R__ASSERT(checksumFound == checksumReal);
+   if (checksumFound != checksumReal)
+      throw ROOT::Experimental::RException(R__FAIL("CRC32 checksum mismatch"));
 }
 
 std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &val, void *buffer)
@@ -460,7 +353,7 @@ std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescript
    pos += SerializeVersion(val.GetVersion(), *where);
    pos += SerializeUInt64(val.GetFirstEntryIndex(), *where);
    pos += SerializeUInt64(val.GetNEntries(), *where);
-   pos += SerializeLocator(val.GetLocator(), *where);
+   pos += SerializeLocator({0, 1, ""}, *where); // reserved for later use.
 
    auto size = pos - base;
    SerializeUInt32(size, ptrSize);
@@ -470,10 +363,8 @@ std::uint32_t SerializeClusterSummary(const ROOT::Experimental::RClusterDescript
 } // anonymous namespace
 
 
-////////////////////////////////////////////////////////////////////////////////
-
-
-bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const {
+bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
+{
    return fFieldId == other.fFieldId &&
           fFieldVersion == other.fFieldVersion &&
           fTypeVersion == other.fTypeVersion &&
@@ -487,7 +378,8 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
 }
 
 ROOT::Experimental::RFieldDescriptor
-ROOT::Experimental::RFieldDescriptor::Clone() const {
+ROOT::Experimental::RFieldDescriptor::Clone() const
+{
    RFieldDescriptor clone;
    clone.fFieldId = fFieldId;
    clone.fFieldVersion = fFieldVersion;
@@ -502,11 +394,36 @@ ROOT::Experimental::RFieldDescriptor::Clone() const {
    return clone;
 }
 
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc) const
+{
+   if (GetTypeName().empty() && GetStructure() == ENTupleStructure::kCollection) {
+      // For untyped collections, we have no class available to collect all the sub fields.
+      // Therefore, we create an untyped record field as an artifical binder for the collection items.
+      std::vector<std::unique_ptr<Detail::RFieldBase>> memberFields;
+      for (auto id : fLinkIds) {
+         const auto &memberDesc = ntplDesc.GetFieldDescriptor(id);
+         memberFields.emplace_back(memberDesc.CreateField(ntplDesc));
+      }
+      auto recordField = std::make_unique<RRecordField>("_0", memberFields);
+      auto collectionField = std::make_unique<RVectorField>(GetFieldName(), std::move(recordField));
+      collectionField->SetOnDiskId(fFieldId);
+      return collectionField;
+   }
+
+   auto field = Detail::RFieldBase::Create(GetFieldName(), GetTypeName()).Unwrap();
+   field->SetOnDiskId(fFieldId);
+   for (auto &f : *field)
+      f.SetOnDiskId(ntplDesc.FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId()));
+   return field;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const {
+bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
+{
    return fColumnId == other.fColumnId &&
           fVersion == other.fVersion &&
           fModel == other.fModel &&
@@ -515,24 +432,86 @@ bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-
-
-bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const {
-   return fClusterId == other.fClusterId &&
-          fVersion == other.fVersion &&
-          fFirstEntryIndex == other.fFirstEntryIndex &&
-          fNEntries == other.fNEntries &&
-          fLocator == other.fLocator &&
-          fColumnRanges == other.fColumnRanges &&
-          fPageRanges == other.fPageRanges;
+ROOT::Experimental::RColumnDescriptor
+ROOT::Experimental::RColumnDescriptor::Clone() const
+{
+   RColumnDescriptor clone;
+   clone.fColumnId = fColumnId;
+   clone.fVersion = fVersion;
+   clone.fModel = fModel;
+   clone.fFieldId = fFieldId;
+   clone.fIndex = fIndex;
+   return clone;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
 
-bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const {
+ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfoExtended
+ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::Experimental::RClusterSize::ValueType idxInCluster) const
+{
+   // TODO(jblomer): binary search
+   RPageInfo pageInfo;
+   decltype(idxInCluster) firstInPage = 0;
+   NTupleSize_t pageNo = 0;
+   for (const auto &pi : fPageInfos) {
+      if (firstInPage + pi.fNElements > idxInCluster) {
+         pageInfo = pi;
+         break;
+      }
+      firstInPage += pi.fNElements;
+      ++pageNo;
+   }
+   R__ASSERT(firstInPage <= idxInCluster);
+   R__ASSERT((firstInPage + pageInfo.fNElements) > idxInCluster);
+   return RPageInfoExtended{pageInfo, firstInPage, pageNo};
+}
+
+
+bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const
+{
+   return fClusterId == other.fClusterId &&
+          fVersion == other.fVersion &&
+          fFirstEntryIndex == other.fFirstEntryIndex &&
+          fNEntries == other.fNEntries &&
+          fColumnRanges == other.fColumnRanges &&
+          fPageRanges == other.fPageRanges;
+}
+
+
+std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClusterDescriptor::GetColumnIds() const
+{
+   std::unordered_set<DescriptorId_t> result;
+   for (const auto &x : fColumnRanges)
+      result.emplace(x.first);
+   return result;
+}
+
+
+bool ROOT::Experimental::RClusterDescriptor::ContainsColumn(DescriptorId_t columnId) const
+{
+   return fColumnRanges.find(columnId) != fColumnRanges.end();
+}
+
+
+std::uint64_t ROOT::Experimental::RClusterDescriptor::GetBytesOnStorage() const
+{
+   std::uint64_t nbytes = 0;
+   for (const auto &pr : fPageRanges) {
+      for (const auto &pi : pr.second.fPageInfos) {
+         nbytes += pi.fLocator.fBytesOnStorage;
+      }
+   }
+   return nbytes;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
+{
    return fName == other.fName &&
           fDescription == other.fDescription &&
           fAuthor == other.fAuthor &&
@@ -657,6 +636,8 @@ ROOT::Experimental::NTupleSize_t ROOT::Experimental::RNTupleDescriptor::GetNElem
 {
    NTupleSize_t result = 0;
    for (const auto &cd : fClusterDescriptors) {
+      if (!cd.second.ContainsColumn(columnId))
+         continue;
       auto columnRange = cd.second.GetColumnRange(columnId);
       result = std::max(result, columnRange.fFirstElementIndex + columnRange.fNElements);
    }
@@ -725,6 +706,8 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
 {
    // TODO(jblomer): binary search?
    for (const auto &cd : fClusterDescriptors) {
+      if (!cd.second.ContainsColumn(columnId))
+         continue;
       auto columnRange = cd.second.GetColumnRange(columnId);
       if (columnRange.Contains(index))
          return cd.second.GetId();
@@ -733,6 +716,7 @@ ROOT::Experimental::RNTupleDescriptor::FindClusterId(DescriptorId_t columnId, NT
 }
 
 
+// TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterId) const
 {
@@ -747,6 +731,7 @@ ROOT::Experimental::RNTupleDescriptor::FindNextClusterId(DescriptorId_t clusterI
 }
 
 
+// TODO(jblomer): fix for cases of sharded clasters
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterId) const
 {
@@ -763,16 +748,63 @@ ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterI
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::GenerateModel() const
 {
    auto model = std::make_unique<RNTupleModel>();
-   for (const auto &topDesc : GetTopLevelFields()) {
-      auto field = Detail::RFieldBase::Create(topDesc.GetFieldName(), topDesc.GetTypeName());
-      model->AddField(field.Unwrap());
-   }
+   model->GetFieldZero()->SetOnDiskId(GetFieldZeroId());
+   for (const auto &topDesc : GetTopLevelFields())
+      model->AddField(topDesc.CreateField(*this));
    return model;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(
+   DescriptorId_t columnId, std::uint64_t firstElementIndex, std::uint32_t compressionSettings,
+   const RClusterDescriptor::RPageRange &pageRange)
+{
+   if (columnId != pageRange.fColumnId)
+      return R__FAIL("column ID mismatch");
+   if (fCluster.fPageRanges.count(columnId) > 0)
+      return R__FAIL("column ID conflict");
+   RClusterDescriptor::RColumnRange columnRange{columnId, firstElementIndex, RClusterSize(0)};
+   columnRange.fCompressionSettings = compressionSettings;
+   for (const auto &pi : pageRange.fPageInfos) {
+      columnRange.fNElements += pi.fNElements;
+   }
+   fCluster.fPageRanges[columnId] = pageRange.Clone();
+   fCluster.fColumnRanges[columnId] = columnRange;
+   return RResult<void>::Success();
+}
+
+
+ROOT::Experimental::RResult<ROOT::Experimental::RClusterDescriptor>
+ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
+{
+   if (fCluster.fClusterId == kInvalidDescriptorId)
+      return R__FAIL("unset cluster ID");
+   if (fCluster.fNEntries == 0)
+      return R__FAIL("empty cluster");
+   for (const auto &pr : fCluster.fPageRanges) {
+      if (fCluster.fColumnRanges.count(pr.first) == 0) {
+         return R__FAIL("missing column range");
+      }
+   }
+   RClusterDescriptor result;
+   std::swap(result, fCluster);
+   return result;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::EnsureFieldExists(DescriptorId_t fieldId) const {
+   if (fDescriptor.fFieldDescriptors.count(fieldId) == 0)
+      return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist");
+   return RResult<void>::Success();
+}
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::EnsureValidDescriptor() const {
@@ -897,9 +929,8 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
       pos += DeserializeUInt64(pos, &firstEntry);
       pos += DeserializeUInt64(pos, &nEntries);
       AddCluster(clusterId, version, firstEntry, ROOT::Experimental::ClusterSize_t(nEntries));
-      RClusterDescriptor::RLocator locator;
-      pos += DeserializeLocator(pos, &locator);
-      SetClusterLocator(clusterId, locator);
+      RNTupleLocator locator;
+      pos += DeserializeLocator(pos, &locator); // unused
 
       pos = clusterBase + frameSize;
 
@@ -916,7 +947,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClustersFromFooter(void* f
 
          RClusterDescriptor::RPageRange pageRange;
          pageRange.fColumnId = columnId;
-         uint32_t nPages;
+         std::uint32_t nPages;
          pos += DeserializeUInt32(pos, &nPages);
          for (unsigned int k = 0; k < nPages; ++k) {
             RClusterDescriptor::RPageRange::RPageInfo pageInfo;
@@ -940,19 +971,32 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::SetNTuple(
    fDescriptor.fGroupUuid = uuid;
 }
 
-ROOT::Experimental::RDanglingFieldDescriptor::RDanglingFieldDescriptor(
+ROOT::Experimental::RResult<ROOT::Experimental::RColumnDescriptor>
+ROOT::Experimental::RColumnDescriptorBuilder::MakeDescriptor() const
+{
+   if (fColumn.GetId() == kInvalidDescriptorId)
+      return R__FAIL("invalid column id");
+   if (fColumn.GetModel().GetType() == EColumnType::kUnknown)
+      return R__FAIL("invalid column model");
+   if (fColumn.GetFieldId() == kInvalidDescriptorId)
+      return R__FAIL("invalid field id, dangling column");
+   return fColumn.Clone();
+}
+
+ROOT::Experimental::RFieldDescriptorBuilder::RFieldDescriptorBuilder(
    const RFieldDescriptor& fieldDesc) : fField(fieldDesc.Clone())
 {
    fField.fParentId = kInvalidDescriptorId;
    fField.fLinkIds = {};
 }
 
-ROOT::Experimental::RDanglingFieldDescriptor
-ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase& field) {
-   RDanglingFieldDescriptor fieldDesc;
+ROOT::Experimental::RFieldDescriptorBuilder
+ROOT::Experimental::RFieldDescriptorBuilder::FromField(const Detail::RFieldBase& field) {
+   RFieldDescriptorBuilder fieldDesc;
    fieldDesc.FieldVersion(field.GetFieldVersion())
       .TypeVersion(field.GetTypeVersion())
       .FieldName(field.GetName())
+      .FieldDescription(field.GetDescription())
       .TypeName(field.GetType())
       .Structure(field.GetStructure())
       .NRepetitions(field.GetNRepetitions());
@@ -960,7 +1004,7 @@ ROOT::Experimental::RDanglingFieldDescriptor::FromField(const Detail::RFieldBase
 }
 
 ROOT::Experimental::RResult<ROOT::Experimental::RFieldDescriptor>
-ROOT::Experimental::RDanglingFieldDescriptor::MakeDescriptor() const {
+ROOT::Experimental::RFieldDescriptorBuilder::MakeDescriptor() const {
    if (fField.GetId() == kInvalidDescriptorId) {
       return R__FAIL("invalid field id");
    }
@@ -968,7 +1012,7 @@ ROOT::Experimental::RDanglingFieldDescriptor::MakeDescriptor() const {
       return R__FAIL("invalid field structure");
    }
    // FieldZero is usually named "" and would be a false positive here
-   if (fField.GetId() != DescriptorId_t(0)) {
+   if (fField.GetParentId() != kInvalidDescriptorId) {
       auto validName = Detail::RFieldBase::EnsureValidFieldName(fField.GetFieldName());
       if (!validName) {
          return R__FORWARD_ERROR(validName);
@@ -984,18 +1028,18 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescript
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId)
 {
-   if (linkId == DescriptorId_t(0)) {
+   auto fieldExists = RResult<void>::Success();
+   if (!(fieldExists = EnsureFieldExists(fieldId)))
+      return R__FORWARD_ERROR(fieldExists);
+   if (!(fieldExists = EnsureFieldExists(linkId)))
+      return  R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
+
+   if (linkId == fDescriptor.GetFieldZeroId()) {
       return R__FAIL("cannot make FieldZero a child field");
    }
-   if (fDescriptor.fFieldDescriptors.count(fieldId) == 0) {
-      return R__FAIL("field with id '" + std::to_string(fieldId) + "' doesn't exist in NTuple");
-   }
-   if (fDescriptor.fFieldDescriptors.count(linkId) == 0) {
-      return R__FAIL("child field with id '" + std::to_string(linkId) + "' doesn't exist in NTuple");
-   }
-   // fail if field already has a valid parent
+   // fail if field already has another valid parent
    auto parentId = fDescriptor.fFieldDescriptors.at(linkId).GetParentId();
-   if (parentId != kInvalidDescriptorId) {
+   if ((parentId != kInvalidDescriptorId) && (parentId != fieldId)) {
       return R__FAIL("field '" + std::to_string(linkId) + "' already has a parent ('" +
          std::to_string(parentId) + ")");
    }
@@ -1020,6 +1064,30 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(
    fDescriptor.fColumnDescriptors.emplace(columnId, std::move(c));
 }
 
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&columnDesc)
+{
+   const auto fieldId = columnDesc.GetFieldId();
+   const auto index = columnDesc.GetIndex();
+
+   auto fieldExists = EnsureFieldExists(fieldId);
+   if (!fieldExists)
+      return R__FORWARD_ERROR(fieldExists);
+   if (fDescriptor.FindColumnId(fieldId, index) != kInvalidDescriptorId) {
+      return R__FAIL("column index clash");
+   }
+   if (index > 0) {
+      if (fDescriptor.FindColumnId(fieldId, index - 1) == kInvalidDescriptorId)
+         return R__FAIL("out of bounds column index");
+   }
+
+   fDescriptor.fColumnDescriptors.emplace(columnDesc.GetId(), std::move(columnDesc));
+
+   return RResult<void>::Success();
+}
+
+
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
    DescriptorId_t clusterId, RNTupleVersion version, NTupleSize_t firstEntryIndex, ClusterSize_t nEntries)
 {
@@ -1029,12 +1097,6 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
    c.fFirstEntryIndex = firstEntryIndex;
    c.fNEntries = nEntries;
    fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(c));
-}
-
-void ROOT::Experimental::RNTupleDescriptorBuilder::SetClusterLocator(DescriptorId_t clusterId,
-   RClusterDescriptor::RLocator locator)
-{
-   fDescriptor.fClusterDescriptors[clusterId].fLocator = locator;
 }
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterColumnRange(
@@ -1047,4 +1109,44 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterPageRange(
    DescriptorId_t clusterId, RClusterDescriptor::RPageRange &&pageRange)
 {
    fDescriptor.fClusterDescriptors[clusterId].fPageRanges.emplace(pageRange.fColumnId, std::move(pageRange));
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterSummary(
+   Internal::RNTupleSerializer::RClusterSummary &clusterSummary)
+{
+   fClusterSummaries.push_back(clusterSummary);
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::AddClusterGroup(
+   Internal::RNTupleSerializer::RClusterGroup &clusterGroup)
+{
+   fClusterGroups.push_back(clusterGroup);
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleDescriptorBuilder::AddCluster(
+   DescriptorId_t clusterId, RClusterDescriptorBuilder &&partialCluster)
+{
+   if (clusterId >= fClusterSummaries.size())
+      return R__FAIL("unknown cluster id");
+   if (fDescriptor.fClusterDescriptors.count(clusterId) != 0)
+      return R__FAIL("cluster clash");
+   const auto &summary = fClusterSummaries.at(clusterId);
+   partialCluster.ClusterId(clusterId)
+                 .FirstEntryIndex(summary.fFirstEntry)
+                 .NEntries(summary.fNEntries);
+   auto cluster = partialCluster.MoveDescriptor();
+   if (!cluster)
+      return R__FORWARD_ERROR(cluster);
+   fDescriptor.fClusterDescriptors.emplace(clusterId, cluster.Unwrap());
+   return RResult<void>::Success();
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
+{
+   fDescriptor.fName = "";
+   fDescriptor.fVersion = RNTupleVersion();
+   fDescriptor.fFieldDescriptors.clear();
+   fDescriptor.fColumnDescriptors.clear();
+   fDescriptor.fClusterDescriptors.clear();
 }

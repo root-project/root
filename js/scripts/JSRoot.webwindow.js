@@ -114,55 +114,55 @@ JSROOT.define([], () => {
                this.handle.processRequest(res);
          }
       }, function(err,status) {
-         // console.log('Get request error', err)
-         // console.log('Get request status', status)
+         // console.log(`Get request error ${err} status ${status}`);
          this.handle.processRequest(null, "error");
       });
 
       req.handle = this;
-      if (kind === "dummy") this.req = req; // remember last dummy request, wait for reply
+      if (!this.req) this.req = req; // any request can be used for response, do not submit dummy until req is there
+      // if (kind === "dummy") this.req = req; // remember last dummy request, wait for reply
       req.send(post);
    }
 
    /** @summary Process request */
    LongPollSocket.prototype.processRequest = function(res, _offset) {
       if (res === null) {
-         if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
+         if (typeof this.onerror === 'function')
+            this.onerror("receive data with connid " + (this.connid || "---"));
          if ((_offset == "error") && (typeof this.onclose === 'function'))
             this.onclose("force_close");
          this.connid = null;
          return;
       } else if (res === -1111) {
-         this.nope_cnt = (this.nope_cnt || 0) + 1;
          res = "";
-      } else {
-         delete this.nope_cnt;
       }
+
+      let dummy_tmout = 5;
 
       if (this.connid === "connect") {
          if (!res) {
             this.connid = null;
-            if (typeof this.onerror === 'function') this.onerror("connection rejected");
+            if (typeof this.onerror === 'function')
+               this.onerror("connection rejected");
             return;
          }
 
          this.connid = parseInt(res);
+         dummy_tmout = 100; // when establishing connection, wait a bit longer to submit dummy package
          console.log('Get new longpoll connection with id ' + this.connid);
          if (typeof this.onopen == 'function') this.onopen();
       } else if (this.connid === "close") {
-         if (typeof this.onclose == 'function') this.onclose();
+         if (typeof this.onclose == 'function')
+            this.onclose();
          return;
       } else {
          if ((typeof this.onmessage === 'function') && res)
             this.onmessage({ data: res, offset: _offset });
       }
 
-      if (!this.req) {
-         if (this.nope_cnt && (this.nope_cnt > 10))
-            setTimeout(() => { if (!this.req) this.nextRequest("", "dummy"); }, 50); // minimal timeout to reduce load
-         else
-            this.nextRequest("", "dummy"); // send new poll request when necessary
-      }
+      // minimal timeout to reduce load, generate dummy only if client not submit new request immediately
+      if (!this.req)
+         setTimeout(() => { if (!this.req) this.nextRequest("", "dummy"); }, dummy_tmout);
    }
 
    /** @summary Send data */
@@ -619,7 +619,7 @@ JSROOT.define([], () => {
          }
 
          this._websocket.onerror = function(err) {
-            console.log("websocket error " + err);
+            console.log(`websocket error ${err} state ${pthis.state}`);
             if (pthis.state > 0) {
                pthis.invokeReceiver(true, "onWebsocketError", err);
                pthis.state = 0;
@@ -670,8 +670,8 @@ JSROOT.define([], () => {
 
       let d = JSROOT.decodeUrl();
 
-      // special hold script, prevents headless browser from too early exit
-      if (d.has("batch_mode") && d.get("key") && (JSROOT.browser.isChromeHeadless || JSROOT.browser.isChrome))
+      // special holder script, prevents headless chrome browser from too early exit
+      if (d.has("headless") && d.get("key") && (JSROOT.browser.isChromeHeadless || JSROOT.browser.isChrome))
          JSROOT.loadScript("root_batch_holder.js?key=" + d.get("key"));
 
       if (!arg.platform)
@@ -683,7 +683,7 @@ JSROOT.define([], () => {
          JSROOT.browser.cef3 = true;
 
       if (arg.batch === undefined)
-         arg.batch = d.has("batch_mode");
+         arg.batch = d.has("headless");
 
       if (arg.batch) JSROOT.batch_mode = true;
 
@@ -727,7 +727,7 @@ JSROOT.define([], () => {
                   if (!arg.prereq2) resolveFunc(handle);
                },
 
-               onWebsocketClosed: () => jsrp.closeCurrentWindow() // when connection closed, close panel as well
+               onWebsocketClosed: () => JSROOT.Painter.closeCurrentWindow() // when connection closed, close panel as well
             };
          }
 

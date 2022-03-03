@@ -101,6 +101,9 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
   if (ca) {
     _argList.Add(new RooCmdArg(*ca)) ;
   }
+
+  _sharedData.reset(new DataCollection);
+  _sharedData->swap(_nextSharedData);
 }
 
 
@@ -109,7 +112,8 @@ RooCmdArg::RooCmdArg(const char* name, Int_t i1, Int_t i2, Double_t d1, Double_t
 /// Copy constructor
 
 RooCmdArg::RooCmdArg(const RooCmdArg& other) :
-  TNamed(other)
+  TNamed(other),
+  _sharedData{other._sharedData}
 {
   _i[0] = other._i[0] ;
   _i[1] = other._i[1] ;
@@ -142,6 +146,8 @@ RooCmdArg::RooCmdArg(const RooCmdArg& other) :
 RooCmdArg& RooCmdArg::operator=(const RooCmdArg& other) 
 {
   if (&other==this) return *this ;
+
+  _sharedData = other._sharedData;
 
   SetName(other.GetName()) ;
   SetTitle(other.GetTitle()) ;
@@ -224,3 +230,7 @@ void RooCmdArg::Print(const char*) const {
       << "\nstrings\t" << _s[0] << " " << _s[1] << " " << _s[2]
       << "\nobjects\t" << _o[0] << " " << _o[1] << std::endl;
 }
+
+RooCmdArg::DataCollection RooCmdArg::_nextSharedData = RooCmdArg::DataCollection{};
+
+RooCmdArg::DataCollection &RooCmdArg::getNextSharedData() { return _nextSharedData; }

@@ -113,11 +113,11 @@ g_win32_opendir (const char *dirname)
     }
   mask = g_strdup_printf ("%s\\*", result->dir_name);
 
-  result->find_file_handle = (guint) FindFirstFile (mask,
+  result->find_file_handle = (gulong) FindFirstFile (mask,
 					     (LPWIN32_FIND_DATA) result->find_file_data);
   g_free (mask);
 
-  if (result->find_file_handle == (guint) INVALID_HANDLE_VALUE)
+  if (result->find_file_handle == (gulong) INVALID_HANDLE_VALUE)
     {
       int error = GetLastError ();
 
@@ -183,11 +183,11 @@ g_win32_rewinddir (DIR *dir)
     g_warning ("gwin_rewinddir(): FindClose() failed\n");
 
   mask = g_strdup_printf ("%s\\*", dir->dir_name);
-  dir->find_file_handle = (guint) FindFirstFile (mask,
+  dir->find_file_handle = (gulong) FindFirstFile (mask,
 					  (LPWIN32_FIND_DATA) dir->find_file_data);
   g_free (mask);
 
-  if (dir->find_file_handle == (guint) INVALID_HANDLE_VALUE)
+  if (dir->find_file_handle == (gulong) INVALID_HANDLE_VALUE)
     {
       int error = GetLastError ();
 

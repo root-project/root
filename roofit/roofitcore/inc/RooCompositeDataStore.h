@@ -37,7 +37,9 @@ public:
   RooCompositeDataStore() ; 
 
   // Ctors from DataStore
-  RooCompositeDataStore(const char* name, const char* title, const RooArgSet& vars, RooCategory& indexCat, std::map<std::string,RooAbsDataStore*> inputData) ;
+  RooCompositeDataStore(std::string_view name, std::string_view title, const RooArgSet& vars, RooCategory& indexCat, std::map<std::string,RooAbsDataStore*> inputData) ;
+
+  WRITE_TSTRING_COMPATIBLE_CONSTRUCTOR(RooCompositeDataStore)
 
   // Empty ctor
   virtual RooAbsDataStore* clone(const char* newname=0) const { return new RooCompositeDataStore(*this,newname) ; }
@@ -57,8 +59,8 @@ public:
   // Retrieve a row
   using RooAbsDataStore::get ;
   virtual const RooArgSet* get(Int_t index) const ;
+  using RooAbsDataStore::weight ;
   virtual Double_t weight() const ;
-  virtual Double_t weight(Int_t index) const ;
   virtual Double_t weightError(RooAbsData::ErrorType etype=RooAbsData::Poisson) const ;
   virtual void weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype=RooAbsData::Poisson) const ; 
   virtual Bool_t isWeighted() const ;
@@ -79,7 +81,6 @@ public:
   virtual void append(RooAbsDataStore& other) ;
 
   // General & bookkeeping methods
-  virtual Bool_t valid() const ;
   virtual Int_t numEntries() const ;
   virtual void reset() ;
 

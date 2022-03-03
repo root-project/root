@@ -26,64 +26,55 @@ sig1 = ROOT.RooGaussian("sig1", "Signal component 1", x, mean, sigma1)
 sig2 = ROOT.RooGaussian("sig2", "Signal component 2", x, mean, sigma2)
 
 # Build Chebychev polynomial pdf
-a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0., 1.)
-a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0., 1.)
-bkg = ROOT.RooChebychev("bkg", "Background", x, ROOT.RooArgList(a0, a1))
+a0 = ROOT.RooRealVar("a0", "a0", 0.5, 0.0, 1.0)
+a1 = ROOT.RooRealVar("a1", "a1", -0.2, 0.0, 1.0)
+bkg = ROOT.RooChebychev("bkg", "Background", x, [a0, a1])
 
 # Sum the signal components into a composite signal pdf
-sig1frac = ROOT.RooRealVar(
-    "sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.)
-sig = ROOT.RooAddPdf(
-    "sig", "Signal", ROOT.RooArgList(sig1, sig2), ROOT.RooArgList(sig1frac))
+sig1frac = ROOT.RooRealVar("sig1frac", "fraction of component 1 in signal", 0.8, 0.0, 1.0)
+sig = ROOT.RooAddPdf("sig", "Signal", [sig1, sig2], [sig1frac])
 
 # Method 1 - Construct extended composite model
 # -------------------------------------------------------------------
 
 # Sum the composite signal and background into an extended pdf
 # nsig*sig+nbkg*bkg
-nsig = ROOT.RooRealVar("nsig", "number of signal events", 500, 0., 10000)
-nbkg = ROOT.RooRealVar(
-    "nbkg", "number of background events", 500, 0, 10000)
-model = ROOT.RooAddPdf(
-    "model",
-    "(g1+g2)+a",
-    ROOT.RooArgList(
-        bkg,
-        sig),
-    ROOT.RooArgList(
-        nbkg,
-        nsig))
+nsig = ROOT.RooRealVar("nsig", "number of signal events", 500, 0.0, 10000)
+nbkg = ROOT.RooRealVar("nbkg", "number of background events", 500, 0, 10000)
+model = ROOT.RooAddPdf("model", "(g1+g2)+a", [bkg, sig], [nbkg, nsig])
 
 # Sample, fit and plot extended model
 # ---------------------------------------------------------------------
 
 # Generate a data sample of expected number events in x from model
 # = model.expectedEvents() = nsig+nbkg
-data = model.generate(ROOT.RooArgSet(x))
+data = model.generate({x})
 
 # Fit model to data, ML term automatically included
 model.fitTo(data)
 
 # Plot data and PDF overlaid, expected number of events for pdf projection normalization
 # rather than observed number of events (==data.numEntries())
-xframe = x.frame(ROOT.RooFit.Title("extended ML fit example"))
+xframe = x.frame(Title="extended ML fit example")
 data.plotOn(xframe)
-model.plotOn(xframe, ROOT.RooFit.Normalization(
-    1.0, ROOT.RooAbsReal.RelativeExpected))
+model.plotOn(xframe, Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected))
 
 # Overlay the background component of model with a dashed line
-ras_bkg = ROOT.RooArgSet(bkg)
 model.plotOn(
-    xframe, ROOT.RooFit.Components(ras_bkg), ROOT.RooFit.LineStyle(
-        ROOT.kDashed), ROOT.RooFit.Normalization(
-            1.0, ROOT.RooAbsReal.RelativeExpected))
+    xframe,
+    Components={bkg},
+    LineStyle=":",
+    Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected),
+)
 
 # Overlay the background+sig2 components of model with a dotted line
-ras_bkg_sig2 = ROOT.RooArgSet(bkg, sig2)
+ras_bkg_sig2 = {bkg, sig2}
 model.plotOn(
-    xframe, ROOT.RooFit.Components(ras_bkg_sig2), ROOT.RooFit.LineStyle(
-        ROOT.kDotted), ROOT.RooFit.Normalization(
-            1.0, ROOT.RooAbsReal.RelativeExpected))
+    xframe,
+    Components=ras_bkg_sig2,
+    LineStyle=":",
+    Normalization=dict(scaleFactor=1.0, scaleType=ROOT.RooAbsReal.RelativeExpected),
+)
 
 # Print structure of composite pdf
 model.Print("t")
@@ -100,7 +91,7 @@ ebkg = ROOT.RooExtendPdf("ebkg", "extended background pdf", bkg, nbkg)
 # -------------------------------------------------------------------------
 
 # Construct sum of two extended pdf (no coefficients required)
-model2 = ROOT.RooAddPdf("model2", "(g1+g2)+a", ROOT.RooArgList(ebkg, esig))
+model2 = ROOT.RooAddPdf("model2", "(g1+g2)+a", [ebkg, esig])
 
 # Draw the frame on the canvas
 c = ROOT.TCanvas("rf202_extendedmlfit", "rf202_extendedmlfit", 600, 600)

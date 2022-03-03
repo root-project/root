@@ -12,7 +12,6 @@
 #define ROOT_RDF_RTREECOLUMNREADER
 
 #include "RColumnReaderBase.hxx"
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RVec.hxx>
 #include <Rtypes.h>  // Long64_t, R__CLING_PTRCHECK
 #include <TTreeReader.h>
@@ -77,11 +76,11 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
       // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
       // Currently we need the first entry to have been loaded to perform the check
       // TODO Move check to constructor once ROOT-10823 is fixed and TTreeReaderArray itself exposes this information
-      const auto arrSize = readerArray.GetSize();
-      if (EStorageType::kUnknown == fStorageType && arrSize > 1) {
+      const auto readerArraySize = readerArray.GetSize();
+      if (EStorageType::kUnknown == fStorageType && readerArraySize > 1) {
          // We can decide since the array is long enough
          fStorageType = EStorageType::kContiguous;
-         for (auto i = 0u; i < arrSize - 1; ++i) {
+         for (auto i = 0u; i < readerArraySize - 1; ++i) {
             if ((char *)&readerArray[i + 1] - (char *)&readerArray[i] != sizeof(T)) {
                fStorageType = EStorageType::kSparse;
                break;
@@ -89,7 +88,6 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
          }
       }
 
-      const auto readerArraySize = readerArray.GetSize();
       if (EStorageType::kContiguous == fStorageType ||
           (EStorageType::kUnknown == fStorageType && readerArray.GetSize() < 2)) {
          if (readerArraySize > 0) {

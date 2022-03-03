@@ -61,6 +61,8 @@ public:
 
    static RElementPath_t ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir = "");
 
+   static RElementPath_t GetWorkingPath(const std::string &workdir = "");
+
 };
 
 } // namespace Browsable
