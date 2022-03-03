@@ -15,6 +15,7 @@
 
 #include "RooArgSet.h"
 #include "RooAbsArg.h" // enum ConstOpCode
+#include "RooAbsPdf.h"
 
 #include "Math/Util.h" // KahanSum
 
@@ -42,13 +43,21 @@ public:
 
 private:
    RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data, std::size_t N_events,
-           std::size_t N_components, Extended extended);
+           std::size_t N_components, Extended extended, const char* name);
 
 public:
    RooAbsL(RooAbsPdf *pdf, RooAbsData *data, std::size_t N_events, std::size_t N_components,
-           Extended extended = Extended::Auto);
-   RooAbsL(ClonePdfData in, std::size_t N_events, std::size_t N_components, Extended extended = Extended::Auto);
+           Extended extended = Extended::Auto, const char* name = "RooAbsL");
+   RooAbsL(ClonePdfData in, std::size_t N_events, std::size_t N_components, Extended extended = Extended::Auto,
+           const char* name = "RooAbsL");
    RooAbsL(const RooAbsL &other);
+
+   // Delegating constructor calls to leave extended as default keyword
+   RooAbsL(RooAbsPdf *pdf, RooAbsData *data, std::size_t N_events, std::size_t N_components,
+           const char* name = "RooAbsL") : RooAbsL(pdf, data, N_events, N_components, Extended::Auto, name) { }
+   RooAbsL(ClonePdfData in, std::size_t N_events, std::size_t N_components, 
+           const char* name = "RooAbsL") : RooAbsL(in, N_events, N_components,  Extended::Auto, name) { }
+
    virtual ~RooAbsL() = default;
 
    void initClones(RooAbsPdf &inpdf, RooAbsData &indata);
@@ -104,8 +113,12 @@ public:
    /// likelihood classes without a cached dataset, like RooSubsidiaryL.
    virtual void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt);
 
-   virtual std::string GetName() const;
-   virtual std::string GetTitle() const;
+   // Introspection with interface similar to rest of RooFit
+   virtual const char* GetName() const { return name_; }
+   virtual const char* GetTitle() const { return name_; }
+
+   // Introspection that returns std::string to allow for returning concatenated info
+   inline virtual std::string GetInfo() const { return (std::string)name_ + "::" + (std::string)(pdf_->GetName()); }
 
    // necessary in RooMinimizer (via LikelihoodWrapper)
    inline virtual double defaultErrorLevel() const { return 0.5; }
@@ -136,6 +149,8 @@ protected:
    bool extended_ = false;
 
    std::size_t sim_count_ = 1; // Total number of component p.d.f.s in RooSimultaneous (if any)
+
+   const char* name_;
 };
 
 } // namespace TestStatistics

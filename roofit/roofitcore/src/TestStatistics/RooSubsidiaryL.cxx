@@ -42,7 +42,7 @@ namespace TestStatistics {
 
 RooSubsidiaryL::RooSubsidiaryL(const std::string &parent_pdf_name, const RooArgSet &pdfs,
                                const RooArgSet &parameter_set)
-   : RooAbsL(nullptr, nullptr, 0, 0, RooAbsL::Extended::No), parent_pdf_name_(parent_pdf_name)
+   : RooAbsL(nullptr, nullptr, 0, 0, RooAbsL::Extended::No, "RooSubsidiaryL"), parent_pdf_name_(parent_pdf_name)
 {
    for (const auto comp : pdfs) {
       if (!dynamic_cast<RooAbsPdf *>(comp)) {

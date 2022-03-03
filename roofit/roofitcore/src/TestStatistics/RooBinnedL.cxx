@@ -39,7 +39,7 @@ namespace RooFit {
 namespace TestStatistics {
 
 RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
-   : RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1)
+   : RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1, "RooBinnedL")
 {
    // pdf must be a RooRealSumPdf representing a yield vector for a binned likelihood calculation
    if (!dynamic_cast<RooRealSumPdf *>(pdf)) {

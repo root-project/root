@@ -38,6 +38,8 @@ public:
 
    void constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
+   const std::vector<std::unique_ptr<RooAbsL>>& GetComponents() const  { return components_; };
+
 private:
    std::vector<std::unique_ptr<RooAbsL>> components_;
 };

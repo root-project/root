@@ -21,6 +21,7 @@
 #include "RooCategory.h" // complete type in MultiBinnedConstraint test
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RooFit/TestStatistics/RooBinnedL.h>
+#include <RooFit/TestStatistics/RooSumL.h>
 #include <RooFit/TestStatistics/optional_parameter_types.h>
 #include <RooFit/TestStatistics/buildLikelihood.h>
 #include <RooFit/TestStatistics/RooRealL.h>
@@ -439,4 +440,63 @@ TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
    auto nll1 = nll_ts->getResult();
 
    EXPECT_NEAR(nll0, nll1, 1e-14 * nll0);
+}
+
+// Introspection tests
+TEST_F(LikelihoodSerialTest, UnbinnedLikelihoodIntrospection)
+{
+   std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+
+   EXPECT_STREQ("RooUnbinnedL", likelihood->GetName());
+   EXPECT_STREQ("RooUnbinnedL::g", (likelihood->GetInfo()).c_str());
+}
+
+TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedLikelihoodIntrospection)
+{
+   pdf->setAttribute("BinnedLikelihood");
+   data = pdf->generateBinned(*w.var("x"));
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+
+   EXPECT_STREQ("RooBinnedL", likelihood->GetName());
+   EXPECT_STREQ("RooBinnedL::model", (likelihood->GetInfo()).c_str());
+}
+
+TEST_F(LikelihoodSerialTest, SumLikelihoodIntrospection)
+{
+   w.factory("ExtendPdf::egA(Gaussian::gA(x[-10,10],mA[2,-10,10],s[3,0.1,10]),nA[1000])");
+   w.factory("ExtendPdf::egB(Gaussian::gB(x,mB[-2,-10,10],s),nB[100])");
+   w.factory("SIMUL::model(index[A,B],A=egA,B=egB)");
+
+   pdf = w.pdf("model");
+   // Construct dataset from physics pdf
+   data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")));
+
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   
+   EXPECT_STREQ("RooSumL", likelihood->GetName());
+   EXPECT_STREQ("RooSumL::model", (likelihood->GetInfo()).c_str());
+}
+
+
+TEST_F(LikelihoodSerialSimBinnedConstrainedTest, SumSubsidiaryLikelihoodIntrospection)
+{
+
+   likelihood = RooFit::TestStatistics::buildLikelihood(
+      pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+
+   EXPECT_STREQ("RooSumL", likelihood->GetName());
+   EXPECT_STREQ("RooSumL::model", (likelihood->GetInfo()).c_str());
+
+
+   // Is RooSumL so we can cast to this type to use its further functionality
+   RooFit::TestStatistics::RooSumL* sum_likelihood = dynamic_cast<RooFit::TestStatistics::RooSumL*>(likelihood.get());
+
+   EXPECT_STREQ("RooUnbinnedL", sum_likelihood->GetComponents()[0]->GetName());
+   EXPECT_STREQ("RooUnbinnedL::model_A", (sum_likelihood->GetComponents()[0]->GetInfo()).c_str());
+   EXPECT_STREQ("RooUnbinnedL", sum_likelihood->GetComponents()[1]->GetName());
+   EXPECT_STREQ("RooUnbinnedL::model_B", (sum_likelihood->GetComponents()[1]->GetInfo()).c_str());
+   EXPECT_STREQ("RooSubsidiaryL", sum_likelihood->GetComponents()[2]->GetName());
+   EXPECT_STREQ("RooSubsidiaryL::likelihood for pdf model", (sum_likelihood->GetComponents()[2]->GetInfo()).c_str());
+
 }

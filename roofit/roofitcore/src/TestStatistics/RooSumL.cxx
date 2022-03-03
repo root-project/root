@@ -38,7 +38,7 @@ namespace TestStatistics {
 /// will have their own number of events that may be more relevant.
 RooSumL::RooSumL(RooAbsPdf *pdf, RooAbsData *data, std::vector<std::unique_ptr<RooAbsL>> components,
                  RooAbsL::Extended extended)
-   : RooAbsL(pdf, data, data->numEntries(), components.size(), extended), components_(std::move(components))
+   : RooAbsL(pdf, data, data->numEntries(), components.size(), extended, "RooSumL"), components_(std::move(components))
 {
 }
 // Developer note on the std::move() warning above:
