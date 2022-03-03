@@ -96,10 +96,10 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
             // the address returned by the GetAddress method
             auto readerArrayAddr = &readerArray.At(0);
             RVec<T> rvec(readerArrayAddr, readerArraySize);
-            std::swap(fRVec, rvec);
+            swap(fRVec, rvec);
          } else {
             RVec<T> emptyVec{};
-            std::swap(fRVec, emptyVec);
+            swap(fRVec, emptyVec);
          }
       } else {
          // The storage is not contiguous or we don't know yet: we cannot but copy into the rvec
@@ -116,10 +116,10 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
 #endif
          if (readerArraySize > 0) {
             RVec<T> rvec(readerArray.begin(), readerArray.end());
-            std::swap(fRVec, rvec);
+            swap(fRVec, rvec);
          } else {
             RVec<T> emptyVec{};
-            std::swap(fRVec, emptyVec);
+            swap(fRVec, emptyVec);
          }
       }
       return &fRVec;
@@ -158,10 +158,10 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::
       if (readerArraySize > 0) {
          // always perform a copy
          RVec<bool> rvec(readerArray.begin(), readerArray.end());
-         std::swap(fRVec, rvec);
+         swap(fRVec, rvec);
       } else {
          RVec<bool> emptyVec{};
-         std::swap(fRVec, emptyVec);
+         swap(fRVec, emptyVec);
       }
       return &fRVec;
    }
