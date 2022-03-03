@@ -491,28 +491,38 @@ void REveSelection::UserUnPickedElement(REveElement* el)
 ////////////////////////////////////////////////////////////////////////////////
 /// Called from GUI when user picks or un-picks an element.
 
-void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& in_secondary_idcs)
+void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int> &secondary_idcs)
 {
    static const REveException eh("REveSelection::NewElementPicked ");
 
    REveElement *pel = nullptr, *el = nullptr;
 
-   std::set<int> secondary_idcs = in_secondary_idcs;
+   if (id > 0) {
+      pel = REX::gEve->FindElementById(id);
 
-   if (id > 0)
-   {
-     pel = REX::gEve->FindElementById(id);
+      if (!pel)
+         throw eh + "picked element id=" + id + " not found.";
 
-     if ( ! pel) throw eh + "picked element id=" + id + " not found.";
-
-     el = MapPickedToSelected(pel);
-
-     if (fDeviator && fDeviator->DeviateSelection(this, el, multi, secondary, secondary_idcs)) {
-        return;
-     }
+      el = MapPickedToSelected(pel);
    }
 
+   if (fDeviator && fDeviator->DeviateSelection(this, el, multi, secondary, secondary_idcs))
+   {
+      return;
+   }
+   else
+   {
+      NewElementPickedInternal(el, multi, secondary, secondary_idcs);
+   }
+}
 
+//==============================================================================
+
+////////////////////////////////////////////////////////////////////////////////
+/// Called from NewElementPicked or Deviator::DeviateSelection
+
+void REveSelection::NewElementPickedInternal(REveElement* el, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+{
    if (gDebug > 0) {
       std::string debug_secondary;
       if (secondary) {
@@ -523,7 +533,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          }
          debug_secondary.append(" }");
       }
-      ::Info("REveSelection::NewElementPicked", "%p -> %p, multi: %d, secondary: %d  %s", pel, el, multi, secondary, debug_secondary.c_str());
+      ::Info("REveSelection::NewElementPickedInternal", " %p, multi: %d, secondary: %d  %s", el, multi, secondary, debug_secondary.c_str());
    }
 
    Record *rec = find_record(el);
@@ -552,11 +562,11 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
                for (auto &dit :  dup)
                   rec->f_sec_idcs.erase(dit);
 
-               secondary_idcs  = rec->f_sec_idcs;
-
+               // re-adding is needed to refresh implied selected
+               std::set<int> newSet = rec->f_sec_idcs;
                RemoveNiece(el);
-               if (!secondary_idcs.empty()) {
-                  AddNieceForSelection(el, secondary, secondary_idcs);
+               if (!newSet.empty()) {
+                  AddNieceForSelection(el, secondary, newSet);
                }
             }
             else
@@ -583,7 +593,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          {
             if (secondary)
             {
-                bool modified = (rec->f_sec_idcs != secondary_idcs);
+               bool modified = (rec->f_sec_idcs != secondary_idcs);
                RemoveNieces();
                // re-adding is needed to refresh implied selected
                if (modified) {
