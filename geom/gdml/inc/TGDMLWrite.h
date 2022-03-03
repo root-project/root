@@ -126,6 +126,7 @@ private:
    XMLDocPointer_t  fGdmlFile;                             //pointer storing xml file
    TString fDefault_lunit;                                 //Default unit of length (depends on ROOT unit system)
    TString fTopVolumeName;                                 //name of top volume
+   TGeoVolume *fTopVolume = nullptr;                       //top volume of the tree being written
    TXMLEngine *fGdmlE;                                     //xml engine pointer
 
    XMLNodePointer_t fDefineNode;                           //main <define> node...
