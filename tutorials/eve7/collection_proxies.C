@@ -791,10 +791,8 @@ public:
       if (el) {
          auto *colItems = dynamic_cast<REveDataItemList *>(el);
          if (colItems) {
-            selection->SetDeviator(nullptr);
-            // std::cout << "Deviate " << colItems->RefSelectedSet().size() << " passed set " << secondary_idcs.size() << "\n";
-            selection->NewElementPicked(colItems->GetElementId(), multi, true, colItems->RefSelectedSet());
-            selection->SetDeviator(this);
+            // std::cout << "Deviate RefSelected=" << colItems->RefSelectedSet().size() << " passed set " << secondary_idcs.size() << "\n";
+            ExecuteNewElementPicked(selection, colItems, multi, true, colItems->RefSelectedSet());
             return true;
          }
       }
@@ -851,7 +849,7 @@ void collection_proxies(bool proj=true)
    REveDataCollection* jetCollection = new REveDataCollection("Jets");
    jetCollection->SetItemClass(Jet::Class());
    jetCollection->SetMainColor(kYellow);
-   jetCollection->SetFilterExpr("i.Pt() > 14");
+   jetCollection->SetFilterExpr("i.Pt() > 1");
    collectionMng->addCollection(jetCollection, new JetProxyBuilder());
 
    REveDataCollection* hitCollection = new REveDataCollection("RecHits");

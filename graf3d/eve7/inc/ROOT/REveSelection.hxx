@@ -27,6 +27,8 @@ namespace Experimental {
 class REveSelection : public REveElement,
                       public REveAunt
 {
+   friend class Deviator;
+
 public:
    enum EPickToSelect   // How to convert picking events to top selected element:
    { kPS_Ignore,        // ignore picking
@@ -68,7 +70,12 @@ public:
     public:
       virtual ~Deviator(){};
       Deviator() {}
-      virtual bool DeviateSelection(REveSelection*, REveElement*, bool multi, bool secondary, const std::set<int>& secondary_idcs) = 0;
+      virtual bool DeviateSelection(REveSelection* s, REveElement* el, bool multi, bool secondary, const std::set<int>& secondary_idcs) = 0;
+   protected:
+      void ExecuteNewElementPicked(REveSelection* s, REveElement* el, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+      {
+         s->NewElementPickedInternal(el, multi, secondary, secondary_idcs);
+      }
    };
 
    typedef std::map<REveElement*, Record>  SelMap_t;
@@ -102,6 +109,8 @@ protected:
    void RecheckImpliedSet(SelMap_i &entry);
 
    void AddNieceForSelection(REveElement*, bool secondary, const std::set<int>&);
+
+   void NewElementPickedInternal(REveElement* el, bool multi, bool secondary, const std::set<int>& secondary_idcs);
 
 public:
    REveSelection(const std::string &n = "REveSelection", const std::string &t = "",
