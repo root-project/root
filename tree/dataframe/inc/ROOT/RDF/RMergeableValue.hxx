@@ -57,6 +57,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableValueBase() = default;
+   RMergeableValueBase(const RMergeableValueBase &) = delete;
+   RMergeableValueBase &operator=(const RMergeableValueBase &) = delete;
+   RMergeableValueBase(RMergeableValueBase &&) = delete;
+   RMergeableValueBase &operator=(RMergeableValueBase &&) = delete;
 };
 
 /**
@@ -161,6 +165,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableValue() = default;
+   RMergeableValue(const RMergeableValue &) = delete;
+   RMergeableValue &operator=(const RMergeableValue &) = delete;
+   RMergeableValue(RMergeableValue &&) = delete;
+   RMergeableValue &operator=(RMergeableValue &&) = delete;
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Retrieve the result wrapped by this mergeable.
    const T &GetValue() const { return fValue; }
@@ -210,8 +218,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableCount() = default;
-   RMergeableCount(RMergeableCount &&) = default;
    RMergeableCount(const RMergeableCount &) = delete;
+   RMergeableCount &operator=(const RMergeableCount &) = delete;
+   RMergeableCount(RMergeableCount &&) = delete;
+   RMergeableCount &operator=(RMergeableCount &&) = delete;
 };
 
 /**
@@ -289,8 +299,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableFill() = default;
-   RMergeableFill(RMergeableFill &&) = default;
    RMergeableFill(const RMergeableFill &) = delete;
+   RMergeableFill &operator=(const RMergeableFill &) = delete;
+   RMergeableFill(RMergeableFill &&) = delete;
+   RMergeableFill &operator=(RMergeableFill &&) = delete;
 };
 
 template <typename T>
@@ -317,8 +329,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableMax() = default;
-   RMergeableMax(RMergeableMax &&) = default;
    RMergeableMax(const RMergeableMax &) = delete;
+   RMergeableMax &operator=(const RMergeableMax &) = delete;
+   RMergeableMax(RMergeableMax &&) = delete;
+   RMergeableMax &operator=(RMergeableMax &&) = delete;
 };
 
 /**
@@ -381,8 +395,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableMean() = default;
-   RMergeableMean(RMergeableMean &&) = default;
    RMergeableMean(const RMergeableMean &) = delete;
+   RMergeableMean &operator=(const RMergeableMean &) = delete;
+   RMergeableMean(RMergeableMean &&) = delete;
+   RMergeableMean &operator=(RMergeableMean &&) = delete;
 };
 
 template <typename T>
@@ -409,8 +425,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableMin() = default;
-   RMergeableMin(RMergeableMin &&) = default;
    RMergeableMin(const RMergeableMin &) = delete;
+   RMergeableMin &operator=(const RMergeableMin &) = delete;
+   RMergeableMin(RMergeableMin &&) = delete;
+   RMergeableMin &operator=(RMergeableMin &&) = delete;
 };
 
 /**
@@ -492,8 +510,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableStdDev() = default;
-   RMergeableStdDev(RMergeableStdDev &&) = default;
    RMergeableStdDev(const RMergeableStdDev &) = delete;
+   RMergeableStdDev &operator=(const RMergeableStdDev &) = delete;
+   RMergeableStdDev(RMergeableStdDev &&) = delete;
+   RMergeableStdDev &operator=(RMergeableStdDev &&) = delete;
 };
 
 template <typename T>
@@ -520,8 +540,10 @@ public:
       (classTBufferFile.html#a209078a4cb58373b627390790bf0c9c1)
    */
    RMergeableSum() = default;
-   RMergeableSum(RMergeableSum &&) = default;
    RMergeableSum(const RMergeableSum &) = delete;
+   RMergeableSum &operator=(const RMergeableSum &) = delete;
+   RMergeableSum(RMergeableSum &&) = delete;
+   RMergeableSum &operator=(RMergeableSum &&) = delete;
 };
 
 /// \cond HIDDEN_SYMBOLS
