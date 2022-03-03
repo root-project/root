@@ -104,6 +104,12 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
    list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
 endif()
 
+if(MSVC AND "${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64" AND NOT win_broken_tests)
+    list(APPEND dataframe_veto dataframe/df002_dataModel.C)
+    list(APPEND dataframe_veto dataframe/df016_vecOps.C)
+    list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.C)
+endif()
+
 if(NOT ROOT_mlp_FOUND)
    set(mlp_veto legacy/mlp/*.C)
 endif()
