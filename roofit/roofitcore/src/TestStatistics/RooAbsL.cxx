@@ -12,6 +12,7 @@
 
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include "ConstantTermsOptimizer.h"
+#include "RooAbsPdf.h"
 #include "RooAbsData.h"
 
 // for dynamic casts in init_clones:
@@ -51,8 +52,8 @@ bool RooAbsL::isExtendedHelper(RooAbsPdf* pdf, Extended extended)
 
 /// After handling cloning (or not) of the pdf and dataset, the public constructors call this private constructor to handle common tasks.
 RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data,
-                 std::size_t N_events, std::size_t N_components, Extended extended, const char* name)
-   : pdf_(std::move(pdf)), data_(std::move(data)), N_events_(N_events), N_components_(N_components), name_(name)
+                 std::size_t N_events, std::size_t N_components, Extended extended)
+   : pdf_(std::move(pdf)), data_(std::move(data)), N_events_(N_events), N_components_(N_components)
 {
    extended_ = isExtendedHelper(pdf_.get(), extended);
    if (extended == Extended::Auto) {
@@ -72,9 +73,9 @@ RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> dat
 /// \param N_events The number of events in this likelihood's dataset.
 /// \param N_components The number of components in the likelihood.
 /// \param extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the pdf whether to activate or not.
-RooAbsL::RooAbsL(RooAbsL::ClonePdfData in, std::size_t N_events, std::size_t N_components, Extended extended, const char* name)
+RooAbsL::RooAbsL(RooAbsL::ClonePdfData in, std::size_t N_events, std::size_t N_components, Extended extended)
   : RooAbsL(std::shared_ptr<RooAbsPdf>(static_cast<RooAbsPdf *>(in.pdf->cloneTree())),
-     std::shared_ptr<RooAbsData>(static_cast<RooAbsData *>(in.data->Clone())), N_events, N_components, extended, name)
+     std::shared_ptr<RooAbsData>(static_cast<RooAbsData *>(in.data->Clone())), N_events, N_components, extended)
 {
    initClones(*in.pdf, *in.data);
 }
@@ -89,13 +90,13 @@ RooAbsL::RooAbsL(RooAbsL::ClonePdfData in, std::size_t N_events, std::size_t N_c
 /// \param N_components The number of components in the likelihood.
 /// \param extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the pdf whether to activate or not.
 RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, std::size_t N_events, std::size_t N_components,
-                 Extended extended, const char* name)
-   : RooAbsL({std::shared_ptr<RooAbsPdf>(nullptr), inpdf}, {std::shared_ptr<RooAbsData>(nullptr), indata}, N_events, N_components, extended, name)
+                 Extended extended)
+   : RooAbsL({std::shared_ptr<RooAbsPdf>(nullptr), inpdf}, {std::shared_ptr<RooAbsData>(nullptr), indata}, N_events, N_components, extended)
 {}
 
 
 RooAbsL::RooAbsL(const RooAbsL &other)
-   : pdf_(other.pdf_), data_(other.data_), N_events_(other.N_events_), N_components_(other.N_components_), extended_(other.extended_), sim_count_(other.sim_count_), name_(other.name_)
+   : pdf_(other.pdf_), data_(other.data_), N_events_(other.N_events_), N_components_(other.N_components_), extended_(other.extended_), sim_count_(other.sim_count_)
 {
    // it can never be one, since we just copied the shared_ptr; if it is, something really weird is going on; also they must be equal (usually either zero or two)
    assert((pdf_.use_count() != 1) && (data_.use_count() != 1) && (pdf_.use_count() == data_.use_count()));
@@ -224,6 +225,20 @@ void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doA
    if (opcode == RooAbsArg::Activate) {
       ConstantTermsOptimizer::enableConstantTermsOptimization(pdf_.get(), normSet_.get(), data_.get(), doAlsoTrackingOpt);
    }
+}
+
+std::string RooAbsL::GetName() const
+{
+   std::string output("likelihood of pdf ");
+   output.append(pdf_->GetName());
+   return output;
+}
+
+std::string RooAbsL::GetTitle() const
+{
+   std::string output("likelihood of pdf ");
+   output.append(pdf_->GetTitle());
+   return output;
 }
 
 std::size_t RooAbsL::numDataEntries() const

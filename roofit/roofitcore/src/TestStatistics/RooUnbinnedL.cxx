@@ -39,7 +39,7 @@ namespace TestStatistics {
 
 RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
                            bool useBatchedEvaluations)
-   : RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1, extended, "RooUnbinnedL"),
+   : RooAbsL(RooAbsL::ClonePdfData{pdf, data}, data->numEntries(), 1, extended),
      useBatchedEvaluations_(useBatchedEvaluations)
 {
 }
