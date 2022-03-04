@@ -40,6 +40,7 @@ To not break old code, the old RooCatType interfaces are still available. Whenev
 the following replacements should be used:
 - lookupType() \f$ \rightarrow \f$ lookupName() / lookupIndex()
 - typeIterator() \f$ \rightarrow \f$ range-based for loop / begin() / end()
+- isValidIndex(Int_t index) \f$ \rightarrow \f$ hasIndex()
 - isValid(const RooCatType&) \f$ \rightarrow \f$ hasIndex() / hasLabel()
 **/
 
