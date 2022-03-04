@@ -684,7 +684,7 @@ Double_t RooAbsPdf::getLogVal(const RooArgSet* nset) const
   Double_t prob = getVal(nset) ;
 
   if (fabs(prob)>1e6) {
-    coutW(Eval) << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: large likelihood value: " << prob << endl ;
+    coutW(Eval) << "RooAbsPdf::getLogVal(" << GetName() << ") WARNING: top-level pdf has a large value: " << prob << endl ;
   }
 
   if(prob < 0) {
@@ -1720,7 +1720,6 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   pc.defineMutex("FitOptions","Hesse") ;
   pc.defineMutex("FitOptions","Minos") ;
   pc.defineMutex("Range","RangeWithName") ;
-  pc.defineMutex("InitialHesse","Minimizer") ;
 
   // Process and check varargs
   pc.process(fitCmdList) ;
