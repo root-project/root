@@ -504,6 +504,14 @@ private:
     if (!MinuendNameOrErr)
       return MinuendNameOrErr.takeError();
     auto MinuendI = GlobalSymbolTable.find(*MinuendNameOrErr);
+    // FIXME: This is a hack that likely addresses a symptom instead of the
+    // cause - there really shouldn't be relocations that reference functions
+    // not in the global symbol table. However, skipping the relocation and
+    // doing nothing is definitely better than dereferencing an end() iterator
+    // and works for the test cases that run into this.
+    if (MinuendI == GlobalSymbolTable.end()) {
+      return ++RelI;
+    }
     unsigned SectionAID = MinuendI->second.getSectionID();
     uint64_t SectionAOffset = MinuendI->second.getOffset();
 
