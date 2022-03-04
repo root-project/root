@@ -304,6 +304,13 @@ inline Py_ssize_t PyNumber_AsSsize_t(PyObject* obj, PyObject*) {
 #define CPyCppyy_PyCFunction_Call PyCFunction_Call
 #endif
 
+// Py_TYPE is changed to an inline static function in 3.11
+#if PY_VERSION_HEX < 0x030900A4 && !defined(Py_SET_TYPE)
+static inline
+void _Py_SET_TYPE(PyObject *ob, PyTypeObject *type) { ob->ob_type = type; }
+#define Py_SET_TYPE(ob, type) _Py_SET_TYPE((PyObject*)(ob), type)
+#endif
+
 // C++ version of the cppyy API
 #include "Cppyy.h"
 
