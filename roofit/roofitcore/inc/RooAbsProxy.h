@@ -50,7 +50,7 @@ public:
 
 protected:
 
-  RooArgSet* _nset ; ///<! Normalization set to be used for evaluation of RooAbsPdf contents
+  RooArgSet* _nset = nullptr ; ///<! Normalization set to be used for evaluation of RooAbsPdf contents
 
   friend class RooAbsArg ;
   friend class RooObjectFactory ;
