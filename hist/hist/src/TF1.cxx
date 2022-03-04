@@ -1561,8 +1561,13 @@ void TF1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fix the value of a parameter
-/// The specified value will be used in a fit operation
+/// Fix the value of a parameter for a fit operation
+/// The specified value will be used in the fit and
+/// the parameter will be constant (nor varying) during fitting
+/// Note that when using pre-defined functions (e.g gaus),
+/// one needs to use the fit option 'B' to have the fix of the paramter
+/// effective. See TH1::Fit(TF1*, Option_t *, Option_t *, Double_t, Double_t) for
+/// the fitting documentation and the fitting options.
 
 void TF1::FixParameter(Int_t ipar, Double_t value)
 {
@@ -3152,8 +3157,9 @@ TH1   *TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Release parameter number ipar If used in a fit, the parameter
-/// can vary freely. The parameter limits are reset to 0,0.
+/// Release parameter number ipar during a fit operation.
+/// After releasing it, the parameter
+/// can vary freely in the fit. The parameter limits are reset to 0,0.
 
 void TF1::ReleaseParameter(Int_t ipar)
 {
@@ -3523,10 +3529,13 @@ void TF1::SetParErrors(const Double_t *errors)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set limits for parameter ipar.
+/// Set lower and upper limits for parameter ipar.
+/// The specified limits will be used in a fit operation.
+/// Note that when this function is a pre-defined function (e.g. gaus)
+/// one needs to use the fit option "B" to have the limits used in the fit.
+/// See TH1::Fit(TF1*, Option_t *, Option_t *, Double_t, Double_t) for the fitting documentation
+/// and the [fitting options](\ref HFitOpt)
 ///
-/// The specified limits will be used in a fit operation
-/// when the option "B" is specified (Bounds).
 /// To fix a parameter, use TF1::FixParameter
 
 void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)
