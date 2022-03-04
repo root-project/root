@@ -3963,7 +3963,7 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///   "N"  | Does not store the graphics function, does not draw the histogram with the function after fitting.
 ///   "0"  | Does not draw the histogram and the fitted function after fitting, but in contrast to option "N", it stores the fitted function in the histogram list of functions.
 ///   "R"  | Fit using a fitting range specified in the function range with `TF1::SetRange`.
-///   "B"  | Use this option when you want to fix one or more parameters and the fitting function is a predefined one (e.g gaus, expo,..), otherwise in case of pre-defined functions, some default initial values and limits are set.
+///   "B"  | Use this option when you want to fix or set limits on one or more parameters and the fitting function is a predefined one (e.g gaus, expo,..), otherwise in case of pre-defined functions, some default initial values and limits will be used.
 ///   "C"  | In case of linear fitting, do no calculate the chisquare (saves CPU time).
 ///   "G"  | Uses the gradient implemented in `TF1::GradientPar` for the minimization. This allows to use Automatic Differentiation when it is supported by the provided TF1 function.
 ///   "WIDTH" | Scales the histogran bin content by the bin width (useful for variable bins histograms)
