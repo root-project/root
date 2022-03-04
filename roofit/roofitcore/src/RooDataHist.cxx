@@ -1784,7 +1784,6 @@ void RooDataHist::set(std::size_t binNumber, double wgt, double wgtErr) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set bin content of bin that was last loaded with get(std::size_t).
-/// \deprecated Prefer set(std::size_t, double, double).
 /// \param[in] wgt New bin content.
 /// \param[in] wgtErr Optional error of the bin content.
 void RooDataHist::set(double wgt, double wgtErr) {
