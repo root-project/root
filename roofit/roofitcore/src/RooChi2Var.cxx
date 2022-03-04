@@ -107,11 +107,11 @@ RooArgSet RooChi2Var::_emptySet ;
 ///  - RooAbsData::Expected: Expected Poisson error (\f$ \sqrt{n_\text{expected}} \f$ from the PDF).
 ///  - RooAbsData::SumW2: The observed error from the square root of the sum of weights,
 ///    i.e., symmetric errors calculated with the standard deviation of a Poisson distribution.
-///  - RooAbsData::Poisson: Asymmetric errors from the observed central poisson (68 %) interval.
+///  - RooAbsData::Poisson: Asymmetric errors from the central 68 % interval around a Poisson distribution with mean \f$ n_\text{observed} \f$.
 ///    If for a given bin \f$ n_\text{expected} \f$ is lower than the \f$ n_\text{observed} \f$, the lower uncertainty is taken
-///    (e.g., the difference between the mean and the 16 % quantile of the Poisson distribution with with mean \f$ n_\text{observed} \f$).
+///    (e.g., the difference between the mean and the 16 % quantile).
 ///    If \f$ n_\text{expected} \f$ is higher than \f$ n_\text{observed} \f$, the higher uncertainty is taken
-///    (e.g., the difference between the mean and the 84 % quantile of the Poisson distribution with with mean \f$ n_\text{observed} \f$).
+///    (e.g., the difference between the 84 % quantile and the mean).
 ///  - RooAbsData::Auto (default): RooAbsData::Expected for unweighted data, RooAbsData::SumW2 for weighted data.
 ///  <tr><td>
 ///  `Extended()` <td>  Use expected number of events of an extended p.d.f as normalization

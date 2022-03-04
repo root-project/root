@@ -1911,7 +1911,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// <tr><th> Type of CmdArg                    <th> Effect on generate
 /// <tr><td> `Name(const char* name)`            <td> Name of the output dataset
 /// <tr><td> `Verbose(bool flag)`              <td> Print informational messages during event generation
-/// <tr><td> `NumEvent(int nevt)`                <td> Generate specified number of events
+/// <tr><td> `NumEvents(int nevt)`               <td> Generate specified number of events
 /// <tr><td> `Extended()`                        <td> If no number of events to be generated is given,
 /// use expected number of events from extended likelihood term.
 /// This evidently only works for extended PDFs.
@@ -2334,11 +2334,11 @@ bool RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 /// dataset.
 ///
 /// The following named arguments are supported
-/// | Type of CmdArg       | Effect on generation
-/// |-------------------------|-----------------------
+/// | Type of CmdArg            | Effect on generation
+/// |---------------------------|-----------------------
 /// | `Name(const char* name)`  | Name of the output dataset
-/// | `Verbose(bool flag)`    | Print informational messages during event generation
-/// | `NumEvent(int nevt)`      | Generate specified number of events
+/// | `Verbose(bool flag)`      | Print informational messages during event generation
+/// | `NumEvents(int nevt)`     | Generate specified number of events
 /// | `Extended()`              | The actual number of events generated will be sampled from a Poisson distribution with mu=nevt.
 /// This can be *much* faster for peaked PDFs, but the number of events is not exactly what was requested.
 /// | `ExpectedData()`          | Return a binned dataset _without_ statistical fluctuations (also aliased as Asimov())
