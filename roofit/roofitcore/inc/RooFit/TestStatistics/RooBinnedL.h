@@ -30,6 +30,8 @@ public:
    ROOT::Math::KahanSum<double>
    evaluatePartition(Section bins, std::size_t components_begin, std::size_t components_end) override;
 
+   virtual std::string GetClassName() const override { return "RooBinnedL"; };
+
 private:
    mutable bool _first = true;        ///<!
    mutable std::vector<double> _binw; ///<!

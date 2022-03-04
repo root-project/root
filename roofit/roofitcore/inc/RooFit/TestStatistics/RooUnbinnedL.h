@@ -37,6 +37,9 @@ public:
    evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
 
    void setUseBatchedEvaluations(bool flag);
+
+   virtual std::string GetClassName() const override { return "RooUnbinnedL"; };
+
 private:
    bool apply_weight_squared = false;                              ///< Apply weights squared?
    mutable bool _first = true;                                     ///<!
