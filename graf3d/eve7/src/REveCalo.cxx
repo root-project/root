@@ -1092,7 +1092,7 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
       std::vector<Float_t> sliceValsUpRef(nSlices, 0.);
       std::vector<Float_t> sliceValsLowRef(nSlices, 0.);
 
-      Float_t  towerH, towerHRef, offUp, offLow;
+      Float_t  towerH, towerHRef;
       REveCaloData::CellData_t cellData;
 
       for (UInt_t etaBin = 1; etaBin <= nEtaBins; ++etaBin)
@@ -1102,7 +1102,6 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
             if (!fCellLists[etaBin]) {
                throw(eh + "selected cell not in cell list cache.");
             }
-            offUp = 0; offLow =0;
             // selected phi sum
             for (Int_t s = 0; s < nSlices; ++s) {
                sliceValsUp[s] = sliceValsLow[s] = 0.;
@@ -1143,7 +1142,6 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
                   jsc["f"] = sliceValsUp[s]/sliceValsUpRef[s];
                   sarr.push_back(jsc);
                }
-               offUp += towerHRef;
 
                // phi -
                SetupHeight(sliceValsLowRef[s], s, towerHRef);
@@ -1155,7 +1153,6 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId
                   jsc["f"] = sliceValsLow[s]/sliceValsLowRef[s];
                   sarr.push_back(jsc);
                }
-               offLow += towerHRef;
             } // slices
          } // if eta bin
       } //eta bins
