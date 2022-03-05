@@ -270,6 +270,28 @@ Other notable additions and improvements include:
 
 
 ## RooFit Libraries
+
+### Experimental CUDA support for RooFit's `BatchMode`
+
+RooFit's [`BatchMode`](https://root.cern/doc/master/classRooAbsPdf.html#a8f802a3a93467d5b7b089e3ccaec0fa8) has been around
+[since ROOT 6.20](https://root.cern/doc/v620/release-notes.html#fast-function-evaluation-and-vectorisation).
+It was further [improved in ROOT 6.24](https://root.cern/doc/v624/release-notes.html#massive-speed-up-of-roofits-batchmode-on-cpus-with-vector-extensions) to use vector extensions of modern CPUs without recompiling ROOT, introducing the new `RooBatchCompute` library as a backend that is compiled multiple times for different instruction sets.
+With this release, `RooBatchCompute` is also compiled with the Nvidia CUDA compiler to support the computation on GPUs if supported by the RooFit object.
+You can use the CUDA mode by passing `"cuda"` to the `BatchMode()` command argument:
+```C++
+model.fitTo(data);                            // not using the batch mode
+model.fitTo(data, RooFit::BatchMode(true));   // using the BatchMode on CPU (RooFit::BatchMode("cpu") is equivalent)
+model.fitTo(data, RooFit::BatchMode("cuda")); // using the new CUDA backend
+```
+
+The `RooBatchCompute` backend now also supports ROOT's implicit multithreading (similar to RDataFrame), which can be enabled as follows:
+```C++
+ROOT::EnableImplicitMT(nThreads);
+```
+
+For more information, please have a look at this [contribution to the ACAT 2021 conference](https://indico.cern.ch/event/855454/contributions/4596763/) or consult the [RooBatchComupte README](https://github.com/root-project/root/tree/v6-26-00-patches/roofit/batchcompute).
+The README also describes how to enable BatchMode support for your own PDFs.
+
 ### Parallel calculation of likelihood gradients during fitting
 This release features two new optional RooFit libraries: `RooFit::MultiProcess` and `RooFit::TestStatistics`.
 To activate both, build with `-Droofit_multiprocess=ON`.
