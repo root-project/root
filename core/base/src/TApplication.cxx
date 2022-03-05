@@ -1038,7 +1038,7 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 ////////////////////////////////////////////////////////////////////////////////
 /// The function lists useful commands (".help") or opens the online reference
 /// guide, generated with Doxygen (".help scope" or ".help scope::member").
-///
+/// \note You can use ".?" as the short version of ".help"
 /// \param[in] line command from the command line
 
 void TApplication::Help(const char *line)
@@ -1049,12 +1049,12 @@ void TApplication::Help(const char *line)
    if ((strippedCommand == ".help") || (strippedCommand == ".?")) {
       gInterpreter->ProcessLine(line);
       Printf("\nROOT special commands.");
-      Printf("==========================================================================");
+      Printf("==============================================================================");
       Printf("   .pwd                : show current directory, pad and style");
       Printf("   .ls                 : list contents of current directory");
       Printf("   .which [file]       : shows path of macro file");
-      Printf("   .help Class         : opens the reference guide for that class");
-      Printf("   .help Class::Member : opens the reference guide for function/member");
+      Printf("   .help Class         : opens the reference guide for that class (or .?)");
+      Printf("   .help Class::Member : opens the reference guide for function/member (or .?)");
       return;
    } else {
       // If the user wants to use the extended ".help scopeName" command to access
@@ -1437,7 +1437,7 @@ Longptr_t TApplication::ProcessLine(const char *line, Bool_t sync, Int_t *err)
    }
 
    if (!strcmp(line, ".reset")) {
-      // Do nothing, .reset disabled in CINT because too many side effects
+      // Do nothing, .reset disabled in Cling because too many side effects
       Printf("*** .reset not allowed, please use gROOT->Reset() ***");
       return 0;
 
