@@ -515,4 +515,5 @@ features of ROOT.
 ***Please move on to become an expert!***
 
 [^2]: All ROOT classes' names start with the letter T. A notable exception is
-RooFit. In this context all classes' names are of the form Roo*.
+RooFit. In this context all classes' names are of the form Roo*. Starting with
+ROOT7, all names start with and R.
