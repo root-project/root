@@ -217,7 +217,7 @@ namespace HistFactory{
     RooCategory* cat = NULL;
     for (auto const* temp : *data->get()) {
       if( strcmp(temp->ClassName(),"RooCategory")==0){
-          cat = static_cast<RooCategory>(temp);
+          cat = static_cast<RooCategory*>(temp);
         break;
       }
     }
