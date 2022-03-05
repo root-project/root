@@ -51,7 +51,7 @@ namespace HistFactory{
         std::string NodeClassName = sum_pdf_arg->ClassName();
         if( NodeClassName == std::string("RooRealSumPdf") ) {
         FoundSumPdf=true;
-        sum_pdf = static_cast<RooAbsPdf*>(sum_pdf_arg);
+        sum_pdf = sum_pdf_arg;
         break;
       }
     }
@@ -181,6 +181,7 @@ namespace HistFactory{
     bool verbose=false;
 
     // Find the servers of this channel
+    RooAbsArg* paramfunc_arg = NULL;
     bool FoundParamHistFunc=false;
     for( auto const *paramfunc_arg :*channel->getComponents() ) {
       std::string NodeName = paramfunc_arg->GetName();
@@ -214,11 +215,10 @@ namespace HistFactory{
     RooSimultaneous* simPdf = (RooSimultaneous*) pdf;
 
     // get category label
-    RooArgSet const* allobs = data->get();
     RooCategory* cat = NULL;
-    for (auto const *temp : *allobs)) {
+    for (auto const *temp : *data->get()) {
       if( strcmp(temp->ClassName(),"RooCategory")==0){
-        cat = static_cast<RooCategory*> temp;
+        cat = temp;
         break;
       }
     }
@@ -298,7 +298,7 @@ namespace HistFactory{
 
     bool FoundConstraintTerm=false;
     RooAbsPdf* constraintTerm=NULL;
-    for (auto const *term_constr : *constraints)) {
+    for (auto const *term_constr : *constraints) {
       std::string TermName = term_constr->GetName();
       if( term_constr->dependsOn( *gamma_stat) ) {
         if( TermName.find("_constraint")!=std::string::npos ) {

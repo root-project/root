@@ -813,10 +813,10 @@ namespace RooStats {
    // the (one) that is a RooRealSumPdf
    // Based on the mode, we assume that node is
    // the "unconstrained" pdf node for that channel
-    for (auto const *arg : *pdf->getComponents()) {
+    for (auto *arg : *pdf->getComponents()) {
       std::string ClassName = arg->ClassName();
       if( ClassName == "RooRealSumPdf" ) {
-      fChannelSumNodeMap[ChannelName] = static_cast<RooRealSumPdf*>(arg);
+      fChannelSumNodeMap[ChannelName] = arg;
       break;
       }
     }
@@ -842,7 +842,7 @@ namespace RooStats {
 
   // Loop over the sample nodes in this
   // channel's RooRealSumPdf
-  for (auto const *func : static_range_cast<RooAbsReal *>(sumPdf->funcList())) {          
+  for (auto *func : static_range_cast<RooAbsReal *>(sumPdf->funcList())) {          
     // Do a bit of work to get the name of each sample
     std::string SampleName = func->GetName();
     if( SampleName.find("L_x_") != std::string::npos ) {
@@ -1083,7 +1083,7 @@ namespace RooStats {
       { 
         for (auto *component : static_range_cast<RooAbsReal*>(components)) {
           std::string NodeName = component->GetName();
-          label_print_width = TMath::Max(label_print_width, static_cast<int>NodeName.size()+2);
+          label_print_width = TMath::Max(label_print_width, static_cast<int>(NodeName.size())+2);
         }
       }
 
