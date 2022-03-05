@@ -47,11 +47,11 @@ namespace HistFactory{
 
     RooAbsPdf* sum_pdf = NULL;
     bool FoundSumPdf=false;
-    for (auto const *sum_pdf_arg : *sim_channel->getComponents()) {
+    for (auto *sum_pdf_arg : *sim_channel->getComponents()) {
         std::string NodeClassName = sum_pdf_arg->ClassName();
         if( NodeClassName == std::string("RooRealSumPdf") ) {
-        FoundSumPdf=true;
-        sum_pdf = sum_pdf_arg;
+            FoundSumPdf=true;
+            sum_pdf = sum_pdf_arg;
         break;
       }
     }
@@ -181,9 +181,8 @@ namespace HistFactory{
     bool verbose=false;
 
     // Find the servers of this channel
-    RooAbsArg* paramfunc_arg = NULL;
     bool FoundParamHistFunc=false;
-    for( auto const *paramfunc_arg :*channel->getComponents() ) {
+    for( auto const *paramfunc_arg : *channel->getComponents() ) {
       std::string NodeName = paramfunc_arg->GetName();
       std::string NodeClassName = paramfunc_arg->ClassName();
       if( NodeClassName != std::string("ParamHistFunc") ) continue;
@@ -216,7 +215,7 @@ namespace HistFactory{
 
     // get category label
     RooCategory* cat = NULL;
-    for (auto const *temp : *data->get()) {
+    for (auto *temp : *data->get()) {
       if( strcmp(temp->ClassName(),"RooCategory")==0){
         cat = temp;
         break;

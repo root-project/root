@@ -816,7 +816,7 @@ namespace RooStats {
     for (auto *arg : *pdf->getComponents()) {
       std::string ClassName = arg->ClassName();
       if( ClassName == "RooRealSumPdf" ) {
-      fChannelSumNodeMap[ChannelName] = arg;
+         fChannelSumNodeMap[ChannelName] = static_cast <RooRealSumPdf*>(arg);
       break;
       }
     }
