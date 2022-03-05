@@ -215,7 +215,7 @@ namespace HistFactory{
 
     // get category label
     RooCategory* cat = NULL;
-    for (auto const* temp : *data->get()) {
+    for (auto* temp : *data->get()) {
       if( strcmp(temp->ClassName(),"RooCategory")==0){
           cat = static_cast<RooCategory*>(temp);
         break;
