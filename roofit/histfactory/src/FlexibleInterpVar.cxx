@@ -90,14 +90,11 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     _low.push_back(val->getVal()) ;
   }
 
-  //RooFIter highIter = highList.fwdIterator() ;
   for (auto const *val : static_range_cast<RooAbsReal *>(highList)) {
     _high.push_back(val->getVal()) ;
   }
 
-
   _logInit = kFALSE ;
-
 
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {

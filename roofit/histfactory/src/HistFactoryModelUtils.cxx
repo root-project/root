@@ -46,13 +46,12 @@ namespace HistFactory{
     std::string realSumPdfName = ChannelName + "_model";
 
     RooAbsPdf* sum_pdf = NULL;
-    
     bool FoundSumPdf=false;
-    for (auto const *sum_pdf_arg : static_range_cast<RooAbsPdf *>(*sim_channel->getComponents())) {
+    for (auto const *sum_pdf_arg : *sim_channel->getComponents()) {
         std::string NodeClassName = sum_pdf_arg->ClassName();
         if( NodeClassName == std::string("RooRealSumPdf") ) {
         FoundSumPdf=true;
-        sum_pdf = (RooAbsPdf*) sum_pdf_arg;
+        sum_pdf = static_cast<RooAbsPdf*>(sum_pdf_arg);
         break;
       }
     }
@@ -183,14 +182,14 @@ namespace HistFactory{
 
     // Find the servers of this channel
     bool FoundParamHistFunc=false;
-    for (auto const *paramfunc_arg : static_range_cast<RooAbsArg *>(*channel->getComponents())) {
+    for( auto const *paramfunc_arg :*channel->getComponents() ) {
       std::string NodeName = paramfunc_arg->GetName();
       std::string NodeClassName = paramfunc_arg->ClassName();
       if( NodeClassName != std::string("ParamHistFunc") ) continue;
       if( NodeName.find("mc_stat_") != std::string::npos ) {
-   FoundParamHistFunc=true;
-   paramfunc = (ParamHistFunc*) paramfunc_arg;
-   break;
+        FoundParamHistFunc=true;
+        paramfunc = static_cast<ParamHistFunc*>(paramfunc_arg);
+        break;
       }
     }
     if( ! FoundParamHistFunc || !paramfunc ) {
@@ -212,18 +211,15 @@ namespace HistFactory{
 
     bool verbose=false;
 
-    //std::map< std::string, std::vector<int>  ChannelBinDataMap;
-
     RooSimultaneous* simPdf = (RooSimultaneous*) pdf;
 
     // get category label
-    RooArgSet *allobs = (RooArgSet *)data->get();
+    RooArgSet const* allobs = data->get();
     RooCategory* cat = NULL;
-    for (auto const *temp : dynamic_range_cast<RooAbsArg *>(*allobs)) {
-      // use dynamic cast here instead
+    for (auto const *temp : *allobs)) {
       if( strcmp(temp->ClassName(),"RooCategory")==0){
-   cat = (RooCategory*) temp;
-   break;
+        cat = static_cast<RooCategory*> temp;
+        break;
       }
     }
     if(verbose) {
@@ -299,20 +295,17 @@ namespace HistFactory{
 
     // To get the constraint term, loop over all constraint terms
     // and look for the gamma_stat name as well as '_constraint'
-    // std::string constraintTermName = std::string(gamma_stat->GetName()) + "_constraint
+
     bool FoundConstraintTerm=false;
     RooAbsPdf* constraintTerm=NULL;
-    for (auto const *term_constr : static_range_cast<RooAbsArg *>(*constraints)) {
+    for (auto const *term_constr : *constraints)) {
       std::string TermName = term_constr->GetName();
-      // std::cout << "Checking if is a constraint term: " << TermName << std::endl;
-
-      //if( TermName.find(gamma_stat->GetName())!=string::npos ) {
       if( term_constr->dependsOn( *gamma_stat) ) {
-   if( TermName.find("_constraint")!=std::string::npos ) {
-     FoundConstraintTerm=true;
-     constraintTerm = (RooAbsPdf*) term_constr;
-     break;
-   }
+        if( TermName.find("_constraint")!=std::string::npos ) {
+          FoundConstraintTerm=true;
+          constraintTerm = (RooAbsPdf*) term_constr;
+          break;
+        }
       }
     }
     if( FoundConstraintTerm==false ) {
