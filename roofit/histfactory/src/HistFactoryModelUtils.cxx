@@ -297,7 +297,7 @@ namespace HistFactory{
 
     bool FoundConstraintTerm=false;
     RooAbsPdf* constraintTerm=NULL;
-    for (auto const *term_constr : *constraints) {
+    for (auto *term_constr : *constraints) {
       std::string TermName = term_constr->GetName();
       if( term_constr->dependsOn( *gamma_stat) ) {
         if( TermName.find("_constraint")!=std::string::npos ) {
