@@ -66,35 +66,35 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of flat polynomial function
 
-//LinInterpVar::LinInterpVar(const char* name, const char* title) :
-//  RooAbsReal(name, title),
-//  _paramList("paramList","List of coefficients",this),
-//  _nominal(0)
-//{
-//  _paramIter = _paramList.createIterator() ;
-//}
+LinInterpVar::LinInterpVar(const char* name, const char* title) :
+  RooAbsReal(name, title),
+  _paramList("paramList","List of coefficients",this),
+  _nominal(0)
+{
+  
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
-//  RooAbsReal(other, name),
-//  _paramList("paramList",this,other._paramList),
-//  _nominal(other._nominal), _low(other._low), _high(other._high)
-//
-//{
-//  // Copy constructor
-//  _paramIter = _paramList.createIterator() ;
-//
-//}
+LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
+  RooAbsReal(other, name),
+  _paramList("paramList",this,other._paramList),
+  _nominal(other._nominal), _low(other._low), _high(other._high)
+
+{
+  // Copy constructor
+  _paramIter = _paramList.createIterator() ;
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-//LinInterpVar::~LinInterpVar()
-//{
-//  delete _paramIter ;
-//}
+LinInterpVar::~LinInterpVar()
+{
+  //delete _paramIter ;
+}
 
 
 
