@@ -621,11 +621,11 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
 
   // old integral, only works for linear and not positive definite
   //RooFIter funcIntIter = cache->_funcIntList.fwdIterator();
-  RooFIter lowIntIter = cache->_lowIntList.fwdIterator();
-  RooFIter highIntIter = cache->_highIntList.fwdIterator();
-  RooAbsReal *low(0), *high(0), *param(0) ;
-  Double_t value(0) ;
-  Double_t nominal(0);
+  //RooFIter lowIntIter = cache->_lowIntList.fwdIterator();
+  //RooFIter highIntIter = cache->_highIntList.fwdIterator();
+  RooAbsReal *low, *high;
+  Double_t value ;
+  Double_t nominal;
 
   // get nominal
   int i=0;
@@ -637,16 +637,18 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   if(i==0 || i>1) { cout << "problem, wrong number of nominal functions"<<endl; }
 
   // now get low/high variations
-  i = 0;
-  RooFIter paramIter(_paramSet.fwdIterator());
+  //RooFIter paramIter(_paramSet.fwdIterator());
 
   // KC: old interp code with new iterator
-  while((param=(RooAbsReal*)paramIter.next())) {
-    low = (RooAbsReal*)lowIntIter.next() ;
-    high = (RooAbsReal*)highIntIter.next() ;
+ 
 
-    if(param->getVal()>0) {
-      value += param->getVal()*(high->getVal() - nominal );
+  i = 0;
+  for (auto const* param : static_range_cast<RooAbsReal *>(paramIter)) {
+    low = static_cast<RooAbsReal *> cache->_lowIntList.at(i);
+    high = static_cast<RooAbsReal *> cache->_highIntIter.at(i);
+  
+    if(param->getVal() > 0) {
+      value += param->getVal()*(high->getVal() - nominal);
     } else {
       value += param->getVal()*(nominal - low->getVal());
     }
