@@ -38,9 +38,12 @@ if(BUILD_DOCUMENTATION)
 
         execute_process(COMMAND ${ROOT_root_CMD}-config --cxx OUTPUT_VARIABLE ROOT_CXX_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
         execute_process(COMMAND ${ROOT_root_CMD} -l -b -q -e gROOT->GetGitBranch\(\) OUTPUT_VARIABLE ROOT_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-        STRING(REGEX REPLACE "\\(const char \\*\\) " "" ROOT_GIT_VERSION ${ROOT_GIT_VERSION})
-        message(${ROOT_GIT_VERSION})
+        STRING(REGEX REPLACE "^\n\\(const char \\*\\) " "" ROOT_GIT_VERSION ${ROOT_GIT_VERSION})
+        #message(${ROOT_GIT_VERSION})
         execute_process(COMMAND find ../../ -type d -name dictpch -prune -o -type d -name inc OUTPUT_VARIABLE ROOT_INC_FOLDERS OUTPUT_STRIP_TRAILING_WHITESPACE WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+        string(REPLACE "\n" ";" ROOT_INC_FOLDERS ${ROOT_INC_FOLDERS})
+        #execute_process(COMMAND ${ROOT_root_CMD}-config --has-roofit OUTPUT_VARIABLE HAS_ROOFIT OUTPUT_STRIP_TRAILING_WHITESPACE)
+        #https://stackoverflow.com/questions/34393562/ternary-operator-in-cmakes-generator-expressions
 
         add_custom_target(Preparation
 
