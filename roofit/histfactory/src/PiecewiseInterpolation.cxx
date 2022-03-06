@@ -513,13 +513,14 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   cache = new CacheElem ;
 
   // Make list of function projection and normalization integrals
-  RooAbsReal const *func ;
+  RooAbsReal *func ;
   //  const RooArgSet* nset = _paramList.nset() ;
 
   // do nominal
-  func = static_cast<RooAbsReal*>(&_nominal.arg()) ;
-  RooAbsReal* funcInt = func->createIntegral(analVars) ;
-  cache->_funcIntList.addOwned(*funcInt) ;
+  //func = static_cast<RooAbsReal*>(&_nominal.arg()) ;
+  RooAbsReal *funcInt;
+      //func->createIntegral(analVars) ;
+  //cache->_funcIntList.addOwned(*funcInt) ;
 
   // do variations 
   for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it)
