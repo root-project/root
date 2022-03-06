@@ -492,11 +492,10 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   //while( paramIterExtra.next() )
   for (auto it = _paramSet.begin(); it != _paramSet.end(); it++) { 
     if (!_interpCode.empty() && _interpCode[it - _paramSet.begin()] != 0) {
-      // can't factorize integral
-      cout <<"can't factorize integral"<<endl;
-      return 0;
-    }
-    ++i;
+        // can't factorize integral
+        cout << "can't factorize integral" << endl;
+        return 0;
+     }
   }
 
   // Select subset of allVars that are actual dependents
@@ -530,7 +529,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   RooFIter highIter( _highSet.fwdIterator() ) ;
   RooFIter paramIter( _paramSet.fwdIterator() ) ;
 
-  //  int i=0;
+    int i=0;
   i=0;
   while( paramIter.next() ) {
     func = (RooAbsReal*)lowIter.next() ;
