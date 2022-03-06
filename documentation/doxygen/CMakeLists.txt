@@ -59,7 +59,6 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_PROJECT_BRIEF          "Reference Guide")
         set(DOXYGEN_PROJECT_LOGO           "rootlogo.gif")
         set(DOXYGEN_ALWAYS_DETAILED_SEC    YES)
-        set(DOXYGEN_STRIP_FROM_PATH        "${DOCU_LOCATION}" "../../")
         set(DOXYGEN_JAVADOC_AUTOBRIEF      YES)
         set(DOXYGEN_QT_AUTOBRIEF           YES)
         set(DOXYGEN_TAB_SIZE               3  )
@@ -142,6 +141,8 @@ if(BUILD_DOCUMENTATION)
                                            ../../graf2d/gpadv7/inc # need to avoid getting doxygen confused with macro call on RAttrAxis
                                            ../../tmva/tmva/inc # same for REGISTER_METHOD on tmva
                                            )
+        set(DOXYGEN_STRIP_FROM_PATH        "${DOCU_LOCATION}" "../../")
+        set(DOXYGEN_STRIP_FROM_INC_PATH    "${DOXYGEN_INCLUDE_PATH}")
         set(DOXYGEN_GENERATE_TAGFILE       "${DOCU_LOCATION}/html/ROOT.tag")
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO )
         set(DOXYGEN_HAVE_DOT               YES) # set to NO for getting faster results when debugging
