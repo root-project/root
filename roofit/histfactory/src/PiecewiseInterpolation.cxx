@@ -487,7 +487,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
 
   // KC: check if interCode=0 for all
-  for (auto it = _paramSet.begin(); it != _paramSet.end(); it++) { 
+  for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it) { 
     if (!_interpCode.empty() && _interpCode[it - _paramSet.begin()] != 0) {
         // can't factorize integral
         cout << "can't factorize integral" << endl;
@@ -513,7 +513,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   cache = new CacheElem ;
 
   // Make list of function projection and normalization integrals
-  RooAbsReal *func ;
+  RooAbsReal const *func ;
   //  const RooArgSet* nset = _paramList.nset() ;
 
   // do nominal
