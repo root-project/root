@@ -42,6 +42,8 @@ if(BUILD_DOCUMENTATION)
         #message(${ROOT_GIT_VERSION})
         execute_process(COMMAND find ../../ -type d -name dictpch -prune -o -type d -name inc OUTPUT_VARIABLE ROOT_INC_FOLDERS OUTPUT_STRIP_TRAILING_WHITESPACE WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         string(REPLACE "\n" ";" ROOT_INC_FOLDERS ${ROOT_INC_FOLDERS})
+        list(APPEND ROOT_INC_FOLDERS ../../interpreter/llvm/src/tools/clang/include)#different pattern
+
         #execute_process(COMMAND ${ROOT_root_CMD}-config --has-roofit OUTPUT_VARIABLE HAS_ROOFIT OUTPUT_STRIP_TRAILING_WHITESPACE)
         #https://stackoverflow.com/questions/34393562/ternary-operator-in-cmakes-generator-expressions
 
