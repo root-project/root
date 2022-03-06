@@ -32,7 +32,7 @@ if(BUILD_DOCUMENTATION)
 
     if(DOXYGEN_FOUND)
 
-        set(DOXYGEN_EXECUTABLE "/opt/doxygen/build/bin/doxygen")#Temporary
+        set(DOXYGEN_EXECUTABLE ${DOXYGEN_EXECUTABLE} CACHE STRING "Path to doxygen executable")#In case you want to point somewhere else
 
         # TODO: should we remove output directory beforehand to ensure a clean rebuild?
 
@@ -173,7 +173,7 @@ if(BUILD_DOCUMENTATION)
             ../../roofit/
             ../../tree/
             ../../sql/
-            ../../tutorials/
+            #../../tutorials/
             ../../bindings/
 
             # Add to the list of files to be analyzed the .pyzdoc files created by extract_docstrings.py
