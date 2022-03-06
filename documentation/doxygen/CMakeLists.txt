@@ -5,7 +5,7 @@ set(CMAKE_VERBOSE_MAKEFILE ON) # set to ON for debugging
 set (QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
 #Pass instead -DQHG_LOCATION=/usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator if qt4dev-tools or qt5/ if qt5-assistant
 #Pass instead -DQHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.h. if custom installation
-set (DOCU_LOCATION $HOME/rootdoc CACHE STRING "Documentation output directory")
+set (DOCU_LOCATION ${HOME}/rootdoc CACHE STRING "Documentation output directory")
 #Pass instead -DDOCU_LOCATION=/tmp/rootdoc if temporary installation
 
 #list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
