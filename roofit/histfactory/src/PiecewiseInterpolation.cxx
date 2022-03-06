@@ -643,9 +643,9 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
  
 
   i = 0;
-  for (auto const* param : static_range_cast<RooAbsReal *>(paramIter)) {
-    low = static_cast<RooAbsReal *> cache->_lowIntList.at(i);
-    high = static_cast<RooAbsReal *> cache->_highIntIter.at(i);
+  for (auto const *param : static_range_cast<RooAbsReal *>(_paramSet)) {
+    low = static_cast<RooAbsReal *>(cache->_lowIntList.at(i));
+    high = static_cast<RooAbsReal *>(cache->_highIntList.at(i));
   
     if(param->getVal() > 0) {
       value += param->getVal()*(high->getVal() - nominal);
