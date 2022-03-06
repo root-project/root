@@ -487,9 +487,6 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
 
   // KC: check if interCode=0 for all
-  //RooFIter paramIterExtra(_paramSet) ;
-  //int i=0;
-  //while( paramIterExtra.next() )
   for (auto it = _paramSet.begin(); it != _paramSet.end(); it++) { 
     if (!_interpCode.empty() && _interpCode[it - _paramSet.begin()] != 0) {
         // can't factorize integral
@@ -520,26 +517,21 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   //  const RooArgSet* nset = _paramList.nset() ;
 
   // do nominal
-  func = (RooAbsReal*)(&_nominal.arg()) ;
+  func = static_cast<RooAbsReal*>(&_nominal.arg()) ;
   RooAbsReal* funcInt = func->createIntegral(analVars) ;
   cache->_funcIntList.addOwned(*funcInt) ;
 
-  // do variations
-  RooFIter lowIter( _lowSet.fwdIterator() ) ;
-  RooFIter highIter( _highSet.fwdIterator() ) ;
-  RooFIter paramIter( _paramSet.fwdIterator() ) ;
-
-    int i=0;
-  i=0;
-  while( paramIter.next() ) {
-    func = (RooAbsReal*)lowIter.next() ;
+  // do variations 
+  for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it)
+  {
+    auto i = it - _paramSet.begin();
+    func = static_cast<RooAbsReal *>(_lowSet.at(i));
     funcInt = func->createIntegral(analVars) ;
     cache->_lowIntList.addOwned(*funcInt) ;
 
-    func = (RooAbsReal*)highIter.next() ;
+    func = static_cast<RooAbsReal *>(_highSet.at(i));
     funcInt = func->createIntegral(analVars) ;
-    cache->_highIntList.addOwned(*funcInt) ;
-    ++i;
+    cache->_highIntList.addOwned(*funcInt);
   }
 
   // Store cache element
