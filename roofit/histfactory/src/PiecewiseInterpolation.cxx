@@ -497,10 +497,6 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
   // Select subset of allVars that are actual dependents
   analVars.add(allVars) ;
-  //  RooArgSet* normSet = normSet2 ? getObservables(normSet2) : 0 ;
-  //  RooArgSet* normSet = getObservables();
-  //  RooArgSet* normSet = 0;
-
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
@@ -515,6 +511,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
   // Make list of function projection and normalization integrals
   RooAbsReal *func ;
   RooAbsReal *funcInt;
+
   // do variations 
   for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it)
   {
@@ -620,16 +617,14 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   }
 
   // old integral, only works for linear and not positive definite
-  //RooFIter funcIntIter = cache->_funcIntList.fwdIterator();
-  //RooFIter lowIntIter = cache->_lowIntList.fwdIterator();
-  //RooFIter highIntIter = cache->_highIntList.fwdIterator();
+
   RooAbsReal *low, *high;
   Double_t value(0);
   Double_t nominal(0);
 
   // get nominal
   int i=0;
-  for (auto funcInt : static_range_cast<RooAbsReal *>(cache->_funcIntList)) {
+  for (auto funcInt : static_range_cast<RooAbsReal*>(cache->_funcIntList)) {
     value += funcInt->getVal() ;
     nominal = value;
     i++;
@@ -637,11 +632,8 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   if(i==0 || i>1) { cout << "problem, wrong number of nominal functions"<<endl; }
 
   // now get low/high variations
-  //RooFIter paramIter(_paramSet.fwdIterator());
-
   // KC: old interp code with new iterator
  
-
   i = 0;
   for (auto const *param : static_range_cast<RooAbsReal *>(_paramSet)) {
     low = static_cast<RooAbsReal *>(cache->_lowIntList.at(i));
