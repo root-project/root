@@ -40,6 +40,7 @@ if(BUILD_DOCUMENTATION)
 
         execute_process(COMMAND ${ROOT_root_CMD}-config --cxx OUTPUT_VARIABLE ROOT_CXX_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
         execute_process(COMMAND ${ROOT_root_CMD} -l -b -q -e 'printf("%s\n",gROOT->GetGitBranch());' OUTPUT_VARIABLE ROOT_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND find ../../ -type d -name dictpch -prune -o -type d -name inc OUTPUT_VARIABLE ROOT_INC_FOLDERS OUTPUT_STRIP_TRAILING_WHITESPACE)
 
         add_custom_target(Preparation
 
@@ -131,22 +132,9 @@ if(BUILD_DOCUMENTATION)
         #set(DOXYGEN_SEARCH_INCLUDES        NO)
         set(DOXYGEN_PREDEFINED             "R__CLING_PTRCHECK" "R__USE_IMT" "__attribute__(x)=" "__declspec(x)=" "__pragma(x)=")
         #"ClassDef(x,y)=" "ClassImp(x)=" "ClassImpQ(x)=" "templateClassImp(x)=" "NamespaceImp(x)=" "R__SUGGEST_ALTERNATIVE(x)="
-        set(DOXYGEN_INCLUDE_PATH           ../../core/base/inc  # needed for detecting ClassDef and not raising Warning on ::Streamer
-                                           ../../core/meta/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
-                                           ../../graf2d/graf/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
-                                           ../../hist/hist/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
-                                           ../../io/io/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
-                                           ../../tree/tree/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
-                                           ../../roofit/roofitcore/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
-                                           ../../roofit/roostats/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
-                                           ../../roofit/histfactory/inc # for classes using ClassDef but do not include Rtypes directly, derive from parent ones in this folder
-                                           ../../bindings/r/inc # needed for bindings/r includes to not raise warnings
-                                           ../../interpreter/llvm/src/tools/clang/include # needed to avoid warning of LangOptions.def not found
-                                           ../../graf2d/gpadv7/inc # need to avoid getting doxygen confused with macro call on RAttrAxis
-                                           ../../tmva/tmva/inc # same for REGISTER_METHOD on tmva
-                                           )
+        set(DOXYGEN_INCLUDE_PATH           "${ROOT_INC_FOLDERS}")
         set(DOXYGEN_STRIP_FROM_PATH        "${DOCU_LOCATION}" "../../")
-        set(DOXYGEN_STRIP_FROM_INC_PATH    "${DOXYGEN_INCLUDE_PATH}")
+        set(DOXYGEN_STRIP_FROM_INC_PATH    "${ROOT_INC_FOLDERS}")
         set(DOXYGEN_GENERATE_TAGFILE       "${DOCU_LOCATION}/html/ROOT.tag")
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO )
         set(DOXYGEN_HAVE_DOT               YES) # set to NO for getting faster results when debugging
