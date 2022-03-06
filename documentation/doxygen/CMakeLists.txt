@@ -21,8 +21,6 @@ if(BUILD_DOCUMENTATION)
     set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
     endif()
     
-    root -l -b -q -e 'printf("%s\n",gROOT->GetGitBranch());'
-
     set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
     find_package(ROOT 6.25 CONFIG REQUIRED)
     set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
