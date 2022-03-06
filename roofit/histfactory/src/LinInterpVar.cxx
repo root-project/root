@@ -90,10 +90,10 @@ LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-//LinInterpVar::~LinInterpVar()
-//{
-//  
-//}
+LinInterpVar::~LinInterpVar()
+{
+  
+}
 
 
 
