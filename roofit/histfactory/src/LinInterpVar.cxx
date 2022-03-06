@@ -88,17 +88,6 @@ LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-LinInterpVar::~LinInterpVar()
-{
-  
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
 Double_t LinInterpVar::evaluate() const
