@@ -624,8 +624,8 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   //RooFIter lowIntIter = cache->_lowIntList.fwdIterator();
   //RooFIter highIntIter = cache->_highIntList.fwdIterator();
   RooAbsReal *low, *high;
-  Double_t value ;
-  Double_t nominal;
+  Double_t value(0);
+  Double_t nominal(0);
 
   // get nominal
   int i=0;
