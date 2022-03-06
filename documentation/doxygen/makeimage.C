@@ -65,7 +65,7 @@ void makeimage(const char *MacroName, const char *ImageName, const char *OutDir,
    TCanvas* canvas = 0;
    int ImageNum = 0;
 
-   FILE *s = fopen(TString::Format("%s/%s%s%s",AuxDir,"ImagesSizes",suffix,".dat"), "w");
+   FILE *s = fopen(TString::Format("%s/%s%s%s",AuxDir,"ImagesSizes",suffix.Data(),".dat"), "w");
 
    int cw;
    while ((canvas = (TCanvas*) iCanvas())) {
@@ -79,7 +79,7 @@ void makeimage(const char *MacroName, const char *ImageName, const char *OutDir,
 
    fclose(s);
 
-   FILE *f = fopen(TString::Format("%s/%s%s%s",AuxDir,"NumberOfImages",suffix,".dat"), "w");
+   FILE *f = fopen(TString::Format("%s/%s%s%s",AuxDir,"NumberOfImages",suffix.Data(),".dat"), "w");
    fprintf(f,"%d\n",ImageNum);
    fclose(f);
 }
