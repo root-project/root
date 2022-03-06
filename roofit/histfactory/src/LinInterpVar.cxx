@@ -53,7 +53,7 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
   _nominal(nominal), _low(low), _high(high)
 {
 
-  for (auto const *param : *paramList) {
+  for (auto *param : *paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "LinInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
              << " is not of type RooAbsReal" << endl ;
