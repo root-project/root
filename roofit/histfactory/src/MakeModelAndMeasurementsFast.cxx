@@ -374,12 +374,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   }
 
   // Loop over all POIs and print their fitted values
-  RooRealVar* poi = NULL; // (RooRealVar*) POIs->first();
-  TIter params_itr = POIs->createIterator();
-  TObject* poi_obj=NULL;
-  while( (poi_obj=params_itr.Next()) ) {
-    //poi = (RooRealVar*) poi_obj;
-    poi = dynamic_cast<RooRealVar*>(poi_obj);
+  for (auto const *poi : static_range_cast<RooRealVar *>(*POIs)) {
     cxcoutIHF << "printing results for " << poi->GetName()
          << " at " << poi->getVal()<< " high "
          << poi->getErrorLo() << " low "
@@ -388,7 +383,7 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
 
   // But we only make detailed plots and tables
   // for the 'first' POI
-  poi = dynamic_cast<RooRealVar*>(POIs->first());
+  RooRealVar* poi = static_cast<RooRealVar *>(POIs->first());
 
   // Print the MINOS errors to the TableFile
   fprintf(tableFile, " %.4f / %.4f  ", poi->getErrorLo(), poi->getErrorHi());
