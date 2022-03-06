@@ -990,9 +990,9 @@ namespace HistFactory{
     //
     // assuming there is only on poi
     //
-    RooRealVar* poi = 0;
+    RooRealVar* poi = 0; 
     // for results tables
-   for ( poi : static_range_cast<RooRealVar *>(*POIs)) {
+   for ( *poi : static_range_cast<RooRealVar *>(*POIs)) {
      cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
    }
 
