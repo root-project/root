@@ -628,10 +628,11 @@ Double_t PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSe
   Double_t nominal(0);
 
   // get nominal
-  //int i=0;
-  for (auto funcInt : static_range_cast<RooAbsReal *>(_funcIntList)) {
+  int i=0;
+  for (auto funcInt : static_range_cast<RooAbsReal *>(cache->_funcIntList)) {
     value += funcInt->getVal() ;
     nominal = value;
+    i++;
   }
   if(i==0 || i>1) { cout << "problem, wrong number of nominal functions"<<endl; }
 
