@@ -1120,10 +1120,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
   }
 
   void HistoToWorkspaceFactoryFast::PrintCovarianceMatrix(RooFitResult* result, RooArgSet* params, string filename){
-    // Change-> Now a static utility
 
     FILE* covFile = fopen ((filename).c_str(),"w");
-
     fprintf(covFile," ") ;
     for (auto const *myargi : static_range_cast<RooRealVar *>(*params)) {
       if(myargi->isConstant()) continue;

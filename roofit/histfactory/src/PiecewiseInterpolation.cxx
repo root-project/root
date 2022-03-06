@@ -87,7 +87,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
     RooErrorHandler::softAbort() ;
   }
 
-  for (auto *comp : static_range_cast<RooAbsArg *>(lowSet)) {
+  for (auto *comp : lowSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " in first list is not of type RooAbsReal" << endl ;
@@ -100,7 +100,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   }
 
 
-  for (auto *comp : static_range_cast<RooAbsArg *>(highSet)) {
+  for (auto *comp : highSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " in first list is not of type RooAbsReal" << endl ;
@@ -113,7 +113,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
   }
 
 
-  for (auto *comp : static_range_cast<RooAbsArg *>(paramSet)) {
+  for (auto *comp : paramSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " in first list is not of type RooAbsReal" << endl ;
@@ -487,10 +487,11 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
 
   // KC: check if interCode=0 for all
-  RooFIter paramIterExtra(_paramSet.fwdIterator()) ;
-  int i=0;
-  while( paramIterExtra.next() ){ 
-    if(!_interpCode.empty() && _interpCode[i]!=0){
+  //RooFIter paramIterExtra(_paramSet) ;
+  //int i=0;
+  //while( paramIterExtra.next() )
+  for (auto it = _paramSet.begin(); it != _paramSet.end(); it++) { 
+    if (!_interpCode.empty() && _interpCode[it - _paramSet.begin()] != 0) {
       // can't factorize integral
       cout <<"can't factorize integral"<<endl;
       return 0;

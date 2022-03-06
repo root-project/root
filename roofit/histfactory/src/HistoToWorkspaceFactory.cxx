@@ -662,10 +662,8 @@ namespace HistFactory{
   }
 
   void HistoToWorkspaceFactory::PrintCovarianceMatrix(RooFitResult* result, RooArgSet* params, string filename){
-    //    FILE * pFile;
+   
     pFile = fopen ((filename).c_str(),"w");
-
-
     fprintf(pFile," ") ; 
     for (auto const *myargi : static_range_cast<RooRealVar *>(*params)) {
       if(myargi->isConstant()) continue;
@@ -994,15 +992,14 @@ namespace HistFactory{
     //
     RooRealVar* poi = 0; // (RooRealVar*) POIs->first();
     // for results tables
-    for (auto const *params_obj : static_range_cast<RooRealVar *>(*POIs)) {
-      poi = (RooRealVar*) params_obj;
-      cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
-    }
+   for (auto const *poi : static_range_cast<RooRealVar *>(*POIs)) {
+     cout << "printing results for " << poi->GetName() << " at " << poi->getVal()<< " high " << poi->getErrorLo() << " low " << poi->getErrorHi()<<endl;
+   }
 
-    if (!poi) {
-       cerr << "found no POI" << endl;
-       return;
-    }
+   if (!poi) {
+     cerr << "found no POI" << endl;
+     return;
+   }
     fprintf(pFile, " %.4f / %.4f  ", poi->getErrorLo(), poi->getErrorHi());
 
     RooAbsReal* nll = model->createNLL(*simData);
