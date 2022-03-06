@@ -39,7 +39,6 @@ using namespace HistFactory;
 
 LinInterpVar::LinInterpVar()
 {
-  _paramIter = _paramList.createIterator() ;
   _nominal = 0 ;
 }
 
@@ -53,12 +52,8 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(nominal), _low(low), _high(high)
 {
-  _paramIter = _paramList.createIterator() ;
 
-
-  TIterator* paramIter = paramList.createIterator() ;
-  RooAbsArg* param ;
-  while((param = (RooAbsArg*)paramIter->Next())) {
+  for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "LinInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
              << " is not of type RooAbsReal" << endl ;
@@ -66,8 +61,6 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
     }
     _paramList.add(*param) ;
   }
-  delete paramIter ;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +71,7 @@ LinInterpVar::LinInterpVar(const char* name, const char* title) :
   _paramList("paramList","List of coefficients",this),
   _nominal(0)
 {
-  _paramIter = _paramList.createIterator() ;
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,20 +83,8 @@ LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
 
 {
   // Copy constructor
-  _paramIter = _paramList.createIterator() ;
 
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-LinInterpVar::~LinInterpVar()
-{
-  delete _paramIter ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -112,15 +93,9 @@ LinInterpVar::~LinInterpVar()
 Double_t LinInterpVar::evaluate() const
 {
   Double_t sum(_nominal) ;
-  _paramIter->Reset() ;
-
-  RooAbsReal* param ;
-  //const RooArgSet* nset = _paramList.nset() ;
+  
   int i=0;
-
-  while((param=(RooAbsReal*)_paramIter->Next())) {
-    //    param->Print("v");
-
+  for(auto const* param: static_range_cast<RooAbsReal *>(_paramList)) {
     if(param->getVal()>0)
       sum +=  param->getVal()*(_high.at(i) - _nominal );
     else
