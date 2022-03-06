@@ -83,7 +83,6 @@ LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
 
 {
   // Copy constructor
-  _paramIter = _paramList.createIterator() ;
 
 }
 
@@ -93,7 +92,7 @@ LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
 
 LinInterpVar::~LinInterpVar()
 {
-  //delete _paramIter ;
+  
 }
 
 
