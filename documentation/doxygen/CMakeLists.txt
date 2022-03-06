@@ -20,6 +20,8 @@ if(BUILD_DOCUMENTATION)
     else()
     set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
     endif()
+    
+    root -l -b -q -e 'printf("%s\n",gROOT->GetGitBranch());'
 
     set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
     find_package(ROOT 6.25 CONFIG REQUIRED)
@@ -37,6 +39,7 @@ if(BUILD_DOCUMENTATION)
         # TODO: should we remove output directory beforehand to ensure a clean rebuild?
 
         execute_process(COMMAND ${ROOT_root_CMD}-config --cxx OUTPUT_VARIABLE ROOT_CXX_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
+        execute_process(COMMAND ${ROOT_root_CMD} -l -b -q -e 'printf("%s\n",gROOT->GetGitBranch());' OUTPUT_VARIABLE ROOT_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
         add_custom_target(Preparation
 
@@ -56,6 +59,7 @@ if(BUILD_DOCUMENTATION)
 
         set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
         set(DOXYGEN_PROJECT_NAME           "ROOT")
+        set(DOXYGEN_PROJECT_NUMBER         "${ROOT_GIT_VERSION}")
         set(DOXYGEN_PROJECT_BRIEF          "Reference Guide")
         set(DOXYGEN_PROJECT_LOGO           "rootlogo.gif")
         set(DOXYGEN_ALWAYS_DETAILED_SEC    YES)
