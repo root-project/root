@@ -810,7 +810,7 @@ void collection_proxies(bool proj=true)
    event->Create();
 
    // divert selection to map proxy builder products with collection
-   auto deviator = new FWSelectionDeviator();
+   auto deviator = std::shared_ptr<FWSelectionDeviator>(new FWSelectionDeviator());
    eveMng->GetSelection()->SetDeviator(deviator);
    eveMng->GetHighlight()->SetDeviator(deviator);
 

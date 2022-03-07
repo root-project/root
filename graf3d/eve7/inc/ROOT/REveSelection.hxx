@@ -95,7 +95,7 @@ protected:
 
    SelMap_t         fMap;              ///<!
    
-   Deviator*        fDeviator{nullptr};///<!
+   std::shared_ptr<Deviator>        fDeviator{nullptr};///<!
 
    Record* find_record(REveElement *el)
    {
@@ -129,8 +129,8 @@ public:
    Bool_t GetIsMaster()   const { return fIsMaster; }
    void   SetIsMaster(Bool_t m) { fIsMaster = m; }
 
-   Deviator* GetDeviator() const { return fDeviator; }
-   void   SetDeviator(Deviator* d) { fDeviator = d; }
+   std::shared_ptr<Deviator> GetDeviator() const { return fDeviator; }
+   void   SetDeviator(std::shared_ptr<Deviator> d) { fDeviator = d; }
 
    bool   IsEmpty()  const { return   fMap.empty(); }
    bool   NotEmpty() const { return ! fMap.empty(); }
