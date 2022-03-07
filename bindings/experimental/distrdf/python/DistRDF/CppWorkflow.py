@@ -13,7 +13,7 @@ import os
 from collections import namedtuple
 
 import ROOT
-RunGraphs = ROOT.RDF.RunGraphs
+
 
 class CppWorkflow(object):
     '''
@@ -471,6 +471,7 @@ class CppWorkflow(object):
 
         if v_results:
             # We trigger the event loop here, so make sure we release the GIL
+            RunGraphs = ROOT.RDF.RunGraphs
             old_rg = RunGraphs.__release_gil__
             RunGraphs.__release_gil__ = True
             RunGraphs(v_results)
