@@ -95,7 +95,7 @@ protected:
 
    SelMap_t         fMap;              ///<!
    
-   std::shared_ptr<Deviator>        fDeviator{nullptr};///<!
+   std::shared_ptr<Deviator>        fDeviator;///<!
 
    Record* find_record(REveElement *el)
    {
