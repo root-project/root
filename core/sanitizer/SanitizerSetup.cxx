@@ -36,7 +36,7 @@ const char* __asan_default_options() {
 /// These can be overridden / augmented by the LSAN_OPTIONS environment variable.
 /// Using LSAN_OPTIONS=help=1 and starting an instrumented ROOT exectuable, available options will be printed.
 const char* __lsan_default_options() {
-   return "exitcode=0:max_leaks=10:print_suppressions=1";
+   return "max_leaks=10:print_suppressions=1";
 }
 
 /// Default suppressions for leak sanitizer in ROOT.
