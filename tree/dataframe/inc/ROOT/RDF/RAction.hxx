@@ -76,10 +76,6 @@ public:
 
    RAction(const RAction &) = delete;
    RAction &operator=(const RAction &) = delete;
-   ~RAction()
-   {
-      fLoopManager->Deregister(this);
-   }
 
    /**
       Retrieve a wrapper to the result of the action that knows how to merge
