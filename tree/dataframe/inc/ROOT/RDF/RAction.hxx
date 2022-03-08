@@ -78,9 +78,6 @@ public:
    RAction &operator=(const RAction &) = delete;
    ~RAction()
    {
-      // must Deregister objects from the RLoopManager here, before the fPrevNode data member is destroyed:
-      // otherwise if fPrevNode is the RLoopManager, it will be destroyed before the calls to Deregister happen.
-      RActionBase::GetColRegister().Clear(); // triggers RDefine deregistration
       fLoopManager->Deregister(this);
    }
 

@@ -94,9 +94,6 @@ public:
    RVariedAction &operator=(const RVariedAction &) = delete;
    ~RVariedAction()
    {
-      // must Deregister objects from the RLoopManager here, before the fPrevDataFrame data member is destroyed:
-      // otherwise if fPrevDataFrame is the RLoopManager, it will be destroyed before the calls to Deregister happen.
-      RActionBase::GetColRegister().Clear(); // triggers RDefine deregistration
       fLoopManager->Deregister(this);
    }
 
