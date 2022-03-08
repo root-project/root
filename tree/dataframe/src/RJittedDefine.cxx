@@ -15,10 +15,7 @@
 
 using namespace ROOT::Detail::RDF;
 
-RJittedDefine::~RJittedDefine()
-{
-   fLoopManager->Deregister(this);
-}
+RJittedDefine::~RJittedDefine() {}
 
 void RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
 {
