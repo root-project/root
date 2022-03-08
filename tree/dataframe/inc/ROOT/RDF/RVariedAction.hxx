@@ -92,10 +92,6 @@ public:
 
    RVariedAction(const RVariedAction &) = delete;
    RVariedAction &operator=(const RVariedAction &) = delete;
-   ~RVariedAction()
-   {
-      fLoopManager->Deregister(this);
-   }
 
    void Initialize() final
    {
