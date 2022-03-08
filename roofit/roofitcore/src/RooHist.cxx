@@ -87,6 +87,11 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
        Bool_t correctForBinWidth, Double_t scaleFactor) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
+  if(etype == RooAbsData::Poisson && correctForBinWidth == false) {
+    throw std::invalid_argument(
+            "To ensure consistent behavior prior releases, it's not possible to create a RooHist from a TH1 with no bin width correction when using Poisson errors.");
+  }
+
   initialize();
   // copy the input histogram's name and title
   SetName(data.GetName());
@@ -97,10 +102,6 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
     if(axis->GetNbins() > 0) _nominalBinWidth= (axis->GetXmax() - axis->GetXmin())/axis->GetNbins();
   }
   setYAxisLabel(data.GetYaxis()->GetTitle());
-
-  if (correctForBinWidth && etype == RooAbsData::Poisson) {
-    coutW(Plotting) << "Cannot apply a bin width correction and use Poisson errors. Not correcting for bin width." << std::endl;
-  }
 
   // initialize our contents from the input histogram's contents
   Int_t nbin= data.GetNbinsX();
@@ -619,16 +620,6 @@ void RooHist::addEfficiencyBinWithError(Axis_t binCenter, Double_t n1, Double_t 
   updateYAxisLimits(scale*yp);
   updateYAxisLimits(scale*ym);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooHist::~RooHist()
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
