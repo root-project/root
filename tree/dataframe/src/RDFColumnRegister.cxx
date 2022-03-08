@@ -18,6 +18,18 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
+RColumnRegister::~RColumnRegister()
+{
+   // Explicitly empty the containers to decrement the reference count of the
+   // various shared_ptr's, which might cause destructors to be called. For
+   // this, we need the RLoopManager to stay around and we do not want to rely
+   // on the order during member destruction.
+   fAliases.reset();
+   fDefines.reset();
+   fVariations.reset();
+   fColumnNames.reset();
+}
+
 bool RColumnRegister::HasName(std::string_view name) const
 {
    const auto ccolnamesEnd = fColumnNames->end();
@@ -130,14 +142,6 @@ std::string RColumnRegister::ResolveAlias(std::string_view alias) const
       return it->second;
 
    return aliasStr; // not an alias, i.e. already resolved
-}
-
-void RColumnRegister::Clear()
-{
-   fAliases.reset();
-   fDefines.reset();
-   fVariations.reset();
-   fColumnNames.reset();
 }
 
 } // namespace RDF
