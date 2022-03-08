@@ -35,7 +35,6 @@ public:
   RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1=1.0, Double_t wgt2=1.0, 
 	  RooAbsData::ErrorType etype=RooAbsData::Poisson, Double_t xErrorFrac=1.0) ;
   RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac=1.0, Double_t scaleFactor=1.0, const RooArgSet *normVars = 0, const RooFitResult* fr = 0);
-  virtual ~RooHist();
 
   // add a datapoint for a bin with n entries, using a Poisson error
   void addBin(Axis_t binCenter, Double_t n, Double_t binWidth= 0, Double_t xErrorFrac=1.0, Double_t scaleFactor=1.0);
