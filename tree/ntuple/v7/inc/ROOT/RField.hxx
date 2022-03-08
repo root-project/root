@@ -524,7 +524,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */,
          Detail::RColumnElement<ClusterSize_t>(static_cast<ClusterSize_t*>(where)), this, where);
    }
-   size_t GetValueSize() const final { return 0; }
+   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
    void CommitCluster() final;
 };
 
