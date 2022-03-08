@@ -1080,7 +1080,6 @@ RooPlot *RooDataHist::plotOn(RooPlot *frame, PlotOpt o) const
   }
 
   o.bins = &dataVar->getBinning() ;
-  o.correctForBinWidth = kFALSE ;
   return RooAbsData::plotOn(frame,o) ;
 }
 
