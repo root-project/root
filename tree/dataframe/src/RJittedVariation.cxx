@@ -15,10 +15,7 @@
 
 using namespace ROOT::Internal::RDF;
 
-RJittedVariation::~RJittedVariation()
-{
-   fLoopManager->Deregister(this);
-}
+RJittedVariation::~RJittedVariation() {}
 
 void RJittedVariation::InitSlot(TTreeReader *r, unsigned int slot)
 {
