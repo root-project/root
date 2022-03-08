@@ -12,7 +12,6 @@
 
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include "ConstantTermsOptimizer.h"
-#include "RooAbsPdf.h"
 #include "RooAbsData.h"
 
 // for dynamic casts in init_clones:

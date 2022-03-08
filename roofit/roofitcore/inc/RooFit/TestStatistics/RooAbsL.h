@@ -15,6 +15,7 @@
 
 #include "RooArgSet.h"
 #include "RooAbsArg.h" // enum ConstOpCode
+#include "RooAbsPdf.h"
 
 #include "Math/Util.h" // KahanSum
 
@@ -106,6 +107,8 @@ public:
 
    virtual std::string GetName() const;
    virtual std::string GetTitle() const;
+   virtual std::string GetInfo() const { return GetClassName() + "::" + pdf_->GetName(); }
+   virtual std::string GetClassName() const = 0;
 
    // necessary in RooMinimizer (via LikelihoodWrapper)
    inline virtual double defaultErrorLevel() const { return 0.5; }
