@@ -121,7 +121,7 @@ else()
 endif()
 
 #---Try to download a file to check internet connection-----------------------------------------
-message(STATUS "Checking internet connectivity...")
+message(STATUS "Checking internet connectivity")
 file(DOWNLOAD https://root.cern/files/cmake_connectivity_test.txt ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt
   TIMEOUT 10 STATUS DOWNLOAD_STATUS
 )
@@ -130,13 +130,13 @@ list(GET DOWNLOAD_STATUS 0 STATUS_CODE)
 # Check if download was successful.
 if(${STATUS_CODE} EQUAL 0)
   # Succcess
-  message(STATUS "Yes")
+  message(STATUS "Checking internet connectivity - found")
   # Now let's delete the file
   file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/cmake_connectivity_test.txt)
   set(NO_CONNECTION FALSE)
 else()
   # Error
-  message(STATUS "No: will not automatically download external dependencies")
+  message(STATUS "Checking internet connectivity - failed: will not automatically download external dependencies")
   set(NO_CONNECTION TRUE)
 endif()
 
