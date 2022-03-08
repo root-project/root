@@ -32,8 +32,6 @@
 #include "snprintf.h"
 #include "strlcpy.h"
 
-#include "rootcoreteam.h"
-
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
 #endif
@@ -766,8 +764,6 @@ int DrawCredits(bool draw, bool extended)
    int y = lineSpacing;
    y = DrawCreditItem("Conception: ", gConception, y, draw);
    y += 2 * lineSpacing;
-
-   y = DrawCreditItem("Core Engineering: ", ROOT::ROOTX::gROOTCoreTeam, y, draw);
 
    if (extended && gContributors) {
       y += 2 * lineSpacing;

@@ -32,8 +32,6 @@
 #include "RConfigure.h"
 #include "RVersion.h"
 
-#include "rootcoreteam.h"
-
 namespace {
 #ifdef MAC_OS_X_VERSION_10_12
 const NSCompositingOperation kCompositeSourceOver = NSCompositingOperationSourceOver;
@@ -867,7 +865,7 @@ void SetSplashscreenPosition()
 //Aux. "non-GUI" functions.
 
 //
-//Caption like "Conception"/"Core Developers"/"Contributors" - white and bold.
+// Caption like "Conception"/"Contributors" - white and bold.
 //
 
 //_________________________________________________________________
@@ -996,27 +994,6 @@ bool AddDeveloperInfo(NSMutableAttributedString *textToScroll)
    if (!AddSectionBody(textToScroll, gConception))
       //TODO: diagnostic.
       return false;
-
-   if (!AddSectionTitle(textToScroll, @"Core Engineering:  "))
-      //TODO: diagnostic.
-      return false;
-
-   std::size_t nLines = sizeof ROOT::ROOTX::gROOTCoreTeam / sizeof ROOT::ROOTX::gROOTCoreTeam[0];
-   if (nLines > 1) {
-      nLines -= 1;//There is a "terminating null" in this array, get rid of it.
-
-      NSScopeGuard<NSMutableString> coreTeam([[NSMutableString alloc] init]);
-
-      for (std::size_t i = 0; i < nLines; ++i)
-         [coreTeam.Get() appendFormat : (i ? @", %s" : @"%s"), ROOT::ROOTX::gROOTCoreTeam[i]];
-      [coreTeam.Get() appendFormat : @".\n\n"];
-
-      if (!AddSectionBody(textToScroll, coreTeam.Get()))
-         return false;
-   } else {
-      //TODO: diagnostic.
-      return false;
-   }
 
    return true;
 }
