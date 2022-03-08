@@ -55,7 +55,6 @@ class RColumnRegister {
    void AddName(std::string_view name);
 
 private:
-   // N.B. must come before fDefines, to be destructed after them
    std::shared_ptr<RDFDetail::RLoopManager> fLoopManager;
 
    /// Immutable map of Defines, can be shared among several nodes.
@@ -81,6 +80,7 @@ public:
         fVariations(std::make_shared<VariationsMap_t>()), fColumnNames(std::make_shared<ColumnNames_t>())
    {
    }
+   ~RColumnRegister();
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Returns the list of the names of the defined columns (Defines + Aliases).
@@ -141,11 +141,6 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the RVariation object that handles the specified variation of the specified column.
    RVariationBase &FindVariation(const std::string &colName, const std::string &variationName) const;
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Empty the contents of this ledger.
-   /// The only allowed operation on a RColumnRegister object after a call to Clear is its destruction.
-   void Clear();
 };
 
 } // Namespace RDF
