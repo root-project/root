@@ -1,0 +1,235 @@
+
+Processing /Users/pcanal/root_working/roottest/root/tree/fastcloning/execCheckClusterRange.C...
+Cluster # 1 starts at    0 and ends at   49
+Cluster # 2 starts at   50 and ends at   99
+Cluster # 3 starts at  100 and ends at  149
+Cluster # 4 starts at  150 and ends at  199
+Cluster # 5 starts at  200 and ends at  249
+Cluster # 6 starts at  250 and ends at  299
+Cluster # 7 starts at  300 and ends at  329
+Cluster # 8 starts at  330 and ends at  359
+Cluster # 9 starts at  360 and ends at  389
+Cluster #10 starts at  390 and ends at  419
+Cluster #11 starts at  420 and ends at  449
+Cluster #12 starts at  450 and ends at  479
+Cluster #13 starts at  480 and ends at  509
+Cluster #14 starts at  510 and ends at  539
+Cluster #15 starts at  540 and ends at  569
+Cluster #16 starts at  570 and ends at  599
+******************************************************************************
+*Tree    :t1        :                                                        *
+*Entries :      600 : Total =           12810 bytes  File  Size =      12810 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
+0                0                299                    50          6
+1                300              599                    30         10
+Total number of clusters: 16 
+Cluster # 1 starts at    0 and ends at   49
+Cluster # 2 starts at   50 and ends at   99
+Cluster # 3 starts at  100 and ends at  149
+Cluster # 4 starts at  150 and ends at  199
+Cluster # 5 starts at  200 and ends at  249
+Cluster # 6 starts at  250 and ends at  299
+Cluster # 7 starts at  300 and ends at  329
+Cluster # 8 starts at  330 and ends at  359
+Cluster # 9 starts at  360 and ends at  389
+Cluster #10 starts at  390 and ends at  419
+Cluster #11 starts at  420 and ends at  449
+Cluster #12 starts at  450 and ends at  479
+Cluster #13 starts at  480 and ends at  509
+Cluster #14 starts at  510 and ends at  539
+Cluster #15 starts at  540 and ends at  569
+Cluster #16 starts at  570 and ends at  599
+Cluster #17 starts at  600 and ends at  649
+Cluster #18 starts at  650 and ends at  699
+Cluster #19 starts at  700 and ends at  749
+Cluster #20 starts at  750 and ends at  799
+Cluster #21 starts at  800 and ends at  849
+Cluster #22 starts at  850 and ends at  899
+Cluster #23 starts at  900 and ends at  949
+Cluster #24 starts at  950 and ends at  999
+Cluster #25 starts at 1000 and ends at 1049
+Cluster #26 starts at 1050 and ends at 1099
+Cluster #27 starts at 1100 and ends at 1149
+Cluster #28 starts at 1150 and ends at 1199
+Cluster #29 starts at 1200 and ends at 1229
+Cluster #30 starts at 1230 and ends at 1259
+Cluster #31 starts at 1260 and ends at 1289
+Cluster #32 starts at 1290 and ends at 1319
+Cluster #33 starts at 1320 and ends at 1349
+Cluster #34 starts at 1350 and ends at 1379
+Cluster #35 starts at 1380 and ends at 1409
+Cluster #36 starts at 1410 and ends at 1439
+Cluster #37 starts at 1440 and ends at 1469
+Cluster #38 starts at 1470 and ends at 1499
+******************************************************************************
+*Tree    :t1        :                                                        *
+*Entries :     1500 : Total =           29664 bytes  File  Size =      16413 *
+*        :          : Tree compression factor =   1.66                       *
+******************************************************************************
+Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
+0                0                299                    50          6
+1                300              599                    30         10
+2                600              899                    50          6
+3                900              1199                   50          6
+4                1200             1499                   30         10
+Total number of clusters: 38 
+******************************************************************************
+*Tree    :t2        :                                                        *
+*Entries :      300 : Total =            2732 bytes  File  Size =       2732 *
+*        :          : Tree compression factor =   1.00                       *
+******************************************************************************
+Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
+0                0                299                    30         10
+Total number of clusters: 10 
+******************************************************************************
+*Tree    :t1        :                                                        *
+*Entries :     1800 : Total =           29346 bytes  File  Size =      18283 *
+*        :          : Tree compression factor =   1.59                       *
+******************************************************************************
+*Br    0 :v1        : v1/I                                                   *
+*Entries :     1800 : Total  Size=      11865 bytes  File Size  =      10416 *
+*Baskets :       48 : Basket Size=        512 bytes  Compression=   1.00     *
+*............................................................................*
+Cluster # 1 starts at    0 and ends at   49
+Cluster # 2 starts at   50 and ends at   99
+Cluster # 3 starts at  100 and ends at  149
+Cluster # 4 starts at  150 and ends at  199
+Cluster # 5 starts at  200 and ends at  249
+Cluster # 6 starts at  250 and ends at  299
+Cluster # 7 starts at  300 and ends at  329
+Cluster # 8 starts at  330 and ends at  359
+Cluster # 9 starts at  360 and ends at  389
+Cluster #10 starts at  390 and ends at  419
+Cluster #11 starts at  420 and ends at  449
+Cluster #12 starts at  450 and ends at  479
+Cluster #13 starts at  480 and ends at  509
+Cluster #14 starts at  510 and ends at  539
+Cluster #15 starts at  540 and ends at  569
+Cluster #16 starts at  570 and ends at  599
+Cluster #17 starts at  600 and ends at  649
+Cluster #18 starts at  650 and ends at  699
+Cluster #19 starts at  700 and ends at  749
+Cluster #20 starts at  750 and ends at  799
+Cluster #21 starts at  800 and ends at  849
+Cluster #22 starts at  850 and ends at  899
+Cluster #23 starts at  900 and ends at  949
+Cluster #24 starts at  950 and ends at  999
+Cluster #25 starts at 1000 and ends at 1049
+Cluster #26 starts at 1050 and ends at 1099
+Cluster #27 starts at 1100 and ends at 1149
+Cluster #28 starts at 1150 and ends at 1199
+Cluster #29 starts at 1200 and ends at 1229
+Cluster #30 starts at 1230 and ends at 1259
+Cluster #31 starts at 1260 and ends at 1289
+Cluster #32 starts at 1290 and ends at 1319
+Cluster #33 starts at 1320 and ends at 1349
+Cluster #34 starts at 1350 and ends at 1379
+Cluster #35 starts at 1380 and ends at 1409
+Cluster #36 starts at 1410 and ends at 1439
+Cluster #37 starts at 1440 and ends at 1469
+Cluster #38 starts at 1470 and ends at 1499
+Cluster #39 starts at 1500 and ends at 1529
+Cluster #40 starts at 1530 and ends at 1559
+Cluster #41 starts at 1560 and ends at 1589
+Cluster #42 starts at 1590 and ends at 1619
+Cluster #43 starts at 1620 and ends at 1649
+Cluster #44 starts at 1650 and ends at 1679
+Cluster #45 starts at 1680 and ends at 1709
+Cluster #46 starts at 1710 and ends at 1739
+Cluster #47 starts at 1740 and ends at 1769
+Cluster #48 starts at 1770 and ends at 1799
+******************************************************************************
+*Tree    :t1        :                                                        *
+*Entries :     1800 : Total =           29346 bytes  File  Size =      17990 *
+*        :          : Tree compression factor =   1.59                       *
+******************************************************************************
+Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
+0                0                299                    50          6
+1                300              599                    30         10
+2                600              899                    50          6
+3                900              1199                   50          6
+4                1200             1799                   30         20
+Total number of clusters: 48 
+Cluster # 1 starts at    0 and ends at   49
+Cluster # 2 starts at   50 and ends at   99
+Cluster # 3 starts at  100 and ends at  149
+Cluster # 4 starts at  150 and ends at  199
+Cluster # 5 starts at  200 and ends at  249
+Cluster # 6 starts at  250 and ends at  299
+Cluster # 7 starts at  300 and ends at  329
+Cluster # 8 starts at  330 and ends at  359
+Cluster # 9 starts at  360 and ends at  389
+Cluster #10 starts at  390 and ends at  419
+Cluster #11 starts at  420 and ends at  449
+Cluster #12 starts at  450 and ends at  479
+Cluster #13 starts at  480 and ends at  509
+Cluster #14 starts at  510 and ends at  539
+Cluster #15 starts at  540 and ends at  569
+Cluster #16 starts at  570 and ends at  599
+Cluster #17 starts at  600 and ends at  649
+Cluster #18 starts at  650 and ends at  699
+Cluster #19 starts at  700 and ends at  749
+Cluster #20 starts at  750 and ends at  799
+Cluster #21 starts at  800 and ends at  849
+Cluster #22 starts at  850 and ends at  899
+Cluster #23 starts at  900 and ends at  949
+Cluster #24 starts at  950 and ends at  999
+Cluster #25 starts at 1000 and ends at 1049
+Cluster #26 starts at 1050 and ends at 1099
+Cluster #27 starts at 1100 and ends at 1149
+Cluster #28 starts at 1150 and ends at 1199
+Cluster #29 starts at 1200 and ends at 1229
+Cluster #30 starts at 1230 and ends at 1259
+Cluster #31 starts at 1260 and ends at 1289
+Cluster #32 starts at 1290 and ends at 1319
+Cluster #33 starts at 1320 and ends at 1349
+Cluster #34 starts at 1350 and ends at 1379
+Cluster #35 starts at 1380 and ends at 1409
+Cluster #36 starts at 1410 and ends at 1439
+Cluster #37 starts at 1440 and ends at 1469
+Cluster #38 starts at 1470 and ends at 1499
+Cluster #39 starts at 1500 and ends at 1529
+Cluster #40 starts at 1530 and ends at 1559
+Cluster #41 starts at 1560 and ends at 1589
+Cluster #42 starts at 1590 and ends at 1619
+Cluster #43 starts at 1620 and ends at 1649
+Cluster #44 starts at 1650 and ends at 1679
+Cluster #45 starts at 1680 and ends at 1709
+Cluster #46 starts at 1710 and ends at 1739
+Cluster #47 starts at 1740 and ends at 1769
+Cluster #48 starts at 1770 and ends at 1799
+Cluster #49 starts at 1800 and ends at 1829
+Cluster #50 starts at 1830 and ends at 1859
+Cluster #51 starts at 1860 and ends at 1889
+Cluster #52 starts at 1890 and ends at 1919
+Cluster #53 starts at 1920 and ends at 1949
+Cluster #54 starts at 1950 and ends at 1979
+Cluster #55 starts at 1980 and ends at 2009
+Cluster #56 starts at 2010 and ends at 2039
+Cluster #57 starts at 2040 and ends at 2069
+Cluster #58 starts at 2070 and ends at 2099
+Cluster #59 starts at 2100 and ends at 2129
+Cluster #60 starts at 2130 and ends at 2159
+Cluster #61 starts at 2160 and ends at 2189
+Cluster #62 starts at 2190 and ends at 2219
+Cluster #63 starts at 2220 and ends at 2249
+Cluster #64 starts at 2250 and ends at 2279
+Cluster #65 starts at 2280 and ends at 2309
+Cluster #66 starts at 2310 and ends at 2339
+Cluster #67 starts at 2340 and ends at 2369
+Cluster #68 starts at 2370 and ends at 2399
+******************************************************************************
+*Tree    :t1        :                                                        *
+*Entries :     2400 : Total =           33566 bytes  File  Size =      20851 *
+*        :          : Tree compression factor =   1.56                       *
+******************************************************************************
+Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
+0                0                299                    50          6
+1                300              599                    30         10
+2                600              899                    50          6
+3                900              1199                   50          6
+4                1200             2399                   30         40
+Total number of clusters: 68 
+(int) 0

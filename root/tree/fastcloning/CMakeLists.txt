@@ -10,6 +10,10 @@ if(${compression_default} STREQUAL "zlib")
          ROOTTEST_ADD_TEST(execCheckClusterRange
                   MACRO execCheckClusterRange.C
                   OUTREF references/execCheckClusterRange_builtinzlib.ref)
+      elseif(MSVC)
+         ROOTTEST_ADD_TEST(execCheckClusterRange
+                  MACRO execCheckClusterRange.C
+                  OUTREF references/execCheckClusterRange_zlib_win64.ref)
       else()
          ROOTTEST_ADD_TEST(execCheckClusterRange
                   MACRO execCheckClusterRange.C
