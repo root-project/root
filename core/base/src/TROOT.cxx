@@ -2774,6 +2774,12 @@ void TROOT::SetWebDisplay(const char *webdisplay)
       fIsWebDisplay = kFALSE;
       fIsWebDisplayBatch = kFALSE;
       fWebDisplay = "";
+   } else if (!strncmp(wd, "server", 6)) {
+      fIsWebDisplay = kTRUE;
+      fIsWebDisplayBatch = kFALSE;
+      fWebDisplay = "server";
+      if (wd[6] == ':')
+         gEnv->SetValue("WebGui.HttpPort", TString(wd+7).Atoi());
    } else {
       fIsWebDisplay = kTRUE;
       if (!strncmp(wd, "batch", 5)) {
