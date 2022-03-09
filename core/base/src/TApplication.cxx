@@ -399,8 +399,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          const char *opt = argv[i] + 5;
          argv[i] = null;
          TString argw;
-         if (gROOT->IsBatch()) argw = "batch";
-         if (*opt == '=') argw.Append(opt+1);
+         if (*opt == '=')
+            argw.Append(opt+1);
+         else if (gROOT->IsBatch())
+            argw = "batch";
          if (argw == "off") {
             gROOT->SetWebDisplay(argw.Data());
             gEnv->SetValue("Browser.Name", "TRootBrowser"); // force usage of TBrowser back
