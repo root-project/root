@@ -1279,6 +1279,7 @@ const char *THttpServer::GetMimeType(const char *path)
                              {".shtml", 6, "text/html"},
                              {".css", 4, "text/css"},
                              {".js", 3, "application/x-javascript"},
+                             {".mjs", 4, "text/javascript"},
                              {".ico", 4, "image/x-icon"},
                              {".jpeg", 5, "image/jpeg"},
                              {".svg", 4, "image/svg+xml"},
