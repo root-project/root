@@ -777,7 +777,7 @@ Bool_t TFileMerger::MergeOne(TDirectory *target, TList *sourcelist, Int_t type, 
       }
    }
    info.Reset();
-
+   dirtodelete.Clear("nodelete");  // If needed the delete is done explicitly above.
    return kTRUE;
 }
 
