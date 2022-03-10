@@ -35,13 +35,13 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 namespace RooBatchCompute {
 namespace RF_ARCH {
 
-std::vector<void (*)(Batches)> getFunctions();
+std::vector<void (*)(BatchesHandle)> getFunctions();
 
 /// This class overrides some RooBatchComputeInterface functions, for the
 /// purpose of providing a CPU specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
 private:
-   const std::vector<void (*)(Batches)> _computeFunctions;
+   const std::vector<void (*)(BatchesHandle)> _computeFunctions;
 
 public:
    RooBatchComputeClass() : _computeFunctions(getFunctions())
@@ -78,22 +78,22 @@ public:
    void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const DataMap &varData,
                 const VarVector &vars, const ArgVector &extraArgs) override
    {
-      double buffer[maxParams][bufferSize];
+      std::vector<double> buffer(vars.size() * bufferSize);
       ROOT::Internal::TExecutor ex;
       unsigned int nThreads = ROOT::IsImplicitMTEnabled() ? ex.GetPoolSize() : 1u;
 
-      // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
-      // Then advance every object but the first to split the work between threads
-      std::vector<Batches> batchesArr(
-         nThreads, Batches(output, nEvents / nThreads + (nEvents % nThreads > 0), varData, vars, extraArgs, buffer));
-      for (unsigned int i = 1; i < nThreads; i++)
-         batchesArr[i].advance(batchesArr[0].getNEvents() * i);
+      auto task = [&](std::size_t idx) -> int {
+         // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
+         // Then advance every object but the first to split the work between threads
+         Batches batches(output, nEvents / nThreads + (nEvents % nThreads > 0), varData, vars, extraArgs,
+                         buffer.data());
+         batches.advance(batches.getNEvents() * idx);
 
-      // Set the number of events of the last Btches object as the remaining events
-      if (nThreads > 1)
-         batchesArr.back().setNEvents(nEvents - (nThreads - 1) * batchesArr[0].getNEvents());
+         // Set the number of events of the last Btches object as the remaining events
+         if (idx == nThreads - 1) {
+            batches.setNEvents(nEvents - idx * batches.getNEvents());
+         }
 
-      auto task = [this, computer](Batches batches) -> int {
          int events = batches.getNEvents();
          batches.setNEvents(bufferSize);
          while (events > bufferSize) {
@@ -105,7 +105,12 @@ public:
          _computeFunctions[computer](batches);
          return 0;
       };
-      ex.Map(task, batchesArr);
+
+      std::vector<std::size_t> indices(nThreads);
+      for (unsigned int i = 1; i < nThreads; i++) {
+         indices[i] = i;
+      }
+      ex.Map(task, indices);
    }
    /// Return the sum of an input array
    double sumReduce(cudaStream_t *, InputArr input, size_t n) override
@@ -126,25 +131,25 @@ static RooBatchComputeClass computeObj;
 \param varData A std::map containing the values of the variables involved in the computation.
 \param vars A std::vector containing pointers to the variables involved in the computation.
 \param extraArgs An optional std::vector containing extra double values that may participate in the computation.
-\param stackArr A 2D array allocated in stack (recommended for performance reasons) that is used as a buffer
-       for scalar variables.
-For every scalar parameter a buffer (one row of the stackArr) is filled with copies of the scalar
+\param buffer A 2D array that is used as a buffer for scalar variables.
+For every scalar parameter a buffer (one row of the buffer) is filled with copies of the scalar
 value, so that it behaves as a batch and facilitates auto-vectorization. The Batches object can be
 passed by value to a compute function to perform efficient computations. **/
 Batches::Batches(RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
-                 const ArgVector &extraArgs, double stackArr[maxParams][bufferSize])
+                 const ArgVector &extraArgs, double *buffer)
    : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
 {
+   _arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
       const RooSpan<const double> &span = varData.at(vars[i]);
       if (span.size() > 1)
          _arrays[i].set(span.data()[0], span.data(), true);
       else {
-         std::fill_n(stackArr[i], bufferSize, span.data()[0]);
-         _arrays[i].set(span.data()[0], stackArr[i], false);
+         std::fill_n(&buffer[i * bufferSize], bufferSize, span.data()[0]);
+         _arrays[i].set(span.data()[0], &buffer[i * bufferSize], false);
       }
    }
-   std::copy(extraArgs.cbegin(), extraArgs.cend(), _extraArgs);
+   _extraArgs = extraArgs;
 }
 
 } // End namespace RF_ARCH
