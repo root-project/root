@@ -46,6 +46,7 @@ and gets destroyed when the fitting ends.
 #include <iomanip>
 #include <numeric>
 #include <thread>
+#include <unordered_set>
 
 namespace ROOT {
 namespace Experimental {
