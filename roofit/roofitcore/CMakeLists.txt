@@ -385,6 +385,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooNLLVar.cxx
     src/RooNLLVarNew.cxx
     src/RooNormSetCache.cxx
+    src/RooNormalizedPdf.cxx
     src/RooNumber.cxx
     src/RooNumCdf.cxx
     src/RooNumConvolution.cxx
