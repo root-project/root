@@ -34,7 +34,6 @@ arguments and dependencies between arguments
 #include "RooInt.h"
 #include "RooDouble.h"
 #include "RooArgSet.h"
-#include "RooStringVar.h"
 #include "RooTObjWrap.h"
 #include "RooAbsData.h"
 #include "RooMsgService.h"
@@ -60,7 +59,6 @@ RooCmdConfig::RooCmdConfig(const char* methodName) :
 {
   _iList.SetOwner() ;
   _dList.SetOwner() ;
-  _sList.SetOwner() ;
   _cList.SetOwner() ;
   _oList.SetOwner() ;
   _rList.SetOwner() ;
@@ -87,7 +85,7 @@ void cloneList(TList const& inList, TList & outList) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)  : TObject(other)
+RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)  : TObject(other), _sList(other._sList)
 {
   _name   = other._name ;
   _verbose = other._verbose ;
@@ -96,7 +94,6 @@ RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)  : TObject(other)
 
   cloneList(other._iList, _iList); // Integer list
   cloneList(other._dList, _dList); // Double list
-  cloneList(other._sList, _sList); // String list
   cloneList(other._oList, _oList); // Object list
   cloneList(other._cList, _cList); // RooArgSet list
 
@@ -196,18 +193,19 @@ Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t d
 
 Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t stringNum, const char* defVal, Bool_t appendMode)
 {
-  if (_sList.FindObject(name)) {
+  auto found = std::find_if(_sList.begin(), _sList.end(), [name](auto const& s){ return s.name == name; });
+  if (found != _sList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineString: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
-  RooStringVar* rs = new RooStringVar(name,argName,defVal,64000) ;
-  if (appendMode) {
-    rs->setAttribute("RooCmdConfig::AppendMode") ;
-  }
-  rs->SetUniqueID(stringNum) ;
-
-  _sList.Add(rs) ;
+  _sList.emplace_back();
+  auto& rs = _sList.back();
+  rs.name = name;
+  rs.argName = argName;
+  rs.val = defVal;
+  rs.appendMode = appendMode;
+  rs.stringNum = stringNum;
   return kFALSE ;
 }
 
@@ -281,9 +279,8 @@ void RooCmdConfig::print() const
   }
 
   // Find registered string fields for this opcode
-  iter.reset(_sList.MakeIterator());
-  while(auto const& rs = iter->Next()) {
-    cout << rs->GetName() << "[string] = \"" << static_cast<RooStringVar const&>(*rs).getVal() << "\"" << endl ;
+  for(auto const& rs : _sList) {
+    cout << rs.name << "[string] = \"" << rs.val << "\"" << endl ;
   }
 
   // Find registered argset fields for this opcode
@@ -391,21 +388,21 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   }
 
   // Find registered string fields for this opcode
-  iter.reset(_sList.MakeIterator());
-  while(auto const& elem = iter->Next()) {
-    auto rs = static_cast<RooStringVar*>(elem);
-    if (!TString(opc).CompareTo(rs->GetTitle())) {
+  for(auto& rs : _sList) {
+    if (rs.argName == opc) {
 
-      const char* oldStr = rs->getVal() ;
+      // RooCmdArg::getString can return nullptr, so we have to protect against this
+      auto const * newStr = arg.getString(rs.stringNum);
 
-      if (oldStr && strlen(oldStr)>0 && rs->getAttribute("RooCmdConfig::AppendMode")) {
-   rs->setVal(Form("%s,%s",rs->getVal(),arg.getString(rs->GetUniqueID()))) ;
+      if (!rs.val.empty() && rs.appendMode) {
+        rs.val += ",";
+        rs.val += newStr ? newStr : "(null)";
       } else {
-   rs->setVal(arg.getString(rs->GetUniqueID())) ;
+        if(newStr) rs.val = newStr;
       }
       anyField = kTRUE ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << rs->GetName() << "[string]" << " set to " << rs->getVal() << endl ;
+        std::cout << "RooCmdConfig::process " << rs.name << "[string]" << " set to " << rs.val << std::endl ;
       }
     }
   }
@@ -523,8 +520,9 @@ Double_t RooCmdConfig::getDouble(const char* name, Double_t defVal)
 
 const char* RooCmdConfig::getString(const char* name, const char* defVal, Bool_t convEmptyToNull)
 {
-  RooStringVar* rs = (RooStringVar*) _sList.FindObject(name) ;
-  return rs ? ((convEmptyToNull && strlen(rs->getVal())==0) ? 0 : ((const char*)rs->getVal()) ) : defVal ;
+  auto found = std::find_if(_sList.begin(), _sList.end(), [name](auto const& s){ return s.name == name; });
+  if(found == _sList.end()) return defVal;
+  return (convEmptyToNull && found->val.empty()) ? nullptr : found->val.c_str();
 }
 
 
