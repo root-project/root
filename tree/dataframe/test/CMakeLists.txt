@@ -18,6 +18,11 @@ ROOT_ADD_GTEST(dataframe_regression dataframe_regression.cxx LIBRARIES Physics R
 ROOT_ADD_GTEST(dataframe_utils dataframe_utils.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_report dataframe_report.cxx LIBRARIES ROOTDataFrame)
 
+if(MSVC)
+  set_property(TARGET dataframe_cache APPEND_STRING PROPERTY LINK_FLAGS " -STACK:10000000")
+  set_property(TARGET dataframe_interface APPEND_STRING PROPERTY LINK_FLAGS " -STACK:10000000")
+endif()
+
 ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx LIBRARIES ROOTDataFrame)
 target_include_directories(dataframe_splitcoll_arrayview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 ROOT_GENERATE_DICTIONARY(TwoFloatsDict TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader)
@@ -49,7 +54,7 @@ ROOT_ADD_GTEST(dataframe_samplecallback dataframe_samplecallback.cxx CounterHelp
 ROOT_ADD_GTEST(dataframe_vary dataframe_vary.cxx LIBRARIES ROOTDataFrame)
 
 #### TESTS FOR DIFFERENT DATASOURCES ####
-if (MSVC)
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
   # TODO: remove this workaround for MS compiler bug #1441527 once fixed
   string(REPLACE "-Od -Z7" "-O2" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
   string(REPLACE "-Z7" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")

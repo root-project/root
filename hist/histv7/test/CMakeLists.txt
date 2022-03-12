@@ -5,7 +5,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 if(MSVC)
-  if(MSVC_VERSION GREATER_EQUAL 1923)
+  if(MSVC_VERSION GREATER_EQUAL 1923 AND MSVC_VERSION LESS 1929)
     # FIXME: using /O2 compiler flag prevent the following error when building in debug mode:
     # axis.obj : fatal error LNK1179: invalid or corrupt file: duplicate COMDAT
     # '??$?8DU?$char_traits@D@std@@@__ROOT@experimental@std@@YA_NV?$basic_string_view@DU?$char_traits@D@std@@@012@0@Z'
