@@ -97,6 +97,14 @@ public:
 
 protected:
 
+  struct StringVar {
+    std::string name;
+    std::string argName;
+    std::string val;
+    bool appendMode;
+    int stringNum;
+  };
+
   TString _name ;
 
   Bool_t _verbose = false;
@@ -105,7 +113,7 @@ protected:
 
   TList _iList ; ///< Integer list
   TList _dList ; ///< Double list
-  TList _sList ; ///< String list
+  std::vector<StringVar> _sList ; ///< String list
   TList _oList ; ///< Object list
   TList _cList ; ///< RooArgSet list
 
