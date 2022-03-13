@@ -22,6 +22,11 @@
 
 #include "HFMsgService.h"
 
+#include <TFile.h>
+#include <TXMLAttr.h>
+#include <TXMLNode.h>
+
+
 #include <sstream>
 
 using namespace RooStats;
