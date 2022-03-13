@@ -148,6 +148,10 @@ RooFormula::RooFormula(const RooFormula& other, const char* name) :
 #ifndef _MSC_VER
 #if !defined(__GNUC__) || defined(__clang__) || (__GNUC__ > 4) || ( __GNUC__ == 4 && __GNUC_MINOR__ > 8)
 #define ROOFORMULA_HAVE_STD_REGEX
+#endif //GCC < 4.9 Check
+#endif //_MSC_VER
+
+#ifdef ROOFORMULA_HAVE_STD_REGEX
 ////////////////////////////////////////////////////////////////////////////////
 /// Process given formula by replacing all ordinal and name references by
 /// `x[i]`, where `i` matches the position of the argument in `_origList`.
@@ -208,6 +212,7 @@ std::string RooFormula::processFormula(std::string formula) const {
     auto regex = std::string{"\\b"} + var.GetName();
     regex = std::regex_replace(regex, std::regex("([\\[\\]\\{\\}])"), "\\$1"); // The name might contain [, ], {, or }.
     regex += "\\b(?!\\[)"; // Veto '[' as next character. If the variable is called `x`, this might otherwise replace `x[0]`.
+    regex += "\\b(?!\\])"; // Veto ']' as next character. If the variable is called `0`, this might otherwise replace `x[0]`.
     std::regex findParameterRegex(regex);
 
     std::stringstream replacement;
@@ -270,8 +275,7 @@ std::string RooFormula::reconstructFormula(std::string internalRepr) const {
 
   return internalRepr;
 }
-#endif //GCC < 4.9 Check
-#endif //_MSC_VER
+#endif //ROOFORMULA_HAVE_STD_REGEX
 
 
 
@@ -612,7 +616,7 @@ std::string RooFormula::processFormula(std::string formula) const {
     const auto& var = _origList[i];
     TString regex = "\\b";
     regex += var.GetName();
-    regex += "\\b([^[]|$)"; //Negative lookahead. If the variable is called `x`, this might otherwise replace `x[0]`.
+    regex += "\\b([^\\[\\]]|$)"; //Negative lookahead. If the variable is called `x` or `0`, this might otherwise replace `x[0]`.
     TPRegexp findParameterRegex(regex);
 
     std::stringstream replacement;
@@ -687,4 +691,4 @@ std::string RooFormula::reconstructFormula(std::string internalRepr) const {
 
   return internalReprT.Data();
 }
-#endif //GCC < 4.9 Check
+#endif //ROOFORMULA_HAVE_STD_REGEX
