@@ -281,8 +281,11 @@ else()
   endif()
   if (NOT tmva-sofie)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_ONNX.C)
+  else()
+    #copy ONNX file needed for the tutorial
+    configure_file(${CMAKE_SOURCE_DIR}/tmva/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/tmva/Linear_16.onnx COPYONLY)
   endif()
-  
+
 endif()
 
 if (NOT ROOT_pythia6_FOUND)
