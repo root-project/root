@@ -77,8 +77,6 @@ END_HTML
 // from root
 #include "TFile.h"
 #include "TH1F.h"
-#include "TDOMParser.h"
-#include "TXMLAttr.h"
 #include "TString.h"
 
 // from roofit
