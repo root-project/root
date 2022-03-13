@@ -21,8 +21,6 @@
 // from root
 #include "TFile.h"
 #include "TH1F.h"
-#include "TDOMParser.h"
-#include "TXMLAttr.h"
 #include "TString.h"
 #include "TCanvas.h"
 #include "TStyle.h"

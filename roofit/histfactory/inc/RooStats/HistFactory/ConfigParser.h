@@ -16,13 +16,11 @@
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Sample.h"
 
-#include "TFile.h"
-#include "TXMLAttr.h"
-#include <TXMLNode.h>
-
 #include <cstdlib>
 #include <string>
 #include <vector>
+
+class TXMLNode;
 
 namespace RooStats{
    namespace HistFactory {
