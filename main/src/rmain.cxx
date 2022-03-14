@@ -77,7 +77,8 @@ int main(int argc, char **argv)
 {
    handle_notebook_option(argc, argv);
 
-   TRint *theApp = new TRint("Rint", &argc, argv);
+   TRint *theApp = new TRint("Rint", &argc, argv, /*options*/ nullptr, /*numOptions*/ 0, /*noLogo*/ kFALSE,
+                             /*exitOnUnknownArgs*/ kTRUE);
 
    // and enter the event loop...
    theApp->Run();
