@@ -21,6 +21,7 @@
 #include "TDirectory.h"
 #include "TROOT.h"
 #include "TFile.h"
+#include "TClass.h"
 
 using namespace std::string_literals;
 
@@ -105,9 +106,14 @@ public:
    bool CanItemHaveChilds() const override
    {
       if (!fKeysIter && fObj)
-         return RProvider::CanHaveChilds(fObj->IsA()->GetName());
-      if (fKeysIter && fKey)
-         return RProvider::CanHaveChilds(fKey->GetClassName());
+         return RProvider::CanHaveChilds(fObj->IsA());
+
+      if (fKeysIter && fKey) {
+         if (RProvider::CanHaveChilds(fKey->GetClassName()))
+            return true;
+         auto cl = TClass::GetClass(fKey->GetClassName(), kFALSE, kTRUE);
+         return RProvider::CanHaveChilds(cl);
+      }
       return false;
    }
 
@@ -260,11 +266,24 @@ public:
       if (fKeyClass.empty()) return false;
 
       switch(action) {
-         case kActBrowse: return RProvider::CanHaveChilds(fKeyClass);
+         case kActBrowse: {
+            if (RProvider::CanHaveChilds(fKeyClass))
+               return true;
+            return RProvider::CanHaveChilds(TClass::GetClass(fKeyClass.c_str(), kFALSE, kTRUE));
+         }
          case kActEdit: return true;
          case kActImage:
-         case kActDraw6: return RProvider::CanDraw6(fKeyClass); // if can draw in TCanvas, can produce image
-         case kActDraw7: return RProvider::CanDraw7(fKeyClass);
+         case kActDraw6: {
+            // if can draw in TCanvas, can produce image
+            if (RProvider::CanDraw6(fKeyClass))
+               return true;
+            return RProvider::CanDraw6(TClass::GetClass(fKeyClass.c_str(), kFALSE, kTRUE));
+         }
+         case kActDraw7: {
+            if (RProvider::CanDraw7(fKeyClass))
+               return true;
+            return RProvider::CanDraw7(TClass::GetClass(fKeyClass.c_str(), kFALSE, kTRUE));
+         }
          case kActCanvas: return (fKeyClass == "TCanvas"s) || (fKeyClass == "ROOT::Experimental::RCanvas"s);
          case kActGeom: return (fKeyClass == "TGeoManager"s);
          default: return false;
