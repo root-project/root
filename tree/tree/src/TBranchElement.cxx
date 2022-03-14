@@ -2136,7 +2136,8 @@ void TBranchElement::SetupInfo()
          targetClass = fTargetClass;
       }
       if ( !targetClass ) {
-         Error( "InitInfo", "The target class dictionary is not present!" );
+         Error("InitInfo", "Branch '%s': missing dictionary for target class '%s'!",
+               GetFullName().Data(), fTargetClass.GetClassName());
          return;
       }
    } else {
