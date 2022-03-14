@@ -369,7 +369,9 @@ std::string RSysFile::GetFileIcon(const std::string &fname)
        (EndsWith(".cxx")) ||
        (EndsWith(".c++")) ||
        (EndsWith(".cxx")) ||
+       (EndsWith(".cc")) ||
        (EndsWith(".h")) ||
+       (EndsWith(".hh")) ||
        (EndsWith(".hpp")) ||
        (EndsWith(".hxx")) ||
        (EndsWith(".h++")) ||
