@@ -25,6 +25,7 @@
 #include <ios>
 #include <iostream> // std::cerr
 #include <functional>
+#include <memory>
 
 // debugging
 #include <unistd.h> // getpid

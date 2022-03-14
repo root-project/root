@@ -1894,6 +1894,10 @@ if (roofit_multiprocess)
       if(NOT ZeroMQ_FOUND)
         message(STATUS "ZeroMQ not found. Switching on builtin_zeromq option")
         set(builtin_zeromq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_zeromq_description})" FORCE)
+        # If the ZeroMQ system version is too old, we can't use the system C++
+        # headers either (note that find_package(ZeroMQ) not only checks if the
+        # library exists, but also if it's a recent version with zmq_ppoll).
+        set(builtin_cppzmq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_cppzmq_description})" FORCE)
       endif()
     endif()
 
