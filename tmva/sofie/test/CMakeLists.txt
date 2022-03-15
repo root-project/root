@@ -43,7 +43,7 @@ target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bou
 
 # Automatic compilation of headers from onnx files
 add_custom_target(SofieCompileModels_ONNX)
-add_dependencies(SofieCompileModels_ONNX emitFromONNX)
+add_dependencies(SofieCompileModels_ONNX emitFromONNX onepcm)
 
 # Finding .onnx files to be compiled and creating the appropriate command
 file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
@@ -51,7 +51,7 @@ foreach(onnx_file ${ONNX_FILES})
 	get_filename_component(fname ${onnx_file} NAME_WE)
 	get_filename_component(fdir ${onnx_file} DIRECTORY)
 	add_custom_command(TARGET SofieCompileModels_ONNX POST_BUILD
-		COMMAND ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
+		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
 		USES_TERMINAL
 	)
 endforeach()
@@ -60,7 +60,8 @@ endforeach()
 ROOT_ADD_GTEST(TestCustomModelsFromONNX TestCustomModelsFromONNX.cxx
   LIBRARIES
     ROOTTMVASofie
-    blas
+    ${BLAS_LINKER_FLAGS}
+    ${BLAS_LIBRARIES}
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -92,7 +93,7 @@ target_compile_options(emitFromROOT PRIVATE -Wno-unused-parameter -Wno-array-bou
 
 # Automatic compilation of headers from root files
 add_custom_target(SofieCompileModels_ROOT)
-add_dependencies(SofieCompileModels_ROOT emitFromROOT)
+add_dependencies(SofieCompileModels_ROOT emitFromROOT onepcm)
 
 # Finding .onnx files to be parsed and creating the appropriate command
 file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
@@ -100,7 +101,7 @@ foreach(onnx_file ${ONNX_FILES})
 	get_filename_component(fname ${onnx_file} NAME_WE)
 	get_filename_component(fdir ${onnx_file} DIRECTORY)
 	add_custom_command(TARGET SofieCompileModels_ROOT POST_BUILD
-		COMMAND ./emitFromROOT ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
+		COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromROOT ${onnx_file} ${CMAKE_CURRENT_BINARY_DIR}/${fname}
 		USES_TERMINAL
 	)
 endforeach()
@@ -109,7 +110,8 @@ endforeach()
 ROOT_ADD_GTEST(TestCustomModelsFromROOT TestCustomModelsFromROOT.cxx
   LIBRARIES
     ROOTTMVASofie
-    blas
+    ${BLAS_LINKER_FLAGS}
+    ${BLAS_LIBRARIES}
   INCLUDE_DIRS
     ${CMAKE_CURRENT_BINARY_DIR}
 )
