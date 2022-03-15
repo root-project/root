@@ -1522,7 +1522,9 @@ void TClass::Init(const char *name, Version_t cversion,
       } else {
          // In this case we initialised this TClass instance starting from the fwd declared state
          // and we know we have no dictionary: no need to warn
-         ::Warning("TClass::Init", "no dictionary for class %s is available", fName.Data());
+         const bool ispairbase = TClassEdit::IsStdPairBase(fName.Data()) && !IsFromRootCling();
+         if (!ispairbase)
+            ::Warning("TClass::Init", "no dictionary for class %s is available", fName.Data());
       }
    }
 
