@@ -2990,6 +2990,9 @@ public:
    /// * std::shared_ptr<Result_t> GetResultPtr() const: return a shared_ptr to the result of this action (of type
    ///   Result_t). The RResultPtr returned by Book will point to this object. Note that this method can be called
    ///   before Initialize(), because the RResultPtr is constructed before the event loop is started.
+   /// * ROOT::RDF::SampleCallback_t GetSampleCallback(): optional. If present, it must return a callable with the
+   ///   appropriate signature (see ROOT::RDF::SampleCallback_t) that will be invoked at the beginning of the processing
+   ///   of every sample, as per with DefinePerSample().
    ///
    /// In case this is called without specifying column types, jitting is used,
    /// and the Helper class needs to be known to the interpreter.<br>
