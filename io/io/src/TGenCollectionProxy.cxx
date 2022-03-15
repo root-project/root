@@ -900,8 +900,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                               Fatal("InitializeEx",
                                     "The TClass creation for %s did not get the right size: %d instead of%d\n",
                                     nam.c_str(), (int)paircl->GetClassSize(), (int)fValDiff);
-                           paircl->ReplaceWith(newpaircl);
-                           delete paircl;
+                           newpaircl->ForceReload(paircl);
                         }
                      }
                   }
