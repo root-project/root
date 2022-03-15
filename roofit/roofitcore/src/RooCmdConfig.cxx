@@ -28,19 +28,22 @@ rules such as (conditionally) required arguments, mutually exclusive
 arguments and dependencies between arguments
 **/
 
-#include "RooFit.h"
+#include <RooCmdConfig.h>
+#include <RooMsgService.h>
 
-#include "RooCmdConfig.h"
-#include "RooInt.h"
-#include "RooDouble.h"
-#include "RooArgSet.h"
-#include "RooTObjWrap.h"
-#include "RooAbsData.h"
-#include "RooMsgService.h"
-
-#include "ROOT/StringUtils.hxx"
+#include <ROOT/StringUtils.hxx>
 
 #include <iostream>
+
+
+namespace {
+
+template<class Collection>
+typename Collection::const_iterator findVar(Collection const& coll, const char * name) {
+  return std::find_if(coll.begin(), coll.end(), [name](auto const& v){ return v.name == name; });
+}
+
+}
 
 
 using namespace std;
@@ -57,10 +60,6 @@ RooCmdConfig::RooCmdConfig(const char* methodName) :
   TObject(),
   _name(methodName)
 {
-  _iList.SetOwner() ;
-  _dList.SetOwner() ;
-  _cList.SetOwner() ;
-  _oList.SetOwner() ;
   _rList.SetOwner() ;
   _fList.SetOwner() ;
   _mList.SetOwner() ;
@@ -85,17 +84,14 @@ void cloneList(TList const& inList, TList & outList) {
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)  : TObject(other), _sList(other._sList)
+RooCmdConfig::RooCmdConfig(const RooCmdConfig& other)
+  : TObject(other), _iList(other._iList), _dList(other._dList),
+    _sList(other._sList), _oList(other._oList), _cList(other._cList)
 {
   _name   = other._name ;
   _verbose = other._verbose ;
   _error = other._error ;
   _allowUndefined = other._allowUndefined ;
-
-  cloneList(other._iList, _iList); // Integer list
-  cloneList(other._dList, _dList); // Double list
-  cloneList(other._oList, _oList); // Object list
-  cloneList(other._cList, _cList); // RooArgSet list
 
   cloneList(other._rList, _rList); // Required cmd list
   cloneList(other._fList, _fList); // Forbidden cmd list
@@ -147,17 +143,17 @@ void RooCmdConfig::defineDependency(const char* refArgName, const char* neededAr
 
 Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intNum, Int_t defVal)
 {
-  if (_iList.FindObject(name)) {
+  if (findVar(_iList, name) != _iList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defintInt: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
-  RooInt* ri = new RooInt(defVal) ;
-  ri->SetName(name) ;
-  ri->SetTitle(argName) ;
-  ri->SetUniqueID(intNum) ;
-
-  _iList.Add(ri) ;
+  _iList.emplace_back();
+  auto& ri = _iList.back();
+  ri.name = name;
+  ri.argName = argName;
+  ri.val = defVal;
+  ri.num = intNum;
   return kFALSE ;
 }
 
@@ -169,17 +165,17 @@ Bool_t RooCmdConfig::defineInt(const char* name, const char* argName, Int_t intN
 
 Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t doubleNum, Double_t defVal)
 {
-  if (_dList.FindObject(name)) {
+  if (findVar(_dList, name) != _dList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineDouble: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
-  RooDouble* rd = new RooDouble(defVal) ;
-  rd->SetName(name) ;
-  rd->SetTitle(argName) ;
-  rd->SetUniqueID(doubleNum) ;
-
-  _dList.Add(rd) ;
+  _dList.emplace_back();
+  auto& rd = _dList.back();
+  rd.name = name;
+  rd.argName = argName;
+  rd.val = defVal;
+  rd.num = doubleNum;
   return kFALSE ;
 }
 
@@ -193,8 +189,7 @@ Bool_t RooCmdConfig::defineDouble(const char* name, const char* argName, Int_t d
 
 Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t stringNum, const char* defVal, Bool_t appendMode)
 {
-  auto found = std::find_if(_sList.begin(), _sList.end(), [name](auto const& s){ return s.name == name; });
-  if (found != _sList.end()) {
+  if (findVar(_sList, name) != _sList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineString: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
@@ -205,7 +200,7 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
   rs.argName = argName;
   rs.val = defVal;
   rs.appendMode = appendMode;
-  rs.stringNum = stringNum;
+  rs.num = stringNum;
   return kFALSE ;
 }
 
@@ -220,17 +215,18 @@ Bool_t RooCmdConfig::defineString(const char* name, const char* argName, Int_t s
 Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t setNum, const TObject* defVal, Bool_t isArray)
 {
 
-  if (_oList.FindObject(name)) {
+  if (findVar(_oList, name) != _oList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
-  RooTObjWrap* os = new RooTObjWrap((TObject*)defVal,isArray) ;
-  os->SetName(name) ;
-  os->SetTitle(argName) ;
-  os->SetUniqueID(setNum) ;
-
-  _oList.Add(os) ;
+  _oList.emplace_back();
+  auto& os = _oList.back();
+  os.name = name;
+  os.argName = argName;
+  os.val.Add(const_cast<TObject*>(defVal));
+  os.appendMode = isArray;
+  os.num = setNum;
   return kFALSE ;
 }
 
@@ -245,17 +241,17 @@ Bool_t RooCmdConfig::defineObject(const char* name, const char* argName, Int_t s
 Bool_t RooCmdConfig::defineSet(const char* name, const char* argName, Int_t setNum, const RooArgSet* defVal)
 {
 
-  if (_cList.FindObject(name)) {
+  if (findVar(_cList, name) != _cList.end()) {
     coutE(InputArguments) << "RooCmdConfig::defineObject: name '" << name << "' already defined" << endl ;
     return kTRUE ;
   }
 
-  RooTObjWrap* cs = new RooTObjWrap((TObject*)defVal) ;
-  cs->SetName(name) ;
-  cs->SetTitle(argName) ;
-  cs->SetUniqueID(setNum) ;
-
-  _cList.Add(cs) ;
+  _cList.emplace_back();
+  auto& cs = _cList.back();
+  cs.name = name;
+  cs.argName = argName;
+  cs.val = const_cast<RooArgSet*>(defVal);
+  cs.num = setNum;
   return kFALSE ;
 }
 
@@ -267,15 +263,13 @@ Bool_t RooCmdConfig::defineSet(const char* name, const char* argName, Int_t setN
 void RooCmdConfig::print() const
 {
   // Find registered integer fields for this opcode
-  std::unique_ptr<TIterator> iter{_iList.MakeIterator()};
-  while(auto const& ri = iter->Next()) {
-    cout << ri->GetName() << "[Int_t] = " << static_cast<RooInt const&>(*ri) << endl ;
+  for(auto const& ri : _iList) {
+    cout << ri.name << "[Int_t] = " << ri.val << endl ;
   }
 
   // Find registered double fields for this opcode
-  iter.reset(_dList.MakeIterator());
-  while(auto const& rd = iter->Next()) {
-    cout << rd->GetName() << "[Double_t] = " << static_cast<RooDouble const&>(*rd) << endl ;
+  for(auto const& rd : _dList) {
+    cout << rd.name << "[Double_t] = " << rd.val << endl ;
   }
 
   // Find registered string fields for this opcode
@@ -284,10 +278,9 @@ void RooCmdConfig::print() const
   }
 
   // Find registered argset fields for this opcode
-  iter.reset(_oList.MakeIterator());
-  while(auto const& ro = iter->Next()) {
-    cout << ro->GetName() << "[TObject] = " ;
-    auto const * obj = static_cast<RooTObjWrap const&>(ro).obj();
+  for(auto const& ro : _oList) {
+    cout << ro.name << "[TObject] = " ;
+    auto const * obj = ro.val.At(0);
     if (obj) {
       cout << obj->GetName() << endl ;
     } else {
@@ -362,27 +355,23 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   Bool_t anyField(kFALSE) ;
 
   // Find registered integer fields for this opcode
-  std::unique_ptr<TIterator> iter{_iList.MakeIterator()};
-  while(auto const& elem = iter->Next()) {
-    auto ri = static_cast<RooInt*>(elem);
-    if (!TString(opc).CompareTo(ri->GetTitle())) {
-      *ri = arg.getInt(ri->GetUniqueID()) ;
+  for(auto& ri : _iList) {
+    if (!TString(opc).CompareTo(ri.argName)) {
+      ri.val = arg.getInt(ri.num) ;
       anyField = kTRUE ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << ri->GetName() << "[Int_t]" << " set to " << *ri << endl ;
+   cout << "RooCmdConfig::process " << ri.name << "[Int_t]" << " set to " << ri.val << endl ;
       }
     }
   }
 
   // Find registered double fields for this opcode
-  iter.reset(_dList.MakeIterator());
-  while(auto const& elem = iter->Next()) {
-    auto rd = static_cast<RooDouble*>(elem);
-    if (!TString(opc).CompareTo(rd->GetTitle())) {
-      *rd = arg.getDouble(rd->GetUniqueID()) ;
+  for(auto& rd : _dList) {
+    if (!TString(opc).CompareTo(rd.argName)) {
+      rd.val = arg.getDouble(rd.num) ;
       anyField = kTRUE ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << rd->GetName() << "[Double_t]" << " set to " << *rd << endl ;
+   cout << "RooCmdConfig::process " << rd.name << "[Double_t]" << " set to " << rd.val << endl ;
       }
     }
   }
@@ -392,7 +381,7 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
     if (rs.argName == opc) {
 
       // RooCmdArg::getString can return nullptr, so we have to protect against this
-      auto const * newStr = arg.getString(rs.stringNum);
+      auto const * newStr = arg.getString(rs.num);
 
       if (!rs.val.empty() && rs.appendMode) {
         rs.val += ",";
@@ -408,16 +397,15 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   }
 
   // Find registered TObject fields for this opcode
-  iter.reset(_oList.MakeIterator());
-  while(auto const& elem = iter->Next()) {
-    auto os = static_cast<RooTObjWrap*>(elem);
-    if (!TString(opc).CompareTo(os->GetTitle())) {
-      os->setObj((TObject*)arg.getObject(os->GetUniqueID())) ;
+  for(auto& os : _oList) {
+    if (!TString(opc).CompareTo(os.argName)) {
+      if(!os.appendMode) os.val.Clear();
+      os.val.Add(const_cast<TObject*>(arg.getObject(os.num)));
       anyField = kTRUE ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << os->GetName() << "[TObject]" << " set to " ;
-   if (os->obj()) {
-     cout << os->obj()->GetName() << endl ;
+   cout << "RooCmdConfig::process " << os.name << "[TObject]" << " set to " ;
+   if (os.val.At(0)) {
+     cout << os.val.At(0)->GetName() << endl ;
    } else {
      cout << "(null)" << endl ;
    }
@@ -426,16 +414,14 @@ Bool_t RooCmdConfig::process(const RooCmdArg& arg)
   }
 
   // Find registered RooArgSet fields for this opcode
-  iter.reset(_cList.MakeIterator());
-  while(auto const& elem = iter->Next()) {
-    auto cs = static_cast<RooTObjWrap*>(elem);
-    if (!TString(opc).CompareTo(cs->GetTitle())) {
-      cs->setObj((TObject*)arg.getSet(cs->GetUniqueID())) ;
+  for(auto& cs : _cList) {
+    if (!TString(opc).CompareTo(cs.argName)) {
+      cs.val = const_cast<RooArgSet*>(arg.getSet(cs.num));
       anyField = kTRUE ;
       if (_verbose) {
-   cout << "RooCmdConfig::process " << cs->GetName() << "[RooArgSet]" << " set to " ;
-   if (cs->obj()) {
-     cout << cs->obj()->GetName() << endl ;
+   cout << "RooCmdConfig::process " << cs.name << "[RooArgSet]" << " set to " ;
+   if (cs.val) {
+     cout << cs.val->GetName() << endl ;
    } else {
      cout << "(null)" << endl ;
    }
@@ -495,8 +481,8 @@ Bool_t RooCmdConfig::hasProcessed(const char* cmdName) const
 
 Int_t RooCmdConfig::getInt(const char* name, Int_t defVal)
 {
-  RooInt* ri = (RooInt*) _iList.FindObject(name) ;
-  return ri ? (Int_t)(*ri) : defVal ;
+  auto found = findVar(_iList, name);
+  return found != _iList.end() ? found->val : defVal;
 }
 
 
@@ -507,8 +493,8 @@ Int_t RooCmdConfig::getInt(const char* name, Int_t defVal)
 
 Double_t RooCmdConfig::getDouble(const char* name, Double_t defVal)
 {
-  RooDouble* rd = (RooDouble*) _dList.FindObject(name) ;
-  return rd ? (Double_t)(*rd) : defVal ;
+  auto found = findVar(_dList, name);
+  return found != _dList.end() ? found->val : defVal;
 }
 
 
@@ -520,7 +506,7 @@ Double_t RooCmdConfig::getDouble(const char* name, Double_t defVal)
 
 const char* RooCmdConfig::getString(const char* name, const char* defVal, Bool_t convEmptyToNull)
 {
-  auto found = std::find_if(_sList.begin(), _sList.end(), [name](auto const& s){ return s.name == name; });
+  auto found = findVar(_sList, name);
   if(found == _sList.end()) return defVal;
   return (convEmptyToNull && found->val.empty()) ? nullptr : found->val.c_str();
 }
@@ -533,8 +519,8 @@ const char* RooCmdConfig::getString(const char* name, const char* defVal, Bool_t
 
 TObject* RooCmdConfig::getObject(const char* name, TObject* defVal)
 {
-  RooTObjWrap* ro = (RooTObjWrap*) _oList.FindObject(name) ;
-  return ro ? ro->obj() : defVal ;
+  auto found = findVar(_oList, name);
+  return found != _oList.end() ? found->val.At(0) : defVal ;
 }
 
 
@@ -544,8 +530,8 @@ TObject* RooCmdConfig::getObject(const char* name, TObject* defVal)
 
 RooArgSet* RooCmdConfig::getSet(const char* name, RooArgSet* defVal)
 {
-  RooTObjWrap* ro = (RooTObjWrap*) _cList.FindObject(name) ;
-  return ro ? ((RooArgSet*)ro->obj()) : defVal ;
+  auto found = findVar(_cList, name);
+  return found != _cList.end() ? found->val : defVal ;
 }
 
 
@@ -556,8 +542,8 @@ RooArgSet* RooCmdConfig::getSet(const char* name, RooArgSet* defVal)
 const RooLinkedList& RooCmdConfig::getObjectList(const char* name)
 {
   const static RooLinkedList defaultDummy ;
-  RooTObjWrap* ro = (RooTObjWrap*) _oList.FindObject(name) ;
-  return ro ? ro->objList() : defaultDummy ;
+  auto found = findVar(_oList, name);
+  return found != _oList.end() ? found->val : defaultDummy ;
 }
 
 
