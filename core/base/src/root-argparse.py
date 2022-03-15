@@ -21,6 +21,6 @@ An extensive Users Guide is available from that site (see below).
 	parser.add_argument('--web', help='Display graphics in a default web browser')
 	parser.add_argument('--web=<browser>', help='Display graphics in specified web browser')
 	parser.add_argument('[dir]', help='if dir is a valid directory cd to it before executing')
-	parser.add_argument('[file:data.root]', help='Open the ROOT file data.root')
+	parser.add_argument('[data1.root...dataN.root]', help='Open the ROOT files data1.root ... dataN.root')
 	parser.add_argument('[file1.C...fileN.C]', help='Execute the the ROOT macro file1.C ... fileN.C')
 	return parser
