@@ -6,6 +6,7 @@
 
 #include <type_traits>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 #include <memory>
