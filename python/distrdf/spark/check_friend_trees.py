@@ -1,45 +1,31 @@
 import os
 import subprocess
-import sys
-import unittest
-import warnings
+
 from array import array
 
-import pyspark
+import pytest
+
 import ROOT
 from DistRDF.Backends import Spark
 
 
-class SparkFriendTreesTest(unittest.TestCase):
+def check_histograms(h_parent, h_friend):
+    """Check equality of histograms in tests"""
+    # Both trees have the same number of entries, i.e. 10000
+    assert h_parent.GetEntries() == 10000
+    assert h_friend.GetEntries() == 10000
+
+    # Check the mean of the distribution for each tree
+    assert h_parent.GetMean() == pytest.approx(10, 0.01)
+    assert h_friend.GetMean() == pytest.approx(20, 0.01)
+
+    # Check the standard deviation of the distribution for each tree
+    assert h_parent.GetStdDev() == pytest.approx(1, 0.01)
+    assert h_friend.GetStdDev() == pytest.approx(1, 0.01)
+
+
+class TestSparkFriendTrees:
     """Integration tests to check the working of DistRDF with friend trees"""
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Synchronize PYSPARK_PYTHON variable to the current Python executable.
-          Needed to avoid mismatch between python versions on driver and on the
-          fake executor on the same machine.
-        - Ignore `ResourceWarning: unclosed socket` warning triggered by Spark.
-          this is ignored by default in any application, but Python's unittest
-          library overrides the default warning filters thus exposing this
-          warning
-        - Initialize a SparkContext for the tests in this class
-        """
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("ignore", ResourceWarning)
-
-        sparkconf = pyspark.SparkConf().setMaster("local[2]")
-        cls.sc = pyspark.SparkContext(conf=sparkconf)
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("default", ResourceWarning)
-
-        cls.sc.stop()
 
     def create_parent_tree(self):
         """Creates a .root file with the parent TTree"""
@@ -77,7 +63,7 @@ class SparkFriendTreesTest(unittest.TestCase):
         ff.Write()
         ff.Close()
 
-    def test_friend_tree_histo(self):
+    def test_friend_tree_histo(self, connection):
         """
         Tests that the computational graph can be issued both on the
         parent tree and the friend tree.
@@ -97,29 +83,19 @@ class SparkFriendTreesTest(unittest.TestCase):
         baseTree.AddFriend(friendTree)
 
         # Create a DistRDF RDataFrame with the parent and the friend trees
-        df = Spark.RDataFrame(baseTree, sparkcontext=self.sc)
+        df = Spark.RDataFrame(baseTree, sparkcontext=connection)
 
         # Create histograms
         h_parent = df.Histo1D("x")
         h_friend = df.Histo1D("TF.x")
 
-        # Both trees have the same number of entries, i.e. 10000
-        self.assertEqual(h_parent.GetEntries(), 10000)
-        self.assertEqual(h_friend.GetEntries(), 10000)
-
-        # Check the mean of the distribution for each tree
-        self.assertAlmostEqual(h_parent.GetMean(), 10, delta=0.01)
-        self.assertAlmostEqual(h_friend.GetMean(), 20, delta=0.01)
-
-        # Check the standard deviation of the distribution for each tree
-        self.assertAlmostEqual(h_parent.GetStdDev(), 1, delta=0.01)
-        self.assertAlmostEqual(h_friend.GetStdDev(), 1, delta=0.01)
+        check_histograms(h_parent, h_friend)
 
         # Remove unnecessary .root files
         os.remove("treeparent.root")
         os.remove("treefriend.root")
 
-    def test_friends_tchain_noname_add_fullpath_addfriend_alias(self):
+    def test_friends_tchain_noname_add_fullpath_addfriend_alias(self, connection):
         """Test against the reproducer of issue https://github.com/root-project/root/issues/7584"""
 
         rn1 = "rn1.root"
@@ -137,7 +113,7 @@ class SparkFriendTreesTest(unittest.TestCase):
 
         # Put the two trees together in a common file
         subprocess.run("hadd -f {} {} {}".format(friendsfilename, rn1, rn2),
-                    shell=True, check=True)
+                       shell=True, check=True)
 
         # Test the specific case of a parent chain and friend chain with no
         # names, that receive one tree each in the form "filename/treename". The
@@ -150,19 +126,12 @@ class SparkFriendTreesTest(unittest.TestCase):
 
         chain.AddFriend(chainFriend, "myfriend")
 
-        df = Spark.RDataFrame(chain, sparkcontext=self.sc)
+        df = Spark.RDataFrame(chain, sparkcontext=connection)
 
         h_parent = df.Histo1D("rnd")
         h_friend = df.Histo1D("myfriend.rnd")
 
-        self.assertEqual(h_parent.GetEntries(), 10000)
-        self.assertEqual(h_friend.GetEntries(), 10000)
-
-        self.assertAlmostEqual(h_parent.GetMean(), 10, delta=0.01)
-        self.assertAlmostEqual(h_friend.GetMean(), 20, delta=0.01)
-
-        self.assertAlmostEqual(h_parent.GetStdDev(), 1, delta=0.01)
-        self.assertAlmostEqual(h_friend.GetStdDev(), 1, delta=0.01)
+        check_histograms(h_parent, h_friend)
 
         os.remove(rn1)
         os.remove(rn2)
@@ -170,4 +139,4 @@ class SparkFriendTreesTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main(argv=[__file__])
+    pytest.main(args=[__file__])

@@ -1,63 +1,25 @@
 import math
-import os
-import sys
-import unittest
-import warnings
 
-import pyspark
+import pytest
+
+import ROOT
+
 from DistRDF.Backends import Spark
 
 
-class IncludesSparkTest(unittest.TestCase):
+class TestIncludesSpark:
     """
     Check that the required header files are properly included in Spark
     environment.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Synchronize PYSPARK_PYTHON variable to the current Python executable.
-          Needed to avoid mismatch between python versions on driver and on the
-          fake executor on the same machine.
-        - Ignore `ResourceWarning: unclosed socket` warning triggered by Spark.
-          this is ignored by default in any application, but Python's unittest
-          library overrides the default warning filters thus exposing this
-          warning
-        - Initialize a SparkContext for the tests in this class
-        """
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("ignore", ResourceWarning)
-
-        sparkconf = pyspark.SparkConf().setMaster("local[2]")
-        cls.sc = pyspark.SparkContext(conf=sparkconf)
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("default", ResourceWarning)
-
-        cls.sc.stop()
-
-    def test_header_distribution_and_inclusion(self):
-        """
-        Tests for the distribution of headers to the workers and their
-        corresponding inclusion.
-        """
-
-        self._includes_function_with_filter_and_histo()
-        self._extend_ROOT_include_path()
-
-    def _includes_function_with_filter_and_histo(self):
+    def _includes_function_with_filter_and_histo(self, connection):
         """
         Check that the filter operation is able to use C++ functions that
         were included using header files.
         """
 
-        rdf = Spark.RDataFrame(10, sparkcontext=self.sc)
+        rdf = Spark.RDataFrame(10, sparkcontext=connection)
 
         rdf._headnode.backend.distribute_headers("../test_headers/header1.hxx")
 
@@ -75,24 +37,21 @@ class IncludesSparkTest(unittest.TestCase):
             required_size)
 
         # Compare the sizes of equivalent set of numbers
-        self.assertEqual(histo.GetEntries(), float(required_size))
-
+        assert histo.GetEntries() == required_size
         # Compare the means of equivalent set of numbers
-        self.assertEqual(histo.GetMean(), required_mean)
-
+        assert histo.GetMean() == required_mean
         # Compare the standard deviations of equivalent set of numbers
-        self.assertEqual(histo.GetStdDev(), required_stdDev)
+        assert histo.GetStdDev() == required_stdDev
 
-    def _extend_ROOT_include_path(self):
+    def _extend_ROOT_include_path(self, connection):
         """
         Check that the include path of ROOT is extended with the directories
         specified in `DistRDF.include_headers()` so references between headers
         are correctly solved.
         """
-        import ROOT
 
         # Create an RDataFrame with 100 integers from 0 to 99
-        rdf = Spark.RDataFrame(100, sparkcontext=self.sc)
+        rdf = Spark.RDataFrame(100, sparkcontext=connection)
 
         # Distribute headers to the workers
         header_folder = "../test_headers/headers_folder"
@@ -105,16 +64,25 @@ class IncludesSparkTest(unittest.TestCase):
         new_folder_include = "-I\"{}\"".format(header_folder)
 
         # Check that new folder is in ROOT include paths
-        self.assertTrue(new_folder_include in ROOT_include_path)
+        assert new_folder_include in ROOT_include_path
 
         # Filter numbers less than 10 and create an histogram
         rdf_less_than_10 = rdf.Filter("check_number_less_than_10(tdfentry_)")
         histo1 = rdf_less_than_10.Histo1D("tdfentry_")
 
         # Check that histogram has 10 entries and mean 4.5
-        self.assertEqual(histo1.GetEntries(), 10)
-        self.assertAlmostEqual(histo1.GetMean(), 4.5)
+        assert histo1.GetEntries() == 10
+        assert histo1.GetMean() == pytest.approx(4.5)
+
+    def test_header_distribution_and_inclusion(self, connection):
+        """
+        Tests for the distribution of headers to the workers and their
+        corresponding inclusion.
+        """
+
+        self._includes_function_with_filter_and_histo(connection)
+        self._extend_ROOT_include_path(connection)
 
 
 if __name__ == "__main__":
-    unittest.main(argv=[__file__])
+    pytest.main(args=[__file__])

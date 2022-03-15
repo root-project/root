@@ -1,11 +1,10 @@
 import os
-import sys
-import unittest
-import warnings
+
+import pytest
 
 import DistRDF
 from DistRDF.Backends import Spark
-import pyspark
+
 import ROOT
 
 
@@ -14,54 +13,37 @@ def write_tree(treename, filename):
     df.Define("x", "rdfentry_").Snapshot(treename, filename)
 
 
-class DefinePerSampleTest(unittest.TestCase):
+@pytest.fixture(scope="class")
+def setup_testdefinepersample(request):
+    """
+    Set up test environment for this class. Currently this includes:
+
+    - Write a set of trees usable by the tests in this class
+    - Initialize a Dask client for the tests in this class. This uses a
+        `LocalCluster` object that spawns 2 single-threaded Python processes.
+    """
+
+    request.cls.samples = ["sample1", "sample2", "sample3"]
+    request.cls.filenames = [sample + ".root" for sample in request.cls.samples]
+    request.cls.maintreename = "Events"
+    for filename in request.cls.filenames:
+        write_tree(request.cls.maintreename, filename)
+    yield
+    for name in request.cls.filenames:
+        os.remove(name)
+
+
+@pytest.mark.usefixtures("setup_testdefinepersample")
+class TestDefinePerSample:
     """Check the working of merge operations in the reducer function."""
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Synchronize PYSPARK_PYTHON variable to the current Python executable.
-          Needed to avoid mismatch between python versions on driver and on the
-          fake executor on the same machine.
-        - Ignore `ResourceWarning: unclosed socket` warning triggered by Spark.
-          this is ignored by default in any application, but Python's unittest
-          library overrides the default warning filters thus exposing this
-          warning
-        - Write a set of trees usable by the tests in this class
-        - Initialize a SparkContext for the tests in this class
-        """
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("ignore", ResourceWarning)
-
-        cls.samples = ["sample1", "sample2", "sample3"]
-        cls.filenames = [sample + ".root" for sample in cls.samples]
-        cls.maintreename = "Events"
-        for filename in cls.filenames:
-            write_tree(cls.maintreename, filename)
-
-        sparkconf = pyspark.SparkConf().setMaster("local[2]")
-        cls.sc = pyspark.SparkContext(conf=sparkconf)
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("default", ResourceWarning)
-
-        cls.sc.stop()
-
-        for name in cls.filenames:
-            os.remove(name)
-
-    def test_definepersample_simple(self):
+    def test_definepersample_simple(self, connection):
         """
         Test DefinePerSample operation on three samples using a predefined
         string of operations.
         """
 
-        df = Spark.RDataFrame(self.maintreename, self.filenames, sparkcontext=self.sc)
+        df = Spark.RDataFrame(self.maintreename, self.filenames, sparkcontext=connection)
 
         # Associate a number to each sample
         definepersample_code = """
@@ -78,9 +60,9 @@ class DefinePerSampleTest(unittest.TestCase):
         samplescounts = [df1.Filter("sampleid == {}".format(id)).Count() for id in [1, 2, 3]]
 
         for count in samplescounts:
-            self.assertEqual(count.GetValue(), 10)
+            assert count.GetValue() == 10
 
-    def test_definepersample_withinitialization(self):
+    def test_definepersample_withinitialization(self, connection):
         """
         Test DefinePerSample operation on three samples using C++ functions
         declared to the ROOT interpreter.
@@ -91,7 +73,8 @@ class DefinePerSampleTest(unittest.TestCase):
         def declare_definepersample_code():
             ROOT.gInterpreter.Declare(
                 '''
-
+            #ifndef distrdf_test_definepersample_withinitialization
+            #define distrdf_test_definepersample_withinitialization
             float sample1_weight(){
                 return 1.0f;
             }
@@ -118,11 +101,11 @@ class DefinePerSampleTest(unittest.TestCase):
             std::string samples_names(unsigned int slot, const ROOT::RDF::RSampleInfo &id){
                 return id.AsString();
             }
-
+            #endif // distrdf_test_definepersample_withinitialization
             ''')
 
         DistRDF.initialize(declare_definepersample_code)
-        df = Spark.RDataFrame(self.maintreename, self.filenames, sparkcontext=self.sc)
+        df = Spark.RDataFrame(self.maintreename, self.filenames, sparkcontext=connection)
         df1 = df.DefinePerSample("sample_weight", "samples_weights(rdfslot_, rdfsampleinfo_)")\
                 .DefinePerSample("sample_name", "samples_names(rdfslot_, rdfsampleinfo_)")
 
@@ -135,8 +118,8 @@ class DefinePerSampleTest(unittest.TestCase):
             for (weight, name) in weightsandnames]
 
         for count in samplescounts:
-            self.assertEqual(count.GetValue(), 10)
+            assert count.GetValue() == 10
 
 
 if __name__ == "__main__":
-    unittest.main(argv=[__file__])
+    pytest.main(args=[__file__])

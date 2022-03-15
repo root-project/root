@@ -1,58 +1,22 @@
-import os
-import sys
-import unittest
-import warnings
 from collections import namedtuple
 
-import pyspark
+import pytest
+
 import ROOT
+
 from DistRDF.Backends import Spark
 
 
-class SparkHistogramsTest(unittest.TestCase):
+class TestSparkHistograms:
     """Integration tests to check the working of DistRDF."""
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Synchronize PYSPARK_PYTHON variable to the current Python executable.
-          Needed to avoid mismatch between python versions on driver and on the
-          fake executor on the same machine.
-        - Ignore `ResourceWarning: unclosed socket` warning triggered by Spark.
-          this is ignored by default in any application, but Python's unittest
-          library overrides the default warning filters thus exposing this
-          warning
-        - Initialize a SparkContext for the tests in this class
-        """
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("ignore", ResourceWarning)
-
-        # Disable ROOT graphics for these tests
-        cls.oldbatch = ROOT.gROOT.IsBatch()
-        ROOT.gROOT.SetBatch(True)
-
-        sparkconf = pyspark.SparkConf().setMaster("local[2]")
-        cls.sc = pyspark.SparkContext(conf=sparkconf)
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        if sys.version_info.major >= 3:
-            warnings.simplefilter("default", ResourceWarning)
-
-        ROOT.gROOT.SetBatch(cls.oldbatch)
-
-        cls.sc.stop()
-
-    def build_pyrdf_graph(self):
+    def build_distrdf_graph(self, connection):
         """
         Create a DistRDF graph with a fixed set of operations and return it.
         """
         treename = "data"
         files = ["http://root.cern/files/teaching/CMS_Open_Dataset.root", ]
-        rdf = Spark.RDataFrame(treename, files, npartitions=5, sparkcontext=self.sc)
+        rdf = Spark.RDataFrame(treename, files, npartitions=5, sparkcontext=connection)
 
         # Define the analysis cuts
         chargeCutStr = "C1 != C2"
@@ -110,14 +74,14 @@ class SparkHistogramsTest(unittest.TestCase):
 
         return pt1_h, pt2_h, invMass_h, phis_h
 
-    def test_spark_histograms(self):
+    def test_spark_histograms(self, connection):
         """Check that Spark backend works the same way as ROOT RDF."""
         physics_variables = ["pt1_h", "pt2_h", "invMass_h", "phis_h"]
 
         SparkResult = namedtuple("SparkResult", physics_variables)
-        spark = SparkResult(*self.build_pyrdf_graph())
+        sparkresults = SparkResult(*self.build_distrdf_graph(connection))
 
-        spark.pt1_h.Draw("PL PLC PMC")  # Trigger Event-loop, Spark
+        sparkresults.pt1_h.Draw("PL PLC PMC")  # Trigger Event-loop, Spark
 
         # ROOT RDataFrame execution
         RDFResult = namedtuple("RDFResult", physics_variables)
@@ -126,16 +90,14 @@ class SparkHistogramsTest(unittest.TestCase):
         rootrdf.pt1_h.Draw("PL PLC PMC")  # Trigger Event-loop, RDF-only
 
         # Assert 'pt1_h' histogram
-        self.assertEqual(spark.pt1_h.GetEntries(), rootrdf.pt1_h.GetEntries())
+        assert sparkresults.pt1_h.GetEntries() == rootrdf.pt1_h.GetEntries()
         # Assert 'pt2_h' histogram
-        self.assertEqual(spark.pt2_h.GetEntries(), rootrdf.pt2_h.GetEntries())
+        assert sparkresults.pt2_h.GetEntries() == rootrdf.pt2_h.GetEntries()
         # Assert 'invMass_h' histogram
-        self.assertEqual(spark.invMass_h.GetEntries(),
-                         rootrdf.invMass_h.GetEntries())
+        assert sparkresults.invMass_h.GetEntries() == rootrdf.invMass_h.GetEntries()
         # Assert 'phis_h' histogram
-        self.assertEqual(spark.phis_h.GetEntries(),
-                         rootrdf.phis_h.GetEntries())
+        assert sparkresults.phis_h.GetEntries() == rootrdf.phis_h.GetEntries()
 
 
 if __name__ == "__main__":
-    unittest.main(argv=[__file__])
+    pytest.main(args=[__file__])
