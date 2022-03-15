@@ -25,13 +25,6 @@
 #include "RooNumIntConfig.h"
 #include "RooMsgService.h"
 #include "RooResolutionModel.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
-#include "RooDouble.h"
-#include "RooWorkspace.h"
-#include "Roo1DTable.h"
-#include "RooCurve.h"
-#include "RooHist.h"
 #include "RooRandom.h"
 #include "RooTrace.h"
 
