@@ -3101,11 +3101,32 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    // TClass if we have one.
    if (cl) return cl;
 
-   if (ispair &&  hint_pair_offset && hint_pair_size) {
-      auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName, silent, hint_pair_offset, hint_pair_size);
-      //return pairinfo ? pairinfo->GetClass() : nullptr;
-      if (pairinfo)
-         return pairinfo->GetClass();
+   if (ispair) {
+      if (hint_pair_offset && hint_pair_size) {
+         auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName, silent, hint_pair_offset, hint_pair_size);
+         //return pairinfo ? pairinfo->GetClass() : nullptr;
+         if (pairinfo)
+            return pairinfo->GetClass();
+      } else {
+         //  Check if we have an STL container that might provide it.
+         static const size_t slen = strlen("pair");
+         static const char *associativeContainer[] = { "map", "unordered_map", "multimap",
+            "unordered_multimap", "set", "unordered_set", "multiset", "unordered_multiset" };
+         for(auto contname : associativeContainer) {
+            std::string collname = contname;
+            collname.append( normalizedName.c_str() + slen );
+            TClass *collcl = TClass::GetClass(collname.c_str(), false, silent);
+            if (!collcl)
+               collcl = LoadClassDefault(collname.c_str(), silent);
+            if (collcl) {
+               auto p = collcl->GetCollectionProxy();
+               if (p)
+                  cl = p->GetValueClass();
+               if (cl)
+                  return cl;
+            }
+         }
+      }
    } else if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
 
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
