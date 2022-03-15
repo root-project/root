@@ -295,7 +295,6 @@ private:
              Int_t dl, Int_t il,
              ClassInfo_t *classInfo,
              Bool_t silent);
-   void ForceReload (TClass* oldcl);
    void LoadClassInfo() const;
 
    static TClass     *LoadClassDefault(const char *requestedname, Bool_t silent);
@@ -401,6 +400,7 @@ public:
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const char* onfile_classname, UInt_t checksum ) const;
    TVirtualStreamerInfo     *GetConversionStreamerInfo( const TClass* onfile_cl, Int_t version ) const;
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const TClass* onfile_cl, UInt_t checksum ) const;
+   void               ForceReload (TClass* oldcl);
    Bool_t             HasDataMemberInfo() const { return fIsSyntheticPair || fHasRootPcmInfo || HasInterpreterInfo(); }
    Bool_t             HasDefaultConstructor(Bool_t testio = kFALSE) const;
    Bool_t             HasInterpreterInfoInMemory() const { return 0 != fClassInfo; }
