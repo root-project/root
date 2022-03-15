@@ -53,6 +53,7 @@
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TH1D>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TH2D>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TH3D>+;
+#pragma link C++ class ROOT::Detail::RDF::RMergeableValue<THnD>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TGraph>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TStatistic>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile>+;
