@@ -221,9 +221,9 @@ root [1] .<command>
 
 This is a selection of the most common commands.
 
--   **quit root**, simply type `.q`
+-   **quit root**, simply type `.q` or `.quit` or `.exit`
 
--   obtain a **list of commands**, use `.?`
+-   obtain the full **list of commands**, use `.?` or `.help`
 
 -   **access the shell** of the operating system, type `.!<OS_command>`;
     try, e.g. `.!ls` or `.!pwd`
@@ -242,8 +242,6 @@ This is a selection of the most common commands.
     code starting from your macro. One could decide to compile a macro
     in order to obtain better performance or to get nearer to the
     production environment.
-
-Use `.help` at the prompt to inspect the full list.
 
 ## Plotting Measurements ##
 
@@ -517,4 +515,5 @@ features of ROOT.
 ***Please move on to become an expert!***
 
 [^2]: All ROOT classes' names start with the letter T. A notable exception is
-RooFit. In this context all classes' names are of the form Roo*.
+RooFit. In this context all classes' names are of the form Roo*. Starting with
+ROOT7, all names start with and R.
