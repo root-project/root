@@ -18,8 +18,13 @@ if (ROOT_test_distrdf_pyspark_FOUND AND ROOT_test_distrdf_dask_FOUND)
         list(APPEND PYSPARK_ENV_VARS OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
     endif()
 
-    ROOTTEST_ADD_TEST(common_test_rungraphs
-                    MACRO test_rungraphs.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
+    # We use the PROCESSORS property to tell cmake how many cores we will be
+    # using in the following test. In this folder, both a Dask and a Spark
+    # cluster objects are created on the local machine. Each object will use 2
+    # cores with multiprocessing, so the property is set to 4 in this case.
+    ROOTTEST_ADD_TEST(test_all
+                      MACRO test_all.py
+                      ENVIRONMENT ${PYSPARK_ENV_VARS}
+                      PROPERTIES PROCESSORS 4)
 
 endif()
