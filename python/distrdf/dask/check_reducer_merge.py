@@ -1,7 +1,7 @@
 import os
-import unittest
 
-from dask.distributed import Client, LocalCluster
+import pytest
+
 import numpy
 
 import ROOT
@@ -10,35 +10,19 @@ from DistRDF.Backends import Dask
 from DistRDF.Proxy import ActionProxy
 
 
-class ReducerMergeTest(unittest.TestCase):
+class TestReducerMerge:
     """Check the working of merge operations in the reducer function."""
-
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Initialize a Dask client for the tests in this class. This uses a
-          `LocalCluster` object that spawns 2 single-threaded Python processes.
-        """
-        cls.client = Client(LocalCluster(n_workers=2, threads_per_worker=1, processes=True))
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        cls.client.shutdown()
-        cls.client.close()
 
     def assertHistoOrProfile(self, obj_1, obj_2):
         """Asserts equality between two 'ROOT.TH1' or 'ROOT.TH2' objects."""
         # Compare the sizes of equivalent objects
-        self.assertEqual(obj_1.GetEntries(), obj_2.GetEntries())
+        assert obj_1.GetEntries() == obj_2.GetEntries()
 
         # Compare the means of equivalent objects
-        self.assertEqual(obj_1.GetMean(), obj_2.GetMean())
+        assert obj_1.GetMean() == obj_2.GetMean()
 
         # Compare the standard deviations of equivalent objects
-        self.assertEqual(obj_1.GetStdDev(), obj_2.GetStdDev())
+        assert obj_1.GetStdDev() == obj_2.GetStdDev()
 
     def define_two_columns(self, rdf):
         """
@@ -66,10 +50,10 @@ class ReducerMergeTest(unittest.TestCase):
 
         return rdf
 
-    def test_histo1d_merge(self):
+    def test_histo1d_merge(self, connection):
         """Check the working of Histo1D merge operation in the reducer."""
         # Operations with DistRDF
-        rdf_py = Dask.RDataFrame(10, daskclient=self.client)
+        rdf_py = Dask.RDataFrame(10, daskclient=connection)
         histo_py = rdf_py.Histo1D("rdfentry_")
 
         # Operations with PyROOT
@@ -79,12 +63,12 @@ class ReducerMergeTest(unittest.TestCase):
         # Compare the 2 histograms
         self.assertHistoOrProfile(histo_py, histo_cpp)
 
-    def test_histo2d_merge(self):
+    def test_histo2d_merge(self, connection):
         """Check the working of Histo2D merge operation in the reducer."""
         modelTH2D = ("", "", 64, -4, 4, 64, -4, 4)
 
         # Operations with DistRDF
-        rdf_py = Dask.RDataFrame(10, daskclient=self.client)
+        rdf_py = Dask.RDataFrame(10, daskclient=connection)
         columns_py = self.define_two_columns(rdf_py)
         histo_py = columns_py.Histo2D(modelTH2D, "x", "y")
 
@@ -96,11 +80,11 @@ class ReducerMergeTest(unittest.TestCase):
         # Compare the 2 histograms
         self.assertHistoOrProfile(histo_py, histo_cpp)
 
-    def test_histo3d_merge(self):
+    def test_histo3d_merge(self, connection):
         """Check the working of Histo3D merge operation in the reducer."""
         modelTH3D = ("", "", 64, -4, 4, 64, -4, 4, 64, -4, 4)
         # Operations with DistRDF
-        rdf_py = Dask.RDataFrame(10, daskclient=self.client)
+        rdf_py = Dask.RDataFrame(10, daskclient=connection)
         columns_py = self.define_three_columns(rdf_py)
         histo_py = columns_py.Histo3D(modelTH3D, "x", "y", "z")
 
@@ -112,7 +96,7 @@ class ReducerMergeTest(unittest.TestCase):
         # Compare the 2 histograms
         self.assertHistoOrProfile(histo_py, histo_cpp)
 
-    def test_histond_merge(self):
+    def test_histond_merge(self, connection):
         """Check the working of HistoND merge operation in the reducer."""
         nbins = (10, 10, 10, 10)
         xmin = (0., 0., 0., 0.)
@@ -120,7 +104,7 @@ class ReducerMergeTest(unittest.TestCase):
         modelTHND = ("name", "title", 4, nbins, xmin, xmax)
         colnames = ("x0", "x1", "x2", "x3")
 
-        distrdf = Dask.RDataFrame(100, daskclient=self.client)
+        distrdf = Dask.RDataFrame(100, daskclient=connection)
         rdf = ROOT.RDataFrame(100)
 
         distrdf_withcols = self.define_four_columns(distrdf, colnames)
@@ -129,13 +113,13 @@ class ReducerMergeTest(unittest.TestCase):
         histond_distrdf = distrdf_withcols.HistoND(modelTHND, colnames)
         histond_rdf = rdf_withcols.HistoND(modelTHND, colnames)
 
-        self.assertEqual(histond_distrdf.GetEntries(), histond_rdf.GetEntries())
-        self.assertEqual(histond_distrdf.GetNbins(), histond_rdf.GetNbins())
+        assert histond_distrdf.GetEntries() == histond_rdf.GetEntries()
+        assert histond_distrdf.GetNbins() == histond_rdf.GetNbins()
 
-    def test_profile1d_merge(self):
+    def test_profile1d_merge(self, connection):
         """Check the working of Profile1D merge operation in the reducer."""
         # Operations with DistRDF
-        rdf_py = Dask.RDataFrame(10, daskclient=self.client)
+        rdf_py = Dask.RDataFrame(10, daskclient=connection)
         columns_py = self.define_two_columns(rdf_py)
         profile_py = columns_py.Profile1D(("", "", 64, -4, 4), "x", "y")
 
@@ -147,12 +131,12 @@ class ReducerMergeTest(unittest.TestCase):
         # Compare the 2 profiles
         self.assertHistoOrProfile(profile_py, profile_cpp)
 
-    def test_profile2d_merge(self):
+    def test_profile2d_merge(self, connection):
         """Check the working of Profile2D merge operation in the reducer."""
         model = ("", "", 64, -4, 4, 64, -4, 4)
 
         # Operations with DistRDF
-        rdf_py = Dask.RDataFrame(10, daskclient=self.client)
+        rdf_py = Dask.RDataFrame(10, daskclient=connection)
         columns_py = self.define_three_columns(rdf_py)
         profile_py = columns_py.Profile2D(model, "x", "y", "z")
 
@@ -164,12 +148,10 @@ class ReducerMergeTest(unittest.TestCase):
         # Compare the 2 profiles
         self.assertHistoOrProfile(profile_py, profile_cpp)
 
-    @unittest.skipIf(ROOT.gROOT.GetVersion() < '6.16',
-                     "Graph featured included in ROOT-6.16 for the first time")
-    def test_tgraph_merge(self):
+    def test_tgraph_merge(self, connection):
         """Check the working of TGraph merge operation in the reducer."""
         # Operations with DistRDF
-        rdf_py = Dask.RDataFrame(10, daskclient=self.client)
+        rdf_py = Dask.RDataFrame(10, daskclient=connection)
         columns_py = self.define_two_columns(rdf_py)
         graph_py = columns_py.Graph("x", "y")
 
@@ -183,66 +165,66 @@ class ReducerMergeTest(unittest.TestCase):
         graph_cpp.Sort()
 
         # Compare the X co-ordinates of the graphs
-        self.assertListEqual(list(graph_py.GetX()), list(graph_cpp.GetX()))
+        assert list(graph_py.GetX()) == list(graph_cpp.GetX())
 
         # Compare the Y co-ordinates of the graphs
-        self.assertListEqual(list(graph_py.GetY()), list(graph_cpp.GetY()))
+        assert list(graph_py.GetY()) == list(graph_cpp.GetY())
 
-    def test_distributed_count(self):
+    def test_distributed_count(self, connection):
         """Test support for `Count` operation in distributed backend"""
-        rdf_py = Dask.RDataFrame(100, daskclient=self.client)
+        rdf_py = Dask.RDataFrame(100, daskclient=connection)
         count = rdf_py.Count()
 
-        self.assertEqual(count.GetValue(), 100)
+        assert count.GetValue() == 100
 
-    def test_distributed_sum(self):
+    def test_distributed_sum(self, connection):
         """Test support for `Sum` operation in distributed backend"""
-        rdf_py = Dask.RDataFrame(10, daskclient=self.client)
+        rdf_py = Dask.RDataFrame(10, daskclient=connection)
         rdf_def = rdf_py.Define("x", "rdfentry_")
         rdf_sum = rdf_def.Sum("x")
 
-        self.assertAlmostEqual(rdf_sum.GetValue(), 45.0)
+        assert rdf_sum.GetValue() == 45.0
 
     def check_npy_dict(self, npy_dict):
-        """Checks on correctness of numpy array dictionary returned by 'Asnumpy"""
-        self.assertIsInstance(npy_dict, dict)
+        """Checks on correctness of numpy array dictionary returned by 'Asnumpy'"""
+        assert isinstance(npy_dict, dict)
 
         # Retrieve the two numpy arrays with the column names of the original
         # RDataFrame as dictionary keys.
         npy_x = npy_dict["x"]
         npy_y = npy_dict["y"]
-        self.assertIsInstance(npy_x, numpy.ndarray)
-        self.assertIsInstance(npy_y, numpy.ndarray)
+        assert isinstance(npy_x, numpy.ndarray)
+        assert isinstance(npy_y, numpy.ndarray)
 
         # Check the two arrays are of the same length as the original columns.
-        self.assertEqual(len(npy_x), 10)
-        self.assertEqual(len(npy_y), 10)
+        assert len(npy_x) == 10
+        assert len(npy_y) == 10
 
         # Check the types correspond to the ones of the original columns.
         int_32_dtype = numpy.dtype("int32")
         float_32_dtype = numpy.dtype("float32")
-        self.assertEqual(npy_x.dtype, int_32_dtype)
-        self.assertEqual(npy_y.dtype, float_32_dtype)
+        assert npy_x.dtype == int_32_dtype
+        assert npy_y.dtype == float_32_dtype
 
-    def test_distributed_asnumpy(self):
+    def test_distributed_asnumpy(self, connection):
         """Test support for `AsNumpy` pythonization in distributed backend"""
 
         # Let's create a simple dataframe with ten rows and two columns
-        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "(int)rdfentry_")\
+        df = Dask.RDataFrame(10, daskclient=connection).Define("x", "(int)rdfentry_")\
             .Define("y", "1.f/(1.f+rdfentry_)")
 
         # Build a dictionary of numpy arrays.
         npy = df.AsNumpy()
         self.check_npy_dict(npy)
 
-    def test_distributed_asnumpy_columns(self):
+    def test_distributed_asnumpy_columns(self, connection):
         """
         Test that distributed AsNumpy correctly accepts the 'columns' keyword
         argument.
         """
 
         # Let's create a simple dataframe with ten rows and two columns
-        df = Dask.RDataFrame(10, daskclient=self.client)\
+        df = Dask.RDataFrame(10, daskclient=connection)\
             .Define("x", "(int)rdfentry_")\
             .Define("y", "1.f/(1.f+rdfentry_)")
 
@@ -250,26 +232,26 @@ class ReducerMergeTest(unittest.TestCase):
         npy = df.AsNumpy(columns=["x"])
 
         # Check the dictionary only has the desired column
-        self.assertListEqual(list(npy.keys()), ["x"])
+        assert list(npy.keys()) == ["x"]
 
         # Check correctness of the output array
         npy_x = npy["x"]
-        self.assertIsInstance(npy_x, numpy.ndarray)
-        self.assertEqual(len(npy_x), 10)
+        assert isinstance(npy_x, numpy.ndarray)
+        assert len(npy_x) == 10
         int_32_dtype = numpy.dtype("int32")
-        self.assertEqual(npy_x.dtype, int_32_dtype)
+        assert npy_x.dtype == int_32_dtype
 
-    def test_distributed_asnumpy_lazy(self):
+    def test_distributed_asnumpy_lazy(self, connection):
         """Test that `AsNumpy` can be still called lazily in distributed mode"""
 
         # Let's create a simple dataframe with ten rows and two columns
-        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "(int)rdfentry_")\
+        df = Dask.RDataFrame(10, daskclient=connection).Define("x", "(int)rdfentry_")\
             .Define("y", "1.f/(1.f+rdfentry_)")
 
         npy_lazy = df.AsNumpy(lazy=True)
         # The event loop hasn't been triggered yet
-        self.assertIsInstance(npy_lazy, ActionProxy)
-        self.assertIsNone(npy_lazy.proxied_node.value)
+        assert isinstance(npy_lazy, ActionProxy)
+        assert npy_lazy.proxied_node.value is None
 
         # Trigger the computations and check final results
         npy = npy_lazy.GetValue()
@@ -279,37 +261,37 @@ class ReducerMergeTest(unittest.TestCase):
         # Count the rows in the snapshotted dataframe
         snapcount = snapdf.Count()
 
-        self.assertEqual(snapcount.GetValue(), 10)
+        assert snapcount.GetValue() == 10
 
         # Retrieve list of file from the snapshotted dataframe
         input_files = snapdf.proxied_node.inputfiles
         # Create list of supposed filenames for the intermediary files
         tmp_files = [f"{snapfilename}_0.root", f"{snapfilename}_1.root"]
         # Check that the two lists are the same
-        self.assertListEqual(input_files, tmp_files)
+        assert input_files == tmp_files
         # Check that the intermediary .root files were created with the right
         # names, then remove them because they are not necessary
         for filename in tmp_files:
-            self.assertTrue(os.path.exists(filename))
+            assert os.path.exists(filename)
             os.remove(filename)
 
-    def test_distributed_snapshot(self):
+    def test_distributed_snapshot(self, connection):
         """Test support for `Snapshot` in distributed backend"""
         # A simple dataframe with ten sequential numbers from 0 to 9
-        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "rdfentry_")
+        df = Dask.RDataFrame(10, daskclient=connection).Define("x", "rdfentry_")
 
         # Snapshot to two files, build a ROOT.TChain with them and retrieve a
         # Dask.RDataFrame
         snapdf = df.Snapshot("snapTree", "snapFile.root")
         self.check_snapshot_df(snapdf, "snapFile")
 
-    def test_distributed_snapshot_columnlist(self):
+    def test_distributed_snapshot_columnlist(self, connection):
         """
         Test that distributed Snapshot correctly passes also the third input
         argument "columnList".
         """
         # A simple dataframe with ten sequential numbers from 0 to 9
-        df = Dask.RDataFrame(10, daskclient=self.client)\
+        df = Dask.RDataFrame(10, daskclient=connection)\
             .Define("a", "rdfentry_")\
             .Define("b", "rdfentry_")\
             .Define("c", "rdfentry_")\
@@ -324,30 +306,30 @@ class ReducerMergeTest(unittest.TestCase):
         rdf = ROOT.RDataFrame("snapTree_columnlist", tmp_files)
         snapcolumns = [str(column) for column in rdf.GetColumnNames()]
 
-        self.assertListEqual(snapcolumns, expectedcolumns)
+        assert snapcolumns == expectedcolumns
 
         for filename in tmp_files:
             os.remove(filename)
 
-    def test_distributed_snapshot_lazy(self):
+    def test_distributed_snapshot_lazy(self, connection):
         """Test that `Snapshot` can be still called lazily in distributed mode"""
         # A simple dataframe with ten sequential numbers from 0 to 9
-        df = Dask.RDataFrame(10, daskclient=self.client).Define("x", "rdfentry_")
+        df = Dask.RDataFrame(10, daskclient=connection).Define("x", "rdfentry_")
 
         opts = ROOT.RDF.RSnapshotOptions()
         opts.fLazy = True
         snap_lazy = df.Snapshot("snapTree_lazy", "snapFile_lazy.root", ["x"], opts)
         # The event loop hasn't been triggered yet
-        self.assertIsInstance(snap_lazy, ActionProxy)
-        self.assertIsNone(snap_lazy.proxied_node.value)
+        assert isinstance(snap_lazy, ActionProxy)
+        assert snap_lazy.proxied_node.value is None
 
         snapdf = snap_lazy.GetValue()
         self.check_snapshot_df(snapdf, "snapFile_lazy")
 
-    def test_redefine_one_column(self):
+    def test_redefine_one_column(self, connection):
         """Test that values of one column can be properly redefined."""
         # A simple dataframe with ten sequential numbers from 0 to 9
-        df = Dask.RDataFrame(10, daskclient=self.client)
+        df = Dask.RDataFrame(10, daskclient=connection)
         df_before = df.Define("x", "1")
         df_after = df_before.Redefine("x", "2")
 
@@ -356,9 +338,9 @@ class ReducerMergeTest(unittest.TestCase):
         # Sum after the redefinition should be equal to 20
         sum_after = df_after.Sum("x")
 
-        self.assertAlmostEqual(sum_before.GetValue(), 10.0)
-        self.assertAlmostEqual(sum_after.GetValue(), 20.0)
+        assert sum_before.GetValue() == 10.0
+        assert sum_after.GetValue() == 20.0
 
 
 if __name__ == "__main__":
-    unittest.main(argv=[__file__])
+    pytest.main(args=[__file__])

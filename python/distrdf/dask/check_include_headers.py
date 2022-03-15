@@ -1,42 +1,25 @@
 import math
-import os
-import unittest
+
+import pytest
 
 import ROOT
 
 from DistRDF.Backends import Dask
 
-from dask.distributed import Client, LocalCluster
 
-class IncludesDaskTest(unittest.TestCase):
+class TestIncludesDask:
     """
     Check that the required header files are properly included in Dask
     environment.
     """
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Initialize a Dask client for the tests in this class. This uses a
-          `LocalCluster` object that spawns 2 single-threaded Python processes.
-        """
-        cls.client = Client(LocalCluster(n_workers=2, threads_per_worker=1, processes=True))
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        cls.client.shutdown()
-        cls.client.close()
-
-    def _includes_function_with_filter_and_histo(self):
+    def _includes_function_with_filter_and_histo(self, connection):
         """
         Check that the filter operation is able to use C++ functions that
         were included using header files.
         """
 
-        rdf = Dask.RDataFrame(10, daskclient=self.client)
+        rdf = Dask.RDataFrame(10, daskclient=connection)
 
         rdf._headnode.backend.distribute_headers("../test_headers/header1.hxx")
 
@@ -54,15 +37,13 @@ class IncludesDaskTest(unittest.TestCase):
             required_size)
 
         # Compare the sizes of equivalent set of numbers
-        self.assertEqual(histo.GetEntries(), float(required_size))
-
+        assert histo.GetEntries() == required_size
         # Compare the means of equivalent set of numbers
-        self.assertEqual(histo.GetMean(), required_mean)
-
+        assert histo.GetMean() == required_mean
         # Compare the standard deviations of equivalent set of numbers
-        self.assertEqual(histo.GetStdDev(), required_stdDev)
+        assert histo.GetStdDev() == required_stdDev
 
-    def _extend_ROOT_include_path(self):
+    def _extend_ROOT_include_path(self, connection):
         """
         Check that the include path of ROOT is extended with the directories
         specified in `DistRDF.include_headers()` so references between headers
@@ -70,7 +51,7 @@ class IncludesDaskTest(unittest.TestCase):
         """
 
         # Create an RDataFrame with 100 integers from 0 to 99
-        rdf = Dask.RDataFrame(100, daskclient=self.client)
+        rdf = Dask.RDataFrame(100, daskclient=connection)
 
         # Distribute headers to the workers
         header_folder = "../test_headers/headers_folder"
@@ -83,24 +64,25 @@ class IncludesDaskTest(unittest.TestCase):
         new_folder_include = "-I\"{}\"".format(header_folder)
 
         # Check that new folder is in ROOT include paths
-        self.assertTrue(new_folder_include in ROOT_include_path)
+        assert new_folder_include in ROOT_include_path
 
         # Filter numbers less than 10 and create an histogram
         rdf_less_than_10 = rdf.Filter("check_number_less_than_10(tdfentry_)")
         histo1 = rdf_less_than_10.Histo1D("tdfentry_")
 
         # Check that histogram has 10 entries and mean 4.5
-        self.assertEqual(histo1.GetEntries(), 10)
-        self.assertAlmostEqual(histo1.GetMean(), 4.5)
+        assert histo1.GetEntries() == 10
+        assert histo1.GetMean() == pytest.approx(4.5)
 
-    def test_header_distribution_and_inclusion(self):
+    def test_header_distribution_and_inclusion(self, connection):
         """
         Tests for the distribution of headers to the workers and their
         corresponding inclusion.
         """
 
-        self._includes_function_with_filter_and_histo()
-        self._extend_ROOT_include_path()
+        self._includes_function_with_filter_and_histo(connection)
+        self._extend_ROOT_include_path(connection)
+
 
 if __name__ == "__main__":
-    unittest.main(argv=[__file__])
+    pytest.main(args=[__file__])

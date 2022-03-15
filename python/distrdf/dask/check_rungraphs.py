@@ -1,34 +1,17 @@
 import os
-import unittest
+
+import pytest
 
 import ROOT
 
 import DistRDF
 from DistRDF.Backends import Dask
 
-from dask.distributed import Client, LocalCluster
 
-
-class RunGraphsTests(unittest.TestCase):
+class TestRunGraphs:
     """Tests usage of RunGraphs function with Dask backend"""
 
-    @classmethod
-    def setUpClass(cls):
-        """
-        Set up test environment for this class. Currently this includes:
-
-        - Initialize a Dask client for the tests in this class. This uses a
-          `LocalCluster` object that spawns 2 single-threaded Python processes.
-        """
-        cls.client = Client(LocalCluster(n_workers=2, threads_per_worker=1, processes=True))
-
-    @classmethod
-    def tearDownClass(cls):
-        """Reset test environment."""
-        cls.client.shutdown()
-        cls.client.close()
-
-    def test_rungraphs_dask_3histos(self):
+    def test_rungraphs_dask_3histos(self, connection):
         """
         Submit three different Dask RDF graphs concurrently
         """
@@ -44,14 +27,14 @@ class RunGraphsTests(unittest.TestCase):
                                  .Snapshot(treename, filename, ["b1", "b2", "b3"], opts)
 
         histoproxies = [
-            Dask.RDataFrame(treename, filename, daskclient=self.client, npartitions=2)
+            Dask.RDataFrame(treename, filename, daskclient=connection, npartitions=2)
                 .Histo1D((col, col, 1, 40, 45), col)
             for col in ["b1", "b2", "b3"]
         ]
 
         # Before triggering the computation graphs values are None
         for proxy in histoproxies:
-            self.assertIsNone(proxy.proxied_node.value)
+            assert proxy.proxied_node.value is None
 
         DistRDF.RunGraphs(histoproxies)
 
@@ -59,12 +42,12 @@ class RunGraphsTests(unittest.TestCase):
         # node objects
         for proxy in histoproxies:
             histo = proxy.proxied_node.value
-            self.assertIsInstance(histo, ROOT.TH1D)
-            self.assertEqual(histo.GetEntries(), nentries)
-            self.assertAlmostEqual(histo.GetMean(), 42)
+            assert isinstance(histo, ROOT.TH1D)
+            assert histo.GetEntries() == nentries
+            assert histo.GetMean() == 42
 
         os.remove(filename)
 
 
 if __name__ == "__main__":
-    unittest.main(argv=[__file__])
+    pytest.main(args=[__file__])
