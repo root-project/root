@@ -17,13 +17,16 @@
 #ifndef ROO_CMD_CONFIG
 #define ROO_CMD_CONFIG
 
-#include "TObject.h"
-#include "TObjString.h"
-#include "TString.h"
-#include "TList.h"
-#include "RooCmdArg.h"
-#include "RooArgSet.h"
+#include <RooCmdArg.h>
+
+#include <TList.h>
+#include <TObjString.h>
+#include <TObject.h>
+#include <TString.h>
+
 #include <string>
+
+class RooArgSet;
 
 class RooCmdConfig : public TObject {
 public:
@@ -97,12 +100,13 @@ public:
 
 protected:
 
-  struct StringVar {
+  template<class T>
+  struct Var {
     std::string name;
     std::string argName;
-    std::string val;
+    T val;
     bool appendMode;
-    int stringNum;
+    int num;
   };
 
   TString _name ;
@@ -111,11 +115,11 @@ protected:
   Bool_t _error = false;
   Bool_t _allowUndefined = false;
 
-  TList _iList ; ///< Integer list
-  TList _dList ; ///< Double list
-  std::vector<StringVar> _sList ; ///< String list
-  TList _oList ; ///< Object list
-  TList _cList ; ///< RooArgSet list
+  std::vector<Var<int>> _iList ; ///< Integer list
+  std::vector<Var<double>> _dList ; ///< Double list
+  std::vector<Var<std::string>> _sList ; ///< String list
+  std::vector<Var<RooLinkedList>> _oList ; ///< Object list
+  std::vector<Var<RooArgSet*>> _cList ; ///< RooArgSet list
 
   TList _rList ; ///< Required cmd list
   TList _fList ; ///< Forbidden cmd list
