@@ -110,6 +110,8 @@ public:
       throw std::logic_error("`GetMergeableValue` is not implemented for this type of action.");
    }
 
+   /// Override this method to register a callback that is executed before the processing a new data sample starts.
+   /// The callback will be invoked in the same conditions as with DefinePerSample().
    virtual ROOT::RDF::SampleCallback_t GetSampleCallback() { return {}; }
 };
 
