@@ -1956,7 +1956,7 @@ Int_t TSpectrum3::SearchHighRes(const Double_t***source,Double_t***dest, Int_t s
    Double_t lda,ldb,ldc,area,maximum;
    Int_t xmin,xmax,l,peak_index = 0,sizex_ext=ssizex + 4 * number_of_iterations,sizey_ext = ssizey + 4 * number_of_iterations,sizez_ext = ssizez + 4 * number_of_iterations,shift = 2 * number_of_iterations;
    Int_t ymin,ymax,zmin,zmax,i,j;
-   Double_t a,b,maxch,plocha = 0,plocha_markov = 0;
+   Double_t a,b,maxch,plocha_markov = 0;
    Double_t nom,nip,nim,sp,sm,spx,spy,smx,smy,spz,smz;
    Double_t p1,p2,p3,p4,p5,p6,p7,p8,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10,s11,s12,r1,r2,r3,r4,r5,r6;
    Int_t x,y,z;
@@ -2381,8 +2381,6 @@ Int_t TSpectrum3::SearchHighRes(const Double_t***source,Double_t***dest, Int_t s
                working_space[i][j][k] = 0;
                if(maxch < working_space[i][j][k + 2 * sizez_ext])
                   maxch = working_space[i][j][k + 2 * sizez_ext];
-
-               plocha += working_space[i][j][k + 2 * sizez_ext];
             }
          }
       }
@@ -3179,7 +3177,7 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
 
 {
    Int_t i,j,k,l,li,lj,lk,lmin,lmax,xmin,xmax,ymin,ymax,zmin,zmax;
-   Double_t maxch,plocha = 0,plocha_markov = 0;
+   Double_t maxch,plocha_markov = 0;
    Double_t nom,nip,nim,sp,sm,spx,spy,smx,smy,spz,smz;
    Double_t norma,val,val1,val2,val3,val4,val5,val6,val7,val8,val9,val10,val11,val12,val13,val14,val15,val16,val17,val18,val19,val20,val21,val22,val23,val24,val25,val26;
    Double_t a,b,s,f,maximum;
@@ -3610,8 +3608,6 @@ Int_t TSpectrum3::SearchFast(const Double_t***source, Double_t***dest, Int_t ssi
                working_space[i][j][k] = 0;
                if(maxch < working_space[i][j][k + 2 * sizez_ext])
                   maxch = working_space[i][j][k + 2 * sizez_ext];
-
-               plocha += working_space[i][j][k + 2 * sizez_ext];
             }
          }
       }
