@@ -288,8 +288,10 @@ ROOT_ADD_TEST(test-stressfit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMA
 if(ROOT_unuran_FOUND)
   ROOT_EXECUTABLE(stressHistoFit stressHistoFit.cxx LIBRARIES MathCore Matrix Unuran Tree Gpad)
   ROOT_ADD_TEST(test-stresshistofit COMMAND stressHistoFit FAILREGEX "FAILED|Error in" LABELS longtest)
-  ROOT_ADD_TEST(test-stresshistofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistoFit.cxx
-                FAILREGEX "FAILED|Error in" DEPENDS test-stresshistofit )
+  if(NOT MSVC OR "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32" OR win_broken_tests)
+    ROOT_ADD_TEST(test-stresshistofit-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressHistoFit.cxx
+                  FAILREGEX "FAILED|Error in" DEPENDS test-stresshistofit )
+  endif()
 endif()
 
 #--stressEntryList---------------------------------------------------------------------------
