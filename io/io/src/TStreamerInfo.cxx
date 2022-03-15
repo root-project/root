@@ -886,7 +886,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
       else {
          // We are in the case of an 'emulated' class.
 
-         if (fOnFileClassVersion >= 2) {
+         if (fOnFileClassVersion >= 2 && !isStdPair) {
             // The class version was specified when the object was
             // written
 
@@ -951,7 +951,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
             // The TStreamerInfo's checksum is different from the checksum for the compile class.
 
             match = kFALSE;
-            oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
+            oldIsNonVersioned = (info->fOnFileClassVersion==1 && info->fClassVersion != 1) || isStdPair;
 
             if (fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->HasDataMemberInfo()) {
                // In the case where the read-in TStreamerInfo does not
@@ -1002,7 +1002,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
                // The on-file TStreamerInfo's checksum differs from the checksum of a TStreamerInfo on another file.
 
                match = kFALSE;
-               oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
+               oldIsNonVersioned = (info->fOnFileClassVersion==1 && info->fClassVersion != 1) || isStdPair;
 
                // In the case where the read-in TStreamerInfo does not
                // match in the 'current' in memory TStreamerInfo for
