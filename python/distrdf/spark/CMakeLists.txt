@@ -17,39 +17,13 @@ if (ROOT_test_distrdf_pyspark_FOUND)
         list(APPEND PYSPARK_ENV_VARS OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES)
     endif()
 
-    ROOTTEST_ADD_TEST(spark_test_backend
-                    MACRO test_backend.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
+    # We use the PROCESSORS property to tell cmake how many cores we will be
+    # using in the following test. In this folder, a Dask cluster object is
+    # created on the local machine. It is going to use 2 cores with
+    # multiprocessing, so the property is set to 2 in this case.
+    ROOTTEST_ADD_TEST(test_all
+                      MACRO test_all.py
+                      ENVIRONMENT ${PYSPARK_ENV_VARS}
+                      PROPERTIES PROCESSORS 2)
 
-    ROOTTEST_ADD_TEST(spark_test_definepersample
-                    MACRO test_definepersample.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
-
-    ROOTTEST_ADD_TEST(spark_test_friend_trees
-                    MACRO test_friend_trees.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
-
-    ROOTTEST_ADD_TEST(spark_test_histo_write
-                    MACRO test_histo_write.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
-
-    ROOTTEST_ADD_TEST(spark_test_include_headers
-                    MACRO test_include_headers.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
-
-    ROOTTEST_ADD_TEST(spark_test_inv_mass
-                    MACRO test_inv_mass.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
-
-    ROOTTEST_ADD_TEST(spark_test_rungraphs
-                    MACRO test_rungraphs.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
-
-    ROOTTEST_ADD_TEST(spark_test_reducer_merge
-                    MACRO test_reducer_merge.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
-
-    ROOTTEST_ADD_TEST(spark_test_variations
-                    MACRO test_variations.py
-                    ENVIRONMENT ${PYSPARK_ENV_VARS})
 endif()
