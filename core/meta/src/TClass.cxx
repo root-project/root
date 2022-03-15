@@ -5900,7 +5900,9 @@ Bool_t  TClass::IsTObject() const
 Bool_t  TClass::IsForeign() const
 {
    if (fProperty==(-1)) Property();
-   return TestBit(kIsForeign);
+   // If the property are not set and the class is a pair, hard code that
+   // it is a unversioned/Foreign class.
+   return TestBit(kIsForeign) || (fProperty == -1 && TClassEdit::IsStdPair(GetName()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
