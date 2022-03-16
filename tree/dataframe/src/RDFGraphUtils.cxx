@@ -27,8 +27,7 @@ GraphDrawing::CreateDefineNode(const std::string &columnName, const ROOT::Detail
    if (duplicateDefineIt != visitedMap.end())
       return duplicateDefineIt->second;
 
-   auto node = std::make_shared<GraphNode>("Define<BR/>" + columnName, visitedMap.size());
-   node->SetDefine();
+   auto node = std::make_shared<GraphNode>("Define<BR/>" + columnName, visitedMap.size(), ENodeType::kDefine);
    visitedMap[(void *)columnPtr] = node;
    return node;
 }
@@ -44,8 +43,8 @@ GraphDrawing::CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr,
       return duplicateFilterIt->second;
    }
 
-   auto node = std::make_shared<GraphNode>((filterPtr->HasName() ? filterPtr->GetName() : "Filter"), visitedMap.size());
-   node->SetFilter();
+   auto node = std::make_shared<GraphNode>((filterPtr->HasName() ? filterPtr->GetName() : "Filter"), visitedMap.size(),
+                                           ENodeType::kFilter);
    visitedMap[(void *)filterPtr] = node;
    return node;
 }
@@ -61,8 +60,7 @@ GraphDrawing::CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr,
       return duplicateRangeIt->second;
    }
 
-   auto node = std::make_shared<GraphNode>("Range", visitedMap.size());
-   node->SetRange();
+   auto node = std::make_shared<GraphNode>("Range", visitedMap.size(), ENodeType::kRange);
    visitedMap[(void *)rangePtr] = node;
    return node;
 }

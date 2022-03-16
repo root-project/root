@@ -161,14 +161,14 @@ public:
       auto prevColumns = prevNode->GetDefinedColumns();
 
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
-      auto thisNode =
-         std::make_shared<RDFGraphDrawing::GraphNode>("Varied " + fHelpers[0].GetActionName(), visitedMap.size());
+      const auto nodeType = HasRun() ? RDFGraphDrawing::ENodeType::kUsedAction : RDFGraphDrawing::ENodeType::kAction;
+      auto thisNode = std::make_shared<RDFGraphDrawing::GraphNode>("Varied " + fHelpers[0].GetActionName(),
+                                                                   visitedMap.size(), nodeType);
       visitedMap[(void *)this] = thisNode;
 
       auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
 
       thisNode->AddDefinedColumns(GetColRegister().GetNames());
-      thisNode->SetAction(HasRun());
       upmostNode->SetPrevNode(prevNode);
       return thisNode;
    }

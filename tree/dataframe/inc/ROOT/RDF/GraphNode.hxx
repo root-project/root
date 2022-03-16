@@ -23,6 +23,15 @@ namespace Internal {
 namespace RDF {
 namespace GraphDrawing {
 
+enum class ENodeType {
+   kAction,
+   kDefine,
+   kFilter,
+   kRange,
+   kRoot,
+   kUsedAction,
+};
+
 class GraphCreatorHelper;
 
 // clang-format off
@@ -48,41 +57,6 @@ class GraphNode {
    ///< is set and it won't be explored anymore
    bool fIsNew = true; ///< A just created node. This means that in no other exploration the node was already created
    ///< (this is needed because branches may share some common node).
-
-public:
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node with a name
-   GraphNode(std::string_view name, unsigned int id) : fID(id), fName(name) {}
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Appends a node on the head of the current node
-   void SetPrevNode(const std::shared_ptr<GraphNode> &node) { fPrevNode = node; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Adds the column defined up to the node
-   void AddDefinedColumns(const std::vector<std::string> &columns) { fDefinedColumns = columns; }
-
-   std::string GetColor() const { return fColor; }
-   unsigned int GetID() const { return fID; }
-   std::string GetName() const { return fName; }
-   std::string GetShape() const { return fShape; }
-   std::shared_ptr<GraphNode> GetPrevNode() { return fPrevNode; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gets the column defined up to the node
-   std::vector<std::string> GetDefinedColumns() { return fDefinedColumns; }
-
-   bool IsExplored() const { return fIsExplored; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Allows to stop the graph traversal when an explored node is encountered
-   void SetExplored() { fIsExplored = true; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief The node is considered just created
-   void SetIsNew(bool isNew) { fIsNew = isNew; }
-
-   bool GetIsNew() { return fIsNew; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gives a different shape based on the node type
@@ -128,6 +102,51 @@ public:
       }
       fShape = "box";
    }
+
+public:
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a node with a name
+   GraphNode(std::string_view name, unsigned int id, ENodeType t) : fID(id), fName(name)
+   {
+      switch (t) {
+      case ENodeType::kAction: SetAction(/*hasRun=*/false); break;
+      case ENodeType::kDefine: SetDefine(); break;
+      case ENodeType::kFilter: SetFilter(); break;
+      case ENodeType::kRange: SetRange(); break;
+      case ENodeType::kRoot: SetRoot(); break;
+      case ENodeType::kUsedAction: SetAction(/*hasRun=*/true); break;
+      };
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Appends a node on the head of the current node
+   void SetPrevNode(const std::shared_ptr<GraphNode> &node) { fPrevNode = node; }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Adds the column defined up to the node
+   void AddDefinedColumns(const std::vector<std::string> &columns) { fDefinedColumns = columns; }
+
+   std::string GetColor() const { return fColor; }
+   unsigned int GetID() const { return fID; }
+   std::string GetName() const { return fName; }
+   std::string GetShape() const { return fShape; }
+   std::shared_ptr<GraphNode> GetPrevNode() { return fPrevNode; }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Gets the column defined up to the node
+   std::vector<std::string> GetDefinedColumns() { return fDefinedColumns; }
+
+   bool IsExplored() const { return fIsExplored; }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Allows to stop the graph traversal when an explored node is encountered
+   void SetExplored() { fIsExplored = true; }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief The node is considered just created
+   void SetIsNew(bool isNew) { fIsNew = isNew; }
+
+   bool GetIsNew() { return fIsNew; }
 };
 
 } // namespace GraphDrawing
