@@ -908,9 +908,8 @@ std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetG
    } else {
       name = "Empty source<BR/>Entries: " + std::to_string(fNEmptyEntries);
    }
-   auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(name);
+   auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(name, visitedMap.size());
    thisNode->SetRoot();
-   thisNode->SetCounter(visitedMap.size());
    visitedMap[(void *)this] = thisNode;
    return thisNode;
 }

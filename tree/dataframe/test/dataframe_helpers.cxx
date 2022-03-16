@@ -265,11 +265,11 @@ TEST(RDFHelpers, SaveGraphHistograms)
       "\t1 [label=<MyFilt>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
       "\t2 [label=<Define<BR/>x>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
       "\t0 [label=<Empty source<BR/>Entries: 10>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
-      "\t10 [label=<TH1D<BR/>v0_weighted_w>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t6 [label=<Define<BR/>w>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t7 [label=<Define<BR/>v2>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t8 [label=<Define<BR/>v1>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t9 [label=<Define<BR/>v0>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t6 [label=<TH1D<BR/>v0_weighted_w>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t7 [label=<Define<BR/>w>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t8 [label=<Define<BR/>v2>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t9 [label=<Define<BR/>v1>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t10 [label=<Define<BR/>v0>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
       "\t11 [label=<TH2D<BR/>A>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
       "\t12 [label=<TH3D<BR/>C>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
       "\t4 -> 5;\n"
@@ -277,13 +277,13 @@ TEST(RDFHelpers, SaveGraphHistograms)
       "\t1 -> 3;\n"
       "\t2 -> 1;\n"
       "\t0 -> 2;\n"
-      "\t6 -> 10;\n"
       "\t7 -> 6;\n"
       "\t8 -> 7;\n"
       "\t9 -> 8;\n"
-      "\t0 -> 9;\n"
-      "\t6 -> 11;\n"
-      "\t6 -> 12;\n}");
+      "\t10 -> 9;\n"
+      "\t0 -> 10;\n"
+      "\t7 -> 11;\n"
+      "\t7 -> 12;\n}");
 
    EXPECT_EQ(expectedGraph, strOut);
 }
@@ -323,27 +323,28 @@ TEST(RDFHelpers, CustomObjects)
 
    static const std::string expectedGraph(
       "digraph {\n"
-      "\t2 [label=<Fill custom object>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t1 [label=<Define<BR/>Jet>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t1 [label=<Fill custom object>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t2 [label=<Define<BR/>Jet>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
       "\t0 [label=<Empty source<BR/>Entries: 10>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n"
       "\t7 [label=<TH1D<BR/>h1>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
       "\t6 [label=<Filter>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
       "\t5 [label=<Range>, style=\"filled\", fillcolor=\"#9574b4\", shape=\"diamond\"];\n"
       "\t3 [label=<MyFilt>, style=\"filled\", fillcolor=\"#0f9d58\", shape=\"hexagon\"];\n"
       "\t4 [label=<Define<BR/>x>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t10 [label=<TH1D<BR/>v0_weighted_w>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
-      "\t8 [label=<Define<BR/>w>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t9 [label=<Define<BR/>v0>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
-      "\t1 -> 2;\n"
-      "\t0 -> 1;\n"
+      "\t8 [label=<TH1D<BR/>v0_weighted_w>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n"
+      "\t9 [label=<Define<BR/>w>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t10 [label=<Define<BR/>v0>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n"
+      "\t2 -> 1;\n"
+      "\t0 -> 2;\n"
       "\t6 -> 7;\n"
       "\t5 -> 6;\n"
       "\t3 -> 5;\n"
       "\t4 -> 3;\n"
       "\t0 -> 4;\n"
-      "\t8 -> 10;\n"
       "\t9 -> 8;\n"
-      "\t0 -> 9;\n}");
+      "\t10 -> 9;\n"
+      "\t0 -> 10;\n"
+      "}");
 
    EXPECT_EQ(expectedGraph, strOut);
 }
@@ -421,12 +422,12 @@ TEST(RDFHelpers, SaveGraphSharedDefines)
    auto c2 = df2.Define("two", One).Count();
    std::string graph = ROOT::RDF::SaveGraph(df);
    const std::string expected =
-      "digraph {\n\t3 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t1 "
-      "[label=<Define<BR/>one>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t2 "
+      "digraph {\n\t1 [label=<Count>, style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t2 "
+      "[label=<Define<BR/>one>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t3 "
       "[label=<Define<BR/>shared>, style=\"filled\", fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t0 [label=<Empty "
-      "source<BR/>Entries: 1>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t5 [label=<Count>, "
-      "style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t4 [label=<Define<BR/>two>, style=\"filled\", "
-      "fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t1 -> 3;\n\t2 -> 1;\n\t0 -> 2;\n\t4 -> 5;\n\t2 -> 4;\n}";
+      "source<BR/>Entries: 1>, style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t4 [label=<Count>, "
+      "style=\"filled\", fillcolor=\"#e47c7e\", shape=\"box\"];\n\t5 [label=<Define<BR/>two>, style=\"filled\", "
+      "fillcolor=\"#4285f4\", shape=\"ellipse\"];\n\t2 -> 1;\n\t3 -> 2;\n\t0 -> 3;\n\t5 -> 4;\n\t3 -> 5;\n}";
    EXPECT_EQ(graph, expected);
 }
 
