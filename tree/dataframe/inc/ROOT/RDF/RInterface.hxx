@@ -577,6 +577,7 @@ public:
       return newInterface;
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Define a new column that is updated when the input sample changes.
    /// \param[in] name The name of the defined column.
@@ -595,6 +596,8 @@ public:
    /// processed or to inject a callback into the event loop that is only called when the processing of a new sample
    /// starts rather than at every entry.
    ///
+   /// The callable will be invoked once per input TTree or once per multi-thread task, whichever is more often.
+   ///
    /// ### Example usage:
    /// ~~~{.cpp}
    /// ROOT::RDataFrame df{"mytree", {"sample1.root","sample2.root"}};
@@ -602,6 +605,7 @@ public:
    ///                    [](unsigned int slot, const ROOT::RDF::RSampleInfo &id)
    ///                    { return id.Contains("sample1") ? 1.0f : 2.0f; });
    /// ~~~
+   // clang-format on
    // TODO we could SFINAE on F's signature to provide friendlier compilation errors in case of signature mismatch
    template <typename F, typename RetType_t = typename TTraits::CallableTraits<F>::ret_type>
    RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, F expression)
@@ -632,6 +636,7 @@ public:
       return newInterface;
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Define a new column that is updated when the input sample changes.
    /// \param[in] name The name of the defined column.
@@ -663,6 +668,12 @@ public:
    /// df = ROOT.RDataFrame("mytree", ["sample1.root","sample2.root"])
    /// df.DefinePerSample("weightsbysample", "weights(rdfslot_, rdfsampleinfo_)")
    /// ~~~
+   ///
+   /// \note
+   /// Differently from what happens in Define(), the string expression passed to DefinePerSample cannot contain
+   /// column names other than those mentioned above: the expression is evaluated once before the processing of the
+   /// sample even starts, so column values are not accessible.
+   // clang-format on
    RInterface<Proxied, DS_t> DefinePerSample(std::string_view name, std::string_view expression)
    {
       RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
