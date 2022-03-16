@@ -94,7 +94,7 @@ GraphDrawing::AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRe
 
 namespace GraphDrawing {
 
-std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> leaf)
+std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> start)
 {
    // Only the mapping between node id and node label (i.e. name)
    std::stringstream dotStringLabels;
@@ -102,6 +102,7 @@ std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> le
    std::stringstream dotStringGraph;
 
    // Explore the graph bottom-up and store its dot representation.
+   const GraphNode *leaf = start.get();
    while (leaf) {
       dotStringLabels << "\t" << leaf->GetID() << " [label=<" << leaf->GetName() << ">, style=\"filled\", fillcolor=\""
                       << leaf->GetColor() << "\", shape=\"" << leaf->GetShape() << "\"];\n";
@@ -121,7 +122,8 @@ std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_pt
    // Representation of the relationships between nodes
    std::stringstream dotStringGraph;
 
-   for (auto leaf : leaves) {
+   for (auto leafShPtr : leaves) {
+      GraphNode *leaf = leafShPtr.get();
       while (leaf && !leaf->IsExplored()) {
          dotStringLabels << "\t" << leaf->GetID() << " [label=<" << leaf->GetName()
                          << ">, style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\""
