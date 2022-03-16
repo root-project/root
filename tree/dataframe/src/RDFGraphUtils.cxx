@@ -105,11 +105,10 @@ std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> le
 
    // Explore the graph bottom-up and store its dot representation.
    while (leaf) {
-      dotStringLabels << "\t" << leaf->GetCounter() << " [label=<" << leaf->GetName()
-                      << ">, style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\"" << leaf->GetShape()
-                      << "\"];\n";
+      dotStringLabels << "\t" << leaf->GetID() << " [label=<" << leaf->GetName() << ">, style=\"filled\", fillcolor=\""
+                      << leaf->GetColor() << "\", shape=\"" << leaf->GetShape() << "\"];\n";
       if (leaf->GetPrevNode()) {
-         dotStringGraph << "\t" << leaf->GetPrevNode()->GetCounter() << " -> " << leaf->GetCounter() << ";\n";
+         dotStringGraph << "\t" << leaf->GetPrevNode()->GetID() << " -> " << leaf->GetID() << ";\n";
       }
       leaf = leaf->GetPrevNode();
    }
@@ -126,11 +125,11 @@ std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_pt
 
    for (auto leaf : leaves) {
       while (leaf && !leaf->IsExplored()) {
-         dotStringLabels << "\t" << leaf->GetCounter() << " [label=<" << leaf->GetName()
+         dotStringLabels << "\t" << leaf->GetID() << " [label=<" << leaf->GetName()
                          << ">, style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\""
                          << leaf->GetShape() << "\"];\n";
          if (leaf->GetPrevNode()) {
-            dotStringGraph << "\t" << leaf->GetPrevNode()->GetCounter() << " -> " << leaf->GetCounter() << ";\n";
+            dotStringGraph << "\t" << leaf->GetPrevNode()->GetID() << " -> " << leaf->GetID() << ";\n";
          }
          // Multiple branches may share the same nodes. It is wrong to explore them more than once.
          leaf->SetExplored();
