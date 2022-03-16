@@ -174,7 +174,7 @@ public:
       /* If the returned node is not new, there is no need to perform any other operation.
        * This is a likely scenario when building the entire graph in which branches share
        * some nodes. */
-      if (!thisNode->GetIsNew()) {
+      if (!thisNode->IsNew()) {
          return thisNode;
       }
 
