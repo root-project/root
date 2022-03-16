@@ -176,6 +176,28 @@ TEST(ONNX, LinearWithSelu)
 }
 
 
+TEST(ONNX, LinearWithLeakyRelu)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(48);
+   std::fill_n(input.data(), input.size(), 1.0f);
+   TMVA_SOFIE_LinearWithSelu::Session s("LinearWithLeakyRelu_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(LinearWithLeakyRelu_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = LinearWithLeakyRelu_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
 TEST(ONNX, LinearWithSigmoid)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
