@@ -52,8 +52,7 @@ class GraphNode {
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node with a name
-   GraphNode(const std::string_view &name) : fName(name) {}
-
+   GraphNode(std::string_view name) : fName(name) {}
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Appends a node on the head of the current node
    void SetPrevNode(const std::shared_ptr<GraphNode> &node) { fPrevNode = node; }
