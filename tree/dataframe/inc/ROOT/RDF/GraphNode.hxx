@@ -137,6 +137,7 @@ public:
    std::vector<std::string> GetDefinedColumns() { return fDefinedColumns; }
 
    bool IsExplored() const { return fIsExplored; }
+   bool IsNew() const { return fIsNew; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Allows to stop the graph traversal when an explored node is encountered
@@ -145,8 +146,6 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief The node is considered just created
    void SetIsNew(bool isNew) { fIsNew = isNew; }
-
-   bool GetIsNew() { return fIsNew; }
 };
 
 } // namespace GraphDrawing
