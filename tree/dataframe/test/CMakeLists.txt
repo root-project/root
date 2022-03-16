@@ -61,9 +61,10 @@ if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
 endif()
 
 ROOT_ADD_GTEST(datasource_more datasource_more.cxx LIBRARIES ROOTDataFrame)
-if(MSVC AND "$<CONFIG>" MATCHES "RelWithDebInfo")
-  string(REPLACE "-Z7" "" COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
-  set_target_properties(datasource_more PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS}")
+if(MSVC)
+  # workaround for potential "fatal error C1001: Internal compiler error" in RelWithDebInfo mode
+  # and fatal "error LNK1179: invalid or corrupt file: duplicate COMDAT" in Debug mode
+  set_target_properties(datasource_more PROPERTIES COMPILE_FLAGS "-Gy-")
 endif()
 ROOT_ADD_GTEST(datasource_root datasource_root.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(datasource_trivial datasource_trivial.cxx LIBRARIES ROOTDataFrame)
