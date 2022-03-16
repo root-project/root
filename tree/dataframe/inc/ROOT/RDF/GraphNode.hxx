@@ -36,7 +36,7 @@ class GraphCreatorHelper;
 */
 // clang-format on
 class GraphNode {
-   unsigned int fCounter; ///< Nodes may share the same name (e.g. Filter). To manage this situation in dot, each node
+   unsigned int fID; ///< Nodes may share the same name (e.g. Filter). To manage this situation in dot, each node
    ///< is represented by an unique id.
    std::string fName, fColor, fShape;
    std::vector<std::string>
@@ -52,7 +52,7 @@ class GraphNode {
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node with a name
-   GraphNode(std::string_view name, unsigned int id) : fCounter(id), fName(name) {}
+   GraphNode(std::string_view name, unsigned int id) : fID(id), fName(name) {}
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Appends a node on the head of the current node
@@ -63,7 +63,7 @@ public:
    void AddDefinedColumns(const std::vector<std::string> &columns) { fDefinedColumns = columns; }
 
    std::string GetColor() const { return fColor; }
-   unsigned int GetCounter() const { return fCounter; }
+   unsigned int GetID() const { return fID; }
    std::string GetName() const { return fName; }
    std::string GetShape() const { return fShape; }
    std::shared_ptr<GraphNode> GetPrevNode() { return fPrevNode; }
