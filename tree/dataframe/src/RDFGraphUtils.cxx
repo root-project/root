@@ -16,6 +16,87 @@
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+std::shared_ptr<GraphDrawing::GraphNode>
+GraphDrawing::CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RDefineBase *columnPtr,
+                               std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
+{
+   // If there is already a node for this define (recognized by the custom column it is defining) return it. If there is
+   // not, return a new one.
+   auto duplicateDefineIt = visitedMap.find((void *)columnPtr);
+   if (duplicateDefineIt != visitedMap.end())
+      return duplicateDefineIt->second;
+
+   auto node = std::make_shared<GraphNode>("Define<BR/>" + columnName);
+   node->SetDefine();
+   node->SetCounter(visitedMap.size());
+   visitedMap[(void *)columnPtr] = node;
+   return node;
+}
+
+std::shared_ptr<GraphDrawing::GraphNode>
+GraphDrawing::CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr,
+                               std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
+{
+   // If there is already a node for this filter return it. If there is not, return a new one.
+   auto duplicateFilterIt = visitedMap.find((void *)filterPtr);
+   if (duplicateFilterIt != visitedMap.end()) {
+      duplicateFilterIt->second->SetIsNew(false);
+      return duplicateFilterIt->second;
+   }
+
+   auto node = std::make_shared<GraphNode>((filterPtr->HasName() ? filterPtr->GetName() : "Filter"));
+   node->SetFilter();
+   node->SetCounter(visitedMap.size());
+   visitedMap[(void *)filterPtr] = node;
+   return node;
+}
+
+std::shared_ptr<GraphDrawing::GraphNode>
+GraphDrawing::CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr,
+                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
+{
+   // If there is already a node for this range return it. If there is not, return a new one.
+   auto duplicateRangeIt = visitedMap.find((void *)rangePtr);
+   if (duplicateRangeIt != visitedMap.end()) {
+      duplicateRangeIt->second->SetIsNew(false);
+      return duplicateRangeIt->second;
+   }
+
+   auto node = std::make_shared<GraphNode>("Range");
+   node->SetRange();
+   node->SetCounter(visitedMap.size());
+   visitedMap[(void *)rangePtr] = node;
+   return node;
+}
+
+std::shared_ptr<GraphDrawing::GraphNode>
+GraphDrawing::AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
+                                const std::vector<std::string> &prevNodeDefines,
+                                std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
+{
+   auto upmostNode = node;
+   const auto &defineNames = colRegister.GetNames();
+   const auto &defineMap = colRegister.GetColumns();
+   for (auto i = int(defineNames.size()) - 1; i >= 0; --i) { // walk backwards through the names of defined columns
+      const auto colName = defineNames[i];
+      const bool isAlias = defineMap.find(colName) == defineMap.end();
+      if (isAlias || IsInternalColumn(colName))
+         continue; // aliases appear in the list of defineNames but we don't support them yet
+      const bool isANewDefine =
+         std::find(prevNodeDefines.begin(), prevNodeDefines.end(), colName) == prevNodeDefines.end();
+      if (!isANewDefine)
+         break; // we walked back through all new defines, the rest is stuff that was already in the graph
+
+      // create a node for this new Define
+      auto defineNode = RDFGraphDrawing::CreateDefineNode(colName, defineMap.at(colName).get(), visitedMap);
+      upmostNode->SetPrevNode(defineNode);
+      upmostNode = defineNode;
+   }
+
+   return upmostNode;
+}
+
 namespace GraphDrawing {
 
 std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> leaf)
@@ -83,83 +164,6 @@ std::string GraphCreatorHelper::RepresentGraph(RLoopManager *loopManager)
       nodes.emplace_back(edge->GetGraph(fVisitedMap));
 
    return FromGraphActionsToDot(nodes);
-}
-
-std::shared_ptr<GraphNode> CreateDefineNode(const std::string &columnName,
-                                            const ROOT::Detail::RDF::RDefineBase *columnPtr,
-                                            std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
-{
-   // If there is already a node for this define (recognized by the custom column it is defining) return it. If there is
-   // not, return a new one.
-   auto duplicateDefineIt = visitedMap.find((void *)columnPtr);
-   if (duplicateDefineIt != visitedMap.end())
-      return duplicateDefineIt->second;
-
-   auto node = std::make_shared<GraphNode>("Define<BR/>" + columnName);
-   node->SetDefine();
-   node->SetCounter(visitedMap.size());
-   visitedMap[(void *)columnPtr] = node;
-   return node;
-}
-
-std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr,
-                                            std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
-{
-   // If there is already a node for this filter return it. If there is not, return a new one.
-   auto duplicateFilterIt = visitedMap.find((void *)filterPtr);
-   if (duplicateFilterIt != visitedMap.end()) {
-      duplicateFilterIt->second->SetIsNew(false);
-      return duplicateFilterIt->second;
-   }
-
-   auto node = std::make_shared<GraphNode>((filterPtr->HasName() ? filterPtr->GetName() : "Filter"));
-   node->SetFilter();
-   node->SetCounter(visitedMap.size());
-   visitedMap[(void *)filterPtr] = node;
-   return node;
-}
-
-std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr,
-                                           std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
-{
-   // If there is already a node for this range return it. If there is not, return a new one.
-   auto duplicateRangeIt = visitedMap.find((void *)rangePtr);
-   if (duplicateRangeIt != visitedMap.end()) {
-      duplicateRangeIt->second->SetIsNew(false);
-      return duplicateRangeIt->second;
-   }
-
-   auto node = std::make_shared<GraphNode>("Range");
-   node->SetRange();
-   node->SetCounter(visitedMap.size());
-   visitedMap[(void *)rangePtr] = node;
-   return node;
-}
-
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
-                                             const std::vector<std::string> &prevNodeDefines,
-                                             std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
-{
-   auto upmostNode = node;
-   const auto &defineNames = colRegister.GetNames();
-   const auto &defineMap = colRegister.GetColumns();
-   for (auto i = int(defineNames.size()) - 1; i >= 0; --i) { // walk backwards through the names of defined columns
-      const auto colName = defineNames[i];
-      const bool isAlias = defineMap.find(colName) == defineMap.end();
-      if (isAlias || IsInternalColumn(colName))
-         continue; // aliases appear in the list of defineNames but we don't support them yet
-      const bool isANewDefine =
-         std::find(prevNodeDefines.begin(), prevNodeDefines.end(), colName) == prevNodeDefines.end();
-      if (!isANewDefine)
-         break; // we walked back through all new defines, the rest is stuff that was already in the graph
-
-      // create a node for this new Define
-      auto defineNode = RDFGraphDrawing::CreateDefineNode(colName, defineMap.at(colName).get(), visitedMap);
-      upmostNode->SetPrevNode(defineNode);
-      upmostNode = defineNode;
-   }
-
-   return upmostNode;
 }
 
 } // namespace GraphDrawing
