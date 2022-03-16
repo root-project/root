@@ -130,7 +130,7 @@ public:
    unsigned int GetID() const { return fID; }
    std::string GetName() const { return fName; }
    std::string GetShape() const { return fShape; }
-   std::shared_ptr<GraphNode> GetPrevNode() { return fPrevNode; }
+   GraphNode *GetPrevNode() const { return fPrevNode.get(); }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gets the column defined up to the node
