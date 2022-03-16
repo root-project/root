@@ -29,10 +29,13 @@ public:
    RooStringView(const char *str) : _cstr{str} {}
    RooStringView(TString const &str) : _cstr{str} {}
    RooStringView(std::string const &str) : _cstr{str.c_str()} {}
+   // If the string is a temporary, we have to store it ourselves, otherwise the C-style string would be invalid.
+   RooStringView(std::string &&str) : _strp{std::make_shared<std::string>(std::move(str))}, _cstr{_strp->c_str()} {}
    operator const char *() { return _cstr; }
    operator std::string_view() { return _cstr; }
 
 private:
+   std::shared_ptr<std::string> _strp;
    const char *_cstr;
 };
 
