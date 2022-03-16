@@ -161,7 +161,7 @@ std::string GraphCreatorHelper::RepresentGraph(RLoopManager *loopManager)
    for (auto *edge : edges)
       nodes.emplace_back(edge->GetGraph(fVisitedMap));
 
-   return FromGraphActionsToDot(nodes);
+   return FromGraphActionsToDot(std::move(nodes));
 }
 
 } // namespace GraphDrawing
