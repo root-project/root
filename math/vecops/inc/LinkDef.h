@@ -30,4 +30,6 @@
 #pragma link C++ class ROOT::VecOps::RVec<unsigned long>-;
 #pragma link C++ class ROOT::VecOps::RVec<unsigned long long>-;
 
+#pragma link C++ class ROOT::VecOps::RVec<std::string>-;
+
 #endif

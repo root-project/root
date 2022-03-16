@@ -515,6 +515,7 @@ TEST(VecOps, InputOutput)
    const RVec<Short_t> sref {1, 2, 3};
    const RVec<Char_t> cref {1, 2, 3};
    const RVec<bool> bref {true, false, true};
+   const RVec<std::string> strref{"hello", "hola", "ciao"};
 
    {
       auto d = dref;
@@ -530,6 +531,7 @@ TEST(VecOps, InputOutput)
       auto s = sref;
       auto c = cref;
       auto b = bref;
+      auto str = strref;
       TFile file(filename, "RECREATE");
       TTree t(treename, treename);
       t.Branch("d", &d);
@@ -545,6 +547,7 @@ TEST(VecOps, InputOutput)
       t.Branch("s", &s);
       t.Branch("c", &c);
       t.Branch("b", &b);
+      t.Branch("str", &str);
       t.Fill();
       t.Write();
    }
@@ -562,6 +565,7 @@ TEST(VecOps, InputOutput)
    auto s = new RVec<Short_t>();
    auto c = new RVec<Char_t>();
    auto b = new RVec<bool>();
+   auto str = new RVec<std::string>();
 
    TFile file(filename);
    TTree *tp;
@@ -581,6 +585,7 @@ TEST(VecOps, InputOutput)
    t.SetBranchAddress("s", &s);
    t.SetBranchAddress("c", &c);
    t.SetBranchAddress("b", &b);
+   t.SetBranchAddress("str", &str);
 
    t.GetEntry(0);
    CheckEq(*d, dref);
@@ -594,6 +599,7 @@ TEST(VecOps, InputOutput)
    CheckEq(*d, dref);
    CheckEq(*f, fref);
    CheckEq(*b, bref);
+   CheckEq(*str, strref);
 
    gSystem->Unlink(filename);
 
