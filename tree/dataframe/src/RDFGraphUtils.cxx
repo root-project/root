@@ -108,12 +108,13 @@ std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> le
 
    // Explore the graph bottom-up and store its dot representation.
    while (leaf) {
-      dotStringLabels << "\t" << leaf->fCounter << " [label=<" << leaf->fName << ">, style=\"filled\", fillcolor=\""
-                      << leaf->fColor << "\", shape=\"" << leaf->fShape << "\"];\n";
-      if (leaf->fPrevNode) {
-         dotStringGraph << "\t" << leaf->fPrevNode->fCounter << " -> " << leaf->fCounter << ";\n";
+      dotStringLabels << "\t" << leaf->GetCounter() << " [label=<" << leaf->GetName()
+                      << ">, style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\"" << leaf->GetShape()
+                      << "\"];\n";
+      if (leaf->GetPrevNode()) {
+         dotStringGraph << "\t" << leaf->GetPrevNode()->GetCounter() << " -> " << leaf->GetCounter() << ";\n";
       }
-      leaf = leaf->fPrevNode;
+      leaf = leaf->GetPrevNode();
    }
 
    return "digraph {\n" + dotStringLabels.str() + dotStringGraph.str() + "}";
@@ -127,15 +128,16 @@ std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_pt
    std::stringstream dotStringGraph;
 
    for (auto leaf : leaves) {
-      while (leaf && !leaf->fIsExplored) {
-         dotStringLabels << "\t" << leaf->fCounter << " [label=<" << leaf->fName << ">, style=\"filled\", fillcolor=\""
-                         << leaf->fColor << "\", shape=\"" << leaf->fShape << "\"];\n";
-         if (leaf->fPrevNode) {
-            dotStringGraph << "\t" << leaf->fPrevNode->fCounter << " -> " << leaf->fCounter << ";\n";
+      while (leaf && !leaf->IsExplored()) {
+         dotStringLabels << "\t" << leaf->GetCounter() << " [label=<" << leaf->GetName()
+                         << ">, style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\""
+                         << leaf->GetShape() << "\"];\n";
+         if (leaf->GetPrevNode()) {
+            dotStringGraph << "\t" << leaf->GetPrevNode()->GetCounter() << " -> " << leaf->GetCounter() << ";\n";
          }
          // Multiple branches may share the same nodes. It is wrong to explore them more than once.
-         leaf->fIsExplored = true;
-         leaf = leaf->fPrevNode;
+         leaf->SetExplored();
+         leaf = leaf->GetPrevNode();
       }
    }
    return "digraph {\n" + dotStringLabels.str() + dotStringGraph.str() + "}";
