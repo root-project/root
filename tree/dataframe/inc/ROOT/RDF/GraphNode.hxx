@@ -52,7 +52,8 @@ class GraphNode {
 public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node with a name
-   GraphNode(std::string_view name) : fName(name) {}
+   GraphNode(std::string_view name, unsigned int id) : fCounter(id), fName(name) {}
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Appends a node on the head of the current node
    void SetPrevNode(const std::shared_ptr<GraphNode> &node) { fPrevNode = node; }
@@ -72,11 +73,6 @@ public:
    std::vector<std::string> GetDefinedColumns() { return fDefinedColumns; }
 
    bool IsExplored() const { return fIsExplored; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Manually sets the counter to a node.
-   /// It is used by the root node to set its counter to zero.
-   void SetCounter(unsigned int counter) { fCounter = counter; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Allows to stop the graph traversal when an explored node is encountered
