@@ -36,9 +36,6 @@ class GraphCreatorHelper;
 */
 // clang-format on
 class GraphNode {
-   friend class GraphCreatorHelper;
-
-private:
    unsigned int fCounter; ///< Nodes may share the same name (e.g. Filter). To manage this situation in dot, each node
    ///< is represented by an unique id.
    std::string fName, fColor, fShape;
@@ -65,9 +62,17 @@ public:
    /// \brief Adds the column defined up to the node
    void AddDefinedColumns(const std::vector<std::string> &columns) { fDefinedColumns = columns; }
 
+   std::string GetColor() const { return fColor; }
+   unsigned int GetCounter() const { return fCounter; }
+   std::string GetName() const { return fName; }
+   std::string GetShape() const { return fShape; }
+   std::shared_ptr<GraphNode> GetPrevNode() { return fPrevNode; }
+
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gets the column defined up to the node
    std::vector<std::string> GetDefinedColumns() { return fDefinedColumns; }
+
+   bool IsExplored() const { return fIsExplored; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Manually sets the counter to a node.
@@ -76,7 +81,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Allows to stop the graph traversal when an explored node is encountered
-   void SetIsExplored(bool isExplored) { fIsExplored = isExplored; }
+   void SetExplored() { fIsExplored = true; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief The node is considered just created
