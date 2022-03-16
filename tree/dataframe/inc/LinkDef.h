@@ -36,7 +36,7 @@
 #pragma link C++ class ROOT::RDF::TProfile1DModel-;
 #pragma link C++ class ROOT::RDF::TProfile2DModel-;
 #pragma link C++ class ROOT::Internal::RDF::RIgnoreErrorLevelRAII-;
-#pragma link C++ class ROOT::Internal::RDF::FillHelper-;
+#pragma link C++ class ROOT::Internal::RDF::BufferedFillHelper-;
 #pragma link C++ class ROOT::RDF::RTrivialDS-;
 #pragma link C++ class ROOT::Internal::RDF::RRootDS-;
 #pragma link C++ class ROOT::RDF::RCsvDS-;
