@@ -45,7 +45,18 @@ public:
   void setInSharedList() { _inSharedList = kTRUE ; }
   Bool_t inSharedList() const { return _inSharedList ; }
 
-   TString asString() const { return TString(_uuid.AsString()); }
+   // Wrapper class to make the TUUID comparable for use as key type in std::map.
+   class UUID {
+   public:
+     UUID(TUUID const& tuuid) : _uuid{tuuid} {}
+     bool operator<(UUID const& other) const { return _uuid.Compare(other._uuid) < 0; }
+     bool operator>(UUID const& other) const { return _uuid.Compare(other._uuid) > 0; }
+     bool operator==(UUID const& other) const { return _uuid.Compare(other._uuid) == 0; }
+   private:
+     TUUID _uuid;
+   };
+
+   UUID uuid() const { return _uuid; }
 
 protected:
 
