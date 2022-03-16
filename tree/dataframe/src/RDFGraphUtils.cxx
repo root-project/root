@@ -94,7 +94,7 @@ GraphDrawing::AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRe
 
 namespace GraphDrawing {
 
-std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> start)
+std::string GraphCreatorHelper::FromGraphLeafToDot(const GraphNode &start)
 {
    // Only the mapping between node id and node label (i.e. name)
    std::stringstream dotStringLabels;
@@ -102,7 +102,7 @@ std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> st
    std::stringstream dotStringGraph;
 
    // Explore the graph bottom-up and store its dot representation.
-   const GraphNode *leaf = start.get();
+   const GraphNode *leaf = &start;
    while (leaf) {
       dotStringLabels << "\t" << leaf->GetID() << " [label=<" << leaf->GetName() << ">, style=\"filled\", fillcolor=\""
                       << leaf->GetColor() << "\", shape=\"" << leaf->GetShape() << "\"];\n";
