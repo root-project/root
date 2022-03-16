@@ -1712,51 +1712,6 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
    if (gDebug > 1)
       ::Info("TCling::LoadPCMImpl", "reading protoclasses for %s \n", pcmFile.GetName());
 
-   pcmFile.GetObject("__ProtoClasses", protoClasses);
-
-   if (protoClasses) {
-      for (auto obj : *protoClasses) {
-         TProtoClass *proto = (TProtoClass *)obj;
-         TClassTable::Add(proto);
-      }
-      // Now that all TClass-es know how to set them up we can update
-      // existing TClasses, which might cause the creation of e.g. TBaseClass
-      // objects which in turn requires the creation of TClasses, that could
-      // come from the PCH, but maybe later in the loop. Instead of resolving
-      // a dependency graph the addition to the TClassTable above allows us
-      // to create these dependent TClasses as needed below.
-      for (auto proto : *protoClasses) {
-         if (TClass *existingCl = (TClass *)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
-            // We have an existing TClass object. It might be emulated
-            // or interpreted; we now have more information available.
-            // Make that available.
-            if (existingCl->GetState() != TClass::kHasTClassInit) {
-               DictFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
-               if (!dict) {
-                  ::Error("TCling::LoadPCM", "Inconsistent TClassTable for %s", proto->GetName());
-               } else {
-                  // This will replace the existing TClass.
-                  TClass *ncl = (*dict)();
-                  if (ncl)
-                     ncl->PostLoadCheck();
-               }
-            }
-         }
-      }
-
-      protoClasses->Clear(); // Ownership was transfered to TClassTable.
-      delete protoClasses;
-   }
-
-   TObjArray *dataTypes;
-   pcmFile.GetObject("__Typedefs", dataTypes);
-   if (dataTypes) {
-      for (auto typedf : *dataTypes)
-         gROOT->GetListOfTypes()->Add(typedf);
-      dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
-      delete dataTypes;
-   }
-
    TObjArray *enums;
    pcmFile.GetObject("__Enums", enums);
    if (enums) {
@@ -1805,6 +1760,51 @@ void TCling::LoadPCMImpl(TFile &pcmFile)
       }
       enums->Clear();
       delete enums;
+   }
+
+   pcmFile.GetObject("__ProtoClasses", protoClasses);
+
+   if (protoClasses) {
+      for (auto obj : *protoClasses) {
+         TProtoClass *proto = (TProtoClass *)obj;
+         TClassTable::Add(proto);
+      }
+      // Now that all TClass-es know how to set them up we can update
+      // existing TClasses, which might cause the creation of e.g. TBaseClass
+      // objects which in turn requires the creation of TClasses, that could
+      // come from the PCH, but maybe later in the loop. Instead of resolving
+      // a dependency graph the addition to the TClassTable above allows us
+      // to create these dependent TClasses as needed below.
+      for (auto proto : *protoClasses) {
+         if (TClass *existingCl = (TClass *)gROOT->GetListOfClasses()->FindObject(proto->GetName())) {
+            // We have an existing TClass object. It might be emulated
+            // or interpreted; we now have more information available.
+            // Make that available.
+            if (existingCl->GetState() != TClass::kHasTClassInit) {
+               DictFuncPtr_t dict = gClassTable->GetDict(proto->GetName());
+               if (!dict) {
+                  ::Error("TCling::LoadPCM", "Inconsistent TClassTable for %s", proto->GetName());
+               } else {
+                  // This will replace the existing TClass.
+                  TClass *ncl = (*dict)();
+                  if (ncl)
+                     ncl->PostLoadCheck();
+               }
+            }
+         }
+      }
+
+      protoClasses->Clear(); // Ownership was transfered to TClassTable.
+      delete protoClasses;
+   }
+
+   TObjArray *dataTypes;
+   pcmFile.GetObject("__Typedefs", dataTypes);
+   if (dataTypes) {
+      for (auto typedf : *dataTypes)
+         gROOT->GetListOfTypes()->Add(typedf);
+      dataTypes->Clear(); // Ownership was transfered to TListOfTypes.
+      delete dataTypes;
    }
 }
 
