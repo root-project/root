@@ -187,7 +187,7 @@ TEST_P(RDFVary, SimpleHisto)
    EXPECT_DOUBLE_EQ(hs["x:1"].GetMean(), 2);
 }
 
-TEST_P(RDFVary, SimpleHistoWithAxes) // uses FillParHelper instead of FillHelper
+TEST_P(RDFVary, SimpleHistoWithAxes) // uses FillHelper instead of DelayedFillHelper
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
    auto h = df.Vary("x", SimpleVariation, {}, 2).Histo1D<int>({"", "", 20, -10, 10}, "x");
