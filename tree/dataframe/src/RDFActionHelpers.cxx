@@ -37,7 +37,7 @@ ULong64_t &CountHelper::PartialUpdate(unsigned int slot)
    return fCounts[slot];
 }
 
-void FillHelper::UpdateMinMax(unsigned int slot, double v)
+void BufferedFillHelper::UpdateMinMax(unsigned int slot, double v)
 {
    auto &thisMin = fMin[slot];
    auto &thisMax = fMax[slot];
@@ -45,7 +45,7 @@ void FillHelper::UpdateMinMax(unsigned int slot, double v)
    thisMax = std::max(thisMax, v);
 }
 
-FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
+BufferedFillHelper::BufferedFillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
    : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots), fPartialHists(fNSlots),
      fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::lowest())
 {
@@ -59,20 +59,20 @@ FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlo
    }
 }
 
-void FillHelper::Exec(unsigned int slot, double v)
+void BufferedFillHelper::Exec(unsigned int slot, double v)
 {
    UpdateMinMax(slot, v);
    fBuffers[slot].emplace_back(v);
 }
 
-void FillHelper::Exec(unsigned int slot, double v, double w)
+void BufferedFillHelper::Exec(unsigned int slot, double v, double w)
 {
    UpdateMinMax(slot, v);
    fBuffers[slot].emplace_back(v);
    fWBuffers[slot].emplace_back(w);
 }
 
-Hist_t &FillHelper::PartialUpdate(unsigned int slot)
+Hist_t &BufferedFillHelper::PartialUpdate(unsigned int slot)
 {
    auto &partialHist = fPartialHists[slot];
    // TODO it is inefficient to re-create the partial histogram everytime the callback is called
@@ -83,7 +83,7 @@ Hist_t &FillHelper::PartialUpdate(unsigned int slot)
    return *partialHist;
 }
 
-void FillHelper::Finalize()
+void BufferedFillHelper::Finalize()
 {
    for (unsigned int i = 0; i < fNSlots; ++i) {
       if (!fWBuffers[i].empty() && fBuffers[i].size() != fWBuffers[i].size()) {
@@ -105,16 +105,17 @@ void FillHelper::Finalize()
    }
 }
 
-template void FillHelper::Exec(unsigned int, const std::vector<float> &);
-template void FillHelper::Exec(unsigned int, const std::vector<double> &);
-template void FillHelper::Exec(unsigned int, const std::vector<char> &);
-template void FillHelper::Exec(unsigned int, const std::vector<int> &);
-template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-template void FillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
-template void FillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
-template void FillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
-template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
-template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
+template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
+template void
+BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
 // TODO
 // template void MinHelper::Exec(unsigned int, const std::vector<float> &);
