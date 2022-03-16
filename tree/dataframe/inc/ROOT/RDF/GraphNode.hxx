@@ -45,18 +45,25 @@ class GraphCreatorHelper;
 */
 // clang-format on
 class GraphNode {
-   unsigned int fID; ///< Nodes may share the same name (e.g. Filter). To manage this situation in dot, each node
-   ///< is represented by an unique id.
+   /// Nodes may share the same name (e.g. Filter). To manage this situation in dot, each node
+   /// is represented by an unique id.
+   unsigned int fID;
+
    std::string fName, fColor, fShape;
-   std::vector<std::string>
-      fDefinedColumns; ///< Columns defined up to this node. By checking the defined columns between two consecutive
-                       ///< nodes, it is possible to know if there was some Define in between.
+
+   /// Columns defined up to this node. By checking the defined columns between two consecutive
+   /// nodes, it is possible to know if there was some Define in between.
+   std::vector<std::string> fDefinedColumns;
+
    std::shared_ptr<GraphNode> fPrevNode;
 
-   bool fIsExplored = false; ///< When the graph is reconstructed, the first time this node has been explored this flag
-   ///< is set and it won't be explored anymore
-   bool fIsNew = true; ///< A just created node. This means that in no other exploration the node was already created
-   ///< (this is needed because branches may share some common node).
+   /// When the graph is reconstructed, the first time this node has been explored this flag
+   /// is set and it won't be explored anymore.
+   bool fIsExplored = false;
+
+   /// A just created node. This means that in no other exploration the node was already created
+   /// (this is needed because branches may share some common node).
+   bool fIsNew = true;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gives a different shape based on the node type
