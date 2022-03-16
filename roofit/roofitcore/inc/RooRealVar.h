@@ -17,6 +17,7 @@
 #define ROO_REAL_VAR
 
 #include "RooAbsRealLValue.h"
+#include "RooSharedProperties.h"
 
 #include "TString.h"
 
@@ -162,7 +163,10 @@ public:
 
   void setExpensiveObjectCache(RooExpensiveObjectCache&) override { ; } ///< variables don't need caches
   static RooRealVarSharedProperties& _nullProp(); ///< Null property
-  static std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>* sharedPropList(); ///< List of properties shared among clones of a variable
+
+  using SharedPropertiesMap = std::map<RooSharedProperties::UUID,std::weak_ptr<RooRealVarSharedProperties>>;
+
+  static SharedPropertiesMap* sharedPropList(); ///< List of properties shared among clones of a variable
 
   std::shared_ptr<RooRealVarSharedProperties> _sharedProp; ///<! Shared binnings associated with this instance
 

@@ -58,11 +58,11 @@ Int_t  RooRealVar::_printSigDigits(5) ;
 static bool staticSharedPropListCleanedUp = false;
 
 /// Return a reference to a map of weak pointers to RooRealVarSharedProperties.
-std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>* RooRealVar::sharedPropList()
+RooRealVar::SharedPropertiesMap* RooRealVar::sharedPropList()
 {
   RooSentinel::activate();
   if(!staticSharedPropListCleanedUp) {
-    static auto * staticSharedPropList = new std::map<std::string,std::weak_ptr<RooRealVarSharedProperties>>();
+    static auto * staticSharedPropList = new SharedPropertiesMap{};
     return staticSharedPropList;
   }
   return nullptr;
@@ -1316,7 +1316,7 @@ void RooRealVar::installSharedProp(std::shared_ptr<RooRealVarSharedProperties>&&
   }
 
 
-  auto& weakPtr = (*sharedPropList())[prop->asString().Data()];
+  auto& weakPtr = (*sharedPropList())[prop->uuid()];
   std::shared_ptr<RooRealVarSharedProperties> existingProp;
   if ( (existingProp = weakPtr.lock()) ) {
     // Property exists, discard incoming
@@ -1339,7 +1339,7 @@ void RooRealVar::deleteSharedProperties()
   if(!_sharedProp) return;
 
   // Get the key for the _sharedPropList.
-  const std::string key = _sharedProp->asString().Data();
+  auto key = _sharedProp->uuid(); // we have to make a copy because _sharedPropList gets delete next.
 
   // Actually delete the shared properties object.
   _sharedProp.reset();

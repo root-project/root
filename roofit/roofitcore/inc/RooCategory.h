@@ -17,6 +17,7 @@
 #define ROO_CATEGORY
 
 #include "RooAbsCategoryLValue.h"
+#include "RooSharedProperties.h"
 
 #include <vector>
 #include <map>
@@ -133,7 +134,7 @@ private:
   void installLegacySharedProp(const RooCategorySharedProperties* sp);
   void installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap);
   /// Helper for restoring shared ranges from old versions of this class read from files. Maps TUUID names to shared ranges.
-  static std::map<std::string, std::weak_ptr<RangeMap_t>> _uuidToSharedRangeIOHelper;
+  static std::map<RooSharedProperties::UUID, std::weak_ptr<RangeMap_t>> _uuidToSharedRangeIOHelper;
   /// Helper for restoring shared ranges from current versions of this class read from files. Maps category names to shared ranges.
   static std::map<std::string, std::weak_ptr<RangeMap_t>> _sharedRangeIOHelper;
 

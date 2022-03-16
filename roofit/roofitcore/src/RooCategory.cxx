@@ -96,7 +96,7 @@ using namespace std;
 
 ClassImp(RooCategory);
 
-std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_uuidToSharedRangeIOHelper; // Helper for restoring shared properties
+std::map<RooSharedProperties::UUID, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_uuidToSharedRangeIOHelper; // Helper for restoring shared properties
 std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_sharedRangeIOHelper;
 
 
@@ -482,7 +482,7 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
   if (props == nullptr || (*props == RooCategorySharedProperties("00000000-0000-0000-0000-000000000000")))
     return;
 
-  auto& weakPtr = _uuidToSharedRangeIOHelper[props->asString().Data()];
+  auto& weakPtr = _uuidToSharedRangeIOHelper[props->uuid()];
   if (auto existingObject = weakPtr.lock()) {
     // We know this range, start sharing
     _ranges = std::move(existingObject);
