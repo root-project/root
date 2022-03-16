@@ -22,5 +22,5 @@ An extensive Users Guide is available from that site (see below).
 	parser.add_argument('--web=<browser>', help='Display graphics in specified web browser')
 	parser.add_argument('[dir]', help='if dir is a valid directory cd to it before executing')
 	parser.add_argument('[data1.root...dataN.root]', help='Open the ROOT files data1.root ... dataN.root')
-	parser.add_argument('[file1.C...fileN.C]', help='Execute the the ROOT macro file1.C ... fileN.C')
+	parser.add_argument('[file1.C...fileN.C]', help='Execute the the ROOT macro file1.C ... fileN.C.\nArguments can be passed to the macro with round parentheses after each filename.\nBetween filename and args, add "+" to precompile if needed\n"++" to force recompile, and "g" to include debug symbols')
 	return parser
