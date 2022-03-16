@@ -258,7 +258,14 @@ public:
    // TODO implement MakeNew. Requires some smartness in passing the appropriate previous node.
 };
 
-class FillHelper : public RActionImpl<FillHelper> {
+/// This helper fills TH1Ds for which no axes were specified by buffering the fill values to pick good axes limits.
+///
+/// TH1Ds have an automatic mechanism to pick good limits based on the first N entries they were filled with, but
+/// that does not work in multi-thread event loops as it might yield histograms with incompatible binning in each
+/// thread, making it impossible to merge the per-thread results.
+/// Instead, this helper delays the decision on the axes limits until all threads have done processing, synchronizing
+/// the decision on the limits as part of the merge operation.
+class BufferedFillHelper : public RActionImpl<BufferedFillHelper> {
    // this sets a total initial size of 16 MB for the buffers (can increase)
    static constexpr unsigned int fgTotalBufSize = 2097152;
    using BufEl_t = double;
@@ -277,9 +284,9 @@ class FillHelper : public RActionImpl<FillHelper> {
    void UpdateMinMax(unsigned int slot, double v);
 
 public:
-   FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
-   FillHelper(FillHelper &&) = default;
-   FillHelper(const FillHelper &) = delete;
+   BufferedFillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
+   BufferedFillHelper(BufferedFillHelper &&) = default;
+   BufferedFillHelper(const BufferedFillHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
@@ -349,29 +356,31 @@ public:
       return std::string(fResultHist->IsA()->GetName()) + "<BR/>" + std::string(fResultHist->GetName());
    }
 
-   FillHelper MakeNew(void *newResult)
+   BufferedFillHelper MakeNew(void *newResult)
    {
       auto &result = *static_cast<std::shared_ptr<Hist_t> *>(newResult);
       result->Reset();
       result->SetDirectory(nullptr);
-      return FillHelper(result, fNSlots);
+      return BufferedFillHelper(result, fNSlots);
    }
 };
 
-extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
 extern template void
-FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
+BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
+/// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
+/// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
-class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
+class FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
 
    void UnsetDirectoryIfPossible(TH1 *h) {
@@ -467,10 +476,10 @@ class FillParHelper : public RActionImpl<FillParHelper<HIST>> {
    }
 
 public:
-   FillParHelper(FillParHelper &&) = default;
-   FillParHelper(const FillParHelper &) = delete;
+   FillHelper(FillHelper &&) = default;
+   FillHelper(const FillHelper &) = delete;
 
-   FillParHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
+   FillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
    {
       fObjects[0] = h.get();
       // Initialize all other slots
@@ -557,12 +566,12 @@ public:
    // it would be hard to guarantee that the object copied from the original action is in a clean state, it
    // might have been copied _after_ the event loop that filled it already happened.
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
-   FillParHelper MakeNew(void *newResult)
+   FillHelper MakeNew(void *newResult)
    {
       auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
       result->Reset();
       UnsetDirectoryIfPossible(result.get());
-      return FillParHelper(result, fObjects.size());
+      return FillHelper(result, fObjects.size());
    }
 };
 
