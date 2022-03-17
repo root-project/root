@@ -1400,10 +1400,10 @@ TFriendElement *TTree::AddFriend(TTree *tree, const char *alias, Bool_t warn)
               tree->GetName(), fe->GetFile() ? fe->GetFile()->GetName() : "(memory resident)", t->GetEntries(),
               fEntries);
    }
-   if (CheckReshuffling(*this, *t)) {
+   if (CheckReshuffling(*this, *t))
       fFriends->Add(fe);
-      tree->RegisterExternalFriend(fe);
-   }
+   else
+      tree->RemoveExternalFriend(fe);
    return fe;
 }
 
