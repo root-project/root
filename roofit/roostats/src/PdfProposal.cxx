@@ -100,14 +100,10 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
 Bool_t PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
 {
    if (x1.equals(x2)) {
-      TIterator* it = x1.createIterator();
-      RooRealVar* r;
-      while ((r = (RooRealVar*)it->Next()) != NULL)
+      for (auto const *r : static_range_cast<RooRealVar*>(x1))
          if (r->getVal() != x2.getRealValue(r->GetName())) {
-            delete it;
             return kFALSE;
          }
-      delete it;
       return kTRUE;
    }
    return kFALSE;

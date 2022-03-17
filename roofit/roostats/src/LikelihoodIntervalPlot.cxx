@@ -166,12 +166,10 @@ void LikelihoodIntervalPlot::SetPlotParameters(const RooArgSet *params)
 
 void LikelihoodIntervalPlot::Draw(const Option_t *options)
 {
-   TIter it = fParamsPlot->createIterator();
    // we need to check if parameters to plot is different than parameters of interval
    RooArgSet* intervalParams = fInterval->GetParameters();
-   RooAbsArg * arg = 0;
    RooArgSet extraParams;
-   while((arg=(RooAbsArg*)it.Next())) {
+   for (auto const *arg : *fParamsPlot) {
       if (!intervalParams->contains(*arg) ) {
          ccoutE(InputArguments) << "Parameter " << arg->GetName() << "is not in the list of LikelihoodInterval parameters "
                                 << " - do not use for plotting " << std::endl;
@@ -203,8 +201,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       newProfile = oldProfile;
    }
 
-   it.Reset();
-   RooRealVar *myparam = (RooRealVar*) it.Next();
+   auto *myparam = static_cast<RooRealVar*>((*fParamsPlot)[0]);
 
    // do a dummy evaluation around minimum to be sure profile has right minimum
    if (fInterval->GetBestFitParameters() ) {
@@ -374,7 +371,7 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
       opt.ReplaceAll("minuit","");
       opt.ReplaceAll("hist","");
 
-      RooRealVar *myparamY = (RooRealVar*)it.Next();
+      auto *myparamY = static_cast<RooRealVar*>((*fParamsPlot)[1]);
 
       Double_t cont_level = ROOT::Math::chisquared_quantile(fInterval->ConfidenceLevel(),fNdimPlot); // level for -2log LR
       cont_level = cont_level/2; // since we are plotting -log LR

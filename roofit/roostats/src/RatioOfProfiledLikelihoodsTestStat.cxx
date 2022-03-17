@@ -102,15 +102,12 @@ Double_t  RooStats::RatioOfProfiledLikelihoodsTestStat::Evaluate(RooAbsData& dat
    }
    if (fDetailedOutputEnabled) {
       fDetailedOutput = new RooArgSet();
-      RooRealVar* var = nullptr;
-      TIter it1 = nullset->createIterator();
-      while((var = dynamic_cast<RooRealVar*>(it1.Next()))) {
+      for (auto const *var : static_range_cast<RooRealVar *>(*nullset)) {
          RooRealVar* cloneVar = new RooRealVar(TString::Format("nullprof_%s", var->GetName()),
                                                TString::Format("%s for null", var->GetTitle()), var->getVal());
          fDetailedOutput->addOwned(*cloneVar);
       }
-      TIter it2 = altset->createIterator();
-      while((var = dynamic_cast<RooRealVar*>(it2.Next()))) {
+      for (auto const *var : static_range_cast<RooRealVar *>(*altset)) {
          RooRealVar* cloneVar = new RooRealVar(TString::Format("altprof_%s", var->GetName()),
                                                TString::Format("%s for null", var->GetTitle()), var->getVal());
          fDetailedOutput->addOwned(*cloneVar);

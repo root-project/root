@@ -154,9 +154,7 @@ void FeldmanCousins::CreateParameterPoints() const{
     ooccoutP(&fModel,Generation) << "FeldmanCousins: Model has nuisance parameters, will do profile construction" << endl;
 
     // set nbins for the POI
-    TIter it2 = fModel.GetParametersOfInterest()->createIterator();
-    RooRealVar *myarg2;
-    while ((myarg2 = dynamic_cast<RooRealVar*>(it2.Next()))) {
+    for (auto *myarg2 : static_range_cast<RooRealVar *>(*fModel.GetParametersOfInterest())){
       myarg2->setBins(fNbins);
     }
 
@@ -199,9 +197,7 @@ void FeldmanCousins::CreateParameterPoints() const{
     // Do full construction
     ooccoutP(&fModel,Generation) << "FeldmanCousins: Model has no nuisance parameters" << endl;
 
-    TIter it = parameters->createIterator();
-    RooRealVar *myarg;
-    while ((myarg = dynamic_cast<RooRealVar*>(it.Next()))) {
+    for (auto *myarg : static_range_cast<RooRealVar *>(*parameters)){
       myarg->setBins(fNbins);
     }
 

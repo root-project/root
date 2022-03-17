@@ -272,10 +272,9 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
 
    // make a list of fPOI with fit result values and pass to LikelihoodInterval class
    // bestPOI is a cloned list of POI only with their best fit values
-   TIter iter = fPOI.createIterator();
    RooArgSet fitParSet(fitParams);
    RooArgSet * bestPOI = new RooArgSet();
-   while (RooAbsArg * arg =  (RooAbsArg*) iter.Next() ) {
+   for (auto const *arg : fPOI){
       RooAbsArg * p  =  fitParSet.find( arg->GetName() );
       if (p) bestPOI->addClone(*p);
       else bestPOI->addClone(*arg);
@@ -354,9 +353,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
    // check there are variable parameter in order to do a fit
    bool existVarParams = false;
-   TIter it = nuisParams.createIterator();
-   RooRealVar * myarg = 0;
-   while ((myarg = (RooRealVar *)it.Next())) {
+   for (auto const *myarg : static_range_cast<RooRealVar *> (nuisParams)) {
       if ( !myarg->isConstant() ) {
          existVarParams = true;
          break;

@@ -35,9 +35,7 @@ namespace {
      template<class listT, class stringT> void getParameterNames(const listT* l,std::vector<stringT>& names){
        // extract the parameter names from a list
        if(!l) return;
-       RooAbsArg* obj;
-       RooFIter itr(l->fwdIterator());
-       while((obj = itr.next())){
+       for (auto const *obj : *l) {
          names.push_back(obj->GetName());
        }
      }
@@ -276,11 +274,7 @@ namespace RooStats {
          return new BranchStore;
       }
       vector <TString> V;
-      const RooArgSet* aset = data.get(0);
-      RooAbsArg *arg(0);
-      TIterator *it = aset->createIterator();
-      for(;(arg = dynamic_cast<RooAbsArg*>(it->Next()));) {
-         RooRealVar *rvar = dynamic_cast<RooRealVar*>(arg);
+      for (auto *rvar : dynamic_range_cast<RooRealVar *>(* data.get(0))) {
          if (rvar == NULL)
             continue;
          V.push_back(rvar->GetName());
@@ -292,7 +286,6 @@ namespace RooStats {
             V.push_back(TString::Format("%s_err", rvar->GetName()));
          }
       }
-      delete it;
       return new BranchStore(V);
    }
 
@@ -301,12 +294,8 @@ namespace RooStats {
       bs->AssignToTTree(myTree);
 
       for(int entry = 0;entry<data.numEntries();entry++) {
-         bs->ResetValues();
-         const RooArgSet* aset = data.get(entry);
-         RooAbsArg *arg(0);
-         RooLinkedListIter it = aset->iterator();
-         for(;(arg = dynamic_cast<RooAbsArg*>(it.Next()));) {
-            RooRealVar *rvar = dynamic_cast<RooRealVar*>(arg);
+         bs->ResetValues(); 
+         for (auto const *rvar : dynamic_range_cast<RooRealVar *>(*data.get(entry))) {
             if (rvar == NULL)
                continue;
             bs->fVarVals[rvar->GetName()] = rvar->getValV();
@@ -395,10 +384,8 @@ namespace RooStats {
 
       // Copy snapshots
       if (copySnapshots) {
-        RooFIter itr(oldWS->getSnapshots().fwdIterator());
-        RooArgSet *snap;
-        while ((snap = (RooArgSet *)itr.next())) {
-          RooArgSet *snapClone = (RooArgSet *)snap->snapshot();
+        for (auto *snap : oldWS->getSnapshots()) {
+          RooArgSet *snapClone = static_cast<RooArgSet *>(snap)->snapshot();
           snapClone->setName(snap->GetName());
           newWS->getSnapshots().Add(snapClone);
         }
