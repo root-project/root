@@ -280,6 +280,8 @@ if(BUILD_DOCUMENTATION)
         #rm -rf tmva* data* result* config* test* Roo* My* Freq*
         #rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
         #rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
+        gzip ${DOCU_LOCATION}/html/ROOT.tag
+	    gzip ${DOCU_LOCATION}/html/ROOT.qch
         #rm -f ${DOCU_LOCATION}/notebooks/*.root
         #rm -rf ${DOCU_LOCATION}
 
