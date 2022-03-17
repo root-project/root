@@ -115,7 +115,7 @@ namespace cling {
   public:
     MetaParser(MetaSema &Actions, llvm::StringRef Line);
 
-    ///\brief Drives the recursive decendent parsing.
+    ///\brief Drives the recursive descendent parsing.
     ///
     ///\returns true if it was meta command.
     ///
