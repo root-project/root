@@ -145,6 +145,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
    TMVA::PyMethodBase::PyInitialize();
 #else
    useKerasCNN = false;
+   usePyTorchCNN = false;
 #endif
 
    TFile *outputFile = nullptr;
@@ -445,7 +446,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
 
       m.SaveSource("make_cnn_model.py");
       // execute
-      gSystem->Exec("python make_cnn_model.py");
+      gSystem->Exec(TMVA::Python_Executable() + " make_cnn_model.py");
 
       if (gSystem->AccessPathName("model_cnn.h5")) {
          Warning("TMVA_CNN_Classification", "Error creating Keras model file - skip using Keras");
@@ -465,7 +466,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
       Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model");
       TString pyTorchFileName = gROOT->GetTutorialDir() + TString("/tmva/PyTorch_Generate_CNN_Model.py");
       // check that pytorch can be imported and file defining the model and used later when booking the method is existing
-      if (gSystem->Exec("python -c 'import torch'")  || gSystem->AccessPathName(pyTorchFileName) ) {
+      if (gSystem->Exec(TMVA::Python_Executable() + " -c 'import torch'")  || gSystem->AccessPathName(pyTorchFileName) ) {
          Warning("TMVA_CNN_Classification", "PyTorch is not installed or model building file is not existing - skip using PyTorch");
       }
       else {
