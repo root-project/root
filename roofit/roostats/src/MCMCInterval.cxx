@@ -569,18 +569,15 @@ void MCMCInterval::SetParameters(const RooArgSet& parameters)
    if (fAxes != NULL)
       delete[] fAxes;
    fAxes = new RooRealVar*[fDimension];
-   TIterator* it = fParameters.createIterator();
    Int_t n = 0;
-   TObject* obj;
-   while ((obj = it->Next()) != NULL) {
+   for (auto *obj : fParameters) {
       if (dynamic_cast<RooRealVar*>(obj) != NULL)
-         fAxes[n] = (RooRealVar*)obj;
+         fAxes[n] = static_cast<RooRealVar*>(obj);
       else
          coutE(Eval) << "* Error in MCMCInterval::SetParameters: " <<
                      obj->GetName() << " not a RooRealVar*" << std::endl;
       n++;
    }
-   delete it;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -750,11 +747,8 @@ void MCMCInterval::DetermineByKeys()
    //Double_t max = product.maxVal(product.getMaxVal(fParameters));
 
    Double_t volume = 1.0;
-   TIterator* it = fParameters.createIterator();
-   RooRealVar* var;
-   while ((var = (RooRealVar*)it->Next()) != NULL)
+   for (auto *var : static_range_cast<RooRealVar*>(fParameters))
       volume *= (var->getMax() - var->getMin());
-   delete it;
 
    Double_t topCutoff = full / volume;
    Double_t bottomCutoff = topCutoff;

@@ -258,13 +258,11 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     }
 
     // printout some debug info
-    TIter      itr = point->createIterator();
-    RooRealVar* myarg;
     ooccoutP(samplingDist,Eval) << "NeymanConstruction: Prog: "<< i+1<<"/"<<fPointsToTest->numEntries()
             << " total MC = " << samplingDist->GetSize()
             << " this test stat = " << thisTestStatistic << endl;
     ooccoutP(samplingDist,Eval) << " ";
-    while ((myarg = (RooRealVar *)itr.Next())) {
+    for (auto const *myarg : static_range_cast<RooRealVar *> (*point)){
       ooccoutP(samplingDist,Eval) << myarg->GetName() << "=" << myarg->getVal() << " ";
     }
     ooccoutP(samplingDist,Eval) << "[" << lowerEdgeOfAcceptance << ", "

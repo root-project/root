@@ -65,19 +65,15 @@ the proposal density to maintain detailed balance.
       /// Return true if all objects are RooRealVars, false otherwise
       virtual bool CheckParameters(RooArgSet& params)
       {
-         TIterator* it = params.createIterator();
-         TObject* obj;
-         while ((obj = it->Next()) != NULL) {
+         for (auto *obj : params){
             if (!dynamic_cast<RooRealVar*>(obj)) {
                coutE(Eval) << "Error when checking parameters in"
                            << "ProposalFunction: "
                            << "Object \"" << obj->GetName() << "\" not of type "
                            << "RooRealVar" << std::endl;
-               delete it;
                return false;
             }
          }
-         delete it;
          // Made it here, so all parameters are RooRealVars
          return true;
       }

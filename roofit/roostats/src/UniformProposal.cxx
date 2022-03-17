@@ -68,10 +68,7 @@ Double_t UniformProposal::GetProposalDensity(RooArgSet& /* x1 */,
    // value of the proposal density function is:
    // 1 / (N-dimensional volume of interval)
    Double_t volume = 1.0;
-   TIterator* it = x2.createIterator();
-   RooRealVar* var;
-   while ((var = (RooRealVar*)it->Next()) != NULL)
+   for (auto const *var : static_range_cast<RooRealVar *> (x2))
       volume *= (var->getMax() - var->getMin());
-   delete it;
    return 1.0 / volume;
 }

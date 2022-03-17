@@ -193,14 +193,13 @@ namespace RooStats {
       enum MCMCInterval::IntervalType fIntervalType; // type of interval to find
 
       void SetupBasicUsage();
-      void SetBins(const RooAbsCollection& coll, Int_t numBins) const
+      void SetBins(const RooAbsCollection &coll, Int_t numBins) const
       {
-         TIterator* it = coll.createIterator();
-         RooAbsArg* r;
-         while ((r = (RooAbsArg*)it->Next()) != NULL)
-            if (dynamic_cast<RooRealVar*>(r))
-               ((RooRealVar*)r)->setBins(numBins);
-         delete it;
+         for (auto *r : dynamic_range_cast<RooRealVar *>(coll)){
+            if (r) {
+               r->setBins(numBins);
+            }
+         }
       }
 
       ClassDefOverride(MCMCCalculator,4) // Markov Chain Monte Carlo calculator for Bayesian credible intervals
