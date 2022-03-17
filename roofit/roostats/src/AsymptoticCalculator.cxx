@@ -928,9 +928,8 @@ void AsymptoticCalculator::FillBins(const RooAbsPdf & pdf, const RooArgList &obs
 
 bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs)
 {
-    RooLinkedListIter  iter(prod.pdfList().iterator());
-    bool ret = true;
-    for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
+    bool ret = true; 
+    for (auto *a : prod.pdfList()) {
         if (!a->dependsOn(obs)) continue;
         RooPoisson *pois = 0;
         RooGaussian * gaus = 0;
@@ -945,7 +944,8 @@ bool AsymptoticCalculator::SetObsToExpected(RooProdPdf &prod, const RooArgSet &o
             if (subprod)
                ret &= SetObsToExpected(*subprod, obs);
             else {
-               oocoutE((TObject*)0,InputArguments) << "Illegal term in counting model: "
+               oocoutE(static_cast<TObject *>(nullptr), InputArguments)
+                  << "Illegal term in counting model: "
                    << "the PDF " << a->GetName()
                    << " depends on the observables, but is not a Poisson, Gaussian or Product"
                    << endl;
@@ -1228,13 +1228,11 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
    RooArgSet  poi(*model.GetParametersOfInterest());
    poi.assign(paramValues);
-   //RooRealVar *r = dynamic_cast<RooRealVar *>(poi.first());
+   
    // set poi constant for conditional MLE
    // need to fit nuisance parameters at their conditional MLE value
-   RooLinkedListIter it = poi.iterator();
-   RooRealVar*  tmpPar = NULL;
    RooArgSet paramsSetConstant;
-   while((tmpPar = (RooRealVar*)it.Next())){
+   for (auto *tmpPar : static_range_cast<RooRealVar *>(poi)) {
       tmpPar->setConstant();
       if (verbose>0)
          std::cout << "MakeAsimov: Setting poi " << tmpPar->GetName() << " to a constant value = " << tmpPar->getVal() << std::endl;
@@ -1251,10 +1249,8 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
    } else {
       // Do we have free parameters anyway that need fitting?
-      std::unique_ptr<RooArgSet> params(model.GetPdf()->getParameters(realData));
-      RooLinkedListIter iter(params->iterator());
-      for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
-         RooRealVar *rrv = dynamic_cast<RooRealVar *>(a);
+      std::unique_ptr<RooArgSet> params(model.GetPdf()->getParameters(realData)); 
+      for (auto const *rrv : dynamic_range_cast<RooRealVar *>(*params)) {
          if ( rrv != 0 && rrv->isConstant() == false ) { hasFloatParams = true; break; }
       }
    }
@@ -1429,10 +1425,10 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          // nothing to unfold - just use the pdf
          pdfList.add(*nuispdf.get());
 
-      RooLinkedListIter iter(pdfList.iterator());
-      for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
-         RooAbsPdf *cterm = dynamic_cast<RooAbsPdf *>(a);
-         assert(cterm && "AsimovUtils: a factor of the nuisance pdf is not a Pdf!");
+      for (auto *cterm : static_range_cast<RooAbsPdf *>(pdfList)) {
+         assert(dynamic_cast<RooAbsPdf *>(static_cast<RooAbsArg *>(cterm)) &&
+                "AsimovUtils: a factor of the nuisance pdf is not a Pdf!");
+
          if (!cterm->dependsOn(nuis)) continue; // dummy constraints
          // skip also the case of uniform components
          if (typeid(*cterm) == typeid(RooUniform)) continue;
@@ -1440,12 +1436,13 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          std::unique_ptr<RooArgSet> cpars(cterm->getParameters(&gobs));
          std::unique_ptr<RooArgSet> cgobs(cterm->getObservables(&gobs));
          if (cgobs->getSize() > 1) {
-            oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName()
+            oocoutE(static_cast<TObject*>(nullptr),Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName()
                                             << " has multiple global observables -cannot generate - skip it" << std::endl;
             continue;
          }
          else if (cgobs->getSize() == 0) {
-            oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: constraint term  " <<  cterm->GetName()
+            oocoutW(static_cast<TObject *>(nullptr), Generation)
+               << "AsymptoticCalculator::MakeAsimovData: constraint term  " << cterm->GetName()
                                             << " has no global observables - skip it" << std::endl;
             continue;
          }
@@ -1455,7 +1452,8 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          // remove the constant parameters in cpars
          RooStats::RemoveConstantParameters(cpars.get());
          if (cpars->getSize() != 1) {
-            oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
+            oocoutE(static_cast<TObject *>(nullptr), Generation)
+               << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                             << cterm->GetName() << " has multiple floating params - cannot generate - skip it " << std::endl;
             continue;
          }
@@ -1469,15 +1467,16 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
               cClass != RooGamma::Class() && cClass != RooLognormal::Class() &&
               cClass != RooBifurGauss::Class()  ) {
             TString className =  (cClass) ?  cClass->GetName() : "undefined";
-            oocoutW((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
+            oocoutW(static_cast<TObject *>(nullptr), Generation)
+               << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                             << cterm->GetName() << " of type " << className
                                             << " is a non-supported type - result might be not correct " << std::endl;
          }
 
          // in case of a Poisson constraint make sure the rounding is not set
          if (cClass == RooPoisson::Class() ) {
-            RooPoisson * pois = dynamic_cast<RooPoisson*>(cterm);
-            assert(pois);
+            RooPoisson * pois = static_cast<RooPoisson*>(cterm);
+            assert(dynamic_cast<RooPoisson *>(cterm));
             pois->setNoRounding(true);
          }
 
@@ -1488,7 +1487,8 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
             // in this case n+1 is the server and we don;t have a direct dependency, but we want to set n to the b value
             // so in case of the Gamma ignore this test
             if ( cClass != RooGamma::Class() ) {
-               oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
+               oocoutE(static_cast<TObject *>(nullptr), Generation)
+                  << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                                << cterm->GetName() << " has no direct dependence on global observable- cannot generate it " << std::endl;
                continue;
             }
@@ -1508,7 +1508,8 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
                }
             }
             if (thetaGamma == 0) {
-               oocoutI((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
+               oocoutI(static_cast<TObject *>(nullptr), Generation)
+                  << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                                << cterm->GetName() << " is a Gamma distribution and no server named theta is found. Assume that the Gamma scale is  1 " << std::endl;
             }
             else {
@@ -1525,7 +1526,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
 
                // found server depending on nuisance
                if (foundServer) {
-                  oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
+                  oocoutE(static_cast<TObject *>(nullptr),Generation) << "AsymptoticCalculator::MakeAsimovData:constraint term "
                                             << cterm->GetName() << " constraint term has more server depending on nuisance- cannot generate it " <<
                      std::endl;
                   foundServer = false;
@@ -1544,7 +1545,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
          }
 
          if (!foundServer) {
-            oocoutE((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global observables will not be set to Asimov value " << cterm->GetName() << std::endl;
+            oocoutE(static_cast<TObject *>(nullptr),Generation) << "AsymptoticCalculator::MakeAsimovData - can't find nuisance for constraint term - global observables will not be set to Asimov value " << cterm->GetName() << std::endl;
             std::cerr << "Parameters: " << std::endl;
             cpars->Print("V");
             std::cerr << "Observables: " << std::endl;

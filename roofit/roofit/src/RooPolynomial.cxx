@@ -83,9 +83,7 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
     _lowestOrder=0 ;
   }
 
-  RooFIter coefIter = coefList.fwdIterator() ;
-  RooAbsArg* coef ;
-  while((coef = (RooAbsArg*)coefIter.next())) {
+  for (auto *coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutE(InputArguments) << "RooPolynomial::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
              << " is not of type RooAbsReal" << endl ;
@@ -134,9 +132,9 @@ Double_t RooPolynomial::evaluate() const
   _wksp.reserve(sz);
   {
     const RooArgSet* nset = _coefList.nset();
-    RooFIter it = _coefList.fwdIterator();
-    RooAbsReal* c;
-    while ((c = (RooAbsReal*) it.next())) _wksp.push_back(c->getVal(nset));
+    for (auto *c : static_range_cast<RooAbsReal *>(_coefList)) {
+       _wksp.push_back(c->getVal(nset));
+    }
   }
   const Double_t x = _x;
   Double_t retVal = _wksp[sz - 1];
@@ -182,10 +180,8 @@ Double_t RooPolynomial::analyticalIntegral(Int_t code, const char* rangeName) co
   _wksp.reserve(sz);
   {
     const RooArgSet* nset = _coefList.nset();
-    RooFIter it = _coefList.fwdIterator();
     unsigned i = 1 + lowestOrder;
-    RooAbsReal* c;
-    while ((c = (RooAbsReal*) it.next())) {
+    for (auto *c : static_range_cast<RooAbsReal *>(_coefList)) {
       _wksp.push_back(c->getVal(nset) / Double_t(i));
       ++i;
     }

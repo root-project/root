@@ -50,8 +50,6 @@ ClassImp(RooStepFunction);
 
 RooStepFunction::RooStepFunction()
 {
-  _coefIter = _coefList.createIterator() ;
-  _boundIter = _boundaryList.createIterator() ;
   _interpolate = kFALSE ;
 }
 
@@ -66,10 +64,7 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
   _boundaryList("boundaryList","List of boundaries",this),
   _interpolate(interpolate)
 {
-  _coefIter = _coefList.createIterator() ;
-  TIterator* coefIter = coefList.createIterator() ;
-  RooAbsArg* coef ;
-  while((coef = (RooAbsArg*)coefIter->Next())) {
+  for (auto *coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
       << " is not of type RooAbsReal" << endl ;
@@ -77,12 +72,8 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
     }
     _coefList.add(*coef) ;
   }
-  delete coefIter ;
 
-  _boundIter = _boundaryList.createIterator() ;
-  TIter boundaryIter = boundaryList.createIterator() ;
-  RooAbsArg* boundary ;
-  while((boundary = (RooAbsArg*)boundaryIter.Next())) {
+  for (auto *boundary : boundaryList) {
     if (!dynamic_cast<RooAbsReal*>(boundary)) {
       cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: boundary " << boundary->GetName()
       << " is not of type RooAbsReal" << endl ;
@@ -108,18 +99,8 @@ RooStepFunction::RooStepFunction(const RooStepFunction& other, const char* name)
   _boundaryList("boundaryList",this,other._boundaryList),
   _interpolate(other._interpolate)
 {
-  _coefIter = _coefList.createIterator();
-  _boundIter = _boundaryList.createIterator();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooStepFunction::~RooStepFunction()
-{
-  delete _coefIter ;
-  delete _boundIter ;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Transfer contents to vector for use below

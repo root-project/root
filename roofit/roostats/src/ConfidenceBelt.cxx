@@ -242,17 +242,17 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
     for(index=0; index<tree->numEntries(); ++index){
       thisPoint = tree->get(index);
       bool samePoint = true;
-      TIter it = parameterPoint.createIterator();
-      RooRealVar *myarg;
-      while ( samePoint && (myarg = (RooRealVar *)it.Next())) {
-   if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
-     samePoint = false;
+      for (auto const *myarg : static_range_cast<RooRealVar *>(parameterPoint)) {      
+        if (samePoint == false)
+            break;
+        if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
+        samePoint = false;
       }
       if(samePoint)
    break;
     }
 
-    if (index >= (int)fSamplingSummaries.size())
+    if (index >= static_cast<int>(fSamplingSummaries.size()))
       throw std::runtime_error("ConfidenceBelt::GetAcceptanceRegion: Sampling summaries are not filled yet. Switch on NeymanConstruction::CreateConfBelt() or FeldmanCousins::CreateConfBelt().");
 
     return &(fSamplingSummaries[index].GetAcceptanceRegion());

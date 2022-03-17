@@ -117,17 +117,16 @@ namespace RooStats {
       bool ParamsAreEqual() {
          if (!fNullParameters->equals(*fAltParameters)) return false;
 
-         RooAbsReal* null;
-         RooAbsReal* alt;
-
-         TIterator* nullIt = fNullParameters->createIterator();
-         TIterator* altIt = fAltParameters->createIterator();
          bool ret = true;
-         while ((null = (RooAbsReal*) nullIt->Next()) && (alt = (RooAbsReal*) altIt->Next())) {
-            if (null->getVal() != alt->getVal()) ret = false;
+
+         for (auto nullIt = fNullParameters->begin(), altIt = fAltParameters->begin();
+              nullIt != fNullParameters->end() && altIt != fAltParameters->end(); ++nullIt, ++altIt) {
+            RooAbsReal *null = static_cast<RooAbsReal *>(*nullIt);
+            RooAbsReal *alt = static_cast<RooAbsReal *>(*altIt);
+            if (null->getVal() != alt->getVal())
+               ret = false;
          }
-         delete nullIt;
-         delete altIt;
+
          return ret;
       }
 

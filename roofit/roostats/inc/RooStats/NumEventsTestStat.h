@@ -64,12 +64,8 @@ namespace RooStats {
 
          // data is not weighted as pdf cannot be extended
          if(data.numEntries() == 1) {
-
-            const RooArgSet *obsSet = data.get(0);
-            RooLinkedListIter iter = obsSet->iterator();
-
-            RooRealVar *obs = NULL; Double_t numEvents = 0.0;
-            while((obs = (RooRealVar *)iter.Next()) != NULL) {
+            Double_t numEvents = 0.0;
+            for (auto const *obs : static_range_cast<RooRealVar *>(*data.get(0))) {
                numEvents += obs->getValV();
             }
             return numEvents;

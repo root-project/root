@@ -33,7 +33,6 @@ public:
 
   RooParametricStepFunction(const RooParametricStepFunction& other, const char* name = 0);
   TObject* clone(const char* newname) const override { return new RooParametricStepFunction(*this, newname); }
-  ~RooParametricStepFunction() override ;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override ;
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override ;

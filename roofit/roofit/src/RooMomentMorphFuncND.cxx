@@ -41,9 +41,6 @@ ClassImp(RooMomentMorphFuncND)
    RooMomentMorphFuncND::RooMomentMorphFuncND()
    : _cacheMgr(this, 10, true, true), _curNormSet(0), _M(0), _MSqr(0), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
 {
-   _parItr = _parList.createIterator();
-   _obsItr = _obsList.createIterator();
-
    TRACE_CREATE
 }
 
@@ -116,10 +113,9 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 {
    // make reference grid
    TVectorD mrefpoints(mrefList.getSize());
-   TIterator *mrefItr = mrefList.createIterator();
-   RooAbsReal *mref;
-   for (int i = 0; (mref = dynamic_cast<RooAbsReal *>(mrefItr->Next())); ++i) {
-      if (!mref) {
+   Int_t i = 0;
+   for (auto *mref : mrefList) {
+      if (!dynamic_cast<RooAbsReal*>(mref)) {
          coutE(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") ERROR: mref " << mref->GetName()
                                << " is not of type RooAbsReal" << endl;
          throw string("RooMomentMorphFuncND::ctor() ERROR mref is not of type RooAbsReal");
@@ -128,17 +124,16 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
          coutW(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") WARNING mref point " << i
                                << " is not a constant, taking a snapshot of its value" << endl;
       }
-      mrefpoints[i] = mref->getVal();
+      mrefpoints[i] = static_cast<RooAbsReal*>(mref)->getVal();
+      ++i;
    }
-   delete mrefItr;
 
    RooBinning grid(mrefpoints.GetNrows() - 1, mrefpoints.GetMatrixArray());
    _referenceGrid.addBinning(grid);
-
-   for (int i = 0; i < mrefpoints.GetNrows(); ++i) {
+   for (i = 0; i < mrefpoints.GetNrows(); ++i) {
       for (int j = 0; j < grid.numBoundaries(); ++j) {
          if (mrefpoints[i] == grid.array()[j]) {
-            _referenceGrid.addPdf(*(RooAbsReal *)pdfList.at(i), j);
+            _referenceGrid.addPdf(static_cast<RooAbsReal &>(pdfList[i]), j);
             break;
          }
       }
@@ -167,8 +162,6 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, co
      _referenceGrid(other._referenceGrid), _pdfList("pdfList", this, other._pdfList), _M(0), _MSqr(0),
      _setting(other._setting), _useHorizMorph(other._useHorizMorph)
 {
-   _parItr = _parList.createIterator();
-   _obsItr = _obsList.createIterator();
 
    // general initialization
    initialize();
@@ -194,9 +187,7 @@ RooMomentMorphFuncND::~RooMomentMorphFuncND()
 //_____________________________________________________________________________
 void RooMomentMorphFuncND::initializeParameters(const RooArgList &parList)
 {
-   TIterator *parItr = parList.createIterator();
-   RooAbsArg *par;
-   for (int i = 0; (par = (RooAbsArg *)parItr->Next()); ++i) {
+   for (auto *par : parList) {
       if (!dynamic_cast<RooAbsReal *>(par)) {
          coutE(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") ERROR: parameter " << par->GetName()
                                << " is not of type RooAbsReal" << endl;
@@ -204,17 +195,12 @@ void RooMomentMorphFuncND::initializeParameters(const RooArgList &parList)
       }
       _parList.add(*par);
    }
-   delete parItr;
-
-   _parItr = _parList.createIterator();
 }
 
 //_____________________________________________________________________________
 void RooMomentMorphFuncND::initializeObservables(const RooArgList &obsList)
 {
-   TIterator *obsItr = obsList.createIterator();
-   RooAbsArg *var;
-   for (int i = 0; (var = (RooAbsArg *)obsItr->Next()); ++i) {
+   for (auto *var : obsList) {
       if (!dynamic_cast<RooAbsReal *>(var)) {
          coutE(InputArguments) << "RooMomentMorphFuncND::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
                                << " is not of type RooAbsReal" << endl;
@@ -222,9 +208,6 @@ void RooMomentMorphFuncND::initializeObservables(const RooArgList &obsList)
       }
       _obsList.add(*var);
    }
-   delete obsItr;
-
-   _obsItr = _obsList.createIterator();
 }
 
 //_____________________________________________________________________________
@@ -428,8 +411,6 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
    int nObs = _obsList.getSize();
    int nPdf = _referenceGrid._pdfList.getSize();
 
-   TIter pdfItr = _pdfList.createIterator();
-
    RooAbsReal *null = 0;
    vector<RooAbsReal *> meanrv(nPdf * nObs, null);
    vector<RooAbsReal *> sigmarv(nPdf * nObs, null);
@@ -501,19 +482,16 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       }
 
       // construction of unit pdfs
-      pdfItr.Reset();
-      RooAbsReal *pdf;
       RooArgList transPdfList;
 
-      for (int i = 0; i < nPdf; ++i) {
-         _obsItr->Reset();
-         RooRealVar *var;
+      Int_t i = 0;
+      for (auto const *pdf : static_range_cast<RooAbsReal *>(_pdfList)) {
 
-         pdf = (RooAbsReal *)pdfItr.Next();
          string pdfName = Form("pdf_%d", i);
          RooCustomizer cust(*pdf, pdfName.c_str());
 
-         for (int j = 0; j < nObs; ++j) {
+         Int_t j = 0;
+         for (auto *var : static_range_cast<RooRealVar *>(obsList)) {
             // slope and offsets formulas
             string slopeName = Form("%s_slope_%d_%d", GetName(), i, j);
             string offsetName = Form("%s_offset_%d_%d", GetName(), i, j);
@@ -525,7 +503,6 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
             ownedComps.add(RooArgSet(*slope[sij(i, j)], *offsets[sij(i, j)]));
 
             // linear transformations, so pdf can be renormalized easily
-            var = (RooRealVar *)(_obsItr->Next());
             string transVarName = Form("%s_transVar_%d_%d", GetName(), i, j);
             transVar[sij(i, j)] = new RooLinearVar(transVarName.c_str(), transVarName.c_str(), *var, *slope[sij(i, j)],
                                                    *offsets[sij(i, j)]);
@@ -536,10 +513,12 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
 
             ownedComps.add(*transVar[sij(i, j)]);
             cust.replaceArg(*var, *transVar[sij(i, j)]);
+            ++j;
          }
          transPdf[i] = (RooAbsReal *)cust.build();
          transPdfList.add(*transPdf[i]);
          ownedComps.add(*transPdf[i]);
+         ++i;
       }
 
       // sum pdf

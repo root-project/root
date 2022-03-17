@@ -223,14 +223,13 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    std::vector<Double_t> max(dim);
    std::vector<Int_t> bins(dim);
    std::vector<const char *> names(dim);
-   TIterator* it = axes.createIterator();
-   for (Int_t i = 0; i < dim; i++) {
-      RooRealVar * var = dynamic_cast<RooRealVar*>(it->Next() );
-      assert(var != 0);
+   Int_t i = 0;
+   for (auto const *var : static_range_cast<RooRealVar *>(axes)) {
       names[i] = var->GetName();
       min[i] = var->getMin();
       max[i] = var->getMax();
       bins[i] = var->numBins();
+      ++i;
    }
 
    THnSparseF* sparseHist = new THnSparseF("posterior", "MCMC Posterior Histogram",
@@ -245,9 +244,9 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    Int_t size = fChain->numEntries();
    const RooArgSet* entry;
    Double_t* x = new Double_t[dim];
-   for (Int_t i = 0; i < size; i++) {
+   for ( i = 0; i < size; i++) {
       entry = fChain->get(i);
-      it->Reset();
+
       for (Int_t ii = 0; ii < dim; ii++) {
          //LM:  doing this is probably quite slow
          x[ii] = entry->getRealValue( names[ii]);
@@ -255,7 +254,6 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
       }
    }
    delete[] x;
-   delete it;
 
    return sparseHist;
 }

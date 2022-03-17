@@ -68,9 +68,7 @@ namespace RooStats {
 
    inline void RemoveConstantParameters(RooArgSet* set){
       RooArgSet constSet;
-      RooLinkedListIter it = set->iterator();
-      RooRealVar *myarg;
-      while ((myarg = (RooRealVar *)it.Next())) {
+      for (auto const *myarg : static_range_cast<RooRealVar *>(*set)) {
          if(myarg->isConstant()) constSet.add(*myarg);
       }
       set->remove(constSet);
@@ -78,9 +76,7 @@ namespace RooStats {
 
    inline void RemoveConstantParameters(RooArgList& set){
       RooArgSet constSet;
-      RooLinkedListIter it = set.iterator();
-      RooRealVar *myarg;
-      while ((myarg = (RooRealVar *)it.Next())) {
+      for (auto const *myarg : static_range_cast<RooRealVar *>(set)) {
          if(myarg->isConstant()) constSet.add(*myarg);
       }
       set.remove(constSet);
@@ -89,10 +85,8 @@ namespace RooStats {
    /// utility function to set all variable constant in a collection
    /// (from G. Petrucciani)
    inline bool SetAllConstant(const RooAbsCollection &coll, bool constant = true) {
-      bool changed = false;
-      RooLinkedListIter iter = coll.iterator();
-      for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
-         RooRealVar *v = dynamic_cast<RooRealVar *>(a);
+      bool changed = false; 
+      for (auto *v : dynamic_range_cast<RooRealVar *>(coll)) {
          if (v && (v->isConstant() != constant)) {
             changed = true;
             v->setConstant(constant);
@@ -106,21 +100,18 @@ namespace RooStats {
    inline void RandomizeCollection(RooAbsCollection& set,
                                    Bool_t randomizeConstants = kTRUE)
    {
-      RooLinkedListIter it = set.iterator();
-      RooRealVar* var;
 
       // repeat loop to avoid calling isConstant for nothing
       if (randomizeConstants) {
-         while ((var = (RooRealVar*)it.Next()) != NULL)
+         for (auto *var : static_range_cast<RooRealVar *>(set))
             var->randomize();
       }
       else {
          // exclude constants variables
-         while ((var = (RooRealVar*)it.Next()) != NULL)
+         for (auto *var : static_range_cast<RooRealVar *>(set))
             if (!var->isConstant() )
                var->randomize();
       }
-
 
    }
 

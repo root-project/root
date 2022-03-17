@@ -70,7 +70,6 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
   _coefList("coefList","List of coefficients",this),
   _nBins(nBins)
 {
-  _coefIter = _coefList.createIterator() ;
 
   // Check lowest order
   if (_nBins<0) {
@@ -79,9 +78,7 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
     _nBins=0 ;
   }
 
-  TIterator* coefIter = coefList.createIterator() ;
-  RooAbsArg* coef ;
-  while((coef = (RooAbsArg*)coefIter->Next())) {
+  for (auto *coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       cout << "RooParametricStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
       << " is not of type RooAbsReal" << endl ;
@@ -89,7 +86,6 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
     }
     _coefList.add(*coef) ;
   }
-  delete coefIter ;
 
   // Bin limits
   limits.Copy(_limits);
@@ -105,19 +101,8 @@ RooParametricStepFunction::RooParametricStepFunction(const RooParametricStepFunc
   _coefList("coefList",this,other._coefList),
   _nBins(other._nBins)
 {
-  _coefIter = _coefList.createIterator();
   (other._limits).Copy(_limits);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooParametricStepFunction::~RooParametricStepFunction()
-{
-  delete _coefIter ;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

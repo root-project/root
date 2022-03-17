@@ -174,12 +174,9 @@ public:
      if (!SetHasOnlyParameters(set,"ModelConfig::SetGlobalObservables")) return ;
 
       // make global observables constant
-      RooFIter iter = set.fwdIterator();
-      RooAbsArg *arg = iter.next();
-      while(arg != NULL) {
+     for (auto *arg : set){
          arg->setAttribute("Constant", kTRUE);
-         arg = iter.next();
-      }
+     }
 
       fGlobalObsName=std::string(GetName()) + "_GlobalObservables";
       DefineSetInWS(fGlobalObsName.c_str(), set);

@@ -96,16 +96,14 @@ Bool_t PointSetInterval::IsInInterval(const RooArgSet &parameterPoint) const
       // This method is not complete
       thisPoint = tree->get(i);
       bool samePoint = true;
-      TIter it = parameterPoint.createIterator();
-      RooRealVar *myarg;
-      while ( samePoint && (myarg = (RooRealVar *)it.Next())) {
-   if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
-     samePoint = false;
+      for (auto const *myarg : static_range_cast<RooRealVar *>(parameterPoint)) {
+        if(samePoint == false)
+            break;
+        if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
+        samePoint = false;
       }
       if(samePoint)
-   return true;
-
-      //      delete thisPoint;
+        return true;
     }
     return false; // didn't find a good point
   }

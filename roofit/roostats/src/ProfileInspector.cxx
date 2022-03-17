@@ -117,10 +117,7 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
     poi->setVal(curve_x[i]);
     profile->getVal();
 
-    TIter nuis_params_itr = nuis_params->createIterator();
-    TObject* nuis_params_obj;
-    while((nuis_params_obj = nuis_params_itr.Next())){
-       RooRealVar* nuis_param = dynamic_cast<RooRealVar*>(nuis_params_obj);
+    for (auto const *nuis_param : dynamic_range_cast<RooRealVar *> (*nuis_params)){
        if(nuis_param) {
           string name = nuis_param->GetName();
           if(nuis_params->getSize()==0) continue;

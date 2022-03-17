@@ -32,9 +32,6 @@ ClassImp(RooMomentMorphFunc)
 RooMomentMorphFunc::RooMomentMorphFunc()
    : _cacheMgr(this, 10, true, true), _curNormSet(0), _mref(0), _M(0), _useHorizMorph(true)
 {
-   // coverity[UNINIT_CTOR]
-   _varItr = _varList.createIterator();
-   _pdfItr = _pdfList.createIterator();
 }
 
 //_____________________________________________________________________________
@@ -47,9 +44,7 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
    // CTOR
 
    // observables
-   TIterator *varItr = varList.createIterator();
-   RooAbsArg *var;
-   for (Int_t i = 0; (var = (RooAbsArg *)varItr->Next()); ++i) {
+   for (auto *var : varList) {
       if (!dynamic_cast<RooAbsReal *>(var)) {
          coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
                                << " is not of type RooAbsReal" << endl;
@@ -57,24 +52,18 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
       }
       _varList.add(*var);
    }
-   delete varItr;
 
    // reference p.d.f.s
-   TIterator *pdfItr = pdfList.createIterator();
-   RooAbsReal *pdf;
-   for (Int_t i = 0; (pdf = dynamic_cast<RooAbsReal *>(pdfItr->Next())); ++i) {
-      if (!pdf) {
+   for (auto const *pdf : pdfList) {
+      if (!dynamic_cast<RooAbsReal const*>(pdf)) {
          coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: func " << pdf->GetName()
                                << " is not of type RooAbsReal" << endl;
          throw string("RooMomentMorhFunc::ctor() ERROR func is not of type RooAbsReal");
       }
       _pdfList.add(*pdf);
    }
-   delete pdfItr;
 
    _mref = new TVectorD(mrefpoints);
-   _varItr = _varList.createIterator();
-   _pdfItr = _pdfList.createIterator();
 
    // initialization
    initialize();
@@ -90,9 +79,7 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
    // CTOR
 
    // observables
-   TIterator *varItr = varList.createIterator();
-   RooAbsArg *var;
-   for (Int_t i = 0; (var = (RooAbsArg *)varItr->Next()); ++i) {
+   for (auto *var : varList) {
       if (!dynamic_cast<RooAbsReal *>(var)) {
          coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
                                << " is not of type RooAbsReal" << endl;
@@ -100,27 +87,22 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
       }
       _varList.add(*var);
    }
-   delete varItr;
 
    // reference p.d.f.s
-   TIterator *pdfItr = pdfList.createIterator();
-   RooAbsReal *pdf;
-   for (Int_t i = 0; (pdf = dynamic_cast<RooAbsReal *>(pdfItr->Next())); ++i) {
-      if (!pdf) {
+   for (auto const *pdf : pdfList){
+      if (!dynamic_cast<RooAbsPdf const*>(pdf)) {
          coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: function " << pdf->GetName()
                                << " is not of type RooAbsReal" << endl;
          throw string("RooMomentMorh::ctor() ERROR function is not of type RooAbsReal");
       }
       _pdfList.add(*pdf);
    }
-   delete pdfItr;
 
    // reference points in m
    _mref = new TVectorD(mrefList.getSize());
-   TIterator *mrefItr = mrefList.createIterator();
-   RooAbsReal *mref;
-   for (Int_t i = 0; (mref = dynamic_cast<RooAbsReal *>(mrefItr->Next())); ++i) {
-      if (!mref) {
+   Int_t i = 0;
+   for (auto *mref : mrefList) {
+      if (!dynamic_cast<RooAbsReal *>(mref)) {
          coutE(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") ERROR: mref " << mref->GetName()
                                << " is not of type RooAbsReal" << endl;
          throw string("RooPolyMorh::ctor() ERROR mref is not of type RooAbsReal");
@@ -129,12 +111,9 @@ RooMomentMorphFunc::RooMomentMorphFunc(const char *name, const char *title, RooA
          coutW(InputArguments) << "RooMomentMorphFunc::ctor(" << GetName() << ") WARNING mref point " << i
                                << " is not a constant, taking a snapshot of its value" << endl;
       }
-      (*_mref)[i] = mref->getVal();
+      (*_mref)[i] = static_cast<RooAbsReal *>(mref)->getVal();
+      ++i;
    }
-   delete mrefItr;
-
-   _varItr = _varList.createIterator();
-   _pdfItr = _pdfList.createIterator();
 
    // initialization
    initialize();
@@ -147,8 +126,6 @@ RooMomentMorphFunc::RooMomentMorphFunc(const RooMomentMorphFunc &other, const ch
      _useHorizMorph(other._useHorizMorph)
 {
    _mref = new TVectorD(*other._mref);
-   _varItr = _varList.createIterator();
-   _pdfItr = _pdfList.createIterator();
 
    // initialization
    initialize();

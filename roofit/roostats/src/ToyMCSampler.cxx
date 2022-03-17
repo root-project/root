@@ -101,9 +101,7 @@ void NuisanceParametersSampler::Refresh() {
 
       // From FeldmanCousins.cxx:
       // set nbins for the POI
-      TIter it2 = fParams->createIterator();
-      RooRealVar *myarg2;
-      while ((myarg2 = dynamic_cast<RooRealVar*>(it2.Next()))) {
+      for (auto *myarg2 : static_range_cast<RooRealVar *>(*fParams)) {
         myarg2->setBins(nBins);
       }
 

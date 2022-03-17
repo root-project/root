@@ -122,13 +122,11 @@ void ProposalHelper::CreatePdf()
    }
    RooArgList* xVec = new RooArgList();
    RooArgList* muVec = new RooArgList();
-   TIterator* it = fVars->createIterator();
-   RooRealVar* r;
-   RooRealVar* clone;
-   while ((r = (RooRealVar*)it->Next()) != NULL) {
+   RooRealVar* clone; 
+   for (auto *r : static_range_cast<RooRealVar *> (*fVars)){
       xVec->add(*r);
       TString cloneName = TString::Format("%s%s", "mu__", r->GetName());
-      clone = (RooRealVar*)r->clone(cloneName.Data());
+      clone = static_cast<RooRealVar*>(r->clone(cloneName.Data()));
       muVec->add(*clone);
       if (fUseUpdates)
          fPdfProp->AddMapping(*clone, *r);
@@ -139,7 +137,6 @@ void ProposalHelper::CreatePdf()
                                   *fCovMatrix);
    delete xVec;
    delete muVec;
-   delete it;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
