@@ -186,10 +186,8 @@ Double_t RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type
 
 
           // set the POI to constant
-          RooLinkedListIter it = paramsOfInterest.iterator();
-          RooRealVar* tmpPar = NULL, *tmpParA=NULL;
-          while((tmpPar = (RooRealVar*)it.Next())){
-             tmpParA =  dynamic_cast<RooRealVar*>( attachedSet->find(tmpPar->GetName()));
+          for (auto *tmpPar : paramsOfInterest) {
+             RooRealVar *tmpParA = dynamic_cast<RooRealVar *>(attachedSet->find(tmpPar->GetName()));
              if (tmpParA) tmpParA->setConstant();
           }
 
