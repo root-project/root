@@ -431,7 +431,7 @@ the option string
 
             m.SaveSource("make_rnn_model.py");
             // execute
-            gSystem->Exec("python make_rnn_model.py");
+            gSystem->Exec(TMVA::Python_Executable() + " make_rnn_model.py");
 
             if (gSystem->AccessPathName(modelName)) {
                Warning("TMVA_RNN_Classification", "Error creating Keras recurrent model file - Skip using Keras");
