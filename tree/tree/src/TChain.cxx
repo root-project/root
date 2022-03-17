@@ -747,7 +747,6 @@ TFriendElement* TChain::AddFriend(TTree* chain, const char* alias, Bool_t /* war
    if (!t) {
       Warning("AddFriend","Unknown TChain %s",chain->GetName());
    }
-   chain->RegisterExternalFriend(fe);
    return fe;
 }
 
