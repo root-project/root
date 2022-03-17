@@ -67,6 +67,8 @@ public:
            Bool_t      IsUpdated() const { return TestBit(kUpdated); }
            void        ResetUpdated() { ResetBit(kUpdated); }
            void        MarkUpdated() { SetBit(kUpdated); }
+   virtual void        RecursiveRemove(TObject *obj);
+
 
    ClassDef(TFriendElement,2)  //A friend element of another TTree
 };

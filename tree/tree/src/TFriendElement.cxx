@@ -140,6 +140,8 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
       delete [] temp;
    }
 
+   if (fTree)
+      fTree->RegisterExternalFriend(this);
    // No need to Connect.
 }
 
@@ -220,11 +222,10 @@ TTree *TFriendElement::GetTree()
 
    if (GetFile()) {
       fFile->GetObject(GetTreeName(),fTree);
-      if (fTree) return fTree;
+   } else {
+      // This could be a memory tree or chain
+      fTree = dynamic_cast<TTree*>( gROOT->FindObject(GetTreeName()) );
    }
-
-   // This could be a memory tree or chain
-   fTree = dynamic_cast<TTree*>( gROOT->FindObject(GetTreeName()) );
 
    if (fTree)
       fTree->RegisterExternalFriend(this);
@@ -238,4 +239,15 @@ TTree *TFriendElement::GetTree()
 void TFriendElement::ls(Option_t *) const
 {
    printf(" Friend Tree: %s in file: %s\n",GetName(),GetTitle());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Forget deleted elements.
+
+void TFriendElement::RecursiveRemove(TObject *delobj)
+{
+   if (delobj == fTree)
+      fTree = nullptr;
+   if (delobj == fFile)
+      fFile = nullptr;
 }
