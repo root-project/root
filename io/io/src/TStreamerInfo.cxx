@@ -2052,7 +2052,7 @@ void TStreamerInfo::BuildOld()
       Bool_t isStdArray(kFALSE);
 
       // First set the offset and sizes.
-      if (fClass->GetState() <= TClass::kEmulated) {
+      if (fClass->GetState() <= TClass::kEmulated && !fClass->IsSyntheticPair()) {
          // Note the initilization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
@@ -2129,6 +2129,16 @@ void TStreamerInfo::BuildOld()
                }
                int dsize = dm->GetUnitSize();
                element->SetSize(dsize*narr);
+            } else if (fClass->IsSyntheticPair()) {
+               auto pattern = (TStreamerInfo*)fClass->GetStreamerInfos()->At(fClass->GetClassVersion());
+               streamer = 0;
+               element->Init(this);
+               if (pattern) {
+                  int pair_element_offset = kMissing;
+                  pattern->GetStreamerElement(element->GetName(), pair_element_offset);
+                  if (offset != kMissing)
+                     element->SetOffset(offset);
+               }
             }
          }
       } // Class corresponding to StreamerInfo is emulated or not.
@@ -3122,7 +3132,7 @@ void TStreamerInfo::ComputeSize()
    // to be aligned.  So let's be on the safe side and align on the size of
    // the pointers.  (Question: is that the right thing on x32 ABI ?)
    constexpr size_t kSizeOfPtr = sizeof(void*);
-   if ((fSize % kSizeOfPtr) != 0) {
+   if ((fSize % kSizeOfPtr) != 0 && !fClass->IsSyntheticPair()) {
       fSize = fSize - (fSize % kSizeOfPtr) + kSizeOfPtr;
    }
 }
