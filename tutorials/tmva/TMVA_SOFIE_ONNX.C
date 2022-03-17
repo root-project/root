@@ -13,7 +13,7 @@ using namespace TMVA::Experimental;
 void TMVA_SOFIE_ONNX(){
     //Creating parser object to parse ONNX files
     SOFIE::RModelParser_ONNX Parser;
-    SOFIE::RModel model = Parser.Parse("../../tmva/sofie/test/input_models/Linear_16.onnx");
+    SOFIE::RModel model = Parser.Parse(std::string(gROOT->GetTutorialsDir()) + "/tmva/Linear_16.onnx");
 
     //Generating inference code
     model.Generate();
