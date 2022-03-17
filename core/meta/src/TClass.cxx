@@ -1335,6 +1335,8 @@ void TClass::ForceReload (TClass* oldcl)
    while ((info = (TVirtualStreamerInfo*)next())) {
       info->Clear("build");
       info->SetClass(this);
+      if (IsSyntheticPair())
+         info->BuildOld();
       fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
    }
    oldcl->fStreamerInfo->Clear();
