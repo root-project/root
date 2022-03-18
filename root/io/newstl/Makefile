@@ -113,6 +113,7 @@ $(LIBDIR)ttest_C.$(DllSuf) : $(LIBDIR)multisetHolder_C.$(DllSuf)
 $(LIBDIR)mtest_C.$(DllSuf) : $(LIBDIR)mapHolder_C.$(DllSuf)
 $(LIBDIR)stest_C.$(DllSuf) : $(LIBDIR)setHolder_C.$(DllSuf)
 $(LIBDIR)ntest_C.$(DllSuf) : $(LIBDIR)multimapHolder_C.$(DllSuf)
+$(LIBDIR)rtest_C.$(DllSuf) : $(LIBDIR)rvecHolder_C.$(DllSuf)
 
 $(LIBDIR)dtest_C.$(DllSuf) : test.C dequeHolder.h  | $(ROOTCORELIBS)
 $(LIBDIR)ltest_C.$(DllSuf) : test.C listHolder.h  | $(ROOTCORELIBS)
@@ -121,6 +122,7 @@ $(LIBDIR)stest_C.$(DllSuf) : test.C setHolder.h  | $(ROOTCORELIBS)
 $(LIBDIR)ttest_C.$(DllSuf) : test.C multisetHolder.h  | $(ROOTCORELIBS)
 $(LIBDIR)mtest_C.$(DllSuf) : test.C mapHolder.h  | $(ROOTCORELIBS)
 $(LIBDIR)ntest_C.$(DllSuf) : test.C multimapHolder.h | $(ROOTCORELIBS)
+$(LIBDIR)rtest_C.$(DllSuf) : test.C rvecHolder.h | $(ROOTCORELIBS)
 
 $(LIBDIR)dequeHolder_C.$(DllSuf)    : dequeHolder.h dequeHolder.C | $(ROOTCORELIBS)
 $(LIBDIR)listHolder_C.$(DllSuf)     : listHolder.C listHolder.h | $(ROOTCORELIBS)
@@ -129,6 +131,7 @@ $(LIBDIR)setHolder_C.$(DllSuf)      : setHolder.C setHolder.h | $(ROOTCORELIBS)
 $(LIBDIR)multisetHolder_C.$(DllSuf) : multisetHolder.C multisetHolder.h | $(ROOTCORELIBS)
 $(LIBDIR)mapHolder_C.$(DllSuf)      : mapHolder.C mapHolder.h | $(ROOTCORELIBS)
 $(LIBDIR)multimapHolder_C.$(DllSuf) : multimapHolder.C multimapHolder.h | $(ROOTCORELIBS)
+$(LIBDIR)rvecHolder_C.$(DllSuf)     : rvecHolder.C rvecHolder.h | $(ROOTCORELIBS)
 
 $(HELPER_DLL) : TestHelpers.C 
 	$(CMDECHO) $(CALLROOTEXEBUILD) -q -l -b "$(RULES_DIR)/build.C(\"$<\",\"\",\"\")" > $(*F).build.log 2>&1
