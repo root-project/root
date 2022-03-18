@@ -63,6 +63,8 @@ protected:
 
    void AddInitWidget(const std::string &kind);
 
+   void CheckWidgtesModified();
+
 public:
    RBrowser(bool use_rcanvas = true);
    virtual ~RBrowser();
