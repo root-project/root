@@ -48,17 +48,6 @@ int check(const char *args, size_t old_index)
       cl->GetStreamerInfo()->ls();
       return 6;
    }
-   if (old_index && !cl->IsLoaded())
-      if (gROOT->GetListOfStreamerInfo()->At(old_index)) {
-         Error("pair offset-size", "The old StreamerInfo for %s is still in the global list after library loading:"
-               "\n\told/new index: %d vs %d"
-               "\n\told/new StreamerInfo %p vs %p",
-               pairname.Data(), (int)old_index, cl->GetStreamerInfo()->GetNumber(),
-               gROOT->GetListOfStreamerInfo()->At(old_index), cl->GetStreamerInfos()->At(1));
-         cl->GetStreamerInfos()->Print();
-         cl->GetStreamerInfos()->ls();
-         return 7;
-      }
 
    return 0;
 }
