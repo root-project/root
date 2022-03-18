@@ -142,6 +142,8 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
       fLastPath = path;
       fLastElement = std::move(elem);
+
+      fLastElement->cd(); // set element active
    } else if (request.reload) {
       // only reload items from element, not need to reset element itself
       ResetLastRequestData(false);
