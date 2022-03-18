@@ -151,8 +151,8 @@ public:
    void SetExplored() { fIsExplored = true; }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief The node is considered just created
-   void SetIsNew(bool isNew) { fIsNew = isNew; }
+   /// \brief Mark this node as "not newly created"
+   void SetNotNew() { fIsNew = false; }
 };
 
 } // namespace GraphDrawing
