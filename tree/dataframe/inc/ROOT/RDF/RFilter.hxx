@@ -167,7 +167,7 @@ public:
    {
       // Recursively call for the previous node.
       auto prevNode = fPrevNode.GetGraph(visitedMap);
-      auto prevColumns = prevNode->GetDefinedColumns();
+      const auto &prevColumns = prevNode->GetDefinedColumns();
 
       auto thisNode = RDFGraphDrawing::CreateFilterNode(this, visitedMap);
 

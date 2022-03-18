@@ -141,7 +141,7 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Gets the column defined up to the node
-   std::vector<std::string> GetDefinedColumns() { return fDefinedColumns; }
+   const std::vector<std::string> &GetDefinedColumns() const { return fDefinedColumns; }
 
    bool IsExplored() const { return fIsExplored; }
    bool IsNew() const { return fIsNew; }
