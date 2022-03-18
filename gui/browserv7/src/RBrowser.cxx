@@ -114,8 +114,6 @@ public:
       return msg;
    }
 
-   virtual void CheckModified() {}
-
 };
 
 class RBrowserCatchedWidget : public RBrowserWidget {
