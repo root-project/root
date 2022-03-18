@@ -296,23 +296,6 @@ public:
 
 // ==============================================================================================
 
-
-/////////////////////////////////////////////////////////////////////////////////
-/// Return element for current TKey object in TDirectory
-
-std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
-{
-   if (!fKeysIter && fObj)
-      return std::make_shared<TObjectElement>(fObj);
-
-   if ("ROOT::Experimental::RNTuple"s == fKey->GetClassName())
-      return RProvider::BrowseNTuple(fKey->GetName(), fDir->GetFile()->GetName());
-
-   return std::make_shared<TKeyElement>(fDir, fKey);
-}
-
-// ==============================================================================================
-
 /** \class TDirectoryElement
 \ingroup rbrowser
 
@@ -384,7 +367,41 @@ public:
 
    /** Get default action - browsing for the TFile/TDirectory*/
    EActionKind GetDefaultAction() const override { return kActBrowse; }
+
+   /** Select directory as active */
+   bool cd() override
+   {
+      if (fDir && !fDir->IsZombie()) {
+         fDir->cd();
+         return true;
+      }
+      return false;
+   }
+
 };
+
+// ==============================================================================================
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Return element for current TKey object in TDirectory
+
+std::shared_ptr<RElement> TDirectoryLevelIter::GetElement()
+{
+   if (!fKeysIter && fObj)
+      return std::make_shared<TObjectElement>(fObj);
+
+   if ("ROOT::Experimental::RNTuple"s == fKey->GetClassName())
+      return RProvider::BrowseNTuple(fKey->GetName(), fDir->GetFile()->GetName());
+
+   std::string key_class = fKey->GetClassName();
+   if (key_class.find("TDirectory") == 0) {
+      auto subdir = fDir->GetDirectory(fKey->GetName());
+      if (subdir) return std::make_shared<TDirectoryElement>("", subdir);
+   }
+
+   return std::make_shared<TKeyElement>(fDir, fKey);
+}
+
 
 
 // ==============================================================================================

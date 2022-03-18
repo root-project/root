@@ -88,6 +88,9 @@ public:
    /** Should item representing element be expand by default */
    virtual bool IsExpandByDefault() const { return false; }
 
+   /** Select element as active */
+   virtual bool cd() { return false; }
+
    static std::shared_ptr<RElement> GetSubElement(std::shared_ptr<RElement> &elem, const RElementPath_t &path);
 
    static RElementPath_t ParsePath(const std::string &str);
