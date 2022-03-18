@@ -3122,7 +3122,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    if (ispair) {
       if (hint_pair_offset && hint_pair_size) {
          auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName, silent, hint_pair_offset, hint_pair_size);
-         //return pairinfo ? pairinfo->GetClass() : nullptr;
+         // Fall-through to allow TClass to be created when known by the interpreter
+         // This is used in the case where TStreamerInfo can not handle them.
          if (pairinfo)
             return pairinfo->GetClass();
       } else {
