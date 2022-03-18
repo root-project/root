@@ -94,7 +94,7 @@ GraphDrawing::AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRe
 
 namespace GraphDrawing {
 
-std::string GraphCreatorHelper::FromGraphLeafToDot(const GraphNode &start)
+std::string GraphCreatorHelper::FromGraphLeafToDot(const GraphNode &start) const
 {
    // Only the mapping between node id and node label (i.e. name)
    std::stringstream dotStringLabels;
@@ -115,7 +115,7 @@ std::string GraphCreatorHelper::FromGraphLeafToDot(const GraphNode &start)
    return "digraph {\n" + dotStringLabels.str() + dotStringGraph.str() + "}";
 }
 
-std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_ptr<GraphNode>> leaves)
+std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_ptr<GraphNode>> leaves) const
 {
    // Only the mapping between node id and node label (i.e. name)
    std::stringstream dotStringLabels;
