@@ -133,7 +133,7 @@ public:
    GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
       auto prevNode = fPrevNode.GetGraph(visitedMap);
-      auto prevColumns = prevNode->GetDefinedColumns();
+      const auto &prevColumns = prevNode->GetDefinedColumns();
 
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
       const auto nodeType = HasRun() ? RDFGraphDrawing::ENodeType::kUsedAction : RDFGraphDrawing::ENodeType::kAction;
