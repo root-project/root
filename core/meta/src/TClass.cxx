@@ -1371,6 +1371,9 @@ void TClass::Init(const char *name, Version_t cversion,
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
    fProperty       = -1;
    fClassProperty  = 0;
+   const bool ispair = TClassEdit::IsStdPair(fName);
+   if (ispair)
+      SetBit(kIsForeign);
 
    ResetInstanceCount();
 
@@ -5903,7 +5906,7 @@ Bool_t  TClass::IsForeign() const
    if (fProperty==(-1)) Property();
    // If the property are not set and the class is a pair, hard code that
    // it is a unversioned/Foreign class.
-   return TestBit(kIsForeign) || (fProperty == -1 && TClassEdit::IsStdPair(GetName()));
+   return TestBit(kIsForeign);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
