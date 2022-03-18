@@ -39,7 +39,7 @@ GraphDrawing::CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr,
    // If there is already a node for this filter return it. If there is not, return a new one.
    auto duplicateFilterIt = visitedMap.find((void *)filterPtr);
    if (duplicateFilterIt != visitedMap.end()) {
-      duplicateFilterIt->second->SetIsNew(false);
+      duplicateFilterIt->second->SetNotNew();
       return duplicateFilterIt->second;
    }
 
@@ -56,7 +56,7 @@ GraphDrawing::CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr,
    // If there is already a node for this range return it. If there is not, return a new one.
    auto duplicateRangeIt = visitedMap.find((void *)rangePtr);
    if (duplicateRangeIt != visitedMap.end()) {
-      duplicateRangeIt->second->SetIsNew(false);
+      duplicateRangeIt->second->SetNotNew();
       return duplicateRangeIt->second;
    }
 
