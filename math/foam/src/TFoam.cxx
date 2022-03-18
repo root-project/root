@@ -751,7 +751,7 @@ void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
 void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
 {
    Int_t    kProj,iBin;
-   Double_t carve,carvTot,carvMax,carvOne,binMax,binTot;
+   Double_t carve,carvTot,carvMax,carvOne,binMax;
    Int_t    jLow,jUp,iLow,iUp;
    Double_t theBin;
    // Int_t    jDivi; // TEST
@@ -780,10 +780,8 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
             return;
          }
          carvTot = 0.0;
-         binTot  = 0.0;
          for(iBin=0;iBin<fNBin;iBin++){
             carvTot = carvTot + (binMax-bins[iBin]);     // Total Carve (more stable)
-            binTot  +=bins[iBin];
          }
          // primTot = binMax*fNBin;
          //std::cout <<"Carver:  CarvTot "<<CarvTot<< "    primTot "<<primTot<<std::endl;
