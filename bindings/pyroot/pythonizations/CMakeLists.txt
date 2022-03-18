@@ -41,6 +41,7 @@ set(py_sources
   ROOT/_pythonization/_tclonesarray.py
   ROOT/_pythonization/_tcollection.py
   ROOT/_pythonization/_tcomplex.py
+  ROOT/_pythonization/_tcontext.py
   ROOT/_pythonization/_tdirectory.py
   ROOT/_pythonization/_tdirectoryfile.py
   ROOT/_pythonization/_tfile.py
