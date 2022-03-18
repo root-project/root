@@ -110,7 +110,7 @@ public:
       // TODO: Ranges node have no information about custom columns, hence it is not possible now
       // if defines have been used before.
       auto prevNode = fPrevNode.GetGraph(visitedMap);
-      auto prevColumns = prevNode->GetDefinedColumns();
+      const auto &prevColumns = prevNode->GetDefinedColumns();
 
       auto thisNode = RDFGraphDrawing::CreateRangeNode(this, visitedMap);
 
