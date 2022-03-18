@@ -36,6 +36,9 @@ ROOT_ADD_PYUNITTEST(pyroot_pyz_tobject_comparisonops tobject_comparisonops.py)
 # TClass pythonisations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tclass_dynamiccast tclass_dynamiccast.py)
 
+# TContext pythonizations
+ROOT_ADD_PYUNITTEST(pyroot_pyz_tcontext_contextmanager tcontext_contextmanager.py)
+
 # TDirectory and subclasses pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectory_attrsyntax tdirectory_attrsyntax.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_tdirectoryfile_attrsyntax_get tdirectoryfile_attrsyntax_get.py)
