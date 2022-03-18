@@ -297,10 +297,6 @@ namespace SOFIE{
 
       fGC += "infer(";
       for (auto& i: fReadyInputTensorInfos){
-         size_t length = 1;
-         for (auto& dim: i.second.shape){
-            length *= dim;
-         }
          if (i.second.type == ETensorType::FLOAT){
          fGC += "float* tensor_" + i.first + ",";
          }

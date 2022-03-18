@@ -164,7 +164,7 @@ void stressTMath(unsigned int size, const char * type)
    else
       totalTime += stressVector<Double_t>(size, "Double_t");
 
-   //std::cout << "Total Test Time: " << totalTime << "\n" << std::endl;
+   std::cout << "Total Test Time: " << totalTime << "\n" << std::endl;
 
    std::cout << "End of Stress Test..." << std::endl;
 
