@@ -54,18 +54,13 @@ ROOT_ADD_GTEST(dataframe_samplecallback dataframe_samplecallback.cxx CounterHelp
 ROOT_ADD_GTEST(dataframe_vary dataframe_vary.cxx LIBRARIES ROOTDataFrame)
 
 #### TESTS FOR DIFFERENT DATASOURCES ####
-if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929 OR CMAKE_CXX_STANDARD LESS 17)
   # TODO: remove this workaround for MS compiler bug #1441527 once fixed
   string(REPLACE "-Od -Z7" "-O2" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
   string(REPLACE "-Z7" "" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 endif()
 
 ROOT_ADD_GTEST(datasource_more datasource_more.cxx LIBRARIES ROOTDataFrame)
-if(MSVC)
-  # workaround for potential "fatal error C1001: Internal compiler error" in RelWithDebInfo mode
-  # and fatal "error LNK1179: invalid or corrupt file: duplicate COMDAT" in Debug mode
-  set_target_properties(datasource_more PROPERTIES COMPILE_FLAGS "-Gy-")
-endif()
 ROOT_ADD_GTEST(datasource_root datasource_root.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(datasource_trivial datasource_trivial.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(datasource_lazy datasource_lazy.cxx LIBRARIES ROOTDataFrame)
