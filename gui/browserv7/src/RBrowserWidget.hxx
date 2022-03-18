@@ -55,6 +55,8 @@ public:
 
    virtual bool DrawElement(std::shared_ptr<Browsable::RElement> &, const std::string &) { return false; }
    virtual std::string SendWidgetContent() { return ""; }
+
+   virtual void CheckModified() {}
 };
 
 class RBrowserWidgetProvider {

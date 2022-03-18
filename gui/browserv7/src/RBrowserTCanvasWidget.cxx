@@ -142,6 +142,12 @@ public:
       return false;
    }
 
+   void CheckModified() override
+   {
+      if (fCanvas->IsModified())
+         fCanvas->Update();
+   }
+
 };
 
 // ======================================================================
