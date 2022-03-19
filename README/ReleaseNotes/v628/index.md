@@ -79,6 +79,22 @@ The following lesser-used RooFit functions now return a `std::string` instead of
 
 - [std::string RooCmdConfig::missingArgs() const](https://root.cern/doc/v628/classRooCmdConfig.html#aec50335293c45a507d347c604bf9651f)
 
+## Removal of HistoToWorkspaceFactory (non-Fast)
+
+The original `HistoToWorkspaceFactory` produced models that consisted of a
+Poisson term for each bin.  In this "number counting form" the dataset has one
+row and the collumns corresponded to the number of events for each bin. This
+led to severe performance problems in statistical tools that generated
+pseudo-experiments and evaluated likelihood ratio test statistics.
+
+Nowadays, everyone uses the faster `HistoToWorkspaceFactoryFast` implementation that
+produces a model in the "standard form" where the dataset has one row for each
+event, and the column corresponds to the value of the observable in the
+histogram. 
+
+Therefore, the original `HistoToWorkspaceFactory` is now removed to avoid
+confusion and maintainance burden.
+
 
 ## 2D Graphics Libraries
 
