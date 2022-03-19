@@ -1326,9 +1326,15 @@ void TClass::ForceReload (TClass* oldcl)
    while ((info = (TVirtualStreamerInfo*)next())) {
       info->Clear("build");
       info->SetClass(this);
-      if (IsSyntheticPair())
-         info->BuildOld();
-      fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
+      if (IsSyntheticPair()) {
+         // Some pair's StreamerInfo were inappropriately marked as versioned
+         info->SetClassVersion(1);
+         // There is already a TStreamerInfo put there by the synthetic
+         // creation.
+         fStreamerInfo->Add(info);
+      } else {
+         fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
+      }
    }
    oldcl->fStreamerInfo->Clear();
 
