@@ -28,7 +28,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     RooStats/HistFactory/HistFactoryModelUtils.h
     RooStats/HistFactory/HistFactoryNavigation.h
     RooStats/HistFactory/HistoToWorkspaceFactoryFast.h
-    RooStats/HistFactory/HistoToWorkspaceFactory.h
     RooStats/HistFactory/HistRef.h
     RooStats/HistFactory/LinInterpVar.h
     RooStats/HistFactory/MakeModelAndMeasurementsFast.h
@@ -48,7 +47,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(HistFactory
     src/FlexibleInterpVar.cxx
     src/HistFactoryModelUtils.cxx
     src/HistFactoryNavigation.cxx
-    src/HistoToWorkspaceFactory.cxx
     src/HistoToWorkspaceFactoryFast.cxx
     src/HistRef.cxx
     src/LinInterpVar.cxx
