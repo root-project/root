@@ -2133,7 +2133,7 @@ void TStreamerInfo::BuildOld()
                auto pattern = (TStreamerInfo*)fClass->GetStreamerInfos()->At(fClass->GetClassVersion());
                streamer = 0;
                element->Init(this);
-               if (pattern) {
+               if (pattern && pattern != this && pattern->IsBuilt()) {
                   int pair_element_offset = kMissing;
                   pattern->GetStreamerElement(element->GetName(), pair_element_offset);
                   if (offset != kMissing)
