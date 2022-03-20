@@ -61,9 +61,10 @@ public:
       for (unsigned i = 0; i <= 5; ++i) {
          descBuilder.AddClusterSummary(i, i, 1);
       }
-      fDescriptor = descBuilder.MoveDescriptor();
+      auto descriptorGuard = GetExclDescriptorGuard();
+      descriptorGuard.MoveIn(descBuilder.MoveDescriptor());
       for (unsigned i = 0; i <= 5; ++i) {
-         fDescriptor.AddClusterDetails(
+         descriptorGuard->AddClusterDetails(
             ROOT::Experimental::RClusterDescriptorBuilder(i, i, 1).MoveDescriptor().Unwrap());
       }
    }
