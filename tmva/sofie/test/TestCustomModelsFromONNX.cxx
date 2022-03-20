@@ -15,6 +15,12 @@
 #include "LinearWithSigmoid_FromONNX.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
 
+// #include "LinearWithSoftmax_FromONNX.hxx"
+// #include "input_models/references/LinearWithSoftmax.ref.hxx"
+
+// #include "LinearWithLeakyRelu_FromONNX.hxx"
+// #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
+
 #include "ConvWithPadding_FromONNX.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
 
@@ -183,7 +189,7 @@ TEST(ONNX, LinearWithLeakyRelu)
    // Preparing the standard all-ones input
    std::vector<float> input(48);
    std::fill_n(input.data(), input.size(), 1.0f);
-   TMVA_SOFIE_LinearWithSelu::Session s("LinearWithLeakyRelu_FromONNX.dat");
+   TMVA_SOFIE_LinearWithLeakyRelu::Session s("LinearWithLeakyRelu_FromONNX.dat");
    std::vector<float> output = s.infer(input.data());
 
    // Checking output size
@@ -212,6 +218,28 @@ TEST(ONNX, LinearWithSigmoid)
    EXPECT_EQ(output.size(), sizeof(LinearWithSigmoid_ExpectedOutput::all_ones) / sizeof(float));
 
    float *correct = LinearWithSigmoid_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
+TEST(ONNX, LinearWithSoftmax)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input(48);
+   std::fill_n(input.data(), input.size(), 1.0f);
+   TMVA_SOFIE_LinearWithSoftmax::Session s("LinearWithSoftmax_FromONNX.dat");
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(LinearWithSoftmax_ExpectedOutput::all_ones) / sizeof(float));
+
+   float *correct = LinearWithSoftmax_ExpectedOutput::all_ones;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {

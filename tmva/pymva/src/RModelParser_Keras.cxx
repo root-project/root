@@ -45,6 +45,7 @@ std::unique_ptr<ROperator> MakeKerasReLU(PyObject *fLayer);         // For insta
 std::unique_ptr<ROperator> MakeKerasLeakyReLU(PyObject *fLayer);    // For instantiating ROperator for Keras Leaky ReLU layer
 std::unique_ptr<ROperator> MakeKerasSelu(PyObject *fLayer);         // For instantiating ROperator for Keras Selu layer
 std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject *fLayer);      // For instantiating ROperator for Keras Sigmoid layer
+std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject *fLayer);      // For instantiating ROperator for Keras Softmax layer
 std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For instantiating ROperator for Keras Permute Layer
 
 // Declaring Internal function for Keras layers which have additional activation attribute
@@ -60,10 +61,11 @@ const KerasMethodMap mapKerasLayer = {
 
    // For activation layers
    {"ReLU", &MakeKerasReLU},
+   {"LeakyReLU", &MakeKerasLeakyReLU},
 
    // For layers with activation attributes
    {"relu", &MakeKerasReLU},
-   {"leaky_relu", &MakeKerasLeakyReLU},
+   {"leakyRelu", &MakeKerasLeakyReLU},
    {"selu", &MakeKerasSelu},
    {"sigmoid", &MakeKerasSigmoid}
 };
@@ -342,6 +344,34 @@ std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject* fLayer){
          break;
          default:
          throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Softmax activation
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_Softmax object, the names of
+/// input & output tensors and the deta-type of the layer are extracted.
+std::unique_ptr<ROperator> MakeKerasSoftmax(PyObject* fLayer){
+      PyObject* fInputs  = PyDict_GetItemString(fLayer,"layerInput");
+      PyObject* fOutputs = PyDict_GetItemString(fLayer,"layerOutput");
+
+      std::string fLayerDType = PyStringAsString(PyDict_GetItemString(fLayer,"layerDType"));
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Softmax<float>(fLayerInputName, fLayerOutputName));
+         break;
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Softmax does not yet support input type " + fLayerDType);
          }
    return op;
 }
