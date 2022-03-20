@@ -4025,7 +4025,7 @@ const char *TSystem::GetObjExt() const
 /// mode there is a risk than 2 script of the same in different source
 /// directory will over-write each other.
 /// \note This `build_dir` can also be controlled via `ACLiC.BuildDir` in
-/// your `.rootrc`, see 
+/// your `.rootrc`.
 
 void TSystem::SetBuildDir(const char *build_dir, Bool_t isflat)
 {
