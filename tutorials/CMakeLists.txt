@@ -774,6 +774,9 @@ if(ROOT_pyroot_FOUND)
   file(GLOB distrdf_spark_tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*spark*)
   file(GLOB distrdf_dask_tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} dataframe/*dask*)
 
+  # Disable tutorial showing connection to the HTCondor service at CERN
+  list(APPEND pyveto dataframe/distrdf004_dask_lxbatch.py)
+
   find_python_module(xgboost QUIET)
   if(NOT PY_XGBOOST_FOUND OR NOT dataframe)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/tmva10*.py)
