@@ -61,8 +61,13 @@ public:
       return TEntryList::Contains(entry, tree);
    };
    virtual Bool_t      Enter(Long64_t entry, TTree *tree, Long64_t subentry);
+   virtual Bool_t      Enter(Long64_t entry, const char *treename, const char *filename, Long64_t subentry);
    virtual Bool_t      Enter(Long64_t entry, TTree *tree = 0) {
       return Enter(entry, tree, -1);
+   };
+   virtual Bool_t      Enter(Long64_t entry, const char *treename, const char *filename)
+   {
+      return Enter(entry, treename, filename, -1);
    };
 //    virtual Bool_t      Enter(Long64_t entry, TTree *tree, const TEntryList *e);
    virtual TEntryListArray* GetSubListForEntry(Long64_t entry, TTree *tree = 0);
