@@ -320,6 +320,10 @@ public:
       void MoveIn(RNTupleDescriptor &&desc) { fDescriptor = std::move(desc); }
    };
 
+private:
+   RNTupleDescriptor fDescriptor;
+   mutable std::shared_mutex fDescriptorLock;
+
 protected:
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -346,8 +350,6 @@ protected:
    RNTupleMetrics fMetrics;
 
    RNTupleReadOptions fOptions;
-   RNTupleDescriptor fDescriptor;
-   mutable std::shared_mutex fDescriptorLock;
    /// The active columns are implicitly defined by the model fields or views
    RCluster::ColumnSet_t fActiveColumns;
 
