@@ -382,6 +382,19 @@ Bool_t TEntryListArray::Enter(Long64_t entry, TTree *tree, Long64_t subentry)
    return result;
 }
 
+Bool_t TEntryListArray::Enter(Long64_t localentry, const char *treename, const char *filename, Long64_t subentry)
+{
+   Bool_t result = 0;
+   SetTree(treename, filename);
+   TEntryListArray *currentArray = dynamic_cast<TEntryListArray *>(fCurrent);
+   if (currentArray) {
+      if ((result = currentArray->Enter(localentry, 0, subentry)))
+         if (fLists)
+            ++fN;
+   }
+   return result;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the list holding the subentries for the given entry or 0
 

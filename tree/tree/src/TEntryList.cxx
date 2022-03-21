@@ -672,6 +672,19 @@ Bool_t TEntryList::Enter(Long64_t entry, TTree *tree)
 
 }
 
+Bool_t TEntryList::Enter(Long64_t localentry, const char *treename, const char *filename)
+{
+   SetTree(treename, filename);
+   if (fCurrent) {
+      if (fCurrent->Enter(localentry)) {
+         if (fLists)
+            fN++;
+         return 1;
+      }
+   }
+   return 0;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 /// \brief Enter all entries in a range in the TEntryList.
 /// \param[in] start starting entry to enter.

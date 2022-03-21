@@ -63,6 +63,7 @@ public:
    virtual void        Add(const TEntryList * /*elist*/){};
    virtual Int_t       Contains(Long64_t /*entry*/, TTree * /*tree = 0*/)  {return 0;};
    virtual Bool_t      Enter(Long64_t /*entry*/, TTree * /*tree = 0*/){return 0;};
+   virtual Bool_t      Enter(Long64_t /*entry*/, const char */*treename*/, const char */*filename*/) { return 0; };
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
    virtual TEntryList *GetEntryList(const char * /*treename*/, const char * /*filename*/, Option_t * /*opt=""*/) {return 0;};
 
