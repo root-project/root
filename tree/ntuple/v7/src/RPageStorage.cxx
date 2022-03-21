@@ -78,7 +78,7 @@ ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Detail::RPageSource::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    R__ASSERT(fieldId != kInvalidDescriptorId);
-   auto columnId = fDescriptor.FindColumnId(fieldId, column.GetIndex());
+   auto columnId = GetSharedDescriptorGuard()->FindColumnId(fieldId, column.GetIndex());
    R__ASSERT(columnId != kInvalidDescriptorId);
    fActiveColumns.emplace(columnId);
    return ColumnHandle_t{columnId, &column};
@@ -91,12 +91,12 @@ void ROOT::Experimental::Detail::RPageSource::DropColumn(ColumnHandle_t columnHa
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNEntries()
 {
-   return fDescriptor.GetNEntries();
+   return GetSharedDescriptorGuard()->GetNEntries();
 }
 
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RPageSource::GetNElements(ColumnHandle_t columnHandle)
 {
-   return fDescriptor.GetNElements(columnHandle.fId);
+   return GetSharedDescriptorGuard()->GetNElements(columnHandle.fId);
 }
 
 ROOT::Experimental::ColumnId_t ROOT::Experimental::Detail::RPageSource::GetColumnId(ColumnHandle_t columnHandle)
