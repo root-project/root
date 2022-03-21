@@ -667,7 +667,9 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 #                            [RESOURCE_LOCK lock]
 #                            [FIXTURES_SETUP ...] [FIXTURES_CLEANUP ...] [FIXTURES_REQUIRED ...]
 #                            [COPY_TO_BUILDDIR file1 file2 ...])
-#                            [ENVIRONMENT ENV_VAR1=value1;ENV_VAR2=value2; ...])
+#                            [ENVIRONMENT ENV_VAR1=value1;ENV_VAR2=value2; ...]
+#                            [PROPERTIES prop1 value1 prop2 value2...]
+#                           )
 #
 # This function defines a roottest test. It adds a number of additional
 # options on top of the ROOT defined ROOT_ADD_TEST.
@@ -676,7 +678,8 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL;RUN_SERIAL"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT;ENABLE_IF;DISABLE_IF;TIMEOUT;RESOURCE_LOCK"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES"
+                            ${ARGN})
 
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
@@ -948,6 +951,10 @@ function(ROOTTEST_ADD_TEST testname)
     set(resource_lock ${ARG_RESOURCE_LOCK})
   endif()
 
+  if (ARG_PROPERTIES)
+    set(properties ${ARG_PROPERTIES})
+  endif()
+  
   ROOT_ADD_TEST(${fulltestname} COMMAND ${command}
                         OUTPUT ${logfile}
                         ${infile}
@@ -977,7 +984,8 @@ function(ROOTTEST_ADD_TEST testname)
                         FIXTURES_SETUP ${fixtures_setup}
                         FIXTURES_CLEANUP ${fixtures_cleanup}
                         FIXTURES_REQUIRED ${fixtures_required}
-                        RESOURCE_LOCK ${resource_lock})
+                        RESOURCE_LOCK ${resource_lock}
+                        PROPERTIES ${properties})
 
   if(MSVC)
     if (ARG_OUTCNV OR ARG_OUTCNVCMD)
