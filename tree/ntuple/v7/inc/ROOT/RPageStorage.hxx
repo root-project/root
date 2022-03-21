@@ -404,7 +404,7 @@ public:
    void DropColumn(ColumnHandle_t columnHandle) override;
 
    /// Open the physical storage container for the tree
-   void Attach() { fDescriptor = AttachImpl(); }
+   void Attach() { GetExclDescriptorGuard().MoveIn(AttachImpl()); }
    NTupleSize_t GetNEntries();
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
