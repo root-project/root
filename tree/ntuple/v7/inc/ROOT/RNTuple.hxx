@@ -395,7 +395,7 @@ public:
 
    /// The simplest user interface if the default entry that comes with the ntuple model is used
    void Fill() { Fill(*fModel->GetDefaultEntry()); }
-   /// Multiple entries can have been instantiated from the tnuple model.  This method will perform
+   /// Multiple entries can have been instantiated from the ntuple model.  This method will perform
    /// a light check whether the entry comes from the ntuple's own model
    void Fill(REntry &entry) {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
