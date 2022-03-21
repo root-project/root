@@ -112,10 +112,6 @@ public:
 */
 // clang-format on
 class RPageSourceFile : public RPageSource {
-public:
-   /// Cannot process pages larger than 1MB
-   static constexpr std::size_t kMaxPageSize = 1024 * 1024;
-
 private:
    /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
