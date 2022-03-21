@@ -295,7 +295,6 @@ public:
       using F_t = RDFDetail::RFilter<F, Proxied>;
 
       auto filterPtr = std::make_shared<F_t>(std::move(f), validColumnNames, fProxiedPtr, fColRegister, name);
-      fLoopManager->Book(filterPtr.get());
       return RInterface<F_t, DS_t>(std::move(filterPtr), *fLoopManager, fColRegister, fDataSource);
    }
 
@@ -354,7 +353,6 @@ public:
          RDFInternal::BookFilterJit(upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(), fColRegister,
                                     fLoopManager->GetTree(), fDataSource);
 
-      fLoopManager->Book(jittedFilter.get());
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister,
                                                         fDataSource);
    }
@@ -477,7 +475,6 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fColRegister,
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
-      fLoopManager->Book(jittedDefine.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddColumn(jittedDefine);
@@ -568,7 +565,6 @@ public:
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fColRegister,
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
-      fLoopManager->Book(jittedDefine.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddColumn(jittedDefine);
@@ -845,7 +841,6 @@ public:
       auto variation = std::make_shared<RDFInternal::RVariation<F_t>>(
          colNames, variationName, std::forward<F>(expression), variationTags, retTypeName, fColRegister, *fLoopManager,
          validColumnNames);
-      fLoopManager->Book(variation.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddVariation(variation);
@@ -990,7 +985,6 @@ public:
       auto jittedVariation =
          RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager, fDataSource,
                                        fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap);
-      fLoopManager->Book(jittedVariation.get());
 
       RDFInternal::RColumnRegister newColRegister(fColRegister);
       newColRegister.AddVariation(std::move(jittedVariation));
@@ -1368,7 +1362,6 @@ public:
 
       using Range_t = RDFDetail::RRange<Proxied>;
       auto rangePtr = std::make_shared<Range_t>(begin, end, stride, fProxiedPtr);
-      fLoopManager->Book(rangePtr.get());
       RInterface<RDFDetail::RRange<Proxied>, DS_t> tdf_r(std::move(rangePtr), *fLoopManager, fColRegister, fDataSource);
       return tdf_r;
    }
@@ -1443,7 +1436,6 @@ public:
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
 
       auto action = std::make_unique<Action_t>(Helper_t(std::move(f)), validColumnNames, fProxiedPtr, fColRegister);
-      fLoopManager->Book(action.get());
 
       fLoopManager->Run();
    }
@@ -1528,7 +1520,6 @@ public:
       using Action_t = RDFInternal::RAction<Helper_t, Proxied>;
       auto action = std::make_unique<Action_t>(Helper_t(cSPtr, nSlots), ColumnNames_t({}), fProxiedPtr,
                                                RDFInternal::RColumnRegister(fColRegister));
-      fLoopManager->Book(action.get());
       return MakeResultPtr(cSPtr, *fLoopManager, std::move(action));
    }
 
@@ -1567,7 +1558,6 @@ public:
 
       auto action =
          std::make_unique<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, fProxiedPtr, fColRegister);
-      fLoopManager->Book(action.get());
       return MakeResultPtr(valuesPtr, *fLoopManager, std::move(action));
    }
 
@@ -2549,7 +2539,6 @@ public:
       auto action = std::make_unique<Action_t>(Helper_t(rep, fProxiedPtr, returnEmptyReport), ColumnNames_t({}),
                                                fProxiedPtr, RDFInternal::RColumnRegister(fColRegister));
 
-      fLoopManager->Book(action.get());
       return MakeResultPtr(rep, *fLoopManager, std::move(action));
    }
 
@@ -2898,7 +2887,6 @@ public:
       auto action = std::make_unique<Action_t>(
          Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fLoopManager->GetNSlots()), validColumnNames,
          fProxiedPtr, fColRegister);
-      fLoopManager->Book(action.get());
       return MakeResultPtr(accObjPtr, *fLoopManager, std::move(action));
    }
 
@@ -3147,7 +3135,6 @@ private:
 
       auto action = RDFInternal::BuildAction<ColTypes...>(validColumnNames, helperArg, nSlots, fProxiedPtr, ActionTag{},
                                                           fColRegister);
-      fLoopManager->Book(action.get());
       fLoopManager->AddSampleCallback(action->GetSampleCallback());
       return MakeResultPtr(r, *fLoopManager, std::move(action));
    }
@@ -3181,7 +3168,6 @@ private:
       auto toJit = RDFInternal::JitBuildAction(
          validColumnNames, upcastNodeOnHeap, typeid(std::shared_ptr<HelperArgType>), typeid(ActionTag), helperArgOnHeap,
          tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
-      fLoopManager->Book(jittedAction.get());
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
@@ -3223,7 +3209,6 @@ private:
       using NewCol_t = RDFDetail::RDefine<F, DefineType>;
       auto newColumn = std::make_shared<NewCol_t>(name, retTypeName, std::forward<F>(expression), validColumnNames,
                                                   fColRegister, *fLoopManager);
-      fLoopManager->Book(newColumn.get());
 
       RDFInternal::RColumnRegister newCols(fColRegister);
       newCols.AddColumn(newColumn);

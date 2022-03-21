@@ -37,7 +37,7 @@ RDefineBase::RDefineBase(std::string_view name, std::string_view type, const RDF
 }
 
 // pin vtable. Work around cling JIT issue.
-RDefineBase::~RDefineBase() { fLoopManager->Deregister(this); }
+RDefineBase::~RDefineBase() = default;
 
 std::string RDefineBase::GetName() const
 {
