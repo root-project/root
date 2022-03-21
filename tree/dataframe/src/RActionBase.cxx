@@ -22,4 +22,4 @@ RActionBase::RActionBase(RLoopManager *lm, const ColumnNames_t &colNames, const 
 }
 
 // outlined to pin virtual table
-RActionBase::~RActionBase() {}
+RActionBase::~RActionBase() = default;
