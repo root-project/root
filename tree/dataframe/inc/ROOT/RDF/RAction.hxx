@@ -68,6 +68,8 @@ public:
       : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister, pd->GetVariations()),
         fHelper(std::forward<Helper>(h)), fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr), fValues(GetNSlots())
    {
+      fLoopManager->Book(this);
+
       const auto nColumns = columns.size();
       const auto &customCols = GetColRegister();
       for (auto i = 0u; i < nColumns; ++i)
@@ -76,6 +78,8 @@ public:
 
    RAction(const RAction &) = delete;
    RAction &operator=(const RAction &) = delete;
+
+   ~RAction() { fLoopManager->Deregister(this); }
 
    /**
       Retrieve a wrapper to the result of the action that knows how to merge
