@@ -389,13 +389,14 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(
    }
 }
 
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(
-   ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor, ClusterSize_t::ValueType idxInCluster)
+ROOT::Experimental::Detail::RPage
+ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandle_t columnHandle,
+                                                                     const RClusterInfo &clusterInfo,
+                                                                     ClusterSize_t::ValueType idxInCluster)
 {
    const auto columnId = columnHandle.fId;
-   const auto clusterId = clusterDescriptor.GetId();
-
-   auto pageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+   const auto clusterId = clusterInfo.fClusterId;
+   const auto &pageInfo = clusterInfo.fPageInfo;
 
    const auto element = columnHandle.fColumn->GetElement();
    const auto elementSize = element->GetSize();
@@ -435,9 +436,9 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceDaos::P
       fCounters->fSzUnzip.Add(elementSize * pageInfo.fNElements);
    }
 
-   const auto indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
    auto newPage = fPageAllocator->NewPage(columnId, pageBuffer.release(), elementSize, pageInfo.fNElements);
-   newPage.SetWindow(indexOffset + pageInfo.fFirstInPage, RPage::RClusterInfo(clusterId, indexOffset));
+   newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
+                     RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fPagePool->RegisterPage(newPage,
       RPageDeleter([](const RPage &page, void * /*userData*/)
       {
@@ -456,12 +457,20 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceDaos::P
    if (!cachedPage.IsNull())
       return cachedPage;
 
-   const auto clusterId = fDescriptor.FindClusterId(columnId, globalIndex);
-   R__ASSERT(clusterId != kInvalidDescriptorId);
-   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
-   const auto selfOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
-   R__ASSERT(selfOffset <= globalIndex);
-   return PopulatePageFromCluster(columnHandle, clusterDescriptor, globalIndex - selfOffset);
+   std::uint64_t idxInCluster;
+   RClusterInfo clusterInfo;
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      clusterInfo.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
+      R__ASSERT(clusterInfo.fClusterId != kInvalidDescriptorId);
+
+      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
+      clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+      R__ASSERT(clusterInfo.fColumnOffset <= globalIndex);
+      idxInCluster = globalIndex - clusterInfo.fColumnOffset;
+      clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+   }
+   return PopulatePageFromCluster(columnHandle, clusterInfo, idxInCluster);
 }
 
 
@@ -476,8 +485,16 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSourceDaos::P
       return cachedPage;
 
    R__ASSERT(clusterId != kInvalidDescriptorId);
-   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
-   return PopulatePageFromCluster(columnHandle, clusterDescriptor, idxInCluster);
+   RClusterInfo clusterInfo;
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
+      clusterInfo.fClusterId = clusterId;
+      clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
+      clusterInfo.fPageInfo = clusterDescriptor.GetPageRange(columnId).Find(idxInCluster);
+   }
+
+   return PopulatePageFromCluster(columnHandle, clusterInfo, idxInCluster);
 }
 
 void ROOT::Experimental::Detail::RPageSourceDaos::ReleasePage(RPage &page)
@@ -573,13 +590,14 @@ void ROOT::Experimental::Detail::RPageSourceDaos::UnzipClusterImpl(RCluster *clu
    fTaskScheduler->Reset();
 
    const auto clusterId = cluster->GetId();
-   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
+   auto descriptorGuard = GetSharedDescriptorGuard();
+   const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
 
    std::vector<std::unique_ptr<RColumnElementBase>> allElements;
 
    const auto &columnsInCluster = cluster->GetAvailColumns();
    for (const auto columnId : columnsInCluster) {
-      const auto &columnDesc = fDescriptor.GetColumnDescriptor(columnId);
+      const auto &columnDesc = descriptorGuard->GetColumnDescriptor(columnId);
 
       allElements.emplace_back(RColumnElementBase::Generate(columnDesc.GetModel().GetType()));
 
