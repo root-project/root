@@ -1426,10 +1426,12 @@ Int_t TH1::BufferEmpty(Int_t action)
    }
    if (CanExtendAllAxes() || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
       //find min, max of entries in buffer
-      Double_t xmin = fBuffer[2];
-      Double_t xmax = xmin;
-      for (Int_t i=1;i<nbentries;i++) {
+      Double_t xmin = TMath::Infinity();
+      Double_t xmax = -TMath::Infinity();
+      for (Int_t i=0;i<nbentries;i++) {
          Double_t x = fBuffer[2*i+2];
+         // skip infinity or NaN values
+         if (!std::isfinite(x)) continue;
          if (x < xmin) xmin = x;
          if (x > xmax) xmax = x;
       }
