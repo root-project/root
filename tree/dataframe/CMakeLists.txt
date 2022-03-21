@@ -51,6 +51,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/InterfaceUtils.hxx
     ROOT/RDF/RActionBase.hxx
     ROOT/RDF/RAction.hxx
+    ROOT/RDF/RActionImpl.hxx
     ROOT/RDF/RColumnRegister.hxx
     ROOT/RDF/RNewSampleNotifier.hxx
     ROOT/RDF/RSampleInfo.hxx
