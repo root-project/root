@@ -375,9 +375,13 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(
    DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage)
 {
    const auto clusterId = clusterIndex.GetClusterId();
-   const auto &clusterDescriptor = fDescriptor.GetClusterDescriptor(clusterId);
 
-   auto pageInfo = clusterDescriptor.GetPageRange(columnId).Find(clusterIndex.GetIndex());
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   {
+      auto descriptorGuard = GetSharedDescriptorGuard();
+      const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
+      pageInfo = clusterDescriptor.GetPageRange(columnId).Find(clusterIndex.GetIndex());
+   }
 
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
    sealedPage.fSize = bytesOnStorage;
