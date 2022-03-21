@@ -150,6 +150,16 @@ public:
 // clang-format on
 class RPageSourceDaos : public RPageSource {
 private:
+   /// Summarizes cluster-level information that are necessary to populate a certain page.
+   /// Used by PopulatePageFromCluster().
+   struct RClusterInfo {
+      DescriptorId_t fClusterId = 0;
+      /// Location of the page on disk
+      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
+      /// The first element number of the page's column in the given cluster
+      std::uint64_t fColumnOffset = 0;
+   };
+
    /// Populated pages might be shared; the memory buffer is managed by the RPageAllocatorDaos
    std::unique_ptr<RPageAllocatorDaos> fPageAllocator;
    // TODO: the page pool should probably be handled by the base class.
@@ -164,7 +174,7 @@ private:
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
-   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
+   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
 
 protected:
