@@ -20,10 +20,30 @@ using namespace ROOT::Detail::RDF;
 RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations)
    : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(nullptr), /*columnNames*/ {}, variations)
 {
+   // Jitted nodes of the computation graph (e.g. RJittedAction, RJittedDefine) usually don't need to register
+   // themselves with the RLoopManager: the _concrete_ nodes will be registered with the RLoopManager right before
+   // the event loop, at jitting time, and that is good enough.
+   // RJittedFilter is an exception: RLoopManager needs to know about what filters have been booked even before
+   // the event loop in order to return a correct list from RLoopManager::GetFiltersNames().
+   // So RJittedFilters register themselves with RLoopManager at construction time and deregister themselves
+   // in SetFilter, i.e. when they are sure that the concrete filter has been instantiated in jitted code and it has
+   // been registered with RLoopManager, making the RJittedFilter registration redundant.
+   fLoopManager->Book(this);
+}
+
+RJittedFilter::~RJittedFilter()
+{
+   // This should be a no-op in most sane cases: the RJittedFilter should already have been deregistered in SetFilter.
+   // However, in the edge case in which the branch of the computation graph that included this RJittedFilter went out
+   // of scope before any event loop ran (e.g. because of bad code logic or a user that changed their mind during
+   // interactive usage), we need to make sure RJittedFilters get properly deregistered.
+   fLoopManager->Deregister(this);
 }
 
 void RJittedFilter::SetFilter(std::unique_ptr<RFilterBase> f)
 {
+   // the concrete filter has been registered with RLoopManager on creation, so let's deregister ourselves
+   fLoopManager->Deregister(this);
    fConcreteFilter = std::move(f);
 }
 

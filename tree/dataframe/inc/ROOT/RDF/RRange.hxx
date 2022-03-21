@@ -51,6 +51,7 @@ public:
                    pd->GetVariations()),
         fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr)
    {
+      fLoopManager->Book(this);
    }
 
    RRange(const RRange &) = delete;
@@ -155,7 +156,6 @@ public:
          prevNode = std::static_pointer_cast<PrevNode_t>(prevNode->GetVariedFilter(variationName));
 
       auto variedRange = std::unique_ptr<RRangeBase>(new RRange(fStart, fStop, fStride, std::move(prevNode)));
-      fLoopManager->Book(variedRange.get());
       auto e = fVariedRanges.insert({variationName, std::move(variedRange)});
       return e.first->second;
    }
