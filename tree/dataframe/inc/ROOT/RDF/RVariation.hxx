@@ -150,12 +150,15 @@ public:
         fExpression(std::move(expression)), fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()),
         fValues(lm.GetNSlots())
    {
+      fLoopManager->Book(this);
+
       for (auto i = 0u; i < lm.GetNSlots(); ++i)
          fLastResults[i * RDFInternal::CacheLineStep<ret_type>()].resize(fVariationNames.size());
    }
 
    RVariation(const RVariation &) = delete;
    RVariation &operator=(const RVariation &) = delete;
+   ~RVariation() { fLoopManager->Deregister(this); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {

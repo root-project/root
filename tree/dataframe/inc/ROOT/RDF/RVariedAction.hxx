@@ -82,6 +82,8 @@ public:
       : RActionBase(prevNode->GetLoopManagerUnchecked(), columns, colRegister, prevNode->GetVariations()),
         fHelpers(std::move(helpers)), fPrevNodes(MakePrevFilters(prevNode)), fInputValues(GetNSlots())
    {
+      fLoopManager->Book(this);
+
       const auto &defines = colRegister.GetColumns();
       for (auto i = 0u; i < columns.size(); ++i) {
          auto it = defines.find(columns[i]);
@@ -93,6 +95,8 @@ public:
 
    RVariedAction(const RVariedAction &) = delete;
    RVariedAction &operator=(const RVariedAction &) = delete;
+
+   ~RVariedAction() { fLoopManager->Deregister(this); }
 
    void Initialize() final
    {

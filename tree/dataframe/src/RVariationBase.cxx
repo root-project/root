@@ -32,10 +32,7 @@ RVariationBase::RVariationBase(const std::vector<std::string> &colNames, std::st
       fIsDefine[i] = fColumnRegister.HasName(fInputColumns[i]);
 }
 
-RVariationBase::~RVariationBase()
-{
-   fLoopManager->Deregister(this);
-}
+RVariationBase::~RVariationBase() = default;
 
 const std::vector<std::string> &RVariationBase::GetColumnNames() const
 {
