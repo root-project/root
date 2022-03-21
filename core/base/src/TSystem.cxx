@@ -4012,16 +4012,20 @@ const char *TSystem::GetObjExt() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the location where ACLiC will create libraries and use as
-/// a scratch area.
+/// a scratch area. If unset, libraries will be created at the same
+/// location than the script.
 ///
-/// If 'isflat' is false, then the libraries are actually stored in
-/// sub-directories of 'build_dir' including the full pathname of the
-/// script.  If the script is location at /full/path/name/macro.C
-/// the library will be located at 'build_dir+/full/path/name/macro_C.so'
+/// \param build_dir the name of the build directory
+/// \param isflat If false (default), then the libraries are actually stored
+/// in sub-directories of 'build_dir' including the full pathname
+/// of the script. If the script is located at `/full/path/name/macro.C`
+/// the library will be located at `build_dir+/full/path/name/macro_C.so`
 /// If 'isflat' is true, then no subdirectory is created and the library
-/// is created directly in the directory 'build_dir'.  Note that in this
+/// is created directly in the directory 'build_dir'. Note that in this
 /// mode there is a risk than 2 script of the same in different source
 /// directory will over-write each other.
+/// \note This `build_dir` can also be controlled via `ACLiC.BuildDir` in
+/// your `.rootrc`.
 
 void TSystem::SetBuildDir(const char *build_dir, Bool_t isflat)
 {
