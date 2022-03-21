@@ -234,10 +234,11 @@ public:
       };
       struct RPageInfoExtended : RPageInfo {
          /// Index (in cluster) of the first element in page.
-         RClusterSize::ValueType fFirstInPage;
+         RClusterSize::ValueType fFirstInPage = 0;
          /// Page number in the corresponding RPageRange.
-         NTupleSize_t fPageNo;
+         NTupleSize_t fPageNo = 0;
 
+         RPageInfoExtended() = default;
          RPageInfoExtended(const RPageInfo &pi, RClusterSize::ValueType i, NTupleSize_t n)
             : RPageInfo(pi), fFirstInPage(i), fPageNo(n) {}
       };

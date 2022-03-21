@@ -113,6 +113,16 @@ public:
 // clang-format on
 class RPageSourceFile : public RPageSource {
 private:
+   /// Summarizes cluster-level information that are necessary to populate a certain page.
+   /// Used by PopulatePageFromCluster().
+   struct RClusterInfo {
+      DescriptorId_t fClusterId = 0;
+      /// Location of the page on disk
+      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
+      /// The first element number of the page's column in the given cluster
+      std::uint64_t fColumnOffset = 0;
+   };
+
    /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    /// The page pool might, at some point, be used by multiple page sources
@@ -127,7 +137,7 @@ private:
    std::unique_ptr<RClusterPool> fClusterPool;
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
-   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
+   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
 
    /// Helper function for LoadClusters: it prepares the memory buffer (page map) and the
