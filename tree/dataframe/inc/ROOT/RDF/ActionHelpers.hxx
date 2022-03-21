@@ -43,6 +43,7 @@
 #include "TObject.h"
 #include "TTree.h"
 #include "TTreeReader.h" // for SnapshotHelper
+#include "ROOT/RDF/RActionImpl.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
 
 #include <algorithm>
@@ -60,64 +61,6 @@
 /// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
-namespace Detail {
-namespace RDF {
-
-/// Base class for action helpers, see RInterface::Book() for more information.
-template <typename Helper>
-class RActionImpl {
-public:
-   virtual ~RActionImpl() = default;
-   // call Helper::FinalizeTask if present, do nothing otherwise
-   template <typename T = Helper>
-   auto CallFinalizeTask(unsigned int slot) -> decltype(std::declval<T>().FinalizeTask(slot))
-   {
-      static_cast<Helper *>(this)->FinalizeTask(slot);
-   }
-
-   template <typename... Args>
-   void CallFinalizeTask(unsigned int, Args...) {}
-
-   template <typename H = Helper>
-   auto CallPartialUpdate(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot), (void *)(nullptr))
-   {
-      return &static_cast<Helper *>(this)->PartialUpdate(slot);
-   }
-
-   template <typename... Args>
-   [[noreturn]] void *CallPartialUpdate(...)
-   {
-      throw std::logic_error("This action does not support callbacks!");
-   }
-
-   template <typename T = Helper>
-   auto CallMakeNew(void *typeErasedResSharedPtr) -> decltype(std::declval<T>().MakeNew(typeErasedResSharedPtr))
-   {
-      return static_cast<Helper *>(this)->MakeNew(typeErasedResSharedPtr);
-   }
-
-   template <typename... Args>
-   [[noreturn]] Helper CallMakeNew(void *, Args...)
-   {
-      const auto &actionName = static_cast<Helper *>(this)->GetActionName();
-      throw std::logic_error("The MakeNew method is not implemented for this action helper (" + actionName +
-                             "). Cannot Vary its result.");
-   }
-
-   // Helper functions for RMergeableValue
-   virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const
-   {
-      throw std::logic_error("`GetMergeableValue` is not implemented for this type of action.");
-   }
-
-   /// Override this method to register a callback that is executed before the processing a new data sample starts.
-   /// The callback will be invoked in the same conditions as with DefinePerSample().
-   virtual ROOT::RDF::SampleCallback_t GetSampleCallback() { return {}; }
-};
-
-} // namespace RDF
-} // namespace Detail
-
 namespace Internal {
 namespace RDF {
 using namespace ROOT::TypeTraits;
