@@ -1,10 +1,15 @@
+#include "TSystem.h"
+#include "TROOT.h"
+#include "TBufferJSON.h"
+#include "TCanvas.h"
+
 /// Generates the root file output of the macro MacroName
 
 void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
 {
 
    // Execute the macro as a C++ one or a Python one.
-   if (!py) gROOT->ProcessLine(Form(".x %s",MacroName));
+   if (!py) gROOT->ProcessLine(Form(".x %s+",MacroName));
    else     gROOT->ProcessLine(Form("TPython::ExecScript(\"%s\");",MacroName));
 
    // If needed, copy the macro in the documentation directory.
