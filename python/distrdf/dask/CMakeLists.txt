@@ -8,6 +8,7 @@ if (ROOT_test_distrdf_dask_FOUND)
     # multiprocessing, so the property is set to 2 in this case.
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
+                      TIMEOUT 420
                       PROPERTIES PROCESSORS 2)
 
 endif()
