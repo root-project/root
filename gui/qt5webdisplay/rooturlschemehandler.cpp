@@ -15,6 +15,7 @@
 #include "rooturlschemehandler.h"
 
 #include "rootwebpage.h" // only because of logger channel
+#include <cstring>
 
 #include <QBuffer>
 #include <QByteArray>
@@ -98,6 +99,13 @@ public:
       buffer->open(QIODevice::WriteOnly);
       if (file.open(QIODevice::ReadOnly)) {
          QByteArray arr = file.readAll();
+         if (strstr(fname, ".mjs") && !strcmp(mime, "text/javascript")) {
+            const char *mark1 = "///_begin_exclude_in_qt5web_", *mark2 = "///_end_exclude_in_qt5web_";
+            auto p1 = arr.indexOf(mark1);
+            auto p2 = arr.indexOf(mark2);
+            if ((p1 > 0) && (p2 > p1)) arr.remove(p1, p2 - p1 + strlen(mark2));
+         }
+
          buffer->write(arr);
       }
       file.close();
@@ -109,6 +117,8 @@ public:
          buffer->connect(req, &QObject::destroyed, buffer, &QObject::deleteLater);
          req->reply(mime, buffer);
          fRequest.reset();
+      } else {
+         delete buffer;
       }
    }
 
