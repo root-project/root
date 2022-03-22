@@ -47,10 +47,10 @@
             if ((p > 1) && (p < viewName.length - 1)) {
                let tgtpath = "/currentdir/";
                let pp = JSROOT.source_dir.indexOf("/jsrootsys/");
-               if (pp > 0) tgtpath = JSROOT.source_dir.substr(0,pp) + "currentdir/";
+               if (pp > 0) tgtpath = JSROOT.source_dir.slice(0,pp) + "/currentdir/";
                let _paths = {};
-               _paths[viewName.substr(0,p)] = tgtpath;
-               console.log('Register module path', viewName.substr(0,p), ' as ', tgtpath);
+               _paths[viewName.slice(0,p)] = tgtpath;
+               console.log('Register module path', viewName.slice(0,p), ' as ', tgtpath);
                sap.ui.loader.config({ paths: _paths });
             }
          }
