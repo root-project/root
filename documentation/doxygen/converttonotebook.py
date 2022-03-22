@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Author: Pau Miquel i Mir <pau.miquel.mir@cern.ch> <pmm1g15@soton.ac.uk>>
+# Author: Pau Miquel i Mir <pau.miquel.mir@cern.ch> <pmm1g15@soton.ac.uk>
 # Date: July, 2016
 #
 # DISCLAIMER: This script is a prototype and a work in progress. Indeed, it is possible that
