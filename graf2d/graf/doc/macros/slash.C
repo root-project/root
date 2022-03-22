@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *slash()
 {
    TCanvas *F = new TCanvas("script","Slash",500,100);
