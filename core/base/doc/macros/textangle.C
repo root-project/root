@@ -1,3 +1,11 @@
+#include "TCanvas.h"
+#include "TLine.h"
+#include "TMarker.h"
+#include "TArc.h"
+#include "TText.h"
+#include "TLatex.h"
+
+void textangle()
 {
    auto *Ta = new TCanvas("Ta","Text angle",0,0,300,326);
    Ta->Range(0,0,1,1);
