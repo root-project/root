@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *subsupscript()
 {
    TCanvas *S = new TCanvas("script","Subscripts and Superscripts",400,250);
