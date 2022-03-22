@@ -1,3 +1,8 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+#include "TBox.h"
+#include "TStyle.h"
+
 void box(Int_t pat, Double_t x1, Double_t y1, Double_t x2, Double_t  y2)
 {
    // Draw an box using the fill pattern "pat" with the "pat" value
