@@ -1,3 +1,11 @@
+#include "TCanvas.h"
+#include "TStyle.h"
+#include "TH1F.h"
+#include "TF1.h"
+#include "TGraphErrors.h"
+#include "TLegend.h"
+
+TCanvas* legend1()
 {
    TCanvas *c1 = new TCanvas("c1","c1",600,500);
    gStyle->SetOptStat(0);
@@ -31,7 +39,7 @@
    gr->SetMarkerColor(7);
    gr->Draw("P");
 
-   leg = new TLegend(0.1,0.7,0.48,0.9);
+   TLegend* leg = new TLegend(0.1,0.7,0.48,0.9);
    leg->SetHeader("The Legend Title");
    leg->AddEntry(h1,"Histogram filled with random numbers","f");
    leg->AddEntry("f1","Function abs(#frac{sin(x)}{x})","l");
