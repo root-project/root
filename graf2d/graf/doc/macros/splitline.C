@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *splitline()
 {
    TCanvas *F = new TCanvas("script","Splitline",700,100);
