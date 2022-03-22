@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *accents()
 {
    TCanvas *S = new TCanvas("script","accents",400,250);
