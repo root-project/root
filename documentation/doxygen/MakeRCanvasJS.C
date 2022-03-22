@@ -3,13 +3,16 @@
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
+#include <fstream>
 #if __has_include("ROOT/RCanvas.hxx")
 #include "ROOT/RCanvas.hxx"
 #endif
 
 void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, const char *AuxDir, bool cp, bool py)
 {
+#if __has_include("ROOT/RCanvas.hxx")
    using namespace ROOT::Experimental;
+#endif
    // Execute the macro as a C++ one or a Python one.
    if (!py) gROOT->ProcessLine(Form(".x %s",MacroName));
    else     gROOT->ProcessLine(Form("TPython::ExecScript(\"%s\");",MacroName));
