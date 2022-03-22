@@ -1,3 +1,8 @@
+#include "TCanvas.h"
+#include "TPaveText.h"
+#include "TArrow.h"
+
+void entrylist_figure1()
 {
    TCanvas *c = new TCanvas("c", "c",213,172,460,253);
    c->Range(0,0,1,1);
