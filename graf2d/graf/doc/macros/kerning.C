@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *kerning()
 {
    TCanvas *S = new TCanvas("script","Kerning",400,250);
