@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *itbold()
 {
    TCanvas *S = new TCanvas("script","Italic Bold",400,150);
