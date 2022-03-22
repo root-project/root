@@ -1,3 +1,8 @@
+#include "TCanvas.h"
+#include "TH1F.h"
+#include "TLegend.h"
+
+TCanvas* legend3()
 {
    TCanvas *c3 = new TCanvas("c2","c2",500,300);
 
