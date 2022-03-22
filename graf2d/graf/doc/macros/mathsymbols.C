@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *mathsymbols()
 {
    TCanvas *Ms = new TCanvas("mathsymb","Mathematical Symbols",800,500);
