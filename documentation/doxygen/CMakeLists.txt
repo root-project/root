@@ -150,10 +150,16 @@ if(BUILD_DOCUMENTATION)
 
             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/makehtmlfooter.sh > ${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html
 
-            COMMAND ${ROOT_CXX_COMPILER} -DROOT_LDPATH=\\\"${ROOT_root_CMD}\\\" -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${Python_EXECUTABLE}\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx -std=c++14
+            COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${Python_EXECUTABLE}\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx -std=c++14
 
             COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc
             COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
+
+            # Precompile here to prevent later multithreading issues
+#            COMMAND ${ROOT_root_CMD} -l -b -e '.L libs.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#            COMMAND ${ROOT_root_CMD} -l -b -e '.L makeimage.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#            COMMAND ${ROOT_root_CMD} -l -b -e '.L MakeTCanvasJS.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#            COMMAND ${ROOT_root_CMD} -l -b -e '.L MakeRCanvasJS.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
         set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
