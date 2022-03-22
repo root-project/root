@@ -406,8 +406,6 @@ void JitFilterHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
       // The branch of the computation graph that needed this jitted code went out of scope between the type
       // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
       delete wkJittedFilter;
-      // colRegister must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
-      // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
       delete colRegister;
       delete prevNodeOnHeap;
       return;
@@ -472,8 +470,6 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
    // a helper to delete objects allocated before jitting, so that the jitter can share data with lazily jitted code
    auto doDeletes = [&] {
       delete wkJittedDefine;
-      // colRegister must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
-      // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
       delete colRegister;
       delete prevNodeOnHeap;
       delete[] colsPtr;
@@ -522,8 +518,6 @@ void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const
       delete[] variationTags;
 
       delete wkJittedVariation;
-      // colRegister must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
-      // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
       delete colRegister;
       delete prevNodeOnHeap;
    };
