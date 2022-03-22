@@ -262,10 +262,10 @@ if(BUILD_DOCUMENTATION)
           #~ OPTIONAL # because available only after "make doc"
         #~ )
 
-        add_custom_target(Finalization
-            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" listlibs.sh
-            COMMAND gzip ${DOCU_LOCATION}/html/ROOT.tag
-            COMMAND gzip ${DOCU_LOCATION}/html/ROOT.qch
+        add_custom_target(Finalization ALL
+            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} ./listlibs.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
+            COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
         )
         add_dependencies(Finalization dox)
 
