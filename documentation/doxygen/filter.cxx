@@ -199,7 +199,11 @@ void FilterClass(const int suffix)
             if (m) {
                fclose(m);
                m = 0;
+<<<<<<< HEAD
                ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\"" CMAKE_BUILD_DIRECTORY "/%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\""
+=======
+               ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C(\\\"" CMAKE_BUILD_DIRECTORY "/%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\""
+>>>>>>> 4aa2362571... some issues with cling, revert
                                               , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
                                               , StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str()
                                               , gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
@@ -391,10 +395,6 @@ void FilterTutorial(const int suffix)
                                                gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                } else {
                   ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
-                  ExecuteCommand(StringFormat(ROOT_COMMAND " -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
-                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
-               } else {
-                  ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
                                                gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                }
             }
@@ -504,7 +504,11 @@ void ExecuteMacro(const int suffix)
    //~ cerr << "The macro is " << gMacroName << endl;
 
    // Build the ROOT command to be executed.
+<<<<<<< HEAD
    gLineString.insert(0, StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\""));
+=======
+   gLineString.insert(0, StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C(\\\""));
+>>>>>>> 4aa2362571... some issues with cling, revert
    size_t l = gLineString.length();
    gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\"", gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
    //~ cerr << "The line is " << gLineString << endl;
