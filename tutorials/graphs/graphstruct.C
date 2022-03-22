@@ -7,11 +7,12 @@
 ///
 /// \macro_image
 /// \macro_code
-///
+/// \note For this to work, ROOT has to be compiled with gviz ON
 /// \author Olivier Couet
 
 TCanvas* graphstruct()
 {
+   #if __has_include("TGraphStruct.h") // handy check on whether gviz was installed
    TGraphStruct *gs = new TGraphStruct();
 
    // create some nodes and put them in the graph in one go ...
@@ -61,4 +62,7 @@ TCanvas* graphstruct()
    c->SetFillColor(38);
    gs->Draw();
    return c;
+   #else
+   return new TCanvas("c","c",800,600);
+   #endif
 }
