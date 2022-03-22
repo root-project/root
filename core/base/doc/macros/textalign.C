@@ -1,3 +1,8 @@
+#include "TCanvas.h"
+#include "TLine.h"
+#include "TText.h"
+
+void textalign()
 {
    auto *Ta = new TCanvas("Ta","Ta",0,0,500,200);
    Ta->Range(0,0,1,1);
