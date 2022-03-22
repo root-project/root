@@ -23,6 +23,13 @@
 ///
 /// \author Olivier Couet
 
+#include "TCanvas.h"
+#include "TLatex.h"
+#include "TArrow.h"
+#include "TEllipse.h"
+#include "TMarker.h"
+#include "TGraph.h"
+
 void transparency()
 {
    auto c1 = new TCanvas("c1", "c1",224,330,700,527);
