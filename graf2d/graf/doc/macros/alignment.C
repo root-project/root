@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *alignment()
 {
    TCanvas *Tlva = new TCanvas("Tlva","Tlva",500,500);
