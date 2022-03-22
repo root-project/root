@@ -55,6 +55,16 @@ TEST(TEntryList, EnterWithMultipleTrees) {
    EXPECT_EQ(n, 6);
    for (int i = 0; i < n; ++i)
       EXPECT_EQ(e.GetEntry(i), i * 2);
+
+   auto *t1e = e.GetEntryList("root/t1", "");
+   EXPECT_EQ(t1e->GetN(), 3);
+   for (int i = 0; i < 3; ++i)
+      EXPECT_EQ(t1e->GetEntry(i), i * 2);
+
+   auto *t2e = e.GetEntryList("root/t2", "");
+   EXPECT_EQ(t2e->GetN(), 3);
+   for (int i = 0; i < 3; ++i)
+      EXPECT_EQ(t2e->GetEntry(i), i * 2 + 6);
 }
 
 TEST(TEntryList, EnterByTreeName) {
@@ -72,4 +82,14 @@ TEST(TEntryList, EnterByTreeName) {
    EXPECT_EQ(n, 6);
    for (int i = 0; i < n; ++i)
       EXPECT_EQ(e.GetEntry(i), i * 2);
+
+   auto *t1e = e.GetEntryList("t1", "");
+   EXPECT_EQ(t1e->GetN(), 3);
+   for (int i = 0; i < 3; ++i)
+      EXPECT_EQ(t1e->GetEntry(i), i * 2);
+
+   auto *t2e = e.GetEntryList("t2", "");
+   EXPECT_EQ(t2e->GetN(), 3);
+   for (int i = 0; i < 3; ++i)
+      EXPECT_EQ(t2e->GetEntry(i), i * 2 + 6);
 }
