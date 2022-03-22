@@ -10,6 +10,98 @@ set (DOCU_LOCATION ${HOME}/rootdoc CACHE STRING "Documentation output directory"
 
 #list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
 
+set (DOCU_INPUT
+
+    ./mainpage.md
+    ../../core/
+    ../../geom/
+    ../../graf2d
+    ../../graf3d
+    ../../gui/
+    ../../hist/
+    ../../html/
+    ../../io/
+    ../../main/
+    ../../math/
+    ../../montecarlo/
+    ../../net/
+    ../../proof/
+    ../../tmva/
+    ../../roofit/
+    ../../tree/
+    ../../sql/
+    #../../tutorials/
+    ../../bindings/
+    ${DOCU_LOCATION}/pyzdoc/
+
+    #~ ../../core/base/
+    #~ ../../core/dictgen/
+    #~ ../../core/cont/
+    #~ ../../core/foundation/
+    #~ ../../core/gui/
+    #~ ../../core/macosx/
+    #~ ../../core/meta/
+    #~ ../../core/metacling/
+    #~ ../../core/clingutils/
+    #~ ../../core/multiproc/
+    #~ ../../core/rint/
+    #~ ../../core/testsupport/
+    #~ ../../core/thread/
+    #~ ../../core/unix/
+    #~ ../../core/winnt/
+    #~ ../../core/imt/
+    #~ ../../core/zip/inc/Compression.h
+    #~ ../../geom/
+    #~ ../../graf2d/asimage/
+    #~ ../../graf2d/cocoa/
+    #~ ../../graf2d/fitsio/
+    #~ ../../graf2d/gpad/
+    #~ ../../graf2d/gpadv7/
+    #~ ../../graf2d/graf/
+    #~ ../../graf2d/gviz/
+    #~ ../../graf2d/postscript/
+    #~ ../../graf2d/quartz/
+    #~ ../../graf2d/win32gdk/
+    #~ ../../graf2d/x11/
+    #~ ../../graf2d/x11ttf/
+    #~ ../../graf3d/eve/
+    #~ ../../graf3d/eve7/
+    #~ ../../graf3d/g3d/
+    #~ ../../graf3d/gl/
+    #~ ../../graf3d/gviz3d/
+    #~ ../../gui/
+    #~ ../../hist/
+    #~ ../../html/
+    #~ ../../io/doc/TFile
+    #~ ../../io/dcache/
+    #~ ../../io/gfal/
+    #~ ../../io/io/
+    #~ ../../io/sql/
+    #~ ../../io/xml/
+    #~ ../../io/xmlparser/
+    #~ ../../main/src/hadd.cxx
+    #~ ../../math/
+    #~ ../../montecarlo/
+    #~ ../../net/alien/
+    #~ ../../net/auth/
+    #~ ../../net/davix/
+    #~ ../../net/http/
+    #~ ../../net/monalisa/
+    #~ ../../net/net/
+    #~ ../../net/netx/
+    #~ ../../net/netxng/
+    #~ ../../proof/
+    #~ ../../tmva/
+    #~ ../../roofit/
+    #~ ../../tree/
+    #~ ../../sql/
+    #~ ../../tutorials/
+    #~ ../../bindings/tpython/
+    #~ ../../bindings/pyroot/
+    #~ ../../bindings/r/
+
+    CACHE STRING "Doxyfile input files or folders")
+
 option(BUILD_DOCUMENTATION "Create and install the HTML based ROOT documentation (requires Doxygen)" ON)
 
 if(BUILD_DOCUMENTATION)
@@ -156,110 +248,7 @@ if(BUILD_DOCUMENTATION)
         #TODO: if(NOT GRAPHVIZ_FOUND) set(gvizveto...)
 
         doxygen_add_docs(dox ALL
-            ./mainpage.md
-            ../../core/
-            ../../geom/
-            ../../graf2d
-            ../../graf3d
-            ../../gui/
-            ../../hist/
-            ../../html/
-            ../../io/
-            ../../main/
-            ../../math/
-            ../../montecarlo/
-            ../../net/
-            ../../proof/
-            ../../tmva/
-            ../../roofit/
-            ../../tree/
-            ../../sql/
-            #../../tutorials/
-            ../../bindings/
-
-            # Add to the list of files to be analyzed the .pyzdoc files created by extract_docstrings.py
-            # and print_roofit_pyz_doctrings.py
-            #~ ls $DOXYGEN_PYZDOC_PATH/*.pyzdoc | sed -e "s/$/ \\\\/"  \
-            #~ >> Doxyfile_INPUT
-            ${DOCU_LOCATION}/pyzdoc/
-
-            #~ ../../core/base/
-            #~ ../../core/dictgen/
-            #~ ../../core/cont/
-            #~ ../../core/foundation/
-            #~ ../../core/gui/
-            #~ ../../core/macosx/
-            #~ ../../core/meta/
-            #~ ../../core/metacling/
-            #~ ../../core/clingutils/
-            #~ ../../core/multiproc/
-            #~ ../../core/rint/
-            #~ ../../core/testsupport/
-            #~ ../../core/thread/
-            #~ ../../core/unix/
-            #~ ../../core/winnt/
-            #~ ../../core/imt/
-            #~ ../../core/zip/inc/Compression.h
-            #~ ../../geom/
-            #~ ../../graf2d/asimage/
-            #~ ../../graf2d/cocoa/
-            #~ ../../graf2d/fitsio/
-            #~ ../../graf2d/gpad/
-            #~ ../../graf2d/gpadv7/
-            #~ ../../graf2d/graf/
-            #~ ../../graf2d/gviz/
-            #~ ../../graf2d/postscript/
-            #~ ../../graf2d/quartz/
-            #~ ../../graf2d/win32gdk/
-            #~ ../../graf2d/x11/
-            #~ ../../graf2d/x11ttf/
-            #~ ../../graf3d/eve/
-            #~ ../../graf3d/eve7/
-            #~ ../../graf3d/g3d/
-            #~ ../../graf3d/gl/
-            #~ ../../graf3d/gviz3d/
-            #~ ../../gui/
-            #~ ../../hist/
-            #~ ../../html/
-            #~ ../../io/doc/TFile
-            #~ ../../io/dcache/
-            #~ ../../io/gfal/
-            #~ ../../io/io/
-            #~ ../../io/sql/
-            #~ ../../io/xml/
-            #~ ../../io/xmlparser/
-            #~ ../../main/src/hadd.cxx
-            #~ ../../math/
-            #~ ../../montecarlo/
-            #~ ../../net/alien/
-            #~ ../../net/auth/
-            #~ ../../net/davix/
-            #~ ../../net/http/
-            #~ ../../net/monalisa/
-            #~ ../../net/net/
-            #~ ../../net/netx/
-            #~ ../../net/netxng/
-            #~ ../../proof/
-            #~ ../../tmva/
-            #~ ../../roofit/
-            #~ ../../tree/
-            #~ ../../sql/
-            #~ ../../tutorials/
-            #~ ../../bindings/tpython/
-            #~ ../../bindings/pyroot/
-            #~ ../../bindings/r/
-
-            # echo "        ../../core/clib/                 \\" >> Doxyfile_INPUT
-            # echo "        ../../core/lzma/                 \\" >> Doxyfile_INPUT
-            # echo "        ../../core/newdelete/            \\" >> Doxyfile_INPUT
-            # echo "        ../../core/textinput/            \\" >> Doxyfile_INPUT
-            # echo "        ../../graf2d/mathtext/           \\" >> Doxyfile_INPUT
-            # echo "        ../../graf3d/ftgl/               \\" >> Doxyfile_INPUT
-            # echo "        ../../graf3d/glew/               \\" >> Doxyfile_INPUT
-            # echo "        ../../graf3d/x3d/                \\" >> Doxyfile_INPUT
-            # echo "        ../../net/rootd/                 \\" >> Doxyfile_INPUT
-            # echo "        ../../net/rpdutils/              \\" >> Doxyfile_INPUT
-
+          ${DOCU_INPUT}
           #ALLOW_DUPLICATE_CUSTOM_TARGETS
           #USE_STAMP_FILE
           COMMENT "Generating doxygen documentation for ${PROJECT_NAME}"
