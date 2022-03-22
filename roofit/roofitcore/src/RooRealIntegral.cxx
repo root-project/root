@@ -433,21 +433,11 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     oocxcoutI(&function,Integration) << function.GetName() << ": Function integrated observables " << _anaList << " internally with code " << _mode << std::endl ;
   }
 
-  // when _funcNormSet is a nullptr a warning message appears for RooAddPdf functions
-  // This is not a problem since we do noty use the returned value from getVal()
-  // we then disable the produced warning message in the RooFit::Eval topic
-  std::unique_ptr<RooHelpers::LocalChangeMsgLevel> msgChanger;
-  if (_funcNormSet == nullptr) {
-     // remove only the RooFit::Eval message topic from current active streams
-     // passed level can be whatever if we provide a false as last argument
-     msgChanger = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING, 0u, RooFit::Eval, false);
-  }
-
   // WVE kludge: synchronize dset for use in analyticalIntegral
-  // LM : is this really needed ??
-  function.getVal(_funcNormSet) ;
-  // delete LocalChangeMsgLevel which will restore previous message level
-  msgChanger.reset(nullptr);
+  // LM : I think this is needed only if  _funcNormSet is not an empty set
+  if (_funcNormSet && _funcNormSet->getSize() > 0) {
+    function.getVal(_funcNormSet) ;
+  }
 
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
   // * F) Make list of numerical integration variables consisting of:            *
