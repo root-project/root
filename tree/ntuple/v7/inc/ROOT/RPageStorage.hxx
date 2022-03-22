@@ -278,7 +278,7 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 // clang-format on
 class RPageSource : public RPageStorage {
 public:
-   /// An RAII wrapper used for the read-only access to RPageSource::fDescriptor
+   /// An RAII wrapper used for the read-only access to RPageSource::fDescriptor. See GetExclDescriptorGuard().
    class RSharedDescriptorGuard {
       const RNTupleDescriptor &fDescriptor;
       std::shared_mutex &fLock;
@@ -297,7 +297,7 @@ public:
       const RNTupleDescriptor &GetRef() const { return fDescriptor; }
    };
 
-   /// An RAII wrapper used for the writable access to RPageSource::fDescriptor
+   /// An RAII wrapper used for the writable access to RPageSource::fDescriptor. See GetSharedDescriptorGuard().
    class RExclDescriptorGuard {
       RNTupleDescriptor &fDescriptor;
       std::shared_mutex &fLock;
@@ -377,6 +377,7 @@ protected:
    /// GetMetrics() member function.
    void EnableDefaultMetrics(const std::string &prefix);
 
+   /// Note that the underlying lock is not recursive. See GetSharedDescriptorGuard() for further information.
    RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
 
 public:
@@ -395,6 +396,13 @@ public:
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
 
+   /// Takes the read lock for the descriptor. Multiple threads can take the lock concurrently.
+   /// The underlying std::shared_mutex, however, is neither read nor write recursive:
+   /// within one thread, only one lock (shared or exclusive) must be acquired at the same time. This requires special
+   /// care in sections protected by GetSharedDescriptorGuard() and GetExclDescriptorGuard() especially to avoid that
+   /// the locks are acquired indirectly (e.g. by a call to GetNEntries()).
+   /// As a general guideline, no other method of the page source should be called (directly or indirectly) in a
+   /// guarded section.
    const RSharedDescriptorGuard GetSharedDescriptorGuard() const
    {
       return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
