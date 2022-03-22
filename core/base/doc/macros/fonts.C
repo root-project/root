@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 void drawtext(double x, double y, int f, const char *s)
 {
    TLatex *t = new TLatex(x,y,Form("#font[41]{%d :} %s",f,s));
