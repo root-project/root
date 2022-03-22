@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *fractions()
 {
    TCanvas *F = new TCanvas("script","Fractions",500,100);
