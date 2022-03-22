@@ -4892,20 +4892,20 @@ void TProof::Print(Option_t *option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Extract from opt information about output handling settings.
 /// The understood keywords are:
-///     of=<file>, outfile=<file>         output file location
-///     ds=<dsname>, dataset=<dsname>     dataset name ('of' and 'ds' are
-///                                       mutually exclusive,execution stops
-///                                       if both are found)
-///     sft[=<opt>], savetofile[=<opt>]   control saving to file
+///     of=`<file>`, outfile=`<file>`         output file location
+///     ds=`<dsname>`, dataset=`<dsname>`     dataset name ('of' and 'ds' are
+///                                           mutually exclusive,execution stops
+///                                           if both are found)
+///     sft[=`<opt>`], savetofile[=`<opt>`]   control saving to file
 ///
-/// For 'mvf', the <opt> integer has the following meaning:
-///     <opt> = <how>*10 + <force>
-///             <force> = 0      save to file if memory threshold is reached
+/// For 'mvf', the `<opt>` integer has the following meaning:
+///     `<opt>` = `<how>`*10 + `<force>`
+///             `<force>` = 0    save to file if memory threshold is reached
 ///                              (the memory threshold is set by the cluster
 ///                              admin); in case an output file is defined, the
 ///                              files are merged at the end;
 ///                       1      save results to file.
-///             <how> =   0      save at the end of the query
+///             `<how>` =   0    save at the end of the query
 ///                       1      save results after each packet (to reduce the
 ///                              loss in case of crash).
 ///
@@ -4922,8 +4922,8 @@ void TProof::Print(Option_t *option) const
 ///
 /// Output file settings are in the form
 ///
-///       <previous_option>of=name <next_option>
-///       <previous_option>outfile=name,...;<next_option>
+///       `<previous_option>`of=name `<next_option>`
+///       `<previous_option>`outfile=name,...;`<next_option>`
 ///
 /// The separator from the next option is either a ' ' or a ';'
 /// Called interanally by TProof::Process.
@@ -5479,7 +5479,7 @@ Long64_t TProof::Process(TFileCollection *fc, const char *selector,
 ///       with the dataset names listed in 'datasets.txt') in which case they are
 ///       treated as in 2); the file is open in raw mode with TFile::Open and
 ///       therefore it cane be remote, e.g. on a Web server.
-/// Each <dsetj> has the format specified above for the single dataset processing,
+/// Each `<dsetj>` has the format specified above for the single dataset processing,
 /// included wildcarding (the name of the tree and subdirectory must be same for
 /// all the datasets).
 /// In the case of multiple datasets, 'elist' is treated a global entry list.
@@ -8181,12 +8181,12 @@ Int_t TProof::EnablePackage(const char *package, Bool_t notOnClient,
 /// The default is to enable packages also on the client.
 /// It is is possible to specify options for the loading step via 'loadopts';
 /// the string will be passed passed as argument to SETUP.
-/// Special option 'chkv=<o>' (or 'checkversion=<o>') can be used to control
+/// Special option 'chkv=`<o>`' (or 'checkversion=`<o>`') can be used to control
 /// plugin version checking during building: possible choices are:
 ///     off         no check; failure may occur at loading
 ///     on          check ROOT version [default]
 ///     svn         check ROOT version and Git commit SHA1.
-/// (Use ';', ' ' or '|' to separate 'chkv=<o>' from the rest.)
+/// (Use ';', ' ' or '|' to separate 'chkv=`<o>`' from the rest.)
 /// If specified, enables packages only on the specified workers.
 /// Returns 0 in case of success and -1 in case of error.
 

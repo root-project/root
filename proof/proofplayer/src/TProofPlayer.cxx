@@ -755,7 +755,7 @@ void TProofPlayer::DeleteDrawFeedback(TDrawFeedback *f)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save the partial results of this query to a dedicated file under the user
 /// data directory. The file name has the form
-///         <session_tag>.q<query_seq_num>.root
+///         `<session_tag>`.q`<query_seq_num>`.root
 /// The file pat and the file are created if not existing already.
 /// Only objects in the outputlist not being TProofOutputFile are saved.
 /// The packets list 'packets' is saved if given.

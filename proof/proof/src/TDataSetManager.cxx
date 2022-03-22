@@ -197,11 +197,11 @@ void TDataSetManager::ParseInitOpts(const char *opts)
 ///
 /// expects the following directives:
 /// Group definition:
-///   group <groupname> <user>+
+///   group `<groupname>` `<user>`+
 /// disk quota
-///   property <groupname> diskquota <quota in GB>
+///   property `<groupname>` diskquota `<quota in GB>`
 /// average filesize (to be used when the file size is not available)
-///   averagefilesize <average size>{G,g,M,m,K,k}
+///   averagefilesize `<average size>`{G,g,M,m,K,k}
 
 Bool_t TDataSetManager::ReadGroupConfig(const char *cf)
 {
@@ -380,7 +380,7 @@ Bool_t TDataSetManager::ReadGroupConfig(const char *cf)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static utility function to gt the number of bytes from a string
-/// representation in the form "<digit><sfx>" with <sfx> = {"", "k", "M", "G",
+/// representation in the form "`<digit>``<sfx>`" with `<sfx>` = {"", "k", "M", "G",
 /// "T", "P"} (case insensitive).
 /// Returns -1 if the format is wrong.
 
@@ -444,11 +444,11 @@ Bool_t TDataSetManager::ExistsDataSet(const char *)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Returns all datasets for the <group> and <user> specified by <uri>.
-/// If <user> is 0, it returns all datasets for the given <group>.
-/// If <group> is 0, it returns all datasets.
+/// Returns all datasets for the `<group>` and `<user>` specified by `<uri>`.
+/// If `<user>` is 0, it returns all datasets for the given `<group>`.
+/// If `<group>` is 0, it returns all datasets.
 /// The returned TMap contains:
-///    <group> --> <map of users> --> <map of datasets> --> <dataset> (TFileCollection)
+///    `<group>` --> `<map of users>` --> `<map of datasets>` --> `<dataset>` (TFileCollection)
 ///
 /// The unsigned int 'option' is forwarded to GetDataSet and BrowseDataSet.
 /// Available options (to be .or.ed):
@@ -531,7 +531,7 @@ Int_t TDataSetManager::ScanDataSet(const char *uri, const char *opts)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Scans the dataset indicated by <uri> and returns the number of missing files.
+/// Scans the dataset indicated by `<uri>` and returns the number of missing files.
 /// Returns -1 if any failure occurs.
 /// For more details, see documentation of
 /// ScanDataSet(TFileCollection *dataset, const char *option)
@@ -766,7 +766,7 @@ Int_t TDataSetManager::RegisterDataSet(const char *,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save into the <datasetdir>/dataset.list file the name of the last updated
+/// Save into the `<datasetdir>/dataset.list` file the name of the last updated
 /// or created or modified dataset
 /// Returns 0 on success, -1 on error
 
@@ -799,7 +799,7 @@ Int_t TDataSetManager::ShowCache(const char * /*uri*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates URI for the dataset manger in the form '[[/dsGroup/]dsUser/]dsName[#dsObjPath]',
+/// Creates URI for the dataset manger in the form '[[/dsGroup/]dsUser/]dsName[#%dsObjPath]',
 /// The optional dsObjPath can be in the form [subdir/]objname]'.
 
 TString TDataSetManager::CreateUri(const char *dsGroup, const char *dsUser,
@@ -996,8 +996,8 @@ Bool_t TDataSetManager::ParseUri(const char *uri,
 ////////////////////////////////////////////////////////////////////////////////
 /// Partition dataset 'ds' accordingly to the servers.
 /// The returned TMap contains:
-///                <server> --> <subdataset> (TFileCollection)
-/// where <subdataset> is the subset of 'ds' on <server>
+///                `<server>` --> `<subdataset>` (TFileCollection)
+/// where `<subdataset>` is the subset of 'ds' on `<server>`
 /// The partitioning is done using all the URLs in the TFileInfo's, so the
 /// resulting datasets are not mutually exclusive.
 /// The string 'exclude' contains a comma-separated list of servers to exclude
@@ -1078,7 +1078,7 @@ void TDataSetManager::PrintDataSet(TFileCollection *fc, Int_t popt)
 ///   2. opt = "servers[:exclude:srv1[,srv2[,srv3[,...]]]]"
 ///            Print info about the subsets of 'uri' on all servers, except
 ///            the ones in the exclude list srv1, srv2, ...
-///   3. opt = <any>
+///   3. opt = `<any>`
 ///            Print info about all datasets matching 'uri'
 ///
 ///   If 'opt' contains 'full:' the list of files in the datasets are also printed.
