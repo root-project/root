@@ -1,6 +1,12 @@
 /// Generates the ImageName output of the macro MacroName
 
 #include <stdio.h>
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TPad.h"
+#include "TCanvas.h"
+#include "TStyle.h"
+#include "TImage.h"
 
 void FindImageInPad(TPad *P)
 {
@@ -37,7 +43,7 @@ void FindImageInCanvas(TCanvas *C)
 void makeimage(const char *MacroName, const char *ImageName, const char *OutDir, bool cp, bool py)
 {
    // Execute the macro as a C++ one or a Python one.
-   if (!py) gROOT->ProcessLine(Form(".x %s",MacroName));
+   if (!py) gROOT->ProcessLine(Form(".x %s+",MacroName));
    else     gROOT->ProcessLine(Form("TPython::ExecScript(\"%s\");",MacroName));
 
    // If needed, copy the macro in the documentation directory.
