@@ -89,7 +89,7 @@ public:
     //! Construct a socket helper
     //!
     //! @param host       Remote location to connect to
-    //! @param windowSize TCP window size: 0 for OS defaults or the ENV setting
+    //! @param windowsize TCP window size: 0 for OS defaults or the ENV setting
     //! @param fd         A descriptor pointing to an already connected socket,
     //!                   -1 if not available
     //--------------------------------------------------------------------------

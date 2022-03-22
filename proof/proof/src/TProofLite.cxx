@@ -796,7 +796,7 @@ Int_t TProofLite::SetProofServEnv(const char *ord)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Resolve some keywords in 's'
-///    <logfilewrk>, <user>, <rootsys>, <cpupin>
+///    `<logfilewrk>`, `<user>`, `<rootsys>`, `<cpupin>`
 
 void TProofLite::ResolveKeywords(TString &s, const char *ord,
    const char *logfile)
