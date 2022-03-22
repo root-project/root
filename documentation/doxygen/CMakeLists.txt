@@ -31,7 +31,7 @@ set (DOCU_INPUT
     ../../roofit/
     ../../tree/
     ../../sql/
-    #../../tutorials/
+    ../../tutorials/
     ../../bindings/
     ${DOCU_LOCATION}/pyzdoc/
 
