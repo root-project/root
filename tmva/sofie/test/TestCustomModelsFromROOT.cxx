@@ -15,11 +15,11 @@
 #include "LinearWithSigmoid_FromROOT.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
 
-// #include "LinearWithSoftmax_FromONNX.hxx"
-// #include "input_models/references/LinearWithSoftmax.ref.hxx"
+#include "LinearWithSoftmax_FromONNX.hxx"
+#include "input_models/references/LinearWithSoftmax.ref.hxx"
 
-// #include "LinearWithLeakyRelu_FromONNX.hxx"
-// #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
+#include "LinearWithLeakyRelu_FromONNX.hxx"
+#include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
 #include "ConvWithPadding_FromROOT.hxx"
 #include "input_models/references/ConvWithPadding.ref.hxx"
