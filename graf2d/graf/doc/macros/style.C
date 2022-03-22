@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *style()
 {
    TCanvas *S = new TCanvas("script","Style",750,250);
