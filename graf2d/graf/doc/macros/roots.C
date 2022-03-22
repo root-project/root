@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *roots()
 {
    TCanvas *S = new TCanvas("script","Roots",400,150);
