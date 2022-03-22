@@ -1,3 +1,7 @@
+#include "TString.h"
+#include "TInterpreter.h"
+#include "TSystem.h"
+
 void libs(TString classname)
 {
    const char *libname;

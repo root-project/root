@@ -3,7 +3,7 @@
 HTMLPATH=$DOXYGEN_OUTPUT_DIRECTORY/html
 
 # Find the libraries for the class $1
-root -l -b -q "libs.C(\"$1\")"
+root -l -b -q "libs.C+(\"$1\")"
 
 # No dot file, the class was not found. Remove the collaboration graph
 if [[ ! -f libslist.dot ]] ; then
