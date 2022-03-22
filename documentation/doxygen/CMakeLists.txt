@@ -7,6 +7,7 @@ set (QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
 #Pass instead -DQHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.h. if custom installation
 set (DOCU_LOCATION ${HOME}/rootdoc CACHE STRING "Documentation output directory")
 #Pass instead -DDOCU_LOCATION=/tmp/rootdoc if temporary installation
+set (DOCU_THREADS 0 CACHE STRING "Number of threads for building the documentation (use 0 for maximum threads, N for specific number)")
 
 #list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
 
@@ -149,7 +150,7 @@ if(BUILD_DOCUMENTATION)
 
             COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/makehtmlfooter.sh > ${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html
 
-            COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${Python_EXECUTABLE}\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx -std=c++14
+            COMMAND ${ROOT_CXX_COMPILER} -DROOT_LDPATH=\\\"${ROOT_root_CMD}\\\" -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${Python_EXECUTABLE}\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx -std=c++14
 
             COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc
             COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
@@ -172,7 +173,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_EXTRACT_ALL            YES)
         set(DOXYGEN_EXTRACT_PRIVATE        YES)
         set(DOXYGEN_EXTRACT_STATIC         YES)
-        set(DOXYGEN_EXTRACT_ANON_NSPACES   YES)
+        #set(DOXYGEN_EXTRACT_ANON_NSPACES   YES)
         set(DOXYGEN_HIDE_IN_BODY_DOCS      YES)
         #set(DOXYGEN_WARN_NO_PARAMDOC       YES) # If you set this to yes for finding all missing documentation, you need to set EXTRACT_ALL to false, see https://github.com/doxygen/doxygen/issues/880
         set(DOXYGEN_SORT_BRIEF_DOCS        YES)
@@ -237,8 +238,8 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO )
         set(DOXYGEN_HAVE_DOT               YES) # set to NO for getting faster results when debugging
         set(DOXYGEN_DOT_MULTI_TARGETS      YES)
-        #set(DOXYGEN_DOT_NUM_THREADS 1) # uncomment this to only use one thread, otherwise all your CPU threads will be used
-        set(DOXYGEN_NUM_PROC_THREADS 0) # comment this to only use one thread, otherwise all your CPU threads will be used
+        set(DOXYGEN_DOT_NUM_THREADS ${DOCU_THREADS})
+        set(DOXYGEN_NUM_PROC_THREADS ${DOCU_THREADS})
         set(DOXYGEN_GROUP_GRAPHS           NO )
         set(DOXYGEN_DOT_IMAGE_FORMAT       svg)
         set(DOXYGEN_INTERACTIVE_SVG        YES)
