@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *greekletters()
 {
    TCanvas *Gl = new TCanvas("greek","greek",500,700);
