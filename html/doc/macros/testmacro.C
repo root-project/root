@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TH1F.h"
+
 TObject* testmacro()
 {
 
