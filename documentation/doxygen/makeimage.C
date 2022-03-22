@@ -10,7 +10,12 @@
 #include <TSystem.h>
 
 #include <stdio.h>
-//#include <iostream>
+#include "TROOT.h"
+#include "TSystem.h"
+#include "TPad.h"
+#include "TCanvas.h"
+#include "TStyle.h"
+#include "TImage.h"
 
 void FindImageInPad(TPad *P)
 {
