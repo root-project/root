@@ -24,6 +24,7 @@ if (ROOT_test_distrdf_pyspark_FOUND)
     ROOTTEST_ADD_TEST(test_all
                       MACRO test_all.py
                       ENVIRONMENT ${PYSPARK_ENV_VARS}
+                      TIMEOUT 420
                       PROPERTIES PROCESSORS 2)
 
 endif()
