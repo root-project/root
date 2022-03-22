@@ -273,15 +273,18 @@ if(BUILD_DOCUMENTATION)
           #~ OPTIONAL # because available only after "make doc"
         #~ )
 
-        execute_process(COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" listlibs.sh)
+        add_custom_target(Finalization
+            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" listlibs.sh
+            COMMAND gzip ${DOCU_LOCATION}/html/ROOT.tag
+            COMMAND gzip ${DOCU_LOCATION}/html/ROOT.qch
+        )
+        add_dependencies(Finalization dox)
 
         #TODO cleaning:
         #rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
         #rm -rf tmva* data* result* config* test* Roo* My* Freq*
         #rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
         #rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
-        gzip ${DOCU_LOCATION}/html/ROOT.tag
-	    gzip ${DOCU_LOCATION}/html/ROOT.qch
         #rm -f ${DOCU_LOCATION}/notebooks/*.root
         #rm -rf ${DOCU_LOCATION}
 
