@@ -8,6 +8,8 @@ set (QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
 set (DOCU_LOCATION ${HOME}/rootdoc CACHE STRING "Documentation output directory")
 #Pass instead -DDOCU_LOCATION=/tmp/rootdoc if temporary installation
 set (DOCU_THREADS 0 CACHE STRING "Number of threads for building the documentation (use 0 for maximum threads, N for specific number)")
+set (DOCU_LOGFILE "" CACHE STRING "File where to write warnings to (leave empty for printing into console)")
+
 
 #list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
 
@@ -187,7 +189,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_GENERATE_TODOLIST      NO)
         set(DOXYGEN_GENERATE_BUGLIST       NO)
         set(DOXYGEN_LAYOUT_FILE            DoxygenLayout.xml)
-        #set(DOXYGEN_WARN_LOGFILE           /tmp/ROOT-Doxygen-warnings.txt)
+        set(DOXYGEN_WARN_LOGFILE           ${DOCU_LOGFILE})
         set(DOXYGEN_FILE_PATTERNS          *.c *.C *.cc *.cpp *.cxx *.def *.dox *.f *.h *.hh *.hpp *.hxx *.icc *.inc *.inl *.js *.m *.md *.mm *.py *.pyzdoc)
         set(DOXYGEN_RECURSIVE YES)
         set(DOXYGEN_EXCLUDE_PATTERNS       #*/G__*
@@ -244,8 +246,8 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO )
         set(DOXYGEN_HAVE_DOT               YES) # set to NO for getting faster results when debugging
         set(DOXYGEN_DOT_MULTI_TARGETS      YES)
-        set(DOXYGEN_DOT_NUM_THREADS ${DOCU_THREADS})
-        set(DOXYGEN_NUM_PROC_THREADS ${DOCU_THREADS})
+        set(DOXYGEN_DOT_NUM_THREADS        ${DOCU_THREADS})
+        set(DOXYGEN_NUM_PROC_THREADS       ${DOCU_THREADS})
         set(DOXYGEN_GROUP_GRAPHS           NO )
         set(DOXYGEN_DOT_IMAGE_FORMAT       svg)
         set(DOXYGEN_INTERACTIVE_SVG        YES)
