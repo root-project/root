@@ -1,3 +1,6 @@
+#include "TCanvas.h"
+#include "TLatex.h"
+
 TCanvas *bars()
 {
    TCanvas *F = new TCanvas("script","Bars",500,100);
