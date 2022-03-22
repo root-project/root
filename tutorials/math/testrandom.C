@@ -670,7 +670,6 @@ void testAll() {
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 #endif
 #endif
-#endif
 
 }
 
