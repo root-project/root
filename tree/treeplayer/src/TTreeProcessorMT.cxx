@@ -150,7 +150,6 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
          throw std::runtime_error(msg);
       }
       auto *t = f->Get<TTree>(treeName.c_str()); // t will be deleted by f
-      t->ResetBit(kMustCleanup);
 
       if (!t) {
          const auto msg = "TTreeProcessorMT::Process: an error occurred while getting tree \"" + treeName +
@@ -158,6 +157,8 @@ static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames
          throw std::runtime_error(msg);
       }
 
+      // Avoid calling TROOT::RecursiveRemove for this tree, it takes the read lock and we don't need it.
+      t->ResetBit(kMustCleanup);
       auto clusterIter = t->GetClusterIterator(0);
       Long64_t start = 0ll, end = 0ll;
       const Long64_t entries = t->GetEntries();
