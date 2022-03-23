@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.16)
 project(ROOT_documentation)
 
 set(CMAKE_VERBOSE_MAKEFILE ON) # set to ON for debugging
-set (QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
-#Pass instead -DQHG_LOCATION=/usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator if qt4dev-tools or qt5/ if qt5-assistant
-#Pass instead -DQHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.h. if custom installation
+set (DOCU_QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
+#Pass instead -DDOCU_QHG_LOCATION=/usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator if qt4dev-tools or qt5/ if qt5-assistant
+#Pass instead -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.h. if custom installation
 set (DOCU_LOCATION ${HOME}/rootdoc CACHE STRING "Documentation output directory")
 #Pass instead -DDOCU_LOCATION=/tmp/rootdoc if temporary installation
 set (DOCU_THREADS 0 CACHE STRING "Number of threads for building the documentation (use 0 for maximum threads, N for specific number)")
@@ -224,7 +224,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_GENERATE_QHP           YES)
         set(DOXYGEN_QCH_FILE               "ROOT.qch")
         set(DOXYGEN_QHP_NAMESPACE          cern.ch.ROOT)
-        set(DOXYGEN_QHG_LOCATION           "${QHG_LOCATION}")
+        set(DOXYGEN_QHG_LOCATION           "${DOCU_QHG_LOCATION}")
         set(DOXYGEN_QHP_VIRTUAL_FOLDER     "rootdoc")
         set(DOXYGEN_DISABLE_INDEX          YES)
         set(DOXYGEN_GENERATE_TREEVIEW      YES)
