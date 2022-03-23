@@ -37,23 +37,29 @@ model.fit(x_train, y_train, epochs=5, batch_size=4)\n\
 model.save('KerasModel.h5')\n";
 
 
-void TMVA_SOFIE_Keras(){
+void TMVA_SOFIE_Keras(const char * modelFile = nullptr, bool printModelInfo = true){
 
     //Running the Python script to generate Keras .h5 file
     TMVA::PyMethodBase::PyInitialize();
 
-    TMacro m;
-    m.AddLine(pythonSrc);
-    m.SaveSource("make_keras_model.py");
-    gSystem->Exec(TMVA::Python_Executable() + " make_keras_model.py");
+    if (modelFile == nullptr) {
+        TMacro m;
+        m.AddLine(pythonSrc);
+        m.SaveSource("make_keras_model.py");
+        gSystem->Exec(TMVA::Python_Executable() + " make_keras_model.py");
+        modelFile = "KerasModel.h5";
+    }
 
     //Parsing the saved Keras .h5 file into RModel object
-    SOFIE::RModel model = SOFIE::PyKeras::Parse("KerasModel.h5");
+    SOFIE::RModel model = SOFIE::PyKeras::Parse(modelFile);
 
 
     //Generating inference code
     model.Generate();
-    model.OutputGenerated("KerasModel.hxx");
+    // generate output header. By default it will be modelName.hxx
+    model.OutputGenerated();
+
+     if (!printModelInfo) return;
 
     //Printing required input tensors
     std::cout<<"\n\n";
