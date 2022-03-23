@@ -563,12 +563,14 @@ RModel Parse(std::string filename){
       switch(fInputDType){
 
          case ETensorType::FLOAT : {
-         if (PyTuple_GetItem(fPInputShapes,0) == Py_None){
-            throw std::runtime_error("None error: Models not initialized with batch-size are not yet supported in TMVA SOFIE");
-         }
 
          // Getting the shape vector from the Tuple object
          std::vector<size_t>fInputShape = GetDataFromTuple(fPInputShapes);
+         if (static_cast<int>(fInputShape[0]) <= 0){
+            fInputShape[0] = 1;
+            std::cout << "Model has not a defined batch size, assume is 1 - input shape : "
+                      << TMVA::Experimental::SOFIE::ConvertShapeToString(fInputShape) << std::endl;
+         }
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
          break;
          }
@@ -591,11 +593,12 @@ RModel Parse(std::string filename){
          case ETensorType::FLOAT : {
          PyObject* fInputShapeTuple=PyList_GetItem(fPInputShapes,inputIter);
 
-         if (PyTuple_GetItem(fInputShapeTuple,0) == Py_None){
-            throw std::runtime_error("None error: Models not initialized with batch-size are not yet supported in TMVA SOFIE");
-         }
-
          std::vector<size_t>fInputShape = GetDataFromTuple(fInputShapeTuple);
+         if (static_cast<int>(fInputShape[0]) <= 0){
+            fInputShape[0] = 1;
+            std::cout << "Model has not a defined batch size, assume is 1 - input shape for tensor "
+                      << fInputName << " : " << TMVA::Experimental::SOFIE::ConvertShapeToString(fInputShape) << std::endl;
+         }
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
          break;
          }
