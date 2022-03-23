@@ -136,15 +136,32 @@ public:
 };
 
 std::ostream &operator<<(std::ostream &os, RooFit::Detail::JSONNode const &s);
+
+template <class T>
+std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode::children_view const &cv)
+{
+   for (const auto &e : cv) {
+      v.push_back(e.val_t<T>());
+   }
+   return v;
+}
+
+template <class T>
+std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode::const_children_view const &cv)
+{
+   for (const auto &e : cv) {
+      v.push_back(e.val_t<T>());
+   }
+   return v;
+}
+
 template <class T>
 std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode const &n)
 {
    if (!n.is_seq()) {
       throw std::runtime_error("node " + n.key() + " is not of sequence type!");
    }
-   for (const auto &e : n.children()) {
-      v.push_back(e.val_t<T>());
-   }
+   v << n.children();
    return v;
 }
 

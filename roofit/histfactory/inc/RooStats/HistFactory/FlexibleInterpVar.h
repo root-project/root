@@ -49,6 +49,7 @@ namespace HistFactory{
     void setHigh(RooAbsReal& param, double newHigh);
 
     void printAllInterpCodes();
+    const std::vector<int>&  interpolationCodes() const { return _interpCode; }    
 
     TObject* clone(const char* newname) const override { return new FlexibleInterpVar(*this, newname); }
     ~FlexibleInterpVar() override ;

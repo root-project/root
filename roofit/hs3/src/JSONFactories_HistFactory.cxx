@@ -564,6 +564,7 @@ public:
          static_cast<const RooStats::HistFactory::FlexibleInterpVar *>(func);
       elem["type"] << key();
       auto &vars = elem["vars"];
+      elem["interpolationCodes"] << fip->interpolationCodes();
       vars.set_seq();
       for (const auto &v : fip->variables()) {
          vars.append_child() << v->GetName();
@@ -664,6 +665,52 @@ public:
       }
 
       ws.import(pip, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return true;
+   }
+};
+
+class FlexibleInterpVarFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      if (!p.has_child("vars")) {
+         RooJSONFactoryWSTool::error("no vars of '" + name + "'");
+      }
+      if (!p.has_child("high")) {
+         RooJSONFactoryWSTool::error("no high variations of '" + name + "'");
+      }
+      if (!p.has_child("low")) {
+         RooJSONFactoryWSTool::error("no low variations of '" + name + "'");
+      }
+      if (!p.has_child("nom")) {
+         RooJSONFactoryWSTool::error("no nominal variation of '" + name + "'");
+      }
+
+      double nom(p["nom"].val_float());
+
+      RooArgList vars;
+      for (const auto &d : p["vars"].children()) {
+         std::string objname(RooJSONFactoryWSTool::name(d));
+         RooRealVar *obj = tool->request<RooRealVar>(objname, name);
+         vars.add(*obj);
+      }
+
+      std::vector<double> high;
+      high << p["high"];
+
+      std::vector<double> low;
+      high << p["low"];
+
+      RooStats::HistFactory::FlexibleInterpVar fip(name.c_str(), name.c_str(), vars, nom, low, high);
+
+      if (p.has_child("interpolationCodes")) {
+         for (size_t i = 0; i < vars.size(); ++i) {
+            fip.setInterpCode(*static_cast<RooAbsReal *>(vars.at(i)), p["interpolationCodes"][i].val_int());
+         }
+      }
+
+      tool->workspace()->import(fip, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
 };
@@ -937,6 +984,7 @@ STATIC_EXECUTE(
 
    registerImporter<RooRealSumPdfFactory>("histfactory", true);
    registerImporter<PiecewiseInterpolationFactory>("interpolation", true);
+   registerImporter<FlexibleInterpVarFactory>("interpolation0d", true);
    registerExporter<FlexibleInterpVarStreamer>(RooStats::HistFactory::FlexibleInterpVar::Class(), true);
    registerExporter<PiecewiseInterpolationStreamer>(PiecewiseInterpolation::Class(), true);
    registerExporter<HistFactoryStreamer>(RooProdPdf::Class(), true);
