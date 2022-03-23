@@ -97,7 +97,7 @@ The minimal HTML/JavaScript code, which establish connection with the server, lo
           receiver: {
               onWebsocketOpened: function(handle) {
                   console.log('Connected');
-                  handle.Send("Init msg from client");
+                  handle.send("Init msg from client");
               },
               onWebsocketMsg: function(handle, msg) {
                   console.log('Get message ' + msg);
