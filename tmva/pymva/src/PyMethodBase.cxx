@@ -408,8 +408,12 @@ const char* PyMethodBase::PyStringAsString(PyObject* string){
 std::vector<size_t> PyMethodBase::GetDataFromTuple(PyObject* tupleObject){
    std::vector<size_t>tupleVec;
    for(Py_ssize_t tupleIter=0;tupleIter<PyTuple_Size(tupleObject);++tupleIter){
-               tupleVec.push_back((size_t)PyLong_AsLong(PyTuple_GetItem(tupleObject,tupleIter)));
-         }
+      auto itemObj = PyTuple_GetItem(tupleObject,tupleIter);
+      if (itemObj == Py_None)
+         tupleVec.push_back(0);  // case shape is for example (None,2,3)
+      else
+         tupleVec.push_back((size_t)PyLong_AsLong(itemObj));
+   }
    return tupleVec;
 }
 
