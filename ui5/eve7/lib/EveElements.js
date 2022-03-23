@@ -345,10 +345,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
       let mesh = new THREE.Mesh(body, boxMaterial);
       let geo_rim = new THREE.BufferGeometry();
 
-      geo_rim.setAttribute('position', vBuff);
+      geo_rim.setAttribute('position', new THREE.BufferAttribute( vBuff, 3 ));
 
       let nTrigs      = 6 * 2;
-      let nSegs       = 6 * 2 * 3;
       let nIdcsTrings = 6 * 2 * 3 * 2;
       let idcs = new Uint16Array(nIdcsTrings);
       for (let i = 0; i < nTrigs; ++i)
