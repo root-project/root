@@ -313,23 +313,23 @@ We can then book the DL method using the built option string
       m.AddLine("model.add(Dense(64, activation='relu'))");
       m.AddLine("model.add(Dense(64, activation='relu'))");
       m.AddLine("model.add(Dense(2, activation='sigmoid'))");
-      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(lr = 0.001), metrics = ['accuracy'])");
-      m.AddLine("model.save('model_dense.h5')");
+      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), metrics = ['accuracy'])");
+      m.AddLine("model.save('Higgs_model.h5')");
       m.AddLine("model.summary()");
 
-      m.SaveSource("make_dense_model.py");
+      m.SaveSource("make_higgs_model.py");
       // execute
-      gSystem->Exec(TMVA::Python_Executable() + " make_dense_model.py");
+      gSystem->Exec(TMVA::Python_Executable() + " make_higgs_model.py");
 
-      if (gSystem->AccessPathName("model_dense.h5")) {
+      if (gSystem->AccessPathName("Higgs_model.h5")) {
          Warning("TMVA_Higgs_Classification", "Error creating Keras model file - skip using Keras");
       } else {
          // book PyKeras method only if Keras model could be created
          Info("TMVA_Higgs_Classification", "Booking tf.Keras Dense model");
          factory.BookMethod(
             loader, TMVA::Types::kPyKeras, "PyKeras",
-            "H:!V:VarTransform=None:FilenameModel=model_dense.h5:tf.keras:"
-            "FilenameTrainedModel=trained_model_dense.h5:NumEpochs=20:BatchSize=100:"
+            "H:!V:VarTransform=None:FilenameModel=Higgs_model.h5:tf.keras:"
+            "FilenameTrainedModel=Higgs_trained_model.h5:NumEpochs=20:BatchSize=100:"
             "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
       }
    }
