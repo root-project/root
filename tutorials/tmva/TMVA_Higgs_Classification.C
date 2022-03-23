@@ -39,12 +39,21 @@ void TMVA_Higgs_Classification() {
    bool useLikelihoodKDE = false;    // likelihood based discriminant
    bool useFischer = true;       // Fischer discriminant
    bool useMLP = false;          // Multi Layer Perceptron (old TMVA NN implementation)
-   bool useBDT = true;           // BOosted Decision Tree
+   bool useBDT = true;           // Boosted Decision Tree
    bool useDL = true;            // TMVA Deep learning ( CPU or GPU)
-
-
+   bool useKeras = true;        // Keras Deep learning
+   bool usePyTorch = true;      // PyTorch Deep learning
 
    TMVA::Tools::Instance();
+
+#ifdef R__HAS_PYMVA
+   gSystem->Setenv("KERAS_BACKEND", "tensorflow");
+   // for using Keras
+   TMVA::PyMethodBase::PyInitialize();
+#else
+   useKeras = false;
+   usePyTorch = false;
+#endif
 
    auto outputFile = TFile::Open("Higgs_ClassificationOutput.root", "RECREATE");
 
@@ -284,7 +293,45 @@ We can then book the DL method using the built option string
       }
 
       factory.BookMethod(loader, TMVA::Types::kDL, dnnMethodName, dnnOptions);
+   }
 
+   // Keras deep learning
+   if (useKeras) {
+
+      Info("TMVA_Higgs_Classification", "Building deep neural network with keras ");
+      // create python script which can be executed
+      // create 2 conv2d layer + maxpool + dense
+      TMacro m;
+      m.AddLine("import tensorflow");
+      m.AddLine("from tensorflow.keras.models import Sequential");
+      m.AddLine("from tensorflow.keras.optimizers import Adam");
+      m.AddLine("from tensorflow.keras.layers import Input, Dense");
+      m.AddLine("");
+      m.AddLine("model = Sequential() ");
+      m.AddLine("model.add(Dense(64, activation='relu',input_dim=7))");
+      m.AddLine("model.add(Dense(64, activation='relu'))");
+      m.AddLine("model.add(Dense(64, activation='relu'))");
+      m.AddLine("model.add(Dense(64, activation='relu'))");
+      m.AddLine("model.add(Dense(2, activation='sigmoid'))");
+      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(lr = 0.001), metrics = ['accuracy'])");
+      m.AddLine("model.save('model_dense.h5')");
+      m.AddLine("model.summary()");
+
+      m.SaveSource("make_dense_model.py");
+      // execute
+      gSystem->Exec(TMVA::Python_Executable() + " make_dense_model.py");
+
+      if (gSystem->AccessPathName("model_dense.h5")) {
+         Warning("TMVA_Higgs_Classification", "Error creating Keras model file - skip using Keras");
+      } else {
+         // book PyKeras method only if Keras model could be created
+         Info("TMVA_Higgs_Classification", "Booking tf.Keras Dense model");
+         factory.BookMethod(
+            loader, TMVA::Types::kPyKeras, "PyKeras",
+            "H:!V:VarTransform=None:FilenameModel=model_dense.h5:tf.keras:"
+            "FilenameTrainedModel=trained_model_dense.h5:NumEpochs=20:BatchSize=100:"
+            "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
+      }
    }
 
    /**
