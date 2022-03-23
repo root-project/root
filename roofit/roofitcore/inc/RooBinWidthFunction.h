@@ -25,7 +25,13 @@
 namespace BatchHelpers { struct RunContext; }
 
 class RooBinWidthFunction : public RooAbsReal {
-public:
+  static bool _enabled;
+  
+public:  
+  static void enable();
+  static void disable();
+  static bool enabled();    
+   
   /// Create an empty instance.
   RooBinWidthFunction() :
     _histFunc("HistFuncForBinWidth", "Handle to a RooHistFunc, whose bin volumes should be returned.", this,
