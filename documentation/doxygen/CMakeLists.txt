@@ -272,7 +272,7 @@ if(BUILD_DOCUMENTATION)
         #~ )
 
         add_custom_target(Finalization ALL
-            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} ./listlibs.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} ./listlibs.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
             COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
         )
