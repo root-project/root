@@ -592,6 +592,9 @@ endforeach()
 #---Python tutorials-----------------------------------------------------
 if(ROOT_pyroot_FOUND)
 
+  # Copy .rootlogon.py file into the build directory. It disables graphics for the Python tutorials
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/.rootlogon.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+
   file(GLOB_RECURSE pytutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.py)
 
   # Now python-specific vetos:
@@ -762,7 +765,7 @@ if(ROOT_pyroot_FOUND)
     endforeach()
 
     ROOT_ADD_TEST(${tutorial_name}
-                COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${CMAKE_CURRENT_SOURCE_DIR}/launcher.py ${CMAKE_CURRENT_SOURCE_DIR}/${t}
+                COMMAND ${PYTHON_EXECUTABLE_Development_Main} ${CMAKE_CURRENT_SOURCE_DIR}/${t}
                 PASSRC ${rc} FAILREGEX "Error in" ": error:" "segmentation violation"
                 LABELS ${labels}
                 DEPENDS ${${tname}-depends}
