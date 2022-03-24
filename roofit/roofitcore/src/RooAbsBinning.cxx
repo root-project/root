@@ -26,7 +26,6 @@ This class defines the interface to retrieve bin boundaries, ranges etc.
 #include "RooAbsBinning.h"
 
 #include "RooAbsReal.h"
-#include "RooFit.h"
 #include "TBuffer.h"
 #include "TClass.h"
 

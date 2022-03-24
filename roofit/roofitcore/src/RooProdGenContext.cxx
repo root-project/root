@@ -25,7 +25,6 @@ component generator contexts that are used to generate the dependents
 for each component PDF sequentially.
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 #include "RooMsgService.h"
 

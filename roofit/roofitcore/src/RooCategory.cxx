@@ -73,7 +73,6 @@ for advanced uses of categories.
 
 #include "RooCategory.h"
 
-#include "RooFit.h"
 #include "RooArgSet.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"

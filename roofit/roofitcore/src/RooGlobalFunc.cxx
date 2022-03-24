@@ -18,7 +18,6 @@
 
 #include "RooGlobalFunc.h"
 
-#include "RooFit.h"
 #include "RooCategory.h"
 #include "RooRealConstant.h"
 #include "RooDataSet.h"

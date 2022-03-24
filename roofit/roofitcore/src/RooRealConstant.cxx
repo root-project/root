@@ -30,8 +30,6 @@ RooRealConstant keeps an internal database of previously created
 RooRealVar objects and will recycle them as appropriate.
 **/
 
-#include "RooFit.h"
-
 #include <math.h>
 #include <sstream>
 #include "RooRealConstant.h"

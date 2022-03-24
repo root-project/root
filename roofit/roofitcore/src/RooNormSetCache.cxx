@@ -31,7 +31,6 @@ evaluates each RooArgSet pointer once, it therefore assumes that
 RooArgSets with normalization and/or integration sets are not changes
 during their lifetime.
 **/
-#include "RooFit.h"
 
 #include "RooNormSetCache.h"
 #include "RooArgSet.h"

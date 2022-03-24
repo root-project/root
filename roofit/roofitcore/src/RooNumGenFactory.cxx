@@ -31,8 +31,6 @@ the preference of the caller as encoded in the configuration object.
 #include "TClass.h"
 #include "Riostream.h"
 
-#include "RooFit.h"
-
 #include "RooNumGenFactory.h"
 #include "RooArgSet.h"
 #include "RooAbsFunc.h"

@@ -21,7 +21,6 @@
 /// generator that is smarter than accept reject.
 ///
 
-#include "RooFit.h"
 #include "RooEffProd.h"
 #include "RooEffGenContext.h"
 #include "RooNameReg.h"

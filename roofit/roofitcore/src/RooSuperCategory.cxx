@@ -31,7 +31,6 @@ supercategory will propagate to its input categories.
 
 #include "RooSuperCategory.h"
 
-#include "RooFit.h"
 #include "Riostream.h"
 #include "RooStreamParser.h"
 #include "RooArgSet.h"

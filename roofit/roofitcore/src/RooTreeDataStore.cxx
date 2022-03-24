@@ -44,7 +44,6 @@ RooAbsData::convertToVectorStore().
 
 #include "RooTreeDataStore.h"
 
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"

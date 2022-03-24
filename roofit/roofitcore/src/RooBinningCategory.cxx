@@ -28,7 +28,6 @@ the inputVar. The name of this binning is passed in the constructor.
 
 #include "RooBinningCategory.h"
 
-#include "RooFit.h"
 #include "Riostream.h"
 #include "RooStreamParser.h"
 

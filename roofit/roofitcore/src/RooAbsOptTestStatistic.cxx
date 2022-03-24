@@ -35,8 +35,6 @@ Support for calculation in partitions is needed to allow multi-core
 parallelized calculation of test statistics.
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TClass.h"
 #include <string.h>

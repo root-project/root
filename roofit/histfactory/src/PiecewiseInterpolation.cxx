@@ -20,8 +20,6 @@
 
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TBuffer.h"
 

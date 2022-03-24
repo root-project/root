@@ -27,8 +27,6 @@ storage of common components, such as the observables definition, the
 prototype data etc..
 **/
 
-#include "RooFit.h"
-
 #include "TClass.h"
 
 #include "RooAbsGenContext.h"

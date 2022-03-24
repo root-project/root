@@ -26,7 +26,6 @@ repeated applications of generate-and-fit operations on a workspace
 
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooStudyPackage.h"

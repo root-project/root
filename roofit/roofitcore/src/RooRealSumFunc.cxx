@@ -33,7 +33,6 @@
 ///   is computed automatically, unless the PDF is extended (see above).
 /// - RooRealSumFunc is a sum of functions. It is neither normalised, nor need it be positive.
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "TIterator.h"

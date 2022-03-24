@@ -26,7 +26,6 @@ the generated code on the fly, and on request also immediate
 instantiate objects.
 **/
 
-#include "RooFit.h"
 #include "TClass.h"
 #include "RooClassFactory.h"
 #include "RooErrorHandler.h"

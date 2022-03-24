@@ -25,7 +25,6 @@ normalized by RooHistPdf and can have an arbitrary number of real or
 discrete dimensions.
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooHistPdf.h"

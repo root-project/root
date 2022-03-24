@@ -24,7 +24,6 @@ Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IGenFun
 **/
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooGenFunction.h"

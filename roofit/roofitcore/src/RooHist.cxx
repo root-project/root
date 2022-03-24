@@ -25,8 +25,6 @@ or Binomial statistics. A RooHist is used to represent histograms in
 a RooPlot.
 **/
 
-#include "RooFit.h"
-
 #include "RooHist.h"
 #include "RooHistError.h"
 #include "RooCurve.h"

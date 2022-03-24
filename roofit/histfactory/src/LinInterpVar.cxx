@@ -15,8 +15,6 @@
  * RooAbsReal that does piecewise-linear interpolations.
  */
 
-#include "RooFit.h"
-
 #include <iostream>
 #include <cmath>
 

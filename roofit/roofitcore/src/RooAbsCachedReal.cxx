@@ -31,7 +31,6 @@ for changes to trigger a refilling of the cache histogram.
 #include "Riostream.h"
 using namespace std ;
 
-#include "RooFit.h"
 #include "TString.h"
 #include "RooAbsCachedReal.h"
 #include "RooAbsReal.h"

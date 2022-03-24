@@ -35,7 +35,6 @@ configurations can be cached.
 **/
 //
 
-#include "RooFit.h"
 #include <vector>
 #include "RooCacheManager.h"
 

@@ -23,7 +23,6 @@ Class RooSharedProperties is the base class for shared properties
 that can be stored in RooSharedPropertiesList.
 **/
 
-#include "RooFit.h"
 #include "RooSharedProperties.h"
 #include "RooMsgService.h"
 #include "RooTrace.h"

@@ -414,8 +414,6 @@
 ///
 
 
-#include "RooFit.h"
-
 #include <cstring>
 #include "strtok.h"
 

@@ -24,8 +24,6 @@ factor to another RooAbsFunc.
 **/
 
 
-#include "RooFit.h"
-
 #include "RooScaledFunc.h"
 
 using namespace std;

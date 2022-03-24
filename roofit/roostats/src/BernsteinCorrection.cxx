@@ -50,7 +50,6 @@ generating the toys (either via a histogram or via an independent model that is 
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooAbsPdf.h"
-#include "RooFit.h"
 #include "RooFitResult.h"
 #include "TMath.h"
 #include <string>
