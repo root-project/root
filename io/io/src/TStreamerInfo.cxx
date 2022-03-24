@@ -2607,6 +2607,11 @@ void TStreamerInfo::Clear(Option_t *option)
       ResetIsCompiled();
       ResetBit(kBuildOldUsed);
 
+      TIter next(fElements);
+      while (auto element = (TStreamerElement*)next()) {
+         element->SetOffset(0);
+      }
+
       if (fReadObjectWise) fReadObjectWise->fActions.clear();
       if (fReadMemberWise) fReadMemberWise->fActions.clear();
       if (fReadMemberWiseVecPtr) fReadMemberWiseVecPtr->fActions.clear();
