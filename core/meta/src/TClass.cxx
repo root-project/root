@@ -5981,6 +5981,26 @@ void TClass::PostLoadCheck()
          }
       }
    }
+   if (fCollectionProxy) {
+      // Update the related pair's TClass if it has already been created.
+      size_t noffset = 0;
+      if (strncmp(GetName(), "map<", 4) == 0)
+         noffset = 3;
+      else if (strncmp(GetName(), "multimap<", 9) == 0)
+         noffset = 8;
+      if (noffset) {
+         std::string pairname("pair");
+         pairname.append(GetName() + noffset);
+         if ( auto pcl = TClass::GetClass(pairname.c_str(), false, false) )
+         {
+            TIter next(pcl->GetStreamerInfos());
+            while (auto info = (TVirtualStreamerInfo*)next()) {
+               info->Clear("build");
+            }
+            fCollectionProxy->GetValueClass();
+         }
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
