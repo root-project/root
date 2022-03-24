@@ -22,8 +22,6 @@ Class RooBreitWigner is a RooAbsPdf implementation
 that models a non-relativistic Breit-Wigner shape
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 

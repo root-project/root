@@ -34,7 +34,6 @@ setting the states.
 
 #include "RooMultiCategory.h"
 
-#include "RooFit.h"
 #include "RooStreamParser.h"
 #include "RooArgSet.h"
 #include "RooAbsCategory.h"

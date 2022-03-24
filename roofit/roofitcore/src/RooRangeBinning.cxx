@@ -24,8 +24,6 @@ but no binning. It it used to store named ranges created by
 the RooRealVar::setRange() method
 **/
 
-#include "RooFit.h"
-
 #include "RooNumber.h"
 #include "RooMsgService.h"
 #include "Riostream.h"

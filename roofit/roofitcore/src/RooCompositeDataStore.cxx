@@ -30,7 +30,6 @@ When iterated from start to finish, datasets will be traversed in the order of t
 
 #include "RooCompositeDataStore.h"
 
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"

@@ -28,8 +28,6 @@ but are not automatically destroyed at the end of the session. This class
 installs an atexit() function that takes care of this
 **/
 
-#include "RooFit.h"
-
 #include "RooSentinel.h"
 #include "RooArgSet.h"
 #include "RooRealConstant.h"

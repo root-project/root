@@ -24,8 +24,6 @@ of CP violation, mixing and life time differences. This function can
 be analytically convolved with any RooResolutionModel implementation
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TMath.h"
 #include "RooBDecay.h"

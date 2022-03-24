@@ -58,8 +58,6 @@ calls that MINUIT needs to fit your function as function of the
 convolution precision.
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TH2F.h"
 #include "RooNumConvPdf.h"

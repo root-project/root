@@ -43,7 +43,6 @@ the names of the arguments are not hard coded.
 **/
 
 #include "RooGenericPdf.h"
-#include "RooFit.h"
 #include "Riostream.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"

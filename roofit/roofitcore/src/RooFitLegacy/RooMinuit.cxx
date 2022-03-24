@@ -39,8 +39,6 @@ automatic PDF optimization.
 
 #include "RooFitLegacy/RooMinuit.h"
 
-#include "RooFit.h"
-
 #include "TClass.h"
 
 #include <iostream>

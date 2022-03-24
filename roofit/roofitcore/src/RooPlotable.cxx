@@ -24,8 +24,6 @@ advantage of its internal normalization and axis range adjustment features. The
 most useful implementation of RooPlotable are RooHist and RooCurve.
 **/
 
-#include "RooFit.h"
-
 #include "RooPlotable.h"
 #include "TObject.h"
 #include "Riostream.h"

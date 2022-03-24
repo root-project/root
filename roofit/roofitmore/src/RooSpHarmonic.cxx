@@ -46,7 +46,6 @@ integrals, using the orthogonality properties of \f$Y_l^m\f$...
 
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 #include <math.h>
 

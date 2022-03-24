@@ -39,7 +39,6 @@ number of expected events of an extended p.d.f
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "TString.h"
-#include "RooFit.h"
 #include "RooFitResult.h"
 #include "RooAddition.h"
 #include "RooMsgService.h"

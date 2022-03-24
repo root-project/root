@@ -30,7 +30,6 @@ plot option.
 
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooDataWeightedAverage.h"

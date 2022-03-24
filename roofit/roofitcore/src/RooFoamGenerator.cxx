@@ -35,8 +35,6 @@ Access those using:
 \see rf902_numgenconfig.C
 **/
 
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooFoamGenerator.h"

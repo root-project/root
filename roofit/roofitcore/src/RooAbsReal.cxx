@@ -34,8 +34,6 @@
 
 #include <sys/types.h>
 
-
-#include "RooFit.h"
 #include "RooFitDriver.h"
 #include "RooMsgService.h"
 

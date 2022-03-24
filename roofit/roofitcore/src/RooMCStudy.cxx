@@ -50,9 +50,6 @@ Check the RooFit tutorials
 for usage examples.
 **/
 
-
-
-#include "RooFit.h"
 #include "snprintf.h"
 #include <iostream>
 

@@ -22,8 +22,6 @@ Two-dimensional kernel estimation PDF.
 <b>This function has been superseded by the more general RooNDKeysPdf.</b>
 */
 
-#include "RooFit.h"
-
 #include "Roo2DKeysPdf.h"
 #include "RooRealVar.h"
 #include "TTree.h"

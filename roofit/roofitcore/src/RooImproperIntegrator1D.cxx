@@ -24,9 +24,6 @@ To this end the range is cut in up three pieces: [-inf,-1],[-1,+1] and [+1,inf]
 and the outer two pieces, if required are calculated using a 1/x transform
 **/
 
-
-#include "RooFit.h"
-
 #include "RooImproperIntegrator1D.h"
 #include "RooIntegrator1D.h"
 #include "RooInvTransform.h"

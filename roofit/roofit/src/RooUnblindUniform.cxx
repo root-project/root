@@ -29,8 +29,6 @@ the error of the blind parameter is identical to that
 of the original parameter.
 **/
 
-#include "RooFit.h"
-
 #include "RooArgSet.h"
 #include "RooUnblindUniform.h"
 

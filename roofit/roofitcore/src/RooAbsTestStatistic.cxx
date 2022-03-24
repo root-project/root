@@ -36,7 +36,6 @@ combined in the main thread.
 
 #include "RooAbsTestStatistic.h"
 
-#include "RooFit.h"
 #include "RooAbsPdf.h"
 #include "RooSimultaneous.h"
 #include "RooAbsData.h"

@@ -24,8 +24,6 @@ occur in a slice defined by the bin coordinates of the input
 sliceSet.
 **/
 
-#include "RooFit.h"
-
 #include "RooDataHist.h"
 #include "RooArgSet.h"
 #include "RooAbsLValue.h"

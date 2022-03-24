@@ -36,8 +36,6 @@
 ///
 ///
 
-#include "RooFit.h"
-
 #include <cmath>
 
 #include "TClass.h"

@@ -30,8 +30,6 @@ integration is performed in the various implementations of the RooAbsIntegrator 
 
 #include "RooRealIntegral.h"
 
-#include "RooFit.h"
-
 #include "RooMsgService.h"
 #include "RooArgSet.h"
 #include "RooAbsRealLValue.h"

@@ -23,8 +23,6 @@
 Lightweight interface adaptor that exports a RooAbsPdf as a functor.
 **/
 
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooFunctor.h"

@@ -28,7 +28,6 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 **/
 
 #include "RooBukinPdf.h"
-#include "RooFit.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
 #include "RooBatchCompute.h"

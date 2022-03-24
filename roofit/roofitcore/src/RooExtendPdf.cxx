@@ -35,7 +35,6 @@ is the set of remaining dependents.
 the nominal integration range \f$ \mathrm{normRegion}[x] \f$.
 */
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooExtendPdf.h"

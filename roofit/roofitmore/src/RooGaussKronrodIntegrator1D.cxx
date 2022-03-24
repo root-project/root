@@ -39,10 +39,6 @@ Scientific Library version 1.5 and applies the 10-, 21-, 43- and
 reached
 **/
 
-
-
-#include "RooFit.h"
-
 #include <assert.h>
 #include <math.h>
 #include <float.h>

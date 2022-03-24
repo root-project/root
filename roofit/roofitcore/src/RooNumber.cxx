@@ -22,7 +22,6 @@
 Class RooNumber implements numeric constants used by RooFit
 **/
 
-#include "RooFit.h"
 #include "RooNumber.h"
 
 using namespace std;

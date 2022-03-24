@@ -24,7 +24,6 @@ numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
 use this class in the (normalization) integral configuration interface
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooNumGenConfig.h"

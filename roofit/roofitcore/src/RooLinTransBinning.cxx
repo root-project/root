@@ -24,9 +24,6 @@ that transforms the binning of the RooLinearVar input variable in the same
 way that RooLinearVar does
 **/
 
-
-#include "RooFit.h"
-
 #include "RooLinTransBinning.h"
 
 using namespace std;

@@ -45,7 +45,6 @@
 ///
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooFormulaVar.h"

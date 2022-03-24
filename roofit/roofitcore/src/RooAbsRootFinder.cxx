@@ -23,8 +23,6 @@ RooAbsRootFinder is the abstract interface for finding roots of real-valued
 1-dimensional function that implements the RooAbsFunc interface.
 **/
 
-#include "RooFit.h"
-
 #include "RooAbsRootFinder.h"
 #include "RooAbsFunc.h"
 #include "RooMsgService.h"

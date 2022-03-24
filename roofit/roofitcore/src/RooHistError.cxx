@@ -24,8 +24,6 @@ for each bin of a RooHist object. Errors are calculated by integrating
 a specified area of a Poisson or Binomail error distribution.
 **/
 
-#include "RooFit.h"
-
 #include "RooHistError.h"
 #include "RooBrentRootFinder.h"
 #include "RooMsgService.h"
