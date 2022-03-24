@@ -113,7 +113,7 @@ template <typename T>
 using Results = std::conditional_t<std::is_same<T, bool>::value, std::deque<T>, std::vector<T>>;
 
 template <typename F>
-class ForeachSlotHelper : public RActionImpl<ForeachSlotHelper<F>> {
+class R__CLING_PTRCHECK(off) ForeachSlotHelper : public RActionImpl<ForeachSlotHelper<F>> {
    F fCallable;
 
 public:
@@ -139,7 +139,7 @@ public:
    std::string GetActionName() { return "ForeachSlot"; }
 };
 
-class CountHelper : public RActionImpl<CountHelper> {
+class R__CLING_PTRCHECK(off) CountHelper : public RActionImpl<CountHelper> {
    const std::shared_ptr<ULong64_t> fResultCount;
    Results<ULong64_t> fCounts;
 
@@ -171,7 +171,7 @@ public:
 };
 
 template <typename ProxiedVal_t>
-class ReportHelper : public RActionImpl<ReportHelper<ProxiedVal_t>> {
+class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<ProxiedVal_t>> {
    const std::shared_ptr<RCutFlowReport> fReport;
    // Here we have a weak pointer since we need to keep track of the validity
    // of the proxied node. It can happen that the user does not trigger the
@@ -208,7 +208,7 @@ public:
 /// thread, making it impossible to merge the per-thread results.
 /// Instead, this helper delays the decision on the axes limits until all threads have done processing, synchronizing
 /// the decision on the limits as part of the merge operation.
-class BufferedFillHelper : public RActionImpl<BufferedFillHelper> {
+class R__CLING_PTRCHECK(off) BufferedFillHelper : public RActionImpl<BufferedFillHelper> {
    // this sets a total initial size of 16 MB for the buffers (can increase)
    static constexpr unsigned int fgTotalBufSize = 2097152;
    using BufEl_t = double;
@@ -323,7 +323,7 @@ BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const 
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
-class FillHelper : public RActionImpl<FillHelper<HIST>> {
+class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
 
    void UnsetDirectoryIfPossible(TH1 *h) {
@@ -518,7 +518,7 @@ public:
    }
 };
 
-class FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
+class R__CLING_PTRCHECK(off) FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
 public:
    using Result_t = ::TGraph;
 
@@ -607,7 +607,8 @@ public:
    }
 };
 
-class FillTGraphAsymmErrorsHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphAsymmErrorsHelper> {
+class R__CLING_PTRCHECK(off) FillTGraphAsymmErrorsHelper
+   : public ROOT::Detail::RDF::RActionImpl<FillTGraphAsymmErrorsHelper> {
 public:
    using Result_t = ::TGraphAsymmErrors;
 
@@ -725,7 +726,7 @@ void FillColl(bool v, COLL& c) {
 // Case 1.: The column is not an RVec, the collection is not a vector
 // No optimisations, no transformations: just copies.
 template <typename RealT_t, typename T, typename COLL>
-class TakeHelper : public RActionImpl<TakeHelper<RealT_t, T, COLL>> {
+class R__CLING_PTRCHECK(off) TakeHelper : public RActionImpl<TakeHelper<RealT_t, T, COLL>> {
    Results<std::shared_ptr<COLL>> fColls;
 
 public:
@@ -774,7 +775,8 @@ public:
 // Case 2.: The column is not an RVec, the collection is a vector
 // Optimisations, no transformations: just copies.
 template <typename RealT_t, typename T>
-class TakeHelper<RealT_t, T, std::vector<T>> : public RActionImpl<TakeHelper<RealT_t, T, std::vector<T>>> {
+class R__CLING_PTRCHECK(off) TakeHelper<RealT_t, T, std::vector<T>>
+   : public RActionImpl<TakeHelper<RealT_t, T, std::vector<T>>> {
    Results<std::shared_ptr<std::vector<T>>> fColls;
 
 public:
@@ -826,7 +828,8 @@ public:
 // Case 3.: The column is a RVec, the collection is not a vector
 // No optimisations, transformations from RVecs to vectors
 template <typename RealT_t, typename COLL>
-class TakeHelper<RealT_t, RVec<RealT_t>, COLL> : public RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, COLL>> {
+class R__CLING_PTRCHECK(off) TakeHelper<RealT_t, RVec<RealT_t>, COLL>
+   : public RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, COLL>> {
    Results<std::shared_ptr<COLL>> fColls;
 
 public:
@@ -870,7 +873,7 @@ public:
 // Case 4.: The column is an RVec, the collection is a vector
 // Optimisations, transformations from RVecs to vectors
 template <typename RealT_t>
-class TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>
+class R__CLING_PTRCHECK(off) TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>
    : public RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>> {
 
    Results<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
@@ -944,9 +947,8 @@ extern template class TakeHelper<float, float, std::vector<float>>;
 extern template class TakeHelper<double, double, std::vector<double>>;
 #endif
 
-
 template <typename ResultType>
-class MinHelper : public RActionImpl<MinHelper<ResultType>> {
+class R__CLING_PTRCHECK(off) MinHelper : public RActionImpl<MinHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultMin;
    Results<ResultType> fMins;
 
@@ -1002,7 +1004,7 @@ public:
 // extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename ResultType>
-class MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
+class R__CLING_PTRCHECK(off) MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultMax;
    Results<ResultType> fMaxs;
 
@@ -1059,7 +1061,7 @@ public:
 // extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename ResultType>
-class SumHelper : public RActionImpl<SumHelper<ResultType>> {
+class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
    const std::shared_ptr<ResultType> fResultSum;
    Results<ResultType> fSums;
 
@@ -1122,7 +1124,7 @@ public:
    }
 };
 
-class MeanHelper : public RActionImpl<MeanHelper> {
+class R__CLING_PTRCHECK(off) MeanHelper : public RActionImpl<MeanHelper> {
    const std::shared_ptr<double> fResultMean;
    std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
@@ -1172,7 +1174,7 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-class StdDevHelper : public RActionImpl<StdDevHelper> {
+class R__CLING_PTRCHECK(off) StdDevHelper : public RActionImpl<StdDevHelper> {
    // Number of subsets of data
    const unsigned int fNSlots;
    const std::shared_ptr<double> fResultStdDev;
@@ -1227,7 +1229,7 @@ extern template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename PrevNodeType>
-class DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
+class R__CLING_PTRCHECK(off) DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
 private:
    using Display_t = ROOT::RDF::RDisplay;
    const std::shared_ptr<Display_t> fDisplayerHelper;
@@ -1397,7 +1399,7 @@ void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &tre
 
 /// Helper object for a single-thread Snapshot action
 template <typename... ColTypes>
-class SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
+class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
    const std::string fFileName;
    const std::string fDirName;
    const std::string fTreeName;
@@ -1521,7 +1523,7 @@ public:
 
 /// Helper object for a multi-thread Snapshot action
 template <typename... ColTypes>
-class SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
+class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
    const unsigned int fNSlots;
    std::unique_ptr<ROOT::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
@@ -1681,7 +1683,8 @@ public:
 
 template <typename Acc, typename Merge, typename R, typename T, typename U,
           bool MustCopyAssign = std::is_same<R, U>::value>
-class AggregateHelper : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, MustCopyAssign>> {
+class R__CLING_PTRCHECK(off) AggregateHelper
+   : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, MustCopyAssign>> {
    Acc fAggregate;
    Merge fMerge;
    const std::shared_ptr<U> fResult;

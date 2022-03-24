@@ -23,7 +23,7 @@ class RMergeableValueBase;
 
 /// Base class for action helpers, see RInterface::Book() for more information.
 template <typename Helper>
-class RActionImpl {
+class R__CLING_PTRCHECK(off) RActionImpl {
 public:
    virtual ~RActionImpl() = default;
    // call Helper::FinalizeTask if present, do nothing otherwise
