@@ -53,7 +53,7 @@ public:
 
   ~RooNLLVar() override;
 
-  void applyWeightSquared(Bool_t flag) ;
+  void applyWeightSquared(bool flag) override;
 
   Double_t defaultErrorLevel() const override { return 0.5 ; }
 
