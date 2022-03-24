@@ -470,11 +470,11 @@ void ReadWriteCarray(const char *outFileNameBase)
    auto size = 0;
    int v[maxArraySize];
    bool vb[maxArraySize];
-   long int vl[maxArraySize];
+   long long int vl[maxArraySize];
    t.Branch("size", &size, "size/I");
    t.Branch("v", v, "v[size]/I");
    t.Branch("vb", vb, "vb[size]/O");
-   t.Branch("vl", vl, "vl[size]/G");
+   t.Branch("vl", vl, "vl[size]/L");
 
    // Size 1
    size = 1;
@@ -518,7 +518,7 @@ void ReadWriteCarray(const char *outFileNameBase)
       TTreeReader r(treename, &f2);
       TTreeReaderArray<int> rv(r, "v");
       TTreeReaderArray<bool> rvb(r, "vb");
-      TTreeReaderArray<long int> rvl(r, "vl");
+      TTreeReaderArray<long long int> rvl(r, "vl");
 
       // Size 1
       EXPECT_TRUE(r.Next());
@@ -571,7 +571,7 @@ void ReadWriteCarray(const char *outFileNameBase)
 
    const auto outfname2 = outFileNameBaseStr + "_out2.root";
    RDataFrame(treename, fname)
-      .Snapshot<int, RVec<int>, RVec<bool>, RVec<long int>>(treename, outfname2, {"size", "v", "vb", "vl"});
+      .Snapshot<int, RVec<int>, RVec<bool>, RVec<long long int>>(treename, outfname2, {"size", "v", "vb", "vl"});
    outputChecker(outfname2.c_str());
 
    gSystem->Unlink(fname.c_str());
