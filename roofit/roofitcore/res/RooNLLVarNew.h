@@ -26,6 +26,11 @@ namespace Experimental {
 class RooNLLVarNew : public RooAbsReal {
 
 public:
+   // The names for the weight variables that the RooNLLVarNew expects
+   static constexpr auto weightVarName = "_weight";
+   static constexpr auto weightVarNameSumW2 = "_weight_sumW2";
+   static constexpr auto weightVarNameSumW2Suffix = "_sumW2";
+
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, RooAbsReal *weight,
                 bool isExtended, std::string const &rangeName);
@@ -41,13 +46,17 @@ public:
    void computeBatch(cudaStream_t *, double *output, size_t nOut, RooBatchCompute::DataMap &) const override;
    inline bool isReducerNode() const override { return true; }
 
+   RooArgSet prefixObservableAndWeightNames(std::string const &prefix);
+
+   void applyWeightSquared(bool flag) override;
+
+protected:
    void setObservables(RooArgSet const &observables)
    {
       _observables.clear();
       _observables.add(observables);
    }
 
-protected:
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
    std::unique_ptr<RooTemplateProxy<RooAbsReal>> _weight;
