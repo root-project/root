@@ -1309,31 +1309,17 @@ int RooAbsPdf::calcAsymptoticCorrectedCovariance(RooMinimizer &minimizer, RooAbs
 ///            matrix caltulated here will be applied to it via
 ///            RooMinimizer::applyCovarianceMatrix().
 /// \param[in] nll The NLL object that was used for the fit.
-int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal const &nll) const
+int RooAbsPdf::calcSumW2CorrectedCovariance(RooMinimizer &minimizer, RooAbsReal &nll) const
 {
-
-   // Make list of RooNLLVar components of FCN
-   std::vector<RooNLLVar *> nllComponents;
-   std::unique_ptr<RooArgSet> comps{nll.getComponents()};
-   for (auto const &arg : *comps) {
-      if (RooNLLVar *nllComp = dynamic_cast<RooNLLVar *>(arg)) {
-         nllComponents.push_back(nllComp);
-      }
-   }
-
    // Calculated corrected errors for weighted likelihood fits
    std::unique_ptr<RooFitResult> rw{minimizer.save()};
-   for (auto &comp : nllComponents) {
-      comp->applyWeightSquared(true);
-   }
+   nll.applyWeightSquared(true);
    coutI(Fitting) << "RooAbsPdf::fitTo(" << this->GetName()
                   << ") Calculating sum-of-weights-squared correction matrix for covariance matrix"
                   << std::endl;
    minimizer.hesse();
    std::unique_ptr<RooFitResult> rw2{minimizer.save()};
-   for (auto &comp : nllComponents) {
-      comp->applyWeightSquared(false);
-   }
+   nll.applyWeightSquared(false);
 
    // Apply correction matrix
    const TMatrixDSym &matV = rw->covarianceMatrix();

@@ -53,9 +53,9 @@ public:
   
   virtual ~RooNLLVar();
 
-  void applyWeightSquared(Bool_t flag) ; 
+  void applyWeightSquared(bool flag);
 
-  virtual Double_t defaultErrorLevel() const { return 0.5 ; }
+  Double_t defaultErrorLevel() const { return 0.5 ; }
 
   void batchMode(bool on = true) {
     _batchEvaluations = on;

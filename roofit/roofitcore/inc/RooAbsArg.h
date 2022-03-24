@@ -596,6 +596,8 @@ public:
   virtual bool canComputeBatchWithCuda() const { return false; }
   virtual bool isReducerNode() const { return false; }
 
+  virtual void applyWeightSquared(bool flag);
+
   operator RooBatchCompute::DataKey() const { return RooBatchCompute::DataKey::create(this->namePtr()); }
 
 protected:
