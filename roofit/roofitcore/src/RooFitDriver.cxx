@@ -40,6 +40,7 @@ and gets destroyed when the fitting ends.
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooBatchCompute/Initialisation.h>
+#include <RooBatchCompute/DataKey.h>
 
 #include <ROOT/StringUtils.hxx>
 
@@ -47,6 +48,19 @@ and gets destroyed when the fitting ends.
 #include <numeric>
 #include <thread>
 #include <unordered_set>
+
+namespace {
+
+// Little wrapper to use a TNamed directly as a RooBatchCompute DataKey
+class NamePtrWrapper {
+public:
+   NamePtrWrapper(TNamed const *namePtr) : _namePtr(namePtr) {}
+   operator RooBatchCompute::DataKey() const { return RooBatchCompute::DataKey::create(_namePtr); }
+
+private:
+   TNamed const *_namePtr;
+};
+} // namespace
 
 namespace ROOT {
 namespace Experimental {
@@ -66,6 +80,7 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
                                RooAbsCategory const *indexCat)
    : _nEvents{static_cast<size_t>(data.numEntries())}
 {
+   auto &nameReg = RooNameReg::instance();
 
    // fill the RunContext with the observable data and map the observables
    // by namePtr in order to replace their memory addresses later, with
@@ -80,7 +95,7 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
    // the data map
    for (auto const &item : data.getCategoryBatches(0, _nEvents)) {
 
-      const TNamed *namePtr = RooNameReg::instance().constPtr(item.first.c_str());
+      const TNamed *namePtr = nameReg.constPtr(item.first.c_str());
       RooSpan<const RooAbsCategory::value_type> intSpan{item.second};
 
       _buffers.emplace(_nEvents);
@@ -92,19 +107,16 @@ RooFitDriver::Dataset::Dataset(RooAbsData const &data, RooArgSet const &observab
       _dataSpans[namePtr] = RooSpan<const double>(buffer, _nEvents);
    }
 
-   // Check if there is a batch for weights and if it's already in the dataMap.
-   // If not, we need to put the batch and give as a key a RooRealVar* that has
-   // the same name as RooNLLVarNew's _weight proxy, so that it gets renamed like
-   // every other observable.
-   RooSpan<const double> weights = data.getWeightBatch(0, _nEvents);
-   if (!weights.empty()) {
-      std::string weightVarName = "_weight";
-      if (auto *dataSet = dynamic_cast<RooDataSet const *>(&data)) {
-         if (dataSet->weightVar())
-            weightVarName = dataSet->weightVar()->GetName();
+   // Add weights to the datamap. They should have the names expected by the
+   // RooNLLVarNew. We also add the sumW2 weights here under a different name,
+   // so we can apply the sumW2 correction by easily swapping the spans.
+   {
+      auto weight = data.getWeightBatch(0, _nEvents, /*sumW2=*/false);
+      auto weightSumW2 = data.getWeightBatch(0, _nEvents, /*sumW2=*/true);
+      if (!weight.empty()) {
+         _dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarName)] = weight;
+         _dataSpans[nameReg.constPtr(RooNLLVarNew::weightVarNameSumW2)] = weightSumW2;
       }
-      const TNamed *pTNamed = RooNameReg::instance().constPtr(weightVarName.c_str());
-      _dataSpans[pTNamed] = weights;
    }
 
    // Now we have do do the range selection
@@ -206,8 +218,8 @@ RooFitDriver::RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, Ro
 }
 
 RooFitDriver::RooFitDriver(RooBatchCompute::RunContext const &data, const RooAbsReal &topNode, RooArgSet const &normSet)
-   : _name{topNode.GetName()}, _title{topNode.GetTitle()},
-     _batchMode{RooFit::BatchModeOption::Cpu}, _dataset{data}, _topNode{topNode}, _normSet{std::make_unique<RooArgSet>(normSet)}
+   : _name{topNode.GetName()}, _title{topNode.GetTitle()}, _batchMode{RooFit::BatchModeOption::Cpu}, _dataset{data},
+     _topNode{topNode}, _normSet{std::make_unique<RooArgSet>(normSet)}
 {
    init();
 }
@@ -259,12 +271,15 @@ void RooFitDriver::init()
       serverSet.add(*arg);
    }
 
+   for (auto const &span : _dataset.spans()) {
+      _dataMapCPU[NamePtrWrapper(span.first)] = span.second;
+   }
+
    for (RooAbsArg *arg : serverSet) {
       _orderedNodes.push_back(arg);
       auto &argInfo = _nodeInfos[arg];
-      if (_dataset.contains(arg)) {
-         _dataMapCPU[arg] = _dataset.span(arg);
-         argInfo.outputSize = _dataset.span(arg).size();
+      if (_dataMapCPU.count(arg) > 0) {
+         argInfo.outputSize = _dataMapCPU[arg].size();
       }
 
       for (auto *client : arg->clients()) {
