@@ -2137,8 +2137,9 @@ void TStreamerInfo::BuildOld()
                if (pattern && pattern != this && pattern->IsBuilt()) {
                   int pair_element_offset = kMissing;
                   pattern->GetStreamerElement(element->GetName(), pair_element_offset);
-                  if (offset != kMissing)
-                     element->SetOffset(offset);
+                  if (pair_element_offset != kMissing) {
+                     element->SetOffset(pair_element_offset);
+                  }
                }
             } else if (strcmp(element->GetName(), "fData") == 0 && strncmp(GetName(), "ROOT::VecOps::RVec", 18) == 0) {
                Error("BuildCheck", "Reading RVecs that were written directly to file before ROOT v6.24 is not "
