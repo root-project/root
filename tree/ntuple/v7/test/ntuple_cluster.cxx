@@ -213,6 +213,7 @@ TEST(ClusterPool, GetClusterBasics)
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
+   c1.WaitForInFlightClusters();
    ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
    EXPECT_EQ(4U, p1.fReqsClusterIds[1]);
@@ -267,11 +268,13 @@ TEST(ClusterPool, GetClusterIncrementally)
    RPageSourceMock p1;
    RClusterPool c1(p1, 1);
    c1.GetCluster(3, {0});
+   c1.WaitForInFlightClusters();
    ASSERT_EQ(2U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[0]);
    EXPECT_EQ(RCluster::ColumnSet_t({0}), p1.fReqsColumns[0]);
 
    c1.GetCluster(3, {1});
+   c1.WaitForInFlightClusters();
    ASSERT_EQ(4U, p1.fReqsClusterIds.size());
    EXPECT_EQ(3U, p1.fReqsClusterIds[2]);
    EXPECT_EQ(RCluster::ColumnSet_t({1}), p1.fReqsColumns[2]);
