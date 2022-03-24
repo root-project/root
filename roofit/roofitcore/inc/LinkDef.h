@@ -105,7 +105,10 @@
 
 
 // Old LinkDef2.h
-#pragma link C++ namespace RooFit ;
+
+// "namespace RooFit" is in roofit/roofit/inc/Linkdef1.h
+// should not be in the dictionary for two different libraries
+// #pragma link C++ namespace RooFit ;
 #pragma link C++ namespace RooFitShortHand ;
 #pragma link C++ class RooDouble+ ;
 #pragma link C++ class RooEffGenContext+ ;
