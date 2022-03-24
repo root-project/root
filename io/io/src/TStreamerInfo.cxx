@@ -2136,8 +2136,9 @@ void TStreamerInfo::BuildOld()
                if (pattern && pattern != this && pattern->IsBuilt()) {
                   int pair_element_offset = kMissing;
                   pattern->GetStreamerElement(element->GetName(), pair_element_offset);
-                  if (offset != kMissing)
-                     element->SetOffset(offset);
+                  if (pair_element_offset != kMissing) {
+                     element->SetOffset(pair_element_offset);
+                  }
                }
             }
          }
