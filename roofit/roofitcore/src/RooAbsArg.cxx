@@ -2545,3 +2545,12 @@ std::string printValue(RooAbsArg *raa)
    return s.str();
 }
 } // namespace cling
+
+
+/// Disables or enables the usage of squared weights. Needs to be overloaded in
+/// the likelihood classes for which this is relevant.
+void RooAbsArg::applyWeightSquared(bool flag) {
+   for(auto * server : servers()) {
+      server->applyWeightSquared(flag);
+   }
+}

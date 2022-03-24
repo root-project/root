@@ -127,6 +127,11 @@ public:
 
       double getValV(const RooArgSet *) const override { return evaluate(); }
 
+      void applyWeightSquared(bool flag) override
+      {
+         const_cast<RooAbsReal &>(_driver->topNode()).applyWeightSquared(flag);
+      }
+
    protected:
       double evaluate() const override { return _driver ? _driver->getVal() : 0.0; }
 

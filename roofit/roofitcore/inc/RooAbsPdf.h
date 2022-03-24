@@ -406,7 +406,7 @@ protected:
 
 private:
   int calcAsymptoticCorrectedCovariance(RooMinimizer& minimizer, RooAbsData const& data);
-  int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal const& nll) const;
+  int calcSumW2CorrectedCovariance(RooMinimizer& minimizer, RooAbsReal & nll) const;
 
   ClassDefOverride(RooAbsPdf,5) // Abstract PDF with normalization support
 };
