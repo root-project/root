@@ -28,7 +28,6 @@ retrieve these precalculated objects.
 
 
 #include "TClass.h"
-#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgSet.h"

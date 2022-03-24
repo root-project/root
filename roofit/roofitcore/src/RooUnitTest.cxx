@@ -34,7 +34,6 @@ Object          | function
    RooWorkspace | regWS()
 **/
 
-#include "RooFit.h"
 #include "RooUnitTest.h"
 #include "TDirectory.h"
 #include "TClass.h"

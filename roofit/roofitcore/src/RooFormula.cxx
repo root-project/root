@@ -58,7 +58,6 @@ Check the tutorial rf506_msgservice.C for details.
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "RunContext.h"
 #include "RooBatchCompute.h"

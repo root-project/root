@@ -24,8 +24,6 @@ to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
 methods that can be used to safely attach and detach one self from a TDirectory
 **/
 
-#include "RooFit.h"
-
 #include <iostream>
 #include "TList.h"
 #include "TDirectoryFile.h"

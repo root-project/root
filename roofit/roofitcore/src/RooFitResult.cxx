@@ -27,8 +27,6 @@
 /// No references to the fitted PDF and dataset are stored
 ///
 
-#include "RooFit.h"
-
 #include <iostream>
 #include <iomanip>
 

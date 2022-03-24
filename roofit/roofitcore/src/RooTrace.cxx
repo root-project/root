@@ -26,8 +26,6 @@ are printed in addition at the construction and destruction of
 each object.
 **/
 
-#include "RooFit.h"
-
 #include "RooTrace.h"
 #include "RooAbsArg.h"
 #include "Riostream.h"

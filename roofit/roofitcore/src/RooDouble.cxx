@@ -23,7 +23,6 @@ RooDouble is a minimal implementation of a TObject holding a Double_t
 value.
 **/
 
-#include "RooFit.h"
 #include "RooDouble.h"
 #include <string>
 

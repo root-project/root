@@ -30,7 +30,6 @@ to other RooAbsArgs must be invertible.
 
 #include "RooAbsCategoryLValue.h"
 
-#include "RooFit.h"
 #include "RooArgSet.h"
 #include "RooRandom.h"
 #include "RooMsgService.h"

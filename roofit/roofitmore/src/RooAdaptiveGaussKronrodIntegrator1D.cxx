@@ -43,8 +43,6 @@ For integrands with integrable singularities the Wynn epsilon rule
 can be selected to speed up the convergence of these integrals.
 **/
 
-#include "RooFit.h"
-
 #include <assert.h>
 #include <stdlib.h>
 #include "TClass.h"

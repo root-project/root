@@ -45,7 +45,6 @@ the following replacements should be used:
 
 #include "RooAbsCategory.h"
 
-#include "RooFit.h"
 #include "RooArgSet.h"
 #include "Roo1DTable.h"
 #include "RooCategory.h"

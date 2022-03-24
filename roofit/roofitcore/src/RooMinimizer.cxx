@@ -40,7 +40,6 @@ automatic PDF optimization.
 
 #include "RooMinimizer.h"
 
-#include "RooFit.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooAbsReal.h"

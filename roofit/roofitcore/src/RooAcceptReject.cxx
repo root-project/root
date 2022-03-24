@@ -26,8 +26,6 @@ classes to take care of generation of observables for which p.d.fs
 do not define internal methods
 **/
 
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooAcceptReject.h"

@@ -30,8 +30,6 @@
 /// ```
 ///
 
-#include "RooFit.h"
-
 #include "RooXYChi2Var.h"
 #include "RooDataSet.h"
 #include "RooAbsReal.h"

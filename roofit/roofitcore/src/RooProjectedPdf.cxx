@@ -29,7 +29,6 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 
 #include "Riostream.h"
 
-#include "RooFit.h"
 #include "RooProjectedPdf.h"
 #include "RooMsgService.h"
 #include "RooAbsReal.h"

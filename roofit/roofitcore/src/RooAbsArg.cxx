@@ -66,8 +66,6 @@ for single nodes.
 
 */
 
-#include "RooFit.h"
-
 #include "TBuffer.h"
 #include "TClass.h"
 #include "TVirtualStreamerInfo.h"

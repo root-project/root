@@ -27,8 +27,6 @@ to the p.d.f if it deems that safe. The other observables are generated
 use a RooAcceptReject sampling technique.
 **/
 
-
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "Riostream.h"
 

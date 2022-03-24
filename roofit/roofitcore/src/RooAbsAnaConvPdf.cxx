@@ -62,7 +62,6 @@
 
 #include "RooAbsAnaConvPdf.h"
 
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "Riostream.h"
 #include "RooResolutionModel.h"

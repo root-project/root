@@ -24,7 +24,6 @@
 
 #include "RooMappedCategory.h"
 
-#include "RooFit.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "Riostream.h"

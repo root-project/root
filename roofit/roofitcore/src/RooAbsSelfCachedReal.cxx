@@ -29,7 +29,6 @@ input.
 
 #include "Riostream.h"
 
-#include "RooFit.h"
 #include "RooAbsSelfCachedReal.h"
 #include "RooAbsReal.h"
 #include "RooMsgService.h"

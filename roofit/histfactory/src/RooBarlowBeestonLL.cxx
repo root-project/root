@@ -24,7 +24,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "RooFit.h"
 #include "RooStats/HistFactory/RooBarlowBeestonLL.h"
 #include "RooAbsReal.h"
 #include "RooAbsData.h"

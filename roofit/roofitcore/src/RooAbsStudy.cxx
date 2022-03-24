@@ -23,9 +23,6 @@ RooAbsStudy is an abstract base class for RooStudyManager modules
 
 **/
 
-
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooAbsStudy.h"

@@ -33,7 +33,6 @@ which returns spans pointing directly to the data.
 
 #include "RooVectorDataStore.h"
 
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "RooTreeDataStore.h"
 #include "RooFormulaVar.h"

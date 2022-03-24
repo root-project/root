@@ -25,8 +25,6 @@ in the two sets.
 **/
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "RooAddition.h"
 #include "RooProduct.h"

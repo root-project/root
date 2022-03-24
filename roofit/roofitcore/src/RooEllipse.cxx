@@ -23,9 +23,6 @@ A RooEllipse is a two-dimensional ellipse that can be used to represent
 an error contour.
 **/
 
-
-#include "RooFit.h"
-
 #include "RooEllipse.h"
 #include "TMath.h"
 #include "RooMsgService.h"

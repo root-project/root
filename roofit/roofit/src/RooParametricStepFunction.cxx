@@ -43,8 +43,6 @@ RooParametricStepFunction  aPdf = ("aPdf","PSF",*x,
 ~~~
 */
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TArrayD.h"
 #include <math.h>

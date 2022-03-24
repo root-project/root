@@ -22,8 +22,6 @@ This function can be analytically convolved with any RooResolutionModel implemen
 */
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"

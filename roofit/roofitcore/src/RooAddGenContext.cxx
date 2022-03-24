@@ -27,9 +27,6 @@ randomly choose one of those context to generate an event,
 with a probability proportional to its associated coefficient.
 **/
 
-
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TClass.h"
 

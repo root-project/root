@@ -23,8 +23,6 @@ RooInt is a minimal implementation of a TObject holding a Int_t
 value.
 **/
 
-#include "RooFit.h"
-
 #include "RooInt.h"
 
 using namespace std;

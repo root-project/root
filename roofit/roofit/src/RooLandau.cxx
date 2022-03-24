@@ -23,7 +23,6 @@ Landau distribution p.d.f
 
 #include "RooLandau.h"
 #include "RooHelpers.h"
-#include "RooFit.h"
 #include "RooRandom.h"
 #include "RooBatchCompute.h"
 

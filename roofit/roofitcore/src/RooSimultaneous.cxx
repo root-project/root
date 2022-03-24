@@ -46,8 +46,6 @@ the relative probability of each category can be calculated from the number of e
 in each category.
 **/
 
-#include "RooFit.h"
-
 #include "RooSimultaneous.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooPlot.h"

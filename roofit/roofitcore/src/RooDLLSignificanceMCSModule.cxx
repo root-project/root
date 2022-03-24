@@ -35,7 +35,6 @@ to test that assumption.
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "TString.h"
-#include "RooFit.h"
 #include "RooFitResult.h"
 #include "RooDLLSignificanceMCSModule.h"
 #include "RooMsgService.h"

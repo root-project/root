@@ -33,7 +33,6 @@ that create and fill these generic containers
 #include "RooCmdArg.h"
 #include "Riostream.h"
 #include "RooArgSet.h"
-#include "RooFit.h"
 
 #include <string>
 #include <iostream>

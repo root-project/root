@@ -24,8 +24,6 @@ in terms of a recursive application of RooIntegrator1D
 **/
 
 
-#include "RooFit.h"
-
 #include "TClass.h"
 #include "RooIntegrator2D.h"
 #include "RooArgSet.h"

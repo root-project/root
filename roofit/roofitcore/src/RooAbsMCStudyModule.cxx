@@ -31,7 +31,6 @@ summaryData() is merged with the 'master' summary dataset in RooMCStudy.
 Look at RooDLLSignificanceMCSModule for an example of an implementation.
 **/
 
-#include "RooFit.h"
 #include "RooAbsMCStudyModule.h"
 
 using namespace std;

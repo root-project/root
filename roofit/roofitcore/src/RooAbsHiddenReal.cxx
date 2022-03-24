@@ -26,8 +26,6 @@ printing methods with versions that do not reveal the objects value
 and it has a protected version of getVal()
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 
 #include "RooArgSet.h"

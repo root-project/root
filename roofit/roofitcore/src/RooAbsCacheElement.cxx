@@ -25,8 +25,6 @@ interface to pass on calls for server redirection, operation mode
 change calls and constant term optimization management calls
 **/
 
-
-#include "RooFit.h"
 #include "RooAbsCacheElement.h"
 #include "RooAbsArg.h"
 #include "RooArgList.h"

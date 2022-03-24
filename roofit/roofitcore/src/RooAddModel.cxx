@@ -43,7 +43,6 @@
 
 #include "RooAddModel.h"
 
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "RooDataSet.h"
 #include "RooRealProxy.h"

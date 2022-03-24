@@ -46,7 +46,6 @@ and try reading again.
 **/
 
 #include "RooWorkspace.h"
-#include "RooFit.h"
 #include "RooWorkspaceHandle.h"
 #include "RooAbsPdf.h"
 #include "RooRealVar.h"

@@ -24,7 +24,6 @@ starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear ter
 **/
 
 #include "RooChebychev.h"
-#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"

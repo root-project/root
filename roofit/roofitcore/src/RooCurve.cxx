@@ -36,8 +36,6 @@ p->Draw();
 To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 **/
 
-#include "RooFit.h"
-
 #include "RooCurve.h"
 #include "RooHist.h"
 #include "RooAbsReal.h"

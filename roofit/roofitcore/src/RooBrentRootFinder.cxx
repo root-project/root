@@ -24,8 +24,6 @@ the Brent-Decker method. This implementation is based on the one
 in the GNU scientific library (v0.99).
 **/
 
-#include "RooFit.h"
-
 #include "RooBrentRootFinder.h"
 #include "RooAbsFunc.h"
 #include <math.h>

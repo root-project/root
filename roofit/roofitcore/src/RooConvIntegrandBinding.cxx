@@ -25,8 +25,6 @@ passed to a numeric integrator. This is a utility class for
 RooNumConvPdf
 **/
 
-#include "RooFit.h"
-
 #include "RooConvIntegrandBinding.h"
 #include "RooAbsReal.h"
 #include "RooArgSet.h"

@@ -31,7 +31,6 @@ side of that error will be used:
 
 #include "RooPullVar.h"
 
-#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 

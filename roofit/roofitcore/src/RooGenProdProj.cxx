@@ -31,8 +31,6 @@ analytically. Remaining non-factorising observables are integrated numerically.
 **/
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 

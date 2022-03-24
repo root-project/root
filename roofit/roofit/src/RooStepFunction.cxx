@@ -28,8 +28,6 @@ Note that in contrast to RooParametricStepFunction, a RooStepFunction is NOT a P
 but a not-normalized function (RooAbsReal)
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TArrayD.h"
 #include <math.h>

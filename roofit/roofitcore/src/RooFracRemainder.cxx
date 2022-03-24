@@ -27,8 +27,6 @@ a constrained split
 **/
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 

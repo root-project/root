@@ -25,7 +25,6 @@ equivalent of a plot. To create a table use the RooDataSet::table method.
 
 #include "Roo1DTable.h"
 
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 

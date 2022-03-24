@@ -32,8 +32,6 @@ in defaultPrintStyle and defaultPrintContents to determine what is printed
 given a Print() option string.
 **/
 
-#include "RooFit.h"
-
 #include "RooPrintable.h"
 
 #include "Riostream.h"

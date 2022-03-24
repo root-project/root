@@ -136,7 +136,6 @@ called for each data event.
 
 #include "RooAbsPdf.h"
 
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "RooDataSet.h"
 #include "RooArgSet.h"

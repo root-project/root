@@ -10,7 +10,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit.h>
 #include <RooWorkspace.h>
 #include <RooPlot.h>
 #include <RooDataSet.h>

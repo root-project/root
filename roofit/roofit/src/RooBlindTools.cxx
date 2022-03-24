@@ -19,8 +19,6 @@
 
 **/
 
-#include "RooFit.h"
-
 #include "RooBlindTools.h"
 
 #include "RooErrorHandler.h"

@@ -22,8 +22,6 @@ the decay of B mesons with the effects of B0/B0bar mixing.
 This function can be analytically convolved with any RooResolutionModel implementation
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "TMath.h"
 #include "RooRealVar.h"

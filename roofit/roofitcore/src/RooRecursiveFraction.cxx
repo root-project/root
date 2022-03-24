@@ -25,9 +25,6 @@ from a set of recursive fractions: for a given set of input fractions
 \f$ {a_i} \f$, it returns \f$ a_n * \prod_{i=0}^{n-1} (1 - a_i) \f$.
 **/
 
-
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 

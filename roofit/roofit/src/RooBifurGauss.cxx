@@ -13,7 +13,6 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#include "RooFit.h"
 
 /** \class RooBifurGauss
     \ingroup Roofit

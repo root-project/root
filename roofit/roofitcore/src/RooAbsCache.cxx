@@ -26,8 +26,6 @@ and the cache data member to communicate server redirects, operation
 mode changes and constant term optimization management calls.
 **/
 
-
-#include "RooFit.h"
 #include "RooAbsCache.h"
 #include "RooAbsArg.h"
 #include "RooArgList.h"

@@ -24,7 +24,6 @@ as a MIGRAD minimization step is executed for each function evaluation
 
 #include "Riostream.h"
 
-#include "RooFit.h"
 #include "RooProfileLL.h"
 #include "RooAbsReal.h"
 #include "RooMinimizer.h"

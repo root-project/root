@@ -24,8 +24,6 @@ classes that keeps track of analytical integration codes and
 associated normalization and integration sets.
 **/
 
-#include "RooFit.h"
-
 #include "RooAICRegistry.h"
 #include "RooMsgService.h"
 #include "RooArgSet.h"

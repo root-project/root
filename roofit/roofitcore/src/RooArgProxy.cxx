@@ -14,8 +14,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooFit.h"
-
 #include "RooArgProxy.h"
 #include "RooArgSet.h"
 #include "RooAbsArg.h"

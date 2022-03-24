@@ -22,8 +22,6 @@ distribution. Object of class RooGaussModel can be used
 for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
 **/
 
-#include "RooFit.h"
-
 #include "TMath.h"
 #include "Riostream.h"
 #include "RooGaussModel.h"

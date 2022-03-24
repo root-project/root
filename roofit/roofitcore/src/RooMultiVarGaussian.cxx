@@ -22,8 +22,6 @@
 Multivariate Gaussian p.d.f. with correlations
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 

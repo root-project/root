@@ -23,9 +23,6 @@ Lightweight RooAbsFunc interface adaptor that binds an analytic integral of a
 RooAbsReal object (specified by a code) to a set of dependent variables.
 **/
 
-
-#include "RooFit.h"
-
 #include "RooRealAnalytic.h"
 #include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"

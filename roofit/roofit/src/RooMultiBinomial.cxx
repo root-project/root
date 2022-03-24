@@ -27,8 +27,6 @@ The combination only 'reject' can be chosen to be visible or not visible
 (and hence this efficiency is then equal to zero).
 **/
 
-#include "RooFit.h"
-
 #include "RooMultiBinomial.h"
 #include "RooStreamParser.h"
 #include "RooArgList.h"

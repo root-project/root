@@ -27,7 +27,6 @@ fast searches and comparisons.
 
 #include "RooNameReg.h"
 
-#include "RooFit.h"
 #include <iostream>
 #include <memory>
 using namespace std ;

@@ -31,8 +31,6 @@ though usually only one observable actually changes.
 **/
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 

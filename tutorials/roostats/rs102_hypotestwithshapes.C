@@ -27,7 +27,6 @@
 #include "TCanvas.h"
 #include "RooChebychev.h"
 #include "RooAbsPdf.h"
-#include "RooFit.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include "RooAbsArg.h"

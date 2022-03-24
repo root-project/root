@@ -28,7 +28,6 @@ by forwarding these calls to the RooAbsCacheElement interface functions, which
 have a sensible default implementation.
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 #include <vector>
 #include "RooObjCacheManager.h"

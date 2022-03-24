@@ -30,8 +30,6 @@ in the proto data is created.
 that an event originates from a certain category.
 **/
 
-#include "RooFit.h"
-
 #include "RooSimGenContext.h"
 #include "RooSimultaneous.h"
 #include "RooRealProxy.h"

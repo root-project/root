@@ -30,8 +30,6 @@ Cranmer KS, Kernel Estimation in High-Energy Physics.
             Computer Physics Communications 136:198-207,2001 - e-Print Archive: hep ex/0011057
 **/
 
-#include "RooFit.h"
-
 #include <limits>
 #include <algorithm>
 #include <cmath>

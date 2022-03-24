@@ -26,8 +26,6 @@ as a RooFormulaVar.  The 6 basis functions used in B mixing and decay and 2 basi
 functions used in D mixing have been hand coded for increased execution speed.
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "RooTruthModel.h"
 #include "RooGenContext.h"

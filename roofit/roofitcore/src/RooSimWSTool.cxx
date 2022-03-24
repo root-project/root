@@ -100,7 +100,6 @@
 ///
 
 
-#include "RooFit.h"
 #include "RooSimWSTool.h"
 
 #include "RooFitLegacy/RooCatTypeLegacy.h"

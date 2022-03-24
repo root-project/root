@@ -28,8 +28,6 @@ Quasi-random number sequences are useful for improving the
 convergence of a Monte Carlo integration.
 **/
 
-#include "RooFit.h"
-
 #include "RooQuasiRandomGenerator.h"
 #include "RooMsgService.h"
 

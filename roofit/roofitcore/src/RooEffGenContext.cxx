@@ -27,7 +27,6 @@ and applying an extra rejection step based on the efficiency function.
 
 #include <memory>
 
-#include "RooFit.h"
 #include "RooEffGenContext.h"
 #include "RooAbsPdf.h"
 #include "RooRandom.h"

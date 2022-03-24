@@ -23,7 +23,6 @@ Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
 **/
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooTFoamBinding.h"

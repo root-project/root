@@ -25,8 +25,6 @@ to be able to interface these coefficient terms with the generic
 RooRealIntegral integration mechanism
 **/
 
-#include "RooFit.h"
-
 #include "RooAbsAnaConvPdf.h"
 #include "RooConvCoefVar.h"
 

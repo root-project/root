@@ -24,8 +24,6 @@ implements an adaptive multi-dimensional Monte Carlo numerical
 integration, following the VEGAS algorithm.
 **/
 
-#include "RooFit.h"
-
 #include "RooGrid.h"
 #include "RooAbsFunc.h"
 #include "RooNumber.h"

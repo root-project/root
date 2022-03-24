@@ -29,7 +29,6 @@ Use RooAbsCollection derived objects for public use
 
 #include "RooLinkedList.h"
 
-#include "RooFit.h"
 #include "RooLinkedListIter.h"
 #include "RooAbsArg.h"
 #include "RooAbsData.h"

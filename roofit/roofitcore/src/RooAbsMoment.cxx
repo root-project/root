@@ -24,9 +24,6 @@ of any RooAbsReal as calculated (numerically) by the MathCore Richardson
 derivator class.
 **/
 
-
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 

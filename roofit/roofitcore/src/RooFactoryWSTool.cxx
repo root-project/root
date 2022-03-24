@@ -28,8 +28,6 @@ instantiate the objects.
 It interprets all expressions for RooWorkspace::factory(const char*).
 **/
 
-#include "RooFit.h"
-
 #include "RooFactoryWSTool.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"

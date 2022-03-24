@@ -23,8 +23,6 @@ RooSegmentedIntegrator1D implements an adaptive one-dimensional
 numerical integration algorithm.
 **/
 
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "TClass.h"

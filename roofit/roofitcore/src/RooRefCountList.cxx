@@ -25,8 +25,6 @@ the counter instead of adding multiple copies. Remove() decrements the
 reference count until zero, when the object is actually removed.
 **/
 
-#include "RooFit.h"
-
 #include "RooRefCountList.h"
 
 #include "Riostream.h"

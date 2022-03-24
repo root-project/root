@@ -24,8 +24,6 @@ specific for RooSimultaneous PDFs when generating more than one of the
 component pdfs.
 **/
 
-#include "RooFit.h"
-
 #include "RooSimSplitGenContext.h"
 #include "RooSimultaneous.h"
 #include "RooRealProxy.h"

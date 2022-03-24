@@ -62,8 +62,6 @@
  *
  */
 
-#include "RooFit.h"
-
 #include "TClass.h"
 #include "TMath.h"
 #include "Riostream.h"

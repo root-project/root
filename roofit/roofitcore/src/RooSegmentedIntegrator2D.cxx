@@ -24,7 +24,6 @@ numerical integration algorithm.
 **/
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "TClass.h"

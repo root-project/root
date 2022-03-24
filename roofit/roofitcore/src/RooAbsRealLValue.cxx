@@ -34,7 +34,6 @@ interpreted as a parameter.
 
 #include "RooAbsRealLValue.h"
 
-#include "RooFit.h"
 #include "RooStreamParser.h"
 #include "RooRandom.h"
 #include "RooPlot.h"
