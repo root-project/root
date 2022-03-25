@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>Geom Demo</title>
-    <script src="jsrootsys/scripts/JSRoot.core.js" type="text/javascript"></script>
   </head>
 
   <style>
@@ -37,68 +36,66 @@
      </div>
   </body>
 
-  <script>
+  <script type="module">
 
-     var conn_handle = null;
+     import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
 
-     function SendMsg(txt) {
+     let conn_handle = null;
+
+     function sendMsg(txt) {
        if (conn_handle)
           conn_handle.send(txt);
      }
 
-     function AddButton(text, exec, title) {
-        var btn = document.createElement("button");
-        btn.onclick = SendMsg.bind(null, exec +  ";");
+     function addButton(text, exec, title) {
+        let btn = document.createElement("button");
+        btn.onclick = sendMsg.bind(null, exec +  ";");
         btn.title = title;
         btn.innerHTML = text;
         document.getElementById("btns").appendChild(btn);
      }
 
      // use code from geodemo.C
-     AddButton("How to run  ","help()","Instructions for running this macro");
-     AddButton("Arb8        ","arb8()","An arbitrary polyhedron defined by vertices (max 8) sitting on 2 parallel planes");
-     AddButton("Box         ","box()","A box shape.");
-     AddButton("Composite   ","composite()","A composite shape");
-     AddButton("Cone        ","cone()","A conical tube");
-     AddButton("Cone segment","coneseg()","A conical segment");
-     AddButton("Cut tube    ","ctub()","A cut tube segment");
-     AddButton("Elliptical tube","eltu()","An elliptical tube");
-     AddButton("Extruded poly","xtru()","A general polygone extrusion");
-     AddButton("Hyperboloid  ","hype()","A hyperboloid");
-     AddButton("Paraboloid  ","parab()","A paraboloid");
-     AddButton("Polycone    ","pcon()","A polycone shape");
-     AddButton("Polygone    ","pgon()","A polygone");
-     AddButton("Parallelepiped","para()","A parallelepiped shape");
-     AddButton("Sphere      ","sphere()","A spherical sector");
-     AddButton("Trd1        ","trd1()","A trapezoid with dX varying with Z");
-     AddButton("Trd2        ","trd2()","A trapezoid with both dX and dY varying with Z");
-     AddButton("Trapezoid   ","trap()","A general trapezoid");
-     AddButton("Tessellated","tessellated()","A tessellated shape");
-     AddButton("Torus       ","torus()","A toroidal segment");
-     AddButton("Tube        ","tube()","A tube with inner and outer radius");
-     AddButton("Tube segment","tubeseg()","A tube segment");
-     AddButton("Twisted trap","gtra()","A twisted trapezoid");
-     AddButton("Aligned (ideal)","ideal()","An ideal (un-aligned) geometry");
-     AddButton("Un-aligned","align()","Some alignment operation");
-     // AddButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
-     AddButton("COMMENTS  ON/OFF","gcomments()","Toggle explanations pad ON/OFF");
-     AddButton("AXES ON/OFF","axes()","Toggle axes ON/OFF");
-     AddButton("AUTOROTATE ON/OFF","autorotate()","Toggle autorotation ON/OFF");
-     AddButton("Quit","quit()","Quit ROOT seesion");
+     addButton("How to run  ","help()","Instructions for running this macro");
+     addButton("Arb8        ","arb8()","An arbitrary polyhedron defined by vertices (max 8) sitting on 2 parallel planes");
+     addButton("Box         ","box()","A box shape.");
+     addButton("Composite   ","composite()","A composite shape");
+     addButton("Cone        ","cone()","A conical tube");
+     addButton("Cone segment","coneseg()","A conical segment");
+     addButton("Cut tube    ","ctub()","A cut tube segment");
+     addButton("Elliptical tube","eltu()","An elliptical tube");
+     addButton("Extruded poly","xtru()","A general polygone extrusion");
+     addButton("Hyperboloid  ","hype()","A hyperboloid");
+     addButton("Paraboloid  ","parab()","A paraboloid");
+     addButton("Polycone    ","pcon()","A polycone shape");
+     addButton("Polygone    ","pgon()","A polygone");
+     addButton("Parallelepiped","para()","A parallelepiped shape");
+     addButton("Sphere      ","sphere()","A spherical sector");
+     addButton("Trd1        ","trd1()","A trapezoid with dX varying with Z");
+     addButton("Trd2        ","trd2()","A trapezoid with both dX and dY varying with Z");
+     addButton("Trapezoid   ","trap()","A general trapezoid");
+     addButton("Tessellated","tessellated()","A tessellated shape");
+     addButton("Torus       ","torus()","A toroidal segment");
+     addButton("Tube        ","tube()","A tube with inner and outer radius");
+     addButton("Tube segment","tubeseg()","A tube segment");
+     addButton("Twisted trap","gtra()","A twisted trapezoid");
+     addButton("Aligned (ideal)","ideal()","An ideal (un-aligned) geometry");
+     addButton("Un-aligned","align()","Some alignment operation");
+     // addButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
+     addButton("COMMENTS  ON/OFF","gcomments()","Toggle explanations pad ON/OFF");
+     addButton("AXES ON/OFF","axes()","Toggle axes ON/OFF");
+     addButton("AUTOROTATE ON/OFF","autorotate()","Toggle autorotation ON/OFF");
+     addButton("Quit","quit()","Quit ROOT seesion");
 
-     JSROOT.connectWebWindow({
+     connectWebWindow({
        receiver: {
           // method called when connection to server is established
-          onWebsocketOpened: function(handle) {
+          onWebsocketOpened(handle) {
              conn_handle = handle;
           },
 
-          // method with new message from server
-          onWebsocketMsg: function(handle, msg, offset) {
-          },
-
           // method called when connection is gone
-          onWebsocketClosed: function(handle) {
+          onWebsocketClosed(handle) {
              conn_handle = null;
              // when connection closed, close panel as well
              if (window) window.close();
