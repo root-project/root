@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
-      <meta charset="UTF-8">
+      <meta charset="utf-8">
       <title>Eve7</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
       <style>
          html { height: 100%; }
          body { min-height: 100%; margin: 0; overflow: hidden }
@@ -21,19 +20,21 @@
 
    <body>
       <div id="EveDiv">
-         loading scripts...
       </div>
 
-      <script type='text/javascript'>
+      <script type='module'>
 
-        JSROOT.connectWebWindow({
-           // socket_kind: "file",  // used for offline
-           prereq: "painter;openui5",
-           prereq_logdiv: "EveDiv",
-//           openui5src: "jsroot",    // use JSROOT provided package, experimental
+         import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
+         import { initEVE } from '/jsrootsys/modules/geom/eve.mjs';
+
+         initEVE(); // create global EVE and THREE handles
+
+         connectWebWindow({
+            // socket_kind: "file",  // used for offline
+            ui5: true,
 //           openui5src: "https://openui5.hana.ondemand.com/1.98.0/",
-           openui5libs: "sap.ui.core" // customize openui5 libs
-        }).then(handle => {
+            openui5libs: "sap.ui.core" // customize openui5 libs
+         }).then(handle => {
 //          sap.ui.loader.config({ paths: { rootui5: "../rootui5/" } });  // used for offline
 
             sap.ui.require(["sap/ui/core/ComponentContainer"], ComponentContainer => {
@@ -49,10 +50,9 @@
                   height: "100%"
                }).placeAt("EveDiv")
             });
+         });
 
-        });
-
-        </script>
+      </script>
 
    </body>
 

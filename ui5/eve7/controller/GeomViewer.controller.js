@@ -2,19 +2,16 @@ sap.ui.define(['sap/ui/core/Component',
                'sap/ui/core/mvc/Controller',
                'sap/ui/core/Control',
                'sap/m/Text',
-               'sap/m/CheckBox',
-               "sap/ui/layout/HorizontalLayout",
-               "sap/ui/table/Column",
-               "sap/ui/model/json/JSONModel",
-               "rootui5/browser/model/BrowserModel"
-],function(Component, Controller, CoreControl, mText, mCheckBox,
+               'sap/ui/layout/HorizontalLayout',
+               'sap/ui/table/Column',
+               'sap/ui/model/json/JSONModel',
+               'rootui5/browser/model/BrowserModel'
+],function(Component, Controller, CoreControl, mText,
            HorizontalLayout, tableColumn, JSONModel, BrowserModel) {
 
    "use strict";
 
-   let geo = null; // naming convention for JSROOT.GEO
-
-   var geomColorBox = CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
+   let geomColorBox = CoreControl.extend("rootui5.eve7.controller.ColorBox", { // call the new Control type "my.ColorBox" and let it inherit from sap.ui.core.Control
 
       // the control API:
       metadata : {
@@ -77,6 +74,7 @@ sap.ui.define(['sap/ui/core/Component',
          let viewData = this.getView().getViewData();
 
          this.websocket = viewData.conn_handle;
+         this.jsroot = viewData.jsroot;
          this._embeded = viewData.embeded;
 
          // this is code for the Components.js
@@ -94,7 +92,7 @@ sap.ui.define(['sap/ui/core/Component',
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
 
-         let nobrowser = this.websocket.getUserArgs('nobrowser') || JSROOT.decodeUrl().has('nobrowser');
+         let nobrowser = this.websocket.getUserArgs('nobrowser') || this.jsroot.decodeUrl().has('nobrowser');
 
          if (nobrowser) {
             // remove main area - plain geometry drawing
@@ -136,11 +134,11 @@ sap.ui.define(['sap/ui/core/Component',
             }, this);
          }
 
-         JSROOT.require("geom").then(_geo => {
-            geo = _geo;
+         Promise.all([import(this.jsroot.source_dir + 'modules/geom/geobase.mjs'), import(this.jsroot.source_dir + 'modules/geom/TGeoPainter.mjs')]).then(arr => {
+            this.geo = Object.assign({}, arr[0], arr[1]);
             sap.ui.define(['rootui5/eve7/lib/EveElements'], EveElements => {
                this.creator = new EveElements();
-               this.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
+               this.creator.useIndexAsIs = this.jsroot.decodeUrl().has('useindx');
                this.checkSendRequest();
             });
          });
@@ -170,7 +168,7 @@ sap.ui.define(['sap/ui/core/Component',
       /** @summary Send REveGeomRequest data to geometry viewer */
       sendViewerRequest: function(_oper, args) {
          let req = { oper: _oper, path: [], stack: [] };
-         JSROOT.extend(req, args);
+         Object.assign(req, args);
          this.websocket.send("GVREQ:" + JSON.stringify(req));
       },
 
@@ -266,7 +264,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (!this.standalone) {
             let req = geo_stack ? geo_stack : [];
             // avoid multiple time submitting same request
-            if (geo.isSameStack(this._last_highlight_req, req)) return;
+            if (EVE.isSameStack(this._last_highlight_req, req)) return;
             this._last_highlight_req = req;
             return this.sendViewerRequest("HIGHL", { stack: req });
          }
@@ -321,7 +319,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.clearDrawings();
          } else {
             let geomDrawing = this.byId("geomDrawing");
-            this.geo_painter = JSROOT.Painter.createGeoPainter(geomDrawing.getDomRef(), null, drawopt);
+            this.geo_painter = EVE.createGeoPainter(geomDrawing.getDomRef(), null, drawopt);
             this.geo_painter.setMouseTmout(0);
             // this.geo_painter.setDepthMethod("dflt");
             this.geo_painter.ctrl.notoolbar = true;
@@ -364,7 +362,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
 
          if (recreate) {
-            this.geo_clones = new geo.ClonedNodes(null, nodes);
+            this.geo_clones = new EVE.ClonedNodes(null, nodes);
             this.geo_clones.name_prefix = this.geo_clones.getNodeName(0);
             // normally only need when making selection, not used in geo viewer
             // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
@@ -381,8 +379,8 @@ sap.ui.define(['sap/ui/core/Component',
             nsegm = this.geom_model.getProperty("/cfg/nsegm");
 
          if (nsegm) {
-            old_gradpersegm = geo.GradPerSegm;
-            geo.GradPerSegm = 360 / Math.max(nsegm,6);
+            old_gradpersegm = EVE.geoCfg("GradPerSegm");
+            EVE.geoCfg("GradPerSegm", 360 / Math.max(nsegm,6));
          }
 
          for (let cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
@@ -396,7 +394,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
 
          if (old_gradpersegm)
-            geo.GradPerSegm = old_gradpersegm;
+            EVE.geoCfg("GradPerSegm", old_gradpersegm);
 
          return true;
       },
@@ -413,7 +411,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (rd.shape) {
             // case when TGeoShape provided as is
-            g = geo.createGeometry(rd.shape);
+            g = EVE.createGeometry(rd.shape);
          } else {
 
             if (!rd.raw || (rd.raw.length==0)) {
@@ -449,7 +447,7 @@ sap.ui.define(['sap/ui/core/Component',
             _typename: "$$Shape$$", // indicate that shape can be used as is
             ready: true,
             geom: g,
-            nfaces: geo.numGeometryFaces(g)
+            nfaces: EVE.numGeometryFaces(g)
          };
       },
 
@@ -574,19 +572,19 @@ sap.ui.define(['sap/ui/core/Component',
             this.modifyDescription(msg);
             break;
          case "GDRAW:":   // normal drawing of geometry
-            this.checkDrawMsg("draw", JSROOT.parse(msg)); // use JSROOT.parse while refs are used
+            this.checkDrawMsg("draw", this.jsroot.parse(msg)); // use jsroot.parse while refs are used
             break;
          case "FDRAW:":   // drawing of found nodes
-            this.checkDrawMsg("found", JSROOT.parse(msg));
+            this.checkDrawMsg("found", this.jsroot.parse(msg));
             break;
          case "APPND:":
-            this.checkDrawMsg("append", JSROOT.parse(msg));
+            this.checkDrawMsg("append", this.jsroot.parse(msg));
             break;
          case "GVRPL:":
-            this.processViewerReply(JSROOT.parse(msg));
+            this.processViewerReply(this.jsroot.parse(msg));
             break;
          case "NINFO:":
-            this.provideNodeInfo(JSROOT.parse(msg));
+            this.provideNodeInfo(this.jsroot.parse(msg));
             break;
          case "RELOAD":
             this.paintFoundNodes(null);
@@ -815,8 +813,8 @@ sap.ui.define(['sap/ui/core/Component',
             let dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98);
             this.geo_painter.changedGlobalTransparency(function(node) {
                if (node.stack)
-                  for (let n=0;n<visibles.length;++n)
-                     if (geo.isSameStack(node.stack, visibles[n].stack))
+                  for (let n = 0; n < visibles.length; ++n)
+                     if (EVE.isSameStack(node.stack, visibles[n].stack))
                         return 0;
                return dflt;
             });
@@ -1003,7 +1001,7 @@ sap.ui.define(['sap/ui/core/Component',
             return;
          }
 
-         this.node_painter = JSROOT.Painter.createGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
+         this.node_painter = EVE.createGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
          this.node_painter.setMouseTmout(0);
          this.node_painter.ctrl.notoolbar = true;
          this.node_painter_active = true;
@@ -1107,7 +1105,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (!this.standalone && this.geo_painter && this.geo_painter.ctrl.cfg) {
             let cfg = this.geo_painter.ctrl.cfg;
             cfg.build_shapes = parseInt(cfg.build_shapes);
-            this.websocket.send("CFG:" + JSROOT.toJSON(cfg));
+            this.websocket.send("CFG:" + this.jsroot.toJSON(cfg));
          }
       },
 

@@ -93,7 +93,7 @@ sap.ui.define(['sap/ui/core/Component',
             toolbar.addContentRight(logCtrl.getButton());
          });
          consoleObj.alert = true;
-         JSROOT.EVE.alert = function (oText)
+         globalThis.EVE.alert = function (oText)
          {
             if (consoleObj.alert)
             {
@@ -131,7 +131,7 @@ sap.ui.define(['sap/ui/core/Component',
          var name = item.getText();
          if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
          // FIXME: one need better way to deliver parameters to the selected view
-         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
+         EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
 
          var oRouter = UIComponent.getRouterFor(this);
          if (name == "Table")
@@ -217,7 +217,7 @@ sap.ui.define(['sap/ui/core/Component',
          var name = viewer.fName;
          if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
          // FIXME: one need better way to deliver parameters to the selected view
-         JSROOT.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
+         EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
 
          var oRouter = UIComponent.getRouterFor(this);
          if (name == "Table")
@@ -281,8 +281,8 @@ sap.ui.define(['sap/ui/core/Component',
 
          let pa = primary.getContentAreas()[1];
 
-         if (elem.fElementId == pa.oViewData.eveViewerId) 
-         { 
+         if (elem.fElementId == pa.oViewData.eveViewerId)
+         {
             let sa = secondary.getContentAreas()[0];
             primary.removeContentArea(pa);
             secondary.removeContentArea(sa);
@@ -298,7 +298,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
          secondary.resetContentAreasSizes();
       },
-      
+
       onEveManagerInit: function() {
          // console.log("manager updated");
          this.UpdateCommandsButtons(this.mgr.commands);
