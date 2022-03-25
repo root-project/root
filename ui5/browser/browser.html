@@ -1,34 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
-      <meta charset="UTF-8">
+      <meta charset="utf-8">
       <title>ROOT RBrowser</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
       <link rel="stylesheet" type="text/css" href="rootui5sys/browser/style.css">
    </head>
 
    <body>
       <div id="BrowserDiv">
-         loading scripts...
       </div>
 
-      <script type='text/javascript'>
+      <script type='module'>
 
-        JSROOT.connectWebWindow({
-           prereq: "openui5",
-//           openui5src: "jsroot",    // use JSROOT provided package, default
-//           openui5src: "https://openui5.hana.ondemand.com/1.98.0/",
-           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor, sap.ui.commons, sap.tnt", // customize openui5 libs later
-           prereq_logdiv: "BrowserDiv"
-        }).then(handle => {
+         import { parse, decodeUrl, toJSON, source_dir } from '/jsrootsys/modules/core.mjs';
+
+         import { connectWebWindow, WebWindowHandle } from '/jsrootsys/modules/webwindow.mjs';
+
+         connectWebWindow({
+            ui5: true,
+            // openui5src: "jsroot",    // use JSROOT provided package, default
+            // openui5src: "https://openui5.hana.ondemand.com/1.98.0/",
+            openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor, sap.ui.commons, sap.tnt" // customize openui5 libs later
+         }).then(handle => {
             sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
                 XMLView.create({
                    id: "TopBrowserId",
                    viewName: "rootui5.browser.view.Browser",
-                   viewData: { conn_handle: handle }
+                   viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, connectWebWindow, WebWindowHandle, toJSON, source_dir } }
                 }).then(oView => oView.placeAt("BrowserDiv"));
             });
-        });
+         });
 
       </script>
 
