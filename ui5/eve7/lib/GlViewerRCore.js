@@ -6,9 +6,7 @@ sap.ui.define([
 
    "use strict";
 
-   var RC;
-   var RP;
-   var RendeQuTor;
+   var RC, RP, RendeQuTor;
 
    function GlViewerRCore(viewer_class)
    {
@@ -74,7 +72,7 @@ sap.ui.define([
       bootstrap: function()
       {
          this.creator = new EveElements(RC);
-         // this.creator.useIndexAsIs = JSROOT.decodeUrl().has('useindx');
+         // this.creator.useIndexAsIs = EVE.decodeUrl().has('useindx');
 
          this.createRCoreRenderer();
          this.controller.createScenes();
@@ -268,7 +266,7 @@ sap.ui.define([
                }
                else if (event.buttons == 2) // Context menu on delay without move
                {
-                  JSROOT.Painter.createMenu(event2, glc).then(menu => { glc.showContextMenu(event2, menu) });
+                  EVE.createMenu(event2, glc).then(menu => glc.showContextMenu(event2, menu));
                }
             }
 
@@ -616,7 +614,7 @@ sap.ui.define([
       {
          // console.log("GLC::showContextMenu", this, menu)
 
-         // See js/scripts/JSRootPainter.jquery.js JSROOT.Painter.createMenu(), menu.add()
+         // See js/modules/menu/menu.mjs createMenu(), menu.add()
 
 
          var intersect = this.getIntersectAt(event.offsetX, event.offsetY);

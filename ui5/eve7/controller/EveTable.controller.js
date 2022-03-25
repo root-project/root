@@ -33,8 +33,8 @@ sap.ui.define([
       },
       onTableObjectMatched: function (oEvent) {
          let args = oEvent.getParameter("arguments");
-         this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.mgr );
-         delete JSROOT.$eve7tmp;
+         this.setupManagerAndViewType(EVE.$eve7tmp.eveViewerId, EVE.$eve7tmp.mgr );
+         delete EVE.$eve7tmp;
 
          this.checkViewReady();
       },

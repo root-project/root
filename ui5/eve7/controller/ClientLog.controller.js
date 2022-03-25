@@ -7,9 +7,8 @@ sap.ui.define([
 	'sap/m/MessageItem',
 	'sap/m/MessageToast',
 	'sap/m/Link',
-	'sap/ui/core/mvc/Controller',
-	'sap/ui/model/json/JSONModel'
-], function(MessageView, Dialog, Button, Bar, Title, MessageItem, MessageToast, Link, Controller, JSONModel) {
+	'sap/ui/core/mvc/Controller'
+], function(MessageView, Dialog, Button, Bar, Title, MessageItem, MessageToast, Link, Controller) {
 	"use strict";
 
 	return Controller.extend("rootui5.eve7.controller.ClientLog", {
