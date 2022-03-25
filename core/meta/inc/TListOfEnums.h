@@ -71,6 +71,9 @@ public:
    TEnum     *Find(DeclId_t id) const;
    virtual TEnum *GetObject(const char*) const;
 
+   TObject  *FindObject(const char*) const override;
+   using THashList::FindObject;
+
    void Clear(Option_t *option) override;
    void Delete(Option_t *option="") override;
 
