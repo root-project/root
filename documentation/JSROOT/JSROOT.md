@@ -34,8 +34,10 @@ To automate files loading and objects drawing, one can provide number of URL par
 - json - name of JSON file with stored ROOT object like histogram or canvas
 - item - item name to be displayed
 - opt - drawing option for the item
-- items - array of items name
+- items - array of items name to be displayed
 - opts - array of drawing options for the items
+- expand - item name(s) to be expanded in the hierarchy browser
+- focus - item name to be focused on in the hierarchy browser
 - title - set browser title
 - layout - can be 'simple', 'flex', 'collapsible', 'tabs', 'gridNxM', 'horizNMK', 'vertNMK'
 - browser - layout of the browser 'fix' (default), 'float', 'no' (hidden), 'off' (fully disabled)
@@ -177,23 +179,56 @@ List of supported classes and draw options:
 [2](https://root.cern/js/latest/examples.htm#tgrapherrors_2),
 [3](https://root.cern/js/latest/examples.htm#tgrapherrors_3),
 [4](https://root.cern/js/latest/examples.htm#tgrapherrors_4),
-[5](https://root.cern/js/latest/examples.htm#tgrapherrors_5),
+[5](https://root.cern/js/latest/examples.htm#tgrapherrors_5)
 - TGraphAsymmErrors : [dflt](https://root.cern/js/latest/examples.htm#tgraphasymmerrors),
+- TGraphMultiErrors : [docu](https://root.cern/js/latest/examples.htm#tgraphmultierrors_canv),
 [z](https://root.cern/js/latest/examples.htm#tgraphasymmerrors_z) and other from TGraphErrors
 - TGraphPolar : [example](https://root.cern/js/latest/examples.htm#tgraphpolar)
 - TMultiGraph : [example](https://root.cern/js/latest/examples.htm#tmultigraph_c3), [exclusion](https://root.cern/js/latest/examples.htm#tmultigraph_exclusion)
 - TGraph2D : [example](https://root.cern/js/latest/examples.htm#tgraph2d)
+- TEfficiency : [docu](https://root.cern/js/latest/examples.htm#tefficiency_docu2)
 - TLatex : [example](https://root.cern/js/latest/examples.htm#tlatex_latex)
 - TMathText : [example](https://root.cern/js/latest/examples.htm#tlatex_math)
 - TCanvas : [example](https://root.cern/js/latest/examples.htm#tcanvas_roofit)
+- TPad : [example](https://root.cern/js/latest/examples.htm#tcanvas_subpad)
+- TRatioPlot : [example](https://root.cern/js/latest/examples.htm#tratioplot_r6)
 - TLegend : [example](https://root.cern/js/latest/examples.htm#tcanvas_legend)
 - TTree : [single-branch draw](https://root.cern/js/latest/examples.htm#ttree_draw)
 - TPolyLine : [dflt](https://root.cern/js/latest/examples.htm#misc_polyline)
+- TGaxis : [dflt](https://root.cern/js/latest/examples.htm#misc_axis)
 - TEllipse : [dflt](https://root.cern/js/latest/examples.htm#misc_ellipse)
 - TArrow : [dflt](https://root.cern/js/latest/examples.htm#misc_arrow)
 - TPolyMarker3D: [dflt](https://root.cern/js/latest/examples.htm#misc_3dmark)
 
 More examples of supported classes can be found on: <https://root.cern/js/latest/examples.htm>
+
+There are specific options which only can be used with JSROOT for TPad and TCanvas objects:
+
+- logx - enable log10 scale for X axis
+- logy - enable log10 scale for Y axis
+- logz - enable log10 scale for Z axis
+- log - enable log10 scale for X,Y,Z axes
+- log2x - enable log2 scale for X axis
+- log2y - enable log2 scale for Y axis
+- log2z - enable log2 scale for Z axis
+- log2 - enable log2 scale for X,Y,Z axes
+- gridx - enable grid for X axis
+- gridy - enable grid for X axis
+- grid - enable grid for X and Y axes
+- tickx - enable ticks for X axis
+- ticky - enable ticks for X axis
+- tick - enable ticks for X and Y axes
+- rx - reverse X axis
+- ry - reverse Y axis
+- rotate - rotate frame
+- fixframe - disable interactive moving of the frame
+- nozoomx - disbale zooming on X axis
+- nozoomy - disbale zooming on Y axis
+- cpXY - create palette XY for the canvas like cp50
+- nopalette - ignore paletter stored with TCanvas
+- nocolors - ignore colors list stored with TCanvas
+- lcolors - use only locally colors list stored with TCanvas
+- nomargins - clear frame margins
 
 
 ## Superimposing draw objects
@@ -333,6 +368,8 @@ Following draw options could be specified (separated by semicolon or ';'):
    - rotate - enable automatic rotation of the geometry
    - trzVALUE - set transformation along Z axis (like trz50)
    - trrVALUE - set radial transformation (like trr100)
+   - ortho_camera - use THREE.OrthographicCamera without possibility to rotate it
+   - ortho_camera_rotate - use THREE.OrthographicCamera and enable it rotation
    - ctrl - show control UI from the beginning
    - tracks - show tracks from TGeoManager
    - showtop - show top-level volume of TGeoManager (default off)
@@ -425,7 +462,8 @@ In principle, one could open any ROOT file placed in the web, providing the full
 
 - <https://jsroot.gsi.de/latest/?file=https://root.cern/js/files/hsimple.root&item=hpx>
 
-But one should be aware of [Same-origin policy](https://en.wikipedia.org/wiki/Same-origin_policy), when the browser blocks requests to files from domains other than current web page.
+But one should be aware of [Same-origin policy](https://en.wikipedia.org/wiki/Same-origin_policy),
+when the browser blocks requests to files from domains other than current web page.
 To enable CORS on Apache web server, hosting ROOT files, one should add following lines to `.htaccess` file:
 
     <IfModule mod_headers.c>
@@ -445,10 +483,13 @@ Alternative - enable CORS requests in the browser. It can be easily done with [C
 Next solution - install JSROOT on the server hosting ROOT files. In such configuration JSROOT does not issue CORS requests, therefore server and browsers can be used with their default settings. A simplified variant of such solution - copy only the top index.htm file from JSROOT package and specify the full path to `JSRoot.core.js` script like:
 
     ...
-    <script type="text/javascript" src="https://root.cern/js/latest/scripts/JSRoot.core.js"></script>
+    <script type="module">
+       import { openFile, draw } from 'https://root.cern/js/latest/modules/main.mjs';
+
+    </script>
     ...
 
-In the `<div>` element with "simpleGUI" id one can specify many custom parameters, which are allowed in the URL string:
+In the main `<div>` element one can specify many custom parameters like one do it in URL string:
 
     ...
      <div id="simpleGUI" path="files/path" files="userfile1.root;subdir/usefile2.root">
@@ -469,13 +510,6 @@ One could try to invoke such dialog with "localfile" parameter in URL string:
    - <https://root.cern/js/latest/?localfile>
 
 It could happen, that due to security limitations automatic popup will be blocked.
-
-For debuging purposes one can install JSROOT on local file system and let read ROOT files from the same location. Like:
-
-   - <file:///home/user/jsroot/index.htm?file=hsimple.root&item=hpx>
-
-But this works only with Firefox.
-
 
 
 ## JSROOT with THttpServer
@@ -552,45 +586,57 @@ JSROOT can be used in arbitrary HTML pages and disaplay data, produced without R
 Many different examples of JSROOT API usage can be found on [JSROOT API examples](https://root.cern/js/latest/api.htm) page.
 
 
-### Scripts loading
+### Import JSROOT functionality
 
-Before JSROOT can be used, all appropriate functionality should be loaded.
-HTML pages where JSROOT is used should include the `JSRoot.core.js` script.
-The `<head>` section of the HTML page should have the following line:
+Major JSROOT functions are locates in `main.mjs` module and can be imported like:
 
-    <script type="text/javascript" src="https://root.cern/js/latest/scripts/JSRoot.core.js"></script>
+    <script type='module'>
+       import { openFile, draw } from 'https://root.cern/js/latest/modules/main.mjs';
+       let filename = "https://root.cern/js/files/hsimple.root";
+       let file = await openFile(filename);
+       let obj = await file.readObject("hpxpy;1");
+       await draw("drawing", obj, "colz");
+   </script>
 
-Here, the default location of JSROOT is specified. One could have a local copy on the file system or on a private web server. When JSROOT is used with THttpServer, the address looks like:
+Here the default location `https://root.cern/js/latest/` is specified. One could have a local copy on the file system or on a private web server.
+When JSROOT is used with THttpServer, the address looks like:
 
-    <script type="text/javascript" src="http://your_root_server:8080/jsrootsys/scripts/JSRoot.core.js"></script>
+    <script type='module'>
+       import { openFile } from 'http://your_root_server:8080/jsrootsys/modules/main.mjs';
+       ...
+   </script>
 
-Loading core script is enough to get main ROOT functionality - loading files and drawing objects.
-If some extra components should be loaded, one have to use `JSROOT.require()` function like:
+Loading core module is enough to get main ROOT functionality - loading files and drawing objects.
+One also can load some components directly like:
 
-```
-    JSROOT.require('hierarchy').then(() => {
-       let h = new JSROOT.HierarchyPainter("example", "myTreeDiv");
+    <script type='module'>
+       import { HierarchyPainter } from 'https://root.cern/js/latest/modules/gui.mjs';
+
+       let h = new HierarchyPainter("example", "myTreeDiv");
 
        // configure 'simple' in provided <div> element
        // one also can specify "grid2x2" or "flex" or "tabs"
        h.setDisplay("simple", "myMainDiv");
 
        // open file and display element
-       h.openRootFile("../../files/hsimple.root").then(() => h.display("hpxpy;1","colz"));
-   })
-```
+       await h.openRootFile("../../files/hsimple.root");
+       await h.display("hpxpy;1","colz");
+   </script>
 
-After script loading one can configure different parameters in `JSROOT.gStyle` object.
+
+After script loading one can configure different parameters in `gStyle` object.
 It is instance of the `TStyle` object and behaves like `gStyle` variable in ROOT. For instance,
 to change stat format using to display value in stats box:
 
-    JSROOT.gStyle.fStatFormat = "7.5g"
+    import { gStyle } from 'https://root.cern/js/latest/modules/main.mjs';
+    gStyle.fStatFormat = "7.5g";
 
-There is also `JSROOT.settings` object which contains all other JSROOT settings. For instance,
-one can configure custom values format for different axes:
+There is also `settings` object which contains all other JSROOT settings. For instance,
+one can configure custom format for different axes:
 
-    JSROOT.settings.XValuesFormat = "4.2g"
-    JSROOT.settings.YValuesFormat = "6.1f"
+    import { settings } from 'https://root.cern/js/latest/modules/main.mjs';
+    settings.XValuesFormat = "4.2g";
+    settings.YValuesFormat = "6.1f";
 
 
 ### Use of JSON
@@ -606,19 +652,19 @@ Such JSON representation generated using the [TBufferJSON](https://root.cern/doc
     obj->SaveAs("file.json");
     ...
 
-To access data from a remote web server, it is recommended to use the [XMLHttpRequest](http://en.wikipedia.org/wiki/XMLHttpRequest) class. JSROOT provides a special method to create such object and properly handle it in different browsers.
-For receiving JSON from a server one could use following code:
+To access data from a remote web server, it is recommended to use the `httpRequest` method.
+For instance to receive object from a THttpServer server one could do:
 
-    JSROOT.httpRequest("http://your_root_server:8080/Canvases/c1/root.json", "object").then(obj => {
-       console.log('Read object of type ', obj._typename);
-    });
+    import { httpRequest } from 'https://root.cern/js/latest/modules/main.mjs';
+    let obj = await httpRequest("http://your_root_server:8080/Canvases/c1/root.json", "object")
+    console.log('Read object of type ', obj._typename);
 
 Function returns Promise, which provides parsed object (or Error in case of failure).
 
 If JSON string was obtained by different method, it should be parsed with:
 
-    let obj = JSROOT.parse(json_string);
-
+    import { parse } from 'https://root.cern/js/latest/modules/main.mjs';
+    let obj = parse(json_string);
 
 
 ### Objects drawing
@@ -629,45 +675,45 @@ After an object has been created, one can directly draw it. If HTML page has `<d
     <div id="drawing"></div>
     ...
 
-One could use the JSROOT.draw function:
+One could use the `draw` function:
 
-    JSROOT.draw("drawing", obj, "colz");
+    import { draw } from 'https://root.cern/js/latest/modules/main.mjs';
+    draw("drawing", obj, "colz");
 
 The first argument is the id of the HTML div element, where drawing will be performed. The second argument is the object to draw and the third one is the drawing option.
 
 Here is complete [running example](https://root.cern/js/latest/api.htm#custom_html_read_json) ans [source code](https://github.com/root-project/jsroot/blob/master/demo/read_json.htm):
 
-    var filename = "https://root.cern/js/files/th2ul.json.gz";
-    JSROOT.httpRequest(filename, 'object').then(obj => {
-       JSROOT.draw("drawing", obj, "lego");
-    });
+    import { httpRequest, draw, redraw, resize, cleanup } from 'https://root.cern/js/latest/modules/main.mjs';
+    let filename = "https://root.cern/js/files/th2ul.json.gz";
+    let obj = await httpRequest(filename, 'object');
+    draw("drawing", obj, "lego");
 
-In very seldom cases one need to access painter object, created in JSROOT.draw() function. This can be done via
+In very seldom cases one need to access painter object, created in `draw()` function. This can be done via
 handling Promise results like:
 
-    JSROOT.draw("drawing", obj, "colz").then(painter => {
-       console.log('Object type in painter', painter.GetClassName());
-    });
+    let painter = await draw("drawing", obj, "colz");
+    console.log('Object type in painter', painter.getClassName());
 
 One is also able to update the drawing with a new version of the object:
 
     // after some interval request object again
-    JSROOT.redraw("drawing", obj2, "colz");
+    redraw("drawing", obj2, "colz");
 
-The JSROOT.redraw() function will call JSROOT.draw if the drawing was not performed before.
+The `redraw` function will call `draw` if the drawing was not performed before.
 
 In the case when changing of HTML layout leads to resize of element with JSROOT drawing,
-one should call JSROOT.resize() to let JSROOT adjust drawing size. One should do:
+one should call `resize()` to let JSROOT adjust drawing size. One should do:
 
-    JSROOT.resize("drawing");
+    resize("drawing");
 
  As second argument one could specify exact size for draw elements like:
 
-    JSROOT.resize("drawing", { width: 500, height: 200 } );
+    resize("drawing", { width: 500, height: 200 } );
 
 To correctly cleanup JSROOT drawings from HTML element, one should call:
 
-    JSROOT.cleanup("drawing");
+    cleanup("drawing");
 
 
 ### File API
@@ -677,23 +723,12 @@ One should always remember that all I/O operations are asynchronous in JSROOT.
 Therefore, callback functions are used to react when the I/O operation completed.
 For example, reading an object from a file and displaying it will look like:
 
-    var filename = "https://root.cern/js/files/hsimple.root";
-    JSROOT.openFile(filename).then(file => {
-       file.ReadObject("hpxpy;1").then(obj => {
-          JSROOT.draw("drawing", obj, "colz");
-       });
-    });
-
-Using async function, one can write following:
-
-      async function read_and_draw_async() {
-         let file = await JSROOT.openFile(filename);
-         let obj = await file.ReadObject("hpxpy;1");
-         await JSROOT.draw("drawing", obj, "colz");
-      }
-
-      read_and_draw_async();
-
+    import { openFile, draw } from 'https://root.cern/js/latest/modules/main.mjs';
+    let filename = "https://root.cern/js/files/hsimple.root";
+    let file = await openFile(filename);
+    let obj = await file.readObject("hpxpy;1");
+    await draw("drawing", obj, "colz");
+    console.log("drawing completed");
 
 Here is [running example](https://root.cern/js/latest/api.htm#custom_html_read_root_file) and [source code](https://github.com/root-project/jsroot/blob/master/demo/read_file.htm)
 
@@ -702,65 +737,69 @@ Here is [running example](https://root.cern/js/latest/api.htm#custom_html_read_r
 
 Simple TTree::Draw operation can be performed with following code:
 
-    JSROOT.openFile("https://root.cern/js/files/hsimple.root")
-          .then(file => file.ReadObject("ntuple;1"))
-          .then(tree => JSROOT.draw("drawing", tree, "px:py::pz>5"));
+    import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
+    import { draw } from 'https://root.cern/js/latest/modules/draw.mjs';
+    let file = await openFile("https://root.cern/js/files/hsimple.root");
+    let tree = await file.readObject("ntuple;1");
+    draw("drawing", tree, "px:py::pz>5");
 
-To get access to selected branches, one should use TSelector class:
+To get access to selected branches, one should use `TSelector` class:
 
-    JSROOT.openFile("https://root.cern/js/files/hsimple.root")
-          .then(file => file.ReadObject("ntuple;1"))
-          .then(tree => {
+    import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
+    import { draw } from 'https://root.cern/js/latest/modules/draw.mjs';
+    import { TSelector, treeProcess } from 'https://root.cern/js/latest/modules/tree.mjs';
 
-             let selector = new JSROOT.TSelector();
+    let file = await openFile("https://root.cern/js/files/hsimple.root");
+    let tree = await file.readObject("ntuple;1");
+    let selector = new TSelector();
 
-             selector.AddBranch("px");
-             selector.AddBranch("py");
+    selector.AddBranch("px");
+    selector.AddBranch("py");
 
-             let cnt = 0, sumpx = 0, sumpy = 0;
+    let cnt = 0, sumpx = 0, sumpy = 0;
 
-             selector.Begin = function() {
-                // function called before reading of TTree starts
-             }
+    selector.Begin = function() {
+       // function called before reading of TTree starts
+    }
 
-             selector.Process = function() {
-                // function called for every entry
-                sumpx += this.tgtobj.px;
-                sumpy += this.tgtobj.py;
-                cnt++;
-             }
+    selector.Process = function() {
+       // function called for every entry
+       sumpx += this.tgtobj.px;
+       sumpy += this.tgtobj.py;
+       cnt++;
+    }
 
-             selector.Terminate = function(res) {
-                if (!res || (cnt===0)) return;
-                var meanpx = sumpx/cnt, meanpy = sumpy/cnt;
-                console.log(`Results meanpx = ${meanpx} meanpy = ${meanpy}`);
-             }
+    selector.Terminate = function(res) {
+       if (!res || (cnt===0)) return;
+       var meanpx = sumpx/cnt, meanpy = sumpy/cnt;
+       console.log(`Results meanpx = ${meanpx} meanpy = ${meanpy}`);
+    }
 
-             tree.Process(selector);
-       });
+    await treeProcess(tree, selector);
 
 Here is [running example](https://root.cern/js/latest/api.htm#ttree_tselector) and [source code](https://github.com/root-project/jsroot/blob/master/demo/read_tree.htm)
 
-This examples shows how read TTree from binary file and create JSROOT.TSelector object.
-Logically it is similar to original TSelector class - for every read entry TSelector::Process() method is called.
-Selected branches can be accessed from **tgtobj** data member. At the end of tree reading TSelector::Terminate() method
+This examples shows how read TTree from binary file and create `TSelector` object.
+Logically it is similar to original TSelector class - for every read entry `TSelector::Process()` method is called.
+Selected branches can be accessed from **tgtobj** data member. At the end of tree reading `TSelector::Terminate()` method
 will be called.
 
-As second parameter of tree.Process() function one could provide object with arguments
+As third parameter of treeProcess() function one could provide object with arguments
 
-    var args = { numentries: 1000, firstentry: 500 };
-    tree.Process(selector, args);
+    let args = { numentries: 1000, firstentry: 500 };
+    treeProcess(tree, selector, args);
 
 
 ### TGeo API
 
-Any supported TGeo object can be drawn with normal JSROOR.draw() function.
+Any supported TGeo object can be drawn with normal `draw()` function.
 
 If necessary, one can create three.js model for supported object directly and use such model
 separately. This can be done with the function:
 
-    var opt = { numfaces: 100000 };
-    var obj3d = JSROOT.GEO.build(obj, opt);
+    import { build } from './path_to_jsroot/modules/geom/TGeoPainter.mjs';
+    let opt = { numfaces: 100000 };
+    let obj3d = build(obj, opt);
     scene.add( obj3d );
 
 Following options can be specified:
@@ -771,10 +810,11 @@ Following options can be specified:
    - wireframe - show wireframe for created object (default - off)
    - dflt_colors - assign default ROOT colors for the volumes
 
-When transparent volumes appeared in the model, one could use JSROOT.GEO.produceRenderOrder() function
+When transparent volumes appeared in the model, one could use `produceRenderOrder()` function
 to correctly set rendering order. It should be used as:
 
-    JSROOT.GEO.produceRenderOrder(scene, camera.position, 'box');
+    import { produceRenderOrder } from './path_to_jsroot/modules/geom/TGeoPainter.mjs';
+    produceRenderOrder(scene, camera.position, 'box');
 
 Following methods can be applied: "box", "pnt", "size", "ray" and "dflt". See more info in draw options description for TGeo classes.
 
@@ -783,70 +823,73 @@ Here is [running example](https://root.cern/js/latest/api.htm#custom_html_geomet
 
 ### Use with Node.js
 
-To install latest JSROOT relelase, just do:
+To install latest JSROOT release, just do:
 
     [shell] npm install jsroot
 
 To use in the Node.js scripts, one should add following line:
 
-     let jsroot = require('jsroot');
+     import { httpRequest } from 'jsroot';
+     import { makeSVG } from 'jsroot/draw';
 
 Using JSROOT functionality, one can open binary ROOT files (local and remote), parse ROOT JSON,
 create SVG output. For example, to create SVG image with lego plot, one should do:
 
-    let jsroot = require("jsroot");
-    let fs = require("fs");
+    import { openFile } from 'jsroot/io';
+    import { makeSVG } from 'jsroot/draw';
+    import { writeFileSync } from 'fs';
 
-    jsroot.OpenFile("https://root.cern/js/files/hsimple.root")
-          .then(file => file.ReadObject("hpx;1")
-          .then(obj => jsroot.makeSVG({ object: obj, option: "lego2", width: 1200, height: 800 }))
-          .then(svg => fs.writeFileSync("lego2.svg", svg));
+    let file = await openFile("https://root.cern/js/files/hsimple.root");
+    let obj = await file.readObject("hpx;1");
+    let svg = await makeSVG({ object: obj, option: "lego2", width: 1200, height: 800 });
+    writeFileSync("lego2.svg", svg);
 
-It is also possible to convert any JavaScript object into ROOT JSON string, using **JSROOT.toJSON()** function. Like:
+It is also possible to convert any JavaScript object into ROOT JSON string, using `toJSON()` function. Like:
 
-    let jsroot = require("jsroot");
-    let fs = require("fs");
+    import { openFile } from 'jsroot/io';
+    import { makeSVG } from 'jsroot/draw';
+    import { toJSON } from 'jsroot';
+    import { writeFileSync } from 'fs';
 
-    jsroot.OpenFile("https://root.cern/js/files/hsimple.root")
-          .then(file => file.ReadObject("hpxpy;1"))
-          .then(obj => jsroot.toJSON(obj))
-          .then(json => fs.writrFileSync("hpxpy.json", json));
+    let file = await openFile("https://root.cern/js/files/hsimple.root");
+    let obj = await file.readObject("hpx;1");
+    let json = await toJSON(obj);
+    writrFileSync("hpxpy.json", json);
 
 Such JSON string could be parsed by any other JSROOT-based application.
+
+When WebGL rendering is used (lego plots or TGeo drawing), on the Linux one need to have `DISPLAY` correctly set
+to make it working. To run JSROOT on headless machine, one have to use `xvfb-run` utility like
+(see also [here](https://github.com/stackgl/headless-gl#how-can-headless-gl-be-used-on-a-headless-linux-machine)):
+
+    xvfb-run -s "-ac -screen 0 1280x1024x24" node geomsvg.js
 
 
 ### Use with OpenUI5
 
 [OpenUI5](http://openui5.org/) is a web toolkit for developers to ease and speed up the development of full-blown HTML5 web applications. Since version 5.3.0 JSROOT provides possibility to use OpenUI5 functionality together with JSROOT.
 
-First problem is bootstraping of OpenUI5. Most easy solution - specify openui5 URL parameter when loading JSROOT:
+First problem is bootstraping of OpenUI5. Most easy solution - use `openui5.mjs` module.
+JSROOT uses https://openui5.hana.ondemand.com to load latest stable version of OpenUI5.
+After loading is completed, one can use `sap` to access openui5 functionality like:
 
-
-      <script type="text/javascript"
-              src="https://root.cern/js/latest/scripts/JSRoot.core.min.js">
+      <script type="module">
+         import { loadOpenui5 } from 'path_to_jsroot/modules/main.mjs';
+         let sap = await loadOpenui5();
+         sap.registerModulePath("NavExample", "./");
+         new sap.m.App ({
+           pages: [
+             new sap.m.Page({
+               title: "Nav Container",
+               enableScrolling : true,
+               content: [ new sap.ui.core.ComponentContainer({ name : "NavExample" })]
+             })
+           ]
+         }).placeAt("content");
       </script>
 
-JSROOT uses https://openui5.hana.ondemand.com to load latest stable version of OpenUI5. After loading is completed, one can use `sap` to access openui5 functionality. Like:
-
-      <script type="text/javascript">
-         JSROOT.require('openui5').then(() => {
-            sap.registerModulePath("NavExample", "./");
-            new sap.m.App ({
-              pages: [
-                new sap.m.Page({
-                  title: "Nav Container",
-                    enableScrolling : true,
-                    content: [ new sap.ui.core.ComponentContainer({
-                         name : "NavExample"
-                    })]
-                })
-              ]
-            }).placeAt("content");
-         }
-      </script>
-
-There are small details when using OpenUI5 with THttpServer. First of all, location of JSROOT scripts should be specified
-as `jsrootsys/scripts/JSRoot.core.js`. And when trying to access files from local disk, one should specify `/currentdir/` folder:
+There are small details when using OpenUI5 with THttpServer. First of all, location of JSROOT modules should be specified
+as `jsrootsys/modules/main.mjs`. And when trying to access files from local disk, one should specify `/currentdir/` folder:
 
     jQuery.sap.registerModulePath("NavExample", "/currentdir/");
 
@@ -854,23 +897,62 @@ JSROOT provides [example](https://root.cern/js/latest/demo/openui5/) showing usa
 [source code](https://github.com/root-project/jsroot/tree/master/demo/openui5) can be found in repository.
 
 
+### Migration v6 -> v7
+
+Loading of `JSRoot.core.js` will provide very similar functionality as with `v6` via global `JSROOT` object, but not everything was ported
+
+`JSROOT.define` and `JSROOT.require` only available after `JSRoot.core.js` loading, normally functionality should be loaded from modules directly (in most cases from `main.mjs`)
+
+Support of `require.js` and `openui5` loader was removed
+
+Core functionality should be imported from `main.mjs` module like:
+
+      import { create, parse, createHistogram, redraw } from 'https://root.cern/js/7.0.0/modules/main.mjs';
+
+Global `JSROOT.hpainter` disappear, one should use `getHPainter` function:
+
+      import { getHPainter } from 'https://root.cern/js/7.0.0/modules/main.mjs';
+      let hpainter = getHPainter();
+
+All math functions in `JSROOT.Math` should be imported from `base/math.mjs` module:
+
+     import * as math from 'https://root.cern/js/7.0.0/modules/base/math.mjs';
+
+Indication of batch mode `JSROOT.batch_mode` should be accessed via functions:
+
+     import { isBatchMode, setBatchMode } from 'https://root.cern/js/7.0.0/modules/main.mjs';
+     let was_batch = isBatchMode();
+     if (!was_batch) setBatchMode(true);
+
+Function `JSROOT.extend` was remove, use `Object.assign` instead
+
+
+
 ### Migration v5 -> v6
 
-In JSROOT v6 release some many incompatible changes where done.
+In JSROOT v6 release many incompatible changes were done.
 
-Main script was renamed to `JSRoot.core.js`. Old `JSRootCore.js` script left to provide partial compatibility
-with old applications, but will be removed in future JSROOT v6.2. All URL parameters for main script will be
-ignored, to load JSROOT functionality one should use `JSROOT.require` function. To create standard GUI,
-`JSROOT.buildGUI` function has to be used.
+Main script was renamed to `JSRoot.core.js`. Old `JSRootCore.js` was deprecated and removed in v6.2.
+All URL parameters for main script ignored now, to load JSROOT functionality one should use `JSROOT.require` function.
+To create standard GUI, `JSROOT.buildGUI` function has to be used.
 
 Instead of `JSROOT.JSONR_unref` one can use `JSROOT.parse`. If object is provided to `JSROOT.parse` it just replaces all
 references which were introduced by `TBufferJSON::ToJSON()` method.
 
 Instead of `JSROOT.console` one should use `console.log`. Instead of `JSROOT.alert` one should use `console.error`.
 
-Painter classes were renamed:
+Many settings were moved from `JSROOT.gStyle` to `JSROOT.settings` object. It was done to keep only TStyle-related members
+in `JSROOT.gStyle`.
+
+Basic painter classes were renamed and made public:
    - `JSROOT.TBasePainter` -> `JSROOT.BasePainter`
    - `JSROOT.TObjectPainter` -> `JSROOT.ObjectPainter`
 
-Many settings where moved from `JSROOT.gStyle` to `JSROOT.settings` object. It was done to keep only TStyle-related members
-in `JSROOT.gStyle`.
+Internal `ObjectPainter.DrawingReady` api was deprecated. Draw function has to return `Promise` if object drawing postponed.
+As argument of returned promise object painter has to be used.
+
+Many function names where adjusted to naming conventions. Like:
+   - `JSROOT.CreateHistogram` -> `JSROOT.createHistogram`
+   - `JSROOT.CreateTGraph` -> `JSROOT.createTGraph`
+   - `JSROOT.Create` -> `JSROOT.create`
+

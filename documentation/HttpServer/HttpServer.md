@@ -41,7 +41,7 @@ One also can provide extra arguments for THttpServer itself:
    - readonly, ro   - use server in read-only mode (default)
    - readwrite, rw  - use server in read-write mode
    - global         - let scan global directories for canvases and files (default)
-   - noglobal       - disable scan of global directories 
+   - noglobal       - disable scan of global directories
 
 Example:
 
@@ -99,6 +99,33 @@ string to the icon name to let browser show command as extra button. In last cas
 One can find example of command interface usage in [tutorials/http/httpcontrol.C](https://github.com/root-project/root/blob/master/tutorials/http/httpcontrol.C) macro.
 
 
+## Customize user interface
+
+JSROOT is used to implement UI for the THttpServer. Defualt webpage shows list of registered objects on the left side and drawing area on the right side - [see example](https://root.cern/js/latest/httpserver.C/). JSROOT allows to configure different parameters via URL - like monitoring interval or name of displayed items [item=Files/job1.root/hpxpy&opt=colz&monitoring=1000](https://root.cern/js/latest/httpserver.C/?item=Files/job1.root/hpxpy&opt=colz&monitoring=1000).
+
+Some of such parameters can be configured already on the server:
+
+    serv->SetItemField("/", "_monitoring", "1000");   // monitoring interval in ms
+    serv->SetItemField("/", "_drawitem", "Files/job1.root/hpxpy");  // item to draw
+    serv->SetItemField("/", "_drawopt", "colz");
+
+In such case URL parameters are not required - specified item will be displayed automatically when web page is opened.
+One also can configure to display several items at once. For that one also can configure layout of the drtawing area:
+
+    serv->SetItemField("/", "_layout", "grid2x2");    // layout for drawing area
+    serv->SetItemField("/", "_drawitem", "[Files/job1.root/hpxpy,Files/job1.root/hpx]");  // items
+    serv->SetItemField("/", "_drawopt", "[colz,hist]");  // options
+
+One also can change appearance of hierarchy browser on the left side of the web page:
+
+    serv->SetItemField("/", "_browser", "off");    // allowed "fix" (default), "float", "no", "off"
+    serv->SetItemField("/", "_toptitle", "Custom title");    // title of web page, shown when browser off
+
+If necessary, one also can automatically open ROOT file when web page is opened:
+
+    serv->SetItemField("/", "_loadfile", "currentdir/hsimple.root"); // name of ROOT file to load
+
+
 ## Configuring user access
 
 By default, the http server is open for anonymous access. One could restrict the access to the server for authenticated users only. First of all, one should create a password file, using the **htdigest** utility.
@@ -151,6 +178,12 @@ In fact, the FastCGI interface can run in parallel to http server. One can just 
 One could specify a debug parameter to be able to adjust the FastCGI configuration on the web server:
 
     serv->CreateEngine("fastcgi:9000?debug=1");
+
+By default 10 threads are used to process FastCGI requests. This number can be changed with "thrds" url parameter:
+
+    serv->CreateEngine("fastcgi:9000?thrds=20");
+
+If "thrds=0" specified, the only thread will be use to received and process all requests.
 
 All user access will be ruled by the main web server. Authorized account names could be used to configure access restriction in THttpServer.
 
@@ -254,7 +287,7 @@ Then, its representation will look like:
     {
        "_typename" : "TNamed",
        "fUniqueID" : 0,
-       "fBits" : 50331656,
+       "fBits" : 0,
        "fName" : "obj",
        "fTitle" : "title"
     }
@@ -419,21 +452,20 @@ such kind of requests, which themselvs require data from POST block.
 
 To use `multi.json` request from the JavaScript, one should create special 'POST' HTTP request and properly parse it. JSROOT provides special method to do this:
 
-     var xhr = JSROOT.NewHttpRequest("your_server/multi.json?number=3", "multi", function(res) {
-        if (!res) return;
-        for (var n=0;n<res.length;++n) {
-           console.log('Requested element ', res[n]._typename);
-           // JSROOT.draw('drawid', res[n], 'hist');
-        }
-     });
-     xhr.send("Files/job1.root/hpx/root.json\nFiles/job1.root/hpxpy/root.json\nFiles/job1.root/hprof/root.json\n");
+     import { httpRequest, draw } from './jsrootsys/modules/core.mjs';
+     let res = await httpRequest("your_server/multi.json?number=3", "multi",
+                        "Files/job1.root/hpx/root.json\nFiles/job1.root/hpxpy/root.json\nFiles/job1.root/hprof/root.json\n");
+     for (let n=0; n < res.length; ++n) {
+         console.log('Requested element ', res[n]._typename);
+         // draw('drawid', res[n], 'hist');
+     }
 
-Here argument "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
+Here argument "multi" identifies, that server response should be parsed with `parseMulti()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
 
 
 ## Websockets supports
 
-Websockets support available starting from ROOT v6.12. 
+Websockets support available starting from ROOT v6.12.
 Minimal example provided in `$ROOTSYS/tutorials/http/ws.C` macro.
 
 To work with websockets, subclass of THttpWSHandler should be created and registered to THttpServer:
@@ -444,18 +476,18 @@ To work with websockets, subclass of THttpWSHandler should be created and regist
     public:
        TUserHandler(const char *name, const char *title) : THttpWSHandler(name, title) {}
 
-       // provide custom HTML page when open correpondent address
+       // provide custom HTML page when open correspondent address
        TString GetDefaultPageContent() { return ""; }
 
        virtual Bool_t ProcessWS(THttpCallArg *arg);
     };
-  
+
 Central method is `TUserHandler::ProcessWS(THttpCallArg *arg)`, where four kinds of websockets events should be handled:
-  
+
    * WS_CONNECT - clients attempts to create websockets, return false when refusing connection
-   * WS_READY   - connection is ready to use, **wsid** can be obtained with `arg->GetWSId()` calls   
-   * WS_DATA    - new portion of data received by webcosket 
-   * WS_CLOSE   - connection closed by the client, **wsid** is no longer valid  
+   * WS_READY   - connection is ready to use, **wsid** can be obtained with `arg->GetWSId()` calls
+   * WS_DATA    - new portion of data received by webcosket
+   * WS_CLOSE   - connection closed by the client, **wsid** is no longer valid
 
 These kinds are coded as method name of THttpCallArg class and can be used like:
 
@@ -483,15 +515,14 @@ These kinds are coded as method name of THttpCallArg class and can be used like:
 
        return kFALSE; // ignore all other kind of requests
     }
- 
+
 Instance of **TUserHandler** should be registered to the THttpServer like:
 
     THttpServer *serv = new THttpServer("http:8080");
     TUserHandler *handler = new TUserHandler("name1","title");
     serv->Register(handler);
-    
+
 After that web socket connection can be established with the address `ws://host_name:8080/name1/root.websocket`
 Example client code can be found in `$ROOTSYS/tutorials/http/ws.htm` file. Actually, custom HTML page for
 websocket handler can be specified with `TUserHandler::GetDefaultPageContent()` method returning `"file:ws.htm"`.
- 
- 
+
