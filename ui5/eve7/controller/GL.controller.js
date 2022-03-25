@@ -29,20 +29,10 @@ sap.ui.define([
             UIComponent.getRouterFor(this).getRoute("View").attachPatternMatched(this.onViewObjectMatched, this);
          }
 
-         this._load_scripts = false;
          this._render_html  = false;
          this.htimeout = 250;
 
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
-
-         JSROOT.require("geom").then(() => this.onLoadScripts());
-      },
-
-      onLoadScripts: function()
-      {
-         this._load_scripts = true;
-
-         this.checkViewReady();
       },
 
       onViewObjectMatched: function(oEvent)
@@ -50,13 +40,13 @@ sap.ui.define([
          let args = oEvent.getParameter("arguments");
 
          // console.log('ON MATCHED', args.viewName);
-         // console.log('MORE DATA', JSROOT.$eve7tmp);
+         // console.log('MORE DATA', EVE.$eve7tmp);
          // console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
 
          this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
-                                      args.viewName, JSROOT.$eve7tmp);
+                                      args.viewName, EVE.$eve7tmp);
 
-         delete JSROOT.$eve7tmp;
+         delete EVE.$eve7tmp;
 
          this.checkViewReady();
       },
@@ -147,7 +137,7 @@ sap.ui.define([
       // Checks if all initialization is performed and startup renderer.
       checkViewReady: function()
       {
-         if (!this.mgr || !this._load_scripts || !this._render_html || !this.eveViewerId || this.viewer_class) return;
+         if (!this.mgr || !this._render_html || !this.eveViewerId || this.viewer_class) return;
 
          this.viewer_class = this.mgr.handle.getUserArgs("GLViewer");
          if ((this.viewer_class != "JSRoot") && (this.viewer_class != "Three") && (this.viewer_class != "RCore"))

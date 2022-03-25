@@ -7,12 +7,6 @@ sap.ui.define([], function() {
 
    "use strict";
 
-   // JSROOT.sources.push("evemgr");
-
-   /** @namespace JSROOT.EVE */
-   /// Holder of all EVE-related functions and classes
-   JSROOT.EVE = {};
-
    function EveManager()
    {
       this.map    = {}; // use object, not array
@@ -54,7 +48,7 @@ sap.ui.define([], function() {
 
       console.log("EveManager got global error", msg, url, lineNo, columnNo, error);
 
-      JSROOT.EVE.alert("Global Exception handler: " + msg + "\n" + url +
+      globalThis.EVE.alert("Global Exception handler: " + msg + "\n" + url +
          " line:" + lineNo + " col:" + columnNo);
       let suppress_alert = false;
       return suppress_alert;
@@ -132,7 +126,7 @@ sap.ui.define([], function() {
             return;
          }
 
-         if (JSROOT.EVE.gDebug)
+         if (globalThis.EVE.gDebug)
             console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 100) ? msg : (msg.substr(0, 500) + "..."));
 
          let resp = JSON.parse(msg);
@@ -174,7 +168,7 @@ sap.ui.define([], function() {
    {
       if (!mir_call || !this.handle || !element_class) return;
 
-      // if (JSROOT.EVE.gDebug)
+      // if (globalThis.EVE.gDebug)
          console.log('MIR', mir_call, element_id, element_class);
 
       if (this.InterceptMIR(mir_call, element_id, element_class))
@@ -403,7 +397,7 @@ sap.ui.define([], function() {
          }
          else if (em.changeBit & this.EChangeBits.kCBColorSelection) {
             delete em.render_data;
-            JSROOT.extend(obj, em);
+            Object.assign(obj, em);
          }
 
          this.callSceneReceivers(scene, "sceneElementChange", em);
@@ -488,7 +482,7 @@ sap.ui.define([], function() {
 
       if (scenes.childs[lastChild].fElementId == msg.fSceneId)
          this.controllers.forEach(ctrl => {
-            if (ctrl.onEveManagerInit) 
+            if (ctrl.onEveManagerInit)
                ctrl.onEveManagerInit();
          });
    },
@@ -584,7 +578,7 @@ sap.ui.define([], function() {
       let changedSet = new Set();
       for (let [id, value] of oldMap.entries())
       {
-         if (JSROOT.EVE.DebugSelection)
+         if (globalThis.EVE.DebugSelection)
             console.log("UnSel prim", id, this.GetElement(id), this.GetElement(id).fSceneId);
 
          this.UnselectElement(sel, id);
@@ -595,7 +589,7 @@ sap.ui.define([], function() {
          {
             let impEl = this.GetElement(imp);
             if (impEl) {
-               if (JSROOT.EVE.DebugSelection)
+               if (globalThis.EVE.DebugSelection)
                   console.log("UnSel impl", imp, impEl, impEl.fSceneId);
 
                this.UnselectElement(sel, imp);
@@ -606,7 +600,7 @@ sap.ui.define([], function() {
 
       for (let [id, value] of newMap.entries())
       {
-         if (JSROOT.EVE.DebugSelection)
+         if (globalThis.EVE.DebugSelection)
             console.log("Sel prim", id, this.GetElement(id), this.GetElement(id).fSceneId);
 
          let secIdcs = Array.from(value.set);
@@ -620,7 +614,7 @@ sap.ui.define([], function() {
 
          for (let imp of value.implied)
          {
-            if (JSROOT.EVE.DebugSelection)
+            if (globalThis.EVE.DebugSelection)
                console.log("Sel impl", imp, this.GetElement(imp), this.GetElement(imp).fSceneId);
 
             this.SelectElement(sel, imp, secIdcs, value.extra);
@@ -706,7 +700,7 @@ sap.ui.define([], function() {
          try {
             item.endChanges();
          } catch (e) {
-            JSROOT.EVE.alert("EveManager: Exception caught during update processing: " + e + "\n" +
+            globalThis.EVE.alert("EveManager: Exception caught during update processing: " + e + "\n" +
                "You might want to reload the page in browser and / or check error consoles.");
             console.error("EveManager: Exception caught during update processing", e);
 
@@ -776,7 +770,7 @@ sap.ui.define([], function() {
       let mirElem = this.GetElement(this._intercept_id);
 
       let msg1 = { content: "BeginChanges" }, msg3 = { content: "EndChanges" },
-          msg2 = { arr: [ JSROOT.extend({UT_PostStream:"UT_Selection_Refresh_State", changeBit: 4}, mirElem) ],
+          msg2 = { arr: [ Object.assign({UT_PostStream:"UT_Selection_Refresh_State", changeBit: 4}, mirElem) ],
                    header:{ content:"ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[] }};
 
       msg2.arr[0].sel_list = elementId ? [{primary: elementId, implied: this.FindElemetsForMaster(elementId, true), sec_idcs:[]}] : [];
@@ -821,10 +815,10 @@ sap.ui.define([], function() {
    EveManager.prototype._intercept_SetMainColorRGB = function(colr, colg, colb) {
       let messages = [{ content: "BeginChanges" }];
 
-      let newColor = JSROOT.Painter.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
+      let newColor = globalThis.EVE.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
 
       let mirElem = this.GetElement(this._intercept_id);
-      let msg = { arr: [ JSROOT.extend({changeBit:1}, mirElem) ],
+      let msg = { arr: [ Object.assign({changeBit:1}, mirElem) ],
                   header:{ content: "ElementsRepresentaionChanges", fSceneId: mirElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
 
       msg.arr[0].fMainColor = newColor;
@@ -833,7 +827,7 @@ sap.ui.define([], function() {
       messages.push(msg);
 
       this.FindElemetsForMaster(this._intercept_id).forEach(function(subElem) {
-         let msg = { arr: [ JSROOT.extend({changeBit:1}, subElem) ],
+         let msg = { arr: [ Object.assign({changeBit:1}, subElem) ],
                header: { content: "ElementsRepresentaionChanges", fSceneId: subElem.fSceneId, fTotalBinarySize:0, numRepresentationChanged:1, removedElements:[]}};
          msg.arr[0].fMainColor = newColor;
          msg.arr[0].sel_list = msg.arr[0].prev_sel_list = msg.arr[0].render_data = undefined;
@@ -865,12 +859,12 @@ sap.ui.define([], function() {
       this._intercept_id = element_id;
       this._intercept_class = element_class;
 
-      JSROOT.$eve7mir = this;
+      globalThis.$eve7mir = this;
 
       if (mir_call.indexOf("SetMainColorRGB(") == 0)
          mir_call = mir_call.replace(/\(UChar_t\)/g, '');
 
-      let func = new Function('JSROOT.$eve7mir._intercept_' + mir_call);
+      let func = new Function('globalThis.$eve7mir._intercept_' + mir_call);
 
       try {
          func();
@@ -878,7 +872,7 @@ sap.ui.define([], function() {
          console.log("Fail to intercept MIR call:", mir_call);
       }
 
-      delete JSROOT.$eve7mir;
+      delete globalThis.$eve7mir;
 
       return true;
    }
@@ -887,11 +881,11 @@ sap.ui.define([], function() {
    // END protoype functions
    //==============================================================================
 
-   JSROOT.EVE.EveManager = EveManager;
+   globalThis.EVE.EveManager = EveManager;
 
-   JSROOT.EVE.DebugSelection = 0;
+   globalThis.EVE.DebugSelection = 0;
 
-   // JSROOT.EVE.gDebug = true;
+   // globalThis.EVE.gDebug = true;
 
    return EveManager;
 

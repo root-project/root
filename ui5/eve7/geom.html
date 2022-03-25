@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
-      <meta charset="UTF-8">
+      <meta charset="utf-8">
       <title>Geometry viewer</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
       <style>
          html { height: 100%; }
          body { min-height: 100%; margin: 0; overflow: hidden }
@@ -40,23 +39,24 @@
 
    <body>
       <div id="GeomDiv">
-         loading scripts...
       </div>
 
-      <script type='text/javascript'>
+      <script type='module'>
 
-        JSROOT.connectWebWindow({
-           prereq: "openui5",
-           prereq_logdiv: "GeomDiv",
-//           openui5src: "jsroot",    // use ROOT provided package
-//           openui5src: "https://openui5.hana.ondemand.com/1.98.0/",   // latest official openui5 release
-//           openui5theme: "sap_fiori_3",                        // optional theme
+        import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
+        import { parse, decodeUrl, toJSON, source_dir } from '/jsrootsys/modules/core.mjs';
+        import { initEVE } from '/jsrootsys/modules/geom/eve.mjs';
+
+        initEVE(); // create global EVE and THREE handles
+
+        connectWebWindow({
+           ui5: true,
            openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table" // customize openui5 libs later
         }).then(handle => {
             sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
                 XMLView.create({
                    viewName: "rootui5.eve7.view.GeomViewer",
-                   viewData: { conn_handle: handle }
+                   viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir } }
                 }).then(oView => oView.placeAt("GeomDiv"));
              });
         });

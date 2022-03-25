@@ -278,7 +278,7 @@ sap.ui.define([
             }
 
             if (elem.fMainColor) {
-               newelem.fMainColor = JSROOT.Painter.getColor(elem.fMainColor);
+               newelem.fMainColor = EVE.getColor(elem.fMainColor);
             }
          }
       },

@@ -25,7 +25,7 @@ sap.ui.define([
 
         onInit: function () {
             // disable narrowing axis range
-            JSROOT.settings.Zooming = false;
+            EVE.settings.Zooming = false;
 
             let data = this.getView().getViewData();
             if (data) {
@@ -40,8 +40,8 @@ sap.ui.define([
 
         onViewObjectMatched: function (oEvent) {
             let args = oEvent.getParameter("arguments");
-            this.setupManagerAndViewType(JSROOT.$eve7tmp.eveViewerId, JSROOT.$eve7tmp.mgr);
-            delete JSROOT.$eve7tmp;
+            this.setupManagerAndViewType(EVE.$eve7tmp.eveViewerId, EVE.$eve7tmp.mgr);
+            delete EVE.$eve7tmp;
         },
 
         setupManagerAndViewType: function (eveViewerId, mgr) {
@@ -60,7 +60,7 @@ sap.ui.define([
             element.setHtmlText("Pointset infected by TCanvas / Lego Stack");
 
             this.eve_lego = chld;
-            this.canvas_json = JSROOT.parse(atob(chld.fTitle));
+            this.canvas_json = EVE.parse(atob(chld.fTitle));
         },
         onResize : function() {
             // use timeout
@@ -74,13 +74,13 @@ sap.ui.define([
             let domref = this.byId("legoPlotPlace").getDomRef();
             if (!this.jst_ptr) {
                 this.jst_ptr = 1;
-                JSROOT.draw(domref, this.canvas_json).then(hist_painter => {
+                EVE.draw(domref, this.canvas_json).then(hist_painter => {
                     this.canv_painter = hist_painter.getCanvPainter();
                 });
             }
             else {
-                // if completely different, call JSROOT.cleanup(dom) first.
-                JSROOT.redraw(domref, this.canvas_json).then(hist_painter => {
+                // if completely different, called cleanup(dom) first.
+                EVE.redraw(domref, this.canvas_json).then(hist_painter => {
                     this.canv_painter = hist_painter.getCanvPainter();
                 });
             }
@@ -105,8 +105,8 @@ sap.ui.define([
             if (!this.controllerIsMapped()) return;
 
             let domref = this.byId("legoPlotPlace").getDomRef();
-            this.canvas_json = JSROOT.parse( atob(this.eve_lego.fTitle) );
-            JSROOT.redraw(domref, this.canvas_json);
+            this.canvas_json = EVE.parse( atob(this.eve_lego.fTitle) );
+            EVE.redraw(domref, this.canvas_json);
         },
 
         elementRemoved: function (elId) {
