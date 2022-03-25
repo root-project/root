@@ -24,7 +24,7 @@ sap.ui.define([
          }
 
          if (msg.indexOf("MODEL:")==0) {
-            var data = JSROOT.parse(msg.substr(6));
+            var data = JSON.parse(msg.substr(6));
             if (data)
                this.getView().setModel(new JSONModel(data));
          } else {
