@@ -2,9 +2,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
+   <meta charset="utf-8">
    <title>Batch production</title>
-   <script src="$jsrootsys/scripts/JSRoot.core.js" type="text/javascript"></script>
    <style>
      @media print {
         @page { margin: 0; }
@@ -12,36 +11,50 @@
         div.page { page-break-after: always; page-break-inside: avoid; }
      }
   </style>
+  <script src="$jsrootsys/build/jsroot.js"></script>
 </head>
 
 <body style="margin:0; padding:0; overflow:hidden">
   <div id="drawing" style="width:$draw_widthpx; height:$draw_heightpx; overflow:hidden; margin:0; padding:0"></div>
 </body>
 
-<script id="data" type='text/javascript'>
-   var main_object = JSROOT.parse($draw_object);
+<script id="data">
+   globalThis.main_object = JSROOT.parse($draw_object);
 </script>
 
-<script type='text/javascript'>
-   JSROOT.batch_mode = true;
+<script>
+
+   JSROOT.setBatchMode(true);
 
    let kind = "$draw_kind";
 
-   JSROOT.draw("drawing", main_object, "").then(painter => {
-      d3.select("#data").remove();
-      if (kind != "draw")
-         painter.produceImage(true, kind).then(res => {
-            let elem = d3.select("#drawing").attr("style", null);
-            if (kind == "svg")
-               elem.html(res);
-            else
-               elem.html("").append("img").attr("src", res);
-            dump(`types ${typeof window} ${typeof window.dump}\n`);
-            if (JSROOT.browser.isFirefox && window && (typeof window.dump == 'function')) {
-                window.dump(d3.select("body").html());
-                window.close();
-           }
-        });
+   function complete() {
+      if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
+         window.dump(document.body.innerHTML);
+         window.close();
+      }
+   }
+
+   JSROOT.draw("drawing", globalThis.main_object, "").then(painter => {
+      document.getElementById("data").remove();
+      if (kind == "draw")
+         return complete();
+
+      painter.produceImage(true, kind).then(res => {
+
+         let elem = document.getElementById("drawing");
+         elem.removeAttribute("style");
+         if (kind == "svg") {
+            elem.innerHTML = res;
+         } else {
+            elem.innerHTML = "";
+            let img = document.createElement("img");
+            img.setAttribute("src", res);
+            elem.appendChild(img);
+         }
+
+         complete();
+      });
    });
 </script>
 
