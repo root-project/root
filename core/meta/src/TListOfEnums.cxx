@@ -184,6 +184,22 @@ TEnum *TListOfEnums::Find(DeclId_t id) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Specialize FindObject to do search for the
+/// a enum just by name or create it if its not already in the list
+
+TObject *TListOfEnums::FindObject(const char *name) const
+{
+   TObject *result = THashList::FindObject(name);
+   if (!result) {
+      TInterpreter::DeclId_t decl;
+      if (GetClass()) decl = gInterpreter->GetEnum(GetClass(), name);
+      else            decl = gInterpreter->GetEnum(nullptr, name);
+      if (decl) result = const_cast<TListOfEnums *>(this)->Get(decl, name);
+   }
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return (after creating it if necessary) the TEnum
 /// describing the enum corresponding to the Decl 'id'.
 
