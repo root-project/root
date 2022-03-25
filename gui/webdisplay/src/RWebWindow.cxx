@@ -966,7 +966,7 @@ std::string RWebWindow::GetClientVersion() const
 
 /////////////////////////////////////////////////////////////////////////
 /// Set arbitrary JSON data, which is accessible via conn.getUserArgs() method in JavaScript
-/// This JSON code injected into main HTML document into JSROOT.connectWebWindow()
+/// This JSON code injected into main HTML document into connectWebWindow({})
 /// Must be set before RWebWindow::Show() method is called
 /// \param args - arbitrary JSON data which can be provided to client side
 
