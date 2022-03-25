@@ -156,16 +156,7 @@ void TListOfEnumsWithLock::Delete(Option_t *option /* ="" */)
 TObject *TListOfEnumsWithLock::FindObject(const char *name) const
 {
    R__LOCKGUARD(gInterpreterMutex);
-   TObject *result = TListOfEnums::FindObject(name);
-   if (!result) {
-
-
-      TInterpreter::DeclId_t decl;
-      if (GetClass()) decl = gInterpreter->GetEnum(GetClass(), name);
-      else        decl = gInterpreter->GetEnum(0, name);
-      if (decl) result = const_cast<TListOfEnumsWithLock *>(this)->Get(decl, name);
-   }
-   return result;
+   return TListOfEnums::FindObject(name);
 }
 
 
