@@ -6016,9 +6016,23 @@ void TClass::PostLoadCheck()
          pairname.append(GetName() + noffset);
          if ( auto pcl = TClass::GetClass(pairname.c_str(), false, false) )
          {
+            TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+
+            fCollectionProxy->Reset();
+            TIter nextClass(gROOT->GetListOfClasses());
+            while (auto acl = (TClass*)nextClass()) {
+               if (acl == this) continue;
+               if (acl->fCollectionProxy && acl->fCollectionProxy->GetValueClass() == pcl) {
+                  acl->fCollectionProxy->Reset();
+               }
+            }
+
             TIter next(pcl->GetStreamerInfos());
             while (auto info = (TVirtualStreamerInfo*)next()) {
-               info->Clear("build");
+               if (info->IsBuilt()) {
+                  info->Clear("build");
+                  info->BuildOld();
+               }
             }
             fCollectionProxy->GetValueClass();
          }
