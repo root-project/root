@@ -776,6 +776,19 @@ TGenCollectionProxy *TGenCollectionProxy::Initialize(Bool_t silent) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reset the info gathered from StreamerInfos and value's TClass.
+Bool_t TGenCollectionProxy::Reset()
+{
+   if (fReadMemberWise)
+      fReadMemberWise->Clear();
+   delete fWriteMemberWise;
+   fWriteMemberWise = nullptr;
+   if (fConversionReadMemberWise)
+      fConversionReadMemberWise->clear();
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Check existence of function pointers
 
 void TGenCollectionProxy::CheckFunctions() const
