@@ -15,7 +15,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       this.obj3d = o3d;
    }
 
-   EveElemControl.prototype = Object.create(JSROOT.Painter.GeoDrawingControl.prototype);
+   EveElemControl.prototype = Object.create(EVE.GeoDrawingControl.prototype);
 
    EveElemControl.prototype.invokeSceneMethod = function (fname, arg)
    {
@@ -57,7 +57,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
 
    function RcCol(root_col)
    {
-      return new RC.Color(JSROOT.Painter.getColor(root_col));
+      return new RC.Color(EVE.getColor(root_col));
    }
 
    //------------------------------------------------------------------------------
@@ -188,7 +188,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
       let track_width = 2 * (track.fLineWidth || 1) * this.LINE_WIDTH_FAC;
       let track_color = RcCol(track.fLineColor);
 
-      if (JSROOT.browser.isWin) track_width = 1;  // not supported on windows
+      if (EVE.browser.isWin) track_width = 1;  // not supported on windows
 
       let buf = new Float32Array((N - 1) * 6), pos = 0;
       for (let k = 0; k < (N - 1); ++k)
@@ -223,7 +223,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          pos += 6;
       }
 
-      let style = (track.fLineStyle > 1) ? JSROOT.Painter.root_line_styles[track.fLineStyle] : "",
+      let style = (track.fLineStyle > 1) ? EVE.root_line_styles[track.fLineStyle] : "",
          dash = style ? style.split(",") : [],
          lineMaterial;
 
