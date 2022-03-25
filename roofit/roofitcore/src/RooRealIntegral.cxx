@@ -434,7 +434,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // This is not a problem since we do noty use the returned value from getVal()
   // we then disable the produced warning message in the RooFit::Eval topic
   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> msgChanger;
-  if (_funcNormSet == nullptr) {
+  if (_funcNormSet == nullptr || _funcNormSet->getSize() == 0) {
      // remove only the RooFit::Eval message topic from current active streams
      // passed level can be whatever if we provide a false as last argument   
      msgChanger = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING, 0u, RooFit::Eval, false);
