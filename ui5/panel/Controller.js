@@ -1,7 +1,6 @@
 sap.ui.define([
-   'sap/ui/core/mvc/Controller',
-   'sap/ui/model/json/JSONModel'
-], function (Controller, JSONModel) {
+   'sap/ui/core/mvc/Controller'
+], function (Controller) {
    "use strict";
 
    return Controller.extend("rootui5.panel.Controller", {
@@ -13,18 +12,16 @@ sap.ui.define([
 
 
       onInit: function() {
-         var data = this.getView().getViewData();
+         let data = this.getView().getViewData();
 
-         if (data && data.handle) {
-            this.websocket = data.handle;
+         this.websocket = data?.handle;
+         if (this.websocket) {
             this.websocket.setReceiver(this); // redirect websocket handling on controller itself
             this.websocket.send("PANEL_READY"); // confirm panel creation, only then GUI can send commands
          }
 
          // TODO: use more specific API between Canvas and Panel
-         if (data && data.masterPanel) {
-            this.masterPanel = data.masterPanel;
-         }
+         this.masterPanel = data?.masterPanel;
 
          if (typeof this.onPanelInit == "function")
             this.onPanelInit();
