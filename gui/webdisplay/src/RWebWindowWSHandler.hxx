@@ -86,7 +86,7 @@ protected:
       if (!user_args.empty())
          more_args.append("user_args: "s + user_args + ","s);
       if (!more_args.empty()) {
-         std::string search = "JSROOT.connectWebWindow({"s;
+         std::string search = "connectWebWindow({"s;
          std::string replace = search + more_args;
          arg->ReplaceAllinContent(search, replace, true);
          arg->AddNoCacheHeader();
