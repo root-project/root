@@ -3,18 +3,23 @@
   <head>
     <meta charset="utf-8">
     <title>RWebWindow latency test</title>
-    <script src="jsrootsys/scripts/JSRoot.core.js" type="text/javascript"></script>
   </head>
 
   <body>
-     <button onclick="SendMsg('halt')">Halt</button>
-     <button onclick="ToggleDrawing()">Draw</button>
+     <button id="halt_btn">Halt</button>
+     <button id="toggle_btn">Draw</button>
      <p>Main: <b id="output">Msg</b></p>
      <div id="clients"></div>
      <div id="draw" style="position: absolute; left: 0px; right: 0px; bottom: 0px; height: 50%; overflow:hidden"></div>
   </body>
 
-  <script>
+  <script type="module">
+
+    import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
+
+    import { redraw, cleanup } from '/jsrootsys/modules/draw.mjs';
+
+    import { createHistogram } from '/jsrootsys/modules/core.mjs';
 
     class PingPongHandler {
        constructor(is_main, out_id) {
@@ -83,7 +88,7 @@
              }
 
              if (this.is_main && this.hist)
-                JSROOT.redraw("draw", this.hist);
+                redraw("draw", this.hist);
 
           }, msec);
        }
@@ -157,7 +162,7 @@
           for (let n = 0; n < nclients; ++n) {
              let sub_handler = new PingPongHandler(false, "out" + n);
              sub_handler.cnt = 10000*(n+1);
-             JSROOT.connectWebWindow( { receiver: sub_handler, socket_kind: this.handle.kind } );
+             connectWebWindow( { receiver: sub_handler, socket_kind: this.handle.kind } );
              this.clients.push(sub_handler);
           }
        }
@@ -165,7 +170,7 @@
        createHistogram() {
           let mean = this.sum[0] > 10 ? this.sum[1] / this.sum[0] : 50;
 
-          this.hist = JSROOT.createHistogram("TH1I", 100);
+          this.hist = createHistogram("TH1I", 100);
           this.hist.fTitle = "Roundtrip time";
           this.hist.fXaxis.fTitle = "ms";
           this.hist.fXaxis.fXmax = 100;
@@ -183,17 +188,18 @@
 
     let main_handler = new PingPongHandler(true);
 
-    function SendMsg(txt) {
+    document.getElementById('halt_btn').onclick = () => {
        if (main_handler && main_handler.handle)
-          main_handler.handle.send(txt);
-    }
+            main_handler.handle.send('halt');
+    };
 
-    function ToggleDrawing() {
+    document.getElementById('toggle_btn').onclick = () => {
+
        let draw = document.getElementById("draw");
        if (!draw) return;
 
        if (main_handler.hist) {
-          JSROOT.cleanup(draw);
+          cleanup(draw);
           main_handler.clearHistogram();
           draw.style.display = "none";
           return;
@@ -201,11 +207,11 @@
 
        main_handler.createHistogram();
        draw.style.display = "";
-    }
+    };
 
     // important this line, which need to be specially handled
     // line MUST always end with "({" symbols
-    JSROOT.connectWebWindow({
+    connectWebWindow({
        receiver: main_handler
     });
 
