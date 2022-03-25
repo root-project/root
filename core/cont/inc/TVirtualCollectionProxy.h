@@ -75,6 +75,9 @@ public:
    virtual TVirtualCollectionProxy* Generate() const = 0; // Returns an object of the actual CollectionProxy class
    virtual ~TVirtualCollectionProxy() {};
 
+   // Reset the info gathered from StreamerInfos and value's TClass.
+   virtual Bool_t    Reset() { return kTRUE; };
+
    virtual TClass   *GetCollectionClass() const { return fClass; }
    // Return a pointer to the TClass representing the container
 

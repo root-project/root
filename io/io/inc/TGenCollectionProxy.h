@@ -358,6 +358,9 @@ public:
    // Standard destructor.
    virtual ~TGenCollectionProxy();
 
+   // Reset the info gathered from StreamerInfos and value's TClass.
+   virtual Bool_t Reset();
+
    // Return a pointer to the TClass representing the container.
    virtual TClass *GetCollectionClass() const;
 
