@@ -3,7 +3,6 @@
   <head>
     <meta charset="utf-8">
     <title>Geom help</title>
-    <script src="jsrootsys/scripts/JSRoot.core.js" type="text/javascript"></script>
   </head>
 
     <style>
@@ -15,26 +14,19 @@
      This is help text
   </body>
 
-  <script>
+  <script type="module">
 
-     var conn_handle = null;
+     import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
 
-     JSROOT.connectWebWindow({
+     connectWebWindow({
        receiver: {
-          // method called when connection to server is established
-          onWebsocketOpened: function(handle) {
-             conn_handle = handle;
-          },
-
           // method with new message from server
-          onWebsocketMsg: function(handle, msg, offset) {
+          onWebsocketMsg(handle, msg, offset) {
              document.body.innerHTML = msg;
           },
 
           // method called when connection is gone
-          onWebsocketClosed: function(handle) {
-             conn_handle = null;
-             // when connection closed, close panel as well
+          onWebsocketClosed(handle) {
              if (window) window.close();
           }
        }
