@@ -896,7 +896,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                         else {
                            gROOT->GetListOfClasses()->Remove(paircl);
                            TClass *newpaircl = TClass::GetClass(nam.c_str(), true, false, fValOffset, fValDiff);
-                           if (newpaircl == paircl || newpaircl->GetClassSize() != fValDiff)
+                           if (!newpaircl || newpaircl == paircl || newpaircl->GetClassSize() != fValDiff)
                               Fatal("InitializeEx",
                                     "The TClass creation for %s did not get the right size: %d instead of%d\n",
                                     nam.c_str(), (int)paircl->GetClassSize(), (int)fValDiff);
