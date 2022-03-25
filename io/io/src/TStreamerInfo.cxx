@@ -2609,10 +2609,12 @@ void TStreamerInfo::Clear(Option_t *option)
       delete [] fComp;     fComp    = 0;
       delete [] fCompFull; fCompFull= 0;
       delete [] fCompOpt;  fCompOpt = 0;
+
       fNdata = 0;
       fNfulldata = 0;
       fNslots= 0;
       fSize = 0;
+
       ResetIsCompiled();
       ResetBit(kBuildOldUsed);
 
