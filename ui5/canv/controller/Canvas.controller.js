@@ -307,7 +307,7 @@ sap.ui.define([
       },
 
       toggleGedEditor : function() {
-         this.showGeEditor(!this.isGedEditor());
+         return this.showGeEditor(!this.isGedEditor());
       },
 
       showPanelInLeftArea: function(panel_name, panel_handle) {
@@ -370,7 +370,8 @@ sap.ui.define([
          this.getView().getModel().setProperty("/LeftArea", panel_name);
          this.getView().getModel().setProperty("/GedIcon", chk_icon(panel_name=="Ged"));
 
-         if (!panel_name) return Promise.resolve(null);
+         if (!panel_name)
+            return Promise.resolve(null);
 
          let oLd = new SplitterLayoutData({
             resizable: true,
@@ -384,12 +385,16 @@ sap.ui.define([
 
          let can_elem = this.getView().byId("MainPanel");
 
-         return XMLView.create({
-            viewName: viewName,
-            viewData: { masterPanel: this },
-            layoutData: oLd,
-            height: (panel_name == "Panel") ? "100%" : undefined
-         }).then(oView => {
+         let imp = [ import('/jsrootsys/modules/main.mjs') ];
+         if (panel_name == "Ged")
+            imp.push(import('/jsrootsys/modules/base/colors.mjs'), import('/jsrootsys/modules/gpad/TAxisPainter.mjs'), import('/jsrootsys/modules/d3.mjs'));
+
+         return Promise.all(imp).then(arr => XMLView.create({
+                     viewName: viewName,
+                     viewData: { masterPanel: this, jsroot: Object.assign({}, arr[0], arr[1], arr[2]), d3: arr[3] },
+                     layoutData: oLd,
+                     height: (panel_name == "Panel") ? "100%" : undefined
+         })).then(oView => {
 
             // workaround, while CanvasPanel.onBeforeRendering called too late
             can_elem.getController().preserveCanvasContent();

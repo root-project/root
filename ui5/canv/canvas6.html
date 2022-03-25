@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
-      <meta charset="UTF-8">
+      <meta charset="utf-8">
       <title>ROOT6 TCanvas</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRoot.core.js"></script>
    </head>
 
    <style>
@@ -21,29 +20,29 @@
 
    <body>
       <div id="CanvasDiv">
-         loading scripts...
       </div>
    </body>
 
-   <script type='text/javascript'>
+   <script type='module'>
 
-      let url = JSROOT.decodeUrl(),
+      import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
+      import { decodeUrl, setBatchMode, browser } from '/jsrootsys/modules/core.mjs';
+      import { TPadPainter, TCanvasPainter } from '/jsrootsys/modules/gpad/TCanvasPainter.mjs';
+      import { assignPadPainterDraw } from '/jsrootsys/modules/draw.mjs';
+
+      assignPadPainterDraw(TPadPainter);
+
+      let url = decodeUrl(),
           is_batch = url.has("batch_mode"),
-          is_ui5 = !url.has("noopenui") && !is_batch,
-          _prereq = 'v6';
+          is_ui5 = !url.has("noopenui") && !is_batch;
 
       if (is_batch)
-         JSROOT.batch_mode = true;
+         setBatchMode(true);
 
-      if (is_ui5)
-         _prereq += ";openui5";
-
-      JSROOT.connectWebWindow({
-         prereq: _prereq,
-         prereq_logdiv: "CanvasDiv",
-         // openui5src: "https://openui5.hana.ondemand.com/1.98.0/",
+      connectWebWindow({
+         ui5: is_ui5
       }).then(handle => {
-         let painter = new JSROOT.TCanvasPainter(null, null);
+         let painter = new TCanvasPainter(null, null);
 
          painter.online_canvas = true;
          painter.use_openui = is_ui5;
@@ -51,11 +50,10 @@
 
          if (window) {
             window.onbeforeunload = () => painter.closeWebsocket(true);
-            if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
+            if (browser.qt5) window.onqt5unload = window.onbeforeunload;
          }
 
          if (is_ui5) {
-
             painter._window_handle = handle;
 
             sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
@@ -73,12 +71,9 @@
             });
 
          } else {
-
             painter.setDom("CanvasDiv"); // just assign id, nothing else happens
-
             painter.useWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
          }
-
       });
 
    </script>

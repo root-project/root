@@ -55,15 +55,15 @@ sap.ui.define([
      },
 
      _setSVG: function() {
-        var dom = this.$();
+        let dom = this.$();
         if (!dom) return;
 
-        var w = dom.innerWidth(), h = dom.innerHeight();
+        let w = dom.innerWidth(), h = dom.innerHeight();
         dom.empty();
 
-        var svg = d3.select(dom.get(0)).append("svg").attr("width", w).attr("height",h).attr("viewBox","0 0 " + w + " " + h);
+        let svg = d3.select(dom.get(0)).append("svg").attr("width", w).attr("height",h).attr("viewBox","0 0 " + w + " " + h);
 
-        var attr = this.getProperty("svgsample");
+        let attr = this.getProperty("svgsample");
         if (attr && (typeof attr == "object") && (typeof attr.createSample == "function"))
            attr.createSample(svg,w,h);
         else

@@ -14,8 +14,12 @@ sap.ui.define([
 
       onInit : function() {
          console.log('init GED editor');
-         var model = new JSONModel({ SelectedClass: "none" });
+         let model = new JSONModel({ SelectedClass: "none" });
          this.getView().setModel(model);
+
+         let data = this.getView().getViewData();
+         this.jsroot = data?.jsroot;
+         this.d3 = data?.d3;
       },
 
       onExit : function() {
@@ -71,7 +75,7 @@ sap.ui.define([
        * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color will be created on server side
        * @private */
       getColorExec: function(painter, col, method) {
-         let id = -1, arr = JSROOT.Painter.root_colors;
+         let id = -1, arr = this.jsroot.getRootColors();
          if (typeof col == "string") {
             if (!col || (col == "none")) id = 0; else
                for (let k = 1; k < arr.length; ++k)
@@ -86,7 +90,7 @@ sap.ui.define([
 
          if (id >= 50) {
             // for higher color numbers ensure that such color exists
-            let c = d3.color(col);
+            let c = this.d3.color(col);
             id = "TColor::GetColor(" + c.r + "," + c.g + "," + c.b + ")";
          }
 
@@ -156,11 +160,11 @@ sap.ui.define([
              axis: obj,
              axiscolor: painter.lineatt.color,
              color_label: this.currentPadPainter.getColor(obj.fLabelColor),
-             center_label: obj.TestBit(JSROOT.EAxisBits.kCenterLabels),
-             vert_label: obj.TestBit(JSROOT.EAxisBits.kLabelsVert),
+             center_label: obj.TestBit(this.jsroot.EAxisBits.kCenterLabels),
+             vert_label: obj.TestBit(this.jsroot.EAxisBits.kLabelsVert),
              color_title: this.currentPadPainter.getColor(obj.fTitleColor),
-             center_title: obj.TestBit(JSROOT.EAxisBits.kCenterTitle),
-             rotate_title: obj.TestBit(JSROOT.EAxisBits.kRotateTitle),
+             center_title: obj.TestBit(this.jsroot.EAxisBits.kCenterTitle),
+             rotate_title: obj.TestBit(this.jsroot.EAxisBits.kRotateTitle),
          };
 
          model.setData(data);
@@ -195,11 +199,11 @@ sap.ui.define([
                exec = this.getColorExec(painter, pars.value, "SetLabelColor");
                break;
             case "center_label":
-               axis.InvertBit(JSROOT.EAxisBits.kCenterLabels);
+               axis.InvertBit(this.jsroot.EAxisBits.kCenterLabels);
                exec = `exec:CenterLabels(${pars.value ? true : false})`;
                break;
             case "vert_label":
-               axis.InvertBit(JSROOT.EAxisBits.kLabelsVert);
+               axis.InvertBit(this.jsroot.EAxisBits.kLabelsVert);
                exec = `exec:SetBit(TAxis::kLabelsVert,${pars.value ? true : false})`;
                break;
             case "axis/fLabelOffset":
@@ -213,11 +217,11 @@ sap.ui.define([
                exec = this.getColorExec(painter, pars.value, "SetTitleColor");
                break;
             case "center_title":
-               axis.InvertBit(JSROOT.EAxisBits.kCenterTitle);
+               axis.InvertBit(this.jsroot.EAxisBits.kCenterTitle);
                exec = `exec:CenterTitle(${pars.value ? true : false})`;
                break;
             case "rotate_title":
-               axis.InvertBit(JSROOT.EAxisBits.kRotateTitle);
+               axis.InvertBit(this.jsroot.EAxisBits.kRotateTitle);
                exec = `exec:RotateTitle(${pars.value ? true : false})`;
                break;
             case "axis/fTickLength":
