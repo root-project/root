@@ -22,6 +22,10 @@
 
 #include "gtest/gtest.h"
 
+#ifndef TYPED_TEST_SUITE
+#define TYPED_TEST_SUITE TYPED_TEST_CASE
+#endif
+
 #include <chrono>
 #include <iostream>
 #include <string>

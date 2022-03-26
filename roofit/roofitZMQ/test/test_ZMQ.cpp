@@ -16,6 +16,10 @@
 
 #include "gtest/gtest.h"
 
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include <unistd.h> // fork, usleep
 
 #include <sstream>

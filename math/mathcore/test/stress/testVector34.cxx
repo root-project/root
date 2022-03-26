@@ -4,6 +4,16 @@
 
 #include "gtest/gtest.h"
 
+#ifndef TYPED_TEST_SUITE_P
+#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
+#endif
+#ifndef REGISTER_TYPED_TEST_SUITE_P
+#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
+#endif
+#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
+#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
+#endif
+
 #include "StatFunction.h"
 #include "VectorTest.h"
 

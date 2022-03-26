@@ -340,7 +340,7 @@ TEST(RDataFrameMergeResults, Merge5Hists)
    EXPECT_FALSE(mh3);
    EXPECT_FALSE(mh4);
    EXPECT_FALSE(mh5);
-   EXPECT_TRUE(mergedptr);
+   EXPECT_TRUE(!!mergedptr);
 
    const auto &mh = mergedptr->GetValue();
 
