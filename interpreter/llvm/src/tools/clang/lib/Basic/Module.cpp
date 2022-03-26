@@ -104,7 +104,7 @@ static bool isPlatformEnvironment(const TargetInfo &Target, StringRef Feature) {
 /// Determine whether a translation unit built using the current
 /// language options has the given feature.
 static bool hasFeature(StringRef Feature, const LangOptions &LangOpts,
-                       const TargetInfo &Target, bool HasMissingHeaders) {
+                       const TargetInfo &Target) {
   bool HasFeature = llvm::StringSwitch<bool>(Feature)
                         .Case("altivec", LangOpts.AltiVec)
                         .Case("blocks", LangOpts.Blocks)
@@ -121,7 +121,6 @@ static bool hasFeature(StringRef Feature, const LangOptions &LangOpts,
                         .Case("objc", LangOpts.ObjC)
                         .Case("objc_arc", LangOpts.ObjCAutoRefCount)
                         .Case("opencl", LangOpts.OpenCL)
-                        .Case("header_existence", !HasMissingHeaders)
                         .Case("tls", Target.isTLSSupported())
                         .Case("zvector", LangOpts.ZVector)
                         .Default(Target.hasFeature(Feature) ||
@@ -145,16 +144,14 @@ bool Module::isAvailable(const LangOptions &LangOpts, const TargetInfo &Target,
       ShadowingModule = Current->ShadowingModule;
       return false;
     }
-    bool HasMissingHeaders = !Current->MissingHeaders.empty();
     for (unsigned I = 0, N = Current->Requirements.size(); I != N; ++I) {
-      if (hasFeature(Current->Requirements[I].first, LangOpts, Target,
-                     HasMissingHeaders) !=
-          Current->Requirements[I].second) {
+      if (hasFeature(Current->Requirements[I].first, LangOpts, Target) !=
+              Current->Requirements[I].second) {
         Req = Current->Requirements[I];
         return false;
       }
     }
-    if (HasMissingHeaders) {
+    if (!Current->MissingHeaders.empty()) {
       MissingHeader = Current->MissingHeaders.front();
       return false;
     }
@@ -282,8 +279,7 @@ void Module::addRequirement(StringRef Feature, bool RequiredState,
   Requirements.push_back(Requirement(Feature, RequiredState));
 
   // If this feature is currently available, we're done.
-  if (hasFeature(Feature, LangOpts, Target, !MissingHeaders.empty()) ==
-      RequiredState)
+  if (hasFeature(Feature, LangOpts, Target) == RequiredState)
     return;
 
   markUnavailable(/*MissingRequirement*/true);
