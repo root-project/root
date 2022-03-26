@@ -18,7 +18,4 @@ endif()
 add_subdirectory(roostats)
 add_subdirectory(histfactory)
 add_subdirectory(RDataFrameHelpers)
-
-if(NOT MSVC)
-  add_subdirectory(hs3)
-endif()
+add_subdirectory(hs3)
