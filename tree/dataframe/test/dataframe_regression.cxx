@@ -10,6 +10,10 @@
 
 #include "gtest/gtest.h"
 
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 // Fixture for all tests in this file. If parameter is true, run with implicit MT, else run sequentially
 class RDFRegressionTests : public ::testing::TestWithParam<bool> {
 protected:

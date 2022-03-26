@@ -9,6 +9,10 @@
 #include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define SetUpTestSuite SetUpTestCase
+#endif
+
 #include "ElementStruct.h"
 
 class TOffsetGeneration : public ::testing::Test {
