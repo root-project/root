@@ -1890,15 +1890,6 @@ if (mpi)
   endif()
 endif()
 
-if(testing AND NO_CONNECTION)
-  if(fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'testing' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  else()
-    message(STATUS "No internet connection, disabling 'testing' option")
-    set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
-endif()
-
 #---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
 
 if (roofit_multiprocess)
@@ -1972,8 +1963,41 @@ if (roofit_multiprocess)
   target_compile_definitions(cppzmq INTERFACE ZMQ_NO_EXPORT)
 endif (roofit_multiprocess)
 
-#---Download googletest--------------------------------------------------------------
+#---Check for googletest---------------------------------------------------------------
 if (testing)
+  if (NOT builtin_gtest)
+    if(fail-on-missing)
+      find_package(GTest REQUIRED)
+    else()
+      find_package(GTest)
+      if(NOT GTEST_FOUND)
+        if(NO_CONNECTION)
+          if(fail-on-missing)
+            message(FATAL_ERROR "No internet connection and GTest was not found. Please check your connection, or either disable the 'testing' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+          else()
+            message(STATUS "GTest not found, and no internet connection. Disabing the 'testing' option.")
+            set(testing OFF CACHE BOOL "Disabled because testing requested and GTest not found (${builtin_gtest_description}) and there is no internet connection" FORCE)
+          endif()
+        else()
+          message(STATUS "GTest not found, switching ON 'builtin_gtest' option.")
+          set(builtin_gtest ON CACHE BOOL "Enabled because testing requested and GTest not found (${builtin_gtest_description})" FORCE)
+        endif()
+      endif()
+    endif()
+  else()
+    if(NO_CONNECTION)
+      if(fail-on-missing)
+        message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'testing' option or the 'builtin_gtest' option or the 'fail-on-missing' option to automatically disable options requiring internet access")
+      else()
+        message(STATUS "No internet connection, disabling the 'testing' and 'builtin_gtest' options")
+        set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+        set(builtin_gtest OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      endif()
+    endif()
+  endif()
+endif()
+
+if (builtin_gtest)
   # FIXME: Remove our version of gtest in roottest. We can reuse this one.
   # Add googletest
   # http://stackoverflow.com/questions/9689183/cmake-googletest
