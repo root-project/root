@@ -6,6 +6,10 @@
 
 #include <gtest/gtest.h>
 
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include <atomic>
 #include <memory>
 #include <thread> // std::thread::hardware_concurrency

@@ -1,5 +1,10 @@
 #include "gtest/gtest.h"
 
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define SetUpTestSuite SetUpTestCase
+#define TearDownTestSuite TearDownTestCase
+#endif
+
 // test iterating histogram bins and using the new THistRange and
 // THBinIterator classes
 

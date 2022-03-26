@@ -22,6 +22,11 @@
 #include <stdio.h> // remove redundant workspace files
 
 #include "gtest/gtest.h"
+
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include "test_lib.h"
 
 #include <RooMsgService.h>
