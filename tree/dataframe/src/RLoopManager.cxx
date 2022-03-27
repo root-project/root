@@ -646,7 +646,7 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
 
-   fSampleInfos[slot] = RSampleInfo(fname + "/" + treename, range);
+   fSampleInfos[slot] = RSampleInfo(fname + "?#" + treename, range);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
