@@ -1,6 +1,8 @@
 import logging
 import warnings
 
+from itertools import zip_longest
+
 import ROOT
 
 from DistRDF import Ranges
@@ -237,6 +239,45 @@ class TreeHeadNode(HeadNode):
         maintreename = self.maintreename
         defaultbranches = self.defaultbranches
 
+        def attach_friend_info_if_present(current_range, chain):
+            """
+            Add info about friend trees to the input chain.
+            """
+            # Gather information about friend trees. Check that we got an
+            # RFriendInfo struct and that it's not empty
+            if (current_range.friendinfo is not None and
+                    not current_range.friendinfo.fFriendNames.empty()):
+                # Zip together the information about friend trees. Each
+                # element of the iterator represents a single friend tree.
+                # If the friend is a TChain, the zipped information looks like:
+                # (name, alias), (file1.root, file2.root, ...), (subname1, subname2, ...)
+                # If the friend is a TTree, the file list is made of
+                # only one filename and the list of names of the sub trees
+                # is empty, so the zipped information looks like:
+                # (name, alias), (filename.root, ), ()
+                zipped_friendinfo = zip(
+                    current_range.friendinfo.fFriendNames,
+                    current_range.friendinfo.fFriendFileNames,
+                    current_range.friendinfo.fFriendChainSubNames
+                )
+                for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
+                    # Start a TChain with the current friend treename
+                    friend_chain = ROOT.TChain(str(friend_name))
+                    # Add each corresponding file to the TChain
+                    # Use zip_longest to address both cases:
+                    # - Friend is a TTree, filenames is a vector of length one
+                    #   and chainsubnames is an empty vector.
+                    # - Friend is a TChain, filenames and chainsubnames are
+                    #   vectors of the same length.
+                    for filename, chainsubname in zip_longest(friend_filenames, friend_chainsubnames, fillvalue=""):
+                        fullpath = filename + "?#" + chainsubname
+                        friend_chain.Add(str(fullpath))
+
+                    # Set cache on the same range as the parent TChain
+                    friend_chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
+                    # Finally add friend TChain to the parent (with alias)
+                    chain.AddFriend(friend_chain, friend_alias)
+
         def build_rdf_from_range(current_range):
             """
             Builds an RDataFrame instance for a distributed mapper.
@@ -266,40 +307,7 @@ class TreeHeadNode(HeadNode):
             # Connect the entry list to the chain
             chain.SetEntryList(elists, "sync")
 
-            # Gather information about friend trees. Check that we got an
-            # RFriendInfo struct and that it's not empty
-            if (current_range.friendinfo is not None and
-                not current_range.friendinfo.fFriendNames.empty()):
-                # Zip together the information about friend trees. Each
-                # element of the iterator represents a single friend tree.
-                # If the friend is a TChain, the zipped information looks like:
-                # (name, alias), (file1.root, file2.root, ...), (subname1, subname2, ...)
-                # If the friend is a TTree, the file list is made of
-                # only one filename and the list of names of the sub trees
-                # is empty, so the zipped information looks like:
-                # (name, alias), (filename.root, ), ()
-                zipped_friendinfo = zip(
-                    current_range.friendinfo.fFriendNames,
-                    current_range.friendinfo.fFriendFileNames,
-                    current_range.friendinfo.fFriendChainSubNames
-                )
-                for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
-                    # Start a TChain with the current friend treename
-                    friend_chain = ROOT.TChain(str(friend_name))
-                    # Add each corresponding file to the TChain
-                    if friend_chainsubnames.empty():
-                        # This friend is a TTree, friend_filenames is a vector of size 1
-                        friend_chain.Add(str(friend_filenames[0]))
-                    else:
-                        # This friend is a TChain, add all files with their tree names
-                        for filename, chainsubname in zip(friend_filenames, friend_chainsubnames):
-                            fullpath = filename + "/" + chainsubname
-                            friend_chain.Add(str(fullpath))
-
-                    # Set cache on the same range as the parent TChain
-                    friend_chain.SetCacheEntryRange(current_range.globalstart, current_range.globalend)
-                    # Finally add friend TChain to the parent (with alias)
-                    chain.AddFriend(friend_chain, friend_alias)
+            attach_friend_info_if_present(current_range, chain)
 
             if defaultbranches is not None:
                 rdf = ROOT.RDataFrame(chain, defaultbranches)
