@@ -1,11 +1,14 @@
 // Tests for the RooDataSet
 // Authors: Stephan Hageboeck, CERN  04/2020
+//          Jonas Rembser, CERN  04/2022
 
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooRealVar.h"
-#include "RooHelpers.h"
-#include "RooCategory.h"
+#include <RooAbsPdf.h>
+#include <RooDataSet.h>
+#include <RooDataHist.h>
+#include <RooRealVar.h>
+#include <RooHelpers.h>
+#include <RooCategory.h>
+#include <RooWorkspace.h>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -258,4 +261,50 @@ TEST(RooDataSet, CrashAfterImportFromTree) {
   EXPECT_EQ(static_cast<RooRealVar*>(data_set->get(0)->find("var"))->getVal(), 1.);
   EXPECT_EQ(static_cast<RooRealVar*>(data_set->get(1)->find("var"))->getVal(), 2.);
 
+}
+
+
+// root-project/root#6951: Broken weights after reducing RooDataSet created with RooAbsPdf::generate()
+TEST(RooDataSet, ReduceWithCompositeDataStore)
+{
+   auto& msg = RooMsgService::instance();
+   msg.setGlobalKillBelow(RooFit::WARNING);
+
+   RooWorkspace ws{};
+   ws.factory("Gaussian::gauss(x[-10,10], mean[3,-10,10], sig    ma[1,0.1,10])");
+   auto &gauss = *ws.pdf("gauss");
+   auto &x = *ws.var("x");
+
+   std::size_t nEvents = 10;
+
+   // Generate toy dataset
+   std::unique_ptr<RooDataSet> dataSetPtr{gauss.generate(x, nEvents)};
+   auto &dataSet = *dataSetPtr;
+
+   // Generate a new dataset with weight column
+   RooRealVar weight("weight", "weight", 0.5, 0.0, 1.0);
+   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", {x, weight}, "weight");
+   for (std::size_t i = 0; i < nEvents; ++i) {
+      dataSetWeighted.add(*dataSet.get(), 0.5);
+   }
+
+   // Make a new dataset that uses the RooCompositeDataStore backend
+   RooCategory sample("sample", "sample");
+   sample.defineType("physics");
+   RooDataSet dataSetComposite("hmaster", "hmaster", x, RooFit::Index(sample),
+                               RooFit::Link({{"physic    s", &dataSetWeighted}}));
+
+   // Reduce the dataset with the RooCompositeDataStore
+   std::unique_ptr<RooAbsData> dataSetReducedPtr{dataSetComposite.reduce("true")};
+   auto &dataSetReduced = static_cast<RooDataSet &>(*dataSetReducedPtr);
+
+   // Get the first row of all datasets
+   dataSet.get(0);
+   dataSetWeighted.get(0);
+   dataSetComposite.get(0);
+   dataSetReduced.get(0);
+
+   // Make sure weights didn't get lost after reducing the dataset
+   EXPECT_EQ(dataSetWeighted.weight(), dataSetComposite.weight());
+   EXPECT_EQ(dataSetComposite.weight(), dataSetReduced.weight());
 }
