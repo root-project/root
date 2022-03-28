@@ -21,6 +21,7 @@
 #include "RooDataSet.h"
 #include "RooAbsRealLValue.h"
 #include "RooArgList.h"
+#include "RooAbsCategory.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "TClass.h"
@@ -214,11 +215,13 @@ bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vec
 
   for (auto const& range : rangeNames) {
     for (auto const& obs : observables) {
-      auto rlv = dynamic_cast<RooAbsRealLValue const*>(obs);
-      if(!rlv) {
-        throw std::logic_error("Classes that represent observables are expected to inherit from RooAbsRealLValue!");
+      if(dynamic_cast<RooAbsCategory const*>(obs)) {
+        // Nothing to be done for category observables
+      } else if(auto * rlv = dynamic_cast<RooAbsRealLValue const*>(obs)) {
+        limits.push_back(getLimits(*rlv, range.c_str()));
+      } else {
+        throw std::logic_error("Classes that represent observables are expected to inherit from RooAbsRealLValue or RooAbsCategory!");
       }
-      limits.push_back(getLimits(*rlv, range.c_str()));
     }
   }
 
