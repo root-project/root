@@ -21,39 +21,37 @@
    <body>
       <div id="EveDiv">
       </div>
-
-      <script type='module'>
-
-         import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
-         import { initEVE } from '/jsrootsys/modules/geom/eve.mjs';
-
-         initEVE(); // create global EVE and THREE handles
-
-         connectWebWindow({
-            // socket_kind: "file",  // used for offline
-            ui5: true,
-//           openui5src: "https://openui5.hana.ondemand.com/1.98.0/",
-            openui5libs: "sap.ui.core" // customize openui5 libs
-         }).then(handle => {
-//          sap.ui.loader.config({ paths: { rootui5: "../rootui5/" } });  // used for offline
-
-            sap.ui.require(["sap/ui/core/ComponentContainer"], ComponentContainer => {
-               new ComponentContainer({
-                  name: "rootui5.eve7",
-                  manifest: true,
-                  async: true,
-                  settings: {
-                     componentData: {
-                        conn_handle: handle
-                     }
-                  },
-                  height: "100%"
-               }).placeAt("EveDiv")
-            });
-         });
-
-      </script>
-
    </body>
+
+   <script type='module'>
+
+      import { source_dir } from '/jsrootsys/modules/core.mjs';
+      import { connectWebWindow } from '/jsrootsys/modules/webwindow.mjs';
+      import { initEVE } from '/rootui5sys/eve7/eve.mjs';
+
+      initEVE(source_dir).then(() => connectWebWindow({
+         // socket_kind: "file",  // used for offline
+         ui5: true,
+         //  openui5src: "https://openui5.hana.ondemand.com/1.98.0/",
+         openui5libs: "sap.ui.core" // customize openui5 libs
+      })).then(handle => {
+         // sap.ui.loader.config({ paths: { rootui5: "../rootui5/" } });  // used for offline
+
+         sap.ui.require(["sap/ui/core/ComponentContainer"], ComponentContainer => {
+            new ComponentContainer({
+               name: "rootui5.eve7",
+               manifest: true,
+               async: true,
+               settings: {
+                  componentData: {
+                     conn_handle: handle
+                  }
+               },
+               height: "100%"
+            }).placeAt("EveDiv")
+         });
+      });
+
+   </script>
 
 </html>

@@ -1039,7 +1039,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      createGeomViewer: function(url, name, title) {
+      createGeomViewer: function(url, name /*, title */) {
          let oTabContainer = this.byId("tabContainer");
          let item = new TabContainerItem({
             name: "Geom viewer",
@@ -1051,18 +1051,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oTabContainer.addItem(item);
          // oTabContainer.setSelectedItem(item);
 
-         import(this.jsroot.source_dir + 'modules/geom/eve.mjs')
-           .then(h => {
-              h.initEVE();
-              return this.jsroot.connectWebWindow({
+         import('/rootui5sys/eve7/eve.mjs')
+           .then(h => h.initEVE(this.jsroot.source_dir))
+           .then(() =>
+              this.jsroot.connectWebWindow({
                  kind: this.websocket.kind,
                  href: this.websocket.getHRef(url),
                  user_args: { nobrowser: true }
-              });
-         }).then(handle => XMLView.create({
-            viewName: "rootui5.eve7.view.GeomViewer",
-            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-         })).then(oView => item.addContent(oView));
+              }))
+           .then(handle => XMLView.create({
+             viewName: "rootui5.eve7.view.GeomViewer",
+             viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+           }))
+           .then(oView => item.addContent(oView));
       },
 
       createCanvas: async function(kind, url, name, title) {
