@@ -48,7 +48,7 @@ sap.ui.define([], function() {
 
       console.log("EveManager got global error", msg, url, lineNo, columnNo, error);
 
-      globalThis.EVE.alert("Global Exception handler: " + msg + "\n" + url +
+      EVE.alert("Global Exception handler: " + msg + "\n" + url +
          " line:" + lineNo + " col:" + columnNo);
       let suppress_alert = false;
       return suppress_alert;
@@ -126,7 +126,7 @@ sap.ui.define([], function() {
             return;
          }
 
-         if (globalThis.EVE.gDebug)
+         if (EVE.gDebug)
             console.log("OnWebsocketMsg msg len=", msg.length, "txt:", (msg.length < 100) ? msg : (msg.substr(0, 500) + "..."));
 
          let resp = JSON.parse(msg);
@@ -168,7 +168,7 @@ sap.ui.define([], function() {
    {
       if (!mir_call || !this.handle || !element_class) return;
 
-      // if (globalThis.EVE.gDebug)
+      // if (EVE.gDebug)
          console.log('MIR', mir_call, element_id, element_class);
 
       if (this.InterceptMIR(mir_call, element_id, element_class))
@@ -578,7 +578,7 @@ sap.ui.define([], function() {
       let changedSet = new Set();
       for (let [id, value] of oldMap.entries())
       {
-         if (globalThis.EVE.DebugSelection)
+         if (EVE.DebugSelection)
             console.log("UnSel prim", id, this.GetElement(id), this.GetElement(id).fSceneId);
 
          this.UnselectElement(sel, id);
@@ -589,7 +589,7 @@ sap.ui.define([], function() {
          {
             let impEl = this.GetElement(imp);
             if (impEl) {
-               if (globalThis.EVE.DebugSelection)
+               if (EVE.DebugSelection)
                   console.log("UnSel impl", imp, impEl, impEl.fSceneId);
 
                this.UnselectElement(sel, imp);
@@ -600,7 +600,7 @@ sap.ui.define([], function() {
 
       for (let [id, value] of newMap.entries())
       {
-         if (globalThis.EVE.DebugSelection)
+         if (EVE.DebugSelection)
             console.log("Sel prim", id, this.GetElement(id), this.GetElement(id).fSceneId);
 
          let secIdcs = Array.from(value.set);
@@ -614,7 +614,7 @@ sap.ui.define([], function() {
 
          for (let imp of value.implied)
          {
-            if (globalThis.EVE.DebugSelection)
+            if (EVE.DebugSelection)
                console.log("Sel impl", imp, this.GetElement(imp), this.GetElement(imp).fSceneId);
 
             this.SelectElement(sel, imp, secIdcs, value.extra);
@@ -700,7 +700,7 @@ sap.ui.define([], function() {
          try {
             item.endChanges();
          } catch (e) {
-            globalThis.EVE.alert("EveManager: Exception caught during update processing: " + e + "\n" +
+            EVE.alert("EveManager: Exception caught during update processing: " + e + "\n" +
                "You might want to reload the page in browser and / or check error consoles.");
             console.error("EveManager: Exception caught during update processing", e);
 
@@ -815,7 +815,7 @@ sap.ui.define([], function() {
    EveManager.prototype._intercept_SetMainColorRGB = function(colr, colg, colb) {
       let messages = [{ content: "BeginChanges" }];
 
-      let newColor = globalThis.EVE.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
+      let newColor = EVE.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
 
       let mirElem = this.GetElement(this._intercept_id);
       let msg = { arr: [ Object.assign({changeBit:1}, mirElem) ],
@@ -881,11 +881,11 @@ sap.ui.define([], function() {
    // END protoype functions
    //==============================================================================
 
-   globalThis.EVE.EveManager = EveManager;
+   EVE.EveManager = EveManager;
 
-   globalThis.EVE.DebugSelection = 0;
+   EVE.DebugSelection = 0;
 
-   // globalThis.EVE.gDebug = true;
+   // EVE.gDebug = true;
 
    return EveManager;
 

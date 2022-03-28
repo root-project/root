@@ -93,7 +93,7 @@ sap.ui.define(['sap/ui/core/Component',
             toolbar.addContentRight(logCtrl.getButton());
          });
          consoleObj.alert = true;
-         globalThis.EVE.alert = function (oText)
+         EVE.alert = function (oText)
          {
             if (consoleObj.alert)
             {
