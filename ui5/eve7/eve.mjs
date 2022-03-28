@@ -17,7 +17,8 @@ function initEVE(source_dir) {
                        import(mpath+'geom/TGeoPainter.mjs')])
     .then(arr => {
        globalThis.THREE = Object.assign({}, arr.shift());
-       globalThis.EVE = Object.assign({}, ...arr);
+       globalThis.EVE = {};
+       globalThis.EVE.JSR = Object.assign({}, ...arr); // JSROOT functionality
        return globalThis.EVE;
      });
 }

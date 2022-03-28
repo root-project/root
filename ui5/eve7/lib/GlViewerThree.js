@@ -21,10 +21,10 @@ sap.ui.define([
          let gh = mgr.GetElement(mgr.global_highlight_id);
 
          if (gs && gh) {
-            sa[0].visibleEdgeColor.setStyle(EVE.getColor(gs.fVisibleEdgeColor));
-            sa[0].hiddenEdgeColor.setStyle(EVE.getColor(gs.fHiddenEdgeColor));
-            sa[1].visibleEdgeColor.setStyle(EVE.getColor(gh.fVisibleEdgeColor));
-            sa[1].hiddenEdgeColor.setStyle(EVE.getColor(gh.fHiddenEdgeColor));
+            sa[0].visibleEdgeColor.setStyle(EVE.JSR.getColor(gs.fVisibleEdgeColor));
+            sa[0].hiddenEdgeColor.setStyle(EVE.JSR.getColor(gs.fHiddenEdgeColor));
+            sa[1].visibleEdgeColor.setStyle(EVE.JSR.getColor(gh.fVisibleEdgeColor));
+            sa[1].hiddenEdgeColor.setStyle(EVE.JSR.getColor(gh.fHiddenEdgeColor));
          }
       },
 
@@ -34,7 +34,7 @@ sap.ui.define([
 
          this.creator = new EveElements(controller);
          // MT-RCORE indices now work, we probably don't need this option anymore.
-         // this.creator.useIndexAsIs = EVE.decodeUrl().has('useindx');
+         // this.creator.useIndexAsIs = EVE.JSR.decodeUrl().has('useindx');
          this.creator.useIndexAsIs = true;
 
          if (!GlViewerThree.g_global_init_done) {
@@ -211,7 +211,7 @@ sap.ui.define([
             }
          } else if (this.click_buttons == 2) {
             let intersect = this.click_intersect;
-            EVE.createMenu(this.click_event, this).then(menu => this.showContextMenu(intersect, menu));
+            EVE.JSR.createMenu(this.click_event, this).then(menu => this.showContextMenu(intersect, menu));
          }
       },
 

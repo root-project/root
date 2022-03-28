@@ -366,7 +366,7 @@ sap.ui.define([
 
             let col_widget = new EVEColorButton( {
                icon : "sap-icon://palette",
-               background: EVE.getColor(citems[i].fColor),
+               background: EVE.JSR.getColor(citems[i].fColor),
                press: function () {
                   let oCPPop = new EVEColorPopup( {
                      colorSelect: function(event) {
@@ -435,7 +435,7 @@ sap.ui.define([
          {
             let pthis = this;
             let col_widget = new EVEColorButton( {
-               background: EVE.getColor(si[i].color),
+               background: EVE.JSR.getColor(si[i].color),
                press: function () {
                   let oCPPop = new EVEColorPopup( {
                      colorSelect: function(event) {
@@ -523,7 +523,7 @@ sap.ui.define([
          let pthis = this;
          let widget = new EVEColorButton( {
             icon: "sap-icon://palette",
-            background: EVE.getColor(val),
+            background: EVE.JSR.getColor(val),
             press: function () {
                let oCPPop = new EVEColorPopup( {
                   colors: this.defaultColors,
