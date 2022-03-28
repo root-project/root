@@ -19,31 +19,31 @@ sap.ui.define(['sap/ui/core/Component',
          this.mgr = new EveManager();
          this.initClientLog();
 
-         var conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
+         let conn_handle = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
          this.mgr.UseConnection(conn_handle);
          // this.mgr.UseConnection(this.getView().getViewData().conn_handle);
 
          this.mgr.RegisterController(this);
          // method to found summary controller by ID and set manager to it
-         var elem = this.byId("Summary");
-         var ctrl = elem.getController();
+         let elem = this.byId("Summary");
+         let ctrl = elem.getController();
          ctrl.SetMgr(this.mgr);
 
       },
 
       onDisconnect : function() {
-         var t = this.byId("centerTitle");
+         let t = this.byId("centerTitle");
          t.setHtmlText("<strong style=\"color: red;\">Client Disconnected !</strong>");
       },
 
       /** called when relative number of possible send operation below or over the threshold  */
       onSendThresholdChanged: function(below, value) {
-         var t = this.byId("centerTitle");
+         let t = this.byId("centerTitle");
          t.$().css('color', below ? 'yellow' : '')
       },
 
       initClientLog: function() {
-         var consoleObj = {};
+         let consoleObj = {};
          consoleObj.data = [];
 
          consoleObj.model = new JSONModel();
@@ -89,7 +89,7 @@ sap.ui.define(['sap/ui/core/Component',
             oView.setModel(consoleObj.model);
             oView.getController().oDialog.setModel(consoleObj.model);
             let logCtrl = oView.getController();
-            var toolbar = pthis.byId("otb1");
+            let toolbar = pthis.byId("otb1");
             toolbar.addContentRight(logCtrl.getButton());
          });
          consoleObj.alert = true;
@@ -111,11 +111,11 @@ sap.ui.define(['sap/ui/core/Component',
       UpdateCommandsButtons: function(cmds) {
          if (!cmds || this.commands) return;
 
-         var toolbar = this.byId("otb1");
+         let toolbar = this.byId("otb1");
 
          this.commands = cmds;
-         for (var k = cmds.length-1; k>=0; --k) {
-            var btn = new mButton({
+         for (let k = cmds.length-1; k>=0; --k) {
+            let btn = new mButton({
                icon: cmds[k].icon,
                text: cmds[k].name,
                press: this.executeCommand.bind(this, cmds[k])
@@ -125,15 +125,15 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       viewItemPressed: function (elem, oEvent) {
-         var item = oEvent.getSource();
+         let item = oEvent.getSource();
          // console.log('item pressed', item.getText(), elem);
 
-         var name = item.getText();
+         let name = item.getText();
          if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
          // FIXME: one need better way to deliver parameters to the selected view
          EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
 
-         var oRouter = UIComponent.getRouterFor(this);
+         let oRouter = UIComponent.getRouterFor(this);
          if (name == "Table")
             oRouter.navTo("Table", { viewName: name });
          else if (name == "Lego")
@@ -143,19 +143,19 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       updateViewers: function(loading_done) {
-         var viewers = this.mgr.FindViewers();
+         let viewers = this.mgr.FindViewers();
 
          // first check number of views to create
-         var staged = [];
-         for (var n=0;n<viewers.length;++n) {
-            var el = viewers[n];
+         let staged = [];
+         for (let n=0;n<viewers.length;++n) {
+            let el = viewers[n];
             if (!el.$view_created) staged.push(el);
          }
          if (staged.length == 0) return;
 
          // console.log("FOUND viewers", viewers.length, "not yet exists", staged.length);
-         var vMenu = this.getView().byId("menuViewId");
-         for (var n = 0; n < staged.length; ++n) {
+         let vMenu = this.getView().byId("menuViewId");
+         for (let n = 0; n < staged.length; ++n) {
             let ipath = staged[n].fRnrSelf ? "sap-icon://decline" : "sap-icon://accept";
             let vi = new mMenuItem({ text: staged[n].fName });
             vMenu.addItem(vi);
@@ -164,28 +164,28 @@ sap.ui.define(['sap/ui/core/Component',
             vi.addItem(new mMenuItem({ text: "Single", icon: "sap-icon://expand",  press: this.switchSingle.bind(this, staged[n]) }));
          }
 
-         var main = this, vv = null, sv = this.getView().byId("MainAreaSplitter");
+         let main = this, vv = null, sv = this.getView().byId("MainAreaSplitter");
 
-         for (var n=0;n<staged.length;++n) {
-            var elem = staged[n];
-            var viewid = "EveViewer" + elem.fElementId;
+         for (let n=0;n<staged.length;++n) {
+            let elem = staged[n];
+            let viewid = "EveViewer" + elem.fElementId;
 
             // create missing view
             elem.$view_created = true;
             console.log("Creating view", viewid);
 
-            var oLd = undefined;
+            let oLd = undefined;
             if ((n == 0) && (staged.length > 1))
                oLd = new SplitterLayoutData({ resizable: true, size: "50%" });
 
-            var vtype = "rootui5.eve7.view.GL";
+            let vtype = "rootui5.eve7.view.GL";
             if (elem.fName === "Table")
                vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
             else if (elem.fName === "Lego")
                vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
 
-            var oOwnerComponent = Component.getOwnerComponentFor(this.getView());
-            var view = oOwnerComponent.runAsOwner(function() {
+            let oOwnerComponent = Component.getOwnerComponentFor(this.getView());
+            let view = oOwnerComponent.runAsOwner(function() {
                return new sap.ui.xmlview({
                   id: viewid,
                   viewName: vtype,
@@ -214,12 +214,12 @@ sap.ui.define(['sap/ui/core/Component',
          let viewer = this.mgr.GetElement(elem.fElementId);
          // console.log('item pressed', item.getText(), elem);
 
-         var name = viewer.fName;
+         let name = viewer.fName;
          if (name.indexOf(" ") > 0) name = name.substr(0, name.indexOf(" "));
          // FIXME: one need better way to deliver parameters to the selected view
          EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: elem.fElementId};
 
-         var oRouter = UIComponent.getRouterFor(this);
+         let oRouter = UIComponent.getRouterFor(this);
          if (name == "Table")
             oRouter.navTo("Table", { viewName: name });
          else if (name == "Lego")
@@ -230,7 +230,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       switchViewVisibility: function (elem, oEvent) {
-         var sc = oEvent.getSource();
+         let sc = oEvent.getSource();
          let viewer = this.mgr.GetElement(elem.fElementId);
          let primary = this.getView().byId("MainAreaSplitter");
          let secondary;
@@ -306,7 +306,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       /*
-       * processWaitingMsg: function() { for ( var i = 0; i <
+       * processWaitingMsg: function() { for ( let i = 0; i <
        * msgToWait.length; ++i ) {
        * this.onWebsocketMsg(handleToWait, msgToWait[i]); }
        * handleToWait = 0; msgToWait = []; },
@@ -317,10 +317,10 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       setMainVerticalSplitterHeight: function(){
-         var mainViewHeight = document.body.clientHeight;
-         var mainToolbarHeight = 49;
-         var height = mainViewHeight - mainToolbarHeight;
-         var splitter =  this.getView().byId("MainAreaSplitter");
+         let mainViewHeight = document.body.clientHeight;
+         let mainToolbarHeight = 49;
+         let height = mainViewHeight - mainToolbarHeight;
+         let splitter =  this.getView().byId("MainAreaSplitter");
          if (splitter) {
             // console.log("set splitter height >>> " , height);
             splitter.setHeight(height + "px");
@@ -328,7 +328,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       onAfterRendering: function(){
-         var me = this;
+         let me = this;
          setTimeout(
             function(){
                $(window).on("resize", function() {
@@ -340,7 +340,7 @@ sap.ui.define(['sap/ui/core/Component',
 
       onToolsMenuAction : function (oEvent) {
 
-         var item = oEvent.getParameter("item");
+         let item = oEvent.getParameter("item");
 
          switch (item.getText()) {
             case "GED Editor": this.getView().byId("Summary").getController().toggleEditor(); break;
