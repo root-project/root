@@ -22,7 +22,7 @@ sap.ui.define([
          //super.init(controller);
 
          this.creator = new EveElements(controller);
-         this.creator.useIndexAsIs = EVE.decodeUrl().has('useindx');
+         this.creator.useIndexAsIs = EVE.JSR.decodeUrl().has('useindx');
 
          this.createGeoPainter();
       },
@@ -62,7 +62,7 @@ sap.ui.define([
          // MT-RCORE - why have I removed this ???
          this.get_view().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
 
-         this.geo_painter = EVE.createGeoPainter(this.get_view().getDomRef(), null, options);
+         this.geo_painter = EVE.JSR.createGeoPainter(this.get_view().getDomRef(), null, options);
 
          this.geo_painter._geom_viewer = true; // disable several JSROOT features
 
@@ -184,7 +184,7 @@ sap.ui.define([
 
                if (!resolve || !resolve.obj) return tooltip;
 
-               let lines = EVE.provideObjectInfo(resolve.obj);
+               let lines = EVE.JSR.provideObjectInfo(resolve.obj);
                lines.unshift(tooltip);
 
                return { name: resolve.obj.fName, title: resolve.obj.fTitle || resolve.obj._typename, lines: lines };
@@ -218,7 +218,7 @@ sap.ui.define([
 
          let browseHandler = this.controller.invokeBrowseOf.bind(this.controller);
 
-         EVE.createMenu(evnt, this.geo_painter).then(menu => {
+         EVE.JSR.createMenu(evnt, this.geo_painter).then(menu => {
             let numitems = 0;
             if (intersects)
                for (let n=0;n<intersects.length;++n)

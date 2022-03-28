@@ -25,7 +25,7 @@ sap.ui.define([
 
         onInit: function () {
             // disable narrowing axis range
-            EVE.settings.Zooming = false;
+            EVE.JSR.settings.Zooming = false;
 
             let data = this.getView().getViewData();
             if (data) {
@@ -60,7 +60,7 @@ sap.ui.define([
             element.setHtmlText("Pointset infected by TCanvas / Lego Stack");
 
             this.eve_lego = chld;
-            this.canvas_json = EVE.parse(atob(chld.fTitle));
+            this.canvas_json = EVE.JSR.parse(atob(chld.fTitle));
         },
         onResize : function() {
             // use timeout
@@ -74,13 +74,13 @@ sap.ui.define([
             let domref = this.byId("legoPlotPlace").getDomRef();
             if (!this.jst_ptr) {
                 this.jst_ptr = 1;
-                EVE.draw(domref, this.canvas_json).then(hist_painter => {
+                EVE.JSR.draw(domref, this.canvas_json).then(hist_painter => {
                     this.canv_painter = hist_painter.getCanvPainter();
                 });
             }
             else {
                 // if completely different, called cleanup(dom) first.
-                EVE.redraw(domref, this.canvas_json).then(hist_painter => {
+                EVE.JSR.redraw(domref, this.canvas_json).then(hist_painter => {
                     this.canv_painter = hist_painter.getCanvPainter();
                 });
             }
@@ -105,8 +105,8 @@ sap.ui.define([
             if (!this.controllerIsMapped()) return;
 
             let domref = this.byId("legoPlotPlace").getDomRef();
-            this.canvas_json = EVE.parse( atob(this.eve_lego.fTitle) );
-            EVE.redraw(domref, this.canvas_json);
+            this.canvas_json = EVE.JSR.parse( atob(this.eve_lego.fTitle) );
+            EVE.JSR.redraw(domref, this.canvas_json);
         },
 
         elementRemoved: function (elId) {
