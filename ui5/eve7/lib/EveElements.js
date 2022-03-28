@@ -1286,7 +1286,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
    //==============================================================================
 
-   globalThis.EVE.EveElements = EveElements;
+   EVE.EveElements = EveElements;
 
    return EveElements;
 
