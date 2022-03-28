@@ -84,7 +84,9 @@ ROOT_ADD_GTEST(MulmodUnitNoInt128 mulmod_noint128.cxx)
 ROOT_ADD_GTEST(RanluxLCGUnit ranlux_lcg.cxx)
 
 ROOT_ADD_GTEST(RanluxppEngineTests RanluxppEngine.cxx
-        LIBRARIES Core MathCore)
+  LIBRARIES Core MathCore)
+
+ROOT_ADD_GTEST(testRange test_Range.cxx LIBRARIES MathCore)
 
 if(veccore AND vc)
   ROOT_ADD_GTEST(VectorizedTMathUnit testVectorizedTMath.cxx
