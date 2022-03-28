@@ -420,9 +420,6 @@ sap.ui.define([
                   ]
                }).addStyleClass("inputRight");
 
-
-               exprIn.setModel(oModel);
-
                let oTableItemTemplate = new mColumnListItem({
                   type: "Active",
                   vAlign: "Middle",
