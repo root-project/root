@@ -48,6 +48,13 @@ TString Python_Executable() {
       TMVA::gTools().Log() << kFATAL << "Can't find a valid Python version used to build ROOT" << Endl;
       return nullptr;
    }
+#ifdef _MSC_VER
+   // on Windows there is a space before the version and the executable is python.exe
+   // for both versions of Python
+   python_version.ReplaceAll(" ", "");
+   if(python_version[0] == '2' || python_version[0] == '3')
+      return "python";
+#endif
    if(python_version[0] == '2')
       return "python";
    else if (python_version[0] == '3')
