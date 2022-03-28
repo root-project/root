@@ -815,7 +815,7 @@ sap.ui.define([], function() {
    EveManager.prototype._intercept_SetMainColorRGB = function(colr, colg, colb) {
       let messages = [{ content: "BeginChanges" }];
 
-      let newColor = EVE.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
+      let newColor = EVE.JSR.addColor("rgb(" + colr + "," + colg + "," + colb + ")");
 
       let mirElem = this.GetElement(this._intercept_id);
       let msg = { arr: [ Object.assign({changeBit:1}, mirElem) ],

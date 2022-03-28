@@ -72,7 +72,7 @@ sap.ui.define([
       bootstrap: function()
       {
          this.creator = new EveElements(RC);
-         // this.creator.useIndexAsIs = EVE.decodeUrl().has('useindx');
+         // this.creator.useIndexAsIs = EVE.JSR.decodeUrl().has('useindx');
 
          this.createRCoreRenderer();
          this.controller.createScenes();
@@ -266,7 +266,7 @@ sap.ui.define([
                }
                else if (event.buttons == 2) // Context menu on delay without move
                {
-                  EVE.createMenu(event2, glc).then(menu => glc.showContextMenu(event2, menu));
+                  EVE.JSR.createMenu(event2, glc).then(menu => glc.showContextMenu(event2, menu));
                }
             }
 
