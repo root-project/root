@@ -3,7 +3,7 @@
 
 // TODO: add dependency from JSROOT components
 
-sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
+sap.ui.define(['rootui5/eve7/lib/EveManager'], function(/*EveManager*/) {
 
    "use strict";
 
@@ -33,17 +33,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       getTooltipText(/* intersect */)
       {
-         let el =  this.obj3d.eve_el;
+         let el = this.obj3d.eve_el;
          return el.fName || el.fTitle || "";
       }
 
-      elementHighlighted(indx)
+      elementHighlighted(/*indx*/)
       {
          // default is simple selection, we ignore the indx
          this.invokeSceneMethod("processElementHighlighted"); // , indx);
       }
 
-      elementSelected(indx)
+      elementSelected(/*indx*/)
       {
          // default is simple selection, we ignore the indx
          this.invokeSceneMethod("processElementSelected"); //, indx);
@@ -240,7 +240,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
        {
            let idx = this.extractIndex(intersect);
            let idxBuff = this.obj3d.eve_el.render_data.idxBuff;
-           let bin =  idxBuff[idx*2 + 1];
+           // let bin =  idxBuff[idx*2 + 1];
            let val = this.obj3d.eve_el.render_data.nrmBuff[idx];
            let caloData =  this.obj3d.scene.mgr.GetElement(this.obj3d.eve_el.dataId);
            let slice = idxBuff[idx*2];
@@ -250,19 +250,17 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
            let p = idx*12;
            let x = vbuff[p];
            let y = vbuff[p+1];
-           let z = vbuff[p+2];
+           // let z = vbuff[p+2];
 
            if (this.obj3d.eve_el.isRPhi) {
-               let phi =  Math.acos(x/Math.sqrt(x*x+y*y));
-               phi *= Math.sign(y);
+               let phi =  Math.acos(x/Math.sqrt(x*x+y*y)) * Math.sign(y);
                return  sname + " " + Math.floor(val*100)/100 +
                    " ("+  Math.floor(phi*100)/100 + ")";
 
            }
            else
            {
-               let cosTheta = x/Math.sqrt(x*x + y*y);
-               let eta = 0;
+               let cosTheta = x/Math.sqrt(x*x + y*y), eta = 0;
                if (cosTheta*cosTheta < 1)
                {
                    eta = -0.5* Math.log( (1.0-cosTheta)/(1.0+cosTheta) );
@@ -279,7 +277,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
            let calo =  this.obj3d.eve_el;
            let idxBuff = calo.render_data.idxBuff;
            let scene = this.obj3d.scene;
-           let multi = event && event.ctrlKey ? true : false;
+           let multi = this.event?.ctrlKey ? true : false;
            let bin = idxBuff[idx*2 + 1];
            let slice =  idxBuff[idx*2];
            // get sign for the case of RhoZ projection
@@ -393,7 +391,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
 
       getTooltipText(intersect)
       {
-           let t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
+           // let t = this.obj3d.eve_el.fTitle || this.obj3d.eve_el.fName || "";
            let idx = this.extractIndex(intersect);
            let val =  this.obj3d.eve_el.render_data.nrmBuff[idx];
            let idxBuff = this.obj3d.eve_el.render_data.idxBuff;
@@ -425,7 +423,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
            let idxBuff = calo.render_data.idxBuff;
            let scene = this.obj3d.scene;
            let selectionId = scene.mgr.global_selection_id;
-           let multi = event && event.ctrlKey ? true : false;
+           let multi = this.event?.ctrlKey ? true : false;
            let fcall = "NewTowerPicked(" +  idxBuff[idx*2 + 1] + ", " +  idxBuff[idx*2] + ", "
                + selectionId + ", " + multi + ")";
            scene.mgr.SendMIR(fcall, calo.fElementId, "ROOT::Experimental::REveCalo3D");
@@ -813,7 +811,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
             // console.log("set index ", nt,":", idxBuff[nt*3], idxBuff[nt*3+1],idxBuff[nt*3+2]);
             nt++;
          }
-         let idcs = new THREE.BufferAttribute(idxBuff,1);
 
          let body = new THREE.BufferGeometry();
          body.setAttribute('position', new THREE.BufferAttribute( rnrData.vtxBuff, 3 ));
@@ -1030,7 +1027,6 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
                 idxBuff[boff + 4] = ioff + 3;
                 idxBuff[boff + 5] = ioff;
              }
-             let idcs = new THREE.BufferAttribute(idxBuff, 1);
 
              body.setAttribute('position', new THREE.BufferAttribute(rnrData.vtxBuff, 3));
              body.setIndex(new THREE.BufferAttribute(idxBuff, 1));
@@ -1116,7 +1112,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function(EveManager) {
           return mesh;
        }
 
-      makeEveGeometry(rnr_data, force)
+      makeEveGeometry(rnr_data /*, force */)
       {
          if (rnr_data.idxBuff[0] != GL.TRIANGLES)  throw "Expect triangles first.";
 
