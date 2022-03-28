@@ -1,4 +1,3 @@
-
 sap.ui.define([
    'rootui5/eve7/lib/GlViewer',
    'rootui5/eve7/lib/EveElementsRCore'
@@ -6,41 +5,38 @@ sap.ui.define([
 
    "use strict";
 
-   var RC, RP, RendeQuTor;
+   let RC, RP, RendeQuTor;
 
-   function GlViewerRCore(viewer_class)
-   {
-      GlViewer.call(this, viewer_class);
+   class GlViewerRCore extends GlViewer {
 
-      const urlParams = new URLSearchParams(window.location.search);
-
-      console.log("XXXX", window.location.search, urlParams.get('UseRenderQueue'), urlParams.get('NoRenderQueue'));
-      this.UseRenderQueue = true;
-      if (urlParams.get('UseRenderQueue') != null) this.UseRenderQueue = true;
-      if (urlParams.get('NoRenderQueue' ) != null) this.UseRenderQueue = false;
-
-      if (this.UseRenderQueue)
+      constructor(viewer_class)
       {
-         let mode_mm = /^(?:Direct|Simple|Full)$/.exec(urlParams.get('RQ_Mode'));
-         let ssaa_mm = /^(1|2|4)$/.               exec(urlParams.get('RQ_SSAA'));
+         super(viewer_class);
 
-         this.RQ_Mode = (mode_mm) ? mode_mm[0] : "Simple";
-         this.RQ_SSAA = (ssaa_mm) ? ssaa_mm[0] : 2;
+         const urlParams = new URLSearchParams(window.location.search);
+
+         console.log("XXXX", window.location.search, urlParams.get('UseRenderQueue'), urlParams.get('NoRenderQueue'));
+         this.UseRenderQueue = true;
+         if (urlParams.get('UseRenderQueue') != null) this.UseRenderQueue = true;
+         if (urlParams.get('NoRenderQueue' ) != null) this.UseRenderQueue = false;
+
+         if (this.UseRenderQueue)
+         {
+            let mode_mm = /^(?:Direct|Simple|Full)$/.exec(urlParams.get('RQ_Mode'));
+            let ssaa_mm = /^(1|2|4)$/.               exec(urlParams.get('RQ_SSAA'));
+
+            this.RQ_Mode = (mode_mm) ? mode_mm[0] : "Simple";
+            this.RQ_SSAA = (ssaa_mm) ? ssaa_mm[0] : 2;
+         }
+
+         console.log("UseRenderQueue", this.UseRenderQueue, "RQ_Mode", this.RQ_Mode, "RQ_SSAA", this.RQ_SSAA);
       }
 
-      console.log("UseRenderQueue", this.UseRenderQueue, "RQ_Mode", this.RQ_Mode, "RQ_SSAA", this.RQ_SSAA);
-   }
-
-   GlViewerRCore.prototype = Object.assign(Object.create(GlViewer.prototype), {
-
-      constructor: GlViewerRCore,
-
-      init: function(controller)
+      init(controller)
       {
-         GlViewer.prototype.init.call(this, controller);
-         // super.init(controller);
+         super.init(controller);
 
-         var pthis = this;
+         let pthis = this;
 
          // For offline mode, one needs a a full URL or the request
          // gets forwarded to openi5.hana.ondemand.com.
@@ -67,9 +63,9 @@ sap.ui.define([
                pthis.bootstrap();
             }
          });
-      },
+      }
 
-      bootstrap: function()
+      bootstrap()
       {
          this.creator = new EveElements(RC);
          // this.creator.useIndexAsIs = EVE.JSR.decodeUrl().has('useindx');
@@ -86,25 +82,25 @@ sap.ui.define([
          // this is probably problematic later on,k if we add objects with
          // custom shaders later on.
          setTimeout(this.render.bind(this), 500);
-      },
+      }
 
       //==============================================================================
 
-      make_object: function(name)
+      make_object(name)
       {
          let c = new RC.Group();
          c.name = name || "<no-name>";
          return c;
-      },
+      }
 
-      get_top_scene: function()
+      get_top_scene()
       {
          return this.scene;
-      },
+      }
 
       //==============================================================================
 
-      createRCoreRenderer: function()
+      createRCoreRenderer()
       {
          let w = this.get_width();
          let h = this.get_height();
@@ -209,9 +205,9 @@ sap.ui.define([
             }
             this.rqt.updateViewport(w, h);
          }
-      },
+      }
 
-      setupRCoreDomAndEventHandlers: function()
+      setupRCoreDomAndEventHandlers()
       {
          let dome = this.get_view().getDomRef();
          dome.appendChild(this.canvas);
@@ -224,7 +220,7 @@ sap.ui.define([
          dome.appendChild(this.ttip);
 
          // Setup some event pre-handlers
-         var glc = this;
+         let glc = this;
 
          dome.addEventListener('pointermove', function(event) {
 
@@ -241,7 +237,7 @@ sap.ui.define([
             }
          });
 
-         dome.addEventListener('pointerleave', function(event) {
+         dome.addEventListener('pointerleave', function() {
 
             glc.removeMouseMoveTimeout();
             glc.clearHighlight();
@@ -273,7 +269,7 @@ sap.ui.define([
             this.addEventListener('pointerup', glc.mouseup_listener);
          });
 
-         dome.addEventListener('dblclick', function(event) {
+         dome.addEventListener('dblclick', function() {
             //if (glc.controller.dblclick_action == "Reset")
             glc.resetRenderer();
          });
@@ -341,9 +337,9 @@ sap.ui.define([
 
          // This will also call render().
          this.resetRenderer();
-      },
+      }
 
-      resetRenderer: function()
+      resetRenderer()
       {
          let sbbox = new RC.Box3();
          sbbox.setFromObject( this.scene );
@@ -411,11 +407,11 @@ sap.ui.define([
          // this.composer.reset();
 
          this.controls.update();
-      },
+      }
 
       //==============================================================================
 
-      render: function()
+      render()
       {
          // console.log("RENDER", this.scene, this.camera, this.canvas, this.renderer);
 
@@ -426,12 +422,12 @@ sap.ui.define([
 
          // if (this.controller.kind === "3D")
          //    window.requestAnimationFrame(this.render.bind(this));
-      },
+      }
 
-      render_for_picking: function(x, y)
+      render_for_picking(x, y)
       {
          console.log("RENDER FOR PICKING", this.scene, this.camera, this.canvas, this.renderer);
-         var o3d;
+         let o3d;
 
          this.renderer.pick(x, y, function(id) { o3d = id; } );
          this.rqt.pick(this.scene, this.camera);
@@ -440,11 +436,11 @@ sap.ui.define([
          // let d   = pthis.renderer.pickedDepth;
          console.log("pick result", o3d /* , d */);
          return o3d;
-      },
+      }
 
       //==============================================================================
 
-      onResizeTimeout: function()
+      onResizeTimeout()
       {
          let w = this.get_width();
          let h = this.get_height();
@@ -462,7 +458,7 @@ sap.ui.define([
 
          this.controls.update();
          this.render();
-      },
+      }
 
 
       //==============================================================================
@@ -473,7 +469,7 @@ sap.ui.define([
       // Highlight & Mouse move timeout handling
       //------------------------------------------------------------------------------
 
-      clearHighlight: function()
+      clearHighlight()
       {
          if (this.highlighted_scene)
          {
@@ -482,19 +478,19 @@ sap.ui.define([
 
             this.ttip.style.display = "none";
          }
-      },
+      }
 
-      removeMouseMoveTimeout: function()
+      removeMouseMoveTimeout()
       {
          if (this.mousemove_timeout)
          {
             clearTimeout(this.mousemove_timeout);
             delete this.mousemove_timeout;
          }
-      },
+      }
 
       /** Get three.js intersect object at specified mouse position */
-      getIntersectAt: function(x, y)
+      getIntersectAt(x, y)
       {
          console.log("GLC::onMouseMoveTimeout", x, y);
 
@@ -529,9 +525,9 @@ sap.ui.define([
             }
          }
          */
-      },
+      }
 
-      onMouseMoveTimeout: function(x, y)
+      onMouseMoveTimeout(x, y)
       {
          delete this.mousemove_timeout;
 
@@ -540,7 +536,7 @@ sap.ui.define([
          if ( ! intersect)
             return this.clearHighlight();
 
-         var c = intersect.object.get_ctrl();
+         let c = intersect.object.get_ctrl();
 
          let mouse = intersect.mouse;
 
@@ -572,9 +568,9 @@ sap.ui.define([
          }
 
          this.ttip.style.display= "block";
-      },
+      }
 
-      getRelativeOffsets: function(elem)
+      getRelativeOffsets(elem)
       {
          // Based on:
          // https://stackoverflow.com/questions/3000887/need-to-calculate-offsetright-in-javascript
@@ -595,29 +591,28 @@ sap.ui.define([
          }
 
          return r;
-      },
+      }
 
       //------------------------------------------------------------------------------
       // Mouse button handlers, selection, context menu
       //------------------------------------------------------------------------------
 
-      removeMouseupListener: function()
+      removeMouseupListener()
       {
          if (this.mouseup_listener)
          {
             this.get_view().getDomRef().removeEventListener('pointerup', this.mouseup_listener);
             this.mouseup_listener = 0;
          }
-      },
+      }
 
-      showContextMenu: function(event, menu)
+      showContextMenu(event, menu)
       {
          // console.log("GLC::showContextMenu", this, menu)
 
          // See js/modules/menu/menu.mjs createMenu(), menu.add()
 
-
-         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+         let intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
          menu.add("header:Context Menu");
 
@@ -638,19 +633,19 @@ sap.ui.define([
          menu.add("endsub:");
 
          menu.show(event);
-      },
+      }
 
-      defaultContextMenuAction: function(arg)
+      defaultContextMenuAction(arg)
       {
          console.log("GLC::defaultContextMenuAction", this, arg);
-      },
+      }
 
-      handleMouseSelect: function(event)
+      handleMouseSelect(event)
       {
-         var intersect = this.getIntersectAt(event.offsetX, event.offsetY);
+         let intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
          if (intersect) {
-            var c = intersect.object.get_ctrl();
+            let c = intersect.object.get_ctrl();
             c.event = event;
             c.elementSelected(c.extractIndex(intersect));
             this.highlighted_scene = intersect.object.scene;
@@ -659,9 +654,9 @@ sap.ui.define([
 
             this.controller.created_scenes[0].processElementSelected(null, [], event);
          }
-      },
+      }
 
-   });
+   } // class GlViewerRCore
 
    return GlViewerRCore;
 });

@@ -7,15 +7,11 @@ sap.ui.define([
 
    "use strict";
 
-   function GlViewerThree(viewer_class) {
-      GlViewer.call(this, viewer_class);
-   }
+   let g_global_init_done = false;
 
-   GlViewerThree.prototype = Object.assign(Object.create(GlViewer.prototype), {
+   class GlViewerThree extends GlViewer {
 
-      constructor: GlViewerThree,
-
-      g_highlight_update: function(mgr) {
+      g_highlight_update(mgr) {
          let sa = THREE.OutlinePassEve.selection_atts;
          let gs = mgr.GetElement(mgr.global_selection_id);
          let gh = mgr.GetElement(mgr.global_highlight_id);
@@ -26,19 +22,18 @@ sap.ui.define([
             sa[1].visibleEdgeColor.setStyle(EVE.JSR.getColor(gh.fVisibleEdgeColor));
             sa[1].hiddenEdgeColor.setStyle(EVE.JSR.getColor(gh.fHiddenEdgeColor));
          }
-      },
+      }
 
-      init: function(controller) {
-         GlViewer.prototype.init.call(this, controller);
-         //super.init(controller);
+      init(controller) {
+         super.init(controller);
 
          this.creator = new EveElements(controller);
          // MT-RCORE indices now work, we probably don't need this option anymore.
          // this.creator.useIndexAsIs = EVE.JSR.decodeUrl().has('useindx');
          this.creator.useIndexAsIs = true;
 
-         if (!GlViewerThree.g_global_init_done) {
-            GlViewerThree.g_global_init_done = true;
+         if (!g_global_init_done) {
+            g_global_init_done = true;
 
             this.controller.mgr.RegisterSelectionChangeFoo(this.g_highlight_update.bind(this));
             this.g_highlight_update(this.controller.mgr);
@@ -52,29 +47,29 @@ sap.ui.define([
          this.setupThreejsDomAndEventHandlers();
 
          this.controller.glViewerInitDone();
-      },
+      }
 
-      cleanup: function() {
+      cleanup() {
          if (this.controller) this.controller.removeScenes();
          this.destroyThreejsRenderer();
-         GlViewer.prototype.cleanup.call(this);
-      },
+         super.cleanup();
+      }
 
       //==============================================================================
 
-      make_object: function(name) {
+      make_object(/*name*/) {
          return new THREE.Object3D;
-      },
+      }
 
-      get_top_scene: function() {
+      get_top_scene() {
          return this.scene;
-      },
+      }
 
       //==============================================================================
       // THREE renderer creation, DOM/event handler setup, reset
       //==============================================================================
 
-      createThreejsRenderer: function() {
+      createThreejsRenderer() {
          let w = this.get_width(), h = this.get_height();
 
          // console.log("createThreejsRenderer", this.controller.kind, "w=", w, "h=", h);
@@ -140,9 +135,9 @@ sap.ui.define([
          this.fxaa_pass.renderToScreen = true;
 
          this.composer.addPass(this.fxaa_pass);
-      },
+      }
 
-      destroyThreejsRenderer: function() {
+      destroyThreejsRenderer() {
          if (this.renderer) {
             this.get_view().getDomRef().removeChild(this.renderer.domElement);
             this.renderer.domElement.removeEventListener('pointermove', this.mousemove_func);
@@ -160,9 +155,9 @@ sap.ui.define([
             this.controls.dispose();
             delete this.controls;
          }
-      },
+      }
 
-      mouseMoveHandler: function(event) {
+      mouseMoveHandler(event) {
          if (event.movementX == 0 && event.movementY == 0)
             return;
 
@@ -172,14 +167,14 @@ sap.ui.define([
          } else {
             this.clearHighlight();
          }
-      },
+      }
 
-      mouseLeaveHandler: function(/* event */) {
+      mouseLeaveHandler(/* event */) {
          this.removeMouseMoveTimeout();
          this.clearHighlight();
-      },
+      }
 
-      mouseDownHandler: function(event) {
+      mouseDownHandler(event) {
          this.removeMouseMoveTimeout();
          if (event.buttons != 1 && event.buttons != 2)
             this.clearHighlight();
@@ -189,14 +184,14 @@ sap.ui.define([
             this.click_buttons = event.buttons;
             this.click_intersect = this.getIntersectAt(event.offsetX, event.offsetY);
          }
-      },
+      }
 
-      clearClickedButtons: function() {
+      clearClickedButtons() {
          delete this.click_buttons;
          delete this.click_intersect;
-      },
+      }
 
-      processControlEnd: function() {
+      processControlEnd() {
          if (this.click_buttons == 1) {
             // handle left mouse button click
             if (this.click_intersect) {
@@ -213,14 +208,14 @@ sap.ui.define([
             let intersect = this.click_intersect;
             EVE.JSR.createMenu(this.click_event, this).then(menu => this.showContextMenu(intersect, menu));
          }
-      },
+      }
 
-      dblClickHandler: function(/* event */) {
+      dblClickHandler(/* event */) {
          if (this.controller.dblclick_action == "Reset")
             this.resetThreejsRenderer();
-      },
+      }
 
-      keyDownHandler: function(event) {
+      keyDownHandler(event) {
          let handled = true;
 
          if (event.key == "t") {
@@ -262,10 +257,9 @@ sap.ui.define([
 
             this.render();
          }
-      },
+      }
 
-
-      setupThreejsDomAndEventHandlers: function() {
+      setupThreejsDomAndEventHandlers() {
          this.get_view().getDomRef().appendChild(this.renderer.domElement);
 
          // Setup tooltip
@@ -303,10 +297,10 @@ sap.ui.define([
 
          // This will also call render().
          this.resetThreejsRenderer();
-      },
+      }
 
       /** Reset camera, lights based on scene bounding box. */
-      resetThreejsRenderer: function() {
+      resetThreejsRenderer() {
          let sbbox = new THREE.Box3();
          sbbox.setFromObject(this.scene);
 
@@ -369,12 +363,12 @@ sap.ui.define([
          this.composer.reset();
 
          this.controls.update();
-      },
+      }
 
 
       //==============================================================================
 
-      render: function() {
+      render() {
          // AMT check if controller is attached in the splitter
          let v = this.get_manager().GetElement(this.controller.eveViewerId);
          if (!v.fRnrSelf)
@@ -385,11 +379,11 @@ sap.ui.define([
 
          // or directly through renderer:
          // this.renderer.render( this.scene, this.camera );
-      },
+      }
 
       //==============================================================================
 
-      onResizeTimeout: function() {
+      onResizeTimeout() {
          let w = this.get_width();
          let h = this.get_height();
 
@@ -410,7 +404,7 @@ sap.ui.define([
          this.composer.reset();
          this.controls.update();
          this.render();
-      },
+      }
 
 
       //==============================================================================
@@ -421,24 +415,24 @@ sap.ui.define([
       // Highlight & Mouse move timeout handling
       //------------------------------------------------------------------------------
 
-      clearHighlight: function() {
+      clearHighlight() {
          if (this.highlighted_scene) {
             this.highlighted_scene.clearHighlight(); // XXXX should go through manager
             this.highlighted_scene = 0;
 
             this.ttip.style.display = "none";
          }
-      },
+      }
 
-      removeMouseMoveTimeout: function() {
+      removeMouseMoveTimeout() {
          if (this.mousemove_timeout) {
             clearTimeout(this.mousemove_timeout);
             delete this.mousemove_timeout;
          }
-      },
+      }
 
       /** Get three.js intersect object at specified mouse position */
-      getIntersectAt: function(x, y) {
+      getIntersectAt(x, y) {
          let w = this.get_width();
          let h = this.get_height();
 
@@ -471,9 +465,9 @@ sap.ui.define([
             }
          }
          return null;
-      },
+      }
 
-      onMouseMoveTimeout: function(x, y) {
+      onMouseMoveTimeout(x, y) {
          delete this.mousemove_timeout;
 
          let intersect = this.getIntersectAt(x, y);
@@ -512,12 +506,16 @@ sap.ui.define([
          }
 
          this.ttip.style.display = "block";
-      },
-      remoteToolTip: function(msg) {
-         this.ttip_text.innerHTML = msg;
-         if (this.highlighted_scene) this.ttip.style.display = "block";
-      },
-      getRelativeOffsets: function(elem) {
+      }
+
+      remoteToolTip(msg) {
+         if (this.ttip_text)
+            this.ttip_text.innerHTML = msg;
+         if (this.highlighted_scene && this.ttip)
+            this.ttip.style.display = "block";
+      }
+
+      getRelativeOffsets(elem) {
          // Based on:
          // https://stackoverflow.com/questions/3000887/need-to-calculate-offsetright-in-javascript
 
@@ -536,13 +534,13 @@ sap.ui.define([
          }
 
          return r;
-      },
+      }
 
       //------------------------------------------------------------------------------
       // Mouse button handlers, selection, context menu
       //------------------------------------------------------------------------------
 
-      showContextMenu: function(intersect, menu) {
+      showContextMenu(intersect, menu) {
          // console.log("GLC::showContextMenu", this, menu)
 
          // See js/modules/gui/menu.mjs createMenu(), menu.add()
@@ -566,13 +564,13 @@ sap.ui.define([
          menu.add("endsub:");
 
          menu.show();
-      },
+      }
 
-      defaultContextMenuAction: function(arg) {
+      defaultContextMenuAction(arg) {
          console.log("GLC::defaultContextMenuAction", this, arg);
-      },
+      }
 
-      handleMouseSelect: function(event) {
+      handleMouseSelect(event) {
          let intersect = this.getIntersectAt(event.offsetX, event.offsetY);
 
          if (intersect) {
@@ -585,9 +583,9 @@ sap.ui.define([
 
             this.controller.created_scenes[0].processElementSelected(null, [], event);
          }
-      },
+      }
 
-   });
+   } // class GlViewerThree
 
    //==============================================================================
    // THREE.js hacks
@@ -652,6 +650,7 @@ sap.ui.define([
          attributes.normal.needsUpdate = true;
 
       };
+
 
    }
 
