@@ -182,6 +182,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_EXTRACT_STATIC         YES)
         #set(DOXYGEN_EXTRACT_ANON_NSPACES   YES)
         set(DOXYGEN_HIDE_IN_BODY_DOCS      YES)
+        set(DOXYGEN_CASE_SENSE_NAMES       YES) # default value is system dependent, so need to set this !
         #set(DOXYGEN_WARN_NO_PARAMDOC       YES) # If you set this to yes for finding all missing documentation, you need to set EXTRACT_ALL to false, see https://github.com/doxygen/doxygen/issues/880
         set(DOXYGEN_SORT_BRIEF_DOCS        YES)
         set(DOXYGEN_SORT_MEMBERS_CTORS_1ST YES)
