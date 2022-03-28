@@ -440,13 +440,15 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
       m.AddLine("model.add(Flatten())");
       m.AddLine("model.add(Dense(256, activation = 'relu')) ");
       m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
-      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(lr = 0.001), metrics = ['accuracy'])");
+      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), metrics = ['accuracy'])");
       m.AddLine("model.save('model_cnn.h5')");
       m.AddLine("model.summary()");
 
       m.SaveSource("make_cnn_model.py");
       // execute
-      gSystem->Exec(TMVA::Python_Executable() + " make_cnn_model.py");
+      auto ret = (TString *)gROOT->ProcessLine("TMVA::Python_Executable()");
+      TString python_exe = (ret) ? *(ret) : "python";
+      gSystem->Exec(python_exe + " make_cnn_model.py");
 
       if (gSystem->AccessPathName("model_cnn.h5")) {
          Warning("TMVA_CNN_Classification", "Error creating Keras model file - skip using Keras");
@@ -466,10 +468,11 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
       Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model");
       TString pyTorchFileName = gROOT->GetTutorialDir() + TString("/tmva/PyTorch_Generate_CNN_Model.py");
       // check that pytorch can be imported and file defining the model and used later when booking the method is existing
-      if (gSystem->Exec(TMVA::Python_Executable() + " -c 'import torch'")  || gSystem->AccessPathName(pyTorchFileName) ) {
+      auto ret = (TString *)gROOT->ProcessLine("TMVA::Python_Executable()");
+      TString python_exe = (ret) ? *(ret) : "python";
+      if (gSystem->Exec(python_exe + " -c 'import torch'") || gSystem->AccessPathName(pyTorchFileName)) {
          Warning("TMVA_CNN_Classification", "PyTorch is not installed or model building file is not existing - skip using PyTorch");
-      }
-      else {
+      } else {
          // book PyTorch method only if PyTorch model could be created
          Info("TMVA_CNN_Classification", "Booking PyTorch CNN model");
          TString methodOpt = "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
