@@ -2,43 +2,43 @@ sap.ui.define([], function() {
 
    "use strict";
 
-   function GlViewer(viewer_class)
-   {
-      this.viewer_class = viewer_class;
+   class GlViewer {
 
-      // console.log(this.get_name() + " - constructor");
-   };
+      constructor(viewer_class)  {
+         this.viewer_class = viewer_class;
 
-   GlViewer.prototype = {
+         // console.log(this.get_name() + " - constructor");
+      }
 
-      init: function(controller)
+      init(controller)
       {
          // console.log(this.get_name() + ".init()");
 
          if (this.controller) throw new Error(this.get_name() + "already initialized.");
 
          this.controller = controller;
-      },
+      }
 
-      cleanup: function()
+      cleanup()
       {
          // console.log(this.get_name() + ".cleanup()");
          delete this.controller;
-      },
+      }
 
       //==============================================================================
 
-      get_name:   function() { return "EVE.GlViewer" + this.viewer_class; },
-      get_view:   function() { return this.controller.getView(); },
-      get_width:  function() { return this.controller.getView().$().width(); },
-      get_height: function() { return this.controller.getView().$().height(); },
+      get_name() { return "EVE.GlViewer" + this.viewer_class; }
+      get_view() { return this.controller.getView(); }
+      get_width() { return this.controller.getView().$().width(); }
+      get_height() { return this.controller.getView().$().height(); }
 
       //==============================================================================
 
-      make_object:   function(name) { return null; },
-      get_top_scene: function()     { return null; },
-      get_manager:   function()     { return this.controller.mgr; }
-   };
+      make_object(/* name */) { return null; }
+      get_top_scene()  { return null; }
+      get_manager()  { return this.controller.mgr; }
+
+   } // class GlViewer
 
    return GlViewer;
 
