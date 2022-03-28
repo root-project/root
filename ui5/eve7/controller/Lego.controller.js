@@ -1,23 +1,8 @@
 sap.ui.define([
     'sap/ui/core/mvc/Controller',
-    'sap/ui/core/Component',
     "sap/ui/core/ResizeHandler",
-    'sap/ui/core/UIComponent',
-    'sap/ui/model/json/JSONModel',
-    'sap/ui/model/Sorter',
-    'sap/m/Column',
-    'sap/m/ColumnListItem',
-    'sap/m/Input',
-    'sap/m/Label',
-    'sap/m/Button',
-    "sap/m/FormattedText",
-    "sap/ui/layout/VerticalLayout",
-    "sap/ui/layout/HorizontalLayout",
-    "sap/ui/table/Column",
-    "sap/m/MessageBox"
-], function (Controller, Component, ResizeHandler, UIComponent, JSONModel, Sorter,
-    mColumn, mColumnListItem, mInput, mLabel, mButton,
-    FormattedText, VerticalLayout, HorizontalLayout, tableColumn, MessageBox) {
+    'sap/ui/core/UIComponent'
+], function (Controller, ResizeHandler, UIComponent) {
 
     "use strict";
 
