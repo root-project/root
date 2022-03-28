@@ -73,6 +73,13 @@ static struct ForbidDiagnostics {
         return;
       }
 
+      // FIXME: RooNaNPacker warns about not being implemented for big endian
+      if (level == kWarning
+	  && strcmp(msg, "Fast recovery from undefined function values only implemented for little-endian machines. If necessary, request an extension of functionality on https://root.cern") == 0) {
+        std::cerr << "Warning in " << location << " " << msg << std::endl;
+        return;
+      }
+
       FAIL() << "Received unexpected diagnostic of severity "
          << level
          << " at '" << location << "' reading '" << msg << "'.\n"
