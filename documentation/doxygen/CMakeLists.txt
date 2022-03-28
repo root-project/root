@@ -115,13 +115,12 @@ if(BUILD_DOCUMENTATION)
     else()
     set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
     endif()
-    
+
     set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
     find_package(ROOT 6.25 CONFIG REQUIRED)
     set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
 
-    find_package(Doxygen REQUIRED dot)
-    #find_package(Doxygen 1.9.5 OPTIONAL_COMPONENTS dot) # TODO: change to this one, min doxygen is needed that has many bug fixes
+    find_package(Doxygen 1.9.4 REQUIRED dot) # OPTIONAL_COMPONENTS dot
 
     find_package (Python COMPONENTS Interpreter)
 
