@@ -45,6 +45,7 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/PreprocessorOptions.h"
 
+#include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
 
@@ -204,75 +205,28 @@ static bool IsFieldDeclInt(const clang::FieldDecl *field)
 
 static const clang::FieldDecl *GetDataMemberFromAll(const clang::CXXRecordDecl &cl, llvm::StringRef what)
 {
-   for(clang::RecordDecl::field_iterator field_iter = cl.field_begin(), end = cl.field_end();
-       field_iter != end;
-       ++field_iter){
-      if (field_iter->getName() == what) {
-         return *field_iter;
-      }
-   }
+   clang::ASTContext &C = cl.getASTContext();
+   clang::DeclarationName DName = &C.Idents.get(what);
+   auto R = cl.lookup(DName);
+   for (const clang::NamedDecl *D : R)
+      if (auto FD = llvm::dyn_cast<const clang::FieldDecl>(D))
+         return FD;
    return nullptr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-static bool CXXRecordDecl__FindOrdinaryMember(const clang::CXXBaseSpecifier *Specifier,
-                                              clang::CXXBasePath &Path,
-                                              const char *Name)
-{
-   if (!Specifier) return false;
-   clang::RecordDecl *BaseRecord = Specifier->getType()->getAs<clang::RecordType>()->getDecl();
-
-   const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(BaseRecord);
-   if (!clxx) return false;
-
-   const clang::FieldDecl *found = GetDataMemberFromAll(*clxx,(const char*)Name);
-   if (found) {
-      // Humm, this is somewhat bad (well really bad), oh well.
-      // Let's hope Paths never thinks it owns those (it should not as far as I can tell).
-      clang::NamedDecl* NonConstFD = const_cast<clang::FieldDecl*>(found);
-      clang::NamedDecl** BaseSpecFirstHack
-      = reinterpret_cast<clang::NamedDecl**>(NonConstFD);
-      Path.Decls = clang::DeclContextLookupResult(llvm::ArrayRef<clang::NamedDecl*>(BaseSpecFirstHack, 1));
-      return true;
-   }
-   //
-   // This is inspired from CXXInheritance.cpp:
-   /*
-    *      RecordDecl *BaseRecord =
-    *        Specifier->getType()->castAs<RecordType>()->getDecl();
-    *
-    *  const unsigned IDNS = clang::Decl::IDNS_Ordinary | clang::Decl::IDNS_Tag | clang::Decl::IDNS_Member;
-    *  clang::DeclarationName N = clang::DeclarationName::getFromOpaquePtr(Name);
-    *  for (Path.Decls = BaseRecord->lookup(N);
-    *       Path.Decls.first != Path.Decls.second;
-    *       ++Path.Decls.first) {
-    *     if ((*Path.Decls.first)->isInIdentifierNamespace(IDNS))
-    *        return true;
-    }
-    */
-   return false;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a data member name 'what' in any of the base classes of the class described by 'cl' if any.
 
-static const clang::FieldDecl *GetDataMemberFromAllParents(const clang::CXXRecordDecl &cl, const char *what)
+static const clang::FieldDecl *GetDataMemberFromAllParents(clang::Sema &SemaR, const clang::CXXRecordDecl &cl, const char *what)
 {
-   clang::CXXBasePaths Paths;
-   Paths.setOrigin(const_cast<clang::CXXRecordDecl*>(&cl));
-   if (cl.lookupInBases([=](const clang::CXXBaseSpecifier *Specifier, clang::CXXBasePath &Path) {
-            return CXXRecordDecl__FindOrdinaryMember(Specifier, Path, what);}, Paths))
-   {
-      clang::CXXBasePaths::paths_iterator iter = Paths.begin();
-      if (iter != Paths.end()) {
-         // See CXXRecordDecl__FindOrdinaryMember, this is, well, awkward.
-         const clang::FieldDecl *found = (clang::FieldDecl *)iter->Decls.data();
-         return found;
-      }
-   }
-   return nullptr;
+   clang::DeclarationName DName = &SemaR.Context.Idents.get(what);
+   clang::LookupResult R(SemaR, DName, clang::SourceLocation(),
+                         clang::Sema::LookupOrdinaryName,
+                         clang::Sema::ForExternalRedeclaration);
+   SemaR.LookupInSuper(R, &const_cast<clang::CXXRecordDecl&>(cl));
+   if (R.empty())
+      return nullptr;
+   return llvm::dyn_cast<const clang::FieldDecl>(R.getFoundDecl());
 }
 
 static
@@ -3130,7 +3084,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 /// If errstr is not null, *errstr is updated with the address of a static
 ///   string containing the part of the index with is invalid.
 
-llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum, llvm::StringRef *errstr)
+llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const cling::Interpreter& interp, const clang::DeclaratorDecl &m, int *errnum, llvm::StringRef *errstr)
 {
    llvm::StringRef title;
 
@@ -3230,8 +3184,10 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const clang::D
             // There is no variable by this name in this class, let see
             // the base classes!:
             int found = 0;
-            if (parent_clxx)
-               index1 = GetDataMemberFromAllParents( *parent_clxx, current );
+            if (parent_clxx) {
+               clang::Sema& SemaR = const_cast<cling::Interpreter&>(interp).getSema();
+               index1 = GetDataMemberFromAllParents(SemaR, *parent_clxx, current);
+            }
             if ( index1 ) {
                if ( IsFieldDeclInt(index1) ) {
                   found = 1;

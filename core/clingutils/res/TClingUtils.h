@@ -354,7 +354,7 @@ clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
-llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, llvm::StringRef  *errstr = 0);
+llvm::StringRef DataMemberInfo__ValidArrayIndex(const cling::Interpreter& interp, const clang::DeclaratorDecl &m, int *errnum = 0, llvm::StringRef  *errstr = 0);
 
 enum class EIOCtorCategory : short { kAbsent, kDefault, kIOPtrType, kIORefType };
 
