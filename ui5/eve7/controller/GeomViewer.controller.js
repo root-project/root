@@ -264,7 +264,7 @@ sap.ui.define(['sap/ui/core/Component',
          if (!this.standalone) {
             let req = geo_stack ? geo_stack : [];
             // avoid multiple time submitting same request
-            if (EVE.isSameStack(this._last_highlight_req, req)) return;
+            if (EVE.JSR.isSameStack(this._last_highlight_req, req)) return;
             this._last_highlight_req = req;
             return this.sendViewerRequest("HIGHL", { stack: req });
          }
@@ -319,7 +319,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.clearDrawings();
          } else {
             let geomDrawing = this.byId("geomDrawing");
-            this.geo_painter = EVE.createGeoPainter(geomDrawing.getDomRef(), null, drawopt);
+            this.geo_painter = EVE.JSR.createGeoPainter(geomDrawing.getDomRef(), null, drawopt);
             this.geo_painter.setMouseTmout(0);
             // this.geo_painter.setDepthMethod("dflt");
             this.geo_painter.ctrl.notoolbar = true;
@@ -362,7 +362,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
 
          if (recreate) {
-            this.geo_clones = new EVE.ClonedNodes(null, nodes);
+            this.geo_clones = new EVE.JSR.ClonedNodes(null, nodes);
             this.geo_clones.name_prefix = this.geo_clones.getNodeName(0);
             // normally only need when making selection, not used in geo viewer
             // this.geo_clones.setMaxVisNodes(draw_msg.maxvisnodes);
@@ -379,8 +379,8 @@ sap.ui.define(['sap/ui/core/Component',
             nsegm = this.geom_model.getProperty("/cfg/nsegm");
 
          if (nsegm) {
-            old_gradpersegm = EVE.geoCfg("GradPerSegm");
-            EVE.geoCfg("GradPerSegm", 360 / Math.max(nsegm,6));
+            old_gradpersegm = EVE.JSR.geoCfg("GradPerSegm");
+            EVE.JSR.geoCfg("GradPerSegm", 360 / Math.max(nsegm,6));
          }
 
          for (let cnt = 0; cnt < draw_msg.visibles.length; ++cnt) {
@@ -394,7 +394,7 @@ sap.ui.define(['sap/ui/core/Component',
          }
 
          if (old_gradpersegm)
-            EVE.geoCfg("GradPerSegm", old_gradpersegm);
+            EVE.JSR.geoCfg("GradPerSegm", old_gradpersegm);
 
          return true;
       },
@@ -411,7 +411,7 @@ sap.ui.define(['sap/ui/core/Component',
 
          if (rd.shape) {
             // case when TGeoShape provided as is
-            g = EVE.createGeometry(rd.shape);
+            g = EVE.JSR.createGeometry(rd.shape);
          } else {
 
             if (!rd.raw || (rd.raw.length==0)) {
@@ -447,7 +447,7 @@ sap.ui.define(['sap/ui/core/Component',
             _typename: "$$Shape$$", // indicate that shape can be used as is
             ready: true,
             geom: g,
-            nfaces: EVE.numGeometryFaces(g)
+            nfaces: EVE.JSR.numGeometryFaces(g)
          };
       },
 
@@ -814,7 +814,7 @@ sap.ui.define(['sap/ui/core/Component',
             this.geo_painter.changedGlobalTransparency(function(node) {
                if (node.stack)
                   for (let n = 0; n < visibles.length; ++n)
-                     if (EVE.isSameStack(node.stack, visibles[n].stack))
+                     if (EVE.JSR.isSameStack(node.stack, visibles[n].stack))
                         return 0;
                return dflt;
             });
@@ -1001,7 +1001,7 @@ sap.ui.define(['sap/ui/core/Component',
             return;
          }
 
-         this.node_painter = EVE.createGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
+         this.node_painter = EVE.JSR.createGeoPainter(nodeDrawing.getDomRef(), server_shape, "");
          this.node_painter.setMouseTmout(0);
          this.node_painter.ctrl.notoolbar = true;
          this.node_painter_active = true;
