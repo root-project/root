@@ -113,8 +113,8 @@ void DataRange::AddRange(unsigned  int  icoord , double xmin, double xmax  ) {
    // case of  an already existing range
    // need to establish a policy (use OR or AND )
 
-   CleanRangeSet(icoord,xmin,xmax);
-   // add the new one
+   CleanRangeSet(icoord, xmin, xmax);
+   // add the new one   
    rs.push_back(std::make_pair(xmin,xmax) );
    // sort range in increasing values of xmax
    std::sort( rs.begin(), rs.end() , lessRange);
@@ -161,24 +161,38 @@ void DataRange::Clear(unsigned int icoord ) {
    fRanges[icoord].clear();
 }
 
+void DataRange::CleanRangeSet(unsigned int icoord, double &xmin, double &xmax) {
+  // loop on existing ranges
+  RangeSet & ranges = fRanges[icoord];
+  for (RangeSet::iterator itr = ranges.begin(); itr != ranges.end(); ++itr) {
+    // delete included ranges
+    if ( itr->first >= xmin && itr->second <= xmax) {
+      itr = ranges.erase(itr);
+      // itr goes to next element, so go back before adding
+      --itr;
+      continue;
+    }
 
-void DataRange::CleanRangeSet(unsigned int icoord, double xmin, double xmax) {
-   //  remove all the existing ranges between xmin and xmax
-   //  called when a new range is inserted
-
-   // loop on existing ranges
-   RangeSet & ranges = fRanges[icoord];
-   for (RangeSet::iterator itr = ranges.begin(); itr != ranges.end(); ++itr) {
-      // delete included ranges
-      if ( itr->first >= xmin && itr->second <= xmax) {
-         itr = ranges.erase(itr);
-         // itr goes to next element, so go back before adding
-         --itr;
-      }
-   }
-
+    if (xmin >= itr->first && xmax <= itr->second) {
+      xmin = itr->first;
+      xmax = itr->second;
+      itr = ranges.erase(itr);
+      // itr goes to next element, so go back before adding
+      --itr;
+      continue;
+    }
+    if ( (itr->first <= xmin && xmin <= itr->second)
+         || (itr->first <= xmax && xmax <= itr->second) ) {
+      xmin = std::min(itr->first, xmin);
+      xmax = std::max(itr->second, xmax);
+      itr = ranges.erase(itr);
+      --itr;
+    }
+  }
 }
 
+     
+     
 void DataRange::GetInfRange(double &xmin, double &xmax) {
    // get the full range [-inf, +inf] for xmin and xmax
    xmin = -std::numeric_limits<double>::infinity();

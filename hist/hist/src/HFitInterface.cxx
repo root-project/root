@@ -135,41 +135,7 @@ namespace ROOT {
 
       // function by default has same range (use that one if requested otherwise use data one)
 
-      int nx = 0;
-      int ny = 0;
-      int nz = 0;
-
-      //  get the range (add the function range ??)
-      // to check if inclusion/exclusion at end/point
-
-      //need to check for overlapping ranges
       const DataRange & range = dv.Range();
-      for (int i=0; i<(int)range.Size(0); ++i) {
-        HFitInterface::ExamineRange( hfit->GetXaxis(), range(0, i), hxfirst, hxlast);
-        nx += hxlast - hxfirst + 1;
-        hxfirst = hfit->GetXaxis()->GetFirst();
-        hxlast  = hfit->GetXaxis()->GetLast();
-      }
-      if (hfit->GetDimension() > 1 && range.Size(1) != 0) {
-        for (int i=0; i<(int)range.Size(1); ++i) {
-          HFitInterface::ExamineRange( hfit->GetYaxis(), range(1, i), hyfirst, hylast);
-          ny += hylast - hyfirst + 1;
-          hyfirst = hfit->GetYaxis()->GetFirst();
-          hylast  = hfit->GetYaxis()->GetLast();
-        }
-      }
-      else { ny = 1; }
-      if (hfit->GetDimension() > 1 && range.Size(2) != 0) {
-        for (int i=0; i<(int)range.Size(2); ++i) {
-          HFitInterface::ExamineRange( hfit->GetZaxis(), range(2, i), hzfirst, hzlast);
-          nz += hzlast - hzfirst + 1;
-          hzfirst = hfit->GetZaxis()->GetFirst();
-          hzlast  = hfit->GetZaxis()->GetLast();
-        }
-      }
-      else { nz = 1; }
-   
-      int n = nx * ny * nz;
 
 #ifdef DEBUG
       std::cout << "THFitInterface: ifirst = " << hxfirst << " ilast =  " << hxlast
@@ -188,7 +154,6 @@ namespace ROOT {
       assert( ndim > 0 );
       //typedef  BinPoint::CoordData CoordData;
       //CoordData x = CoordData( hfit->GetDimension() );
-      dv.Initialize(n,ndim);
 
       double x[3];
       double s[3];
@@ -204,39 +169,41 @@ namespace ROOT {
       for (int ix=0; ix<(int)range.Size(0); ++ix) {
         hxfirst = xaxis->GetFirst();
         hxlast  = xaxis->GetLast();
-        HFitInterface::ExamineRange( xaxis, range(0, ix), hxfirst, hxlast ); //set hxfirst and hxlast for this the ix range     
+        HFitInterface::ExamineRange( xaxis, range(0, ix), hxfirst, hxlast ); //set hxfirst and hxlast for this ix range     
 
-        for ( binx = hxfirst; binx <= hxlast; ++binx) {
-          if (useBinEdges) {
-            x[0] = xaxis->GetBinLowEdge(binx);
-            s[0] = xaxis->GetBinUpEdge(binx);
+        for (int iy=0; iy<=(int)range.Size(1); ++iy) {
+          if (iy > 0 && iy == (int)range.Size(1)) { continue; }
+          hyfirst = yaxis->GetFirst();
+          hylast  = yaxis->GetLast();
+          if (ndim > 1 && range.Size(1) != 0) {
+            HFitInterface::ExamineRange( yaxis, range(1, iy), hyfirst, hylast ); //set hyfirst and hylast for this iy range
           }
-          else
-            x[0] = xaxis->GetBinCenter(binx);
 
-          for (int iy=0; iy<=(int)range.Size(1); ++iy) {
-            if (iy > 0 && iy == (int)range.Size(1)) { continue; }
-            hyfirst = yaxis->GetFirst();
-            hylast  = yaxis->GetLast();
-            if (ndim > 1 && range.Size(1) != 0) {
-              HFitInterface::ExamineRange( yaxis, range(1, iy), hyfirst, hylast ); //set hyfirst and hylast for this the iy range
+          for (int iz=0; iz<=(int)range.Size(2); ++iz) {
+            if (iz > 0 && iz == (int)range.Size(2)) { continue; }
+            hzfirst = zaxis->GetFirst();
+            hzlast  = zaxis->GetLast();
+            if (ndim > 1 && range.Size(2) != 0) {
+              HFitInterface::ExamineRange( zaxis, range(2, iz), hzfirst, hzlast ); //set hzfirst and hzlast for this iz range
             }
 
-            for ( biny = hyfirst; biny <= hylast; ++biny) {
+            int nPoints = (hxlast - hxfirst + 1) * (hylast - hyfirst + 1) * (hzlast - hzfirst + 1);
+            dv.Append(nPoints, ndim);
+            for ( binx = hxfirst; binx <= hxlast; ++binx) {
               if (useBinEdges) {
-                x[1] = yaxis->GetBinLowEdge(biny);
-                s[1] = yaxis->GetBinUpEdge(biny);
+                x[0] = xaxis->GetBinLowEdge(binx);
+                s[0] = xaxis->GetBinUpEdge(binx);
               }
               else
-                x[1] = yaxis->GetBinCenter(biny);
+                x[0] = xaxis->GetBinCenter(binx);
 
-              for (int iz=0; iz<=(int)range.Size(2); ++iz) {
-                if (iz > 0 && iz == (int)range.Size(2)) { continue; }
-                hzfirst = zaxis->GetFirst();
-                hzlast  = zaxis->GetLast();
-                if (ndim > 1 && range.Size(2) != 0) {
-                  HFitInterface::ExamineRange( zaxis, range(2, iz), hzfirst, hzlast ); //set hzfirst and hzlast for this the iz range
+              for ( biny = hyfirst; biny <= hylast; ++biny) {
+                if (useBinEdges) {
+                  x[1] = yaxis->GetBinLowEdge(biny);
+                  s[1] = yaxis->GetBinUpEdge(biny);
                 }
+                else
+                  x[1] = yaxis->GetBinCenter(biny);
 
                 for ( binz = hzfirst; binz <= hzlast; ++binz) {
                   if (useBinEdges) {
@@ -253,7 +220,6 @@ namespace ROOT {
                     (*func)( &x[0] );  // evaluate using stored function parameters
                     if (TF1::RejectedPoint() ) continue;
                   }
-
 
                   double value =  hfit->GetBinContent(binx, biny, binz);
                   double error =  hfit->GetBinError(binx, biny, binz);
@@ -278,10 +244,10 @@ namespace ROOT {
 #endif
 
                 }  // end loop on z bins
-              } // end loop on iz
-            }  // end loop on y bins
-          } // end loop on iy 
-        }   // end loop on x axis
+              } // end loop on y bins 
+            } // end loop on x axis
+          } // end loop on iz          
+        }  // end loop on iy
       } //end loop on ix
 
 
