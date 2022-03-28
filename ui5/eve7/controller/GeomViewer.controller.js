@@ -1,12 +1,11 @@
-sap.ui.define(['sap/ui/core/Component',
-               'sap/ui/core/mvc/Controller',
+sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/core/Control',
                'sap/m/Text',
                'sap/ui/layout/HorizontalLayout',
                'sap/ui/table/Column',
                'sap/ui/model/json/JSONModel',
                'rootui5/browser/model/BrowserModel'
-],function(Component, Controller, CoreControl, mText,
+],function(Controller, CoreControl, mText,
            HorizontalLayout, tableColumn, JSONModel, BrowserModel) {
 
    "use strict";

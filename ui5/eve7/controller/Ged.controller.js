@@ -11,7 +11,7 @@ sap.ui.define([
 ], function (Controller, JSONModel, Button, mInput, mStepInput, mCheckBox, mText, ColorPalettePopover, HorizontalLayout) {
    "use strict";
 
-   var UI5PopupColors = {
+   let UI5PopupColors = {
          aliceblue: 'f0f8ff',
          antiquewhite: 'faebd7',
          aqua: '00ffff',
@@ -164,7 +164,7 @@ sap.ui.define([
 
 
    // TODO: move to separate file
-   var EVEColorButton = Button.extend("rootui5.eve7.controller.EVEColorButton", {
+   let EVEColorButton = Button.extend("rootui5.eve7.controller.EVEColorButton", {
       // when default value not specified - openui tries to load custom
       renderer: {}, // ButtonRenderer.render,
 
@@ -180,7 +180,7 @@ sap.ui.define([
 
    });
 
-    var EVEColorPopup = ColorPalettePopover.extend("rootui5.eve7.controller.EVEColorPopup", {
+    let EVEColorPopup = ColorPalettePopover.extend("rootui5.eve7.controller.EVEColorPopup", {
         // when default value not specified - openui tries to load custom
         defaultColors : ['gold','darkorange', 'indianred','rgb(102,51,0)', 'cyan',// 'magenta'
                              'blue', 'lime', 'gray','slategray','rgb(204, 198, 170)',
@@ -211,7 +211,7 @@ sap.ui.define([
 
     });
 
-   var GedController = Controller.extend("rootui5.eve7.controller.Ged", {
+   let GedController = Controller.extend("rootui5.eve7.controller.Ged", {
 
       onInit : function() {
          this.oModel = new JSONModel({ title: "GED title", "widgetlist" : [] });
@@ -234,7 +234,7 @@ sap.ui.define([
 
       closeGedEditor: function() {
          if (this.ged_visible) {
-            var prnt = this.getView().getParent();
+            let prnt = this.getView().getParent();
             if (prnt) prnt.removeContentArea(this.getView());
             this.ged_visible = false;
          }
@@ -248,7 +248,7 @@ sap.ui.define([
          if (this.ged_visible && (elementId == this.ged_id))
             return this.closeGedEditor();
 
-         var editorElement = this.mgr ? this.mgr.GetElement(elementId) : null;
+         let editorElement = this.mgr ? this.mgr.GetElement(elementId) : null;
          if (!editorElement)
             return this.closeGedEditor();
 
@@ -260,7 +260,7 @@ sap.ui.define([
 
          this.editorElement = editorElement;
 
-         var title = this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
+         let title = this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
          this.oModel.setProperty("/title", title);
          this.buildEditor();
       },
@@ -334,7 +334,7 @@ sap.ui.define([
 	 //
 	 // Also, it is not tested whether for all types of events, the direct browser
 	 // event is coming BEFORE the itemPress event handler invocation!
-         var ctrlKeyPressed = false;
+         let ctrlKeyPressed = false;
          list.attachBrowserEvent("click", function(e) {
 	    ctrlKeyPressed = e.ctrlKey;
 	 });
@@ -343,7 +343,7 @@ sap.ui.define([
          let makeItem = function(i) {
             let iid = "item_"+ i;
             let fout = citems[i].fFiltered;
-	    var item  = new sap.m.CustomListItem( iid, {type:sap.m.ListType.Active});
+	    let item  = new sap.m.CustomListItem( iid, {type:sap.m.ListType.Active});
 	    item.addStyleClass("sapUiTinyMargin");
 
             // item info
@@ -636,9 +636,9 @@ sap.ui.define([
 
    /** Return method to toggle rendering self */
    GedController.GetRnrSelfMethod = function(typename) {
-      var desc = this.canEditClass(typename);
+      let desc = this.canEditClass(typename);
       if (desc)
-         for (var k=0;k<desc.length;++k)
+         for (let k=0;k<desc.length;++k)
             if ((desc[k].member == "fRnrSelf") && desc[k].name)
                return "Set" + desc[k].name;
 

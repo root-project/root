@@ -17,7 +17,7 @@ sap.ui.define([
 
       onInit : function()
       {
-         // var id = this.getView().getId();
+         // let id = this.getView().getId();
 
          let viewData = this.getView().getViewData();
          if (viewData)
