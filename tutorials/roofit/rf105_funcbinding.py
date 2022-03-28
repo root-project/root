@@ -17,15 +17,8 @@ import ROOT
 # ---------------------------------------------------
 
 # Bind one-dimensional ROOT.TMath.Erf function as ROOT.RooAbsReal function
-# Directly trying this in python doesn't work:
-# x = ROOT.RooRealVar("x", "x", -3, 3)
-# erf = ROOT.RooFit.bindFunction("erf", ROOT.TMath.Erf, x)
-# Need to go through C interface
-ROOT.gInterpreter.ProcessLine(
-    'auto x = RooRealVar("x", "x", -3, 3); auto myerf = RooFit::bindFunction("erf", TMath::Erf, x)'
-)
-x = ROOT.x
-erf = ROOT.myerf
+x = ROOT.RooRealVar("x", "x", -3, 3)
+erf = ROOT.RooFit.bindFunction("erf", ROOT.TMath.Erf, x)
 
 # Print erf definition
 erf.Print()
@@ -38,21 +31,10 @@ erf.plotOn(frame1)
 # -----------------------------------------------------------------------
 
 # Bind pdf ROOT.Math.Beta with three variables as ROOT.RooAbsPdf function
-# As above, this does not work directly in python
-# x2 = ROOT.RooRealVar("x2", "x2", 0, 0.999)
-# a = ROOT.RooRealVar("a", "a", 5, 0, 10)
-# b = ROOT.RooRealVar("b", "b", 2, 0, 10)
-# beta = ROOT.RooFit.bindPdf("beta", ROOT.Math.beta_pdf, x2, a, b)
-ROOT.gInterpreter.ProcessLine(
-    'auto x2 = RooRealVar("x2", "x2", 0, 0.999);\
-    auto a = RooRealVar("a", "a", 5, 0, 10);\
-    auto b = RooRealVar("b", "b", 5, 0, 10);\
-    auto beta = RooFit::bindPdf("beta", ROOT::Math::beta_pdf, x2, a, b)'
-)
-x2 = ROOT.x2
-a = ROOT.a
-b = ROOT.b
-beta = ROOT.beta
+x2 = ROOT.RooRealVar("x2", "x2", 0, 0.999)
+a = ROOT.RooRealVar("a", "a", 5, 0, 10)
+b = ROOT.RooRealVar("b", "b", 2, 0, 10)
+beta = ROOT.RooFit.bindPdf("beta", ROOT.Math.beta_pdf, x2, a, b)
 
 # Perf beta definition
 beta.Print()
