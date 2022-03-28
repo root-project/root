@@ -27,9 +27,9 @@ def check_histograms(h_parent, h_friend):
 class TestDaskFriendTrees:
     """Integration tests to check the working of DistRDF with friend trees"""
 
-    def create_parent_tree(self):
+    def create_parent_tree(self, filename):
         """Creates a .root file with the parent TTree"""
-        f = ROOT.TFile("treeparent.root", "recreate")
+        f = ROOT.TFile(filename, "recreate")
         T = ROOT.TTree("T", "test friend trees")
 
         x = array("f", [0])
@@ -45,9 +45,9 @@ class TestDaskFriendTrees:
         f.Write()
         f.Close()
 
-    def create_friend_tree(self):
+    def create_friend_tree(self, filename):
         """Creates a .root file with the friend TTree"""
-        ff = ROOT.TFile("treefriend.root", "recreate")
+        ff = ROOT.TFile(filename, "recreate")
         TF = ROOT.TTree("TF", "tree friend")
 
         x = array("f", [0])
@@ -63,27 +63,31 @@ class TestDaskFriendTrees:
         ff.Write()
         ff.Close()
 
-    def test_friend_tree_histo(self, connection):
+    def test_tchain_with_friend_tchain_histo(self, connection):
         """
         Tests that the computational graph can be issued both on the
-        parent tree and the friend tree.
+        parent chain and the friend chain.
         """
-        self.create_parent_tree()
-        self.create_friend_tree()
 
-        # Parent Tree
-        baseTree = ROOT.TChain("T")
-        baseTree.Add("treeparent.root")
+        main_filename = "main_chain.root"
+        friend_filename = "friend_chain.root"
 
-        # Friend Tree
-        friendTree = ROOT.TChain("TF")
-        friendTree.Add("treefriend.root")
+        self.create_parent_tree(main_filename)
+        self.create_friend_tree(friend_filename)
 
-        # Add friendTree to the parent
-        baseTree.AddFriend(friendTree)
+        # Main TChain
+        mainchain = ROOT.TChain("T")
+        mainchain.Add(main_filename)
 
-        # Create a DistRDF RDataFrame with the parent and the friend trees
-        df = Dask.RDataFrame(baseTree, daskclient=connection)
+        # Friend TChain
+        friendchain = ROOT.TChain("TF")
+        friendchain.Add(friend_filename)
+
+        # Add friend chain to the main one
+        mainchain.AddFriend(friendchain)
+
+        # Create a DistRDF RDataFrame with the main and the friend chains
+        df = Dask.RDataFrame(mainchain, daskclient=connection)
 
         # Create histograms
         h_parent = df.Histo1D("x")
@@ -92,8 +96,45 @@ class TestDaskFriendTrees:
         check_histograms(h_parent, h_friend)
 
         # Remove unnecessary .root files
-        os.remove("treeparent.root")
-        os.remove("treefriend.root")
+        os.remove(main_filename)
+        os.remove(friend_filename)
+
+    def test_ttree_with_friend_ttree_histo(self, connection):
+        """
+        Tests that the computational graph can be issued both on the
+        parent tree and the friend tree.
+        """
+        main_filename = "main_tree.root"
+        friend_filename = "friend_tree.root"
+
+        self.create_parent_tree(main_filename)
+        self.create_friend_tree(friend_filename)
+
+        # Main TTree
+        mainfile = ROOT.TFile(main_filename)
+        maintree = mainfile.Get("T")
+
+        # Friend TTree
+        friendfile = ROOT.TFile(friend_filename)
+        friendtree = friendfile.Get("TF")
+
+        # Add friend tree to the main one
+        maintree.AddFriend(friendtree)
+
+        # Create a DistRDF RDataFrame with the main and the friend trees
+        df = Dask.RDataFrame(maintree, daskclient=connection)
+
+        # Create histograms
+        h_parent = df.Histo1D("x")
+        h_friend = df.Histo1D("TF.x")
+
+        check_histograms(h_parent, h_friend)
+
+        # Remove unnecessary .root files
+        mainfile.Close()
+        friendfile.Close()
+        os.remove(main_filename)
+        os.remove(friend_filename)
 
     def test_friends_tchain_noname_add_fullpath_addfriend_alias(self, connection):
         """Test against the reproducer of issue https://github.com/root-project/root/issues/7584"""
