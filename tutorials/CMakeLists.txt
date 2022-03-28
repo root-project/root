@@ -285,6 +285,11 @@ else()
     #copy ONNX file needed for the tutorial
     configure_file(${CMAKE_SOURCE_DIR}/tmva/sofie/test/input_models/Linear_16.onnx ${CMAKE_BINARY_DIR}/tutorials/tmva/Linear_16.onnx COPYONLY)
   endif()
+  if(NOT tmva-pymva)
+    # both tutorials use TMVA::Python_Executable(), which is defined in pymva
+    list(APPEND tmva_veto tmva/TMVA_CNN_Classification.C)
+    list(APPEND tmva_veto tmva/TMVA_RNN_Classification.C)
+  endif()
 
 endif()
 
