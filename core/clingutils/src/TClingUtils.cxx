@@ -3084,7 +3084,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 /// If errstr is not null, *errstr is updated with the address of a static
 ///   string containing the part of the index with is invalid.
 
-llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const cling::Interpreter& interp, const clang::DeclaratorDecl &m, int *errnum, llvm::StringRef *errstr)
+llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const cling::Interpreter &interp, const clang::DeclaratorDecl &m, int *errnum, llvm::StringRef *errstr)
 {
    llvm::StringRef title;
 
