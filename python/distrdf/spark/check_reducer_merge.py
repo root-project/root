@@ -298,11 +298,11 @@ class TestReducerMerge:
             .Define("d", "rdfentry_")
 
         expectedcolumns = ["a", "b"]
-        df.Snapshot("snapTree_columnlist", "snapFile_columnlist.root", expectedcolumns)
+        df.Snapshot("snapTree_columnlist", "distrdf_spark_snapfile_columnlist.root", expectedcolumns)
 
         # Create a traditional RDF from the snapshotted files to retrieve the
         # list of columns
-        tmp_files = ["snapFile_columnlist_0.root", "snapFile_columnlist_1.root"]
+        tmp_files = ["distrdf_spark_snapfile_columnlist_0.root", "distrdf_spark_snapfile_columnlist_1.root"]
         rdf = ROOT.RDataFrame("snapTree_columnlist", tmp_files)
         snapcolumns = [str(column) for column in rdf.GetColumnNames()]
 
