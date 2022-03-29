@@ -157,7 +157,7 @@ if(BUILD_DOCUMENTATION)
             COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
 
             # Precompile here to prevent later multithreading issues
-#            COMMAND ${ROOT_root_CMD} -l -b -e '.L libs.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${ROOT_root_CMD} -l -b -e '.L libs.C++' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 #            COMMAND ${ROOT_root_CMD} -l -b -e '.L makeimage.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 #            COMMAND ${ROOT_root_CMD} -l -b -e '.L MakeTCanvasJS.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 #            COMMAND ${ROOT_root_CMD} -l -b -e '.L MakeRCanvasJS.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
