@@ -206,12 +206,9 @@ bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vec
     return std::pair<double, double>{rlv.getMin(), rlv.getMax()};
   };
 
-  auto nObs = observables.size();
-  auto nRanges = rangeNames.size();
-
   // cache the range limits in a flat vector
   std::vector<std::pair<double,double>> limits;
-  limits.reserve(nRanges * nObs);
+  limits.reserve(rangeNames.size() * observables.size());
 
   for (auto const& range : rangeNames) {
     for (auto const& obs : observables) {
@@ -224,6 +221,9 @@ bool checkIfRangesOverlap(RooAbsPdf const& pdf, RooAbsData const& data, std::vec
       }
     }
   }
+
+  auto nRanges = rangeNames.size();
+  auto nObs = limits.size() / nRanges; // number of observables that are not categories
 
   // loop over pairs of ranges
   for(size_t ir1 = 0; ir1 < nRanges; ++ir1) {
