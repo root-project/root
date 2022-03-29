@@ -303,19 +303,30 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
       RooRealVar* realObs = dynamic_cast<RooRealVar*>(arg) ;
       if (realObs) {
 
+        auto transferRangeAndBinning = [&](RooRealVar & toVar, const char* toName, const char* fromName) {
+          toVar.setRange(toName, realObs->getMin(fromName),realObs->getMax(fromName));
+          // If the realObs also has a binning with a name matching the
+          // rangeName, it will be set as the default binning. If `fromName` is
+          // a nullptr to signify taking the default binning from `realObs`,
+          // don't check if it exists as there is always a default binning.
+          if(!fromName || realObs->hasBinning(fromName)) {
+            toVar.setBinning(realObs->getBinning(fromName), toName);
+          }
+        };
+
         observablesKnowRange |= realObs->hasRange(rangeName);
 
         // If no explicit range is given for RooAddPdf coefficients, create explicit named range equivalent to original observables range
         if (!(addCoefRangeName && strlen(addCoefRangeName))) {
-          realObs->setRange(Form("NormalizationRangeFor%s",rangeName),realObs->getMin(),realObs->getMax()) ;
+          transferRangeAndBinning(*realObs, Form("NormalizationRangeFor%s",rangeName), nullptr);
         }
 
         // Adjust range of function observable to those of given named range
-        realObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;
+        transferRangeAndBinning(*realObs, nullptr, rangeName);
 
         // Adjust range of data observable to those of given named range
         RooRealVar* dataObs = (RooRealVar*) dataObsSet->find(realObs->GetName()) ;
-        dataObs->setRange(realObs->getMin(rangeName),realObs->getMax(rangeName)) ;
+        transferRangeAndBinning(*dataObs, nullptr, rangeName);
 
         // Keep track of list of fit ranges in string attribute fit range of original p.d.f.
         if (!_splitRange) {
@@ -329,7 +340,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
           real.setStringAttribute("fitrange", newAttr.c_str());
           RooRealVar* origObs = (RooRealVar*) origObsSet->find(arg->GetName()) ;
           if (origObs) {
-            origObs->setRange(fitRangeName.c_str(), realObs->getMin(rangeName), realObs->getMax(rangeName));
+            transferRangeAndBinning(*origObs, fitRangeName.c_str(), rangeName);
           }
         }
       }
