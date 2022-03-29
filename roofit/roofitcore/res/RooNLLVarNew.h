@@ -27,9 +27,9 @@ class RooNLLVarNew : public RooAbsReal {
 
 public:
    // The names for the weight variables that the RooNLLVarNew expects
-   static constexpr auto weightVarName = "_weight";
-   static constexpr auto weightVarNameSumW2 = "_weight_sumW2";
-   static constexpr auto weightVarNameSumW2Suffix = "_sumW2";
+   static constexpr const char *weightVarName = "_weight";
+   static constexpr const char *weightVarNameSumW2 = "_weight_sumW2";
+   static constexpr const char *weightVarNameSumW2Suffix = "_sumW2";
 
    RooNLLVarNew(){};
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, RooAbsReal *weight,
