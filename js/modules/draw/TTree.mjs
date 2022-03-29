@@ -126,12 +126,12 @@ function createTreePlayer(player) {
 
    player.draw_first = true;
 
-   player.configureOnline = function(itemname, url, askey, root_version, dflt_expr) {
+   player.configureOnline = function(itemname, url, askey, root_version, expr) {
       this.setItemName(itemname, "", this);
       this.url = url;
       this.root_version = root_version;
       this.askey = askey;
-      this.dflt_expr = dflt_expr;
+      this.draw_expr = expr;
    }
 
    player.configureTree = function(tree) {
@@ -152,10 +152,10 @@ function createTreePlayer(player) {
           '<button class="treedraw_clear" title="Clear drawing">Clear</button>';
 
       main.select('.treedraw_exe').on("click", () => this.performDraw());
-      main.select(".treedraw_cut").property("value", args && args.parse_cut ? args.parse_cut : "").on("change", () => this.performDraw());
-      main.select(".treedraw_opt").property("value", args && args.drawopt ? args.drawopt : "").on("change", () => this.performDraw());
-      main.select(".treedraw_number").attr("value", args && args.numentries ? args.numentries : ""); // .on("change", () => this.performDraw());
-      main.select(".treedraw_first").attr("value", args && args.firstentry ? args.firstentry : ""); // .on("change", () => this.performDraw());
+      main.select(".treedraw_cut").property("value", args?.parse_cut || "").on("change", () => this.performDraw());
+      main.select(".treedraw_opt").property("value", args?.drawopt || "").on("change", () => this.performDraw());
+      main.select(".treedraw_number").attr("value", args?.numentries || ""); // .on("change", () => this.performDraw());
+      main.select(".treedraw_first").attr("value", args?.firstentry || ""); // .on("change", () => this.performDraw());
       main.select(".treedraw_clear").on("click", () => cleanup(this.drawid));
    }
 
@@ -165,7 +165,7 @@ function createTreePlayer(player) {
 
       this.drawid = "jsroot_tree_player_" + internals.id_counter++ + "_draw";
 
-      let show_extra = args && (args.parse_cut || args.numentries || args.firstentry);
+      let show_extra = args?.parse_cut || args?.numentries || args?.firstentry;
 
       main.html('<div style="display:flex; flex-flow:column; height:100%; width:100%;">'+
                    '<div class="treedraw_buttons" style="flex: 0 1 auto;margin-top:0.2em;">' +
@@ -187,7 +187,7 @@ function createTreePlayer(player) {
              .attr("title", "Tree draw player for: " + this.local_tree.fName);
       main.select('.treedraw_exe').on("click", () => this.performDraw());
       main.select('.treedraw_varexp')
-          .attr("value", args && args.parse_expr ? args.parse_expr : (this.dflt_expr || "px:py"))
+          .attr("value", args?.parse_expr || this.draw_expr || "px:py")
           .on("change", () => this.performDraw());
       main.select('.treedraw_varexp_info')
           .attr('title', "Example of valid draw expressions:\n" +
@@ -300,6 +300,8 @@ function createTreePlayer(player) {
          });
       };
 
+      this.draw_expr = expr;
+
       if (this.askey) {
          // first let read tree from the file
          this.askey = false;
@@ -323,11 +325,11 @@ function drawTreePlayer(hpainter, itemname, askey, asleaf) {
 
    let item = hpainter.findItem(itemname),
        top = hpainter.getTopOnlineItem(item),
-       draw_expr = "", leaf_cnt = 0;
+       expr = "", leaf_cnt = 0;
    if (!item || !top) return null;
 
    if (asleaf) {
-      draw_expr = item._name;
+      expr = item._name;
       while (item && !item._ttree) item = item._parent;
       if (!item) return null;
       itemname = hpainter.itemFullName(item);
@@ -351,13 +353,13 @@ function drawTreePlayer(hpainter, itemname, askey, asleaf) {
       for (let n = 0; n < item._childs.length; ++n) {
          let leaf = item._childs[n];
          if (leaf && leaf._kind && (leaf._kind.indexOf("ROOT.TLeaf") == 0) && (leaf_cnt < 2)) {
-            if (leaf_cnt++ > 0) draw_expr+=":";
-            draw_expr+=leaf._name;
+            if (leaf_cnt++ > 0) expr += ":";
+            expr += leaf._name;
          }
       }
 
    createTreePlayer(player);
-   player.configureOnline(itemname, url, askey, root_version, draw_expr);
+   player.configureOnline(itemname, url, askey, root_version, expr);
    player.showPlayer();
 
    return player;
