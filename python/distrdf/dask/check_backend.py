@@ -107,27 +107,6 @@ class TestEmptyTreeError:
 class TestChangeAttribute:
     """Tests that check correct changes in the class attributes"""
 
-    def test_change_attribute_when_npartitions_greater_than_clusters(self, connection):
-        """
-        Check that the `npartitions` class attribute is changed when it is
-        greater than the number of clusters in the ROOT file.
-        """
-
-        treename = "mytree"
-        filename = "myfile.root"
-        ROOT.RDataFrame(100).Define("x", "rdfentry_").Snapshot(treename, filename)
-
-        df = Dask.RDataFrame(treename, filename, npartitions=10, daskclient=connection)
-
-        assert df._headnode.npartitions == 10
-        histo = df.Histo1D("x")
-        nentries = histo.GetEntries()
-
-        assert nentries == 100
-        assert df._headnode.npartitions == 1
-
-        os.remove(filename)
-
     def test_user_supplied_npartitions_have_precedence(self, connection):
         """
         The class Client object is connected to a LocalCluster with 2 processes.
