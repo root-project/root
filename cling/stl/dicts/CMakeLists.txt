@@ -8,6 +8,3 @@ ROOT_LINKER_LIBRARY(stldictTest TEST MyClass1.cpp MyClass2.cpp MyClass3.cpp
 
 ROOT_ADD_TEST(roottest-cling-stl-dicts-build 
               COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target stldictTest${fast})
-if(MSVC)
-  set_property(TEST roottest-cling-stl-dicts-build PROPERTY RUN_SERIAL true)
-endif()
