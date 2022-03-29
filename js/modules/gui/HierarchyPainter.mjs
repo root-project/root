@@ -632,6 +632,16 @@ function createStreamerInfoContent(lst) {
    return h;
 }
 
+/** @summary tag item in hierarchy painter as streamer info
+  * @desc this function used on THttpServer to mark streamer infos list
+  * as fictional TStreamerInfoList class, which has special draw function
+  * @private */
+function markAsStreamerInfo(h, item, obj) {
+   if (obj && (obj._typename == 'TList'))
+      obj._typename = 'TStreamerInfoList';
+}
+
+
 /** @summary Create hierarchy for object inspector
   * @private */
 function createInspectorContent(obj) {
@@ -1818,22 +1828,22 @@ class HierarchyPainter extends BasePainter {
       if (!item || !item._player || (typeof item._player != 'string'))
          return null;
 
-      let player_func = findFunction(item._player);
+      let player_func = null;
 
-      if (!player_func)
-         if (item._prereq || (item._player.indexOf('JSROOT.') >= 0)) {
-            await this.loadScripts("", item._prereq);
-            player_func = findFunction(item._player);
-         }
-      if (!player_func && item._module) {
-         let hh = import(item._module);
+      if (item._module) {
+         let hh = await this.importModule(item._module);
          player_func = hh ? hh[item._player] : null;
+      } else {
+         if (item._prereq || (item._player.indexOf('JSROOT.') >= 0))
+            await this.loadScripts("", item._prereq);
+         player_func = findFunction(item._player);
       }
+
       if (typeof player_func != 'function')
          return null;
 
-      let mdi = await this.createDisplay();
-      return mdi ? player_func(this, itemname, option) : null;
+      await this.createDisplay();
+      return player_func(this, itemname, option);
    }
 
    /** @summary Checks if item can be displayed with given draw option
@@ -2631,6 +2641,15 @@ class HierarchyPainter extends BasePainter {
       return this.getOnlineItemUrl(item) !== null;
    }
 
+   importModule(module) {
+      switch(module) {
+         case "core": return import('../core.mjs');
+         case "draw_tree": return import('../draw/TTree.mjs');
+         case "hierarchy": return Promise.resolve({ HierarchyPainter, markAsStreamerInfo });
+      }
+      return import(module);
+   }
+
    /** @summary method used to request object from the http server
      * @returns {Promise} with requested object
      * @private */
@@ -2688,19 +2707,22 @@ class HierarchyPainter extends BasePainter {
 
          let itemreq = createHttpRequest(url, req_kind, obj => {
 
-            let func = null;
+            let handleAfterRequest = func => {
+               if (typeof func == 'function') {
+                  let res = func(this, item, obj, option, itemreq);
+                  if (res && (typeof res == "object")) obj = res;
+               }
+               resolveFunc(obj);
+            };
 
-            if (!h_get && item && ('_after_request' in item)) {
-               func = findFunction(item._after_request);
-            } else if (draw_handle && ('after_request' in draw_handle))
-               func = draw_handle.after_request;
-
-            if (typeof func == 'function') {
-               let res = func(this, item, obj, option, itemreq);
-               if (res && (typeof res == "object")) obj = res;
+            if (!h_get && item?._after_request) {
+               if (item._module)
+                  this.importModule(item._module).then(h => handleAfterRequest(h[item._after_request]));
+               else
+                  handleAfterRequest(findFunction(item._after_request)); // v6 support
+            } else {
+               handleAfterRequest(draw_handle?.after_request)
             }
-
-            resolveFunc(obj);
          });
 
          itemreq.send(null);
@@ -3079,7 +3101,7 @@ class HierarchyPainter extends BasePainter {
    /** @summary Load and execute scripts, kept to support v6 applications
      * @private */
    loadScripts(scripts, modules) {
-      if (!scripts && !modules)
+      if (!scripts?.length && !modules?.length)
          return Promise.resolve(true);
 
       return _ensureJSROOT().then(v6 => {
@@ -3667,5 +3689,5 @@ function drawInspector(dom, obj) {
 internals.drawInspector = drawInspector;
 
 export { getHPainter, HierarchyPainter,
-         drawInspector, drawStreamerInfo, drawList,
+         drawInspector, drawStreamerInfo, drawList, markAsStreamerInfo,
          folderHierarchy, taskHierarchy, listHierarchy, objectHierarchy, keysHierarchy };

@@ -8,16 +8,6 @@ import { TH1Painter } from '../hist2d/TH1Painter.mjs';
 
 import * as jsroot_math from '../base/math.mjs';
 
-function funcEvalPar(x, y) {
-   if (! ('_func' in this) || (this._title !== this.fTitle)) {
-
-     this._title = this.fTitle;
-   }
-
-   return this._func(x, y);
-}
-
-
 function proivdeEvalPar(obj) {
 
    obj._math = jsroot_math;
