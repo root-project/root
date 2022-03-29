@@ -40,6 +40,11 @@ functions from `RooBatchCompute` library to provide faster computation times.
 
 using namespace ROOT::Experimental;
 
+// Declare constexpr static members to make them available if odr-used in C++14.
+constexpr const char *RooNLLVarNew::weightVarName;
+constexpr const char *RooNLLVarNew::weightVarNameSumW2;
+constexpr const char *RooNLLVarNew::weightVarNameSumW2Suffix;
+
 namespace {
 
 std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet const &observables,
