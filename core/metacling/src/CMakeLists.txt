@@ -126,6 +126,8 @@ if(MSVC)
       __std_reverse_trivially_swappable_4
       __std_reverse_trivially_swappable_8
       __std_terminate
+      _Smtx_lock_shared
+      _Smtx_unlock_shared
       cling_runtime_internal_throwIfInvalidPointer
   )
   if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
