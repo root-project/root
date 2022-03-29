@@ -6002,6 +6002,10 @@ void TClass::PostLoadCheck()
          noffset = 3;
       else if (strncmp(GetName(), "multimap<", 9) == 0)
          noffset = 8;
+      else if (strncmp(GetName(), "unordered_map<", 14) == 0)
+         noffset = 13;
+      else if (strncmp(GetName(), "unordered_multimap<", 19) == 0)
+         noffset = 18;
       if (noffset) {
          std::string pairname("pair");
          pairname.append(GetName() + noffset);
