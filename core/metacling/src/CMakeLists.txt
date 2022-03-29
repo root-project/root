@@ -126,10 +126,14 @@ if(MSVC)
       __std_reverse_trivially_swappable_4
       __std_reverse_trivially_swappable_8
       __std_terminate
-      _Smtx_lock_shared
-      _Smtx_unlock_shared
       cling_runtime_internal_throwIfInvalidPointer
   )
+  if(CMAKE_CXX_STANDARD GREATER 14)
+    set(cling_exports ${cling_exports}
+      _Smtx_lock_shared
+      _Smtx_unlock_shared
+    )
+  endif()
   if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
     set(cling_exports ${cling_exports}
       ??2@YAPEAX_K@Z
