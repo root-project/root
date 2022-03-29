@@ -50,7 +50,7 @@ public:
 
 #include "fcgiapp.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 
 void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 {

@@ -20,7 +20,7 @@ class THttpEngine : public TNamed {
 protected:
    friend class THttpServer;
 
-   THttpServer *fServer; ///<! object server
+   THttpServer *fServer{nullptr}; ///<! object server
 
    THttpEngine(const char *name, const char *title);
 

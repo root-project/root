@@ -29,10 +29,10 @@
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <memory>
 #include <vector>
-#include <string.h>
+#include <cstring>
 
 const char *item_prop_kind = "_kind";
 const char *item_prop_more = "_more";

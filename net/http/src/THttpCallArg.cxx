@@ -11,7 +11,8 @@
 
 #include "THttpCallArg.h"
 
-#include <string.h>
+#include <cstring>
+
 #include "RZip.h"
 #include "THttpWSEngine.h"
 
