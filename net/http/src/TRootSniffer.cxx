@@ -978,7 +978,8 @@ void TRootSniffer::ScanRoot(TRootSnifferScanRec &rec)
          chld.SetField(item_prop_kind, "ROOT.TStreamerInfoList");
          chld.SetField(item_prop_title, "List of streamer infos for binary I/O");
          chld.SetField(item_prop_hidden, "true", kFALSE);
-         chld.SetField("_after_request", "JSROOT.markAsStreamerInfo");
+         chld.SetField("_module", "hierarchy");
+         chld.SetField("_after_request", "markAsStreamerInfo");
       }
    }
 
