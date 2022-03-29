@@ -158,9 +158,9 @@ if(BUILD_DOCUMENTATION)
 
             # Precompile here to prevent later multithreading issues
             COMMAND ${ROOT_root_CMD} -l -b -e '.L libs.C++' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#            COMMAND ${ROOT_root_CMD} -l -b -e '.L makeimage.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#            COMMAND ${ROOT_root_CMD} -l -b -e '.L MakeTCanvasJS.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#            COMMAND ${ROOT_root_CMD} -l -b -e '.L MakeRCanvasJS.C+' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${ROOT_root_CMD} -l -b -e '.L makeimage.C++' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${ROOT_root_CMD} -l -b -e '.L MakeTCanvasJS.C++' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            COMMAND ${ROOT_root_CMD} -l -b -e '.L MakeRCanvasJS.C++' -q WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
 
         set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
@@ -278,10 +278,16 @@ if(BUILD_DOCUMENTATION)
         )
         add_dependencies(Finalization dox)
 
+        set_property(
+          TARGET dox
+          APPEND
+          PROPERTY ADDITIONAL_CLEAN_FILES Doxyfile.dox filter htmlfooter.html
+        )
+
         #TODO cleaning:
         #rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
         #rm -rf tmva* data* result* config* test* Roo* My* Freq*
-        #rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
+        #rm -f MDF.C pca.C
         #rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
         #rm -f ${DOCU_LOCATION}/notebooks/*.root
         #rm -rf ${DOCU_LOCATION}
