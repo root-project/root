@@ -669,7 +669,8 @@ llvm::StringRef TClingDataMemberInfo::ValidArrayIndex() const
       return llvm::StringRef();
    }
    const clang::DeclaratorDecl *FD = llvm::dyn_cast<clang::DeclaratorDecl>(GetTargetValueDecl());
-   if (FD) return ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(*fInterp, *FD);
-   else return llvm::StringRef();
+   if (FD)
+      return ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(*fInterp, *FD);
+   return {};
 }
 
