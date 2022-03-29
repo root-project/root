@@ -31,18 +31,18 @@
 
 bool RooBinWidthFunction::_enabled = true;
 
+/// Globally enable bin-width corrections by this class.
 void RooBinWidthFunction::enableClass() {
-  /// Globally enable bin-width corrections by this class.
   _enabled = true;
 }
 
+/// Returns `true` if bin-width corrections by this class are globally enabled, `false` otherwise.
 bool RooBinWidthFunction::isClassEnabled() {
-  /// Returns true if bin-width corrections by this class are globally enabled, false otherwise.
   return _enabled;
 }
 
+/// Globally disable bin-width corrections by this class.
 void RooBinWidthFunction::disableClass() {
-  /// Globally disnable bin-width corrections by this class.	
   _enabled = false;
 }
 
