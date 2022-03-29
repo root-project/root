@@ -6009,7 +6009,8 @@ void TClass::PostLoadCheck()
       if (noffset) {
          std::string pairname("pair");
          pairname.append(GetName() + noffset);
-         if ( auto pcl = TClass::GetClass(pairname.c_str(), false, false) )
+         auto pcl = TClass::GetClass(pairname.c_str(), false, false);
+         if ( pcl && !pcl->IsLoaded() && !pcl->IsSyntheticPair() )
          {
             TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
 
