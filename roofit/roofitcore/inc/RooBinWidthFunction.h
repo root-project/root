@@ -28,9 +28,9 @@ class RooBinWidthFunction : public RooAbsReal {
   static bool _enabled;
   
 public:  
-  static void enable();
-  static void disable();
-  static bool enabled();    
+  static void enableClass();
+  static void disableClass());
+  static bool isClassEnabled();    
    
   /// Create an empty instance.
   RooBinWidthFunction() :
