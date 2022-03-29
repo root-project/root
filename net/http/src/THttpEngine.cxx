@@ -11,8 +11,6 @@
 
 #include "THttpEngine.h"
 
-#include <string.h>
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // THttpEngine                                                          //
@@ -26,6 +24,6 @@ ClassImp(THttpEngine);
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-THttpEngine::THttpEngine(const char *name, const char *title) : TNamed(name, title), fServer(nullptr)
+THttpEngine::THttpEngine(const char *name, const char *title) : TNamed(name, title)
 {
 }
