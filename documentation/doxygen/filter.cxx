@@ -166,6 +166,7 @@ int main(int argc, char *argv[])
 
    if (gFileName.find("tutorials") != string::npos) FilterTutorial(suffix);
    else                                             FilterClass(suffix);
+   remove(gOutputName.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,6 +209,7 @@ void FilterClass(const int suffix)
                                               , StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str()
                                               , gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                ExecuteCommand(StringFormat("rm " CMAKE_BUILD_DIRECTORY "/%s_%3.3d.C", gClassName.c_str(), gMacroID));
+               remove(StringFormat("%s/NumberOfImages%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str());//or call ImagesList instead
             }
             int ImageSize = 300;
             FILE *f = fopen(StringFormat("%s/ImagesSizes%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str(), "r");
@@ -225,6 +227,7 @@ void FilterClass(const int suffix)
                if (EndsWith(gLineString,".C\n") || (gLineString.find(".C(") != string::npos)) {
                   ExecuteMacro(suffix);
                   gInMacro++;
+                  remove(StringFormat("%s/NumberOfImages%d.dat",CMAKE_BUILD_DIRECTORY,suffix).c_str());//or call ImagesList instead
                } else {
                   gMacroID++;
                   //~ cerr << "Writing " << StringFormat(CMAKE_BUILD_DIRECTORY "/%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str() << endl;
@@ -398,8 +401,7 @@ void FilterTutorial(const int suffix)
                                                gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                }
             }
-            ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName, suffix));
-            remove(gOutputName.c_str());
+            ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName, suffix));//ImagesList calls NumberOfImages, which removes NumberOfImages%d.dat
          }
       }
 
