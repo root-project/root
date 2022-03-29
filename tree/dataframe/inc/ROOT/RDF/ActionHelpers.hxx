@@ -1333,12 +1333,19 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          leaf->GetLeafCount() ? std::string(leaf->GetLeafCount()->GetName()) : std::to_string(leaf->GetLenStatic());
       const auto btype = leaf->GetTypeName();
       const auto rootbtype = TypeName2ROOTTypeName(btype);
-      const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
-      outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
-      outputBranch->SetTitle(inputBranch->GetTitle());
-      outputBranches.Insert(outName, outputBranch);
-      branch = outputBranch;
-      branchAddress = ab->data();
+      if (rootbtype == ' ') {
+         Warning("Snapshot",
+                 "RDataFrame::Snapshot: could not correctly construct a leaflist for C-style array in column %s. This "
+                 "column will not be written out.",
+                 bname);
+      } else {
+         const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
+         outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
+         outputBranch->SetTitle(inputBranch->GetTitle());
+         outputBranches.Insert(outName, outputBranch);
+         branch = outputBranch;
+         branchAddress = ab->data();
+      }
    }
 }
 
