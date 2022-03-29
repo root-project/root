@@ -68,6 +68,10 @@ TEST(RooSimultaneous, MultiRangeNLL)
    auto &pdfCat1 = *ws.pdf("pdfCat1");
    auto &pdfCat2 = *ws.pdf("pdfCat2");
 
+   // set the ranges
+   x.setRange("range1", 0.0, 4.0);
+   x.setRange("range2", 6.0, 10.0);
+
    // Create combined pdf
    RooCategory indexCat("cat", "cat");
    indexCat.defineType("cat1");
