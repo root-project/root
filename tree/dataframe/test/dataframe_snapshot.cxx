@@ -972,6 +972,28 @@ TEST_F(RDFSnapshotArrays, MultiThreadJitted)
    ROOT::DisableImplicitMT();
 }
 
+// See also https://github.com/root-project/root/issues/10225
+TEST_F(RDFSnapshotArrays, WriteRVecFromFile)
+{
+   {
+      auto df = ROOT::RDataFrame(3).Define("x", [](ULong64_t e) { return ROOT::RVecD(e, double(e)); }, {"rdfentry_"});
+      df.Snapshot<ROOT::RVecD>("t", "test_snapshotRVecWriteRVecFromFile.root", {"x"});
+   }
+
+   ROOT::RDataFrame df("t", "test_snapshotRVecWriteRVecFromFile.root");
+   auto outdf = df.Snapshot<ROOT::RVecD>("t", "test_snapshotRVecWriteRVecFromFile2.root", {"x"});
+
+   const auto res = outdf->Take<ROOT::RVecD>("x").GetValue();
+
+   EXPECT_EQ(res.size(), 3u);
+   EXPECT_EQ(res[0].size(), 0u);
+   EXPECT_TRUE(All(res[1] == ROOT::RVecD{1.}));
+   EXPECT_TRUE(All(res[2] == ROOT::RVecD{2., 2.}));
+
+   gSystem->Unlink("test_snapshotRVecWriteRVecFromFile.root");
+   gSystem->Unlink("test_snapshotRVecWriteRVecFromFile2.root");
+}
+
 TEST(RDFSnapshotMore, ColsWithCustomTitlesMT)
 {
    const auto fname = "colswithcustomtitlesmt.root";
