@@ -1316,14 +1316,6 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    }
 
    // else this must be a C-array, aka case 1.
-   auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
-   const auto bname = leaf->GetName();
-   const auto counterStr =
-      leaf->GetLeafCount() ? std::string(leaf->GetLeafCount()->GetName()) : std::to_string(leaf->GetLenStatic());
-   const auto btype = leaf->GetTypeName();
-   const auto rootbtype = TypeName2ROOTTypeName(btype);
-   const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
-
    auto dataPtr = ab->data();
 
    if (outputBranch) {
@@ -1334,6 +1326,14 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
          outputBranch->SetAddress(dataPtr);
       }
    } else {
+      // must construct the leaflist for the output branch and create the branch in the output tree
+      auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
+      const auto bname = leaf->GetName();
+      const auto counterStr =
+         leaf->GetLeafCount() ? std::string(leaf->GetLeafCount()->GetName()) : std::to_string(leaf->GetLenStatic());
+      const auto btype = leaf->GetTypeName();
+      const auto rootbtype = TypeName2ROOTTypeName(btype);
+      const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
       outputBranch = outputTree.Branch(outName.c_str(), dataPtr, leaflist.c_str());
       outputBranch->SetTitle(inputBranch->GetTitle());
       outputBranches.Insert(outName, outputBranch);
