@@ -5,7 +5,7 @@ let version_id = "modules";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "24/03/2022";
+let version_date = "29/03/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1599,15 +1599,6 @@ function isRootCollection(lst, typename) {
           (typename === 'TObjArray') || (typename === 'TClonesArray');
 }
 
-/** @summary tag item in hierarchy painter as streamer info
-  * @desc this function used on THttpServer to mark streamer infos list
-  * as fictional TStreamerInfoList class, which has special draw function
-  * @private */
-function markAsStreamerInfo(h, item, obj) {
-   if (obj && (obj._typename == 'TList'))
-      obj._typename = 'TStreamerInfoList';
-}
-
 /** @summary Check if object is a Promise
   * @private */
 function isPromise(obj) {
@@ -1675,6 +1666,5 @@ createTMultiGraph,
 getMethods,
 registerMethods,
 isRootCollection,
-markAsStreamerInfo,
 isPromise,
 _ensureJSROOT };

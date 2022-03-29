@@ -11,7 +11,7 @@ let version_id = "modules";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "24/03/2022";
+let version_date = "29/03/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1605,15 +1605,6 @@ function isRootCollection(lst, typename) {
           (typename === 'TObjArray') || (typename === 'TClonesArray');
 }
 
-/** @summary tag item in hierarchy painter as streamer info
-  * @desc this function used on THttpServer to mark streamer infos list
-  * as fictional TStreamerInfoList class, which has special draw function
-  * @private */
-function markAsStreamerInfo(h, item, obj) {
-   if (obj && (obj._typename == 'TList'))
-      obj._typename = 'TStreamerInfoList';
-}
-
 /** @summary Check if object is a Promise
   * @private */
 function isPromise(obj) {
@@ -1643,6 +1634,47 @@ if (source_fullpath) {
       settings.HandleWrongHttpResponse = true; // server may send wrong content length by partial requests, use other method to control this
    if (d.has('nosap')) internals.sap = undefined; // let ignore sap loader even with openui5 loaded
 }
+
+var core = /*#__PURE__*/Object.freeze({
+__proto__: null,
+version_id: version_id,
+version_date: version_date,
+version: version,
+get source_dir () { return exports.source_dir; },
+isNodeJs: isNodeJs,
+isBatchMode: isBatchMode,
+setBatchMode: setBatchMode,
+browser: browser$1,
+internals: internals,
+constants: constants$1,
+settings: settings,
+gStyle: gStyle,
+isArrayProto: isArrayProto,
+getDocument: getDocument,
+BIT: BIT,
+clone: clone,
+addMethods: addMethods,
+parse: parse,
+parseMulti: parseMulti,
+toJSON: toJSON,
+decodeUrl: decodeUrl,
+findFunction: findFunction,
+createHttpRequest: createHttpRequest,
+httpRequest: httpRequest,
+loadScript: loadScript,
+injectCode: injectCode,
+create: create$1,
+createHistogram: createHistogram,
+createTPolyLine: createTPolyLine,
+createTGraph: createTGraph,
+createTHStack: createTHStack,
+createTMultiGraph: createTMultiGraph,
+getMethods: getMethods,
+registerMethods: registerMethods,
+isRootCollection: isRootCollection,
+isPromise: isPromise,
+_ensureJSROOT: _ensureJSROOT
+});
 
 // https://d3js.org v7.3.0 Copyright 2010-2021 Mike Bostock
 
@@ -30325,6 +30357,16 @@ function createStreamerInfoContent(lst) {
    return h;
 }
 
+/** @summary tag item in hierarchy painter as streamer info
+  * @desc this function used on THttpServer to mark streamer infos list
+  * as fictional TStreamerInfoList class, which has special draw function
+  * @private */
+function markAsStreamerInfo(h, item, obj) {
+   if (obj && (obj._typename == 'TList'))
+      obj._typename = 'TStreamerInfoList';
+}
+
+
 /** @summary Create hierarchy for object inspector
   * @private */
 function createInspectorContent(obj) {
@@ -31509,22 +31551,22 @@ class HierarchyPainter extends BasePainter {
       if (!item || !item._player || (typeof item._player != 'string'))
          return null;
 
-      let player_func = findFunction(item._player);
+      let player_func = null;
 
-      if (!player_func)
-         if (item._prereq || (item._player.indexOf('JSROOT.') >= 0)) {
-            await this.loadScripts("", item._prereq);
-            player_func = findFunction(item._player);
-         }
-      if (!player_func && item._module) {
-         let hh = import(item._module);
+      if (item._module) {
+         let hh = await this.importModule(item._module);
          player_func = hh ? hh[item._player] : null;
+      } else {
+         if (item._prereq || (item._player.indexOf('JSROOT.') >= 0))
+            await this.loadScripts("", item._prereq);
+         player_func = findFunction(item._player);
       }
+
       if (typeof player_func != 'function')
          return null;
 
-      let mdi = await this.createDisplay();
-      return mdi ? player_func(this, itemname, option) : null;
+      await this.createDisplay();
+      return player_func(this, itemname, option);
    }
 
    /** @summary Checks if item can be displayed with given draw option
@@ -32321,6 +32363,15 @@ class HierarchyPainter extends BasePainter {
       return this.getOnlineItemUrl(item) !== null;
    }
 
+   importModule(module) {
+      switch(module) {
+         case "core": return Promise.resolve().then(function () { return core; });
+         case "draw_tree": return Promise.resolve().then(function () { return TTree; });
+         case "hierarchy": return Promise.resolve({ HierarchyPainter, markAsStreamerInfo });
+      }
+      return import(module);
+   }
+
    /** @summary method used to request object from the http server
      * @returns {Promise} with requested object
      * @private */
@@ -32378,19 +32429,22 @@ class HierarchyPainter extends BasePainter {
 
          let itemreq = createHttpRequest(url, req_kind, obj => {
 
-            let func = null;
+            let handleAfterRequest = func => {
+               if (typeof func == 'function') {
+                  let res = func(this, item, obj, option, itemreq);
+                  if (res && (typeof res == "object")) obj = res;
+               }
+               resolveFunc(obj);
+            };
 
-            if (!h_get && item && ('_after_request' in item)) {
-               func = findFunction(item._after_request);
-            } else if (draw_handle && ('after_request' in draw_handle))
-               func = draw_handle.after_request;
-
-            if (typeof func == 'function') {
-               let res = func(this, item, obj, option, itemreq);
-               if (res && (typeof res == "object")) obj = res;
+            if (!h_get && item?._after_request) {
+               if (item._module)
+                  this.importModule(item._module).then(h => handleAfterRequest(h[item._after_request]));
+               else
+                  handleAfterRequest(findFunction(item._after_request)); // v6 support
+            } else {
+               handleAfterRequest(draw_handle?.after_request);
             }
-
-            resolveFunc(obj);
          });
 
          itemreq.send(null);
@@ -32769,7 +32823,7 @@ class HierarchyPainter extends BasePainter {
    /** @summary Load and execute scripts, kept to support v6 applications
      * @private */
    loadScripts(scripts, modules) {
-      if (!scripts && !modules)
+      if (!scripts?.length && !modules?.length)
          return Promise.resolve(true);
 
       return _ensureJSROOT().then(v6 => {
@@ -33363,6 +33417,7 @@ HierarchyPainter: HierarchyPainter,
 drawInspector: drawInspector,
 drawStreamerInfo: drawStreamerInfo,
 drawList: drawList,
+markAsStreamerInfo: markAsStreamerInfo,
 folderHierarchy: folderHierarchy,
 taskHierarchy: taskHierarchy,
 listHierarchy: listHierarchy,
@@ -68172,7 +68227,7 @@ function create3DScene(render3d, x3dscale, y3dscale) {
 
    this.control = createOrbitControl(this, this.camera, this.scene, this.renderer, this.lookat);
 
-   let axis_painter = this, obj_painter = this.getMainPainter();
+   let frame_painter = this, obj_painter = this.getMainPainter();
 
    this.control.processMouseMove = function(intersects) {
 
@@ -68188,42 +68243,35 @@ function create3DScene(render3d, x3dscale, y3dscale) {
       }
 
       if (tip && !tip.use_itself) {
-         let delta_x = 1e-4*axis_painter.size_x3d,
-             delta_y = 1e-4*axis_painter.size_y3d,
-             delta_z = 1e-4*axis_painter.size_z3d;
+         let delta_x = 1e-4*frame_painter.size_x3d,
+             delta_y = 1e-4*frame_painter.size_y3d,
+             delta_z = 1e-4*frame_painter.size_z3d;
          if ((tip.x1 > tip.x2) || (tip.y1 > tip.y2) || (tip.z1 > tip.z2)) console.warn('check 3D hints coordinates');
          tip.x1 -= delta_x; tip.x2 += delta_x;
          tip.y1 -= delta_y; tip.y2 += delta_y;
          tip.z1 -= delta_z; tip.z2 += delta_z;
       }
 
-      axis_painter.highlightBin3D(tip, mesh);
+      frame_painter.highlightBin3D(tip, mesh);
 
-      if (!tip && zoom_mesh && axis_painter.get3dZoomCoord) {
+      if (!tip && zoom_mesh && frame_painter.get3dZoomCoord) {
          let pnt = zoom_mesh.globalIntersect(this.raycaster),
              axis_name = zoom_mesh.zoom,
-             axis_value = axis_painter.get3dZoomCoord(pnt, axis_name);
+             axis_value = frame_painter.get3dZoomCoord(pnt, axis_name);
 
          if ((axis_name==="z") && zoom_mesh.use_y_for_z) axis_name = "y";
 
-         let taxis = axis_painter.getAxis(axis_name),
-             hint = { name: axis_name,
-                      title: "TAxis",
-                      line: "any info",
-                      only_status: true };
-
-         if (taxis) { hint.name = taxis.fName; hint.title = taxis.fTitle || "histogram TAxis object"; }
-
-         hint.line = axis_name + " : " + axis_painter.axisAsText(axis_name, axis_value);
-
-         return hint;
+         return { name: axis_name,
+                  title: "axis object",
+                  line: axis_name + " : " + frame_painter.axisAsText(axis_name, axis_value),
+                  only_status: true };
       }
 
       return (tip && tip.lines) ? tip : "";
    };
 
    this.control.processMouseLeave = function() {
-      axis_painter.highlightBin3D(null);
+      frame_painter.highlightBin3D(null);
    };
 
    this.control.contextMenu = function(pos, intersects) {
@@ -94794,12 +94842,12 @@ function createTreePlayer(player) {
 
    player.draw_first = true;
 
-   player.configureOnline = function(itemname, url, askey, root_version, dflt_expr) {
+   player.configureOnline = function(itemname, url, askey, root_version, expr) {
       this.setItemName(itemname, "", this);
       this.url = url;
       this.root_version = root_version;
       this.askey = askey;
-      this.dflt_expr = dflt_expr;
+      this.draw_expr = expr;
    };
 
    player.configureTree = function(tree) {
@@ -94820,10 +94868,10 @@ function createTreePlayer(player) {
           '<button class="treedraw_clear" title="Clear drawing">Clear</button>';
 
       main.select('.treedraw_exe').on("click", () => this.performDraw());
-      main.select(".treedraw_cut").property("value", args && args.parse_cut ? args.parse_cut : "").on("change", () => this.performDraw());
-      main.select(".treedraw_opt").property("value", args && args.drawopt ? args.drawopt : "").on("change", () => this.performDraw());
-      main.select(".treedraw_number").attr("value", args && args.numentries ? args.numentries : ""); // .on("change", () => this.performDraw());
-      main.select(".treedraw_first").attr("value", args && args.firstentry ? args.firstentry : ""); // .on("change", () => this.performDraw());
+      main.select(".treedraw_cut").property("value", args?.parse_cut || "").on("change", () => this.performDraw());
+      main.select(".treedraw_opt").property("value", args?.drawopt || "").on("change", () => this.performDraw());
+      main.select(".treedraw_number").attr("value", args?.numentries || ""); // .on("change", () => this.performDraw());
+      main.select(".treedraw_first").attr("value", args?.firstentry || ""); // .on("change", () => this.performDraw());
       main.select(".treedraw_clear").on("click", () => cleanup(this.drawid));
    };
 
@@ -94833,7 +94881,7 @@ function createTreePlayer(player) {
 
       this.drawid = "jsroot_tree_player_" + internals.id_counter++ + "_draw";
 
-      let show_extra = args && (args.parse_cut || args.numentries || args.firstentry);
+      let show_extra = args?.parse_cut || args?.numentries || args?.firstentry;
 
       main.html('<div style="display:flex; flex-flow:column; height:100%; width:100%;">'+
                    '<div class="treedraw_buttons" style="flex: 0 1 auto;margin-top:0.2em;">' +
@@ -94855,7 +94903,7 @@ function createTreePlayer(player) {
              .attr("title", "Tree draw player for: " + this.local_tree.fName);
       main.select('.treedraw_exe').on("click", () => this.performDraw());
       main.select('.treedraw_varexp')
-          .attr("value", args && args.parse_expr ? args.parse_expr : (this.dflt_expr || "px:py"))
+          .attr("value", args?.parse_expr || this.draw_expr || "px:py")
           .on("change", () => this.performDraw());
       main.select('.treedraw_varexp_info')
           .attr('title', "Example of valid draw expressions:\n" +
@@ -94968,6 +95016,8 @@ function createTreePlayer(player) {
          });
       };
 
+      this.draw_expr = expr;
+
       if (this.askey) {
          // first let read tree from the file
          this.askey = false;
@@ -94991,11 +95041,11 @@ function drawTreePlayer(hpainter, itemname, askey, asleaf) {
 
    let item = hpainter.findItem(itemname),
        top = hpainter.getTopOnlineItem(item),
-       draw_expr = "", leaf_cnt = 0;
+       expr = "", leaf_cnt = 0;
    if (!item || !top) return null;
 
    if (asleaf) {
-      draw_expr = item._name;
+      expr = item._name;
       while (item && !item._ttree) item = item._parent;
       if (!item) return null;
       itemname = hpainter.itemFullName(item);
@@ -95019,13 +95069,13 @@ function drawTreePlayer(hpainter, itemname, askey, asleaf) {
       for (let n = 0; n < item._childs.length; ++n) {
          let leaf = item._childs[n];
          if (leaf && leaf._kind && (leaf._kind.indexOf("ROOT.TLeaf") == 0) && (leaf_cnt < 2)) {
-            if (leaf_cnt++ > 0) draw_expr+=":";
-            draw_expr+=leaf._name;
+            if (leaf_cnt++ > 0) expr += ":";
+            expr += leaf._name;
          }
       }
 
    createTreePlayer(player);
-   player.configureOnline(itemname, url, askey, root_version, draw_expr);
+   player.configureOnline(itemname, url, askey, root_version, expr);
    player.showPlayer();
 
    return player;
@@ -108735,7 +108785,6 @@ exports.isRootCollection = isRootCollection;
 exports.loadOpenui5 = loadOpenui5;
 exports.loadScript = loadScript;
 exports.makeSVG = makeSVG;
-exports.markAsStreamerInfo = markAsStreamerInfo;
 exports.openFile = openFile;
 exports.parse = parse;
 exports.parseMulti = parseMulti;
