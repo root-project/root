@@ -36,3 +36,4 @@ CMakeLists.txt.user
 tags
 *.d
 .cache
+.gdb_history
