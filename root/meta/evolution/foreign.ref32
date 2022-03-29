@@ -41,7 +41,7 @@ StreamerInfo for class: data, checksum=0x72709669
    i= 0, mydouble_two    type=  8, offset=  0, len=1, method=0
 
 StreamerInfo for class: data, checksum=0x810cd3a3
-  int            myvar_one       offset=  4 type= 3                     
+  int            myvar_one       offset=  0 type= 3
 
 ==> Looking at the StreamerInfo after loading the library
 
@@ -65,7 +65,7 @@ StreamerInfo for class: data, checksum=0x72709669
    i= 0, mydouble_two    type=  8, offset=  0, len=1, method=0
 
 StreamerInfo for class: data, checksum=0x810cd3a3
-  int            myvar_one       offset=  4 type= 3                     
+  int            myvar_one       offset=  0 type= 3
 
 StreamerInfo for class: data, checksum=0x489331ab
   double         mydouble        offset=  0 type= 8                     
