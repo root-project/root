@@ -199,7 +199,8 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 
       if (auto pr = cl->GetCollectionProxy()) {
          auto colltype = pr->GetCollectionType();
-         if (colltype == ROOT::kSTLmap || colltype == ROOT::kSTLmultimap) {
+         if (colltype == ROOT::kSTLmap || colltype == ROOT::kSTLmultimap ||
+             colltype == ROOT::kSTLunorderedmap || colltype == ROOT::kSTLunorderedmultimap) {
             if (auto pcl = pr->GetValueClass()) {
                if (auto pcl_dms = pcl->GetListOfDataMembers()) {
                   for (auto dmObj : *pcl_dms) {
