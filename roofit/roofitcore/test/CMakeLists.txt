@@ -16,6 +16,7 @@ if(NOT MSVC OR win_broken_tests)
                      ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv5_ref.root
                      ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv6_ref.root)
 endif()
+ROOT_ADD_GTEST(testRooBinSamplingPdf testRooBinSamplingPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooSimPdfBuilder testRooSimPdfBuilder.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooWrapperPdf testRooWrapperPdf.cxx LIBRARIES Gpad RooFitCore)
 ROOT_ADD_GTEST(testRooFitDriver testRooFitDriver.cxx LIBRARIES RooFitCore RooFit)
