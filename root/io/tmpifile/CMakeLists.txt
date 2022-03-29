@@ -15,9 +15,6 @@ ROOTTEST_ADD_TEST(split-fail
 
 ROOTTEST_ADD_TEST(libjetevent-build 
                   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target JetEvent${fast} -- ${always-make})
-if(MSVC)
-  set_property(TEST libjetevent-build PROPERTY RUN_SERIAL true)
-endif()
 
 ROOTTEST_ADD_TEST(sync-rate
                   COPY_TO_BUILDDIR sync_rate.C

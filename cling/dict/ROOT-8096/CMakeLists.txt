@@ -20,9 +20,6 @@ add_test(NAME roottest-cling-dict-ROOT-8096-build
                                   -- ${always-make})
 #                                  --target  ${targetname_libgen}${fast})
 set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
-if(MSVC)
-  set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY RUN_SERIAL true)
-endif()
 
 if(MSVC)
    set(load_precmd ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libROOT-8096.dll ${CMAKE_CURRENT_BINARY_DIR}/)
