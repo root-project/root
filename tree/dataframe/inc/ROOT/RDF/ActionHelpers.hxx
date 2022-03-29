@@ -1246,9 +1246,10 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
 /// This overload is called for columns of type `RVec<T>`. For RDF, these can represent:
-/// 1. c-style arrays in ROOT files, so we are sure that there are input trees to which we can ask the correct branch title
-/// 2. RVecs coming from a custom column or a source
-/// 3. vectors coming from ROOT files
+/// 1. c-style arrays in ROOT files, so we are sure that there are input trees to which we can ask the correct branch
+/// title
+/// 2. RVecs coming from a custom column or the input file/data-source
+/// 3. vectors coming from ROOT files that are being read as RVecs
 /// 4. TClonesArray
 ///
 /// In case of 1., we keep aside the pointer to the branch and the pointer to the input value (in `branch` and
@@ -1267,21 +1268,30 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
       }
    }
    auto *outputBranch = outputBranches.Get(outName);
-   const bool isTClonesArray = inputBranch != nullptr && std::string(inputBranch->GetClassName()) == "TClonesArray";
-   const auto mustWriteRVec = !inputBranch || isTClonesArray ||
-                              ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(inputBranch->GetClassName());
+
+   // if no backing input branch, we must write out an RVec
+   bool mustWriteRVec = (inputBranch == nullptr);
+   // otherwise, if input branch is TClonesArray, must write out an RVec
+   if (!mustWriteRVec && std::string_view(inputBranch->GetClassName()) == "TClonesArray") {
+      mustWriteRVec = true;
+      Warning("Snapshot",
+              "Branch \"%s\" contains TClonesArrays but the type specified to Snapshot was RVec<T>. The branch will "
+              "be written out as a RVec instead of a TClonesArray. Specify that the type of the branch is "
+              "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.",
+              inName.c_str());
+   }
+   // otherwise, if input branch is a std::vector or RVec, must write out an RVec
+   if (!mustWriteRVec) {
+      const auto STLKind = TClassEdit::IsSTLCont(inputBranch->GetClassName());
+      if (STLKind == ROOT::ESTLType::kSTLvector || STLKind == ROOT::ESTLType::kROOTRVec)
+         mustWriteRVec = true;
+   }
 
    if (mustWriteRVec) {
       // Treat:
       // 2. RVec coming from a custom column or a source
       // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
       // 4. TClonesArray written out as RVec<T>
-      if (isTClonesArray) {
-         Warning("Snapshot",
-                 "Branch \"%s\" contains TClonesArrays but the type specified to Snapshot was RVec<T>. The branch will "
-                 "be written out as a RVec instead of a TClonesArray. Specify that the type of the branch is "
-                 "TClonesArray as a Snapshot template parameter to write out a TClonesArray instead.", inName.c_str());
-      }
       if (outputBranch) {
          branchAddress = ab->data();
          outputBranch->SetAddress(&branchAddress);
@@ -1292,7 +1302,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
       return;
    }
 
-   // Treat 1, the C-array case
+   // else this must be a C-array, aka case 1.
    auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
    const auto bname = leaf->GetName();
    const auto counterStr =
