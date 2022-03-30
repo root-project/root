@@ -8,7 +8,7 @@
 #include "ROOT/RCanvas.hxx"
 #endif
 
-void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, const char *AuxDir, bool cp, bool py)
+void MakeRCanvasJS(const char *MacroName, const char *IN, const char *OutDir, /*const char *AuxDir,*/ bool cp, bool py)
 {
 #if __has_include("ROOT/RCanvas.hxx")
    using namespace ROOT::Experimental;
