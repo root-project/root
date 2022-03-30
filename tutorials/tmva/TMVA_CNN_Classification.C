@@ -125,14 +125,15 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1, 1})
 
    bool writeOutputFile = true;
 
-   int num_threads = 0;  // use default threads
+   int num_threads = 32;
 
    TMVA::Tools::Instance();
 
    // do enable MT running
    if (num_threads >= 0) {
       ROOT::EnableImplicitMT(num_threads);
-      if (num_threads > 0) gSystem->Setenv("OMP_NUM_THREADS", TString::Format("%d",num_threads));
+      if (ROOT::GetThreadPoolSize() > 0)
+         gSystem->Setenv("OMP_NUM_THREADS", TString::Format("%u", ROOT::GetThreadPoolSize()));
    }
    else
       gSystem->Setenv("OMP_NUM_THREADS", "1");
