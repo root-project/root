@@ -14,6 +14,7 @@
 #include <ROOT/Browsable/TKeyItem.hxx>
 #include <ROOT/Browsable/TObjectItem.hxx>
 #include <ROOT/Browsable/TObjectElement.hxx>
+#include <ROOT/Browsable/RHolder.hxx>
 
 #include <ROOT/RLogger.hxx>
 
@@ -22,6 +23,10 @@
 #include "TROOT.h"
 #include "TFile.h"
 #include "TClass.h"
+#include "TEnv.h"
+
+#include <cstring>
+#include <string>
 
 using namespace std::string_literals;
 
@@ -37,8 +42,9 @@ Iterator over keys in TDirectory
 
 class TDirectoryLevelIter : public RLevelIter {
    TDirectory *fDir{nullptr};         ///<! current directory handle
-   std::unique_ptr<TIterator>  fIter; ///<! created iterator
+   std::unique_ptr<TIterator> fIter;  ///<! created iterator
    Bool_t fKeysIter{kTRUE};           ///<! iterating over keys list (default)
+   Bool_t fOnlyLastCycle{kFALSE};     ///<! show only last cycle in list of keys
    TKey *fKey{nullptr};               ///<! currently selected key
    TObject *fObj{nullptr};            ///<! currently selected object
    std::string fCurrentName;          ///<! current key name
@@ -77,11 +83,30 @@ class TDirectoryLevelIter : public RLevelIter {
          return true;
       }
 
-      fKey = dynamic_cast<TKey *>(fObj);
+      while(true) {
 
-      if (!fKey) {
-         fIter.reset();
-         return false;
+         fKey = dynamic_cast<TKey *>(fObj);
+
+         if (!fKey) {
+            fIter.reset();
+            return false;
+         }
+
+         if (!fOnlyLastCycle) break;
+
+         TIter iter(fDir->GetListOfKeys());
+         TKey *key = nullptr;
+         bool found_newer = false;
+         while ((key = dynamic_cast<TKey*>(iter())) != nullptr) {
+            if ((key != fKey) && !strcmp(key->GetName(), fKey->GetName()) && (key->GetCycle() > fKey->GetCycle())) {
+               found_newer = true;
+               break;
+            }
+         }
+
+         if (!found_newer) break;
+
+         fObj = fIter->Next();
       }
 
       fCurrentName = fKey->GetName();
@@ -92,7 +117,24 @@ class TDirectoryLevelIter : public RLevelIter {
    }
 
 public:
-   explicit TDirectoryLevelIter(TDirectory *dir) : fDir(dir) { CreateIter(); }
+   explicit TDirectoryLevelIter(TDirectory *dir) : fDir(dir)
+   {
+      const char *undef = "<undefined>";
+      const char *value = gEnv->GetValue("WebGui.LastCycle", undef);
+      if (value) {
+         std::string svalue = value;
+         if (svalue != undef) {
+            if (svalue == "yes")
+               fOnlyLastCycle = kTRUE;
+            else if (svalue == "no")
+               fOnlyLastCycle = kFALSE;
+            else
+               R__LOG_ERROR(ROOT::Experimental::BrowsableLog()) << "WebGui.LastCycle must be yes or no";
+         }
+      }
+
+      CreateIter();
+   }
 
    virtual ~TDirectoryLevelIter() = default;
 
@@ -229,6 +271,7 @@ public:
          return nullptr;
 
       std::string namecycle = fKeyName + ";"s + std::to_string(fKeyCycle);
+
       void *obj = fDir->GetObjectChecked(namecycle.c_str(), obj_class);
       if (!obj)
          return nullptr;
@@ -437,6 +480,6 @@ public:
       });
    }
 
-} newRTFileProvider ;
+} newRTFileProvider;
 
 
