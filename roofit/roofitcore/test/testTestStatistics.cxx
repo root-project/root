@@ -77,7 +77,7 @@ TEST(RooNLLVar, IntegrateBins) {
 /// Prepare a RooDataSet that looks like the one that HistFactory uses:
 /// It pretends to be an unbinned dataset, but instead of single events,
 /// events are aggregated in the bin centres using weights.
-TEST(RooNLLVar, DISABLED_IntegrateBins_SubRange) {
+TEST(RooNLLVar, IntegrateBins_SubRange) {
   RooRandom::randomGenerator()->SetSeed(1337ul);
 
   RooRealVar x("x", "x", 0.1, 5.1);
@@ -85,7 +85,7 @@ TEST(RooNLLVar, DISABLED_IntegrateBins_SubRange) {
   x.setRange("range", 0.1, 4.1);
   x.setBins(8, "range"); // consistent binning
 
-  RooRealVar a("a", "a", -0.7, -5., 5.);
+  RooRealVar a("a", "a", -0.3, -5., 5.);
   RooArgSet targetValues;
   RooArgSet(a).snapshot(targetValues);
 
