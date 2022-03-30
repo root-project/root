@@ -1,6 +1,5 @@
 // Tests for the RooBinSamplingPdf
 // Authors: Jonas Rembser, CERN  03/2022
-
 #include <RooArgSet.h>
 #include <RooBinSamplingPdf.h>
 #include <RooGenericPdf.h>
@@ -74,4 +73,41 @@ TEST(RooBinSamplingPdf, LinearPdfSubRangeCrossCheck)
    std::unique_ptr<RooAbsReal> nll2(pdf.createNLL(data, Range("range"), IntegrateBins(1.E-3)));
 
    EXPECT_FLOAT_EQ(nll2->getVal(), nll1->getVal());
+}
+
+TEST(RooBinSamplingPdf, CheckConsistentNormalization)
+{
+   RooRealVar x("x", "x", 0, 10);
+   RooRealVar mean1("mean1", "mean1", 4., 0, 10);
+   RooRealVar mean2("mean2", "mean2", 6., 0, 10);
+   RooRealVar width("width", "width", 3., 0.1, 10);
+   RooRealVar f("f", "f", 0.5, 0.0, 1.0);
+
+   RooArgSet normSet{x};
+
+   RooGenericPdf gaus1("guas1", "gaus1", "std::exp(-0.5*(x - mean1)^2/width^2)", {x, mean1, width});
+   RooGenericPdf gaus2("guas2", "gaus2", "std::exp(-0.5*(x - mean2)^2/width^2)", {x, mean2, width});
+   RooAddPdf pdf{"pdf", "pdf", {gaus1, gaus2}, {f}};
+   pdf.fixCoefNormalization(normSet);
+
+   RooBinSamplingPdf binSamplingPdf{"binSamplingPdf", "binSamplingPdf", x, pdf};
+
+   // An integral over the normalization set normalized by an integral over the
+   // normalization set should be unity by definition.
+   {
+      std::unique_ptr<RooAbsReal> int1{binSamplingPdf.createIntegral(normSet, &normSet)};
+      std::cout << int1->getVal() << std::endl;
+      EXPECT_FLOAT_EQ(int1->getVal(), 1.0);
+   }
+
+   // Evaluating the pdf with a given normalization set should not unexpectedly
+   // change the value of it's unnormalized integral.
+   {
+      std::unique_ptr<RooAbsReal> int1{binSamplingPdf.createIntegral(normSet)};
+      binSamplingPdf.getVal(normSet);
+      std::unique_ptr<RooAbsReal> int2{binSamplingPdf.createIntegral(normSet)};
+      std::cout << int1->getVal() << std::endl;
+      std::cout << int2->getVal() << std::endl;
+      EXPECT_FLOAT_EQ(int1->getVal(), int2->getVal());
+   }
 }
