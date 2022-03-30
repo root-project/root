@@ -192,20 +192,20 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_WARN_LOGFILE           ${DOCU_LOGFILE})
         set(DOXYGEN_FILE_PATTERNS          *.c *.C *.cc *.cpp *.cxx *.def *.dox *.f *.h *.hh *.hpp *.hxx *.icc *.inc *.inl *.js *.m *.md *.mm *.py *.pyzdoc)
         set(DOXYGEN_RECURSIVE YES)
-        set(DOXYGEN_EXCLUDE_PATTERNS       #*/G__*
-                                           #~ */test/*
-                                           #~ */src/unuran-*
-                                           #~ */libAfterImage/*
-                                           #~ */doc/v6*
-                                           #~ */doc/v5*
+        set(DOXYGEN_EXCLUDE_PATTERNS       */G__*
+                                           */test/*
+                                           */src/unuran-*
+                                           */libAfterImage/*
+                                           */doc/v6*
+                                           */doc/v5*
                                            */win32gdk/gdk/*
-                                           #~ */bindings/pyroot/*.py
-                                           #~ *gl2ps*
-                                           #~ *CsgOps*
-                                           #~ LinkDef*.h
-                                           #~ launcher.py
-                                           #~ */io/io/res/*
-                                           #~ */src/lexertk.hpp
+                                           */bindings/pyroot/*.py
+                                           *gl2ps*
+                                           *CsgOps*
+                                           LinkDef*.h
+                                           launcher.py
+                                           */io/io/res/*
+                                           */src/lexertk.hpp
                                            )
         #set(DOXYGEN_EXCLUDE_SYMBOLS        std
                                            #cling*)
