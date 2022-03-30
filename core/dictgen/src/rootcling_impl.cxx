@@ -1334,12 +1334,12 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 /// array data member.
 /// In case of error, or if the size is not specified, GrabIndex returns 0.
 
-llvm::StringRef GrabIndex(const clang::FieldDecl &member, int printError)
+llvm::StringRef GrabIndex(const cling::Interpreter& interp, const clang::FieldDecl &member, int printError)
 {
    int error;
    llvm::StringRef where;
 
-   llvm::StringRef index = ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(member, &error, &where);
+   llvm::StringRef index = ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(interp, member, &error, &where);
    if (index.size() == 0 && printError) {
       const char *errorstring;
       switch (error) {
@@ -1522,7 +1522,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                      dictStream << "         ;//R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
                   }
                } else if (type.getTypePtr()->isPointerType()) {
-                  llvm::StringRef indexvar = GrabIndex(**field_iter, i == 0);
+                  llvm::StringRef indexvar = GrabIndex(interp, **field_iter, i == 0);
                   if (indexvar.size() == 0) {
                      if (i == 0) {
                         ROOT::TMetaUtils::Error(nullptr, "*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
