@@ -29,11 +29,28 @@
 #include "RooDataHist.h"
 #include "RunContext.h"
 
+bool RooBinWidthFunction::_enabled = true;
+
+/// Globally enable bin-width corrections by this class.
+void RooBinWidthFunction::enableClass() {
+  _enabled = true;
+}
+
+/// Returns `true` if bin-width corrections by this class are globally enabled, `false` otherwise.
+bool RooBinWidthFunction::isClassEnabled() {
+  return _enabled;
+}
+
+/// Globally disable bin-width corrections by this class.
+void RooBinWidthFunction::disableClass() {
+  _enabled = false;
+}
 
 /// Compute current bin of observable, and return its volume or inverse volume, depending
 /// on configuration chosen in the constructor.
 /// If the bin is not valid, return a volume of 1.
 double RooBinWidthFunction::evaluate() const {
+  if(!_enabled) return 1.;
   const RooDataHist& dataHist = _histFunc->dataHist();
   const auto idx = _histFunc->getBin();
   auto volumes = dataHist.binVolumes(0, dataHist.numEntries());
@@ -51,13 +68,19 @@ void RooBinWidthFunction::computeBatch(cudaStream_t*, double* output, size_t, Ro
   std::vector<Int_t> bins = _histFunc->getBins(dataMap);
   auto volumes = dataHist.binVolumes(0, dataHist.numEntries());
 
-  if (_divideByBinWidth) {
+  if(!_enabled){
     for (std::size_t i=0; i < bins.size(); ++i) {
-      output[i] = bins[i] >= 0 ? 1./volumes[bins[i]] : 1.;
+      output[i] = 1.;
     }
   } else {
-    for (std::size_t i=0; i < bins.size(); ++i) {
-      output[i] = bins[i] >= 0 ? volumes[bins[i]] : 1.;
+    if (_divideByBinWidth) {
+      for (std::size_t i=0; i < bins.size(); ++i) {
+	output[i] = bins[i] >= 0 ? 1./volumes[bins[i]] : 1.;
+      }
+    } else {
+      for (std::size_t i=0; i < bins.size(); ++i) {
+	output[i] = bins[i] >= 0 ? volumes[bins[i]] : 1.;
+      }
     }
   }
 }
