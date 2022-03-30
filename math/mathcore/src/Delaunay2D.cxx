@@ -26,19 +26,19 @@
 #include <stdlib.h>
 
 namespace ROOT {
-   
+
    namespace Math {
 
 
 /// class constructor from array of data points
-Delaunay2D::Delaunay2D(int n, const double * x, const double * y, const double * z, 
+Delaunay2D::Delaunay2D(int n, const double * x, const double * y, const double * z,
                        double xmin, double xmax, double ymin, double ymax)
 {
    // Delaunay2D normal constructor
 
    fX            = x;
    fY            = y;
-   fZ            = z; 
+   fZ            = z;
    fZout         = 0.;
    fNpoints      = n;
    fOffsetX      = 0;
@@ -49,14 +49,14 @@ Delaunay2D::Delaunay2D(int n, const double * x, const double * y, const double *
    fXNmax        = 0;
    fXNmin        = 0;
    fYNmin        = 0;
-   fYNmax        = 0; 
+   fYNmax        = 0;
 
    SetInputPoints(n,x,y,z,xmin,xmax,ymin,ymax);
 
 }
 
-/// set the input points   
-void Delaunay2D::SetInputPoints(int n, const double * x, const double * y, const double * z, 
+/// set the input points
+void Delaunay2D::SetInputPoints(int n, const double * x, const double * y, const double * z,
                            double xmin, double xmax, double ymin, double ymax) {
 
 
@@ -66,31 +66,35 @@ void Delaunay2D::SetInputPoints(int n, const double * x, const double * y, const
    fInit         = kFALSE;
 #endif
 
-   if (n == 0 || !x || !y || !z ) return; 
+   if (n == 0 || !x || !y || !z ) return;
 
    if (xmin >= xmax) {
-      xmin = *std::min_element(x, x+n); 
-      xmax = *std::max_element(x, x+n); 
+      xmin = *std::min_element(x, x+n);
+      xmax = *std::max_element(x, x+n);
 
-      ymin = *std::min_element(y, y+n); 
-      ymax = *std::max_element(y, y+n); 
+      ymin = *std::min_element(y, y+n);
+      ymax = *std::max_element(y, y+n);
    }
 
    fOffsetX      = -(xmax+xmin)/2.;
    fOffsetY      = -(ymax+ymin)/2.;
-   
-   fScaleFactorX = 1./(xmax-xmin);
-   fScaleFactorY = 1./(ymax-ymin);
-   
-   //xTransformer = std::bind(linear_transform, std::placeholders::_1, Xoffset, XScaleFactor);
-   //yTransformer = std::bind(linear_transform, std::placeholders::_1, Yoffset, YScaleFactor);
-   
-   fXNmax        = Linear_transform(xmax, fOffsetX, fScaleFactorX); //xTransformer(xmax);
-   fXNmin        = Linear_transform(xmin, fOffsetX, fScaleFactorX); //xTransformer(xmin);
-   
-   fYNmax        = Linear_transform(ymax, fOffsetY, fScaleFactorY); //yTransformer(ymax);
-   fYNmin        = Linear_transform(ymin, fOffsetY, fScaleFactorY); //yTransformer(ymin);
 
+   if ( (xmax-xmin) != 0 ) {
+      fScaleFactorX = 1./(xmax-xmin);
+      fXNmax        = Linear_transform(xmax, fOffsetX, fScaleFactorX); //xTransformer(xmax);
+      fXNmin        = Linear_transform(xmin, fOffsetX, fScaleFactorX); //xTransformer(xmin);
+   } else {
+      // we can't find triangle in this case
+      fInit = true;
+   }
+
+   if (ymax-ymin != 0) {
+      fScaleFactorY = 1./(ymax-ymin);
+      fYNmax        = Linear_transform(ymax, fOffsetY, fScaleFactorY); //yTransformer(ymax);
+      fYNmin        = Linear_transform(ymin, fOffsetY, fScaleFactorY); //yTransformer(ymin);
+   } else {
+      fInit = true;
+   }
    //printf("Normalized space extends from (%f,%f) to (%f,%f)\n", fXNmin, fYNmin, fXNmax, fYNmax);
 
 
@@ -103,13 +107,20 @@ void Delaunay2D::SetInputPoints(int n, const double * x, const double * y, const
 //______________________________________________________________________________
 double Delaunay2D::Interpolate(double x, double y)
 {
-   // Return the z value corresponding to the (x,y) point in fGraph2D
+   // Return the interpolated z value corresponding to the given (x,y) point
 
    // Initialise the Delaunay algorithm if needed.
    // CreateTrianglesDataStructure computes fXoffset, fYoffset,
    // fXScaleFactor and fYScaleFactor;
    // needed in this function.
    FindAllTriangles();
+
+   // handle case no triangles are found  return default value (i.e. 0)
+   // to do: if points are aligned in one direction we could return in
+   // some case the 1d interpolated value
+   if (fNdt == 0) {
+      return fZout;
+   }
 
    // Find the z value corresponding to the point (x,y).
    double xx, yy;
@@ -132,7 +143,7 @@ void Delaunay2D::FindAllTriangles()
    //treat the common case first
    if(fInit.load(std::memory_order::memory_order_relaxed) == Initialization::INITIALIZED)
       return;
-   
+
    Initialization cState = Initialization::UNINITIALIZED;
    if(fInit.compare_exchange_strong(cState, Initialization::INITIALIZING,
                                     std::memory_order::memory_order_release, std::memory_order::memory_order_relaxed))
@@ -145,17 +156,17 @@ void Delaunay2D::FindAllTriangles()
 
       // Function used internally only. It creates the data structures needed to
       // compute the Delaunay triangles.
-      
+
       // Offset fX and fY so they average zero, and scale so the average
       // of the X and Y ranges is one. The normalized version of fX and fY used
       // in Interpolate.
-      
+
       DoNormalizePoints(); // call backend specific point normalization
-      
+
       DoFindTriangles(); // call backend specific triangle finding
-      
+
       fNdt = fTriangles.size();
-      
+
 #ifdef THREAD_SAFE
       fInit = Initialization::INITIALIZED;
    } else while(cState != Initialization::INITIALIZED) {
@@ -163,7 +174,7 @@ void Delaunay2D::FindAllTriangles()
          cState = fInit.load(std::memory_order::memory_order_relaxed);
       }
 #endif
-   
+
 }
 
 
@@ -181,7 +192,7 @@ void Delaunay2D::DonormalizePoints() {
    }
 }
 
-/// CGAL implementation for finding triangles 
+/// CGAL implementation for finding triangles
 void Delaunay2D::DoFindTriangles() {
    fCGALdelaunay.insert(fNormalizedPoints.begin(), fNormalizedPoints.end());
 
@@ -252,7 +263,7 @@ void Delaunay2D::DoNormalizePoints() {
    fYCellStep = fNCells / (fYNmax - fYNmin);
 }
 
-/// Triangle implementation for finding all the triangles 
+/// Triangle implementation for finding all the triangles
 void Delaunay2D::DoFindTriangles() {
 
    auto initStruct = [] (triangulateio & s) {
@@ -395,7 +406,7 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
     auto inTriangle = [] (const std::tuple<double, double, double> & coords) -> bool {
        return std::get<0>(coords) >= 0 && std::get<1>(coords) >= 0 && std::get<2>(coords) >= 0;
     };
-    
+
    int cX = CellX(xx);
    int cY = CellY(yy);
 

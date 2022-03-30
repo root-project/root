@@ -92,7 +92,9 @@ public:
    /// set the input points for building the graph
    void SetInputPoints(int n, const double *x, const double * y, const double * z, double xmin=0, double xmax=0, double ymin=0, double ymax=0);
 
-   /// Return the Interpolated z value corresponding to the (x,y) point
+   /// Return the Interpolated z value corresponding to the given (x,y) point
+   /// Note that in case no Delaunay triangles are found, for example when the
+   /// points are aligned, then a default value of zero is always return
    double  Interpolate(double x, double y);
 
    /// Find all triangles
