@@ -17,13 +17,18 @@ ClassImp(TGraphDelaunay2D);
 
 /** \class TGraphDelaunay2D
     \ingroup Graphs
-TGraphDelaunay2D generates a Delaunay triangulation of a TGraph2D. This
-triangulation code derives from an implementation done by Luke Jones
-(Royal Holloway, University of London) in April 2002 in the PAW context.
+TGraphDelaunay2D generates a Delaunay triangulation of a TGraph2D.
+The algorithm used for finding the triangles is based on on
+**Triangle**, a two-dimensional quality mesh generator and
+Delaunay triangulator from Jonathan Richard Shewchuk.
+See [http://www.cs.cmu.edu/~quake/triangle.html]
+The ROOT::Math::Delaunay2D class provides a wrapper for using
+the **Triangle** library.
 
-This software cannot be guaranteed to work under all circumstances. They
-were originally written to work with a few hundred points in an XY space
-with similar X and Y ranges.
+This implementation provides large improvements in terms of computational performances
+compared to the legacy one available in TGraphDelaunay, and it is by default
+used in TGraph2D. The old, legacy implementation can be still used when calling
+`TGraph2D::GetHistogram` and `TGraph2D::Draw` with the `old` option.
 
 Definition of Delaunay triangulation (After B. Delaunay):
 For a set S of points in the Euclidean plane, the unique triangulation DT(S)
