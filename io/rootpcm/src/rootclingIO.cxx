@@ -248,6 +248,8 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
             Error("CloseStreamerInfoROOTFile", "Cannot find TClass instance for namespace %s.", nsName.c_str());
             return false;
          }
+         if (!(tclassInstance->Property() & kIsNamespace))
+            continue; // Enum will be part of the TClass.
          auto enumListPtr = tclassInstance->GetListOfEnums();
          if (!enumListPtr) {
             Error("CloseStreamerInfoROOTFile", "TClass instance for namespace %s does not have any enum associated. This is an inconsistency.", nsName.c_str());
