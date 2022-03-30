@@ -24,12 +24,29 @@ Persistent version of a TClass.
 #include "TList.h"
 #include "TListOfDataMembers.h"
 #include "TListOfEnums.h"
+#include "TListOfEnumsWithLock.h"
 #include "TRealData.h"
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
 
 #include <cassert>
 #include <unordered_map>
+
+#ifdef WIN32
+#include <io.h>
+#include "Windows4Root.h"
+#include <Psapi.h>
+#define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
+#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
+#else
+#include <dlfcn.h>
+#endif
+
+static bool IsFromRootCling() {
+  // rootcling also uses TCling for generating the dictionary ROOT files.
+  const static bool foundSymbol = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+  return foundSymbol;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TProtoClass from a TClass.
@@ -262,7 +279,8 @@ Bool_t TProtoClass::FillTClass(TClass* cl) {
    // We need to fill enums one by one to initialise the internal map which is
    // transient
    {
-      auto temp = new TListOfEnums();
+      auto temp = cl->fEnums.load() ? cl->fEnums.load() :
+                  IsFromRootCling() ? new TListOfEnums() : new TListOfEnumsWithLock();
       if (fEnums) {
          for (TObject* enumAsTObj : *fEnums){
             temp->Add((TEnum*) enumAsTObj);
