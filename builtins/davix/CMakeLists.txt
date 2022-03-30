@@ -10,16 +10,14 @@ find_package(libuuid REQUIRED)
 find_package(LibXml2 REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-set(DAVIX_VERSION "0.7.6")
+set(DAVIX_VERSION "0.8.1")
 set(DAVIX_URL "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources")
-set(DAVIX_URLHASH "SHA256=fc9b5341d006482755684052328740449f2decc33ad7b5ba3e2c614fe602e6e2")
+set(DAVIX_URLHASH "SHA256=3f42f4eadaf560ab80984535ffa096d3e88287d631960b2193e84cf29a5fe3a6")
 set(DAVIX_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/DAVIX-prefix)
 set(DAVIX_LIBNAME ${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
 
-foreach(lib davix neon)
-  set(libname ${CMAKE_STATIC_LIBRARY_PREFIX}${lib}${CMAKE_STATIC_LIBRARY_SUFFIX})
-  list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/lib/${libname})
-endforeach()
+list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}davix${CMAKE_STATIC_LIBRARY_SUFFIX})
+list(APPEND DAVIX_LIBRARIES ${DAVIX_PREFIX}/src/DAVIX-build/deps/curl-install/usr/lib/${CMAKE_STATIC_LIBRARY_PREFIX}curl${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 string(REPLACE "-Werror " "" DAVIX_CXX_FLAGS "${CMAKE_CXX_FLAGS} ")
 
@@ -58,7 +56,21 @@ if(builtin_openssl)
   add_dependencies(DAVIX OPENSSL)
 endif()
 
-list(APPEND DAVIX_LIBRARIES uuid::uuid OpenSSL::SSL ${LIBXML2_LIBRARIES} ${CMAKE_DL_LIBS})
+if(APPLE)
+   find_library(FOUND_CoreFoundation CoreFoundation)
+   if(NOT FOUND_CoreFoundation)
+      message(FATAL_ERROR "Missing macOS CoreFoundation framework!")
+   endif()
+   list(APPEND DAVIX_LIBRARIES ${FOUND_CoreFoundation})
+
+   find_library(FOUND_Security Security)
+   if(NOT FOUND_Security)
+      message(FATAL_ERROR "Missing macOS Security framework!")
+   endif()
+   list(APPEND DAVIX_LIBRARIES ${FOUND_Security})
+endif()
+
+list(APPEND DAVIX_LIBRARIES uuid::uuid OpenSSL::SSL ZLIB::ZLIB ${LIBXML2_LIBRARIES} ${CMAKE_DL_LIBS})
 
 check_cxx_symbol_exists("clock_gettime" "time.h" _have_clock_gettime)
 
