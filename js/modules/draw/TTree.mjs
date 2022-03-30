@@ -338,7 +338,7 @@ function drawTreePlayer(hpainter, itemname, askey, asleaf) {
    let url = hpainter.getOnlineItemUrl(itemname);
    if (!url) return null;
 
-   let root_version = top._root_version ? parseInt(top._root_version) : 396545; // by default use version number 6-13-01
+   let root_version = top._root_version || 400129; // by default use version number 6-27-01
 
    let mdi = hpainter.getDisplay();
    if (!mdi) return null;
@@ -455,7 +455,7 @@ function drawTree() {
       args.testio = true;
       args.showProgress = showProgress;
       pr = treeIOTest(tree, args);
-   } else if (args.expr) {
+   } else if (args.expr || args.branch) {
       pr = treeDraw(tree, args);
    } else
       return Promise.resolve(painter);
