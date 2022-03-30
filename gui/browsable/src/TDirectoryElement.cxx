@@ -228,7 +228,8 @@ public:
       if (!obj_class)
          return nullptr;
 
-      void *obj = fDir->GetObjectChecked(fKeyName.c_str(), obj_class);
+      std::string namecycle = fKeyName + ";"s + std::to_string(fKeyCycle);
+      void *obj = fDir->GetObjectChecked(namecycle.c_str(), obj_class);
       if (!obj)
          return nullptr;
 
