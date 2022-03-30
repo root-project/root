@@ -60,6 +60,35 @@ exports.openFile = function(...args) {
    return _sync().then(() => import('../modules/io.mjs')).then(handle => handle.openFile(...args));
 }
 
+exports.parse = function(json) {
+   if (typeof json == 'string')
+      json = JSON.parse(json);
+
+   if (json && typeof json == 'object')
+      json.$parse_workaround = true;
+   return json;
+}
+
+function test_parse_workaround(obj) {
+   if (obj && (typeof obj == 'object') && obj.$parse_workaround) {
+      delete obj.$parse_workaround;
+      if (JSROOT?.parse)
+         obj = JSROOT.parse(obj);
+   }
+   return obj;
+}
+
+exports.draw = function(dom, obj, opt) {
+   return _sync().then(() => import('../modules/draw.mjs')).then(handle => handle.draw(dom, test_parse_workaround(obj), opt));
+}
+
+exports.redraw = function(dom, obj, opt) {
+   return _sync().then(() => import('../modules/draw.mjs')).then(handle => handle.redraw(dom, test_parse_workaround(obj), opt));
+}
+
+let workaround_settings = {};
+
+exports.settings = workaround_settings;
 
 /** @summary Old v6 method to load JSROOT functionality
   * @desc
@@ -294,11 +323,13 @@ if ((typeof globalThis !== "undefined") && !globalThis.JSROOT) {
    globalThis.JSROOT._complete_loading = _sync;
 
    let pr = Promise.all([import('../modules/core.mjs'), import('../modules/draw.mjs'), import('../modules/gui/HierarchyPainter.mjs')]).then(arr => {
-      Object.assign(globalThis.JSROOT, arr[0], arr[1]);
+
+      Object.assign(globalThis.JSROOT, arr[0], arr[1], arr[2]);
+
+      Object.assign(globalThis.JSROOT.settings, workaround_settings);
 
       globalThis.JSROOT._ = arr[0].internals;
 
-      globalThis.JSROOT.HierarchyPainter = arr[2].HierarchyPainter;
       getHPainter = arr[2].getHPainter;
 
       globalThis.JSROOT.hpainter = getHPainter();
