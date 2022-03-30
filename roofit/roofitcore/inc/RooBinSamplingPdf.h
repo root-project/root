@@ -31,7 +31,6 @@ public:
   RooBinSamplingPdf() { };
   RooBinSamplingPdf(const char *name, const char *title, RooAbsRealLValue& observable, RooAbsPdf& inputPdf,
       double epsilon = 1.E-4);
-  ~RooBinSamplingPdf() override {};
 
   RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = 0);
 
@@ -62,8 +61,16 @@ public:
     return _pdf->analyticalIntegral(code, rangeName);
   }
 
-  /// Since contained PDF is already normalised, this always returns true.
-  bool selfNormalized() const override { return true; }
+  /// Forwards to the PDF's implementation.
+  bool selfNormalized() const override { return _pdf->selfNormalized(); }
+
+  /// Forwards to the PDF's implementation.
+  RooAbsReal* createIntegral(const RooArgSet& iset,
+                             const RooArgSet* nset=nullptr,
+                             const RooNumIntConfig* cfg=nullptr,
+                             const char* rangeName=nullptr) const override {
+    return _pdf->createIntegral(iset, nset, cfg, rangeName);
+  }
 
   ExtendMode extendMode() const override { return _pdf->extendMode(); }
   Double_t expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
@@ -118,7 +125,6 @@ private:
 
   mutable std::unique_ptr<ROOT::Math::IntegratorOneDim> _integrator{nullptr}; ///<! Integrator used to sample bins.
   mutable std::vector<double> _binBoundaries; ///<! Workspace to store data for bin sampling
-  mutable const RooArgSet* _normSetForIntegrator{nullptr}; ///<! Normalisation set for operator() calls.
 
   ClassDefOverride(RooBinSamplingPdf,1)
 };

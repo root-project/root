@@ -294,16 +294,13 @@ std::unique_ptr<ROOT::Math::IntegratorOneDim>& RooBinSamplingPdf::integrator() c
 /// Binding used by the integrator to evaluate the PDF.
 double RooBinSamplingPdf::operator()(double x) const {
   _observable->setVal(x);
-  return _pdf->getVal(_normSetForIntegrator);
+  return _pdf->getVal();
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Integrate the wrapped PDF using our current integrator, with given norm set and limits.
-double RooBinSamplingPdf::integrate(const RooArgSet* normSet, double low, double high) const {
-  // Need to set this because operator() only takes one argument.
-  _normSetForIntegrator = normSet;
-
+double RooBinSamplingPdf::integrate(const RooArgSet* /*normSet*/, double low, double high) const {
   return integrator()->Integral(low, high);
 }
 
