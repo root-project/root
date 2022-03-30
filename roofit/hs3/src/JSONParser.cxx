@@ -244,29 +244,14 @@ std::string TJSONTree::Node::key() const
    return node->key();
 }
 
-namespace {
-std::string itoa(int i)
-{
-   std::stringstream ss;
-   ss << i;
-   return ss.str();
-}
-std::string ftoa(float f)
-{
-   std::stringstream ss;
-   ss << f;
-   return ss.str();
-}
-} // namespace
-
 std::string TJSONTree::Node::val() const
 {
    switch (node->get().type()) {
    case nlohmann::json::value_t::string: return node->get().get<std::string>();
    case nlohmann::json::value_t::boolean: return node->get().get<bool>() ? "true" : "false";
-   case nlohmann::json::value_t::number_integer: return ::itoa(node->get().get<int>());
-   case nlohmann::json::value_t::number_unsigned: return ::itoa(node->get().get<unsigned int>());
-   case nlohmann::json::value_t::number_float: return ::ftoa(node->get().get<float>());
+   case nlohmann::json::value_t::number_integer: return std::to_string(node->get().get<int>());
+   case nlohmann::json::value_t::number_unsigned: return std::to_string(node->get().get<unsigned int>());
+   case nlohmann::json::value_t::number_float: return std::to_string(node->get().get<float>());
    default:
       throw std::runtime_error(std::string("node " + node->key() + ": implicit string conversion for type " +
                                            node->get().type_name() + " not supported!"));
