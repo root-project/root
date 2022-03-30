@@ -1584,16 +1584,16 @@ class HierarchyPainter extends BasePainter {
 
       if (place == "item") {
 
-         if ('_player' in hitem)
+         if (hitem._player)
             return this.player(itemname);
 
-         if (handle && handle.aslink)
+         if (handle?.aslink)
             return window.open(itemname + "/");
 
-         if (handle && handle.execute)
+         if (handle?.execute)
             return this.executeCommand(itemname, node.parentNode);
 
-         if (handle && handle.ignore_online && this.isOnlineItem(hitem)) return;
+         if (handle?.ignore_online && this.isOnlineItem(hitem)) return;
 
          let can_draw = hitem._can_draw,
              can_expand = hitem._more,
@@ -1621,10 +1621,10 @@ class HierarchyPainter extends BasePainter {
          if (can_draw && can_expand && !drawopt) {
             // if default action specified as expand, disable drawing
             // if already displayed, try to expand
-            if (dflt_expand || (handle && (handle.dflt === 'expand')) || this.isItemDisplayed(itemname)) can_draw = false;
+            if (dflt_expand || (handle?.dflt === 'expand') || this.isItemDisplayed(itemname)) can_draw = false;
          }
 
-         if (can_draw && !drawopt && handle && handle.dflt && (handle.dflt !== 'expand'))
+         if (can_draw && !drawopt && handle?.dflt && (handle?.dflt !== 'expand'))
             drawopt = handle.dflt;
 
          if (can_draw)
