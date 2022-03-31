@@ -86,7 +86,7 @@ class TestInitialization:
 
 class TestEmptyTreeError:
     """
-    Distributed execution fails when the tree has no entries.
+    Tests with emtpy trees.
     """
 
     def test_histo_from_empty_root_file(self, connection):
@@ -102,6 +102,45 @@ class TestEmptyTreeError:
         # Get entries in the histogram, raises error
         with pytest.raises(RuntimeError):
             histo.GetEntries()
+
+    def test_count_with_some_empty_trees(self, connection):
+        """
+        A dataset might contain empty trees. These should be skipped and thus
+        not contribute to how many entries are processed in the distributed
+        execution.
+        """
+
+        opts = ROOT.RDF.RSnapshotOptions()
+        opts.fAutoFlush = 10
+        df = ROOT.RDataFrame(100).Define("x", "1")
+        treenames = [f"tree_{i}" for i in range(3)]
+        filenames = [f"distrdf_roottest_dask_check_backend_file_{i}.root" for i in range(3)]
+        for treename, filename in zip(treenames, filenames):
+            df.Snapshot(treename, filename, ["x"], opts)
+
+        empty_treename = "NOMINAL"
+        empty_filename = "../emptytree.root"
+
+        # Create the final dataset with some empty trees
+        final_treenames = []
+        final_filenames = []
+        for treename, filename in zip(treenames, filenames):
+            final_treenames.append(empty_treename)
+            final_treenames.append(treename)
+            final_filenames.append(empty_filename)
+            final_filenames.append(filename)
+
+        chain = ROOT.TChain()
+        for treename, filename in zip(final_treenames, final_filenames):
+            chain.Add(filename + "?#" + treename)
+
+        # 3 files are non-empty, we should always count 300 entries.
+        for n in range(1, 6):
+            rdf = Dask.RDataFrame(chain, daskclient=connection, npartitions=n)
+            assert rdf.Count().GetValue() == 300
+
+        for filename in filenames:
+            os.remove(filename)
 
 
 class TestChangeAttribute:
