@@ -896,11 +896,16 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
 
                {
                   TInterpreter::SuspendAutoParsing autoParseRaii(gCling);
-                  if (0==TClass::GetClass(nam.c_str(), true, false, fValOffset, fValDiff)) {
+                  TClass *paircl = TClass::GetClass(nam.c_str(), true, false, fValOffset, fValDiff);
+                  if (paircl == nullptr) {
                      // We need to emulate the pair
-                     TVirtualStreamerInfo::Factory()->GenerateInfoForPair(inside[1], inside[2], silent, fValOffset, fValDiff);
+                     auto info = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(inside[1], inside[2], silent, fValOffset, fValDiff);
+                     if (!info) {
+                        Fatal("InitializeEx",
+                              "Could not load nor generate the dictionary for \"%s\", some element might be missing their dictionary (eg. enums)",
+                              nam.c_str());
+                     }
                   } else {
-                     TClass *paircl = TClass::GetClass(nam.c_str());
                      if (paircl->GetClassSize() != fValDiff) {
                         if (paircl->GetState() >= TClass::kInterpreted)
                            Fatal("InitializeEx",
