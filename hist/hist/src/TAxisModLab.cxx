@@ -74,6 +74,7 @@ void TAxisModLab::SetColor(Int_t c) {
 
 void TAxisModLab::SetFont(Int_t f) {
    if (f>0) fTextFont  = 0;
+   if (f>0) fTextFont  = f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
