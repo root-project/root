@@ -22,6 +22,7 @@
 #include "TTimeStamp.h"
 #include "TBuffer.h"
 #include "TMath.h"
+#include "THLimitsFinder.h"
 #include "strlcpy.h"
 #include "snprintf.h"
 
@@ -563,6 +564,24 @@ void TAxis::GetLowEdge(Double_t *edge) const
 {
    Int_t bin;
    for (bin=1; bin<=fNbins; bin++) *(edge + bin-1) = GetBinLowEdge(bin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of axis labels.
+
+Int_t TAxis::GetNlabels() const
+{
+   if (fNdivisions>0) {
+      Int_t divxo  = 0;
+      Double_t x1o = 0.;
+      Double_t x2o = 0.;
+      Double_t bwx = 0.;
+      THLimitsFinder::Optimize(fXmin, fXmax,fNdivisions%100,x1o,x2o,divxo,bwx,"");
+      return divxo+1;
+   } else {
+      Int_t divx  = -fNdivisions;
+      return divx%100+1;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
