@@ -1,8 +1,9 @@
 import logging
 import warnings
 
+from dataclasses import dataclass
 from itertools import zip_longest
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 
 import ROOT
 
@@ -43,6 +44,23 @@ def get_headnode(npartitions: int, *args) -> HeadNode:
                 "argument for distributed RDataFrame. Currently only TTree/Tchain "
                 "based datasets or datasets created from a number of entries "
                 "can be processed distributedly.").format(firstarg, type(firstarg)))
+
+
+@dataclass
+class TaskObjects:
+    """
+    Holds objects needed in a distributed task.
+    Attributes:
+        rdf: The starting node of the RDataFrame computation graph. Only in a
+            TTree-based run, if the task has nothing to process then this
+            attribute is None.
+        entries_in_trees: A struct holding the amount of processed entries in
+            the task, as well as a dictionary where each key is an identifier
+            for a tree opened in the task and the value is the number of entries
+            in that tree. This attribute is not None only in a TTree-based run.
+    """
+    rdf: Optional[ROOT.RDF.RNode]
+    entries_in_trees: Optional[Ranges.TaskTreeEntries]
 
 
 class EmptySourceHeadNode(HeadNode):
@@ -106,7 +124,7 @@ class EmptySourceHeadNode(HeadNode):
             """
             Builds an RDataFrame instance for a distributed mapper.
             """
-            return ROOT.RDataFrame(nentries).Range(current_range.start, current_range.end)
+            return TaskObjects(ROOT.RDataFrame(nentries).Range(current_range.start, current_range.end), None)
 
         return build_rdf_from_range
 
@@ -210,10 +228,12 @@ class TreeHeadNode(HeadNode):
             # Compute clusters and entries of the first tree in the dataset.
             # This will call once TFile::Open, but we pay this cost to get an estimate
             # on whether the number of requested partitions is reasonable.
-            # Depending on the cluster setup, this may still be quite costly.
+            # Depending on the cluster setup, this may still be quite costly, so
+            # we decide to pay the price only if the user explicitly requested
+            # warning logging.
             clusters, entries = Ranges.get_clusters_and_entries(self.subtreenames[0], self.inputfiles[0])
-            if entries is not None:
-                # The file could contain an empty tree. In that case, the estimate will not be computed.
+            # The file could contain an empty tree. In that case, the estimate will not be computed.
+            if entries > 0:
                 partitionsperfile = self.npartitions / len(self.inputfiles)
                 if partitionsperfile > len(clusters):
                     logger.warning(
@@ -223,7 +243,7 @@ class TreeHeadNode(HeadNode):
 
         return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo)
 
-    def generate_rdf_creator(self) -> Callable[[Ranges.TreeRangePerc], Optional[ROOT.RDataFrame]]:
+    def generate_rdf_creator(self) -> Callable[[Ranges.TreeRangePerc], TaskObjects]:
         """
         Generates a function that is responsible for building an instance of
         RDataFrame on a distributed mapper for a given entry range. Specific for
@@ -273,7 +293,8 @@ class TreeHeadNode(HeadNode):
                     # Finally add friend TChain to the parent (with alias)
                     chain.AddFriend(friend_chain, friend_alias)
 
-        def build_chain_from_range(current_range: Ranges.TreeRangePerc) -> Optional[ROOT.TChain]:
+        def build_chain_from_range(
+                current_range: Ranges.TreeRangePerc) -> Tuple[Optional[ROOT.TChain], Ranges.TaskTreeEntries]:
             """
             Builds a TChain from the information in 'current_range'.
 
@@ -288,10 +309,10 @@ class TreeHeadNode(HeadNode):
             # Build TChain of files for this range:
             chain = ROOT.TChain(maintreename)
 
-            clustered_range = Ranges.get_clustered_range_from_percs(current_range)
+            clustered_range, entries_in_trees = Ranges.get_clustered_range_from_percs(current_range)
             if clustered_range is None:
                 # The task could not be correctly built, don't create the TChain
-                return None
+                return None, entries_in_trees
 
             for subtreename, filename, treenentries, start, end in zip(
                     clustered_range.treenames, clustered_range.filenames, clustered_range.treesnentries,
@@ -318,9 +339,9 @@ class TreeHeadNode(HeadNode):
             # this task
             attach_friend_info_if_present(clustered_range, chain)
 
-            return chain
+            return chain, entries_in_trees
 
-        def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> Optional[ROOT.RDataFrame]:
+        def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """
             Builds an RDataFrame instance for a distributed mapper.
 
@@ -328,10 +349,10 @@ class TreeHeadNode(HeadNode):
             input range object. If the chain cannot be built, returns None.
             """
             # Prepare main TChain
-            chain = build_chain_from_range(current_range)
+            chain, entries_in_trees = build_chain_from_range(current_range)
             if chain is None:
                 # The chain could not be built.
-                return None
+                return TaskObjects(None, entries_in_trees)
 
             # Create RDataFrame object for this task
             if defaultbranches is not None:
@@ -344,6 +365,6 @@ class TreeHeadNode(HeadNode):
             # the scope of this function.
             rdf._chain_lifeline = chain
 
-            return rdf
+            return TaskObjects(rdf, entries_in_trees)
 
         return build_rdf_from_range
