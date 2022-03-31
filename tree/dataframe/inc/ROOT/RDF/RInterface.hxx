@@ -1174,6 +1174,12 @@ public:
       columnNames.insert(columnNames.end(), definedColumns.begin(), definedColumns.end());
       columnNames.insert(columnNames.end(), treeBranchNames.begin(), treeBranchNames.end());
       columnNames.insert(columnNames.end(), dsColumnsWithoutSizeColumns.begin(), dsColumnsWithoutSizeColumns.end());
+
+      // De-duplicate column names. Currently the only way this can happen is if a column coming from a tree or
+      // data-source is Redefine'd.
+      std::set<std::string> uniqueCols(columnNames.begin(), columnNames.end());
+      columnNames.assign(uniqueCols.begin(), uniqueCols.end());
+
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
    }
