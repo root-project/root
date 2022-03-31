@@ -1,8 +1,9 @@
 import logging
 
 from bisect import bisect_left
+from dataclasses import dataclass, field
 from math import floor
-from typing import List, NamedTuple, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple
 
 import ROOT
 
@@ -78,7 +79,8 @@ def get_balanced_ranges(nentries, npartitions):
     return ranges
 
 
-class TreeRange(NamedTuple):
+@dataclass
+class TreeRange:
     """
     Range of entries in one of the trees in the chain of a single distributed task.
 
@@ -124,7 +126,8 @@ class TreeRange(NamedTuple):
     friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
 
 
-class TreeRangePerc(NamedTuple):
+@dataclass
+class TreeRangePerc:
     """
     Range of percentages to be considered for a list of trees. Building block
     for an actual range of entries of a distributed task.
@@ -137,7 +140,20 @@ class TreeRangePerc(NamedTuple):
     friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
 
 
-def get_clusters_and_entries(treename: str, filename: str) -> Union[Tuple[List[int], int], Tuple[None, None]]:
+@dataclass
+class TaskTreeEntries:
+    """
+    Entries corresponding to each tree assigned to a certain task, plus the
+    actual number of entries that task will be processing. This information will
+    be aggregated along with the main mergeable results in distributed
+    execution. It serves as a sanity check that exactly the total amount of
+    entries in the dataset is processed in the application.
+    """
+    processed_entries: int = 0
+    trees_with_entries: Dict[str, int] = field(default_factory=dict)
+
+
+def get_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], int]:
     """
     Retrieve cluster boundaries and number of entries of a TTree. If the tree
     is empty, returns None, None.
@@ -159,9 +175,6 @@ def get_clusters_and_entries(treename: str, filename: str) -> Union[Tuple[List[i
         clusters.append(cluster_startentry)
 
     tfile.Close()
-
-    if not entries or not clusters:
-        return None, None
 
     return clusters, entries
 
@@ -225,7 +238,7 @@ def get_percentage_ranges(treenames: List[str], filenames: List[str], npartition
     ]
 
 
-def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Optional[TreeRange]:
+def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[TreeRange], TaskTreeEntries]:
     """
     Builds a range of entries to be processed for each tree in the chain created
     in a distributed task.
@@ -261,6 +274,9 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Optional[TreeRan
     # that is not empty).
     last_available_entries: int = 0
 
+    # How many entries are in each tree that was assigned in this task.
+    trees_with_entries: Dict[str, int] = {}
+
     for file_n, (treename, filename, thistreepercstart, thistreepercend) in enumerate(
             zip(percrange.treenames, percrange.filenames, treepercstarts, treepercends)):
 
@@ -269,7 +285,11 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Optional[TreeRan
         # cluster boundary are included in the list. Example:
         # [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         clusters, entries = get_clusters_and_entries(treename, filename)
-        if entries is None:
+
+        fullpath = filename + "?#" + treename
+        trees_with_entries[fullpath] = entries
+
+        if entries == 0:
             # The tree is empty.
             continue
 
@@ -324,7 +344,7 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Optional[TreeRan
         # - If the computed starting cluster is equal to the ending cluster.
         # These would effectively lead to creating a TChain with zero usable
         # entries.
-        return None
+        return None, TaskTreeEntries()
 
     # The ending entry w.r.t. the chain of this task is defined as:
     # The total amount of entries in the chain minus the entries of the last tree
@@ -334,5 +354,12 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Optional[TreeRan
     # processed in that tree.
     globalend = chain_entries_so_far - last_available_entries + tree_endentry_at_cluster_boundary
 
-    return TreeRange(percrange.id, treenames, filenames, treesnentries, localstarts, localends,
-                     globalstart, globalend, percrange.friendinfo)
+    # Store information about entries of the trees in this task and
+    # the actual amount of entries that will be processed.
+    processed_entries = globalend - globalstart
+    entries_in_trees = TaskTreeEntries(processed_entries, trees_with_entries)
+
+    treerange = TreeRange(percrange.id, treenames, filenames, treesnentries, localstarts,
+                          localends, globalstart, globalend, percrange.friendinfo)
+
+    return treerange, entries_in_trees
