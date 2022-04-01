@@ -3949,16 +3949,6 @@ int RootClingMain(int argc,
               char **argv,
               bool isGenreflex = false)
 {
-   // Define Options aliasses
-   auto &opts = llvm::cl::getRegisteredOptions();
-   auto &optHelp = *opts["help"];
-   llvm::cl::alias optHelpAlias1("h",
-                      llvm::cl::desc("Alias for -help"),
-                      llvm::cl::aliasopt(optHelp));
-   llvm::cl::alias optHelpAlias2("?",
-                      llvm::cl::desc("Alias for -help"),
-                      llvm::cl::aliasopt(optHelp));
-
    // Set number of required arguments. We cannot do this globally since it
    // would interfere with LLVM's option parsing.
    gOptDictionaryFileName.setNumOccurrencesFlag(llvm::cl::Required);
@@ -3993,6 +3983,16 @@ int RootClingMain(int argc,
 
    // Hide options from llvm which we got from static initialization of libCling.
    llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions);
+
+   // Define Options aliasses
+   auto &opts = llvm::cl::getRegisteredOptions();
+   llvm::cl::Option* optHelp = opts["help"];
+   llvm::cl::alias optHelpAlias1("h",
+                      llvm::cl::desc("Alias for -help"),
+                      llvm::cl::aliasopt(*optHelp));
+   llvm::cl::alias optHelpAlias2("?",
+                      llvm::cl::desc("Alias for -help"),
+                      llvm::cl::aliasopt(*optHelp));
 
    llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
 
