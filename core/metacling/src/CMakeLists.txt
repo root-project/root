@@ -128,6 +128,12 @@ if(MSVC)
       __std_terminate
       cling_runtime_internal_throwIfInvalidPointer
   )
+  if(CMAKE_CXX_STANDARD GREATER 14)
+    set(cling_exports ${cling_exports}
+      _Smtx_lock_shared
+      _Smtx_unlock_shared
+    )
+  endif()
   if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
     set(cling_exports ${cling_exports}
       ??2@YAPEAX_K@Z
