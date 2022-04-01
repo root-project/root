@@ -90,6 +90,15 @@ if (NOT ROOT_builtin_nlohmannjson_FOUND)
   include(CMakeFindDependencyMacro)
   find_dependency(nlohmann_json @nlohmann_json_VERSION@)
 endif()
+if(ROOT_minuit2_mpi_FOUND)
+  include(CMakeFindDependencyMacro)
+  find_dependency(MPI)
+endif()
+if(ROOT_minuit2_omp_FOUND)
+  include(CMakeFindDependencyMacro)
+  find_dependency(OpenMP)
+  find_dependency(Threads)
+endif()
 
 #----------------------------------------------------------------------------
 # Now set them to ROOT_LIBRARIES
