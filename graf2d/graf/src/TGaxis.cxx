@@ -2578,8 +2578,7 @@ void TGaxis::SetFunction(const char *funcname)
 /// \param[in] labFont   New label font
 /// \param[in] labText   New label text
 ///
-/// If an attribute should not be changed just give the value
-/// "-1".The following macro gives an example:
+/// #### Example:
 ///
 /// Begin_Macro(source)
 /// {
@@ -2600,7 +2599,12 @@ void TGaxis::SetFunction(const char *funcname)
 /// }
 /// End_Macro
 ///
-/// If labnum=0 the list of modified labels is reset.
+///  #### Notes:
+///
+///  - If an attribute should not be changed just give the value "-1".
+///  - If labnum=0 the list of modified labels is reset.
+///  - To erase a label set labSize to 0.
+///  - If labText is not specified or is an empty string, the text label is not changed.
 
 void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
                                 Int_t labAlign, Int_t labColor, Int_t labFont,
