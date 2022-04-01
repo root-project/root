@@ -1931,8 +1931,7 @@ bool TCling::RegisterPrebuiltModulePath(const std::string &FullPath,
    FileManager &FM = PP.getFileManager();
    // FIXME: In a ROOT session we can add an include path (through .I /inc/path)
    // We should look for modulemap files there too.
-   const DirectoryEntry *DE = FM.getDirectory(FullPath);
-   if (DE) {
+   if (auto DE = FM.getOptionalDirectoryRef(FullPath)) {
       HeaderSearch &HS = PP.getHeaderSearchInfo();
       HeaderSearchOptions &HSOpts = HS.getHeaderSearchOpts();
       const auto &ModPaths = HSOpts.PrebuiltModulePaths;
