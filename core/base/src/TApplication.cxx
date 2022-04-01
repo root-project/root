@@ -106,7 +106,7 @@ TApplication::TApplication() :
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an application environment. The application environment
 /// provides an interface to the graphics system and eventloop
-/// (be it X, Windows, MacOS or BeOS). After creating the application
+/// (be it X, Windows, macOS or BeOS). After creating the application
 /// object start the eventloop by calling its Run() method. The command
 /// line options recognized by TApplication are described in the GetOptions()
 /// method. The recognized options are removed from the argument array.
@@ -1051,12 +1051,30 @@ void TApplication::Help(const char *line)
    if ((strippedCommand == ".help") || (strippedCommand == ".?")) {
       gInterpreter->ProcessLine(line);
       Printf("\nROOT special commands.");
-      Printf("==============================================================================");
-      Printf("   .pwd                : show current directory, pad and style");
-      Printf("   .ls                 : list contents of current directory");
-      Printf("   .which [file]       : shows path of macro file");
-      Printf("   .help Class         : opens the reference guide for that class (or .?)");
-      Printf("   .help Class::Member : opens the reference guide for function/member (or .?)");
+      Printf(" ==============================================================================");
+      Printf("   .L <filename>[flags]: load the given file with optional flags like\n"
+             "                         + to compile or ++ to force recompile.\n"
+             "                         Type .? TSystem::CompileMacro for a list of all flags.");
+      Printf("   .(x|X) <filename>[flags](args) :\n"
+             "                         same as .L <filename>[flags] and runs then a function\n"
+             "                         with signature: ret_type filename(args).");
+      Printf("   .credits            : show credits");
+      Printf("   .demo               : launch GUI demo");
+      Printf("   .help Class::Member : open reference guide for that class member (or .?).\n"
+             "                         Specifying '::Member' is optional.");
+      Printf("   .help edit          : show line editing shortcuts (or .?)");
+      Printf("   .license            : show license");
+      Printf("   .ls                 : list contents of current TDirectory");
+      Printf("   .pwd                : show current TDirectory, pad and style");
+      Printf("   .quit (or .exit)    : quit ROOT (long form of .q)");
+      Printf("   .R [user@]host[:dir] [-l user] [-d dbg] [script] :\n"
+             "                         launch process in a remote host");
+      Printf("   .qqq                : quit ROOT - mandatory");
+      Printf("   .qqqqq              : exit process immediately");
+      Printf("   .qqqqqqq            : abort process");
+      Printf("   .which [file]       : show path of macro file");
+      Printf("   .![OS_command]      : execute OS-specific shell command");
+      Printf("   .!root -?           : print ROOT usage (CLI options)");
       return;
    } else {
       // If the user wants to use the extended ".help scopeName" command to access
