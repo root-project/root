@@ -1091,6 +1091,70 @@ void TApplication::Help(const char *line)
       }
       // We strip the command line after removing ".help" or ".?".
       strippedCommand = strippedCommand.Strip(TString::kBoth);
+
+      if (strippedCommand == "edit") {
+         Printf("\nROOT terminal keyboard shortcuts (GNU-readline style).");
+         #ifdef R__MACOSX
+         #define FOOTNOTE " *"
+         Printf("* Some of these commands might be intercepted by macOS predefined system shortcuts.");
+         // https://apple.stackexchange.com/questions/18043/how-can-i-make-ctrlright-left-arrow-stop-changing-desktops-in-lion
+         #else
+         #define FOOTNOTE ""
+         #endif
+         Printf(" ==============================================================================");
+         Printf("   Arrow_Left       : move cursor left [Ctrl+B]");
+         Printf("   Arrow_Right      : move cursor right [Ctrl+F] [Ctrl+G]");
+         #ifdef R__MACOSX
+         Printf("   Fn+Arrow_Left    : move cursor to beginning of line [Ctrl+A]");
+         #else
+         Printf("   Home             : move cursor to beginning of line [Ctrl+A]");
+         #endif
+         #ifdef R__MACOSX
+         Printf("   Fn+Arrow_Right   : move cursor to end of line [Ctrl+E]");
+         #else
+         Printf("   End              : move cursor to end of line [Ctrl+E]");
+         #endif
+         Printf("   Ctrl+Arrow_Left  : jump to previous word [Esc,B] [Alt,B]" FOOTNOTE);
+         Printf("   Ctrl+Arrow_Right : jump to next word [Esc,F] [Alt,F]" FOOTNOTE);
+
+         Printf("   Backspace        : delete previous character [Ctrl+H]");
+         Printf("   Del              : delete next character [Ctrl+D]");
+         Printf("   Esc,Backspace    : delete previous word [Ctrl+W] [Esc,Ctrl+H] [Alt+Backspace] [Esc,Del] [Esc,Ctrl+Del]" FOOTNOTE);// Del is 0x7F on macOS
+         Printf("   Ctrl+Del         : delete next word [Esc,D] [Alt,D]" FOOTNOTE);
+         Printf("   Ctrl+U           : cut all characters between cursor and start of line");
+         Printf("   Ctrl+K           : cut all characters between cursor and end of line");
+
+         Printf("   Ctrl+T           : transpose characters");
+         Printf("   Esc,C            : character to upper and jump to next word");
+         Printf("   Esc,L            : word to lower case and jump to its end");
+         Printf("   Esc,U            : word to upper case and jump to its end");
+         Printf("   Ctrl+Shift+C     : copy clipboard content");
+         Printf("   Ctrl+Shift+V     : paste clipboard content [Ctrl+Y] [Alt+Y]");
+         #ifdef R__MACOSX
+         Printf("   Fn+Enter         : toggle overwrite mode");
+         #else
+         Printf("   Ins              : toggle overwrite mode");
+         #endif
+
+         Printf("   Ctrl+_           : undo last keypress action");
+         Printf("   Tab              : autocomplete command or print suggestions [Ctrl+I] [Esc,Tab]");
+         Printf("   Enter            : execute command [Ctrl+J] [Ctrl+M]");
+         Printf("   Ctrl+L           : clear prompt screen");
+         Printf("   Ctrl+D           : quit ROOT (if empty line)");
+         Printf("   Ctrl+C           : send kSigInt interrupt signal");
+         Printf("   Ctrl+Z           : send kSigStop pause job signal");
+
+         Printf("   Arrow_Down       : navigate downwards in command history [Ctrl+N]");
+         Printf("   Arrow_Up         : navigate upwards in command history [Ctrl+P]");
+         Printf("   Ctrl+R ; Ctrl+S  : search command in your history by typing a string.\n"
+                "                      Use Backspace if you mistyped (but not arrows).\n"
+                "                      Press Ctrl+R (Ctrl+S) repeateadly to navigate matches in reverse (forward) order");
+         Printf("   Arrow_Right      : after Ctrl+R (Ctrl+S), select current match of the history search\n"
+                "                      [Ctrl+O] [Enter] [Ctrl+J] [Ctrl+M] [Arrow_Left] [Esc,Esc].\n"
+                "                      Use Ctrl+F or Ctrl+G to cancel search and revert original line");
+
+         return;
+      }
       // We call the function what handles the extended ".help scopeName" command.
       OpenReferenceGuideFor(strippedCommand);
    }
