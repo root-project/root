@@ -4,6 +4,7 @@ if (NOT builtin_clang)
 endif()
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
+set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
 set(LLVM_APPEND_VC_REV OFF CACHE BOOL "")
 set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "")
 set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
