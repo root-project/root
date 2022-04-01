@@ -18,10 +18,9 @@ namespace driver {
 namespace tools {
 namespace wasm {
 
-class LLVM_LIBRARY_VISIBILITY Linker : public GnuTool {
+class LLVM_LIBRARY_VISIBILITY Linker : public Tool {
 public:
-  explicit Linker(const ToolChain &TC)
-      : GnuTool("wasm::Linker", "linker", TC) {}
+  explicit Linker(const ToolChain &TC) : Tool("wasm::Linker", "linker", TC) {}
   bool isLinkJob() const override { return true; }
   bool hasIntegratedCPP() const override { return false; }
   std::string getLinkerPath(const llvm::opt::ArgList &Args) const;
@@ -71,6 +70,10 @@ private:
   const char *getDefaultLinker() const override { return "wasm-ld"; }
 
   Tool *buildLinker() const override;
+
+  std::string getMultiarchTriple(const Driver &D,
+                                 const llvm::Triple &TargetTriple,
+                                 StringRef SysRoot) const override;
 };
 
 } // end namespace toolchains

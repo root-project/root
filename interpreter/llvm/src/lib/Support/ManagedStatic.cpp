@@ -12,30 +12,23 @@
 
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Config/config.h"
-#include "llvm/Support/Mutex.h"
-#include "llvm/Support/MutexGuard.h"
 #include "llvm/Support/Threading.h"
 #include <cassert>
+#include <mutex>
 using namespace llvm;
 
 static const ManagedStaticBase *StaticList = nullptr;
-static sys::Mutex *ManagedStaticMutex = nullptr;
-static llvm::once_flag mutex_init_flag;
 
-static void initializeMutex() {
-  ManagedStaticMutex = new sys::Mutex();
-}
-
-static sys::Mutex* getManagedStaticMutex() {
-  llvm::call_once(mutex_init_flag, initializeMutex);
-  return ManagedStaticMutex;
+static std::recursive_mutex *getManagedStaticMutex() {
+  static std::recursive_mutex m;
+  return &m;
 }
 
 void ManagedStaticBase::RegisterManagedStatic(void *(*Creator)(),
                                               void (*Deleter)(void*)) const {
   assert(Creator);
   if (llvm_is_multithreaded()) {
-    MutexGuard Lock(*getManagedStaticMutex());
+    std::lock_guard<std::recursive_mutex> Lock(*getManagedStaticMutex());
 
     if (!Ptr.load(std::memory_order_relaxed)) {
       void *Tmp = Creator();
@@ -76,9 +69,10 @@ void ManagedStaticBase::destroy() const {
 }
 
 /// llvm_shutdown - Deallocate and destroy all ManagedStatic variables.
+/// IMPORTANT: it's only safe to call llvm_shutdown() in single thread,
+/// without any other threads executing LLVM APIs.
+/// llvm_shutdown() should be the last use of LLVM APIs.
 void llvm::llvm_shutdown() {
-  MutexGuard Lock(*getManagedStaticMutex());
-
   while (StaticList)
     StaticList->destroy();
 }

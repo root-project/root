@@ -8,6 +8,7 @@
 
 #include "MCTargetDesc/SystemZMCFixups.h"
 #include "MCTargetDesc/SystemZMCTargetDesc.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCFixupKindInfo.h"
@@ -49,23 +50,18 @@ public:
   unsigned getNumFixupKinds() const override {
     return SystemZ::NumTargetFixupKinds;
   }
+  Optional<MCFixupKind> getFixupKind(StringRef Name) const override;
   const MCFixupKindInfo &getFixupKindInfo(MCFixupKind Kind) const override;
+  bool shouldForceRelocation(const MCAssembler &Asm, const MCFixup &Fixup,
+                             const MCValue &Target) override;
   void applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
                   const MCValue &Target, MutableArrayRef<char> Data,
                   uint64_t Value, bool IsResolved,
                   const MCSubtargetInfo *STI) const override;
-  bool mayNeedRelaxation(const MCInst &Inst,
-                         const MCSubtargetInfo &STI) const override {
-    return false;
-  }
   bool fixupNeedsRelaxation(const MCFixup &Fixup, uint64_t Value,
                             const MCRelaxableFragment *Fragment,
                             const MCAsmLayout &Layout) const override {
     return false;
-  }
-  void relaxInstruction(const MCInst &Inst, const MCSubtargetInfo &STI,
-                        MCInst &Res) const override {
-    llvm_unreachable("SystemZ does do not have assembler relaxation");
   }
   bool writeNopData(raw_ostream &OS, uint64_t Count) const override;
   std::unique_ptr<MCObjectTargetWriter>
@@ -74,6 +70,22 @@ public:
   }
 };
 } // end anonymous namespace
+
+Optional<MCFixupKind> SystemZMCAsmBackend::getFixupKind(StringRef Name) const {
+  unsigned Type = llvm::StringSwitch<unsigned>(Name)
+#define ELF_RELOC(X, Y) .Case(#X, Y)
+#include "llvm/BinaryFormat/ELFRelocs/SystemZ.def"
+#undef ELF_RELOC
+			.Case("BFD_RELOC_NONE", ELF::R_390_NONE)
+			.Case("BFD_RELOC_8", ELF::R_390_8)
+			.Case("BFD_RELOC_16", ELF::R_390_16)
+			.Case("BFD_RELOC_32", ELF::R_390_32)
+			.Case("BFD_RELOC_64", ELF::R_390_64)
+			.Default(-1u);
+  if (Type != -1u)
+    return static_cast<MCFixupKind>(FirstLiteralRelocationKind + Type);
+  return None;
+}
 
 const MCFixupKindInfo &
 SystemZMCAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
@@ -85,12 +97,23 @@ SystemZMCAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
     { "FK_390_TLS_CALL", 0, 0, 0 }
   };
 
+  // Fixup kinds from .reloc directive are like R_390_NONE. They
+  // do not require any extra processing.
+  if (Kind >= FirstLiteralRelocationKind)
+    return MCAsmBackend::getFixupKindInfo(FK_NONE);
+
   if (Kind < FirstTargetFixupKind)
     return MCAsmBackend::getFixupKindInfo(Kind);
 
   assert(unsigned(Kind - FirstTargetFixupKind) < getNumFixupKinds() &&
          "Invalid kind!");
   return Infos[Kind - FirstTargetFixupKind];
+}
+
+bool SystemZMCAsmBackend::shouldForceRelocation(const MCAssembler &,
+						const MCFixup &Fixup,
+						const MCValue &) {
+  return Fixup.getKind() >= FirstLiteralRelocationKind;
 }
 
 void SystemZMCAsmBackend::applyFixup(const MCAssembler &Asm,
@@ -100,6 +123,8 @@ void SystemZMCAsmBackend::applyFixup(const MCAssembler &Asm,
                                      bool IsResolved,
                                      const MCSubtargetInfo *STI) const {
   MCFixupKind Kind = Fixup.getKind();
+  if (Kind >= FirstLiteralRelocationKind)
+    return;
   unsigned Offset = Fixup.getOffset();
   unsigned BitSize = getFixupKindInfo(Kind).TargetSize;
   unsigned Size = (BitSize + 7) / 8;

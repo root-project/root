@@ -16,6 +16,7 @@ set(LLVM_ENABLE_BACKTRACES OFF CACHE BOOL "")
 set(LLVM_ENABLE_MODULES ON CACHE BOOL "")
 set(LLVM_EXTERNALIZE_DEBUGINFO ON CACHE BOOL "")
 set(CLANG_PLUGIN_SUPPORT OFF CACHE BOOL "")
+set(CLANG_SPAWN_CC1 ON CACHE BOOL "")
 set(BUG_REPORT_URL "http://developer.apple.com/bugreporter/" CACHE STRING "")
 
 set(LLVM_BUILD_EXTERNAL_COMPILER_RT ON CACHE BOOL "Build Compiler-RT with just-built clang")
@@ -55,6 +56,17 @@ set(LLVM_TOOLCHAIN_TOOLS
   llvm-objdump
   llvm-nm
   llvm-size
+  llvm-cxxfilt
+  llvm-config
+  CACHE STRING "")
+
+set(LLVM_BUILD_UTILS ON CACHE BOOL "")
+set(LLVM_INSTALL_UTILS ON CACHE BOOL "")
+set(LLVM_TOOLCHAIN_UTILITIES
+  FileCheck
+  yaml2obj
+  not
+  count
   CACHE STRING "")
 
 set(LLVM_DISTRIBUTION_COMPONENTS
@@ -65,6 +77,7 @@ set(LLVM_DISTRIBUTION_COMPONENTS
   cxx-headers
   Remarks
   ${LLVM_TOOLCHAIN_TOOLS}
+  ${LLVM_TOOLCHAIN_UTILITIES}
   CACHE STRING "")
 
 # test args

@@ -17,22 +17,24 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallSet.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
-#include "llvm/IR/Instruction.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/Operator.h"
 #include <cassert>
 #include <cstdint>
 
 namespace llvm {
 
 class AddOperator;
+class AllocaInst;
 class APInt;
 class AssumptionCache;
 class DominatorTree;
 class GEPOperator;
 class IntrinsicInst;
+class LoadInst;
 class WithOverflowInst;
 struct KnownBits;
 class Loop;
@@ -42,6 +44,8 @@ class OptimizationRemarkEmitter;
 class StringRef;
 class TargetLibraryInfo;
 class Value;
+
+constexpr unsigned MaxAnalysisRecursionDepth = 6;
 
   /// Determine which bits of V are known to be either zero or one and return
   /// them in the KnownZero/KnownOne bit sets.
@@ -59,9 +63,34 @@ class Value;
                         OptimizationRemarkEmitter *ORE = nullptr,
                         bool UseInstrInfo = true);
 
+  /// Determine which bits of V are known to be either zero or one and return
+  /// them in the KnownZero/KnownOne bit sets.
+  ///
+  /// This function is defined on values with integer type, values with pointer
+  /// type, and vectors of integers.  In the case
+  /// where V is a vector, the known zero and known one values are the
+  /// same width as the vector element, and the bit is set only if it is true
+  /// for all of the demanded elements in the vector.
+  void computeKnownBits(const Value *V, const APInt &DemandedElts,
+                        KnownBits &Known, const DataLayout &DL,
+                        unsigned Depth = 0, AssumptionCache *AC = nullptr,
+                        const Instruction *CxtI = nullptr,
+                        const DominatorTree *DT = nullptr,
+                        OptimizationRemarkEmitter *ORE = nullptr,
+                        bool UseInstrInfo = true);
+
   /// Returns the known bits rather than passing by reference.
   KnownBits computeKnownBits(const Value *V, const DataLayout &DL,
                              unsigned Depth = 0, AssumptionCache *AC = nullptr,
+                             const Instruction *CxtI = nullptr,
+                             const DominatorTree *DT = nullptr,
+                             OptimizationRemarkEmitter *ORE = nullptr,
+                             bool UseInstrInfo = true);
+
+  /// Returns the known bits rather than passing by reference.
+  KnownBits computeKnownBits(const Value *V, const APInt &DemandedElts,
+                             const DataLayout &DL, unsigned Depth = 0,
+                             AssumptionCache *AC = nullptr,
                              const Instruction *CxtI = nullptr,
                              const DominatorTree *DT = nullptr,
                              OptimizationRemarkEmitter *ORE = nullptr,
@@ -185,7 +214,7 @@ class Value;
 
   /// Map a call instruction to an intrinsic ID.  Libcalls which have equivalent
   /// intrinsics are treated as-if they were intrinsics.
-  Intrinsic::ID getIntrinsicForCallSite(ImmutableCallSite ICS,
+  Intrinsic::ID getIntrinsicForCallSite(const CallBase &CB,
                                         const TargetLibraryInfo *TLI);
 
   /// Return true if we can prove that the specified FP value is never equal to
@@ -202,6 +231,12 @@ class Value;
   ///   x > +0 --> true
   ///   x < -0 --> false
   bool CannotBeOrderedLessThanZero(const Value *V, const TargetLibraryInfo *TLI);
+
+  /// Return true if the floating-point scalar value is not an infinity or if
+  /// the floating-point vector value has no infinities. Return false if a value
+  /// could ever be infinity.
+  bool isKnownNeverInfinity(const Value *V, const TargetLibraryInfo *TLI,
+                            unsigned Depth = 0);
 
   /// Return true if the floating-point scalar value is not a NaN or if the
   /// floating-point vector value has no NaN elements. Return false if a value
@@ -226,9 +261,9 @@ class Value;
   /// return undef.
   Value *isBytewiseValue(Value *V, const DataLayout &DL);
 
-  /// Given an aggregrate and an sequence of indices, see if the scalar value
+  /// Given an aggregate and an sequence of indices, see if the scalar value
   /// indexed is already around as a register, for example if it were inserted
-  /// directly into the aggregrate.
+  /// directly into the aggregate.
   ///
   /// If InsertBefore is not null, this function will duplicate (modified)
   /// insertvalues when a part of a nested struct is extracted.
@@ -242,19 +277,21 @@ class Value;
   /// This is a wrapper around Value::stripAndAccumulateConstantOffsets that
   /// creates and later unpacks the required APInt.
   inline Value *GetPointerBaseWithConstantOffset(Value *Ptr, int64_t &Offset,
-                                                 const DataLayout &DL) {
+                                                 const DataLayout &DL,
+                                                 bool AllowNonInbounds = true) {
     APInt OffsetAPInt(DL.getIndexTypeSizeInBits(Ptr->getType()), 0);
     Value *Base =
-        Ptr->stripAndAccumulateConstantOffsets(DL, OffsetAPInt,
-                                               /* AllowNonInbounds */ true);
+        Ptr->stripAndAccumulateConstantOffsets(DL, OffsetAPInt, AllowNonInbounds);
+
     Offset = OffsetAPInt.getSExtValue();
     return Base;
   }
-  inline const Value *GetPointerBaseWithConstantOffset(const Value *Ptr,
-                                                       int64_t &Offset,
-                                                       const DataLayout &DL) {
-    return GetPointerBaseWithConstantOffset(const_cast<Value *>(Ptr), Offset,
-                                            DL);
+  inline const Value *
+  GetPointerBaseWithConstantOffset(const Value *Ptr, int64_t &Offset,
+                                   const DataLayout &DL,
+                                   bool AllowNonInbounds = true) {
+    return GetPointerBaseWithConstantOffset(const_cast<Value *>(Ptr), Offset, DL,
+                                            AllowNonInbounds);
   }
 
   /// Returns true if the GEP is based on a pointer to a string (array of
@@ -307,34 +344,40 @@ class Value;
   uint64_t GetStringLength(const Value *V, unsigned CharSize = 8);
 
   /// This function returns call pointer argument that is considered the same by
-  /// aliasing rules. You CAN'T use it to replace one value with another.
-  const Value *getArgumentAliasingToReturnedPointer(const CallBase *Call);
-  inline Value *getArgumentAliasingToReturnedPointer(CallBase *Call) {
+  /// aliasing rules. You CAN'T use it to replace one value with another. If
+  /// \p MustPreserveNullness is true, the call must preserve the nullness of
+  /// the pointer.
+  const Value *getArgumentAliasingToReturnedPointer(const CallBase *Call,
+                                                    bool MustPreserveNullness);
+  inline Value *
+  getArgumentAliasingToReturnedPointer(CallBase *Call,
+                                       bool MustPreserveNullness) {
     return const_cast<Value *>(getArgumentAliasingToReturnedPointer(
-        const_cast<const CallBase *>(Call)));
+        const_cast<const CallBase *>(Call), MustPreserveNullness));
   }
 
-  // {launder,strip}.invariant.group returns pointer that aliases its argument,
-  // and it only captures pointer by returning it.
-  // These intrinsics are not marked as nocapture, because returning is
-  // considered as capture. The arguments are not marked as returned neither,
-  // because it would make it useless.
+  /// {launder,strip}.invariant.group returns pointer that aliases its argument,
+  /// and it only captures pointer by returning it.
+  /// These intrinsics are not marked as nocapture, because returning is
+  /// considered as capture. The arguments are not marked as returned neither,
+  /// because it would make it useless. If \p MustPreserveNullness is true,
+  /// the intrinsic must preserve the nullness of the pointer.
   bool isIntrinsicReturningPointerAliasingArgumentWithoutCapturing(
-      const CallBase *Call);
+      const CallBase *Call, bool MustPreserveNullness);
 
   /// This method strips off any GEP address adjustments and pointer casts from
   /// the specified value, returning the original object being addressed. Note
   /// that the returned value has pointer type if the specified value does. If
   /// the MaxLookup value is non-zero, it limits the number of instructions to
   /// be stripped off.
-  Value *GetUnderlyingObject(Value *V, const DataLayout &DL,
-                             unsigned MaxLookup = 6);
-  inline const Value *GetUnderlyingObject(const Value *V, const DataLayout &DL,
-                                          unsigned MaxLookup = 6) {
-    return GetUnderlyingObject(const_cast<Value *>(V), DL, MaxLookup);
+  const Value *getUnderlyingObject(const Value *V, unsigned MaxLookup = 6);
+  inline Value *getUnderlyingObject(Value *V, unsigned MaxLookup = 6) {
+    // Force const to avoid infinite recursion.
+    const Value *VConst = V;
+    return const_cast<Value *>(getUnderlyingObject(VConst, MaxLookup));
   }
 
-  /// This method is similar to GetUnderlyingObject except that it can
+  /// This method is similar to getUnderlyingObject except that it can
   /// look through phi and select instructions and return multiple objects.
   ///
   /// If LoopInfo is passed, loop phis are further analyzed.  If a pointer
@@ -362,19 +405,36 @@ class Value;
   /// Since A[i] and A[i-1] are independent pointers, getUnderlyingObjects
   /// should not assume that Curr and Prev share the same underlying object thus
   /// it shouldn't look through the phi above.
-  void GetUnderlyingObjects(const Value *V,
+  void getUnderlyingObjects(const Value *V,
                             SmallVectorImpl<const Value *> &Objects,
-                            const DataLayout &DL, LoopInfo *LI = nullptr,
-                            unsigned MaxLookup = 6);
+                            LoopInfo *LI = nullptr, unsigned MaxLookup = 6);
 
-  /// This is a wrapper around GetUnderlyingObjects and adds support for basic
+  /// This is a wrapper around getUnderlyingObjects and adds support for basic
   /// ptrtoint+arithmetic+inttoptr sequences.
   bool getUnderlyingObjectsForCodeGen(const Value *V,
-                            SmallVectorImpl<Value *> &Objects,
-                            const DataLayout &DL);
+                                      SmallVectorImpl<Value *> &Objects);
+
+  /// Returns unique alloca where the value comes from, or nullptr.
+  /// If OffsetZero is true check that V points to the begining of the alloca.
+  AllocaInst *findAllocaForValue(Value *V, bool OffsetZero = false);
+  inline const AllocaInst *findAllocaForValue(const Value *V,
+                                              bool OffsetZero = false) {
+    return findAllocaForValue(const_cast<Value *>(V), OffsetZero);
+  }
 
   /// Return true if the only users of this pointer are lifetime markers.
   bool onlyUsedByLifetimeMarkers(const Value *V);
+
+  /// Return true if the only users of this pointer are lifetime markers or
+  /// droppable instructions.
+  bool onlyUsedByLifetimeMarkersOrDroppableInsts(const Value *V);
+
+  /// Return true if speculation of the given load must be suppressed to avoid
+  /// ordering or interfering with an active sanitizer.  If not suppressed,
+  /// dereferenceability and alignment must be proven separately.  Note: This
+  /// is only needed for raw reasoning; if you use the interface below
+  /// (isSafeToSpeculativelyExecute), this is handled internally.
+  bool mustSuppressSpeculation(const LoadInst &LI);
 
   /// Return true if the instruction does not have any effects besides
   /// calculating the result and does not have undefined behavior.
@@ -401,7 +461,8 @@ class Value;
   /// for such instructions, moving them may change the resulting value.
   bool isSafeToSpeculativelyExecute(const Value *V,
                                     const Instruction *CtxI = nullptr,
-                                    const DominatorTree *DT = nullptr);
+                                    const DominatorTree *DT = nullptr,
+                                    const TargetLibraryInfo *TLI = nullptr);
 
   /// Returns true if the result or effects of the given instructions \p I
   /// depend on or influence global memory.
@@ -485,7 +546,10 @@ class Value;
 
   /// Determine the possible constant range of an integer or vector of integer
   /// value. This is intended as a cheap, non-recursive check.
-  ConstantRange computeConstantRange(const Value *V, bool UseInstrInfo = true);
+  ConstantRange computeConstantRange(const Value *V, bool UseInstrInfo = true,
+                                     AssumptionCache *AC = nullptr,
+                                     const Instruction *CtxI = nullptr,
+                                     unsigned Depth = 0);
 
   /// Return true if this function can prove that the instruction I will
   /// always transfer execution to one of its successors (including the next
@@ -516,35 +580,78 @@ class Value;
   bool isGuaranteedToExecuteForEveryIteration(const Instruction *I,
                                               const Loop *L);
 
-  /// Return true if this function can prove that I is guaranteed to yield
-  /// full-poison (all bits poison) if at least one of its operands are
-  /// full-poison (all bits poison).
-  ///
-  /// The exact rules for how poison propagates through instructions have
-  /// not been settled as of 2015-07-10, so this function is conservative
-  /// and only considers poison to be propagated in uncontroversial
-  /// cases. There is no attempt to track values that may be only partially
+  /// Return true if I yields poison or raises UB if any of its operands is
   /// poison.
-  bool propagatesFullPoison(const Instruction *I);
+  /// Formally, given I = `r = op v1 v2 .. vN`, propagatesPoison returns true
+  /// if, for all i, r is evaluated to poison or op raises UB if vi = poison.
+  /// If vi is a vector or an aggregate and r is a single value, any poison
+  /// element in vi should make r poison or raise UB.
+  /// To filter out operands that raise UB on poison, you can use
+  /// getGuaranteedNonPoisonOp.
+  bool propagatesPoison(const Operator *I);
 
-  /// Return either nullptr or an operand of I such that I will trigger
-  /// undefined behavior if I is executed and that operand has a full-poison
-  /// value (all bits poison).
-  const Value *getGuaranteedNonFullPoisonOp(const Instruction *I);
+  /// Insert operands of I into Ops such that I will trigger undefined behavior
+  /// if I is executed and that operand has a poison value.
+  void getGuaranteedNonPoisonOps(const Instruction *I,
+                                 SmallPtrSetImpl<const Value *> &Ops);
+  /// Insert operands of I into Ops such that I will trigger undefined behavior
+  /// if I is executed and that operand is not a well-defined value
+  /// (i.e. has undef bits or poison).
+  void getGuaranteedWellDefinedOps(const Instruction *I,
+                                   SmallPtrSetImpl<const Value *> &Ops);
 
-  /// Return true if the given instruction must trigger undefined behavior.
+  /// Return true if the given instruction must trigger undefined behavior
   /// when I is executed with any operands which appear in KnownPoison holding
-  /// a full-poison value at the point of execution.
+  /// a poison value at the point of execution.
   bool mustTriggerUB(const Instruction *I,
                      const SmallSet<const Value *, 16>& KnownPoison);
 
-  /// Return true if this function can prove that if PoisonI is executed
-  /// and yields a full-poison value (all bits poison), then that will
-  /// trigger undefined behavior.
+  /// Return true if this function can prove that if Inst is executed
+  /// and yields a poison value or undef bits, then that will trigger
+  /// undefined behavior.
   ///
   /// Note that this currently only considers the basic block that is
-  /// the parent of I.
-  bool programUndefinedIfFullPoison(const Instruction *PoisonI);
+  /// the parent of Inst.
+  bool programUndefinedIfUndefOrPoison(const Instruction *Inst);
+  bool programUndefinedIfPoison(const Instruction *Inst);
+
+  /// canCreateUndefOrPoison returns true if Op can create undef or poison from
+  /// non-undef & non-poison operands.
+  /// For vectors, canCreateUndefOrPoison returns true if there is potential
+  /// poison or undef in any element of the result when vectors without
+  /// undef/poison poison are given as operands.
+  /// For example, given `Op = shl <2 x i32> %x, <0, 32>`, this function returns
+  /// true. If Op raises immediate UB but never creates poison or undef
+  /// (e.g. sdiv I, 0), canCreatePoison returns false.
+  ///
+  /// canCreatePoison returns true if Op can create poison from non-poison
+  /// operands.
+  bool canCreateUndefOrPoison(const Operator *Op);
+  bool canCreatePoison(const Operator *Op);
+
+  /// Return true if V is poison given that ValAssumedPoison is already poison.
+  /// For example, if ValAssumedPoison is `icmp X, 10` and V is `icmp X, 5`,
+  /// impliesPoison returns true.
+  bool impliesPoison(const Value *ValAssumedPoison, const Value *V);
+
+  /// Return true if this function can prove that V does not have undef bits
+  /// and is never poison. If V is an aggregate value or vector, check whether
+  /// all elements (except padding) are not undef or poison.
+  /// Note that this is different from canCreateUndefOrPoison because the
+  /// function assumes Op's operands are not poison/undef.
+  ///
+  /// If CtxI and DT are specified this method performs flow-sensitive analysis
+  /// and returns true if it is guaranteed to be never undef or poison
+  /// immediately before the CtxI.
+  bool isGuaranteedNotToBeUndefOrPoison(const Value *V,
+                                        AssumptionCache *AC = nullptr,
+                                        const Instruction *CtxI = nullptr,
+                                        const DominatorTree *DT = nullptr,
+                                        unsigned Depth = 0);
+  bool isGuaranteedNotToBePoison(const Value *V, AssumptionCache *AC = nullptr,
+                                 const Instruction *CtxI = nullptr,
+                                 const DominatorTree *DT = nullptr,
+                                 unsigned Depth = 0);
 
   /// Specific patterns of select instructions we can match.
   enum SelectPatternFlavor {
@@ -605,12 +712,12 @@ class Value;
   SelectPatternResult matchSelectPattern(Value *V, Value *&LHS, Value *&RHS,
                                          Instruction::CastOps *CastOp = nullptr,
                                          unsigned Depth = 0);
+
   inline SelectPatternResult
-  matchSelectPattern(const Value *V, const Value *&LHS, const Value *&RHS,
-                     Instruction::CastOps *CastOp = nullptr) {
-    Value *L = const_cast<Value*>(LHS);
-    Value *R = const_cast<Value*>(RHS);
-    auto Result = matchSelectPattern(const_cast<Value*>(V), L, R);
+  matchSelectPattern(const Value *V, const Value *&LHS, const Value *&RHS) {
+    Value *L = const_cast<Value *>(LHS);
+    Value *R = const_cast<Value *>(RHS);
+    auto Result = matchSelectPattern(const_cast<Value *>(V), L, R);
     LHS = L;
     RHS = R;
     return Result;
@@ -631,9 +738,54 @@ class Value;
   /// For example, signed minimum is the inverse of signed maximum.
   SelectPatternFlavor getInverseMinMaxFlavor(SelectPatternFlavor SPF);
 
+  Intrinsic::ID getInverseMinMaxIntrinsic(Intrinsic::ID MinMaxID);
+
   /// Return the canonical inverse comparison predicate for the specified
   /// minimum/maximum flavor.
   CmpInst::Predicate getInverseMinMaxPred(SelectPatternFlavor SPF);
+
+  /// Return the minimum or maximum constant value for the specified integer
+  /// min/max flavor and type.
+  APInt getMinMaxLimit(SelectPatternFlavor SPF, unsigned BitWidth);
+
+  /// Check if the values in \p VL are select instructions that can be converted
+  /// to a min or max (vector) intrinsic. Returns the intrinsic ID, if such a
+  /// conversion is possible, together with a bool indicating whether all select
+  /// conditions are only used by the selects. Otherwise return
+  /// Intrinsic::not_intrinsic.
+  std::pair<Intrinsic::ID, bool>
+  canConvertToMinOrMaxIntrinsic(ArrayRef<Value *> VL);
+
+  /// Attempt to match a simple first order recurrence cycle of the form:
+  ///   %iv = phi Ty [%Start, %Entry], [%Inc, %backedge]
+  ///   %inc = binop %iv, %step
+  /// OR
+  ///   %iv = phi Ty [%Start, %Entry], [%Inc, %backedge]
+  ///   %inc = binop %step, %iv
+  ///
+  /// A first order recurrence is a formula with the form: X_n = f(X_(n-1))
+  ///
+  /// A couple of notes on subtleties in that definition:
+  /// * The Step does not have to be loop invariant.  In math terms, it can
+  ///   be a free variable.  We allow recurrences with both constant and
+  ///   variable coefficients. Callers may wish to filter cases where Step
+  ///   does not dominate P.
+  /// * For non-commutative operators, we will match both forms.  This
+  ///   results in some odd recurrence structures.  Callers may wish to filter
+  ///   out recurrences where the phi is not the LHS of the returned operator.
+  /// * Because of the structure matched, the caller can assume as a post
+  ///   condition of the match the presence of a Loop with P's parent as it's
+  ///   header *except* in unreachable code.  (Dominance decays in unreachable
+  ///   code.)
+  ///
+  /// NOTE: This is intentional simple.  If you want the ability to analyze
+  /// non-trivial loop conditons, see ScalarEvolution instead.
+  bool matchSimpleRecurrence(const PHINode *P, BinaryOperator *&BO,
+                             Value *&Start, Value *&Step);
+
+  /// Analogous to the above, but starting from the binary operator
+  bool matchSimpleRecurrence(const BinaryOperator *I, PHINode *&P,
+                                    Value *&Start, Value *&Step);
 
   /// Return true if RHS is known to be implied true by LHS.  Return false if
   /// RHS is known to be implied false by LHS.  Otherwise, return None if no
@@ -648,12 +800,27 @@ class Value;
   Optional<bool> isImpliedCondition(const Value *LHS, const Value *RHS,
                                     const DataLayout &DL, bool LHSIsTrue = true,
                                     unsigned Depth = 0);
+  Optional<bool> isImpliedCondition(const Value *LHS,
+                                    CmpInst::Predicate RHSPred,
+                                    const Value *RHSOp0, const Value *RHSOp1,
+                                    const DataLayout &DL, bool LHSIsTrue = true,
+                                    unsigned Depth = 0);
 
   /// Return the boolean condition value in the context of the given instruction
   /// if it is known based on dominating conditions.
   Optional<bool> isImpliedByDomCondition(const Value *Cond,
                                          const Instruction *ContextI,
                                          const DataLayout &DL);
+  Optional<bool> isImpliedByDomCondition(CmpInst::Predicate Pred,
+                                         const Value *LHS, const Value *RHS,
+                                         const Instruction *ContextI,
+                                         const DataLayout &DL);
+
+  /// If Ptr1 is provably equal to Ptr2 plus a constant offset, return that
+  /// offset. For example, Ptr1 might be &A[42], and Ptr2 might be &A[40]. In
+  /// this case offset would be -8.
+  Optional<int64_t> isPointerOffset(const Value *Ptr1, const Value *Ptr2,
+                                    const DataLayout &DL);
 } // end namespace llvm
 
 #endif // LLVM_ANALYSIS_VALUETRACKING_H

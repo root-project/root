@@ -33,6 +33,7 @@
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/PseudoSourceValue.h"
 #include "llvm/CodeGen/TargetFrameLowering.h"
+#include "llvm/CodeGen/TargetInstrInfo.h"
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
@@ -71,6 +72,7 @@
 #include <cstdint>
 #include <iterator>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -78,10 +80,11 @@ using namespace llvm;
 
 #define DEBUG_TYPE "codegen"
 
-static cl::opt<unsigned>
-AlignAllFunctions("align-all-functions",
-                  cl::desc("Force the alignment of all functions."),
-                  cl::init(0), cl::Hidden);
+static cl::opt<unsigned> AlignAllFunctions(
+    "align-all-functions",
+    cl::desc("Force the alignment of all functions in log2 format (e.g. 4 "
+             "means align on 16B boundaries)."),
+    cl::init(0), cl::Hidden);
 
 static const char *getPropertyName(MachineFunctionProperties::Property Prop) {
   using P = MachineFunctionProperties::Property;
@@ -95,6 +98,7 @@ static const char *getPropertyName(MachineFunctionProperties::Property Prop) {
   case P::RegBankSelected: return "RegBankSelected";
   case P::Selected: return "Selected";
   case P::TracksLiveness: return "TracksLiveness";
+  case P::TiedOpsRewritten: return "TiedOpsRewritten";
   }
   llvm_unreachable("Invalid machine function property");
 }
@@ -127,11 +131,10 @@ static inline unsigned getFnStackAlignment(const TargetSubtargetInfo *STI,
                                            const Function &F) {
   if (F.hasFnAttribute(Attribute::StackAlignment))
     return F.getFnStackAlignment();
-  return STI->getFrameLowering()->getStackAlignment();
+  return STI->getFrameLowering()->getStackAlign().value();
 }
 
-MachineFunction::MachineFunction(const Function &F,
-                                 const LLVMTargetMachine &Target,
+MachineFunction::MachineFunction(Function &F, const LLVMTargetMachine &Target,
                                  const TargetSubtargetInfo &STI,
                                  unsigned FunctionNum, MachineModuleInfo &mmi)
     : F(F), Target(Target), STI(&STI), Ctx(mmi.getContext()), MMI(mmi) {
@@ -169,7 +172,7 @@ void MachineFunction::init() {
           F.hasFnAttribute(Attribute::StackAlignment));
 
   if (F.hasFnAttribute(Attribute::StackAlignment))
-    FrameInfo->ensureMaxAlignment(F.getFnStackAlignment());
+    FrameInfo->ensureMaxAlignment(*F.getFnStackAlign());
 
   ConstantPool = new (Allocator) MachineConstantPool(getDataLayout());
   Alignment = STI->getTargetLowering()->getMinFunctionAlignment();
@@ -181,7 +184,7 @@ void MachineFunction::init() {
                          STI->getTargetLowering()->getPrefFunctionAlignment());
 
   if (AlignAllFunctions)
-    Alignment = AlignAllFunctions;
+    Alignment = Align(1ULL << AlignAllFunctions);
 
   JumpTableInfo = nullptr;
 
@@ -200,7 +203,7 @@ void MachineFunction::init() {
          "Target-incompatible DataLayout attached\n");
 
   PSVManager =
-    llvm::make_unique<PseudoSourceValueManager>(*(getSubtarget().
+    std::make_unique<PseudoSourceValueManager>(*(getSubtarget().
                                                   getInstrInfo()));
 }
 
@@ -269,6 +272,10 @@ getOrCreateJumpTableInfo(unsigned EntryKind) {
   return JumpTableInfo;
 }
 
+DenormalMode MachineFunction::getDenormalMode(const fltSemantics &FPType) const {
+  return F.getDenormalMode(FPType);
+}
+
 /// Should we be emitting segmented stack stuff for the function
 bool MachineFunction::shouldSplitStack() const {
   return getFunction().hasFnAttribute("split-stack");
@@ -321,12 +328,28 @@ void MachineFunction::RenumberBlocks(MachineBasicBlock *MBB) {
   MBBNumbering.resize(BlockNo);
 }
 
+/// This method iterates over the basic blocks and assigns their IsBeginSection
+/// and IsEndSection fields. This must be called after MBB layout is finalized
+/// and the SectionID's are assigned to MBBs.
+void MachineFunction::assignBeginEndSections() {
+  front().setIsBeginSection();
+  auto CurrentSectionID = front().getSectionID();
+  for (auto MBBI = std::next(begin()), E = end(); MBBI != E; ++MBBI) {
+    if (MBBI->getSectionID() == CurrentSectionID)
+      continue;
+    MBBI->setIsBeginSection();
+    std::prev(MBBI)->setIsEndSection();
+    CurrentSectionID = MBBI->getSectionID();
+  }
+  back().setIsEndSection();
+}
+
 /// Allocate a new MachineInstr. Use this instead of `new MachineInstr'.
 MachineInstr *MachineFunction::CreateMachineInstr(const MCInstrDesc &MCID,
                                                   const DebugLoc &DL,
-                                                  bool NoImp) {
+                                                  bool NoImplicit) {
   return new (InstructionRecycler.Allocate<MachineInstr>(Allocator))
-    MachineInstr(*this, MCID, DL, NoImp);
+      MachineInstr(*this, MCID, DL, NoImplicit);
 }
 
 /// Create a new MachineInstr which is a copy of the 'Orig' instruction,
@@ -354,6 +377,11 @@ MachineInstr &MachineFunction::CloneMachineInstrBundle(MachineBasicBlock &MBB,
       break;
     ++I;
   }
+  // Copy over call site info to the cloned instruction if needed. If Orig is in
+  // a bundle, copyCallSiteInfo takes care of finding the call instruction in
+  // the bundle.
+  if (Orig.shouldUpdateCallSiteInfo())
+    copyCallSiteInfo(&Orig, FirstClone);
   return *FirstClone;
 }
 
@@ -367,7 +395,7 @@ MachineFunction::DeleteMachineInstr(MachineInstr *MI) {
   // be triggered during the implementation of support for the
   // call site info of a new architecture. If the assertion is triggered,
   // back trace will tell where to insert a call to updateCallSiteInfo().
-  assert((!MI->isCall(MachineInstr::IgnoreBundle) ||
+  assert((!MI->isCandidateForCallSiteEntry() ||
           CallSitesInfo.find(MI) == CallSitesInfo.end()) &&
          "Call site info was not updated!");
   // Strip it for parts. The operand array and the MI object itself are
@@ -392,13 +420,16 @@ MachineFunction::CreateMachineBasicBlock(const BasicBlock *bb) {
 void
 MachineFunction::DeleteMachineBasicBlock(MachineBasicBlock *MBB) {
   assert(MBB->getParent() == this && "MBB parent mismatch!");
+  // Clean up any references to MBB in jump tables before deleting it.
+  if (JumpTableInfo)
+    JumpTableInfo->RemoveMBBFromJumpTables(MBB);
   MBB->~MachineBasicBlock();
   BasicBlockRecycler.Deallocate(Allocator, MBB);
 }
 
 MachineMemOperand *MachineFunction::getMachineMemOperand(
     MachinePointerInfo PtrInfo, MachineMemOperand::Flags f, uint64_t s,
-    unsigned base_alignment, const AAMDNodes &AAInfo, const MDNode *Ranges,
+    Align base_alignment, const AAMDNodes &AAInfo, const MDNode *Ranges,
     SyncScope::ID SSID, AtomicOrdering Ordering,
     AtomicOrdering FailureOrdering) {
   return new (Allocator)
@@ -406,21 +437,49 @@ MachineMemOperand *MachineFunction::getMachineMemOperand(
                         SSID, Ordering, FailureOrdering);
 }
 
+MachineMemOperand *MachineFunction::getMachineMemOperand(
+    MachinePointerInfo PtrInfo, MachineMemOperand::Flags f, LLT MemTy,
+    Align base_alignment, const AAMDNodes &AAInfo, const MDNode *Ranges,
+    SyncScope::ID SSID, AtomicOrdering Ordering,
+    AtomicOrdering FailureOrdering) {
+  return new (Allocator)
+      MachineMemOperand(PtrInfo, f, MemTy, base_alignment, AAInfo, Ranges, SSID,
+                        Ordering, FailureOrdering);
+}
+
+MachineMemOperand *MachineFunction::getMachineMemOperand(
+    const MachineMemOperand *MMO, const MachinePointerInfo &PtrInfo, uint64_t Size) {
+  return new (Allocator)
+      MachineMemOperand(PtrInfo, MMO->getFlags(), Size, MMO->getBaseAlign(),
+                        AAMDNodes(), nullptr, MMO->getSyncScopeID(),
+                        MMO->getSuccessOrdering(), MMO->getFailureOrdering());
+}
+
+MachineMemOperand *MachineFunction::getMachineMemOperand(
+    const MachineMemOperand *MMO, const MachinePointerInfo &PtrInfo, LLT Ty) {
+  return new (Allocator)
+      MachineMemOperand(PtrInfo, MMO->getFlags(), Ty, MMO->getBaseAlign(),
+                        AAMDNodes(), nullptr, MMO->getSyncScopeID(),
+                        MMO->getSuccessOrdering(), MMO->getFailureOrdering());
+}
+
 MachineMemOperand *
 MachineFunction::getMachineMemOperand(const MachineMemOperand *MMO,
-                                      int64_t Offset, uint64_t Size) {
+                                      int64_t Offset, LLT Ty) {
   const MachinePointerInfo &PtrInfo = MMO->getPointerInfo();
 
   // If there is no pointer value, the offset isn't tracked so we need to adjust
   // the base alignment.
-  unsigned Align = PtrInfo.V.isNull()
-                       ? MinAlign(MMO->getBaseAlignment(), Offset)
-                       : MMO->getBaseAlignment();
+  Align Alignment = PtrInfo.V.isNull()
+                        ? commonAlignment(MMO->getBaseAlign(), Offset)
+                        : MMO->getBaseAlign();
 
-  return new (Allocator)
-      MachineMemOperand(PtrInfo.getWithOffset(Offset), MMO->getFlags(), Size,
-                        Align, AAMDNodes(), nullptr, MMO->getSyncScopeID(),
-                        MMO->getOrdering(), MMO->getFailureOrdering());
+  // Do not preserve ranges, since we don't necessarily know what the high bits
+  // are anymore.
+  return new (Allocator) MachineMemOperand(
+      PtrInfo.getWithOffset(Offset), MMO->getFlags(), Ty, Alignment,
+      MMO->getAAInfo(), nullptr, MMO->getSyncScopeID(),
+      MMO->getSuccessOrdering(), MMO->getFailureOrdering());
 }
 
 MachineMemOperand *
@@ -430,28 +489,26 @@ MachineFunction::getMachineMemOperand(const MachineMemOperand *MMO,
              MachinePointerInfo(MMO->getValue(), MMO->getOffset()) :
              MachinePointerInfo(MMO->getPseudoValue(), MMO->getOffset());
 
-  return new (Allocator)
-             MachineMemOperand(MPI, MMO->getFlags(), MMO->getSize(),
-                               MMO->getBaseAlignment(), AAInfo,
-                               MMO->getRanges(), MMO->getSyncScopeID(),
-                               MMO->getOrdering(), MMO->getFailureOrdering());
+  return new (Allocator) MachineMemOperand(
+      MPI, MMO->getFlags(), MMO->getSize(), MMO->getBaseAlign(), AAInfo,
+      MMO->getRanges(), MMO->getSyncScopeID(), MMO->getSuccessOrdering(),
+      MMO->getFailureOrdering());
 }
 
 MachineMemOperand *
 MachineFunction::getMachineMemOperand(const MachineMemOperand *MMO,
                                       MachineMemOperand::Flags Flags) {
   return new (Allocator) MachineMemOperand(
-      MMO->getPointerInfo(), Flags, MMO->getSize(), MMO->getBaseAlignment(),
+      MMO->getPointerInfo(), Flags, MMO->getSize(), MMO->getBaseAlign(),
       MMO->getAAInfo(), MMO->getRanges(), MMO->getSyncScopeID(),
-      MMO->getOrdering(), MMO->getFailureOrdering());
+      MMO->getSuccessOrdering(), MMO->getFailureOrdering());
 }
 
-MachineInstr::ExtraInfo *
-MachineFunction::createMIExtraInfo(ArrayRef<MachineMemOperand *> MMOs,
-                                   MCSymbol *PreInstrSymbol,
-                                   MCSymbol *PostInstrSymbol) {
+MachineInstr::ExtraInfo *MachineFunction::createMIExtraInfo(
+    ArrayRef<MachineMemOperand *> MMOs, MCSymbol *PreInstrSymbol,
+    MCSymbol *PostInstrSymbol, MDNode *HeapAllocMarker) {
   return MachineInstr::ExtraInfo::create(Allocator, MMOs, PreInstrSymbol,
-                                         PostInstrSymbol);
+                                         PostInstrSymbol, HeapAllocMarker);
 }
 
 const char *MachineFunction::createExternalSymbolName(StringRef Name) {
@@ -467,6 +524,12 @@ uint32_t *MachineFunction::allocateRegMask() {
   uint32_t *Mask = Allocator.Allocate<uint32_t>(Size);
   memset(Mask, 0, Size * sizeof(Mask[0]));
   return Mask;
+}
+
+ArrayRef<int> MachineFunction::allocateShuffleMask(ArrayRef<int> Mask) {
+  int* AllocMask = Allocator.Allocate<int>(Mask.size());
+  copy(Mask, AllocMask);
+  return {AllocMask, Mask.size()};
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
@@ -518,6 +581,13 @@ void MachineFunction::print(raw_ostream &OS, const SlotIndexes *Indexes) const {
   }
 
   OS << "\n# End machine code for function " << getName() << ".\n\n";
+}
+
+/// True if this function needs frame moves for debug or exceptions.
+bool MachineFunction::needsFrameMoves() const {
+  return getMMI().hasDebugInfo() ||
+         getTarget().Options.ForceDwarfFrameSection ||
+         F.needsUnwindTableEntry();
 }
 
 namespace llvm {
@@ -580,10 +650,10 @@ void MachineFunction::viewCFGOnly() const
 
 /// Add the specified physical register as a live-in value and
 /// create a corresponding virtual register for it.
-unsigned MachineFunction::addLiveIn(unsigned PReg,
+Register MachineFunction::addLiveIn(MCRegister PReg,
                                     const TargetRegisterClass *RC) {
   MachineRegisterInfo &MRI = getRegInfo();
-  unsigned VReg = MRI.getLiveInVirtReg(PReg);
+  Register VReg = MRI.getLiveInVirtReg(PReg);
   if (VReg) {
     const TargetRegisterClass *VRegRC = MRI.getRegClass(VReg);
     (void)VRegRC;
@@ -799,9 +869,8 @@ int MachineFunction::getFilterIDFor(std::vector<unsigned> &TyIds) {
   // If the new filter coincides with the tail of an existing filter, then
   // re-use the existing filter.  Folding filters more than this requires
   // re-ordering filters and/or their elements - probably not worth it.
-  for (std::vector<unsigned>::iterator I = FilterEnds.begin(),
-       E = FilterEnds.end(); I != E; ++I) {
-    unsigned i = *I, j = TyIds.size();
+  for (unsigned i : FilterEnds) {
+    unsigned j = TyIds.size();
 
     while (i && j)
       if (FilterIds[--i] != TyIds[--j])
@@ -817,36 +886,339 @@ try_next:;
   // Add the new filter.
   int FilterID = -(1 + FilterIds.size());
   FilterIds.reserve(FilterIds.size() + TyIds.size() + 1);
-  FilterIds.insert(FilterIds.end(), TyIds.begin(), TyIds.end());
+  llvm::append_range(FilterIds, TyIds);
   FilterEnds.push_back(FilterIds.size());
   FilterIds.push_back(0); // terminator
   return FilterID;
 }
 
-void MachineFunction::addCodeViewHeapAllocSite(MachineInstr *I, MDNode *MD) {
-  MCSymbol *BeginLabel = Ctx.createTempSymbol("heapallocsite", true);
-  MCSymbol *EndLabel = Ctx.createTempSymbol("heapallocsite", true);
-  I->setPreInstrSymbol(*this, BeginLabel);
-  I->setPostInstrSymbol(*this, EndLabel);
+MachineFunction::CallSiteInfoMap::iterator
+MachineFunction::getCallSiteInfo(const MachineInstr *MI) {
+  assert(MI->isCandidateForCallSiteEntry() &&
+         "Call site info refers only to call (MI) candidates");
 
-  DIType *DI = dyn_cast<DIType>(MD);
-  CodeViewHeapAllocSites.push_back(std::make_tuple(BeginLabel, EndLabel, DI));
+  if (!Target.Options.EmitCallSiteInfo)
+    return CallSitesInfo.end();
+  return CallSitesInfo.find(MI);
 }
 
-void MachineFunction::updateCallSiteInfo(const MachineInstr *Old,
-                                         const MachineInstr *New) {
-  if (!Target.Options.EnableDebugEntryValues || Old == New)
-    return;
+/// Return the call machine instruction or find a call within bundle.
+static const MachineInstr *getCallInstr(const MachineInstr *MI) {
+  if (!MI->isBundle())
+    return MI;
 
-  assert(Old->isCall() && (!New || New->isCall()) &&
-         "Call site info referes only to call instructions!");
-  CallSiteInfoMap::iterator CSIt = CallSitesInfo.find(Old);
+  for (auto &BMI : make_range(getBundleStart(MI->getIterator()),
+                              getBundleEnd(MI->getIterator())))
+    if (BMI.isCandidateForCallSiteEntry())
+      return &BMI;
+
+  llvm_unreachable("Unexpected bundle without a call site candidate");
+}
+
+void MachineFunction::eraseCallSiteInfo(const MachineInstr *MI) {
+  assert(MI->shouldUpdateCallSiteInfo() &&
+         "Call site info refers only to call (MI) candidates or "
+         "candidates inside bundles");
+
+  const MachineInstr *CallMI = getCallInstr(MI);
+  CallSiteInfoMap::iterator CSIt = getCallSiteInfo(CallMI);
   if (CSIt == CallSitesInfo.end())
     return;
+  CallSitesInfo.erase(CSIt);
+}
+
+void MachineFunction::copyCallSiteInfo(const MachineInstr *Old,
+                                       const MachineInstr *New) {
+  assert(Old->shouldUpdateCallSiteInfo() &&
+         "Call site info refers only to call (MI) candidates or "
+         "candidates inside bundles");
+
+  if (!New->isCandidateForCallSiteEntry())
+    return eraseCallSiteInfo(Old);
+
+  const MachineInstr *OldCallMI = getCallInstr(Old);
+  CallSiteInfoMap::iterator CSIt = getCallSiteInfo(OldCallMI);
+  if (CSIt == CallSitesInfo.end())
+    return;
+
+  CallSiteInfo CSInfo = CSIt->second;
+  CallSitesInfo[New] = CSInfo;
+}
+
+void MachineFunction::moveCallSiteInfo(const MachineInstr *Old,
+                                       const MachineInstr *New) {
+  assert(Old->shouldUpdateCallSiteInfo() &&
+         "Call site info refers only to call (MI) candidates or "
+         "candidates inside bundles");
+
+  if (!New->isCandidateForCallSiteEntry())
+    return eraseCallSiteInfo(Old);
+
+  const MachineInstr *OldCallMI = getCallInstr(Old);
+  CallSiteInfoMap::iterator CSIt = getCallSiteInfo(OldCallMI);
+  if (CSIt == CallSitesInfo.end())
+    return;
+
   CallSiteInfo CSInfo = std::move(CSIt->second);
   CallSitesInfo.erase(CSIt);
-  if (New)
-    CallSitesInfo[New] = CSInfo;
+  CallSitesInfo[New] = CSInfo;
+}
+
+void MachineFunction::setDebugInstrNumberingCount(unsigned Num) {
+  DebugInstrNumberingCount = Num;
+}
+
+void MachineFunction::makeDebugValueSubstitution(DebugInstrOperandPair A,
+                                                 DebugInstrOperandPair B,
+                                                 unsigned Subreg) {
+  // Catch any accidental self-loops.
+  assert(A.first != B.first);
+  DebugValueSubstitutions.push_back({A, B, Subreg});
+}
+
+void MachineFunction::substituteDebugValuesForInst(const MachineInstr &Old,
+                                                   MachineInstr &New,
+                                                   unsigned MaxOperand) {
+  // If the Old instruction wasn't tracked at all, there is no work to do.
+  unsigned OldInstrNum = Old.peekDebugInstrNum();
+  if (!OldInstrNum)
+    return;
+
+  // Iterate over all operands looking for defs to create substitutions for.
+  // Avoid creating new instr numbers unless we create a new substitution.
+  // While this has no functional effect, it risks confusing someone reading
+  // MIR output.
+  // Examine all the operands, or the first N specified by the caller.
+  MaxOperand = std::min(MaxOperand, Old.getNumOperands());
+  for (unsigned int I = 0; I < MaxOperand; ++I) {
+    const auto &OldMO = Old.getOperand(I);
+    auto &NewMO = New.getOperand(I);
+    (void)NewMO;
+
+    if (!OldMO.isReg() || !OldMO.isDef())
+      continue;
+    assert(NewMO.isDef());
+
+    unsigned NewInstrNum = New.getDebugInstrNum();
+    makeDebugValueSubstitution(std::make_pair(OldInstrNum, I),
+                               std::make_pair(NewInstrNum, I));
+  }
+}
+
+auto MachineFunction::salvageCopySSA(MachineInstr &MI)
+    -> DebugInstrOperandPair {
+  MachineRegisterInfo &MRI = getRegInfo();
+  const TargetRegisterInfo &TRI = *MRI.getTargetRegisterInfo();
+  const TargetInstrInfo &TII = *getSubtarget().getInstrInfo();
+
+  // Chase the value read by a copy-like instruction back to the instruction
+  // that ultimately _defines_ that value. This may pass:
+  //  * Through multiple intermediate copies, including subregister moves /
+  //    copies,
+  //  * Copies from physical registers that must then be traced back to the
+  //    defining instruction,
+  //  * Or, physical registers may be live-in to (only) the entry block, which
+  //    requires a DBG_PHI to be created.
+  // We can pursue this problem in that order: trace back through copies,
+  // optionally through a physical register, to a defining instruction. We
+  // should never move from physreg to vreg. As we're still in SSA form, no need
+  // to worry about partial definitions of registers.
+
+  // Helper lambda to interpret a copy-like instruction. Takes instruction,
+  // returns the register read and any subregister identifying which part is
+  // read.
+  auto GetRegAndSubreg =
+      [&](const MachineInstr &Cpy) -> std::pair<Register, unsigned> {
+    Register NewReg, OldReg;
+    unsigned SubReg;
+    if (Cpy.isCopy()) {
+      OldReg = Cpy.getOperand(0).getReg();
+      NewReg = Cpy.getOperand(1).getReg();
+      SubReg = Cpy.getOperand(1).getSubReg();
+    } else if (Cpy.isSubregToReg()) {
+      OldReg = Cpy.getOperand(0).getReg();
+      NewReg = Cpy.getOperand(2).getReg();
+      SubReg = Cpy.getOperand(3).getImm();
+    } else {
+      auto CopyDetails = *TII.isCopyInstr(Cpy);
+      const MachineOperand &Src = *CopyDetails.Source;
+      const MachineOperand &Dest = *CopyDetails.Destination;
+      OldReg = Dest.getReg();
+      NewReg = Src.getReg();
+      SubReg = Src.getSubReg();
+    }
+
+    return {NewReg, SubReg};
+  };
+
+  // First seek either the defining instruction, or a copy from a physreg.
+  // During search, the current state is the current copy instruction, and which
+  // register we've read. Accumulate qualifying subregisters into SubregsSeen;
+  // deal with those later.
+  auto State = GetRegAndSubreg(MI);
+  auto CurInst = MI.getIterator();
+  SmallVector<unsigned, 4> SubregsSeen;
+  while (true) {
+    // If we've found a copy from a physreg, first portion of search is over.
+    if (!State.first.isVirtual())
+      break;
+
+    // Record any subregister qualifier.
+    if (State.second)
+      SubregsSeen.push_back(State.second);
+
+    assert(MRI.hasOneDef(State.first));
+    MachineInstr &Inst = *MRI.def_begin(State.first)->getParent();
+    CurInst = Inst.getIterator();
+
+    // Any non-copy instruction is the defining instruction we're seeking.
+    if (!Inst.isCopyLike() && !TII.isCopyInstr(Inst))
+      break;
+    State = GetRegAndSubreg(Inst);
+  };
+
+  // Helper lambda to apply additional subregister substitutions to a known
+  // instruction/operand pair. Adds new (fake) substitutions so that we can
+  // record the subregister. FIXME: this isn't very space efficient if multiple
+  // values are tracked back through the same copies; cache something later.
+  auto ApplySubregisters =
+      [&](DebugInstrOperandPair P) -> DebugInstrOperandPair {
+    for (unsigned Subreg : reverse(SubregsSeen)) {
+      // Fetch a new instruction number, not attached to an actual instruction.
+      unsigned NewInstrNumber = getNewDebugInstrNum();
+      // Add a substitution from the "new" number to the known one, with a
+      // qualifying subreg.
+      makeDebugValueSubstitution({NewInstrNumber, 0}, P, Subreg);
+      // Return the new number; to find the underlying value, consumers need to
+      // deal with the qualifying subreg.
+      P = {NewInstrNumber, 0};
+    }
+    return P;
+  };
+
+  // If we managed to find the defining instruction after COPYs, return an
+  // instruction / operand pair after adding subregister qualifiers.
+  if (State.first.isVirtual()) {
+    // Virtual register def -- we can just look up where this happens.
+    MachineInstr *Inst = MRI.def_begin(State.first)->getParent();
+    for (auto &MO : Inst->operands()) {
+      if (!MO.isReg() || !MO.isDef() || MO.getReg() != State.first)
+        continue;
+      return ApplySubregisters(
+          {Inst->getDebugInstrNum(), Inst->getOperandNo(&MO)});
+    }
+
+    llvm_unreachable("Vreg def with no corresponding operand?");
+  }
+
+  // Our search ended in a copy from a physreg: walk back up the function
+  // looking for whatever defines the physreg.
+  assert(CurInst->isCopyLike() || TII.isCopyInstr(*CurInst));
+  State = GetRegAndSubreg(*CurInst);
+  Register RegToSeek = State.first;
+
+  auto RMII = CurInst->getReverseIterator();
+  auto PrevInstrs = make_range(RMII, CurInst->getParent()->instr_rend());
+  for (auto &ToExamine : PrevInstrs) {
+    for (auto &MO : ToExamine.operands()) {
+      // Test for operand that defines something aliasing RegToSeek.
+      if (!MO.isReg() || !MO.isDef() ||
+          !TRI.regsOverlap(RegToSeek, MO.getReg()))
+        continue;
+
+      return ApplySubregisters(
+          {ToExamine.getDebugInstrNum(), ToExamine.getOperandNo(&MO)});
+    }
+  }
+
+  MachineBasicBlock &InsertBB = *CurInst->getParent();
+
+  // We reached the start of the block before finding a defining instruction.
+  // It could be from a constant register, otherwise it must be an argument.
+  if (TRI.isConstantPhysReg(State.first)) {
+    // We can produce a DBG_PHI that identifies the constant physreg. Doesn't
+    // matter where we put it, as it's constant valued.
+    assert(CurInst->isCopy());
+  } else if (State.first == TRI.getFrameRegister(*this)) {
+    // LLVM IR is allowed to read the framepointer by calling a
+    // llvm.frameaddress.* intrinsic. We can support this by emitting a
+    // DBG_PHI $fp. This isn't ideal, because it extends the behaviours /
+    // position that DBG_PHIs appear at, limiting what can be done later.
+    // TODO: see if there's a better way of expressing these variable
+    // locations.
+    ;
+  } else {
+    // Assert that this is the entry block. If it isn't, then there is some
+    // code construct we don't recognise that deals with physregs across
+    // blocks.
+    assert(!State.first.isVirtual());
+    assert(&*InsertBB.getParent()->begin() == &InsertBB);
+  }
+
+  // Create DBG_PHI for specified physreg.
+  auto Builder = BuildMI(InsertBB, InsertBB.getFirstNonPHI(), DebugLoc(),
+                         TII.get(TargetOpcode::DBG_PHI));
+  Builder.addReg(State.first, RegState::Debug);
+  unsigned NewNum = getNewDebugInstrNum();
+  Builder.addImm(NewNum);
+  return ApplySubregisters({NewNum, 0u});
+}
+
+void MachineFunction::finalizeDebugInstrRefs() {
+  auto *TII = getSubtarget().getInstrInfo();
+
+  auto MakeDbgValue = [&](MachineInstr &MI) {
+    const MCInstrDesc &RefII = TII->get(TargetOpcode::DBG_VALUE);
+    MI.setDesc(RefII);
+    MI.getOperand(1).ChangeToRegister(0, false);
+    MI.getOperand(0).setIsDebug();
+  };
+
+  if (!getTarget().Options.ValueTrackingVariableLocations)
+    return;
+
+  for (auto &MBB : *this) {
+    for (auto &MI : MBB) {
+      if (!MI.isDebugRef() || !MI.getOperand(0).isReg())
+        continue;
+
+      Register Reg = MI.getOperand(0).getReg();
+
+      // Some vregs can be deleted as redundant in the meantime. Mark those
+      // as DBG_VALUE $noreg.
+      if (Reg == 0) {
+        MakeDbgValue(MI);
+        continue;
+      }
+
+      assert(Reg.isVirtual());
+      MachineInstr &DefMI = *RegInfo->def_instr_begin(Reg);
+      assert(RegInfo->hasOneDef(Reg));
+
+      // If we've found a copy-like instruction, follow it back to the
+      // instruction that defines the source value, see salvageCopySSA docs
+      // for why this is important.
+      if (DefMI.isCopyLike() || TII->isCopyInstr(DefMI)) {
+        auto Result = salvageCopySSA(DefMI);
+        MI.getOperand(0).ChangeToImmediate(Result.first);
+        MI.getOperand(1).setImm(Result.second);
+      } else {
+        // Otherwise, identify the operand number that the VReg refers to.
+        unsigned OperandIdx = 0;
+        for (const auto &MO : DefMI.operands()) {
+          if (MO.isReg() && MO.isDef() && MO.getReg() == Reg)
+            break;
+          ++OperandIdx;
+        }
+        assert(OperandIdx < DefMI.getNumOperands());
+
+        // Morph this instr ref to point at the given instruction and operand.
+        unsigned ID = DefMI.getDebugInstrNum();
+        MI.getOperand(0).ChangeToImmediate(ID);
+        MI.getOperand(1).setImm(OperandIdx);
+      }
+    }
+  }
 }
 
 /// \}
@@ -881,13 +1253,13 @@ unsigned MachineJumpTableInfo::getEntryAlignment(const DataLayout &TD) const {
   // alignment.
   switch (getEntryKind()) {
   case MachineJumpTableInfo::EK_BlockAddress:
-    return TD.getPointerABIAlignment(0);
+    return TD.getPointerABIAlignment(0).value();
   case MachineJumpTableInfo::EK_GPRel64BlockAddress:
-    return TD.getABIIntegerTypeAlignment(64);
+    return TD.getABIIntegerTypeAlignment(64).value();
   case MachineJumpTableInfo::EK_GPRel32BlockAddress:
   case MachineJumpTableInfo::EK_LabelDifference32:
   case MachineJumpTableInfo::EK_Custom32:
-    return TD.getABIIntegerTypeAlignment(32);
+    return TD.getABIIntegerTypeAlignment(32).value();
   case MachineJumpTableInfo::EK_Inline:
     return 1;
   }
@@ -910,6 +1282,17 @@ bool MachineJumpTableInfo::ReplaceMBBInJumpTables(MachineBasicBlock *Old,
   bool MadeChange = false;
   for (size_t i = 0, e = JumpTables.size(); i != e; ++i)
     ReplaceMBBInJumpTable(i, Old, New);
+  return MadeChange;
+}
+
+/// If MBB is present in any jump tables, remove it.
+bool MachineJumpTableInfo::RemoveMBBFromJumpTables(MachineBasicBlock *MBB) {
+  bool MadeChange = false;
+  for (MachineJumpTableEntry &JTE : JumpTables) {
+    auto removeBeginItr = std::remove(JTE.MBBs.begin(), JTE.MBBs.end(), MBB);
+    MadeChange |= (removeBeginItr != JTE.MBBs.end());
+    JTE.MBBs.erase(removeBeginItr, JTE.MBBs.end());
+  }
   return MadeChange;
 }
 
@@ -959,23 +1342,27 @@ Printable llvm::printJumpTableEntryReference(unsigned Idx) {
 
 void MachineConstantPoolValue::anchor() {}
 
-Type *MachineConstantPoolEntry::getType() const {
+unsigned MachineConstantPoolValue::getSizeInBytes(const DataLayout &DL) const {
+  return DL.getTypeAllocSize(Ty);
+}
+
+unsigned MachineConstantPoolEntry::getSizeInBytes(const DataLayout &DL) const {
   if (isMachineConstantPoolEntry())
-    return Val.MachineCPVal->getType();
-  return Val.ConstVal->getType();
+    return Val.MachineCPVal->getSizeInBytes(DL);
+  return DL.getTypeAllocSize(Val.ConstVal->getType());
 }
 
 bool MachineConstantPoolEntry::needsRelocation() const {
   if (isMachineConstantPoolEntry())
     return true;
-  return Val.ConstVal->needsRelocation();
+  return Val.ConstVal->needsDynamicRelocation();
 }
 
 SectionKind
 MachineConstantPoolEntry::getSectionKind(const DataLayout *DL) const {
   if (needsRelocation())
     return SectionKind::getReadOnlyWithRel();
-  switch (DL->getTypeAllocSize(getType())) {
+  switch (getSizeInBytes(*DL)) {
   case 4:
     return SectionKind::getMergeableConst4();
   case 8:
@@ -998,11 +1385,9 @@ MachineConstantPool::~MachineConstantPool() {
       Deleted.insert(Constants[i].Val.MachineCPVal);
       delete Constants[i].Val.MachineCPVal;
     }
-  for (DenseSet<MachineConstantPoolValue*>::iterator I =
-       MachineCPVsSharingEntries.begin(), E = MachineCPVsSharingEntries.end();
-       I != E; ++I) {
-    if (Deleted.count(*I) == 0)
-      delete *I;
+  for (MachineConstantPoolValue *CPV : MachineCPVsSharingEntries) {
+    if (Deleted.count(CPV) == 0)
+      delete CPV;
   }
 }
 
@@ -1052,8 +1437,7 @@ static bool CanShareConstantPoolEntry(const Constant *A, const Constant *B,
 /// Create a new entry in the constant pool or return an existing one.
 /// User must specify the log2 of the minimum required alignment for the object.
 unsigned MachineConstantPool::getConstantPoolIndex(const Constant *C,
-                                                   unsigned Alignment) {
-  assert(Alignment && "Alignment must be specified!");
+                                                   Align Alignment) {
   if (Alignment > PoolAlignment) PoolAlignment = Alignment;
 
   // Check to see if we already have this constant.
@@ -1062,7 +1446,7 @@ unsigned MachineConstantPool::getConstantPoolIndex(const Constant *C,
   for (unsigned i = 0, e = Constants.size(); i != e; ++i)
     if (!Constants[i].isMachineConstantPoolEntry() &&
         CanShareConstantPoolEntry(Constants[i].Val.ConstVal, C, DL)) {
-      if ((unsigned)Constants[i].getAlignment() < Alignment)
+      if (Constants[i].getAlign() < Alignment)
         Constants[i].Alignment = Alignment;
       return i;
     }
@@ -1072,8 +1456,7 @@ unsigned MachineConstantPool::getConstantPoolIndex(const Constant *C,
 }
 
 unsigned MachineConstantPool::getConstantPoolIndex(MachineConstantPoolValue *V,
-                                                   unsigned Alignment) {
-  assert(Alignment && "Alignment must be specified!");
+                                                   Align Alignment) {
   if (Alignment > PoolAlignment) PoolAlignment = Alignment;
 
   // Check to see if we already have this constant.
@@ -1099,7 +1482,7 @@ void MachineConstantPool::print(raw_ostream &OS) const {
       Constants[i].Val.MachineCPVal->print(OS);
     else
       Constants[i].Val.ConstVal->printAsOperand(OS, /*PrintType=*/false);
-    OS << ", align=" << Constants[i].getAlignment();
+    OS << ", align=" << Constants[i].getAlign().value();
     OS << "\n";
   }
 }

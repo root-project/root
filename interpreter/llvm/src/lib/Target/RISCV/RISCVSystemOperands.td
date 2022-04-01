@@ -19,6 +19,12 @@ include "llvm/TableGen/SearchableTable.td"
 
 class SysReg<string name, bits<12> op> {
   string Name = name;
+  // A maximum of one alias is supported right now.
+  string AltName = name;
+  // A maximum of one deprecated name is supported right now.  Unlike the
+  // `AltName` alias, a `DeprecatedName` generates a diagnostic when the name is
+  // used to encourage software to migrate away from the name.
+  string DeprecatedName = "";
   bits<12> Encoding = op;
   // FIXME: add these additional fields when needed.
   // Privilege Access: Read and Write = 0, 1, 2; Read-Only = 3.
@@ -36,7 +42,10 @@ class SysReg<string name, bits<12> op> {
 def SysRegsList : GenericTable {
   let FilterClass = "SysReg";
   // FIXME: add "ReadWrite", "Mode", "Extra", "Number" fields when needed.
-  let Fields = [ "Name", "Encoding", "FeaturesRequired", "isRV32Only" ];
+  let Fields = [
+    "Name", "AltName", "DeprecatedName", "Encoding", "FeaturesRequired",
+    "isRV32Only",
+  ];
 
   let PrimaryKey = [ "Encoding" ];
   let PrimaryKeyName = "lookupSysRegByEncoding";
@@ -45,6 +54,16 @@ def SysRegsList : GenericTable {
 def lookupSysRegByName : SearchIndex {
   let Table = SysRegsList;
   let Key = [ "Name" ];
+}
+
+def lookupSysRegByAltName : SearchIndex {
+  let Table = SysRegsList;
+  let Key = [ "AltName" ];
+}
+
+def lookupSysRegByDeprecatedName : SearchIndex {
+  let Table = SysRegsList;
+  let Key = [ "DeprecatedName" ];
 }
 
 // The following CSR encodings match those given in Tables 2.2,
@@ -64,6 +83,7 @@ def : SysReg<"utvec", 0x005>;
 def : SysReg<"uscratch", 0x040>;
 def : SysReg<"uepc", 0x041>;
 def : SysReg<"ucause", 0x042>;
+let DeprecatedName = "ubadaddr" in
 def : SysReg<"utval", 0x043>;
 def : SysReg<"uip", 0x044>;
 
@@ -71,9 +91,9 @@ def : SysReg<"uip", 0x044>;
 // User Floating-Point CSRs
 //===--------------------------
 
-def FFLAGS : SysReg<"fflags", 0x001>;
-def FRM    : SysReg<"frm", 0x002>;
-def FCSR   : SysReg<"fcsr", 0x003>;
+def SysRegFFLAGS : SysReg<"fflags", 0x001>;
+def SysRegFRM    : SysReg<"frm", 0x002>;
+def SysRegFCSR   : SysReg<"fcsr", 0x003>;
 
 //===--------------------------
 // User Counter/Timers
@@ -164,12 +184,14 @@ def : SysReg<"scounteren", 0x106>;
 def : SysReg<"sscratch", 0x140>;
 def : SysReg<"sepc", 0x141>;
 def : SysReg<"scause", 0x142>;
+let DeprecatedName = "sbadaddr" in
 def : SysReg<"stval", 0x143>;
 def : SysReg<"sip", 0x144>;
 
 //===-------------------------------------
 // Supervisor Protection and Translation
 //===-------------------------------------
+let DeprecatedName = "sptbr" in
 def : SysReg<"satp", 0x180>;
 
 //===-----------------------------
@@ -198,6 +220,7 @@ def : SysReg<"mcounteren", 0x306>;
 def : SysReg<"mscratch", 0x340>;
 def : SysReg<"mepc", 0x341>;
 def : SysReg<"mcause", 0x342>;
+let DeprecatedName = "mbadaddr" in
 def : SysReg<"mtval", 0x343>;
 def : SysReg<"mip", 0x344>;
 
@@ -303,6 +326,9 @@ def: SysReg<"mhpmcounter31h", 0xB9F>;
 //===--------------------------
 // Machine Counter Setup
 //===--------------------------
+let AltName = "mucounteren" in // Privileged spec v1.9.1 Name
+def : SysReg<"mcountinhibit", 0x320>;
+
 def : SysReg<"mhpmevent3", 0x323>;
 def : SysReg<"mhpmevent4", 0x324>;
 def : SysReg<"mhpmevent5", 0x325>;
@@ -346,4 +372,19 @@ def : SysReg<"tdata3", 0x7A3>;
 //===-----------------------------------------------
 def : SysReg<"dcsr", 0x7B0>;
 def : SysReg<"dpc", 0x7B1>;
-def : SysReg<"dscratch", 0x7B2>;
+
+// "dscratch" is an alternative name for "dscratch0" which appeared in earlier
+// drafts of the RISC-V debug spec
+let AltName = "dscratch" in
+def : SysReg<"dscratch0", 0x7B2>;
+def : SysReg<"dscratch1", 0x7B3>;
+
+//===-----------------------------------------------
+// User Vector CSRs
+//===-----------------------------------------------
+def : SysReg<"vstart", 0x008>;
+def : SysReg<"vxsat", 0x009>;
+def : SysReg<"vxrm", 0x00A>;
+def : SysReg<"vl", 0xC20>;
+def : SysReg<"vtype", 0xC21>;
+def : SysReg<"vlenb", 0xC22>;

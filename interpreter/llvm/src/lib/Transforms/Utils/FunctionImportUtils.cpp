@@ -12,13 +12,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Utils/FunctionImportUtils.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/IR/InstIterator.h"
 using namespace llvm;
 
 /// Checks if we should import SGV as a definition, otherwise import as a
 /// declaration.
 bool FunctionImportGlobalProcessing::doImportAsDefinition(
-    const GlobalValue *SGV, SetVector<GlobalValue *> *GlobalsToImport) {
+    const GlobalValue *SGV) {
+  if (!isPerformingImport())
+    return false;
 
   // Only import the globals requested for importing.
   if (!GlobalsToImport->count(const_cast<GlobalValue *>(SGV)))
@@ -31,16 +34,8 @@ bool FunctionImportGlobalProcessing::doImportAsDefinition(
   return true;
 }
 
-bool FunctionImportGlobalProcessing::doImportAsDefinition(
-    const GlobalValue *SGV) {
-  if (!isPerformingImport())
-    return false;
-  return FunctionImportGlobalProcessing::doImportAsDefinition(SGV,
-                                                              GlobalsToImport);
-}
-
 bool FunctionImportGlobalProcessing::shouldPromoteLocalToGlobal(
-    const GlobalValue *SGV) {
+    const GlobalValue *SGV, ValueInfo VI) {
   assert(SGV->hasLocalLinkage());
   // Both the imported references and the original local variable must
   // be promoted.
@@ -65,7 +60,7 @@ bool FunctionImportGlobalProcessing::shouldPromoteLocalToGlobal(
   // (so the source file name and resulting GUID is the same). Find the one
   // in this module.
   auto Summary = ImportIndex.findSummaryInModule(
-      SGV->getGUID(), SGV->getParent()->getModuleIdentifier());
+      VI, SGV->getParent()->getModuleIdentifier());
   assert(Summary && "Missing summary for global value when exporting");
   auto Linkage = Summary->linkage();
   if (!GlobalValue::isLocalLinkage(Linkage)) {
@@ -91,18 +86,15 @@ bool FunctionImportGlobalProcessing::isNonRenamableLocal(
 }
 #endif
 
-std::string FunctionImportGlobalProcessing::getName(const GlobalValue *SGV,
-                                                    bool DoPromote) {
+std::string
+FunctionImportGlobalProcessing::getPromotedName(const GlobalValue *SGV) {
+  assert(SGV->hasLocalLinkage());
   // For locals that must be promoted to global scope, ensure that
   // the promoted name uniquely identifies the copy in the original module,
-  // using the ID assigned during combined index creation. When importing,
-  // we rename all locals (not just those that are promoted) in order to
-  // avoid naming conflicts between locals imported from different modules.
-  if (SGV->hasLocalLinkage() && (DoPromote || isPerformingImport()))
-    return ModuleSummaryIndex::getGlobalNameForLocal(
-        SGV->getName(),
-        ImportIndex.getModuleHash(SGV->getParent()->getModuleIdentifier()));
-  return SGV->getName();
+  // using the ID assigned during combined index creation.
+  return ModuleSummaryIndex::getGlobalNameForLocal(
+      SGV->getName(),
+      ImportIndex.getModuleHash(SGV->getParent()->getModuleIdentifier()));
 }
 
 GlobalValue::LinkageTypes
@@ -210,7 +202,7 @@ void FunctionImportGlobalProcessing::processGlobalForThinLTO(GlobalValue &GV) {
       if (Function *F = dyn_cast<Function>(&GV)) {
         if (!F->isDeclaration()) {
           for (auto &S : VI.getSummaryList()) {
-            FunctionSummary *FS = dyn_cast<FunctionSummary>(S->getBaseObject());
+            auto *FS = cast<FunctionSummary>(S->getBaseObject());
             if (FS->modulePath() == M.getModuleIdentifier()) {
               F->setEntryCount(Function::ProfileCount(FS->entryCount(),
                                                       Function::PCT_Synthetic));
@@ -220,14 +212,12 @@ void FunctionImportGlobalProcessing::processGlobalForThinLTO(GlobalValue &GV) {
         }
       }
     }
-    // Check the summaries to see if the symbol gets resolved to a known local
-    // definition.
-    if (VI && VI.isDSOLocal()) {
-      GV.setDSOLocal(true);
-      if (GV.hasDLLImportStorageClass())
-        GV.setDLLStorageClass(GlobalValue::DefaultStorageClass);
-    }
   }
+
+  // We should always have a ValueInfo (i.e. GV in index) for definitions when
+  // we are exporting, and also when importing that value.
+  assert(VI || GV.isDeclaration() ||
+         (isPerformingImport() && !doImportAsDefinition(&GV)));
 
   // Mark read/write-only variables which can be imported with specific
   // attribute. We can't internalize them now because IRMover will fail
@@ -238,27 +228,42 @@ void FunctionImportGlobalProcessing::processGlobalForThinLTO(GlobalValue &GV) {
   // If global value dead stripping is not enabled in summary then
   // propagateConstants hasn't been run. We can't internalize GV
   // in such case.
-  if (!GV.isDeclaration() && VI && ImportIndex.withGlobalValueDeadStripping()) {
-    const auto &SL = VI.getSummaryList();
-    auto *GVS = SL.empty() ? nullptr : dyn_cast<GlobalVarSummary>(SL[0].get());
-    // At this stage "maybe" is "definitely"
-    if (GVS && (GVS->maybeReadOnly() || GVS->maybeWriteOnly()))
-      cast<GlobalVariable>(&GV)->addAttribute("thinlto-internalize");
+  if (!GV.isDeclaration() && VI && ImportIndex.withAttributePropagation()) {
+    if (GlobalVariable *V = dyn_cast<GlobalVariable>(&GV)) {
+      // We can have more than one local with the same GUID, in the case of
+      // same-named locals in different but same-named source files that were
+      // compiled in their respective directories (so the source file name
+      // and resulting GUID is the same). Find the one in this module.
+      // Handle the case where there is no summary found in this module. That
+      // can happen in the distributed ThinLTO backend, because the index only
+      // contains summaries from the source modules if they are being imported.
+      // We might have a non-null VI and get here even in that case if the name
+      // matches one in this module (e.g. weak or appending linkage).
+      auto *GVS = dyn_cast_or_null<GlobalVarSummary>(
+          ImportIndex.findSummaryInModule(VI, M.getModuleIdentifier()));
+      if (GVS &&
+          (ImportIndex.isReadOnly(GVS) || ImportIndex.isWriteOnly(GVS))) {
+        V->addAttribute("thinlto-internalize");
+        // Objects referenced by writeonly GV initializer should not be
+        // promoted, because there is no any kind of read access to them
+        // on behalf of this writeonly GV. To avoid promotion we convert
+        // GV initializer to 'zeroinitializer'. This effectively drops
+        // references in IR module (not in combined index), so we can
+        // ignore them when computing import. We do not export references
+        // of writeonly object. See computeImportForReferencedGlobals
+        if (ImportIndex.isWriteOnly(GVS))
+          V->setInitializer(Constant::getNullValue(V->getValueType()));
+      }
+    }
   }
 
-  bool DoPromote = false;
-  if (GV.hasLocalLinkage() &&
-      ((DoPromote = shouldPromoteLocalToGlobal(&GV)) || isPerformingImport())) {
+  if (GV.hasLocalLinkage() && shouldPromoteLocalToGlobal(&GV, VI)) {
     // Save the original name string before we rename GV below.
     auto Name = GV.getName().str();
-    // Once we change the name or linkage it is difficult to determine
-    // again whether we should promote since shouldPromoteLocalToGlobal needs
-    // to locate the summary (based on GUID from name and linkage). Therefore,
-    // use DoPromote result saved above.
-    GV.setName(getName(&GV, DoPromote));
-    GV.setLinkage(getLinkage(&GV, DoPromote));
-    if (!GV.hasLocalLinkage())
-      GV.setVisibility(GlobalValue::HiddenVisibility);
+    GV.setName(getPromotedName(&GV));
+    GV.setLinkage(getLinkage(&GV, /* DoPromote */ true));
+    assert(!GV.hasLocalLinkage());
+    GV.setVisibility(GlobalValue::HiddenVisibility);
 
     // If we are renaming a COMDAT leader, ensure that we record the COMDAT
     // for later renaming as well. This is required for COFF.
@@ -267,6 +272,22 @@ void FunctionImportGlobalProcessing::processGlobalForThinLTO(GlobalValue &GV) {
         RenamedComdats.try_emplace(C, M.getOrInsertComdat(GV.getName()));
   } else
     GV.setLinkage(getLinkage(&GV, /* DoPromote */ false));
+
+  // When ClearDSOLocalOnDeclarations is true, clear dso_local if GV is
+  // converted to a declaration, to disable direct access. Don't do this if GV
+  // is implicitly dso_local due to a non-default visibility.
+  if (ClearDSOLocalOnDeclarations &&
+      (GV.isDeclarationForLinker() ||
+       (isPerformingImport() && !doImportAsDefinition(&GV))) &&
+      !GV.isImplicitDSOLocal()) {
+    GV.setDSOLocal(false);
+  } else if (VI && VI.isDSOLocal(ImportIndex.withDSOLocalPropagation())) {
+    // If all summaries are dso_local, symbol gets resolved to a known local
+    // definition.
+    GV.setDSOLocal(true);
+    if (GV.hasDLLImportStorageClass())
+      GV.setDLLStorageClass(GlobalValue::DefaultStorageClass);
+  }
 
   // Remove functions imported as available externally defs from comdats,
   // as this is a declaration for the linker, and will be dropped eventually.
@@ -307,7 +328,9 @@ bool FunctionImportGlobalProcessing::run() {
 }
 
 bool llvm::renameModuleForThinLTO(Module &M, const ModuleSummaryIndex &Index,
+                                  bool ClearDSOLocalOnDeclarations,
                                   SetVector<GlobalValue *> *GlobalsToImport) {
-  FunctionImportGlobalProcessing ThinLTOProcessing(M, Index, GlobalsToImport);
+  FunctionImportGlobalProcessing ThinLTOProcessing(M, Index, GlobalsToImport,
+                                                   ClearDSOLocalOnDeclarations);
   return ThinLTOProcessing.run();
 }

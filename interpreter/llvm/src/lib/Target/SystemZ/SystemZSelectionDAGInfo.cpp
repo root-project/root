@@ -47,7 +47,7 @@ static SDValue emitMemMem(SelectionDAG &DAG, const SDLoc &DL, unsigned Sequence,
 
 SDValue SystemZSelectionDAGInfo::EmitTargetCodeForMemcpy(
     SelectionDAG &DAG, const SDLoc &DL, SDValue Chain, SDValue Dst, SDValue Src,
-    SDValue Size, unsigned Align, bool IsVolatile, bool AlwaysInline,
+    SDValue Size, Align Alignment, bool IsVolatile, bool AlwaysInline,
     MachinePointerInfo DstPtrInfo, MachinePointerInfo SrcPtrInfo) const {
   if (IsVolatile)
     return SDValue();
@@ -74,18 +74,19 @@ static SDValue memsetStore(SelectionDAG &DAG, const SDLoc &DL, SDValue Chain,
 
 SDValue SystemZSelectionDAGInfo::EmitTargetCodeForMemset(
     SelectionDAG &DAG, const SDLoc &DL, SDValue Chain, SDValue Dst,
-    SDValue Byte, SDValue Size, unsigned Align, bool IsVolatile,
+    SDValue Byte, SDValue Size, Align Alignment, bool IsVolatile,
     MachinePointerInfo DstPtrInfo) const {
   EVT PtrVT = Dst.getValueType();
 
   if (IsVolatile)
     return SDValue();
 
+  auto *CByte = dyn_cast<ConstantSDNode>(Byte);
   if (auto *CSize = dyn_cast<ConstantSDNode>(Size)) {
     uint64_t Bytes = CSize->getZExtValue();
     if (Bytes == 0)
       return SDValue();
-    if (auto *CByte = dyn_cast<ConstantSDNode>(Byte)) {
+    if (CByte) {
       // Handle cases that can be done using at most two of
       // MVI, MVHI, MVHHI and MVGHI.  The latter two can only be
       // used if ByteVal is all zeros or all ones; in other casees,
@@ -97,45 +98,57 @@ SDValue SystemZSelectionDAGInfo::EmitTargetCodeForMemset(
         unsigned Size1 = Bytes == 16 ? 8 : 1 << findLastSet(Bytes);
         unsigned Size2 = Bytes - Size1;
         SDValue Chain1 = memsetStore(DAG, DL, Chain, Dst, ByteVal, Size1,
-                                     Align, DstPtrInfo);
+                                     Alignment.value(), DstPtrInfo);
         if (Size2 == 0)
           return Chain1;
         Dst = DAG.getNode(ISD::ADD, DL, PtrVT, Dst,
                           DAG.getConstant(Size1, DL, PtrVT));
         DstPtrInfo = DstPtrInfo.getWithOffset(Size1);
-        SDValue Chain2 = memsetStore(DAG, DL, Chain, Dst, ByteVal, Size2,
-                                     std::min(Align, Size1), DstPtrInfo);
+        SDValue Chain2 = memsetStore(
+            DAG, DL, Chain, Dst, ByteVal, Size2,
+            std::min((unsigned)Alignment.value(), Size1), DstPtrInfo);
         return DAG.getNode(ISD::TokenFactor, DL, MVT::Other, Chain1, Chain2);
       }
     } else {
       // Handle one and two bytes using STC.
       if (Bytes <= 2) {
-        SDValue Chain1 = DAG.getStore(Chain, DL, Byte, Dst, DstPtrInfo, Align);
+        SDValue Chain1 =
+            DAG.getStore(Chain, DL, Byte, Dst, DstPtrInfo, Alignment);
         if (Bytes == 1)
           return Chain1;
         SDValue Dst2 = DAG.getNode(ISD::ADD, DL, PtrVT, Dst,
                                    DAG.getConstant(1, DL, PtrVT));
-        SDValue Chain2 =
-            DAG.getStore(Chain, DL, Byte, Dst2, DstPtrInfo.getWithOffset(1),
-                         /* Alignment = */ 1);
+        SDValue Chain2 = DAG.getStore(Chain, DL, Byte, Dst2,
+                                      DstPtrInfo.getWithOffset(1), Align(1));
         return DAG.getNode(ISD::TokenFactor, DL, MVT::Other, Chain1, Chain2);
       }
     }
     assert(Bytes >= 2 && "Should have dealt with 0- and 1-byte cases already");
 
     // Handle the special case of a memset of 0, which can use XC.
-    auto *CByte = dyn_cast<ConstantSDNode>(Byte);
     if (CByte && CByte->getZExtValue() == 0)
       return emitMemMem(DAG, DL, SystemZISD::XC, SystemZISD::XC_LOOP,
                         Chain, Dst, Dst, Bytes);
 
     // Copy the byte to the first location and then use MVC to copy
     // it to the rest.
-    Chain = DAG.getStore(Chain, DL, Byte, Dst, DstPtrInfo, Align);
+    Chain = DAG.getStore(Chain, DL, Byte, Dst, DstPtrInfo, Alignment);
     SDValue DstPlus1 = DAG.getNode(ISD::ADD, DL, PtrVT, Dst,
                                    DAG.getConstant(1, DL, PtrVT));
     return emitMemMem(DAG, DL, SystemZISD::MVC, SystemZISD::MVC_LOOP,
                       Chain, DstPlus1, Dst, Bytes - 1);
+  }
+
+  // Variable length
+  if (CByte && CByte->getZExtValue() == 0) {
+    // Handle the special case of a variable length memset of 0 with XC.
+    SDValue LenMinus1 = DAG.getNode(ISD::ADD, DL, MVT::i64,
+                                    DAG.getZExtOrTrunc(Size, DL, MVT::i64),
+                                    DAG.getConstant(-1, DL, MVT::i64));
+    SDValue TripC = DAG.getNode(ISD::SRL, DL, MVT::i64, LenMinus1,
+                                DAG.getConstant(8, DL, MVT::i64));
+    return DAG.getNode(SystemZISD::XC_LOOP, DL, MVT::Other, Chain, Dst, Dst,
+                       LenMinus1, TripC);
   }
   return SDValue();
 }
@@ -209,10 +222,10 @@ std::pair<SDValue, SDValue> SystemZSelectionDAGInfo::EmitTargetCodeForMemchr(
 
   // Now select between End and null, depending on whether the character
   // was found.
-  SDValue Ops[] = {End, DAG.getConstant(0, DL, PtrVT),
-                   DAG.getConstant(SystemZ::CCMASK_SRST, DL, MVT::i32),
-                   DAG.getConstant(SystemZ::CCMASK_SRST_FOUND, DL, MVT::i32),
-                   CCReg};
+  SDValue Ops[] = {
+      End, DAG.getConstant(0, DL, PtrVT),
+      DAG.getTargetConstant(SystemZ::CCMASK_SRST, DL, MVT::i32),
+      DAG.getTargetConstant(SystemZ::CCMASK_SRST_FOUND, DL, MVT::i32), CCReg};
   End = DAG.getNode(SystemZISD::SELECT_CCMASK, DL, PtrVT, Ops);
   return std::make_pair(End, Chain);
 }

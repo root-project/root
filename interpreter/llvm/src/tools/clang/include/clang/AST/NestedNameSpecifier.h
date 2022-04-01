@@ -14,8 +14,10 @@
 #ifndef LLVM_CLANG_AST_NESTEDNAMESPECIFIER_H
 #define LLVM_CLANG_AST_NESTEDNAMESPECIFIER_H
 
+#include "clang/AST/DependenceFlags.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/SourceLocation.h"
+#include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/FoldingSet.h"
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/Support/Compiler.h"
@@ -199,6 +201,8 @@ public:
     return nullptr;
   }
 
+  NestedNameSpecifierDependence getDependence() const;
+
   /// Whether this nested name specifier refers to a dependent
   /// type or not.
   bool isDependent() const;
@@ -210,6 +214,9 @@ public:
   /// Whether this nested-name-specifier contains an unexpanded
   /// parameter pack (for C++11 variadic templates).
   bool containsUnexpandedParameterPack() const;
+
+  /// Whether this nested name specifier contains an error.
+  bool containsErrors() const;
 
   /// Print this nested name specifier to the given output stream. If
   /// `ResolveTemplateArguments` is true, we'll print actual types, e.g.
@@ -512,13 +519,42 @@ public:
 
 /// Insertion operator for diagnostics.  This allows sending
 /// NestedNameSpecifiers into a diagnostic with <<.
-inline const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
-                                           NestedNameSpecifier *NNS) {
+inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &DB,
+                                             NestedNameSpecifier *NNS) {
   DB.AddTaggedVal(reinterpret_cast<intptr_t>(NNS),
                   DiagnosticsEngine::ak_nestednamespec);
   return DB;
 }
 
 } // namespace clang
+
+namespace llvm {
+
+template <> struct DenseMapInfo<clang::NestedNameSpecifierLoc> {
+  using FirstInfo = DenseMapInfo<clang::NestedNameSpecifier *>;
+  using SecondInfo = DenseMapInfo<void *>;
+
+  static clang::NestedNameSpecifierLoc getEmptyKey() {
+    return clang::NestedNameSpecifierLoc(FirstInfo::getEmptyKey(),
+                                         SecondInfo::getEmptyKey());
+  }
+
+  static clang::NestedNameSpecifierLoc getTombstoneKey() {
+    return clang::NestedNameSpecifierLoc(FirstInfo::getTombstoneKey(),
+                                         SecondInfo::getTombstoneKey());
+  }
+
+  static unsigned getHashValue(const clang::NestedNameSpecifierLoc &PairVal) {
+    return hash_combine(
+        FirstInfo::getHashValue(PairVal.getNestedNameSpecifier()),
+        SecondInfo::getHashValue(PairVal.getOpaqueData()));
+  }
+
+  static bool isEqual(const clang::NestedNameSpecifierLoc &LHS,
+                      const clang::NestedNameSpecifierLoc &RHS) {
+    return LHS == RHS;
+  }
+};
+} // namespace llvm
 
 #endif // LLVM_CLANG_AST_NESTEDNAMESPECIFIER_H

@@ -1,6 +1,6 @@
 
 
-add_llvm_library(LLVMExecutionEngine
+add_llvm_component_library(LLVMExecutionEngine
   ExecutionEngine.cpp
   ExecutionEngineBindings.cpp
   GDBRegistrationListener.cpp
@@ -12,6 +12,15 @@ add_llvm_library(LLVMExecutionEngine
 
   DEPENDS
   intrinsics_gen
+
+  LINK_COMPONENTS
+  Core
+  MC
+  Object
+  OrcTargetProcess
+  RuntimeDyld
+  Support
+  Target
   )
 
 if(BUILD_SHARED_LIBS)

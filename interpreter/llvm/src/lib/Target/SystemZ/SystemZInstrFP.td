@@ -25,10 +25,10 @@ let Predicates = [FeatureNoVectorEnhancements1] in
 let Predicates = [FeatureVectorEnhancements1] in
   def SelectVR128 : SelectWrapper<f128, VR128>;
 
-defm CondStoreF32 : CondStores<FP32, nonvolatile_store,
-                               nonvolatile_load, bdxaddr20only>;
-defm CondStoreF64 : CondStores<FP64, nonvolatile_store,
-                               nonvolatile_load, bdxaddr20only>;
+defm CondStoreF32 : CondStores<FP32, simple_store,
+                               simple_load, bdxaddr20only>;
+defm CondStoreF64 : CondStores<FP64, simple_store,
+                               simple_load, bdxaddr20only>;
 
 //===----------------------------------------------------------------------===//
 // Move instructions
@@ -221,13 +221,13 @@ let Predicates = [FeatureNoVectorEnhancements1] in {
 
 // Convert a signed integer register value to a floating-point one.
 let Uses = [FPC], mayRaiseFPException = 1 in {
-  def CEFBR : UnaryRRE<"cefbr", 0xB394, sint_to_fp, FP32,  GR32>;
-  def CDFBR : UnaryRRE<"cdfbr", 0xB395, sint_to_fp, FP64,  GR32>;
-  def CXFBR : UnaryRRE<"cxfbr", 0xB396, sint_to_fp, FP128, GR32>;
+  def CEFBR : UnaryRRE<"cefbr", 0xB394, any_sint_to_fp, FP32,  GR32>;
+  def CDFBR : UnaryRRE<"cdfbr", 0xB395, any_sint_to_fp, FP64,  GR32>;
+  def CXFBR : UnaryRRE<"cxfbr", 0xB396, any_sint_to_fp, FP128, GR32>;
 
-  def CEGBR : UnaryRRE<"cegbr", 0xB3A4, sint_to_fp, FP32,  GR64>;
-  def CDGBR : UnaryRRE<"cdgbr", 0xB3A5, sint_to_fp, FP64,  GR64>;
-  def CXGBR : UnaryRRE<"cxgbr", 0xB3A6, sint_to_fp, FP128, GR64>;
+  def CEGBR : UnaryRRE<"cegbr", 0xB3A4, any_sint_to_fp, FP32,  GR64>;
+  def CDGBR : UnaryRRE<"cdgbr", 0xB3A5, any_sint_to_fp, FP64,  GR64>;
+  def CXGBR : UnaryRRE<"cxgbr", 0xB3A6, any_sint_to_fp, FP128, GR64>;
 }
 
 // The FP extension feature provides versions of the above that allow
@@ -254,13 +254,13 @@ let Predicates = [FeatureFPExtension] in {
     def CXLGBR : TernaryRRFe<"cxlgbr", 0xB3A2, FP128, GR64>;
   }
 
-  def : Pat<(f32  (uint_to_fp GR32:$src)), (CELFBR 0, GR32:$src, 0)>;
-  def : Pat<(f64  (uint_to_fp GR32:$src)), (CDLFBR 0, GR32:$src, 0)>;
-  def : Pat<(f128 (uint_to_fp GR32:$src)), (CXLFBR 0, GR32:$src, 0)>;
+  def : Pat<(f32  (any_uint_to_fp GR32:$src)), (CELFBR 0, GR32:$src, 0)>;
+  def : Pat<(f64  (any_uint_to_fp GR32:$src)), (CDLFBR 0, GR32:$src, 0)>;
+  def : Pat<(f128 (any_uint_to_fp GR32:$src)), (CXLFBR 0, GR32:$src, 0)>;
 
-  def : Pat<(f32  (uint_to_fp GR64:$src)), (CELGBR 0, GR64:$src, 0)>;
-  def : Pat<(f64  (uint_to_fp GR64:$src)), (CDLGBR 0, GR64:$src, 0)>;
-  def : Pat<(f128 (uint_to_fp GR64:$src)), (CXLGBR 0, GR64:$src, 0)>;
+  def : Pat<(f32  (any_uint_to_fp GR64:$src)), (CELGBR 0, GR64:$src, 0)>;
+  def : Pat<(f64  (any_uint_to_fp GR64:$src)), (CDLGBR 0, GR64:$src, 0)>;
+  def : Pat<(f128 (any_uint_to_fp GR64:$src)), (CXLGBR 0, GR64:$src, 0)>;
 }
 
 // Convert a floating-point register value to a signed integer value,
@@ -276,13 +276,13 @@ let Uses = [FPC], mayRaiseFPException = 1, Defs = [CC] in {
 }
 
 // fp_to_sint always rounds towards zero, which is modifier value 5.
-def : Pat<(i32 (fp_to_sint FP32:$src)),  (CFEBR 5, FP32:$src)>;
-def : Pat<(i32 (fp_to_sint FP64:$src)),  (CFDBR 5, FP64:$src)>;
-def : Pat<(i32 (fp_to_sint FP128:$src)), (CFXBR 5, FP128:$src)>;
+def : Pat<(i32 (any_fp_to_sint FP32:$src)),  (CFEBR 5, FP32:$src)>;
+def : Pat<(i32 (any_fp_to_sint FP64:$src)),  (CFDBR 5, FP64:$src)>;
+def : Pat<(i32 (any_fp_to_sint FP128:$src)), (CFXBR 5, FP128:$src)>;
 
-def : Pat<(i64 (fp_to_sint FP32:$src)),  (CGEBR 5, FP32:$src)>;
-def : Pat<(i64 (fp_to_sint FP64:$src)),  (CGDBR 5, FP64:$src)>;
-def : Pat<(i64 (fp_to_sint FP128:$src)), (CGXBR 5, FP128:$src)>;
+def : Pat<(i64 (any_fp_to_sint FP32:$src)),  (CGEBR 5, FP32:$src)>;
+def : Pat<(i64 (any_fp_to_sint FP64:$src)),  (CGDBR 5, FP64:$src)>;
+def : Pat<(i64 (any_fp_to_sint FP128:$src)), (CGXBR 5, FP128:$src)>;
 
 // The FP extension feature provides versions of the above that allow
 // also specifying the inexact-exception suppression flag.
@@ -309,13 +309,13 @@ let Predicates = [FeatureFPExtension] in {
     def CLGXBR : TernaryRRFe<"clgxbr", 0xB3AE, GR64, FP128>;
   }
 
-  def : Pat<(i32 (fp_to_uint FP32:$src)),  (CLFEBR 5, FP32:$src,  0)>;
-  def : Pat<(i32 (fp_to_uint FP64:$src)),  (CLFDBR 5, FP64:$src,  0)>;
-  def : Pat<(i32 (fp_to_uint FP128:$src)), (CLFXBR 5, FP128:$src, 0)>;
+  def : Pat<(i32 (any_fp_to_uint FP32:$src)),  (CLFEBR 5, FP32:$src,  0)>;
+  def : Pat<(i32 (any_fp_to_uint FP64:$src)),  (CLFDBR 5, FP64:$src,  0)>;
+  def : Pat<(i32 (any_fp_to_uint FP128:$src)), (CLFXBR 5, FP128:$src, 0)>;
 
-  def : Pat<(i64 (fp_to_uint FP32:$src)),  (CLGEBR 5, FP32:$src,  0)>;
-  def : Pat<(i64 (fp_to_uint FP64:$src)),  (CLGDBR 5, FP64:$src,  0)>;
-  def : Pat<(i64 (fp_to_uint FP128:$src)), (CLGXBR 5, FP128:$src, 0)>;
+  def : Pat<(i64 (any_fp_to_uint FP32:$src)),  (CLGEBR 5, FP32:$src,  0)>;
+  def : Pat<(i64 (any_fp_to_uint FP64:$src)),  (CLGDBR 5, FP64:$src,  0)>;
+  def : Pat<(i64 (any_fp_to_uint FP128:$src)), (CLGXBR 5, FP128:$src, 0)>;
 }
 
 
@@ -438,8 +438,8 @@ let Uses = [FPC], mayRaiseFPException = 1,
     def ADBR : BinaryRRE<"adbr", 0xB31A, any_fadd, FP64,  FP64>;
     def AXBR : BinaryRRE<"axbr", 0xB34A, any_fadd, FP128, FP128>;
   }
-  def AEB : BinaryRXE<"aeb", 0xED0A, any_fadd, FP32, load, 4>;
-  def ADB : BinaryRXE<"adb", 0xED1A, any_fadd, FP64, load, 8>;
+  defm AEB : BinaryRXEAndPseudo<"aeb", 0xED0A, any_fadd, FP32, load, 4>;
+  defm ADB : BinaryRXEAndPseudo<"adb", 0xED1A, any_fadd, FP64, load, 8>;
 }
 
 // Subtraction.
@@ -449,8 +449,8 @@ let Uses = [FPC], mayRaiseFPException = 1,
   def SDBR : BinaryRRE<"sdbr", 0xB31B, any_fsub, FP64,  FP64>;
   def SXBR : BinaryRRE<"sxbr", 0xB34B, any_fsub, FP128, FP128>;
 
-  def SEB : BinaryRXE<"seb",  0xED0B, any_fsub, FP32, load, 4>;
-  def SDB : BinaryRXE<"sdb",  0xED1B, any_fsub, FP64, load, 8>;
+  defm SEB : BinaryRXEAndPseudo<"seb",  0xED0B, any_fsub, FP32, load, 4>;
+  defm SDB : BinaryRXEAndPseudo<"sdb",  0xED1B, any_fsub, FP64, load, 8>;
 }
 
 // Multiplication.
@@ -460,23 +460,23 @@ let Uses = [FPC], mayRaiseFPException = 1 in {
     def MDBR  : BinaryRRE<"mdbr",  0xB31C, any_fmul, FP64,  FP64>;
     def MXBR  : BinaryRRE<"mxbr",  0xB34C, any_fmul, FP128, FP128>;
   }
-  def MEEB : BinaryRXE<"meeb", 0xED17, any_fmul, FP32, load, 4>;
-  def MDB  : BinaryRXE<"mdb",  0xED1C, any_fmul, FP64, load, 8>;
+  defm MEEB : BinaryRXEAndPseudo<"meeb", 0xED17, any_fmul, FP32, load, 4>;
+  defm MDB  : BinaryRXEAndPseudo<"mdb",  0xED1C, any_fmul, FP64, load, 8>;
 }
 
 // f64 multiplication of two FP32 registers.
 let Uses = [FPC], mayRaiseFPException = 1 in
   def MDEBR : BinaryRRE<"mdebr", 0xB30C, null_frag, FP64, FP32>;
-def : Pat<(any_fmul (f64 (fpextend FP32:$src1)),
-                    (f64 (fpextend FP32:$src2))),
+def : Pat<(any_fmul (f64 (any_fpextend FP32:$src1)),
+                    (f64 (any_fpextend FP32:$src2))),
           (MDEBR (INSERT_SUBREG (f64 (IMPLICIT_DEF)),
                                 FP32:$src1, subreg_h32), FP32:$src2)>;
 
 // f64 multiplication of an FP32 register and an f32 memory.
 let Uses = [FPC], mayRaiseFPException = 1 in
   def MDEB : BinaryRXE<"mdeb", 0xED0C, null_frag, FP64, load, 4>;
-def : Pat<(any_fmul (f64 (fpextend FP32:$src1)),
-                    (f64 (extloadf32 bdxaddr12only:$addr))),
+def : Pat<(any_fmul (f64 (any_fpextend FP32:$src1)),
+                    (f64 (any_extloadf32 bdxaddr12only:$addr))),
           (MDEB (INSERT_SUBREG (f64 (IMPLICIT_DEF)), FP32:$src1, subreg_h32),
                 bdxaddr12only:$addr)>;
 
@@ -484,8 +484,8 @@ def : Pat<(any_fmul (f64 (fpextend FP32:$src1)),
 let Uses = [FPC], mayRaiseFPException = 1 in
   def MXDBR : BinaryRRE<"mxdbr", 0xB307, null_frag, FP128, FP64>;
 let Predicates = [FeatureNoVectorEnhancements1] in
-  def : Pat<(any_fmul (f128 (fpextend FP64:$src1)),
-                      (f128 (fpextend FP64:$src2))),
+  def : Pat<(any_fmul (f128 (any_fpextend FP64:$src1)),
+                      (f128 (any_fpextend FP64:$src2))),
             (MXDBR (INSERT_SUBREG (f128 (IMPLICIT_DEF)),
                                   FP64:$src1, subreg_h64), FP64:$src2)>;
 
@@ -493,8 +493,8 @@ let Predicates = [FeatureNoVectorEnhancements1] in
 let Uses = [FPC], mayRaiseFPException = 1 in
   def MXDB : BinaryRXE<"mxdb", 0xED07, null_frag, FP128, load, 8>;
 let Predicates = [FeatureNoVectorEnhancements1] in
-  def : Pat<(any_fmul (f128 (fpextend FP64:$src1)),
-                      (f128 (extloadf64 bdxaddr12only:$addr))),
+  def : Pat<(any_fmul (f128 (any_fpextend FP64:$src1)),
+                      (f128 (any_extloadf64 bdxaddr12only:$addr))),
             (MXDB (INSERT_SUBREG (f128 (IMPLICIT_DEF)), FP64:$src1, subreg_h64),
                   bdxaddr12only:$addr)>;
 
@@ -503,8 +503,8 @@ let Uses = [FPC], mayRaiseFPException = 1 in {
   def MAEBR : TernaryRRD<"maebr", 0xB30E, z_any_fma, FP32, FP32>;
   def MADBR : TernaryRRD<"madbr", 0xB31E, z_any_fma, FP64, FP64>;
 
-  def MAEB : TernaryRXF<"maeb", 0xED0E, z_any_fma, FP32, FP32, load, 4>;
-  def MADB : TernaryRXF<"madb", 0xED1E, z_any_fma, FP64, FP64, load, 8>;
+  defm MAEB : TernaryRXFAndPseudo<"maeb", 0xED0E, z_any_fma, FP32, FP32, load, 4>;
+  defm MADB : TernaryRXFAndPseudo<"madb", 0xED1E, z_any_fma, FP64, FP64, load, 8>;
 }
 
 // Fused multiply-subtract.
@@ -512,8 +512,8 @@ let Uses = [FPC], mayRaiseFPException = 1 in {
   def MSEBR : TernaryRRD<"msebr", 0xB30F, z_any_fms, FP32, FP32>;
   def MSDBR : TernaryRRD<"msdbr", 0xB31F, z_any_fms, FP64, FP64>;
 
-  def MSEB : TernaryRXF<"mseb", 0xED0F, z_any_fms, FP32, FP32, load, 4>;
-  def MSDB : TernaryRXF<"msdb", 0xED1F, z_any_fms, FP64, FP64, load, 8>;
+  defm MSEB : TernaryRXFAndPseudo<"mseb", 0xED0F, z_any_fms, FP32, FP32, load, 4>;
+  defm MSDB : TernaryRXFAndPseudo<"msdb", 0xED1F, z_any_fms, FP64, FP64, load, 8>;
 }
 
 // Division.
@@ -522,8 +522,8 @@ let Uses = [FPC], mayRaiseFPException = 1 in {
   def DDBR : BinaryRRE<"ddbr", 0xB31D, any_fdiv, FP64,  FP64>;
   def DXBR : BinaryRRE<"dxbr", 0xB34D, any_fdiv, FP128, FP128>;
 
-  def DEB : BinaryRXE<"deb", 0xED0D, any_fdiv, FP32, load, 4>;
-  def DDB : BinaryRXE<"ddb", 0xED1D, any_fdiv, FP64, load, 8>;
+  defm DEB : BinaryRXEAndPseudo<"deb", 0xED0D, any_fdiv, FP32, load, 4>;
+  defm DDB : BinaryRXEAndPseudo<"ddb", 0xED1D, any_fdiv, FP64, load, 8>;
 }
 
 // Divide to integer.
@@ -537,19 +537,19 @@ let Uses = [FPC], mayRaiseFPException = 1, Defs = [CC] in {
 //===----------------------------------------------------------------------===//
 
 let Uses = [FPC], mayRaiseFPException = 1, Defs = [CC], CCValues = 0xF in {
-  def CEBR : CompareRRE<"cebr", 0xB309, z_fcmp, FP32,  FP32>;
-  def CDBR : CompareRRE<"cdbr", 0xB319, z_fcmp, FP64,  FP64>;
-  def CXBR : CompareRRE<"cxbr", 0xB349, z_fcmp, FP128, FP128>;
+  def CEBR : CompareRRE<"cebr", 0xB309, z_any_fcmp, FP32,  FP32>;
+  def CDBR : CompareRRE<"cdbr", 0xB319, z_any_fcmp, FP64,  FP64>;
+  def CXBR : CompareRRE<"cxbr", 0xB349, z_any_fcmp, FP128, FP128>;
 
-  def CEB : CompareRXE<"ceb", 0xED09, z_fcmp, FP32, load, 4>;
-  def CDB : CompareRXE<"cdb", 0xED19, z_fcmp, FP64, load, 8>;
+  def CEB : CompareRXE<"ceb", 0xED09, z_any_fcmp, FP32, load, 4>;
+  def CDB : CompareRXE<"cdb", 0xED19, z_any_fcmp, FP64, load, 8>;
 
-  def KEBR : CompareRRE<"kebr", 0xB308, null_frag, FP32,  FP32>;
-  def KDBR : CompareRRE<"kdbr", 0xB318, null_frag, FP64,  FP64>;
-  def KXBR : CompareRRE<"kxbr", 0xB348, null_frag, FP128, FP128>;
+  def KEBR : CompareRRE<"kebr", 0xB308, z_strict_fcmps, FP32,  FP32>;
+  def KDBR : CompareRRE<"kdbr", 0xB318, z_strict_fcmps, FP64,  FP64>;
+  def KXBR : CompareRRE<"kxbr", 0xB348, z_strict_fcmps, FP128, FP128>;
 
-  def KEB : CompareRXE<"keb", 0xED08, null_frag, FP32, load, 4>;
-  def KDB : CompareRXE<"kdb", 0xED18, null_frag, FP64, load, 8>;
+  def KEB : CompareRXE<"keb", 0xED08, z_strict_fcmps, FP32, load, 4>;
+  def KDB : CompareRXE<"kdb", 0xED18, z_strict_fcmps, FP64, load, 8>;
 }
 
 // Test Data Class.

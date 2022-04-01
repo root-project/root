@@ -9,6 +9,7 @@ lto_module_create_from_memory_with_path
 lto_module_create_in_local_context
 lto_module_create_in_codegen_context
 lto_module_get_linkeropts
+lto_module_get_macho_cputype
 lto_module_get_num_symbols
 lto_module_get_symbol_attribute
 lto_module_get_symbol_name
@@ -33,6 +34,7 @@ lto_codegen_set_debug_model
 lto_codegen_set_pic_model
 lto_codegen_write_merged_modules
 lto_codegen_debug_options
+lto_codegen_debug_options_array
 lto_codegen_set_assembler_args
 lto_codegen_set_assembler_path
 lto_codegen_set_cpu
@@ -41,6 +43,7 @@ lto_codegen_optimize
 lto_codegen_compile_optimized
 lto_codegen_set_should_internalize
 lto_codegen_set_should_embed_uselists
+lto_set_debug_options
 LLVMCreateDisasm
 LLVMCreateDisasmCPU
 LLVMDisasmDispose
@@ -76,3 +79,4 @@ lto_input_create
 lto_input_dispose
 lto_input_get_num_dependent_libraries
 lto_input_get_dependent_library
+lto_runtime_lib_symbols_list

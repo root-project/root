@@ -36,11 +36,25 @@ enum class LangAS : unsigned {
   opencl_constant,
   opencl_private,
   opencl_generic,
+  opencl_global_device,
+  opencl_global_host,
 
   // CUDA specific address spaces.
   cuda_device,
   cuda_constant,
   cuda_shared,
+
+  // SYCL specific address spaces.
+  sycl_global,
+  sycl_global_device,
+  sycl_global_host,
+  sycl_local,
+  sycl_private,
+
+  // Pointer size and extension address spaces.
+  ptr32_sptr,
+  ptr32_uptr,
+  ptr64,
 
   // This denotes the count of language-specific address spaces and also
   // the offset added to the target-specific address spaces, which are usually
@@ -66,6 +80,11 @@ inline unsigned toTargetAddressSpace(LangAS AS) {
 inline LangAS getLangASFromTargetAS(unsigned TargetAS) {
   return static_cast<LangAS>((TargetAS) +
                              (unsigned)LangAS::FirstTargetAddressSpace);
+}
+
+inline bool isPtrSizeAddressSpace(LangAS AS) {
+  return (AS == LangAS::ptr32_sptr || AS == LangAS::ptr32_uptr ||
+          AS == LangAS::ptr64);
 }
 
 } // namespace clang

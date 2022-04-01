@@ -53,7 +53,7 @@ static MCRegisterInfo *createAVRMCRegisterInfo(const Triple &TT) {
 
 static MCSubtargetInfo *createAVRMCSubtargetInfo(const Triple &TT,
                                                  StringRef CPU, StringRef FS) {
-  return createAVRMCSubtargetInfoImpl(TT, CPU, FS);
+  return createAVRMCSubtargetInfoImpl(TT, CPU, /*TuneCPU*/ CPU, FS);
 }
 
 static MCInstPrinter *createAVRMCInstPrinter(const Triple &T,
@@ -89,7 +89,7 @@ static MCTargetStreamer *createMCAsmTargetStreamer(MCStreamer &S,
   return new AVRTargetAsmStreamer(S);
 }
 
-extern "C" void LLVMInitializeAVRTargetMC() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeAVRTargetMC() {
   // Register the MC asm info.
   RegisterMCAsmInfo<AVRMCAsmInfo> X(getTheAVRTarget());
 

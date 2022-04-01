@@ -85,7 +85,7 @@ enum ModuleCodes {
   MODULE_CODE_ASM = 4,         // ASM:         [strchr x N]
   MODULE_CODE_SECTIONNAME = 5, // SECTIONNAME: [strchr x N]
 
-  // FIXME: Remove DEPLIB in 4.0.
+  // Deprecated, but still needed to read old bitcode files.
   MODULE_CODE_DEPLIB = 6, // DEPLIB:      [strchr x N]
 
   // GLOBALVAR: [pointer type, isconst, initid,
@@ -121,7 +121,7 @@ enum ModuleCodes {
 
 /// PARAMATTR blocks have code for defining a parameter attribute set.
 enum AttributeCodes {
-  // FIXME: Remove `PARAMATTR_CODE_ENTRY_OLD' in 4.0
+  // Deprecated, but still needed to read old bitcode files.
   PARAMATTR_CODE_ENTRY_OLD = 1, // ENTRY: [paramidx0, attr0,
                                 //         paramidx1, attr1...]
   PARAMATTR_CODE_ENTRY = 2,     // ENTRY: [attrgrp0, attrgrp1, ...]
@@ -166,7 +166,12 @@ enum TypeCodes {
 
   TYPE_CODE_FUNCTION = 21, // FUNCTION: [vararg, retty, paramty x N]
 
-  TYPE_CODE_TOKEN = 22 // TOKEN
+  TYPE_CODE_TOKEN = 22, // TOKEN
+
+  TYPE_CODE_BFLOAT = 23,  // BRAIN FLOATING POINT
+  TYPE_CODE_X86_AMX = 24, // X86 AMX
+
+  TYPE_CODE_OPAQUE_POINTER = 25, // OPAQUE_POINTER: [addrspace]
 };
 
 enum OperandBundleTagCode {
@@ -288,6 +293,11 @@ enum GlobalValueSummarySymtabCodes {
   //                                        numrefs, numrefs x valueid,
   //                                        n x (valueid, offset)]
   FS_PERMODULE_VTABLE_GLOBALVAR_INIT_REFS = 23,
+  // The total number of basic blocks in the module.
+  FS_BLOCK_COUNT = 24,
+  // Range information for accessed offsets for every argument.
+  // [n x (paramno, range, numcalls, numcalls x (callee_guid, paramno, range))]
+  FS_PARAM_ACCESS = 25,
 };
 
 enum MetadataCodes {
@@ -331,7 +341,12 @@ enum MetadataCodes {
   METADATA_INDEX_OFFSET = 38,           // [offset]
   METADATA_INDEX = 39,                  // [bitpos]
   METADATA_LABEL = 40,                  // [distinct, scope, name, file, line]
+  METADATA_STRING_TYPE = 41,            // [distinct, name, size, align,...]
+  // Codes 42 and 43 are reserved for support for Fortran array specific debug
+  // info.
   METADATA_COMMON_BLOCK = 44,     // [distinct, scope, name, variable,...]
+  METADATA_GENERIC_SUBRANGE = 45, // [distinct, count, lo, up, stride]
+  METADATA_ARG_LIST = 46          // [n x [type num, value num]]
 };
 
 // The constants block (CONSTANTS_BLOCK_ID) describes emission for each
@@ -360,10 +375,15 @@ enum ConstantsCodes {
   CST_CODE_CE_INBOUNDS_GEP = 20, // INBOUNDS_GEP:  [n x operands]
   CST_CODE_BLOCKADDRESS = 21,    // CST_CODE_BLOCKADDRESS [fnty, fnval, bb#]
   CST_CODE_DATA = 22,            // DATA:          [n x elements]
-  CST_CODE_INLINEASM = 23,       // INLINEASM:     [sideeffect|alignstack|
+  CST_CODE_INLINEASM_OLD2 = 23,  // INLINEASM:     [sideeffect|alignstack|
                                  //                 asmdialect,asmstr,conststr]
   CST_CODE_CE_GEP_WITH_INRANGE_INDEX = 24, //      [opty, flags, n x operands]
-  CST_CODE_CE_UNOP = 25,         // CE_UNOP:      [opcode, opval]
+  CST_CODE_CE_UNOP = 25,                   // CE_UNOP:      [opcode, opval]
+  CST_CODE_POISON = 26,                    // POISON
+  CST_CODE_DSO_LOCAL_EQUIVALENT = 27,      // DSO_LOCAL_EQUIVALENT [gvty, gv]
+  CST_CODE_INLINEASM = 28, // INLINEASM:     [sideeffect|alignstack|
+                           //                 asmdialect|unwind,
+                           //                 asmstr,conststr]
 };
 
 /// CastOpcodes - These are values used in the bitcode files to encode which
@@ -391,7 +411,7 @@ enum CastOpcodes {
 /// have no fixed relation to the LLVM IR enum values.  Changing these will
 /// break compatibility with old files.
 enum UnaryOpcodes {
-  UNOP_NEG = 0
+  UNOP_FNEG = 0
 };
 
 /// BinaryOpcodes - These are values used in the bitcode files to encode which
@@ -527,14 +547,15 @@ enum FunctionCodes {
 
   FUNC_CODE_INST_CALL = 34, // CALL:    [attr, cc, fnty, fnid, args...]
 
-  FUNC_CODE_DEBUG_LOC = 35,        // DEBUG_LOC:  [Line,Col,ScopeVal, IAVal]
-  FUNC_CODE_INST_FENCE = 36,       // FENCE: [ordering, synchscope]
-  FUNC_CODE_INST_CMPXCHG_OLD = 37, // CMPXCHG: [ptrty,ptr,cmp,new, align, vol,
-                                   //           ordering, synchscope]
-  FUNC_CODE_INST_ATOMICRMW = 38,   // ATOMICRMW: [ptrty,ptr,val, operation,
-                                   //             align, vol,
-                                   //             ordering, synchscope]
-  FUNC_CODE_INST_RESUME = 39,      // RESUME:     [opval]
+  FUNC_CODE_DEBUG_LOC = 35,          // DEBUG_LOC:  [Line,Col,ScopeVal, IAVal]
+  FUNC_CODE_INST_FENCE = 36,         // FENCE: [ordering, synchscope]
+  FUNC_CODE_INST_CMPXCHG_OLD = 37,   // CMPXCHG: [ptrty, ptr, cmp, val, vol,
+                                     //            ordering, synchscope,
+                                     //            failure_ordering?, weak?]
+  FUNC_CODE_INST_ATOMICRMW_OLD = 38, // ATOMICRMW: [ptrty,ptr,val, operation,
+                                     //             align, vol,
+                                     //             ordering, synchscope]
+  FUNC_CODE_INST_RESUME = 39,        // RESUME:     [opval]
   FUNC_CODE_INST_LANDINGPAD_OLD =
       40,                         // LANDINGPAD: [ty,val,val,num,id0,val0...]
   FUNC_CODE_INST_LOADATOMIC = 41, // LOAD: [opty, op, align, vol,
@@ -544,8 +565,9 @@ enum FunctionCodes {
   FUNC_CODE_INST_GEP = 43,             // GEP:  [inbounds, n x operands]
   FUNC_CODE_INST_STORE = 44,       // STORE: [ptrty,ptr,valty,val, align, vol]
   FUNC_CODE_INST_STOREATOMIC = 45, // STORE: [ptrty,ptr,val, align, vol
-  FUNC_CODE_INST_CMPXCHG = 46,     // CMPXCHG: [ptrty,ptr,valty,cmp,new, align,
-                                   //           vol,ordering,synchscope]
+  FUNC_CODE_INST_CMPXCHG = 46,     // CMPXCHG: [ptrty, ptr, cmp, val, vol,
+                                   //           success_ordering, synchscope,
+                                   //           failure_ordering, weak]
   FUNC_CODE_INST_LANDINGPAD = 47,  // LANDINGPAD: [ty,val,num,id0,val0...]
   FUNC_CODE_INST_CLEANUPRET = 48,  // CLEANUPRET: [val] or [val,bb#]
   FUNC_CODE_INST_CATCHRET = 49,    // CATCHRET: [val,bb#]
@@ -559,6 +581,10 @@ enum FunctionCodes {
   FUNC_CODE_INST_UNOP = 56,      // UNOP:       [opcode, ty, opval]
   FUNC_CODE_INST_CALLBR = 57,    // CALLBR:     [attr, cc, norm, transfs,
                                  //              fnty, fnid, args...]
+  FUNC_CODE_INST_FREEZE = 58,    // FREEZE: [opty, opval]
+  FUNC_CODE_INST_ATOMICRMW = 59, // ATOMICRMW: [ptrty, ptr, valty, val,
+                                 //             operation, align, vol,
+                                 //             ordering, synchscope]
 };
 
 enum UseListCodes {
@@ -632,6 +658,19 @@ enum AttributeKindCodes {
   ATTR_KIND_NOFREE = 62,
   ATTR_KIND_NOSYNC = 63,
   ATTR_KIND_SANITIZE_MEMTAG = 64,
+  ATTR_KIND_PREALLOCATED = 65,
+  ATTR_KIND_NO_MERGE = 66,
+  ATTR_KIND_NULL_POINTER_IS_VALID = 67,
+  ATTR_KIND_NOUNDEF = 68,
+  ATTR_KIND_BYREF = 69,
+  ATTR_KIND_MUSTPROGRESS = 70,
+  ATTR_KIND_NO_CALLBACK = 71,
+  ATTR_KIND_HOT = 72,
+  ATTR_KIND_NO_PROFILE = 73,
+  ATTR_KIND_VSCALE_RANGE = 74,
+  ATTR_KIND_SWIFT_ASYNC = 75,
+  ATTR_KIND_NO_SANITIZE_COVERAGE = 76,
+  ATTR_KIND_ELEMENTTYPE = 77,
 };
 
 enum ComdatSelectionKindCodes {

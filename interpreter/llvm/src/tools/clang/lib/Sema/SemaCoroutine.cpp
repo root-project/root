@@ -18,11 +18,13 @@
 #include "clang/AST/Decl.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/StmtCXX.h"
+#include "clang/Basic/Builtins.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Initialization.h"
 #include "clang/Sema/Overload.h"
 #include "clang/Sema/ScopeInfo.h"
 #include "clang/Sema/SemaInternal.h"
+#include "llvm/ADT/SmallSet.h"
 
 using namespace clang;
 using namespace sema;
@@ -83,7 +85,7 @@ static QualType lookupPromiseType(Sema &S, const FunctionDecl *FD,
       //      ref-qualifier or with the & ref-qualifier
       //  -- "rvalue reference to cv X" for functions declared with the &&
       //      ref-qualifier
-      QualType T = MD->getThisType()->getAs<PointerType>()->getPointeeType();
+      QualType T = MD->getThisType()->castAs<PointerType>()->getPointeeType();
       T = FnType->getRefQualifier() == RQ_RValue
               ? S.Context.getRValueReferenceType(T)
               : S.Context.getLValueReferenceType(T, /*SpelledAsLValue*/ true);
@@ -289,26 +291,6 @@ static ExprResult buildOperatorCoawaitCall(Sema &SemaRef, Scope *S,
                                   cast<UnresolvedLookupExpr>(R.get()));
 }
 
-static Expr *buildBuiltinCall(Sema &S, SourceLocation Loc, Builtin::ID Id,
-                              MultiExprArg CallArgs) {
-  StringRef Name = S.Context.BuiltinInfo.getName(Id);
-  LookupResult R(S, &S.Context.Idents.get(Name), Loc, Sema::LookupOrdinaryName);
-  S.LookupName(R, S.TUScope, /*AllowBuiltinCreation=*/true);
-
-  auto *BuiltInDecl = R.getAsSingle<FunctionDecl>();
-  assert(BuiltInDecl && "failed to find builtin declaration");
-
-  ExprResult DeclRef =
-      S.BuildDeclRefExpr(BuiltInDecl, BuiltInDecl->getType(), VK_LValue, Loc);
-  assert(DeclRef.isUsable() && "Builtin reference cannot fail");
-
-  ExprResult Call =
-      S.BuildCallExpr(/*Scope=*/nullptr, DeclRef.get(), Loc, CallArgs, Loc);
-
-  assert(!Call.isInvalid() && "Call to builtin cannot fail!");
-  return Call.get();
-}
-
 static ExprResult buildCoroutineHandle(Sema &S, QualType PromiseType,
                                        SourceLocation Loc) {
   QualType CoroHandleType = lookupCoroutineHandleType(S, PromiseType, Loc);
@@ -325,7 +307,7 @@ static ExprResult buildCoroutineHandle(Sema &S, QualType PromiseType,
   }
 
   Expr *FramePtr =
-      buildBuiltinCall(S, Loc, Builtin::BI__builtin_coro_frame, {});
+      S.BuildBuiltinCallExpr(Loc, Builtin::BI__builtin_coro_frame, {});
 
   CXXScopeSpec SS;
   ExprResult FromAddr =
@@ -389,40 +371,61 @@ static Expr *maybeTailCall(Sema &S, QualType RetType, Expr *E,
     return nullptr;
 
   Expr *JustAddress = AddressExpr.get();
-  // FIXME: Check that the type of AddressExpr is void*
-  return buildBuiltinCall(S, Loc, Builtin::BI__builtin_coro_resume,
-                          JustAddress);
+
+  // Check that the type of AddressExpr is void*
+  if (!JustAddress->getType().getTypePtr()->isVoidPointerType())
+    S.Diag(cast<CallExpr>(JustAddress)->getCalleeDecl()->getLocation(),
+           diag::warn_coroutine_handle_address_invalid_return_type)
+        << JustAddress->getType();
+
+  // Clean up temporary objects so that they don't live across suspension points
+  // unnecessarily. We choose to clean up before the call to
+  // __builtin_coro_resume so that the cleanup code are not inserted in-between
+  // the resume call and return instruction, which would interfere with the
+  // musttail call contract.
+  JustAddress = S.MaybeCreateExprWithCleanups(JustAddress);
+  return S.BuildBuiltinCallExpr(Loc, Builtin::BI__builtin_coro_resume,
+                                JustAddress);
 }
 
 /// Build calls to await_ready, await_suspend, and await_resume for a co_await
+/// expression.
+/// The generated AST tries to clean up temporary objects as early as
+/// possible so that they don't live across suspension points if possible.
+/// Having temporary objects living across suspension points unnecessarily can
+/// lead to large frame size, and also lead to memory corruptions if the
+/// coroutine frame is destroyed after coming back from suspension. This is done
+/// by wrapping both the await_ready call and the await_suspend call with
+/// ExprWithCleanups. In the end of this function, we also need to explicitly
+/// set cleanup state so that the CoawaitExpr is also wrapped with an
+/// ExprWithCleanups to clean up the awaiter associated with the co_await
 /// expression.
 static ReadySuspendResumeResult buildCoawaitCalls(Sema &S, VarDecl *CoroPromise,
                                                   SourceLocation Loc, Expr *E) {
   OpaqueValueExpr *Operand = new (S.Context)
       OpaqueValueExpr(Loc, E->getType(), VK_LValue, E->getObjectKind(), E);
 
-  // Assume invalid until we see otherwise.
-  ReadySuspendResumeResult Calls = {{}, Operand, /*IsInvalid=*/true};
-
-  ExprResult CoroHandleRes = buildCoroutineHandle(S, CoroPromise->getType(), Loc);
-  if (CoroHandleRes.isInvalid())
-    return Calls;
-  Expr *CoroHandle = CoroHandleRes.get();
-
-  const StringRef Funcs[] = {"await_ready", "await_suspend", "await_resume"};
-  MultiExprArg Args[] = {None, CoroHandle, None};
-  for (size_t I = 0, N = llvm::array_lengthof(Funcs); I != N; ++I) {
-    ExprResult Result = buildMemberCall(S, Operand, Loc, Funcs[I], Args[I]);
-    if (Result.isInvalid())
-      return Calls;
-    Calls.Results[I] = Result.get();
-  }
-
-  // Assume the calls are valid; all further checking should make them invalid.
-  Calls.IsInvalid = false;
+  // Assume valid until we see otherwise.
+  // Further operations are responsible for setting IsInalid to true.
+  ReadySuspendResumeResult Calls = {{}, Operand, /*IsInvalid=*/false};
 
   using ACT = ReadySuspendResumeResult::AwaitCallType;
-  CallExpr *AwaitReady = cast<CallExpr>(Calls.Results[ACT::ACT_Ready]);
+
+  auto BuildSubExpr = [&](ACT CallType, StringRef Func,
+                          MultiExprArg Arg) -> Expr * {
+    ExprResult Result = buildMemberCall(S, Operand, Loc, Func, Arg);
+    if (Result.isInvalid()) {
+      Calls.IsInvalid = true;
+      return nullptr;
+    }
+    Calls.Results[CallType] = Result.get();
+    return Result.get();
+  };
+
+  CallExpr *AwaitReady =
+      cast_or_null<CallExpr>(BuildSubExpr(ACT::ACT_Ready, "await_ready", None));
+  if (!AwaitReady)
+    return Calls;
   if (!AwaitReady->getType()->isDependentType()) {
     // [expr.await]p3 [...]
     // — await-ready is the expression e.await_ready(), contextually converted
@@ -434,18 +437,36 @@ static ReadySuspendResumeResult buildCoawaitCalls(Sema &S, VarDecl *CoroPromise,
       S.Diag(Loc, diag::note_coroutine_promise_call_implicitly_required)
           << AwaitReady->getDirectCallee() << E->getSourceRange();
       Calls.IsInvalid = true;
-    }
-    Calls.Results[ACT::ACT_Ready] = Conv.get();
+    } else
+      Calls.Results[ACT::ACT_Ready] = S.MaybeCreateExprWithCleanups(Conv.get());
   }
-  CallExpr *AwaitSuspend = cast<CallExpr>(Calls.Results[ACT::ACT_Suspend]);
+
+  ExprResult CoroHandleRes =
+      buildCoroutineHandle(S, CoroPromise->getType(), Loc);
+  if (CoroHandleRes.isInvalid()) {
+    Calls.IsInvalid = true;
+    return Calls;
+  }
+  Expr *CoroHandle = CoroHandleRes.get();
+  CallExpr *AwaitSuspend = cast_or_null<CallExpr>(
+      BuildSubExpr(ACT::ACT_Suspend, "await_suspend", CoroHandle));
+  if (!AwaitSuspend)
+    return Calls;
   if (!AwaitSuspend->getType()->isDependentType()) {
     // [expr.await]p3 [...]
     //   - await-suspend is the expression e.await_suspend(h), which shall be
-    //     a prvalue of type void or bool.
+    //     a prvalue of type void, bool, or std::coroutine_handle<Z> for some
+    //     type Z.
     QualType RetType = AwaitSuspend->getCallReturnType(S.Context);
 
     // Experimental support for coroutine_handle returning await_suspend.
-    if (Expr *TailCallSuspend = maybeTailCall(S, RetType, AwaitSuspend, Loc))
+    if (Expr *TailCallSuspend =
+            maybeTailCall(S, RetType, AwaitSuspend, Loc))
+      // Note that we don't wrap the expression with ExprWithCleanups here
+      // because that might interfere with tailcall contract (e.g. inserting
+      // clean up instructions in-between tailcall and return). Instead
+      // ExprWithCleanups is wrapped within maybeTailCall() prior to the resume
+      // call.
       Calls.Results[ACT::ACT_Suspend] = TailCallSuspend;
     else {
       // non-class prvalues always have cv-unqualified types
@@ -457,9 +478,16 @@ static ReadySuspendResumeResult buildCoawaitCalls(Sema &S, VarDecl *CoroPromise,
         S.Diag(Loc, diag::note_coroutine_promise_call_implicitly_required)
             << AwaitSuspend->getDirectCallee();
         Calls.IsInvalid = true;
-      }
+      } else
+        Calls.Results[ACT::ACT_Suspend] =
+            S.MaybeCreateExprWithCleanups(AwaitSuspend);
     }
   }
+
+  BuildSubExpr(ACT::ACT_Resume, "await_resume", None);
+
+  // Make sure the awaiter object gets a chance to be cleaned up.
+  S.Cleanup.setExprNeedsCleanups(true);
 
   return Calls;
 }
@@ -496,13 +524,15 @@ VarDecl *Sema::buildCoroutinePromise(SourceLocation Loc) {
   auto *VD = VarDecl::Create(Context, FD, FD->getLocation(), FD->getLocation(),
                              &PP.getIdentifierTable().get("__promise"), T,
                              Context.getTrivialTypeSourceInfo(T, Loc), SC_None);
+  VD->setImplicit();
   CheckVariableDeclarationType(VD);
   if (VD->isInvalidDecl())
     return nullptr;
 
   auto *ScopeInfo = getCurFunction();
-  // Build a list of arguments, based on the coroutine functions arguments,
-  // that will be passed to the promise type's constructor.
+
+  // Build a list of arguments, based on the coroutine function's arguments,
+  // that if present will be passed to the promise type's constructor.
   llvm::SmallVector<Expr *, 4> CtorArgExprs;
 
   // Add implicit object parameter.
@@ -518,6 +548,7 @@ VarDecl *Sema::buildCoroutinePromise(SourceLocation Loc) {
     }
   }
 
+  // Add the coroutine function's parameters.
   auto &Moves = ScopeInfo->CoroutineParameterMoves;
   for (auto *PD : FD->parameters()) {
     if (PD->getType()->isDependentType())
@@ -539,28 +570,33 @@ VarDecl *Sema::buildCoroutinePromise(SourceLocation Loc) {
     CtorArgExprs.push_back(RefExpr.get());
   }
 
-  // Create an initialization sequence for the promise type using the
-  // constructor arguments, wrapped in a parenthesized list expression.
-  Expr *PLE = ParenListExpr::Create(Context, FD->getLocation(),
-                                    CtorArgExprs, FD->getLocation());
-  InitializedEntity Entity = InitializedEntity::InitializeVariable(VD);
-  InitializationKind Kind = InitializationKind::CreateForInit(
-      VD->getLocation(), /*DirectInit=*/true, PLE);
-  InitializationSequence InitSeq(*this, Entity, Kind, CtorArgExprs,
-                                 /*TopLevelOfInitList=*/false,
-                                 /*TreatUnavailableAsInvalid=*/false);
+  // If we have a non-zero number of constructor arguments, try to use them.
+  // Otherwise, fall back to the promise type's default constructor.
+  if (!CtorArgExprs.empty()) {
+    // Create an initialization sequence for the promise type using the
+    // constructor arguments, wrapped in a parenthesized list expression.
+    Expr *PLE = ParenListExpr::Create(Context, FD->getLocation(),
+                                      CtorArgExprs, FD->getLocation());
+    InitializedEntity Entity = InitializedEntity::InitializeVariable(VD);
+    InitializationKind Kind = InitializationKind::CreateForInit(
+        VD->getLocation(), /*DirectInit=*/true, PLE);
+    InitializationSequence InitSeq(*this, Entity, Kind, CtorArgExprs,
+                                   /*TopLevelOfInitList=*/false,
+                                   /*TreatUnavailableAsInvalid=*/false);
 
-  // Attempt to initialize the promise type with the arguments.
-  // If that fails, fall back to the promise type's default constructor.
-  if (InitSeq) {
-    ExprResult Result = InitSeq.Perform(*this, Entity, Kind, CtorArgExprs);
-    if (Result.isInvalid()) {
-      VD->setInvalidDecl();
-    } else if (Result.get()) {
-      VD->setInit(MaybeCreateExprWithCleanups(Result.get()));
-      VD->setInitStyle(VarDecl::CallInit);
-      CheckCompleteVariableDeclaration(VD);
-    }
+    // Attempt to initialize the promise type with the arguments.
+    // If that fails, fall back to the promise type's default constructor.
+    if (InitSeq) {
+      ExprResult Result = InitSeq.Perform(*this, Entity, Kind, CtorArgExprs);
+      if (Result.isInvalid()) {
+        VD->setInvalidDecl();
+      } else if (Result.get()) {
+        VD->setInit(MaybeCreateExprWithCleanups(Result.get()));
+        VD->setInitStyle(VarDecl::CallInit);
+        CheckCompleteVariableDeclaration(VD);
+      }
+    } else
+      ActOnUninitializedDecl(VD);
   } else
     ActOnUninitializedDecl(VD);
 
@@ -594,6 +630,80 @@ static FunctionScopeInfo *checkCoroutineContext(Sema &S, SourceLocation Loc,
     return nullptr;
 
   return ScopeInfo;
+}
+
+/// Recursively check \p E and all its children to see if any call target
+/// (including constructor call) is declared noexcept. Also any value returned
+/// from the call has a noexcept destructor.
+static void checkNoThrow(Sema &S, const Stmt *E,
+                         llvm::SmallPtrSetImpl<const Decl *> &ThrowingDecls) {
+  auto checkDeclNoexcept = [&](const Decl *D, bool IsDtor = false) {
+    // In the case of dtor, the call to dtor is implicit and hence we should
+    // pass nullptr to canCalleeThrow.
+    if (Sema::canCalleeThrow(S, IsDtor ? nullptr : cast<Expr>(E), D)) {
+      if (const auto *FD = dyn_cast<FunctionDecl>(D)) {
+        // co_await promise.final_suspend() could end up calling
+        // __builtin_coro_resume for symmetric transfer if await_suspend()
+        // returns a handle. In that case, even __builtin_coro_resume is not
+        // declared as noexcept and may throw, it does not throw _into_ the
+        // coroutine that just suspended, but rather throws back out from
+        // whoever called coroutine_handle::resume(), hence we claim that
+        // logically it does not throw.
+        if (FD->getBuiltinID() == Builtin::BI__builtin_coro_resume)
+          return;
+      }
+      if (ThrowingDecls.empty()) {
+        // First time seeing an error, emit the error message.
+        S.Diag(cast<FunctionDecl>(S.CurContext)->getLocation(),
+               diag::err_coroutine_promise_final_suspend_requires_nothrow);
+      }
+      ThrowingDecls.insert(D);
+    }
+  };
+  auto SC = E->getStmtClass();
+  if (SC == Expr::CXXConstructExprClass) {
+    auto const *Ctor = cast<CXXConstructExpr>(E)->getConstructor();
+    checkDeclNoexcept(Ctor);
+    // Check the corresponding destructor of the constructor.
+    checkDeclNoexcept(Ctor->getParent()->getDestructor(), true);
+  } else if (SC == Expr::CallExprClass || SC == Expr::CXXMemberCallExprClass ||
+             SC == Expr::CXXOperatorCallExprClass) {
+    if (!cast<CallExpr>(E)->isTypeDependent()) {
+      checkDeclNoexcept(cast<CallExpr>(E)->getCalleeDecl());
+      auto ReturnType = cast<CallExpr>(E)->getCallReturnType(S.getASTContext());
+      // Check the destructor of the call return type, if any.
+      if (ReturnType.isDestructedType() ==
+          QualType::DestructionKind::DK_cxx_destructor) {
+        const auto *T =
+            cast<RecordType>(ReturnType.getCanonicalType().getTypePtr());
+        checkDeclNoexcept(
+            dyn_cast<CXXRecordDecl>(T->getDecl())->getDestructor(), true);
+      }
+    }
+  }
+  for (const auto *Child : E->children()) {
+    if (!Child)
+      continue;
+    checkNoThrow(S, Child, ThrowingDecls);
+  }
+}
+
+bool Sema::checkFinalSuspendNoThrow(const Stmt *FinalSuspend) {
+  llvm::SmallPtrSet<const Decl *, 4> ThrowingDecls;
+  // We first collect all declarations that should not throw but not declared
+  // with noexcept. We then sort them based on the location before printing.
+  // This is to avoid emitting the same note multiple times on the same
+  // declaration, and also provide a deterministic order for the messages.
+  checkNoThrow(*this, FinalSuspend, ThrowingDecls);
+  auto SortedDecls = llvm::SmallVector<const Decl *, 4>{ThrowingDecls.begin(),
+                                                        ThrowingDecls.end()};
+  sort(SortedDecls, [](const Decl *A, const Decl *B) {
+    return A->getEndLoc() < B->getEndLoc();
+  });
+  for (const auto *D : SortedDecls) {
+    Diag(D->getEndLoc(), diag::note_coroutine_function_declare_noexcept);
+  }
+  return ThrowingDecls.empty();
 }
 
 bool Sema::ActOnCoroutineBodyStart(Scope *SC, SourceLocation KWLoc,
@@ -638,7 +748,7 @@ bool Sema::ActOnCoroutineBodyStart(Scope *SC, SourceLocation KWLoc,
     return true;
 
   StmtResult FinalSuspend = buildSuspends("final_suspend");
-  if (FinalSuspend.isInvalid())
+  if (FinalSuspend.isInvalid() || !checkFinalSuspendNoThrow(FinalSuspend.get()))
     return true;
 
   ScopeInfo->setCoroutineSuspends(InitSuspend.get(), FinalSuspend.get());
@@ -767,7 +877,7 @@ ExprResult Sema::BuildResolvedCoawaitExpr(SourceLocation Loc, Expr *E,
 
   // If the expression is a temporary, materialize it as an lvalue so that we
   // can use it multiple times.
-  if (E->getValueKind() == VK_RValue)
+  if (E->isPRValue())
     E = CreateMaterializeTemporaryExpr(E->getType(), E, true);
 
   // The location of the `co_await` token cannot be used when constructing
@@ -776,8 +886,8 @@ ExprResult Sema::BuildResolvedCoawaitExpr(SourceLocation Loc, Expr *E,
   SourceLocation CallLoc = E->getExprLoc();
 
   // Build the await_ready, await_suspend, await_resume calls.
-  ReadySuspendResumeResult RSS =
-      buildCoawaitCalls(*this, Coroutine->CoroutinePromise, CallLoc, E);
+  ReadySuspendResumeResult RSS = buildCoawaitCalls(
+      *this, Coroutine->CoroutinePromise, CallLoc, E);
   if (RSS.IsInvalid)
     return ExprError();
 
@@ -827,12 +937,12 @@ ExprResult Sema::BuildCoyieldExpr(SourceLocation Loc, Expr *E) {
 
   // If the expression is a temporary, materialize it as an lvalue so that we
   // can use it multiple times.
-  if (E->getValueKind() == VK_RValue)
+  if (E->isPRValue())
     E = CreateMaterializeTemporaryExpr(E->getType(), E, true);
 
   // Build the await_ready, await_suspend, await_resume calls.
-  ReadySuspendResumeResult RSS =
-      buildCoawaitCalls(*this, Coroutine->CoroutinePromise, Loc, E);
+  ReadySuspendResumeResult RSS = buildCoawaitCalls(
+      *this, Coroutine->CoroutinePromise, Loc, E);
   if (RSS.IsInvalid)
     return ExprError();
 
@@ -864,25 +974,10 @@ StmtResult Sema::BuildCoreturnStmt(SourceLocation Loc, Expr *E,
     E = R.get();
   }
 
-  // Move the return value if we can
-  if (E) {
-    auto NRVOCandidate = this->getCopyElisionCandidate(E->getType(), E, CES_AsIfByStdMove);
-    if (NRVOCandidate) {
-      InitializedEntity Entity =
-          InitializedEntity::InitializeResult(Loc, E->getType(), NRVOCandidate);
-      ExprResult MoveResult = this->PerformMoveOrCopyInitialization(
-          Entity, NRVOCandidate, E->getType(), E);
-      if (MoveResult.get())
-        E = MoveResult.get();
-    }
-  }
-
-  // FIXME: If the operand is a reference to a variable that's about to go out
-  // of scope, we should treat the operand as an xvalue for this overload
-  // resolution.
   VarDecl *Promise = FSI->CoroutinePromise;
   ExprResult PC;
   if (E && (isa<InitListExpr>(E) || !E->getType()->isVoidType())) {
+    getNamedReturnInfo(E, SimplerImplicitMoveMode::ForceOn);
     PC = buildPromiseCall(*this, Promise, Loc, "return_value", E);
   } else {
     E = MakeFullDiscardedValueExpr(E).get();
@@ -1227,7 +1322,7 @@ bool CoroutineStmtBuilder::makeNewAndDeleteExpr() {
     return false;
 
   if (RequiresNoThrowAlloc) {
-    const auto *FT = OperatorNew->getType()->getAs<FunctionProtoType>();
+    const auto *FT = OperatorNew->getType()->castAs<FunctionProtoType>();
     if (!FT->isNothrow(/*ResultIfDependent*/ false)) {
       S.Diag(OperatorNew->getLocation(),
              diag::err_coroutine_promise_new_requires_nothrow)
@@ -1242,10 +1337,10 @@ bool CoroutineStmtBuilder::makeNewAndDeleteExpr() {
     return false;
 
   Expr *FramePtr =
-      buildBuiltinCall(S, Loc, Builtin::BI__builtin_coro_frame, {});
+      S.BuildBuiltinCallExpr(Loc, Builtin::BI__builtin_coro_frame, {});
 
   Expr *FrameSize =
-      buildBuiltinCall(S, Loc, Builtin::BI__builtin_coro_size, {});
+      S.BuildBuiltinCallExpr(Loc, Builtin::BI__builtin_coro_size, {});
 
   // Make new call.
 
@@ -1274,13 +1369,13 @@ bool CoroutineStmtBuilder::makeNewAndDeleteExpr() {
     return false;
 
   Expr *CoroFree =
-      buildBuiltinCall(S, Loc, Builtin::BI__builtin_coro_free, {FramePtr});
+      S.BuildBuiltinCallExpr(Loc, Builtin::BI__builtin_coro_free, {FramePtr});
 
   SmallVector<Expr *, 2> DeleteArgs{CoroFree};
 
   // Check if we need to pass the size.
   const auto *OpDeleteType =
-      OpDeleteQualType.getTypePtr()->getAs<FunctionProtoType>();
+      OpDeleteQualType.getTypePtr()->castAs<FunctionProtoType>();
   if (OpDeleteType->getNumParams() > 1)
     DeleteArgs.push_back(FrameSize);
 
@@ -1438,8 +1533,8 @@ bool CoroutineStmtBuilder::makeGroDeclAndReturnStmt() {
   if (GroType->isVoidType()) {
     // Trigger a nice error message.
     InitializedEntity Entity =
-        InitializedEntity::InitializeResult(Loc, FnRetType, false);
-    S.PerformMoveOrCopyInitialization(Entity, nullptr, FnRetType, ReturnValue);
+        InitializedEntity::InitializeResult(Loc, FnRetType);
+    S.PerformCopyInitialization(Entity, SourceLocation(), ReturnValue);
     noteMemberDeclaredHere(S, ReturnValue, Fn);
     return false;
   }
@@ -1448,14 +1543,15 @@ bool CoroutineStmtBuilder::makeGroDeclAndReturnStmt() {
       S.Context, &FD, FD.getLocation(), FD.getLocation(),
       &S.PP.getIdentifierTable().get("__coro_gro"), GroType,
       S.Context.getTrivialTypeSourceInfo(GroType, Loc), SC_None);
+  GroDecl->setImplicit();
 
   S.CheckVariableDeclarationType(GroDecl);
   if (GroDecl->isInvalidDecl())
     return false;
 
   InitializedEntity Entity = InitializedEntity::InitializeVariable(GroDecl);
-  ExprResult Res = S.PerformMoveOrCopyInitialization(Entity, nullptr, GroType,
-                                                     this->ReturnValue);
+  ExprResult Res =
+      S.PerformCopyInitialization(Entity, SourceLocation(), ReturnValue);
   if (Res.isInvalid())
     return false;
 
@@ -1526,8 +1622,8 @@ bool Sema::buildCoroutineParameterMoves(SourceLocation Loc) {
   auto *FD = cast<FunctionDecl>(CurContext);
 
   auto *ScopeInfo = getCurFunction();
-  assert(ScopeInfo->CoroutineParameterMoves.empty() &&
-         "Should not build parameter moves twice");
+  if (!ScopeInfo->CoroutineParameterMoves.empty())
+    return false;
 
   for (auto *PD : FD->parameters()) {
     if (PD->getType()->isDependentType())

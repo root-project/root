@@ -22,7 +22,17 @@ class raw_ostream;
 /// Utility for building string tables with deduplicated suffixes.
 class StringTableBuilder {
 public:
-  enum Kind { ELF, WinCOFF, MachO, RAW, DWARF };
+  enum Kind {
+    ELF,
+    WinCOFF,
+    MachO,
+    MachO64,
+    MachOLinked,
+    MachO64Linked,
+    RAW,
+    DWARF,
+    XCOFF
+  };
 
 private:
   DenseMap<CachedHashStringRef, size_t> StringIndexMap;
@@ -57,6 +67,16 @@ public:
   size_t getOffset(CachedHashStringRef S) const;
   size_t getOffset(StringRef S) const {
     return getOffset(CachedHashStringRef(S));
+  }
+
+  /// Check if a string is contained in the string table. Since this class
+  /// doesn't store the string values, this function can be used to check if
+  /// storage needs to be done prior to adding the string.
+  bool contains(StringRef S) const {
+    return contains(CachedHashStringRef(S));
+  }
+  bool contains(CachedHashStringRef S) const {
+    return StringIndexMap.count(S);
   }
 
   size_t getSize() const { return Size; }

@@ -16,9 +16,7 @@
 #include "llvm/Target/TargetMachine.h"
 
 namespace llvm {
-class MCSymbol;
 class WebAssemblyTargetStreamer;
-class WebAssemblyMCInstLower;
 
 class LLVM_LIBRARY_VISIBILITY WebAssemblyAsmPrinter final : public AsmPrinter {
   const WebAssemblySubtarget *Subtarget;
@@ -26,6 +24,14 @@ class LLVM_LIBRARY_VISIBILITY WebAssemblyAsmPrinter final : public AsmPrinter {
   WebAssemblyFunctionInfo *MFI;
   // TODO: Do the uniquing of Signatures here instead of ObjectFileWriter?
   std::vector<std::unique_ptr<wasm::WasmSignature>> Signatures;
+  std::vector<std::unique_ptr<std::string>> Names;
+  bool signaturesEmitted = false;
+
+  StringRef storeName(StringRef Name) {
+    std::unique_ptr<std::string> N = std::make_unique<std::string>(Name);
+    Names.push_back(std::move(N));
+    return *Names.back();
+  }
 
 public:
   explicit WebAssemblyAsmPrinter(TargetMachine &TM,
@@ -57,13 +63,15 @@ public:
   // AsmPrinter Implementation.
   //===------------------------------------------------------------------===//
 
-  void EmitEndOfAsmFile(Module &M) override;
+  void emitEndOfAsmFile(Module &M) override;
   void EmitProducerInfo(Module &M);
   void EmitTargetFeatures(Module &M);
-  void EmitJumpTableInfo() override;
-  void EmitConstantPool() override;
-  void EmitFunctionBodyStart() override;
-  void EmitInstruction(const MachineInstr *MI) override;
+  void emitGlobalVariable(const GlobalVariable *GV) override;
+  void emitJumpTableInfo() override;
+  void emitConstantPool() override;
+  void emitLinkage(const GlobalValue *, MCSymbol *) const override;
+  void emitFunctionBodyStart() override;
+  void emitInstruction(const MachineInstr *MI) override;
   bool PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
                        const char *ExtraCode, raw_ostream &OS) override;
   bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNo,
@@ -72,6 +80,11 @@ public:
   MVT getRegType(unsigned RegNo) const;
   std::string regToString(const MachineOperand &MO);
   WebAssemblyTargetStreamer *getTargetStreamer();
+  MCSymbolWasm *getMCSymbolForFunction(const Function *F, bool EnableEmEH,
+                                       wasm::WasmSignature *Sig,
+                                       bool &InvokeDetected);
+  MCSymbol *getOrCreateWasmSymbol(StringRef Name);
+  void emitExternalDecls(const Module &M);
 };
 
 } // end namespace llvm

@@ -96,6 +96,17 @@ void RewriteBuffer::RemoveText(unsigned OrigOffset, unsigned Size,
     }
     if (posI != end() && *posI == '\n') {
       Buffer.erase(curLineStartOffs, lineSize + 1/* + '\n'*/);
+      // FIXME: Here, the offset of the start of the line is supposed to be
+      // expressed in terms of the original input not the "real" rewrite
+      // buffer.  How do we compute that reliably?  It might be tempting to use
+      // curLineStartOffs + OrigOffset - RealOffset, but that assumes the
+      // difference between the original and real offset is the same at the
+      // removed text and at the start of the line, but that's not true if
+      // edits were previously made earlier on the line.  This bug is also
+      // documented by a FIXME on the definition of
+      // clang::Rewriter::RewriteOptions::RemoveLineIfEmpty.  A reproducer for
+      // the implementation below is the test RemoveLineIfEmpty in
+      // clang/unittests/Rewrite/RewriteBufferTest.cpp.
       AddReplaceDelta(curLineStartOffs, -(lineSize + 1/* + '\n'*/));
     }
   }
@@ -252,8 +263,8 @@ bool Rewriter::InsertText(SourceLocation Loc, StringRef Str,
     StringRef MB = SourceMgr->getBufferData(FID);
 
     unsigned lineNo = SourceMgr->getLineNumber(FID, StartOffs) - 1;
-    const SrcMgr::ContentCache *
-        Content = SourceMgr->getSLocEntry(FID).getFile().getContentCache();
+    const SrcMgr::ContentCache *Content =
+        &SourceMgr->getSLocEntry(FID).getFile().getContentCache();
     unsigned lineOffs = Content->SourceLineCache[lineNo];
 
     // Find the whitespace at the start of the line.
@@ -356,8 +367,8 @@ bool Rewriter::IncreaseIndentation(CharSourceRange range,
   unsigned startLineNo = SourceMgr->getLineNumber(FID, StartOff) - 1;
   unsigned endLineNo = SourceMgr->getLineNumber(FID, EndOff) - 1;
 
-  const SrcMgr::ContentCache *
-      Content = SourceMgr->getSLocEntry(FID).getFile().getContentCache();
+  const SrcMgr::ContentCache *Content =
+      &SourceMgr->getSLocEntry(FID).getFile().getContentCache();
 
   // Find where the lines start.
   unsigned parentLineOffs = Content->SourceLineCache[parentLineNo];

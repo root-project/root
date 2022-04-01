@@ -83,7 +83,7 @@ A |LLVM IR fuzzer| aimed at finding bugs in instruction selection.
 
 This fuzzer accepts flags after `ignore_remaining_args=1`. The flags match
 those of :doc:`llc <CommandGuide/llc>` and the triple is required. For example,
-the following command would fuzz AArch64 with :doc:`GlobalISel`:
+the following command would fuzz AArch64 with :doc:`GlobalISel/index`:
 
 .. code-block:: shell
 
@@ -106,7 +106,7 @@ llvm-opt-fuzzer
 
 A |LLVM IR fuzzer| aimed at finding bugs in optimization passes.
 
-It receives optimzation pipeline and runs it for each fuzzer input.
+It receives optimization pipeline and runs it for each fuzzer input.
 
 Interface of this fuzzer almost directly mirrors ``llvm-isel-fuzzer``. Both
 ``mtriple`` and ``passes`` arguments are required. Passes are specified in a

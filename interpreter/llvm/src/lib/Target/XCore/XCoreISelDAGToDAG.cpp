@@ -24,6 +24,7 @@
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/IntrinsicsXCore.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -151,7 +152,7 @@ void XCoreDAGToDAGISel::Select(SDNode *N) {
                                             CurDAG->getEntryNode());
       MachineMemOperand *MemOp =
           MF->getMachineMemOperand(MachinePointerInfo::getConstantPool(*MF),
-                                   MachineMemOperand::MOLoad, 4, 4);
+                                   MachineMemOperand::MOLoad, 4, Align(4));
       CurDAG->setNodeMemRefs(cast<MachineSDNode>(node), {MemOp});
       ReplaceNode(N, node);
       return;

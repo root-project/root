@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "BenchmarkCode.h"
+#include "Error.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -38,48 +39,92 @@ class ExegesisTarget;
 
 // Gather the set of reserved registers (depends on function's calling
 // convention and target machine).
-llvm::BitVector getFunctionReservedRegs(const llvm::TargetMachine &TM);
+BitVector getFunctionReservedRegs(const TargetMachine &TM);
+
+// Helper to fill in a basic block.
+class BasicBlockFiller {
+public:
+  BasicBlockFiller(MachineFunction &MF, MachineBasicBlock *MBB,
+                   const MCInstrInfo *MCII);
+
+  void addInstruction(const MCInst &Inst, const DebugLoc &DL = DebugLoc());
+  void addInstructions(ArrayRef<MCInst> Insts, const DebugLoc &DL = DebugLoc());
+
+  void addReturn(const DebugLoc &DL = DebugLoc());
+
+  MachineFunction &MF;
+  MachineBasicBlock *const MBB;
+  const MCInstrInfo *const MCII;
+};
+
+// Helper to fill in a function.
+class FunctionFiller {
+public:
+  FunctionFiller(MachineFunction &MF, std::vector<unsigned> RegistersSetUp);
+
+  // Adds a basic block to the function.
+  BasicBlockFiller addBasicBlock();
+
+  // Returns the function entry point.
+  BasicBlockFiller getEntry() { return Entry; }
+
+  MachineFunction &MF;
+  const MCInstrInfo *const MCII;
+
+  // Returns the set of registers in the snippet setup code.
+  ArrayRef<unsigned> getRegistersSetUp() const;
+
+private:
+  BasicBlockFiller Entry;
+  // The set of registers that are set up in the basic block.
+  std::vector<unsigned> RegistersSetUp;
+};
+
+// A callback that fills a function.
+using FillFunction = std::function<void(FunctionFiller &)>;
 
 // Creates a temporary `void foo(char*)` function containing the provided
 // Instructions. Runs a set of llvm Passes to provide correct prologue and
 // epilogue. Once the MachineFunction is ready, it is assembled for TM to
 // AsmStream, the temporary function is eventually discarded.
-void assembleToStream(const ExegesisTarget &ET,
-                      std::unique_ptr<llvm::LLVMTargetMachine> TM,
-                      llvm::ArrayRef<unsigned> LiveIns,
-                      llvm::ArrayRef<RegisterValue> RegisterInitialValues,
-                      llvm::ArrayRef<llvm::MCInst> Instructions,
-                      llvm::raw_pwrite_stream &AsmStream);
+Error assembleToStream(const ExegesisTarget &ET,
+                       std::unique_ptr<LLVMTargetMachine> TM,
+                       ArrayRef<unsigned> LiveIns,
+                       ArrayRef<RegisterValue> RegisterInitialValues,
+                       const FillFunction &Fill, raw_pwrite_stream &AsmStream);
 
 // Creates an ObjectFile in the format understood by the host.
 // Note: the resulting object keeps a copy of Buffer so it can be discarded once
 // this function returns.
-llvm::object::OwningBinary<llvm::object::ObjectFile>
-getObjectFromBuffer(llvm::StringRef Buffer);
+object::OwningBinary<object::ObjectFile> getObjectFromBuffer(StringRef Buffer);
 
 // Loads the content of Filename as on ObjectFile and returns it.
-llvm::object::OwningBinary<llvm::object::ObjectFile>
-getObjectFromFile(llvm::StringRef Filename);
+object::OwningBinary<object::ObjectFile> getObjectFromFile(StringRef Filename);
 
 // Consumes an ObjectFile containing a `void foo(char*)` function and make it
 // executable.
 struct ExecutableFunction {
   explicit ExecutableFunction(
-      std::unique_ptr<llvm::LLVMTargetMachine> TM,
-      llvm::object::OwningBinary<llvm::object::ObjectFile> &&ObjectFileHolder);
+      std::unique_ptr<LLVMTargetMachine> TM,
+      object::OwningBinary<object::ObjectFile> &&ObjectFileHolder);
 
   // Retrieves the function as an array of bytes.
-  llvm::StringRef getFunctionBytes() const { return FunctionBytes; }
+  StringRef getFunctionBytes() const { return FunctionBytes; }
 
   // Executes the function.
   void operator()(char *Memory) const {
     ((void (*)(char *))(intptr_t)FunctionBytes.data())(Memory);
   }
 
-  std::unique_ptr<llvm::LLVMContext> Context;
-  std::unique_ptr<llvm::ExecutionEngine> ExecEngine;
-  llvm::StringRef FunctionBytes;
+  std::unique_ptr<LLVMContext> Context;
+  std::unique_ptr<ExecutionEngine> ExecEngine;
+  StringRef FunctionBytes;
 };
+
+// Creates a void(int8*) MachineFunction.
+MachineFunction &createVoidVoidPtrMachineFunction(StringRef FunctionID,
+                                                  Module *Module,
+                                                  MachineModuleInfo *MMI);
 
 } // namespace exegesis
 } // namespace llvm

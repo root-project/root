@@ -52,13 +52,16 @@ def FeatureXSAVE   : SubtargetFeature<"xsave", "HasXSAVE", "true",
                                        "Support xsave instructions">;
 
 def FeatureXSAVEOPT: SubtargetFeature<"xsaveopt", "HasXSAVEOPT", "true",
-                                       "Support xsaveopt instructions">;
+                                       "Support xsaveopt instructions",
+                                       [FeatureXSAVE]>;
 
 def FeatureXSAVEC  : SubtargetFeature<"xsavec", "HasXSAVEC", "true",
-                                       "Support xsavec instructions">;
+                                       "Support xsavec instructions",
+                                       [FeatureXSAVE]>;
 
 def FeatureXSAVES  : SubtargetFeature<"xsaves", "HasXSAVES", "true",
-                                       "Support xsaves instructions">;
+                                       "Support xsaves instructions",
+                                       [FeatureXSAVE]>;
 
 def FeatureSSE1    : SubtargetFeature<"sse", "X86SSELevel", "SSE1",
                                       "Enable SSE instructions">;
@@ -168,6 +171,9 @@ def FeaturePKU   : SubtargetFeature<"pku", "HasPKU", "true",
 def FeatureVNNI    : SubtargetFeature<"avx512vnni", "HasVNNI", "true",
                           "Enable AVX-512 Vector Neural Network Instructions",
                                       [FeatureAVX512]>;
+def FeatureAVXVNNI    : SubtargetFeature<"avxvnni", "HasAVXVNNI", "true",
+                           "Support AVX_VNNI encoding",
+                                      [FeatureAVX2]>;
 def FeatureBF16    : SubtargetFeature<"avx512bf16", "HasBF16", "true",
                            "Support bfloat16 floating point",
                                       [FeatureBWI]>;
@@ -231,8 +237,8 @@ def FeaturePRFCHW  : SubtargetFeature<"prfchw", "HasPRFCHW", "true",
                                       "Support PRFCHW instructions">;
 def FeatureRDSEED  : SubtargetFeature<"rdseed", "HasRDSEED", "true",
                                       "Support RDSEED instruction">;
-def FeatureLAHFSAHF : SubtargetFeature<"sahf", "HasLAHFSAHF", "true",
-                                       "Support LAHF and SAHF instructions">;
+def FeatureLAHFSAHF : SubtargetFeature<"sahf", "HasLAHFSAHF64", "true",
+                           "Support LAHF and SAHF instructions in 64-bit mode">;
 def FeatureMWAITX  : SubtargetFeature<"mwaitx", "HasMWAITX", "true",
                                       "Enable MONITORX/MWAITX timer functionality">;
 def FeatureCLZERO  : SubtargetFeature<"clzero", "HasCLZERO", "true",
@@ -241,8 +247,14 @@ def FeatureCLDEMOTE  : SubtargetFeature<"cldemote", "HasCLDEMOTE", "true",
                                       "Enable Cache Demote">;
 def FeaturePTWRITE  : SubtargetFeature<"ptwrite", "HasPTWRITE", "true",
                                       "Support ptwrite instruction">;
-def FeatureMPX     : SubtargetFeature<"mpx", "HasMPX", "true",
-                                      "Support MPX instructions">;
+def FeatureAMXTILE     : SubtargetFeature<"amx-tile", "HasAMXTILE", "true",
+                                      "Support AMX-TILE instructions">;
+def FeatureAMXINT8     : SubtargetFeature<"amx-int8", "HasAMXINT8", "true",
+                                      "Support AMX-INT8 instructions",
+                                      [FeatureAMXTILE]>;
+def FeatureAMXBF16     : SubtargetFeature<"amx-bf16", "HasAMXBF16", "true",
+                                      "Support AMX-BF16 instructions",
+                                      [FeatureAMXTILE]>;
 def FeatureLEAForSP : SubtargetFeature<"lea-sp", "UseLeaForSP", "true",
                                      "Use LEA for adjusting the stack pointer">;
 def FeatureSlowDivide32 : SubtargetFeature<"idivl-to-divb",
@@ -270,6 +282,20 @@ def FeatureWAITPKG  : SubtargetFeature<"waitpkg", "HasWAITPKG", "true",
                                       "Wait and pause enhancements">;
 def FeatureENQCMD : SubtargetFeature<"enqcmd", "HasENQCMD", "true",
                                      "Has ENQCMD instructions">;
+def FeatureKL  : SubtargetFeature<"kl", "HasKL", "true",
+                                  "Support Key Locker kl Instructions",
+                                  [FeatureSSE2]>;
+def FeatureWIDEKL  : SubtargetFeature<"widekl", "HasWIDEKL", "true",
+                                      "Support Key Locker wide Instructions",
+                                      [FeatureKL]>;
+def FeatureHRESET : SubtargetFeature<"hreset", "HasHRESET", "true",
+                                      "Has hreset instruction">;
+def FeatureSERIALIZE : SubtargetFeature<"serialize", "HasSERIALIZE", "true",
+                                        "Has serialize instruction">;
+def FeatureTSXLDTRK : SubtargetFeature<"tsxldtrk", "HasTSXLDTRK", "true",
+                                       "Support TSXLDTRK instructions">;
+def FeatureUINTR : SubtargetFeature<"uintr", "HasUINTR", "true",
+                                    "Has UINTR Instructions">;
 // On some processors, instructions that implicitly take two memory operands are
 // slow. In practice, this means that CALL, PUSH, and POP with memory operands
 // should be avoided in favor of a MOV + register CALL/PUSH/POP.
@@ -297,16 +323,21 @@ def FeaturePCONFIG : SubtargetFeature<"pconfig", "HasPCONFIG", "true",
                                       "platform configuration instruction">;
 // On recent X86 (port bound) processors, its preferable to combine to a single shuffle
 // using a variable mask over multiple fixed shuffles.
-def FeatureFastVariableShuffle
-    : SubtargetFeature<"fast-variable-shuffle",
-                       "HasFastVariableShuffle",
-                       "true", "Shuffles with variable masks are fast">;
-// On some X86 processors, there is no performance hazard to writing only the
-// lower parts of a YMM or ZMM register without clearing the upper part.
-def FeatureFastPartialYMMorZMMWrite
-    : SubtargetFeature<"fast-partial-ymm-or-zmm-write",
-                       "HasFastPartialYMMorZMMWrite",
-                       "true", "Partial writes to YMM/ZMM registers are fast">;
+def FeatureFastVariableCrossLaneShuffle
+    : SubtargetFeature<"fast-variable-crosslane-shuffle",
+                       "HasFastVariableCrossLaneShuffle",
+                       "true", "Cross-lane shuffles with variable masks are fast">;
+def FeatureFastVariablePerLaneShuffle
+    : SubtargetFeature<"fast-variable-perlane-shuffle",
+                       "HasFastVariablePerLaneShuffle",
+                       "true", "Per-lane shuffles with variable masks are fast">;
+
+// On some X86 processors, a vzeroupper instruction should be inserted after
+// using ymm/zmm registers before executing code that may use SSE instructions.
+def FeatureInsertVZEROUPPER
+    : SubtargetFeature<"vzeroupper",
+                       "InsertVZEROUPPER",
+                       "true", "Should insert vzeroupper instructions">;
 // FeatureFastScalarFSQRT should be enabled if scalar FSQRT has shorter latency
 // than the corresponding NR code. FeatureFastVectorFSQRT should be enabled if
 // vector FSQRT has higher throughput than the corresponding NR code.
@@ -326,6 +357,11 @@ def FeatureFastLZCNT
     : SubtargetFeature<
           "fast-lzcnt", "HasFastLZCNT", "true",
           "LZCNT instructions are as fast as most simple integer ops">;
+// If the target can efficiently decode NOPs upto 7-bytes in length.
+def FeatureFast7ByteNOP
+    : SubtargetFeature<
+          "fast-7bytenop", "HasFast7ByteNOP", "true",
+          "Target can quickly decode up to 7 byte NOPs">;
 // If the target can efficiently decode NOPs upto 11-bytes in length.
 def FeatureFast11ByteNOP
     : SubtargetFeature<
@@ -354,6 +390,12 @@ def FeatureERMSB
           "ermsb", "HasERMSB", "true",
           "REP MOVS/STOS are fast">;
 
+// Icelake and newer processors have Fast Short REP MOV.
+def FeatureFSRM
+    : SubtargetFeature<
+          "fsrm", "HasFSRM", "true",
+          "REP MOVSB of short lengths is faster">;
+
 // Bulldozer and newer processors can merge CMP/TEST (but not other
 // instructions) with conditional branches.
 def FeatureBranchFusion
@@ -375,9 +417,17 @@ def FeatureHasFastGather
     : SubtargetFeature<"fast-gather", "HasFastGather", "true",
                        "Indicates if gather is reasonably fast">;
 
+def FeaturePrefer128Bit
+    : SubtargetFeature<"prefer-128-bit", "Prefer128Bit", "true",
+                       "Prefer 128-bit AVX instructions">;
+
 def FeaturePrefer256Bit
     : SubtargetFeature<"prefer-256-bit", "Prefer256Bit", "true",
                        "Prefer 256-bit AVX instructions">;
+
+def FeaturePreferMaskRegisters
+    : SubtargetFeature<"prefer-mask-registers", "PreferMaskRegisters", "true",
+                       "Prefer AVX512 mask registers over PTEST/MOVMSK">;
 
 // Lower indirect calls using a special construct called a `retpoline` to
 // mitigate potential Spectre v2 attacks against them.
@@ -415,6 +465,31 @@ def FeatureRetpolineExternalThunk
           "ourselves. Only has effect when combined with some other retpoline "
           "feature", [FeatureRetpolineIndirectCalls]>;
 
+// Mitigate LVI attacks against indirect calls/branches and call returns
+def FeatureLVIControlFlowIntegrity
+    : SubtargetFeature<
+          "lvi-cfi", "UseLVIControlFlowIntegrity", "true",
+          "Prevent indirect calls/branches from using a memory operand, and "
+          "precede all indirect calls/branches from a register with an "
+          "LFENCE instruction to serialize control flow. Also decompose RET "
+          "instructions into a POP+LFENCE+JMP sequence.">;
+
+// Enable SESES to mitigate speculative execution attacks
+def FeatureSpeculativeExecutionSideEffectSuppression
+    : SubtargetFeature<
+          "seses", "UseSpeculativeExecutionSideEffectSuppression", "true",
+          "Prevent speculative execution side channel timing attacks by "
+          "inserting a speculation barrier before memory reads, memory writes, "
+          "and conditional branches. Implies LVI Control Flow integrity.",
+          [FeatureLVIControlFlowIntegrity]>;
+
+// Mitigate LVI attacks against data loads
+def FeatureLVILoadHardening
+    : SubtargetFeature<
+          "lvi-load-hardening", "UseLVILoadHardening", "true",
+          "Insert LFENCE instructions to prevent data speculatively injected "
+          "into loads from being used maliciously.">;
+
 // Direct Move instructions.
 def FeatureMOVDIRI  : SubtargetFeature<"movdiri", "HasMOVDIRI", "true",
                                        "Support movdiri instruction">;
@@ -432,7 +507,7 @@ def FeatureFastHorizontalOps
     : SubtargetFeature<
         "fast-hops", "HasFastHorizontalOps", "true",
         "Prefer horizontal vector math instructions (haddp, phsub, etc.) over "
-        "normal vector instructions with shuffles", [FeatureSSE3]>;
+        "normal vector instructions with shuffles">;
 
 def FeatureFastScalarShiftMasks
     : SubtargetFeature<
@@ -444,22 +519,22 @@ def FeatureFastVectorShiftMasks
         "fast-vector-shift-masks", "HasFastVectorShiftMasks", "true",
         "Prefer a left/right vector logical shift pair over a shift+and pair">;
 
-// Merge branches using three-way conditional code.
-def FeatureMergeToThreeWayBranch : SubtargetFeature<"merge-to-threeway-branch",
-                                        "ThreewayBranchProfitable", "true",
-                                        "Merge branches to a three-way "
-                                        "conditional branch">;
+def FeatureFastMOVBE
+    : SubtargetFeature<"fast-movbe", "HasFastMOVBE", "true",
+    "Prefer a movbe over a single-use load + bswap / single-use bswap + store">;
+
+def FeatureUseGLMDivSqrtCosts
+    : SubtargetFeature<"use-glm-div-sqrt-costs", "UseGLMDivSqrtCosts", "true",
+        "Use Goldmont specific floating point div/sqrt costs">;
+
+// Enable use of alias analysis during code generation.
+def FeatureUseAA : SubtargetFeature<"use-aa", "UseAA", "true",
+                                    "Use alias analysis during codegen">;
 
 // Bonnell
 def ProcIntelAtom : SubtargetFeature<"", "X86ProcFamily", "IntelAtom", "">;
 // Silvermont
 def ProcIntelSLM  : SubtargetFeature<"", "X86ProcFamily", "IntelSLM", "">;
-// Goldmont
-def ProcIntelGLM  : SubtargetFeature<"", "X86ProcFamily", "IntelGLM", "">;
-// Goldmont Plus
-def ProcIntelGLP  : SubtargetFeature<"", "X86ProcFamily", "IntelGLP", "">;
-// Tremont
-def ProcIntelTRM  : SubtargetFeature<"", "X86ProcFamily", "IntelTRM", "">;
 
 //===----------------------------------------------------------------------===//
 // Register File Description
@@ -488,6 +563,8 @@ include "X86SchedHaswell.td"
 include "X86SchedBroadwell.td"
 include "X86ScheduleSLM.td"
 include "X86ScheduleZnver1.td"
+include "X86ScheduleZnver2.td"
+include "X86ScheduleZnver3.td"
 include "X86ScheduleBdVer2.td"
 include "X86ScheduleBtVer2.td"
 include "X86SchedSkylakeClient.td"
@@ -498,57 +575,59 @@ include "X86SchedSkylakeServer.td"
 //===----------------------------------------------------------------------===//
 
 def ProcessorFeatures {
+  // x86-64 and x86-64-v[234]
+  list<SubtargetFeature> X86_64V1Features = [
+    FeatureX87, FeatureCMPXCHG8B, FeatureCMOV, FeatureMMX, FeatureSSE2,
+    FeatureFXSR, FeatureNOPL, Feature64Bit
+  ];
+  list<SubtargetFeature> X86_64V2Features = !listconcat(
+      X86_64V1Features,
+      [FeatureCMPXCHG16B, FeatureLAHFSAHF, FeaturePOPCNT, FeatureSSE42]);
+  list<SubtargetFeature> X86_64V3Features = !listconcat(X86_64V2Features, [
+    FeatureAVX2, FeatureBMI, FeatureBMI2, FeatureF16C, FeatureFMA, FeatureLZCNT,
+    FeatureMOVBE, FeatureXSAVE
+  ]);
+  list<SubtargetFeature> X86_64V4Features = !listconcat(X86_64V3Features, [
+    FeatureBWI,
+    FeatureCDI,
+    FeatureDQI,
+    FeatureVLX,
+  ]);
+
   // Nehalem
-  list<SubtargetFeature> NHMInheritableFeatures = [FeatureX87,
-                                                   FeatureCMPXCHG8B,
-                                                   FeatureCMOV,
-                                                   FeatureMMX,
-                                                   FeatureSSE42,
-                                                   FeatureFXSR,
-                                                   FeatureNOPL,
-                                                   Feature64Bit,
-                                                   FeatureCMPXCHG16B,
-                                                   FeaturePOPCNT,
-                                                   FeatureLAHFSAHF,
-                                                   FeatureMacroFusion];
-  list<SubtargetFeature> NHMSpecificFeatures = [];
-  list<SubtargetFeature> NHMFeatures =
-    !listconcat(NHMInheritableFeatures, NHMSpecificFeatures);
+  list<SubtargetFeature> NHMFeatures = X86_64V2Features;
+  list<SubtargetFeature> NHMTuning = [FeatureMacroFusion,
+                                      FeatureInsertVZEROUPPER];
 
   // Westmere
   list<SubtargetFeature> WSMAdditionalFeatures = [FeaturePCLMUL];
-  list<SubtargetFeature> WSMSpecificFeatures = [];
-  list<SubtargetFeature> WSMInheritableFeatures =
-    !listconcat(NHMInheritableFeatures, WSMAdditionalFeatures);
+  list<SubtargetFeature> WSMTuning = NHMTuning;
   list<SubtargetFeature> WSMFeatures =
-    !listconcat(WSMInheritableFeatures, WSMSpecificFeatures);
+    !listconcat(NHMFeatures, WSMAdditionalFeatures);
 
   // Sandybridge
   list<SubtargetFeature> SNBAdditionalFeatures = [FeatureAVX,
-                                                  FeatureSlowDivide64,
                                                   FeatureXSAVE,
-                                                  FeatureXSAVEOPT,
-                                                  FeatureSlow3OpsLEA,
-                                                  FeatureFastScalarFSQRT,
-                                                  FeatureFastSHLDRotate,
-                                                  FeatureMergeToThreeWayBranch];
-  list<SubtargetFeature> SNBSpecificFeatures = [FeatureSlowUAMem32,
-                                                FeaturePOPCNTFalseDeps];
-  list<SubtargetFeature> SNBInheritableFeatures =
-    !listconcat(WSMInheritableFeatures, SNBAdditionalFeatures);
+                                                  FeatureXSAVEOPT];
+  list<SubtargetFeature> SNBTuning = [FeatureMacroFusion,
+                                      FeatureSlow3OpsLEA,
+                                      FeatureSlowDivide64,
+                                      FeatureSlowUAMem32,
+                                      FeatureFastScalarFSQRT,
+                                      FeatureFastSHLDRotate,
+                                      FeatureFast15ByteNOP,
+                                      FeaturePOPCNTFalseDeps,
+                                      FeatureInsertVZEROUPPER];
   list<SubtargetFeature> SNBFeatures =
-    !listconcat(SNBInheritableFeatures, SNBSpecificFeatures);
+    !listconcat(WSMFeatures, SNBAdditionalFeatures);
 
   // Ivybridge
   list<SubtargetFeature> IVBAdditionalFeatures = [FeatureRDRAND,
                                                   FeatureF16C,
                                                   FeatureFSGSBase];
-  list<SubtargetFeature> IVBSpecificFeatures = [FeatureSlowUAMem32,
-                                                FeaturePOPCNTFalseDeps];
-  list<SubtargetFeature> IVBInheritableFeatures =
-    !listconcat(SNBInheritableFeatures, IVBAdditionalFeatures);
+  list<SubtargetFeature> IVBTuning = SNBTuning;
   list<SubtargetFeature> IVBFeatures =
-    !listconcat(IVBInheritableFeatures, IVBSpecificFeatures);
+    !listconcat(SNBFeatures, IVBAdditionalFeatures);
 
   // Haswell
   list<SubtargetFeature> HSWAdditionalFeatures = [FeatureAVX2,
@@ -558,73 +637,88 @@ def ProcessorFeatures {
                                                   FeatureFMA,
                                                   FeatureINVPCID,
                                                   FeatureLZCNT,
-                                                  FeatureMOVBE,
-                                                  FeatureFastVariableShuffle];
-  list<SubtargetFeature> HSWSpecificFeatures = [FeaturePOPCNTFalseDeps,
-                                                FeatureLZCNTFalseDeps];
-  list<SubtargetFeature> HSWInheritableFeatures =
-    !listconcat(IVBInheritableFeatures, HSWAdditionalFeatures);
+                                                  FeatureMOVBE];
+  list<SubtargetFeature> HSWTuning = [FeatureMacroFusion,
+                                      FeatureSlow3OpsLEA,
+                                      FeatureSlowDivide64,
+                                      FeatureFastScalarFSQRT,
+                                      FeatureFastSHLDRotate,
+                                      FeatureFast15ByteNOP,
+                                      FeatureFastVariableCrossLaneShuffle,
+                                      FeatureFastVariablePerLaneShuffle,
+                                      FeaturePOPCNTFalseDeps,
+                                      FeatureLZCNTFalseDeps,
+                                      FeatureInsertVZEROUPPER];
   list<SubtargetFeature> HSWFeatures =
-    !listconcat(HSWInheritableFeatures, HSWSpecificFeatures);
+    !listconcat(IVBFeatures, HSWAdditionalFeatures);
 
   // Broadwell
   list<SubtargetFeature> BDWAdditionalFeatures = [FeatureADX,
                                                   FeatureRDSEED,
                                                   FeaturePRFCHW];
-  list<SubtargetFeature> BDWSpecificFeatures = [FeaturePOPCNTFalseDeps,
-                                                FeatureLZCNTFalseDeps];
-  list<SubtargetFeature> BDWInheritableFeatures =
-    !listconcat(HSWInheritableFeatures, BDWAdditionalFeatures);
+  list<SubtargetFeature> BDWTuning = HSWTuning;
   list<SubtargetFeature> BDWFeatures =
-    !listconcat(BDWInheritableFeatures, BDWSpecificFeatures);
+    !listconcat(HSWFeatures, BDWAdditionalFeatures);
 
   // Skylake
   list<SubtargetFeature> SKLAdditionalFeatures = [FeatureAES,
-                                                  FeatureMPX,
+                                                  FeatureXSAVEC,
+                                                  FeatureXSAVES,
+                                                  FeatureCLFLUSHOPT];
+  list<SubtargetFeature> SKLTuning = [FeatureHasFastGather,
+                                      FeatureMacroFusion,
+                                      FeatureSlow3OpsLEA,
+                                      FeatureSlowDivide64,
+                                      FeatureFastScalarFSQRT,
+                                      FeatureFastVectorFSQRT,
+                                      FeatureFastSHLDRotate,
+                                      FeatureFast15ByteNOP,
+                                      FeatureFastVariableCrossLaneShuffle,
+                                      FeatureFastVariablePerLaneShuffle,
+                                      FeaturePOPCNTFalseDeps,
+                                      FeatureInsertVZEROUPPER];
+  list<SubtargetFeature> SKLFeatures =
+    !listconcat(BDWFeatures, SKLAdditionalFeatures);
+
+  // Skylake-AVX512
+  list<SubtargetFeature> SKXAdditionalFeatures = [FeatureAES,
                                                   FeatureXSAVEC,
                                                   FeatureXSAVES,
                                                   FeatureCLFLUSHOPT,
-                                                  FeatureFastVectorFSQRT];
-  list<SubtargetFeature> SKLSpecificFeatures = [FeatureHasFastGather,
-                                                FeaturePOPCNTFalseDeps,
-                                                FeatureSGX];
-  list<SubtargetFeature> SKLInheritableFeatures =
-    !listconcat(BDWInheritableFeatures, SKLAdditionalFeatures);
-  list<SubtargetFeature> SKLFeatures =
-    !listconcat(SKLInheritableFeatures, SKLSpecificFeatures);
-
-  // Skylake-AVX512
-  list<SubtargetFeature> SKXAdditionalFeatures = [FeatureAVX512,
+                                                  FeatureAVX512,
                                                   FeatureCDI,
                                                   FeatureDQI,
                                                   FeatureBWI,
                                                   FeatureVLX,
                                                   FeaturePKU,
                                                   FeatureCLWB];
-  list<SubtargetFeature> SKXSpecificFeatures = [FeatureHasFastGather,
-                                                FeaturePOPCNTFalseDeps];
-  list<SubtargetFeature> SKXInheritableFeatures =
-    !listconcat(SKLInheritableFeatures, SKXAdditionalFeatures);
+  list<SubtargetFeature> SKXTuning = [FeatureHasFastGather,
+                                      FeatureMacroFusion,
+                                      FeatureSlow3OpsLEA,
+                                      FeatureSlowDivide64,
+                                      FeatureFastScalarFSQRT,
+                                      FeatureFastVectorFSQRT,
+                                      FeatureFastSHLDRotate,
+                                      FeatureFast15ByteNOP,
+                                      FeatureFastVariableCrossLaneShuffle,
+                                      FeatureFastVariablePerLaneShuffle,
+                                      FeaturePrefer256Bit,
+                                      FeaturePOPCNTFalseDeps,
+                                      FeatureInsertVZEROUPPER];
   list<SubtargetFeature> SKXFeatures =
-    !listconcat(SKXInheritableFeatures, SKXSpecificFeatures);
+    !listconcat(BDWFeatures, SKXAdditionalFeatures);
 
   // Cascadelake
   list<SubtargetFeature> CLXAdditionalFeatures = [FeatureVNNI];
-  list<SubtargetFeature> CLXSpecificFeatures = [FeatureHasFastGather,
-                                                FeaturePOPCNTFalseDeps];
-  list<SubtargetFeature> CLXInheritableFeatures =
-    !listconcat(SKXInheritableFeatures, CLXAdditionalFeatures);
+  list<SubtargetFeature> CLXTuning = SKXTuning;
   list<SubtargetFeature> CLXFeatures =
-    !listconcat(CLXInheritableFeatures, CLXSpecificFeatures);
+    !listconcat(SKXFeatures, CLXAdditionalFeatures);
 
   // Cooperlake
   list<SubtargetFeature> CPXAdditionalFeatures = [FeatureBF16];
-  list<SubtargetFeature> CPXSpecificFeatures = [FeatureHasFastGather,
-                                                FeaturePOPCNTFalseDeps];
-  list<SubtargetFeature> CPXInheritableFeatures =
-    !listconcat(CLXInheritableFeatures, CPXAdditionalFeatures);
+  list<SubtargetFeature> CPXTuning = SKXTuning;
   list<SubtargetFeature> CPXFeatures =
-    !listconcat(CPXInheritableFeatures, CPXSpecificFeatures);
+    !listconcat(CLXFeatures, CPXAdditionalFeatures);
 
   // Cannonlake
   list<SubtargetFeature> CNLAdditionalFeatures = [FeatureAVX512,
@@ -635,13 +729,21 @@ def ProcessorFeatures {
                                                   FeaturePKU,
                                                   FeatureVBMI,
                                                   FeatureIFMA,
-                                                  FeatureSHA,
-                                                  FeatureSGX];
-  list<SubtargetFeature> CNLSpecificFeatures = [FeatureHasFastGather];
-  list<SubtargetFeature> CNLInheritableFeatures =
-    !listconcat(SKLInheritableFeatures, CNLAdditionalFeatures);
+                                                  FeatureSHA];
+  list<SubtargetFeature> CNLTuning = [FeatureHasFastGather,
+                                      FeatureMacroFusion,
+                                      FeatureSlow3OpsLEA,
+                                      FeatureSlowDivide64,
+                                      FeatureFastScalarFSQRT,
+                                      FeatureFastVectorFSQRT,
+                                      FeatureFastSHLDRotate,
+                                      FeatureFast15ByteNOP,
+                                      FeatureFastVariableCrossLaneShuffle,
+                                      FeatureFastVariablePerLaneShuffle,
+                                      FeaturePrefer256Bit,
+                                      FeatureInsertVZEROUPPER];
   list<SubtargetFeature> CNLFeatures =
-    !listconcat(CNLInheritableFeatures, CNLSpecificFeatures);
+    !listconcat(SKLFeatures, CNLAdditionalFeatures);
 
   // Icelake
   list<SubtargetFeature> ICLAdditionalFeatures = [FeatureBITALG,
@@ -651,64 +753,94 @@ def ProcessorFeatures {
                                                   FeatureVPCLMULQDQ,
                                                   FeatureVPOPCNTDQ,
                                                   FeatureGFNI,
-                                                  FeatureCLWB,
-                                                  FeatureRDPID];
-  list<SubtargetFeature> ICLSpecificFeatures = [FeatureHasFastGather];
-  list<SubtargetFeature> ICLInheritableFeatures =
-    !listconcat(CNLInheritableFeatures, ICLAdditionalFeatures);
+                                                  FeatureRDPID,
+                                                  FeatureFSRM];
+  list<SubtargetFeature> ICLTuning = CNLTuning;
   list<SubtargetFeature> ICLFeatures =
-    !listconcat(ICLInheritableFeatures, ICLSpecificFeatures);
+    !listconcat(CNLFeatures, ICLAdditionalFeatures);
 
   // Icelake Server
-  list<SubtargetFeature> ICXSpecificFeatures = [FeaturePCONFIG,
-                                                FeatureWBNOINVD,
-                                                FeatureHasFastGather];
+  list<SubtargetFeature> ICXAdditionalFeatures = [FeaturePCONFIG,
+                                                  FeatureCLWB,
+                                                  FeatureWBNOINVD];
+  list<SubtargetFeature> ICXTuning = CNLTuning;
   list<SubtargetFeature> ICXFeatures =
-    !listconcat(ICLInheritableFeatures, ICXSpecificFeatures);
+    !listconcat(ICLFeatures, ICXAdditionalFeatures);
+
+  // Tigerlake
+  list<SubtargetFeature> TGLAdditionalFeatures = [FeatureVP2INTERSECT,
+                                                  FeatureCLWB,
+                                                  FeatureMOVDIRI,
+                                                  FeatureMOVDIR64B,
+                                                  FeatureSHSTK];
+  list<SubtargetFeature> TGLTuning = CNLTuning;
+  list<SubtargetFeature> TGLFeatures =
+    !listconcat(ICLFeatures, TGLAdditionalFeatures );
+
+  // Sapphirerapids
+  list<SubtargetFeature> SPRAdditionalFeatures = [FeatureAMXTILE,
+                                                  FeatureAMXINT8,
+                                                  FeatureAMXBF16,
+                                                  FeatureBF16,
+                                                  FeatureSERIALIZE,
+                                                  FeatureCLDEMOTE,
+                                                  FeatureWAITPKG,
+                                                  FeaturePTWRITE,
+                                                  FeatureAVXVNNI,
+                                                  FeatureTSXLDTRK,
+                                                  FeatureENQCMD,
+                                                  FeatureSHSTK,
+                                                  FeatureVP2INTERSECT,
+                                                  FeatureMOVDIRI,
+                                                  FeatureMOVDIR64B,
+                                                  FeatureUINTR];
+  list<SubtargetFeature> SPRTuning = ICXTuning;
+  list<SubtargetFeature> SPRFeatures =
+    !listconcat(ICXFeatures, SPRAdditionalFeatures);
 
   // Atom
-  list<SubtargetFeature> AtomInheritableFeatures = [FeatureX87,
-                                                    FeatureCMPXCHG8B,
-                                                    FeatureCMOV,
-                                                    FeatureMMX,
-                                                    FeatureSSSE3,
-                                                    FeatureFXSR,
-                                                    FeatureNOPL,
-                                                    Feature64Bit,
-                                                    FeatureCMPXCHG16B,
-                                                    FeatureMOVBE,
-                                                    FeatureSlowTwoMemOps,
-                                                    FeatureLAHFSAHF];
-  list<SubtargetFeature> AtomSpecificFeatures = [ProcIntelAtom,
-                                                 FeatureSlowUAMem16,
-                                                 FeatureLEAForSP,
-                                                 FeatureSlowDivide32,
-                                                 FeatureSlowDivide64,
-                                                 FeatureLEAUsesAG,
-                                                 FeaturePadShortFunctions];
-  list<SubtargetFeature> AtomFeatures =
-    !listconcat(AtomInheritableFeatures, AtomSpecificFeatures);
+  list<SubtargetFeature> AtomFeatures = [FeatureX87,
+                                         FeatureCMPXCHG8B,
+                                         FeatureCMOV,
+                                         FeatureMMX,
+                                         FeatureSSSE3,
+                                         FeatureFXSR,
+                                         FeatureNOPL,
+                                         Feature64Bit,
+                                         FeatureCMPXCHG16B,
+                                         FeatureMOVBE,
+                                         FeatureLAHFSAHF];
+  list<SubtargetFeature> AtomTuning = [ProcIntelAtom,
+                                       FeatureSlowUAMem16,
+                                       FeatureLEAForSP,
+                                       FeatureSlowDivide32,
+                                       FeatureSlowDivide64,
+                                       FeatureSlowTwoMemOps,
+                                       FeatureLEAUsesAG,
+                                       FeaturePadShortFunctions,
+                                       FeatureInsertVZEROUPPER];
 
   // Silvermont
   list<SubtargetFeature> SLMAdditionalFeatures = [FeatureSSE42,
                                                   FeaturePOPCNT,
                                                   FeaturePCLMUL,
                                                   FeaturePRFCHW,
-                                                  FeatureSlowLEA,
-                                                  FeatureSlowIncDec,
                                                   FeatureRDRAND];
-  list<SubtargetFeature> SLMSpecificFeatures = [ProcIntelSLM,
-                                                FeatureSlowDivide64,
-                                                FeatureSlowPMULLD,
-                                                FeaturePOPCNTFalseDeps];
-  list<SubtargetFeature> SLMInheritableFeatures =
-    !listconcat(AtomInheritableFeatures, SLMAdditionalFeatures);
+  list<SubtargetFeature> SLMTuning = [ProcIntelSLM,
+                                      FeatureSlowTwoMemOps,
+                                      FeatureSlowLEA,
+                                      FeatureSlowIncDec,
+                                      FeatureSlowDivide64,
+                                      FeatureSlowPMULLD,
+                                      FeatureFast7ByteNOP,
+                                      FeatureFastMOVBE,
+                                      FeaturePOPCNTFalseDeps,
+                                      FeatureInsertVZEROUPPER];
   list<SubtargetFeature> SLMFeatures =
-    !listconcat(SLMInheritableFeatures, SLMSpecificFeatures);
+    !listconcat(AtomFeatures, SLMAdditionalFeatures);
 
   // Goldmont
   list<SubtargetFeature> GLMAdditionalFeatures = [FeatureAES,
-                                                  FeatureMPX,
                                                   FeatureSHA,
                                                   FeatureRDSEED,
                                                   FeatureXSAVE,
@@ -717,33 +849,59 @@ def ProcessorFeatures {
                                                   FeatureXSAVES,
                                                   FeatureCLFLUSHOPT,
                                                   FeatureFSGSBase];
-  list<SubtargetFeature> GLMSpecificFeatures = [ProcIntelGLM,
-                                                FeaturePOPCNTFalseDeps];
-  list<SubtargetFeature> GLMInheritableFeatures =
-    !listconcat(SLMInheritableFeatures, GLMAdditionalFeatures);
+  list<SubtargetFeature> GLMTuning = [FeatureUseGLMDivSqrtCosts,
+                                      FeatureSlowTwoMemOps,
+                                      FeatureSlowLEA,
+                                      FeatureSlowIncDec,
+                                      FeatureFastMOVBE,
+                                      FeaturePOPCNTFalseDeps,
+                                      FeatureInsertVZEROUPPER];
   list<SubtargetFeature> GLMFeatures =
-    !listconcat(GLMInheritableFeatures, GLMSpecificFeatures);
+    !listconcat(SLMFeatures, GLMAdditionalFeatures);
 
   // Goldmont Plus
   list<SubtargetFeature> GLPAdditionalFeatures = [FeaturePTWRITE,
-                                                  FeatureRDPID,
-                                                  FeatureSGX];
-  list<SubtargetFeature> GLPSpecificFeatures = [ProcIntelGLP];
-  list<SubtargetFeature> GLPInheritableFeatures =
-    !listconcat(GLMInheritableFeatures, GLPAdditionalFeatures);
+                                                  FeatureRDPID];
+  list<SubtargetFeature> GLPTuning = [FeatureUseGLMDivSqrtCosts,
+                                      FeatureSlowTwoMemOps,
+                                      FeatureSlowLEA,
+                                      FeatureSlowIncDec,
+                                      FeatureFastMOVBE,
+                                      FeatureInsertVZEROUPPER];
   list<SubtargetFeature> GLPFeatures =
-    !listconcat(GLPInheritableFeatures, GLPSpecificFeatures);
+    !listconcat(GLMFeatures, GLPAdditionalFeatures);
 
   // Tremont
-  list<SubtargetFeature> TRMAdditionalFeatures = [FeatureCLDEMOTE,
-                                                  FeatureGFNI,
+  list<SubtargetFeature> TRMAdditionalFeatures = [FeatureCLWB,
+                                                  FeatureGFNI];
+  list<SubtargetFeature> TRMTuning = GLPTuning;
+  list<SubtargetFeature> TRMFeatures =
+    !listconcat(GLPFeatures, TRMAdditionalFeatures);
+
+  // Alderlake
+  list<SubtargetFeature> ADLAdditionalFeatures = [FeatureSERIALIZE,
+                                                  FeaturePCONFIG,
+                                                  FeatureSHSTK,
+                                                  FeatureWIDEKL,
+                                                  FeatureINVPCID,
+                                                  FeatureADX,
+                                                  FeatureFMA,
+                                                  FeatureVAES,
+                                                  FeatureVPCLMULQDQ,
+                                                  FeatureF16C,
+                                                  FeatureBMI,
+                                                  FeatureBMI2,
+                                                  FeatureLZCNT,
+                                                  FeatureAVXVNNI,
+                                                  FeaturePKU,
+                                                  FeatureHRESET,
+                                                  FeatureCLDEMOTE,
                                                   FeatureMOVDIRI,
                                                   FeatureMOVDIR64B,
                                                   FeatureWAITPKG];
-  list<SubtargetFeature> TRMSpecificFeatures = [ProcIntelTRM];
-  list<SubtargetFeature> TRMFeatures =
-    !listconcat(GLPInheritableFeatures, TRMAdditionalFeatures,
-                TRMSpecificFeatures);
+  list<SubtargetFeature> ADLTuning = SKLTuning;
+  list<SubtargetFeature> ADLFeatures =
+    !listconcat(TRMFeatures, ADLAdditionalFeatures);
 
   // Knights Landing
   list<SubtargetFeature> KNLFeatures = [FeatureX87,
@@ -755,13 +913,10 @@ def ProcessorFeatures {
                                         Feature64Bit,
                                         FeatureCMPXCHG16B,
                                         FeaturePOPCNT,
-                                        FeatureSlowDivide64,
                                         FeaturePCLMUL,
                                         FeatureXSAVE,
                                         FeatureXSAVEOPT,
                                         FeatureLAHFSAHF,
-                                        FeatureSlow3OpsLEA,
-                                        FeatureSlowIncDec,
                                         FeatureAES,
                                         FeatureRDRAND,
                                         FeatureF16C,
@@ -778,36 +933,57 @@ def ProcessorFeatures {
                                         FeatureBMI,
                                         FeatureBMI2,
                                         FeatureFMA,
-                                        FeaturePRFCHW,
-                                        FeatureSlowTwoMemOps,
-                                        FeatureFastPartialYMMorZMMWrite,
-                                        FeatureHasFastGather,
-                                        FeatureSlowPMADDWD];
+                                        FeaturePRFCHW];
+  list<SubtargetFeature> KNLTuning = [FeatureSlowDivide64,
+                                      FeatureSlow3OpsLEA,
+                                      FeatureSlowIncDec,
+                                      FeatureSlowTwoMemOps,
+                                      FeaturePreferMaskRegisters,
+                                      FeatureHasFastGather,
+                                      FeatureFastMOVBE,
+                                      FeatureSlowPMADDWD];
   // TODO Add AVX5124FMAPS/AVX5124VNNIW features
   list<SubtargetFeature> KNMFeatures =
     !listconcat(KNLFeatures, [FeatureVPOPCNTDQ]);
 
+  // Barcelona
+  list<SubtargetFeature> BarcelonaFeatures = [FeatureX87,
+                                              FeatureCMPXCHG8B,
+                                              FeatureSSE4A,
+                                              Feature3DNowA,
+                                              FeatureFXSR,
+                                              FeatureNOPL,
+                                              FeatureCMPXCHG16B,
+                                              FeaturePRFCHW,
+                                              FeatureLZCNT,
+                                              FeaturePOPCNT,
+                                              FeatureLAHFSAHF,
+                                              FeatureCMOV,
+                                              Feature64Bit];
+  list<SubtargetFeature> BarcelonaTuning = [FeatureFastScalarShiftMasks,
+                                            FeatureSlowSHLD,
+                                            FeatureInsertVZEROUPPER];
 
   // Bobcat
-  list<SubtargetFeature> BtVer1InheritableFeatures = [FeatureX87,
-                                                      FeatureCMPXCHG8B,
-                                                      FeatureCMOV,
-                                                      FeatureMMX,
-                                                      FeatureSSSE3,
-                                                      FeatureSSE4A,
-                                                      FeatureFXSR,
-                                                      FeatureNOPL,
-                                                      Feature64Bit,
-                                                      FeatureCMPXCHG16B,
-                                                      FeaturePRFCHW,
-                                                      FeatureLZCNT,
-                                                      FeaturePOPCNT,
-                                                      FeatureSlowSHLD,
-                                                      FeatureLAHFSAHF,
-                                                      FeatureFast15ByteNOP,
-                                                      FeatureFastScalarShiftMasks,
-                                                      FeatureFastVectorShiftMasks];
-  list<SubtargetFeature> BtVer1Features = BtVer1InheritableFeatures;
+  list<SubtargetFeature> BtVer1Features = [FeatureX87,
+                                           FeatureCMPXCHG8B,
+                                           FeatureCMOV,
+                                           FeatureMMX,
+                                           FeatureSSSE3,
+                                           FeatureSSE4A,
+                                           FeatureFXSR,
+                                           FeatureNOPL,
+                                           Feature64Bit,
+                                           FeatureCMPXCHG16B,
+                                           FeaturePRFCHW,
+                                           FeatureLZCNT,
+                                           FeaturePOPCNT,
+                                           FeatureLAHFSAHF];
+  list<SubtargetFeature> BtVer1Tuning = [FeatureFast15ByteNOP,
+                                         FeatureFastScalarShiftMasks,
+                                         FeatureFastVectorShiftMasks,
+                                         FeatureSlowSHLD,
+                                         FeatureInsertVZEROUPPER];
 
   // Jaguar
   list<SubtargetFeature> BtVer2AdditionalFeatures = [FeatureAVX,
@@ -818,38 +994,40 @@ def ProcessorFeatures {
                                                      FeatureMOVBE,
                                                      FeatureXSAVE,
                                                      FeatureXSAVEOPT];
-  list<SubtargetFeature> BtVer2SpecificFeatures = [FeatureFastLZCNT,
-                                                   FeatureFastBEXTR,
-                                                   FeatureFastPartialYMMorZMMWrite,
-                                                   FeatureFastHorizontalOps];
-  list<SubtargetFeature> BtVer2InheritableFeatures =
-    !listconcat(BtVer1InheritableFeatures, BtVer2AdditionalFeatures);
+  list<SubtargetFeature> BtVer2Tuning = [FeatureFastLZCNT,
+                                         FeatureFastBEXTR,
+                                         FeatureFastHorizontalOps,
+                                         FeatureFast15ByteNOP,
+                                         FeatureFastScalarShiftMasks,
+                                         FeatureFastVectorShiftMasks,
+                                         FeatureFastMOVBE,
+                                         FeatureSlowSHLD];
   list<SubtargetFeature> BtVer2Features =
-    !listconcat(BtVer2InheritableFeatures, BtVer2SpecificFeatures);
+    !listconcat(BtVer1Features, BtVer2AdditionalFeatures);
 
   // Bulldozer
-  list<SubtargetFeature> BdVer1InheritableFeatures = [FeatureX87,
-                                                      FeatureCMPXCHG8B,
-                                                      FeatureCMOV,
-                                                      FeatureXOP,
-                                                      Feature64Bit,
-                                                      FeatureCMPXCHG16B,
-                                                      FeatureAES,
-                                                      FeaturePRFCHW,
-                                                      FeaturePCLMUL,
-                                                      FeatureMMX,
-                                                      FeatureFXSR,
-                                                      FeatureNOPL,
-                                                      FeatureLZCNT,
-                                                      FeaturePOPCNT,
-                                                      FeatureXSAVE,
-                                                      FeatureLWP,
-                                                      FeatureSlowSHLD,
-                                                      FeatureLAHFSAHF,
-                                                      FeatureFast11ByteNOP,
-                                                      FeatureFastScalarShiftMasks,
-                                                      FeatureBranchFusion];
-  list<SubtargetFeature> BdVer1Features = BdVer1InheritableFeatures;
+  list<SubtargetFeature> BdVer1Features = [FeatureX87,
+                                           FeatureCMPXCHG8B,
+                                           FeatureCMOV,
+                                           FeatureXOP,
+                                           Feature64Bit,
+                                           FeatureCMPXCHG16B,
+                                           FeatureAES,
+                                           FeaturePRFCHW,
+                                           FeaturePCLMUL,
+                                           FeatureMMX,
+                                           FeatureFXSR,
+                                           FeatureNOPL,
+                                           FeatureLZCNT,
+                                           FeaturePOPCNT,
+                                           FeatureXSAVE,
+                                           FeatureLWP,
+                                           FeatureLAHFSAHF];
+  list<SubtargetFeature> BdVer1Tuning = [FeatureSlowSHLD,
+                                         FeatureFast11ByteNOP,
+                                         FeatureFastScalarShiftMasks,
+                                         FeatureBranchFusion,
+                                         FeatureInsertVZEROUPPER];
 
   // PileDriver
   list<SubtargetFeature> BdVer2AdditionalFeatures = [FeatureF16C,
@@ -857,24 +1035,28 @@ def ProcessorFeatures {
                                                      FeatureTBM,
                                                      FeatureFMA,
                                                      FeatureFastBEXTR];
-  list<SubtargetFeature> BdVer2InheritableFeatures =
-    !listconcat(BdVer1InheritableFeatures, BdVer2AdditionalFeatures);
-  list<SubtargetFeature> BdVer2Features = BdVer2InheritableFeatures;
+  list<SubtargetFeature> BdVer2AdditionalTuning = [FeatureFastMOVBE];
+  list<SubtargetFeature> BdVer2Tuning =
+    !listconcat(BdVer1Tuning, BdVer2AdditionalTuning);
+  list<SubtargetFeature> BdVer2Features =
+    !listconcat(BdVer1Features, BdVer2AdditionalFeatures);
 
   // Steamroller
   list<SubtargetFeature> BdVer3AdditionalFeatures = [FeatureXSAVEOPT,
                                                      FeatureFSGSBase];
-  list<SubtargetFeature> BdVer3InheritableFeatures =
-    !listconcat(BdVer2InheritableFeatures, BdVer3AdditionalFeatures);
-  list<SubtargetFeature> BdVer3Features = BdVer3InheritableFeatures;
+  list<SubtargetFeature> BdVer3Tuning = BdVer2Tuning;
+  list<SubtargetFeature> BdVer3Features =
+    !listconcat(BdVer2Features, BdVer3AdditionalFeatures);
 
   // Excavator
   list<SubtargetFeature> BdVer4AdditionalFeatures = [FeatureAVX2,
                                                      FeatureBMI2,
+                                                     FeatureMOVBE,
+                                                     FeatureRDRAND,
                                                      FeatureMWAITX];
-  list<SubtargetFeature> BdVer4InheritableFeatures =
-    !listconcat(BdVer3InheritableFeatures, BdVer4AdditionalFeatures);
-  list<SubtargetFeature> BdVer4Features = BdVer4InheritableFeatures;
+  list<SubtargetFeature> BdVer4Tuning = BdVer3Tuning;
+  list<SubtargetFeature> BdVer4Features =
+    !listconcat(BdVer3Features, BdVer4AdditionalFeatures);
 
 
   // AMD Zen Processors common ISAs
@@ -893,13 +1075,8 @@ def ProcessorFeatures {
                                        FeatureFSGSBase,
                                        FeatureFXSR,
                                        FeatureNOPL,
-                                       FeatureFastLZCNT,
                                        FeatureLAHFSAHF,
                                        FeatureLZCNT,
-                                       FeatureFastBEXTR,
-                                       FeatureFast15ByteNOP,
-                                       FeatureBranchFusion,
-                                       FeatureFastScalarShiftMasks,
                                        FeatureMMX,
                                        FeatureMOVBE,
                                        FeatureMWAITX,
@@ -910,51 +1087,90 @@ def ProcessorFeatures {
                                        FeatureRDSEED,
                                        FeatureSHA,
                                        FeatureSSE4A,
-                                       FeatureSlowSHLD,
                                        FeatureX87,
                                        FeatureXSAVE,
                                        FeatureXSAVEC,
                                        FeatureXSAVEOPT,
                                        FeatureXSAVES];
+  list<SubtargetFeature> ZNTuning = [FeatureFastLZCNT,
+                                     FeatureFastBEXTR,
+                                     FeatureFast15ByteNOP,
+                                     FeatureBranchFusion,
+                                     FeatureFastScalarShiftMasks,
+                                     FeatureFastMOVBE,
+                                     FeatureSlowSHLD,
+                                     FeatureInsertVZEROUPPER];
   list<SubtargetFeature> ZN2AdditionalFeatures = [FeatureCLWB,
                                                   FeatureRDPID,
                                                   FeatureWBNOINVD];
+  list<SubtargetFeature> ZN2Tuning = ZNTuning;
   list<SubtargetFeature> ZN2Features =
     !listconcat(ZNFeatures, ZN2AdditionalFeatures);
+  list<SubtargetFeature> ZN3AdditionalFeatures = [FeatureFSRM,
+                                                  FeatureINVPCID,
+                                                  FeaturePKU,
+                                                  FeatureVAES,
+                                                  FeatureVPCLMULQDQ];
+  list<SubtargetFeature> ZN3AdditionalTuning =
+    [FeatureMacroFusion,
+     FeatureFastVariablePerLaneShuffle];
+  list<SubtargetFeature> ZN3Tuning =
+    !listconcat(ZNTuning, ZN3AdditionalTuning);
+  list<SubtargetFeature> ZN3Features =
+    !listconcat(ZN2Features, ZN3AdditionalFeatures);
 }
 
 //===----------------------------------------------------------------------===//
 // X86 processors supported.
 //===----------------------------------------------------------------------===//
 
-class Proc<string Name, list<SubtargetFeature> Features>
- : ProcessorModel<Name, GenericModel, Features>;
+class Proc<string Name, list<SubtargetFeature> Features,
+           list<SubtargetFeature> TuneFeatures>
+ : ProcessorModel<Name, GenericModel, Features, TuneFeatures>;
 
-// NOTE: CMPXCHG8B is here for legacy compatbility so that it is only disabled
+class ProcModel<string Name, SchedMachineModel Model,
+                list<SubtargetFeature> Features,
+                list<SubtargetFeature> TuneFeatures>
+ : ProcessorModel<Name, Model, Features, TuneFeatures>;
+
+// NOTE: CMPXCHG8B is here for legacy compatibility so that it is only disabled
 // if i386/i486 is specifically requested.
-def : Proc<"generic",         [FeatureX87, FeatureSlowUAMem16,
-                               FeatureCMPXCHG8B]>;
-def : Proc<"i386",            [FeatureX87, FeatureSlowUAMem16]>;
-def : Proc<"i486",            [FeatureX87, FeatureSlowUAMem16]>;
-def : Proc<"i586",            [FeatureX87, FeatureSlowUAMem16,
-                               FeatureCMPXCHG8B]>;
-def : Proc<"pentium",         [FeatureX87, FeatureSlowUAMem16,
-                               FeatureCMPXCHG8B]>;
-def : Proc<"pentium-mmx",     [FeatureX87, FeatureSlowUAMem16,
-                               FeatureCMPXCHG8B, FeatureMMX]>;
+// NOTE: 64Bit is here as "generic" is the default llc CPU. The X86Subtarget
+// constructor checks that any CPU used in 64-bit mode has Feature64Bit enabled.
+// It has no effect on code generation.
+def : ProcModel<"generic", SandyBridgeModel,
+                [FeatureX87, FeatureCMPXCHG8B, Feature64Bit],
+                [FeatureSlow3OpsLEA,
+                 FeatureSlowDivide64,
+                 FeatureSlowIncDec,
+                 FeatureMacroFusion,
+                 FeatureInsertVZEROUPPER]>;
 
-def : Proc<"i686", [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                    FeatureCMOV]>;
-def : Proc<"pentiumpro", [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                          FeatureCMOV, FeatureNOPL]>;
+def : Proc<"i386",            [FeatureX87],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"i486",            [FeatureX87],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"i586",            [FeatureX87, FeatureCMPXCHG8B],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"pentium",         [FeatureX87, FeatureCMPXCHG8B],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"pentium-mmx",     [FeatureX87, FeatureCMPXCHG8B, FeatureMMX],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 
-def : Proc<"pentium2",        [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                               FeatureMMX, FeatureCMOV, FeatureFXSR,
-                               FeatureNOPL]>;
+def : Proc<"i686", [FeatureX87, FeatureCMPXCHG8B, FeatureCMOV],
+                   [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"pentiumpro", [FeatureX87, FeatureCMPXCHG8B, FeatureCMOV,
+                          FeatureNOPL],
+                         [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+
+def : Proc<"pentium2", [FeatureX87, FeatureCMPXCHG8B, FeatureMMX, FeatureCMOV,
+                        FeatureFXSR, FeatureNOPL],
+                       [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 
 foreach P = ["pentium3", "pentium3m"] in {
-  def : Proc<P, [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,FeatureMMX,
-                 FeatureSSE1, FeatureFXSR, FeatureNOPL, FeatureCMOV]>;
+  def : Proc<P, [FeatureX87, FeatureCMPXCHG8B, FeatureMMX,
+                 FeatureSSE1, FeatureFXSR, FeatureNOPL, FeatureCMOV],
+                [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 }
 
 // Enable the PostRAScheduler for SSE2 and SSE3 class cpus.
@@ -967,35 +1183,35 @@ foreach P = ["pentium3", "pentium3m"] in {
 // measure to avoid performance surprises, in case clang's default cpu
 // changes slightly.
 
-def : ProcessorModel<"pentium-m", GenericPostRAModel,
-                     [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                      FeatureMMX, FeatureSSE2, FeatureFXSR, FeatureNOPL,
-                      FeatureCMOV]>;
+def : ProcModel<"pentium-m", GenericPostRAModel,
+                [FeatureX87, FeatureCMPXCHG8B, FeatureMMX, FeatureSSE2,
+                FeatureFXSR, FeatureNOPL, FeatureCMOV],
+                [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 
 foreach P = ["pentium4", "pentium4m"] in {
-  def : ProcessorModel<P, GenericPostRAModel,
-                       [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                        FeatureMMX, FeatureSSE2, FeatureFXSR, FeatureNOPL,
-                        FeatureCMOV]>;
+  def : ProcModel<P, GenericPostRAModel,
+                  [FeatureX87, FeatureCMPXCHG8B, FeatureMMX, FeatureSSE2,
+                   FeatureFXSR, FeatureNOPL, FeatureCMOV],
+                  [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 }
 
 // Intel Quark.
-def : Proc<"lakemont",        []>;
+def : Proc<"lakemont", [FeatureCMPXCHG8B],
+                       [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 
 // Intel Core Duo.
-def : ProcessorModel<"yonah", SandyBridgeModel,
-                     [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                      FeatureMMX, FeatureSSE3, FeatureFXSR, FeatureNOPL,
-                      FeatureCMOV]>;
+def : ProcModel<"yonah", SandyBridgeModel,
+                [FeatureX87, FeatureCMPXCHG8B, FeatureMMX, FeatureSSE3,
+                 FeatureFXSR, FeatureNOPL, FeatureCMOV],
+                [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 
 // NetBurst.
-def : ProcessorModel<"prescott", GenericPostRAModel,
-                     [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                      FeatureMMX, FeatureSSE3, FeatureFXSR, FeatureNOPL,
-                      FeatureCMOV]>;
-def : ProcessorModel<"nocona", GenericPostRAModel, [
+def : ProcModel<"prescott", GenericPostRAModel,
+                [FeatureX87, FeatureCMPXCHG8B, FeatureMMX, FeatureSSE3,
+                 FeatureFXSR, FeatureNOPL, FeatureCMOV],
+                [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : ProcModel<"nocona", GenericPostRAModel, [
   FeatureX87,
-  FeatureSlowUAMem16,
   FeatureCMPXCHG8B,
   FeatureCMOV,
   FeatureMMX,
@@ -1003,13 +1219,16 @@ def : ProcessorModel<"nocona", GenericPostRAModel, [
   FeatureFXSR,
   FeatureNOPL,
   Feature64Bit,
-  FeatureCMPXCHG16B
+  FeatureCMPXCHG16B,
+],
+[
+  FeatureSlowUAMem16,
+  FeatureInsertVZEROUPPER
 ]>;
 
 // Intel Core 2 Solo/Duo.
-def : ProcessorModel<"core2", SandyBridgeModel, [
+def : ProcModel<"core2", SandyBridgeModel, [
   FeatureX87,
-  FeatureSlowUAMem16,
   FeatureCMPXCHG8B,
   FeatureCMOV,
   FeatureMMX,
@@ -1018,12 +1237,15 @@ def : ProcessorModel<"core2", SandyBridgeModel, [
   FeatureNOPL,
   Feature64Bit,
   FeatureCMPXCHG16B,
-  FeatureLAHFSAHF,
-  FeatureMacroFusion
-]>;
-def : ProcessorModel<"penryn", SandyBridgeModel, [
-  FeatureX87,
+  FeatureLAHFSAHF
+],
+[
+  FeatureMacroFusion,
   FeatureSlowUAMem16,
+  FeatureInsertVZEROUPPER
+]>;
+def : ProcModel<"penryn", SandyBridgeModel, [
+  FeatureX87,
   FeatureCMPXCHG8B,
   FeatureCMOV,
   FeatureMMX,
@@ -1032,136 +1254,173 @@ def : ProcessorModel<"penryn", SandyBridgeModel, [
   FeatureNOPL,
   Feature64Bit,
   FeatureCMPXCHG16B,
-  FeatureLAHFSAHF,
-  FeatureMacroFusion
+  FeatureLAHFSAHF
+],
+[
+  FeatureMacroFusion,
+  FeatureSlowUAMem16,
+  FeatureInsertVZEROUPPER
 ]>;
 
 // Atom CPUs.
 foreach P = ["bonnell", "atom"] in {
-  def : ProcessorModel<P, AtomModel, ProcessorFeatures.AtomFeatures>;
+  def : ProcModel<P, AtomModel, ProcessorFeatures.AtomFeatures,
+                  ProcessorFeatures.AtomTuning>;
 }
 
 foreach P = ["silvermont", "slm"] in {
-  def : ProcessorModel<P, SLMModel, ProcessorFeatures.SLMFeatures>;
+  def : ProcModel<P, SLMModel, ProcessorFeatures.SLMFeatures,
+                  ProcessorFeatures.SLMTuning>;
 }
 
-def : ProcessorModel<"goldmont", SLMModel, ProcessorFeatures.GLMFeatures>;
-def : ProcessorModel<"goldmont-plus", SLMModel, ProcessorFeatures.GLPFeatures>;
-def : ProcessorModel<"tremont", SLMModel, ProcessorFeatures.TRMFeatures>;
+def : ProcModel<"goldmont", SLMModel, ProcessorFeatures.GLMFeatures,
+                ProcessorFeatures.GLMTuning>;
+def : ProcModel<"goldmont-plus", SLMModel, ProcessorFeatures.GLPFeatures,
+                ProcessorFeatures.GLPTuning>;
+def : ProcModel<"tremont", SLMModel, ProcessorFeatures.TRMFeatures,
+                ProcessorFeatures.TRMTuning>;
 
 // "Arrandale" along with corei3 and corei5
 foreach P = ["nehalem", "corei7"] in {
-  def : ProcessorModel<P, SandyBridgeModel, ProcessorFeatures.NHMFeatures>;
+  def : ProcModel<P, SandyBridgeModel, ProcessorFeatures.NHMFeatures,
+                  ProcessorFeatures.NHMTuning>;
 }
 
 // Westmere is the corei3/i5/i7 path from nehalem to sandybridge
-def : ProcessorModel<"westmere", SandyBridgeModel,
-                     ProcessorFeatures.WSMFeatures>;
+def : ProcModel<"westmere", SandyBridgeModel, ProcessorFeatures.WSMFeatures,
+                ProcessorFeatures.WSMTuning>;
 
 foreach P = ["sandybridge", "corei7-avx"] in {
-  def : ProcessorModel<P, SandyBridgeModel, ProcessorFeatures.SNBFeatures>;
+  def : ProcModel<P, SandyBridgeModel, ProcessorFeatures.SNBFeatures,
+                  ProcessorFeatures.SNBTuning>;
 }
 
 foreach P = ["ivybridge", "core-avx-i"] in {
-  def : ProcessorModel<P, SandyBridgeModel, ProcessorFeatures.IVBFeatures>;
+  def : ProcModel<P, SandyBridgeModel, ProcessorFeatures.IVBFeatures,
+                  ProcessorFeatures.IVBTuning>;
 }
 
 foreach P = ["haswell", "core-avx2"] in {
-  def : ProcessorModel<P, HaswellModel, ProcessorFeatures.HSWFeatures>;
+  def : ProcModel<P, HaswellModel, ProcessorFeatures.HSWFeatures,
+                  ProcessorFeatures.HSWTuning>;
 }
 
-def : ProcessorModel<"broadwell", BroadwellModel,
-                     ProcessorFeatures.BDWFeatures>;
+def : ProcModel<"broadwell", BroadwellModel, ProcessorFeatures.BDWFeatures,
+                ProcessorFeatures.BDWTuning>;
 
-def : ProcessorModel<"skylake", SkylakeClientModel,
-                     ProcessorFeatures.SKLFeatures>;
+def : ProcModel<"skylake", SkylakeClientModel, ProcessorFeatures.SKLFeatures,
+                ProcessorFeatures.SKLTuning>;
 
 // FIXME: define KNL scheduler model
-def : ProcessorModel<"knl", HaswellModel, ProcessorFeatures.KNLFeatures>;
-def : ProcessorModel<"knm", HaswellModel, ProcessorFeatures.KNMFeatures>;
+def : ProcModel<"knl", HaswellModel, ProcessorFeatures.KNLFeatures,
+                ProcessorFeatures.KNLTuning>;
+def : ProcModel<"knm", HaswellModel, ProcessorFeatures.KNMFeatures,
+                ProcessorFeatures.KNLTuning>;
 
 foreach P = ["skylake-avx512", "skx"] in {
-  def : ProcessorModel<P, SkylakeServerModel, ProcessorFeatures.SKXFeatures>;
+  def : ProcModel<P, SkylakeServerModel, ProcessorFeatures.SKXFeatures,
+                  ProcessorFeatures.SKXTuning>;
 }
 
-def : ProcessorModel<"cascadelake", SkylakeServerModel,
-                     ProcessorFeatures.CLXFeatures>;
-def : ProcessorModel<"cooperlake", SkylakeServerModel,
-                     ProcessorFeatures.CPXFeatures>;
-def : ProcessorModel<"cannonlake", SkylakeServerModel,
-                     ProcessorFeatures.CNLFeatures>;
-def : ProcessorModel<"icelake-client", SkylakeServerModel,
-                     ProcessorFeatures.ICLFeatures>;
-def : ProcessorModel<"icelake-server", SkylakeServerModel,
-                     ProcessorFeatures.ICXFeatures>;
+def : ProcModel<"cascadelake", SkylakeServerModel,
+                ProcessorFeatures.CLXFeatures, ProcessorFeatures.CLXTuning>;
+def : ProcModel<"cooperlake", SkylakeServerModel,
+                ProcessorFeatures.CPXFeatures, ProcessorFeatures.CPXTuning>;
+def : ProcModel<"cannonlake", SkylakeServerModel,
+                ProcessorFeatures.CNLFeatures, ProcessorFeatures.CNLTuning>;
+def : ProcModel<"icelake-client", SkylakeServerModel,
+                ProcessorFeatures.ICLFeatures, ProcessorFeatures.ICLTuning>;
+def : ProcModel<"rocketlake", SkylakeServerModel,
+                ProcessorFeatures.ICLFeatures, ProcessorFeatures.ICLTuning>;
+def : ProcModel<"icelake-server", SkylakeServerModel,
+                ProcessorFeatures.ICXFeatures, ProcessorFeatures.ICXTuning>;
+def : ProcModel<"tigerlake", SkylakeServerModel,
+                ProcessorFeatures.TGLFeatures, ProcessorFeatures.TGLTuning>;
+def : ProcModel<"sapphirerapids", SkylakeServerModel,
+                ProcessorFeatures.SPRFeatures, ProcessorFeatures.SPRTuning>;
+def : ProcModel<"alderlake", SkylakeClientModel,
+                ProcessorFeatures.ADLFeatures, ProcessorFeatures.ADLTuning>;
 
 // AMD CPUs.
 
-def : Proc<"k6",   [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                    FeatureMMX]>;
-def : Proc<"k6-2", [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                    Feature3DNow]>;
-def : Proc<"k6-3", [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                               Feature3DNow]>;
+def : Proc<"k6",   [FeatureX87, FeatureCMPXCHG8B, FeatureMMX],
+                   [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"k6-2", [FeatureX87, FeatureCMPXCHG8B, Feature3DNow],
+                   [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"k6-3", [FeatureX87, FeatureCMPXCHG8B, Feature3DNow],
+                   [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 
 foreach P = ["athlon", "athlon-tbird"] in {
-  def : Proc<P, [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B, FeatureCMOV,
-                 Feature3DNowA, FeatureNOPL, FeatureSlowSHLD]>;
+  def : Proc<P, [FeatureX87, FeatureCMPXCHG8B, FeatureCMOV, Feature3DNowA,
+                 FeatureNOPL],
+                [FeatureSlowSHLD, FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 }
 
 foreach P = ["athlon-4", "athlon-xp", "athlon-mp"] in {
-  def : Proc<P, [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B, FeatureCMOV,
-                 FeatureSSE1, Feature3DNowA, FeatureFXSR, FeatureNOPL,
-                 FeatureSlowSHLD]>;
+  def : Proc<P, [FeatureX87, FeatureCMPXCHG8B, FeatureCMOV,
+                 FeatureSSE1, Feature3DNowA, FeatureFXSR, FeatureNOPL],
+                [FeatureSlowSHLD, FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 }
 
 foreach P = ["k8", "opteron", "athlon64", "athlon-fx"] in {
-  def : Proc<P, [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                 FeatureSSE2, Feature3DNowA, FeatureFXSR, FeatureNOPL,
-                 Feature64Bit, FeatureSlowSHLD, FeatureCMOV,
-                 FeatureFastScalarShiftMasks]>;
+  def : Proc<P, [FeatureX87, FeatureCMPXCHG8B, FeatureSSE2, Feature3DNowA,
+                 FeatureFXSR, FeatureNOPL, Feature64Bit, FeatureCMOV],
+                [FeatureFastScalarShiftMasks, FeatureSlowSHLD, FeatureSlowUAMem16,
+                 FeatureInsertVZEROUPPER]>;
 }
 
 foreach P = ["k8-sse3", "opteron-sse3", "athlon64-sse3"] in {
-  def : Proc<P, [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B, FeatureSSE3,
-                 Feature3DNowA, FeatureFXSR, FeatureNOPL, FeatureCMPXCHG16B,
-                 FeatureSlowSHLD, FeatureCMOV, Feature64Bit,
-                 FeatureFastScalarShiftMasks]>;
+  def : Proc<P, [FeatureX87, FeatureCMPXCHG8B, FeatureSSE3, Feature3DNowA,
+                 FeatureFXSR, FeatureNOPL, FeatureCMPXCHG16B, FeatureCMOV,
+                 Feature64Bit],
+                [FeatureFastScalarShiftMasks, FeatureSlowSHLD, FeatureSlowUAMem16,
+                 FeatureInsertVZEROUPPER]>;
 }
 
 foreach P = ["amdfam10", "barcelona"] in {
-  def : Proc<P, [FeatureX87, FeatureCMPXCHG8B, FeatureSSE4A, Feature3DNowA,
-                 FeatureFXSR, FeatureNOPL, FeatureCMPXCHG16B, FeatureLZCNT,
-                 FeaturePOPCNT, FeatureSlowSHLD, FeatureLAHFSAHF, FeatureCMOV,
-                 Feature64Bit, FeatureFastScalarShiftMasks]>;
+  def : Proc<P, ProcessorFeatures.BarcelonaFeatures,
+             ProcessorFeatures.BarcelonaTuning>;
 }
 
 // Bobcat
-def : Proc<"btver1", ProcessorFeatures.BtVer1Features>;
+def : Proc<"btver1", ProcessorFeatures.BtVer1Features,
+           ProcessorFeatures.BtVer1Tuning>;
 // Jaguar
-def : ProcessorModel<"btver2", BtVer2Model, ProcessorFeatures.BtVer2Features>;
+def : ProcModel<"btver2", BtVer2Model, ProcessorFeatures.BtVer2Features,
+                ProcessorFeatures.BtVer2Tuning>;
 
 // Bulldozer
-def : ProcessorModel<"bdver1", BdVer2Model, ProcessorFeatures.BdVer1Features>;
+def : ProcModel<"bdver1", BdVer2Model, ProcessorFeatures.BdVer1Features,
+                ProcessorFeatures.BdVer1Tuning>;
 // Piledriver
-def : ProcessorModel<"bdver2", BdVer2Model, ProcessorFeatures.BdVer2Features>;
+def : ProcModel<"bdver2", BdVer2Model, ProcessorFeatures.BdVer2Features,
+                ProcessorFeatures.BdVer2Tuning>;
 // Steamroller
-def : Proc<"bdver3", ProcessorFeatures.BdVer3Features>;
+def : Proc<"bdver3", ProcessorFeatures.BdVer3Features,
+           ProcessorFeatures.BdVer3Tuning>;
 // Excavator
-def : Proc<"bdver4", ProcessorFeatures.BdVer4Features>;
+def : Proc<"bdver4", ProcessorFeatures.BdVer4Features,
+           ProcessorFeatures.BdVer4Tuning>;
 
-def : ProcessorModel<"znver1", Znver1Model, ProcessorFeatures.ZNFeatures>;
-def : ProcessorModel<"znver2", Znver1Model, ProcessorFeatures.ZN2Features>;
+def : ProcModel<"znver1", Znver1Model, ProcessorFeatures.ZNFeatures,
+                ProcessorFeatures.ZNTuning>;
+def : ProcModel<"znver2", Znver2Model, ProcessorFeatures.ZN2Features,
+                ProcessorFeatures.ZN2Tuning>;
+def : ProcModel<"znver3", Znver3Model, ProcessorFeatures.ZN3Features,
+                ProcessorFeatures.ZN3Tuning>;
 
-def : Proc<"geode",           [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                               Feature3DNowA]>;
+def : Proc<"geode",           [FeatureX87, FeatureCMPXCHG8B, Feature3DNowA],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 
-def : Proc<"winchip-c6",      [FeatureX87, FeatureSlowUAMem16, FeatureMMX]>;
-def : Proc<"winchip2",        [FeatureX87, FeatureSlowUAMem16, Feature3DNow]>;
-def : Proc<"c3",              [FeatureX87, FeatureSlowUAMem16, Feature3DNow]>;
-def : Proc<"c3-2",            [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
-                               FeatureMMX, FeatureSSE1, FeatureFXSR,
-                               FeatureCMOV]>;
+def : Proc<"winchip-c6",      [FeatureX87, FeatureMMX],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"winchip2",        [FeatureX87, Feature3DNow],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"c3",              [FeatureX87, Feature3DNow],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
+def : Proc<"c3-2",            [FeatureX87, FeatureCMPXCHG8B, FeatureMMX,
+                               FeatureSSE1, FeatureFXSR, FeatureCMOV],
+                              [FeatureSlowUAMem16, FeatureInsertVZEROUPPER]>;
 
 // We also provide a generic 64-bit specific x86 processor model which tries to
 // be good for modern chips without enabling instruction set encodings past the
@@ -1173,19 +1432,24 @@ def : Proc<"c3-2",            [FeatureX87, FeatureSlowUAMem16, FeatureCMPXCHG8B,
 // covers a huge swath of x86 processors. If there are specific scheduling
 // knobs which need to be tuned differently for AMD chips, we might consider
 // forming a common base for them.
-def : ProcessorModel<"x86-64", SandyBridgeModel, [
-  FeatureX87,
-  FeatureCMPXCHG8B,
-  FeatureCMOV,
-  FeatureMMX,
-  FeatureSSE2,
-  FeatureFXSR,
-  FeatureNOPL,
-  Feature64Bit,
+def : ProcModel<"x86-64", SandyBridgeModel, ProcessorFeatures.X86_64V1Features,
+[
   FeatureSlow3OpsLEA,
+  FeatureSlowDivide64,
   FeatureSlowIncDec,
-  FeatureMacroFusion
+  FeatureMacroFusion,
+  FeatureInsertVZEROUPPER
 ]>;
+
+// x86-64 micro-architecture levels.
+def : ProcModel<"x86-64-v2", SandyBridgeModel, ProcessorFeatures.X86_64V2Features,
+                ProcessorFeatures.SNBTuning>;
+// Close to Haswell.
+def : ProcModel<"x86-64-v3", HaswellModel, ProcessorFeatures.X86_64V3Features,
+                ProcessorFeatures.HSWTuning>;
+// Close to the AVX-512 level implemented by Xeon Scalable Processors.
+def : ProcModel<"x86-64-v4", SkylakeServerModel, ProcessorFeatures.X86_64V4Features,
+                ProcessorFeatures.SKXTuning>;
 
 //===----------------------------------------------------------------------===//
 // Calling Conventions

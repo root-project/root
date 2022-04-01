@@ -11,8 +11,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/SwitchLoweringUtils.h"
+#include "llvm/CodeGen/FunctionLoweringInfo.h"
+#include "llvm/CodeGen/MachineJumpTableInfo.h"
+#include "llvm/CodeGen/TargetLowering.h"
+#include "llvm/Target/TargetMachine.h"
 
 using namespace llvm;
 using namespace SwitchCG;
@@ -42,7 +45,9 @@ SwitchCG::getJumpTableNumCases(const SmallVectorImpl<unsigned> &TotalCases,
 
 void SwitchCG::SwitchLowering::findJumpTables(CaseClusterVector &Clusters,
                                               const SwitchInst *SI,
-                                              MachineBasicBlock *DefaultMBB) {
+                                              MachineBasicBlock *DefaultMBB,
+                                              ProfileSummaryInfo *PSI,
+                                              BlockFrequencyInfo *BFI) {
 #ifndef NDEBUG
   // Clusters must be non-empty, sorted, and only contain Range clusters.
   assert(!Clusters.empty());
@@ -80,7 +85,7 @@ void SwitchCG::SwitchLowering::findJumpTables(CaseClusterVector &Clusters,
   assert(Range >= NumCases);
 
   // Cheap case: the whole range may be suitable for jump table.
-  if (TLI->isSuitableForJumpTable(SI, NumCases, Range)) {
+  if (TLI->isSuitableForJumpTable(SI, NumCases, Range, PSI, BFI)) {
     CaseCluster JTCluster;
     if (buildJumpTable(Clusters, 0, N - 1, SI, DefaultMBB, JTCluster)) {
       Clusters[0] = JTCluster;
@@ -138,7 +143,7 @@ void SwitchCG::SwitchLowering::findJumpTables(CaseClusterVector &Clusters,
       assert(NumCases < UINT64_MAX / 100);
       assert(Range >= NumCases);
 
-      if (TLI->isSuitableForJumpTable(SI, NumCases, Range)) {
+      if (TLI->isSuitableForJumpTable(SI, NumCases, Range, PSI, BFI)) {
         unsigned NumPartitions = 1 + (j == N - 1 ? 0 : MinPartitions[j + 1]);
         unsigned Score = j == N - 1 ? 0 : PartitionsScore[j + 1];
         int64_t NumEntries = j - i + 1;

@@ -31,7 +31,6 @@
 #include "llvm/Analysis/CallGraph.h"
 #include "llvm/Analysis/ProfileSummaryInfo.h"
 #include "llvm/Analysis/SyntheticCountsUtils.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
@@ -45,11 +44,12 @@ using ProfileCount = Function::ProfileCount;
 
 #define DEBUG_TYPE "synthetic-counts-propagation"
 
-/// Initial synthetic count assigned to functions.
+namespace llvm {
 cl::opt<int>
     InitialSyntheticCount("initial-synthetic-count", cl::Hidden, cl::init(10),
                           cl::ZeroOrMore,
-                          cl::desc("Initial value of synthetic entry count."));
+                          cl::desc("Initial value of synthetic entry count"));
+} // namespace llvm
 
 /// Initial synthetic count assigned to inline functions.
 static cl::opt<int> InlineSyntheticCount(
@@ -110,14 +110,13 @@ PreservedAnalyses SyntheticCountsPropagation::run(Module &M,
     Optional<Scaled64> Res = None;
     if (!Edge.first)
       return Res;
-    assert(isa<Instruction>(Edge.first));
-    CallSite CS(cast<Instruction>(Edge.first));
-    Function *Caller = CS.getCaller();
+    CallBase &CB = *cast<CallBase>(*Edge.first);
+    Function *Caller = CB.getCaller();
     auto &BFI = FAM.getResult<BlockFrequencyAnalysis>(*Caller);
 
     // Now compute the callsite count from relative frequency and
     // entry count:
-    BasicBlock *CSBB = CS.getInstruction()->getParent();
+    BasicBlock *CSBB = CB.getParent();
     Scaled64 EntryFreq(BFI.getEntryFreq(), 0);
     Scaled64 BBCount(BFI.getBlockFreq(CSBB).getFrequency(), 0);
     BBCount /= EntryFreq;

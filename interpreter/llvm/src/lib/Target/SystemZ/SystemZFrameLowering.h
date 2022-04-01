@@ -9,8 +9,10 @@
 #ifndef LLVM_LIB_TARGET_SYSTEMZ_SYSTEMZFRAMELOWERING_H
 #define LLVM_LIB_TARGET_SYSTEMZ_SYSTEMZFRAMELOWERING_H
 
+#include "MCTargetDesc/SystemZMCTargetDesc.h"
 #include "llvm/ADT/IndexedMap.h"
 #include "llvm/CodeGen/TargetFrameLowering.h"
+#include "llvm/Support/TypeSize.h"
 
 namespace llvm {
 class SystemZTargetMachine;
@@ -24,33 +26,49 @@ public:
 
   // Override TargetFrameLowering.
   bool isFPCloseToIncomingSP() const override { return false; }
-  const SpillSlot *getCalleeSavedSpillSlots(unsigned &NumEntries) const
-    override;
+  bool
+  assignCalleeSavedSpillSlots(MachineFunction &MF,
+                              const TargetRegisterInfo *TRI,
+                              std::vector<CalleeSavedInfo> &CSI) const override;
   void determineCalleeSaves(MachineFunction &MF, BitVector &SavedRegs,
                             RegScavenger *RS) const override;
   bool spillCalleeSavedRegisters(MachineBasicBlock &MBB,
                                  MachineBasicBlock::iterator MBBI,
-                                 const std::vector<CalleeSavedInfo> &CSI,
+                                 ArrayRef<CalleeSavedInfo> CSI,
                                  const TargetRegisterInfo *TRI) const override;
-  bool restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
-                                   MachineBasicBlock::iterator MBBII,
-                                   std::vector<CalleeSavedInfo> &CSI,
-                                   const TargetRegisterInfo *TRI) const
-    override;
+  bool
+  restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator MBBII,
+                              MutableArrayRef<CalleeSavedInfo> CSI,
+                              const TargetRegisterInfo *TRI) const override;
   void processFunctionBeforeFrameFinalized(MachineFunction &MF,
                                            RegScavenger *RS) const override;
   void emitPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
   void emitEpilogue(MachineFunction &MF, MachineBasicBlock &MBB) const override;
+  void inlineStackProbe(MachineFunction &MF,
+                        MachineBasicBlock &PrologMBB) const override;
   bool hasFP(const MachineFunction &MF) const override;
   bool hasReservedCallFrame(const MachineFunction &MF) const override;
+  StackOffset getFrameIndexReference(const MachineFunction &MF, int FI,
+                                     Register &FrameReg) const override;
   MachineBasicBlock::iterator
   eliminateCallFramePseudoInstr(MachineFunction &MF, MachineBasicBlock &MBB,
                                 MachineBasicBlock::iterator MI) const override;
 
   // Return the byte offset from the incoming stack pointer of Reg's
-  // ABI-defined save slot.  Return 0 if no slot is defined for Reg.
-  unsigned getRegSpillOffset(unsigned Reg) const {
-    return RegSpillOffsets[Reg];
+  // ABI-defined save slot.  Return 0 if no slot is defined for Reg.  Adjust
+  // the offset in case MF has packed-stack.
+  unsigned getRegSpillOffset(MachineFunction &MF, Register Reg) const;
+
+  // Get or create the frame index of where the old frame pointer is stored.
+  int getOrCreateFramePointerSaveIndex(MachineFunction &MF) const;
+
+  bool usePackedStack(MachineFunction &MF) const;
+
+  // Return the offset of the backchain.
+  unsigned getBackchainOffset(MachineFunction &MF) const {
+    // The back chain is stored topmost with packed-stack.
+    return usePackedStack(MF) ? SystemZMC::ELFCallFrameSize - 8 : 0;
   }
 };
 } // end namespace llvm

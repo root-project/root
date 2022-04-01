@@ -15,7 +15,6 @@
 #define LLVM_EXECUTIONENGINE_SECTIONMEMORYMANAGER_H
 
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ExecutionEngine/RTDyldMemoryManager.h"
 #include "llvm/Support/Memory.h"
 #include <cstdint>
@@ -186,10 +185,9 @@ private:
   MemoryGroup CodeMem;
   MemoryGroup RWDataMem;
   MemoryGroup RODataMem;
-  std::unique_ptr<MemoryMapper> DefMMapper;
   MemoryMapper &MMapper;
 };
 
 } // end namespace llvm
 
-#endif // LLVM_EXECUTION_ENGINE_SECTION_MEMORY_MANAGER_H
+#endif // LLVM_EXECUTIONENGINE_SECTIONMEMORYMANAGER_H

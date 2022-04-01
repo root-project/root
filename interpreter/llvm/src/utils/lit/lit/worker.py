@@ -1,82 +1,94 @@
-# The functions in this module are meant to run on a separate worker process.
-# Exception: in single process mode _execute_test is called directly.
+"""
+The functions in this module are meant to run on a separate worker process.
+Exception: in single process mode _execute is called directly.
+
+For efficiency, we copy all data needed to execute all tests into each worker
+and store it in global variables. This reduces the cost of each task.
+"""
+import contextlib
+import os
+import signal
 import time
 import traceback
 
 import lit.Test
 import lit.util
 
+
 _lit_config = None
 _parallelism_semaphores = None
 
-def initializer(lit_config, parallelism_semaphores):
-    """Copy expensive repeated data into worker processes"""
+
+def initialize(lit_config, parallelism_semaphores):
+    """Copy data shared by all test executions into worker processes"""
     global _lit_config
     global _parallelism_semaphores
     _lit_config = lit_config
     _parallelism_semaphores = parallelism_semaphores
 
-def run_one_test(test_index, test):
+    # We use the following strategy for dealing with Ctrl+C/KeyboardInterrupt in
+    # subprocesses created by the multiprocessing.Pool.
+    # https://noswap.com/blog/python-multiprocessing-keyboardinterrupt
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+def execute(test):
     """Run one test in a multiprocessing.Pool
 
     Side effects in this function and functions it calls are not visible in the
     main lit process.
 
     Arguments and results of this function are pickled, so they should be cheap
-    to copy. For efficiency, we copy all data needed to execute all tests into
-    each worker and store it in the worker_* global variables. This reduces the
-    cost of each task.
-
-    Returns an index and a Result, which the parent process uses to update
-    the display.
+    to copy.
     """
-    try:
-        _execute_test_in_parallelism_group(test, _lit_config,
-                                           _parallelism_semaphores)
-        return (test_index, test)
-    except KeyboardInterrupt:
-        # If a worker process gets an interrupt, abort it immediately.
-        lit.util.abort_now()
-    except:
-        traceback.print_exc()
+    with _get_parallelism_semaphore(test):
+        result = _execute(test, _lit_config)
 
-def _execute_test_in_parallelism_group(test, lit_config, parallelism_semaphores):
-    """Execute one test inside the appropriate parallelism group"""
+    test.setResult(result)
+    return test
+
+
+# TODO(python3): replace with contextlib.nullcontext
+@contextlib.contextmanager
+def NopSemaphore():
+    yield
+
+
+def _get_parallelism_semaphore(test):
     pg = test.config.parallelism_group
     if callable(pg):
         pg = pg(test)
+    return _parallelism_semaphores.get(pg, NopSemaphore())
 
-    if pg:
-        semaphore = parallelism_semaphores[pg]
-        try:
-            semaphore.acquire()
-            _execute_test(test, lit_config)
-        finally:
-            semaphore.release()
-    else:
-        _execute_test(test, lit_config)
 
-def _execute_test(test, lit_config):
-    """Execute one test"""
+# Do not inline! Directly used by LitTestCase.py
+def _execute(test, lit_config):
+    start = time.time()
+    result = _execute_test_handle_errors(test, lit_config)
+    result.elapsed = time.time() - start
+    result.start = start
+    result.pid = os.getpid()
+    return result
+
+
+def _execute_test_handle_errors(test, lit_config):
     try:
-        start_time = time.time()
         result = test.config.test_format.execute(test, lit_config)
-        # Support deprecated result from execute() which returned the result
-        # code and additional output as a tuple.
-        if isinstance(result, tuple):
-            code, output = result
-            result = lit.Test.Result(code, output)
-        elif not isinstance(result, lit.Test.Result):
-            raise ValueError("unexpected result from test execution")
-        result.elapsed = time.time() - start_time
-    except KeyboardInterrupt:
-        raise
+        return _adapt_result(result)
     except:
         if lit_config.debug:
             raise
         output = 'Exception during script execution:\n'
         output += traceback.format_exc()
         output += '\n'
-        result = lit.Test.Result(lit.Test.UNRESOLVED, output)
+        return lit.Test.Result(lit.Test.UNRESOLVED, output)
 
-    test.setResult(result)
+
+# Support deprecated result from execute() which returned the result
+# code and additional output as a tuple.
+def _adapt_result(result):
+    if isinstance(result, lit.Test.Result):
+        return result
+    assert isinstance(result, tuple)
+    code, output = result
+    return lit.Test.Result(code, output)

@@ -15,15 +15,16 @@
 
 #include "X86ISelLowering.h"
 #include "X86InstrInfo.h"
+#include "llvm/IR/IntrinsicsX86.h"
 
 namespace llvm {
 
 enum IntrinsicType : uint16_t {
   CVTNEPS2BF16_MASK,
   GATHER, SCATTER, PREFETCH, RDSEED, RDRAND, RDPMC, RDTSC, XTEST, XGETBV, ADX, FPCLASSS,
-  INTR_TYPE_1OP, INTR_TYPE_2OP, INTR_TYPE_3OP, INTR_TYPE_4OP,
+  INTR_TYPE_1OP, INTR_TYPE_2OP, INTR_TYPE_3OP, INTR_TYPE_4OP_IMM8,
   INTR_TYPE_3OP_IMM8,
-  CMP_MASK_CC,CMP_MASK_SCALAR_CC, VSHIFT, COMI, COMI_RM, BLENDV,
+  CMP_MASK_CC,CMP_MASK_SCALAR_CC, VSHIFT, COMI, COMI_RM, BLENDV, BEXTRI,
   CVTPD2PS_MASK,
   INTR_TYPE_1OP_SAE, INTR_TYPE_2OP_SAE,
   INTR_TYPE_1OP_MASK_SAE, INTR_TYPE_2OP_MASK_SAE, INTR_TYPE_3OP_MASK_SAE,
@@ -323,9 +324,7 @@ static const IntrinsicData IntrinsicsWithChain[] = {
  * Find Intrinsic data by intrinsic ID
  */
 static const IntrinsicData* getIntrinsicWithChain(unsigned IntNo) {
-  const IntrinsicData *Data =  std::lower_bound(std::begin(IntrinsicsWithChain),
-                                                std::end(IntrinsicsWithChain),
-                                                IntNo);
+  const IntrinsicData *Data = lower_bound(IntrinsicsWithChain, IntNo);
   if (Data != std::end(IntrinsicsWithChain) && Data->Id == IntNo)
     return Data;
   return nullptr;
@@ -416,12 +415,6 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
   X86_INTRINSIC_DATA(avx2_psrlv_q_256, INTR_TYPE_2OP, X86ISD::VSRLV, 0),
   X86_INTRINSIC_DATA(avx512_add_pd_512, INTR_TYPE_2OP, ISD::FADD, X86ISD::FADD_RND),
   X86_INTRINSIC_DATA(avx512_add_ps_512, INTR_TYPE_2OP, ISD::FADD, X86ISD::FADD_RND),
-  X86_INTRINSIC_DATA(avx512_cmp_pd_128, CMP_MASK_CC, X86ISD::CMPM, 0),
-  X86_INTRINSIC_DATA(avx512_cmp_pd_256, CMP_MASK_CC, X86ISD::CMPM, 0),
-  X86_INTRINSIC_DATA(avx512_cmp_pd_512, CMP_MASK_CC, X86ISD::CMPM, X86ISD::CMPM_SAE),
-  X86_INTRINSIC_DATA(avx512_cmp_ps_128, CMP_MASK_CC, X86ISD::CMPM, 0),
-  X86_INTRINSIC_DATA(avx512_cmp_ps_256, CMP_MASK_CC, X86ISD::CMPM, 0),
-  X86_INTRINSIC_DATA(avx512_cmp_ps_512, CMP_MASK_CC, X86ISD::CMPM, X86ISD::CMPM_SAE),
   X86_INTRINSIC_DATA(avx512_conflict_d_128, INTR_TYPE_1OP, X86ISD::CONFLICT, 0),
   X86_INTRINSIC_DATA(avx512_conflict_d_256, INTR_TYPE_1OP, X86ISD::CONFLICT, 0),
   X86_INTRINSIC_DATA(avx512_conflict_d_512, INTR_TYPE_1OP, X86ISD::CONFLICT, 0),
@@ -463,6 +456,12 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
                      X86ISD::FADDS, X86ISD::FADDS_RND),
   X86_INTRINSIC_DATA(avx512_mask_add_ss_round, INTR_TYPE_SCALAR_MASK,
                      X86ISD::FADDS, X86ISD::FADDS_RND),
+  X86_INTRINSIC_DATA(avx512_mask_cmp_pd_128, CMP_MASK_CC, X86ISD::CMPMM, 0),
+  X86_INTRINSIC_DATA(avx512_mask_cmp_pd_256, CMP_MASK_CC, X86ISD::CMPMM, 0),
+  X86_INTRINSIC_DATA(avx512_mask_cmp_pd_512, CMP_MASK_CC, X86ISD::CMPMM, X86ISD::CMPMM_SAE),
+  X86_INTRINSIC_DATA(avx512_mask_cmp_ps_128, CMP_MASK_CC, X86ISD::CMPMM, 0),
+  X86_INTRINSIC_DATA(avx512_mask_cmp_ps_256, CMP_MASK_CC, X86ISD::CMPMM, 0),
+  X86_INTRINSIC_DATA(avx512_mask_cmp_ps_512, CMP_MASK_CC, X86ISD::CMPMM, X86ISD::CMPMM_SAE),
   X86_INTRINSIC_DATA(avx512_mask_cmp_sd,     CMP_MASK_SCALAR_CC,
                      X86ISD::FSETCCM, X86ISD::FSETCCM_SAE),
   X86_INTRINSIC_DATA(avx512_mask_cmp_ss,     CMP_MASK_SCALAR_CC,
@@ -678,8 +677,8 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
                      X86ISD::VTRUNCS, X86ISD::VMTRUNCS),
   X86_INTRINSIC_DATA(avx512_mask_pmovs_qb_512, TRUNCATE_TO_REG,
                      X86ISD::VTRUNCS, X86ISD::VMTRUNCS),
-  X86_INTRINSIC_DATA(avx512_mask_pmovs_qd_128, INTR_TYPE_1OP_MASK,
-                     X86ISD::VTRUNCS, 0),
+  X86_INTRINSIC_DATA(avx512_mask_pmovs_qd_128, TRUNCATE_TO_REG,
+                     X86ISD::VTRUNCS, X86ISD::VMTRUNCS),
   X86_INTRINSIC_DATA(avx512_mask_pmovs_qd_256, INTR_TYPE_1OP_MASK,
                      X86ISD::VTRUNCS, 0),
   X86_INTRINSIC_DATA(avx512_mask_pmovs_qd_512, INTR_TYPE_1OP_MASK,
@@ -782,10 +781,6 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
                      X86ISD::FSUBS, X86ISD::FSUBS_RND),
   X86_INTRINSIC_DATA(avx512_mask_sub_ss_round, INTR_TYPE_SCALAR_MASK,
                      X86ISD::FSUBS, X86ISD::FSUBS_RND),
-  X86_INTRINSIC_DATA(avx512_mask_vcvtph2ps_128, INTR_TYPE_1OP_MASK,
-                     X86ISD::CVTPH2PS, 0),
-  X86_INTRINSIC_DATA(avx512_mask_vcvtph2ps_256, INTR_TYPE_1OP_MASK,
-                     X86ISD::CVTPH2PS, 0),
   X86_INTRINSIC_DATA(avx512_mask_vcvtph2ps_512, INTR_TYPE_1OP_MASK_SAE,
                      X86ISD::CVTPH2PS, X86ISD::CVTPH2PS_SAE),
   X86_INTRINSIC_DATA(avx512_mask_vcvtps2ph_128, CVTPS2PH_MASK,
@@ -885,12 +880,12 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
   X86_INTRINSIC_DATA(avx512_psrlv_w_128, INTR_TYPE_2OP, X86ISD::VSRLV, 0),
   X86_INTRINSIC_DATA(avx512_psrlv_w_256, INTR_TYPE_2OP, X86ISD::VSRLV, 0),
   X86_INTRINSIC_DATA(avx512_psrlv_w_512, INTR_TYPE_2OP, X86ISD::VSRLV, 0),
-  X86_INTRINSIC_DATA(avx512_pternlog_d_128, INTR_TYPE_4OP, X86ISD::VPTERNLOG, 0),
-  X86_INTRINSIC_DATA(avx512_pternlog_d_256, INTR_TYPE_4OP, X86ISD::VPTERNLOG, 0),
-  X86_INTRINSIC_DATA(avx512_pternlog_d_512, INTR_TYPE_4OP, X86ISD::VPTERNLOG, 0),
-  X86_INTRINSIC_DATA(avx512_pternlog_q_128, INTR_TYPE_4OP, X86ISD::VPTERNLOG, 0),
-  X86_INTRINSIC_DATA(avx512_pternlog_q_256, INTR_TYPE_4OP, X86ISD::VPTERNLOG, 0),
-  X86_INTRINSIC_DATA(avx512_pternlog_q_512, INTR_TYPE_4OP, X86ISD::VPTERNLOG, 0),
+  X86_INTRINSIC_DATA(avx512_pternlog_d_128, INTR_TYPE_4OP_IMM8, X86ISD::VPTERNLOG, 0),
+  X86_INTRINSIC_DATA(avx512_pternlog_d_256, INTR_TYPE_4OP_IMM8, X86ISD::VPTERNLOG, 0),
+  X86_INTRINSIC_DATA(avx512_pternlog_d_512, INTR_TYPE_4OP_IMM8, X86ISD::VPTERNLOG, 0),
+  X86_INTRINSIC_DATA(avx512_pternlog_q_128, INTR_TYPE_4OP_IMM8, X86ISD::VPTERNLOG, 0),
+  X86_INTRINSIC_DATA(avx512_pternlog_q_256, INTR_TYPE_4OP_IMM8, X86ISD::VPTERNLOG, 0),
+  X86_INTRINSIC_DATA(avx512_pternlog_q_512, INTR_TYPE_4OP_IMM8, X86ISD::VPTERNLOG, 0),
   X86_INTRINSIC_DATA(avx512_rcp14_pd_128, INTR_TYPE_1OP_MASK, X86ISD::RCP14, 0),
   X86_INTRINSIC_DATA(avx512_rcp14_pd_256, INTR_TYPE_1OP_MASK, X86ISD::RCP14, 0),
   X86_INTRINSIC_DATA(avx512_rcp14_pd_512, INTR_TYPE_1OP_MASK, X86ISD::RCP14, 0),
@@ -996,7 +991,16 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
   X86_INTRINSIC_DATA(bmi_bextr_64,         INTR_TYPE_2OP, X86ISD::BEXTR, 0),
   X86_INTRINSIC_DATA(bmi_bzhi_32,          INTR_TYPE_2OP, X86ISD::BZHI, 0),
   X86_INTRINSIC_DATA(bmi_bzhi_64,          INTR_TYPE_2OP, X86ISD::BZHI, 0),
+  X86_INTRINSIC_DATA(bmi_pdep_32,          INTR_TYPE_2OP, X86ISD::PDEP, 0),
+  X86_INTRINSIC_DATA(bmi_pdep_64,          INTR_TYPE_2OP, X86ISD::PDEP, 0),
+  X86_INTRINSIC_DATA(bmi_pext_32,          INTR_TYPE_2OP, X86ISD::PEXT, 0),
+  X86_INTRINSIC_DATA(bmi_pext_64,          INTR_TYPE_2OP, X86ISD::PEXT, 0),
+  X86_INTRINSIC_DATA(fma_vfmaddsub_pd,     INTR_TYPE_3OP, X86ISD::FMADDSUB, 0),
+  X86_INTRINSIC_DATA(fma_vfmaddsub_pd_256, INTR_TYPE_3OP, X86ISD::FMADDSUB, 0),
+  X86_INTRINSIC_DATA(fma_vfmaddsub_ps,     INTR_TYPE_3OP, X86ISD::FMADDSUB, 0),
+  X86_INTRINSIC_DATA(fma_vfmaddsub_ps_256, INTR_TYPE_3OP, X86ISD::FMADDSUB, 0),
   X86_INTRINSIC_DATA(sse_cmp_ps,        INTR_TYPE_3OP, X86ISD::CMPP, 0),
+  X86_INTRINSIC_DATA(sse_cmp_ss,        INTR_TYPE_3OP, X86ISD::FSETCC, 0),
   X86_INTRINSIC_DATA(sse_comieq_ss,     COMI, X86ISD::COMI, ISD::SETEQ),
   X86_INTRINSIC_DATA(sse_comige_ss,     COMI, X86ISD::COMI, ISD::SETGE),
   X86_INTRINSIC_DATA(sse_comigt_ss,     COMI, X86ISD::COMI, ISD::SETGT),
@@ -1021,6 +1025,7 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
   X86_INTRINSIC_DATA(sse_ucomilt_ss,    COMI, X86ISD::UCOMI, ISD::SETLT),
   X86_INTRINSIC_DATA(sse_ucomineq_ss,   COMI, X86ISD::UCOMI, ISD::SETNE),
   X86_INTRINSIC_DATA(sse2_cmp_pd,       INTR_TYPE_3OP, X86ISD::CMPP, 0),
+  X86_INTRINSIC_DATA(sse2_cmp_sd,       INTR_TYPE_3OP, X86ISD::FSETCC, 0),
   X86_INTRINSIC_DATA(sse2_comieq_sd,    COMI, X86ISD::COMI, ISD::SETEQ),
   X86_INTRINSIC_DATA(sse2_comige_sd,    COMI, X86ISD::COMI, ISD::SETGE),
   X86_INTRINSIC_DATA(sse2_comigt_sd,    COMI, X86ISD::COMI, ISD::SETGT),
@@ -1091,7 +1096,7 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
   X86_INTRINSIC_DATA(sse41_round_sd,    ROUNDS, X86ISD::VRNDSCALES, 0),
   X86_INTRINSIC_DATA(sse41_round_ss,    ROUNDS, X86ISD::VRNDSCALES, 0),
   X86_INTRINSIC_DATA(sse4a_extrqi,      INTR_TYPE_3OP, X86ISD::EXTRQI, 0),
-  X86_INTRINSIC_DATA(sse4a_insertqi,    INTR_TYPE_4OP, X86ISD::INSERTQI, 0),
+  X86_INTRINSIC_DATA(sse4a_insertqi,    INTR_TYPE_4OP_IMM8, X86ISD::INSERTQI, 0),
   X86_INTRINSIC_DATA(ssse3_phadd_d_128, INTR_TYPE_2OP, X86ISD::HADD, 0),
   X86_INTRINSIC_DATA(ssse3_phadd_w_128, INTR_TYPE_2OP, X86ISD::HADD, 0),
   X86_INTRINSIC_DATA(ssse3_phsub_d_128, INTR_TYPE_2OP, X86ISD::HSUB, 0),
@@ -1101,10 +1106,8 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
   X86_INTRINSIC_DATA(ssse3_pshuf_b_128, INTR_TYPE_2OP, X86ISD::PSHUFB, 0),
   X86_INTRINSIC_DATA(subborrow_32,      ADX, X86ISD::SBB, X86ISD::SUB),
   X86_INTRINSIC_DATA(subborrow_64,      ADX, X86ISD::SBB, X86ISD::SUB),
-  X86_INTRINSIC_DATA(tbm_bextri_u32,    INTR_TYPE_2OP, X86ISD::BEXTR, 0),
-  X86_INTRINSIC_DATA(tbm_bextri_u64,    INTR_TYPE_2OP, X86ISD::BEXTR, 0),
-  X86_INTRINSIC_DATA(vcvtph2ps_128,     INTR_TYPE_1OP, X86ISD::CVTPH2PS, 0),
-  X86_INTRINSIC_DATA(vcvtph2ps_256,     INTR_TYPE_1OP, X86ISD::CVTPH2PS, 0),
+  X86_INTRINSIC_DATA(tbm_bextri_u32,    BEXTRI, X86ISD::BEXTRI, 0),
+  X86_INTRINSIC_DATA(tbm_bextri_u64,    BEXTRI, X86ISD::BEXTRI, 0),
   X86_INTRINSIC_DATA(vcvtps2ph_128,     INTR_TYPE_2OP, X86ISD::CVTPS2PH, 0),
   X86_INTRINSIC_DATA(vcvtps2ph_256,     INTR_TYPE_2OP, X86ISD::CVTPS2PH, 0),
 
@@ -1127,10 +1130,10 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
   X86_INTRINSIC_DATA(vgf2p8mulb_512, INTR_TYPE_2OP,
                      X86ISD::GF2P8MULB, 0),
 
-  X86_INTRINSIC_DATA(xop_vpermil2pd,     INTR_TYPE_4OP, X86ISD::VPERMIL2, 0),
-  X86_INTRINSIC_DATA(xop_vpermil2pd_256, INTR_TYPE_4OP, X86ISD::VPERMIL2, 0),
-  X86_INTRINSIC_DATA(xop_vpermil2ps,     INTR_TYPE_4OP, X86ISD::VPERMIL2, 0),
-  X86_INTRINSIC_DATA(xop_vpermil2ps_256, INTR_TYPE_4OP, X86ISD::VPERMIL2, 0),
+  X86_INTRINSIC_DATA(xop_vpermil2pd,     INTR_TYPE_4OP_IMM8, X86ISD::VPERMIL2, 0),
+  X86_INTRINSIC_DATA(xop_vpermil2pd_256, INTR_TYPE_4OP_IMM8, X86ISD::VPERMIL2, 0),
+  X86_INTRINSIC_DATA(xop_vpermil2ps,     INTR_TYPE_4OP_IMM8, X86ISD::VPERMIL2, 0),
+  X86_INTRINSIC_DATA(xop_vpermil2ps_256, INTR_TYPE_4OP_IMM8, X86ISD::VPERMIL2, 0),
   X86_INTRINSIC_DATA(xop_vpperm,        INTR_TYPE_3OP, X86ISD::VPPERM, 0),
   X86_INTRINSIC_DATA(xop_vpshab,        INTR_TYPE_2OP, X86ISD::VPSHA, 0),
   X86_INTRINSIC_DATA(xop_vpshad,        INTR_TYPE_2OP, X86ISD::VPSHA, 0),
@@ -1147,19 +1150,15 @@ static const IntrinsicData  IntrinsicsWithoutChain[] = {
  * Return nullptr if intrinsic is not defined in the table.
  */
 static const IntrinsicData* getIntrinsicWithoutChain(unsigned IntNo) {
-  const IntrinsicData *Data = std::lower_bound(std::begin(IntrinsicsWithoutChain),
-                                               std::end(IntrinsicsWithoutChain),
-                                               IntNo);
+  const IntrinsicData *Data = lower_bound(IntrinsicsWithoutChain, IntNo);
   if (Data != std::end(IntrinsicsWithoutChain) && Data->Id == IntNo)
     return Data;
   return nullptr;
 }
 
 static void verifyIntrinsicTables() {
-  assert(std::is_sorted(std::begin(IntrinsicsWithoutChain),
-                        std::end(IntrinsicsWithoutChain)) &&
-         std::is_sorted(std::begin(IntrinsicsWithChain),
-                        std::end(IntrinsicsWithChain)) &&
+  assert(llvm::is_sorted(IntrinsicsWithoutChain) &&
+         llvm::is_sorted(IntrinsicsWithChain) &&
          "Intrinsic data tables should be sorted by Intrinsic ID");
   assert((std::adjacent_find(std::begin(IntrinsicsWithoutChain),
                              std::end(IntrinsicsWithoutChain)) ==

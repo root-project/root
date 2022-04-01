@@ -35,7 +35,7 @@ class LOp<list<dag> ops> : Operation<ops>;
 // These defs and classes are used internally to implement the SetTheory
 // expansion and should be ignored.
 foreach Index = 0-63 in
-  def sv##Index;
+  def sv#Index;
 class MaskExpand;
 
 //===----------------------------------------------------------------------===//
@@ -60,6 +60,15 @@ def op;
 // example: (call "vget_high", $p0) -> "vgetq_high_s16(__p0)"
 //            (assuming $p0 has type int16x8_t).
 def call;
+// call_mangled - Invoke another intrinsic matching the mangled name variation
+//                of the caller's base type. If there is no intrinsic defined
+//                that has the variation and takes the given types, an error
+//                is generated at tblgen time.
+// example: (call_mangled "vfma_lane", $p0, $p1) -> "vfma_lane(__p0, __p1)"
+//            (assuming non-LaneQ caller)
+//          (call_mangled "vfma_lane", $p0, $p1) -> "vfma_laneq(__p0, __p1)"
+//            (assuming LaneQ caller)
+def call_mangled;
 // cast - Perform a cast to a different type. This gets emitted as a static
 //        C-style cast. For a pure reinterpret cast (T x = *(T*)&y), use
 //        "bitcast".
@@ -79,6 +88,7 @@ def call;
 //          - "D" - Double the number of lanes in the type.
 //          - "8" - Convert type to an equivalent vector of 8-bit signed
 //                  integers.
+//          - "32" - Convert type to an equivalent vector of 32-bit integers.
 // example: (cast "R", "U", $p0) -> "(uint32x4_t)__p0" (assuming the return
 //           value is of type "int32x4_t".
 //          (cast $p0, "D", "8", $p1) -> "(int8x16_t)__p1" (assuming __p0
@@ -100,12 +110,6 @@ def dup;
 // example: (dup_typed $p1, $p2) -> "(float16x4_t) {__p2, __p2, __p2, __p2}"
 //          (assuming __p1 is float16x4_t, and __p2 is a compatible scalar).
 def dup_typed;
-// splat - Take a vector and a lane index, and return a vector of the same type
-//         containing repeated instances of the source vector at the lane index.
-// example: (splat $p0, $p1) ->
-//            "__builtin_shufflevector(__p0, __p0, __p1, __p1, __p1, __p1)"
-//          (assuming __p0 has four elements).
-def splat;
 // save_temp - Create a temporary (local) variable. The variable takes a name
 //             based on the zero'th parameter and can be referenced using
 //             using that name in subsequent DAGs in the same
@@ -198,10 +202,8 @@ def OP_UNAVAILABLE : Operation {
 //
 // The prototype is a string that defines the return type of the intrinsic
 // and the type of each argument. The return type and every argument gets a
-// "modifier" that can change in some way the "base type" of the intrinsic.
-//
-// The modifier 'd' means "default" and does not modify the base type in any
-// way. The available modifiers are given below.
+// set of "modifiers" that can change in some way the "base type" of the
+// intrinsic.
 //
 // Typespecs
 // ---------
@@ -213,6 +215,7 @@ def OP_UNAVAILABLE : Operation {
 // f: float
 // h: half-float
 // d: double
+// b: bfloat16
 //
 // Typespec modifiers
 // ------------------
@@ -226,42 +229,35 @@ def OP_UNAVAILABLE : Operation {
 // -------------------
 // prototype: return (arg, arg, ...)
 //
-// v: void
-// t: best-fit integer (int/poly args)
-// x: signed integer   (int/float args)
-// u: unsigned integer (int/float args)
-// f: float (int args)
-// F: double (int args)
-// H: half (int args)
-// 0: half (int args), ignore 'Q' size modifier.
-// 1: half (int args), force 'Q' size modifier.
-// d: default
-// g: default, ignore 'Q' size modifier.
-// j: default, force 'Q' size modifier.
-// w: double width elements, same num elts
-// n: double width elements, half num elts
-// h: half width elements, double num elts
-// q: half width elements, quad num elts
-// e: half width elements, double num elts, unsigned
-// m: half width elements, same num elts
-// i: constant int
-// l: constant uint64
-// s: scalar of element type
-// z: scalar of half width element type, signed
-// r: scalar of double width element type, signed
-// a: scalar of element type (splat to vector type)
-// b: scalar of unsigned integer/long type (int/float args)
-// $: scalar of signed integer/long type (int/float args)
-// y: scalar of float
-// o: scalar of double
-// k: default elt width, double num elts
-// 2,3,4: array of default vectors
-// B,C,D: array of default elts, force 'Q' size modifier.
-// p: pointer type
-// c: const pointer type
-// 7: vector of 8-bit elements, ignore 'Q' size modifier
-// 8: vector of 8-bit elements, same width as default type
-// 9: vector of 8-bit elements, force 'Q' size modifier
+// Each type modifier is either a single character, or a group surrounded by
+// parentheses.
+//
+// .: default
+// v: change to void category.
+// S: change to signed integer category.
+// U: change to unsigned integer category.
+// F: change to floating category.
+// B: change to BFloat16
+// P: change to polynomial category.
+// p: change polynomial to equivalent integer category. Otherwise nop.
+//
+// >: double element width (vector size unchanged).
+// <: half element width (vector size unchanged).
+//
+// 1: change to scalar.
+// 2: change to struct of two vectors.
+// 3: change to struct of three vectors.
+// 4: change to struct of four vectors.
+//
+// *: make a pointer argument.
+// c: make a constant argument (for pointers).
+//
+// Q: force 128-bit width.
+// q: force 64-bit width.
+//
+// I: make 32-bit signed scalar immediate
+// !: make this the key type passed to CGBuiltin.cpp in a polymorphic call.
+
 
 // Every intrinsic subclasses Inst.
 class Inst <string n, string p, string t, Operation o> {
@@ -271,12 +267,12 @@ class Inst <string n, string p, string t, Operation o> {
   string ArchGuard = "";
 
   Operation Operation = o;
-  bit CartesianProductOfTypes = 0;
   bit BigEndianSafe = 0;
   bit isShift = 0;
   bit isScalarShift = 0;
   bit isScalarNarrowShift = 0;
   bit isVCVT_N = 0;
+  bit isVXAR = 0;
   // For immediate checks: the immediate will be assumed to specify the lane of
   // a Q register. Only used for intrinsics which end up calling polymorphic
   // builtins.
@@ -293,6 +289,8 @@ class Inst <string n, string p, string t, Operation o> {
   // this. Ex: vset_lane which outputs vmov instructions.
   bit isHiddenWInst = 0;
   bit isHiddenLInst = 0;
+
+  string CartesianProductWith = "";
 }
 
 // The following instruction classes are implemented via builtins.

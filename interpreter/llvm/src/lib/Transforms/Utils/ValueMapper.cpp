@@ -21,13 +21,12 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/Argument.h"
 #include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
-#include "llvm/IR/GlobalAlias.h"
+#include "llvm/IR/GlobalIndirectSymbol.h"
 #include "llvm/IR/GlobalObject.h"
 #include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/InlineAsm.h"
@@ -38,12 +37,15 @@
 #include "llvm/IR/Type.h"
 #include "llvm/IR/Value.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/Debug.h"
 #include <cassert>
 #include <limits>
 #include <memory>
 #include <utility>
 
 using namespace llvm;
+
+#define DEBUG_TYPE "value-mapper"
 
 // Out of line method to get vtable etc for class.
 void ValueMapTypeRemapper::anchor() {}
@@ -66,7 +68,7 @@ struct WorklistEntry {
   enum EntryKind {
     MapGlobalInit,
     MapAppendingVar,
-    MapGlobalAliasee,
+    MapGlobalIndirectSymbol,
     RemapFunction
   };
   struct GVInitTy {
@@ -77,9 +79,9 @@ struct WorklistEntry {
     GlobalVariable *GV;
     Constant *InitPrefix;
   };
-  struct GlobalAliaseeTy {
-    GlobalAlias *GA;
-    Constant *Aliasee;
+  struct GlobalIndirectSymbolTy {
+    GlobalIndirectSymbol *GIS;
+    Constant *Target;
   };
 
   unsigned Kind : 2;
@@ -89,7 +91,7 @@ struct WorklistEntry {
   union {
     GVInitTy GVInit;
     AppendingGVTy AppendingGV;
-    GlobalAliaseeTy GlobalAliasee;
+    GlobalIndirectSymbolTy GlobalIndirectSymbol;
     Function *RemapF;
   } Data;
 };
@@ -161,19 +163,16 @@ public:
                                     bool IsOldCtorDtor,
                                     ArrayRef<Constant *> NewMembers,
                                     unsigned MCID);
-  void scheduleMapGlobalAliasee(GlobalAlias &GA, Constant &Aliasee,
-                                unsigned MCID);
+  void scheduleMapGlobalIndirectSymbol(GlobalIndirectSymbol &GIS, Constant &Target,
+                                       unsigned MCID);
   void scheduleRemapFunction(Function &F, unsigned MCID);
 
   void flush();
 
 private:
-  void mapGlobalInitializer(GlobalVariable &GV, Constant &Init);
   void mapAppendingVariable(GlobalVariable &GV, Constant *InitPrefix,
                             bool IsOldCtorDtor,
                             ArrayRef<Constant *> NewMembers);
-  void mapGlobalAliasee(GlobalAlias &GA, Constant &Aliasee);
-  void remapFunction(Function &F, ValueToValueMapTy &VM);
 
   ValueToValueMapTy &getVM() { return *MCs[CurrentMCID].VM; }
   ValueMaterializer *getMaterializer() { return MCs[CurrentMCID].Materializer; }
@@ -369,7 +368,8 @@ Value *Mapper::mapValue(const Value *V) {
 
       if (NewTy != IA->getFunctionType())
         V = InlineAsm::get(NewTy, IA->getAsmString(), IA->getConstraintString(),
-                           IA->hasSideEffects(), IA->isAlignStack());
+                           IA->hasSideEffects(), IA->isAlignStack(),
+                           IA->getDialect(), IA->canThrow());
     }
 
     return getVM()[V] = const_cast<Value *>(V);
@@ -393,6 +393,26 @@ Value *Mapper::mapValue(const Value *V) {
                  : MetadataAsValue::get(V->getContext(),
                                         MDTuple::get(V->getContext(), None));
     }
+    if (auto *AL = dyn_cast<DIArgList>(MD)) {
+      SmallVector<ValueAsMetadata *, 4> MappedArgs;
+      for (auto *VAM : AL->getArgs()) {
+        // Map both Local and Constant VAMs here; they will both ultimately
+        // be mapped via mapValue (apart from constants when we have no
+        // module level changes, which have an identity mapping).
+        if ((Flags & RF_NoModuleLevelChanges) && isa<ConstantAsMetadata>(VAM)) {
+          MappedArgs.push_back(VAM);
+        } else if (Value *LV = mapValue(VAM->getValue())) {
+          MappedArgs.push_back(
+              LV == VAM->getValue() ? VAM : ValueAsMetadata::get(LV));
+        } else {
+          // If we cannot map the value, set the argument as undef.
+          MappedArgs.push_back(ValueAsMetadata::get(
+              UndefValue::get(VAM->getValue()->getType())));
+        }
+      }
+      return MetadataAsValue::get(V->getContext(),
+                                  DIArgList::get(V->getContext(), MappedArgs));
+    }
 
     // If this is a module-level metadata and we know that nothing at the module
     // level is changing, then use an identity mapping.
@@ -414,6 +434,20 @@ Value *Mapper::mapValue(const Value *V) {
 
   if (BlockAddress *BA = dyn_cast<BlockAddress>(C))
     return mapBlockAddress(*BA);
+
+  if (const auto *E = dyn_cast<DSOLocalEquivalent>(C)) {
+    auto *Val = mapValue(E->getGlobalValue());
+    GlobalValue *GV = dyn_cast<GlobalValue>(Val);
+    if (GV)
+      return getVM()[E] = DSOLocalEquivalent::get(GV);
+
+    auto *Func = cast<Function>(Val->stripPointerCastsAndAliases());
+    Type *NewTy = E->getType();
+    if (TypeMapper)
+      NewTy = TypeMapper->remapType(NewTy);
+    return getVM()[E] = llvm::ConstantExpr::getBitCast(
+               DSOLocalEquivalent::get(Func), NewTy);
+  }
 
   auto mapValueOrNull = [this](Value *V) {
     auto Mapped = mapValue(V);
@@ -536,23 +570,21 @@ Optional<Metadata *> MDNodeMapper::tryToMapOperand(const Metadata *Op) {
   return None;
 }
 
-static Metadata *cloneOrBuildODR(const MDNode &N) {
-  auto *CT = dyn_cast<DICompositeType>(&N);
-  // If ODR type uniquing is enabled, we would have uniqued composite types
-  // with identifiers during bitcode reading, so we can just use CT.
-  if (CT && CT->getContext().isODRUniquingDebugTypes() &&
-      CT->getIdentifier() != "")
-    return const_cast<DICompositeType *>(CT);
-  return MDNode::replaceWithDistinct(N.clone());
-}
-
 MDNode *MDNodeMapper::mapDistinctNode(const MDNode &N) {
   assert(N.isDistinct() && "Expected a distinct node");
   assert(!M.getVM().getMappedMD(&N) && "Expected an unmapped node");
-  DistinctWorklist.push_back(
-      cast<MDNode>((M.Flags & RF_MoveDistinctMDs)
-                       ? M.mapToSelf(&N)
-                       : M.mapToMetadata(&N, cloneOrBuildODR(N))));
+  Metadata *NewM = nullptr;
+
+  if (M.Flags & RF_ReuseAndMutateDistinctMDs) {
+    NewM = M.mapToSelf(&N);
+  } else {
+    NewM = MDNode::replaceWithDistinct(N.clone());
+    LLVM_DEBUG(dbgs() << "\nMap " << N << "\n"
+                      << "To  " << *NewM << "\n\n");
+    M.mapToMetadata(&N, NewM);
+  }
+  DistinctWorklist.push_back(cast<MDNode>(NewM));
+
   return DistinctWorklist.back();
 }
 
@@ -600,6 +632,9 @@ void MDNodeMapper::remapOperands(MDNode &N, OperandMapper mapOperand) {
   for (unsigned I = 0, E = N.getNumOperands(); I != E; ++I) {
     Metadata *Old = N.getOperand(I);
     Metadata *New = mapOperand(Old);
+    if (Old != New)
+      LLVM_DEBUG(dbgs() << "Replacing Op " << Old << " with " << New << " in "
+                        << N << "\n");
 
     if (Old != New)
       N.replaceOperandWith(I, New);
@@ -719,6 +754,11 @@ void MDNodeMapper::mapNodesInPOT(UniquedGraph &G) {
     });
 
     auto *NewN = MDNode::replaceWithUniqued(std::move(ClonedN));
+    if (N && NewN && N != NewN) {
+      LLVM_DEBUG(dbgs() << "\nMap " << *N << "\n"
+                        << "To  " << *NewN << "\n\n");
+    }
+
     M.mapToMetadata(N, NewN);
 
     // Nodes that were referenced out of order in the POT are involved in a
@@ -774,20 +814,6 @@ Metadata *MDNodeMapper::mapTopLevelUniquedNode(const MDNode &FirstN) {
   return *getMappedOp(&FirstN);
 }
 
-namespace {
-
-struct MapMetadataDisabler {
-  ValueToValueMapTy &VM;
-
-  MapMetadataDisabler(ValueToValueMapTy &VM) : VM(VM) {
-    VM.disableMapMetadata();
-  }
-
-  ~MapMetadataDisabler() { VM.enableMapMetadata(); }
-};
-
-} // end anonymous namespace
-
 Optional<Metadata *> Mapper::mapSimpleMetadata(const Metadata *MD) {
   // If the value already exists in the map, use it.
   if (Optional<Metadata *> NewMD = getVM().getMappedMD(MD))
@@ -802,9 +828,6 @@ Optional<Metadata *> Mapper::mapSimpleMetadata(const Metadata *MD) {
     return const_cast<Metadata *>(MD);
 
   if (auto *CMD = dyn_cast<ConstantAsMetadata>(MD)) {
-    // Disallow recursion into metadata mapping through mapValue.
-    MapMetadataDisabler MMD(getVM());
-
     // Don't memoize ConstantAsMetadata.  Instead of lasting until the
     // LLVMContext is destroyed, they can be deleted when the GlobalValue they
     // reference is destructed.  These aren't super common, so the extra
@@ -839,16 +862,20 @@ void Mapper::flush() {
       break;
     case WorklistEntry::MapAppendingVar: {
       unsigned PrefixSize = AppendingInits.size() - E.AppendingGVNumNewMembers;
+      // mapAppendingVariable call can change AppendingInits if initalizer for
+      // the variable depends on another appending global, because of that inits
+      // need to be extracted and updated before the call.
+      SmallVector<Constant *, 8> NewInits(
+          drop_begin(AppendingInits, PrefixSize));
+      AppendingInits.resize(PrefixSize);
       mapAppendingVariable(*E.Data.AppendingGV.GV,
                            E.Data.AppendingGV.InitPrefix,
-                           E.AppendingGVIsOldCtorDtor,
-                           makeArrayRef(AppendingInits).slice(PrefixSize));
-      AppendingInits.resize(PrefixSize);
+                           E.AppendingGVIsOldCtorDtor, makeArrayRef(NewInits));
       break;
     }
-    case WorklistEntry::MapGlobalAliasee:
-      E.Data.GlobalAliasee.GA->setAliasee(
-          mapConstant(E.Data.GlobalAliasee.Aliasee));
+    case WorklistEntry::MapGlobalIndirectSymbol:
+      E.Data.GlobalIndirectSymbol.GIS->setIndirectSymbol(
+          mapConstant(E.Data.GlobalIndirectSymbol.Target));
       break;
     case WorklistEntry::RemapFunction:
       remapFunction(*E.Data.RemapF);
@@ -905,29 +932,29 @@ void Mapper::remapInstruction(Instruction *I) {
     return;
 
   // If the instruction's type is being remapped, do so now.
-  if (auto CS = CallSite(I)) {
+  if (auto *CB = dyn_cast<CallBase>(I)) {
     SmallVector<Type *, 3> Tys;
-    FunctionType *FTy = CS.getFunctionType();
+    FunctionType *FTy = CB->getFunctionType();
     Tys.reserve(FTy->getNumParams());
     for (Type *Ty : FTy->params())
       Tys.push_back(TypeMapper->remapType(Ty));
-    CS.mutateFunctionType(FunctionType::get(
+    CB->mutateFunctionType(FunctionType::get(
         TypeMapper->remapType(I->getType()), Tys, FTy->isVarArg()));
 
-    LLVMContext &C = CS->getContext();
-    AttributeList Attrs = CS.getAttributes();
+    LLVMContext &C = CB->getContext();
+    AttributeList Attrs = CB->getAttributes();
     for (unsigned i = 0; i < Attrs.getNumAttrSets(); ++i) {
-      if (Attrs.hasAttribute(i, Attribute::ByVal)) {
-        Type *Ty = Attrs.getAttribute(i, Attribute::ByVal).getValueAsType();
-        if (!Ty)
-          continue;
-
-        Attrs = Attrs.removeAttribute(C, i, Attribute::ByVal);
-        Attrs = Attrs.addAttribute(
-            C, i, Attribute::getWithByValType(C, TypeMapper->remapType(Ty)));
+      for (Attribute::AttrKind TypedAttr :
+             {Attribute::ByVal, Attribute::StructRet, Attribute::ByRef,
+              Attribute::InAlloca}) {
+        if (Type *Ty = Attrs.getAttribute(i, TypedAttr).getValueAsType()) {
+          Attrs = Attrs.replaceAttributeType(C, i, TypedAttr,
+                                             TypeMapper->remapType(Ty));
+          break;
+        }
       }
     }
-    CS.setAttributes(Attrs);
+    CB->setAttributes(Attrs);
     return;
   }
   if (auto *AI = dyn_cast<AllocaInst>(I))
@@ -1005,8 +1032,8 @@ void Mapper::mapAppendingVariable(GlobalVariable &GV, Constant *InitPrefix,
     Elements.push_back(NewV);
   }
 
-  GV.setInitializer(ConstantArray::get(
-      cast<ArrayType>(GV.getType()->getElementType()), Elements));
+  GV.setInitializer(
+      ConstantArray::get(cast<ArrayType>(GV.getValueType()), Elements));
 }
 
 void Mapper::scheduleMapGlobalInitializer(GlobalVariable &GV, Constant &Init,
@@ -1041,16 +1068,16 @@ void Mapper::scheduleMapAppendingVariable(GlobalVariable &GV,
   AppendingInits.append(NewMembers.begin(), NewMembers.end());
 }
 
-void Mapper::scheduleMapGlobalAliasee(GlobalAlias &GA, Constant &Aliasee,
-                                      unsigned MCID) {
-  assert(AlreadyScheduled.insert(&GA).second && "Should not reschedule");
+void Mapper::scheduleMapGlobalIndirectSymbol(GlobalIndirectSymbol &GIS,
+                                             Constant &Target, unsigned MCID) {
+  assert(AlreadyScheduled.insert(&GIS).second && "Should not reschedule");
   assert(MCID < MCs.size() && "Invalid mapping context");
 
   WorklistEntry WE;
-  WE.Kind = WorklistEntry::MapGlobalAliasee;
+  WE.Kind = WorklistEntry::MapGlobalIndirectSymbol;
   WE.MCID = MCID;
-  WE.Data.GlobalAliasee.GA = &GA;
-  WE.Data.GlobalAliasee.Aliasee = &Aliasee;
+  WE.Data.GlobalIndirectSymbol.GIS = &GIS;
+  WE.Data.GlobalIndirectSymbol.Target = &Target;
   Worklist.push_back(WE);
 }
 
@@ -1147,9 +1174,10 @@ void ValueMapper::scheduleMapAppendingVariable(GlobalVariable &GV,
       GV, InitPrefix, IsOldCtorDtor, NewMembers, MCID);
 }
 
-void ValueMapper::scheduleMapGlobalAliasee(GlobalAlias &GA, Constant &Aliasee,
-                                           unsigned MCID) {
-  getAsMapper(pImpl)->scheduleMapGlobalAliasee(GA, Aliasee, MCID);
+void ValueMapper::scheduleMapGlobalIndirectSymbol(GlobalIndirectSymbol &GIS,
+                                                  Constant &Target,
+                                                  unsigned MCID) {
+  getAsMapper(pImpl)->scheduleMapGlobalIndirectSymbol(GIS, Target, MCID);
 }
 
 void ValueMapper::scheduleRemapFunction(Function &F, unsigned MCID) {

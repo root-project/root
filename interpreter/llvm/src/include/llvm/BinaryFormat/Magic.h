@@ -9,12 +9,12 @@
 #ifndef LLVM_BINARYFORMAT_MAGIC_H
 #define LLVM_BINARYFORMAT_MAGIC_H
 
-#include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/Twine.h"
-
 #include <system_error>
 
 namespace llvm {
+class StringRef;
+class Twine;
+
 /// file_magic - An "enum class" enumeration of file types based on magic (the
 /// first N bytes of the file).
 struct file_magic {
@@ -27,6 +27,7 @@ struct file_magic {
     elf_executable,    ///< ELF Executable image
     elf_shared_object, ///< ELF dynamically linked shared lib
     elf_core,          ///< ELF core image
+    goff_object,       ///< GOFF object file
     macho_object,      ///< Mach-O Object file
     macho_executable,  ///< Mach-O Executable
     macho_fixed_virtual_memory_shared_lib,    ///< Mach-O Shared Lib, FVM
@@ -49,6 +50,7 @@ struct file_magic {
     xcoff_object_64,     ///< 64-bit XCOFF object file
     wasm_object,         ///< WebAssembly Object file
     pdb,                 ///< Windows PDB debug info file
+    tapi_file,           ///< Text-based Dynamic Library Stub file
   };
 
   bool is_object() const { return V != unknown; }

@@ -9,18 +9,11 @@ Frequently Asked Questions (FAQ)
 License
 =======
 
-Does the University of Illinois Open Source License really qualify as an "open source" license?
------------------------------------------------------------------------------------------------
-Yes, the license is `certified
-<http://www.opensource.org/licenses/UoI-NCSA.php>`_ by the Open Source
-Initiative (OSI).
-
-
 Can I modify LLVM source code and redistribute the modified source?
 -------------------------------------------------------------------
 Yes.  The modified source distribution must retain the copyright notice and
-follow the three bulleted conditions listed in the `LLVM license
-<http://llvm.org/svn/llvm-project/llvm/trunk/LICENSE.TXT>`_.
+follow the conditions listed in the `Apache License v2.0 with LLVM Exceptions
+<https://github.com/llvm/llvm-project/blob/main/llvm/LICENSE.TXT>`_.
 
 
 Can I modify the LLVM source code and redistribute binaries or other tools based on it, without redistributing the source?
@@ -41,9 +34,11 @@ the STL.
 How portable is the LLVM source code?
 -------------------------------------
 The LLVM source code should be portable to most modern Unix-like operating
-systems.  Most of the code is written in standard C++ with operating system
+systems. LLVM also has excellent support on Windows systems.
+Most of the code is written in standard C++ with operating system
 services abstracted to a support library.  The tools required to build and
 test LLVM have been ported to a plethora of platforms.
+
 
 What API do I use to store a value to one of the virtual registers in LLVM IR's SSA representation?
 ---------------------------------------------------------------------------------------------------
@@ -77,9 +72,9 @@ What source languages are supported?
 ------------------------------------
 
 LLVM currently has full support for C and C++ source languages through
-`Clang <http://clang.llvm.org/>`_. Many other language frontends have
+`Clang <https://clang.llvm.org/>`_. Many other language frontends have
 been written using LLVM, and an incomplete list is available at
-`projects with LLVM <http://llvm.org/ProjectsWithLLVM/>`_.
+`projects with LLVM <https://llvm.org/ProjectsWithLLVM/>`_.
 
 
 I'd like to write a self-hosting LLVM compiler. How should I interface with the LLVM middle-end optimizers and back-end code generators?

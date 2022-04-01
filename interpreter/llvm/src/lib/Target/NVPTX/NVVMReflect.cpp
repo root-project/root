@@ -27,7 +27,9 @@
 #include "llvm/IR/InstIterator.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/IntrinsicsNVPTX.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/IR/Type.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/CommandLine.h"
@@ -72,7 +74,7 @@ INITIALIZE_PASS(NVVMReflect, "nvvm-reflect",
                 "Replace occurrences of __nvvm_reflect() calls with 0/1", false,
                 false)
 
-bool NVVMReflect::runOnFunction(Function &F) {
+static bool runNVVMReflect(Function &F, unsigned SmVersion) {
   if (!NVVMReflectEnabled)
     return false;
 
@@ -177,4 +179,16 @@ bool NVVMReflect::runOnFunction(Function &F) {
     I->eraseFromParent();
 
   return ToRemove.size() > 0;
+}
+
+bool NVVMReflect::runOnFunction(Function &F) {
+  return runNVVMReflect(F, SmVersion);
+}
+
+NVVMReflectPass::NVVMReflectPass() : NVVMReflectPass(0) {}
+
+PreservedAnalyses NVVMReflectPass::run(Function &F,
+                                       FunctionAnalysisManager &AM) {
+  return runNVVMReflect(F, SmVersion) ? PreservedAnalyses::none()
+                                      : PreservedAnalyses::all();
 }

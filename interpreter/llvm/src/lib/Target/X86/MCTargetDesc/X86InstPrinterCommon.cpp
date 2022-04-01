@@ -13,6 +13,7 @@
 
 #include "X86InstPrinterCommon.h"
 #include "X86BaseInfo.h"
+#include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrDesc.h"
@@ -287,16 +288,27 @@ void X86InstPrinterCommon::printRoundingControl(const MCInst *MI, unsigned Op,
   }
 }
 
-/// printPCRelImm - This is used to print an immediate value that ends up
-/// being encoded as a pc-relative value (e.g. for jumps and calls).  In
-/// Intel-style these print slightly differently than normal immediates.
-/// for example, a $ is not emitted.
-void X86InstPrinterCommon::printPCRelImm(const MCInst *MI, unsigned OpNo,
-                                         raw_ostream &O) {
+/// value (e.g. for jumps and calls). In Intel-style these print slightly
+/// differently than normal immediates. For example, a $ is not emitted.
+///
+/// \p Address The address of the next instruction.
+/// \see MCInstPrinter::printInst
+void X86InstPrinterCommon::printPCRelImm(const MCInst *MI, uint64_t Address,
+                                         unsigned OpNo, raw_ostream &O) {
+  // Do not print the numberic target address when symbolizing.
+  if (SymbolizeOperands)
+    return;
+
   const MCOperand &Op = MI->getOperand(OpNo);
-  if (Op.isImm())
-    O << formatImm(Op.getImm());
-  else {
+  if (Op.isImm()) {
+    if (PrintBranchImmAsAddress) {
+      uint64_t Target = Address + Op.getImm();
+      if (MAI.getCodePointerSize() == 4)
+        Target &= 0xffffffff;
+      O << formatHex(Target);
+    } else
+      O << formatImm(Op.getImm());
+  } else {
     assert(Op.isExpr() && "unknown pcrel immediate operand");
     // If a symbolic branch target was added as a constant expression then print
     // that address in hex.
@@ -334,6 +346,21 @@ void X86InstPrinterCommon::printInstFlags(const MCInst *MI, raw_ostream &O) {
     O << "\trepne\t";
   else if (Flags & X86::IP_HAS_REPEAT)
     O << "\trep\t";
+
+  // These all require a pseudo prefix
+  if ((Flags & X86::IP_USE_VEX) || (TSFlags & X86II::ExplicitVEXPrefix))
+    O << "\t{vex}";
+  else if (Flags & X86::IP_USE_VEX2)
+    O << "\t{vex2}";
+  else if (Flags & X86::IP_USE_VEX3)
+    O << "\t{vex3}";
+  else if (Flags & X86::IP_USE_EVEX)
+    O << "\t{evex}";
+
+  if (Flags & X86::IP_USE_DISP8)
+    O << "\t{disp8}";
+  else if (Flags & X86::IP_USE_DISP32)
+    O << "\t{disp32}";
 }
 
 void X86InstPrinterCommon::printVKPair(const MCInst *MI, unsigned OpNo,
