@@ -17,6 +17,7 @@ namespace yaml {
 
 template <> struct ScalarEnumerationTraits<TypeTestResolution::Kind> {
   static void enumeration(IO &io, TypeTestResolution::Kind &value) {
+    io.enumCase(value, "Unknown", TypeTestResolution::Unknown);
     io.enumCase(value, "Unsat", TypeTestResolution::Unsat);
     io.enumCase(value, "ByteArray", TypeTestResolution::ByteArray);
     io.enumCase(value, "Inline", TypeTestResolution::Inline);
@@ -135,7 +136,7 @@ template <> struct MappingTraits<TypeIdSummary> {
 };
 
 struct FunctionSummaryYaml {
-  unsigned Linkage;
+  unsigned Linkage, Visibility;
   bool NotEligibleToImport, Live, IsLocal, CanAutoHide;
   std::vector<uint64_t> Refs;
   std::vector<uint64_t> TypeTests;
@@ -177,6 +178,7 @@ namespace yaml {
 template <> struct MappingTraits<FunctionSummaryYaml> {
   static void mapping(IO &io, FunctionSummaryYaml& summary) {
     io.mapOptional("Linkage", summary.Linkage);
+    io.mapOptional("Visibility", summary.Visibility);
     io.mapOptional("NotEligibleToImport", summary.NotEligibleToImport);
     io.mapOptional("Live", summary.Live);
     io.mapOptional("Local", summary.IsLocal);
@@ -220,16 +222,19 @@ template <> struct CustomMappingTraits<GlobalValueSummaryMapTy> {
           V.emplace(RefGUID, /*IsAnalysis=*/false);
         Refs.push_back(ValueInfo(/*IsAnalysis=*/false, &*V.find(RefGUID)));
       }
-      Elem.SummaryList.push_back(llvm::make_unique<FunctionSummary>(
+      Elem.SummaryList.push_back(std::make_unique<FunctionSummary>(
           GlobalValueSummary::GVFlags(
               static_cast<GlobalValue::LinkageTypes>(FSum.Linkage),
-              FSum.NotEligibleToImport, FSum.Live, FSum.IsLocal, FSum.CanAutoHide),
+              static_cast<GlobalValue::VisibilityTypes>(FSum.Visibility),
+              FSum.NotEligibleToImport, FSum.Live, FSum.IsLocal,
+              FSum.CanAutoHide),
           /*NumInsts=*/0, FunctionSummary::FFlags{}, /*EntryCount=*/0, Refs,
           ArrayRef<FunctionSummary::EdgeTy>{}, std::move(FSum.TypeTests),
           std::move(FSum.TypeTestAssumeVCalls),
           std::move(FSum.TypeCheckedLoadVCalls),
           std::move(FSum.TypeTestAssumeConstVCalls),
-          std::move(FSum.TypeCheckedLoadConstVCalls)));
+          std::move(FSum.TypeCheckedLoadConstVCalls),
+          ArrayRef<FunctionSummary::ParamAccess>{}));
     }
   }
   static void output(IO &io, GlobalValueSummaryMapTy &V) {
@@ -241,7 +246,7 @@ template <> struct CustomMappingTraits<GlobalValueSummaryMapTy> {
           for (auto &VI : FSum->refs())
             Refs.push_back(VI.getGUID());
           FSums.push_back(FunctionSummaryYaml{
-              FSum->flags().Linkage,
+              FSum->flags().Linkage, FSum->flags().Visibility,
               static_cast<bool>(FSum->flags().NotEligibleToImport),
               static_cast<bool>(FSum->flags().Live),
               static_cast<bool>(FSum->flags().DSOLocal),
@@ -262,7 +267,7 @@ template <> struct CustomMappingTraits<TypeIdSummaryMapTy> {
   static void inputOne(IO &io, StringRef Key, TypeIdSummaryMapTy &V) {
     TypeIdSummary TId;
     io.mapRequired(Key.str().c_str(), TId);
-    V.insert({GlobalValue::getGUID(Key), {Key, TId}});
+    V.insert({GlobalValue::getGUID(Key), {std::string(Key), TId}});
   }
   static void output(IO &io, TypeIdSummaryMapTy &V) {
     for (auto TidIter = V.begin(); TidIter != V.end(); TidIter++)

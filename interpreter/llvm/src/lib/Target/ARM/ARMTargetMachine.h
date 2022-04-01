@@ -70,6 +70,14 @@ public:
            TargetTriple.isOSWindows() ||
            TargetABI == ARMBaseTargetMachine::ARM_ABI_AAPCS16;
   }
+
+  bool targetSchedulesPostRAScheduling() const override { return true; };
+
+  /// Returns true if a cast between SrcAS and DestAS is a noop.
+  bool isNoopAddrSpaceCast(unsigned SrcAS, unsigned DestAS) const override {
+    // Addrspacecasts are always noops.
+    return true;
+  }
 };
 
 /// ARM/Thumb little endian target machine.

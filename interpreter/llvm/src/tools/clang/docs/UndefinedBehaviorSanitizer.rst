@@ -54,6 +54,10 @@ and define the desired behavior for each kind of check:
 * ``-fno-sanitize-recover=...``: print a verbose error report and exit the program;
 * ``-fsanitize-trap=...``: execute a trap instruction (doesn't require UBSan run-time support).
 
+Note that the ``trap`` / ``recover`` options do not enable the corresponding
+sanitizer, and in general need to be accompanied by a suitable ``-fsanitize=``
+flag.
+
 For example if you compile/link your program as:
 
 .. code-block:: console
@@ -77,7 +81,9 @@ Available checks are:
      ``true`` nor ``false``.
   -  ``-fsanitize=builtin``: Passing invalid values to compiler builtins.
   -  ``-fsanitize=bounds``: Out of bounds array indexing, in cases
-     where the array bound can be statically determined.
+     where the array bound can be statically determined. The check includes
+     ``-fsanitize=array-bounds`` and ``-fsanitize=local-bounds``. Note that
+     ``-fsanitize=local-bounds`` is not included in ``-fsanitize=undefined``.
   -  ``-fsanitize=enum``: Load of a value of an enumerated type which
      is not in the range of representable values for that enumerated
      type.
@@ -121,6 +127,10 @@ Available checks are:
      is annotated with ``_Nonnull``.
   -  ``-fsanitize=nullability-return``: Returning null from a function with
      a return type annotated with ``_Nonnull``.
+  -  ``-fsanitize=objc-cast``: Invalid implicit cast of an ObjC object pointer
+     to an incompatible type. This is often unintentional, but is not undefined
+     behavior, therefore the check is not a part of the ``undefined`` group.
+     Currently only supported on Darwin.
   -  ``-fsanitize=object-size``: An attempt to potentially use bytes which
      the optimizer can determine are not part of the object being accessed.
      This will also detect some types of undefined behavior that may not
@@ -130,7 +140,8 @@ Available checks are:
      ``__builtin_object_size``, and consequently may be able to detect more
      problems at higher optimization levels.
   -  ``-fsanitize=pointer-overflow``: Performing pointer arithmetic which
-     overflows.
+     overflows, or where either the old or new pointer value is a null pointer
+     (or in C, when they both are).
   -  ``-fsanitize=return``: In C++, reaching the end of a
      value-returning function without returning a value.
   -  ``-fsanitize=returns-nonnull-attribute``: Returning null pointer
@@ -142,6 +153,8 @@ Available checks are:
      unsigned overflow in C++. You can use ``-fsanitize=shift-base`` or
      ``-fsanitize=shift-exponent`` to check only left-hand side or
      right-hand side of shift operation, respectively.
+  -  ``-fsanitize=unsigned-shift-base``: check that an unsigned left-hand side of
+     a left shift operation doesn't overflow.
   -  ``-fsanitize=signed-integer-overflow``: Signed integer overflow, where the
      result of a signed integer computation cannot be represented in its type.
      This includes all the checks covered by ``-ftrapv``, as well as checks for
@@ -168,7 +181,8 @@ Available checks are:
 You can also use the following check groups:
   -  ``-fsanitize=undefined``: All of the checks listed above other than
      ``float-divide-by-zero``, ``unsigned-integer-overflow``,
-     ``implicit-conversion``, and the ``nullability-*`` group of checks.
+     ``implicit-conversion``, ``local-bounds`` and the ``nullability-*`` group
+     of checks.
   -  ``-fsanitize=undefined-trap``: Deprecated alias of
      ``-fsanitize=undefined``.
   -  ``-fsanitize=implicit-integer-truncation``: Catches lossy integral
@@ -197,7 +211,7 @@ You can also use the following check groups:
 Volatile
 --------
 
-The ``null``, ``alignment``, ``object-size``, and ``vptr`` checks do not apply
+The ``null``, ``alignment``, ``object-size``, ``local-bounds``, and ``vptr`` checks do not apply
 to pointers to types with the ``volatile`` qualifier.
 
 Minimal Runtime
@@ -223,6 +237,12 @@ will need to:
 #. Run your program with environment variable
    ``UBSAN_OPTIONS=print_stacktrace=1``.
 #. Make sure ``llvm-symbolizer`` binary is in ``PATH``.
+
+Logging
+=======
+
+The default log file for diagnostics is "stderr". To log diagnostics to another
+file, you can set ``UBSAN_OPTIONS=log_path=...``.
 
 Silencing Unsigned Integer Overflow
 ===================================
@@ -250,8 +270,8 @@ This attribute may not be
 supported by other compilers, so consider using it together with
 ``#if defined(__clang__)``.
 
-Suppressing Errors in Recompiled Code (Blacklist)
--------------------------------------------------
+Suppressing Errors in Recompiled Code (Ignorelist)
+--------------------------------------------------
 
 UndefinedBehaviorSanitizer supports ``src`` and ``fun`` entity types in
 :doc:`SanitizerSpecialCaseList`, that can be used to suppress error reports

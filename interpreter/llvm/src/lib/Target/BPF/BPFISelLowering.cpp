@@ -20,7 +20,6 @@
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/CodeGen/SelectionDAGISel.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/DiagnosticInfo.h"
@@ -79,6 +78,24 @@ BPFTargetLowering::BPFTargetLowering(const TargetMachine &TM,
   setOperationAction(ISD::STACKSAVE, MVT::Other, Expand);
   setOperationAction(ISD::STACKRESTORE, MVT::Other, Expand);
 
+  // Set unsupported atomic operations as Custom so
+  // we can emit better error messages than fatal error
+  // from selectiondag.
+  for (auto VT : {MVT::i8, MVT::i16, MVT::i32}) {
+    if (VT == MVT::i32) {
+      if (STI.getHasAlu32())
+        continue;
+    } else {
+      setOperationAction(ISD::ATOMIC_LOAD_ADD, VT, Custom);
+    }
+
+    setOperationAction(ISD::ATOMIC_LOAD_AND, VT, Custom);
+    setOperationAction(ISD::ATOMIC_LOAD_OR, VT, Custom);
+    setOperationAction(ISD::ATOMIC_LOAD_XOR, VT, Custom);
+    setOperationAction(ISD::ATOMIC_SWAP, VT, Custom);
+    setOperationAction(ISD::ATOMIC_CMP_SWAP_WITH_SUCCESS, VT, Custom);
+  }
+
   for (auto VT : { MVT::i32, MVT::i64 }) {
     if (VT == MVT::i32 && !STI.getHasAlu32())
       continue;
@@ -132,9 +149,9 @@ BPFTargetLowering::BPFTargetLowering(const TargetMachine &TM,
 
   setBooleanContents(ZeroOrOneBooleanContent);
 
-  // Function alignments (log2)
-  setMinFunctionAlignment(3);
-  setPrefFunctionAlignment(3);
+  // Function alignments
+  setMinFunctionAlignment(Align(8));
+  setPrefFunctionAlignment(Align(8));
 
   if (BPFExpandMemcpyInOrder) {
     // LLVM generic code will try to expand memcpy into load/store pairs at this
@@ -171,6 +188,52 @@ bool BPFTargetLowering::isOffsetFoldingLegal(const GlobalAddressSDNode *GA) cons
   return false;
 }
 
+bool BPFTargetLowering::isTruncateFree(Type *Ty1, Type *Ty2) const {
+  if (!Ty1->isIntegerTy() || !Ty2->isIntegerTy())
+    return false;
+  unsigned NumBits1 = Ty1->getPrimitiveSizeInBits();
+  unsigned NumBits2 = Ty2->getPrimitiveSizeInBits();
+  return NumBits1 > NumBits2;
+}
+
+bool BPFTargetLowering::isTruncateFree(EVT VT1, EVT VT2) const {
+  if (!VT1.isInteger() || !VT2.isInteger())
+    return false;
+  unsigned NumBits1 = VT1.getSizeInBits();
+  unsigned NumBits2 = VT2.getSizeInBits();
+  return NumBits1 > NumBits2;
+}
+
+bool BPFTargetLowering::isZExtFree(Type *Ty1, Type *Ty2) const {
+  if (!getHasAlu32() || !Ty1->isIntegerTy() || !Ty2->isIntegerTy())
+    return false;
+  unsigned NumBits1 = Ty1->getPrimitiveSizeInBits();
+  unsigned NumBits2 = Ty2->getPrimitiveSizeInBits();
+  return NumBits1 == 32 && NumBits2 == 64;
+}
+
+bool BPFTargetLowering::isZExtFree(EVT VT1, EVT VT2) const {
+  if (!getHasAlu32() || !VT1.isInteger() || !VT2.isInteger())
+    return false;
+  unsigned NumBits1 = VT1.getSizeInBits();
+  unsigned NumBits2 = VT2.getSizeInBits();
+  return NumBits1 == 32 && NumBits2 == 64;
+}
+
+BPFTargetLowering::ConstraintType
+BPFTargetLowering::getConstraintType(StringRef Constraint) const {
+  if (Constraint.size() == 1) {
+    switch (Constraint[0]) {
+    default:
+      break;
+    case 'w':
+      return C_RegisterClass;
+    }
+  }
+
+  return TargetLowering::getConstraintType(Constraint);
+}
+
 std::pair<unsigned, const TargetRegisterClass *>
 BPFTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
                                                 StringRef Constraint,
@@ -180,11 +243,39 @@ BPFTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
     switch (Constraint[0]) {
     case 'r': // GENERAL_REGS
       return std::make_pair(0U, &BPF::GPRRegClass);
+    case 'w':
+      if (HasAlu32)
+        return std::make_pair(0U, &BPF::GPR32RegClass);
+      break;
     default:
       break;
     }
 
   return TargetLowering::getRegForInlineAsmConstraint(TRI, Constraint, VT);
+}
+
+void BPFTargetLowering::ReplaceNodeResults(
+  SDNode *N, SmallVectorImpl<SDValue> &Results, SelectionDAG &DAG) const {
+  const char *err_msg;
+  uint32_t Opcode = N->getOpcode();
+  switch (Opcode) {
+  default:
+    report_fatal_error("Unhandled custom legalization");
+  case ISD::ATOMIC_LOAD_ADD:
+  case ISD::ATOMIC_LOAD_AND:
+  case ISD::ATOMIC_LOAD_OR:
+  case ISD::ATOMIC_LOAD_XOR:
+  case ISD::ATOMIC_SWAP:
+  case ISD::ATOMIC_CMP_SWAP_WITH_SUCCESS:
+    if (HasAlu32 || Opcode == ISD::ATOMIC_LOAD_ADD)
+      err_msg = "Unsupported atomic operations, please use 32/64 bit version";
+    else
+      err_msg = "Unsupported atomic operations, please use 64 bit version";
+    break;
+  }
+
+  SDLoc DL(N);
+  fail(DL, DAG, err_msg);
 }
 
 SDValue BPFTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
@@ -195,6 +286,8 @@ SDValue BPFTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
     return LowerGlobalAddress(Op, DAG);
   case ISD::SELECT_CC:
     return LowerSELECT_CC(Op, DAG);
+  case ISD::DYNAMIC_STACKALLOC:
+    report_fatal_error("Unsupported dynamic stack allocation");
   default:
     llvm_unreachable("unimplemented operand");
   }
@@ -236,9 +329,8 @@ SDValue BPFTargetLowering::LowerFormalArguments(
       }
       case MVT::i32:
       case MVT::i64:
-        unsigned VReg = RegInfo.createVirtualRegister(SimpleTy == MVT::i64 ?
-                                                      &BPF::GPRRegClass :
-                                                      &BPF::GPR32RegClass);
+        Register VReg = RegInfo.createVirtualRegister(
+            SimpleTy == MVT::i64 ? &BPF::GPRRegClass : &BPF::GPR32RegClass);
         RegInfo.addLiveIn(VA.getLocReg(), VReg);
         SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, RegVT);
 
@@ -571,9 +663,15 @@ BPFTargetLowering::EmitSubregExt(MachineInstr &MI, MachineBasicBlock *BB,
   DebugLoc DL = MI.getDebugLoc();
 
   MachineRegisterInfo &RegInfo = F->getRegInfo();
-  unsigned PromotedReg0 = RegInfo.createVirtualRegister(RC);
-  unsigned PromotedReg1 = RegInfo.createVirtualRegister(RC);
-  unsigned PromotedReg2 = RegInfo.createVirtualRegister(RC);
+
+  if (!isSigned) {
+    Register PromotedReg0 = RegInfo.createVirtualRegister(RC);
+    BuildMI(BB, DL, TII.get(BPF::MOV_32_64), PromotedReg0).addReg(Reg);
+    return PromotedReg0;
+  }
+  Register PromotedReg0 = RegInfo.createVirtualRegister(RC);
+  Register PromotedReg1 = RegInfo.createVirtualRegister(RC);
+  Register PromotedReg2 = RegInfo.createVirtualRegister(RC);
   BuildMI(BB, DL, TII.get(BPF::MOV_32_64), PromotedReg0).addReg(Reg);
   BuildMI(BB, DL, TII.get(BPF::SLL_ri), PromotedReg1)
     .addReg(PromotedReg0).addImm(32);
@@ -699,7 +797,7 @@ BPFTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
     report_fatal_error("unimplemented select CondCode " + Twine(CC));
   }
 
-  unsigned LHS = MI.getOperand(1).getReg();
+  Register LHS = MI.getOperand(1).getReg();
   bool isSignedCmp = (CC == ISD::SETGT ||
                       CC == ISD::SETGE ||
                       CC == ISD::SETLT ||
@@ -716,7 +814,7 @@ BPFTargetLowering::EmitInstrWithCustomInserter(MachineInstr &MI,
     LHS = EmitSubregExt(MI, BB, LHS, isSignedCmp);
 
   if (isSelectRROp) {
-    unsigned RHS = MI.getOperand(2).getReg();
+    Register RHS = MI.getOperand(2).getReg();
 
     if (is32BitCmp && !HasJmp32)
       RHS = EmitSubregExt(MI, BB, RHS, isSignedCmp);

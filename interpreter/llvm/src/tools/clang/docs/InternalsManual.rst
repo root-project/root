@@ -572,6 +572,429 @@ The Frontend Library
 The Frontend library contains functionality useful for building tools on top of
 the Clang libraries, for example several methods for outputting diagnostics.
 
+Compiler Invocation
+-------------------
+
+One of the classes provided by the Frontend library is ``CompilerInvocation``,
+which holds information that describe current invocation of the Clang ``-cc1``
+frontend. The information typically comes from the command line constructed by
+the Clang driver or from clients performing custom initialization. The data
+structure is split into logical units used by different parts of the compiler,
+for example ``PreprocessorOptions``, ``LanguageOptions`` or ``CodeGenOptions``.
+
+Command Line Interface
+----------------------
+
+The command line interface of the Clang ``-cc1`` frontend is defined alongside
+the driver options in ``clang/Driver/Options.td``. The information making up an
+option definition includes its prefix and name (for example ``-std=``), form and
+position of the option value, help text, aliases and more. Each option may
+belong to a certain group and can be marked with zero or more flags. Options
+accepted by the ``-cc1`` frontend are marked with the ``CC1Option`` flag.
+
+Command Line Parsing
+--------------------
+
+Option definitions are processed by the ``-gen-opt-parser-defs`` tablegen
+backend during early stages of the build. Options are then used for querying an
+instance ``llvm::opt::ArgList``, a wrapper around the command line arguments.
+This is done in the Clang driver to construct individual jobs based on the
+driver arguments and also in the ``CompilerInvocation::CreateFromArgs`` function
+that parses the ``-cc1`` frontend arguments.
+
+Command Line Generation
+-----------------------
+
+Any valid ``CompilerInvocation`` created from a ``-cc1`` command line  can be
+also serialized back into semantically equivalent command line in a
+deterministic manner. This enables features such as implicitly discovered,
+explicitly built modules.
+
+..
+  TODO: Create and link corresponding section in Modules.rst.
+
+Adding new Command Line Option
+------------------------------
+
+When adding a new command line option, the first place of interest is the header
+file declaring the corresponding options class (e.g. ``CodeGenOptions.h`` for
+command line option that affects the code generation). Create new member
+variable for the option value:
+
+.. code-block:: diff
+
+    class CodeGenOptions : public CodeGenOptionsBase {
+
+  +   /// List of dynamic shared object files to be loaded as pass plugins.
+  +   std::vector<std::string> PassPlugins;
+
+    }
+
+Next, declare the command line interface of the option in the tablegen file
+``clang/include/clang/Driver/Options.td``. This is done by instantiating the
+``Option`` class (defined in ``llvm/include/llvm/Option/OptParser.td``). The
+instance is typically created through one of the helper classes that encode the
+acceptable ways to specify the option value on the command line:
+
+* ``Flag`` - the option does not accept any value,
+* ``Joined`` - the value must immediately follow the option name within the same
+  argument,
+* ``Separate`` - the value must follow the option name in the next command line
+  argument,
+* ``JoinedOrSeparate`` - the value can be specified either as ``Joined`` or
+  ``Separate``,
+* ``CommaJoined`` - the values are comma-separated and must immediately follow
+  the option name within the same argument (see ``Wl,`` for an example).
+
+The helper classes take a list of acceptable prefixes of the option (e.g.
+``"-"``, ``"--"`` or ``"/"``) and the option name:
+
+.. code-block:: diff
+
+    // Options.td
+
+  + def fpass_plugin_EQ : Joined<["-"], "fpass-plugin=">;
+
+Then, specify additional attributes via mix-ins:
+
+* ``HelpText`` holds the text that will be printed besides the option name when
+  the user requests help (e.g. via ``clang --help``).
+* ``Group`` specifies the "category" of options this option belongs to. This is
+  used by various tools to filter certain options of interest.
+* ``Flags`` may contain a number of "tags" associated with the option. This
+  enables more granular filtering than the ``Group`` attribute.
+* ``Alias`` denotes that the option is an alias of another option. This may be
+  combined with ``AliasArgs`` that holds the implied value.
+
+.. code-block:: diff
+
+    // Options.td
+
+    def fpass_plugin_EQ : Joined<["-"], "fpass-plugin=">,
+  +   Group<f_Group>, Flags<[CC1Option]>,
+  +   HelpText<"Load pass plugin from a dynamic shared object file.">;
+
+New options are recognized by the Clang driver unless marked with the
+``NoDriverOption`` flag. On the other hand, options intended for the ``-cc1``
+frontend must be explicitly marked with the ``CC1Option`` flag.
+
+Next, parse (or manufacture) the command line arguments in the Clang driver and
+use them to construct the ``-cc1`` job:
+
+.. code-block:: diff
+
+    void Clang::ConstructJob(const ArgList &Args /*...*/) const {
+      ArgStringList CmdArgs;
+      // ... 
+
+  +   for (const Arg *A : Args.filtered(OPT_fpass_plugin_EQ)) {
+  +     CmdArgs.push_back(Args.MakeArgString(Twine("-fpass-plugin=") + A->getValue()));
+  +     A->claim();
+  +   }
+    }
+
+The last step is implementing the ``-cc1`` command line argument
+parsing/generation that initializes/serializes the option class (in our case
+``CodeGenOptions``) stored within ``CompilerInvocation``. This can be done
+automatically by using the marshalling annotations on the option definition:
+
+.. code-block:: diff
+
+    // Options.td
+
+    def fpass_plugin_EQ : Joined<["-"], "fpass-plugin=">,
+      Group<f_Group>, Flags<[CC1Option]>,
+      HelpText<"Load pass plugin from a dynamic shared object file.">,
+  +   MarshallingInfoStringVector<CodeGenOpts<"PassPlugins">>;
+
+Inner workings of the system are introduced in the :ref:`marshalling
+infrastructure <OptionMarshalling>` section and the available annotations are
+listed :ref:`here <OptionMarshallingAnnotations>`.
+
+In case the marshalling infrastructure does not support the desired semantics,
+consider simplifying it to fit the existing model. This makes the command line
+more uniform and reduces the amount of custom, manually written code. Remember
+that the ``-cc1`` command line interface is intended only for Clang developers,
+meaning it does not need to mirror the driver interface, maintain backward
+compatibility or be compatible with GCC.
+
+If the option semantics cannot be encoded via marshalling annotations, you can
+resort to parsing/serializing the command line arguments manually:
+
+.. code-block:: diff
+
+    // CompilerInvocation.cpp
+
+    static bool ParseCodeGenArgs(CodeGenOptions &Opts, ArgList &Args /*...*/) {
+      // ...
+
+  +   Opts.PassPlugins = Args.getAllArgValues(OPT_fpass_plugin_EQ);
+    }
+
+    static void GenerateCodeGenArgs(const CodeGenOptions &Opts,
+                                    SmallVectorImpl<const char *> &Args,
+                                    CompilerInvocation::StringAllocator SA /*...*/) {
+      // ...
+
+  +   for (const std::string &PassPlugin : Opts.PassPlugins)
+  +     GenerateArg(Args, OPT_fpass_plugin_EQ, PassPlugin, SA);
+    }
+
+Finally, you can specify the argument on the command line:
+``clang -fpass-plugin=a -fpass-plugin=b`` and use the new member variable as
+desired.
+
+.. code-block:: diff
+
+    void EmitAssemblyHelper::EmitAssemblyWithNewPassManager(/*...*/) {
+      // ...
+  +   for (auto &PluginFN : CodeGenOpts.PassPlugins)
+  +     if (auto PassPlugin = PassPlugin::Load(PluginFN))
+  +        PassPlugin->registerPassBuilderCallbacks(PB);
+    }
+
+.. _OptionMarshalling:
+
+Option Marshalling Infrastructure
+---------------------------------
+
+The option marshalling infrastructure automates the parsing of the Clang
+``-cc1`` frontend command line arguments into ``CompilerInvocation`` and their
+generation from ``CompilerInvocation``. The system replaces lots of repetitive
+C++ code with simple, declarative tablegen annotations and it's being used for
+the majority of the ``-cc1`` command line interface. This section provides an
+overview of the system.
+
+**Note:** The marshalling infrastructure is not intended for driver-only
+options. Only options of the ``-cc1`` frontend need to be marshalled to/from
+``CompilerInvocation`` instance.
+
+To read and modify contents of ``CompilerInvocation``, the marshalling system
+uses key paths, which are declared in two steps. First, a tablegen definition
+for the ``CompilerInvocation`` member is created by inheriting from
+``KeyPathAndMacro``:
+
+.. code-block:: text
+
+  // Options.td
+
+  class LangOpts<string field> : KeyPathAndMacro<"LangOpts->", field, "LANG_"> {}
+  //                   CompilerInvocation member  ^^^^^^^^^^
+  //                                    OPTION_WITH_MARSHALLING prefix ^^^^^
+
+The first argument to the parent class is the beginning of the key path that
+references the ``CompilerInvocation`` member. This argument ends with ``->`` if
+the member is a pointer type or with ``.`` if it's a value type. The child class
+takes a single parameter ``field`` that is forwarded as the second argument to
+the base class. The child class can then be used like so:
+``LangOpts<"IgnoreExceptions">``, constructing a key path to the field
+``LangOpts->IgnoreExceptions``. The third argument passed to the parent class is
+a string that the tablegen backend uses as a prefix to the
+``OPTION_WITH_MARSHALLING`` macro. Using the key path as a mix-in on an
+``Option`` instance instructs the backend to generate the following code:
+
+.. code-block:: c++
+
+  // Options.inc
+
+  #ifdef LANG_OPTION_WITH_MARSHALLING
+  LANG_OPTION_WITH_MARSHALLING([...], LangOpts->IgnoreExceptions, [...])
+  #endif // LANG_OPTION_WITH_MARSHALLING
+
+Such definition can be used used in the function for parsing and generating
+command line:
+
+.. code-block:: c++
+
+  // clang/lib/Frontend/CompilerInvoation.cpp
+
+  bool CompilerInvocation::ParseLangArgs(LangOptions *LangOpts, ArgList &Args,
+                                         DiagnosticsEngine &Diags) {
+    bool Success = true;
+
+  #define LANG_OPTION_WITH_MARSHALLING(                                          \
+      PREFIX_TYPE, NAME, ID, KIND, GROUP, ALIAS, ALIASARGS, FLAGS, PARAM,        \
+      HELPTEXT, METAVAR, VALUES, SPELLING, SHOULD_PARSE, ALWAYS_EMIT, KEYPATH,   \
+      DEFAULT_VALUE, IMPLIED_CHECK, IMPLIED_VALUE, NORMALIZER, DENORMALIZER,     \
+      MERGER, EXTRACTOR, TABLE_INDEX)                                            \
+    PARSE_OPTION_WITH_MARSHALLING(Args, Diags, Success, ID, FLAGS, PARAM,        \
+                                  SHOULD_PARSE, KEYPATH, DEFAULT_VALUE,          \
+                                  IMPLIED_CHECK, IMPLIED_VALUE, NORMALIZER,      \
+                                  MERGER, TABLE_INDEX)
+  #include "clang/Driver/Options.inc"
+  #undef LANG_OPTION_WITH_MARSHALLING
+
+    // ...
+
+    return Success;
+  }
+
+  void CompilerInvocation::GenerateLangArgs(LangOptions *LangOpts,
+                                            SmallVectorImpl<const char *> &Args,
+                                            StringAllocator SA) {
+  #define LANG_OPTION_WITH_MARSHALLING(                                          \
+      PREFIX_TYPE, NAME, ID, KIND, GROUP, ALIAS, ALIASARGS, FLAGS, PARAM,        \
+      HELPTEXT, METAVAR, VALUES, SPELLING, SHOULD_PARSE, ALWAYS_EMIT, KEYPATH,   \
+      DEFAULT_VALUE, IMPLIED_CHECK, IMPLIED_VALUE, NORMALIZER, DENORMALIZER,     \
+      MERGER, EXTRACTOR, TABLE_INDEX)                                            \
+    GENERATE_OPTION_WITH_MARSHALLING(                                            \
+        Args, SA, KIND, FLAGS, SPELLING, ALWAYS_EMIT, KEYPATH, DEFAULT_VALUE,    \
+        IMPLIED_CHECK, IMPLIED_VALUE, DENORMALIZER, EXTRACTOR, TABLE_INDEX)
+  #include "clang/Driver/Options.inc"
+  #undef LANG_OPTION_WITH_MARSHALLING
+
+    // ...
+  }
+
+The ``PARSE_OPTION_WITH_MARSHALLING`` and ``GENERATE_OPTION_WITH_MARSHALLING``
+macros are defined in ``CompilerInvocation.cpp`` and they implement the generic
+algorithm for parsing and generating command line arguments.
+
+.. _OptionMarshallingAnnotations:
+
+Option Marshalling Annotations
+------------------------------
+
+How does the tablegen backend know what to put in place of ``[...]`` in the
+generated ``Options.inc``? This is specified by the ``Marshalling`` utilities
+described below. All of them take a key path argument and possibly other
+information required for parsing or generating the command line argument.
+
+**Note:** The marshalling infrastructure is not intended for driver-only
+options. Only options of the ``-cc1`` frontend need to be marshalled to/from
+``CompilerInvocation`` instance.
+
+**Positive Flag**
+
+The key path defaults to ``false`` and is set to ``true`` when the flag is
+present on command line.
+
+.. code-block:: text
+
+  def fignore_exceptions : Flag<["-"], "fignore-exceptions">, Flags<[CC1Option]>,
+    MarshallingInfoFlag<LangOpts<"IgnoreExceptions">>;
+
+**Negative Flag**
+
+The key path defaults to ``true`` and is set to ``false`` when the flag is
+present on command line.
+
+.. code-block:: text
+
+  def fno_verbose_asm : Flag<["-"], "fno-verbose-asm">, Flags<[CC1Option]>,
+    MarshallingInfoNegativeFlag<CodeGenOpts<"AsmVerbose">>;
+
+**Negative and Positive Flag**
+
+The key path defaults to the specified value (``false``, ``true`` or some
+boolean value that's statically unknown in the tablegen file). Then, the key
+path is set to the value associated with the flag that appears last on command
+line.
+
+.. code-block:: text
+
+  defm legacy_pass_manager : BoolOption<"f", "legacy-pass-manager",
+    CodeGenOpts<"LegacyPassManager">, DefaultFalse,
+    PosFlag<SetTrue, [], "Use the legacy pass manager in LLVM">,
+    NegFlag<SetFalse, [], "Use the new pass manager in LLVM">,
+    BothFlags<[CC1Option]>>;
+
+With most such pair of flags, the ``-cc1`` frontend accepts only the flag that
+changes the default key path value. The Clang driver is responsible for
+accepting both and either forwarding the changing flag or discarding the flag
+that would just set the key path to its default.
+
+The first argument to ``BoolOption`` is a prefix that is used to construct the
+full names of both flags. The positive flag would then be named
+``flegacy-pass-manager`` and the negative ``fno-legacy-pass-manager``.
+``BoolOption`` also implies the ``-`` prefix for both flags. It's also possible
+to use ``BoolFOption`` that implies the ``"f"`` prefix and ``Group<f_Group>``.
+The ``PosFlag`` and ``NegFlag`` classes hold the associated boolean value, an
+array of elements passed to the ``Flag`` class and the help text. The optional
+``BothFlags`` class holds an array of ``Flag`` elements that are common for both
+the positive and negative flag and their common help text suffix.
+
+**String**
+
+The key path defaults to the specified string, or an empty one, if omitted. When
+the option appears on the command line, the argument value is simply copied.
+
+.. code-block:: text
+
+  def isysroot : JoinedOrSeparate<["-"], "isysroot">, Flags<[CC1Option]>,
+    MarshallingInfoString<HeaderSearchOpts<"Sysroot">, [{"/"}]>;
+
+**List of Strings**
+
+The key path defaults to an empty ``std::vector<std::string>``. Values specified
+with each appearance of the option on the command line are appended to the
+vector.
+
+.. code-block:: text
+
+  def frewrite_map_file : Separate<["-"], "frewrite-map-file">, Flags<[CC1Option]>,
+    MarshallingInfoStringVector<CodeGenOpts<"RewriteMapFiles">>;
+
+**Integer**
+
+The key path defaults to the specified integer value, or ``0`` if omitted. When
+the option appears on the command line, its value gets parsed by ``llvm::APInt``
+and the result is assigned to the key path on success.
+
+.. code-block:: text
+
+  def mstack_probe_size : Joined<["-"], "mstack-probe-size=">, Flags<[CC1Option]>,
+    MarshallingInfoInt<CodeGenOpts<"StackProbeSize">, "4096">;
+
+**Enumeration**
+
+The key path defaults to the value specified in ``MarshallingInfoEnum`` prefixed
+by the contents of ``NormalizedValuesScope`` and ``::``. This ensures correct
+reference to an enum case is formed even if the enum resides in different
+namespace or is an enum class. If the value present on command line does not
+match any of the comma-separated values from ``Values``, an error diagnostics is
+issued. Otherwise, the corresponding element from ``NormalizedValues`` at the
+same index is assigned to the key path (also correctly scoped). The number of
+comma-separated string values and elements of the array within
+``NormalizedValues`` must match.
+
+.. code-block:: text
+
+  def mthread_model : Separate<["-"], "mthread-model">, Flags<[CC1Option]>,
+    Values<"posix,single">, NormalizedValues<["POSIX", "Single"]>,
+    NormalizedValuesScope<"LangOptions::ThreadModelKind">,
+    MarshallingInfoEnum<LangOpts<"ThreadModel">, "POSIX">;
+
+..
+  Intentionally omitting MarshallingInfoBitfieldFlag. It's adding some
+  complexity to the marshalling infrastructure and might be removed.
+
+It is also possible to define relationships between options.
+
+**Implication**
+
+The key path defaults to the default value from the primary ``Marshalling``
+annotation. Then, if any of the elements of ``ImpliedByAnyOf`` evaluate to true,
+the key path value is changed to the specified value or ``true`` if missing.
+Finally, the command line is parsed according to the primary annotation.
+
+.. code-block:: text
+
+  def fms_extensions : Flag<["-"], "fms-extensions">, Flags<[CC1Option]>,
+    MarshallingInfoFlag<LangOpts<"MicrosoftExt">>,
+    ImpliedByAnyOf<[fms_compatibility.KeyPath], "true">;
+
+**Condition**
+
+The option is parsed only if the expression in ``ShouldParseIf`` evaluates to
+true.
+
+.. code-block:: text
+
+  def fopenmp_enable_irbuilder : Flag<["-"], "fopenmp-enable-irbuilder">, Flags<[CC1Option]>,
+    MarshallingInfoFlag<LangOpts<"OpenMPIRBuilder">>,
+    ShouldParseIf<fopenmp.KeyPath>;
+
 The Lexer and Preprocessor Library
 ==================================
 
@@ -859,7 +1282,7 @@ benefits:
 
 There are unfortunately exceptions to this general approach, such as:
 
-  * A the first declaration of a redeclarable entity maintains a pointer to the
+  * The first declaration of a redeclarable entity maintains a pointer to the
     most recent declaration of that entity, which naturally needs to change as
     more declarations are parsed.
   * Name lookup tables in declaration contexts change after the namespace
@@ -1439,13 +1862,631 @@ Because the same entity can be defined multiple times in different modules,
 it is also possible for there to be multiple definitions of (for instance)
 a ``CXXRecordDecl``, all of which describe a definition of the same class.
 In such a case, only one of those "definitions" is considered by Clang to be
-the definiition of the class, and the others are treated as non-defining
+the definition of the class, and the others are treated as non-defining
 declarations that happen to also contain member declarations. Corresponding
 members in each definition of such multiply-defined classes are identified
 either by redeclaration chains (if the members are ``Redeclarable``)
 or by simply a pointer to the canonical declaration (if the declarations
 are not ``Redeclarable`` -- in that case, a ``Mergeable`` base class is used
 instead).
+
+Error Handling
+--------------
+
+Clang produces an AST even when the code contains errors. Clang won't generate
+and optimize code for it, but it's used as parsing continues to detect further
+errors in the input. Clang-based tools also depend on such ASTs, and IDEs in
+particular benefit from a high-quality AST for broken code.
+
+In presence of errors, clang uses a few error-recovery strategies to present the
+broken code in the AST:
+
+- correcting errors: in cases where clang is confident about the fix, it
+  provides a FixIt attaching to the error diagnostic and emits a corrected AST
+  (reflecting the written code with FixIts applied). The advantage of that is to
+  provide more accurate subsequent diagnostics. Typo correction is a typical
+  example.
+- representing invalid node: the invalid node is preserved in the AST in some
+  form, e.g. when the "declaration" part of the declaration contains semantic
+  errors, the Decl node is marked as invalid.
+- dropping invalid node: this often happens for errors that we don’t have
+  graceful recovery. Prior to Recovery AST, a mismatched-argument function call
+  expression was dropped though a CallExpr was created for semantic analysis.
+
+With these strategies, clang surfaces better diagnostics, and provides AST
+consumers a rich AST reflecting the written source code as much as possible even
+for broken code.
+
+Recovery AST
+^^^^^^^^^^^^
+
+The idea of Recovery AST is to use recovery nodes which act as a placeholder to
+maintain the rough structure of the parsing tree, preserve locations and
+children but have no language semantics attached to them.
+
+For example, consider the following mismatched function call:
+
+.. code-block:: c++
+
+   int NoArg();
+   void test(int abc) {
+     NoArg(abc); // oops, mismatched function arguments.
+   }
+
+Without Recovery AST, the invalid function call expression (and its child
+expressions) would be dropped in the AST:
+
+::
+
+    |-FunctionDecl <line:1:1, col:11> NoArg 'int ()'
+    `-FunctionDecl <line:2:1, line:4:1> test 'void (int)'
+     |-ParmVarDecl <col:11, col:15> col:15 used abc 'int'
+     `-CompoundStmt <col:20, line:4:1>
+
+
+With Recovery AST, the AST looks like:
+
+::
+
+    |-FunctionDecl <line:1:1, col:11> NoArg 'int ()'
+    `-FunctionDecl <line:2:1, line:4:1> test 'void (int)'
+      |-ParmVarDecl <col:11, col:15> used abc 'int'
+      `-CompoundStmt <col:20, line:4:1>
+        `-RecoveryExpr <line:3:3, col:12> 'int' contains-errors
+          |-UnresolvedLookupExpr <col:3> '<overloaded function type>' lvalue (ADL) = 'NoArg'
+          `-DeclRefExpr <col:9> 'int' lvalue ParmVar 'abc' 'int'
+
+
+An alternative is to use existing Exprs, e.g. CallExpr for the above example.
+This would capture more call details (e.g. locations of parentheses) and allow
+it to be treated uniformly with valid CallExprs. However, jamming the data we
+have into CallExpr forces us to weaken its invariants, e.g. arg count may be
+wrong. This would introduce a huge burden on consumers of the AST to handle such
+"impossible" cases. So when we're representing (rather than correcting) errors,
+we use a distinct recovery node type with extremely weak invariants instead.
+
+``RecoveryExpr`` is the only recovery node so far. In practice, broken decls
+need more detailed semantics preserved (the current ``Invalid`` flag works
+fairly well), and completely broken statements with interesting internal
+structure are rare (so dropping the statements is OK).
+
+Types and dependence
+^^^^^^^^^^^^^^^^^^^^
+
+``RecoveryExpr`` is an ``Expr``, so it must have a type. In many cases the true
+type can't really be known until the code is corrected (e.g. a call to a
+function that doesn't exist). And it means that we can't properly perform type
+checks on some containing constructs, such as ``return 42 + unknownFunction()``.
+
+To model this, we generalize the concept of dependence from C++ templates to
+mean dependence on a template parameter or how an error is repaired. The
+``RecoveryExpr`` ``unknownFunction()`` has the totally unknown type
+``DependentTy``, and this suppresses type-based analysis in the same way it
+would inside a template.
+
+In cases where we are confident about the concrete type (e.g. the return type
+for a broken non-overloaded function call), the ``RecoveryExpr`` will have this
+type. This allows more code to be typechecked, and produces a better AST and
+more diagnostics. For example:
+
+.. code-block:: C++
+
+   unknownFunction().size() // .size() is a CXXDependentScopeMemberExpr
+   std::string(42).size() // .size() is a resolved MemberExpr
+
+Whether or not the ``RecoveryExpr`` has a dependent type, it is always
+considered value-dependent, because its value isn't well-defined until the error
+is resolved. Among other things, this means that clang doesn't emit more errors
+where a RecoveryExpr is used as a constant (e.g. array size), but also won't try
+to evaluate it.
+
+ContainsErrors bit
+^^^^^^^^^^^^^^^^^^
+
+Beyond the template dependence bits, we add a new “ContainsErrors” bit to
+express “Does this expression or anything within it contain errors” semantic,
+this bit is always set for RecoveryExpr, and propagated to other related nodes.
+This provides a fast way to query whether any (recursive) child of an expression
+had an error, which is often used to improve diagnostics.
+
+.. code-block:: C++
+
+   // C++
+   void recoveryExpr(int abc) {
+    unknownFunction(); // type-dependent, value-dependent, contains-errors
+
+    std::string(42).size(); // value-dependent, contains-errors,
+                            // not type-dependent, as we know the type is std::string
+   }
+
+
+.. code-block:: C
+
+   // C
+   void recoveryExpr(int abc) {
+     unknownVar + abc; // type-dependent, value-dependent, contains-errors
+   }
+
+
+The ASTImporter
+---------------
+
+The ``ASTImporter`` class imports nodes of an ``ASTContext`` into another
+``ASTContext``. Please refer to the document :doc:`ASTImporter: Merging Clang
+ASTs <LibASTImporter>` for an introduction. And please read through the
+high-level `description of the import algorithm
+<LibASTImporter.html#algorithm-of-the-import>`_, this is essential for
+understanding further implementation details of the importer.
+
+.. _templated:
+
+Abstract Syntax Graph
+^^^^^^^^^^^^^^^^^^^^^
+
+Despite the name, the Clang AST is not a tree. It is a directed graph with
+cycles. One example of a cycle is the connection between a
+``ClassTemplateDecl`` and its "templated" ``CXXRecordDecl``. The *templated*
+``CXXRecordDecl`` represents all the fields and methods inside the class
+template, while the ``ClassTemplateDecl`` holds the information which is
+related to being a template, i.e. template arguments, etc. We can get the
+*templated* class (the ``CXXRecordDecl``) of a ``ClassTemplateDecl`` with
+``ClassTemplateDecl::getTemplatedDecl()``. And we can get back a pointer of the
+"described" class template from the *templated* class:
+``CXXRecordDecl::getDescribedTemplate()``. So, this is a cycle between two
+nodes: between the *templated* and the *described* node. There may be various
+other kinds of cycles in the AST especially in case of declarations.
+
+.. _structural-eq:
+
+Structural Equivalency
+^^^^^^^^^^^^^^^^^^^^^^
+
+Importing one AST node copies that node into the destination ``ASTContext``. To
+copy one node means that we create a new node in the "to" context then we set
+its properties to be equal to the properties of the source node. Before the
+copy, we make sure that the source node is not *structurally equivalent* to any
+existing node in the destination context. If it happens to be equivalent then
+we skip the copy.
+
+The informal definition of structural equivalency is the following:
+Two nodes are **structurally equivalent** if they are
+
+- builtin types and refer to the same type, e.g. ``int`` and ``int`` are
+  structurally equivalent,
+- function types and all their parameters have structurally equivalent types,
+- record types and all their fields in order of their definition have the same
+  identifier names and structurally equivalent types,
+- variable or function declarations and they have the same identifier name and
+  their types are structurally equivalent.
+
+In C, two types are structurally equivalent if they are *compatible types*. For
+a formal definition of *compatible types*, please refer to 6.2.7/1 in the C11
+standard. However, there is no definition for *compatible types* in the C++
+standard. Still, we extend the definition of structural equivalency to
+templates and their instantiations similarly: besides checking the previously
+mentioned properties, we have to check for equivalent template
+parameters/arguments, etc.
+
+The structural equivalent check can be and is used independently from the
+ASTImporter, e.g. the ``clang::Sema`` class uses it also.
+
+The equivalence of nodes may depend on the equivalency of other pairs of nodes.
+Thus, the check is implemented as a parallel graph traversal. We traverse
+through the nodes of both graphs at the same time. The actual implementation is
+similar to breadth-first-search. Let's say we start the traverse with the <A,B>
+pair of nodes. Whenever the traversal reaches a pair <X,Y> then the following
+statements are true:
+
+- A and X are nodes from the same ASTContext.
+- B and Y are nodes from the same ASTContext.
+- A and B may or may not be from the same ASTContext.
+- if A == X and B == Y (pointer equivalency) then (there is a cycle during the
+  traverse)
+
+  - A and B are structurally equivalent if and only if
+
+    - All dependent nodes on the path from <A,B> to <X,Y> are structurally
+      equivalent.
+
+When we compare two classes or enums and one of them is incomplete or has
+unloaded external lexical declarations then we cannot descend to compare their
+contained declarations. So in these cases they are considered equal if they
+have the same names. This is the way how we compare forward declarations with
+definitions.
+
+.. TODO Should we elaborate the actual implementation of the graph traversal,
+.. which is a very weird BFS traversal?
+
+Redeclaration Chains
+^^^^^^^^^^^^^^^^^^^^
+
+The early version of the ``ASTImporter``'s merge mechanism squashed the
+declarations, i.e. it aimed to have only one declaration instead of maintaining
+a whole redeclaration chain. This early approach simply skipped importing a
+function prototype, but it imported a definition. To demonstrate the problem
+with this approach let's consider an empty "to" context and the following
+``virtual`` function declarations of ``f`` in the "from" context:
+
+.. code-block:: c++
+
+  struct B { virtual void f(); };
+  void B::f() {} // <-- let's import this definition
+
+If we imported the definition with the "squashing" approach then we would
+end-up having one declaration which is indeed a definition, but ``isVirtual()``
+returns ``false`` for it. The reason is that the definition is indeed not
+virtual, it is the property of the prototype!
+
+Consequently, we must either set the virtual flag for the definition (but then
+we create a malformed AST which the parser would never create), or we import
+the whole redeclaration chain of the function. The most recent version of the
+``ASTImporter`` uses the latter mechanism. We do import all function
+declarations - regardless if they are definitions or prototypes - in the order
+as they appear in the "from" context.
+
+.. One definition
+
+If we have an existing definition in the "to" context, then we cannot import
+another definition, we will use the existing definition. However, we can import
+prototype(s): we chain the newly imported prototype(s) to the existing
+definition. Whenever we import a new prototype from a third context, that will
+be added to the end of the redeclaration chain. This may result in long
+redeclaration chains in certain cases, e.g. if we import from several
+translation units which include the same header with the prototype.
+
+.. Squashing prototypes
+
+To mitigate the problem of long redeclaration chains of free functions, we
+could compare prototypes to see if they have the same properties and if yes
+then we could merge these prototypes. The implementation of squashing of
+prototypes for free functions is future work.
+
+.. Exception: Cannot have more than 1 prototype in-class
+
+Chaining functions this way ensures that we do copy all information from the
+source AST. Nonetheless, there is a problem with member functions: While we can
+have many prototypes for free functions, we must have only one prototype for a
+member function.
+
+.. code-block:: c++
+
+  void f(); // OK
+  void f(); // OK
+
+  struct X {
+    void f(); // OK
+    void f(); // ERROR
+  };
+  void X::f() {} // OK
+
+Thus, prototypes of member functions must be squashed, we cannot just simply
+attach a new prototype to the existing in-class prototype. Consider the
+following contexts:
+
+.. code-block:: c++
+
+  // "to" context
+  struct X {
+    void f(); // D0
+  };
+
+.. code-block:: c++
+
+  // "from" context
+  struct X {
+    void f(); // D1
+  };
+  void X::f() {} // D2
+
+When we import the prototype and the definition of ``f`` from the "from"
+context, then the resulting redecl chain will look like this ``D0 -> D2'``,
+where ``D2'`` is the copy of ``D2`` in the "to" context.
+
+.. Redecl chains of other declarations
+
+Generally speaking, when we import declarations (like enums and classes) we do
+attach the newly imported declaration to the existing redeclaration chain (if
+there is structural equivalency). We do not import, however, the whole
+redeclaration chain as we do in case of functions. Up till now, we haven't
+found any essential property of forward declarations which is similar to the
+case of the virtual flag in a member function prototype. In the future, this
+may change, though.
+
+Traversal during the Import
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The node specific import mechanisms are implemented in
+``ASTNodeImporter::VisitNode()`` functions, e.g. ``VisitFunctionDecl()``.
+When we import a declaration then first we import everything which is needed to
+call the constructor of that declaration node. Everything which can be set
+later is set after the node is created. For example, in case of  a
+``FunctionDecl`` we first import the declaration context in which the function
+is declared, then we create the ``FunctionDecl`` and only then we import the
+body of the function. This means there are implicit dependencies between AST
+nodes. These dependencies determine the order in which we visit nodes in the
+"from" context. As with the regular graph traversal algorithms like DFS, we
+keep track which nodes we have already visited in
+``ASTImporter::ImportedDecls``. Whenever we create a node then we immediately
+add that to the ``ImportedDecls``. We must not start the import of any other
+declarations before we keep track of the newly created one. This is essential,
+otherwise, we would not be able to handle circular dependencies. To enforce
+this, we wrap all constructor calls of all AST nodes in
+``GetImportedOrCreateDecl()``. This wrapper ensures that all newly created
+declarations are immediately marked as imported; also, if a declaration is
+already marked as imported then we just return its counterpart in the "to"
+context. Consequently, calling a declaration's ``::Create()`` function directly
+would lead to errors, please don't do that!
+
+Even with the use of ``GetImportedOrCreateDecl()`` there is still a
+probability of having an infinite import recursion if things are imported from
+each other in wrong way. Imagine that during the import of ``A``, the import of
+``B`` is requested before we could create the node for ``A`` (the constructor
+needs a reference to ``B``). And the same could be true for the import of ``B``
+(``A`` is requested to be imported before we could create the node for ``B``).
+In case of the :ref:`templated-described swing <templated>` we take
+extra attention to break the cyclical dependency: we import and set the
+described template only after the ``CXXRecordDecl`` is created. As a best
+practice, before creating the node in the "to" context, avoid importing of
+other nodes which are not needed for the constructor of node ``A``.
+
+Error Handling
+^^^^^^^^^^^^^^
+
+Every import function returns with either an ``llvm::Error`` or an
+``llvm::Expected<T>`` object. This enforces to check the return value of the
+import functions. If there was an error during one import then we return with
+that error. (Exception: when we import the members of a class, we collect the
+individual errors with each member and we concatenate them in one Error
+object.) We cache these errors in cases of declarations. During the next import
+call if there is an existing error we just return with that. So, clients of the
+library receive an Error object, which they must check.
+
+During import of a specific declaration, it may happen that some AST nodes had
+already been created before we recognize an error. In this case, we signal back
+the error to the caller, but the "to" context remains polluted with those nodes
+which had been created. Ideally, those nodes should not had been created, but
+that time we did not know about the error, the error happened later. Since the
+AST is immutable (most of the cases we can't remove existing nodes) we choose
+to mark these nodes as erroneous.
+
+We cache the errors associated with declarations in the "from" context in
+``ASTImporter::ImportDeclErrors`` and the ones which are associated with the
+"to" context in ``ASTImporterSharedState::ImportErrors``. Note that, there may
+be several ASTImporter objects which import into the same "to" context but from
+different "from" contexts; in this case, they have to share the associated
+errors of the "to" context.
+
+When an error happens, that propagates through the call stack, through all the
+dependant nodes. However, in case of dependency cycles, this is not enough,
+because we strive to mark the erroneous nodes so clients can act upon. In those
+cases, we have to keep track of the errors for those nodes which are
+intermediate nodes of a cycle.
+
+An **import path** is the list of the AST nodes which we visit during an Import
+call. If node ``A`` depends on node ``B`` then the path contains an ``A->B``
+edge. From the call stack of the import functions, we can read the very same
+path.
+
+Now imagine the following AST, where the ``->`` represents dependency in terms
+of the import (all nodes are declarations).
+
+.. code-block:: text
+
+  A->B->C->D
+     `->E
+
+We would like to import A.
+The import behaves like a DFS, so we will visit the nodes in this order: ABCDE.
+During the visitation we will have the following import paths:
+
+.. code-block:: text
+
+  A
+  AB
+  ABC
+  ABCD
+  ABC
+  AB
+  ABE
+  AB
+  A
+
+If during the visit of E there is an error then we set an error for E, then as
+the call stack shrinks for B, then for A:
+
+.. code-block:: text
+
+  A
+  AB
+  ABC
+  ABCD
+  ABC
+  AB
+  ABE // Error! Set an error to E
+  AB  // Set an error to B
+  A   // Set an error to A
+
+However, during the import we could import C and D without any error and they
+are independent of A,B and E. We must not set up an error for C and D. So, at
+the end of the import we have an entry in ``ImportDeclErrors`` for A,B,E but
+not for C,D.
+
+Now, what happens if there is a cycle in the import path? Let's consider this
+AST:
+
+.. code-block:: text
+
+  A->B->C->A
+     `->E
+
+During the visitation, we will have the below import paths and if during the
+visit of E there is an error then we will set up an error for E,B,A. But what's
+up with C?
+
+.. code-block:: text
+
+  A
+  AB
+  ABC
+  ABCA
+  ABC
+  AB
+  ABE // Error! Set an error to E
+  AB  // Set an error to B
+  A   // Set an error to A
+
+This time we know that both B and C are dependent on A. This means we must set
+up an error for C too. As the call stack reverses back we get to A and we must
+set up an error to all nodes which depend on A (this includes C). But C is no
+longer on the import path, it just had been previously. Such a situation can
+happen only if during the visitation we had a cycle. If we didn't have any
+cycle, then the normal way of passing an Error object through the call stack
+could handle the situation. This is why we must track cycles during the import
+process for each visited declaration.
+
+Lookup Problems
+^^^^^^^^^^^^^^^
+
+When we import a declaration from the source context then we check whether we
+already have a structurally equivalent node with the same name in the "to"
+context. If the "from" node is a definition and the found one is also a
+definition, then we do not create a new node, instead, we mark the found node
+as the imported node. If the found definition and the one we want to import
+have the same name but they are structurally in-equivalent, then we have an ODR
+violation in case of C++. If the "from" node is not a definition then we add
+that to the redeclaration chain of the found node. This behaviour is essential
+when we merge ASTs from different translation units which include the same
+header file(s). For example, we want to have only one definition for the class
+template ``std::vector``, even if we included ``<vector>`` in several
+translation units.
+
+To find a structurally equivalent node we can use the regular C/C++ lookup
+functions: ``DeclContext::noload_lookup()`` and
+``DeclContext::localUncachedLookup()``. These functions do respect the C/C++
+name hiding rules, thus you cannot find certain declarations in a given
+declaration context. For instance, unnamed declarations (anonymous structs),
+non-first ``friend`` declarations and template specializations are hidden. This
+is a problem, because if we use the regular C/C++ lookup then we create
+redundant AST nodes during the merge! Also, having two instances of the same
+node could result in false :ref:`structural in-equivalencies <structural-eq>`
+of other nodes which depend on the duplicated node. Because of these reasons,
+we created a lookup class which has the sole purpose to register all
+declarations, so later they can be looked up by subsequent import requests.
+This is the ``ASTImporterLookupTable`` class. This lookup table should be
+shared amongst the different ``ASTImporter`` instances if they happen to import
+to the very same "to" context. This is why we can use the importer specific
+lookup only via the ``ASTImporterSharedState`` class.
+
+ExternalASTSource
+~~~~~~~~~~~~~~~~~
+
+The ``ExternalASTSource`` is an abstract interface associated with the
+``ASTContext`` class. It provides the ability to read the declarations stored
+within a declaration context either for iteration or for name lookup. A
+declaration context with an external AST source may load its declarations
+on-demand. This means that the list of declarations (represented as a linked
+list, the head is ``DeclContext::FirstDecl``) could be empty. However, member
+functions like ``DeclContext::lookup()`` may initiate a load.
+
+Usually, external sources are associated with precompiled headers. For example,
+when we load a class from a PCH then the members are loaded only if we do want
+to look up something in the class' context.
+
+In case of LLDB, an implementation of the ``ExternalASTSource`` interface is
+attached to the AST context which is related to the parsed expression. This
+implementation of the ``ExternalASTSource`` interface is realized with the help
+of the ``ASTImporter`` class. This way, LLDB can reuse Clang's parsing
+machinery while synthesizing the underlying AST from the debug data (e.g. from
+DWARF). From the view of the ``ASTImporter`` this means both the "to" and the
+"from" context may have declaration contexts with external lexical storage. If
+a ``DeclContext`` in the "to" AST context has external lexical storage then we
+must take extra attention to work only with the already loaded declarations!
+Otherwise, we would end up with an uncontrolled import process. For instance,
+if we used the regular ``DeclContext::lookup()`` to find the existing
+declarations in the "to" context then the ``lookup()`` call itself would
+initiate a new import while we are in the middle of importing a declaration!
+(By the time we initiate the lookup we haven't registered yet that we already
+started to import the node of the "from" context.) This is why we use
+``DeclContext::noload_lookup()`` instead.
+
+Class Template Instantiations
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Different translation units may have class template instantiations with the
+same template arguments, but with a different set of instantiated
+``MethodDecls`` and ``FieldDecls``. Consider the following files:
+
+.. code-block:: c++
+
+  // x.h
+  template <typename T>
+  struct X {
+      int a{0}; // FieldDecl with InitListExpr
+      X(char) : a(3) {}     // (1)
+      X(int) {}             // (2)
+  };
+
+  // foo.cpp
+  void foo() {
+      // ClassTemplateSpec with ctor (1): FieldDecl without InitlistExpr
+      X<char> xc('c');
+  }
+
+  // bar.cpp
+  void bar() {
+      // ClassTemplateSpec with ctor (2): FieldDecl WITH InitlistExpr
+      X<char> xc(1);
+  }
+
+In ``foo.cpp`` we use the constructor with number ``(1)``, which explicitly
+initializes the member ``a`` to ``3``, thus the ``InitListExpr`` ``{0}`` is not
+used here and the AST node is not instantiated. However, in the case of
+``bar.cpp`` we use the constructor with number ``(2)``, which does not
+explicitly initialize the ``a`` member, so the default ``InitListExpr`` is
+needed and thus instantiated. When we merge the AST of ``foo.cpp`` and
+``bar.cpp`` we must create an AST node for the class template instantiation of
+``X<char>`` which has all the required nodes. Therefore, when we find an
+existing ``ClassTemplateSpecializationDecl`` then we merge the fields of the
+``ClassTemplateSpecializationDecl`` in the "from" context in a way that the
+``InitListExpr`` is copied if not existent yet. The same merge mechanism should
+be done in the cases of instantiated default arguments and exception
+specifications of functions.
+
+.. _visibility:
+
+Visibility of Declarations
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+During import of a global variable with external visibility, the lookup will
+find variables (with the same name) but with static visibility (linkage).
+Clearly, we cannot put them into the same redeclaration chain. The same is true
+the in case of functions. Also, we have to take care of other kinds of
+declarations like enums, classes, etc. if they are in anonymous namespaces.
+Therefore, we filter the lookup results and consider only those which have the
+same visibility as the declaration we currently import.
+
+We consider two declarations in two anonymous namespaces to have the same
+visibility only if they are imported from the same AST context.
+
+Strategies to Handle Conflicting Names
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+During the import we lookup existing declarations with the same name. We filter
+the lookup results based on their :ref:`visibility <visibility>`. If any of the
+found declarations are not structurally equivalent then we bumped to a name
+conflict error (ODR violation in C++). In this case, we return with an
+``Error`` and we set up the ``Error`` object for the declaration. However, some
+clients of the ``ASTImporter`` may require a different, perhaps less
+conservative and more liberal error handling strategy.
+
+E.g. static analysis clients may benefit if the node is created even if there
+is a name conflict. During the CTU analysis of certain projects, we recognized
+that there are global declarations which collide with declarations from other
+translation units, but they are not referenced outside from their translation
+unit. These declarations should be in an unnamed namespace ideally. If we treat
+these collisions liberally then CTU analysis can find more results. Note, the
+feature be able to choose between name conflict handling strategies is still an
+ongoing work.
 
 .. _CFG:
 
@@ -1645,7 +2686,7 @@ about them.
 
 Finally, this is not just a problem for semantic analysis.  The code generator
 and other clients have to be able to fold constants (e.g., to initialize global
-variables) and has to handle a superset of what C99 allows.  Further, these
+variables) and have to handle a superset of what C99 allows.  Further, these
 clients can benefit from extended information.  For example, we know that
 "``foo() || 1``" always evaluates to ``true``, but we can't replace the
 expression with ``true`` because it has side effects.
@@ -1762,12 +2803,14 @@ implementing a keyword attribute, the parsing of the keyword and creation of the
 ``ParsedAttr`` object must be done manually.
 
 Eventually, ``Sema::ProcessDeclAttributeList()`` is called with a ``Decl`` and
-an ``ParsedAttr``, at which point the parsed attribute can be transformed
+a ``ParsedAttr``, at which point the parsed attribute can be transformed
 into a semantic attribute. The process by which a parsed attribute is converted
 into a semantic attribute depends on the attribute definition and semantic
 requirements of the attribute. The end result, however, is that the semantic
 attribute object is attached to the ``Decl`` object, and can be obtained by a
-call to ``Decl::getAttr<T>()``.
+call to ``Decl::getAttr<T>()``. Similarly, for statement attributes,
+``Sema::ProcessStmtAttributes()`` is called with a ``Stmt`` a list of
+``ParsedAttr`` objects to be converted into a semantic attribute.
 
 The structure of the semantic attribute is also governed by the attribute
 definition given in Attr.td. This definition is used to automatically generate
@@ -1780,19 +2823,20 @@ semantic checking for some attributes, etc.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The first step to adding a new attribute to Clang is to add its definition to
 `include/clang/Basic/Attr.td
-<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Basic/Attr.td>`_.
+<https://github.com/llvm/llvm-project/blob/main/clang/include/clang/Basic/Attr.td>`_.
 This tablegen definition must derive from the ``Attr`` (tablegen, not
 semantic) type, or one of its derivatives. Most attributes will derive from the
 ``InheritableAttr`` type, which specifies that the attribute can be inherited by
 later redeclarations of the ``Decl`` it is associated with.
 ``InheritableParamAttr`` is similar to ``InheritableAttr``, except that the
 attribute is written on a parameter instead of a declaration. If the attribute
-is intended to apply to a type instead of a declaration, such an attribute
-should derive from ``TypeAttr``, and will generally not be given an AST
-representation. (Note that this document does not cover the creation of type
-attributes.) An attribute that inherits from ``IgnoredAttr`` is parsed, but will
-generate an ignored attribute diagnostic when used, which may be useful when an
-attribute is supported by another vendor but not supported by clang.
+applies to statements, it should inherit from ``StmtAttr``. If the attribute is
+intended to apply to a type instead of a declaration, such an attribute should
+derive from ``TypeAttr``, and will generally not be given an AST representation.
+(Note that this document does not cover the creation of type attributes.) An
+attribute that inherits from ``IgnoredAttr`` is parsed, but will generate an
+ignored attribute diagnostic when used, which may be useful when an attribute is
+supported by another vendor but not supported by clang.
 
 The definition will specify several key pieces of information, such as the
 semantic name of the attribute, the spellings the attribute supports, the
@@ -1814,16 +2858,23 @@ are created implicitly. The following spellings are accepted:
   ============  ================================================================
   ``GNU``       Spelled with a GNU-style ``__attribute__((attr))`` syntax and
                 placement.
-  ``CXX11``     Spelled with a C++-style ``[[attr]]`` syntax. If the attribute
-                is meant to be used by Clang, it should set the namespace to
-                ``"clang"``.
+  ``CXX11``     Spelled with a C++-style ``[[attr]]`` syntax with an optional
+                vendor-specific namespace.
+  ``C2x``       Spelled with a C-style ``[[attr]]`` syntax with an optional
+                vendor-specific namespace.
   ``Declspec``  Spelled with a Microsoft-style ``__declspec(attr)`` syntax.
   ``Keyword``   The attribute is spelled as a keyword, and required custom
                 parsing.
-  ``GCC``       Specifies two spellings: the first is a GNU-style spelling, and
-                the second is a C++-style spelling with the ``gnu`` namespace.
-                Attributes should only specify this spelling for attributes
-                supported by GCC.
+  ``GCC``       Specifies two or three spellings: the first is a GNU-style
+                spelling, the second is a C++-style spelling with the ``gnu``
+                namespace, and the third is an optional C-style spelling with
+                the ``gnu`` namespace. Attributes should only specify this
+                spelling for attributes supported by GCC.
+  ``Clang``     Specifies two or three spellings: the first is a GNU-style
+                spelling, the second is a C++-style spelling with the ``clang``
+                namespace, and the third is an optional C-style spelling with
+                the ``clang`` namespace. By default, a C-style spelling is
+                provided.
   ``Pragma``    The attribute is spelled as a ``#pragma``, and requires custom
                 processing within the preprocessor. If the attribute is meant to
                 be used by Clang, it should set the namespace to ``"clang"``.
@@ -1832,20 +2883,17 @@ are created implicitly. The following spellings are accepted:
 
 Subjects
 ~~~~~~~~
-Attributes appertain to one or more ``Decl`` subjects. If the attribute attempts
-to attach to a subject that is not in the subject list, a diagnostic is issued
+Attributes appertain to one or more subjects. If the attribute attempts to 
+attach to a subject that is not in the subject list, a diagnostic is issued
 automatically. Whether the diagnostic is a warning or an error depends on how
 the attribute's ``SubjectList`` is defined, but the default behavior is to warn.
 The diagnostics displayed to the user are automatically determined based on the
 subjects in the list, but a custom diagnostic parameter can also be specified in
 the ``SubjectList``. The diagnostics generated for subject list violations are
-either ``diag::warn_attribute_wrong_decl_type`` or
-``diag::err_attribute_wrong_decl_type``, and the parameter enumeration is found
-in `include/clang/Sema/ParsedAttr.h
-<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Sema/ParsedAttr.h>`_
-If a previously unused Decl node is added to the ``SubjectList``, the logic used
-to automatically determine the diagnostic parameter in `utils/TableGen/ClangAttrEmitter.cpp
-<https://github.com/llvm/llvm-project/blob/master/clang/utils/TableGen/ClangAttrEmitter.cpp>`_
+calculated automatically or specified by the subject list itself. If a
+previously unused Decl node is added to the ``SubjectList``, the logic used to
+automatically determine the diagnostic parameter in `utils/TableGen/ClangAttrEmitter.cpp
+<https://github.com/llvm/llvm-project/blob/main/clang/utils/TableGen/ClangAttrEmitter.cpp>`_
 may need to be updated.
 
 By default, all subjects in the SubjectList must either be a Decl node defined
@@ -1858,8 +2906,8 @@ instance, a ``NonBitField`` SubsetSubject appertains to a ``FieldDecl``, and
 tests whether the given FieldDecl is a bit field. When a SubsetSubject is
 specified in a SubjectList, a custom diagnostic parameter must also be provided.
 
-Diagnostic checking for attribute subject lists is automated except when
-``HasCustomParsing`` is set to ``1``.
+Diagnostic checking for attribute subject lists for declaration and statement
+attributes is automated except when ``HasCustomParsing`` is set to ``1``.
 
 Documentation
 ~~~~~~~~~~~~~
@@ -1867,7 +2915,7 @@ All attributes must have some form of documentation associated with them.
 Documentation is table generated on the public web server by a server-side
 process that runs daily. Generally, the documentation for an attribute is a
 stand-alone definition in `include/clang/Basic/AttrDocs.td 
-<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Basic/AttrDocs.td>`_
+<https://github.com/llvm/llvm-project/blob/main/clang/include/clang/Basic/AttrDocs.td>`_
 that is named after the attribute being documented.
 
 If the attribute is not for public consumption, or is an implicitly-created
@@ -1918,7 +2966,7 @@ All arguments have a name and a flag that specifies whether the argument is
 optional. The associated C++ type of the argument is determined by the argument
 definition type. If the existing argument types are insufficient, new types can
 be created, but it requires modifying `utils/TableGen/ClangAttrEmitter.cpp
-<https://github.com/llvm/llvm-project/blob/master/clang/utils/TableGen/ClangAttrEmitter.cpp>`_
+<https://github.com/llvm/llvm-project/blob/main/clang/utils/TableGen/ClangAttrEmitter.cpp>`_
 to properly support the type.
 
 Other Properties
@@ -1930,7 +2978,7 @@ document, however a few deserve mention.
 If the parsed form of the attribute is more complex, or differs from the
 semantic form, the ``HasCustomParsing`` bit can be set to ``1`` for the class,
 and the parsing code in `Parser::ParseGNUAttributeArgs()
-<https://github.com/llvm/llvm-project/blob/master/clang/lib/Parse/ParseDecl.cpp>`_
+<https://github.com/llvm/llvm-project/blob/main/clang/lib/Parse/ParseDecl.cpp>`_
 can be updated for the special case. Note that this only applies to arguments
 with a GNU spelling -- attributes with a __declspec spelling currently ignore
 this flag and are handled by ``Parser::ParseMicrosoftDeclSpec``.
@@ -1969,6 +3017,9 @@ Attributes that do not require custom semantic handling should set the
 attributes are assumed to use a semantic handler by default. Attributes
 without a semantic handler are not given a parsed attribute ``Kind`` enumerator.
 
+"Simple" attributes, that require no custom semantic processing aside from what
+is automatically provided, should set the ``SimpleHandler`` field to ``1``.
+
 Target-specific attributes may share a spelling with other attributes in
 different targets. For instance, the ARM and MSP430 targets both have an
 attribute spelled ``GNU<"interrupt">``, but with different parsing and semantic
@@ -1990,30 +3041,36 @@ If additional functionality is desired for the semantic form of the attribute,
 the ``AdditionalMembers`` field specifies code to be copied verbatim into the
 semantic attribute class object, with ``public`` access.
 
+If two or more attributes cannot be used in combination on the same declaration
+or statement, a ``MutualExclusions`` definition can be supplied to automatically
+generate diagnostic code. This will disallow the attribute combinations
+regardless of spellings used. Additionally, it will diagnose combinations within
+the same attribute list, different attribute list, and redeclarations, as
+appropriate.
+
 Boilerplate
 ^^^^^^^^^^^
 All semantic processing of declaration attributes happens in `lib/Sema/SemaDeclAttr.cpp
-<https://github.com/llvm/llvm-project/blob/master/clang/lib/Sema/SemaDeclAttr.cpp>`_,
+<https://github.com/llvm/llvm-project/blob/main/clang/lib/Sema/SemaDeclAttr.cpp>`_,
 and generally starts in the ``ProcessDeclAttribute()`` function. If the
-attribute is a "simple" attribute -- meaning that it requires no custom semantic
-processing aside from what is automatically  provided, add a call to
-``handleSimpleAttribute<YourAttr>(S, D, Attr);`` to the switch statement.
-Otherwise, write a new ``handleYourAttr()`` function, and add that to the switch
-statement. Please do not implement handling logic directly in the ``case`` for
-the attribute.
+attribute has the ``SimpleHandler`` field set to ``1`` then the function to
+process the attribute will be automatically generated, and nothing needs to be
+done here. Otherwise, write a new ``handleYourAttr()`` function, and add that to
+the switch statement. Please do not implement handling logic directly in the
+``case`` for the attribute.
 
 Unless otherwise specified by the attribute definition, common semantic checking
 of the parsed attribute is handled automatically. This includes diagnosing
-parsed attributes that do not appertain to the given ``Decl``, ensuring the
-correct minimum number of arguments are passed, etc.
+parsed attributes that do not appertain to the given ``Decl`` or ``Stmt``,
+ensuring the correct minimum number of arguments are passed, etc.
 
 If the attribute adds additional warnings, define a ``DiagGroup`` in
 `include/clang/Basic/DiagnosticGroups.td
-<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Basic/DiagnosticGroups.td>`_
+<https://github.com/llvm/llvm-project/blob/main/clang/include/clang/Basic/DiagnosticGroups.td>`_
 named after the attribute's ``Spelling`` with "_"s replaced by "-"s. If there
 is only a single diagnostic, it is permissible to use ``InGroup<DiagGroup<"your-attribute">>``
 directly in `DiagnosticSemaKinds.td
-<https://github.com/llvm/llvm-project/blob/master/clang/include/clang/Basic/DiagnosticSemaKinds.td>`_
+<https://github.com/llvm/llvm-project/blob/main/clang/include/clang/Basic/DiagnosticSemaKinds.td>`_
 
 All semantic diagnostics generated for your attribute, including automatically-
 generated ones (such as subjects and argument counts), should have a
@@ -2030,6 +3087,10 @@ the custom logic requiring use of the attribute.
 The ``clang::Decl`` object can be queried for the presence or absence of an
 attribute using ``hasAttr<T>()``. To obtain a pointer to the semantic
 representation of the attribute, ``getAttr<T>`` may be used.
+
+The ``clang::AttributedStmt`` object can  be queried for the presence or absence
+of an attribute by calling ``getAttrs()`` and looping over the list of
+attributes.
 
 How to add an expression or statement
 -------------------------------------

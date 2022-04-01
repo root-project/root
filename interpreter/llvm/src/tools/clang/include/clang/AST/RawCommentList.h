@@ -10,15 +10,20 @@
 #define LLVM_CLANG_AST_RAWCOMMENTLIST_H
 
 #include "clang/Basic/CommentOptions.h"
-#include "clang/Basic/SourceManager.h"
+#include "clang/Basic/SourceLocation.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/Support/Allocator.h"
+#include <map>
 
 namespace clang {
 
 class ASTContext;
 class ASTReader;
 class Decl;
+class DiagnosticsEngine;
 class Preprocessor;
+class SourceManager;
 
 namespace comments {
   class FullComment;
@@ -170,23 +175,6 @@ private:
   friend class ASTReader;
 };
 
-/// Compare comments' source locations.
-template<>
-class BeforeThanCompare<RawComment> {
-  const SourceManager &SM;
-
-public:
-  explicit BeforeThanCompare(const SourceManager &SM) : SM(SM) { }
-
-  bool operator()(const RawComment &LHS, const RawComment &RHS) {
-    return SM.isBeforeInTranslationUnit(LHS.getBeginLoc(), RHS.getBeginLoc());
-  }
-
-  bool operator()(const RawComment *LHS, const RawComment *RHS) {
-    return operator()(*LHS, *RHS);
-  }
-};
-
 /// This class represents all comments included in the translation unit,
 /// sorted in order of appearance in the translation unit.
 class RawCommentList {
@@ -196,17 +184,25 @@ public:
   void addComment(const RawComment &RC, const CommentOptions &CommentOpts,
                   llvm::BumpPtrAllocator &Allocator);
 
-  ArrayRef<RawComment *> getComments() const {
-    return Comments;
-  }
+  /// \returns A mapping from an offset of the start of the comment to the
+  /// comment itself, or nullptr in case there are no comments in \p File.
+  const std::map<unsigned, RawComment *> *getCommentsInFile(FileID File) const;
+
+  bool empty() const;
+
+  unsigned getCommentBeginLine(RawComment *C, FileID File,
+                               unsigned Offset) const;
+  unsigned getCommentEndOffset(RawComment *C) const;
 
 private:
   SourceManager &SourceMgr;
-  std::vector<RawComment *> Comments;
-
-  void addDeserializedComments(ArrayRef<RawComment *> DeserializedComments);
+  // mapping: FileId -> comment begin offset -> comment
+  llvm::DenseMap<FileID, std::map<unsigned, RawComment *>> OrderedComments;
+  mutable llvm::DenseMap<RawComment *, unsigned> CommentBeginLine;
+  mutable llvm::DenseMap<RawComment *, unsigned> CommentEndOffset;
 
   friend class ASTReader;
+  friend class ASTWriter;
 };
 
 } // end namespace clang

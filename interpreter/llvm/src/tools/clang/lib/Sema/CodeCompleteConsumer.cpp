@@ -23,6 +23,7 @@
 #include "clang/Sema/Sema.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/Casting.h"
@@ -355,8 +356,7 @@ const char *CodeCompletionAllocator::CopyString(const Twine &String) {
 }
 
 StringRef CodeCompletionTUInfo::getParentName(const DeclContext *DC) {
-  const NamedDecl *ND = dyn_cast<NamedDecl>(DC);
-  if (!ND)
+  if (!isa<NamedDecl>(DC))
     return {};
 
   // Check whether we've already cached the parent name.
@@ -469,8 +469,7 @@ void CodeCompletionBuilder::addParentContext(const DeclContext *DC) {
   if (DC->isFunctionOrMethod())
     return;
 
-  const NamedDecl *ND = dyn_cast<NamedDecl>(DC);
-  if (!ND)
+  if (!isa<NamedDecl>(DC))
     return;
 
   ParentName = getCodeCompletionTUInfo().getParentName(DC);
@@ -570,29 +569,10 @@ void PrintingCodeCompleteConsumer::ProcessCodeCompleteResults(
         if (const char *BriefComment = CCS->getBriefComment())
           OS << " : " << BriefComment;
       }
-      for (const FixItHint &FixIt : Results[I].FixIts) {
-        const SourceLocation BLoc = FixIt.RemoveRange.getBegin();
-        const SourceLocation ELoc = FixIt.RemoveRange.getEnd();
-
-        SourceManager &SM = SemaRef.SourceMgr;
-        std::pair<FileID, unsigned> BInfo = SM.getDecomposedLoc(BLoc);
-        std::pair<FileID, unsigned> EInfo = SM.getDecomposedLoc(ELoc);
-        // Adjust for token ranges.
-        if (FixIt.RemoveRange.isTokenRange())
-          EInfo.second += Lexer::MeasureTokenLength(ELoc, SM, SemaRef.LangOpts);
-
-        OS << " (requires fix-it:"
-           << " {" << SM.getLineNumber(BInfo.first, BInfo.second) << ':'
-           << SM.getColumnNumber(BInfo.first, BInfo.second) << '-'
-           << SM.getLineNumber(EInfo.first, EInfo.second) << ':'
-           << SM.getColumnNumber(EInfo.first, EInfo.second) << "}"
-           << " to \"" << FixIt.CodeToInsert << "\")";
-      }
-      OS << '\n';
       break;
 
     case CodeCompletionResult::RK_Keyword:
-      OS << Results[I].Keyword << '\n';
+      OS << Results[I].Keyword;
       break;
 
     case CodeCompletionResult::RK_Macro:
@@ -602,13 +582,31 @@ void PrintingCodeCompleteConsumer::ProcessCodeCompleteResults(
               includeBriefComments())) {
         OS << " : " << CCS->getAsString();
       }
-      OS << '\n';
       break;
 
     case CodeCompletionResult::RK_Pattern:
-      OS << "Pattern : " << Results[I].Pattern->getAsString() << '\n';
+      OS << "Pattern : " << Results[I].Pattern->getAsString();
       break;
     }
+    for (const FixItHint &FixIt : Results[I].FixIts) {
+      const SourceLocation BLoc = FixIt.RemoveRange.getBegin();
+      const SourceLocation ELoc = FixIt.RemoveRange.getEnd();
+
+      SourceManager &SM = SemaRef.SourceMgr;
+      std::pair<FileID, unsigned> BInfo = SM.getDecomposedLoc(BLoc);
+      std::pair<FileID, unsigned> EInfo = SM.getDecomposedLoc(ELoc);
+      // Adjust for token ranges.
+      if (FixIt.RemoveRange.isTokenRange())
+        EInfo.second += Lexer::MeasureTokenLength(ELoc, SM, SemaRef.LangOpts);
+
+      OS << " (requires fix-it:"
+         << " {" << SM.getLineNumber(BInfo.first, BInfo.second) << ':'
+         << SM.getColumnNumber(BInfo.first, BInfo.second) << '-'
+         << SM.getLineNumber(EInfo.first, EInfo.second) << ':'
+         << SM.getColumnNumber(EInfo.first, EInfo.second) << "}"
+         << " to \"" << FixIt.CodeToInsert << "\")";
+    }
+    OS << '\n';
   }
 }
 
@@ -757,7 +755,7 @@ bool clang::operator<(const CodeCompletionResult &X,
   std::string XSaved, YSaved;
   StringRef XStr = X.getOrderedName(XSaved);
   StringRef YStr = Y.getOrderedName(YSaved);
-  int cmp = XStr.compare_lower(YStr);
+  int cmp = XStr.compare_insensitive(YStr);
   if (cmp)
     return cmp < 0;
 

@@ -12,6 +12,7 @@
 
 #include "llvm/Object/MachOUniversal.h"
 #include "llvm/Object/Archive.h"
+#include "llvm/Object/IRObjectFile.h"
 #include "llvm/Object/MachO.h"
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/Casting.h"
@@ -78,6 +79,25 @@ MachOUniversalBinary::ObjectForArch::getAsObjectFile() const {
   StringRef ObjectName = Parent->getFileName();
   MemoryBufferRef ObjBuffer(ObjectData, ObjectName);
   return ObjectFile::createMachOObjectFile(ObjBuffer, cputype, Index);
+}
+
+Expected<std::unique_ptr<IRObjectFile>>
+MachOUniversalBinary::ObjectForArch::getAsIRObject(LLVMContext &Ctx) const {
+  if (!Parent)
+    report_fatal_error("MachOUniversalBinary::ObjectForArch::getAsIRObject() "
+                       "called when Parent is a nullptr");
+
+  StringRef ParentData = Parent->getData();
+  StringRef ObjectData;
+  if (Parent->getMagic() == MachO::FAT_MAGIC) {
+    ObjectData = ParentData.substr(Header.offset, Header.size);
+  } else { // Parent->getMagic() == MachO::FAT_MAGIC_64
+    ObjectData = ParentData.substr(Header64.offset, Header64.size);
+  }
+  StringRef ObjectName = Parent->getFileName();
+  MemoryBufferRef ObjBuffer(ObjectData, ObjectName);
+
+  return IRObjectFile::create(ObjBuffer, Ctx);
 }
 
 Expected<std::unique_ptr<Archive>>
@@ -155,15 +175,16 @@ MachOUniversalBinary::MachOUniversalBinary(MemoryBufferRef Source, Error &Err)
         ") extends past the end of the file");
       return;
     }
-#define MAXSECTALIGN 15 /* 2**15 or 0x8000 */
-    if (A.getAlign() > MAXSECTALIGN) {
-      Err = malformedError("align (2^" + Twine(A.getAlign()) + ") too large "
-        "for cputype (" + Twine(A.getCPUType()) + ") cpusubtype (" +
-        Twine(A.getCPUSubType() & ~MachO::CPU_SUBTYPE_MASK) +
-        ") (maximum 2^" + Twine(MAXSECTALIGN) + ")");
+
+    if (A.getAlign() > MaxSectionAlignment) {
+      Err = malformedError("align (2^" + Twine(A.getAlign()) +
+                           ") too large for cputype (" + Twine(A.getCPUType()) +
+                           ") cpusubtype (" +
+                           Twine(A.getCPUSubType() & ~MachO::CPU_SUBTYPE_MASK) +
+                           ") (maximum 2^" + Twine(MaxSectionAlignment) + ")");
       return;
     }
-    if(A.getOffset() % (1 << A.getAlign()) != 0){
+    if(A.getOffset() % (1ull << A.getAlign()) != 0){
       Err = malformedError("offset: " + Twine(A.getOffset()) +
         " for cputype (" + Twine(A.getCPUType()) + ") cpusubtype (" +
         Twine(A.getCPUSubType() & ~MachO::CPU_SUBTYPE_MASK) +
@@ -209,19 +230,43 @@ MachOUniversalBinary::MachOUniversalBinary(MemoryBufferRef Source, Error &Err)
   Err = Error::success();
 }
 
-Expected<std::unique_ptr<MachOObjectFile>>
+Expected<MachOUniversalBinary::ObjectForArch>
 MachOUniversalBinary::getObjectForArch(StringRef ArchName) const {
   if (Triple(ArchName).getArch() == Triple::ArchType::UnknownArch)
     return make_error<GenericBinaryError>("Unknown architecture "
                                           "named: " +
                                               ArchName,
                                           object_error::arch_not_found);
-
-  for (auto &Obj : objects())
+  for (const auto &Obj : objects())
     if (Obj.getArchFlagName() == ArchName)
-      return Obj.getAsObjectFile();
+      return Obj;
   return make_error<GenericBinaryError>("fat file does not "
                                         "contain " +
                                             ArchName,
                                         object_error::arch_not_found);
+}
+
+Expected<std::unique_ptr<MachOObjectFile>>
+MachOUniversalBinary::getMachOObjectForArch(StringRef ArchName) const {
+  Expected<ObjectForArch> O = getObjectForArch(ArchName);
+  if (!O)
+    return O.takeError();
+  return O->getAsObjectFile();
+}
+
+Expected<std::unique_ptr<IRObjectFile>>
+MachOUniversalBinary::getIRObjectForArch(StringRef ArchName,
+                                         LLVMContext &Ctx) const {
+  Expected<ObjectForArch> O = getObjectForArch(ArchName);
+  if (!O)
+    return O.takeError();
+  return O->getAsIRObject(Ctx);
+}
+
+Expected<std::unique_ptr<Archive>>
+MachOUniversalBinary::getArchiveForArch(StringRef ArchName) const {
+  Expected<ObjectForArch> O = getObjectForArch(ArchName);
+  if (!O)
+    return O.takeError();
+  return O->getAsArchive();
 }

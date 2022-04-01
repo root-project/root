@@ -7,24 +7,38 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Driver/Types.h"
+#include "clang/Driver/Driver.h"
+#include "clang/Driver/DriverDiagnostic.h"
+#include "clang/Driver/Options.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/Option/Arg.h"
 #include <cassert>
-#include <string.h>
+#include <cstring>
 
 using namespace clang::driver;
 using namespace clang::driver::types;
 
 struct TypeInfo {
   const char *Name;
-  const char *Flags;
   const char *TempSuffix;
   ID PreprocessedType;
+  class PhasesBitSet {
+    unsigned Bits = 0;
+
+  public:
+    constexpr PhasesBitSet(std::initializer_list<phases::ID> Phases) {
+      for (auto Id : Phases)
+        Bits |= 1 << Id;
+    }
+    bool contains(phases::ID Id) const { return Bits & (1 << Id); }
+  } Phases;
 };
 
-static const TypeInfo TypeInfos[] = {
-#define TYPE(NAME, ID, PP_TYPE, TEMP_SUFFIX, FLAGS) \
-  { NAME, FLAGS, TEMP_SUFFIX, TY_##PP_TYPE, },
+static constexpr TypeInfo TypeInfos[] = {
+#define TYPE(NAME, ID, PP_TYPE, TEMP_SUFFIX, ...) \
+  { NAME, TEMP_SUFFIX, TY_##PP_TYPE, { __VA_ARGS__ }, },
 #include "clang/Driver/Types.def"
 #undef TYPE
 };
@@ -40,11 +54,19 @@ const char *types::getTypeName(ID Id) {
 }
 
 types::ID types::getPreprocessedType(ID Id) {
-  return getInfo(Id).PreprocessedType;
+  ID PPT = getInfo(Id).PreprocessedType;
+  assert((getInfo(Id).Phases.contains(phases::Preprocess) !=
+          (PPT == TY_INVALID)) &&
+         "Unexpected Preprocess Type.");
+  return PPT;
+}
+
+static bool isPreprocessedModuleType(ID Id) {
+  return Id == TY_CXXModule || Id == TY_PP_CXXModule;
 }
 
 types::ID types::getPrecompiledType(ID Id) {
-  if (strchr(getInfo(Id).Flags, 'm'))
+  if (isPreprocessedModuleType(Id))
     return TY_ModuleFile;
   if (onlyPrecompileType(Id))
     return TY_PCH;
@@ -68,20 +90,26 @@ const char *types::getTypeTempSuffix(ID Id, bool CLMode) {
   return getInfo(Id).TempSuffix;
 }
 
-bool types::onlyAssembleType(ID Id) {
-  return strchr(getInfo(Id).Flags, 'a');
-}
-
 bool types::onlyPrecompileType(ID Id) {
-  return strchr(getInfo(Id).Flags, 'p');
+  return getInfo(Id).Phases.contains(phases::Precompile) &&
+         !isPreprocessedModuleType(Id);
 }
 
 bool types::canTypeBeUserSpecified(ID Id) {
-  return strchr(getInfo(Id).Flags, 'u');
+  static const clang::driver::types::ID kStaticLangageTypes[] = {
+      TY_CUDA_DEVICE,   TY_HIP_DEVICE,    TY_PP_CHeader,
+      TY_PP_ObjCHeader, TY_PP_CXXHeader,  TY_PP_ObjCXXHeader,
+      TY_PP_CXXModule,  TY_LTO_IR,        TY_LTO_BC,
+      TY_Plist,         TY_RewrittenObjC, TY_RewrittenLegacyObjC,
+      TY_Remap,         TY_PCH,           TY_Object,
+      TY_Image,         TY_dSYM,          TY_Dependencies,
+      TY_CUDA_FATBIN,   TY_HIP_FATBIN};
+  return !llvm::is_contained(kStaticLangageTypes, Id);
 }
 
 bool types::appendSuffixForType(ID Id) {
-  return strchr(getInfo(Id).Flags, 'A');
+  return Id == TY_PCH || Id == TY_dSYM || Id == TY_CUDA_FATBIN ||
+         Id == TY_HIP_FATBIN;
 }
 
 bool types::canLipoType(ID Id) {
@@ -98,7 +126,7 @@ bool types::isAcceptedByClang(ID Id) {
 
   case TY_Asm:
   case TY_C: case TY_PP_C:
-  case TY_CL:
+  case TY_CL: case TY_CLCXX:
   case TY_CUDA: case TY_PP_CUDA:
   case TY_CUDA_DEVICE:
   case TY_HIP:
@@ -113,7 +141,7 @@ bool types::isAcceptedByClang(ID Id) {
   case TY_CXXHeader: case TY_PP_CXXHeader:
   case TY_ObjCXXHeader: case TY_PP_ObjCXXHeader:
   case TY_CXXModule: case TY_PP_CXXModule:
-  case TY_AST: case TY_ModuleFile:
+  case TY_AST: case TY_ModuleFile: case TY_PCH:
   case TY_LLVM_IR: case TY_LLVM_BC:
     return true;
   }
@@ -131,6 +159,8 @@ bool types::isObjC(ID Id) {
     return true;
   }
 }
+
+bool types::isOpenCL(ID Id) { return Id == TY_CL || Id == TY_CLCXX; }
 
 bool types::isCXX(ID Id) {
   switch (Id) {
@@ -187,6 +217,16 @@ bool types::isHIP(ID Id) {
   }
 }
 
+bool types::isFortran(ID Id) {
+  switch (Id) {
+  default:
+    return false;
+
+  case TY_Fortran: case TY_PP_Fortran:
+    return true;
+  }
+}
+
 bool types::isSrcFile(ID Id) {
   return Id != TY_Object && getPreprocessedType(Id) != TY_INVALID;
 }
@@ -209,6 +249,7 @@ types::ID types::lookupTypeForExtension(llvm::StringRef Ext) {
            .Case("cc", TY_CXX)
            .Case("CC", TY_CXX)
            .Case("cl", TY_CL)
+           .Case("clcpp", TY_CLCXX)
            .Case("cp", TY_CXX)
            .Case("cu", TY_CUDA)
            .Case("hh", TY_CXXHeader)
@@ -240,10 +281,12 @@ types::ID types::lookupTypeForExtension(llvm::StringRef Ext) {
            .Case("gch", TY_PCH)
            .Case("hip", TY_HIP)
            .Case("hpp", TY_CXXHeader)
+           .Case("hxx", TY_CXXHeader)
            .Case("iim", TY_PP_CXXModule)
            .Case("lib", TY_Object)
            .Case("mii", TY_PP_ObjCXX)
            .Case("obj", TY_Object)
+           .Case("ifs", TY_IFS)
            .Case("pch", TY_PCH)
            .Case("pcm", TY_ModuleFile)
            .Case("c++m", TY_CXXModule)
@@ -259,35 +302,67 @@ types::ID types::lookupTypeForTypeSpecifier(const char *Name) {
         strcmp(Name, getInfo(Id).Name) == 0)
       return Id;
   }
-
+  // Accept "cu" as an alias for "cuda" for NVCC compatibility
+  if (strcmp(Name, "cu") == 0) {
+    return types::TY_CUDA;
+  }
   return TY_INVALID;
 }
 
-// FIXME: Why don't we just put this list in the defs file, eh.
-void types::getCompilationPhases(ID Id, llvm::SmallVectorImpl<phases::ID> &P) {
-  if (Id != TY_Object) {
-    if (getPreprocessedType(Id) != TY_INVALID) {
-      P.push_back(phases::Preprocess);
-    }
-
-    if (getPrecompiledType(Id) != TY_INVALID) {
-      P.push_back(phases::Precompile);
-    }
-
-    if (!onlyPrecompileType(Id)) {
-      if (!onlyAssembleType(Id)) {
-        P.push_back(phases::Compile);
-        P.push_back(phases::Backend);
-      }
-      P.push_back(phases::Assemble);
-    }
-  }
-
-  if (!onlyPrecompileType(Id)) {
-    P.push_back(phases::Link);
-  }
-  assert(0 < P.size() && "Not enough phases in list");
+llvm::SmallVector<phases::ID, phases::MaxNumberOfPhases>
+types::getCompilationPhases(ID Id, phases::ID LastPhase) {
+  llvm::SmallVector<phases::ID, phases::MaxNumberOfPhases> P;
+  const auto &Info = getInfo(Id);
+  for (int I = 0; I <= LastPhase; ++I)
+    if (Info.Phases.contains(static_cast<phases::ID>(I)))
+      P.push_back(static_cast<phases::ID>(I));
   assert(P.size() <= phases::MaxNumberOfPhases && "Too many phases in list");
+  return P;
+}
+
+llvm::SmallVector<phases::ID, phases::MaxNumberOfPhases>
+types::getCompilationPhases(const clang::driver::Driver &Driver,
+                            llvm::opt::DerivedArgList &DAL, ID Id) {
+  phases::ID LastPhase;
+
+  // Filter to compiler mode. When the compiler is run as a preprocessor then
+  // compilation is not an option.
+  // -S runs the compiler in Assembly listing mode.
+  if (Driver.CCCIsCPP() || DAL.getLastArg(options::OPT_E) ||
+      DAL.getLastArg(options::OPT__SLASH_EP) ||
+      DAL.getLastArg(options::OPT_M, options::OPT_MM) ||
+      DAL.getLastArg(options::OPT__SLASH_P))
+    LastPhase = phases::Preprocess;
+
+  // --precompile only runs up to precompilation.
+  // This is a clang extension and is not compatible with GCC.
+  else if (DAL.getLastArg(options::OPT__precompile))
+    LastPhase = phases::Precompile;
+
+  // -{fsyntax-only,-analyze,emit-ast} only run up to the compiler.
+  else if (DAL.getLastArg(options::OPT_fsyntax_only) ||
+           DAL.getLastArg(options::OPT_print_supported_cpus) ||
+           DAL.getLastArg(options::OPT_module_file_info) ||
+           DAL.getLastArg(options::OPT_verify_pch) ||
+           DAL.getLastArg(options::OPT_rewrite_objc) ||
+           DAL.getLastArg(options::OPT_rewrite_legacy_objc) ||
+           DAL.getLastArg(options::OPT__migrate) ||
+           DAL.getLastArg(options::OPT__analyze) ||
+           DAL.getLastArg(options::OPT_emit_ast))
+    LastPhase = phases::Compile;
+
+  else if (DAL.getLastArg(options::OPT_S) ||
+           DAL.getLastArg(options::OPT_emit_llvm))
+    LastPhase = phases::Backend;
+
+  else if (DAL.getLastArg(options::OPT_c))
+    LastPhase = phases::Assemble;
+
+  // Generally means, do every phase until Link.
+  else
+    LastPhase = phases::LastPhase;
+
+  return types::getCompilationPhases(Id, LastPhase);
 }
 
 ID types::lookupCXXTypeForCType(ID Id) {
@@ -322,6 +397,7 @@ ID types::lookupHeaderTypeForSourceType(ID Id) {
   case types::TY_ObjCXX:
     return types::TY_ObjCXXHeader;
   case types::TY_CL:
+  case types::TY_CLCXX:
     return types::TY_CLHeader;
   }
 }

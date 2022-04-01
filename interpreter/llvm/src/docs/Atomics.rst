@@ -38,7 +38,7 @@ be moved across a volatile load freely, but not an Acquire load.
 
 This document is intended to provide a guide to anyone either writing a frontend
 for LLVM or working on optimization passes for LLVM with a guide for how to deal
-with instructions with special semantics in the presence of concurrency.  This
+with instructions with special semantics in the presence of concurrency. This
 is not intended to be a precise guide to the semantics; the details can get
 extremely complicated and unreadable, and are not usually necessary.
 
@@ -87,8 +87,10 @@ The following is equivalent in non-concurrent situations:
 
 However, LLVM is not allowed to transform the former to the latter: it could
 indirectly introduce undefined behavior if another thread can access ``x`` at
-the same time. (This example is particularly of interest because before the
-concurrency model was implemented, LLVM would perform this transformation.)
+the same time. That thread would read `undef` instead of the value it was
+expecting, which can lead to undefined behavior down the line. (This example is
+particularly of interest because before the concurrency model was implemented,
+LLVM would perform this transformation.)
 
 Note that speculative loads are allowed; a load which is part of a race returns
 ``undef``, but does not have undefined behavior.
@@ -290,7 +292,7 @@ Notes for frontends
 Notes for optimizers
   Optimizers not aware of atomics can treat this like a nothrow call.  It is
   also possible to move loads from after a Release store or read-modify-write
-  operation to before it, and move non-Release stores from after an Release
+  operation to before it, and move non-Release stores from after a Release
   operation to before it.
 
 Notes for code generation
@@ -560,7 +562,7 @@ various reasons, it is not practical to emit the instructions inline.
 
 There's two typical examples of this.
 
-Some CPUs support multiple instruction sets which can be swiched back and forth
+Some CPUs support multiple instruction sets which can be switched back and forth
 on function-call boundaries. For example, MIPS supports the MIPS16 ISA, which
 has a smaller instruction encoding than the usual MIPS32 ISA. ARM, similarly,
 has the Thumb ISA. In MIPS16 and earlier versions of Thumb, the atomic
@@ -619,3 +621,23 @@ fence on either side of a normal load or store.)
 There's also, somewhat separately, the possibility to lower ``ATOMIC_FENCE`` to
 ``__sync_synchronize()``. This may happen or not happen independent of all the
 above, controlled purely by ``setOperationAction(ISD::ATOMIC_FENCE, ...)``.
+
+On AArch64, a variant of the __sync_* routines is used which contain the memory
+order as part of the function name. These routines may determine at runtime
+whether the single-instruction atomic operations which were introduced as part
+of AArch64 Large System Extensions "LSE" instruction set are available, or if
+it needs to fall back to an LL/SC loop. The following helper functions are
+implemented in both ``compiler-rt`` and ``libgcc`` libraries
+(``N`` is one of 1, 2, 4, 8, and ``M`` is one of 1, 2, 4, 8 and 16, and
+``ORDER`` is one of 'relax', 'acq', 'rel', 'acq_rel')::
+
+  iM __aarch64_casM_ORDER(iM expected, iM desired, iM *ptr)
+  iN __aarch64_swpN_ORDER(iN val, iN *ptr)
+  iN __aarch64_ldaddN_ORDER(iN val, iN *ptr)
+  iN __aarch64_ldclrN_ORDER(iN val, iN *ptr)
+  iN __aarch64_ldeorN_ORDER(iN val, iN *ptr)
+  iN __aarch64_ldsetN_ORDER(iN val, iN *ptr)
+
+Please note, if LSE instruction set is specified for AArch64 target then
+out-of-line atomics calls are not generated and single-instruction atomic
+operations are used in place.

@@ -8,11 +8,6 @@ set(LLVM_LINK_COMPONENTS
   Support
   )
 
-set(optional_deps intrinsics_gen)
-if (CLANG_BUILT_STANDALONE)
-  set(optional_deps)
-endif()
-
 add_clang_library(clangFrontend
   ASTConsumers.cpp
   ASTMerge.cpp
@@ -28,11 +23,9 @@ add_clang_library(clangFrontend
   FrontendAction.cpp
   FrontendActions.cpp
   FrontendOptions.cpp
-  FrontendTiming.cpp
   HeaderIncludeGen.cpp
   InitHeaderSearch.cpp
   InitPreprocessor.cpp
-  LangStandards.cpp
   LayoutOverrideSource.cpp
   LogDiagnosticPrinter.cpp
   ModuleDependencyCollector.cpp
@@ -50,7 +43,7 @@ add_clang_library(clangFrontend
 
   DEPENDS
   ClangDriverOptions
-  ${optional_deps}
+  intrinsics_gen
 
   LINK_LIBS
   clangAST

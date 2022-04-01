@@ -56,7 +56,8 @@ private:
 public:
   RuntimeDyldCOFFX86_64(RuntimeDyld::MemoryManager &MM,
                         JITSymbolResolver &Resolver)
-    : RuntimeDyldCOFF(MM, Resolver), ImageBase(0) {}
+      : RuntimeDyldCOFF(MM, Resolver, 8, COFF::IMAGE_REL_AMD64_ADDR64),
+        ImageBase(0) {}
 
   unsigned getStubAlignment() override { return 1; }
 
@@ -112,11 +113,10 @@ public:
       // The MemoryManager can make sure this is always true by forcing the
       // memory layout to be: CodeSection < ReadOnlySection < ReadWriteSection.
       const uint64_t ImageBase = getImageBase();
-      if (Value < ImageBase || ((Value - ImageBase) > UINT32_MAX)) {
-        llvm::errs() << "IMAGE_REL_AMD64_ADDR32NB relocation requires an"
-                     << "ordered section layout.\n";
-        write32BitOffset(Target, 0, 0);
-      } else {
+      if (Value < ImageBase || ((Value - ImageBase) > UINT32_MAX))
+        report_fatal_error("IMAGE_REL_AMD64_ADDR32NB relocation requires an "
+                           "ordered section layout");
+      else {
         write32BitOffset(Target, RE.Addend, Value - ImageBase);
       }
       break;
@@ -202,7 +202,7 @@ public:
       return SectionOrError.takeError();
     object::section_iterator SecI = *SectionOrError;
     // If there is no section, this must be an external reference.
-    const bool IsExtern = SecI == Obj.section_end();
+    bool IsExtern = SecI == Obj.section_end();
 
     // Determine the Addend used to adjust the relocation value.
     uint64_t RelType = RelI->getType();
@@ -214,7 +214,25 @@ public:
     Expected<StringRef> TargetNameOrErr = Symbol->getName();
     if (!TargetNameOrErr)
       return TargetNameOrErr.takeError();
+
     StringRef TargetName = *TargetNameOrErr;
+    unsigned TargetSectionID = 0;
+    uint64_t TargetOffset = 0;
+
+    if (TargetName.startswith(getImportSymbolPrefix())) {
+      assert(IsExtern && "DLLImport not marked extern?");
+      TargetSectionID = SectionID;
+      TargetOffset = getDLLImportOffset(SectionID, Stubs, TargetName);
+      TargetName = StringRef();
+      IsExtern = false;
+    } else if (!IsExtern) {
+      if (auto TargetSectionIDOrErr =
+              findOrEmitSection(Obj, *SecI, SecI->isText(), ObjSectionToID))
+        TargetSectionID = *TargetSectionIDOrErr;
+      else
+        return TargetSectionIDOrErr.takeError();
+      TargetOffset = getSymbolOffset(*Symbol);
+    }
 
     switch (RelType) {
 
@@ -253,14 +271,6 @@ public:
       RelocationEntry RE(SectionID, Offset, RelType, Addend);
       addRelocationForSymbol(RE, TargetName);
     } else {
-      bool IsCode = SecI->isText();
-      unsigned TargetSectionID;
-      if (auto TargetSectionIDOrErr =
-          findOrEmitSection(Obj, *SecI, IsCode, ObjSectionToID))
-        TargetSectionID = *TargetSectionIDOrErr;
-      else
-        return TargetSectionIDOrErr.takeError();
-      uint64_t TargetOffset = getSymbolOffset(*Symbol);
       RelocationEntry RE(SectionID, Offset, RelType, TargetOffset + Addend);
       addRelocationForSection(RE, TargetSectionID);
     }
@@ -284,14 +294,14 @@ public:
     // Look for and record the EH frame section IDs.
     for (const auto &SectionPair : SectionMap) {
       const object::SectionRef &Section = SectionPair.first;
-      StringRef Name;
-      if (auto EC = Section.getName(Name))
-        return errorCodeToError(EC);
+      Expected<StringRef> NameOrErr = Section.getName();
+      if (!NameOrErr)
+        return NameOrErr.takeError();
 
       // Note unwind info is stored in .pdata but often points to .xdata
       // with an IMAGE_REL_AMD64_ADDR32NB relocation. Using a memory manager
       // that keeps sections ordered in relation to __ImageBase is necessary.
-      if (Name == ".pdata")
+      if ((*NameOrErr) == ".pdata")
         UnregisteredEHFrameSections.push_back(SectionPair.second);
     }
     return Error::success();

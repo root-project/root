@@ -9,13 +9,7 @@
 #ifndef LLVM_MC_MCOBJECTWRITER_H
 #define LLVM_MC_MCOBJECTWRITER_H
 
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Triple.h"
-#include "llvm/Support/Endian.h"
-#include "llvm/Support/EndianStream.h"
-#include "llvm/Support/raw_ostream.h"
-#include <cassert>
 #include <cstdint>
 
 namespace llvm {
@@ -90,6 +84,9 @@ public:
                                                       const MCFragment &FB,
                                                       bool InSet,
                                                       bool IsPCRel) const;
+
+  /// ELF only. Mark that we have seen GNU ABI usage (e.g. SHF_GNU_RETAIN).
+  virtual void markGnuAbi() {}
 
   /// Tell the object writer to emit an address-significance table during
   /// writeObject(). If this function is not called, all symbols are treated as

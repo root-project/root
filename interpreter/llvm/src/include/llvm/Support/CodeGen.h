@@ -57,10 +57,17 @@ namespace llvm {
     };
   }
 
-  // Specify effect of frame pointer elimination optimization.
-  namespace FramePointer {
-    enum FP {All, NonLeaf, None};
-  }
+  /// These enums are meant to be passed into addPassesToEmitFile to indicate
+  /// what type of file to emit, and returned by it to indicate what type of
+  /// file could actually be made.
+  enum CodeGenFileType {
+    CGFT_AssemblyFile,
+    CGFT_ObjectFile,
+    CGFT_Null         // Do not emit any output.
+  };
+
+  // Specify what functions should keep the frame pointer.
+  enum class FramePointerKind { None, NonLeaf, All };
 
 }  // end llvm namespace
 

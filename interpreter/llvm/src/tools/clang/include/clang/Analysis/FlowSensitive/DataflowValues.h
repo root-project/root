@@ -19,13 +19,14 @@
 #include "clang/Analysis/ProgramPoint.h"
 #include "llvm/ADT/DenseMap.h"
 
+namespace clang {
+
 //===----------------------------------------------------------------------===//
 /// Dataflow Directional Tag Classes.  These are used for tag dispatching
 ///  within the dataflow solver/transfer functions to determine what direction
 ///  a dataflow analysis flows.
 //===----------------------------------------------------------------------===//
 
-namespace clang {
 namespace dataflow {
   struct forward_analysis_tag {};
   struct backward_analysis_tag {};
@@ -168,4 +169,4 @@ protected:
 };
 
 } // end namespace clang
-#endif
+#endif // LLVM_CLANG_ANALYSES_DATAFLOW_VALUES

@@ -1,4 +1,4 @@
-add_llvm_library(LLVMFuzzMutate
+add_llvm_component_library(LLVMFuzzMutate
   FuzzerCLI.cpp
   IRMutator.cpp
   OpDescriptor.cpp
@@ -10,4 +10,13 @@ add_llvm_library(LLVMFuzzMutate
 
   DEPENDS
   intrinsics_gen
+
+  LINK_COMPONENTS
+  Analysis
+  BitReader
+  BitWriter
+  Core
+  Scalar
+  Support
+  Target
   )

@@ -1,4 +1,4 @@
-add_llvm_library(LLVMCodeGen
+add_llvm_component_library(LLVMCodeGen
   AggressiveAntiDepBreaker.cpp
   AllocationOrder.cpp
   Analysis.cpp
@@ -7,12 +7,15 @@ add_llvm_library(LLVMCodeGen
   BranchFolding.cpp
   BranchRelaxation.cpp
   BreakFalseDeps.cpp
-  BuiltinGCs.cpp
+  BasicBlockSections.cpp
   CalcSpillWeights.cpp
   CallingConvLower.cpp
+  CFGuardLongjmp.cpp
   CFIInstrInserter.cpp
   CodeGen.cpp
+  CodeGenPassBuilder.cpp
   CodeGenPrepare.cpp
+  CommandFlags.cpp
   CriticalAntiDepBreaker.cpp
   DeadMachineInstructionElim.cpp
   DetectDeadLanes.cpp
@@ -20,18 +23,20 @@ add_llvm_library(LLVMCodeGen
   DwarfEHPrepare.cpp
   EarlyIfConversion.cpp
   EdgeBundles.cpp
+  EHContGuardCatchret.cpp
   ExecutionDomainFix.cpp
   ExpandMemCmp.cpp
   ExpandPostRAPseudos.cpp
   ExpandReductions.cpp
+  ExpandVectorPredication.cpp
   FaultMaps.cpp
   FEntryInserter.cpp
   FinalizeISel.cpp
+  FixupStatepointCallerSaved.cpp
   FuncletLayout.cpp
   GCMetadata.cpp
   GCMetadataPrinter.cpp
   GCRootLowering.cpp
-  GCStrategy.cpp
   GlobalMerge.cpp
   HardwareLoops.cpp
   IfConversion.cpp
@@ -45,13 +50,13 @@ add_llvm_library(LLVMCodeGen
   LatencyPriorityQueue.cpp
   LazyMachineBlockFrequencyInfo.cpp
   LexicalScopes.cpp
-  LiveDebugValues.cpp
   LiveDebugVariables.cpp
   LiveIntervals.cpp
   LiveInterval.cpp
   LiveIntervalUnion.cpp
   LivePhysRegs.cpp
   LiveRangeCalc.cpp
+  LiveIntervalCalc.cpp
   LiveRangeEdit.cpp
   LiveRangeShrink.cpp
   LiveRegMatrix.cpp
@@ -70,34 +75,48 @@ add_llvm_library(LLVMCodeGen
   MachineCombiner.cpp
   MachineCopyPropagation.cpp
   MachineCSE.cpp
+  MachineCheckDebugify.cpp
+  MachineDebugify.cpp
   MachineDominanceFrontier.cpp
   MachineDominators.cpp
   MachineFrameInfo.cpp
   MachineFunction.cpp
   MachineFunctionPass.cpp
   MachineFunctionPrinterPass.cpp
+  MachineFunctionSplitter.cpp
   MachineInstrBundle.cpp
   MachineInstr.cpp
   MachineLICM.cpp
   MachineLoopInfo.cpp
+  MachineLoopUtils.cpp
   MachineModuleInfo.cpp
   MachineModuleInfoImpls.cpp
+  MachineModuleSlotTracker.cpp
   MachineOperand.cpp
   MachineOptimizationRemarkEmitter.cpp
   MachineOutliner.cpp
+  MachinePassManager.cpp
   MachinePipeliner.cpp
   MachinePostDominators.cpp
   MachineRegionInfo.cpp
   MachineRegisterInfo.cpp
   MachineScheduler.cpp
   MachineSink.cpp
+  MachineSizeOpts.cpp
   MachineSSAUpdater.cpp
+  MachineStripDebug.cpp
   MachineTraceMetrics.cpp
   MachineVerifier.cpp
+  MIRFSDiscriminator.cpp
+  MIRYamlMapping.cpp
+  ModuloSchedule.cpp
+  MultiHazardRecognizer.cpp
   PatchableFunction.cpp
+  MBFIWrapper.cpp
   MIRPrinter.cpp
   MIRPrintingPass.cpp
   MacroFusion.cpp
+  NonRelocatableStringpool.cpp
   OptimizePHIs.cpp
   ParallelCG.cpp
   PeepholeOptimizer.cpp
@@ -108,7 +127,11 @@ add_llvm_library(LLVMCodeGen
   PreISelIntrinsicLowering.cpp
   ProcessImplicitDefs.cpp
   PrologEpilogInserter.cpp
+  PseudoProbeInserter.cpp
   PseudoSourceValue.cpp
+  RDFGraph.cpp
+  RDFLiveness.cpp
+  RDFRegisters.cpp
   ReachingDefAnalysis.cpp
   RegAllocBase.cpp
   RegAllocBasic.cpp
@@ -119,16 +142,19 @@ add_llvm_library(LLVMCodeGen
   RegisterCoalescer.cpp
   RegisterPressure.cpp
   RegisterScavenging.cpp
+  RemoveRedundantDebugValues.cpp
   RenameIndependentSubregs.cpp
+  MachineStableHash.cpp
+  MIRVRegNamerUtils.cpp
+  MIRNamerPass.cpp
   MIRCanonicalizerPass.cpp
   RegisterUsageInfo.cpp
   RegUsageInfoCollector.cpp
   RegUsageInfoPropagate.cpp
+  ReplaceWithVeclib.cpp
   ResetMachineFunctionPass.cpp
   SafeStack.cpp
-  SafeStackColoring.cpp
   SafeStackLayout.cpp
-  ScalarizeMaskedMemIntrin.cpp
   ScheduleDAG.cpp
   ScheduleDAGInstrs.cpp
   ScheduleDAGPrinter.cpp
@@ -157,6 +183,7 @@ add_llvm_library(LLVMCodeGen
   TargetRegisterInfo.cpp
   TargetSchedule.cpp
   TargetSubtargetInfo.cpp
+  TypePromotion.cpp
   TwoAddressInstructionPass.cpp
   UnreachableBlockElim.cpp
   ValueTypes.cpp
@@ -164,6 +191,10 @@ add_llvm_library(LLVMCodeGen
   WasmEHPrepare.cpp
   WinEHPrepare.cpp
   XRayInstrumentation.cpp
+
+  LiveDebugValues/LiveDebugValues.cpp
+  LiveDebugValues/VarLocBasedImpl.cpp
+  LiveDebugValues/InstrRefBasedImpl.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${LLVM_MAIN_INCLUDE_DIR}/llvm/CodeGen
@@ -173,6 +204,18 @@ add_llvm_library(LLVMCodeGen
 
   DEPENDS
   intrinsics_gen
+
+  LINK_COMPONENTS
+  Analysis
+  BitReader
+  BitWriter
+  Core
+  MC
+  ProfileData
+  Scalar
+  Support
+  Target
+  TransformUtils
   )
 
 add_subdirectory(SelectionDAG)

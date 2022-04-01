@@ -52,7 +52,7 @@ void TaintTesterChecker::checkPostStmt(const Expr *E,
   if (isTainted(State, E, C.getLocationContext())) {
     if (ExplodedNode *N = C.generateNonFatalErrorNode()) {
       initBugType();
-      auto report = llvm::make_unique<BugReport>(*BT, "tainted",N);
+      auto report = std::make_unique<PathSensitiveBugReport>(*BT, "tainted", N);
       report->addRange(E->getSourceRange());
       C.emitReport(std::move(report));
     }
@@ -63,6 +63,6 @@ void ento::registerTaintTesterChecker(CheckerManager &mgr) {
   mgr.registerChecker<TaintTesterChecker>();
 }
 
-bool ento::shouldRegisterTaintTesterChecker(const LangOptions &LO) {
+bool ento::shouldRegisterTaintTesterChecker(const CheckerManager &mgr) {
   return true;
 }

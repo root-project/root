@@ -18,10 +18,7 @@
 #include "llvm/DebugInfo/CodeView/TypeHashing.h"
 #include "llvm/DebugInfo/CodeView/TypeIndex.h"
 #include "llvm/Support/Allocator.h"
-#include <cassert>
 #include <cstdint>
-#include <memory>
-#include <vector>
 
 namespace llvm {
 namespace codeview {
@@ -47,7 +44,7 @@ public:
   explicit MergingTypeTableBuilder(BumpPtrAllocator &Storage);
   ~MergingTypeTableBuilder();
 
-  // TypeTableCollection overrides
+  // TypeCollection overrides
   Optional<TypeIndex> getFirst() override;
   Optional<TypeIndex> getNext(TypeIndex Prev) override;
   CVType getType(TypeIndex Index) override;
@@ -55,6 +52,7 @@ public:
   bool contains(TypeIndex Index) override;
   uint32_t size() override;
   uint32_t capacity() override;
+  bool replaceType(TypeIndex &Index, CVType Data, bool Stabilize) override;
 
   // public interface
   void reset();

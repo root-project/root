@@ -13,6 +13,7 @@
 
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
+#include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/CodeGen/TargetRegisterInfo.h"
@@ -32,7 +33,6 @@ CCState::CCState(CallingConv::ID CC, bool isVarArg, MachineFunction &mf,
       TRI(*MF.getSubtarget().getRegisterInfo()), Locs(locs), Context(C) {
   // No stack is used.
   StackOffset = 0;
-  MaxStackArgAlign = 1;
 
   clearByValRegsInfo();
   UsedRegs.resize((TRI.getNumRegs()+31)/32);
@@ -41,30 +41,34 @@ CCState::CCState(CallingConv::ID CC, bool isVarArg, MachineFunction &mf,
 /// Allocate space on the stack large enough to pass an argument by value.
 /// The size and alignment information of the argument is encoded in
 /// its parameter attribute.
-void CCState::HandleByVal(unsigned ValNo, MVT ValVT,
-                          MVT LocVT, CCValAssign::LocInfo LocInfo,
-                          int MinSize, int MinAlign,
-                          ISD::ArgFlagsTy ArgFlags) {
-  unsigned Align = ArgFlags.getByValAlign();
+void CCState::HandleByVal(unsigned ValNo, MVT ValVT, MVT LocVT,
+                          CCValAssign::LocInfo LocInfo, int MinSize,
+                          Align MinAlign, ISD::ArgFlagsTy ArgFlags) {
+  Align Alignment = ArgFlags.getNonZeroByValAlign();
   unsigned Size  = ArgFlags.getByValSize();
   if (MinSize > (int)Size)
     Size = MinSize;
-  if (MinAlign > (int)Align)
-    Align = MinAlign;
-  ensureMaxAlignment(Align);
-  MF.getSubtarget().getTargetLowering()->HandleByVal(this, Size, Align);
+  if (MinAlign > Alignment)
+    Alignment = MinAlign;
+  ensureMaxAlignment(Alignment);
+  MF.getSubtarget().getTargetLowering()->HandleByVal(this, Size, Alignment);
   Size = unsigned(alignTo(Size, MinAlign));
-  unsigned Offset = AllocateStack(Size, Align);
+  unsigned Offset = AllocateStack(Size, Alignment);
   addLoc(CCValAssign::getMem(ValNo, ValVT, Offset, LocVT, LocInfo));
 }
 
 /// Mark a register and all of its aliases as allocated.
-void CCState::MarkAllocated(unsigned Reg) {
+void CCState::MarkAllocated(MCPhysReg Reg) {
   for (MCRegAliasIterator AI(Reg, &TRI, true); AI.isValid(); ++AI)
-    UsedRegs[*AI/32] |= 1 << (*AI&31);
+    UsedRegs[*AI / 32] |= 1 << (*AI & 31);
 }
 
-bool CCState::IsShadowAllocatedReg(unsigned Reg) const {
+void CCState::MarkUnallocated(MCPhysReg Reg) {
+  for (MCRegAliasIterator AI(Reg, &TRI, true); AI.isValid(); ++AI)
+    UsedRegs[*AI / 32] &= ~(1 << (*AI & 31));
+}
+
+bool CCState::IsShadowAllocatedReg(MCRegister Reg) const {
   if (!isAllocated(Reg))
     return false;
 
@@ -90,13 +94,8 @@ CCState::AnalyzeFormalArguments(const SmallVectorImpl<ISD::InputArg> &Ins,
   for (unsigned i = 0; i != NumArgs; ++i) {
     MVT ArgVT = Ins[i].VT;
     ISD::ArgFlagsTy ArgFlags = Ins[i].Flags;
-    if (Fn(i, ArgVT, ArgVT, CCValAssign::Full, ArgFlags, *this)) {
-#ifndef NDEBUG
-      dbgs() << "Formal argument #" << i << " has unhandled type "
-             << EVT(ArgVT).getEVTString() << '\n';
-#endif
-      llvm_unreachable(nullptr);
-    }
+    if (Fn(i, ArgVT, ArgVT, CCValAssign::Full, ArgFlags, *this))
+      report_fatal_error("unable to allocate function argument #" + Twine(i));
   }
 }
 
@@ -122,13 +121,8 @@ void CCState::AnalyzeReturn(const SmallVectorImpl<ISD::OutputArg> &Outs,
   for (unsigned i = 0, e = Outs.size(); i != e; ++i) {
     MVT VT = Outs[i].VT;
     ISD::ArgFlagsTy ArgFlags = Outs[i].Flags;
-    if (Fn(i, VT, VT, CCValAssign::Full, ArgFlags, *this)) {
-#ifndef NDEBUG
-      dbgs() << "Return operand #" << i << " has unhandled type "
-             << EVT(VT).getEVTString() << '\n';
-#endif
-      llvm_unreachable(nullptr);
-    }
+    if (Fn(i, VT, VT, CCValAssign::Full, ArgFlags, *this))
+      report_fatal_error("unable to allocate function return #" + Twine(i));
   }
 }
 
@@ -196,20 +190,23 @@ void CCState::AnalyzeCallResult(MVT VT, CCAssignFn Fn) {
   }
 }
 
+void CCState::ensureMaxAlignment(Align Alignment) {
+  if (!AnalyzingMustTailForwardedRegs)
+    MF.getFrameInfo().ensureMaxAlignment(Alignment);
+}
+
 static bool isValueTypeInRegForCC(CallingConv::ID CC, MVT VT) {
   if (VT.isVector())
     return true; // Assume -msse-regparm might be in effect.
   if (!VT.isInteger())
     return false;
-  if (CC == CallingConv::X86_VectorCall || CC == CallingConv::X86_FastCall)
-    return true;
-  return false;
+  return (CC == CallingConv::X86_VectorCall || CC == CallingConv::X86_FastCall);
 }
 
 void CCState::getRemainingRegParmsForType(SmallVectorImpl<MCPhysReg> &Regs,
                                           MVT VT, CCAssignFn Fn) {
   unsigned SavedStackOffset = StackOffset;
-  unsigned SavedMaxStackArgAlign = MaxStackArgAlign;
+  Align SavedMaxStackArgAlign = MaxStackArgAlign;
   unsigned NumLocs = Locs.size();
 
   // Set the 'inreg' flag if it is used for this calling convention.
@@ -219,8 +216,8 @@ void CCState::getRemainingRegParmsForType(SmallVectorImpl<MCPhysReg> &Regs,
 
   // Allocate something of this value type repeatedly until we get assigned a
   // location in memory.
-  bool HaveRegParm = true;
-  while (HaveRegParm) {
+  bool HaveRegParm;
+  do {
     if (Fn(0, VT, VT, CCValAssign::Full, Flags, *this)) {
 #ifndef NDEBUG
       dbgs() << "Call has unhandled type " << EVT(VT).getEVTString()
@@ -229,7 +226,7 @@ void CCState::getRemainingRegParmsForType(SmallVectorImpl<MCPhysReg> &Regs,
       llvm_unreachable(nullptr);
     }
     HaveRegParm = Locs.back().isRegLoc();
-  }
+  } while (HaveRegParm);
 
   // Copy all the registers from the value locations we added.
   assert(NumLocs < Locs.size() && "CC assignment failed to add location");
@@ -260,7 +257,7 @@ void CCState::analyzeMustTailForwardedRegisters(
     const TargetLowering *TL = MF.getSubtarget().getTargetLowering();
     const TargetRegisterClass *RC = TL->getRegClassFor(RegVT);
     for (MCPhysReg PReg : RemainingRegs) {
-      unsigned VReg = MF.addLiveIn(PReg, RC);
+      Register VReg = MF.addLiveIn(PReg, RC);
       Forwards.push_back(ForwardedRegister(VReg, PReg, RegVT));
     }
   }
@@ -286,18 +283,14 @@ bool CCState::resultsCompatible(CallingConv::ID CalleeCC,
   for (unsigned I = 0, E = RVLocs1.size(); I != E; ++I) {
     const CCValAssign &Loc1 = RVLocs1[I];
     const CCValAssign &Loc2 = RVLocs2[I];
-    if (Loc1.getLocInfo() != Loc2.getLocInfo())
+
+    if ( // Must both be in registers, or both in memory
+        Loc1.isRegLoc() != Loc2.isRegLoc() ||
+        // Must fill the same part of their locations
+        Loc1.getLocInfo() != Loc2.getLocInfo() ||
+        // Memory offset/register number must be the same
+        Loc1.getExtraInfo() != Loc2.getExtraInfo())
       return false;
-    bool RegLoc1 = Loc1.isRegLoc();
-    if (RegLoc1 != Loc2.isRegLoc())
-      return false;
-    if (RegLoc1) {
-      if (Loc1.getLocReg() != Loc2.getLocReg())
-        return false;
-    } else {
-      if (Loc1.getLocMemOffset() != Loc2.getLocMemOffset())
-        return false;
-    }
   }
   return true;
 }

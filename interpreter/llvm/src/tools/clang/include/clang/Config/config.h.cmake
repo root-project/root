@@ -35,6 +35,9 @@
 /* Default architecture for OpenMP offloading to Nvidia GPUs. */
 #define CLANG_OPENMP_NVPTX_DEFAULT_ARCH "${CLANG_OPENMP_NVPTX_DEFAULT_ARCH}"
 
+/* Default architecture for SystemZ. */
+#define CLANG_SYSTEMZ_DEFAULT_ARCH "${CLANG_SYSTEMZ_DEFAULT_ARCH}"
+
 /* Multilib suffix for libdir. */
 #define CLANG_LIBDIR_SUFFIX "${CLANG_LIBDIR_SUFFIX}"
 
@@ -72,12 +75,12 @@
 /* enable x86 relax relocations by default */
 #cmakedefine01 ENABLE_X86_RELAX_RELOCATIONS
 
-/* Enable the experimental new pass manager by default */
-#cmakedefine01 ENABLE_EXPERIMENTAL_NEW_PASS_MANAGER
-
 /* Enable each functionality of modules */
 #cmakedefine01 CLANG_ENABLE_ARCMT
 #cmakedefine01 CLANG_ENABLE_OBJC_REWRITER
 #cmakedefine01 CLANG_ENABLE_STATIC_ANALYZER
+
+/* Spawn a new process clang.exe for the CC1 tool invocation, when necessary */
+#cmakedefine01 CLANG_SPAWN_CC1
 
 #endif

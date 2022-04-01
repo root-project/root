@@ -9,8 +9,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "llvm/Transforms/Instrumentation/InstrOrderFile.h"
 #include "llvm/ADT/Statistic.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/GlobalValue.h"
@@ -19,6 +19,7 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/PassRegistry.h"
 #include "llvm/ProfileData/InstrProf.h"
@@ -28,7 +29,6 @@
 #include "llvm/Support/Path.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Instrumentation.h"
-#include "llvm/Transforms/Instrumentation/InstrOrderFile.h"
 #include <fstream>
 #include <map>
 #include <mutex>
@@ -100,7 +100,8 @@ public:
     if (!ClOrderFileWriteMapping.empty()) {
       std::lock_guard<std::mutex> LogLock(MappingMutex);
       std::error_code EC;
-      llvm::raw_fd_ostream OS(ClOrderFileWriteMapping, EC, llvm::sys::fs::F_Append);
+      llvm::raw_fd_ostream OS(ClOrderFileWriteMapping, EC,
+                              llvm::sys::fs::OF_Append);
       if (EC) {
         report_fatal_error(Twine("Failed to open ") + ClOrderFileWriteMapping +
                            " to save mapping file for order file instrumentation\n");
@@ -143,7 +144,7 @@ public:
     // Fill up UpdateOrderFileBB: grab the index, update the buffer!
     Value *IdxVal = updateB.CreateAtomicRMW(
         AtomicRMWInst::Add, BufferIdx, ConstantInt::get(Int32Ty, 1),
-        AtomicOrdering::SequentiallyConsistent);
+        MaybeAlign(), AtomicOrdering::SequentiallyConsistent);
     // We need to wrap around the index to fit it inside the buffer.
     Value *WrappedIdx = updateB.CreateAnd(
         IdxVal, ConstantInt::get(Int32Ty, INSTR_ORDER_FILE_BUFFER_MASK));

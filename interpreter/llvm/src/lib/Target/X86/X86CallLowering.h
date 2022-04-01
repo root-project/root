@@ -14,12 +14,12 @@
 #ifndef LLVM_LIB_TARGET_X86_X86CALLLOWERING_H
 #define LLVM_LIB_TARGET_X86_X86CALLLOWERING_H
 
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/CodeGen/GlobalISel/CallLowering.h"
 #include <functional>
 
 namespace llvm {
 
+template <typename T> class ArrayRef;
 class DataLayout;
 class MachineRegisterInfo;
 class X86TargetLowering;
@@ -29,23 +29,15 @@ public:
   X86CallLowering(const X86TargetLowering &TLI);
 
   bool lowerReturn(MachineIRBuilder &MIRBuilder, const Value *Val,
-                   ArrayRef<Register> VRegs) const override;
+                   ArrayRef<Register> VRegs,
+                   FunctionLoweringInfo &FLI) const override;
 
   bool lowerFormalArguments(MachineIRBuilder &MIRBuilder, const Function &F,
-                            ArrayRef<ArrayRef<Register>> VRegs) const override;
+                            ArrayRef<ArrayRef<Register>> VRegs,
+                            FunctionLoweringInfo &FLI) const override;
 
-  bool lowerCall(MachineIRBuilder &MIRBuilder, CallingConv::ID CallConv,
-                 const MachineOperand &Callee, const ArgInfo &OrigRet,
-                 ArrayRef<ArgInfo> OrigArgs) const override;
-
-private:
-  /// A function of this type is used to perform value split action.
-  using SplitArgTy = std::function<void(ArrayRef<Register>)>;
-
-  bool splitToValueTypes(const ArgInfo &OrigArgInfo,
-                         SmallVectorImpl<ArgInfo> &SplitArgs,
-                         const DataLayout &DL, MachineRegisterInfo &MRI,
-                         SplitArgTy SplitArg) const;
+  bool lowerCall(MachineIRBuilder &MIRBuilder,
+                 CallLoweringInfo &Info) const override;
 };
 
 } // end namespace llvm

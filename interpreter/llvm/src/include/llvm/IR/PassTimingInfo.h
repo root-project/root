@@ -17,11 +17,13 @@
 
 #include "llvm/ADT/Any.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Timer.h"
-#include "llvm/Support/TypeName.h"
 #include <memory>
+#include <utility>
+
 namespace llvm {
 
 class Pass;
@@ -35,11 +37,6 @@ void reportAndResetTimings(raw_ostream *OutStream = nullptr);
 
 /// Request the timer for this legacy-pass-manager's pass instance.
 Timer *getPassTimer(Pass *);
-
-/// If the user specifies the -time-passes argument on an LLVM tool command line
-/// then the value of this boolean will be true, otherwise false.
-/// This is the storage for the -time-passes option.
-extern bool TimePassesIsEnabled;
 
 /// This class implements -time-passes functionality for new pass manager.
 /// It provides the pass-instrumentation callbacks that measure the pass
@@ -55,11 +52,9 @@ class TimePassesHandler {
   /// A group of all pass-timing timers.
   TimerGroup TG;
 
+  using TimerVector = llvm::SmallVector<std::unique_ptr<Timer>, 4>;
   /// Map of timers for pass invocations
-  DenseMap<PassInvocationID, std::unique_ptr<Timer>> TimingData;
-
-  /// Map that counts invocations of passes, for use in UniqPassID construction.
-  StringMap<unsigned> PassIDCountMap;
+  StringMap<TimerVector> TimingData;
 
   /// Stack of currently active timers.
   SmallVector<Timer *, 8> TimerStack;
@@ -70,9 +65,11 @@ class TimePassesHandler {
   raw_ostream *OutStream = nullptr;
 
   bool Enabled;
+  bool PerRun;
 
 public:
-  TimePassesHandler(bool Enabled = TimePassesIsEnabled);
+  TimePassesHandler();
+  TimePassesHandler(bool Enabled, bool PerRun = false);
 
   /// Destructor handles the print action if it has not been handled before.
   ~TimePassesHandler() { print(); }
@@ -96,14 +93,11 @@ private:
   /// Returns the new timer for each new run of the pass.
   Timer &getPassTimer(StringRef PassID);
 
-  /// Returns the incremented counter for the next invocation of \p PassID.
-  unsigned nextPassID(StringRef PassID) { return ++PassIDCountMap[PassID]; }
-
   void startTimer(StringRef PassID);
   void stopTimer(StringRef PassID);
 
   // Implementation of pass instrumentation callbacks.
-  bool runBeforePass(StringRef PassID);
+  void runBeforePass(StringRef PassID);
   void runAfterPass(StringRef PassID);
 };
 

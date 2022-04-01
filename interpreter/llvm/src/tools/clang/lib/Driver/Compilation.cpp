@@ -76,16 +76,29 @@ Compilation::getArgsForToolChain(const ToolChain *TC, StringRef BoundArch,
           *TranslatedArgs, SameTripleAsHost, AllocatedArgs);
     }
 
+    DerivedArgList *NewDAL = nullptr;
     if (!OpenMPArgs) {
+      NewDAL = TC->TranslateXarchArgs(*TranslatedArgs, BoundArch,
+                                      DeviceOffloadKind, &AllocatedArgs);
+    } else {
+      NewDAL = TC->TranslateXarchArgs(*OpenMPArgs, BoundArch, DeviceOffloadKind,
+                                      &AllocatedArgs);
+      if (!NewDAL)
+        NewDAL = OpenMPArgs;
+      else
+        delete OpenMPArgs;
+    }
+
+    if (!NewDAL) {
       Entry = TC->TranslateArgs(*TranslatedArgs, BoundArch, DeviceOffloadKind);
       if (!Entry)
         Entry = TranslatedArgs;
     } else {
-      Entry = TC->TranslateArgs(*OpenMPArgs, BoundArch, DeviceOffloadKind);
+      Entry = TC->TranslateArgs(*NewDAL, BoundArch, DeviceOffloadKind);
       if (!Entry)
-        Entry = OpenMPArgs;
+        Entry = NewDAL;
       else
-        delete OpenMPArgs;
+        delete NewDAL;
     }
 
     // Add allocated arguments to the final DAL.
@@ -157,11 +170,12 @@ int Compilation::ExecuteCommand(const Command &C,
 
     // Follow gcc implementation of CC_PRINT_OPTIONS; we could also cache the
     // output stream.
-    if (getDriver().CCPrintOptions && getDriver().CCPrintOptionsFilename) {
+    if (getDriver().CCPrintOptions &&
+        !getDriver().CCPrintOptionsFilename.empty()) {
       std::error_code EC;
       OwnedStream.reset(new llvm::raw_fd_ostream(
-          getDriver().CCPrintOptionsFilename, EC,
-          llvm::sys::fs::F_Append | llvm::sys::fs::F_Text));
+          getDriver().CCPrintOptionsFilename.c_str(), EC,
+          llvm::sys::fs::OF_Append | llvm::sys::fs::OF_TextWithCRLF));
       if (EC) {
         getDriver().Diag(diag::err_drv_cc_print_options_failure)
             << EC.message();
@@ -172,7 +186,7 @@ int Compilation::ExecuteCommand(const Command &C,
     }
 
     if (getDriver().CCPrintOptions)
-      *OS << "[Logging clang options]";
+      *OS << "[Logging clang options]\n";
 
     C.Print(*OS, "\n", /*Quote=*/getDriver().CCPrintOptions);
   }
@@ -180,6 +194,8 @@ int Compilation::ExecuteCommand(const Command &C,
   std::string Error;
   bool ExecutionFailed;
   int Res = C.Execute(Redirects, &Error, &ExecutionFailed);
+  if (PostCallback)
+    PostCallback(C, Res);
   if (!Error.empty()) {
     assert(Res && "Error string set with 0 result code!");
     getDriver().Diag(diag::err_drv_command_failure) << Error;
@@ -258,13 +274,22 @@ void Compilation::initCompilationForDiagnostics() {
 
   // Remove any user specified output.  Claim any unclaimed arguments, so as
   // to avoid emitting warnings about unused args.
-  OptSpecifier OutputOpts[] = { options::OPT_o, options::OPT_MD,
-                                options::OPT_MMD };
+  OptSpecifier OutputOpts[] = {
+      options::OPT_o,  options::OPT_MD, options::OPT_MMD, options::OPT_M,
+      options::OPT_MM, options::OPT_MF, options::OPT_MG,  options::OPT_MJ,
+      options::OPT_MQ, options::OPT_MT, options::OPT_MV};
   for (unsigned i = 0, e = llvm::array_lengthof(OutputOpts); i != e; ++i) {
     if (TranslatedArgs->hasArg(OutputOpts[i]))
       TranslatedArgs->eraseArg(OutputOpts[i]);
   }
   TranslatedArgs->ClaimAllArgs();
+
+  // Force re-creation of the toolchain Args, otherwise our modifications just
+  // above will have no effect.
+  for (auto Arg : TCArgs)
+    if (Arg.second != TranslatedArgs)
+      delete Arg.second;
+  TCArgs.clear();
 
   // Redirect stdout/stderr to /dev/null.
   Redirects = {None, {""}, {""}};

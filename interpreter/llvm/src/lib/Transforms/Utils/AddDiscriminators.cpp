@@ -63,15 +63,18 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/PassManager.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils.h"
+#include "llvm/Transforms/Utils/SampleProfileLoaderBaseUtil.h"
 #include <utility>
 
 using namespace llvm;
+using namespace sampleprofutil;
 
 #define DEBUG_TYPE "add-discriminators"
 
@@ -171,6 +174,10 @@ static bool addDiscriminators(Function &F) {
   if (NoDiscriminators || !F.getSubprogram())
     return false;
 
+  // Create FSDiscriminatorVariable if flow sensitive discriminators are used.
+  if (EnableFSDiscriminator)
+    createFSDiscriminatorVariable(F.getParent());
+
   bool Changed = false;
 
   using Location = std::pair<StringRef, unsigned>;
@@ -232,7 +239,7 @@ static bool addDiscriminators(Function &F) {
     LocationSet CallLocations;
     for (auto &I : B.getInstList()) {
       // We bypass intrinsic calls for the following two reasons:
-      //  1) We want to avoid a non-deterministic assigment of
+      //  1) We want to avoid a non-deterministic assignment of
       //     discriminators.
       //  2) We want to minimize the number of base discriminators used.
       if (!isa<InvokeInst>(I) && (!isa<CallInst>(I) || isa<IntrinsicInst>(I)))  

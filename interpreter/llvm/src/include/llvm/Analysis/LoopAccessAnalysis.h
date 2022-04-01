@@ -15,27 +15,22 @@
 #define LLVM_ANALYSIS_LOOPACCESSANALYSIS_H
 
 #include "llvm/ADT/EquivalenceClasses.h"
-#include "llvm/ADT/Optional.h"
-#include "llvm/ADT/SetVector.h"
-#include "llvm/Analysis/AliasAnalysis.h"
-#include "llvm/Analysis/AliasSetTracker.h"
 #include "llvm/Analysis/LoopAnalysisManager.h"
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/IR/DiagnosticInfo.h"
-#include "llvm/IR/ValueHandle.h"
 #include "llvm/Pass.h"
-#include "llvm/Support/raw_ostream.h"
 
 namespace llvm {
 
-class Value;
+class AAResults;
 class DataLayout;
-class ScalarEvolution;
 class Loop;
-class SCEV;
-class SCEVUnionPredicate;
 class LoopAccessInfo;
 class OptimizationRemarkEmitter;
+class raw_ostream;
+class SCEV;
+class SCEVUnionPredicate;
+class Value;
 
 /// Collection of parameters shared beetween the Loop Vectorizer and the
 /// Loop Access Analysis.
@@ -175,7 +170,8 @@ public:
   };
 
   MemoryDepChecker(PredicatedScalarEvolution &PSE, const Loop *L)
-      : PSE(PSE), InnermostLoop(L), AccessIdx(0), MaxSafeRegisterWidth(-1U),
+      : PSE(PSE), InnermostLoop(L), AccessIdx(0), MaxSafeDepDistBytes(0),
+        MaxSafeVectorWidthInBits(-1U),
         FoundNonConstantDistanceDependence(false),
         Status(VectorizationSafetyStatus::Safe), RecordDependences(true) {}
 
@@ -209,13 +205,21 @@ public:
     return Status == VectorizationSafetyStatus::Safe;
   }
 
+  /// Return true if the number of elements that are safe to operate on
+  /// simultaneously is not bounded.
+  bool isSafeForAnyVectorWidth() const {
+    return MaxSafeVectorWidthInBits == UINT_MAX;
+  }
+
   /// The maximum number of bytes of a vector register we can vectorize
   /// the accesses safely with.
   uint64_t getMaxSafeDepDistBytes() { return MaxSafeDepDistBytes; }
 
   /// Return the number of elements that are safe to operate on
   /// simultaneously, multiplied by the size of the element in bits.
-  uint64_t getMaxSafeRegisterWidth() const { return MaxSafeRegisterWidth; }
+  uint64_t getMaxSafeVectorWidthInBits() const {
+    return MaxSafeVectorWidthInBits;
+  }
 
   /// In same cases when the dependency check fails we can still
   /// vectorize the loop with a dynamic array access check.
@@ -280,7 +284,7 @@ private:
   /// operate on simultaneously, multiplied by the size of the element in bits.
   /// The size of the element is taken from the memory access that is most
   /// restrictive.
-  uint64_t MaxSafeRegisterWidth;
+  uint64_t MaxSafeVectorWidthInBits;
 
   /// If we see a non-constant dependence distance we can still try to
   /// vectorize this loop with runtime checks.
@@ -329,9 +333,51 @@ private:
   void mergeInStatus(VectorizationSafetyStatus S);
 };
 
+class RuntimePointerChecking;
+/// A grouping of pointers. A single memcheck is required between
+/// two groups.
+struct RuntimeCheckingPtrGroup {
+  /// Create a new pointer checking group containing a single
+  /// pointer, with index \p Index in RtCheck.
+  RuntimeCheckingPtrGroup(unsigned Index, RuntimePointerChecking &RtCheck);
+
+  RuntimeCheckingPtrGroup(unsigned Index, const SCEV *Start, const SCEV *End,
+                          unsigned AS)
+      : High(End), Low(Start), AddressSpace(AS) {
+    Members.push_back(Index);
+  }
+
+  /// Tries to add the pointer recorded in RtCheck at index
+  /// \p Index to this pointer checking group. We can only add a pointer
+  /// to a checking group if we will still be able to get
+  /// the upper and lower bounds of the check. Returns true in case
+  /// of success, false otherwise.
+  bool addPointer(unsigned Index, RuntimePointerChecking &RtCheck);
+  bool addPointer(unsigned Index, const SCEV *Start, const SCEV *End,
+                  unsigned AS, ScalarEvolution &SE);
+
+  /// The SCEV expression which represents the upper bound of all the
+  /// pointers in this group.
+  const SCEV *High;
+  /// The SCEV expression which represents the lower bound of all the
+  /// pointers in this group.
+  const SCEV *Low;
+  /// Indices of all the pointers that constitute this grouping.
+  SmallVector<unsigned, 2> Members;
+  /// Address space of the involved pointers.
+  unsigned AddressSpace;
+};
+
+/// A memcheck which made up of a pair of grouped pointers.
+typedef std::pair<const RuntimeCheckingPtrGroup *,
+                  const RuntimeCheckingPtrGroup *>
+    RuntimePointerCheck;
+
 /// Holds information about the memory runtime legality checks to verify
 /// that a group of pointers do not overlap.
 class RuntimePointerChecking {
+  friend struct RuntimeCheckingPtrGroup;
+
 public:
   struct PointerInfo {
     /// Holds the pointer value that we need to check.
@@ -381,59 +427,20 @@ public:
   /// No run-time memory checking is necessary.
   bool empty() const { return Pointers.empty(); }
 
-  /// A grouping of pointers. A single memcheck is required between
-  /// two groups.
-  struct CheckingPtrGroup {
-    /// Create a new pointer checking group containing a single
-    /// pointer, with index \p Index in RtCheck.
-    CheckingPtrGroup(unsigned Index, RuntimePointerChecking &RtCheck)
-        : RtCheck(RtCheck), High(RtCheck.Pointers[Index].End),
-          Low(RtCheck.Pointers[Index].Start) {
-      Members.push_back(Index);
-    }
-
-    /// Tries to add the pointer recorded in RtCheck at index
-    /// \p Index to this pointer checking group. We can only add a pointer
-    /// to a checking group if we will still be able to get
-    /// the upper and lower bounds of the check. Returns true in case
-    /// of success, false otherwise.
-    bool addPointer(unsigned Index);
-
-    /// Constitutes the context of this pointer checking group. For each
-    /// pointer that is a member of this group we will retain the index
-    /// at which it appears in RtCheck.
-    RuntimePointerChecking &RtCheck;
-    /// The SCEV expression which represents the upper bound of all the
-    /// pointers in this group.
-    const SCEV *High;
-    /// The SCEV expression which represents the lower bound of all the
-    /// pointers in this group.
-    const SCEV *Low;
-    /// Indices of all the pointers that constitute this grouping.
-    SmallVector<unsigned, 2> Members;
-  };
-
-  /// A memcheck which made up of a pair of grouped pointers.
-  ///
-  /// These *have* to be const for now, since checks are generated from
-  /// CheckingPtrGroups in LAI::addRuntimeChecks which is a const member
-  /// function.  FIXME: once check-generation is moved inside this class (after
-  /// the PtrPartition hack is removed), we could drop const.
-  typedef std::pair<const CheckingPtrGroup *, const CheckingPtrGroup *>
-      PointerCheck;
-
   /// Generate the checks and store it.  This also performs the grouping
   /// of pointers to reduce the number of memchecks necessary.
   void generateChecks(MemoryDepChecker::DepCandidates &DepCands,
                       bool UseDependencies);
 
   /// Returns the checks that generateChecks created.
-  const SmallVector<PointerCheck, 4> &getChecks() const { return Checks; }
+  const SmallVectorImpl<RuntimePointerCheck> &getChecks() const {
+    return Checks;
+  }
 
   /// Decide if we need to add a check between two groups of pointers,
   /// according to needsChecking.
-  bool needsChecking(const CheckingPtrGroup &M,
-                     const CheckingPtrGroup &N) const;
+  bool needsChecking(const RuntimeCheckingPtrGroup &M,
+                     const RuntimeCheckingPtrGroup &N) const;
 
   /// Returns the number of run-time checks required according to
   /// needsChecking.
@@ -443,7 +450,8 @@ public:
   void print(raw_ostream &OS, unsigned Depth = 0) const;
 
   /// Print \p Checks.
-  void printChecks(raw_ostream &OS, const SmallVectorImpl<PointerCheck> &Checks,
+  void printChecks(raw_ostream &OS,
+                   const SmallVectorImpl<RuntimePointerCheck> &Checks,
                    unsigned Depth = 0) const;
 
   /// This flag indicates if we need to add the runtime check.
@@ -453,7 +461,7 @@ public:
   SmallVector<PointerInfo, 2> Pointers;
 
   /// Holds a partitioning of pointers into "check groups".
-  SmallVector<CheckingPtrGroup, 2> CheckingGroups;
+  SmallVector<RuntimeCheckingPtrGroup, 2> CheckingGroups;
 
   /// Check if pointers are in the same partition
   ///
@@ -472,6 +480,8 @@ public:
     return Pointers[PtrIdx];
   }
 
+  ScalarEvolution *getSE() const { return SE; }
+
 private:
   /// Groups pointers such that a single memcheck is required
   /// between two different groups. This will clear the CheckingGroups vector
@@ -481,15 +491,14 @@ private:
                    bool UseDependencies);
 
   /// Generate the checks and return them.
-  SmallVector<PointerCheck, 4>
-  generateChecks() const;
+  SmallVector<RuntimePointerCheck, 4> generateChecks() const;
 
   /// Holds a pointer to the ScalarEvolution analysis.
   ScalarEvolution *SE;
 
   /// Set of run-time checks required to establish independence of
   /// otherwise may-aliasing pointers in the loop.
-  SmallVector<PointerCheck, 4> Checks;
+  SmallVector<RuntimePointerCheck, 4> Checks;
 };
 
 /// Drive the analysis of memory accesses in the loop
@@ -516,7 +525,7 @@ private:
 class LoopAccessInfo {
 public:
   LoopAccessInfo(Loop *L, ScalarEvolution *SE, const TargetLibraryInfo *TLI,
-                 AliasAnalysis *AA, DominatorTree *DT, LoopInfo *LI);
+                 AAResults *AA, DominatorTree *DT, LoopInfo *LI);
 
   /// Return true we can analyze the memory accesses in the loop and there are
   /// no memory dependence cycles.
@@ -548,24 +557,6 @@ public:
   uint64_t getMaxSafeDepDistBytes() const { return MaxSafeDepDistBytes; }
   unsigned getNumStores() const { return NumStores; }
   unsigned getNumLoads() const { return NumLoads;}
-
-  /// Add code that checks at runtime if the accessed arrays overlap.
-  ///
-  /// Returns a pair of instructions where the first element is the first
-  /// instruction generated in possibly a sequence of instructions and the
-  /// second value is the final comparator value or NULL if no check is needed.
-  std::pair<Instruction *, Instruction *>
-  addRuntimeChecks(Instruction *Loc) const;
-
-  /// Generete the instructions for the checks in \p PointerChecks.
-  ///
-  /// Returns a pair of instructions where the first element is the first
-  /// instruction generated in possibly a sequence of instructions and the
-  /// second value is the final comparator value or NULL if no check is needed.
-  std::pair<Instruction *, Instruction *>
-  addRuntimeChecks(Instruction *Loc,
-                   const SmallVectorImpl<RuntimePointerChecking::PointerCheck>
-                       &PointerChecks) const;
 
   /// The diagnostics report generated for the analysis.  E.g. why we
   /// couldn't analyze the loop.
@@ -607,7 +598,7 @@ public:
 
 private:
   /// Analyze the loop.
-  void analyzeLoop(AliasAnalysis *AA, LoopInfo *LI,
+  void analyzeLoop(AAResults *AA, LoopInfo *LI,
                    const TargetLibraryInfo *TLI, DominatorTree *DT);
 
   /// Check if the structure of the loop allows it to be analyzed by this
@@ -694,6 +685,16 @@ int64_t getPtrStride(PredicatedScalarEvolution &PSE, Value *Ptr, const Loop *Lp,
                      const ValueToValueMap &StridesMap = ValueToValueMap(),
                      bool Assume = false, bool ShouldCheckWrap = true);
 
+/// Returns the distance between the pointers \p PtrA and \p PtrB iff they are
+/// compatible and it is possible to calculate the distance between them. This
+/// is a simple API that does not depend on the analysis pass.
+/// \param StrictCheck Ensure that the calculated distance matches the
+/// type-based one after all the bitcasts removal in the provided pointers.
+Optional<int> getPointersDiff(Type *ElemTyA, Value *PtrA, Type *ElemTyB,
+                              Value *PtrB, const DataLayout &DL,
+                              ScalarEvolution &SE, bool StrictCheck = false,
+                              bool CheckType = true);
+
 /// Attempt to sort the pointers in \p VL and return the sorted indices
 /// in \p SortedIndices, if reordering is required.
 ///
@@ -704,7 +705,7 @@ int64_t getPtrStride(PredicatedScalarEvolution &PSE, Value *Ptr, const Loop *Lp,
 /// sorted indices in \p SortedIndices as a[i+0], a[i+1], a[i+4], a[i+7] and
 /// saves the mask for actual memory accesses in program order in
 /// \p SortedIndices as <1,2,0,3>
-bool sortPtrAccesses(ArrayRef<Value *> VL, const DataLayout &DL,
+bool sortPtrAccesses(ArrayRef<Value *> VL, Type *ElemTy, const DataLayout &DL,
                      ScalarEvolution &SE,
                      SmallVectorImpl<unsigned> &SortedIndices);
 
@@ -724,9 +725,7 @@ class LoopAccessLegacyAnalysis : public FunctionPass {
 public:
   static char ID;
 
-  LoopAccessLegacyAnalysis() : FunctionPass(ID) {
-    initializeLoopAccessLegacyAnalysisPass(*PassRegistry::getPassRegistry());
-  }
+  LoopAccessLegacyAnalysis();
 
   bool runOnFunction(Function &F) override;
 
@@ -750,11 +749,11 @@ private:
   DenseMap<Loop *, std::unique_ptr<LoopAccessInfo>> LoopAccessInfoMap;
 
   // The used analysis passes.
-  ScalarEvolution *SE;
-  const TargetLibraryInfo *TLI;
-  AliasAnalysis *AA;
-  DominatorTree *DT;
-  LoopInfo *LI;
+  ScalarEvolution *SE = nullptr;
+  const TargetLibraryInfo *TLI = nullptr;
+  AAResults *AA = nullptr;
+  DominatorTree *DT = nullptr;
+  LoopInfo *LI = nullptr;
 };
 
 /// This analysis provides dependence information for the memory

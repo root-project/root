@@ -90,6 +90,9 @@ The important flags to get right are:
 * On the final candidate you just need Release builds, and that's the binary
   directory you'll have to pack.
 
+* On macOS, you must export ``MACOSX_DEPLOYMENT_TARGET=10.9`` before running
+  the script.
+
 This script builds three phases of Clang+LLVM twice each (Release and
 Release+Asserts), so use screen or nohup to avoid headaches, since it'll take
 a long time.
@@ -112,7 +115,7 @@ Test Suite
    :local:
 
 Follow the `LNT Quick Start Guide
-<http://llvm.org/docs/lnt/quickstart.html>`__ link on how to set-up the
+<https://llvm.org/docs/lnt/quickstart.html>`__ link on how to set-up the
 test-suite
 
 The binary location you'll have to use for testing is inside the
@@ -157,7 +160,7 @@ candidates, on the previous release.
 You should:
 
 * Download the previous release sources from
-  http://llvm.org/releases/download.html.
+  https://llvm.org/releases/download.html.
 
 * Run the test-release.sh script on ``final`` mode (change ``-rc 1`` to
   ``-final``).
@@ -187,7 +190,7 @@ to them), and run the release test as above.
 You should:
 
 * Download the current candidate sources from where the release manager points
-  you (ex. http://llvm.org/pre-releases/3.3/rc1/).
+  you (ex. https://llvm.org/pre-releases/3.3/rc1/).
 
 * Repeat the steps above with ``-rc 1``, ``-rc 2`` etc modes and run the
   test-suite the same way.
@@ -201,7 +204,7 @@ and that will be the official binary.
 
 * Rename (or link) ``clang+llvm-REL-ARCH-ENV`` to the .install directory
 
-* Tar that into the same name with ``.tar.gz`` extensioan from outside the
+* Tar that into the same name with ``.tar.gz`` extension from outside the
   directory
 
 * Make it available for the release manager to download

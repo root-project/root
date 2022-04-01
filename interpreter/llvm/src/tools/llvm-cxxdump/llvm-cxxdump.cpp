@@ -33,9 +33,10 @@ using namespace llvm::object;
 using namespace llvm::support;
 
 namespace opts {
+cl::OptionCategory CXXDumpCategory("CXX Dump Options");
 cl::list<std::string> InputFilenames(cl::Positional,
                                      cl::desc("<input object files>"),
-                                     cl::ZeroOrMore);
+                                     cl::ZeroOrMore, cl::cat(CXXDumpCategory));
 } // namespace opts
 
 namespace llvm {
@@ -174,7 +175,11 @@ static void dumpCXXData(const ObjectFile *Obj) {
 
   SectionRelocMap.clear();
   for (const SectionRef &Section : Obj->sections()) {
-    section_iterator Sec2 = Section.getRelocatedSection();
+    Expected<section_iterator> ErrOrSec = Section.getRelocatedSection();
+    if (!ErrOrSec)
+      error(ErrOrSec.takeError());
+
+    section_iterator Sec2 = *ErrOrSec;
     if (Sec2 != Obj->section_end())
       SectionRelocMap[*Sec2].push_back(Section);
   }
@@ -545,6 +550,7 @@ int main(int argc, const char *argv[]) {
   // Register the target printer for --version.
   cl::AddExtraVersionPrinter(TargetRegistry::printRegisteredTargetsForVersion);
 
+  cl::HideUnrelatedOptions({&opts::CXXDumpCategory, &getColorCategory()});
   cl::ParseCommandLineOptions(argc, argv, "LLVM C++ ABI Data Dumper\n");
 
   // Default to stdin if no filename is specified.

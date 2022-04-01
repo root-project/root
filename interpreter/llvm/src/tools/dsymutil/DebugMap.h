@@ -90,7 +90,7 @@ class DebugMap {
 public:
   DebugMap(const Triple &BinaryTriple, StringRef BinaryPath,
            ArrayRef<uint8_t> BinaryUUID = ArrayRef<uint8_t>())
-      : BinaryTriple(BinaryTriple), BinaryPath(BinaryPath),
+      : BinaryTriple(BinaryTriple), BinaryPath(std::string(BinaryPath)),
         BinaryUUID(BinaryUUID.begin(), BinaryUUID.end()) {}
 
   using const_iterator = ObjectContainer::const_iterator;
@@ -114,9 +114,7 @@ public:
 
   const Triple &getTriple() const { return BinaryTriple; }
 
-  const ArrayRef<uint8_t> getUUID() const {
-    return ArrayRef<uint8_t>(BinaryUUID);
-  }
+  ArrayRef<uint8_t> getUUID() const { return ArrayRef<uint8_t>(BinaryUUID); }
 
   StringRef getBinaryPath() const { return BinaryPath; }
 
@@ -183,7 +181,9 @@ public:
 
   bool empty() const { return Symbols.empty(); }
 
-  void addWarning(StringRef Warning) { Warnings.push_back(Warning); }
+  void addWarning(StringRef Warning) {
+    Warnings.push_back(std::string(Warning));
+  }
   const std::vector<std::string> &getWarnings() const { return Warnings; }
 
   void print(raw_ostream &OS) const;

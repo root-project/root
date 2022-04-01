@@ -11,41 +11,67 @@
 
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Error.h"
 #include "llvm/Support/Path.h"
 #include <CoreServices/CoreServices.h>
+#include <TargetConditionals.h>
 
 using namespace llvm;
 using namespace clang;
 
-static FSEventStreamRef createFSEventStream(
-    StringRef Path,
-    std::function<void(llvm::ArrayRef<DirectoryWatcher::Event>, bool)>,
-    dispatch_queue_t);
+#if TARGET_OS_OSX
+
 static void stopFSEventStream(FSEventStreamRef);
 
 namespace {
 
+/// This implementation is based on FSEvents API which implementation is
+/// aggressively coallescing events. This can manifest as duplicate events.
+///
+/// For example this scenario has been observed:
+///
+/// create foo/bar
+/// sleep 5 s
+/// create DirectoryWatcherMac for dir foo
+/// receive notification: bar EventKind::Modified
+/// sleep 5 s
+/// modify foo/bar
+/// receive notification: bar EventKind::Modified
+/// receive notification: bar EventKind::Modified
+/// sleep 5 s
+/// delete foo/bar
+/// receive notification: bar EventKind::Modified
+/// receive notification: bar EventKind::Modified
+/// receive notification: bar EventKind::Removed
 class DirectoryWatcherMac : public clang::DirectoryWatcher {
 public:
   DirectoryWatcherMac(
-      FSEventStreamRef EventStream,
+      dispatch_queue_t Queue, FSEventStreamRef EventStream,
       std::function<void(llvm::ArrayRef<DirectoryWatcher::Event>, bool)>
           Receiver,
       llvm::StringRef WatchedDirPath)
-      : EventStream(EventStream), Receiver(Receiver),
+      : Queue(Queue), EventStream(EventStream), Receiver(Receiver),
         WatchedDirPath(WatchedDirPath) {}
 
   ~DirectoryWatcherMac() override {
-    stopFSEventStream(EventStream);
-    EventStream = nullptr;
-    // Now it's safe to use Receiver as the only other concurrent use would have
-    // been in EventStream processing.
-    Receiver(DirectoryWatcher::Event(
-                 DirectoryWatcher::Event::EventKind::WatcherGotInvalidated, ""),
-             false);
+    // FSEventStreamStop and Invalidate must be called after Start and
+    // SetDispatchQueue to follow FSEvents API contract. The call to Receiver
+    // also uses Queue to not race with the initial scan.
+    dispatch_sync(Queue, ^{
+      stopFSEventStream(EventStream);
+      EventStream = nullptr;
+      Receiver(
+          DirectoryWatcher::Event(
+              DirectoryWatcher::Event::EventKind::WatcherGotInvalidated, ""),
+          false);
+    });
+
+    // Balance initial creation.
+    dispatch_release(Queue);
   }
 
 private:
+  dispatch_queue_t Queue;
   FSEventStreamRef EventStream;
   std::function<void(llvm::ArrayRef<Event>, bool)> Receiver;
   const std::string WatchedDirPath;
@@ -158,7 +184,7 @@ FSEventStreamRef createFSEventStream(
       if (::realpath(P.begin(), Buffer) != nullptr)
         RealPath = Buffer;
       else
-        RealPath = Path;
+        RealPath = Path.str();
     }
 
     FSEventStreamContext Context;
@@ -187,7 +213,7 @@ void stopFSEventStream(FSEventStreamRef EventStream) {
   FSEventStreamRelease(EventStream);
 }
 
-std::unique_ptr<DirectoryWatcher> clang::DirectoryWatcher::create(
+llvm::Expected<std::unique_ptr<DirectoryWatcher>> clang::DirectoryWatcher::create(
     StringRef Path,
     std::function<void(llvm::ArrayRef<DirectoryWatcher::Event>, bool)> Receiver,
     bool WaitForInitialSync) {
@@ -195,19 +221,18 @@ std::unique_ptr<DirectoryWatcher> clang::DirectoryWatcher::create(
       dispatch_queue_create("DirectoryWatcher", DISPATCH_QUEUE_SERIAL);
 
   if (Path.empty())
-    return nullptr;
+    llvm::report_fatal_error(
+        "DirectoryWatcher::create can not accept an empty Path.");
 
   auto EventStream = createFSEventStream(Path, Receiver, Queue);
-  if (!EventStream) {
-    return nullptr;
-  }
+  assert(EventStream && "EventStream expected to be non-null");
 
   std::unique_ptr<DirectoryWatcher> Result =
-      llvm::make_unique<DirectoryWatcherMac>(EventStream, Receiver, Path);
+      std::make_unique<DirectoryWatcherMac>(Queue, EventStream, Receiver, Path);
 
   // We need to copy the data so the lifetime is ok after a const copy is made
   // for the block.
-  const std::string CopiedPath = Path;
+  const std::string CopiedPath = Path.str();
 
   auto InitWork = ^{
     // We need to start watching the directory before we start scanning in order
@@ -216,10 +241,6 @@ std::unique_ptr<DirectoryWatcher> clang::DirectoryWatcher::create(
     // inital scan and handling events ONLY AFTER the scan finishes.
     FSEventStreamSetDispatchQueue(EventStream, Queue);
     FSEventStreamStart(EventStream);
-    // We need to decrement the ref count for Queue as initialize() will return
-    // and FSEvents has incremented it. Since we have to wait for FSEvents to
-    // take ownership it's the easiest to do it here rather than main thread.
-    dispatch_release(Queue);
     Receiver(getAsFileEvents(scanDirectory(CopiedPath)), /*IsInitial=*/true);
   };
 
@@ -231,3 +252,17 @@ std::unique_ptr<DirectoryWatcher> clang::DirectoryWatcher::create(
 
   return Result;
 }
+
+#else // TARGET_OS_OSX
+
+llvm::Expected<std::unique_ptr<DirectoryWatcher>>
+clang::DirectoryWatcher::create(
+    StringRef Path,
+    std::function<void(llvm::ArrayRef<DirectoryWatcher::Event>, bool)> Receiver,
+    bool WaitForInitialSync) {
+  return llvm::make_error<llvm::StringError>(
+      "DirectoryWatcher is not implemented for this platform!",
+      llvm::inconvertibleErrorCode());
+}
+
+#endif // TARGET_OS_OSX

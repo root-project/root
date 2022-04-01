@@ -110,7 +110,7 @@ Error DumpOutputStyle::dump() {
     P.NewLine();
   }
 
-  if (opts::dump::DumpTypeStats) {
+  if (opts::dump::DumpTypeStats || opts::dump::DumpIDStats) {
     if (auto EC = dumpTypeStats())
       return EC;
     P.NewLine();
@@ -350,13 +350,13 @@ static bool isMyCode(const SymbolGroup &Group) {
   StringRef Name = Group.name();
   if (Name.startswith("Import:"))
     return false;
-  if (Name.endswith_lower(".dll"))
+  if (Name.endswith_insensitive(".dll"))
     return false;
-  if (Name.equals_lower("* linker *"))
+  if (Name.equals_insensitive("* linker *"))
     return false;
-  if (Name.startswith_lower("f:\\binaries\\Intermediate\\vctools"))
+  if (Name.startswith_insensitive("f:\\binaries\\Intermediate\\vctools"))
     return false;
-  if (Name.startswith_lower("f:\\dd\\vctools\\crt"))
+  if (Name.startswith_insensitive("f:\\dd\\vctools\\crt"))
     return false;
   return true;
 }
@@ -701,7 +701,8 @@ Error DumpOutputStyle::dumpTypeStats() {
 
   // Iterate the types, categorize by kind, accumulate size stats.
   StatCollection TypeStats;
-  LazyRandomTypeCollection &Types = File.types();
+  LazyRandomTypeCollection &Types =
+      opts::dump::DumpTypeStats ? File.types() : File.ids();
   for (Optional<TypeIndex> TI = Types.getFirst(); TI; TI = Types.getNext(*TI)) {
     CVType Type = Types.getType(*TI);
     TypeStats.update(uint32_t(Type.kind()), Type.length());
@@ -710,18 +711,16 @@ Error DumpOutputStyle::dumpTypeStats() {
   P.NewLine();
   P.formatLine("  Types");
   AutoIndent Indent(P);
-  P.formatLine("{0,14}: {1,7} entries ({2,12:N} bytes, {3,7} avg)", "Total",
+  P.formatLine("{0,16}: {1,7} entries ({2,12:N} bytes, {3,7} avg)", "Total",
                TypeStats.Totals.Count, TypeStats.Totals.Size,
                (double)TypeStats.Totals.Size / TypeStats.Totals.Count);
   P.formatLine("{0}", fmt_repeat('-', 74));
 
   for (const auto &K : TypeStats.getStatsSortedBySize()) {
-    P.formatLine("{0,14}: {1,7} entries ({2,12:N} bytes, {3,7} avg)",
+    P.formatLine("{0,16}: {1,7} entries ({2,12:N} bytes, {3,7} avg)",
                  formatTypeLeafKind(TypeLeafKind(K.first)), K.second.Count,
                  K.second.Size, (double)K.second.Size / K.second.Count);
   }
-
-
   return Error::success();
 }
 
@@ -739,21 +738,17 @@ namespace {
 constexpr uint32_t kNoneUdtKind = 0;
 constexpr uint32_t kSimpleUdtKind = 1;
 constexpr uint32_t kUnknownUdtKind = 2;
-const StringRef NoneLabel("<none type>");
-const StringRef SimpleLabel("<simple type>");
-const StringRef UnknownLabel("<unknown type>");
-
 } // namespace
 
-static StringRef getUdtStatLabel(uint32_t Kind) {
+static std::string getUdtStatLabel(uint32_t Kind) {
   if (Kind == kNoneUdtKind)
-    return NoneLabel;
+    return "<none type>";
 
   if (Kind == kSimpleUdtKind)
-    return SimpleLabel;
+    return "<simple type>";
 
   if (Kind == kUnknownUdtKind)
-    return UnknownLabel;
+    return "<unknown type>";
 
   return formatTypeLeafKind(static_cast<TypeLeafKind>(Kind));
 }
@@ -761,7 +756,7 @@ static StringRef getUdtStatLabel(uint32_t Kind) {
 static uint32_t getLongestTypeLeafName(const StatCollection &Stats) {
   size_t L = 0;
   for (const auto &Stat : Stats.Individual) {
-    StringRef Label = getUdtStatLabel(Stat.first);
+    std::string Label = getUdtStatLabel(Stat.first);
     L = std::max(L, Label.size());
   }
   return static_cast<uint32_t>(L);
@@ -870,7 +865,7 @@ Error DumpOutputStyle::dumpUdtStats() {
 
   P.formatLine("{0}", fmt_repeat('-', TableWidth));
   for (const auto &Stat : UdtTargetStats.getStatsSortedBySize()) {
-    StringRef Label = getUdtStatLabel(Stat.first);
+    std::string Label = getUdtStatLabel(Stat.first);
     P.formatLine("{0} | {1:N}  {2:N}",
                  fmt_align(Label, AlignStyle::Right, FieldWidth),
                  fmt_align(Stat.second.Count, AlignStyle::Right, CD),
@@ -896,7 +891,7 @@ Error DumpOutputStyle::dumpUdtStats() {
                       return L.Stat.Size > R.Stat.Size;
                     });
   for (const auto &Stat : NamespacedStatsSorted) {
-    std::string Label = formatv("namespace '{0}'", Stat.Key);
+    std::string Label = std::string(formatv("namespace '{0}'", Stat.Key));
     P.formatLine("{0} | {1:N}  {2:N}",
                  fmt_align(Label, AlignStyle::Right, FieldWidth),
                  fmt_align(Stat.Stat.Count, AlignStyle::Right, CD),
@@ -1039,7 +1034,7 @@ Error DumpOutputStyle::dumpXmi() {
           }
           std::vector<std::string> TIs;
           for (const auto I : Xmi.Imports)
-            TIs.push_back(formatv("{0,+10:X+}", fmtle(I)));
+            TIs.push_back(std::string(formatv("{0,+10:X+}", fmtle(I))));
           std::string Result =
               typesetItemList(TIs, P.getIndentLevel() + 35, 12, " ");
           P.formatLine("{0,+32} | {1}", Module, Result);
@@ -1369,9 +1364,10 @@ Error DumpOutputStyle::dumpTypesFromObjectFile() {
   LazyRandomTypeCollection Types(100);
 
   for (const auto &S : getObj().sections()) {
-    StringRef SectionName;
-    if (auto EC = S.getName(SectionName))
-      return errorCodeToError(EC);
+    Expected<StringRef> NameOrErr = S.getName();
+    if (!NameOrErr)
+      return NameOrErr.takeError();
+    StringRef SectionName = *NameOrErr;
 
     // .debug$T is a standard CodeView type section, while .debug$P is the same
     // format but used for MSVC precompiled header object files.
@@ -1406,7 +1402,7 @@ Error DumpOutputStyle::dumpTypesFromObjectFile() {
 
       P.formatLine("Local / Global hashes:");
       TypeIndex TI(TypeIndex::FirstNonSimpleIndex);
-      for (const auto &H : zip(LocalHashes, GlobalHashes)) {
+      for (auto H : zip(LocalHashes, GlobalHashes)) {
         AutoIndent Indent2(P);
         LocallyHashedType &L = std::get<0>(H);
         GloballyHashedType &G = std::get<1>(H);
@@ -1551,7 +1547,7 @@ Error DumpOutputStyle::dumpModuleSymsForObj() {
         Dumper.setSymbolGroup(&Strings);
         for (auto Symbol : Symbols) {
           if (auto EC = Visitor.visitSymbolRecord(Symbol)) {
-            SymbolError = llvm::make_unique<Error>(std::move(EC));
+            SymbolError = std::make_unique<Error>(std::move(EC));
             return;
           }
         }
@@ -1911,7 +1907,6 @@ void DumpOutputStyle::dumpSectionHeaders(StringRef Label, DbgHeaderType Type) {
                             P.getIndentLevel(), Header.Characteristics, 1, ""));
     ++I;
   }
-  return;
 }
 
 Error DumpOutputStyle::dumpSectionContribs() {

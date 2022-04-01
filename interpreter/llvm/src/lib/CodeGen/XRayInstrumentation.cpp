@@ -26,6 +26,7 @@
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Function.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Target/TargetMachine.h"
 
@@ -110,8 +111,8 @@ void XRayInstrumentation::replaceRetWithPatchableRet(
         for (auto &MO : T.operands())
           MIB.add(MO);
         Terminators.push_back(&T);
-        if (T.isCall())
-          MF.updateCallSiteInfo(&T);
+        if (T.shouldUpdateCallSiteInfo())
+          MF.eraseCallSiteInfo(&T);
       }
     }
   }
@@ -144,43 +145,56 @@ void XRayInstrumentation::prependRetWithPatchableExit(
 bool XRayInstrumentation::runOnMachineFunction(MachineFunction &MF) {
   auto &F = MF.getFunction();
   auto InstrAttr = F.getFnAttribute("function-instrument");
-  bool AlwaysInstrument = !InstrAttr.hasAttribute(Attribute::None) &&
-                          InstrAttr.isStringAttribute() &&
+  bool AlwaysInstrument = InstrAttr.isStringAttribute() &&
                           InstrAttr.getValueAsString() == "xray-always";
-  Attribute Attr = F.getFnAttribute("xray-instruction-threshold");
-  unsigned XRayThreshold = 0;
+  bool NeverInstrument = InstrAttr.isStringAttribute() &&
+                         InstrAttr.getValueAsString() == "xray-never";
+  if (NeverInstrument && !AlwaysInstrument)
+    return false;
+  auto ThresholdAttr = F.getFnAttribute("xray-instruction-threshold");
+  auto IgnoreLoopsAttr = F.getFnAttribute("xray-ignore-loops");
+  unsigned int XRayThreshold = 0;
   if (!AlwaysInstrument) {
-    if (Attr.hasAttribute(Attribute::None) || !Attr.isStringAttribute())
+    if (!ThresholdAttr.isStringAttribute())
       return false; // XRay threshold attribute not found.
-    if (Attr.getValueAsString().getAsInteger(10, XRayThreshold))
+    if (ThresholdAttr.getValueAsString().getAsInteger(10, XRayThreshold))
       return false; // Invalid value for threshold.
+
+    bool IgnoreLoops = IgnoreLoopsAttr.isValid();
 
     // Count the number of MachineInstr`s in MachineFunction
     int64_t MICount = 0;
     for (const auto &MBB : MF)
       MICount += MBB.size();
 
-    // Get MachineDominatorTree or compute it on the fly if it's unavailable
-    auto *MDT = getAnalysisIfAvailable<MachineDominatorTree>();
-    MachineDominatorTree ComputedMDT;
-    if (!MDT) {
-      ComputedMDT.getBase().recalculate(MF);
-      MDT = &ComputedMDT;
-    }
+    bool TooFewInstrs = MICount < XRayThreshold;
 
-    // Get MachineLoopInfo or compute it on the fly if it's unavailable
-    auto *MLI = getAnalysisIfAvailable<MachineLoopInfo>();
-    MachineLoopInfo ComputedMLI;
-    if (!MLI) {
-      ComputedMLI.getBase().analyze(MDT->getBase());
-      MLI = &ComputedMLI;
-    }
+    if (!IgnoreLoops) {
+      // Get MachineDominatorTree or compute it on the fly if it's unavailable
+      auto *MDT = getAnalysisIfAvailable<MachineDominatorTree>();
+      MachineDominatorTree ComputedMDT;
+      if (!MDT) {
+        ComputedMDT.getBase().recalculate(MF);
+        MDT = &ComputedMDT;
+      }
 
-    // Check if we have a loop.
-    // FIXME: Maybe make this smarter, and see whether the loops are dependent
-    // on inputs or side-effects?
-    if (MLI->empty() && MICount < XRayThreshold)
-      return false; // Function is too small and has no loops.
+      // Get MachineLoopInfo or compute it on the fly if it's unavailable
+      auto *MLI = getAnalysisIfAvailable<MachineLoopInfo>();
+      MachineLoopInfo ComputedMLI;
+      if (!MLI) {
+        ComputedMLI.getBase().analyze(MDT->getBase());
+        MLI = &ComputedMLI;
+      }
+
+      // Check if we have a loop.
+      // FIXME: Maybe make this smarter, and see whether the loops are dependent
+      // on inputs or side-effects?
+      if (MLI->empty() && TooFewInstrs)
+        return false; // Function is too small and has no loops.
+    } else if (TooFewInstrs) {
+      // Function is too small
+      return false;
+    }
   }
 
   // We look for the first non-empty MachineBasicBlock, so that we can insert
@@ -200,43 +214,47 @@ bool XRayInstrumentation::runOnMachineFunction(MachineFunction &MF) {
     return false;
   }
 
-  // First, insert an PATCHABLE_FUNCTION_ENTER as the first instruction of the
-  // MachineFunction.
-  BuildMI(FirstMBB, FirstMI, FirstMI.getDebugLoc(),
-          TII->get(TargetOpcode::PATCHABLE_FUNCTION_ENTER));
+  if (!F.hasFnAttribute("xray-skip-entry")) {
+    // First, insert an PATCHABLE_FUNCTION_ENTER as the first instruction of the
+    // MachineFunction.
+    BuildMI(FirstMBB, FirstMI, FirstMI.getDebugLoc(),
+            TII->get(TargetOpcode::PATCHABLE_FUNCTION_ENTER));
+  }
 
-  switch (MF.getTarget().getTargetTriple().getArch()) {
-  case Triple::ArchType::arm:
-  case Triple::ArchType::thumb:
-  case Triple::ArchType::aarch64:
-  case Triple::ArchType::mips:
-  case Triple::ArchType::mipsel:
-  case Triple::ArchType::mips64:
-  case Triple::ArchType::mips64el: {
-    // For the architectures which don't have a single return instruction
-    InstrumentationOptions op;
-    op.HandleTailcall = false;
-    op.HandleAllReturns = true;
-    prependRetWithPatchableExit(MF, TII, op);
-    break;
-  }
-  case Triple::ArchType::ppc64le: {
-    // PPC has conditional returns. Turn them into branch and plain returns.
-    InstrumentationOptions op;
-    op.HandleTailcall = false;
-    op.HandleAllReturns = true;
-    replaceRetWithPatchableRet(MF, TII, op);
-    break;
-  }
-  default: {
-    // For the architectures that have a single return instruction (such as
-    //   RETQ on x86_64).
-    InstrumentationOptions op;
-    op.HandleTailcall = true;
-    op.HandleAllReturns = false;
-    replaceRetWithPatchableRet(MF, TII, op);
-    break;
-  }
+  if (!F.hasFnAttribute("xray-skip-exit")) {
+    switch (MF.getTarget().getTargetTriple().getArch()) {
+    case Triple::ArchType::arm:
+    case Triple::ArchType::thumb:
+    case Triple::ArchType::aarch64:
+    case Triple::ArchType::mips:
+    case Triple::ArchType::mipsel:
+    case Triple::ArchType::mips64:
+    case Triple::ArchType::mips64el: {
+      // For the architectures which don't have a single return instruction
+      InstrumentationOptions op;
+      op.HandleTailcall = false;
+      op.HandleAllReturns = true;
+      prependRetWithPatchableExit(MF, TII, op);
+      break;
+    }
+    case Triple::ArchType::ppc64le: {
+      // PPC has conditional returns. Turn them into branch and plain returns.
+      InstrumentationOptions op;
+      op.HandleTailcall = false;
+      op.HandleAllReturns = true;
+      replaceRetWithPatchableRet(MF, TII, op);
+      break;
+    }
+    default: {
+      // For the architectures that have a single return instruction (such as
+      //   RETQ on x86_64).
+      InstrumentationOptions op;
+      op.HandleTailcall = true;
+      op.HandleAllReturns = false;
+      replaceRetWithPatchableRet(MF, TII, op);
+      break;
+    }
+    }
   }
   return true;
 }

@@ -23,6 +23,7 @@
 #include "llvm/IR/GlobalAlias.h"
 #include "llvm/IR/GlobalValue.h"
 #include "llvm/IR/GlobalVariable.h"
+#include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Module.h"
 #include "llvm/MC/MCAsmInfo.h"
 #include "llvm/MC/MCContext.h"
@@ -63,7 +64,8 @@ void ModuleSymbolTable::addModule(Module *M) {
     SymTab.push_back(&GV);
 
   CollectAsmSymbols(*M, [this](StringRef Name, BasicSymbolRef::Flags Flags) {
-    SymTab.push_back(new (AsmSymbols.Allocate()) AsmSymbol(Name, Flags));
+    SymTab.push_back(new (AsmSymbols.Allocate())
+                         AsmSymbol(std::string(Name), Flags));
   });
 }
 
@@ -83,7 +85,8 @@ initializeRecordStreamer(const Module &M,
   if (!MRI)
     return;
 
-  std::unique_ptr<MCAsmInfo> MAI(T->createMCAsmInfo(*MRI, TT.str()));
+  MCTargetOptions MCOptions;
+  std::unique_ptr<MCAsmInfo> MAI(T->createMCAsmInfo(*MRI, TT.str(), MCOptions));
   if (!MAI)
     return;
 
@@ -96,24 +99,29 @@ initializeRecordStreamer(const Module &M,
   if (!MCII)
     return;
 
-  MCObjectFileInfo MOFI;
-  MCContext MCCtx(MAI.get(), MRI.get(), &MOFI);
-  MOFI.InitMCObjectFileInfo(TT, /*PIC*/ false, MCCtx);
-  MOFI.setSDKVersion(M.getSDKVersion());
-  RecordStreamer Streamer(MCCtx, M);
-  T->createNullTargetStreamer(Streamer);
-
   std::unique_ptr<MemoryBuffer> Buffer(MemoryBuffer::getMemBuffer(InlineAsm));
   SourceMgr SrcMgr;
   SrcMgr.AddNewSourceBuffer(std::move(Buffer), SMLoc());
+
+  MCContext MCCtx(TT, MAI.get(), MRI.get(), STI.get(), &SrcMgr);
+  std::unique_ptr<MCObjectFileInfo> MOFI(
+      T->createMCObjectFileInfo(MCCtx, /*PIC=*/false));
+  MOFI->setSDKVersion(M.getSDKVersion());
+  MCCtx.setObjectFileInfo(MOFI.get());
+  RecordStreamer Streamer(MCCtx, M);
+  T->createNullTargetStreamer(Streamer);
+
   std::unique_ptr<MCAsmParser> Parser(
       createMCAsmParser(SrcMgr, MCCtx, Streamer, *MAI));
 
-  MCTargetOptions MCOptions;
   std::unique_ptr<MCTargetAsmParser> TAP(
       T->createMCAsmParser(*STI, *Parser, *MCII, MCOptions));
   if (!TAP)
     return;
+
+  // Module-level inline asm is assumed to use At&t syntax (see
+  // AsmPrinter::doInitialization()).
+  Parser->setAssemblerDialect(InlineAsm::AD_ATT);
 
   Parser->setTargetParser(*TAP);
   if (Parser->Run(false))

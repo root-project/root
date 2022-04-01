@@ -10,8 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef DEMANGLE_UTILITY_H
-#define DEMANGLE_UTILITY_H
+#ifndef LLVM_DEMANGLE_UTILITY_H
+#define LLVM_DEMANGLE_UTILITY_H
 
 #include "StringView.h"
 #include <cstdint>
@@ -25,9 +25,9 @@ DEMANGLE_NAMESPACE_BEGIN
 // Stream that AST nodes write their string representation into after the AST
 // has been parsed.
 class OutputStream {
-  char *Buffer;
-  size_t CurrentPosition;
-  size_t BufferCapacity;
+  char *Buffer = nullptr;
+  size_t CurrentPosition = 0;
+  size_t BufferCapacity = 0;
 
   // Ensure there is at least n more positions in buffer.
   void grow(size_t N) {
@@ -52,7 +52,7 @@ class OutputStream {
     char *TempPtr = std::end(Temp);
 
     while (N) {
-      *--TempPtr = '0' + char(N % 10);
+      *--TempPtr = char('0' + N % 10);
       N /= 10;
     }
 
@@ -137,7 +137,7 @@ public:
 
   char *getBuffer() { return Buffer; }
   char *getBufferEnd() { return Buffer + CurrentPosition - 1; }
-  size_t getBufferCapacity() { return BufferCapacity; }
+  size_t getBufferCapacity() const { return BufferCapacity; }
 };
 
 template <class T> class SwapAndRestore {

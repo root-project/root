@@ -64,6 +64,7 @@ def : InstRW<[P9_ALUE_2C, P9_ALUO_2C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
     XXLAND,
     XXLANDC,
     XXLEQV,
+    XXLEQVOnes,
     XXLNAND,
     XXLNOR,
     XXLOR,
@@ -93,7 +94,7 @@ def : InstRW<[P9_ALU_3C, IP_EXEC_1C, DISP_3SLOTS_1C],
     (instregex "CMPRB(8)?$"),
     (instregex "TD(I)?$"),
     (instregex "TW(I)?$"),
-    (instregex "FCMPU(S|D)$"),
+    (instregex "FCMP(O|U)(S|D)$"),
     (instregex "XSTSTDC(S|D)P$"),
     FTDIV,
     FTSQRT,
@@ -106,7 +107,7 @@ def : InstRW<[P9_ALU_3C, IP_EXEC_1C, DISP_1C],
     (instregex "XSMAX(C|J)?DP$"),
     (instregex "XSMIN(C|J)?DP$"),
     (instregex "XSCMP(EQ|EXP|GE|GT|O|U)DP$"),
-    (instregex "CNT(L|T)Z(D|W)(8)?(o)?$"),
+    (instregex "CNT(L|T)Z(D|W)(8)?(_rec)?$"),
     (instregex "POPCNT(D|W)$"),
     (instregex "CMPB(8)?$"),
     (instregex "SETB(8)?$"),
@@ -124,31 +125,32 @@ def : InstRW<[P9_ALU_2C, IP_EXEC_1C, DISP_1C],
     (instregex "SRAD(I)?$"),
     (instregex "EXTSWSLI_32_64$"),
     (instregex "MFV(S)?RD$"),
-    (instregex "MTVSRD$"),
-    (instregex "MTVSRW(A|Z)$"),
+    (instregex "MTV(S)?RD$"),
+    (instregex "MTV(S)?RW(A|Z)$"),
     (instregex "CMP(WI|LWI|W|LW)(8)?$"),
     (instregex "CMP(L)?D(I)?$"),
-    (instregex "SUBF(I)?C(8)?$"),
-    (instregex "ANDI(S)?o(8)?$"),
-    (instregex "ADDC(8)?$"),
-    (instregex "ADDIC(8)?(o)?$"),
-    (instregex "ADD(8|4)(o)?$"),
-    (instregex "ADD(E|ME|ZE)(8)?(o)?$"),
-    (instregex "SUBF(E|ME|ZE)?(8)?(o)?$"),
-    (instregex "NEG(8)?(o)?$"),
+    (instregex "SUBF(I)?C(8)?(O)?$"),
+    (instregex "ANDI(S)?(8)?(_rec)?$"),
+    (instregex "ADDC(8)?(O)?$"),
+    (instregex "ADDIC(8)?(_rec)?$"),
+    (instregex "ADD(8|4)(O)?(_rec)?$"),
+    (instregex "ADD(E|ME|ZE)(8)?(O)?(_rec)?$"),
+    (instregex "SUBF(E|ME|ZE)?(8)?(O)?(_rec)?$"),
+    (instregex "NEG(8)?(O)?(_rec)?$"),
     (instregex "POPCNTB$"),
+    (instregex "POPCNTB8$"),
     (instregex "ADD(I|IS)?(8)?$"),
     (instregex "LI(S)?(8)?$"),
-    (instregex "(X)?OR(I|IS)?(8)?(o)?$"),
-    (instregex "NAND(8)?(o)?$"),
-    (instregex "AND(C)?(8)?(o)?$"),
-    (instregex "NOR(8)?(o)?$"),
-    (instregex "OR(C)?(8)?(o)?$"),
-    (instregex "EQV(8)?(o)?$"),
-    (instregex "EXTS(B|H|W)(8)?(_32)?(_64)?(o)?$"),
+    (instregex "(X)?OR(I|IS)?(8)?(_rec)?$"),
+    (instregex "NAND(8)?(_rec)?$"),
+    (instregex "AND(C)?(8)?(_rec)?$"),
+    (instregex "NOR(8)?(_rec)?$"),
+    (instregex "OR(C)?(8)?(_rec)?$"),
+    (instregex "EQV(8)?(_rec)?$"),
+    (instregex "EXTS(B|H|W)(8)?(_32)?(_64)?(_rec)?$"),
     (instregex "ADD(4|8)(TLS)?(_)?$"),
-    (instregex "NEG(8)?$"),
-    (instregex "ADDI(S)?toc(HA|L)$"),
+    (instregex "NEG(8)?(O)?$"),
+    (instregex "ADDI(S)?toc(HA|L)(8)?$"),
     COPY,
     MCRF,
     MCRXRX,
@@ -158,6 +160,7 @@ def : InstRW<[P9_ALU_2C, IP_EXEC_1C, DISP_1C],
     XSNEGDP,
     XSCPSGNDP,
     MFVSRWZ,
+    MFVRWZ,
     EXTSWSLI,
     SRADI_32,
     RLDIC,
@@ -209,8 +212,8 @@ def : InstRW<[P9_ALUE_3C, P9_ALUO_3C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
     (instregex "VABSDU(B|H|W)$"),
     (instregex "VADDU(B|H|W)S$"),
     (instregex "VAVG(S|U)(B|H|W)$"),
-    (instregex "VCMP(EQ|GE|GT)FP(o)?$"),
-    (instregex "VCMPBFP(o)?$"),
+    (instregex "VCMP(EQ|GE|GT)FP(_rec)?$"),
+    (instregex "VCMPBFP(_rec)?$"),
     (instregex "VC(L|T)Z(B|H|W|D)$"),
     (instregex "VADDS(B|H|W)S$"),
     (instregex "V(MIN|MAX)FP$"),
@@ -231,43 +234,43 @@ def : InstRW<[P9_ALUE_3C, P9_ALUO_3C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
     VSUBUWS,
     VSUBCUW,
     VCMPGTSB,
-    VCMPGTSBo,
+    VCMPGTSB_rec,
     VCMPGTSD,
-    VCMPGTSDo,
+    VCMPGTSD_rec,
     VCMPGTSH,
-    VCMPGTSHo,
+    VCMPGTSH_rec,
     VCMPGTSW,
-    VCMPGTSWo,
+    VCMPGTSW_rec,
     VCMPGTUB,
-    VCMPGTUBo,
+    VCMPGTUB_rec,
     VCMPGTUD,
-    VCMPGTUDo,
+    VCMPGTUD_rec,
     VCMPGTUH,
-    VCMPGTUHo,
+    VCMPGTUH_rec,
     VCMPGTUW,
-    VCMPGTUWo,
-    VCMPNEBo,
-    VCMPNEHo,
-    VCMPNEWo,
-    VCMPNEZBo,
-    VCMPNEZHo,
-    VCMPNEZWo,
-    VCMPEQUBo,
-    VCMPEQUDo,
-    VCMPEQUHo,
-    VCMPEQUWo,
+    VCMPGTUW_rec,
+    VCMPNEB_rec,
+    VCMPNEH_rec,
+    VCMPNEW_rec,
+    VCMPNEZB_rec,
+    VCMPNEZH_rec,
+    VCMPNEZW_rec,
+    VCMPEQUB_rec,
+    VCMPEQUD_rec,
+    VCMPEQUH_rec,
+    VCMPEQUW_rec,
     XVCMPEQDP,
-    XVCMPEQDPo,
+    XVCMPEQDP_rec,
     XVCMPEQSP,
-    XVCMPEQSPo,
+    XVCMPEQSP_rec,
     XVCMPGEDP,
-    XVCMPGEDPo,
+    XVCMPGEDP_rec,
     XVCMPGESP,
-    XVCMPGESPo,
+    XVCMPGESP_rec,
     XVCMPGTDP,
-    XVCMPGTDPo,
+    XVCMPGTDP_rec,
     XVCMPGTSP,
-    XVCMPGTSPo,
+    XVCMPGTSP_rec,
     XVMAXDP,
     XVMAXSP,
     XVMINDP,
@@ -371,6 +374,7 @@ def : InstRW<[P9_DPE_7C, P9_DPO_7C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
     VMSUMSHS,
     VMSUMUBM,
     VMSUMUHM,
+    VMSUMUDM,
     VMSUMUHS,
     VMULESB,
     VMULESH,
@@ -397,7 +401,7 @@ def : InstRW<[P9_DPE_7C, P9_DPO_7C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
 def : InstRW<[P9_DP_5C, IP_EXEC_1C, DISP_3SLOTS_1C],
       (instrs
     (instregex "MADD(HD|HDU|LD|LD8)$"),
-    (instregex "MUL(HD|HW|LD|LI|LI8|LW)(U)?$")
+    (instregex "MUL(HD|HW|LD|LI|LI8|LW)(U)?(O)?$")
 )>;
 
 // 7 cycle Restricted DP operation. One DP unit, one EXEC pipeline and all three
@@ -449,14 +453,14 @@ def : InstRW<[P9_DP_7C, IP_EXEC_1C, DISP_3SLOTS_1C],
 def : InstRW<[P9_DP_7C, P9_ALU_3C, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    (instregex "FSEL(D|S)o$")
+    (instregex "FSEL(D|S)_rec$")
 )>;
 
 // 5 Cycle Restricted DP operation and one 2 cycle ALU operation.
 def : InstRW<[P9_DPOpAndALUOp_7C, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    (instregex "MUL(H|L)(D|W)(U)?o$")
+    (instregex "MUL(H|L)(D|W)(U)?(O)?_rec$")
 )>;
 
 // 7 cycle Restricted DP operation and one 3 cycle ALU operation.
@@ -465,18 +469,18 @@ def : InstRW<[P9_DPOpAndALUOp_7C, IP_EXEC_1C, IP_EXEC_1C,
 def : InstRW<[P9_DPOpAndALU2Op_10C, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    (instregex "FRI(N|P|Z|M)(D|S)o$"),
-    (instregex "FRE(S)?o$"),
-    (instregex "FADD(S)?o$"),
-    (instregex "FSUB(S)?o$"),
-    (instregex "F(N)?MSUB(S)?o$"),
-    (instregex "F(N)?MADD(S)?o$"),
-    (instregex "FCFID(U)?(S)?o$"),
-    (instregex "FCTID(U)?(Z)?o$"),
-    (instregex "FCTIW(U)?(Z)?o$"),
-    (instregex "FMUL(S)?o$"),
-    (instregex "FRSQRTE(S)?o$"),
-    FRSPo
+    (instregex "FRI(N|P|Z|M)(D|S)_rec$"),
+    (instregex "FRE(S)?_rec$"),
+    (instregex "FADD(S)?_rec$"),
+    (instregex "FSUB(S)?_rec$"),
+    (instregex "F(N)?MSUB(S)?_rec$"),
+    (instregex "F(N)?MADD(S)?_rec$"),
+    (instregex "FCFID(U)?(S)?_rec$"),
+    (instregex "FCTID(U)?(Z)?_rec$"),
+    (instregex "FCTIW(U)?(Z)?_rec$"),
+    (instregex "FMUL(S)?_rec$"),
+    (instregex "FRSQRTE(S)?_rec$"),
+    FRSP_rec
 )>;
 
 // 7 cycle DP operation. One DP unit, one EXEC pipeline and 1 dispatch units.
@@ -611,16 +615,16 @@ def : InstRW<[P9_PM_3C, IP_EXECO_1C, IP_EXECE_1C, DISP_1C],
     XSCMPUQP,
     XSTSTDCQP,
     XSXSIGQP,
-    BCDCFNo,
-    BCDCFZo,
-    BCDCPSGNo,
-    BCDCTNo,
-    BCDCTZo,
-    BCDSETSGNo,
-    BCDSo,
-    BCDTRUNCo,
-    BCDUSo,
-    BCDUTRUNCo
+    BCDCFN_rec,
+    BCDCFZ_rec,
+    BCDCPSGN_rec,
+    BCDCTN_rec,
+    BCDCTZ_rec,
+    BCDSETSGN_rec,
+    BCDS_rec,
+    BCDTRUNC_rec,
+    BCDUS_rec,
+    BCDUTRUNC_rec
 )>;
 
 // 12 Cycle DFU operation. Only one DFU unit per CPU so we use a whole
@@ -628,7 +632,7 @@ def : InstRW<[P9_PM_3C, IP_EXECO_1C, IP_EXECE_1C, DISP_1C],
 // dispatch.
 def : InstRW<[P9_DFU_12C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
       (instrs
-    BCDSRo,
+    BCDSR_rec,
     XSADDQP,
     XSADDQPO,
     XSCVDPQP,
@@ -652,7 +656,7 @@ def : InstRW<[P9_DFU_12C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
 // dispatch.
 def : InstRW<[P9_DFU_23C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
       (instrs
-    BCDCTSQo
+    BCDCTSQ_rec
 )>;
 
 // 24 Cycle DFU operation. Only one DFU unit per CPU so we use a whole
@@ -677,7 +681,7 @@ def : InstRW<[P9_DFU_24C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
 // dispatch.
 def : InstRW<[P9_DFU_37C, IP_EXECE_1C, IP_EXECO_1C, DISP_1C],
       (instrs
-    BCDCFSQo
+    BCDCFSQ_rec
 )>;
 
 // 58 Cycle DFU operation. Only one DFU unit per CPU so we use a whole
@@ -730,7 +734,6 @@ def : InstRW<[P9_LS_4C, IP_AGEN_1C, DISP_1C],
     (instregex "DCBZ(L)?(EP)?$"),
     (instregex "DCBTST(EP)?$"),
     (instregex "CP_COPY(8)?$"),
-    (instregex "CP_PASTE(8)?$"),
     (instregex "ICBI(EP)?$"),
     (instregex "ICBT(LS)?$"),
     (instregex "LBARX(L)?$"),
@@ -817,7 +820,7 @@ def : InstRW<[P9_LoadAndALUOp_6C, IP_EXEC_1C, IP_AGEN_1C,
               DISP_1C, DISP_1C],
       (instrs
     (instregex "LHA(X)?(8)?$"),
-    (instregex "CP_PASTE(8)?o$"),
+    (instregex "CP_PASTE(8)?_rec$"),
     (instregex "LWA(X)?(_32)?$"),
     TCHECK
 )>;
@@ -944,7 +947,9 @@ def : InstRW<[P9_DIV_12C, IP_EXECE_1C, IP_EXECO_1C, DISP_EVEN_1C],
 def : InstRW<[P9_DIV_16C_8, IP_EXECO_1C, IP_EXECE_1C, DISP_EVEN_1C],
       (instrs
     DIVW,
+    DIVWO,
     DIVWU,
+    DIVWUO,
     MODSW
 )>;
 
@@ -954,9 +959,13 @@ def : InstRW<[P9_DIV_16C_8, IP_EXECO_1C, IP_EXECE_1C, DISP_EVEN_1C],
 def : InstRW<[P9_DIV_24C_8, IP_EXECO_1C, IP_EXECE_1C, DISP_EVEN_1C],
       (instrs
     DIVWE,
+    DIVWEO,
     DIVD,
+    DIVDO,
     DIVWEU,
+    DIVWEUO,
     DIVDU,
+    DIVDUO,
     MODSD,
     MODUD,
     MODUW
@@ -968,7 +977,9 @@ def : InstRW<[P9_DIV_24C_8, IP_EXECO_1C, IP_EXECE_1C, DISP_EVEN_1C],
 def : InstRW<[P9_DIV_40C_8, IP_EXECO_1C, IP_EXECE_1C, DISP_EVEN_1C],
       (instrs
     DIVDE,
-    DIVDEU
+    DIVDEO,
+    DIVDEU,
+    DIVDEUO
 )>;
 
 // Cracked DIV and ALU operation. Requires one full slice for the ALU operation
@@ -977,7 +988,7 @@ def : InstRW<[P9_DIV_40C_8, IP_EXECO_1C, IP_EXECE_1C, DISP_EVEN_1C],
 def : InstRW<[P9_IntDivAndALUOp_18C_8, IP_EXECE_1C, IP_EXECO_1C, IP_EXEC_1C,
               DISP_EVEN_1C, DISP_1C],
       (instrs
-    (instregex "DIVW(U)?(O)?o$")
+    (instregex "DIVW(U)?(O)?_rec$")
 )>;
 
 // Cracked DIV and ALU operation. Requires one full slice for the ALU operation
@@ -986,10 +997,14 @@ def : InstRW<[P9_IntDivAndALUOp_18C_8, IP_EXECE_1C, IP_EXECO_1C, IP_EXEC_1C,
 def : InstRW<[P9_IntDivAndALUOp_26C_8, IP_EXECE_1C, IP_EXECO_1C, IP_EXEC_1C,
               DISP_EVEN_1C, DISP_1C],
       (instrs
-    DIVDo,
-    DIVDUo,
-    DIVWEo,
-    DIVWEUo
+    DIVD_rec,
+    DIVDO_rec,
+    DIVDU_rec,
+    DIVDUO_rec,
+    DIVWE_rec,
+    DIVWEO_rec,
+    DIVWEU_rec,
+    DIVWEUO_rec
 )>;
 
 // Cracked DIV and ALU operation. Requires one full slice for the ALU operation
@@ -998,8 +1013,10 @@ def : InstRW<[P9_IntDivAndALUOp_26C_8, IP_EXECE_1C, IP_EXECO_1C, IP_EXEC_1C,
 def : InstRW<[P9_IntDivAndALUOp_42C_8, IP_EXECE_1C, IP_EXECO_1C, IP_EXEC_1C,
               DISP_EVEN_1C, DISP_1C],
       (instrs
-    DIVDEo,
-    DIVDEUo
+    DIVDE_rec,
+    DIVDEO_rec,
+    DIVDEU_rec,
+    DIVDEUO_rec
 )>;
 
 // CR access instructions in _BrMCR, IIC_BrMCRX.
@@ -1024,8 +1041,8 @@ def : InstRW<[P9_ALU_2C, P9_ALU_2C, IP_EXEC_1C, IP_EXEC_1C,
 def : InstRW<[P9_ALU_2C, P9_ALU_2C, IP_EXEC_1C, IP_EXEC_1C,
               DISP_1C, DISP_1C],
       (instrs
-    (instregex "ADDC(8)?o$"),
-    (instregex "SUBFC(8)?o$")
+    (instregex "ADDC(8)?(O)?_rec$"),
+    (instregex "SUBFC(8)?(O)?_rec$")
 )>;
 
 // Cracked ALU operations.
@@ -1036,10 +1053,10 @@ def : InstRW<[P9_ALU_2C, P9_ALU_2C, IP_EXEC_1C, IP_EXEC_1C,
 def : InstRW<[P9_ALU_2C, P9_ALU_3C, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    (instregex "F(N)?ABS(D|S)o$"),
-    (instregex "FCPSGN(D|S)o$"),
-    (instregex "FNEG(D|S)o$"),
-    FMRo
+    (instregex "F(N)?ABS(D|S)_rec$"),
+    (instregex "FCPSGN(D|S)_rec$"),
+    (instregex "FNEG(D|S)_rec$"),
+    FMR_rec
 )>;
 
 // Cracked ALU operations.
@@ -1061,8 +1078,9 @@ def : InstRW<[P9_ALU_3C, P9_ALU_3C, IP_EXEC_1C, IP_EXEC_1C,
 def : InstRW<[P9_ALU_3C, P9_ALU_3C, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_3SLOTS_1C],
       (instrs
-    (instregex "MTFSF(b|o)?$"),
-    (instregex "MTFSFI(o)?$")
+    (instregex "MTFSF(b|_rec)?$"),
+    (instregex "MTFSFI(_rec)?$"),
+    MTFSFIb
 )>;
 
 // Cracked instruction made of two ALU ops.
@@ -1071,13 +1089,13 @@ def : InstRW<[P9_ALU_3C, P9_ALU_3C, IP_EXEC_1C, IP_EXEC_1C,
 def : InstRW<[P9_ALUOpAndALUOp_4C, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    (instregex "RLD(I)?C(R|L)o$"),
-    (instregex "RLW(IMI|INM|NM)(8)?o$"),
-    (instregex "SLW(8)?o$"),
-    (instregex "SRAW(I)?o$"),
-    (instregex "SRW(8)?o$"),
-    RLDICL_32o,
-    RLDIMIo
+    (instregex "RLD(I)?C(R|L)_rec$"),
+    (instregex "RLW(IMI|INM|NM)(8)?_rec$"),
+    (instregex "SLW(8)?_rec$"),
+    (instregex "SRAW(I)?_rec$"),
+    (instregex "SRW(8)?_rec$"),
+    RLDICL_32_rec,
+    RLDIMI_rec
 )>;
 
 // Cracked instruction made of two ALU ops.
@@ -1086,7 +1104,7 @@ def : InstRW<[P9_ALUOpAndALUOp_4C, IP_EXEC_1C, IP_EXEC_1C,
 def : InstRW<[P9_ALU2OpAndALU2Op_6C, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_3SLOTS_1C],
       (instrs
-    (instregex "MFFS(L|CE|o)?$")
+    (instregex "MFFS(L|CE|_rec)?$")
 )>;
 
 // Cracked ALU instruction composed of three consecutive 2 cycle loads for a
@@ -1102,12 +1120,12 @@ def : InstRW<[P9_ALUOpAndALUOpAndALUOp_6C, IP_EXEC_1C, IP_EXEC_1C, IP_EXEC_1C,
 // The two ops cannot be done in parallel.
 def : InstRW<[P9_ALUOpAndALUOp_4C, IP_EXEC_1C, IP_EXEC_1C, DISP_1C, DISP_1C],
       (instrs
-    (instregex "EXTSWSLI_32_64o$"),
-    (instregex "SRAD(I)?o$"),
-    EXTSWSLIo,
-    SLDo,
-    SRDo,
-    RLDICo
+    (instregex "EXTSWSLI_32_64_rec$"),
+    (instregex "SRAD(I)?_rec$"),
+    EXTSWSLI_rec,
+    SLD_rec,
+    SRD_rec,
+    RLDIC_rec
 )>;
 
 // 33 Cycle DP Instruction Restricted. Takes one slice and 3 dispatches.
@@ -1120,7 +1138,7 @@ def : InstRW<[P9_DP_33C_8, IP_EXEC_1C, DISP_3SLOTS_1C],
 def : InstRW<[P9_DPOpAndALU2Op_36C_8, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    FDIVo
+    FDIV_rec
 )>;
 
 // 36 Cycle DP Instruction.
@@ -1154,7 +1172,7 @@ def : InstRW<[P9_DPE_27C_10, P9_DPO_27C_10, IP_EXECE_1C, IP_EXECO_1C,
 def : InstRW<[P9_DPOpAndALU2Op_39C_10, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    FSQRTo
+    FSQRT_rec
 )>;
 
 // 26 Cycle DP Instruction.
@@ -1173,7 +1191,7 @@ def : InstRW<[P9_DP_26C_5, IP_EXEC_1C, DISP_3SLOTS_1C],
 def : InstRW<[P9_DPOpAndALU2Op_29C_5, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    FSQRTSo
+    FSQRTS_rec
 )>;
 
 // 33 Cycle DP Instruction. Takes one slice and 1 dispatch.
@@ -1192,7 +1210,7 @@ def : InstRW<[P9_DP_22C_5, IP_EXEC_1C, DISP_3SLOTS_1C],
 def : InstRW<[P9_DPOpAndALU2Op_25C_5, IP_EXEC_1C, IP_EXEC_1C,
               DISP_3SLOTS_1C, DISP_1C],
       (instrs
-    FDIVSo
+    FDIVS_rec
 )>;
 
 // 22 Cycle DP Instruction. Takes one slice and 1 dispatch.
@@ -1302,6 +1320,7 @@ def : InstRW<[P9_BR_2C, DISP_BR_1C],
   BCLalways,
   BCLn,
   BCTRL8_LDinto_toc,
+  BCTRL_LWZinto_toc,
   BCn,
   CTRL_DEP
 )>;
@@ -1392,13 +1411,14 @@ def : InstRW<[],
   (instregex "NOP_GT_PWR(6|7)$"),
   (instregex "TLB(IA|IVAX|SX|SX2|SX2D|LD|LI|RE|RE2|WE|WE2)$"),
   (instregex "WRTEE(I)?$"),
+  (instregex "HASH(ST|STP|CHK|CHKP)$"),
   ATTN,
   CLRBHRB,
   MFBHRBE,
   MBAR,
   MSYNC,
   SLBSYNC,
-  SLBFEEo,
+  SLBFEE_rec,
   NAP,
   STOP,
   TRAP,
@@ -1409,5 +1429,6 @@ def : InstRW<[],
   DCBA,
   DCBI,
   DCCCI,
-  ICCCI
+  ICCCI,
+  ADDEX
 )> { let Unsupported = 1; }

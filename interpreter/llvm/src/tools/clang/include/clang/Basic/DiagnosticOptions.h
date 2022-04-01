@@ -15,7 +15,14 @@
 #include <type_traits>
 #include <vector>
 
+namespace llvm {
+namespace opt {
+class ArgList;
+} // namespace opt
+} // namespace llvm
+
 namespace clang {
+class DiagnosticsEngine;
 
 /// Specifies which overload candidates to display when overload
 /// resolution fails.
@@ -61,6 +68,11 @@ raw_ostream& operator<<(raw_ostream& Out, DiagnosticLevelMask M);
 
 /// Options for controlling the compiler diagnostics engine.
 class DiagnosticOptions : public RefCountedBase<DiagnosticOptions>{
+  friend bool ParseDiagnosticArgs(DiagnosticOptions &, llvm::opt::ArgList &,
+                                  clang::DiagnosticsEngine *, bool);
+
+  friend class CompilerInvocation;
+
 public:
   enum TextDiagnosticFormat { Clang, MSVC, Vi };
 
@@ -97,6 +109,10 @@ public:
   /// The list of -W... options used to alter the diagnostic mappings, with the
   /// prefixes removed.
   std::vector<std::string> Warnings;
+
+  /// The list of prefixes from -Wundef-prefix=... used to generate warnings
+  /// for undefined macros.
+  std::vector<std::string> UndefPrefixes;
 
   /// The list of -R... options used to alter the diagnostic mappings, with the
   /// prefixes removed.

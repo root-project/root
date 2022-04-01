@@ -14,18 +14,13 @@
 #define LLVM_LIB_TABLEGEN_TGPARSER_H
 
 #include "TGLexer.h"
-#include "llvm/ADT/Twine.h"
-#include "llvm/Support/SourceMgr.h"
 #include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Record.h"
 #include <map>
 
 namespace llvm {
-  class Record;
-  class RecordVal;
-  class RecordKeeper;
-  class RecTy;
-  class Init;
+  class SourceMgr;
+  class Twine;
   struct ForeachLoop;
   struct MultiClass;
   struct SubClassReference;
@@ -41,21 +36,29 @@ namespace llvm {
     }
   };
 
-  /// RecordsEntry - Can be either a record or a foreach loop.
+  /// RecordsEntry - Holds exactly one of a Record, ForeachLoop, or
+  /// AssertionInfo.
   struct RecordsEntry {
     std::unique_ptr<Record> Rec;
     std::unique_ptr<ForeachLoop> Loop;
+    std::unique_ptr<Record::AssertionInfo> Assertion;
 
     void dump() const;
 
     RecordsEntry() {}
     RecordsEntry(std::unique_ptr<Record> Rec) : Rec(std::move(Rec)) {}
     RecordsEntry(std::unique_ptr<ForeachLoop> Loop)
-      : Loop(std::move(Loop)) {}
+        : Loop(std::move(Loop)) {}
+    RecordsEntry(std::unique_ptr<Record::AssertionInfo> Assertion)
+        : Assertion(std::move(Assertion)) {}
   };
 
   /// ForeachLoop - Record the iteration state associated with a for loop.
   /// This is used to instantiate items in the loop body.
+  ///
+  /// IterVar is allowed to be null, in which case no iteration variable is
+  /// defined in the loop at all. (This happens when a ForeachLoop is
+  /// constructed by desugaring an if statement.)
   struct ForeachLoop {
     SMLoc Loc;
     VarInit *IterVar;
@@ -70,9 +73,49 @@ namespace llvm {
 
   struct DefsetRecord {
     SMLoc Loc;
-    RecTy *EltTy;
+    RecTy *EltTy = nullptr;
     SmallVector<Init *, 16> Elements;
   };
+
+class TGLocalVarScope {
+  // A scope to hold local variable definitions from defvar.
+  std::map<std::string, Init *, std::less<>> vars;
+  std::unique_ptr<TGLocalVarScope> parent;
+
+public:
+  TGLocalVarScope() = default;
+  TGLocalVarScope(std::unique_ptr<TGLocalVarScope> parent)
+      : parent(std::move(parent)) {}
+
+  std::unique_ptr<TGLocalVarScope> extractParent() {
+    // This is expected to be called just before we are destructed, so
+    // it doesn't much matter what state we leave 'parent' in.
+    return std::move(parent);
+  }
+
+  Init *getVar(StringRef Name) const {
+    auto It = vars.find(Name);
+    if (It != vars.end())
+      return It->second;
+    if (parent)
+      return parent->getVar(Name);
+    return nullptr;
+  }
+
+  bool varAlreadyDefined(StringRef Name) const {
+    // When we check whether a variable is already defined, for the purpose of
+    // reporting an error on redefinition, we don't look up to the parent
+    // scope, because it's all right to shadow an outer definition with an
+    // inner one.
+    return vars.find(Name) != vars.end();
+  }
+
+  void addVar(StringRef Name, Init *I) {
+    bool Ins = vars.insert(std::make_pair(std::string(Name), I)).second;
+    (void)Ins;
+    assert(Ins && "Local variable already exists");
+  }
+};
 
 struct MultiClass {
   Record Rec;  // Placeholder for template args and Name.
@@ -99,6 +142,10 @@ class TGParser {
   /// current value.
   MultiClass *CurMultiClass;
 
+  /// CurLocalScope - Innermost of the current nested scopes for 'defvar' local
+  /// variables.
+  std::unique_ptr<TGLocalVarScope> CurLocalScope;
+
   // Record tracker
   RecordKeeper &Records;
 
@@ -114,9 +161,9 @@ class TGParser {
   };
 
 public:
-  TGParser(SourceMgr &SrcMgr, ArrayRef<std::string> Macros,
+  TGParser(SourceMgr &SM, ArrayRef<std::string> Macros,
            RecordKeeper &records)
-    : Lex(SrcMgr, Macros), CurMultiClass(nullptr), Records(records) {}
+    : Lex(SM, Macros), CurMultiClass(nullptr), Records(records) {}
 
   /// ParseFile - Main entrypoint for parsing a tblgen file.  These parser
   /// routines return true on error, or false on success.
@@ -129,11 +176,24 @@ public:
   bool TokError(const Twine &Msg) const {
     return Error(Lex.getLoc(), Msg);
   }
-  const TGLexer::DependenciesMapTy &getDependencies() const {
+  const TGLexer::DependenciesSetTy &getDependencies() const {
     return Lex.getDependencies();
   }
 
-private:  // Semantic analysis methods.
+  TGLocalVarScope *PushLocalScope() {
+    CurLocalScope = std::make_unique<TGLocalVarScope>(std::move(CurLocalScope));
+    // Returns a pointer to the new scope, so that the caller can pass it back
+    // to PopLocalScope which will check by assertion that the pushes and pops
+    // match up properly.
+    return CurLocalScope.get();
+  }
+  void PopLocalScope(TGLocalVarScope *ExpectedStackTop) {
+    assert(ExpectedStackTop == CurLocalScope.get() &&
+           "Mismatched pushes and pops of local variable scopes");
+    CurLocalScope = CurLocalScope->extractParent();
+  }
+
+private: // Semantic analysis methods.
   bool AddValue(Record *TheRec, SMLoc Loc, const RecordVal &RV);
   bool SetValue(Record *TheRec, SMLoc Loc, Init *ValName,
                 ArrayRef<unsigned> BitList, Init *V,
@@ -154,6 +214,7 @@ private:  // Semantic analysis methods.
   bool addDefOne(std::unique_ptr<Record> Rec);
 
 private:  // Parser methods.
+  bool consume(tgtok::TokKind K);
   bool ParseObjectList(MultiClass *MC = nullptr);
   bool ParseObject(MultiClass *MC);
   bool ParseClass();
@@ -161,7 +222,11 @@ private:  // Parser methods.
   bool ParseDefm(MultiClass *CurMultiClass);
   bool ParseDef(MultiClass *CurMultiClass);
   bool ParseDefset();
+  bool ParseDefvar();
   bool ParseForeach(MultiClass *CurMultiClass);
+  bool ParseIf(MultiClass *CurMultiClass);
+  bool ParseIfBody(MultiClass *CurMultiClass, StringRef Kind);
+  bool ParseAssert(MultiClass *CurMultiClass, Record *CurRec = nullptr);
   bool ParseTopLevelLet(MultiClass *CurMultiClass);
   void ParseLetList(SmallVectorImpl<LetRecord> &Result);
 
@@ -182,8 +247,10 @@ private:  // Parser methods.
                          IDParseMode Mode = ParseValueMode);
   Init *ParseValue(Record *CurRec, RecTy *ItemType = nullptr,
                    IDParseMode Mode = ParseValueMode);
-  void ParseValueList(SmallVectorImpl<llvm::Init*> &Result, Record *CurRec,
-                      Record *ArgsRec = nullptr, RecTy *EltTy = nullptr);
+  void ParseValueList(SmallVectorImpl<llvm::Init*> &Result,
+                      Record *CurRec, RecTy *ItemType = nullptr);
+  bool ParseTemplateArgValueList(SmallVectorImpl<llvm::Init *> &Result,
+                                 Record *CurRec, Record *ArgsRec);
   void ParseDagArgList(
       SmallVectorImpl<std::pair<llvm::Init*, StringInit*>> &Result,
       Record *CurRec);
@@ -194,6 +261,9 @@ private:  // Parser methods.
                        TypedInit *FirstItem = nullptr);
   RecTy *ParseType();
   Init *ParseOperation(Record *CurRec, RecTy *ItemType);
+  Init *ParseOperationSubstr(Record *CurRec, RecTy *ItemType);
+  Init *ParseOperationFind(Record *CurRec, RecTy *ItemType);
+  Init *ParseOperationForEachFilter(Record *CurRec, RecTy *ItemType);
   Init *ParseOperationCond(Record *CurRec, RecTy *ItemType);
   RecTy *ParseOperatorType();
   Init *ParseObjectName(MultiClass *CurMultiClass);
@@ -201,6 +271,8 @@ private:  // Parser methods.
   MultiClass *ParseMultiClassID();
   bool ApplyLetStack(Record *CurRec);
   bool ApplyLetStack(RecordsEntry &Entry);
+  bool CheckTemplateArgValues(SmallVectorImpl<llvm::Init *> &Values,
+                              SMLoc Loc, Record *ArgsRec);
 };
 
 } // end namespace llvm

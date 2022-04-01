@@ -144,9 +144,9 @@ LanaiTargetLowering::LanaiTargetLowering(const TargetMachine &TM,
   setTargetDAGCombine(ISD::OR);
   setTargetDAGCombine(ISD::XOR);
 
-  // Function alignments (log2)
-  setMinFunctionAlignment(2);
-  setPrefFunctionAlignment(2);
+  // Function alignments
+  setMinFunctionAlignment(Align(4));
+  setPrefFunctionAlignment(Align(4));
 
   setJumpIsExpensive(true);
 
@@ -212,10 +212,11 @@ SDValue LanaiTargetLowering::LowerOperation(SDValue Op,
 //                       Lanai Inline Assembly Support
 //===----------------------------------------------------------------------===//
 
-unsigned LanaiTargetLowering::getRegisterByName(const char *RegName, EVT /*VT*/,
-                                                SelectionDAG & /*DAG*/) const {
+Register LanaiTargetLowering::getRegisterByName(
+  const char *RegName, LLT /*VT*/,
+  const MachineFunction & /*MF*/) const {
   // Only unallocatable registers should be matched here.
-  unsigned Reg = StringSwitch<unsigned>(RegName)
+  Register Reg = StringSwitch<unsigned>(RegName)
                      .Case("pc", Lanai::PC)
                      .Case("sp", Lanai::SP)
                      .Case("fp", Lanai::FP)
@@ -387,7 +388,7 @@ static bool CC_Lanai32_VarArg(unsigned ValNo, MVT ValVT, MVT LocVT,
   }
 
   // VarArgs get passed on stack
-  unsigned Offset = State.AllocateStack(4, 4);
+  unsigned Offset = State.AllocateStack(4, Align(4));
   State.addLoc(CCValAssign::getMem(ValNo, ValVT, Offset, LocVT, LocInfo));
   return false;
 }
@@ -459,7 +460,7 @@ SDValue LanaiTargetLowering::LowerCCCArguments(
       EVT RegVT = VA.getLocVT();
       switch (RegVT.getSimpleVT().SimpleTy) {
       case MVT::i32: {
-        unsigned VReg = RegInfo.createVirtualRegister(&Lanai::GPRRegClass);
+        Register VReg = RegInfo.createVirtualRegister(&Lanai::GPRRegClass);
         RegInfo.addLiveIn(VA.getLocReg(), VReg);
         SDValue ArgValue = DAG.getCopyFromReg(Chain, DL, VReg, RegVT);
 
@@ -632,13 +633,13 @@ SDValue LanaiTargetLowering::LowerCCCCallTo(
 
     SDValue Arg = OutVals[I];
     unsigned Size = Flags.getByValSize();
-    unsigned Align = Flags.getByValAlign();
+    Align Alignment = Flags.getNonZeroByValAlign();
 
-    int FI = MFI.CreateStackObject(Size, Align, false);
+    int FI = MFI.CreateStackObject(Size, Alignment, false);
     SDValue FIPtr = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
     SDValue SizeNode = DAG.getConstant(Size, DL, MVT::i32);
 
-    Chain = DAG.getMemcpy(Chain, DL, FIPtr, Arg, SizeNode, Align,
+    Chain = DAG.getMemcpy(Chain, DL, FIPtr, Arg, SizeNode, Alignment,
                           /*IsVolatile=*/false,
                           /*AlwaysInline=*/false,
                           /*isTailCall=*/false, MachinePointerInfo(),
@@ -1019,7 +1020,7 @@ SDValue LanaiTargetLowering::LowerDYNAMIC_STACKALLOC(SDValue Op,
   SDValue Size = Op.getOperand(1);
   SDLoc DL(Op);
 
-  unsigned SPReg = getStackPointerRegisterToSaveRestore();
+  Register SPReg = getStackPointerRegisterToSaveRestore();
 
   // Get a reference to the stack pointer.
   SDValue StackPointer = DAG.getCopyFromReg(Chain, DL, SPReg, MVT::i32);
@@ -1135,7 +1136,7 @@ SDValue LanaiTargetLowering::LowerConstantPool(SDValue Op,
   if (getTargetMachine().getCodeModel() == CodeModel::Small ||
       TLOF->isConstantInSmallSection(DAG.getDataLayout(), C)) {
     SDValue Small = DAG.getTargetConstantPool(
-        C, MVT::i32, N->getAlignment(), N->getOffset(), LanaiII::MO_NO_FLAG);
+        C, MVT::i32, N->getAlign(), N->getOffset(), LanaiII::MO_NO_FLAG);
     return DAG.getNode(ISD::OR, DL, MVT::i32,
                        DAG.getRegister(Lanai::R0, MVT::i32),
                        DAG.getNode(LanaiISD::SMALL, DL, MVT::i32, Small));
@@ -1143,9 +1144,9 @@ SDValue LanaiTargetLowering::LowerConstantPool(SDValue Op,
     uint8_t OpFlagHi = LanaiII::MO_ABS_HI;
     uint8_t OpFlagLo = LanaiII::MO_ABS_LO;
 
-    SDValue Hi = DAG.getTargetConstantPool(C, MVT::i32, N->getAlignment(),
+    SDValue Hi = DAG.getTargetConstantPool(C, MVT::i32, N->getAlign(),
                                            N->getOffset(), OpFlagHi);
-    SDValue Lo = DAG.getTargetConstantPool(C, MVT::i32, N->getAlignment(),
+    SDValue Lo = DAG.getTargetConstantPool(C, MVT::i32, N->getAlign(),
                                            N->getOffset(), OpFlagLo);
     Hi = DAG.getNode(LanaiISD::HI, DL, MVT::i32, Hi);
     Lo = DAG.getNode(LanaiISD::LO, DL, MVT::i32, Lo);
@@ -1499,8 +1500,7 @@ void LanaiTargetLowering::computeKnownBitsForTargetNode(
     KnownBits Known2;
     Known = DAG.computeKnownBits(Op->getOperand(0), Depth + 1);
     Known2 = DAG.computeKnownBits(Op->getOperand(1), Depth + 1);
-    Known.Zero &= Known2.Zero;
-    Known.One &= Known2.One;
+    Known = KnownBits::commonBits(Known, Known2);
     break;
   }
 }

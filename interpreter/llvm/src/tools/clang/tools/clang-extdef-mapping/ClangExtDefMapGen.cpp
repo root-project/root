@@ -76,10 +76,15 @@ void MapExtDefNamesConsumer::handleDecl(const Decl *D) {
 
 void MapExtDefNamesConsumer::addIfInMain(const DeclaratorDecl *DD,
                                          SourceLocation defStart) {
-  std::string LookupName = CrossTranslationUnitContext::getLookupName(DD);
+  llvm::Optional<std::string> LookupName =
+      CrossTranslationUnitContext::getLookupName(DD);
+  if (!LookupName)
+    return;
+  assert(!LookupName->empty() && "Lookup name should be non-empty.");
+
   if (CurrentFileName.empty()) {
-    CurrentFileName =
-        SM.getFileEntryForID(SM.getMainFileID())->tryGetRealPathName();
+    CurrentFileName = std::string(
+        SM.getFileEntryForID(SM.getMainFileID())->tryGetRealPathName());
     if (CurrentFileName.empty())
       CurrentFileName = "invalid_file";
   }
@@ -89,7 +94,7 @@ void MapExtDefNamesConsumer::addIfInMain(const DeclaratorDecl *DD,
   case VisibleNoLinkage:
   case UniqueExternalLinkage:
     if (SM.isInMainFile(defStart))
-      Index[LookupName] = CurrentFileName;
+      Index[*LookupName] = CurrentFileName;
     break;
   default:
     break;
@@ -99,8 +104,8 @@ void MapExtDefNamesConsumer::addIfInMain(const DeclaratorDecl *DD,
 class MapExtDefNamesAction : public ASTFrontendAction {
 protected:
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
-                                                 llvm::StringRef) {
-    return llvm::make_unique<MapExtDefNamesConsumer>(CI.getASTContext());
+                                                 llvm::StringRef) override {
+    return std::make_unique<MapExtDefNamesConsumer>(CI.getASTContext());
   }
 };
 
@@ -114,8 +119,13 @@ int main(int argc, const char **argv) {
   const char *Overview = "\nThis tool collects the USR name and location "
                          "of external definitions in the source files "
                          "(excluding headers).\n";
-  CommonOptionsParser OptionsParser(argc, argv, ClangExtDefMapGenCategory,
-                                    cl::ZeroOrMore, Overview);
+  auto ExpectedParser = CommonOptionsParser::create(
+      argc, argv, ClangExtDefMapGenCategory, cl::ZeroOrMore, Overview);
+  if (!ExpectedParser) {
+    llvm::errs() << ExpectedParser.takeError();
+    return 1;
+  }
+  CommonOptionsParser &OptionsParser = ExpectedParser.get();
 
   ClangTool Tool(OptionsParser.getCompilations(),
                  OptionsParser.getSourcePathList());

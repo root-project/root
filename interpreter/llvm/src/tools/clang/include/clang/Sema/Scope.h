@@ -129,11 +129,17 @@ public:
     /// This is a compound statement scope.
     CompoundStmtScope = 0x400000,
 
-    /// We are between inheritance colon and the real class/struct definition scope.
+    /// We are between inheritance colon and the real class/struct definition
+    /// scope.
     ClassInheritanceScope = 0x800000,
 
     /// This is the scope of a C++ catch statement.
     CatchScope = 0x1000000,
+
+    /// This is a scope in which a condition variable is currently being
+    /// parsed. If such a scope is a ContinueScope, it's invalid to jump to the
+    /// continue block from here.
+    ConditionVarScope = 0x2000000,
   };
 
 private:
@@ -247,6 +253,17 @@ public:
     return const_cast<Scope*>(this)->getContinueParent();
   }
 
+  // Set whether we're in the scope of a condition variable, where 'continue'
+  // is disallowed despite being a continue scope.
+  void setIsConditionVarScope(bool InConditionVarScope) {
+    Flags = (Flags & ~ConditionVarScope) |
+            (InConditionVarScope ? ConditionVarScope : 0);
+  }
+
+  bool isConditionVarScope() const {
+    return Flags & ConditionVarScope;
+  }
+
   /// getBreakParent - Return the closest scope that a break statement
   /// would be affected by.
   Scope *getBreakParent() {
@@ -320,15 +337,28 @@ public:
 
   /// isDeclScope - Return true if this is the scope that the specified decl is
   /// declared in.
-  bool isDeclScope(Decl *D) {
-    return DeclsInScope.count(D) != 0;
+  bool isDeclScope(const Decl *D) const { return DeclsInScope.count(D) != 0; }
+
+  /// Get the entity corresponding to this scope.
+  DeclContext *getEntity() const {
+    return isTemplateParamScope() ? nullptr : Entity;
   }
 
-  DeclContext *getEntity() const { return Entity; }
-  void setEntity(DeclContext *E) { Entity = E; }
+  /// Get the DeclContext in which to continue unqualified lookup after a
+  /// lookup in this scope.
+  DeclContext *getLookupEntity() const { return Entity; }
 
-  bool hasErrorOccurred() const { return ErrorTrap.hasErrorOccurred(); }
+  void setEntity(DeclContext *E) {
+    assert(!isTemplateParamScope() &&
+           "entity associated with template param scope");
+    Entity = E;
+  }
+  void setLookupEntity(DeclContext *E) { Entity = E; }
 
+  /// Determine whether any unrecoverable errors have occurred within this
+  /// scope. Note that this may return false even if the scope contains invalid
+  /// declarations or statements, if the errors for those invalid constructs
+  /// were suppressed because some prior invalid construct was referenced.
   bool hasUnrecoverableErrorOccurred() const {
     return ErrorTrap.hasUnrecoverableErrorOccurred();
   }
@@ -383,6 +413,12 @@ public:
   /// function prototype scope.
   bool isFunctionPrototypeScope() const {
     return getFlags() & Scope::FunctionPrototypeScope;
+  }
+
+  /// isFunctionDeclarationScope - Return true if this scope is a
+  /// function prototype scope.
+  bool isFunctionDeclarationScope() const {
+    return getFlags() & Scope::FunctionDeclarationScope;
   }
 
   /// isAtCatchScope - Return true if this scope is \@catch.

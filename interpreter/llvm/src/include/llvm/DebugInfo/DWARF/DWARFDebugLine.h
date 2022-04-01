@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_DEBUGINFO_DWARFDEBUGLINE_H
-#define LLVM_DEBUGINFO_DWARFDEBUGLINE_H
+#ifndef LLVM_DEBUGINFO_DWARF_DWARFDEBUGLINE_H
+#define LLVM_DEBUGINFO_DWARF_DWARFDEBUGLINE_H
 
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/StringRef.h"
@@ -18,6 +18,7 @@
 #include "llvm/DebugInfo/DWARF/DWARFRelocMap.h"
 #include "llvm/DebugInfo/DWARF/DWARFTypeUnit.h"
 #include "llvm/Support/MD5.h"
+#include "llvm/Support/Path.h"
 #include <cstdint>
 #include <map>
 #include <string>
@@ -107,15 +108,7 @@ public:
     bool totalLengthIsValid() const;
 
     /// Length of the prologue in bytes.
-    uint32_t getLength() const {
-      return PrologueLength + sizeofTotalLength() + sizeof(getVersion()) +
-             sizeofPrologueLength();
-    }
-
-    /// Length of the line table data in bytes (not including the prologue).
-    uint32_t getStatementTableLength() const {
-      return TotalLength + sizeofTotalLength() - getLength();
-    }
+    uint64_t getLength() const;
 
     int32_t getMaxLineIncrementForSpecialOpcode() const {
       return LineBase + (int8_t)LineRange - 1;
@@ -128,13 +121,18 @@ public:
 
     bool hasFileAtIndex(uint64_t FileIndex) const;
 
-    bool getFileNameByIndex(uint64_t FileIndex, StringRef CompDir,
-                            DILineInfoSpecifier::FileLineInfoKind Kind,
-                            std::string &Result) const;
+    Optional<uint64_t> getLastValidFileIndex() const;
+
+    bool
+    getFileNameByIndex(uint64_t FileIndex, StringRef CompDir,
+                       DILineInfoSpecifier::FileLineInfoKind Kind,
+                       std::string &Result,
+                       sys::path::Style Style = sys::path::Style::native) const;
 
     void clear();
     void dump(raw_ostream &OS, DIDumpOptions DumpOptions) const;
-    Error parse(const DWARFDataExtractor &DebugLineData, uint32_t *OffsetPtr,
+    Error parse(DWARFDataExtractor Data, uint64_t *OffsetPtr,
+                function_ref<void(Error)> RecoverableErrorHandler,
                 const DWARFContext &Ctx, const DWARFUnit *U = nullptr);
   };
 
@@ -147,7 +145,7 @@ public:
     void reset(bool DefaultIsStmt);
     void dump(raw_ostream &OS) const;
 
-    static void dumpTableHeader(raw_ostream &OS);
+    static void dumpTableHeader(raw_ostream &OS, unsigned Indent);
 
     static bool orderByAddress(const Row &LHS, const Row &RHS) {
       return std::tie(LHS.Address.SectionIndex, LHS.Address.Address) <
@@ -255,6 +253,10 @@ public:
       return Prologue.hasFileAtIndex(FileIndex);
     }
 
+    Optional<uint64_t> getLastValidFileIndex() const {
+      return Prologue.getLastValidFileIndex();
+    }
+
     /// Extracts filename by its index in filename table in prologue.
     /// In Dwarf 4, the files are 1-indexed and the current compilation file
     /// name is not represented in the list. In DWARF v5, the files are
@@ -277,11 +279,10 @@ public:
     void clear();
 
     /// Parse prologue and all rows.
-    Error parse(
-        DWARFDataExtractor &DebugLineData, uint32_t *OffsetPtr,
-        const DWARFContext &Ctx, const DWARFUnit *U,
-        std::function<void(Error)> RecoverableErrorCallback,
-        raw_ostream *OS = nullptr);
+    Error parse(DWARFDataExtractor &DebugLineData, uint64_t *OffsetPtr,
+                const DWARFContext &Ctx, const DWARFUnit *U,
+                function_ref<void(Error)> RecoverableErrorHandler,
+                raw_ostream *OS = nullptr, bool Verbose = false);
 
     using RowVector = std::vector<Row>;
     using RowIter = RowVector::const_iterator;
@@ -305,43 +306,44 @@ public:
                                 std::vector<uint32_t> &Result) const;
   };
 
-  const LineTable *getLineTable(uint32_t Offset) const;
-  Expected<const LineTable *> getOrParseLineTable(
-      DWARFDataExtractor &DebugLineData, uint32_t Offset,
-      const DWARFContext &Ctx, const DWARFUnit *U,
-      std::function<void(Error)> RecoverableErrorCallback);
+  const LineTable *getLineTable(uint64_t Offset) const;
+  Expected<const LineTable *>
+  getOrParseLineTable(DWARFDataExtractor &DebugLineData, uint64_t Offset,
+                      const DWARFContext &Ctx, const DWARFUnit *U,
+                      function_ref<void(Error)> RecoverableErrorHandler);
 
   /// Helper to allow for parsing of an entire .debug_line section in sequence.
   class SectionParser {
   public:
-    using cu_range = DWARFUnitVector::iterator_range;
-    using tu_range = DWARFUnitVector::iterator_range;
     using LineToUnitMap = std::map<uint64_t, DWARFUnit *>;
 
-    SectionParser(DWARFDataExtractor &Data, const DWARFContext &C, cu_range CUs,
-                  tu_range TUs);
+    SectionParser(DWARFDataExtractor &Data, const DWARFContext &C,
+                  DWARFUnitVector::iterator_range Units);
 
     /// Get the next line table from the section. Report any issues via the
-    /// callbacks.
+    /// handlers.
     ///
-    /// \param RecoverableErrorCallback - any issues that don't prevent further
-    /// parsing of the table will be reported through this callback.
-    /// \param UnrecoverableErrorCallback - any issues that prevent further
-    /// parsing of the table will be reported through this callback.
+    /// \param RecoverableErrorHandler - any issues that don't prevent further
+    /// parsing of the table will be reported through this handler.
+    /// \param UnrecoverableErrorHandler - any issues that prevent further
+    /// parsing of the table will be reported through this handler.
     /// \param OS - if not null, the parser will print information about the
     /// table as it parses it.
-    LineTable
-    parseNext(
-        function_ref<void(Error)> RecoverableErrorCallback,
-        function_ref<void(Error)> UnrecoverableErrorCallback,
-        raw_ostream *OS = nullptr);
+    /// \param Verbose - if true, the parser will print verbose information when
+    /// printing to the output.
+    LineTable parseNext(function_ref<void(Error)> RecoverableErrorHandler,
+                        function_ref<void(Error)> UnrecoverableErrorHandler,
+                        raw_ostream *OS = nullptr, bool Verbose = false);
 
     /// Skip the current line table and go to the following line table (if
     /// present) immediately.
     ///
-    /// \param ErrorCallback - report any prologue parsing issues via this
-    /// callback.
-    void skip(function_ref<void(Error)> ErrorCallback);
+    /// \param RecoverableErrorHandler - report any recoverable prologue
+    /// parsing issues via this handler.
+    /// \param UnrecoverableErrorHandler - report any unrecoverable prologue
+    /// parsing issues via this handler.
+    void skip(function_ref<void(Error)> RecoverableErrorHandler,
+              function_ref<void(Error)> UnrecoverableErrorHandler);
 
     /// Indicates if the parser has parsed as much as possible.
     ///
@@ -350,34 +352,66 @@ public:
     bool done() const { return Done; }
 
     /// Get the offset the parser has reached.
-    uint32_t getOffset() const { return Offset; }
+    uint64_t getOffset() const { return Offset; }
 
   private:
-    DWARFUnit *prepareToParse(uint32_t Offset);
-    void moveToNextTable(uint32_t OldOffset, const Prologue &P);
+    DWARFUnit *prepareToParse(uint64_t Offset);
+    void moveToNextTable(uint64_t OldOffset, const Prologue &P);
 
     LineToUnitMap LineToUnit;
 
     DWARFDataExtractor &DebugLineData;
     const DWARFContext &Context;
-    uint32_t Offset = 0;
+    uint64_t Offset = 0;
     bool Done = false;
   };
 
 private:
   struct ParsingState {
-    ParsingState(struct LineTable *LT);
+    ParsingState(struct LineTable *LT, uint64_t TableOffset,
+                 function_ref<void(Error)> ErrorHandler);
 
     void resetRowAndSequence();
     void appendRowToMatrix();
+
+    /// Advance the address by the \p OperationAdvance value. \returns the
+    /// amount advanced by.
+    uint64_t advanceAddr(uint64_t OperationAdvance, uint8_t Opcode,
+                         uint64_t OpcodeOffset);
+
+    struct AddrAndAdjustedOpcode {
+      uint64_t AddrDelta;
+      uint8_t AdjustedOpcode;
+    };
+
+    /// Advance the address as required by the specified \p Opcode.
+    /// \returns the amount advanced by and the calculated adjusted opcode.
+    AddrAndAdjustedOpcode advanceAddrForOpcode(uint8_t Opcode,
+                                               uint64_t OpcodeOffset);
+
+    struct AddrAndLineDelta {
+      uint64_t Address;
+      int32_t Line;
+    };
+
+    /// Advance the line and address as required by the specified special \p
+    /// Opcode. \returns the address and line delta.
+    AddrAndLineDelta handleSpecialOpcode(uint8_t Opcode, uint64_t OpcodeOffset);
 
     /// Line table we're currently parsing.
     struct LineTable *LineTable;
     struct Row Row;
     struct Sequence Sequence;
+
+  private:
+    uint64_t LineTableOffset;
+
+    bool ReportAdvanceAddrProblem = true;
+    bool ReportBadLineRange = true;
+    function_ref<void(Error)> ErrorHandler;
   };
 
-  using LineTableMapTy = std::map<uint32_t, LineTable>;
+  using LineTableMapTy = std::map<uint64_t, LineTable>;
   using LineTableIter = LineTableMapTy::iterator;
   using LineTableConstIter = LineTableMapTy::const_iterator;
 
@@ -386,4 +420,4 @@ private:
 
 } // end namespace llvm
 
-#endif // LLVM_DEBUGINFO_DWARFDEBUGLINE_H
+#endif // LLVM_DEBUGINFO_DWARF_DWARFDEBUGLINE_H

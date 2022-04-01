@@ -6,15 +6,15 @@
 |*
 \*===----------------------------------------------------------------------===*/
 /*
- * This is the master file that defines all the data structure, signature,
+ * This is the main file that defines all the data structure, signature,
  * constant literals that are shared across profiling runtime library,
  * compiler (instrumentation), and host tools (reader/writer). The entities
  * defined in this file affect the profile runtime ABI, the raw profile format,
  * or both.
  *
- * The file has two identical copies. The master copy lives in LLVM and
+ * The file has two identical copies. The primary copy lives in LLVM and
  * the other one  sits in compiler-rt/lib/profile directory. To make changes
- * in this file, first modify the master copy and copy it over to compiler-rt.
+ * in this file, first modify the primary copy and copy it over to compiler-rt.
  * Testing of any change in this file can start only after the two copies are
  * synced up.
  *
@@ -129,8 +129,11 @@ INSTR_PROF_VALUE_NODE(PtrToNodeT, llvm::Type::getInt8PtrTy(Ctx), Next, \
 #endif
 INSTR_PROF_RAW_HEADER(uint64_t, Magic, __llvm_profile_get_magic())
 INSTR_PROF_RAW_HEADER(uint64_t, Version, __llvm_profile_get_version())
+INSTR_PROF_RAW_HEADER(uint64_t, BinaryIdsSize, __llvm_write_binary_ids(NULL))
 INSTR_PROF_RAW_HEADER(uint64_t, DataSize, DataSize)
+INSTR_PROF_RAW_HEADER(uint64_t, PaddingBytesBeforeCounters, PaddingBytesBeforeCounters)
 INSTR_PROF_RAW_HEADER(uint64_t, CountersSize, CountersSize)
+INSTR_PROF_RAW_HEADER(uint64_t, PaddingBytesAfterCounters, PaddingBytesAfterCounters)
 INSTR_PROF_RAW_HEADER(uint64_t, NamesSize,  NamesSize)
 INSTR_PROF_RAW_HEADER(uint64_t, CountersDelta, (uintptr_t)CountersBegin)
 INSTR_PROF_RAW_HEADER(uint64_t, NamesDelta, (uintptr_t)NamesBegin)
@@ -152,17 +155,7 @@ INSTR_PROF_RAW_HEADER(uint64_t, ValueKindLast, IPVK_Last)
 VALUE_PROF_FUNC_PARAM(uint64_t, TargetValue, Type::getInt64Ty(Ctx)) \
                       INSTR_PROF_COMMA
 VALUE_PROF_FUNC_PARAM(void *, Data, Type::getInt8PtrTy(Ctx)) INSTR_PROF_COMMA
-#ifndef VALUE_RANGE_PROF
 VALUE_PROF_FUNC_PARAM(uint32_t, CounterIndex, Type::getInt32Ty(Ctx))
-#else /* VALUE_RANGE_PROF */
-VALUE_PROF_FUNC_PARAM(uint32_t, CounterIndex, Type::getInt32Ty(Ctx)) \
-                      INSTR_PROF_COMMA
-VALUE_PROF_FUNC_PARAM(uint64_t, PreciseRangeStart, Type::getInt64Ty(Ctx)) \
-                      INSTR_PROF_COMMA
-VALUE_PROF_FUNC_PARAM(uint64_t, PreciseRangeLast, Type::getInt64Ty(Ctx)) \
-                      INSTR_PROF_COMMA
-VALUE_PROF_FUNC_PARAM(uint64_t, LargeValue, Type::getInt64Ty(Ctx))
-#endif /*VALUE_RANGE_PROF */
 #undef VALUE_PROF_FUNC_PARAM
 #undef INSTR_PROF_COMMA
 /* VALUE_PROF_FUNC_PARAM end */
@@ -196,6 +189,14 @@ VALUE_PROF_KIND(IPVK_Last, IPVK_MemOPSize, "last")
 #undef VALUE_PROF_KIND
 /* VALUE_PROF_KIND end */
 
+#undef COVMAP_V2_OR_V3
+#ifdef COVMAP_V2
+#define COVMAP_V2_OR_V3
+#endif
+#ifdef COVMAP_V3
+#define COVMAP_V2_OR_V3
+#endif
+
 /* COVMAP_FUNC_RECORD start */
 /* Definition of member fields of the function record structure in coverage
  * map.
@@ -212,16 +213,30 @@ COVMAP_FUNC_RECORD(const IntPtrT, llvm::Type::getInt8PtrTy(Ctx), \
 COVMAP_FUNC_RECORD(const uint32_t, llvm::Type::getInt32Ty(Ctx), NameSize, \
                    llvm::ConstantInt::get(llvm::Type::getInt32Ty(Ctx), \
                    NameValue.size()))
-#else
+#endif
+#ifdef COVMAP_V2_OR_V3
 COVMAP_FUNC_RECORD(const int64_t, llvm::Type::getInt64Ty(Ctx), NameRef, \
-                   llvm::ConstantInt::get(llvm::Type::getInt64Ty(Ctx), \
-                   llvm::IndexedInstrProf::ComputeHash(NameValue)))
+                   llvm::ConstantInt::get( \
+                     llvm::Type::getInt64Ty(Ctx), NameHash))
 #endif
 COVMAP_FUNC_RECORD(const uint32_t, llvm::Type::getInt32Ty(Ctx), DataSize, \
-                   llvm::ConstantInt::get(llvm::Type::getInt32Ty(Ctx),\
-                   CoverageMapping.size()))
+                   llvm::ConstantInt::get( \
+                     llvm::Type::getInt32Ty(Ctx), CoverageMapping.size()))
 COVMAP_FUNC_RECORD(const uint64_t, llvm::Type::getInt64Ty(Ctx), FuncHash, \
-                   llvm::ConstantInt::get(llvm::Type::getInt64Ty(Ctx), FuncHash))
+                   llvm::ConstantInt::get( \
+                     llvm::Type::getInt64Ty(Ctx), FuncHash))
+#ifdef COVMAP_V3
+COVMAP_FUNC_RECORD(const uint64_t, llvm::Type::getInt64Ty(Ctx), FilenamesRef, \
+                   llvm::ConstantInt::get( \
+                     llvm::Type::getInt64Ty(Ctx), FilenamesRef))
+COVMAP_FUNC_RECORD(const char, \
+                   llvm::ArrayType::get(llvm::Type::getInt8Ty(Ctx), \
+                                        CoverageMapping.size()), \
+                   CoverageMapping,
+                   llvm::ConstantDataArray::getRaw( \
+                     CoverageMapping, CoverageMapping.size(), \
+                     llvm::Type::getInt8Ty(Ctx)))
+#endif
 #undef COVMAP_FUNC_RECORD
 /* COVMAP_FUNC_RECORD end.  */
 
@@ -234,7 +249,7 @@ COVMAP_FUNC_RECORD(const uint64_t, llvm::Type::getInt64Ty(Ctx), FuncHash, \
 #define INSTR_PROF_DATA_DEFINED
 #endif
 COVMAP_HEADER(uint32_t, Int32Ty, NRecords, \
-              llvm::ConstantInt::get(Int32Ty,  FunctionRecords.size()))
+              llvm::ConstantInt::get(Int32Ty, NRecords))
 COVMAP_HEADER(uint32_t, Int32Ty, FilenamesSize, \
               llvm::ConstantInt::get(Int32Ty, FilenamesSize))
 COVMAP_HEADER(uint32_t, Int32Ty, CoverageSize, \
@@ -265,6 +280,9 @@ INSTR_PROF_SECT_ENTRY(IPSK_vnodes, \
 INSTR_PROF_SECT_ENTRY(IPSK_covmap, \
                       INSTR_PROF_QUOTE(INSTR_PROF_COVMAP_COMMON), \
                       INSTR_PROF_COVMAP_COFF, "__LLVM_COV,")
+INSTR_PROF_SECT_ENTRY(IPSK_covfun, \
+                      INSTR_PROF_QUOTE(INSTR_PROF_COVFUN_COMMON), \
+                      INSTR_PROF_COVFUN_COFF, "__LLVM_COV,")
 INSTR_PROF_SECT_ENTRY(IPSK_orderfile, \
                       INSTR_PROF_QUOTE(INSTR_PROF_ORDERFILE_COMMON), \
                       INSTR_PROF_QUOTE(INSTR_PROF_ORDERFILE_COFF), "__DATA,")
@@ -628,11 +646,11 @@ serializeValueProfDataFrom(ValueProfRecordClosure *Closure,
         (uint64_t)'f' << 16 | (uint64_t)'R' << 8 | (uint64_t)129
 
 /* Raw profile format version (start from 1). */
-#define INSTR_PROF_RAW_VERSION 4
+#define INSTR_PROF_RAW_VERSION 7
 /* Indexed profile format version (start from 1). */
-#define INSTR_PROF_INDEX_VERSION 5
-/* Coverage mapping format vresion (start from 0). */
-#define INSTR_PROF_COVMAP_VERSION 2
+#define INSTR_PROF_INDEX_VERSION 7
+/* Coverage mapping format version (start from 0). */
+#define INSTR_PROF_COVMAP_VERSION 5
 
 /* Profile version is always of type uint64_t. Reserve the upper 8 bits in the
  * version for other variants of profile. We set the lowest bit of the upper 8
@@ -644,8 +662,10 @@ serializeValueProfDataFrom(ValueProfRecordClosure *Closure,
 #define GET_VERSION(V) ((V) & ~VARIANT_MASKS_ALL)
 #define VARIANT_MASK_IR_PROF (0x1ULL << 56)
 #define VARIANT_MASK_CSIR_PROF (0x1ULL << 57)
+#define VARIANT_MASK_INSTR_ENTRY (0x1ULL << 58)
 #define INSTR_PROF_RAW_VERSION_VAR __llvm_profile_raw_version
 #define INSTR_PROF_PROFILE_RUNTIME_VAR __llvm_profile_runtime
+#define INSTR_PROF_PROFILE_COUNTER_BIAS_VAR __llvm_profile_counter_bias
 
 /* The variable that holds the name of the profile data
  * specified via command line. */
@@ -659,6 +679,7 @@ serializeValueProfDataFrom(ValueProfRecordClosure *Closure,
 #define INSTR_PROF_VALS_COMMON __llvm_prf_vals
 #define INSTR_PROF_VNODES_COMMON __llvm_prf_vnds
 #define INSTR_PROF_COVMAP_COMMON __llvm_covmap
+#define INSTR_PROF_COVFUN_COMMON __llvm_covfun
 #define INSTR_PROF_ORDERFILE_COMMON __llvm_orderfile
 /* Windows section names. Because these section names contain dollar characters,
  * they must be quoted.
@@ -669,6 +690,7 @@ serializeValueProfDataFrom(ValueProfRecordClosure *Closure,
 #define INSTR_PROF_VALS_COFF ".lprfv$M"
 #define INSTR_PROF_VNODES_COFF ".lprfnd$M"
 #define INSTR_PROF_COVMAP_COFF ".lcovmap$M"
+#define INSTR_PROF_COVFUN_COFF ".lcovfun$M"
 #define INSTR_PROF_ORDERFILE_COFF ".lorderfile$M"
 
 #ifdef _WIN32
@@ -683,6 +705,7 @@ serializeValueProfDataFrom(ValueProfRecordClosure *Closure,
 /* Value profile nodes section. */
 #define INSTR_PROF_VNODES_SECT_NAME INSTR_PROF_VNODES_COFF
 #define INSTR_PROF_COVMAP_SECT_NAME INSTR_PROF_COVMAP_COFF
+#define INSTR_PROF_COVFUN_SECT_NAME INSTR_PROF_COVFUN_COFF
 #define INSTR_PROF_ORDERFILE_SECT_NAME INSTR_PROF_ORDERFILE_COFF
 #else
 /* Runtime section names and name strings.  */
@@ -696,6 +719,7 @@ serializeValueProfDataFrom(ValueProfRecordClosure *Closure,
 /* Value profile nodes section. */
 #define INSTR_PROF_VNODES_SECT_NAME INSTR_PROF_QUOTE(INSTR_PROF_VNODES_COMMON)
 #define INSTR_PROF_COVMAP_SECT_NAME INSTR_PROF_QUOTE(INSTR_PROF_COVMAP_COMMON)
+#define INSTR_PROF_COVFUN_SECT_NAME INSTR_PROF_QUOTE(INSTR_PROF_COVFUN_COMMON)
 /* Order file instrumentation. */
 #define INSTR_PROF_ORDERFILE_SECT_NAME                                         \
   INSTR_PROF_QUOTE(INSTR_PROF_ORDERFILE_COMMON)
@@ -722,9 +746,9 @@ serializeValueProfDataFrom(ValueProfRecordClosure *Closure,
 #define INSTR_PROF_VALUE_PROF_FUNC __llvm_profile_instrument_target
 #define INSTR_PROF_VALUE_PROF_FUNC_STR \
         INSTR_PROF_QUOTE(INSTR_PROF_VALUE_PROF_FUNC)
-#define INSTR_PROF_VALUE_RANGE_PROF_FUNC __llvm_profile_instrument_range
-#define INSTR_PROF_VALUE_RANGE_PROF_FUNC_STR \
-        INSTR_PROF_QUOTE(INSTR_PROF_VALUE_RANGE_PROF_FUNC)
+#define INSTR_PROF_VALUE_PROF_MEMOP_FUNC __llvm_profile_instrument_memop
+#define INSTR_PROF_VALUE_PROF_MEMOP_FUNC_STR                                   \
+  INSTR_PROF_QUOTE(INSTR_PROF_VALUE_PROF_MEMOP_FUNC)
 
 /* InstrProfile per-function control data alignment.  */
 #define INSTR_PROF_DATA_ALIGNMENT 8
@@ -742,7 +766,7 @@ typedef struct InstrProfValueData {
 #endif /* INSTR_PROF_DATA_INC */
 
 #ifndef INSTR_ORDER_FILE_INC
-// The maximal # of functions: 128*1024 (the buffer size will be 128*4 KB).
+/* The maximal # of functions: 128*1024 (the buffer size will be 128*4 KB). */
 #define INSTR_ORDER_FILE_BUFFER_SIZE 131072
 #define INSTR_ORDER_FILE_BUFFER_BITS 17
 #define INSTR_ORDER_FILE_BUFFER_MASK 0x1ffff
@@ -750,3 +774,124 @@ typedef struct InstrProfValueData {
 #else
 #undef INSTR_PROF_DATA_DEFINED
 #endif
+
+#undef COVMAP_V2_OR_V3
+
+#ifdef INSTR_PROF_VALUE_PROF_MEMOP_API
+
+#ifdef __cplusplus
+#define INSTR_PROF_INLINE inline
+#else
+#define INSTR_PROF_INLINE
+#endif
+
+/* The value range buckets (22 buckets) for the memop size value profiling looks
+ * like:
+ *
+ *   [0, 0]
+ *   [1, 1]
+ *   [2, 2]
+ *   [3, 3]
+ *   [4, 4]
+ *   [5, 5]
+ *   [6, 6]
+ *   [7, 7]
+ *   [8, 8]
+ *   [9, 15]
+ *   [16, 16]
+ *   [17, 31]
+ *   [32, 32]
+ *   [33, 63]
+ *   [64, 64]
+ *   [65, 127]
+ *   [128, 128]
+ *   [129, 255]
+ *   [256, 256]
+ *   [257, 511]
+ *   [512, 512]
+ *   [513, UINT64_MAX]
+ *
+ * Each range has a 'representative value' which is the lower end value of the
+ * range and used to store in the runtime profile data records and the VP
+ * metadata. For example, it's 2 for [2, 2] and 64 for [65, 127].
+ */
+#define INSTR_PROF_NUM_BUCKETS 22
+
+/*
+ * Clz and Popcount. This code was copied from
+ * compiler-rt/lib/fuzzer/{FuzzerBuiltins.h,FuzzerBuiltinsMsvc.h} and
+ * llvm/include/llvm/Support/MathExtras.h.
+ */
+#if defined(_MSC_VER) && !defined(__clang__)
+
+#include <intrin.h>
+INSTR_PROF_VISIBILITY INSTR_PROF_INLINE
+int InstProfClzll(unsigned long long X) {
+  unsigned long LeadZeroIdx = 0;
+#if !defined(_M_ARM64) && !defined(_M_X64)
+  // Scan the high 32 bits.
+  if (_BitScanReverse(&LeadZeroIdx, (unsigned long)(X >> 32)))
+    return (int)(63 - (LeadZeroIdx + 32)); // Create a bit offset
+                                                      // from the MSB.
+  // Scan the low 32 bits.
+  if (_BitScanReverse(&LeadZeroIdx, (unsigned long)(X)))
+    return (int)(63 - LeadZeroIdx);
+#else
+  if (_BitScanReverse64(&LeadZeroIdx, X)) return 63 - LeadZeroIdx;
+#endif
+  return 64;
+}
+INSTR_PROF_VISIBILITY INSTR_PROF_INLINE
+int InstProfPopcountll(unsigned long long X) {
+  // This code originates from https://reviews.llvm.org/rG30626254510f.
+  unsigned long long v = X;
+  v = v - ((v >> 1) & 0x5555555555555555ULL);
+  v = (v & 0x3333333333333333ULL) + ((v >> 2) & 0x3333333333333333ULL);
+  v = (v + (v >> 4)) & 0x0F0F0F0F0F0F0F0FULL;
+  return (int)((unsigned long long)(v * 0x0101010101010101ULL) >> 56);
+}
+
+#else
+
+INSTR_PROF_VISIBILITY INSTR_PROF_INLINE
+int InstProfClzll(unsigned long long X) { return __builtin_clzll(X); }
+INSTR_PROF_VISIBILITY INSTR_PROF_INLINE
+int InstProfPopcountll(unsigned long long X) { return __builtin_popcountll(X); }
+
+#endif  /* defined(_MSC_VER) && !defined(__clang__) */
+
+/* Map an (observed) memop size value to the representative value of its range.
+ * For example, 5 -> 5, 22 -> 17, 99 -> 65, 256 -> 256, 1001 -> 513. */
+INSTR_PROF_VISIBILITY INSTR_PROF_INLINE uint64_t
+InstrProfGetRangeRepValue(uint64_t Value) {
+  if (Value <= 8)
+    // The first ranges are individually tracked. Use the value as is.
+    return Value;
+  else if (Value >= 513)
+    // The last range is mapped to its lowest value.
+    return 513;
+  else if (InstProfPopcountll(Value) == 1)
+    // If it's a power of two, use it as is.
+    return Value;
+  else
+    // Otherwise, take to the previous power of two + 1.
+    return (UINT64_C(1) << (64 - InstProfClzll(Value) - 1)) + 1;
+}
+
+/* Return true if the range that an (observed) memop size value belongs to has
+ * only a single value in the range.  For example, 0 -> true, 8 -> true, 10 ->
+ * false, 64 -> true, 100 -> false, 513 -> false. */
+INSTR_PROF_VISIBILITY INSTR_PROF_INLINE unsigned
+InstrProfIsSingleValRange(uint64_t Value) {
+  if (Value <= 8)
+    // The first ranges are individually tracked.
+    return 1;
+  else if (InstProfPopcountll(Value) == 1)
+    // If it's a power of two, there's only one value.
+    return 1;
+  else
+    // Otherwise, there's more than one value in the range.
+    return 0;
+}
+
+#endif /* INSTR_PROF_VALUE_PROF_MEMOP_API */

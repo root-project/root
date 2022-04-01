@@ -12,21 +12,32 @@
 namespace llvm {
 namespace orc {
 
-ObjectTransformLayer::ObjectTransformLayer(ExecutionSession &ES,
-                                            ObjectLayer &BaseLayer,
-                                            TransformFunction Transform)
-    : ObjectLayer(ES), BaseLayer(BaseLayer), Transform(std::move(Transform)) {}
+char ObjectTransformLayer::ID;
 
-void ObjectTransformLayer::emit(MaterializationResponsibility R,
-                                std::unique_ptr<MemoryBuffer> O) {
+using BaseT = RTTIExtends<ObjectTransformLayer, ObjectLayer>;
+
+ObjectTransformLayer::ObjectTransformLayer(ExecutionSession &ES,
+                                           ObjectLayer &BaseLayer,
+                                           TransformFunction Transform)
+    : BaseT(ES), BaseLayer(BaseLayer), Transform(std::move(Transform)) {}
+
+void ObjectTransformLayer::emit(
+    std::unique_ptr<MaterializationResponsibility> R,
+    std::unique_ptr<MemoryBuffer> O) {
   assert(O && "Module must not be null");
 
-  if (auto TransformedObj = Transform(std::move(O)))
-    BaseLayer.emit(std::move(R), std::move(*TransformedObj));
-  else {
-    R.failMaterialization();
-    getExecutionSession().reportError(TransformedObj.takeError());
+  // If there is a transform set then apply it.
+  if (Transform) {
+    if (auto TransformedObj = Transform(std::move(O)))
+      O = std::move(*TransformedObj);
+    else {
+      R->failMaterialization();
+      getExecutionSession().reportError(TransformedObj.takeError());
+      return;
+    }
   }
+
+  BaseLayer.emit(std::move(R), std::move(O));
 }
 
 } // End namespace orc.

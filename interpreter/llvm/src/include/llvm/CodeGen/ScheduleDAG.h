@@ -614,14 +614,19 @@ class TargetRegisterInfo;
     const MCInstrDesc *getNodeDesc(const SDNode *Node) const;
   };
 
-  class SUnitIterator : public std::iterator<std::forward_iterator_tag,
-                                             SUnit, ptrdiff_t> {
+  class SUnitIterator {
     SUnit *Node;
     unsigned Operand;
 
     SUnitIterator(SUnit *N, unsigned Op) : Node(N), Operand(Op) {}
 
   public:
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = SUnit;
+    using difference_type = std::ptrdiff_t;
+    using pointer = value_type *;
+    using reference = value_type &;
+
     bool operator==(const SUnitIterator& x) const {
       return Operand == x.Operand;
     }
@@ -723,6 +728,10 @@ class TargetRegisterInfo;
 
   public:
     ScheduleDAGTopologicalSort(std::vector<SUnit> &SUnits, SUnit *ExitSU);
+
+    /// Add a SUnit without predecessors to the end of the topological order. It
+    /// also must be the first new node added to the DAG.
+    void AddSUnitWithoutPredecessors(const SUnit *SU);
 
     /// Creates the initial topological ordering from the DAG to be scheduled.
     void InitDAGTopologicalSorting();

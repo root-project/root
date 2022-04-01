@@ -11,6 +11,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ADT/SmallVector.h"
+#include <cstdint>
+#ifdef LLVM_ENABLE_EXCEPTIONS
+#include <stdexcept>
+#endif
 using namespace llvm;
 
 // Check that no bytes are wasted and everything is well-aligned.
@@ -37,18 +41,76 @@ static_assert(sizeof(SmallVector<void *, 1>) ==
                   sizeof(unsigned) * 2 + sizeof(void *) * 2,
               "wasted space in SmallVector size 1");
 
-/// grow_pod - This is an implementation of the grow() method which only works
-/// on POD-like datatypes and is out of line to reduce code duplication.
-void SmallVectorBase::grow_pod(void *FirstEl, size_t MinCapacity,
-                               size_t TSize) {
-  // Ensure we can fit the new capacity in 32 bits.
-  if (MinCapacity > UINT32_MAX)
-    report_bad_alloc_error("SmallVector capacity overflow during allocation");
+static_assert(sizeof(SmallVector<char, 0>) ==
+                  sizeof(void *) * 2 + sizeof(void *),
+              "1 byte elements have word-sized type for size and capacity");
 
-  size_t NewCapacity = 2 * capacity() + 1; // Always grow.
-  NewCapacity =
-      std::min(std::max(NewCapacity, MinCapacity), size_t(UINT32_MAX));
+/// Report that MinSize doesn't fit into this vector's size type. Throws
+/// std::length_error or calls report_fatal_error.
+LLVM_ATTRIBUTE_NORETURN
+static void report_size_overflow(size_t MinSize, size_t MaxSize);
+static void report_size_overflow(size_t MinSize, size_t MaxSize) {
+  std::string Reason = "SmallVector unable to grow. Requested capacity (" +
+                       std::to_string(MinSize) +
+                       ") is larger than maximum value for size type (" +
+                       std::to_string(MaxSize) + ")";
+#ifdef LLVM_ENABLE_EXCEPTIONS
+  throw std::length_error(Reason);
+#else
+  report_fatal_error(Reason);
+#endif
+}
 
+/// Report that this vector is already at maximum capacity. Throws
+/// std::length_error or calls report_fatal_error.
+LLVM_ATTRIBUTE_NORETURN static void report_at_maximum_capacity(size_t MaxSize);
+static void report_at_maximum_capacity(size_t MaxSize) {
+  std::string Reason =
+      "SmallVector capacity unable to grow. Already at maximum size " +
+      std::to_string(MaxSize);
+#ifdef LLVM_ENABLE_EXCEPTIONS
+  throw std::length_error(Reason);
+#else
+  report_fatal_error(Reason);
+#endif
+}
+
+// Note: Moving this function into the header may cause performance regression.
+template <class Size_T>
+static size_t getNewCapacity(size_t MinSize, size_t TSize, size_t OldCapacity) {
+  constexpr size_t MaxSize = std::numeric_limits<Size_T>::max();
+
+  // Ensure we can fit the new capacity.
+  // This is only going to be applicable when the capacity is 32 bit.
+  if (MinSize > MaxSize)
+    report_size_overflow(MinSize, MaxSize);
+
+  // Ensure we can meet the guarantee of space for at least one more element.
+  // The above check alone will not catch the case where grow is called with a
+  // default MinSize of 0, but the current capacity cannot be increased.
+  // This is only going to be applicable when the capacity is 32 bit.
+  if (OldCapacity == MaxSize)
+    report_at_maximum_capacity(MaxSize);
+
+  // In theory 2*capacity can overflow if the capacity is 64 bit, but the
+  // original capacity would never be large enough for this to be a problem.
+  size_t NewCapacity = 2 * OldCapacity + 1; // Always grow.
+  return std::min(std::max(NewCapacity, MinSize), MaxSize);
+}
+
+// Note: Moving this function into the header may cause performance regression.
+template <class Size_T>
+void *SmallVectorBase<Size_T>::mallocForGrow(size_t MinSize, size_t TSize,
+                                             size_t &NewCapacity) {
+  NewCapacity = getNewCapacity<Size_T>(MinSize, TSize, this->capacity());
+  return llvm::safe_malloc(NewCapacity * TSize);
+}
+
+// Note: Moving this function into the header may cause performance regression.
+template <class Size_T>
+void SmallVectorBase<Size_T>::grow_pod(void *FirstEl, size_t MinSize,
+                                       size_t TSize) {
+  size_t NewCapacity = getNewCapacity<Size_T>(MinSize, TSize, this->capacity());
   void *NewElts;
   if (BeginX == FirstEl) {
     NewElts = safe_malloc(NewCapacity * TSize);
@@ -63,3 +125,20 @@ void SmallVectorBase::grow_pod(void *FirstEl, size_t MinCapacity,
   this->BeginX = NewElts;
   this->Capacity = NewCapacity;
 }
+
+template class llvm::SmallVectorBase<uint32_t>;
+
+// Disable the uint64_t instantiation for 32-bit builds.
+// Both uint32_t and uint64_t instantiations are needed for 64-bit builds.
+// This instantiation will never be used in 32-bit builds, and will cause
+// warnings when sizeof(Size_T) > sizeof(size_t).
+#if SIZE_MAX > UINT32_MAX
+template class llvm::SmallVectorBase<uint64_t>;
+
+// Assertions to ensure this #if stays in sync with SmallVectorSizeType.
+static_assert(sizeof(SmallVectorSizeType<char>) == sizeof(uint64_t),
+              "Expected SmallVectorBase<uint64_t> variant to be in use.");
+#else
+static_assert(sizeof(SmallVectorSizeType<char>) == sizeof(uint32_t),
+              "Expected SmallVectorBase<uint32_t> variant to be in use.");
+#endif

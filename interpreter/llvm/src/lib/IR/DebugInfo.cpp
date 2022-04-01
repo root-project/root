@@ -40,6 +40,92 @@
 using namespace llvm;
 using namespace llvm::dwarf;
 
+/// Finds all intrinsics declaring local variables as living in the memory that
+/// 'V' points to. This may include a mix of dbg.declare and
+/// dbg.addr intrinsics.
+TinyPtrVector<DbgVariableIntrinsic *> llvm::FindDbgAddrUses(Value *V) {
+  // This function is hot. Check whether the value has any metadata to avoid a
+  // DenseMap lookup.
+  if (!V->isUsedByMetadata())
+    return {};
+  auto *L = LocalAsMetadata::getIfExists(V);
+  if (!L)
+    return {};
+  auto *MDV = MetadataAsValue::getIfExists(V->getContext(), L);
+  if (!MDV)
+    return {};
+
+  TinyPtrVector<DbgVariableIntrinsic *> Declares;
+  for (User *U : MDV->users()) {
+    if (auto *DII = dyn_cast<DbgVariableIntrinsic>(U))
+      if (DII->isAddressOfVariable())
+        Declares.push_back(DII);
+  }
+
+  return Declares;
+}
+
+TinyPtrVector<DbgDeclareInst *> llvm::FindDbgDeclareUses(Value *V) {
+  TinyPtrVector<DbgDeclareInst *> DDIs;
+  for (DbgVariableIntrinsic *DVI : FindDbgAddrUses(V))
+    if (auto *DDI = dyn_cast<DbgDeclareInst>(DVI))
+      DDIs.push_back(DDI);
+  return DDIs;
+}
+
+void llvm::findDbgValues(SmallVectorImpl<DbgValueInst *> &DbgValues, Value *V) {
+  // This function is hot. Check whether the value has any metadata to avoid a
+  // DenseMap lookup.
+  if (!V->isUsedByMetadata())
+    return;
+  // TODO: If this value appears multiple times in a DIArgList, we should still
+  // only add the owning DbgValueInst once; use this set to track ArgListUsers.
+  // This behaviour can be removed when we can automatically remove duplicates.
+  SmallPtrSet<DbgValueInst *, 4> EncounteredDbgValues;
+  if (auto *L = LocalAsMetadata::getIfExists(V)) {
+    if (auto *MDV = MetadataAsValue::getIfExists(V->getContext(), L)) {
+      for (User *U : MDV->users())
+        if (DbgValueInst *DVI = dyn_cast<DbgValueInst>(U))
+          DbgValues.push_back(DVI);
+    }
+    for (Metadata *AL : L->getAllArgListUsers()) {
+      if (auto *MDV = MetadataAsValue::getIfExists(V->getContext(), AL)) {
+        for (User *U : MDV->users())
+          if (DbgValueInst *DVI = dyn_cast<DbgValueInst>(U))
+            if (EncounteredDbgValues.insert(DVI).second)
+              DbgValues.push_back(DVI);
+      }
+    }
+  }
+}
+
+void llvm::findDbgUsers(SmallVectorImpl<DbgVariableIntrinsic *> &DbgUsers,
+                        Value *V) {
+  // This function is hot. Check whether the value has any metadata to avoid a
+  // DenseMap lookup.
+  if (!V->isUsedByMetadata())
+    return;
+  // TODO: If this value appears multiple times in a DIArgList, we should still
+  // only add the owning DbgValueInst once; use this set to track ArgListUsers.
+  // This behaviour can be removed when we can automatically remove duplicates.
+  SmallPtrSet<DbgVariableIntrinsic *, 4> EncounteredDbgValues;
+  if (auto *L = LocalAsMetadata::getIfExists(V)) {
+    if (auto *MDV = MetadataAsValue::getIfExists(V->getContext(), L)) {
+      for (User *U : MDV->users())
+        if (DbgVariableIntrinsic *DII = dyn_cast<DbgVariableIntrinsic>(U))
+          DbgUsers.push_back(DII);
+    }
+    for (Metadata *AL : L->getAllArgListUsers()) {
+      if (auto *MDV = MetadataAsValue::getIfExists(V->getContext(), AL)) {
+        for (User *U : MDV->users())
+          if (DbgVariableIntrinsic *DII = dyn_cast<DbgVariableIntrinsic>(U))
+            if (EncounteredDbgValues.insert(DII).second)
+              DbgUsers.push_back(DII);
+      }
+    }
+  }
+}
+
 DISubprogram *llvm::getDISubprogram(const MDNode *Scope) {
   if (auto *LocalScope = dyn_cast_or_null<DILocalScope>(Scope))
     return LocalScope->getSubprogram();
@@ -105,10 +191,8 @@ void DebugInfoFinder::processCompileUnit(DICompileUnit *CU) {
 
 void DebugInfoFinder::processInstruction(const Module &M,
                                          const Instruction &I) {
-  if (auto *DDI = dyn_cast<DbgDeclareInst>(&I))
-    processDeclare(M, DDI);
-  else if (auto *DVI = dyn_cast<DbgValueInst>(&I))
-    processValue(M, DVI);
+  if (auto *DVI = dyn_cast<DbgVariableIntrinsic>(&I))
+    processVariable(M, *DVI);
 
   if (auto DbgLoc = I.getDebugLoc())
     processLocation(M, DbgLoc.get());
@@ -194,24 +278,9 @@ void DebugInfoFinder::processSubprogram(DISubprogram *SP) {
   }
 }
 
-void DebugInfoFinder::processDeclare(const Module &M,
-                                     const DbgDeclareInst *DDI) {
-  auto *N = dyn_cast<MDNode>(DDI->getVariable());
-  if (!N)
-    return;
-
-  auto *DV = dyn_cast<DILocalVariable>(N);
-  if (!DV)
-    return;
-
-  if (!NodesSeen.insert(DV).second)
-    return;
-  processScope(DV->getScope());
-  processType(DV->getType());
-}
-
-void DebugInfoFinder::processValue(const Module &M, const DbgValueInst *DVI) {
-  auto *N = dyn_cast<MDNode>(DVI->getVariable());
+void DebugInfoFinder::processVariable(const Module &M,
+                                      const DbgVariableIntrinsic &DVI) {
+  auto *N = dyn_cast<MDNode>(DVI.getVariable());
   if (!N)
     return;
 
@@ -278,36 +347,95 @@ bool DebugInfoFinder::addScope(DIScope *Scope) {
   return true;
 }
 
-static MDNode *stripDebugLocFromLoopID(MDNode *N) {
-  assert(!empty(N->operands()) && "Missing self reference?");
+static MDNode *updateLoopMetadataDebugLocationsImpl(
+    MDNode *OrigLoopID, function_ref<Metadata *(Metadata *)> Updater) {
+  assert(OrigLoopID && OrigLoopID->getNumOperands() > 0 &&
+         "Loop ID needs at least one operand");
+  assert(OrigLoopID && OrigLoopID->getOperand(0).get() == OrigLoopID &&
+         "Loop ID should refer to itself");
 
-  // if there is no debug location, we do not have to rewrite this MDNode.
-  if (std::none_of(N->op_begin() + 1, N->op_end(), [](const MDOperand &Op) {
-        return isa<DILocation>(Op.get());
-      }))
+  // Save space for the self-referential LoopID.
+  SmallVector<Metadata *, 4> MDs = {nullptr};
+
+  for (unsigned i = 1; i < OrigLoopID->getNumOperands(); ++i) {
+    Metadata *MD = OrigLoopID->getOperand(i);
+    if (!MD)
+      MDs.push_back(nullptr);
+    else if (Metadata *NewMD = Updater(MD))
+      MDs.push_back(NewMD);
+  }
+
+  MDNode *NewLoopID = MDNode::getDistinct(OrigLoopID->getContext(), MDs);
+  // Insert the self-referential LoopID.
+  NewLoopID->replaceOperandWith(0, NewLoopID);
+  return NewLoopID;
+}
+
+void llvm::updateLoopMetadataDebugLocations(
+    Instruction &I, function_ref<Metadata *(Metadata *)> Updater) {
+  MDNode *OrigLoopID = I.getMetadata(LLVMContext::MD_loop);
+  if (!OrigLoopID)
+    return;
+  MDNode *NewLoopID = updateLoopMetadataDebugLocationsImpl(OrigLoopID, Updater);
+  I.setMetadata(LLVMContext::MD_loop, NewLoopID);
+}
+
+/// Return true if a node is a DILocation or if a DILocation is
+/// indirectly referenced by one of the node's children.
+static bool isDILocationReachable(SmallPtrSetImpl<Metadata *> &Visited,
+                                  SmallPtrSetImpl<Metadata *> &Reachable,
+                                  Metadata *MD) {
+  MDNode *N = dyn_cast_or_null<MDNode>(MD);
+  if (!N)
+    return false;
+  if (isa<DILocation>(N) || Reachable.count(N))
+    return true;
+  if (!Visited.insert(N).second)
+    return false;
+  for (auto &OpIt : N->operands()) {
+    Metadata *Op = OpIt.get();
+    if (isDILocationReachable(Visited, Reachable, Op)) {
+      Reachable.insert(N);
+      return true;
+    }
+  }
+  return false;
+}
+
+static MDNode *stripDebugLocFromLoopID(MDNode *N) {
+  assert(!N->operands().empty() && "Missing self reference?");
+  SmallPtrSet<Metadata *, 8> Visited, DILocationReachable;
+  // If we already visited N, there is nothing to do.
+  if (!Visited.insert(N).second)
+    return N;
+
+  // If there is no debug location, we do not have to rewrite this
+  // MDNode. This loop also initializes DILocationReachable, later
+  // needed by updateLoopMetadataDebugLocationsImpl; the use of
+  // count_if avoids an early exit.
+  if (!std::count_if(N->op_begin() + 1, N->op_end(),
+                     [&Visited, &DILocationReachable](const MDOperand &Op) {
+                       return isDILocationReachable(
+                                  Visited, DILocationReachable, Op.get());
+                     }))
     return N;
 
   // If there is only the debug location without any actual loop metadata, we
   // can remove the metadata.
-  if (std::none_of(N->op_begin() + 1, N->op_end(), [](const MDOperand &Op) {
-        return !isa<DILocation>(Op.get());
-      }))
+  if (std::all_of(
+          N->op_begin() + 1, N->op_end(),
+          [&Visited, &DILocationReachable](const MDOperand &Op) {
+            return isDILocationReachable(Visited, DILocationReachable,
+                                         Op.get());
+          }))
     return nullptr;
 
-  SmallVector<Metadata *, 4> Args;
-  // Reserve operand 0 for loop id self reference.
-  auto TempNode = MDNode::getTemporary(N->getContext(), None);
-  Args.push_back(TempNode.get());
-  // Add all non-debug location operands back.
-  for (auto Op = N->op_begin() + 1; Op != N->op_end(); Op++) {
-    if (!isa<DILocation>(*Op))
-      Args.push_back(*Op);
-  }
-
-  // Set the first operand to itself.
-  MDNode *LoopID = MDNode::get(N->getContext(), Args);
-  LoopID->replaceOperandWith(0, LoopID);
-  return LoopID;
+  return updateLoopMetadataDebugLocationsImpl(
+      N, [&DILocationReachable](Metadata *MD) -> Metadata * {
+        if (isa<DILocation>(MD) || DILocationReachable.count(MD))
+          return nullptr;
+        return MD;
+      });
 }
 
 bool llvm::stripDebugInfo(Function &F) {
@@ -317,7 +445,7 @@ bool llvm::stripDebugInfo(Function &F) {
     F.setSubprogram(nullptr);
   }
 
-  DenseMap<MDNode*, MDNode*> LoopIDsMap;
+  DenseMap<MDNode *, MDNode *> LoopIDsMap;
   for (BasicBlock &BB : F) {
     for (auto II = BB.begin(), End = BB.end(); II != End;) {
       Instruction &I = *II++; // We may delete the instruction, increment now.
@@ -330,18 +458,16 @@ bool llvm::stripDebugInfo(Function &F) {
         Changed = true;
         I.setDebugLoc(DebugLoc());
       }
-    }
-
-    auto *TermInst = BB.getTerminator();
-    if (!TermInst)
-      // This is invalid IR, but we may not have run the verifier yet
-      continue;
-    if (auto *LoopID = TermInst->getMetadata(LLVMContext::MD_loop)) {
-      auto *NewLoopID = LoopIDsMap.lookup(LoopID);
-      if (!NewLoopID)
-        NewLoopID = LoopIDsMap[LoopID] = stripDebugLocFromLoopID(LoopID);
-      if (NewLoopID != LoopID)
-        TermInst->setMetadata(LLVMContext::MD_loop, NewLoopID);
+      if (auto *LoopID = I.getMetadata(LLVMContext::MD_loop)) {
+        auto *NewLoopID = LoopIDsMap.lookup(LoopID);
+        if (!NewLoopID)
+          NewLoopID = LoopIDsMap[LoopID] = stripDebugLocFromLoopID(LoopID);
+        if (NewLoopID != LoopID)
+          I.setMetadata(LLVMContext::MD_loop, NewLoopID);
+      }
+      // Strip heapallocsite attachments, they point into the DIType system.
+      if (I.hasMetadataOtherThanDebugLoc())
+        I.setMetadata("heapallocsite", nullptr);
     }
   }
   return Changed;
@@ -350,16 +476,12 @@ bool llvm::stripDebugInfo(Function &F) {
 bool llvm::StripDebugInfo(Module &M) {
   bool Changed = false;
 
-  for (Module::named_metadata_iterator NMI = M.named_metadata_begin(),
-         NME = M.named_metadata_end(); NMI != NME;) {
-    NamedMDNode *NMD = &*NMI;
-    ++NMI;
-
+  for (NamedMDNode &NMD : llvm::make_early_inc_range(M.named_metadata())) {
     // We're stripping debug info, and without them, coverage information
     // doesn't quite make sense.
-    if (NMD->getName().startswith("llvm.dbg.") ||
-        NMD->getName() == "llvm.gcov") {
-      NMD->eraseFromParent();
+    if (NMD.getName().startswith("llvm.dbg.") ||
+        NMD.getName() == "llvm.gcov") {
+      NMD.eraseFromParent();
       Changed = true;
     }
   }
@@ -489,7 +611,7 @@ private:
         RetainedTypes, GlobalVariables, ImportedEntities, CU->getMacros(),
         CU->getDWOId(), CU->getSplitDebugInlining(),
         CU->getDebugInfoForProfiling(), CU->getNameTableKind(),
-        CU->getRangesBaseAddress());
+        CU->getRangesBaseAddress(), CU->getSysRoot(), CU->getSDK());
   }
 
   DILocation *getReplacementMDLocation(DILocation *MLD) {
@@ -598,7 +720,9 @@ bool llvm::stripNonLineTableDebugInfo(Module &M) {
       Changed = true;
     }
   };
+  RemoveUses("llvm.dbg.addr");
   RemoveUses("llvm.dbg.declare");
+  RemoveUses("llvm.dbg.label");
   RemoveUses("llvm.dbg.value");
 
   // Delete non-CU debug info named metadata nodes.
@@ -637,26 +761,28 @@ bool llvm::stripNonLineTableDebugInfo(Module &M) {
     }
     for (auto &BB : F) {
       for (auto &I : BB) {
-        auto remapDebugLoc = [&](DebugLoc DL) -> DebugLoc {
+        auto remapDebugLoc = [&](const DebugLoc &DL) -> DebugLoc {
           auto *Scope = DL.getScope();
           MDNode *InlinedAt = DL.getInlinedAt();
           Scope = remap(Scope);
           InlinedAt = remap(InlinedAt);
-          return DebugLoc::get(DL.getLine(), DL.getCol(), Scope, InlinedAt);
+          return DILocation::get(M.getContext(), DL.getLine(), DL.getCol(),
+                                 Scope, InlinedAt);
         };
 
         if (I.getDebugLoc() != DebugLoc())
           I.setDebugLoc(remapDebugLoc(I.getDebugLoc()));
 
-        // Remap DILocations in untyped MDNodes (e.g., llvm.loop).
-        SmallVector<std::pair<unsigned, MDNode *>, 2> MDs;
-        I.getAllMetadata(MDs);
-        for (auto Attachment : MDs)
-          if (auto *T = dyn_cast_or_null<MDTuple>(Attachment.second))
-            for (unsigned N = 0; N < T->getNumOperands(); ++N)
-              if (auto *Loc = dyn_cast_or_null<DILocation>(T->getOperand(N)))
-                if (DebugLoc(Loc) != DebugLoc())
-                  T->replaceOperandWith(N, remapDebugLoc(Loc));
+        // Remap DILocations in llvm.loop attachments.
+        updateLoopMetadataDebugLocations(I, [&](Metadata *MD) -> Metadata * {
+          if (auto *Loc = dyn_cast_or_null<DILocation>(MD))
+            return remapDebugLoc(Loc).get();
+          return MD;
+        });
+
+        // Strip heapallocsite attachments, they point into the DIType system.
+        if (I.hasMetadataOtherThanDebugLoc())
+          I.setMetadata("heapallocsite", nullptr);
       }
     }
   }
@@ -689,6 +815,38 @@ unsigned llvm::getDebugMetadataVersionFromModule(const Module &M) {
 void Instruction::applyMergedLocation(const DILocation *LocA,
                                       const DILocation *LocB) {
   setDebugLoc(DILocation::getMergedLocation(LocA, LocB));
+}
+
+void Instruction::updateLocationAfterHoist() { dropLocation(); }
+
+void Instruction::dropLocation() {
+  const DebugLoc &DL = getDebugLoc();
+  if (!DL)
+    return;
+
+  // If this isn't a call, drop the location to allow a location from a
+  // preceding instruction to propagate.
+  if (!isa<CallBase>(this)) {
+    setDebugLoc(DebugLoc());
+    return;
+  }
+
+  // Set a line 0 location for calls to preserve scope information in case
+  // inlining occurs.
+  DISubprogram *SP = getFunction()->getSubprogram();
+  if (SP)
+    // If a function scope is available, set it on the line 0 location. When
+    // hoisting a call to a predecessor block, using the function scope avoids
+    // making it look like the callee was reached earlier than it should be.
+    setDebugLoc(DILocation::get(getContext(), 0, 0, SP));
+  else
+    // The parent function has no scope. Go ahead and drop the location. If
+    // the parent function is inlined, and the callee has a subprogram, the
+    // inliner will attach a location to the call.
+    //
+    // One alternative is to set a line 0 location with the existing scope and
+    // inlinedAt info. The location might be sensitive to when inlining occurs.
+    setDebugLoc(DebugLoc());
 }
 
 //===----------------------------------------------------------------------===//
@@ -757,16 +915,18 @@ LLVMMetadataRef LLVMDIBuilderCreateCompileUnit(
     LLVMBool isOptimized, const char *Flags, size_t FlagsLen,
     unsigned RuntimeVer, const char *SplitName, size_t SplitNameLen,
     LLVMDWARFEmissionKind Kind, unsigned DWOId, LLVMBool SplitDebugInlining,
-    LLVMBool DebugInfoForProfiling) {
+    LLVMBool DebugInfoForProfiling, const char *SysRoot, size_t SysRootLen,
+    const char *SDK, size_t SDKLen) {
   auto File = unwrapDI<DIFile>(FileRef);
 
   return wrap(unwrap(Builder)->createCompileUnit(
-                 map_from_llvmDWARFsourcelanguage(Lang), File,
-                 StringRef(Producer, ProducerLen), isOptimized,
-                 StringRef(Flags, FlagsLen), RuntimeVer,
-                 StringRef(SplitName, SplitNameLen),
-                 static_cast<DICompileUnit::DebugEmissionKind>(Kind), DWOId,
-                 SplitDebugInlining, DebugInfoForProfiling));
+      map_from_llvmDWARFsourcelanguage(Lang), File,
+      StringRef(Producer, ProducerLen), isOptimized, StringRef(Flags, FlagsLen),
+      RuntimeVer, StringRef(SplitName, SplitNameLen),
+      static_cast<DICompileUnit::DebugEmissionKind>(Kind), DWOId,
+      SplitDebugInlining, DebugInfoForProfiling,
+      DICompileUnit::DebugNameTableKind::Default, false,
+      StringRef(SysRoot, SysRootLen), StringRef(SDK, SDKLen)));
 }
 
 LLVMMetadataRef
@@ -782,12 +942,12 @@ LLVMDIBuilderCreateModule(LLVMDIBuilderRef Builder, LLVMMetadataRef ParentScope,
                           const char *Name, size_t NameLen,
                           const char *ConfigMacros, size_t ConfigMacrosLen,
                           const char *IncludePath, size_t IncludePathLen,
-                          const char *ISysRoot, size_t ISysRootLen) {
+                          const char *APINotesFile, size_t APINotesFileLen) {
   return wrap(unwrap(Builder)->createModule(
       unwrapDI<DIScope>(ParentScope), StringRef(Name, NameLen),
       StringRef(ConfigMacros, ConfigMacrosLen),
       StringRef(IncludePath, IncludePathLen),
-      StringRef(ISysRoot, ISysRootLen)));
+      StringRef(APINotesFile, APINotesFileLen)));
 }
 
 LLVMMetadataRef LLVMDIBuilderCreateNameSpace(LLVMDIBuilderRef Builder,
@@ -927,6 +1087,26 @@ const char *LLVMDIFileGetSource(LLVMMetadataRef File, unsigned *Len) {
   }
   *Len = 0;
   return "";
+}
+
+LLVMMetadataRef LLVMDIBuilderCreateMacro(LLVMDIBuilderRef Builder,
+                                         LLVMMetadataRef ParentMacroFile,
+                                         unsigned Line,
+                                         LLVMDWARFMacinfoRecordType RecordType,
+                                         const char *Name, size_t NameLen,
+                                         const char *Value, size_t ValueLen) {
+  return wrap(
+      unwrap(Builder)->createMacro(unwrapDI<DIMacroFile>(ParentMacroFile), Line,
+                                   static_cast<MacinfoRecordType>(RecordType),
+                                   {Name, NameLen}, {Value, ValueLen}));
+}
+
+LLVMMetadataRef
+LLVMDIBuilderCreateTempMacroFile(LLVMDIBuilderRef Builder,
+                                 LLVMMetadataRef ParentMacroFile, unsigned Line,
+                                 LLVMMetadataRef File) {
+  return wrap(unwrap(Builder)->createTempMacroFile(
+      unwrapDI<DIMacroFile>(ParentMacroFile), Line, unwrapDI<DIFile>(File)));
 }
 
 LLVMMetadataRef LLVMDIBuilderCreateEnumerator(LLVMDIBuilderRef Builder,
@@ -1088,11 +1268,10 @@ LLVMMetadataRef
 LLVMDIBuilderCreateTypedef(LLVMDIBuilderRef Builder, LLVMMetadataRef Type,
                            const char *Name, size_t NameLen,
                            LLVMMetadataRef File, unsigned LineNo,
-                           LLVMMetadataRef Scope) {
+                           LLVMMetadataRef Scope, uint32_t AlignInBits) {
   return wrap(unwrap(Builder)->createTypedef(
-                  unwrapDI<DIType>(Type), {Name, NameLen},
-                  unwrapDI<DIFile>(File), LineNo,
-                  unwrapDI<DIScope>(Scope)));
+      unwrapDI<DIType>(Type), {Name, NameLen}, unwrapDI<DIFile>(File), LineNo,
+      unwrapDI<DIScope>(Scope), AlignInBits));
 }
 
 LLVMMetadataRef
@@ -1270,7 +1449,7 @@ LLVMMetadataRef LLVMDIBuilderCreateGlobalVariableExpression(
   return wrap(unwrap(Builder)->createGlobalVariableExpression(
       unwrapDI<DIScope>(Scope), {Name, NameLen}, {Linkage, LinkLen},
       unwrapDI<DIFile>(File), LineNo, unwrapDI<DIType>(Ty), LocalToUnit,
-      unwrap<DIExpression>(Expr), unwrapDI<MDNode>(Decl),
+      true, unwrap<DIExpression>(Expr), unwrapDI<MDNode>(Decl),
       nullptr, AlignInBits));
 }
 

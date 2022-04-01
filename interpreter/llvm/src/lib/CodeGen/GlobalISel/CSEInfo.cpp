@@ -10,11 +10,17 @@
 //===----------------------------------------------------------------------===//
 #include "llvm/CodeGen/GlobalISel/CSEInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/InitializePasses.h"
+#include "llvm/Support/Error.h"
 
 #define DEBUG_TYPE "cseinfo"
 
 using namespace llvm;
 char llvm::GISelCSEAnalysisWrapperPass::ID = 0;
+GISelCSEAnalysisWrapperPass::GISelCSEAnalysisWrapperPass()
+    : MachineFunctionPass(ID) {
+  initializeGISelCSEAnalysisWrapperPassPass(*PassRegistry::getPassRegistry());
+}
 INITIALIZE_PASS_BEGIN(GISelCSEAnalysisWrapperPass, DEBUG_TYPE,
                       "Analysis containing CSE Info", false, true)
 INITIALIZE_PASS_END(GISelCSEAnalysisWrapperPass, DEBUG_TYPE,
@@ -47,27 +53,30 @@ bool CSEConfigFull::shouldCSEOpc(unsigned Opc) {
   case TargetOpcode::G_SREM:
   case TargetOpcode::G_CONSTANT:
   case TargetOpcode::G_FCONSTANT:
+  case TargetOpcode::G_IMPLICIT_DEF:
   case TargetOpcode::G_ZEXT:
   case TargetOpcode::G_SEXT:
   case TargetOpcode::G_ANYEXT:
   case TargetOpcode::G_UNMERGE_VALUES:
   case TargetOpcode::G_TRUNC:
+  case TargetOpcode::G_PTR_ADD:
+  case TargetOpcode::G_EXTRACT:
     return true;
   }
   return false;
 }
 
 bool CSEConfigConstantOnly::shouldCSEOpc(unsigned Opc) {
-  return Opc == TargetOpcode::G_CONSTANT;
+  return Opc == TargetOpcode::G_CONSTANT || Opc == TargetOpcode::G_IMPLICIT_DEF;
 }
 
 std::unique_ptr<CSEConfigBase>
 llvm::getStandardCSEConfigForOpt(CodeGenOpt::Level Level) {
   std::unique_ptr<CSEConfigBase> Config;
   if (Level == CodeGenOpt::None)
-    Config = make_unique<CSEConfigConstantOnly>();
+    Config = std::make_unique<CSEConfigConstantOnly>();
   else
-    Config = make_unique<CSEConfigFull>();
+    Config = std::make_unique<CSEConfigFull>();
   return Config;
 }
 
@@ -210,9 +219,6 @@ void GISelCSEInfo::handleRecordedInsts() {
 }
 
 bool GISelCSEInfo::shouldCSE(unsigned Opc) const {
-  // Only GISel opcodes are CSEable
-  if (!isPreISelGenericOpcode(Opc))
-    return false;
   assert(CSEOpt.get() && "CSEConfig not set");
   return CSEOpt->shouldCSEOpc(Opc);
 }
@@ -254,6 +260,51 @@ void GISelCSEInfo::releaseMemory() {
 #endif
 }
 
+#ifndef NDEBUG
+static const char *stringify(const MachineInstr *MI, std::string &S) {
+  raw_string_ostream OS(S);
+  OS << *MI;
+  return OS.str().c_str();
+}
+#endif
+
+Error GISelCSEInfo::verify() {
+#ifndef NDEBUG
+  std::string S1, S2;
+  handleRecordedInsts();
+  // For each instruction in map from MI -> UMI,
+  // Profile(MI) and make sure UMI is found for that profile.
+  for (auto &It : InstrMapping) {
+    FoldingSetNodeID TmpID;
+    GISelInstProfileBuilder(TmpID, *MRI).addNodeID(It.first);
+    void *InsertPos;
+    UniqueMachineInstr *FoundNode =
+        CSEMap.FindNodeOrInsertPos(TmpID, InsertPos);
+    if (FoundNode != It.second)
+      return createStringError(std::errc::not_supported,
+                               "CSEMap mismatch, InstrMapping has MIs without "
+                               "corresponding Nodes in CSEMap:\n%s",
+                               stringify(It.second->MI, S1));
+  }
+
+  // For every node in the CSEMap, make sure that the InstrMapping
+  // points to it.
+  for (const UniqueMachineInstr &UMI : CSEMap) {
+    if (!InstrMapping.count(UMI.MI))
+      return createStringError(std::errc::not_supported,
+                               "Node in CSE without InstrMapping:\n%s",
+                               stringify(UMI.MI, S1));
+
+    if (InstrMapping[UMI.MI] != &UMI)
+      return createStringError(std::make_error_code(std::errc::not_supported),
+                               "Mismatch in CSE mapping:\n%s\n%s",
+                               stringify(InstrMapping[UMI.MI]->MI, S1),
+                               stringify(UMI.MI, S2));
+  }
+#endif
+  return Error::success();
+}
+
 void GISelCSEInfo::print() {
   LLVM_DEBUG(for (auto &It
                   : OpcodeHitTable) {
@@ -280,7 +331,7 @@ GISelInstProfileBuilder::addNodeIDOpcode(unsigned Opc) const {
 }
 
 const GISelInstProfileBuilder &
-GISelInstProfileBuilder::addNodeIDRegType(const LLT &Ty) const {
+GISelInstProfileBuilder::addNodeIDRegType(const LLT Ty) const {
   uint64_t Val = Ty.getUniqueRAWLLTData();
   ID.AddInteger(Val);
   return *this;
@@ -305,13 +356,13 @@ GISelInstProfileBuilder::addNodeIDImmediate(int64_t Imm) const {
 }
 
 const GISelInstProfileBuilder &
-GISelInstProfileBuilder::addNodeIDRegNum(unsigned Reg) const {
+GISelInstProfileBuilder::addNodeIDRegNum(Register Reg) const {
   ID.AddInteger(Reg);
   return *this;
 }
 
 const GISelInstProfileBuilder &
-GISelInstProfileBuilder::addNodeIDRegType(const unsigned Reg) const {
+GISelInstProfileBuilder::addNodeIDRegType(const Register Reg) const {
   addNodeIDMachineOperand(MachineOperand::CreateReg(Reg, false));
   return *this;
 }
@@ -329,21 +380,30 @@ GISelInstProfileBuilder::addNodeIDFlag(unsigned Flag) const {
   return *this;
 }
 
+const GISelInstProfileBuilder &
+GISelInstProfileBuilder::addNodeIDReg(Register Reg) const {
+  LLT Ty = MRI.getType(Reg);
+  if (Ty.isValid())
+    addNodeIDRegType(Ty);
+
+  if (const RegClassOrRegBank &RCOrRB = MRI.getRegClassOrRegBank(Reg)) {
+    if (const auto *RB = RCOrRB.dyn_cast<const RegisterBank *>())
+      addNodeIDRegType(RB);
+    else if (const auto *RC = RCOrRB.dyn_cast<const TargetRegisterClass *>())
+      addNodeIDRegType(RC);
+  }
+  return *this;
+}
+
 const GISelInstProfileBuilder &GISelInstProfileBuilder::addNodeIDMachineOperand(
     const MachineOperand &MO) const {
   if (MO.isReg()) {
-    unsigned Reg = MO.getReg();
+    Register Reg = MO.getReg();
     if (!MO.isDef())
       addNodeIDRegNum(Reg);
-    LLT Ty = MRI.getType(Reg);
-    if (Ty.isValid())
-      addNodeIDRegType(Ty);
-    auto *RB = MRI.getRegBankOrNull(Reg);
-    if (RB)
-      addNodeIDRegType(RB);
-    auto *RC = MRI.getRegClassOrNull(Reg);
-    if (RC)
-      addNodeIDRegType(RC);
+
+    // Profile the register properties.
+    addNodeIDReg(Reg);
     assert(!MO.isImplicit() && "Unhandled case");
   } else if (MO.isImm())
     ID.AddInteger(MO.getImm());
@@ -363,6 +423,7 @@ GISelCSEInfo &
 GISelCSEAnalysisWrapper::get(std::unique_ptr<CSEConfigBase> CSEOpt,
                              bool Recompute) {
   if (!AlreadyComputed || Recompute) {
+    Info.releaseMemory();
     Info.setCSEConfig(std::move(CSEOpt));
     Info.analyze(*MF);
     AlreadyComputed = true;

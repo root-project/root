@@ -67,7 +67,7 @@ void MmapWriteExecChecker::checkPreCall(const CallEvent &Call,
       if (!N)
         return;
 
-      auto Report = llvm::make_unique<BugReport>(
+      auto Report = std::make_unique<PathSensitiveBugReport>(
           *BT, "Both PROT_WRITE and PROT_EXEC flags are set. This can "
                "lead to exploitable memory regions, which could be overwritten "
                "with malicious code", N);
@@ -88,6 +88,6 @@ void ento::registerMmapWriteExecChecker(CheckerManager &mgr) {
       .getCheckerIntegerOption(Mwec, "MmapProtRead");
 }
 
-bool ento::shouldRegisterMmapWriteExecChecker(const LangOptions &LO) {
+bool ento::shouldRegisterMmapWriteExecChecker(const CheckerManager &mgr) {
   return true;
 }

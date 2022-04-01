@@ -37,11 +37,11 @@ enum ChangeKind {
 struct Node {
   NodeId Parent, LeftMostDescendant, RightMostDescendant;
   int Depth, Height, Shift = 0;
-  ast_type_traits::DynTypedNode ASTNode;
+  DynTypedNode ASTNode;
   SmallVector<NodeId, 4> Children;
   ChangeKind Change = None;
 
-  ast_type_traits::ASTNodeKind getType() const;
+  ASTNodeKind getType() const;
   StringRef getTypeLabel() const;
   bool isLeaf() const { return Children.empty(); }
   llvm::Optional<StringRef> getIdentifier() const;
@@ -71,7 +71,7 @@ public:
   /// Constructs a tree from any AST node.
   template <class T>
   SyntaxTree(T *Node, ASTContext &AST)
-      : TreeImpl(llvm::make_unique<Impl>(this, Node, AST)) {}
+      : TreeImpl(std::make_unique<Impl>(this, Node, AST)) {}
   SyntaxTree(SyntaxTree &&Other) = default;
   ~SyntaxTree();
 

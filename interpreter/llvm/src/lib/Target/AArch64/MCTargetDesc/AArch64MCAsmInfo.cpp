@@ -30,7 +30,7 @@ static cl::opt<AsmWriterVariantTy> AsmWriterVariant(
     cl::values(clEnumValN(Generic, "generic", "Emit generic NEON assembly"),
                clEnumValN(Apple, "apple", "Emit Apple-style NEON assembly")));
 
-AArch64MCAsmInfoDarwin::AArch64MCAsmInfoDarwin() {
+AArch64MCAsmInfoDarwin::AArch64MCAsmInfoDarwin(bool IsILP32) {
   // We prefer NEON instructions to be printed in the short, Apple-specific
   // form when targeting Darwin.
   AssemblerDialect = AsmWriterVariant == Default ? Apple : AsmWriterVariant;
@@ -39,7 +39,8 @@ AArch64MCAsmInfoDarwin::AArch64MCAsmInfoDarwin() {
   PrivateLabelPrefix = "L";
   SeparatorString = "%%";
   CommentString = ";";
-  CodePointerSize = CalleeSaveStackSlotSize = 8;
+  CalleeSaveStackSlotSize = 8;
+  CodePointerSize = IsILP32 ? 4 : 8;
 
   AlignmentIsInBytes = false;
   UsesELFSectionDirectiveForBSS = true;
@@ -59,7 +60,7 @@ const MCExpr *AArch64MCAsmInfoDarwin::getExprForPersonalitySymbol(
   const MCExpr *Res =
       MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_GOT, Context);
   MCSymbol *PCSym = Context.createTempSymbol();
-  Streamer.EmitLabel(PCSym);
+  Streamer.emitLabel(PCSym);
   const MCExpr *PC = MCSymbolRefExpr::create(PCSym, Context);
   return MCBinaryExpr::createSub(Res, PC, Context);
 }
@@ -72,7 +73,7 @@ AArch64MCAsmInfoELF::AArch64MCAsmInfoELF(const Triple &T) {
   // targeting ELF.
   AssemblerDialect = AsmWriterVariant == Default ? Generic : AsmWriterVariant;
 
-  CodePointerSize = 8;
+  CodePointerSize = T.getEnvironment() == Triple::GNUILP32 ? 4 : 8;
 
   // ".comm align is in bytes but .align is pow-2."
   AlignmentIsInBytes = false;
@@ -95,8 +96,6 @@ AArch64MCAsmInfoELF::AArch64MCAsmInfoELF(const Triple &T) {
   // Exceptions handling
   ExceptionsType = ExceptionHandling::DwarfCFI;
 
-  UseIntegratedAssembler = true;
-
   HasIdentDirective = true;
 }
 
@@ -112,7 +111,7 @@ AArch64MCAsmInfoMicrosoftCOFF::AArch64MCAsmInfoMicrosoftCOFF() {
   SupportsDebugInformation = true;
   CodePointerSize = 8;
 
-  CommentString = ";";
+  CommentString = "//";
   ExceptionsType = ExceptionHandling::WinEH;
   WinEHEncodingType = WinEH::EncodingType::Itanium;
 }

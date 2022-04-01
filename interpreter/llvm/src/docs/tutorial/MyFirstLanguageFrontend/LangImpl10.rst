@@ -1,5 +1,3 @@
-:orphan:
-
 ======================================================
 Kaleidoscope: Conclusion and other useful LLVM tidbits
 ======================================================
@@ -32,7 +30,7 @@ need not be a scary or mystical process! Now that you've seen some of
 the basics, I strongly encourage you to take the code and hack on it.
 For example, try adding:
 
--  **global variables** - While global variables have questional value
+-  **global variables** - While global variables have questionable value
    in modern software engineering, they are often useful when putting
    together quick little hacks like the Kaleidoscope compiler itself.
    Fortunately, our current setup makes it very easy to add global
@@ -51,9 +49,9 @@ For example, try adding:
    extending the type system in all sorts of interesting ways. Simple
    arrays are very easy and are quite useful for many different
    applications. Adding them is mostly an exercise in learning how the
-   LLVM `getelementptr <../LangRef.html#getelementptr-instruction>`_ instruction
+   LLVM `getelementptr <../../LangRef.html#getelementptr-instruction>`_ instruction
    works: it is so nifty/unconventional, it `has its own
-   FAQ <../GetElementPtr.html>`_!
+   FAQ <../../GetElementPtr.html>`_!
 -  **standard runtime** - Our current language allows the user to access
    arbitrary external functions, and we use it for things like "printd"
    and "putchard". As you extend the language to add higher-level
@@ -66,10 +64,10 @@ For example, try adding:
    memory, either with calls to the standard libc malloc/free interface
    or with a garbage collector. If you would like to use garbage
    collection, note that LLVM fully supports `Accurate Garbage
-   Collection <../GarbageCollection.html>`_ including algorithms that
+   Collection <../../GarbageCollection.html>`_ including algorithms that
    move objects and need to scan/update the stack.
 -  **exception handling support** - LLVM supports generation of `zero
-   cost exceptions <../ExceptionHandling.html>`_ which interoperate with
+   cost exceptions <../../ExceptionHandling.html>`_ which interoperate with
    code compiled in other languages. You could also generate code by
    implicitly making every function return an error value and checking
    it. You could also make explicit use of setjmp/longjmp. There are

@@ -65,7 +65,9 @@ enum {
   NewDef_Shift = 6,
 
   /// This instruction is an X-Form memory operation.
-  XFormMemOp = 0x1 << (NewDef_Shift+1)
+  XFormMemOp = 0x1 << NewDef_Shift,
+  /// This instruction is prefixed.
+  Prefixed = 0x1 << (NewDef_Shift+1)
 };
 } // end namespace PPCII
 
@@ -108,10 +110,91 @@ struct LoadImmediateInfo {
   unsigned SetCR : 1;
 };
 
+// Index into the OpcodesForSpill array.
+enum SpillOpcodeKey {
+  SOK_Int4Spill,
+  SOK_Int8Spill,
+  SOK_Float8Spill,
+  SOK_Float4Spill,
+  SOK_CRSpill,
+  SOK_CRBitSpill,
+  SOK_VRVectorSpill,
+  SOK_VSXVectorSpill,
+  SOK_VectorFloat8Spill,
+  SOK_VectorFloat4Spill,
+  SOK_SpillToVSR,
+  SOK_PairedVecSpill,
+  SOK_AccumulatorSpill,
+  SOK_UAccumulatorSpill,
+  SOK_SPESpill,
+  SOK_PairedG8Spill,
+  SOK_LastOpcodeSpill // This must be last on the enum.
+};
+
+// Define list of load and store spill opcodes.
+#define NoInstr PPC::INSTRUCTION_LIST_END
+#define Pwr8LoadOpcodes                                                        \
+  {                                                                            \
+    PPC::LWZ, PPC::LD, PPC::LFD, PPC::LFS, PPC::RESTORE_CR,                    \
+        PPC::RESTORE_CRBIT, PPC::LVX, PPC::LXVD2X, PPC::LXSDX, PPC::LXSSPX,    \
+        PPC::SPILLTOVSR_LD, NoInstr, NoInstr, NoInstr, PPC::EVLDD,             \
+        PPC::RESTORE_QUADWORD                                                  \
+  }
+
+#define Pwr9LoadOpcodes                                                        \
+  {                                                                            \
+    PPC::LWZ, PPC::LD, PPC::LFD, PPC::LFS, PPC::RESTORE_CR,                    \
+        PPC::RESTORE_CRBIT, PPC::LVX, PPC::LXV, PPC::DFLOADf64,                \
+        PPC::DFLOADf32, PPC::SPILLTOVSR_LD, NoInstr, NoInstr, NoInstr,         \
+        NoInstr, PPC::RESTORE_QUADWORD                                         \
+  }
+
+#define Pwr10LoadOpcodes                                                       \
+  {                                                                            \
+    PPC::LWZ, PPC::LD, PPC::LFD, PPC::LFS, PPC::RESTORE_CR,                    \
+        PPC::RESTORE_CRBIT, PPC::LVX, PPC::LXV, PPC::DFLOADf64,                \
+        PPC::DFLOADf32, PPC::SPILLTOVSR_LD, PPC::LXVP, PPC::RESTORE_ACC,       \
+        PPC::RESTORE_UACC, NoInstr, PPC::RESTORE_QUADWORD                      \
+  }
+
+#define Pwr8StoreOpcodes                                                       \
+  {                                                                            \
+    PPC::STW, PPC::STD, PPC::STFD, PPC::STFS, PPC::SPILL_CR, PPC::SPILL_CRBIT, \
+        PPC::STVX, PPC::STXVD2X, PPC::STXSDX, PPC::STXSSPX,                    \
+        PPC::SPILLTOVSR_ST, NoInstr, NoInstr, NoInstr, PPC::EVSTDD,            \
+        PPC::SPILL_QUADWORD                                                    \
+  }
+
+#define Pwr9StoreOpcodes                                                       \
+  {                                                                            \
+    PPC::STW, PPC::STD, PPC::STFD, PPC::STFS, PPC::SPILL_CR, PPC::SPILL_CRBIT, \
+        PPC::STVX, PPC::STXV, PPC::DFSTOREf64, PPC::DFSTOREf32,                \
+        PPC::SPILLTOVSR_ST, NoInstr, NoInstr, NoInstr, NoInstr,                \
+        PPC::SPILL_QUADWORD                                                    \
+  }
+
+#define Pwr10StoreOpcodes                                                      \
+  {                                                                            \
+    PPC::STW, PPC::STD, PPC::STFD, PPC::STFS, PPC::SPILL_CR, PPC::SPILL_CRBIT, \
+        PPC::STVX, PPC::STXV, PPC::DFSTOREf64, PPC::DFSTOREf32,                \
+        PPC::SPILLTOVSR_ST, PPC::STXVP, PPC::SPILL_ACC, PPC::SPILL_UACC,       \
+        NoInstr, PPC::SPILL_QUADWORD                                           \
+  }
+
+// Initialize arrays for load and store spill opcodes on supported subtargets.
+#define StoreOpcodesForSpill                                                   \
+  { Pwr8StoreOpcodes, Pwr9StoreOpcodes, Pwr10StoreOpcodes }
+#define LoadOpcodesForSpill                                                    \
+  { Pwr8LoadOpcodes, Pwr9LoadOpcodes, Pwr10LoadOpcodes }
+
 class PPCSubtarget;
 class PPCInstrInfo : public PPCGenInstrInfo {
   PPCSubtarget &Subtarget;
   const PPCRegisterInfo RI;
+  const unsigned StoreSpillOpcodesArray[3][SOK_LastOpcodeSpill] =
+      StoreOpcodesForSpill;
+  const unsigned LoadSpillOpcodesArray[3][SOK_LastOpcodeSpill] =
+      LoadOpcodesForSpill;
 
   void StoreRegToStackSlot(MachineFunction &MF, unsigned SrcReg, bool isKill,
                            int FrameIdx, const TargetRegisterClass *RC,
@@ -121,13 +204,21 @@ class PPCInstrInfo : public PPCGenInstrInfo {
                             const TargetRegisterClass *RC,
                             SmallVectorImpl<MachineInstr *> &NewMIs) const;
 
-  // If the inst has imm-form and one of its operand is produced by a LI,
-  // put the imm into the inst directly and remove the LI if possible.
+  // Replace the instruction with single LI if possible. \p DefMI must be LI or
+  // LI8.
+  bool simplifyToLI(MachineInstr &MI, MachineInstr &DefMI,
+                    unsigned OpNoForForwarding, MachineInstr **KilledDef) const;
+  // If the inst is imm-form and its register operand is produced by a ADDI, put
+  // the imm into the inst directly and remove the ADDI if possible.
+  bool transformToNewImmFormFedByAdd(MachineInstr &MI, MachineInstr &DefMI,
+                                     unsigned OpNoForForwarding) const;
+  // If the inst is x-form and has imm-form and one of its operand is produced
+  // by a LI, put the imm into the inst directly and remove the LI if possible.
   bool transformToImmFormFedByLI(MachineInstr &MI, const ImmInstrInfo &III,
-                                 unsigned ConstantOpNo, MachineInstr &DefMI,
-                                 int64_t Imm) const;
-  // If the inst has imm-form and one of its operand is produced by an
-  // add-immediate, try to transform it when possible.
+                                 unsigned ConstantOpNo,
+                                 MachineInstr &DefMI) const;
+  // If the inst is x-form and has imm-form and one of its operand is produced
+  // by an add-immediate, try to transform it when possible.
   bool transformToImmFormFedByAdd(MachineInstr &MI, const ImmInstrInfo &III,
                                   unsigned ConstantOpNo, MachineInstr &DefMI,
                                   bool KillDefMI) const;
@@ -151,13 +242,26 @@ class PPCInstrInfo : public PPCGenInstrInfo {
   bool isImmElgibleForForwarding(const MachineOperand &ImmMO,
                                  const MachineInstr &DefMI,
                                  const ImmInstrInfo &III,
-                                 int64_t &Imm) const;
+                                 int64_t &Imm,
+                                 int64_t BaseImm = 0) const;
   bool isRegElgibleForForwarding(const MachineOperand &RegMO,
                                  const MachineInstr &DefMI,
                                  const MachineInstr &MI, bool KillDefMI,
                                  bool &IsFwdFeederRegKilled) const;
+  unsigned getSpillTarget() const;
   const unsigned *getStoreOpcodesForSpillArray() const;
   const unsigned *getLoadOpcodesForSpillArray() const;
+  unsigned getSpillIndex(const TargetRegisterClass *RC) const;
+  int16_t getFMAOpIdxInfo(unsigned Opcode) const;
+  void reassociateFMA(MachineInstr &Root, MachineCombinerPattern Pattern,
+                      SmallVectorImpl<MachineInstr *> &InsInstrs,
+                      SmallVectorImpl<MachineInstr *> &DelInstrs,
+                      DenseMap<unsigned, unsigned> &InstrIdxForVirtReg) const;
+  bool isLoadFromConstantPool(MachineInstr *I) const;
+  Register
+  generateLoadForNewConst(unsigned Idx, MachineInstr *MI, Type *Ty,
+                          SmallVectorImpl<MachineInstr *> &InsInstrs) const;
+  const Constant *getConstantFromConstantPool(MachineInstr *I) const;
   virtual void anchor();
 
 protected:
@@ -187,11 +291,15 @@ public:
   bool isXFormMemOp(unsigned Opcode) const {
     return get(Opcode).TSFlags & PPCII::XFormMemOp;
   }
+  bool isPrefixed(unsigned Opcode) const {
+    return get(Opcode).TSFlags & PPCII::Prefixed;
+  }
+
   static bool isSameClassPhysRegCopy(unsigned Opcode) {
-    unsigned CopyOpcodes[] =
-      { PPC::OR, PPC::OR8, PPC::FMR, PPC::VOR, PPC::XXLOR, PPC::XXLORf,
-        PPC::XSCPSGNDP, PPC::MCRF, PPC::QVFMR, PPC::QVFMRs, PPC::QVFMRb,
-        PPC::CROR, PPC::EVOR, -1U };
+    unsigned CopyOpcodes[] = {PPC::OR,        PPC::OR8,   PPC::FMR,
+                              PPC::VOR,       PPC::XXLOR, PPC::XXLORf,
+                              PPC::XSCPSGNDP, PPC::MCRF,  PPC::CROR,
+                              PPC::EVOR,      -1U};
     for (int i = 0; CopyOpcodes[i] != -1U; i++)
       if (Opcode == CopyOpcodes[i])
         return true;
@@ -233,26 +341,71 @@ public:
     return true;
   }
 
+  /// When getMachineCombinerPatterns() finds patterns, this function generates
+  /// the instructions that could replace the original code sequence
+  void genAlternativeCodeSequence(
+      MachineInstr &Root, MachineCombinerPattern Pattern,
+      SmallVectorImpl<MachineInstr *> &InsInstrs,
+      SmallVectorImpl<MachineInstr *> &DelInstrs,
+      DenseMap<unsigned, unsigned> &InstrIdxForVirtReg) const override;
+
+  /// Return true when there is potentially a faster code sequence for a fma
+  /// chain ending in \p Root. All potential patterns are output in the \p
+  /// P array.
+  bool getFMAPatterns(MachineInstr &Root,
+                      SmallVectorImpl<MachineCombinerPattern> &P,
+                      bool DoRegPressureReduce) const;
+
   /// Return true when there is potentially a faster code sequence
   /// for an instruction chain ending in <Root>. All potential patterns are
   /// output in the <Pattern> array.
-  bool getMachineCombinerPatterns(
-      MachineInstr &Root,
-      SmallVectorImpl<MachineCombinerPattern> &P) const override;
+  bool getMachineCombinerPatterns(MachineInstr &Root,
+                                  SmallVectorImpl<MachineCombinerPattern> &P,
+                                  bool DoRegPressureReduce) const override;
+
+  /// On PowerPC, we leverage machine combiner pass to reduce register pressure
+  /// when the register pressure is high for one BB.
+  /// Return true if register pressure for \p MBB is high and ABI is supported
+  /// to reduce register pressure. Otherwise return false.
+  bool
+  shouldReduceRegisterPressure(MachineBasicBlock *MBB,
+                               RegisterClassInfo *RegClassInfo) const override;
+
+  /// Fixup the placeholders we put in genAlternativeCodeSequence() for
+  /// MachineCombiner.
+  void
+  finalizeInsInstrs(MachineInstr &Root, MachineCombinerPattern &P,
+                    SmallVectorImpl<MachineInstr *> &InsInstrs) const override;
 
   bool isAssociativeAndCommutative(const MachineInstr &Inst) const override;
 
+  /// On PowerPC, we try to reassociate FMA chain which will increase
+  /// instruction size. Set extension resource length limit to 1 for edge case.
+  /// Resource Length is calculated by scaled resource usage in getCycles().
+  /// Because of the division in getCycles(), it returns different cycles due to
+  /// legacy scaled resource usage. So new resource length may be same with
+  /// legacy or 1 bigger than legacy.
+  /// We need to execlude the 1 bigger case even the resource length is not
+  /// perserved for more FMA chain reassociations on PowerPC.
+  int getExtendResourceLenLimit() const override { return 1; }
+
+  void setSpecialOperandAttr(MachineInstr &OldMI1, MachineInstr &OldMI2,
+                             MachineInstr &NewMI1,
+                             MachineInstr &NewMI2) const override;
+
+  void setSpecialOperandAttr(MachineInstr &MI, uint16_t Flags) const override;
+
   bool isCoalescableExtInstr(const MachineInstr &MI,
-                             unsigned &SrcReg, unsigned &DstReg,
+                             Register &SrcReg, Register &DstReg,
                              unsigned &SubIdx) const override;
   unsigned isLoadFromStackSlot(const MachineInstr &MI,
                                int &FrameIndex) const override;
   bool isReallyTriviallyReMaterializable(const MachineInstr &MI,
-                                         AliasAnalysis *AA) const override;
+                                         AAResults *AA) const override;
   unsigned isStoreToStackSlot(const MachineInstr &MI,
                               int &FrameIndex) const override;
 
-  bool findCommutedOpIndices(MachineInstr &MI, unsigned &SrcOpIdx1,
+  bool findCommutedOpIndices(const MachineInstr &MI, unsigned &SrcOpIdx1,
                              unsigned &SrcOpIdx2) const override;
 
   void insertNoop(MachineBasicBlock &MBB,
@@ -273,39 +426,59 @@ public:
 
   // Select analysis.
   bool canInsertSelect(const MachineBasicBlock &, ArrayRef<MachineOperand> Cond,
-                       unsigned, unsigned, int &, int &, int &) const override;
+                       Register, Register, Register, int &, int &,
+                       int &) const override;
   void insertSelect(MachineBasicBlock &MBB, MachineBasicBlock::iterator MI,
-                    const DebugLoc &DL, unsigned DstReg,
-                    ArrayRef<MachineOperand> Cond, unsigned TrueReg,
-                    unsigned FalseReg) const override;
+                    const DebugLoc &DL, Register DstReg,
+                    ArrayRef<MachineOperand> Cond, Register TrueReg,
+                    Register FalseReg) const override;
 
   void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
-                   const DebugLoc &DL, unsigned DestReg, unsigned SrcReg,
+                   const DebugLoc &DL, MCRegister DestReg, MCRegister SrcReg,
                    bool KillSrc) const override;
 
   void storeRegToStackSlot(MachineBasicBlock &MBB,
                            MachineBasicBlock::iterator MBBI,
-                           unsigned SrcReg, bool isKill, int FrameIndex,
+                           Register SrcReg, bool isKill, int FrameIndex,
                            const TargetRegisterClass *RC,
                            const TargetRegisterInfo *TRI) const override;
 
+  // Emits a register spill without updating the register class for vector
+  // registers. This ensures that when we spill a vector register the
+  // element order in the register is the same as it was in memory.
+  void storeRegToStackSlotNoUpd(MachineBasicBlock &MBB,
+                                MachineBasicBlock::iterator MBBI,
+                                unsigned SrcReg, bool isKill, int FrameIndex,
+                                const TargetRegisterClass *RC,
+                                const TargetRegisterInfo *TRI) const;
+
   void loadRegFromStackSlot(MachineBasicBlock &MBB,
                             MachineBasicBlock::iterator MBBI,
-                            unsigned DestReg, int FrameIndex,
+                            Register DestReg, int FrameIndex,
                             const TargetRegisterClass *RC,
                             const TargetRegisterInfo *TRI) const override;
 
-  unsigned getStoreOpcodeForSpill(unsigned Reg,
-                                  const TargetRegisterClass *RC = nullptr) const;
+  // Emits a register reload without updating the register class for vector
+  // registers. This ensures that when we reload a vector register the
+  // element order in the register is the same as it was in memory.
+  void loadRegFromStackSlotNoUpd(MachineBasicBlock &MBB,
+                                 MachineBasicBlock::iterator MBBI,
+                                 unsigned DestReg, int FrameIndex,
+                                 const TargetRegisterClass *RC,
+                                 const TargetRegisterInfo *TRI) const;
 
-  unsigned getLoadOpcodeForSpill(unsigned Reg,
-                                 const TargetRegisterClass *RC = nullptr) const;
+  unsigned getStoreOpcodeForSpill(const TargetRegisterClass *RC) const;
+
+  unsigned getLoadOpcodeForSpill(const TargetRegisterClass *RC) const;
 
   bool
   reverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const override;
 
-  bool FoldImmediate(MachineInstr &UseMI, MachineInstr &DefMI, unsigned Reg,
+  bool FoldImmediate(MachineInstr &UseMI, MachineInstr &DefMI, Register Reg,
                      MachineRegisterInfo *MRI) const override;
+
+  bool onlyFoldImmediate(MachineInstr &UseMI, MachineInstr &DefMI,
+                         Register Reg) const;
 
   // If conversion by predication (only supported by some branch instructions).
   // All of the profitability checks always return true; it is always
@@ -335,7 +508,9 @@ public:
   // Predication support.
   bool isPredicated(const MachineInstr &MI) const override;
 
-  bool isUnpredicatedTerminator(const MachineInstr &MI) const override;
+  bool isSchedulingBoundary(const MachineInstr &MI,
+                            const MachineBasicBlock *MBB,
+                            const MachineFunction &MF) const override;
 
   bool PredicateInstruction(MachineInstr &MI,
                             ArrayRef<MachineOperand> Pred) const override;
@@ -343,18 +518,16 @@ public:
   bool SubsumesPredicate(ArrayRef<MachineOperand> Pred1,
                          ArrayRef<MachineOperand> Pred2) const override;
 
-  bool DefinesPredicate(MachineInstr &MI,
-                        std::vector<MachineOperand> &Pred) const override;
-
-  bool isPredicable(const MachineInstr &MI) const override;
+  bool ClobbersPredicate(MachineInstr &MI, std::vector<MachineOperand> &Pred,
+                         bool SkipDead) const override;
 
   // Comparison optimization.
 
-  bool analyzeCompare(const MachineInstr &MI, unsigned &SrcReg,
-                      unsigned &SrcReg2, int &Mask, int &Value) const override;
+  bool analyzeCompare(const MachineInstr &MI, Register &SrcReg,
+                      Register &SrcReg2, int &Mask, int &Value) const override;
 
-  bool optimizeCompareInstr(MachineInstr &CmpInstr, unsigned SrcReg,
-                            unsigned SrcReg2, int Mask, int Value,
+  bool optimizeCompareInstr(MachineInstr &CmpInstr, Register SrcReg,
+                            Register SrcReg2, int Mask, int Value,
                             const MachineRegisterInfo *MRI) const override;
 
 
@@ -366,19 +539,32 @@ public:
                                     int64_t &Offset, unsigned &Width,
                                     const TargetRegisterInfo *TRI) const;
 
+  /// Get the base operand and byte offset of an instruction that reads/writes
+  /// memory.
+  bool getMemOperandsWithOffsetWidth(
+      const MachineInstr &LdSt,
+      SmallVectorImpl<const MachineOperand *> &BaseOps, int64_t &Offset,
+      bool &OffsetIsScalable, unsigned &Width,
+      const TargetRegisterInfo *TRI) const override;
+
+  /// Returns true if the two given memory operations should be scheduled
+  /// adjacent.
+  bool shouldClusterMemOps(ArrayRef<const MachineOperand *> BaseOps1,
+                           ArrayRef<const MachineOperand *> BaseOps2,
+                           unsigned NumLoads, unsigned NumBytes) const override;
+
   /// Return true if two MIs access different memory addresses and false
   /// otherwise
   bool
   areMemAccessesTriviallyDisjoint(const MachineInstr &MIa,
-                                  const MachineInstr &MIb,
-                                  AliasAnalysis *AA = nullptr) const override;
+                                  const MachineInstr &MIb) const override;
 
   /// GetInstSize - Return the number of bytes of code the specified
   /// instruction may be.  This returns the maximum number of bytes.
   ///
   unsigned getInstSizeInBytes(const MachineInstr &MI) const override;
 
-  void getNoop(MCInst &NopInst) const override;
+  MCInst getNop() const override;
 
   std::pair<unsigned, unsigned>
   decomposeMachineOperandsTargetFlags(unsigned TF) const override;
@@ -423,24 +609,46 @@ public:
 
   bool convertToImmediateForm(MachineInstr &MI,
                               MachineInstr **KilledDef = nullptr) const;
+  bool foldFrameOffset(MachineInstr &MI) const;
+  bool combineRLWINM(MachineInstr &MI, MachineInstr **ToErase = nullptr) const;
+  bool isADDIInstrEligibleForFolding(MachineInstr &ADDIMI, int64_t &Imm) const;
+  bool isADDInstrEligibleForFolding(MachineInstr &ADDMI) const;
+  bool isImmInstrEligibleForFolding(MachineInstr &MI, unsigned &BaseReg,
+                                    unsigned &XFormOpcode,
+                                    int64_t &OffsetOfImmInstr,
+                                    ImmInstrInfo &III) const;
+  bool isValidToBeChangedReg(MachineInstr *ADDMI, unsigned Index,
+                             MachineInstr *&ADDIMI, int64_t &OffsetAddi,
+                             int64_t OffsetImm) const;
 
   /// Fixup killed/dead flag for register \p RegNo between instructions [\p
-  /// StartMI, \p EndMI]. Some PostRA transformations may violate register
-  /// killed/dead flags semantics, this function can be called to fix up. Before
-  /// calling this function,
+  /// StartMI, \p EndMI]. Some pre-RA or post-RA transformations may violate
+  /// register killed/dead flags semantics, this function can be called to fix
+  /// up. Before calling this function,
   /// 1. Ensure that \p RegNo liveness is killed after instruction \p EndMI.
   /// 2. Ensure that there is no new definition between (\p StartMI, \p EndMI)
-  ///    and possible definition for \p RegNo is \p StartMI or \p EndMI.
-  /// 3. Ensure that all instructions between [\p StartMI, \p EndMI] are in same
-  ///    basic block.
-  void fixupIsDeadOrKill(MachineInstr &StartMI, MachineInstr &EndMI,
+  ///    and possible definition for \p RegNo is \p StartMI or \p EndMI. For
+  ///    pre-RA cases, definition may be \p StartMI through COPY, \p StartMI
+  ///    will be adjust to true definition.
+  /// 3. We can do accurate fixup for the case when all instructions between
+  ///    [\p StartMI, \p EndMI] are in same basic block.
+  /// 4. For the case when \p StartMI and \p EndMI are not in same basic block,
+  ///    we conservatively clear kill flag for all uses of \p RegNo for pre-RA
+  ///    and for post-RA, we give an assertion as without reaching definition
+  ///    analysis post-RA, \p StartMI and \p EndMI are hard to keep right.
+  void fixupIsDeadOrKill(MachineInstr *StartMI, MachineInstr *EndMI,
                          unsigned RegNo) const;
   void replaceInstrWithLI(MachineInstr &MI, const LoadImmediateInfo &LII) const;
   void replaceInstrOperandWithImm(MachineInstr &MI, unsigned OpNo,
                                   int64_t Imm) const;
 
-  bool instrHasImmForm(const MachineInstr &MI, ImmInstrInfo &III,
+  bool instrHasImmForm(unsigned Opc, bool IsVFReg, ImmInstrInfo &III,
                        bool PostRA) const;
+
+  // In PostRA phase, try to find instruction defines \p Reg before \p MI.
+  // \p SeenIntermediate is set to true if uses between DefMI and \p MI exist.
+  MachineInstr *getDefMIPostRA(unsigned Reg, MachineInstr &MI,
+                               bool &SeenIntermediateUse) const;
 
   /// getRegNumForOperand - some operands use different numbering schemes
   /// for the same registers. For example, a VSX instruction may have any of
@@ -481,26 +689,14 @@ public:
   /// On PPC, we have two instructions used to set-up the hardware loop
   /// (MTCTRloop, MTCTR8loop) with corresponding endloop (BDNZ, BDNZ8)
   /// instructions to indicate the end of a loop.
-  MachineInstr *findLoopInstr(MachineBasicBlock &PreHeader) const;
+  MachineInstr *
+  findLoopInstr(MachineBasicBlock &PreHeader,
+                SmallPtrSet<MachineBasicBlock *, 8> &Visited) const;
 
-  /// Analyze the loop code to find the loop induction variable and compare used
-  /// to compute the number of iterations. Currently, we analyze loop that are
-  /// controlled using hardware loops.  In this case, the induction variable
-  /// instruction is null.  For all other cases, this function returns true,
-  /// which means we're unable to analyze it. \p IndVarInst and \p CmpInst will
-  /// return new values when we can analyze the readonly loop \p L, otherwise,
-  /// nothing got changed
-  bool analyzeLoop(MachineLoop &L, MachineInstr *&IndVarInst,
-                   MachineInstr *&CmpInst) const override;
-  /// Generate code to reduce the loop iteration by one and check if the loop
-  /// is finished.  Return the value/register of the new loop count.  We need
-  /// this function when peeling off one or more iterations of a loop. This
-  /// function assumes the last iteration is peeled first.
-  unsigned reduceLoopCount(MachineBasicBlock &MBB, MachineBasicBlock &PreHeader,
-                           MachineInstr *IndVar, MachineInstr &Cmp,
-                           SmallVectorImpl<MachineOperand> &Cond,
-                           SmallVectorImpl<MachineInstr *> &PrevInsts,
-                           unsigned Iter, unsigned MaxIter) const override;
+  /// Analyze loop L, which must be a single-basic-block loop, and if the
+  /// conditions can be understood enough produce a PipelinerLoopInfo object.
+  std::unique_ptr<TargetInstrInfo::PipelinerLoopInfo>
+  analyzeLoopForPipelining(MachineBasicBlock *LoopBB) const override;
 };
 
 }

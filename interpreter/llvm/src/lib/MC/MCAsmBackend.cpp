@@ -9,7 +9,6 @@
 #include "llvm/MC/MCAsmBackend.h"
 #include "llvm/ADT/None.h"
 #include "llvm/ADT/STLExtras.h"
-#include "llvm/MC/MCCodePadder.h"
 #include "llvm/MC/MCELFObjectWriter.h"
 #include "llvm/MC/MCFixupKindInfo.h"
 #include "llvm/MC/MCMachObjectWriter.h"
@@ -23,8 +22,7 @@
 
 using namespace llvm;
 
-MCAsmBackend::MCAsmBackend(support::endianness Endian)
-    : CodePadder(new MCCodePadder()), Endian(Endian) {}
+MCAsmBackend::MCAsmBackend(support::endianness Endian) : Endian(Endian) {}
 
 MCAsmBackend::~MCAsmBackend() = default;
 
@@ -56,10 +54,17 @@ std::unique_ptr<MCObjectWriter>
 MCAsmBackend::createDwoObjectWriter(raw_pwrite_stream &OS,
                                     raw_pwrite_stream &DwoOS) const {
   auto TW = createObjectTargetWriter();
-  if (TW->getFormat() != Triple::ELF)
-    report_fatal_error("dwo only supported with ELF");
-  return createELFDwoObjectWriter(cast<MCELFObjectTargetWriter>(std::move(TW)),
-                                  OS, DwoOS, Endian == support::little);
+  switch (TW->getFormat()) {
+  case Triple::ELF:
+    return createELFDwoObjectWriter(
+        cast<MCELFObjectTargetWriter>(std::move(TW)), OS, DwoOS,
+        Endian == support::little);
+  case Triple::Wasm:
+    return createWasmDwoObjectWriter(
+        cast<MCWasmObjectTargetWriter>(std::move(TW)), OS, DwoOS);
+  default:
+    report_fatal_error("dwo only supported with ELF and Wasm");
+  }
 }
 
 Optional<MCFixupKind> MCAsmBackend::getFixupKind(StringRef Name) const {
@@ -73,6 +78,7 @@ const MCFixupKindInfo &MCAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
       {"FK_Data_2", 0, 16, 0},
       {"FK_Data_4", 0, 32, 0},
       {"FK_Data_8", 0, 64, 0},
+      {"FK_Data_6b", 0, 6, 0},
       {"FK_PCRel_1", 0, 8, MCFixupKindInfo::FKF_IsPCRel},
       {"FK_PCRel_2", 0, 16, MCFixupKindInfo::FKF_IsPCRel},
       {"FK_PCRel_4", 0, 32, MCFixupKindInfo::FKF_IsPCRel},
@@ -89,14 +95,7 @@ const MCFixupKindInfo &MCAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
       {"FK_SecRel_2", 0, 16, 0},
       {"FK_SecRel_4", 0, 32, 0},
       {"FK_SecRel_8", 0, 64, 0},
-      {"FK_Data_Add_1", 0, 8, 0},
-      {"FK_Data_Add_2", 0, 16, 0},
-      {"FK_Data_Add_4", 0, 32, 0},
-      {"FK_Data_Add_8", 0, 64, 0},
-      {"FK_Data_Sub_1", 0, 8, 0},
-      {"FK_Data_Sub_2", 0, 16, 0},
-      {"FK_Data_Sub_4", 0, 32, 0},
-      {"FK_Data_Sub_8", 0, 64, 0}};
+  };
 
   assert((size_t)Kind <= array_lengthof(Builtins) && "Unknown fixup kind");
   return Builtins[Kind];
@@ -109,26 +108,4 @@ bool MCAsmBackend::fixupNeedsRelaxationAdvanced(
   if (!Resolved)
     return true;
   return fixupNeedsRelaxation(Fixup, Value, DF, Layout);
-}
-
-void MCAsmBackend::handleCodePaddingBasicBlockStart(
-    MCObjectStreamer *OS, const MCCodePaddingContext &Context) {
-  CodePadder->handleBasicBlockStart(OS, Context);
-}
-
-void MCAsmBackend::handleCodePaddingBasicBlockEnd(
-    const MCCodePaddingContext &Context) {
-  CodePadder->handleBasicBlockEnd(Context);
-}
-
-void MCAsmBackend::handleCodePaddingInstructionBegin(const MCInst &Inst) {
-  CodePadder->handleInstructionBegin(Inst);
-}
-
-void MCAsmBackend::handleCodePaddingInstructionEnd(const MCInst &Inst) {
-  CodePadder->handleInstructionEnd(Inst);
-}
-
-bool MCAsmBackend::relaxFragment(MCPaddingFragment *PF, MCAsmLayout &Layout) {
-  return CodePadder->relaxFragment(PF, Layout);
 }

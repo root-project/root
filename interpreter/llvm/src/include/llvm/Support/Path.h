@@ -47,15 +47,15 @@ enum class Style { windows, posix, native };
 ///   foo/       => foo,.
 ///   /foo/bar   => /,foo,bar
 ///   ../        => ..,.
-///   C:\foo\bar => C:,/,foo,bar
+///   C:\foo\bar => C:,\,foo,bar
 /// @endcode
 class const_iterator
     : public iterator_facade_base<const_iterator, std::input_iterator_tag,
                                   const StringRef> {
-  StringRef Path;      ///< The entire path.
-  StringRef Component; ///< The current component. Not necessarily in Path.
-  size_t    Position;  ///< The iterators current position within Path.
-  Style S;             ///< The path style to use.
+  StringRef Path;          ///< The entire path.
+  StringRef Component;     ///< The current component. Not necessarily in Path.
+  size_t    Position = 0;  ///< The iterators current position within Path.
+  Style S = Style::native; ///< The path style to use.
 
   // An end iterator has Position = Path.size() + 1.
   friend const_iterator begin(StringRef path, Style style);
@@ -78,10 +78,10 @@ public:
 class reverse_iterator
     : public iterator_facade_base<reverse_iterator, std::input_iterator_tag,
                                   const StringRef> {
-  StringRef Path;      ///< The entire path.
-  StringRef Component; ///< The current component. Not necessarily in Path.
-  size_t    Position;  ///< The iterators current position within Path.
-  Style S;             ///< The path style to use.
+  StringRef Path;          ///< The entire path.
+  StringRef Component;     ///< The current component. Not necessarily in Path.
+  size_t    Position = 0;  ///< The iterators current position within Path.
+  Style S = Style::native; ///< The path style to use.
 
   friend reverse_iterator rbegin(StringRef path, Style style);
   friend reverse_iterator rend(StringRef path);
@@ -121,6 +121,8 @@ reverse_iterator rend(StringRef path);
 
 /// Remove the last component from \a path unless it is the root dir.
 ///
+/// Similar to the POSIX "dirname" utility.
+///
 /// @code
 ///   directory/filename.cpp => directory/
 ///   directory/             => directory
@@ -150,8 +152,14 @@ void replace_extension(SmallVectorImpl<char> &path, const Twine &extension,
 ///
 /// @code
 ///   /foo, /old, /new => /foo
+///   /old, /old, /new => /new
+///   /old, /old/, /new => /old
 ///   /old/foo, /old, /new => /new/foo
+///   /old/foo, /old/, /new => /new/foo
+///   /old/foo, /old/, /new/ => /new/foo
+///   /oldfoo, /old, /new => /oldfoo
 ///   /foo, <empty>, /new => /new/foo
+///   /foo, <empty>, new => new/foo
 ///   /old/foo, /old, <empty> => /foo
 /// @endcode
 ///
@@ -159,8 +167,11 @@ void replace_extension(SmallVectorImpl<char> &path, const Twine &extension,
 ///        start with \a NewPrefix.
 /// @param OldPrefix The path prefix to strip from \a Path.
 /// @param NewPrefix The path prefix to replace \a NewPrefix with.
-void replace_path_prefix(SmallVectorImpl<char> &Path,
-                         const StringRef &OldPrefix, const StringRef &NewPrefix,
+/// @param style The style used to match the prefix. Exact match using
+/// Posix style, case/separator insensitive match for Windows style.
+/// @result true if \a Path begins with OldPrefix
+bool replace_path_prefix(SmallVectorImpl<char> &Path, StringRef OldPrefix,
+                         StringRef NewPrefix,
                          Style style = Style::native);
 
 /// Append to path.
@@ -295,7 +306,7 @@ StringRef parent_path(StringRef path, Style style = Style::native);
 ///
 /// @param path Input path.
 /// @result The filename part of \a path. This is defined as the last component
-///         of \a path.
+///         of \a path. Similar to the POSIX "basename" utility.
 StringRef filename(StringRef path, Style style = Style::native);
 
 /// Get stem.
@@ -359,6 +370,20 @@ void system_temp_directory(bool erasedOnReboot, SmallVectorImpl<char> &result);
 /// @param result Holds the resulting path name.
 /// @result True if a home directory is set, false otherwise.
 bool home_directory(SmallVectorImpl<char> &result);
+
+/// Get the directory where packages should read user-specific configurations.
+/// e.g. $XDG_CONFIG_HOME.
+///
+/// @param result Holds the resulting path name.
+/// @result True if the appropriate path was determined, it need not exist.
+bool user_config_directory(SmallVectorImpl<char> &result);
+
+/// Get the directory where installed packages should put their
+/// machine-local cache, e.g. $XDG_CACHE_HOME.
+///
+/// @param result Holds the resulting path name.
+/// @result True if the appropriate path was determined, it need not exist.
+bool cache_directory(SmallVectorImpl<char> &result);
 
 /// Has root name?
 ///
@@ -426,9 +451,47 @@ bool has_extension(const Twine &path, Style style = Style::native);
 
 /// Is path absolute?
 ///
+/// According to cppreference.com, C++17 states: "An absolute path is a path
+/// that unambiguously identifies the location of a file without reference to
+/// an additional starting location."
+///
+/// In other words, the rules are:
+/// 1) POSIX style paths with nonempty root directory are absolute.
+/// 2) Windows style paths with nonempty root name and root directory are
+///    absolute.
+/// 3) No other paths are absolute.
+///
+/// \see has_root_name
+/// \see has_root_directory
+///
 /// @param path Input path.
 /// @result True if the path is absolute, false if it is not.
 bool is_absolute(const Twine &path, Style style = Style::native);
+
+/// Is path absolute using GNU rules?
+///
+/// GNU rules are:
+/// 1) Paths starting with a path separator are absolute.
+/// 2) Windows style paths are also absolute if they start with a character
+///    followed by ':'.
+/// 3) No other paths are absolute.
+///
+/// On Windows style the path "C:\Users\Default" has "C:" as root name and "\"
+/// as root directory.
+///
+/// Hence "C:" on Windows is absolute under GNU rules and not absolute under
+/// C++17 because it has no root directory. Likewise "/" and "\" on Windows are
+/// absolute under GNU and are not absolute under C++17 due to empty root name.
+///
+/// \see has_root_name
+/// \see has_root_directory
+///
+/// @param path Input path.
+/// @param style The style of \p path (e.g. Windows or POSIX). "native" style
+/// means to derive the style from the host.
+/// @result True if the path is absolute following GNU rules, false if it is
+/// not.
+bool is_absolute_gnu(const Twine &path, Style style = Style::native);
 
 /// Is path relative?
 ///
@@ -450,10 +513,6 @@ StringRef remove_leading_dotslash(StringRef path, Style style = Style::native);
 /// @result True if path was changed
 bool remove_dots(SmallVectorImpl<char> &path, bool remove_dot_dot = false,
                  Style style = Style::native);
-
-#if defined(_WIN32)
-std::error_code widenPath(const Twine &Path8, SmallVectorImpl<wchar_t> &Path16);
-#endif
 
 } // end namespace path
 } // end namespace sys

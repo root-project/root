@@ -18,7 +18,6 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
@@ -38,6 +37,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Support/TypeSize.h"
 #include <algorithm>
 #include <cassert>
 #include <cstdint>
@@ -45,34 +45,25 @@
 
 using namespace llvm;
 
-static cl::opt<bool> SwitchInstProfUpdateWrapperStrict(
-    "switch-inst-prof-update-wrapper-strict", cl::Hidden,
-    cl::desc("Assert that prof branch_weights metadata is valid when creating "
-             "an instance of SwitchInstProfUpdateWrapper"),
-    cl::init(false));
+static cl::opt<bool> DisableI2pP2iOpt(
+    "disable-i2p-p2i-opt", cl::init(false),
+    cl::desc("Disables inttoptr/ptrtoint roundtrip optimization"));
 
 //===----------------------------------------------------------------------===//
 //                            AllocaInst Class
 //===----------------------------------------------------------------------===//
 
-Optional<uint64_t>
+Optional<TypeSize>
 AllocaInst::getAllocationSizeInBits(const DataLayout &DL) const {
-  uint64_t Size = DL.getTypeAllocSizeInBits(getAllocatedType());
+  TypeSize Size = DL.getTypeAllocSizeInBits(getAllocatedType());
   if (isArrayAllocation()) {
-    auto C = dyn_cast<ConstantInt>(getArraySize());
+    auto *C = dyn_cast<ConstantInt>(getArraySize());
     if (!C)
       return None;
+    assert(!Size.isScalable() && "Array elements cannot have a scalable size");
     Size *= C->getZExtValue();
   }
   return Size;
-}
-
-//===----------------------------------------------------------------------===//
-//                            CallSite Class
-//===----------------------------------------------------------------------===//
-
-User::op_iterator CallSite::getCallee() const {
-  return cast<CallBase>(getInstruction())->op_end() - 1;
 }
 
 //===----------------------------------------------------------------------===//
@@ -95,7 +86,7 @@ const char *SelectInst::areInvalidOperands(Value *Op0, Value *Op1, Value *Op2) {
     VectorType *ET = dyn_cast<VectorType>(Op1->getType());
     if (!ET)
       return "selected values for vector select must be vectors";
-    if (ET->getNumElements() != VT->getNumElements())
+    if (ET->getElementCount() != VT->getElementCount())
       return "vector select requires selected vectors to have "
                    "the same vector length as select condition";
   } else if (Op0->getType() != Type::getInt1Ty(Op0->getContext())) {
@@ -261,6 +252,33 @@ void LandingPadInst::addClause(Constant *Val) {
 //                        CallBase Implementation
 //===----------------------------------------------------------------------===//
 
+CallBase *CallBase::Create(CallBase *CB, ArrayRef<OperandBundleDef> Bundles,
+                           Instruction *InsertPt) {
+  switch (CB->getOpcode()) {
+  case Instruction::Call:
+    return CallInst::Create(cast<CallInst>(CB), Bundles, InsertPt);
+  case Instruction::Invoke:
+    return InvokeInst::Create(cast<InvokeInst>(CB), Bundles, InsertPt);
+  case Instruction::CallBr:
+    return CallBrInst::Create(cast<CallBrInst>(CB), Bundles, InsertPt);
+  default:
+    llvm_unreachable("Unknown CallBase sub-class!");
+  }
+}
+
+CallBase *CallBase::Create(CallBase *CI, OperandBundleDef OpB,
+                           Instruction *InsertPt) {
+  SmallVector<OperandBundleDef, 2> OpDefs;
+  for (unsigned i = 0, e = CI->getNumOperandBundles(); i < e; ++i) {
+    auto ChildOB = CI->getOperandBundleAt(i);
+    if (ChildOB.getTagName() != OpB.getTag())
+      OpDefs.emplace_back(ChildOB);
+  }
+  OpDefs.emplace_back(OpB);
+  return CallBase::Create(CI, OpDefs, InsertPt);
+}
+
+
 Function *CallBase::getCaller() { return getParent()->getParent(); }
 
 unsigned CallBase::getNumSubclassExtraOperandsDynamic() const {
@@ -269,13 +287,10 @@ unsigned CallBase::getNumSubclassExtraOperandsDynamic() const {
 }
 
 bool CallBase::isIndirectCall() const {
-  const Value *V = getCalledValue();
+  const Value *V = getCalledOperand();
   if (isa<Function>(V) || isa<Constant>(V))
     return false;
-  if (const CallInst *CI = dyn_cast<CallInst>(this))
-    if (CI->isInlineAsm())
-      return false;
-  return true;
+  return !isInlineAsm();
 }
 
 /// Tests if this call site must be tail call optimized. Only a CallInst can
@@ -324,16 +339,6 @@ Value *CallBase::getReturnedArgOperand() const {
   return nullptr;
 }
 
-bool CallBase::hasRetAttr(Attribute::AttrKind Kind) const {
-  if (Attrs.hasAttribute(AttributeList::ReturnIndex, Kind))
-    return true;
-
-  // Look at the callee, if available.
-  if (const Function *F = getCalledFunction())
-    return F->getAttributes().hasAttribute(AttributeList::ReturnIndex, Kind);
-  return false;
-}
-
 /// Determine whether the argument or parameter has the given attribute.
 bool CallBase::paramHasAttr(unsigned ArgNo, Attribute::AttrKind Kind) const {
   assert(ArgNo < getNumArgOperands() && "Param index out of bounds!");
@@ -347,14 +352,20 @@ bool CallBase::paramHasAttr(unsigned ArgNo, Attribute::AttrKind Kind) const {
 
 bool CallBase::hasFnAttrOnCalledFunction(Attribute::AttrKind Kind) const {
   if (const Function *F = getCalledFunction())
-    return F->getAttributes().hasAttribute(AttributeList::FunctionIndex, Kind);
+    return F->getAttributes().hasFnAttribute(Kind);
   return false;
 }
 
 bool CallBase::hasFnAttrOnCalledFunction(StringRef Kind) const {
   if (const Function *F = getCalledFunction())
-    return F->getAttributes().hasAttribute(AttributeList::FunctionIndex, Kind);
+    return F->getAttributes().hasFnAttribute(Kind);
   return false;
+}
+
+void CallBase::getOperandBundlesAsDefs(
+    SmallVectorImpl<OperandBundleDef> &Defs) const {
+  for (unsigned i = 0, e = getNumOperandBundles(); i != e; ++i)
+    Defs.emplace_back(getOperandBundleAt(i));
 }
 
 CallBase::op_iterator
@@ -383,6 +394,89 @@ CallBase::populateBundleOperandInfos(ArrayRef<OperandBundleDef> Bundles,
   return It;
 }
 
+CallBase::BundleOpInfo &CallBase::getBundleOpInfoForOperand(unsigned OpIdx) {
+  /// When there isn't many bundles, we do a simple linear search.
+  /// Else fallback to a binary-search that use the fact that bundles usually
+  /// have similar number of argument to get faster convergence.
+  if (bundle_op_info_end() - bundle_op_info_begin() < 8) {
+    for (auto &BOI : bundle_op_infos())
+      if (BOI.Begin <= OpIdx && OpIdx < BOI.End)
+        return BOI;
+
+    llvm_unreachable("Did not find operand bundle for operand!");
+  }
+
+  assert(OpIdx >= arg_size() && "the Idx is not in the operand bundles");
+  assert(bundle_op_info_end() - bundle_op_info_begin() > 0 &&
+         OpIdx < std::prev(bundle_op_info_end())->End &&
+         "The Idx isn't in the operand bundle");
+
+  /// We need a decimal number below and to prevent using floating point numbers
+  /// we use an intergal value multiplied by this constant.
+  constexpr unsigned NumberScaling = 1024;
+
+  bundle_op_iterator Begin = bundle_op_info_begin();
+  bundle_op_iterator End = bundle_op_info_end();
+  bundle_op_iterator Current = Begin;
+
+  while (Begin != End) {
+    unsigned ScaledOperandPerBundle =
+        NumberScaling * (std::prev(End)->End - Begin->Begin) / (End - Begin);
+    Current = Begin + (((OpIdx - Begin->Begin) * NumberScaling) /
+                       ScaledOperandPerBundle);
+    if (Current >= End)
+      Current = std::prev(End);
+    assert(Current < End && Current >= Begin &&
+           "the operand bundle doesn't cover every value in the range");
+    if (OpIdx >= Current->Begin && OpIdx < Current->End)
+      break;
+    if (OpIdx >= Current->End)
+      Begin = Current + 1;
+    else
+      End = Current;
+  }
+
+  assert(OpIdx >= Current->Begin && OpIdx < Current->End &&
+         "the operand bundle doesn't cover every value in the range");
+  return *Current;
+}
+
+CallBase *CallBase::addOperandBundle(CallBase *CB, uint32_t ID,
+                                     OperandBundleDef OB,
+                                     Instruction *InsertPt) {
+  if (CB->getOperandBundle(ID))
+    return CB;
+
+  SmallVector<OperandBundleDef, 1> Bundles;
+  CB->getOperandBundlesAsDefs(Bundles);
+  Bundles.push_back(OB);
+  return Create(CB, Bundles, InsertPt);
+}
+
+CallBase *CallBase::removeOperandBundle(CallBase *CB, uint32_t ID,
+                                        Instruction *InsertPt) {
+  SmallVector<OperandBundleDef, 1> Bundles;
+  bool CreateNew = false;
+
+  for (unsigned I = 0, E = CB->getNumOperandBundles(); I != E; ++I) {
+    auto Bundle = CB->getOperandBundleAt(I);
+    if (Bundle.getTagID() == ID) {
+      CreateNew = true;
+      continue;
+    }
+    Bundles.emplace_back(Bundle);
+  }
+
+  return CreateNew ? Create(CB, Bundles, InsertPt) : CB;
+}
+
+bool CallBase::hasReadingOperandBundles() const {
+  // Implementation note: this is a conservative implementation of operand
+  // bundle semantics, where *any* non-assume operand bundle forces a callsite
+  // to be at least readonly.
+  return hasOperandBundles() && getIntrinsicID() != Intrinsic::assume;
+}
+
 //===----------------------------------------------------------------------===//
 //                        CallInst Implementation
 //===----------------------------------------------------------------------===//
@@ -392,7 +486,6 @@ void CallInst::init(FunctionType *FTy, Value *Func, ArrayRef<Value *> Args,
   this->FTy = FTy;
   assert(getNumOperands() == Args.size() + CountBundleInputs(Bundles) + 1 &&
          "NumOperands not set up?");
-  setCalledOperand(Func);
 
 #ifndef NDEBUG
   assert((Args.size() == FTy->getNumParams() ||
@@ -405,7 +498,10 @@ void CallInst::init(FunctionType *FTy, Value *Func, ArrayRef<Value *> Args,
            "Calling a function with a bad signature!");
 #endif
 
+  // Set operands in order of their index to match use-list-order
+  // prediction.
   llvm::copy(Args, op_begin());
+  setCalledOperand(Func);
 
   auto It = populateBundleOperandInfos(Bundles, Args.size());
   (void)It;
@@ -455,7 +551,7 @@ CallInst *CallInst::Create(CallInst *CI, ArrayRef<OperandBundleDef> OpB,
                            Instruction *InsertPt) {
   std::vector<Value *> Args(CI->arg_begin(), CI->arg_end());
 
-  auto *NewCI = CallInst::Create(CI->getFunctionType(), CI->getCalledValue(),
+  auto *NewCI = CallInst::Create(CI->getFunctionType(), CI->getCalledOperand(),
                                  Args, OpB, CI->getName(), InsertPt);
   NewCI->setTailCallKind(CI->getTailCallKind());
   NewCI->setCallingConv(CI->getCallingConv());
@@ -498,17 +594,24 @@ void CallInst::updateProfWeight(uint64_t S, uint64_t T) {
                        ->getValue()
                        .getZExtValue());
     Val *= APS;
-    Vals.push_back(MDB.createConstant(ConstantInt::get(
-        Type::getInt64Ty(getContext()), Val.udiv(APT).getLimitedValue())));
+    Vals.push_back(MDB.createConstant(
+        ConstantInt::get(Type::getInt32Ty(getContext()),
+                         Val.udiv(APT).getLimitedValue(UINT32_MAX))));
   } else if (ProfDataName->getString().equals("VP"))
     for (unsigned i = 1; i < ProfileData->getNumOperands(); i += 2) {
       // The first value is the key of the value profile, which will not change.
       Vals.push_back(ProfileData->getOperand(i));
+      uint64_t Count =
+          mdconst::dyn_extract<ConstantInt>(ProfileData->getOperand(i + 1))
+              ->getValue()
+              .getZExtValue();
+      // Don't scale the magic number.
+      if (Count == NOMORE_ICP_MAGICNUM) {
+        Vals.push_back(ProfileData->getOperand(i + 1));
+        continue;
+      }
       // Using APInt::div may be expensive, but most cases should fit 64 bits.
-      APInt Val(128,
-                mdconst::dyn_extract<ConstantInt>(ProfileData->getOperand(i + 1))
-                    ->getValue()
-                    .getZExtValue());
+      APInt Val(128, Count);
       Val *= APS;
       Vals.push_back(MDB.createConstant(
           ConstantInt::get(Type::getInt64Ty(getContext()),
@@ -727,9 +830,6 @@ void InvokeInst::init(FunctionType *FTy, Value *Fn, BasicBlock *IfNormal,
   assert((int)getNumOperands() ==
              ComputeNumOperands(Args.size(), CountBundleInputs(Bundles)) &&
          "NumOperands not set up?");
-  setNormalDest(IfNormal);
-  setUnwindDest(IfException);
-  setCalledOperand(Fn);
 
 #ifndef NDEBUG
   assert(((Args.size() == FTy->getNumParams()) ||
@@ -742,7 +842,12 @@ void InvokeInst::init(FunctionType *FTy, Value *Fn, BasicBlock *IfNormal,
            "Invoking a function with a bad signature!");
 #endif
 
+  // Set operands in order of their index to match use-list-order
+  // prediction.
   llvm::copy(Args, op_begin());
+  setNormalDest(IfNormal);
+  setUnwindDest(IfException);
+  setCalledOperand(Fn);
 
   auto It = populateBundleOperandInfos(Bundles, Args.size());
   (void)It;
@@ -766,16 +871,15 @@ InvokeInst *InvokeInst::Create(InvokeInst *II, ArrayRef<OperandBundleDef> OpB,
                                Instruction *InsertPt) {
   std::vector<Value *> Args(II->arg_begin(), II->arg_end());
 
-  auto *NewII = InvokeInst::Create(II->getFunctionType(), II->getCalledValue(),
-                                   II->getNormalDest(), II->getUnwindDest(),
-                                   Args, OpB, II->getName(), InsertPt);
+  auto *NewII = InvokeInst::Create(
+      II->getFunctionType(), II->getCalledOperand(), II->getNormalDest(),
+      II->getUnwindDest(), Args, OpB, II->getName(), InsertPt);
   NewII->setCallingConv(II->getCallingConv());
   NewII->SubclassOptionalData = II->SubclassOptionalData;
   NewII->setAttributes(II->getAttributes());
   NewII->setDebugLoc(II->getDebugLoc());
   return NewII;
 }
-
 
 LandingPadInst *InvokeInst::getLandingPadInst() const {
   return cast<LandingPadInst>(getUnwindDest()->getFirstNonPHI());
@@ -796,11 +900,6 @@ void CallBrInst::init(FunctionType *FTy, Value *Fn, BasicBlock *Fallthrough,
              ComputeNumOperands(Args.size(), IndirectDests.size(),
                                 CountBundleInputs(Bundles)) &&
          "NumOperands not set up?");
-  NumIndirectDests = IndirectDests.size();
-  setDefaultDest(Fallthrough);
-  for (unsigned i = 0; i != NumIndirectDests; ++i)
-    setIndirectDest(i, IndirectDests[i]);
-  setCalledOperand(Fn);
 
 #ifndef NDEBUG
   assert(((Args.size() == FTy->getNumParams()) ||
@@ -813,7 +912,14 @@ void CallBrInst::init(FunctionType *FTy, Value *Fn, BasicBlock *Fallthrough,
            "Calling a function with a bad signature!");
 #endif
 
+  // Set operands in order of their index to match use-list-order
+  // prediction.
   std::copy(Args.begin(), Args.end(), op_begin());
+  NumIndirectDests = IndirectDests.size();
+  setDefaultDest(Fallthrough);
+  for (unsigned i = 0; i != NumIndirectDests; ++i)
+    setIndirectDest(i, IndirectDests[i]);
+  setCalledOperand(Fn);
 
   auto It = populateBundleOperandInfos(Bundles, Args.size());
   (void)It;
@@ -849,11 +955,9 @@ CallBrInst *CallBrInst::Create(CallBrInst *CBI, ArrayRef<OperandBundleDef> OpB,
                                Instruction *InsertPt) {
   std::vector<Value *> Args(CBI->arg_begin(), CBI->arg_end());
 
-  auto *NewCBI = CallBrInst::Create(CBI->getFunctionType(),
-                                    CBI->getCalledValue(),
-                                    CBI->getDefaultDest(),
-                                    CBI->getIndirectDests(),
-                                    Args, OpB, CBI->getName(), InsertPt);
+  auto *NewCBI = CallBrInst::Create(
+      CBI->getFunctionType(), CBI->getCalledOperand(), CBI->getDefaultDest(),
+      CBI->getIndirectDests(), Args, OpB, CBI->getName(), InsertPt);
   NewCBI->setCallingConv(CBI->getCallingConv());
   NewCBI->SubclassOptionalData = CBI->SubclassOptionalData;
   NewCBI->setAttributes(CBI->getAttributes());
@@ -926,7 +1030,8 @@ CleanupReturnInst::CleanupReturnInst(const CleanupReturnInst &CRI)
                   OperandTraits<CleanupReturnInst>::op_end(this) -
                       CRI.getNumOperands(),
                   CRI.getNumOperands()) {
-  setInstructionSubclassData(CRI.getSubclassDataFromInstruction());
+  setSubclassData<Instruction::OpaqueField>(
+      CRI.getSubclassData<Instruction::OpaqueField>());
   Op<0>() = CRI.Op<0>();
   if (CRI.hasUnwindDest())
     Op<1>() = CRI.Op<1>();
@@ -934,7 +1039,7 @@ CleanupReturnInst::CleanupReturnInst(const CleanupReturnInst &CRI)
 
 void CleanupReturnInst::init(Value *CleanupPad, BasicBlock *UnwindBB) {
   if (UnwindBB)
-    setInstructionSubclassData(getSubclassDataFromInstruction() | 1);
+    setSubclassData<UnwindDestField>(true);
 
   Op<0>() = CleanupPad;
   if (UnwindBB)
@@ -1038,7 +1143,7 @@ void CatchSwitchInst::init(Value *ParentPad, BasicBlock *UnwindDest,
 
   Op<0>() = ParentPad;
   if (UnwindDest) {
-    setInstructionSubclassData(getSubclassDataFromInstruction() | 1);
+    setSubclassData<UnwindDestField>(true);
     setUnwindDest(UnwindDest);
   }
 }
@@ -1146,9 +1251,10 @@ BranchInst::BranchInst(BasicBlock *IfTrue, BasicBlock *IfFalse, Value *Cond,
     : Instruction(Type::getVoidTy(IfTrue->getContext()), Instruction::Br,
                   OperandTraits<BranchInst>::op_end(this) - 3, 3,
                   InsertBefore) {
-  Op<-1>() = IfTrue;
-  Op<-2>() = IfFalse;
+  // Assign in order of operand index to make use-list order predictable.
   Op<-3>() = Cond;
+  Op<-2>() = IfFalse;
+  Op<-1>() = IfTrue;
 #ifndef NDEBUG
   AssertOK();
 #endif
@@ -1165,9 +1271,10 @@ BranchInst::BranchInst(BasicBlock *IfTrue, BasicBlock *IfFalse, Value *Cond,
                        BasicBlock *InsertAtEnd)
     : Instruction(Type::getVoidTy(IfTrue->getContext()), Instruction::Br,
                   OperandTraits<BranchInst>::op_end(this) - 3, 3, InsertAtEnd) {
-  Op<-1>() = IfTrue;
-  Op<-2>() = IfFalse;
+  // Assign in order of operand index to make use-list order predictable.
   Op<-3>() = Cond;
+  Op<-2>() = IfFalse;
+  Op<-1>() = IfTrue;
 #ifndef NDEBUG
   AssertOK();
 #endif
@@ -1177,12 +1284,13 @@ BranchInst::BranchInst(const BranchInst &BI)
     : Instruction(Type::getVoidTy(BI.getContext()), Instruction::Br,
                   OperandTraits<BranchInst>::op_end(this) - BI.getNumOperands(),
                   BI.getNumOperands()) {
-  Op<-1>() = BI.Op<-1>();
+  // Assign in order of operand index to make use-list order predictable.
   if (BI.getNumOperands() != 1) {
     assert(BI.getNumOperands() == 3 && "BR can have 1 or 3 operands!");
     Op<-3>() = BI.Op<-3>();
     Op<-2>() = BI.Op<-2>();
   }
+  Op<-1>() = BI.Op<-1>();
   SubclassOptionalData = BI.SubclassOptionalData;
 }
 
@@ -1212,6 +1320,19 @@ static Value *getAISize(LLVMContext &Context, Value *Amt) {
   return Amt;
 }
 
+static Align computeAllocaDefaultAlign(Type *Ty, BasicBlock *BB) {
+  assert(BB && "Insertion BB cannot be null when alignment not provided!");
+  assert(BB->getParent() &&
+         "BB must be in a Function when alignment not provided!");
+  const DataLayout &DL = BB->getModule()->getDataLayout();
+  return DL.getPrefTypeAlign(Ty);
+}
+
+static Align computeAllocaDefaultAlign(Type *Ty, Instruction *I) {
+  assert(I && "Insertion position cannot be null when alignment not provided!");
+  return computeAllocaDefaultAlign(Ty, I->getParent());
+}
+
 AllocaInst::AllocaInst(Type *Ty, unsigned AddrSpace, const Twine &Name,
                        Instruction *InsertBefore)
   : AllocaInst(Ty, AddrSpace, /*ArraySize=*/nullptr, Name, InsertBefore) {}
@@ -1222,42 +1343,37 @@ AllocaInst::AllocaInst(Type *Ty, unsigned AddrSpace, const Twine &Name,
 
 AllocaInst::AllocaInst(Type *Ty, unsigned AddrSpace, Value *ArraySize,
                        const Twine &Name, Instruction *InsertBefore)
-  : AllocaInst(Ty, AddrSpace, ArraySize, /*Align=*/0, Name, InsertBefore) {}
+    : AllocaInst(Ty, AddrSpace, ArraySize,
+                 computeAllocaDefaultAlign(Ty, InsertBefore), Name,
+                 InsertBefore) {}
 
 AllocaInst::AllocaInst(Type *Ty, unsigned AddrSpace, Value *ArraySize,
                        const Twine &Name, BasicBlock *InsertAtEnd)
-  : AllocaInst(Ty, AddrSpace, ArraySize, /*Align=*/0, Name, InsertAtEnd) {}
+    : AllocaInst(Ty, AddrSpace, ArraySize,
+                 computeAllocaDefaultAlign(Ty, InsertAtEnd), Name,
+                 InsertAtEnd) {}
 
 AllocaInst::AllocaInst(Type *Ty, unsigned AddrSpace, Value *ArraySize,
-                       unsigned Align, const Twine &Name,
+                       Align Align, const Twine &Name,
                        Instruction *InsertBefore)
-  : UnaryInstruction(PointerType::get(Ty, AddrSpace), Alloca,
-                     getAISize(Ty->getContext(), ArraySize), InsertBefore),
-    AllocatedType(Ty) {
-  setAlignment(Align);
-  assert(!Ty->isVoidTy() && "Cannot allocate void!");
-  setName(Name);
-}
-
-AllocaInst::AllocaInst(Type *Ty, unsigned AddrSpace, Value *ArraySize,
-                       unsigned Align, const Twine &Name,
-                       BasicBlock *InsertAtEnd)
-  : UnaryInstruction(PointerType::get(Ty, AddrSpace), Alloca,
-                     getAISize(Ty->getContext(), ArraySize), InsertAtEnd),
+    : UnaryInstruction(PointerType::get(Ty, AddrSpace), Alloca,
+                       getAISize(Ty->getContext(), ArraySize), InsertBefore),
       AllocatedType(Ty) {
   setAlignment(Align);
   assert(!Ty->isVoidTy() && "Cannot allocate void!");
   setName(Name);
 }
 
-void AllocaInst::setAlignment(unsigned Align) {
-  assert((Align & (Align-1)) == 0 && "Alignment is not a power of 2!");
-  assert(Align <= MaximumAlignment &&
-         "Alignment is greater than MaximumAlignment!");
-  setInstructionSubclassData((getSubclassDataFromInstruction() & ~31) |
-                             (Log2_32(Align) + 1));
-  assert(getAlignment() == Align && "Alignment representation error!");
+AllocaInst::AllocaInst(Type *Ty, unsigned AddrSpace, Value *ArraySize,
+                       Align Align, const Twine &Name, BasicBlock *InsertAtEnd)
+    : UnaryInstruction(PointerType::get(Ty, AddrSpace), Alloca,
+                       getAISize(Ty->getContext(), ArraySize), InsertAtEnd),
+      AllocatedType(Ty) {
+  setAlignment(Align);
+  assert(!Ty->isVoidTy() && "Cannot allocate void!");
+  setName(Name);
 }
+
 
 bool AllocaInst::isArrayAllocation() const {
   if (ConstantInt *CI = dyn_cast<ConstantInt>(getOperand(0)))
@@ -1288,6 +1404,19 @@ void LoadInst::AssertOK() {
          "Alignment required for atomic load");
 }
 
+static Align computeLoadStoreDefaultAlign(Type *Ty, BasicBlock *BB) {
+  assert(BB && "Insertion BB cannot be null when alignment not provided!");
+  assert(BB->getParent() &&
+         "BB must be in a Function when alignment not provided!");
+  const DataLayout &DL = BB->getModule()->getDataLayout();
+  return DL.getABITypeAlign(Ty);
+}
+
+static Align computeLoadStoreDefaultAlign(Type *Ty, Instruction *I) {
+  assert(I && "Insertion position cannot be null when alignment not provided!");
+  return computeLoadStoreDefaultAlign(Ty, I->getParent());
+}
+
 LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name,
                    Instruction *InsertBef)
     : LoadInst(Ty, Ptr, Name, /*isVolatile=*/false, InsertBef) {}
@@ -1298,27 +1427,29 @@ LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name,
 
 LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name, bool isVolatile,
                    Instruction *InsertBef)
-    : LoadInst(Ty, Ptr, Name, isVolatile, /*Align=*/0, InsertBef) {}
+    : LoadInst(Ty, Ptr, Name, isVolatile,
+               computeLoadStoreDefaultAlign(Ty, InsertBef), InsertBef) {}
 
 LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name, bool isVolatile,
                    BasicBlock *InsertAE)
-    : LoadInst(Ty, Ptr, Name, isVolatile, /*Align=*/0, InsertAE) {}
+    : LoadInst(Ty, Ptr, Name, isVolatile,
+               computeLoadStoreDefaultAlign(Ty, InsertAE), InsertAE) {}
 
 LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name, bool isVolatile,
-                   unsigned Align, Instruction *InsertBef)
+                   Align Align, Instruction *InsertBef)
     : LoadInst(Ty, Ptr, Name, isVolatile, Align, AtomicOrdering::NotAtomic,
                SyncScope::System, InsertBef) {}
 
 LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name, bool isVolatile,
-                   unsigned Align, BasicBlock *InsertAE)
+                   Align Align, BasicBlock *InsertAE)
     : LoadInst(Ty, Ptr, Name, isVolatile, Align, AtomicOrdering::NotAtomic,
                SyncScope::System, InsertAE) {}
 
 LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name, bool isVolatile,
-                   unsigned Align, AtomicOrdering Order,
-                   SyncScope::ID SSID, Instruction *InsertBef)
+                   Align Align, AtomicOrdering Order, SyncScope::ID SSID,
+                   Instruction *InsertBef)
     : UnaryInstruction(Ty, Load, Ptr, InsertBef) {
-  assert(Ty == cast<PointerType>(Ptr->getType())->getElementType());
+  assert(cast<PointerType>(Ptr->getType())->isOpaqueOrPointeeTypeMatches(Ty));
   setVolatile(isVolatile);
   setAlignment(Align);
   setAtomic(Order, SSID);
@@ -1327,24 +1458,15 @@ LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name, bool isVolatile,
 }
 
 LoadInst::LoadInst(Type *Ty, Value *Ptr, const Twine &Name, bool isVolatile,
-                   unsigned Align, AtomicOrdering Order, SyncScope::ID SSID,
+                   Align Align, AtomicOrdering Order, SyncScope::ID SSID,
                    BasicBlock *InsertAE)
     : UnaryInstruction(Ty, Load, Ptr, InsertAE) {
-  assert(Ty == cast<PointerType>(Ptr->getType())->getElementType());
+  assert(cast<PointerType>(Ptr->getType())->isOpaqueOrPointeeTypeMatches(Ty));
   setVolatile(isVolatile);
   setAlignment(Align);
   setAtomic(Order, SSID);
   AssertOK();
   setName(Name);
-}
-
-void LoadInst::setAlignment(unsigned Align) {
-  assert((Align & (Align-1)) == 0 && "Alignment is not a power of 2!");
-  assert(Align <= MaximumAlignment &&
-         "Alignment is greater than MaximumAlignment!");
-  setInstructionSubclassData((getSubclassDataFromInstruction() & ~(31 << 1)) |
-                             ((Log2_32(Align)+1)<<1));
-  assert(getAlignment() == Align && "Alignment representation error!");
 }
 
 //===----------------------------------------------------------------------===//
@@ -1355,9 +1477,9 @@ void StoreInst::AssertOK() {
   assert(getOperand(0) && getOperand(1) && "Both operands must be non-null!");
   assert(getOperand(1)->getType()->isPointerTy() &&
          "Ptr must have pointer type!");
-  assert(getOperand(0)->getType() ==
-                 cast<PointerType>(getOperand(1)->getType())->getElementType()
-         && "Ptr must be a pointer to Val type!");
+  assert(cast<PointerType>(getOperand(1)->getType())
+             ->isOpaqueOrPointeeTypeMatches(getOperand(0)->getType()) &&
+         "Ptr must be a pointer to Val type!");
   assert(!(isAtomic() && getAlignment() == 0) &&
          "Alignment required for atomic store");
 }
@@ -1370,30 +1492,32 @@ StoreInst::StoreInst(Value *val, Value *addr, BasicBlock *InsertAtEnd)
 
 StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile,
                      Instruction *InsertBefore)
-    : StoreInst(val, addr, isVolatile, /*Align=*/0, InsertBefore) {}
+    : StoreInst(val, addr, isVolatile,
+                computeLoadStoreDefaultAlign(val->getType(), InsertBefore),
+                InsertBefore) {}
 
 StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile,
                      BasicBlock *InsertAtEnd)
-    : StoreInst(val, addr, isVolatile, /*Align=*/0, InsertAtEnd) {}
+    : StoreInst(val, addr, isVolatile,
+                computeLoadStoreDefaultAlign(val->getType(), InsertAtEnd),
+                InsertAtEnd) {}
 
-StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile, unsigned Align,
+StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile, Align Align,
                      Instruction *InsertBefore)
     : StoreInst(val, addr, isVolatile, Align, AtomicOrdering::NotAtomic,
                 SyncScope::System, InsertBefore) {}
 
-StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile, unsigned Align,
+StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile, Align Align,
                      BasicBlock *InsertAtEnd)
     : StoreInst(val, addr, isVolatile, Align, AtomicOrdering::NotAtomic,
                 SyncScope::System, InsertAtEnd) {}
 
-StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile,
-                     unsigned Align, AtomicOrdering Order,
-                     SyncScope::ID SSID,
+StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile, Align Align,
+                     AtomicOrdering Order, SyncScope::ID SSID,
                      Instruction *InsertBefore)
-  : Instruction(Type::getVoidTy(val->getContext()), Store,
-                OperandTraits<StoreInst>::op_begin(this),
-                OperandTraits<StoreInst>::operands(this),
-                InsertBefore) {
+    : Instruction(Type::getVoidTy(val->getContext()), Store,
+                  OperandTraits<StoreInst>::op_begin(this),
+                  OperandTraits<StoreInst>::operands(this), InsertBefore) {
   Op<0>() = val;
   Op<1>() = addr;
   setVolatile(isVolatile);
@@ -1402,14 +1526,12 @@ StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile,
   AssertOK();
 }
 
-StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile,
-                     unsigned Align, AtomicOrdering Order,
-                     SyncScope::ID SSID,
+StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile, Align Align,
+                     AtomicOrdering Order, SyncScope::ID SSID,
                      BasicBlock *InsertAtEnd)
-  : Instruction(Type::getVoidTy(val->getContext()), Store,
-                OperandTraits<StoreInst>::op_begin(this),
-                OperandTraits<StoreInst>::operands(this),
-                InsertAtEnd) {
+    : Instruction(Type::getVoidTy(val->getContext()), Store,
+                  OperandTraits<StoreInst>::op_begin(this),
+                  OperandTraits<StoreInst>::operands(this), InsertAtEnd) {
   Op<0>() = val;
   Op<1>() = addr;
   setVolatile(isVolatile);
@@ -1418,21 +1540,13 @@ StoreInst::StoreInst(Value *val, Value *addr, bool isVolatile,
   AssertOK();
 }
 
-void StoreInst::setAlignment(unsigned Align) {
-  assert((Align & (Align-1)) == 0 && "Alignment is not a power of 2!");
-  assert(Align <= MaximumAlignment &&
-         "Alignment is greater than MaximumAlignment!");
-  setInstructionSubclassData((getSubclassDataFromInstruction() & ~(31 << 1)) |
-                             ((Log2_32(Align)+1) << 1));
-  assert(getAlignment() == Align && "Alignment representation error!");
-}
 
 //===----------------------------------------------------------------------===//
 //                       AtomicCmpXchgInst Implementation
 //===----------------------------------------------------------------------===//
 
 void AtomicCmpXchgInst::Init(Value *Ptr, Value *Cmp, Value *NewVal,
-                             AtomicOrdering SuccessOrdering,
+                             Align Alignment, AtomicOrdering SuccessOrdering,
                              AtomicOrdering FailureOrdering,
                              SyncScope::ID SSID) {
   Op<0>() = Ptr;
@@ -1441,30 +1555,24 @@ void AtomicCmpXchgInst::Init(Value *Ptr, Value *Cmp, Value *NewVal,
   setSuccessOrdering(SuccessOrdering);
   setFailureOrdering(FailureOrdering);
   setSyncScopeID(SSID);
+  setAlignment(Alignment);
 
   assert(getOperand(0) && getOperand(1) && getOperand(2) &&
          "All operands must be non-null!");
   assert(getOperand(0)->getType()->isPointerTy() &&
          "Ptr must have pointer type!");
-  assert(getOperand(1)->getType() ==
-                 cast<PointerType>(getOperand(0)->getType())->getElementType()
-         && "Ptr must be a pointer to Cmp type!");
-  assert(getOperand(2)->getType() ==
-                 cast<PointerType>(getOperand(0)->getType())->getElementType()
-         && "Ptr must be a pointer to NewVal type!");
-  assert(SuccessOrdering != AtomicOrdering::NotAtomic &&
-         "AtomicCmpXchg instructions must be atomic!");
-  assert(FailureOrdering != AtomicOrdering::NotAtomic &&
-         "AtomicCmpXchg instructions must be atomic!");
-  assert(!isStrongerThan(FailureOrdering, SuccessOrdering) &&
-         "AtomicCmpXchg failure argument shall be no stronger than the success "
-         "argument");
-  assert(FailureOrdering != AtomicOrdering::Release &&
-         FailureOrdering != AtomicOrdering::AcquireRelease &&
-         "AtomicCmpXchg failure ordering cannot include release semantics");
+  assert(cast<PointerType>(getOperand(0)->getType())
+             ->isOpaqueOrPointeeTypeMatches(getOperand(1)->getType()) &&
+         "Ptr must be a pointer to Cmp type!");
+  assert(cast<PointerType>(getOperand(0)->getType())
+             ->isOpaqueOrPointeeTypeMatches(getOperand(2)->getType()) &&
+         "Ptr must be a pointer to NewVal type!");
+  assert(getOperand(1)->getType() == getOperand(2)->getType() &&
+         "Cmp type and NewVal type must be same!");
 }
 
 AtomicCmpXchgInst::AtomicCmpXchgInst(Value *Ptr, Value *Cmp, Value *NewVal,
+                                     Align Alignment,
                                      AtomicOrdering SuccessOrdering,
                                      AtomicOrdering FailureOrdering,
                                      SyncScope::ID SSID,
@@ -1473,10 +1581,11 @@ AtomicCmpXchgInst::AtomicCmpXchgInst(Value *Ptr, Value *Cmp, Value *NewVal,
           StructType::get(Cmp->getType(), Type::getInt1Ty(Cmp->getContext())),
           AtomicCmpXchg, OperandTraits<AtomicCmpXchgInst>::op_begin(this),
           OperandTraits<AtomicCmpXchgInst>::operands(this), InsertBefore) {
-  Init(Ptr, Cmp, NewVal, SuccessOrdering, FailureOrdering, SSID);
+  Init(Ptr, Cmp, NewVal, Alignment, SuccessOrdering, FailureOrdering, SSID);
 }
 
 AtomicCmpXchgInst::AtomicCmpXchgInst(Value *Ptr, Value *Cmp, Value *NewVal,
+                                     Align Alignment,
                                      AtomicOrdering SuccessOrdering,
                                      AtomicOrdering FailureOrdering,
                                      SyncScope::ID SSID,
@@ -1485,7 +1594,7 @@ AtomicCmpXchgInst::AtomicCmpXchgInst(Value *Ptr, Value *Cmp, Value *NewVal,
           StructType::get(Cmp->getType(), Type::getInt1Ty(Cmp->getContext())),
           AtomicCmpXchg, OperandTraits<AtomicCmpXchgInst>::op_begin(this),
           OperandTraits<AtomicCmpXchgInst>::operands(this), InsertAtEnd) {
-  Init(Ptr, Cmp, NewVal, SuccessOrdering, FailureOrdering, SSID);
+  Init(Ptr, Cmp, NewVal, Alignment, SuccessOrdering, FailureOrdering, SSID);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1493,45 +1602,42 @@ AtomicCmpXchgInst::AtomicCmpXchgInst(Value *Ptr, Value *Cmp, Value *NewVal,
 //===----------------------------------------------------------------------===//
 
 void AtomicRMWInst::Init(BinOp Operation, Value *Ptr, Value *Val,
-                         AtomicOrdering Ordering,
+                         Align Alignment, AtomicOrdering Ordering,
                          SyncScope::ID SSID) {
   Op<0>() = Ptr;
   Op<1>() = Val;
   setOperation(Operation);
   setOrdering(Ordering);
   setSyncScopeID(SSID);
+  setAlignment(Alignment);
 
   assert(getOperand(0) && getOperand(1) &&
          "All operands must be non-null!");
   assert(getOperand(0)->getType()->isPointerTy() &&
          "Ptr must have pointer type!");
-  assert(getOperand(1)->getType() ==
-         cast<PointerType>(getOperand(0)->getType())->getElementType()
-         && "Ptr must be a pointer to Val type!");
+  assert(cast<PointerType>(getOperand(0)->getType())
+             ->isOpaqueOrPointeeTypeMatches(getOperand(1)->getType()) &&
+         "Ptr must be a pointer to Val type!");
   assert(Ordering != AtomicOrdering::NotAtomic &&
          "AtomicRMW instructions must be atomic!");
 }
 
 AtomicRMWInst::AtomicRMWInst(BinOp Operation, Value *Ptr, Value *Val,
-                             AtomicOrdering Ordering,
-                             SyncScope::ID SSID,
-                             Instruction *InsertBefore)
-  : Instruction(Val->getType(), AtomicRMW,
-                OperandTraits<AtomicRMWInst>::op_begin(this),
-                OperandTraits<AtomicRMWInst>::operands(this),
-                InsertBefore) {
-  Init(Operation, Ptr, Val, Ordering, SSID);
+                             Align Alignment, AtomicOrdering Ordering,
+                             SyncScope::ID SSID, Instruction *InsertBefore)
+    : Instruction(Val->getType(), AtomicRMW,
+                  OperandTraits<AtomicRMWInst>::op_begin(this),
+                  OperandTraits<AtomicRMWInst>::operands(this), InsertBefore) {
+  Init(Operation, Ptr, Val, Alignment, Ordering, SSID);
 }
 
 AtomicRMWInst::AtomicRMWInst(BinOp Operation, Value *Ptr, Value *Val,
-                             AtomicOrdering Ordering,
-                             SyncScope::ID SSID,
-                             BasicBlock *InsertAtEnd)
-  : Instruction(Val->getType(), AtomicRMW,
-                OperandTraits<AtomicRMWInst>::op_begin(this),
-                OperandTraits<AtomicRMWInst>::operands(this),
-                InsertAtEnd) {
-  Init(Operation, Ptr, Val, Ordering, SSID);
+                             Align Alignment, AtomicOrdering Ordering,
+                             SyncScope::ID SSID, BasicBlock *InsertAtEnd)
+    : Instruction(Val->getType(), AtomicRMW,
+                  OperandTraits<AtomicRMWInst>::op_begin(this),
+                  OperandTraits<AtomicRMWInst>::operands(this), InsertAtEnd) {
+  Init(Operation, Ptr, Val, Alignment, Ordering, SSID);
 }
 
 StringRef AtomicRMWInst::getOperationName(BinOp Op) {
@@ -1613,35 +1719,44 @@ GetElementPtrInst::GetElementPtrInst(const GetElementPtrInst &GEPI)
   SubclassOptionalData = GEPI.SubclassOptionalData;
 }
 
-/// getIndexedType - Returns the type of the element that would be accessed with
-/// a gep instruction with the specified parameters.
-///
-/// The Idxs pointer should point to a continuous piece of memory containing the
-/// indices, either as Value* or uint64_t.
-///
-/// A null type is returned if the indices are invalid for the specified
-/// pointer type.
-///
-template <typename IndexTy>
-static Type *getIndexedTypeInternal(Type *Agg, ArrayRef<IndexTy> IdxList) {
-  // Handle the special case of the empty set index set, which is always valid.
-  if (IdxList.empty())
-    return Agg;
-
-  // If there is at least one index, the top level type must be sized, otherwise
-  // it cannot be 'stepped over'.
-  if (!Agg->isSized())
-    return nullptr;
-
-  unsigned CurIdx = 1;
-  for (; CurIdx != IdxList.size(); ++CurIdx) {
-    CompositeType *CT = dyn_cast<CompositeType>(Agg);
-    if (!CT || CT->isPointerTy()) return nullptr;
-    IndexTy Index = IdxList[CurIdx];
-    if (!CT->indexValid(Index)) return nullptr;
-    Agg = CT->getTypeAtIndex(Index);
+Type *GetElementPtrInst::getTypeAtIndex(Type *Ty, Value *Idx) {
+  if (auto *Struct = dyn_cast<StructType>(Ty)) {
+    if (!Struct->indexValid(Idx))
+      return nullptr;
+    return Struct->getTypeAtIndex(Idx);
   }
-  return CurIdx == IdxList.size() ? Agg : nullptr;
+  if (!Idx->getType()->isIntOrIntVectorTy())
+    return nullptr;
+  if (auto *Array = dyn_cast<ArrayType>(Ty))
+    return Array->getElementType();
+  if (auto *Vector = dyn_cast<VectorType>(Ty))
+    return Vector->getElementType();
+  return nullptr;
+}
+
+Type *GetElementPtrInst::getTypeAtIndex(Type *Ty, uint64_t Idx) {
+  if (auto *Struct = dyn_cast<StructType>(Ty)) {
+    if (Idx >= Struct->getNumElements())
+      return nullptr;
+    return Struct->getElementType(Idx);
+  }
+  if (auto *Array = dyn_cast<ArrayType>(Ty))
+    return Array->getElementType();
+  if (auto *Vector = dyn_cast<VectorType>(Ty))
+    return Vector->getElementType();
+  return nullptr;
+}
+
+template <typename IndexTy>
+static Type *getIndexedTypeInternal(Type *Ty, ArrayRef<IndexTy> IdxList) {
+  if (IdxList.empty())
+    return Ty;
+  for (IndexTy V : IdxList.slice(1)) {
+    Ty = GetElementPtrInst::getTypeAtIndex(Ty, V);
+    if (!Ty)
+      return Ty;
+  }
+  return Ty;
 }
 
 Type *GetElementPtrInst::getIndexedType(Type *Ty, ArrayRef<Value *> IdxList) {
@@ -1694,6 +1809,15 @@ bool GetElementPtrInst::accumulateConstantOffset(const DataLayout &DL,
                                                  APInt &Offset) const {
   // Delegate to the generic GEPOperator implementation.
   return cast<GEPOperator>(this)->accumulateConstantOffset(DL, Offset);
+}
+
+bool GetElementPtrInst::collectOffset(
+    const DataLayout &DL, unsigned BitWidth,
+    MapVector<Value *, APInt> &VariableOffsets,
+    APInt &ConstantOffset) const {
+  // Delegate to the generic GEPOperator implementation.
+  return cast<GEPOperator>(this)->collectOffset(DL, BitWidth, VariableOffsets,
+                                                ConstantOffset);
 }
 
 //===----------------------------------------------------------------------===//
@@ -1788,55 +1912,108 @@ bool InsertElementInst::isValidOperands(const Value *Vec, const Value *Elt,
 ShuffleVectorInst::ShuffleVectorInst(Value *V1, Value *V2, Value *Mask,
                                      const Twine &Name,
                                      Instruction *InsertBefore)
-: Instruction(VectorType::get(cast<VectorType>(V1->getType())->getElementType(),
-                cast<VectorType>(Mask->getType())->getNumElements()),
-              ShuffleVector,
-              OperandTraits<ShuffleVectorInst>::op_begin(this),
-              OperandTraits<ShuffleVectorInst>::operands(this),
-              InsertBefore) {
+    : Instruction(
+          VectorType::get(cast<VectorType>(V1->getType())->getElementType(),
+                          cast<VectorType>(Mask->getType())->getElementCount()),
+          ShuffleVector, OperandTraits<ShuffleVectorInst>::op_begin(this),
+          OperandTraits<ShuffleVectorInst>::operands(this), InsertBefore) {
   assert(isValidOperands(V1, V2, Mask) &&
          "Invalid shuffle vector instruction operands!");
+
   Op<0>() = V1;
   Op<1>() = V2;
-  Op<2>() = Mask;
+  SmallVector<int, 16> MaskArr;
+  getShuffleMask(cast<Constant>(Mask), MaskArr);
+  setShuffleMask(MaskArr);
   setName(Name);
 }
 
 ShuffleVectorInst::ShuffleVectorInst(Value *V1, Value *V2, Value *Mask,
-                                     const Twine &Name,
-                                     BasicBlock *InsertAtEnd)
-: Instruction(VectorType::get(cast<VectorType>(V1->getType())->getElementType(),
-                cast<VectorType>(Mask->getType())->getNumElements()),
-              ShuffleVector,
-              OperandTraits<ShuffleVectorInst>::op_begin(this),
-              OperandTraits<ShuffleVectorInst>::operands(this),
-              InsertAtEnd) {
+                                     const Twine &Name, BasicBlock *InsertAtEnd)
+    : Instruction(
+          VectorType::get(cast<VectorType>(V1->getType())->getElementType(),
+                          cast<VectorType>(Mask->getType())->getElementCount()),
+          ShuffleVector, OperandTraits<ShuffleVectorInst>::op_begin(this),
+          OperandTraits<ShuffleVectorInst>::operands(this), InsertAtEnd) {
   assert(isValidOperands(V1, V2, Mask) &&
          "Invalid shuffle vector instruction operands!");
 
   Op<0>() = V1;
   Op<1>() = V2;
-  Op<2>() = Mask;
+  SmallVector<int, 16> MaskArr;
+  getShuffleMask(cast<Constant>(Mask), MaskArr);
+  setShuffleMask(MaskArr);
+  setName(Name);
+}
+
+ShuffleVectorInst::ShuffleVectorInst(Value *V1, Value *V2, ArrayRef<int> Mask,
+                                     const Twine &Name,
+                                     Instruction *InsertBefore)
+    : Instruction(
+          VectorType::get(cast<VectorType>(V1->getType())->getElementType(),
+                          Mask.size(), isa<ScalableVectorType>(V1->getType())),
+          ShuffleVector, OperandTraits<ShuffleVectorInst>::op_begin(this),
+          OperandTraits<ShuffleVectorInst>::operands(this), InsertBefore) {
+  assert(isValidOperands(V1, V2, Mask) &&
+         "Invalid shuffle vector instruction operands!");
+  Op<0>() = V1;
+  Op<1>() = V2;
+  setShuffleMask(Mask);
+  setName(Name);
+}
+
+ShuffleVectorInst::ShuffleVectorInst(Value *V1, Value *V2, ArrayRef<int> Mask,
+                                     const Twine &Name, BasicBlock *InsertAtEnd)
+    : Instruction(
+          VectorType::get(cast<VectorType>(V1->getType())->getElementType(),
+                          Mask.size(), isa<ScalableVectorType>(V1->getType())),
+          ShuffleVector, OperandTraits<ShuffleVectorInst>::op_begin(this),
+          OperandTraits<ShuffleVectorInst>::operands(this), InsertAtEnd) {
+  assert(isValidOperands(V1, V2, Mask) &&
+         "Invalid shuffle vector instruction operands!");
+
+  Op<0>() = V1;
+  Op<1>() = V2;
+  setShuffleMask(Mask);
   setName(Name);
 }
 
 void ShuffleVectorInst::commute() {
-  int NumOpElts = Op<0>()->getType()->getVectorNumElements();
-  int NumMaskElts = getMask()->getType()->getVectorNumElements();
-  SmallVector<Constant*, 16> NewMask(NumMaskElts);
-  Type *Int32Ty = Type::getInt32Ty(getContext());
+  int NumOpElts = cast<FixedVectorType>(Op<0>()->getType())->getNumElements();
+  int NumMaskElts = ShuffleMask.size();
+  SmallVector<int, 16> NewMask(NumMaskElts);
   for (int i = 0; i != NumMaskElts; ++i) {
     int MaskElt = getMaskValue(i);
-    if (MaskElt == -1) {
-      NewMask[i] = UndefValue::get(Int32Ty);
+    if (MaskElt == UndefMaskElem) {
+      NewMask[i] = UndefMaskElem;
       continue;
     }
     assert(MaskElt >= 0 && MaskElt < 2 * NumOpElts && "Out-of-range mask");
     MaskElt = (MaskElt < NumOpElts) ? MaskElt + NumOpElts : MaskElt - NumOpElts;
-    NewMask[i] = ConstantInt::get(Int32Ty, MaskElt);
+    NewMask[i] = MaskElt;
   }
-  Op<2>() = ConstantVector::get(NewMask);
+  setShuffleMask(NewMask);
   Op<0>().swap(Op<1>());
+}
+
+bool ShuffleVectorInst::isValidOperands(const Value *V1, const Value *V2,
+                                        ArrayRef<int> Mask) {
+  // V1 and V2 must be vectors of the same type.
+  if (!isa<VectorType>(V1->getType()) || V1->getType() != V2->getType())
+    return false;
+
+  // Make sure the mask elements make sense.
+  int V1Size =
+      cast<VectorType>(V1->getType())->getElementCount().getKnownMinValue();
+  for (int Elem : Mask)
+    if (Elem != UndefMaskElem && Elem >= V1Size * 2)
+      return false;
+
+  if (isa<ScalableVectorType>(V1->getType()))
+    if ((Mask[0] != 0 && Mask[0] != UndefMaskElem) || !is_splat(Mask))
+      return false;
+
+  return true;
 }
 
 bool ShuffleVectorInst::isValidOperands(const Value *V1, const Value *V2,
@@ -1845,9 +2022,11 @@ bool ShuffleVectorInst::isValidOperands(const Value *V1, const Value *V2,
   if (!V1->getType()->isVectorTy() || V1->getType() != V2->getType())
     return false;
 
-  // Mask must be vector of i32.
+  // Mask must be vector of i32, and must be the same kind of vector as the
+  // input vectors
   auto *MaskTy = dyn_cast<VectorType>(Mask->getType());
-  if (!MaskTy || !MaskTy->getElementType()->isIntegerTy(32))
+  if (!MaskTy || !MaskTy->getElementType()->isIntegerTy(32) ||
+      isa<ScalableVectorType>(MaskTy) != isa<ScalableVectorType>(V1->getType()))
     return false;
 
   // Check to see if Mask is valid.
@@ -1855,7 +2034,7 @@ bool ShuffleVectorInst::isValidOperands(const Value *V1, const Value *V2,
     return true;
 
   if (const auto *MV = dyn_cast<ConstantVector>(Mask)) {
-    unsigned V1Size = cast<VectorType>(V1->getType())->getNumElements();
+    unsigned V1Size = cast<FixedVectorType>(V1->getType())->getNumElements();
     for (Value *Op : MV->operands()) {
       if (auto *CI = dyn_cast<ConstantInt>(Op)) {
         if (CI->uge(V1Size*2))
@@ -1868,37 +2047,38 @@ bool ShuffleVectorInst::isValidOperands(const Value *V1, const Value *V2,
   }
 
   if (const auto *CDS = dyn_cast<ConstantDataSequential>(Mask)) {
-    unsigned V1Size = cast<VectorType>(V1->getType())->getNumElements();
-    for (unsigned i = 0, e = MaskTy->getNumElements(); i != e; ++i)
+    unsigned V1Size = cast<FixedVectorType>(V1->getType())->getNumElements();
+    for (unsigned i = 0, e = cast<FixedVectorType>(MaskTy)->getNumElements();
+         i != e; ++i)
       if (CDS->getElementAsInteger(i) >= V1Size*2)
         return false;
     return true;
   }
 
-  // The bitcode reader can create a place holder for a forward reference
-  // used as the shuffle mask. When this occurs, the shuffle mask will
-  // fall into this case and fail. To avoid this error, do this bit of
-  // ugliness to allow such a mask pass.
-  if (const auto *CE = dyn_cast<ConstantExpr>(Mask))
-    if (CE->getOpcode() == Instruction::UserOp1)
-      return true;
-
   return false;
-}
-
-int ShuffleVectorInst::getMaskValue(const Constant *Mask, unsigned i) {
-  assert(i < Mask->getType()->getVectorNumElements() && "Index out of range");
-  if (auto *CDS = dyn_cast<ConstantDataSequential>(Mask))
-    return CDS->getElementAsInteger(i);
-  Constant *C = Mask->getAggregateElement(i);
-  if (isa<UndefValue>(C))
-    return -1;
-  return cast<ConstantInt>(C)->getZExtValue();
 }
 
 void ShuffleVectorInst::getShuffleMask(const Constant *Mask,
                                        SmallVectorImpl<int> &Result) {
-  unsigned NumElts = Mask->getType()->getVectorNumElements();
+  ElementCount EC = cast<VectorType>(Mask->getType())->getElementCount();
+
+  if (isa<ConstantAggregateZero>(Mask)) {
+    Result.resize(EC.getKnownMinValue(), 0);
+    return;
+  }
+
+  Result.reserve(EC.getKnownMinValue());
+
+  if (EC.isScalable()) {
+    assert((isa<ConstantAggregateZero>(Mask) || isa<UndefValue>(Mask)) &&
+           "Scalable vector shuffle mask must be undef or zeroinitializer");
+    int MaskVal = isa<UndefValue>(Mask) ? -1 : 0;
+    for (unsigned I = 0; I < EC.getKnownMinValue(); ++I)
+      Result.emplace_back(MaskVal);
+    return;
+  }
+
+  unsigned NumElts = EC.getKnownMinValue();
 
   if (auto *CDS = dyn_cast<ConstantDataSequential>(Mask)) {
     for (unsigned i = 0; i != NumElts; ++i)
@@ -1912,22 +2092,47 @@ void ShuffleVectorInst::getShuffleMask(const Constant *Mask,
   }
 }
 
+void ShuffleVectorInst::setShuffleMask(ArrayRef<int> Mask) {
+  ShuffleMask.assign(Mask.begin(), Mask.end());
+  ShuffleMaskForBitcode = convertShuffleMaskForBitcode(Mask, getType());
+}
+
+Constant *ShuffleVectorInst::convertShuffleMaskForBitcode(ArrayRef<int> Mask,
+                                                          Type *ResultTy) {
+  Type *Int32Ty = Type::getInt32Ty(ResultTy->getContext());
+  if (isa<ScalableVectorType>(ResultTy)) {
+    assert(is_splat(Mask) && "Unexpected shuffle");
+    Type *VecTy = VectorType::get(Int32Ty, Mask.size(), true);
+    if (Mask[0] == 0)
+      return Constant::getNullValue(VecTy);
+    return UndefValue::get(VecTy);
+  }
+  SmallVector<Constant *, 16> MaskConst;
+  for (int Elem : Mask) {
+    if (Elem == UndefMaskElem)
+      MaskConst.push_back(UndefValue::get(Int32Ty));
+    else
+      MaskConst.push_back(ConstantInt::get(Int32Ty, Elem));
+  }
+  return ConstantVector::get(MaskConst);
+}
+
 static bool isSingleSourceMaskImpl(ArrayRef<int> Mask, int NumOpElts) {
   assert(!Mask.empty() && "Shuffle mask must contain elements");
   bool UsesLHS = false;
   bool UsesRHS = false;
-  for (int i = 0, NumMaskElts = Mask.size(); i < NumMaskElts; ++i) {
-    if (Mask[i] == -1)
+  for (int I : Mask) {
+    if (I == -1)
       continue;
-    assert(Mask[i] >= 0 && Mask[i] < (NumOpElts * 2) &&
+    assert(I >= 0 && I < (NumOpElts * 2) &&
            "Out-of-bounds shuffle mask element");
-    UsesLHS |= (Mask[i] < NumOpElts);
-    UsesRHS |= (Mask[i] >= NumOpElts);
+    UsesLHS |= (I < NumOpElts);
+    UsesRHS |= (I >= NumOpElts);
     if (UsesLHS && UsesRHS)
       return false;
   }
-  assert((UsesLHS ^ UsesRHS) && "Should have selected from exactly 1 source");
-  return true;
+  // Allow for degenerate case: completely undef mask means neither source is used.
+  return UsesLHS || UsesRHS;
 }
 
 bool ShuffleVectorInst::isSingleSourceMask(ArrayRef<int> Mask) {
@@ -2047,7 +2252,7 @@ bool ShuffleVectorInst::isExtractSubvectorMask(ArrayRef<int> Mask,
     SubIndex = Offset;
   }
 
-  if (0 <= SubIndex) {
+  if (0 <= SubIndex && SubIndex + (int)Mask.size() <= NumSrcElts) {
     Index = SubIndex;
     return true;
   }
@@ -2055,13 +2260,21 @@ bool ShuffleVectorInst::isExtractSubvectorMask(ArrayRef<int> Mask,
 }
 
 bool ShuffleVectorInst::isIdentityWithPadding() const {
-  int NumOpElts = Op<0>()->getType()->getVectorNumElements();
-  int NumMaskElts = getType()->getVectorNumElements();
+  if (isa<UndefValue>(Op<2>()))
+    return false;
+
+  // FIXME: Not currently possible to express a shuffle mask for a scalable
+  // vector for this case.
+  if (isa<ScalableVectorType>(getType()))
+    return false;
+
+  int NumOpElts = cast<FixedVectorType>(Op<0>()->getType())->getNumElements();
+  int NumMaskElts = cast<FixedVectorType>(getType())->getNumElements();
   if (NumMaskElts <= NumOpElts)
     return false;
 
   // The first part of the mask must choose elements from exactly 1 source op.
-  SmallVector<int, 16> Mask = getShuffleMask();
+  ArrayRef<int> Mask = getShuffleMask();
   if (!isIdentityMaskImpl(Mask, NumOpElts))
     return false;
 
@@ -2074,8 +2287,16 @@ bool ShuffleVectorInst::isIdentityWithPadding() const {
 }
 
 bool ShuffleVectorInst::isIdentityWithExtract() const {
-  int NumOpElts = Op<0>()->getType()->getVectorNumElements();
-  int NumMaskElts = getType()->getVectorNumElements();
+  if (isa<UndefValue>(Op<2>()))
+    return false;
+
+  // FIXME: Not currently possible to express a shuffle mask for a scalable
+  // vector for this case.
+  if (isa<ScalableVectorType>(getType()))
+    return false;
+
+  int NumOpElts = cast<FixedVectorType>(Op<0>()->getType())->getNumElements();
+  int NumMaskElts = cast<FixedVectorType>(getType())->getNumElements();
   if (NumMaskElts >= NumOpElts)
     return false;
 
@@ -2084,11 +2305,17 @@ bool ShuffleVectorInst::isIdentityWithExtract() const {
 
 bool ShuffleVectorInst::isConcat() const {
   // Vector concatenation is differentiated from identity with padding.
-  if (isa<UndefValue>(Op<0>()) || isa<UndefValue>(Op<1>()))
+  if (isa<UndefValue>(Op<0>()) || isa<UndefValue>(Op<1>()) ||
+      isa<UndefValue>(Op<2>()))
     return false;
 
-  int NumOpElts = Op<0>()->getType()->getVectorNumElements();
-  int NumMaskElts = getType()->getVectorNumElements();
+  // FIXME: Not currently possible to express a shuffle mask for a scalable
+  // vector for this case.
+  if (isa<ScalableVectorType>(getType()))
+    return false;
+
+  int NumOpElts = cast<FixedVectorType>(Op<0>()->getType())->getNumElements();
+  int NumMaskElts = cast<FixedVectorType>(getType())->getNumElements();
   if (NumMaskElts != NumOpElts * 2)
     return false;
 
@@ -2170,15 +2397,15 @@ Type *ExtractValueInst::getIndexedType(Type *Agg,
     if (ArrayType *AT = dyn_cast<ArrayType>(Agg)) {
       if (Index >= AT->getNumElements())
         return nullptr;
+      Agg = AT->getElementType();
     } else if (StructType *ST = dyn_cast<StructType>(Agg)) {
       if (Index >= ST->getNumElements())
         return nullptr;
+      Agg = ST->getElementType(Index);
     } else {
       // Not a valid type to index into.
       return nullptr;
     }
-
-    Agg = cast<CompositeType>(Agg)->getTypeAtIndex(Index);
   }
   return const_cast<Type*>(Agg);
 }
@@ -2390,20 +2617,6 @@ BinaryOperator *BinaryOperator::CreateNUWNeg(Value *Op, const Twine &Name,
   return BinaryOperator::CreateNUWSub(zero, Op, Name, InsertAtEnd);
 }
 
-BinaryOperator *BinaryOperator::CreateFNeg(Value *Op, const Twine &Name,
-                                           Instruction *InsertBefore) {
-  Value *zero = ConstantFP::getZeroValueForNegation(Op->getType());
-  return new BinaryOperator(Instruction::FSub, zero, Op,
-                            Op->getType(), Name, InsertBefore);
-}
-
-BinaryOperator *BinaryOperator::CreateFNeg(Value *Op, const Twine &Name,
-                                           BasicBlock *InsertAtEnd) {
-  Value *zero = ConstantFP::getZeroValueForNegation(Op->getType());
-  return new BinaryOperator(Instruction::FSub, zero, Op,
-                            Op->getType(), Name, InsertAtEnd);
-}
-
 BinaryOperator *BinaryOperator::CreateNot(Value *Op, const Twine &Name,
                                           Instruction *InsertBefore) {
   Constant *C = Constant::getAllOnesValue(Op->getType());
@@ -2489,6 +2702,7 @@ bool CastInst::isNoopCast(Instruction::CastOps Opcode,
                           Type *SrcTy,
                           Type *DestTy,
                           const DataLayout &DL) {
+  assert(castIsValid(Opcode, SrcTy, DestTy) && "method precondition");
   switch (Opcode) {
     default: llvm_unreachable("Invalid CastOp");
     case Instruction::Trunc:
@@ -2635,6 +2849,10 @@ unsigned CastInst::isEliminableCastPair(
         return secondOp;
       return 0;
     case 7: {
+      // Disable inttoptr/ptrtoint optimization if enabled.
+      if (DisableI2pP2iOpt)
+        return 0;
+
       // Cannot simplify if address spaces are different!
       if (SrcTy->getPointerAddressSpace() != DstTy->getPointerAddressSpace())
         return 0;
@@ -2700,13 +2918,15 @@ unsigned CastInst::isEliminableCastPair(
         "Illegal addrspacecast, bitcast sequence!");
       // Allowed, use first cast's opcode
       return firstOp;
-    case 14:
+    case 14: {
       // bitcast, addrspacecast -> addrspacecast if the element type of
       // bitcast's source is the same as that of addrspacecast's destination.
-      if (SrcTy->getScalarType()->getPointerElementType() ==
-          DstTy->getScalarType()->getPointerElementType())
+      PointerType *SrcPtrTy = cast<PointerType>(SrcTy->getScalarType());
+      PointerType *DstPtrTy = cast<PointerType>(DstTy->getScalarType());
+      if (SrcPtrTy->hasSameElementTypeAs(DstPtrTy))
         return Instruction::AddrSpaceCast;
       return 0;
+    }
     case 15:
       // FIXME: this state can be merged with (1), but the following assert
       // is useful to check the correcteness of the sequence due to semantic
@@ -2843,7 +3063,8 @@ CastInst *CastInst::CreatePointerCast(Value *S, Type *Ty,
          "Invalid cast");
   assert(Ty->isVectorTy() == S->getType()->isVectorTy() && "Invalid cast");
   assert((!Ty->isVectorTy() ||
-          Ty->getVectorNumElements() == S->getType()->getVectorNumElements()) &&
+          cast<VectorType>(Ty)->getElementCount() ==
+              cast<VectorType>(S->getType())->getElementCount()) &&
          "Invalid cast");
 
   if (Ty->isIntOrIntVectorTy())
@@ -2861,7 +3082,8 @@ CastInst *CastInst::CreatePointerCast(Value *S, Type *Ty,
          "Invalid cast");
   assert(Ty->isVectorTy() == S->getType()->isVectorTy() && "Invalid cast");
   assert((!Ty->isVectorTy() ||
-          Ty->getVectorNumElements() == S->getType()->getVectorNumElements()) &&
+          cast<VectorType>(Ty)->getElementCount() ==
+              cast<VectorType>(S->getType())->getElementCount()) &&
          "Invalid cast");
 
   if (Ty->isIntOrIntVectorTy())
@@ -2961,63 +3183,6 @@ CastInst *CastInst::CreateFPCast(Value *C, Type *Ty,
   return Create(opcode, C, Ty, Name, InsertAtEnd);
 }
 
-// Check whether it is valid to call getCastOpcode for these types.
-// This routine must be kept in sync with getCastOpcode.
-bool CastInst::isCastable(Type *SrcTy, Type *DestTy) {
-  if (!SrcTy->isFirstClassType() || !DestTy->isFirstClassType())
-    return false;
-
-  if (SrcTy == DestTy)
-    return true;
-
-  if (VectorType *SrcVecTy = dyn_cast<VectorType>(SrcTy))
-    if (VectorType *DestVecTy = dyn_cast<VectorType>(DestTy))
-      if (SrcVecTy->getNumElements() == DestVecTy->getNumElements()) {
-        // An element by element cast.  Valid if casting the elements is valid.
-        SrcTy = SrcVecTy->getElementType();
-        DestTy = DestVecTy->getElementType();
-      }
-
-  // Get the bit sizes, we'll need these
-  unsigned SrcBits = SrcTy->getPrimitiveSizeInBits();   // 0 for ptr
-  unsigned DestBits = DestTy->getPrimitiveSizeInBits(); // 0 for ptr
-
-  // Run through the possibilities ...
-  if (DestTy->isIntegerTy()) {               // Casting to integral
-    if (SrcTy->isIntegerTy())                // Casting from integral
-        return true;
-    if (SrcTy->isFloatingPointTy())   // Casting from floating pt
-      return true;
-    if (SrcTy->isVectorTy())          // Casting from vector
-      return DestBits == SrcBits;
-                                      // Casting from something else
-    return SrcTy->isPointerTy();
-  }
-  if (DestTy->isFloatingPointTy()) {  // Casting to floating pt
-    if (SrcTy->isIntegerTy())                // Casting from integral
-      return true;
-    if (SrcTy->isFloatingPointTy())   // Casting from floating pt
-      return true;
-    if (SrcTy->isVectorTy())          // Casting from vector
-      return DestBits == SrcBits;
-                                    // Casting from something else
-    return false;
-  }
-  if (DestTy->isVectorTy())         // Casting to vector
-    return DestBits == SrcBits;
-  if (DestTy->isPointerTy()) {        // Casting to pointer
-    if (SrcTy->isPointerTy())                // Casting from pointer
-      return true;
-    return SrcTy->isIntegerTy();             // Casting from integral
-  }
-  if (DestTy->isX86_MMXTy()) {
-    if (SrcTy->isVectorTy())
-      return DestBits == SrcBits;       // 64-bit vector to MMX
-    return false;
-  }                                    // Casting to something else
-  return false;
-}
-
 bool CastInst::isBitCastable(Type *SrcTy, Type *DestTy) {
   if (!SrcTy->isFirstClassType() || !DestTy->isFirstClassType())
     return false;
@@ -3027,7 +3192,7 @@ bool CastInst::isBitCastable(Type *SrcTy, Type *DestTy) {
 
   if (VectorType *SrcVecTy = dyn_cast<VectorType>(SrcTy)) {
     if (VectorType *DestVecTy = dyn_cast<VectorType>(DestTy)) {
-      if (SrcVecTy->getNumElements() == DestVecTy->getNumElements()) {
+      if (SrcVecTy->getElementCount() == DestVecTy->getElementCount()) {
         // An element by element cast. Valid if casting the elements is valid.
         SrcTy = SrcVecTy->getElementType();
         DestTy = DestVecTy->getElementType();
@@ -3041,12 +3206,12 @@ bool CastInst::isBitCastable(Type *SrcTy, Type *DestTy) {
     }
   }
 
-  unsigned SrcBits = SrcTy->getPrimitiveSizeInBits();   // 0 for ptr
-  unsigned DestBits = DestTy->getPrimitiveSizeInBits(); // 0 for ptr
+  TypeSize SrcBits = SrcTy->getPrimitiveSizeInBits();   // 0 for ptr
+  TypeSize DestBits = DestTy->getPrimitiveSizeInBits(); // 0 for ptr
 
   // Could still have vectors of pointers if the number of elements doesn't
   // match
-  if (SrcBits == 0 || DestBits == 0)
+  if (SrcBits.getKnownMinSize() == 0 || DestBits.getKnownMinSize() == 0)
     return false;
 
   if (SrcBits != DestBits)
@@ -3079,7 +3244,6 @@ bool CastInst::isBitOrNoopPointerCastable(Type *SrcTy, Type *DestTy,
 //   castIsValid( getCastOpcode(Val, Ty), Val, Ty)
 // should not assert in castIsValid. In other words, this produces a "correct"
 // casting opcode for the arguments passed to it.
-// This routine must be kept in sync with isCastable.
 Instruction::CastOps
 CastInst::getCastOpcode(
   const Value *Src, bool SrcIsSigned, Type *DestTy, bool DestIsSigned) {
@@ -3094,7 +3258,7 @@ CastInst::getCastOpcode(
   // FIXME: Check address space sizes here
   if (VectorType *SrcVecTy = dyn_cast<VectorType>(SrcTy))
     if (VectorType *DestVecTy = dyn_cast<VectorType>(DestTy))
-      if (SrcVecTy->getNumElements() == DestVecTy->getNumElements()) {
+      if (SrcVecTy->getElementCount() == DestVecTy->getElementCount()) {
         // An element by element cast.  Find the appropriate opcode based on the
         // element types.
         SrcTy = SrcVecTy->getElementType();
@@ -3184,65 +3348,59 @@ CastInst::getCastOpcode(
 /// it in one place and to eliminate the redundant code for getting the sizes
 /// of the types involved.
 bool
-CastInst::castIsValid(Instruction::CastOps op, Value *S, Type *DstTy) {
-  // Check for type sanity on the arguments
-  Type *SrcTy = S->getType();
-
+CastInst::castIsValid(Instruction::CastOps op, Type *SrcTy, Type *DstTy) {
   if (!SrcTy->isFirstClassType() || !DstTy->isFirstClassType() ||
       SrcTy->isAggregateType() || DstTy->isAggregateType())
     return false;
 
-  // Get the size of the types in bits, we'll need this later
-  unsigned SrcBitSize = SrcTy->getScalarSizeInBits();
-  unsigned DstBitSize = DstTy->getScalarSizeInBits();
+  // Get the size of the types in bits, and whether we are dealing
+  // with vector types, we'll need this later.
+  bool SrcIsVec = isa<VectorType>(SrcTy);
+  bool DstIsVec = isa<VectorType>(DstTy);
+  unsigned SrcScalarBitSize = SrcTy->getScalarSizeInBits();
+  unsigned DstScalarBitSize = DstTy->getScalarSizeInBits();
 
   // If these are vector types, get the lengths of the vectors (using zero for
   // scalar types means that checking that vector lengths match also checks that
   // scalars are not being converted to vectors or vectors to scalars).
-  unsigned SrcLength = SrcTy->isVectorTy() ?
-    cast<VectorType>(SrcTy)->getNumElements() : 0;
-  unsigned DstLength = DstTy->isVectorTy() ?
-    cast<VectorType>(DstTy)->getNumElements() : 0;
+  ElementCount SrcEC = SrcIsVec ? cast<VectorType>(SrcTy)->getElementCount()
+                                : ElementCount::getFixed(0);
+  ElementCount DstEC = DstIsVec ? cast<VectorType>(DstTy)->getElementCount()
+                                : ElementCount::getFixed(0);
 
   // Switch on the opcode provided
   switch (op) {
   default: return false; // This is an input error
   case Instruction::Trunc:
     return SrcTy->isIntOrIntVectorTy() && DstTy->isIntOrIntVectorTy() &&
-      SrcLength == DstLength && SrcBitSize > DstBitSize;
+           SrcEC == DstEC && SrcScalarBitSize > DstScalarBitSize;
   case Instruction::ZExt:
     return SrcTy->isIntOrIntVectorTy() && DstTy->isIntOrIntVectorTy() &&
-      SrcLength == DstLength && SrcBitSize < DstBitSize;
+           SrcEC == DstEC && SrcScalarBitSize < DstScalarBitSize;
   case Instruction::SExt:
     return SrcTy->isIntOrIntVectorTy() && DstTy->isIntOrIntVectorTy() &&
-      SrcLength == DstLength && SrcBitSize < DstBitSize;
+           SrcEC == DstEC && SrcScalarBitSize < DstScalarBitSize;
   case Instruction::FPTrunc:
     return SrcTy->isFPOrFPVectorTy() && DstTy->isFPOrFPVectorTy() &&
-      SrcLength == DstLength && SrcBitSize > DstBitSize;
+           SrcEC == DstEC && SrcScalarBitSize > DstScalarBitSize;
   case Instruction::FPExt:
     return SrcTy->isFPOrFPVectorTy() && DstTy->isFPOrFPVectorTy() &&
-      SrcLength == DstLength && SrcBitSize < DstBitSize;
+           SrcEC == DstEC && SrcScalarBitSize < DstScalarBitSize;
   case Instruction::UIToFP:
   case Instruction::SIToFP:
     return SrcTy->isIntOrIntVectorTy() && DstTy->isFPOrFPVectorTy() &&
-      SrcLength == DstLength;
+           SrcEC == DstEC;
   case Instruction::FPToUI:
   case Instruction::FPToSI:
     return SrcTy->isFPOrFPVectorTy() && DstTy->isIntOrIntVectorTy() &&
-      SrcLength == DstLength;
+           SrcEC == DstEC;
   case Instruction::PtrToInt:
-    if (isa<VectorType>(SrcTy) != isa<VectorType>(DstTy))
+    if (SrcEC != DstEC)
       return false;
-    if (VectorType *VT = dyn_cast<VectorType>(SrcTy))
-      if (VT->getNumElements() != cast<VectorType>(DstTy)->getNumElements())
-        return false;
     return SrcTy->isPtrOrPtrVectorTy() && DstTy->isIntOrIntVectorTy();
   case Instruction::IntToPtr:
-    if (isa<VectorType>(SrcTy) != isa<VectorType>(DstTy))
+    if (SrcEC != DstEC)
       return false;
-    if (VectorType *VT = dyn_cast<VectorType>(SrcTy))
-      if (VT->getNumElements() != cast<VectorType>(DstTy)->getNumElements())
-        return false;
     return SrcTy->isIntOrIntVectorTy() && DstTy->isPtrOrPtrVectorTy();
   case Instruction::BitCast: {
     PointerType *SrcPtrTy = dyn_cast<PointerType>(SrcTy->getScalarType());
@@ -3263,14 +3421,12 @@ CastInst::castIsValid(Instruction::CastOps op, Value *S, Type *DstTy) {
       return false;
 
     // A vector of pointers must have the same number of elements.
-    VectorType *SrcVecTy = dyn_cast<VectorType>(SrcTy);
-    VectorType *DstVecTy = dyn_cast<VectorType>(DstTy);
-    if (SrcVecTy && DstVecTy)
-      return (SrcVecTy->getNumElements() == DstVecTy->getNumElements());
-    if (SrcVecTy)
-      return SrcVecTy->getNumElements() == 1;
-    if (DstVecTy)
-      return DstVecTy->getNumElements() == 1;
+    if (SrcIsVec && DstIsVec)
+      return SrcEC == DstEC;
+    if (SrcIsVec)
+      return SrcEC == ElementCount::getFixed(1);
+    if (DstIsVec)
+      return DstEC == ElementCount::getFixed(1);
 
     return true;
   }
@@ -3286,14 +3442,7 @@ CastInst::castIsValid(Instruction::CastOps op, Value *S, Type *DstTy) {
     if (SrcPtrTy->getAddressSpace() == DstPtrTy->getAddressSpace())
       return false;
 
-    if (VectorType *SrcVecTy = dyn_cast<VectorType>(SrcTy)) {
-      if (VectorType *DstVecTy = dyn_cast<VectorType>(DstTy))
-        return (SrcVecTy->getNumElements() == DstVecTy->getNumElements());
-
-      return false;
-    }
-
-    return true;
+    return SrcEC == DstEC;
   }
   }
 }
@@ -3528,10 +3677,12 @@ bool CmpInst::isCommutative() const {
   return cast<FCmpInst>(this)->isCommutative();
 }
 
-bool CmpInst::isEquality() const {
-  if (const ICmpInst *IC = dyn_cast<ICmpInst>(this))
-    return IC->isEquality();
-  return cast<FCmpInst>(this)->isEquality();
+bool CmpInst::isEquality(Predicate P) {
+  if (ICmpInst::isIntPredicate(P))
+    return ICmpInst::isEquality(P);
+  if (FCmpInst::isFPPredicate(P))
+    return FCmpInst::isEquality(P);
+  llvm_unreachable("Unsupported predicate kind");
 }
 
 CmpInst::Predicate CmpInst::getInversePredicate(Predicate pred) {
@@ -3625,29 +3776,6 @@ ICmpInst::Predicate ICmpInst::getUnsignedPredicate(Predicate pred) {
   }
 }
 
-CmpInst::Predicate CmpInst::getFlippedStrictnessPredicate(Predicate pred) {
-  switch (pred) {
-    default: llvm_unreachable("Unknown or unsupported cmp predicate!");
-    case ICMP_SGT: return ICMP_SGE;
-    case ICMP_SLT: return ICMP_SLE;
-    case ICMP_SGE: return ICMP_SGT;
-    case ICMP_SLE: return ICMP_SLT;
-    case ICMP_UGT: return ICMP_UGE;
-    case ICMP_ULT: return ICMP_ULE;
-    case ICMP_UGE: return ICMP_UGT;
-    case ICMP_ULE: return ICMP_ULT;
-
-    case FCMP_OGT: return FCMP_OGE;
-    case FCMP_OLT: return FCMP_OLE;
-    case FCMP_OGE: return FCMP_OGT;
-    case FCMP_OLE: return FCMP_OLT;
-    case FCMP_UGT: return FCMP_UGE;
-    case FCMP_ULT: return FCMP_ULE;
-    case FCMP_UGE: return FCMP_UGT;
-    case FCMP_ULE: return FCMP_ULT;
-  }
-}
-
 CmpInst::Predicate CmpInst::getSwappedPredicate(Predicate pred) {
   switch (pred) {
     default: llvm_unreachable("Unknown cmp predicate!");
@@ -3678,22 +3806,97 @@ CmpInst::Predicate CmpInst::getSwappedPredicate(Predicate pred) {
   }
 }
 
-CmpInst::Predicate CmpInst::getNonStrictPredicate(Predicate pred) {
+bool CmpInst::isNonStrictPredicate(Predicate pred) {
   switch (pred) {
-  case ICMP_SGT: return ICMP_SGE;
-  case ICMP_SLT: return ICMP_SLE;
-  case ICMP_UGT: return ICMP_UGE;
-  case ICMP_ULT: return ICMP_ULE;
-  case FCMP_OGT: return FCMP_OGE;
-  case FCMP_OLT: return FCMP_OLE;
-  case FCMP_UGT: return FCMP_UGE;
-  case FCMP_ULT: return FCMP_ULE;
-  default: return pred;
+  case ICMP_SGE:
+  case ICMP_SLE:
+  case ICMP_UGE:
+  case ICMP_ULE:
+  case FCMP_OGE:
+  case FCMP_OLE:
+  case FCMP_UGE:
+  case FCMP_ULE:
+    return true;
+  default:
+    return false;
   }
 }
 
+bool CmpInst::isStrictPredicate(Predicate pred) {
+  switch (pred) {
+  case ICMP_SGT:
+  case ICMP_SLT:
+  case ICMP_UGT:
+  case ICMP_ULT:
+  case FCMP_OGT:
+  case FCMP_OLT:
+  case FCMP_UGT:
+  case FCMP_ULT:
+    return true;
+  default:
+    return false;
+  }
+}
+
+CmpInst::Predicate CmpInst::getStrictPredicate(Predicate pred) {
+  switch (pred) {
+  case ICMP_SGE:
+    return ICMP_SGT;
+  case ICMP_SLE:
+    return ICMP_SLT;
+  case ICMP_UGE:
+    return ICMP_UGT;
+  case ICMP_ULE:
+    return ICMP_ULT;
+  case FCMP_OGE:
+    return FCMP_OGT;
+  case FCMP_OLE:
+    return FCMP_OLT;
+  case FCMP_UGE:
+    return FCMP_UGT;
+  case FCMP_ULE:
+    return FCMP_ULT;
+  default:
+    return pred;
+  }
+}
+
+CmpInst::Predicate CmpInst::getNonStrictPredicate(Predicate pred) {
+  switch (pred) {
+  case ICMP_SGT:
+    return ICMP_SGE;
+  case ICMP_SLT:
+    return ICMP_SLE;
+  case ICMP_UGT:
+    return ICMP_UGE;
+  case ICMP_ULT:
+    return ICMP_ULE;
+  case FCMP_OGT:
+    return FCMP_OGE;
+  case FCMP_OLT:
+    return FCMP_OLE;
+  case FCMP_UGT:
+    return FCMP_UGE;
+  case FCMP_ULT:
+    return FCMP_ULE;
+  default:
+    return pred;
+  }
+}
+
+CmpInst::Predicate CmpInst::getFlippedStrictnessPredicate(Predicate pred) {
+  assert(CmpInst::isRelational(pred) && "Call only with relational predicate!");
+
+  if (isStrictPredicate(pred))
+    return getNonStrictPredicate(pred);
+  if (isNonStrictPredicate(pred))
+    return getStrictPredicate(pred);
+
+  llvm_unreachable("Unknown predicate!");
+}
+
 CmpInst::Predicate CmpInst::getSignedPredicate(Predicate pred) {
-  assert(CmpInst::isUnsigned(pred) && "Call only with signed predicates!");
+  assert(CmpInst::isUnsigned(pred) && "Call only with unsigned predicates!");
 
   switch (pred) {
   default:
@@ -3706,6 +3909,23 @@ CmpInst::Predicate CmpInst::getSignedPredicate(Predicate pred) {
     return CmpInst::ICMP_SGT;
   case CmpInst::ICMP_UGE:
     return CmpInst::ICMP_SGE;
+  }
+}
+
+CmpInst::Predicate CmpInst::getUnsignedPredicate(Predicate pred) {
+  assert(CmpInst::isSigned(pred) && "Call only with signed predicates!");
+
+  switch (pred) {
+  default:
+    llvm_unreachable("Unknown predicate!");
+  case CmpInst::ICMP_SLT:
+    return CmpInst::ICMP_ULT;
+  case CmpInst::ICMP_SLE:
+    return CmpInst::ICMP_ULE;
+  case CmpInst::ICMP_SGT:
+    return CmpInst::ICMP_UGT;
+  case CmpInst::ICMP_SGE:
+    return CmpInst::ICMP_UGE;
   }
 }
 
@@ -3723,6 +3943,18 @@ bool CmpInst::isSigned(Predicate predicate) {
     case ICmpInst::ICMP_SLT: case ICmpInst::ICMP_SLE: case ICmpInst::ICMP_SGT:
     case ICmpInst::ICMP_SGE: return true;
   }
+}
+
+CmpInst::Predicate CmpInst::getFlippedSignednessPredicate(Predicate pred) {
+  assert(CmpInst::isRelational(pred) &&
+         "Call only with non-equality predicates!");
+
+  if (isSigned(pred))
+    return getUnsignedPredicate(pred);
+  if (isUnsigned(pred))
+    return getSignedPredicate(pred);
+
+  llvm_unreachable("Unknown predicate!");
 }
 
 bool CmpInst::isOrdered(Predicate predicate) {
@@ -3897,7 +4129,7 @@ SwitchInstProfUpdateWrapper::getProfBranchWeightsMD(const SwitchInst &SI) {
 }
 
 MDNode *SwitchInstProfUpdateWrapper::buildProfBranchWeightsMD() {
-  assert(State == Changed && "called only if metadata has changed");
+  assert(Changed && "called only if metadata has changed");
 
   if (!Weights)
     return nullptr;
@@ -3916,17 +4148,12 @@ MDNode *SwitchInstProfUpdateWrapper::buildProfBranchWeightsMD() {
 
 void SwitchInstProfUpdateWrapper::init() {
   MDNode *ProfileData = getProfBranchWeightsMD(SI);
-  if (!ProfileData) {
-    State = Initialized;
+  if (!ProfileData)
     return;
-  }
 
   if (ProfileData->getNumOperands() != SI.getNumSuccessors() + 1) {
-    State = Invalid;
-    if (SwitchInstProfUpdateWrapperStrict)
-      llvm_unreachable("number of prof branch_weights metadata operands does "
-                       "not correspond to number of succesors");
-    return;
+    llvm_unreachable("number of prof branch_weights metadata operands does "
+                     "not correspond to number of succesors");
   }
 
   SmallVector<uint32_t, 8> Weights;
@@ -3935,7 +4162,6 @@ void SwitchInstProfUpdateWrapper::init() {
     uint32_t CW = C->getValue().getZExtValue();
     Weights.push_back(CW);
   }
-  State = Initialized;
   this->Weights = std::move(Weights);
 }
 
@@ -3944,7 +4170,7 @@ SwitchInstProfUpdateWrapper::removeCase(SwitchInst::CaseIt I) {
   if (Weights) {
     assert(SI.getNumSuccessors() == Weights->size() &&
            "num of prof branch_weights must accord with num of successors");
-    State = Changed;
+    Changed = true;
     // Copy the last case to the place of the removed one and shrink.
     // This is tightly coupled with the way SwitchInst::removeCase() removes
     // the cases in SwitchInst::removeCase(CaseIt).
@@ -3959,15 +4185,12 @@ void SwitchInstProfUpdateWrapper::addCase(
     SwitchInstProfUpdateWrapper::CaseWeightOpt W) {
   SI.addCase(OnVal, Dest);
 
-  if (State == Invalid)
-    return;
-
   if (!Weights && W && *W) {
-    State = Changed;
+    Changed = true;
     Weights = SmallVector<uint32_t, 8>(SI.getNumSuccessors(), 0);
     Weights.getValue()[SI.getNumSuccessors() - 1] = *W;
   } else if (Weights) {
-    State = Changed;
+    Changed = true;
     Weights.getValue().push_back(W ? *W : 0);
   }
   if (Weights)
@@ -3978,11 +4201,9 @@ void SwitchInstProfUpdateWrapper::addCase(
 SymbolTableList<Instruction>::iterator
 SwitchInstProfUpdateWrapper::eraseFromParent() {
   // Instruction is erased. Mark as unchanged to not touch it in the destructor.
-  if (State != Invalid) {
-    State = Initialized;
-    if (Weights)
-      Weights->resize(0);
-  }
+  Changed = false;
+  if (Weights)
+    Weights->resize(0);
   return SI.eraseFromParent();
 }
 
@@ -3995,7 +4216,7 @@ SwitchInstProfUpdateWrapper::getSuccessorWeight(unsigned idx) {
 
 void SwitchInstProfUpdateWrapper::setSuccessorWeight(
     unsigned idx, SwitchInstProfUpdateWrapper::CaseWeightOpt W) {
-  if (!W || State == Invalid)
+  if (!W)
     return;
 
   if (!Weights && *W)
@@ -4004,7 +4225,7 @@ void SwitchInstProfUpdateWrapper::setSuccessorWeight(
   if (Weights) {
     auto &OldW = Weights.getValue()[idx];
     if (*W != OldW) {
-      State = Changed;
+      Changed = true;
       OldW = *W;
     }
   }
@@ -4102,6 +4323,22 @@ void IndirectBrInst::removeDestination(unsigned idx) {
 }
 
 //===----------------------------------------------------------------------===//
+//                            FreezeInst Implementation
+//===----------------------------------------------------------------------===//
+
+FreezeInst::FreezeInst(Value *S,
+                       const Twine &Name, Instruction *InsertBefore)
+    : UnaryInstruction(S->getType(), Freeze, S, InsertBefore) {
+  setName(Name);
+}
+
+FreezeInst::FreezeInst(Value *S,
+                       const Twine &Name, BasicBlock *InsertAtEnd)
+    : UnaryInstruction(S->getType(), Freeze, S, InsertAtEnd) {
+  setName(Name);
+}
+
+//===----------------------------------------------------------------------===//
 //                           cloneImpl() implementations
 //===----------------------------------------------------------------------===//
 
@@ -4137,9 +4374,9 @@ InsertValueInst *InsertValueInst::cloneImpl() const {
 }
 
 AllocaInst *AllocaInst::cloneImpl() const {
-  AllocaInst *Result = new AllocaInst(getAllocatedType(),
-                                      getType()->getAddressSpace(),
-                                      (Value *)getOperand(0), getAlignment());
+  AllocaInst *Result =
+      new AllocaInst(getAllocatedType(), getType()->getAddressSpace(),
+                     getOperand(0), getAlign());
   Result->setUsedWithInAlloca(isUsedWithInAlloca());
   Result->setSwiftError(isSwiftError());
   return Result;
@@ -4147,20 +4384,18 @@ AllocaInst *AllocaInst::cloneImpl() const {
 
 LoadInst *LoadInst::cloneImpl() const {
   return new LoadInst(getType(), getOperand(0), Twine(), isVolatile(),
-                      getAlignment(), getOrdering(), getSyncScopeID());
+                      getAlign(), getOrdering(), getSyncScopeID());
 }
 
 StoreInst *StoreInst::cloneImpl() const {
-  return new StoreInst(getOperand(0), getOperand(1), isVolatile(),
-                       getAlignment(), getOrdering(), getSyncScopeID());
-
+  return new StoreInst(getOperand(0), getOperand(1), isVolatile(), getAlign(),
+                       getOrdering(), getSyncScopeID());
 }
 
 AtomicCmpXchgInst *AtomicCmpXchgInst::cloneImpl() const {
-  AtomicCmpXchgInst *Result =
-    new AtomicCmpXchgInst(getOperand(0), getOperand(1), getOperand(2),
-                          getSuccessOrdering(), getFailureOrdering(),
-                          getSyncScopeID());
+  AtomicCmpXchgInst *Result = new AtomicCmpXchgInst(
+      getOperand(0), getOperand(1), getOperand(2), getAlign(),
+      getSuccessOrdering(), getFailureOrdering(), getSyncScopeID());
   Result->setVolatile(isVolatile());
   Result->setWeak(isWeak());
   return Result;
@@ -4168,8 +4403,8 @@ AtomicCmpXchgInst *AtomicCmpXchgInst::cloneImpl() const {
 
 AtomicRMWInst *AtomicRMWInst::cloneImpl() const {
   AtomicRMWInst *Result =
-    new AtomicRMWInst(getOperation(), getOperand(0), getOperand(1),
-                      getOrdering(), getSyncScopeID());
+      new AtomicRMWInst(getOperation(), getOperand(0), getOperand(1),
+                        getAlign(), getOrdering(), getSyncScopeID());
   Result->setVolatile(isVolatile());
   return Result;
 }
@@ -4255,7 +4490,7 @@ InsertElementInst *InsertElementInst::cloneImpl() const {
 }
 
 ShuffleVectorInst *ShuffleVectorInst::cloneImpl() const {
-  return new ShuffleVectorInst(getOperand(0), getOperand(1), getOperand(2));
+  return new ShuffleVectorInst(getOperand(0), getOperand(1), getShuffleMask());
 }
 
 PHINode *PHINode::cloneImpl() const { return new PHINode(*this); }
@@ -4315,4 +4550,8 @@ FuncletPadInst *FuncletPadInst::cloneImpl() const {
 UnreachableInst *UnreachableInst::cloneImpl() const {
   LLVMContext &Context = getContext();
   return new UnreachableInst(Context);
+}
+
+FreezeInst *FreezeInst::cloneImpl() const {
+  return new FreezeInst(getOperand(0));
 }

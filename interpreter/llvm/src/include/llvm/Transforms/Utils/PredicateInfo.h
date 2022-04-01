@@ -51,48 +51,31 @@
 #define LLVM_TRANSFORMS_UTILS_PREDICATEINFO_H
 
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/DenseSet.h"
-#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallSet.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/ilist.h"
 #include "llvm/ADT/ilist_node.h"
-#include "llvm/ADT/iterator.h"
-#include "llvm/Analysis/AssumptionCache.h"
-#include "llvm/Analysis/OrderedInstructions.h"
-#include "llvm/IR/BasicBlock.h"
-#include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
-#include "llvm/IR/IntrinsicInst.h"
-#include "llvm/IR/Module.h"
-#include "llvm/IR/OperandTraits.h"
-#include "llvm/IR/Type.h"
-#include "llvm/IR/Use.h"
-#include "llvm/IR/User.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Pass.h"
-#include "llvm/PassAnalysisSupport.h"
-#include "llvm/Support/Casting.h"
-#include "llvm/Support/Compiler.h"
-#include "llvm/Support/ErrorHandling.h"
-#include <algorithm>
-#include <cassert>
-#include <cstddef>
-#include <iterator>
-#include <memory>
-#include <utility>
 
 namespace llvm {
 
+class AssumptionCache;
 class DominatorTree;
 class Function;
-class Instruction;
-class MemoryAccess;
-class LLVMContext;
+class IntrinsicInst;
 class raw_ostream;
 
 enum PredicateType { PT_Branch, PT_Assume, PT_Switch };
+
+/// Constraint for a predicate of the form "cmp Pred Op, OtherOp", where Op
+/// is the value the constraint applies to (the ssa.copy result).
+struct PredicateConstraint {
+  CmpInst::Predicate Predicate;
+  Value *OtherOp;
+};
 
 // Base class for all predicate information we provide.
 // All of our predicate information has at least a comparison.
@@ -103,37 +86,38 @@ public:
   // This can be use by passes, when destroying predicateinfo, to know
   // whether they can just drop the intrinsic, or have to merge metadata.
   Value *OriginalOp;
+  // The renamed operand in the condition used for this predicate. For nested
+  // predicates, this is different to OriginalOp which refers to the initial
+  // operand.
+  Value *RenamedOp;
+  // The condition associated with this predicate.
+  Value *Condition;
+
   PredicateBase(const PredicateBase &) = delete;
   PredicateBase &operator=(const PredicateBase &) = delete;
   PredicateBase() = delete;
   virtual ~PredicateBase() = default;
-
-protected:
-  PredicateBase(PredicateType PT, Value *Op) : Type(PT), OriginalOp(Op) {}
-};
-
-class PredicateWithCondition : public PredicateBase {
-public:
-  Value *Condition;
   static bool classof(const PredicateBase *PB) {
     return PB->Type == PT_Assume || PB->Type == PT_Branch ||
            PB->Type == PT_Switch;
   }
 
+  /// Fetch condition in the form of PredicateConstraint, if possible.
+  Optional<PredicateConstraint> getConstraint() const;
+
 protected:
-  PredicateWithCondition(PredicateType PT, Value *Op, Value *Condition)
-      : PredicateBase(PT, Op), Condition(Condition) {}
+  PredicateBase(PredicateType PT, Value *Op, Value *Condition)
+      : Type(PT), OriginalOp(Op), Condition(Condition) {}
 };
 
 // Provides predicate information for assumes.  Since assumes are always true,
 // we simply provide the assume instruction, so you can tell your relative
 // position to it.
-class PredicateAssume : public PredicateWithCondition {
+class PredicateAssume : public PredicateBase {
 public:
   IntrinsicInst *AssumeInst;
   PredicateAssume(Value *Op, IntrinsicInst *AssumeInst, Value *Condition)
-      : PredicateWithCondition(PT_Assume, Op, Condition),
-        AssumeInst(AssumeInst) {}
+      : PredicateBase(PT_Assume, Op, Condition), AssumeInst(AssumeInst) {}
   PredicateAssume() = delete;
   static bool classof(const PredicateBase *PB) {
     return PB->Type == PT_Assume;
@@ -143,7 +127,7 @@ public:
 // Mixin class for edge predicates.  The FROM block is the block where the
 // predicate originates, and the TO block is the block where the predicate is
 // valid.
-class PredicateWithEdge : public PredicateWithCondition {
+class PredicateWithEdge : public PredicateBase {
 public:
   BasicBlock *From;
   BasicBlock *To;
@@ -155,7 +139,7 @@ public:
 protected:
   PredicateWithEdge(PredicateType PType, Value *Op, BasicBlock *From,
                     BasicBlock *To, Value *Cond)
-      : PredicateWithCondition(PType, Op, Cond), From(From), To(To) {}
+      : PredicateBase(PType, Op, Cond), From(From), To(To) {}
 };
 
 // Provides predicate information for branches.
@@ -189,26 +173,9 @@ public:
   }
 };
 
-// This name is used in a few places, so kick it into their own namespace
-namespace PredicateInfoClasses {
-struct ValueDFS;
-}
-
 /// Encapsulates PredicateInfo, including all data associated with memory
 /// accesses.
 class PredicateInfo {
-private:
-  // Used to store information about each value we might rename.
-  struct ValueInfo {
-    // Information about each possible copy. During processing, this is each
-    // inserted info. After processing, we move the uninserted ones to the
-    // uninserted vector.
-    SmallVector<PredicateBase *, 4> Infos;
-    SmallVector<PredicateBase *, 4> UninsertedInfos;
-  };
-  // This owns the all the predicate infos in the function, placed or not.
-  iplist<PredicateBase> AllInfos;
-
 public:
   PredicateInfo(Function &, DominatorTree &, AssumptionCache &);
   ~PredicateInfo();
@@ -226,42 +193,18 @@ protected:
   // Used by PredicateInfo annotater, dumpers, and wrapper pass.
   friend class PredicateInfoAnnotatedWriter;
   friend class PredicateInfoPrinterLegacyPass;
+  friend class PredicateInfoBuilder;
 
 private:
-  void buildPredicateInfo();
-  void processAssume(IntrinsicInst *, BasicBlock *, SmallPtrSetImpl<Value *> &);
-  void processBranch(BranchInst *, BasicBlock *, SmallPtrSetImpl<Value *> &);
-  void processSwitch(SwitchInst *, BasicBlock *, SmallPtrSetImpl<Value *> &);
-  void renameUses(SmallPtrSetImpl<Value *> &);
-  using ValueDFS = PredicateInfoClasses::ValueDFS;
-  typedef SmallVectorImpl<ValueDFS> ValueDFSStack;
-  void convertUsesToDFSOrdered(Value *, SmallVectorImpl<ValueDFS> &);
-  Value *materializeStack(unsigned int &, ValueDFSStack &, Value *);
-  bool stackIsInScope(const ValueDFSStack &, const ValueDFS &) const;
-  void popStackUntilDFSScope(ValueDFSStack &, const ValueDFS &);
-  ValueInfo &getOrCreateValueInfo(Value *);
-  void addInfoFor(SmallPtrSetImpl<Value *> &OpsToRename, Value *Op,
-                  PredicateBase *PB);
-  const ValueInfo &getValueInfo(Value *) const;
   Function &F;
-  DominatorTree &DT;
-  AssumptionCache &AC;
-  OrderedInstructions OI;
+
+  // This owns the all the predicate infos in the function, placed or not.
+  iplist<PredicateBase> AllInfos;
+
   // This maps from copy operands to Predicate Info. Note that it does not own
   // the Predicate Info, they belong to the ValueInfo structs in the ValueInfos
   // vector.
   DenseMap<const Value *, const PredicateBase *> PredicateMap;
-  // This stores info about each operand or comparison result we make copies
-  // of.  The real ValueInfos start at index 1, index 0 is unused so that we can
-  // more easily detect invalid indexing.
-  SmallVector<ValueInfo, 32> ValueInfos;
-  // This gives the index into the ValueInfos array for a given Value.  Because
-  // 0 is not a valid Value Info index, you can use DenseMap::lookup and tell
-  // whether it returned a valid result.
-  DenseMap<Value *, unsigned int> ValueInfoNums;
-  // The set of edges along which we can only handle phi uses, due to critical
-  // edges.
-  DenseSet<std::pair<BasicBlock *, BasicBlock *>> EdgeUsesOnly;
   // The set of ssa_copy declarations we created with our custom mangling.
   SmallSet<AssertingVH<Function>, 20> CreatedDeclarations;
 };

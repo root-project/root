@@ -7,6 +7,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "PPCTargetObjectFile.h"
+#include "llvm/IR/GlobalVariable.h"
 #include "llvm/IR/Mangler.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
@@ -18,7 +19,6 @@ void
 PPC64LinuxTargetObjectFile::
 Initialize(MCContext &Ctx, const TargetMachine &TM) {
   TargetLoweringObjectFileELF::Initialize(Ctx, TM);
-  InitializeELF(TM.Options.UseInitArray);
 }
 
 MCSection *PPC64LinuxTargetObjectFile::SelectSectionForGlobal(
@@ -40,7 +40,8 @@ MCSection *PPC64LinuxTargetObjectFile::SelectSectionForGlobal(
   if (Kind.isReadOnly()) {
     const auto *GVar = dyn_cast<GlobalVariable>(GO);
 
-    if (GVar && GVar->isConstant() && GVar->getInitializer()->needsRelocation())
+    if (GVar && GVar->isConstant() &&
+        GVar->getInitializer()->needsDynamicRelocation())
       Kind = SectionKind::getReadOnlyWithRel();
   }
 

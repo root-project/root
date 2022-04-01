@@ -23,11 +23,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "TableGenBackends.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/None.h"
-#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
@@ -97,7 +99,8 @@ enum EltType {
   Poly128,
   Float16,
   Float32,
-  Float64
+  Float64,
+  BFloat16
 };
 
 } // end namespace NeonTypeFlags
@@ -139,7 +142,16 @@ class Type {
 private:
   TypeSpec TS;
 
-  bool Float, Signed, Immediate, Void, Poly, Constant, Pointer;
+  enum TypeKind {
+    Void,
+    Float,
+    SInt,
+    UInt,
+    Poly,
+    BFloat16,
+  };
+  TypeKind Kind;
+  bool Immediate, Constant, Pointer;
   // ScalarForMangling and NoManglingQ are really not suited to live here as
   // they are not related to the type. But they live in the TypeSpec (not the
   // prototype), so this is really the only place to store them.
@@ -148,16 +160,15 @@ private:
 
 public:
   Type()
-      : Float(false), Signed(false), Immediate(false), Void(true), Poly(false),
-        Constant(false), Pointer(false), ScalarForMangling(false),
-        NoManglingQ(false), Bitwidth(0), ElementBitwidth(0), NumVectors(0) {}
+      : Kind(Void), Immediate(false), Constant(false),
+        Pointer(false), ScalarForMangling(false), NoManglingQ(false),
+        Bitwidth(0), ElementBitwidth(0), NumVectors(0) {}
 
-  Type(TypeSpec TS, char CharMod)
-      : TS(std::move(TS)), Float(false), Signed(false), Immediate(false),
-        Void(false), Poly(false), Constant(false), Pointer(false),
-        ScalarForMangling(false), NoManglingQ(false), Bitwidth(0),
-        ElementBitwidth(0), NumVectors(0) {
-    applyModifier(CharMod);
+  Type(TypeSpec TS, StringRef CharMods)
+      : TS(std::move(TS)), Kind(Void), Immediate(false),
+        Constant(false), Pointer(false), ScalarForMangling(false),
+        NoManglingQ(false), Bitwidth(0), ElementBitwidth(0), NumVectors(0) {
+    applyModifiers(CharMods);
   }
 
   /// Returns a type representing "void".
@@ -173,21 +184,24 @@ public:
   bool noManglingQ() const { return NoManglingQ; }
 
   bool isPointer() const { return Pointer; }
-  bool isFloating() const { return Float; }
-  bool isInteger() const { return !Float && !Poly; }
-  bool isSigned() const { return Signed; }
+  bool isValue() const { return !isVoid() && !isPointer(); }
+  bool isScalar() const { return isValue() && NumVectors == 0; }
+  bool isVector() const { return isValue() && NumVectors > 0; }
+  bool isConstPointer() const { return Constant; }
+  bool isFloating() const { return Kind == Float; }
+  bool isInteger() const { return Kind == SInt || Kind == UInt; }
+  bool isPoly() const { return Kind == Poly; }
+  bool isSigned() const { return Kind == SInt; }
   bool isImmediate() const { return Immediate; }
-  bool isScalar() const { return NumVectors == 0; }
-  bool isVector() const { return NumVectors > 0; }
-  bool isFloat() const { return Float && ElementBitwidth == 32; }
-  bool isDouble() const { return Float && ElementBitwidth == 64; }
-  bool isHalf() const { return Float && ElementBitwidth == 16; }
-  bool isPoly() const { return Poly; }
+  bool isFloat() const { return isFloating() && ElementBitwidth == 32; }
+  bool isDouble() const { return isFloating() && ElementBitwidth == 64; }
+  bool isHalf() const { return isFloating() && ElementBitwidth == 16; }
   bool isChar() const { return ElementBitwidth == 8; }
-  bool isShort() const { return !Float && ElementBitwidth == 16; }
-  bool isInt() const { return !Float && ElementBitwidth == 32; }
-  bool isLong() const { return !Float && ElementBitwidth == 64; }
-  bool isVoid() const { return Void; }
+  bool isShort() const { return isInteger() && ElementBitwidth == 16; }
+  bool isInt() const { return isInteger() && ElementBitwidth == 32; }
+  bool isLong() const { return isInteger() && ElementBitwidth == 64; }
+  bool isVoid() const { return Kind == Void; }
+  bool isBFloat16() const { return Kind == BFloat16; }
   unsigned getNumElements() const { return Bitwidth / ElementBitwidth; }
   unsigned getSizeInBits() const { return Bitwidth; }
   unsigned getElementSizeInBits() const { return ElementBitwidth; }
@@ -196,21 +210,24 @@ public:
   //
   // Mutator functions
   //
-  void makeUnsigned() { Signed = false; }
-  void makeSigned() { Signed = true; }
+  void makeUnsigned() {
+    assert(!isVoid() && "not a potentially signed type");
+    Kind = UInt;
+  }
+  void makeSigned() {
+    assert(!isVoid() && "not a potentially signed type");
+    Kind = SInt;
+  }
 
   void makeInteger(unsigned ElemWidth, bool Sign) {
-    Float = false;
-    Poly = false;
-    Signed = Sign;
+    assert(!isVoid() && "converting void to int probably not useful");
+    Kind = Sign ? SInt : UInt;
     Immediate = false;
     ElementBitwidth = ElemWidth;
   }
 
   void makeImmediate(unsigned ElemWidth) {
-    Float = false;
-    Poly = false;
-    Signed = true;
+    Kind = SInt;
     Immediate = true;
     ElementBitwidth = ElemWidth;
   }
@@ -223,6 +240,11 @@ public:
   void makeOneVector() {
     assert(isVector());
     NumVectors = 1;
+  }
+
+  void make32BitElement() {
+    assert_with_loc(Bitwidth > 32, "Not enough bits to make it 32!");
+    ElementBitwidth = 32;
   }
 
   void doubleLanes() {
@@ -256,8 +278,8 @@ private:
   /// seen. This is needed by applyModifier as some modifiers
   /// only take effect if the type size was changed by "Q" or "H".
   void applyTypespec(bool &Quad);
-  /// Applies a prototype modifier to the type.
-  void applyModifier(char Mod);
+  /// Applies prototype modifiers to the type.
+  void applyModifiers(StringRef Mods);
 };
 
 //===----------------------------------------------------------------------===//
@@ -284,14 +306,12 @@ public:
 /// The main grunt class. This represents an instantiation of an intrinsic with
 /// a particular typespec and prototype.
 class Intrinsic {
-  friend class DagEmitter;
-
   /// The Record this intrinsic was created from.
   Record *R;
-  /// The unmangled name and prototype.
-  std::string Name, Proto;
+  /// The unmangled name.
+  std::string Name;
   /// The input and output typespecs. InTS == OutTS except when
-  /// CartesianProductOfTypes is 1 - this is the case for vreinterpret.
+  /// CartesianProductWith is non-empty - this is the case for vreinterpret.
   TypeSpec OutTS, InTS;
   /// The base class kind. Most intrinsics use ClassS, which has full type
   /// info for integers (s32/u32). Some use ClassI, which doesn't care about
@@ -312,6 +332,8 @@ class Intrinsic {
 
   /// The types of return value [0] and parameters [1..].
   std::vector<Type> Types;
+  /// The index of the key type passed to CGBuiltin.cpp for polymorphic calls.
+  int PolymorphicKeyType;
   /// The local variables defined.
   std::map<std::string, Variable> Variables;
   /// NeededEarly - set if any other intrinsic depends on this intrinsic.
@@ -322,7 +344,7 @@ class Intrinsic {
   /// The set of intrinsics that this intrinsic uses/requires.
   std::set<Intrinsic *> Dependencies;
   /// The "base type", which is Type('d', OutTS). InBaseType is only
-  /// different if CartesianProductOfTypes = 1 (for vreinterpret).
+  /// different if CartesianProductWith is non-empty (for vreinterpret).
   Type BaseType, InBaseType;
   /// The return variable.
   Variable RetVar;
@@ -332,38 +354,54 @@ class Intrinsic {
   NeonEmitter &Emitter;
   std::stringstream OS;
 
+  bool isBigEndianSafe() const {
+    if (BigEndianSafe)
+      return true;
+
+    for (const auto &T : Types){
+      if (T.isVector() && T.getNumElements() > 1)
+        return false;
+    }
+    return true;
+  }
+
 public:
   Intrinsic(Record *R, StringRef Name, StringRef Proto, TypeSpec OutTS,
             TypeSpec InTS, ClassKind CK, ListInit *Body, NeonEmitter &Emitter,
             StringRef Guard, bool IsUnavailable, bool BigEndianSafe)
-      : R(R), Name(Name.str()), Proto(Proto.str()), OutTS(OutTS), InTS(InTS),
-        CK(CK), Body(Body), Guard(Guard.str()), IsUnavailable(IsUnavailable),
-        BigEndianSafe(BigEndianSafe), NeededEarly(false), UseMacro(false),
-        BaseType(OutTS, 'd'), InBaseType(InTS, 'd'), Emitter(Emitter) {
-    // If this builtin takes an immediate argument, we need to #define it rather
-    // than use a standard declaration, so that SemaChecking can range check
-    // the immediate passed by the user.
-    if (Proto.find('i') != std::string::npos)
-      UseMacro = true;
-
-    // Pointer arguments need to use macros to avoid hiding aligned attributes
-    // from the pointer type.
-    if (Proto.find('p') != std::string::npos ||
-        Proto.find('c') != std::string::npos)
-      UseMacro = true;
-
-    // It is not permitted to pass or return an __fp16 by value, so intrinsics
-    // taking a scalar float16_t must be implemented as macros.
-    if (OutTS.find('h') != std::string::npos &&
-        Proto.find('s') != std::string::npos)
-      UseMacro = true;
-
+      : R(R), Name(Name.str()), OutTS(OutTS), InTS(InTS), CK(CK), Body(Body),
+        Guard(Guard.str()), IsUnavailable(IsUnavailable),
+        BigEndianSafe(BigEndianSafe), PolymorphicKeyType(0), NeededEarly(false),
+        UseMacro(false), BaseType(OutTS, "."), InBaseType(InTS, "."),
+        Emitter(Emitter) {
     // Modify the TypeSpec per-argument to get a concrete Type, and create
     // known variables for each.
     // Types[0] is the return value.
-    Types.emplace_back(OutTS, Proto[0]);
-    for (unsigned I = 1; I < Proto.size(); ++I)
-      Types.emplace_back(InTS, Proto[I]);
+    unsigned Pos = 0;
+    Types.emplace_back(OutTS, getNextModifiers(Proto, Pos));
+    StringRef Mods = getNextModifiers(Proto, Pos);
+    while (!Mods.empty()) {
+      Types.emplace_back(InTS, Mods);
+      if (Mods.find('!') != StringRef::npos)
+        PolymorphicKeyType = Types.size() - 1;
+
+      Mods = getNextModifiers(Proto, Pos);
+    }
+
+    for (auto Type : Types) {
+      // If this builtin takes an immediate argument, we need to #define it rather
+      // than use a standard declaration, so that SemaChecking can range check
+      // the immediate passed by the user.
+
+      // Pointer arguments need to use macros to avoid hiding aligned attributes
+      // from the pointer type.
+
+      // It is not permitted to pass or return an __fp16 by value, so intrinsics
+      // taking a scalar float16_t must be implemented as macros.
+      if (Type.isImmediate() || Type.isPointer() ||
+          (Type.isScalar() && Type.isHalf()))
+        UseMacro = true;
+    }
   }
 
   /// Get the Record that this intrinsic is based off.
@@ -379,37 +417,26 @@ public:
 
   /// Return true if the intrinsic takes an immediate operand.
   bool hasImmediate() const {
-    return Proto.find('i') != std::string::npos;
+    return std::any_of(Types.begin(), Types.end(),
+                       [](const Type &T) { return T.isImmediate(); });
   }
 
   /// Return the parameter index of the immediate operand.
   unsigned getImmediateIdx() const {
-    assert(hasImmediate());
-    unsigned Idx = Proto.find('i');
-    assert(Idx > 0 && "Can't return an immediate!");
-    return Idx - 1;
+    for (unsigned Idx = 0; Idx < Types.size(); ++Idx)
+      if (Types[Idx].isImmediate())
+        return Idx - 1;
+    llvm_unreachable("Intrinsic has no immediate");
   }
 
-  /// Return true if the intrinsic takes an splat operand.
-  bool hasSplat() const { return Proto.find('a') != std::string::npos; }
 
-  /// Return the parameter index of the splat operand.
-  unsigned getSplatIdx() const {
-    assert(hasSplat());
-    unsigned Idx = Proto.find('a');
-    assert(Idx > 0 && "Can't return a splat!");
-    return Idx - 1;
-  }
-
-  unsigned getNumParams() const { return Proto.size() - 1; }
+  unsigned getNumParams() const { return Types.size() - 1; }
   Type getReturnType() const { return Types[0]; }
   Type getParamType(unsigned I) const { return Types[I + 1]; }
   Type getBaseType() const { return BaseType; }
-  /// Return the raw prototype string.
-  std::string getProto() const { return Proto; }
+  Type getPolymorphicKeyType() const { return Types[PolymorphicKeyType]; }
 
   /// Return true if the prototype has a scalar argument.
-  /// This does not return true for the "splat" code ('a').
   bool protoHasScalar() const;
 
   /// Return the index that parameter PIndex will sit at
@@ -461,6 +488,8 @@ public:
   void indexBody();
 
 private:
+  StringRef getNextModifiers(StringRef Proto, unsigned &Pos) const;
+
   std::string mangleName(std::string Name, ClassKind CK) const;
 
   void initVariables();
@@ -496,7 +525,8 @@ private:
     std::pair<Type, std::string> emitDagDupTyped(DagInit *DI);
     std::pair<Type, std::string> emitDagShuffle(DagInit *DI);
     std::pair<Type, std::string> emitDagCast(DagInit *DI, bool IsBitCast);
-    std::pair<Type, std::string> emitDagCall(DagInit *DI);
+    std::pair<Type, std::string> emitDagCall(DagInit *DI,
+                                             bool MatchMangledName);
     std::pair<Type, std::string> emitDagNameReplace(DagInit *DI);
     std::pair<Type, std::string> emitDagLiteral(DagInit *DI);
     std::pair<Type, std::string> emitDagOp(DagInit *DI);
@@ -524,7 +554,8 @@ class NeonEmitter {
 public:
   /// Called by Intrinsic - this attempts to get an intrinsic that takes
   /// the given types as arguments.
-  Intrinsic &getIntrinsic(StringRef Name, ArrayRef<Type> Types);
+  Intrinsic &getIntrinsic(StringRef Name, ArrayRef<Type> Types,
+                          Optional<std::string> MangledName);
 
   /// Called by Intrinsic - returns a globally-unique number.
   unsigned getUniqueNumber() { return UniqueNumber++; }
@@ -549,18 +580,18 @@ public:
     ClassMap[NoTestOpI] = ClassNoTest;
   }
 
-  // run - Emit arm_neon.h.inc
+  // Emit arm_neon.h.inc
   void run(raw_ostream &o);
 
-  // runFP16 - Emit arm_fp16.h.inc
+  // Emit arm_fp16.h.inc
   void runFP16(raw_ostream &o);
 
-  // runHeader - Emit all the __builtin prototypes used in arm_neon.h
-	// and arm_fp16.h
-  void runHeader(raw_ostream &o);
+  // Emit arm_bf16.h.inc
+  void runBF16(raw_ostream &o);
 
-  // runTests - Emit tests for all the Neon intrinsics.
-  void runTests(raw_ostream &o);
+  // Emit all the __builtin prototypes used in arm_neon.h, arm_fp16.h and
+  // arm_bf16.h
+  void runHeader(raw_ostream &o);
 };
 
 } // end anonymous namespace
@@ -570,17 +601,19 @@ public:
 //===----------------------------------------------------------------------===//
 
 std::string Type::str() const {
-  if (Void)
+  if (isVoid())
     return "void";
   std::string S;
 
-  if (!Signed && isInteger())
+  if (isInteger() && !isSigned())
     S += "u";
 
-  if (Poly)
+  if (isPoly())
     S += "poly";
-  else if (Float)
+  else if (isFloating())
     S += "float";
+  else if (isBFloat16())
+    S += "bfloat";
   else
     S += "int";
 
@@ -604,10 +637,14 @@ std::string Type::builtin_str() const {
   if (isVoid())
     return "v";
 
-  if (Pointer)
+  if (isPointer()) {
     // All pointers are void pointers.
-    S += "v";
-  else if (isInteger())
+    S = "v";
+    if (isConstPointer())
+      S += "C";
+    S += "*";
+    return S;
+  } else if (isInteger())
     switch (ElementBitwidth) {
     case 8: S += "c"; break;
     case 16: S += "s"; break;
@@ -616,7 +653,10 @@ std::string Type::builtin_str() const {
     case 128: S += "LLLi"; break;
     default: llvm_unreachable("Unhandled case!");
     }
-  else
+  else if (isBFloat16()) {
+    assert(ElementBitwidth == 16 && "BFloat16 can only be 16 bits");
+    S += "y";
+  } else
     switch (ElementBitwidth) {
     case 16: S += "h"; break;
     case 32: S += "f"; break;
@@ -624,10 +664,11 @@ std::string Type::builtin_str() const {
     default: llvm_unreachable("Unhandled case!");
     }
 
-  if (isChar() && !Pointer)
+  // FIXME: NECESSARY???????????????????????????????????????????????????????????????????????
+  if (isChar() && !isPointer() && isSigned())
     // Make chars explicitly signed.
     S = "S" + S;
-  else if (isInteger() && !Pointer && !Signed)
+  else if (isInteger() && !isSigned())
     S = "U" + S;
 
   // Constant indices are "int", but have the "constant expression" modifier.
@@ -636,11 +677,8 @@ std::string Type::builtin_str() const {
     S = "I" + S;
   }
 
-  if (isScalar()) {
-    if (Constant) S += "C";
-    if (Pointer) S += "*";
+  if (isScalar())
     return S;
-  }
 
   std::string Ret;
   for (unsigned I = 0; I < NumVectors; ++I)
@@ -661,20 +699,25 @@ unsigned Type::getNeonEnum() const {
   }
 
   unsigned Base = (unsigned)NeonTypeFlags::Int8 + Addend;
-  if (Poly) {
+  if (isPoly()) {
     // Adjustment needed because Poly32 doesn't exist.
     if (Addend >= 2)
       --Addend;
     Base = (unsigned)NeonTypeFlags::Poly8 + Addend;
   }
-  if (Float) {
+  if (isFloating()) {
     assert(Addend != 0 && "Float8 doesn't exist!");
     Base = (unsigned)NeonTypeFlags::Float16 + (Addend - 1);
   }
 
+  if (isBFloat16()) {
+    assert(Addend == 1 && "BFloat16 is only 16 bit");
+    Base = (unsigned)NeonTypeFlags::BFloat16;
+  }
+
   if (Bitwidth == 128)
     Base |= (unsigned)NeonTypeFlags::QuadFlag;
-  if (isInteger() && !Signed)
+  if (isInteger() && !isSigned())
     Base |= (unsigned)NeonTypeFlags::UnsignedFlag;
 
   return Base;
@@ -682,23 +725,22 @@ unsigned Type::getNeonEnum() const {
 
 Type Type::fromTypedefName(StringRef Name) {
   Type T;
-  T.Void = false;
-  T.Float = false;
-  T.Poly = false;
+  T.Kind = SInt;
 
   if (Name.front() == 'u') {
-    T.Signed = false;
+    T.Kind = UInt;
     Name = Name.drop_front();
-  } else {
-    T.Signed = true;
   }
 
   if (Name.startswith("float")) {
-    T.Float = true;
+    T.Kind = Float;
     Name = Name.drop_front(5);
   } else if (Name.startswith("poly")) {
-    T.Poly = true;
+    T.Kind = Poly;
     Name = Name.drop_front(4);
+  } else if (Name.startswith("bfloat")) {
+    T.Kind = BFloat16;
+    Name = Name.drop_front(6);
   } else {
     assert(Name.startswith("int"));
     Name = Name.drop_front(3);
@@ -748,10 +790,8 @@ Type Type::fromTypedefName(StringRef Name) {
 void Type::applyTypespec(bool &Quad) {
   std::string S = TS;
   ScalarForMangling = false;
-  Void = false;
-  Poly = Float = false;
+  Kind = SInt;
   ElementBitwidth = ~0U;
-  Signed = true;
   NumVectors = 1;
 
   for (char I : S) {
@@ -767,28 +807,28 @@ void Type::applyTypespec(bool &Quad) {
       Quad = true;
       break;
     case 'P':
-      Poly = true;
+      Kind = Poly;
       break;
     case 'U':
-      Signed = false;
+      Kind = UInt;
       break;
     case 'c':
       ElementBitwidth = 8;
       break;
     case 'h':
-      Float = true;
+      Kind = Float;
       LLVM_FALLTHROUGH;
     case 's':
       ElementBitwidth = 16;
       break;
     case 'f':
-      Float = true;
+      Kind = Float;
       LLVM_FALLTHROUGH;
     case 'i':
       ElementBitwidth = 32;
       break;
     case 'd':
-      Float = true;
+      Kind = Float;
       LLVM_FALLTHROUGH;
     case 'l':
       ElementBitwidth = 64;
@@ -796,8 +836,12 @@ void Type::applyTypespec(bool &Quad) {
     case 'k':
       ElementBitwidth = 128;
       // Poly doesn't have a 128x1 type.
-      if (Poly)
+      if (isPoly())
         NumVectors = 0;
+      break;
+    case 'b':
+      Kind = BFloat16;
+      ElementBitwidth = 16;
       break;
     default:
       llvm_unreachable("Unhandled type code!");
@@ -808,220 +852,81 @@ void Type::applyTypespec(bool &Quad) {
   Bitwidth = Quad ? 128 : 64;
 }
 
-void Type::applyModifier(char Mod) {
+void Type::applyModifiers(StringRef Mods) {
   bool AppliedQuad = false;
   applyTypespec(AppliedQuad);
 
-  switch (Mod) {
-  case 'v':
-    Void = true;
-    break;
-  case 't':
-    if (Poly) {
-      Poly = false;
-      Signed = false;
+  for (char Mod : Mods) {
+    switch (Mod) {
+    case '.':
+      break;
+    case 'v':
+      Kind = Void;
+      break;
+    case 'S':
+      Kind = SInt;
+      break;
+    case 'U':
+      Kind = UInt;
+      break;
+    case 'B':
+      Kind = BFloat16;
+      ElementBitwidth = 16;
+      break;
+    case 'F':
+      Kind = Float;
+      break;
+    case 'P':
+      Kind = Poly;
+      break;
+    case '>':
+      assert(ElementBitwidth < 128);
+      ElementBitwidth *= 2;
+      break;
+    case '<':
+      assert(ElementBitwidth > 8);
+      ElementBitwidth /= 2;
+      break;
+    case '1':
+      NumVectors = 0;
+      break;
+    case '2':
+      NumVectors = 2;
+      break;
+    case '3':
+      NumVectors = 3;
+      break;
+    case '4':
+      NumVectors = 4;
+      break;
+    case '*':
+      Pointer = true;
+      break;
+    case 'c':
+      Constant = true;
+      break;
+    case 'Q':
+      Bitwidth = 128;
+      break;
+    case 'q':
+      Bitwidth = 64;
+      break;
+    case 'I':
+      Kind = SInt;
+      ElementBitwidth = Bitwidth = 32;
+      NumVectors = 0;
+      Immediate = true;
+      break;
+    case 'p':
+      if (isPoly())
+        Kind = UInt;
+      break;
+    case '!':
+      // Key type, handled elsewhere.
+      break;
+    default:
+      llvm_unreachable("Unhandled character!");
     }
-    break;
-  case 'b':
-    Signed = false;
-    Float = false;
-    Poly = false;
-    NumVectors = 0;
-    Bitwidth = ElementBitwidth;
-    break;
-  case '$':
-    Signed = true;
-    Float = false;
-    Poly = false;
-    NumVectors = 0;
-    Bitwidth = ElementBitwidth;
-    break;
-  case 'u':
-    Signed = false;
-    Poly = false;
-    Float = false;
-    break;
-  case 'x':
-    Signed = true;
-    assert(!Poly && "'u' can't be used with poly types!");
-    Float = false;
-    break;
-  case 'o':
-    Bitwidth = ElementBitwidth = 64;
-    NumVectors = 0;
-    Float = true;
-    break;
-  case 'y':
-    Bitwidth = ElementBitwidth = 32;
-    NumVectors = 0;
-    Float = true;
-    break;
-  case 'Y':
-    Bitwidth = ElementBitwidth = 16;
-    NumVectors = 0;
-    Float = true;
-    break;
-  case 'I':
-    Bitwidth = ElementBitwidth = 32;
-    NumVectors = 0;
-    Float = false;
-    Signed = true;
-    break;
-  case 'L':
-    Bitwidth = ElementBitwidth = 64;
-    NumVectors = 0;
-    Float = false;
-    Signed = true;
-    break;
-  case 'U':
-    Bitwidth = ElementBitwidth = 32;
-    NumVectors = 0;
-    Float = false;
-    Signed = false;
-    break;
-  case 'O':
-    Bitwidth = ElementBitwidth = 64;
-    NumVectors = 0;
-    Float = false;
-    Signed = false;
-    break;
-  case 'f':
-    Float = true;
-    ElementBitwidth = 32;
-    break;
-  case 'F':
-    Float = true;
-    ElementBitwidth = 64;
-    break;
-  case 'H':
-    Float = true;
-    ElementBitwidth = 16;
-    break;
-  case '0':
-    Float = true;
-    if (AppliedQuad)
-      Bitwidth /= 2;
-    ElementBitwidth = 16;
-    break;
-  case '1':
-    Float = true;
-    if (!AppliedQuad)
-      Bitwidth *= 2;
-    ElementBitwidth = 16;
-    break;
-  case 'g':
-    if (AppliedQuad)
-      Bitwidth /= 2;
-    break;
-  case 'j':
-    if (!AppliedQuad)
-      Bitwidth *= 2;
-    break;
-  case 'w':
-    ElementBitwidth *= 2;
-    Bitwidth *= 2;
-    break;
-  case 'n':
-    ElementBitwidth *= 2;
-    break;
-  case 'i':
-    Float = false;
-    Poly = false;
-    ElementBitwidth = Bitwidth = 32;
-    NumVectors = 0;
-    Signed = true;
-    Immediate = true;
-    break;
-  case 'l':
-    Float = false;
-    Poly = false;
-    ElementBitwidth = Bitwidth = 64;
-    NumVectors = 0;
-    Signed = false;
-    Immediate = true;
-    break;
-  case 'z':
-    ElementBitwidth /= 2;
-    Bitwidth = ElementBitwidth;
-    NumVectors = 0;
-    break;
-  case 'r':
-    ElementBitwidth *= 2;
-    Bitwidth = ElementBitwidth;
-    NumVectors = 0;
-    break;
-  case 's':
-  case 'a':
-    Bitwidth = ElementBitwidth;
-    NumVectors = 0;
-    break;
-  case 'k':
-    Bitwidth *= 2;
-    break;
-  case 'c':
-    Constant = true;
-    LLVM_FALLTHROUGH;
-  case 'p':
-    Pointer = true;
-    Bitwidth = ElementBitwidth;
-    NumVectors = 0;
-    break;
-  case 'h':
-    ElementBitwidth /= 2;
-    break;
-  case 'q':
-    ElementBitwidth /= 2;
-    Bitwidth *= 2;
-    break;
-  case 'e':
-    ElementBitwidth /= 2;
-    Signed = false;
-    break;
-  case 'm':
-    ElementBitwidth /= 2;
-    Bitwidth /= 2;
-    break;
-  case 'd':
-    break;
-  case '2':
-    NumVectors = 2;
-    break;
-  case '3':
-    NumVectors = 3;
-    break;
-  case '4':
-    NumVectors = 4;
-    break;
-  case 'B':
-    NumVectors = 2;
-    if (!AppliedQuad)
-      Bitwidth *= 2;
-    break;
-  case 'C':
-    NumVectors = 3;
-    if (!AppliedQuad)
-      Bitwidth *= 2;
-    break;
-  case 'D':
-    NumVectors = 4;
-    if (!AppliedQuad)
-      Bitwidth *= 2;
-    break;
-  case '7':
-    if (AppliedQuad)
-      Bitwidth /= 2;
-    ElementBitwidth = 8;
-    break;
-  case '8':
-    ElementBitwidth = 8;
-    break;
-  case '9':
-    if (!AppliedQuad)
-      Bitwidth *= 2;
-    ElementBitwidth = 8;
-    break;
-  default:
-    llvm_unreachable("Unhandled character!");
   }
 }
 
@@ -1029,12 +934,28 @@ void Type::applyModifier(char Mod) {
 // Intrinsic implementation
 //===----------------------------------------------------------------------===//
 
+StringRef Intrinsic::getNextModifiers(StringRef Proto, unsigned &Pos) const {
+  if (Proto.size() == Pos)
+    return StringRef();
+  else if (Proto[Pos] != '(')
+    return Proto.substr(Pos++, 1);
+
+  size_t Start = Pos + 1;
+  size_t End = Proto.find(')', Start);
+  assert_with_loc(End != StringRef::npos, "unmatched modifier group paren");
+  Pos = End + 1;
+  return Proto.slice(Start, End);
+}
+
 std::string Intrinsic::getInstTypeCode(Type T, ClassKind CK) const {
   char typeCode = '\0';
   bool printNumber = true;
 
   if (CK == ClassB)
     return "";
+
+  if (T.isBFloat16())
+    return "bf16";
 
   if (T.isPoly())
     typeCode = 'p';
@@ -1067,17 +988,13 @@ std::string Intrinsic::getInstTypeCode(Type T, ClassKind CK) const {
   return S;
 }
 
-static bool isFloatingPointProtoModifier(char Mod) {
-  return Mod == 'F' || Mod == 'f' || Mod == 'H' || Mod == 'Y' || Mod == 'I';
-}
-
 std::string Intrinsic::getBuiltinTypeStr() {
   ClassKind LocalCK = getClassKind(true);
   std::string S;
 
   Type RetT = getReturnType();
   if ((LocalCK == ClassI || LocalCK == ClassW) && RetT.isScalar() &&
-      !RetT.isFloating())
+      !RetT.isFloating() && !RetT.isBFloat16())
     RetT.makeInteger(RetT.getElementSizeInBits(), false);
 
   // Since the return value must be one type, return a vector type of the
@@ -1089,11 +1006,10 @@ std::string Intrinsic::getBuiltinTypeStr() {
   } else {
     if (RetT.isPoly())
       RetT.makeInteger(RetT.getElementSizeInBits(), false);
-    if (!RetT.isScalar() && !RetT.isSigned())
+    if (!RetT.isScalar() && RetT.isInteger() && !RetT.isSigned())
       RetT.makeSigned();
 
-    bool ForcedVectorFloatingType = isFloatingPointProtoModifier(Proto[0]);
-    if (LocalCK == ClassB && !RetT.isScalar() && !ForcedVectorFloatingType)
+    if (LocalCK == ClassB && RetT.isValue() && !RetT.isScalar())
       // Cast to vector of 8-bit elements.
       RetT.makeInteger(8, true);
 
@@ -1105,14 +1021,13 @@ std::string Intrinsic::getBuiltinTypeStr() {
     if (T.isPoly())
       T.makeInteger(T.getElementSizeInBits(), false);
 
-    bool ForcedFloatingType = isFloatingPointProtoModifier(Proto[I + 1]);
-    if (LocalCK == ClassB && !T.isScalar() && !ForcedFloatingType)
+    if (LocalCK == ClassB && !T.isScalar())
       T.makeInteger(8, true);
     // Halves always get converted to 8-bit elements.
     if (T.isHalf() && T.isVector() && !T.isScalarForMangling())
       T.makeInteger(8, true);
 
-    if (LocalCK == ClassI)
+    if (LocalCK == ClassI && T.isInteger())
       T.makeSigned();
 
     if (hasImmediate() && getImmediateIdx() == I)
@@ -1144,7 +1059,8 @@ std::string Intrinsic::mangleName(std::string Name, ClassKind LocalCK) const {
   std::string S = Name;
 
   if (Name == "vcvt_f16_f32" || Name == "vcvt_f32_f16" ||
-      Name == "vcvt_f32_f64" || Name == "vcvt_f64_f32")
+      Name == "vcvt_f32_f64" || Name == "vcvt_f64_f32" ||
+      Name == "vcvt_f32_bf16")
     return Name;
 
   if (!typeCode.empty()) {
@@ -1210,7 +1126,7 @@ void Intrinsic::initVariables() {
 
   // Modify the TypeSpec per-argument to get a concrete Type, and create
   // known variables for each.
-  for (unsigned I = 1; I < Proto.size(); ++I) {
+  for (unsigned I = 1; I < Types.size(); ++I) {
     char NameC = '0' + (I - 1);
     std::string Name = "p";
     Name.push_back(NameC);
@@ -1293,7 +1209,7 @@ void Intrinsic::emitReverseVariable(Variable &Dest, Variable &Src) {
 }
 
 void Intrinsic::emitArgumentReversal() {
-  if (BigEndianSafe)
+  if (isBigEndianSafe())
     return;
 
   // Reverse all vector arguments.
@@ -1314,7 +1230,7 @@ void Intrinsic::emitArgumentReversal() {
 }
 
 void Intrinsic::emitReturnReversal() {
-  if (BigEndianSafe)
+  if (isBigEndianSafe())
     return;
   if (!getReturnType().isVector() || getReturnType().isVoid() ||
       getReturnType().getNumElements() == 1)
@@ -1331,7 +1247,7 @@ void Intrinsic::emitShadowedArgs() {
   for (unsigned I = 0; I < getNumParams(); ++I) {
     // Do not create a temporary for an immediate argument.
     // That would defeat the whole point of using a macro!
-    if (hasImmediate() && Proto[I+1] == 'i')
+    if (getParamType(I).isImmediate())
       continue;
     // Do not create a temporary for pointer arguments. The input
     // pointer may have an alignment hint.
@@ -1354,16 +1270,10 @@ void Intrinsic::emitShadowedArgs() {
   }
 }
 
-// We don't check 'a' in this function, because for builtin function the
-// argument matching to 'a' uses a vector type splatted from a scalar type.
 bool Intrinsic::protoHasScalar() const {
-  return (Proto.find('s') != std::string::npos ||
-          Proto.find('z') != std::string::npos ||
-          Proto.find('r') != std::string::npos ||
-          Proto.find('b') != std::string::npos ||
-          Proto.find('$') != std::string::npos ||
-          Proto.find('y') != std::string::npos ||
-          Proto.find('o') != std::string::npos);
+  return std::any_of(Types.begin(), Types.end(), [](const Type &T) {
+    return T.isScalar() && !T.isImmediate();
+  });
 }
 
 void Intrinsic::emitBodyAsBuiltinCall() {
@@ -1374,12 +1284,6 @@ void Intrinsic::emitBodyAsBuiltinCall() {
   bool SRet = getReturnType().getNumVectors() >= 2;
 
   StringRef N = Name;
-  if (hasSplat()) {
-    // Call the non-splat builtin: chop off the "_n" suffix from the name.
-    assert(N.endswith("_n"));
-    N = N.drop_back(2);
-  }
-
   ClassKind LocalCK = CK;
   if (!protoHasScalar())
     LocalCK = ClassB;
@@ -1387,7 +1291,7 @@ void Intrinsic::emitBodyAsBuiltinCall() {
   if (!getReturnType().isVoid() && !SRet)
     S += "(" + RetVar.getType().str() + ") ";
 
-  S += "__builtin_neon_" + mangleName(N, LocalCK) + "(";
+  S += "__builtin_neon_" + mangleName(std::string(N), LocalCK) + "(";
 
   if (SRet)
     S += "&" + RetVar.getName() + ", ";
@@ -1401,7 +1305,7 @@ void Intrinsic::emitBodyAsBuiltinCall() {
     if (T.getNumVectors() > 1) {
       // Check if an explicit cast is needed.
       std::string Cast;
-      if (T.isChar() || T.isPoly() || !T.isSigned()) {
+      if (LocalCK == ClassB) {
         Type T2 = T;
         T2.makeOneVector();
         T2.makeInteger(8, /*Signed=*/true);
@@ -1413,25 +1317,17 @@ void Intrinsic::emitBodyAsBuiltinCall() {
       continue;
     }
 
-    std::string Arg;
+    std::string Arg = V.getName();
     Type CastToType = T;
-    if (hasSplat() && I == getSplatIdx()) {
-      Arg = "(" + BaseType.str() + ") {";
-      for (unsigned J = 0; J < BaseType.getNumElements(); ++J) {
-        if (J != 0)
-          Arg += ", ";
-        Arg += V.getName();
-      }
-      Arg += "}";
-
-      CastToType = BaseType;
-    } else {
-      Arg = V.getName();
-    }
 
     // Check if an explicit cast is needed.
-    if (CastToType.isVector()) {
+    if (CastToType.isVector() &&
+        (LocalCK == ClassB || (T.isHalf() && !T.isScalarForMangling()))) {
       CastToType.makeInteger(8, true);
+      Arg = "(" + CastToType.str() + ")" + Arg;
+    } else if (CastToType.isVector() && LocalCK == ClassI) {
+      if (CastToType.isInteger())
+        CastToType.makeSigned();
       Arg = "(" + CastToType.str() + ")" + Arg;
     }
 
@@ -1440,13 +1336,7 @@ void Intrinsic::emitBodyAsBuiltinCall() {
 
   // Extra constant integer to hold type class enum for this function, e.g. s8
   if (getClassKind(true) == ClassB) {
-    Type ThisTy = getReturnType();
-    if (Proto[0] == 'v' || isFloatingPointProtoModifier(Proto[0]))
-      ThisTy = getParamType(0);
-    if (ThisTy.isPointer())
-      ThisTy = getParamType(1);
-
-    S += utostr(ThisTy.getNeonEnum());
+    S += utostr(getPolymorphicKeyType().getNeonEnum());
   } else {
     // Remove extraneous ", ".
     S.pop_back();
@@ -1527,8 +1417,8 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDag(DagInit *DI) {
     return emitDagSaveTemp(DI);
   if (Op == "op")
     return emitDagOp(DI);
-  if (Op == "call")
-    return emitDagCall(DI);
+  if (Op == "call" || Op == "call_mangled")
+    return emitDagCall(DI, Op == "call_mangled");
   if (Op == "name_replace")
     return emitDagNameReplace(DI);
   if (Op == "literal")
@@ -1542,25 +1432,26 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagOp(DagInit *DI) {
   if (DI->getNumArgs() == 2) {
     // Unary op.
     std::pair<Type, std::string> R =
-        emitDagArg(DI->getArg(1), DI->getArgNameStr(1));
+        emitDagArg(DI->getArg(1), std::string(DI->getArgNameStr(1)));
     return std::make_pair(R.first, Op + R.second);
   } else {
     assert(DI->getNumArgs() == 3 && "Can only handle unary and binary ops!");
     std::pair<Type, std::string> R1 =
-        emitDagArg(DI->getArg(1), DI->getArgNameStr(1));
+        emitDagArg(DI->getArg(1), std::string(DI->getArgNameStr(1)));
     std::pair<Type, std::string> R2 =
-        emitDagArg(DI->getArg(2), DI->getArgNameStr(2));
+        emitDagArg(DI->getArg(2), std::string(DI->getArgNameStr(2)));
     assert_with_loc(R1.first == R2.first, "Argument type mismatch!");
     return std::make_pair(R1.first, R1.second + " " + Op + " " + R2.second);
   }
 }
 
-std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagCall(DagInit *DI) {
+std::pair<Type, std::string>
+Intrinsic::DagEmitter::emitDagCall(DagInit *DI, bool MatchMangledName) {
   std::vector<Type> Types;
   std::vector<std::string> Values;
   for (unsigned I = 0; I < DI->getNumArgs() - 1; ++I) {
     std::pair<Type, std::string> R =
-        emitDagArg(DI->getArg(I + 1), DI->getArgNameStr(I + 1));
+        emitDagArg(DI->getArg(I + 1), std::string(DI->getArgNameStr(I + 1)));
     Types.push_back(R.first);
     Values.push_back(R.second);
   }
@@ -1571,14 +1462,23 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagCall(DagInit *DI) {
     N = SI->getAsUnquotedString();
   else
     N = emitDagArg(DI->getArg(0), "").second;
-  Intrinsic &Callee = Intr.Emitter.getIntrinsic(N, Types);
+  Optional<std::string> MangledName;
+  if (MatchMangledName) {
+    if (Intr.getRecord()->getValueAsBit("isLaneQ"))
+      N += "q";
+    MangledName = Intr.mangleName(N, ClassS);
+  }
+  Intrinsic &Callee = Intr.Emitter.getIntrinsic(N, Types, MangledName);
 
   // Make sure the callee is known as an early def.
   Callee.setNeededEarly();
   Intr.Dependencies.insert(&Callee);
 
   // Now create the call itself.
-  std::string S = CallPrefix.str() + Callee.getMangledName(true) + "(";
+  std::string S = "";
+  if (!Callee.isBigEndianSafe())
+    S += CallPrefix.str();
+  S += Callee.getMangledName(true) + "(";
   for (unsigned I = 0; I < DI->getNumArgs() - 1; ++I) {
     if (I != 0)
       S += ", ";
@@ -1592,9 +1492,9 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagCall(DagInit *DI) {
 std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagCast(DagInit *DI,
                                                                 bool IsBitCast){
   // (cast MOD* VAL) -> cast VAL to type given by MOD.
-  std::pair<Type, std::string> R = emitDagArg(
-      DI->getArg(DI->getNumArgs() - 1),
-      DI->getArgNameStr(DI->getNumArgs() - 1));
+  std::pair<Type, std::string> R =
+      emitDagArg(DI->getArg(DI->getNumArgs() - 1),
+                 std::string(DI->getArgNameStr(DI->getNumArgs() - 1)));
   Type castToType = R.first;
   for (unsigned ArgIdx = 0; ArgIdx < DI->getNumArgs() - 1; ++ArgIdx) {
 
@@ -1606,10 +1506,11 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagCast(DagInit *DI,
     //   5. The value "H" or "D" to half or double the bitwidth.
     //   6. The value "8" to convert to 8-bit (signed) integer lanes.
     if (!DI->getArgNameStr(ArgIdx).empty()) {
-      assert_with_loc(Intr.Variables.find(DI->getArgNameStr(ArgIdx)) !=
-                      Intr.Variables.end(),
+      assert_with_loc(Intr.Variables.find(std::string(
+                          DI->getArgNameStr(ArgIdx))) != Intr.Variables.end(),
                       "Variable not found");
-      castToType = Intr.Variables[DI->getArgNameStr(ArgIdx)].getType();
+      castToType =
+          Intr.Variables[std::string(DI->getArgNameStr(ArgIdx))].getType();
     } else {
       StringInit *SI = dyn_cast<StringInit>(DI->getArg(ArgIdx));
       assert_with_loc(SI, "Expected string type or $Name for cast type");
@@ -1626,6 +1527,8 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagCast(DagInit *DI,
         castToType.doubleLanes();
       } else if (SI->getAsUnquotedString() == "8") {
         castToType.makeInteger(8, true);
+      } else if (SI->getAsUnquotedString() == "32") {
+        castToType.make32BitElement();
       } else {
         castToType = Type::fromTypedefName(SI->getAsUnquotedString());
         assert_with_loc(!castToType.isVoid(), "Unknown typedef");
@@ -1724,20 +1627,20 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagShuffle(DagInit *DI){
 
   // (shuffle arg1, arg2, sequence)
   std::pair<Type, std::string> Arg1 =
-      emitDagArg(DI->getArg(0), DI->getArgNameStr(0));
+      emitDagArg(DI->getArg(0), std::string(DI->getArgNameStr(0)));
   std::pair<Type, std::string> Arg2 =
-      emitDagArg(DI->getArg(1), DI->getArgNameStr(1));
+      emitDagArg(DI->getArg(1), std::string(DI->getArgNameStr(1)));
   assert_with_loc(Arg1.first == Arg2.first,
                   "Different types in arguments to shuffle!");
 
   SetTheory ST;
   SetTheory::RecSet Elts;
-  ST.addOperator("lowhalf", llvm::make_unique<LowHalf>());
-  ST.addOperator("highhalf", llvm::make_unique<HighHalf>());
+  ST.addOperator("lowhalf", std::make_unique<LowHalf>());
+  ST.addOperator("highhalf", std::make_unique<HighHalf>());
   ST.addOperator("rev",
-                 llvm::make_unique<Rev>(Arg1.first.getElementSizeInBits()));
+                 std::make_unique<Rev>(Arg1.first.getElementSizeInBits()));
   ST.addExpander("MaskExpand",
-                 llvm::make_unique<MaskExpander>(Arg1.first.getNumElements()));
+                 std::make_unique<MaskExpander>(Arg1.first.getNumElements()));
   ST.evaluate(DI->getArg(2), Elts, None);
 
   std::string S = "__builtin_shufflevector(" + Arg1.second + ", " + Arg2.second;
@@ -1768,8 +1671,8 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagShuffle(DagInit *DI){
 
 std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagDup(DagInit *DI) {
   assert_with_loc(DI->getNumArgs() == 1, "dup() expects one argument");
-  std::pair<Type, std::string> A = emitDagArg(DI->getArg(0),
-                                              DI->getArgNameStr(0));
+  std::pair<Type, std::string> A =
+      emitDagArg(DI->getArg(0), std::string(DI->getArgNameStr(0)));
   assert_with_loc(A.first.isScalar(), "dup() expects a scalar argument");
 
   Type T = Intr.getBaseType();
@@ -1787,14 +1690,18 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagDup(DagInit *DI) {
 
 std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagDupTyped(DagInit *DI) {
   assert_with_loc(DI->getNumArgs() == 2, "dup_typed() expects two arguments");
-  std::pair<Type, std::string> A = emitDagArg(DI->getArg(0),
-                                              DI->getArgNameStr(0));
-  std::pair<Type, std::string> B = emitDagArg(DI->getArg(1),
-                                              DI->getArgNameStr(1));
+  std::pair<Type, std::string> B =
+      emitDagArg(DI->getArg(1), std::string(DI->getArgNameStr(1)));
   assert_with_loc(B.first.isScalar(),
                   "dup_typed() requires a scalar as the second argument");
+  Type T;
+  // If the type argument is a constant string, construct the type directly.
+  if (StringInit *SI = dyn_cast<StringInit>(DI->getArg(0))) {
+    T = Type::fromTypedefName(SI->getAsUnquotedString());
+    assert_with_loc(!T.isVoid(), "Unknown typedef");
+  } else
+    T = emitDagArg(DI->getArg(0), std::string(DI->getArgNameStr(0))).first;
 
-  Type T = A.first;
   assert_with_loc(T.isVector(), "dup_typed() used but target type is scalar!");
   std::string S = "(" + T.str() + ") {";
   for (unsigned I = 0; I < T.getNumElements(); ++I) {
@@ -1809,10 +1716,10 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagDupTyped(DagInit *DI)
 
 std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagSplat(DagInit *DI) {
   assert_with_loc(DI->getNumArgs() == 2, "splat() expects two arguments");
-  std::pair<Type, std::string> A = emitDagArg(DI->getArg(0),
-                                              DI->getArgNameStr(0));
-  std::pair<Type, std::string> B = emitDagArg(DI->getArg(1),
-                                              DI->getArgNameStr(1));
+  std::pair<Type, std::string> A =
+      emitDagArg(DI->getArg(0), std::string(DI->getArgNameStr(0)));
+  std::pair<Type, std::string> B =
+      emitDagArg(DI->getArg(1), std::string(DI->getArgNameStr(1)));
 
   assert_with_loc(B.first.isScalar(),
                   "splat() requires a scalar int as the second argument");
@@ -1828,13 +1735,13 @@ std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagSplat(DagInit *DI) {
 
 std::pair<Type, std::string> Intrinsic::DagEmitter::emitDagSaveTemp(DagInit *DI) {
   assert_with_loc(DI->getNumArgs() == 2, "save_temp() expects two arguments");
-  std::pair<Type, std::string> A = emitDagArg(DI->getArg(1),
-                                              DI->getArgNameStr(1));
+  std::pair<Type, std::string> A =
+      emitDagArg(DI->getArg(1), std::string(DI->getArgNameStr(1)));
 
   assert_with_loc(!A.first.isVoid(),
                   "Argument to save_temp() must have non-void type!");
 
-  std::string N = DI->getArgNameStr(0);
+  std::string N = std::string(DI->getArgNameStr(0));
   assert_with_loc(!N.empty(),
                   "save_temp() expects a name as the first argument");
 
@@ -1889,6 +1796,11 @@ Intrinsic::DagEmitter::emitDagArg(Init *Arg, std::string ArgName) {
 }
 
 std::string Intrinsic::generate() {
+  // Avoid duplicated code for big and little endian
+  if (isBigEndianSafe()) {
+    generateImpl(false, "", "");
+    return OS.str();
+  }
   // Little endian intrinsics are simple and don't require any argument
   // swapping.
   OS << "#ifdef __LITTLE_ENDIAN__\n";
@@ -1967,7 +1879,8 @@ void Intrinsic::indexBody() {
 // NeonEmitter implementation
 //===----------------------------------------------------------------------===//
 
-Intrinsic &NeonEmitter::getIntrinsic(StringRef Name, ArrayRef<Type> Types) {
+Intrinsic &NeonEmitter::getIntrinsic(StringRef Name, ArrayRef<Type> Types,
+                                     Optional<std::string> MangledName) {
   // First, look up the name in the intrinsic map.
   assert_with_loc(IntrinsicMap.find(Name.str()) != IntrinsicMap.end(),
                   ("Intrinsic '" + Name + "' not found!").str());
@@ -1996,17 +1909,19 @@ Intrinsic &NeonEmitter::getIntrinsic(StringRef Name, ArrayRef<Type> Types) {
     }
     ErrMsg += ")\n";
 
+    if (MangledName && MangledName != I.getMangledName(true))
+      continue;
+
     if (I.getNumParams() != Types.size())
       continue;
 
-    bool Good = true;
-    for (unsigned Arg = 0; Arg < Types.size(); ++Arg) {
-      if (I.getParamType(Arg) != Types[Arg]) {
-        Good = false;
-        break;
-      }
-    }
-    if (Good)
+    unsigned ArgNum = 0;
+    bool MatchingArgumentTypes =
+        std::all_of(Types.begin(), Types.end(), [&](const auto &Type) {
+          return Type == I.getParamType(ArgNum++);
+        });
+
+    if (MatchingArgumentTypes)
       GoodVec.push_back(&I);
   }
 
@@ -2019,14 +1934,14 @@ Intrinsic &NeonEmitter::getIntrinsic(StringRef Name, ArrayRef<Type> Types) {
 
 void NeonEmitter::createIntrinsic(Record *R,
                                   SmallVectorImpl<Intrinsic *> &Out) {
-  std::string Name = R->getValueAsString("Name");
-  std::string Proto = R->getValueAsString("Prototype");
-  std::string Types = R->getValueAsString("Types");
+  std::string Name = std::string(R->getValueAsString("Name"));
+  std::string Proto = std::string(R->getValueAsString("Prototype"));
+  std::string Types = std::string(R->getValueAsString("Types"));
   Record *OperationRec = R->getValueAsDef("Operation");
-  bool CartesianProductOfTypes = R->getValueAsBit("CartesianProductOfTypes");
   bool BigEndianSafe  = R->getValueAsBit("BigEndianSafe");
-  std::string Guard = R->getValueAsString("ArchGuard");
+  std::string Guard = std::string(R->getValueAsString("ArchGuard"));
   bool IsUnavailable = OperationRec->getValueAsBit("Unavailable");
+  std::string CartesianProductWith = std::string(R->getValueAsString("CartesianProductWith"));
 
   // Set the global current record. This allows assert_with_loc to produce
   // decent location information even when highly nested.
@@ -2041,17 +1956,20 @@ void NeonEmitter::createIntrinsic(Record *R,
     CK = ClassMap[R->getSuperClasses()[1].first];
 
   std::vector<std::pair<TypeSpec, TypeSpec>> NewTypeSpecs;
-  for (auto TS : TypeSpecs) {
-    if (CartesianProductOfTypes) {
-      Type DefaultT(TS, 'd');
-      for (auto SrcTS : TypeSpecs) {
-        Type DefaultSrcT(SrcTS, 'd');
+  if (!CartesianProductWith.empty()) {
+    std::vector<TypeSpec> ProductTypeSpecs = TypeSpec::fromTypeSpecs(CartesianProductWith);
+    for (auto TS : TypeSpecs) {
+      Type DefaultT(TS, ".");
+      for (auto SrcTS : ProductTypeSpecs) {
+        Type DefaultSrcT(SrcTS, ".");
         if (TS == SrcTS ||
             DefaultSrcT.getSizeInBits() != DefaultT.getSizeInBits())
           continue;
         NewTypeSpecs.push_back(std::make_pair(TS, SrcTS));
       }
-    } else {
+    }
+  } else {
+    for (auto TS : TypeSpecs) {
       NewTypeSpecs.push_back(std::make_pair(TS, TS));
     }
   }
@@ -2082,10 +2000,6 @@ void NeonEmitter::genBuiltinsDef(raw_ostream &OS,
 
   for (auto *Def : Defs) {
     if (Def->hasBody())
-      continue;
-    // Functions with 'a' (the splat code) in the type prototype should not get
-    // their own builtin as they use the non-splat variant.
-    if (Def->hasSplat())
       continue;
 
     std::string S = "BUILTIN(__builtin_neon_" + Def->getMangledName() + ", \"";
@@ -2123,41 +2037,25 @@ void NeonEmitter::genOverloadTypeCheckCode(raw_ostream &OS,
     // __builtin_neon_* so we don't need to generate a definition for it.
     if (Def->hasBody())
       continue;
-    // Functions with 'a' (the splat code) in the type prototype should not get
-    // their own builtin as they use the non-splat variant.
-    if (Def->hasSplat())
-      continue;
     // Functions which have a scalar argument cannot be overloaded, no need to
     // check them if we are emitting the type checking code.
     if (Def->protoHasScalar())
       continue;
 
     uint64_t Mask = 0ULL;
-    Type Ty = Def->getReturnType();
-    if (Def->getProto()[0] == 'v' ||
-        isFloatingPointProtoModifier(Def->getProto()[0]))
-      Ty = Def->getParamType(0);
-    if (Ty.isPointer())
-      Ty = Def->getParamType(1);
-
-    Mask |= 1ULL << Ty.getNeonEnum();
+    Mask |= 1ULL << Def->getPolymorphicKeyType().getNeonEnum();
 
     // Check if the function has a pointer or const pointer argument.
-    std::string Proto = Def->getProto();
     int PtrArgNum = -1;
     bool HasConstPtr = false;
     for (unsigned I = 0; I < Def->getNumParams(); ++I) {
-      char ArgType = Proto[I + 1];
-      if (ArgType == 'c') {
-        HasConstPtr = true;
+      const auto &Type = Def->getParamType(I);
+      if (Type.isPointer()) {
         PtrArgNum = I;
-        break;
-      }
-      if (ArgType == 'p') {
-        PtrArgNum = I;
-        break;
+        HasConstPtr = Type.isConstPointer();
       }
     }
+
     // For sret builtins, adjust the pointer argument index.
     if (PtrArgNum >= 0 && Def->getReturnType().getNumVectors() > 1)
       PtrArgNum += 1;
@@ -2207,10 +2105,6 @@ void NeonEmitter::genIntrinsicRangeCheckCode(raw_ostream &OS,
   for (auto *Def : Defs) {
     if (Def->hasBody())
       continue;
-    // Functions with 'a' (the splat code) in the type prototype should not get
-    // their own builtin as they use the non-splat variant.
-    if (Def->hasSplat())
-      continue;
     // Functions which do not have an immediate do not need to have range
     // checking code emitted.
     if (!Def->hasImmediate())
@@ -2221,7 +2115,11 @@ void NeonEmitter::genIntrinsicRangeCheckCode(raw_ostream &OS,
     std::string LowerBound, UpperBound;
 
     Record *R = Def->getRecord();
-    if (R->getValueAsBit("isVCVT_N")) {
+    if (R->getValueAsBit("isVXAR")) {
+      //VXAR takes an immediate in the range [0, 63]
+      LowerBound = "0";
+      UpperBound = "63";
+    } else if (R->getValueAsBit("isVCVT_N")) {
       // VCVT between floating- and fixed-point values takes an immediate
       // in the range [1, 32) for f32 or [1, 64) for f64 or [1, 16) for f16.
       LowerBound = "1";
@@ -2303,6 +2201,74 @@ void NeonEmitter::runHeader(raw_ostream &OS) {
   genIntrinsicRangeCheckCode(OS, Defs);
 }
 
+static void emitNeonTypeDefs(const std::string& types, raw_ostream &OS) {
+  std::string TypedefTypes(types);
+  std::vector<TypeSpec> TDTypeVec = TypeSpec::fromTypeSpecs(TypedefTypes);
+
+  // Emit vector typedefs.
+  bool InIfdef = false;
+  for (auto &TS : TDTypeVec) {
+    bool IsA64 = false;
+    Type T(TS, ".");
+    if (T.isDouble())
+      IsA64 = true;
+
+    if (InIfdef && !IsA64) {
+      OS << "#endif\n";
+      InIfdef = false;
+    }
+    if (!InIfdef && IsA64) {
+      OS << "#ifdef __aarch64__\n";
+      InIfdef = true;
+    }
+
+    if (T.isPoly())
+      OS << "typedef __attribute__((neon_polyvector_type(";
+    else
+      OS << "typedef __attribute__((neon_vector_type(";
+
+    Type T2 = T;
+    T2.makeScalar();
+    OS << T.getNumElements() << "))) ";
+    OS << T2.str();
+    OS << " " << T.str() << ";\n";
+  }
+  if (InIfdef)
+    OS << "#endif\n";
+  OS << "\n";
+
+  // Emit struct typedefs.
+  InIfdef = false;
+  for (unsigned NumMembers = 2; NumMembers <= 4; ++NumMembers) {
+    for (auto &TS : TDTypeVec) {
+      bool IsA64 = false;
+      Type T(TS, ".");
+      if (T.isDouble())
+        IsA64 = true;
+
+      if (InIfdef && !IsA64) {
+        OS << "#endif\n";
+        InIfdef = false;
+      }
+      if (!InIfdef && IsA64) {
+        OS << "#ifdef __aarch64__\n";
+        InIfdef = true;
+      }
+
+      const char Mods[] = { static_cast<char>('2' + (NumMembers - 2)), 0};
+      Type VT(TS, Mods);
+      OS << "typedef struct " << VT.str() << " {\n";
+      OS << "  " << T.str() << " val";
+      OS << "[" << NumMembers << "]";
+      OS << ";\n} ";
+      OS << VT.str() << ";\n";
+      OS << "\n";
+    }
+  }
+  if (InIfdef)
+    OS << "#endif\n";
+}
+
 /// run - Read the records in arm_neon.td and output arm_neon.h.  arm_neon.h
 /// is comprised of type definitions and function declarations.
 void NeonEmitter::run(raw_ostream &OS) {
@@ -2351,11 +2317,21 @@ void NeonEmitter::run(raw_ostream &OS) {
   OS << "#ifndef __ARM_NEON_H\n";
   OS << "#define __ARM_NEON_H\n\n";
 
+  OS << "#ifndef __ARM_FP\n";
+  OS << "#error \"NEON intrinsics not available with the soft-float ABI. "
+        "Please use -mfloat-abi=softfp or -mfloat-abi=hard\"\n";
+  OS << "#else\n\n";
+
   OS << "#if !defined(__ARM_NEON)\n";
   OS << "#error \"NEON support not enabled\"\n";
-  OS << "#endif\n\n";
+  OS << "#else\n\n";
 
   OS << "#include <stdint.h>\n\n";
+
+  OS << "#ifdef __ARM_FEATURE_BF16\n";
+  OS << "#include <arm_bf16.h>\n";
+  OS << "typedef __bf16 bfloat16_t;\n";
+  OS << "#endif\n\n";
 
   // Emit NEON-specific scalar typedefs.
   OS << "typedef float float32_t;\n";
@@ -2374,76 +2350,14 @@ void NeonEmitter::run(raw_ostream &OS) {
   OS << "#else\n";
   OS << "typedef int8_t poly8_t;\n";
   OS << "typedef int16_t poly16_t;\n";
+  OS << "typedef int64_t poly64_t;\n";
   OS << "#endif\n";
 
-  // Emit Neon vector typedefs.
-  std::string TypedefTypes(
-      "cQcsQsiQilQlUcQUcUsQUsUiQUiUlQUlhQhfQfdQdPcQPcPsQPsPlQPl");
-  std::vector<TypeSpec> TDTypeVec = TypeSpec::fromTypeSpecs(TypedefTypes);
+  emitNeonTypeDefs("cQcsQsiQilQlUcQUcUsQUsUiQUiUlQUlhQhfQfdQdPcQPcPsQPsPlQPl", OS);
 
-  // Emit vector typedefs.
-  bool InIfdef = false;
-  for (auto &TS : TDTypeVec) {
-    bool IsA64 = false;
-    Type T(TS, 'd');
-    if (T.isDouble() || (T.isPoly() && T.isLong()))
-      IsA64 = true;
-
-    if (InIfdef && !IsA64) {
-      OS << "#endif\n";
-      InIfdef = false;
-    }
-    if (!InIfdef && IsA64) {
-      OS << "#ifdef __aarch64__\n";
-      InIfdef = true;
-    }
-
-    if (T.isPoly())
-      OS << "typedef __attribute__((neon_polyvector_type(";
-    else
-      OS << "typedef __attribute__((neon_vector_type(";
-
-    Type T2 = T;
-    T2.makeScalar();
-    OS << T.getNumElements() << "))) ";
-    OS << T2.str();
-    OS << " " << T.str() << ";\n";
-  }
-  if (InIfdef)
-    OS << "#endif\n";
-  OS << "\n";
-
-  // Emit struct typedefs.
-  InIfdef = false;
-  for (unsigned NumMembers = 2; NumMembers <= 4; ++NumMembers) {
-    for (auto &TS : TDTypeVec) {
-      bool IsA64 = false;
-      Type T(TS, 'd');
-      if (T.isDouble() || (T.isPoly() && T.isLong()))
-        IsA64 = true;
-
-      if (InIfdef && !IsA64) {
-        OS << "#endif\n";
-        InIfdef = false;
-      }
-      if (!InIfdef && IsA64) {
-        OS << "#ifdef __aarch64__\n";
-        InIfdef = true;
-      }
-
-      char M = '2' + (NumMembers - 2);
-      Type VT(TS, M);
-      OS << "typedef struct " << VT.str() << " {\n";
-      OS << "  " << T.str() << " val";
-      OS << "[" << NumMembers << "]";
-      OS << ";\n} ";
-      OS << VT.str() << ";\n";
-      OS << "\n";
-    }
-  }
-  if (InIfdef)
-    OS << "#endif\n";
-  OS << "\n";
+  OS << "#ifdef __ARM_FEATURE_BF16\n";
+  emitNeonTypeDefs("bQb", OS);
+  OS << "#endif\n\n";
 
   OS << "#define __ai static __inline__ __attribute__((__always_inline__, "
         "__nodebug__))\n\n";
@@ -2456,7 +2370,7 @@ void NeonEmitter::run(raw_ostream &OS) {
   for (auto *I : Defs)
     I->indexBody();
 
-  llvm::stable_sort(Defs, llvm::less_ptr<Intrinsic>());
+  llvm::stable_sort(Defs, llvm::deref<std::less<>>());
 
   // Only emit a def when its requirements have been met.
   // FIXME: This loop could be made faster, but it's fast enough for now.
@@ -2500,6 +2414,8 @@ void NeonEmitter::run(raw_ostream &OS) {
 
   OS << "\n";
   OS << "#undef __ai\n\n";
+  OS << "#endif /* if !defined(__ARM_NEON) */\n";
+  OS << "#endif /* ifndef __ARM_FP */\n";
   OS << "#endif /* __ARM_NEON_H */\n";
 }
 
@@ -2563,7 +2479,7 @@ void NeonEmitter::runFP16(raw_ostream &OS) {
   for (auto *I : Defs)
     I->indexBody();
 
-  llvm::stable_sort(Defs, llvm::less_ptr<Intrinsic>());
+  llvm::stable_sort(Defs, llvm::deref<std::less<>>());
 
   // Only emit a def when its requirements have been met.
   // FIXME: This loop could be made faster, but it's fast enough for now.
@@ -2610,22 +2526,100 @@ void NeonEmitter::runFP16(raw_ostream &OS) {
   OS << "#endif /* __ARM_FP16_H */\n";
 }
 
-namespace clang {
+void NeonEmitter::runBF16(raw_ostream &OS) {
+  OS << "/*===---- arm_bf16.h - ARM BF16 intrinsics "
+        "-----------------------------------===\n"
+        " *\n"
+        " *\n"
+        " * Part of the LLVM Project, under the Apache License v2.0 with LLVM "
+        "Exceptions.\n"
+        " * See https://llvm.org/LICENSE.txt for license information.\n"
+        " * SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception\n"
+        " *\n"
+        " *===-----------------------------------------------------------------"
+        "------===\n"
+        " */\n\n";
 
-void EmitNeon(RecordKeeper &Records, raw_ostream &OS) {
+  OS << "#ifndef __ARM_BF16_H\n";
+  OS << "#define __ARM_BF16_H\n\n";
+
+  OS << "typedef __bf16 bfloat16_t;\n";
+
+  OS << "#define __ai static __inline__ __attribute__((__always_inline__, "
+        "__nodebug__))\n\n";
+
+  SmallVector<Intrinsic *, 128> Defs;
+  std::vector<Record *> RV = Records.getAllDerivedDefinitions("Inst");
+  for (auto *R : RV)
+    createIntrinsic(R, Defs);
+
+  for (auto *I : Defs)
+    I->indexBody();
+
+  llvm::stable_sort(Defs, llvm::deref<std::less<>>());
+
+  // Only emit a def when its requirements have been met.
+  // FIXME: This loop could be made faster, but it's fast enough for now.
+  bool MadeProgress = true;
+  std::string InGuard;
+  while (!Defs.empty() && MadeProgress) {
+    MadeProgress = false;
+
+    for (SmallVector<Intrinsic *, 128>::iterator I = Defs.begin();
+         I != Defs.end(); /*No step*/) {
+      bool DependenciesSatisfied = true;
+      for (auto *II : (*I)->getDependencies()) {
+        if (llvm::is_contained(Defs, II))
+          DependenciesSatisfied = false;
+      }
+      if (!DependenciesSatisfied) {
+        // Try the next one.
+        ++I;
+        continue;
+      }
+
+      // Emit #endif/#if pair if needed.
+      if ((*I)->getGuard() != InGuard) {
+        if (!InGuard.empty())
+          OS << "#endif\n";
+        InGuard = (*I)->getGuard();
+        if (!InGuard.empty())
+          OS << "#if " << InGuard << "\n";
+      }
+
+      // Actually generate the intrinsic code.
+      OS << (*I)->generate();
+
+      MadeProgress = true;
+      I = Defs.erase(I);
+    }
+  }
+  assert(Defs.empty() && "Some requirements were not satisfied!");
+  if (!InGuard.empty())
+    OS << "#endif\n";
+
+  OS << "\n";
+  OS << "#undef __ai\n\n";
+
+  OS << "#endif\n";
+}
+
+void clang::EmitNeon(RecordKeeper &Records, raw_ostream &OS) {
   NeonEmitter(Records).run(OS);
 }
 
-void EmitFP16(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitFP16(RecordKeeper &Records, raw_ostream &OS) {
   NeonEmitter(Records).runFP16(OS);
 }
 
-void EmitNeonSema(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitBF16(RecordKeeper &Records, raw_ostream &OS) {
+  NeonEmitter(Records).runBF16(OS);
+}
+
+void clang::EmitNeonSema(RecordKeeper &Records, raw_ostream &OS) {
   NeonEmitter(Records).runHeader(OS);
 }
 
-void EmitNeonTest(RecordKeeper &Records, raw_ostream &OS) {
+void clang::EmitNeonTest(RecordKeeper &Records, raw_ostream &OS) {
   llvm_unreachable("Neon test generation no longer implemented!");
 }
-
-} // end namespace clang

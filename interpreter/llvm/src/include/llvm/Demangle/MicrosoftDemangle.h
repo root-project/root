@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_DEMANGLE_MICROSOFT_DEMANGLE_H
-#define LLVM_DEMANGLE_MICROSOFT_DEMANGLE_H
+#ifndef LLVM_DEMANGLE_MICROSOFTDEMANGLE_H
+#define LLVM_DEMANGLE_MICROSOFTDEMANGLE_H
 
 #include "llvm/Demangle/DemangleConfig.h"
 #include "llvm/Demangle/MicrosoftDemangleNodes.h"
@@ -158,6 +158,7 @@ private:
                                     QualifiedNameNode *QN);
   SymbolNode *demangleDeclarator(StringView &MangledName);
   SymbolNode *demangleMD5Name(StringView &MangledName);
+  SymbolNode *demangleTypeinfoName(StringView &MangledName);
 
   VariableSymbolNode *demangleVariableEncoding(StringView &MangledName,
                                                StorageClass SC);
@@ -274,4 +275,4 @@ private:
 } // namespace ms_demangle
 } // namespace llvm
 
-#endif // LLVM_DEMANGLE_MICROSOFT_DEMANGLE_H
+#endif // LLVM_DEMANGLE_MICROSOFTDEMANGLE_H

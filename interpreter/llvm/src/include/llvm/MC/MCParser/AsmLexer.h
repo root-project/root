@@ -30,6 +30,7 @@ class AsmLexer : public MCAsmLexer {
   bool IsAtStartOfLine = true;
   bool IsAtStartOfStatement = true;
   bool IsPeeking = false;
+  bool EndStatementAtEOF = true;
 
 protected:
   /// LexToken - Read the next token and return its code.
@@ -41,7 +42,8 @@ public:
   AsmLexer &operator=(const AsmLexer &) = delete;
   ~AsmLexer() override;
 
-  void setBuffer(StringRef Buf, const char *ptr = nullptr);
+  void setBuffer(StringRef Buf, const char *ptr = nullptr,
+                 bool EndStatementAtEOF = true);
 
   StringRef LexUntilEndOfStatement() override;
 
@@ -54,6 +56,7 @@ private:
   bool isAtStartOfComment(const char *Ptr);
   bool isAtStatementSeparator(const char *Ptr);
   int getNextChar();
+  int peekNextChar();
   AsmToken ReturnError(const char *Loc, const std::string &Msg);
 
   AsmToken LexIdentifier();

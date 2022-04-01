@@ -14,21 +14,24 @@
 #ifndef LLVM_LIB_TARGET_RISCV_RISCV_H
 #define LLVM_LIB_TARGET_RISCV_RISCV_H
 
-#include "Utils/RISCVBaseInfo.h"
+#include "MCTargetDesc/RISCVBaseInfo.h"
 #include "llvm/Target/TargetMachine.h"
 
 namespace llvm {
+class RISCVRegisterBankInfo;
+class RISCVSubtarget;
 class RISCVTargetMachine;
 class AsmPrinter;
 class FunctionPass;
+class InstructionSelector;
 class MCInst;
 class MCOperand;
 class MachineInstr;
 class MachineOperand;
 class PassRegistry;
 
-void LowerRISCVMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
-                                    const AsmPrinter &AP);
+bool lowerRISCVMachineInstrToMCInst(const MachineInstr *MI, MCInst &OutMI,
+                                    AsmPrinter &AP);
 bool LowerRISCVMachineOperandToMCOperand(const MachineOperand &MO,
                                          MCOperand &MCOp, const AsmPrinter &AP);
 
@@ -39,6 +42,16 @@ void initializeRISCVMergeBaseOffsetOptPass(PassRegistry &);
 
 FunctionPass *createRISCVExpandPseudoPass();
 void initializeRISCVExpandPseudoPass(PassRegistry &);
+
+FunctionPass *createRISCVExpandAtomicPseudoPass();
+void initializeRISCVExpandAtomicPseudoPass(PassRegistry &);
+
+FunctionPass *createRISCVInsertVSETVLIPass();
+void initializeRISCVInsertVSETVLIPass(PassRegistry &);
+
+InstructionSelector *createRISCVInstructionSelector(const RISCVTargetMachine &,
+                                                    RISCVSubtarget &,
+                                                    RISCVRegisterBankInfo &);
 }
 
 #endif

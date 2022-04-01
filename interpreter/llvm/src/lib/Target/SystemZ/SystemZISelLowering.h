@@ -50,9 +50,6 @@ enum NodeType : unsigned {
   // as a register base.
   PCREL_OFFSET,
 
-  // Integer absolute.
-  IABS,
-
   // Integer comparisons.  There are three operands: the two values
   // to compare, and an integer of type SystemZICMP.
   ICMP,
@@ -82,6 +79,10 @@ enum NodeType : unsigned {
   // Evaluates to the gap between the stack pointer and the
   // base of the dynamically-allocatable area.
   ADJDYNALLOC,
+
+  // For allocating stack space when using stack clash protector.
+  // Allocation is performed by block, and each block is probed.
+  PROBED_ALLOCA,
 
   // Count number of bits set in operand 0 per byte.
   POPCNT,
@@ -245,7 +246,7 @@ enum NodeType : unsigned {
   VICMPHS,
   VICMPHLS,
 
-  // Compare floating-point vector operands 0 and 1 to preoduce the usual 0/-1
+  // Compare floating-point vector operands 0 and 1 to produce the usual 0/-1
   // vector result.  VFCMPE is for "ordered and equal", VFCMPH for "ordered and
   // greater than" and VFCMPHE for "ordered and greater than or equal to".
   VFCMPE,
@@ -289,6 +290,24 @@ enum NodeType : unsigned {
   // Operand 0: the value to test
   // Operand 1: the bit mask
   TDC,
+
+  // Strict variants of scalar floating-point comparisons.
+  // Quiet and signaling versions.
+  STRICT_FCMP = ISD::FIRST_TARGET_STRICTFP_OPCODE,
+  STRICT_FCMPS,
+
+  // Strict variants of vector floating-point comparisons.
+  // Quiet and signaling versions.
+  STRICT_VFCMPE,
+  STRICT_VFCMPH,
+  STRICT_VFCMPHE,
+  STRICT_VFCMPES,
+  STRICT_VFCMPHS,
+  STRICT_VFCMPHES,
+
+  // Strict variants of VEXTEND and VROUND.
+  STRICT_VEXTEND,
+  STRICT_VROUND,
 
   // Wrappers around the inner loop of an 8- or 16-bit ATOMIC_SWAP or
   // ATOMIC_LOAD_<op>.
@@ -375,6 +394,8 @@ public:
   explicit SystemZTargetLowering(const TargetMachine &TM,
                                  const SystemZSubtarget &STI);
 
+  bool useSoftFloat() const override;
+
   // Override TargetLowering.
   MVT getScalarShiftAmountTy(const DataLayout &, EVT) const override {
     return MVT::i32;
@@ -401,23 +422,53 @@ public:
       return TypeWidenVector;
     return TargetLoweringBase::getPreferredVectorAction(VT);
   }
+  unsigned
+  getNumRegisters(LLVMContext &Context, EVT VT,
+                  Optional<MVT> RegisterVT) const override {
+    // i128 inline assembly operand.
+    if (VT == MVT::i128 &&
+        RegisterVT.hasValue() && RegisterVT.getValue() == MVT::Untyped)
+      return 1;
+    return TargetLowering::getNumRegisters(Context, VT);
+  }
   bool isCheapToSpeculateCtlz() const override { return true; }
+  bool preferZeroCompareBranch() const override { return true; }
+  bool hasBitPreservingFPLogic(EVT VT) const override {
+    EVT ScVT = VT.getScalarType();
+    return ScVT == MVT::f32 || ScVT == MVT::f64 || ScVT == MVT::f128;
+  }
+  bool isMaskAndCmp0FoldingBeneficial(const Instruction &AndI) const override {
+    ConstantInt* Mask = dyn_cast<ConstantInt>(AndI.getOperand(1));
+    return Mask && Mask->getValue().isIntN(16);
+  }
+  bool convertSetCCLogicToBitwiseLogic(EVT VT) const override {
+    return VT.isScalarInteger();
+  }
   EVT getSetCCResultType(const DataLayout &DL, LLVMContext &,
                          EVT) const override;
-  bool isFMAFasterThanFMulAndFAdd(EVT VT) const override;
+  bool isFMAFasterThanFMulAndFAdd(const MachineFunction &MF,
+                                  EVT VT) const override;
   bool isFPImmLegal(const APFloat &Imm, EVT VT,
                     bool ForCodeSize) const override;
+  bool hasInlineStackProbe(MachineFunction &MF) const override;
   bool isLegalICmpImmediate(int64_t Imm) const override;
   bool isLegalAddImmediate(int64_t Imm) const override;
   bool isLegalAddressingMode(const DataLayout &DL, const AddrMode &AM, Type *Ty,
                              unsigned AS,
                              Instruction *I = nullptr) const override;
-  bool allowsMisalignedMemoryAccesses(EVT VT, unsigned AS,
-                                      unsigned Align,
+  bool allowsMisalignedMemoryAccesses(EVT VT, unsigned AS, Align Alignment,
                                       MachineMemOperand::Flags Flags,
                                       bool *Fast) const override;
   bool isTruncateFree(Type *, Type *) const override;
   bool isTruncateFree(EVT, EVT) const override;
+
+  bool shouldFormOverflowOp(unsigned Opcode, EVT VT,
+                            bool MathUsed) const override {
+    // Form add and sub with overflow intrinsics regardless of any extra
+    // users of the math result.
+    return VT == MVT::i32 || VT == MVT::i64;
+  }
+
   const char *getTargetNodeName(unsigned Opcode) const override;
   std::pair<unsigned, const TargetRegisterClass *>
   getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
@@ -452,16 +503,19 @@ public:
     return TargetLowering::getInlineAsmMemConstraint(ConstraintCode);
   }
 
+  Register getRegisterByName(const char *RegName, LLT VT,
+                             const MachineFunction &MF) const override;
+
   /// If a physical register, this returns the register that receives the
   /// exception address on entry to an EH pad.
-  unsigned
+  Register
   getExceptionPointerRegister(const Constant *PersonalityFn) const override {
     return SystemZ::R6D;
   }
 
   /// If a physical register, this returns the register that receives the
   /// exception typeid on entry to a landing pad.
-  unsigned
+  Register
   getExceptionSelectorRegister(const Constant *PersonalityFn) const override {
     return SystemZ::R7D;
   }
@@ -484,6 +538,15 @@ public:
   const MCPhysReg *getScratchRegisters(CallingConv::ID CC) const override;
   bool allowTruncateForTailCall(Type *, Type *) const override;
   bool mayBeEmittedAsTailCall(const CallInst *CI) const override;
+  bool splitValueIntoRegisterParts(SelectionDAG &DAG, const SDLoc &DL,
+                                   SDValue Val, SDValue *Parts,
+                                   unsigned NumParts, MVT PartVT,
+                                   Optional<CallingConv::ID> CC) const override;
+  SDValue
+  joinRegisterPartsIntoValue(SelectionDAG &DAG, const SDLoc &DL,
+                             const SDValue *Parts, unsigned NumParts,
+                             MVT PartVT, EVT ValueVT,
+                             Optional<CallingConv::ID> CC) const override;
   SDValue LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
                                bool isVarArg,
                                const SmallVectorImpl<ISD::InputArg> &Ins,
@@ -519,10 +582,15 @@ public:
   ISD::NodeType getExtendForAtomicOps() const override {
     return ISD::ANY_EXTEND;
   }
+  ISD::NodeType getExtendForAtomicCmpSwapArg() const override {
+    return ISD::ZERO_EXTEND;
+  }
 
   bool supportSwiftError() const override {
     return true;
   }
+
+  unsigned getStackProbeSize(MachineFunction &MF) const;
 
 private:
   const SystemZSubtarget &Subtarget;
@@ -530,11 +598,15 @@ private:
   // Implement LowerOperation for individual opcodes.
   SDValue getVectorCmp(SelectionDAG &DAG, unsigned Opcode,
                        const SDLoc &DL, EVT VT,
-                       SDValue CmpOp0, SDValue CmpOp1) const;
+                       SDValue CmpOp0, SDValue CmpOp1, SDValue Chain) const;
   SDValue lowerVectorSETCC(SelectionDAG &DAG, const SDLoc &DL,
                            EVT VT, ISD::CondCode CC,
-                           SDValue CmpOp0, SDValue CmpOp1) const;
+                           SDValue CmpOp0, SDValue CmpOp1,
+                           SDValue Chain = SDValue(),
+                           bool IsSignaling = false) const;
   SDValue lowerSETCC(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerSTRICT_FSETCC(SDValue Op, SelectionDAG &DAG,
+                             bool IsSignaling) const;
   SDValue lowerBR_CC(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerSELECT_CC(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerGlobalAddress(GlobalAddressSDNode *Node,
@@ -584,8 +656,8 @@ private:
   SDValue lowerSCALAR_TO_VECTOR(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerINSERT_VECTOR_ELT(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerEXTRACT_VECTOR_ELT(SDValue Op, SelectionDAG &DAG) const;
-  SDValue lowerExtendVectorInreg(SDValue Op, SelectionDAG &DAG,
-                                 unsigned UnpackHigh) const;
+  SDValue lowerSIGN_EXTEND_VECTOR_INREG(SDValue Op, SelectionDAG &DAG) const;
+  SDValue lowerZERO_EXTEND_VECTOR_INREG(SDValue Op, SelectionDAG &DAG) const;
   SDValue lowerShift(SDValue Op, SelectionDAG &DAG, unsigned ByScalar) const;
 
   bool canTreatAsByteVector(EVT VT) const;
@@ -606,11 +678,13 @@ private:
   SDValue combineJOIN_DWORDS(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineFP_ROUND(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineFP_EXTEND(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineINT_TO_FP(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineBSWAP(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineBR_CCMASK(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineSELECT_CCMASK(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineGET_CCMASK(SDNode *N, DAGCombinerInfo &DCI) const;
   SDValue combineIntDIVREM(SDNode *N, DAGCombinerInfo &DCI) const;
+  SDValue combineINTRINSIC(SDNode *N, DAGCombinerInfo &DCI) const;
 
   SDValue unwrapAddress(SDValue N) const override;
 
@@ -653,8 +727,13 @@ private:
   MachineBasicBlock *emitLoadAndTestCmp0(MachineInstr &MI,
                                          MachineBasicBlock *MBB,
                                          unsigned Opcode) const;
+  MachineBasicBlock *emitProbedAlloca(MachineInstr &MI,
+                                      MachineBasicBlock *MBB) const;
 
-  MachineMemOperand::Flags getMMOFlags(const Instruction &I) const override;
+  SDValue getBackchainAddress(SDValue SP, SelectionDAG &DAG) const;
+
+  MachineMemOperand::Flags
+  getTargetMMOFlags(const Instruction &I) const override;
   const TargetRegisterClass *getRepRegClassFor(MVT VT) const override;
 };
 

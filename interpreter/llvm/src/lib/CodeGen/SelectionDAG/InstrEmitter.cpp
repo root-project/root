@@ -19,15 +19,18 @@
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/SelectionDAG.h"
 #include "llvm/CodeGen/StackMaps.h"
 #include "llvm/CodeGen/TargetInstrInfo.h"
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DebugInfo.h"
+#include "llvm/IR/PseudoProbe.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MathExtras.h"
+#include "llvm/Target/TargetMachine.h"
 using namespace llvm;
 
 #define DEBUG_TYPE "instr-emitter"
@@ -71,7 +74,7 @@ static unsigned countOperands(SDNode *Node, unsigned NumExpUses,
     if (isa<RegisterMaskSDNode>(Node->getOperand(I - 1)))
       continue;
     if (RegisterSDNode *RN = dyn_cast<RegisterSDNode>(Node->getOperand(I - 1)))
-      if (TargetRegisterInfo::isPhysicalRegister(RN->getReg()))
+      if (Register::isPhysicalRegister(RN->getReg()))
         continue;
     NumImpUses = N - I;
     break;
@@ -84,9 +87,9 @@ static unsigned countOperands(SDNode *Node, unsigned NumExpUses,
 /// implicit physical register output.
 void InstrEmitter::
 EmitCopyFromReg(SDNode *Node, unsigned ResNo, bool IsClone, bool IsCloned,
-                unsigned SrcReg, DenseMap<SDValue, unsigned> &VRBaseMap) {
-  unsigned VRBase = 0;
-  if (TargetRegisterInfo::isVirtualRegister(SrcReg)) {
+                Register SrcReg, DenseMap<SDValue, Register> &VRBaseMap) {
+  Register VRBase;
+  if (SrcReg.isVirtual()) {
     // Just use the input register directly!
     SDValue Op(Node, ResNo);
     if (IsClone)
@@ -113,8 +116,8 @@ EmitCopyFromReg(SDNode *Node, unsigned ResNo, bool IsClone, bool IsCloned,
       if (User->getOpcode() == ISD::CopyToReg &&
           User->getOperand(2).getNode() == Node &&
           User->getOperand(2).getResNo() == ResNo) {
-        unsigned DestReg = cast<RegisterSDNode>(User->getOperand(1))->getReg();
-        if (TargetRegisterInfo::isVirtualRegister(DestReg)) {
+        Register DestReg = cast<RegisterSDNode>(User->getOperand(1))->getReg();
+        if (DestReg.isVirtual()) {
           VRBase = DestReg;
           Match = false;
         } else if (DestReg != SrcReg)
@@ -139,7 +142,7 @@ EmitCopyFromReg(SDNode *Node, unsigned ResNo, bool IsClone, bool IsCloned,
               UseRC = RC;
             else if (RC) {
               const TargetRegisterClass *ComRC =
-                TRI->getCommonSubClass(UseRC, RC, VT.SimpleTy);
+                TRI->getCommonSubClass(UseRC, RC);
               // If multiple uses expect disjoint register classes, we emit
               // copies in AddRegisterOperand.
               if (ComRC)
@@ -163,9 +166,8 @@ EmitCopyFromReg(SDNode *Node, unsigned ResNo, bool IsClone, bool IsCloned,
     assert(TRI->isTypeLegalForClass(*UseRC, VT) &&
            "Incompatible phys register def and uses!");
     DstRC = UseRC;
-  } else {
-    DstRC = TLI->getRegClassFor(VT, Node->isDivergent());
-  }
+  } else
+    DstRC = SrcRC;
 
   // If all uses are reading from the src physical register and copying the
   // register is either impossible or very expensive, then don't create a copy.
@@ -190,16 +192,21 @@ void InstrEmitter::CreateVirtualRegisters(SDNode *Node,
                                        MachineInstrBuilder &MIB,
                                        const MCInstrDesc &II,
                                        bool IsClone, bool IsCloned,
-                                       DenseMap<SDValue, unsigned> &VRBaseMap) {
+                                       DenseMap<SDValue, Register> &VRBaseMap) {
   assert(Node->getMachineOpcode() != TargetOpcode::IMPLICIT_DEF &&
          "IMPLICIT_DEF should have been handled as a special case elsewhere!");
 
   unsigned NumResults = CountResults(Node);
-  for (unsigned i = 0; i < II.getNumDefs(); ++i) {
+  bool HasVRegVariadicDefs = !MF->getTarget().usesPhysRegsForValues() &&
+                             II.isVariadic() && II.variadicOpsAreDefs();
+  unsigned NumVRegs = HasVRegVariadicDefs ? NumResults : II.getNumDefs();
+  if (Node->getMachineOpcode() == TargetOpcode::STATEPOINT)
+    NumVRegs = NumResults;
+  for (unsigned i = 0; i < NumVRegs; ++i) {
     // If the specific node value is only used by a CopyToReg and the dest reg
     // is a vreg in the same register class, use the CopyToReg'd destination
     // register instead of creating a new vreg.
-    unsigned VRBase = 0;
+    Register VRBase;
     const TargetRegisterClass *RC =
       TRI->getAllocatableClass(TII->getRegClass(II, i, TRI, *MF));
     // Always let the value type influence the used register class. The
@@ -216,10 +223,10 @@ void InstrEmitter::CreateVirtualRegisters(SDNode *Node,
         RC = VTRC;
     }
 
-    if (II.OpInfo[i].isOptionalDef()) {
+    if (II.OpInfo != nullptr && II.OpInfo[i].isOptionalDef()) {
       // Optional def must be a physical register.
       VRBase = cast<RegisterSDNode>(Node->getOperand(i-NumResults))->getReg();
-      assert(TargetRegisterInfo::isPhysicalRegister(VRBase));
+      assert(VRBase.isPhysical());
       MIB.addReg(VRBase, RegState::Define);
     }
 
@@ -229,7 +236,7 @@ void InstrEmitter::CreateVirtualRegisters(SDNode *Node,
             User->getOperand(2).getNode() == Node &&
             User->getOperand(2).getResNo() == i) {
           unsigned Reg = cast<RegisterSDNode>(User->getOperand(1))->getReg();
-          if (TargetRegisterInfo::isVirtualRegister(Reg)) {
+          if (Register::isVirtualRegister(Reg)) {
             const TargetRegisterClass *RegRC = MRI->getRegClass(Reg);
             if (RegRC == RC) {
               VRBase = Reg;
@@ -263,8 +270,8 @@ void InstrEmitter::CreateVirtualRegisters(SDNode *Node,
 
 /// getVR - Return the virtual register corresponding to the specified result
 /// of the specified node.
-unsigned InstrEmitter::getVR(SDValue Op,
-                             DenseMap<SDValue, unsigned> &VRBaseMap) {
+Register InstrEmitter::getVR(SDValue Op,
+                             DenseMap<SDValue, Register> &VRBaseMap) {
   if (Op.isMachineOpcode() &&
       Op.getMachineOpcode() == TargetOpcode::IMPLICIT_DEF) {
     // Add an IMPLICIT_DEF instruction before every use.
@@ -272,13 +279,13 @@ unsigned InstrEmitter::getVR(SDValue Op,
     // does not include operand register class info.
     const TargetRegisterClass *RC = TLI->getRegClassFor(
         Op.getSimpleValueType(), Op.getNode()->isDivergent());
-    unsigned VReg = MRI->createVirtualRegister(RC);
+    Register VReg = MRI->createVirtualRegister(RC);
     BuildMI(*MBB, InsertPos, Op.getDebugLoc(),
             TII->get(TargetOpcode::IMPLICIT_DEF), VReg);
     return VReg;
   }
 
-  DenseMap<SDValue, unsigned>::iterator I = VRBaseMap.find(Op);
+  DenseMap<SDValue, Register>::iterator I = VRBaseMap.find(Op);
   assert(I != VRBaseMap.end() && "Node emitted out of order - late");
   return I->second;
 }
@@ -292,13 +299,13 @@ InstrEmitter::AddRegisterOperand(MachineInstrBuilder &MIB,
                                  SDValue Op,
                                  unsigned IIOpNum,
                                  const MCInstrDesc *II,
-                                 DenseMap<SDValue, unsigned> &VRBaseMap,
+                                 DenseMap<SDValue, Register> &VRBaseMap,
                                  bool IsDebug, bool IsClone, bool IsCloned) {
   assert(Op.getValueType() != MVT::Other &&
          Op.getValueType() != MVT::Glue &&
          "Chain and glue operands should occur at end of operand list!");
   // Get/emit the operand.
-  unsigned VReg = getVR(Op, VRBaseMap);
+  Register VReg = getVR(Op, VRBaseMap);
 
   const MCInstrDesc &MCID = MIB->getDesc();
   bool isOptDef = IIOpNum < MCID.getNumOperands() &&
@@ -319,7 +326,7 @@ InstrEmitter::AddRegisterOperand(MachineInstrBuilder &MIB,
       if (!ConstrainedRC) {
         OpRC = TRI->getAllocatableClass(OpRC);
         assert(OpRC && "Constraints cannot be fulfilled for allocation");
-        unsigned NewVReg = MRI->createVirtualRegister(OpRC);
+        Register NewVReg = MRI->createVirtualRegister(OpRC);
         BuildMI(*MBB, InsertPos, Op.getNode()->getDebugLoc(),
                 TII->get(TargetOpcode::COPY), NewVReg).addReg(VReg);
         VReg = NewVReg;
@@ -363,7 +370,7 @@ void InstrEmitter::AddOperand(MachineInstrBuilder &MIB,
                               SDValue Op,
                               unsigned IIOpNum,
                               const MCInstrDesc *II,
-                              DenseMap<SDValue, unsigned> &VRBaseMap,
+                              DenseMap<SDValue, Register> &VRBaseMap,
                               bool IsDebug, bool IsClone, bool IsCloned) {
   if (Op.isMachineOpcode()) {
     AddRegisterOperand(MIB, Op, IIOpNum, II, VRBaseMap,
@@ -373,7 +380,7 @@ void InstrEmitter::AddOperand(MachineInstrBuilder &MIB,
   } else if (ConstantFPSDNode *F = dyn_cast<ConstantFPSDNode>(Op)) {
     MIB.addFPImm(F->getConstantFPValue());
   } else if (RegisterSDNode *R = dyn_cast<RegisterSDNode>(Op)) {
-    unsigned VReg = R->getReg();
+    Register VReg = R->getReg();
     MVT OpVT = Op.getSimpleValueType();
     const TargetRegisterClass *IIRC =
         II ? TRI->getAllocatableClass(TII->getRegClass(*II, IIOpNum, TRI, *MF))
@@ -385,9 +392,8 @@ void InstrEmitter::AddOperand(MachineInstrBuilder &MIB,
                                       (IIRC && TRI->isDivergentRegClass(IIRC)))
             : nullptr;
 
-    if (OpRC && IIRC && OpRC != IIRC &&
-        TargetRegisterInfo::isVirtualRegister(VReg)) {
-      unsigned NewVReg = MRI->createVirtualRegister(IIRC);
+    if (OpRC && IIRC && OpRC != IIRC && Register::isVirtualRegister(VReg)) {
+      Register NewVReg = MRI->createVirtualRegister(IIRC);
       BuildMI(*MBB, InsertPos, Op.getNode()->getDebugLoc(),
                TII->get(TargetOpcode::COPY), NewVReg).addReg(VReg);
       VReg = NewVReg;
@@ -410,23 +416,14 @@ void InstrEmitter::AddOperand(MachineInstrBuilder &MIB,
     MIB.addJumpTableIndex(JT->getIndex(), JT->getTargetFlags());
   } else if (ConstantPoolSDNode *CP = dyn_cast<ConstantPoolSDNode>(Op)) {
     int Offset = CP->getOffset();
-    unsigned Align = CP->getAlignment();
-    Type *Type = CP->getType();
-    // MachineConstantPool wants an explicit alignment.
-    if (Align == 0) {
-      Align = MF->getDataLayout().getPrefTypeAlignment(Type);
-      if (Align == 0) {
-        // Alignment of vector types.  FIXME!
-        Align = MF->getDataLayout().getTypeAllocSize(Type);
-      }
-    }
+    Align Alignment = CP->getAlign();
 
     unsigned Idx;
     MachineConstantPool *MCP = MF->getConstantPool();
     if (CP->isMachineConstantPoolEntry())
-      Idx = MCP->getConstantPoolIndex(CP->getMachineCPVal(), Align);
+      Idx = MCP->getConstantPoolIndex(CP->getMachineCPVal(), Alignment);
     else
-      Idx = MCP->getConstantPoolIndex(CP->getConstVal(), Align);
+      Idx = MCP->getConstantPoolIndex(CP->getConstVal(), Alignment);
     MIB.addConstantPoolIndex(Idx, Offset, CP->getTargetFlags());
   } else if (ExternalSymbolSDNode *ES = dyn_cast<ExternalSymbolSDNode>(Op)) {
     MIB.addExternalSymbol(ES->getSymbol(), ES->getTargetFlags());
@@ -447,7 +444,7 @@ void InstrEmitter::AddOperand(MachineInstrBuilder &MIB,
   }
 }
 
-unsigned InstrEmitter::ConstrainForSubReg(unsigned VReg, unsigned SubIdx,
+Register InstrEmitter::ConstrainForSubReg(Register VReg, unsigned SubIdx,
                                           MVT VT, bool isDivergent, const DebugLoc &DL) {
   const TargetRegisterClass *VRC = MRI->getRegClass(VReg);
   const TargetRegisterClass *RC = TRI->getSubClassWithSubReg(VRC, SubIdx);
@@ -465,7 +462,7 @@ unsigned InstrEmitter::ConstrainForSubReg(unsigned VReg, unsigned SubIdx,
   // register instead.
   RC = TRI->getSubClassWithSubReg(TLI->getRegClassFor(VT, isDivergent), SubIdx);
   assert(RC && "No legal register class for VT supports that SubIdx");
-  unsigned NewReg = MRI->createVirtualRegister(RC);
+  Register NewReg = MRI->createVirtualRegister(RC);
   BuildMI(*MBB, InsertPos, DL, TII->get(TargetOpcode::COPY), NewReg)
     .addReg(VReg);
   return NewReg;
@@ -474,9 +471,9 @@ unsigned InstrEmitter::ConstrainForSubReg(unsigned VReg, unsigned SubIdx,
 /// EmitSubregNode - Generate machine code for subreg nodes.
 ///
 void InstrEmitter::EmitSubregNode(SDNode *Node,
-                                  DenseMap<SDValue, unsigned> &VRBaseMap,
+                                  DenseMap<SDValue, Register> &VRBaseMap,
                                   bool IsClone, bool IsCloned) {
-  unsigned VRBase = 0;
+  Register VRBase;
   unsigned Opc = Node->getMachineOpcode();
 
   // If the node is only used by a CopyToReg and the dest reg is a vreg, use
@@ -484,8 +481,8 @@ void InstrEmitter::EmitSubregNode(SDNode *Node,
   for (SDNode *User : Node->uses()) {
     if (User->getOpcode() == ISD::CopyToReg &&
         User->getOperand(2).getNode() == Node) {
-      unsigned DestReg = cast<RegisterSDNode>(User->getOperand(1))->getReg();
-      if (TargetRegisterInfo::isVirtualRegister(DestReg)) {
+      Register DestReg = cast<RegisterSDNode>(User->getOperand(1))->getReg();
+      if (DestReg.isVirtual()) {
         VRBase = DestReg;
         break;
       }
@@ -500,10 +497,10 @@ void InstrEmitter::EmitSubregNode(SDNode *Node,
     const TargetRegisterClass *TRC =
       TLI->getRegClassFor(Node->getSimpleValueType(0), Node->isDivergent());
 
-    unsigned Reg;
+    Register Reg;
     MachineInstr *DefMI;
     RegisterSDNode *R = dyn_cast<RegisterSDNode>(Node->getOperand(0));
-    if (R && TargetRegisterInfo::isPhysicalRegister(R->getReg())) {
+    if (R && Register::isPhysicalRegister(R->getReg())) {
       Reg = R->getReg();
       DefMI = nullptr;
     } else {
@@ -511,7 +508,8 @@ void InstrEmitter::EmitSubregNode(SDNode *Node,
       DefMI = MRI->getVRegDef(Reg);
     }
 
-    unsigned SrcReg, DstReg, DefSubIdx;
+    Register SrcReg, DstReg;
+    unsigned DefSubIdx;
     if (DefMI &&
         TII->isCoalescableExtInstr(*DefMI, SrcReg, DstReg, DefSubIdx) &&
         SubIdx == DefSubIdx &&
@@ -529,19 +527,19 @@ void InstrEmitter::EmitSubregNode(SDNode *Node,
       // Reg may not support a SubIdx sub-register, and we may need to
       // constrain its register class or issue a COPY to a compatible register
       // class.
-      if (TargetRegisterInfo::isVirtualRegister(Reg))
+      if (Reg.isVirtual())
         Reg = ConstrainForSubReg(Reg, SubIdx,
                                  Node->getOperand(0).getSimpleValueType(),
                                  Node->isDivergent(), Node->getDebugLoc());
       // Create the destreg if it is missing.
-      if (VRBase == 0)
+      if (!VRBase)
         VRBase = MRI->createVirtualRegister(TRC);
 
       // Create the extract_subreg machine instruction.
       MachineInstrBuilder CopyMI =
           BuildMI(*MBB, InsertPos, Node->getDebugLoc(),
                   TII->get(TargetOpcode::COPY), VRBase);
-      if (TargetRegisterInfo::isVirtualRegister(Reg))
+      if (Reg.isVirtual())
         CopyMI.addReg(Reg, 0, SubIdx);
       else
         CopyMI.addReg(TRI->getSubReg(Reg, SubIdx));
@@ -607,14 +605,14 @@ void InstrEmitter::EmitSubregNode(SDNode *Node,
 ///
 void
 InstrEmitter::EmitCopyToRegClassNode(SDNode *Node,
-                                     DenseMap<SDValue, unsigned> &VRBaseMap) {
+                                     DenseMap<SDValue, Register> &VRBaseMap) {
   unsigned VReg = getVR(Node->getOperand(0), VRBaseMap);
 
   // Create the new VReg in the destination class and emit a copy.
   unsigned DstRCIdx = cast<ConstantSDNode>(Node->getOperand(1))->getZExtValue();
   const TargetRegisterClass *DstRC =
     TRI->getAllocatableClass(TRI->getRegClass(DstRCIdx));
-  unsigned NewVReg = MRI->createVirtualRegister(DstRC);
+  Register NewVReg = MRI->createVirtualRegister(DstRC);
   BuildMI(*MBB, InsertPos, Node->getDebugLoc(), TII->get(TargetOpcode::COPY),
     NewVReg).addReg(VReg);
 
@@ -627,11 +625,11 @@ InstrEmitter::EmitCopyToRegClassNode(SDNode *Node,
 /// EmitRegSequence - Generate machine code for REG_SEQUENCE nodes.
 ///
 void InstrEmitter::EmitRegSequence(SDNode *Node,
-                                  DenseMap<SDValue, unsigned> &VRBaseMap,
+                                  DenseMap<SDValue, Register> &VRBaseMap,
                                   bool IsClone, bool IsCloned) {
   unsigned DstRCIdx = cast<ConstantSDNode>(Node->getOperand(0))->getZExtValue();
   const TargetRegisterClass *RC = TRI->getRegClass(DstRCIdx);
-  unsigned NewVReg = MRI->createVirtualRegister(TRI->getAllocatableClass(RC));
+  Register NewVReg = MRI->createVirtualRegister(TRI->getAllocatableClass(RC));
   const MCInstrDesc &II = TII->get(TargetOpcode::REG_SEQUENCE);
   MachineInstrBuilder MIB = BuildMI(*MF, Node->getDebugLoc(), II, NewVReg);
   unsigned NumOps = Node->getNumOperands();
@@ -649,7 +647,7 @@ void InstrEmitter::EmitRegSequence(SDNode *Node,
       RegisterSDNode *R = dyn_cast<RegisterSDNode>(Node->getOperand(i-1));
       // Skip physical registers as they don't have a vreg to get and we'll
       // insert copies for them in TwoAddressInstructionPass anyway.
-      if (!R || !TargetRegisterInfo::isPhysicalRegister(R->getReg())) {
+      if (!R || !Register::isPhysicalRegister(R->getReg())) {
         unsigned SubIdx = cast<ConstantSDNode>(Op)->getZExtValue();
         unsigned SubReg = getVR(Node->getOperand(i-1), VRBaseMap);
         const TargetRegisterClass *TRC = MRI->getRegClass(SubReg);
@@ -676,7 +674,7 @@ void InstrEmitter::EmitRegSequence(SDNode *Node,
 ///
 MachineInstr *
 InstrEmitter::EmitDbgValue(SDDbgValue *SD,
-                           DenseMap<SDValue, unsigned> &VRBaseMap) {
+                           DenseMap<SDValue, Register> &VRBaseMap) {
   MDNode *Var = SD->getVariable();
   MDNode *Expr = SD->getExpression();
   DebugLoc DL = SD->getDebugLoc();
@@ -685,82 +683,213 @@ InstrEmitter::EmitDbgValue(SDDbgValue *SD,
 
   SD->setIsEmitted();
 
-  if (SD->isInvalidated()) {
-    // An invalidated SDNode must generate an undef DBG_VALUE: although the
-    // original value is no longer computed, earlier DBG_VALUEs live ranges
-    // must not leak into later code.
-    auto MIB = BuildMI(*MF, DL, TII->get(TargetOpcode::DBG_VALUE));
-    MIB.addReg(0U);
-    MIB.addReg(0U, RegState::Debug);
+  ArrayRef<SDDbgOperand> LocationOps = SD->getLocationOps();
+  assert(!LocationOps.empty() && "dbg_value with no location operands?");
+
+  if (SD->isInvalidated())
+    return EmitDbgNoLocation(SD);
+
+  // Emit variadic dbg_value nodes as DBG_VALUE_LIST.
+  if (SD->isVariadic()) {
+    // DBG_VALUE_LIST := "DBG_VALUE_LIST" var, expression, loc (, loc)*
+    const MCInstrDesc &DbgValDesc = TII->get(TargetOpcode::DBG_VALUE_LIST);
+    // Build the DBG_VALUE_LIST instruction base.
+    auto MIB = BuildMI(*MF, DL, DbgValDesc);
     MIB.addMetadata(Var);
     MIB.addMetadata(Expr);
+    AddDbgValueLocationOps(MIB, DbgValDesc, LocationOps, VRBaseMap);
     return &*MIB;
   }
 
-  if (SD->getKind() == SDDbgValue::FRAMEIX) {
-    // Stack address; this needs to be lowered in target-dependent fashion.
-    // EmitTargetCodeForFrameDebugValue is responsible for allocation.
-    auto FrameMI = BuildMI(*MF, DL, TII->get(TargetOpcode::DBG_VALUE))
-                       .addFrameIndex(SD->getFrameIx());
-    if (SD->isIndirect())
-      // Push [fi + 0] onto the DIExpression stack.
-      FrameMI.addImm(0);
-    else
-      // Push fi onto the DIExpression stack.
-      FrameMI.addReg(0);
-    return FrameMI.addMetadata(Var).addMetadata(Expr);
-  }
-  // Otherwise, we're going to create an instruction here.
-  const MCInstrDesc &II = TII->get(TargetOpcode::DBG_VALUE);
-  MachineInstrBuilder MIB = BuildMI(*MF, DL, II);
-  if (SD->getKind() == SDDbgValue::SDNODE) {
-    SDNode *Node = SD->getSDNode();
-    SDValue Op = SDValue(Node, SD->getResNo());
-    // It's possible we replaced this SDNode with other(s) and therefore
-    // didn't generate code for it.  It's better to catch these cases where
-    // they happen and transfer the debug info, but trying to guarantee that
-    // in all cases would be very fragile; this is a safeguard for any
-    // that were missed.
-    DenseMap<SDValue, unsigned>::iterator I = VRBaseMap.find(Op);
-    if (I==VRBaseMap.end())
-      MIB.addReg(0U);       // undef
-    else
-      AddOperand(MIB, Op, (*MIB).getNumOperands(), &II, VRBaseMap,
-                 /*IsDebug=*/true, /*IsClone=*/false, /*IsCloned=*/false);
-  } else if (SD->getKind() == SDDbgValue::VREG) {
-    MIB.addReg(SD->getVReg(), RegState::Debug);
-  } else if (SD->getKind() == SDDbgValue::CONST) {
-    const Value *V = SD->getConst();
-    if (const ConstantInt *CI = dyn_cast<ConstantInt>(V)) {
-      if (CI->getBitWidth() > 64)
-        MIB.addCImm(CI);
+  // Attempt to produce a DBG_INSTR_REF if we've been asked to.
+  // We currently exclude the possibility of instruction references for
+  // variadic nodes; if at some point we enable them, this should be moved
+  // above the variadic block.
+  if (EmitDebugInstrRefs)
+    if (auto *InstrRef = EmitDbgInstrRef(SD, VRBaseMap))
+      return InstrRef;
+
+  return EmitDbgValueFromSingleOp(SD, VRBaseMap);
+}
+
+void InstrEmitter::AddDbgValueLocationOps(
+    MachineInstrBuilder &MIB, const MCInstrDesc &DbgValDesc,
+    ArrayRef<SDDbgOperand> LocationOps,
+    DenseMap<SDValue, Register> &VRBaseMap) {
+  for (const SDDbgOperand &Op : LocationOps) {
+    switch (Op.getKind()) {
+    case SDDbgOperand::FRAMEIX:
+      MIB.addFrameIndex(Op.getFrameIx());
+      break;
+    case SDDbgOperand::VREG:
+      MIB.addReg(Op.getVReg(), RegState::Debug);
+      break;
+    case SDDbgOperand::SDNODE: {
+      SDValue V = SDValue(Op.getSDNode(), Op.getResNo());
+      // It's possible we replaced this SDNode with other(s) and therefore
+      // didn't generate code for it. It's better to catch these cases where
+      // they happen and transfer the debug info, but trying to guarantee that
+      // in all cases would be very fragile; this is a safeguard for any
+      // that were missed.
+      if (VRBaseMap.count(V) == 0)
+        MIB.addReg(0U); // undef
       else
-        MIB.addImm(CI->getSExtValue());
-    } else if (const ConstantFP *CF = dyn_cast<ConstantFP>(V)) {
-      MIB.addFPImm(CF);
-    } else if (isa<ConstantPointerNull>(V)) {
-      // Note: This assumes that all nullptr constants are zero-valued.
-      MIB.addImm(0);
-    } else {
-      // Could be an Undef.  In any case insert an Undef so we can see what we
-      // dropped.
-      MIB.addReg(0U);
+        AddOperand(MIB, V, (*MIB).getNumOperands(), &DbgValDesc, VRBaseMap,
+                   /*IsDebug=*/true, /*IsClone=*/false, /*IsCloned=*/false);
+    } break;
+    case SDDbgOperand::CONST: {
+      const Value *V = Op.getConst();
+      if (const ConstantInt *CI = dyn_cast<ConstantInt>(V)) {
+        if (CI->getBitWidth() > 64)
+          MIB.addCImm(CI);
+        else
+          MIB.addImm(CI->getSExtValue());
+      } else if (const ConstantFP *CF = dyn_cast<ConstantFP>(V)) {
+        MIB.addFPImm(CF);
+      } else if (isa<ConstantPointerNull>(V)) {
+        // Note: This assumes that all nullptr constants are zero-valued.
+        MIB.addImm(0);
+      } else {
+        // Could be an Undef. In any case insert an Undef so we can see what we
+        // dropped.
+        MIB.addReg(0U);
+      }
+    } break;
     }
+  }
+}
+
+MachineInstr *
+InstrEmitter::EmitDbgInstrRef(SDDbgValue *SD,
+                              DenseMap<SDValue, Register> &VRBaseMap) {
+  assert(!SD->isVariadic());
+  SDDbgOperand DbgOperand = SD->getLocationOps()[0];
+  MDNode *Var = SD->getVariable();
+  MDNode *Expr = SD->getExpression();
+  DebugLoc DL = SD->getDebugLoc();
+  const MCInstrDesc &RefII = TII->get(TargetOpcode::DBG_INSTR_REF);
+
+  // Handle variable locations that don't actually depend on the instructions
+  // in the program: constants and stack locations.
+  if (DbgOperand.getKind() == SDDbgOperand::FRAMEIX ||
+      DbgOperand.getKind() == SDDbgOperand::CONST)
+    return EmitDbgValueFromSingleOp(SD, VRBaseMap);
+
+  // It may not be immediately possible to identify the MachineInstr that
+  // defines a VReg, it can depend for example on the order blocks are
+  // emitted in. When this happens, or when further analysis is needed later,
+  // produce an instruction like this:
+  //
+  //    DBG_INSTR_REF %0:gr64, 0, !123, !456
+  //
+  // i.e., point the instruction at the vreg, and patch it up later in
+  // MachineFunction::finalizeDebugInstrRefs.
+  auto EmitHalfDoneInstrRef = [&](unsigned VReg) -> MachineInstr * {
+    auto MIB = BuildMI(*MF, DL, RefII);
+    MIB.addReg(VReg);
+    MIB.addImm(0);
+    MIB.addMetadata(Var);
+    MIB.addMetadata(Expr);
+    return MIB;
+  };
+
+  // Try to find both the defined register and the instruction defining it.
+  MachineInstr *DefMI = nullptr;
+  unsigned VReg;
+
+  if (DbgOperand.getKind() == SDDbgOperand::VREG) {
+    VReg = DbgOperand.getVReg();
+
+    // No definition means that block hasn't been emitted yet. Leave a vreg
+    // reference to be fixed later.
+    if (!MRI->hasOneDef(VReg))
+      return EmitHalfDoneInstrRef(VReg);
+
+    DefMI = &*MRI->def_instr_begin(VReg);
   } else {
-    // Insert an Undef so we can see what we dropped.
-    MIB.addReg(0U);
+    assert(DbgOperand.getKind() == SDDbgOperand::SDNODE);
+    // Look up the corresponding VReg for the given SDNode, if any.
+    SDNode *Node = DbgOperand.getSDNode();
+    SDValue Op = SDValue(Node, DbgOperand.getResNo());
+    DenseMap<SDValue, Register>::iterator I = VRBaseMap.find(Op);
+    // No VReg -> produce a DBG_VALUE $noreg instead.
+    if (I==VRBaseMap.end())
+      return EmitDbgNoLocation(SD);
+
+    // Try to pick out a defining instruction at this point.
+    VReg = getVR(Op, VRBaseMap);
+
+    // Again, if there's no instruction defining the VReg right now, fix it up
+    // later.
+    if (!MRI->hasOneDef(VReg))
+      return EmitHalfDoneInstrRef(VReg);
+
+    DefMI = &*MRI->def_instr_begin(VReg);
   }
 
-  // Indirect addressing is indicated by an Imm as the second parameter.
+  // Avoid copy like instructions: they don't define values, only move them.
+  // Leave a virtual-register reference until it can be fixed up later, to find
+  // the underlying value definition.
+  if (DefMI->isCopyLike() || TII->isCopyInstr(*DefMI))
+    return EmitHalfDoneInstrRef(VReg);
+
+  auto MIB = BuildMI(*MF, DL, RefII);
+
+  // Find the operand number which defines the specified VReg.
+  unsigned OperandIdx = 0;
+  for (const auto &MO : DefMI->operands()) {
+    if (MO.isReg() && MO.isDef() && MO.getReg() == VReg)
+      break;
+    ++OperandIdx;
+  }
+  assert(OperandIdx < DefMI->getNumOperands());
+
+  // Make the DBG_INSTR_REF refer to that instruction, and that operand.
+  unsigned InstrNum = DefMI->getDebugInstrNum();
+  MIB.addImm(InstrNum);
+  MIB.addImm(OperandIdx);
+  MIB.addMetadata(Var);
+  MIB.addMetadata(Expr);
+  return &*MIB;
+}
+
+MachineInstr *InstrEmitter::EmitDbgNoLocation(SDDbgValue *SD) {
+  // An invalidated SDNode must generate an undef DBG_VALUE: although the
+  // original value is no longer computed, earlier DBG_VALUEs live ranges
+  // must not leak into later code.
+  MDNode *Var = SD->getVariable();
+  MDNode *Expr = SD->getExpression();
+  DebugLoc DL = SD->getDebugLoc();
+  auto MIB = BuildMI(*MF, DL, TII->get(TargetOpcode::DBG_VALUE));
+  MIB.addReg(0U);
+  MIB.addReg(0U, RegState::Debug);
+  MIB.addMetadata(Var);
+  MIB.addMetadata(Expr);
+  return &*MIB;
+}
+
+MachineInstr *
+InstrEmitter::EmitDbgValueFromSingleOp(SDDbgValue *SD,
+                                       DenseMap<SDValue, Register> &VRBaseMap) {
+  MDNode *Var = SD->getVariable();
+  MDNode *Expr = SD->getExpression();
+  DebugLoc DL = SD->getDebugLoc();
+  const MCInstrDesc &II = TII->get(TargetOpcode::DBG_VALUE);
+
+  assert(SD->getLocationOps().size() == 1 &&
+         "Non variadic dbg_value should have only one location op");
+
+  // Emit non-variadic dbg_value nodes as DBG_VALUE.
+  // DBG_VALUE := "DBG_VALUE" loc, isIndirect, var, expr
+  auto MIB = BuildMI(*MF, DL, II);
+  AddDbgValueLocationOps(MIB, II, SD->getLocationOps(), VRBaseMap);
+
   if (SD->isIndirect())
     MIB.addImm(0U);
   else
     MIB.addReg(0U, RegState::Debug);
 
-  MIB.addMetadata(Var);
-  MIB.addMetadata(Expr);
-
-  return &*MIB;
+  return MIB.addMetadata(Var).addMetadata(Expr);
 }
 
 MachineInstr *
@@ -782,7 +911,7 @@ InstrEmitter::EmitDbgLabel(SDDbgLabel *SD) {
 ///
 void InstrEmitter::
 EmitMachineNode(SDNode *Node, bool IsClone, bool IsCloned,
-                DenseMap<SDValue, unsigned> &VRBaseMap) {
+                DenseMap<SDValue, Register> &VRBaseMap) {
   unsigned Opc = Node->getMachineOpcode();
 
   // Handle subreg insert/extract specially
@@ -825,12 +954,17 @@ EmitMachineNode(SDNode *Node, bool IsClone, bool IsCloned,
       NumDefs = NumResults;
     }
     ScratchRegs = TLI->getScratchRegisters((CallingConv::ID) CC);
+  } else if (Opc == TargetOpcode::STATEPOINT) {
+    NumDefs = NumResults;
   }
 
   unsigned NumImpUses = 0;
   unsigned NodeOperands =
     countOperands(Node, II.getNumOperands() - NumDefs, NumImpUses);
-  bool HasPhysRegOuts = NumResults > NumDefs && II.getImplicitDefs()!=nullptr;
+  bool HasVRegVariadicDefs = !MF->getTarget().usesPhysRegsForValues() &&
+                             II.isVariadic() && II.variadicOpsAreDefs();
+  bool HasPhysRegOuts = NumResults > NumDefs &&
+                        II.getImplicitDefs() != nullptr && !HasVRegVariadicDefs;
 #ifndef NDEBUG
   unsigned NumMIOperands = NodeOperands + NumResults;
   if (II.isVariadic())
@@ -884,8 +1018,8 @@ EmitMachineNode(SDNode *Node, bool IsClone, bool IsCloned,
     if (Flags.hasExact())
       MI->setFlag(MachineInstr::MIFlag::IsExact);
 
-    if (Flags.hasFPExcept())
-      MI->setFlag(MachineInstr::MIFlag::FPExcept);
+    if (Flags.hasNoFPExcept())
+      MI->setFlag(MachineInstr::MIFlag::NoFPExcept);
   }
 
   // Emit all of the actual operands of this instruction, adding them to the
@@ -928,12 +1062,12 @@ EmitMachineNode(SDNode *Node, bool IsClone, bool IsCloned,
   //
   // Collect all the used physreg defs, and make sure that any unused physreg
   // defs are marked as dead.
-  SmallVector<unsigned, 8> UsedRegs;
+  SmallVector<Register, 8> UsedRegs;
 
   // Additional results must be physical register defs.
   if (HasPhysRegOuts) {
     for (unsigned i = NumDefs; i < NumResults; ++i) {
-      unsigned Reg = II.getImplicitDefs()[i - NumDefs];
+      Register Reg = II.getImplicitDefs()[i - NumDefs];
       if (!Node->hasAnyUseOfValue(i))
         continue;
       // This implicitly defined physreg has a use.
@@ -960,8 +1094,8 @@ EmitMachineNode(SDNode *Node, bool IsClone, bool IsCloned,
       // direct RegisterSDNode operands.
       for (unsigned i = 0, e = F->getNumOperands(); i != e; ++i)
         if (RegisterSDNode *R = dyn_cast<RegisterSDNode>(F->getOperand(i))) {
-          unsigned Reg = R->getReg();
-          if (TargetRegisterInfo::isPhysicalRegister(Reg))
+          Register Reg = R->getReg();
+          if (Reg.isPhysical())
             UsedRegs.push_back(Reg);
         }
     }
@@ -970,6 +1104,22 @@ EmitMachineNode(SDNode *Node, bool IsClone, bool IsCloned,
   // Finally mark unused registers as dead.
   if (!UsedRegs.empty() || II.getImplicitDefs() || II.hasOptionalDef())
     MIB->setPhysRegsDeadExcept(UsedRegs, *TRI);
+
+  // STATEPOINT is too 'dynamic' to have meaningful machine description.
+  // We have to manually tie operands.
+  if (Opc == TargetOpcode::STATEPOINT && NumDefs > 0) {
+    assert(!HasPhysRegOuts && "STATEPOINT mishandled");
+    MachineInstr *MI = MIB;
+    unsigned Def = 0;
+    int First = StatepointOpers(MI).getFirstGCPtrIdx();
+    assert(First > 0 && "Statepoint has Defs but no GC ptr list");
+    unsigned Use = (unsigned)First;
+    while (Def < NumDefs) {
+      if (MI->getOperand(Use).isReg())
+        MI->tieOperands(Def++, Use);
+      Use = StackMaps::getNextMetaArgIdx(MI, Use);
+    }
+  }
 
   // Run post-isel target hook to adjust this instruction if needed.
   if (II.hasPostISelHook())
@@ -980,7 +1130,7 @@ EmitMachineNode(SDNode *Node, bool IsClone, bool IsCloned,
 /// needed dependencies.
 void InstrEmitter::
 EmitSpecialNode(SDNode *Node, bool IsClone, bool IsCloned,
-                DenseMap<SDValue, unsigned> &VRBaseMap) {
+                DenseMap<SDValue, Register> &VRBaseMap) {
   switch (Node->getOpcode()) {
   default:
 #ifndef NDEBUG
@@ -993,10 +1143,9 @@ EmitSpecialNode(SDNode *Node, bool IsClone, bool IsCloned,
   case ISD::TokenFactor: // fall thru
     break;
   case ISD::CopyToReg: {
-    unsigned DestReg = cast<RegisterSDNode>(Node->getOperand(1))->getReg();
+    Register DestReg = cast<RegisterSDNode>(Node->getOperand(1))->getReg();
     SDValue SrcVal = Node->getOperand(2);
-    if (TargetRegisterInfo::isVirtualRegister(DestReg) &&
-        SrcVal.isMachineOpcode() &&
+    if (Register::isVirtualRegister(DestReg) && SrcVal.isMachineOpcode() &&
         SrcVal.getMachineOpcode() == TargetOpcode::IMPLICIT_DEF) {
       // Instead building a COPY to that vreg destination, build an
       // IMPLICIT_DEF instruction instead.
@@ -1004,7 +1153,7 @@ EmitSpecialNode(SDNode *Node, bool IsClone, bool IsCloned,
               TII->get(TargetOpcode::IMPLICIT_DEF), DestReg);
       break;
     }
-    unsigned SrcReg;
+    Register SrcReg;
     if (RegisterSDNode *R = dyn_cast<RegisterSDNode>(SrcVal))
       SrcReg = R->getReg();
     else
@@ -1035,12 +1184,26 @@ EmitSpecialNode(SDNode *Node, bool IsClone, bool IsCloned,
 
   case ISD::LIFETIME_START:
   case ISD::LIFETIME_END: {
-    unsigned TarOp = (Node->getOpcode() == ISD::LIFETIME_START) ?
-    TargetOpcode::LIFETIME_START : TargetOpcode::LIFETIME_END;
-
-    FrameIndexSDNode *FI = dyn_cast<FrameIndexSDNode>(Node->getOperand(1));
+    unsigned TarOp = (Node->getOpcode() == ISD::LIFETIME_START)
+                         ? TargetOpcode::LIFETIME_START
+                         : TargetOpcode::LIFETIME_END;
+    auto *FI = cast<FrameIndexSDNode>(Node->getOperand(1));
     BuildMI(*MBB, InsertPos, Node->getDebugLoc(), TII->get(TarOp))
     .addFrameIndex(FI->getIndex());
+    break;
+  }
+
+  case ISD::PSEUDO_PROBE: {
+    unsigned TarOp = TargetOpcode::PSEUDO_PROBE;
+    auto Guid = cast<PseudoProbeSDNode>(Node)->getGuid();
+    auto Index = cast<PseudoProbeSDNode>(Node)->getIndex();
+    auto Attr = cast<PseudoProbeSDNode>(Node)->getAttributes();
+
+    BuildMI(*MBB, InsertPos, Node->getDebugLoc(), TII->get(TarOp))
+        .addImm(Guid)
+        .addImm(Index)
+        .addImm((uint8_t)PseudoProbeType::Block)
+        .addImm(Attr);
     break;
   }
 
@@ -1093,16 +1256,18 @@ EmitSpecialNode(SDNode *Node, bool IsClone, bool IsCloned,
           // FIXME: Add dead flags for physical and virtual registers defined.
           // For now, mark physical register defs as implicit to help fast
           // regalloc. This makes inline asm look a lot like calls.
-          MIB.addReg(Reg, RegState::Define |
-                  getImplRegState(TargetRegisterInfo::isPhysicalRegister(Reg)));
+          MIB.addReg(Reg,
+                     RegState::Define |
+                         getImplRegState(Register::isPhysicalRegister(Reg)));
         }
         break;
       case InlineAsm::Kind_RegDefEarlyClobber:
       case InlineAsm::Kind_Clobber:
         for (unsigned j = 0; j != NumVals; ++j, ++i) {
           unsigned Reg = cast<RegisterSDNode>(Node->getOperand(i))->getReg();
-          MIB.addReg(Reg, RegState::Define | RegState::EarlyClobber |
-                  getImplRegState(TargetRegisterInfo::isPhysicalRegister(Reg)));
+          MIB.addReg(Reg,
+                     RegState::Define | RegState::EarlyClobber |
+                         getImplRegState(Register::isPhysicalRegister(Reg)));
           ECRegs.push_back(Reg);
         }
         break;
@@ -1136,7 +1301,7 @@ EmitSpecialNode(SDNode *Node, bool IsClone, bool IsCloned,
     // then remove the early-clobber flag.
     for (unsigned Reg : ECRegs) {
       if (MIB->readsRegister(Reg, TRI)) {
-        MachineOperand *MO = 
+        MachineOperand *MO =
             MIB->findRegisterDefOperand(Reg, false, false, TRI);
         assert(MO && "No def operand for clobbered register?");
         MO->setIsEarlyClobber(false);
@@ -1157,10 +1322,12 @@ EmitSpecialNode(SDNode *Node, bool IsClone, bool IsCloned,
 
 /// InstrEmitter - Construct an InstrEmitter and set it to start inserting
 /// at the given position in the given block.
-InstrEmitter::InstrEmitter(MachineBasicBlock *mbb,
+InstrEmitter::InstrEmitter(const TargetMachine &TM, MachineBasicBlock *mbb,
                            MachineBasicBlock::iterator insertpos)
     : MF(mbb->getParent()), MRI(&MF->getRegInfo()),
       TII(MF->getSubtarget().getInstrInfo()),
       TRI(MF->getSubtarget().getRegisterInfo()),
       TLI(MF->getSubtarget().getTargetLowering()), MBB(mbb),
-      InsertPos(insertpos) {}
+      InsertPos(insertpos) {
+  EmitDebugInstrRefs = TM.Options.ValueTrackingVariableLocations;
+}

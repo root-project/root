@@ -28,14 +28,14 @@ namespace llvm {
   DOTGraphTraits (bool isSimple=false) : DefaultDOTGraphTraits(isSimple) {}
 
     static std::string getGraphName(const ScheduleDAG *G) {
-      return G->MF.getName();
+      return std::string(G->MF.getName());
     }
 
     static bool renderGraphFromBottomUp() {
       return true;
     }
 
-    static bool isNodeHidden(const SUnit *Node) {
+    static bool isNodeHidden(const SUnit *Node, const ScheduleDAG *G) {
       return (Node->NumPreds > 10 || Node->NumSuccs > 10);
     }
 

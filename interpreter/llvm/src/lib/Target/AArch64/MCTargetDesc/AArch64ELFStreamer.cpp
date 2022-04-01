@@ -12,6 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "AArch64ELFStreamer.h"
+#include "AArch64MCTargetDesc.h"
 #include "AArch64TargetStreamer.h"
 #include "AArch64WinCOFFStreamer.h"
 #include "llvm/ADT/DenseMap.h"
@@ -47,6 +49,65 @@ class AArch64TargetAsmStreamer : public AArch64TargetStreamer {
 
   void emitInst(uint32_t Inst) override;
 
+  void emitDirectiveVariantPCS(MCSymbol *Symbol) override {
+    OS << "\t.variant_pcs\t" << Symbol->getName() << "\n";
+  }
+
+  void emitARM64WinCFIAllocStack(unsigned Size) override {
+    OS << "\t.seh_stackalloc\t" << Size << "\n";
+  }
+  void emitARM64WinCFISaveR19R20X(int Offset) override {
+    OS << "\t.seh_save_r19r20_x\t" << Offset << "\n";
+  }
+  void emitARM64WinCFISaveFPLR(int Offset) override {
+    OS << "\t.seh_save_fplr\t" << Offset << "\n";
+  }
+  void emitARM64WinCFISaveFPLRX(int Offset) override {
+    OS << "\t.seh_save_fplr_x\t" << Offset << "\n";
+  }
+  void emitARM64WinCFISaveReg(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_reg\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveRegX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_reg_x\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveRegP(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_regp\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveRegPX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_regp_x\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveLRPair(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_lrpair\tx" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveFReg(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_freg\td" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveFRegX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_freg_x\td" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveFRegP(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_fregp\td" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISaveFRegPX(unsigned Reg, int Offset) override {
+    OS << "\t.seh_save_fregp_x\td" << Reg << ", " << Offset << "\n";
+  }
+  void emitARM64WinCFISetFP() override { OS << "\t.seh_set_fp\n"; }
+  void emitARM64WinCFIAddFP(unsigned Size) override {
+    OS << "\t.seh_add_fp\t" << Size << "\n";
+  }
+  void emitARM64WinCFINop() override { OS << "\t.seh_nop\n"; }
+  void emitARM64WinCFISaveNext() override { OS << "\t.seh_save_next\n"; }
+  void emitARM64WinCFIPrologEnd() override { OS << "\t.seh_endprologue\n"; }
+  void emitARM64WinCFIEpilogStart() override { OS << "\t.seh_startepilogue\n"; }
+  void emitARM64WinCFIEpilogEnd() override { OS << "\t.seh_endepilogue\n"; }
+  void emitARM64WinCFITrapFrame() override { OS << "\t.seh_trap_frame\n"; }
+  void emitARM64WinCFIMachineFrame() override { OS << "\t.seh_pushframe\n"; }
+  void emitARM64WinCFIContext() override { OS << "\t.seh_context\n"; }
+  void emitARM64WinCFIClearUnwoundToCall() override {
+    OS << "\t.seh_clear_unwound_to_call\n";
+  }
+
 public:
   AArch64TargetAsmStreamer(MCStreamer &S, formatted_raw_ostream &OS);
 };
@@ -81,14 +142,14 @@ public:
                       std::move(Emitter)),
         MappingSymbolCounter(0), LastEMS(EMS_None) {}
 
-  void ChangeSection(MCSection *Section, const MCExpr *Subsection) override {
+  void changeSection(MCSection *Section, const MCExpr *Subsection) override {
     // We have to keep track of the mapping symbol state of any sections we
     // use. Each one should start off as EMS_None, which is provided as the
     // default constructor by DenseMap::lookup.
     LastMappingSymbols[getPreviousSection().first] = LastEMS;
     LastEMS = LastMappingSymbols.lookup(Section);
 
-    MCELFStreamer::ChangeSection(Section, Subsection);
+    MCELFStreamer::changeSection(Section, Subsection);
   }
 
   // Reset state between object emissions
@@ -102,10 +163,10 @@ public:
   /// This function is the one used to emit instruction data into the ELF
   /// streamer. We override it to add the appropriate mapping symbol if
   /// necessary.
-  void EmitInstruction(const MCInst &Inst,
+  void emitInstruction(const MCInst &Inst,
                        const MCSubtargetInfo &STI) override {
-    EmitA64MappingSymbol();
-    MCELFStreamer::EmitInstruction(Inst, STI);
+    emitA64MappingSymbol();
+    MCELFStreamer::emitInstruction(Inst, STI);
   }
 
   /// Emit a 32-bit value as an instruction. This is only used for the .inst
@@ -121,29 +182,29 @@ public:
       Inst >>= 8;
     }
 
-    EmitA64MappingSymbol();
-    MCELFStreamer::EmitBytes(StringRef(Buffer, 4));
+    emitA64MappingSymbol();
+    MCELFStreamer::emitBytes(StringRef(Buffer, 4));
   }
 
   /// This is one of the functions used to emit data into an ELF section, so the
   /// AArch64 streamer overrides it to add the appropriate mapping symbol ($d)
   /// if necessary.
-  void EmitBytes(StringRef Data) override {
-    EmitDataMappingSymbol();
-    MCELFStreamer::EmitBytes(Data);
+  void emitBytes(StringRef Data) override {
+    emitDataMappingSymbol();
+    MCELFStreamer::emitBytes(Data);
   }
 
   /// This is one of the functions used to emit data into an ELF section, so the
   /// AArch64 streamer overrides it to add the appropriate mapping symbol ($d)
   /// if necessary.
-  void EmitValueImpl(const MCExpr *Value, unsigned Size, SMLoc Loc) override {
-    EmitDataMappingSymbol();
-    MCELFStreamer::EmitValueImpl(Value, Size, Loc);
+  void emitValueImpl(const MCExpr *Value, unsigned Size, SMLoc Loc) override {
+    emitDataMappingSymbol();
+    MCELFStreamer::emitValueImpl(Value, Size, Loc);
   }
 
   void emitFill(const MCExpr &NumBytes, uint64_t FillValue,
                                   SMLoc Loc) override {
-    EmitDataMappingSymbol();
+    emitDataMappingSymbol();
     MCObjectStreamer::emitFill(NumBytes, FillValue, Loc);
   }
 private:
@@ -153,24 +214,24 @@ private:
     EMS_Data
   };
 
-  void EmitDataMappingSymbol() {
+  void emitDataMappingSymbol() {
     if (LastEMS == EMS_Data)
       return;
-    EmitMappingSymbol("$d");
+    emitMappingSymbol("$d");
     LastEMS = EMS_Data;
   }
 
-  void EmitA64MappingSymbol() {
+  void emitA64MappingSymbol() {
     if (LastEMS == EMS_A64)
       return;
-    EmitMappingSymbol("$x");
+    emitMappingSymbol("$x");
     LastEMS = EMS_A64;
   }
 
-  void EmitMappingSymbol(StringRef Name) {
+  void emitMappingSymbol(StringRef Name) {
     auto *Symbol = cast<MCSymbolELF>(getContext().getOrCreateSymbol(
         Name + "." + Twine(MappingSymbolCounter++)));
-    EmitLabel(Symbol);
+    emitLabel(Symbol);
     Symbol->setType(ELF::STT_NOTYPE);
     Symbol->setBinding(ELF::STB_LOCAL);
     Symbol->setExternal(false);
@@ -184,8 +245,6 @@ private:
 
 } // end anonymous namespace
 
-namespace llvm {
-
 AArch64ELFStreamer &AArch64TargetELFStreamer::getStreamer() {
   return static_cast<AArch64ELFStreamer &>(Streamer);
 }
@@ -194,23 +253,24 @@ void AArch64TargetELFStreamer::emitInst(uint32_t Inst) {
   getStreamer().emitInst(Inst);
 }
 
-MCTargetStreamer *createAArch64AsmTargetStreamer(MCStreamer &S,
-                                                 formatted_raw_ostream &OS,
-                                                 MCInstPrinter *InstPrint,
-                                                 bool isVerboseAsm) {
+void AArch64TargetELFStreamer::emitDirectiveVariantPCS(MCSymbol *Symbol) {
+  cast<MCSymbolELF>(Symbol)->setOther(ELF::STO_AARCH64_VARIANT_PCS);
+}
+
+MCTargetStreamer *
+llvm::createAArch64AsmTargetStreamer(MCStreamer &S, formatted_raw_ostream &OS,
+                                     MCInstPrinter *InstPrint,
+                                     bool isVerboseAsm) {
   return new AArch64TargetAsmStreamer(S, OS);
 }
 
-MCELFStreamer *createAArch64ELFStreamer(MCContext &Context,
-                                        std::unique_ptr<MCAsmBackend> TAB,
-                                        std::unique_ptr<MCObjectWriter> OW,
-                                        std::unique_ptr<MCCodeEmitter> Emitter,
-                                        bool RelaxAll) {
+MCELFStreamer *llvm::createAArch64ELFStreamer(
+    MCContext &Context, std::unique_ptr<MCAsmBackend> TAB,
+    std::unique_ptr<MCObjectWriter> OW, std::unique_ptr<MCCodeEmitter> Emitter,
+    bool RelaxAll) {
   AArch64ELFStreamer *S = new AArch64ELFStreamer(
       Context, std::move(TAB), std::move(OW), std::move(Emitter));
   if (RelaxAll)
     S->getAssembler().setRelaxAll(true);
   return S;
 }
-
-} // end namespace llvm

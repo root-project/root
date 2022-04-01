@@ -9,17 +9,18 @@ Introduction
 ============
 
 This document aims to provide a high-level overview of the design and
-implementation of the ORC JIT APIs. Except where otherwise stated, all
-discussion applies to the design of the APIs as of LLVM verison 9 (ORCv2).
+implementation of the ORC JIT APIs. Except where otherwise stated all discussion
+refers to the modern ORCv2 APIs (available since LLVM 7). Clients wishing to
+transition from OrcV1 should see Section :ref:`transitioning_orcv1_to_orcv2`.
 
 Use-cases
 =========
 
-ORC provides a modular API for building JIT compilers. There are a range
+ORC provides a modular API for building JIT compilers. There are a number
 of use cases for such an API. For example:
 
 1. The LLVM tutorials use a simple ORC-based JIT class to execute expressions
-compiled from a toy languge: Kaleidoscope.
+compiled from a toy language: Kaleidoscope.
 
 2. The LLVM debugger, LLDB, uses a cross-compiling JIT for expression
 evaluation. In this use case, cross compilation allows expressions compiled
@@ -31,7 +32,7 @@ optimizations within an existing JIT infrastructure.
 
 4. In interpreters and REPLs, e.g. Cling (C++) and the Swift interpreter.
 
-By adoping a modular, library-based design we aim to make ORC useful in as many
+By adopting a modular, library-based design we aim to make ORC useful in as many
 of these contexts as possible.
 
 Features
@@ -39,41 +40,46 @@ Features
 
 ORC provides the following features:
 
-- *JIT-linking* links relocatable object files (COFF, ELF, MachO) [1]_ into a
-  target process an runtime. The target process may be the same process that
-  contains the JIT session object and jit-linker, or may be another process
+**JIT-linking**
+  ORC provides APIs to link relocatable object files (COFF, ELF, MachO) [1]_
+  into a target process at runtime. The target process may be the same process
+  that contains the JIT session object and jit-linker, or may be another process
   (even one running on a different machine or architecture) that communicates
   with the JIT via RPC.
 
-- *LLVM IR compilation*, which is provided by off the shelf components
-  (IRCompileLayer, SimpleCompiler, ConcurrentIRCompiler) that make it easy to
-  add LLVM IR to a JIT'd process.
+**LLVM IR compilation**
+  ORC provides off the shelf components (IRCompileLayer, SimpleCompiler,
+  ConcurrentIRCompiler) that make it easy to add LLVM IR to a JIT'd process.
 
-- *Eager and lazy compilation*. By default, ORC will compile symbols as soon as
-  they are looked up in the JIT session object (``ExecutionSession``). Compiling
-  eagerly by default makes it easy to use ORC as a simple in-memory compiler for
-  an existing JIT. ORC also provides a simple mechanism, lazy-reexports, for
-  deferring compilation until first call.
+**Eager and lazy compilation**
+  By default, ORC will compile symbols as soon as they are looked up in the JIT
+  session object (``ExecutionSession``). Compiling eagerly by default makes it
+  easy to use ORC as an in-memory compiler for an existing JIT (similar to how
+  MCJIT is commonly used). However ORC also provides built-in support for lazy
+  compilation via lazy-reexports (see :ref:`Laziness`).
 
-- *Support for custom compilers and program representations*. Clients can supply
-  custom compilers for each symbol that they define in their JIT session. ORC
-  will run the user-supplied compiler when the a definition of a symbol is
-  needed. ORC is actually fully language agnostic: LLVM IR is not treated
-  specially, and is supported via the same wrapper mechanism (the
+**Support for Custom Compilers and Program Representations**
+  Clients can supply custom compilers for each symbol that they define in their
+  JIT session. ORC will run the user-supplied compiler when the a definition of
+  a symbol is needed. ORC is actually fully language agnostic: LLVM IR is not
+  treated specially, and is supported via the same wrapper mechanism (the
   ``MaterializationUnit`` class) that is used for custom compilers.
 
-- *Concurrent JIT'd code* and *concurrent compilation*. JIT'd code may spawn
-  multiple threads, and may re-enter the JIT (e.g. for lazy compilation)
-  concurrently from multiple threads. The ORC APIs also support running multiple
-  compilers concurrently, and provides off-the-shelf infrastructure to track
-  dependencies on running compiles (e.g. to ensure that we never call into code
-  until it is safe to do so, even if that involves waiting on multiple
-  compiles).
+**Concurrent JIT'd code** and **Concurrent Compilation**
+  JIT'd code may be executed in multiple threads, may spawn new threads, and may
+  re-enter the ORC (e.g. to request lazy compilation) concurrently from multiple
+  threads. Compilers launched my ORC can run concurrently (provided the client
+  sets up an appropriate dispatcher). Built-in dependency tracking ensures that
+  ORC does not release pointers to JIT'd code or data until all dependencies
+  have also been JIT'd and they are safe to call or use.
 
-- *Orthogonality* and *composability*: Each of the features above can be used (or
-  not) independently. It is possible to put ORC components together to make a
-  non-lazy, in-process, single threaded JIT or a lazy, out-of-process,
-  concurrent JIT, or anything in between.
+**Removable Code**
+  Resources for JIT'd program representations
+
+**Orthogonality** and **Composability**
+  Each of the features above can be used independently. It is possible to put
+  ORC components together to make a non-lazy, in-process, single threaded JIT
+  or a lazy, out-of-process, concurrent JIT, or anything in between.
 
 LLJIT and LLLazyJIT
 ===================
@@ -97,7 +103,7 @@ JIT API.
 
 LLJIT and LLLazyJIT instances can be created using their respective builder
 classes: LLJITBuilder and LLazyJITBuilder. For example, assuming you have a
-module ``M`` loaded on an ThreadSafeContext ``Ctx``:
+module ``M`` loaded on a ThreadSafeContext ``Ctx``:
 
 .. code-block:: c++
 
@@ -117,11 +123,13 @@ module ``M`` loaded on an ThreadSafeContext ``Ctx``:
   if (!EntrySym)
     return EntrySym.takeError();
 
+  // Cast the entry point address to a function pointer.
   auto *Entry = (void(*)())EntrySym.getAddress();
 
+  // Call into JIT'd code.
   Entry();
 
-The builder clasess provide a number of configuration options that can be
+The builder classes provide a number of configuration options that can be
 specified before the JIT instance is constructed. For example:
 
 .. code-block:: c++
@@ -150,11 +158,11 @@ found at ``llvm/examples/HowToUseLLJIT``.
 Design Overview
 ===============
 
-ORC's JIT'd program model aims to emulate the linking and symbol resolution
+ORC's JIT program model aims to emulate the linking and symbol resolution
 rules used by the static and dynamic linkers. This allows ORC to JIT
 arbitrary LLVM IR, including IR produced by an ordinary static compiler (e.g.
-clang) that uses constructs like symbol linkage and visibility, and weak and
-common symbol definitions.
+clang) that uses constructs like symbol linkage and visibility, and weak [3]_
+and common symbol definitions.
 
 To see how this works, imagine a program ``foo`` which links against a pair
 of dynamic libraries: ``libA`` and ``libB``. On the command line, building this
@@ -167,14 +175,14 @@ program might look like:
   $ clang++ -o myapp myapp.cpp -L. -lA -lB
   $ ./myapp
 
-In ORC, this would translate into API calls on a "CXXCompilingLayer" (with error
-checking omitted for brevity) as:
+In ORC, this would translate into API calls on a hypothetical CXXCompilingLayer
+(with error checking omitted for brevity) as:
 
 .. code-block:: c++
 
   ExecutionSession ES;
   RTDyldObjectLinkingLayer ObjLinkingLayer(
-      ES, []() { return llvm::make_unique<SectionMemoryManager>(); });
+      ES, []() { return std::make_unique<SectionMemoryManager>(); });
   CXXCompileLayer CXXLayer(ES, ObjLinkingLayer);
 
   // Create JITDylib "A" and add code to it using the CXX layer.
@@ -187,16 +195,18 @@ checking omitted for brevity) as:
   CXXLayer.add(LibB, MemoryBuffer::getFile("b1.cpp"));
   CXXLayer.add(LibB, MemoryBuffer::getFile("b2.cpp"));
 
-  // Specify the search order for the main JITDylib. This is equivalent to a
-  // "links against" relationship in a command-line link.
-  ES.getMainJITDylib().setSearchOrder({{&LibA, false}, {&LibB, false}});
-  CXXLayer.add(ES.getMainJITDylib(), MemoryBuffer::getFile("main.cpp"));
+  // Create and specify the search order for the main JITDylib. This is
+  // equivalent to a "links against" relationship in a command-line link.
+  auto &MainJD = ES.createJITDylib("main");
+  MainJD.addToLinkOrder(&LibA);
+  MainJD.addToLinkOrder(&LibB);
+  CXXLayer.add(MainJD, MemoryBuffer::getFile("main.cpp"));
 
   // Look up the JIT'd main, cast it to a function pointer, then call it.
-  auto MainSym = ExitOnErr(ES.lookup({&ES.getMainJITDylib()}, "main"));
+  auto MainSym = ExitOnErr(ES.lookup({&MainJD}, "main"));
   auto *Main = (int(*)(int, char*[]))MainSym.getAddress();
 
-v  int Result = Main(...);
+  int Result = Main(...);
 
 This example tells us nothing about *how* or *when* compilation will happen.
 That will depend on the implementation of the hypothetical CXXCompilingLayer.
@@ -235,7 +245,7 @@ but they may also wrap a jit-linker directly (if the program representation
 backing the definitions is an object file), or may even be a class that writes
 bits directly into memory (for example, if the definitions are
 stubs). Materialization is the blanket term for any actions (compiling, linking,
-splatting bits, registering with runtimes, etc.) that are requried to generate a
+splatting bits, registering with runtimes, etc.) that are required to generate a
 symbol definition that is safe to call or access.
 
 As each materializer completes its work it notifies the JITDylib, which in turn
@@ -286,31 +296,174 @@ of them, but Layer authors will use them:
   that must be materialized and provides a way to notify the JITDylib once they
   are either successfully materialized or a failure occurs.
 
-Handy utilities
-===============
+Absolute Symbols, Aliases, and Reexports
+========================================
 
-TBD: absolute symbols, aliases, off-the-shelf layers.
+ORC makes it easy to define symbols with absolute addresses, or symbols that
+are simply aliases of other symbols:
+
+Absolute Symbols
+----------------
+
+Absolute symbols are symbols that map directly to addresses without requiring
+further materialization, for example: "foo" = 0x1234. One use case for
+absolute symbols is allowing resolution of process symbols. E.g.
+
+.. code-block: c++
+
+  JD.define(absoluteSymbols(SymbolMap({
+      { Mangle("printf"),
+        { pointerToJITTargetAddress(&printf),
+          JITSymbolFlags::Callable } }
+    });
+
+With this mapping established code added to the JIT can refer to printf
+symbolically rather than requiring the address of printf to be "baked in".
+This in turn allows cached versions of the JIT'd code (e.g. compiled objects)
+to be re-used across JIT sessions as the JIT'd code no longer changes, only the
+absolute symbol definition does.
+
+For process and library symbols the DynamicLibrarySearchGenerator utility (See
+:ref:`How to Add Process and Library Symbols to JITDylibs
+<ProcessAndLibrarySymbols>`) can be used to automatically build absolute
+symbol mappings for you. However the absoluteSymbols function is still useful
+for making non-global objects in your JIT visible to JIT'd code. For example,
+imagine that your JIT standard library needs access to your JIT object to make
+some calls. We could bake the address of your object into the library, but then
+it would need to be recompiled for each session:
+
+.. code-block: c++
+
+  // From standard library for JIT'd code:
+
+  class MyJIT {
+  public:
+    void log(const char *Msg);
+  };
+
+  void log(const char *Msg) { ((MyJIT*)0x1234)->log(Msg); }
+
+We can turn this into a symbolic reference in the JIT standard library:
+
+.. code-block: c++
+
+  extern MyJIT *__MyJITInstance;
+
+  void log(const char *Msg) { __MyJITInstance->log(Msg); }
+
+And then make our JIT object visible to the JIT standard library with an
+absolute symbol definition when the JIT is started:
+
+.. code-block: c++
+
+  MyJIT J = ...;
+
+  auto &JITStdLibJD = ... ;
+
+  JITStdLibJD.define(absoluteSymbols(SymbolMap({
+      { Mangle("__MyJITInstance"),
+        { pointerToJITTargetAddress(&J), JITSymbolFlags() } }
+    });
+
+Aliases and Reexports
+---------------------
+
+Aliases and reexports allow you to define new symbols that map to existing
+symbols. This can be useful for changing linkage relationships between symbols
+across sessions without having to recompile code. For example, imagine that
+JIT'd code has access to a log function, ``void log(const char*)`` for which
+there are two implementations in the JIT standard library: ``log_fast`` and
+``log_detailed``. Your JIT can choose which one of these definitions will be
+used when the ``log`` symbol is referenced by setting up an alias at JIT startup
+time:
+
+.. code-block: c++
+
+  auto &JITStdLibJD = ... ;
+
+  auto LogImplementationSymbol =
+   Verbose ? Mangle("log_detailed") : Mangle("log_fast");
+
+  JITStdLibJD.define(
+    symbolAliases(SymbolAliasMap({
+        { Mangle("log"),
+          { LogImplementationSymbol
+            JITSymbolFlags::Exported | JITSymbolFlags::Callable } }
+      });
+
+The ``symbolAliases`` function allows you to define aliases within a single
+JITDylib. The ``reexports`` function provides the same functionality, but
+operates across JITDylib boundaries. E.g.
+
+.. code-block: c++
+
+  auto &JD1 = ... ;
+  auto &JD2 = ... ;
+
+  // Make 'bar' in JD2 an alias for 'foo' from JD1.
+  JD2.define(
+    reexports(JD1, SymbolAliasMap({
+        { Mangle("bar"), { Mangle("foo"), JITSymbolFlags::Exported } }
+      });
+
+The reexports utility can be handy for composing a single JITDylib interface by
+re-exporting symbols from several other JITDylibs.
+
+.. _Laziness:
 
 Laziness
 ========
 
-Laziness in ORC is provided by a utility called "lazy-reexports". The aim of
-this utility is to re-use the synchronization provided by the symbol lookup
-mechanism to make it safe to lazily compile functions, even if calls to the
-stub occur simultaneously on multiple threads of JIT'd code. It does this by
-reducing lazy compilation to symbol lookup: The lazy stub performs a lookup of
-its underlying definition on first call, updating the function body pointer
-once the definition is available. If additional calls arrive on other threads
-while compilation is ongoing they will be safely blocked by the normal lookup
-synchronization guarantee (no result until the result is safe) and can also
-proceed as soon as compilation completes.
+Laziness in ORC is provided by a utility called "lazy reexports". A lazy
+reexport is similar to a regular reexport or alias: It provides a new name for
+an existing symbol. Unlike regular reexports however, lookups of lazy reexports
+do not trigger immediate materialization of the reexported symbol. Instead, they
+only trigger materialization of a function stub. This function stub is
+initialized to point at a *lazy call-through*, which provides reentry into the
+JIT. If the stub is called at runtime then the lazy call-through will look up
+the reexported symbol (triggering materialization for it if necessary), update
+the stub (to call directly to the reexported symbol on subsequent calls), and
+then return via the reexported symbol. By re-using the existing symbol lookup
+mechanism, lazy reexports inherit the same concurrency guarantees: calls to lazy
+reexports can be made from multiple threads concurrently, and the reexported
+symbol can be any state of compilation (uncompiled, already in the process of
+being compiled, or already compiled) and the call will succeed. This allows
+laziness to be safely mixed with features like remote compilation, concurrent
+compilation, concurrent JIT'd code, and speculative compilation.
 
-TBD: Usage example.
+There is one other key difference between regular reexports and lazy reexports
+that some clients must be aware of: The address of a lazy reexport will be
+*different* from the address of the reexported symbol (whereas a regular
+reexport is guaranteed to have the same address as the reexported symbol).
+Clients who care about pointer equality will generally want to use the address
+of the reexport as the canonical address of the reexported symbol. This will
+allow the address to be taken without forcing materialization of the reexport.
+
+Usage example:
+
+If JITDylib ``JD`` contains definitions for symbols ``foo_body`` and
+``bar_body``, we can create lazy entry points ``Foo`` and ``Bar`` in JITDylib
+``JD2`` by calling:
+
+.. code-block:: c++
+
+  auto ReexportFlags = JITSymbolFlags::Exported | JITSymbolFlags::Callable;
+  JD2.define(
+    lazyReexports(CallThroughMgr, StubsMgr, JD,
+                  SymbolAliasMap({
+                    { Mangle("foo"), { Mangle("foo_body"), ReexportedFlags } },
+                    { Mangle("bar"), { Mangle("bar_body"), ReexportedFlags } }
+                  }));
+
+A full example of how to use lazyReexports with the LLJIT class can be found at
+``llvm_project/llvm/examples/LLJITExamples/LLJITWithLazyReexports``.
 
 Supporting Custom Compilers
 ===========================
 
 TBD.
+
+.. _transitioning_orcv1_to_orcv2:
 
 Transitioning from ORCv1 to ORCv2
 =================================
@@ -323,10 +476,10 @@ are now referred to as ORCv1.
 
 The majority of the ORCv1 layers and utilities were renamed with a 'Legacy'
 prefix in LLVM 8.0, and have deprecation warnings attached in LLVM 9.0. In LLVM
-10.0 ORCv1 will be removed entirely.
+12.0 ORCv1 will be removed entirely.
 
 Transitioning from ORCv1 to ORCv2 should be easy for most clients. Most of the
-ORCv1 layers and utilities have ORCv2 counterparts[2]_ that can be directly
+ORCv1 layers and utilities have ORCv2 counterparts [2]_ that can be directly
 substituted. However there are some design differences between ORCv1 and ORCv2
 to be aware of:
 
@@ -339,10 +492,11 @@ to be aware of:
      references are resolved, and symbol resolvers are no longer used. See the
      section `Design Overview`_ for more details.
 
-     Unless multiple JITDylibs are needed to model linkage relationsips, ORCv1
-     clients should place all code in the main JITDylib (returned by
-     ``ExecutionSession::getMainJITDylib()``). MCJIT clients should use LLJIT
-     (see `LLJIT and LLLazyJIT`_).
+     Unless multiple JITDylibs are needed to model linkage relationships, ORCv1
+     clients should place all code in a single JITDylib.
+     MCJIT clients should use LLJIT (see `LLJIT and LLLazyJIT`_), and can place
+     code in LLJIT's default created main JITDylib (See
+     ``LLJIT::getMainJITDylib()``).
 
   2. All JIT stacks now need an ``ExecutionSession`` instance. ExecutionSession
      manages the string pool, error reporting, synchronization, and symbol
@@ -379,7 +533,7 @@ How-tos
 =======
 
 How to manage symbol strings
-############################
+----------------------------
 
 Symbol strings in ORC are uniqued to improve lookup performance, reduce memory
 overhead, and allow symbol names to function as efficient keys. To get the
@@ -409,10 +563,10 @@ will perform both jobs for you:
     // ...
 
     // Portable IR-symbol-name lookup:
-    auto Sym = ES.lookup({&ES.getMainJITDylib()}, Mangle("main"));
+    auto Sym = ES.lookup({&MainJD}, Mangle("main"));
 
 How to create JITDylibs and set up linkage relationships
-########################################################
+--------------------------------------------------------
 
 In ORC, all symbol definitions reside in JITDylibs. JITDylibs are created by
 calling the ``ExecutionSession::createJITDylib`` method with a unique name:
@@ -425,23 +579,14 @@ calling the ``ExecutionSession::createJITDylib`` method with a unique name:
 The JITDylib is owned by the ``ExecutionEngine`` instance and will be freed
 when it is destroyed.
 
-A JITDylib representing the JIT main program is created by ExecutionEngine by
-default. A reference to it can be obtained by calling
-``ExecutionSession::getMainJITDylib()``:
-
-  .. code-block:: c++
-
-    ExecutionSession ES;
-    auto &MainJD = ES.getMainJITDylib();
-
 How to use ThreadSafeModule and ThreadSafeContext
-#################################################
+-------------------------------------------------
 
 ThreadSafeModule and ThreadSafeContext are wrappers around Modules and
 LLVMContexts respectively. A ThreadSafeModule is a pair of a
 std::unique_ptr<Module> and a (possibly shared) ThreadSafeContext value. A
 ThreadSafeContext is a pair of a std::unique_ptr<LLVMContext> and a lock.
-This design serves two purposes: providing both a locking scheme and lifetime
+This design serves two purposes: providing a locking scheme and lifetime
 management for LLVMContexts. The ThreadSafeContext may be locked to prevent
 accidental concurrent access by two Modules that use the same LLVMContext.
 The underlying LLVMContext is freed once all ThreadSafeContext values pointing
@@ -453,7 +598,7 @@ std::unique_ptr<LLVMContext>:
 
   .. code-block:: c++
 
-    ThreadSafeContext TSCtx(llvm::make_unique<LLVMContext>());
+    ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
 
 ThreadSafeModules can be constructed from a pair of a std::unique_ptr<Module>
 and a ThreadSafeContext value. ThreadSafeContext values may be shared between
@@ -462,43 +607,56 @@ multiple ThreadSafeModules:
   .. code-block:: c++
 
     ThreadSafeModule TSM1(
-      llvm::make_unique<Module>("M1", *TSCtx.getContext()), TSCtx);
+      std::make_unique<Module>("M1", *TSCtx.getContext()), TSCtx);
 
     ThreadSafeModule TSM2(
-      llvm::make_unique<Module>("M2", *TSCtx.getContext()), TSCtx);
+      std::make_unique<Module>("M2", *TSCtx.getContext()), TSCtx);
 
 Before using a ThreadSafeContext, clients should ensure that either the context
 is only accessible on the current thread, or that the context is locked. In the
 example above (where the context is never locked) we rely on the fact that both
 ``TSM1`` and ``TSM2``, and TSCtx are all created on one thread. If a context is
-going to be shared between threads then it must be locked before the context,
-or any Modules attached to it, are accessed. When code is added to in-tree IR
-layers this locking is is done automatically by the
-``BasicIRLayerMaterializationUnit::materialize`` method. In all other
-situations, for example when writing a custom IR materialization unit, or
-constructing a new ThreadSafeModule from higher-level program representations,
-locking must be done explicitly:
+going to be shared between threads then it must be locked before any accessing
+or creating any Modules attached to it. E.g.
 
   .. code-block:: c++
 
-    void HighLevelRepresentationLayer::emit(MaterializationResponsibility R,
-                                            HighLevelProgramRepresentation H) {
-      // Get or create a context value that may be shared between threads.
-      ThreadSafeContext TSCtx = getContext();
+    ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
 
-      // Lock the context to prevent concurrent access.
-      auto Lock = TSCtx.getLock();
+    ThreadPool TP(NumThreads);
+    JITStack J;
 
-      // IRGen a module onto the locked Context.
-      ThreadSafeModule TSM(IRGen(H, *TSCtx.getContext()), TSCtx);
-
-      // Emit the module to the base layer with the context still locked.
-      BaseIRLayer.emit(std::move(R), std::move(TSM));
+    for (auto &ModulePath : ModulePaths) {
+      TP.async(
+        [&]() {
+          auto Lock = TSCtx.getLock();
+          auto M = loadModuleOnContext(ModulePath, TSCtx.getContext());
+          J.addModule(ThreadSafeModule(std::move(M), TSCtx));
+        });
     }
 
+    TP.wait();
+
+To make exclusive access to Modules easier to manage the ThreadSafeModule class
+provides a convenience function, ``withModuleDo``, that implicitly (1) locks the
+associated context, (2) runs a given function object, (3) unlocks the context,
+and (3) returns the result generated by the function object. E.g.
+
+  .. code-block:: c++
+
+    ThreadSafeModule TSM = getModule(...);
+
+    // Dump the module:
+    size_t NumFunctionsInModule =
+      TSM.withModuleDo(
+        [](Module &M) { // <- Context locked before entering lambda.
+          return M.size();
+        } // <- Context unlocked after leaving.
+      );
+
 Clients wishing to maximize possibilities for concurrent compilation will want
-to create every new ThreadSafeModule on a new ThreadSafeContext. For this reason
-a convenience constructor for ThreadSafeModule is provided that implicitly
+to create every new ThreadSafeModule on a new ThreadSafeContext. For this
+reason a convenience constructor for ThreadSafeModule is provided that implicitly
 constructs a new ThreadSafeContext value from a std::unique_ptr<LLVMContext>:
 
   .. code-block:: c++
@@ -506,10 +664,9 @@ constructs a new ThreadSafeContext value from a std::unique_ptr<LLVMContext>:
     // Maximize concurrency opportunities by loading every module on a
     // separate context.
     for (const auto &IRPath : IRPaths) {
-      auto Ctx = llvm::make_unique<LLVMContext>();
-      auto M = llvm::make_unique<LLVMContext>("M", *Ctx);
-      CompileLayer.add(ES.getMainJITDylib(),
-                       ThreadSafeModule(std::move(M), std::move(Ctx)));
+      auto Ctx = std::make_unique<LLVMContext>();
+      auto M = std::make_unique<LLVMContext>("M", *Ctx);
+      CompileLayer.add(MainJD, ThreadSafeModule(std::move(M), std::move(Ctx)));
     }
 
 Clients who plan to run single-threaded may choose to save memory by loading
@@ -518,11 +675,13 @@ all modules on the same context:
   .. code-block:: c++
 
     // Save memory by using one context for all Modules:
-    ThreadSafeContext TSCtx(llvm::make_unique<LLVMContext>());
+    ThreadSafeContext TSCtx(std::make_unique<LLVMContext>());
     for (const auto &IRPath : IRPaths) {
       ThreadSafeModule TSM(parsePath(IRPath, *TSCtx.getContext()), TSCtx);
-      CompileLayer.add(ES.getMainJITDylib(), ThreadSafeModule(std::move(TSM));
+      CompileLayer.add(MainJD, ThreadSafeModule(std::move(TSM));
     }
+
+.. _ProcessAndLibrarySymbols:
 
 How to Add Process and Library Symbols to the JITDylibs
 =======================================================
@@ -546,7 +705,7 @@ function:
     const DataLayout &DL = getDataLayout();
     MangleAndInterner Mangle(ES, DL);
 
-    auto &JD = ES.getMainJITDylib();
+    auto &JD = ES.createJITDylib("main");
 
     JD.define(
       absoluteSymbols({
@@ -569,44 +728,112 @@ For example, to load the whole interface of a runtime library:
   .. code-block:: c++
 
     const DataLayout &DL = getDataLayout();
-    auto &JD = ES.getMainJITDylib();
+    auto &JD = ES.createJITDylib("main");
 
-    JD.setGenerator(DynamicLibrarySearchGenerator::Load("/path/to/lib"
+    JD.addGenerator(DynamicLibrarySearchGenerator::Load("/path/to/lib"
                                                         DL.getGlobalPrefix()));
 
     // IR added to JD can now link against all symbols exported by the library
     // at '/path/to/lib'.
     CompileLayer.add(JD, loadModule(...));
 
-Or, to expose a whitelisted set of symbols from the main process:
+Or, to expose an allowed set of symbols from the main process:
 
   .. code-block:: c++
 
     const DataLayout &DL = getDataLayout();
     MangleAndInterner Mangle(ES, DL);
 
-    auto &JD = ES.getMainJITDylib();
+    auto &JD = ES.createJITDylib("main");
 
-    DenseSet<SymbolStringPtr> Whitelist({
+    DenseSet<SymbolStringPtr> AllowList({
         Mangle("puts"),
         Mangle("gets")
       });
 
     // Use GetForCurrentProcess with a predicate function that checks the
-    // whitelist.
-    JD.setGenerator(
+    // allowed list.
+    JD.addGenerator(
       DynamicLibrarySearchGenerator::GetForCurrentProcess(
         DL.getGlobalPrefix(),
-        [&](const SymbolStringPtr &S) { return Whitelist.count(S); }));
+        [&](const SymbolStringPtr &S) { return AllowList.count(S); }));
 
     // IR added to JD can now link against any symbols exported by the process
-    // and contained in the whitelist.
+    // and contained in the list.
     CompileLayer.add(JD, loadModule(...));
 
-Future Features
-===============
+Roadmap
+=======
 
-TBD: Speculative compilation. Object Caches.
+ORC is still undergoing active development. Some current and future works are
+listed below.
+
+Current Work
+------------
+
+1. **TargetProcessControl: Improvements to in-tree support for out-of-process
+   execution**
+
+   The ``TargetProcessControl`` API provides various operations on the JIT
+   target process (the one which will execute the JIT'd code), including
+   memory allocation, memory writes, function execution, and process queries
+   (e.g. for the target triple). By targeting this API new components can be
+   developed which will work equally well for in-process and out-of-process
+   JITing.
+
+
+2. **ORC RPC based TargetProcessControl implementation**
+
+   An ORC RPC based implementation of the ``TargetProcessControl`` API is
+   currently under development to enable easy out-of-process JITing via
+   file descriptors / sockets.
+
+3. **Core State Machine Cleanup**
+
+   The core ORC state machine is currently implemented between JITDylib and
+   ExecutionSession. Methods are slowly being moved to `ExecutionSession`. This
+   will tidy up the code base, and also allow us to support asynchronous removal
+   of JITDylibs (in practice deleting an associated state object in
+   ExecutionSession and leaving the JITDylib instance in a defunct state until
+   all references to it have been released).
+
+Near Future Work
+----------------
+
+1. **ORC JIT Runtime Libraries**
+
+   We need a runtime library for JIT'd code. This would include things like
+   TLS registration, reentry functions, registration code for language runtimes
+   (e.g. Objective C and Swift) and other JIT specific runtime code. This should
+   be built in a similar manner to compiler-rt (possibly even as part of it).
+
+2. **Remote jit_dlopen / jit_dlclose**
+
+   To more fully mimic the environment that static programs operate in we would
+   like JIT'd code to be able to "dlopen" and "dlclose" JITDylibs, running all of
+   their initializers/deinitializers on the current thread. This would require
+   support from the runtime library described above.
+
+3. **Debugging support**
+
+   ORC currently supports the GDBRegistrationListener API when using RuntimeDyld
+   as the underlying JIT linker. We will need a new solution for JITLink based
+   platforms.
+
+Further Future Work
+-------------------
+
+1. **Speculative Compilation**
+
+   ORC's support for concurrent compilation allows us to easily enable
+   *speculative* JIT compilation: compilation of code that is not needed yet,
+   but which we have reason to believe will be needed in the future. This can be
+   used to hide compile latency and improve JIT throughput. A proof-of-concept
+   example of speculative compilation with ORC has already been developed (see
+   ``llvm/examples/SpeculativeJIT``). Future work on this is likely to focus on
+   re-using and improving existing profiling support (currently used by PGO) to
+   feed speculation decisions, as well as built-in tools to simplify use of
+   speculative compilation.
 
 .. [1] Formats/architectures vary in terms of supported features. MachO and
        ELF tend to have better support than COFF. Patches very welcome!
@@ -620,13 +847,7 @@ TBD: Speculative compilation. Object Caches.
        across processes, however this functionality appears not to have been
        used.
 
-.. [3] Sharing ThreadSafeModules in a concurrent compilation can be dangerous:
-       if interdependent modules are loaded on the same context, but compiled
-       on different threads a deadlock may occur (with each compile waiting for
-       the other(s) to complete, and the other(s) unable to proceed because the
-       context is locked).
-
-.. [4] Mostly. Weak definitions are handled correctly within dylibs, but if
-       multiple dylibs provide a weak definition of a symbol each will end up
-       with its own definition (similar to how weak symbols in Windows DLLs
-       behave). This will be fixed in the future.
+.. [3] Weak definitions are currently handled correctly within dylibs, but if
+       multiple dylibs provide a weak definition of a symbol then each will end
+       up with its own definition (similar to how weak definitions are handled
+       in Windows DLLs). This will be fixed in the future.

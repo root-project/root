@@ -12,7 +12,7 @@ YAML is a human readable data serialization language.  The full YAML language
 spec can be read at `yaml.org 
 <http://www.yaml.org/spec/1.2/spec.html#Introduction>`_.  The simplest form of
 yaml is just "scalars", "mappings", and "sequences".  A scalar is any number
-or string.  The pound/hash symbol (#) begins a comment line.   A mapping is 
+or string.  The pound/hash symbol (#) begins a comment line.   A mapping is
 a set of key-value pairs where the key ends with a colon.  For example:
 
 .. code-block:: yaml
@@ -288,7 +288,7 @@ ScalarEnumerationTraits
 -----------------------
 YAML I/O supports translating between in-memory enumerations and a set of string
 values in YAML documents. This is done by specializing ScalarEnumerationTraits<>
-on your enumeration type and define a enumeration() method. 
+on your enumeration type and define an enumeration() method.
 For instance, suppose you had an enumeration of CPUs and a struct with it as 
 a field:
 
@@ -391,7 +391,7 @@ on MyFlags and provide the bit values and their names.
 With the above, YAML I/O (when writing) will test mask each value in the 
 bitset trait against the flags field, and each that matches will
 cause the corresponding string to be added to the flow sequence.  The opposite
-is done when reading and any unknown string values will result in a error. With 
+is done when reading and any unknown string values will result in an error. With
 the above schema, a same valid YAML document is:
 
 .. code-block:: yaml
@@ -439,7 +439,7 @@ to the flow sequence.
 Custom Scalar
 -------------
 Sometimes for readability a scalar needs to be formatted in a custom way. For
-instance your internal data structure may use a integer for time (seconds since
+instance your internal data structure may use an integer for time (seconds since
 some epoch), but in YAML it would be much nicer to express that integer in 
 some time format (e.g. 4-May-2012 10:30pm).  YAML I/O has a way to support  
 custom formatting and parsing of scalar types by specializing ScalarTraits<> on
@@ -555,7 +555,7 @@ you can specialize on the class pointer.  Examples:
 No Normalization
 ----------------
 
-The mapping() method is responsible, if needed, for normalizing and 
+The ``mapping()`` method is responsible, if needed, for normalizing and 
 denormalizing. In a simple case where the native data structure requires no 
 normalization, the mapping method just uses mapOptional() or mapRequired() to 
 bind the struct's fields to YAML key names.  For example:
@@ -730,7 +730,7 @@ The YAML syntax supports tags as a way to specify the type of a node before
 it is parsed. This allows dynamic types of nodes.  But the YAML I/O model uses
 static typing, so there are limits to how you can use tags with the YAML I/O
 model. Recently, we added support to YAML I/O for checking/setting the optional 
-tag on a map. Using this functionality it is even possbile to support different 
+tag on a map. Using this functionality it is even possible to support different 
 mappings, as long as they are convertible.  
 
 To check a tag, inside your mapping() method you can use io.mapTag() to specify
@@ -739,15 +739,15 @@ what the tag should be.  This will also add that tag when writing yaml.
 Validation
 ----------
 
-Sometimes in a yaml map, each key/value pair is valid, but the combination is
+Sometimes in a YAML map, each key/value pair is valid, but the combination is
 not.  This is similar to something having no syntax errors, but still having
 semantic errors.  To support semantic level checking, YAML I/O allows
 an optional ``validate()`` method in a MappingTraits template specialization.  
 
-When parsing yaml, the ``validate()`` method is call *after* all key/values in 
+When parsing YAML, the ``validate()`` method is call *after* all key/values in 
 the map have been processed. Any error message returned by the ``validate()`` 
 method during input will be printed just a like a syntax error would be printed.
-When writing yaml, the ``validate()`` method is called *before* the yaml 
+When writing YAML, the ``validate()`` method is called *before* the YAML 
 key/values  are written.  Any error during output will trigger an ``assert()`` 
 because it is a programming error to have invalid struct values.
 
@@ -766,11 +766,11 @@ because it is a programming error to have invalid struct values.
       static void mapping(IO &io, Stuff &stuff) {
       ...
       }
-      static StringRef validate(IO &io, Stuff &stuff) {
+      static std::string validate(IO &io, Stuff &stuff) {
         // Look at all fields in 'stuff' and if there
         // are any bad values return a string describing
         // the error.  Otherwise return an empty string.
-        return StringRef();
+        return std::string{};
       }
     };
 

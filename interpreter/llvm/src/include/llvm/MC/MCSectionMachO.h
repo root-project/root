@@ -23,7 +23,6 @@ namespace llvm {
 /// system, these are also described in /usr/include/mach-o/loader.h.
 class MCSectionMachO final : public MCSection {
   char SegmentName[16];  // Not necessarily null terminated!
-  char SectionName[16];  // Not necessarily null terminated!
 
   /// This is the SECTION_TYPE and SECTION_ATTRIBUTES field of a section, drawn
   /// from the enums below.
@@ -44,12 +43,6 @@ public:
       return StringRef(SegmentName, 16);
     return StringRef(SegmentName);
   }
-  StringRef getSectionName() const {
-    // SectionName is not necessarily null terminated!
-    if (SectionName[15])
-      return StringRef(SectionName, 16);
-    return StringRef(SectionName);
-  }
 
   unsigned getTypeAndAttributes() const { return TypeAndAttributes; }
   unsigned getStubSize() const { return Reserved2; }
@@ -66,14 +59,14 @@ public:
   /// appear after a .section directive in a mach-o flavored .s file.  If
   /// successful, this fills in the specified Out parameters and returns an
   /// empty string.  When an invalid section specifier is present, this returns
-  /// a string indicating the problem. If no TAA was parsed, TAA is not altered,
+  /// an Error indicating the problem. If no TAA was parsed, TAA is not altered,
   /// and TAAWasSet becomes false.
-  static std::string ParseSectionSpecifier(StringRef Spec,       // In.
-                                           StringRef &Segment,   // Out.
-                                           StringRef &Section,   // Out.
-                                           unsigned  &TAA,       // Out.
-                                           bool      &TAAParsed, // Out.
-                                           unsigned  &StubSize); // Out.
+  static Error ParseSectionSpecifier(StringRef Spec,      // In.
+                                     StringRef &Segment,  // Out.
+                                     StringRef &Section,  // Out.
+                                     unsigned &TAA,       // Out.
+                                     bool &TAAParsed,     // Out.
+                                     unsigned &StubSize); // Out.
 
   void PrintSwitchToSection(const MCAsmInfo &MAI, const Triple &T,
                             raw_ostream &OS,

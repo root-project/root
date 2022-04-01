@@ -54,7 +54,7 @@ bool AArch64MachObjectWriter::getAArch64FixupKindMachOInfo(
   RelocType = unsigned(MachO::ARM64_RELOC_UNSIGNED);
   Log2Size = ~0U;
 
-  switch ((unsigned)Fixup.getKind()) {
+  switch (Fixup.getTargetKind()) {
   default:
     return false;
 
@@ -139,7 +139,7 @@ static bool canUseLocalRelocation(const MCSectionMachO &Section,
     return false;
 
   if (RefSec.getSegmentName() == "__DATA" &&
-      RefSec.getSectionName() == "__objc_classrefs")
+      RefSec.getName() == "__objc_classrefs")
     return false;
 
   // FIXME: ld64 currently handles internal pointer-sized relocations
@@ -373,7 +373,11 @@ void AArch64MachObjectWriter::recordRelocation(
        Type == MachO::ARM64_RELOC_PAGE21 ||
        Type == MachO::ARM64_RELOC_PAGEOFF12) &&
       Value) {
-    assert((Value & 0xff000000) == 0 && "Added relocation out of range!");
+    if (!isInt<24>(Value)) {
+      Asm.getContext().reportError(Fixup.getLoc(),
+                                   "addend too big for relocation");
+      return;
+    }
 
     MachO::any_relocation_info MRE;
     MRE.r_word0 = FixupOffset;
@@ -406,6 +410,6 @@ void AArch64MachObjectWriter::recordRelocation(
 std::unique_ptr<MCObjectTargetWriter>
 llvm::createAArch64MachObjectWriter(uint32_t CPUType, uint32_t CPUSubtype,
                                     bool IsILP32) {
-  return llvm::make_unique<AArch64MachObjectWriter>(CPUType, CPUSubtype,
-                                                    IsILP32);
+  return std::make_unique<AArch64MachObjectWriter>(CPUType, CPUSubtype,
+                                                   IsILP32);
 }

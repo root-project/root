@@ -4,6 +4,8 @@ LLDB Formatters for LLVM data types.
 Load into LLDB with 'command script import /path/to/lldbDataFormatters.py'
 """
 
+import lldb
+
 def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand('type category define -e llvm -l c++')
     debugger.HandleCommand('type synthetic add -w llvm '
@@ -15,16 +17,25 @@ def __lldb_init_module(debugger, internal_dict):
     debugger.HandleCommand('type synthetic add -w llvm '
                            '-l lldbDataFormatters.ArrayRefSynthProvider '
                            '-x "^llvm::ArrayRef<.+>$"')
+    debugger.HandleCommand('type synthetic add -w llvm '
+                           '-l lldbDataFormatters.OptionalSynthProvider '
+                           '-x "^llvm::Optional<.+>$"')
     debugger.HandleCommand('type summary add -w llvm '
                            '-F lldbDataFormatters.OptionalSummaryProvider '
                            '-x "^llvm::Optional<.+>$"')
     debugger.HandleCommand('type summary add -w llvm '
                            '-F lldbDataFormatters.SmallStringSummaryProvider '
                            '-x "^llvm::SmallString<.+>$"')
+    debugger.HandleCommand('type summary add -w llvm '
+                           '-F lldbDataFormatters.StringRefSummaryProvider '
+                           '-x "^llvm::StringRef$"')
+    debugger.HandleCommand('type summary add -w llvm '
+                           '-F lldbDataFormatters.ConstStringSummaryProvider '
+                           '-x "^lldb_private::ConstString$"')
 
 # Pretty printer for llvm::SmallVector/llvm::SmallVectorImpl
 class SmallVectorSynthProvider:
-    def __init__(self, valobj, dict):
+    def __init__(self, valobj, internal_dict):
         self.valobj = valobj;
         self.update() # initialize this provider
 
@@ -63,7 +74,7 @@ class SmallVectorSynthProvider:
 
 class ArrayRefSynthProvider:
     """ Provider for llvm::ArrayRef """
-    def __init__(self, valobj, dict):
+    def __init__(self, valobj, internal_dict):
         self.valobj = valobj;
         self.update() # initialize this provider
 
@@ -91,7 +102,7 @@ class ArrayRefSynthProvider:
         self.type_size = self.data_type.GetByteSize()
         assert self.type_size != 0
 
-def OptionalSummaryProvider(valobj, internal_dict):
+def GetOptionalValue(valobj):
     storage = valobj.GetChildMemberWithName('Storage')
     if not storage:
         storage = valobj
@@ -102,16 +113,57 @@ def OptionalSummaryProvider(valobj, internal_dict):
         return '<could not read llvm::Optional>'
 
     if hasVal == 0:
-        return 'None'
+        return None
 
     underlying_type = storage.GetType().GetTemplateArgumentType(0)
-    storage = storage.GetChildMemberWithName('storage')
-    return str(storage.Cast(underlying_type))
+    storage = storage.GetChildMemberWithName('value')
+    return storage.Cast(underlying_type)
+
+def OptionalSummaryProvider(valobj, internal_dict):
+    val = GetOptionalValue(valobj)
+    return val.summary if val else 'None'
+
+class OptionalSynthProvider:
+    """Provides deref support to llvm::Optional<T>"""
+    def __init__(self, valobj, internal_dict):
+        self.valobj = valobj
+
+    def num_children(self):
+        return self.valobj.num_children
+
+    def get_child_index(self, name):
+        if name == '$$dereference$$':
+            return self.valobj.num_children
+        return self.valobj.GetIndexOfChildWithName(name)
+
+    def get_child_at_index(self, index):
+        if index < self.valobj.num_children:
+            return self.valobj.GetChildAtIndex(index)
+        return GetOptionalValue(self.valobj) or lldb.SBValue()
 
 def SmallStringSummaryProvider(valobj, internal_dict):
     num_elements = valobj.GetNumChildren()
     res = "\""
     for i in range(0, num_elements):
-      res += valobj.GetChildAtIndex(i).GetValue().strip("'")
+        c = valobj.GetChildAtIndex(i).GetValue()
+        if c:
+            res += c.strip("'")
     res += "\""
     return res
+
+def StringRefSummaryProvider(valobj, internal_dict):
+    if valobj.GetNumChildren() == 2:
+        # StringRef's are also used to point at binary blobs in memory,
+        # so filter out suspiciously long strings.
+        max_length = 256
+        length = valobj.GetChildAtIndex(1).GetValueAsUnsigned(max_length)
+        if length == 0:
+            return "NULL"
+        if length < max_length:
+            return valobj.GetChildAtIndex(0).GetSummary()
+    return ""
+
+def ConstStringSummaryProvider(valobj, internal_dict):
+    if valobj.GetNumChildren() == 1:
+        return valobj.GetChildAtIndex(0).GetSummary()
+    return ""

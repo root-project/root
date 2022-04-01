@@ -12,6 +12,24 @@
 
 include "ARCInstrFormats.td"
 
+//===----------------------------------------------------------------------===//
+// Operand Pattern Stuff.
+//===----------------------------------------------------------------------===//
+
+// Operand for printing out a condition code.
+let PrintMethod = "printCCOperand" in
+  def CCOp : PredicateOperand<i32, (ops i32imm), (ops)>;
+
+// The "u6" operand of a RRU6-type instruction
+let PrintMethod = "printU6" in {
+  def u6 : Operand<i32>, ImmLeaf<i32, [{
+    return isUInt<6>(Imm);
+  }]>;
+  def wide_u6 : Operand<i64>, ImmLeaf<i64, [{
+    return isUInt<6>(Imm);
+  }]>;
+}
+
 // ---------------------------------------------------------------------------
 // Selection DAG Nodes.
 // ---------------------------------------------------------------------------
@@ -34,7 +52,7 @@ def ARCGAWrapper : SDNode<"ARCISD::GAWRAPPER", SDT_ARCmov, []>;
 // Comparison
 def ARCcmp : SDNode<"ARCISD::CMP", SDT_ARCcmptst, [SDNPOutGlue]>;
 
-// Conditionanal mov
+// Conditional mov
 def ARCcmov : SDNode<"ARCISD::CMOV", SDT_ARCcmov, [SDNPInGlue]>;
 
 // Conditional Branch
@@ -118,12 +136,13 @@ def STB_FAR : PseudoInstARC<(outs), (ins GPR32:$dst, MEMrlimm:$addr),
 
 // Generic 3 operand binary instructions (i.e., add r0, r1, r2).
 multiclass ArcBinaryInst<bits<5> major, bits<6> mincode,
-                       string opasm> {
+                       string opasm, bit Commutable> {
   // 3 register variant.
   def _rrr : F32_DOP_RR<major, mincode, 0, (outs GPR32:$A),
                         (ins GPR32:$B, GPR32:$C),
                         !strconcat(opasm, "\t$A, $B, $C"),
-                        []>;
+                        []>
+  { let isCommutable = Commutable; }
   def _f_rrr : F32_DOP_RR<major, mincode, 1, (outs GPR32:$A),
                           (ins GPR32:$B, GPR32:$C),
                           !strconcat(opasm, ".f\t$A, $B, $C"),
@@ -140,6 +159,23 @@ multiclass ArcBinaryInst<bits<5> major, bits<6> mincode,
                             !strconcat(opasm, ".f\t$A, $B, $U6"),
                             []>
   { let Defs = [STATUS32]; }
+
+  def _cc_rru6 : F32_DOP_CC_RRU6<major, mincode, 0, (outs GPR32:$A),
+                                 (ins immU6:$U6, ccond:$cc, GPR32:$B),
+                                 !strconcat(opasm, ".$cc\t$A, $B, $U6"),
+                                 []> {
+                                   let Uses = [STATUS32];
+                                   let Constraints = "$A = $B";
+                                 }
+
+  def _cc_f_rru6 : F32_DOP_CC_RRU6<major, mincode, 1, (outs GPR32:$A),
+                                   (ins immU6:$U6, ccond:$cc, GPR32:$B),
+                                   !strconcat(opasm, ".$cc.f\t$A, $B, $U6"),
+                                   []> {
+                                     let Defs = [STATUS32];
+                                     let Uses = [STATUS32];
+                                     let Constraints = "$A = $B";
+                                   }
 
   // 2 register with 32-bit immediate variant.
   def _rrlimm : F32_DOP_RLIMM<major, mincode, 0,
@@ -198,15 +234,17 @@ multiclass ArcUnaryInst<bits<5> major, bits<6> subop,
 }
 
 
-multiclass ArcBinaryGEN4Inst<bits<6> mincode, string opasm> :
-  ArcBinaryInst<0b00100, mincode, opasm>;
+multiclass ArcBinaryGEN4Inst<bits<6> mincode, string opasm, bit Commutable = 0> :
+  ArcBinaryInst<0b00100, mincode, opasm, Commutable>;
 multiclass ArcBinaryEXT5Inst<bits<6> mincode, string opasm> :
-  ArcBinaryInst<0b00101, mincode, opasm>;
+  ArcBinaryInst<0b00101, mincode, opasm, 0>;
 
 multiclass ArcUnaryGEN4Inst<bits<6> mincode, string opasm> :
   ArcUnaryInst<0b00100, mincode, opasm>;
+multiclass ArcUnaryEXT5Inst<bits<6> mincode, string opasm> :
+  ArcUnaryInst<0b00101, mincode, opasm>;
 
-// Pattern generation for differnt instruction variants.
+// Pattern generation for different instruction variants.
 multiclass MultiPat<SDPatternOperator InFrag,
                Instruction RRR, Instruction RRU6, Instruction RRLImm> {
   def _rrr : Pat<(InFrag i32:$B, i32:$C), (RRR i32:$B, i32:$C)>;
@@ -215,28 +253,29 @@ multiclass MultiPat<SDPatternOperator InFrag,
 }
 
 // ---------------------------------------------------------------------------
-// Instruction defintions and patterns for 3 operand binary instructions.
+// Instruction definitions and patterns for 3 operand binary instructions.
 // ---------------------------------------------------------------------------
 
 // Definitions for 3 operand binary instructions.
-defm ADD : ArcBinaryGEN4Inst<0b000000, "add">;
+defm ADD : ArcBinaryGEN4Inst<0b000000, "add",1>;
 defm SUB : ArcBinaryGEN4Inst<0b000010, "sub">;
 defm SUB1 : ArcBinaryGEN4Inst<0b010111, "sub1">;
 defm SUB2 : ArcBinaryGEN4Inst<0b011000, "sub2">;
 defm SUB3 : ArcBinaryGEN4Inst<0b011001, "sub3">;
-defm OR  : ArcBinaryGEN4Inst<0b000101, "or">;
-defm AND : ArcBinaryGEN4Inst<0b000100, "and">;
-defm XOR : ArcBinaryGEN4Inst<0b000111, "xor">;
-defm MAX : ArcBinaryGEN4Inst<0b001000, "max">;
-defm MIN : ArcBinaryGEN4Inst<0b001001, "min">;
+defm RSUB : ArcBinaryGEN4Inst<0b001110, "rsub">;
+defm OR  : ArcBinaryGEN4Inst<0b000101, "or",1>;
+defm AND : ArcBinaryGEN4Inst<0b000100, "and",1>;
+defm XOR : ArcBinaryGEN4Inst<0b000111, "xor",1>;
+defm MAX : ArcBinaryGEN4Inst<0b001000, "max",1>;
+defm MIN : ArcBinaryGEN4Inst<0b001001, "min",1>;
 defm ASL : ArcBinaryEXT5Inst<0b000000, "asl">;
 defm LSR : ArcBinaryEXT5Inst<0b000001, "lsr">;
 defm ASR : ArcBinaryEXT5Inst<0b000010, "asr">;
 defm ROR : ArcBinaryEXT5Inst<0b000011, "ror">;
-defm MPY  : ArcBinaryGEN4Inst<0b011010, "mpy">;
-defm MPYM : ArcBinaryGEN4Inst<0b011011, "mpym">;
-defm MPYMU : ArcBinaryGEN4Inst<0b011100, "mpymu">;
-defm SETEQ : ArcBinaryGEN4Inst<0b111000, "seteq">;
+defm MPY  : ArcBinaryGEN4Inst<0b011010, "mpy",1>;
+defm MPYM : ArcBinaryGEN4Inst<0b011011, "mpym",1>;
+defm MPYMU : ArcBinaryGEN4Inst<0b011100, "mpymu",1>;
+defm SETEQ : ArcBinaryGEN4Inst<0b111000, "seteq",1>;
 
 // Patterns for 3 operand binary instructions.
 defm : MultiPat<add, ADD_rrr, ADD_rru6, ADD_rrlimm>;
@@ -260,6 +299,9 @@ defm : MultiPat<mulhu, MPYMU_rrr, MPYMU_rru6, MPYMU_rrlimm>;
 // General unary instruction definitions.
 defm SEXB : ArcUnaryGEN4Inst<0b000101, "sexb">;
 defm SEXH : ArcUnaryGEN4Inst<0b000110, "sexh">;
+
+// Extension unary instruction definitions.
+defm FLS : ArcUnaryEXT5Inst<0b010011, "fls">;
 
 // General Unary Instruction fragments.
 def : Pat<(sext_inreg i32:$a, i8), (SEXB_rr i32:$a)>;
@@ -298,14 +340,24 @@ def MOV_ru6 : F32_DOP_RU6<0b00100, 0b001010, 0,
 def cmov : PatFrag<(ops node:$op1, node:$op2, node:$cc),
                    (ARCcmov $op1, $op2, $cc)>;
 let Uses = [STATUS32] in {
-def MOVcc : F32_DOP_CC_RR<0b00100, 0b001010, 0,
-               (outs GPR32:$B),
-               (ins GPR32:$C, GPR32:$fval, cmovpred:$cc),
-               !strconcat("mov.", "$cc\t$B, $C"),
-               [(set GPR32:$B, (cmov i32:$C, i32:$fval, cmovpred:$cc))]> {
-  let Constraints = "$B = $fval";
+  def MOVcc : F32_DOP_CC_RR<0b00100, 0b001010, 0,
+                 (outs GPR32:$B),
+                 (ins GPR32:$C, GPR32:$fval, cmovpred:$cc),
+                 !strconcat("mov.", "$cc\t$B, $C"),
+                 [(set GPR32:$B, (cmov i32:$C, i32:$fval, cmovpred:$cc))]> {
+    let Constraints = "$B = $fval";
+  }
+
+  def MOVcc_ru6 : F32_SOP_CC_RU6<0b00100, 0b001010, 0,
+                 (outs GPR32:$b), (ins u6:$c, CCOp:$cc, GPR32:$b2),
+                 "mov.$cc\t$b, $c", []> {
+    let isAsCheapAsAMove=0;
+    let isPredicable=1;
+    let isReMaterializable=0;
+    let Constraints="$b2 = $b";
+  }
 }
-}
+
 def : Pat<(ARCGAWrapper tglobaladdr:$addr),
            (MOV_rlimm tglobaladdr:$addr)>;
 
@@ -344,7 +396,7 @@ let isBranch = 1, isTerminator = 1 in {
   // At worst, this expands into 2 4-byte instructions.
   def BRcc_rr_p : PseudoInstARC<(outs),
                                 (ins btarget:$T, GPR32:$B, GPR32:$C, ccond:$cc),
-                                "pbr$cc\t$B, $C, $T", 
+                                "pbr$cc\t$B, $C, $T",
                                 [(ARCbrcc bb:$T, i32:$B, i32:$C, imm32:$cc)]>
                                 { let Size = 8; }
 
@@ -430,7 +482,7 @@ def LEAVE_S : F16_SP_OPS<0b110,
   (outs), (ins immU<7>:$u7), "leave_s\t$u7"> {
 
   bits<7> u7;
-  
+
   let fieldB = u7{6-4};
   let fieldU{4-1} = u7{3-0};
   let fieldU{0} = 0b0;
@@ -440,7 +492,7 @@ def ENTER_S : F16_SP_OPS<0b111,
   (outs), (ins immU<6>:$u6), "enter_s\t$u6"> {
 
   bits<6> u6;
-  
+
   let fieldB{2} = 0;
   let fieldB{1-0} = u6{5-4};
   let fieldU{4-1} = u6{3-0};
@@ -452,19 +504,19 @@ def ENTER_S : F16_SP_OPS<0b111,
 //----------------------------------------------------------------------------
 class COMPACT_MOV_S :
   F16_COMPACT<0b0, (outs GPR32:$g), (ins GPR32:$h),
-          "mov_s\t$g, $h"> {  
+          "mov_s\t$g, $h"> {
   let DecoderMethod = "DecodeMoveHRegInstruction";
 }
 
 def COMPACT_MOV_S_limm : COMPACT_MOV_S {
-  bits<32> LImm;  
+  bits<32> LImm;
   let Inst{47-16} = LImm;
 
-  bits<5> LImmReg = 0b11110;  
+  bits<5> LImmReg = 0b11110;
   let Inst{7-5} = LImmReg{2-0};
   let Inst{1-0} = LImmReg{4-3};
 
-  let Size = 6;  
+  let Size = 6;
 }
 
 def COMPACT_MOV_S_hreg : COMPACT_MOV_S;
@@ -548,9 +600,9 @@ def GP_ADD_S : F16_GP_LD_ADD<0b11, (ins immS<11>:$s),
 //----------------------------------------------------------------------------
 def PCL_LD : InstARC<2, (outs GPR32:$b), (ins immU<10>:$u10),
  "ld_s\t$b, [%pcl, $u10]", []> {
- 
-  bits<3> b; 
-  bits<10> u10; 
+
+  bits<3> b;
+  bits<10> u10;
 
   let Inst{15-11} = 0b11010;
   let Inst{10-8} = b;
@@ -587,11 +639,11 @@ def BL_S :
   InstARC<2, (outs), (ins btargetS13:$s13), "bl_s\t$s13", []> {
 
   let Inst{15-11} = 0b11111;
-  
+
   bits<13> s13;
   let Inst{10-0} = s13{12-2};
   let s13{1-0} = 0b00;
-  
+
   let isCall = 1;
   let isBarrier = 1;
 }

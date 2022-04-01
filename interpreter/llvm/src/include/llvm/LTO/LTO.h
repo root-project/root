@@ -17,28 +17,24 @@
 
 #include "llvm/ADT/MapVector.h"
 #include "llvm/ADT/StringMap.h"
-#include "llvm/ADT/StringSet.h"
-#include "llvm/IR/DiagnosticInfo.h"
+#include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/IR/ModuleSummaryIndex.h"
-#include "llvm/IR/RemarkStreamer.h"
 #include "llvm/LTO/Config.h"
-#include "llvm/Linker/IRMover.h"
 #include "llvm/Object/IRSymtab.h"
 #include "llvm/Support/Error.h"
-#include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Support/thread.h"
-#include "llvm/Target/TargetOptions.h"
 #include "llvm/Transforms/IPO/FunctionImport.h"
 
 namespace llvm {
 
-class BitcodeModule;
 class Error;
+class IRMover;
 class LLVMContext;
 class MemoryBufferRef;
 class Module;
-class Target;
 class raw_pwrite_stream;
+class Target;
+class ToolOutputFile;
 
 /// Resolve linkage for prevailing symbols in the \p Index. Linkage changes
 /// recorded in the index and the ThinLTO backends must apply the changes to
@@ -47,7 +43,7 @@ class raw_pwrite_stream;
 /// This is done for correctness (if value exported, ensure we always
 /// emit a copy), and compile-time optimization (allow drop of duplicates).
 void thinLTOResolvePrevailingInIndex(
-    ModuleSummaryIndex &Index,
+    const lto::Config &C, ModuleSummaryIndex &Index,
     function_ref<bool(GlobalValue::GUID, const GlobalValueSummary *)>
         isPrevailing,
     function_ref<void(StringRef, GlobalValue::GUID, GlobalValue::LinkageTypes)>
@@ -59,7 +55,9 @@ void thinLTOResolvePrevailingInIndex(
 /// must apply the changes to the Module via thinLTOInternalizeModule.
 void thinLTOInternalizeAndPromoteInIndex(
     ModuleSummaryIndex &Index,
-    function_ref<bool(StringRef, GlobalValue::GUID)> isExported);
+    function_ref<bool(StringRef, ValueInfo)> isExported,
+    function_ref<bool(GlobalValue::GUID, const GlobalValueSummary *)>
+        isPrevailing);
 
 /// Computes a unique hash for the Module considering the current list of
 /// export/import and other global analysis results.
@@ -84,14 +82,18 @@ std::string getThinLTOOutputFile(const std::string &Path,
                                  const std::string &NewPrefix);
 
 /// Setup optimization remarks.
-Expected<std::unique_ptr<ToolOutputFile>>
-setupOptimizationRemarks(LLVMContext &Context, StringRef RemarksFilename,
-                         StringRef RemarksPasses, StringRef RemarksFormat,
-                         bool RemarksWithHotness, int Count = -1);
+Expected<std::unique_ptr<ToolOutputFile>> setupLLVMOptimizationRemarks(
+    LLVMContext &Context, StringRef RemarksFilename, StringRef RemarksPasses,
+    StringRef RemarksFormat, bool RemarksWithHotness,
+    Optional<uint64_t> RemarksHotnessThreshold = 0, int Count = -1);
 
 /// Setups the output file for saving statistics.
 Expected<std::unique_ptr<ToolOutputFile>>
 setupStatsFile(StringRef StatsFilename);
+
+/// Produces a container ordering for optimal multi-threaded processing. Returns
+/// ordered indices to elements in the input array.
+std::vector<int> generateModulesOrdering(ArrayRef<BitcodeModule *> R);
 
 class LTO;
 struct SymbolResolution;
@@ -117,7 +119,7 @@ private:
 
   StringRef TargetTriple, SourceFileName, COFFLinkerOpts;
   std::vector<StringRef> DependentLibraries;
-  std::vector<StringRef> ComdatTable;
+  std::vector<std::pair<StringRef, Comdat::SelectionKind>> ComdatTable;
 
 public:
   ~InputFile();
@@ -170,7 +172,9 @@ public:
   StringRef getSourceFileName() const { return SourceFileName; }
 
   // Returns a table with all the comdats used by this file.
-  ArrayRef<StringRef> getComdatTable() const { return ComdatTable; }
+  ArrayRef<std::pair<StringRef, Comdat::SelectionKind>> getComdatTable() const {
+    return ComdatTable;
+  }
 
   // Returns the only BitcodeModule from InputFile.
   BitcodeModule &getSingleBitcodeModule();
@@ -220,12 +224,13 @@ using NativeObjectCache =
 /// The details of this type definition aren't important; clients can only
 /// create a ThinBackend using one of the create*ThinBackend() functions below.
 using ThinBackend = std::function<std::unique_ptr<ThinBackendProc>(
-    Config &C, ModuleSummaryIndex &CombinedIndex,
+    const Config &C, ModuleSummaryIndex &CombinedIndex,
     StringMap<GVSummaryMapTy> &ModuleToDefinedGVSummaries,
     AddStreamFn AddStream, NativeObjectCache Cache)>;
 
 /// This ThinBackend runs the individual backend jobs in-process.
-ThinBackend createInProcessThinBackend(unsigned ParallelismLevel);
+/// The default value means to use one job per hardware core (not hyper-thread).
+ThinBackend createInProcessThinBackend(ThreadPoolStrategy Parallelism);
 
 /// This ThinBackend writes individual module indexes to files, instead of
 /// running the individual backend jobs. This backend is for distributed builds
@@ -296,14 +301,19 @@ public:
   /// Cache) for each task identifier.
   Error run(AddStreamFn AddStream, NativeObjectCache Cache = nullptr);
 
+  /// Static method that returns a list of libcall symbols that can be generated
+  /// by LTO but might not be visible from bitcode symbol table.
+  static ArrayRef<const char*> getRuntimeLibcallSymbols();
+
 private:
   Config Conf;
 
   struct RegularLTOState {
-    RegularLTOState(unsigned ParallelCodeGenParallelismLevel, Config &Conf);
+    RegularLTOState(unsigned ParallelCodeGenParallelismLevel,
+                    const Config &Conf);
     struct CommonResolution {
       uint64_t Size = 0;
-      unsigned Align = 0;
+      MaybeAlign Align;
       /// Record if at least one instance of the common was marked as prevailing
       bool Prevailing = false;
     };
@@ -323,14 +333,20 @@ private:
       std::vector<GlobalValue *> Keep;
     };
     std::vector<AddedModule> ModsWithSummaries;
+    bool EmptyCombinedModule = true;
   } RegularLTO;
+
+  using ModuleMapType = MapVector<StringRef, BitcodeModule>;
 
   struct ThinLTOState {
     ThinLTOState(ThinBackend Backend);
 
     ThinBackend Backend;
     ModuleSummaryIndex CombinedIndex;
-    MapVector<StringRef, BitcodeModule> ModuleMap;
+    // The full set of bitcode modules in input order.
+    ModuleMapType ModuleMap;
+    // The bitcode modules to compile, if specified by the LTO Config.
+    Optional<ModuleMapType> ModulesToCompile;
     DenseMap<GlobalValue::GUID, StringRef> PrevailingModuleForGUID;
   } ThinLTO;
 
@@ -349,6 +365,10 @@ private:
     /// (i.e. in either a regular object or a regular LTO module without a
     /// summary).
     bool VisibleOutsideSummary = false;
+
+    /// The symbol was exported dynamically, and therefore could be referenced
+    /// by a shared library not visible to the linker.
+    bool ExportDynamic = false;
 
     bool UnnamedAddr = true;
 
@@ -420,6 +440,10 @@ private:
 
   // Use Optional to distinguish false from not yet initialized.
   Optional<bool> EnableSplitLTOUnit;
+
+  // Identify symbols exported dynamically, and that therefore could be
+  // referenced by a shared library not visible to the linker.
+  DenseSet<GlobalValue::GUID> DynamicExportSymbols;
 };
 
 /// The resolution for a symbol. The linker must provide a SymbolResolution for
@@ -427,7 +451,7 @@ private:
 struct SymbolResolution {
   SymbolResolution()
       : Prevailing(0), FinalDefinitionInLinkageUnit(0), VisibleToRegularObj(0),
-        LinkerRedefined(0) {}
+        ExportDynamic(0), LinkerRedefined(0) {}
 
   /// The linker has chosen this definition of the symbol.
   unsigned Prevailing : 1;
@@ -438,6 +462,10 @@ struct SymbolResolution {
 
   /// The definition of this symbol is visible outside of the LTO unit.
   unsigned VisibleToRegularObj : 1;
+
+  /// The symbol was exported dynamically, and therefore could be referenced
+  /// by a shared library not visible to the linker.
+  unsigned ExportDynamic : 1;
 
   /// Linker redefined version of the symbol which appeared in -wrap or -defsym
   /// linker option.

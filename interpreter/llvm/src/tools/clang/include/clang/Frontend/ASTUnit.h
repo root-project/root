@@ -172,7 +172,7 @@ private:
 
   /// Sorted (by file offset) vector of pairs of file offset/Decl.
   using LocDeclsTy = SmallVector<std::pair<unsigned, Decl *>, 64>;
-  using FileDeclsTy = llvm::DenseMap<FileID, LocDeclsTy *>;
+  using FileDeclsTy = llvm::DenseMap<FileID, std::unique_ptr<LocDeclsTy>>;
 
   /// Map from FileID to the file-level declarations that it contains.
   /// The files and decls are only local (and non-preamble) ones.
@@ -315,7 +315,7 @@ public:
 
   CodeCompletionTUInfo &getCodeCompletionTUInfo() {
     if (!CCTUInfo)
-      CCTUInfo = llvm::make_unique<CodeCompletionTUInfo>(
+      CCTUInfo = std::make_unique<CodeCompletionTUInfo>(
           std::make_shared<GlobalCodeCompletionAllocator>());
     return *CCTUInfo;
   }
@@ -390,7 +390,7 @@ private:
   /// just about any usage.
   /// Becomes a noop in release mode; only useful for debug mode checking.
   class ConcurrencyState {
-    void *Mutex; // a llvm::sys::MutexImpl in debug;
+    void *Mutex; // a std::recursive_mutex in debug;
 
   public:
     ConcurrencyState();
@@ -688,14 +688,15 @@ public:
   /// lifetime is expected to extend past that of the returned ASTUnit.
   ///
   /// \returns - The initialized ASTUnit or null if the AST failed to load.
-  static std::unique_ptr<ASTUnit> LoadFromASTFile(
-      const std::string &Filename, const PCHContainerReader &PCHContainerRdr,
-      WhatToLoad ToLoad, IntrusiveRefCntPtr<DiagnosticsEngine> Diags,
-      const FileSystemOptions &FileSystemOpts, bool UseDebugInfo = false,
-      bool OnlyLocalDecls = false, ArrayRef<RemappedFile> RemappedFiles = None,
-      CaptureDiagsKind CaptureDiagnostics = CaptureDiagsKind::None,
-      bool AllowPCHWithCompilerErrors = false,
-      bool UserFilesAreVolatile = false);
+  static std::unique_ptr<ASTUnit>
+  LoadFromASTFile(const std::string &Filename,
+                  const PCHContainerReader &PCHContainerRdr, WhatToLoad ToLoad,
+                  IntrusiveRefCntPtr<DiagnosticsEngine> Diags,
+                  const FileSystemOptions &FileSystemOpts,
+                  bool UseDebugInfo = false, bool OnlyLocalDecls = false,
+                  CaptureDiagsKind CaptureDiagnostics = CaptureDiagsKind::None,
+                  bool AllowASTWithCompilerErrors = false,
+                  bool UserFilesAreVolatile = false);
 
 private:
   /// Helper function for \c LoadFromCompilerInvocation() and
@@ -756,7 +757,6 @@ public:
       CaptureDiagsKind CaptureDiagnostics = CaptureDiagsKind::None,
       unsigned PrecompilePreambleAfterNParses = 0,
       bool CacheCodeCompletionResults = false,
-      bool IncludeBriefCommentsInCodeCompletion = false,
       bool UserFilesAreVolatile = false,
       std::unique_ptr<ASTUnit> *ErrAST = nullptr);
 
@@ -832,6 +832,7 @@ public:
           SkipFunctionBodiesScope::None,
       bool SingleFileParse = false, bool UserFilesAreVolatile = false,
       bool ForSerialization = false,
+      bool RetainExcludedConditionalBlocks = false,
       llvm::Optional<StringRef> ModuleFormat = llvm::None,
       std::unique_ptr<ASTUnit> *ErrAST = nullptr,
       IntrusiveRefCntPtr<llvm::vfs::FileSystem> VFS = nullptr);

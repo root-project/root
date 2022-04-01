@@ -39,7 +39,7 @@ AArch64MCInstLower::GetGlobalAddressSymbol(const MachineOperand &MO) const {
   unsigned TargetFlags = MO.getTargetFlags();
   const Triple &TheTriple = Printer.TM.getTargetTriple();
   if (!TheTriple.isOSBinFormatCOFF())
-    return Printer.getSymbol(GV);
+    return Printer.getSymbolPreferLocal(*GV);
 
   assert(TheTriple.isOSWindows() &&
          "Windows is the only supported COFF target");
@@ -148,6 +148,8 @@ MCOperand AArch64MCInstLower::lowerSymbolOperandELF(const MachineOperand &MO,
       RefFlags |= AArch64MCExpr::VK_TLSDESC;
       break;
     }
+  } else if (MO.getTargetFlags() & AArch64II::MO_PREL) {
+    RefFlags |= AArch64MCExpr::VK_PREL;
   } else {
     // No modifier means this is a generic reference, classified as absolute for
     // the cases where it matters (:abs_g0: etc).
@@ -201,6 +203,12 @@ MCOperand AArch64MCInstLower::lowerSymbolOperandCOFF(const MachineOperand &MO,
     RefFlags |= AArch64MCExpr::VK_SABS;
   } else {
     RefFlags |= AArch64MCExpr::VK_ABS;
+
+    if ((MO.getTargetFlags() & AArch64II::MO_FRAGMENT) == AArch64II::MO_PAGE)
+      RefFlags |= AArch64MCExpr::VK_PAGE;
+    else if ((MO.getTargetFlags() & AArch64II::MO_FRAGMENT) ==
+             AArch64II::MO_PAGEOFF)
+      RefFlags |= AArch64MCExpr::VK_PAGEOFF | AArch64MCExpr::VK_NC;
   }
 
   if ((MO.getTargetFlags() & AArch64II::MO_FRAGMENT) == AArch64II::MO_G3)

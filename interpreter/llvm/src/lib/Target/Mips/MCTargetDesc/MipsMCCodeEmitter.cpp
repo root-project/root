@@ -129,7 +129,7 @@ void MipsMCCodeEmitter::EmitByte(unsigned char C, raw_ostream &OS) const {
   OS << (char)C;
 }
 
-void MipsMCCodeEmitter::EmitInstruction(uint64_t Val, unsigned Size,
+void MipsMCCodeEmitter::emitInstruction(uint64_t Val, unsigned Size,
                                         const MCSubtargetInfo &STI,
                                         raw_ostream &OS) const {
   // Output the instruction encoding in little endian byte order.
@@ -137,8 +137,8 @@ void MipsMCCodeEmitter::EmitInstruction(uint64_t Val, unsigned Size,
   //   mips32r2:   4 | 3 | 2 | 1
   //   microMIPS:  2 | 1 | 4 | 3
   if (IsLittleEndian && Size == 4 && isMicroMips(STI)) {
-    EmitInstruction(Val >> 16, 2, STI, OS);
-    EmitInstruction(Val, 2, STI, OS);
+    emitInstruction(Val >> 16, 2, STI, OS);
+    emitInstruction(Val, 2, STI, OS);
   } else {
     for (unsigned i = 0; i < Size; ++i) {
       unsigned Shift = IsLittleEndian ? i * 8 : (Size - 1 - i) * 8;
@@ -226,7 +226,7 @@ encodeInstruction(const MCInst &MI, raw_ostream &OS,
   if (!Size)
     llvm_unreachable("Desc.getSize() returns 0");
 
-  EmitInstruction(Binary, Size, STI, OS);
+  emitInstruction(Binary, Size, STI, OS);
 }
 
 /// getBranchTargetOpValue - Return binary encoding of the branch
@@ -485,8 +485,11 @@ getJumpOffset16OpValue(const MCInst &MI, unsigned OpNo,
   assert(MO.isExpr() &&
          "getJumpOffset16OpValue expects only expressions or an immediate");
 
-   // TODO: Push fixup.
-   return 0;
+  const MCExpr *Expr = MO.getExpr();
+  Mips::Fixups FixupKind =
+      isMicroMips(STI) ? Mips::fixup_MICROMIPS_LO16 : Mips::fixup_Mips_LO16;
+  Fixups.push_back(MCFixup::create(0, Expr, MCFixupKind(FixupKind)));
+  return 0;
 }
 
 /// getJumpTargetOpValue - Return binary encoding of the jump
@@ -597,7 +600,8 @@ getExprOpValue(const MCExpr *Expr, SmallVectorImpl<MCFixup> &Fixups,
   }
 
   if (Kind == MCExpr::Binary) {
-    unsigned Res = getExprOpValue(cast<MCBinaryExpr>(Expr)->getLHS(), Fixups, STI);
+    unsigned Res =
+        getExprOpValue(cast<MCBinaryExpr>(Expr)->getLHS(), Fixups, STI);
     Res += getExprOpValue(cast<MCBinaryExpr>(Expr)->getRHS(), Fixups, STI);
     return Res;
   }
@@ -719,20 +723,8 @@ getExprOpValue(const MCExpr *Expr, SmallVectorImpl<MCFixup> &Fixups,
     return 0;
   }
 
-  if (Kind == MCExpr::SymbolRef) {
-    Mips::Fixups FixupKind = Mips::Fixups(0);
-
-    switch(cast<MCSymbolRefExpr>(Expr)->getKind()) {
-    default: llvm_unreachable("Unknown fixup kind!");
-      break;
-    case MCSymbolRefExpr::VK_None:
-      FixupKind = Mips::fixup_Mips_32; // FIXME: This is ok for O32/N32 but not N64.
-      break;
-    } // switch
-
-    Fixups.push_back(MCFixup::create(0, Expr, MCFixupKind(FixupKind)));
-    return 0;
-  }
+  if (Kind == MCExpr::SymbolRef)
+    Ctx.reportError(Expr->getLoc(), "expected an immediate");
   return 0;
 }
 
@@ -748,9 +740,8 @@ getMachineOpValue(const MCInst &MI, const MCOperand &MO,
     return RegNo;
   } else if (MO.isImm()) {
     return static_cast<unsigned>(MO.getImm());
-  } else if (MO.isFPImm()) {
-    return static_cast<unsigned>(APFloat(MO.getFPImm())
-        .bitcastToAPInt().getHiBits(32).getLimitedValue());
+  } else if (MO.isDFPImm()) {
+    return static_cast<unsigned>(bit_cast<double>(MO.getDFPImm()));
   }
   // MO must be an Expr.
   assert(MO.isExpr());
@@ -765,7 +756,8 @@ unsigned MipsMCCodeEmitter::getMemEncoding(const MCInst &MI, unsigned OpNo,
                                            const MCSubtargetInfo &STI) const {
   // Base register is encoded in bits 20-16, offset is encoded in bits 15-0.
   assert(MI.getOperand(OpNo).isReg());
-  unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo),Fixups, STI) << 16;
+  unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo), Fixups, STI)
+                     << 16;
   unsigned OffBits = getMachineOpValue(MI, MI.getOperand(OpNo+1), Fixups, STI);
 
   // Apply the scale factor if there is one.
@@ -854,7 +846,8 @@ getMemEncodingMMImm9(const MCInst &MI, unsigned OpNo,
   assert(MI.getOperand(OpNo).isReg());
   unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo), Fixups,
                                        STI) << 16;
-  unsigned OffBits = getMachineOpValue(MI, MI.getOperand(OpNo + 1), Fixups, STI);
+  unsigned OffBits =
+      getMachineOpValue(MI, MI.getOperand(OpNo + 1), Fixups, STI);
 
   return (OffBits & 0x1FF) | RegBits;
 }
@@ -889,7 +882,8 @@ getMemEncodingMMImm12(const MCInst &MI, unsigned OpNo,
 
   // Base register is encoded in bits 20-16, offset is encoded in bits 11-0.
   assert(MI.getOperand(OpNo).isReg());
-  unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo), Fixups, STI) << 16;
+  unsigned RegBits = getMachineOpValue(MI, MI.getOperand(OpNo), Fixups, STI)
+                     << 16;
   unsigned OffBits = getMachineOpValue(MI, MI.getOperand(OpNo+1), Fixups, STI);
 
   return (OffBits & 0x0FFF) | RegBits;

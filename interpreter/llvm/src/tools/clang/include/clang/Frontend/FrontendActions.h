@@ -34,6 +34,17 @@ public:
   bool usesPreprocessorOnly() const override { return false; }
 };
 
+/// Preprocessor-based frontend action that also loads PCH files.
+class ReadPCHAndPreprocessAction : public FrontendAction {
+  void ExecuteAction() override;
+
+  std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
+                                                 StringRef InFile) override;
+
+public:
+  bool usesPreprocessorOnly() const override { return false; }
+};
+
 class DumpCompilerOptionsAction : public FrontendAction {
   std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
                                                  StringRef InFile) override {
@@ -117,26 +128,17 @@ protected:
   }
 
   bool hasASTFileSupport() const override { return false; }
+
+  bool shouldEraseOutputFiles() override;
 };
 
-class GenerateInterfaceStubAction : public ASTFrontendAction {
+class GenerateInterfaceStubsAction : public ASTFrontendAction {
 protected:
+  std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
+                                                 StringRef InFile) override;
+
   TranslationUnitKind getTranslationUnitKind() override { return TU_Module; }
-
   bool hasASTFileSupport() const override { return false; }
-};
-
-// Support different interface stub formats this way:
-class GenerateInterfaceYAMLExpV1Action : public GenerateInterfaceStubAction {
-protected:
-  std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
-                                                 StringRef InFile) override;
-};
-
-class GenerateInterfaceTBEExpV1Action : public GenerateInterfaceStubAction {
-protected:
-  std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI,
-                                                 StringRef InFile) override;
 };
 
 class GenerateModuleFromModuleMapAction : public GenerateModuleAction {

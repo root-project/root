@@ -12,7 +12,6 @@
 
 #include "llvm/CodeGen/IntrinsicLowering.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -49,14 +48,6 @@ static CallInst *ReplaceCallWith(const char *NewFn, CallInst *CI,
     CI->replaceAllUsesWith(NewCI);
   return NewCI;
 }
-
-// VisualStudio defines setjmp as _setjmp
-#if defined(_MSC_VER) && defined(setjmp) && \
-                         !defined(setjmp_undefined_for_msvc)
-#  pragma push_macro("setjmp")
-#  undef setjmp
-#  define setjmp_undefined_for_msvc
-#endif
 
 /// Emit the code to lower bswap of V before the specified instruction IP.
 static Value *LowerBSWAP(LLVMContext &Context, Value *V, Instruction *IP) {
@@ -211,22 +202,21 @@ static Value *LowerCTLZ(LLVMContext &Context, Value *V, Instruction *IP) {
 static void ReplaceFPIntrinsicWithCall(CallInst *CI, const char *Fname,
                                        const char *Dname,
                                        const char *LDname) {
-  CallSite CS(CI);
   switch (CI->getArgOperand(0)->getType()->getTypeID()) {
   default: llvm_unreachable("Invalid type in intrinsic");
   case Type::FloatTyID:
-    ReplaceCallWith(Fname, CI, CS.arg_begin(), CS.arg_end(),
-                  Type::getFloatTy(CI->getContext()));
+    ReplaceCallWith(Fname, CI, CI->arg_begin(), CI->arg_end(),
+                    Type::getFloatTy(CI->getContext()));
     break;
   case Type::DoubleTyID:
-    ReplaceCallWith(Dname, CI, CS.arg_begin(), CS.arg_end(),
-                  Type::getDoubleTy(CI->getContext()));
+    ReplaceCallWith(Dname, CI, CI->arg_begin(), CI->arg_end(),
+                    Type::getDoubleTy(CI->getContext()));
     break;
   case Type::X86_FP80TyID:
   case Type::FP128TyID:
   case Type::PPC_FP128TyID:
-    ReplaceCallWith(LDname, CI, CS.arg_begin(), CS.arg_end(),
-                  CI->getArgOperand(0)->getType());
+    ReplaceCallWith(LDname, CI, CI->arg_begin(), CI->arg_end(),
+                    CI->getArgOperand(0)->getType());
     break;
   }
 }
@@ -238,7 +228,6 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
   const Function *Callee = CI->getCalledFunction();
   assert(Callee && "Cannot lower an indirect call!");
 
-  CallSite CS(CI);
   switch (Callee->getIntrinsicID()) {
   case Intrinsic::not_intrinsic:
     report_fatal_error("Cannot lower a call to a non-intrinsic function '"+
@@ -254,34 +243,6 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
     break;
   }
 
-    // The setjmp/longjmp intrinsics should only exist in the code if it was
-    // never optimized (ie, right out of the CFE), or if it has been hacked on
-    // by the lowerinvoke pass.  In both cases, the right thing to do is to
-    // convert the call to an explicit setjmp or longjmp call.
-  case Intrinsic::setjmp: {
-    Value *V = ReplaceCallWith("setjmp", CI, CS.arg_begin(), CS.arg_end(),
-                               Type::getInt32Ty(Context));
-    if (!CI->getType()->isVoidTy())
-      CI->replaceAllUsesWith(V);
-    break;
-  }
-  case Intrinsic::sigsetjmp:
-     if (!CI->getType()->isVoidTy())
-       CI->replaceAllUsesWith(Constant::getNullValue(CI->getType()));
-     break;
-
-  case Intrinsic::longjmp: {
-    ReplaceCallWith("longjmp", CI, CS.arg_begin(), CS.arg_end(),
-                    Type::getVoidTy(Context));
-    break;
-  }
-
-  case Intrinsic::siglongjmp: {
-    // Insert the call to abort
-    ReplaceCallWith("abort", CI, CS.arg_end(), CS.arg_end(),
-                    Type::getVoidTy(Context));
-    break;
-  }
   case Intrinsic::ctpop:
     CI->replaceAllUsesWith(LowerCTPOP(Context, CI->getArgOperand(0), CI));
     break;
@@ -368,6 +329,7 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
     break;
 
   case Intrinsic::assume:
+  case Intrinsic::experimental_noalias_scope_decl:
   case Intrinsic::var_annotation:
     break;   // Strip out these intrinsics
 
@@ -458,6 +420,10 @@ void IntrinsicLowering::LowerIntrinsicCall(CallInst *CI) {
   }
   case Intrinsic::round: {
     ReplaceFPIntrinsicWithCall(CI, "roundf", "round", "roundl");
+    break;
+  }
+  case Intrinsic::roundeven: {
+    ReplaceFPIntrinsicWithCall(CI, "roundevenf", "roundeven", "roundevenl");
     break;
   }
   case Intrinsic::copysign: {

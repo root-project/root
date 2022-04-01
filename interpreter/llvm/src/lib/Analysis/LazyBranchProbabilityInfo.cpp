@@ -17,6 +17,7 @@
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/Dominators.h"
+#include "llvm/InitializePasses.h"
 
 using namespace llvm;
 
@@ -45,9 +46,9 @@ void LazyBranchProbabilityInfoPass::getAnalysisUsage(AnalysisUsage &AU) const {
   // We require DT so it's available when LI is available. The LI updating code
   // asserts that DT is also present so if we don't make sure that we have DT
   // here, that assert will trigger.
-  AU.addRequired<DominatorTreeWrapperPass>();
-  AU.addRequired<LoopInfoWrapperPass>();
-  AU.addRequired<TargetLibraryInfoWrapperPass>();
+  AU.addRequiredTransitive<DominatorTreeWrapperPass>();
+  AU.addRequiredTransitive<LoopInfoWrapperPass>();
+  AU.addRequiredTransitive<TargetLibraryInfoWrapperPass>();
   AU.setPreservesAll();
 }
 
@@ -55,15 +56,16 @@ void LazyBranchProbabilityInfoPass::releaseMemory() { LBPI.reset(); }
 
 bool LazyBranchProbabilityInfoPass::runOnFunction(Function &F) {
   LoopInfo &LI = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-  TargetLibraryInfo &TLI = getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
-  LBPI = llvm::make_unique<LazyBranchProbabilityInfo>(&F, &LI, &TLI);
+  TargetLibraryInfo &TLI =
+      getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(F);
+  LBPI = std::make_unique<LazyBranchProbabilityInfo>(&F, &LI, &TLI);
   return false;
 }
 
 void LazyBranchProbabilityInfoPass::getLazyBPIAnalysisUsage(AnalysisUsage &AU) {
-  AU.addRequired<LazyBranchProbabilityInfoPass>();
-  AU.addRequired<LoopInfoWrapperPass>();
-  AU.addRequired<TargetLibraryInfoWrapperPass>();
+  AU.addRequiredTransitive<LazyBranchProbabilityInfoPass>();
+  AU.addRequiredTransitive<LoopInfoWrapperPass>();
+  AU.addRequiredTransitive<TargetLibraryInfoWrapperPass>();
 }
 
 void llvm::initializeLazyBPIPassPass(PassRegistry &Registry) {

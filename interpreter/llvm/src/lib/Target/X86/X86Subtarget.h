@@ -17,15 +17,9 @@
 #include "X86ISelLowering.h"
 #include "X86InstrInfo.h"
 #include "X86SelectionDAGInfo.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Triple.h"
-#include "llvm/CodeGen/GlobalISel/CallLowering.h"
-#include "llvm/CodeGen/GlobalISel/InstructionSelector.h"
-#include "llvm/CodeGen/GlobalISel/LegalizerInfo.h"
-#include "llvm/CodeGen/GlobalISel/RegisterBankInfo.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
 #include "llvm/IR/CallingConv.h"
-#include "llvm/Target/TargetMachine.h"
 #include <climits>
 #include <memory>
 
@@ -34,13 +28,19 @@
 
 namespace llvm {
 
+class CallLowering;
 class GlobalValue;
+class InstructionSelector;
+class LegalizerInfo;
+class RegisterBankInfo;
+class StringRef;
+class TargetMachine;
 
 /// The X86 backend supports a number of different styles of PIC.
 ///
 namespace PICStyles {
 
-enum Style {
+enum class Style {
   StubPIC,          // Used on i386-darwin in pic mode.
   GOT,              // Used on 32 bit elf on when in pic mode.
   RIPRel,           // Used on X86-64 when in pic mode.
@@ -50,19 +50,14 @@ enum Style {
 } // end namespace PICStyles
 
 class X86Subtarget final : public X86GenSubtargetInfo {
-public:
   // NOTE: Do not add anything new to this list. Coarse, CPU name based flags
   // are not a good idea. We should be migrating away from these.
   enum X86ProcFamilyEnum {
     Others,
     IntelAtom,
-    IntelSLM,
-    IntelGLM,
-    IntelGLP,
-    IntelTRM
+    IntelSLM
   };
 
-protected:
   enum X86SSEEnum {
     NoSSE, SSE1, SSE2, SSE3, SSSE3, SSE41, SSE42, AVX, AVX2, AVX512F
   };
@@ -194,8 +189,8 @@ protected:
   /// Processor has RDSEED instructions.
   bool HasRDSEED = false;
 
-  /// Processor has LAHF/SAHF instructions.
-  bool HasLAHFSAHF = false;
+  /// Processor has LAHF/SAHF instructions in 64-bit mode.
+  bool HasLAHFSAHF64 = false;
 
   /// Processor has MONITORX/MWAITX instructions.
   bool HasMWAITX = false;
@@ -252,13 +247,21 @@ protected:
   /// True if LZCNT/TZCNT instructions have a false dependency on the destination register.
   bool HasLZCNTFalseDeps = false;
 
-  /// True if its preferable to combine to a single shuffle using a variable
-  /// mask over multiple fixed shuffles.
-  bool HasFastVariableShuffle = false;
+  /// True if its preferable to combine to a single cross-lane shuffle
+  /// using a variable mask over multiple fixed shuffles.
+  bool HasFastVariableCrossLaneShuffle = false;
 
-  /// True if there is no performance penalty to writing only the lower parts
-  /// of a YMM or ZMM register without clearing the upper part.
-  bool HasFastPartialYMMorZMMWrite = false;
+  /// True if its preferable to combine to a single per-lane shuffle
+  /// using a variable mask over multiple fixed shuffles.
+  bool HasFastVariablePerLaneShuffle = false;
+
+  /// True if vzeroupper instructions should be inserted after code that uses
+  /// ymm or zmm registers.
+  bool InsertVZEROUPPER = false;
+
+  /// True if there is no performance penalty for writing NOPs with up to
+  /// 7 bytes.
+  bool HasFast7ByteNOP = false;
 
   /// True if there is no performance penalty for writing NOPs with up to
   /// 11 bytes.
@@ -302,6 +305,9 @@ protected:
 
   /// True if the processor has enhanced REP MOVSB/STOSB.
   bool HasERMSB = false;
+
+  /// True if the processor has fast short REP MOV.
+  bool HasFSRM = false;
 
   /// True if the short functions should be padded to prevent
   /// a stall when returning too early.
@@ -353,6 +359,9 @@ protected:
   /// Processor has AVX-512 Vector Neural Network Instructions
   bool HasVNNI = false;
 
+  /// Processor has AVX Vector Neural Network Instructions
+  bool HasAVXVNNI = false;
+
   /// Processor has AVX-512 bfloat16 floating-point extensions
   bool HasBF16 = false;
 
@@ -364,9 +373,6 @@ protected:
 
   /// Processor has AVX-512 vp2intersect instructions
   bool HasVP2INTERSECT = false;
-
-  /// Processor supports MPX - Memory Protection Extensions
-  bool HasMPX = false;
 
   /// Processor supports CET SHSTK - Control-Flow Enforcement Technology
   /// using Shadow Stack
@@ -396,6 +402,29 @@ protected:
   /// Processor supports PCONFIG instruction
   bool HasPCONFIG = false;
 
+  /// Processor support key locker instructions
+  bool HasKL = false;
+
+  /// Processor support key locker wide instructions
+  bool HasWIDEKL = false;
+
+  /// Processor supports HRESET instruction
+  bool HasHRESET = false;
+
+  /// Processor supports SERIALIZE instruction
+  bool HasSERIALIZE = false;
+
+  /// Processor supports TSXLDTRK instruction
+  bool HasTSXLDTRK = false;
+
+  /// Processor has AMX support
+  bool HasAMXTILE = false;
+  bool HasAMXBF16 = false;
+  bool HasAMXINT8 = false;
+
+  /// Processor supports User Level Interrupt instructions
+  bool HasUINTR = false;
+
   /// Processor has a single uop BEXTR implementation.
   bool HasFastBEXTR = false;
 
@@ -407,6 +436,9 @@ protected:
 
   /// Prefer a left/right vector logical shifts pair over a shift+and pair.
   bool HasFastVectorShiftMasks = false;
+
+  /// Prefer a movbe over a single-use load + bswap / single-use bswap + store.
+  bool HasFastMOVBE = false;
 
   /// Use a retpoline thunk rather than indirect calls to block speculative
   /// execution.
@@ -424,23 +456,47 @@ protected:
   /// than emitting one inside the compiler.
   bool UseRetpolineExternalThunk = false;
 
+  /// Prevent generation of indirect call/branch instructions from memory,
+  /// and force all indirect call/branch instructions from a register to be
+  /// preceded by an LFENCE. Also decompose RET instructions into a
+  /// POP+LFENCE+JMP sequence.
+  bool UseLVIControlFlowIntegrity = false;
+
+  /// Enable Speculative Execution Side Effect Suppression
+  bool UseSpeculativeExecutionSideEffectSuppression = false;
+
+  /// Insert LFENCE instructions to prevent data speculatively injected into
+  /// loads from being used maliciously.
+  bool UseLVILoadHardening = false;
+
   /// Use software floating point for code generation.
   bool UseSoftFloat = false;
 
+  /// Use alias analysis during code generation.
+  bool UseAA = false;
+
   /// The minimum alignment known to hold of the stack frame on
   /// entry to the function and which must be maintained by every function.
-  unsigned stackAlignment = 4;
+  Align stackAlignment = Align(4);
+
+  Align TileConfigAlignment = Align(4);
 
   /// Max. memset / memcpy size that is turned into rep/movs, rep/stos ops.
   ///
   // FIXME: this is a known good value for Yonah. How about others?
   unsigned MaxInlineSizeThreshold = 128;
 
+  /// Indicates target prefers 128 bit instructions.
+  bool Prefer128Bit = false;
+
   /// Indicates target prefers 256 bit instructions.
   bool Prefer256Bit = false;
 
-  /// Threeway branch is profitable in this subtarget.
-  bool ThreewayBranchProfitable = false;
+  /// Indicates target prefers AVX512 mask registers.
+  bool PreferMaskRegisters = false;
+
+  /// Use Goldmont specific floating point div/sqrt costs.
+  bool UseGLMDivSqrtCosts = false;
 
   /// What processor and OS we're targeting.
   Triple TargetTriple;
@@ -453,7 +509,7 @@ protected:
 
 private:
   /// Override the stack alignment.
-  unsigned StackAlignOverride;
+  MaybeAlign StackAlignOverride;
 
   /// Preferred vector width from function attribute.
   unsigned PreferVectorWidthOverride;
@@ -466,17 +522,13 @@ private:
   unsigned RequiredVectorWidth;
 
   /// True if compiling for 64-bit, false for 16-bit or 32-bit.
-  bool In64BitMode;
+  bool In64BitMode = false;
 
   /// True if compiling for 32-bit, false for 16-bit or 64-bit.
-  bool In32BitMode;
+  bool In32BitMode = false;
 
   /// True if compiling for 16-bit, false for 32-bit or 64-bit.
-  bool In16BitMode;
-
-  /// Contains the Overhead of gather\scatter instructions
-  int GatherOverhead = 1024;
-  int ScatterOverhead = 1024;
+  bool In16BitMode = false;
 
   X86SelectionDAGInfo TSInfo;
   // Ordering here is important. X86InstrInfo initializes X86RegisterInfo which
@@ -489,8 +541,8 @@ public:
   /// This constructor initializes the data members to match that
   /// of the specified triple.
   ///
-  X86Subtarget(const Triple &TT, StringRef CPU, StringRef FS,
-               const X86TargetMachine &TM, unsigned StackAlignOverride,
+  X86Subtarget(const Triple &TT, StringRef CPU, StringRef TuneCPU, StringRef FS,
+               const X86TargetMachine &TM, MaybeAlign StackAlignOverride,
                unsigned PreferVectorWidthOverride,
                unsigned RequiredVectorWidth);
 
@@ -512,10 +564,13 @@ public:
     return &getInstrInfo()->getRegisterInfo();
   }
 
+  unsigned getTileConfigSize() const { return 64; }
+  Align getTileConfigAlignment() const { return TileConfigAlignment; }
+
   /// Returns the minimum alignment known to hold of the
   /// stack frame on entry to the function and which must be maintained by every
   /// function for this subtarget.
-  unsigned getStackAlignment() const { return stackAlignment; }
+  Align getStackAlignment() const { return stackAlignment; }
 
   /// Returns the maximum memset / memcpy size
   /// that still makes it profitable to inline the call.
@@ -523,19 +578,21 @@ public:
 
   /// ParseSubtargetFeatures - Parses features string setting specified
   /// subtarget options.  Definition of function is auto generated by tblgen.
-  void ParseSubtargetFeatures(StringRef CPU, StringRef FS);
+  void ParseSubtargetFeatures(StringRef CPU, StringRef TuneCPU, StringRef FS);
 
   /// Methods used by Global ISel
   const CallLowering *getCallLowering() const override;
-  const InstructionSelector *getInstructionSelector() const override;
+  InstructionSelector *getInstructionSelector() const override;
   const LegalizerInfo *getLegalizerInfo() const override;
   const RegisterBankInfo *getRegBankInfo() const override;
 
 private:
   /// Initialize the full set of dependencies so we can use an initializer
   /// list for X86Subtarget.
-  X86Subtarget &initializeSubtargetDependencies(StringRef CPU, StringRef FS);
-  void initSubtargetFeatures(StringRef CPU, StringRef FS);
+  X86Subtarget &initializeSubtargetDependencies(StringRef CPU,
+                                                StringRef TuneCPU,
+                                                StringRef FS);
+  void initSubtargetFeatures(StringRef CPU, StringRef TuneCPU, StringRef FS);
 
 public:
   /// Is this x86_64? (disregarding specific ABI / programming model)
@@ -553,14 +610,12 @@ public:
 
   /// Is this x86_64 with the ILP32 programming model (x32 ABI)?
   bool isTarget64BitILP32() const {
-    return In64BitMode && (TargetTriple.getEnvironment() == Triple::GNUX32 ||
-                           TargetTriple.isOSNaCl());
+    return In64BitMode && (TargetTriple.isX32() || TargetTriple.isOSNaCl());
   }
 
   /// Is this x86_64 with the LP64 programming model (standard AMD64, no x32)?
   bool isTarget64BitLP64() const {
-    return In64BitMode && (TargetTriple.getEnvironment() != Triple::GNUX32 &&
-                           !TargetTriple.isOSNaCl());
+    return In64BitMode && (!TargetTriple.isX32() && !TargetTriple.isOSNaCl());
   }
 
   PICStyles::Style getPICStyle() const { return PICStyle; }
@@ -618,8 +673,15 @@ public:
   bool hasRTM() const { return HasRTM; }
   bool hasADX() const { return HasADX; }
   bool hasSHA() const { return HasSHA; }
-  bool hasPRFCHW() const { return HasPRFCHW || HasPREFETCHWT1; }
+  bool hasPRFCHW() const { return HasPRFCHW; }
   bool hasPREFETCHWT1() const { return HasPREFETCHWT1; }
+  bool hasPrefetchW() const {
+    // The PREFETCHW instruction was added with 3DNow but later CPUs gave it
+    // its own CPUID bit as part of deprecating 3DNow. Intel eventually added
+    // it and KNL has another that prefetches to L2 cache. We assume the
+    // L1 version exists if the L2 version does.
+    return has3DNow() || hasPRFCHW() || hasPREFETCHWT1();
+  }
   bool hasSSEPrefetch() const {
     // We implicitly enable these when we have a write prefix supporting cache
     // level OR if we have prfchw, but don't already have a read prefetch from
@@ -627,7 +689,7 @@ public:
     return hasSSE1() || (hasPRFCHW() && !has3DNow()) || hasPREFETCHWT1();
   }
   bool hasRDSEED() const { return HasRDSEED; }
-  bool hasLAHFSAHF() const { return HasLAHFSAHF; }
+  bool hasLAHFSAHF() const { return HasLAHFSAHF64 || !is64Bit(); }
   bool hasMWAITX() const { return HasMWAITX; }
   bool hasCLZERO() const { return HasCLZERO; }
   bool hasCLDEMOTE() const { return HasCLDEMOTE; }
@@ -639,19 +701,18 @@ public:
   bool isPMADDWDSlow() const { return IsPMADDWDSlow; }
   bool isUnalignedMem16Slow() const { return IsUAMem16Slow; }
   bool isUnalignedMem32Slow() const { return IsUAMem32Slow; }
-  int getGatherOverhead() const { return GatherOverhead; }
-  int getScatterOverhead() const { return ScatterOverhead; }
   bool hasSSEUnalignedMem() const { return HasSSEUnalignedMem; }
   bool hasCmpxchg16b() const { return HasCmpxchg16b && is64Bit(); }
   bool useLeaForSP() const { return UseLeaForSP; }
   bool hasPOPCNTFalseDeps() const { return HasPOPCNTFalseDeps; }
   bool hasLZCNTFalseDeps() const { return HasLZCNTFalseDeps; }
-  bool hasFastVariableShuffle() const {
-    return HasFastVariableShuffle;
+  bool hasFastVariableCrossLaneShuffle() const {
+    return HasFastVariableCrossLaneShuffle;
   }
-  bool hasFastPartialYMMorZMMWrite() const {
-    return HasFastPartialYMMorZMMWrite;
+  bool hasFastVariablePerLaneShuffle() const {
+    return HasFastVariablePerLaneShuffle;
   }
+  bool insertVZEROUPPER() const { return InsertVZEROUPPER; }
   bool hasFastGather() const { return HasFastGather; }
   bool hasFastScalarFSQRT() const { return HasFastScalarFSQRT; }
   bool hasFastVectorFSQRT() const { return HasFastVectorFSQRT; }
@@ -661,9 +722,11 @@ public:
   bool hasFastHorizontalOps() const { return HasFastHorizontalOps; }
   bool hasFastScalarShiftMasks() const { return HasFastScalarShiftMasks; }
   bool hasFastVectorShiftMasks() const { return HasFastVectorShiftMasks; }
+  bool hasFastMOVBE() const { return HasFastMOVBE; }
   bool hasMacroFusion() const { return HasMacroFusion; }
   bool hasBranchFusion() const { return HasBranchFusion; }
   bool hasERMSB() const { return HasERMSB; }
+  bool hasFSRM() const { return HasFSRM; }
   bool hasSlowDivide32() const { return HasSlowDivide32; }
   bool hasSlowDivide64() const { return HasSlowDivide64; }
   bool padShortFunctions() const { return PadShortFunctions; }
@@ -684,7 +747,6 @@ public:
   bool hasBF16() const { return HasBF16; }
   bool hasVP2INTERSECT() const { return HasVP2INTERSECT; }
   bool hasBITALG() const { return HasBITALG; }
-  bool hasMPX() const { return HasMPX; }
   bool hasSHSTK() const { return HasSHSTK; }
   bool hasCLFLUSHOPT() const { return HasCLFLUSHOPT; }
   bool hasCLWB() const { return HasCLWB; }
@@ -693,14 +755,41 @@ public:
   bool hasWAITPKG() const { return HasWAITPKG; }
   bool hasPCONFIG() const { return HasPCONFIG; }
   bool hasSGX() const { return HasSGX; }
-  bool threewayBranchProfitable() const { return ThreewayBranchProfitable; }
   bool hasINVPCID() const { return HasINVPCID; }
   bool hasENQCMD() const { return HasENQCMD; }
+  bool hasKL() const { return HasKL; }
+  bool hasWIDEKL() const { return HasWIDEKL; }
+  bool hasHRESET() const { return HasHRESET; }
+  bool hasSERIALIZE() const { return HasSERIALIZE; }
+  bool hasTSXLDTRK() const { return HasTSXLDTRK; }
+  bool hasUINTR() const { return HasUINTR; }
   bool useRetpolineIndirectCalls() const { return UseRetpolineIndirectCalls; }
   bool useRetpolineIndirectBranches() const {
     return UseRetpolineIndirectBranches;
   }
+  bool hasAVXVNNI() const { return HasAVXVNNI; }
+  bool hasAMXTILE() const { return HasAMXTILE; }
+  bool hasAMXBF16() const { return HasAMXBF16; }
+  bool hasAMXINT8() const { return HasAMXINT8; }
   bool useRetpolineExternalThunk() const { return UseRetpolineExternalThunk; }
+
+  // These are generic getters that OR together all of the thunk types
+  // supported by the subtarget. Therefore useIndirectThunk*() will return true
+  // if any respective thunk feature is enabled.
+  bool useIndirectThunkCalls() const {
+    return useRetpolineIndirectCalls() || useLVIControlFlowIntegrity();
+  }
+  bool useIndirectThunkBranches() const {
+    return useRetpolineIndirectBranches() || useLVIControlFlowIntegrity();
+  }
+
+  bool preferMaskRegisters() const { return PreferMaskRegisters; }
+  bool useGLMDivSqrtCosts() const { return UseGLMDivSqrtCosts; }
+  bool useLVIControlFlowIntegrity() const { return UseLVIControlFlowIntegrity; }
+  bool useLVILoadHardening() const { return UseLVILoadHardening; }
+  bool useSpeculativeExecutionSideEffectSuppression() const {
+    return UseSpeculativeExecutionSideEffectSuppression;
+  }
 
   unsigned getPreferVectorWidth() const { return PreferVectorWidth; }
   unsigned getRequiredVectorWidth() const { return RequiredVectorWidth; }
@@ -728,17 +817,11 @@ public:
 
   bool isXRaySupported() const override { return is64Bit(); }
 
-  X86ProcFamilyEnum getProcFamily() const { return X86ProcFamily; }
-
   /// TODO: to be removed later and replaced with suitable properties
   bool isAtom() const { return X86ProcFamily == IntelAtom; }
   bool isSLM() const { return X86ProcFamily == IntelSLM; }
-  bool isGLM() const {
-    return X86ProcFamily == IntelGLM ||
-           X86ProcFamily == IntelGLP ||
-           X86ProcFamily == IntelTRM;
-  }
   bool useSoftFloat() const { return UseSoftFloat; }
+  bool useAA() const override { return UseAA; }
 
   /// Use mfence if we have SSE2 or we're on x86-64 (even if we asked for
   /// no-sse2). There isn't any reason to disable it if the target processor
@@ -795,21 +878,23 @@ public:
 
   bool isTargetWin32() const { return !In64BitMode && isOSWindows(); }
 
-  bool isPICStyleGOT() const { return PICStyle == PICStyles::GOT; }
-  bool isPICStyleRIPRel() const { return PICStyle == PICStyles::RIPRel; }
+  bool isPICStyleGOT() const { return PICStyle == PICStyles::Style::GOT; }
+  bool isPICStyleRIPRel() const { return PICStyle == PICStyles::Style::RIPRel; }
 
   bool isPICStyleStubPIC() const {
-    return PICStyle == PICStyles::StubPIC;
+    return PICStyle == PICStyles::Style::StubPIC;
   }
 
-  bool isPositionIndependent() const { return TM.isPositionIndependent(); }
+  bool isPositionIndependent() const;
 
   bool isCallingConvWin64(CallingConv::ID CC) const {
     switch (CC) {
     // On Win64, all these conventions just use the default convention.
     case CallingConv::C:
     case CallingConv::Fast:
+    case CallingConv::Tail:
     case CallingConv::Swift:
+    case CallingConv::SwiftTail:
     case CallingConv::X86_FastCall:
     case CallingConv::X86_StdCall:
     case CallingConv::X86_ThisCall:
@@ -848,10 +933,10 @@ public:
   /// Return true if the subtarget allows calls to immediate address.
   bool isLegalToCallImmediateAddr() const;
 
-  /// If we are using retpolines, we need to expand indirectbr to avoid it
+  /// If we are using indirect thunks, we need to expand indirectbr to avoid it
   /// lowering to an actual indirect jump.
   bool enableIndirectBrExpand() const override {
-    return useRetpolineIndirectBranches();
+    return useIndirectThunkBranches();
   }
 
   /// Enable the MachineScheduler pass for all X86 subtargets.
@@ -866,7 +951,7 @@ public:
     return TargetSubtargetInfo::ANTIDEP_CRITICAL;
   }
 
-  bool enableAdvancedRASplitCost() const override { return true; }
+  bool enableAdvancedRASplitCost() const override { return false; }
 };
 
 } // end namespace llvm

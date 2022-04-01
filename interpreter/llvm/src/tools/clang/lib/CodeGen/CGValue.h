@@ -29,6 +29,7 @@ namespace llvm {
 namespace clang {
 namespace CodeGen {
   class AggValueSlot;
+  class CodeGenFunction;
   struct CGBitFieldInfo;
 
 /// RValue - This trivial value class is used to represent the result of an
@@ -169,7 +170,8 @@ class LValue {
     VectorElt,    // This is a vector element l-value (V[i]), use getVector*
     BitField,     // This is a bitfield l-value, use getBitfield*.
     ExtVectorElt, // This is an extended vector subset, use getExtVectorComp
-    GlobalReg     // This is a register l-value, use getGlobalReg()
+    GlobalReg,    // This is a register l-value, use getGlobalReg()
+    MatrixElt     // This is a matrix element, use getVector*
   } LVType;
 
   llvm::Value *V;
@@ -253,6 +255,7 @@ public:
   bool isBitField() const { return LVType == BitField; }
   bool isExtVectorElt() const { return LVType == ExtVectorElt; }
   bool isGlobalReg() const { return LVType == GlobalReg; }
+  bool isMatrixElt() const { return LVType == MatrixElt; }
 
   bool isVolatileQualified() const { return Quals.hasVolatile(); }
   bool isRestrictQualified() const { return Quals.hasRestrict(); }
@@ -319,11 +322,13 @@ public:
   void setBaseInfo(LValueBaseInfo Info) { BaseInfo = Info; }
 
   // simple lvalue
-  llvm::Value *getPointer() const {
+  llvm::Value *getPointer(CodeGenFunction &CGF) const {
     assert(isSimple());
     return V;
   }
-  Address getAddress() const { return Address(getPointer(), getAlignment()); }
+  Address getAddress(CodeGenFunction &CGF) const {
+    return Address(getPointer(CGF), getAlignment());
+  }
   void setAddress(Address address) {
     assert(isSimple());
     V = address.getPointer();
@@ -334,8 +339,26 @@ public:
   Address getVectorAddress() const {
     return Address(getVectorPointer(), getAlignment());
   }
-  llvm::Value *getVectorPointer() const { assert(isVectorElt()); return V; }
-  llvm::Value *getVectorIdx() const { assert(isVectorElt()); return VectorIdx; }
+  llvm::Value *getVectorPointer() const {
+    assert(isVectorElt());
+    return V;
+  }
+  llvm::Value *getVectorIdx() const {
+    assert(isVectorElt());
+    return VectorIdx;
+  }
+
+  Address getMatrixAddress() const {
+    return Address(getMatrixPointer(), getAlignment());
+  }
+  llvm::Value *getMatrixPointer() const {
+    assert(isMatrixElt());
+    return V;
+  }
+  llvm::Value *getMatrixIdx() const {
+    assert(isMatrixElt());
+    return VectorIdx;
+  }
 
   // extended vector elements.
   Address getExtVectorAddress() const {
@@ -427,8 +450,20 @@ public:
     return R;
   }
 
-  RValue asAggregateRValue() const {
-    return RValue::getAggregate(getAddress(), isVolatileQualified());
+  static LValue MakeMatrixElt(Address matAddress, llvm::Value *Idx,
+                              QualType type, LValueBaseInfo BaseInfo,
+                              TBAAAccessInfo TBAAInfo) {
+    LValue R;
+    R.LVType = MatrixElt;
+    R.V = matAddress.getPointer();
+    R.VectorIdx = Idx;
+    R.Initialize(type, type.getQualifiers(), matAddress.getAlignment(),
+                 BaseInfo, TBAAInfo);
+    return R;
+  }
+
+  RValue asAggregateRValue(CodeGenFunction &CGF) const {
+    return RValue::getAggregate(getAddress(CGF), isVolatileQualified());
   }
 };
 
@@ -536,14 +571,12 @@ public:
     return AV;
   }
 
-  static AggValueSlot forLValue(const LValue &LV,
-                                IsDestructed_t isDestructed,
-                                NeedsGCBarriers_t needsGC,
-                                IsAliased_t isAliased,
-                                Overlap_t mayOverlap,
-                                IsZeroed_t isZeroed = IsNotZeroed,
-                       IsSanitizerChecked_t isChecked = IsNotSanitizerChecked) {
-    return forAddr(LV.getAddress(), LV.getQuals(), isDestructed, needsGC,
+  static AggValueSlot
+  forLValue(const LValue &LV, CodeGenFunction &CGF, IsDestructed_t isDestructed,
+            NeedsGCBarriers_t needsGC, IsAliased_t isAliased,
+            Overlap_t mayOverlap, IsZeroed_t isZeroed = IsNotZeroed,
+            IsSanitizerChecked_t isChecked = IsNotSanitizerChecked) {
+    return forAddr(LV.getAddress(CGF), LV.getQuals(), isDestructed, needsGC,
                    isAliased, mayOverlap, isZeroed, isChecked);
   }
 
@@ -620,7 +653,7 @@ public:
   /// is the type size unless that might overlap another object, in which
   /// case it's the dsize.
   CharUnits getPreferredSize(ASTContext &Ctx, QualType Type) const {
-    return mayOverlap() ? Ctx.getTypeInfoDataSizeInChars(Type).first
+    return mayOverlap() ? Ctx.getTypeInfoDataSizeInChars(Type).Width
                         : Ctx.getTypeSizeInChars(Type);
   }
 };

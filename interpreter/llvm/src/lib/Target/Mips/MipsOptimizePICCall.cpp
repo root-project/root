@@ -127,8 +127,7 @@ static MachineOperand *getCallTargetRegOpnd(MachineInstr &MI) {
 
   MachineOperand &MO = MI.getOperand(0);
 
-  if (!MO.isReg() || !MO.isUse() ||
-      !TargetRegisterInfo::isVirtualRegister(MO.getReg()))
+  if (!MO.isReg() || !MO.isUse() || !Register::isVirtualRegister(MO.getReg()))
     return nullptr;
 
   return &MO;
@@ -152,7 +151,7 @@ static void setCallTargetReg(MachineBasicBlock *MBB,
                              MachineBasicBlock::iterator I) {
   MachineFunction &MF = *MBB->getParent();
   const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
-  unsigned SrcReg = I->getOperand(0).getReg();
+  Register SrcReg = I->getOperand(0).getReg();
   unsigned DstReg = getRegTy(SrcReg, MF) == MVT::i32 ? Mips::T9 : Mips::T9_64;
   BuildMI(*MBB, I, I->getDebugLoc(), TII.get(TargetOpcode::COPY), DstReg)
       .addReg(SrcReg);
@@ -219,8 +218,7 @@ bool OptimizePICCall::runOnMachineFunction(MachineFunction &F) {
     MBBI.preVisit(ScopedHT);
     Changed |= visitNode(MBBI);
     const MachineDomTreeNode *Node = MBBI.getNode();
-    const std::vector<MachineDomTreeNode *> &Children = Node->getChildren();
-    WorkList.append(Children.begin(), Children.end());
+    WorkList.append(Node->begin(), Node->end());
   }
 
   return Changed;

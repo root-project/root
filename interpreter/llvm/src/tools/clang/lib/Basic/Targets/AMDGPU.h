@@ -13,6 +13,7 @@
 #ifndef LLVM_CLANG_LIB_BASIC_TARGETS_AMDGPU_H
 #define LLVM_CLANG_LIB_BASIC_TARGETS_AMDGPU_H
 
+#include "clang/Basic/TargetID.h"
 #include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/TargetOptions.h"
 #include "llvm/ADT/StringSet.h"
@@ -40,6 +41,15 @@ class LLVM_LIBRARY_VISIBILITY AMDGPUTargetInfo final : public TargetInfo {
 
   llvm::AMDGPU::GPUKind GPUKind;
   unsigned GPUFeatures;
+  unsigned WavefrontSize;
+
+  /// Target ID is device name followed by optional feature name postfixed
+  /// by plus or minus sign delimitted by colon, e.g. gfx908:xnack+:sramecc-.
+  /// If the target ID contains feature+, map it to true.
+  /// If the target ID contains feature-, map it to false.
+  /// If the target ID does not contain a feature (default), do not map it.
+  llvm::StringMap<bool> OffloadArchFeatures;
+  std::string TargetID;
 
   bool hasFP64() const {
     return getTriple().getArch() == llvm::Triple::amdgcn ||
@@ -83,7 +93,7 @@ public:
 
   void setAddressSpaceMap(bool DefaultIsPrivate);
 
-  void adjust(LangOptions &Opts) override;
+  void adjust(DiagnosticsEngine &Diags, LangOptions &Opts) override;
 
   uint64_t getPointerWidthV(unsigned AddrSpace) const override {
     if (isR600(getTriple()))
@@ -114,11 +124,14 @@ public:
   /// Accepted register names: (n, m is unsigned integer, n < m)
   /// v
   /// s
+  /// a
   /// {vn}, {v[n]}
   /// {sn}, {s[n]}
+  /// {an}, {a[n]}
   /// {S} , where S is a special register name
   ////{v[n:m]}
   /// {s[n:m]}
+  /// {a[n:m]}
   bool validateAsmConstraint(const char *&Name,
                              TargetInfo::ConstraintInfo &Info) const override {
     static const ::llvm::StringSet<> SpecialRegs({
@@ -127,7 +140,30 @@ public:
         "exec_hi", "tma_lo", "tma_hi", "tba_lo", "tba_hi",
     });
 
+    switch (*Name) {
+    case 'I':
+      Info.setRequiresImmediate(-16, 64);
+      return true;
+    case 'J':
+      Info.setRequiresImmediate(-32768, 32767);
+      return true;
+    case 'A':
+    case 'B':
+    case 'C':
+      Info.setRequiresImmediate();
+      return true;
+    default:
+      break;
+    }
+
     StringRef S(Name);
+
+    if (S == "DA" || S == "DB") {
+      Name++;
+      Info.setRequiresImmediate();
+      return true;
+    }
+
     bool HasLeftParen = false;
     if (S.front() == '{') {
       HasLeftParen = true;
@@ -135,7 +171,7 @@ public:
     }
     if (S.empty())
       return false;
-    if (S.front() != 'v' && S.front() != 's') {
+    if (S.front() != 'v' && S.front() != 's' && S.front() != 'a') {
       if (!HasLeftParen)
         return false;
       auto E = S.find('}');
@@ -153,7 +189,7 @@ public:
     if (!HasLeftParen) {
       if (!S.empty())
         return false;
-      // Found s or v.
+      // Found s, v or a.
       Info.setAllowsRegister();
       Name = S.data() - 1;
       return true;
@@ -184,7 +220,8 @@ public:
     S = S.drop_front();
     if (!S.empty())
       return false;
-    // Found {vn}, {sn}, {v[n]}, {s[n]}, {v[n:m]}, or {s[n:m]}.
+    // Found {vn}, {sn}, {an}, {v[n]}, {s[n]}, {a[n]}, {v[n:m]}, {s[n:m]}
+    // or {a[n:m]}.
     Info.setAllowsRegister();
     Name = S.data() - 1;
     return true;
@@ -194,6 +231,12 @@ public:
   // the constraint.  In practice, it won't be changed unless the
   // constraint is longer than one character.
   std::string convertConstraint(const char *&Constraint) const override {
+
+    StringRef S(Constraint);
+    if (S == "DA" || S == "DB") {
+      return std::string("^") + std::string(Constraint++, 2);
+    }
+
     const char *Begin = Constraint;
     TargetInfo::ConstraintInfo Info("", "");
     if (validateAsmConstraint(Constraint, Info))
@@ -208,10 +251,9 @@ public:
                  StringRef CPU,
                  const std::vector<std::string> &FeatureVec) const override;
 
-  void adjustTargetOptions(const CodeGenOptions &CGOpts,
-                           TargetOptions &TargetOpts) const override;
-
   ArrayRef<Builtin::Info> getTargetBuiltins() const override;
+
+  bool useFP16ConversionIntrinsics() const override { return false; }
 
   void getTargetDefines(const LangOptions &Opts,
                         MacroBuilder &Builder) const override;
@@ -242,31 +284,38 @@ public:
 
   void setSupportedOpenCLOpts() override {
     auto &Opts = getSupportedOpenCLOpts();
-    Opts.support("cl_clang_storage_class_specifiers");
-    Opts.support("cl_khr_icd");
+    Opts["cl_clang_storage_class_specifiers"] = true;
+    Opts["__cl_clang_variadic_functions"] = true;
+    Opts["__cl_clang_function_pointers"] = true;
+    Opts["__cl_clang_non_portable_kernel_param_types"] = true;
+    Opts["__cl_clang_bitfields"] = true;
 
     bool IsAMDGCN = isAMDGCN(getTriple());
 
-    if (hasFP64())
-      Opts.support("cl_khr_fp64");
+    Opts["cl_khr_fp64"] = hasFP64();
+    Opts["__opencl_c_fp64"] = hasFP64();
 
     if (IsAMDGCN || GPUKind >= llvm::AMDGPU::GK_CEDAR) {
-      Opts.support("cl_khr_byte_addressable_store");
-      Opts.support("cl_khr_global_int32_base_atomics");
-      Opts.support("cl_khr_global_int32_extended_atomics");
-      Opts.support("cl_khr_local_int32_base_atomics");
-      Opts.support("cl_khr_local_int32_extended_atomics");
+      Opts["cl_khr_byte_addressable_store"] = true;
+      Opts["cl_khr_global_int32_base_atomics"] = true;
+      Opts["cl_khr_global_int32_extended_atomics"] = true;
+      Opts["cl_khr_local_int32_base_atomics"] = true;
+      Opts["cl_khr_local_int32_extended_atomics"] = true;
     }
 
     if (IsAMDGCN) {
-      Opts.support("cl_khr_fp16");
-      Opts.support("cl_khr_int64_base_atomics");
-      Opts.support("cl_khr_int64_extended_atomics");
-      Opts.support("cl_khr_mipmap_image");
-      Opts.support("cl_khr_subgroups");
-      Opts.support("cl_khr_3d_image_writes");
-      Opts.support("cl_amd_media_ops");
-      Opts.support("cl_amd_media_ops2");
+      Opts["cl_khr_fp16"] = true;
+      Opts["cl_khr_int64_base_atomics"] = true;
+      Opts["cl_khr_int64_extended_atomics"] = true;
+      Opts["cl_khr_mipmap_image"] = true;
+      Opts["cl_khr_mipmap_image_writes"] = true;
+      Opts["cl_khr_subgroups"] = true;
+      Opts["cl_amd_media_ops"] = true;
+      Opts["cl_amd_media_ops2"] = true;
+
+      Opts["__opencl_c_images"] = true;
+      Opts["__opencl_c_3d_image_writes"] = true;
+      Opts["cl_khr_3d_image_writes"] = true;
     }
   }
 
@@ -348,10 +397,45 @@ public:
   // address space has value 0 but in private and local address space has
   // value ~0.
   uint64_t getNullPointerValue(LangAS AS) const override {
-    return AS == LangAS::opencl_local ? ~0 : 0;
+    // FIXME: Also should handle region.
+    return (AS == LangAS::opencl_local || AS == LangAS::opencl_private)
+      ? ~0 : 0;
   }
 
   void setAuxTarget(const TargetInfo *Aux) override;
+
+  bool hasExtIntType() const override { return true; }
+
+  // Record offload arch features since they are needed for defining the
+  // pre-defined macros.
+  bool handleTargetFeatures(std::vector<std::string> &Features,
+                            DiagnosticsEngine &Diags) override {
+    auto TargetIDFeatures =
+        getAllPossibleTargetIDFeatures(getTriple(), getArchNameAMDGCN(GPUKind));
+    llvm::for_each(Features, [&](const auto &F) {
+      assert(F.front() == '+' || F.front() == '-');
+      if (F == "+wavefrontsize64")
+        WavefrontSize = 64;
+      bool IsOn = F.front() == '+';
+      StringRef Name = StringRef(F).drop_front();
+      if (llvm::find(TargetIDFeatures, Name) == TargetIDFeatures.end())
+        return;
+      assert(OffloadArchFeatures.find(Name) == OffloadArchFeatures.end());
+      OffloadArchFeatures[Name] = IsOn;
+    });
+    return true;
+  }
+
+  Optional<std::string> getTargetID() const override {
+    if (!isAMDGCN(getTriple()))
+      return llvm::None;
+    // When -target-cpu is not set, we assume generic code that it is valid
+    // for all GPU and use an empty string as target ID to represent that.
+    if (GPUKind == llvm::AMDGPU::GK_NONE)
+      return std::string("");
+    return getCanonicalTargetID(getArchNameAMDGCN(GPUKind),
+                                OffloadArchFeatures);
+  }
 };
 
 } // namespace targets

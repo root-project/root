@@ -5,31 +5,15 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+///
+/// \file
+/// This file implements the class GCNIterativeScheduler.
+///
+//===----------------------------------------------------------------------===//
 
 #include "GCNIterativeScheduler.h"
-#include "AMDGPUSubtarget.h"
-#include "GCNRegPressure.h"
 #include "GCNSchedStrategy.h"
 #include "SIMachineFunctionInfo.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/CodeGen/LiveIntervals.h"
-#include "llvm/CodeGen/MachineBasicBlock.h"
-#include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/RegisterPressure.h"
-#include "llvm/CodeGen/ScheduleDAG.h"
-#include "llvm/Config/llvm-config.h"
-#include "llvm/Support/Compiler.h"
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/raw_ostream.h"
-#include <algorithm>
-#include <cassert>
-#include <iterator>
-#include <limits>
-#include <memory>
-#include <type_traits>
-#include <vector>
 
 using namespace llvm;
 
@@ -237,7 +221,7 @@ public:
 
 GCNIterativeScheduler::GCNIterativeScheduler(MachineSchedContext *C,
                                              StrategyKind S)
-  : BaseClass(C, llvm::make_unique<SchedStrategyStub>())
+  : BaseClass(C, std::make_unique<SchedStrategyStub>())
   , Context(C)
   , Strategy(S)
   , UPTracker(*LIS) {

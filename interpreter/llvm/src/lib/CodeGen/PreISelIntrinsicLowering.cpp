@@ -12,14 +12,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/PreISelIntrinsicLowering.h"
+#include "llvm/Analysis/ObjCARCInstKind.h"
 #include "llvm/CodeGen/Passes.h"
 #include "llvm/IR/Function.h"
-#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/User.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
 
@@ -37,14 +39,14 @@ static bool lowerLoadRelative(Function &F) {
   for (auto I = F.use_begin(), E = F.use_end(); I != E;) {
     auto CI = dyn_cast<CallInst>(I->getUser());
     ++I;
-    if (!CI || CI->getCalledValue() != &F)
+    if (!CI || CI->getCalledOperand() != &F)
       continue;
 
     IRBuilder<> B(CI);
     Value *OffsetPtr =
         B.CreateGEP(Int8Ty, CI->getArgOperand(0), CI->getArgOperand(1));
     Value *OffsetPtrI32 = B.CreateBitCast(OffsetPtr, Int32PtrTy);
-    Value *OffsetI32 = B.CreateAlignedLoad(Int32Ty, OffsetPtrI32, 4);
+    Value *OffsetI32 = B.CreateAlignedLoad(Int32Ty, OffsetPtrI32, Align(4));
 
     Value *ResultPtr = B.CreateGEP(Int8Ty, CI->getArgOperand(0), OffsetI32);
 
@@ -54,6 +56,17 @@ static bool lowerLoadRelative(Function &F) {
   }
 
   return Changed;
+}
+
+// ObjCARC has knowledge about whether an obj-c runtime function needs to be
+// always tail-called or never tail-called.
+static CallInst::TailCallKind getOverridingTailCallKind(const Function &F) {
+  objcarc::ARCInstKind Kind = objcarc::GetFunctionClass(&F);
+  if (objcarc::IsAlwaysTail(Kind))
+    return CallInst::TCK_Tail;
+  else if (objcarc::IsNeverTail(Kind))
+    return CallInst::TCK_NoTail;
+  return CallInst::TCK_None;
 }
 
 static bool lowerObjCCall(Function &F, const char *NewFn,
@@ -75,16 +88,28 @@ static bool lowerObjCCall(Function &F, const char *NewFn,
     }
   }
 
+  CallInst::TailCallKind OverridingTCK = getOverridingTailCallKind(F);
+
   for (auto I = F.use_begin(), E = F.use_end(); I != E;) {
-    auto *CI = dyn_cast<CallInst>(I->getUser());
+    auto *CI = cast<CallInst>(I->getUser());
     assert(CI->getCalledFunction() && "Cannot lower an indirect call!");
     ++I;
 
     IRBuilder<> Builder(CI->getParent(), CI->getIterator());
-    SmallVector<Value *, 8> Args(CI->arg_begin(), CI->arg_end());
+    SmallVector<Value *, 8> Args(CI->args());
     CallInst *NewCI = Builder.CreateCall(FCache, Args);
     NewCI->setName(CI->getName());
-    NewCI->setTailCallKind(CI->getTailCallKind());
+
+    // Try to set the most appropriate TailCallKind based on both the current
+    // attributes and the ones that we could get from ObjCARC's special
+    // knowledge of the runtime functions.
+    //
+    // std::max respects both requirements of notail and tail here:
+    // * notail on either the call or from ObjCARC becomes notail
+    // * tail on either side is stronger than none, but not notail
+    CallInst::TailCallKind TCK = CI->getTailCallKind();
+    NewCI->setTailCallKind(std::max(TCK, OverridingTCK));
+
     if (!CI->use_empty())
       CI->replaceAllUsesWith(NewCI);
     CI->eraseFromParent();

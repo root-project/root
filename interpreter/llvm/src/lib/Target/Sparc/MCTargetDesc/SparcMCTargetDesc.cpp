@@ -33,19 +33,21 @@ using namespace llvm;
 #include "SparcGenRegisterInfo.inc"
 
 static MCAsmInfo *createSparcMCAsmInfo(const MCRegisterInfo &MRI,
-                                       const Triple &TT) {
+                                       const Triple &TT,
+                                       const MCTargetOptions &Options) {
   MCAsmInfo *MAI = new SparcELFMCAsmInfo(TT);
   unsigned Reg = MRI.getDwarfRegNum(SP::O6, true);
-  MCCFIInstruction Inst = MCCFIInstruction::createDefCfa(nullptr, Reg, 0);
+  MCCFIInstruction Inst = MCCFIInstruction::cfiDefCfa(nullptr, Reg, 0);
   MAI->addInitialFrameState(Inst);
   return MAI;
 }
 
 static MCAsmInfo *createSparcV9MCAsmInfo(const MCRegisterInfo &MRI,
-                                         const Triple &TT) {
+                                         const Triple &TT,
+                                         const MCTargetOptions &Options) {
   MCAsmInfo *MAI = new SparcELFMCAsmInfo(TT);
   unsigned Reg = MRI.getDwarfRegNum(SP::O6, true);
-  MCCFIInstruction Inst = MCCFIInstruction::createDefCfa(nullptr, Reg, 2047);
+  MCCFIInstruction Inst = MCCFIInstruction::cfiDefCfa(nullptr, Reg, 2047);
   MAI->addInitialFrameState(Inst);
   return MAI;
 }
@@ -66,7 +68,7 @@ static MCSubtargetInfo *
 createSparcMCSubtargetInfo(const Triple &TT, StringRef CPU, StringRef FS) {
   if (CPU.empty())
     CPU = (TT.getArch() == Triple::sparcv9) ? "v9" : "v8";
-  return createSparcMCSubtargetInfoImpl(TT, CPU, FS);
+  return createSparcMCSubtargetInfoImpl(TT, CPU, /*TuneCPU*/ CPU, FS);
 }
 
 static MCTargetStreamer *
@@ -89,7 +91,7 @@ static MCInstPrinter *createSparcMCInstPrinter(const Triple &T,
   return new SparcInstPrinter(MAI, MII, MRI);
 }
 
-extern "C" void LLVMInitializeSparcTargetMC() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeSparcTargetMC() {
   // Register the MC asm info.
   RegisterMCAsmInfoFn X(getTheSparcTarget(), createSparcMCAsmInfo);
   RegisterMCAsmInfoFn Y(getTheSparcV9Target(), createSparcV9MCAsmInfo);

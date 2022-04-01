@@ -16,28 +16,41 @@
 
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Support/DataTypes.h"
-#include <string>
 
 namespace llvm {
-  class MCInst;
-  class MCSubtargetInfo;
-  class FeatureBitset;
+
+class MCInst;
 
 //===----------------------------------------------------------------------===//
 // Machine Operand Flags and Description
 //===----------------------------------------------------------------------===//
 
 namespace MCOI {
-// Operand constraints
+/// Operand constraints. These are encoded in 16 bits with one of the
+/// low-order 3 bits specifying that a constraint is present and the
+/// corresponding high-order hex digit specifying the constraint value.
+/// This allows for a maximum of 3 constraints.
 enum OperandConstraint {
-  TIED_TO = 0,  // Must be allocated the same register as.
-  EARLY_CLOBBER // Operand is an early clobber register operand
+  TIED_TO = 0,  // Must be allocated the same register as specified value.
+  EARLY_CLOBBER // If present, operand is an early clobber register.
 };
+
+// Define a macro to produce each constraint value.
+#define MCOI_TIED_TO(op) \
+  ((1 << MCOI::TIED_TO) | ((op) << (4 + MCOI::TIED_TO * 4)))
+
+#define MCOI_EARLY_CLOBBER \
+  (1 << MCOI::EARLY_CLOBBER)
 
 /// These are flags set on operands, but should be considered
 /// private, all access should go through the MCOperandInfo accessors.
 /// See the accessors for a description of what these are.
-enum OperandFlags { LookupPtrRegClass = 0, Predicate, OptionalDef };
+enum OperandFlags {
+  LookupPtrRegClass = 0,
+  Predicate,
+  OptionalDef,
+  BranchTarget
+};
 
 /// Operands are tagged with one of the values of this enum.
 enum OperandType {
@@ -56,7 +69,11 @@ enum OperandType {
   OPERAND_GENERIC_5 = 11,
   OPERAND_LAST_GENERIC = 11,
 
-  OPERAND_FIRST_TARGET = 12,
+  OPERAND_FIRST_GENERIC_IMM = 12,
+  OPERAND_GENERIC_IMM_0 = 12,
+  OPERAND_LAST_GENERIC_IMM = 12,
+
+  OPERAND_FIRST_TARGET = 13,
 };
 
 }
@@ -76,10 +93,9 @@ public:
 
   /// Information about the type of the operand.
   uint8_t OperandType;
-  /// The lower 16 bits are used to specify which constraints are set.
-  /// The higher 16 bits are used to specify the value of constraints (4 bits
-  /// each).
-  uint32_t Constraints;
+
+  /// Operand constraints (see OperandConstraint enum).
+  uint16_t Constraints;
 
   /// Set if this operand is a pointer value and it requires a callback
   /// to look up its register class.
@@ -94,6 +110,9 @@ public:
   /// Set if this operand is a optional def.
   bool isOptionalDef() const { return Flags & (1 << MCOI::OptionalDef); }
 
+  /// Set if this operand is a branch target.
+  bool isBranchTarget() const { return Flags & (1 << MCOI::BranchTarget); }
+
   bool isGenericType() const {
     return OperandType >= MCOI::OPERAND_FIRST_GENERIC &&
            OperandType <= MCOI::OPERAND_LAST_GENERIC;
@@ -102,6 +121,16 @@ public:
   unsigned getGenericTypeIndex() const {
     assert(isGenericType() && "non-generic types don't have an index");
     return OperandType - MCOI::OPERAND_FIRST_GENERIC;
+  }
+
+  bool isGenericImm() const {
+    return OperandType >= MCOI::OPERAND_FIRST_GENERIC_IMM &&
+           OperandType <= MCOI::OPERAND_LAST_GENERIC_IMM;
+  }
+
+  unsigned getGenericImmIndex() const {
+    assert(isGenericImm() && "non-generic immediates don't have an index");
+    return OperandType - MCOI::OPERAND_FIRST_GENERIC_IMM;
   }
 };
 
@@ -115,7 +144,8 @@ namespace MCID {
 /// not use these directly.  These all correspond to bitfields in the
 /// MCInstrDesc::Flags field.
 enum Flag {
-  Variadic = 0,
+  PreISelOpcode = 0,
+  Variadic,
   HasOptionalDef,
   Pseudo,
   Return,
@@ -153,6 +183,7 @@ enum Flag {
   Add,
   Trap,
   VariadicOpsAreDefs,
+  Authenticated,
 };
 }
 
@@ -173,32 +204,18 @@ public:
   const MCPhysReg *ImplicitUses; // Registers implicitly read by this instr
   const MCPhysReg *ImplicitDefs; // Registers implicitly defined by this instr
   const MCOperandInfo *OpInfo;   // 'NumOperands' entries about operands
-  // Subtarget feature that this is deprecated on, if any
-  // -1 implies this is not deprecated by any single feature. It may still be
-  // deprecated due to a "complex" reason, below.
-  int64_t DeprecatedFeature;
 
-  // A complex method to determine if a certain instruction is deprecated or
-  // not, and return the reason for deprecation.
-  bool (*ComplexDeprecationInfo)(MCInst &, const MCSubtargetInfo &,
-                                 std::string &);
-
-  /// Returns the value of the specific constraint if
-  /// it is set. Returns -1 if it is not set.
+  /// Returns the value of the specified operand constraint if
+  /// it is present. Returns -1 if it is not present.
   int getOperandConstraint(unsigned OpNum,
                            MCOI::OperandConstraint Constraint) const {
     if (OpNum < NumOperands &&
         (OpInfo[OpNum].Constraints & (1 << Constraint))) {
-      unsigned Pos = 16 + Constraint * 4;
-      return (int)(OpInfo[OpNum].Constraints >> Pos) & 0xf;
+      unsigned ValuePos = 4 + Constraint * 4;
+      return (int)(OpInfo[OpNum].Constraints >> ValuePos) & 0x0f;
     }
     return -1;
   }
-
-  /// Returns true if a certain instruction is deprecated and if so
-  /// returns the reason in \p Info.
-  bool getDeprecatedInfo(MCInst &MI, const MCSubtargetInfo &STI,
-                         std::string &Info) const;
 
   /// Return the opcode number for this descriptor.
   unsigned getOpcode() const { return Opcode; }
@@ -227,6 +244,10 @@ public:
 
   /// Return flags of this instruction.
   uint64_t getFlags() const { return Flags; }
+
+  /// \returns true if this instruction is emitted before instruction selection
+  /// and should be legalized/regbankselected/selected.
+  bool isPreISelOpcode() const { return Flags & (1ULL << MCID::PreISelOpcode); }
 
   /// Return true if this instruction can have a variable number of
   /// operands.  In this case, the variable operands will be after the normal
@@ -272,7 +293,7 @@ public:
 
   /// Returns true if this is a conditional, unconditional, or
   /// indirect branch.  Predicates below can be used to discriminate between
-  /// these cases, and the TargetInstrInfo::AnalyzeBranch method can be used to
+  /// these cases, and the TargetInstrInfo::analyzeBranch method can be used to
   /// get more information.
   bool isBranch() const { return Flags & (1ULL << MCID::Branch); }
 
@@ -282,18 +303,18 @@ public:
 
   /// Return true if this is a branch which may fall
   /// through to the next instruction or may transfer control flow to some other
-  /// block.  The TargetInstrInfo::AnalyzeBranch method can be used to get more
+  /// block.  The TargetInstrInfo::analyzeBranch method can be used to get more
   /// information about this branch.
   bool isConditionalBranch() const {
-    return isBranch() & !isBarrier() & !isIndirectBranch();
+    return isBranch() && !isBarrier() && !isIndirectBranch();
   }
 
   /// Return true if this is a branch which always
   /// transfers control flow to some other block.  The
-  /// TargetInstrInfo::AnalyzeBranch method can be used to get more information
+  /// TargetInstrInfo::analyzeBranch method can be used to get more information
   /// about this branch.
   bool isUnconditionalBranch() const {
-    return isBranch() & isBarrier() & !isIndirectBranch();
+    return isBranch() && isBarrier() && !isIndirectBranch();
   }
 
   /// Return true if this is a branch or an instruction which directly
@@ -387,6 +408,15 @@ public:
   /// Return true if variadic operands of this instruction are definitions.
   bool variadicOpsAreDefs() const {
     return Flags & (1ULL << MCID::VariadicOpsAreDefs);
+  }
+
+  /// Return true if this instruction authenticates a pointer (e.g. LDRAx/BRAx
+  /// from ARMv8.3, which perform loads/branches with authentication).
+  ///
+  /// An authenticated instruction may fail in an ABI-defined manner when
+  /// operating on an invalid signed pointer.
+  bool isAuthenticated() const {
+    return Flags & (1ULL << MCID::Authenticated);
   }
 
   //===--------------------------------------------------------------------===//

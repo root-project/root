@@ -54,6 +54,9 @@ enum class SymbolKind : uint8_t {
 
   Parameter,
   Using,
+  TemplateTypeParm,
+  TemplateTemplateParm,
+  NonTypeTemplateParm,
 };
 
 enum class SymbolLanguage : uint8_t {
@@ -72,6 +75,7 @@ enum class SymbolSubKind : uint8_t {
   AccessorSetter,
   UsingTypename,
   UsingValue,
+  UsingEnum,
 };
 
 typedef uint16_t SymbolPropertySet;

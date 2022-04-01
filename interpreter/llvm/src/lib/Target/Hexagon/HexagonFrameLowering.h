@@ -11,6 +11,7 @@
 
 #include "Hexagon.h"
 #include "HexagonBlockRanges.h"
+#include "MCTargetDesc/HexagonMCTargetDesc.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
@@ -29,8 +30,10 @@ class TargetRegisterClass;
 
 class HexagonFrameLowering : public TargetFrameLowering {
 public:
+  // First register which could possibly hold a variable argument.
+  int FirstVarArgSavedReg;
   explicit HexagonFrameLowering()
-      : TargetFrameLowering(StackGrowsDown, 8, 0, 1, true) {}
+      : TargetFrameLowering(StackGrowsDown, Align(8), 0, Align(1), true) {}
 
   // All of the prolog/epilog functionality, including saving and restoring
   // callee-saved registers is handled in emitPrologue. This is to have the
@@ -43,14 +46,17 @@ public:
   bool enableCalleeSaveSkip(const MachineFunction &MF) const override;
 
   bool spillCalleeSavedRegisters(MachineBasicBlock &MBB,
-      MachineBasicBlock::iterator MI, const std::vector<CalleeSavedInfo> &CSI,
-      const TargetRegisterInfo *TRI) const override {
+                                 MachineBasicBlock::iterator MI,
+                                 ArrayRef<CalleeSavedInfo> CSI,
+                                 const TargetRegisterInfo *TRI) const override {
     return true;
   }
 
-  bool restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
-      MachineBasicBlock::iterator MI, std::vector<CalleeSavedInfo> &CSI,
-      const TargetRegisterInfo *TRI) const override {
+  bool
+  restoreCalleeSavedRegisters(MachineBasicBlock &MBB,
+                              MachineBasicBlock::iterator MI,
+                              MutableArrayRef<CalleeSavedInfo> CSI,
+                              const TargetRegisterInfo *TRI) const override {
     return true;
   }
 
@@ -77,8 +83,8 @@ public:
     return true;
   }
 
-  int getFrameIndexReference(const MachineFunction &MF, int FI,
-      unsigned &FrameReg) const override;
+  StackOffset getFrameIndexReference(const MachineFunction &MF, int FI,
+                                     Register &FrameReg) const override;
   bool hasFP(const MachineFunction &MF) const override;
 
   const SpillSlot *getCalleeSavedSpillSlots(unsigned &NumEntries)

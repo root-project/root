@@ -71,13 +71,13 @@ apply to each Module that is added via addModule:
 
     KaleidoscopeJIT(JITTargetMachineBuilder JTMB, DataLayout DL)
         : ObjectLayer(ES,
-                      []() { return llvm::make_unique<SectionMemoryManager>(); }),
+                      []() { return std::make_unique<SectionMemoryManager>(); }),
           CompileLayer(ES, ObjectLayer, ConcurrentIRCompiler(std::move(JTMB))),
           TransformLayer(ES, CompileLayer, optimizeModule),
           DL(std::move(DL)), Mangle(ES, this->DL),
-          Ctx(llvm::make_unique<LLVMContext>()) {
-      ES.getMainJITDylib().setGenerator(
-          cantFail(DynamicLibrarySearchGenerator::GetForCurrentProcess(DL)));
+          Ctx(std::make_unique<LLVMContext>()) {
+      ES.getMainJITDylib().addGenerator(
+          cantFail(DynamicLibrarySearchGenerator::GetForCurrentProcess(DL.getGlobalPrefix())));
     }
 
 Our extended KaleidoscopeJIT class starts out the same as it did in Chapter 1,
@@ -102,7 +102,7 @@ Next we need to update our addModule method to replace the call to
   static Expected<ThreadSafeModule>
   optimizeModule(ThreadSafeModule M, const MaterializationResponsibility &R) {
     // Create a function pass manager.
-    auto FPM = llvm::make_unique<legacy::FunctionPassManager>(M.get());
+    auto FPM = std::make_unique<legacy::FunctionPassManager>(M.get());
 
     // Add some optimizations.
     FPM->add(createInstructionCombiningPass());
@@ -170,7 +170,7 @@ can be implemented.
     TransformFunction Transform;
   };
 
-  // From IRTransfomrLayer.cpp:
+  // From IRTransformLayer.cpp:
 
   IRTransformLayer::IRTransformLayer(ExecutionSession &ES,
                                      IRLayer &BaseLayer,
@@ -213,7 +213,7 @@ class:
 .. code-block:: c++
 
   Error IRLayer::add(JITDylib &JD, ThreadSafeModule TSM, VModuleKey K) {
-    return JD.define(llvm::make_unique<BasicIRLayerMaterializationUnit>(
+    return JD.define(std::make_unique<BasicIRLayerMaterializationUnit>(
         *this, std::move(K), std::move(TSM)));
   }
 
@@ -224,9 +224,9 @@ Most layers that derived from IRLayer can rely on this default implementation
 of the ``add`` method.
 
 These two operations, ``add`` and ``emit``, together constitute the layer
-concept: A layer is a way to wrap a portion of a compiler pipeline (in this case
-the "opt" phase of an LLVM compiler) whose API is is opaque to ORC in an
-interface that allows ORC to invoke it when needed. The add method takes an
+concept: A layer is a way to wrap a part of a compiler pipeline (in this case
+the "opt" phase of an LLVM compiler) whose API is opaque to ORC with an
+interface that ORC can call as needed. The add method takes an
 module in some input program representation (in this case an LLVM IR module) and
 stores it in the target JITDylib, arranging for it to be passed back to the
 Layer's emit method when any symbol defined by that module is requested. Layers
@@ -250,7 +250,7 @@ each function just passes through code-gen. If we both optimize and code-gen
 lazily we can start executing the first function more quickly, but we will have
 longer pauses as each function has to be both optimized and code-gen'd when it
 is first executed. Things become even more interesting if we consider
-interproceedural optimizations like inlining, which must be performed eagerly.
+interprocedural optimizations like inlining, which must be performed eagerly.
 These are complex trade-offs, and there is no one-size-fits all solution to
 them, but by providing composable layers we leave the decisions to the person
 implementing the JIT, and make it easy for them to experiment with different

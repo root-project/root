@@ -281,7 +281,7 @@ defm : int_cond_alias<"pos",  0b1110>;
 defm : int_cond_alias<"neg",  0b0110>;
 defm : int_cond_alias<"vc",   0b1111>;
 defm : int_cond_alias<"vs",   0b0111>;
-let EmitPriority = 0 in 
+let EmitPriority = 0 in
 {
   defm : int_cond_alias<"",     0b1000>; // same as a; gnu asm, not in manual
   defm : int_cond_alias<"nz",   0b1001>; // same as ne
@@ -306,7 +306,7 @@ defm : fp_cond_alias<"uge",   0b1100>;
 defm : fp_cond_alias<"le",    0b1101>;
 defm : fp_cond_alias<"ule",   0b1110>;
 defm : fp_cond_alias<"o",     0b1111>;
-let EmitPriority = 0 in 
+let EmitPriority = 0 in
 {
   defm : fp_cond_alias<"",      0b1000>; // same as a; gnu asm, not in manual
   defm : fp_cond_alias<"nz",    0b0001>; // same as ne
@@ -444,6 +444,7 @@ def : InstAlias<"mov $asr, $rd", (RDASR IntRegs:$rd, ASRRegs:$asr), 0>;
 def : InstAlias<"mov %psr, $rd", (RDPSR IntRegs:$rd), 0>;
 def : InstAlias<"mov %wim, $rd", (RDWIM IntRegs:$rd), 0>;
 def : InstAlias<"mov %tbr, $rd", (RDTBR IntRegs:$rd), 0>;
+def : InstAlias<"mov %pc, $rd", (RDPC IntRegs:$rd), 0>;
 
 // mov reg_or_imm, specialreg -> wr %g0, reg_or_imm, specialreg
 def : InstAlias<"mov $rs2, $asr", (WRASRrr ASRRegs:$asr, G0, IntRegs:$rs2), 0>;
@@ -491,6 +492,7 @@ def : MnemonicAlias<"stsh", "sth">;
 
 def : MnemonicAlias<"stuha", "stha">;
 def : MnemonicAlias<"stsha", "stha">;
+def : MnemonicAlias<"stw", "st">, Requires<[HasV9]>;
 
 def : MnemonicAlias<"lduw", "ld">, Requires<[HasV9]>;
 def : MnemonicAlias<"lduwa", "lda">, Requires<[HasV9]>;
@@ -521,3 +523,6 @@ def : InstAlias<"signx $rd", (SRArr IntRegs:$rd, IntRegs:$rd, G0), 0>, Requires<
 
 // signx reg, rd -> sra reg, %g0, rd
 def : InstAlias<"signx $rs1, $rd", (SRArr IntRegs:$rd, IntRegs:$rs1, G0), 0>, Requires<[HasV9]>;
+
+// sir -> sir 0
+def : InstAlias<"sir", (SIR 0), 0>;

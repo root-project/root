@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Tooling/Core/Diagnostic.h"
+#include "clang/Basic/SourceLocation.h"
 #include "clang/Basic/SourceManager.h"
 #include "llvm/ADT/STLExtras.h"
 
@@ -25,13 +26,23 @@ DiagnosticMessage::DiagnosticMessage(llvm::StringRef Message,
                                      SourceLocation Loc)
     : Message(Message), FileOffset(0) {
   assert(Loc.isValid() && Loc.isFileID());
-  FilePath = Sources.getFilename(Loc);
+  FilePath = std::string(Sources.getFilename(Loc));
 
   // Don't store offset in the scratch space. It doesn't tell anything to the
   // user. Moreover, it depends on the history of macro expansions and thus
   // prevents deduplication of warnings in headers.
   if (!FilePath.empty())
     FileOffset = Sources.getFileOffset(Loc);
+}
+
+FileByteRange::FileByteRange(
+    const SourceManager &Sources, CharSourceRange Range)
+    : FileOffset(0), Length(0) {
+  FilePath = std::string(Sources.getFilename(Range.getBegin()));
+  if (!FilePath.empty()) {
+    FileOffset = Sources.getFileOffset(Range.getBegin());
+    Length = Sources.getFileOffset(Range.getEnd()) - FileOffset;
+  }
 }
 
 Diagnostic::Diagnostic(llvm::StringRef DiagnosticName,

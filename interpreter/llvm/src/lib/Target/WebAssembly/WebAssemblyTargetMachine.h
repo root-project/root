@@ -33,6 +33,7 @@ public:
 
   ~WebAssemblyTargetMachine() override;
 
+  const WebAssemblySubtarget *getSubtargetImpl() const;
   const WebAssemblySubtarget *getSubtargetImpl(std::string CPU,
                                                std::string FS) const;
   const WebAssemblySubtarget *
@@ -47,7 +48,7 @@ public:
 
   TargetTransformInfo getTargetTransformInfo(const Function &F) override;
 
-  bool usesPhysRegsForPEI() const override { return false; }
+  bool usesPhysRegsForValues() const override { return false; }
 
   yaml::MachineFunctionInfo *createDefaultFuncInfoYAML() const override;
   yaml::MachineFunctionInfo *

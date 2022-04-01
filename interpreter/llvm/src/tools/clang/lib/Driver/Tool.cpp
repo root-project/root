@@ -7,17 +7,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/Driver/Tool.h"
-#include "InputInfo.h"
+#include "clang/Driver/InputInfo.h"
 
 using namespace clang::driver;
 
-Tool::Tool(const char *_Name, const char *_ShortName, const ToolChain &TC,
-           ResponseFileSupport _ResponseSupport,
-           llvm::sys::WindowsEncodingMethod _ResponseEncoding,
-           const char *_ResponseFlag)
-    : Name(_Name), ShortName(_ShortName), TheToolChain(TC),
-      ResponseSupport(_ResponseSupport), ResponseEncoding(_ResponseEncoding),
-      ResponseFlag(_ResponseFlag) {}
+Tool::Tool(const char *_Name, const char *_ShortName, const ToolChain &TC)
+    : Name(_Name), ShortName(_ShortName), TheToolChain(TC) {}
 
 Tool::~Tool() {
 }

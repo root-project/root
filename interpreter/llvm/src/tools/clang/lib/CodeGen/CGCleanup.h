@@ -102,7 +102,7 @@ protected:
   };
 
 public:
-  enum Kind { Cleanup, Catch, Terminate, Filter, PadEnd };
+  enum Kind { Cleanup, Catch, Terminate, Filter };
 
   EHScope(Kind kind, EHScopeStack::stable_iterator enclosingEHScope)
     : CachedLandingPad(nullptr), CachedEHDispatchBlock(nullptr),
@@ -284,8 +284,8 @@ public:
     return sizeof(EHCleanupScope) + CleanupBits.CleanupSize;
   }
 
-  EHCleanupScope(bool isNormal, bool isEH, bool isActive,
-                 unsigned cleanupSize, unsigned fixupDepth,
+  EHCleanupScope(bool isNormal, bool isEH, unsigned cleanupSize,
+                 unsigned fixupDepth,
                  EHScopeStack::stable_iterator enclosingNormal,
                  EHScopeStack::stable_iterator enclosingEH)
       : EHScope(EHScope::Cleanup, enclosingEH),
@@ -293,7 +293,7 @@ public:
         ActiveFlag(nullptr), ExtInfo(nullptr), FixupDepth(fixupDepth) {
     CleanupBits.IsNormalCleanup = isNormal;
     CleanupBits.IsEHCleanup = isEH;
-    CleanupBits.IsActive = isActive;
+    CleanupBits.IsActive = true;
     CleanupBits.IsLifetimeMarker = false;
     CleanupBits.TestFlagInNormalCleanup = false;
     CleanupBits.TestFlagInEHCleanup = false;
@@ -487,17 +487,6 @@ public:
   }
 };
 
-class EHPadEndScope : public EHScope {
-public:
-  EHPadEndScope(EHScopeStack::stable_iterator enclosingEHScope)
-      : EHScope(PadEnd, enclosingEHScope) {}
-  static size_t getSize() { return sizeof(EHPadEndScope); }
-
-  static bool classof(const EHScope *scope) {
-    return scope->getKind() == PadEnd;
-  }
-};
-
 /// A non-stable pointer into the scope stack.
 class EHScopeStack::iterator {
   char *Ptr;
@@ -534,10 +523,6 @@ public:
 
     case EHScope::Terminate:
       Size = EHTerminateScope::getSize();
-      break;
-
-    case EHScope::PadEnd:
-      Size = EHPadEndScope::getSize();
       break;
     }
     Ptr += llvm::alignTo(Size, ScopeStackAlignment);
@@ -627,6 +612,7 @@ struct EHPersonality {
   static const EHPersonality MSVC_C_specific_handler;
   static const EHPersonality MSVC_CxxFrameHandler3;
   static const EHPersonality GNU_Wasm_CPlusPlus;
+  static const EHPersonality XL_CPlusPlus;
 
   /// Does this personality use landingpads or the family of pad instructions
   /// designed to form funclets?
