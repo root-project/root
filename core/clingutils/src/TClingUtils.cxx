@@ -4608,8 +4608,9 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          QualType newQT= ReSubstTemplateArg(arr->getElementType(),instance);
 
          if (newQT == arr->getElementType()) return QT;
-         QT = Ctxt.getConstantArrayType (newQT,
+         QT = Ctxt.getConstantArrayType(newQT,
                                         arr->getSize(),
+                                        arr->getSizeExpr(),
                                         arr->getSizeModifier(),
                                         arr->getIndexTypeCVRQualifiers());
 
