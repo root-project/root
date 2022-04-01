@@ -4235,8 +4235,7 @@ int RootClingMain(int argc,
       // Try to get the module name in the modulemap based on the filepath.
       moduleName = GetModuleNameFromRdictName(outputFile);
 
-      clingArgsInterpreter.push_back("-fmodule-name");
-      clingArgsInterpreter.push_back(moduleName.str());
+      clingArgsInterpreter.push_back("-fmodule-name=" + moduleName.str());
 
       std::string moduleCachePath = llvm::sys::path::parent_path(gOptSharedLibFileName).str();
       // FIXME: This is a horrible workaround to fix the incremental builds.
