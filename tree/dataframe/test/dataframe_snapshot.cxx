@@ -1,5 +1,6 @@
 #include "ROOT/TestSupport.hxx"
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RTrivialDS.hxx"
 #include "ROOT/TSeq.hxx"
 #include "TFile.h"
 #include "TROOT.h"
@@ -829,6 +830,16 @@ TEST(RDFSnapshotMore, ZeroOutputEntries)
    auto *t = f.Get<TTree>("t");
    EXPECT_NE(t, nullptr);           // TTree "t" should be in there...
    EXPECT_EQ(t->GetEntries(), 0ll); // ...and have zero entries
+   gSystem->Unlink(fname);
+}
+
+// Test for https://github.com/root-project/root/issues/10233
+TEST(RDFSnapshotMore, RedefinedDSColumn)
+{
+   const auto fname = "test_snapshot_redefinedscolumn.root";
+   auto df = ROOT::RDF::MakeTrivialDataFrame(1);
+
+   df.Redefine("col0", [] { return 42; }).Snapshot("t", fname);
    gSystem->Unlink(fname);
 }
 
