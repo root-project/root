@@ -2590,14 +2590,12 @@ ROOT::TMetaUtils::GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcC
    // ClassDef argument. It's usually just be an integer literal but it could
    // also be an enum or a variable template for all we know.
    // Go through ICE to be more general.
-   llvm::APSInt RetRes;
-   if (!RetExpr->isIntegerConstantExpr(RetRes, funcCV->getASTContext()))
-      return res_t{false, -1};
-   if (RetRes.isSigned()) {
-      return res_t{true, (Version_t)RetRes.getSExtValue()};
+   if (auto RetRes = RetExpr->getIntegerConstantExpr(funcCV->getASTContext())) {
+      if (RetRes->isSigned())
+         return res_t{true, (Version_t)RetRes->getSExtValue()};
+      return res_t{true, (Version_t)RetRes->getZExtValue()};
    }
-   // else
-   return res_t{true, (Version_t)RetRes.getZExtValue()};
+   return res_t{false, -1};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3675,7 +3673,8 @@ static bool areEqualValues(const clang::TemplateArgument& tArg,
    llvm::APSInt defaultValueAPSInt(64, false);
    if (Expr* defArgExpr = nttpd.getDefaultArgument()) {
       const ASTContext& astCtxt = nttpdPtr->getASTContext();
-      defArgExpr->isIntegerConstantExpr(defaultValueAPSInt, astCtxt);
+      if (auto Value = defArgExpr->getIntegerConstantExpr(astCtxt))
+         defaultValueAPSInt = *Value;
    }
 
    const int value = tArg.getAsIntegral().getLimitedValue();
