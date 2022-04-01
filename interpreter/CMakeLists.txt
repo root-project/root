@@ -351,10 +351,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "9\\.0(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "13\\.0(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 9.0.x")
+    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 13.0.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
