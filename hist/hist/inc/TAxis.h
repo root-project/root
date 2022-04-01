@@ -119,6 +119,7 @@ public:
    virtual void       GetLowEdge(Double_t *edge) const;
            Bool_t     GetMoreLogLabels() const { return TestBit(kMoreLogLabels); }
            Int_t      GetNbins() const { return fNbins; }
+           Int_t      GetNlabels() const;
            Bool_t     GetNoExponent() const { return TestBit(kNoExponent); }
    virtual TObject   *GetParent() const {return fParent;}
            Bool_t     GetRotateTitle() const { return TestBit(kRotateTitle); }
