@@ -814,7 +814,7 @@ TFitResultPtr TGraph2D::Fit(const char *fname, Option_t *option, Option_t *)
 ///
 ///  f2 is an already predefined function created by TF2.
 ///
-/// See TGraph::Fit for the available fitting options and fitting notes 
+/// See TGraph::Fit for the available fitting options and fitting notes
 ///
 TFitResultPtr TGraph2D::Fit(TF2 *f2, Option_t *option, Option_t *)
 {
@@ -1079,9 +1079,13 @@ TH2D *TGraph2D::GetHistogram(Option_t *option)
       }
       if (hzmin == hzmax) {
          Double_t hz = hzmin;
-         if (hz==0) hz = 1.;
-         hzmin = hz - 0.01 * hz;
-         hzmax = hz + 0.01 * hz;
+         if (hz==0) {
+            hzmin = -0.01;
+            hzmax = 0.01;
+         } else {
+            hzmin = hz - 0.01 * TMath::Abs(hz);
+            hzmax = hz + 0.01 * TMath::Abs(hz);
+         }
       }
       fHistogram->SetMinimum(hzmin);
       fHistogram->SetMaximum(hzmax);
