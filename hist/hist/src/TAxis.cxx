@@ -568,6 +568,16 @@ void TAxis::GetLowEdge(Double_t *edge) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the number of axis labels.
+///
+/// It is sometimes useful to know the number of labels on an axis. For instance
+/// when changing the labels with TAxis::ChangeLabel. The number of labels is equal
+/// to `the_number_of_divisions + 1`. By default the number of divisions is
+/// optimised to show a coherent labelling of the main tick marks. After optimisation the
+/// real number of divisions will be smaller or equal to number of divisions requested.
+/// In order to turn off the labelling optimization, it is enough to give a negative
+/// number of divisions to SetNdivisions. The absolute value of this number will be use as
+/// the exact number of divisions. This method take the two cases (optimised or not) into
+/// account.
 
 Int_t TAxis::GetNlabels() const
 {
@@ -885,9 +895,13 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 /// \param[in] labFont   New label font
 /// \param[in] labText   New label text
 ///
-/// If an attribute should not be changed just give the value "-1".
+///  #### Notes:
 ///
-/// If labnum=0 the list of modified labels is reset.
+///  - If an attribute should not be changed just give the value "-1".
+///  - If labnum=0 the list of modified labels is reset.
+///  - To erase a label set labSize to 0.
+///  - If labText is not specified or is an empty string, the text label is not changed.
+///  - To retrieve the number of axis labels use GetNlabels.
 
 void TAxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
                                Int_t labAlign, Int_t labColor, Int_t labFont,
