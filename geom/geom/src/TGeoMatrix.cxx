@@ -683,6 +683,7 @@ TGeoHMatrix TGeoTranslation::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    Double_t tr[3];
    tr[0] = -fTranslation[0];
    tr[1] = -fTranslation[1];
@@ -977,6 +978,7 @@ TGeoHMatrix TGeoRotation::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    Double_t newrot[9];
    newrot[0] = fRotationMatrix[0];
    newrot[1] = fRotationMatrix[3];
@@ -1527,6 +1529,7 @@ TGeoHMatrix TGeoScale::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    Double_t scale[3];
    scale[0] = 1./fScale[0];
    scale[1] = 1./fScale[1];
@@ -1826,6 +1829,7 @@ TGeoHMatrix TGeoCombiTrans::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    Bool_t is_tr = IsTranslation();
    Bool_t is_rot = IsRotation();
    Double_t tr[3];
@@ -2232,6 +2236,7 @@ void TGeoGenTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
 TGeoHMatrix TGeoGenTrans::Inverse() const
 {
    TGeoHMatrix h = *this;
+   h.ResetBit(kGeoRegistered);
    return h;
 }
 
@@ -2458,6 +2463,7 @@ TGeoHMatrix TGeoHMatrix::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    if (IsTranslation()) {
       Double_t tr[3];
       tr[0] = -fTranslation[0]*fRotationMatrix[0] - fTranslation[1]*fRotationMatrix[3] - fTranslation[2]*fRotationMatrix[6];

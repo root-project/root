@@ -3820,13 +3820,13 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
 {
    if (fgLock) {
       ::Warning("TGeoManager::Import", "TGeoMananager in lock mode. NOT IMPORTING new geometry");
-      return NULL;
+      return nullptr;
    }
    if (!filename) return 0;
    if (fgVerboseLevel>0) ::Info("TGeoManager::Import","Reading geometry from file: %s",filename);
 
    if (gGeoManager) delete gGeoManager;
-   gGeoManager = 0;
+   gGeoManager = nullptr;
 
    if (strstr(filename,".gdml")) {
       // import from a gdml file
@@ -3834,8 +3834,10 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       TString cmd = TString::Format("TGDMLParse::StartGDML(\"%s\")", filename);
       TGeoVolume* world = (TGeoVolume*)gROOT->ProcessLineFast(cmd);
 
-      if(world == 0) {
-         ::Error("TGeoManager::Import", "Cannot open file");
+      if(world == nullptr) {
+         delete gGeoManager;
+         gGeoManager = nullptr;
+         ::Error("TGeoManager::Import", "Cannot read file %s", filename);
       }
       else {
          gGeoManager->SetTopVolume(world);
@@ -3847,12 +3849,12 @@ TGeoManager *TGeoManager::Import(const char *filename, const char *name, Option_
       TDirectory::TContext ctxt;
       // in case a web file is specified, use the cacheread option to cache
       // this file in the cache directory
-      TFile *f = 0;
+      TFile *f = nullptr;
       if (strstr(filename,"http")) f = TFile::Open(filename,"CACHEREAD");
       else                         f = TFile::Open(filename);
       if (!f || f->IsZombie()) {
          ::Error("TGeoManager::Import", "Cannot open file");
-         return 0;
+         return nullptr;
       }
       if (name && strlen(name) > 0) {
          gGeoManager = (TGeoManager*)f->Get(name);

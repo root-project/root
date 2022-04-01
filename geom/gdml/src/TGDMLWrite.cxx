@@ -240,7 +240,8 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, T
     Info("WriteGDMLfile", "Top volume does not exist!");
     return;
   }
-  fTopVolumeName = "";
+  fTopVolume = node->GetVolume();
+  fTopVolumeName = fTopVolume->GetName();
   WriteGDMLfile(geomanager, node, materials, filename, option);
 }
 
@@ -259,6 +260,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoNode* node, const c
   for(TGeoMaterial* m : extract.materials)
     materials.Add(m);
   fTopVolumeName = volume->GetName();
+  fTopVolume = volume;
   fSurfaceList.clear();
   fVolumeList.clear();
   fNodeList.clear();
@@ -569,7 +571,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
    fNodeList.insert(node);
    fVolumeList.insert(volume);
    //create the name for volume/assembly
-   if (volume->IsTopVolume()) {
+   if (volume == fTopVolume) {
       //not needed a special function for generating name
       volname = volume->GetName();
       fTopVolumeName = volname;
@@ -2432,6 +2434,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, con
   for(TGeoMaterial* m : extract.materials)
     materials.Add(m);
   fTopVolumeName = volume->GetName();
+  fTopVolume = volume;
   fSurfaceList.clear();
   fVolumeList.clear();
   fNodeList.clear();
@@ -2583,7 +2586,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
 
    //create the name for volume/assembly
-   if (volume->IsTopVolume()) {
+   if (volume == fTopVolume) {
       //not needed a special function for generating name
       volname = volume->GetName();
       fTopVolumeName = volname;
