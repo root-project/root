@@ -4723,7 +4723,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       } else {
          std::string astDump;
          llvm::raw_string_ostream ostream(astDump);
-         instance->dump(ostream);
+         instance->dump(ostream, Ctxt);
          ostream.flush();
          ROOT::TMetaUtils::Warning("ReSubstTemplateArg","Unexpected type of declaration context for template parameter: %s.\n\tThe responsible class is:\n\t%s\n",
                                    replacedDeclCtxt->getDeclKindName(), astDump.c_str());
