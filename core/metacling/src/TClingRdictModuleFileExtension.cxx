@@ -24,7 +24,6 @@
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Serialization/ASTReader.h"
-#include "clang/Serialization/Module.h"
 
 #include "llvm/ADT/Hashing.h"
 #include "llvm/Bitstream/BitstreamWriter.h"
