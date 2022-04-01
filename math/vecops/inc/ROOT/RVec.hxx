@@ -1071,6 +1071,19 @@ RVecImpl<T> &RVecImpl<T>::operator=(RVecImpl<T> &&RHS)
    RHS.clear();
    return *this;
 }
+
+template <typename T>
+bool IsSmall(const ROOT::VecOps::RVec<T> &v)
+{
+   return v.isSmall();
+}
+
+template <typename T>
+bool IsAdopting(const ROOT::VecOps::RVec<T> &v)
+{
+   return !v.Owns();
+}
+
 } // namespace VecOps
 } // namespace Detail
 
@@ -1492,6 +1505,10 @@ public:
    }
 
    using SuperClass::at;
+
+   friend bool ROOT::Detail::VecOps::IsSmall<T>(const RVec<T> &v);
+
+   friend bool ROOT::Detail::VecOps::IsAdopting<T>(const RVec<T> &v);
 };
 
 template <typename T, unsigned N>
