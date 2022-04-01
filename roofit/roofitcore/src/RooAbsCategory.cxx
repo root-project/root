@@ -52,6 +52,7 @@ the following replacements should be used:
 #include "RooMsgService.h"
 #include "RooVectorDataStore.h"
 #include "RooFitLegacy/RooAbsCategoryLegacyIterator.h"
+#include "TreeReadBuffer.h"
 
 #include "Compression.h"
 #include "TString.h"
@@ -59,6 +60,7 @@ the following replacements should be used:
 #include "TLeaf.h"
 #include "TBranch.h"
 
+#include <functional>
 #include <memory>
 
 using namespace std;
@@ -71,6 +73,10 @@ const decltype(RooAbsCategory::_stateNames)::value_type& RooAbsCategory::invalid
   static const decltype(RooAbsCategory::_stateNames)::value_type invalid{"", std::numeric_limits<value_type>::min()};
   return invalid;
 }
+
+
+RooAbsCategory::RooAbsCategory() {}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
@@ -90,8 +96,7 @@ RooAbsCategory::RooAbsCategory(const char *name, const char *title) :
 RooAbsCategory::RooAbsCategory(const RooAbsCategory& other,const char* name) :
   RooAbsArg(other,name),  _currentIndex(other._currentIndex),
   _stateNames(other._stateNames),
-  _insertionOrder(other._insertionOrder),
-  _treeVar(other._treeVar)
+  _insertionOrder(other._insertionOrder)
 {
   setValueDirty() ;
   setShapeDirty() ;
@@ -439,41 +444,65 @@ void RooAbsCategory::attachToVStore(RooVectorDataStore& vstore)
 /// Attach the category index and label as branches to the given
 /// TTree. The index field will be attached as integer with name
 /// `<name>_idx`. If a branch `<name>` exists, it attaches to this branch.
-void RooAbsCategory::attachToTree(TTree& t, Int_t bufSize)
+void RooAbsCategory::attachToTree(TTree& tree, Int_t bufSize)
 {
   // First check if there is an integer branch matching the category name
   TString cleanName(cleanBranchName()) ;
-  TBranch* branch = t.GetBranch(cleanName) ;
+  TBranch* branch = tree.GetBranch(cleanName) ;
   if (!branch) {
     cleanName += "_idx";
-    branch = t.GetBranch(cleanName);
+    branch = tree.GetBranch(cleanName);
   }
 
   if (branch) {
-    TString typeName(((TLeaf*)branch->GetListOfLeaves()->At(0))->GetTypeName()) ;
-    if (!typeName.CompareTo("Int_t")) {
-      // Imported TTree: attach only index field as branch
+    TLeaf* leaf = (TLeaf*)branch->GetListOfLeaves()->At(0) ;
 
-      coutI(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") TTree branch " << GetName()
-           << " will be interpreted as category index" << endl ;
+    // Check that leaf is _not_ an array
+    Int_t dummy ;
+    TLeaf* counterLeaf = leaf->GetLeafCounter(dummy) ;
+    if (counterLeaf) {
+      coutE(Eval) << "RooAbsCategory::attachToTree(" << GetName() << ") ERROR: TTree branch " << GetName()
+        << " is an array and cannot be attached to a RooAbsCategory" << endl ;
+      return ;
+    }
 
-      t.SetBranchAddress(cleanName, &_currentIndex) ;
-      setAttribute("INTIDXONLY_TREE_BRANCH",kTRUE) ;
-      _treeVar = true;
-      return ;
-    } else if (!typeName.CompareTo("UChar_t")) {
-      coutI(DataHandling) << "RooAbsReal::attachToTree(" << GetName() << ") TTree UChar_t branch " << GetName()
-           << " will be interpreted as category index" << endl ;
-      t.SetBranchAddress(cleanName,&_byteValue) ;
-      setAttribute("UCHARIDXONLY_TREE_BRANCH",kTRUE) ;
-      _treeVar = true;
-      return ;
+    TString typeName(leaf->GetTypeName()) ;
+
+
+    // For different type names, store a function to attach
+    std::map<std::string, std::function<std::unique_ptr<TreeReadBuffer>()>> typeMap {
+      {"Float_t",   [&](){ return createTreeReadBuffer<Float_t  >(cleanName, tree); }},
+      {"Double_t",  [&](){ return createTreeReadBuffer<Double_t >(cleanName, tree); }},
+      {"UChar_t",   [&](){ return createTreeReadBuffer<UChar_t  >(cleanName, tree); }},
+      {"Bool_t",    [&](){ return createTreeReadBuffer<Bool_t   >(cleanName, tree); }},
+      {"Char_t",    [&](){ return createTreeReadBuffer<Char_t   >(cleanName, tree); }},
+      {"UInt_t",    [&](){ return createTreeReadBuffer<UInt_t   >(cleanName, tree); }},
+      {"Long64_t",  [&](){ return createTreeReadBuffer<Long64_t >(cleanName, tree); }},
+      {"ULong64_t", [&](){ return createTreeReadBuffer<ULong64_t>(cleanName, tree); }},
+      {"Short_t",   [&](){ return createTreeReadBuffer<Short_t  >(cleanName, tree); }},
+      {"UShort_t",  [&](){ return createTreeReadBuffer<UShort_t >(cleanName, tree); }},
+    };
+
+    auto typeDetails = typeMap.find(typeName.Data());
+    if (typeDetails != typeMap.end()) {
+      coutI(DataHandling) << "RooAbsCategory::attachToTree(" << GetName() << ") TTree " << typeName << " branch \"" << cleanName
+                  << "\" will be converted to int." << endl ;
+      _treeReadBuffer = typeDetails->second();
+    } else {
+      _treeReadBuffer = nullptr;
+
+      if (!typeName.CompareTo("Int_t")) {
+        tree.SetBranchAddress(cleanName, &_currentIndex);
+      }
+      else {
+        coutE(InputArguments) << "RooAbsCategory::attachToTree(" << GetName() << ") data type " << typeName << " is not supported." << endl ;
+      }
     }
   } else {
     TString format(cleanName);
     format.Append("/I");
     void* ptr = &_currentIndex;
-    t.Branch(cleanName, ptr, (const Text_t*)format, bufSize);
+    tree.Branch(cleanName, ptr, (const Text_t*)format, bufSize);
   }
 }
 
@@ -533,33 +562,17 @@ void RooAbsCategory::copyCache(const RooAbsArg *source, Bool_t /*valueOnly*/, Bo
    auto other = static_cast<const RooAbsCategory*>(source);
    assert(dynamic_cast<const RooAbsCategory*>(source));
 
-   _currentIndex = other->_currentIndex;
-
-   if (setValDirty) {
-     setValueDirty();
-   }
-
-   if (!_treeVar)
-     return;
-
-   if (source->getAttribute("INTIDXONLY_TREE_BRANCH")) {
-     // Lookup cat state from other-index because label is missing
-     if (hasIndex(other->_currentIndex)) {
-       _currentIndex = other->_currentIndex;
-     } else {
-       coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName() << ") ERROR: index of source arg "
-           << source->GetName() << " is invalid (" << other->_currentIndex
-           << "), value not updated" << endl;
+   value_type tmp = other->_treeReadBuffer ? *other->_treeReadBuffer : other->_currentIndex;
+   // Lookup cat state from other-index because label is missing
+   if (hasIndex(tmp)) {
+     _currentIndex = tmp;
+     if (setValDirty) {
+       setValueDirty();
      }
-   } else if (source->getAttribute("UCHARIDXONLY_TREE_BRANCH")) {
-     // Lookup cat state from other-index because label is missing
-     Int_t tmp = static_cast<int>(other->_byteValue);
-     if (hasIndex(tmp)) {
-       _currentIndex = tmp;
-     } else {
-       coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName() << ") ERROR: index of source arg "
-           << source->GetName() << " is invalid (" << tmp << "), value not updated" << endl;
-     }
+   } else {
+     coutE(DataHandling) << "RooAbsCategory::copyCache(" << GetName() << ") ERROR: index of source arg "
+         << source->GetName() << " is invalid (" << other->_currentIndex
+         << "), value not updated" << endl;
    }
 }
 
