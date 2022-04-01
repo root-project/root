@@ -84,6 +84,7 @@
 #include "RooCachedReal.h"
 #include "RooHelpers.h"
 #include "RunContext.h"
+#include "TreeReadBuffer.h"
 #include "ValueChecking.h"
 
 #include "ROOT/StringUtils.hxx"
@@ -3205,12 +3206,6 @@ RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, B
 
 
 
-struct TreeReadBuffer {
-  virtual ~TreeReadBuffer() = default;
-  virtual operator double() = 0;
-};
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the cached value of another RooAbsArg to our cache.
 /// Warning: This function just copies the cached values of source,
@@ -3235,30 +3230,6 @@ void RooAbsReal::attachToVStore(RooVectorDataStore& vstore)
 {
   RooVectorDataStore::RealVector* rv = vstore.addReal(this) ;
   rv->setBuffer(this,&_value) ;
-}
-
-
-namespace {
-/// Helper for reading branches with various types from a TTree, and convert all to double.
-template<typename T>
-struct TypedTreeReadBuffer final : public TreeReadBuffer {
-  operator double() override {
-    return _value;
-  }
-  T _value;
-};
-
-/// Create a TreeReadBuffer to hold the specified type, and attach to the branch passed as argument.
-/// \tparam T Type of branch to be read.
-/// \param[in] branchName Attach to this branch.
-/// \param[in] tree Tree to attach to.
-template<typename T>
-std::unique_ptr<TreeReadBuffer> createTreeReadBuffer(const TString& branchName, TTree& tree) {
-  auto buf = new TypedTreeReadBuffer<T>();
-  tree.SetBranchAddress(branchName.Data(), &buf->_value);
-  return std::unique_ptr<TreeReadBuffer>(buf);
-}
-
 }
 
 
