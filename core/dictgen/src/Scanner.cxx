@@ -152,7 +152,7 @@ inline long APIntToLong(const llvm::APInt& num)
 
 inline std::string APIntToStr(const llvm::APInt& num)
 {
-   return num.toString(10, true);
+   return llvm::toString(num, /*radix*/10, /*signed*/true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
