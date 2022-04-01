@@ -1294,7 +1294,7 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
          if (GlobalIndex && KnownModuleFileNames.count(FullASTFilePath))
             continue;
 
-         if (M->IsMissingRequirement)
+         if (M->IsUnimportable)
             continue;
 
          if (GlobalIndex)
@@ -3132,7 +3132,7 @@ Bool_t TCling::HasPCMForLibrary(const char *libname) const
    // true.
    clang::ModuleMap &moduleMap = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo().getModuleMap();
    clang::Module *M = moduleMap.findModule(ModuleName);
-   return M && !M->IsMissingRequirement && M->getASTFile();
+   return M && !M->IsUnimportable && M->getASTFile();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
