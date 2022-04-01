@@ -21,6 +21,8 @@ namespace RDF {
 /// \brief A simple data-source implementation, for demo purposes.
 ///
 /// Constructing an RDataFrame as `RDataFrame(nEntries)` is a superior alternative.
+/// If size is std::numeric_limits<ULong64_t>::max(), this acts as an infinite data-source:
+/// it returns entries from GetEntryRanges forever or until a Range stops the event loop (for test purposes).
 class RTrivialDS final : public ROOT::RDF::RDataSource {
 private:
    unsigned int fNSlots = 0U;
@@ -53,6 +55,8 @@ public:
 /// \brief Make a RDF wrapping a RTrivialDS with the specified amount of entries.
 ///
 /// Constructing an RDataFrame as `RDataFrame(nEntries)` is a superior alternative.
+/// If size is std::numeric_limits<ULong64_t>::max(), this acts as an infinite data-source:
+/// it returns entries from GetEntryRanges forever or until a Range stops the event loop (for test purposes).
 RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries = false);
 /// \brief Make a RDF wrapping a RTrivialDS with infinite entries, for demo purposes.
 RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame();
