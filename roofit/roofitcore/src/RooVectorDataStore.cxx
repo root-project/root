@@ -57,17 +57,7 @@ ClassImp(RooVectorDataStore::RealVector);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooVectorDataStore::RooVectorDataStore() :
-  _wgtVar(0),
-  _sumWeight(0),
-  _sumWeightCarry(0),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _cache(0),
-  _cacheOwner(0),
-  _forcedUpdate(kFALSE)
+RooVectorDataStore::RooVectorDataStore()
 {
   TRACE_CREATE
 }
@@ -79,16 +69,7 @@ RooVectorDataStore::RooVectorDataStore() :
 RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _sumWeight(0),
-  _sumWeightCarry(0),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _cache(0),
-  _cacheOwner(0),
-  _forcedUpdate(kFALSE)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
   for (auto arg : _varsww) {
     arg->attachToVStore(*this) ;
@@ -167,10 +148,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
   _extWgtErrLoArray(other._extWgtErrLoArray),
   _extWgtErrHiArray(other._extWgtErrHiArray),
   _extSumW2Array(other._extSumW2Array),
-  _currentWeightIndex(other._currentWeightIndex),
-  _cache(0),
-  _cacheOwner(0),
-  _forcedUpdate(kFALSE)
+  _currentWeightIndex(other._currentWeightIndex)
 {
   for (const auto realVec : other._realStoreList) {
     _realStoreList.push_back(new RealVector(*realVec, (RooAbsReal*)_varsww.find(realVec->_nativeReal->GetName()))) ;
@@ -195,17 +173,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const ch
 RooVectorDataStore::RooVectorDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname) :
   RooAbsDataStore(other,varsNoWeight(vars,other._wgtVar?other._wgtVar->GetName():0),newname),
   _varsww(vars),
-  _wgtVar(weightVar(vars,other._wgtVar?other._wgtVar->GetName():0)),
-  _sumWeight(0),
-  _sumWeightCarry(0),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _currentWeightIndex(0),
-  _cache(0),
-  _cacheOwner(0),
-  _forcedUpdate(kFALSE)
+  _wgtVar(weightVar(vars,other._wgtVar?other._wgtVar->GetName():0))
 {
   for (const auto arg : _varsww) {
     arg->attachToVStore(*this) ;
@@ -238,9 +206,7 @@ RooVectorDataStore::RooVectorDataStore(const RooVectorDataStore& other, const Ro
   _extWgtErrLoArray(other._extWgtErrLoArray),
   _extWgtErrHiArray(other._extWgtErrHiArray),
   _extSumW2Array(other._extSumW2Array),
-  _currentWeightIndex(other._currentWeightIndex),
-  _cache(0),
-  _forcedUpdate(kFALSE)
+  _currentWeightIndex(other._currentWeightIndex)
 {
   for (const auto realVec : other._realStoreList) {
     auto real = static_cast<RooAbsReal*>(vars.find(realVec->bufArg()->GetName()));
@@ -302,15 +268,7 @@ RooVectorDataStore::RooVectorDataStore(RooStringView name, RooStringView title, 
 
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _sumWeight(0),
-  _sumWeightCarry(0),
-  _extWgtArray(0),
-  _extWgtErrLoArray(0),
-  _extWgtErrHiArray(0),
-  _extSumW2Array(0),
-  _cache(0),
-  _forcedUpdate(kFALSE)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
   for (const auto arg : _varsww) {
     arg->attachToVStore(*this) ;
