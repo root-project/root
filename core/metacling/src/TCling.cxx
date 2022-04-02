@@ -2291,7 +2291,7 @@ void TCling::RegisterModule(const char* modulename,
          ModuleMapName = ModuleName + ".modulemap";
       else
          ModuleMapName = "module.modulemap";
-      RegisterPrebuiltModulePath(llvm::sys::path::parent_path(dyLibName).data(),
+      RegisterPrebuiltModulePath(llvm::sys::path::parent_path(dyLibName).str(),
                                  ModuleMapName);
 
       // FIXME: We should only complain for modules which we know to exist. For example, we should not complain about

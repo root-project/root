@@ -85,7 +85,7 @@ void TClingRdictModuleFileExtension::Writer::writeExtensionContents(clang::Sema 
          Stream.EmitRecordWithBlob(Abbrev, Record, FileName);
 
          uint64_t Record1[] = {FIRST_EXTENSION_RECORD_ID + 1};
-         std::ifstream fp(FilePath.data(), std::ios::binary);
+         std::ifstream fp(FilePath.str(), std::ios::binary);
          std::ostringstream os;
          os << fp.rdbuf();
          Stream.EmitRecordWithBlob(Abbrev1, Record1, StringRef(os.str()));
