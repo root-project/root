@@ -71,18 +71,7 @@ Int_t RooTreeDataStore::_defTreeBufSize = 10*1024*1024;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore() :
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kTRUE),
-  _wgtVar(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
-{
-}
+RooTreeDataStore::RooTreeDataStore() : _defCtor(true) {}
 
 
 
@@ -92,12 +81,9 @@ RooTreeDataStore::RooTreeDataStore() :
 RooTreeDataStore::RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* wgtVarName) :
   RooAbsDataStore("blah","blah",varsNoWeight(vars,wgtVarName)),
   _tree(t),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kTRUE),
+  _defCtor(true),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
 }
 
@@ -108,16 +94,8 @@ RooTreeDataStore::RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* 
 
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
   initialize() ;
 }
@@ -129,16 +107,8 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
   initialize() ;
   loadValues(&t,&select) ;
@@ -150,16 +120,8 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const char* selExpr, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
   initialize() ;
 
@@ -178,16 +140,8 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& tds, const RooFormulaVar& select, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
   initialize() ;
   loadValues(&tds,&select) ;
@@ -199,16 +153,8 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& ads, const char* selExpr, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
   initialize() ;
 
@@ -231,11 +177,7 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
           Int_t nStart, Int_t nStop, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
   // WVE NEED TO ADJUST THIS FOR WEIGHTS
 
@@ -340,9 +282,6 @@ void RooTreeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& c
 
 RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const char* newname) :
   RooAbsDataStore(other,newname),
-  _tree(0),
-  _cacheTree(0),
-  _defCtor(kFALSE),
   _varsww(other._varsww),
   _wgtVar(other._wgtVar),
   _extWgtArray(other._extWgtArray),
@@ -363,9 +302,6 @@ RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const char* ne
 
 RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname) :
   RooAbsDataStore(other,varsNoWeight(vars,other._wgtVar?other._wgtVar->GetName():0),newname),
-  _tree(0),
-  _cacheTree(0),
-  _defCtor(kFALSE),
   _varsww(vars),
   _wgtVar(other._wgtVar?weightVar(vars,other._wgtVar->GetName()):0),
   _extWgtArray(other._extWgtArray),

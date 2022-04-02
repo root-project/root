@@ -120,11 +120,11 @@ public:
   void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) override ;
 
   std::map<Int_t,RooAbsDataStore*> _dataMap ;
-  RooCategory* _indexCat ;
-  mutable RooAbsDataStore* _curStore ; ///<! Datastore associated with current event
-  mutable Int_t _curIndex ; ///<! Index associated with current event
+  RooCategory* _indexCat = nullptr;
+  mutable RooAbsDataStore* _curStore = nullptr; ///<! Datastore associated with current event
+  mutable Int_t _curIndex = 0; ///<! Index associated with current event
   mutable std::unique_ptr<std::vector<double>> _weightBuffer; ///<! Buffer for weights in case a batch of values is requested.
-  Bool_t _ownComps ; ///<!
+  Bool_t _ownComps = false; ///<!
 
   ClassDefOverride(RooCompositeDataStore,1) // Composite Data Storage class
 };

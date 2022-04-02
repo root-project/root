@@ -161,13 +161,13 @@ public:
   static Int_t _defTreeBufSize ;
 
   void createTree(RooStringView name, RooStringView title) ;
-  TTree *_tree ;           // TTree holding the data points
-  TTree *_cacheTree ;      //! TTree holding the cached function values
-  const RooAbsArg* _cacheOwner ; //! Object owning cache contents
-  mutable Bool_t _defCtor ;//! Was object constructed with default ctor?
+  TTree *_tree = nullptr;                 // TTree holding the data points
+  TTree *_cacheTree = nullptr;            //! TTree holding the cached function values
+  const RooAbsArg* _cacheOwner = nullptr; //! Object owning cache contents
+  mutable Bool_t _defCtor = false;        //! Was object constructed with default ctor?
 
   RooArgSet _varsww ;
-  RooRealVar* _wgtVar ;     // Pointer to weight variable (if set)
+  RooRealVar* _wgtVar = nullptr;     // Pointer to weight variable (if set)
 
   const Double_t* _extWgtArray{nullptr};         ///<! External weight array
   const Double_t* _extWgtErrLoArray{nullptr};    ///<! External weight array - low error
@@ -175,10 +175,10 @@ public:
   const Double_t* _extSumW2Array{nullptr};       ///<! External sum of weights array
   mutable std::unique_ptr<std::vector<double>> _weightBuffer; //! Buffer for weights in case a batch of values is requested.
 
-  mutable Double_t  _curWgt ;      ///< Weight of current event
-  mutable Double_t  _curWgtErrLo ; ///< Weight of current event
-  mutable Double_t  _curWgtErrHi ; ///< Weight of current event
-  mutable Double_t  _curWgtErr ;   ///< Weight of current event
+  mutable Double_t  _curWgt = 1.0;      ///< Weight of current event
+  mutable Double_t  _curWgtErrLo = 0.0; ///< Weight of current event
+  mutable Double_t  _curWgtErrHi = 0.0; ///< Weight of current event
+  mutable Double_t  _curWgtErr = 0.0;   ///< Weight of current event
 
   RooArgSet _attachedBuffers ; ///<! Currently attached buffers (if different from _varsww)
 
