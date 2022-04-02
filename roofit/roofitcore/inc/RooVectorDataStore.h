@@ -672,7 +672,7 @@ public:
 
  private:
   RooArgSet _varsww ;
-  RooRealVar* _wgtVar ;     ///< Pointer to weight variable (if set)
+  RooRealVar* _wgtVar = nullptr; ///< Pointer to weight variable (if set)
 
   std::vector<RealVector*> _realStoreList ;
   std::vector<RealFullVector*> _realfStoreList ;
@@ -680,20 +680,20 @@ public:
 
   void setAllBuffersNative() ;
 
-  Double_t _sumWeight ;
-  Double_t _sumWeightCarry;
+  Double_t _sumWeight = 0.0;
+  Double_t _sumWeightCarry = 0.0;
 
-  const Double_t* _extWgtArray ;         ///<! External weight array
-  const Double_t* _extWgtErrLoArray ;    ///<! External weight array - low error
-  const Double_t* _extWgtErrHiArray ;    ///<! External weight array - high error
-  const Double_t* _extSumW2Array ;       ///<! External sum of weights array
+  const Double_t* _extWgtArray = nullptr;      ///<! External weight array
+  const Double_t* _extWgtErrLoArray = nullptr; ///<! External weight array - low error
+  const Double_t* _extWgtErrHiArray = nullptr; ///<! External weight array - high error
+  const Double_t* _extSumW2Array = nullptr;    ///<! External sum of weights array
 
   mutable ULong64_t _currentWeightIndex{0}; ///<
 
-  RooVectorDataStore* _cache ; ///<! Optimization cache
-  RooAbsArg* _cacheOwner ; ///<! Cache owner
+  RooVectorDataStore* _cache = nullptr; ///<! Optimization cache
+  RooAbsArg* _cacheOwner = nullptr; ///<! Cache owner
 
-  Bool_t _forcedUpdate ; ///<! Request for forced cache update
+  Bool_t _forcedUpdate = false; ///<! Request for forced cache update
 
   ClassDefOverride(RooVectorDataStore, 7) // STL-vector-based Data Storage class
 };
