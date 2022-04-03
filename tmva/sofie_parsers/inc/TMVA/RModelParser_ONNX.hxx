@@ -41,6 +41,9 @@ std::unique_ptr<ROperator> make_ROperator_Slice(const onnx::NodeProto &nodeproto
 std::unique_ptr<ROperator> make_ROperator_GRU(const onnx::NodeProto& nodeproto, const onnx::GraphProto& graphproto, std::unordered_map<std::string, ETensorType>& tensor_type);
 template <EBasicBinaryOperator Op1>
 std::unique_ptr<ROperator> make_ROperator_BasicBinary(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Identity(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Softmax(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
+std::unique_ptr<ROperator> make_ROperator_Concat(const onnx::NodeProto &nodeproto, const onnx::GraphProto &graphproto, std::unordered_map<std::string, ETensorType> &tensor_type);
 
 using factoryMethodMap = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
 const factoryMethodMap mapOptypeOperator = {
@@ -67,7 +70,10 @@ const factoryMethodMap mapOptypeOperator = {
    {"Slice", &make_ROperator_Slice},
    {"Squeeze", &make_ROperator_Reshape},
    {"Unsqueeze", &make_ROperator_Reshape},
-   {"Flatten", &make_ROperator_Reshape}
+   {"Flatten", &make_ROperator_Reshape},
+   {"Identity", &make_ROperator_Identity},
+   {"Softmax", &make_ROperator_Softmax},
+   {"Concat", &make_ROperator_Concat}
 };
 
 using factoryMethodMap1 = std::unordered_map<std::string, std::unique_ptr<ROperator> (*)(const onnx::NodeProto&,const onnx::NodeProto&, const onnx::GraphProto&, std::unordered_map<std::string, ETensorType>&)>;
@@ -81,7 +87,7 @@ std::unique_ptr<ROperator> make_ROperator(size_t idx, const onnx::GraphProto& gr
 
 class RModelParser_ONNX{
 public:
-   RModel Parse(std::string filename);
+   RModel Parse(std::string filename, bool verbose = false);
 };
 
 
