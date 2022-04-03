@@ -13,3 +13,6 @@
 #include "TMVA/ROperator_Reshape.hxx"
 #include "TMVA/ROperator_Slice.hxx"
 #include "TMVA/ROperator_GRU.hxx"
+#include "TMVA/ROperator_Identity.hxx"
+#include "TMVA/ROperator_Softmax.hxx"
+#include "TMVA/ROperator_Concat.hxx"

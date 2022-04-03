@@ -28,6 +28,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Slice.hxx
    TMVA/ROperator_Transpose.hxx
    TMVA/ROperator_Pool.hxx
+   TMVA/ROperator_Concat.hxx
+   TMVA/ROperator_Identity.hxx
+   TMVA/ROperator_Softmax.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
   SOURCES
