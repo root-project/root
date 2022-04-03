@@ -16,38 +16,60 @@
 
 using namespace TMVA::Experimental;
 
-#include "TMVA/SOFIEHelpers.hxx"
+/// function to compile the generated model and the declaration of the SofieFunctor
+/// used by RDF.
+/// Assume that the model name as in the header file
+void CompileModelForRDF(const std::string & headerModelFile, unsigned int ninputs, unsigned int nslots=0) {
 
-void TMVA_SOFIE_RDataFrame_JIT(const char * modelFile = "Higgs_trained_model.h5"){
+   std::string modelName = headerModelFile.substr(0,headerModelFile.find(".hxx"));
+   std::string cmd = std::string("#include \"") + headerModelFile + std::string("\"");
+   auto ret = gInterpreter->Declare(cmd.c_str());
+   if (!ret)
+    throw std::runtime_error("Error compiling : " + cmd);
+   std::cout << "compiled : " << cmd << std::endl;
+
+   cmd = "auto sofie_functor = TMVA::Experimental::SofieFunctor<" + std::to_string(ninputs) + ",TMVA_SOFIE_" +
+    modelName + "::Session>(" + std::to_string(nslots) + ");";
+   ret = gInterpreter->Declare(cmd.c_str());
+   if (!ret)
+    throw std::runtime_error("Error compiling : " + cmd);
+   std::cout << "compiled : " << cmd << std::endl;
+   std::cout << "Model is ready to be evaluated" << std::endl;
+   return;
+}
+
+void TMVA_SOFIE_RDataFrame_JIT(std::string modelFile = "Higgs_trained_model.h5"){
 
     TMVA::PyMethodBase::PyInitialize();
 
     // check if the input file exists
-    TString modelFile = "Higgs_trained_model.h5";
-    if (gSystem->AccessPathName(modelFile)) {
+    if (gSystem->AccessPathName(modelFile.c_str())) {
         Info("TMVA_SOFIE_RDataFrame","You need to run TMVA_Higgs_Classification.C to generate the Keras trained model");
         return;
     }
 
     // parse the input Keras model into RModel object
-    SOFIE::RModel model = SOFIE::PyKeras::Parse(std::string(modelFile.Data()));
+    SOFIE::RModel model = SOFIE::PyKeras::Parse(modelFile);
 
-    modelFile.ReplaceAll(".h5",".hxx");
+    std::string modelName = modelFile.substr(0,modelFile.find(".h5"));
+    std::string modelHeaderFile = modelName + std::string(".hxx");
     //Generating inference code
     model.Generate();
-    model.OutputGenerated(std::string(modelFile.Data()));
+    model.OutputGenerated(modelHeaderFile);
     model.PrintGenerated();
+    // check that also weigh file exists
+    std::string modelWeightFile = modelName + std::string(".dat");
+    if (gSystem->AccessPathName(modelWeightFile.c_str())) {
+        Error("TMVA_SOFIE_RDataFrame","Generated weight file is missing");
+        return;
+    }
 
-    // now compile using ROOT JIT trained model
-    gROOT->ProcessLine(TString(".L ") + modelFile);
-
+    // now compile using ROOT JIT trained model (see function above)
+    CompileModelForRDF(modelHeaderFile,7);
 
     std::string inputFileName = "Higgs_data.root";
     std::string inputFile = "http://root.cern.ch/files/" + inputFileName;
 
-    gROOT->ProcessLine("auto sofie_functor = SofieFunctor<7,TMVA_SOFIE_Higgs_trained_model::Session>(0)");
-
-    int nthreads = ROOT::GetThreadPoolSize();
     ROOT::RDataFrame df1("sig_tree", inputFile);
     auto h1 = df1.Define("DNN_Value", "sofie_functor(rdfslot_,m_jj, m_jjj, m_lv, m_jlv, m_bb, m_wbb, m_wwbb)")
                    .Histo1D({"h_sig", "", 100, 0, 1},"DNN_Value");
@@ -55,7 +77,6 @@ void TMVA_SOFIE_RDataFrame_JIT(const char * modelFile = "Higgs_trained_model.h5"
     ROOT::RDataFrame df2("bkg_tree", inputFile);
     auto h2 = df2.Define("DNN_Value", "sofie_functor(rdfslot_,m_jj, m_jjj, m_lv, m_jlv, m_bb, m_wbb, m_wwbb)")
                    .Histo1D({"h_bkg", "", 100, 0, 1},"DNN_Value");
-
 
     h1->SetLineColor(kRed);
     h2->SetLineColor(kBlue);
