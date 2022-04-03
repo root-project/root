@@ -154,7 +154,8 @@ void PDFTest::setValuesConstant(const RooAbsCollection& coll, bool constant) con
 }
 
 void PDFTest::resetParameters() {
-  _parameters = _origParameters;
+  _parameters.assign(_origParameters);
+  _yields.assign(_origYields);
 }
 
 void PDFTest::kickParameters() {
@@ -425,7 +426,10 @@ void PDFTest::runBatchVsScalar(bool clonePDF) {
     cleanupBatch.reset(pdfBatch);
   }
 
+  resetParameters();
   auto resultScalar = runScalarFit(pdfScalar);
+
+  resetParameters();
   auto resultBatch = runBatchFit(pdfBatch);
 
   resetParameters();
