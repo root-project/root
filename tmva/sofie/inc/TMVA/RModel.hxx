@@ -28,6 +28,7 @@ private:
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
    std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
    std::vector<std::string> fOutputTensorNames;
+   std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
 
@@ -79,13 +80,14 @@ public:
          fNeededStdLib.insert(libname);
       }
    }
+   void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> outputtensornames);
    void UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
    std::shared_ptr<void> GetInitializedTensorData(std::string tensor_name);
 
 
-   void Initialize();
-   void Generate(bool useSession = true, bool useWeightFile = true);
+   void Initialize(int batchSize=1);
+   void Generate(bool useSession = true, bool useWeightFile = true, int batchSize = 1);
 
    void ReadInitializedTensorsFromFile();
    void WriteInitializedTensorsToFile(std::string filename = "");

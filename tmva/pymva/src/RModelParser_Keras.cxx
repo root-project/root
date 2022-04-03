@@ -572,6 +572,7 @@ RModel Parse(std::string filename){
                       << TMVA::Experimental::SOFIE::ConvertShapeToString(fInputShape) << std::endl;
          }
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
+         rmodel.AddInputTensorName(fInputName);
          break;
          }
 
@@ -600,6 +601,7 @@ RModel Parse(std::string filename){
                       << fInputName << " : " << TMVA::Experimental::SOFIE::ConvertShapeToString(fInputShape) << std::endl;
          }
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
+         rmodel.AddInputTensorName(fInputName);
          break;
          }
 

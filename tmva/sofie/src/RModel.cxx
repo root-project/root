@@ -15,6 +15,7 @@ namespace SOFIE{
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
       fOutputTensorNames = other.fOutputTensorNames;
+      fInputTensorNames = other.fInputTensorNames;
       fOperators = std::move(other.fOperators);
       fInitializedTensors = std::move(other.fInitializedTensors);
       fIntermediateTensorInfos = std::move(other.fIntermediateTensorInfos);
@@ -30,6 +31,7 @@ namespace SOFIE{
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
       fOutputTensorNames = other.fOutputTensorNames;
+      fInputTensorNames = other.fInputTensorNames;
       fOperators = std::move(other.fOperators);
       fInitializedTensors = std::move(other.fInitializedTensors);
       fIntermediateTensorInfos = std::move(other.fIntermediateTensorInfos);
@@ -85,7 +87,7 @@ namespace SOFIE{
          return f4->second.type;
       }
 
-      throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the shape is requested is not found");
+      throw std::runtime_error("TMVA SOFIE tensor [" + name + "] for which the type is requested is not found");
    }
 
    bool RModel::CheckIfTensorAlreadyExist(std::string tensor_name){
@@ -112,6 +114,10 @@ namespace SOFIE{
       }
       TensorInfo inputInfo { type, shape };
       fReadyInputTensorInfos[input_name] = inputInfo;
+   }
+
+   void RModel::AddInputTensorName(std::string input_name) {
+       fInputTensorNames.push_back(input_name);
    }
 
    void RModel::AddOperator(std::unique_ptr<ROperator> op, int order_execution){
@@ -166,15 +172,36 @@ namespace SOFIE{
       }
    }
 
-   void RModel::Initialize(){
+   void RModel::Initialize(int batchSize){
+      // check if there are only parametrized input tensor and convert in
+      // ready input tensor according to batch size
+      // convert parametric shape to a dimensional shape
+      if (fReadyInputTensorInfos.size() != fInputTensorNames.size()) {
+         if ( fReadyInputTensorInfos.size() + fInputTensorInfos.size() != fInputTensorNames.size())
+            throw std::runtime_error("TMVA-SOFIE: RModel::Initializes: invalid inputs");
+         for (auto & input : fInputTensorInfos) {
+            std::vector<size_t> shape;
+            shape.reserve(input.second.shape.size());
+            for (auto & d : input.second.shape){
+               if (d.isParam)
+                  shape.push_back(batchSize);
+               else
+                  shape.push_back(d.dim);
+            }
+            AddInputTensorInfo(input.first, input.second.type, shape);
+         }
+      }
+
+
       for (auto& i : fOperators){
+         //std::cout << "initialize operator  " << typeid(*i).name() << std::endl;
          i->Initialize(*this);
       }
    }
 
-   void RModel::Generate(bool useSession, bool useWeightFile){
+   void RModel::Generate(bool useSession, bool useWeightFile, int batchSize){
       fUseSession = useSession;  // session flag is used in operator initialize
-      Initialize();
+      Initialize(batchSize);
       fGC += ("//Code generated automatically by TMVA for Inference of Model file [" + fFileName + "] at [" + fParseTime.substr(0, fParseTime.length()-1) +"] \n");
       // add header guards
       std::string hgname = fName;
