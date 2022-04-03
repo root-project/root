@@ -28,6 +28,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Transpose.hxx
    TMVA/ROperator_Pool.hxx
    TMVA/SOFIE_common.hxx
+   TMVA/SOFIEHelpers.hxx
   SOURCES
     src/RModel.cxx
     src/SOFIE_common.cxx
