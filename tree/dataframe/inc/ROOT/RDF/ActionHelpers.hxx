@@ -1273,9 +1273,9 @@ void *GetData(T & /*v*/)
 }
 
 template <typename T>
-void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName,
-                       const std::string &name, TBranch *&branch, void *&branchAddress, T *address,
-                       RBranchSet &outputBranches)
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName, const std::string &name,
+                       TBranch *&branch, void *&branchAddress, T *address, RBranchSet &outputBranches,
+                       bool /*isDefine*/)
 {
    static TClassRef TBOClRef("TBranchObject");
 
@@ -1336,9 +1336,8 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
 /// In case of 1., we keep aside the pointer to the branch and the pointer to the input value (in `branch` and
 /// `branchAddress`) so we can intercept changes in the address of the input branch and tell the output branch.
 template <typename T>
-void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName,
-                       const std::string &outName, TBranch *&branch, void *&branchAddress, RVec<T> *ab,
-                       RBranchSet &outputBranches)
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &inName, const std::string &outName,
+                       TBranch *&branch, void *&branchAddress, RVec<T> *ab, RBranchSet &outputBranches, bool isDefine)
 {
    TBranch *inputBranch = nullptr;
    if (inputTree) {
@@ -1349,7 +1348,7 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    auto *outputBranch = outputBranches.Get(outName);
 
    // if no backing input branch, we must write out an RVec
-   bool mustWriteRVec = (inputBranch == nullptr);
+   bool mustWriteRVec = (inputBranch == nullptr || isDefine);
    // otherwise, if input branch is TClonesArray, must write out an RVec
    if (!mustWriteRVec && std::string_view(inputBranch->GetClassName()) == "TClonesArray") {
       mustWriteRVec = true;
@@ -1427,14 +1426,16 @@ class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<
    std::vector<TBranch *> fBranches; // Addresses of branches in output, non-null only for the ones holding C arrays
    std::vector<void *> fBranchAddresses; // Addresses of objects associated to output branches
    RBranchSet fOutputBranches;
+   std::vector<bool> fIsDefine;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
-                  const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options)
+                  const ColumnNames_t &vbnames, const ColumnNames_t &bnames, const RSnapshotOptions &options,
+                  std::vector<bool> &&isDefine)
       : fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fBranches(vbnames.size(), nullptr),
-        fBranchAddresses(vbnames.size(), nullptr)
+        fBranchAddresses(vbnames.size(), nullptr), fIsDefine(std::move(isDefine))
    {
       ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
    }
@@ -1481,11 +1482,10 @@ public:
    void SetBranches(ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
       // create branches in output tree
-      int expander[] = {
-         (SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S],
-                            fBranches[S], fBranchAddresses[S], &values, fOutputBranches),
-          0)...,
-         0};
+      int expander[] = {(SetBranchesHelper(fInputTree, *fOutputTree, fInputBranchNames[S], fOutputBranchNames[S],
+                                           fBranches[S], fBranchAddresses[S], &values, fOutputBranches, fIsDefine[S]),
+                         0)...,
+                        0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
    }
 
@@ -1554,17 +1554,19 @@ class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelpe
    // Addresses associated to output branches per slot, non-null only for the ones holding C arrays
    std::vector<std::vector<void *>> fBranchAddresses;
    std::vector<RBranchSet> fOutputBranches;
+   std::vector<bool> fIsDefine;
 
 public:
    using ColumnTypes_t = TypeList<ColTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &vbnames, const ColumnNames_t &bnames,
-                    const RSnapshotOptions &options)
+                    const RSnapshotOptions &options, std::vector<bool> &&isDefine)
       : fNSlots(nSlots), fOutputFiles(fNSlots), fOutputTrees(fNSlots), fBranchAddressesNeedReset(fNSlots, 1),
         fFileName(filename), fDirName(dirname), fTreeName(treename), fOptions(options), fInputBranchNames(vbnames),
         fOutputBranchNames(ReplaceDotWithUnderscore(bnames)), fInputTrees(fNSlots),
         fBranches(fNSlots, std::vector<TBranch *>(vbnames.size(), nullptr)),
-        fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr)), fOutputBranches(fNSlots)
+        fBranchAddresses(fNSlots, std::vector<void *>(vbnames.size(), nullptr)), fOutputBranches(fNSlots),
+        fIsDefine(std::move(isDefine))
    {
       ValidateSnapshotOutput(fOptions, fTreeName, fFileName);
    }
@@ -1645,11 +1647,11 @@ public:
    void SetBranches(unsigned int slot, ColTypes &... values, std::index_sequence<S...> /*dummy*/)
    {
          // hack to call TTree::Branch on all variadic template arguments
-         int expander[] = {
-            (SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S], fOutputBranchNames[S],
-                               fBranches[slot][S], fBranchAddresses[slot][S], &values, fOutputBranches[slot]),
-             0)...,
-            0};
+         int expander[] = {(SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fInputBranchNames[S],
+                                              fOutputBranchNames[S], fBranches[slot][S], fBranchAddresses[slot][S],
+                                              &values, fOutputBranches[slot], fIsDefine[S]),
+                            0)...,
+                           0};
          (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
          (void)slot;     // avoid unused variable warnings in gcc6.2
    }
