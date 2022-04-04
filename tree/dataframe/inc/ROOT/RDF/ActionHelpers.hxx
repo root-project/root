@@ -1372,8 +1372,8 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
       // 3. RVec coming from a column on disk of type vector (the RVec is adopting the data of that vector)
       // 4. TClonesArray written out as RVec<T>
       if (outputBranch) {
-         branchAddress = ab->data();
-         outputBranch->SetAddress(&branchAddress);
+         // needs to be SetObject (not SetAddress) to mimic what happens when this TBranchElement is constructed
+         outputBranch->SetObject(ab);
       } else {
          auto *b = outputTree.Branch(outName.c_str(), ab);
          outputBranches.Insert(outName, b);
