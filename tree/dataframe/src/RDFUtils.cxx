@@ -227,14 +227,11 @@ std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, R
    std::string colType;
 
    // must check defines first: we want Redefines to have precedence over everything else
-   if (colType.empty() && define) {
+   if (define) {
       colType = define->GetTypeName();
-   }
-
-   if (ds && ds->HasColumn(colName))
+   } else if (ds && ds->HasColumn(colName)) {
       colType = ds->GetTypeName(colName);
-
-   if (colType.empty() && tree) {
+   } else if (tree) {
       colType = GetBranchOrLeafTypeName(*tree, colName);
       if (vector2rvec && TClassEdit::IsSTLCont(colType) == ROOT::ESTLType::kSTLvector) {
          std::vector<std::string> split;
