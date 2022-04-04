@@ -323,6 +323,24 @@ TEST_F(RDFSnapshotArrays, SingleThreadJitted)
    checkSnapshotArrayFile(dj, kNEvents);
 }
 
+TEST_F(RDFSnapshotArrays, RedefineArray)
+{
+   RDataFrame df("arrayTree", kFileNames);
+   auto df2 = df.Redefine("fixedSizeArr",
+                          [] {
+                             return ROOT::RVecF{42.f, 42.f};
+                          })
+                 .Snapshot<ROOT::RVec<float>>("t", "test_snapshotRVecRedefineArray.root", {"fixedSizeArr"});
+   df2->Foreach(
+      [](const ROOT::RVecF &v) {
+         EXPECT_EQ(v.size(), 2u); // not 4 as it was in the original input
+         EXPECT_TRUE(All(v == ROOT::RVecF{42.f, 42.f}));
+      },
+      {"fixedSizeArr"});
+
+   gSystem->Unlink("test_snapshotRVecRedefineArray.root");
+}
+
 void WriteColsWithCustomTitles(const std::string &tname, const std::string &fname)
 {
    int i;
