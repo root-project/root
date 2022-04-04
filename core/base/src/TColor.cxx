@@ -2036,16 +2036,15 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
 
    TColor *color = gROOT->GetColor(n);
    if (color) {
-      TObjArray *colors  = (TObjArray*) gROOT->GetListOfColors();
+      TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
       Int_t ncolors = colors->GetSize();
       TColor *col = 0;
-      for (Int_t i = 0; i<ncolors; i++) {
-         col = (TColor*)colors->At(i);
+      for (Int_t i = 0; i < ncolors; i++) {
+         col = (TColor *)colors->At(i);
          if (col) {
-            if (col->GetRed()   == color->GetRed()   &&
-                col->GetGreen() == color->GetGreen() &&
-                col->GetBlue()  == color->GetBlue()  &&
-                col->GetAlpha() == a) return col->GetNumber();
+            if (col->GetRed()   == color->GetRed() && col->GetGreen() == color->GetGreen() &&
+                col->GetBlue()  == color->GetBlue() && col->GetAlpha() == a)
+               return col->GetNumber();
          }
       }
       TColor *colort = new TColor(gROOT->GetListOfColors()->GetLast()+1,
