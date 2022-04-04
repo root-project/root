@@ -1202,8 +1202,13 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
                        RBranchSet &outputBranches)
 {
    static TClassRef TBOClRef("TBranchObject");
-   // FIXME we should be using FindBranch as a fallback if GetBranch fails
-   TBranch *inputBranch = inputTree ? inputTree->GetBranch(inName.c_str()) : nullptr;
+
+   TBranch *inputBranch = nullptr;
+   if (inputTree) {
+      inputBranch = inputTree->GetBranch(inName.c_str());
+      if (!inputBranch) // try harder
+         inputBranch = inputTree->FindBranch(inName.c_str());
+   }
 
    auto *outputBranch = outputBranches.Get(name);
    if (outputBranch) {
@@ -1262,10 +1267,8 @@ void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &i
    TBranch *inputBranch = nullptr;
    if (inputTree) {
       inputBranch = inputTree->GetBranch(inName.c_str());
-      if (!inputBranch) {
-         // try harder
+      if (!inputBranch) // try harder
          inputBranch = inputTree->FindBranch(inName.c_str());
-      }
    }
    auto *outputBranch = outputBranches.Get(outName);
 
