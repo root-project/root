@@ -146,6 +146,8 @@ ROOT_BUILD_OPTION(mathmore ON "Build libMathMore extended math library (requires
 ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before process termination (experimental, used for leak checking)")
 ROOT_BUILD_OPTION(mlp ON "Enable support for TMultilayerPerceptron classes' federation")
 ROOT_BUILD_OPTION(minuit2 ON "Build Minuit2 minimization library")
+ROOT_BUILD_OPTION(minuit2_mpi OFF "Enable support for MPI in Minuit2")
+ROOT_BUILD_OPTION(minuit2_omp OFF "Enable support for OpenMP in Minuit2")
 ROOT_BUILD_OPTION(monalisa OFF "Enable support for monitoring with Monalisa (requires libapmoncpp)")
 ROOT_BUILD_OPTION(mpi OFF "Enable support for Message Passing Interface (MPI)")
 ROOT_BUILD_OPTION(mysql ON "Enable support for MySQL databases")
