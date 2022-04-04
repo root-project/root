@@ -93,10 +93,10 @@ std::unique_ptr<ROperator> make_ROperator_Transpose(const onnx::NodeProto& nodep
    if (it != tensor_type.end()){
       input_type = it->second;
    }else{
-      //throw std::runtime_error("TMVA::SOFIE ONNX Parser tranpose op has input tensor" + input_name + " but its type is not yet registered");
-      std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
-      " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      input_type = ETensorType::FLOAT;
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser tranpose op has input tensor" + input_name + " but its type is not yet registered");
+      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
+      // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
+      // input_type = ETensorType::FLOAT;
    }
 
    std::unique_ptr<ROperator> op;
@@ -136,9 +136,9 @@ std::unique_ptr<ROperator> make_ROperator_Identity(const onnx::NodeProto& nodepr
    if (it != tensor_type.end()){
       input_type = it->second;
    }else{
-      //throw std::runtime_error("TMVA::SOFIE ONNX Parser Identity op has input tensor" + input_name + "  but its type is not yet registered");
-      std::cout << "TMVA::SOFIE ONNX Parser Identity op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      input_type = ETensorType::FLOAT;
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Identity op has input tensor" + input_name + "  but its type is not yet registered");
+      // std::cout << "TMVA::SOFIE ONNX Parser Identity op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
+      // input_type = ETensorType::FLOAT;
    }
 
    std::unique_ptr<ROperator> op;
@@ -170,10 +170,10 @@ std::unique_ptr<ROperator> make_ROperator_Relu(const onnx::NodeProto& nodeproto,
    if (it != tensor_type.end()){
       input_type = it->second;
    }else{
-      //throw std::runtime_error("TMVA::SOFIE ONNX Parser relu op has input tensor" + input_name + " but its type is not yet registered");
-      std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
-      " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      input_type = ETensorType::FLOAT;
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser relu op has input tensor" + input_name + " but its type is not yet registered");
+      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
+      // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
+      // input_type = ETensorType::FLOAT;
    }
 
    std::unique_ptr<ROperator> op;
@@ -310,12 +310,12 @@ std::unique_ptr<ROperator> make_ROperator_Softmax(const onnx::NodeProto &nodepro
    if (it != tensor_type.end()) {
       input_type = it->second;
    } else {
-      // throw std::runtime_error("TMVA::SOFIE ONNX Parser Softmax op has input tensor" + input_name + " but its type is
-      // not yet registered");
-      std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type()
-                << " op has input tensor" + input_name + "  but its type is not yet registered - use default float "
-                << std::endl;
-      input_type = ETensorType::FLOAT;
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Softmax op has input tensor " + input_name +
+                               " but its type is not yet registered");
+      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type()
+      //           << " op has input tensor" + input_name + "  but its type is not yet registered - use default float "
+      //           << std::endl;
+      // input_type = ETensorType::FLOAT;
    }
 
    std::unique_ptr<ROperator> op;
@@ -346,7 +346,7 @@ std::unique_ptr<ROperator> make_ROperator_GemmFromMatMulandAdd(const onnx::NodeP
    if (it != tensor_type.end())
       input_type = ETensorType::FLOAT;
    else
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser MatMul op has input tensor" + input_name + " but its type is not yet registered");
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser MatMul op has input tensor " + input_name + " but its type is not yet registered");
          // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto1.op_type() <<
          // " op has input tensor " + input_name + "  but its type is not yet registered - use default float " << std::endl;
 
@@ -355,20 +355,7 @@ std::unique_ptr<ROperator> make_ROperator_GemmFromMatMulandAdd(const onnx::NodeP
       throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul and Add since have different inputs");
 
    // we don't check input type of ADD since it is not be registered
-   // for (int i = 0; i < 2; ++i) {
-   //    auto input_name = nodeproto2.input(i);
-   //    auto it = tensor_type.find(input_name);
-   //    if (it != tensor_type.end()){
-   //       if (input_type != it->second)
-   //          throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul and Add : inputs have different types");
-   //       // according to ONNX both inputs have same time
-   //    } else {
-   //       //throw std::runtime_error("TMVA::SOFIE ONNX Parser Add op has input tensor" + input_name + " but its type is not yet registered");
-   //       std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto2.op_type() <<
-   //       " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-   //       input_type = ETensorType::FLOAT;
-   //    }
-   // }
+
    std::unique_ptr<ROperator> op;
 
 
@@ -464,10 +451,10 @@ std::unique_ptr<ROperator> make_ROperator_GRU(const onnx::NodeProto& nodeproto, 
    if (it != tensor_type.end()) {
       input_type = it->second;
    } else {
-      //throw std::runtime_error("TMVA::SOFIE ONNX Parser GRU op has input tensor " + input_name + " but its type is not yet registered");
-      std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
-      " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      input_type = ETensorType::FLOAT;
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser GRU op has input tensor " + input_name + " but its type is not yet registered");
+      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
+      // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
+      // input_type = ETensorType::FLOAT;
    }
 
    std::unique_ptr<ROperator> op;
@@ -558,11 +545,11 @@ std::unique_ptr<ROperator> make_ROperator_Conv(const onnx::NodeProto& nodeproto,
    if (it != tensor_type.end()) {
       input_type = it->second;
    } else {
-      //throw
-      //   std::runtime_error("TMVA::SOFIE ONNX Parser Conv op has input tensor " + input_name + " but its type is not yet registered");
-      std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
-      " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      input_type = ETensorType::FLOAT;
+      throw
+          std::runtime_error("TMVA::SOFIE ONNX Parser Conv op has input tensor " + input_name + " but its type is not yet registered");
+      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
+      // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
+      // input_type = ETensorType::FLOAT;
    }
 
    std::unique_ptr<ROperator> op;
@@ -721,11 +708,11 @@ std::unique_ptr<ROperator> make_ROperator_Reshape(const onnx::NodeProto &nodepro
    if (it != tensor_type.end()) {
       input_type = it->second;
    } else {
-      //throw std::runtime_error("TMVA::SOFIE ONNX Parser Reshape op has input tensor" + input_name +
-      //                         " but its type is not yet registered");
-      std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
-      " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      input_type = ETensorType::FLOAT;
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Reshape op has input tensor" + input_name +
+                                  " but its type is not yet registered");
+      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
+      // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
+      // input_type = ETensorType::FLOAT;
    }
 
    // Reshape is having one attribute: allowzero (int) (default = 0)
@@ -1048,11 +1035,11 @@ std::unique_ptr<ROperator> make_ROperator_BatchNormalization(const onnx::NodePro
    if (it != tensor_type.end()) {
       input_type = it->second;
    } else {
-      //throw std::runtime_error("TMVA::SOFIE ONNX Parser BatchNorm op has input tensor " + input_name +
-      //                         " but its type is not yet registered");
-      std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
-      " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
-      input_type = ETensorType::FLOAT;
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser BatchNorm op has input tensor " + input_name +
+                               " but its type is not yet registered");
+      // std::cout << "TMVA::SOFIE ONNX Parser " << nodeproto.op_type() <<
+      // " op has input tensor" + input_name + "  but its type is not yet registered - use default float " << std::endl;
+      // input_type = ETensorType::FLOAT;
    }
 
    std::unique_ptr<ROperator> op;
