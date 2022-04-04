@@ -264,19 +264,29 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    const auto &outputColNames = snapHelperArgs->fOutputColNames;
    const auto &options = snapHelperArgs->fOptions;
 
+   auto isDefine = [&] {
+      std::vector<bool> isDef;
+      isDef.reserve(sizeof...(ColTypes));
+      for (auto i = 0u; i < sizeof...(ColTypes); ++i)
+         isDef[i] = colRegister.HasName(colNames[i]);
+      return isDef;
+   }();
+
    std::unique_ptr<RActionBase> actionPtr;
    if (!ROOT::IsImplicitMTEnabled()) {
       // single-thread snapshot
       using Helper_t = SnapshotHelper<ColTypes...>;
       using Action_t = RAction<Helper_t, PrevNodeType>;
-      actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options), colNames,
-                                   prevNode, colRegister));
+      actionPtr.reset(
+         new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
+                      colNames, prevNode, colRegister));
    } else {
       // multi-thread snapshot
       using Helper_t = SnapshotHelperMT<ColTypes...>;
       using Action_t = RAction<Helper_t, PrevNodeType>;
-      actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options),
-                                   colNames, prevNode, colRegister));
+      actionPtr.reset(new Action_t(
+         Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
+         colNames, prevNode, colRegister));
    }
    return actionPtr;
 }
