@@ -80,8 +80,7 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
   const Pair pair(set1, set2);
   PairIdxMapType::iterator it = _pairToIdx.lower_bound(pair);
-  if (_pairToIdx.end() != it && !PairCmp()(it->first, pair) &&
-      !PairCmp()(pair, it->first)) {
+  if (_pairToIdx.end() != it && it->first == pair) {
     // not empty, and keys match - nothing to do
     return;
   }
