@@ -14,6 +14,7 @@
 #define roofit_roofitcore_RooFit_UniqueId_h
 
 #include <atomic>
+#include <cstdint>
 
 namespace RooFit {
 
@@ -38,7 +39,7 @@ namespace RooFit {
 template <class Class>
 struct UniqueId {
 public:
-   using Value_t = unsigned long;
+   using Value_t = std::uint64_t;
 
    /// Create a new UniqueId with the next value from the static counter.
    UniqueId() : _val{++counter} {}
@@ -61,10 +62,17 @@ public:
    bool operator==(UniqueId const &other) const { return _val == other._val; }
    bool operator<(UniqueId const &other) const { return _val < other._val; }
 
-   static const UniqueId nullid;           ///< An ID that is less than the ID of any object (similar to nullptr).
+   /// Get an ID that is less than the ID of any object (similar to nullptr).
+   static UniqueId const& nullid() {
+      static const UniqueId nid{nullval};
+      return nid;
+   }
+
    static constexpr Value_t nullval = 0UL; ///< The value of the nullid.
 
 private:
+   UniqueId(Value_t val) : _val{val} {}
+
    Value_t _val; ///< Numerical value of the ID.
 
    static std::atomic<Value_t> counter; ///< The static object counter to get the next ID value.
@@ -73,16 +81,13 @@ private:
 template <class Class>
 std::atomic<typename UniqueId<Class>::Value_t> UniqueId<Class>::counter{UniqueId<Class>::nullval};
 
-template <class Class>
-const UniqueId<Class> UniqueId<Class>::nullid{UniqueId<Class>::nullval};
-
 /// A helper function to replace pointer comparisons with UniqueId comparisons.
 /// With pointer comparisons, we can also have `nullptr`. In the UniqueId case,
 /// this translates to the `nullid`.
 template <class Class>
-UniqueId<Class> getUniqueId(Class const *ptr)
+UniqueId<Class> const& getUniqueId(Class const *ptr)
 {
-   return ptr ? ptr->uniqueId() : UniqueId<Class>::nullid;
+   return ptr ? ptr->uniqueId() : UniqueId<Class>::nullid();
 }
 
 } // namespace RooFit

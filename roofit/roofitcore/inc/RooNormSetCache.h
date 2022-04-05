@@ -16,30 +16,34 @@
 #ifndef ROO_NORMSET_CACHE
 #define ROO_NORMSET_CACHE
 
+#include <RooArgSet.h>
+
+#include <Rtypes.h>
+
 #include <vector>
 #include <map>
 #include <string>
-
-#include "Rtypes.h"
-
-class RooAbsArg;
-class RooArgSet;
 
 typedef RooArgSet* pRooArgSet ;
 
 class RooNormSetCache {
 protected:
-  typedef std::pair<const RooArgSet*, const RooArgSet*> Pair;
-  struct PairCmp {
-      inline bool operator()(const Pair& a, const Pair& b) const
-      {
-     if (a.first < b.first) return true;
-     if (b.first < a.first) return false;
-     return a.second < b.second;
-      }
+  class Pair {
+  public:
+    using Value_t = RooFit::UniqueId<RooArgSet>::Value_t;
+    Pair(const RooArgSet* set1, const RooArgSet* set2)
+      : _pair{RooFit::getUniqueId(set1), RooFit::getUniqueId(set2)} {}
+   bool operator==(Pair const &other) const { return _pair == other._pair; }
+   bool operator<(Pair const &other) const { return _pair < other._pair; }
+
+   Value_t const& first() const { return _pair.first; }
+   Value_t const& second() const { return _pair.second; }
+  private:
+    std::pair<Value_t,Value_t> _pair;
   };
+
   typedef std::vector<Pair> PairVectType;
-  typedef std::map<Pair, ULong_t> PairIdxMapType;
+  typedef std::map<Pair, ULong64_t> PairIdxMapType;
 
 public:
   RooNormSetCache(ULong_t max = 32);
@@ -54,9 +58,9 @@ public:
     if (set2RangeName != _set2RangeName) return -1;
     const Pair pair(set1, set2);
     PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
-    if (_pairToIdx.end() != it &&
-   !PairCmp()(it->first, pair) && !PairCmp()(pair, it->first))
+    if (_pairToIdx.end() != it && it->first == pair) {
       return it->second;
+    }
     return -1;
   }
 
@@ -68,13 +72,11 @@ public:
   {
     const Pair pair(set1, (const RooArgSet*)0);
     PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
-    if (_pairToIdx.end() != it && it->first.first == set1)
+    if (_pairToIdx.end() != it && it->first.first() == RooFit::getUniqueId(set1))
       return kTRUE;
     return kFALSE;
   }
 
-  const RooArgSet* lastSet1() const { return _pairs.empty()?0:_pairs.back().first; }
-  const RooArgSet* lastSet2() const { return _pairs.empty()?0:_pairs.back().second; }
   const std::string& nameSet1() const { return _name1; }
   const std::string& nameSet2() const { return _name2; }
 
