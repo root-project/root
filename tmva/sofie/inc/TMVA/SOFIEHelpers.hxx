@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include <memory>
+#include <string>
 
 
 namespace TMVA{
@@ -18,30 +18,31 @@ class SofieFunctorHelper;
 
 template <std::size_t... N,  typename Session_t, typename T>
 class SofieFunctorHelper<std::index_sequence<N...>, Session_t, T> {
-   /// this is the magic to defined the operator () with N fixed parameter arguments
+   /// this is the magic to define the operator() with N fixed parameter arguments
    template <std::size_t Idx>
    using AlwaysT = T;
 
    std::vector<std::vector<T>> fInput;
-   std::vector<std::shared_ptr<Session_t>> fSessions;
+   std::vector<Session_t> fSessions;
 
 public:
 
-   SofieFunctorHelper(unsigned int nslots = 0) :
+   SofieFunctorHelper(unsigned int nslots = 0, const std::string & filename = "") :
       fInput(1)
    {
       // create Sessions according to given number of slots.
       // if number of slots is zero create a single session
       if (nslots < 1) nslots = 1;
       fInput.resize(nslots);
+      fSessions.reserve(nslots);
       for (unsigned int i = 0; i < nslots; i++) {
-         fSessions.emplace_back(std::make_shared<Session_t>());
+         fSessions.emplace_back(filename);
       }
    }
 
    double operator()(unsigned slot, AlwaysT<N>... args) {
       fInput[slot] = {args...};
-      auto y =  fSessions[slot]->infer(fInput[slot].data());
+      auto y =  fSessions[slot].infer(fInput[slot].data());
       return y[0];
    }
 };
@@ -57,9 +58,9 @@ public:
 /// and the Python tutorial TMVA_SOFIE_RDataFrame.py which makes use of the ROOT JIT
 /// to compile on the fly the generated SOFIE model.
 template <std::size_t N, typename Session_t>
-auto SofieFunctor(unsigned int nslots = 0) -> SofieFunctorHelper<std::make_index_sequence<N>, Session_t, float>
+auto SofieFunctor(unsigned int nslots = 0, const std::string & weightsFile = "") -> SofieFunctorHelper<std::make_index_sequence<N>, Session_t, float>
 {
-   return SofieFunctorHelper<std::make_index_sequence<N>, Session_t, float>(nslots);
+   return SofieFunctorHelper<std::make_index_sequence<N>, Session_t, float>(nslots, weightsFile);
 }
 
 }//Experimental
