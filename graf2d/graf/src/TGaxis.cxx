@@ -35,12 +35,12 @@
 #include "strlcpy.h"
 #include "snprintf.h"
 
-Int_t TGaxis::fgMaxDigits = 5;
-Float_t TGaxis::fXAxisExpXOffset = 0.; //Exponent X offset for the X axis
-Float_t TGaxis::fXAxisExpYOffset = 0.; //Exponent Y offset for the X axis
-Float_t TGaxis::fYAxisExpXOffset = 0.; //Exponent X offset for the Y axis
-Float_t TGaxis::fYAxisExpYOffset = 0.; //Exponent Y offset for the Y axis
-const Int_t kHori = BIT(9); //defined in TPad
+Int_t   TGaxis::fgMaxDigits = 5;
+Float_t TGaxis::fXAxisExpXOffset = 0.;
+Float_t TGaxis::fXAxisExpYOffset = 0.;
+Float_t TGaxis::fYAxisExpXOffset = 0.;
+Float_t TGaxis::fYAxisExpYOffset = 0.;
+const Int_t kHori = BIT(9);
 
 ClassImp(TGaxis);
 
@@ -2582,20 +2582,22 @@ void TGaxis::SetFunction(const char *funcname)
 ///
 /// Begin_Macro(source)
 /// {
-///    c1 = new TCanvas("c1","Examples of Gaxis",10,10,900,500);
-///    c1->Range(-6,-0.1,6,0.1);
-///    TGaxis *axis1 = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
-///    axis1->SetName("axis1");
-///    axis1->SetTitle("Axis Title");
-///    axis1->SetTitleSize(0.05);
-///    axis1->SetTitleColor(kBlue);
-///    axis1->SetTitleFont(42);
-///    axis1->ChangeLabel(1,-1,-1,-1,2);
-///    axis1->ChangeLabel(3,-1,0.);
-///    axis1->ChangeLabel(5,30.,-1,0);
-///    axis1->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
-///    axis1->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
-///    axis1->Draw();
+///   auto c = new TCanvas("c1","Examples of TGaxis",900,100);
+///   c->Range(-6,-0.1,6,0.1);
+///   auto *axis = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"S");
+///   axis->SetName("axis1");
+///   axis->SetTitle("Axis Title");
+///   axis->SetTitleSize(0.2);
+///   axis->SetLabelSize(0.2);
+///   axis->SetTickSize(0.15);
+///   axis->SetTitleColor(kBlue);
+///   axis->SetTitleFont(42);
+///   axis->ChangeLabel(1,-1,-1,-1,2);
+///   axis->ChangeLabel(3,-1,0.);
+///   axis->ChangeLabel(5,30.,-1,0);
+///   axis->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
+///   axis->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
+///   axis->Draw();
 /// }
 /// End_Macro
 ///
@@ -2633,19 +2635,20 @@ void TGaxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
    fModLabs->Add((TObject*)ml);
 }
 
+static Double_t SavedTextAngle; ///< Global variable saving the current label's text angle. Used by TGaxis::ChangeLabelAttributes.
+static Double_t SavedTextSize;  ///< Global variable saving the current label's text size. Used by TGaxis::ChangeLabelAttributes.
+static Int_t    SavedTextAlign; ///< Global variable saving the current label's text alignment. Used by TGaxis::ChangeLabelAttributes.
+static Int_t    SavedTextColor; ///< Global variable saving the current label's text color. Used by TGaxis::ChangeLabelAttributes.
+static Int_t    SavedTextFont;  ///< Global variable saving the current label's text font. Used by TGaxis::ChangeLabelAttributes.
+
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper method used by TGaxis::ChangeLabel.
 /// Change the label attributes of label number i. If needed.
 ///
 /// \param[in] i        Current label number to be changed if needed
 /// \param[in] nlabels  Totals number of labels for this axis (useful when i is counted from the end)
 /// \param[in] t        Original TLatex string holding the label to be changed
 /// \param[in] c        Text string to be drawn
-
-static Double_t SavedTextAngle;
-static Double_t SavedTextSize;
-static Int_t    SavedTextAlign;
-static Int_t    SavedTextColor;
-static Int_t    SavedTextFont;;
 
 void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
 {
@@ -2681,8 +2684,9 @@ void TGaxis::ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper method used by TGaxis::ChangeLabel.
 /// Reset the labels' attributes to the values they had before the last call to
-/// ChangeLabelAttributes.
+/// TGaxis::ChangeLabelAttributes.
 
 void TGaxis::ResetLabelAttributes(TLatex* t)
 {
