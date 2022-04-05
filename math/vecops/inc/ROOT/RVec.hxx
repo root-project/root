@@ -902,6 +902,23 @@ void RVecImpl<T>::swap(RVecImpl<T> &RHS)
       std::swap(this->fCapacity, RHS.fCapacity);
       return;
    }
+
+   // This block handles the swap of a small and a non-owning vector
+   // It is more efficient to first move the non-owning vector, hence the 2 cases
+   if (this->isSmall() && !RHS.Owns()) { // the right vector is non-owning
+      RVecImpl<T> temp(0);
+      temp = std::move(RHS);
+      RHS = std::move(*this);
+      *this = std::move(temp);
+      return;
+   } else if (RHS.isSmall() && !this->Owns()) { // the left vector is non-owning
+      RVecImpl<T> temp(0);
+      temp = std::move(*this);
+      *this = std::move(RHS);
+      RHS = std::move(temp);
+      return;
+   }
+
    if (RHS.size() > this->capacity())
       this->grow(RHS.size());
    if (this->size() > RHS.capacity())
