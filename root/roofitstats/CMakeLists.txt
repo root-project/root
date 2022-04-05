@@ -28,6 +28,11 @@ if(ROOT_roofit_FOUND)
                  ${CMAKE_CURRENT_SOURCE_DIR}/rf502_workspace_v6.14.root
                  )
 
+  ROOT_ADD_GTEST(testRooWorkspace testRooWorkspace.cxx LIBRARIES ROOT::RooFit
+                 COPY_TO_BUILDDIR
+                 ${CMAKE_CURRENT_SOURCE_DIR}/data/test_workspace_01.root
+                 )
+
   if(NOT MSVC OR win_broken_tests)
     add_subdirectory(vectorisedPDFs)
   endif()
