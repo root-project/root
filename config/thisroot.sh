@@ -178,14 +178,13 @@ fi
 
 
 SHELLNAME=$(getTrueShellExeName)
-if [ "$SHELLNAME" = "dash" ]; then
+if [ "$SHELLNAME" = "bash" ]; then
+   SOURCE=${BASH_ARGV[0]}
+elif [ "$SHELLNAME" = "zsh" ]; then
+   SOURCE=${(%):-%N}
+else # dash or ksh
    x=$(lsof -p $$ -Fn0 2>/dev/null | tail -1); # Paul Brannan https://stackoverflow.com/a/42815001/7471760
    SOURCE=${x#*n}
-else
-   SOURCE=${BASH_ARGV[0]}
-   if [ "x$SOURCE" = "x" ]; then
-      SOURCE=${(%):-%N} # for zsh
-   fi
 fi
 
 
