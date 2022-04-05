@@ -1,6 +1,6 @@
 # Source this script to set up the ROOT build that this script is part of.
 #
-# Conveniently an alias like this can be defined in .bashrc:
+# Conveniently an alias like this can be defined in .bashrc or .zshrc:
 #   alias thisroot=". bin/thisroot.sh"
 #
 # This script if for the bash like shells, see thisroot.csh for csh like shells.
@@ -154,6 +154,20 @@ set_environment()
    fi
 }
 
+getTrueShellExeName() { # mklement0 https://stackoverflow.com/a/23011530/7471760
+  local trueExe nextTarget 2>/dev/null # ignore error in shells without `local`
+  # Determine the shell executable filename.
+  trueExe=$(ps -o comm= $$) || return 1
+  # Strip a leading "-", as added e.g. by OSX for login shells.
+  [ "${trueExe#-}" = "$trueExe" ] || trueExe=${trueExe#-}
+  # Determine full executable path.
+  [ "${trueExe#/}" != "$trueExe" ] || trueExe=$([ -n "$ZSH_VERSION" ] && which -p "$trueExe" || which "$trueExe")
+  # If the executable is a symlink, resolve it to its *ultimate*
+  # target.
+  while nextTarget=$(readlink "$trueExe"); do trueExe=$nextTarget; done
+  # Output the executable name only.
+  printf '%s' "$(basename "$trueExe")"
+}
 
 ### main ###
 
@@ -163,9 +177,15 @@ if [ -n "${ROOTSYS}" ] ; then
 fi
 
 
-SOURCE=${BASH_ARGV[0]}
-if [ "x$SOURCE" = "x" ]; then
-   SOURCE=${(%):-%N} # for zsh
+SHELLNAME=$(getTrueShellExeName)
+if [ "$SHELLNAME" = "dash" ]; then
+   x=$(lsof -p $$ -Fn0 2>/dev/null | tail -1); # Paul Brannan https://stackoverflow.com/a/42815001/7471760
+   SOURCE=${x#*n}
+else
+   SOURCE=${BASH_ARGV[0]}
+   if [ "x$SOURCE" = "x" ]; then
+      SOURCE=${(%):-%N} # for zsh
+   fi
 fi
 
 
@@ -175,7 +195,7 @@ if [ "x${SOURCE}" = "x" ]; then
    elif [ -f ./thisroot.sh ]; then
       ROOTSYS=$(cd ..  > /dev/null; pwd); export ROOTSYS
    else
-      echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of bash!
+      echo ERROR: must "cd where/root/is" before calling ". bin/thisroot.sh" for this version of "$SHELLNAME"!
       ROOTSYS=; export ROOTSYS
       return 1
    fi
