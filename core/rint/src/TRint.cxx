@@ -195,12 +195,6 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options, 
       PrintLogo(lite);
    }
 
-   // Explicitly load libMathCore it cannot be auto-loaded it when using one
-   // of its freestanding functions. Once functions can trigger autoloading we
-   // can get rid of this.
-   if (!gClassTable->GetDict("TRandom"))
-      gSystem->Load("libMathCore");
-
    if (!gInterpreter->HasPCMForLibrary("std")) {
       // Load some frequently used includes
       Int_t includes = gEnv->GetValue("Rint.Includes", 1);
