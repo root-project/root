@@ -1333,7 +1333,19 @@ Possible combinations of vectors to swap:
 6. regular <-> adopting (and vice versa)
 */
 
-TEST(VecOpsSwap, BothSmallVectors)
+class VecOpsSwap : public ::testing::TestWithParam<bool> {
+protected:
+   // Ensure ROOT::VecOps::swap produces the same result as std::swap
+   void test_swap(RVec<int> &a, RVec<int> &b) const
+   {
+      if (GetParam())
+         ROOT::VecOps::swap(a, b);
+      else
+         std::swap(a, b);
+   }
+};
+
+TEST_P(VecOpsSwap, BothSmallVectors)
 {
    RVec<int> fixed_vempty{};
    RVec<int> fixed_vshort1{1, 2, 3};
@@ -1345,7 +1357,7 @@ TEST(VecOpsSwap, BothSmallVectors)
    RVec<int> vshort2{4, 5, 6};
    RVec<int> vshort3{7, 8};
 
-   swap(vshort1, vshort2); // swap of equal sizes
+   test_swap(vshort1, vshort2); // swap of equal sizes
 
    CheckEqual(vshort1, fixed_vshort2);
    CheckEqual(vshort2, fixed_vshort1);
@@ -1354,7 +1366,7 @@ TEST(VecOpsSwap, BothSmallVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vshort1));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vshort2));
 
-   swap(vshort1, vshort3); // left vector has bigger size
+   test_swap(vshort1, vshort3); // left vector has bigger size
 
    CheckEqual(vshort1, fixed_vshort3);
    CheckEqual(vshort3, fixed_vshort2);
@@ -1363,7 +1375,7 @@ TEST(VecOpsSwap, BothSmallVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vshort1));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vshort3));
 
-   swap(vshort1, vshort3); // left vector has smaller size
+   test_swap(vshort1, vshort3); // left vector has smaller size
 
    CheckEqual(vshort1, fixed_vshort2);
    CheckEqual(vshort3, fixed_vshort3);
@@ -1372,7 +1384,7 @@ TEST(VecOpsSwap, BothSmallVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vshort1));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vshort3));
 
-   swap(vempty, vshort2); // handling empty vectors
+   test_swap(vempty, vshort2); // handling empty vectors
 
    CheckEqual(vempty, fixed_vshort1);
    CheckEqual(vshort2, fixed_vempty);
@@ -1382,7 +1394,7 @@ TEST(VecOpsSwap, BothSmallVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vshort2));
 }
 
-TEST(VecOpsSwap, BothRegularVectors)
+TEST_P(VecOpsSwap, BothRegularVectors)
 {
    RVec<int> fixed_vreg1{1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3, 1, 2, 3};
    RVec<int> fixed_vreg2{4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
@@ -1402,7 +1414,7 @@ TEST(VecOpsSwap, BothRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsSmall(vreg3));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsSmall(vmocksmall));
 
-   swap(vreg1, vreg2); // swap of equal sizes
+   test_swap(vreg1, vreg2); // swap of equal sizes
 
    CheckEqual(vreg1, fixed_vreg2);
    CheckEqual(vreg2, fixed_vreg1);
@@ -1411,7 +1423,7 @@ TEST(VecOpsSwap, BothRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg1));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg2));
 
-   swap(vreg1, vreg3); // left vector has bigger size
+   test_swap(vreg1, vreg3); // left vector has bigger size
 
    CheckEqual(vreg1, fixed_vreg3);
    CheckEqual(vreg3, fixed_vreg2);
@@ -1420,7 +1432,7 @@ TEST(VecOpsSwap, BothRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg1));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg3));
 
-   swap(vreg1, vreg3); // left vector has smaller size
+   test_swap(vreg1, vreg3); // left vector has smaller size
 
    CheckEqual(vreg1, fixed_vreg2);
    CheckEqual(vreg3, fixed_vreg3);
@@ -1429,7 +1441,7 @@ TEST(VecOpsSwap, BothRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg1));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg3));
 
-   swap(vreg3, vmocksmall); // handling artificially shortened regular vector as right argument
+   test_swap(vreg3, vmocksmall); // handling artificially shortened regular vector as right argument
 
    CheckEqual(vreg3, fixed_vmocksmall);
    CheckEqual(vmocksmall, fixed_vreg3);
@@ -1438,7 +1450,7 @@ TEST(VecOpsSwap, BothRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg3));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vmocksmall));
 
-   swap(vreg3, vmocksmall); // handling artificially shortened regular vector as left argument
+   test_swap(vreg3, vmocksmall); // handling artificially shortened regular vector as left argument
 
    CheckEqual(vreg3, fixed_vreg3);
    CheckEqual(vmocksmall, fixed_vmocksmall);
@@ -1448,7 +1460,7 @@ TEST(VecOpsSwap, BothRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vmocksmall));
 }
 
-TEST(VecOpsSwap, BothAdoptingVectors)
+TEST_P(VecOpsSwap, BothAdoptingVectors)
 {
    std::vector<int> v1{1, 2, 3};
    std::vector<int> v2{4, 5, 6};
@@ -1458,7 +1470,7 @@ TEST(VecOpsSwap, BothAdoptingVectors)
    RVec<int> vadopt2(v2.data(), v2.size());
    RVec<int> vadopt3(v3.data(), v3.size());
 
-   swap(vadopt1, vadopt2); // swap of equal sizes
+   test_swap(vadopt1, vadopt2); // swap of equal sizes
 
    CheckEqual(vadopt1, v2);
    CheckEqual(vadopt2, v1);
@@ -1482,7 +1494,7 @@ TEST(VecOpsSwap, BothAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vadopt1));
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vadopt2));
 
-   swap(vadopt1, vadopt3); // left vector has bigger size
+   test_swap(vadopt1, vadopt3); // left vector has bigger size
 
    CheckEqual(vadopt1, v3);
    CheckEqual(vadopt3, v2);
@@ -1493,7 +1505,7 @@ TEST(VecOpsSwap, BothAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vadopt1));
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vadopt3));
 
-   swap(vadopt1, vadopt3); // left vector has smaller size
+   test_swap(vadopt1, vadopt3); // left vector has smaller size
 
    CheckEqual(vadopt1, v2);
    CheckEqual(vadopt3, v3);
@@ -1505,7 +1517,11 @@ TEST(VecOpsSwap, BothAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vadopt3));
 }
 
-TEST(VecOpsSwap, SmallRegularVectors)
+// there is a difference between std::swap and ROOT::VecOps::swap here
+// they both produce the same result, but std::swap might produce 2 regular vectors
+// in cases where ROOT::VecOps::swap produces 1 regular and 1 adopting vector
+// therefore ROOT::VecOps::swap-s are mainly used "alone"
+TEST_P(VecOpsSwap, SmallRegularVectors)
 {
    RVec<int> fixed_vsmall{1, 2, 3};
    RVec<int> fixed_vreg1{4, 5, 6};
@@ -1515,7 +1531,6 @@ TEST(VecOpsSwap, SmallRegularVectors)
 
    // need multiple hard copies since after swap of a small and a regular,
    // there is no fixed policy whether 2 regular vectors are produced or 1 small and 1 regular
-   // currently a small and a regular vector are produced (this might change)
    RVec<int> vsmall1{1, 2, 3};
    RVec<int> vsmall2{1, 2, 3};
    RVec<int> vsmall3{1, 2, 3};
@@ -1597,7 +1612,7 @@ TEST(VecOpsSwap, SmallRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg30));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vsmall6));
 
-   swap(vsmall2, vreg4); // small <-> very long regular
+   test_swap(vsmall2, vreg4); // small <-> very long regular
 
    CheckEqual(vsmall2, fixed_vreg4);
    CheckEqual(vreg4, fixed_vsmall);
@@ -1606,7 +1621,7 @@ TEST(VecOpsSwap, SmallRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vsmall2));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg4));
 
-   swap(vsmall2, vsmall7); // very long regular <-> small
+   test_swap(vsmall2, vsmall7); // very long regular <-> small
    // vsmall2 is already swapped
 
    CheckEqual(vsmall2, fixed_vsmall);
@@ -1617,7 +1632,7 @@ TEST(VecOpsSwap, SmallRegularVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vreg4));
 }
 
-TEST(VecOpsSwap, SmallAdoptingVectors)
+TEST_P(VecOpsSwap, SmallAdoptingVectors)
 {
    RVec<int> fixed_vsmall{1, 2, 3};
    std::vector<int> v1{4, 5, 6};
@@ -1637,7 +1652,7 @@ TEST(VecOpsSwap, SmallAdoptingVectors)
    RVec<int> vadopt2(v2.data(), v2.size());
    RVec<int> vadopt3(v3.data(), v3.size());
 
-   swap(vsmall1, vadopt1); // non-adopting <-> adopting (same size)
+   test_swap(vsmall1, vadopt1); // non-adopting <-> adopting (same size)
 
    CheckEqual(vsmall1, v1);
    CheckEqual(vadopt1, fixed_vsmall);
@@ -1647,7 +1662,7 @@ TEST(VecOpsSwap, SmallAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vsmall1));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vadopt1));
 
-   swap(vsmall1, vsmall2); // adopting <-> non-adopting (same size)
+   test_swap(vsmall1, vsmall2); // adopting <-> non-adopting (same size)
    // vsmall1 is already swapped
 
    CheckEqual(vsmall1, fixed_vsmall);
@@ -1658,7 +1673,7 @@ TEST(VecOpsSwap, SmallAdoptingVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vsmall1));
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vsmall2));
 
-   swap(vsmall3, vadopt2); // longer non-adopting <-> shorter adopting
+   test_swap(vsmall3, vadopt2); // longer non-adopting <-> shorter adopting
 
    CheckEqual(vsmall3, v2);
    CheckEqual(vadopt2, fixed_vsmall);
@@ -1668,7 +1683,7 @@ TEST(VecOpsSwap, SmallAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vsmall3));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vadopt2));
 
-   swap(vsmall3, vsmall4); // shorter adopting <-> longer non-adopting
+   test_swap(vsmall3, vsmall4); // shorter adopting <-> longer non-adopting
 
    CheckEqual(vsmall3, fixed_vsmall);
    CheckEqual(vsmall4, v2);
@@ -1678,7 +1693,7 @@ TEST(VecOpsSwap, SmallAdoptingVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vsmall3));
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vsmall4));
 
-   swap(vsmall5, vadopt3); // shorter non-adopting <-> longer adopting
+   test_swap(vsmall5, vadopt3); // shorter non-adopting <-> longer adopting
 
    CheckEqual(vsmall5, v3);
    CheckEqual(vadopt3, fixed_vsmall);
@@ -1688,7 +1703,7 @@ TEST(VecOpsSwap, SmallAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vsmall5));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vadopt3));
 
-   swap(vsmall5, vsmall6); // longer adopting <-> shorter non-adopting
+   test_swap(vsmall5, vsmall6); // longer adopting <-> shorter non-adopting
 
    CheckEqual(vsmall5, fixed_vsmall);
    CheckEqual(vsmall6, v3);
@@ -1699,7 +1714,7 @@ TEST(VecOpsSwap, SmallAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vsmall6));
 }
 
-TEST(VecOpsSwap, RegularAdoptingVectors)
+TEST_P(VecOpsSwap, RegularAdoptingVectors)
 {
    RVec<int> fixed_vregular{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14};
    std::vector<int> v1{15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28};
@@ -1711,7 +1726,7 @@ TEST(VecOpsSwap, RegularAdoptingVectors)
    RVec<int> vadopt2(v2.data(), v2.size());
    RVec<int> vadopt3(v3.data(), v3.size());
 
-   swap(vregular, vadopt1); // non-adopting <-> adopting (same size)
+   test_swap(vregular, vadopt1); // non-adopting <-> adopting (same size)
 
    CheckEqual(vregular, v1);
    CheckEqual(vadopt1, fixed_vregular);
@@ -1721,7 +1736,7 @@ TEST(VecOpsSwap, RegularAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vregular));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vadopt1));
 
-   swap(vregular, vadopt1); // adopting <-> non-adopting (same size)
+   test_swap(vregular, vadopt1); // adopting <-> non-adopting (same size)
 
    CheckEqual(vregular, fixed_vregular);
    CheckEqual(vadopt1, v1);
@@ -1731,7 +1746,7 @@ TEST(VecOpsSwap, RegularAdoptingVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vregular));
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vadopt1));
 
-   swap(vregular, vadopt2); // longer non-adopting <-> shorter adopting
+   test_swap(vregular, vadopt2); // longer non-adopting <-> shorter adopting
 
    CheckEqual(vregular, v2);
    CheckEqual(vadopt2, fixed_vregular);
@@ -1741,7 +1756,7 @@ TEST(VecOpsSwap, RegularAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vregular));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vadopt2));
 
-   swap(vregular, vadopt2); // shorter adopting <-> longer non-adopting
+   test_swap(vregular, vadopt2); // shorter adopting <-> longer non-adopting
 
    CheckEqual(vregular, fixed_vregular);
    CheckEqual(vadopt2, v2);
@@ -1751,7 +1766,7 @@ TEST(VecOpsSwap, RegularAdoptingVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vregular));
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vadopt2));
 
-   swap(vregular, vadopt3); // shorter non-adopting <-> longer adopting
+   test_swap(vregular, vadopt3); // shorter non-adopting <-> longer adopting
 
    CheckEqual(vregular, v3);
    CheckEqual(vadopt3, fixed_vregular);
@@ -1761,7 +1776,7 @@ TEST(VecOpsSwap, RegularAdoptingVectors)
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vregular));
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vadopt3));
 
-   swap(vregular, vadopt3); // longer adopting <-> shorter non-adopting
+   test_swap(vregular, vadopt3); // longer adopting <-> shorter non-adopting
 
    CheckEqual(vregular, fixed_vregular);
    CheckEqual(vadopt3, v3);
@@ -1771,3 +1786,6 @@ TEST(VecOpsSwap, RegularAdoptingVectors)
    EXPECT_FALSE(ROOT::Detail::VecOps::IsAdopting(vregular));
    EXPECT_TRUE(ROOT::Detail::VecOps::IsAdopting(vadopt3));
 }
+
+INSTANTIATE_TEST_SUITE_P(ROOTVecOpsswap, VecOpsSwap, ::testing::Values(true));
+INSTANTIATE_TEST_SUITE_P(stdswap, VecOpsSwap, ::testing::Values(false));
