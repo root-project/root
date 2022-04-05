@@ -10,10 +10,10 @@ Jitted branch: b1_square
 Jitted branch: b2_vector
 Jitted branch: a
 Jitted means:49 49
-Jitted branch: b1_square
-Jitted branch: b2_vector
 Jitted branch: b1
+Jitted branch: b1_square
 Jitted branch: b2
+Jitted branch: b2_vector
 ---- Now with a tree in a subdirectory
 Branch: b1
 Branch: b1_square
@@ -25,10 +25,10 @@ Jitted branch: b1_square
 Jitted branch: b2_vector
 Jitted branch: a
 Jitted means:49 49
-Jitted branch: b1_square
-Jitted branch: b2_vector
 Jitted branch: b1
+Jitted branch: b1_square
 Jitted branch: b2
+Jitted branch: b2_vector
 +++++++++ Now MT
 ---- Now with a tree in the root directory
 Branch: b1
@@ -41,10 +41,10 @@ Jitted branch: b1_square
 Jitted branch: b2_vector
 Jitted branch: a
 Jitted means:49 49
-Jitted branch: b1_square
-Jitted branch: b2_vector
 Jitted branch: b1
+Jitted branch: b1_square
 Jitted branch: b2
+Jitted branch: b2_vector
 ---- Now with a tree in a subdirectory
 Branch: b1
 Branch: b1_square
@@ -56,8 +56,8 @@ Jitted branch: b1_square
 Jitted branch: b2_vector
 Jitted branch: a
 Jitted means:49 49
-Jitted branch: b1_square
-Jitted branch: b2_vector
 Jitted branch: b1
+Jitted branch: b1_square
 Jitted branch: b2
+Jitted branch: b2_vector
 (int) 0
