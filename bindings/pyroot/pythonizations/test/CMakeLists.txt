@@ -112,6 +112,8 @@ if (dataframe)
     if(NOT MSVC OR win_broken_tests)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_asnumpy rdataframe_asnumpy.py PYTHON_DEPS numpy)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_makenumpy rdataframe_makenumpy.py PYTHON_DEPS numpy)
+    elseif(CMAKE_CXX_STANDARD GREATER 14)
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_rdataframe_histo_profile rdataframe_histo_profile.py)
     endif()
 endif()
 
