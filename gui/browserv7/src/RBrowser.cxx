@@ -62,7 +62,7 @@ public:
 
    void Show(const std::string &) override {}
 
-   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &) override
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &, bool) override
    {
       if (fIsEditor && elem->IsCapable(Browsable::RElement::kActEdit)) {
          auto code = elem->GetContent("text");
@@ -312,7 +312,7 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
    }
 
    auto widget = GetActiveWidget();
-   if (widget && widget->DrawElement(elem, drawingOptions)) {
+   if (widget && widget->DrawElement(elem, drawingOptions, doAppend == "true"s)) {
       widget->SetPath(path);
       return widget->SendWidgetContent();
    }
@@ -343,7 +343,7 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
       if (new_widget) {
          // draw object before client side is created - should not be a problem
          // after widget add in browser, connection will be established and data provided
-         if (new_widget->DrawElement(elem, drawingOptions))
+         if (new_widget->DrawElement(elem, drawingOptions, false))
             new_widget->SetPath(path);
          return NewWidgetMsg(new_widget);
       }
