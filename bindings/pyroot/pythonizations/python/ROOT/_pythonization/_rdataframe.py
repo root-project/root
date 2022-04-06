@@ -1,4 +1,4 @@
-# Author: Stefan Wunsch, Massimiliano Galli CERN  02/2019
+# Author: Stefan Wunsch, Massimiliano Galli, Enric Tejedor  CERN  02/2019
 
 ################################################################################
 # Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.                      #
@@ -174,20 +174,7 @@ df2_transformed = ROOT.MyTransformation(ROOT.RDF.AsRNode(df2))
 '''
 
 from . import pythonization
-
-# functools.partial does not add the self argument
-# this is done by functools.partialmethod which is
-# introduced only in Python 3.4
-try:
-    from functools import partialmethod
-except ImportError:
-    from functools import partial
-
-    class partialmethod(partial):
-        def __get__(self, instance, owner):
-            if instance is None:
-                return self
-            return partial(self.func, instance, *(self.args or ()), **(self.keywords or {}))
+from ._pyz_utils import MethodTemplateGetter, MethodTemplateWrapper
 
 
 def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
@@ -357,41 +344,49 @@ class AsNumpyResult(object):
         self._py_arrays = state
 
 
-def _histo_profile(self, fixed_args, *args):
-    # Check wheter the user called one of the HistoXD or ProfileXD methods
-    # of RDataFrame with a tuple as first argument; in that case,
-    # extract the tuple items to construct a model object and call the
-    # original implementation of the method with that object.
+class HistoProfileWrapper(MethodTemplateWrapper):
+    '''
+    Subclass of MethodTemplateWrapper that pythonizes HistoXD and ProfileXD
+    method templates.
+    It relies on the `_original_method` and `_extra_args` attributes of the
+    superclass, to invoke the original implementation of the method template
+    and get the model class, respectively.
+    '''
 
-    # Parameters:
-    # self: instantiation of RDataFrame
-    # fixed_args: tuple containing the original name of the method being
-    # pythonised and the class of the model object to construct
-    # args: arguments passed by the user when he calls e.g Histo1D
+    def __call__(self, *args):
+        '''
+        Pythonization of HistoXD and ProfileXD method templates.
+        Checks whether the user made a call with a tuple as first argument; in
+        that case, extracts the tuple items to construct a model object and
+        calls the original implementation of the method with that object.
 
-    original_method_name, model_class = fixed_args
+	Args:
+	    args: arguments of a HistoXD or ProfileXD call.
 
-    # Get the "original" method of the RDataFrame instantiation
-    original_method = getattr(self, original_method_name)
+        Returns:
+            return value of the original HistoXD or ProfileXD implementations.
+        '''
 
-    if args and isinstance(args[0], tuple):
-        # Construct the model with the elements of the tuple
-        # as arguments
-        model = model_class(*args[0])
-        # Call the original implementation of the method
-        # with the model as first argument
-        if len(args) > 1:
-            res = original_method(model, *args[1:])
+        model_class, = self._extra_args
+
+        if args and isinstance(args[0], tuple):
+            # Construct the model with the elements of the tuple
+            # as arguments
+            model = model_class(*args[0])
+            # Call the original implementation of the method
+            # with the model as first argument
+            if len(args) > 1:
+                res = self._original_method(model, *args[1:])
+            else:
+                # Covers the case of the overloads with only model passed
+                # as argument
+               res = self._original_method(model)
+        # If the first argument is not a tuple, nothing to do, just call
+        # the original implementation
         else:
-            # Covers the case of the overloads with only model passed
-            # as argument
-            res = original_method(model)
-    # If the first argument is not a tuple, nothing to do, just call
-    # the original implementation
-    else:
-        res = original_method(*args)
+            res = self._original_method(*args)
 
-    return res
+        return res
 
 
 @pythonization("RInterface<", ns="ROOT::RDF", is_prefix=True)
@@ -414,15 +409,11 @@ def pythonize_rdataframe(klass):
             'Profile2D' : RDF.TProfile2DModel
             }
 
-    # Do e.g.:
-    # klass._OriginalHisto1D = klass.Histo1D
-    # klass.Histo1D = TH1DModel
     for method_name, model_class in methods_with_TModel.items():
-        original_method_name = '_Original' + method_name
-        setattr(klass, original_method_name, getattr(klass, method_name))
-        # Fixed arguments to construct a partialmethod
-        fixed_args = (original_method_name, model_class)
         # Replace the original implementation of the method
-        # by a generic function _histo_profile with
-        # (original_method_name, model_class) as fixed argument
-        setattr(klass, method_name, partialmethod(_histo_profile, fixed_args))
+        # with an object that can handle template arguments
+        # and stores a reference to such implementation
+        getter = MethodTemplateGetter(getattr(klass, method_name),
+                                      HistoProfileWrapper,
+                                      model_class)
+        setattr(klass, method_name, getter)
