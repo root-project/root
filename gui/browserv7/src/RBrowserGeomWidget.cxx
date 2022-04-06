@@ -74,7 +74,7 @@ public:
       return "../"s + fViewer.GetWindowAddr() + "/"s;
    }
 
-   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &) override
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &, bool) override
    {
       if (!elem->IsCapable(Browsable::RElement::kActGeom))
          return false;

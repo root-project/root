@@ -29,14 +29,7 @@ class RV7HistDrawProvider : public RProvider {
          auto hist = obj->get_shared<HistClass>();
          if (!hist) return false;
 
-         if (subpad->NumPrimitives() > 0) {
-            subpad->Wipe();
-            subpad->GetCanvas()->Modified();
-            subpad->GetCanvas()->Update(true);
-         }
-
          subpad->Draw(hist);
-
          return true;
       });
    }
