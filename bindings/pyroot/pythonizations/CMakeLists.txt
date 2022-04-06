@@ -33,6 +33,7 @@ set(py_sources
   ROOT/_pythonization/_cppinstance.py
   ROOT/_pythonization/_drawables.py
   ROOT/_pythonization/_generic.py
+  ROOT/_pythonization/_pyz_utils.py
   ROOT/_pythonization/_rbdt.py
   ROOT/_pythonization/_rvec.py
   ROOT/_pythonization/_stl_vector.py
