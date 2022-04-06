@@ -118,7 +118,7 @@ TGraph2DErrors::TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
                :TGraph2D(n, x, y, z)
 {
    if (n <= 0) {
-      Error("TGraphErrors", "Invalid number of points (%d)", n);
+      Error("TGraph2DErrors", "Invalid number of points (%d)", n);
       return;
    }
 
@@ -209,7 +209,7 @@ Double_t TGraph2DErrors::GetErrorX(Int_t i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by Graph2DFitChisquare.
-/// It returns the error along X at point i.
+/// It returns the error along Y at point i.
 
 Double_t TGraph2DErrors::GetErrorY(Int_t i) const
 {
@@ -221,7 +221,7 @@ Double_t TGraph2DErrors::GetErrorY(Int_t i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by Graph2DFitChisquare.
-/// It returns the error along X at point i.
+/// It returns the error along Z at point i.
 
 Double_t TGraph2DErrors::GetErrorZ(Int_t i) const
 {
@@ -269,7 +269,7 @@ Double_t TGraph2DErrors::GetYmaxE() const
 
 Double_t TGraph2DErrors::GetYminE() const
 {
-   Double_t v = fY[0]+fEY[0];
+   Double_t v = fY[0]-fEY[0];
    for (Int_t i=1; i<fNpoints; i++) if (fY[i]-fEY[i]<v) v=fY[i]-fEY[i];
    return v;
 }
@@ -291,7 +291,7 @@ Double_t TGraph2DErrors::GetZmaxE() const
 
 Double_t TGraph2DErrors::GetZminE() const
 {
-   Double_t v = fZ[0]+fEZ[0];
+   Double_t v = fZ[0]-fEZ[0];
    for (Int_t i=1; i<fNpoints; i++) if (fZ[i]-fEZ[i]<v) v=fZ[i]-fEZ[i];
    return v;
 }
@@ -453,7 +453,7 @@ void TGraph2DErrors::SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t e
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TGraphErrors.
+/// Stream an object of class TGraph2DErrors.
 
 void TGraph2DErrors::Streamer(TBuffer &b)
 {
