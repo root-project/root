@@ -5,7 +5,7 @@ let version_id = "modules";
 
 /** @summary version date
   * @desc Release date in format day/month/year like "19/11/2021" */
-let version_date = "30/03/2022";
+let version_date = "6/04/2022";
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -35,6 +35,9 @@ if (src && (typeof src == "string")) {
       source_fullpath = src;
       source_dir = source_fullpath.slice(0, pos);
       console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
+   } else {
+      console.log(`jsroot bundle, ${version}`);
+      internals.ignore_v6 = true;
    }
 }
 

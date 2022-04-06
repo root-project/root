@@ -2402,9 +2402,11 @@ class HierarchyPainter extends BasePainter {
                if (typeof handle.expand == 'function')
                   _item._expand = handle.expand;
                else if (typeof handle.expand == 'string') {
-                  let v6 = await _ensureJSROOT();
-                  await v6.require(handle.prereq);
-                  await v6._complete_loading();
+                  if (!internals.ignore_v6) {
+                     let v6 = await _ensureJSROOT();
+                     await v6.require(handle.prereq);
+                     await v6._complete_loading();
+                  }
                   _item._expand = handle.expand = findFunction(handle.expand);
                } else if (typeof handle.get_expand == 'function') {
                   _item._expand = handle.expand = await handle.get_expand();
@@ -2653,7 +2655,7 @@ class HierarchyPainter extends BasePainter {
    /** @summary method used to request object from the http server
      * @returns {Promise} with requested object
      * @private */
-   getOnlineItem(item, itemname, option) {
+   async getOnlineItem(item, itemname, option) {
 
       let url = itemname, h_get = false, req = "", req_kind = "object", draw_handle = null;
 
@@ -2671,7 +2673,12 @@ class HierarchyPainter extends BasePainter {
             req = 'h.json?compact=3';
             item._expand = onlineHierarchy; // use proper expand function
          } else if (item._make_request) {
-            func = findFunction(item._make_request);
+            if (item._module) {
+               let h = await this.importModule(item._module);
+               func = h[item._make_request];
+            } else {
+               func = findFunction(item._make_request);
+            }
          } else if (draw_handle && draw_handle.make_request) {
             func = draw_handle.make_request;
          }
@@ -2680,11 +2687,14 @@ class HierarchyPainter extends BasePainter {
             // ask to make request
             let dreq = func(this, item, url, option);
             // result can be simple string or object with req and kind fields
-            if (dreq!=null)
-               if (typeof dreq == 'string') req = dreq; else {
+            if (dreq) {
+               if (typeof dreq == 'string') {
+                  req = dreq;
+               } else {
                   if ('req' in dreq) req = dreq.req;
                   if ('kind' in dreq) req_kind = dreq.kind;
                }
+            }
          }
 
          if ((req.length == 0) && (item._kind.indexOf("ROOT.") != 0))
@@ -2698,7 +2708,8 @@ class HierarchyPainter extends BasePainter {
          return Promise.resolve(obj);
       }
 
-      if (req.length == 0) req = 'root.json.gz?compact=23';
+      if (req.length == 0)
+         req = 'root.json.gz?compact=23';
 
       if (url.length > 0) url += "/";
       url += req;
@@ -2750,7 +2761,7 @@ class HierarchyPainter extends BasePainter {
 
          this.h._expand = onlineHierarchy;
 
-         let styles = [], scripts = [], v6_modules = [];
+         let styles = [], scripts = [], v6_modules = [], v7_imports = [];
          this.forEachItem(item => {
             if (item._childs !== undefined)
                item._expand = onlineHierarchy;
@@ -2758,7 +2769,9 @@ class HierarchyPainter extends BasePainter {
             if (item._autoload) {
                let arr = item._autoload.split(";");
                arr.forEach(name => {
-                  if ((name.length > 3) && (name.lastIndexOf(".js") == name.length-3)) {
+                  if ((name.length > 4) && (name.lastIndexOf(".mjs") == name.length-4)) {
+                     v7_imports.push(this.importModule(name));
+                  } else if ((name.length > 3) && (name.lastIndexOf(".js") == name.length-3)) {
                      if (!scripts.find(elem => elem == name)) scripts.push(name);
                   } else if ((name.length > 4) && (name.lastIndexOf(".css") == name.length-4)) {
                      if (!styles.find(elem => elem == name)) styles.push(name);
@@ -2771,6 +2784,7 @@ class HierarchyPainter extends BasePainter {
 
          return this.loadScripts(scripts, v6_modules)
                .then(() => loadScript(styles))
+               .then(() => Promise.all(v7_imports))
                .then(() => {
                   this.forEachItem(item => {
                      if (!('_drawfunc' in item) || !('_kind' in item)) return;
@@ -3104,6 +3118,9 @@ class HierarchyPainter extends BasePainter {
       if (!scripts?.length && !modules?.length)
          return Promise.resolve(true);
 
+      if (internals.ignore_v6)
+         return loadScript(scripts);
+
       return _ensureJSROOT().then(v6 => {
          return v6.require(modules)
                   .then(() => loadScript(scripts))
@@ -3297,7 +3314,7 @@ class HierarchyPainter extends BasePainter {
 
       let h0 = null;
       if (this.is_online) {
-         let func = internals.GetCachedHierarchy || findFunction('GetCachedHierarchy');
+         let func = internals.getCachedHierarchy || findFunction('GetCachedHierarchy');
          if (typeof func == 'function')
             h0 = func();
          if (typeof h0 !== 'object') h0 = "";

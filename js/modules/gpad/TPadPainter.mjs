@@ -442,7 +442,7 @@ class TPadPainter extends ObjectPainter {
          if (isBatchMode()) {
             svg.attr("xmlns", "http://www.w3.org/2000/svg");
             svg.attr("xmlns:xlink", "http://www.w3.org/1999/xlink");
-         } else {
+         } else if (!this.online_canvas) {
             svg.append("svg:title").text("ROOT canvas");
          }
 

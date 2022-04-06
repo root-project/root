@@ -34,7 +34,7 @@ import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
 import { geoCfg, geoBITS, ClonedNodes, testGeoBit, setGeoBit, toggleGeoBit, setInvisibleAll,
          countNumShapes, getNodeKind, produceRenderOrder, createFlippedMesh,
-         createGeometry, projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix,
+         projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix,
          getBoundingBox, provideObjectInfo, isSameStack, checkDuplicates, getObjectName, cleanupShape } from './geobase.mjs';
 
 const _ENTIRE_SCENE = 0, _BLOOM_SCENE = 1;
