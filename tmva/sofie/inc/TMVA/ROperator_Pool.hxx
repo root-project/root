@@ -17,7 +17,7 @@ namespace Experimental {
 namespace SOFIE {
 
 struct RAttributes_Pool {
-   // structure conatin Pool attributes
+   // structure containing Pool attributes
    std::string auto_pad = "NOTSET";
    int ceil_mode = 0;
    int count_include_pad = 0;     // not for MaxPool
@@ -89,16 +89,16 @@ public:
 
    // function returning output shape given input 
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input) {
-      // shape of pooling input has to be (according to ONNX): NxCxHxW  
+      // shape of pooling input has to be (according to ONNX): N x C x H x W  
       // Where N is batch size, C : input  channels, H : input height, W = input width
       // or it can be [N, C, F1,F2,....FN] . Minimum dimension is 3  
       if (input.size() != 1 ) {
          throw std::runtime_error("TMVA SOFIE" + Name() + "Op Shape inference need 1 input tensor");
       }
       if (input[0].size() < 3) {
-         throw std::runtime_error("TMVA SOFIE" + Name() + "Op Shape inference only accept tensor with at leat 3 dimensions");
+         throw std::runtime_error("TMVA SOFIE" + Name() + "Op Shape inference only accept tensor with at least 3 dimensions");
       }
-      // for the time being support only 4 dimens
+      // for the time being support only 4 dimensions
       if (input[0].size() !=  4) {
          throw std::runtime_error("TMVA SOFIE" + Name() + "Op : tensors with dimension " + std::to_string(input[0].size()) + " are not yet supported");
       }
@@ -167,7 +167,7 @@ public:
          fAttrPads = {0, 0, 0, 0};
          assert(fAttrStrides.empty());
       }
-      // find shape of Y and add it in the list of intermidiate tensors
+      // find shape of Y and add it in the list of intermediate tensors
       fShapeY = ShapeInference({fShapeX})[0];
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
 
