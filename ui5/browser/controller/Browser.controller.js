@@ -701,9 +701,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return this.websocket.send("GETLOGS:");
       },
 
+      formatLine: function(line) {
+         let res = "", p = line.indexOf("\u001b");
+
+         while (p >= 0) {
+            if (p > 0)
+               res += line.slice(0, p);
+            line = line.slice(p+1);
+            // cut of colors codes
+            if (line[0] == '[') {
+               p = 0;
+               while ((p < line.length) && (line[p] != 'm')) p++;
+               line = line.slice(p+1);
+            }
+            p = line.indexOf("\u001b");
+         }
+
+         return res + line;
+      },
+
       updateLogs: function(logs) {
          let str = "";
-         logs.forEach(line => str += line+"\n");
+         logs.forEach(line => str += this.formatLine(line)+"\n");
          this.getView().byId("output_log").setValue(str);
       },
 
