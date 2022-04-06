@@ -16,4 +16,7 @@
 
 #pragma link C++ class ComplexStruct+;
 
+#pragma link C++ class BaseOfStructWithEnums + ;
+#pragma link C++ class StructWithEnums + ;
+
 #endif
