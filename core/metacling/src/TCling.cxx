@@ -3164,10 +3164,11 @@ Bool_t TCling::IsLoaded(const char* filename) const
    llvm::StringRef(filesStr).split(files, "\n");
 
    std::set<std::string> fileMap;
+   llvm::StringRef file_name_ref(file_name);
    // Fill fileMap; return early on exact match.
    for (llvm::SmallVector<llvm::StringRef, 100>::const_iterator
            iF = files.begin(), iE = files.end(); iF != iE; ++iF) {
-      if ((*iF) == file_name.c_str()) return kTRUE; // exact match
+      if ((*iF) == file_name_ref) return kTRUE; // exact match
       fileMap.insert(iF->str());
    }
 
@@ -7129,9 +7130,12 @@ static std::string GetSharedLibImmediateDepsSlow(std::string lib,
             // FIXME: It is unclear whether we can ignore all weak undefined
             // symbols:
             // http://lists.llvm.org/pipermail/llvm-dev/2017-October/118177.html
-            if (SymName == "_Jv_RegisterClasses" ||
-               SymName == "_ITM_deregisterTMCloneTable" ||
-               SymName == "_ITM_registerTMCloneTable")
+            static constexpr llvm::StringRef RegisterClasses("_Jv_RegisterClasses");
+            static constexpr llvm::StringRef RegisterCloneTable("_ITM_registerTMCloneTable");
+            static constexpr llvm::StringRef DeregisterCloneTable("_ITM_deregisterTMCloneTable");
+            if (SymName == RegisterClasses ||
+               SymName == RegisterCloneTable ||
+               SymName == DeregisterCloneTable)
                continue;
          }
 
