@@ -24,10 +24,8 @@
 #include <map>
 #include <string>
 
-typedef RooArgSet* pRooArgSet ;
-
 class RooNormSetCache {
-protected:
+private:
   class Pair {
   public:
     using Value_t = RooFit::UniqueId<RooArgSet>::Value_t;
@@ -46,8 +44,7 @@ protected:
   typedef std::map<Pair, ULong64_t> PairIdxMapType;
 
 public:
-  RooNormSetCache(ULong_t max = 32);
-  virtual ~RooNormSetCache();
+  RooNormSetCache(ULong_t max = 32) : _max(max) {}
 
   void add(const RooArgSet* set1, const RooArgSet* set2 = 0);
 
@@ -89,18 +86,16 @@ public:
 
   void initialize(const RooNormSetCache& other) { clear(); *this = other; }
 
-protected:
+private:
 
   PairVectType _pairs; ///<!
   PairIdxMapType _pairToIdx; ///<!
   ULong_t _max; ///<!
-  ULong_t _next; ///<!
+  ULong_t _next = 0; ///<!
 
   std::string _name1;   ///<!
   std::string _name2;   ///<!
-  TNamed*    _set2RangeName; ///<!
-
-  ClassDef(RooNormSetCache, 0) // Management tool for tracking sets of similar integration/normalization sets
+  TNamed*    _set2RangeName = nullptr; ///<!
 };
 
 #endif

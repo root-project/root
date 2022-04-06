@@ -33,30 +33,8 @@ during their lifetime.
 **/
 #include "RooFit.h"
 
-#include "RooNormSetCache.h"
-#include "RooArgSet.h"
-#include "RooHelpers.h"
-
-ClassImp(RooNormSetCache);
-;
-
-
-#include <iostream>
-using namespace std ;
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooNormSetCache::RooNormSetCache(ULong_t max) :
-  _max(max), _next(0), _set2RangeName(0)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNormSetCache::~RooNormSetCache()
-{
-}
+#include <RooNormSetCache.h>
+#include <RooHelpers.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear contents
@@ -106,19 +84,19 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If RooArgSets set1 and set2 or sets with similar contents have
-/// been seen by this cache manager before return kFALSE If not,
-/// return kTRUE. If sets have not been seen and doRefill is true,
+/// been seen by this cache manager before return `false` If not,
+/// return `true`. If sets have not been seen and doRefill is true,
 /// update cache reference to current input sets.
 
 Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
    const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill)
 {
 
-  // Automated cache management function - Returns kTRUE if cache is invalidated
+  // Automated cache management function - Returns `true` if cache is invalidated
 
   // A - Check if set1/2 are in cache and range name is identical
   if (set2RangeName == _set2RangeName && contains(set1,set2)) {
-    return kFALSE ;
+    return false ;
   }
 
   // B - Check if dependents(set1/set2) are compatible with current cache
@@ -128,42 +106,39 @@ Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
 //   if (set2) set2->Print("v");
   //if (self) self->Print("v");
 
-  RooArgSet *set1d, *set2d ;
+  RooArgSet set1d;
+  RooArgSet set2d;
   if (self) {
-    set1d = set1 ? self->getObservables(*set1,kFALSE) : new RooArgSet;
-    set2d = set2 ? self->getObservables(*set2,kFALSE) : new RooArgSet;
+    if(set1) self->getObservables(set1,set1d,false);
+    if(set2) self->getObservables(set2,set2d,false);
   } else {
-    set1d = set1 ? (RooArgSet*)set1->snapshot() : new RooArgSet;
-    set2d = set2 ? (RooArgSet*)set2->snapshot() : new RooArgSet;
+    if(set1) set1->snapshot(set1d);
+    if(set2) set2->snapshot(set2d);
   }
 
 //   cout << "RooNormSetCache::autoCache set1d = " << *set1d << " set2 = " << *set2d << endl;
 
   using RooHelpers::getColonSeparatedNameString;
 
-  if (   getColonSeparatedNameString(*set1d) == _name1
-      && getColonSeparatedNameString(*set2d) == _name2
+  if (   getColonSeparatedNameString(set1d) == _name1
+      && getColonSeparatedNameString(set2d) == _name2
       && _set2RangeName == set2RangeName) {
     // Compatible - Add current set1/2 to cache
     add(set1,set2);
 
-    delete set1d;
-    delete set2d;
-    return kFALSE;
+    return false;
   }
 
   // C - Reset cache and refill with current state
   if (doRefill) {
     clear();
     add(set1,set2);
-    _name1 = getColonSeparatedNameString(*set1d);
-    _name2 = getColonSeparatedNameString(*set2d);
+    _name1 = getColonSeparatedNameString(set1d);
+    _name2 = getColonSeparatedNameString(set2d);
 //     cout << "RooNormSetCache::autoCache() _name1 refilled from " << *set1d << " to " ; _name1.printValue(cout) ; cout << endl;
 //     cout << "RooNormSetCache::autoCache() _name2 refilled from " << *set2d << " to " ; _name2.printValue(cout) ; cout << endl;
     _set2RangeName = (TNamed*) set2RangeName;
   }
 
-  delete set1d;
-  delete set2d;
-  return kTRUE;
+  return true;
 }
