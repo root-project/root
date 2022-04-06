@@ -192,8 +192,7 @@ TObject *TListOfEnums::FindObject(const char *name) const
    TObject *result = THashList::FindObject(name);
    if (!result) {
       TInterpreter::DeclId_t decl;
-      if (GetClass()) decl = gInterpreter->GetEnum(GetClass(), name);
-      else            decl = gInterpreter->GetEnum(nullptr, name);
+      decl = gInterpreter->GetEnum(GetClass(), name);
       if (decl) result = const_cast<TListOfEnums *>(this)->Get(decl, name);
    }
    return result;
