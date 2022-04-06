@@ -17,7 +17,7 @@ import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
 const CoordSystem = { kCARTESIAN: 1, kPOLAR: 2, kCYLINDRICAL: 3, kSPHERICAL: 4, kRAPIDITY: 5 };
 
-const createDefaultPalette = () => {
+function createDefaultPalette() {
    const hue2rgb = (p, q, t) => {
       if (t < 0) t += 1;
       if (t > 1) t -= 1;
@@ -38,16 +38,16 @@ const createDefaultPalette = () => {
       palette.push(HLStoRGB(hue, 0.5, 1));
    }
    return new ColorPalette(palette);
-};
+}
 
-const createGrayPalette = () => {
+function createGrayPalette() {
    let palette = [];
    for (let i = 0; i < 50; ++i) {
       const code = toHex((i+2)/60);
       palette.push('#'+code+code+code);
    }
    return new ColorPalette(palette);
-};
+}
 
 /** @summary Create color palette
   * @private */
