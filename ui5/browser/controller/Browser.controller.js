@@ -553,7 +553,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (hidden != this.model.isShowHidden()) {
             changed = true;
-            this.model.setShowHidden(hiden);
+            this.model.setShowHidden(hidden);
          }
 
          if (reverse != this.model.isReverseOrder()) {
