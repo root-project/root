@@ -150,7 +150,7 @@ function buildGUI(gui_element, gui_kind) {
          return hpainter.initializeBrowser();
       if (!drawing)
          return;
-      let obj = null, func = internals.GetCachedObject || findFunction('GetCachedObject');
+      let obj = null, func = internals.getCachedObject || findFunction('GetCachedObject');
       if (typeof func == 'function')
          obj = parse(func());
       if (obj) hpainter._cached_draw_object = obj;

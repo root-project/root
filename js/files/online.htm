@@ -12,14 +12,14 @@
          loading ...
       </div>
 
-      <script type="module">
-         import { buildGUI, internals } from './jsrootsys/modules/gui.mjs';
-
-         internals.GetCachedHierarchy = function() { return "$$$h.json$$$"; }
-
-         buildGUI("onlineGUI", "online");
-      </script>
-
    </body>
+
+   <script type="module">
+      import { buildGUI, internals } from './jsrootsys/modules/gui.mjs';
+
+      internals.getCachedHierarchy = function() { return "$$$h.json$$$"; }
+
+      buildGUI("onlineGUI", "online");
+   </script>
 
 </html>

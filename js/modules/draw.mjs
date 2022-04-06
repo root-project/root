@@ -378,13 +378,16 @@ function draw(dom, obj, opt) {
    } else if (!handle.prereq && !handle.script) {
       return Promise.reject(Error(`Prerequicities to load ${handle.func} are not specified`));
    } else {
-      promise = _ensureJSROOT().then(v6 => {
+
+      let init_promise = internals.ignore_v6 ? Promise.resolve(true) : _ensureJSROOT().then(v6 => {
          let pr = handle.prereq ? v6.require(handle.prereq) : Promise.resolve(true);
          return pr.then(() => {
             if (handle.script)
                return loadScript(handle.script);
          }).then(() => v6._complete_loading());
-      }).then(() => {
+      });
+
+      promise = init_promise.then(() => {
          let func = findFunction(handle.func);
 
          if (!func || (typeof func != 'function'))

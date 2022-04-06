@@ -1,3 +1,5 @@
+// Only 2D histograms drawing without support of generic draw function
+
 export { version, parse } from "../core.mjs";
 
 export { cleanup } from "../base/ObjectPainter.mjs";

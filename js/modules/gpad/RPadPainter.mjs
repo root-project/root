@@ -298,7 +298,7 @@ class RPadPainter extends RObjectPainter {
 
          this.setTopPainter(); //assign canvas as top painter of that element
 
-         if (!isBatchMode())
+         if (!isBatchMode() && !this.online_canvas)
             svg.append("svg:title").text("ROOT canvas");
 
          frect = svg.append("svg:path").attr("class","canvas_fillrect");
