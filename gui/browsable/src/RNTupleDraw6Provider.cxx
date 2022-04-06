@@ -33,8 +33,6 @@ public:
          auto h1 = DrawField(dynamic_cast<RFieldHolder*> (obj.get()));
          if (!h1) return false;
 
-         pad->GetListOfPrimitives()->Clear();
-
          pad->GetListOfPrimitives()->Add(h1, opt.c_str());
 
          return true;

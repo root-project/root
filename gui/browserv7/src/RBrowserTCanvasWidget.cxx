@@ -19,6 +19,8 @@
 #include "TClass.h"
 #include "TWebCanvas.h"
 
+#include <vector>
+
 using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
@@ -29,7 +31,7 @@ class RBrowserTCanvasWidget : public RBrowserWidget {
    std::unique_ptr<TCanvas> fCanvas; ///<! drawn canvas
    TWebCanvas *fWebCanvas{nullptr};  ///<! web implementation, owned by TCanvas
 
-   std::unique_ptr<Browsable::RHolder> fObject; // TObject drawing in the TCanvas
+   std::vector<std::unique_ptr<Browsable::RHolder>> fObjects; ///<! objects holder
 
    void SetPrivateCanvasFields(bool on_init)
    {
@@ -127,14 +129,22 @@ public:
       return fCanvas->GetName();
    }
 
-   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt) override
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt, bool append) override
    {
       if (!elem->IsCapable(Browsable::RElement::kActDraw6))
          return false;
 
-      fObject = elem->GetObject();
+      std::unique_ptr<Browsable::RHolder> obj = elem->GetObject();
+      if (!obj)
+         return false;
 
-      if (fObject && Browsable::RProvider::Draw6(fCanvas.get(), fObject, opt)) {
+      if (!append) {
+         fCanvas->GetListOfPrimitives()->Clear();
+         fObjects.clear();
+      }
+
+      if (Browsable::RProvider::Draw6(fCanvas.get(), obj, opt)) {
+         fObjects.emplace_back(std::move(obj));
          fCanvas->ForceUpdate();
          return true;
       }
