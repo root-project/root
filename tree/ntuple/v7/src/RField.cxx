@@ -31,6 +31,7 @@
 #include <TDataMember.h>
 #include <TError.h>
 #include <TList.h>
+#include <TRealData.h>
 
 #include <algorithm>
 #include <cctype> // for isspace
@@ -40,6 +41,7 @@
 #include <iostream>
 #include <type_traits>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace {
 
@@ -785,7 +787,14 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
 	     RSubFieldInfo{kBaseClass, static_cast<std::size_t>(baseClass->GetDelta())});
       i++;
    }
+   std::unordered_set<void *> realMembers;
+   for (auto rm : ROOT::Detail::TRangeStaticCast<TRealData>(*fClass->GetListOfRealData()))
+      realMembers.insert(rm->GetDataMember());
    for (auto dataMember : ROOT::Detail::TRangeStaticCast<TDataMember>(*fClass->GetListOfDataMembers())) {
+      // Skip, for instance, unscoped enum constants defined in the class
+      if (realMembers.count(dataMember) == 0)
+         continue;
+      // Skip members explicitly marked as transient by user comment
       if (!dataMember->IsPersistent())
          continue;
       auto subField = Detail::RFieldBase::Create(dataMember->GetName(), dataMember->GetFullTypeName()).Unwrap();
