@@ -72,6 +72,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             SortMethod: "name",
             ReverseOrder: false,
             ShowHiddenFiles: false,
+            AppendToCanvas: false,
             DBLCLKRun: false,
             TH1: [
                {name: "hist"},
@@ -535,6 +536,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onSettingPress: async function () {
          let menu = await this._getSettingsMenu();
 
+         this._oSettingsModel.setProperty("/AppendToCanvas", this.model.isAppendToCanvas());
          this._oSettingsModel.setProperty("/ShowHiddenFiles", this.model.isShowHidden());
          this._oSettingsModel.setProperty("/SortMethod", this.model.getSortMethod());
          this._oSettingsModel.setProperty("/ReverseOrder", this.model.isReverseOrder());
@@ -548,14 +550,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       handleSeetingsConfirm: function() {
-         let hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles"),
+         let append = this._oSettingsModel.getProperty("/AppendToCanvas"),
+             hidden = this._oSettingsModel.getProperty("/ShowHiddenFiles"),
              sort = this._oSettingsModel.getProperty("/SortMethod"),
              reverse = this._oSettingsModel.getProperty("/ReverseOrder"),
              changed = false;
 
+         if (append != this.model.isAppendToCanvas())
+            this.model.setAppendToCanvas(append);
+
          if (hidden != this.model.isShowHidden()) {
             changed = true;
-            this.model.setShowHidden(hiden);
+            this.model.setShowHidden(hidden);
          }
 
          if (reverse != this.model.isReverseOrder()) {
@@ -568,9 +574,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.model.setSortMethod(sort);
          }
 
-         if (changed) {
+         if (changed)
             this.doReload();
-         }
       },
 
       /** @summary Add Tab event handler */
@@ -773,23 +778,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary Double-click event handler */
       onRowDblClick: function (row) {
          let ctxt = row.getBindingContext(),
-            prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
          if (!prop || !prop.path) return;
 
          let className = this.getBaseClass(prop.className),
              opt = className ? this.drawingOptions[className] : "",
+             append = this.model.isAppendToCanvas() ? "true" : "false",
              exec = "";
 
-         if (this._oSettingsModel.getProperty("/DBLCLKRun")) exec = "exec";
-         if (!opt) opt = "";
+         if (this._oSettingsModel.getProperty("/DBLCLKRun"))
+            exec = "exec";
 
          let args = prop.path.slice(); // make copy of array
-         args.push(opt, exec);
+         args.push(opt || "", append, exec);
 
          this.websocket.send("DBLCLK:" + JSON.stringify(args));
 
-         this.invokeWarning("Processing double click on: " + prop.name, 200);
+         this.invokeWarning("Processing double click on: " + prop.name, 500);
       },
 
       invokeWarning: function(msg, tmout) {

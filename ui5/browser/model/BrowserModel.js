@@ -27,6 +27,7 @@ sap.ui.define([
             this.reverseOrder = false;
             this.itemsFilter = "";
             this.showHidden = false;
+            this.appendToCanvas = false;
 
             this.threshold = 100; // default threshold to prefetch items
         },
@@ -46,6 +47,12 @@ sap.ui.define([
 
         /** @summary Is show hidden flag set */
         isShowHidden: function() { return this.showHidden; },
+
+        /** @summary Set show hidden flag */
+        setAppendToCanvas: function(flag) { this.appendToCanvas = flag; },
+
+        /** @summary Is show hidden flag set */
+        isAppendToCanvas: function() { return this.appendToCanvas; },
 
         /** @summary Set reverse order */
         setReverseOrder: function(on) { this.reverseOrder = on; },

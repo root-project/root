@@ -272,6 +272,9 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
 {
    args.pop_back(); // remove exec string, not used now
 
+   std::string doAppend = args.back();
+   args.pop_back(); // remove append option
+
    std::string drawingOptions = args.back();
    args.pop_back(); // remove draw option
 
