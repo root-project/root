@@ -24,6 +24,7 @@
 #include "TFile.h"
 #include "TClass.h"
 #include "TEnv.h"
+#include "TH1.h"
 
 #include <cstring>
 #include <string>
@@ -280,6 +281,12 @@ public:
 
       if (tobj) {
          bool owned_by_dir = (fDir->FindObject(tobj) == tobj) || (fKeyClass == "TGeoManager");
+
+         if (owned_by_dir && tobj->InheritsFrom(TH1::Class())) {
+            auto hist = dynamic_cast<TH1*>(tobj);
+            hist->SetDirectory(nullptr);
+            owned_by_dir = false;
+         }
 
          return std::make_unique<TObjectHolder>(tobj, !owned_by_dir);
       }
