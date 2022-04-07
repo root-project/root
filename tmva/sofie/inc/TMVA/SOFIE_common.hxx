@@ -107,6 +107,8 @@ template<typename T>
 T* Unidirectional_broadcast(const T* original_data, const std::vector<size_t> original_shape, const std::vector<size_t> target_shape);
 std::string Clean_name(std::string input_tensor_name);
 
+/// compute stride of a tensor given its shape (assume layout is row-major)
+std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);
 
 /// function to check if a >> 0 and a < MAX using a single comparison
 //// use trick casting to unsigned values so it becomes a single comparison
@@ -115,23 +117,23 @@ inline bool is_a_ge_zero_and_a_lt_b(int a, int b) {
 }
 
 
-/// im2col : efficient function to re-arrange input data of convolution to a matrix 
+/// im2col : efficient function to re-arrange input data of convolution to a matrix
 /// that can be used by BLAS
 /// Use trick to loop on each element of filtered region first and follow input data layout
 /// By doing this reads and writes are of consecutive data in memory and one gains in efficiency
-/// The resulting matrix will be already transposed and can be used directly in BLAS 
+/// The resulting matrix will be already transposed and can be used directly in BLAS
 /// since output will be a matrix : (channels*kernel_h*kernel_w , output_h*output_w)
-/// Example: with an input matrix 
-///    a1 a2 a3 
-///    b1 b2 b3    and a 2x2 kernel    (k1,k2,k3,k4) and padding 1 : 
-///    c1 c2 c3  
-///     outpout will be a matrix (4 x 16)                  
-///  the routine will follow output order : 
+/// Example: with an input matrix
+///    a1 a2 a3
+///    b1 b2 b3    and a 2x2 kernel    (k1,k2,k3,k4) and padding 1 :
+///    c1 c2 c3
+///     outpout will be a matrix (4 x 16)
+///  the routine will follow output order :
 //     first all elements which will be operated by k1 then k2 then k3
 ///  -> ( 0  0  0  0  0  a1 a2 a3 0  b1 b2 b3  0 c1 c2 c3  )    all elements for k1
-///     ( 0  0  0  0  a1 a2 a3  0 b1 b2 b3  0 c1 c2 c3  0  )     for k2 
-///     ( 0  a1 a2 a3 0  b1 b2 b3 0  c1 c2 c3  0  0  0  0  )     for k3 
-///     ( a1 a2 a3 0  b1 b2 b3  0 c1 c2 c3  0  0  0  0  0  )     for k4     
+///     ( 0  0  0  0  a1 a2 a3  0 b1 b2 b3  0 c1 c2 c3  0  )     for k2
+///     ( 0  a1 a2 a3 0  b1 b2 b3 0  c1 c2 c3  0  0  0  0  )     for k3
+///     ( a1 a2 a3 0  b1 b2 b3  0 c1 c2 c3  0  0  0  0  0  )     for k4
 ///
 
 template <typename T>
@@ -171,11 +173,11 @@ void Im2col(const T *data_im, const int channels, const int height, const int wi
 
 /// 3d implementation
 template <typename T>
-void Im2col_3d(const T *data_im, const int channels, 
-            const int depth, const int height, const int width, 
-            const int kernel_d, const int kernel_h, const int kernel_w, 
-            const int pad_d, const int pad_h, const int pad_w, 
-            const int stride_d, const int stride_h, const int stride_w, 
+void Im2col_3d(const T *data_im, const int channels,
+            const int depth, const int height, const int width,
+            const int kernel_d, const int kernel_h, const int kernel_w,
+            const int pad_d, const int pad_h, const int pad_w,
+            const int stride_d, const int stride_h, const int stride_w,
             const int dilation_d, const int dilation_h,  const int dilation_w, T *data_col)
 {
    const int output_h = (height + 2 * pad_h - (dilation_h * (kernel_h - 1) + 1)) / stride_h + 1;
@@ -201,7 +203,7 @@ void Im2col_3d(const T *data_im, const int channels,
                         if (!is_a_ge_zero_and_a_lt_b(input_row, height)) {
                            for (int output_cols = output_w; output_cols; output_cols--) {
                               *(data_col++) = 0;
-                           }  
+                           }
                         } else {
                            int input_col = -pad_w + kernel_col * dilation_w;
                            for (int output_col = output_w; output_col; output_col--) {
