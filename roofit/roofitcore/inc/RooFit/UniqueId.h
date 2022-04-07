@@ -14,7 +14,6 @@
 #define roofit_roofitcore_RooFit_UniqueId_h
 
 #include <atomic>
-#include <cstdint>
 
 namespace RooFit {
 
@@ -39,7 +38,7 @@ namespace RooFit {
 template <class Class>
 struct UniqueId {
 public:
-   using Value_t = std::uint64_t;
+   using Value_t = unsigned long;
 
    /// Create a new UniqueId with the next value from the static counter.
    UniqueId() : _val{++counter} {}
