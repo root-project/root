@@ -1050,7 +1050,7 @@ void TApplication::Help(const char *line)
    // If the user chooses ".help" or ".?".
    if ((strippedCommand == ".help") || (strippedCommand == ".?")) {
       gInterpreter->ProcessLine(line);
-      Printf("\nROOT special commands.");
+      Printf("\n ROOT special commands.");
       Printf(" ==============================================================================");
       Printf("   .L <filename>[flags]: load the given file with optional flags like\n"
              "                         + to compile or ++ to force recompile.\n"
@@ -1093,7 +1093,7 @@ void TApplication::Help(const char *line)
       strippedCommand = strippedCommand.Strip(TString::kBoth);
 
       if (strippedCommand == "edit") {
-         Printf("\nROOT terminal keyboard shortcuts (GNU-readline style).");
+         Printf("\n ROOT terminal keyboard shortcuts (GNU-readline style).");
          #ifdef R__MACOSX
          #define FOOTNOTE " *"
          Printf("* Some of these commands might be intercepted by macOS predefined system shortcuts.");
