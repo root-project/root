@@ -18,8 +18,6 @@
 
 #include <RooArgSet.h>
 
-#include <Rtypes.h>
-
 #include <vector>
 #include <map>
 #include <string>
@@ -41,14 +39,14 @@ private:
   };
 
   typedef std::vector<Pair> PairVectType;
-  typedef std::map<Pair, ULong64_t> PairIdxMapType;
+  typedef std::map<Pair, std::size_t> PairIdxMapType;
 
 public:
-  RooNormSetCache(ULong_t max = 32) : _max(max) {}
+  RooNormSetCache(std::size_t max = 32) : _max(max) {}
 
   void add(const RooArgSet* set1, const RooArgSet* set2 = 0);
 
-  inline Int_t index(const RooArgSet* set1, const RooArgSet* set2 = 0,
+  inline int index(const RooArgSet* set1, const RooArgSet* set2 = 0,
       const TNamed* set2RangeName = 0)
   {
     // Match range name first
@@ -61,28 +59,28 @@ public:
     return -1;
   }
 
-  inline Bool_t contains(const RooArgSet* set1, const RooArgSet* set2 = 0,
+  inline bool contains(const RooArgSet* set1, const RooArgSet* set2 = 0,
       const TNamed* set2RangeName = 0)
   { return (index(set1,set2,set2RangeName) >= 0); }
 
-  inline Bool_t containsSet1(const RooArgSet* set1)
+  inline bool containsSet1(const RooArgSet* set1)
   {
     const Pair pair(set1, (const RooArgSet*)0);
     PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
     if (_pairToIdx.end() != it && it->first.first() == RooFit::getUniqueId(set1))
-      return kTRUE;
-    return kFALSE;
+      return true;
+    return false;
   }
 
   const std::string& nameSet1() const { return _name1; }
   const std::string& nameSet2() const { return _name2; }
 
-  Bool_t autoCache(const RooAbsArg* self, const RooArgSet* set1,
+  bool autoCache(const RooAbsArg* self, const RooArgSet* set1,
       const RooArgSet* set2 = 0, const TNamed* set2RangeName = 0,
-      Bool_t autoRefill = kTRUE);
+      bool autoRefill = true);
 
   void clear();
-  Int_t entries() const { return _pairs.size(); }
+  std::size_t entries() const { return _pairs.size(); }
 
   void initialize(const RooNormSetCache& other) { clear(); *this = other; }
 
@@ -90,8 +88,8 @@ private:
 
   PairVectType _pairs; ///<!
   PairIdxMapType _pairToIdx; ///<!
-  ULong_t _max; ///<!
-  ULong_t _next = 0; ///<!
+  std::size_t _max; ///<!
+  std::size_t _next = 0; ///<!
 
   std::string _name1;   ///<!
   std::string _name2;   ///<!

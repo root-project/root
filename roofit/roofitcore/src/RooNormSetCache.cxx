@@ -63,7 +63,7 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
     return;
   }
   // register pair -> index mapping
-  _pairToIdx.insert(it, std::make_pair(pair, ULong_t(_pairs.size())));
+  _pairToIdx.insert(it, std::make_pair(pair, _pairs.size()));
   // save pair at that index
   _pairs.push_back(pair);
   // if the cache grew too large, start replacing in a round-robin fashion
@@ -87,8 +87,8 @@ void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 /// return `true`. If sets have not been seen and doRefill is true,
 /// update cache reference to current input sets.
 
-Bool_t RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
-   const RooArgSet* set2, const TNamed* set2RangeName, Bool_t doRefill)
+bool RooNormSetCache::autoCache(const RooAbsArg* self, const RooArgSet* set1,
+   const RooArgSet* set2, const TNamed* set2RangeName, bool doRefill)
 {
 
   // Automated cache management function - Returns `true` if cache is invalidated
