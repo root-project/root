@@ -23,12 +23,34 @@
 
 class RooArgList ;
 
+// # Original comment on USEMEMPOOLFORARGSET:
+//
 // Use a memory pool for RooArgSet.
 // RooFit assumes (e.g. for caching results) that arg sets that have the same pointer have
 // the same contents. Trying to remove that memory pool lead to wrong results, because the
 // OS *occasionally* returns the same address, and the caching goes wrong.
 // It's hard to track down, so disable this only when e.g. looking for memory leaks!
-#define USEMEMPOOLFORARGSET
+//
+// # Update April 2022:
+//
+// Using pointers comparisons for caching RooFit results caused too many bugs,
+// even wih the memory pool. For example, if the RooArgSet is created on the
+// stack, there is no guarantee that memory is not reused. Also, pointer
+// comparisons still work if the RooArgSets for the cache entry are already out
+// of scope, which can also cause problems. Therefore, when RooArgSets are used
+// for caching, RooFit now uses the `RooArgSet::uniqueId()` as of PR [1].
+//
+// Since pointers are not used as cache keys anymore, the custom memory pool
+// is not necessary anymore. It was decided to deactivate it, because it also
+// caused quite some trouble on its own. It caused unexpected memory increases,
+// possibly because of heap fragmentation [2], and overloading `operator new`
+// and `delete` caused PyROOT issues on some platforms.
+//
+// [1] https://github.com/root-project/root/pull/10333
+// [2] https://github.com/root-project/root/issues/8323
+
+// #define USEMEMPOOLFORARGSET
+
 template <class RooSet_t, size_t>
 class MemPoolForRooSets;
 

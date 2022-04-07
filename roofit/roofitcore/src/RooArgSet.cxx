@@ -37,7 +37,15 @@
 /// ownership status. Arguments supplied in the constructor are always added
 /// as unowned elements.
 ///
-///
+/// 
+/// Uniquely identifying RooArgSet objects
+/// ---------------------------------------
+/// 
+/// \warning Before v6.28, it was ensured that no RooArgSet objects on the heap
+/// were located at an address that had already been used for a RooArgSet before.
+/// With v6.28, this is not guaranteed anymore. Hence, if your code uses pointer
+/// comparisons to uniquely identify RooArgSet instances, please consider using
+/// the new `RooArgSet::uniqueId()`.
 
 #include "RooArgSet.h"
 
