@@ -10,14 +10,18 @@
 
 using namespace TMVA::Experimental;
 
-void TMVA_SOFIE_ONNX(){
+void TMVA_SOFIE_ONNX(std::string inputFile = ""){
+   if (inputFile.empty() )
+      inputFile = std::string(gROOT->GetTutorialsDir()) + "/tmva/Linear_16.onnx";
+
     //Creating parser object to parse ONNX files
-    SOFIE::RModelParser_ONNX Parser;
-    SOFIE::RModel model = Parser.Parse(std::string(gROOT->GetTutorialsDir()) + "/tmva/Linear_16.onnx");
+    SOFIE::RModelParser_ONNX parser;
+    SOFIE::RModel model = parser.Parse(inputFile, true);
 
     //Generating inference code
     model.Generate();
-    model.OutputGenerated("Linear_16.hxx");
+    // write the code in a file (by default Linear_16.hxx and Linear_16.dat
+    model.OutputGenerated();
 
     //Printing required input tensors
     model.PrintRequiredInputTensors();
