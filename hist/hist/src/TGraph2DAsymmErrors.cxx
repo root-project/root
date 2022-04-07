@@ -603,7 +603,7 @@ void TGraph2DAsymmErrors::SetPointError(Int_t i, Double_t exl, Double_t exh, Dou
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TGraphErrors.
+/// Stream an object of class TGraph2DAsymmErrors.
 
 void TGraph2DAsymmErrors::Streamer(TBuffer &b)
 {
