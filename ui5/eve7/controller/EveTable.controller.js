@@ -224,8 +224,8 @@ sap.ui.define([
          }
 
          let itemList = this.collection.childs[0].items;
-         for (let i = 0; i < itemList.length; i++) {
-            rowData[i].Name = this.collection.fName + " " + i;
+         for (var i = 0; i < itemList.length; i++) {
+            rowData[i].Idx = i;
             rowData[i].Filtered = itemList[i].fFiltered === true ? 0 : 1;
          }
 
@@ -233,7 +233,7 @@ sap.ui.define([
             // column definition
             let columnData = [];
 
-            columnData.push({ columnName: "Name" });
+            columnData.push({ columnName: "Idx" });
             columnData.push({ columnName: "Filtered" });
 
             let eveColumns = this.eveTable.childs;
