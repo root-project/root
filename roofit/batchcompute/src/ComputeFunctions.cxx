@@ -27,17 +27,18 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 #include "RooVDTHeaders.h"
 #include "Batches.h"
 
+#include <TMath.h>
+
 #include <complex>
+
+#include "faddeeva_impl.h"
 
 #ifdef __CUDACC__
 #define BEGIN blockDim.x *blockIdx.x + threadIdx.x
 #define STEP blockDim.x *gridDim.x
-#include "RooMath.cxx"
-// for CUDA, we need RooMath.cxx in the same translation unit
 #else
 #define BEGIN 0
 #define STEP 1
-#include "RooMath.h"
 #endif // #ifdef __CUDACC__
 
 namespace RooBatchCompute {
@@ -600,7 +601,7 @@ __rooglobal__ void computeVoigtian(Batches batches)
             batches._output[i] = -batches._output[i];
          const double factor = W[i] > 0.0 ? 0.5 : -0.5;
          std::complex<double> z(batches._output[i] * (X[i] - M[i]), factor * batches._output[i] * W[i]);
-         batches._output[i] *= RooMath::faddeeva(z).real();
+         batches._output[i] *= faddeeva_impl::faddeeva(z).real();
       }
 
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
