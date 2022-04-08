@@ -9,8 +9,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
-
 from typing import Dict, Union
+
+import ROOT
 
 
 class Operation:
@@ -25,6 +26,36 @@ class Operation:
 class Action(Operation):
     """An action attached to a distributed RDataFrame graph node."""
     pass
+
+
+class Histo(Action):
+    """
+    Any type of Histo*D action.
+
+    This distinct class is needed to check that the user passes a model for the
+    histogram action. Merging histograms coming from different distributed tasks
+    is not possible unless the model was previously specified, since the binning
+    of the different histograms would be incompatible.
+    """
+
+    def __init__(self, name: str, *args, **kwargs):
+        super().__init__(name, *args, **kwargs)
+
+        # The histogram model can be passed as the keyword argument 'model'. All
+        # Histo*D specializations have the same name for this argument. If it is
+        # present, we know the execution can proceed safely.
+        if not "model" in self.kwargs:
+            # If the keyword argument was not passed, we need to check the first
+            # positional argument. In all Histo*D overload where it is present,
+            # it is always the first argument.
+            if not isinstance(self.args[0],
+                              (tuple, ROOT.RDF.TH1DModel, ROOT.RDF.TH2DModel, ROOT.RDF.TH3DModel, ROOT.RDF.THnDModel)):
+                message = (
+                    "Creating a histogram without a model is not supported in distributed mode. Please make sure to "
+                    "specify the histogram model when rerunning the distributed RDataFrame application. For example:\n\n"
+                    "\tHisto1D('mycolumn') --> Histo1D(('myhist', 'myhist', 100, 0, 10), 'mycolumn')\n\n"
+                    "See the RDataFrame documentation for more details.")
+                raise ValueError(message)
 
 
 class VariationsFor(Action):
@@ -62,10 +93,10 @@ SUPPORTED_OPERATIONS: Dict[str, Union[Action, InstantAction, Transformation]] = 
     "DefinePerSample": Transformation,
     "Filter": Transformation,
     "Graph": Action,
-    "Histo1D": Action,
-    "Histo2D": Action,
-    "Histo3D": Action,
-    "HistoND": Action,
+    "Histo1D": Histo,
+    "Histo2D": Histo,
+    "Histo3D": Histo,
+    "HistoND": Histo,
     "Max": Action,
     "Mean": Action,
     "Min": Action,
