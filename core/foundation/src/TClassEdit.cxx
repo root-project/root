@@ -38,6 +38,9 @@ namespace {
    struct ShuttingDownSignaler : public T {
       using T::T;
 
+      ShuttingDownSignaler() = default;
+      ShuttingDownSignaler(T &&in) : T(std::move(in)) {}
+
       ~ShuttingDownSignaler()
       {
          if (gInterpreterHelper)
@@ -1228,14 +1231,13 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 {
    static const char* remove[] = {"class","const","volatile",0};
-   static bool isinit = false;
-   static std::vector<size_t> lengths;
-   if (!isinit) {
+   static std::vector<size_t> lengths{ []() {
+      std::vector<size_t> create_lengths;
       for (int k=0; remove[k]; ++k) {
-         lengths.push_back(strlen(remove[k]));
+         create_lengths.push_back(strlen(remove[k]));
       }
-      isinit = true;
-   }
+      return create_lengths;
+   }() };
 
    string result;
    result.reserve(strlen(typeDesc)*2);
@@ -1908,16 +1910,17 @@ string TClassEdit::InsertStd(const char *tname)
       "vector",
       "wstring"
    };
-   static ShuttingDownSignaler<set<string>> sSetSTLtypes;
 
    if (tname==0 || tname[0]==0) return "";
 
-   if (sSetSTLtypes.empty()) {
+   static ShuttingDownSignaler<std::set<std::string>> sSetSTLtypes{ []() {
+      std::set<std::string> iSetSTLtypes;
       // set up static set
       const size_t nSTLtypes = sizeof(sSTLtypes) / sizeof(const char*);
       for (size_t i = 0; i < nSTLtypes; ++i)
-         sSetSTLtypes.insert(sSTLtypes[i]);
-   }
+         iSetSTLtypes.insert(sSTLtypes[i]);
+      return iSetSTLtypes;
+   } () };
 
    size_t b = 0;
    size_t len = strlen(tname);
