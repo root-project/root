@@ -2012,23 +2012,31 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save the graph as .csv, .tsv or .txt.
+/// Save the graph as .csv, .tsv or .txt. In case of any other extension, fall
+/// back to TObject::SaveAs
 ///
 /// The result can be immediately imported into Excel, gnuplot, Python or whatever,
 /// without the needing to install pyroot, etc.
 ///
-/// the file extension defines the delimiter used:
+/// \param filename the name of the file where to store the graph
+/// \param option some tuning options
+///
+/// The file extension defines the delimiter used:
 ///  - `.csv` : comma
 ///  - `.tsv` : tab
 ///  - `.txt` : space
+///
+/// If option = "title" a title line is generated with the axis titles.
 
 void TGraph::SaveAs(const char *filename, Option_t *option) const
 {
    TString del = "";
+   TString ext = "";
+
    if (filename) {
-      if (strstr(filename,".csv")) del = ",";
-      if (strstr(filename,".tsv")) del = "\t";
-      if (strstr(filename,".txt")) del = " ";
+      if      (strstr(filename,".csv")) {del = ",";  ext = "csv";}
+      else if (strstr(filename,".tsv")) {del = "\t"; ext = "tsv";}
+      else if (strstr(filename,".txt")) {del = " ";  ext = "txt";}
    }
    if (del.Length()>0) {
       std::ofstream out;
@@ -2043,7 +2051,7 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
          double *ex = this->GetEX();
          double *ey = this->GetEY();
          for(int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del.Data() << ex[i] << del.Data() << fY[i] << del.Data() << ey[i] << std::endl;
+         out << fX[i] << del.Data() << (ex?ex[i]:0) << del.Data() << fY[i] << del.Data() << (ey?ey[i]:0) << std::endl;
       } else if (this->InheritsFrom(TGraphAsymmErrors::Class()) || this->InheritsFrom(TGraphBentErrors::Class())) {
          if(strstr(option,"title"))
          out << "# " << GetXaxis()->GetTitle() << "\texl\t" << "\texh\t" << GetYaxis()->GetTitle() << "\teyl" << "\teyh" << std::endl;
@@ -2052,15 +2060,15 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
          double *eyl = this->GetEYlow();
          double *eyh = this->GetEYhigh();
          for(int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del.Data() << exl[i] << del.Data() << exh[i] << del.Data() << fY[i] << del.Data() << eyl[i] << del.Data() << eyh[i] << std::endl;
+         out << fX[i] << del.Data() << (exl?exl[i]:0) << del.Data() << (exh?exh[i]:0) << del.Data() << fY[i] << del.Data() << (eyl?eyl[i]:0) << del.Data() << (exh?eyh[i]:0) << std::endl;
       } else {
          if (strstr(option,"title"))
          out << "# " << GetXaxis()->GetTitle() << "\t" << GetYaxis()->GetTitle() << std::endl;
          for (int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del.Data()  << fY[i] << std::endl;
+         out << fX[i] << del.Data() << fY[i] << std::endl;
       }
       out.close();
-      Info("SaveAs", "csv file: %s has been generated", filename);
+      Info("SaveAs", "%s file: %s has been generated", ext.Data(), filename);
    } else {
       TObject::SaveAs(filename, option);
    }
