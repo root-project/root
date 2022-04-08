@@ -495,11 +495,14 @@ void ReadWriteCarray(const char *outFileNameBase)
    t.Branch("vb", vb, "vb[size]/O");
    t.Branch("vl", vl, "vl[size]/G");
 
+   // use 2**33 as a larger-than-int value on 64 bits, otherwise just something larger than short (2**30)
+   static constexpr long int longintTestValue = sizeof(long int) == 8 ? 8589934592 : 1073741824;
+
    // Size 1
    size = 1;
    v[0] = 12;
    vb[0] = true;
-   vl[0] = 8589934592; // 2**33
+   vl[0] = longintTestValue;
    t.Fill();
 
    // Size 0 (see ROOT-9860)
@@ -546,7 +549,7 @@ void ReadWriteCarray(const char *outFileNameBase)
       EXPECT_EQ(rvb.GetSize(), 1u);
       EXPECT_TRUE(rvb[0]);
       EXPECT_EQ(rvl.GetSize(), 1u);
-      EXPECT_EQ(rvl[0], 8589934592);
+      EXPECT_EQ(rvl[0], longintTestValue);
 
       // Size 0
       EXPECT_TRUE(r.Next());
