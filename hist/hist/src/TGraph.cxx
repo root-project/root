@@ -2030,42 +2030,44 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
 
 void TGraph::SaveAs(const char *filename, Option_t *option) const
 {
-   TString del = "";
+   char del = '\0';
    TString ext = "";
+   TString fname = filename;
+   TString opt = option;
 
    if (filename) {
-      if      (strstr(filename,".csv")) {del = ",";  ext = "csv";}
-      else if (strstr(filename,".tsv")) {del = "\t"; ext = "tsv";}
-      else if (strstr(filename,".txt")) {del = " ";  ext = "txt";}
+      if      (fname.EndsWith(".csv")) {del = ',';  ext = "csv";}
+      else if (fname.EndsWith(".tsv")) {del = '\t'; ext = "tsv";}
+      else if (fname.EndsWith(".txt")) {del = ' ';  ext = "txt";}
    }
-   if (del.Length()>0) {
+   if (del) {
       std::ofstream out;
       out.open(filename, std::ios::out);
       if (!out.good ()) {
          Error("SaveAs", "cannot open file: %s", filename);
          return;
       }
-      if (this->InheritsFrom(TGraphErrors::Class()) ) {
-         if(strstr(option,"title"))
+      if (InheritsFrom(TGraphErrors::Class()) ) {
+         if(opt.Contains("title"))
          out << "# " << GetXaxis()->GetTitle() << "\tex\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
          double *ex = this->GetEX();
          double *ey = this->GetEY();
          for(int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del.Data() << (ex?ex[i]:0) << del.Data() << fY[i] << del.Data() << (ey?ey[i]:0) << std::endl;
-      } else if (this->InheritsFrom(TGraphAsymmErrors::Class()) || this->InheritsFrom(TGraphBentErrors::Class())) {
-         if(strstr(option,"title"))
+         out << fX[i] << del << (ex?ex[i]:0) << del << fY[i] << del << (ey?ey[i]:0) << std::endl;
+      } else if (InheritsFrom(TGraphAsymmErrors::Class()) || InheritsFrom(TGraphBentErrors::Class())) {
+         if(opt.Contains("title"))
          out << "# " << GetXaxis()->GetTitle() << "\texl\t" << "\texh\t" << GetYaxis()->GetTitle() << "\teyl" << "\teyh" << std::endl;
          double *exl = this->GetEXlow();
          double *exh = this->GetEXhigh();
          double *eyl = this->GetEYlow();
          double *eyh = this->GetEYhigh();
          for(int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del.Data() << (exl?exl[i]:0) << del.Data() << (exh?exh[i]:0) << del.Data() << fY[i] << del.Data() << (eyl?eyl[i]:0) << del.Data() << (exh?eyh[i]:0) << std::endl;
+         out << fX[i] << del << (exl?exl[i]:0) << del << (exh?exh[i]:0) << del << fY[i] << del << (eyl?eyl[i]:0) << del << (eyh?eyh[i]:0) << std::endl;
       } else {
-         if (strstr(option,"title"))
+         if(opt.Contains("title"))
          out << "# " << GetXaxis()->GetTitle() << "\t" << GetYaxis()->GetTitle() << std::endl;
          for (int i=0 ; i<fNpoints ; i++)
-         out << fX[i] << del.Data() << fY[i] << std::endl;
+         out << fX[i] << del << fY[i] << std::endl;
       }
       out.close();
       Info("SaveAs", "%s file: %s has been generated", ext.Data(), filename);
