@@ -10,6 +10,9 @@ void workload(TTreeReader &r)
       ra.GetSize();
 }
 
+// This is a regression test for https://github.com/root-project/root/issues/9136 and https://github.com/root-project/root/issues/10357 .
+// Both issues require that the input trees contain a branch of type vector<T, RAdoptAllocator<T>> (or anyway a vector
+// with a custom allocator, so that TTreeReaderArray uses emulated collection proxies).
 int main()
 {
    ROOT::EnableImplicitMT(2);
