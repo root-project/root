@@ -595,7 +595,7 @@ df = RDataFrame("mytree", "myfile.root")
 
 # Continue the application with the traditional RDataFrame API
 sum = df.Filter("x > 10").Sum("y")
-h = df.Histo1D("x")
+h = df.Histo1D(("name", "title", 10, 0, 10), "x")
 
 print(sum.GetValue())
 h.Draw()
@@ -675,7 +675,7 @@ if __name__ == "__main__":
     # The Dask RDataFrame constructor accepts the Dask Client object as an optional argument
     df = RDataFrame("mytree","myfile.root", daskclient=client)
     # Proceed as usual
-    df.Define("x","someoperation").Histo1D("x")
+    df.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
 
 If an instance of [distributed.Client](http://distributed.dask.org/en/stable/api.html#distributed.Client) is not
@@ -708,7 +708,7 @@ if __name__ == "__main__":
     # The `npartitions` optional argument tells the RDataFrame how many tasks are desired
     df = RDataFrame("mytree","myfile.root", npartitions=NPARTITIONS)
     # Proceed as usual
-    df.Define("x","someoperation").Histo1D("x")
+    df.Define("x","someoperation").Histo1D(("name", "title", 10, 0, 10), "x")
 ~~~
 
 Note that when processing a TTree or TChain dataset, the `npartitions` value should not exceed the number of clusters in
@@ -750,6 +750,28 @@ histos = [histoproxy.GetValue() for histoproxy in histoproxies]
 
 Every distributed backend supports this feature and graphs belonging to different backends can be still triggered with
 a single call to RunGraphs (e.g. it is possible to send a Spark job and a Dask job at the same time).
+
+### Histogram models in distributed mode
+
+When calling a Histo*D operation in distributed mode, remember to pass to the function the model of the histogram to be
+computed, e.g. the axis range and the number of bins:
+
+~~~{.py}
+import ROOT
+RDataFrame = ROOT.RDF.Experimental.Distributed.[BACKEND].RDataFrame
+
+if __name__ == "__main__":
+    df = RDataFrame("mytree","myfile.root").Define("x","someoperation")
+    # The model can be passed either as a tuple with the arguments in the correct order
+    df.Histo1D(("name", "title", 10, 0, 10), "x")
+    # Or by creating the specific struct
+    model = ROOT.RDF.TH1DModel("name", "title", 10, 0, 10)
+    df.Histo1D(model, "x")
+~~~
+
+Without this, two partial histograms resulting from two distributed tasks would have incompatible binning, thus leading
+to errors when merging them. Failing to pass a histogram model will raise an error on the client side, before starting
+the distributed execution.
 
 
 \anchor parallel-execution
