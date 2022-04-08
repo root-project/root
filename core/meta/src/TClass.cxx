@@ -5414,7 +5414,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      fCollectionProxy->Destructor(p, dtorOnly);
+      GetCollectionProxy()->Destructor(p, dtorOnly);
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
@@ -5540,7 +5540,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      fCollectionProxy->DeleteArray(ary, dtorOnly);
+      GetCollectionProxy()->DeleteArray(ary, dtorOnly);
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
