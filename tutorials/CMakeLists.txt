@@ -651,10 +651,11 @@ if(ROOT_pyroot_FOUND)
 
   # Rules specific to distributed RDataFrame
   # Disable distributed RDF tutorials if we didn't check dependencies in the environment first
-  if(NOT test_distrdf_pyspark)
+  # They are always disabled on Mac ARM, until #10061 is fixed
+  if(NOT test_distrdf_pyspark OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64))
     list(APPEND pyveto dataframe/distrdf001_spark_connection.py)
   endif()
-  if(NOT test_distrdf_dask)
+  if(NOT test_distrdf_dask OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64))
     list(APPEND pyveto dataframe/distrdf002_dask_connection.py)
   endif()
   # Use main Python executable to run in PySpark driver and executors
