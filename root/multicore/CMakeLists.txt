@@ -239,4 +239,11 @@ if(ROOT_imt_FOUND)
                      OUTREF tp_process_imt.ref
                      DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
+   ROOTTEST_GENERATE_EXECUTABLE(tp_process_imt_race_regression tp_process_imt_race_regression.cpp LIBRARIES Core Imt Thread Tree TreePlayer)
+
+   ROOTTEST_ADD_TEST(tp_process_imt_race_regression
+                     EXEC ${CMAKE_CURRENT_BINARY_DIR}/tp_process_imt_race_regression
+                     COPY_TO_BUILDDIR treeprocmt_race_regression_input1.root treeprocmt_race_regression_input2.root
+                                      treeprocmt_race_regression_input3.root treeprocmt_race_regression_input4.root
+                     DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
