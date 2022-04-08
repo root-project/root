@@ -27,6 +27,8 @@
 #include "ROOT/RStringView.hxx"
 #include <algorithm>
 
+#include "TSpinLockGuard.h"
+
 using namespace std;
 
 namespace {
@@ -60,23 +62,34 @@ static size_t StdLen(const std::string_view name)
          for(size_t i = 5; i < name.length(); ++i) {
             if (name[i] == '<') break;
             if (name[i] == ':') {
-               bool isInlined;
                std::string scope(name.data(),i);
-               std::string scoperesult;
+
                // We assume that we are called in already serialized code.
                // Note: should we also cache the negative answers?
                static ShuttingDownSignaler<std::set<std::string>> gInlined;
+               static std::atomic_flag spinFlag = ATOMIC_FLAG_INIT;
 
-               if (gInlined.find(scope) != gInlined.end()) {
+               bool isInlined;
+               {
+                  ROOT::Internal::TSpinLockGuard lock(spinFlag);
+                  isInlined = (gInlined.find(scope) != gInlined.end());
+               }
+
+               if (isInlined) {
                   len = i;
                   if (i+1<name.length() && name[i+1]==':') {
                      len += 2;
                   }
                }
+
+               std::string scoperesult;
                if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
                    && gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
                   if (isInlined) {
-                     gInlined.insert(scope);
+                     {
+                        ROOT::Internal::TSpinLockGuard lock(spinFlag);
+                        gInlined.insert(scope);
+                     }
                      len = i;
                      if (i+1<name.length() && name[i+1]==':') {
                         len += 2;
