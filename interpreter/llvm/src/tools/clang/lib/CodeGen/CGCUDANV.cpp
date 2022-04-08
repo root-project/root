@@ -711,7 +711,7 @@ llvm::Function *CGNVCUDARuntime::makeModuleCtorFunction() {
   }
 
   llvm::Function *ModuleCtorFunc = llvm::Function::Create(
-      llvm::FunctionType::get(VoidTy, VoidPtrTy, false),
+      llvm::FunctionType::get(VoidTy, false),
       llvm::GlobalValue::InternalLinkage,
       addUnderscoredPrefixToName("_module_ctor"), &TheModule);
   llvm::BasicBlock *CtorEntryBB =
@@ -947,7 +947,7 @@ llvm::Function *CGNVCUDARuntime::makeModuleDtorFunction() {
       addUnderscoredPrefixToName("UnregisterFatBinary"));
 
   llvm::Function *ModuleDtorFunc = llvm::Function::Create(
-      llvm::FunctionType::get(VoidTy, VoidPtrTy, false),
+      llvm::FunctionType::get(VoidTy, false),
       llvm::GlobalValue::InternalLinkage,
       addUnderscoredPrefixToName("_module_dtor"), &TheModule);
 
