@@ -386,7 +386,7 @@ All data will be automatically zipped if '.gz' extension is appended. Like:
 If the access to the server is restricted with htdigest, it is recommended to use the **curl** program since only curl correctly implements such authentication method. The command will look like:
 
 ```bash
-[shell] curl --user "accout:password" http://localhost:8080/Objects/subfolder/obj/root.json --digest -o root.json
+[shell] curl --user "account:password" http://localhost:8080/Objects/subfolder/obj/root.json --digest -o root.json
 ```
 
 
