@@ -1,7 +1,6 @@
 # Library which powers fast batch computations in Roofit.
 ROOT_LINKER_LIBRARY(RooBatchCompute
     src/Initialisation.cxx
-    src/RooMath.cxx
     src/RunContext.cxx
   DEPENDENCIES
     Core
