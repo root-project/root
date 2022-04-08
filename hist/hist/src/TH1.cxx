@@ -4141,6 +4141,10 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 ///      histo->Fit("f1", "R");
 /// ~~~
 ///
+/// The fitting range is also limited by the histogram range defined using TAxis::SetRange
+/// or TAxis::SetRangeUser. Therefore the fitting range is the smallest range between the
+/// histogram one and the one defined by one of the two previous options.
+///
 /// \anchor HFitInitial
 /// ### Setting initial conditions
 ///
