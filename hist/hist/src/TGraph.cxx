@@ -14,6 +14,9 @@
 #include "TBuffer.h"
 #include "TEnv.h"
 #include "TGraph.h"
+#include "TGraphErrors.h"
+#include "TGraphAsymmErrors.h"
+#include "TGraphBentErrors.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TStyle.h"
@@ -1060,9 +1063,9 @@ TObject *TGraph::FindObject(const TObject *obj) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fit this graph with function f1.
-/// 
-/// \param[in] f1 pointer to the function object 
-/// \param[in] option string defining the fit options (see table below). 
+///
+/// \param[in] f1 pointer to the function object
+/// \param[in] option string defining the fit options (see table below).
 /// \param[in] goption specify a list of graphics options. See TGraph::Draw and TGraphPainter for a complete list of these possible options.
 /// \param[in] rxmin lower fitting range
 /// \param[in] rxmax upper fitting range
@@ -1094,10 +1097,10 @@ TObject *TGraph::FindObject(const TObject *obj) const
 ///
 /// This function is used for fitting also the derived TGraph classes such as TGraphErrors or TGraphAsymmErrors.
 /// See the note below on how the errors are used when fitting a TGraphErrors or TGraphAsymmErrors.
-/// 
-/// The fitting of the TGraph, i.e simple data points without any error associated, is performed using the 
+///
+/// The fitting of the TGraph, i.e simple data points without any error associated, is performed using the
 /// un-weighted least-square (chi-square) method.
-/// 
+///
 ///
 ///\anchor GFitErrors
 /// ### TGraphErrors fit:
@@ -1118,7 +1121,7 @@ TObject *TGraph::FindObject(const TObject *obj) const
 ///
 ///   The approach used to approximate the uncertainty in y because of the
 ///   errors in x is to make it equal the error in x times the slope of the line.
-///   This approach is called "effective variance method" and 
+///   This approach is called "effective variance method" and
 ///   the implementation is provided in the function FitUtil::EvaluateChi2Effective
 ///
 /// \anchor GFitLinear
@@ -1128,14 +1131,14 @@ TObject *TGraph::FindObject(const TObject *obj) const
 ///   To create a linear function, use the following syntax: linear parts
 ///   separated by `++` sign.
 ///   Example: to fit the parameters of the function `p0*x + p1*sin(x)`, you can create a
-///   TF1 object as 
+///   TF1 object as
 ///
 ///       TF1 *f1 = new TF1("f1", "x++sin(x)", xmin, xmax);
 ///
 ///   For such a TF1 you don't have to set the initial conditions and the linear fitter is used.
 ///   Going via the linear fitter for functions, linear in parameters, gives a
 ///   considerable advantage in speed.
-///   When using the linear fitting it is also possible to perform a robust fitting with the 
+///   When using the linear fitting it is also possible to perform a robust fitting with the
 ///   Least Trimmed Square (LTS) regression algorithm, by using the fit option `ROB`.
 ///   See the tutorial `fitLinearRobust.C`.
 ///
@@ -1153,12 +1156,12 @@ TObject *TGraph::FindObject(const TObject *obj) const
 ///    If errors in x are important, use option "F" for linear function fitting.
 /// 5. When fitting a TGraph (i.e. no errors associated with each point),
 ///    a correction is applied to the errors on the parameters with the following
-///    formula: 
+///    formula:
 ///    `parameter_error *= sqrt(chisquare/(ndf-1))`
 ///
 /// ### General Fitting documentation
 ///
-/// See in TH1::Fit for the documentation of  
+/// See in TH1::Fit for the documentation of
 ///  - [Fit Result](\ref HFitRes)
 ///  - [Fit Status](\ref HFitStatus)
 ///  - [Fit Statistics Box](\ref HFitStatBox)
@@ -1179,7 +1182,7 @@ TFitResultPtr TGraph::Fit(TF1 *f1, Option_t *option, Option_t *goption, Axis_t r
 /// Fit this graph with function with name `fname`.
 ///
 /// This is a different interface to TGraph fitting using TGraph::Fit(TF1 *f1,Option_t *, Option_t *, Axis_t, Axis_t)
-/// See there for the details about fitting a TGraph. 
+/// See there for the details about fitting a TGraph.
 ///
 /// The parameter `fname` is the name of an already predefined function created by TF1 or TF2
 /// Predefined functions such as gaus, expo and poln are automatically
@@ -2007,6 +2010,62 @@ Int_t TGraph::RemovePoint(Int_t ipoint)
    if (gPad) gPad->Modified();
    return ipoint;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Save the graph as .csv, .tsv or .txt.
+///
+/// The result can be immediately imported into Excel, gnuplot, Python or whatever,
+/// without the needing to install pyroot, etc.
+///
+/// the file extension defines the delimiter used:
+///  - `.csv` : comma
+///  - `.tsv` : tab
+///  - `.txt` : space
+
+void TGraph::SaveAs(const char *filename, Option_t *option) const
+{
+   TString del = "";
+   if (filename) {
+      if (strstr(filename,".csv")) del = ",";
+      if (strstr(filename,".tsv")) del = "\t";
+      if (strstr(filename,".txt")) del = " ";
+   }
+   if (del.Length()>0) {
+      std::ofstream out;
+      out.open(filename, std::ios::out);
+      if (!out.good ()) {
+         Error("SaveAs", "cannot open file: %s", filename);
+         return;
+      }
+      if (this->InheritsFrom(TGraphErrors::Class()) ) {
+         if(strstr(option,"title"))
+         out << "# " << GetXaxis()->GetTitle() << "\tex\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
+         double *ex = this->GetEX();
+         double *ey = this->GetEY();
+         for(int i=0 ; i<fNpoints ; i++)
+         out << fX[i] << del.Data() << ex[i] << del.Data() << fY[i] << del.Data() << ey[i] << std::endl;
+      } else if (this->InheritsFrom(TGraphAsymmErrors::Class()) || this->InheritsFrom(TGraphBentErrors::Class())) {
+         if(strstr(option,"title"))
+         out << "# " << GetXaxis()->GetTitle() << "\texl\t" << "\texh\t" << GetYaxis()->GetTitle() << "\teyl" << "\teyh" << std::endl;
+         double *exl = this->GetEXlow();
+         double *exh = this->GetEXhigh();
+         double *eyl = this->GetEYlow();
+         double *eyh = this->GetEYhigh();
+         for(int i=0 ; i<fNpoints ; i++)
+         out << fX[i] << del.Data() << exl[i] << del.Data() << exh[i] << del.Data() << fY[i] << del.Data() << eyl[i] << del.Data() << eyh[i] << std::endl;
+      } else {
+         if (strstr(option,"title"))
+         out << "# " << GetXaxis()->GetTitle() << "\t" << GetYaxis()->GetTitle() << std::endl;
+         for (int i=0 ; i<fNpoints ; i++)
+         out << fX[i] << del.Data()  << fY[i] << std::endl;
+      }
+      out.close();
+      Info("SaveAs", "csv file: %s has been generated", filename);
+   } else {
+      TObject::SaveAs(filename, option);
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
