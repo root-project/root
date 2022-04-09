@@ -236,13 +236,55 @@ double RooRealVar::getValV(const RooArgSet*) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Enable or disable the silent clipping behavior of `RooRealVar::setVal()`
+/// that was the default in ROOT versions before 6.28. It is not recommened to
+/// enable this, as silently mutating data can be dangerous.
+void RooRealVar::enableSilentClipping(bool flag) {
+  isSilentClippingEnabled() = flag;
+  if(flag) {
+    oocoutI(static_cast<TObject*>(nullptr), InputArguments)
+        << "Silent clipping of values to range in `RooRealVar::setVal()` enabled." << std::endl ;
+  }
+}
+
+bool& RooRealVar::isSilentClippingEnabled() {
+  static bool isEnabled = false;
+  return isEnabled;
+}
+
+
+namespace {
+
+inline void throwOutOfRangeError(RooRealVar const& var, double value, const char* rangeName) {
+    std::stringstream ss;
+    ss << "Value " << value;
+    if(rangeName) {
+      ss << " is outside the range \"" << rangeName << "\" ";
+    } else {
+      ss << " is outside the default range ";
+    }
+    ss << "[" << var.getMin() << ", " << var.getMax() << "] of the variable \"";
+    ss << var.GetName() << "\"!";
+    ss << "\nTo restore the dangerous old behavior of silently clipping the value to the range,"
+       << " call `RooRealVar::enableSilentClipping()`.";
+    throw std::invalid_argument(ss.str());
+}
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set value of variable to 'value'. If 'value' is outside
 /// range of object, clip value into range
 
 void RooRealVar::setVal(double value)
 {
   double clipValue ;
-  inRange(value,nullptr,&clipValue) ;
+  bool isInRange = inRange(value,0,&clipValue) ;
+
+  if(!isInRange && !isSilentClippingEnabled()) {
+    throwOutOfRangeError(*this, value, nullptr);
+  }
 
   if (clipValue != _value) {
     setValueDirty() ;
@@ -259,7 +301,11 @@ void RooRealVar::setVal(double value)
 void RooRealVar::setVal(double value, const char* rangeName)
 {
   double clipValue ;
-  inRange(value,rangeName,&clipValue) ;
+  bool isInRange = inRange(value,rangeName,&clipValue) ;
+
+  if(!isInRange && !isSilentClippingEnabled()) {
+    throwOutOfRangeError(*this, value, rangeName);
+  }
 
   if (clipValue != _value) {
     setValueDirty() ;
