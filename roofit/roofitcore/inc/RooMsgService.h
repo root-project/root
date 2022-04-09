@@ -16,13 +16,17 @@
 #ifndef ROO_MSG_SERVICE
 #define ROO_MSG_SERVICE
 
-#include "TObject.h"
+#include <RooCmdArg.h>
+#include <RooGlobalFunc.h>
+
+#include <TObject.h>
+
+#include <cstddef>
 #include <string>
 #include <vector>
 #include <stack>
 #include <map>
-#include "RooCmdArg.h"
-#include "RooGlobalFunc.h"
+
 class RooAbsArg ;
 class RooWorkspace ;
 
@@ -166,6 +170,11 @@ public:
   // Back end -- Send message or check if particular logging configuration is active
   std::ostream& log(const RooAbsArg* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) ;
   std::ostream& log(const TObject* self, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) ;
+  // Overload to resolve the ambiguity when passing a `nullptr`. Without this,
+  // one would have to explicitly cast the `nullptr` to TObject* or RooAbsArg*.
+  inline std::ostream& log(std::nullptr_t, RooFit::MsgLevel level, RooFit::MsgTopic facility, bool forceSkipPrefix=false) {
+      return log(static_cast<TObject*>(nullptr), level, facility, forceSkipPrefix);
+  }
   bool isActive(const RooAbsArg* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
   bool isActive(const TObject* self, RooFit::MsgTopic facility, RooFit::MsgLevel level) ;
 
