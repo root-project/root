@@ -96,7 +96,7 @@ class TestInitialization:
         # Finally, Histo1D returns a histogram filled with one value. The mean
         # of this single value has to be the value itself, independently of
         # the number of spawned workers.
-        df = Spark.RDataFrame(1, sparkcontext=connection).Define("u", "userValue").Histo1D("u")
+        df = Spark.RDataFrame(1, sparkcontext=connection).Define("u", "userValue").Histo1D(("name", "title", 1, 100, 130), "u")
         h = df.GetValue()
         assert h.GetMean() == 123
 

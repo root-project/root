@@ -25,7 +25,7 @@ class TestIncludesSpark:
 
         # This filters out all numbers less than 5
         rdf_filtered = rdf.Filter("check_number_less_than_5(tdfentry_)")
-        histo = rdf_filtered.Histo1D("tdfentry_")
+        histo = rdf_filtered.Histo1D(("name", "title", 10, 0, 10), "tdfentry_")
 
         # The expected results after filtering
         # The actual set of numbers required after filtering
@@ -68,7 +68,7 @@ class TestIncludesSpark:
 
         # Filter numbers less than 10 and create an histogram
         rdf_less_than_10 = rdf.Filter("check_number_less_than_10(tdfentry_)")
-        histo1 = rdf_less_than_10.Histo1D("tdfentry_")
+        histo1 = rdf_less_than_10.Histo1D(("name", "title", 10, 0, 100), "tdfentry_")
 
         # Check that histogram has 10 entries and mean 4.5
         assert histo1.GetEntries() == 10

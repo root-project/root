@@ -90,8 +90,8 @@ class TestSparkFriendTrees:
         df = Spark.RDataFrame(mainchain, sparkcontext=connection)
 
         # Create histograms
-        h_parent = df.Histo1D("x")
-        h_friend = df.Histo1D("TF.x")
+        h_parent = df.Histo1D(("main", "main", 10, 0, 20), "x")
+        h_friend = df.Histo1D(("friend", "friend", 10, 10, 30), "TF.x")
 
         check_histograms(h_parent, h_friend)
 
@@ -125,8 +125,8 @@ class TestSparkFriendTrees:
         df = Spark.RDataFrame(maintree, sparkcontext=connection)
 
         # Create histograms
-        h_parent = df.Histo1D("x")
-        h_friend = df.Histo1D("TF.x")
+        h_parent = df.Histo1D(("main", "main", 10, 0, 20), "x")
+        h_friend = df.Histo1D(("friend", "friend", 10, 10, 30), "TF.x")
 
         check_histograms(h_parent, h_friend)
 
@@ -169,8 +169,8 @@ class TestSparkFriendTrees:
 
         df = Spark.RDataFrame(chain, sparkcontext=connection)
 
-        h_parent = df.Histo1D("rnd")
-        h_friend = df.Histo1D("myfriend.rnd")
+        h_parent = df.Histo1D(("main", "main", 10, 0, 20), "rnd")
+        h_friend = df.Histo1D(("friend", "friend", 10, 10, 30), "myfriend.rnd")
 
         check_histograms(h_parent, h_friend)
 
