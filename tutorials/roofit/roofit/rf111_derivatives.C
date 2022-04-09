@@ -14,12 +14,15 @@
 /// \date July 2008
 /// \author Wouter Verkerke
 
+#include "RooDerivative.h"
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
+#include "RooPlot.h"
+
 #include "TCanvas.h"
 #include "TAxis.h"
-#include "RooPlot.h"
+
 using namespace RooFit;
 
 void rf111_derivatives()
@@ -31,6 +34,12 @@ void rf111_derivatives()
    RooRealVar x("x", "x", -10, 10);
    RooRealVar mean("mean", "mean of gaussian", 1, -10, 10);
    RooRealVar sigma("sigma", "width of gaussian", 1, 0.1, 10);
+
+   // Ranges for plotting derivatives. They can't be the full range, because
+   // the derivatives is calculated by variation around the central point. We
+   // need to ensure that the varied values are still in the full range.
+   x.setRange("plotrange", -9.95, 9.95);
+   sigma.setRange("plotrange", 0.15, 1.95);
 
    // Build gaussian pdf in terms of x,mean and sigma
    RooGaussian gauss("gauss", "gaussian PDF", x, mean, sigma);
@@ -52,9 +61,9 @@ void rf111_derivatives()
    gauss.plotOn(xframe);
 
    // Plot derivatives in same frame
-   dgdx->plotOn(xframe, LineColor(kMagenta));
-   d2gdx2->plotOn(xframe, LineColor(kRed));
-   d3gdx3->plotOn(xframe, LineColor(kOrange));
+   dgdx->plotOn(xframe, LineColor(kMagenta), Range("plotrange"));
+   d2gdx2->plotOn(xframe, LineColor(kRed), Range("plotrange"));
+   d3gdx3->plotOn(xframe, LineColor(kOrange), Range("plotrange"));
 
    // C r e a t e   a n d   p l o t  d e r i v a t i v e s   w . r . t .   s i g m a
    // ------------------------------------------------------------------------------
@@ -73,9 +82,9 @@ void rf111_derivatives()
    gauss.plotOn(sframe);
 
    // Plot derivatives in same frame
-   dgds->plotOn(sframe, LineColor(kMagenta));
-   d2gds2->plotOn(sframe, LineColor(kRed));
-   d3gds3->plotOn(sframe, LineColor(kOrange));
+   dgds->plotOn(sframe, LineColor(kMagenta), Range("plotrange"));
+   d2gds2->plotOn(sframe, LineColor(kRed), Range("plotrange"));
+   d3gds3->plotOn(sframe, LineColor(kOrange), Range("plotrange"));
 
    // Draw all frames on a canvas
    TCanvas *c = new TCanvas("rf111_derivatives", "rf111_derivatives", 800, 400);
