@@ -12,7 +12,7 @@ class TestVariations:
     def test_histo(self, connection):
         df = Spark.RDataFrame(10, sparkcontext=connection, npartitions=2).Define("x", "1")
         df1 = df.Vary("x", "ROOT::RVecI{-2,2}", ["down", "up"])
-        h = df1.Histo1D("x")
+        h = df1.Histo1D(("name", "title", 10, -10, 10), "x")
         histos = DistRDF.VariationsFor(h)
 
         expectednames = ["nominal", "x:up", "x:down"]
@@ -39,7 +39,8 @@ class TestVariations:
 
     def test_mixed(self, connection):
         df = Spark.RDataFrame(10, sparkcontext=connection, npartitions=2).Define("x", "1").Define("y", "42")
-        h = df.Vary("x", "ROOT::RVecI{-1, 2}", variationTags=["down", "up"]).Histo1D("x", "y")
+        h = df.Vary("x", "ROOT::RVecI{-1, 2}",
+                    variationTags=["down", "up"]).Histo1D(("name", "title", 10, -500, 500), "x", "y")
         histos = DistRDF.VariationsFor(h)
 
         expectednames = ["nominal", "x:down", "x:up"]
@@ -55,7 +56,7 @@ class TestVariations:
         df = Spark.RDataFrame(10, sparkcontext=connection, npartitions=2).Define("x", "1").Define("y", "42")
         h = df.Vary(["x", "y"],
                     "ROOT::RVec<ROOT::RVecI>{{-1, 2, 3}, {41, 43, 44}}",
-                    ["down", "up", "other"], "xy").Histo1D("x", "y")
+                    ["down", "up", "other"], "xy").Histo1D(("name", "title", 10, -500, 500), "x", "y")
         histos = DistRDF.VariationsFor(h)
 
         expectednames = ["nominal", "xy:down", "xy:up", "xy:other"]

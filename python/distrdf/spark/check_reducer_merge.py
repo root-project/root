@@ -54,11 +54,11 @@ class TestReducerMerge:
         """Check the working of Histo1D merge operation in the reducer."""
         # Operations with DistRDF
         rdf_py = Spark.RDataFrame(10, sparkcontext=connection)
-        histo_py = rdf_py.Histo1D("rdfentry_")
+        histo_py = rdf_py.Histo1D(("name", "title", 10, 0, 10), "rdfentry_")
 
         # Operations with PyROOT
         rdf_cpp = ROOT.ROOT.RDataFrame(10)
-        histo_cpp = rdf_cpp.Histo1D("rdfentry_")
+        histo_cpp = rdf_cpp.Histo1D(("name", "title", 10, 0, 10), "rdfentry_")
 
         # Compare the 2 histograms
         self.assertHistoOrProfile(histo_py, histo_cpp)
