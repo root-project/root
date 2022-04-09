@@ -64,6 +64,13 @@ The `Scale(bool)` argument was always set internally to `false` in case `createH
 This meant that one could not get yield histograms that were correctly scaled by the bin volumes using that function.
 This release changes that behavior, meaning the `Scale(bool)` command argument is now respected for extended pdfs.
 
+### Error out when setting out-of-range variable value instead of silent clipping
+
+In previous versions, if you set the value of a variable with `RooRealVar::setVal()`, the value was silently clippend when it was outside the variable range.
+This silent mutation of data can be dangerous.
+With ROOT 6.28, an exception will be thrown instead.
+If you know what you are doing and want to restore the old clipping behavior, you can do so with `RooRealVar::enableSilentClipping()`, but this is not recommended.
+
 
 ## IO
 
