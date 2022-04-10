@@ -190,6 +190,7 @@ if(BUILD_DOCUMENTATION)
         set(DOXYGEN_GENERATE_BUGLIST       NO)
         set(DOXYGEN_LAYOUT_FILE            DoxygenLayout.xml)
         set(DOXYGEN_WARN_LOGFILE           ${DOCU_LOGFILE})
+        set(DOXYGEN_WARN_LINE_FORMAT       "$file:$line")
         set(DOXYGEN_FILE_PATTERNS          *.c *.C *.cc *.cpp *.cxx *.def *.dox *.f *.h *.hh *.hpp *.hxx *.icc *.inc *.inl *.js *.m *.md *.mm *.py *.pyzdoc)
         set(DOXYGEN_RECURSIVE YES)
         set(DOXYGEN_EXCLUDE_PATTERNS       */G__*
