@@ -451,6 +451,7 @@ bool RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic
 
   if (universal) return true ;
 
+  if (!obj) return false;
   if (objectName.size()>0 && objectName != obj->GetName()) return false ;
   if (className.size()>0 && className != obj->IsA()->GetName()) return false ;
   if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
@@ -471,6 +472,7 @@ bool RooMsgService::StreamConfig::match(RooFit::MsgLevel level, RooFit::MsgTopic
 
   if (universal) return true ;
 
+  if (!obj) return false;
   if (objectName.size()>0 && objectName != obj->GetName()) return false ;
   if (className.size()>0 && className != obj->IsA()->GetName()) return false ;
   if (baseClassName.size()>0 && !obj->IsA()->InheritsFrom(baseClassName.c_str())) return false ;
