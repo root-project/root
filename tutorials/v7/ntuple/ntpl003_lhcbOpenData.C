@@ -104,7 +104,7 @@ void ntpl003_lhcbOpenData()
 
    // Create histogram of the flight distance
 
-   // We open the ntuple without specifiying an explicit model first, but instead use a view on the field we are
+   // We open the ntuple without specifying an explicit model first, but instead use a view on the field we are
    // interested in
    auto ntuple = RNTupleReader::Open("DecayTree", kNTupleFileName);
 
