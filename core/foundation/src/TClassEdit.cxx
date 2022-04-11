@@ -83,19 +83,20 @@ static size_t StdLen(const std::string_view name)
                   if (i+1<name.length() && name[i+1]==':') {
                      len += 2;
                   }
-               }
-
-               std::string scoperesult;
-               if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
-                   && gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
-                  if (isInlined) {
-                     {
-                        ROOT::Internal::TSpinLockGuard lock(spinFlag);
-                        gInlined.insert(scope);
-                     }
-                     len = i;
-                     if (i+1<name.length() && name[i+1]==':') {
-                        len += 2;
+               } else {
+                  std::string scoperesult;
+                  if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
+                     && gInterpreterHelper->IsDeclaredScope(scope, isInlined))
+                  {
+                     if (isInlined) {
+                        {
+                           ROOT::Internal::TSpinLockGuard lock(spinFlag);
+                           gInlined.insert(scope);
+                        }
+                        len = i;
+                        if (i+1<name.length() && name[i+1]==':') {
+                           len += 2;
+                        }
                      }
                   }
                }
