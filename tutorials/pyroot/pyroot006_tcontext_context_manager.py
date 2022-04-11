@@ -52,5 +52,7 @@ with TDirectory.TContext(), TFile("pyroot006_file_3.root", "recreate") as f:
 print("Current directory: '{}'.\n".format(ROOT.gDirectory.GetName()))
 
 # Cleanup the files created for this tutorial
+file_1.Close();
+file_2.Close();
 for i in range(1, 4):
     os.remove("pyroot006_file_{}.root".format(i))
