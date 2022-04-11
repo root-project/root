@@ -1728,13 +1728,16 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Experimental::JSONNode &
          std::string name = RooJSONFactoryWSTool::name(snsh);
          if (name == "fromJSON")
             continue;
+         RooArgSet vars;
          for (const auto &var : snsh.children()) {
             std::string vname = RooJSONFactoryWSTool::name(var);
             RooRealVar *rrv = this->_workspace->var(vname.c_str());
             if (!rrv)
                continue;
             this->configureVariable(var, *rrv);
+            vars.add(*rrv);
          }
+         this->_workspace->saveSnapshot(name.c_str(), vars);
       }
    }
    this->_workspace->loadSnapshot("fromJSON");
