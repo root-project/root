@@ -108,6 +108,19 @@ else
 	TESTGOAL = test
 endif
 
+# Python is "python", "python3", or nada?
+ifeq ($(PYTHON),)
+   ifneq (, $(shell command -v python 2>/dev/null))
+      export PYTHON := python
+   else ifneq (, $(shell command -v python3 2>/dev/null 2>&1))
+      export PYTHON := python3
+   else ifneq (, $(shell command -v python2 2>/dev/null 2>&1))
+      export PYTHON := python2
+   else
+      $(error "Cannot find python, python3, nor python2!")
+   endif
+endif
+
 # here we guess the platform
 
 ifeq ($(ARCH),)
@@ -135,7 +148,7 @@ ifeq ($(PLATFORM),win32)
    export PATH:=${PATH}:${ROOTTEST_LOC}/scripts
 else
 ifeq ($(PLATFORM),macosx)
-   export ROOTTEST_LOC := $(shell python -c 'import os,sys; print os.path.realpath(sys.argv[1]);' $(ROOTTEST_HOME))/
+   export ROOTTEST_LOC := $(shell $(PYTHON) -c 'import os,sys; print(os.path.realpath(sys.argv[1]));' $(ROOTTEST_HOME))/
    export PATH := $(PATH):$(ROOTTEST_HOME)/scripts
 else
    export ROOTTEST_LOC := $(shell readlink -f -n $(ROOTTEST_HOME))/
@@ -328,17 +341,6 @@ endif
 
 ObjSuf   = o
 
-ifeq ($(PYTHON),)
-   ifneq (, $(shell command -v python 2>/dev/null))
-      export PYTHON := python
-   else ifneq (, $(shell command -v python3 2>/dev/null 2>&1))
-      export PYTHON := python3
-   else ifneq (, $(shell command -v python2 2>/dev/null 2>&1))
-      export PYTHON := python2
-   else
-      $(error "Cannot find python, python3, nor python2!")
-   endif
-endif
 ifeq ($(HAS_PYTHON),)
    export HAS_PYTHON := $(shell root-config --has-python)
 endif
