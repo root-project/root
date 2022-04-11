@@ -319,7 +319,9 @@ We can then book the DL method using the built option string
 
       m.SaveSource("make_higgs_model.py");
       // execute
-      gSystem->Exec(TMVA::Python_Executable() + " make_higgs_model.py");
+      auto ret = (TString *)gROOT->ProcessLine("TMVA::Python_Executable()");
+      TString python_exe = (ret) ? *(ret) : "python";
+      gSystem->Exec(python_exe + " make_higgs_model.py");
 
       if (gSystem->AccessPathName("Higgs_model.h5")) {
          Warning("TMVA_Higgs_Classification", "Error creating Keras model file - skip using Keras");
