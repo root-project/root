@@ -946,8 +946,30 @@ ROOT's experimental features (RNTuple, RHist, etc) now require C++17.
 * [[#9899](https://github.com/root-project/root/issues/9899)] - TTree incorrectly run I/O customization rules on "new" data members.
 * [[#9967](https://github.com/root-project/root/issues/9967)] - Update builtin XRootD to v5.4.1
 
+## Release 6.26/02
+
+Published on April 12, 2022
+
+### Bugs and Issues fixed in this release
+
+* [[#9989](https://github.com/root-project/root/issues/9989)] - Writing TObject-derived objects to file does not store the object's title
+* [[#9993](https://github.com/root-project/root/issues/9993)] - Distributed RDataFrame doesn't respect lazy instant actions
+* [[#9939](https://github.com/root-project/root/issues/9939)] - Hadd super slow since TFileMerger modification
+* [[#10090](https://github.com/root-project/root/issues/10090)] - TRint changes in 6.26.00 break existing use cases
+* [[#10170](https://github.com/root-project/root/issues/10170)] - Crashes when reading a ttree with a friend
+* [[#8549](https://github.com/root-project/root/issues/8549)] - A crash when opening a ttree and its friend on TFile::Close()
+* [[#10131](https://github.com/root-project/root/issues/10131)] -  Open too many different non-versioned layouts for pair
+* [[#10216](https://github.com/root-project/root/issues/10216)] - [DF] EnableImplicitMT() prevents reading TTree in sub-directory from XrootD file
+* [[#10225](https://github.com/root-project/root/issues/10225)] - TChain doesn't recognise ROOT::VecOps::RVec<double> as a column type
+* [[#10233](https://github.com/root-project/root/issues/10233)] - [RDataFrame] RDataFrame.Redefine does not work with Snapshot
+* [[#10327](https://github.com/root-project/root/issues/10327)] - [RBrowser] Garbled output at prompt
+* [[#10297](https://github.com/root-project/root/issues/10297)] - RVec's swap is broken when RVec is adopting memory
+* [[#10282](https://github.com/root-project/root/issues/10282)] - [RF] Crash in reading some RooWorkspaces after recent TStreamerInfo update
+* [[#10357](https://github.com/root-project/root/issues/10357)] - [I/O] Race condition when reading vectors with custom allocators with TTreeProcessorMT
+* [[#9112](https://github.com/root-project/root/issues/9112)] - Only add cling nullptr checks in TRint
+
 ## HEAD of the v6-26-00-patches branch
 
-These changes will be part of a future 6.26/02.
+These changes will be part of a future 6.26/04.
 
 - None so far.
