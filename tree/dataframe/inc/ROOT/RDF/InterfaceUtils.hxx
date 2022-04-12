@@ -253,19 +253,30 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
    const auto &outputColNames = snapHelperArgs->fOutputColNames;
    const auto &options = snapHelperArgs->fOptions;
 
+   auto makeIsDefine = [&] {
+      std::vector<bool> isDef;
+      isDef.reserve(sizeof...(ColTypes));
+      for (auto i = 0u; i < sizeof...(ColTypes); ++i)
+         isDef[i] = colRegister.HasName(colNames[i]);
+      return isDef;
+   };
+   std::vector<bool> isDefine = makeIsDefine();
+
    std::unique_ptr<RActionBase> actionPtr;
    if (!ROOT::IsImplicitMTEnabled()) {
       // single-thread snapshot
       using Helper_t = SnapshotHelper<ColTypes...>;
       using Action_t = RAction<Helper_t, PrevNodeType>;
-      actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options), colNames,
-                                   prevNode, colRegister));
+      actionPtr.reset(
+         new Action_t(Helper_t(filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
+                      colNames, prevNode, colRegister));
    } else {
       // multi-thread snapshot
       using Helper_t = SnapshotHelperMT<ColTypes...>;
       using Action_t = RAction<Helper_t, PrevNodeType>;
-      actionPtr.reset(new Action_t(Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options),
-                                   colNames, prevNode, colRegister));
+      actionPtr.reset(new Action_t(
+         Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
+         colNames, prevNode, colRegister));
    }
    return actionPtr;
 }
@@ -458,19 +469,24 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
                      std::weak_ptr<RJittedDefine> *wkJittedDefine, RColumnRegister *colRegister,
                      std::shared_ptr<RNodeBase> *prevNodeOnHeap) noexcept
 {
-   if (wkJittedDefine->expired()) {
-      // The branch of the computation graph that needed this jitted code went out of scope between the type
-      // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
+   // a helper to delete objects allocated before jitting, so that the jitter can share data with lazily jitted code
+   auto doDeletes = [&] {
       delete wkJittedDefine;
       // colRegister must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
       // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
       delete colRegister;
       delete prevNodeOnHeap;
+      delete[] colsPtr;
+   };
+
+   if (wkJittedDefine->expired()) {
+      // The branch of the computation graph that needed this jitted code went out of scope between the type
+      // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
+      doDeletes();
       return;
    }
 
    const ColumnNames_t cols(colsPtr, colsPtr + colsSize);
-   delete[] colsPtr;
 
    auto jittedDefine = wkJittedDefine->lock();
 
@@ -489,13 +505,7 @@ void JitDefineHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
       MakeDefineNode(RDefineTypeTag{}, name, dummyType, std::forward<F>(f), cols, *colRegister, *lm)};
    jittedDefine->SetDefine(std::move(newCol));
 
-   // colRegister points to the columns structure in the heap, created before the jitted call so that the jitter can
-   // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
-   delete colRegister;
-   // prevNodeOnHeap only serves the purpose of keeping the RLoopManager alive so it can be accessed by
-   // colRegister' destructor in case the rest of the computation graph is gone. Can be safely deleted here.
-   delete prevNodeOnHeap;
-   delete wkJittedDefine;
+   doDeletes();
 }
 
 template <typename F>
@@ -505,23 +515,29 @@ void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const
                         std::weak_ptr<RJittedVariation> *wkJittedVariation, RColumnRegister *colRegister,
                         std::shared_ptr<RNodeBase> *prevNodeOnHeap) noexcept
 {
-   if (wkJittedVariation->expired()) {
-      // The branch of the computation graph that needed this jitted variation went out of scope between the type
-      // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
+   // a helper to delete objects allocated before jitting, so that the jitter can share data with lazily jitted code
+   auto doDeletes = [&] {
+      delete[] colsPtr;
+      delete[] variedCols;
+      delete[] variationTags;
+
       delete wkJittedVariation;
       // colRegister must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
       // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
       delete colRegister;
       delete prevNodeOnHeap;
+   };
+
+   if (wkJittedVariation->expired()) {
+      // The branch of the computation graph that needed this jitted variation went out of scope between the type
+      // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
+      doDeletes();
       return;
    }
 
    const ColumnNames_t inputColNames(colsPtr, colsPtr + colsSize);
-   delete[] colsPtr;
    std::vector<std::string> variedColNames(variedCols, variedCols + variedColsSize);
-   delete[] variedCols;
    std::vector<std::string> tags(variationTags, variationTags + variationTagsSize);
-   delete[] variationTags;
 
    auto jittedVariation = wkJittedVariation->lock();
 
@@ -538,13 +554,7 @@ void JitVariationHelper(F &&f, const char **colsPtr, std::size_t colsSize, const
                                       jittedVariation->GetTypeName(), *colRegister, *lm, std::move(inputColNames))};
    jittedVariation->SetVariation(std::move(newVariation));
 
-   // colRegister points to the columns structure in the heap, created before the jitted call so that the jitter can
-   // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
-   delete colRegister;
-   // prevNodeOnHeap only serves the purpose of keeping the RLoopManager alive so it can be accessed by
-   // colRegister' destructor in case the rest of the computation graph is gone. Can be safely deleted here.
-   delete prevNodeOnHeap;
-   delete wkJittedVariation;
+   doDeletes();
 }
 
 /// Convenience function invoked by jitted code to build action nodes at runtime
@@ -553,18 +563,25 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char *
                      const unsigned int nSlots, std::shared_ptr<HelperArgType> *helperArgOnHeap,
                      std::weak_ptr<RJittedAction> *wkJittedActionOnHeap, RColumnRegister *colRegister) noexcept
 {
-   if (wkJittedActionOnHeap->expired()) {
+   // a helper to delete objects allocated before jitting, so that the jitter can share data with lazily jitted code
+   auto doDeletes = [&] {
+      delete[] colsPtr;
       delete helperArgOnHeap;
       delete wkJittedActionOnHeap;
       // colRegister must be deleted before prevNodeOnHeap because their dtor needs the RLoopManager to be alive
       // and prevNodeOnHeap is what keeps it alive if the rest of the computation graph is already out of scope
       delete colRegister;
       delete prevNodeOnHeap;
+   };
+
+   if (wkJittedActionOnHeap->expired()) {
+      // The branch of the computation graph that needed this jitted variation went out of scope between the type
+      // jitting was booked and the time jitting actually happened. Nothing to do other than cleaning up.
+      doDeletes();
       return;
    }
 
    const ColumnNames_t cols(colsPtr, colsPtr + colsSize);
-   delete[] colsPtr;
 
    auto jittedActionOnHeap = wkJittedActionOnHeap->lock();
 
@@ -582,13 +599,7 @@ void CallBuildAction(std::shared_ptr<PrevNodeType> *prevNodeOnHeap, const char *
    loopManager.AddSampleCallback(actionPtr->GetSampleCallback());
    jittedActionOnHeap->SetAction(std::move(actionPtr));
 
-   // colRegister points to the columns structure in the heap, created before the jitted call so that the jitter can
-   // share data after it has lazily compiled the code. Here the data has been used and the memory can be freed.
-   delete colRegister;
-
-   delete helperArgOnHeap;
-   delete prevNodeOnHeap;
-   delete wkJittedActionOnHeap;
+   doDeletes();
 }
 
 /// The contained `type` alias is `double` if `T == RInferredType`, `U` if `T == std::container<U>`, `T` otherwise.

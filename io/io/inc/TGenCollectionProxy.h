@@ -70,7 +70,7 @@ public:
       // Default copy constructor has the correct implementation.
 
       // Initializing constructor
-      Value(const std::string& info, Bool_t silent);
+      Value(const std::string& info, Bool_t silent, size_t hint_pair_offset = 0, size_t hint_pair_size = 0);
       // Delete individual item from STL container
       void DeleteItem(void* ptr);
 
@@ -358,6 +358,9 @@ public:
 
    // Standard destructor.
    virtual ~TGenCollectionProxy();
+
+   // Reset the info gathered from StreamerInfos and value's TClass.
+   virtual Bool_t Reset();
 
    // Return a pointer to the TClass representing the container.
    virtual TClass *GetCollectionClass() const;

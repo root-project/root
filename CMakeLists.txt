@@ -506,16 +506,17 @@ install(
 
 # modules.idx
 if(runtime_cxxmodules)
-  add_custom_command(OUTPUT ${CMAKE_INSTALL_LIBDIR}/modules.idx
+  ROOT_GET_LIBRARY_OUTPUT_DIR(library_output_dir)
+  add_custom_command(OUTPUT ${library_output_dir}/modules.idx
                      COMMAND ${CMAKE_COMMAND} -E remove -f modules.idx modules.timestamp
-                     COMMAND ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
+                     COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
                              ROOTIGNOREPREFIX=1 ROOT_HIST=0
                              $<TARGET_FILE:root.exe> -l -q -b
-                     WORKING_DIRECTORY ${CMAKE_INSTALL_LIBDIR}
+                     WORKING_DIRECTORY ${library_output_dir}
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts ${modules_idx_deps})
-  add_custom_target(modules_idx ALL DEPENDS ${CMAKE_INSTALL_LIBDIR}/modules.idx)
+  add_custom_target(modules_idx ALL DEPENDS ${library_output_dir}/modules.idx)
   add_dependencies(modules_idx ${modules_idx_deps})
-  set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${CMAKE_INSTALL_LIBDIR}/modules.timestamp")
+  set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
 endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---

@@ -213,7 +213,8 @@ TStreamerInfo::~TStreamerInfo()
    // Note: If a StreamerInfo is loaded from a file and is the same information
    // as an existing one, it is assigned the same "unique id" and we need to double
    // check before removing it from the global list.
-   if (fNumber >=0 && gROOT->GetListOfStreamerInfo()->At(fNumber) == this)
+   if (fNumber >=0 && gROOT->GetListOfStreamerInfo()->GetSize() > fNumber
+       && gROOT->GetListOfStreamerInfo()->At(fNumber) == this)
       gROOT->GetListOfStreamerInfo()->RemoveAt(fNumber);
 
    delete [] fComp;     fComp     = 0;
@@ -783,13 +784,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
             return;
          }
       }
-      if (fClass->fIsSyntheticPair) {
-         // The format never change, no need to import the old StreamerInfo
-         // (which anyway would have issue when being setup due to the lack
-         // of TDataMember in the TClass.
-         SetBit(kCanDelete);
-         return;
-      }
+      bool isStdPair = TClassEdit::IsStdPair(GetName());
 
       if (0 == strcmp("string",fClass->GetName())) {
          // We know we do not need any offset check for a string
@@ -887,7 +882,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
       else {
          // We are in the case of an 'emulated' class.
 
-         if (fOnFileClassVersion >= 2) {
+         if (fOnFileClassVersion >= 2 && !isStdPair) {
             // The class version was specified when the object was
             // written
 
@@ -952,7 +947,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
             // The TStreamerInfo's checksum is different from the checksum for the compile class.
 
             match = kFALSE;
-            oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
+            oldIsNonVersioned = (info->fOnFileClassVersion==1 && info->fClassVersion != 1) || isStdPair;
 
             if (fClass->IsLoaded() && (fClassVersion == fClass->GetClassVersion()) && fClass->HasDataMemberInfo()) {
                // In the case where the read-in TStreamerInfo does not
@@ -1003,7 +998,7 @@ void TStreamerInfo::BuildCheck(TFile *file /* = 0 */, Bool_t load /* = kTRUE */)
                // The on-file TStreamerInfo's checksum differs from the checksum of a TStreamerInfo on another file.
 
                match = kFALSE;
-               oldIsNonVersioned = info->fOnFileClassVersion==1 && info->fClassVersion != 1;
+               oldIsNonVersioned = (info->fOnFileClassVersion==1 && info->fClassVersion != 1) || isStdPair;
 
                // In the case where the read-in TStreamerInfo does not
                // match in the 'current' in memory TStreamerInfo for
@@ -2059,7 +2054,7 @@ void TStreamerInfo::BuildOld()
       Bool_t isStdArray(kFALSE);
 
       // First set the offset and sizes.
-      if (fClass->GetState() <= TClass::kEmulated) {
+      if (fClass->GetState() <= TClass::kEmulated && !fClass->IsSyntheticPair()) {
          // Note the initilization in this case are
          // delayed until __after__ the schema evolution
          // section, just in case the info has changed.
@@ -2136,6 +2131,17 @@ void TStreamerInfo::BuildOld()
                }
                int dsize = dm->GetUnitSize();
                element->SetSize(dsize*narr);
+            } else if (fClass->IsSyntheticPair()) {
+               auto pattern = (TStreamerInfo*)fClass->GetStreamerInfos()->At(fClass->GetClassVersion());
+               streamer = 0;
+               element->Init(this);
+               if (pattern && pattern != this && pattern->IsBuilt()) {
+                  int pair_element_offset = kMissing;
+                  pattern->GetStreamerElement(element->GetName(), pair_element_offset);
+                  if (pair_element_offset != kMissing) {
+                     element->SetOffset(pair_element_offset);
+                  }
+               }
             } else if (strcmp(element->GetName(), "fData") == 0 && strncmp(GetName(), "ROOT::VecOps::RVec", 18) == 0) {
                Error("BuildCheck", "Reading RVecs that were written directly to file before ROOT v6.24 is not "
                                    "supported, the program will likely crash.");
@@ -2612,12 +2618,19 @@ void TStreamerInfo::Clear(Option_t *option)
       delete [] fComp;     fComp    = 0;
       delete [] fCompFull; fCompFull= 0;
       delete [] fCompOpt;  fCompOpt = 0;
+
       fNdata = 0;
       fNfulldata = 0;
       fNslots= 0;
       fSize = 0;
+
       ResetIsCompiled();
       ResetBit(kBuildOldUsed);
+
+      TIter next(fElements);
+      while (auto element = (TStreamerElement*)next()) {
+         element->SetOffset(0);
+      }
 
       if (fReadObjectWise) fReadObjectWise->fActions.clear();
       if (fReadMemberWise) fReadMemberWise->fActions.clear();
@@ -3136,7 +3149,7 @@ void TStreamerInfo::ComputeSize()
    // to be aligned.  So let's be on the safe side and align on the size of
    // the pointers.  (Question: is that the right thing on x32 ABI ?)
    constexpr size_t kSizeOfPtr = sizeof(void*);
-   if ((fSize % kSizeOfPtr) != 0) {
+   if ((fSize % kSizeOfPtr) != 0 && !fClass->IsSyntheticPair()) {
       fSize = fSize - (fSize % kSizeOfPtr) + kSizeOfPtr;
    }
 }

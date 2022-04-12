@@ -1604,13 +1604,13 @@ if(vdt OR builtin_vdt)
     endif()
   endif()
   if(builtin_vdt)
-    set(vdt_version 0.4.3)
+    set(vdt_version 0.4.4)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
-      URL_HASH SHA256=705674612ebb5c182b65a8f61f4d173eb7fe7cdeee2235b402541a492e08ace1
+      URL_HASH SHA256=8b1664b45ec82042152f89d171dd962aea9bb35ac53c8eebb35df1cb9c34e498
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS
         -DSSE=OFF # breaks on ARM without this
@@ -1894,6 +1894,10 @@ if (roofit_multiprocess)
       if(NOT ZeroMQ_FOUND)
         message(STATUS "ZeroMQ not found. Switching on builtin_zeromq option")
         set(builtin_zeromq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_zeromq_description})" FORCE)
+        # If the ZeroMQ system version is too old, we can't use the system C++
+        # headers either (note that find_package(ZeroMQ) not only checks if the
+        # library exists, but also if it's a recent version with zmq_ppoll).
+        set(builtin_cppzmq ON CACHE BOOL "Enabled because ZeroMQ not found (${builtin_cppzmq_description})" FORCE)
       endif()
     endif()
 

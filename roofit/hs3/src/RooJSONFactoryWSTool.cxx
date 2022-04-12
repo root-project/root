@@ -12,6 +12,7 @@
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
+#include <RooGlobalFunc.h>
 #include <RooConstVar.h>
 #include <RooRealVar.h>
 #include <RooAbsCategory.h>
@@ -1056,11 +1057,13 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
          continue;
       if (p.has_child("counts")) {
          // binned
-         auto vars = this->getObservables(p, name);
+         RooArgSet vars;
+         this->getObservables(p, name, vars);
          dataMap[name] = this->readBinnedData(p, name, vars);
       } else if (p.has_child("coordinates")) {
          // unbinned
-         auto vars = this->getObservables(p, name);
+         RooArgSet vars;
+         this->getObservables(p, name, vars);
          RooArgList varlist(vars);
          RooRealVar *weightVar = this->getWeightVar("weight");
          vars.add(*weightVar, true);
@@ -1224,27 +1227,28 @@ void RooJSONFactoryWSTool::exportData(RooAbsData *data, JSONNode &n)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // create several observables
-RooArgSet RooJSONFactoryWSTool::getObservables(const JSONNode &n, const std::string &obsnamecomp)
+void RooJSONFactoryWSTool::getObservables(const JSONNode &n, const std::string &obsnamecomp, RooArgSet &out)
 {
-   if (this->_scope.observables.size() > 0) {
-      return this->_scope.observables;
+   if (!_scope.observables.empty()) {
+      out.add(_scope.observables.begin(), _scope.observables.end());
+      return;
    }
    auto vars = readObservables(n, obsnamecomp);
-   RooArgList varlist;
    for (auto v : vars) {
       std::string name(v.first);
       if (_workspace->var(name.c_str())) {
-         varlist.add(*(_workspace->var(name.c_str())));
+         out.add(*(_workspace->var(name.c_str())));
       } else {
-         varlist.add(*RooJSONFactoryWSTool::createObservable(name, v.second));
+         out.add(*RooJSONFactoryWSTool::createObservable(name, v.second));
       }
    }
-   return varlist;
 }
 
 void RooJSONFactoryWSTool::setScopeObservables(const RooArgList &args)
 {
-   this->_scope.observables.add(args, true);
+   for (auto *arg : args) {
+      _scope.observables.push_back(arg);
+   }
 }
 void RooJSONFactoryWSTool::setScopeObject(const std::string &name, RooAbsArg *obj)
 {
@@ -1724,13 +1728,16 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Experimental::JSONNode &
          std::string name = RooJSONFactoryWSTool::name(snsh);
          if (name == "fromJSON")
             continue;
+         RooArgSet vars;
          for (const auto &var : snsh.children()) {
             std::string vname = RooJSONFactoryWSTool::name(var);
             RooRealVar *rrv = this->_workspace->var(vname.c_str());
             if (!rrv)
                continue;
             this->configureVariable(var, *rrv);
+            vars.add(*rrv);
          }
+         this->_workspace->saveSnapshot(name.c_str(), vars);
       }
    }
    this->_workspace->loadSnapshot("fromJSON");
@@ -1789,9 +1796,10 @@ bool RooJSONFactoryWSTool::importYML(std::string const &filename)
    return this->importYML(infile);
 }
 
-std::ostream &RooJSONFactoryWSTool::log(RooFit::MsgLevel level) const
+std::ostream &RooJSONFactoryWSTool::log(int level) const
 {
-   return RooMsgService::instance().log(static_cast<TObject *>(nullptr), level, RooFit::IO);
+   return RooMsgService::instance().log(static_cast<TObject *>(nullptr), static_cast<RooFit::MsgLevel>(level),
+                                        RooFit::IO);
 }
 
 RooJSONFactoryWSTool::ImportMap &RooJSONFactoryWSTool::staticImporters()

@@ -104,6 +104,12 @@ if(MACOSX_VERSION VERSION_EQUAL 10.13)
    list(APPEND dataframe_veto dataframe/df103_NanoAODHiggsAnalysis.*)
 endif()
 
+if(MSVC AND "${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64" AND NOT win_broken_tests)
+    list(APPEND dataframe_veto dataframe/df002_dataModel.C)
+    list(APPEND dataframe_veto dataframe/df016_vecOps.C)
+    list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.C)
+endif()
+
 if(NOT ROOT_mlp_FOUND)
    set(mlp_veto legacy/mlp/*.C)
 endif()
@@ -627,10 +633,11 @@ if(ROOT_pyroot_FOUND)
 
   # Rules specific to distributed RDataFrame
   # Disable distributed RDF tutorials if we didn't check dependencies in the environment first
-  if(NOT test_distrdf_pyspark)
+  # They are always disabled on Mac ARM, until #10061 is fixed
+  if(NOT test_distrdf_pyspark OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64))
     list(APPEND pyveto dataframe/distrdf001_spark_connection.py)
   endif()
-  if(NOT test_distrdf_dask)
+  if(NOT test_distrdf_dask OR (APPLE AND CMAKE_SYSTEM_PROCESSOR MATCHES arm64))
     list(APPEND pyveto dataframe/distrdf002_dask_connection.py)
   endif()
   # Use main Python executable to run in PySpark driver and executors

@@ -118,7 +118,9 @@ endif()
 
 # RTensor pythonizations
 if (dataframe AND tmva)
-    ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
+    if(NOT MSVC OR "${CMAKE_GENERATOR_PLATFORM}" MATCHES "Win32" OR win_broken_tests)
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
+    endif()
 endif()
 
 # Passing Python callables to ROOT.TF

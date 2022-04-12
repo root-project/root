@@ -143,7 +143,7 @@ public:
    }
    virtual void cudaStreamWaitEvent(cudaStream_t *stream, cudaEvent_t *event)
    {
-      ERRCHECK(::cudaStreamWaitEvent(*stream, *event));
+      ERRCHECK(::cudaStreamWaitEvent(*stream, *event, 0));
    }
    virtual float cudaEventElapsedTime(cudaEvent_t *begin, cudaEvent_t *end)
    {
@@ -180,9 +180,18 @@ For every scalar parameter a `Batch` object inside the `Batches` object is set a
 a data member of type double gets assigned the scalar value. This way, when the cuda kernel
 is launched this scalar value gets copied automatically and thus no call to cudaMemcpy is needed **/
 Batches::Batches(RestrictArr output, size_t nEvents, const DataMap &varData, const VarVector &vars,
-                 const ArgVector &extraArgs, double[maxParams][bufferSize])
+                 const ArgVector &extraArgs, double *)
    : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
 {
+   if (vars.size() > maxParams) {
+      throw std::runtime_error(std::string("Size of vars is ") + std::to_string(vars.size()) +
+                               ", which is larger than maxParams = " + std::to_string(maxParams) + "!");
+   }
+   if (extraArgs.size() > maxExtraArgs) {
+      throw std::runtime_error(std::string("Size of extraArgs is ") + std::to_string(extraArgs.size()) +
+                               ", which is larger than maxExtraArgs = " + std::to_string(maxExtraArgs) + "!");
+   }
+
    for (int i = 0; i < vars.size(); i++) {
       const RooSpan<const double> &span = varData.at(vars[i]);
       size_t size = span.size();

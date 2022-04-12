@@ -18,6 +18,7 @@
 #include "TClass.h"
 #include "TDirectory.h"
 #include "TKey.h"
+#include "TObject.h"
 #include "Python.h"
 
 using namespace CPyCppyy;
@@ -47,13 +48,34 @@ PyObject *TDirectoryWriteObject(CPPInstance *self, PyObject *args)
                       "TDirectory::WriteObject must be called with a TDirectory instance as first argument");
       return nullptr;
    }
+
+   // Implement a check on whether the object is derived from TObject or not. Similarly to what is done in
+   // TDirectory::WriteObject with SFINAE. Unfortunately, 'wrt' is a void* in this scope and can't be casted to its
+   // concrete type.
+   auto *wrtclass = GetTClass(wrt);
+   void *wrtobj = wrt->GetObject();
    Int_t result = 0;
-   if (option != nullptr) {
-      result = dir->WriteObjectAny(wrt->GetObject(), GetTClass(wrt), CPyCppyy_PyText_AsString(name),
-                                   CPyCppyy_PyText_AsString(option), bufsize);
+
+   if (wrtclass->IsTObject()) {
+      // If the found TClass is derived from TObject, cast the object to a TObject since we are just interested in the
+      // object title for the purposes of the WriteTObject function.
+      auto objtowrite = static_cast<TObject *>(wrtclass->DynamicCast(TObject::Class(), wrtobj));
+
+      if (option != nullptr) {
+         result =
+            dir->WriteTObject(objtowrite, CPyCppyy_PyText_AsString(name), CPyCppyy_PyText_AsString(option), bufsize);
+      } else {
+         result = dir->WriteTObject(objtowrite, CPyCppyy_PyText_AsString(name));
+      }
    } else {
-      result = dir->WriteObjectAny(wrt->GetObject(), GetTClass(wrt), CPyCppyy_PyText_AsString(name));
+      if (option != nullptr) {
+         result = dir->WriteObjectAny(wrtobj, wrtclass, CPyCppyy_PyText_AsString(name),
+                                      CPyCppyy_PyText_AsString(option), bufsize);
+      } else {
+         result = dir->WriteObjectAny(wrtobj, wrtclass, CPyCppyy_PyText_AsString(name));
+      }
    }
+
    return PyInt_FromLong((Long_t)result);
 }
 

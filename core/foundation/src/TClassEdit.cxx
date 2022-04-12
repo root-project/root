@@ -27,6 +27,8 @@
 #include "ROOT/RStringView.hxx"
 #include <algorithm>
 
+#include "TSpinLockGuard.h"
+
 using namespace std;
 
 namespace {
@@ -35,6 +37,9 @@ namespace {
    template <typename T>
    struct ShuttingDownSignaler : public T {
       using T::T;
+
+      ShuttingDownSignaler() = default;
+      ShuttingDownSignaler(T &&in) : T(std::move(in)) {}
 
       ~ShuttingDownSignaler()
       {
@@ -60,26 +65,38 @@ static size_t StdLen(const std::string_view name)
          for(size_t i = 5; i < name.length(); ++i) {
             if (name[i] == '<') break;
             if (name[i] == ':') {
-               bool isInlined;
                std::string scope(name.data(),i);
-               std::string scoperesult;
+
                // We assume that we are called in already serialized code.
                // Note: should we also cache the negative answers?
                static ShuttingDownSignaler<std::set<std::string>> gInlined;
+               static std::atomic_flag spinFlag = ATOMIC_FLAG_INIT;
 
-               if (gInlined.find(scope) != gInlined.end()) {
+               bool isInlined;
+               {
+                  ROOT::Internal::TSpinLockGuard lock(spinFlag);
+                  isInlined = (gInlined.find(scope) != gInlined.end());
+               }
+
+               if (isInlined) {
                   len = i;
                   if (i+1<name.length() && name[i+1]==':') {
                      len += 2;
                   }
-               }
-               if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
-                   && gInterpreterHelper->IsDeclaredScope(scope,isInlined)) {
-                  if (isInlined) {
-                     gInlined.insert(scope);
-                     len = i;
-                     if (i+1<name.length() && name[i+1]==':') {
-                        len += 2;
+               } else {
+                  std::string scoperesult;
+                  if (!gInterpreterHelper->ExistingTypeCheck(scope, scoperesult)
+                     && gInterpreterHelper->IsDeclaredScope(scope, isInlined))
+                  {
+                     if (isInlined) {
+                        {
+                           ROOT::Internal::TSpinLockGuard lock(spinFlag);
+                           gInlined.insert(scope);
+                        }
+                        len = i;
+                        if (i+1<name.length() && name[i+1]==':') {
+                           len += 2;
+                        }
                      }
                   }
                }
@@ -1215,14 +1232,14 @@ int TClassEdit::GetSplit(const char *type, vector<string>& output, int &nestedLo
 string TClassEdit::CleanType(const char *typeDesc, int mode, const char **tail)
 {
    static const char* remove[] = {"class","const","volatile",0};
-   static bool isinit = false;
-   static std::vector<size_t> lengths;
-   if (!isinit) {
+   auto initLengthsVector = []() {
+      std::vector<size_t> create_lengths;
       for (int k=0; remove[k]; ++k) {
-         lengths.push_back(strlen(remove[k]));
+         create_lengths.push_back(strlen(remove[k]));
       }
-      isinit = true;
-   }
+      return create_lengths;
+   };
+   static std::vector<size_t> lengths{ initLengthsVector() };
 
    string result;
    result.reserve(strlen(typeDesc)*2);
@@ -1895,16 +1912,18 @@ string TClassEdit::InsertStd(const char *tname)
       "vector",
       "wstring"
    };
-   static ShuttingDownSignaler<set<string>> sSetSTLtypes;
 
    if (tname==0 || tname[0]==0) return "";
 
-   if (sSetSTLtypes.empty()) {
+   auto initSetSTLtypes = []() {
+      std::set<std::string> iSetSTLtypes;
       // set up static set
       const size_t nSTLtypes = sizeof(sSTLtypes) / sizeof(const char*);
       for (size_t i = 0; i < nSTLtypes; ++i)
-         sSetSTLtypes.insert(sSTLtypes[i]);
-   }
+         iSetSTLtypes.insert(sSTLtypes[i]);
+      return iSetSTLtypes;
+   };
+   static ShuttingDownSignaler<std::set<std::string>> sSetSTLtypes{ initSetSTLtypes() };
 
    size_t b = 0;
    size_t len = strlen(tname);

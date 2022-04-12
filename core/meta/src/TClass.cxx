@@ -1344,7 +1344,15 @@ void TClass::ForceReload (TClass* oldcl)
    while ((info = (TVirtualStreamerInfo*)next())) {
       info->Clear("build");
       info->SetClass(this);
-      fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
+      if (IsSyntheticPair()) {
+         // Some pair's StreamerInfo were inappropriately marked as versioned
+         info->SetClassVersion(1);
+         // There is already a TStreamerInfo put there by the synthetic
+         // creation.
+         fStreamerInfo->Add(info);
+      } else {
+         fStreamerInfo->AddAtAndExpand(info,info->GetClassVersion());
+      }
    }
    oldcl->fStreamerInfo->Clear();
 
@@ -1387,6 +1395,9 @@ void TClass::Init(const char *name, Version_t cversion,
    fStreamerInfo   = new TObjArray(fClassVersion+2+10,-1); // +10 to read new data by old
    fProperty       = -1;
    fClassProperty  = 0;
+   const bool ispair = TClassEdit::IsStdPair(fName);
+   if (ispair)
+      SetBit(kIsForeign);
 
    ResetInstanceCount();
 
@@ -1529,9 +1540,9 @@ void TClass::Init(const char *name, Version_t cversion,
                     fName.Data());
          }
       } else {
-         // In this case we initialised this TClass instance starting from the fwd declared state
-         // and we know we have no dictionary: no need to warn
-         ::Warning("TClass::Init", "no dictionary for class %s is available", fName.Data());
+         const bool ispairbase = TClassEdit::IsStdPairBase(fName.Data()) && !IsFromRootCling();
+         if (!ispairbase)
+            ::Warning("TClass::Init", "no dictionary for class %s is available", fName.Data());
       }
    }
 
@@ -3117,11 +3128,33 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    // TClass if we have one.
    if (cl) return cl;
 
-   if (ispair &&  hint_pair_offset && hint_pair_size) {
-      auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName, silent, hint_pair_offset, hint_pair_size);
-      //return pairinfo ? pairinfo->GetClass() : nullptr;
-      if (pairinfo)
-         return pairinfo->GetClass();
+   if (ispair) {
+      if (hint_pair_offset && hint_pair_size) {
+         auto pairinfo = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(normalizedName, silent, hint_pair_offset, hint_pair_size);
+         // Fall-through to allow TClass to be created when known by the interpreter
+         // This is used in the case where TStreamerInfo can not handle them.
+         if (pairinfo)
+            return pairinfo->GetClass();
+      } else {
+         //  Check if we have an STL container that might provide it.
+         static const size_t slen = strlen("pair");
+         static const char *associativeContainer[] = { "map", "unordered_map", "multimap",
+            "unordered_multimap", "set", "unordered_set", "multiset", "unordered_multiset" };
+         for(auto contname : associativeContainer) {
+            std::string collname = contname;
+            collname.append( normalizedName.c_str() + slen );
+            TClass *collcl = TClass::GetClass(collname.c_str(), false, silent);
+            if (!collcl)
+               collcl = LoadClassDefault(collname.c_str(), silent);
+            if (collcl) {
+               auto p = collcl->GetCollectionProxy();
+               if (p)
+                  cl = p->GetValueClass();
+               if (cl)
+                  return cl;
+            }
+         }
+      }
    } else if (TClassEdit::IsSTLCont( normalizedName.c_str() )) {
 
       return gInterpreter->GenerateTClass(normalizedName.c_str(), kTRUE, silent);
@@ -5381,7 +5414,7 @@ void TClass::Destructor(void *obj, Bool_t dtorOnly)
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      fCollectionProxy->Destructor(p, dtorOnly);
+      GetCollectionProxy()->Destructor(p, dtorOnly);
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
@@ -5507,7 +5540,7 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
       // There is no dictionary at all, so this is an emulated
       // class; however we do have the services of a collection proxy,
       // so this is an emulated STL class.
-      fCollectionProxy->DeleteArray(ary, dtorOnly);
+      GetCollectionProxy()->DeleteArray(ary, dtorOnly);
    } else if (!HasInterpreterInfo() && !fCollectionProxy) {
       // There is no dictionary at all and we do not have
       // the services of a collection proxy available, so
@@ -5900,6 +5933,8 @@ Bool_t  TClass::IsTObject() const
 Bool_t  TClass::IsForeign() const
 {
    if (fProperty==(-1)) Property();
+   // If the property are not set and the class is a pair, hard code that
+   // it is a unversioned/Foreign class.
    return TestBit(kIsForeign);
 }
 
@@ -5966,6 +6001,45 @@ void TClass::PostLoadCheck()
             }
             info->CompareContent(this,nullptr,kTRUE,kTRUE,nullptr);
             SetBit(kWarned);
+         }
+      }
+   }
+   if (fCollectionProxy) {
+      // Update the related pair's TClass if it has already been created.
+      size_t noffset = 0;
+      if (strncmp(GetName(), "map<", 4) == 0)
+         noffset = 3;
+      else if (strncmp(GetName(), "multimap<", 9) == 0)
+         noffset = 8;
+      else if (strncmp(GetName(), "unordered_map<", 14) == 0)
+         noffset = 13;
+      else if (strncmp(GetName(), "unordered_multimap<", 19) == 0)
+         noffset = 18;
+      if (noffset) {
+         std::string pairname("pair");
+         pairname.append(GetName() + noffset);
+         auto pcl = TClass::GetClass(pairname.c_str(), false, false);
+         if ( pcl && !pcl->IsLoaded() && !pcl->IsSyntheticPair() )
+         {
+            TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+
+            fCollectionProxy->Reset();
+            TIter nextClass(gROOT->GetListOfClasses());
+            while (auto acl = (TClass*)nextClass()) {
+               if (acl == this) continue;
+               if (acl->fCollectionProxy && acl->fCollectionProxy->GetValueClass() == pcl) {
+                  acl->fCollectionProxy->Reset();
+               }
+            }
+
+            TIter next(pcl->GetStreamerInfos());
+            while (auto info = (TVirtualStreamerInfo*)next()) {
+               if (info->IsBuilt()) {
+                  info->Clear("build");
+                  info->BuildOld();
+               }
+            }
+            fCollectionProxy->GetValueClass();
          }
       }
    }
@@ -7235,6 +7309,10 @@ void TClass::RemoveStreamerInfo(Int_t slot)
       R__LOCKGUARD(gInterpreterMutex);
       TVirtualStreamerInfo *info = (TVirtualStreamerInfo*)fStreamerInfo->At(slot);
       fStreamerInfo->RemoveAt(fClassVersion);
+      if (fLastReadInfo.load() == info)
+         fLastReadInfo = nullptr;
+      if (fCurrentInfo.load() == info)
+         fCurrentInfo = nullptr;
       delete info;
       if (fState == kEmulated && fStreamerInfo->GetEntries() == 0) {
          fState = kForwardDeclared;

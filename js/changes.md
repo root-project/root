@@ -2,6 +2,8 @@
 
 ## Changes in 6.3.x
 1. Ignore "pads" draw option for THStack
+2. Fix error in TGraphPolar labels drawing
+3. Fix error in "multi" request submission
 
 
 ## Changes in 6.3.4

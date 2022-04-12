@@ -313,7 +313,7 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
+TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent, size_t hint_pair_offset, size_t hint_pair_size)
 {
    std::string inside = (inside_type.find("const ")==0) ? inside_type.substr(6) : inside_type;
    fCase = 0;
@@ -364,7 +364,7 @@ TGenCollectionProxy::Value::Value(const std::string& inside_type, Bool_t silent)
       // might fail because CINT does not known the nesting
       // scope, so let's first look for an emulated class:
 
-      fType = TClass::GetClass(intype.c_str(),kTRUE,silent);
+      fType = TClass::GetClass(intype.c_str(),kTRUE,silent, hint_pair_offset, hint_pair_size);
 
       if (fType) {
          if (isPointer) {
@@ -776,6 +776,19 @@ TGenCollectionProxy *TGenCollectionProxy::Initialize(Bool_t silent) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reset the info gathered from StreamerInfos and value's TClass.
+Bool_t TGenCollectionProxy::Reset()
+{
+   if (fReadMemberWise)
+      fReadMemberWise->Clear();
+   delete fWriteMemberWise;
+   fWriteMemberWise = nullptr;
+   if (fConversionReadMemberWise)
+      fConversionReadMemberWise->clear();
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Check existence of function pointers
 
 void TGenCollectionProxy::CheckFunctions() const
@@ -815,9 +828,10 @@ void TGenCollectionProxy::CheckFunctions() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility routine to issue a Fatal error is the Value object is not valid
 
-static TGenCollectionProxy::Value *R__CreateValue(const std::string &name, Bool_t silent)
+static TGenCollectionProxy::Value *R__CreateValue(const std::string &name, Bool_t silent,
+                                                  size_t hint_pair_offset = 0, size_t hint_pair_size = 0)
 {
-   TGenCollectionProxy::Value *val = new TGenCollectionProxy::Value( name, silent );
+   TGenCollectionProxy::Value *val = new TGenCollectionProxy::Value( name, silent, hint_pair_offset, hint_pair_size );
    if ( !val->IsValid() ) {
       Fatal("TGenCollectionProxy","Could not find %s!",name.c_str());
    }
@@ -881,11 +895,16 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
 
                {
                   TInterpreter::SuspendAutoParsing autoParseRaii(gCling);
-                  if (0==TClass::GetClass(nam.c_str(), true, false, fValOffset, fValDiff)) {
+                  TClass *paircl = TClass::GetClass(nam.c_str(), true, false, fValOffset, fValDiff);
+                  if (paircl == nullptr) {
                      // We need to emulate the pair
-                     TVirtualStreamerInfo::Factory()->GenerateInfoForPair(inside[1], inside[2], silent, fValOffset, fValDiff);
+                     auto info = TVirtualStreamerInfo::Factory()->GenerateInfoForPair(inside[1], inside[2], silent, fValOffset, fValDiff);
+                     if (!info) {
+                        Fatal("InitializeEx",
+                              "Could not load nor generate the dictionary for \"%s\", some element might be missing their dictionary (eg. enums)",
+                              nam.c_str());
+                     }
                   } else {
-                     TClass *paircl = TClass::GetClass(nam.c_str());
                      if (paircl->GetClassSize() != fValDiff) {
                         if (paircl->GetState() >= TClass::kInterpreted)
                            Fatal("InitializeEx",
@@ -896,7 +915,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                         else {
                            gROOT->GetListOfClasses()->Remove(paircl);
                            TClass *newpaircl = TClass::GetClass(nam.c_str(), true, false, fValOffset, fValDiff);
-                           if (newpaircl == paircl || newpaircl->GetClassSize() != fValDiff)
+                           if (!newpaircl || newpaircl == paircl || newpaircl->GetClassSize() != fValDiff)
                               Fatal("InitializeEx",
                                     "The TClass creation for %s did not get the right size: %d instead of%d\n",
                                     nam.c_str(), (int)paircl->GetClassSize(), (int)fValDiff);
@@ -906,7 +925,7 @@ TGenCollectionProxy *TGenCollectionProxy::InitializeEx(Bool_t silent)
                      }
                   }
                }
-               newfValue = R__CreateValue(nam, silent);
+               newfValue = R__CreateValue(nam, silent, fValOffset, fValDiff);
 
                fPointers = (0 != (fKey->fCase&kIsPointer));
                if (fPointers || (0 != (fKey->fProperties&kNeedDelete))) {

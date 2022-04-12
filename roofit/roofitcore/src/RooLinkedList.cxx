@@ -605,7 +605,8 @@ TObject* RooLinkedList::find(const char* name) const
 {
   
   if (_htableName) {
-    TObject *a = const_cast<TObject*>((*_htableName)[name]) ;
+    auto found = _htableName->find(name);
+    TObject *a = found != _htableName->end() ? const_cast<TObject*>(found->second) : nullptr;
     // RooHashTable::find could return false negative if element was renamed to 'name'.
     // The list search means it won't return false positive, so can return here.
     if (a) return a;

@@ -40,6 +40,11 @@ functions from `RooBatchCompute` library to provide faster computation times.
 
 using namespace ROOT::Experimental;
 
+// Declare constexpr static members to make them available if odr-used in C++14.
+constexpr const char *RooNLLVarNew::weightVarName;
+constexpr const char *RooNLLVarNew::weightVarNameSumW2;
+constexpr const char *RooNLLVarNew::weightVarNameSumW2Suffix;
+
 namespace {
 
 std::unique_ptr<RooAbsReal> createRangeNormTerm(RooAbsPdf const &pdf, RooArgSet const &observables,
@@ -218,4 +223,67 @@ void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *para
    params->remove(_observables, true, true);
    if (_weight)
       params->remove(**_weight, true, true);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replaces all observables and the weight variable of this NLL with clones
+/// that only differ by a prefix added to the names. Used for simultaneous fits.
+/// \return A RooArgSet with the new observable args.
+/// \param[in] prefix The prefix to add to the observables and weight names.
+RooArgSet RooNLLVarNew::prefixObservableAndWeightNames(std::string const &prefix)
+{
+   RooArgSet obsSet{_observables};
+   if (_weight)
+      obsSet.add(**_weight);
+   RooArgSet obsClones;
+   obsSet.snapshot(obsClones);
+   for (RooAbsArg *arg : obsClones) {
+      arg->setAttribute((std::string("ORIGNAME:") + arg->GetName()).c_str());
+      arg->SetName((prefix + arg->GetName()).c_str());
+   }
+   recursiveRedirectServers(obsClones, false, true);
+
+   RooArgSet newObservables{obsClones};
+   if (_weight) {
+      newObservables.remove(**_weight);
+   }
+
+   setObservables(obsClones);
+   addOwnedComponents(std::move(obsClones));
+
+   return newObservables;
+}
+
+namespace {
+
+inline bool endsWith(std::string const &value, std::string_view ending)
+{
+   if (ending.size() > value.size())
+      return false;
+   return std::equal(ending.rbegin(), ending.rend(), value.rbegin());
+}
+
+} // namespace
+
+////////////////////////////////////////////////////////////////////////////////
+/// Toggles the weight square correction by changing the name of the weight
+/// variable to get different weights from the RooFitDriver data map. The
+/// RooNLLVarNew::weightVarNameSumW2Suffix is either added or removed from the
+/// weight variable name.
+void RooNLLVarNew::applyWeightSquared(bool flag)
+{
+   if (!_weight)
+      return;
+   auto &w = **_weight;
+
+   const std::string name = w.GetName();
+   const std::string suffix = weightVarNameSumW2Suffix;
+
+   bool isAlreadyWeightSquared = endsWith(name, suffix);
+
+   if (isAlreadyWeightSquared && !flag) {
+      w.SetName(name.substr(0, name.length() - suffix.length()).c_str());
+   } else if (!isAlreadyWeightSquared && flag) {
+      w.SetName((name + suffix).c_str());
+   }
 }

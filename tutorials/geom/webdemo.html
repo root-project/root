@@ -43,7 +43,7 @@
 
      function SendMsg(txt) {
        if (conn_handle)
-          conn_handle.Send(txt);
+          conn_handle.send(txt);
      }
 
      function AddButton(text, exec, title) {
@@ -89,16 +89,16 @@
      JSROOT.connectWebWindow({
        receiver: {
           // method called when connection to server is established
-          OnWebsocketOpened: function(handle) {
+          onWebsocketOpened: function(handle) {
              conn_handle = handle;
           },
 
           // method with new message from server
-          OnWebsocketMsg: function(handle, msg, offset) {
+          onWebsocketMsg: function(handle, msg, offset) {
           },
 
           // method called when connection is gone
-          OnWebsocketClosed: function(handle) {
+          onWebsocketClosed: function(handle) {
              conn_handle = null;
              // when connection closed, close panel as well
              if (window) window.close();

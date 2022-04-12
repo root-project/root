@@ -77,7 +77,7 @@ protected:
 
   Double_t calculate(const RooArgList& partIntList) const;
   Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooBatchCompute::DataMap&) const;
 
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;

@@ -565,6 +565,15 @@ std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Check if any widget was modified and update if necessary
+
+void RBrowser::CheckWidgtesModified()
+{
+   for (auto &widget : fWidgets)
+      widget->CheckModified();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Process received message from the client
 
 void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
@@ -628,12 +637,13 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       }
 
       std::ofstream ofs(pathtmp.str(), std::ofstream::out | std::ofstream::app);
-      ofs << sPrompt << msg;
+      ofs << sPrompt << msg << std::endl;
       ofs.close();
 
       gSystem->RedirectOutput(pathtmp.str().c_str(), "a");
       gROOT->ProcessLine(msg.c_str());
-      gSystem->RedirectOutput(0);
+      gSystem->RedirectOutput(nullptr);
+      CheckWidgtesModified();
    } else if (kind == "GETHISTORY") {
 
       auto history = GetRootHistory();

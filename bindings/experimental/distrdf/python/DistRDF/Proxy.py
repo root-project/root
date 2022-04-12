@@ -194,13 +194,26 @@ class TransformationProxy(Proxy):
         # Add the new node as a child of the current node
         self.proxied_node.children.append(newNode)
 
-        # Return the appropriate proxy object for the node
-        if op.is_action():
-            return ActionProxy(newNode)
-        elif op.name in ["AsNumpy", "Snapshot"]:
+        def _execute_instant_action():
             headnode = self.proxied_node.get_head()
             generator = ComputationGraphGenerator(headnode)
             headnode.backend.execute(generator)
             return newNode.value
+
+        # Return the appropriate proxy object for the node
+        if op.is_action():
+            return ActionProxy(newNode)
+        elif op.name == "AsNumpy":
+            if op.kwargs.get("lazy", False):
+                return ActionProxy(newNode)
+            else:
+                return _execute_instant_action()
+        elif op.name == "Snapshot":
+            if len(op.args) == 4:
+                # An RSnapshotOptions instance was passed as fourth argument
+                if op.args[3].fLazy:
+                    return ActionProxy(newNode)
+            else:
+                return _execute_instant_action()            
         else:
             return TransformationProxy(newNode)

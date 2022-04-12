@@ -25,7 +25,13 @@
 namespace BatchHelpers { struct RunContext; }
 
 class RooBinWidthFunction : public RooAbsReal {
-public:
+  static bool _enabled;
+  
+public:  
+  static void enableClass();
+  static void disableClass();
+  static bool isClassEnabled();    
+   
   /// Create an empty instance.
   RooBinWidthFunction() :
     _histFunc("HistFuncForBinWidth", "Handle to a RooHistFunc, whose bin volumes should be returned.", this,
@@ -71,7 +77,7 @@ public:
   bool divideByBinWidth() const { return _divideByBinWidth; }
   const RooHistFunc& histFunc() const { return (*_histFunc); }  
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const override;
 
 private:
   RooTemplateProxy<const RooHistFunc> _histFunc;

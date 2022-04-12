@@ -95,15 +95,15 @@ The minimal HTML/JavaScript code, which establish connection with the server, lo
      <script>
        JSROOT.connectWebWindow({
           receiver: {
-              OnWebsocketOpened: function(handle) {
+              onWebsocketOpened: function(handle) {
                   console.log('Connected');
-                  handle.Send("Init msg from client");
+                  handle.send("Init msg from client");
               },
-              OnWebsocketMsg: function(handle, msg) {
+              onWebsocketMsg: function(handle, msg) {
                   console.log('Get message ' + msg);
                   document.getElementById("main").innerHTML = msg;
               },
-              OnWebsocketClosed: function(handle) {
+              onWebsocketClosed: function(handle) {
                  // when connection closed, close panel as well
                  if (window) window.close();
               }

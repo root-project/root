@@ -86,7 +86,7 @@ public:
 
 
   Int_t getBin() const;
-  std::vector<Int_t> getBins(RooBatchCompute::RunContext& evalData) const;
+  std::vector<Int_t> getBins(RooBatchCompute::DataMap& dataMap) const;
 
 protected:
 
@@ -94,7 +94,7 @@ protected:
   Bool_t areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   Double_t evaluate() const;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooBatchCompute::DataMap&) const;
   friend class RooAbsCachedReal ;
 
   virtual void ioStreamerPass2() ;

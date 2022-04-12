@@ -17,6 +17,7 @@
 #include "RooAbsReal.h"
 #include "RooBatchCompute.h"
 #include "RooGlobalFunc.h"
+#include "RunContext.h"
 
 #include "RooFit/Detail/Buffers.h"
 
@@ -52,9 +53,9 @@ class RooFitDriver {
 public:
    class Dataset {
    public:
-      Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName);
-
-      void splitByCategory(RooAbsCategory const &splitCategory);
+      Dataset(RooAbsData const &data, RooArgSet const &observables, std::string_view rangeName,
+              RooAbsCategory const *indexCat);
+      Dataset(RooBatchCompute::RunContext const &runContext);
 
       std::size_t size() const { return _nEvents; }
 
@@ -73,14 +74,19 @@ public:
       std::map<const TNamed *, RooSpan<const double>> const &spans() const { return _dataSpans; }
 
    private:
+      void splitByCategory(RooAbsCategory const &splitCategory);
+
       std::map<const TNamed *, RooSpan<const double>> _dataSpans;
       size_t _nEvents = 0;
       std::stack<std::vector<double>> _buffers;
    };
 
-   RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &observables,
-                RooArgSet const &normSet, RooFit::BatchModeOption batchMode, std::string_view rangeName,
+   RooFitDriver(const RooAbsData &data, const RooAbsReal &topNode, RooArgSet const &normSet,
+                RooFit::BatchModeOption batchMode, std::string_view rangeName,
                 RooAbsCategory const *indexCat = nullptr);
+
+   RooFitDriver(const RooBatchCompute::RunContext &runContext, const RooAbsReal &topNode, RooArgSet const &normSet);
+
    ~RooFitDriver();
    std::vector<double> getValues();
    double getVal();
@@ -121,6 +127,11 @@ public:
 
       double getValV(const RooArgSet *) const override { return evaluate(); }
 
+      void applyWeightSquared(bool flag) override
+      {
+         const_cast<RooAbsReal &>(_driver->topNode()).applyWeightSquared(flag);
+      }
+
    protected:
       double evaluate() const override { return _driver ? _driver->getVal() : 0.0; }
 
@@ -159,6 +170,8 @@ private:
          }
       }
 
+      RooAbsArg *absArg = nullptr;
+
       std::unique_ptr<Detail::AbsBuffer> buffer;
 
       cudaEvent_t *event = nullptr;
@@ -185,6 +198,10 @@ private:
             RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
       }
    };
+
+   void init();
+
+   double getValHeterogeneous();
    void updateMyClients(const RooAbsArg *node);
    void updateMyServers(const RooAbsArg *node);
    void handleIntegral(const RooAbsArg *node);
@@ -221,9 +238,12 @@ private:
    RooBatchCompute::DataMap _dataMapCPU;
    RooBatchCompute::DataMap _dataMapCUDA;
    const RooAbsReal &_topNode;
-   RooArgSet _normSet;
-   std::unordered_map<const RooAbsArg *, NodeInfo> _nodeInfos;
-   std::unordered_map<const RooAbsArg *, NodeInfo> _integralInfos;
+   std::unique_ptr<RooArgSet> _normSet;
+   std::map<RooAbsArg const *, NodeInfo> _nodeInfos;
+   std::map<RooAbsArg const *, NodeInfo> _integralInfos;
+
+   // the ordered computation graph
+   std::vector<RooAbsArg *> _orderedNodes;
 
    // used for preserving resources
    std::vector<double> _nonDerivedValues;

@@ -203,12 +203,13 @@ TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorit
 ///
 /// Option | Description
 /// -------|------------
-/// NEW or CREATE | Create a new file and open it for writing, if the file already exists the file is not opened.
-/// RECREATE      | Create a new file, if the file already exists it will be overwritten.
-/// UPDATE        | Open an existing file for writing. If no file exists, it is created.
-/// READ          | Open an existing file for reading (default).
-/// NET           | Used by derived remote file access classes, not a user callable option.
-/// WEB           | Used by derived remote http access class, not a user callable option.
+/// NEW or CREATE                     | Create a new file and open it for writing, if the file already exists the file is not opened.
+/// RECREATE                          | Create a new file, if the file already exists it will be overwritten.
+/// UPDATE                            | Open an existing file for writing. If no file exists, it is created.
+/// READ                              | Open an existing file for reading (default).
+/// NET                               | Used by derived remote file access classes, not a user callable option.
+/// WEB                               | Used by derived remote http access class, not a user callable option.
+/// READ_WITHOUT_GLOBALREGISTRATION   | Used by TTreeProcessorMT, not a user callable option.
 ///
 /// If option = "" (default), READ is assumed.
 /// The file can be specified as a URL of the form:
@@ -383,6 +384,14 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
    if (fOption == "NEW")
       fOption = "CREATE";
 
+   if (fOption == "READ_WITHOUT_GLOBALREGISTRATION") {
+      fOption = "READ";
+      fGlobalRegistration = false;
+      if (fList) {
+         fList->UseRWLock(false);
+      }
+   }
+
    Bool_t create   = (fOption == "CREATE") ? kTRUE : kFALSE;
    Bool_t recreate = (fOption == "RECREATE") ? kTRUE : kFALSE;
    Bool_t update   = (fOption == "UPDATE") ? kTRUE : kFALSE;
@@ -502,7 +511,7 @@ TFile::TFile(const char *fname1, Option_t *option, const char *ftitle, Int_t com
 
 zombie:
    // error in file opening occurred, make this object a zombie
-   {
+   if (fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
@@ -540,7 +549,9 @@ TFile::~TFile()
 
    {
       R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfClosedObjects()->Remove(this);
+      if (fGlobalRegistration) {
+         gROOT->GetListOfClosedObjects()->Remove(this);
+      }
       gROOT->GetUUIDs()->RemoveUUID(GetUniqueID());
    }
 
@@ -825,8 +836,10 @@ void TFile::Init(Bool_t create)
 
    {
       R__LOCKGUARD(gROOTMutex);
-      gROOT->GetListOfFiles()->Add(this);
-      gROOT->GetUUIDs()->AddUUID(fUUID,this);
+      if (fGlobalRegistration) {
+         gROOT->GetListOfFiles()->Add(this);
+      }
+      gROOT->GetUUIDs()->AddUUID(fUUID, this);
    }
 
    // Create StreamerInfo index
@@ -862,10 +875,11 @@ void TFile::Init(Bool_t create)
       }
       fProcessIDs = new TObjArray(fNProcessIDs+1);
    }
+
    return;
 
 zombie:
-   {
+   if (fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfClosedObjects()->Add(this);
    }
@@ -971,7 +985,7 @@ void TFile::Close(Option_t *option)
    }
    pidDeleted.Delete();
 
-   if (!IsZombie()) {
+   if (!IsZombie() && fGlobalRegistration) {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFiles()->Remove(this);
       gROOT->GetListOfBrowsers()->RecursiveRemove(this);
@@ -1324,7 +1338,9 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
 
 #ifdef R__USE_IMT
       if (lookupSICache) {
-         hash = fgTsSIHashes.Hash(buf, fNbytesInfo);
+         // key data must be excluded from the hash, otherwise the timestamp will
+         // always lead to unique hashes for each file
+         hash = fgTsSIHashes.Hash(buf + key->GetKeylen(), fNbytesInfo - key->GetKeylen());
          if (fgTsSIHashes.Find(hash)) {
             if (gDebug > 0) Info("GetStreamerInfo", "The streamer info record for file %s has already been treated, skipping it.", GetName());
             return {nullptr, 0, hash};

@@ -1459,11 +1459,11 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          let path = "", pnt, grx, gry;
 
          this.createAttMarker({ attr: graph, style: this.options.Mark - 100 });
-         
+
          this.marker_size = this.markeratt.getFullSize();
 
          this.markeratt.resetPos();
-         
+
          let want_tooltip = !JSROOT.batch_mode && JSROOT.settings.Tooltip && (!this.markeratt.fill || (this.marker_size < 7)) && !nodes,
              hints_marker = "", hsz = Math.max(5, Math.round(this.marker_size*0.7)),
              maxnummarker = 1000000 / (this.markeratt.getMarkerLength() + 7), step = 1; // let produce SVG at maximum 1MB
@@ -1492,7 +1492,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
             if ((nodes===null) && (this.draw_kind == "none"))
                this.draw_kind = (this.options.Mark == 101) ? "path" : "mark";
          }
-         if (want_tooltip && hints_marker) 
+         if (want_tooltip && hints_marker)
             this.draw_g.append("svg:path")
                 .attr("d", hints_marker)
                 .attr("stroke", "none")
@@ -2282,7 +2282,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
    }
 
    /** @summary Redraw polargram */
-   TGraphPolargramPainter.prototype.redraw = function() {
+   TGraphPolargramPainter.prototype.redraw = async function() {
       if (!this.isMainPainter()) return;
 
       let polar = this.getObject(),
@@ -2365,7 +2365,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          }
       }
 
-      this.finishTextDrawing();
+      await this.finishTextDrawing();
 
       let fontsize = Math.round(polar.fPolarTextSize * this.szy * 2);
       this.startTextDrawing(polar.fPolarLabelFont, fontsize);
@@ -2394,7 +2394,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
                          color: this.getColor(polar.fPolarLabelColor), latex: 1 });
       }
 
-      this.finishTextDrawing();
+      await this.finishTextDrawing();
 
       nminor = Math.floor((polar.fNdivPol % 10000) / 100);
 
@@ -2412,32 +2412,31 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
 
       if (JSROOT.batch_mode) return;
 
-      JSROOT.require(['interactive']).then(inter => {
-         inter.TooltipHandler.assign(this);
+      let inter = await JSROOT.require(['interactive']);
+      inter.TooltipHandler.assign(this);
 
-         let layer = this.getLayerSvg("primitives_layer"),
-             interactive = layer.select(".interactive_ellipse");
+      let layer = this.getLayerSvg("primitives_layer"),
+          interactive = layer.select(".interactive_ellipse");
 
-         if (interactive.empty())
-            interactive = layer.append("g")
-                               .classed("most_upper_primitives", true)
-                               .append("ellipse")
-                               .classed("interactive_ellipse", true)
-                               .attr("cx",0)
-                               .attr("cy",0)
-                               .style("fill", "none")
-                               .style("pointer-events","visibleFill")
-                               .on('mouseenter', evnt => this.mouseEvent('enter', evnt))
-                               .on('mousemove', evnt => this.mouseEvent('move', evnt))
-                               .on('mouseleave', evnt => this.mouseEvent('leave', evnt));
+      if (interactive.empty())
+         interactive = layer.append("g")
+                            .classed("most_upper_primitives", true)
+                            .append("ellipse")
+                            .classed("interactive_ellipse", true)
+                            .attr("cx",0)
+                            .attr("cy",0)
+                            .style("fill", "none")
+                            .style("pointer-events","visibleFill")
+                            .on('mouseenter', evnt => this.mouseEvent('enter', evnt))
+                            .on('mousemove', evnt => this.mouseEvent('move', evnt))
+                            .on('mouseleave', evnt => this.mouseEvent('leave', evnt));
 
-         interactive.attr("rx", this.szx).attr("ry", this.szy);
+      interactive.attr("rx", this.szx).attr("ry", this.szy);
 
-         d3.select(interactive.node().parentNode).attr("transform", this.draw_g.attr("transform"));
+      d3.select(interactive.node().parentNode).attr("transform", this.draw_g.attr("transform"));
 
-         if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
-            interactive.on("wheel", evnt => this.mouseWheel(evnt));
-      });
+      if (JSROOT.settings.Zooming && JSROOT.settings.ZoomWheel)
+         interactive.on("wheel", evnt => this.mouseWheel(evnt));
    }
 
    function drawGraphPolargram(divid, polargram /*, opt*/) {
@@ -2451,9 +2450,8 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
       let painter = new TGraphPolargramPainter(divid, polargram);
       return jsrp.ensureTCanvas(painter, false).then(() => {
          painter.setAsMainPainter();
-         painter.redraw();
-         return painter;
-      });
+         return painter.redraw();
+      }).then(() => painter);
    }
 
    // ==============================================================
@@ -3322,7 +3320,7 @@ JSROOT.define(['d3', 'painter', 'math', 'gpad'], (d3, jsrp) => {
          gr.fMarkerStyle = eff.fMarkerStyle;
          gr.fMarkerSize = eff.fMarkerSize;
          painter.fillGraph(gr, opt);
-         return JSROOT.draw(divid, gr, opt); 
+         return JSROOT.draw(divid, gr, opt);
       }).then(() => {
          painter.addToPadPrimitives();
          return painter;

@@ -169,6 +169,15 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          auto dm = (TDataMember *) dmObj;
          if (!dm->IsPersistent() || cl->GetClassVersion()==0) continue;
          if (IsUnsupportedUniquePointer(normName.c_str(), dm)) return false;
+         if (dm->IsEnum()) {
+            const char *enumTypeName = dm->GetTypeName();
+            auto enumType = TEnum::GetEnum(enumTypeName);
+            if (enumType && (!enumType->GetClass() || !enumType->GetClass()->IsLoaded()) &&
+                ((strstr(enumTypeName, "(anonymous)") == nullptr) &&
+                std::find(gEnumsToStore.begin(), gEnumsToStore.end(), enumTypeName) == gEnumsToStore.end()))
+               gEnumsToStore.emplace_back(enumTypeName);
+         }
+
       }
 
       // Never store a proto class for a class which rootcling already has
@@ -188,6 +197,27 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 //       if (cl->GetCollectionProxy())
 //          continue;
       cl->Property(); // Force initialization of the bits and property fields.
+
+      if (auto pr = cl->GetCollectionProxy()) {
+         auto colltype = pr->GetCollectionType();
+         if (colltype == ROOT::kSTLmap || colltype == ROOT::kSTLmultimap ||
+             colltype == ROOT::kSTLunorderedmap || colltype == ROOT::kSTLunorderedmultimap) {
+            if (auto pcl = pr->GetValueClass()) {
+               if (auto pcl_dms = pcl->GetListOfDataMembers()) {
+                  for (auto dmObj : *pcl_dms) {
+                     auto dm = (TDataMember *) dmObj;
+                     if (dm->IsEnum()) {
+                        const char *enumTypeName = dm->GetTypeName();
+                        auto enumType = TEnum::GetEnum(enumTypeName);
+                        if (enumType && (!enumType->GetClass() || !enumType->GetClass()->IsLoaded()) &&
+                            (std::find(gEnumsToStore.begin(), gEnumsToStore.end(), enumTypeName) == gEnumsToStore.end()))
+                           gEnumsToStore.emplace_back(enumTypeName);
+                     }
+                  }
+               }
+            }
+         }
+      }
 
       protoClasses.AddLast(new TProtoClass(cl));
    }
@@ -219,6 +249,8 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
             Error("CloseStreamerInfoROOTFile", "Cannot find TClass instance for namespace %s.", nsName.c_str());
             return false;
          }
+         if (!(tclassInstance->Property() & kIsNamespace))
+            continue; // Enum will be part of the TClass.
          auto enumListPtr = tclassInstance->GetListOfEnums();
          if (!enumListPtr) {
             Error("CloseStreamerInfoROOTFile", "TClass instance for namespace %s does not have any enum associated. This is an inconsistency.", nsName.c_str());
@@ -242,10 +274,10 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
    if (dictFile.IsZombie())
       return false;
 // Instead of plugins:
-   protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
-   protoClasses.Delete();
    typedefs.Write("__Typedefs", TObject::kSingleKey);
    enums.Write("__Enums", TObject::kSingleKey);
+   protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
+   protoClasses.Delete();
 
    return true;
 }

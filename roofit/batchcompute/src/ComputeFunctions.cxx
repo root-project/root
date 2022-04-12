@@ -27,23 +27,24 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 #include "RooVDTHeaders.h"
 #include "Batches.h"
 
+#include <TMath.h>
+
 #include <complex>
+
+#include "faddeeva_impl.h"
 
 #ifdef __CUDACC__
 #define BEGIN blockDim.x *blockIdx.x + threadIdx.x
 #define STEP blockDim.x *gridDim.x
-#include "RooMath.cxx"
-// for CUDA, we need RooMath.cxx in the same translation unit
 #else
 #define BEGIN 0
 #define STEP 1
-#include "RooMath.h"
 #endif // #ifdef __CUDACC__
 
 namespace RooBatchCompute {
 namespace RF_ARCH {
 
-__rooglobal__ void computeAddPdf(Batches batches)
+__rooglobal__ void computeAddPdf(BatchesHandle batches)
 {
    const int nPdfs = batches.getNExtraArgs();
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
@@ -53,7 +54,7 @@ __rooglobal__ void computeAddPdf(Batches batches)
          batches._output[i] += batches.extraArg(pdf) * batches[pdf][i];
 }
 
-__rooglobal__ void computeArgusBG(Batches batches)
+__rooglobal__ void computeArgusBG(BatchesHandle batches)
 {
    Batch m = batches[0], m0 = batches[1], c = batches[2], p = batches[3], normVal = batches[4];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -69,7 +70,7 @@ __rooglobal__ void computeArgusBG(Batches batches)
    }
 }
 
-__rooglobal__ void computeBernstein(Batches batches)
+__rooglobal__ void computeBernstein(BatchesHandle batches)
 {
    const int nCoef = batches.getNExtraArgs() - 2;
    const int degree = nCoef - 1;
@@ -77,9 +78,12 @@ __rooglobal__ void computeBernstein(Batches batches)
    const double xmax = batches.extraArg(nCoef + 1);
    Batch xData = batches[0], normVal = batches[1];
 
-   double Binomial[maxExtraArgs] = {1.0}; // Binomial stores values c(degree,i) for i in [0..degree]
-   for (int i = 1; i <= degree; i++)
-      Binomial[i] = Binomial[i - 1] * (degree - i + 1) / i;
+   // apply binomial coefficient in-place so we don't have to allocate new memory
+   double binomial = 1.0;
+   for (int k = 0; k < nCoef; k++) {
+      batches.setExtraArg(k, batches.extraArg(k) * binomial);
+      binomial = (binomial * (degree - k)) / (k + 1);
+   }
 
    if (STEP == 1) {
       double X[bufferSize], _1_X[bufferSize], powX[bufferSize], pow_1_X[bufferSize];
@@ -105,7 +109,7 @@ __rooglobal__ void computeBernstein(Batches batches)
 
       for (int k = 0; k < nCoef; k++)
          for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-            batches._output[i] += batches.extraArg(k) * Binomial[k] * powX[i] * pow_1_X[i];
+            batches._output[i] += batches.extraArg(k) * powX[i] * pow_1_X[i];
 
             // calculating next power for x and 1-x
             powX[i] *= X[i];
@@ -120,7 +124,7 @@ __rooglobal__ void computeBernstein(Batches batches)
             pow_1_X *= 1 - X;
          const double _1_X = 1 / (1 - X);
          for (int k = 0; k < nCoef; k++) {
-            batches._output[i] += batches.extraArg(k) * Binomial[k] * powX * pow_1_X;
+            batches._output[i] += batches.extraArg(k) * powX * pow_1_X;
             powX *= X;
             pow_1_X *= _1_X;
          }
@@ -128,9 +132,16 @@ __rooglobal__ void computeBernstein(Batches batches)
 
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] /= normVal[i];
+
+   // reset extraArgs values so we don't mutate the Batches object
+   binomial = 1.0;
+   for (int k = 0; k < nCoef; k++) {
+      batches.setExtraArg(k, batches.extraArg(k) / binomial);
+      binomial = (binomial * (degree - k)) / (k + 1);
+   }
 }
 
-__rooglobal__ void computeBifurGauss(Batches batches)
+__rooglobal__ void computeBifurGauss(BatchesHandle batches)
 {
    Batch X = batches[0], M = batches[1], SL = batches[2], SR = batches[3], normVal = batches[4];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -143,7 +154,7 @@ __rooglobal__ void computeBifurGauss(Batches batches)
    }
 }
 
-__rooglobal__ void computeBreitWigner(Batches batches)
+__rooglobal__ void computeBreitWigner(BatchesHandle batches)
 {
    Batch X = batches[0], M = batches[1], W = batches[2], normVal = batches[3];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -152,7 +163,7 @@ __rooglobal__ void computeBreitWigner(Batches batches)
    }
 }
 
-__rooglobal__ void computeBukin(Batches batches)
+__rooglobal__ void computeBukin(BatchesHandle batches)
 {
    Batch X = batches[0], XP = batches[1], SP = batches[2], XI = batches[3], R1 = batches[4], R2 = batches[5],
          normVal = batches[6];
@@ -193,7 +204,7 @@ __rooglobal__ void computeBukin(Batches batches)
       batches._output[i] = fast_exp(batches._output[i]) / normVal[i];
 }
 
-__rooglobal__ void computeCBShape(Batches batches)
+__rooglobal__ void computeCBShape(BatchesHandle batches)
 {
    Batch M = batches[0], M0 = batches[1], S = batches[2], A = batches[3], N = batches[4], normVal = batches[5];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -211,7 +222,7 @@ __rooglobal__ void computeCBShape(Batches batches)
       batches._output[i] = fast_exp(batches._output[i]) / normVal[i];
 }
 
-__rooglobal__ void computeChebychev(Batches batches)
+__rooglobal__ void computeChebychev(BatchesHandle batches)
 {
    Batch xData = batches[0], normVal = batches[1];
    const int nCoef = batches.getNExtraArgs() - 2;
@@ -254,7 +265,7 @@ __rooglobal__ void computeChebychev(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__rooglobal__ void computeChiSquare(Batches batches)
+__rooglobal__ void computeChiSquare(BatchesHandle batches)
 {
    Batch X = batches[0], normVal = batches[1];
    const double ndof = batches.extraArg(0);
@@ -269,7 +280,7 @@ __rooglobal__ void computeChiSquare(Batches batches)
    }
 }
 
-__rooglobal__ void computeDstD0BG(Batches batches)
+__rooglobal__ void computeDstD0BG(BatchesHandle batches)
 {
    Batch DM = batches[0], DM0 = batches[1], C = batches[2], A = batches[3], B = batches[4], normVal = batches[5];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -286,14 +297,14 @@ __rooglobal__ void computeDstD0BG(Batches batches)
          batches._output[i] /= normVal[i];
 }
 
-__rooglobal__ void computeExponential(Batches batches)
+__rooglobal__ void computeExponential(BatchesHandle batches)
 {
    Batch x = batches[0], c = batches[1], normVal = batches[2];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = fast_exp(x[i] * c[i]) / normVal[i];
 }
 
-__rooglobal__ void computeGamma(Batches batches)
+__rooglobal__ void computeGamma(BatchesHandle batches)
 {
    Batch X = batches[0], G = batches[1], B = batches[2], M = batches[3], normVal = batches[4];
    double gamma = -std::lgamma(G[0]);
@@ -320,7 +331,7 @@ __rooglobal__ void computeGamma(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__rooglobal__ void computeGaussian(Batches batches)
+__rooglobal__ void computeGaussian(BatchesHandle batches)
 {
    auto x = batches[0], mean = batches[1], sigma = batches[2], normVal = batches[3];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -330,7 +341,7 @@ __rooglobal__ void computeGaussian(Batches batches)
    }
 }
 
-__rooglobal__ void computeNegativeLogarithms(Batches batches)
+__rooglobal__ void computeNegativeLogarithms(BatchesHandle batches)
 {
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
       batches._output[i] = -fast_log(batches[0][i]);
@@ -340,7 +351,7 @@ __rooglobal__ void computeNegativeLogarithms(Batches batches)
          batches._output[i] *= batches[1][i];
 }
 
-__rooglobal__ void computeJohnson(Batches batches)
+__rooglobal__ void computeJohnson(BatchesHandle batches)
 {
    Batch mass = batches[0], mu = batches[1], lambda = batches[2], gamma = batches[3], delta = batches[4],
          normVal = batches[5];
@@ -367,7 +378,7 @@ __rooglobal__ void computeJohnson(Batches batches)
  * Code copied from function landau_pdf (math/mathcore/src/PdfFuncMathCore.cxx)
  * and rewritten to enable vectorization.
  */
-__rooglobal__ void computeLandau(Batches batches)
+__rooglobal__ void computeLandau(BatchesHandle batches)
 {
    auto case0 = [](double x) {
       const double a1[3] = {0.04166666667, -0.01996527778, 0.02709538966};
@@ -449,7 +460,7 @@ __rooglobal__ void computeLandau(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__rooglobal__ void computeLognormal(Batches batches)
+__rooglobal__ void computeLognormal(BatchesHandle batches)
 {
    Batch X = batches[0], M0 = batches[1], K = batches[2], normVal = batches[3];
    const double rootOf2pi = 2.506628274631000502415765284811;
@@ -472,7 +483,7 @@ __rooglobal__ void computeLognormal(Batches batches)
  * ln is the logarithm that was solely present in the initial
  * formula, that is before the asinh replacement
  */
-__rooglobal__ void computeNovosibirsk(Batches batches)
+__rooglobal__ void computeNovosibirsk(BatchesHandle batches)
 {
    Batch X = batches[0], P = batches[1], W = batches[2], T = batches[3], normVal = batches[4];
    constexpr double xi = 2.3548200450309494; // 2 Sqrt( Ln(4) )
@@ -493,7 +504,7 @@ __rooglobal__ void computeNovosibirsk(Batches batches)
       batches._output[i] = fast_exp(batches._output[i]) / normVal[i];
 }
 
-__rooglobal__ void computePoisson(Batches batches)
+__rooglobal__ void computePoisson(BatchesHandle batches)
 {
    Batch x = batches[0], mean = batches[1], normVal = batches[2];
    bool protectNegative = batches.extraArg(0);
@@ -523,7 +534,7 @@ __rooglobal__ void computePoisson(Batches batches)
       batches._output[i] /= normVal[i];
 }
 
-__rooglobal__ void computePolynomial(Batches batches)
+__rooglobal__ void computePolynomial(BatchesHandle batches)
 {
    Batch X = batches[0], normVal = batches[1];
    const int nCoef = batches.getNExtraArgs() - 1;
@@ -568,7 +579,7 @@ finale:
       batches._output[i] /= normVal[i];
 }
 
-__rooglobal__ void computeProdPdf(Batches batches)
+__rooglobal__ void computeProdPdf(BatchesHandle batches)
 {
    const int nPdfs = batches.extraArg(0);
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
@@ -578,7 +589,7 @@ __rooglobal__ void computeProdPdf(Batches batches)
          batches._output[i] *= batches[pdf][i];
 }
 
-__rooglobal__ void computeVoigtian(Batches batches)
+__rooglobal__ void computeVoigtian(BatchesHandle batches)
 {
    Batch X = batches[0], M = batches[1], W = batches[2], S = batches[3], normVal = batches[4];
    const double invSqrt2 = 0.707106781186547524400844362105;
@@ -600,7 +611,7 @@ __rooglobal__ void computeVoigtian(Batches batches)
             batches._output[i] = -batches._output[i];
          const double factor = W[i] > 0.0 ? 0.5 : -0.5;
          std::complex<double> z(batches._output[i] * (X[i] - M[i]), factor * batches._output[i] * W[i]);
-         batches._output[i] *= RooMath::faddeeva(z).real();
+         batches._output[i] *= faddeeva_impl::faddeeva(z).real();
       }
 
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
@@ -608,7 +619,7 @@ __rooglobal__ void computeVoigtian(Batches batches)
 }
 
 /// Returns a std::vector of pointers to the compute functions in this file.
-std::vector<void (*)(Batches)> getFunctions()
+std::vector<void (*)(BatchesHandle)> getFunctions()
 {
    return {computeAddPdf,
            computeArgusBG,
