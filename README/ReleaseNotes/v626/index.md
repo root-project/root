@@ -967,6 +967,7 @@ Published on April 12, 2022
 * [[#10282](https://github.com/root-project/root/issues/10282)] - [RF] Crash in reading some RooWorkspaces after recent TStreamerInfo update
 * [[#10357](https://github.com/root-project/root/issues/10357)] - [I/O] Race condition when reading vectors with custom allocators with TTreeProcessorMT
 * [[#9112](https://github.com/root-project/root/issues/9112)] - Only add cling nullptr checks in TRint
+* [[#10353](https://github.com/root-project/root/issues/10353)] - Thread-safety issue in TClassEdit (StdLen)?  [6.24.06]
 
 ## HEAD of the v6-26-00-patches branch
 
