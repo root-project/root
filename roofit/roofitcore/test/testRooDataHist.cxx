@@ -1,6 +1,6 @@
 // Tests for the RooDataHist
 // Authors: Stephan Hageboeck, CERN  01/2019
-//          Jonas Rembser, CERN 02/2020
+//          Jonas Rembser, CERN 02/2021
 
 #include "RooDataHist.h"
 #include "RooGlobalFunc.h"
@@ -702,4 +702,38 @@ TEST(RooDataHist, Interpolation2DSimple)
          EXPECT_FLOAT_EQ(dataHist.weight({x, y}, 1), getTrueWeight());
       }
    }
+}
+
+
+/// GitHub issue #8015
+/// Take binning from input RooDataHists when building a combined RooDataHist.
+TEST(RooDataHist, CombinedRooDataHistBinning)
+{
+   using namespace RooFit;
+
+   TH1D hh1{"h1", "h1", 40, -3, 3};
+   hh1.FillRandom("gaus");
+   TH1D hh2{"h2", "h2", 40, -3, 3};
+   hh2.FillRandom("gaus");
+
+   // Declare observable x
+   RooRealVar x("x", "x", -3, 3);
+
+   // Create category observable c that serves as index for the ROOT histograms
+   RooCategory c("c", "c", {{"SampleA", 0}, {"SampleB", 1}});
+
+   RooDataHist dh1("dh1", "dh1", x, &hh1);
+   RooDataHist dh2("dh2", "dh1", x, &hh2);
+
+   // Create combined RooDataHist via intermediate RooDataHists
+   RooDataHist dhComb1("dhComb1", "dhComb1", x, Index(c), Import("SampleA", dh1),
+                       Import("SampleB", dh2));
+
+   // Create combined RooDataHist directly from the TH1Ds
+   RooDataHist dhComb2{"dhComb2", "dhComb2", x, Index(c), Import("SampleA", hh1),
+                       Import("SampleB", hh2)};
+
+   // In both cases the number of bins should be 40 + 40 = 80
+   EXPECT_EQ(dhComb1.numEntries(), 80);
+   EXPECT_EQ(dhComb2.numEntries(), 80);
 }

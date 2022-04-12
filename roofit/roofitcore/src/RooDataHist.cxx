@@ -332,10 +332,10 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   } else if (indexCat) {
 
 
-    if (impSliceHistos.GetSize()>0) {
+    if (!impSliceHistos.empty()) {
 
       // Initialize importing mapped set of TH1s
-      map<string,TH1*> hmap ;
+      std::map<std::string,TH1*> hmap ;
       TIter hiter = impSliceHistos.MakeIterator() ;
       for (const auto& token : ROOT::Split(impSliceNames, ",")) {
         auto histo = static_cast<TH1*>(hiter.Next());
@@ -346,7 +346,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
     } else {
 
       // Initialize importing mapped set of RooDataHists
-      map<string,RooDataHist*> dmap ;
+      std::map<std::string,RooDataHist*> dmap ;
       TIter hiter = impSliceDHistos.MakeIterator() ;
       for (const auto& token : ROOT::Split(impSliceDNames, ",")) {
         dmap[token] = (RooDataHist*) hiter.Next() ;
@@ -439,6 +439,51 @@ bool checkConsistentAxes(const TH1* first, const TH1* second) {
                                    && first->GetYaxis()->GetXmax() == second->GetYaxis()->GetXmax() ) )
       && (first->GetNbinsZ() == 1 || (first->GetZaxis()->GetXmin() == second->GetZaxis()->GetXmin()
                                    && first->GetZaxis()->GetXmax() == second->GetZaxis()->GetXmax() ) );
+}
+
+bool hasConsistentLayoutAndBinning(RooDataHist const& h1, RooDataHist const& h2) {
+
+  // Relative tolerance for bin boundary comparison
+  constexpr double tolerance = 1e-6;
+
+  auto const& vars1 = *h1.get();
+  auto const& vars2 = *h2.get();
+
+  // Check if numer of variables and names is consistent
+  if(!vars1.hasSameLayout(vars2)) {
+    return false;
+  }
+
+  for(std::size_t iVar = 0; iVar < vars1.size(); ++iVar) {
+    auto * var1 = dynamic_cast<RooRealVar*>(vars1[iVar]);
+    auto * var2 = dynamic_cast<RooRealVar*>(vars2[iVar]);
+
+    // Check if variables are consistently real-valued
+    if((!var1 && var2) || (var1 && !var2)) return false;
+
+    // Not a real-valued variable
+    if(!var1) continue;
+
+    // Now check the binning
+    auto const& bng1 = var1->getBinning();
+    auto const& bng2 = var2->getBinning();
+
+    // Compare bin numbers
+    if(bng1.numBins() != bng2.numBins()) return false;
+
+    std::size_t nBins = bng1.numBins();
+
+    // Compare bin boundaries
+    for(std::size_t iBin = 0; iBin < nBins; ++iBin) {
+      double v1 = bng1.binLow(iBin);
+      double v2 = bng2.binLow(iBin);
+      if(std::abs((v1 - v2) / v1) > tolerance) return false;
+    }
+    double v1 = bng1.binHigh(nBins - 1);
+    double v2 = bng2.binHigh(nBins - 1);
+    if(std::abs((v1 - v2) / v1) > tolerance) return false;
+  }
+  return true;
 }
 }
 
@@ -553,18 +598,41 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, ma
 
 void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, Double_t initWgt)
 {
-  RooCategory* icat = (RooCategory*) _vars.find(indexCat.GetName()) ;
+  auto* icat = static_cast<RooCategory*>(_vars.find(indexCat.GetName()));
+
+  RooDataHist* dhistForBinning = nullptr;
 
   for (const auto& diter : dmap) {
 
+    std::string const& label = diter.first;
+    RooDataHist* dhist = diter.second ;
+
+    if(!dhistForBinning) {
+      dhistForBinning = dhist;
+    }
+    else {
+      if(!hasConsistentLayoutAndBinning(*dhistForBinning, *dhist)) {
+        coutE(InputArguments) << "Layout or binning of histogram " << dhist->GetName() << " is not consistent with first processed "
+            << "histogram " << dhistForBinning->GetName() << std::endl;
+        throw std::invalid_argument("Layout or binning of inputs for RooDataHist is inconsistent");
+      }
+    }
+
     // Define state labels in index category (both in provided indexCat and in internal copy in dataset)
-    if (!indexCat.hasLabel(diter.first)) {
-      indexCat.defineType(diter.first) ;
-      coutI(InputArguments) << "RooDataHist::importDHistSet(" << GetName() << ") defining state \"" << diter.first << "\" in index category " << indexCat.GetName() << endl ;
+    if (!indexCat.hasLabel(label)) {
+      indexCat.defineType(label) ;
+      coutI(InputArguments) << "RooDataHist::importDHistSet(" << GetName() << ") defining state \"" << label << "\" in index category " << indexCat.GetName() << endl ;
     }
-    if (!icat->hasLabel(diter.first)) {
-      icat->defineType(diter.first) ;
+    if (!icat->hasLabel(label)) {
+      icat->defineType(label) ;
     }
+  }
+
+  // adjust the binning of the created histogram
+  for(auto * theirVar : dynamic_range_cast<RooRealVar*>(dhistForBinning->_vars)) {
+    auto * ourVar = dynamic_cast<RooRealVar*>(_vars.find(theirVar->GetName()));
+    if(!theirVar || !ourVar) continue;
+    ourVar->setBinning(theirVar->getBinning());
   }
 
   initialize() ;
@@ -572,10 +640,10 @@ void RooDataHist::importDHistSet(const RooArgList& /*vars*/, RooCategory& indexC
 
 
   for (const auto& diter : dmap) {
-
+    std::string const& label = diter.first;
     RooDataHist* dhist = diter.second ;
 
-    icat->setLabel(diter.first.c_str()) ;
+    icat->setLabel(label.c_str()) ;
 
     // Transfer contents
     for (Int_t i=0 ; i<dhist->numEntries() ; i++) {
