@@ -39,20 +39,30 @@
 
 #include <cstdint>
 
+#ifndef R__USEASMSWAP
 #if (defined(__linux) || defined(__APPLE__)) &&   \
     (defined(__i386__) || defined(__x86_64__)) && \
     (defined(__GNUC__))
-#ifndef R__USEASMSWAP
 # define R__USEASMSWAP
 #endif
+
+#if defined(_WIN32) && (_MSC_VER >= 1300)
+# include <stdlib.h>
+# pragma intrinsic(_byteswap_ushort,_byteswap_ulong,_byteswap_uint64)
+# define R__USEASMSWAP
 #endif
+#endif /* R__USEASMSWAP */
 
 /* Swap bytes in 16 bit value.  */
 #define R__bswap_constant_16(x) \
      ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
 #if defined(R__USEASMSWAP)
-# define R__bswap_16(x) __builtin_bswap16(x)
+# if defined(__GNUC__)
+#  define R__bswap_16(x) __builtin_bswap16(x)
+# elif defined(_MSC_VER)
+#  define R__bswap_16(x) _byteswap_ushort(x)
+# endif
 #else
 # define R__bswap_16(x) R__bswap_constant_16(x)
 #endif
@@ -63,7 +73,11 @@
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
 #if defined(R__USEASMSWAP)
-# define R__bswap_32(x) __builtin_bswap32(x)
+# if defined(__GNUC__)
+#  define R__bswap_32(x) __builtin_bswap32(x)
+# elif defined(_MSC_VER)
+#  define R__bswap_32(x) _byteswap_ulong(x)
+# endif
 #else
 # define R__bswap_32(x) R__bswap_constant_32(x)
 #endif
@@ -77,7 +91,11 @@ static inline uint64_t R__bswap_constant_64(uint64_t x) {
 }
 
 #if defined(R__USEASMSWAP)
-# define R__bswap_64(x) __builtin_bswap64(x)
+# if defined(__GNUC__)
+#  define R__bswap_64(x) __builtin_bswap64(x)
+# elif defined(_MSC_VER)
+#  define R__bswap_64(x) _byteswap_uint64(x)
+# endif
 #else
 # define R__bswap_64(x) R__bswap_constant_64(x)
 #endif
