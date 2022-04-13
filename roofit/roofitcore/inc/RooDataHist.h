@@ -245,9 +245,9 @@ protected:
 
   void initialize(const char* binningName=0,Bool_t fillTree=kTRUE) ;
   RooDataHist(RooStringView name, RooStringView title, RooDataHist* h, const RooArgSet& varSubset,
-        const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop, Bool_t copyCache) ;
+        const RooFormulaVar* cutVar, const char* cutRange, Int_t nStart, Int_t nStop) ;
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0,
-                  std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max(), Bool_t copyCache=kTRUE) override;
+                  std::size_t nStart=0, std::size_t nStop=std::numeric_limits<std::size_t>::max()) override;
   double interpolateDim(int iDim, double xval, size_t centralIdx, int intOrder, bool correctForBinSize, bool cdfBoundaries) ;
   const std::vector<double>& calculatePartialBinVolume(const RooArgSet& dimSet) const ;
   void checkBinBounds() const;

@@ -342,7 +342,7 @@ protected:
   virtual void attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVars) ;
 
   virtual RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0,
-                           std::size_t nStart = 0, std::size_t = std::numeric_limits<std::size_t>::max(), Bool_t copyCache=kTRUE) = 0 ; // DERIVED
+                           std::size_t nStart = 0, std::size_t = std::numeric_limits<std::size_t>::max()) = 0 ;
 
   RooRealVar* dataRealVar(const char* methodname, const RooRealVar& extVar) const ;
 
