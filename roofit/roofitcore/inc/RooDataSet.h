@@ -169,11 +169,10 @@ protected:
 
   // Cache copy feature is not publicly accessible
   RooAbsData* reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange=0,
-                        std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max(),
-                        Bool_t copyCache=kTRUE) override;
+                        std::size_t nStart=0, std::size_t nStop = std::numeric_limits<std::size_t>::max()) override;
   RooDataSet(RooStringView name, RooStringView title, RooDataSet *ntuple,
              const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-             std::size_t nStart, std::size_t nStop, Bool_t copyCache, const char* wgtVarName=0);
+             std::size_t nStart, std::size_t nStop, const char* wgtVarName=0);
 
   RooArgSet addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar) ;
 
