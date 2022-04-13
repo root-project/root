@@ -83,11 +83,18 @@ namespace ROOT {
          checkIntegralType();
       }
 
-      class iterator: public std::iterator<std::random_access_iterator_tag, T, difference_type> {
+      class iterator {
       private:
          T fCounter;
          T fStep;
       public:
+         using iterator_category = std::random_access_iterator_tag;
+         using value_type = T;
+         using difference_type = typename std::make_signed<T>::type;
+         using pointer = T *;
+         using const_pointer = const T *;
+         using reference = T &;
+
          iterator(T start, T step): fCounter(start), fStep(step) {}
          T operator*() const {
             return fCounter;
