@@ -503,15 +503,15 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
   if (cutSpec) {
 
     RooFormulaVar cutVarTmp(cutSpec,cutSpec,*get()) ;
-    ret =  reduceEng(varSubset,&cutVarTmp,cutRange,nStart,nStop,kFALSE) ;
+    ret =  reduceEng(varSubset,&cutVarTmp,cutRange,nStart,nStop) ;
 
   } else if (cutVar) {
 
-    ret = reduceEng(varSubset,cutVar,cutRange,nStart,nStop,kFALSE) ;
+    ret = reduceEng(varSubset,cutVar,cutRange,nStart,nStop) ;
 
   } else {
 
-    ret = reduceEng(varSubset,0,cutRange,nStart,nStop,kFALSE) ;
+    ret = reduceEng(varSubset,0,cutRange,nStart,nStop) ;
 
   }
 
@@ -533,7 +533,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
 RooAbsData* RooAbsData::reduce(const char* cut)
 {
   RooFormulaVar cutVar(cut,cut,*get()) ;
-  RooAbsData* ret = reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max(),kFALSE) ;
+  RooAbsData* ret = reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
   return ret;
 }
@@ -545,7 +545,7 @@ RooAbsData* RooAbsData::reduce(const char* cut)
 
 RooAbsData* RooAbsData::reduce(const RooFormulaVar& cutVar)
 {
-  RooAbsData* ret = reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max(),kFALSE) ;
+  RooAbsData* ret = reduceEng(*get(),&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
   return ret;
 }
@@ -573,9 +573,9 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const char* cut)
   RooAbsData* ret = nullptr;
   if (cut && strlen(cut)>0) {
     RooFormulaVar cutVar(cut, cut, *get(), false);
-    ret = reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max(),false);
+    ret = reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max());
   } else {
-    ret = reduceEng(varSubset2,0,0,0,std::numeric_limits<std::size_t>::max(),false);
+    ret = reduceEng(varSubset2,0,0,0,std::numeric_limits<std::size_t>::max());
   }
   ret->copyGlobalObservables(*this);
   return ret;
@@ -600,7 +600,7 @@ RooAbsData* RooAbsData::reduce(const RooArgSet& varSubset, const RooFormulaVar& 
     }
   }
 
-  RooAbsData* ret = reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max(),kFALSE) ;
+  RooAbsData* ret = reduceEng(varSubset2,&cutVar,0,0,std::numeric_limits<std::size_t>::max()) ;
   ret->copyGlobalObservables(*this);
   return ret;
 }

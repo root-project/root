@@ -53,7 +53,7 @@ public:
 
   RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
                    const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-                   Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName=0) ;
+                   Int_t nStart, Int_t nStop, const char* wgtVarName=0) ;
 
   RooTreeDataStore(const RooTreeDataStore& other, const char* newname=0) ;
   RooTreeDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname=0) ;

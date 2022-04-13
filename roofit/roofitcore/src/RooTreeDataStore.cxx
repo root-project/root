@@ -228,7 +228,7 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, cons
 
 RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
           const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-          Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName) :
+          Int_t nStart, Int_t nStop, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(kFALSE),
   _varsww(vars),
   _wgtVar(weightVar(vars,wgtVarName)),

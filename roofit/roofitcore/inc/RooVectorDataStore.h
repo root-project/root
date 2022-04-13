@@ -55,7 +55,7 @@ public:
 
   RooVectorDataStore(RooStringView name, RooStringView title, RooAbsDataStore& tds,
                      const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-                     std::size_t nStart, std::size_t nStop, Bool_t /*copyCache*/, const char* wgtVarName=0) ;
+                     std::size_t nStart, std::size_t nStop, const char* wgtVarName=0) ;
 
   ~RooVectorDataStore() override ;
 
