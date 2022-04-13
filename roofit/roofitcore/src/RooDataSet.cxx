@@ -872,24 +872,6 @@ RooArgSet RooDataSet::addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtV
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return a clone of this dataset containing only the cached variables
-
-RooAbsData* RooDataSet::cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName)
-{
-  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),GetTitle(),this,_vars,(RooFormulaVar*)0,0,0,2000000000,kTRUE,_wgtVar?_wgtVar->GetName():0) ;
-  //if (_wgtVar) dset->setWeightVar(_wgtVar->GetName()) ;
-
-  RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dset->_cachedVars) ;
-  dset->attachCache(newCacheOwner, *selCacheVars) ;
-  delete selCacheVars ;
-
-  return dset ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an empty clone of this dataset. If vars is not null, only the variables in vars
 /// are added to the definition of the empty clone

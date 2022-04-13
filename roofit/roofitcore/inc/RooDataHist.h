@@ -257,8 +257,6 @@ protected:
   void importTH1Set(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,TH1*> hmap, Double_t initWgt, Bool_t doDensityCorrection) ;
   void importDHistSet(const RooArgList& vars, RooCategory& indexCat, std::map<std::string,RooDataHist*> dmap, Double_t initWgt) ;
 
-  RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) override ;
-
   Double_t get_wgt(std::size_t idx)   const { return _wgt[idx]; }
   Double_t get_errLo(std::size_t idx) const { return _errLo ? _errLo[idx] : -1.; }
   Double_t get_errHi(std::size_t idx) const { return _errHi ? _errHi[idx] : -1.; }
