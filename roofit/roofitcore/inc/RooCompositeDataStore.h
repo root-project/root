@@ -37,14 +37,19 @@ public:
   RooCompositeDataStore() ;
 
   // Ctors from DataStore
-  RooCompositeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, RooCategory& indexCat, std::map<std::string,RooAbsDataStore*> inputData) ;
+  RooCompositeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, RooCategory& indexCat, std::map<std::string,RooAbsDataStore*> const& inputData) ;
 
   // Empty ctor
   RooAbsDataStore* clone(const char* newname=0) const override { return new RooCompositeDataStore(*this,newname) ; }
   RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const override { return new RooCompositeDataStore(*this,vars,newname) ; }
 
+  RooAbsDataStore* reduce(RooStringView name, RooStringView title,
+                          const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
+                          std::size_t nStart, std::size_t nStop) override;
+
   RooCompositeDataStore(const RooCompositeDataStore& other, const char* newname=0) ;
   RooCompositeDataStore(const RooCompositeDataStore& other, const RooArgSet& vars, const char* newname=0) ;
+
   ~RooCompositeDataStore() override ;
 
   void dump() override ;

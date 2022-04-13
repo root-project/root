@@ -61,7 +61,7 @@ RooCompositeDataStore::RooCompositeDataStore() : _indexCat(0), _curStore(0), _cu
 
 RooCompositeDataStore::RooCompositeDataStore(
         RooStringView name, RooStringView title,
-        const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> inputData) :
+        const RooArgSet& vars, RooCategory& indexCat,map<std::string,RooAbsDataStore*> const& inputData) :
   RooAbsDataStore(name,title,RooArgSet(vars,indexCat)), _indexCat(&indexCat), _curStore(0), _curIndex(0), _ownComps(kFALSE)
 {
   for (const auto& iter : inputData) {
@@ -70,8 +70,6 @@ RooCompositeDataStore::RooCompositeDataStore(
   }
   TRACE_CREATE
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +120,30 @@ RooCompositeDataStore::~RooCompositeDataStore()
     }
   }
   TRACE_DESTROY
+}
+
+
+RooAbsDataStore* RooCompositeDataStore::reduce(
+        RooStringView name, RooStringView title, const RooArgSet& vars, const RooFormulaVar* cutVar,
+        const char* cutRange, std::size_t nStart, std::size_t nStop)
+{
+  // for the components, we need the set of variables without the index category
+  RooArgSet varsNoIndex{vars};
+  if (RooAbsArg * indexCat = varsNoIndex.find(*_indexCat)) {
+    varsNoIndex.remove(*indexCat,true) ;
+  }
+
+  // create an empty RooCompositeDataStore
+  auto * out = new RooCompositeDataStore{name, title, varsNoIndex, *_indexCat, std::map<std::string,RooAbsDataStore*>{}};
+
+  // fill it with reduced versions of components
+  for (const auto& item : _dataMap) {
+    out->_dataMap[item.first] = item.second->reduce(name, title, varsNoIndex, cutVar, cutRange, nStart, nStop);
+  }
+
+  // indiceate component ownership and return
+  out->_ownComps = true;
+  return out;
 }
 
 
