@@ -37,11 +37,13 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#if (defined(__linux) || defined(__APPLE__)) && \
+#include <cstdint>
+
+#if (defined(__linux) || defined(__APPLE__)) &&   \
     (defined(__i386__) || defined(__x86_64__)) && \
     (defined(__GNUC__))
 #ifndef R__USEASMSWAP
-#define R__USEASMSWAP
+# define R__USEASMSWAP
 #endif
 #endif
 
@@ -49,41 +51,45 @@
 #define R__bswap_constant_16(x) \
      ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
-#if defined R__USEASMSWAP
+#if defined(R__USEASMSWAP)
 # define R__bswap_16(x) __builtin_bswap16(x)
 #else
-# define R__bswap_16(x) R__bswap_constant_16 (x)
+# define R__bswap_16(x) R__bswap_constant_16(x)
 #endif
-
 
 /* Swap bytes in 32 bit value.  */
 #define R__bswap_constant_32(x) \
      ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |               \
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
-#if defined R__USEASMSWAP
+#if defined(R__USEASMSWAP)
 # define R__bswap_32(x) __builtin_bswap32(x)
 #else
-# define R__bswap_32(x) R__bswap_constant_32 (x)
+# define R__bswap_32(x) R__bswap_constant_32(x)
+#endif
+
+/* Swap bytes in 64 bit value.  */
+static inline uint64_t R__bswap_constant_64(uint64_t x) {
+   x = ((x & 0x00000000ffffffff) << 32) | ((x & 0xffffffff00000000) >> 32);
+   x = ((x & 0x0000ffff0000ffff) << 16) | ((x & 0xffff0000ffff0000) >> 16);
+   x = ((x & 0x00ff00ff00ff00ff) <<  8) | ((x & 0xff00ff00ff00ff00) >>  8);
+   return x;
+}
+
+#if defined(R__USEASMSWAP)
+# define R__bswap_64(x) __builtin_bswap64(x)
+#else
+# define R__bswap_64(x) R__bswap_constant_64(x)
 #endif
 
 
 /* Return a value with all bytes in the 16 bit argument swapped.  */
-#define Rbswap_16(x) R__bswap_16 (x)
+#define Rbswap_16(x) R__bswap_16(x)
 
 /* Return a value with all bytes in the 32 bit argument swapped.  */
-#define Rbswap_32(x) R__bswap_32 (x)
+#define Rbswap_32(x) R__bswap_32(x)
 
 /* Return a value with all bytes in the 64 bit argument swapped.  */
-
-/* For reasons that were lost to history, Rbswap_64 used to only
- * be defined wherever GNUC was available.  To simplify the macro
- * definitions, we extend this to wherever we can use the gcc-like
- * builtins.
- *    -- Brian Bockelman, August 2018
- */
-#ifdef R__USEASMSWAP
-# define Rbswap_64(x) __builtin_bswap64(x)
-#endif
+#define Rbswap_64(x) R__bswap_64(x)
 
 #endif /* Byteswap.h */
