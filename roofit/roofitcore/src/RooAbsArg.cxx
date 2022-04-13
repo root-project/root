@@ -1535,24 +1535,27 @@ void RooAbsArg::printMultiline(ostream& os, Int_t /*contents*/, Bool_t /*verbose
   }
 
   // proxy list
-  os << indent << "  Proxies: " << endl ;
+  os << indent << "  Proxies: " << std::endl;
   for (int i=0 ; i<numProxies() ; i++) {
     RooAbsProxy* proxy=getProxy(i) ;
     if (!proxy) continue ;
-    if (proxy->IsA()->InheritsFrom(RooArgProxy::Class())) {
-      os << indent << "    " << proxy->name() << " -> " ;
-      RooAbsArg* parg = ((RooArgProxy*)proxy)->absArg() ;
-      if (parg) {
-   parg->printStream(os,kName,kSingleLine) ;
+    os << indent << "    " << proxy->name() << " -> " ;
+    if(auto * argProxy = dynamic_cast<RooArgProxy*>(proxy)) {
+      if (RooAbsArg* parg = argProxy->absArg()) {
+        parg->printStream(os,kName,kSingleLine) ;
       } else {
-   os << " (empty)" << endl ; ;
+        os << " (empty)" << std::endl;
       }
-    } else {
-      os << indent << "    " << proxy->name() << " -> " ;
-      os << endl ;
+      // If a RooAbsProxy is not a RooArgProxy, it is a RooSetProxy or a
+      // RooListProxy. However, they are treated the same in this function, so
+      // we try the dynamic cast to their common base class, RooAbsCollection.
+    } else if(auto * collProxy = dynamic_cast<RooAbsCollection*>(proxy)) {
+      os << std::endl;
       TString moreIndent(indent) ;
       moreIndent.Append("    ") ;
-      ((RooSetProxy*)proxy)->printStream(os,kName,kStandard,moreIndent.Data()) ;
+      collProxy->printStream(os,kName,kStandard,moreIndent.Data());
+    } else {
+      throw std::runtime_error("Unsupported proxy type.");
     }
   }
 }
