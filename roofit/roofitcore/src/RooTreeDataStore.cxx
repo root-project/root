@@ -266,6 +266,17 @@ RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooA
 }
 
 
+RooAbsDataStore* RooTreeDataStore::reduce(RooStringView name, RooStringView title,
+                        const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
+                        std::size_t nStart, std::size_t nStop) {
+  RooArgSet tmp(vars) ;
+  if(_wgtVar && !tmp.contains(*_wgtVar)) {
+    tmp.add(*_wgtVar) ;
+  }
+  const char* wgtVarName = _wgtVar ? _wgtVar->GetName() : nullptr;
+  return new RooTreeDataStore(name, title, *this, tmp, cutVar, cutRange, nStart, nStop, wgtVarName);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for constructors

@@ -51,6 +51,10 @@ public:
   virtual RooAbsDataStore* clone(const char* newname=0) const = 0 ;
   virtual RooAbsDataStore* clone(const RooArgSet& vars, const char* newname=0) const = 0 ;
 
+  virtual RooAbsDataStore* reduce(RooStringView name, RooStringView title,
+                                  const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
+                                  std::size_t nStart, std::size_t nStop) = 0 ;
+
   // Write current row
   virtual Int_t fill() = 0 ;
 
