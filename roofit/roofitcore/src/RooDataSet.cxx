@@ -841,16 +841,10 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
 
 RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset,
              const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-             std::size_t nStart, std::size_t nStop, const char* wgtVarName) :
+             std::size_t nStart, std::size_t nStop) :
   RooAbsData(name,title,vars)
 {
-  if (defaultStorageType == Tree) {
-    _dstore = new RooTreeDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart, nStop,
-        wgtVarName);
-  } else {
-    _dstore = new RooVectorDataStore(name, title, *dset->_dstore, _vars, cutVar, cutRange, nStart,
-        nStop, wgtVarName);
-  }
+  _dstore = dset->_dstore->reduce(name, title, _vars, cutVar, cutRange, nStart, nStop);
 
    _cachedVars.add(_dstore->cachedVars());
 
@@ -936,21 +930,11 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
               std::size_t nStart, std::size_t nStop)
 {
   checkInit() ;
-
-  //cout << "reduceEng varSubset = " << varSubset << " _wgtVar = " << (_wgtVar ? _wgtVar->GetName() : "") << endl;
-
   RooArgSet tmp(varSubset) ;
   if (_wgtVar) {
     tmp.add(*_wgtVar) ;
   }
-  RooDataSet* ret =  new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop,_wgtVar?_wgtVar->GetName():0) ;
-
-  // WVE - propagate optional weight variable
-  //       check behaviour in plotting.
-  // if (_wgtVar) {
-  //   ret->setWeightVar(_wgtVar->GetName()) ;
-  // }
-  return ret ;
+  return new RooDataSet(GetName(), GetTitle(), this, tmp, cutVar, cutRange, nStart, nStop) ;
 }
 
 
