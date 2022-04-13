@@ -163,8 +163,6 @@ public:
 
 protected:
 
-  RooAbsData* cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName=0) override;
-
   friend class RooProdGenContext ;
 
   void initialize(const char* wgtVarName) ;

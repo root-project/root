@@ -865,24 +865,6 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, RooDataHist* h
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Construct a clone of this dataset that contains only the cached variables
-
-RooAbsData* RooDataHist::cacheClone(const RooAbsArg* newCacheOwner, const RooArgSet* newCacheVars, const char* newName)
-{
-  checkInit() ;
-
-  RooDataHist* dhist = new RooDataHist(newName?newName:GetName(),GetTitle(),this,*get(),0,0,0,2000000000,kTRUE) ;
-
-  RooArgSet* selCacheVars = (RooArgSet*) newCacheVars->selectCommon(dhist->_cachedVars) ;
-  dhist->attachCache(newCacheOwner, *selCacheVars) ;
-  delete selCacheVars ;
-
-  return dhist ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Implementation of RooAbsData virtual method that drives the RooAbsData::reduce() methods
 
 RooAbsData* RooDataHist::reduceEng(const RooArgSet& varSubset, const RooFormulaVar* cutVar, const char* cutRange,
