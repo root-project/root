@@ -145,7 +145,6 @@ TEST(RNTuple, RVec)
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
 }
 
-
 TEST(RNTuple, RVecTypeErased)
 {
    FileRaii fileGuard("test_ntuple_rvec_typeerased.root");
@@ -185,7 +184,6 @@ TEST(RNTuple, RVecTypeErased)
    EXPECT_TRUE(v->empty());
 }
 
-
 TEST(RNTuple, ReadVectorAsRVec)
 {
    FileRaii fileGuard("test_ntuple_vectorrvecinterop.root");
@@ -214,7 +212,6 @@ TEST(RNTuple, ReadVectorAsRVec)
    r->LoadEntry(2);
    EXPECT_TRUE(rvec->empty());
 }
-
 
 TEST(RNTuple, BoolVector)
 {
