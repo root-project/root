@@ -28,6 +28,18 @@
 #include <string>
 #include <type_traits>
 
+#ifndef R__LITTLE_ENDIAN
+#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
+  (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+# define R__LITTLE_ENDIAN 1
+#elif defined(__BIG_ENDIAN__) || \
+  (defined(__BYTE_ORDER__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+# define R__LITTLE_ENDIAN 0
+#else
+# error "Unsupported endianness"
+#endif
+#endif /* R__LITTLE_ENDIAN */
+
 namespace {
 template <std::size_t N>
 struct RByteSwap {};
@@ -140,6 +152,34 @@ public:
    void *GetRawContent() const { return fRawContent; }
    std::size_t GetSize() const { return fSize; }
    std::size_t GetPackedSize(std::size_t nElements) const { return (nElements * GetBitsOnStorage() + 7) / 8; }
+};
+
+/**
+ * Base class for columns whose on-storage representation is little-endian.
+ * The implementation of `Pack` and `Unpack` takes care of byteswap if the memory page is big-endian.
+ */
+template <typename CppT>
+class RColumnElementLE : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = R__LITTLE_ENDIAN;
+   RColumnElementLE(void *rawContent, std::size_t size) : RColumnElementBase(rawContent, size) {}
+
+   void Pack(void *dst, void *src, std::size_t count) const final
+   {
+#if R__LITTLE_ENDIAN == 1
+      std::memcpy(dst, src, count);
+#else
+      CopyElementsBswap<sizeof(CppT)>(dst, src, count);
+#endif
+   }
+   void Unpack(void *dst, void *src, std::size_t count) const final
+   {
+#if R__LITTLE_ENDIAN == 1
+      std::memcpy(dst, src, count);
+#else
+      CopyElementsBswap<sizeof(CppT)>(dst, src, count);
+#endif
+   }
 };
 
 /**
