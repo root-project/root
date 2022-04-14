@@ -259,10 +259,20 @@ namespace {
             return;
          }
 
-         if (sizeLeaf->IsUnsigned()) {
-            fSizeReader.reset(new TSizeReaderImpl<UInt_t>(*treeReader, foundLeafName.c_str()));
-         } else {
+         const std::string leafType = sizeLeaf->GetTypeName();
+         if (leafType == "Int_t") {
             fSizeReader.reset(new TSizeReaderImpl<Int_t>(*treeReader, foundLeafName.c_str()));
+         } else if (leafType == "UInt_t") {
+            fSizeReader.reset(new TSizeReaderImpl<UInt_t>(*treeReader, foundLeafName.c_str()));
+         } else if (leafType == "Short_t") {
+            fSizeReader.reset(new TSizeReaderImpl<Short_t>(*treeReader, foundLeafName.c_str()));
+         } else if (leafType == "UShort_t") {
+            fSizeReader.reset(new TSizeReaderImpl<UShort_t>(*treeReader, foundLeafName.c_str()));
+         } else {
+            Error("TUIntOrIntReader",
+                  "Unsupported size type for leaf %s. Supported types are int, short int, and their unsigned "
+                  "counterparts.",
+                  leafName);
          }
       }
 
