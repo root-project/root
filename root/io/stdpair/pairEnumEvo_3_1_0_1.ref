@@ -1,0 +1,27 @@
+
+
+Last verifications:
+Current StreamerInfo:
+
+StreamerInfo for class: pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >, checksum=0xb15d1241
+  reco::Muon::MuonTrackType first           offset=  0 type= 3                     
+  edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > second          offset=  4 type=62                     
+   i= 0, first           type=  3, offset=  0, len=1, method=0
+   i= 1, second          type= 62, offset=  4, len=1, method=0
+
+#1 StreamerInfo:
+
+StreamerInfo for class: pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >, checksum=0xb5fb752
+  reco::Muon::MuonTrackType first           offset=  0 type=13 Emulation           
+  edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > second          offset=  4 type=62 Emulation           
+   i= 0, first           type=213, offset=  0, len=1, method=0
+   i= 1, second          type= 62, offset=  4, len=1, method=0
+
+#2 StreamerInfo:
+
+StreamerInfo for class: pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >, checksum=0xb15d1241
+  reco::Muon::MuonTrackType first           offset=  0 type= 3 / @c first is a copy of the first object
+  edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > second          offset=  4 type=62 / @c second is a copy of the second object
+   i= 0, first           type=  3, offset=  0, len=1, method=0
+   i= 1, second          type= 62, offset=  4, len=1, method=0
+(int) 0
