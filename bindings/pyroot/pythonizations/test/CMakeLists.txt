@@ -154,19 +154,20 @@ if(roofit)
   if(NOT MSVC OR win_broken_tests)
     # Test pythonizations for the RooFitHS3 package, which is not built on Windows.
     ROOT_ADD_PYUNITTEST(pyroot_roofit_roojsonfactorywstool roofit/roojsonfactorywstool.py)
-
-    # NumPy compatibility
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
-    ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
   endif()
+
+  # NumPy compatibility
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset_numpy roofit/roodataset_numpy.py PYTHON_DEPS numpy)
+  ROOT_ADD_PYUNITTEST(pyroot_roofit_roodatahist_numpy roofit/roodatahist_numpy.py PYTHON_DEPS numpy)
 
 endif()
 
 if (dataframe)
-    if(NOT MSVC OR win_broken_tests)
+    if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
         # std::string_view backport in CPyCppyy
         ROOT_ADD_PYUNITTEST(pyroot_string_view_backport string_view_backport.py)
-
+    endif()
+    if(NOT MSVC OR win_broken_tests)
         if(NOT (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY2} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 2) AND NOT
             (DEFINED ENV{ROOTTEST_IGNORE_NUMBA_PY3} AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3))
             # Test wrapping Python callables for use in C++ using numba
