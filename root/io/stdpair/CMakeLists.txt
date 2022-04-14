@@ -18,13 +18,13 @@ ROOT_ADD_TEST(roottest-root-io-stdpair-pair-build
               FIXTURES_SETUP InputFiles)
 
 ROOTTEST_ADD_TEST(CopyRootFiles
-                  EXEC ls -l aa02.root ab02.root
+                  EXEC echo "Copying root files"
                   COPY_TO_BUILDDIR aa02.root ab02.root
                   FIXTURES_SETUP InputFiles)
 
 ROOTTEST_COMPILE_MACRO(cmspair.h)
 
-foreach(A RANGE 0 3)
+foreach(A RANGE 0 4)
 foreach(B RANGE 0 1)
 foreach(C RANGE 0 1)
 foreach(D RANGE 0 1)

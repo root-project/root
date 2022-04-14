@@ -14,7 +14,8 @@ enum libEnum {
    kShared = 0,
    kACLiC = 1,
    kInterpreted = 2,
-   kPairShared = 3
+   kPairShared = 3,
+   kNothing = 4
 };
 
 const char *gNameOfPairClass = "pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >";
@@ -69,6 +70,8 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
       gSystem->Load("libCmsPair.so");
    else if (libtype == libEnum::kInterpreted)
       gROOT->ProcessLine("#include \"cmspair.h\"");
+   else if (libtype == libEnum::kNothing)
+      {} // Do notthing.
    else {
       fprintf(stderr, "Error: unknown lib value: %d\n",(int)libtype);
       return 1;
