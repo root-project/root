@@ -1,14 +1,13 @@
 ROOTTEST_ADD_TESTDIRS()
 
 set(CMAKE_ROOTTEST_NOROOTMAP ON)
-message(WARNING "CURRRENT SOURCe DIR is ${CMAKE_CURRENT_SOURCE_DIR}")
 set(RootExternalIncludes -e "gInterpreter->AddIncludePath(\"-I${CMAKE_CURRENT_SOURCE_DIR}\");")
 
 ROOT_GENERATE_DICTIONARY(G__CmsPairCollection ${CMAKE_CURRENT_SOURCE_DIR}/cmspair.h LINKDEF FullLinkDef.h)
 ROOT_LINKER_LIBRARY(CmsPairCollection TEST G__CmsPairCollection.cxx LIBRARIES ${ROOT_LIBRARIES})
 
-ROOT_GENERATE_DICTIONARY(G__Pair ${CMAKE_CURRENT_SOURCE_DIR}/cmspair.h LINKDEF PairLinkDef.h)
-ROOT_LINKER_LIBRARY(CmsPair TEST G__Pair.cxx LIBRARIES ${ROOT_LIBRARIES})
+ROOT_GENERATE_DICTIONARY(G__CmsPair ${CMAKE_CURRENT_SOURCE_DIR}/cmspair.h LINKDEF PairLinkDef.h)
+ROOT_LINKER_LIBRARY(CmsPair TEST G__CmsPair.cxx LIBRARIES ${ROOT_LIBRARIES})
 
 ROOT_ADD_TEST(roottest-root-io-stdpair-collection-build 
               COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --config $<CONFIG> --target CmsPairCollection${fast})
@@ -18,7 +17,7 @@ ROOT_ADD_TEST(roottest-root-io-stdpair-pair-build
 
 ROOTTEST_COMPILE_MACRO(cmspair.h)
 
-foreach(A RANGE 0 2)
+foreach(A RANGE 0 3)
 foreach(B RANGE 0 1)
 foreach(C RANGE 0 1)
 foreach(D RANGE 0 1)
