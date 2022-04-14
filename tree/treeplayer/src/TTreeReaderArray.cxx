@@ -198,16 +198,24 @@ namespace {
 
    template <class BASE>
    class TUIntOrIntReader: public BASE {
-   private:
-      // The index can be of type int or unsigned int.
-      std::unique_ptr<TTreeReaderValueBase> fSizeReader;
-      bool fIsUnsigned = false;
 
-   protected:
-      template <class T>
-      TTreeReaderValue<T>& GetSizeReader() {
-         return *static_cast<TTreeReaderValue<T>*>(fSizeReader.get());
-      }
+      // TVirtualSizeReaderImpl and TSizeReaderImpl type-erase the reading of the size leaf.
+      class TVirtualSizeReaderImpl {
+      public:
+         virtual ~TVirtualSizeReaderImpl() = default;
+         virtual size_t GetSize() = 0;
+      };
+
+      template <typename T>
+      class TSizeReaderImpl final : public TVirtualSizeReaderImpl {
+         TTreeReaderValue<T> fSizeReader;
+
+      public:
+         TSizeReaderImpl(TTreeReader &r, const char *leafName) : fSizeReader(r, leafName) {}
+         size_t GetSize() final { return *fSizeReader; }
+      };
+
+      std::unique_ptr<TVirtualSizeReaderImpl> fSizeReader;
 
    public:
       template <class... ARGS>
@@ -251,19 +259,14 @@ namespace {
             return;
          }
 
-         fIsUnsigned = sizeLeaf->IsUnsigned();
-         if (fIsUnsigned) {
-            fSizeReader.reset(new TTreeReaderValue<UInt_t>(*treeReader, foundLeafName.c_str()));
+         if (sizeLeaf->IsUnsigned()) {
+            fSizeReader.reset(new TSizeReaderImpl<UInt_t>(*treeReader, foundLeafName.c_str()));
          } else {
-            fSizeReader.reset(new TTreeReaderValue<Int_t>(*treeReader, foundLeafName.c_str()));
+            fSizeReader.reset(new TSizeReaderImpl<Int_t>(*treeReader, foundLeafName.c_str()));
          }
       }
 
-      size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) override {
-         if (fIsUnsigned)
-            return *GetSizeReader<UInt_t>();
-         return *GetSizeReader<Int_t>();
-      }
+      size_t GetSize(ROOT::Detail::TBranchProxy * /*proxy*/) override { return fSizeReader->GetSize(); }
    };
 
    class TArrayParameterSizeReader: public TUIntOrIntReader<TObjectArrayReader> {
