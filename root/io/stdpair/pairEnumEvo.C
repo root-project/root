@@ -13,7 +13,8 @@
 enum libEnum {
    kShared = 0,
    kACLiC = 1,
-   kInterpreted = 2
+   kInterpreted = 2,
+   kPairShared = 3
 };
 
 const char *gNameOfPairClass = "pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >";
@@ -64,6 +65,8 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
       gROOT->ProcessLine(".L cmspair.h+");
    else if (libtype == libEnum::kShared)
       gSystem->Load("libCmsPairCollection.so");
+   else if (libtype == libEnum::kPairShared)
+      gSystem->Load("libCmsPair.so");
    else if (libtype == libEnum::kInterpreted)
       gROOT->ProcessLine("#include \"cmspair.h\"");
    else {
@@ -112,10 +115,12 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
    fprintf(stdout, "Current StreamerInfo:\n");
    auto pcl = TClass::GetClass(gNameOfPairClass);
    pcl->GetStreamerInfo()->ls();
-   auto i = pcl->GetStreamerInfo(2);
-   if (i) {
-      fprintf(stdout, "\n#2 StreamerInfo:\n");
-      i->ls();
+   for(int i = 1; i < 3 ; ++i) {
+      auto info = pcl->GetStreamerInfo(i);
+      if (info) {
+         fprintf(stdout, "\n#%d StreamerInfo:\n",i );
+         info->ls();
+      }
    }
    return 0;
 }
