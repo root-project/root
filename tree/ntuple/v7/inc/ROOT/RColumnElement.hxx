@@ -19,6 +19,7 @@
 #include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
+#include <Byteswap.h>
 #include <TError.h>
 
 #include <cstring> // for memcpy
@@ -26,6 +27,42 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+
+namespace {
+template <std::size_t N>
+struct RByteSwap {};
+
+template <>
+struct RByteSwap<2> {
+   using value_type = std::uint16_t;
+   static value_type bswap(value_type x) { return Rbswap_16(x); }
+};
+
+template <>
+struct RByteSwap<4> {
+   using value_type = std::uint32_t;
+   static value_type bswap(value_type x) { return Rbswap_32(x); }
+};
+
+template <>
+struct RByteSwap<8> {
+   using value_type = std::uint64_t;
+   static value_type bswap(value_type x) { return Rbswap_64(x); }
+};
+
+/// \brief Copy and byteswap `count` elements of size `N` from `source` to `destination`.
+///
+/// Used on big-endian architectures for packing/unpacking elements whose column type requires
+/// a little-endian on-disk representation.
+template <std::size_t N>
+static void CopyElementsBswap(void *destination, const void *source, std::size_t count) {
+   auto dst = reinterpret_cast<typename RByteSwap<N>::value_type *>(destination);
+   auto src = reinterpret_cast<const typename RByteSwap<N>::value_type *>(source);
+   for (std::size_t i = 0; i < count; ++i) {
+      *(dst++) = RByteSwap<N>::bswap(*(src++));
+   }
+}
+} // anonymous namespace
 
 namespace ROOT {
 namespace Experimental {
