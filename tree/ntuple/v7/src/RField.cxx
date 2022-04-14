@@ -1148,10 +1148,9 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const Detail::RFieldValue
    auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.GetRawPtr());
 
    std::size_t nbytes = 0;
-   char *begin = reinterpret_cast<char*>(*beginPtr); // for pointer arithmetics
+   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      auto elementValue =
-         fSubFields[0]->CaptureValue(begin + i * fItemSize);
+      auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
       nbytes += fSubFields[0]->Append(elementValue);
    }
 
@@ -1186,7 +1185,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
    }
 
    // Create new elements
-   char *begin = reinterpret_cast<char*>(*beginPtr); // for pointer arithmetics
+   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    for (auto i = 0u; i < nItems; ++i) {
       // GenerateValue uses a placement new which starts the objects' lifetime
       auto itemValue = fSubFields[0]->GenerateValue(begin + (i * fItemSize));
@@ -1198,8 +1197,8 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
 void ROOT::Experimental::RRVecField::GenerateColumnsImpl()
 {
    RColumnModel modelIndex(EColumnType::kIndex, true /* isSorted*/);
-   fColumns.emplace_back(std::unique_ptr<Detail::RColumn>(
-      Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
+   fColumns.emplace_back(
+      std::unique_ptr<Detail::RColumn>(Detail::RColumn::Create<ClusterSize_t, EColumnType::kIndex>(modelIndex, 0)));
 }
 
 void ROOT::Experimental::RRVecField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
@@ -1208,22 +1207,22 @@ void ROOT::Experimental::RRVecField::GenerateColumnsImpl(const RNTupleDescriptor
    GenerateColumnsImpl();
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::GenerateValue(void* where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::GenerateValue(void *where)
 {
    // initialize data members fBegin, fSize, fCapacity
    // currently the inline buffer is left uninitialized
-   void **beginPtr = new (where) (void *)(nullptr);
-   std::int32_t* sizePtr = new (reinterpret_cast<void*>(beginPtr + 1)) std::int32_t(0);
+   void **beginPtr = new (where)(void *)(nullptr);
+   std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(0);
    new (sizePtr + 1) std::int32_t(0);
 
-   return Detail::RFieldValue(/*captureTag*/true, this, where);
+   return Detail::RFieldValue(/*captureTag*/ true, this, where);
 }
 
-void ROOT::Experimental::RRVecField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RRVecField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
 {
    auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(value.GetRawPtr());
 
-   char *begin = reinterpret_cast<char*>(*beginPtr); // for pointer arithmetics
+   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
       auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
       fSubFields[0]->DestroyValue(elementValue, true /* dtorOnly */);
@@ -1236,7 +1235,7 @@ void ROOT::Experimental::RRVecField::DestroyValue(const Detail::RFieldValue& val
    auto paddingMiddle = dataMemberSz % alignOfT;
    if (paddingMiddle != 0)
       paddingMiddle = alignOfT - paddingMiddle;
-   const bool isSmall = (reinterpret_cast<void*>(begin) == (beginPtr + dataMemberSz + paddingMiddle));
+   const bool isSmall = (reinterpret_cast<void *>(begin) == (beginPtr + dataMemberSz + paddingMiddle));
 
    const bool owns = (*capacityPtr != -1);
    if (!isSmall && owns)
@@ -1246,7 +1245,7 @@ void ROOT::Experimental::RRVecField::DestroyValue(const Detail::RFieldValue& val
       free(beginPtr);
 }
 
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::CaptureValue(void* where)
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::CaptureValue(void *where)
 {
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
@@ -1257,7 +1256,7 @@ ROOT::Experimental::RRVecField::SplitValue(const Detail::RFieldValue &value) con
    auto [beginPtr, sizePtr, _] = GetRVecDataMembers(value.GetRawPtr());
 
    std::vector<Detail::RFieldValue> result;
-   char *begin = reinterpret_cast<char*>(*beginPtr); // for pointer arithmetics
+   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
       auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
       result.emplace_back(std::move(elementValue));
@@ -1313,7 +1312,8 @@ size_t ROOT::Experimental::RRVecField::EvalValueSize() const
    return dataMemberSz + inlineStorageSz + paddingMiddle + paddingEnd;
 }
 
-size_t ROOT::Experimental::RRVecField::GetValueSize() const {
+size_t ROOT::Experimental::RRVecField::GetValueSize() const
+{
    return fValueSize;
 }
 
@@ -1323,7 +1323,6 @@ size_t ROOT::Experimental::RRVecField::GetAlignment() const
    // (including the inline buffer which has the same alignment as the RVec::value_type)
    return std::max({alignof(void *), alignof(std::int32_t), fSubFields[0]->GetAlignment()});
 }
-
 
 void ROOT::Experimental::RRVecField::CommitCluster()
 {
