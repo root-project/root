@@ -88,7 +88,17 @@ if (NOT dataframe)
     # RooFit tutorial depending on RDataFrame
     list(APPEND dataframe_veto roofit/rf408*)
 elseif(MSVC AND NOT win_broken_tests)
-    list(APPEND dataframe_veto dataframe/*.py)
+    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+      list(APPEND dataframe_veto dataframe/df002_dataModel.py)
+      list(APPEND dataframe_veto dataframe/df016_vecOps.py)
+    endif()
+    if(CMAKE_CXX_STANDARD GREATER 14)
+        list(APPEND dataframe_veto dataframe/df017_vecOpsHEP.py)
+        list(APPEND dataframe_veto dataframe/df032_MakeNumpyDataFrame.py)
+        list(APPEND dataframe_veto dataframe/df033_Describe.py)
+    else()
+        list(APPEND dataframe_veto dataframe/*.py)
+    endif()
 endif()
 
 if(NOT sqlite)
@@ -126,18 +136,13 @@ if(NOT ROOT_roofit_FOUND)
                    roofit/*.py)
 else()
   if(MSVC AND NOT win_broken_tests)
-    set(roofit_veto roofit/rf104_classfactory.C
-                    roofit/rf104_classfactory.py
-                    roofit/rf316_llratioplot.py
-                    roofit/rf401_importttreethx.C
-                    roofit/rf401_importttreethx.py
-                    roofit/rf408_RDataFrameToRooFit.py
-                    roofit/rf409_NumPyPandasToRooFit.py
-                    roofit/rf512_wsfactory_oper.C
-                    roofit/rf512_wsfactory_oper.py
-                    roofit/rf515_hfJSON.py
-                    roofit/rf708_bphysics.py
-    )
+    set(roofit_veto roofit/rf401_importttreethx.py roofit/rf708_bphysics.py)
+    if(CMAKE_CXX_STANDARD LESS 17)
+      list(APPEND roofit_veto roofit/rf408_RDataFrameToRooFit.py)
+    endif()
+    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+      list(APPEND roofit_veto roofit/rf409_NumPyPandasToRooFit.py)
+    endif()
   endif()
 endif()
 
@@ -270,7 +275,7 @@ else()
   #---These do not need to run for TMVA
   list(APPEND tmva_veto tmva/createData.C)
   if(MSVC AND NOT win_broken_tests)
-    list(APPEND tmva_veto tmva/tmva103_Application.C tmva/envelope/classification.C)
+    list(APPEND tmva_veto tmva/envelope/classification.C)
   endif()
   #these depends on external packages
   find_python_module(torch QUIET)

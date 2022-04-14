@@ -11,12 +11,10 @@ ROOT_ADD_GTEST(simple simple.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooCacheManager testRooCacheManager.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooCategory testRooCategory.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testWorkspace testWorkspace.cxx LIBRARIES RooFitCore RooStats)
-if(NOT MSVC OR win_broken_tests)
-  ROOT_ADD_GTEST(testRooDataHist testRooDataHist.cxx LIBRARIES RooFitCore
-    COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv4_ref.root
-                     ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv5_ref.root
-                     ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv6_ref.root)
-endif()
+ROOT_ADD_GTEST(testRooDataHist testRooDataHist.cxx LIBRARIES RooFitCore
+  COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv4_ref.root
+                   ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv5_ref.root
+                   ${CMAKE_CURRENT_SOURCE_DIR}/dataHistv6_ref.root)
 ROOT_ADD_GTEST(testRooBinSamplingPdf testRooBinSamplingPdf.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooSimPdfBuilder testRooSimPdfBuilder.cxx LIBRARIES RooFitCore)
 ROOT_ADD_GTEST(testRooWrapperPdf testRooWrapperPdf.cxx LIBRARIES Gpad RooFitCore)

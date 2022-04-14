@@ -6,7 +6,7 @@
 
 ROOT_ADD_GTEST(testStatusBitsChecker testStatusBitsChecker.cxx LIBRARIES Core)
 ROOT_ADD_GTEST(testHashRecursiveRemove testHashRecursiveRemove.cxx LIBRARIES Core)
-if(NOT MSVC OR win_broken_tests)
+if(NOT MSVC OR win_broken_tests OR CMAKE_CXX_STANDARD GREATER 14)
   ROOT_ADD_GTEST(testTClass testTClass.cxx LIBRARIES Core)
 endif()
 ROOT_ADD_GTEST(testTDataType testTDataType.cxx LIBRARIES Core)
