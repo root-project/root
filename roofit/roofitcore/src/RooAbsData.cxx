@@ -619,12 +619,18 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this dataset for the variables with given names
-/// The range of each observable that is histogrammed is always automatically calculated from the distribution in
-/// the dataset. The number of bins can be controlled using the [xyz]bins parameters. For a greater degree of control
-/// use the createHistogram() method below with named arguments
+/// Create and fill a ROOT histogram TH1, TH2 or TH3 with the values of this
+/// dataset for the variables with given names.
+//
+/// The caller takes ownership of the returned histogram.
+/// For a greater degree of control, use the
+/// createHistogram(const char *, const RooAbsRealLValue&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)
+/// method that takes RooFit command arguments.
 ///
-/// The caller takes ownership of the returned histogram
+/// The binning can be steered with the `[xyz]bins` parameters:
+///   - `[xyz]bins == 0`: take the binning from the variable (equivalent to passing no command argument to the other function linked above)
+///   - `[xyz]bins > 0`: get a uniform binning between the variables maxinum and minimum (equivalent to passing the `Binning(nbins)` command)
+///   - `[xyz]bins < 0`: compute an automatic binning from the distribution in the dataset, where the number of bins is given by the absolute value (equivalent to passing the `AutoBinning(nbins)` command)
 
 TH1 *RooAbsData::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
 {
@@ -652,26 +658,23 @@ TH1 *RooAbsData::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
     return nullptr;
   }
 
-  if (xbins<=0  || !vars[0]->hasMax() || !vars[0]->hasMin() ) {
-    argList.Add(RooFit::AutoBinning(xbins==0?vars[0]->numBins():abs(xbins)).Clone()) ;
-  } else {
-    argList.Add(RooFit::Binning(xbins).Clone()) ;
-  }
+  auto createBinningCommand = [](int nbins) {
+    if (nbins > 0) {
+      // If `nbins` is positive, pass the `Binning(nbins)` command to get a
+      // uniform binning between the variables maxinum and minimum.
+      return RooFit::Binning(nbins);
+    } else if (nbins < 0) {
+      // One can enforce automatic binning with a negative `nbins` argument.
+      return RooFit::AutoBinning(-nbins);
+    } else {
+      // By default, we pass no binning command and the binning from the variable is used.
+      return RooCmdArg::none();
+    }
+  };
 
-  if (vars[1]) {
-    if (ybins<=0 || !vars[1]->hasMax() || !vars[1]->hasMin() ) {
-      argList.Add(RooFit::YVar(*vars[1],RooFit::AutoBinning(ybins==0?vars[1]->numBins():abs(ybins))).Clone()) ;
-    } else {
-      argList.Add(RooFit::YVar(*vars[1],RooFit::Binning(ybins)).Clone()) ;
-    }
-  }
-  if (vars[2]) {
-    if (zbins<=0 || !vars[2]->hasMax() || !vars[2]->hasMin() ) {
-      argList.Add(RooFit::ZVar(*vars[2],RooFit::AutoBinning(zbins==0?vars[2]->numBins():abs(zbins))).Clone()) ;
-    } else {
-      argList.Add(RooFit::ZVar(*vars[2],RooFit::Binning(zbins)).Clone()) ;
-    }
-  }
+  argList.Add(createBinningCommand(xbins).Clone());
+  if (vars[1]) argList.Add(RooFit::YVar(*vars[1], createBinningCommand(ybins)).Clone());
+  if (vars[2]) argList.Add(RooFit::ZVar(*vars[2], createBinningCommand(zbins)).Clone());
 
 
   // Call implementation function
