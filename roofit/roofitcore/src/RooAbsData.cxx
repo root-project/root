@@ -702,6 +702,77 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this
+/// dataset for the variables with given names.
+///
+/// \param[in] varNameList Comma-separated variable names.
+/// \param[in] binArgX Control the binning for the `x` variable.
+/// \param[in] binArgY Control the binning for the `y` variable.
+/// \param[in] binArgZ Control the binning for the `z` variable.
+/// \return Histogram now owned by user.
+///
+/// The possible binning command arguments for each axis are:
+///
+/// <table>
+/// <tr><td> `AutoBinning(Int_t nbins, Double_y margin)`   <td> Automatically calculate range with given added fractional margin, set binning to nbins
+/// <tr><td> `AutoSymBinning(Int_t nbins, Double_y margin)`   <td> Automatically calculate range with given added fractional margin,
+///     with additional constraint that mean of data is in center of range, set binning to nbins
+/// <tr><td> `Binning(const char* name)`   <td> Apply binning with given name to x axis of histogram
+/// <tr><td> `Binning(RooAbsBinning& binning)`   <td> Apply specified binning to x axis of histogram
+/// <tr><td> `Binning(int nbins, double lo, double hi)`   <td> Apply specified binning to x axis of histogram
+///
+/// <tr><td> `YVar(const RooAbsRealLValue& var,...)`   <td> Observable to be mapped on y axis of ROOT histogram
+/// <tr><td> `ZVar(const RooAbsRealLValue& var,...)`   <td> Observable to be mapped on z axis of ROOT histogram
+/// </table>
+
+TH1 *RooAbsData::createHistogram(const char* varNameList,
+                                 const RooCmdArg& binArgX,
+                                 const RooCmdArg& binArgY,
+                                 const RooCmdArg& binArgZ) const
+{
+  // Parse list of variable names
+  const auto varNames = ROOT::Split(varNameList, ",:");
+  RooRealVar* vars[3] = {nullptr, nullptr, nullptr};
+
+  for (unsigned int i = 0; i < varNames.size(); ++i) {
+    if (i >= 3) {
+      coutW(InputArguments) << "RooAbsData::createHistogram(" << GetName() << "): Can only create 3-dimensional histograms. Variable "
+          << i << " " << varNames[i] << " unused." << std::endl;
+      continue;
+    }
+
+    vars[i] = static_cast<RooRealVar*>( get()->find(varNames[i].data()) );
+    if (!vars[i]) {
+      coutE(InputArguments) << "RooAbsData::createHistogram(" << GetName() << ") ERROR: dataset does not contain an observable named " << varNames[i] << std::endl;
+      return nullptr;
+    }
+  }
+
+  if (!vars[0]) {
+    coutE(InputArguments) << "RooAbsData::createHistogram(" << GetName() << "): No variable to be histogrammed in list '" << varNameList << "'" << std::endl;
+    return nullptr;
+  }
+
+  // Fill command argument list
+  RooLinkedList argList;
+  argList.Add(binArgX.Clone());
+  if (vars[1]) {
+    argList.Add(RooFit::YVar(*vars[1],binArgY).Clone());
+  }
+  if (vars[2]) {
+    argList.Add(RooFit::ZVar(*vars[2],binArgZ).Clone());
+  }
+
+  // Call implementation function
+  TH1* result = createHistogram(GetName(), *vars[0], argList);
+
+  // Delete temporary list of RooCmdArgs
+  argList.Delete() ;
+
+  return result ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///
 /// This function accepts the following arguments
 ///

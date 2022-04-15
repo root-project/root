@@ -94,10 +94,10 @@ void rf803_mcstudy_addons2()
    mcs->generateAndFit(500);
 
    // Make some plots
-   TH1 *dll_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,dll_nullhypo_nsig", -40, -40);
-   TH1 *z_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,significance_nullhypo_nsig", -40, -40);
-   TH1 *errnsig_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,nsigerr", -40, -40);
-   TH1 *errnsig_vs_nsig = mcs->fitParDataSet().createHistogram("nsig,nsigerr", -40, -40);
+   TH1 *dll_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,dll_nullhypo_nsig", AutoBinning(40), AutoBinning(40));
+   TH1 *z_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,significance_nullhypo_nsig", AutoBinning(40), AutoBinning(40));
+   TH1 *errnsig_vs_ngen = mcs->fitParDataSet().createHistogram("ngen,nsigerr", AutoBinning(40), AutoBinning(40));
+   TH1 *errnsig_vs_nsig = mcs->fitParDataSet().createHistogram("nsig,nsigerr", AutoBinning(40), AutoBinning(40));
 
    // Draw plots on canvas
    TCanvas *c = new TCanvas("rf803_mcstudy_addons2", "rf802_mcstudy_addons2", 800, 800);
