@@ -101,7 +101,7 @@ void rs401c_FeldmanCousins()
    // No dedicated plotting class yet, so do it by hand:
 
    RooDataHist *parameterScan = (RooDataHist *)fc.GetPointsToScan();
-   TH1F *hist = (TH1F *)parameterScan->createHistogram("mu", 30);
+   TH1F *hist = (TH1F *)parameterScan->createHistogram("mu", Binning(30));
    hist->Draw();
 
    RooArgSet *tmpPoint;

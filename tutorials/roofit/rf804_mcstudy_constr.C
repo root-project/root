@@ -62,7 +62,7 @@ void rf804_mcstudy_constr()
    mcs.generateAndFit(500, 2000);
 
    // Make plot of distribution of generated value of f parameter
-   TH1 *h_f_gen = mcs.fitParDataSet().createHistogram("f_gen", -40);
+   TH1 *h_f_gen = mcs.fitParDataSet().createHistogram("f_gen", AutoBinning(40));
 
    // Make plot of distribution of fitted value of f parameter
    RooPlot *frame1 = mcs.plotParam(f, Bins(40));

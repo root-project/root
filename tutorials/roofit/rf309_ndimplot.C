@@ -49,8 +49,7 @@ void rf309_ndimplot()
    // -------------------------------------------------------------
 
    // Create and fill ROOT 2D histogram (20x20 bins) with contents of dataset
-   // TH2D* hh_data = data->createHistogram("hh_data",x,Binning(20),YVar(y,Binning(20))) ;
-   TH1 *hh_data = data->createHistogram("x,y", 20, 20);
+   TH1 *hh_data = data->createHistogram("x,y", Binning(20), Binning(20));
 
    // Create and fill ROOT 2D histogram (50x50 bins) with sampling of pdf
    // TH2D* hh_pdf = model.createHistogram("hh_model",x,Binning(50),YVar(y,Binning(50))) ;

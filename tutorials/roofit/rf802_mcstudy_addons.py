@@ -40,10 +40,13 @@ mcs.addModule(chi2mod)
 # Generate 1000 samples of 1000 events
 mcs.generateAndFit(2000, 1000)
 
+# Number of bins for chi2 plots
+nBins = 100
+
 # Fill histograms with distributions chi2 and prob(chi2,ndf) that
 # are calculated by ROOT.RooChiMCSModule
-hist_chi2 = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "chi2")
-hist_prob = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "prob")
+hist_chi2 = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "chi2", ROOT.RooFit.AutoBinning(nBins))
+hist_prob = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "prob", ROOT.RooFit.AutoBinning(nBins))
 
 # Create manager with separate fit model
 # ----------------------------------------------------------------------------
@@ -74,8 +77,8 @@ pullMeanFrame = mcs2.plotPull(mean)
 
 # Fill histograms with distributions chi2 and prob(chi2,ndf) that
 # are calculated by ROOT.RooChiMCSModule
-hist2_chi2 = ROOT.RooAbsData.createHistogram(mcs2.fitParDataSet(), "chi2")
-hist2_prob = ROOT.RooAbsData.createHistogram(mcs2.fitParDataSet(), "prob")
+hist2_chi2 = ROOT.RooAbsData.createHistogram(mcs2.fitParDataSet(), "chi2", ROOT.RooFit.AutoBinning(nBins))
+hist2_prob = ROOT.RooAbsData.createHistogram(mcs2.fitParDataSet(), "prob", ROOT.RooFit.AutoBinning(nBins))
 hist2_chi2.SetLineColor(ROOT.kRed)
 hist2_prob.SetLineColor(ROOT.kRed)
 

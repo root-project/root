@@ -86,10 +86,11 @@ mcs.addModule(sigModule)
 mcs.generateAndFit(500)
 
 # Make some plots
-dll_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,dll_nullhypo_nsig", -40, -40)
-z_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,significance_nullhypo_nsig", -40, -40)
-errnsig_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,nsigerr", -40, -40)
-errnsig_vs_nsig = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "nsig,nsigerr", -40, -40)
+binning = ROOT.RooFit.AutoBinning(40)
+dll_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,dll_nullhypo_nsig", binning, binning)
+z_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,significance_nullhypo_nsig", binning, binning)
+errnsig_vs_ngen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "ngen,nsigerr", binning, binning)
+errnsig_vs_nsig = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "nsig,nsigerr", binning, binning)
 
 # Draw plots on canvas
 c = ROOT.TCanvas("rf803_mcstudy_addons2", "rf802_mcstudy_addons2", 800, 800)
