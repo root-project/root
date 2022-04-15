@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "TSystem.h"
 #include "TVirtualCollectionProxy.h"
+#include "TError.h"
 
 // good.C with (0,1,0,0) and good.C(1,0,0,0) behaves differently due to the IsSyntheticPair early return in BuildCheck (not triggered in this case)
 // good.C(1,0,0,0): check why order of StreamerInfo is different from (0,1,0,0)
@@ -34,6 +35,17 @@ void printInfo(const char *when)
    }
 }
 
+void printElements(TVirtualStreamerInfo *info)
+{
+   if (info->GetElements()) {
+      TIter    next(info->GetElements());
+      while (TNamed *obj = (TNamed*)next())
+         if (0 != strcmp("Emulation", obj->GetTitle()))
+            obj->SetTitle("");
+   }
+
+   info->ls();
+}
 
 int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, bool readbeforeload, bool reportedorder)
 {
@@ -117,12 +129,12 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
    fprintf(stdout, "\nLast verifications:\n");
    fprintf(stdout, "Current StreamerInfo:\n");
    auto pcl = TClass::GetClass(gNameOfPairClass);
-   pcl->GetStreamerInfo()->ls();
+   printElements(pcl->GetStreamerInfo());
    for(int i = 1; i < 3 ; ++i) {
-      auto info = pcl->GetStreamerInfo(i);
+      auto info = dynamic_cast<TStreamerInfo*>(pcl->GetStreamerInfo(i));
       if (info) {
          fprintf(stdout, "\n#%d StreamerInfo:\n",i );
-         info->ls();
+         printElements(info);
       }
    }
    return 0;
