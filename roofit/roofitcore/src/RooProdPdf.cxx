@@ -2273,7 +2273,7 @@ void RooProdPdf::printMetaArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Implement support for node removal
 
-Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t nameChange, Bool_t /*isRecursive*/)
+Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, Bool_t /*mustReplaceAll*/, Bool_t nameChange, Bool_t /*isRecursive*/)
 {
   if (nameChange && _pdfList.find("REMOVAL_DUMMY")) {
 
@@ -2288,6 +2288,23 @@ Bool_t RooProdPdf::redirectServersHook(const RooAbsCollection& /*newServerList*/
     // Clear caches
     _cacheMgr.reset() ;
   }
+
+  // If the replaced server is an observable that is used in any of the
+  // normalization sets for conditional fits, replace the element in the
+  // normalization set too.
+  for(std::unique_ptr<RooArgSet> const& normSet : _pdfNSetList) {
+    for(RooAbsArg * arg : *normSet) {
+      if(RooAbsArg * newArg = arg->findNewServer(newServerList, nameChange)) {
+        // Need to do some tricks here because it's not possible to replace in
+        // an owning RooAbsCollection.
+        normSet->releaseOwnership();
+        normSet->replace(*arg, *newArg->cloneTree());
+        normSet->takeOwnership();
+        delete arg;
+      }
+    }
+  }
+
   return kFALSE ;
 }
 
