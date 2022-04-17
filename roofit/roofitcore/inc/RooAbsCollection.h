@@ -356,9 +356,9 @@ protected:
   Storage_t _list;  ///< Actual object storage
   using LegacyIterator_t = TIteratorToSTLInterface<Storage_t>;
 
-  Bool_t _ownCont;  ///< Flag to identify a list that owns its contents.
-  TString _name;    ///< Our name.
-  Bool_t _allRRV ;  ///< All contents are RRV
+  Bool_t _ownCont = false; ///< Flag to identify a list that owns its contents.
+  TString _name;           ///< Our name.
+  Bool_t _allRRV = true;   ///< All contents are RRV
 
   void deleteList() ;
 
@@ -373,8 +373,8 @@ protected:
 
   inline void clearStructureTags() { _structureTag=0 ; _typedStructureTag = 0 ; }
 
-  void makeStructureTag() ;
-  void makeTypedStructureTag() ;
+  void makeStructureTag() {}
+  void makeTypedStructureTag() {}
 
   /// Determine whether it's possible to add a given RooAbsArg to the collection or not.
   virtual bool canBeAdded(const RooAbsArg& arg, bool silent) const = 0;
@@ -393,7 +393,7 @@ private:
 
   using HashAssistedFind = RooFit::Detail::HashAssistedFind;
   mutable std::unique_ptr<HashAssistedFind> _hashAssistedFind; ///<!
-  std::size_t _sizeThresholdForMapSearch; ///<!
+  std::size_t _sizeThresholdForMapSearch = 100; ///<!
 
   void insert(RooAbsArg*);
 
