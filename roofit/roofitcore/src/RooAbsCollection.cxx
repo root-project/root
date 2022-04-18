@@ -1615,6 +1615,40 @@ void RooAbsCollection::sort(Bool_t reverse) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Sort collection topologically: the servers of any RooAbsArg will be before
+/// that RooAbsArg in the collection. Will throw an exception if servers
+/// are missing in the collection.
+
+void RooAbsCollection::sortTopologically() {
+   std::unordered_set<TNamed const *> seenArgs;
+   for (std::size_t iArg = 0; iArg < _list.size(); ++iArg) {
+      RooAbsArg *arg = _list[iArg];
+      bool movedArg = false;
+      for (RooAbsArg *server : arg->servers()) {
+         if (seenArgs.find(server->namePtr()) == seenArgs.end()) {
+            auto found = std::find_if(_list.begin(), _list.end(),
+                                      [server](RooAbsArg *elem) { return elem->namePtr() == server->namePtr(); });
+            if (found == _list.end()) {
+               std::stringstream ss;
+               ss << "RooAbsArg \"" << arg->GetName() << "\" depends on \"" << server->GetName()
+                  << "\", but this arg is missing in the collection!";
+               throw std::runtime_error(ss.str());
+            }
+            _list.erase(found);
+            _list.insert(_list.begin() + iArg, server);
+            movedArg = true;
+            break;
+         }
+      }
+      if (movedArg) {
+         --iArg;
+         continue;
+      }
+      seenArgs.insert(arg->namePtr());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Factory for legacy iterators.
 
 std::unique_ptr<RooAbsCollection::LegacyIterator_t> RooAbsCollection::makeLegacyIterator (bool forward) const {
