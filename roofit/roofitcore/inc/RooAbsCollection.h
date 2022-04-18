@@ -335,6 +335,7 @@ public:
   void takeOwnership() { _ownCont = kTRUE ; }
 
   void sort(Bool_t reverse = false);
+  void sortTopologically();
 
   void RecursiveRemove(TObject *obj) override;
 
