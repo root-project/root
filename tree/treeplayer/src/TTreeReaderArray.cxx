@@ -268,10 +268,18 @@ namespace {
             fSizeReader.reset(new TSizeReaderImpl<Short_t>(*treeReader, foundLeafName.c_str()));
          } else if (leafType == "UShort_t") {
             fSizeReader.reset(new TSizeReaderImpl<UShort_t>(*treeReader, foundLeafName.c_str()));
+         } else if (leafType == "Long_t") {
+            fSizeReader.reset(new TSizeReaderImpl<Long_t>(*treeReader, foundLeafName.c_str()));
+         } else if (leafType == "ULong_t") {
+            fSizeReader.reset(new TSizeReaderImpl<ULong_t>(*treeReader, foundLeafName.c_str()));
+         } else if (leafType == "Long64_t") {
+            fSizeReader.reset(new TSizeReaderImpl<Long64_t>(*treeReader, foundLeafName.c_str()));
+         } else if (leafType == "ULong64_t") {
+            fSizeReader.reset(new TSizeReaderImpl<ULong64_t>(*treeReader, foundLeafName.c_str()));
          } else {
             Error("TUIntOrIntReader",
-                  "Unsupported size type for leaf %s. Supported types are int, short int, and their unsigned "
-                  "counterparts.",
+                  "Unsupported size type for leaf %s. Supported types are int, short int, long int, long long int and "
+                  "their unsigned counterparts.",
                   leafName);
          }
       }
