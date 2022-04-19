@@ -4614,7 +4614,7 @@ TVirtualStreamerInfo* TClass::GetStreamerInfoImpl(Int_t version, Bool_t silent) 
    //          user requested the emulated streamerInfo for an abstract
    //          base class, even though we have a dictionary for it.
 
-   if ((version < -1) || (version >= fStreamerInfo->GetSize())) {
+   if ((version < -1) || (version >= (fStreamerInfo->GetSize()-1))) {
       Error("GetStreamerInfo", "class: %s, attempting to access a wrong version: %d", GetName(), version);
       // FIXME: Shouldn't we go to -1 here, or better just abort?
       version = fClassVersion;
