@@ -131,6 +131,44 @@ std::unique_ptr<ROperator> make_ROperator_Relu(const onnx::NodeProto& nodeproto,
    return op;
 }
 
+std::unique_ptr<ROperator> make_ROperator_LeakyRelu(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
+
+   ETensorType input_type;
+
+   auto input_name =  nodeproto.input(0);
+   auto it = tensor_type.find(input_name);
+   if (it != tensor_type.end()){
+      input_type = it->second;
+   }else{
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser leaky relu op has input tensor" + input_name + " but its type is not yet registered");
+   }
+
+   std::unique_ptr<ROperator> op;
+
+   float attr_alpha = 0.01;
+
+   for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
+         std::string attribute_name = nodeproto.attribute(i).name();
+         if (attribute_name == "alpha") 
+            attr_alpha = nodeproto.attribute(i).f();
+   }   
+   switch(input_type){
+   case ETensorType::FLOAT:
+         op.reset(new ROperator_LeakyRelu<float>(attr_alpha,nodeproto.input(0), nodeproto.output(0)));
+         break;
+      default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Leaky Relu does not yet support input type " + std::to_string(static_cast<int>(input_type)));
+      }
+
+      ETensorType output_type = (op->TypeInference({input_type}))[0];
+      auto it2 = tensor_type.find(nodeproto.output(0));
+      if (it2 == tensor_type.end()){
+         tensor_type[nodeproto.output(0)] = output_type;
+      }
+
+      return op;
+   }
+
 std::unique_ptr<ROperator> make_ROperator_Selu(const onnx::NodeProto& nodeproto, const onnx::GraphProto& /*graphproto */, std::unordered_map<std::string, ETensorType>& tensor_type){
 
    ETensorType input_type;
