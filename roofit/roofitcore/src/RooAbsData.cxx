@@ -628,6 +628,10 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
 
 TH1 *RooAbsData::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
 {
+  coutW(DataHandling) << "'RooAbsData::createHistogram' is deprecated and will be removed in ROOT v6.30: "
+                      << "Use the overload of 'RooAbsData::createHistogram' that takes RooFit command arguments."
+                      << std::endl;
+
   // Parse list of variable names
   const auto varNames = ROOT::Split(varNameList, ",:");
   RooLinkedList argList;
