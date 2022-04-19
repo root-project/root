@@ -12,15 +12,15 @@ StreamerInfo for class: pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Tra
    i= 0, first           type=  3, offset=  0, len=1, method=0
    i= 1, second          type= 62, offset=  8, len=1, method=0
 
-#1 StreamerInfo:
+#2 StreamerInfo:
 
-StreamerInfo for class: pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >, checksum=0xb15d1241
-  reco::Muon::MuonTrackType first           offset=  0 type= 3                     
-  edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > second          offset=  8 type=62                     
-   i= 0, first           type=  3, offset=  0, len=1, method=0
+StreamerInfo for class: pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >, checksum=0xb5fb752
+  reco::Muon::MuonTrackType first           offset=  0 type=13 Emulation           
+  edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > second          offset=  8 type=62 Emulation           
+   i= 0, first           type=213, offset=  0, len=1, method=0
    i= 1, second          type= 62, offset=  8, len=1, method=0
 
-#2 StreamerInfo:
+#3 StreamerInfo:
 
 StreamerInfo for class: pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >, checksum=0xb5fb752
   reco::Muon::MuonTrackType first           offset=  0 type=13 Emulation           

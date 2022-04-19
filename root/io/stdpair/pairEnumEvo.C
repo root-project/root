@@ -37,6 +37,7 @@ void printInfo(const char *when)
 
 void printElements(TVirtualStreamerInfo *info)
 {
+   //fprintf(stdout, "Printing StreamerInfo %p\n", info);
    if (info->GetElements()) {
       TIter    next(info->GetElements());
       while (TNamed *obj = (TNamed*)next())
@@ -129,14 +130,17 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
    fprintf(stdout, "\nLast verifications:\n");
    fprintf(stdout, "Current StreamerInfo:\n");
    auto pcl = TClass::GetClass(gNameOfPairClass);
-   printElements(pcl->GetStreamerInfo());
-   for(int i = 1; i < 3 ; ++i) {
+   auto currentInfo = pcl->GetStreamerInfo();
+   printElements(currentInfo);
+   auto ninfos = pcl->GetStreamerInfos()->GetSize() - 1;
+   for(int i = 1; i < ninfos ; ++i) {
       auto info = dynamic_cast<TStreamerInfo*>(pcl->GetStreamerInfo(i));
-      if (info) {
-         fprintf(stdout, "\n#%d StreamerInfo:\n",i );
+      if (info && info != currentInfo) {
+         fprintf(stdout, "\n#%d StreamerInfo:\n", i);
          printElements(info);
       }
    }
+   // pcl->GetStreamerInfos()->ls();
    return 0;
 }
 
