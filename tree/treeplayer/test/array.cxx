@@ -270,23 +270,20 @@ TEST(TTreeReaderArray, LongIntArray)
    EXPECT_FALSE(r.Next());
 }
 
-TEST(TTreeReaderArray, ShortSize)
+template <typename Size_t>
+void TestReadingNonIntArraySizes()
 {
    TTree t("t", "t");
-   short sizes = 1;
-   unsigned short sizeus = 1;
+   Size_t sizes = 1;
    float arr[10]{};
 
    t.Branch("sizes", &sizes);
-   t.Branch("sizeus", &sizeus);
    t.Branch("arrs", arr, "arrs[sizes]/F");
-   t.Branch("arrus", arr, "arrus[sizeus]/F");
 
    arr[0] = 42.f;
    t.Fill();
 
    sizes = 3;
-   sizeus = 3;
    arr[0] = 1.f;
    arr[1] = 2.f;
    arr[2] = 3.f;
@@ -294,19 +291,52 @@ TEST(TTreeReaderArray, ShortSize)
 
    TTreeReader r(&t);
    TTreeReaderArray<float> ras(r, "arrs");
-   TTreeReaderArray<float> raus(r, "arrus");
    r.Next();
    EXPECT_EQ(ras.GetSize(), 1);
    EXPECT_FLOAT_EQ(ras[0], 42.f);
-   EXPECT_EQ(raus.GetSize(), 1);
-   EXPECT_FLOAT_EQ(raus[0], 42.f);
    r.Next();
    EXPECT_EQ(ras.GetSize(), 3);
    EXPECT_FLOAT_EQ(ras[0], 1.f);
    EXPECT_FLOAT_EQ(ras[1], 2.f);
    EXPECT_FLOAT_EQ(ras[2], 3.f);
-   EXPECT_EQ(raus.GetSize(), 3);
-   EXPECT_FLOAT_EQ(raus[0], 1.f);
-   EXPECT_FLOAT_EQ(raus[1], 2.f);
-   EXPECT_FLOAT_EQ(raus[2], 3.f);
+}
+
+TEST(TTreeReaderArray, ShortSize)
+{
+   TestReadingNonIntArraySizes<short>();
+}
+
+TEST(TTreeReaderArray, UShortSize)
+{
+   TestReadingNonIntArraySizes<unsigned short>();
+}
+
+TEST(TTreeReaderArray, LongSize)
+{
+   TestReadingNonIntArraySizes<long>();
+}
+
+TEST(TTreeReaderArray, ULongSize)
+{
+   TestReadingNonIntArraySizes<unsigned long>();
+}
+
+TEST(TTreeReaderArray, LongLongSize)
+{
+   TestReadingNonIntArraySizes<long long>();
+}
+
+TEST(TTreeReaderArray, ULongLongSize)
+{
+   TestReadingNonIntArraySizes<unsigned long long>();
+}
+
+TEST(TTreeReaderArray, Long64Size)
+{
+   TestReadingNonIntArraySizes<Long64_t>();
+}
+
+TEST(TTreeReaderArray, ULong64Size)
+{
+   TestReadingNonIntArraySizes<ULong64_t>();
 }
