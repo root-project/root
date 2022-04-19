@@ -92,15 +92,15 @@ int RDaosFakeObject::Fetch(daos_key_t *dkey, unsigned int nr, daos_iod_t *iods, 
 
    std::lock_guard<std::mutex> lock(fMutexStorage);
    /* Iterate over pairs of (I/O descriptor, scatter-gather list) */
-   for (int i = 0; i < (int)nr; i++) {
+   for (unsigned i = 0; i < nr; i++) {
       /* Retrieve entry data for (dkey, akey). Fails if not found */
-      auto data = fStorage.find(GetKey(dkey, &iods[i].iod_name));
+      auto data = fStorage.find(GetKey(dkey, /*akey=*/ &iods[i].iod_name));
       if (data == fStorage.end())
          return -DER_INVAL;
 
-      /* Assumption: each (dkey, akey) contains a blob
-       * ==> One extent per I/O descriptor
-       * ==> One I/O vector per scatter-gather list  */
+      /* In principle, we can safely assume that each attribute key is associated to a single value,
+       * i.e. one extent per I/O descriptor, and that the corresponding data is copied to a exactly one
+       * I/O vector. */
       if (iods[i].iod_nr != 1 || iods[i].iod_type != DAOS_IOD_SINGLE)
          return -DER_INVAL;
       if (sgls[i].sg_nr != 1)
@@ -119,9 +119,9 @@ int RDaosFakeObject::Update(daos_key_t *dkey, unsigned int nr, daos_iod_t *iods,
 
    std::lock_guard<std::mutex> lock(fMutexStorage);
    /* Process each I/O descriptor and associated SG list */
-   for (int i = 0; i < (int)nr; i++) {
-      auto &data = fStorage[GetKey(dkey, &iods[i].iod_name)]; // entry with (dkey, akey)
-      /* Assumption: each (dkey, akey) contains a blob */
+   for (unsigned i = 0; i < nr; i++) {
+      auto &data = fStorage[GetKey(dkey, /*akey=*/ &iods[i].iod_name)];
+      /* Assumption: each (dkey, akey) contains a single value */
       if (iods[i].iod_nr != 1 || iods[i].iod_type != DAOS_IOD_SINGLE)
          return -DER_INVAL;
       if (sgls[i].sg_nr != 1)
