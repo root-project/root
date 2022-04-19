@@ -31,7 +31,7 @@ following example shows how to use it:
 
 Begin_Macro(source)
 {
-   TCanvas *c = new TCanvas("c","Graph2DErrors example",0,0,600,600);
+   auto c = new TCanvas("c","TGraph2DErrors example",0,0,600,600);
    Double_t P = 6.;
    Int_t np   = 200;
 
@@ -45,7 +45,7 @@ Begin_Macro(source)
    ey = new Double_t[np];
    ez = new Double_t[np];
 
-   TRandom *r = new TRandom();
+   auto r = new TRandom();
 
    for (Int_t N=0; N<np;N++) {
       rx[N] = 2*P*(r->Rndm(N))-P;
@@ -59,17 +59,16 @@ Begin_Macro(source)
       ez[N] = 10*r->Rndm(N);
    }
 
-   TGraph2DErrors *dte = new TGraph2DErrors(np, rx, ry, rz, ex, ey, ez);
-   dte->SetTitle("TGraph2D with error bars: option \"ERR\"");
-   dte->SetFillColor(29);
-   dte->SetMarkerSize(0.8);
-   dte->SetMarkerStyle(20);
-   dte->SetMarkerColor(kRed);
-   dte->SetLineColor(kBlue-3);
-   dte->SetLineWidth(2);
-   dte->Draw("err p0");
+   TGraph2DErrors *g = new TGraph2DErrors(np, rx, ry, rz, ex, ey, ez);
+   g->SetTitle("TGraph2D with error bars: option \"ERR\"");
+   g->SetFillColor(29);
+   g->SetMarkerSize(0.8);
+   g->SetMarkerStyle(20);
+   g->SetMarkerColor(kRed);
+   g->SetLineColor(kBlue-3);
+   g->SetLineWidth(2);
    gPad->SetLogy(1);
-   return c;
+   g->Draw("err p0");
 }
 End_Macro
 */

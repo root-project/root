@@ -67,6 +67,8 @@ Please use their non-experimental counterparts `ROOT::TBufferMerger` and `ROOT::
 
 ## Histogram Libraries
 
+- New class `TGraph2DAsymmErrors` to create TGraph2D with asymmetric errors.
+![TGraph2DAsymmErrors](TGraph2DAsymmErrors.png)
 
 ## Math Libraries
 
@@ -95,7 +97,7 @@ pseudo-experiments and evaluated likelihood ratio test statistics.
 Nowadays, everyone uses the faster `HistoToWorkspaceFactoryFast` implementation that
 produces a model in the "standard form" where the dataset has one row for each
 event, and the column corresponds to the value of the observable in the
-histogram. 
+histogram.
 
 Therefore, the original `HistoToWorkspaceFactory` is now removed to avoid
 confusion and maintainance burden.
