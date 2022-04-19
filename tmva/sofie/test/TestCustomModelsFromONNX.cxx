@@ -12,6 +12,9 @@
 #include "LinearWithSelu_FromONNX.hxx"
 #include "input_models/references/LinearWithSelu.ref.hxx"
 
+#include "LinearWithLeakyRelu_FromONNX.hxx"
+#include "input_models/references/LinearWithLeakyRelu.ref.hxx"
+
 #include "LinearWithSigmoid_FromONNX.hxx"
 #include "input_models/references/LinearWithSigmoid.ref.hxx"
 
@@ -168,6 +171,33 @@ TEST(ONNX, LinearWithSelu)
    EXPECT_EQ(output.size(), sizeof(LinearWithSelu_ExpectedOutput::all_ones) / sizeof(float));
 
    float *correct = LinearWithSelu_ExpectedOutput::all_ones;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+
+TEST(ONNX, LinearWithLeakyRelu)
+{
+   constexpr float TOLERANCE = 1;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input({
+      0.4369, -0.6882,  1.0309, -1.0263, -0.1519,  1.2237, -0.7054, -0.1762,
+      -0.6811, -2.2597,  1.0388, -0.7993,  0.1468,  1.3257, -0.4714, -0.0958,
+      0.7057, -0.3749, -0.3310,  0.0986, -0.1370,  0.0832, -1.6465, -0.2793
+   });
+
+   TMVA_SOFIE_LinearWithLeakyRelu::Session s("LinearWithLeakyRelu_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(LinearWithLeakyRelu_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = LinearWithLeakyRelu_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
