@@ -124,6 +124,12 @@ public:
    virtual Double_t     *GetEX() const {return 0;}
    virtual Double_t     *GetEY() const {return 0;}
    virtual Double_t     *GetEZ() const {return 0;}
+   virtual Double_t     *GetEXlow() const {return 0;}
+   virtual Double_t     *GetEXhigh() const {return 0;}
+   virtual Double_t     *GetEYlow() const {return 0;}
+   virtual Double_t     *GetEYhigh() const {return 0;}
+   virtual Double_t     *GetEZlow() const {return 0;}
+   virtual Double_t     *GetEZhigh() const {return 0;}
    Double_t              GetXmax() const;
    Double_t              GetXmin() const;
    Double_t              GetYmax() const;

@@ -50,6 +50,7 @@
 #pragma link C++ class TGraphBentErrors+;
 #pragma link C++ class TGraph2D-;
 #pragma link C++ class TGraph2DErrors-;
+#pragma link C++ class TGraph2DAsymmErrors-;
 #pragma link C++ class TGraphDelaunay+;
 #pragma link C++ class TGraphDelaunay2D+;
 #pragma link C++ class TGraphSmooth+;

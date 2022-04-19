@@ -1110,7 +1110,7 @@ void TGraphAsymmErrors::FillZero(Int_t begin, Int_t end,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// It returns the combined error along X at point i by computing the average
+/// Returns the combined error along X at point i by computing the average
 /// of the lower and upper variance.
 
 Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
@@ -1125,7 +1125,7 @@ Double_t TGraphAsymmErrors::GetErrorX(Int_t i) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// It returns the combined error along Y at point i by computing the average
+/// Returns the combined error along Y at point i by computing the average
 /// of the lower and upper variance.
 
 Double_t TGraphAsymmErrors::GetErrorY(Int_t i) const
