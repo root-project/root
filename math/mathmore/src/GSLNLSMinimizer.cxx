@@ -48,23 +48,23 @@ public:
       fGrad( std::vector<double>(f.NDim() ) )
    {
       // constructor
-      // need to pass to MinimTransformFunction a new pointer which will be managed by the class itself
-      // pass a gradient pointer although it will not be used byb the class
+      // create a new pointer of  MinimTransformFunction, which will be managed by the class itself
    }
 
    FitTransformFunction(const FitMethodFunction & f, MinimTransformFunction *transFunc ) :
       FitMethodFunction( f.NDim(), f.NPoints() ),
-      fOwnTransformation(false),
+      fOwnTransformation(true),
       fFunc(f),
       fTransform(transFunc),
       fGrad( std::vector<double>(f.NDim() ) )
    {
-      // constructor from al already existing Transformation object. Ownership of the transformation onbect is passed to caller
+      // constructor from an already existing Transformation object.
+      // Ownership of the transformation object is passed to caller
    }
 
    ~FitTransformFunction() override {
       if (fOwnTransformation) {
-         assert(fTransform);
+         //assert(fTransform);
          delete fTransform;
       }
    }
@@ -218,19 +218,21 @@ bool GSLNLSMinimizer::Minimize() {
    // set residual functions and check if a transformation is needed
    std::vector<double> startValues;
 
-   // transformation need a grad function. Delegate fChi2Func to given object
-   MultiNumGradFunction * gradFunction = new MultiNumGradFunction(*fChi2Func);
-   MinimTransformFunction * trFuncRaw  =  CreateTransformation(startValues, gradFunction);
+   // transformation need a grad function.
+   std::unique_ptr<MultiNumGradFunction> gradFunction(new MultiNumGradFunction(*fChi2Func));
+   MinimTransformFunction * trFuncRaw  =  CreateTransformation(startValues, gradFunction.get());
    // need to transform in a FitTransformFunction which is set in the residual functions
    std::unique_ptr<FitTransformFunction> trFunc;
    if (trFuncRaw) {
+      //pass ownership of trFuncRaw to FitTransformFunction
       trFunc.reset(new FitTransformFunction(*fChi2Func, trFuncRaw) );
-      //FitTransformationFunction *trFunc = new FitTransformFunction(*fChi2Func, trFuncRaw);
       for (unsigned int ires = 0; ires < fResiduals.size(); ++ires) {
          fResiduals[ires] = LSResidualFunc(*trFunc, ires);
       }
 
       assert(npar == trFunc->NTot() );
+      // gradFunction is going to be managed by FitTransFormFunction and does not need
+      // to be deleted
    }
 
    if (debugLevel >=1 ) std::cout <<"Minimize using GSLNLSMinimizer "  << std::endl;
@@ -259,7 +261,7 @@ bool GSLNLSMinimizer::Minimize() {
       if (debugLevel >=1) {
          std::cout << "----------> Iteration " << iter << " / " << MaxIterations() << " status " << gsl_strerror(status)  << std::endl;
          const double * x = fGSLMultiFit->X();
-         if (trFunc.get()) x = trFunc->Transformation(x);
+         if (trFunc) x = trFunc->Transformation(x);
          int pr = std::cout.precision(18);
          std::cout << "            FVAL = " << (*fChi2Func)(x) << std::endl;
          std::cout.precision(pr);
@@ -309,7 +311,9 @@ bool GSLNLSMinimizer::Minimize() {
    // save state with values and function value
    const double * x = fGSLMultiFit->X();
    if (x == 0) return false;
-
+   // apply transformation outside SetFinalValues(..)
+   // because trFunc is not a MinimTransformFunction but a FitTransFormFunction
+   if (trFunc)  x = trFunc->Transformation(x);
    SetFinalValues(x);
 
    SetMinValue( (*fChi2Func)(x) );
@@ -323,11 +327,11 @@ bool GSLNLSMinimizer::Minimize() {
 
       fCovMatrix.resize(ndim*ndim);
 
-      if (trFunc.get() ) {
-         trFunc->MatrixTransformation(x, fGSLMultiFit->CovarMatrix(), &fCovMatrix[0] );
+      if (trFunc) {
+         trFunc->MatrixTransformation(x, fGSLMultiFit->CovarMatrix(), fCovMatrix.data() );
       }
       else {
-         std::copy(cov, cov + ndim*ndim, fCovMatrix.begin() );
+         std::copy(cov, cov + fCovMatrix.size(), fCovMatrix.begin() );
       }
 
       for (unsigned int i = 0; i < ndim; ++i)

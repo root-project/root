@@ -510,7 +510,7 @@ bool Fitter::DoBinnedLikelihoodFit(bool extended, const ROOT::EExecutionPolicy &
             return false;
          }
          // use gradient for minimization
-         // not-extended is not impelemented in this case
+         // not-extended is not implemented in this case
          if (!extended) {
             MATH_WARN_MSG("Fitter::DoBinnedLikelihoodFit",
                           "Not-extended binned fit with gradient not yet supported - do an extended fit");
@@ -764,15 +764,15 @@ bool Fitter::CalculateMinosErrors() {
    const std::vector<unsigned int> & ipars = fConfig.MinosParams();
    unsigned int n = (ipars.size() > 0) ? ipars.size() : fResult->Parameters().size();
    bool ok = false;
-  
-   int iparNewMin = 0; 
-   int iparMax = n; 
-   int iter = 0; 
+
+   int iparNewMin = 0;
+   int iparMax = n;
+   int iter = 0;
    // rerun minos for the parameters run before a new Minimum has been found
    do {
-      if (iparNewMin > 0) 
+      if (iparNewMin > 0)
          MATH_INFO_MSG("Fitter::CalculateMinosErrors","Run again Minos for some parameters because a new Minimum has been found");
-      iparNewMin = 0; 
+      iparNewMin = 0;
       for (int i = 0; i < iparMax; ++i) {
          double elow, eup;
          unsigned int index = (ipars.size() > 0) ? ipars[i] : i;
@@ -787,7 +787,7 @@ bool Fitter::CalculateMinosErrors() {
       }
 
       iparMax = iparNewMin;
-      iter++;  // to avoid infinite looping 
+      iter++;  // to avoid infinite looping
    }
    while( iparNewMin > 0 && iter < 10);
    if (!ok) {

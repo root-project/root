@@ -52,7 +52,7 @@ namespace ROOT {
 /**
     LSResidualFunc class description.
     Internal class used for accessing the residuals of the Least Square function
-    and their derivates which are estimated numerically using GSL numerical derivation.
+    and their derivatives which are estimated numerically using GSL numerical derivation.
     The class contains a pointer to the fit method function and an index specifying
     the i-th residual and wraps it in a multi-dim gradient function interface
     ROOT::Math::IGradientFunctionMultiDim.

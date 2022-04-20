@@ -57,10 +57,10 @@ GSLSimAnMinimizer::~GSLSimAnMinimizer () {
 bool GSLSimAnMinimizer::Minimize() {
    // set initial parameters of the minimizer
    int debugLevel = PrintLevel();
-   
-   if (debugLevel >= 1) 
+
+   if (debugLevel >= 1)
       std::cout << "Minimize using GSLSimAnMinimizer " << std::endl;
-   
+
 
    const ROOT::Math::IMultiGenFunction * function = ObjFunction();
    if (function == 0) {
@@ -85,11 +85,10 @@ bool GSLSimAnMinimizer::Minimize() {
    std::vector<double> steps(StepSizes(),StepSizes()+npar);
 
    // needed for the transformation
-   MultiNumGradFunction * gradFunc = new MultiNumGradFunction( *function );
-   gradFunc->SetOwnership();
+   std::unique_ptr<MultiNumGradFunction> gradFunc(new MultiNumGradFunction( *function ));
+   //gradFunc->SetOwnership();
 
-   MinimTransformFunction * trFunc  = CreateTransformation(xvar, gradFunc );
-   // ObjFunction() will return now the new transformed function
+   std::unique_ptr<MinimTransformFunction>  trFunc(CreateTransformation(xvar, gradFunc.get() ));
 
    if (trFunc) {
       // transform also the step sizes
@@ -104,20 +103,19 @@ bool GSLSimAnMinimizer::Minimize() {
    for (unsigned int i = 0; i < npar ; ++i) {
       std::cout << "x  = " << xvar[i] << " steps " << steps[i] << "  x " << X()[i] << std::endl;
    }
-   std::cout << "f(x) = " <<  (*ObjFunction())(&xvar.front() ) << std::endl;
-   std::cout << "f(x) not transf = " <<  (*function)( X() ) << std::endl;
-   if (trFunc) std::cout << "ftrans(x) = " <<  (*trFunc) (&xvar.front() ) << std::endl;
+   std::cout << "f(x) = " <<  (*ObjFunction())(xvar.data() ) << std::endl;
+   std::cout << "f(x) not transf = " <<  (*ObjFunction())( X() ) << std::endl;
+   if (trFunc) std::cout << "ftrans(x) = " <<  (*trFunc) ( xvar.data() ) << std::endl;
 #endif
 
    // output vector
    std::vector<double> xmin(xvar.size() );
 
 
-   int iret = fSolver.Solve(*ObjFunction(), &xvar.front(), &steps.front(), &xmin[0], (debugLevel > 1) );
+   int iret = fSolver.Solve( (trFunc) ? *trFunc : *function, xvar.data(), steps.data(), xmin.data(), (debugLevel > 1) );
 
-   SetMinValue( (*ObjFunction())(&xmin.front() ) );
-
-   SetFinalValues(&xmin.front());
+   SetFinalValues(xmin.data(), trFunc.get());
+   SetMinValue( (*ObjFunction())( X() ) );
 
 
    if (debugLevel >=1 ) {
@@ -140,12 +138,10 @@ bool GSLSimAnMinimizer::Minimize() {
 
 unsigned int GSLSimAnMinimizer::NCalls() const {
    // return number of function calls
-   const ROOT::Math::MinimTransformFunction * tfunc = dynamic_cast<const ROOT::Math::MinimTransformFunction *>(ObjFunction());
-   const ROOT::Math::MultiNumGradFunction * f = 0;
-   if (tfunc) f = dynamic_cast<const ROOT::Math::MultiNumGradFunction *>(tfunc->OriginalFunction());
-   else
-      f = dynamic_cast<const ROOT::Math::MultiNumGradFunction *>(ObjFunction());
+   auto f = dynamic_cast<const FitMethodFunction*>(ObjFunction());
    if (f) return f->NCalls();
+   auto gf = dynamic_cast<const FitMethodGradFunction*>(ObjFunction());
+   if (gf) return gf->NCalls();
    return 0;
 }
 
@@ -174,7 +170,7 @@ void GSLSimAnMinimizer::DoSetSimAnParameters(const MinimizerOptions & options)
       return;
    }
 
-   // get the various options. In case they are not defined the default parameters 
+   // get the various options. In case they are not defined the default parameters
    // will not be modified and will be used
    GSLSimAnParams params;
    simanOpt->GetValue("n_tries", params.n_tries);
