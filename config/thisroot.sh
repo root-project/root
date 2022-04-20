@@ -180,6 +180,8 @@ fi
 SHELLNAME=$(getTrueShellExeName)
 if [ "$SHELLNAME" = "bash" ]; then
    SOURCE=${BASH_ARGV[0]}
+elif [ "x${SHELLNAME}" = "x" ]; then # workaround, when running thisroot.sh from an executable script, getTrueShellExeName does not work, fall back to default
+   SOURCE=${BASH_ARGV[0]}
 elif [ "$SHELLNAME" = "zsh" ]; then
    SOURCE=${(%):-%N}
 else # dash or ksh
