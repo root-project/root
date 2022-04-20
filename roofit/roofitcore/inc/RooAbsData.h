@@ -214,17 +214,11 @@ public:
                        const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
                        const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
                        const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
-  // Developer note: the `binArgX` parameter has no default `none` value,
-  // because then the signature would be ambiguous with the deprecated bin
-  // integer overload below. When the deprecated overload is removed, a default
-  // value must be set (tutorial failures will remind us to do that).
   TH1 *createHistogram(const char* varNameList,
-                       const RooCmdArg& binArgX, const RooCmdArg& binArgY=RooCmdArg::none(),
+                       const RooCmdArg& binArgX=RooCmdArg::none(), const RooCmdArg& binArgY=RooCmdArg::none(),
                        const RooCmdArg& binArgZ=RooCmdArg::none()) const;
   /// Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this dataset.
   TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar, const RooLinkedList& argList) const ;
-  TH1 *createHistogram(const char* varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const
-      R__DEPRECATED(6, 30, "Use the overload of RooAbsData::createHistogram that takes RooFit command arguments.");
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts="",
          const char *name= "hist") const;
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, int nx, int ny,
