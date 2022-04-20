@@ -153,8 +153,6 @@ public:
    /// return pointer to used gradient object function  (NULL if gradient is not supported)
    const ROOT::Math::IMultiGradFunction * GradObjFunction() const;
 
-   /// return transformation function (NULL if not having a transformation)
-   const ROOT::Math::MinimTransformFunction * TransformFunction() const;
 
    /// print result of minimization
    void PrintResult() const;
@@ -170,7 +168,7 @@ protected:
 
    MinimTransformFunction * CreateTransformation(std::vector<double> & startValues, const ROOT::Math::IMultiGradFunction * func = 0);
 
-   void SetFinalValues(const double * x);
+   void SetFinalValues(const double * x, const MinimTransformFunction * func = nullptr);
 
    void SetMinValue(double val) { fMinVal = val; }
 

@@ -22,6 +22,8 @@
 
 #include <vector>
 #include <map>
+#include <memory>
+#include <iostream>
 
 namespace ROOT {
 
@@ -45,7 +47,7 @@ public:
 
 
    /**
-     Constructor from a IMultiGradFunction interface (which is managed by the class)
+     Constructor from a IMultiGradFunction interface that is externally managed
      vector specifying the variable types (free, bounded or fixed, defined in enum EMinimVariableTypes )
      variable values (used for the fixed ones) and a map with the bounds (for the bounded variables)
 
@@ -55,12 +57,9 @@ public:
 
 
    /**
-      Destructor (delete function pointer)
+      Destructor (no operation)
    */
-   ~MinimTransformFunction () override  {
-      if (fFunc) delete fFunc;
-   }
-
+   ~MinimTransformFunction () override  { }
 
    // method inherited from IFunction interface
 
