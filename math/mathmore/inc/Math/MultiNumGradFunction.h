@@ -63,7 +63,7 @@ public:
 
    /**
      Constructor from a generic function (pointer or reference) and number of dimension
-     implementiong operator () (double * x)
+     implementing operator () (double * x)
    */
 
    template<class FuncType>
