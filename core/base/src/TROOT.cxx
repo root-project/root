@@ -574,13 +574,6 @@ namespace Internal {
       return 0;
 #endif
    }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Returns the size of the pool used for implicit multi-threading.
-   UInt_t GetImplicitMTPoolSize()
-   {
-      return GetThreadPoolSize();
-   }
 } // end of ROOT namespace
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
