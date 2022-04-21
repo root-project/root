@@ -2472,7 +2472,7 @@ void ROOT::TMetaUtils::WritePointersSTL(const AnnotatedRecordDecl &cl,
 {
    std::string a;
    std::string clName;
-   TMetaUtils::GetCppName(clName, ROOT::TMetaUtils::GetFileName(*cl.GetRecordDecl(), interp).str().c_str());
+   TMetaUtils::GetCppName(clName, ROOT::TMetaUtils::GetFileName(*cl.GetRecordDecl(), interp).c_str());
    int version = ROOT::TMetaUtils::GetClassVersion(cl.GetRecordDecl(),interp);
    if (version == 0) return;
    if (version < 0 && !(cl.RequestStreamerInfo()) ) return;
@@ -3295,8 +3295,8 @@ getFinalSpellingLoc(clang::SourceManager& sourceManager,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the header file to be included to declare the Decl.
 
-llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
-                                              const cling::Interpreter& interp)
+std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
+                                          const cling::Interpreter& interp)
 {
    // It looks like the template specialization decl actually contains _less_ information
    // on the location of the code than the decl (in case where there is forward declaration,
@@ -3376,7 +3376,11 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
    }
 
    if (!headerFE) return invalidFilename;
-   llvm::StringRef headerFileName = headerFE->getName();
+
+   llvm::SmallString<256> headerFileName(headerFE->getName());
+   // Remove double ../ from the path so that the search below finds a valid
+   // longest match and does not result in growing paths.
+   llvm::sys::path::remove_dots(headerFileName, /*remove_dot_dot=*/true);
 
    // Now headerFID references the last valid system header or the original
    // user file.

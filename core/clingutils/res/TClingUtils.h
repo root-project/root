@@ -561,8 +561,7 @@ bool HasCustomConvStreamerMemberFunction(const AnnotatedRecordDecl &cl,
 
 //______________________________________________________________________________
 // Return the header file to be included to declare the Decl
-llvm::StringRef GetFileName(const clang::Decl& decl,
-                            const cling::Interpreter& interp);
+std::string GetFileName(const clang::Decl& decl, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
 // Return the dictionary file name for a module
