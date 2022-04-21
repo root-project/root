@@ -412,8 +412,8 @@ namespace ROOT {
       using retType = decltype(func(args.front()));
       std::vector<retType> reslist(actualChunks);
       auto lambda = [&](unsigned int i) {
-         std::vector<retType> partialResults(step);
-         for (unsigned j = 0; j < step && (i + j) < nToProcess; j++) {
+         std::vector<retType> partialResults(std::min(step, nToProcess - i));
+         for (unsigned j = 0; j < partialResults.size(); j++) {
             partialResults[j] = func(args[i + j]);
          }
          reslist[i / step] = Reduce(partialResults, redfunc);
@@ -444,8 +444,8 @@ namespace ROOT {
       using retType = decltype(func(args.front()));
       std::vector<retType> reslist(actualChunks);
       auto lambda = [&](unsigned int i) {
-         std::vector<retType> partialResults(step);
-         for (unsigned j = 0; j < step && (i + j) < nToProcess; j++) {
+         std::vector<retType> partialResults(std::min(step, nToProcess - i));
+         for (unsigned j = 0; j < partialResults.size(); j++) {
             partialResults[j] = func(args[i + j]);
          }
          reslist[i / step] = Reduce(partialResults, redfunc);
