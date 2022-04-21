@@ -3,8 +3,8 @@
 /// \notebook
 /// This script is a slightly modified version of hsum.C.
 ///
-/// At the end of this macro, after `c1->Modified();` calling `c1->Print("hsumanim.gif++");`
-/// will produce an animated gif file. The option "++" makes an infinite animation.
+/// Uncomment the two `c1->Print(...);` lines in order to produce
+/// an animated gif file. The option "++" makes an infinite animation.
 /// The animated file `hsumanim.gif` can be visualized within a web browser
 ///
 /// \macro_image
@@ -61,7 +61,7 @@ void hsumanim() {
          c1->Modified();
          c1->Update();
          if (gROOT->IsBatch()) {
-            c1->Print("hsumanim.gif+");
+            // c1->Print("hsumanim.gif+");
             printf("i = %d\n", i);
          } else {
             if (gSystem->ProcessEvents())
@@ -72,6 +72,7 @@ void hsumanim() {
    slider->SetRange(0,1);
    total->Draw("sameaxis"); // to redraw axis hidden by the fill area
    c1->Modified();
+   // c1->Print("hsumanim.gif++")
 
    gBenchmark->Show("hsum");
 }
