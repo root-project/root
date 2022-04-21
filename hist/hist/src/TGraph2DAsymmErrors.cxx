@@ -86,12 +86,6 @@ End_Macro
 
 TGraph2DAsymmErrors::TGraph2DAsymmErrors(): TGraph2D()
 {
-   fEXlow  = 0;
-   fEXhigh = 0;
-   fEYlow  = 0;
-   fEYhigh = 0;
-   fEZlow  = 0;
-   fEZhigh = 0;
 }
 
 
@@ -217,12 +211,12 @@ TGraph2DAsymmErrors & TGraph2DAsymmErrors::operator=(const TGraph2DAsymmErrors &
    if (fEZlow)  delete [] fEZlow;
    if (fEZhigh) delete [] fEZhigh;
 
-   fEXlow    = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEXhigh   = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEYlow    = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEYhigh   = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEZlow    = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEZhigh   = (fSize > 0) ? new Double_t[fSize] : 0;
+   fEXlow    = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEXhigh   = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEYlow    = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEYhigh   = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEZlow    = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEZhigh   = (fSize > 0) ? new Double_t[fSize] : nullptr;
 
 
    // copy error arrays

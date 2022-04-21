@@ -29,17 +29,21 @@ private:
 
 
 protected:
-   Double_t    *fEXlow;        ///<[fNpoints] array of X low errors
-   Double_t    *fEXhigh;       ///<[fNpoints] array of X high errors
-   Double_t    *fEYlow;        ///<[fNpoints] array of Y low errors
-   Double_t    *fEYhigh;       ///<[fNpoints] array of Y high errors
-   Double_t    *fEZlow;        ///<[fNpoints] array of Z low errors
-   Double_t    *fEZhigh;       ///<[fNpoints] array of Z high errors
+   Double_t    *fEXlow{nullptr};        ///<[fNpoints] array of X low errors
+   Double_t    *fEXhigh{nullptr};       ///<[fNpoints] array of X high errors
+   Double_t    *fEYlow{nullptr};        ///<[fNpoints] array of Y low errors
+   Double_t    *fEYhigh{nullptr};       ///<[fNpoints] array of Y high errors
+   Double_t    *fEZlow{nullptr};        ///<[fNpoints] array of Z low errors
+   Double_t    *fEZhigh{nullptr};       ///<[fNpoints] array of Z high errors
 
 public:
    TGraph2DAsymmErrors();
    TGraph2DAsymmErrors(Int_t n);
-   TGraph2DAsymmErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z, Double_t *exl=0, Double_t *exh=0, Double_t *eyl=0, Double_t *eyh=0, Double_t *ezl=0, Double_t *ezh=0, Option_t *option="");
+   TGraph2DAsymmErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
+                       Double_t *exl = nullptr, Double_t *exh = nullptr,
+                       Double_t *eyl = nullptr, Double_t *eyh = nullptr,
+                       Double_t *ezl = nullptr, Double_t *ezh = nullptr,
+                       Option_t *option = "");
    TGraph2DAsymmErrors(const TGraph2DAsymmErrors&);
    TGraph2DAsymmErrors& operator=(const TGraph2DAsymmErrors&);
    ~TGraph2DAsymmErrors() override;
