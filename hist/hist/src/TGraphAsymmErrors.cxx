@@ -71,10 +71,6 @@ End_Macro
 
 TGraphAsymmErrors::TGraphAsymmErrors(): TGraph()
 {
-   fEXlow       = 0;
-   fEYlow       = 0;
-   fEXhigh      = 0;
-   fEYhigh      = 0;
 }
 
 
@@ -164,14 +160,22 @@ TGraphAsymmErrors::TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t 
    if (!CtorAllocate()) return;
 
    n = fNpoints*sizeof(Double_t);
-   if(exl) { memcpy(fEXlow, exl, n);
-   } else { memset(fEXlow, 0, n); }
-   if(exh) { memcpy(fEXhigh, exh, n);
-   } else { memset(fEXhigh, 0, n); }
-   if(eyl) { memcpy(fEYlow, eyl, n);
-   } else { memset(fEYlow, 0, n); }
-   if(eyh) { memcpy(fEYhigh, eyh, n);
-   } else { memset(fEYhigh, 0, n); }
+   if (exl)
+      memcpy(fEXlow, exl, n);
+   else
+      memset(fEXlow, 0, n);
+   if (exh)
+      memcpy(fEXhigh, exh, n);
+   else
+      memset(fEXhigh, 0, n);
+   if (eyl)
+      memcpy(fEYlow, eyl, n);
+   else
+      memset(fEYlow, 0, n);
+   if (eyh)
+      memcpy(fEYhigh, eyh, n);
+   else
+      memset(fEYhigh, 0, n);
 }
 
 
@@ -244,7 +248,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const TH1 *h)
 {
    if (!CtorAllocate()) return;
 
-   for (Int_t i=0;i<fNpoints;i++) {
+   for (Int_t i = 0; i < fNpoints; i++) {
       fEXlow[i]  = h->GetBinWidth(i+1)*gStyle->GetErrorX();
       fEXhigh[i] = fEXlow[i];
       fEYlow[i]  = h->GetBinErrorLow(i+1);
@@ -318,7 +322,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
       Int_t ncol = TGraphErrors::CalculateScanfFields(format);  //count number of columns in format
       Int_t res;
       while (std::getline(infile, line, '\n')) {
-         exl = exh = eyl = eyh = 0;
+         exl = exh = eyl = eyh = 0.;
          if (ncol < 3) {
             res = sscanf(line.c_str(), format, &x, &y);
          } else if (ncol < 5) {
@@ -354,30 +358,29 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
          Error("TGraphAsymmErrors", "Incorrect input format! Only %d tag(s) in format whereas at least 2 \"%%lg\" tags are expected!", ntokens);
          return ;
       }
-      Int_t ntokensToBeSaved = 0 ;
-      Bool_t * isTokenToBeSaved = new Bool_t [ntokens] ;
+      Int_t ntokensToBeSaved = 0;
+      Bool_t * isTokenToBeSaved = new Bool_t[ntokens];
       for (Int_t idx = 0; idx < ntokens; idx++) {
-         isTokenToBeSaved[idx] = TString::Format("%c", format_[idx]).Atoi() ; //atoi(&format_[idx]) does not work for some reason...
+         isTokenToBeSaved[idx] = TString::Format("%c", format_[idx]).Atoi(); //atoi(&format_[idx]) does not work for some reason...
          if (isTokenToBeSaved[idx] == 1) {
             ntokensToBeSaved++ ;
          }
       }
       if (ntokens >= 2 && (ntokensToBeSaved < 2 || ntokensToBeSaved > 4)) { //first condition not to repeat the previous error message
          Error("TGraphAsymmErrors", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2,3 or 4 are expected!", ntokensToBeSaved);
-         delete [] isTokenToBeSaved ;
+         delete [] isTokenToBeSaved;
          return ;
       }
 
       // Initializing loop variables
-      Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
-      char * token = NULL ;
-      TString token_str = "" ;
-      Int_t token_idx = 0 ;
-      Double_t * value = new Double_t [6] ; //x,y,exl, exh, eyl, eyh buffers
-      for (Int_t k = 0; k < 6; k++) {
-         value[k] = 0. ;
-      }
-      Int_t value_idx = 0 ;
+      Bool_t isLineToBeSkipped = kFALSE; //empty and ill-formed lines
+      char *token = nullptr;
+      TString token_str = "";
+      Int_t token_idx = 0;
+      Double_t value[6]; //x,y,exl, exh, eyl, eyh buffers
+      for (Int_t k = 0; k < 6; k++)
+         value[k] = 0.;
+      Int_t value_idx = 0;
 
       // Looping
       char *rest;
@@ -387,7 +390,7 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
                line.erase(line.end() - 1, line.end()) ;
             }
             token = R__STRTOK_R(const_cast<char*>(line.c_str()), option, &rest) ;
-            while (token != NULL && value_idx < ntokensToBeSaved) {
+            while (token != nullptr && value_idx < ntokensToBeSaved) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
                   token_str.ReplaceAll("\t", "") ;
@@ -399,32 +402,31 @@ TGraphAsymmErrors::TGraphAsymmErrors(const char *filename, const char *format, O
                      value_idx++ ;
                   }
                }
-               token = R__STRTOK_R(NULL, option, &rest); // next token
+               token = R__STRTOK_R(nullptr, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx > 1) { //i.e. 2,3 or 4
-               x = value[0] ;
-               y = value[1] ;
-               exl = value[2] ;
-               exh = value[3] ;
-               eyl = value[4] ;
-               eyh = value[5] ;
-               SetPoint(np, x, y) ;
+               x = value[0];
+               y = value[1];
+               exl = value[2];
+               exh = value[3];
+               eyl = value[4];
+               eyh = value[5];
+               SetPoint(np, x, y);
                SetPointError(np, exl, exh, eyl, eyh);
                np++ ;
             }
          }
-         isLineToBeSkipped = kFALSE ;
-         token = NULL ;
-         token_idx = 0 ;
-         value_idx = 0 ;
+         isLineToBeSkipped = kFALSE;
+         token = nullptr;
+         token_idx = 0;
+         value_idx = 0;
       }
       Set(np) ;
 
       // Cleaning
-      delete [] isTokenToBeSaved ;
-      delete [] value ;
-      delete token ;
+      delete [] isTokenToBeSaved;
+      delete token;
    }
    infile.close();
 }
@@ -464,14 +466,14 @@ void TGraphAsymmErrors::Apply(TF1 *f)
 
    if (fHistogram) {
       delete fHistogram;
-      fHistogram = 0;
+      fHistogram = nullptr;
    }
    for (Int_t i=0;i<GetN();i++) {
       GetPoint(i,x,y);
-      exl=GetErrorXlow(i);
-      exh=GetErrorXhigh(i);
-      eyl=GetErrorYlow(i);
-      eyh=GetErrorYhigh(i);
+      exl = GetErrorXlow(i);
+      exh = GetErrorXhigh(i);
+      eyl = GetErrorYlow(i);
+      eyh = GetErrorYhigh(i);
 
       fxy = f->Eval(x,y);
       SetPoint(i,x,fxy);
@@ -481,8 +483,7 @@ void TGraphAsymmErrors::Apply(TF1 *f)
       if (f->Eval(x,y-eyl)<f->Eval(x,y+eyh)) {
          eyl_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
          eyh_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
-      }
-      else {
+      } else {
          eyh_new = TMath::Abs(fxy - f->Eval(x,y-eyl));
          eyl_new = TMath::Abs(f->Eval(x,y+eyh) - fxy);
       }
@@ -1052,10 +1053,10 @@ Bool_t TGraphAsymmErrors::CopyPoints(Double_t **arrays,
 /// Note: This function should be called only from the constructor
 /// since it does not delete previously existing arrays
 
-Bool_t TGraphAsymmErrors::CtorAllocate(void)
+Bool_t TGraphAsymmErrors::CtorAllocate()
 {
    if (!fNpoints) {
-      fEXlow = fEYlow = fEXhigh = fEYhigh = 0;
+      fEXlow = fEYlow = fEXhigh = fEYhigh = nullptr;
       return kFALSE;
    }
    fEXlow = new Double_t[fMaxSize];
@@ -1076,7 +1077,7 @@ Bool_t TGraphAsymmErrors::DoMerge(const TGraph *g)
    Double_t * exh = g->GetEXhigh();
    Double_t * eyl = g->GetEYlow();
    Double_t * eyh = g->GetEYhigh();
-   if (exl == 0 || exh == 0 || eyl == 0 || eyh == 0) {
+   if (exl == nullptr || exh == nullptr || eyl == nullptr || eyh == nullptr) {
       if (g->IsA() != TGraph::Class() )
          Warning("DoMerge","Merging a %s is not compatible with a TGraphAsymmErrors - errors will be ignored",g->IsA()->GetName());
       return TGraph::DoMerge(g);

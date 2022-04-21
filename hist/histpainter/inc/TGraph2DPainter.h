@@ -87,7 +87,7 @@ public:
    void   PaintPolyLine(Option_t *option);
    void   PaintTriangles(Option_t *option);
 
-   ClassDefOverride(TGraph2DPainter,1)  // TGraph2D painter
+   ClassDefOverride(TGraph2DPainter,0)  // TGraph2D painter
 };
 
 #endif
