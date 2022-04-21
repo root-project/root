@@ -246,4 +246,25 @@ TEST(TThreadExecutor, ThreadSafety) {
    EXPECT_TRUE(std::equal(counters.begin(), counters.end(), target.begin()));
 }
 
+// Checking if we correctly handle uneven chunks
+TEST(TThreadExecutor, StdVectorChunks)
+{
+   ROOT::TThreadExecutor ttex;
+   auto func = [](int x) -> int { return x; };
+   // redfunc must be such that does not have 0 as identity (i.e. not addition but multiplication)
+   auto redfunc = [](const std::vector<int> &v) {
+      return std::accumulate(v.begin(), v.end(), 1, std::multiplies<int>());
+   };
+
+   // will be calculating 7 factorial = 5040, const and non-const vectors to invoke different overloads
+   std::vector<int> vec{1, 2, 3, 4, 5, 6, 7};
+   const std::vector<int> cvec{1, 2, 3, 4, 5, 6, 7};
+
+   EXPECT_EQ(ttex.MapReduce(func, vec, redfunc, 3), 5040); // with 3 chunks, last chunk is smaller
+   EXPECT_EQ(ttex.MapReduce(func, cvec, redfunc, 3), 5040);
+
+   EXPECT_EQ(ttex.MapReduce(func, vec, redfunc, 9), 5040); // with 9 chunks, 2 empty chunks
+   EXPECT_EQ(ttex.MapReduce(func, cvec, redfunc, 9), 5040);
+}
+
 #endif
