@@ -26,28 +26,28 @@
 class TGraphAsymmErrors : public TGraph {
 
 protected:
-   Double_t    *fEXlow;        ///<[fNpoints] array of X low errors
-   Double_t    *fEXhigh;       ///<[fNpoints] array of X high errors
-   Double_t    *fEYlow;        ///<[fNpoints] array of Y low errors
-   Double_t    *fEYhigh;       ///<[fNpoints] array of Y high errors
+   Double_t    *fEXlow{nullptr};        ///<[fNpoints] array of X low errors
+   Double_t    *fEXhigh{nullptr};       ///<[fNpoints] array of X high errors
+   Double_t    *fEYlow{nullptr};        ///<[fNpoints] array of Y low errors
+   Double_t    *fEYhigh{nullptr};       ///<[fNpoints] array of Y high errors
 
-   void    SwapPoints(Int_t pos1, Int_t pos2) override;
+   void       SwapPoints(Int_t pos1, Int_t pos2) override;
 
    Double_t** Allocate(Int_t size) override;
    void       CopyAndRelease(Double_t **newarrays,
-                                     Int_t ibegin, Int_t iend, Int_t obegin) override;
+                             Int_t ibegin, Int_t iend, Int_t obegin) override;
    Bool_t     CopyPoints(Double_t **arrays, Int_t ibegin, Int_t iend,
-                                 Int_t obegin) override;
-   Bool_t             CtorAllocate();
+                         Int_t obegin) override;
+   Bool_t     CtorAllocate();
    void       FillZero(Int_t begin, Int_t end,
-                               Bool_t from_ctor = kTRUE) override;
+                       Bool_t from_ctor = kTRUE) override;
    Bool_t     DoMerge(const TGraph * g) override;
 
 public:
    TGraphAsymmErrors();
    TGraphAsymmErrors(Int_t n);
-   TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl=0, const Float_t *exh=0, const Float_t *eyl=0, const Float_t *eyh=0);
-   TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl=0, const Double_t *exh=0, const Double_t *eyl=0, const Double_t *eyh=0);
+   TGraphAsymmErrors(Int_t n, const Float_t *x, const Float_t *y, const Float_t *exl = nullptr, const Float_t *exh = nullptr, const Float_t *eyl = nullptr, const Float_t *eyh = nullptr);
+   TGraphAsymmErrors(Int_t n, const Double_t *x, const Double_t *y, const Double_t *exl = nullptr, const Double_t *exh = nullptr, const Double_t *eyl = nullptr, const Double_t *eyh = nullptr);
    TGraphAsymmErrors(const TVectorF &vx, const TVectorF &vy, const TVectorF &vexl, const TVectorF &vexh, const TVectorF &veyl, const TVectorF &veyh);
    TGraphAsymmErrors(const TVectorD &vx, const TVectorD &vy, const TVectorD &vexl, const TVectorD &vexh, const TVectorD &veyl, const TVectorD &veyh);
    TGraphAsymmErrors(const TGraphAsymmErrors &gr);

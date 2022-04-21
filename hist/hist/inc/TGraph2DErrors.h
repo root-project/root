@@ -25,19 +25,16 @@
 
 class TGraph2DErrors : public TGraph2D {
 
-private:
-
-
 protected:
-   Double_t *fEX; ///<[fNpoints] array of X errors
-   Double_t *fEY; ///<[fNpoints] array of Y errors
-   Double_t *fEZ; ///<[fNpoints] array of Z errors
+   Double_t *fEX{nullptr}; ///<[fNpoints] array of X errors
+   Double_t *fEY{nullptr}; ///<[fNpoints] array of Y errors
+   Double_t *fEZ{nullptr}; ///<[fNpoints] array of Z errors
 
 public:
    TGraph2DErrors();
    TGraph2DErrors(Int_t n);
    TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
-                  Double_t *ex=0, Double_t *ey=0, Double_t *ez=0, Option_t *option="");
+                  Double_t *ex = nullptr, Double_t *ey = nullptr, Double_t *ez = nullptr, Option_t *option = "");
    TGraph2DErrors(const TGraph2DErrors&);
    TGraph2DErrors& operator=(const TGraph2DErrors&);
    ~TGraph2DErrors() override;
