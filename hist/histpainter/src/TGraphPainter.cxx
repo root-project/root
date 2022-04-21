@@ -515,7 +515,7 @@ their color. The simplest way is to pick colors in the current active color
 palette. Palette coloring for histogram is activated thanks to the options `PFC`
 (Palette Fill Color), `PLC` (Palette Line Color) and `PMC` (Palette Marker Color).
 When one of these options is given to `TGraph::Draw` the graph get its color
-from the current color palette defined by `gStyle->SetPalette(…)`. The color
+from the current color palette defined by `gStyle->SetPalette(...)`. The color
 is determined according to the number of objects having palette coloring in
 the current pad.
 
