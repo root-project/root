@@ -122,7 +122,7 @@ if(BUILD_DOCUMENTATION)
 
     find_package(Doxygen 1.9.4 REQUIRED dot) # OPTIONAL_COMPONENTS dot
 
-    find_package (Python COMPONENTS Interpreter)
+    find_package (Python3 COMPONENTS Interpreter)
 
     if(DOXYGEN_FOUND)
 
