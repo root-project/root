@@ -573,11 +573,11 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, bool inv
   }
   else {
     // if the frame axis is alphanumeric, the coordinates of the graph need to be translated to this binning
-    if(this->_hist->GetXaxis()->IsAlphanumeric()){
+    if(_hist->GetXaxis()->IsAlphanumeric()){
       if(obj->InheritsFrom(RooCurve::Class())){
-        ::translateGraph(this->_hist,_plotVarClone,static_cast<RooCurve*>(obj));
+        ::translateGraph(_hist,_plotVarClone,static_cast<RooCurve*>(obj));
       } else if(obj->InheritsFrom(RooHist::Class())){
-        ::translateGraph(this->_hist,_plotVarClone,static_cast<RooHist*>(obj));
+        ::translateGraph(_hist,_plotVarClone,static_cast<RooHist*>(obj));
       }
     }
 

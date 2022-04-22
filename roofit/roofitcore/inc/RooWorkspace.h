@@ -94,7 +94,7 @@ public:
   const RooArgSet* getSnapshot(const char* name) const ;
 
   // Retrieve list of parameter snapshots
-  RooLinkedList getSnapshots(){ return this->_snapshots; }
+  RooLinkedList getSnapshots(){ return _snapshots; }
 
   void merge(const RooWorkspace& /*other*/) {} ;
 

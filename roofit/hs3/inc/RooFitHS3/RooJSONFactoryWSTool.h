@@ -148,7 +148,7 @@ public:
    T *request(const std::string &objname, const std::string &requestAuthor);
 
    RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{&ws} {}
-   RooWorkspace *workspace() { return this->_workspace; }
+   RooWorkspace *workspace() { return _workspace; }
 
    template <class T>
    static bool registerImporter(const std::string &key, bool topPriority = true)
