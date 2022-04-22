@@ -236,7 +236,7 @@ public:
    void setScale(double val);
    double getScale();
 
-   int nSamples() const { return this->_config.folderNames.size(); }
+   int nSamples() const { return _config.folderNames.size(); }
 
    RooRealSumFunc *getFunc() const;
    std::unique_ptr<RooWrapperPdf> createPdf() const;
