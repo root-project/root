@@ -1,5 +1,10 @@
 #include "ntuple_test.hxx"
 
+// A layer of indirection to hide std::vector's second template parameter.
+// This way we can generalize tests over RVec and std::vector using a template template parameter (see below).
+template <typename T>
+using Vector_t = std::vector<T>;
+
 TEST(RNTuple, ClassVector)
 {
    FileRaii fileGuard("test_ntuple_classvector.root");
@@ -256,13 +261,13 @@ TEST(RNTuple, BoolVector)
    EXPECT_FALSE((*rdBoolRVec)[3]);
 }
 
-
-TEST(RNTuple, ComplexVector)
+template <template <typename> class Coll_t>
+void TestComplexVector(const char *fname)
 {
-   FileRaii fileGuard("test_ntuple_vec_complex.root");
+   FileRaii fileGuard(fname);
 
    auto model = RNTupleModel::Create();
-   auto wrV = model->MakeField<std::vector<ComplexStruct>>("v");
+   auto wrV = model->MakeField<Coll_t<ComplexStruct>>("v");
 
    {
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "T", fileGuard.GetPath());
@@ -291,7 +296,7 @@ TEST(RNTuple, ComplexVector)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<Coll_t<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -302,6 +307,10 @@ TEST(RNTuple, ComplexVector)
       EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(10u, rdV->size());
       ntuple->LoadEntry(2);
+      // FIXME RVec has called the ctor 10010 times at this point, because on resize it calls it again for all elements
+      // std::vector instead only calls the ctor for the _new_ elements, although even the "old" elements might have
+      // been moved bit by bit to the new location, so I am not sure who's right. See also discussion at
+      // https://github.com/root-project/root/pull/8770#issuecomment-1106514234 .
       EXPECT_EQ(10000, ComplexStruct::GetNCallConstructor());
       EXPECT_EQ(0, ComplexStruct::GetNCallDestructor());
       EXPECT_EQ(10000u, rdV->size());
@@ -323,4 +332,14 @@ TEST(RNTuple, ComplexVector)
       EXPECT_EQ(1u, rdV->size());
    }
    EXPECT_EQ(10101u, ComplexStruct::GetNCallDestructor());
+}
+
+TEST(RNTuple, ComplexVector)
+{
+   TestComplexVector<Vector_t>("test_ntuple_vec_complex.root");
+}
+
+TEST(RNTuple, ComplexRVec)
+{
+   TestComplexVector<ROOT::RVec>("test_ntuple_rvec_complex.root");
 }
