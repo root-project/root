@@ -50,9 +50,6 @@ Check the RooFit tutorials
 for usage examples.
 **/
 
-#include "snprintf.h"
-#include <iostream>
-
 #include "RooMCStudy.h"
 #include "RooAbsMCStudyModule.h"
 
@@ -73,6 +70,8 @@ for usage examples.
 #include "RooPullVar.h"
 #include "RooMsgService.h"
 #include "RooProdPdf.h"
+
+#include <iostream>
 
 using namespace std ;
 
@@ -363,14 +362,18 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
 
   Int_t prescale = nSamples>100 ? Int_t(nSamples/100) : 1 ;
 
+  oocoutP(_fitModel,Generation) << "RooMCStudy::run: " ;
+  if (doGenerate) ooccoutI(_fitModel,Generation) << "Generating " ;
+  if (doGenerate && DoFit) ooccoutI(_fitModel,Generation) << "and " ;
+  if (DoFit) ooccoutI(_fitModel,Generation) << "fitting ";
+  ooccoutP(_fitModel,Generation) << nSamples << " samples:" << std::endl;
+  const std::size_t nTotal = nSamples;
+
   while(nSamples--) {
 
-    if (nSamples%prescale==0) {
-      oocoutP(_fitModel,Generation) << "RooMCStudy::run: " ;
-      if (doGenerate) ooccoutI(_fitModel,Generation) << "Generating " ;
-      if (doGenerate && DoFit) ooccoutI(_fitModel,Generation) << "and " ;
-      if (DoFit) ooccoutI(_fitModel,Generation) << "fitting " ;
-      ooccoutP(_fitModel,Generation) << "sample " << nSamples << endl ;
+    if (nSamples % prescale == 0) {
+      auto percentage = (100 * (nTotal - nSamples)) / nTotal;
+      ooccoutP(_fitModel,Generation) << "\r     " << percentage << " \%  " << std::flush;
     }
 
     _genSample = 0;
@@ -427,7 +430,7 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
      delete[] newOrder ;
    }
 
-   coutP(Generation) << "RooMCStudy: now generating " << nEvt << " events" << endl ;
+   cxcoutD(Generation) << "RooMCStudy: now generating " << nEvt << " events" << endl ;
 
    // Actual generation of events
    if (nEvt>0) {
@@ -496,6 +499,8 @@ Bool_t RooMCStudy::run(Bool_t doGenerate, Bool_t DoFit, Int_t nSamples, Int_t nE
       }
     }
   }
+
+  ooccoutP(_fitModel,Generation) << "\r     100 \%  Done!" << std::flush << std::endl;
 
   for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
     RooDataSet* auxData = (*iter)->finalizeRun() ;
