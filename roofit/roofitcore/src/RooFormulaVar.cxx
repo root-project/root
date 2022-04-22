@@ -133,7 +133,7 @@ RooFormula& RooFormulaVar::getFormula() const
   if (!_formula) {
     // After being read from file, the formula object might not exist, yet:
     auto theFormula = new RooFormula(GetName(), _formExpr, _actualVars);
-    const_cast<std::unique_ptr<RooFormula>&>(this->_formula).reset(theFormula);
+    const_cast<std::unique_ptr<RooFormula>&>(_formula).reset(theFormula);
     const_cast<TString&>(_formExpr) = _formula->formulaString().c_str();
   }
 
