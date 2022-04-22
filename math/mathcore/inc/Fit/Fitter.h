@@ -471,9 +471,13 @@ protected:
    // initialize the minimizer
    bool DoInitMinimizer();
    /// do minimization
-   bool DoMinimization(const BaseFunc & f, const ROOT::Math::IMultiGenFunction * chifunc = 0);
-   // do minimization after having set obj function
-   bool DoMinimization(const ROOT::Math::IMultiGenFunction * chifunc = 0);
+   template<class ObjFunc_t>
+   bool DoMinimization(std::unique_ptr<ObjFunc_t> f, const ROOT::Math::IMultiGenFunction * chifunc = nullptr);
+   // do minimization for weighted likelihood fits
+   template<class ObjFunc_t>
+   bool DoWeightMinimization(std::unique_ptr<ObjFunc_t> f, const ROOT::Math::IMultiGenFunction * chifunc = nullptr);
+   // do minimization after having set the objective function
+   bool DoMinimization(const ROOT::Math::IMultiGenFunction * chifunc = nullptr);
    // update config after fit
    void DoUpdateFitConfig();
    // update minimizer options for re-fitting
