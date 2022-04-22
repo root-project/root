@@ -1399,7 +1399,7 @@ protected:
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
       typedValue->resize(nItems);
       for (unsigned i = 0; i < nItems; ++i) {
-         auto itemValue = fSubFields[0]->GenerateValue(&typedValue->data()[i]);
+         auto itemValue = fSubFields[0]->CaptureValue(&typedValue->data()[i]);
          fSubFields[0]->Read(collectionStart + i, &itemValue);
       }
    }
