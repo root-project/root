@@ -32,7 +32,7 @@ parser.add_argument("--full-dataset", action="store_true", default=False,
                     help="Use the full dataset (use --lumi-scale to run only on a fraction of it)")
 parser.add_argument("-b", action="store_true", default=False, help="Use ROOT batch mode")
 parser.add_argument("-t", action="store_true", default=False, help="Use implicit multi threading (for the full dataset only possible with --lumi-scale 1.0)")
-args = parser.parse_args()
+args = parser.parse_args(args=[])
 
 if args.b: ROOT.gROOT.SetBatch(True)
 if args.t: ROOT.EnableImplicitMT()
@@ -47,7 +47,7 @@ else: dataset_path = "root://eospublic.cern.ch//eos/root-eos/reduced_atlas_opend
 
 # Create a ROOT dataframe for each dataset
 # Note that we load the filenames from the external json file placed in the same folder than this script.
-files = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "df105_WBosonAnalysis.json")))
+files = json.load(open(os.path.join(ROOT.gROOT.GetTutorialsDir(), "dataframe/df105_WBosonAnalysis.json")))
 processes = files.keys()
 df = {}
 xsecs = {}
