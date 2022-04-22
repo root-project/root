@@ -1171,27 +1171,48 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   const std::size_t oldSize = *sizePtr;
 
-   // Resize output RVec if needed
-   if (std::int32_t(nItems) > *capacityPtr) {
-      // Get new buffer.
-      // We trust that `malloc` returns a buffer with large enough alignment.
-      // This might not be the case if T in RVec<T> is over-aligned.
+   // Destroy excess elements, if any
+   for (std::size_t i = nItems; i < oldSize; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
+      fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+   }
+
+   // Resize RVec (capacity and size)
+   if (std::int32_t(nItems) > *capacityPtr) { // must reallocate
+      // Destroy old elements: useless work for trivial types, but in case the element type's constructor
+      // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
+      for (std::size_t i = 0u; i < oldSize; ++i) {
+         auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
+         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+      }
+
       // TODO Increment capacity by a factor rather than just enough to fit the elements.
       free(*beginPtr);
+      // We trust that malloc returns a buffer with large enough alignment.
+      // This might not be the case if T in RVec<T> is over-aligned.
       *beginPtr = malloc(nItems * fItemSize);
       R__ASSERT(*beginPtr != nullptr);
+      begin = reinterpret_cast<char *>(*beginPtr);
       *capacityPtr = nItems;
-   }
 
-   // Create new elements
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
-   for (auto i = 0u; i < nItems; ++i) {
-      // GenerateValue uses a placement new which starts the objects' lifetime
-      auto itemValue = fSubFields[0]->GenerateValue(begin + (i * fItemSize));
-      fSubFields[0]->Read(collectionStart + i, &itemValue);
+      // Placement new for elements that were already there before the resize
+      for (std::size_t i = 0u; i < oldSize; ++i)
+         fSubFields[0]->GenerateValue(begin + (i * fItemSize));
    }
    *sizePtr = nItems;
+
+   // Placement new for new elements, if any
+   for (std::size_t i = oldSize; i < nItems; ++i)
+      fSubFields[0]->GenerateValue(begin + (i * fItemSize));
+
+   // Read the new values into the collection elements
+   for (std::size_t i = 0; i < nItems; ++i) {
+      auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
+      fSubFields[0]->Read(collectionStart + i, &itemValue);
+   }
 }
 
 void ROOT::Experimental::RRVecField::GenerateColumnsImpl()
