@@ -1,5 +1,10 @@
 #include "ntuple_test.hxx"
 
+// A layer of indirection to hide std::vector's second template parameter.
+// This way we can generalize tests over RVec and std::vector using a template template parameter (see below).
+template <typename T>
+using Vector_t = std::vector<T>;
+
 TEST(RNTuple, ClassVector)
 {
    FileRaii fileGuard("test_ntuple_classvector.root");
@@ -265,13 +270,13 @@ TEST(RNTuple, BoolVector)
    EXPECT_FALSE((*rdBoolRVec)[3]);
 }
 
-
-TEST(RNTuple, ComplexVector)
+template <template <typename> class Coll_t>
+void TestComplexVector(const char *fname)
 {
-   FileRaii fileGuard("test_ntuple_vec_complex.root");
+   FileRaii fileGuard(fname);
 
    auto model = RNTupleModel::Create();
-   auto wrV = model->MakeField<std::vector<ComplexStruct>>("v");
+   auto wrV = model->MakeField<Coll_t<ComplexStruct>>("v");
 
    {
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "T", fileGuard.GetPath());
@@ -300,7 +305,7 @@ TEST(RNTuple, ComplexVector)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<Coll_t<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -332,4 +337,14 @@ TEST(RNTuple, ComplexVector)
       EXPECT_EQ(1u, rdV->size());
    }
    EXPECT_EQ(10211u, ComplexStruct::GetNCallDestructor());
+}
+
+TEST(RNTuple, ComplexVector)
+{
+   TestComplexVector<Vector_t>("test_ntuple_vec_complex.root");
+}
+
+TEST(RNTuple, ComplexRVec)
+{
+   TestComplexVector<ROOT::RVec>("test_ntuple_rvec_complex.root");
 }
