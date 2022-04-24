@@ -199,7 +199,7 @@ void RooAbsNumGenerator::printTitle(ostream& os) const
 
 void RooAbsNumGenerator::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

@@ -297,7 +297,7 @@ void RooAbsGenContext::printTitle(ostream& os) const
 
 void RooAbsGenContext::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

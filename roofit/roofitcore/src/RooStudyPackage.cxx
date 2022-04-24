@@ -167,7 +167,7 @@ void RooStudyPackage::exportData(TList* olist, Int_t seqno)
     if (detailedData && detailedData->GetSize()>0) {
 
       detailedData->SetName(Form("%s_%d",detailedData->GetName(),seqno)) ;
-      cout << "registering detailed dataset " << detailedData->IsA()->GetName() << "::"
+      cout << "registering detailed dataset " << detailedData->ClassName() << "::"
       << detailedData->GetName() << " with " << detailedData->GetSize() << " elements" << endl ;
       TIterator* diter = detailedData->MakeIterator() ;
       TNamed* dobj ;

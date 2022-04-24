@@ -1448,7 +1448,7 @@ void RooAbsArg::printTitle(ostream& os) const
 
 void RooAbsArg::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 
@@ -1928,7 +1928,7 @@ void RooAbsArg::printCompactTree(ostream& os, const char* indent, const char* na
     }
     os << " " ;
 
-    os << IsA()->GetName() << "::" << GetName() <<  " = " ;
+    os << ClassName() << "::" << GetName() <<  " = " ;
     printValue(os) ;
 
     if (!_serverList.empty()) {
@@ -2152,7 +2152,7 @@ void RooAbsArg::graphVizTree(ostream& os, const char* delimiter, bool useTitle, 
     }
 
     string typeFormat = "\\texttt{";
-    string nodeType = (useLatex) ? typeFormat+node->IsA()->GetName()+"}" : node->IsA()->GetName();
+    string nodeType = (useLatex) ? typeFormat+node->ClassName()+"}" : node->ClassName();
 
     if (auto realNode = dynamic_cast<RooAbsReal*>(node)) {
       nodeLabel += delimiter + std::to_string(realNode->getVal());
@@ -2222,7 +2222,7 @@ void RooAbsArg::graphVizAddConnections(set<pair<RooAbsArg*,RooAbsArg*> >& linkSe
 //    ostringstream oss ;
 //    node->printStream(oss,(node->defaultPrintContents(0)&(~kValue)),node->defaultPrintStyle(0)) ;
 //    nodeName= oss.str() ;
-// //    nodeName = Form("%s::%s",node->IsA()->GetName(),node->GetName());
+// //    nodeName = Form("%s::%s",node->ClassName(),node->GetName());
 
 //       }
 //     }

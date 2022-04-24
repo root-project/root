@@ -1185,7 +1185,7 @@ void RooAddPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
   while ((aarg=aiter.next())) {
     if (aarg->canNodeBeCached()==Always) {
       trackNodes.add(*aarg) ;
-      //cout << "tracking node RooAddPdf component " << aarg->IsA()->GetName() << "::" << aarg->GetName() << endl ;
+      //cout << "tracking node RooAddPdf component " << aarg->ClassName() << "::" << aarg->GetName() << endl ;
     }
   }
 }

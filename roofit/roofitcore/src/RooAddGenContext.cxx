@@ -78,7 +78,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
     auto pdf = dynamic_cast<const RooAbsPdf *>(arg);
     if (!pdf) {
       coutF(Generation) << "Cannot generate events from an object that is not a PDF.\n\t"
-          << "The offending object is a " << arg->IsA()->GetName() << " named '" << arg->GetName() << "'." << std::endl;
+          << "The offending object is a " << arg->ClassName() << " named '" << arg->GetName() << "'." << std::endl;
       throw std::invalid_argument("Trying to generate events from on object that is not a PDF.");
     }
 

@@ -324,7 +324,7 @@ double RooResolutionModel::getNorm(const RooArgSet* nset) const
   }
 
   syncNormalization(nset,false) ;
-  if (_verboseEval>1) cxcoutD(Tracing) << IsA()->GetName() << "::getNorm(" << GetName()
+  if (_verboseEval>1) cxcoutD(Tracing) << ClassName() << "::getNorm(" << GetName()
                    << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
 
   double ret = _norm->getVal() ;

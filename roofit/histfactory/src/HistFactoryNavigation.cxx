@@ -956,7 +956,7 @@ namespace RooStats {
       }
 
       // Get the type of constraint
-      std::string ConstraintType = constraintTerm->IsA()->GetName();
+      std::string ConstraintType = constraintTerm->ClassName();
 
       // Find its value
       double sigma = 0.0;

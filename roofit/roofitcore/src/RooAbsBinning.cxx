@@ -80,7 +80,7 @@ void RooAbsBinning::printTitle(ostream& os) const
 
 void RooAbsBinning::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

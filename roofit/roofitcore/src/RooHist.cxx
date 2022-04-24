@@ -731,7 +731,7 @@ void RooHist::printTitle(ostream& os) const
 
 void RooHist::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

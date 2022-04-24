@@ -139,7 +139,7 @@ void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_lis
         rangeMsg << "inf" << closeBr;
 
       oocoutW(callingClass, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
-          << par->getMax() << "] of the " << callingClass->IsA()->GetName() << " '" << callingClass->GetName()
+          << par->getMax() << "] of the " << callingClass->ClassName() << " '" << callingClass->GetName()
           << "' exceeds the safe range of " << rangeMsg.str() << ". Advise to limit its range."
           << (!extraMessage.empty() ? "\n" : "") << extraMessage << std::endl;
     }

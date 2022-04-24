@@ -84,7 +84,7 @@ void RooMCIntegrator::registerIntegrator(RooNumIntFactory& fact)
   fact.storeProtoIntegrator(proto,RooArgSet(samplingMode,genType,verbose,alpha,nRefineIter,nRefinePerDim,nIntPerDim)) ;
 
   // Make this method the default for all N>2-dim integrals
-  RooNumIntConfig::defaultConfig().methodND().setLabel(proto->IsA()->GetName()) ;
+  RooNumIntConfig::defaultConfig().methodND().setLabel(proto->ClassName()) ;
 }
 
 
@@ -127,7 +127,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _grid(function)
 {
-  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
+  const RooArgSet& configSet = config.getConfigSection(ClassName()) ;
   _verbose = (bool) configSet.getCatIndex("verbose",0) ;
   _alpha = configSet.getRealValue("alpha",1.5) ;
   _mode = (SamplingMode) configSet.getCatIndex("samplingMode",Importance) ;

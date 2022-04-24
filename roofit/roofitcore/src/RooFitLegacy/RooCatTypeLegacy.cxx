@@ -77,7 +77,7 @@ void RooCatType::printTitle(ostream& os) const
 
 void RooCatType::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

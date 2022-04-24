@@ -30,7 +30,7 @@ use a TTree as internal storage mechanism
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of dataset
-void RooAbsDataStore::printClassName(std::ostream& os) const { os << IsA()->GetName() ; }
+void RooAbsDataStore::printClassName(std::ostream& os) const { os << ClassName() ; }
 
 
 ////////////////////////////////////////////////////////////////////////////////

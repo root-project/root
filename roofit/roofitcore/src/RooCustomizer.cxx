@@ -547,13 +547,13 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
     if (branch->dependsOn(masterNodesToBeSplit)) {
       if (verbose) {
    coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node "
-               << branch->IsA()->GetName() << "::" << branch->GetName() << " cloned: depends on a split parameter" << endl ;
+               << branch->ClassName() << "::" << branch->GetName() << " cloned: depends on a split parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
     } else if (branch->dependsOn(masterNodesToBeReplaced)) {
       if (verbose) {
    coutI(ObjectHandling) << "RooCustomizer::build(" << _masterPdf->GetName() << ") Branch node "
-               << branch->IsA()->GetName() << "::" << branch->GetName() << " cloned: depends on a replaced parameter" << endl ;
+               << branch->ClassName() << "::" << branch->GetName() << " cloned: depends on a replaced parameter" << endl ;
       }
       masterBranchesToBeCloned.add(*branch) ;
     }
@@ -627,7 +627,7 @@ void RooCustomizer::printTitle(ostream& os) const
 
 void RooCustomizer::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

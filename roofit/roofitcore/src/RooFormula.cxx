@@ -559,7 +559,7 @@ void RooFormula::printTitle(ostream& os) const
 
 void RooFormula::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

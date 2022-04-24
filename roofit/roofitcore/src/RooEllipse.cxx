@@ -140,7 +140,7 @@ void RooEllipse::printTitle(ostream& os) const
 
 void RooEllipse::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

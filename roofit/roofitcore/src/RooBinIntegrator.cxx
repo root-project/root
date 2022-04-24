@@ -57,7 +57,7 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
   RooRealVar numBins("numBins","Number of bins in range",100) ;
   RooBinIntegrator* proto = new RooBinIntegrator() ;
   fact.storeProtoIntegrator(proto,RooArgSet(numBins)) ;
-  RooNumIntConfig::defaultConfig().method1D().setLabel(proto->IsA()->GetName()) ;
+  RooNumIntConfig::defaultConfig().method1D().setLabel(proto->ClassName()) ;
 }
 
 
@@ -127,7 +127,7 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function) :
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function)
 {
-  const RooArgSet& configSet = config.getConfigSection(IsA()->GetName()) ;
+  const RooArgSet& configSet = config.getConfigSection(ClassName()) ;
   _useIntegrandLimits= true;
   _numBins = (Int_t) configSet.getRealValue("numBins") ;
   assert(_function && _function->isValid());

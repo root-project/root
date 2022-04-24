@@ -114,7 +114,7 @@ RooNumIntFactory& RooNumIntFactory::instance()
 
 bool RooNumIntFactory::storeProtoIntegrator(RooAbsIntegrator* proto, const RooArgSet& defConfig, const char* depName)
 {
-  TString name = proto->IsA()->GetName() ;
+  TString name = proto->ClassName() ;
 
   if (getProtoIntegrator(name)) {
     //cout << "RooNumIntFactory::storeIntegrator() ERROR: integrator '" << name << "' already registered" << endl ;

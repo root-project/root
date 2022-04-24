@@ -147,7 +147,7 @@ void Roo1DTable::printTitle(ostream& os) const
 
 void Roo1DTable::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

@@ -283,7 +283,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
    if (max==0) {
      coutE(Generation) << "RooGenContext::ctor(" << model.GetName()
              << ") ERROR: generating conditional p.d.f. which requires prior knowledge of function maximum, "
-             << "but chosen numeric generator (" << maxFinder->IsA()->GetName() << ") does not support maximum finding" << endl ;
+             << "but chosen numeric generator (" << maxFinder->ClassName() << ") does not support maximum finding" << endl ;
      delete maxFinder ;
      throw string("RooGenContext::ctor()") ;
    }
@@ -297,7 +297,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
   if (_acceptRejectFunc && _otherVars.getSize()>0) {
     _generator = RooNumGenFactory::instance().createSampler(*_acceptRejectFunc,_otherVars,RooArgSet(_protoVars),*model.getGeneratorConfig(),_verbose,_maxVar) ;
-    cxcoutD(Generation) << "RooGenContext::ctor() creating MC sampling generator " << _generator->IsA()->GetName() << "  from function for observables " << _otherVars << endl ;
+    cxcoutD(Generation) << "RooGenContext::ctor() creating MC sampling generator " << _generator->ClassName() << "  from function for observables " << _otherVars << endl ;
     //_generator= new RooAcceptReject(*_acceptRejectFunc,_otherVars,RooNumGenConfig::defaultConfig(),_verbose,_maxVar);
   } else {
     _generator = 0 ;
@@ -439,7 +439,7 @@ void RooGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TSt
 
   if(verbose) {
     os << indent << "Use PDF generator for " << _directVars << endl ;
-    os << indent << "Use MC sampling generator " << (_generator ? _generator->IsA()->GetName() : "<none>") << " for " << _otherVars << endl ;
+    os << indent << "Use MC sampling generator " << (_generator ? _generator->ClassName() : "<none>") << " for " << _otherVars << endl ;
     if (_protoVars.getSize()>0) {
       os << indent << "Prototype observables are " << _protoVars << endl ;
     }
