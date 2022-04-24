@@ -117,7 +117,7 @@ RooNumGenFactory& RooNumGenFactory::instance()
 
 bool RooNumGenFactory::storeProtoSampler(RooAbsNumGenerator* proto, const RooArgSet& defConfig)
 {
-  TString name = proto->IsA()->GetName() ;
+  TString name = proto->ClassName() ;
 
   if (getProtoSampler(name)) {
     //cout << "RooNumGenFactory::storeSampler() ERROR: integrator '" << name << "' already registered" << endl ;

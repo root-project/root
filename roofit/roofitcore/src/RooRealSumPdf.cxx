@@ -619,7 +619,7 @@ void RooRealSumPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
   for (const auto sarg : _funcList) {
     if (sarg->canNodeBeCached()==Always) {
       trackNodes.add(*sarg) ;
-      //cout << "tracking node RealSumPdf component " << sarg->IsA()->GetName() << "::" << sarg->GetName() << endl ;
+      //cout << "tracking node RealSumPdf component " << sarg->ClassName() << "::" << sarg->GetName() << endl ;
     }
   }
 }

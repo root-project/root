@@ -1433,7 +1433,7 @@ void RooFitResult::printTitle(ostream& os) const
 
 void RooFitResult::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

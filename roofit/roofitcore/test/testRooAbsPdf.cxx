@@ -205,7 +205,7 @@ TEST(RooAbsPdf, MultiRangeFit)
 
       EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
           << "Results of fitting " << model->GetName() << " to a "
-          << data->IsA()->GetName() <<  " should be very similar.";
+          << data->ClassName() <<  " should be very similar.";
     }
   }
 }
@@ -279,7 +279,7 @@ TEST(RooAbsPdf, MultiRangeFit2D)
       std::unique_ptr<RooFitResult> fitResultPart{model.fitTo(*data, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1))};
 
       EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull)) << "Results of fitting " << model.GetName() << " to a "
-                                                              << data->IsA()->GetName() << " should be very similar.";
+                                                              << data->ClassName() << " should be very similar.";
    }
 }
 

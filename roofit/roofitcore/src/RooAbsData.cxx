@@ -931,7 +931,7 @@ void RooAbsData::printTitle(ostream& os) const
 
 void RooAbsData::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

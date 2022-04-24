@@ -462,7 +462,7 @@ void RooCompositeDataStore::dump()
 {
   cout << "RooCompositeDataStore::dump()" << endl ;
   for (auto const& item : _dataMap) {
-    cout << "state number " << item.first << " has store " << item.second->IsA()->GetName() << " with variables " << *item.second->get() ;
+    cout << "state number " << item.first << " has store " << item.second->ClassName() << " with variables " << *item.second->get() ;
     if (item.second->isWeighted()) cout << " and is weighted " ;
     cout << endl ;
   }

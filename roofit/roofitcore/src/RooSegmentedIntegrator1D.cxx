@@ -73,7 +73,7 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D() : _array(0)
 RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config)
 {
-  _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
+  _nseg = (Int_t) config.getConfigSection(ClassName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= true;
 
   _valid= initialize();
@@ -89,7 +89,7 @@ RooSegmentedIntegrator1D::RooSegmentedIntegrator1D(const RooAbsFunc& function, d
                      const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _config(config)
 {
-  _nseg = (Int_t) config.getConfigSection(IsA()->GetName()).getRealValue("numSeg",3) ;
+  _nseg = (Int_t) config.getConfigSection(ClassName()).getRealValue("numSeg",3) ;
   _useIntegrandLimits= false;
   _xmin= xmin;
   _xmax= xmax;

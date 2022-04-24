@@ -731,7 +731,7 @@ void RooPlot::printTitle(ostream& os) const
 
 void RooPlot::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

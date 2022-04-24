@@ -366,7 +366,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     bool depOK(false) ;
     // Check for integratable AbsRealLValue
 
-    //cout << "checking server " << arg->IsA()->GetName() << "::" << arg->GetName() << endl ;
+    //cout << "checking server " << arg->ClassName() << "::" << arg->GetName() << endl ;
 
     if (arg->isDerived()) {
       RooAbsRealLValue    *realArgLV = dynamic_cast<RooAbsRealLValue*>(arg) ;
@@ -487,7 +487,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // Loop again over function servers to add remaining numeric integrations
   for (const auto arg : function.servers()) {
 
-    //cout << "processing server for numeric integration " << arg->IsA()->GetName() << "::" << arg->GetName() << endl ;
+    //cout << "processing server for numeric integration " << arg->ClassName() << "::" << arg->GetName() << endl ;
 
     // Process only servers that are not treated analytically
     if (!_anaList.find(arg->GetName()) && arg->dependsOn(intDepList)) {
@@ -681,7 +681,7 @@ bool RooRealIntegral::initNumIntegrator() const
   }
 
   cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") using numeric integrator "
-           << _numIntEngine->IsA()->GetName() << " to calculate Int" << _intList << endl ;
+           << _numIntEngine->ClassName() << " to calculate Int" << _intList << endl ;
 
   if (_intList.getSize()>3) {
     cxcoutI(NumIntegration) << "RooRealIntegral::init(" << GetName() << ") evaluation requires " << _intList.getSize() << "-D numeric integration step. Evaluation may be slow, sufficient numeric precision for fitting & minimization is not guaranteed" << endl ;
@@ -883,7 +883,7 @@ double RooRealIntegral::evaluate() const
     {
       retVal =  ((RooAbsReal&)_function.arg()).analyticalIntegralWN(_mode,_funcNormSet,RooNameReg::str(_rangeName)) / jacobianProduct() ;
       cxcoutD(Tracing) << "RooRealIntegral::evaluate_analytic(" << GetName()
-             << ")func = " << _function.arg().IsA()->GetName() << "::" << _function.arg().GetName()
+             << ")func = " << _function.arg().ClassName() << "::" << _function.arg().GetName()
              << " raw = " << retVal << " _funcNormSet = " << (_funcNormSet?*_funcNormSet:RooArgSet()) << endl ;
 
 

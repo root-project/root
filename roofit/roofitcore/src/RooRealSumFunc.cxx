@@ -222,7 +222,7 @@ double RooRealSumFunc::evaluate() const
       double coefVal = coef->getVal();
       if (coefVal) {
          cxcoutD(Eval) << "RooRealSumFunc::eval(" << GetName() << ") coefVal = " << coefVal
-                       << " funcVal = " << func->IsA()->GetName() << "::" << func->GetName() << " = " << func->getVal()
+                       << " funcVal = " << func->ClassName() << "::" << func->GetName() << " = " << func->getVal()
                        << endl;
          if (func->isSelectedComp()) {
             value += func->getVal() * coefVal;
@@ -557,7 +557,7 @@ void RooRealSumFunc::setCacheAndTrackHints(RooArgSet &trackNodes)
    while ((sarg = siter.next())) {
       if (sarg->canNodeBeCached() == Always) {
          trackNodes.add(*sarg);
-         // cout << "tracking node RealSumFunc component " << sarg->IsA()->GetName() << "::" << sarg->GetName() << endl
+         // cout << "tracking node RealSumFunc component " << sarg->ClassName() << "::" << sarg->GetName() << endl
          // ;
       }
    }
