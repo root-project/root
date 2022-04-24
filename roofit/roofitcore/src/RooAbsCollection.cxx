@@ -1201,7 +1201,7 @@ void RooAbsCollection::printTitle(std::ostream& os) const
 
 void RooAbsCollection::printClassName(std::ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 
@@ -1294,7 +1294,7 @@ void RooAbsCollection::printMultiline(std::ostream&os, Int_t contents, bool /*ve
 void RooAbsCollection::dump() const
 {
   for (auto arg : _list) {
-    std::cout << arg << " " << arg->IsA()->GetName() << "::" << arg->GetName() << " (" << arg->GetTitle() << ")" << std::endl ;
+    std::cout << arg << " " << arg->ClassName() << "::" << arg->GetName() << " (" << arg->GetTitle() << ")" << std::endl ;
   }
 }
 

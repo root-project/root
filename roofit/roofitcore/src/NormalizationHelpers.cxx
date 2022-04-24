@@ -72,11 +72,11 @@ void treeNodeServerListAndNormSets(const RooAbsArg &arg, RooAbsCollection &list,
          if (found != normSets.end()) {
             if (found->second->size() != serverNormSet.size() || !serverNormSet.hasSameLayout(*found->second)) {
                std::stringstream ss;
-               ss << server->IsA()->GetName() << "::" << server->GetName()
+               ss << server->ClassName() << "::" << server->GetName()
                   << " is requested to be evaluated with two different normalization sets in the same model!";
                ss << " This is not supported yet. The conflicting norm sets are:\n    RooArgSet";
                serverNormSet.printValue(ss);
-               ss << " requested by " << arg.IsA()->GetName() << "::" << arg.GetName() << "\n    RooArgSet";
+               ss << " requested by " << arg.ClassName() << "::" << arg.GetName() << "\n    RooArgSet";
                found->second->printValue(ss);
                ss << " first requested by other client";
                auto errMsg = ss.str();

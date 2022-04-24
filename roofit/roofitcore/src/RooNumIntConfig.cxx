@@ -166,7 +166,7 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 
 bool RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
-  std::string name = proto->IsA()->GetName() ;
+  std::string name = proto->ClassName() ;
 
   // Register integrator for appropriate dimensionalities
   if (proto->canIntegrate1D()) {

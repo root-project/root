@@ -933,9 +933,9 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
 
           cache->_numList.addOwned(*func[1]);
           cache->_denList.addOwned(*func[2]);
-//          cout << "func[0]=" << func[0]->IsA()->GetName() << "::" << func[0]->GetName() << endl;
-//          cout << "func[1]=" << func[1]->IsA()->GetName() << "::" << func[1]->GetName() << endl;
-//          cout << "func[2]=" << func[2]->IsA()->GetName() << "::" << func[2]->GetName() << endl;
+//          cout << "func[0]=" << func[0]->ClassName() << "::" << func[0]->GetName() << endl;
+//          cout << "func[1]=" << func[1]->ClassName() << "::" << func[1]->GetName() << endl;
+//          cout << "func[2]=" << func[2]->ClassName() << "::" << func[2]->GetName() << endl;
         }
       } else {
 //        cout << "processing composite item" << endl;
@@ -976,9 +976,9 @@ Int_t RooProdPdf::getPartIntList(const RooArgSet* nset, const RooArgSet* iset, c
      //cache->_numList.add(*func[1]);
      //cache->_denList.add(*func[2]);
 
-//      cout << "func[0]=" << func[0]->IsA()->GetName() << "::" << func[0]->GetName() << endl;
-//      cout << "func[1]=" << func[1]->IsA()->GetName() << "::" << func[1]->GetName() << endl;
-//      cout << "func[2]=" << func[2]->IsA()->GetName() << "::" << func[2]->GetName() << endl;
+//      cout << "func[0]=" << func[0]->ClassName() << "::" << func[0]->GetName() << endl;
+//      cout << "func[1]=" << func[1]->ClassName() << "::" << func[1]->GetName() << endl;
+//      cout << "func[2]=" << func[2]->ClassName() << "::" << func[2]->GetName() << endl;
    }
       }
 
@@ -1189,7 +1189,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
     for (list<string>::iterator iter = rangeComps.begin() ; iter != rangeComps.end() ; ++iter) {
       // If denominator is an integral, make a clone with the integration range adjusted to
       // the selected component of the normalization integral
-//       cout << "NOW PROCESSING DENOMINATOR " << den->IsA()->GetName() << "::" << den->GetName() << endl ;
+//       cout << "NOW PROCESSING DENOMINATOR " << den->ClassName() << "::" << den->GetName() << endl ;
 
       if (string("SPECINT")==part->getStringAttribute("PROD_TERM_TYPE")) {
 
@@ -1203,15 +1203,15 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
    //RooProduct* numtmp = (RooProduct*) specRatio->getParameter(0) ;
    RooProduct* dentmp = (RooProduct*) specRatio->getParameter(1) ;
 
-//    cout << "numtmp = " << numtmp->IsA()->GetName() << "::" << numtmp->GetName() << endl ;
-//    cout << "dentmp = " << dentmp->IsA()->GetName() << "::" << dentmp->GetName() << endl ;
+//    cout << "numtmp = " << numtmp->ClassName() << "::" << numtmp->GetName() << endl ;
+//    cout << "dentmp = " << dentmp->ClassName() << "::" << dentmp->GetName() << endl ;
 
 //    cout << "denominator components are " << dentmp->components() << endl ;
    RooArgSet comps(dentmp->components()) ;
    RooFIter piter = comps.fwdIterator() ;
    RooAbsReal* parg ;
    while((parg=(RooAbsReal*)piter.next())) {
-//      cout << "now processing denominator component " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
+//      cout << "now processing denominator component " << parg->ClassName() << "::" << parg->GetName() << endl ;
 
      if (ratio && parg->dependsOn(*ratio)) {
 //        cout << "depends in value of ratio" << endl ;
@@ -1390,7 +1390,7 @@ RooAbsReal* RooProdPdf::specializeIntegral(RooAbsReal& input, const char* target
 
   } else {
 
-//     cout << "specializeIntegral: unknown input type " << input.IsA()->GetName() << "::" << input.GetName() << endl ;
+//     cout << "specializeIntegral: unknown input type " << input.ClassName() << "::" << input.GetName() << endl ;
   }
 
   return &input ;
@@ -2184,7 +2184,7 @@ void RooProdPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
 
     if (parg->canNodeBeCached()==Always) {
       trackNodes.add(*parg) ;
-//      cout << "tracking node RooProdPdf component " << parg << " " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
+//      cout << "tracking node RooProdPdf component " << parg << " " << parg->ClassName() << "::" << parg->GetName() << endl ;
 
       // Additional processing to fix normalization sets in case product defines conditional observables
       RooArgSet* pdf_nset = findPdfNSet((RooAbsPdf&)(*parg)) ;

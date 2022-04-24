@@ -238,7 +238,7 @@ const RooCategory& RooNumGenConfig::methodND(bool cond, bool cat) const
 
 bool RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& inDefaultConfig)
 {
-  std::string name = proto->IsA()->GetName();
+  std::string name = proto->ClassName();
 
   // Register integrator for appropriate dimensionalities
 

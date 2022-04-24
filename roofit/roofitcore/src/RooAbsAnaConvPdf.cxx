@@ -694,7 +694,7 @@ void RooAbsAnaConvPdf::setCacheAndTrackHints(RooArgSet& trackNodes)
   while ((carg=citer.next())) {
     if (carg->canNodeBeCached()==Always) {
       trackNodes.add(*carg) ;
-      //cout << "tracking node RooAddPdf component " << carg->IsA()->GetName() << "::" << carg->GetName() << endl ;
+      //cout << "tracking node RooAddPdf component " << carg->ClassName() << "::" << carg->GetName() << endl ;
     }
   }
 }

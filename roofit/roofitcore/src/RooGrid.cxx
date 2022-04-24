@@ -312,7 +312,7 @@ void RooGrid::printTitle(ostream& os) const
 
 void RooGrid::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

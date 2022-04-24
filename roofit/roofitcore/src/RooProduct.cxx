@@ -497,7 +497,7 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
     if (parg->isDerived()) {
       if (parg->canNodeBeCached()==Always) {
         trackNodes.add(*parg) ;
-   //cout << "tracking node RooProduct component " << parg->IsA()->GetName() << "::" << parg->GetName() << endl ;
+   //cout << "tracking node RooProduct component " << parg->ClassName() << "::" << parg->GetName() << endl ;
       }
     }
   }

@@ -527,7 +527,7 @@ void RooCurve::printTitle(ostream& os) const
 
 void RooCurve::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

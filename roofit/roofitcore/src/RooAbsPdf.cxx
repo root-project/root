@@ -483,7 +483,7 @@ double RooAbsPdf::getNorm(const RooArgSet* nset) const
   if (!nset) return 1 ;
 
   syncNormalization(nset,true) ;
-  if (_verboseEval>1) cxcoutD(Tracing) << IsA()->GetName() << "::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
+  if (_verboseEval>1) cxcoutD(Tracing) << ClassName() << "::getNorm(" << GetName() << "): norm(" << _norm << ") = " << _norm->getVal() << endl ;
 
   double ret = _norm->getVal() ;
   if (ret==0.) {
@@ -569,11 +569,11 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
 
   if (_verboseEval>0) {
     if (!selfNormalized()) {
-      cxcoutD(Tracing) << IsA()->GetName() << "::syncNormalization(" << GetName()
+      cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName()
       << ") recreating normalization integral " << endl ;
       depList.printStream(ccoutD(Tracing),kName|kValue|kArgs,kSingleLine) ;
     } else {
-      cxcoutD(Tracing) << IsA()->GetName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
+      cxcoutD(Tracing) << ClassName() << "::syncNormalization(" << GetName() << ") selfNormalized, creating unit norm" << endl;
     }
   }
 

@@ -257,7 +257,7 @@ bool RooUnitTest::runCompTests()
      RooHist* testHist = static_cast<RooHist*>(obj) ;
      RooHist* refHist = static_cast<RooHist*>(objRef) ;
      if (!testHist->isIdentical(*refHist,htol(),_verb >= 0)) {
-        if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName()
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << obj->ClassName() << "::" << obj->GetName()
                                  <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << std::endl;
 
        if (compPlot) {
@@ -279,7 +279,7 @@ bool RooUnitTest::runCompTests()
      RooCurve* testCurve = static_cast<RooCurve*>(obj) ;
      RooCurve* refCurve = static_cast<RooCurve*>(objRef) ;
      if (!testCurve->isIdentical(*refCurve,ctol(),_verb >= 0)) {
-       if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName()
+       if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << obj->ClassName() << "::" << obj->GetName()
                                  <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << std::endl;
 
        if (compPlot) {
@@ -350,7 +350,7 @@ bool RooUnitTest::runCompTests()
       }
 
       if (!iter2->first->isIdentical(*bmark,fptol(),fctol(),_verb >= 0)) {
-        if(_verb >= 0) cout << "RooUnitTest ERROR: comparison of object " << iter2->first->IsA()->GetName() << "::" << iter2->first->GetName()
+        if(_verb >= 0) cout << "RooUnitTest ERROR: comparison of object " << iter2->first->ClassName() << "::" << iter2->first->GetName()
              << " from result " << iter2->second
              <<   " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << std::endl;
         ret = false ;
@@ -435,7 +435,7 @@ bool RooUnitTest::runCompTests()
       }
 
       if (!iter4->first->isIdentical(*bmark, _verb >= 0)) {
-        if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << iter4->first->IsA()->GetName() << "::" << iter4->first->GetName()
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << iter4->first->ClassName() << "::" << iter4->first->GetName()
             <<   " fails comparison with counterpart in reference RooTable " << bmark->GetName() << endl ;
         if (_verb > 0) {
           iter4->first->Print("V");
@@ -501,7 +501,7 @@ bool RooUnitTest::runCompTests()
 
       if (!areTHidentical(iter6->first,bmark)) {
    // coverity[NULL_RETURNS]
-   if(_verb >= 0) cout << "RooUnitTest ERROR: comparison of object " << iter6->first->IsA()->GetName() << "::" << iter6->first->GetName()
+   if(_verb >= 0) cout << "RooUnitTest ERROR: comparison of object " << iter6->first->ClassName() << "::" << iter6->first->GetName()
         <<   " fails comparison with counterpart in reference TH1 " << bmark->GetName() << endl ;
 
 

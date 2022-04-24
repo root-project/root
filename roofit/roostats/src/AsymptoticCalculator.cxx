@@ -968,7 +968,7 @@ bool AsymptoticCalculator::SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs
 {
    RooRealVar *myobs = 0;
    RooAbsReal *myexp = 0;
-   const char * pdfName = pdf.IsA()->GetName();
+   const char * pdfName = pdf.ClassName();
    RooFIter iter(pdf.serverMIterator());
    for (RooAbsArg *a =  iter.next(); a != 0; a = iter.next()) {
       if (obs.contains(*a)) {
@@ -1025,7 +1025,7 @@ RooAbsData * AsymptoticCalculator::GenerateCountingAsimovData(RooAbsPdf & pdf, c
     RooGaussian *gaus = 0;
 
     if (fgPrintLevel > 1)
-       std::cout << "generate counting Asimov data for pdf of type " << pdf.IsA()->GetName() << std::endl;
+       std::cout << "generate counting Asimov data for pdf of type " << pdf.ClassName() << std::endl;
 
     bool r = false;
     if (prod != 0) {

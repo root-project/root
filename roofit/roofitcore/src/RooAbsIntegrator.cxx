@@ -65,7 +65,7 @@ double RooAbsIntegrator::calculate(const double *yvec)
   double ret = integral(yvec) ;
   integrand()->restoreXVec() ;
 
-  cxcoutD(NumIntegration) << IsA()->GetName() << "::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << endl ;
+  cxcoutD(NumIntegration) << ClassName() << "::calculate(" << _function->getName() << ") number of function calls = " << integrand()->numCall()<<", result  = "<<ret << endl ;
   return ret ;
 }
 

@@ -646,7 +646,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     if (_autoClass) {
       if (!_classes.autoImportClass(node->IsA())) {
         coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object "
-            << node->IsA()->GetName() << "::" << node->GetName() << ", reading of workspace will require external definition of class" << endl ;
+            << node->ClassName() << "::" << node->GetName() << ", reading of workspace will require external definition of class" << endl ;
       }
     }
 
@@ -661,8 +661,8 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     if (wsnode) {
       // Do not import node, add not to list of nodes that require reconnection
       if (!silence && useExistingNodes) {
-        coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") using existing copy of " << node->IsA()->GetName()
-                   << "::" << node->GetName() << " for import of " << cloneTop2->IsA()->GetName() << "::"
+        coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") using existing copy of " << node->ClassName()
+                   << "::" << node->GetName() << " for import of " << cloneTop2->ClassName() << "::"
                    << cloneTop2->GetName() << endl ;
       }
       recycledNodes.add(*_allOwnedNodes.find(node->GetName())) ;
@@ -675,7 +675,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
     } else {
       // Import node
       if (!silence) {
-        coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing " << node->IsA()->GetName() << "::"
+        coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing " << node->ClassName() << "::"
             << node->GetName() << endl ;
       }
       _allOwnedNodes.addOwned(*node) ;
@@ -1128,10 +1128,10 @@ bool RooWorkspace::importClassCode(const char* pat, bool doReplace)
   TIterator* iter = componentIterator() ;
   RooAbsArg* carg ;
   while((carg=(RooAbsArg*)iter->Next())) {
-    TString className = carg->IsA()->GetName() ;
+    TString className = carg->ClassName() ;
     if (className.Index(re)>=0 && !_classes.autoImportClass(carg->IsA(),doReplace)) {
       coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object "
-             << carg->IsA()->GetName() << "::" << carg->GetName() << ", reading of workspace will require external definition of class" << endl ;
+             << carg->ClassName() << "::" << carg->GetName() << ", reading of workspace will require external definition of class" << endl ;
       ret = false ;
     }
   }
@@ -2360,7 +2360,7 @@ void RooWorkspace::Print(Option_t* opts) const
     iter = _dataList.MakeIterator() ;
     RooAbsData* data2 ;
     while((data2=(RooAbsData*)iter->Next())) {
-      cout << data2->IsA()->GetName() << "::" << data2->GetName() << *data2->get() << endl ;
+      cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << endl ;
     }
     delete iter ;
     cout << endl ;
@@ -2372,7 +2372,7 @@ void RooWorkspace::Print(Option_t* opts) const
     iter = _embeddedDataList.MakeIterator() ;
     RooAbsData* data2 ;
     while((data2=(RooAbsData*)iter->Next())) {
-      cout << data2->IsA()->GetName() << "::" << data2->GetName() << *data2->get() << endl ;
+      cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << endl ;
     }
     delete iter ;
     cout << endl ;
@@ -2424,9 +2424,9 @@ void RooWorkspace::Print(Option_t* opts) const
     TObject* gobj ;
     while((gobj=(TObject*)iter->Next())) {
       if (gobj->IsA()==RooTObjWrap::Class()) {
-   cout << ((RooTObjWrap*)gobj)->obj()->IsA()->GetName() << "::" << gobj->GetName() << endl ;
+   cout << ((RooTObjWrap*)gobj)->obj()->ClassName() << "::" << gobj->GetName() << endl ;
       } else {
-   cout << gobj->IsA()->GetName() << "::" << gobj->GetName() << endl ;
+   cout << gobj->ClassName() << "::" << gobj->GetName() << endl ;
       }
     }
     delete iter ;
@@ -2440,7 +2440,7 @@ void RooWorkspace::Print(Option_t* opts) const
     iter = _studyMods.MakeIterator() ;
     TObject* smobj ;
     while((smobj=(TObject*)iter->Next())) {
-      cout << smobj->IsA()->GetName() << "::" << smobj->GetName() << endl ;
+      cout << smobj->ClassName() << "::" << smobj->GetName() << endl ;
     }
     delete iter ;
     cout << endl ;
@@ -2600,7 +2600,7 @@ void RooWorkspace::Streamer(TBuffer &R__b)
    if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
       RooAbsOptTestStatistic *tmp = (RooAbsOptTestStatistic *)node;
       if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
-         cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->IsA()->GetName() << "::" << node->GetName()
+         cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
               << " : " << tmp->sealNotice() << endl;
       }
    }
@@ -3091,7 +3091,7 @@ void RooWorkspace::exportObj(TObject* wobj)
   }
 
   // Declare correctly typed reference to object in CINT in the namespace associated with this workspace
-  string cintExpr = Form("namespace %s { %s& %s = *(%s *)0x%zx ; }",_exportNSName.c_str(),wobj->IsA()->GetName(),wobj->GetName(),wobj->IsA()->GetName(),(size_t)wobj) ;
+  string cintExpr = Form("namespace %s { %s& %s = *(%s *)0x%zx ; }",_exportNSName.c_str(),wobj->ClassName(),wobj->GetName(),wobj->ClassName(),(size_t)wobj) ;
   gROOT->ProcessLine(cintExpr.c_str()) ;
 }
 
