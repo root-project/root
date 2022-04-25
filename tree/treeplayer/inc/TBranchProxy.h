@@ -64,6 +64,11 @@ namespace Internal {
    class TTreeReaderValueBase;
 } // namespace Internal
 
+// prevent access violation when executing the df017_vecOpsHEP.C tutorial with ROOT built in release mode
+// TODO: to be reviewed when updating Visual Studio or LLVM
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma optimize( "", off )
+#endif
 
 namespace Detail {
    class TBranchProxy {
@@ -513,6 +518,10 @@ public:
       Int_t GetOffset() { return fOffset; }
    };
 } // namespace Detail
+
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma optimize( "", on )
+#endif
 
 namespace Internal {
 
