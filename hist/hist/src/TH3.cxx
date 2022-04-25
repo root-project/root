@@ -2361,7 +2361,8 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
 ///
 ///  NOTE 5: This function calls DoProject2D, which creates a new histogram (if same name does not already exists)
 ///  and returns a pointer to it. The returned pointer is also returned by Project3D, and its ownership is delegated
-///  to the user. Thus, be sure to call 'delete' on it after it's no longer needed, to avoid memory leaks.
+///  to the user if TH1::AddDirectory was set to kFalse. If that's the case, be sure to call 'delete' on it after
+///  it's no longer needed, to avoid memory leaks.
 
 TH1 *TH3::Project3D(Option_t *option) const
 {
