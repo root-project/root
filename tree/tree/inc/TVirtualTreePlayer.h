@@ -100,7 +100,7 @@ public:
    static  TVirtualTreePlayer *TreePlayer(TTree *obj);
    static void        SetPlayer(const char *player);
 
-   ClassDef(TVirtualTreePlayer,0);  //Abstract interface for Tree players
+   ClassDefOverride(TVirtualTreePlayer,0);  //Abstract interface for Tree players
 };
 
 #endif
