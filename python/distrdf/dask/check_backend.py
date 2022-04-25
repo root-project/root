@@ -143,6 +143,28 @@ class TestEmptyTreeError:
             os.remove(filename)
 
 
+class TestWithRepeatedTree:
+    """
+    Tests that the correct number of entries is computed even when the same tree
+    is used multiple times.
+    """
+
+    def test_count_with_same_tree_repeated(self, connection):
+        """
+        Count entries of a dataset with three times the same tree.
+        """
+        df = ROOT.RDataFrame(100).Define("x", "1")
+        treename = "tree"
+        filename = "distrdf_roottest_dask_check_backend_same_tree.root"
+        filenames = [filename] * 3
+        df.Snapshot(treename, filename, ["x"])
+
+        rdf = Dask.RDataFrame(treename, filenames, daskclient=connection)
+        assert rdf.Count().GetValue() == 300
+
+        os.remove(filename)
+
+
 class TestChangeAttribute:
     """Tests that check correct changes in the class attributes"""
 
