@@ -39,23 +39,23 @@ public:
    TNamed(const TNamed &named);
    TNamed& operator=(const TNamed& rhs);
    virtual ~TNamed();
-   virtual void     Clear(Option_t *option ="");
-   virtual TObject *Clone(const char *newname="") const;
-   virtual Int_t    Compare(const TObject *obj) const;
-   virtual void     Copy(TObject &named) const;
-   virtual void     FillBuffer(char *&buffer);
-   virtual const char  *GetName() const { return fName; }
-   virtual const char  *GetTitle() const { return fTitle; }
-   virtual ULong_t  Hash() const { return fName.Hash(); }
-   virtual Bool_t   IsSortable() const { return kTRUE; }
-   virtual void     SetName(const char *name); // *MENU*
-   virtual void     SetNameTitle(const char *name, const char *title);
-   virtual void     SetTitle(const char *title=""); // *MENU*
-   virtual void     ls(Option_t *option="") const;
-   virtual void     Print(Option_t *option="") const;
-   virtual Int_t    Sizeof() const;
+            void     Clear(Option_t *option ="") override;
+            TObject *Clone(const char *newname="") const override;
+            Int_t    Compare(const TObject *obj) const override;
+            void     Copy(TObject &named) const override;
+   virtual  void     FillBuffer(char *&buffer);
+            const char  *GetName() const override { return fName; }
+            const char  *GetTitle() const override { return fTitle; }
+            ULong_t  Hash() const override { return fName.Hash(); }
+            Bool_t   IsSortable() const override { return kTRUE; }
+   virtual  void     SetName(const char *name); // *MENU*
+   virtual  void     SetNameTitle(const char *name, const char *title);
+   virtual  void     SetTitle(const char *title=""); // *MENU*
+            void     ls(Option_t *option="") const override;
+            void     Print(Option_t *option="") const override;
+   virtual  Int_t    Sizeof() const;
 
-   ClassDef(TNamed,1)  //The basis for a named object (name, title)
+   ClassDefOverride(TNamed,1)  //The basis for a named object (name, title)
 };
 
 #endif

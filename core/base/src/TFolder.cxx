@@ -125,14 +125,6 @@ TFolder::TFolder(const char *name, const char *title) : TNamed(name,title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TFolder::TFolder(const TFolder &folder) : TNamed(folder),fFolders(nullptr),fIsOwner(kFALSE)
-{
-   ((TFolder&)folder).Copy(*this);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Folder destructor. Remove all objects from its lists and delete
 /// all its sub folders.
 
