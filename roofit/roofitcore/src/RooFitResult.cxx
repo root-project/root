@@ -798,6 +798,13 @@ void isIdenticalErrMsg(std::string const& msgHead, const RooAbsReal* tv, const R
       << "\t(" << (tv->getVal()-ov->getVal())/ov->getVal() << ")" << std::endl;
 }
 
+void isErrorIdenticalErrMsg(std::string const& msgHead, const RooRealVar* tv, const RooRealVar* ov, bool verbose) {
+  if(!verbose) return;
+  std::cout << "RooFitResult::isIdentical: " << msgHead << " " << tv->GetName() << " differs in error:\t"
+      << tv->getError() << " vs.\t" << ov->getError()
+      << "\t(" << (tv->getError()-ov->getError())/ov->getError() << ")" << std::endl;
+}
+
 } // namespace
 
 
@@ -805,61 +812,56 @@ void isIdenticalErrMsg(std::string const& msgHead, const RooAbsReal* tv, const R
 /// Return true if this fit result is identical to other within tolerances, ignoring the correlation matrix.
 /// \param[in] other Fit result to test against.
 /// \param[in] tol **Relative** tolerance for parameters and NLL.
+/// \param[in] tolErr **Relative** tolerance for parameter errors.
 /// \param[in] verbose If this function will log to the standard output when comparisions fail.
 
-bool RooFitResult::isIdenticalNoCov(const RooFitResult& other, double tol, bool verbose) const
+bool RooFitResult::isIdenticalNoCov(const RooFitResult& other, double tol, double tolErr, bool verbose) const
 {
-  Bool_t ret = kTRUE ;
-  auto deviation = [tol](const double left, const double right){
-    if (right != 0.)
-      return fabs((left - right)/right) >= tol;
-    else
-      return fabs(left) >= tol;
+  bool ret = true;
+  auto deviation = [](const double left, const double right, double tolerance){
+    return right != 0. ? std::abs((left - right)/right) >= tolerance : std::abs(left) >= tolerance;
   };
 
-  if (deviation(_minNLL, other._minNLL)) {
-    if(verbose) cout << "RooFitResult::isIdentical: minimized value of -log(L) is different " << _minNLL << " vs. " << other._minNLL << endl ;
-    ret = kFALSE ;
+  auto compare = [&](RooArgList const& pars, RooArgList const& otherpars, std::string const& prefix, bool isVerbose) {
+    bool out = true;
+
+    for (auto * tv : static_range_cast<const RooAbsReal*>(pars)) {
+      auto ov = static_cast<const RooAbsReal*>(otherpars.find(tv->GetName())) ;
+
+      // Check in the parameter is in the other fit result
+      if (!ov) {
+        if(verbose) cout << "RooFitResult::isIdentical: cannot find " << prefix << " " << tv->GetName() << " in reference" << endl ;
+        out = false;
+      }
+
+      // Compare parameter value
+      if (ov && deviation(tv->getVal(), ov->getVal(), tol)) {
+        isIdenticalErrMsg(prefix, tv, ov, isVerbose);
+        out = false;
+      }
+
+      // Compare parameter error if it's a RooRealVar
+      auto * rtv = dynamic_cast<RooRealVar const*>(tv);
+      auto * rov = dynamic_cast<RooRealVar const*>(ov);
+      if(rtv && rov) {
+        if (ov && deviation(rtv->getError(), rov->getError(), tolErr)) {
+          isErrorIdenticalErrMsg(prefix, rtv, rov, isVerbose);
+          out = false;
+        }
+      }
+    }
+
+    return out;
+  };
+
+  if (deviation(_minNLL, other._minNLL, tol)) {
+    if(verbose) std::cout << "RooFitResult::isIdentical: minimized value of -log(L) is different " << _minNLL << " vs. " << other._minNLL << std::endl;
+    ret = false;
   }
 
-  for (Int_t i=0 ; i<_constPars->getSize() ; i++) {
-    auto tv = static_cast<const RooAbsReal*>(_constPars->at(i));
-    auto ov = static_cast<const RooAbsReal*>(other._constPars->find(tv->GetName())) ;
-    if (!ov) {
-      if(verbose) cout << "RooFitResult::isIdentical: cannot find constant parameter " << _constPars->at(i)->GetName() << " in reference" << endl ;
-      ret = kFALSE ;
-    }
-    if (ov && deviation(tv->getVal(), ov->getVal())) {
-      isIdenticalErrMsg("constant parameter", tv, ov, verbose);
-      ret = kFALSE ;
-    }
-  }
-
-  for (Int_t i=0 ; i<_initPars->getSize() ; i++) {
-    auto ov = static_cast<const RooAbsReal*>(other._initPars->find(_initPars->at(i)->GetName())) ;
-    auto tv = static_cast<const RooAbsReal*>(_initPars->at(i));
-    if (!ov) {
-      if(verbose) cout << "RooFitResult::isIdentical: cannot find initial parameter " << _initPars->at(i)->GetName() << " in reference" << endl ;
-      ret = kFALSE ;
-    }
-    if (ov && deviation(tv->getVal(), ov->getVal())) {
-      isIdenticalErrMsg("initial parameter", tv, ov, verbose);
-      ret = kFALSE ;
-    }
-  }
-
-  for (Int_t i=0 ; i<_finalPars->getSize() ; i++) {
-    auto tv = static_cast<const RooAbsReal*>(_finalPars->at(i));
-    auto ov = static_cast<const RooAbsReal*>(other._finalPars->find(tv->GetName())) ;
-    if (!ov) {
-      if(verbose) cout << "RooFitResult::isIdentical: cannot find final parameter " << tv->GetName() << " in reference" << endl ;
-      ret = kFALSE ;
-    }
-    if (ov && deviation(tv->getVal(), ov->getVal())) {
-      isIdenticalErrMsg("final parameter", tv, ov, verbose);
-      ret = kFALSE ;
-    }
-  }
+  ret &= compare(*_constPars, *other._constPars, "constant parameter", verbose);
+  ret &= compare(*_initPars, *other._initPars, "initial parameter", verbose);
+  ret &= compare(*_finalPars, *other._finalPars, "final parameter", verbose);
 
   return ret;
 }
@@ -871,10 +873,13 @@ bool RooFitResult::isIdenticalNoCov(const RooFitResult& other, double tol, bool 
 /// \param[in] tol **Relative** tolerance for parameters and NLL.
 /// \param[in] tolCorr **absolute** tolerance for correlation coefficients.
 /// \param[in] verbose If this function will log to the standard output when comparisions fail.
+///
+/// As the relative tolerance for the parameter errors, the default value of
+/// `1e-3` will be used.
 
 bool RooFitResult::isIdentical(const RooFitResult& other, double tol, double tolCorr, bool verbose) const
 {
-  bool ret = isIdenticalNoCov(other, tol, verbose);
+  bool ret = isIdenticalNoCov(other, tol, 1e-3 /* synced with default parameter*/, verbose);
 
   auto deviationCorr = [tolCorr](const double left, const double right){
     return fabs(left - right) >= tolCorr;
