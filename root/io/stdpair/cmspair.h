@@ -1,21 +1,45 @@
-//
-// Odd pair:
-//   pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >
-// from map:
-//   map<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >"
+/*
+See https://github.com/root-project/root/issues/10131 for the details for the original
+error case.
 
-#if 0
+ Odd pair:
+   pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >
+ from map:
+   map<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >"
+
+// Distillation of the original error case.
 {
+// Load the libraries
 gSystem->Load("lib/slc7_amd64_gcc10/libDataFormatsMuonReco.so");
+// Generate the CollectionProxy for the related map
 c = TClass::GetClass("map<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >");
 p = c->GetCollectionProxy();
 // p->GetProperties() & TVirtualCollectionProxy::kIsEmulated
+// Surprisingly this line was enough to cmake the error "disappear"
 p->GetValueClass();
-f = TFile::Open("aa98e17b-012c-492b-8e12-e530018cd464.root");
+// Load the file and see complaints.
+TFile *f = TFile::Open("aa98e17b-012c-492b-8e12-e530018cd464.root");
 }
-#endif
 
-#if 1 // defined(__ROOTCLING__) || !defined(__CLING__)
+The error message was:
+
+Warning in <TStreamerInfo::BuildCheck>:
+   The class pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > > transitioned from not having a specified class version
+   to having a specified class version (the current class version is 1).
+   However too many different non-versioned layouts of the class have been
+   loaded so far.  This prevent the proper reading of objects written with
+   the class layout version 2, in particular from the file:
+   root://cms-xrd-global.cern.ch//store/data/Commissioning2021/MinimumBias8/RECO/900GeVnomkFit_FEVT-v1/40000/ab71db55-c0e9-4e85-84a9-1508280782ff.root.
+   To work around this issue, load fewer 'old' files in the same ROOT session.
+Warning in <TStreamerInfo::CompareContent>: The following data member of
+the on-file layout version 2 of class 'pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >' differs from
+the in-memory layout version 2:
+   reco::Muon::MuonTrackType first; //
+vs
+   reco::Muon::MuonTrackType first; //
+
+*/
+
 #include "Rtypes.h"
 
 namespace reco {
@@ -74,6 +98,3 @@ template <typename L, typename R> class FindUsingAdvance {};
 #pragma link C++ class edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track>+;
 #endif
 
-#endif
-
-//map<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > > mmmm;

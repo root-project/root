@@ -11,14 +11,6 @@
 
 // good.C(0,0,1,0): 'missing' StreamerInfo and after update (use ForceReload in GenCollectionProxy) it now has duplicated StreamerInfo
 
-enum libEnum {
-   kShared = 0,
-   kACLiC = 1,
-   kInterpreted = 2,
-   kPairShared = 3,
-   kNothing = 4
-};
-
 const char *gNameOfPairClass = "pair<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >";
 const char *gNameOfMap = "map<reco::Muon::MuonTrackType,edm::Ref<vector<reco::Track>,reco::Track,edm::refhelper::FindUsingAdvance<vector<reco::Track>,reco::Track> > >";
 
@@ -37,7 +29,6 @@ void printInfo(const char *when)
 
 void printElements(TVirtualStreamerInfo *info)
 {
-   //fprintf(stdout, "Printing StreamerInfo %p\n", info);
    if (info->GetElements()) {
       TIter    next(info->GetElements());
       while (TNamed *obj = (TNamed*)next())
@@ -48,7 +39,15 @@ void printElements(TVirtualStreamerInfo *info)
    info->ls();
 }
 
-int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, bool readbeforeload, bool reportedorder)
+enum libEnum {
+   kShared = 0,
+   kACLiC = 1,
+   kInterpreted = 2,
+   kPairShared = 3,
+   kNothing = 4
+};
+
+int pairEnumEvo(int libtype /* used as enum libEnum */, bool fixed, bool readbeforeload, bool reportedorder)
 {
    // Originally 4 config
    //   load ACLiC or compiled library
@@ -67,8 +66,6 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
       f2 = TFile::Open("ab02.root");
       if (!reportedorder)
          f1 = TFile::Open("aa02.root");
-      // printInfo("After the early file opening.");
-      //return 1;
       if (!f1)
          Fatal("pairEnumEvo", "Can not open aa02.root");
       if (!f2)
@@ -84,7 +81,7 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
    else if (libtype == libEnum::kInterpreted)
       gROOT->ProcessLine("#include \"cmspair.h\"");
    else if (libtype == libEnum::kNothing)
-      {} // Do notthing.
+      {} // Do nothing.
    else {
       fprintf(stderr, "Error: unknown lib value: %d\n",(int)libtype);
       return 1;
@@ -93,16 +90,13 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
    // printInfo("After library loading.");
 
    auto c = TClass::GetClass(gNameOfMap);
-   // printInfo("After map TClass loading.");
 
    if (!c)
       Fatal("pairEnumEvo", "Not TClass for %s", gNameOfMap);
    c->GetClassInfo();
-   // printInfo("After map TClass GetClassInfo.");
 
 
    auto p = c->GetCollectionProxy();
-   // printInfo("After CollectionProxy loading.");
 
    if (fixed)
       p->GetValueClass();
@@ -121,11 +115,6 @@ int pairEnumEvo(int libtype /* 0 shared, 1 ACLiC, 2 interpreted */, bool fixed, 
       if (!f2)
          Fatal("pairEnumEvo", "Can not open ab02.root");
    }
-
-   // printInfo("After the late file opening.");
-
-   // p->GetValueClass()->GetStreamerInfo()->ls();
-   // TClass::GetClass(gNameOfPairClass)->GetStreamerInfos()->ls();
 
    fprintf(stdout, "\nLast verifications:\n");
    fprintf(stdout, "Current StreamerInfo:\n");
