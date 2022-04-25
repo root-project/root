@@ -108,7 +108,7 @@ public:
    virtual ~TImage() { }
 
    // Cloning
-   virtual TObject *Clone(const char *) const { return 0; }
+           TObject *Clone(const char *) const override { return nullptr; }
 
    // Input / output
    virtual void ReadImage(const char * /*file*/, EImageFileTypes /*type*/ = TImage::kUnknown) {}
@@ -255,9 +255,9 @@ public:
    TImage    &operator+=(const TImage &i) { Append(&i, "+"); return *this; }
    TImage    &operator/=(const TImage &i) { Append(&i, "/"); return *this; }
 
-   virtual void  ls(Option_t *option="") const;
+           void  ls(Option_t *option="") const override;
 
-   ClassDef(TImage,1)  // Abstract image class
+   ClassDefOverride(TImage,1)  // Abstract image class
 };
 
 

@@ -53,7 +53,7 @@ public:
    static TImagePalette* Create(Option_t* opts);
    static TImagePalette* CreateCOLPalette(Int_t nContours);
 
-   ClassDef(TImagePalette,2)  // Color Palette for value -> color conversion
+   ClassDefOverride(TImagePalette,2)  // Color Palette for value -> color conversion
 };
 
 class TAttImage {
