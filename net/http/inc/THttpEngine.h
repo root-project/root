@@ -39,7 +39,7 @@ public:
    /** Returns pointer to THttpServer associated with engine */
    THttpServer *GetServer() const { return fServer; }
 
-   ClassDef(THttpEngine, 0) // abstract class which should provide http-based protocol for server
+   ClassDefOverride(THttpEngine, 0) // abstract class which should provide http-based protocol for server
 };
 
 #endif
