@@ -3,7 +3,7 @@ Processing run.C...
 ===========================================================================
 class Master::Container
 SIZE: 16 FILE: Master.hh LINE: 8
-Base classes: --------------------------------------------------------
+Base classes: -------------------------------------------------------------
 0x0        public TObject
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: Container();
@@ -25,7 +25,7 @@ filename     line:size busy function type and name
 ===========================================================================
 class Master::Container
 SIZE: 16 FILE: Master.hh LINE: 8
-Base classes: --------------------------------------------------------
+Base classes: -------------------------------------------------------------
 0x0        public TObject
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: Container();
@@ -47,7 +47,7 @@ filename     line:size busy function type and name
 ===========================================================================
 class Master::Container
 SIZE: 16 FILE: Master.hh LINE: 8
-Base classes: --------------------------------------------------------
+Base classes: -------------------------------------------------------------
 0x0        public TObject
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: Container();

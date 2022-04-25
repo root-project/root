@@ -3,7 +3,7 @@ Processing run.C...
 ===========================================================================
 class Name::MyClass
 SIZE: 16 FILE: MyClass.hh LINE: 10
-Base classes: --------------------------------------------------------
+Base classes: -------------------------------------------------------------
 0x0        public TObject
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();
@@ -25,7 +25,7 @@ filename     line:size busy function type and name
 ===========================================================================
 class Name::MyClass
 SIZE: 16 FILE: MyClass.hh LINE: 10
-Base classes: --------------------------------------------------------
+Base classes: -------------------------------------------------------------
 0x0        public TObject
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();
@@ -47,7 +47,7 @@ filename     line:size busy function type and name
 ===========================================================================
 class Name::MyClass
 SIZE: 16 FILE: MyClass.hh LINE: 10
-Base classes: --------------------------------------------------------
+Base classes: -------------------------------------------------------------
 0x0        public TObject
 filename     line:size busy function type and name
 (compiled)     (NA):(NA) 0 public: MyClass();

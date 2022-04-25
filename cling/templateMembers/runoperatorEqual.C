@@ -4,6 +4,6 @@ gROOT->ProcessLine(".L operatorEqual.C+");
 #ifdef __CINT__
 gROOT->ProcessLine(".class StThreeVector");
 #else
-gROOT->ProcessLine(".class StThreeVector<>");
+gROOT->ProcessLine(".Class StThreeVector<>");
 #endif
 }
