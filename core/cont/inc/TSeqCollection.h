@@ -35,7 +35,7 @@ protected:
 
 public:
    virtual           ~TSeqCollection() { }
-   virtual void      Add(TObject *obj) { AddLast(obj); }
+   void              Add(TObject *obj) override { AddLast(obj); }
    virtual void      AddFirst(TObject *obj) = 0;
    virtual void      AddLast(TObject *obj) = 0;
    virtual void      AddAt(TObject *obj, Int_t idx) = 0;
@@ -64,7 +64,7 @@ public:
    static inline void QSort(TObject **a, TObject **b, Int_t first, Int_t last) { QSort(a, 1, &b, first, last); }
    static void        QSort(TObject **a, Int_t nBs, TObject ***b, Int_t first, Int_t last);
 
-   ClassDef(TSeqCollection,0)  //Sequenceable collection ABC
+   ClassDefOverride(TSeqCollection,0)  //Sequenceable collection ABC
 };
 
 #endif

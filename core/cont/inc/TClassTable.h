@@ -84,12 +84,12 @@ public:
    static TProtoClass  *GetProtoNorm(const char *cname);
    static void          Init();
    static char         *Next();
-   void                 Print(Option_t *option="") const;
+   void                 Print(Option_t *option="") const override;
    static void          PrintTable();
    static void          Remove(const char *cname);
    static void          Terminate();
 
-   ClassDef(TClassTable,0)  //Table of known classes
+   ClassDefOverride(TClassTable,0)  //Table of known classes
 };
 
 R__EXTERN TClassTable *gClassTable;

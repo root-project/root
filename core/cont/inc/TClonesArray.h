@@ -44,22 +44,22 @@ public:
    TClonesArray(const TClonesArray& tc);
    virtual         ~TClonesArray();
    TClonesArray& operator=(const TClonesArray& tc);
-   virtual void     Compress();
-   virtual void     Clear(Option_t *option="");
-   virtual void     Delete(Option_t *option="");
-   virtual void     Expand(Int_t newSize);
+   void             Compress() override;
+   void             Clear(Option_t *option="") override;
+   void             Delete(Option_t *option="") override;
+   void             Expand(Int_t newSize) override;
    virtual void     ExpandCreate(Int_t n);
    virtual void     ExpandCreateFast(Int_t n);
    TClass          *GetClass() const { return fClass; }
-   virtual void     SetOwner(Bool_t enable = kTRUE);
+   void             SetOwner(Bool_t enable = kTRUE) override;
 
-   void             AddFirst(TObject *) { MayNotUse("AddFirst"); }
-   void             AddLast(TObject *) { MayNotUse("AddLast"); }
-   void             AddAt(TObject *, Int_t) { MayNotUse("AddAt"); }
-   void             AddAtAndExpand(TObject *, Int_t) { MayNotUse("AddAtAndExpand"); }
-   Int_t            AddAtFree(TObject *) { MayNotUse("AddAtFree"); return 0; }
-   void             AddAfter(const TObject *, TObject *) { MayNotUse("AddAfter"); }
-   void             AddBefore(const TObject *, TObject *) { MayNotUse("AddBefore"); }
+   void             AddFirst(TObject *) override { MayNotUse("AddFirst"); }
+   void             AddLast(TObject *) override { MayNotUse("AddLast"); }
+   void             AddAt(TObject *, Int_t) override { MayNotUse("AddAt"); }
+   void             AddAtAndExpand(TObject *, Int_t) override { MayNotUse("AddAtAndExpand"); }
+   Int_t            AddAtFree(TObject *) override { MayNotUse("AddAtFree"); return 0; }
+   void             AddAfter(const TObject *, TObject *) override { MayNotUse("AddAfter"); }
+   void             AddBefore(const TObject *, TObject *) override { MayNotUse("AddBefore"); }
    void             BypassStreamer(Bool_t bypass=kTRUE);
    Bool_t           CanBypassStreamer() const { return TestBit(kBypassStreamer); }
    TObject         *ConstructedAt(Int_t idx);
@@ -70,17 +70,17 @@ public:
    void             AbsorbObjects(TClonesArray *tc);
    void             AbsorbObjects(TClonesArray *tc, Int_t idx1, Int_t idx2);
    void             MultiSort(Int_t nTCs, TClonesArray** tcs, Int_t upto = kMaxInt);
-   virtual TObject *RemoveAt(Int_t idx);
-   virtual TObject *Remove(TObject *obj);
-   virtual void     RemoveRange(Int_t idx1, Int_t idx2);
-   virtual void     Sort(Int_t upto = kMaxInt);
+   TObject         *RemoveAt(Int_t idx) override;
+   TObject         *Remove(TObject *obj) override;
+   void             RemoveRange(Int_t idx1, Int_t idx2) override;
+   void             Sort(Int_t upto = kMaxInt) override;
 
    TObject         *New(Int_t idx);
    TObject         *AddrAt(Int_t idx);
-   TObject         *&operator[](Int_t idx);
-   TObject         *operator[](Int_t idx) const;
+   TObject         *&operator[](Int_t idx) override;
+   TObject         *operator[](Int_t idx) const override;
 
-   ClassDef(TClonesArray,4)  //An array of clone objects
+   ClassDefOverride(TClonesArray,4)  //An array of clone objects
 };
 
 inline TObject *TClonesArray::AddrAt(Int_t idx)

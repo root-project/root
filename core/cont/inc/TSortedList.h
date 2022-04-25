@@ -30,24 +30,24 @@ class TSortedList : public TList {
 public:
    TSortedList(Bool_t order = kSortAscending) { fAscending = order; }
 
-   void      Add(TObject *obj);
-   void      Add(TObject *obj, Option_t *opt);
+   void      Add(TObject *obj) override;
+   void      Add(TObject *obj, Option_t *opt) override;
 
-   Bool_t    IsSorted() const { return kTRUE; }
+   Bool_t    IsSorted() const override { return kTRUE; }
 
    //---- the following methods are overridden to preserve sorting order
-   void      AddFirst(TObject *obj) { Add(obj); }
-   void      AddFirst(TObject *obj, Option_t *opt) { Add(obj, opt); }
-   void      AddLast(TObject *obj) { Add(obj); }
-   void      AddLast(TObject *obj, Option_t *opt) { Add(obj, opt); }
-   void      AddAt(TObject *obj, Int_t) { Add(obj); }
-   void      AddAfter(const TObject *, TObject *obj) { Add(obj); }
-   void      AddAfter(TObjLink *, TObject *obj) { Add(obj); }
-   void      AddBefore(const TObject *, TObject *obj) { Add(obj); }
-   void      AddBefore(TObjLink *, TObject *obj) { Add(obj); }
-   void      Sort(Bool_t = kSortAscending) { }
+   void      AddFirst(TObject *obj) override { Add(obj); }
+   void      AddFirst(TObject *obj, Option_t *opt) override { Add(obj, opt); }
+   void      AddLast(TObject *obj) override { Add(obj); }
+   void      AddLast(TObject *obj, Option_t *opt) override { Add(obj, opt); }
+   void      AddAt(TObject *obj, Int_t) override { Add(obj); }
+   void      AddAfter(const TObject *, TObject *obj) override { Add(obj); }
+   void      AddAfter(TObjLink *, TObject *obj) override { Add(obj); }
+   void      AddBefore(const TObject *, TObject *obj) override { Add(obj); }
+   void      AddBefore(TObjLink *, TObject *obj) override { Add(obj); }
+   void      Sort(Bool_t = kSortAscending) override { }
 
-   ClassDef(TSortedList,0)  //A sorted list
+   ClassDefOverride(TSortedList,0)  //A sorted list
 };
 
 #endif

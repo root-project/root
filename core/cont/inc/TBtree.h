@@ -70,26 +70,26 @@ public:
 
    TBtree(Int_t ordern = 3);  //create a TBtree of order n
    virtual     ~TBtree();
-   void        Clear(Option_t *option="");
-   void        Delete(Option_t *option="");
-   TObject    *FindObject(const char *name) const;
-   TObject    *FindObject(const TObject *obj) const;
-   TObject   **GetObjectRef(const TObject *) const { return 0; }
-   TIterator  *MakeIterator(Bool_t dir = kIterForward) const;
+   void        Clear(Option_t *option="") override;
+   void        Delete(Option_t *option="") override;
+   TObject    *FindObject(const char *name) const override;
+   TObject    *FindObject(const TObject *obj) const override;
+   TObject   **GetObjectRef(const TObject *) const override { return nullptr; }
+   TIterator  *MakeIterator(Bool_t dir = kIterForward) const override;
 
-   void        Add(TObject *obj);
-   void        AddFirst(TObject *obj) { Add(obj); }
-   void        AddLast(TObject *obj) { Add(obj); }
-   void        AddAt(TObject *obj, Int_t) { Add(obj); }
-   void        AddAfter(const TObject *, TObject *obj) { Add(obj); }
-   void        AddBefore(const TObject *, TObject *obj) { Add(obj); }
-   TObject    *Remove(TObject *obj);
+   void        Add(TObject *obj) override;
+   void        AddFirst(TObject *obj) override { Add(obj); }
+   void        AddLast(TObject *obj) override { Add(obj); }
+   void        AddAt(TObject *obj, Int_t) override { Add(obj); }
+   void        AddAfter(const TObject *, TObject *obj) override { Add(obj); }
+   void        AddBefore(const TObject *, TObject *obj) override { Add(obj); }
+   TObject    *Remove(TObject *obj) override;
 
-   TObject    *At(Int_t idx) const;
-   TObject    *Before(const TObject *obj) const;
-   TObject    *After(const TObject *obj) const;
-   TObject    *First() const;
-   TObject    *Last() const;
+   TObject    *At(Int_t idx) const override;
+   TObject    *Before(const TObject *obj) const override;
+   TObject    *After(const TObject *obj) const override;
+   TObject    *First() const override;
+   TObject    *Last() const override;
 
    //void PrintOn(std::ostream &os) const;
 
@@ -97,7 +97,7 @@ public:
    TObject    *operator[](Int_t i) const;
    Int_t       Rank(const TObject *obj) const;
 
-   ClassDef(TBtree,0)  //A B-tree
+   ClassDefOverride(TBtree,0)  //A B-tree
 };
 
 

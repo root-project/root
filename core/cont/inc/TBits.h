@@ -124,7 +124,7 @@ public:
    void   Get(ULong64_t *array) const { Get((Long64_t*)array); }
 
    //----- Utilities
-   void    Clear(Option_t *option="");
+   void    Clear(Option_t *option="") override;
    void    Compact();               // Reduce the space used.
    UInt_t  CountBits(UInt_t startBit=0)     const ;  // return number of bits set to 1
    UInt_t  FirstNullBit(UInt_t startBit=0)  const;
@@ -137,11 +137,11 @@ public:
    Bool_t  operator==(const TBits &other) const;
    Bool_t  operator!=(const TBits &other) const { return !(*this==other); }
 
-   void    Paint(Option_t *option="");        // to visualize the bits array as an histogram, etc
-   void    Print(Option_t *option="") const;  // to show the list of active bits
+   void    Paint(Option_t *option="") override;        // to visualize the bits array as an histogram, etc
+   void    Print(Option_t *option="") const override;  // to show the list of active bits
    void    Output(std::ostream &) const;
 
-   ClassDef(TBits,1)        // Bit container
+   ClassDefOverride(TBits,1)        // Bit container
 };
 
 
