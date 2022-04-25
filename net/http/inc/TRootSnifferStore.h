@@ -45,7 +45,7 @@ public:
    Int_t GetResRestrict() const { return fResRestrict; }
    virtual Bool_t IsXml() const { return kFALSE; }
 
-   ClassDef(TRootSnifferStore, 0) // structure for results store of objects sniffer
+   ClassDefOverride(TRootSnifferStore, 0) // structure for results store of objects sniffer
 };
 
 // ========================================================================
