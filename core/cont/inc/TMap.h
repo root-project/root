@@ -50,44 +50,44 @@ private:
 protected:
    enum EStatusBits { kIsOwnerValue = BIT(15) };
 
-   virtual void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const;
+   void        PrintCollectionEntry(TObject* entry, Option_t* option, Int_t recurse) const override;
 
 public:
    typedef TMapIter Iterator_t;
 
    TMap(Int_t capacity = TCollection::kInitHashTableCapacity, Int_t rehash = 0);
    virtual           ~TMap();
-   void              Add(TObject *obj);
+   void              Add(TObject *obj) override;
    void              Add(TObject *key, TObject *value);
    Float_t           AverageCollisions() const;
    Int_t             Capacity() const;
-   void              Clear(Option_t *option="");
+   void              Clear(Option_t *option="") override;
    Int_t             Collisions(const char *keyname) const;
    Int_t             Collisions(TObject *key) const;
-   void              Delete(Option_t *option="");
+   void              Delete(Option_t *option="") override;
    void              DeleteKeys() { Delete(); }
    void              DeleteValues();
    void              DeleteAll();
    Bool_t            DeleteEntry(TObject *key);
-   TObject          *FindObject(const char *keyname) const;
-   TObject          *FindObject(const TObject *key) const;
-   TObject         **GetObjectRef(const TObject *obj) const { return fTable->GetObjectRef(obj); }
+   TObject          *FindObject(const char *keyname) const override;
+   TObject          *FindObject(const TObject *key) const override;
+   TObject         **GetObjectRef(const TObject *obj) const override { return fTable->GetObjectRef(obj); }
    const THashTable *GetTable() const { return fTable; }
    TObject          *GetValue(const char *keyname) const;
    TObject          *GetValue(const TObject *key) const;
    Bool_t            IsOwnerValue() const { return TestBit(kIsOwnerValue); }
    TObject          *operator()(const char *keyname) const { return GetValue(keyname); }
    TObject          *operator()(const TObject *key) const { return GetValue(key); }
-   TIterator        *MakeIterator(Bool_t dir = kIterForward) const;
+   TIterator        *MakeIterator(Bool_t dir = kIterForward) const override;
    void              Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
-   TObject          *Remove(TObject *key);
+   TObject          *Remove(TObject *key) override;
    TPair            *RemoveEntry(TObject *key);
    virtual void      SetOwnerValue(Bool_t enable = kTRUE);
    virtual void      SetOwnerKeyValue(Bool_t ownkeys = kTRUE, Bool_t ownvals = kTRUE);
-   virtual Int_t     Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
-   virtual Int_t     Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
+   Int_t             Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) override;
+   Int_t             Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) const override;
 
-   ClassDef(TMap,3)  //A (key,value) map
+   ClassDefOverride(TMap,3)  //A (key,value) map
 };
 
 
@@ -111,17 +111,17 @@ public:
    TPair(TObject *key, TObject *value) : fKey(key), fValue(value) { }
    TPair(const TPair &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
    virtual               ~TPair();
-   Bool_t                IsFolder() const { return kTRUE;}
-   virtual void          Browse(TBrowser *b);
-   const char           *GetName() const { return fKey->GetName(); }
-   const char           *GetTitle() const { return fKey->GetTitle(); }
-   ULong_t               Hash() const { return fKey->Hash(); }
-   Bool_t                IsEqual(const TObject *obj) const { return fKey->IsEqual(obj); }
+   Bool_t                IsFolder() const override { return kTRUE;}
+   void                  Browse(TBrowser *b) override;
+   const char           *GetName() const override { return fKey->GetName(); }
+   const char           *GetTitle() const override { return fKey->GetTitle(); }
+   ULong_t               Hash() const override { return fKey->Hash(); }
+   Bool_t                IsEqual(const TObject *obj) const override { return fKey->IsEqual(obj); }
    TObject              *Key() const { return fKey; }
    TObject              *Value() const { return fValue; }
    void                  SetValue(TObject *val) { fValue = val; }
 
-   ClassDef(TPair,0); // Pair TObject*, TObject*
+   ClassDefOverride(TPair,0); // Pair TObject*, TObject*
 };
 
 typedef TPair   TAssoc;     // for backward compatibility
@@ -157,17 +157,17 @@ public:
    TMapIter(const TMap *map, Bool_t dir = kIterForward);
    TMapIter(const TMapIter &iter);
    ~TMapIter();
-   TIterator &operator=(const TIterator &rhs);
+   TIterator &operator=(const TIterator &rhs) override;
    TMapIter  &operator=(const TMapIter &rhs);
 
-   const TCollection *GetCollection() const { return fMap; }
-   TObject           *Next();
-   void               Reset();
-   Bool_t             operator!=(const TIterator &aIter) const;
+   const TCollection *GetCollection() const override { return fMap; }
+   TObject           *Next() override;
+   void               Reset() override;
+   Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TMapIter &aIter) const;
-   TObject           *operator*() const;
+   TObject           *operator*() const override;
 
-   ClassDef(TMapIter,0)  //Map iterator
+   ClassDefOverride(TMapIter,0)  //Map iterator
 };
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600

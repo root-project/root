@@ -86,12 +86,12 @@ public:
    virtual void     RemoveRange(Int_t idx1, Int_t idx2);
    virtual void     RecursiveRemove(TObject *obj);
 
-   TObject         *At(Int_t idx) const;
+   TObject         *At(Int_t idx) const override;
    TObject         *UncheckedAt(Int_t i) const { return fCont[i-fLowerBound]; }
-   TObject         *Before(const TObject *obj) const;
-   TObject         *After(const TObject *obj) const;
-   TObject         *First() const;
-   TObject         *Last() const;
+   TObject         *Before(const TObject *obj) const override;
+   TObject         *After(const TObject *obj) const override;
+   TObject         *First() const override;
+   TObject         *Last() const override;
    virtual TObject *&operator[](Int_t i);
    virtual TObject *operator[](Int_t i) const;
    Int_t            LowerBound() const { return fLowerBound; }
@@ -102,7 +102,7 @@ public:
    virtual void     Sort(Int_t upto = kMaxInt);
    virtual Int_t    BinarySearch(TObject *obj, Int_t upto = kMaxInt); // the TObjArray has to be sorted, -1 == not found !!
 
-   ClassDef(TObjArray,3)  //An array of objects
+   ClassDefOverride(TObjArray,3)  //An array of objects
 };
 
 
@@ -137,17 +137,17 @@ public:
    TObjArrayIter(const TObjArray *arr, Bool_t dir = kIterForward);
    TObjArrayIter(const TObjArrayIter &iter);
    ~TObjArrayIter() { }
-   TIterator     &operator=(const TIterator &rhs);
+   TIterator     &operator=(const TIterator &rhs) override;
    TObjArrayIter &operator=(const TObjArrayIter &rhs);
 
-   const TCollection *GetCollection() const { return fArray; }
-   TObject           *Next();
-   void               Reset();
-   Bool_t             operator!=(const TIterator &aIter) const;
+   const TCollection *GetCollection() const override { return fArray; }
+   TObject           *Next() override;
+   void               Reset() override;
+   Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TObjArrayIter &aIter) const;
-   TObject           *operator*() const;
+   TObject           *operator*() const override;
 
-   ClassDef(TObjArrayIter,0)  //Object array iterator
+   ClassDefOverride(TObjArrayIter,0)  //Object array iterator
 };
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
