@@ -190,15 +190,15 @@ public:
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
    void              AddClassGenerator(TClassGenerator *gen);
-   virtual void      Append(TObject *obj, Bool_t replace = kFALSE);
-   void              Browse(TBrowser *b);
+   void              Append(TObject *obj, Bool_t replace = kFALSE) override;
+   void              Browse(TBrowser *b) override;
    Bool_t            ClassSaved(TClass *cl);
    void              CloseFiles();
    void              EndOfProcessCleanups();
-   virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(const TObject *obj) const;
-   virtual TObject  *FindObjectAny(const char *name) const;
-   virtual TObject  *FindObjectAnyFile(const char *name) const;
+   TObject          *FindObject(const char *name) const override;
+   TObject          *FindObject(const TObject *obj) const override;
+   TObject          *FindObjectAny(const char *name) const override;
+   TObject          *FindObjectAnyFile(const char *name) const override;
    TObject          *FindSpecialObject(const char *name, void *&where);
    const char       *FindObjectClassName(const char *name) const;
    const char       *FindObjectPathName(const TObject *obj) const;
@@ -257,7 +257,7 @@ public:
    TCollection      *GetListOfFunctionTemplates();
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
-   TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}
+   TFile            *GetFile() const override { if (gDirectory != this) return gDirectory->GetFile(); else return nullptr;}
    TFile            *GetFile(const char *name) const;
    TFunctionTemplate*GetFunctionTemplate(const char *name);
    TStyle           *GetStyle(const char *name) const;
@@ -278,7 +278,7 @@ public:
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
    Bool_t            IsExecutingMacro() const { return fExecutingMacro; }
-   Bool_t            IsFolder() const { return kTRUE; }
+   Bool_t            IsFolder() const override { return kTRUE; }
    Bool_t            IsInterrupted() const { return fInterrupt; }
    Bool_t            IsEscaped() const { return fEscape; }
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
@@ -286,7 +286,7 @@ public:
    Bool_t            IsRootFile(const char *filename) const;
    Bool_t            IsWebDisplay() const { return fIsWebDisplay; }
    Bool_t            IsWebDisplayBatch() const { return fIsWebDisplayBatch; }
-   void              ls(Option_t *option = "") const;
+   void              ls(Option_t *option = "") const override;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
    Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
@@ -298,7 +298,7 @@ public:
    Longptr_t         ProcessLineSync(const char *line, Int_t *error = 0);
    Longptr_t         ProcessLineFast(const char *line, Int_t *error = 0);
    Bool_t            ReadingObject() const;
-   void              RecursiveRemove(TObject *obj);
+   void              RecursiveRemove(TObject *obj) override;
    void              RefreshBrowsers();
    static void       RegisterModule(const char* modulename,
                                     const char** headers,
@@ -309,7 +309,7 @@ public:
                                     const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                                     const char** classesHeaders,
                                     bool hasCxxModule = false);
-   TObject          *Remove(TObject*);
+   TObject          *Remove(TObject*) override;
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");
    void              SaveContext();
@@ -367,7 +367,7 @@ public:
    static const char *GetTutorialsDir();
    static void ShutDown();
 
-   ClassDef(TROOT,0)  //Top level (or root) structure for all classes
+   ClassDefOverride(TROOT,0)  //Top level (or root) structure for all classes
 };
 
 
