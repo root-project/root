@@ -69,9 +69,9 @@ This is what clang sees:
 ===========================================================================
 class m02<double>
 SIZE: 160 FILE: test01.cxx LINE: 15
-Base classes: --------------------------------------------------------
+Base classes: -------------------------------------------------------------
 0x0        private map2<double, double, struct alloc<struct std::__1::pair<double, double> > >
-List of member variables --------------------------------------------------
+List of member variables: -------------------------------------------------
 test01.cxx       17 0x0        public: int fN
 test01.cxx       19 0x8        public: vector<Double32_t> ff1, size = 24
 test01.cxx       20 0x20       public: Double32_t ff2[3]
@@ -92,7 +92,7 @@ test01.cxx       36 0x95       public: map2<Int_t, double> fv13, size = 1
 test01.cxx       37 0x96       public: map2<Int_t, vec<double> > fv14, size = 1
 test01.cxx       38 0x97       public: map2<Int_t, map2<double, double> > fv15, size = 1
 test01.cxx       39 0x98       public: map2<Int_t, map2<double, vec<double> > > fv16, size = 1
-List of member functions :---------------------------------------------------
+List of member functions: -------------------------------------------------
 filename     line:size busy function type and name
 
 and this is what StreamerInfo need to see:
