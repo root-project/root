@@ -20,6 +20,7 @@
 ## \author Stefan Wunsch (KIT, CERN)
 
 import ROOT
+import sys
 import json
 import argparse
 import os
@@ -32,7 +33,12 @@ parser.add_argument("--full-dataset", action="store_true", default=False,
                     help="Use the full dataset (use --lumi-scale to run only on a fraction of it)")
 parser.add_argument("-b", action="store_true", default=False, help="Use ROOT batch mode")
 parser.add_argument("-t", action="store_true", default=False, help="Use implicit multi threading (for the full dataset only possible with --lumi-scale 1.0)")
-args = parser.parse_args(args=[])
+if 'df105_WBosonAnalysis.py' in sys.argv[0]:
+    # Script
+    args = parser.parse_args()
+else:
+    # Notebook
+    args =parser.parse_args(args=[])
 
 if args.b: ROOT.gROOT.SetBatch(True)
 if args.t: ROOT.EnableImplicitMT()
