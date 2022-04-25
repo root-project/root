@@ -63,10 +63,10 @@ protected:
    TBuffer(const TBuffer &) = delete;
    void operator=(const TBuffer &) = delete;
 
-   Int_t Read(const char *name) { return TObject::Read(name); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufs)
+   Int_t Read(const char *name) override { return TObject::Read(name); }
+   Int_t Write(const char *name, Int_t opt, Int_t bufs) override
                               { return TObject::Write(name, opt, bufs); }
-   Int_t Write(const char *name, Int_t opt, Int_t bufs) const
+   Int_t Write(const char *name, Int_t opt, Int_t bufs) const override
                               { return TObject::Write(name, opt, bufs); }
 
 public:
@@ -337,7 +337,7 @@ public:
    static TClass *GetClass(const std::type_info &typeinfo);
    static TClass *GetClass(const char *className);
 
-   ClassDef(TBuffer,0)  //Buffer base class used for serializing objects
+   ClassDefOverride(TBuffer,0)  //Buffer base class used for serializing objects
 };
 
 //---------------------- TBuffer default external operators --------------------

@@ -162,20 +162,20 @@ namespace ROOT {
 
    class TDefaultInitBehavior: public TInitBehavior {
    public:
-      virtual void Register(const char *cname, Version_t id,
+      void Register(const char *cname, Version_t id,
                             const std::type_info &info,
-                            DictFuncPtr_t dict, Int_t pragmabits) const {
+                            DictFuncPtr_t dict, Int_t pragmabits) const override {
          ROOT::AddClass(cname, id, info, dict, pragmabits);
       }
 
-      virtual void Unregister(const char *classname) const {
+      void Unregister(const char *classname) const override {
          ROOT::RemoveClass(classname);
       }
 
-      virtual TClass *CreateClass(const char *cname, Version_t id,
+      TClass *CreateClass(const char *cname, Version_t id,
                                   const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const {
+                                  Int_t dl, Int_t il) const override {
          return ROOT::CreateClass(cname, id, info, isa, dfil, ifil, dl, il);
       }
    };
@@ -387,7 +387,7 @@ public:                                                                         
          }                                                                  \
       }                                                                     \
    }
-   
+
 #define NamespaceImp(name) NamespaceImpUnique(name,default)
 
 //---- ClassDefT macros for templates with one template argument ---------------
