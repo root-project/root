@@ -67,7 +67,7 @@ namespace Internal {
 // prevent access violation when executing the df017_vecOpsHEP.C tutorial with ROOT built in release mode
 // TODO: to be reviewed when updating Visual Studio or LLVM
 #if defined(_MSC_VER) && !defined(__clang__)
-#pragma optimize( "", off )
+#pragma optimize("", off)
 #endif
 
 namespace Detail {
@@ -520,7 +520,7 @@ public:
 } // namespace Detail
 
 #if defined(_MSC_VER) && !defined(__clang__)
-#pragma optimize( "", on )
+#pragma optimize("", on)
 #endif
 
 namespace Internal {
