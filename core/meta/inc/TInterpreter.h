@@ -64,7 +64,7 @@ struct InterpreterMutexRegistrationRAII {
 class TInterpreter : public TNamed {
 
 protected:
-   virtual void Execute(TMethod *method, TObjArray *params, int *error = 0) = 0;
+           void Execute(TMethod *method, TObjArray *params, int *error = nullptr) override = 0;
    virtual Bool_t SetSuspendAutoParsing(Bool_t value) = 0;
 
    friend class SuspendAutoParsing;
@@ -233,7 +233,7 @@ public:
    virtual void     GetInterpreterTypeName(const char *name, std::string &output, Bool_t full = kFALSE) = 0;
    virtual void    *GetInterfaceMethod(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE) = 0;
    virtual void    *GetInterfaceMethodWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode /* mode */ = ROOT::kConversionMatch) = 0;
-   virtual void     Execute(const char *function, const char *params, int *error = 0) = 0;
+           void     Execute(const char *function, const char *params, int *error = 0) override = 0;
    virtual void     Execute(TObject *obj, TClass *cl, const char *method, const char *params, int *error = 0) = 0;
    virtual void     Execute(TObject *obj, TClass *cl, TMethod *method, TObjArray *params, int *error = 0) = 0;
    virtual void     ExecuteWithArgsAndReturn(TMethod *method, void* address, const void* args[] = 0, int /*nargs*/ = 0, void* ret= 0) const = 0;
@@ -553,7 +553,7 @@ public:
 
    static TInterpreter *Instance();
 
-   ClassDef(TInterpreter,0)  //ABC defining interface to generic interpreter
+   ClassDefOverride(TInterpreter,0)  //ABC defining interface to generic interpreter
 };
 
 

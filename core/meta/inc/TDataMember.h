@@ -91,11 +91,11 @@ public:
    Bool_t         IsPersistent() const { return TestBit(kObjIsPersistent); }
    Int_t          IsSTLContainer();
    Bool_t         IsValid();
-   Long_t         Property() const;
+   Long_t         Property() const override;
    void           SetClass(TClass* cl) { fClass = cl; }
    virtual bool   Update(DataMemberInfo_t *info);
 
-   ClassDef(TDataMember,2)  //Dictionary for a class data member
+   ClassDefOverride(TDataMember,2)  //Dictionary for a class data member
 };
 
 
@@ -112,12 +112,12 @@ public:
    TString          fOptName;        //Text assigned to option which appears in option menu
    TString          fOptLabel;       //Text (or enum) value assigned to option.
    TOptionListItem():
-      fDataMember(0), fValue(0), fValueMaskBit(0), fToggleMaskBit(0)
+      fDataMember(nullptr), fValue(0), fValueMaskBit(0), fToggleMaskBit(0)
    {}
    TOptionListItem(TDataMember *m,Long_t val, Long_t valmask, Long_t tglmask,
                    const char *name, const char *label);
 
-   ClassDef(TOptionListItem,2); //Element in the list of options.
+   ClassDefOverride(TOptionListItem,2); //Element in the list of options.
 };
 
 #endif
