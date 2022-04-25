@@ -149,7 +149,7 @@ the TClass for the pair is informed (via `TCling::UpdateClassInfoWithDecl`
 and `TCling::RefreshClassInfo`).
 
 We could update `RefreshClassInfo` to refresh the `StreamerInfo` for the pair
-but it would also need to also refresh the map's CollectionProxy (size,
+but it would also need to refresh the map's CollectionProxy (size,
 hints, etc?) [and there is an arbitrary number because they are thread-local]
 
 So at that point, it might actually be better to recreate the TClass for the
@@ -162,6 +162,12 @@ That proxy does not match the interpreted (nor the compiled) version of the
 map ... so there is no good point to match the pair either ....
 
 So the solution above are (a tad bit) complex and .... not enough ...
+
+Conclusion: The current situation in regards to the TClass for an std::pair
+for an interpreted STL collection looks 'bad' (offset can be wrong) but this is
+not a real issue as that TClass 'should' not be used in conjunction with object
+created by compiled code.  This needs to be reviewed and improved when we
+introduce the generation of CollectioProxy for interpreter STL containers.
 
 #endif
 
