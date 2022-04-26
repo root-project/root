@@ -425,7 +425,6 @@ const std::vector<std::string> &RCsvDS::GetColumnNames() const
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RCsvDS::GetEntryRanges()
 {
-
    // Read records and store them in memory
    auto linesToRead = fLinesChunkSize;
    FreeRecords();
