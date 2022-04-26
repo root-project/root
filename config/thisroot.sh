@@ -185,7 +185,7 @@ SHELLNAME=$(getTrueShellExeName)
 if [ "$SHELLNAME" = "bash" ]; then
    SOURCE=${BASH_ARGV[0]}
 elif [ "x${SHELLNAME}" = "x" ]; then # in case getTrueShellExeName does not work, fall back to default
-   echo WARNING: shell name was not recognized.
+   echo "WARNING: shell name '${SHELLNAME}' was not recognized."
    SOURCE=${BASH_ARGV[0]}
 elif [ "$SHELLNAME" = "zsh" ]; then
    SOURCE=${(%):-%N}
