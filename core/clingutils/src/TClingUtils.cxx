@@ -1431,7 +1431,7 @@ std::string ROOT::TMetaUtils::GetQualifiedName(const AnnotatedRecordDecl &annota
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the data member name-type map for given class
 
-void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::MembersTypeMap_t& nameType)
+static void CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::MembersTypeMap_t& nameType)
 {
    std::stringstream dims;
    std::string typenameStr;
@@ -1461,7 +1461,7 @@ void ROOT::TMetaUtils::CreateNameTypeMap(const clang::CXXRecordDecl &cl, ROOT::M
          }
       }
 
-      GetFullyQualifiedTypeName(typenameStr, fieldType, astContext);
+      ROOT::TMetaUtils::GetFullyQualifiedTypeName(typenameStr, fieldType, astContext);
       nameType[field_iter->getName().str()] = ROOT::Internal::TSchemaType(typenameStr.c_str(),dims.str().c_str());
    }
 
