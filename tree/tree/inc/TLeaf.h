@@ -108,7 +108,7 @@ public:
    TLeaf(TBranch *parent, const char *name, const char *type);
    virtual ~TLeaf();
 
-   virtual void     Browse(TBrowser *b);
+           void     Browse(TBrowser *b) override;
    virtual Bool_t   CanGenerateOffsetArray() {return fLeafCount;} // overload and return true if this leaf can generate its own offset array.
    virtual void     Export(TClonesArray *, Int_t) {}
    virtual void     FillBasket(TBuffer &b);
@@ -135,7 +135,7 @@ public:
    virtual Int_t    GetMinimum() const { return 0; }
    virtual Int_t    GetNdata() const { return fNdata; }
    virtual Int_t    GetOffset() const { return fOffset; }
-   virtual void    *GetValuePointer() const { return 0; }
+   virtual void    *GetValuePointer() const { return nullptr; }
    virtual const char *GetTypeName() const { return ""; }
 
    virtual Double_t GetValue(Int_t i = 0) const;
@@ -152,12 +152,12 @@ public:
    virtual void     ReadBasket(TBuffer &) {}
    virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {}
    virtual bool     ReadBasketFast(TBuffer&, Long64_t) { return false; }  // Read contents of leaf into a user-provided buffer.
-   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return true; } 
+   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return true; }
    virtual void     ReadValue(std::istream & /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
    }
            Int_t    ResetAddress(void *add, Bool_t calledFromDestructor = kFALSE);
-   virtual void     SetAddress(void *add = 0);
+   virtual void     SetAddress(void *add = nullptr);
    virtual void     SetBranch(TBranch *branch) { fBranch = branch; }
    virtual void     SetLeafCount(TLeaf *leaf);
    virtual void     SetLen(Int_t len = 1) { fLen = len; }
@@ -165,7 +165,7 @@ public:
    virtual void     SetRange(Bool_t range = kTRUE) { fIsRange = range; }
    virtual void     SetUnsigned() { fIsUnsigned = kTRUE; }
 
-   ClassDef(TLeaf, 2); // Leaf: description of a Branch data type
+   ClassDefOverride(TLeaf, 2); // Leaf: description of a Branch data type
 };
 
 
