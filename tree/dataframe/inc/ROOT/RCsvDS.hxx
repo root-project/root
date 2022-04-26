@@ -73,6 +73,7 @@ private:
    std::vector<std::string> ParseColumns(const std::string &);
    size_t ParseValue(const std::string &, std::vector<std::string> &, size_t);
    ColType_t GetType(std::string_view colName) const;
+   void FreeRecords();
 
 protected:
    std::string AsString();
@@ -81,7 +82,6 @@ public:
    RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
           std::unordered_map<std::string, char> &&colTypes = {});
    void Finalize() final;
-   void FreeRecords();
    ~RCsvDS();
    const std::vector<std::string> &GetColumnNames() const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
