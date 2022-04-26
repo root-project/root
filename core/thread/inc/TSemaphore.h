@@ -46,7 +46,7 @@ public:
    Int_t  TryWait();
    Int_t  Post();
 
-   ClassDef(TSemaphore, 0)  // Counting semaphore
+   ClassDefOverride(TSemaphore, 0)  // Counting semaphore
 };
 
 #endif

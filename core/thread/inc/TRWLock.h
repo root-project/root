@@ -48,7 +48,7 @@ public:
    Int_t  WriteLock();
    Int_t  WriteUnLock();
 
-   ClassDef(TRWLock,0)  // Reader/writer lock
+   ClassDefOverride(TRWLock,0)  // Reader/writer lock
 };
 
 #endif
