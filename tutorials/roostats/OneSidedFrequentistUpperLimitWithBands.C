@@ -102,7 +102,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \authors Kyle Cranmer Haichen Wang Daniel Whiteson
+/// \authors Kyle Cranmer, Haichen Wang, Daniel Whiteson
 
 #include "TFile.h"
 #include "TROOT.h"

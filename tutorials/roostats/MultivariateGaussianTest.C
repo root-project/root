@@ -22,7 +22,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \authors Kevin Belasco and Kyle Cranmer
+/// \authors Kevin Belasco, Kyle Cranmer
 
 #include "RooGlobalFunc.h"
 #include <stdlib.h>
