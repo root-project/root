@@ -357,7 +357,11 @@ void FilterTutorial(const int suffix)
             ReplaceAll(image_name, " ", "");
             ReplaceAll(image_name, "///\\macro_image(", "");
             ReplaceAll(image_name, ")\n", "");
-            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q %s", gFileName.c_str()));
+            if (gPython) {
+               ExecuteCommand(StringFormat("%s %s", gPythonExec.c_str(), gFileName.c_str()));
+            } else {
+               ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q %s", gFileName.c_str()));
+            }
             ExecuteCommand(StringFormat("mv %s %s/images/", image_name.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image (", "image html ");
             ReplaceAll(gLineString, ")", "");
@@ -366,16 +370,16 @@ void FilterTutorial(const int suffix)
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"MakeTCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str()));//, CMAKE_BUILD_DIRECTORY));
+            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"MakeTCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+                                         gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));//, CMAKE_BUILD_DIRECTORY));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else if (rcanvas_js) {
             string IN;
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q --web=batch \"MakeRCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false)\"",
-                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str()));//, CMAKE_BUILD_DIRECTORY));
+            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q --web=batch \"MakeRCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+                                          gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));//, CMAKE_BUILD_DIRECTORY));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
             if (gPython) {
