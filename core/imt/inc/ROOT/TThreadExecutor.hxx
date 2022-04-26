@@ -267,17 +267,10 @@ namespace ROOT {
    /// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
    template<class F, class INTEGER, class Cond>
    auto TThreadExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
-      unsigned start = *args.begin();
-      unsigned end = *args.end();
-      unsigned seqStep = args.step();
-
-      using retType = decltype(func(start));
+      using retType = decltype(func(*args.begin()));
       std::vector<retType> reslist(args.size());
-      auto lambda = [&](unsigned int i)
-      {
-         reslist[i] = func(i);
-      };
-      ParallelFor(start, end, seqStep, lambda);
+      auto lambda = [&](unsigned int i) { reslist[i] = func(args[i]); };
+      ParallelFor(0U, args.size(), 1, lambda);
 
       return reslist;
    }
@@ -370,24 +363,22 @@ namespace ROOT {
          return Map(func, args);
       }
 
-      unsigned start = *args.begin();
-      unsigned end = *args.end();
-      unsigned seqStep = args.step();
-      unsigned step = (end - start + nChunks - 1) / nChunks; //ceiling the division
+      unsigned nToProcess = args.size();
+      unsigned step = (nToProcess + nChunks - 1) / nChunks; // ceiling the division
       // Avoid empty chunks
-      unsigned actualChunks = (end - start + step - 1) / step;
+      unsigned actualChunks = (nToProcess + step - 1) / step;
 
-      using retType = decltype(func(start));
+      using retType = decltype(func(*args.begin()));
       std::vector<retType> reslist(actualChunks);
-      auto lambda = [&](unsigned int i)
-      {
-         std::vector<retType> partialResults(std::min(end-i, step));
-         for (unsigned j = 0; j < step && (i + j) < end; j+=seqStep) {
-            partialResults[j] = func(i + j);
+      auto lambda = [&](unsigned int i) {
+         std::vector<retType> partialResults(std::min(step, nToProcess - i)); // last chunk might be smaller
+         for (unsigned j = 0; j < partialResults.size(); j++) {
+            partialResults[j] = func(args[i + j]);
          }
          reslist[i / step] = Reduce(partialResults, redfunc);
       };
-      ParallelFor(start, end, step, lambda);
+
+      ParallelFor(0U, nToProcess, step, lambda);
 
       return reslist;
    }
