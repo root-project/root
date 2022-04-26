@@ -113,7 +113,6 @@ void RCsvDS::FillHeaders(const std::string &line)
 
 void RCsvDS::FillRecord(const std::string &line, Record_t &record)
 {
-   std::istringstream lineStream(line);
    auto i = 0U;
 
    auto columns = ParseColumns(line);
