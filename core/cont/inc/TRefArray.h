@@ -66,16 +66,16 @@ public:
    virtual void     Compress();
    void             Delete(Option_t *option="") override;
    virtual void     Expand(Int_t newSize);   // expand or shrink an array
-   Int_t            GetEntries() const;
+   Int_t            GetEntries() const override;
    Int_t            GetEntriesFast() const {
       return GetAbsLast() + 1;   //only OK when no gaps
    }
-   Int_t            GetLast() const;
-   TObject        **GetObjectRef(const TObject *obj) const;
+   Int_t            GetLast() const override;
+   TObject        **GetObjectRef(const TObject *obj) const override;
    TProcessID      *GetPID() const {return fPID;}
    UInt_t           GetUID(Int_t at) const;
-   Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
-   TIterator       *MakeIterator(Bool_t dir = kIterForward) const;
+   Bool_t           IsEmpty() const  override { return GetAbsLast() == -1; }
+   TIterator       *MakeIterator(Bool_t dir = kIterForward) const override;
 
    void             Add(TObject *obj) override { AddLast(obj); }
    void             AddFirst(TObject *obj) override;
@@ -83,8 +83,8 @@ public:
    void             AddAt(TObject *obj, Int_t idx) override;
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
-   void             AddAfter(const TObject *after, TObject *obj);
-   void             AddBefore(const TObject *before, TObject *obj);
+   void             AddAfter(const TObject *after, TObject *obj) override;
+   void             AddBefore(const TObject *before, TObject *obj) override;
    TObject         *RemoveAt(Int_t idx) override;
    TObject         *Remove(TObject *obj) override;
 
@@ -136,7 +136,7 @@ public:
    TRefArrayIter(const TRefArray *arr, Bool_t dir = kIterForward);
    TRefArrayIter(const TRefArrayIter &iter);
    ~TRefArrayIter() { }
-   TIterator         &operator=(const TIterator &rhs);
+   TIterator         &operator=(const TIterator &rhs) override;
    TRefArrayIter     &operator=(const TRefArrayIter &rhs);
 
    const TCollection *GetCollection() const override { return fArray; }
