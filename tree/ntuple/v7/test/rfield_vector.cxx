@@ -13,43 +13,76 @@ void TestClassVector()
    auto modelWrite = RNTupleModel::Create();
    auto wrKlassVec = modelWrite->MakeField<Coll_t<CustomStruct>>("klassVec");
    CustomStruct klass;
-   klass.a = 42.0;
-   klass.v1.emplace_back(1.0);
-   wrKlassVec->emplace_back(klass);
-   klass.a = 137.0;
-   klass.v1.emplace_back(2.0);
+   klass.a = 42.f;
+   klass.v1.emplace_back(1.f);
    wrKlassVec->emplace_back(klass);
 
    {
       RNTupleWriter ntuple(std::move(modelWrite),
                            std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
       ntuple.Fill();
+
+      // enlarge
+      wrKlassVec->emplace_back(CustomStruct{1.f, {1.f, 2.f, 3.f}, {{42.f}}, "foo"});
+      wrKlassVec->emplace_back(CustomStruct{2.f, {4.f, 5.f, 6.f}, {{1.f}, {2.f, 3.f}}, "bar"});
+      ntuple.Fill();
+
+      // shrink
+      wrKlassVec->clear();
+      wrKlassVec->emplace_back(CustomStruct{3.f, {7.f, 8.f, 9.f}, {{4.f, 5.f}, {}}, "baz"});
+      ntuple.Fill();
    }
 
    RNTupleReader ntuple(std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   EXPECT_EQ(1U, ntuple.GetNEntries());
+   EXPECT_EQ(3U, ntuple.GetNEntries());
 
    auto viewKlassVec = ntuple.GetViewCollection("klassVec");
    auto viewKlass = viewKlassVec.GetView<CustomStruct>("_0");
    auto viewKlassA = viewKlassVec.GetView<float>("_0.a");
+   auto viewKlassV1 = viewKlassVec.GetView<std::vector<float>>("_0.v1");
+   auto viewKlassV2 = viewKlassVec.GetView<std::vector<std::vector<float>>>("_0.v2");
+   auto viewKlassS = viewKlassVec.GetView<std::string>("_0.s");
 
-   // Loop over all the elements of the vector in all the entries
-   for (auto elementId : viewKlassVec.GetFieldRange()) {
-      if (elementId == 0) {
-         EXPECT_EQ(42.0, viewKlass(elementId).a);
-         EXPECT_EQ(1u, viewKlass(elementId).v1.size());
-         EXPECT_EQ(1.0, viewKlass(elementId).v1[0]);
-         EXPECT_EQ(42.0, viewKlassA(elementId));
-      } else if (elementId == 1) {
-         EXPECT_EQ(137.0, viewKlass(elementId).a);
-         EXPECT_EQ(2u, viewKlass(elementId).v1.size());
-         EXPECT_EQ(1.0, viewKlass(elementId).v1[0]);
-         EXPECT_EQ(2.0, viewKlass(elementId).v1[1]);
-         EXPECT_EQ(137.0, viewKlassA(elementId));
-      } else {
-         EXPECT_TRUE(false);
-      }
-   }
+   // first entry, one element
+   EXPECT_EQ(42.f, viewKlass(0).a);
+   EXPECT_EQ(42.f, viewKlassA(0));
+   EXPECT_EQ(std::vector<float>({1.f}), viewKlassV1(0));
+   EXPECT_TRUE(viewKlassV2(0).empty());
+   EXPECT_TRUE(viewKlassS(0).empty());
+   EXPECT_EQ(viewKlass(0).v1, viewKlassV1(0));
+   EXPECT_EQ(viewKlass(0).v2, viewKlassV2(0));
+
+   // second entry, three elements
+   EXPECT_EQ(42.f, viewKlass(0).a);
+   EXPECT_EQ(42.f, viewKlassA(0));
+   EXPECT_EQ(std::vector<float>({1.f}), viewKlassV1(0));
+   EXPECT_TRUE(viewKlassV2(0).empty());
+   EXPECT_TRUE(viewKlassS(0).empty());
+   EXPECT_EQ(viewKlass(0).v1, viewKlassV1(0));
+   EXPECT_EQ(viewKlass(0).v2, viewKlassV2(0));
+
+   EXPECT_EQ(1.f, viewKlass(2).a);
+   EXPECT_EQ(1.f, viewKlassA(2));
+   EXPECT_EQ(std::vector<float>({1.f, 2.f, 3.f}), viewKlassV1(2));
+   EXPECT_EQ(std::vector<std::vector<float>>({{42.f}}), viewKlassV2(2));
+   EXPECT_EQ("foo", viewKlassS(2));
+   EXPECT_EQ(viewKlass(2).v1, viewKlassV1(2));
+   EXPECT_EQ(viewKlass(2).v2, viewKlassV2(2));
+
+   EXPECT_EQ(2.f, viewKlass(3).a);
+   EXPECT_EQ(2.f, viewKlassA(3));
+   EXPECT_EQ(std::vector<float>({4.f, 5.f, 6.f}), viewKlassV1(3));
+   EXPECT_EQ(std::vector<std::vector<float>>({{1.f}, {2.f, 3.f}}), viewKlassV2(3));
+   EXPECT_EQ("bar", viewKlassS(3));
+   EXPECT_EQ(viewKlass(3).v2, viewKlassV2(3));
+
+   // third entry, one element
+   EXPECT_EQ(3.f, viewKlass(4).a);
+   EXPECT_EQ(3.f, viewKlassA(4));
+   EXPECT_EQ(std::vector<float>({7.f, 8.f, 9.f}), viewKlassV1(4));
+   EXPECT_EQ(std::vector<std::vector<float>>({{4.f, 5.f}, {}}), viewKlassV2(4));
+   EXPECT_EQ("baz", viewKlassS(4));
+   EXPECT_EQ(viewKlass(4).v2, viewKlassV2(4));
 }
 
 TEST(RNTuple, ClassVector)
