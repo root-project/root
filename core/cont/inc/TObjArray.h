@@ -56,9 +56,9 @@ public:
    TObjArray(const TObjArray &a);
    virtual          ~TObjArray();
    TObjArray& operator=(const TObjArray&);
-   virtual void     Clear(Option_t *option="") override;
+   void             Clear(Option_t *option="") override;
    virtual void     Compress();
-   virtual void     Delete(Option_t *option="") override;
+   void             Delete(Option_t *option="") override;
    virtual void     Expand(Int_t newSize);   // expand or shrink an array
    Int_t            GetEntries() const override;
    Int_t            GetEntriesFast() const {
@@ -72,19 +72,19 @@ public:
    TIterator       *MakeIterator(Bool_t dir = kIterForward) const override;
 
    void             Add(TObject *obj) override { AddLast(obj); }
-   virtual void     AddFirst(TObject *obj) override;
-   virtual void     AddLast(TObject *obj) override;
-   virtual void     AddAt(TObject *obj, Int_t idx) override;
+   void             AddFirst(TObject *obj) override;
+   void             AddLast(TObject *obj) override;
+   void             AddAt(TObject *obj, Int_t idx) override;
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
-   virtual void     AddAfter(const TObject *after, TObject *obj) override;
-   virtual void     AddBefore(const TObject *before, TObject *obj) override;
-   virtual TObject *FindObject(const char *name) const override;
-   virtual TObject *FindObject(const TObject *obj) const override;
-   virtual TObject *RemoveAt(Int_t idx) override;
-   virtual TObject *Remove(TObject *obj) override;
+   void             AddAfter(const TObject *after, TObject *obj) override;
+   void             AddBefore(const TObject *before, TObject *obj) override;
+   TObject         *FindObject(const char *name) const override;
+   TObject         *FindObject(const TObject *obj) const override;
+   TObject         *RemoveAt(Int_t idx) override;
+   TObject         *Remove(TObject *obj) override;
    virtual void     RemoveRange(Int_t idx1, Int_t idx2);
-   virtual void     RecursiveRemove(TObject *obj) override;
+   void             RecursiveRemove(TObject *obj) override;
 
    TObject         *At(Int_t idx) const override;
    TObject         *UncheckedAt(Int_t i) const { return fCont[i-fLowerBound]; }
