@@ -296,7 +296,7 @@ public:
   static void verboseEval(Int_t stat) ;
   static int verboseEval() ;
 
-  double extendedTerm(double observedEvents, const RooArgSet* nset=0) const;
+  double extendedTerm(double sumEntries, const RooArgSet* nset, double sumEntriesW2=0.0) const;
   double extendedTerm(RooAbsData const& data, bool weightSquared) const;
 
   void setNormRange(const char* rangeName) ;
