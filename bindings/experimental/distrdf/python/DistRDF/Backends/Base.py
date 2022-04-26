@@ -14,14 +14,17 @@ from abc import ABC, abstractmethod
 from collections import Counter
 from dataclasses import dataclass
 from functools import partial, singledispatch
-from typing import Callable, Iterable, List, Optional, Union
+from typing import Callable, Iterable, List, Optional, TYPE_CHECKING, Union
 
 import ROOT
 
 from DistRDF import Ranges
 from DistRDF.Backends import Utils
-from DistRDF.Node import HeadNode
-from DistRDF.HeadNode import TaskObjects, TreeHeadNode
+from DistRDF.HeadNode import HeadNode, TaskObjects, TreeHeadNode
+
+# Type hints only
+if TYPE_CHECKING:
+    from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
 
 
 def setup_mapper(initialization_fn: Callable) -> None:
@@ -246,7 +249,7 @@ class BaseBackend(ABC):
         cls.initialization = partial(fun, *args, **kwargs)
         fun(*args, **kwargs)
 
-    def execute(self, generator):
+    def execute(self, generator: "ComputationGraphGenerator"):
         """
         Executes an RDataFrame computation graph on a distributed backend.
 
@@ -286,7 +289,7 @@ class BaseBackend(ABC):
         # Extract actual results of the RDataFrame operations requested
         actual_values = handle_returned_values(headnode, returned_values)
         # List of action nodes in the same order as values
-        nodes = generator.get_action_nodes()
+        nodes = headnode.get_action_nodes()
 
         # Set the value of every action node
         for node, value in zip(nodes, actual_values):

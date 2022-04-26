@@ -9,9 +9,16 @@
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
-import logging
+from __future__ import annotations
 
-from DistRDF import Operation
+import logging
+from typing import Callable, Optional, TYPE_CHECKING
+
+# Type hints only
+if TYPE_CHECKING:
+    # Avoid circular imports
+    from DistRDF.HeadNode import HeadNode
+    from DistRDF.Operation import Operation
 
 logger = logging.getLogger(__name__)
 
@@ -22,14 +29,18 @@ class Node(object):
     houses an operation and has references to children nodes.
 
     Attributes:
-        get_head (function): A lambda function that returns the head node of
-            the current graph.
+        get_head: A function returning the head node in the graph.
 
-        operation: The operation that this Node represents.
-            This could be :obj:`None`.
+        node_id: The id of this node, given sequentially in the order of
+            creation with respect to the head node of the graph.
 
-        children (list): A list of :obj:`DistRDF.Node` objects which represent
-            the children nodes connected to the current node.
+        operation: The operation that this node represents. `None` if the node
+            is the head node.
+
+        parent: A reference to the parent node of this node. `None` if the node
+            is the head node.
+
+        nchildren: A counter of how many children this node has.
 
         _new_op_name (str): The name of the new incoming operation of the next
             child, which is the last child node among the current node's
@@ -40,76 +51,61 @@ class Node(object):
             for transformation nodes and the action nodes get a
             :obj:`ROOT.RResultPtr` after event-loop execution.
 
-        pyroot_node: Reference to the PyROOT object that implements the
-            functionality of this node on the cpp side.
-
         has_user_references (bool): A flag to check whether the node has
             direct user references, that is if it is assigned to a variable.
             Default value is :obj:`True`, turns to :obj:`False` if the proxy
             that wraps the node gets garbage collected by Python.
+
+        rdf_node: A reference to the result of calling a function of the
+            RDataFrame API with the current operation. This is practically a
+            node of the true computation graph, which is being executed in some
+            distributed task. It is a transient attribute. On the client, it
+            is always None. The value is computed and stored only during a task
+            on a worker.
     """
 
-    def __init__(self, get_head, operation, *args):
-        """
-        Creates a new node based on the operation passed as argument.
-
-        Args:
-            get_head (function): A lambda function that returns the head node
-                of the current graph. This value could be `None`.
-
-            operation (DistRDF.Operation.Operation): The operation that this Node
-                represents. This could be :obj:`None`.
-        """
-        if get_head is None:
-            # Function to get 'head' Node
-            self.get_head = lambda: self
-        else:
-            self.get_head = get_head
-
+    def __init__(self, get_head: Callable[[], "HeadNode"], node_id: int = 0,
+                 operation: "Operation" = None, parent: Node = None):
+        self.get_head = get_head
+        self.node_id = node_id
         self.operation = operation
-        self.children = []
-        self._new_op_name = ""
+        self.parent = parent
+        self.nchildren: int = 0
+        self._new_op_name: str = ""
         self.value = None
-        self.pyroot_node = None
-        self.has_user_references = True
+        self.has_user_references: bool = True
+        self.rdf_node = None
+
+        # This is the internal attribute for the 'parent_id' property. It is
+        # serialized from the local information then deserialized and set in a
+        # distributed task.
+        self._parent_id: Optional[int] = parent.node_id if parent is not None else None
+
+    @property
+    def parent_id(self) -> Optional[int]:
+        """Retrieves the id of the parent node."""
+        return self._parent_id
+
+    @parent_id.setter
+    def parent_id(self, value: Optional[int]):
+        """
+        Sets the id of the parent node. Only present to enable setting this
+        attribute when deserializing the node in a distributed task.
+        """
+        self._parent_id = value
 
     def __getstate__(self):
         """
-        Converts the state of the current node
-        to a Python dictionary.
-
-        Returns:
-            dictionary: A dictionary that stores all instance variables
-            that represent the current DistRDF node.
-
+        Serialize the minimum amount of information needed in a distributed task
+        to execute the operation corresponding to this node of the graph.
         """
-        state_dict = {'children': self.children}
-        if self.operation:
-            state_dict['operation_name'] = self.operation.name
-            state_dict['operation_args'] = self.operation.args
-            state_dict['operation_kwargs'] = self.operation.kwargs
-
-        return state_dict
+        return {"operation": self.operation, "parent_id": self.parent_id}
 
     def __setstate__(self, state):
-        """
-        Retrieves the state dictionary of the current
-        node and sets the instance variables.
+        self.operation = state["operation"]
+        self.parent_id = state["parent_id"]
 
-        Args:
-            state (dict): This is the state dictionary that needs to be
-                converted to a `Node` object.
-
-        """
-        self.children = state['children']
-        if state.get('operation_name'):
-            self.operation = Operation.create_op(state['operation_name'],
-                                                 *state['operation_args'],
-                                                 **state["operation_kwargs"])
-        else:
-            self.operation = None
-
-    def is_prunable(self):
+    def is_prunable(self) -> bool:
         """
         Checks whether the current node can be pruned from the computational
         graph.
@@ -118,72 +114,34 @@ class Node(object):
             bool: True if the node has no children and no user references or
             its value has already been computed, False otherwise.
         """
-        if not self.children:
-            # Every pruning condition is written on a separate line
-            if not self.has_user_references or self.value is not None:
+        logger.debug(f"Checking node {self.node_id} for pruning")
 
-                # ***** Condition 1 *****
-                # If the node is wrapped by a proxy which is not directly
-                # assigned to a variable, then it will be flagged for pruning
+        if self.nchildren == 0 and (not self.has_user_references or self.value is not None):
 
-                # ***** Condition 2 *****
-                # If the current node's value was already computed, it should
-                # get pruned. Only action nodes may possess a value attribute
-                # which is not None
+            # ***** Condition 1 *****
+            # If the node does not have children, it might be prunable.
 
-                # Logger debug statements
-                logger.debug("{} node can be pruned".format(
-                    self.operation.name
-                ))
+            # ***** Condition 2 *****
+            # If the node is wrapped by a proxy which is not directly
+            # assigned to a variable, then it will be flagged for pruning
 
-                return True
+            # ***** Condition 3 *****
+            # If the current node's value was already computed, it should
+            # get pruned. Only action nodes may possess a value attribute
+            # which is not None
 
-        # Logger debug statements
-        if self.operation:  # Node has an operation
-            logger.debug("{} node shouldn't be pruned".format(
-                self.operation.name
-            ))
-        else:  # Node is the RDataFrame
-            logger.debug("Graph pruning completed")
+            logger.debug(f"node {self.node_id} can be pruned")
+
+            # Decrement children count of the parent node of this node, so that
+            # when the pruning will consider the parent, this child will not be
+            # counted.
+            self.parent.nchildren -= 1
+
+            return True
+
+        logger.debug(f"node {self.node_id} should not be pruned")
+
         return False
-
-    def graph_prune(self):
-        """
-        Prunes nodes from the current DistRDF graph under certain conditions.
-        The current node will be pruned if it has no children and the user
-        application does not hold any reference to it. The children of the
-        current node will get recursively pruned.
-
-        Returns:
-            bool: True if the current node has to be pruned, False otherwise.
-        """
-        children = []
-
-        # Logger debug statements
-        if self.operation:
-            logger.debug("Checking {} node for pruning".format(
-                self.operation.name
-            ))
-        else:
-            logger.debug("Starting computational graph pruning")
-
-        for n in self.children:
-            # Logger debug statement
-            # Select children based on pruning condition
-            if not n.graph_prune():
-                children.append(n)
-
-        self.children = children
-        return self.is_prunable()
-
-
-class HeadNode(Node):
-    """
-    Helper tag for the headnode of the computation graph. Defined in the Node.py
-    module so that other modules who may want to use it in type hints don't need
-    to import the HeadNode.py module
-    """
-    pass
 
 
 class VariationsNode(Node):
