@@ -30,12 +30,12 @@ public:
    TSQLTableInfo(const char* tablename,
                  TList* columns,
                  const char* comment = "SQL table",
-                 const char* engine = 0,
-                 const char* create_time = 0,
-                 const char* update_time = 0);
+                 const char* engine = nullptr,
+                 const char* create_time = nullptr,
+                 const char* update_time = nullptr);
    virtual ~TSQLTableInfo();
 
-   virtual void Print(Option_t* option = "") const;
+   void Print(Option_t* option = "") const override;
 
    TList* GetColumns() const { return fColumns; }
 
@@ -45,7 +45,7 @@ public:
    const char* GetCreateTime() const { return fCreateTime.Data(); }
    const char* GetUpdateTime() const { return fUpdateTime.Data(); }
 
-   ClassDef(TSQLTableInfo, 0) // Summury information about SQL table
+   ClassDefOverride(TSQLTableInfo, 0) // Summary information about SQL table
 };
 
 #endif

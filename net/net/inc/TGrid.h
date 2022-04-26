@@ -53,8 +53,8 @@ protected:
    Int_t          fPort;    // port to which we are connected
 
 public:
-   TGrid() : fGridUrl(), fGrid(), fHost(), fUser(), fPw(), fOptions(), fPort(-1) { }
-   virtual ~TGrid() { }
+   TGrid() : fGridUrl(), fGrid(), fHost(), fUser(), fPw(), fOptions(), fPort(-1) {}
+   virtual ~TGrid() {}
 
    const char    *GridUrl() const { return fGridUrl; }
    const char    *GetGrid() const { return fGrid; }
@@ -72,21 +72,21 @@ public:
    virtual TGridResult *Command(const char * /*command*/,
                                 Bool_t /*interactive*/ = kFALSE,
                                 UInt_t /*stream*/ = 2)
-      { MayNotUse("Command"); return 0; }
+      { MayNotUse("Command"); return nullptr; }
 
    virtual TGridResult *Query(const char * /*path*/, const char * /*pattern*/,
                               const char * /*conditions*/ = "", const char * /*options*/ = "")
-      { MayNotUse("Query"); return 0; }
+      { MayNotUse("Query"); return nullptr; }
 
-   virtual TGridResult *LocateSites() { MayNotUse("LocalSites"); return 0; }
+   virtual TGridResult *LocateSites() { MayNotUse("LocalSites"); return nullptr; }
 
    //--- Catalogue Interface
    virtual TGridResult *Ls(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
-      { MayNotUse("Ls"); return 0; }
+      { MayNotUse("Ls"); return nullptr; }
    virtual const char  *Pwd(Bool_t /*verbose*/ =kFALSE)
-      { MayNotUse("Pwd"); return 0; }
+      { MayNotUse("Pwd"); return nullptr; }
    virtual const char  *GetHomeDirectory()
-      { MayNotUse("GetHomeDirectory"); return 0; }
+      { MayNotUse("GetHomeDirectory"); return nullptr; }
    virtual Bool_t Cd(const char* /*ldn*/ ="",Bool_t /*verbose*/ =kFALSE)
       { MayNotUse("Cd"); return kFALSE; }
    virtual Int_t  Mkdir(const char* /*ldn*/ ="", Option_t* /*options*/ ="", Bool_t /*verbose*/ =kFALSE)
@@ -100,29 +100,29 @@ public:
 
    //--- Job Submission Interface
    virtual TGridJob *Submit(const char * /*jdl*/)
-      { MayNotUse("Submit"); return 0; }
+      { MayNotUse("Submit"); return nullptr; }
    virtual TGridJDL *GetJDLGenerator()
-      { MayNotUse("GetJDLGenerator"); return 0; }
+      { MayNotUse("GetJDLGenerator"); return nullptr; }
    virtual TGridCollection *OpenCollection(const char *, UInt_t /*maxentries*/ = 1000000)
-      { MayNotUse("OpenCollection"); return 0; }
+      { MayNotUse("OpenCollection"); return nullptr; }
    virtual TGridCollection *OpenCollectionQuery(TGridResult * /*queryresult*/,Bool_t /*nogrouping*/ = kFALSE)
-      { MayNotUse("OpenCollection"); return 0; }
+      { MayNotUse("OpenCollection"); return nullptr; }
    virtual TGridJobStatusList* Ps(const char* /*options*/, Bool_t /*verbose*/ = kTRUE)
-      { MayNotUse("Ps"); return 0; }
+      { MayNotUse("Ps"); return nullptr; }
    virtual Bool_t KillById(TString /*jobid*/)
       { MayNotUse("KillById"); return kFALSE; }
    virtual Bool_t ResubmitById(TString /*jobid*/)
-      { MayNotUse("ResubmitById"); return 0; }
+      { MayNotUse("ResubmitById"); return kFALSE; }
    virtual Bool_t Kill(TGridJob *gridjob)
       { return ((gridjob)?KillById(gridjob->GetJobID()):kFALSE); }
    virtual Bool_t Resubmit(TGridJob* gridjob)
       { return ((gridjob)?ResubmitById(gridjob->GetJobID()):kFALSE); }
 
    //--- Load desired plugin and setup conection to GRID
-   static TGrid *Connect(const char *grid, const char *uid = 0,
-                         const char *pw = 0, const char *options = 0);
+   static TGrid *Connect(const char *grid, const char *uid = nullptr,
+                         const char *pw = nullptr, const char *options = nullptr);
 
-   ClassDef(TGrid,0)  // ABC defining interface to GRID services
+   ClassDefOverride(TGrid,0)  // ABC defining interface to GRID services
 };
 
 R__EXTERN TGrid *gGrid;
