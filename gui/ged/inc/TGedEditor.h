@@ -62,7 +62,7 @@ public:
    virtual ~TGedEditor();
 
    void          PrintFrameStat();
-   virtual void  Update(TGedFrame* frame = 0);
+   virtual void  Update(TGedFrame* frame = nullptr);
    void          ReinitWorkspace();
    void          ActivateEditor (TClass* cl, Bool_t recurse);
    void          ActivateEditors(TList* bcl, Bool_t recurse);
@@ -74,28 +74,28 @@ public:
    virtual TGCompositeFrame* GetEditorTab(const char* name);
    virtual TGedTabInfo*      GetEditorTabInfo(const char* name);
 
-   virtual TCanvas*          GetCanvas() const { return fCanvas; }
+   TCanvas*                  GetCanvas() const override { return fCanvas; }
    virtual TVirtualPad*      GetPad()    const { return fPad; }
    virtual TObject*          GetModel()  const { return fModel; }
 
 
-   virtual void   CloseWindow();
+   void           CloseWindow() override;
    virtual void   ConnectToCanvas(TCanvas *c);
    virtual void   DisconnectFromCanvas();
-   virtual Bool_t IsGlobal() const  { return fGlobal; }
-   virtual void   Hide();
+   Bool_t         IsGlobal() const  override { return fGlobal; }
+   void           Hide() override;
    virtual void   GlobalClosed();
    virtual void   SetCanvas(TCanvas *c);
-   virtual void   SetGlobal(Bool_t global);
+   void           SetGlobal(Bool_t global) override;
    virtual void   GlobalSetModel(TVirtualPad *, TObject *, Int_t);
    virtual void   SetModel(TVirtualPad* pad, TObject* obj, Int_t event, Bool_t force=kFALSE);
-   virtual void   Show();
-   virtual void   RecursiveRemove(TObject* obj);
+   void           Show() override;
+   void           RecursiveRemove(TObject* obj) override;
 
    static TGedEditor* GetFrameCreator();
    static void SetFrameCreator(TGedEditor* e);
 
-   ClassDef(TGedEditor,0)  // ROOT graphics editor
+   ClassDefOverride(TGedEditor,0)  // ROOT graphics editor
 };
 
 #endif
